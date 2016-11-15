@@ -1,0 +1,30 @@
+languagesystem DFLT dflt;
+
+# Mixes kerning between single glyphs, and class-based kerning.
+# https://github.com/behdad/fonttools/issues/456
+lookup MixedKerning {
+    pos v v 14;
+    pos [D O Q] [T V W] -26;
+} MixedKerning;
+
+lookup GlyphKerning {
+    pos T one 100;
+    pos T two 200;
+    pos T two.oldstyle 200;
+    pos T three 300;
+    pos T four 400;
+    pos X a 100;
+    pos X b 200;
+    pos Y a 100;
+    pos Y b 200;
+    pos Y c <3 3 3 3>;
+} GlyphKerning;
+
+feature kern {
+    lookup GlyphKerning;
+    lookup MixedKerning;
+} kern;
+
+feature vkrn {
+    pos T one 100;
+} vkrn;

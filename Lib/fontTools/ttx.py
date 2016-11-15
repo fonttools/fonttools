@@ -1,7 +1,7 @@
 """\
 usage: ttx [options] inputfile1 [... inputfileN]
 
-    TTX %s -- From OpenType To XML And Back
+    TTX -- From OpenType To XML And Back
 
     If an input file is a TrueType or OpenType font file, it will be
        dumped to an TTX file (an XML-based text format).
@@ -12,11 +12,13 @@ usage: ttx [options] inputfile1 [... inputfileN]
        never overwritten.
 
     General options:
-    -h Help: print this message
+    -h Help: print this message.
+    --version: show version and exit.
     -d <outputfolder> Specify a directory where the output files are
        to be created.
     -o <outputfile> Specify a file to write the output to. A special
        value of of - would use the standard output.
+    -f Overwrite existing output file(s), ie. don't append numbers.
     -v Verbose: more messages will be written to stdout about what
        is being done.
     -q Quiet: No messages will be written to stdout about what
@@ -51,12 +53,17 @@ usage: ttx [options] inputfile1 [... inputfileN]
          -z bitwise
             * export each row as binary in an ASCII art style
          -z extfile
-            * export the data as external files with XML refences
+            * export the data as external files with XML references
        If no export format is specified 'raw' format is used.
     -e Don't ignore decompilation errors, but show a full traceback
        and abort.
-    -y <number> Select font number for TrueType Collection,
+    -y <number> Select font number for TrueType Collection (.ttc/.otc),
        starting from 0.
+    --unicodedata <UnicodeData.txt> Use custom database file to write
+       character names in the comments of the cmap TTX output.
+    --newline <value> Control how line endings are written in the XML
+       file. It can be 'LF', 'CR', or 'CRLF'. If not specified, the
+       default platform-specific line endings are used.
 
     Compile options:
     -m Merge with TrueType-input-file: specify a TrueType or OpenType
@@ -64,6 +71,13 @@ usage: ttx [options] inputfile1 [... inputfileN]
        valid when at most one TTX file is specified.
     -b Don't recalc glyph bounding boxes: use the values in the TTX
        file as-is.
+    --recalc-timestamp Set font 'modified' timestamp to current time.
+       By default, the modification time of the TTX file will be used.
+    --flavor <type> Specify flavor of output font file. May be 'woff'
+      or 'woff2'. Note that WOFF2 requires the Brotli Python extension,
+      available at https://github.com/google/brotli
+    --with-zopfli Use Zopfli instead of Zlib to compress WOFF. The Python
+      extension is available at https://github.com/anthrotype/py-zopfli
 """
 
 
@@ -71,21 +85,22 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, TTLibError
 from fontTools.misc.macCreatorType import getMacCreatorAndType
+from fontTools.unicode import setUnicodeData
+from fontTools.misc.timeTools import timestampSinceEpoch
+from fontTools.misc.loggingTools import Timer
 import os
 import sys
 import getopt
 import re
+import logging
 
-def usage():
-	from fontTools import version
-	print(__doc__ % version)
-	sys.exit(2)
 
-	
+log = logging.getLogger(__name__)
+
 numberAddedRE = re.compile("#\d+$")
 opentypeheaderRE = re.compile('''sfntVersion=['"]OTTO["']''')
 
-def makeOutputFileName(input, outputDir, extension):
+def makeOutputFileName(input, outputDir, extension, overWrite=False):
 	dirName, fileName = os.path.split(input)
 	fileName, ext = os.path.splitext(fileName)
 	if outputDir:
@@ -93,9 +108,10 @@ def makeOutputFileName(input, outputDir, extension):
 	fileName = numberAddedRE.split(fileName)[0]
 	output = os.path.join(dirName, fileName + extension)
 	n = 1
-	while os.path.exists(output):
-		output = os.path.join(dirName, fileName + "#" + repr(n) + extension)
-		n = n + 1
+	if not overWrite:
+		while os.path.exists(output):
+			output = os.path.join(dirName, fileName + "#" + repr(n) + extension)
+			n = n + 1
 	return output
 
 
@@ -104,6 +120,7 @@ class Options(object):
 	listTables = False
 	outputDir = None
 	outputFile = None
+	overWrite = False
 	verbose = False
 	quiet = False
 	splitTables = False
@@ -113,6 +130,11 @@ class Options(object):
 	allowVID = False
 	ignoreDecompileErrors = True
 	bitmapGlyphDataFormat = 'raw'
+	unicodedata = None
+	newlinestr = None
+	recalcTimestamp = False
+	flavor = None
+	useZopfli = False
 
 	def __init__(self, rawOptions, numFiles):
 		self.onlyTables = []
@@ -121,16 +143,20 @@ class Options(object):
 		for option, value in rawOptions:
 			# general options
 			if option == "-h":
+				print(__doc__)
+				sys.exit(0)
+			elif option == "--version":
 				from fontTools import version
-				print(__doc__ % version)
+				print(version)
 				sys.exit(0)
 			elif option == "-d":
 				if not os.path.isdir(value):
-					print("The -d option value must be an existing directory")
-					sys.exit(2)
+					raise getopt.GetoptError("The -d option value must be an existing directory")
 				self.outputDir = value
 			elif option == "-o":
 				self.outputFile = value
+			elif option == "-f":
+				self.overWrite = True
 			elif option == "-v":
 				self.verbose = True
 			elif option == "-q":
@@ -139,6 +165,8 @@ class Options(object):
 			elif option == "-l":
 				self.listTables = True
 			elif option == "-t":
+				# pad with space if table tag length is less than 4
+				value = value.ljust(4)
 				self.onlyTables.append(value)
 			elif option == "-x":
 				self.skipTables.append(value)
@@ -149,8 +177,8 @@ class Options(object):
 			elif option == "-z":
 				validOptions = ('raw', 'row', 'bitwise', 'extfile')
 				if value not in validOptions:
-					print("-z does not allow %s as a format. Use %s" % (option, validOptions))
-					sys.exit(2)
+					raise getopt.GetoptError(
+						"-z does not allow %s as a format. Use %s" % (option, validOptions))
 				self.bitmapGlyphDataFormat = value
 			elif option == "-y":
 				self.fontNumber = int(value)
@@ -163,12 +191,43 @@ class Options(object):
 				self.allowVID = True
 			elif option == "-e":
 				self.ignoreDecompileErrors = False
+			elif option == "--unicodedata":
+				self.unicodedata = value
+			elif option == "--newline":
+				validOptions = ('LF', 'CR', 'CRLF')
+				if value == "LF":
+					self.newlinestr = "\n"
+				elif value == "CR":
+					self.newlinestr = "\r"
+				elif value == "CRLF":
+					self.newlinestr = "\r\n"
+				else:
+					raise getopt.GetoptError(
+						"Invalid choice for --newline: %r (choose from %s)"
+						% (value, ", ".join(map(repr, validOptions))))
+			elif option == "--recalc-timestamp":
+				self.recalcTimestamp = True
+			elif option == "--flavor":
+				self.flavor = value
+			elif option == "--with-zopfli":
+				self.useZopfli = True
+		if self.verbose and self.quiet:
+			raise getopt.GetoptError("-q and -v options are mutually exclusive")
+		if self.verbose:
+			self.logLevel = logging.DEBUG
+		elif self.quiet:
+			self.logLevel = logging.WARNING
+		else:
+			self.logLevel = logging.INFO
+		if self.mergeFile and self.flavor:
+			raise getopt.GetoptError("-m and --flavor options are mutually exclusive")
+			sys.exit(2)
 		if self.onlyTables and self.skipTables:
-			print("-t and -x options are mutually exclusive")
-			sys.exit(2)
+			raise getopt.GetoptError("-t and -x options are mutually exclusive")
 		if self.mergeFile and numFiles > 1:
-			print("Must specify exactly one TTX source file when using -m")
-			sys.exit(2)
+			raise getopt.GetoptError("Must specify exactly one TTX source file when using -m")
+		if self.flavor != 'woff' and self.useZopfli:
+			raise getopt.GetoptError("--with-zopfli option requires --flavor 'woff'")
 
 
 def ttList(input, output, options):
@@ -181,7 +240,13 @@ def ttList(input, output, options):
 	print(format % ("----", "----------", "-------", "-------"))
 	for tag in tags:
 		entry = reader.tables[tag]
-		checkSum = int(entry.checkSum)
+		if ttf.flavor == "woff2":
+			# WOFF2 doesn't store table checksums, so they must be calculated
+			from fontTools.ttLib.sfnt import calcChecksum
+			data = entry.loadData(reader.transformBuffer)
+			checkSum = calcChecksum(data)
+		else:
+			checkSum = int(entry.checkSum)
 		if checkSum < 0:
 			checkSum = checkSum + 0x100000000
 		checksum = "0x%08X" % checkSum
@@ -190,35 +255,42 @@ def ttList(input, output, options):
 	ttf.close()
 
 
+@Timer(log, 'Done dumping TTX in %(time).3f seconds')
 def ttDump(input, output, options):
-	if not options.quiet:
-		print('Dumping "%s" to "%s"...' % (input, output))
-	ttf = TTFont(input, 0, verbose=options.verbose, allowVID=options.allowVID,
-			quiet=options.quiet,
+	log.info('Dumping "%s" to "%s"...', input, output)
+	if options.unicodedata:
+		setUnicodeData(options.unicodedata)
+	ttf = TTFont(input, 0, allowVID=options.allowVID,
 			ignoreDecompileErrors=options.ignoreDecompileErrors,
 			fontNumber=options.fontNumber)
 	ttf.saveXML(output,
-			quiet=options.quiet,
 			tables=options.onlyTables,
 			skipTables=options.skipTables,
 			splitTables=options.splitTables,
 			disassembleInstructions=options.disassembleInstructions,
-			bitmapGlyphDataFormat=options.bitmapGlyphDataFormat)
+			bitmapGlyphDataFormat=options.bitmapGlyphDataFormat,
+			newlinestr=options.newlinestr)
 	ttf.close()
 
 
+@Timer(log, 'Done compiling TTX in %(time).3f seconds')
 def ttCompile(input, output, options):
-	if not options.quiet:
-		print('Compiling "%s" to "%s"...' % (input, output))
-	ttf = TTFont(options.mergeFile,
+	log.info('Compiling "%s" to "%s"...' % (input, output))
+	if options.useZopfli:
+		from fontTools.ttLib import sfnt
+		sfnt.USE_ZOPFLI = True
+	ttf = TTFont(options.mergeFile, flavor=options.flavor,
 			recalcBBoxes=options.recalcBBoxes,
-			verbose=options.verbose, allowVID=options.allowVID)
-	ttf.importXML(input, quiet=options.quiet)
-	ttf.save(output)
+			recalcTimestamp=options.recalcTimestamp,
+			allowVID=options.allowVID)
+	ttf.importXML(input)
 
-	if options.verbose:
-		import time
-		print("finished at", time.strftime("%H:%M:%S", time.localtime(time.time())))
+	if not options.recalcTimestamp:
+		# use TTX file modification time for head "modified" timestamp
+		mtime = os.path.getmtime(input)
+		ttf['head'].modified = timestampSinceEpoch(mtime)
+
+	ttf.save(output)
 
 
 def guessFileType(fileName):
@@ -242,6 +314,8 @@ def guessFileType(fileName):
 		return "TTF"
 	elif head == "wOFF":
 		return "WOFF"
+	elif head == "wOF2":
+		return "WOFF2"
 	elif head.lower() == "<?xm":
 		# Use 'latin1' because that can't fail.
 		header = tostr(header, 'latin1')
@@ -253,39 +327,42 @@ def guessFileType(fileName):
 
 
 def parseOptions(args):
-	try:
-		rawOptions, files = getopt.getopt(args, "ld:o:vqht:x:sim:z:baey:")
-	except getopt.GetoptError:
-		usage()
-	
-	if not files:
-		usage()
-	
+	rawOptions, files = getopt.getopt(args, "ld:o:fvqht:x:sim:z:baey:",
+			['unicodedata=', "recalc-timestamp", 'flavor=', 'version',
+			 'with-zopfli', 'newline='])
+
 	options = Options(rawOptions, len(files))
 	jobs = []
-	
+
+	if not files:
+		raise getopt.GetoptError('Must specify at least one input file')
+
 	for input in files:
+		if not os.path.isfile(input):
+			raise getopt.GetoptError('File not found: "%s"' % input)
 		tp = guessFileType(input)
-		if tp in ("OTF", "TTF", "TTC", "WOFF"):
+		if tp in ("OTF", "TTF", "TTC", "WOFF", "WOFF2"):
 			extension = ".ttx"
 			if options.listTables:
 				action = ttList
 			else:
 				action = ttDump
 		elif tp == "TTX":
-			extension = ".ttf"
+			extension = "."+options.flavor if options.flavor else ".ttf"
 			action = ttCompile
 		elif tp == "OTX":
-			extension = ".otf"
+			extension = "."+options.flavor if options.flavor else ".otf"
 			action = ttCompile
 		else:
-			print('Unknown file type: "%s"' % input)
-			continue
-		
+			raise getopt.GetoptError('Unknown file type: "%s"' % input)
+
 		if options.outputFile:
 			output = options.outputFile
 		else:
-			output = makeOutputFileName(input, options.outputDir, extension)
+			output = makeOutputFileName(input, options.outputDir, extension, options.overWrite)
+			# 'touch' output file to avoid race condition in choosing file names
+			if action != ttList:
+				open(output, 'a').close()
 		jobs.append((action, input, output))
 	return jobs, options
 
@@ -299,32 +376,42 @@ def waitForKeyPress():
 	"""Force the DOS Prompt window to stay open so the user gets
 	a chance to see what's wrong."""
 	import msvcrt
-	print('(Hit any key to exit)')
+	print('(Hit any key to exit)', file=sys.stderr)
 	while not msvcrt.kbhit():
 		pass
 
 
-def main(args):
-	jobs, options = parseOptions(args)
+def main(args=None):
+	from fontTools import configLogger
+
+	if args is None:
+		args = sys.argv[1:]
+	try:
+		jobs, options = parseOptions(args)
+	except getopt.GetoptError as e:
+		print("%s\nERROR: %s" % (__doc__, e), file=sys.stderr)
+		sys.exit(2)
+
+	configLogger(level=options.logLevel)
+
 	try:
 		process(jobs, options)
 	except KeyboardInterrupt:
-		print("(Cancelled.)")
+		log.error("(Cancelled.)")
+		sys.exit(1)
 	except SystemExit:
 		if sys.platform == "win32":
 			waitForKeyPress()
-		else:
-			raise
+		raise
 	except TTLibError as e:
-		print("Error:",e)
+		log.error(e)
+		sys.exit(1)
 	except:
+		log.exception('Unhandled exception has occurred')
 		if sys.platform == "win32":
-			import traceback
-			traceback.print_exc()
 			waitForKeyPress()
-		else:
-			raise
-	
+		sys.exit(1)
+
 
 if __name__ == "__main__":
-	main(sys.argv[1:])
+	main()

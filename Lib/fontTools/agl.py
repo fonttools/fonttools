@@ -705,18 +705,19 @@ _aglText = """\
 """
 
 
-AGLError = "AGLError"
+class AGLError(Exception):
+	pass
 
 AGL2UV = {}
 UV2AGL = {}
 
 def _builddicts():
 	import re
-	
+
 	lines = _aglText.splitlines()
-	
+
 	parseAGL_RE = re.compile("([0-9A-F]{4});([A-Za-z_0-9.]+);.*?$")
-	
+
 	for line in lines:
 		if not line or line[:1] == '#':
 			continue
@@ -733,5 +734,5 @@ def _builddicts():
 		else:
 			AGL2UV[glyphName] = unicode
 		UV2AGL[unicode] = glyphName
-	
+
 _builddicts()

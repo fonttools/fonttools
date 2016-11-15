@@ -1,0 +1,10 @@
+table GDEF {
+    LigatureCaretByPos [c_h c_k] 500;
+
+    # The OpenType Feature File specification does not define what should
+    # happen when there are multiple LigatureCaretByPos statements for
+    # the same glyph. Our behavior matches that of Adobe makeotf v2.0.90.
+    # https://github.com/adobe-type-tools/afdko/issues/95
+    LigatureCaretByPos o_f_f_i 700 300;
+    LigatureCaretByPos o_f_f_i 900;
+} GDEF;

@@ -1,0 +1,14 @@
+languagesystem DFLT dflt;
+
+anchorDef 3 4 contourpoint 2 ANCH342;
+
+feature kern {
+    pos cursive zero <anchor NULL> <anchor NULL>;
+    pos cursive one <anchor 121 -1> <anchor ANCH342>;
+    pos cursive two <anchor 122 -2> <anchor 3 4>;
+    pos cursive three <anchor 123 -3> <anchor NULL>;
+    pos cursive four <anchor 124 -4 contourpoint 7> <anchor 3 4>;
+    pos cursive five
+        <anchor 124 -4 <device 8 1, 9 2> <device 7 3>>
+        <anchor ANCH342>;
+} kern;

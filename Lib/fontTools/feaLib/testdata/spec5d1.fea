@@ -1,0 +1,26 @@
+# OpenType Feature File specification, section 5.d, example 1.
+# http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html
+
+feature F1 {
+  substitute [one one.oldstyle] [slash fraction] [two two.oldstyle] by onehalf;
+} F1;
+
+# Since the OpenType specification does not allow ligature substitutions
+# to be specified on target sequences that contain glyph classes, the
+# implementation software will enumerate all specific glyph sequences
+# if glyph classes are detected in <glyph sequence>.  Thus, the above
+# example produces an identical representation in the font as if all
+# the sequences were manually enumerated by the font editor:
+feature F2 {
+  substitute one          slash    two          by onehalf;
+  substitute one.oldstyle slash    two          by onehalf;
+  substitute one          fraction two          by onehalf;
+  substitute one.oldstyle fraction two          by onehalf;
+  substitute one          slash    two.oldstyle by onehalf;
+  substitute one.oldstyle slash    two.oldstyle by onehalf;
+  substitute one          fraction two.oldstyle by onehalf;
+  substitute one.oldstyle fraction two.oldstyle by onehalf;
+} F2;
+
+# In the resulting OpenType GSUB table (spec5d1.ttx),
+# we expect to see only one single lookup.

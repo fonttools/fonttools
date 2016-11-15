@@ -1,0 +1,25 @@
+# OpenType Feature File specification, section 5.d, example 2.
+# http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html
+
+# A contiguous set of ligature rules does not need to be ordered in
+# any particular way by the font editor; the implementation software
+# must do the appropriate sorting.
+
+# So:
+feature F1 {
+  sub f f by f_f;
+  sub f i by f_i;
+  sub f f i by f_f_i;
+  sub o f f i by o_f_f_i;
+} F1;
+
+# will produce an identical representation in the font as:
+feature F2 {
+  sub o f f i by o_f_f_i;
+  sub f f i by f_f_i;
+  sub f f by f_f;
+  sub f i by f_i;
+} F2;
+
+# In the resulting OpenType GSUB table (spec5d2.ttx),
+# we expect to see only one single lookup.

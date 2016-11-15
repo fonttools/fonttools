@@ -10,7 +10,7 @@ that drawings don't need to know the details of how outlines are stored.
 
 The most basic pattern is this:
 
-    outline.draw(pen)  # 'outline' draws itself onto 'pen'
+	outline.draw(pen)  # 'outline' draws itself onto 'pen'
 
 Pens can be used to render outlines to the screen, but also to construct
 new outlines. Eg. an outline object can be both a drawable object (it has a
@@ -39,8 +39,8 @@ sequence of length 2 will do.
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
-__all__ = ["AbstractPen", "NullPen", "BasePen",
-           "decomposeSuperBezierSegment", "decomposeQuadraticSegment"]
+__all__ =  ["AbstractPen", "NullPen", "BasePen",
+			"decomposeSuperBezierSegment", "decomposeQuadraticSegment"]
 
 
 class AbstractPen(object):
@@ -307,8 +307,8 @@ def decomposeSuperBezierSegment(points):
 			if pt2 is None:
 				pt2 = temp
 			else:
-				pt3 = (0.5 * (pt2[0] + temp[0]),
-					   0.5 * (pt2[1] + temp[1]))
+				pt3 =  (0.5 * (pt2[0] + temp[0]),
+						0.5 * (pt2[1] + temp[1]))
 				bezierSegments.append((pt1, pt2, pt3))
 				pt1, pt2, pt3 = temp, None, None
 	bezierSegments.append((pt1, points[-2], points[-1]))

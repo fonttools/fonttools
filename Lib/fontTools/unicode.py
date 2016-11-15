@@ -30,7 +30,12 @@ class _UnicodeCustom(object):
 class _UnicodeBuiltin(object):
 
 	def __getitem__(self, charCode):
-		import unicodedata
+		try:
+			# use unicodedata backport to python2, if available:
+			# https://github.com/mikekap/unicodedata2
+			import unicodedata2 as unicodedata
+		except ImportError: 
+			import unicodedata
 		try:
 			return unicodedata.name(unichr(charCode))
 		except ValueError:

@@ -1,0 +1,13 @@
+languagesystem DFLT dflt;
+
+markClass [acute grave] <anchor 1 1 contourpoint 11> @TOP_MARKS;
+markClass macron <anchor 2 2 contourpoint 22> @TOP_MARKS;
+markClass [cedilla] <anchor 3 3 contourpoint 33> @BOTTOM_MARKS;
+
+feature test {
+    position mark [acute grave macron ogonek]
+        <anchor 500 200> mark @TOP_MARKS
+        <anchor 500 -80> mark @BOTTOM_MARKS;
+    position mark [dieresis caron]
+        <anchor 500 200> mark @TOP_MARKS;
+} test;

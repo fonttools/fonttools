@@ -1,0 +1,7 @@
+languagesystem DFLT dflt;
+
+feature kern {
+  @Y_LC = [y yacute ydieresis];
+  @SMALL_PUNC = [comma semicolon period];
+  enum pos @Y_LC @SMALL_PUNC -100;
+} kern;

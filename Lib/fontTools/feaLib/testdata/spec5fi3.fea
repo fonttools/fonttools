@@ -1,0 +1,9 @@
+# OpenType Feature File specification, section 5.f.i, example 3
+# "Specifying a Chain Sub rule and marking sub-runs"
+# http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html
+
+languagesystem latn dflt;
+
+feature test {
+    substitute [A-Z] [A.sc-Z.sc]' by [a-z];
+} test;

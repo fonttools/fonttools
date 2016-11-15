@@ -1,0 +1,634 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.0">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="parenleft"/>
+    <GlyphID id="2" name="A"/>
+    <GlyphID id="3" name="uni0302"/>
+    <GlyphID id="4" name="uni239B"/>
+    <GlyphID id="5" name="uni239C"/>
+    <GlyphID id="6" name="uni239D"/>
+    <GlyphID id="7" name="u1D400"/>
+    <GlyphID id="8" name="u1D435"/>
+    <GlyphID id="9" name="parenleft.size1"/>
+    <GlyphID id="10" name="uni0302.size1"/>
+    <GlyphID id="11" name="parenleft.size2"/>
+    <GlyphID id="12" name="uni0302.size2"/>
+    <GlyphID id="13" name="parenleft.size3"/>
+    <GlyphID id="14" name="uni0302.size3"/>
+    <GlyphID id="15" name="parenleft.size4"/>
+    <GlyphID id="16" name="uni0302.size4"/>
+    <GlyphID id="17" name="uni0302.size5"/>
+  </GlyphOrder>
+
+  <CFF>
+    <major value="1"/>
+    <minor value="0"/>
+    <CFFFont name="XITSMath">
+      <version value="1.108"/>
+      <Notice value="Copyright (c) 2001-2011 by the STI Pub Companies, consisting of the American Chemical Society, the American Institute of Physics, the American Mathematical Society, the American Physical Society, Elsevier, Inc., and The Institute of Electrical and Electronic Engineers, Inc.  Portions copyright (c) 1998-2003 by MicroPress, Inc.  Portions copyright (c) 1990 by Elsevier, Inc.  Portions copyright (c) 2009-2012 by Khaled Hosny.  All rights reserved. "/>
+      <FullName value="XITS Math"/>
+      <FamilyName value="XITS Math"/>
+      <Weight value="Regular"/>
+      <isFixedPitch value="0"/>
+      <ItalicAngle value="0"/>
+      <UnderlinePosition value="-50"/>
+      <UnderlineThickness value="50"/>
+      <PaintType value="0"/>
+      <CharstringType value="2"/>
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FontBBox value="-970 -906 3238 2566"/>
+      <StrokeWidth value="0"/>
+      <!-- charset is dumped separately as the 'GlyphOrder' element -->
+      <Encoding name="StandardEncoding"/>
+      <Private>
+        <BlueValues value="-14 0 450 460 662 676"/>
+        <BlueScale value="0.039625"/>
+        <BlueShift value="6"/>
+        <BlueFuzz value="1"/>
+        <StdHW value="66"/>
+        <StdVW value="66"/>
+        <StemSnapH value="23 28 31 34 38 43 50 54 63 66"/>
+        <StemSnapV value="39 43 48 52 56 59 66 73 79 83"/>
+        <ForceBold value="0"/>
+        <LanguageGroup value="0"/>
+        <ExpansionFactor value="0.06"/>
+        <initialRandomSeed value="0"/>
+        <defaultWidthX value="685"/>
+        <nominalWidthX value="601"/>
+        <Subrs>
+          <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+          <CharString index="0">
+            19 vlineto
+            -52 6 -14 21 -28 65 rrcurveto
+            -246 563 -20 0 -206 -488 rlineto
+            -59 -140 -9 -21 -58 -6 rrcurveto
+            -19 199 19 vlineto
+            -48 -22 10 31 hvcurveto
+            0 12 4 17 5 13 rrcurveto
+            46 114 262 0 41 -94 rlineto
+            12 -28 7 -27 0 -15 0 -9 -6 -11 -8 -4 -12 -7 -7 -2 -36 0 rrcurveto
+            -19 vlineto
+            return
+          </CharString>
+          <CharString index="1">
+            -231 0 115 275 rlineto
+            return
+          </CharString>
+          <CharString index="2">
+            -125 167 -62 0 -124 -167 34 0 121 103 122 -103 rlineto
+            return
+          </CharString>
+          <CharString index="3">
+            25 vlineto
+            -41 0 -18 22 -51 121 rrcurveto
+            -222 522 -28 0 -221 -545 rlineto
+            -38 -94 -15 -18 -46 -8 rrcurveto
+            -25 202 25 vlineto
+            -59 4 -22 11 0 26 0 24 19 42 12 31 rrcurveto
+            13 34 225 0 rlineto
+            34 -79 12 -35 0 -22 0 -22 -13 -8 -33 -3 rrcurveto
+            -32 -3 0 -25 rlineto
+            return
+          </CharString>
+          <CharString index="4">
+            -5 -16 19 0 rlineto
+            59 19 -16 -26 hvcurveto
+            0 -6 -1 -10 -1 -5 rrcurveto
+            -123 -495 rlineto
+            -8 -34 -19 -29 -76 0 rrcurveto
+            -20 0 -4 -16 324 0 rlineto
+            207 82 94 99 hvcurveto
+            0 85 -67 42 -60 11 rrcurveto
+            -3 4 rlineto
+            20 5 29 8 25 13 48 24 43 45 0 78 rrcurveto
+            136 -152 9 -84 vhcurveto
+            return
+          </CharString>
+          <CharString index="5">
+            13 2 15 1 15 0 rrcurveto
+            54 65 -21 -77 -97 -56 -66 -112 hvcurveto
+            -15 0 -18 2 -20 4 rrcurveto
+            return
+          </CharString>
+          <CharString index="6">
+            15 4 20 0 16 0 rrcurveto
+            78 64 -35 -73 -130 -96 -42 -94 hvcurveto
+            -26 0 -20 2 -25 7 rrcurveto
+            return
+          </CharString>
+        </Subrs>
+      </Private>
+      <CharStrings>
+        <CharString name=".notdef">
+          -351 endchar
+        </CharString>
+        <CharString name="A">
+          121 0 20 196 41 397 20 hstem
+          707 hmoveto
+          -107 callsubr
+          -5 257 rmoveto
+          -106 callsubr
+          endchar
+        </CharString>
+        <CharString name="parenleft">
+          -268 656 20 hstem
+          48 86 vstem
+          304 -161 rmoveto
+          -140 117 -30 113 0 186 0 193 31 93 139 119 rrcurveto
+          -9 16 rlineto
+          -160 -95 -87 -144 0 -185 0 -170 86 -169 158 -90 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="parenleft.size1">
+          -133 139 81 vstem
+          382 -134 rmoveto
+          -90 110 -72 169 0 306 0 303 72 172 90 110 rrcurveto
+          30 vlineto
+          -142 -134 -101 -214 0 -267 0 -272 101 -209 142 -134 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="parenleft.size2">
+          -12 139 95 vstem
+          503 -243 rmoveto
+          -134 165 -135 265 0 456 0 458 135 294 134 138 rrcurveto
+          33 vlineto
+          -213 -171 -151 -352 0 -400 0 -409 151 -313 213 -200 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="parenleft.size3">
+          149 182 110 vstem
+          667 -346 rmoveto
+          -178 220 -197 349 0 613 0 606 197 396 178 184 rrcurveto
+          44 vlineto
+          -284 -228 -201 -464 0 -538 0 -541 201 -422 284 -267 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="parenleft.size4">
+          207 124 130 vstem
+          732 -453 rmoveto
+          -224 232 -254 504 0 746 0 777 254 473 224 231 rrcurveto
+          56 vlineto
+          -355 -286 -253 -578 0 -673 0 -675 253 -577 355 -286 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="u1D400">
+          121 0 20 177 39 hstem
+          689 hmoveto
+          -104 callsubr
+          17 236 rmoveto
+          -195 0 94 243 rlineto
+          endchar
+        </CharString>
+        <CharString name="u1D435">
+          95 0 38 280 35 261 39 hstem
+          198 653 rmoveto
+          -103 callsubr
+          -44 -42 rmoveto
+          -102 callsubr
+          -9 -45 rmoveto
+          -101 callsubr
+          endchar
+        </CharString>
+        <CharString name="uni0302">
+          -601 654 20 hstem
+          -75 507 rmoveto
+          -105 callsubr
+          endchar
+        </CharString>
+        <CharString name="uni0302.size1">
+          -41 560 554 rmoveto
+          -256 213 -48 0 -256 -213 64 0 216 146 216 -146 rlineto
+          endchar
+        </CharString>
+        <CharString name="uni0302.size2">
+          378 979 564 rmoveto
+          -465 213 -48 0 -466 -213 99 0 391 145 390 -145 rlineto
+          endchar
+        </CharString>
+        <CharString name="uni0302.size3">
+          859 1460 564 rmoveto
+          -706 213 -48 0 -706 -213 153 0 577 145 577 -145 rlineto
+          endchar
+        </CharString>
+        <CharString name="uni0302.size4">
+          1285 1886 599 rmoveto
+          -943 197 -943 -197 5 -26 937 161 939 -161 rlineto
+          endchar
+        </CharString>
+        <CharString name="uni0302.size5">
+          1727 2328 603 rmoveto
+          -1164 213 -1164 -213 5 -31 1158 182 1160 -182 rlineto
+          endchar
+        </CharString>
+        <CharString name="uni239B">
+          -151 50 124 vstem
+          400 1005 rmoveto
+          -261 -184 -89 -359 0 -303 rrcurveto
+          -159 124 239 vlineto
+          0 254 54 285 172 197 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="uni239C">
+          -151 50 124 vstem
+          174 hmoveto
+          1010 -124 -1010 vlineto
+          endchar
+        </CharString>
+        <CharString name="uni239D">
+          -151 50 124 vstem
+          400 30 rmoveto
+          -172 197 -54 285 0 254 rrcurveto
+          239 -124 -159 vlineto
+          0 -303 89 -359 261 -184 rrcurveto
+          endchar
+        </CharString>
+      </CharStrings>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF>
+
+  <MATH>
+    <Version value="0x00010000"/>
+    <MathConstants>
+      <ScriptPercentScaleDown value="75"/>
+      <ScriptScriptPercentScaleDown value="60"/>
+      <DelimitedSubFormulaMinHeight value="1500"/>
+      <DisplayOperatorMinHeight value="1450"/>
+      <MathLeading>
+        <Value value="150"/>
+      </MathLeading>
+      <AxisHeight>
+        <Value value="250"/>
+      </AxisHeight>
+      <AccentBaseHeight>
+        <Value value="450"/>
+      </AccentBaseHeight>
+      <FlattenedAccentBaseHeight>
+        <Value value="662"/>
+      </FlattenedAccentBaseHeight>
+      <SubscriptShiftDown>
+        <Value value="250"/>
+      </SubscriptShiftDown>
+      <SubscriptTopMax>
+        <Value value="400"/>
+      </SubscriptTopMax>
+      <SubscriptBaselineDropMin>
+        <Value value="50"/>
+      </SubscriptBaselineDropMin>
+      <SuperscriptShiftUp>
+        <Value value="400"/>
+      </SuperscriptShiftUp>
+      <SuperscriptShiftUpCramped>
+        <Value value="275"/>
+      </SuperscriptShiftUpCramped>
+      <SuperscriptBottomMin>
+        <Value value="125"/>
+      </SuperscriptBottomMin>
+      <SuperscriptBaselineDropMax>
+        <Value value="375"/>
+      </SuperscriptBaselineDropMax>
+      <SubSuperscriptGapMin>
+        <Value value="264"/>
+      </SubSuperscriptGapMin>
+      <SuperscriptBottomMaxWithSubscript>
+        <Value value="400"/>
+      </SuperscriptBottomMaxWithSubscript>
+      <SpaceAfterScript>
+        <Value value="41"/>
+      </SpaceAfterScript>
+      <UpperLimitGapMin>
+        <Value value="150"/>
+      </UpperLimitGapMin>
+      <UpperLimitBaselineRiseMin>
+        <Value value="300"/>
+      </UpperLimitBaselineRiseMin>
+      <LowerLimitGapMin>
+        <Value value="150"/>
+      </LowerLimitGapMin>
+      <LowerLimitBaselineDropMin>
+        <Value value="600"/>
+      </LowerLimitBaselineDropMin>
+      <StackTopShiftUp>
+        <Value value="480"/>
+      </StackTopShiftUp>
+      <StackTopDisplayStyleShiftUp>
+        <Value value="580"/>
+      </StackTopDisplayStyleShiftUp>
+      <StackBottomShiftDown>
+        <Value value="800"/>
+      </StackBottomShiftDown>
+      <StackBottomDisplayStyleShiftDown>
+        <Value value="900"/>
+      </StackBottomDisplayStyleShiftDown>
+      <StackGapMin>
+        <Value value="198"/>
+      </StackGapMin>
+      <StackDisplayStyleGapMin>
+        <Value value="462"/>
+      </StackDisplayStyleGapMin>
+      <StretchStackTopShiftUp>
+        <Value value="300"/>
+      </StretchStackTopShiftUp>
+      <StretchStackBottomShiftDown>
+        <Value value="600"/>
+      </StretchStackBottomShiftDown>
+      <StretchStackGapAboveMin>
+        <Value value="150"/>
+      </StretchStackGapAboveMin>
+      <StretchStackGapBelowMin>
+        <Value value="150"/>
+      </StretchStackGapBelowMin>
+      <FractionNumeratorShiftUp>
+        <Value value="480"/>
+      </FractionNumeratorShiftUp>
+      <FractionNumeratorDisplayStyleShiftUp>
+        <Value value="580"/>
+      </FractionNumeratorDisplayStyleShiftUp>
+      <FractionDenominatorShiftDown>
+        <Value value="480"/>
+      </FractionDenominatorShiftDown>
+      <FractionDenominatorDisplayStyleShiftDown>
+        <Value value="700"/>
+      </FractionDenominatorDisplayStyleShiftDown>
+      <FractionNumeratorGapMin>
+        <Value value="66"/>
+      </FractionNumeratorGapMin>
+      <FractionNumDisplayStyleGapMin>
+        <Value value="198"/>
+      </FractionNumDisplayStyleGapMin>
+      <FractionRuleThickness>
+        <Value value="66"/>
+      </FractionRuleThickness>
+      <FractionDenominatorGapMin>
+        <Value value="66"/>
+      </FractionDenominatorGapMin>
+      <FractionDenomDisplayStyleGapMin>
+        <Value value="198"/>
+      </FractionDenomDisplayStyleGapMin>
+      <SkewedFractionHorizontalGap>
+        <Value value="300"/>
+      </SkewedFractionHorizontalGap>
+      <SkewedFractionVerticalGap>
+        <Value value="66"/>
+      </SkewedFractionVerticalGap>
+      <OverbarVerticalGap>
+        <Value value="198"/>
+      </OverbarVerticalGap>
+      <OverbarRuleThickness>
+        <Value value="66"/>
+      </OverbarRuleThickness>
+      <OverbarExtraAscender>
+        <Value value="66"/>
+      </OverbarExtraAscender>
+      <UnderbarVerticalGap>
+        <Value value="198"/>
+      </UnderbarVerticalGap>
+      <UnderbarRuleThickness>
+        <Value value="66"/>
+      </UnderbarRuleThickness>
+      <UnderbarExtraDescender>
+        <Value value="66"/>
+      </UnderbarExtraDescender>
+      <RadicalVerticalGap>
+        <Value value="82"/>
+      </RadicalVerticalGap>
+      <RadicalDisplayStyleVerticalGap>
+        <Value value="186"/>
+      </RadicalDisplayStyleVerticalGap>
+      <RadicalRuleThickness>
+        <Value value="66"/>
+      </RadicalRuleThickness>
+      <RadicalExtraAscender>
+        <Value value="66"/>
+      </RadicalExtraAscender>
+      <RadicalKernBeforeDegree>
+        <Value value="277"/>
+      </RadicalKernBeforeDegree>
+      <RadicalKernAfterDegree>
+        <Value value="-555"/>
+      </RadicalKernAfterDegree>
+      <RadicalDegreeBottomRaisePercent value="70"/>
+    </MathConstants>
+    <MathGlyphInfo>
+      <MathItalicsCorrectionInfo>
+        <Coverage Format="1">
+          <Glyph value="u1D435"/>
+        </Coverage>
+        <!-- ItalicsCorrectionCount=1 -->
+        <ItalicsCorrection index="0">
+          <Value value="40"/>
+        </ItalicsCorrection>
+      </MathItalicsCorrectionInfo>
+      <MathTopAccentAttachment>
+        <TopAccentCoverage Format="1">
+          <Glyph value="A"/>
+          <Glyph value="uni0302"/>
+          <Glyph value="u1D400"/>
+          <Glyph value="u1D435"/>
+          <Glyph value="uni0302.size1"/>
+          <Glyph value="uni0302.size2"/>
+          <Glyph value="uni0302.size3"/>
+          <Glyph value="uni0302.size4"/>
+          <Glyph value="uni0302.size5"/>
+        </TopAccentCoverage>
+        <!-- TopAccentAttachmentCount=9 -->
+        <TopAccentAttachment index="0">
+          <Value value="361"/>
+        </TopAccentAttachment>
+        <TopAccentAttachment index="1">
+          <Value value="-230"/>
+        </TopAccentAttachment>
+        <TopAccentAttachment index="2">
+          <Value value="345"/>
+        </TopAccentAttachment>
+        <TopAccentAttachment index="3">
+          <Value value="476"/>
+        </TopAccentAttachment>
+        <TopAccentAttachment index="4">
+          <Value value="280"/>
+        </TopAccentAttachment>
+        <TopAccentAttachment index="5">
+          <Value value="489"/>
+        </TopAccentAttachment>
+        <TopAccentAttachment index="6">
+          <Value value="730"/>
+        </TopAccentAttachment>
+        <TopAccentAttachment index="7">
+          <Value value="943"/>
+        </TopAccentAttachment>
+        <TopAccentAttachment index="8">
+          <Value value="1164"/>
+        </TopAccentAttachment>
+      </MathTopAccentAttachment>
+      <ExtendedShapeCoverage Format="1">
+        <Glyph value="parenleft.size1"/>
+        <Glyph value="parenleft.size2"/>
+        <Glyph value="parenleft.size3"/>
+        <Glyph value="parenleft.size4"/>
+      </ExtendedShapeCoverage>
+      <MathKernInfo>
+        <MathKernCoverage Format="1">
+          <Glyph value="A"/>
+          <Glyph value="u1D400"/>
+        </MathKernCoverage>
+        <!-- MathKernCount=2 -->
+        <MathKernInfoRecords index="0">
+          <TopRightMathKern>
+            <!-- HeightCount=1 -->
+            <CorrectionHeight index="0">
+              <Value value="275"/>
+            </CorrectionHeight>
+            <KernValue index="0">
+              <Value value="-100"/>
+            </KernValue>
+            <KernValue index="1">
+              <Value value="-150"/>
+            </KernValue>
+          </TopRightMathKern>
+          <BottomRightMathKern>
+            <!-- HeightCount=0 -->
+            <KernValue index="0">
+              <Value value="50"/>
+            </KernValue>
+          </BottomRightMathKern>
+        </MathKernInfoRecords>
+        <MathKernInfoRecords index="1">
+          <TopRightMathKern>
+            <!-- HeightCount=1 -->
+            <CorrectionHeight index="0">
+              <Value value="275"/>
+            </CorrectionHeight>
+            <KernValue index="0">
+              <Value value="-100"/>
+            </KernValue>
+            <KernValue index="1">
+              <Value value="-150"/>
+            </KernValue>
+          </TopRightMathKern>
+          <BottomRightMathKern>
+            <!-- HeightCount=0 -->
+            <KernValue index="0">
+              <Value value="30"/>
+            </KernValue>
+          </BottomRightMathKern>
+        </MathKernInfoRecords>
+      </MathKernInfo>
+    </MathGlyphInfo>
+    <MathVariants>
+      <MinConnectorOverlap value="50"/>
+      <VertGlyphCoverage Format="1">
+        <Glyph value="parenleft"/>
+      </VertGlyphCoverage>
+      <HorizGlyphCoverage Format="1">
+        <Glyph value="uni0302"/>
+      </HorizGlyphCoverage>
+      <!-- VertGlyphCount=1 -->
+      <!-- HorizGlyphCount=1 -->
+      <VertGlyphConstruction index="0">
+        <GlyphAssembly>
+          <ItalicsCorrection>
+            <Value value="0"/>
+          </ItalicsCorrection>
+          <!-- PartCount=3 -->
+          <PartRecords index="0">
+            <glyph value="uni239D"/>
+            <StartConnectorLength value="0"/>
+            <EndConnectorLength value="150"/>
+            <FullAdvance value="1005"/>
+            <PartFlags value="0"/>
+          </PartRecords>
+          <PartRecords index="1">
+            <glyph value="uni239C"/>
+            <StartConnectorLength value="150"/>
+            <EndConnectorLength value="150"/>
+            <FullAdvance value="1010"/>
+            <PartFlags value="1"/>
+          </PartRecords>
+          <PartRecords index="2">
+            <glyph value="uni239B"/>
+            <StartConnectorLength value="150"/>
+            <EndConnectorLength value="0"/>
+            <FullAdvance value="1005"/>
+            <PartFlags value="0"/>
+          </PartRecords>
+        </GlyphAssembly>
+        <!-- VariantCount=5 -->
+        <MathGlyphVariantRecord index="0">
+          <VariantGlyph value="parenleft"/>
+          <AdvanceMeasurement value="854"/>
+        </MathGlyphVariantRecord>
+        <MathGlyphVariantRecord index="1">
+          <VariantGlyph value="parenleft.size1"/>
+          <AdvanceMeasurement value="1231"/>
+        </MathGlyphVariantRecord>
+        <MathGlyphVariantRecord index="2">
+          <VariantGlyph value="parenleft.size2"/>
+          <AdvanceMeasurement value="1846"/>
+        </MathGlyphVariantRecord>
+        <MathGlyphVariantRecord index="3">
+          <VariantGlyph value="parenleft.size3"/>
+          <AdvanceMeasurement value="2461"/>
+        </MathGlyphVariantRecord>
+        <MathGlyphVariantRecord index="4">
+          <VariantGlyph value="parenleft.size4"/>
+          <AdvanceMeasurement value="3076"/>
+        </MathGlyphVariantRecord>
+      </VertGlyphConstruction>
+      <HorizGlyphConstruction index="0">
+        <!-- VariantCount=6 -->
+        <MathGlyphVariantRecord index="0">
+          <VariantGlyph value="uni0302"/>
+          <AdvanceMeasurement value="312"/>
+        </MathGlyphVariantRecord>
+        <MathGlyphVariantRecord index="1">
+          <VariantGlyph value="uni0302.size1"/>
+          <AdvanceMeasurement value="561"/>
+        </MathGlyphVariantRecord>
+        <MathGlyphVariantRecord index="2">
+          <VariantGlyph value="uni0302.size2"/>
+          <AdvanceMeasurement value="980"/>
+        </MathGlyphVariantRecord>
+        <MathGlyphVariantRecord index="3">
+          <VariantGlyph value="uni0302.size3"/>
+          <AdvanceMeasurement value="1461"/>
+        </MathGlyphVariantRecord>
+        <MathGlyphVariantRecord index="4">
+          <VariantGlyph value="uni0302.size4"/>
+          <AdvanceMeasurement value="1887"/>
+        </MathGlyphVariantRecord>
+        <MathGlyphVariantRecord index="5">
+          <VariantGlyph value="uni0302.size5"/>
+          <AdvanceMeasurement value="2329"/>
+        </MathGlyphVariantRecord>
+      </HorizGlyphConstruction>
+    </MathVariants>
+  </MATH>
+
+  <hmtx>
+    <mtx name=".notdef" width="250" lsb="0"/>
+    <mtx name="A" width="722" lsb="15"/>
+    <mtx name="parenleft" width="333" lsb="48"/>
+    <mtx name="parenleft.size1" width="468" lsb="139"/>
+    <mtx name="parenleft.size2" width="589" lsb="139"/>
+    <mtx name="parenleft.size3" width="750" lsb="182"/>
+    <mtx name="parenleft.size4" width="808" lsb="124"/>
+    <mtx name="u1D400" width="722" lsb="9"/>
+    <mtx name="u1D435" width="696" lsb="38"/>
+    <mtx name="uni0302" width="0" lsb="-386"/>
+    <mtx name="uni0302.size1" width="560" lsb="0"/>
+    <mtx name="uni0302.size2" width="979" lsb="0"/>
+    <mtx name="uni0302.size3" width="1460" lsb="0"/>
+    <mtx name="uni0302.size4" width="1886" lsb="0"/>
+    <mtx name="uni0302.size5" width="2328" lsb="0"/>
+    <mtx name="uni239B" width="450" lsb="50"/>
+    <mtx name="uni239C" width="450" lsb="50"/>
+    <mtx name="uni239D" width="450" lsb="50"/>
+  </hmtx>
+
+</ttFont>

@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=2 -->
+            <FeatureIndex index="0" value="0"/>
+            <FeatureIndex index="1" value="1"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=2 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="kern"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="1">
+        <FeatureTag value="vkrn"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="1"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=2 -->
+      <Lookup index="0">
+        <!-- LookupType=1 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=8 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="one"/>
+            <Glyph value="two"/>
+            <Glyph value="three"/>
+            <Glyph value="five"/>
+          </Coverage>
+          <ValueFormat value="5"/>
+          <Value XPlacement="-80" XAdvance="-160"/>
+        </SinglePos>
+        <SinglePos index="1" Format="2">
+          <Coverage>
+            <Glyph value="four"/>
+            <Glyph value="six"/>
+            <Glyph value="four.oldstyle"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <!-- ValueCount=3 -->
+          <Value index="0" XAdvance="400"/>
+          <Value index="1" XAdvance="-200"/>
+          <Value index="2" XAdvance="401"/>
+        </SinglePos>
+        <SinglePos index="2" Format="1">
+          <Coverage>
+            <Glyph value="seven"/>
+            <Glyph value="eight"/>
+            <Glyph value="nine"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="-100"/>
+        </SinglePos>
+        <SinglePos index="3" Format="2">
+          <Coverage>
+            <Glyph value="P"/>
+            <Glyph value="Q"/>
+            <Glyph value="R"/>
+          </Coverage>
+          <ValueFormat value="5"/>
+          <!-- ValueCount=3 -->
+          <Value index="0" XPlacement="1" XAdvance="800"/>
+          <Value index="1" XPlacement="1" XAdvance="801"/>
+          <Value index="2" XPlacement="1" XAdvance="802"/>
+        </SinglePos>
+        <SinglePos index="4" Format="2">
+          <Coverage>
+            <Glyph value="S"/>
+            <Glyph value="T"/>
+            <Glyph value="U"/>
+          </Coverage>
+          <ValueFormat value="7"/>
+          <!-- ValueCount=3 -->
+          <Value index="0" XPlacement="1" YPlacement="1" XAdvance="803"/>
+          <Value index="1" XPlacement="1" YPlacement="1" XAdvance="804"/>
+          <Value index="2" XPlacement="1" YPlacement="1" XAdvance="805"/>
+        </SinglePos>
+        <SinglePos index="5" Format="1">
+          <Coverage>
+            <Glyph value="A"/>
+            <Glyph value="B"/>
+          </Coverage>
+          <ValueFormat value="127"/>
+          <Value XPlacement="1" YPlacement="2" XAdvance="3" YAdvance="4">
+            <XPlaDevice>
+              <StartSize value="11"/>
+              <EndSize value="12"/>
+              <DeltaFormat value="3"/>
+              <DeltaValue value="[111, 112]"/>
+            </XPlaDevice>
+            <YPlaDevice>
+              <StartSize value="13"/>
+              <EndSize value="14"/>
+              <DeltaFormat value="3"/>
+              <DeltaValue value="[113, 114]"/>
+            </YPlaDevice>
+            <XAdvDevice>
+              <StartSize value="16"/>
+              <EndSize value="16"/>
+              <DeltaFormat value="3"/>
+              <DeltaValue value="[116]"/>
+            </XAdvDevice>
+          </Value>
+        </SinglePos>
+        <SinglePos index="6" Format="1">
+          <Coverage>
+            <Glyph value="zero"/>
+          </Coverage>
+          <ValueFormat value="0"/>
+        </SinglePos>
+        <SinglePos index="7" Format="1">
+          <Coverage>
+            <Glyph value="C"/>
+          </Coverage>
+          <ValueFormat value="255"/>
+          <Value XPlacement="1" YPlacement="2" XAdvance="3" YAdvance="4">
+            <XPlaDevice>
+              <StartSize value="11"/>
+              <EndSize value="14"/>
+              <DeltaFormat value="1"/>
+              <DeltaValue value="[-2, 0, 0, 1]"/>
+            </XPlaDevice>
+            <YPlaDevice>
+              <StartSize value="13"/>
+              <EndSize value="15"/>
+              <DeltaFormat value="2"/>
+              <DeltaValue value="[-3, 0, 1]"/>
+            </YPlaDevice>
+            <XAdvDevice>
+              <StartSize value="11"/>
+              <EndSize value="14"/>
+              <DeltaFormat value="2"/>
+              <DeltaValue value="[-8, 0, 0, 7]"/>
+            </XAdvDevice>
+            <YAdvDevice>
+              <StartSize value="13"/>
+              <EndSize value="15"/>
+              <DeltaFormat value="3"/>
+              <DeltaValue value="[8, 0, 1]"/>
+            </YAdvDevice>
+          </Value>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="1">
+        <!-- LookupType=1 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="A"/>
+          </Coverage>
+          <ValueFormat value="8"/>
+          <Value YAdvance="-100"/>
+        </SinglePos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+</ttFont>

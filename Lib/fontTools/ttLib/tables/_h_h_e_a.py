@@ -2,11 +2,13 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
+from fontTools.misc.fixedTools import (
+	ensureVersionIsLong as fi2ve, versionToFixed as ve2fi)
 from . import DefaultTable
 
 hheaFormat = """
 		>  # big endian
-		tableVersion:           16.16F
+		tableVersion:           L
 		ascent:                 h
 		descent:                h
 		lineGap:                h
@@ -31,15 +33,16 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 	# Note: Keep in sync with table__v_h_e_a
 
 	dependencies = ['hmtx', 'glyf']
-	
+
 	def decompile(self, data, ttFont):
 		sstruct.unpack(hheaFormat, data, self)
-	
+
 	def compile(self, ttFont):
 		if ttFont.isLoaded('glyf') and ttFont.recalcBBoxes:
 			self.recalc(ttFont)
+		self.tableVersion = fi2ve(self.tableVersion)
 		return sstruct.pack(hheaFormat, self)
-	
+
 	def recalc(self, ttFont):
 		hmtxTable = ttFont['hmtx']
 		if 'glyf' in ttFont:
@@ -79,14 +82,19 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 		else:
 			# XXX CFF recalc...
 			pass
-	
+
 	def toXML(self, writer, ttFont):
 		formatstring, names, fixes = sstruct.getformat(hheaFormat)
 		for name in names:
 			value = getattr(self, name)
+			if name == "tableVersion":
+				value = fi2ve(value)
+				value = "0x%08x" % value
 			writer.simpletag(name, value=value)
 			writer.newline()
-	
-	def fromXML(self, name, attrs, content, ttFont):
-		setattr(self, name, safeEval(attrs["value"]))
 
+	def fromXML(self, name, attrs, content, ttFont):
+		if name == "tableVersion":
+			setattr(self, name, ve2fi(attrs["value"]))
+			return
+		setattr(self, name, safeEval(attrs["value"]))

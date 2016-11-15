@@ -1,0 +1,9 @@
+# OpenType Feature File specification, section 5.f.ii, example 3
+# "Specifying exceptions to the Chain Sub rule"
+# http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html
+
+feature test {
+    @LETTER = [a-z];
+    ignore substitute @LETTER a' n' d', a' n' d' @LETTER;
+    substitute a' n' d' by a_n_d;
+} test;

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="2.5">
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef"/><!-- contains no outline data -->
+
+  </glyf>
+
+  <hmtx>
+    <mtx name=".notdef" width="496" lsb="10"/>
+  </hmtx>
+
+</ttFont>

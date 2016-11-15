@@ -79,7 +79,7 @@ class Transform(object):
 		>>> t.scale(2)
 		<Transform [2 0 0 2 0 0]>
 		>>> t.scale(2.5, 5.5)
-		<Transform [2.5 0.0 0.0 5.5 0 0]>
+		<Transform [2.5 0 0 5.5 0 0]>
 		>>>
 		>>> t.scale(2, 3).transformPoint((100, 100))
 		(200, 300)
@@ -172,7 +172,7 @@ class Transform(object):
 			>>> import math
 			>>> t = Transform()
 			>>> t.skew(math.pi / 4)
-			<Transform [1.0 0.0 1.0 1.0 0 0]>
+			<Transform [1 0 1 1 0 0]>
 			>>>
 		"""
 		import math
@@ -282,9 +282,9 @@ class Transform(object):
 			>>> t1 = Identity.scale(0.2, 0.3).translate(0.4, 0.6)
 			>>> t2 = Identity.translate(0.08, 0.18).scale(0.2, 0.3)
 			>>> t1
-			<Transform [0.2 0.0 0.0 0.3 0.08 0.18]>
+			<Transform [0.2 0 0 0.3 0.08 0.18]>
 			>>> t2
-			<Transform [0.2 0.0 0.0 0.3 0.08 0.18]>
+			<Transform [0.2 0 0 0.3 0.08 0.18]>
 			>>> t1 == t2
 			0
 			>>>
@@ -306,23 +306,44 @@ class Transform(object):
 			>>> t1 = Identity.scale(0.2, 0.3).translate(0.4, 0.6)
 			>>> t2 = Identity.translate(0.08, 0.18).scale(0.2, 0.3)
 			>>> t1
-			<Transform [0.2 0.0 0.0 0.3 0.08 0.18]>
+			<Transform [0.2 0 0 0.3 0.08 0.18]>
 			>>> t2
-			<Transform [0.2 0.0 0.0 0.3 0.08 0.18]>
+			<Transform [0.2 0 0 0.3 0.08 0.18]>
 			>>> d = {t1: None}
 			>>> d
-			{<Transform [0.2 0.0 0.0 0.3 0.08 0.18]>: None}
+			{<Transform [0.2 0 0 0.3 0.08 0.18]>: None}
 			>>> d[t2]
 			Traceback (most recent call last):
 			  File "<stdin>", line 1, in ?
-			KeyError: <Transform [0.2 0.0 0.0 0.3 0.08 0.18]>
+			KeyError: <Transform [0.2 0 0 0.3 0.08 0.18]>
 			>>>
 		"""
 		return hash(self.__affine)
 
+	def __bool__(self):
+		"""Returns True if transform is not identity, False otherwise.
+			>>> bool(Identity)
+			False
+			>>> bool(Transform())
+			False
+			>>> bool(Scale(1.))
+			False
+			>>> bool(Scale(2))
+			True
+			>>> bool(Offset())
+			False
+			>>> bool(Offset(0))
+			False
+			>>> bool(Offset(2))
+			True
+		"""
+		return self.__affine != Identity.__affine
+
+	__nonzero__ = __bool__
+
 	def __repr__(self):
-		return "<%s [%s %s %s %s %s %s]>" % ((self.__class__.__name__,) \
-				 + tuple(map(str, self.__affine)))
+		return "<%s [%g %g %g %g %g %g]>" % ((self.__class__.__name__,) \
+				+ self.__affine)
 
 
 Identity = Transform()
@@ -352,5 +373,6 @@ def Scale(x, y=None):
 
 
 if __name__ == "__main__":
+	import sys
 	import doctest
-	doctest.testmod()
+	sys.exit(doctest.testmod().failed)

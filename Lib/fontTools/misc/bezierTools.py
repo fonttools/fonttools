@@ -18,7 +18,8 @@ __all__ = [
 
 from fontTools.misc.arrayTools import calcBounds
 
-epsilon = 1e-12
+epsilonDigits = 6
+epsilon = 1e-10
 
 
 def calcQuadraticBounds(pt1, pt2, pt3):
@@ -50,7 +51,7 @@ def calcCubicBounds(pt1, pt2, pt3, pt4):
         (0, 0, 100, 75.0)
         >>> calcCubicBounds((0, 0), (50, 0), (100, 50), (100, 100))
         (0.0, 0.0, 100, 100)
-        >>> print "%f %f %f %f" % calcCubicBounds((50, 0), (0, 100), (100, 100), (50, 0))
+        >>> print("%f %f %f %f" % calcCubicBounds((50, 0), (0, 100), (100, 100), (50, 0)))
         35.566243 0.000000 64.433757 75.000000
     """
     (ax, ay), (bx, by), (cx, cy), (dx, dy) = calcCubicParameters(pt1, pt2, pt3, pt4)
@@ -62,7 +63,7 @@ def calcCubicBounds(pt1, pt2, pt3, pt4):
     xRoots = [t for t in solveQuadratic(ax3, bx2, cx) if 0 <= t < 1]
     yRoots = [t for t in solveQuadratic(ay3, by2, cy) if 0 <= t < 1]
     roots = xRoots + yRoots
-    
+
     points = [(ax*t*t*t + bx*t*t + cx * t + dx, ay*t*t*t + by*t*t + cy * t + dy) for t in roots] + [pt1, pt4]
     return calcBounds(points)
 
@@ -75,16 +76,22 @@ def splitLine(pt1, pt2, where, isHorizontal):
     line.
 
         >>> printSegments(splitLine((0, 0), (100, 100), 50, True))
-        ((0, 0), (50.0, 50.0))
-        ((50.0, 50.0), (100, 100))
+        ((0, 0), (50, 50))
+        ((50, 50), (100, 100))
         >>> printSegments(splitLine((0, 0), (100, 100), 100, True))
         ((0, 0), (100, 100))
         >>> printSegments(splitLine((0, 0), (100, 100), 0, True))
-        ((0, 0), (0.0, 0.0))
-        ((0.0, 0.0), (100, 100))
+        ((0, 0), (0, 0))
+        ((0, 0), (100, 100))
         >>> printSegments(splitLine((0, 0), (100, 100), 0, False))
-        ((0, 0), (0.0, 0.0))
-        ((0.0, 0.0), (100, 100))
+        ((0, 0), (0, 0))
+        ((0, 0), (100, 100))
+        >>> printSegments(splitLine((100, 0), (0, 0), 50, False))
+        ((100, 0), (50, 0))
+        ((50, 0), (0, 0))
+        >>> printSegments(splitLine((0, 100), (0, 0), 50, True))
+        ((0, 100), (0, 50))
+        ((0, 50), (0, 0))
     """
     pt1x, pt1y = pt1
     pt2x, pt2y = pt2
@@ -95,10 +102,11 @@ def splitLine(pt1, pt2, where, isHorizontal):
     bx = pt1x
     by = pt1y
 
-    if ax == 0:
-        return [(pt1, pt2)]
+    a = (ax, ay)[isHorizontal]
 
-    t = (where - (bx, by)[isHorizontal]) / ax
+    if a == 0:
+        return [(pt1, pt2)]
+    t = (where - (bx, by)[isHorizontal]) / a
     if 0 <= t < 1:
         midPt = ax * t + bx, ay * t + by
         return [(pt1, midPt), (midPt, pt2)]
@@ -114,20 +122,20 @@ def splitQuadratic(pt1, pt2, pt3, where, isHorizontal):
         >>> printSegments(splitQuadratic((0, 0), (50, 100), (100, 0), 150, False))
         ((0, 0), (50, 100), (100, 0))
         >>> printSegments(splitQuadratic((0, 0), (50, 100), (100, 0), 50, False))
-        ((0.0, 0.0), (25.0, 50.0), (50.0, 50.0))
-        ((50.0, 50.0), (75.0, 50.0), (100.0, 0.0))
+        ((0, 0), (25, 50), (50, 50))
+        ((50, 50), (75, 50), (100, 0))
         >>> printSegments(splitQuadratic((0, 0), (50, 100), (100, 0), 25, False))
-        ((0.0, 0.0), (12.5, 25.0), (25.0, 37.5))
-        ((25.0, 37.5), (62.5, 75.0), (100.0, 0.0))
+        ((0, 0), (12.5, 25), (25, 37.5))
+        ((25, 37.5), (62.5, 75), (100, 0))
         >>> printSegments(splitQuadratic((0, 0), (50, 100), (100, 0), 25, True))
-        ((0.0, 0.0), (7.32233047034, 14.6446609407), (14.6446609407, 25.0))
-        ((14.6446609407, 25.0), (50.0, 75.0), (85.3553390593, 25.0))
-        ((85.3553390593, 25.0), (92.6776695297, 14.6446609407), (100.0, -7.1054273576e-15))
+        ((0, 0), (7.32233, 14.6447), (14.6447, 25))
+        ((14.6447, 25), (50, 75), (85.3553, 25))
+        ((85.3553, 25), (92.6777, 14.6447), (100, -7.10543e-15))
         >>> # XXX I'm not at all sure if the following behavior is desirable:
         >>> printSegments(splitQuadratic((0, 0), (50, 100), (100, 0), 50, True))
-        ((0.0, 0.0), (25.0, 50.0), (50.0, 50.0))
-        ((50.0, 50.0), (50.0, 50.0), (50.0, 50.0))
-        ((50.0, 50.0), (75.0, 50.0), (100.0, 0.0))
+        ((0, 0), (25, 50), (50, 50))
+        ((50, 50), (50, 50), (50, 50))
+        ((50, 50), (75, 50), (100, 0))
     """
     a, b, c = calcQuadraticParameters(pt1, pt2, pt3)
     solutions = solveQuadratic(a[isHorizontal], b[isHorizontal],
@@ -146,12 +154,12 @@ def splitCubic(pt1, pt2, pt3, pt4, where, isHorizontal):
         >>> printSegments(splitCubic((0, 0), (25, 100), (75, 100), (100, 0), 150, False))
         ((0, 0), (25, 100), (75, 100), (100, 0))
         >>> printSegments(splitCubic((0, 0), (25, 100), (75, 100), (100, 0), 50, False))
-        ((0.0, 0.0), (12.5, 50.0), (31.25, 75.0), (50.0, 75.0))
-        ((50.0, 75.0), (68.75, 75.0), (87.5, 50.0), (100.0, 0.0))
+        ((0, 0), (12.5, 50), (31.25, 75), (50, 75))
+        ((50, 75), (68.75, 75), (87.5, 50), (100, 0))
         >>> printSegments(splitCubic((0, 0), (25, 100), (75, 100), (100, 0), 25, True))
-        ((0.0, 0.0), (2.2937927384, 9.17517095361), (4.79804488188, 17.5085042869), (7.47413641001, 25.0))
-        ((7.47413641001, 25.0), (31.2886200204, 91.6666666667), (68.7113799796, 91.6666666667), (92.52586359, 25.0))
-        ((92.52586359, 25.0), (95.2019551181, 17.5085042869), (97.7062072616, 9.17517095361), (100.0, 1.7763568394e-15))
+        ((0, 0), (2.29379, 9.17517), (4.79804, 17.5085), (7.47414, 25))
+        ((7.47414, 25), (31.2886, 91.6667), (68.7114, 91.6667), (92.5259, 25))
+        ((92.5259, 25), (95.202, 17.5085), (97.7062, 9.17517), (100, 1.77636e-15))
     """
     a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
     solutions = solveCubic(a[isHorizontal], b[isHorizontal], c[isHorizontal],
@@ -167,12 +175,12 @@ def splitQuadraticAtT(pt1, pt2, pt3, *ts):
     values of t. Return a list of curve segments.
 
         >>> printSegments(splitQuadraticAtT((0, 0), (50, 100), (100, 0), 0.5))
-        ((0.0, 0.0), (25.0, 50.0), (50.0, 50.0))
-        ((50.0, 50.0), (75.0, 50.0), (100.0, 0.0))
+        ((0, 0), (25, 50), (50, 50))
+        ((50, 50), (75, 50), (100, 0))
         >>> printSegments(splitQuadraticAtT((0, 0), (50, 100), (100, 0), 0.5, 0.75))
-        ((0.0, 0.0), (25.0, 50.0), (50.0, 50.0))
-        ((50.0, 50.0), (62.5, 50.0), (75.0, 37.5))
-        ((75.0, 37.5), (87.5, 25.0), (100.0, 0.0))
+        ((0, 0), (25, 50), (50, 50))
+        ((50, 50), (62.5, 50), (75, 37.5))
+        ((75, 37.5), (87.5, 25), (100, 0))
     """
     a, b, c = calcQuadraticParameters(pt1, pt2, pt3)
     return _splitQuadraticAtT(a, b, c, *ts)
@@ -183,12 +191,12 @@ def splitCubicAtT(pt1, pt2, pt3, pt4, *ts):
     values of t. Return a list of curve segments.
 
         >>> printSegments(splitCubicAtT((0, 0), (25, 100), (75, 100), (100, 0), 0.5))
-        ((0.0, 0.0), (12.5, 50.0), (31.25, 75.0), (50.0, 75.0))
-        ((50.0, 75.0), (68.75, 75.0), (87.5, 50.0), (100.0, 0.0))
+        ((0, 0), (12.5, 50), (31.25, 75), (50, 75))
+        ((50, 75), (68.75, 75), (87.5, 50), (100, 0))
         >>> printSegments(splitCubicAtT((0, 0), (25, 100), (75, 100), (100, 0), 0.5, 0.75))
-        ((0.0, 0.0), (12.5, 50.0), (31.25, 75.0), (50.0, 75.0))
-        ((50.0, 75.0), (59.375, 75.0), (68.75, 68.75), (77.34375, 56.25))
-        ((77.34375, 56.25), (85.9375, 43.75), (93.75, 25.0), (100.0, 0.0))
+        ((0, 0), (12.5, 50), (31.25, 75), (50, 75))
+        ((50, 75), (59.375, 75), (68.75, 68.75), (77.3438, 56.25))
+        ((77.3438, 56.25), (85.9375, 43.75), (93.75, 25), (100, 0))
     """
     a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
     return _splitCubicAtT(a, b, c, d, *ts)
@@ -207,13 +215,15 @@ def _splitQuadraticAtT(a, b, c, *ts):
         t2 = ts[i+1]
         delta = (t2 - t1)
         # calc new a, b and c
-        a1x = ax * delta**2
-        a1y = ay * delta**2
+        delta_2 = delta*delta
+        a1x = ax * delta_2
+        a1y = ay * delta_2
         b1x = (2*ax*t1 + bx) * delta
         b1y = (2*ay*t1 + by) * delta
-        c1x = ax*t1**2 + bx*t1 + cx
-        c1y = ay*t1**2 + by*t1 + cy
-    
+        t1_2 = t1*t1
+        c1x = ax*t1_2 + bx*t1 + cx
+        c1y = ay*t1_2 + by*t1 + cy
+
         pt1, pt2, pt3 = calcQuadraticPoints((a1x, a1y), (b1x, b1y), (c1x, c1y))
         segments.append((pt1, pt2, pt3))
     return segments
@@ -232,15 +242,21 @@ def _splitCubicAtT(a, b, c, d, *ts):
         t1 = ts[i]
         t2 = ts[i+1]
         delta = (t2 - t1)
+
+        delta_2 = delta*delta
+        delta_3 = delta*delta_2
+        t1_2 = t1*t1
+        t1_3 = t1*t1_2
+
         # calc new a, b, c and d
-        a1x = ax * delta**3
-        a1y = ay * delta**3
-        b1x = (3*ax*t1 + bx) * delta**2
-        b1y = (3*ay*t1 + by) * delta**2
-        c1x = (2*bx*t1 + cx + 3*ax*t1**2) * delta
-        c1y = (2*by*t1 + cy + 3*ay*t1**2) * delta
-        d1x = ax*t1**3 + bx*t1**2 + cx*t1 + dx
-        d1y = ay*t1**3 + by*t1**2 + cy*t1 + dy
+        a1x = ax * delta_3
+        a1y = ay * delta_3
+        b1x = (3*ax*t1 + bx) * delta_2
+        b1y = (3*ay*t1 + by) * delta_2
+        c1x = (2*bx*t1 + cx + 3*ax*t1_2) * delta
+        c1y = (2*by*t1 + cy + 3*ay*t1_2) * delta
+        d1x = ax*t1_3 + bx*t1_2 + cx*t1 + dx
+        d1y = ay*t1_3 + by*t1_2 + cy*t1 + dy
         pt1, pt2, pt3, pt4 = calcCubicPoints((a1x, a1y), (b1x, b1y), (c1x, c1y), (d1x, d1y))
         segments.append((pt1, pt2, pt3, pt4))
     return segments
@@ -284,6 +300,19 @@ def solveCubic(a, b, c, d):
         a*x*x*x + b*x*x + c*x + d = 0
     This function returns a list of roots. Note that the returned list
     is neither guaranteed to be sorted nor to contain unique values!
+
+    >>> solveCubic(1, 1, -6, 0)
+    [-3.0, -0.0, 2.0]
+    >>> solveCubic(-10.0, -9.0, 48.0, -29.0)
+    [-2.9, 1.0, 1.0]
+    >>> solveCubic(-9.875, -9.0, 47.625, -28.75)
+    [-2.911392, 1.0, 1.0]
+    >>> solveCubic(1.0, -4.5, 6.75, -3.375)
+    [1.5, 1.5, 1.5]
+    >>> solveCubic(-12.0, 18.0, -9.0, 1.50023651123)
+    [0.5, 0.5, 0.5]
+    >>> solveCubic(9.0, 0.0, 0.0, -7.62939453125e-05)
+    [-0.0, -0.0, -0.0]
     """
     #
     # adapted from:
@@ -299,27 +328,49 @@ def solveCubic(a, b, c, d):
     a1 = b/a
     a2 = c/a
     a3 = d/a
-    
+
     Q = (a1*a1 - 3.0*a2)/9.0
     R = (2.0*a1*a1*a1 - 9.0*a1*a2 + 27.0*a3)/54.0
-    R2_Q3 = R*R - Q*Q*Q
 
-    if R2_Q3 < 0:
-        theta = acos(R/sqrt(Q*Q*Q))
+    R2 = R*R
+    Q3 = Q*Q*Q
+    R2 = 0 if R2 < epsilon else R2
+    Q3 = 0 if abs(Q3) < epsilon else Q3
+
+    R2_Q3 = R2 - Q3
+
+    if R2 == 0. and Q3 == 0.:
+        x = round(-a1/3.0, epsilonDigits)
+        return [x, x, x]
+    elif R2_Q3 <= epsilon * .5:
+        # The epsilon * .5 above ensures that Q3 is not zero.
+        theta = acos(max(min(R/sqrt(Q3), 1.0), -1.0))
         rQ2 = -2.0*sqrt(Q)
-        x0 = rQ2*cos(theta/3.0) - a1/3.0
-        x1 = rQ2*cos((theta+2.0*pi)/3.0) - a1/3.0
-        x2 = rQ2*cos((theta+4.0*pi)/3.0) - a1/3.0
+        a1_3 = a1/3.0
+        x0 = rQ2*cos(theta/3.0) - a1_3
+        x1 = rQ2*cos((theta+2.0*pi)/3.0) - a1_3
+        x2 = rQ2*cos((theta+4.0*pi)/3.0) - a1_3
+        x0, x1, x2 = sorted([x0, x1, x2])
+        # Merge roots that are close-enough
+        if x1 - x0 < epsilon and x2 - x1 < epsilon:
+            x0 = x1 = x2 = round((x0 + x1 + x2) / 3., epsilonDigits)
+        elif x1 - x0 < epsilon:
+            x0 = x1 = round((x0 + x1) / 2., epsilonDigits)
+            x2 = round(x2, epsilonDigits)
+        elif x2 - x1 < epsilon:
+            x0 = round(x0, epsilonDigits)
+            x1 = x2 = round((x1 + x2) / 2., epsilonDigits)
+        else:
+            x0 = round(x0, epsilonDigits)
+            x1 = round(x1, epsilonDigits)
+            x2 = round(x2, epsilonDigits)
         return [x0, x1, x2]
     else:
-        if Q == 0 and R == 0:
-            x = 0
-        else:
-            x = pow(sqrt(R2_Q3)+abs(R), 1/3.0)
-            x = x + Q/x
+        x = pow(sqrt(R2_Q3)+abs(R), 1/3.0)
+        x = x + Q/x
         if R >= 0.0:
             x = -x
-        x = x - a1/3.0
+        x = round(x - a1/3.0, epsilonDigits)
         return [x]
 
 
@@ -389,7 +440,7 @@ def _segmentrepr(obj):
     try:
         it = iter(obj)
     except TypeError:
-        return str(obj)
+        return "%g" % obj
     else:
         return "(%s)" % ", ".join([_segmentrepr(x) for x in it])
 
@@ -402,5 +453,6 @@ def printSegments(segments):
         print(_segmentrepr(segment))
 
 if __name__ == "__main__":
+    import sys
     import doctest
-    doctest.testmod()
+    sys.exit(doctest.testmod().failed)

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GDEF>
+    <Version value="0x00010000"/>
+    <GlyphClassDef>
+      <ClassDef glyph="a" class="1"/>
+      <ClassDef glyph="b" class="2"/>
+      <ClassDef glyph="c" class="3"/>
+      <ClassDef glyph="d" class="4"/>
+      <ClassDef glyph="e" class="1"/>
+      <ClassDef glyph="f" class="2"/>
+      <ClassDef glyph="g" class="3"/>
+      <ClassDef glyph="h" class="4"/>
+      <ClassDef glyph="i" class="1"/>
+      <ClassDef glyph="j" class="2"/>
+      <ClassDef glyph="k" class="3"/>
+      <ClassDef glyph="l" class="4"/>
+    </GlyphClassDef>
+  </GDEF>
+
+</ttFont>

@@ -1,0 +1,4 @@
+table name {
+  nameid 9 "Joachim M\00fcller-Lanc\00e9";    # Windows (Unicode)
+  nameid 9 1 "Joachim M\9fller-Lanc\8e";      # Macintosh (Mac Roman)
+} name;

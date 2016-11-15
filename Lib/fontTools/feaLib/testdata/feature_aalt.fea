@@ -1,0 +1,31 @@
+languagesystem DFLT dflt;
+
+feature aalt {
+    feature sups;
+    feature frac;
+    feature ordn;
+} aalt;
+
+feature sups {
+    sub one by onesuperior;
+    sub two by twosuperior;
+    sub three by threesuperior;
+} sups;
+
+feature frac {
+    sub one slash four by onequarter;
+    sub one slash two by onehalf;
+    sub three slash four by threequarters;
+} frac;
+
+feature ordn {
+    sub [zero one two three four five six seven eight nine] [A a]'
+        by ordfeminine;
+    sub [zero one two three four five six seven eight nine] [O o]'
+        by ordmasculine;
+} ordn;
+
+feature liga {
+    sub f i by f_i;
+    sub f l by f_l;
+} liga;

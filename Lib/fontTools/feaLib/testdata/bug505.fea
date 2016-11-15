@@ -1,0 +1,12 @@
+# https://github.com/behdad/fonttools/issues/505
+
+languagesystem armn dflt;
+languagesystem avst dflt;
+languagesystem bali dflt;
+languagesystem bamu dflt;
+
+feature test {
+    script linb;
+    script vai;
+    sub T by t;
+} test;

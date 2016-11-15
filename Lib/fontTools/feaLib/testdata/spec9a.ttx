@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <BASE>
+    <Version value="0x00010000"/>
+    <HorizAxis>
+      <BaseTagList>
+        <!-- BaseTagCount=2 -->
+        <BaselineTag index="0" value="ideo"/>
+        <BaselineTag index="1" value="romn"/>
+      </BaseTagList>
+      <BaseScriptList>
+        <!-- BaseScriptCount=6 -->
+        <BaseScriptRecord index="0">
+          <BaseScriptTag value="cyrl"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="1"/>
+              <!-- BaseCoordCount=2 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="-120"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="1">
+          <BaseScriptTag value="grek"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="1"/>
+              <!-- BaseCoordCount=2 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="-120"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="2">
+          <BaseScriptTag value="hang"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="0"/>
+              <!-- BaseCoordCount=2 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="-120"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="3">
+          <BaseScriptTag value="hani"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="0"/>
+              <!-- BaseCoordCount=2 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="-120"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="4">
+          <BaseScriptTag value="kana"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="0"/>
+              <!-- BaseCoordCount=2 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="-120"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="5">
+          <BaseScriptTag value="latn"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="1"/>
+              <!-- BaseCoordCount=2 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="-120"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+      </BaseScriptList>
+    </HorizAxis>
+  </BASE>
+
+</ttFont>

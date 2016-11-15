@@ -1,0 +1,5 @@
+table GDEF {
+    Attach [a e] 7;
+    Attach a 23;
+    Attach a 23;
+} GDEF;

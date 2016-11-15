@@ -2,10 +2,13 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
+from fontTools.misc.timeTools import timestampFromString, timestampToString, timestampNow
+from fontTools.misc.timeTools import epoch_diff as mac_epoch_diff # For backward compat
 from . import DefaultTable
-import time
-import calendar
+import logging
 
+
+log = logging.getLogger(__name__)
 
 headFormat = """
 		>	# big endian
@@ -29,21 +32,38 @@ headFormat = """
 """
 
 class table__h_e_a_d(DefaultTable.DefaultTable):
-	
+
 	dependencies = ['maxp', 'loca']
-	
+
 	def decompile(self, data, ttFont):
 		dummy, rest = sstruct.unpack2(headFormat, data, self)
 		if rest:
 			# this is quite illegal, but there seem to be fonts out there that do this
+			log.warning("extra bytes at the end of 'head' table")
 			assert rest == "\0\0"
-	
+
+		# For timestamp fields, ignore the top four bytes.  Some fonts have
+		# bogus values there.  Since till 2038 those bytes only can be zero,
+		# ignore them.
+		#
+		# https://github.com/behdad/fonttools/issues/99#issuecomment-66776810
+		for stamp in 'created', 'modified':
+			value = getattr(self, stamp)
+			if value > 0xFFFFFFFF:
+				log.warning("'%s' timestamp out of range; ignoring top bytes", stamp)
+				value &= 0xFFFFFFFF
+				setattr(self, stamp, value)
+			if value < 0x7C259DC0: # January 1, 1970 00:00:00
+				log.warning("'%s' timestamp seems very low; regarding as unix timestamp", stamp)
+				value += 0x7C259DC0
+				setattr(self, stamp, value)
+
 	def compile(self, ttFont):
 		if ttFont.recalcTimestamp:
-			self.modified = int(time.time() - mac_epoch_diff)
+			self.modified = timestampNow()
 		data = sstruct.pack(headFormat, self)
 		return data
-	
+
 	def toXML(self, writer, ttFont):
 		writer.comment("Most of this table will be recalculated by the compiler")
 		writer.newline()
@@ -51,10 +71,7 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 		for name in names:
 			value = getattr(self, name)
 			if name in ("created", "modified"):
-				try:
-					value = time.asctime(time.gmtime(max(0, value + mac_epoch_diff)))
-				except ValueError:
-					value = time.asctime(time.gmtime(0))
+				value = timestampToString(value)
 			if name in ("magicNumber", "checkSumAdjustment"):
 				if value < 0:
 					value = value + 0x100000000
@@ -65,17 +82,13 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 				value = num2binary(value, 16)
 			writer.simpletag(name, value=value)
 			writer.newline()
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		value = attrs["value"]
 		if name in ("created", "modified"):
-			value = calendar.timegm(time.strptime(value)) - mac_epoch_diff
+			value = timestampFromString(value)
 		elif name in ("macStyle", "flags"):
 			value = binary2num(value)
 		else:
 			value = safeEval(value)
 		setattr(self, name, value)
-
-
-# Difference between the original Mac epoch (1904) to the epoch on this machine.
-mac_epoch_diff = calendar.timegm((1904, 1, 1, 0, 0, 0, 0, 0, 0))

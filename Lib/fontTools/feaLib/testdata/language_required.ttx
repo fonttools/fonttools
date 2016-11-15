@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="latn"/>
+        <Script>
+          <!-- LangSysCount=3 -->
+          <LangSysRecord index="0">
+            <LangSysTag value="DEU "/>
+            <LangSys>
+              <ReqFeatureIndex value="0"/>
+              <!-- FeatureCount=1 -->
+              <FeatureIndex index="0" value="3"/>
+            </LangSys>
+          </LangSysRecord>
+          <LangSysRecord index="1">
+            <LangSysTag value="FRA "/>
+            <LangSys>
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=2 -->
+              <FeatureIndex index="0" value="1"/>
+              <FeatureIndex index="1" value="3"/>
+            </LangSys>
+          </LangSysRecord>
+          <LangSysRecord index="2">
+            <LangSysTag value="ITA "/>
+            <LangSys>
+              <ReqFeatureIndex value="2"/>
+              <!-- FeatureCount=1 -->
+              <FeatureIndex index="0" value="3"/>
+            </LangSys>
+          </LangSysRecord>
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=4 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="hlig"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="1">
+        <FeatureTag value="hlig"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="1"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="2">
+        <FeatureTag value="liga"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="2"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="3">
+        <FeatureTag value="scmp"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="3"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=4 -->
+      <Lookup index="0">
+        <!-- LookupType=4 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <LigatureSubst index="0">
+          <LigatureSet glyph="D">
+            <Ligature components="E,U" glyph="D.sc"/>
+          </LigatureSet>
+        </LigatureSubst>
+      </Lookup>
+      <Lookup index="1">
+        <!-- LookupType=4 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <LigatureSubst index="0">
+          <LigatureSet glyph="F">
+            <Ligature components="R,A" glyph="F.sc"/>
+          </LigatureSet>
+        </LigatureSubst>
+      </Lookup>
+      <Lookup index="2">
+        <!-- LookupType=4 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <LigatureSubst index="0">
+          <LigatureSet glyph="I">
+            <Ligature components="T,A" glyph="I.sc"/>
+          </LigatureSet>
+        </LigatureSubst>
+      </Lookup>
+      <Lookup index="3">
+        <!-- LookupType=1 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="a" out="A.sc"/>
+          <Substitution in="b" out="B.sc"/>
+          <Substitution in="c" out="C.sc"/>
+          <Substitution in="d" out="D.sc"/>
+          <Substitution in="e" out="E.sc"/>
+          <Substitution in="f" out="F.sc"/>
+          <Substitution in="g" out="G.sc"/>
+          <Substitution in="h" out="H.sc"/>
+          <Substitution in="i" out="I.sc"/>
+          <Substitution in="j" out="J.sc"/>
+          <Substitution in="k" out="K.sc"/>
+          <Substitution in="l" out="L.sc"/>
+          <Substitution in="m" out="M.sc"/>
+          <Substitution in="n" out="N.sc"/>
+          <Substitution in="o" out="O.sc"/>
+          <Substitution in="p" out="P.sc"/>
+          <Substitution in="q" out="Q.sc"/>
+          <Substitution in="r" out="R.sc"/>
+          <Substitution in="s" out="S.sc"/>
+          <Substitution in="t" out="T.sc"/>
+          <Substitution in="u" out="U.sc"/>
+          <Substitution in="v" out="V.sc"/>
+          <Substitution in="w" out="W.sc"/>
+          <Substitution in="x" out="X.sc"/>
+          <Substitution in="y" out="Y.sc"/>
+          <Substitution in="z" out="Z.sc"/>
+        </SingleSubst>
+      </Lookup>
+    </LookupList>
+  </GSUB>
+
+</ttFont>

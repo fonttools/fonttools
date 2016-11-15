@@ -40,7 +40,7 @@ DSIG_SignatureBlockFormat = """
 #
 
 class table_D_S_I_G_(DefaultTable.DefaultTable):
-	
+
 	def decompile(self, data, ttFont):
 		dummy, newData = sstruct.unpack2(DSIG_HeaderFormat, data, self)
 		assert self.ulVersion == 1, "DSIG ulVersion must be 1"
@@ -55,7 +55,7 @@ class table_D_S_I_G_(DefaultTable.DefaultTable):
 			assert sigrec.usReserved1 == 0, "DSIG signature record #%d usReserverd1 must be 0" % n
 			assert sigrec.usReserved2 == 0, "DSIG signature record #%d usReserverd2 must be 0" % n
 			sigrec.pkcs7 = newData[:sigrec.cbSignature]
-	
+
 	def compile(self, ttFont):
 		packed = sstruct.pack(DSIG_HeaderFormat, self)
 		headers = [packed]
@@ -76,7 +76,7 @@ class table_D_S_I_G_(DefaultTable.DefaultTable):
 			# Pad to even bytes
 			data.append(b'\0')
 		return bytesjoin(headers+data)
-	
+
 	def toXML(self, xmlWriter, ttFont):
 		xmlWriter.comment("note that the Digital Signature will be invalid after recompilation!")
 		xmlWriter.newline()
@@ -85,7 +85,7 @@ class table_D_S_I_G_(DefaultTable.DefaultTable):
 			xmlWriter.newline()
 			sigrec.toXML(xmlWriter, ttFont)
 		xmlWriter.newline()
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		if name == "tableHeader":
 			self.signatureRecords = []
@@ -115,7 +115,7 @@ def b64encode(b):
 class SignatureRecord(object):
 	def __repr__(self):
 		return "<%s: %s>" % (self.__class__.__name__, self.__dict__)
-	
+
 	def toXML(self, writer, ttFont):
 		writer.begintag(self.__class__.__name__, format=self.ulFormat)
 		writer.newline()
@@ -123,7 +123,7 @@ class SignatureRecord(object):
 		writer.write_noindent(b64encode(self.pkcs7))
 		writer.write_noindent("-----END PKCS7-----\n")
 		writer.endtag(self.__class__.__name__)
-	
+
 	def fromXML(self, name, attrs, content, ttFont):
 		self.ulFormat = safeEval(attrs["format"])
 		self.usReserved1 = safeEval(attrs.get("reserved1", "0"))

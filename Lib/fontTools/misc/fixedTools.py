@@ -3,10 +3,15 @@
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+import logging
+
+log = logging.getLogger(__name__)
 
 __all__ = [
-    "fixedToFloat",
-    "floatToFixed",
+	"fixedToFloat",
+	"floatToFixed",
+	"fixedToVersion",
+	"versionToFixed",
 ]
 
 def fixedToFloat(value, precisionBits):
@@ -14,52 +19,53 @@ def fixedToFloat(value, precisionBits):
 	that has the shortest decimal reprentation.  Eg. to convert a
 	fixed number in a 2.14 format, use precisionBits=14.  This is
 	pretty slow compared to a simple division.  Use sporadically.
-	
-	>>> fixedToFloat(13107, 14)
-	0.8
-	>>> fixedToFloat(0, 14)
-	0.0
-	>>> fixedToFloat(0x4000, 14)
-	1.0
-	"""
 
+	precisionBits is only supported up to 16.
+	"""
 	if not value: return 0.0
 
 	scale = 1 << precisionBits
 	value /= scale
 	eps = .5 / scale
-	digits = (precisionBits + 2) // 3
-	fmt = "%%.%df" % digits
-	lo = fmt % (value - eps)
-	hi = fmt % (value + eps)
-	out = []
-	length = min(len(lo), len(hi))
-	for i in range(length):
+	lo = value - eps
+	hi = value + eps
+	# If the range of valid choices spans an integer, return the integer.
+	if int(lo) != int(hi):
+		return float(round(value))
+	fmt = "%.8f"
+	lo = fmt % lo
+	hi = fmt % hi
+	assert len(lo) == len(hi) and lo != hi
+	for i in range(len(lo)):
 		if lo[i] != hi[i]:
-			break;
-		out.append(lo[i])
-	outlen = len(out)
-	if outlen < length:
-		out.append(max(lo[outlen], hi[outlen]))
-	return float(strjoin(out))
+			break
+	period = lo.find('.')
+	assert period < i
+	fmt = "%%.%df" % (i - period)
+	value = fmt % value
+	return float(value)
 
 def floatToFixed(value, precisionBits):
 	"""Converts a float to a fixed-point number given the number of
 	precisionBits.  Ie. int(round(value * (1<<precisionBits))).
-
-	>>> floatToFixed(0.8, 14)
-	13107
-	>>> floatToFixed(1.0, 14)
-	16384
-	>>> floatToFixed(1, 14)
-	16384
-	>>> floatToFixed(0, 14)
-	0
 	"""
-
 	return int(round(value * (1<<precisionBits)))
 
 
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+def ensureVersionIsLong(value):
+	"""Ensure a table version is an unsigned long (unsigned short major,
+	unsigned short minor) instead of a float."""
+	if value < 0x10000:
+		newValue = floatToFixed(value, 16)
+		log.warning(
+			"Table version value is a float: %.4f; "
+			"fix to use hex instead: 0x%08x", value, newValue)
+		value = newValue
+	return value
+
+
+def versionToFixed(value):
+	"""Converts a table version to a fixed"""
+	value = int(value, 0) if value.startswith("0") else float(value)
+	value = ensureVersionIsLong(value)
+	return value

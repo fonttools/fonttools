@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <name>
+    <namerecord nameID="9" platformID="3" platEncID="1" langID="0x409">
+      Joachim Müller-Lancé
+    </namerecord>
+    <namerecord nameID="9" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Joachim Müller-Lancé
+    </namerecord>
+  </name>
+
+</ttFont>

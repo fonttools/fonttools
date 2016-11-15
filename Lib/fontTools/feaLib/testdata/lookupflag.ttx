@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GDEF>
+    <Version value="0x00010002"/>
+    <GlyphClassDef>
+      <ClassDef glyph="cedilla" class="3"/>
+      <ClassDef glyph="ogonek" class="3"/>
+    </GlyphClassDef>
+    <MarkAttachClassDef>
+      <ClassDef glyph="acute" class="1"/>
+      <ClassDef glyph="cedilla" class="2"/>
+      <ClassDef glyph="grave" class="1"/>
+      <ClassDef glyph="macron" class="1"/>
+      <ClassDef glyph="ogonek" class="2"/>
+    </MarkAttachClassDef>
+    <MarkGlyphSetsDef>
+      <MarkSetTableFormat value="1"/>
+      <!-- MarkSetCount=2 -->
+      <Coverage index="0">
+        <Glyph value="grave"/>
+        <Glyph value="acute"/>
+        <Glyph value="macron"/>
+      </Coverage>
+      <Coverage index="1">
+        <Glyph value="grave"/>
+        <Glyph value="acute"/>
+        <Glyph value="dieresis"/>
+        <Glyph value="circumflex"/>
+        <Glyph value="cedilla"/>
+      </Coverage>
+    </MarkGlyphSetsDef>
+  </GDEF>
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="test"/>
+        <Feature>
+          <!-- LookupCount=12 -->
+          <LookupListIndex index="0" value="0"/>
+          <LookupListIndex index="1" value="1"/>
+          <LookupListIndex index="2" value="2"/>
+          <LookupListIndex index="3" value="3"/>
+          <LookupListIndex index="4" value="4"/>
+          <LookupListIndex index="5" value="5"/>
+          <LookupListIndex index="6" value="6"/>
+          <LookupListIndex index="7" value="7"/>
+          <LookupListIndex index="8" value="8"/>
+          <LookupListIndex index="9" value="9"/>
+          <LookupListIndex index="10" value="10"/>
+          <LookupListIndex index="11" value="11"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=12 -->
+      <Lookup index="0">
+        <!-- LookupType=1 -->
+        <LookupFlag value="1"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="one"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="1">
+        <!-- LookupType=1 -->
+        <LookupFlag value="2"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="two"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="2"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="2">
+        <!-- LookupType=1 -->
+        <LookupFlag value="4"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="four"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="4"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="3">
+        <!-- LookupType=1 -->
+        <LookupFlag value="7"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="seven"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="7"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="4">
+        <!-- LookupType=1 -->
+        <LookupFlag value="8"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="eight"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="8"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="5">
+        <!-- LookupType=1 -->
+        <LookupFlag value="256"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="F"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="6">
+        <!-- LookupType=1 -->
+        <LookupFlag value="512"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="G"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="7">
+        <!-- LookupType=1 -->
+        <LookupFlag value="260"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="H"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="8">
+        <!-- LookupType=1 -->
+        <LookupFlag value="16"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="I"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
+        <MarkFilteringSet value="0"/>
+      </Lookup>
+      <Lookup index="9">
+        <!-- LookupType=1 -->
+        <LookupFlag value="16"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="J"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
+        <MarkFilteringSet value="1"/>
+      </Lookup>
+      <Lookup index="10">
+        <!-- LookupType=1 -->
+        <LookupFlag value="20"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="K"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
+        <MarkFilteringSet value="0"/>
+      </Lookup>
+      <Lookup index="11">
+        <!-- LookupType=1 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="L"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+</ttFont>

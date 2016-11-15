@@ -1,0 +1,763 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.0">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name=".null"/>
+    <GlyphID id="2" name="nonmarkingreturn"/>
+    <GlyphID id="3" name="a"/>
+    <GlyphID id="4" name="b"/>
+    <GlyphID id="5" name="c"/>
+    <GlyphID id="6" name="smileface"/>
+    <GlyphID id="7" name="smileface.ffe08a"/>
+    <GlyphID id="8" name="smileface.e59b25"/>
+    <GlyphID id="9" name="smileface.84380d"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="1.0"/>
+    <checkSumAdjustment value="0xc1cca2c2"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00001011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Tue Dec  1 06:38:41 2015"/>
+    <modified value="Tue Dec  1 06:38:41 2015"/>
+    <xMin value="33"/>
+    <yMin value="0"/>
+    <xMax value="900"/>
+    <yMax value="800"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="8"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="1.0"/>
+    <ascent value="800"/>
+    <descent value="0"/>
+    <lineGap value="90"/>
+    <advanceWidthMax value="1000"/>
+    <minLeftSideBearing value="0"/>
+    <minRightSideBearing value="0"/>
+    <xMaxExtent value="900"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="7"/>
+  </hhea>
+
+  <maxp>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="0x10000"/>
+    <numGlyphs value="10"/>
+    <maxPoints value="50"/>
+    <maxContours value="5"/>
+    <maxCompositePoints value="0"/>
+    <maxCompositeContours value="0"/>
+    <maxZones value="2"/>
+    <maxTwilightPoints value="0"/>
+    <maxStorage value="1"/>
+    <maxFunctionDefs value="1"/>
+    <maxInstructionDefs value="0"/>
+    <maxStackElements value="64"/>
+    <maxSizeOfInstructions value="46"/>
+    <maxComponentElements value="0"/>
+    <maxComponentDepth value="0"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="4"/>
+    <xAvgCharWidth value="553"/>
+    <usWeightClass value="400"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000000"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="700"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="140"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="700"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="480"/>
+    <yStrikeoutSize value="49"/>
+    <yStrikeoutPosition value="258"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="2"/>
+      <bSerifStyle value="0"/>
+      <bWeight value="5"/>
+      <bProportion value="3"/>
+      <bContrast value="0"/>
+      <bStrokeVariation value="0"/>
+      <bArmStyle value="0"/>
+      <bLetterForm value="0"/>
+      <bMidline value="0"/>
+      <bXHeight value="0"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000001"/>
+    <ulUnicodeRange2 value="00000000 00000000 01000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="PfEd"/>
+    <fsSelection value="00000000 11000000"/>
+    <usFirstCharIndex value="97"/>
+    <usLastCharIndex value="9786"/>
+    <sTypoAscender value="800"/>
+    <sTypoDescender value="-200"/>
+    <sTypoLineGap value="90"/>
+    <usWinAscent value="800"/>
+    <usWinDescent value="0"/>
+    <ulCodePageRange1 value="00000000 00000000 00000000 00000001"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="205"/>
+    <sCapHeight value="0"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="1"/>
+  </OS_2>
+
+  <hmtx>
+    <mtx name=".notdef" width="364" lsb="33"/>
+    <mtx name=".null" width="0" lsb="0"/>
+    <mtx name="a" width="405" lsb="100"/>
+    <mtx name="b" width="405" lsb="100"/>
+    <mtx name="c" width="405" lsb="100"/>
+    <mtx name="nonmarkingreturn" width="333" lsb="0"/>
+    <mtx name="smileface" width="1000" lsb="100"/>
+    <mtx name="smileface.84380d" width="1000" lsb="238"/>
+    <mtx name="smileface.e59b25" width="1000" lsb="100"/>
+    <mtx name="smileface.ffe08a" width="1000" lsb="100"/>
+  </hmtx>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x61" name="a"/><!-- LATIN SMALL LETTER A -->
+      <map code="0x62" name="b"/><!-- LATIN SMALL LETTER B -->
+      <map code="0x63" name="c"/><!-- LATIN SMALL LETTER C -->
+      <map code="0x263a" name="smileface"/><!-- WHITE SMILING FACE -->
+    </cmap_format_4>
+    <cmap_format_0 platformID="1" platEncID="0" language="0">
+      <map code="0x0" name=".null"/>
+      <map code="0x1" name=".notdef"/>
+      <map code="0x2" name=".notdef"/>
+      <map code="0x3" name=".notdef"/>
+      <map code="0x4" name=".notdef"/>
+      <map code="0x5" name=".notdef"/>
+      <map code="0x6" name=".notdef"/>
+      <map code="0x7" name=".notdef"/>
+      <map code="0x8" name=".null"/>
+      <map code="0x9" name="nonmarkingreturn"/>
+      <map code="0xa" name=".notdef"/>
+      <map code="0xb" name=".notdef"/>
+      <map code="0xc" name=".notdef"/>
+      <map code="0xd" name="nonmarkingreturn"/>
+      <map code="0xe" name=".notdef"/>
+      <map code="0xf" name=".notdef"/>
+      <map code="0x10" name=".notdef"/>
+      <map code="0x11" name=".notdef"/>
+      <map code="0x12" name=".notdef"/>
+      <map code="0x13" name=".notdef"/>
+      <map code="0x14" name=".notdef"/>
+      <map code="0x15" name=".notdef"/>
+      <map code="0x16" name=".notdef"/>
+      <map code="0x17" name=".notdef"/>
+      <map code="0x18" name=".notdef"/>
+      <map code="0x19" name=".notdef"/>
+      <map code="0x1a" name=".notdef"/>
+      <map code="0x1b" name=".notdef"/>
+      <map code="0x1c" name=".notdef"/>
+      <map code="0x1d" name=".null"/>
+      <map code="0x1e" name=".notdef"/>
+      <map code="0x1f" name=".notdef"/>
+      <map code="0x20" name=".notdef"/>
+      <map code="0x21" name=".notdef"/>
+      <map code="0x22" name=".notdef"/>
+      <map code="0x23" name=".notdef"/>
+      <map code="0x24" name=".notdef"/>
+      <map code="0x25" name=".notdef"/>
+      <map code="0x26" name=".notdef"/>
+      <map code="0x27" name=".notdef"/>
+      <map code="0x28" name=".notdef"/>
+      <map code="0x29" name=".notdef"/>
+      <map code="0x2a" name=".notdef"/>
+      <map code="0x2b" name=".notdef"/>
+      <map code="0x2c" name=".notdef"/>
+      <map code="0x2d" name=".notdef"/>
+      <map code="0x2e" name=".notdef"/>
+      <map code="0x2f" name=".notdef"/>
+      <map code="0x30" name=".notdef"/>
+      <map code="0x31" name=".notdef"/>
+      <map code="0x32" name=".notdef"/>
+      <map code="0x33" name=".notdef"/>
+      <map code="0x34" name=".notdef"/>
+      <map code="0x35" name=".notdef"/>
+      <map code="0x36" name=".notdef"/>
+      <map code="0x37" name=".notdef"/>
+      <map code="0x38" name=".notdef"/>
+      <map code="0x39" name=".notdef"/>
+      <map code="0x3a" name=".notdef"/>
+      <map code="0x3b" name=".notdef"/>
+      <map code="0x3c" name=".notdef"/>
+      <map code="0x3d" name=".notdef"/>
+      <map code="0x3e" name=".notdef"/>
+      <map code="0x3f" name=".notdef"/>
+      <map code="0x40" name=".notdef"/>
+      <map code="0x41" name=".notdef"/>
+      <map code="0x42" name=".notdef"/>
+      <map code="0x43" name=".notdef"/>
+      <map code="0x44" name=".notdef"/>
+      <map code="0x45" name=".notdef"/>
+      <map code="0x46" name=".notdef"/>
+      <map code="0x47" name=".notdef"/>
+      <map code="0x48" name=".notdef"/>
+      <map code="0x49" name=".notdef"/>
+      <map code="0x4a" name=".notdef"/>
+      <map code="0x4b" name=".notdef"/>
+      <map code="0x4c" name=".notdef"/>
+      <map code="0x4d" name=".notdef"/>
+      <map code="0x4e" name=".notdef"/>
+      <map code="0x4f" name=".notdef"/>
+      <map code="0x50" name=".notdef"/>
+      <map code="0x51" name=".notdef"/>
+      <map code="0x52" name=".notdef"/>
+      <map code="0x53" name=".notdef"/>
+      <map code="0x54" name=".notdef"/>
+      <map code="0x55" name=".notdef"/>
+      <map code="0x56" name=".notdef"/>
+      <map code="0x57" name=".notdef"/>
+      <map code="0x58" name=".notdef"/>
+      <map code="0x59" name=".notdef"/>
+      <map code="0x5a" name=".notdef"/>
+      <map code="0x5b" name=".notdef"/>
+      <map code="0x5c" name=".notdef"/>
+      <map code="0x5d" name=".notdef"/>
+      <map code="0x5e" name=".notdef"/>
+      <map code="0x5f" name=".notdef"/>
+      <map code="0x60" name=".notdef"/>
+      <map code="0x61" name="a"/>
+      <map code="0x62" name="b"/>
+      <map code="0x63" name="c"/>
+      <map code="0x64" name=".notdef"/>
+      <map code="0x65" name=".notdef"/>
+      <map code="0x66" name=".notdef"/>
+      <map code="0x67" name=".notdef"/>
+      <map code="0x68" name=".notdef"/>
+      <map code="0x69" name=".notdef"/>
+      <map code="0x6a" name=".notdef"/>
+      <map code="0x6b" name=".notdef"/>
+      <map code="0x6c" name=".notdef"/>
+      <map code="0x6d" name=".notdef"/>
+      <map code="0x6e" name=".notdef"/>
+      <map code="0x6f" name=".notdef"/>
+      <map code="0x70" name=".notdef"/>
+      <map code="0x71" name=".notdef"/>
+      <map code="0x72" name=".notdef"/>
+      <map code="0x73" name=".notdef"/>
+      <map code="0x74" name=".notdef"/>
+      <map code="0x75" name=".notdef"/>
+      <map code="0x76" name=".notdef"/>
+      <map code="0x77" name=".notdef"/>
+      <map code="0x78" name=".notdef"/>
+      <map code="0x79" name=".notdef"/>
+      <map code="0x7a" name=".notdef"/>
+      <map code="0x7b" name=".notdef"/>
+      <map code="0x7c" name=".notdef"/>
+      <map code="0x7d" name=".notdef"/>
+      <map code="0x7e" name=".notdef"/>
+      <map code="0x7f" name=".notdef"/>
+      <map code="0x80" name=".notdef"/>
+      <map code="0x81" name=".notdef"/>
+      <map code="0x82" name=".notdef"/>
+      <map code="0x83" name=".notdef"/>
+      <map code="0x84" name=".notdef"/>
+      <map code="0x85" name=".notdef"/>
+      <map code="0x86" name=".notdef"/>
+      <map code="0x87" name=".notdef"/>
+      <map code="0x88" name=".notdef"/>
+      <map code="0x89" name=".notdef"/>
+      <map code="0x8a" name=".notdef"/>
+      <map code="0x8b" name=".notdef"/>
+      <map code="0x8c" name=".notdef"/>
+      <map code="0x8d" name=".notdef"/>
+      <map code="0x8e" name=".notdef"/>
+      <map code="0x8f" name=".notdef"/>
+      <map code="0x90" name=".notdef"/>
+      <map code="0x91" name=".notdef"/>
+      <map code="0x92" name=".notdef"/>
+      <map code="0x93" name=".notdef"/>
+      <map code="0x94" name=".notdef"/>
+      <map code="0x95" name=".notdef"/>
+      <map code="0x96" name=".notdef"/>
+      <map code="0x97" name=".notdef"/>
+      <map code="0x98" name=".notdef"/>
+      <map code="0x99" name=".notdef"/>
+      <map code="0x9a" name=".notdef"/>
+      <map code="0x9b" name=".notdef"/>
+      <map code="0x9c" name=".notdef"/>
+      <map code="0x9d" name=".notdef"/>
+      <map code="0x9e" name=".notdef"/>
+      <map code="0x9f" name=".notdef"/>
+      <map code="0xa0" name=".notdef"/>
+      <map code="0xa1" name=".notdef"/>
+      <map code="0xa2" name=".notdef"/>
+      <map code="0xa3" name=".notdef"/>
+      <map code="0xa4" name=".notdef"/>
+      <map code="0xa5" name=".notdef"/>
+      <map code="0xa6" name=".notdef"/>
+      <map code="0xa7" name=".notdef"/>
+      <map code="0xa8" name=".notdef"/>
+      <map code="0xa9" name=".notdef"/>
+      <map code="0xaa" name=".notdef"/>
+      <map code="0xab" name=".notdef"/>
+      <map code="0xac" name=".notdef"/>
+      <map code="0xad" name=".notdef"/>
+      <map code="0xae" name=".notdef"/>
+      <map code="0xaf" name=".notdef"/>
+      <map code="0xb0" name=".notdef"/>
+      <map code="0xb1" name=".notdef"/>
+      <map code="0xb2" name=".notdef"/>
+      <map code="0xb3" name=".notdef"/>
+      <map code="0xb4" name=".notdef"/>
+      <map code="0xb5" name=".notdef"/>
+      <map code="0xb6" name=".notdef"/>
+      <map code="0xb7" name=".notdef"/>
+      <map code="0xb8" name=".notdef"/>
+      <map code="0xb9" name=".notdef"/>
+      <map code="0xba" name=".notdef"/>
+      <map code="0xbb" name=".notdef"/>
+      <map code="0xbc" name=".notdef"/>
+      <map code="0xbd" name=".notdef"/>
+      <map code="0xbe" name=".notdef"/>
+      <map code="0xbf" name=".notdef"/>
+      <map code="0xc0" name=".notdef"/>
+      <map code="0xc1" name=".notdef"/>
+      <map code="0xc2" name=".notdef"/>
+      <map code="0xc3" name=".notdef"/>
+      <map code="0xc4" name=".notdef"/>
+      <map code="0xc5" name=".notdef"/>
+      <map code="0xc6" name=".notdef"/>
+      <map code="0xc7" name=".notdef"/>
+      <map code="0xc8" name=".notdef"/>
+      <map code="0xc9" name=".notdef"/>
+      <map code="0xca" name=".notdef"/>
+      <map code="0xcb" name=".notdef"/>
+      <map code="0xcc" name=".notdef"/>
+      <map code="0xcd" name=".notdef"/>
+      <map code="0xce" name=".notdef"/>
+      <map code="0xcf" name=".notdef"/>
+      <map code="0xd0" name=".notdef"/>
+      <map code="0xd1" name=".notdef"/>
+      <map code="0xd2" name=".notdef"/>
+      <map code="0xd3" name=".notdef"/>
+      <map code="0xd4" name=".notdef"/>
+      <map code="0xd5" name=".notdef"/>
+      <map code="0xd6" name=".notdef"/>
+      <map code="0xd7" name=".notdef"/>
+      <map code="0xd8" name=".notdef"/>
+      <map code="0xd9" name=".notdef"/>
+      <map code="0xda" name=".notdef"/>
+      <map code="0xdb" name=".notdef"/>
+      <map code="0xdc" name=".notdef"/>
+      <map code="0xdd" name=".notdef"/>
+      <map code="0xde" name=".notdef"/>
+      <map code="0xdf" name=".notdef"/>
+      <map code="0xe0" name=".notdef"/>
+      <map code="0xe1" name=".notdef"/>
+      <map code="0xe2" name=".notdef"/>
+      <map code="0xe3" name=".notdef"/>
+      <map code="0xe4" name=".notdef"/>
+      <map code="0xe5" name=".notdef"/>
+      <map code="0xe6" name=".notdef"/>
+      <map code="0xe7" name=".notdef"/>
+      <map code="0xe8" name=".notdef"/>
+      <map code="0xe9" name=".notdef"/>
+      <map code="0xea" name=".notdef"/>
+      <map code="0xeb" name=".notdef"/>
+      <map code="0xec" name=".notdef"/>
+      <map code="0xed" name=".notdef"/>
+      <map code="0xee" name=".notdef"/>
+      <map code="0xef" name=".notdef"/>
+      <map code="0xf0" name=".notdef"/>
+      <map code="0xf1" name=".notdef"/>
+      <map code="0xf2" name=".notdef"/>
+      <map code="0xf3" name=".notdef"/>
+      <map code="0xf4" name=".notdef"/>
+      <map code="0xf5" name=".notdef"/>
+      <map code="0xf6" name=".notdef"/>
+      <map code="0xf7" name=".notdef"/>
+      <map code="0xf8" name=".notdef"/>
+      <map code="0xf9" name=".notdef"/>
+      <map code="0xfa" name=".notdef"/>
+      <map code="0xfb" name=".notdef"/>
+      <map code="0xfc" name=".notdef"/>
+      <map code="0xfd" name=".notdef"/>
+      <map code="0xfe" name=".notdef"/>
+      <map code="0xff" name=".notdef"/>
+    </cmap_format_0>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x61" name="a"/><!-- LATIN SMALL LETTER A -->
+      <map code="0x62" name="b"/><!-- LATIN SMALL LETTER B -->
+      <map code="0x63" name="c"/><!-- LATIN SMALL LETTER C -->
+      <map code="0x263a" name="smileface"/><!-- WHITE SMILING FACE -->
+    </cmap_format_4>
+  </cmap>
+
+  <cvt>
+    <cv index="0" value="33"/>
+    <cv index="1" value="633"/>
+  </cvt>
+
+  <loca>
+    <!-- The 'loca' table will be calculated by the compiler -->
+  </loca>
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef" xMin="33" yMin="0" xMax="298" yMax="666">
+      <contour>
+        <pt x="33" y="0" on="1"/>
+        <pt x="33" y="666" on="1"/>
+        <pt x="298" y="666" on="1"/>
+        <pt x="298" y="0" on="1"/>
+      </contour>
+      <contour>
+        <pt x="66" y="33" on="1"/>
+        <pt x="265" y="33" on="1"/>
+        <pt x="265" y="633" on="1"/>
+        <pt x="66" y="633" on="1"/>
+      </contour>
+      <instructions><assembly>
+          PUSH[ ]	/* 2 values pushed */
+          1 0
+          MDAP[1]	/* MoveDirectAbsPt */
+          ALIGNRP[ ]	/* AlignRelativePt */
+          PUSH[ ]	/* 3 values pushed */
+          7 4 0
+          MIRP[01101]	/* MoveIndirectRelPt */
+          SHP[0]	/* ShiftPointByLastPoint */
+          PUSH[ ]	/* 2 values pushed */
+          6 5
+          MDRP[11100]	/* MoveDirectRelPt */
+          ALIGNRP[ ]	/* AlignRelativePt */
+          PUSH[ ]	/* 3 values pushed */
+          3 2 0
+          MIRP[01101]	/* MoveIndirectRelPt */
+          SHP[0]	/* ShiftPointByLastPoint */
+          SVTCA[0]	/* SetFPVectorToAxis */
+          PUSH[ ]	/* 2 values pushed */
+          3 0
+          MDAP[1]	/* MoveDirectAbsPt */
+          ALIGNRP[ ]	/* AlignRelativePt */
+          PUSH[ ]	/* 3 values pushed */
+          5 4 0
+          MIRP[01101]	/* MoveIndirectRelPt */
+          SHP[0]	/* ShiftPointByLastPoint */
+          PUSH[ ]	/* 3 values pushed */
+          7 6 1
+          MIRP[11100]	/* MoveIndirectRelPt */
+          ALIGNRP[ ]	/* AlignRelativePt */
+          PUSH[ ]	/* 3 values pushed */
+          1 2 0
+          MIRP[01101]	/* MoveIndirectRelPt */
+          SHP[0]	/* ShiftPointByLastPoint */
+        </assembly></instructions>
+    </TTGlyph>
+
+    <TTGlyph name=".null"/><!-- contains no outline data -->
+
+    <TTGlyph name="a" xMin="100" yMin="0" xMax="305" yMax="205">
+      <contour>
+        <pt x="100" y="205" on="1"/>
+        <pt x="305" y="205" on="1"/>
+        <pt x="305" y="0" on="1"/>
+        <pt x="100" y="0" on="1"/>
+      </contour>
+      <instructions><assembly>
+        </assembly></instructions>
+    </TTGlyph>
+
+    <TTGlyph name="b" xMin="100" yMin="0" xMax="305" yMax="205">
+      <contour>
+        <pt x="100" y="205" on="1"/>
+        <pt x="305" y="205" on="1"/>
+        <pt x="305" y="0" on="1"/>
+        <pt x="100" y="0" on="1"/>
+      </contour>
+      <instructions><assembly>
+        </assembly></instructions>
+    </TTGlyph>
+
+    <TTGlyph name="c" xMin="100" yMin="0" xMax="305" yMax="205">
+      <contour>
+        <pt x="100" y="205" on="1"/>
+        <pt x="305" y="205" on="1"/>
+        <pt x="305" y="0" on="1"/>
+        <pt x="100" y="0" on="1"/>
+      </contour>
+      <instructions><assembly>
+        </assembly></instructions>
+    </TTGlyph>
+
+    <TTGlyph name="nonmarkingreturn"/><!-- contains no outline data -->
+
+    <TTGlyph name="smileface" xMin="100" yMin="0" xMax="900" yMax="800">
+      <contour>
+        <pt x="733" y="348" on="0"/>
+        <pt x="761" y="336" on="0"/>
+        <pt x="755" y="322" on="1"/>
+        <pt x="724" y="256" on="0"/>
+        <pt x="582" y="183" on="0"/>
+        <pt x="500" y="182" on="1"/>
+        <pt x="417" y="181" on="0"/>
+        <pt x="279" y="251" on="0"/>
+        <pt x="245" y="321" on="1"/>
+        <pt x="238" y="333" on="0"/>
+        <pt x="251" y="341" on="1"/>
+        <pt x="263" y="348" on="0"/>
+        <pt x="271" y="335" on="1"/>
+        <pt x="301" y="275" on="0"/>
+        <pt x="425" y="211" on="0"/>
+        <pt x="575" y="213" on="0"/>
+        <pt x="701" y="277" on="0"/>
+        <pt x="727" y="334" on="1"/>
+      </contour>
+      <contour>
+        <pt x="100" y="234" on="0"/>
+        <pt x="100" y="566" on="0"/>
+        <pt x="334" y="800" on="0"/>
+        <pt x="666" y="800" on="0"/>
+        <pt x="900" y="566" on="0"/>
+        <pt x="900" y="234" on="0"/>
+        <pt x="666" y="0" on="0"/>
+        <pt x="334" y="0" on="0"/>
+      </contour>
+      <contour>
+        <pt x="130" y="553" on="0"/>
+        <pt x="130" y="247" on="0"/>
+        <pt x="347" y="30" on="0"/>
+        <pt x="653" y="30" on="0"/>
+        <pt x="870" y="247" on="0"/>
+        <pt x="870" y="553" on="0"/>
+        <pt x="653" y="770" on="0"/>
+        <pt x="347" y="770" on="0"/>
+      </contour>
+      <contour>
+        <pt x="623" y="482" on="0"/>
+        <pt x="623" y="554" on="0"/>
+        <pt x="646" y="606" on="0"/>
+        <pt x="680" y="606" on="0"/>
+        <pt x="703" y="554" on="0"/>
+        <pt x="703" y="482" on="0"/>
+        <pt x="680" y="430" on="0"/>
+        <pt x="646" y="430" on="0"/>
+      </contour>
+      <contour>
+        <pt x="297" y="482" on="0"/>
+        <pt x="297" y="554" on="0"/>
+        <pt x="320" y="606" on="0"/>
+        <pt x="354" y="606" on="0"/>
+        <pt x="377" y="554" on="0"/>
+        <pt x="377" y="482" on="0"/>
+        <pt x="354" y="430" on="0"/>
+        <pt x="320" y="430" on="0"/>
+      </contour>
+      <instructions><assembly>
+        </assembly></instructions>
+    </TTGlyph>
+
+    <TTGlyph name="smileface.84380d" xMin="238" yMin="181" xMax="761" yMax="606">
+      <contour>
+        <pt x="733" y="348" on="0"/>
+        <pt x="761" y="336" on="0"/>
+        <pt x="755" y="322" on="1"/>
+        <pt x="724" y="256" on="0"/>
+        <pt x="582" y="183" on="0"/>
+        <pt x="500" y="182" on="1"/>
+        <pt x="417" y="181" on="0"/>
+        <pt x="279" y="251" on="0"/>
+        <pt x="245" y="321" on="1"/>
+        <pt x="238" y="333" on="0"/>
+        <pt x="251" y="341" on="1"/>
+        <pt x="263" y="348" on="0"/>
+        <pt x="271" y="335" on="1"/>
+        <pt x="301" y="275" on="0"/>
+        <pt x="425" y="211" on="0"/>
+        <pt x="575" y="213" on="0"/>
+        <pt x="701" y="277" on="0"/>
+        <pt x="727" y="334" on="1"/>
+      </contour>
+      <contour>
+        <pt x="623" y="481" on="0"/>
+        <pt x="623" y="555" on="0"/>
+        <pt x="646" y="606" on="0"/>
+        <pt x="680" y="606" on="0"/>
+        <pt x="703" y="555" on="0"/>
+        <pt x="703" y="481" on="0"/>
+        <pt x="680" y="430" on="0"/>
+        <pt x="646" y="430" on="0"/>
+      </contour>
+      <contour>
+        <pt x="297" y="481" on="0"/>
+        <pt x="297" y="555" on="0"/>
+        <pt x="320" y="606" on="0"/>
+        <pt x="354" y="606" on="0"/>
+        <pt x="377" y="555" on="0"/>
+        <pt x="377" y="481" on="0"/>
+        <pt x="354" y="430" on="0"/>
+        <pt x="320" y="430" on="0"/>
+      </contour>
+      <instructions><assembly>
+        </assembly></instructions>
+    </TTGlyph>
+
+    <TTGlyph name="smileface.e59b25" xMin="100" yMin="0" xMax="900" yMax="800">
+      <contour>
+        <pt x="100" y="234" on="0"/>
+        <pt x="100" y="566" on="0"/>
+        <pt x="334" y="800" on="0"/>
+        <pt x="666" y="800" on="0"/>
+        <pt x="900" y="566" on="0"/>
+        <pt x="900" y="234" on="0"/>
+        <pt x="666" y="0" on="0"/>
+        <pt x="334" y="0" on="0"/>
+      </contour>
+      <contour>
+        <pt x="130" y="553" on="0"/>
+        <pt x="130" y="247" on="0"/>
+        <pt x="347" y="30" on="0"/>
+        <pt x="653" y="30" on="0"/>
+        <pt x="870" y="247" on="0"/>
+        <pt x="870" y="553" on="0"/>
+        <pt x="653" y="770" on="0"/>
+        <pt x="347" y="770" on="0"/>
+      </contour>
+      <instructions><assembly>
+        </assembly></instructions>
+    </TTGlyph>
+
+    <TTGlyph name="smileface.ffe08a" xMin="100" yMin="0" xMax="900" yMax="800">
+      <contour>
+        <pt x="100" y="234" on="0"/>
+        <pt x="100" y="566" on="0"/>
+        <pt x="334" y="800" on="0"/>
+        <pt x="666" y="800" on="0"/>
+        <pt x="900" y="566" on="0"/>
+        <pt x="900" y="234" on="0"/>
+        <pt x="666" y="0" on="0"/>
+        <pt x="334" y="0" on="0"/>
+      </contour>
+      <instructions><assembly>
+        </assembly></instructions>
+    </TTGlyph>
+
+  </glyf>
+
+  <name>
+    <namerecord nameID="0" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Created by Khaled Hosny with Sorts Mill Tools 2.1.0_alpha1 &lt;http://bitbucket.org/sortsmill/sortsmill-tools&gt;
+    </namerecord>
+    <namerecord nameID="1" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      TestCLR
+    </namerecord>
+    <namerecord nameID="2" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      FontForge : TestCLR : 1-12-2015
+    </namerecord>
+    <namerecord nameID="4" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      TestCLR
+    </namerecord>
+    <namerecord nameID="5" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Version 001.000 
+    </namerecord>
+    <namerecord nameID="6" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      TestCLR-Regular
+    </namerecord>
+    <namerecord nameID="0" platformID="3" platEncID="1" langID="0x409">
+      Created by Khaled Hosny with Sorts Mill Tools 2.1.0_alpha1 &lt;http://bitbucket.org/sortsmill/sortsmill-tools&gt;
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      TestCLR
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      FontForge : TestCLR : 1-12-2015
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      TestCLR
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 001.000 
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      TestCLR-Regular
+    </namerecord>
+  </name>
+
+  <post>
+    <formatType value="2.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-125"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+    <psNames>
+      <!-- This file uses unique glyph names based on the information
+           found in the 'post' table. Since these names might not be unique,
+           we have to invent artificial names in case of clashes. In order to
+           be able to retain the original information, we need a name to
+           ps name mapping for those cases where they differ. That's what
+           you see below.
+            -->
+    </psNames>
+    <extraNames>
+      <!-- following are the name that are not taken from the standard Mac glyph order -->
+      <psName name="smileface"/>
+      <psName name="smileface.ffe08a"/>
+      <psName name="smileface.e59b25"/>
+      <psName name="smileface.84380d"/>
+    </extraNames>
+  </post>
+
+  <COLR>
+    <version value="0"/>
+    <ColorGlyph name="smileface">
+      <layer colorID="0" name="smileface.ffe08a"/>
+      <layer colorID="1" name="smileface.e59b25"/>
+      <layer colorID="2" name="smileface.84380d"/>
+    </ColorGlyph>
+  </COLR>
+
+  <CPAL>
+    <version value="0"/>
+    <numPaletteEntries value="3"/>
+    <palette index="0">
+      <color index="0" value="#FFE08AFF"/>
+      <color index="1" value="#E59B25FF"/>
+      <color index="2" value="#84380DFF"/>
+    </palette>
+  </CPAL>
+
+</ttFont>

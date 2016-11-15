@@ -3,8 +3,12 @@ from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
+import sys
 import os
+import logging
 
+
+log = logging.getLogger(__name__)
 
 class TTXParseError(Exception): pass
 
@@ -12,34 +16,47 @@ BUFSIZE = 0x4000
 
 
 class XMLReader(object):
-	
-	def __init__(self, fileName, ttFont, progress=None, quiet=False):
+
+	def __init__(self, fileOrPath, ttFont, progress=None, quiet=None):
+		if fileOrPath == '-':
+			fileOrPath = sys.stdin
+		if not hasattr(fileOrPath, "read"):
+			self.file = open(fileOrPath, "rb")
+			self._closeStream = True
+		else:
+			# assume readable file object
+			self.file = fileOrPath
+			self._closeStream = False
 		self.ttFont = ttFont
-		self.fileName = fileName
 		self.progress = progress
-		self.quiet = quiet
+		if quiet is not None:
+			from fontTools.misc.loggingTools import deprecateArgument
+			deprecateArgument("quiet", "configure logging instead")
+			self.quiet = quiet
 		self.root = None
 		self.contentStack = []
 		self.stackSize = 0
-	
+
 	def read(self):
 		if self.progress:
-			import stat
-			self.progress.set(0, os.stat(self.fileName)[stat.ST_SIZE] // 100 or 1)
-		if not hasattr(self.fileName, "read"):
-		        file = open(self.fileName)
-                else:
-                        file = self.fileName
-		self._parseFile(file)
-		file.close()
-	
+			self.file.seek(0, 2)
+			fileSize = self.file.tell()
+			self.progress.set(0, fileSize // 100 or 1)
+			self.file.seek(0)
+		self._parseFile(self.file)
+		if self._closeStream:
+			self.close()
+
+	def close(self):
+		self.file.close()
+
 	def _parseFile(self, file):
 		from xml.parsers.expat import ParserCreate
 		parser = ParserCreate()
 		parser.StartElementHandler = self._startElementHandler
 		parser.EndElementHandler = self._endElementHandler
 		parser.CharacterDataHandler = self._characterDataHandler
-		
+
 		pos = 0
 		while True:
 			chunk = file.read(BUFSIZE)
@@ -50,7 +67,7 @@ class XMLReader(object):
 			if self.progress:
 				self.progress.set(pos // 100)
 			parser.Parse(chunk, 0)
-	
+
 	def _startElementHandler(self, name, attrs):
 		stackSize = self.stackSize
 		self.stackSize = stackSize + 1
@@ -66,20 +83,22 @@ class XMLReader(object):
 		elif stackSize == 1:
 			subFile = attrs.get("src")
 			if subFile is not None:
-				subFile = os.path.join(os.path.dirname(self.fileName), subFile)
-				subReader = XMLReader(subFile, self.ttFont, self.progress, self.quiet)
+				if hasattr(self.file, 'name'):
+					# if file has a name, get its parent directory
+					dirname = os.path.dirname(self.file.name)
+				else:
+					# else fall back to using the current working directory
+					dirname = os.getcwd()
+				subFile = os.path.join(dirname, subFile)
+				subReader = XMLReader(subFile, self.ttFont, self.progress)
 				subReader.read()
 				self.contentStack.append([])
 				return
 			tag = ttLib.xmlToTag(name)
 			msg = "Parsing '%s' table..." % tag
 			if self.progress:
-				self.progress.setlabel(msg)
-			elif self.ttFont.verbose:
-				ttLib.debugmsg(msg)
-			else:
-				if not self.quiet:
-					print(msg)
+				self.progress.setLabel(msg)
+			log.info(msg)
 			if tag == "GlyphOrder":
 				tableClass = ttLib.GlyphOrder
 			elif "ERROR" in attrs or ('raw' in attrs and safeEval(attrs['raw'])):
@@ -103,11 +122,11 @@ class XMLReader(object):
 			l = []
 			self.contentStack[-1].append((name, attrs, l))
 			self.contentStack.append(l)
-	
+
 	def _characterDataHandler(self, data):
 		if self.stackSize > 1:
 			self.contentStack[-1].append(data)
-	
+
 	def _endElementHandler(self, name):
 		self.stackSize = self.stackSize - 1
 		del self.contentStack[-1]
@@ -120,16 +139,15 @@ class XMLReader(object):
 
 
 class ProgressPrinter(object):
-	
+
 	def __init__(self, title, maxval=100):
 		print(title)
-	
+
 	def set(self, val, maxval=None):
 		pass
-	
+
 	def increment(self, val=1):
 		pass
-	
+
 	def setLabel(self, text):
 		print(text)
-

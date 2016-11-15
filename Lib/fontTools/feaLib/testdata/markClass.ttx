@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GDEF>
+    <Version value="0x00010000"/>
+    <GlyphClassDef>
+      <ClassDef glyph="acute" class="3"/>
+      <ClassDef glyph="breve" class="3"/>
+      <ClassDef glyph="cedilla" class="3"/>
+      <ClassDef glyph="dieresis" class="3"/>
+      <ClassDef glyph="grave" class="3"/>
+    </GlyphClassDef>
+  </GDEF>
+
+</ttFont>

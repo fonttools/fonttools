@@ -1,0 +1,9 @@
+@PUNC = [comma semicolon period];
+
+feature kern {
+  pos [A] @PUNC 1;
+  pos [B C] [comma] 2;
+  pos [D E F] [comma] 3;
+  pos [D E F] [semicolon period] 4;
+  pos [G] @PUNC <5 5 5 5>;
+} kern;

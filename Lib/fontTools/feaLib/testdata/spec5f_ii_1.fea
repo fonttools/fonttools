@@ -1,0 +1,9 @@
+# OpenType Feature File specification, section 5.f.ii, example 1
+# "Specifying exceptions to the Chain Sub rule"
+# http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html
+
+feature test {
+    ignore substitute f [a e] d';
+    ignore substitute a d' d;
+    substitute [a e n] d' by d.alt;
+} test;

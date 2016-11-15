@@ -1,0 +1,83 @@
+languagesystem DFLT dflt;
+
+@TOP_MARKS = [acute grave macron];
+markClass [cedilla ogonek] <anchor 350 -20> @BOTTOM_MARKS;
+@FRENCH_MARKS = [acute grave cedilla dieresis circumflex];
+
+lookup A {
+    lookupflag RightToLeft;
+    pos one 1;
+} A;
+
+lookup B {
+    lookupflag IgnoreBaseGlyphs;
+    pos two 2;
+} B;
+
+lookup C {
+    lookupflag IgnoreLigatures;
+    pos four 4;
+} C;
+
+lookup D {
+    lookupflag 7;
+    pos seven 7;
+} D;
+
+lookup E {
+    lookupflag IgnoreMarks;
+    pos eight 8;
+} E;
+
+lookup F {
+    lookupflag MarkAttachmentType @TOP_MARKS;
+    pos F 1;
+} F;
+
+lookup G {
+    lookupflag MarkAttachmentType @BOTTOM_MARKS;
+    pos G 1;
+} G;
+
+lookup H {
+    lookupflag IgnoreLigatures MarkAttachmentType @TOP_MARKS;
+    pos H 1;
+} H;
+
+lookup I {
+    lookupflag UseMarkFilteringSet @TOP_MARKS;
+    pos I 1;
+} I;
+
+lookup J {
+    # @FRENCH_MARKS overlaps with @TOP_MARKS.
+    # Other than with MarkAttachmentType, the same glyph may appear
+    # in multiple glyphsets for UseMarkFilteringSet. Make sure that
+    # our implementation can handle this.
+    lookupflag UseMarkFilteringSet @FRENCH_MARKS;
+    pos J 1;
+} J;
+
+lookup K {
+    lookupflag IgnoreLigatures UseMarkFilteringSet @TOP_MARKS;
+    pos K 1;
+} K;
+
+lookup L {
+    pos L 1;
+} L;
+
+feature test {
+    lookup A;
+    lookup B;
+    lookup C;
+    lookup D;
+    lookup E;
+    lookup F;
+    lookup G;
+    lookup H;
+    lookup I;
+    lookup J;
+    lookup K;
+    lookup L;
+} test;

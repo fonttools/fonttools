@@ -1,0 +1,16 @@
+languagesystem DFLT dflt;
+
+lookup ChainedSinglePos {
+    pos A one'1 two'2 one'-1 two'-2;
+} ChainedSinglePos;
+
+lookup L1 {pos one 100;} L1;
+lookup L2 {pos two 200;} L2;
+lookup ChainedContextualPos {
+    pos [A a] [B b] I' lookup L1 N' lookup L2 P' [Y y] [Z z];
+} ChainedContextualPos;
+
+feature test {
+    lookup ChainedSinglePos;
+    lookup ChainedContextualPos;
+} test;

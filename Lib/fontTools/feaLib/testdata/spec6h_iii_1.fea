@@ -1,0 +1,9 @@
+# OpenType Feature File specification, section 6.h.iii, example 1:
+# Specifying Contextual Positioning with in-line single positioning rules
+# http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html
+
+languagesystem DFLT dflt;
+
+feature test {
+    pos [quoteleft quotedblleft] [Y T]' <0 0 20 0> [quoteright quotedblright];
+} test;

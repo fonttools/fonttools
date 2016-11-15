@@ -1,0 +1,7 @@
+# OpenType Feature File specification, section 6.h.iii, example 3d:
+# Specifying Contextual Positioning with in-line single positioning rules
+# http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html
+
+feature test {
+    position L' quoteright' -150;
+} test;

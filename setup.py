@@ -1,53 +1,39 @@
 #! /usr/bin/env python
 
 from __future__ import print_function
-import os, sys
-from distutils.core import setup, Extension
-from distutils.command.build_ext import build_ext
+import sys
+from setuptools import setup, find_packages
+import versioneer
 
-try:
-	# load py2exe distutils extension, if available
-	import py2exe
-except ImportError:
-	pass
+# Force distutils to use py_compile.compile() function with 'doraise' argument
+# set to True, in order to raise an exception on compilation errors
+import py_compile
+orig_py_compile = py_compile.compile
 
-try:
-	import xml.parsers.expat
-except ImportError:
-	print("*** Warning: FontTools needs PyXML, see:")
-	print("        http://sourceforge.net/projects/pyxml/")
+def doraise_py_compile(file, cfile=None, dfile=None, doraise=False):
+	orig_py_compile(file, cfile=cfile, dfile=dfile, doraise=True)
 
+py_compile.compile = doraise_py_compile
 
-class build_ext_optional(build_ext):
-	"""build_ext command which doesn't abort when it fails."""
-	def build_extension(self, ext):
-		# Skip extensions which cannot be built
-		try:
-			build_ext.build_extension(self, ext)
-		except:
-			self.announce(
-				'*** WARNING: Building of extension "%s" '
-				'failed: %s' %
-				(ext.name, sys.exc_info()[1]))
+needs_pytest = {'pytest', 'test'}.intersection(sys.argv)
+pytest_runner = ['pytest_runner'] if needs_pytest else []
+needs_wheel = {'bdist_wheel'}.intersection(sys.argv)
+wheel = ['wheel'] if needs_wheel else []
 
-
-if sys.version_info > (2, 3, 0, 'alpha', 1):
-	# Trove classifiers for PyPI
-	classifiers = {"classifiers": [
-		"Development Status :: 4 - Beta",
-		"Environment :: Console",
-		"Environment :: Other Environment",
-		"Intended Audience :: Developers",
-		"Intended Audience :: End Users/Desktop",
-		"License :: OSI Approved :: BSD License",
-		"Natural Language :: English",
-		"Operating System :: OS Independent",
-		"Programming Language :: Python",
-		"Topic :: Multimedia :: Graphics",
-		"Topic :: Multimedia :: Graphics :: Graphics Conversion",
-	]}
-else:
-	classifiers = {}
+# Trove classifiers for PyPI
+classifiers = {"classifiers": [
+	"Development Status :: 4 - Beta",
+	"Environment :: Console",
+	"Environment :: Other Environment",
+	"Intended Audience :: Developers",
+	"Intended Audience :: End Users/Desktop",
+	"License :: OSI Approved :: BSD License",
+	"Natural Language :: English",
+	"Operating System :: OS Independent",
+	"Programming Language :: Python",
+	"Topic :: Multimedia :: Graphics",
+	"Topic :: Multimedia :: Graphics :: Graphics Conversion",
+]}
 
 long_description = """\
 FontTools/TTX is a library to manipulate font files from Python.
@@ -58,30 +44,37 @@ TrueType/OpenType fonts to and from an XML-based format.
 """
 
 setup(
-		name = "fonttools",
-		version = "2.4",
-		description = "Tools to manipulate font files",
-		author = "Just van Rossum",
-		author_email = "just@letterror.com",
-		maintainer = "Just van Rossum",
-		maintainer_email = "just@letterror.com",
-		url = "http://fonttools.sourceforge.net/",
-		license = "OpenSource, BSD-style",
-		platforms = ["Any"],
-		long_description = long_description,
-		
-		packages = [
-			"fontTools",
-			"fontTools.encodings",
-			"fontTools.misc",
-			"fontTools.pens",
-			"fontTools.ttLib",
-			"fontTools.ttLib.tables",
-		],
-		package_dir = {'': 'Lib'},
-		extra_path = 'FontTools',
-		scripts = ["Tools/ttx", "Tools/pyftsubset", "Tools/pyftinspect", "Tools/pyftmerge"],
-		cmdclass = {"build_ext": build_ext_optional},
-		data_files = [('share/man/man1', ["Doc/ttx.1"])],
-		**classifiers
-	)
+	name="fonttools",
+	version=versioneer.get_version(),
+	description="Tools to manipulate font files",
+	author="Just van Rossum",
+	author_email="just@letterror.com",
+	maintainer="Behdad Esfahbod",
+	maintainer_email="behdad@behdad.org",
+	url="http://github.com/fonttools/fonttools",
+	license="OpenSource, BSD-style",
+	platforms=["Any"],
+	long_description=long_description,
+	package_dir={'': 'Lib'},
+	packages=find_packages("Lib"),
+	py_modules=['sstruct', 'xmlWriter'],
+	include_package_data=True,
+	data_files=[
+		('share/man/man1', ["Doc/ttx.1"])
+	] if sys.platform.startswith('linux') else [],
+	setup_requires=pytest_runner + wheel,
+	tests_require=[
+		'pytest>=2.8',
+	],
+	entry_points={
+		'console_scripts': [
+			"fonttools = fontTools.__main__:main",
+			"ttx = fontTools.ttx:main",
+			"pyftsubset = fontTools.subset:main",
+			"pyftmerge = fontTools.merge:main",
+			"pyftinspect = fontTools.inspect:main"
+		]
+	},
+	cmdclass=versioneer.get_cmdclass(),
+	**classifiers
+)

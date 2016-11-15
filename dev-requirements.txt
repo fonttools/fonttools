@@ -1,0 +1,7 @@
+pytest>=2.8
+virtualenv>=15.0
+tox>=2.3
+
+# We use a fork of bumpversion due to missing support for annotated tags.
+# See peritus/bumpversion#58
+git+https://github.com/anthrotype/bumpversion.git@annotated-tags#egg=bumpversion

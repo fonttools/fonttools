@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="kern"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <!-- LookupType=3 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <CursivePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="zero"/>
+            <Glyph value="one"/>
+            <Glyph value="two"/>
+            <Glyph value="three"/>
+            <Glyph value="four"/>
+            <Glyph value="five"/>
+          </Coverage>
+          <!-- EntryExitCount=6 -->
+          <EntryExitRecord index="0">
+          </EntryExitRecord>
+          <EntryExitRecord index="1">
+            <EntryAnchor Format="1">
+              <XCoordinate value="121"/>
+              <YCoordinate value="-1"/>
+            </EntryAnchor>
+            <ExitAnchor Format="2">
+              <XCoordinate value="3"/>
+              <YCoordinate value="4"/>
+              <AnchorPoint value="2"/>
+            </ExitAnchor>
+          </EntryExitRecord>
+          <EntryExitRecord index="2">
+            <EntryAnchor Format="1">
+              <XCoordinate value="122"/>
+              <YCoordinate value="-2"/>
+            </EntryAnchor>
+            <ExitAnchor Format="1">
+              <XCoordinate value="3"/>
+              <YCoordinate value="4"/>
+            </ExitAnchor>
+          </EntryExitRecord>
+          <EntryExitRecord index="3">
+            <EntryAnchor Format="1">
+              <XCoordinate value="123"/>
+              <YCoordinate value="-3"/>
+            </EntryAnchor>
+          </EntryExitRecord>
+          <EntryExitRecord index="4">
+            <EntryAnchor Format="2">
+              <XCoordinate value="124"/>
+              <YCoordinate value="-4"/>
+              <AnchorPoint value="7"/>
+            </EntryAnchor>
+            <ExitAnchor Format="1">
+              <XCoordinate value="3"/>
+              <YCoordinate value="4"/>
+            </ExitAnchor>
+          </EntryExitRecord>
+          <EntryExitRecord index="5">
+            <EntryAnchor Format="3">
+              <XCoordinate value="124"/>
+              <YCoordinate value="-4"/>
+              <XDeviceTable>
+                <StartSize value="8"/>
+                <EndSize value="9"/>
+                <DeltaFormat value="2"/>
+                <DeltaValue value="[1, 2]"/>
+              </XDeviceTable>
+              <YDeviceTable>
+                <StartSize value="7"/>
+                <EndSize value="7"/>
+                <DeltaFormat value="2"/>
+                <DeltaValue value="[3]"/>
+              </YDeviceTable>
+            </EntryAnchor>
+            <ExitAnchor Format="2">
+              <XCoordinate value="3"/>
+              <YCoordinate value="4"/>
+              <AnchorPoint value="2"/>
+            </ExitAnchor>
+          </EntryExitRecord>
+        </CursivePos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+</ttFont>

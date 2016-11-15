@@ -3,11 +3,16 @@ from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from . import DefaultTable
 try:
-    import xml.etree.cElementTree as ET
+	import xml.etree.cElementTree as ET
 except ImportError:
-    import xml.etree.ElementTree as ET
+	import xml.etree.ElementTree as ET
 import struct
 import re
+import logging
+
+
+log = logging.getLogger(__name__)
+
 
 __doc__="""
 Compiles/decompiles version 0 and 1 SVG tables from/to XML.
@@ -19,34 +24,34 @@ only if you add the secret element "<version1/>" to the SVG element in the TTF f
 Version 0 is the joint Adobe-Mozilla proposal, which supports color palettes.
 
 The XML format is:
-  <SVG>
-    <svgDoc endGlyphID="1" startGlyphID="1">
-      <![CDATA[ <complete SVG doc> ]]
-    </svgDoc>
+<SVG>
+	<svgDoc endGlyphID="1" startGlyphID="1">
+		<![CDATA[ <complete SVG doc> ]]
+	</svgDoc>
 ...
 	<svgDoc endGlyphID="n" startGlyphID="m">
-      <![CDATA[ <complete SVG doc> ]]
-    </svgDoc>
+		<![CDATA[ <complete SVG doc> ]]
+	</svgDoc>
 
-    <colorPalettes>
-    	<colorParamUINameID>n</colorParamUINameID>
-    	...
-    	<colorParamUINameID>m</colorParamUINameID>
-    	<colorPalette uiNameID="n">
-    		<colorRecord red="<int>" green="<int>" blue="<int>" alpha="<int>" />
-    		...
-    		<colorRecord red="<int>" green="<int>" blue="<int>" alpha="<int>" />
-    	</colorPalette>
-    	...
-    	<colorPalette uiNameID="m">
-    		<colorRecord red="<int> green="<int>" blue="<int>" alpha="<int>" />
-    		...
-    		<colorRecord red=<int>" green="<int>" blue="<int>" alpha="<int>" />
-    	</colorPalette>
-    </colorPalettes>
+	<colorPalettes>
+		<colorParamUINameID>n</colorParamUINameID>
+		...
+		<colorParamUINameID>m</colorParamUINameID>
+		<colorPalette uiNameID="n">
+			<colorRecord red="<int>" green="<int>" blue="<int>" alpha="<int>" />
+			...
+			<colorRecord red="<int>" green="<int>" blue="<int>" alpha="<int>" />
+		</colorPalette>
+		...
+		<colorPalette uiNameID="m">
+			<colorRecord red="<int> green="<int>" blue="<int>" alpha="<int>" />
+			...
+			<colorRecord red=<int>" green="<int>" blue="<int>" alpha="<int>" />
+		</colorPalette>
+	</colorPalettes>
 </SVG>
 
-Color values must be less than 256. 
+Color values must be less than 256.
 
 The number of color records in each </colorPalette> must be the same as
 the number of <colorParamUINameID> elements.
@@ -93,20 +98,28 @@ colorRecord_format_0 = """
 
 
 class table_S_V_G_(DefaultTable.DefaultTable):
-	
+
+	def __init__(self, tag=None):
+		DefaultTable.DefaultTable.__init__(self, tag)
+		self.colorPalettes = None
+
 	def decompile(self, data, ttFont):
 		self.docList = None
 		self.colorPalettes = None
 		pos = 0
 		self.version = struct.unpack(">H", data[pos:pos+2])[0]
-		
+
 		if self.version == 1:
+			# This is pre-standardization version of the table; and obsolete.  But we decompile it for now.
+			# https://wiki.mozilla.org/SVGOpenTypeFonts
 			self.decompile_format_1(data, ttFont)
 		else:
 			if self.version != 0:
-				print("Unknown SVG table version '%s'. Decompiling as version 0." % (self.version))
+				log.warning(
+					"Unknown SVG table version '%s'. Decompiling as version 0.", self.version)
+			# This is the standardized version of the table; and current.
+			# https://www.microsoft.com/typography/otspec/svg.htm
 			self.decompile_format_0(data, ttFont)
-
 
 	def decompile_format_0(self, data, ttFont):
 		dummy, data2 = sstruct.unpack2(SVG_format_0, data, self)
@@ -121,37 +134,29 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			if numColorParams > 0:
 				colorPalettes.colorParamUINameIDs = colorParamUINameIDs = []
 				pos = pos + 2
-				i = 0
-				while i < numColorParams:
+				for i in range(numColorParams):
 					nameID = struct.unpack(">H", data[pos:pos+2])[0]
 					colorParamUINameIDs.append(nameID)
 					pos = pos + 2
-					i += 1
 
 				colorPalettes.numColorPalettes = numColorPalettes = struct.unpack(">H", data[pos:pos+2])[0]
 				pos = pos + 2
 				if numColorPalettes > 0:
 					colorPalettes.colorPaletteList = colorPaletteList = []
-					i = 0
-					while i < numColorPalettes:
+					for i in range(numColorPalettes):
 						colorPalette = ColorPalette()
 						colorPaletteList.append(colorPalette)
 						colorPalette.uiNameID = struct.unpack(">H", data[pos:pos+2])[0]
 						pos = pos + 2
 						colorPalette.paletteColors = paletteColors = []
-						j = 0
-						while j < numColorParams:
+						for j in range(numColorParams):
 							colorRecord, colorPaletteData = sstruct.unpack2(colorRecord_format_0, data[pos:], ColorRecord())
 							paletteColors.append(colorRecord)
-							j += 1
 							pos += 4
-						i += 1
 
 	def decompile_format_1(self, data, ttFont):
-		pos = 2
-		self.numEntries = struct.unpack(">H", data[pos:pos+2])[0]
-		pos += 2
-		self.decompileEntryList(data, pos)
+		self.offsetToSVGDocIndex = 2
+		self.decompileEntryList(data)
 
 	def decompileEntryList(self, data):
 		# data starts with the first entry of the entry list.
@@ -162,16 +167,22 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			data2 = data[pos:]
 			self.docList = []
 			self.entries = entries = []
-			i = 0
-			while i < self.numEntries:
+			for i in range(self.numEntries):
 				docIndexEntry, data2 = sstruct.unpack2(doc_index_entry_format_0, data2, DocumentIndexEntry())
 				entries.append(docIndexEntry)
-				i += 1
 
 			for entry in entries:
 				start = entry.svgDocOffset + subTableStart
 				end = start + entry.svgDocLength
-				doc = tostr(data[start:end], "utf-8")
+				doc = data[start:end]
+				if doc.startswith(b"\x1f\x8b"):
+					import gzip
+					bytesIO = BytesIO(doc)
+					with gzip.GzipFile(None, "r", fileobj=bytesIO) as gunzipper:
+						doc = gunzipper.read()
+					self.compressed = True
+					del bytesIO
+				doc = tostr(doc, "utf_8")
 				self.docList.append( [doc, entry.startGlyphID, entry.endGlyphID] )
 
 	def compile(self, ttFont):
@@ -193,11 +204,21 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		curOffset = len(datum) + doc_index_entry_format_0Size*numEntries
 		for doc, startGlyphID, endGlyphID in self.docList:
 			docOffset = curOffset
-			docLength = len(doc)
+			docBytes = tobytes(doc, encoding="utf_8")
+			if getattr(self, "compressed", False) and not docBytes.startswith(b"\x1f\x8b"):
+				import gzip
+				bytesIO = BytesIO()
+				with gzip.GzipFile(None, "w", fileobj=bytesIO) as gzipper:
+					gzipper.write(docBytes)
+				gzipped = bytesIO.getvalue()
+				if len(gzipped) < len(docBytes):
+					docBytes = gzipped
+				del gzipped, bytesIO
+			docLength = len(docBytes)
 			curOffset += docLength
 			entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)
 			entryList.append(entry)
-			docList.append(tobytes(doc, encoding="utf-8"))
+			docList.append(docBytes)
 		entryList.extend(docList)
 		svgDocData = bytesjoin(entryList)
 
@@ -239,11 +260,12 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 		curOffset = SVG_format_1Size + doc_index_entry_format_0Size*numEntries
 		for doc, startGlyphID, endGlyphID in self.docList:
 			docOffset = curOffset
-			docLength = len(doc)
+			docBytes = tobytes(doc, encoding="utf_8")
+			docLength = len(docBytes)
 			curOffset += docLength
 			entry = struct.pack(">HHLL", startGlyphID, endGlyphID, docOffset, docLength)
 			dataList.append(entry)
-			docList.append(tobytes(doc, encoding="utf-8"))
+			docList.append(docBytes)
 		dataList.extend(docList)
 		data = bytesjoin(dataList)
 		return data
@@ -284,13 +306,8 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 
 			writer.endtag("colorPalettes")
 			writer.newline()
-		else:
-			writer.begintag("colorPalettes")
-			writer.endtag("colorPalettes")
-			writer.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
-		import re
 		if name == "svgDoc":
 			if not hasattr(self, "docList"):
 				self.docList = []
@@ -299,13 +316,13 @@ class table_S_V_G_(DefaultTable.DefaultTable):
 			startGID = int(attrs["startGlyphID"])
 			endGID = int(attrs["endGlyphID"])
 			self.docList.append( [doc, startGID, endGID] )
-		elif  name == "colorPalettes":
+		elif name == "colorPalettes":
 			self.colorPalettes = ColorPalettes()
 			self.colorPalettes.fromXML(name, attrs, content, ttFont)
 			if self.colorPalettes.numColorParams == 0:
 				self.colorPalettes = None
 		else:
-			print("Unknown", name, content)
+			log.warning("Unknown %s %s", name, content)
 
 class DocumentIndexEntry(object):
 	def __init__(self):
@@ -326,7 +343,8 @@ class ColorPalettes(object):
 
 	def fromXML(self, name, attrs, content, ttFont):
 		for element in content:
-			if isinstance(element, type("")):
+			element = element.strip()
+			if not element:
 				continue
 			name, attrib, content = element
 			if name == "colorParamUINameID":
@@ -345,7 +363,7 @@ class ColorPalettes(object):
 
 class ColorPalette(object):
 	def __init__(self):
-		self.uiNameID = None # USHORT. name table ID that describes user interface strings associated with this color palette. 
+		self.uiNameID = None # USHORT. name table ID that describes user interface strings associated with this color palette.
 		self.paletteColors = [] # list of ColorRecords
 
 	def fromXML(self, name, attrs, content, ttFont):

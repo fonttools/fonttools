@@ -7,6 +7,10 @@ from . import DefaultTable
 import itertools
 import os
 import struct
+import logging
+
+
+log = logging.getLogger(__name__)
 
 ebdtTableVersionFormat = """
 	> # big endian
@@ -158,7 +162,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 					continue
 				name, attrs, content = element
 				if name[4:].startswith(_bitmapGlyphSubclassPrefix[4:]):
-					imageFormat =	safeEval(name[len(_bitmapGlyphSubclassPrefix):])
+					imageFormat = safeEval(name[len(_bitmapGlyphSubclassPrefix):])
 					glyphName = attrs['name']
 					imageFormatClass = self.getImageFormatClass(imageFormat)
 					curGlyph = imageFormatClass(None, None)
@@ -166,7 +170,7 @@ class table_E_B_D_T_(DefaultTable.DefaultTable):
 					assert glyphName not in bitmapGlyphDict, "Duplicate glyphs with the same name '%s' in the same strike." % glyphName
 					bitmapGlyphDict[glyphName] = curGlyph
 				else:
-					print("Warning: %s being ignored by %s", name, self.__class__.__name__)
+					log.warning("%s being ignored by %s", name, self.__class__.__name__)
 
 			# Grow the strike data array to the appropriate size. The XML
 			# format allows the strike index value to be out of order.
@@ -196,7 +200,7 @@ class EbdtComponent(object):
 			if name in componentNames:
 				vars(self)[name] = safeEval(attrs['value'])
 			else:
-				print("Warning: unknown name '%s' being ignored by EbdtComponent." % name)
+				log.warning("unknown name '%s' being ignored by EbdtComponent.", name)
 
 # Helper functions for dealing with binary.
 
@@ -338,15 +342,20 @@ def _readBitwiseImageData(bitmapObject, name, attrs, content, ttFont):
 	bitmapObject.setRows(dataRows, bitDepth=bitDepth, metrics=metrics, reverseBytes=True)
 
 def _writeExtFileImageData(strikeIndex, glyphName, bitmapObject, writer, ttFont):
-	folder = 'bitmaps/'
+	try:
+		folder = os.path.dirname(writer.file.name)
+	except AttributeError:
+		# fall back to current directory if output file's directory isn't found
+		folder = '.'
+	folder = os.path.join(folder, 'bitmaps')
 	filename = glyphName + bitmapObject.fileExtension
 	if not os.path.isdir(folder):
 		os.makedirs(folder)
-	folder += 'strike%d/' % strikeIndex
+	folder = os.path.join(folder, 'strike%d' % strikeIndex)
 	if not os.path.isdir(folder):
 		os.makedirs(folder)
 
-	fullPath = folder + filename
+	fullPath = os.path.join(folder, filename)
 	writer.simpletag('extfileimagedata', value=fullPath)
 	writer.newline()
 
@@ -373,10 +382,10 @@ class BitmapGlyph(object):
 
 	# Keep track of reading and writing of various forms.
 	xmlDataFunctions = {
-		'raw':       (_writeRawImageData, _readRawImageData),
-		'row':       (_writeRowImageData, _readRowImageData),
-		'bitwise':   (_writeBitwiseImageData, _readBitwiseImageData),
-		'extfile':   (_writeExtFileImageData, _readExtFileImageData),
+		'raw':		(_writeRawImageData, _readRawImageData),
+		'row':		(_writeRowImageData, _readRowImageData),
+		'bitwise':	(_writeBitwiseImageData, _readBitwiseImageData),
+		'extfile':	(_writeExtFileImageData, _readExtFileImageData),
 		}
 
 	def __init__(self, data, ttFont):
@@ -423,7 +432,7 @@ class BitmapGlyph(object):
 			# Chop off 'imagedata' from the tag to get just the option.
 			option = name[:-len('imagedata')]
 			assert option in self.__class__.xmlDataFunctions
-			self.readData(name, attrs, content, ttFont)
+			self.readData(name, attr, content, ttFont)
 
 	# Some of the glyphs have the metrics. This allows for metrics to be
 	# added if the glyph format has them. Default behavior is to do nothing.
@@ -473,7 +482,7 @@ def _createBitmapPlusMetricsMixin(metricsClass):
 					self.metrics = metricsClass()
 					self.metrics.fromXML(name, attrs, content, ttFont)
 				elif name == oppositeMetricsName:
-					print("Warning: %s being ignored in format %d." % oppositeMetricsName, self.getFormat())
+					log.warning("Warning: %s being ignored in format %d.", oppositeMetricsName, self.getFormat())
 
 	return BitmapPlusMetricsMixin
 
@@ -687,7 +696,7 @@ class ComponentBitmapGlyph(BitmapGlyph):
 						curComponent.fromXML(name, attrs, content, ttFont)
 						self.componentArray.append(curComponent)
 					else:
-						print("Warning: '%s' being ignored in component array." % name)
+						log.warning("'%s' being ignored in component array.", name)
 
 
 class ebdt_bitmap_format_8(BitmapPlusSmallMetricsMixin, ComponentBitmapGlyph):

@@ -3,11 +3,13 @@
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-import ast
 import string
 
 
-safeEval = ast.literal_eval
+def safeEval(data, eval=eval):
+	"""A (kindof) safe replacement for eval."""
+	return eval(data, {"__builtins__":{"True":True,"False":False}})
+
 
 def readHex(content):
 	"""Convert a list of hex strings to binary data."""
@@ -64,12 +66,37 @@ def binary2num(bin):
 
 
 def caselessSort(alist):
-	"""Return a sorted copy of a list. If there are only strings 
+	"""Return a sorted copy of a list. If there are only strings
 	in the list, it will not consider case.
 	"""
-	
+
 	try:
 		return sorted(alist, key=lambda a: (a.lower(), a))
 	except TypeError:
 		return sorted(alist)
 
+
+def pad(data, size):
+	r""" Pad byte string 'data' with null bytes until its length is a
+	multiple of 'size'.
+
+	>>> len(pad(b'abcd', 4))
+	4
+	>>> len(pad(b'abcde', 2))
+	6
+	>>> len(pad(b'abcde', 4))
+	8
+	>>> pad(b'abcdef', 4) == b'abcdef\x00\x00'
+	True
+	"""
+	data = tobytes(data)
+	if size > 1:
+		remainder = len(data) % size
+		if remainder:
+			data += b"\0" * (size - remainder)
+	return data
+
+
+if __name__ == "__main__":
+	import doctest, sys
+	sys.exit(doctest.testmod().failed)

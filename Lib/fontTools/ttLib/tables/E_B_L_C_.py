@@ -7,6 +7,10 @@ from .BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGly
 import struct
 import itertools
 from collections import deque
+import logging
+
+
+log = logging.getLogger(__name__)
 
 eblcHeaderFormat = """
 	> # big endian
@@ -71,44 +75,47 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
 
 		# Save the original data because offsets are from the start of the table.
 		origData = data
+		i = 0;
 
-		dummy, data = sstruct.unpack2(eblcHeaderFormat, data, self)
+		dummy = sstruct.unpack(eblcHeaderFormat, data[:8], self)
+		i += 8;
 
 		self.strikes = []
 		for curStrikeIndex in range(self.numSizes):
 			curStrike = Strike()
 			self.strikes.append(curStrike)
 			curTable = curStrike.bitmapSizeTable
-			dummy, data = sstruct.unpack2(bitmapSizeTableFormatPart1, data, curTable)
+			dummy = sstruct.unpack2(bitmapSizeTableFormatPart1, data[i:i+16], curTable)
+			i += 16
 			for metric in ('hori', 'vert'):
 				metricObj = SbitLineMetrics()
 				vars(curTable)[metric] = metricObj
-				dummy, data = sstruct.unpack2(sbitLineMetricsFormat, data, metricObj)
-			dummy, data = sstruct.unpack2(bitmapSizeTableFormatPart2, data, curTable)
+				dummy = sstruct.unpack2(sbitLineMetricsFormat, data[i:i+12], metricObj)
+				i += 12
+			dummy = sstruct.unpack(bitmapSizeTableFormatPart2, data[i:i+8], curTable)
+			i += 8
 
 		for curStrike in self.strikes:
 			curTable = curStrike.bitmapSizeTable
 			for subtableIndex in range(curTable.numberOfIndexSubTables):
-				lowerBound = curTable.indexSubTableArrayOffset + subtableIndex * indexSubTableArraySize
-				upperBound = lowerBound + indexSubTableArraySize
-				data = origData[lowerBound:upperBound]
+				i = curTable.indexSubTableArrayOffset + subtableIndex * indexSubTableArraySize
 
-				tup = struct.unpack(indexSubTableArrayFormat, data)
+				tup = struct.unpack(indexSubTableArrayFormat, data[i:i+indexSubTableArraySize])
 				(firstGlyphIndex, lastGlyphIndex, additionalOffsetToIndexSubtable) = tup
-				offsetToIndexSubTable = curTable.indexSubTableArrayOffset + additionalOffsetToIndexSubtable
-				data = origData[offsetToIndexSubTable:]
+				i = curTable.indexSubTableArrayOffset + additionalOffsetToIndexSubtable
 
-				tup = struct.unpack(indexSubHeaderFormat, data[:indexSubHeaderSize])
+				tup = struct.unpack(indexSubHeaderFormat, data[i:i+indexSubHeaderSize])
 				(indexFormat, imageFormat, imageDataOffset) = tup
 
 				indexFormatClass = self.getIndexFormatClass(indexFormat)
-				indexSubTable = indexFormatClass(data[indexSubHeaderSize:], ttFont)
+				indexSubTable = indexFormatClass(data[i+indexSubHeaderSize:], ttFont)
 				indexSubTable.firstGlyphIndex = firstGlyphIndex
 				indexSubTable.lastGlyphIndex = lastGlyphIndex
 				indexSubTable.additionalOffsetToIndexSubtable = additionalOffsetToIndexSubtable
 				indexSubTable.indexFormat = indexFormat
 				indexSubTable.imageFormat = imageFormat
 				indexSubTable.imageDataOffset = imageDataOffset
+				indexSubTable.decompile() # https://github.com/behdad/fonttools/issues/317
 				curStrike.indexSubTables.append(indexSubTable)
 
 	def compile(self, ttFont):
@@ -293,7 +300,7 @@ class BitmapSizeTable(object):
 			elif name in dataNames:
 				vars(self)[name] = safeEval(attrs['value'])
 			else:
-				print("Warning: unknown name '%s' being ignored in BitmapSizeTable." % name)
+				log.warning("unknown name '%s' being ignored in BitmapSizeTable.", name)
 
 
 class SbitLineMetrics(object):
@@ -336,7 +343,6 @@ class EblcIndexSubTable(object):
 		if not hasattr(self, "data"):
 			raise AttributeError(attr)
 		self.decompile()
-		del self.data, self.ttFont
 		return getattr(self, attr)
 
 	# This method just takes care of the indexSubHeader. Implementing subclasses
@@ -439,6 +445,7 @@ def _createOffsetArrayIndexSubTableMixin(formatStringForDataType):
 
 			self.names = list(map(self.ttFont.getGlyphName, glyphIds))
 			self.removeSkipGlyphs()
+			del self.data, self.ttFont
 
 		def compile(self, ttFont):
 			# First make sure that all the data lines up properly. Formats 1 and 3
@@ -503,7 +510,7 @@ class FixedSizeIndexSubTableMixin(object):
 				self.metrics = BigGlyphMetrics()
 				self.metrics.fromXML(name, attrs, content, ttFont)
 			elif name == SmallGlyphMetrics.__name__:
-				print("Warning: SmallGlyphMetrics being ignored in format %d." % self.indexFormat)
+				log.warning("SmallGlyphMetrics being ignored in format %d.", self.indexFormat)
 
 	def padBitmapData(self, data):
 		# Make sure that the data isn't bigger than the fixed size.
@@ -525,6 +532,7 @@ class eblc_index_sub_table_2(FixedSizeIndexSubTableMixin, EblcIndexSubTable):
 		offsets = [self.imageSize * i + self.imageDataOffset for i in range(len(glyphIds)+1)]
 		self.locations = list(zip(offsets, offsets[1:]))
 		self.names = list(map(self.ttFont.getGlyphName, glyphIds))
+		del self.data, self.ttFont
 
 	def compile(self, ttFont):
 		glyphIds = list(map(ttFont.getGlyphID, self.names))
@@ -556,6 +564,7 @@ class eblc_index_sub_table_4(EblcIndexSubTable):
 		offsets = [offset + self.imageDataOffset for offset in offsets]
 		self.locations = list(zip(offsets, offsets[1:]))
 		self.names = list(map(self.ttFont.getGlyphName, glyphIds))
+		del self.data, self.ttFont
 
 	def compile(self, ttFont):
 		# First make sure that all the data lines up properly. Format 4
@@ -594,6 +603,7 @@ class eblc_index_sub_table_5(FixedSizeIndexSubTableMixin, EblcIndexSubTable):
 		offsets = [self.imageSize * i + self.imageDataOffset for i in range(len(glyphIds)+1)]
 		self.locations = list(zip(offsets, offsets[1:]))
 		self.names = list(map(self.ttFont.getGlyphName, glyphIds))
+		del self.data, self.ttFont
 
 	def compile(self, ttFont):
 		self.imageDataOffset = min(zip(*self.locations)[0])

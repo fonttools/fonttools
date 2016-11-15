@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="test"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <!-- LookupType=8 -->
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=3 -->
+        <ReverseChainSingleSubst index="0" Format="1">
+          <Coverage>
+            <Glyph value="q"/>
+          </Coverage>
+          <!-- BacktrackGlyphCount=3 -->
+          <BacktrackCoverage index="0">
+            <Glyph value="C"/>
+            <Glyph value="c"/>
+          </BacktrackCoverage>
+          <BacktrackCoverage index="1">
+            <Glyph value="B"/>
+            <Glyph value="b"/>
+          </BacktrackCoverage>
+          <BacktrackCoverage index="2">
+            <Glyph value="A"/>
+            <Glyph value="a"/>
+          </BacktrackCoverage>
+          <!-- LookAheadGlyphCount=3 -->
+          <LookAheadCoverage index="0">
+            <Glyph value="D"/>
+            <Glyph value="d"/>
+          </LookAheadCoverage>
+          <LookAheadCoverage index="1">
+            <Glyph value="E"/>
+            <Glyph value="e"/>
+          </LookAheadCoverage>
+          <LookAheadCoverage index="2">
+            <Glyph value="F"/>
+            <Glyph value="f"/>
+          </LookAheadCoverage>
+          <!-- GlyphCount=1 -->
+          <Substitute index="0" value="Q"/>
+        </ReverseChainSingleSubst>
+        <ReverseChainSingleSubst index="1" Format="1">
+          <Coverage>
+            <Glyph value="s"/>
+            <Glyph value="t"/>
+            <Glyph value="u"/>
+            <Glyph value="v"/>
+            <Glyph value="w"/>
+            <Glyph value="x"/>
+            <Glyph value="y"/>
+            <Glyph value="z"/>
+          </Coverage>
+          <!-- BacktrackGlyphCount=3 -->
+          <BacktrackCoverage index="0">
+            <Glyph value="C"/>
+            <Glyph value="c"/>
+          </BacktrackCoverage>
+          <BacktrackCoverage index="1">
+            <Glyph value="B"/>
+            <Glyph value="b"/>
+          </BacktrackCoverage>
+          <BacktrackCoverage index="2">
+            <Glyph value="A"/>
+            <Glyph value="a"/>
+          </BacktrackCoverage>
+          <!-- LookAheadGlyphCount=3 -->
+          <LookAheadCoverage index="0">
+            <Glyph value="D"/>
+            <Glyph value="d"/>
+          </LookAheadCoverage>
+          <LookAheadCoverage index="1">
+            <Glyph value="E"/>
+            <Glyph value="e"/>
+          </LookAheadCoverage>
+          <LookAheadCoverage index="2">
+            <Glyph value="F"/>
+            <Glyph value="f"/>
+          </LookAheadCoverage>
+          <!-- GlyphCount=8 -->
+          <Substitute index="0" value="S"/>
+          <Substitute index="1" value="T"/>
+          <Substitute index="2" value="U"/>
+          <Substitute index="3" value="V"/>
+          <Substitute index="4" value="W"/>
+          <Substitute index="5" value="X"/>
+          <Substitute index="6" value="Y"/>
+          <Substitute index="7" value="Z"/>
+        </ReverseChainSingleSubst>
+        <ReverseChainSingleSubst index="2" Format="1">
+          <Coverage>
+            <Glyph value="p"/>
+          </Coverage>
+          <!-- BacktrackGlyphCount=0 -->
+          <!-- LookAheadGlyphCount=0 -->
+          <!-- GlyphCount=1 -->
+          <Substitute index="0" value="P"/>
+        </ReverseChainSingleSubst>
+      </Lookup>
+    </LookupList>
+  </GSUB>
+
+</ttFont>

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.0">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="minus"/>
+    <GlyphID id="2" name="plus"/>
+  </GlyphOrder>
+
+  <avar>
+    <segment axis="wght">
+      <mapping from="-1.0" to="-1.0"/>
+      <mapping from="0.0" to="0.0"/>
+      <mapping from="0.3" to="0.5"/>
+      <mapping from="1.0" to="1.0"/>
+    </segment>
+  </avar>
+
+  <fvar>
+
+    <!-- Weight -->
+    <Axis>
+      <AxisTag>wght</AxisTag>
+      <MinValue>100.0</MinValue>
+      <DefaultValue>400.0</DefaultValue>
+      <MaxValue>900.0</MaxValue>
+      <AxisNameID>257</AxisNameID>
+    </Axis>
+
+    <!-- Thin -->
+    <NamedInstance subfamilyNameID="258">
+      <coord axis="wght" value="100.0"/>
+    </NamedInstance>
+
+    <!-- Light -->
+    <NamedInstance subfamilyNameID="259">
+      <coord axis="wght" value="300.0"/>
+    </NamedInstance>
+
+    <!-- Regular -->
+    <NamedInstance subfamilyNameID="260">
+      <coord axis="wght" value="400.0"/>
+    </NamedInstance>
+
+    <!-- Bold -->
+    <NamedInstance subfamilyNameID="261">
+      <coord axis="wght" value="700.0"/>
+    </NamedInstance>
+
+    <!-- Black -->
+    <NamedInstance subfamilyNameID="262">
+      <coord axis="wght" value="900.0"/>
+    </NamedInstance>
+  </fvar>
+
+  <gvar>
+    <version value="1"/>
+    <reserved value="0"/>
+    <glyphVariations glyph="minus">
+      <tuple>
+        <coord axis="wght" value="-1.0"/>
+        <delta pt="0" x="-20" y="-30"/>
+        <delta pt="1" x="-20" y="30"/>
+        <delta pt="2" x="-20" y="30"/>
+        <delta pt="3" x="-20" y="-30"/>
+        <delta pt="4" x="0" y="0"/>
+        <delta pt="5" x="-40" y="0"/>
+        <delta pt="6" x="0" y="-30"/>
+        <delta pt="7" x="0" y="-30"/>
+      </tuple>
+      <tuple>
+        <coord axis="wght" value="1.0"/>
+        <delta pt="0" x="20" y="30"/>
+        <delta pt="1" x="20" y="-30"/>
+        <delta pt="2" x="20" y="-30"/>
+        <delta pt="3" x="20" y="30"/>
+        <delta pt="4" x="0" y="0"/>
+        <delta pt="5" x="40" y="0"/>
+        <delta pt="6" x="0" y="30"/>
+        <delta pt="7" x="0" y="30"/>
+      </tuple>
+    </glyphVariations>
+    <glyphVariations glyph="plus">
+      <tuple>
+        <coord axis="wght" value="-1.0"/>
+        <delta pt="0" x="-20" y="30"/>
+        <delta pt="1" x="-50" y="30"/>
+        <delta pt="2" x="-50" y="0"/>
+        <delta pt="3" x="10" y="0"/>
+        <delta pt="4" x="10" y="30"/>
+        <delta pt="5" x="-20" y="30"/>
+        <delta pt="6" x="-20" y="-30"/>
+        <delta pt="7" x="10" y="-30"/>
+        <delta pt="8" x="10" y="0"/>
+        <delta pt="9" x="-50" y="0"/>
+        <delta pt="10" x="-50" y="-30"/>
+        <delta pt="11" x="-20" y="-30"/>
+        <delta pt="12" x="0" y="0"/>
+        <delta pt="13" x="-40" y="0"/>
+        <delta pt="14" x="0" y="0"/>
+        <delta pt="15" x="0" y="0"/>
+      </tuple>
+      <tuple>
+        <coord axis="wght" value="1.0"/>
+        <delta pt="0" x="20" y="-30"/>
+        <delta pt="1" x="50" y="-30"/>
+        <delta pt="2" x="50" y="0"/>
+        <delta pt="3" x="-10" y="0"/>
+        <delta pt="4" x="-10" y="-30"/>
+        <delta pt="5" x="20" y="-30"/>
+        <delta pt="6" x="20" y="30"/>
+        <delta pt="7" x="-10" y="30"/>
+        <delta pt="8" x="-10" y="0"/>
+        <delta pt="9" x="50" y="0"/>
+        <delta pt="10" x="50" y="30"/>
+        <delta pt="11" x="20" y="30"/>
+        <delta pt="12" x="0" y="0"/>
+        <delta pt="13" x="40" y="0"/>
+        <delta pt="14" x="0" y="0"/>
+        <delta pt="15" x="0" y="0"/>
+      </tuple>
+    </glyphVariations>
+  </gvar>
+
+  <name>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      TestGVAR
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="257" platformID="3" platEncID="1" langID="0x409">
+      Weight
+    </namerecord>
+    <namerecord nameID="258" platformID="3" platEncID="1" langID="0x409">
+      Thin
+    </namerecord>
+    <namerecord nameID="259" platformID="3" platEncID="1" langID="0x409">
+      Light
+    </namerecord>
+    <namerecord nameID="260" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="261" platformID="3" platEncID="1" langID="0x409">
+      Bold
+    </namerecord>
+    <namerecord nameID="262" platformID="3" platEncID="1" langID="0x409">
+      Black
+    </namerecord>
+  </name>
+
+</ttFont>

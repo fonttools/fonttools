@@ -7,13 +7,20 @@
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.timeTools import timestampNow
 from fontTools import ttLib, cffLib
 from fontTools.ttLib.tables import otTables, _h_e_a_d
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
+from fontTools.misc.loggingTools import Timer
 from functools import reduce
 import sys
 import time
 import operator
+import logging
+
+
+log = logging.getLogger(__name__)
+timer = Timer(logger=logging.getLogger(__name__+".timer"), level=logging.INFO)
 
 
 def _add_method(*clazzes, **kwargs):
@@ -21,11 +28,13 @@ def _add_method(*clazzes, **kwargs):
 	more classes."""
 	allowDefault = kwargs.get('allowDefaultTable', False)
 	def wrapper(method):
+		done = []
 		for clazz in clazzes:
+			if clazz in done: continue # Support multiple names of a clazz
+			done.append(clazz)
 			assert allowDefault or clazz != DefaultTable, 'Oops, table class not found.'
 			assert method.__name__ not in clazz.__dict__, \
-				"Oops, class '%s' has method '%s'." % (clazz.__name__,
-								       method.__name__)
+				"Oops, class '%s' has method '%s'." % (clazz.__name__, method.__name__)
 			setattr(clazz, method.__name__, method)
 		return None
 	return wrapper
@@ -46,7 +55,7 @@ def recalculate(lst):
 	return NotImplemented
 
 def current_time(lst):
-	return int(time.time() - _h_e_a_d.mac_epoch_diff)
+	return timestampNow()
 
 def bitwise_and(lst):
 	return reduce(operator.and_, lst)
@@ -141,7 +150,7 @@ def mergeBits(bitmap):
 @_add_method(DefaultTable, allowDefaultTable=True)
 def merge(self, m, tables):
 	if not hasattr(self, 'mergeMap'):
-		m.log("Don't know how to merge '%s'." % self.tableTag)
+		log.info("Don't know how to merge '%s'.", self.tableTag)
 		return NotImplemented
 
 	logic = self.mergeMap
@@ -350,21 +359,27 @@ ttLib.getTableClass('cvt ').mergeMap = lambda self, lst: first(lst)
 @_add_method(ttLib.getTableClass('cmap'))
 def merge(self, m, tables):
 	# TODO Handle format=14.
-	cmapTables = [(t,fontIdx) for fontIdx,table in enumerate(tables) for t in table.tables
-		      if t.isUnicode()]
-	# TODO Better handle format-4 and format-12 coexisting in same font.
-	# TODO Insert both a format-4 and format-12 if needed.
-	module = ttLib.getTableModule('cmap')
-	assert all(t.format in [4, 12] for t,_ in cmapTables)
-	format = max(t.format for t,_ in cmapTables)
-	cmapTable = module.cmap_classes[format](format)
-	cmapTable.cmap = {}
-	cmapTable.platformID = 3
-	cmapTable.platEncID = max(t.platEncID for t,_ in cmapTables)
-	cmapTable.language = 0
-	cmap = cmapTable.cmap
+	# Only merges 4/3/1 and 12/3/10 subtables, ignores all other subtables
+	# If there is a format 12 table for the same font, ignore the format 4 table
+	cmapTables = []
+	for fontIdx,table in enumerate(tables):
+		format4 = None
+		format12 = None
+		for subtable in table.tables:
+			properties = (subtable.format, subtable.platformID, subtable.platEncID)
+			if properties == (4,3,1):
+				format4 = subtable
+			elif properties == (12,3,10):
+				format12 = subtable
+		if format12 is not None:
+			cmapTables.append((format12, fontIdx))
+		elif format4 is not None:
+			cmapTables.append((format4, fontIdx))
+
+	# Build a unicode mapping, then decide which format is needed to store it.
+	cmap = {}
 	for table,fontIdx in cmapTables:
-		# TODO handle duplicates.
+		# handle duplicates
 		for uni,gid in table.cmap.items():
 			oldgid = cmap.get(uni, None)
 			if oldgid is None:
@@ -372,10 +387,34 @@ def merge(self, m, tables):
 			elif oldgid != gid:
 				# Char previously mapped to oldgid, now to gid.
 				# Record, to fix up in GSUB 'locl' later.
-				assert m.duplicateGlyphsPerFont[fontIdx].get(oldgid, gid) == gid
-				m.duplicateGlyphsPerFont[fontIdx][oldgid] = gid
+				if m.duplicateGlyphsPerFont[fontIdx].get(oldgid, gid) == gid:
+					m.duplicateGlyphsPerFont[fontIdx][oldgid] = gid
+				else:
+					# char previously mapped to oldgid but already remapped to a different gid,
+					# save new gid as an alternate
+					# TODO: try harder to save these
+					log.warn("Dropped mapping from codepoint %#06X to glyphId '%s'", uni, gid)
+
+	cmapBmpOnly = {uni: gid for uni,gid in cmap.items() if uni <= 0xFFFF}
+	self.tables = []
+	module = ttLib.getTableModule('cmap')
+	if len(cmapBmpOnly) != len(cmap):
+		# format-12 required.
+		cmapTable = module.cmap_classes[12](12)
+		cmapTable.platformID = 3
+		cmapTable.platEncID = 10
+		cmapTable.language = 0
+		cmapTable.cmap = cmap
+		self.tables.append(cmapTable)
+	# always create format-4
+	cmapTable = module.cmap_classes[4](4)
+	cmapTable.platformID = 3
+	cmapTable.platEncID = 1
+	cmapTable.language = 0
+	cmapTable.cmap = cmapBmpOnly
+	# ordered by platform then encoding
+	self.tables.insert(0, cmapTable)
 	self.tableVersion = 0
-	self.tables = [cmapTable]
 	self.numSubTables = len(self.tables)
 	return self
 
@@ -391,7 +430,7 @@ otTables.BaseScriptList.mergeMap = {
 
 otTables.FeatureList.mergeMap = {
 	'FeatureCount': sum,
-	'FeatureRecord': sumLists,
+	'FeatureRecord': lambda lst: sorted(sumLists(lst), key=lambda s: s.FeatureTag),
 }
 
 otTables.LookupList.mergeMap = {
@@ -400,10 +439,12 @@ otTables.LookupList.mergeMap = {
 }
 
 otTables.Coverage.mergeMap = {
+	'Format': min,
 	'glyphs': sumLists,
 }
 
 otTables.ClassDef.mergeMap = {
+	'Format': min,
 	'classDefs': sumDicts,
 }
 
@@ -465,13 +506,14 @@ def merge(self, m, tables):
 	for i,(table,dups) in enumerate(zip(tables, m.duplicateGlyphsPerFont)):
 		if not dups: continue
 		assert (table is not None and table is not NotImplemented), "Have duplicates to resolve for font %d but no GSUB" % (i + 1)
-		lookupMap = dict((id(v),v) for v in table.table.LookupList.Lookup)
-		featureMap = dict((id(v),v) for v in table.table.FeatureList.FeatureRecord)
+		lookupMap = {id(v):v for v in table.table.LookupList.Lookup}
+		featureMap = {id(v):v for v in table.table.FeatureList.FeatureRecord}
 		synthFeature = None
 		synthLookup = None
 		for script in table.table.ScriptList.ScriptRecord:
 			if script.ScriptTag == 'DFLT': continue # XXX
 			for langsys in [script.Script.DefaultLangSys] + [l.LangSys for l in script.Script.LangSysRecord]:
+				if langsys is None: continue # XXX Create!
 				feature = [featureMap[v] for v in langsys.FeatureIndex if featureMap[v].FeatureTag == 'locl']
 				assert len(feature) <= 1
 				if feature:
@@ -505,100 +547,97 @@ def merge(self, m, tables):
 				feature.Feature.LookupListIndex[:0] = [id(synthLookup)]
 				feature.Feature.LookupCount += 1
 
-
 	DefaultTable.merge(self, m, tables)
 	return self
 
-
-
 @_add_method(otTables.SingleSubst,
-             otTables.MultipleSubst,
-             otTables.AlternateSubst,
-             otTables.LigatureSubst,
-             otTables.ReverseChainSingleSubst,
-             otTables.SinglePos,
-             otTables.PairPos,
-             otTables.CursivePos,
-             otTables.MarkBasePos,
-             otTables.MarkLigPos,
-             otTables.MarkMarkPos)
+		otTables.MultipleSubst,
+		otTables.AlternateSubst,
+		otTables.LigatureSubst,
+		otTables.ReverseChainSingleSubst,
+		otTables.SinglePos,
+		otTables.PairPos,
+		otTables.CursivePos,
+		otTables.MarkBasePos,
+		otTables.MarkLigPos,
+		otTables.MarkMarkPos)
 def mapLookups(self, lookupMap):
-  pass
+	pass
 
 # Copied and trimmed down from subset.py
 @_add_method(otTables.ContextSubst,
-             otTables.ChainContextSubst,
-             otTables.ContextPos,
-             otTables.ChainContextPos)
-def __classify_context(self):
+		otTables.ChainContextSubst,
+		otTables.ContextPos,
+		otTables.ChainContextPos)
+def __merge_classify_context(self):
 
-  class ContextHelper(object):
-    def __init__(self, klass, Format):
-      if klass.__name__.endswith('Subst'):
-        Typ = 'Sub'
-        Type = 'Subst'
-      else:
-        Typ = 'Pos'
-        Type = 'Pos'
-      if klass.__name__.startswith('Chain'):
-        Chain = 'Chain'
-      else:
-        Chain = ''
-      ChainTyp = Chain+Typ
+	class ContextHelper(object):
+		def __init__(self, klass, Format):
+			if klass.__name__.endswith('Subst'):
+				Typ = 'Sub'
+				Type = 'Subst'
+			else:
+				Typ = 'Pos'
+				Type = 'Pos'
+			if klass.__name__.startswith('Chain'):
+				Chain = 'Chain'
+			else:
+				Chain = ''
+			ChainTyp = Chain+Typ
 
-      self.Typ = Typ
-      self.Type = Type
-      self.Chain = Chain
-      self.ChainTyp = ChainTyp
+			self.Typ = Typ
+			self.Type = Type
+			self.Chain = Chain
+			self.ChainTyp = ChainTyp
 
-      self.LookupRecord = Type+'LookupRecord'
+			self.LookupRecord = Type+'LookupRecord'
 
-      if Format == 1:
-        self.Rule = ChainTyp+'Rule'
-        self.RuleSet = ChainTyp+'RuleSet'
-      elif Format == 2:
-        self.Rule = ChainTyp+'ClassRule'
-        self.RuleSet = ChainTyp+'ClassSet'
+			if Format == 1:
+				self.Rule = ChainTyp+'Rule'
+				self.RuleSet = ChainTyp+'RuleSet'
+			elif Format == 2:
+				self.Rule = ChainTyp+'ClassRule'
+				self.RuleSet = ChainTyp+'ClassSet'
 
-  if self.Format not in [1, 2, 3]:
-    return None  # Don't shoot the messenger; let it go
-  if not hasattr(self.__class__, "__ContextHelpers"):
-    self.__class__.__ContextHelpers = {}
-  if self.Format not in self.__class__.__ContextHelpers:
-    helper = ContextHelper(self.__class__, self.Format)
-    self.__class__.__ContextHelpers[self.Format] = helper
-  return self.__class__.__ContextHelpers[self.Format]
+	if self.Format not in [1, 2, 3]:
+		return None  # Don't shoot the messenger; let it go
+	if not hasattr(self.__class__, "__ContextHelpers"):
+		self.__class__.__ContextHelpers = {}
+	if self.Format not in self.__class__.__ContextHelpers:
+		helper = ContextHelper(self.__class__, self.Format)
+		self.__class__.__ContextHelpers[self.Format] = helper
+	return self.__class__.__ContextHelpers[self.Format]
 
 
 @_add_method(otTables.ContextSubst,
-             otTables.ChainContextSubst,
-             otTables.ContextPos,
-             otTables.ChainContextPos)
+		otTables.ChainContextSubst,
+		otTables.ContextPos,
+		otTables.ChainContextPos)
 def mapLookups(self, lookupMap):
-  c = self.__classify_context()
+	c = self.__merge_classify_context()
 
-  if self.Format in [1, 2]:
-    for rs in getattr(self, c.RuleSet):
-      if not rs: continue
-      for r in getattr(rs, c.Rule):
-        if not r: continue
-        for ll in getattr(r, c.LookupRecord):
-          if not ll: continue
-          ll.LookupListIndex = lookupMap[ll.LookupListIndex]
-  elif self.Format == 3:
-    for ll in getattr(self, c.LookupRecord):
-      if not ll: continue
-      ll.LookupListIndex = lookupMap[ll.LookupListIndex]
-  else:
-    assert 0, "unknown format: %s" % self.Format
+	if self.Format in [1, 2]:
+		for rs in getattr(self, c.RuleSet):
+			if not rs: continue
+			for r in getattr(rs, c.Rule):
+				if not r: continue
+				for ll in getattr(r, c.LookupRecord):
+					if not ll: continue
+					ll.LookupListIndex = lookupMap[ll.LookupListIndex]
+	elif self.Format == 3:
+		for ll in getattr(self, c.LookupRecord):
+			if not ll: continue
+			ll.LookupListIndex = lookupMap[ll.LookupListIndex]
+	else:
+		assert 0, "unknown format: %s" % self.Format
 
 @_add_method(otTables.ExtensionSubst,
-             otTables.ExtensionPos)
+		otTables.ExtensionPos)
 def mapLookups(self, lookupMap):
-  if self.Format == 1:
-    self.ExtSubTable.mapLookups(lookupMap)
-  else:
-    assert 0, "unknown format: %s" % self.Format
+	if self.Format == 1:
+		self.ExtSubTable.mapLookups(lookupMap)
+	else:
+		assert 0, "unknown format: %s" % self.Format
 
 @_add_method(otTables.Lookup)
 def mapLookups(self, lookupMap):
@@ -623,7 +662,7 @@ def mapLookups(self, lookupMap):
 		f.Feature.mapLookups(lookupMap)
 
 @_add_method(otTables.DefaultLangSys,
-             otTables.LangSys)
+		otTables.LangSys)
 def mapFeatures(self, featureMap):
 	self.FeatureIndex = [featureMap[i] for i in self.FeatureIndex]
 	if self.ReqFeatureIndex != 65535:
@@ -646,91 +685,91 @@ def mapFeatures(self, featureMap):
 
 class Options(object):
 
-  class UnknownOptionError(Exception):
-    pass
+	class UnknownOptionError(Exception):
+		pass
 
-  def __init__(self, **kwargs):
+	def __init__(self, **kwargs):
 
-    self.set(**kwargs)
+		self.verbose = False
+		self.timing = False
 
-  def set(self, **kwargs):
-    for k,v in kwargs.items():
-      if not hasattr(self, k):
-        raise self.UnknownOptionError("Unknown option '%s'" % k)
-      setattr(self, k, v)
+		self.set(**kwargs)
 
-  def parse_opts(self, argv, ignore_unknown=False):
-    ret = []
-    opts = {}
-    for a in argv:
-      orig_a = a
-      if not a.startswith('--'):
-        ret.append(a)
-        continue
-      a = a[2:]
-      i = a.find('=')
-      op = '='
-      if i == -1:
-        if a.startswith("no-"):
-          k = a[3:]
-          v = False
-        else:
-          k = a
-          v = True
-      else:
-        k = a[:i]
-        if k[-1] in "-+":
-          op = k[-1]+'='  # Ops is '-=' or '+=' now.
-          k = k[:-1]
-        v = a[i+1:]
-      k = k.replace('-', '_')
-      if not hasattr(self, k):
-        if ignore_unknown == True or k in ignore_unknown:
-          ret.append(orig_a)
-          continue
-        else:
-          raise self.UnknownOptionError("Unknown option '%s'" % a)
+	def set(self, **kwargs):
+		for k,v in kwargs.items():
+			if not hasattr(self, k):
+				raise self.UnknownOptionError("Unknown option '%s'" % k)
+			setattr(self, k, v)
 
-      ov = getattr(self, k)
-      if isinstance(ov, bool):
-        v = bool(v)
-      elif isinstance(ov, int):
-        v = int(v)
-      elif isinstance(ov, list):
-        vv = v.split(',')
-        if vv == ['']:
-          vv = []
-        vv = [int(x, 0) if len(x) and x[0] in "0123456789" else x for x in vv]
-        if op == '=':
-          v = vv
-        elif op == '+=':
-          v = ov
-          v.extend(vv)
-        elif op == '-=':
-          v = ov
-          for x in vv:
-            if x in v:
-              v.remove(x)
-        else:
-          assert 0
+	def parse_opts(self, argv, ignore_unknown=False):
+		ret = []
+		opts = {}
+		for a in argv:
+			orig_a = a
+			if not a.startswith('--'):
+				ret.append(a)
+				continue
+			a = a[2:]
+			i = a.find('=')
+			op = '='
+			if i == -1:
+				if a.startswith("no-"):
+					k = a[3:]
+					v = False
+				else:
+					k = a
+					v = True
+			else:
+				k = a[:i]
+				if k[-1] in "-+":
+					op = k[-1]+'='  # Ops is '-=' or '+=' now.
+					k = k[:-1]
+				v = a[i+1:]
+			k = k.replace('-', '_')
+			if not hasattr(self, k):
+				if ignore_unknown is True or k in ignore_unknown:
+					ret.append(orig_a)
+					continue
+				else:
+					raise self.UnknownOptionError("Unknown option '%s'" % a)
 
-      opts[k] = v
-    self.set(**opts)
+			ov = getattr(self, k)
+			if isinstance(ov, bool):
+				v = bool(v)
+			elif isinstance(ov, int):
+				v = int(v)
+			elif isinstance(ov, list):
+				vv = v.split(',')
+				if vv == ['']:
+					vv = []
+				vv = [int(x, 0) if len(x) and x[0] in "0123456789" else x for x in vv]
+				if op == '=':
+					v = vv
+				elif op == '+=':
+					v = ov
+					v.extend(vv)
+				elif op == '-=':
+					v = ov
+					for x in vv:
+						if x in v:
+							v.remove(x)
+				else:
+					assert 0
 
-    return ret
+			opts[k] = v
+		self.set(**opts)
+
+		return ret
 
 
 class Merger(object):
 
-	def __init__(self, options=None, log=None):
+	def __init__(self, options=None):
 
-		if not log:
-			log = Logger()
 		if not options:
 			options = Options()
 
 		self.options = options
-		self.log = log
 
 	def merge(self, fontfiles):
 
@@ -767,19 +806,19 @@ class Merger(object):
 			allTags = ['cmap'] + list(allTags)
 
 		for tag in allTags:
+			with timer("merge '%s'" % tag):
+				tables = [font.get(tag, NotImplemented) for font in fonts]
 
-			tables = [font.get(tag, NotImplemented) for font in fonts]
+				log.info("Merging '%s'.", tag)
+				clazz = ttLib.getTableClass(tag)
+				table = clazz(tag).merge(self, tables)
+				# XXX Clean this up and use:  table = mergeObjects(tables)
 
-			clazz = ttLib.getTableClass(tag)
-			table = clazz(tag).merge(self, tables)
-			# XXX Clean this up and use:  table = mergeObjects(tables)
-
-			if table is not NotImplemented and table is not False:
-				mega[tag] = table
-				self.log("Merged '%s'." % tag)
-			else:
-				self.log("Dropped '%s'." % tag)
-			self.log.lapse("merge '%s'" % tag)
+				if table is not NotImplemented and table is not False:
+					mega[tag] = table
+					log.info("Merged '%s'.", tag)
+				else:
+					log.info("Dropped '%s'.", tag)
 
 		del self.duplicateGlyphsPerFont
 
@@ -813,7 +852,7 @@ class Merger(object):
 				try:
 					mergeLogic = logic['*']
 				except KeyError:
-					raise Exception("Don't know how to merge key %s of class %s" % 
+					raise Exception("Don't know how to merge key %s of class %s" %
 							(key, returnTable.__class__.__name__))
 			if mergeLogic is NotImplemented:
 				continue
@@ -835,14 +874,14 @@ class Merger(object):
 			if not t: continue
 
 			if t.table.LookupList:
-				lookupMap = dict((i,id(v)) for i,v in enumerate(t.table.LookupList.Lookup))
+				lookupMap = {i:id(v) for i,v in enumerate(t.table.LookupList.Lookup)}
 				t.table.LookupList.mapLookups(lookupMap)
 				if t.table.FeatureList:
 					# XXX Handle present FeatureList but absent LookupList
 					t.table.FeatureList.mapLookups(lookupMap)
 
 			if t.table.FeatureList and t.table.ScriptList:
-				featureMap = dict((i,id(v)) for i,v in enumerate(t.table.FeatureList.FeatureRecord))
+				featureMap = {i:id(v) for i,v in enumerate(t.table.FeatureList.FeatureRecord)}
 				t.table.ScriptList.mapFeatures(featureMap)
 
 		# TODO GDEF/Lookup MarkFilteringSets
@@ -860,7 +899,7 @@ class Merger(object):
 			if not t: continue
 
 			if t.table.LookupList:
-				lookupMap = dict((id(v),i) for i,v in enumerate(t.table.LookupList.Lookup))
+				lookupMap = {id(v):i for i,v in enumerate(t.table.LookupList.Lookup)}
 				t.table.LookupList.mapLookups(lookupMap)
 				if t.table.FeatureList:
 					# XXX Handle present FeatureList but absent LookupList
@@ -868,67 +907,25 @@ class Merger(object):
 
 			if t.table.FeatureList and t.table.ScriptList:
 				# XXX Handle present ScriptList but absent FeatureList
-				featureMap = dict((id(v),i) for i,v in enumerate(t.table.FeatureList.FeatureRecord))
+				featureMap = {id(v):i for i,v in enumerate(t.table.FeatureList.FeatureRecord)}
 				t.table.ScriptList.mapFeatures(featureMap)
 
 		# TODO GDEF/Lookup MarkFilteringSets
 		# TODO FeatureParams nameIDs
 
 
-class Logger(object):
-
-  def __init__(self, verbose=False, xml=False, timing=False):
-    self.verbose = verbose
-    self.xml = xml
-    self.timing = timing
-    self.last_time = self.start_time = time.time()
-
-  def parse_opts(self, argv):
-    argv = argv[:]
-    for v in ['verbose', 'xml', 'timing']:
-      if "--"+v in argv:
-        setattr(self, v, True)
-        argv.remove("--"+v)
-    return argv
-
-  def __call__(self, *things):
-    if not self.verbose:
-      return
-    print(' '.join(str(x) for x in things))
-
-  def lapse(self, *things):
-    if not self.timing:
-      return
-    new_time = time.time()
-    print("Took %0.3fs to %s" %(new_time - self.last_time,
-                                 ' '.join(str(x) for x in things)))
-    self.last_time = new_time
-
-  def font(self, font, file=sys.stdout):
-    if not self.xml:
-      return
-    from fontTools.misc import xmlWriter
-    writer = xmlWriter.XMLWriter(file)
-    font.disassembleInstructions = False  # Work around ttLib bug
-    for tag in font.keys():
-      writer.begintag(tag)
-      writer.newline()
-      font[tag].toXML(writer, font)
-      writer.endtag(tag)
-      writer.newline()
-
-
 __all__ = [
-  'Options',
-  'Merger',
-  'Logger',
-  'main'
+	'Options',
+	'Merger',
+	'main'
 ]
 
-def main(args):
+@timer("make one with everything (TOTAL TIME)")
+def main(args=None):
+	from fontTools import configLogger
 
-	log = Logger()
-	args = log.parse_opts(args)
+	if args is None:
+		args = sys.argv[1:]
 
 	options = Options()
 	args = options.parse_opts(args)
@@ -937,14 +934,18 @@ def main(args):
 		print("usage: pyftmerge font...", file=sys.stderr)
 		sys.exit(1)
 
-	merger = Merger(options=options, log=log)
+	configLogger(level=logging.INFO if options.verbose else logging.WARNING)
+	if options.timing:
+		timer.logger.setLevel(logging.DEBUG)
+	else:
+		timer.logger.disabled = True
+
+	merger = Merger(options=options)
 	font = merger.merge(args)
 	outfile = 'merged.ttf'
-	font.save(outfile)
-	log.lapse("compile and save font")
+	with timer("compile and save font"):
+		font.save(outfile)
 
-	log.last_time = log.start_time
-	log.lapse("make one with everything(TOTAL TIME)")
 
 if __name__ == "__main__":
-	main(sys.argv[1:])
+	main()

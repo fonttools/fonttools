@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.1">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="dollar"/>
+    <GlyphID id="2" name="one"/>
+    <GlyphID id="3" name="two"/>
+    <GlyphID id="4" name="three"/>
+    <GlyphID id="5" name="A"/>
+    <GlyphID id="6" name="B"/>
+    <GlyphID id="7" name="C"/>
+    <GlyphID id="8" name="dollar.black"/>
+  </GlyphOrder>
+
+  <CFF>
+    <major value="1"/>
+    <minor value="0"/>
+    <CFFFont name="CFF2TestFont1Master-0">
+      <version value="1.0"/>
+      <FullName value="CFF2 Test Font1 Master 0"/>
+      <FamilyName value="CFF2 Test Font1 Master"/>
+      <isFixedPitch value="0"/>
+      <ItalicAngle value="0"/>
+      <UnderlineThickness value="50"/>
+      <PaintType value="0"/>
+      <CharstringType value="2"/>
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FontBBox value="0 -128 651 762"/>
+      <StrokeWidth value="0"/>
+      <!-- charset is dumped separately as the 'GlyphOrder' element -->
+      <Encoding name="StandardEncoding"/>
+      <Private>
+        <BlueValues value="-20 0 466 484 531 546 652 667 677 697 738 758"/>
+        <OtherBlues value="-255 -245"/>
+        <FamilyBlues value="-20 0 473 491 525 540 644 659 669 689 729 749"/>
+        <FamilyOtherBlues value="-249 -239"/>
+        <BlueScale value="0.0375"/>
+        <BlueShift value="7"/>
+        <BlueFuzz value="0"/>
+        <StdHW value="26"/>
+        <StdVW value="28"/>
+        <StemSnapH value="20 26"/>
+        <StemSnapV value="28 32"/>
+        <ForceBold value="0"/>
+        <LanguageGroup value="0"/>
+        <ExpansionFactor value="0.06"/>
+        <initialRandomSeed value="0"/>
+        <defaultWidthX value="490"/>
+        <nominalWidthX value="597"/>
+      </Private>
+      <CharStrings>
+        <CharString name=".notdef">
+          -97 0 50 600 50 hstem
+          0 50 400 50 vstem
+          0 0 rmoveto
+          500 0 rlineto
+          0 700 rlineto
+          -500 0 rlineto
+          0 -700 rlineto
+          250 395 rmoveto
+          -170 255 rlineto
+          340 0 rlineto
+          -170 -255 rlineto
+          30 -45 rmoveto
+          170 255 rlineto
+          0 -510 rlineto
+          -170 255 rlineto
+          -200 -300 rmoveto
+          170 255 rlineto
+          170 -255 rlineto
+          -340 0 rlineto
+          -30 555 rmoveto
+          170 -255 rlineto
+          -170 -255 rlineto
+          0 510 rlineto
+          endchar
+        </CharString>
+        <CharString name="A">
+          56 523 26 rmoveto
+          -120 -6 rlineto
+          0 -20 rlineto
+          248 0 rlineto
+          0 20 rlineto
+          -114 6 rlineto
+          -14 0 rlineto
+          -424 0 rmoveto
+          -87 -6 rlineto
+          0 -20 rlineto
+          198 0 rlineto
+          0 20 rlineto
+          -97 6 rlineto
+          -14 0 rlineto
+          369 221 rmoveto
+          -8 20 rlineto
+          -278 0 rlineto
+          -9 -20 rlineto
+          295 0 rlineto
+          -161 430 rmoveto
+          -222 -677 rlineto
+          27 0 rlineto
+          211 660 rlineto
+          -17 -10 rlineto
+          216 -650 rlineto
+          34 0 rlineto
+          -229 677 rlineto
+          -20 0 rlineto
+          endchar
+        </CharString>
+        <CharString name="B">
+          -3 167 310 rmoveto
+          0 -104 0 -104 -2 -102 rrcurveto
+          34 0 rlineto
+          -2 102 0 104 0 144 rrcurveto
+          0 7 rlineto
+          0 114 0 104 2 102 rrcurveto
+          -34 0 rlineto
+          2 -102 0 -104 0 -104 rrcurveto
+          0 -57 rlineto
+          8 340 rmoveto
+          7 0 rlineto
+          0 27 rlineto
+          -124 0 rlineto
+          0 -20 rlineto
+          117 -7 rlineto
+          0 -623 rmoveto
+          -117 -7 rlineto
+          0 -20 rlineto
+          124 0 rlineto
+          0 27 rlineto
+          -7 0 rlineto
+          7 316 rmoveto
+          101 0 rlineto
+          162 0 69 -60 0 -102 rrcurveto
+          0 -102 -75 -57 -125 0 rrcurveto
+          -132 0 rlineto
+          0 -22 rlineto
+          131 0 rlineto
+          156 0 75 77 0 102 rrcurveto
+          0 100 -68 76 -162 2 rrcurveto
+          -10 -8 rlineto
+          141 11 64 75 0 84 rrcurveto
+          0 95 -66 63 -146 0 rrcurveto
+          -115 0 rlineto
+          0 -22 rlineto
+          104 0 rlineto
+          145 0 50 -57 0 -76 rrcurveto
+          0 -95 -75 -64 -136 0 rrcurveto
+          -88 0 rlineto
+          0 -20 rlineto
+          endchar
+        </CharString>
+        <CharString name="C">
+          47 386 7 rmoveto
+          -167 0 -123 128 0 203 rrcurveto
+          0 199 116 133 180 0 rrcurveto
+          73 0 40 -17 56 -37 rrcurveto
+          -21 29 rlineto
+          18 -145 rlineto
+          24 0 rlineto
+          -4 139 rlineto
+          -60 35 -49 18 -80 0 rrcurveto
+          -190 0 -135 -144 0 -210 rrcurveto
+          0 -209 129 -144 195 0 rrcurveto
+          72 0 57 12 67 41 rrcurveto
+          4 139 rlineto
+          -24 0 rlineto
+          -18 -139 rlineto
+          17 20 rlineto
+          -55 -37 -55 -14 -67 0 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="dollar">
+          245 5 rmoveto
+          -65 0 -39 15 -46 50 rrcurveto
+          36 -48 rlineto
+          -28 100 rlineto
+          -6 15 -10 5 -11 0 rrcurveto
+          -14 0 -8 -7 -1 -14 rrcurveto
+          24 -85 61 -51 107 0 rrcurveto
+          91 0 90 54 0 112 rrcurveto
+          0 70 -26 66 -134 57 rrcurveto
+          -19 8 rlineto
+          -93 39 -42 49 0 68 rrcurveto
+          0 91 60 48 88 0 rrcurveto
+          56 0 35 -14 44 -50 rrcurveto
+          -38 47 rlineto
+          28 -100 rlineto
+          6 -15 10 -5 11 0 rrcurveto
+          14 0 8 7 1 14 rrcurveto
+          -24 88 -67 48 -84 0 rrcurveto
+          -92 0 -82 -51 0 -108 rrcurveto
+          0 -80 45 -53 92 -42 rrcurveto
+          37 -17 rlineto
+          114 -52 26 -46 0 -65 rrcurveto
+          0 -93 -65 -55 -90 0 rrcurveto
+          18 318 rmoveto
+          0 439 rlineto
+          -22 0 rlineto
+          0 -425 rlineto
+          22 -14 rlineto
+          -20 -438 rmoveto
+          22 0 rlineto
+          0 438 rlineto
+          -22 14 rlineto
+          0 -452 rlineto
+          endchar
+        </CharString>
+        <CharString name="dollar.black">
+          3 245 5 rmoveto
+          -65 0 -39 15 -46 50 rrcurveto
+          36 -48 rlineto
+          -28 100 rlineto
+          -6 15 -10 5 -11 0 rrcurveto
+          -14 0 -8 -7 -1 -14 rrcurveto
+          24 -85 61 -51 107 0 rrcurveto
+          91 0 90 54 0 112 rrcurveto
+          0 70 -26 66 -134 57 rrcurveto
+          -19 8 rlineto
+          -93 39 -42 49 0 68 rrcurveto
+          0 91 60 48 88 0 rrcurveto
+          56 0 35 -14 44 -50 rrcurveto
+          -38 47 rlineto
+          28 -100 rlineto
+          6 -15 10 -5 11 0 rrcurveto
+          14 0 8 7 1 14 rrcurveto
+          -24 88 -67 48 -84 0 rrcurveto
+          -92 0 -82 -51 0 -108 rrcurveto
+          0 -80 45 -53 92 -42 rrcurveto
+          37 -17 rlineto
+          114 -52 26 -46 0 -65 rrcurveto
+          0 -93 -65 -55 -90 0 rrcurveto
+          17 651 rmoveto
+          1 106 rlineto
+          -22 0 rlineto
+          1 -107 rlineto
+          20 1 rlineto
+          -15 -784 rmoveto
+          22 0 rlineto
+          -3 121 rlineto
+          -20 2 rlineto
+          1 -123 rlineto
+          endchar
+        </CharString>
+        <CharString name="one">
+          91 618 rmoveto
+          0 -20 rlineto
+          155 35 rlineto
+          0 -421 rlineto
+          0 -70 -1 -71 -2 -72 rrcurveto
+          34 0 rlineto
+          -2 72 -1 71 0 70 rrcurveto
+          0 297 rlineto
+          4 146 rlineto
+          -14 12 rlineto
+          -173 -49 rlineto
+          176 -593 rmoveto
+          -14 0 rlineto
+          -170 -6 rlineto
+          0 -20 rlineto
+          344 0 rlineto
+          0 20 rlineto
+          -160 6 rlineto
+          endchar
+        </CharString>
+        <CharString name="three">
+          endchar
+        </CharString>
+        <CharString name="two">
+          endchar
+        </CharString>
+      </CharStrings>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF>
+
+</ttFont>

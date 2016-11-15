@@ -1,0 +1,12 @@
+# OpenType Feature File specification, section 6.b.ii:
+# [GPOS LookupType 2] Enumerating pairs
+# http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html
+
+@Y_LC = [y yacute ydieresis];
+@SMALL_PUNC = [comma semicolon period];
+
+feature kern {
+  enum pos @Y_LC semicolon -80;    # specific pairs
+  pos     f quoteright 30;         # specific pair
+  pos     @Y_LC @SMALL_PUNC -100;  # class pair
+} kern;

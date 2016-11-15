@@ -21,13 +21,9 @@ def calcBounds(array):
 def calcIntBounds(array):
     """Return the integer bounding rectangle of a 2D points array as a
     tuple: (xMin, yMin, xMax, yMax)
+    Values are rounded to closest integer.
     """
-    xMin, yMin, xMax, yMax = calcBounds(array)
-    xMin = int(math.floor(xMin))
-    xMax = int(math.ceil(xMax))
-    yMin = int(math.floor(yMin))
-    yMax = int(math.ceil(yMax))
-    return xMin, yMin, xMax, yMax
+    return tuple(int(round(v)) for v in calcBounds(array))
 
 
 def updateBounds(bounds, p, min=min, max=max):
@@ -43,7 +39,7 @@ def pointInRect(p, rect):
     return (xMin <= x <= xMax) and (yMin <= y <= yMax)
 
 def pointsInRect(array, rect):
-    """Find out which points or array are inside rect. 
+    """Find out which points or array are inside rect.
     Returns an array with a boolean for each point.
     """
     if len(array) < 1:
@@ -59,7 +55,7 @@ def vectorLength(vector):
 def asInt16(array):
     """Round and cast to 16 bit integer."""
     return [int(math.floor(i+0.5)) for i in array]
-    
+
 
 def normRect(rect):
     """Normalize the rectangle so that the following holds:
@@ -180,5 +176,6 @@ def _test():
     """
 
 if __name__ == "__main__":
+    import sys
     import doctest
-    doctest.testmod()
+    sys.exit(doctest.testmod().failed)
