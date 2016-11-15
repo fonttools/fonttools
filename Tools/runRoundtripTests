@@ -19,7 +19,6 @@ from fontTools.ttLib import TTFont
 from fontTools.misc.captureOutput import captureOutput
 from fontTools.ttLib.bytecodeContainer import BytecodeContainer, Program
 from fontTools.ttLib.instructions import statements, instructionConstructor, abstractExecute
-from fontTools.ttLib.instructions.instructionConstructor import constructInstructions
 from fontTools import analysis
 from fontTools import coi2ttf
 from fontTools import compare

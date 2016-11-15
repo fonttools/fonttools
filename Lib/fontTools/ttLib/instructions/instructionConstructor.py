@@ -2,6 +2,7 @@ from . import statements
 
 #this will parse str to instruct or data classes
 class instructionConstructor():
+    WORD_SUFFIX = "/* word */ "
     def __init__(self,instruction):
         self.instruction = instruction
         self.tokenizer()
@@ -9,8 +10,12 @@ class instructionConstructor():
         return self.typed_instruction
     def tokenizer(self):
         try:
+            is_word = False
+            if self.instruction.endswith(self.WORD_SUFFIX):
+                is_word = True
+                self.instruction = self.instruction[:-len(self.WORD_SUFFIX)]
             data = int(self.instruction)
-            self.typed_instruction = Data(data)
+            self.typed_instruction = Data(data, is_word)
         except ValueError:
             data = ''
             flag = False
@@ -23,7 +28,7 @@ class instructionConstructor():
                 elif self.instruction[i].isdigit() and flag:
                     has_data = True
                     data += str(self.instruction[i])
-                if self.instruction[i]=='/' and self.instruction[i+1] == "*":
+                if self.instruction[i:i+2] == '/*':
                     break
             if has_data:
                 self.typed_instruction.add_data(Data(data))
@@ -32,32 +37,10 @@ class instructionConstructor():
         return targetClass()
 
 class Data():
-    def __init__(self, data):
+    def __init__(self, data, is_word = False):
+        self.is_word = is_word
         if type(data)==str:
             self.value = data
         if type(data)==int:
-             self.value = data
+            self.value = data
 
-
-def constructInstructions(program_tag, instructions):
-    thisinstruction = None
-    instructions_list = []
-    def combineInstructionData(instruction,data):
-        instruction.add_data(data)
-    number = 0
-    for instruction in instructions:
-        instructionCons = instructionConstructor(instruction)
-        instruction = instructionCons.getClass()
-
-        if isinstance(instruction, Data):
-            combineInstructionData(thisinstruction,instruction)
-        else:
-            if thisinstruction is not None:
-                thisinstruction.id = program_tag + '.' + str(number)
-                instructions_list.append(thisinstruction)
-                number = number+1
-            thisinstruction = instruction
-
-    instructions_list.append(thisinstruction)
-    return instructions_list
-    

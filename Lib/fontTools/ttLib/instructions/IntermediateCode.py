@@ -364,7 +364,7 @@ class IPMethodCall(MethodCallStatement):
 class ROUNDMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
         super(ROUNDMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'ROUND_'+data
+        self.methodName = 'ROUND_'+data.value
 
 class SHPMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
@@ -549,33 +549,20 @@ class EmptyStatement(object):
         return "Empty"
 
 class JmpStatement(object):
-    def __init__(self, label):
-        self.jmpLabel = label
+    def __init__(self, dest):
+        self.dest = dest
     def __repr__(self):
-        return "JMPR %s" % (self.jmpLabel)
+        return "JMPR %s" % (self.dest)
 
 class JROxStatement(object):
-    def __init__(self, onTrue, arg, label):
+    def __init__(self, onTrue, e, dest):
         self.onTrue = onTrue
-        self.arg = arg
-        self.jmpLabel = label
+        self.e = e
+        self.dest = dest
     def __repr__(self):
-        if self.onTrue:
-            op = 'JROT'
-        else:
-            op = 'JROF'
-        return "%s (%s, %s)" % (op, self.arg, self.jmpLabel)
-
-class LabelBlock(object):
-    def __init__(self,label):
-        self.label = label
-        self.statements = []
-    def __repr__(self):
-        resStr = ""
-        resStr += self.label+'\n'
-        for statement in self.statements:
-            resStr += str(statement)+'\n'
-        return resStr
+        op = 'JROT' if self.onTrue else 'JROF'
+        d = "self" if self == self.dest else str(self.dest)
+        return "%s (%s, [%s])" % (op, self.e, d)
 
 class IfElseBlock(object):
     def __init__(self, condition = None, nesting_level = 1):

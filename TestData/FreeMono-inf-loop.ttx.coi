@@ -22,7 +22,8 @@ $prep_1 := 0
 CALL 0()
 
 Function #0:
-$fpgm_0_1 := -1
-$fpgm_0_1 := -1
-JMPR -1
+$fpgm_0_1 := -2
+label0:
+$fpgm_0_1 := -2
+JMPR label0
 

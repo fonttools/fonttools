@@ -149,13 +149,13 @@
       MPPEM[ ]
       IF[ ]
       PUSH[ ]
-      5
+      9
       JMPR[ ]
       PUSH[ ]
       8
       ELSE[ ]
       PUSH[ ]
-      -3
+      -6
       JMPR[ ]
       PUSH[ ]
       9

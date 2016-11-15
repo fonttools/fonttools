@@ -149,14 +149,10 @@
       MPPEM[ ]
       IF[ ]
       PUSH[ ]
-      987
-      PUSH[ ]
-      4
+      6
       PUSH[ ]
       1
       JROT[ ]
-      PUSH[ ]
-      8
       EIF[ ]
       PUSH[ ]
       9

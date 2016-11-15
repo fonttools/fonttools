@@ -1,6 +1,12 @@
-from instructions import statements, instructionConstructor, abstractExecute
+from instructions import statements, instructionConstructor, abstractExecute, IntermediateCode
 
 class BytecodeContainer(object):
+    class Label(object):
+        def __init__(self, n):
+            self.n = n
+        def __repr__(self):
+            return "label%i" % self.n
+
     """ Represents bytecode-related global data for a TrueType font. """
     def __init__(self, tt):
         # tag id -> Program
@@ -28,25 +34,23 @@ class BytecodeContainer(object):
         in a single font file
         '''
         def constructInstructions(program_tag, instructions):
-            thisinstruction = None
+            parent_instruction = None
             instructions_list = []
-            def combineInstructionData(instruction,data):
-                instruction.add_data(data)
             number = 0
-            for instruction in instructions:
-                instructionCons = instructionConstructor.instructionConstructor(instruction)
+            for i in instructions:
+                instructionCons = instructionConstructor.instructionConstructor(i)
                 instruction = instructionCons.getClass()
         
                 if isinstance(instruction, instructionConstructor.Data):
-                    combineInstructionData(thisinstruction,instruction)
+                    parent_instruction.add_data(instruction)
                 else:
-                    if thisinstruction is not None:
-                        thisinstruction.id = program_tag + '.' + str(number)
-                        instructions_list.append(thisinstruction)
-                        number = number+1
-                    thisinstruction = instruction
+                    if parent_instruction is not None:
+                        parent_instruction.id = program_tag + '.' + str(number)
+                        instructions_list.append(parent_instruction)
+                        number += 1
+                    parent_instruction = instruction
 
-            instructions_list.append(thisinstruction)
+            instructions_list.append(parent_instruction)
             return instructions_list
         
         def add_tags_with_bytecode(tt,tag):
@@ -70,18 +74,17 @@ class BytecodeContainer(object):
                 for instruction in instructions:
                     if not skip:
                         if isinstance(instruction, statements.all.PUSH_Statement):
-                            functionsLabels.extend(instruction.data)
+                            functionsLabels.extend(map(lambda x: x.value, instruction.data))
                         if isinstance(instruction, statements.all.FDEF_Statement):
                             skip = True
                             function_ptr = Function()
                     else:
+                        function_ptr.instructions.append(instruction)
                         if isinstance(instruction, statements.all.ENDF_Statement):
                             skip = False
                             function_label = functionsLabels[-1]
                             functionsLabels.pop()
                             self.function_table[function_label] = function_ptr
-                        else:
-                            function_ptr.instructions.append(instruction)
 
                 for key, value in self.function_table.items():
                     value.constructBody()
@@ -208,8 +211,17 @@ class BytecodeContainer(object):
                         ttFont['glyf'].glyphs[table].program.fromAssembly(assembly)
 
     def print_IR(self, IR):
-        for line in IR:
-            print line
+        jump_targets = {}
+        counter = 0
+        for inst in IR:
+            if isinstance(inst, IntermediateCode.JROxStatement) or isinstance(inst, IntermediateCode.JmpStatement):
+                jump_targets[inst.dest] = self.Label(counter)
+                inst.dest = self.Label(counter)
+                counter = counter + 1
+        for inst in IR:
+            if inst in jump_targets:
+                print "%s:" % jump_targets[inst]
+            print inst
 
 # Function and Program are suspiciously similar; should probably be refactored.
 # per-glyph instructions

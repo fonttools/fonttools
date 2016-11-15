@@ -348,8 +348,6 @@ class Program(object):
                                         args.append(int(number))
                                         argIsWord.append(True if cwm is not None and cwm.strip() == WORD_SUFFIX else False)
                                 nArgs = len(args)
-                                print (mnemonic)
-                                print (args)
                                 if mnemonic == "PUSH":
                                         # Automatically choose the most compact representation
                                         nWords = 0

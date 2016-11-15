@@ -24,10 +24,10 @@ CALL 0()
 Function #0:
 $fpgm_0_1 := PPEM_X
 if ($fpgm_0_1) {
-    $fpgm_0_1 := 5
+    $fpgm_0_1 := 8
     $fpgm_0_1 := 9
 } else {
-    $fpgm_0_1 := -3
+    $fpgm_0_1 := -5
     $fpgm_0_1 := 8
 }
 

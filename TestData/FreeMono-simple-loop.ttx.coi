@@ -23,8 +23,10 @@ $prep_1 := 0
 
 Function #0:
 $fpgm_0_1 := 1
+label0:
 $fpgm_0_2 := PPEM_X
-$fpgm_0_3 := -2
-JROT ($fpgm_0_2, -2)
-$fpgm_0_1 := PPEM_X
+$fpgm_0_3 := -3
+$fpgm_0_4 := PPEM_X
+JROT ($fpgm_0_4, -3)
+$fpgm_0_2 := PPEM_X
 

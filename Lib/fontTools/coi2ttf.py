@@ -15,7 +15,6 @@ import copy
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.bytecodeContainer import BytecodeContainer, Program
 from fontTools.ttLib.instructions import instructionConstructor
-from fontTools.ttLib.instructions.instructionConstructor import constructInstructions
 
 def usage():
     print(__doc__)
@@ -339,7 +338,7 @@ def save_font(bytecode, fontfile):
         if key == 'prep':
             del bytecode[key][:17]
         program_tag = key
-        instruction = constructInstructions(program_tag, bytecode[key])
+        instruction = bytecodeContainer.constructInstructions(program_tag, bytecode[key])
         bytecodeContainer.tag_to_programs[program_tag] = Program(instruction)
     bytecodeContainer.updateTTFont(font_roundtrip)
     roundtrip_filename = "{0}_roundtrip.ttf".format(fontfile.split(".ttf")[0])

@@ -27,7 +27,7 @@ if ($fpgm_0_1) {
     $fpgm_0_1 := 987
     $fpgm_0_2 := 4
     $fpgm_0_3 := 1
-    JROT ($fpgm_0_2, 1)
+    JROT ($fpgm_0_3, 4)
     $fpgm_0_2 := 8
 }
 $fpgm_0_1 := 9

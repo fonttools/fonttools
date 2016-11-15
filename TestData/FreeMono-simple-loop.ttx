@@ -147,10 +147,11 @@
       0
       FDEF[ ]
       PUSH[ ]
-      1
-      MPPEM[ ]
+      1 1
+      POP[ ]
       PUSH[ ]
-      -2
+      -3
+      MPPEM[ ]
       JROT[ ]
       POP[ ]
       MPPEM[ ]

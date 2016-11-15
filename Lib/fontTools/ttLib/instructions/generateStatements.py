@@ -32,7 +32,7 @@ class root_statement(object):
     def set_predecessor(self, predecessor):
         self.predecessor = predecessor
     def add_data(self,new_data):
-        self.data.append(new_data.value)
+        self.data.append(new_data)
     def get_pop_num(self):
         return self.pop_num
     def get_push_num(self):
@@ -42,7 +42,7 @@ class root_statement(object):
     def prettyPrint(self):
         print(self.__class__.__name__,self.data)
     def __repr__(self):
-        return "%s(%r)" % (self.__class__.__name__.split("_")[0],self.data)
+        return "%s(%r)" % (self.__class__.__name__.split("_")[0],map(lambda x:x.value, self.data))
 class all():
 """
 
