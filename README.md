@@ -200,6 +200,22 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 <map input="401.0" output="66.0" />
 <map input="1000.0" output="990.0" />
 ```
+
+Example of all axis elements together:
+```xml
+    <axes>
+        <axis default="0" maximum="1000" minimum="0" name="weight" tag="wght">
+            <labelName xml:lang="fa-IR">قطر</labelName>
+            <labelName xml:lang="en">Wéíght</labelName>
+        </axis>
+        <axis default="0" maximum="1000" minimum="0" name="width" tag="wdth">
+            <map input="0.0" output="10.0" />
+            <map input="401.0" output="66.0" />
+            <map input="1000.0" output="990.0" />
+        </axis>
+    </axes>
+```
+
 # 2. `source` element
 * Defines a single font that contributes to the designspace.
 * Child element of `sources`
