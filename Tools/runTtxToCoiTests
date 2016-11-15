@@ -8,7 +8,7 @@ import subprocess
 from fontTools import analysis
 
 testSuite = ['FreeMono-call-endf.ttx', 'FreeMono-empty-fdef.ttx', 'FreeMono-gfv.ttx', 'FreeMono-inf-loop.ttx', 
-             'FreeMono-jmpr.ttx', 'FreeMono-jrot.ttx', 'FreeMono-jrot-jrof.ttx',
+             'FreeMono-jmpr.ttx', 'FreeMono-jrot.ttx', 'FreeMono-jrot-jrof.ttx', 'FreeMono-fn-with-jmprs-from-arial.ttx',
              'FreeMono-max.ttx', 'FreeMono-max-no-simplify.ttx',
              'FreeMono-pop.ttx', 'FreeMono-simple-loop.ttx', 'FreeMono-subset-A.ttx']
 
@@ -16,11 +16,12 @@ def main(args):
     scriptdir = os.path.dirname(os.path.realpath(__file__))
     stored_stdout = sys.stdout
     for fontFile in testSuite:
-        print ("Testing "+fontFile)
         (fd, tmpnam) = tempfile.mkstemp()
+        ff_with_path = os.path.join(scriptdir, "..", "TestData" , fontFile)
+        print ("pyftanalysis -ipf " + ff_with_path)
         sys.stdout = os.fdopen(fd, 'w')
 
-        analysis.main(['-ipf', os.path.join(scriptdir, "..", "TestData" , fontFile)])
+        analysis.main(['-ipf', ff_with_path])
         sys.stdout.close()
         sys.stdout = stored_stdout
 
