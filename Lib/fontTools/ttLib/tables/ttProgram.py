@@ -151,11 +151,11 @@ instructions = [
 
 
 def bitRepr(value, bits):
-        s = ""
-        for i in range(bits):
-                s = "01"[value & 0x1] + s
-                value = value >> 1
-        return s
+	s = ""
+	for i in range(bits):
+		s = "01"[value & 0x1] + s
+		value = value >> 1
+	return s
 
 
 _mnemonicPat = re.compile("[A-Z][A-Z0-9]*$")
@@ -207,12 +207,11 @@ def constructInstructionClasses(instructionList):
 streamOpcodeDict, streamMnemonicDict = _makeDict(streamInstructions)
 opcodeDict, mnemonicDict = _makeDict(instructions)
 
-
 class tt_instructions_error(Exception):
-        def __init__(self, error):
-                self.error = error
-        def __str__(self):
-                return "TT instructions error: %s" % repr(self.error)
+	def __init__(self, error):
+		self.error = error
+	def __str__(self):
+		return "TT instructions error: %s" % repr(self.error)
 
 
 _comment = r"/\*.*?\*/"
@@ -223,46 +222,47 @@ _token = "(%s)|(%s)|(%s)" % (_instruction, _number, _comment)
 _tokenRE = re.compile(_token)
 _whiteRE = re.compile(r"\s*")
 
-_pushCountPat = re.compile(r"[A-Z][A-Z0-9]*\s*\[.*?\]\s*/\* ([0-9]*).*?\*/")
+_pushCountPat = re.compile(r"[A-Z][A-Z0-9]*\s*\[.*?\]\s*/\* ([0-9]+).*?\*/")
+
 WORD_SUFFIX = "/* word */"
 
 def _skipWhite(data, pos):
-        m = _whiteRE.match(data, pos)
-        newPos = m.regs[0][1]
-        assert newPos >= pos
-        return newPos
+	m = _whiteRE.match(data, pos)
+	newPos = m.regs[0][1]
+	assert newPos >= pos
+	return newPos
 
 
 class Program(object):
-        
-        def __init__(self):
-                pass
-        
-        def fromBytecode(self, bytecode):
-                self.bytecode = array.array("B", bytecode)
-                if hasattr(self, "assembly"):
-                        del self.assembly
-        
-        def fromAssembly(self, assembly):
-                self.assembly = assembly
-                if hasattr(self, "bytecode"):
-                        del self.bytecode
-        
-        def getBytecode(self):
-                if not hasattr(self, "bytecode"):
-                        self._assemble()
-                return self.bytecode.tostring()
-        
-        def getAssembly(self):
-                if not hasattr(self, "assembly"):
-                        self._disassemble()
-                return self.assembly
-        
-        def toXML(self, writer, ttFont):
-                if not hasattr (ttFont, "disassembleInstructions") or ttFont.disassembleInstructions:
-                        try:
-                                assembly = self.getAssembly()
-                        except:
+
+	def __init__(self):
+		pass
+
+	def fromBytecode(self, bytecode):
+		self.bytecode = array.array("B", bytecode)
+		if hasattr(self, "assembly"):
+			del self.assembly
+
+	def fromAssembly(self, assembly):
+		self.assembly = assembly
+		if hasattr(self, "bytecode"):
+			del self.bytecode
+
+	def getBytecode(self):
+		if not hasattr(self, "bytecode"):
+			self._assemble()
+		return self.bytecode.tostring()
+
+	def getAssembly(self, preserve=True):
+		if not hasattr(self, "assembly"):
+			self._disassemble(preserve=preserve)
+		return self.assembly
+
+	def toXML(self, writer, ttFont):
+		if not hasattr (ttFont, "disassembleInstructions") or ttFont.disassembleInstructions:
+			try:
+				assembly = self.getAssembly()
+			except:
 				import traceback
 				tmp = StringIO()
 				traceback.print_exc(file=tmp)
@@ -276,232 +276,232 @@ class Program(object):
 				writer.dumphex(self.getBytecode())
 				writer.endtag("bytecode")
 			else:
-                                writer.begintag("assembly")
-                                writer.newline()
-                                i = 0
-                                nInstr = len(assembly)
-                                while i < nInstr:
-                                        instr = assembly[i]
-                                        writer.write(instr)
-                                        writer.newline()
-                                        m = _pushCountPat.match(instr)
-                                        i = i + 1
-                                        if m:
-                                                nValues = int(m.group(1))
-                                                line = []
-                                                j = 0
-                                                for j in range(nValues):
-                                                        if j and not (j % 25):
-                                                                writer.write(' '.join(line))
-                                                                writer.newline()
-                                                                line = []
-                                                                line.append(assembly[i+j])
-                                                        writer.write(' '.join(line))
-                                                        writer.newline()
-                                                        i = i + j + 1
-                                writer.endtag("assembly")
-                else:
-                        writer.begintag("bytecode")
-                        writer.newline()
-                        writer.dumphex(self.getBytecode())
-                        writer.endtag("bytecode")
-        
-        def fromXML(self, name, attrs, content, ttFont, preserveWidths=False):
-                if name == "assembly":
-                        self.fromAssembly(strjoin(content))
-                        self._assemble(preserveWidths)
-                        del self.assembly
-                else:
-                        assert name == "bytecode"
-                        self.fromBytecode(readHex(content))
-        
-        def _assemble(self, preserveWidths=False):
-                assembly = self.assembly
-                if isinstance(assembly, type([])):
-                        assembly = ' '.join(assembly)
-                bytecode = []
-                push = bytecode.append
-                lenAssembly = len(assembly)
-                pos = _skipWhite(assembly, 0)
-                while pos < lenAssembly:
-                        m = _tokenRE.match(assembly, pos)
-                        if m is None:
-                                raise tt_instructions_error("Syntax error in TT program (%s)" % assembly[pos-5:pos+15])
-                        dummy, mnemonic, arg, number, comment = m.groups()
-                        pos = m.regs[0][1]
-                        if comment:
+				writer.begintag("assembly")
+				writer.newline()
+				i = 0
+				nInstr = len(assembly)
+				while i < nInstr:
+					instr = assembly[i]
+					writer.write(instr)
+					writer.newline()
+					m = _pushCountPat.match(instr)
+					i = i + 1
+					if m:
+						nValues = int(m.group(1))
+						line = []
+						j = 0
+						for j in range(nValues):
+							if j and not (j % 25):
+								writer.write(' '.join(line))
+								writer.newline()
+								line = []
+							line.append(assembly[i+j])
+						writer.write(' '.join(line))
+						writer.newline()
+						i = i + j + 1
+				writer.endtag("assembly")
+		else:
+			writer.begintag("bytecode")
+			writer.newline()
+			writer.dumphex(self.getBytecode())
+			writer.endtag("bytecode")
+
+	def fromXML(self, name, attrs, content, ttFont, preserveWidths=False):
+		if name == "assembly":
+			self.fromAssembly(strjoin(content))
+			self._assemble(preserveWidths)
+			del self.assembly
+		else:
+			assert name == "bytecode"
+			self.fromBytecode(readHex(content))
+
+	def _assemble(self, preserveWidths=False):
+		assembly = self.assembly
+		if isinstance(assembly, type([])):
+			assembly = ' '.join(assembly)
+		bytecode = []
+		push = bytecode.append
+		lenAssembly = len(assembly)
+		pos = _skipWhite(assembly, 0)
+		while pos < lenAssembly:
+			m = _tokenRE.match(assembly, pos)
+			if m is None:
+				raise tt_instructions_error("Syntax error in TT program (%s)" % assembly[pos-5:pos+15])
+			dummy, mnemonic, arg, number, comment = m.groups()
+			pos = m.regs[0][1]
+			if comment:
 				pos = _skipWhite(assembly, pos)
-                                continue
-                        
-                        arg = arg.strip()
-                        if mnemonic.startswith("INSTR"):
-                                # Unknown instruction
-                                op = int(mnemonic[5:])
-                                push(op)
-                        elif mnemonic not in ("PUSH", "NPUSHB", "NPUSHW", "PUSHB", "PUSHW"):
-                                op, argBits, name = mnemonicDict[mnemonic]
-                                if len(arg) != argBits:
-                                        raise tt_instructions_error("Incorrect number of argument bits (%s[%s])" % (mnemonic, arg))
-                                if arg:
-                                        arg = binary2num(arg)
-                                        push(op + arg)
-                                else:
-                                        push(op)
-                        else:
-                                args = []
-                                argIsWord = []
-                                pos = _skipWhite(assembly, pos)
-                                while pos < lenAssembly:
-                                        m = _tokenRE.match(assembly, pos)
-                                        if m is None:
-                                                raise tt_instructions_error("Syntax error in TT program (%s)" % assembly[pos:pos+15])
-                                        dummy, _mnemonic, arg, number, comment = m.groups()
-                                        if number is None and comment is None:
-                                                break
-                                        pos = m.regs[0][1]
-                                        pos = _skipWhite(assembly, pos)
-                                        comment_with_m_match = _tokenRE.match(assembly, pos)
-                                        cwm = comment_with_m_match.groups()[4]
-                                        if comment is not None:
-                                                continue
-                                        args.append(int(number))
-                                        argIsWord.append(True if cwm is not None and cwm.strip() == WORD_SUFFIX else False)
-                                nArgs = len(args)
-                                if mnemonic == "PUSH":
-                                        # Automatically choose the most compact representation
-                                        nWords = 0
-                                        while nArgs:
-                                                while nWords < nArgs and nWords < 255 and (not (0 <= args[nWords] <= 255) or (preserveWidths and argIsWord[nWords])):
-                                                        nWords += 1
-                                                nBytes = 0
-                                                while nWords+nBytes < nArgs and nBytes < 255 and 0 <= args[nWords+nBytes] <= 255:
-                                                        nBytes += 1
-                                                if nBytes < 2 and nWords + nBytes < 255 and nWords + nBytes != nArgs:
-                                                        # Will write bytes as words
-                                                        nWords += nBytes
-                                                        continue
+				continue
 
-                                                # Write words
-                                                if nWords:
-                                                        if nWords <= 8:
-                                                                op, argBits = streamMnemonicDict["PUSHW"]
-                                                                op = op + nWords - 1
-                                                                push(op)
-                                                        else:
-                                                                op, argBits = streamMnemonicDict["NPUSHW"]
-                                                                push(op)
-                                                                push(nWords)
-                                                        for value in args[:nWords]:
-                                                                assert -32768 <= value < 32768, "PUSH value out of range %d" % value
-                                                                push((value >> 8) & 0xff)
-                                                                push(value & 0xff)
+			arg = arg.strip()
+			if mnemonic.startswith("INSTR"):
+				# Unknown instruction
+				op = int(mnemonic[5:])
+				push(op)
+			elif mnemonic not in ("PUSH", "NPUSHB", "NPUSHW", "PUSHB", "PUSHW"):
+				op, argBits, name = mnemonicDict[mnemonic]
+				if len(arg) != argBits:
+					raise tt_instructions_error("Incorrect number of argument bits (%s[%s])" % (mnemonic, arg))
+				if arg:
+					arg = binary2num(arg)
+					push(op + arg)
+				else:
+					push(op)
+			else:
+				args = []
+				argIsWord = []
+				pos = _skipWhite(assembly, pos)
+				while pos < lenAssembly:
+					m = _tokenRE.match(assembly, pos)
+					if m is None:
+						raise tt_instructions_error("Syntax error in TT program (%s)" % assembly[pos:pos+15])
+					dummy, _mnemonic, arg, number, comment = m.groups()
+					if number is None and comment is None:
+						break
+					pos = m.regs[0][1]
+					pos = _skipWhite(assembly, pos)
+					comment_with_m_match = _tokenRE.match(assembly, pos)
+					cwm = comment_with_m_match.groups()[4]
+					if comment is not None:
+						continue
+					args.append(int(number))
+					argIsWord.append(True if cwm is not None and cwm.strip() == WORD_SUFFIX else False)
+				nArgs = len(args)
+				if mnemonic == "PUSH":
+					# Automatically choose the most compact representation
+					nWords = 0
+					while nArgs:
+						while nWords < nArgs and nWords < 255 and (not (0 <= args[nWords] <= 255) or (preserveWidths and argIsWord[nWords])):
+							nWords += 1
+						nBytes = 0
+						while nWords+nBytes < nArgs and nBytes < 255 and 0 <= args[nWords+nBytes] <= 255:
+							nBytes += 1
+						if nBytes < 2 and nWords + nBytes < 255 and nWords + nBytes != nArgs:
+							# Will write bytes as words
+							nWords += nBytes
+							continue
 
-                                                # Write bytes
-                                                if nBytes:
-                                                        pass
-                                                        if nBytes <= 8:
-                                                                op, argBits = streamMnemonicDict["PUSHB"]
-                                                                op = op + nBytes - 1
-                                                                push(op)
-                                                        else:
-                                                                op, argBits = streamMnemonicDict["NPUSHB"]
-                                                                push(op)
-                                                                push(nBytes)
-                                                        for value in args[nWords:nWords+nBytes]:
-                                                                push(value)
+						# Write words
+						if nWords:
+							if nWords <= 8:
+								op, argBits, name = streamMnemonicDict["PUSHW"]
+								op = op + nWords - 1
+								push(op)
+							else:
+								op, argBits, name = streamMnemonicDict["NPUSHW"]
+								push(op)
+								push(nWords)
+							for value in args[:nWords]:
+								assert -32768 <= value < 32768, "PUSH value out of range %d" % value
+								push((value >> 8) & 0xff)
+								push(value & 0xff)
 
-                                                nTotal = nWords + nBytes
-                                                args = args[nTotal:]
-                                                argIsWord = argIsWord[nTotal:]
-                                                nArgs -= nTotal
-                                                nWords = 0
-                                else:
-                                        # Write exactly what we've been asked to
-                                        words = mnemonic[-1] == "W"
-                                        op, argBits = streamMnemonicDict[mnemonic]
-                                        if mnemonic[0] != "N":
-                                                assert nArgs <= 8, nArgs
-                                                op = op + nArgs - 1
-                                                push(op)
-                                        else:
-                                                assert nArgs < 256
-                                                push(op)
-                                                push(nArgs)
-                                        if words:
-                                                for value in args:
-                                                        assert -32768 <= value < 32768, "PUSHW value out of range %d" % value
-                                                        push((value >> 8) & 0xff)
-                                                        push(value & 0xff)
-                                        else:
-                                                for value in args:
-                                                        assert 0 <= value < 256, "PUSHB value out of range %d" % value
-                                                        push(value)
+						# Write bytes
+						if nBytes:
+							pass
+							if nBytes <= 8:
+								op, argBits, name = streamMnemonicDict["PUSHB"]
+								op = op + nBytes - 1
+								push(op)
+							else:
+								op, argBits, name = streamMnemonicDict["NPUSHB"]
+								push(op)
+								push(nBytes)
+							for value in args[nWords:nWords+nBytes]:
+								push(value)
 
-                        pos = _skipWhite(assembly, pos)
-                
-                if bytecode:
-                        assert max(bytecode) < 256 and min(bytecode) >= 0
-                self.bytecode = array.array("B", bytecode)
-        
-        def _disassemble(self, preserve=False):
-                assembly = []
-                i = 0
-                bytecode = self.bytecode
-                numBytecode = len(bytecode)
-                while i < numBytecode:
-                        op = bytecode[i]
-                        try:
-                                mnemonic, argBits, argoffset = opcodeDict[op]
-                        except KeyError:
-                                if op in streamOpcodeDict:
-                                        values = []
+						nTotal = nWords + nBytes
+						args = args[nTotal:]
+						argIsWord = argIsWord[nTotal:]
+						nArgs -= nTotal
+						nWords = 0
+				else:
+					# Write exactly what we've been asked to
+					words = mnemonic[-1] == "W"
+					op, argBits, name = streamMnemonicDict[mnemonic]
+					if mnemonic[0] != "N":
+						assert nArgs <= 8, nArgs
+						op = op + nArgs - 1
+						push(op)
+					else:
+						assert nArgs < 256
+						push(op)
+						push(nArgs)
+					if words:
+						for value in args:
+							assert -32768 <= value < 32768, "PUSHW value out of range %d" % value
+							push((value >> 8) & 0xff)
+							push(value & 0xff)
+					else:
+						for value in args:
+							assert 0 <= value < 256, "PUSHB value out of range %d" % value
+							push(value)
 
-                                        # Merge consecutive PUSH operations
-                                        while bytecode[i] in streamOpcodeDict:
-                                                op = bytecode[i]
-                                                mnemonic, argBits, argoffset = streamOpcodeDict[op]
-                                                words = mnemonic[-1] == "W"
-                                                if argBits:
-                                                        nValues = op - argoffset + 1
-                                                else:
-                                                        i = i + 1
-                                                        nValues = bytecode[i]
-                                                i = i + 1
-                                                assert nValues > 0
-                                                if not words:
-                                                        for j in range(nValues):
-                                                                value = bytecode[i]
-                                                                values.append(repr(value))
-                                                                i = i + 1
-                                                else:
-                                                        for j in range(nValues):
-                                                                # cast to signed int16
-                                                                value = (bytecode[i] << 8) | bytecode[i+1]
-                                                                if value >= 0x8000:
-                                                                        value = value - 0x10000
-                                                                values.append("%s /* word */ " % repr(value))
-                                                                i = i + 2
-                                                if preserve:
-                                                        break
+			pos = _skipWhite(assembly, pos)
 
-                                        if not preserve:
-                                                mnemonic = "PUSH"
-                                        nValues = len(values)
-                                        if nValues == 1:
-                                                assembly.append("%s[ ]" % mnemonic)
-                                        else:
-                                                assembly.append("%s[ ]	/* %s values pushed */" % (mnemonic, nValues))
-                                        assembly.extend(values)
-                                else:
-                                        assembly.append("INSTR%d[ ]" % op)
-                                        i = i + 1
-                        else:
-                                if argBits:
-                                        assembly.append(mnemonic + "[%s]" % num2binary(op - argoffset, argBits))
-                                else:
-                                        assembly.append(mnemonic + "[ ]")
-                                i = i + 1
-                self.assembly = assembly
+		if bytecode:
+			assert max(bytecode) < 256 and min(bytecode) >= 0
+		self.bytecode = array.array("B", bytecode)
+
+	def _disassemble(self, preserve=False):
+		assembly = []
+		i = 0
+		bytecode = self.bytecode
+		numBytecode = len(bytecode)
+		while i < numBytecode:
+			op = bytecode[i]
+			try:
+				mnemonic, argBits, argoffset, name = opcodeDict[op]
+			except KeyError:
+				if op in streamOpcodeDict:
+					values = []
+
+					# Merge consecutive PUSH operations
+					while bytecode[i] in streamOpcodeDict:
+						op = bytecode[i]
+						mnemonic, argBits, argoffset, name = streamOpcodeDict[op]
+						words = mnemonic[-1] == "W"
+						if argBits:
+							nValues = op - argoffset + 1
+						else:
+							i = i + 1
+							nValues = bytecode[i]
+						i = i + 1
+						assert nValues > 0
+						if not words:
+							for j in range(nValues):
+								value = bytecode[i]
+								values.append(repr(value))
+								i = i + 1
+						else:
+							for j in range(nValues):
+								# cast to signed int16
+								value = (bytecode[i] << 8) | bytecode[i+1]
+								if value >= 0x8000:
+									value = value - 0x10000
+								values.append("%s /* word */ " % repr(value))
+								i = i + 2
+						if preserve:
+							break
+
+					if not preserve:
+						mnemonic = "PUSH"
+					nValues = len(values)
+					if nValues == 1:
+						assembly.append("%s[ ]	/* 1 value pushed */" % mnemonic)
+					else:
+						assembly.append("%s[ ]	/* %s values pushed */" % (mnemonic, nValues))
+					assembly.extend(values)
+				else:
+					assembly.append("INSTR%d[ ]" % op)
+					i = i + 1
+			else:
+				if argBits:
+					assembly.append(mnemonic + "[%s]	/* %s */" % (num2binary(op - argoffset, argBits), name))
+				else:
+					assembly.append(mnemonic + "[ ]	/* %s */" % name)
+				i = i + 1
+		self.assembly = assembly
 
 	def __bool__(self):
 		"""
