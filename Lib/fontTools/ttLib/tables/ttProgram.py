@@ -221,7 +221,7 @@ _tokenRE = re.compile(_token)
 _whiteRE = re.compile(r"\s*")
 
 _pushCountPat = re.compile(r"[A-Z][A-Z0-9]*\s*\[.*?\]\s*/\* ([0-9]*).*?\*/")
-
+WORD_SUFFIX = "/* word */"
 
 def _skipWhite(data, pos):
         m = _whiteRE.match(data, pos)
@@ -288,16 +288,16 @@ class Program(object):
                         writer.dumphex(self.getBytecode())
                         writer.endtag("bytecode")
         
-        def fromXML(self, name, attrs, content, ttFont):
+        def fromXML(self, name, attrs, content, ttFont, preserveWidths=False):
                 if name == "assembly":
                         self.fromAssembly(strjoin(content))
-                        self._assemble()
+                        self._assemble(preserveWidths)
                         del self.assembly
                 else:
                         assert name == "bytecode"
                         self.fromBytecode(readHex(content))
         
-        def _assemble(self):
+        def _assemble(self, preserveWidths=False):
                 assembly = self.assembly
                 if isinstance(assembly, type([])):
                         assembly = ' '.join(assembly)
@@ -330,6 +330,7 @@ class Program(object):
                                         push(op)
                         else:
                                 args = []
+                                argIsWord = []
                                 pos = _skipWhite(assembly, pos)
                                 while pos < lenAssembly:
                                         m = _tokenRE.match(assembly, pos)
@@ -340,15 +341,20 @@ class Program(object):
                                                 break
                                         pos = m.regs[0][1]
                                         pos = _skipWhite(assembly, pos)
+                                        comment_with_m_match = _tokenRE.match(assembly, pos)
+                                        cwm = comment_with_m_match.groups()[4]
                                         if comment is not None:
                                                 continue
                                         args.append(int(number))
+                                        argIsWord.append(True if cwm is not None and cwm.strip() == WORD_SUFFIX else False)
                                 nArgs = len(args)
+                                print (mnemonic)
+                                print (args)
                                 if mnemonic == "PUSH":
                                         # Automatically choose the most compact representation
                                         nWords = 0
                                         while nArgs:
-                                                while nWords < nArgs and nWords < 255 and not (0 <= args[nWords] <= 255):
+                                                while nWords < nArgs and nWords < 255 and (not (0 <= args[nWords] <= 255) or (preserveWidths and argIsWord[nWords])):
                                                         nWords += 1
                                                 nBytes = 0
                                                 while nWords+nBytes < nArgs and nBytes < 255 and 0 <= args[nWords+nBytes] <= 255:
@@ -389,6 +395,7 @@ class Program(object):
 
                                                 nTotal = nWords + nBytes
                                                 args = args[nTotal:]
+                                                argIsWord = argIsWord[nTotal:]
                                                 nArgs -= nTotal
                                                 nWords = 0
                                 else:
@@ -455,7 +462,7 @@ class Program(object):
                                                                 value = (bytecode[i] << 8) | bytecode[i+1]
                                                                 if value >= 0x8000:
                                                                         value = value - 0x10000
-                                                                values.append(repr(value))
+                                                                values.append("%s /* word */ " % repr(value))
                                                                 i = i + 2
                                                 if preserve:
                                                         break
