@@ -1,7 +1,7 @@
 MutatorMath started out with its own reader and writer for designspaces. Since then the use of designspace has broadened and it would be useful to have a reader and writer that are independent of a specific system.
 
 DesignSpaceDocument Object
-===================
+==========================
 
 An object to read, write and edit interpolation systems for typefaces.
 
@@ -34,7 +34,7 @@ doc.instances
 ```
 
 
-# Source descriptor object attributes
+# `Source` descriptor object attributes
 * `path`: string. Path to the source file. MutatorMath + Varlib.
 * `name`: string. Unique identifier name of the source, used to identify it if it needs to be referenced from elsewhere in the document. MutatorMath.
 * `location`: dict. Axis values for this source. MutatorMath + Varlib
@@ -64,7 +64,7 @@ s1.mutedGlyphNames.append("Z")
 doc.addSource(s1)
 ```
 
-# Instance descriptor object
+# `Instance` descriptor object
 * `path`: string. Path to the instance file, which may or may not exist. MutatorMath.
 * `name`: string. Unique identifier name of the instance, used to identify it if it needs to be referenced from elsewhere in the document. 
 * `location`: dict. Axis values for this source. MutatorMath + Varlib.
@@ -97,7 +97,7 @@ i2.glyphs['arrow'] = glyphData
 i2.glyphs['arrow2'] = dict(mute=False)
 doc.addInstance(i2)
 ```
-# Axis descriptor object
+# `Axis` descriptor object
 * `tag`: string. Four letter tag for this axis. Some might be registered at the OpenType specification.
 * `name`: string. Name of the axis as it is used in the location dicts. MutatorMath + Varlib.
 * `labelNames`: dict. When defining a non-registered axis, it will be necessary to define user-facing readable names for the axis. Keyed by xml:lang code. Varlib. 
@@ -118,7 +118,7 @@ a1.labelNames[u'en'] = u"Wéíght"
 a1.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
 ```
 
-# Subclassing
+# Subclassing descriptors
 
 The DesignSpaceDocument can take subclassed Reader and Writer objects. This allows you to work with your own descriptors. You could subclass the descriptors. But as long as they have the basic attributes the descriptor does not need to be a subclass. 
 ```python
@@ -298,6 +298,7 @@ Example of all axis elements together:
 * `stylemapfamilyname`: string. Optional for MutatorMath. Corresponds with `styleMapFamilyName`
 * `stylemapstylename `: string. Optional for MutatorMath. Corresponds with `styleMapStyleName`
 
+# Example
 ```xml
 <instance familyname="InstanceFamilyName" filename="instances/instanceTest2.ufo" name="instance.ufo2" postscriptfontname="InstancePostscriptName" stylemapfamilyname="InstanceStyleMapFamilyName" stylemapstylename="InstanceStyleMapStyleName" stylename="InstanceStyleName">
 <location>
