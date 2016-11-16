@@ -173,36 +173,6 @@ def _makeDict(instructionList):
                 else:
                                 opcodeDict[op] = mnemonic, 0, 0, name
         return opcodeDict, mnemonicDict
-
-def emit(stream, line, level=0):
-        indent = "    "*level
-        stream.write(indent + line + "\n")
-def constructInstructionClasses(instructionList):
-        HEAD = """#instructions classes are generated from instructionList
-        class root_instruct(object):
-        def __init__(self):
-                self.data = []
-        def add_data(self,new_data):
-                self.data.append(new_data.value)
-        def prettyPrinter(self):
-                print(self.__class__.__name__,self.data)
-    class all():
-        """
-
-        here = os.path.dirname(__file__)
-        out_file = os.path.join(here, "..", "instructions_test.py")
-        fp = open(out_file, "w")
-        try:
-            fp.write(HEAD)
-            for op, mnemonic, argBits, name, pops, pushes in instructionList:
-                emit("class %s(root_instruct):" % (mnemonic),1)
-                emit("")
-                emit("def to_simple_int(self, space):", 1)
-                emit("w_msg = space.wrap(\"not a valid %s\")" % (base,), 2)
-                emit("raise OperationError(space.w_TypeError, w_msg)", 2)
-                emit("")
-        finally:
-            fp.close()
             
 streamOpcodeDict, streamMnemonicDict = _makeDict(streamInstructions)
 opcodeDict, mnemonicDict = _makeDict(instructions)
@@ -471,7 +441,7 @@ class Program(object):
 						if not words:
 							for j in range(nValues):
 								value = bytecode[i]
-								values.append(repr(value))
+								values.append("%s " % repr(value))
 								i = i + 1
 						else:
 							for j in range(nValues):
