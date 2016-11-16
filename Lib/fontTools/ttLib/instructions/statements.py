@@ -34,6 +34,22 @@ class all():
             self.pop_num = 0
         def get_push_num(self):
             return len(self.data)
+    class PUSHB_Statement(PUSH_Statement):
+        def __init__(self):
+            root_statement.__init__(self)
+            self.push_num = len(self.data)
+            self.pop_num = 0
+            self.mnemonic = 'PUSHB'
+        def get_push_num(self):
+            return len(self.data)
+    class PUSHW_Statement(PUSH_Statement):
+        def __init__(self):
+            root_statement.__init__(self)
+            self.push_num = len(self.data)
+            self.pop_num = 0
+            self.mnemonic = 'PUSHW'
+        def get_push_num(self):
+            return len(self.data)
     class AA_Statement(root_statement):
         def __init__(self):
             root_statement.__init__(self) 

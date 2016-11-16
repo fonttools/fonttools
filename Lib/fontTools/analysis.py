@@ -37,7 +37,7 @@ import tempfile
 def ttDump(input):
     output = tempfile.TemporaryFile(suffix=".ttx")
     ttf = TTFont(input, 0, verbose=False, allowVID=False,
-            quiet=False, ignoreDecompileErrors=True,
+            quiet=None, ignoreDecompileErrors=True,
             fontNumber=-1)
     ttf.saveXML(output, quiet=True, tables= [],
                 skipTables= [], splitTables=False,
@@ -126,7 +126,7 @@ def usage():
 def process(jobs, options):
     for input in jobs:
         tt = TTFont()
-        tt.importXML(input, quiet=True)
+        tt.importXML(input, quiet=None)
         bc = BytecodeContainer(tt)
 
         if (options.allGlyphs):
@@ -221,7 +221,9 @@ def parseOptions(args):
             raise NotImplementedError
     return jobs, options
 
-def main(args):
+def main(args=None):
+    if args is None:
+        args = sys.argv[1:]
     jobs, options = parseOptions(args)
     process(jobs, options)
     

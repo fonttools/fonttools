@@ -279,6 +279,10 @@ class Environment(object):
     def exec_PUSH(self):
         for item in self.current_instruction.data:
             self.program_stack_push(item.value)
+    def exec_PUSHB(self):
+        self.exec_PUSH()
+    def exec_PUSHW(self):
+        self.exec_PUSH()
 
     # Don't execute any cfg-related instructions
     # This has the effect of "executing both branches" when we hit the EIF and go back to the ELSE
@@ -1166,7 +1170,7 @@ class Executor(object):
                 e = self.environment.program_stack_pop().eval(self.environment.keep_abstract)
                 dest = self.environment.program_stack_pop().eval(False)
                 (broke_cycle, branch_succ) = self.environment.adjust_succ_for_relative_jump(dest, False)
-                logger.info("polling stored_environments for %s" % (branch_succ.id))
+                logger.info("polling stored_environments for %s" % (str(branch_succ.id)))
                 if self.pc.id in self.stored_environments:
                     self.environment.merge(self.stored_environments[self.pc.id])
                 else:

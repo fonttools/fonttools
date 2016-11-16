@@ -72,7 +72,8 @@ setup(
 			"ttx = fontTools.ttx:main",
 			"pyftsubset = fontTools.subset:main",
 			"pyftmerge = fontTools.merge:main",
-			"pyftinspect = fontTools.inspect:main"
+			"pyftinspect = fontTools.inspect:main",
+			"pyftanalysis = fontTools.analysis:main"
 		]
 	},
 	cmdclass=versioneer.get_cmdclass(),
