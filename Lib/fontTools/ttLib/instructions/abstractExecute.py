@@ -60,7 +60,7 @@ class Environment(object):
         result = cls.__new__(cls)
         memo[id(self)] = result
         for k, v in self.__dict__.items():
-            if k == 'bytecodeContainer':
+            if k == 'bytecodeContainer' or k == 'current_instruction':
                 setattr(result, k, copy.copy(v))
             else:
                 setattr(result, k, copy.deepcopy(v, memo))
@@ -282,6 +282,10 @@ class Environment(object):
     def exec_PUSHB(self):
         self.exec_PUSH()
     def exec_PUSHW(self):
+        self.exec_PUSH()
+    def exec_NPUSHB(self):
+        self.exec_PUSH()
+    def exec_NPUSHW(self):
         self.exec_PUSH()
 
     # Don't execute any cfg-related instructions
@@ -781,7 +785,7 @@ class Environment(object):
         self.current_instruction_intermediate.append(IR.SHZMethodCall(self.current_instruction.data[0], [arg]))
   
     def exec_SLOOP(self):
-        self.graphics_state['loop'] = self.program_stack[-1].data
+        self.graphics_state['loop'] = self.program_stack[-1].data.value
         arg = self.program_stack_pop()
         self.current_instruction_intermediate.append(IR.SLOOPMethodCall([arg]))
 
@@ -794,7 +798,7 @@ class Environment(object):
         raise NotImplementedError
 
     def exec_SPVTCA(self):
-        data = int(self.current_instruction.data[0])
+        data = int(self.current_instruction.data[0].value)
         assert (data is 1 or data is 0)
         if data == 0:
             self.graphics_state['pv'] = (0, 1)

@@ -369,7 +369,7 @@ class ROUNDMethodCall(MethodCallStatement):
 class SHPMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
         super(SHPMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'SHP_'+data
+        self.methodName = 'SHP_'+data.value
 
 class SHPIXMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
@@ -379,37 +379,37 @@ class SHPIXMethodCall(MethodCallStatement):
 class IUPMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
         super(IUPMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'IUP_'+data
+        self.methodName = 'IUP_'+data.value
 
 class MDMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
         super(MDMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'MD_'+data
+        self.methodName = 'MD_'+data.value
 
 class MDAPMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
         super(MDAPMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'MDAP_'+data
+        self.methodName = 'MDAP_'+data.value
 
 class MDRPMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
         super(MDRPMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'MDRP_'+data
+        self.methodName = 'MDRP_'+data.value
 
 class MIAPMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
         super(MIAPMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'MIAP_'+data
+        self.methodName = 'MIAP_'+data.value
 
 class MIRPMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
         super(MIRPMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'MIRP_'+data
+        self.methodName = 'MIRP_'+data.value
 
 class MSIRPMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
         super(MSIRPMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'MSIRP_'+data
+        self.methodName = 'MSIRP_'+data.value
 
 class SCFSMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
@@ -419,7 +419,7 @@ class SCFSMethodCall(MethodCallStatement):
 class SDPVTLMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
         super(SDPVTLMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'SDPVTL_'+data
+        self.methodName = 'SDPVTL_'+data.value
 
 class SDSMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
@@ -434,17 +434,17 @@ class SFVFSMethodCall(MethodCallStatement):
 class SFVTLMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
         super(SFVTLMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'SFVTL_'+data
+        self.methodName = 'SFVTL_'+data.value
 
 class SHCMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
         super(SHCMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'SHC_'+data
+        self.methodName = 'SHC_'+data.value
 
 class SHZMethodCall(MethodCallStatement):
     def __init__(self, data, parameters = [], returnVal=None):
         super(SHZMethodCall, self).__init__(parameters, returnVal)
-        self.methodName = 'SHZ_'+data
+        self.methodName = 'SHZ_'+data.value
 
 class SLOOPMethodCall(MethodCallStatement):
     def __init__(self, parameters = [], returnVal=None):
