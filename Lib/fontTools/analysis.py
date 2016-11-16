@@ -14,7 +14,8 @@ usage: pyftanalysis [options] inputfile
     -z Glyphs: print out selected glyph bytecode/IR
     -g NAME Glyph: execute prep plus hints for glyph NAME
     -G AllGlyphs: execute prep plus hints for all glyphs in font
-    -r Reduce: remove uncalled functions
+    -r Reduce: remove uncalled functions (tree shaking)
+    -x XML: produce ttx instead of ttf output (for -r)
     --cvt CVT: print the CVT after executing prep
     -v Verbose: be more verbose
 """
@@ -36,14 +37,13 @@ import tempfile
 
 def ttDump(input):
     output = tempfile.TemporaryFile(suffix=".ttx")
-    ttf = TTFont(input, 0, verbose=False, allowVID=False,
+    ttf = TTFont(input, 0, allowVID=False,
             quiet=None, ignoreDecompileErrors=True,
             fontNumber=-1)
-    ttf.saveXML(output, quiet=True, tables= [],
+    ttf.saveXML(output, tables= [],
                 skipTables= [], splitTables=False,
                 disassembleInstructions=True,
-                bitmapGlyphDataFormat='raw',
-                leaveOpen=True)
+                bitmapGlyphDataFormat='raw')
     ttf.close()
     return output
 
@@ -77,6 +77,7 @@ class Options(object):
     outputGlyfPrograms = False
     outputCallGraph = False
     outputMaxStackDepth = False
+    outputXML = False
     glyphs = []
     allGlyphs = False
     reduceFunctions = False
@@ -112,6 +113,8 @@ class Options(object):
                 self.verbose = True
             elif option == "-r":
                 self.reduceFunctions = True
+            elif option == "-x":
+                self.outputXML = True
 
         if (self.verbose):
             logging.basicConfig(level = logging.INFO)
@@ -124,7 +127,7 @@ def usage():
     sys.exit(2)
 
 def process(jobs, options):
-    for input in jobs:
+    for (input, origin) in jobs:
         tt = TTFont()
         tt.importXML(input, quiet=None)
         bc = BytecodeContainer(tt)
@@ -134,7 +137,7 @@ def process(jobs, options):
         else:
             glyphs = map(lambda x: 'glyf.'+x, options.glyphs)
 
-        if options.outputIR:
+        if options.outputIR or options.reduceFunctions:
             ae, called_functions = analysis(bc, glyphs)
 
         if (options.outputPrep):
@@ -182,24 +185,24 @@ def process(jobs, options):
         if (options.outputMaxStackDepth):
             print("Max Stack Depth =", ae.maximum_stack_depth)
         if (options.reduceFunctions):
-            if not options.allGlyphs:
-                glyphs = filter(lambda x: x != 'fpgm' and x != 'prep', bc.tag_to_programs.keys())
-                called_functions.update(executeGlyphs(ae, glyphs)) 
-            
-            function_set = ae.environment.function_table.keys()
+            function_set = bc.function_table.keys()
             unused_functions = [item for item in function_set if item not in called_functions]
           
             bc.removeFunctions(unused_functions)
             bc.updateTTFont(tt)
-            output = "Reduced"+input
-            output = makeOutputFileName(output, ".ttf")
-            tt.save(output)
+            output = "Reduced"+origin
+            if (options.outputXML):
+                output = makeOutputFileName(output, ".ttx")
+                tt.saveXML(output)
+            else:
+                output = makeOutputFileName(output, ".ttf")
+                tt.save(output)
         if type(input) is file:
             input.close()
 
 def parseOptions(args):
     try:
-        rawOptions, files = getopt.getopt(args, "hiscpfzGmg:vr", ['cvt'])
+        rawOptions, files = getopt.getopt(args, "hiscpfzGmg:vrx", ['cvt'])
     except getopt.GetoptError:
         usage()
 
@@ -214,9 +217,9 @@ def parseOptions(args):
         if fileformat == 'ttf':
             output = ttDump(input)
             output.seek(0)
-            jobs.append(output)
+            jobs.append((output, input))
         elif fileformat == 'ttx':
-            jobs.append(input)
+            jobs.append((input, input))
         else:
             raise NotImplementedError
     return jobs, options
