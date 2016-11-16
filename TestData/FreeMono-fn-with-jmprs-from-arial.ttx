@@ -231,6 +231,10 @@
       SUB[ ]
       WCVTP[ ]
       ENDF[ ]
+      PUSH[ ]
+      13
+      FDEF[ ]
+      ENDF[ ]
     </assembly>
   </fpgm>
 
