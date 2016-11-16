@@ -154,7 +154,7 @@ class BytecodeContainer(object):
             if(len(instr.data) > 0):
                 instr_append = instr.mnemonic+'['
                 for data in instr.data:
-                    instr_append += str(data)
+                    instr_append += str(data.value)
                 instr_append += ']'
                 assembly.append(instr_append)
             else:

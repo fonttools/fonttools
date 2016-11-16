@@ -31,7 +31,7 @@ def main(args):
             absExecutor.environment = copy.deepcopy(environment)
         except:
             absExecutor.environment = copy.deepcopy(environment)
-    function_set = absExecutor.environment.function_table.keys()
+    function_set = bytecodeContainer.function_table.keys()
     unused_functions = [item for item in function_set if item not in called_functions]
 
     bytecodeContainer.removeFunctions(unused_functions)

@@ -74,6 +74,7 @@ setup(
 			"pyftmerge = fontTools.merge:main",
 			"pyftinspect = fontTools.inspect:main",
 			"pyftanalysis = fontTools.analysis:main"
+			"pyfttreeshake = fontTools.treeshake:main"
 		]
 	},
 	cmdclass=versioneer.get_cmdclass(),
