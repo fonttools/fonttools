@@ -143,18 +143,19 @@ class BytecodeContainer(object):
 
     def instrToAssembly(self, instr):
         assembly = []
-        if(instr.mnemonic == 'PUSH'):
-            assembly.append('PUSH[ ]')
+        if (instr.mnemonic == 'PUSH' or instr.mnemonic == 'NPUSHB' or instr.mnemonic == 'NPUSHW' or
+            instr.mnemonic == 'PUSHB' or instr.mnemonic == 'PUSHW'):
+            assembly.append("%s [ ]" % instr.mnemonic)
             if(len(instr.data) > 1):
                 assembly[-1] += "  /* %s values pushed */" % len(instr.data)
 
             for data in instr.data:
-                assembly.append(str(data))
+                assembly.append(str(data.value))
         else:
             if(len(instr.data) > 0):
                 instr_append = instr.mnemonic+'['
                 for data in instr.data:
-                    instr_append += str(data.value)
+                    instr_append += "%s " % str(data.value)
                 instr_append += ']'
                 assembly.append(instr_append)
             else:
