@@ -27,7 +27,9 @@ CALL 1()
 $fpgm_0_1 := 7
 $fpgm_0_2 := 9
 $fpgm_0_1 := max($fpgm_0_2, $fpgm_0_1)
+RET
 
 Function #1:
 $fpgm_1_1 := 999
+RET
 

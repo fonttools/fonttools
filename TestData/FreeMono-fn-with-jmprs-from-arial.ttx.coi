@@ -22,85 +22,123 @@ $prep_1 := 5
 $prep_2 := 7
 $prep_3 := 3
 $prep_4 := 2
-$prep_5 := 0
-CALL 0($prep_3, $prep_2, $prep_1, $prep_0)
+$prep_5 := 1
+$prep_6 := 3
+$prep_7 := 2
+$prep_8 := 0
+CALL 0($prep_6, $prep_5)
 
 Function #0:
-$fpgm_0_5 := $fpgm_0_4
-$fpgm_0_6 := 3
-$fpgm_0_6 := $fpgm_0_4
-$fpgm_0_6 := cvt_table[$fpgm_0_6]
-$fpgm_0_7 := 25
+$fpgm_0_8 := $fpgm_0_7
+$fpgm_0_9 := 3
+$fpgm_0_9 := $fpgm_0_7
+$fpgm_0_9 := cvt_table[$fpgm_0_9]
+$fpgm_0_10 := 25
+$fpgm_0_11 := $fpgm_0_10
+$fpgm_0_10 := $fpgm_0_9
+$fpgm_0_9 := $fpgm_0_11
+cvt_table[$fpgm_0_10] := $fpgm_0_9
+$fpgm_0_8 := cvt_table[$fpgm_0_8]
+$fpgm_0_9 := 26
+$fpgm_0_10 := $fpgm_0_9
+$fpgm_0_9 := $fpgm_0_8
+$fpgm_0_8 := $fpgm_0_10
+cvt_table[$fpgm_0_9] := $fpgm_0_8
+$fpgm_0_7 := cvt_table[arg$0]
+$fpgm_0_7 := NEG $fpgm_0_7
 $fpgm_0_8 := $fpgm_0_7
 $fpgm_0_7 := $fpgm_0_6
 $fpgm_0_6 := $fpgm_0_8
-cvt_table[$fpgm_0_7] := $fpgm_0_6
-$fpgm_0_5 := cvt_table[$fpgm_0_5]
-$fpgm_0_6 := 26
-$fpgm_0_7 := $fpgm_0_6
-$fpgm_0_6 := $fpgm_0_5
-$fpgm_0_5 := $fpgm_0_7
-cvt_table[$fpgm_0_6] := $fpgm_0_5
-$fpgm_0_4 := cvt_table[arg$0]
-$fpgm_0_4 := NEG $fpgm_0_4
-$fpgm_0_5 := $fpgm_0_4
-$fpgm_0_4 := $fpgm_0_3
-$fpgm_0_3 := $fpgm_0_5
-$fpgm_0_4 := cvt_table[arg$1]
-$fpgm_0_5 := $fpgm_0_4
-$fpgm_0_6 := 3
-$fpgm_0_6 := $fpgm_0_4
-$fpgm_0_5 := $fpgm_0_6 + $fpgm_0_5
-$fpgm_0_5 := ROUND_10($fpgm_0_5)
-$fpgm_0_6 := $fpgm_0_5
-$fpgm_0_7 := 9
+$fpgm_0_7 := cvt_table[arg$1]
 $fpgm_0_8 := $fpgm_0_7
-$fpgm_0_7 := $fpgm_0_6
-$fpgm_0_6 := $fpgm_0_8
-storage_area[$fpgm_0_7] := $fpgm_0_6
-$fpgm_0_6 := $fpgm_0_5
-$fpgm_0_5 := $fpgm_0_4
-$fpgm_0_4 := $fpgm_0_6
-$fpgm_0_5 := ROUND_00($fpgm_0_4)
-$fpgm_0_6 := $fpgm_0_5
-$fpgm_0_5 := $fpgm_0_3
-$fpgm_0_3 := $fpgm_0_4
-$fpgm_0_4 := $fpgm_0_6
-$fpgm_0_5 := ROUND_10($fpgm_0_4)
-$fpgm_0_4 := $fpgm_0_5 + $fpgm_0_4
-$fpgm_0_3 := $fpgm_0_4 - $fpgm_0_3
-$fpgm_0_4 := $fpgm_0_3
-$fpgm_0_5 := 26
-$fpgm_0_6 := $fpgm_0_5
-$fpgm_0_5 := $fpgm_0_3
-$fpgm_0_3 := $fpgm_0_4
-$fpgm_0_4 := $fpgm_0_6
-$fpgm_0_6 := 0
-$fpgm_0_5 := $fpgm_0_6 GT $fpgm_0_5
-JROF ($fpgm_0_5, 26)
-$fpgm_0_3 := 26
-$fpgm_0_4 := 26
-$fpgm_0_5 := 64
-$fpgm_0_6 := -32
-$fpgm_0_7 := 26
-$fpgm_0_7 := cvt_table[$fpgm_0_7]
+$fpgm_0_9 := 3
+$fpgm_0_9 := $fpgm_0_7
+$fpgm_0_8 := $fpgm_0_9 + $fpgm_0_8
+$fpgm_0_8 := ROUND_10($fpgm_0_8)
+$fpgm_0_9 := $fpgm_0_8
+$fpgm_0_10 := 9
+$fpgm_0_11 := $fpgm_0_10
+$fpgm_0_10 := $fpgm_0_9
+$fpgm_0_9 := $fpgm_0_11
+storage_area[$fpgm_0_10] := $fpgm_0_9
+$fpgm_0_9 := $fpgm_0_8
 $fpgm_0_8 := $fpgm_0_7
+$fpgm_0_7 := $fpgm_0_9
+$fpgm_0_8 := ROUND_00($fpgm_0_7)
 $fpgm_0_9 := $fpgm_0_8
 $fpgm_0_8 := $fpgm_0_6
 $fpgm_0_6 := $fpgm_0_7
 $fpgm_0_7 := $fpgm_0_9
-$fpgm_0_7 := $fpgm_0_8 EQ $fpgm_0_7
-if ($fpgm_0_7) {
-    $fpgm_0_7 := $fpgm_0_6
-    $fpgm_0_6 := $fpgm_0_5
-    $fpgm_0_5 := $fpgm_0_7
-    $fpgm_0_6 := 63
+$fpgm_0_8 := ROUND_10($fpgm_0_7)
+$fpgm_0_7 := $fpgm_0_8 + $fpgm_0_7
+$fpgm_0_6 := $fpgm_0_7 - $fpgm_0_6
+$fpgm_0_7 := $fpgm_0_6
+$fpgm_0_8 := 26
+$fpgm_0_9 := $fpgm_0_8
+$fpgm_0_8 := $fpgm_0_6
+$fpgm_0_6 := $fpgm_0_7
+$fpgm_0_7 := $fpgm_0_9
+$fpgm_0_9 := 0
+$fpgm_0_8 := $fpgm_0_9 GT $fpgm_0_8
+JROF ($fpgm_0_8, [label0])
+$fpgm_0_6 := 26
+$fpgm_0_7 := 26
+$fpgm_0_8 := 64
+$fpgm_0_9 := -32
+$fpgm_0_10 := 26
+$fpgm_0_10 := cvt_table[$fpgm_0_10]
+$fpgm_0_11 := $fpgm_0_10
+$fpgm_0_12 := $fpgm_0_11
+$fpgm_0_11 := $fpgm_0_9
+$fpgm_0_9 := $fpgm_0_10
+$fpgm_0_10 := $fpgm_0_12
+$fpgm_0_10 := $fpgm_0_11 EQ $fpgm_0_10
+if ($fpgm_0_10) {
+    $fpgm_0_10 := $fpgm_0_9
+    $fpgm_0_9 := $fpgm_0_8
+    $fpgm_0_8 := $fpgm_0_10
+    $fpgm_0_9 := 63
 } else {
-    $fpgm_0_7 := $fpgm_0_6
-    $fpgm_0_6 := $fpgm_0_5
-    $fpgm_0_5 := $fpgm_0_7
+    $fpgm_0_10 := $fpgm_0_9
+    $fpgm_0_9 := $fpgm_0_8
+    $fpgm_0_8 := $fpgm_0_10
 }
-$fpgm_0_5 := $fpgm_0_6 - $fpgm_0_5
-cvt_table[$fpgm_0_4] := $fpgm_0_5
-cvt_table[arg$3] := arg$2
+$fpgm_0_8 := $fpgm_0_9 - $fpgm_0_8
+cvt_table[$fpgm_0_7] := $fpgm_0_8
+RET
+label0:
+$fpgm_0_7 := 20
+$fpgm_0_8 := 0
+$fpgm_0_9 := $fpgm_0_8
+$fpgm_0_8 := $fpgm_0_6
+$fpgm_0_6 := $fpgm_0_7
+$fpgm_0_7 := $fpgm_0_9
+$fpgm_0_7 := $fpgm_0_8 GT $fpgm_0_7
+JROF ($fpgm_0_7, [label1])
+$fpgm_0_6 := 25
+$fpgm_0_7 := 64
+$fpgm_0_8 := 32
+$fpgm_0_9 := 25
+$fpgm_0_9 := cvt_table[$fpgm_0_9]
+$fpgm_0_10 := $fpgm_0_9
+$fpgm_0_11 := $fpgm_0_10
+$fpgm_0_10 := $fpgm_0_8
+$fpgm_0_8 := $fpgm_0_9
+$fpgm_0_9 := $fpgm_0_11
+$fpgm_0_9 := $fpgm_0_10 EQ $fpgm_0_9
+if ($fpgm_0_9) {
+    $fpgm_0_9 := $fpgm_0_8
+    $fpgm_0_8 := $fpgm_0_7
+    $fpgm_0_7 := $fpgm_0_9
+    $fpgm_0_8 := 63
+} else {
+    $fpgm_0_9 := $fpgm_0_8
+    $fpgm_0_8 := $fpgm_0_7
+    $fpgm_0_7 := $fpgm_0_9
+}
+$fpgm_0_7 := $fpgm_0_8 - $fpgm_0_7
+cvt_table[$fpgm_0_6] := $fpgm_0_7
+RET
+label1:
+RET
 

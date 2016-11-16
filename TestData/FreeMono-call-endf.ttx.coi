@@ -24,7 +24,9 @@ CALL 0()
 Function #0:
 $fpgm_0_1 := 1
 CALL 1()
+RET
 
 Function #1:
 $fpgm_1_1 := 999
+RET
 

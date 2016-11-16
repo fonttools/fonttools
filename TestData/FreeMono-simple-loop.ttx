@@ -150,7 +150,7 @@
       1 1
       POP[ ]
       PUSH[ ]
-      -3
+      -2
       MPPEM[ ]
       JROT[ ]
       POP[ ]

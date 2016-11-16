@@ -215,8 +215,9 @@ class BytecodeContainer(object):
         counter = 0
         for inst in IR:
             if isinstance(inst, IntermediateCode.JROxStatement) or isinstance(inst, IntermediateCode.JmpStatement):
-                jump_targets[inst.dest] = self.Label(counter)
-                inst.dest = self.Label(counter)
+                c = self.Label(counter)
+                jump_targets[inst.dest] = c
+                inst.dest = c
                 counter = counter + 1
         for inst in IR:
             if inst in jump_targets:

@@ -26,4 +26,5 @@ $fpgm_0_1 := 7
 $fpgm_0_2 := 9
 $fpgm_0_1 := max($fpgm_0_2, $fpgm_0_1)
 GS[rp0] := $fpgm_0_1
+RET
 

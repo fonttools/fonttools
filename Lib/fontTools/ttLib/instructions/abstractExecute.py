@@ -293,7 +293,7 @@ class Environment(object):
     def exec_ELSE(self):
         pass
     def exec_ENDF(self):
-        pass
+        self.current_instruction_intermediate.append(IR.ReturnStatement())
 
     def exec_AA(self):#AdjustAngle
         self.program_stack_pop()
@@ -491,7 +491,7 @@ class Environment(object):
         else:
             return self.bytecodeContainer.tag_to_programs[self.tag].body
 
-    def adjust_succ_for_relative_jump(self, arg, only_succ):
+    def adjust_succ_for_relative_jump(self, current_instruction, arg, only_succ):
         # find the instructions and set the PC
         # returns (True, _) if we broke a cycle
         # also returns the jump successor
@@ -500,13 +500,13 @@ class Environment(object):
         pc = 0
         # note use of 'is' (object equality) rather than normal equality
         for i in range(len(ins)):
-            if self.current_instruction is ins[i]:
+            if current_instruction is ins[i]:
                 break
             pc += 1
         assert pc < len(ins)
 
         dir = -1 if arg < 0 else 1
-        mag = abs(arg) - 1
+        mag = abs(arg)
         while mag > 0:
             ci_size = 1
             for d in ins[pc].data:
@@ -514,6 +514,7 @@ class Environment(object):
             mag = mag - ci_size
             pc += dir
         target = ins[pc]
+        logger.info("relative jump target is %s" % ins[pc])
 
         if only_succ:
             self.current_instruction.successors = []
@@ -529,7 +530,7 @@ class Environment(object):
     def exec_JMPR(self):
         dest = self.program_stack_pop().eval(False)
         assert not isinstance(dest, dataType.AbstractValue)
-        (broke_cycle, dest_inst) = self.adjust_succ_for_relative_jump(dest, True)
+        (broke_cycle, dest_inst) = self.adjust_succ_for_relative_jump(self.current_instruction, dest, True)
         if broke_cycle:
             self.current_instruction_intermediate.append(IR.JmpStatement(dest_inst))
     def exec_JROF(self):
@@ -828,7 +829,7 @@ class Environment(object):
         self.binary_operation('SUB')
 
     def exec_SVTCA(self):
-        data = int(self.current_instruction.data[0])
+        data = int(self.current_instruction.data[0].value)
         assert (data is 1 or data is 0)
         if data == 0:
             self.graphics_state['pv'] = (0, 1)
@@ -1169,7 +1170,7 @@ class Executor(object):
             if self.pc.mnemonic == 'JROT' or self.pc.mnemonic == 'JROF':
                 e = self.environment.program_stack_pop().eval(self.environment.keep_abstract)
                 dest = self.environment.program_stack_pop().eval(False)
-                (broke_cycle, branch_succ) = self.environment.adjust_succ_for_relative_jump(dest, False)
+                (broke_cycle, branch_succ) = self.environment.adjust_succ_for_relative_jump(self.pc, dest, False)
                 logger.info("polling stored_environments for %s" % (str(branch_succ.id)))
                 if self.pc.id in self.stored_environments:
                     self.environment.merge(self.stored_environments[self.pc.id])

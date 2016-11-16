@@ -24,11 +24,12 @@ $prep_1 := 0
 Function #0:
 $fpgm_0_1 := PPEM_X
 if ($fpgm_0_1) {
-    $fpgm_0_1 := 987
-    $fpgm_0_2 := 4
-    $fpgm_0_3 := 1
-    JROT ($fpgm_0_3, 4)
-    $fpgm_0_2 := 8
+    $fpgm_0_1 := 2
+    $fpgm_0_2 := 1
+    JROT ($fpgm_0_2, [$fpgm_0_1 := 9])
 }
 $fpgm_0_1 := 9
+RET
+$fpgm_0_1 := 9
+RET
 

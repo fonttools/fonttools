@@ -87,6 +87,7 @@ $fpgm_3_5 := $fpgm_3_6 LT $fpgm_3_5
 if ($fpgm_3_5) {
     $fpgm_3_4 := 64
 }
+RET
 
 Function #4:
   <not executed, no IR>
@@ -107,6 +108,7 @@ if ($fpgm_6_2) {
 } else {
     $fpgm_6_2 := 0
 }
+RET
 
 Function #7:
   <not executed, no IR>
@@ -149,6 +151,7 @@ Function #19:
 
 Function #20:
 $fpgm_20_3 := 0
+RET
 
 Function #21:
   <not executed, no IR>

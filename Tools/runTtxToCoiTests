@@ -7,10 +7,11 @@ import tempfile
 import subprocess
 from fontTools import analysis
 
-testSuite = ['FreeMono-call-endf.ttx', 'FreeMono-empty-fdef.ttx', 'FreeMono-gfv.ttx', 'FreeMono-inf-loop.ttx', 
+testSuite = ['FreeMono-call-endf.ttx', 'FreeMono-empty-fdef.ttx', 'FreeMono-gfv.ttx',
+             # 'FreeMono-inf-loop.ttx', 'FreeMono-simple-loop.ttx',
              'FreeMono-jmpr.ttx', 'FreeMono-jrot.ttx', 'FreeMono-jrot-jrof.ttx', 'FreeMono-fn-with-jmprs-from-arial.ttx',
-             'FreeMono-max.ttx', 'FreeMono-max-no-simplify.ttx',
-             'FreeMono-pop.ttx', 'FreeMono-simple-loop.ttx', 'FreeMono-subset-A.ttx']
+             'FreeMono-max.ttx', 'FreeMono-max-no-simplify.ttx', 'FreeMono-pop.ttx',
+             'FreeMono-subset-A.ttx']
 
 def main(args):
     scriptdir = os.path.dirname(os.path.realpath(__file__))

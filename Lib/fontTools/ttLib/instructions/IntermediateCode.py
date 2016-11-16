@@ -546,7 +546,11 @@ class ReadFromIndexedStorage(AssignmentStatement):
 
 class EmptyStatement(object):
     def __repr__(self):
-        return "Empty"
+        return "NOP"
+
+class ReturnStatement(object):
+    def __repr__(self):
+        return "RET"
 
 class JmpStatement(object):
     def __init__(self, dest):

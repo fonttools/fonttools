@@ -31,4 +31,5 @@ if ($fpgm_0_3) {
     $fpgm_0_2 := cvt_table[arg$1]
     cvt_table[arg$2] := $fpgm_0_2
 }
+RET
 
