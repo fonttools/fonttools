@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, unicode_literals
 import os
 import xml.etree.ElementTree as ET
 
@@ -15,16 +16,19 @@ import xml.etree.ElementTree as ET
 
 
 __all__ = [
-    'DesignSpaceDocumentError', 'BaseDocReader', 'DesignSpaceDocument', 
+    'DesignSpaceDocumentError', 'BaseDocReader', 'DesignSpaceDocument',
     'SourceDescriptor', 'InstanceDescriptor',
     'AxisDescriptor', 'BaseDocReader', 'BaseDocWriter']
+
 
 class DesignSpaceDocumentError(Exception):
     def __init__(self, msg, obj=None):
         self.msg = msg
         self.obj = obj
+
     def __str__(self):
         return repr(self.msg) + repr(self.obj)
+
 
 def _indent(elem, whitespace="    ", level=0):
     # taken from http://effbot.org/zone/element-lib.htm#prettyprint
@@ -42,26 +46,28 @@ def _indent(elem, whitespace="    ", level=0):
         if level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
 
+
 class SimpleDescriptor(object):
     """ Containers for a bunch of attributes"""
     def compare(self, other):
         # test if this object contains the same data as the other
         for attr in self._attrs:
             try:
-                #print getattr(self, attr), getattr(other, attr)
-                assert(getattr(self,attr) == getattr(other,attr))
+                assert(getattr(self, attr) == getattr(other, attr))
             except AssertionError:
-                print "failed attribute", attr, getattr(self, attr), "!=", getattr(other, attr)
+                print("failed attribute", attr, getattr(self, attr), "!=", getattr(other, attr))
+
 
 class SourceDescriptor(SimpleDescriptor):
     """Simple container for data related to the source"""
-    flavor="source"
-    _attrs  = [ 'path', 'name', 
-                'location', 'copyLib', 
-                'copyGroups', 'copyFeatures', 
-                'muteKerning', 'muteInfo', 
-                'mutedGlyphNames', 
-                'familyName', 'styleName']
+    flavor = "source"
+    _attrs = ['path', 'name',
+              'location', 'copyLib',
+              'copyGroups', 'copyFeatures',
+              'muteKerning', 'muteInfo',
+              'mutedGlyphNames',
+              'familyName', 'styleName']
+
     def __init__(self):
         self.path = None
         self.name = None
@@ -79,13 +85,14 @@ class SourceDescriptor(SimpleDescriptor):
 
 class InstanceDescriptor(SimpleDescriptor):
     """Simple container for data related to the instance"""
-    flavor="instance"
-    _attrs = [  'path', 'name', 
-                'location', 'familyName', 
-                'styleName', 'postScriptFontName', 
-                'styleMapFamilyName', 
-                'styleMapStyleName', 
-                'kerning', 'info']
+    flavor = "instance"
+    _attrs = ['path', 'name',
+              'location', 'familyName',
+              'styleName', 'postScriptFontName',
+              'styleMapFamilyName',
+              'styleMapStyleName',
+              'kerning', 'info']
+
     def __init__(self):
         self.path = None
         self.name = None
@@ -102,19 +109,20 @@ class InstanceDescriptor(SimpleDescriptor):
 
 class AxisDescriptor(SimpleDescriptor):
     """Simple container for the axis data"""
-    flavor="axis"
+    flavor = "axis"
     _attrs = ['tag', 'name', 'maximum', 'minimum', 'default', 'map']
+
     def __init__(self):
-        self.tag = None     # opentype tag for this axis
-        self.name = None    # name of the axis used in locations
-        self.labelNames = {} # names for UI purposes, if this is not a standard axis,
+        self.tag = None       # opentype tag for this axis
+        self.name = None      # name of the axis used in locations
+        self.labelNames = {}  # names for UI purposes, if this is not a standard axis,
         self.minimum = None
         self.maximum = None
         self.default = None
         self.map = []
 
     def serialize(self):
-        # output to a dict
+        # output to a dict, used in testing
         d = dict(tag = self.tag,
                 name = self.name,
                 labelNames = self.labelNames,
@@ -131,12 +139,13 @@ class BaseDocWriter(object):
     axisDescriptorClass = AxisDescriptor
     sourceDescriptorClass = SourceDescriptor
     instanceDescriptorClass = InstanceDescriptor
+
     def __init__(self, documentPath, documentObject):
         self.path = documentPath
         self.documentObject = documentObject
         self.toolVersion = 3
         self.root = ET.Element("designspace")
-        self.root.attrib['format'] = "%d"%self.toolVersion
+        self.root.attrib['format'] = "%d" % self.toolVersion
         self.root.append(ET.Element("axes"))
         self.root.append(ET.Element("sources"))
         self.root.append(ET.Element("instances"))
@@ -158,13 +167,13 @@ class BaseDocWriter(object):
         if pretty:
             _indent(self.root, whitespace=self._whiteSpace)
         tree = ET.ElementTree(self.root)
-        tree.write(self.path, encoding=u"utf-8", method='xml', xml_declaration=True)
+        tree.write(self.path, encoding="utf-8", method='xml', xml_declaration=True)
 
     def _makeLocationElement(self, locationObject, name=None):
         """ Convert Location dict to a locationElement."""
         locElement = ET.Element("location")
         if name is not None:
-           locElement.attrib['name'] = name
+            locElement.attrib['name'] = name
         defaultLoc = self.newDefaultLocation()
         validatedLocation = {}
         for axisName, axisValue in defaultLoc.items():
@@ -174,20 +183,20 @@ class BaseDocWriter(object):
             else:
                 validatedLocation[axisName] = locationObject[axisName]
         for dimensionName, dimensionValue in validatedLocation.items():
-           dimElement = ET.Element('dimension')
-           dimElement.attrib['name'] = dimensionName
-           if type(dimensionValue)==tuple:
-               dimElement.attrib['xvalue'] = self.intOrFloat(dimensionValue[0])
-               dimElement.attrib['yvalue'] = self.intOrFloat(dimensionValue[1])
-           else:
-               dimElement.attrib['xvalue'] = self.intOrFloat(dimensionValue)
-           locElement.append(dimElement)
+            dimElement = ET.Element('dimension')
+            dimElement.attrib['name'] = dimensionName
+            if type(dimensionValue) == tuple:
+                dimElement.attrib['xvalue'] = self.intOrFloat(dimensionValue[0])
+                dimElement.attrib['yvalue'] = self.intOrFloat(dimensionValue[1])
+            else:
+                dimElement.attrib['xvalue'] = self.intOrFloat(dimensionValue)
+            locElement.append(dimElement)
         return locElement, validatedLocation
-    
+
     def intOrFloat(self, num):
         if int(num) == num:
-            return "%d"%num
-        return "%f"%num
+            return "%d" % num
+        return "%f" % num
 
     def _addAxis(self, axisObject):
         self.axes.append(axisObject)
@@ -319,10 +328,12 @@ class BaseDocWriter(object):
             glyphElement.append(mastersElement)
         return glyphElement
 
+
 class BaseDocReader(object):
     axisDescriptorClass = AxisDescriptor
     sourceDescriptorClass = SourceDescriptor
     instanceDescriptorClass = InstanceDescriptor
+
     def __init__(self, documentPath, documentObject):
         self.path = documentPath
         self.documentObject = documentObject
@@ -345,15 +356,15 @@ class BaseDocReader(object):
         for name in self.documentObject.sources.keys():
             paths.append(self.documentObject.sources[name][0].path)
         return paths
-    
+
     def newDefaultLocation(self):
         loc = {}
         for axisDescriptor in self.axes:
             loc[axisDescriptor.name] = axisDescriptor.default
         return loc
-        
+
     def readAxes(self):
-        # read the axes elements, including the warp map. 
+        # read the axes elements, including the warp map.
         axes = []
         for axisElement in self.root.findall(".axes/axis"):
             axisObject = self.axisDescriptorClass()
@@ -501,7 +512,7 @@ class BaseDocReader(object):
             ::
 
                 <info/>
-                
+
                 Let's drop support for a different location for the info. Never needed it.
 
             """
@@ -566,9 +577,9 @@ class BaseDocReader(object):
             if masterGlyphName is None:
                 # if we don't read a glyphname, use the one we have
                 masterGlyphName = glyphName
-            d = dict(   font=fontSourceName,
-                        location=sourceLocation,
-                        glyphName=masterGlyphName)
+            d = dict(font=fontSourceName,
+                     location=sourceLocation,
+                     glyphName=masterGlyphName)
             if glyphSources is None:
                 glyphSources = []
             glyphSources.append(d)
@@ -620,14 +631,10 @@ class DesignSpaceDocument(object):
         return loc
 
 
-
-
-
-
 if __name__ == "__main__":
 
     def test():
-        u"""
+        """
         >>> import os
         >>> testDocPath = os.path.join(os.getcwd(), "test.designspace")
         >>> masterPath1 = os.path.join(os.getcwd(), "masters", "masterTest1.ufo")
@@ -679,7 +686,7 @@ if __name__ == "__main__":
         >>> i2.familyName = "InstanceFamilyName"
         >>> i2.styleName = "InstanceStyleName"
         >>> i2.name = "instance.ufo2"
-        >>> # anisotropic location 
+        >>> # anisotropic location
         >>> i2.location = dict(weight=500, width=(400,300))
         >>> i2.postScriptFontName = "InstancePostscriptName"
         >>> i2.styleMapFamilyName = "InstanceStyleMapFamilyName"
@@ -749,9 +756,8 @@ if __name__ == "__main__":
         ...     a, b = v
         ...     assert a == b        
         """
-    
+
     def _test():
         import doctest
         doctest.testmod()
-    
     _test()

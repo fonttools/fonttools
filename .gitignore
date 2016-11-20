@@ -1,2 +1,6 @@
 test.designspace
 Lib/DesignSpaceDocument.egg-info
+.cache
+__pycache__
+*.py[co]
+.DS_Store
