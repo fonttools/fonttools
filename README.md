@@ -250,7 +250,7 @@ Example of all axis elements together:
 * `<info copy="1" />`
 * Child element of `source`
 * Defines if the instances can inherit the non-interpolating font info from this source.
-* MutatorMath only
+* MutatorMath + Varlib
 
 # 3.3 `features` element
 * `<features copy="1" />`

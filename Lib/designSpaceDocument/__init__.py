@@ -113,6 +113,18 @@ class AxisDescriptor(SimpleDescriptor):
         self.default = None
         self.map = []
 
+    def serialize(self):
+        # output to a dict
+        d = dict(tag = self.tag,
+                name = self.name,
+                labelNames = self.labelNames,
+                maximum = self.maximum,
+                minimum = self.minimum,
+                default = self.default,
+                map = self.map,
+            )
+        return d
+
 
 class BaseDocWriter(object):
     _whiteSpace = "    "
@@ -186,7 +198,7 @@ class BaseDocWriter(object):
         axisElement.attrib['maximum'] = str(axisObject.maximum)
         axisElement.attrib['default'] = str(axisObject.default)
         for languageCode, labelName in axisObject.labelNames.items():
-            languageElement = ET.Element('labelName')
+            languageElement = ET.Element('labelname')
             languageElement.attrib[u'xml:lang'] = languageCode
             languageElement.text = labelName
             axisElement.append(languageElement)
@@ -361,6 +373,12 @@ class BaseDocReader(object):
                 a = float(mapElement.attrib['input'])
                 b = float(mapElement.attrib['output'])
                 axisObject.map.append((a,b))
+            for labelNameElement in axisElement.findall('labelname'):
+                # Note: elementtree reads the xml:lang attribute name as
+                # '{http://www.w3.org/XML/1998/namespace}lang'
+                for key, lang in labelNameElement.items():
+                    labelName = labelNameElement.text
+                    axisObject.labelNames[lang] = labelName
             self.documentObject.axes.append(axisObject)
             self.axisDefaults[axisObject.name] = axisObject.default
 
@@ -681,6 +699,7 @@ if __name__ == "__main__":
         >>> a1.default = 0
         >>> a1.name = "weight"
         >>> a1.tag = "wght"
+        >>> # note: just to test the element language, not an actual label name recommendations.
         >>> a1.labelNames[u'fa-IR'] = u"قطر"
         >>> a1.labelNames[u'en'] = u"Wéíght"
         >>> doc.addAxis(a1)
@@ -691,6 +710,7 @@ if __name__ == "__main__":
         >>> a2.name = "width"
         >>> a2.tag = "wdth"
         >>> a2.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
+        >>> a2.labelNames[u'fr'] = u"Poids"
         >>> doc.addAxis(a2)
         >>> # add an axis that is not part of any location to see if that works
         >>> a3 = AxisDescriptor()
@@ -714,11 +734,24 @@ if __name__ == "__main__":
         ...     a.compare(b)
         >>> [n.mutedGlyphNames for n in new.sources]
         [['A', 'Z'], []]
+        
+        >>> # test roundtrip for the axis attributes and data
+        >>> axes = {}
+        >>> for axis in doc.axes:
+        ...     if not axis.tag in axes:
+        ...         axes[axis.tag] = []
+        ...     axes[axis.tag].append(axis.serialize())
+        >>> for axis in new.axes:
+        ...     if not axis.tag in axes:
+        ...         axes[axis.tag] = []
+        ...     axes[axis.tag].append(axis.serialize())
+        >>> for v in axes.values():
+        ...     a, b = v
+        ...     assert a == b        
         """
     
     def _test():
         import doctest
         doctest.testmod()
-        print "done"
     
     _test()
