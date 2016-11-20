@@ -178,10 +178,7 @@ class BaseDocWriter(object):
         validatedLocation = {}
         for axisName, axisValue in defaultLoc.items():
             # update the location dict with missing default axis values
-            if not axisName in locationObject:
-                validatedLocation[axisName] = axisValue
-            else:
-                validatedLocation[axisName] = locationObject[axisName]
+            validatedLocation[axisName] = locationObject.get(axisName, axisValue)
         for dimensionName, dimensionValue in validatedLocation.items():
             dimElement = ET.Element('dimension')
             dimElement.attrib['name'] = dimensionName
