@@ -1,7 +1,7 @@
 MutatorMath started out with its own reader and writer for designspaces. Since then the use of designspace has broadened and it would be useful to have a reader and writer that are independent of a specific system.
 
-DesignSpaceDocument Object
-==========================
+DesignSpaceDocument
+===================
 
 An object to read, write and edit interpolation systems for typefaces.
 
@@ -18,9 +18,9 @@ A couple of differences between things that use designspaces:
 * The goals of Varlib and MutatorMath are different, so not all attributes are always needed.
 * Need to expand the description of FDK use of deisgnspace files.
 
-The DesignSpaceDocument object can read and write .designspace data. It imports the axes, sources and instances to very basic "descriptor" objects that store the data in attributes. Data is added to the document by creating such descriptor objects, filling them with data and then adding them to the document. This makes it easy to integrate this object in different contexts.
+The DesignSpaceDocument object can read and write .designspace data. It imports the axes, sources and instances to very basic **descriptor** objects that store the data in attributes. Data is added to the document by creating such descriptor objects, filling them with data and then adding them to the document. This makes it easy to integrate this object in different contexts.
 
-The DesignSpaceDocument object can be subclassed to work with different objects, as long as they have the same attributes.
+The **DesignSpaceDocument** object can be subclassed to work with different objects, as long as they have the same attributes.
 
 The object does not do any validation. 
 
@@ -120,7 +120,8 @@ a1.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
 
 # Subclassing descriptors
 
-The DesignSpaceDocument can take subclassed Reader and Writer objects. This allows you to work with your own descriptors. You could subclass the descriptors. But as long as they have the basic attributes the descriptor does not need to be a subclass. 
+The DesignSpaceDocument can take subclassed Reader and Writer objects. This allows you to work with your own descriptors. You could subclass the descriptors. But as long as they have the basic attributes the descriptor does not need to be a subclass.
+
 ```python
 class MyDocReader(BaseDocReader):
     axisDescriptorClass = MyAxisDescriptor
@@ -185,6 +186,7 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 ### Value
 * The natural language name of this axis.
 
+### Example
 ```xml
 <labelName xml:lang="fa-IR">قطر</labelName>
 <labelName xml:lang="en">Wéíght</labelName>
@@ -195,13 +197,14 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 * Together these values transform the designspace.
 * Child of `axis` element.
 
+### Example
 ```xml
 <map input="0.0" output="10.0" />
 <map input="401.0" output="66.0" />
 <map input="1000.0" output="990.0" />
 ```
 
-Example of all axis elements together:
+### Example of all axis elements together:
 ```xml
     <axes>
         <axis default="0" maximum="1000" minimum="0" name="weight" tag="wght">
@@ -229,6 +232,13 @@ Example of all axis elements together:
 * `xvalue`: required, number. The value on this axis.
 * `yvalue`: optional, number. Separate value for anisotropic interpolations.
 
+### Example
+```xml
+<location>
+  <dimension name="width" xvalue="0.000000" />
+  <dimension name="weight" xvalue="0.000000" yvalue="0.003" />
+</location>
+```
 
 # 3. `source` element
 * Defines a single font that contributes to the designspace.
@@ -251,6 +261,7 @@ Example of all axis elements together:
 * Child element of `source`
 * Defines if the instances can inherit the non-interpolating font info from this source.
 * MutatorMath + Varlib
+* This presence of this element indicates this source is to be the default font.
 
 # 3.3 `features` element
 * `<features copy="1" />`
@@ -268,7 +279,7 @@ Example of all axis elements together:
 * `mute`: optional, number, andts
 * MutatorMath only
 
-# Example
+### Example
 ```xml
 <source familyname="MasterFamilyName" filename="masters/masterTest1.ufo" name="master.ufo1" stylename="MasterStyleNameOne">
 	<lib copy="1" />
@@ -298,7 +309,46 @@ Example of all axis elements together:
 * `stylemapfamilyname`: string. Optional for MutatorMath. Corresponds with `styleMapFamilyName`
 * `stylemapstylename `: string. Optional for MutatorMath. Corresponds with `styleMapStyleName`
 
-# Example
+### Example for varlib
+```xml
+<instance familyname="InstanceFamilyName" filename="instances/instanceTest2.ufo" name="instance.ufo2" postscriptfontname="InstancePostscriptName" stylemapfamilyname="InstanceStyleMapFamilyName" stylemapstylename="InstanceStyleMapStyleName" stylename="InstanceStyleName">
+<location>
+	<dimension name="width" xvalue="400" yvalue="300" />
+   <dimension name="weight" xvalue="500" />
+</location>
+<kerning />
+<info />
+</instance>
+```
+
+# 4.1 `glyphs` element
+* Container for `glyph` elements.
+* Optional
+* MutatorMath only.
+
+# 4.2 `glyph` element
+* Child element of `glyphs`
+* May contain a `location` element.
+
+### Attributes
+* `name`: string. The name of the glyph.
+* `unicode`: string. Unicode value for this glyph, in hexadecimal.
+
+# 4.2.1 `note` element
+* String. The value corresponds to glyph.note in UFO.
+
+# 4.2.2 `masters` element
+* Container for `master` elements
+* These `master` elements define an alternative set of glyph masters for this glyph.
+
+# 4.2.2.1 `master` element
+* Defines a single alternative master for this glyph.
+
+### Attributes
+* `glyphname`: the name of the alternate master glyph.
+* `source`: the identifier name of the source this master glyph needs to be loaded from
+
+### Example
 ```xml
 <instance familyname="InstanceFamilyName" filename="instances/instanceTest2.ufo" name="instance.ufo2" postscriptfontname="InstancePostscriptName" stylemapfamilyname="InstanceStyleMapFamilyName" stylemapstylename="InstanceStyleMapStyleName" stylename="InstanceStyleName">
 <location>
@@ -327,33 +377,6 @@ Example of all axis elements together:
 <info />
 </instance>
 ```
-
-# 4.1 `glyphs` element
-* Container for `glyph` elements.
-* Optional
-* Not needed for Varlib
-
-# 4.2 `glyph` element
-* Child element of `glyphs`
-* May contain a `location` element.
-
-### Attributes
-* `name`: string. The name of the glyph.
-* `unicode`: string. Unicode value for this glyph, in hexadecimal.
-
-# 4.2.1 `note` element
-* String. The value corresponds to glyph.note in UFO.
-
-# 4.2.2 `masters` element
-* Container for `master` elements
-* These `master` elements define an alternative set of glyph masters for this glyph.
-
-# 4.2.2.1 `master` element
-* Defines a single alternative master for this glyph.
-
-### Attributes
-* `glyphname`: the name of the alternate master glyph.
-* `source`: the identifier name of the source this master glyph needs to be loaded from
 
 
 ## Notes on this document
