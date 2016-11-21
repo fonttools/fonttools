@@ -430,7 +430,7 @@ OS2_UNICODE_RANGES = (
 	 ('Musical Symbols',                          (0x1D100, 0x1D1FF)),
 	 ('Ancient Greek Musical Notation',           (0x1D200, 0x1D24F))),
 	(('Mathematical Alphanumeric Symbols',        (0x1D400, 0x1D7FF)),),
-	(('Private Use (plane 15)',                   (0xFF000, 0xFFFFD)),
+	(('Private Use (plane 15)',                   (0xF0000, 0xFFFFD)),
 	 ('Private Use (plane 16)',                   (0x100000, 0x10FFFD))),
 	(('Variation Selectors',                      (0xFE00, 0xFE0F)),
 	 ('Variation Selectors Supplement',           (0xE0100, 0xE01EF))),
