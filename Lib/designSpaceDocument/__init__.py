@@ -587,7 +587,7 @@ class BaseDocReader(object):
 
 class DesignSpaceDocument(object):
     """ Read, write data from the designspace file"""
-    def __init__(self, readerClass=None, writerClass=None):
+    def __init__(self, readerClass=None, writerClass=None, fontClass=None):
         self.path = None
         self.formatVersion = None
         self.sources = []
@@ -602,6 +602,11 @@ class DesignSpaceDocument(object):
             self.writerClass = writerClass
         else:
             self.writerClass = BaseDocWriter
+        if fontClass is not None:
+            self.fontClass = fontClass
+        else:
+            from defcon.objects.font import Font
+            self.fontClass = Font
 
     def read(self, path):
         self.path = path
@@ -626,6 +631,17 @@ class DesignSpaceDocument(object):
         for axisDescriptor in self.axes:
             loc[axisDescriptor.name] = axisDescriptor.default
         return loc
+
+    def getFonts(self):
+        # convenience method that delivers the masters and their locations
+        # so someone can build a thing for a thing.
+        fonts = []
+        for sourceDescriptor in self.sources:
+            if sourceDescriptor.path is not None:
+                if os.path.exists(sourceDescriptor.path):
+                    f = self.fontClass(sourceDescriptor.path)
+                    fonts.append((f, sourceDescriptor.location))
+        return fonts
 
 
 if __name__ == "__main__":
@@ -727,6 +743,7 @@ if __name__ == "__main__":
         >>> #doc.addAxis(a3)    # uncomment this line to test the effects of default axes values
         >>> # write the document
         >>> doc.write(testDocPath)
+        >>> assert os.path.exists(testDocPath)
         >>> # import it again
         >>> new = DesignSpaceDocument()
         >>> new.read(testDocPath)
@@ -738,6 +755,8 @@ if __name__ == "__main__":
         ...     a.compare(b)
         >>> [n.mutedGlyphNames for n in new.sources]
         [['A', 'Z'], []]
+        >>> doc.getFonts()
+        []
         
         >>> # test roundtrip for the axis attributes and data
         >>> axes = {}
