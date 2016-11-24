@@ -1,3 +1,20 @@
+# Byte-compiled and optimized files
+__pycache__/
+*.py[co]
+*$py.class
+
+# Packaging
+*.egg-info
+*.eggs
 build
-*.pyc
-*.egg-info/
+dist
+
+# Unit test and coverage files
+.cache
+.coverage
+.coverage.*
+.tox
+htmlcov
+
+# OS X Finder
+.DS_Store

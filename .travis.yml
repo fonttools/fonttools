@@ -1,14 +1,33 @@
 sudo: false
 language: python
-python:
-  - "2.7"
-  - "3.5"
+matrix:
+  include:
+    - python: 2.7
+    - python: 3.5
+      env: BUILD_DIST=true
+    - python: 3.5
+      env: TOXENV=coveralls
 branches:
   only:
     - master
 
 install:
-  - pip install -r requirements.txt
+  - pip install --upgrade setuptools wheel
+  - pip install tox-travis
 
 script:
-  - python setup.py test
+  - tox
+
+deploy:
+  # deploy to PyPI on tags
+  provider: pypi
+  server: https://upload.pypi.org/legacy/
+  on:
+    repo: googlei18n/cu2qu
+    tags: true
+    all_branches: true
+    condition: "$BUILD_DIST == true"
+  user: anthrotype
+  password:
+    secure: LdEsho2OyiHKOsqjdwa1s6LQNuzbiHJGpk7L+Qn6XV8bmzznI15Z5yaC4kO8vE0ZfE0dwTcdA4BrjUBxFZnmWZtGp/la9pcwUF5fX8LnKwRsw8oPHJZNvvi9IEgnIg68VUJ4X787+hJKilQKhyE+J3UKDrJ0on6UJjpTciO8Tsins80EMD5wB000VriCXiZ3wvaCm/yaXDeGKkb8Us3NWT8pshgZ2SpoQyIJ1pik7p4UtjcZM2tPKbCPkim17UCOYQ/0II4KmoT19JGceC0xWbD0cssZDM2rd0vIQ+OMQTD7fkoTE2pY9L3dLDyHamJCECq/ZX0rNgFUBylEJq1+gin+8g81vXsewzBZA5Zc4/D+ER0INdLF8LbLAZOqu40eMa2X6bu3w++Vo8dK0wZibVlrA3EnBKcvTePTFuXnlAPuE252lsq+zn1nO8SO6xfzvB4JF3iB7GO7dajnR+8C+m9ctO/Lx043+FoxH607N1E/WOsFvOCPXQhpeNJZHyPtA4no++O0fp3KcKkvvJrt5nVxs55AT+p5uAXvfOATwwjaZYivayeZj2ICeFhh3A2LciMOvaqqXAJ64zFmjnmgVYyJPc7Xh30cnsvdKOR5QR35gzAZfEAyBeYIckIyIwpF9N+ogtGMQvHSprkbf1Bm6Hpmhq/XTkNzW+SM8+3/cfI=
+  distributions: sdist bdist_wheel

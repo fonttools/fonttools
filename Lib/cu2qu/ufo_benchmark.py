@@ -18,9 +18,6 @@ from __future__ import print_function, division, absolute_import
 import os
 import random
 
-from defcon import Font
-from robofab.world import OpenFont
-
 from cu2qu.benchmark import run_benchmark
 from cu2qu.test import DATADIR
 
@@ -28,11 +25,13 @@ MAX_ERR_EM = 0.002
 
 
 def setup_fonts_to_quadratic_defcon():
+    from defcon import Font
     return [[Font(os.path.join(DATADIR, 'RobotoSubset-Regular.ufo'))],
             MAX_ERR_EM]
 
 
 def setup_fonts_to_quadratic_robofab():
+    from robofab.world import OpenFont
     return [[OpenFont(os.path.join(DATADIR, 'RobotoSubset-Regular.ufo'))],
             MAX_ERR_EM]
 
