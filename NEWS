@@ -1,3 +1,11 @@
+## TTX/FontTools Version 3.2.2
+
+- [varLib] Do not emit null axes in fvar (1bebcec). Thanks @robmck-ms
+- [varLib] Handle fonts without GPOS (7915a45)
+- [merge] Ignore LangSys if None (a11bc56)
+- [subset] Fix subsetting MathVariants (78d3cbe)
+- [OS/2] Fix "Private Use (plane 15)" range (08a0d55). Thanks @mashabow
+
 ## TTX/FontTools Version 3.2.1
 
 - [OS/2] fix checking `fsSelection` bits matching `head.macStyle` bits
