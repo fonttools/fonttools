@@ -10,6 +10,7 @@ matrix:
 branches:
   only:
     - master
+    - /^v\d+\.\d+.*$/
 
 install:
   - pip install --upgrade setuptools wheel
