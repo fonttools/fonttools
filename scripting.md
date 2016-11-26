@@ -1,6 +1,6 @@
 # Scripting a designspace
 
-It can be useful to build a designspace with a script rather than construct one with an interface like [Superpolator](http://superpolator.com) or [DesignSpaceEditor](https://github.com/LettError/designSpaceRoboFontExtension). But the [designSpaceDocument](https://github.com/LettError/designSpaceDocument) also offers a method of building designspaces in Python. This document offers some examples on how to do that.
+It can be useful to build a designspace with a script rather than construct one with an interface like [Superpolator](http://superpolator.com) or [DesignSpaceEditor](https://github.com/LettError/designSpaceRoboFontExtension). The [designSpaceDocument](https://github.com/LettError/designSpaceDocument) offers a some tools of building designspaces in Python. This document shows an example on how to do that.
 
 So, suppose you installed the [designSpaceDocument](https://github.com/LettError/designSpaceDocument) package through your favorite `git` client.
 
@@ -12,11 +12,11 @@ from designSpaceDocument import DesignSpaceDocument, AxisDescriptor, SourceDescr
 doc = DesignSpaceDocument()
 ```
 
-We want to create definitions for axes, sources and instances. That means a lot of attributes to set, so the **DesignSpaceDocument object** uses objects to descibe the axes, sources and instances. These are relatively simple objects, just a collection of attributes.
+We want to create definitions for axes, sources and instances. That means there are a lot of attributes to set. The **DesignSpaceDocument object** uses objects to descibe the axes, sources and instances. These are relatively simple objects, think of these as collections of attributes.
 
-* [Source descriptor](https://github.com/LettError/designSpaceDocument#source-descriptor-object-attributes) attributes and example.
-* [Instance descriptor](https://github.com/LettError/designSpaceDocument#instance-descriptor-object)  attributes and example.
-* [Axis descriptor](https://github.com/LettError/designSpaceDocument#axis-descriptor-object)  attributes and example.
+* [Attributes of the Source descriptor](https://github.com/LettError/designSpaceDocument#source-descriptor-object-attributes)
+* [Attributes of the Instance descriptor](https://github.com/LettError/designSpaceDocument#instance-descriptor-object)
+* [Attributes of the Axis descriptor](https://github.com/LettError/designSpaceDocument#axis-descriptor-object)
 * Read about [subclassing descriptors](https://github.com/LettError/designSpaceDocument#subclassing-descriptors)
 
 ## Making some axes
@@ -33,7 +33,8 @@ a1.name = "weight"
 a1.tag = "wght"
 doc.addAxis(a1)
 ```
-You can add as many axes as you need. OpenType has a maximum of around 64K. DesignSpaceEditor has a maximum of 5.
+* You can add as many axes as you need. OpenType has a maximum of around 64K. DesignSpaceEditor has a maximum of 5.
+* The `name` attribute is the name you'll be using as the axis name in the locations.
 
 ## Make a source object
 
