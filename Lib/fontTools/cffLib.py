@@ -1371,14 +1371,6 @@ class DictCompiler(object):
 				continue
 			rawDict[name] = value
 		self.rawDict = rawDict
-		ignoredNames = []
-		for name in sorted(set(dictObj.rawDict) - set(dictObj.order)):
-			value = getattr(dictObj, name, None)
-			if value is not None:
-				ignoredNames.append(name)
-		if ignoredNames:
-			log.warning("Some CFF Dict keys were ignored upon compile: " +
-				" ".join(sorted(ignoredNames)))
 
 	def setPos(self, pos, endPos):
 		pass
@@ -1490,6 +1482,39 @@ class TopDictCompiler(DictCompiler):
 			children.append(privComp)
 			children.extend(privComp.getChildren(strings))
 		return children
+
+
+class FontDictCompiler(TopDictCompiler):
+
+	def __init__(self, dictObj, strings, parent):
+		super(FontDictCompiler, self).__init__(dictObj, strings, parent)
+		#
+		# We now take some effort to detect if there were any key/value pairs supplied
+		# that were ignored in the FontDict context, and issue a warning for those cases.
+		#
+		ignoredNames = []
+		dictObj = self.dictObj
+		for name in sorted(set(dictObj.converters) - set(dictObj.order)):
+			if name in dictObj.rawDict:
+				# The font was directly read from binary. In this
+				# case, we want to report *all* "useless" key/value
+				# pairs that are in the font, not just the ones that
+				# are different from the default.
+				ignoredNames.append(name)
+			else:
+				# The font was probably read from a TTX file. We only
+				# warn about keys whos value is not the default. The
+				# ones that have the default value will not be written
+				# to binary anyway.
+				default = dictObj.defaults.get(name)
+				if default is not None:
+					conv = dictObj.converters[name]
+					default = conv.read(dictObj, default)
+				if getattr(dictObj, name, None) != default:
+					ignoredNames.append(name)
+		if ignoredNames:
+			log.warning("Some CFF Dict keys were ignored upon compile: " +
+				" ".join(sorted(ignoredNames)))
 
 
 class PrivateDictCompiler(DictCompiler):
@@ -1633,8 +1658,9 @@ class FontDict(TopDict):
 	# from binary or when reading from XML, but by overriding `order` with a limited
 	# list of names, we ensure that only the useful names ever get exported to XML and
 	# ever get compiled into the binary font.
-	# While this is not ideal -- we won't get to see "useless" key/value pairs that are
-	# actually in the font -- it's better than crashing on them.
+	#
+	# We override compilerClass so we can warn about "useless" key/value pairs, either
+	# from the original binary font or from TTX input.
 	#
 	# See:
 	# - https://github.com/fonttools/fonttools/issues/740
@@ -1642,6 +1668,7 @@ class FontDict(TopDict):
 	# - https://github.com/adobe-type-tools/afdko/issues/137
 	#
 	order = ['FontName', 'FontMatrix', 'Weight', 'Private']
+	compilerClass = FontDictCompiler
 
 
 class PrivateDict(BaseDict):
