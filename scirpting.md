@@ -50,6 +50,7 @@ doc.addSource(s0)
 * You'll need to have at least 2 sources in your document, so go ahead and add another one. 
 * The **location** attribute is a dictionary with the designspace location for this master. 
 * The axis names in the location have to match one of the `axis.name` values you defined before.
+* The **path** attribute is the absolute path to an existing UFO.
 
 So go ahead and add another master:
 
@@ -76,7 +77,7 @@ i0.kerning = True
 i0.info = True
 doc.addInstance(i0)
 ```
-* The `path` attribute needs to be the full (real or intended) path for the instance. When the document is saved this path will written as relative to the path of the document.
+* The `path` attribute needs to be the absolute (real or intended) path for the instance. When the document is saved this path will written as relative to the path of the document.
 * instance paths should be on the same level as the document, or in a level below.
 
 # Saving
@@ -94,6 +95,7 @@ You can generate the UFO's with MutatorMath:
 from mutatorMath.ufo import build
 build("whatevs/myprototype.designspace")
 ```
+* Assuming the outline data in the masters is compatible. 
 
-Or you can use the file in making **variable font** with varlib.
+Or you can use the file in making a **variable font** with varlib.
 
