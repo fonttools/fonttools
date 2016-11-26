@@ -1544,6 +1544,10 @@ class BaseDict(object):
 				continue
 			conv = self.converters[name]
 			conv.xmlWrite(xmlWriter, name, value, progress)
+		ignoredNames = set(self.rawDict) - set(self.order)
+		if ignoredNames:
+			xmlWriter.comment("some keys were ignored: %s" % " ".join(sorted(ignoredNames)))
+			xmlWriter.newline()
 
 	def fromXML(self, name, attrs, content):
 		conv = self.converters[name]
@@ -1624,7 +1628,10 @@ class FontDict(TopDict):
 	# While this is not ideal -- we won't get to see "useless" key/value pairs that are
 	# actually in the font -- it's better than crashing on them.
 	#
-	# See https://github.com/fonttools/fonttools/issues/740
+	# See:
+	# - https://github.com/fonttools/fonttools/issues/740
+	# - https://github.com/fonttools/fonttools/issues/601
+	# - https://github.com/adobe-type-tools/afdko/issues/137
 	#
 	order = ['FontName', 'FontMatrix', 'Weight', 'Private']
 
