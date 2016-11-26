@@ -1371,6 +1371,14 @@ class DictCompiler(object):
 				continue
 			rawDict[name] = value
 		self.rawDict = rawDict
+		ignoredNames = []
+		for name in sorted(set(dictObj.rawDict) - set(dictObj.order)):
+			value = getattr(dictObj, name, None)
+			if value is not None:
+				ignoredNames.append(name)
+		if ignoredNames:
+			log.log(logging.WARNING, "Some CFF Dict keys were ignored upon compile: " +
+				" ".join(sorted(ignoredNames)))
 
 	def setPos(self, pos, endPos):
 		pass
