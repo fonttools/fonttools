@@ -1513,7 +1513,7 @@ class FontDictCompiler(TopDictCompiler):
 				if getattr(dictObj, name, None) != default:
 					ignoredNames.append(name)
 		if ignoredNames:
-			log.warning("Some CFF FontDict keys were ignored upon compile: " +
+			log.warning("Some CFF FDArray/FontDict keys were ignored upon compile: " +
 				" ".join(sorted(ignoredNames)))
 
 
