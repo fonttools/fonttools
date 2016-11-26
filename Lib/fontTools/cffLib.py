@@ -464,11 +464,7 @@ class FDArrayIndex(TopDictIndex):
 			if isinstance(element, basestring):
 				continue
 			name, attrs, content = element
-			try:
-				fontDict.fromXML(name, attrs, content)
-			except KeyError:
-				"""Since fonttools used to pass a lot of fields that are not relevant in the FDArray FontDict, there are 'ttx' files in the wild that contain all these. These got in the ttx files because fonttools writes explicit values for all the TopDict default values. These are not actually illegal in the context of an FDArray FontDict - you can legally, per spec, put any arbitrary key/value pair in a FontDict - but are useless since current major company CFF interpreters ignore anything but the set listed in this file. So, we just silently skip them. An exception is Weight: this is not used by any interepreter, but some foundries have asked that this be supported in FDArray FontDicts just to preserve information about the design when the font is being inspected."""
-				pass
+			fontDict.fromXML(name, attrs, content)
 		self.append(fontDict)
 
 
@@ -1302,15 +1298,6 @@ topDictOperators = [
 	(17,		'CharStrings',		'number',	None,	CharStringsConverter()),
 ]
 
-fontDictOperators = [
-#	opcode		name			argument type	default	converter
-	((12, 38),	'FontName',		'SID',		None,	None),
-	((12, 7),	'FontMatrix',		'array',	[0.001, 0, 0, 0.001, 0, 0],	None),
-	(4,		'Weight',		'SID',		None,	None),
-	(18,		'Private',	('number', 'number'),	None,	PrivateDictConverter()),
-]
-
-
 
 # Note! FDSelect and FDArray must both preceed CharStrings in the output XML build order,
 # in order for the font to compile back from xml.
@@ -1357,14 +1344,10 @@ def addConverters(table):
 
 addConverters(privateDictOperators)
 addConverters(topDictOperators)
-addConverters(fontDictOperators)
 
 
 class TopDictDecompiler(psCharStrings.DictDecompiler):
 	operators = buildOperatorDict(topDictOperators)
-
-class FontDictDecompiler(psCharStrings.DictDecompiler):
-	operators = buildOperatorDict(fontDictOperators)
 
 class PrivateDictDecompiler(psCharStrings.DictDecompiler):
 	operators = buildOperatorDict(privateDictOperators)
@@ -1501,19 +1484,6 @@ class TopDictCompiler(DictCompiler):
 		return children
 
 
-class FontDictCompiler(DictCompiler):
-
-	opcodes = buildOpcodeDict(fontDictOperators)
-
-	def getChildren(self, strings):
-		children = []
-		if hasattr(self.dictObj, "Private"):
-			privComp = self.dictObj.Private.getCompiler(strings, self)
-			children.append(privComp)
-			children.extend(privComp.getChildren(strings))
-		return children
-
-
 class PrivateDictCompiler(DictCompiler):
 
 	opcodes = buildOpcodeDict(privateDictOperators)
@@ -1633,18 +1603,30 @@ class TopDict(BaseDict):
 
 
 class FontDict(TopDict):
-
-	defaults = buildDefaults(fontDictOperators)
-	converters = buildConverters(fontDictOperators)
-	order = buildOrder(fontDictOperators)
-	decompilerClass = FontDictDecompiler
-	compilerClass = FontDictCompiler
-
-	def __init__(self, strings=None, file=None, offset=None, GlobalSubrs=None):
-		TopDict.__init__(self, strings, file, offset)
-
-	def toXML(self, xmlWriter, progress):
-		BaseDict.toXML(self, xmlWriter, progress)
+	#
+	# Since fonttools used to pass a lot of fields that are not relevant in the FDArray
+	# FontDict, there are 'ttx' files in the wild that contain all these. These got in
+	# the ttx files because fonttools writes explicit values for all the TopDict default
+	# values. These are not actually illegal in the context of an FDArray FontDict - you
+	# can legally, per spec, put any arbitrary key/value pair in a FontDict - but are
+	# useless since current major company CFF interpreters ignore anything but the set
+	# listed in this file. So, we just silently skip them. An exception is Weight: this
+	# is not used by any interpreter, but some foundries have asked that this be
+	# supported in FDArray FontDicts just to preserve information about the design when
+	# the font is being inspected.
+	#
+	# On top of that, there are fonts out there that contain such useless FontDict values.
+	#
+	# By subclassing TopDict, we *allow* all key/values from TopDict, both when reading
+	# from binary or when reading from XML, but by overriding `order` with a limited
+	# list of names, we ensure that only the useful names ever get exported to XML and
+	# ever get compiled into the binary font.
+	# While this is not ideal -- we won't get to see "useless" key/value pairs that are
+	# actually in the font -- it's better than crashing on them.
+	#
+	# See https://github.com/fonttools/fonttools/issues/740
+	#
+	order = ['FontName', 'FontMatrix', 'Weight', 'Private']
 
 
 class PrivateDict(BaseDict):
