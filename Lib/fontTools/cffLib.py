@@ -1377,7 +1377,7 @@ class DictCompiler(object):
 			if value is not None:
 				ignoredNames.append(name)
 		if ignoredNames:
-			log.log(logging.WARNING, "Some CFF Dict keys were ignored upon compile: " +
+			log.warning("Some CFF Dict keys were ignored upon compile: " +
 				" ".join(sorted(ignoredNames)))
 
 	def setPos(self, pos, endPos):
