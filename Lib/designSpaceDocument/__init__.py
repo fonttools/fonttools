@@ -5,21 +5,14 @@ import os
 import xml.etree.ElementTree as ET
 
 """
-
     designSpaceDocument
 
     - read and write designspace files
     - axes must be defined.
     - warpmap is stored in its axis element
-
 """
 
-
-__all__ = [
-    'DesignSpaceDocumentError', 'BaseDocReader', 'DesignSpaceDocument',
-    'SourceDescriptor', 'InstanceDescriptor',
-    'AxisDescriptor', 'BaseDocReader', 'BaseDocWriter']
-
+__all__ = [ 'DesignSpaceDocumentError', 'BaseDocReader', 'DesignSpaceDocument', 'SourceDescriptor', 'InstanceDescriptor', 'AxisDescriptor', 'BaseDocReader', 'BaseDocWriter']
 
 class DesignSpaceDocumentError(Exception):
     def __init__(self, msg, obj=None):
@@ -642,6 +635,12 @@ class DesignSpaceDocument(object):
                     f = self.fontClass(sourceDescriptor.path)
                     fonts.append((f, sourceDescriptor.location))
         return fonts
+
+    def getAxisOrder(self):
+        names = []
+        for axisDescriptor in self.axes:
+            names.append(axisDescriptor.name)
+        return names
 
 
 if __name__ == "__main__":
