@@ -1,6 +1,6 @@
 # Scripting a designspace
 
-It can be useful to build a designspace with a script rather than construct one with an interface like [Superpolator](http://superpolator.com) or [DesignSpaceEditor](https://github.com/LettError/designSpaceRoboFontExtension). The [designSpaceDocument](https://github.com/LettError/designSpaceDocument) offers a some tools of building designspaces in Python. This document shows an example on how to do that.
+It can be useful to build a designspace with a script rather than construct one with an interface like [Superpolator](http://superpolator.com) or [DesignSpaceEditor](https://github.com/LettError/designSpaceRoboFontExtension). The [designSpaceDocument](https://github.com/LettError/designSpaceDocument) offers a some tools for building designspaces in Python. This document shows an example.
 
 So, suppose you installed the [designSpaceDocument](https://github.com/LettError/designSpaceDocument) package through your favorite `git` client.
 
@@ -19,7 +19,7 @@ We want to create definitions for axes, sources and instances. That means there 
 * [Attributes of the Axis descriptor](https://github.com/LettError/designSpaceDocument#axis-descriptor-object)
 * Read about [subclassing descriptors](https://github.com/LettError/designSpaceDocument#subclassing-descriptors)
 
-## Making some axes
+## Make an axis object
 
 Make a descriptor object and add it to the document.
 
@@ -35,6 +35,24 @@ doc.addAxis(a1)
 ```
 * You can add as many axes as you need. OpenType has a maximum of around 64K. DesignSpaceEditor has a maximum of 5.
 * The `name` attribute is the name you'll be using as the axis name in the locations.
+
+### Option: add label names
+
+The **labelnames** attribute is intended to store localisable, human readable names for this axis if this is not an axis that is registered by OpenType. Think "The label next to the slider". The attribute is a dictionary. The key is the [xml language tag](https://www.w3.org/International/articles/language-tags/), the value is a utf-8 string with the name. Whether or not this attribute is used depends on the font building tool, the operating system and the authoring software. This, at least, is the place to record it.
+
+```python
+a1.labelNames['fa-IR'] = u"قطر"
+a1.labelNames['en'] = u"Wéíght"
+```
+
+### Option: add a map
+
+The **map** attribute is a list of (input, output) mapping values intended for [axis variations table of OpenType](https://www.microsoft.com/typography/otspec/avar.htm).
+
+```python
+a1.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
+```
+
 
 ## Make a source object
 
@@ -52,6 +70,7 @@ doc.addSource(s0)
 * The **location** attribute is a dictionary with the designspace location for this master. 
 * The axis names in the location have to match one of the `axis.name` values you defined before.
 * The **path** attribute is the absolute path to an existing UFO.
+* The **name** attribute is a unique name for this source used to keep track it.
 
 So go ahead and add another master:
 
@@ -80,6 +99,38 @@ doc.addInstance(i0)
 ```
 * The `path` attribute needs to be the absolute (real or intended) path for the instance. When the document is saved this path will written as relative to the path of the document.
 * instance paths should be on the same level as the document, or in a level below.
+* Instances for MutatorMath will generate to UFO.
+* Instances for variable fonts become **named instances**.
+
+### Option: add glyph specific masters
+This bit is not supported by OpenType variable fonts, but it is needed for some designspaces intended for generating instances with MutatorMath. The code becomes a bit verbose, so you're invited to wrap this into something clever.
+
+```python
+# we're making a dict with all sorts of
+#(optional) settings for a glyph.
+#In this example: the dollar.
+glyphData = dict(name="dollar", unicodeValue=0x24)
+
+# you can specify a different location for a glyph
+glyphData['instanceLocation'] = dict(weight=500)
+
+# You can specify different masters
+# for this specific glyph. 
+# You can also give those masters new
+# locations. It's a miniature designspace.
+# Remember the "name" attribute we assigned to the sources?
+glyphData['masters'] = [
+	dict(font="master.thin",
+		glyphName="dollar.nostroke",
+		location=dict(weight=0)),
+	dict(font="master.bold",
+		glyphName="dollar.nostroke",
+		location=dict(weight=1000)),
+	]
+	
+# With all of that set up, store it in the instance.
+i4.glyphs['dollar'] = glyphData
+```
 
 # Saving
 
