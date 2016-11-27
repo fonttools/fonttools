@@ -80,6 +80,13 @@ s1.name = "master.bold"
 s1.location = dict(weight=1000)
 doc.addSource(s1)
 ```
+### Option: exclude glyphs
+
+By default all glyphs in a source will be processed. If you want to exclude certain glyphs, add their names to the `mutedGlyphNames` list.
+
+```python
+s1.mutedGlyphNames = ["A.test", "A.old"]
+```
 
 ## Make an instance object
 
@@ -89,7 +96,6 @@ An **instance** is description of a UFO that you want to generate with the desig
 i0 = InstanceDescriptor()
 i0.familyName = "MyVariableFontPrototype"
 i0.styleName = "Medium"
-i0.postScriptFontName = "MyVariableFontPrototype-Medium"
 i0.path = os.path.join(root, "instances","MyVariableFontPrototype-Medium.ufo")
 i0.location = dict(weight=500)
 i0.kerning = True
@@ -100,6 +106,16 @@ doc.addInstance(i0)
 * instance paths should be on the same level as the document, or in a level below.
 * Instances for MutatorMath will generate to UFO.
 * Instances for variable fonts become **named instances**.
+
+### Option: add more names
+
+If you want you can add a PostScript font name, a stylemap familyName and a stylemap styleName.
+
+```python
+i0.postScriptFontName = "MyVariableFontPrototype-Medium"
+i0.styleMapFamilyName = "MyVarProtoMedium"
+i0.styleMapStyleName = "regular"
+```
 
 ### Option: add glyph specific masters
 This bit is not supported by OpenType variable fonts, but it is needed for some designspaces intended for generating instances with MutatorMath. The code becomes a bit verbose, so you're invited to wrap this into something clever.
