@@ -25,7 +25,6 @@ Make a descriptor object and add it to the document.
 
 ```python
 a1 = AxisDescriptor()
-a1.initial = 0
 a1.maximum = 1000
 a1.minimum = 0
 a1.default = 0
