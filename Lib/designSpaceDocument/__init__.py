@@ -683,9 +683,18 @@ class DesignSpaceDocument(object):
             minimum = self.normalizeLocation({axis.name:axis.minimum}).get(axis.name)
             maximum = self.normalizeLocation({axis.name:axis.maximum}).get(axis.name)
             default = self.normalizeLocation({axis.name:axis.default}).get(axis.name)
+            # scale the map first
+            newMap = []
+            for inputValue, outputValue in axis.map:
+                newOutputValue = self.normalizeLocation({axis.name: outputValue}).get(axis.name)
+                newMap.append((inputValue, newOutputValue))
+            if newMap:
+                axis.map = newMap
             axis.minimum = minimum
             axis.maximum = maximum
             axis.default = default
+
+
 
 
 if __name__ == "__main__":
@@ -911,6 +920,25 @@ if __name__ == "__main__":
         >>> r.sort()
         >>> r
         [('ccc', -1.0, 0.0, 0.0)]
+
+        >>> doc = DesignSpaceDocument()
+        >>> # write some axes
+        >>> a4 = AxisDescriptor()
+        >>> a4.minimum = 0
+        >>> a4.maximum = 1000
+        >>> a4.default = 0
+        >>> a4.name = "ddd"
+        >>> a4.map = [(0,100), (300, 500), (600, 500), (1000,900)]
+        >>> doc.addAxis(a4)
+        >>> doc.normalize()
+        >>> r = []
+        >>> for axis in doc.axes:
+        ...     r.append((axis.name, axis.map))
+        >>> r.sort()
+        >>> r
+        [('ddd', [(0, 0.1), (300, 0.5), (600, 0.5), (1000, 0.9)])]
+
+
         """
 
     def _test():
