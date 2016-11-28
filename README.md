@@ -171,7 +171,7 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 * `default`: required, number. The default value for this axis.
 
 ```xml
-<axis name="weight" tag="wght" minimum="-1000" maximum="1000 default="0">
+<axis name="weight" tag="wght" minimum="-1000" maximum="1000" default="0">
 ```
 
 # 1.1 `labelname` element
