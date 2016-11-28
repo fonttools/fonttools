@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, unicode_literals
+from __future__ import print_function, division, absolute_import
+
 import os
 import xml.etree.ElementTree as ET
 
@@ -13,6 +14,7 @@ import xml.etree.ElementTree as ET
 """
 
 __all__ = [ 'DesignSpaceDocumentError', 'BaseDocReader', 'DesignSpaceDocument', 'SourceDescriptor', 'InstanceDescriptor', 'AxisDescriptor', 'BaseDocReader', 'BaseDocWriter']
+
 
 class DesignSpaceDocumentError(Exception):
     def __init__(self, msg, obj=None):
@@ -642,6 +644,49 @@ class DesignSpaceDocument(object):
             names.append(axisDescriptor.name)
         return names
 
+    def normalizeLocation(self, location):
+        # scale this location based on the axes
+        # accept only values for the axes that we have definitions for
+        # only normalise if we're valid?
+        # normalise anisotropic cooordinates to isotropic.
+        # copied from fontTools.varlib.models.normalizeLocation
+        new = {}
+        for axis in self.axes:
+            if not axis.name in location:
+                # skipping this dimension it seems
+                continue
+            v = location.get(axis.name, axis.default)
+            if type(v)==tuple:
+                v = v[0]
+            if v == axis.default:
+                v = 0.0
+            elif v < axis.default:
+                if axis.default == axis.minimum:
+                    v = 0.0
+                else:
+                    v = (max(v, axis.minimum) - axis.default) / (axis.default - axis.minimum)
+            else:
+                if axis.default == axis.maximum:
+                    v = 0.0
+                else:
+                    v = (min(v, axis.maximum) - axis.default) / (axis.maximum - axis.default)
+            new[axis.name] = v
+        return new
+
+    def normalize(self):
+        # scale all the locations of all masters and instances to the -1 - 0 - 1 value.
+        for item in self.sources:
+            item.location = self.normalizeLocation(item.location)
+        for item in self.instances:
+            item.location = self.normalizeLocation(item.location)
+        for axis in self.axes:
+            minimum = self.normalizeLocation({axis.name:axis.minimum}).get(axis.name)
+            maximum = self.normalizeLocation({axis.name:axis.maximum}).get(axis.name)
+            default = self.normalizeLocation({axis.name:axis.default}).get(axis.name)
+            axis.minimum = minimum
+            axis.maximum = maximum
+            axis.default = default
+
 
 if __name__ == "__main__":
 
@@ -769,7 +814,103 @@ if __name__ == "__main__":
         ...     axes[axis.tag].append(axis.serialize())
         >>> for v in axes.values():
         ...     a, b = v
-        ...     assert a == b        
+        ...     assert a == b
+
+        """
+
+    def testNormalise():
+        """
+        >>> doc = DesignSpaceDocument()
+        >>> # write some axes
+        >>> a1 = AxisDescriptor()
+        >>> a1.minimum = -1000
+        >>> a1.maximum = 1000
+        >>> a1.default = 0
+        >>> a1.name = "aaa"
+        >>> doc.addAxis(a1)
+
+        >>> doc.normalizeLocation(dict(aaa=0))
+        {'aaa': 0.0}
+        >>> doc.normalizeLocation(dict(aaa=1000))
+        {'aaa': 1.0}
+        >>> # clipping beyond max values:
+        >>> doc.normalizeLocation(dict(aaa=1001))
+        {'aaa': 1.0}
+        >>> doc.normalizeLocation(dict(aaa=500))
+        {'aaa': 0.5}
+        >>> doc.normalizeLocation(dict(aaa=-1000))
+        {'aaa': -1.0}
+        >>> doc.normalizeLocation(dict(aaa=-1001))
+        {'aaa': -1.0}
+        >>> # anisotropic coordinates normalise to isotropic
+        >>> doc.normalizeLocation(dict(aaa=(1000,-1000)))
+        {'aaa': 1.0}
+        >>> doc.normalize()
+        >>> r = []
+        >>> for axis in doc.axes:
+        ...     r.append((axis.name, axis.minimum, axis.default, axis.maximum))
+        >>> r.sort()
+        >>> r
+        [('aaa', -1.0, 0.0, 1.0)]
+
+        >>> doc = DesignSpaceDocument()
+        >>> # write some axes
+        >>> a2 = AxisDescriptor()
+        >>> a2.minimum = 100
+        >>> a2.maximum = 1000
+        >>> a2.default = 100
+        >>> a2.name = "bbb"
+        >>> doc.addAxis(a2)
+        >>> doc.normalizeLocation(dict(bbb=0))
+        {'bbb': 0.0}
+        >>> doc.normalizeLocation(dict(bbb=1000))
+        {'bbb': 1.0}
+        >>> # clipping beyond max values:
+        >>> doc.normalizeLocation(dict(bbb=1001))
+        {'bbb': 1.0}
+        >>> doc.normalizeLocation(dict(bbb=500))
+        {'bbb': 0.4444444444444444}
+        >>> doc.normalizeLocation(dict(bbb=-1000))
+        {'bbb': 0.0}
+        >>> doc.normalizeLocation(dict(bbb=-1001))
+        {'bbb': 0.0}
+        >>> # anisotropic coordinates normalise to isotropic
+        >>> doc.normalizeLocation(dict(bbb=(1000,-1000)))
+        {'bbb': 1.0}
+        >>> doc.normalizeLocation(dict(bbb=1001))
+        {'bbb': 1.0}
+        >>> doc.normalize()
+        >>> r = []
+        >>> for axis in doc.axes:
+        ...     r.append((axis.name, axis.minimum, axis.default, axis.maximum))
+        >>> r.sort()
+        >>> r
+        [('bbb', 0.0, 0.0, 1.0)]
+
+        >>> doc = DesignSpaceDocument()
+        >>> # write some axes
+        >>> a3 = AxisDescriptor()
+        >>> a3.minimum = -1000
+        >>> a3.maximum = 0
+        >>> a3.default = 0
+        >>> a3.name = "ccc"
+        >>> doc.addAxis(a3)
+        >>> doc.normalizeLocation(dict(ccc=0))
+        {'ccc': 0.0}
+        >>> doc.normalizeLocation(dict(ccc=1))
+        {'ccc': 0.0}
+        >>> doc.normalizeLocation(dict(ccc=-1000))
+        {'ccc': -1.0}
+        >>> doc.normalizeLocation(dict(ccc=-1001))
+        {'ccc': -1.0}
+
+        >>> doc.normalize()
+        >>> r = []
+        >>> for axis in doc.axes:
+        ...     r.append((axis.name, axis.minimum, axis.default, axis.maximum))
+        >>> r.sort()
+        >>> r
+        [('ccc', -1.0, 0.0, 0.0)]
         """
 
     def _test():
