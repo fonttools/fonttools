@@ -675,14 +675,20 @@ class DesignSpaceDocument(object):
 
     def normalize(self):
         # scale all the locations of all masters and instances to the -1 - 0 - 1 value.
+        # we need the axis data to do the scaling, so we do those last.
+        # masters
         for item in self.sources:
             item.location = self.normalizeLocation(item.location)
+        # instances
         for item in self.instances:
+            # glyph masters for this instance
+            for name, glyphData in item.glyphs.items():
+                glyphData['instanceLocation'] = self.normalizeLocation(glyphData['instanceLocation'])
+                for glyphMaster in glyphData['masters']:
+                    glyphMaster['location'] = self.normalizeLocation(glyphMaster['location'])
             item.location = self.normalizeLocation(item.location)
+        # now the axes
         for axis in self.axes:
-            minimum = self.normalizeLocation({axis.name:axis.minimum}).get(axis.name)
-            maximum = self.normalizeLocation({axis.name:axis.maximum}).get(axis.name)
-            default = self.normalizeLocation({axis.name:axis.default}).get(axis.name)
             # scale the map first
             newMap = []
             for inputValue, outputValue in axis.map:
@@ -690,6 +696,11 @@ class DesignSpaceDocument(object):
                 newMap.append((inputValue, newOutputValue))
             if newMap:
                 axis.map = newMap
+            # finally the axis values
+            minimum = self.normalizeLocation({axis.name:axis.minimum}).get(axis.name)
+            maximum = self.normalizeLocation({axis.name:axis.maximum}).get(axis.name)
+            default = self.normalizeLocation({axis.name:axis.default}).get(axis.name)
+            # and set them in the axis.
             axis.minimum = minimum
             axis.maximum = maximum
             axis.default = default
