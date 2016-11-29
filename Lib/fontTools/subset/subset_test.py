@@ -195,6 +195,36 @@ class SubsetTest(unittest.TestCase):
         # unknown tables are kept if --passthrough-tables option is passed
         self.assertTrue(unknown_tag in subsetfont)
 
+    def test_non_BMP_text_arg_input(self):
+        _, fontpath = self.compile_font(
+            self.getpath("TestTTF-Regular_non_BMP_char.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        text = tostr(u"A\U0001F6D2", encoding='utf-8')
+
+        subset.main([fontpath, "--text=%s" % text, "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+
+        self.assertEqual(subsetfont['maxp'].numGlyphs, 3)
+        self.assertEqual(subsetfont.getGlyphOrder(), ['.notdef', 'A', 'u1F6D2'])
+
+    def test_non_BMP_text_file_input(self):
+        _, fontpath = self.compile_font(
+            self.getpath("TestTTF-Regular_non_BMP_char.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        text = tobytes(u"A\U0001F6D2", encoding='utf-8')
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            tmp.write(text)
+
+        try:
+            subset.main([fontpath, "--text-file=%s" % tmp.name,
+                         "--output-file=%s" % subsetpath])
+            subsetfont = TTFont(subsetpath)
+        finally:
+            os.remove(tmp.name)
+
+        self.assertEqual(subsetfont['maxp'].numGlyphs, 3)
+        self.assertEqual(subsetfont.getGlyphOrder(), ['.notdef', 'A', 'u1F6D2'])
+
 
 if __name__ == "__main__":
     unittest.main()
