@@ -26,6 +26,8 @@ def normalizeLocation(location, axes):
 	{'wght': 0}
 	>>> normalizeLocation({"wght": 1000}, axes)
 	{'wght': 1.0}
+	>>> normalizeLocation({"wght": 500}, axes)
+	{'wght': 0.5}
 	>>> normalizeLocation({"wght": 1001}, axes)
 	{'wght': 1.0}
 	>>> axes = {"wght": (0, 1000, 1000)}
@@ -33,6 +35,8 @@ def normalizeLocation(location, axes):
 	{'wght': -1.0}
 	>>> normalizeLocation({"wght": -1}, axes)
 	{'wght': -1.0}
+	>>> normalizeLocation({"wght": 500}, axes)
+	{'wght': -0.5}
 	>>> normalizeLocation({"wght": 1000}, axes)
 	{'wght': 0}
 	>>> normalizeLocation({"wght": 1001}, axes)
