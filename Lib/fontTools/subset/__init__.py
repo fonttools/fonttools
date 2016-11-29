@@ -2588,8 +2588,10 @@ class Subsetter(object):
         self.unicodes_requested.update(unicodes)
         if isinstance(text, bytes):
             text = text.decode("utf_8")
-        for u in text:
-            self.unicodes_requested.add(ord(u))
+        text_utf32 = text.encode("utf-32-be")
+        nchars = len(text_utf32)//4
+        for u in struct.unpack('>%dL' % nchars, text_utf32):
+            self.unicodes_requested.add(u)
         self.glyph_names_requested.update(glyphs)
         self.glyph_ids_requested.update(gids)
 
