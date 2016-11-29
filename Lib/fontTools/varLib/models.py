@@ -5,16 +5,49 @@ from fontTools.misc.py23 import *
 __all__ = ['normalizeLocation', 'supportScalar', 'VariationModel']
 
 def normalizeLocation(location, axes):
-	"""Normalizes location based on axis min/default/max values from axes."""
+	"""Normalizes location based on axis min/default/max values from axes.
+	>>> axes = {"wght": (100, 400, 900)}
+	>>> normalizeLocation({"wght": 400}, axes)
+	{'wght': 0}
+	>>> normalizeLocation({"wght": 100}, axes)
+	{'wght': -1.0}
+	>>> normalizeLocation({"wght": 900}, axes)
+	{'wght': 1.0}
+	>>> normalizeLocation({"wght": 650}, axes)
+	{'wght': 0.5}
+	>>> normalizeLocation({"wght": 1000}, axes)
+	{'wght': 1.0}
+	>>> normalizeLocation({"wght": 0}, axes)
+	{'wght': -1.0}
+	>>> axes = {"wght": (0, 0, 1000)}
+	>>> normalizeLocation({"wght": 0}, axes)
+	{'wght': 0}
+	>>> normalizeLocation({"wght": -1}, axes)
+	{'wght': 0}
+	>>> normalizeLocation({"wght": 1000}, axes)
+	{'wght': 1.0}
+	>>> normalizeLocation({"wght": 1001}, axes)
+	{'wght': 1.0}
+	>>> axes = {"wght": (0, 1000, 1000)}
+	>>> normalizeLocation({"wght": 0}, axes)
+	{'wght': -1.0}
+	>>> normalizeLocation({"wght": -1}, axes)
+	{'wght': -1.0}
+	>>> normalizeLocation({"wght": 1000}, axes)
+	{'wght': 0}
+	>>> normalizeLocation({"wght": 1001}, axes)
+	{'wght': 0}
+	"""
 	out = {}
 	for tag,(lower,default,upper) in axes.items():
 		v = location.get(tag, default)
+		v = max(min(v, upper), lower)
 		if v == default:
 			v = 0
 		elif v < default:
-			v = (max(v, lower) - default) / (default - lower)
+			v = (v - default) / (default - lower)
 		else:
-			v = (min(v, upper) - default) / (upper - default)
+			v = (v - default) / (upper - default)
 		out[tag] = v
 	return out
 
@@ -232,3 +265,8 @@ class VariationModel(object):
 	def interpolateFromMasters(self, loc, masterValues):
 		deltas = self.getDeltas(masterValues)
 		return self.interpolateFromDeltas(loc, deltas)
+
+
+if __name__ == "__main__":
+	import doctest, sys
+	sys.exit(doctest.testmod().failed)
