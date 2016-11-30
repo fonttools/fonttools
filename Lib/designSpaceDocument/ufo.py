@@ -103,6 +103,9 @@ class DesignSpaceProcessor(DesignSpaceDocument):
             f = self.fonts[sourceDescriptor.name]
             if glyphName in sourceDescriptor.mutedGlyphNames:
                 continue
+            if not glyphName in f:
+                # log this>
+                continue
             items.append((loc, self.mathGlyphClass(f[glyphName])))
         bias, self._glyphMutators[glyphName] = buildMutator(items, bias=self.defaultLoc)
         return self._glyphMutators[glyphName]
@@ -212,7 +215,10 @@ class DesignSpaceProcessor(DesignSpaceDocument):
                 for glyphMaster in masters:
                     sourceGlyphFont = glyphMaster.get("font")
                     sourceGlyphName = glyphMaster.get("glyphName", glyphName)
-                    sourceGlyph = MathGlyph(self.fonts.get(sourceGlyphFont)[sourceGlyphName])
+                    m = self.fonts.get(sourceGlyphFont)
+                    if not sourceGlyphName in m:
+                        continue
+                    sourceGlyph = MathGlyph(m[sourceGlyphName])
                     sourceGlyphLocation = Location(glyphMaster.get("location"))
                     items.append((sourceGlyphLocation, sourceGlyph))
                 bias, glyphMutator = buildMutator(items, bias=self.defaultLoc)
