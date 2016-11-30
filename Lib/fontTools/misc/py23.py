@@ -261,90 +261,94 @@ def xrange(*args, **kwargs):
 
 import decimal as _decimal
 
+if PY3:
+	def round2(number, ndigits=None):
+		"""
+		Implementation of Python 2 built-in round() function.
 
-def round2(number, ndigits=None):
-	"""
-	See Python 2 documentation.
+		Rounds a number to a given precision in decimal digits (default
+		0 digits). The result is a floating point number. Values are rounded
+		to the closest multiple of 10 to the power minus ndigits; if two
+		multiples are equally close, rounding is done away from 0.
 
-	Rounds a number to a given precision in decimal digits (default
-	0 digits). The result is a floating point number. Values are rounded
-	to the closest multiple of 10 to the power minus ndigits; if two
-	multiples are equally close, rounding is done away from 0.
+		ndigits may be negative.
 
-	ndigits may be negative.
-	"""
-	if ndigits is None:
-		ndigits = 0
-	elif hasattr(ndigits, '__index__'):
-		# any type with an __index__ method should be permitted as
-		# a second argument
-		ndigits = ndigits.__index__()
+		See Python 2 documentation:
+		https://docs.python.org/2/library/functions.html?highlight=round#round
+		"""
+		if ndigits is None:
+			ndigits = 0
 
-	if ndigits < 0:
-		exponent = 10 ** (-ndigits)
-		quotient, remainder = divmod(number, exponent)
-		if remainder >= exponent//2 and number >= 0:
-			quotient += 1
-		return float(quotient * exponent)
-	else:
-		exponent = _decimal.Decimal('10') ** (-ndigits)
+		if ndigits < 0:
+			exponent = 10 ** (-ndigits)
+			quotient, remainder = divmod(number, exponent)
+			if remainder >= exponent//2 and number >= 0:
+				quotient += 1
+			return float(quotient * exponent)
+		else:
+			exponent = _decimal.Decimal('10') ** (-ndigits)
 
-		d = _decimal.Decimal.from_float(number).quantize(
-			exponent, rounding=_decimal.ROUND_HALF_UP)
+			d = _decimal.Decimal.from_float(number).quantize(
+				exponent, rounding=_decimal.ROUND_HALF_UP)
 
-		return float(d)
+			return float(d)
 
+	# in Python 3, 'round3' is an alias to the built-in 'round'
+	round = round3 = round
 
-def round3(number, ndigits=None):
-	"""
-	See Python 3 documentation: uses Banker's Rounding.
-
-	Delegates to the __round__ method if for some reason this exists.
-
-	If not, rounds a number to a given precision in decimal digits (default
-	0 digits). This returns an int when called with one argument,
-	otherwise the same type as the number. ndigits may be negative.
-
-	ndigits may be negative.
-
-	Derived from python-future:
-	https://github.com/PythonCharmers/python-future/blob/master/src/future/builtins/newround.py
-	"""
-	return_int = False
-	if ndigits is None:
-		return_int = True
-		ndigits = 0
-
-	if hasattr(number, '__round__'):
-		d = number.__round__(ndigits)
-		return int(d) if return_int else float(d)
-
-	if hasattr(ndigits, '__index__'):
-		# any type with an __index__ method should be permitted as
-		# a second argument
-		ndigits = ndigits.__index__()
-
-	if ndigits < 0:
-		exponent = 10 ** (-ndigits)
-		quotient, remainder = divmod(number, exponent)
-		half = exponent//2
-		if remainder > half or (remainder == half and quotient % 2 != 0):
-			quotient += 1
-		d = quotient * exponent
-	else:
-		exponent = _decimal.Decimal('10') ** (-ndigits)
-
-		d = _decimal.Decimal.from_float(number).quantize(
-			exponent, rounding=_decimal.ROUND_HALF_EVEN)
-
-	return int(d) if return_int else float(d)
-
-
-if PY2:
-	round = round3
 else:
-	import builtins
-	round = builtins.round
+	def round3(number, ndigits=None):
+		"""
+		Implementation of Python 3 built-in round() function.
+
+		Rounds a number to a given precision in decimal digits (default
+		0 digits). This returns an int when called with one argument,
+		otherwise the same type as the number.
+
+		Values are rounded to the closest multiple of 10 to the power minus
+		ndigits; if two multiples are equally close, rounding is done toward
+		the even choice (aka "Banker's Rounding"). For example, both round(0.5)
+		and round(-0.5) are 0, and round(1.5) is 2.
+
+		ndigits may be negative.
+
+		See Python 3 documentation:
+		https://docs.python.org/3/library/functions.html?highlight=round#round
+
+		Derived from python-future:
+		https://github.com/PythonCharmers/python-future/blob/master/src/future/builtins/newround.py
+		"""
+		if ndigits is None:
+			ndigits = 0
+			# return an int when called with one argument
+			totype = int
+			# shortcut if already an integer, or a float with no decimal digits
+			inumber = totype(number)
+			if inumber == number:
+				return inumber
+		else:
+			# return the same type as the number, when called with two arguments
+			totype = type(number)
+
+		if ndigits < 0:
+			exponent = 10 ** (-ndigits)
+			quotient, remainder = divmod(number, exponent)
+			half = exponent//2
+			if remainder > half or (remainder == half and quotient % 2 != 0):
+				quotient += 1
+			d = quotient * exponent
+		else:
+			exponent = _decimal.Decimal('10') ** (-ndigits) if ndigits != 0 else 1
+
+			d = _decimal.Decimal.from_float(number).quantize(
+				exponent, rounding=_decimal.ROUND_HALF_EVEN)
+
+		return totype(d)
+
+	# in Python 2, 'round2' is an alias to the built-in 'round' and
+	# 'round' is shadowed by 'round3'
+	round2 = round
+	round = round3
 
 
 import logging
