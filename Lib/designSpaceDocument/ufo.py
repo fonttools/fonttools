@@ -48,52 +48,77 @@ class DesignSpaceProcessor(DesignSpaceDocument):
 
     def __init__(self, readerClass=None, writerClass=None, fontClass=None, ufoVersion=2):
         super(DesignSpaceProcessor, self).__init__(readerClass=None, writerClass=None, fontClass=None)
-        self.glyphMutators = {}
         self.ufoVersion = ufoVersion         # target UFO version
         self.roundGeometry = False
-        self.infoMutator = None
-        self.kerningMutator = None
+        self._glyphMutators = {}
+        self._infoMutator = None
+        self._kerningMutator = None
         self.default = None         # name of the default master
         self.defaultLoc = None
         self.fonts = {}
+        self.glyphNames = []     # list of all glyphnames
 
-    def process(self):
-        # make the instances
-        self._loadFonts()
-        self._buildMutators()
+    def generateUFO(self):
+        # makes the instances
+        self.loadFonts()
         for instanceDescriptor in self.instances:
-            if instanceDescriptor.path is not None:
-                self.makeInstance(instanceDescriptor)
+            if instanceDescriptor.path is None:
+                continue
+            font = self.makeInstance(instanceDescriptor)
+            if not os.path.exists(os.path.dirname(instanceDescriptor.path)):
+                os.makedirs(os.path.dirname(instanceDescriptor.path))
+            font.save(instanceDescriptor.path, self.ufoVersion)
 
-    def _buildMutators(self):
+    def getInfoMutator(self):
+        """ Returns a info mutator """
+        if self._infoMutator:
+            return self._infoMutator
         infoItems = []
+        for sourceDescriptor in self.sources:
+            loc = Location(sourceDescriptor.location)
+            sourceFont = self.fonts[sourceDescriptor.name]
+            infoItems.append((loc, self.mathInfoClass(sourceFont.info)))
+        bias, self._infoMutator = buildMutator(infoItems, bias=self.defaultLoc)
+        return self._infoMutator
+
+    def getKerningMutator(self):
+        """ Return a kerning mutator """
+        if self._kerningMutator:
+            return self._kerningMutator
         kerningItems = []
-        glyphItems = {}
+        for sourceDescriptor in self.sources:
+            loc = Location(sourceDescriptor.location)
+            sourceFont = self.fonts[sourceDescriptor.name]
+            kerningItems.append((loc, self.mathKerningClass(sourceFont.kerning, sourceFont.groups)))
+        bias, self._kerningMutator = buildMutator(kerningItems, bias=self.defaultLoc)
+        return self._kerningMutator
+
+    def getGlyphMutator(self, glyphName):
+        """ Return a glyph mutator """
+        if glyphName in self._glyphMutators:
+            return self._glyphMutators[glyphName]
+        items = []
         for sourceDescriptor in self.sources:
             loc = Location(sourceDescriptor.location)
             f = self.fonts[sourceDescriptor.name]
-            infoItems.append((loc, self.mathInfoClass(f.info)))
-            kerningItems.append((loc, self.mathKerningClass(f.kerning, f.groups)))
-            for g in f:
-                if g.name in sourceDescriptor.mutedGlyphNames:
-                    continue
-                if not g.name in glyphItems:
-                    glyphItems[g.name] = []
-                glyphItems[g.name].append((loc, self.mathGlyphClass(g)))
-        bias, self.infoMutator = buildMutator(infoItems, bias=self.defaultLoc)
-        bias, self.kerningMutator = buildMutator(kerningItems, bias=self.defaultLoc)
-        for name, items in glyphItems.items():
-            bias, self.glyphMutators[name] = buildMutator(items, bias=self.defaultLoc)
+            if glyphName in sourceDescriptor.mutedGlyphNames:
+                continue
+            items.append((loc, self.mathGlyphClass(f[glyphName])))
+        bias, self._glyphMutators[glyphName] = buildMutator(items, bias=self.defaultLoc)
+        return self._glyphMutators[glyphName]
 
-    def _loadFonts(self):
-        # find the default candidate based on the info flag
+    def loadFonts(self):
+        # Load the fonts and find the default candidate based on the info flag
         defaultCandidate = None
         for sourceDescriptor in self.sources:
+            names = set()
             if not sourceDescriptor.name in self.fonts:
                 self.fonts[sourceDescriptor.name] = self._instantiateFont(sourceDescriptor.path)
+                names = names | set(self.fonts[sourceDescriptor.name].keys())
             if sourceDescriptor.copyInfo:
                 # we choose you!
                 defaultCandidate = sourceDescriptor
+        self.glyphNames = list(names)
         # find the default based on mutatorMath bias
         masterLocations = [Location(src.location) for src in self.sources]
         mutatorBias = biasFromLocations(masterLocations)
@@ -113,24 +138,23 @@ class DesignSpaceProcessor(DesignSpaceDocument):
         self.defaultLoc = Location(self.default.location)
 
     def makeInstance(self, instanceDescriptor):
-        # generate the UFO for this instance
-        if not os.path.exists(os.path.dirname(instanceDescriptor.path)):
-            os.makedirs(os.path.dirname(instanceDescriptor.path))
+        """ Generate a font object for this instance """
         font = self._instantiateFont(None)
         # make fonty things here
         loc = Location(instanceDescriptor.location)
-        # calculated info
+        # make the kerning
+        if instanceDescriptor.kerning:
+            self.getKerningMutator().makeInstance(loc).extractKerning(font)
+        # make the info
         if instanceDescriptor.info:
-            info = self.infoMutator.makeInstance(loc)
+            self.getInfoMutator().makeInstance(loc).extractInfo(font.info)
+            info = self._infoMutator.makeInstance(loc)
             info.extractInfo(font.info)
             font.info.familyName = instanceDescriptor.familyName
             font.info.styleName = instanceDescriptor.styleName
             font.info.postScriptFontName = instanceDescriptor.postScriptFontName
             font.info.styleMapFamilyName = instanceDescriptor.styleMapFamilyName
             font.info.styleMapStyleName = instanceDescriptor.styleMapStyleName
-        if instanceDescriptor.kerning:
-            kerning = self.kerningMutator.makeInstance(loc)
-            kerning.extractKerning(font)
         # copied info
         for sourceDescriptor in self.sources:
             if sourceDescriptor.copyInfo:
@@ -144,78 +168,75 @@ class DesignSpaceProcessor(DesignSpaceDocument):
                     font.features.text = u""+featuresText
                 elif isinstance(featuresText, unicode):
                     font.features.text = featuresText
-
         # glyphs
-        for name, glyphMutator in self.glyphMutators.items():
-            if name in instanceDescriptor.glyphs.keys():
-                glyphData = instanceDescriptor.glyphs[name]
+        for glyphName in self.glyphNames:
+            glyphMutator = self.getGlyphMutator(glyphName)
+            if glyphName in instanceDescriptor.glyphs.keys():
+                # reminder: this is what the glyphData can look like
+                # {'instanceLocation': {'custom': 0.0, 'weight': 824.0},
+                #  'masters': [{'font': 'master.Adobe VF Prototype.Master_0.0',
+                #               'glyphName': 'dollar.nostroke',
+                #               'location': {'custom': 0.0, 'weight': 0.0}},
+                #              {'font': 'master.Adobe VF Prototype.Master_1.1',
+                #               'glyphName': 'dollar.nostroke',
+                #               'location': {'custom': 0.0, 'weight': 368.0}},
+                #              {'font': 'master.Adobe VF Prototype.Master_2.2',
+                #               'glyphName': 'dollar.nostroke',
+                #               'location': {'custom': 0.0, 'weight': 1000.0}},
+                #              {'font': 'master.Adobe VF Prototype.Master_3.3',
+                #               'glyphName': 'dollar.nostroke',
+                #               'location': {'custom': 100.0, 'weight': 1000.0}},
+                #              {'font': 'master.Adobe VF Prototype.Master_0.4',
+                #               'glyphName': 'dollar.nostroke',
+                #               'location': {'custom': 100.0, 'weight': 0.0}},
+                #              {'font': 'master.Adobe VF Prototype.Master_4.5',
+                #               'glyphName': 'dollar.nostroke',
+                #               'location': {'custom': 100.0, 'weight': 368.0}}],
+                #  'unicodeValue': 36}
+                glyphData = instanceDescriptor.glyphs[glyphName]
             else:
                 glyphData = {}
-            # {'instanceLocation': {'custom': 0.0, 'weight': 824.0},
-            #  'masters': [{'font': 'master.Adobe VF Prototype.Master_0.0',
-            #               'glyphName': 'dollar.nostroke',
-            #               'location': {'custom': 0.0, 'weight': 0.0}},
-            #              {'font': 'master.Adobe VF Prototype.Master_1.1',
-            #               'glyphName': 'dollar.nostroke',
-            #               'location': {'custom': 0.0, 'weight': 368.0}},
-            #              {'font': 'master.Adobe VF Prototype.Master_2.2',
-            #               'glyphName': 'dollar.nostroke',
-            #               'location': {'custom': 0.0, 'weight': 1000.0}},
-            #              {'font': 'master.Adobe VF Prototype.Master_3.3',
-            #               'glyphName': 'dollar.nostroke',
-            #               'location': {'custom': 100.0, 'weight': 1000.0}},
-            #              {'font': 'master.Adobe VF Prototype.Master_0.4',
-            #               'glyphName': 'dollar.nostroke',
-            #               'location': {'custom': 100.0, 'weight': 0.0}},
-            #              {'font': 'master.Adobe VF Prototype.Master_4.5',
-            #               'glyphName': 'dollar.nostroke',
-            #               'location': {'custom': 100.0, 'weight': 368.0}}],
-            #  'unicodeValue': 36}
-            font.newGlyph(name)
-            font[name].clear()
+            font.newGlyph(glyphName)
+            font[glyphName].clear()
             if glyphData.get('mute', False):
                 # mute this glyph, skip
                 continue
             glyphInstanceLocation = Location(glyphData.get("instanceLocation", instanceDescriptor.location))
-            glyphInstanceUnicode = glyphData.get("unicodeValue", font[name].unicode)
+            glyphInstanceUnicode = glyphData.get("unicodeValue", font[glyphName].unicode)
             note = glyphData.get("note")
             if note:
-                font[name] = note
+                font[glyphName] = note
             masters = glyphData.get("masters", None)
             if masters:
                 items = []
                 for glyphMaster in masters:
                     sourceGlyphFont = glyphMaster.get("font")
-                    sourceGlyphName = glyphMaster.get("glyphName", name)
+                    sourceGlyphName = glyphMaster.get("glyphName", glyphName)
                     sourceGlyph = MathGlyph(self.fonts.get(sourceGlyphFont)[sourceGlyphName])
                     sourceGlyphLocation = Location(glyphMaster.get("location"))
                     items.append((sourceGlyphLocation, sourceGlyph))
                 bias, glyphMutator = buildMutator(items, bias=self.defaultLoc)
             glyphInstanceObject = glyphMutator.makeInstance(glyphInstanceLocation)
-            font.newGlyph(name)
-            font[name].clear()
+            font.newGlyph(glyphName)
+            font[glyphName].clear()
             if self.roundGeometry:
                 try:
                     glyphInstanceObject = glyphInstanceObject.round()
                 except AttributeError:
                     pass
             try:
-                glyphInstanceObject.extractGlyph(font[name], onlyGeometry=True)
+                glyphInstanceObject.extractGlyph(font[glyphName], onlyGeometry=True)
             except TypeError:
                 # this causes ruled glyphs to end up in the wrong glyphname
                 # but defcon2 objects don't support it
-                pPen = font[name].getPointPen()
-                font[name].clear()
+                pPen = font[glyphName].getPointPen()
+                font[glyphName].clear()
                 glyphInstanceObject.drawPoints(pPen)
-            font[name].width = glyphInstanceObject.width
-        # save
-        font.save(instanceDescriptor.path, self.ufoVersion)
+            font[glyphName].width = glyphInstanceObject.width
+        return font
 
     def _instantiateFont(self, path):
-        """
-        Return a instance of a font object
-        with all the given subclasses
-        """
+        """ Return a instance of a font object with all the given subclasses"""
         return self.fontClass(path,
             libClass=self.libClass,
             kerningClass=self.kerningClass,
@@ -229,8 +250,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
             glyphAnchorClass=self.glyphAnchorClass)
 
     def _copyFontInfo(self, sourceInfo, targetInfo):
-        """ Copy the non-calculating fields from the source info.
-        """
+        """ Copy the non-calculating fields from the source info."""
         infoAttributes = [
             "versionMajor",
             "versionMinor",
@@ -385,11 +405,7 @@ if __name__ == "__main__":
         # execute the test document
         d = DesignSpaceProcessor()
         d.read(docPath)
-        d.process()
-        #print(d.defaultCandidate)
-        # for w in range(0, 1000, 100):
-        #     r = d.makeGlyph("glyphOne", dict(pop=w))
-        #     print(w, r.width)
+        d.generateUFO()
 
     selfTest = True
     if selfTest:
