@@ -49,7 +49,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
     def __init__(self, readerClass=None, writerClass=None, fontClass=None, ufoVersion=2):
         super(DesignSpaceProcessor, self).__init__(readerClass=None, writerClass=None, fontClass=None)
         self.glyphMutators = {}
-        self.ufoVersion = 2         # target UFO version
+        self.ufoVersion = ufoVersion         # target UFO version
         self.roundGeometry = False
         self.infoMutator = None
         self.kerningMutator = None
