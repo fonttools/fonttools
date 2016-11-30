@@ -26,6 +26,7 @@ the resulting splines are interpolation-compatible.
 
 from __future__ import print_function, division, absolute_import
 
+import logging
 from fontTools.pens.basePen import AbstractPen
 
 from cu2qu import curves_to_quadratic
@@ -34,6 +35,8 @@ from cu2qu.pens import ReverseContourPen
 __all__ = ['fonts_to_quadratic', 'font_to_quadratic']
 
 DEFAULT_MAX_ERR = 0.0025
+
+logger = logging.getLogger('cu2qu')
 
 
 class IncompatibleGlyphsError(ValueError):
@@ -258,8 +261,8 @@ def fonts_to_quadratic(
 
     if modified and dump_stats:
         spline_lengths = sorted(stats.keys())
-        print('New spline lengths:\n%s\n' % (
-            '\n'.join('%s: %d' % (l, stats[l]) for l in spline_lengths)))
+        logger.info('New spline lengths:\n%s\n' % ('\n'.join(
+                    '%s: %d' % (l, stats[l]) for l in spline_lengths)))
     return modified
 
 
