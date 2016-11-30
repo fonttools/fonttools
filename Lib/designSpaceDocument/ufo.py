@@ -16,7 +16,9 @@ from pprint import pprint
 from designSpaceDocument import DesignSpaceDocument, SourceDescriptor, InstanceDescriptor, AxisDescriptor
 from defcon.objects.font import Font
 import defcon
-from fontMath import MathGlyph, MathInfo, MathKerning
+from fontMath.mathGlyph import MathGlyph
+from fontMath.mathInfo import MathInfo
+from fontMath.mathKerning import MathKerning
 from mutatorMath.objects.mutator import buildMutator
 from mutatorMath.objects.location import biasFromLocations, Location
 import os
@@ -173,7 +175,6 @@ class DesignSpaceProcessor(DesignSpaceDocument):
             font[name].clear()
             if glyphData.get('mute', False):
                 # mute this glyph, skip
-                #print("\tmuted: %s in %s"%(name, instanceDescriptor.name))
                 continue
             glyphInstanceLocation = Location(glyphData.get("instanceLocation", instanceDescriptor.location))
             glyphInstanceUnicode = glyphData.get("unicodeValue", font[name].unicode)
