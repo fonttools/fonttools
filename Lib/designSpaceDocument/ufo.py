@@ -53,7 +53,6 @@ class DesignSpaceProcessor(DesignSpaceDocument):
         self.kerningMutator = None
         self.default = None         # name of the default master
         self.defaultLoc = None
-        self.ufoVersion = 2
         self.fonts = {}
 
     def process(self):
@@ -98,7 +97,6 @@ class DesignSpaceProcessor(DesignSpaceDocument):
         mutatorBias = biasFromLocations(masterLocations)
         c = [src for src in self.sources if src.location==mutatorBias]
         if c:
-            print("c", c)
             mutatorDefaultCandidate = c[0]
         else:
             mutatorDefaultCandidate = None
@@ -175,7 +173,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
             font[name].clear()
             if glyphData.get('mute', False):
                 # mute this glyph, skip
-                print("\tmuted: %s in %s"%(name, instanceDescriptor.name))
+                #print("\tmuted: %s in %s"%(name, instanceDescriptor.name))
                 continue
             glyphInstanceLocation = Location(glyphData.get("instanceLocation", instanceDescriptor.location))
             glyphInstanceUnicode = glyphData.get("unicodeValue", font[name].unicode)
@@ -188,7 +186,6 @@ class DesignSpaceProcessor(DesignSpaceDocument):
                 for glyphMaster in masters:
                     sourceGlyphFont = glyphMaster.get("font")
                     sourceGlyphName = glyphMaster.get("glyphName", name)
-                    # print("using", sourceGlyphName)
                     sourceGlyph = MathGlyph(self.fonts.get(sourceGlyphFont)[sourceGlyphName])
                     sourceGlyphLocation = Location(glyphMaster.get("location"))
                     items.append((sourceGlyphLocation, sourceGlyph))
@@ -230,7 +227,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
             glyphComponentClass=self.glyphComponentClass,
             glyphAnchorClass=self.glyphAnchorClass)
 
-    def _copyFontInfo(self, targetInfo, sourceInfo):
+    def _copyFontInfo(self, sourceInfo, targetInfo):
         """ Copy the non-calculating fields from the source info.
         """
         infoAttributes = [
@@ -332,7 +329,7 @@ if __name__ == "__main__":
         f2.info.descender = -100
 
         f1.info.copyright = u"This is the copyright notice from master 1"
-        f2.info.copyright = u"This is the copyright notice from master 1"
+        f2.info.copyright = u"This is the copyright notice from master 2"
 
         # save
         f1.save(path1, 2)
@@ -356,7 +353,7 @@ if __name__ == "__main__":
         s1.path = m1
         s1.location = dict(pop=a.minimum)
         s1.name = "test.master.1"
-        #s1.copyInfo = True
+        s1.copyInfo = True
         s1.copyFeatures = True
         d.addSource(s1)
 
@@ -401,4 +398,3 @@ if __name__ == "__main__":
         docPath = os.path.join(testRoot, "automatic_test.designspace")
         test0(docPath)
         test1(docPath)
-        
