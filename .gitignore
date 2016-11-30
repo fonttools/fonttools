@@ -4,3 +4,4 @@ Lib/DesignSpaceDocument.egg-info
 __pycache__
 *.py[co]
 .DS_Store
+Lib/designSpaceDocument/automatic_testfonts
