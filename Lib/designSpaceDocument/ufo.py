@@ -47,7 +47,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
     mathKerningClass = MathKerning
 
     def __init__(self, readerClass=None, writerClass=None, fontClass=None, ufoVersion=2):
-        super(self.__class__, self).__init__(readerClass=None, writerClass=None, fontClass=None)
+        super(DesignSpaceProcessor, self).__init__(readerClass=None, writerClass=None, fontClass=None)
         self.glyphMutators = {}
         self.ufoVersion = 2         # target UFO version
         self.roundGeometry = False
