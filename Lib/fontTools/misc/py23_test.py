@@ -78,14 +78,7 @@ class Round2Test(unittest.TestCase):
 	"""
 
 	def test_second_argument_type(self):
-		# any type with an __index__ method should be permitted as
-		# a second argument
-		self.assertAlmostEqual(round2(12.34, True), 12.3)
-
-		class MyIndex(object):
-			def __index__(self): return 4
-		self.assertAlmostEqual(round2(-0.123456, MyIndex()), -0.1235)
-		# but floats should be illegal
+		# floats should be illegal
 		self.assertRaises(TypeError, round2, 3.14159, 2.0)
 
 	def test_halfway_cases(self):
@@ -168,14 +161,7 @@ class Round3Test(unittest.TestCase):
 	""" Same as above but results adapted for Python 3 round() """
 
 	def test_second_argument_type(self):
-		# any type with an __index__ method should be permitted as
-		# a second argument
-		self.assertAlmostEqual(round3(12.34, True), 12.3)
-
-		class MyIndex(object):
-			def __index__(self): return 4
-		self.assertAlmostEqual(round3(-0.123456, MyIndex()), -0.1235)
-		# but floats should be illegal
+		# floats should be illegal
 		self.assertRaises(TypeError, round3, 3.14159, 2.0)
 
 	def test_halfway_cases(self):
@@ -218,6 +204,14 @@ class Round3Test(unittest.TestCase):
 		self.assertEqual(round3(4.5), 4)
 		self.assertEqual(round3(5.5), 6)
 		self.assertEqual(round3(6.5), 6)
+
+		# no ndigits and input is already an integer: output == input
+		rv = round3(1)
+		self.assertEqual(rv, 1)
+		self.assertTrue(isinstance(rv, int))
+		rv = round3(1.0)
+		self.assertEqual(rv, 1)
+		self.assertTrue(isinstance(rv, int))
 
 		self.assertEqual(round3(-25.0, -1), -20.0)
 		self.assertEqual(round3(-15.0, -1), -20.0)
