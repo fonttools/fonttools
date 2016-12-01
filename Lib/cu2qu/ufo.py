@@ -36,7 +36,7 @@ __all__ = ['fonts_to_quadratic', 'font_to_quadratic']
 
 DEFAULT_MAX_ERR = 0.0025
 
-logger = logging.getLogger('cu2qu')
+logger = logging.getLogger(__name__)
 
 
 class IncompatibleGlyphsError(ValueError):
