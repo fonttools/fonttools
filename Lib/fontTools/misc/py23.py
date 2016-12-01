@@ -302,6 +302,8 @@ except AttributeError:
 		return result
 
 
+import decimal as _decimal
+
 if PY3:
 	def round2(number, ndigits=None):
 		"""
@@ -338,8 +340,6 @@ if PY3:
 	round = round3 = round
 
 else:
-	import decimal as _decimal
-
 	# in Python 2, 'round2' is an alias to the built-in 'round' and
 	# 'round' is shadowed by 'round3'
 	round2 = round
