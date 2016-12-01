@@ -259,6 +259,49 @@ def xrange(*args, **kwargs):
 	raise Py23Error("'xrange' is not defined. Use 'range' instead.")
 
 
+import math as _math
+
+try:
+	isclose = _math.isclose
+except AttributeError:
+	# math.isclose() was only added in Python 3.5
+
+	_isinf = _math.isinf
+	_fabs = _math.fabs
+
+	def isclose(a, b, rel_tol=1e-09, abs_tol=0):
+		"""
+		Python 2 implementation of Python 3.5 math.isclose()
+		https://hg.python.org/cpython/file/v3.5.2/Modules/mathmodule.c#l1993
+		"""
+		# sanity check on the inputs
+		if rel_tol < 0 or abs_tol < 0:
+			raise ValueError("tolerances must be non-negative")
+		# short circuit exact equality -- needed to catch two infinities of
+		# the same sign. And perhaps speeds things up a bit sometimes.
+		if a == b:
+			return True
+		# This catches the case of two infinities of opposite sign, or
+		# one infinity and one finite number. Two infinities of opposite
+		# sign would otherwise have an infinite relative tolerance.
+		# Two infinities of the same sign are caught by the equality check
+		# above.
+		if _isinf(a) or _isinf(b):
+			return False
+		# Cast to float to allow decimal.Decimal arguments
+		if not isinstance(a, float):
+			a = float(a)
+		if not isinstance(b, float):
+			b = float(b)
+		# now do the regular computation
+		# this is essentially the "weak" test from the Boost library
+		diff = _fabs(b - a)
+		result = ((diff <= _fabs(rel_tol * a)) or
+				  (diff <= _fabs(rel_tol * b)) or
+				  (diff <= abs_tol))
+		return result
+
+
 import decimal as _decimal
 
 if PY3:
@@ -297,6 +340,10 @@ if PY3:
 	round = round3 = round
 
 else:
+	# in Python 2, 'round2' is an alias to the built-in 'round' and
+	# 'round' is shadowed by 'round3'
+	round2 = round
+
 	def round3(number, ndigits=None):
 		"""
 		Implementation of Python 3 built-in round() function.
@@ -330,24 +377,28 @@ else:
 			# return the same type as the number, when called with two arguments
 			totype = type(number)
 
-		if ndigits < 0:
-			exponent = 10 ** (-ndigits)
-			quotient, remainder = divmod(number, exponent)
-			half = exponent//2
-			if remainder > half or (remainder == half and quotient % 2 != 0):
-				quotient += 1
-			d = quotient * exponent
-		else:
-			exponent = _decimal.Decimal('10') ** (-ndigits) if ndigits != 0 else 1
+		m = number * (10 ** ndigits)
+		# if number is half-way between two multiples, and the mutliple that is
+		# closer to zero is even, we use the (slow) pure-Python implementation
+		if isclose(m % 1, .5) and int(m) % 2 == 0:
+			if ndigits < 0:
+				exponent = 10 ** (-ndigits)
+				quotient, remainder = divmod(number, exponent)
+				half = exponent//2
+				if remainder > half or (remainder == half and quotient % 2 != 0):
+					quotient += 1
+				d = quotient * exponent
+			else:
+				exponent = _decimal.Decimal('10') ** (-ndigits) if ndigits != 0 else 1
 
-			d = _decimal.Decimal.from_float(number).quantize(
-				exponent, rounding=_decimal.ROUND_HALF_EVEN)
+				d = _decimal.Decimal.from_float(number).quantize(
+					exponent, rounding=_decimal.ROUND_HALF_EVEN)
+		else:
+			# else we use the built-in round() as it produces the same results
+			d = round2(number, ndigits)
 
 		return totype(d)
 
-	# in Python 2, 'round2' is an alias to the built-in 'round' and
-	# 'round' is shadowed by 'round3'
-	round2 = round
 	round = round3
 
 
