@@ -1,3 +1,10 @@
+## TTX/FontTools Version 3.2.3
+
+- [py23] optimized performance of round3 function; added backport for py35 math.isclose() (9d8dacb)
+- [subset] fixed issue with 'narrow' (UCS-2) Python 2 builds and --text/--text-file options containing non-BMP chararcters (16d0e5e)
+- [varLib] fixed issuewhen normalizing location values (8fa2ee1, #749)
+- [inspect] Made it compatible with both python2 and python3 (167ee60, #748). Thanks @pnemade
+
 ## TTX/FontTools Version 3.2.2
 
 - [varLib] Do not emit null axes in fvar (1bebcec). Thanks @robmck-ms
