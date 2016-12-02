@@ -880,7 +880,6 @@ otData = [
 		('uint16', 'AxisIndex', None, None, 'Index into the axis record array identifying the axis of design variation to which the axis value record applies.'),
 		('uint16', 'Flags', None, None, 'Flags.'),
 		('NameID', 'ValueNameID', None, None, ''),
-		('Fixed', 'Value', None, None, ''),
 		('Fixed', 'NominalValue', None, None, ''),
 		('Fixed', 'RangeMinValue', None, None, ''),
 		('Fixed', 'RangeMaxValue', None, None, ''),
