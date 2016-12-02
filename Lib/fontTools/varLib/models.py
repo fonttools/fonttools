@@ -44,6 +44,7 @@ def normalizeLocation(location, axes):
 	"""
 	out = {}
 	for tag,(lower,default,upper) in axes.items():
+		assert lower <= default <= upper, "invalid axis values"
 		v = location.get(tag, default)
 		v = max(min(v, upper), lower)
 		if v == default:
