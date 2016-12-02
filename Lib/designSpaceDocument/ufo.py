@@ -53,13 +53,13 @@ class DesignSpaceProcessor(DesignSpaceDocument):
         self._glyphMutators = {}
         self._infoMutator = None
         self._kerningMutator = None
-        self.default = None         # name of the default master
-        self.defaultLoc = None
         self.fonts = {}
         self.glyphNames = []     # list of all glyphnames
 
     def generateUFO(self):
         # makes the instances
+        self.checkAxes()
+        self.checkDefault()
         self.loadFonts()
         for instanceDescriptor in self.instances:
             if instanceDescriptor.path is None:
@@ -112,33 +112,12 @@ class DesignSpaceProcessor(DesignSpaceDocument):
 
     def loadFonts(self):
         # Load the fonts and find the default candidate based on the info flag
-        defaultCandidate = None
         for sourceDescriptor in self.sources:
             names = set()
             if not sourceDescriptor.name in self.fonts:
                 self.fonts[sourceDescriptor.name] = self._instantiateFont(sourceDescriptor.path)
                 names = names | set(self.fonts[sourceDescriptor.name].keys())
-            if sourceDescriptor.copyInfo:
-                # we choose you!
-                defaultCandidate = sourceDescriptor
         self.glyphNames = list(names)
-        # find the default based on mutatorMath bias
-        masterLocations = [Location(src.location) for src in self.sources]
-        mutatorBias = biasFromLocations(masterLocations)
-        c = [src for src in self.sources if src.location==mutatorBias]
-        if c:
-            mutatorDefaultCandidate = c[0]
-        else:
-            mutatorDefaultCandidate = None
-        # what are we going to do?
-        if defaultCandidate is not None and mutatorDefaultCandidate.name != defaultCandidate.name:
-            # warn if we have a conflict
-            print("Note: conflicting default masters:\n\tUsing %s as default\n\tMutator found %s"%(defaultCandidate.name, mutatorDefaultCandidate.name))
-        if defaultCandidate is None and mutatorDefaultCandidate is not None:
-            # we didn't have a flag, use the one selected by mutator
-            defaultCandidate = mutatorDefaultCandidate
-        self.default = defaultCandidate
-        self.defaultLoc = Location(self.default.location)
 
     def makeInstance(self, instanceDescriptor):
         """ Generate a font object for this instance """

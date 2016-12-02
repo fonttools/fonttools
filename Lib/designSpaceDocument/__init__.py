@@ -2,8 +2,10 @@
 
 from __future__ import print_function, division, absolute_import
 
+import logging
 import os
 import xml.etree.ElementTree as ET
+from mutatorMath.objects.location import biasFromLocations, Location
 
 """
     designSpaceDocument
@@ -102,6 +104,23 @@ class InstanceDescriptor(SimpleDescriptor):
         self.info = True
 
 
+def tagForAxisName(name):
+    # try to find or make a tag name for this axis name
+    names = {
+        'weight':   ('wght', dict(en = 'Weight')),
+        'width':    ('wdth', dict(en = 'Width')),
+        'optical':  ('opsz', dict(en = 'Optical Size')),
+        'slant':    ('slnt', dict(en = 'Slant')),
+        'italic':   ('ital', dict(en = 'Italic')),
+    }
+    if name.lower() in names:
+        return names[name.lower()]
+    if len(name) < 4:
+        tag = name + "*"*(4-len(name))
+    else:
+        tag = name[:4]
+    return tag, dict(en = name)
+
 class AxisDescriptor(SimpleDescriptor):
     """Simple container for the axis data"""
     flavor = "axis"
@@ -134,6 +153,10 @@ class BaseDocWriter(object):
     axisDescriptorClass = AxisDescriptor
     sourceDescriptorClass = SourceDescriptor
     instanceDescriptorClass = InstanceDescriptor
+
+    @classmethod
+    def getAxisDecriptor(cls):
+        return cls.axisDescriptorClass()
 
     def __init__(self, documentPath, documentObject):
         self.path = documentPath
@@ -583,11 +606,14 @@ class BaseDocReader(object):
 class DesignSpaceDocument(object):
     """ Read, write data from the designspace file"""
     def __init__(self, readerClass=None, writerClass=None, fontClass=None):
+        self.logger = logging.getLogger("DesignSpaceDocumentLog")
         self.path = None
         self.formatVersion = None
         self.sources = []
         self.instances = []
         self.axes = []
+        self.default = None         # name of the default master
+        self.defaultLoc = None
         #
         if readerClass is not None:
             self.readerClass = readerClass
@@ -638,11 +664,102 @@ class DesignSpaceDocument(object):
                     fonts.append((f, sourceDescriptor.location))
         return fonts
 
+    def newAxisDescriptor(self):
+        # Ask the writer class to make us a new axisDescriptor
+        return self.writerClass.getAxisDecriptor()
+
     def getAxisOrder(self):
         names = []
         for axisDescriptor in self.axes:
             names.append(axisDescriptor.name)
         return names
+
+    def check(self):
+        """
+            After reading we need to make sure we have a valid designspace. 
+            This means making repairs if things are missing
+                - check if we have axes and deduce them from the masters if they're missing
+                - that can include axes referenced in masters, instances, glyphs. 
+                - if no default is assigned, use mutatormath to find out. 
+                - record the default in the designspace
+                - report all the changes in a log
+                - save a "repaired" version of the doc
+        """
+        self.checkAxes()
+        self.checkDefault()
+
+    def checkDefault(self):
+        """ Check the sources for a copyInfo flag."""
+        flaggedDefaultCandidate = None
+        for sourceDescriptor in self.sources:
+            names = set()
+            if sourceDescriptor.copyInfo:
+                # we choose you!
+                flaggedDefaultCandidate = sourceDescriptor
+        masterLocations = [src.location for src in self.sources]
+        mutatorBias = biasFromLocations(masterLocations, preferOrigin=False)
+        c = [src for src in self.sources if src.location==mutatorBias]
+        if c:
+            mutatorDefaultCandidate = c[0]
+        else:
+            mutatorDefaultCandidate = None
+        # what are we going to do?
+        if flaggedDefaultCandidate is not None:
+            if mutatorDefaultCandidate is not None:
+                if mutatorDefaultCandidate.name != flaggedDefaultCandidate.name:
+                    # warn if we have a conflict
+                    self.logger.info("Note: conflicting default masters:\n\tUsing %s as default\n\tMutator found %s"%(flaggedDefaultCandidate.name, mutatorDefaultCandidate.name))
+            self.default = flaggedDefaultCandidate
+            self.defaultLoc = self.default.location
+        else:
+            # we have no flagged default candidate
+            # let's use the one from mutator
+            if flaggedDefaultCandidate is None and mutatorDefaultCandidate is not None:
+                # we didn't have a flag, use the one selected by mutator
+                self.default = mutatorDefaultCandidate
+                self.defaultLoc = self.default.location
+
+
+    def checkAxes(self):
+        """
+            If we don't have axes in the document, make some, report
+            Should we include the instance locations when determining the axis extrema?
+        """
+        axisValues = {}
+        # find all the axes
+        locations = []
+        for sourceDescriptor in self.sources:
+            locations.append(sourceDescriptor.location)
+        for instanceDescriptor in self.instances:
+            locations.append(instanceDescriptor.location)
+            for name, glyphData in instanceDescriptor.glyphs.items():
+                loc = glyphData.get("instanceLocation")
+                if loc is not None:
+                    locations.append(loc)
+                for m in glyphData.get('masters', []):
+                    locations.append(m['location'])
+        for loc in locations:
+            for name, value in loc.items():
+                if not name in axisValues:
+                    axisValues[name] = []
+                if type(value)==tuple:
+                    for v in value:
+                        axisValues[name].append(v)
+                else:
+                    axisValues[name].append(value)
+        have = self.getAxisOrder()
+        for name, values in axisValues.items():
+            if name not in have:
+                # we need to make this axis
+                a = self.newAxisDescriptor()
+                a.name = name
+                a.minimum = min(values)
+                a.maximum = max(values)
+                a.default = a.minimum
+                a.tag, a.labelNames = tagForAxisName(a.name)
+                self.addAxis(a)
+                self.logger.info("CheckAxes: added a missing axis %s, %3.3f %3.3f"%(a.name, a.minimum, a.maximum))
+
 
     def normalizeLocation(self, location):
         # scale this location based on the axes
@@ -700,15 +817,20 @@ class DesignSpaceDocument(object):
             minimum = self.normalizeLocation({axis.name:axis.minimum}).get(axis.name)
             maximum = self.normalizeLocation({axis.name:axis.maximum}).get(axis.name)
             default = self.normalizeLocation({axis.name:axis.default}).get(axis.name)
-            # and set them in the axis.
+            # and set them in the axis.minimum
             axis.minimum = minimum
             axis.maximum = maximum
             axis.default = default
 
 
 
-
 if __name__ == "__main__":
+
+    # print(tagForAxisName('weight'))
+    # print(tagForAxisName('width'))
+    # print(tagForAxisName('Optical'))
+    # print(tagForAxisName('Poids'))
+    # print(tagForAxisName('wt'))
 
     def test():
         """
@@ -776,6 +898,11 @@ if __name__ == "__main__":
         >>> i2.glyphs['arrow'] = glyphData
         >>> i2.glyphs['arrow2'] = dict(mute=False)
         >>> doc.addInstance(i2)
+        >>> # now we have sounrces and instances, but no axes yet. 
+        >>> doc.check()
+        >>> doc.getAxisOrder()
+        ['spooky', 'weight', 'width']
+        >>> doc.axes = []   # clear the axes
         >>> # write some axes
         >>> a1 = AxisDescriptor()
         >>> a1.minimum = 0
@@ -951,6 +1078,72 @@ if __name__ == "__main__":
 
 
         """
+
+    def testCheck():
+        """
+        >>> # check if the checks are checking
+        >>> testDocPath = os.path.join(os.getcwd(), "testCheck.designspace")
+        >>> masterPath1 = os.path.join(os.getcwd(), "masters", "masterTest1.ufo")
+        >>> masterPath2 = os.path.join(os.getcwd(), "masters", "masterTest2.ufo")
+        >>> instancePath1 = os.path.join(os.getcwd(), "instances", "instanceTest1.ufo")
+        >>> instancePath2 = os.path.join(os.getcwd(), "instances", "instanceTest2.ufo")
+        
+        >>> # no default selected
+        >>> doc = DesignSpaceDocument()
+        >>> # add master 1
+        >>> s1 = SourceDescriptor()
+        >>> s1.path = masterPath1
+        >>> s1.name = "master.ufo1"
+        >>> s1.location = dict(snap=0, pop=10)
+        >>> s1.familyName = "MasterFamilyName"
+        >>> s1.styleName = "MasterStyleNameOne"
+        >>> doc.addSource(s1)
+        >>> # add master 2
+        >>> s2 = SourceDescriptor()
+        >>> s2.path = masterPath2
+        >>> s2.name = "master.ufo2"
+        >>> s2.location = dict(snap=1000, pop=20)
+        >>> s2.familyName = "MasterFamilyName"
+        >>> s2.styleName = "MasterStyleNameTwo"
+        >>> doc.addSource(s2)
+        >>> doc.checkAxes()
+        >>> doc.getAxisOrder()
+        ['snap', 'pop']
+        >>> assert doc.default == None
+        >>> doc.checkDefault()
+        >>> doc.default.name
+        'master.ufo1'
+
+        >>> # default selected
+        >>> doc = DesignSpaceDocument()
+        >>> # add master 1
+        >>> s1 = SourceDescriptor()
+        >>> s1.path = masterPath1
+        >>> s1.name = "master.ufo1"
+        >>> s1.location = dict(snap=0, pop=10)
+        >>> s1.familyName = "MasterFamilyName"
+        >>> s1.styleName = "MasterStyleNameOne"
+        >>> doc.addSource(s1)
+        >>> # add master 2
+        >>> s2 = SourceDescriptor()
+        >>> s2.path = masterPath2
+        >>> s2.name = "master.ufo2"
+        >>> s2.copyInfo = True
+        >>> s2.location = dict(snap=1000, pop=20)
+        >>> s2.familyName = "MasterFamilyName"
+        >>> s2.styleName = "MasterStyleNameTwo"
+        >>> doc.addSource(s2)
+        >>> doc.checkAxes()
+        >>> doc.getAxisOrder()
+        ['snap', 'pop']
+        >>> assert doc.default == None
+        >>> doc.checkDefault()
+        >>> doc.default.name
+        'master.ufo2'
+
+
+        """
+
 
     def _test():
         import doctest
