@@ -22,8 +22,6 @@ The DesignSpaceDocument object can read and write .designspace data. It imports 
 
 The **DesignSpaceDocument** object can be subclassed to work with different objects, as long as they have the same attributes.
 
-The object does not do any validation. 
-
 ```python
 from designSpaceDocument import DesignSpaceDocument
 doc = DesignSpaceDocument()
@@ -33,13 +31,26 @@ doc.sources
 doc.instances
 ```
 
+# Validation
+Some validation is done when reading.
+
+### Axes
+* If the `axes` element is available in the document then all locations will check their dimensions against the defined axes. If a location uses an axis that is not defined it will be ignored.
+* If there are no `axes` in the document, locations will accept all axis names, so that we can..
+* Use `doc.checkAxes()` to reconstruct axes definitions based on the `source.location` values. If you save the document the axes will be there.
+
+### Default font
+* The source with the `copyInfo` flag indicates this is the default font.
+* In mutatorMath the default font is selected automatically. A warning is printed if the mutatorMath default selection differs from the one set by `copyInfo`. But the `copyInfo` source will be used.
+* If no source has a `copyInfo` flag, mutatorMath will be used to select one. This source gets its `copyInfo` flag set. If you save the document this flag will be set.
+* Use `doc.checkDefault()` to set the default font.
 
 # `Source` descriptor object attributes
 * `path`: string. Path to the source file. MutatorMath + Varlib.
 * `name`: string. Unique identifier name of the source, used to identify it if it needs to be referenced from elsewhere in the document. MutatorMath.
 * `location`: dict. Axis values for this source. MutatorMath + Varlib
 * `copyLib`: bool. Indicates if the contents of the font.lib need to be copied to the instances. MutatorMath. 
-* `copyInfo` bool. Indicates if the non-interpolating font.info needs to be copied to the instances. MutatorMath.
+* `copyInfo` bool. Indicates if the non-interpolating font.info needs to be copied to the instances. Also indicates this source is expected to be the default font. MutatorMath + Varlib
 * `copyGroups` bool. Indicates if the groups need to be copied to the instances. MutatorMath.
 * `copyFeatures` bool. Indicates if the feature text needs to be copied to the instances. MutatorMath.
 * `muteKerning`: bool. Indicates if the kerning data from this source needs to be muted (i.e. not be part of the calculations). MutatorMath.

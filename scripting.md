@@ -154,6 +154,21 @@ path = "myprototype.designspace"
 doc.write(path)
 ```
 
+# Reading old designspaces
+
+Old designspace files might not contain `axes` definitions. This is how you reconstruct the axes from the extremes of the source locations 
+
+```python
+doc.checkAxes()
+```
+
+This is how you check the default font.
+
+```python
+doc.checkDefault()
+```
+
+
 # Generating?
 
 You can generate the UFO's with MutatorMath:
