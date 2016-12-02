@@ -360,7 +360,7 @@ else:
 		Implementation of Python 3 built-in round() function.
 
 		Rounds a number to a given precision in decimal digits (default
-		0 digits). This returns an int when called with one argument,
+		0 digits). This returns an int when ndigits is omitted or is None,
 		otherwise the same type as the number.
 
 		Values are rounded to the closest multiple of 10 to the power minus
