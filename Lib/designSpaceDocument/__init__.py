@@ -360,6 +360,7 @@ class BaseDocReader(object):
         self.sources = []
         self.instances = []
         self.axisDefaults = {}
+        self._strictAxisNames = True
 
     def read(self):
         self.readAxes()
@@ -407,6 +408,8 @@ class BaseDocReader(object):
                     axisObject.labelNames[lang] = labelName
             self.documentObject.axes.append(axisObject)
             self.axisDefaults[axisObject.name] = axisObject.default
+        if not axes:
+            self._strictAxisNames = False
 
     def readSources(self):
         for sourceElement in self.root.findall(".sources/source"):
@@ -460,7 +463,11 @@ class BaseDocReader(object):
         loc = {}
         for dimensionElement in locationElement.findall(".dimension"):
             dimName = dimensionElement.attrib.get("name")
-            if dimName not in self.axisDefaults:
+            if self._strictAxisNames and dimName not in self.axisDefaults:
+                # In case the document contains axis definitions,
+                # then we should only read the axes we know about. 
+                # However, if the document does not contain axes,
+                # then we need to create them after reading.
                 continue
             xValue = yValue = None
             try:
@@ -718,6 +725,7 @@ class DesignSpaceDocument(object):
                 # we didn't have a flag, use the one selected by mutator
                 self.default = mutatorDefaultCandidate
                 self.defaultLoc = self.default.location
+        self.default.copyInfo = True
 
 
     def checkAxes(self):
@@ -758,7 +766,8 @@ class DesignSpaceDocument(object):
                 a.default = a.minimum
                 a.tag, a.labelNames = tagForAxisName(a.name)
                 self.addAxis(a)
-                self.logger.info("CheckAxes: added a missing axis %s, %3.3f %3.3f"%(a.name, a.minimum, a.maximum))
+                self.logger.info("CheckAxes: added a missing axis %s, %3.3f %3.3f", a.name, a.minimum, a.maximum)
+                #print("CheckAxes: added a missing axis %s, %3.3f %3.3f"%(a.name, a.minimum, a.maximum))
 
 
     def normalizeLocation(self, location):
@@ -825,6 +834,19 @@ class DesignSpaceDocument(object):
 
 
 if __name__ == "__main__":
+
+    def __removeAxesFromDesignSpace(path):
+        # only for testing, so we can make an invalid designspace file
+        # without making the designSpaceDocument also support it.
+        f = open(path, 'r')
+        d = f.read()
+        f.close()
+        start = d.find("<axes>")
+        end = d.find("</axes>")+len("</axes>")
+        n = d[0:start] + d[end:]
+        f = open(path, 'w')
+        f.write(n)
+        f.close()
 
     # print(tagForAxisName('weight'))
     # print(tagForAxisName('width'))
@@ -1141,10 +1163,41 @@ if __name__ == "__main__":
         >>> doc.default.name
         'master.ufo2'
 
+        >>> # generate a doc without axes, save and read again
+        >>> doc = DesignSpaceDocument()
+        >>> # add master 1
+        >>> s1 = SourceDescriptor()
+        >>> s1.path = masterPath1
+        >>> s1.name = "master.ufo1"
+        >>> s1.location = dict(snap=0, pop=10)
+        >>> s1.familyName = "MasterFamilyName"
+        >>> s1.styleName = "MasterStyleNameOne"
+        >>> doc.addSource(s1)
+        >>> # add master 2
+        >>> s2 = SourceDescriptor()
+        >>> s2.path = masterPath2
+        >>> s2.name = "master.ufo2"
+        >>> s2.location = dict(snap=1000, pop=20)
+        >>> s2.familyName = "MasterFamilyName"
+        >>> s2.styleName = "MasterStyleNameTwo"
+        >>> doc.addSource(s2)
+        >>> doc.checkAxes()
+        >>> doc.write(testDocPath)
+        >>> __removeAxesFromDesignSpace(testDocPath)
+
+        >>> new = DesignSpaceDocument()
+        >>> new.read(testDocPath)
+        >>> new.axes
+        []
+        >>> new.checkAxes()
+        >>> len(new.axes)
+        2
+        >>> new.write(testDocPath)
 
         """
 
-
+    p = "testCheck.designspace"
+    __removeAxesFromDesignSpace(p)
     def _test():
         import doctest
         doctest.testmod()
