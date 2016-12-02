@@ -681,6 +681,12 @@ class DesignSpaceDocument(object):
             names.append(axisDescriptor.name)
         return names
 
+    def getAxis(self, name):
+        for axisDescriptor in self.axes:
+            if axisDescriptor.name == name:
+                return axisDescriptor
+        return None
+
     def check(self):
         """
             After reading we need to make sure we have a valid designspace. 
@@ -728,7 +734,7 @@ class DesignSpaceDocument(object):
         self.default.copyInfo = True
 
 
-    def checkAxes(self):
+    def checkAxes(self, overwrite=False):
         """
             If we don't have axes in the document, make some, report
             Should we include the instance locations when determining the axis extrema?
@@ -757,17 +763,19 @@ class DesignSpaceDocument(object):
                     axisValues[name].append(value)
         have = self.getAxisOrder()
         for name, values in axisValues.items():
-            if name not in have:
+            if name in have and overwrite:
+                # we're making a new axis
+                a = self.getAxis(name)
+            else:
                 # we need to make this axis
                 a = self.newAxisDescriptor()
-                a.name = name
-                a.minimum = min(values)
-                a.maximum = max(values)
-                a.default = a.minimum
-                a.tag, a.labelNames = tagForAxisName(a.name)
                 self.addAxis(a)
-                self.logger.info("CheckAxes: added a missing axis %s, %3.3f %3.3f", a.name, a.minimum, a.maximum)
-                #print("CheckAxes: added a missing axis %s, %3.3f %3.3f"%(a.name, a.minimum, a.maximum))
+            a.name = name
+            a.minimum = min(values)
+            a.maximum = max(values)
+            a.default = a.minimum
+            a.tag, a.labelNames = tagForAxisName(a.name)
+            self.logger.info("CheckAxes: added a missing axis %s, %3.3f %3.3f", a.name, a.minimum, a.maximum)
 
 
     def normalizeLocation(self, location):
