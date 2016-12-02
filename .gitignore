@@ -5,3 +5,4 @@ __pycache__
 *.py[co]
 .DS_Store
 Lib/designSpaceDocument/automatic_testfonts
+testCheck.designspace
