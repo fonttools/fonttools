@@ -23,7 +23,7 @@ def buildConverters(tableSpec, tableNamespace):
 		if name.startswith("ValueFormat"):
 			assert tp == "uint16"
 			converterClass = ValueFormat
-		elif name.endswith("Count") or name.endswith("LookupType") or name.endswith("RecordSize"):
+		elif name.endswith("Count") or name.endswith("LookupType"):
 			assert tp in ("uint16", "uint32")
 			converterClass = ComputedUShort if tp == 'uint16' else ComputedULong
 		elif name == "SubTable":
@@ -95,7 +95,7 @@ class BaseConverter(object):
 		self.tableClass = tableClass
 		self.isCount = name.endswith("Count")
 		self.isLookupType = name.endswith("LookupType")
-		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount", "VarRegionCount", "MappingCount", "RegionAxisCount", 'DesignAxisCount', 'AxisValueCount']
+		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount", "VarRegionCount", "MappingCount", "RegionAxisCount", 'DesignAxisCount', 'DesignAxisRecordSize', 'AxisValueCount']
 
 	def readArray(self, reader, font, tableDict, count):
 		"""Read an array of values from the reader."""
