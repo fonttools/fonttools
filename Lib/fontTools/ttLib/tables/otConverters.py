@@ -369,11 +369,6 @@ class Table(Struct):
 		offset = self.readOffset(reader)
 		if offset == 0:
 			return None
-		if offset <= 3:
-			# XXX hack to work around buggy pala.ttf
-			log.warning("offset is not 0, yet suspiciously low (%d). table: %s",
-					offset, self.tableClass.__name__)
-			return None
 		table = self.tableClass()
 		reader = reader.getSubReader(offset)
 		if font.lazy:

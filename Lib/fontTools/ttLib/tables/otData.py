@@ -868,6 +868,7 @@ otData = [
 	]),
 
 	('AxisValueFormat1', [
+		('uint16', 'Format', None, None, 'Format, = 1'),
 		('uint16', 'AxisIndex', None, None, 'Index into the axis record array identifying the axis of design variation to which the axis value record applies.'),
 		('uint16', 'Flags', None, None, 'Flags.'),
 		('NameID', 'ValueNameID', None, None, ''),
@@ -875,6 +876,7 @@ otData = [
 	]),
 
 	('AxisValueFormat2', [
+		('uint16', 'Format', None, None, 'Format, = 2'),
 		('uint16', 'AxisIndex', None, None, 'Index into the axis record array identifying the axis of design variation to which the axis value record applies.'),
 		('uint16', 'Flags', None, None, 'Flags.'),
 		('NameID', 'ValueNameID', None, None, ''),
@@ -885,6 +887,7 @@ otData = [
 	]),
 
 	('AxisValueFormat3', [
+		('uint16', 'Format', None, None, 'Format, = 3'),
 		('uint16', 'AxisIndex', None, None, 'Index into the axis record array identifying the axis of design variation to which the axis value record applies.'),
 		('uint16', 'Flags', None, None, 'Flags.'),
 		('NameID', 'ValueNameID', None, None, ''),
