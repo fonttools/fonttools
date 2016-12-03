@@ -30,37 +30,6 @@ STAT_DATA = deHexStr(
 assert(len(STAT_DATA) == 88)
 
 
-# Contains junk data for making sure we get our offset decoding right.
-# This is an entirely valid STAT table, just more verbose than the minimum.
-STAT_DATA_WITH_JUNK = deHexStr(
-    '0001 0000 '           #   0: Version=1.0
-    '000C 0002 '           #   4: DesignAxisSize=12, DesignAxisCount=2
-    '0000 0016 '           #   8: OffsetToDesignAxes=22
-    '0003 0000 002E '      #  12: AxisValueCount=3, OffsetToAxisValueOffsets=46
-    'DEAD BEEF '           #  18: <junk>
-    '7767 6874 '           #  22: DesignAxis[0].AxisTag='wght'
-    '012D 0002 '           #  26: DesignAxis[0].NameID=301, .AxisOrdering=2
-    'DEAD BEEF '           #  30: <junk>
-    '5445 5354 '           #  34: DesignAxis[1].AxisTag='TEST'
-    '012E 0001 '           #  38: DesignAxis[1].NameID=302, .AxisOrdering=1
-    'DEAD BEEF '           #  42: <junk>
-    '000C 001C 0034 '      #  46: AxisValueOffsets = [12, 28, 52] (+46)
-    'DEAD BEEF DEAD '      #  52: <junk>
-    '0001 0000 0000 '      #  58: AxisValue[0].Format=1, .AxisIndex=0, .Flags=0
-    '0191 0190 0000 '      #  64: AxisValue[0].ValueNameID=401, .Value=400.0
-    'DEAD BEEF '           #  70: <junk>
-    '0002 0001 0000 '      #  74: AxisValue[1].Format=2, .AxisIndex=1, .Flags=0
-    '0192 '                #  80: AxisValue[1].ValueNameID=402
-    '0002 0000 '           #  82: AxisValue[1].NominalValue=2.0
-    '0001 0000 '           #  86: AxisValue[1].RangeMinValue=1.0
-    '0003 0000 '           #  86: AxisValue[1].RangeMaxValue=3.0
-    'DEAD BEEF '           #  94: <junk>
-    '0003 0000 0000 '      #  98: AxisValue[2].Format=3, .AxisIndex=0, .Flags=0
-    '0190 0000 02BC 0000 ' # 104: AxisValue[2].Value=400.0, .LinkedValue=700.0
-)                          # 112: <end>
-assert(len(STAT_DATA_WITH_JUNK) == 112)
-
-
 STAT_XML = (
     '<Version value="0x00010000"/>'
     '<DesignAxisRecordSize value="8"/>'
@@ -101,6 +70,47 @@ STAT_XML = (
     '    <LinkedValue value="700.0"/>'
     '  </AxisValue>'
     '</AxisValueArray>'
+)
+
+
+# Contains junk data for making sure we get our offset decoding right.
+STAT_DATA_WITH_AXIS_JUNK = deHexStr(
+    '0001 0000 '           #   0: Version=1.0
+    '000A 0002 '           #   4: DesignAxisSize=10, DesignAxisCount=2
+    '0000 0012 '           #   8: OffsetToDesignAxes=18
+    '0000 0000 0000 '      #  12: AxisValueCount=3, OffsetToAxisValueOffsets=34
+    '7767 6874 '           #  18: DesignAxis[0].AxisTag='wght'
+    '012D 0002 '           #  22: DesignAxis[0].NameID=301, .AxisOrdering=2
+    'DEAD '                #  26: <junk>
+    '5445 5354 '           #  28: DesignAxis[1].AxisTag='TEST'
+    '012E 0001 '           #  32: DesignAxis[1].NameID=302, .AxisOrdering=1
+    'BEEF '                #  36: <junk>
+)                          #  38: <end>
+
+assert(len(STAT_DATA_WITH_AXIS_JUNK) == 38)
+
+
+STAT_XML_WITH_AXIS_JUNK = (
+    '<Version value="0x00010000"/>'
+    '<DesignAxisRecordSize value="10"/>'
+    '<!-- DesignAxisCount=2 -->'
+    '<DesignAxisRecord>'
+    '  <Axis index="0">'
+    '    <AxisTag value="wght"/>'
+    '    <AxisNameID value="301"/>'
+    '    <AxisOrdering value="2"/>'
+    '    <MoreBytes index="0" value="222"/>'  # 0xDE
+    '    <MoreBytes index="1" value="173"/>'  # 0xAD
+    '  </Axis>'
+    '  <Axis index="1">'
+    '    <AxisTag value="TEST"/>'
+    '    <AxisNameID value="302"/>'
+    '    <AxisOrdering value="1"/>'
+    '    <MoreBytes index="0" value="190"/>'  # 0xBE
+    '    <MoreBytes index="1" value="239"/>'  # 0xEF
+    '  </Axis>'
+    '</DesignAxisRecord>'
+    '<!-- AxisValueCount=0 -->'
 )
 
 
@@ -154,14 +164,10 @@ class STATTest(unittest.TestCase):
         self.maxDiff = None
         self.assertEqual(getXML(table.toXML), STAT_XML)
 
-    # TODO: Make this pass.
-    #
-    #def test_decompile_toXML_withJunk(self):
-    #    table = newTable('STAT')
-    #    table.decompile(STAT_DATA_WITH_JUNK, font=FakeFont(['.notdef']))
-    #    expected_xml = STAT_XML.replace('DesignAxisRecordSize=8',
-    #                                    'DesignAxisRecordSize=12')
-    #    self.assertEqual(getXML(table.toXML), expected_xml)
+    def test_decompile_toXML_withAxisJunk(self):
+        table = newTable('STAT')
+        table.decompile(STAT_DATA_WITH_AXIS_JUNK, font=FakeFont(['.notdef']))
+        self.assertEqual(getXML(table.toXML), STAT_XML_WITH_AXIS_JUNK)
 
     def test_decompile_toXML_format3(self):
         table = newTable('STAT')
