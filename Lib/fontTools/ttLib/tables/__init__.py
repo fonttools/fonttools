@@ -31,6 +31,7 @@ def _moduleFinderHint():
 	from . import M_E_T_A_
 	from . import O_S_2f_2
 	from . import S_I_N_G_
+	from . import S_T_A_T_
 	from . import S_V_G_
 	from . import T_S_I_B_
 	from . import T_S_I_D_
