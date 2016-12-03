@@ -21,6 +21,7 @@ def parseXML(xmlSnippet):
 class FakeFont:
     def __init__(self, glyphs):
         self.glyphOrder_ = glyphs
+        self.lazy = False
 
     def getGlyphID(self, name):
         return self.glyphOrder_.index(name)

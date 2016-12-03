@@ -95,7 +95,7 @@ class BaseConverter(object):
 		self.tableClass = tableClass
 		self.isCount = name.endswith("Count")
 		self.isLookupType = name.endswith("LookupType")
-		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount", "VarRegionCount", "MappingCount", "RegionAxisCount"]
+		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount", "VarRegionCount", "MappingCount", "RegionAxisCount", 'DesignAxisCount', 'DesignAxisRecordSize', 'AxisValueCount']
 
 	def readArray(self, reader, font, tableDict, count):
 		"""Read an array of values from the reader."""
@@ -368,11 +368,6 @@ class Table(Struct):
 	def read(self, reader, font, tableDict):
 		offset = self.readOffset(reader)
 		if offset == 0:
-			return None
-		if offset <= 3:
-			# XXX hack to work around buggy pala.ttf
-			log.warning("offset is not 0, yet suspiciously low (%d). table: %s",
-					offset, self.tableClass.__name__)
 			return None
 		table = self.tableClass()
 		reader = reader.getSubReader(offset)
