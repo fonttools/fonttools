@@ -1,6 +1,7 @@
 ## TTX/FontTools Version 3.3.0
 
 - [ttLib] Implemented STAT table from OpenType 1.8 (#758)
+- [cffLib] Fixed decompilation of CFF fonts containing non-standard key/value pairs in FontDict (issue #740; PR #744)
 - [py23] minor: in `round3` function, allow the second argument to be `None` (#757)
 
 ## TTX/FontTools Version 3.2.3
