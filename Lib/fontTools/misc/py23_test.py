@@ -164,6 +164,12 @@ class Round3Test(unittest.TestCase):
 		# floats should be illegal
 		self.assertRaises(TypeError, round3, 3.14159, 2.0)
 
+		# None should be allowed
+		self.assertEqual(round3(1.0, None), 1)
+		# the following would raise an error with the built-in Python3.5 round:
+		# TypeError: 'NoneType' object cannot be interpreted as an integer
+		self.assertEqual(round3(1, None), 1)
+
 	def test_halfway_cases(self):
 		self.assertAlmostEqual(round3(0.125, 2), 0.12)
 		self.assertAlmostEqual(round3(0.375, 2), 0.38)

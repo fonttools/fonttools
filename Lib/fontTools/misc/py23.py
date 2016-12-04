@@ -336,8 +336,19 @@ if PY3:
 
 			return float(d)
 
-	# in Python 3, 'round3' is an alias to the built-in 'round'
-	round = round3 = round
+	if sys.version_info[:2] >= (3, 6):
+		# in Python 3.6, 'round3' is an alias to the built-in 'round'
+		round = round3 = round
+	else:
+		# in Python3 < 3.6 we need work around the inconsistent behavior of
+		# built-in round(), whereby floats accept a second None argument,
+		# while integers raise TypeError. See https://bugs.python.org/issue27936
+		_round = round
+
+		def round3(number, ndigits=None):
+			return _round(number) if ndigits is None else _round(number, ndigits)
+
+		round = round3
 
 else:
 	# in Python 2, 'round2' is an alias to the built-in 'round' and
@@ -349,7 +360,7 @@ else:
 		Implementation of Python 3 built-in round() function.
 
 		Rounds a number to a given precision in decimal digits (default
-		0 digits). This returns an int when called with one argument,
+		0 digits). This returns an int when ndigits is omitted or is None,
 		otherwise the same type as the number.
 
 		Values are rounded to the closest multiple of 10 to the power minus
