@@ -1,3 +1,8 @@
+## TTX/FontTools Version 3.3.0
+
+- [ttLib] Implemented STAT table from OpenType 1.8 (#758)
+- [py23] minor: in `round3` function, allow the second argument to be `None` (#757)
+
 ## TTX/FontTools Version 3.2.3
 
 - [py23] optimized performance of round3 function; added backport for py35 math.isclose() (9d8dacb)
