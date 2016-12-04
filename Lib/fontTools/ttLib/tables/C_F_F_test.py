@@ -1,4 +1,4 @@
-"""cffLib_test.py -- unit test for Adobe CFF fonts."""
+"""C_F_F_test.py -- unit test for CFF data."""
 
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
@@ -7,7 +7,6 @@ from fontTools.ttLib import TTFont, newTable
 import re
 import os
 import unittest
-
 
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 DATA_DIR = os.path.join(CURR_DIR, 'testdata')

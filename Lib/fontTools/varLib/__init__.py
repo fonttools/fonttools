@@ -314,17 +314,18 @@ def _merge_OTL(font, model, master_fonts, axisTags, base_idx):
 	print("Merging OpenType Layout tables")
 	merger = VariationMerger(model, axisTags, font)
 
-	merge_tables(font, merger, master_fonts, axisTags, base_idx, ['GPOS'])
-	store = merger.store_builder.finish()
-	try:
-		GDEF = font['GDEF'].table
-		assert GDEF.Version <= 0x00010002
-	except KeyError:
-		font['GDEF']= newTable('GDEF')
-		GDEFTable = font["GDEF"] = newTable('GDEF')
-		GDEF = GDEFTable.table = ot.GDEF()
-	GDEF.Version = 0x00010003
-	GDEF.VarStore = store
+	if 'GPOS' in font:
+		merge_tables(font, merger, master_fonts, axisTags, base_idx, ['GPOS'])
+		store = merger.store_builder.finish()
+		try:
+			GDEF = font['GDEF'].table
+			assert GDEF.Version <= 0x00010002
+		except KeyError:
+			font['GDEF']= newTable('GDEF')
+			GDEFTable = font["GDEF"] = newTable('GDEF')
+			GDEF = GDEFTable.table = ot.GDEF()
+		GDEF.Version = 0x00010003
+		GDEF.VarStore = store
 
 
 def build(designspace_filename, master_finder=lambda s:s, axisMap=None, build_HVAR=False):
