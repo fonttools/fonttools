@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 v = get_versions()
 if v["error"]:
     __import__('warnings').warn("versioneer: %s" % v['error'], RuntimeWarning)
-    __version__ = "3.2.3"
+    __version__ = "3.3.0"
 else:
     __version__ = v['version']
 del get_versions, v
