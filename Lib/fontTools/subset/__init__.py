@@ -216,11 +216,17 @@ Font table options:
       they do not need subsetting (ignore the fact that 'loca' is listed
       here): 'gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca',
       'name', 'cvt ', 'fpgm', 'prep', 'VMDX', 'DSIG' and 'CPAL'.
-      Tables that the tool does not know how to subset and are not specified
-      here will be dropped from the font.
+      By default, tables that the tool does not know how to subset and are not
+      specified here will be dropped from the font, unless --passthrough-tables
+      option is passed.
       Example:
          --no-subset-tables+=FFTM
             * Keep 'FFTM' table in the font by preventing subsetting.
+  --passthrough-tables
+      Do not drop tables that the tool does not know how to subset.
+  --no-passthrough-tables
+      Tables that the tool does not know how to subset and are not specified
+      in --no-subset-tables will be dropped from the font. [default]
   --hinting-tables[-]=<table>[,<table>...]
       Specify (=), add to (+=) or exclude from (-=) the list of font-wide
       hinting tables that will be dropped if --no-hinting is specified,
@@ -303,6 +309,10 @@ Other font-specific options:
       *not* be switched on if an intersection is found.  [default]
   --no-prune-unicode-ranges
       Don't change the 'OS/2 ulUnicodeRange*' bits.
+  --recalc-average-width
+      Update the 'OS/2 xAvgCharWidth' field after subsetting.
+  --no-recalc-average-width
+      Don't change the 'OS/2 xAvgCharWidth' field. [default]
 
 Application options:
   --verbose
@@ -512,7 +522,9 @@ def subset_glyphs(self, s):
         return len(self.Coverage.subset(s.glyphs))
     elif self.Format == 2:
         indices = self.Coverage.subset(s.glyphs)
-        self.Value = [self.Value[i] for i in indices]
+        values = self.Value
+        count = len(values)
+        self.Value = [values[i] for i in indices if i < count]
         self.ValueCount = len(self.Value)
         return bool(self.ValueCount)
     else:
@@ -529,10 +541,11 @@ def prune_post_subset(self, options):
 def subset_glyphs(self, s):
     if self.Format == 1:
         indices = self.Coverage.subset(s.glyphs)
-        self.PairSet = [self.PairSet[i] for i in indices]
+        pairs = self.PairSet
+        count = len(pairs)
+        self.PairSet = [pairs[i] for i in indices if i < count]
         for p in self.PairSet:
-            p.PairValueRecord = [r for r in p.PairValueRecord
-                                 if r.SecondGlyph in s.glyphs]
+            p.PairValueRecord = [r for r in p.PairValueRecord if r.SecondGlyph in s.glyphs]
             p.PairValueCount = len(p.PairValueRecord)
         # Remove empty pairsets
         indices = [i for i,p in enumerate(self.PairSet) if p.PairValueCount]
@@ -541,8 +554,8 @@ def subset_glyphs(self, s):
         self.PairSetCount = len(self.PairSet)
         return bool(self.PairSetCount)
     elif self.Format == 2:
-        class1_map = self.ClassDef1.subset(s.glyphs, remap=True)
-        class2_map = self.ClassDef2.subset(s.glyphs, remap=True)
+        class1_map = [c for c in self.ClassDef1.subset(s.glyphs, remap=True) if c < self.Class1Count]
+        class2_map = [c for c in self.ClassDef2.subset(s.glyphs, remap=True) if c < self.Class2Count]
         self.Class1Record = [self.Class1Record[i] for i in class1_map]
         for c in self.Class1Record:
             c.Class2Record = [c.Class2Record[i] for i in class2_map]
@@ -566,7 +579,9 @@ def prune_post_subset(self, options):
 def subset_glyphs(self, s):
     if self.Format == 1:
         indices = self.Coverage.subset(s.glyphs)
-        self.EntryExitRecord = [self.EntryExitRecord[i] for i in indices]
+        records = self.EntryExitRecord
+        count = len(records)
+        self.EntryExitRecord = [records[i] for i in indices if i < count]
         self.EntryExitCount = len(self.EntryExitRecord)
         return bool(self.EntryExitCount)
     else:
@@ -590,12 +605,10 @@ def prune_post_subset(self, options):
 def subset_glyphs(self, s):
     if self.Format == 1:
         mark_indices = self.MarkCoverage.subset(s.glyphs)
-        self.MarkArray.MarkRecord = [self.MarkArray.MarkRecord[i]
-                                     for i in mark_indices]
+        self.MarkArray.MarkRecord = [self.MarkArray.MarkRecord[i] for i in mark_indices]
         self.MarkArray.MarkCount = len(self.MarkArray.MarkRecord)
         base_indices = self.BaseCoverage.subset(s.glyphs)
-        self.BaseArray.BaseRecord = [self.BaseArray.BaseRecord[i]
-                                     for i in base_indices]
+        self.BaseArray.BaseRecord = [self.BaseArray.BaseRecord[i] for i in base_indices]
         self.BaseArray.BaseCount = len(self.BaseArray.BaseRecord)
         # Prune empty classes
         class_indices = _uniq_sort(v.Class for v in self.MarkArray.MarkRecord)
@@ -626,12 +639,10 @@ def prune_post_subset(self, options):
 def subset_glyphs(self, s):
     if self.Format == 1:
         mark_indices = self.MarkCoverage.subset(s.glyphs)
-        self.MarkArray.MarkRecord = [self.MarkArray.MarkRecord[i]
-                                     for i in mark_indices]
+        self.MarkArray.MarkRecord = [self.MarkArray.MarkRecord[i] for i in mark_indices]
         self.MarkArray.MarkCount = len(self.MarkArray.MarkRecord)
         ligature_indices = self.LigatureCoverage.subset(s.glyphs)
-        self.LigatureArray.LigatureAttach = [self.LigatureArray.LigatureAttach[i]
-                                             for i in ligature_indices]
+        self.LigatureArray.LigatureAttach = [self.LigatureArray.LigatureAttach[i] for i in ligature_indices]
         self.LigatureArray.LigatureCount = len(self.LigatureArray.LigatureAttach)
         # Prune empty classes
         class_indices = _uniq_sort(v.Class for v in self.MarkArray.MarkRecord)
@@ -664,12 +675,10 @@ def prune_post_subset(self, options):
 def subset_glyphs(self, s):
     if self.Format == 1:
         mark1_indices = self.Mark1Coverage.subset(s.glyphs)
-        self.Mark1Array.MarkRecord = [self.Mark1Array.MarkRecord[i]
-                                      for i in mark1_indices]
+        self.Mark1Array.MarkRecord = [self.Mark1Array.MarkRecord[i] for i in mark1_indices]
         self.Mark1Array.MarkCount = len(self.Mark1Array.MarkRecord)
         mark2_indices = self.Mark2Coverage.subset(s.glyphs)
-        self.Mark2Array.Mark2Record = [self.Mark2Array.Mark2Record[i]
-                                       for i in mark2_indices]
+        self.Mark2Array.Mark2Record = [self.Mark2Array.Mark2Record[i] for i in mark2_indices]
         self.Mark2Array.MarkCount = len(self.Mark2Array.Mark2Record)
         # Prune empty classes
         class_indices = _uniq_sort(v.Class for v in self.Mark1Array.MarkRecord)
@@ -1532,8 +1541,7 @@ def subset_glyphs(self, s):
     table = self.table
     if table.LigCaretList:
         indices = table.LigCaretList.Coverage.subset(glyphs)
-        table.LigCaretList.LigGlyph = [table.LigCaretList.LigGlyph[i]
-                                       for i in indices]
+        table.LigCaretList.LigGlyph = [table.LigCaretList.LigGlyph[i] for i in indices]
         table.LigCaretList.LigGlyphCount = len(table.LigCaretList.LigGlyph)
     if table.MarkAttachClassDef:
         table.MarkAttachClassDef.classDefs = \
@@ -1547,8 +1555,7 @@ def subset_glyphs(self, s):
         indices = table.AttachList.Coverage.subset(glyphs)
         GlyphCount = table.AttachList.GlyphCount
         table.AttachList.AttachPoint = [table.AttachList.AttachPoint[i]
-                                        for i in indices
-                                        if i < GlyphCount]
+                                        for i in indices if i < GlyphCount]
         table.AttachList.GlyphCount = len(table.AttachList.AttachPoint)
     if hasattr(table, "MarkGlyphSetsDef") and table.MarkGlyphSetsDef:
         for coverage in table.MarkGlyphSetsDef.Coverage:
@@ -1575,13 +1582,13 @@ def prune_post_subset(self, options):
         table.MarkGlyphSetsDef and
         not table.MarkGlyphSetsDef.Coverage):
         table.MarkGlyphSetsDef = None
-        if table.Version == 0x00010002/0x10000:
-            table.Version = 1.0
+        if table.Version == 0x00010002:
+            table.Version = 0x00010000
     return bool(table.LigCaretList or
                 table.MarkAttachClassDef or
                 table.GlyphClassDef or
                 table.AttachList or
-                (table.Version >= 0x00010002/0x10000 and table.MarkGlyphSetsDef))
+                (table.Version >= 0x00010002 and table.MarkGlyphSetsDef))
 
 @_add_method(ttLib.getTableClass('kern'))
 def prune_pre_subset(self, font, options):
@@ -1685,13 +1692,15 @@ def closure_glyphs(self, s):
     glyphs = frozenset(s.glyphs)
     variants = set()
 
-    indices = self.VertGlyphCoverage.intersect(glyphs)
-    for i in indices:
-        variants.update(self.VertGlyphConstruction[i].closure_glyphs(glyphs))
+    if self.VertGlyphCoverage:
+        indices = self.VertGlyphCoverage.intersect(glyphs)
+        for i in indices:
+            variants.update(self.VertGlyphConstruction[i].closure_glyphs(glyphs))
 
-    indices = self.HorizGlyphCoverage.intersect(glyphs)
-    for i in indices:
-        variants.update(self.HorizGlyphConstruction[i].closure_glyphs(glyphs))
+    if self.HorizGlyphCoverage:
+        indices = self.HorizGlyphCoverage.intersect(glyphs)
+        for i in indices:
+            variants.update(self.HorizGlyphConstruction[i].closure_glyphs(glyphs))
 
     s.glyphs.update(variants)
 
@@ -1734,13 +1743,15 @@ def subset_glyphs(self, s):
 
 @_add_method(otTables.MathVariants)
 def subset_glyphs(self, s):
-    indices = self.VertGlyphCoverage.subset(s.glyphs)
-    self.VertGlyphConstruction = [self.VertGlyphConstruction[i] for i in indices]
-    self.VertGlyphCount = len(self.VertGlyphConstruction)
+    if self.VertGlyphCoverage:
+        indices = self.VertGlyphCoverage.subset(s.glyphs)
+        self.VertGlyphConstruction = [self.VertGlyphConstruction[i] for i in indices]
+        self.VertGlyphCount = len(self.VertGlyphConstruction)
 
-    indices = self.HorizGlyphCoverage.subset(s.glyphs)
-    self.HorizGlyphConstruction = [self.HorizGlyphConstruction[i] for i in indices]
-    self.HorizGlyphCount = len(self.HorizGlyphConstruction)
+    if self.HorizGlyphCoverage:
+        indices = self.HorizGlyphCoverage.subset(s.glyphs)
+        self.HorizGlyphConstruction = [self.HorizGlyphConstruction[i] for i in indices]
+        self.HorizGlyphCount = len(self.HorizGlyphConstruction)
 
     return True
 
@@ -1846,6 +1857,12 @@ def prune_pre_subset(self, font, options):
                 c.program = [c.width - nmnlWdX, 'endchar']
             else:
                 c.program = ['endchar']
+
+    # Clear useless Encoding
+    for fontname in cff.keys():
+        font = cff[fontname]
+        # https://github.com/behdad/fonttools/issues/620
+        font.Encoding = "StandardEncoding"
 
     return True # bool(cff.fontNames)
 
@@ -2254,7 +2271,8 @@ def prune_post_subset(self, options):
                 local_subrs = subrs
 
             subrs.items = [subrs.items[i] for i in subrs._used]
-            del subrs.file
+            if hasattr(subrs, 'file'):
+                del subrs.file
             if hasattr(subrs, 'offsets'):
                 del subrs.offsets
 
@@ -2342,6 +2360,7 @@ def prune_pre_subset(self, font, options):
         if self.tableVersion == 0x00010000:
             self.maxZones = 1
             self.maxTwilightPoints = 0
+            self.maxStorage = 0
             self.maxFunctionDefs = 0
             self.maxInstructionDefs = 0
             self.maxStackElements = 0
@@ -2353,8 +2372,10 @@ def prune_pre_subset(self, font, options):
     nameIDs = set(options.name_IDs)
     fvar = font.get('fvar')
     if fvar:
-        nameIDs.update([inst.nameID for inst in fvar.instances])
-        nameIDs.update([axis.nameID for axis in fvar.axes])
+        nameIDs.update([axis.axisNameID for axis in fvar.axes])
+        nameIDs.update([inst.subfamilyNameID for inst in fvar.instances])
+        nameIDs.update([inst.postscriptNameID for inst in fvar.instances
+                        if inst.postscriptNameID != 0xFFFF])
     if '*' not in options.name_IDs:
         self.names = [n for n in self.names if n.nameID in nameIDs]
     if not options.name_legacy:
@@ -2435,6 +2456,7 @@ class Options(object):
 
         self.drop_tables = self._drop_tables_default[:]
         self.no_subset_tables = self._no_subset_tables_default[:]
+        self.passthrough_tables = False  # keep/drop tables we can't subset
         self.hinting_tables = self._hinting_tables_default[:]
         self.legacy_kern = False    # drop 'kern' table if GPOS available
         self.layout_features = self._layout_features_default[:]
@@ -2454,6 +2476,7 @@ class Options(object):
         self.recalc_bounds = False # Recalculate font bounding boxes
         self.recalc_timestamp = False # Recalculate font modified timestamp
         self.prune_unicode_ranges = True  # Clear unused 'ulUnicodeRange' bits
+        self.recalc_average_width = False  # update 'xAvgCharWidth'
         self.canonical_order = None # Order tables as recommended
         self.flavor = None  # May be 'woff' or 'woff2'
         self.with_zopfli = False  # use zopfli instead of zlib for WOFF 1.0
@@ -2565,8 +2588,10 @@ class Subsetter(object):
         self.unicodes_requested.update(unicodes)
         if isinstance(text, bytes):
             text = text.decode("utf_8")
-        for u in text:
-            self.unicodes_requested.add(ord(u))
+        text_utf32 = text.encode("utf-32-be")
+        nchars = len(text_utf32)//4
+        for u in struct.unpack('>%dL' % nchars, text_utf32):
+            self.unicodes_requested.add(u)
         self.glyph_names_requested.update(glyphs)
         self.glyph_ids_requested.update(gids)
 
@@ -2712,6 +2737,8 @@ class Subsetter(object):
                     del font[tag]
                 else:
                     log.info("%s subsetted", tag)
+            elif self.options.passthrough_tables:
+                log.info("%s NOT subset; don't know how to subset", tag)
             else:
                 log.info("%s NOT subset; don't know how to subset; dropped", tag)
                 del font[tag]
@@ -2730,6 +2757,12 @@ class Subsetter(object):
                 new_uniranges = font[tag].recalcUnicodeRanges(font, pruneOnly=True)
                 if old_uniranges != new_uniranges:
                     log.info("%s Unicode ranges pruned: %s", tag, sorted(new_uniranges))
+                if self.options.recalc_average_width:
+                    widths = [m[0] for m in font["hmtx"].metrics.values() if m[0] > 0]
+                    avg_width = int(round(sum(widths) / len(widths)))
+                    if avg_width != font[tag].xAvgCharWidth:
+                        font[tag].xAvgCharWidth = avg_width
+                        log.info("%s xAvgCharWidth updated: %d", tag, avg_width)
             clazz = ttLib.getTableClass(tag)
             if hasattr(clazz, 'prune_post_subset'):
                 with timer("prune '%s'" % tag):
@@ -2886,7 +2919,7 @@ def main(args=None):
             text += g[7:]
             continue
         if g.startswith('--text-file='):
-            text += open(g[12:]).read().replace('\n', '')
+            text += open(g[12:], encoding='utf-8').read().replace('\n', '')
             continue
         if g.startswith('--unicodes='):
             if g[11:] == '*':

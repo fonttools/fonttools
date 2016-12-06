@@ -1,7 +1,7 @@
 """\
 usage: ttx [options] inputfile1 [... inputfileN]
 
-    TTX %s -- From OpenType To XML And Back
+    TTX -- From OpenType To XML And Back
 
     If an input file is a TrueType or OpenType font file, it will be
        dumped to an TTX file (an XML-based text format).
@@ -12,7 +12,8 @@ usage: ttx [options] inputfile1 [... inputfileN]
        never overwritten.
 
     General options:
-    -h Help: print this message
+    -h Help: print this message.
+    --version: show version and exit.
     -d <outputfolder> Specify a directory where the output files are
        to be created.
     -o <outputfile> Specify a file to write the output to. A special
@@ -60,6 +61,9 @@ usage: ttx [options] inputfile1 [... inputfileN]
        starting from 0.
     --unicodedata <UnicodeData.txt> Use custom database file to write
        character names in the comments of the cmap TTX output.
+    --newline <value> Control how line endings are written in the XML
+       file. It can be 'LF', 'CR', or 'CRLF'. If not specified, the
+       default platform-specific line endings are used.
 
     Compile options:
     -m Merge with TrueType-input-file: specify a TrueType or OpenType
@@ -92,12 +96,6 @@ import logging
 
 
 log = logging.getLogger(__name__)
-
-
-def usage():
-	from fontTools import version
-	print(__doc__ % version)
-
 
 numberAddedRE = re.compile("#\d+$")
 opentypeheaderRE = re.compile('''sfntVersion=['"]OTTO["']''')
@@ -133,6 +131,7 @@ class Options(object):
 	ignoreDecompileErrors = True
 	bitmapGlyphDataFormat = 'raw'
 	unicodedata = None
+	newlinestr = None
 	recalcTimestamp = False
 	flavor = None
 	useZopfli = False
@@ -144,7 +143,11 @@ class Options(object):
 		for option, value in rawOptions:
 			# general options
 			if option == "-h":
-				usage()
+				print(__doc__)
+				sys.exit(0)
+			elif option == "--version":
+				from fontTools import version
+				print(version)
 				sys.exit(0)
 			elif option == "-d":
 				if not os.path.isdir(value):
@@ -190,6 +193,18 @@ class Options(object):
 				self.ignoreDecompileErrors = False
 			elif option == "--unicodedata":
 				self.unicodedata = value
+			elif option == "--newline":
+				validOptions = ('LF', 'CR', 'CRLF')
+				if value == "LF":
+					self.newlinestr = "\n"
+				elif value == "CR":
+					self.newlinestr = "\r"
+				elif value == "CRLF":
+					self.newlinestr = "\r\n"
+				else:
+					raise getopt.GetoptError(
+						"Invalid choice for --newline: %r (choose from %s)"
+						% (value, ", ".join(map(repr, validOptions))))
 			elif option == "--recalc-timestamp":
 				self.recalcTimestamp = True
 			elif option == "--flavor":
@@ -253,7 +268,8 @@ def ttDump(input, output, options):
 			skipTables=options.skipTables,
 			splitTables=options.splitTables,
 			disassembleInstructions=options.disassembleInstructions,
-			bitmapGlyphDataFormat=options.bitmapGlyphDataFormat)
+			bitmapGlyphDataFormat=options.bitmapGlyphDataFormat,
+			newlinestr=options.newlinestr)
 	ttf.close()
 
 
@@ -312,8 +328,8 @@ def guessFileType(fileName):
 
 def parseOptions(args):
 	rawOptions, files = getopt.getopt(args, "ld:o:fvqht:x:sim:z:baey:",
-			['unicodedata=', "recalc-timestamp", 'flavor=',
-			 'with-zopfli'])
+			['unicodedata=', "recalc-timestamp", 'flavor=', 'version',
+			 'with-zopfli', 'newline='])
 
 	options = Options(rawOptions, len(files))
 	jobs = []
@@ -373,8 +389,7 @@ def main(args=None):
 	try:
 		jobs, options = parseOptions(args)
 	except getopt.GetoptError as e:
-		usage()
-		print("ERROR:", e, file=sys.stderr)
+		print("%s\nERROR: %s" % (__doc__, e), file=sys.stderr)
 		sys.exit(2)
 
 	configLogger(level=options.logLevel)

@@ -16,21 +16,17 @@ if [[ "$(uname -s)" == 'Darwin' ]]; then
             curl -O https://bootstrap.pypa.io/get-pip.py
             python get-pip.py --user
             ;;
-        py33)
-            pyenv install 3.3.6
-            pyenv global 3.3.6
-            ;;
         py34)
-            pyenv install 3.4.3
-            pyenv global 3.4.3
+            pyenv install 3.4.5
+            pyenv global 3.4.5
             ;;
         py35)
-            pyenv install 3.5.1
-            pyenv global 3.5.1
+            pyenv install 3.5.2
+            pyenv global 3.5.2
             ;;
         pypy)
-            pyenv install pypy-5.0.0
-            pyenv global pypy-5.0.0
+            pyenv install pypy-5.4.1
+            pyenv global pypy-5.4.1
             ;;
     esac
     pyenv rehash
@@ -44,8 +40,8 @@ else
         eval "$(pyenv init -)"
 
         if [[ "${TOXENV}" == "pypy" ]]; then
-            pyenv install pypy-5.0.0
-            pyenv global pypy-5.0.0
+            pyenv install pypy-5.4.1
+            pyenv global pypy-5.4.1
         else
             pyenv install jython-2.7.1b3
             pyenv global jython-2.7.1b3
@@ -67,3 +63,9 @@ if [[ "${TOXENV}" != "jython" ]]; then
     source ~/.venv/bin/activate
     pip install -r dev-requirements.txt
 fi
+
+# Travis by default only clones a 'shallow' repository with --depth=50.
+# When building the distribution packages, we use git to determine the
+# package version string (via versioneer), hence we need to fetch the
+# whole repo, and not just the last 50 commits.
+git fetch --unshallow

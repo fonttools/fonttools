@@ -24,6 +24,8 @@
   </GlyphOrder>
 
   <CFF>
+    <major value="1"/>
+    <minor value="0"/>
     <CFFFont name="XITSMath">
       <version value="1.108"/>
       <Notice value="Copyright (c) 2001-2011 by the STI Pub Companies, consisting of the American Chemical Society, the American Institute of Physics, the American Mathematical Society, the American Physical Society, Elsevier, Inc., and The Institute of Electrical and Electronic Engineers, Inc.  Portions copyright (c) 1998-2003 by MicroPress, Inc.  Portions copyright (c) 1990 by Elsevier, Inc.  Portions copyright (c) 2009-2012 by Khaled Hosny.  All rights reserved. "/>
@@ -252,7 +254,7 @@
   </CFF>
 
   <MATH>
-    <Version value="1.0"/>
+    <Version value="0x00010000"/>
     <MathConstants>
       <ScriptPercentScaleDown value="75"/>
       <ScriptScriptPercentScaleDown value="60"/>

@@ -6,7 +6,15 @@ import sys
 
 __all__ = ['basestring', 'unicode', 'unichr', 'byteord', 'bytechr', 'BytesIO',
 		'StringIO', 'UnicodeIO', 'strjoin', 'bytesjoin', 'tobytes', 'tostr',
-		'tounicode', 'Tag', 'open']
+		'tounicode', 'Tag', 'open', 'range', 'xrange', 'round', 'Py23Error']
+
+
+class Py23Error(NotImplementedError):
+	pass
+
+
+PY3 = sys.version_info[0] == 3
+PY2 = sys.version_info[0] == 2
 
 
 try:
@@ -239,6 +247,170 @@ def open(file, mode='r', buffering=-1, encoding=None, errors=None,
 	else:
 		return _io.open(
 			file, mode, buffering, encoding, errors, newline, closefd)
+
+
+# always use iterator for 'range' on both py 2 and 3
+try:
+	range = xrange
+except NameError:
+	range = range
+
+def xrange(*args, **kwargs):
+	raise Py23Error("'xrange' is not defined. Use 'range' instead.")
+
+
+import math as _math
+
+try:
+	isclose = _math.isclose
+except AttributeError:
+	# math.isclose() was only added in Python 3.5
+
+	_isinf = _math.isinf
+	_fabs = _math.fabs
+
+	def isclose(a, b, rel_tol=1e-09, abs_tol=0):
+		"""
+		Python 2 implementation of Python 3.5 math.isclose()
+		https://hg.python.org/cpython/file/v3.5.2/Modules/mathmodule.c#l1993
+		"""
+		# sanity check on the inputs
+		if rel_tol < 0 or abs_tol < 0:
+			raise ValueError("tolerances must be non-negative")
+		# short circuit exact equality -- needed to catch two infinities of
+		# the same sign. And perhaps speeds things up a bit sometimes.
+		if a == b:
+			return True
+		# This catches the case of two infinities of opposite sign, or
+		# one infinity and one finite number. Two infinities of opposite
+		# sign would otherwise have an infinite relative tolerance.
+		# Two infinities of the same sign are caught by the equality check
+		# above.
+		if _isinf(a) or _isinf(b):
+			return False
+		# Cast to float to allow decimal.Decimal arguments
+		if not isinstance(a, float):
+			a = float(a)
+		if not isinstance(b, float):
+			b = float(b)
+		# now do the regular computation
+		# this is essentially the "weak" test from the Boost library
+		diff = _fabs(b - a)
+		result = ((diff <= _fabs(rel_tol * a)) or
+				  (diff <= _fabs(rel_tol * b)) or
+				  (diff <= abs_tol))
+		return result
+
+
+import decimal as _decimal
+
+if PY3:
+	def round2(number, ndigits=None):
+		"""
+		Implementation of Python 2 built-in round() function.
+
+		Rounds a number to a given precision in decimal digits (default
+		0 digits). The result is a floating point number. Values are rounded
+		to the closest multiple of 10 to the power minus ndigits; if two
+		multiples are equally close, rounding is done away from 0.
+
+		ndigits may be negative.
+
+		See Python 2 documentation:
+		https://docs.python.org/2/library/functions.html?highlight=round#round
+		"""
+		if ndigits is None:
+			ndigits = 0
+
+		if ndigits < 0:
+			exponent = 10 ** (-ndigits)
+			quotient, remainder = divmod(number, exponent)
+			if remainder >= exponent//2 and number >= 0:
+				quotient += 1
+			return float(quotient * exponent)
+		else:
+			exponent = _decimal.Decimal('10') ** (-ndigits)
+
+			d = _decimal.Decimal.from_float(number).quantize(
+				exponent, rounding=_decimal.ROUND_HALF_UP)
+
+			return float(d)
+
+	if sys.version_info[:2] >= (3, 6):
+		# in Python 3.6, 'round3' is an alias to the built-in 'round'
+		round = round3 = round
+	else:
+		# in Python3 < 3.6 we need work around the inconsistent behavior of
+		# built-in round(), whereby floats accept a second None argument,
+		# while integers raise TypeError. See https://bugs.python.org/issue27936
+		_round = round
+
+		def round3(number, ndigits=None):
+			return _round(number) if ndigits is None else _round(number, ndigits)
+
+		round = round3
+
+else:
+	# in Python 2, 'round2' is an alias to the built-in 'round' and
+	# 'round' is shadowed by 'round3'
+	round2 = round
+
+	def round3(number, ndigits=None):
+		"""
+		Implementation of Python 3 built-in round() function.
+
+		Rounds a number to a given precision in decimal digits (default
+		0 digits). This returns an int when ndigits is omitted or is None,
+		otherwise the same type as the number.
+
+		Values are rounded to the closest multiple of 10 to the power minus
+		ndigits; if two multiples are equally close, rounding is done toward
+		the even choice (aka "Banker's Rounding"). For example, both round(0.5)
+		and round(-0.5) are 0, and round(1.5) is 2.
+
+		ndigits may be negative.
+
+		See Python 3 documentation:
+		https://docs.python.org/3/library/functions.html?highlight=round#round
+
+		Derived from python-future:
+		https://github.com/PythonCharmers/python-future/blob/master/src/future/builtins/newround.py
+		"""
+		if ndigits is None:
+			ndigits = 0
+			# return an int when called with one argument
+			totype = int
+			# shortcut if already an integer, or a float with no decimal digits
+			inumber = totype(number)
+			if inumber == number:
+				return inumber
+		else:
+			# return the same type as the number, when called with two arguments
+			totype = type(number)
+
+		m = number * (10 ** ndigits)
+		# if number is half-way between two multiples, and the mutliple that is
+		# closer to zero is even, we use the (slow) pure-Python implementation
+		if isclose(m % 1, .5) and int(m) % 2 == 0:
+			if ndigits < 0:
+				exponent = 10 ** (-ndigits)
+				quotient, remainder = divmod(number, exponent)
+				half = exponent//2
+				if remainder > half or (remainder == half and quotient % 2 != 0):
+					quotient += 1
+				d = quotient * exponent
+			else:
+				exponent = _decimal.Decimal('10') ** (-ndigits) if ndigits != 0 else 1
+
+				d = _decimal.Decimal.from_float(number).quantize(
+					exponent, rounding=_decimal.ROUND_HALF_EVEN)
+		else:
+			# else we use the built-in round() as it produces the same results
+			d = round2(number, ndigits)
+
+		return totype(d)
+
+	round = round3
 
 
 import logging

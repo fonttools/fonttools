@@ -17,6 +17,7 @@ class Lexer(object):
     SYMBOL = "SYMBOL"
     COMMENT = "COMMENT"
     NEWLINE = "NEWLINE"
+    ANONYMOUS_BLOCK = "ANONYMOUS_BLOCK"
 
     CHAR_WHITESPACE_ = " \t"
     CHAR_NEWLINE_ = "\r\n"
@@ -53,10 +54,13 @@ class Lexer(object):
             if token_type not in {Lexer.COMMENT, Lexer.NEWLINE}:
                 return (token_type, token, location)
 
+    def location_(self):
+        column = self.pos_ - self.line_start_ + 1
+        return (self.filename_, self.line_, column)
+
     def next_(self):
         self.scan_over_(Lexer.CHAR_WHITESPACE_)
-        column = self.pos_ - self.line_start_ + 1
-        location = (self.filename_, self.line_, column)
+        location = self.location_()
         start = self.pos_
         text = self.text_
         limit = len(text)
@@ -142,10 +146,12 @@ class Lexer(object):
             return (Lexer.SYMBOL, cur_char, location)
         if cur_char == '"':
             self.pos_ += 1
-            self.scan_until_('"\r\n')
+            self.scan_until_('"')
             if self.pos_ < self.text_length_ and self.text_[self.pos_] == '"':
                 self.pos_ += 1
-                return (Lexer.STRING, text[start + 1:self.pos_ - 1], location)
+                # strip newlines embedded within a string
+                string = re.sub("[\r\n]", "", text[start + 1:self.pos_ - 1])
+                return (Lexer.STRING, string, location)
             else:
                 raise FeatureLibError("Expected '\"' to terminate string",
                                       location)
@@ -163,6 +169,20 @@ class Lexer(object):
         while p < self.text_length_ and self.text_[p] not in stop_at:
             p += 1
         self.pos_ = p
+
+    def scan_anonymous_block(self, tag):
+        location = self.location_()
+        tag = tag.strip()
+        self.scan_until_(Lexer.CHAR_NEWLINE_)
+        self.scan_over_(Lexer.CHAR_NEWLINE_)
+        regexp = r'}\s*' + tag + r'\s*;'
+        split = re.split(regexp, self.text_[self.pos_:], maxsplit=1)
+        if len(split) != 2:
+            raise FeatureLibError(
+                "Expected '} %s;' to terminate anonymous block" % tag,
+                location)
+        self.pos_ += len(split[0])
+        return (Lexer.ANONYMOUS_BLOCK, split[0], location)
 
 
 class IncludingLexer(object):
@@ -216,3 +236,6 @@ class IncludingLexer(object):
         if closing:
             fileobj.close()
         return Lexer(data, filename)
+
+    def scan_anonymous_block(self, tag):
+        return self.lexers_[-1].scan_anonymous_block(tag)

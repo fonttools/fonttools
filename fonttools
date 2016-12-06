@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+from __future__ import print_function, division, absolute_import
+import sys
+import os.path
+
+libdir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'Lib'))
+sys.path.insert(0, libdir)
+
+from fontTools.__main__ import main
+
+if __name__ == '__main__':
+
+	main()

@@ -1,18 +1,9 @@
 #! /usr/bin/env python
 
 from __future__ import print_function
-import os, sys
-
-# if setuptools is not installed, fall back to distutils
-try:
-	from setuptools import setup
-except ImportError:
-	from distutils.core import setup
-	distutils_scripts = [
-		"Tools/ttx", "Tools/pyftsubset", "Tools/pyftinspect", "Tools/pyftmerge"]
-else:
-	distutils_scripts = []
-
+import sys
+from setuptools import setup, find_packages
+import versioneer
 
 # Force distutils to use py_compile.compile() function with 'doraise' argument
 # set to True, in order to raise an exception on compilation errors
@@ -20,10 +11,14 @@ import py_compile
 orig_py_compile = py_compile.compile
 
 def doraise_py_compile(file, cfile=None, dfile=None, doraise=False):
-    orig_py_compile(file, cfile=cfile, dfile=dfile, doraise=True)
+	orig_py_compile(file, cfile=cfile, dfile=dfile, doraise=True)
 
 py_compile.compile = doraise_py_compile
 
+needs_pytest = {'pytest', 'test'}.intersection(sys.argv)
+pytest_runner = ['pytest_runner'] if needs_pytest else []
+needs_wheel = {'bdist_wheel'}.intersection(sys.argv)
+wheel = ['wheel'] if needs_wheel else []
 
 # Trove classifiers for PyPI
 classifiers = {"classifiers": [
@@ -49,44 +44,37 @@ TrueType/OpenType fonts to and from an XML-based format.
 """
 
 setup(
-		name = "fonttools",
-		version = "3.0",
-		description = "Tools to manipulate font files",
-		author = "Just van Rossum",
-		author_email = "just@letterror.com",
-		maintainer = "Behdad Esfahbod",
-		maintainer_email = "behdad@behdad.org",
-		url = "http://github.com/behdad/fonttools",
-		license = "OpenSource, BSD-style",
-		platforms = ["Any"],
-		long_description = long_description,
-
-		packages = [
-			"fontTools",
-			"fontTools.encodings",
-			"fontTools.feaLib",
-			"fontTools.misc",
-			"fontTools.mtiLib",
-			"fontTools.pens",
-			"fontTools.ttLib",
-			"fontTools.t1Lib",
-			"fontTools.subset",
-			"fontTools.otlLib",
-			"fontTools.ttLib.tables",
-			"fontTools.varLib",
-		],
-		py_modules = ['sstruct', 'xmlWriter'],
-		package_dir = {'': 'Lib'},
-		extra_path = 'FontTools',
-		data_files = [('share/man/man1', ["Doc/ttx.1"])],
-		scripts = distutils_scripts,
-		entry_points = {
-				'console_scripts': [
-					"ttx = fontTools.ttx:main",
-					"pyftsubset = fontTools.subset:main",
-					"pyftmerge = fontTools.merge:main",
-					"pyftinspect = fontTools.inspect:main"
-				]
-			},
-		**classifiers
-	)
+	name="fonttools",
+	version=versioneer.get_version(),
+	description="Tools to manipulate font files",
+	author="Just van Rossum",
+	author_email="just@letterror.com",
+	maintainer="Behdad Esfahbod",
+	maintainer_email="behdad@behdad.org",
+	url="http://github.com/fonttools/fonttools",
+	license="OpenSource, BSD-style",
+	platforms=["Any"],
+	long_description=long_description,
+	package_dir={'': 'Lib'},
+	packages=find_packages("Lib"),
+	py_modules=['sstruct', 'xmlWriter'],
+	include_package_data=True,
+	data_files=[
+		('share/man/man1', ["Doc/ttx.1"])
+	] if sys.platform.startswith('linux') else [],
+	setup_requires=pytest_runner + wheel,
+	tests_require=[
+		'pytest>=2.8',
+	],
+	entry_points={
+		'console_scripts': [
+			"fonttools = fontTools.__main__:main",
+			"ttx = fontTools.ttx:main",
+			"pyftsubset = fontTools.subset:main",
+			"pyftmerge = fontTools.merge:main",
+			"pyftinspect = fontTools.inspect:main"
+		]
+	},
+	cmdclass=versioneer.get_cmdclass(),
+	**classifiers
+)

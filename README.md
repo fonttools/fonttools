@@ -1,7 +1,8 @@
-[![Travis Build Status](https://travis-ci.org/behdad/fonttools.svg)](https://travis-ci.org/behdad/fonttools)
-[![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/k0sa9nfhkeqc0s3c/branch/master?svg=true)](https://ci.appveyor.com/project/behdad/fonttools/branch/master)
+[![Travis Build Status](https://travis-ci.org/fonttools/fonttools.svg)](https://travis-ci.org/fonttools/fonttools)
+[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/0f7fmee9as744sl7/branch/master?svg=true)](https://ci.appveyor.com/project/fonttools/fonttools/branch/master)
 [![Health](https://landscape.io/github/behdad/fonttools/master/landscape.svg?style=flat)](https://landscape.io/github/behdad/fonttools/master)
-[![Coverage Status](https://img.shields.io/coveralls/behdad/fonttools.svg)](https://coveralls.io/r/behdad/fonttools)
+[![Coverage Status](https://coveralls.io/repos/github/fonttools/fonttools/badge.svg?branch=master)](https://coveralls.io/github/fonttools/fonttools?branch=master)
+[![PyPI](https://img.shields.io/pypi/v/fonttools.svg)](https://pypi.org/project/FontTools)
 
 ### What is this?
 
@@ -13,29 +14,33 @@ Among other things this means you can use it free of charge.
 
 ### Installation
 
-FontTools requires Python 2.7, or Python 3.3 or later.
-The fresh versions as well as older versions can be downloaded from <http://www.python.org/download/>
-  
-- Windows: grab the Windows installer, run the full install.
-- Un\*x: follow the build instructions.
-- MacOS: grab the installer, run "Easy Install"
+FontTools requires [Python](http://www.python.org/download/) 2.7, 3.4 or later.
 
-A package is available in pypi from <https://pypi.python.org/pypi/FontTools>
+The package is listed in the Python Package Index (PyPI), so you can install it with [`pip`](https://pip.pypa.io):
 
 ```sh
-easy_install pip ;
-pip install fonttools ;
+pip install fonttools
 ```
 
-For people who want to download and install fontools on your system from source code, run the following commands:
+If you would like to contribute to its development, you can clone the repository from Github, install the package in 'editable' mode and modify the source code in place. We recommend creating a virtual environment, using [`virtualenv`](https://virtualenv.pypa.io) or Python 3 [`venv`](https://docs.python.org/3/library/venv.html) module.
 
 ```sh
-git clone https://github.com/behdad/fonttools.git ;
-cd fonttools ;
-python setup.py install ;
-```
+# download the source code to 'fonttools' folder
+git clone https://github.com/fonttools/fonttools.git
+cd fonttools
 
-This will install all the modules and command line tools in the right places.
+# create new virtual environment called e.g. 'fonttools-venv', or anything you like
+python -m virtualenv fonttools-venv
+
+# source the `activate` shell script to enter the environment (Un\*x); to exit, just type `deactivate`
+. fonttools-venv/bin/activate
+
+# to activate the virtual environment in Windows `cmd.exe`, do
+fonttools-venv\Scripts\activate.bat
+
+# install in 'editable' mode
+pip install -e .
+```
 
 ### TTX – From OpenType and TrueType to XML and Back
 
@@ -43,8 +48,8 @@ Once installed you can use the `ttx` command to convert binary font files (`.otf
 TTX files have a .ttx file extension.
 
 ```sh
-ttx /path/to/font.otf ;
-ttx /path/to/font.ttx ;
+ttx /path/to/font.otf
+ttx /path/to/font.ttx
 ```
 
 The TTX application works can be used in two ways, depending on what platform you run it on:
@@ -71,11 +76,11 @@ These additional options include:
 The following tables are currently supported:
 <!-- begin table list -->
     BASE, CBDT, CBLC, CFF, COLR, CPAL, DSIG, EBDT, EBLC, FFTM, GDEF,
-    GMAP, GPKG, GPOS, GSUB, JSTF, LTSH, MATH, META, OS/2, SING, SVG,
-    TSI0, TSI1, TSI2, TSI3, TSI5, TSIB, TSID, TSIJ, TSIP, TSIS, TSIV,
-    VDMX, VORG, avar, cmap, cvt, feat, fpgm, fvar, gasp, glyf, gvar,
-    hdmx, head, hhea, hmtx, kern, loca, ltag, maxp, meta, name, post,
-    prep, sbix, trak, vhea and vmtx
+    GMAP, GPKG, GPOS, GSUB, HVAR, JSTF, LTSH, MATH, META, OS/2, SING,
+    STAT, SVG, TSI0, TSI1, TSI2, TSI3, TSI5, TSIB, TSID, TSIJ, TSIP,
+    TSIS, TSIV, VDMX, VORG, VVAR, avar, cmap, cvt, feat, fpgm, fvar,
+    gasp, glyf, gvar, hdmx, head, hhea, hmtx, kern, loca, ltag, maxp,
+    meta, name, post, prep, sbix, trak, vhea and vmtx
 <!-- end table list -->
 Other tables are dumped as hexadecimal data.
 
@@ -98,9 +103,9 @@ Because the order in which glyphs are stored inside the binary font is important
 Commands for inspecting, merging and subsetting fonts are also available:
 
 ```sh
-pyftinspect ;
-pyftmerge ;
-pyftsubset ;
+pyftinspect
+pyftmerge
+pyftsubset
 ```
 
 ### fontTools Python Module
@@ -115,15 +120,33 @@ The fontTools python module provides a convenient way to programmatically edit f
 >>>
 ```
 
-A selection of sample python programs is in the [Snippets](https://github.com/behdad/fonttools/blob/master/Snippets/) directory. 
+A selection of sample python programs is in the [Snippets](https://github.com/fonttools/fonttools/blob/master/Snippets/) directory. 
+
+### Testing
+
+To run the test suite, you can do:
+
+```sh
+python setup.py test
+```
+
+Or if you have [pytest](http://docs.pytest.org/en/latest/), you can run the `pytest` command directly.
+
+We also use [tox](https://testrun.org/tox/latest/) to automatically test on different Python versions in isolated virtual environments.
+
+```sh
+pip install -r dev-requirements.txt
+tox
+```
 
 ### Development Community
 
 TTX/FontTools development is ongoing in an active community of developers, that includes professional developers employed at major software corporations and type foundries as well as hobbyists. 
 
-Feature requests and bug reports are always welcome at <https://github.com/behdad/fonttools/issues/>
+Feature requests and bug reports are always welcome at <https://github.com/fonttools/fonttools/issues/>
 
 The best place for discussions about TTX from an end-user perspective as well as TTX/FontTools development is the <https://groups.google.com/d/forum/fonttools> mailing list.
+There is also a development <https://groups.google.com/d/forum/fonttools-dev> mailing list for continuous integration notifications.
 You can also email Behdad privately at <behdad@behdad.org>
 
 ### History
@@ -157,7 +180,7 @@ Greg Hitchcock,
 Jeremie Hornus,
 Khaled Hosny,
 John Hudson,
-Denis Jacquerye,
+Denis Moyogo Jacquerye,
 Jack Jansen, 
 Tom Kacvinsky, 
 Jens Kutilek,

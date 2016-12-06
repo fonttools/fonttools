@@ -589,7 +589,7 @@ class ClassDefBuilder(object):
         self.useClass0_ = useClass0
 
     def canAdd(self, glyphs):
-        glyphs = frozenset(glyphs)
+        glyphs = tuple(glyphs)
         if glyphs in self.classes_:
             return True
         for glyph in glyphs:
@@ -598,7 +598,7 @@ class ClassDefBuilder(object):
         return True
 
     def add(self, glyphs):
-        glyphs = frozenset(glyphs)
+        glyphs = tuple(glyphs)
         if glyphs in self.classes_:
             return
         self.classes_.add(glyphs)

@@ -120,17 +120,67 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			return None
 
 	def setName(self, string, nameID, platformID, platEncID, langID):
+		""" Set the 'string' for the name record identified by 'nameID', 'platformID',
+		'platEncID' and 'langID'. If a record with that nameID doesn't exist, create it
+		and append to the name table.
+
+		'string' can be of type `str` (`unicode` in PY2) or `bytes`. In the latter case,
+		it is assumed to be already encoded with the correct plaform-specific encoding
+		identified by the (platformID, platEncID, langID) triplet. A warning is issued
+		to prevent unexpected results.
+		"""
 		if not hasattr(self, 'names'):
 			self.names = []
+		if not isinstance(string, unicode):
+			if isinstance(string, bytes):
+				log.warning(
+					"name string is bytes, ensure it's correctly encoded: %r", string)
+			else:
+				raise TypeError(
+					"expected unicode or bytes, found %s: %r" % (
+						type(string).__name__, string))
 		namerecord = self.getName(nameID, platformID, platEncID, langID)
-		if namerecord is None:
-			namerecord = NameRecord()
-			namerecord.nameID = nameID
-			namerecord.platformID = platformID
-			namerecord.platEncID = platEncID
-			namerecord.langID = langID
-			self.names.append(namerecord)
-		namerecord.string = string.encode(namerecord.getEncoding())
+		if namerecord:
+			namerecord.string = string
+		else:
+			self.names.append(makeName(string, nameID, platformID, platEncID, langID))
+
+	def addName(self, string, platforms=((1, 0, 0), (3, 1, 0x409)), minNameID=255):
+		""" Add a new name record containing 'string' for each (platformID, platEncID,
+		langID) tuple specified in the 'platforms' list.
+
+		The nameID is assigned in the range between 'minNameID'+1 and 32767 (inclusive),
+		following the last nameID in the name table.
+
+		If no 'platforms' are specified, two English name records are added, one for the
+		Macintosh (platformID=0), and one for the Windows platform (3).
+
+		The 'string' must be a Unicode string, so it can be encoded with different,
+		platform-specific encodings.
+
+		Return the new nameID.
+		"""
+		assert len(platforms) > 0, \
+			"'platforms' must contain at least one (platformID, platEncID, langID) tuple"
+		if not hasattr(self, 'names'):
+			self.names = []
+		if not isinstance(string, unicode):
+			raise TypeError(
+				"expected %s, found %s: %r" % (
+					unicode.__name__, type(string).__name__,string ))
+		nameID = 1 + max([n.nameID for n in self.names] + [minNameID])
+		if nameID > 32767:
+			raise ValueError("nameID must be less than 32768")
+		for platformID, platEncID, langID in platforms:
+			self.names.append(makeName(string, nameID, platformID, platEncID, langID))
+		return nameID
+
+
+def makeName(string, nameID, platformID, platEncID, langID):
+	name = NameRecord()
+	name.string, name.nameID, name.platformID, name.platEncID, name.langID = (
+		string, nameID, platformID, platEncID, langID)
+	return name
 
 
 class NameRecord(object):

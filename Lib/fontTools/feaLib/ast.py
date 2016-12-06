@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.feaLib.error import FeatureLibError
+from collections import OrderedDict
 import itertools
 
 
@@ -34,7 +35,7 @@ class GlyphName(Expression):
         self.glyph = glyph
 
     def glyphSet(self):
-        return frozenset((self.glyph,))
+        return (self.glyph,)
 
 
 class GlyphClass(Expression):
@@ -44,7 +45,7 @@ class GlyphClass(Expression):
         self.glyphs = glyphs
 
     def glyphSet(self):
-        return frozenset(self.glyphs)
+        return tuple(self.glyphs)
 
 
 class GlyphClassName(Expression):
@@ -55,7 +56,7 @@ class GlyphClassName(Expression):
         self.glyphclass = glyphclass
 
     def glyphSet(self):
-        return frozenset(self.glyphclass.glyphs)
+        return tuple(self.glyphclass.glyphs)
 
 
 class MarkClassName(Expression):
@@ -67,6 +68,12 @@ class MarkClassName(Expression):
 
     def glyphSet(self):
         return self.markClass.glyphSet()
+
+
+class AnonymousBlock(Statement):
+    def __init__(self, tag, content, location):
+        Statement.__init__(self, location)
+        self.tag, self.content = tag, content
 
 
 class Block(Statement):
@@ -93,7 +100,14 @@ class FeatureBlock(Block):
     def build(self, builder):
         # TODO(sascha): Handle use_extension.
         builder.start_feature(self.location, self.name)
+        # language exclude_dflt statements modify builder.features_
+        # limit them to this block with temporary builder.features_
+        features = builder.features_
+        builder.features_ = {}
         Block.build(self, builder)
+        for key, value in builder.features_.items():
+            features.setdefault(key, []).extend(value)
+        builder.features_ = features
         builder.end_feature()
 
 
@@ -123,7 +137,7 @@ class GlyphClassDefinition(Statement):
         self.glyphs = glyphs
 
     def glyphSet(self):
-        return frozenset(self.glyphs)
+        return tuple(self.glyphs)
 
 
 class GlyphClassDefStatement(Statement):
@@ -136,11 +150,12 @@ class GlyphClassDefStatement(Statement):
         self.componentGlyphs = componentGlyphs
 
     def build(self, builder):
-        base = self.baseGlyphs.glyphSet() if self.baseGlyphs else set()
-        liga = self.ligatureGlyphs.glyphSet() if self.ligatureGlyphs else set()
-        mark = self.markGlyphs.glyphSet() if self.markGlyphs else set()
+        base = self.baseGlyphs.glyphSet() if self.baseGlyphs else tuple()
+        liga = self.ligatureGlyphs.glyphSet() \
+            if self.ligatureGlyphs else tuple()
+        mark = self.markGlyphs.glyphSet() if self.markGlyphs else tuple()
         comp = (self.componentGlyphs.glyphSet()
-                if self.componentGlyphs else set())
+                if self.componentGlyphs else tuple())
         builder.add_glyphClassDef(self.location, base, liga, mark, comp)
 
 
@@ -154,7 +169,7 @@ class MarkClass(object):
     def __init__(self, name):
         self.name = name
         self.definitions = []
-        self.glyphs = {}  # glyph --> ast.MarkClassDefinitions
+        self.glyphs = OrderedDict()  # glyph --> ast.MarkClassDefinitions
 
     def addDefinition(self, definition):
         assert isinstance(definition, MarkClassDefinition)
@@ -169,7 +184,7 @@ class MarkClass(object):
             self.glyphs[glyph] = definition
 
     def glyphSet(self):
-        return frozenset(self.glyphs.keys())
+        return tuple(self.glyphs.keys())
 
 
 class MarkClassDefinition(Statement):
@@ -641,3 +656,13 @@ class HheaField(Statement):
 
     def build(self, builder):
         builder.add_hhea_field(self.key, self.value)
+
+
+class VheaField(Statement):
+    def __init__(self, location, key, value):
+        Statement.__init__(self, location)
+        self.key = key
+        self.value = value
+
+    def build(self, builder):
+        builder.add_vhea_field(self.key, self.value)

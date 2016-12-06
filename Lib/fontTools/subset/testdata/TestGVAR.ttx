@@ -374,7 +374,7 @@
   </gasp>
 
   <GSUB>
-    <Version value="1.0"/>
+    <Version value="0x00010000"/>
   </GSUB>
 
   <avar>
@@ -394,31 +394,31 @@
       <MinValue>100.0</MinValue>
       <DefaultValue>400.0</DefaultValue>
       <MaxValue>900.0</MaxValue>
-      <NameID>257</NameID>
+      <AxisNameID>257</AxisNameID>
     </Axis>
 
     <!-- Thin -->
-    <NamedInstance nameID="258">
+    <NamedInstance subfamilyNameID="258">
       <coord axis="wght" value="100.0"/>
     </NamedInstance>
 
     <!-- Light -->
-    <NamedInstance nameID="259">
+    <NamedInstance subfamilyNameID="259">
       <coord axis="wght" value="300.0"/>
     </NamedInstance>
 
     <!-- Regular -->
-    <NamedInstance nameID="260">
+    <NamedInstance subfamilyNameID="260">
       <coord axis="wght" value="400.0"/>
     </NamedInstance>
 
     <!-- Bold -->
-    <NamedInstance nameID="261">
+    <NamedInstance subfamilyNameID="261">
       <coord axis="wght" value="700.0"/>
     </NamedInstance>
 
     <!-- Black -->
-    <NamedInstance nameID="262">
+    <NamedInstance subfamilyNameID="262">
       <coord axis="wght" value="900.0"/>
     </NamedInstance>
   </fvar>

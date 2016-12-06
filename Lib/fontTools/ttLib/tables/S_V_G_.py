@@ -99,7 +99,8 @@ colorRecord_format_0 = """
 
 class table_S_V_G_(DefaultTable.DefaultTable):
 
-	def __init__(self, object):
+	def __init__(self, tag=None):
+		DefaultTable.DefaultTable.__init__(self, tag)
 		self.colorPalettes = None
 
 	def decompile(self, data, ttFont):

@@ -10,6 +10,11 @@ import array
 import io
 import sys
 import struct
+import logging
+
+
+log = logging.getLogger(__name__)
+
 
 # Apple's documentation of 'gvar':
 # https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6gvar.html
@@ -284,7 +289,8 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		deltas_y, pos = GlyphVariation.decompileDeltas_(len(points), tupleData, pos)
 		deltas = [None] * numPointsInGlyph
 		for p, x, y in zip(points, deltas_x, deltas_y):
-				deltas[p] = (x, y)
+				if 0 <= p < numPointsInGlyph:
+					deltas[p] = (x, y)
 		return GlyphVariation(axes, deltas)
 
 	@staticmethod
@@ -421,6 +427,8 @@ class GlyphVariation(object):
 	def compile(self, axisTags, sharedCoordIndices, sharedPoints):
 		tupleData = []
 
+		assert all(tag in axisTags for tag in self.axes.keys()), ("Unknown axis tag found.", self.axes.keys(), axisTags)
+
 		coord = self.compileCoord(axisTags)
 		if coord in sharedCoordIndices:
 			flags = sharedCoordIndices[coord]
@@ -514,17 +522,21 @@ class GlyphVariation(object):
 
 		MAX_RUN_LENGTH = 127
 		pos = 0
+		lastValue = 0
 		while pos < numPoints:
 			run = io.BytesIO()
 			runLength = 0
-			lastValue = 0
-			useByteEncoding = (points[pos] <= 0xff)
+			useByteEncoding = None
 			while pos < numPoints and runLength <= MAX_RUN_LENGTH:
 				curValue = points[pos]
 				delta = curValue - lastValue
-				if useByteEncoding and delta > 0xff:
+				if useByteEncoding is None:
+					useByteEncoding = 0 <= delta <= 0xff
+				if useByteEncoding and (delta > 0xff or delta < 0):
 					# we need to start a new run (which will not use byte encoding)
 					break
+				# TODO This never switches back to a byte-encoding from a short-encoding.
+				# That's suboptimal.
 				if useByteEncoding:
 					run.write(bytechr(delta))
 				else:
@@ -570,17 +582,22 @@ class GlyphVariation(object):
 			if sys.byteorder != "big":
 				points.byteswap()
 
-
 			assert len(points) == numPointsInRun
 			pos += pointsSize
 
-			# Convert relative to absolute, and append
-			for delta in points:
-				point += delta
-				result.append(point)
+			result.extend(points)
 
-		if max(result) >= numPointsInGlyph:
-			raise TTLibError("malformed 'gvar' table")
+		# Convert relative to absolute
+		absolute = []
+		current = 0
+		for delta in result:
+			current += delta
+			absolute.append(current)
+		result = absolute
+		del absolute
+
+		if max(result) >= numPointsInGlyph or min(result) < 0:
+			log.warning("point number out of range in 'gvar' table")
 		return (result, pos)
 
 	def compileDeltas(self, points):

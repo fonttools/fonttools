@@ -18,7 +18,8 @@ __all__ = [
 
 from fontTools.misc.arrayTools import calcBounds
 
-epsilon = 1e-12
+epsilonDigits = 6
+epsilon = 1e-10
 
 
 def calcQuadraticBounds(pt1, pt2, pt3):
@@ -214,12 +215,14 @@ def _splitQuadraticAtT(a, b, c, *ts):
         t2 = ts[i+1]
         delta = (t2 - t1)
         # calc new a, b and c
-        a1x = ax * delta**2
-        a1y = ay * delta**2
+        delta_2 = delta*delta
+        a1x = ax * delta_2
+        a1y = ay * delta_2
         b1x = (2*ax*t1 + bx) * delta
         b1y = (2*ay*t1 + by) * delta
-        c1x = ax*t1**2 + bx*t1 + cx
-        c1y = ay*t1**2 + by*t1 + cy
+        t1_2 = t1*t1
+        c1x = ax*t1_2 + bx*t1 + cx
+        c1y = ay*t1_2 + by*t1 + cy
 
         pt1, pt2, pt3 = calcQuadraticPoints((a1x, a1y), (b1x, b1y), (c1x, c1y))
         segments.append((pt1, pt2, pt3))
@@ -239,15 +242,21 @@ def _splitCubicAtT(a, b, c, d, *ts):
         t1 = ts[i]
         t2 = ts[i+1]
         delta = (t2 - t1)
+
+        delta_2 = delta*delta
+        delta_3 = delta*delta_2
+        t1_2 = t1*t1
+        t1_3 = t1*t1_2
+
         # calc new a, b, c and d
-        a1x = ax * delta**3
-        a1y = ay * delta**3
-        b1x = (3*ax*t1 + bx) * delta**2
-        b1y = (3*ay*t1 + by) * delta**2
-        c1x = (2*bx*t1 + cx + 3*ax*t1**2) * delta
-        c1y = (2*by*t1 + cy + 3*ay*t1**2) * delta
-        d1x = ax*t1**3 + bx*t1**2 + cx*t1 + dx
-        d1y = ay*t1**3 + by*t1**2 + cy*t1 + dy
+        a1x = ax * delta_3
+        a1y = ay * delta_3
+        b1x = (3*ax*t1 + bx) * delta_2
+        b1y = (3*ay*t1 + by) * delta_2
+        c1x = (2*bx*t1 + cx + 3*ax*t1_2) * delta
+        c1y = (2*by*t1 + cy + 3*ay*t1_2) * delta
+        d1x = ax*t1_3 + bx*t1_2 + cx*t1 + dx
+        d1y = ay*t1_3 + by*t1_2 + cy*t1 + dy
         pt1, pt2, pt3, pt4 = calcCubicPoints((a1x, a1y), (b1x, b1y), (c1x, c1y), (d1x, d1y))
         segments.append((pt1, pt2, pt3, pt4))
     return segments
@@ -291,6 +300,19 @@ def solveCubic(a, b, c, d):
         a*x*x*x + b*x*x + c*x + d = 0
     This function returns a list of roots. Note that the returned list
     is neither guaranteed to be sorted nor to contain unique values!
+
+    >>> solveCubic(1, 1, -6, 0)
+    [-3.0, -0.0, 2.0]
+    >>> solveCubic(-10.0, -9.0, 48.0, -29.0)
+    [-2.9, 1.0, 1.0]
+    >>> solveCubic(-9.875, -9.0, 47.625, -28.75)
+    [-2.911392, 1.0, 1.0]
+    >>> solveCubic(1.0, -4.5, 6.75, -3.375)
+    [1.5, 1.5, 1.5]
+    >>> solveCubic(-12.0, 18.0, -9.0, 1.50023651123)
+    [0.5, 0.5, 0.5]
+    >>> solveCubic(9.0, 0.0, 0.0, -7.62939453125e-05)
+    [-0.0, -0.0, -0.0]
     """
     #
     # adapted from:
@@ -309,24 +331,46 @@ def solveCubic(a, b, c, d):
 
     Q = (a1*a1 - 3.0*a2)/9.0
     R = (2.0*a1*a1*a1 - 9.0*a1*a2 + 27.0*a3)/54.0
-    R2_Q3 = R*R - Q*Q*Q
 
-    if R2_Q3 < 0:
-        theta = acos(R/sqrt(Q*Q*Q))
+    R2 = R*R
+    Q3 = Q*Q*Q
+    R2 = 0 if R2 < epsilon else R2
+    Q3 = 0 if abs(Q3) < epsilon else Q3
+
+    R2_Q3 = R2 - Q3
+
+    if R2 == 0. and Q3 == 0.:
+        x = round(-a1/3.0, epsilonDigits)
+        return [x, x, x]
+    elif R2_Q3 <= epsilon * .5:
+        # The epsilon * .5 above ensures that Q3 is not zero.
+        theta = acos(max(min(R/sqrt(Q3), 1.0), -1.0))
         rQ2 = -2.0*sqrt(Q)
-        x0 = rQ2*cos(theta/3.0) - a1/3.0
-        x1 = rQ2*cos((theta+2.0*pi)/3.0) - a1/3.0
-        x2 = rQ2*cos((theta+4.0*pi)/3.0) - a1/3.0
+        a1_3 = a1/3.0
+        x0 = rQ2*cos(theta/3.0) - a1_3
+        x1 = rQ2*cos((theta+2.0*pi)/3.0) - a1_3
+        x2 = rQ2*cos((theta+4.0*pi)/3.0) - a1_3
+        x0, x1, x2 = sorted([x0, x1, x2])
+        # Merge roots that are close-enough
+        if x1 - x0 < epsilon and x2 - x1 < epsilon:
+            x0 = x1 = x2 = round((x0 + x1 + x2) / 3., epsilonDigits)
+        elif x1 - x0 < epsilon:
+            x0 = x1 = round((x0 + x1) / 2., epsilonDigits)
+            x2 = round(x2, epsilonDigits)
+        elif x2 - x1 < epsilon:
+            x0 = round(x0, epsilonDigits)
+            x1 = x2 = round((x1 + x2) / 2., epsilonDigits)
+        else:
+            x0 = round(x0, epsilonDigits)
+            x1 = round(x1, epsilonDigits)
+            x2 = round(x2, epsilonDigits)
         return [x0, x1, x2]
     else:
-        if Q == 0 and R == 0:
-            x = 0
-        else:
-            x = pow(sqrt(R2_Q3)+abs(R), 1/3.0)
-            x = x + Q/x
+        x = pow(sqrt(R2_Q3)+abs(R), 1/3.0)
+        x = x + Q/x
         if R >= 0.0:
             x = -x
-        x = x - a1/3.0
+        x = round(x - a1/3.0, epsilonDigits)
         return [x]
 
 

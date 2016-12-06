@@ -2,11 +2,13 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
+from fontTools.misc.fixedTools import (
+	ensureVersionIsLong as fi2ve, versionToFixed as ve2fi)
 from . import DefaultTable
 
 vheaFormat = """
 		>	# big endian
-		tableVersion:		16.16F
+		tableVersion:		L
 		ascent:			h
 		descent:		h
 		lineGap:		h
@@ -16,7 +18,7 @@ vheaFormat = """
 		yMaxExtent:		h
 		caretSlopeRise:		h
 		caretSlopeRun:		h
-		reserved0:		h
+		caretOffset:		h
 		reserved1:		h
 		reserved2:		h
 		reserved3:		h
@@ -37,6 +39,7 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 	def compile(self, ttFont):
 		if ttFont.isLoaded('glyf') and ttFont.recalcBBoxes:
 			self.recalc(ttFont)
+		self.tableVersion = fi2ve(self.tableVersion)
 		return sstruct.pack(vheaFormat, self)
 
 	def recalc(self, ttFont):
@@ -83,8 +86,23 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 		formatstring, names, fixes = sstruct.getformat(vheaFormat)
 		for name in names:
 			value = getattr(self, name)
+			if name == "tableVersion":
+				value = fi2ve(value)
+				value = "0x%08x" % value
 			writer.simpletag(name, value=value)
 			writer.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
+		if name == "tableVersion":
+			setattr(self, name, ve2fi(attrs["value"]))
+			return
 		setattr(self, name, safeEval(attrs["value"]))
+
+	# reserved0 is caretOffset for legacy reasons
+	@property
+	def reserved0(self):
+		return self.caretOffset
+
+	@reserved0.setter
+	def reserved0(self, value):
+		self.caretOffset = value

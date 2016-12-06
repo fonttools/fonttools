@@ -1070,11 +1070,13 @@ class GlyphComponent(object):
 				data = data + struct.pack(">HH", self.firstPt, self.secondPt)
 				flags = flags | ARG_1_AND_2_ARE_WORDS
 		else:
+			x = int(round(self.x))
+			y = int(round(self.y))
 			flags = flags | ARGS_ARE_XY_VALUES
-			if (-128 <= self.x <= 127) and (-128 <= self.y <= 127):
-				data = data + struct.pack(">bb", self.x, self.y)
+			if (-128 <= x <= 127) and (-128 <= y <= 127):
+				data = data + struct.pack(">bb", x, y)
 			else:
-				data = data + struct.pack(">hh", self.x, self.y)
+				data = data + struct.pack(">hh", x, y)
 				flags = flags | ARG_1_AND_2_ARE_WORDS
 
 		if hasattr(self, "transform"):
@@ -1198,12 +1200,17 @@ class GlyphCoordinates(object):
 		if isinstance(k, slice):
 			indices = range(*k.indices(len(self)))
 			# XXX This only works if len(v) == len(indices)
-			# TODO Implement __delitem__
 			for j,i in enumerate(indices):
 				self[i] = v[j]
 			return
 		v = self._checkFloat(v)
 		self._a[2*k],self._a[2*k+1] = v
+
+	def __delitem__(self, i):
+		i = (2*i) % len(self._a)
+		del self._a[i]
+		del self._a[i]
+
 
 	def __repr__(self):
 		return 'GlyphCoordinates(['+','.join(str(c) for c in self)+'])'
@@ -1389,6 +1396,7 @@ class GlyphCoordinates(object):
 			self.translate(other)
 			return self
 		if isinstance(other, GlyphCoordinates):
+			if other.isFloat(): self._ensureFloat()
 			other = other._a
 			a = self._a
 			assert len(a) == len(other)
@@ -1413,6 +1421,7 @@ class GlyphCoordinates(object):
 			self.translate((-other[0],-other[1]))
 			return self
 		if isinstance(other, GlyphCoordinates):
+			if other.isFloat(): self._ensureFloat()
 			other = other._a
 			a = self._a
 			assert len(a) == len(other)

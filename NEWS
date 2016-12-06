@@ -1,3 +1,77 @@
+## TTX/FontTools Version 3.3.0
+
+- [ttLib] Implemented STAT table from OpenType 1.8 (#758)
+- [cffLib] Fixed decompilation of CFF fonts containing non-standard key/value pairs in FontDict (issue #740; PR #744)
+- [py23] minor: in `round3` function, allow the second argument to be `None` (#757)
+- The standalone `sstruct` and `xmlWriter` modules, deprecated since vesion 3.2.0, have been removed. They can be imported from the `fontTools.misc` package.
+
+## TTX/FontTools Version 3.2.3
+
+- [py23] optimized performance of round3 function; added backport for py35 math.isclose() (9d8dacb)
+- [subset] fixed issue with 'narrow' (UCS-2) Python 2 builds and --text/--text-file options containing non-BMP chararcters (16d0e5e)
+- [varLib] fixed issuewhen normalizing location values (8fa2ee1, #749)
+- [inspect] Made it compatible with both python2 and python3 (167ee60, #748). Thanks @pnemade
+
+## TTX/FontTools Version 3.2.2
+
+- [varLib] Do not emit null axes in fvar (1bebcec). Thanks @robmck-ms
+- [varLib] Handle fonts without GPOS (7915a45)
+- [merge] Ignore LangSys if None (a11bc56)
+- [subset] Fix subsetting MathVariants (78d3cbe)
+- [OS/2] Fix "Private Use (plane 15)" range (08a0d55). Thanks @mashabow
+
+## TTX/FontTools Version 3.2.1
+
+- [OS/2] fix checking `fsSelection` bits matching `head.macStyle` bits
+- [varLib] added `--build-HVAR` option to generate `HVAR` table for fonts with TrueType outlines. For `CFF2`, it is enabled by default.
+
+## TTX/FontTools Version 3.2.0
+
+- [varLib] Improve support for OpenType 1.8 Variable Fonts:
+  * Implement GDEF's VariationStore
+  * Implement HVAR/VVAR tables
+  * Partial support for loading MutatorMath .designspace files with varLib.designspace module
+  * Add varLib.models with Variation fonts interpolation models
+  * Implement GSUB/GPOS FeatureVariations
+  * Initial support for interpolating and merging OpenType Layout tables (see varLib.interpolate_layout and varLib.merger)
+- [API change] Change version to be an integer instead of a float in XML output for GSUB, GPOS, GDEF, MATH, BASE, JSTF, HVAR, VVAR, feat, hhea and vhea tables. Scripts that set the Version for those to 1.0 or other float values also need fixing. A warning is emitted when code or XML needs fix.
+- several bug fixes to the cffLib module, contributed by Adobe's @readroberts
+- The XML output for CFF table now has a 'major' and 'minor' elements for specifying whether it's version 1.0 or 2.0 (support for CFF2 is coming soon)
+- [setup.py] remove undocumented/deprecated 'extra_path' Distutils argument. This means that we no longer create a "FontTools" subfolder in site-packages containing the actual fontTools package, as well as the standalone xmlWriter and sstruct modules. The latter modules are also deprecated, and scheduled for removal in upcoming releases. Please change your import statements to point to from fontTools.misc import xmlWriter and from fontTools.misc import sstruct.
+- [scripts] Add a 'fonttools' command-line tool that simply runs fontTools.* sub-modules: e.g. `fonttools ttx`, `fonttools subset`, etc.
+- [hmtx/vmts] Read advance width/heights as unsigned short (uint16); automatically round float values to integers.
+- [ttLib/xmlWriter] add 'newlinestr=None' keyword argument to `TTFont.saveXML` for overriding os-specific line endings (passed on to `XMLWriter` instances).
+- [versioning] Use versioneer instead of setuptools_scm to dynamically load version info from a git checkout at import time.
+- [feaLib] Support backslash-prefixed glyph names.
+
+## TTX/FontTools Version 3.1.2
+
+- restore Makefile as an alternative way to build/check/install
+- README.md: update instructions for installing package from source, and for running test suite
+- NEWS: Change log was out of sync with tagged release
+
+## TTX/FontTools Version 3.1.1
+
+- Fix 'ttLibVersion' attribute in TTX files still showing '3.0' instead of '3.1'.
+- Use setuptools_scm to manage package versions.
+
+## TTX/FontTools Version 3.1.0
+
+- [feaLib] New library to parse and compile Adobe FDK OpenType Feature files.
+- [mtiLib] New library to parse and compile Monotype 'FontDame' OpenType Layout Tables files.
+- [voltLib] New library to parse Microsoft VOLT project files.
+- [otlLib] New library to work with OpenType Layout tables.
+- [varLib] New library to work with OpenType Font Variations.
+- [pens] Add ttGlyphPen to draw to TrueType glyphs, and t2CharStringPen to draw to Type 2 Charstrings (CFF); add areaPen and perimeterPen.
+- [ttLib.tables] Implement 'meta' and 'trak' tables.
+- [ttx] Add --flavor option for compiling to 'woff' or 'woff2'; add --with-zopfli option to use Zopfli to compress WOFF 1.0 fonts.
+- [subset] Support subsetting 'COLR'/'CPAL' and 'CBDT'/'CBLC' color fonts tables, and 'gvar' table for variation fonts.
+- [Snippets] Add symfont.py, for symbolic font statistics analysis; interpolatable.py, a preliminary script for detecting interpolation errors; {merge,dump}_woff_metadata.py.
+- [classifyTools] Helpers to classify things into classes.
+- [CI] Run tests on Windows, Linux and macOS using Appveyor and Travis CI; check unit test coverage with Coverage.py/Coveralls; automatic deployment to PyPI on tags.
+- [loggingTools] Use Python built-in logging module to print messages.
+- [py23] Make round() behave like Python 3 built-in round(); define round2() and round3().
+
 ## TTX/FontTools Version 3.0
 
 2015-09-01 <https://github.com/behdad/fonttools/commit/58f86f318af8b2f8b553e8cceef678d6ce0017c5>

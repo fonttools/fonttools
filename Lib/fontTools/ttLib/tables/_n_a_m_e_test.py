@@ -3,17 +3,11 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.xmlWriter import XMLWriter
+from fontTools.misc.loggingTools import CapturingLogHandler
 import struct
 import unittest
 from ._n_a_m_e import table__n_a_m_e, NameRecord, nameRecordFormat, nameRecordSize
-
-
-def makeName(text, nameID, platformID, platEncID, langID):
-	name = NameRecord()
-	name.nameID, name.platformID, name.platEncID, name.langID = (
-		nameID, platformID, platEncID, langID)
-	name.string = tobytes(text, encoding=name.getEncoding())
-	return name
+from ._n_a_m_e import makeName, log
 
 
 class NameTableTest(unittest.TestCase):
@@ -42,6 +36,36 @@ class NameTableTest(unittest.TestCase):
 		table.setName("緊縮", 276, 1, 2, 0x13)
 		self.assertEqual("緊縮", table.getName(276, 1, 2, 0x13).toUnicode())
 		self.assertTrue(len(table.names) == 3)
+		# passing bytes issues a warning
+		with CapturingLogHandler(log, "WARNING") as captor:
+			table.setName(b"abc", 0, 1, 0, 0)
+		self.assertTrue(
+			len([r for r in captor.records if "string is bytes" in r.msg]) == 1)
+		# anything other than unicode or bytes raises an error
+		with self.assertRaises(TypeError):
+			table.setName(1.000, 5, 1, 0, 0)
+
+	def test_addName(self):
+		table = table__n_a_m_e()
+		nameIDs = []
+		for string in ("Width", "Weight", "Custom"):
+			nameIDs.append(table.addName(string))
+
+		self.assertEqual(nameIDs[0], 256)
+		self.assertEqual(nameIDs[1], 257)
+		self.assertEqual(nameIDs[2], 258)
+		self.assertEqual(len(table.names), 6)
+		self.assertEqual(table.names[0].string, "Width")
+		self.assertEqual(table.names[1].string, "Width")
+		self.assertEqual(table.names[2].string, "Weight")
+		self.assertEqual(table.names[3].string, "Weight")
+		self.assertEqual(table.names[4].string, "Custom")
+		self.assertEqual(table.names[5].string, "Custom")
+
+		with self.assertRaises(ValueError):
+			table.addName('Invalid nameID', minNameID=32767)
+		with self.assertRaises(TypeError):
+			table.addName(b"abc")  # must be unicode string
 
 	def test_decompile_badOffset(self):
                 # https://github.com/behdad/fonttools/issues/525

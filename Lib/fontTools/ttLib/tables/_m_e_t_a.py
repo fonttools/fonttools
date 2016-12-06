@@ -26,7 +26,7 @@ DATA_MAP_FORMAT = """
 
 
 class table__m_e_t_a(DefaultTable.DefaultTable):
-    def __init__(self, tag="meta"):
+    def __init__(self, tag=None):
         DefaultTable.DefaultTable.__init__(self, tag)
         self.data = {}
 

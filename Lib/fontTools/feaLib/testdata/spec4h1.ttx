@@ -2,7 +2,7 @@
 <ttFont>
 
   <GSUB>
-    <Version value="1.0"/>
+    <Version value="0x00010000"/>
     <ScriptList>
       <!-- ScriptCount=3 -->
       <ScriptRecord index="0">
@@ -11,8 +11,8 @@
           <DefaultLangSys>
             <ReqFeatureIndex value="65535"/>
             <!-- FeatureCount=2 -->
-            <FeatureIndex index="0" value="0"/>
-            <FeatureIndex index="1" value="1"/>
+            <FeatureIndex index="0" value="2"/>
+            <FeatureIndex index="1" value="3"/>
           </DefaultLangSys>
           <!-- LangSysCount=0 -->
         </Script>
@@ -23,8 +23,8 @@
           <DefaultLangSys>
             <ReqFeatureIndex value="65535"/>
             <!-- FeatureCount=2 -->
-            <FeatureIndex index="0" value="0"/>
-            <FeatureIndex index="1" value="1"/>
+            <FeatureIndex index="0" value="2"/>
+            <FeatureIndex index="1" value="3"/>
           </DefaultLangSys>
           <!-- LangSysCount=0 -->
         </Script>
@@ -35,8 +35,8 @@
           <DefaultLangSys>
             <ReqFeatureIndex value="65535"/>
             <!-- FeatureCount=2 -->
-            <FeatureIndex index="0" value="0"/>
-            <FeatureIndex index="1" value="1"/>
+            <FeatureIndex index="0" value="1"/>
+            <FeatureIndex index="1" value="3"/>
           </DefaultLangSys>
           <!-- LangSysCount=2 -->
           <LangSysRecord index="0">
@@ -45,7 +45,7 @@
               <ReqFeatureIndex value="65535"/>
               <!-- FeatureCount=2 -->
               <FeatureIndex index="0" value="0"/>
-              <FeatureIndex index="1" value="1"/>
+              <FeatureIndex index="1" value="3"/>
             </LangSys>
           </LangSysRecord>
           <LangSysRecord index="1">
@@ -53,15 +53,15 @@
             <LangSys>
               <ReqFeatureIndex value="65535"/>
               <!-- FeatureCount=2 -->
-              <FeatureIndex index="0" value="0"/>
-              <FeatureIndex index="1" value="1"/>
+              <FeatureIndex index="0" value="1"/>
+              <FeatureIndex index="1" value="3"/>
             </LangSys>
           </LangSysRecord>
         </Script>
       </ScriptRecord>
     </ScriptList>
     <FeatureList>
-      <!-- FeatureCount=2 -->
+      <!-- FeatureCount=4 -->
       <FeatureRecord index="0">
         <FeatureTag value="liga"/>
         <Feature>
@@ -72,6 +72,21 @@
         </Feature>
       </FeatureRecord>
       <FeatureRecord index="1">
+        <FeatureTag value="liga"/>
+        <Feature>
+          <!-- LookupCount=2 -->
+          <LookupListIndex index="0" value="1"/>
+          <LookupListIndex index="1" value="2"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="2">
+        <FeatureTag value="liga"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="1"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="3">
         <FeatureTag value="smcp"/>
         <Feature>
           <!-- LookupCount=1 -->

@@ -1,8 +1,10 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools import subset
-from fontTools.ttLib import TTFont
+from fontTools.ttLib import TTFont, newTable
+from fontTools.misc.loggingTools import CapturingLogHandler
 import difflib
+import logging
 import os
 import shutil
 import sys
@@ -147,6 +149,82 @@ class SubsetTest(unittest.TestCase):
         subsetfont = TTFont(subsetpath)
         self.assertTrue("x" in subsetfont['CBDT'].strikeData[0])
         self.assertTrue("y" in subsetfont['CBDT'].strikeData[0])
+
+    def test_timing_publishes_parts(self):
+        _, fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+
+        options = subset.Options()
+        options.timing = True
+        subsetter = subset.Subsetter(options)
+        subsetter.populate(text='ABC')
+        font = TTFont(fontpath)
+        with CapturingLogHandler('fontTools.subset.timer', logging.DEBUG) as captor:
+            captor.logger.propagate = False
+            subsetter.subset(font)
+            logs = captor.records
+        captor.logger.propagate = True
+
+        self.assertTrue(len(logs) > 5)
+        self.assertEqual(len(logs), len([l for l in logs if 'msg' in l.args and 'time' in l.args]))
+        # Look for a few things we know should happen
+        self.assertTrue(filter(lambda l: l.args['msg'] == "load 'cmap'", logs))
+        self.assertTrue(filter(lambda l: l.args['msg'] == "subset 'cmap'", logs))
+        self.assertTrue(filter(lambda l: l.args['msg'] == "subset 'glyf'", logs))
+
+    def test_passthrough_tables(self):
+        _, fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
+        font = TTFont(fontpath)
+        unknown_tag = 'ZZZZ'
+        unknown_table = newTable(unknown_tag)
+        unknown_table.data = b'\0'*10
+        font[unknown_tag] = unknown_table
+        font.save(fontpath)
+
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+
+        # tables we can't subset are dropped by default
+        self.assertFalse(unknown_tag in subsetfont)
+
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--passthrough-tables", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+
+        # unknown tables are kept if --passthrough-tables option is passed
+        self.assertTrue(unknown_tag in subsetfont)
+
+    def test_non_BMP_text_arg_input(self):
+        _, fontpath = self.compile_font(
+            self.getpath("TestTTF-Regular_non_BMP_char.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        text = tostr(u"A\U0001F6D2", encoding='utf-8')
+
+        subset.main([fontpath, "--text=%s" % text, "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+
+        self.assertEqual(subsetfont['maxp'].numGlyphs, 3)
+        self.assertEqual(subsetfont.getGlyphOrder(), ['.notdef', 'A', 'u1F6D2'])
+
+    def test_non_BMP_text_file_input(self):
+        _, fontpath = self.compile_font(
+            self.getpath("TestTTF-Regular_non_BMP_char.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        text = tobytes(u"A\U0001F6D2", encoding='utf-8')
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            tmp.write(text)
+
+        try:
+            subset.main([fontpath, "--text-file=%s" % tmp.name,
+                         "--output-file=%s" % subsetpath])
+            subsetfont = TTFont(subsetpath)
+        finally:
+            os.remove(tmp.name)
+
+        self.assertEqual(subsetfont['maxp'].numGlyphs, 3)
+        self.assertEqual(subsetfont.getGlyphOrder(), ['.notdef', 'A', 'u1F6D2'])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -8,35 +8,20 @@ matrix:
       env: TOXENV=py27
     - python: 2.7
       env: TOXENV=jython
-    - python: 3.3
-      env: TOXENV=py33
     - python: 3.4
       env: TOXENV=py34
     - python: 3.5
-      env: TOXENV=py35
+      env:
+        - TOXENV=py35
+        - BUILD_DIST=true
     - python: pypy
       env: TOXENV=pypy
     - language: generic
       os: osx
-      # the default 'osx' on Travis is 10.9 Mavericks, with Python 2.7.5
       env: TOXENV=py27
-    - language: generic
-      os: osx
-      # this is to test on 10.11 El Capitan which comes with Python 2.7.10
-      osx_image: osx10.11
-      env: TOXENV=py27
-    - language: generic
-      os: osx
-      env: TOXENV=py33
-    - language: generic
-      os: osx
-      env: TOXENV=py34
     - language: generic
       os: osx
       env: TOXENV=py35
-    - language: generic
-      os: osx
-      env: TOXENV=pypy
     # coveralls is not listed in tox's envlist, but should run in travis
     - python: 3.5
       env: TOXENV=coveralls
@@ -47,6 +32,35 @@ install:
 script:
   - ./.travis/run.sh
 
+before_deploy:
+  - ./.travis/before_deploy.sh
+
 notifications:
   irc: "irc.freenode.org##fonts"
-  email: fonttools@googlegroups.com
+  email: fonttools-dev@googlegroups.com
+
+deploy:
+  # deploy to Github Releases on tags
+  - provider: releases
+    api_key:
+      secure: KEcWhJxMcnKay7wmWJCpg2W5GWHTQ+LaRbqGM11IKGcQuEOFxWuG7W1xjGpVdKPj/MQ+cG0b9hGUFpls1hwseOA1HANMv4xjCgYkuvT1OdpX/KOcZ7gfe/qaovzVxHyP9xwohnHSJMb790t37fmDfFUSROx3iEexIX09LLoDjO8=
+    skip_cleanup: true
+    file_glob: true
+    file: "dist/*"
+    on:
+      tags: true
+      repo: fonttools/fonttools
+      all_branches: true
+      condition: "$BUILD_DIST == true"
+  # deploy to PyPI on tags
+  - provider: pypi
+    server: https://upload.pypi.org/legacy/
+    user: anthrotype
+    password:
+      secure: Dz3x8kh4ergBV6qZUgcGVDOEzjoCEFzzQiO5WVw4Zfi04DD8+d1ghmMz2BY4UvoVKSsFrfKDuEB3MCWyqewJsf/zoZQczk/vnWVFjERROieyO1Ckzpz/WkCvbjtniIE0lxzB7zorSV+kGI9VigGAaRlXJyU7mCFojeAFqD6cjS4=
+    distributions: "sdist bdist_wheel"
+    on:
+      tags: true
+      repo: fonttools/fonttools
+      all_branches: true
+      condition: "$BUILD_DIST == true"

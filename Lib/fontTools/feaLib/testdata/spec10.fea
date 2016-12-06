@@ -1,0 +1,12 @@
+# OpenType Feature File specification, section 10.
+# http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html
+
+anon sbit {
+    /* sbit table specifications */
+    72  % dpi
+    sizes {
+        10, 12, 14 source {
+            all "Generic/JGeneric"
+        }
+    }
+} sbit;

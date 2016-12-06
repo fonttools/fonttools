@@ -3,19 +3,21 @@
 # FontDame-to-FontTools for OpenType Layout tables
 #
 # Source language spec is available at:
-# https://rawgit.com/Monotype/OpenType_Table_Source/master/otl_source.html
+# http://monotype.github.io/OpenType_Table_Source/otl_source.html
 # https://github.com/Monotype/OpenType_Table_Source/
 
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.misc.py23 import *
 from fontTools import ttLib
+from fontTools.ttLib.tables._c_m_a_p import cmap_classes
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
 from fontTools.otlLib import builder as otl
 from contextlib import contextmanager
 from operator import setitem
 import logging
+import warnings
 
 class MtiLibError(Exception): pass
 class ReferenceNotFoundError(MtiLibError): pass
@@ -27,11 +29,12 @@ log = logging.getLogger(__name__)
 
 
 def makeGlyph(s):
-	if s[:2] == 'U ':
+	if s[:2] in ['U ', 'u ']:
 		return ttLib.TTFont._makeGlyphName(int(s[2:], 16))
 	elif s[:2] == '# ':
 		return "glyph%.5d" % int(s[2:])
 	assert s.find(' ') < 0, "Space found in glyph name: %s" % s
+	assert s, "Glyph name is empty"
 	return s
 
 def makeGlyphs(l):
@@ -682,6 +685,7 @@ def parseContext(self, lines, font, Type, lookupMap=None):
 		rules = []
 		for line in lines:
 			assert line[0].lower() == 'glyph', line[0]
+			while len(line) < 1+c.DataLen: line.append('')
 			seq = tuple(makeGlyphs(stripSplitComma(i)) for i in line[1:1+c.DataLen])
 			recs = parseLookupRecords(line[1+c.DataLen:], c.LookupRecord, lookupMap)
 			rules.append((seq, recs))
@@ -712,6 +716,7 @@ def parseContext(self, lines, font, Type, lookupMap=None):
 		rules = []
 		for line in lines:
 			assert line[0].lower().startswith('class'), line[0]
+			while len(line) < 1+c.DataLen: line.append('')
 			seq = tuple(intSplitComma(i) for i in line[1:1+c.DataLen])
 			recs = parseLookupRecords(line[1+c.DataLen:], c.LookupRecord, lookupMap)
 			rules.append((seq, recs))
@@ -836,6 +841,7 @@ def parseLookup(lines, tableTag, font, lookupMap=None):
 	return lookup
 
 def parseGSUBGPOS(lines, font, tableTag):
+	container = ttLib.getTableClass(tableTag)()
 	lookupMap = DeferredMapping()
 	featureMap = DeferredMapping()
 	assert tableTag in ('GSUB', 'GPOS')
@@ -883,7 +889,8 @@ def parseGSUBGPOS(lines, font, tableTag):
 		lookupMap.applyDeferredMappings()
 	if featureMap is not None:
 		featureMap.applyDeferredMappings()
-	return self
+	container.table = self
+	return container
 
 def parseGSUB(lines, font):
 	return parseGSUBGPOS(lines, font, 'GSUB')
@@ -934,6 +941,7 @@ def parseMarkFilteringSets(lines, font):
 	return makeMarkFilteringSets(sets, font)
 
 def parseGDEF(lines, font):
+	container = ttLib.getTableClass('GDEF')()
 	log.debug("Parsing GDEF")
 	self = ot.GDEF()
 	fields = {
@@ -962,14 +970,48 @@ def parseGDEF(lines, font):
 		assert getattr(self, attr) is None, attr
 		setattr(self, attr, parser(lines, font))
 	self.Version = 1.0 if self.MarkGlyphSetsDef is None else 0x00010002
-	return self
+	container.table = self
+	return container
+
+def parseCmap(lines, font):
+	container = ttLib.getTableClass('cmap')()
+	log.debug("Parsing cmap")
+	tables = []
+	while lines.peek() is not None:
+		lines.expect('cmap subtable %d' % len(tables))
+		platId, encId, fmt, lang = [
+			parseCmapId(lines, field)
+			for field in ('platformID', 'encodingID', 'format', 'language')]
+		table = cmap_classes[fmt](fmt)
+		table.platformID = platId
+		table.platEncID = encId
+		table.language = lang
+		table.cmap = {}
+		line = next(lines)
+		while line[0] != 'end subtable':
+			table.cmap[int(line[0], 16)] = line[1]
+			line = next(lines)
+		tables.append(table)
+	container.tableVersion = 0
+	container.tables = tables
+	return container
+
+def parseCmapId(lines, field):
+	line = next(lines)
+	assert field == line[0]
+	return int(line[1])
 
 def parseTable(lines, font, tableTag=None):
 	log.debug("Parsing table")
 	line = lines.peek()
+	tag = None
 	if line[0].split()[0] == 'FontDame':
+		tag = line[0].split()[1]
+	elif ' '.join(line[0].split()[:3]) == 'Font Chef Table':
+		tag = line[0].split()[3]
+	if tag is not None:
 		next(lines)
-		tag = line[0].split()[1].ljust(4)
+		tag = tag.ljust(4)
 		if tableTag is None:
 			tableTag = tag
 		else:
@@ -977,25 +1019,24 @@ def parseTable(lines, font, tableTag=None):
 
 	assert tableTag is not None, "Don't know what table to parse and data doesn't specify"
 
-	container = ttLib.getTableClass(tableTag)()
-	table = {'GSUB': parseGSUB,
-		 'GPOS': parseGPOS,
-		 'GDEF': parseGDEF,
+	return {
+		'GSUB': parseGSUB,
+		'GPOS': parseGPOS,
+		'GDEF': parseGDEF,
+		'cmap': parseCmap,
 		}[tableTag](lines, font)
-	container.table = table
-	return container
 
 class Tokenizer(object):
 
 	def __init__(self, f):
 		# TODO BytesIO / StringIO as needed?  also, figure out whether we work on bytes or unicode
 		lines = iter(f)
-		lines = ([s.strip() for s in line.split('\t')] for line in lines)
 		try:
 			self.filename = f.name
 		except:
 			self.filename = None
-		self.lines = lines
+		self.lines = iter(lines)
+		self.line = ''
 		self.lineno = 0
 		self.stoppers = []
 		self.buffer = None
@@ -1005,13 +1046,21 @@ class Tokenizer(object):
 
 	def _next_line(self):
 		self.lineno += 1
-		return next(self.lines)
+		line = self.line = next(self.lines)
+		line = [s.strip() for s in line.split('\t')]
+		if len(line) == 1 and not line[0]:
+			del line[0]
+		if line and not line[-1]:
+			warnings.warn('trailing tab found on line %d: %s' % (self.lineno, self.line))
+			while line and not line[-1]:
+				del line[-1]
+		return line
 
 	def _next_nonempty(self):
 		while True:
 			line = self._next_line()
 			# Skip comments and empty lines
-			if line[0] and (line[0][0] != '%' or line[0] == '% subtable'):
+			if line and line[0] and (line[0][0] != '%' or line[0] == '% subtable'):
 				return line
 
 	def _next_buffered(self):

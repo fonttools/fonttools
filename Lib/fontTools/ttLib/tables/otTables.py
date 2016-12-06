@@ -6,6 +6,7 @@ converter objects from otConverters.py.
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.textTools import safeEval
 from .otBase import BaseTable, FormatSwitchingBaseTable
 import operator
 import logging
@@ -133,6 +134,91 @@ class Coverage(FormatSwitchingBaseTable):
 		glyphs.append(attrs["value"])
 
 
+class VarIdxMap(BaseTable):
+
+	def postRead(self, rawTable, font):
+		assert (rawTable['EntryFormat'] & 0xFFC0) == 0
+		self.mapping = rawTable['mapping']
+
+	def preWrite(self, font):
+		mapping = getattr(self, "mapping", None)
+		if mapping is None:
+			mapping = self.mapping = []
+		rawTable = { 'mapping': mapping }
+		rawTable['MappingCount'] = len(mapping)
+
+		# TODO Remove this abstraction/optimization and move it varLib.builder?
+
+		ored = 0
+		for idx in mapping:
+			ored |= idx
+
+		inner = ored & 0xFFFF
+		innerBits = 0
+		while inner:
+			innerBits += 1
+			inner >>= 1
+		innerBits = max(innerBits, 1)
+		assert innerBits <= 16
+
+		ored = (ored >> (16-innerBits)) | (ored & ((1<<innerBits)-1))
+		if   ored <= 0x000000FF:
+			entrySize = 1
+		elif ored <= 0x0000FFFF:
+			entrySize = 2
+		elif ored <= 0x00FFFFFF:
+			entrySize = 3
+		else:
+			entrySize = 4
+
+		entryFormat = ((entrySize - 1) << 4) | (innerBits - 1)
+
+		rawTable['EntryFormat'] = entryFormat
+		return rawTable
+
+	def toXML2(self, xmlWriter, font):
+		for i, value in enumerate(getattr(self, "mapping", [])):
+			attrs = (
+				('index', i),
+				('outer', value >> 16),
+				('inner', value & 0xFFFF),
+			)
+			xmlWriter.simpletag("Map", attrs)
+			xmlWriter.newline()
+
+	def fromXML(self, name, attrs, content, font):
+		mapping = getattr(self, "mapping", None)
+		if mapping is None:
+			mapping = []
+			self.mapping = mapping
+		outer = safeEval(attrs['outer'])
+		inner = safeEval(attrs['inner'])
+		assert inner <= 0xFFFF
+		mapping.append((outer << 16) | inner)
+
+
+class VarData(BaseTable):
+
+	def preWrite(self, font):
+		rawTable = self.__dict__.copy()
+
+		# TODO Remove this abstraction/optimization and move it varLib.builder?
+
+		numShorts = 0
+		count = len(self.VarRegionIndex)
+		for item in self.Item:
+			assert len(item) == count, ("Item length mismatch", len(item), count)
+			for i in range(count - 1, numShorts - 1, -1):
+				if not (-128 <= item[i] <= 127):
+					numShorts = i + 1
+					break
+			if numShorts == count:
+				break
+
+		rawTable['NumShorts'] = numShorts
+		return rawTable
+
+
 class SingleSubst(FormatSwitchingBaseTable):
 
 	def postRead(self, rawTable, font):
@@ -173,7 +259,11 @@ class SingleSubst(FormatSwitchingBaseTable):
 			if (inID + delta) % 65536 != outID:
 					break
 		else:
-			format = 1
+			if delta is None:
+				# the mapping is empty, better use format 2
+				format = 2
+			else:
+				format = 1
 
 		rawTable = {}
 		self.Format = format
@@ -698,7 +788,31 @@ def splitPairPos(oldSubTable, newSubTable, overflowRecord):
 	st = oldSubTable
 	ok = False
 	newSubTable.Format = oldSubTable.Format
-	if oldSubTable.Format == 2 and len(oldSubTable.Class1Record) > 1:
+	if oldSubTable.Format == 1 and len(oldSubTable.PairSet) > 1:
+		for name in 'ValueFormat1', 'ValueFormat2':
+			setattr(newSubTable, name, getattr(oldSubTable, name))
+
+		# Move top half of coverage to new subtable
+
+		newSubTable.Coverage = oldSubTable.Coverage.__class__()
+
+		coverage = oldSubTable.Coverage.glyphs
+		records = oldSubTable.PairSet
+
+		oldCount = len(oldSubTable.PairSet) // 2
+
+		oldSubTable.Coverage.glyphs = coverage[:oldCount]
+		oldSubTable.PairSet = records[:oldCount]
+
+		newSubTable.Coverage.glyphs = coverage[oldCount:]
+		newSubTable.PairSet = records[oldCount:]
+
+		oldSubTable.PairSetCount = len(oldSubTable.PairSet)
+		newSubTable.PairSetCount = len(newSubTable.PairSet)
+
+		ok = True
+
+	elif oldSubTable.Format == 2 and len(oldSubTable.Class1Record) > 1:
 		if not hasattr(oldSubTable, 'Class2Count'):
 			oldSubTable.Class2Count = len(oldSubTable.Class1Record[0].Class2Record)
 		for name in 'Class2Count', 'ClassDef2', 'ValueFormat1', 'ValueFormat2':
@@ -783,7 +897,7 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 		subTableType = subtable.ExtSubTable.__class__.LookupType
 		extSubTable = subtable
 		subtable = extSubTable.ExtSubTable
-		newExtSubTableClass = lookupTypes[overflowRecord.tableType][subtable.__class__.LookupType]
+		newExtSubTableClass = lookupTypes[overflowRecord.tableType][extSubTable.__class__.LookupType]
 		newExtSubTable = newExtSubTableClass()
 		newExtSubTable.Format = extSubTable.Format
 		lookup.SubTable.insert(subIndex + 1, newExtSubTable)

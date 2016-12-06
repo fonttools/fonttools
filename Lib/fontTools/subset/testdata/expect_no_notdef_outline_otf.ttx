@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="OTTO" ttLibVersion="2.5">
+<ttFont sfntVersion="OTTO" ttLibVersion="3.0">
 
   <CFF>
+    <major value="1"/>
+    <minor value="0"/>
     <CFFFont name="TestOTF-Regular">
       <version value="1.0"/>
       <FamilyName value="Test OTF"/>

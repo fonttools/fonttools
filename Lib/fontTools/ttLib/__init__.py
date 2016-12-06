@@ -262,7 +262,7 @@ class TTFont(object):
 
 	def saveXML(self, fileOrPath, progress=None, quiet=None,
 			tables=None, skipTables=None, splitTables=False, disassembleInstructions=True,
-			bitmapGlyphDataFormat='raw'):
+			bitmapGlyphDataFormat='raw', newlinestr=None):
 		"""Export the font as TTX (an XML-based text file), or as a series of text
 		files when splitTables is true. In the latter case, the 'fileOrPath'
 		argument should be a path to a directory.
@@ -272,6 +272,10 @@ class TTFont(object):
 		"""
 		from fontTools import version
 		from fontTools.misc import xmlWriter
+
+		# only write the MAJOR.MINOR version in the 'ttLibVersion' attribute of
+		# TTX files' root element (without PATCH or .dev suffixes)
+		version = ".".join(version.split('.')[:2])
 
 		if quiet is not None:
 			deprecateArgument("quiet", "configure logging instead")
@@ -293,8 +297,9 @@ class TTFont(object):
 		else:
 			idlefunc = None
 
-		writer = xmlWriter.XMLWriter(fileOrPath, idlefunc=idlefunc)
-		writer.begintag("ttFont", sfntVersion=repr(self.sfntVersion)[1:-1],
+		writer = xmlWriter.XMLWriter(fileOrPath, idlefunc=idlefunc,
+				newlinestr=newlinestr)
+		writer.begintag("ttFont", sfntVersion=repr(tostr(self.sfntVersion))[1:-1],
 				ttLibVersion=version)
 		writer.newline()
 
@@ -311,7 +316,8 @@ class TTFont(object):
 			tag = tables[i]
 			if splitTables:
 				tablePath = fileNameTemplate % tagToIdentifier(tag)
-				tableWriter = xmlWriter.XMLWriter(tablePath, idlefunc=idlefunc)
+				tableWriter = xmlWriter.XMLWriter(tablePath, idlefunc=idlefunc,
+						newlinestr=newlinestr)
 				tableWriter.begintag("ttFont", ttLibVersion=version)
 				tableWriter.newline()
 				tableWriter.newline()

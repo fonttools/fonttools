@@ -164,6 +164,13 @@ class OTTableReader(object):
 		self.pos = newpos
 		return value
 
+	def readInt8(self):
+		pos = self.pos
+		newpos = pos + 1
+		value, = struct.unpack(">b", self.data[pos:newpos])
+		self.pos = newpos
+		return value
+
 	def readShort(self):
 		pos = self.pos
 		newpos = pos + 2
@@ -429,11 +436,16 @@ class OTTableWriter(object):
 		self.items.append(struct.pack(">H", value))
 
 	def writeShort(self, value):
+		assert -32768 <= value < 32768, value
 		self.items.append(struct.pack(">h", value))
 
 	def writeUInt8(self, value):
-		assert 0 <= value < 256
+		assert 0 <= value < 256, value
 		self.items.append(struct.pack(">B", value))
+
+	def writeInt8(self, value):
+		assert -128 <= value < 128, value
+		self.items.append(struct.pack(">b", value))
 
 	def writeUInt24(self, value):
 		assert 0 <= value < 0x1000000, value
@@ -454,8 +466,8 @@ class OTTableWriter(object):
 	def writeSubTable(self, subWriter):
 		self.items.append(subWriter)
 
-	def writeCountReference(self, table, name):
-		ref = CountReference(table, name)
+	def writeCountReference(self, table, name, size=2):
+		ref = CountReference(table, name, size=size)
 		self.items.append(ref)
 		return ref
 
@@ -502,9 +514,10 @@ class OTTableWriter(object):
 
 class CountReference(object):
 	"""A reference to a Count value, not a count of references."""
-	def __init__(self, table, name):
+	def __init__(self, table, name, size=None):
 		self.table = table
 		self.name = name
+		self.size = size
 	def setValue(self, value):
 		table = self.table
 		name = self.name
@@ -513,9 +526,10 @@ class CountReference(object):
 		else:
 			assert table[name] == value, (name, table[name], value)
 	def getCountData(self):
+		assert self.size in (2, 4)
 		v = self.table[self.name]
 		if v is None: v = 0
-		return packUShort(v)
+		return packUShort(v) if self.size == 2 else packULong(v)
 
 
 def packUShort(value):
@@ -645,12 +659,12 @@ class BaseTable(object):
 				# table. We will later store it here.
 				# We add a reference: by the time the data is assembled
 				# the Count value will be filled in.
-				ref = writer.writeCountReference(table, conv.name)
+				ref = writer.writeCountReference(table, conv.name, conv.staticSize)
 				table[conv.name] = None
 				if conv.isPropagated:
 					writer[conv.name] = ref
 			elif conv.isLookupType:
-				ref = writer.writeCountReference(table, conv.name)
+				ref = writer.writeCountReference(table, conv.name, conv.staticSize)
 				table[conv.name] = None
 				writer['LookupType'] = ref
 			else:
@@ -853,6 +867,12 @@ class ValueRecordFactory(object):
 class ValueRecord(object):
 
 	# see ValueRecordFactory
+
+	def __init__(self, valueFormat=None):
+		if valueFormat is not None:
+			for mask, name, isDevice, signed in valueRecordFormat:
+				if valueFormat & mask:
+					setattr(self, name, None if isDevice else 0)
 
 	def getFormat(self):
 		format = 0

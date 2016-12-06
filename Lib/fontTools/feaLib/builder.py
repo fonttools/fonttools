@@ -6,7 +6,7 @@ from fontTools.misc.textTools import binary2num, safeEval
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser
 from fontTools.otlLib import builder as otl
-from fontTools.ttLib import getTableClass, getTableModule
+from fontTools.ttLib import newTable, getTableModule
 from fontTools.ttLib.tables import otBase, otTables
 import itertools
 
@@ -71,6 +71,8 @@ class Builder(object):
         self.os2_ = {}
         # for table 'hhea'
         self.hhea_ = {}
+        # for table 'vhea'
+        self.vhea_ = {}
 
     def build(self):
         self.parseTree = Parser(self.file).parse()
@@ -78,6 +80,7 @@ class Builder(object):
         self.build_feature_aalt_()
         self.build_head()
         self.build_hhea()
+        self.build_vhea()
         self.build_name()
         self.build_OS_2()
         for tag in ('GPOS', 'GSUB'):
@@ -85,7 +88,7 @@ class Builder(object):
             if (table.ScriptList.ScriptCount > 0 or
                     table.FeatureList.FeatureCount > 0 or
                     table.LookupList.LookupCount > 0):
-                fontTable = self.font[tag] = getTableClass(tag)()
+                fontTable = self.font[tag] = newTable(tag)
                 fontTable.table = table
             elif tag in self.font:
                 del self.font[tag]
@@ -182,7 +185,7 @@ class Builder(object):
             return
         table = self.font.get("head")
         if not table:  # this only happens for unit tests
-            table = self.font["head"] = getTableClass("head")()
+            table = self.font["head"] = newTable("head")
             table.decompile(b"\0" * 54, self.font)
             table.tableVersion = 1.0
             table.created = table.modified = 3406620153  # 2011-12-13 11:22:33
@@ -193,9 +196,9 @@ class Builder(object):
             return
         table = self.font.get("hhea")
         if not table:  # this only happens for unit tests
-            table = self.font["hhea"] = getTableClass("hhea")()
+            table = self.font["hhea"] = newTable("hhea")
             table.decompile(b"\0" * 36, self.font)
-            table.tableVersion = 1.0
+            table.tableVersion = 0x00010000
         if "caretoffset" in self.hhea_:
             table.caretOffset = self.hhea_["caretoffset"]
         if "ascender" in self.hhea_:
@@ -204,6 +207,21 @@ class Builder(object):
             table.descent = self.hhea_["descender"]
         if "linegap" in self.hhea_:
             table.lineGap = self.hhea_["linegap"]
+
+    def build_vhea(self):
+        if not self.vhea_:
+            return
+        table = self.font.get("vhea")
+        if not table:  # this only happens for unit tests
+            table = self.font["vhea"] = newTable("vhea")
+            table.decompile(b"\0" * 36, self.font)
+            table.tableVersion = 0x00011000
+        if "verttypoascender" in self.vhea_:
+            table.ascent = self.vhea_["verttypoascender"]
+        if "verttypodescender" in self.vhea_:
+            table.descent = self.vhea_["verttypodescender"]
+        if "verttypolinegap" in self.vhea_:
+            table.lineGap = self.vhea_["verttypolinegap"]
 
     def get_user_name_id(self, table):
         # Try to find first unused font-specific name id
@@ -234,7 +252,7 @@ class Builder(object):
             return
         table = self.font.get("name")
         if not table:  # this only happens for unit tests
-            table = self.font["name"] = getTableClass("name")()
+            table = self.font["name"] = newTable("name")
             table.names = []
         for name in self.names_:
             nameID, platformID, platEncID, langID, string = name
@@ -252,7 +270,7 @@ class Builder(object):
             return
         table = self.font.get("OS/2")
         if not table:  # this only happens for unit tests
-            table = self.font["OS/2"] = getTableClass("OS/2")()
+            table = self.font["OS/2"] = newTable("OS/2")
             data = b"\0" * sstruct.calcsize(getTableModule("OS/2").OS2_format_0)
             table.decompile(data, self.font)
         version = 0
@@ -341,7 +359,7 @@ class Builder(object):
         base.HorizAxis = self.buildBASEAxis(self.base_horiz_axis_)
         base.VertAxis = self.buildBASEAxis(self.base_vert_axis_)
 
-        result = getTableClass("BASE")()
+        result = newTable("BASE")
         result.table = base
         return result
 
@@ -386,7 +404,7 @@ class Builder(object):
         gdef.Version = 0x00010002 if gdef.MarkGlyphSetsDef else 1.0
         if any((gdef.GlyphClassDef, gdef.AttachList, gdef.LigCaretList,
                 gdef.MarkAttachClassDef, gdef.MarkGlyphSetsDef)):
-            result = getTableClass("GDEF")()
+            result = newTable("GDEF")
             result.table = gdef
             return result
         else:
@@ -452,7 +470,7 @@ class Builder(object):
 
     def makeTable(self, tag):
         table = getattr(otTables, tag, None)()
-        table.Version = 1.0
+        table.Version = 0x00010000
         table.ScriptList = otTables.ScriptList()
         table.ScriptList.ScriptRecord = []
         table.FeatureList = otTables.FeatureList()
@@ -561,6 +579,7 @@ class Builder(object):
 
     def start_feature(self, location, name):
         self.language_systems = self.get_default_language_systems_()
+        self.script_ = 'DFLT'
         self.cur_lookup_ = None
         self.cur_feature_name_ = name
         self.lookupflag_ = 0
@@ -613,13 +632,32 @@ class Builder(object):
             raise FeatureLibError(
                 "Language statements are not allowed "
                 "within \"feature %s\"" % self.cur_feature_name_, location)
+        if language != 'dflt' and self.script_ == 'DFLT':
+            raise FeatureLibError("Need non-DFLT script when using non-dflt "
+                                  "language (was: \"%s\")" % language, location)
         self.cur_lookup_ = None
-        if include_default:
+
+        key = (self.script_, language, self.cur_feature_name_)
+        if not include_default:
+            # don't include any lookups added by script DFLT in this feature
+            self.features_[key] = []
+        elif language != 'dflt':
+            # add rules defined between script statement and its first following
+            # language statement to each of its explicitly specified languages:
+            # http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html#4.b.ii
+            lookups = self.features_.get((key[0], 'dflt', key[2]))
+            dflt_lookups = self.features_.get(('DFLT', 'dflt', key[2]), [])
+            if lookups:
+                if key[:2] in self.get_default_language_systems_():
+                    lookups = [l for l in lookups if l not in dflt_lookups]
+                self.features_.setdefault(key, []).extend(lookups)
+        if self.script_ == 'DFLT':
             langsys = set(self.get_default_language_systems_())
         else:
             langsys = set()
         langsys.add((self.script_, language))
         self.language_systems = frozenset(langsys)
+
         if required:
             key = (self.script_, language)
             if key in self.required_features_:
@@ -679,7 +717,7 @@ class Builder(object):
         self.lookupflag_ = 0
         self.lookupflag_markFilterSet_ = None
         self.set_language(location, "dflt",
-                          include_default=False, required=False)
+                          include_default=True, required=False)
 
     def find_lookup_builders_(self, lookups):
         """Helper for building chain contextual substitutions
@@ -901,7 +939,7 @@ class Builder(object):
             if value is None:
                 subs.append(None)
                 continue
-            if not glyphs.isdisjoint(sub.mapping.keys()):
+            if not set(glyphs).isdisjoint(sub.mapping.keys()):
                 sub = self.get_chained_lookup_(location, SinglePosBuilder)
             for glyph in glyphs:
                 sub.add_pos(location, glyph, value)
@@ -947,6 +985,9 @@ class Builder(object):
 
     def add_hhea_field(self, key, value):
         self.hhea_[key] = value
+
+    def add_vhea_field(self, key, value):
+        self.vhea_[key] = value
 
 
 def makeOpenTypeAnchor(anchor):

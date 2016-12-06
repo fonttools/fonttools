@@ -14,7 +14,7 @@
   </name>
 
   <GPOS>
-    <Version value="1.0"/>
+    <Version value="0x00010000"/>
     <ScriptList>
       <!-- ScriptCount=1 -->
       <ScriptRecord index="0">
@@ -37,7 +37,7 @@
           <FeatureParamsSize>
             <DesignSize value="10.0"/>
             <SubfamilyID value="3"/>
-            <SubfamilyNameID value="256"/>
+            <SubfamilyNameID value="256"/>  <!-- Win MinionPro Size Name -->
             <RangeStart value="8.0"/>
             <RangeEnd value="13.9"/>
           </FeatureParamsSize>
