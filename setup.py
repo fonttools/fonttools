@@ -57,7 +57,6 @@ setup(
 	long_description=long_description,
 	package_dir={'': 'Lib'},
 	packages=find_packages("Lib"),
-	py_modules=['sstruct', 'xmlWriter'],
 	include_package_data=True,
 	data_files=[
 		('share/man/man1', ["Doc/ttx.1"])
