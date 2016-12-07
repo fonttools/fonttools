@@ -31,8 +31,21 @@ from fontTools.ttLib.tables import otBase as otBase
 from fontTools.varLib import designspace, models, builder
 from fontTools.varLib.merger import merge_tables, Merger
 import warnings
+import re
 import os.path
 from argparse import ArgumentParser
+
+CLASS_VALS = {
+	'Thin': 100,
+	'ExtraLight': 200,
+	'Light': 300,
+	'Regular': 400,
+	'Medium': 500,
+	'SemiBold': 600,
+	'Bold': 700,
+	'ExtraBold': 800,
+	'Black': 900,
+}
 
 #
 # Creation routines
@@ -57,10 +70,19 @@ def _add_fvar(font, axes, instances, axis_map):
 	font['fvar'] = fvar = newTable('fvar')
 	nameTable = font['name']
 
+	weight_re = re.compile('(%s)' % '|'.join(CLASS_VALS.keys()))
+	wght_class_axis = {'wght': (100, 400, 900)}
+	wght_design_axis = None
+	avar_wght_mappings = {}
+
 	for iden in sorted(axes.keys(), key=lambda k: axis_map[k][0]):
 		axis = Axis()
 		axis.axisTag = Tag(axis_map[iden][0])
-		axis.minValue, axis.defaultValue, axis.maxValue = axes[iden]
+		axis_vals = axes[iden]
+		if axis.axisTag == 'wght':
+			wght_design_axis = {'wght': axis_vals}
+			axis_vals = wght_class_axis['wght']
+		axis.minValue, axis.defaultValue, axis.maxValue = axis_vals
 		axisName = tounicode(axis_map[iden][1])
 		axis.axisNameID = nameTable.addName(axisName)
 		fvar.axes.append(axis)
@@ -69,14 +91,36 @@ def _add_fvar(font, axes, instances, axis_map):
 		coordinates = instance['location']
 		name = tounicode(instance['stylename'])
 		psname = instance.get('postscriptfontname')
+		weight_match = weight_re.search(name)
+		weight = weight_match.group(0) if weight_match else 'Regular'
 
 		inst = NamedInstance()
 		inst.subfamilyNameID = nameTable.addName(name)
 		if psname is not None:
 			psname = tounicode(psname)
 			inst.postscriptNameID = nameTable.addName(psname)
-		inst.coordinates = {axis_map[k][0]:v for k,v in coordinates.items()}
+		inst.coordinates = {}
+		for iden, val in coordinates.items():
+			tag = axis_map[iden][0]
+			if tag == 'wght':
+				design_loc = models.normalizeLocation(
+					{'wght': val}, wght_design_axis)
+				val = CLASS_VALS[weight]
+				class_loc = models.normalizeLocation(
+					{'wght': val}, wght_class_axis)
+				avar_wght_mappings[class_loc['wght']] = design_loc['wght']
+			inst.coordinates[tag] = val
 		fvar.instances.append(inst)
+
+	if avar_wght_mappings:
+		assert 'avar' not in font
+		for k in (-1.0, 0.0, 1.0):
+			if k not in avar_wght_mappings:
+				avar_wght_mappings[k] = k
+			assert avar_wght_mappings[k] == k
+		font['avar'] = avar = newTable('avar')
+		avar.segments = {
+			'wght': avar_wght_mappings, 'wdth': {-1: -1, 0: 0, 1: 1}}
 
 	return fvar
 
