@@ -70,7 +70,8 @@ def _add_fvar(font, axes, instances, axis_map):
 	font['fvar'] = fvar = newTable('fvar')
 	nameTable = font['name']
 
-	weight_re = re.compile('(%s)' % '|'.join(CLASS_VALS.keys()))
+	weight_names = sorted(CLASS_VALS.keys(), key=lambda s: -len(s))
+	weight_re = re.compile('(%s)' % '|'.join(weight_names))
 	wght_class_axis = {'wght': (100, 400, 900)}
 	wght_design_axis = None
 	avar_wght_mappings = {}
