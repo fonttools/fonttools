@@ -32,7 +32,7 @@ label1:
     $fpgm_0_2 := 8
 } else {
     $fpgm_0_1 := 789
-    $fpgm_0_2 := -9
+    $fpgm_0_2 := -11
     $fpgm_0_3 := 1
     JROF ($fpgm_0_3, label1)
 label0:
