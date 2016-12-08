@@ -1,5 +1,6 @@
 from fontTools.ttLib.data import dataType
 import math
+import copy
 
 class Boolean(object):
     def __init__(self, value):
@@ -219,7 +220,7 @@ class NEGOperator(Operator):
     def __repr__(self):
         return "NEG"
 
-class Expression(object):
+class Expression(dataType.AbstractValue):
     pass
 
 class UnaryExpression(Expression):
@@ -227,8 +228,11 @@ class UnaryExpression(Expression):
 	self.arg = arg
 	self.operator = op
     def eval(self, keep_abstract):
-        # TODO should eval e.g. NEG
-        return self
+        if (keep_abstract):
+            return self
+        ue = copy.copy(self)
+        ue.arg = ue.arg.eval(keep_abstract)
+        return ue
     def __repr__(self):
 	return "%s %s" % (str(self.operator), self.arg)
 
@@ -237,6 +241,13 @@ class BinaryExpression(Expression):
 	self.left = left
 	self.right = right
 	self.operator = op
+    def eval(self, keep_abstract):
+        if (keep_abstract):
+            return self
+        be = copy.copy(self)
+        be.left = be.left.eval(keep_abstract)
+        be.right = be.right.eval(keep_abstract)
+        return be
 
 class InfixBinaryExpression(BinaryExpression):
     def __init__(self, left, right, op):
@@ -543,6 +554,12 @@ class ReadFromIndexedStorage(AssignmentStatement):
         self.index = index
     def __repr__(self):
         return "%s[%s]" % (self.storage, self.index)
+    def eval(self, keep_abstract):
+        if keep_abstract:
+            return self
+        ris = copy.copy(self)
+        ris.index = ris.index.eval(keep_abstract)
+        return ris
 
 class EmptyStatement(object):
     def __repr__(self):
@@ -554,43 +571,56 @@ class ReturnStatement(object):
 
 class JmpStatement(object):
     def __init__(self, dest):
-        self.dest = dest
+        self.bytecode_dest = dest
+        self.inst_dest = None
     def __repr__(self):
-        return "JMPR %s" % (self.dest)
+        return "JMPR %s" % (self.inst_dest)
 
 class JROxStatement(object):
     def __init__(self, onTrue, e, dest):
         self.onTrue = onTrue
         self.e = e
-        self.dest = dest
+        self.bytecode_dest = dest
+        self.inst_dest = None
     def __repr__(self):
         op = 'JROT' if self.onTrue else 'JROF'
-        d = "self" if self == self.dest else str(self.dest)
-        return "%s (%s, [%s])" % (op, self.e, d)
+        d = "self" if self == self.inst_dest else str(self.inst_dest)
+        return "%s (%s, %s)" % (op, self.e, d)
 
 class IfElseBlock(object):
     def __init__(self, condition = None, nesting_level = 1):
         self.condition = condition
+        # IR
         self.if_branch = []
         self.else_branch = []
         self.nesting_level = nesting_level
-        self.mode = 'IF'
-    def appendStatements(self, statements):
-        if self.mode == 'IF':
-            self.if_branch += statements
-        else:
-            self.else_branch += statements
+
+        # bytecode
+        self.if_instructions = []
+        self.else_instructions = []
+
+        # random crap
+        self.mode = 'THEN'
+        self.jump_targets = {}
     def __str__(self):
         c = self.condition.eval(True)
         if isinstance(c, dataType.UncertainValue):
             c = self.condition
         res_str = 'if ('+str(c)+') {\n'
-        for line in self.if_branch:
-            res_str += (self.nesting_level * 4 * ' ') + str(line) + '\n'
+        for inst in self.if_branch:
+            if inst in self.jump_targets:
+                res_str += "%s:" % self.jump_targets[inst] + '\n'
+            if hasattr(inst, 'jump_targets'):
+                inst.jump_targets = jump_targets
+            res_str += (self.nesting_level * 4 * ' ') + str(inst) + '\n'
         res_str += (self.nesting_level-1) * 4 * ' ' + '}'
         if len(self.else_branch) > 0:
             res_str += ' else {\n'
-            for line in self.else_branch:
-                res_str += (self.nesting_level * 4 * ' ') + str(line) + '\n'
+            for inst in self.else_branch:
+                if inst in self.jump_targets:
+                    res_str += "%s:" % self.jump_targets[inst] + '\n'
+                if hasattr(inst, 'jump_targets'):
+                    inst.jump_targets = jump_targets
+                res_str += (self.nesting_level * 4 * ' ') + str(inst) + '\n'
             res_str += (self.nesting_level-1) * 4 * ' ' + '}'
         return res_str

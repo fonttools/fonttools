@@ -155,7 +155,9 @@
       JROT[ ]
       EIF[ ]
       PUSH[ ]
-      9
+      99
+      PUSH[ ]
+      10
       ENDF[ ]
     </assembly>
   </fpgm>

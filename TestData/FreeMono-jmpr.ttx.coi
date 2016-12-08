@@ -25,10 +25,15 @@ Function #0:
 $fpgm_0_1 := PPEM_X
 if ($fpgm_0_1) {
     $fpgm_0_1 := 8
+    JMPR label0
+label0:
     $fpgm_0_1 := 9
+    $fpgm_0_1 := ROUND_10($fpgm_0_1)
 } else {
-    $fpgm_0_1 := -5
-    $fpgm_0_1 := 8
+    $fpgm_0_1 := -7
+    JMPR label1
+label1:
+    $fpgm_0_1 := 6
 }
 RET
 

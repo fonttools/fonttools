@@ -151,15 +151,15 @@
       PUSH[ ]
       987
       PUSH[ ]
-      15
-      PUSH[ ]
+      12
+      PUSHW[ ]
       1
       JROT[ ]
-      PUSH[ ]
+      PUSHB[ ]
       8
       ELSE[ ]
-      PUSH[ ]
-      789 -9 1
+      PUSHW[ ]
+      789 -11 1
       JROF[ ]
       PUSH[ ]
       9

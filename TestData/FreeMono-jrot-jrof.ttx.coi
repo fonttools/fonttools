@@ -19,24 +19,24 @@ GS[rp0] := 0
 GS[rp1] := 0
 GS[rp2] := 0
 $prep_1 := 0
-($rv0) := CALL 0()
+($rv1, $rv0) := CALL 0()
 
 Function #0:
 $fpgm_0_1 := PPEM_X
 if ($fpgm_0_1) {
     $fpgm_0_1 := 987
-    $fpgm_0_2 := 15
+    $fpgm_0_2 := 12
     $fpgm_0_3 := 1
-    JROT ($fpgm_0_3, [RET])
+    JROT ($fpgm_0_3, label0)
+label1:
     $fpgm_0_2 := 8
 } else {
     $fpgm_0_1 := 789
     $fpgm_0_2 := -9
     $fpgm_0_3 := 1
-    JROF ($fpgm_0_3, [$fpgm_0_2 := 8])
+    JROF ($fpgm_0_3, label1)
+label0:
     $fpgm_0_2 := 9
 }
-RET
-$fpgm_0_2 := 8
 RET
 

@@ -211,26 +211,34 @@ class BytecodeContainer(object):
                         table = table.replace("glyf.", "")
                         ttFont['glyf'].glyphs[table].program.fromAssembly(assembly)
 
+    def flatten_IR(self, ir_list):
+        for inst in ir_list:
+            yield inst
+            if isinstance(inst, IntermediateCode.IfElseBlock):
+                for i1 in self.flatten_IR(inst.if_branch): yield i1
+                for i1 in self.flatten_IR(inst.else_branch): yield i1
+
     def print_IR(self, IR):
         jump_targets = {}
         counter = 0
-        for inst in IR:
+        for inst in self.flatten_IR(IR):
             if isinstance(inst, IntermediateCode.JROxStatement) or isinstance(inst, IntermediateCode.JmpStatement):
                 c = self.Label(counter)
-                jump_targets[inst.dest] = c
-                inst.dest = c
+                jump_targets[inst.inst_dest] = c
+                inst.inst_dest = c
                 counter = counter + 1
         for inst in IR:
             if inst in jump_targets:
                 print "%s:" % jump_targets[inst]
-            print inst
+            if hasattr(inst, 'jump_targets'):
+                inst.jump_targets = jump_targets
+            print ("%s" % (inst))
 
 # Function and Program are suspiciously similar; should probably be refactored.
 # per-glyph instructions
 class Program(object):
     def __init__(self, input):
         self.body = Body(instructions = input)
-        self.call_function_set = [] # set of functions called in the tag program
     def pretty_print(self):
         self.body.pretty_print()
     def start(self):
@@ -261,13 +269,6 @@ class Body(object):
     
     # CFG construction
     def constructSuccessorAndPredecessor(self):
-        def is_branch(instruction):
-            if isinstance(instruction,statements.all.EIF_Statement):
-                return True
-            elif isinstance(instruction,statements.all.ELSE_Statement):
-                return True
-            else:
-                return False
         pending_if_stack = []
         for index in range(len(self.instructions)):
             this_instruction = self.instructions[index]
@@ -276,16 +277,9 @@ class Body(object):
             # We'll just treat them like normal statements now and fix up the
             # CFG during symbolic execution, since we need to read the dest off the stack.
 
-            #if isinstance(this_instruction,statements.all.JMPR_Statement):
-            #    raise NotImplementedError
-            #elif isinstance(this_instruction,statements.all.JROT_Statement):
-            #    raise NotImplementedError
-            #elif isinstance(this_instruction,statements.all.JROF_Statement):
-            #    raise NotImplementedError
-
             #other statements should have at least 
             #the next instruction in stream as a successor
-            if index < len(self.instructions)-1 and not is_branch(self.instructions[index+1]):
+            if index < len(self.instructions)-1:
                 this_instruction.add_successor(self.instructions[index+1])
                 self.instructions[index+1].set_predecessor(this_instruction)
             # An IF statement should have two successors:

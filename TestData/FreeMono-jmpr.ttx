@@ -152,13 +152,14 @@
       8
       JMPR[ ]
       PUSH[ ]
-      8
+      6
       ELSE[ ]
-      PUSH[ ]
-      -5
+      PUSHW[ ]
+      -7
       JMPR[ ]
       PUSH[ ]
       9
+      ROUND[10]
       EIF[ ]
       POP[ ]
       ENDF[ ]

@@ -26,10 +26,9 @@ $fpgm_0_1 := PPEM_X
 if ($fpgm_0_1) {
     $fpgm_0_1 := 2
     $fpgm_0_2 := 1
-    JROT ($fpgm_0_2, [$fpgm_0_1 := 9])
+    JROT ($fpgm_0_2, label0)
 }
-$fpgm_0_1 := 9
-RET
+label0:
 $fpgm_0_1 := 9
 RET
 

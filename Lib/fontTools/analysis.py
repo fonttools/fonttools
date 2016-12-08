@@ -52,7 +52,7 @@ def executeGlyphs(abstractExecutor, initialEnvironment, glyphs):
     for glyph in glyphs:
         abstractExecutor.environment = copy.deepcopy(initialEnvironment)
         abstractExecutor.execute(glyph)
-        called_functions.update(list(set(abstractExecutor.program.call_function_set)))
+        called_functions.update(list(set(abstractExecutor.visited_functions)))
     return called_functions
 
 def analysis(bytecodeContainer, glyphs):
@@ -60,7 +60,7 @@ def analysis(bytecodeContainer, glyphs):
     called_functions = set()
     if 'prep' in bytecodeContainer.tag_to_programs:
         abstractExecutor.execute('prep')
-        called_functions.update(list(set(abstractExecutor.program.call_function_set)))
+        called_functions.update(list(set(abstractExecutor.visited_functions)))
     # NB: if there's no prep we don't explicitly output the initial graphics state
 
     environment_after_prep = abstractExecutor.environment
