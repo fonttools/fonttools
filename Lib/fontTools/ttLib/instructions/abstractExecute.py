@@ -1116,7 +1116,7 @@ class Executor(object):
             repeats_str = ''
 
         # XXX this is mis-typed; it should be a MethodCallInstruction
-        self.bytecode2ir[previous_instruction.id] = ['%sCALL%s %s%s' % (call_rv, repeats_str, str(callee), call_args)]
+        self.setIRForBytecode(previous_instruction, ['%sCALL%s %s%s' % (call_rv, repeats_str, str(callee), call_args)])
 
         logger.info("pop call stack, next is %s", str(self.current_instruction))
         logger.info("stack used %d/stack additional %d" % (stack_used, stack_additional))
@@ -1126,6 +1126,19 @@ class Executor(object):
             if isinstance(inst, IR.JROxStatement) or isinstance(inst, IR.JmpStatement):
                 inst.inst_dest = self.bytecode2ir[inst.bytecode_dest.id][0]
         return ic
+
+    def setIRForBytecode(self, current_instruction, ir):
+        already_seen_this_inst = current_instruction.id in self.already_seen_insts
+        if not already_seen_this_inst:
+            self.bytecode2ir[current_instruction.id] = ir
+            self.already_seen_insts.add(current_instruction.id)
+        if len(self.if_else_stack) > 0:
+            if_else_block = self.if_else_stack[-1].IR
+            if not already_seen_this_inst:
+                if if_else_block.mode == 'ELSE':
+                    if_else_block.else_instructions.append(current_instruction)
+                else:
+                    if_else_block.if_instructions.append(current_instruction)
 
     def execute(self, tag):
         logger.info("execute; tag is %s", tag)
@@ -1248,18 +1261,7 @@ class Executor(object):
             if self.stack_depth() > self.maximum_stack_depth:
                 self.maximum_stack_depth = self.stack_depth()
 
-            already_seen_this_inst = self.current_instruction.id in self.already_seen_insts
-            if not already_seen_this_inst:
-                self.bytecode2ir[self.current_instruction.id] = ir
-                self.already_seen_insts.add(self.current_instruction.id)
-            if len(self.if_else_stack) > 0:
-                if_else_block = self.if_else_stack[-1].IR
-                if not already_seen_this_inst:
-                    logger.info("appending %s to if_else_block %x" % (self.current_instruction, id(if_else_block)))
-                    if if_else_block.mode == 'ELSE':
-                        if_else_block.else_instructions.append(self.current_instruction)
-                    else:
-                        if_else_block.if_instructions.append(self.current_instruction)
+            self.setIRForBytecode(self.current_instruction, ir)
 
             # normal case: 1 succ
             if len(self.current_instruction.successors) == 1:

@@ -34,23 +34,26 @@ class BytecodeContainer(object):
         in a single font file
         '''
         def constructInstructions(program_tag, instructions):
+            counter = [0]
+            def append_instruction(inst):
+                if parent_instruction is not None:
+                    parent_instruction.id = program_tag + '.' + str(counter[0])
+                    instructions_list.append(parent_instruction)
+                    counter[0] += 1
+
             parent_instruction = None
             instructions_list = []
-            number = 0
             for i in instructions:
                 instructionCons = instructionConstructor.instructionConstructor(i)
                 instruction = instructionCons.getClass()
-        
+
                 if isinstance(instruction, instructionConstructor.Data):
                     parent_instruction.add_data(instruction)
                 else:
-                    if parent_instruction is not None:
-                        parent_instruction.id = program_tag + '.' + str(number)
-                        instructions_list.append(parent_instruction)
-                        number += 1
+                    append_instruction(instruction)
                     parent_instruction = instruction
 
-            instructions_list.append(parent_instruction)
+            append_instruction(parent_instruction)
             return instructions_list
         
         def add_tags_with_bytecode(tt,tag):
