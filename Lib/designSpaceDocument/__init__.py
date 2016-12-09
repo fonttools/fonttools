@@ -158,6 +158,14 @@ class BaseDocWriter(object):
     def getAxisDecriptor(cls):
         return cls.axisDescriptorClass()
 
+    @classmethod
+    def getSourceDescriptor(cls):
+        return cls.sourceDescriptorClass()
+
+    @classmethod
+    def getInstanceDescriptor(cls):
+        return cls.instanceDescriptorClass()
+
     def __init__(self, documentPath, documentObject):
         self.path = documentPath
         self.documentObject = documentObject
@@ -674,6 +682,10 @@ class DesignSpaceDocument(object):
     def newAxisDescriptor(self):
         # Ask the writer class to make us a new axisDescriptor
         return self.writerClass.getAxisDecriptor()
+
+    def newSourceDescriptor(self):
+        # Ask the writer class to make us a new sourceDescriptor
+        return self.writerClass.getSourceDecriptor()
 
     def getAxisOrder(self):
         names = []
