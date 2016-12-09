@@ -6,13 +6,13 @@ The ideas here are very similar to MutatorMath.  There is even code to read
 MutatorMath .designspace files in the varLib.designspace module.
 
 For now, if you run this file on a designspace file, it tries to find
-ttf-interpolatable files for the masters and build a GX variation font from
+ttf-interpolatable files for the masters and build a variable-font from
 them.  Such ttf-interpolatable and designspace files can be generated from
 a Glyphs source, eg., using noto-source as an example:
 
   $ fontmake -o ttf-interpolatable -g NotoSansArabic-MM.glyphs
 
-Then you can make a GX font this way:
+Then you can make a variable-font this way:
 
   $ python fonttools/Lib/fontTools/varLib/__init__.py master_ufo/NotoSansArabic.designspace
 
@@ -350,7 +350,7 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None, build_HV
 	from pprint import pprint
 	print("Index of base master:", base_idx)
 
-	print("Building GX")
+	print("Building variable font")
 	print("Loading TTF masters")
 	basedir = os.path.dirname(designspace_filename)
 	master_ttfs = [master_finder(os.path.join(basedir, m['filename'])) for m in masters]
@@ -438,7 +438,7 @@ def main(args=None):
 
 	designspace_filename = options.designspace
 	finder = lambda s: s.replace('master_ufo', 'master_ttf_interpolatable').replace('.ufo', '.ttf')
-	outfile = os.path.splitext(designspace_filename)[0] + '-GX.ttf'
+	outfile = os.path.splitext(designspace_filename)[0] + '-VF.ttf'
 
 	gx, model, master_ttfs = build(designspace_filename, finder, build_HVAR=options.build_HVAR)
 
