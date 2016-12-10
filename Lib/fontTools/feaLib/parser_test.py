@@ -5,9 +5,6 @@ from fontTools.feaLib.parser import Parser, SymbolTable
 from fontTools.misc.py23 import *
 import fontTools.feaLib.ast as ast
 import os
-import shutil
-import sys
-import tempfile
 import unittest
 
 
@@ -1263,22 +1260,9 @@ class ParserTest(unittest.TestCase):
         doc = self.parse(";;;")
         self.assertFalse(doc.statements)
 
-    def setUp(self):
-        self.tempdir = None
-        self.num_tempfiles = 0
-
-    def tearDown(self):
-        if self.tempdir:
-            shutil.rmtree(self.tempdir)
-
     def parse(self, text):
-        if not self.tempdir:
-            self.tempdir = tempfile.mkdtemp()
-        self.num_tempfiles += 1
-        path = os.path.join(self.tempdir, "tmp%d.fea" % self.num_tempfiles)
-        with open(path, "w", encoding="utf-8") as outfile:
-            outfile.write(text)
-        return Parser(path).parse()
+        featurefile = UnicodeIO(text)
+        return Parser(featurefile).parse()
 
     @staticmethod
     def getpath(testfile):
