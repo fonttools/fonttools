@@ -1,7 +1,8 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.misc.py23 import *
-from fontTools.feaLib.builder import Builder, addOpenTypeFeatures
+from fontTools.feaLib.builder import Builder, addOpenTypeFeatures, \
+        addOpenTypeFeaturesFromString
 from fontTools.feaLib.builder import LigatureSubstBuilder
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.ttLib import TTFont
@@ -117,11 +118,8 @@ class BuilderTest(unittest.TestCase):
             self.fail("TTX output is different from expected")
 
     def build(self, featureFile):
-        path = self.temp_path(suffix=".fea")
-        with open(path, "w", encoding="utf-8") as outfile:
-            outfile.write(featureFile)
         font = makeTTFont()
-        addOpenTypeFeatures(font, path)
+        addOpenTypeFeaturesFromString(font, featureFile)
         return font
 
     def check_feature_file(self, name):
