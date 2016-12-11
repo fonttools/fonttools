@@ -128,6 +128,16 @@ a1.labelNames[u'fa-IR'] = u"قطر"
 a1.labelNames[u'en'] = u"Wéíght"
 a1.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
 ```
+# `rule` descriptor object
+* `name`: string. Unique name for this rule. Will be used to reference this rule data.
+* `conditions`: list of dicts with condition data. `
+
+```python
+r1 = RuleDescriptor()
+r1.name = "unique.rule.name"
+r1.conditions.append(dict(tag="aaaa", minimum=-10, maximum=10))
+r1.conditions.append(dict(tag="bbbb", minimum=-10, maximum=10))
+```
 
 # Subclassing descriptors
 
@@ -389,8 +399,48 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 </instance>
 ```
 
+# 5.0 `rules` element
+ * Container for `rule` elements
 
+# 5.1 `rule` element
+ * Defines a named rule with a set of conditions.
+* The conditional substitutions specifed in the OpenType specification can be much more elaborate than what it recorded in this element.
+* So while authoring tools are welcome to use the `sub` element, they're intended as preview / example / test substitutions for the rule.
+
+### Attributes
+* `name`: required, string. A unique name that can be used to identify this rule if it needs to be referenced elsewhere.
+
+# 5.1.1 `condition` element
+* Child element of `rule`
+* Between the `minimum` and `maximum` this rule is `true`.
+
+### Attributes
+* `tag`: string, required. Must match one of the defined `axis` tag attributes.
+* `minimum`: number, required. The low value.
+* `maximum`: number, required. The high value.
+
+# 5.1.2 `sub` element
+* Child element of `rule`.
+* Defines which glyphs to replace when the rule is true.
+* This element is optional.
+
+### Attributes
+* `name`: string, required. The name of the glyph this rule looks for.
+* `byname`: string, required. The name of the glyph it is replaced with.
+
+### Example
+```xml
+<rules>
+	<rule name="named.rule.1">
+   		<condition maximum="1" minimum="0" tag="aaaa" />
+		<condition maximum="3" minimum="2" tag="bbbb" />
+		<sub name="dollar" byname="dollar.alt"/>
+	</rule>
+</rules>
+
+```
 ## Notes on this document
 
-Second version. The package is rather new and changes are to be expected.
+* The package is rather new and changes are to be expected.
+
 
