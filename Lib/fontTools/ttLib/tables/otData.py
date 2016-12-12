@@ -844,13 +844,13 @@ otData = [
 	# STAT
 	#
 	('STAT', [
-		('Version', 'Version', None, None, 'Version of the table-initially set to 0x00010000.'),
+		('Version', 'Version', None, None, 'Version of the table-initially set to 0x00010000, currently 0x00010001.'),
 		('uint16', 'DesignAxisRecordSize', None, None, 'Size in bytes of each design axis record'),
 		('uint16', 'DesignAxisCount', None, None, 'Number of design axis records'),
 		('LOffsetTo(AxisRecordArray)', 'DesignAxisRecord', None, None, 'Offset in bytes from the beginning of the STAT table to the start of the design axes array'),
 		('uint16', 'AxisValueCount', None, None, 'Number of axis value tables'),
 		('LOffsetTo(AxisValueArray)', 'AxisValueArray', None, None, 'Offset in bytes from the beginning of the STAT table to the start of the axes value offset array'),
-		('NameID', 'ElidedFallbackNameID', None, None, 'NameID to use when all style attributes are elided.'),
+		('NameID', 'ElidedFallbackNameID', None, 'Version >= 0x00010001', 'NameID to use when all style attributes are elided.'),
 	]),
 
 	('AxisRecordArray', [
