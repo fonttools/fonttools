@@ -157,6 +157,51 @@ STAT_XML_AXIS_VALUE_FORMAT3 = (
 )
 
 
+STAT_DATA_VERSION_1_1 = deHexStr(
+    '0001 0001 '  #  0: Version=1.1
+    '0008 0001 '  #  4: DesignAxisSize=8, DesignAxisCount=1
+    '0000 0014 '  #  8: OffsetToDesignAxes=20
+    '0001 '       # 12: AxisValueCount=1
+    '0000 001C '  # 14: OffsetToAxisValueOffsets=28
+    '0101 '       # 18: ElidedFallbackNameID: 257
+    '7767 6874 '  # 20: DesignAxis[0].AxisTag='wght'
+    '0102  '      # 24: DesignAxis[0].AxisNameID=258 'Weight'
+    '0000 '       # 26: DesignAxis[0].AxisOrdering=0
+    '0002 '       # 28: AxisValueOffsets=[2] (+28)
+    '0003 '       # 30: AxisValue[0].Format=3
+    '0000 0002 '  # 32: AxisValue[0].AxisIndex=0, .Flags=0x2
+    '0002 '       # 36: AxisValue[0].ValueNameID=2 'Regular'
+    '0190 0000 '  # 38: AxisValue[0].Value=400.0
+    '02BC 0000 '  # 42: AxisValue[0].LinkedValue=700.0
+)                 # 46: <end>
+assert(len(STAT_DATA_VERSION_1_1) == 46)
+
+
+STAT_XML_VERSION_1_1 = (
+    '<Version value="0x00010001"/>'
+    '<DesignAxisRecordSize value="8"/>'
+    '<!-- DesignAxisCount=1 -->'
+    '<DesignAxisRecord>'
+    '  <Axis index="0">'
+    '    <AxisTag value="wght"/>'
+    '    <AxisNameID value="258"/>'
+    '    <AxisOrdering value="0"/>'
+    '  </Axis>'
+    '</DesignAxisRecord>'
+    '<!-- AxisValueCount=1 -->'
+    '<AxisValueArray>'
+    '  <AxisValue index="0" Format="3">'
+    '    <AxisIndex value="0"/>'
+    '    <Flags value="2"/>'
+    '    <ValueNameID value="2"/>'
+    '    <Value value="400.0"/>'
+    '    <LinkedValue value="700.0"/>'
+    '  </AxisValue>'
+    '</AxisValueArray>'
+    '<ElidedFallbackNameID value="257"/>'
+)
+
+
 class STATTest(unittest.TestCase):
     def test_decompile_toXML(self):
         table = newTable('STAT')
@@ -174,6 +219,12 @@ class STATTest(unittest.TestCase):
         table.decompile(STAT_DATA_AXIS_VALUE_FORMAT3,
                         font=FakeFont(['.notdef']))
         self.assertEqual(getXML(table.toXML), STAT_XML_AXIS_VALUE_FORMAT3)
+
+    def test_decompile_toXML_version_1_1(self):
+        table = newTable('STAT')
+        table.decompile(STAT_DATA_VERSION_1_1,
+                        font=FakeFont(['.notdef']))
+        self.assertEqual(getXML(table.toXML), STAT_XML_VERSION_1_1)
 
 
 if __name__ == '__main__':
