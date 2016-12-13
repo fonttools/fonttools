@@ -1013,15 +1013,18 @@ class BuilderTest(unittest.TestCase):
 class ClassDefBuilderTest(unittest.TestCase):
     def test_build_usingClass0(self):
         b = builder.ClassDefBuilder(useClass0=True)
+        b.add({"aa", "bb"})
         b.add({"a", "b"})
         b.add({"c"})
         b.add({"e", "f", "g", "h"})
         cdef = b.build()
         self.assertIsInstance(cdef, otTables.ClassDef)
         self.assertEqual(cdef.classDefs, {
-            "a": 1,
-            "b": 1,
-            "c": 2
+            "a": 2,
+            "b": 2,
+            "c": 3,
+            "aa": 1,
+            "bb": 1
         })
 
     def test_build_notUsingClass0(self):
