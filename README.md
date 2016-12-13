@@ -45,7 +45,8 @@ Some validation is done when reading.
 * If no source has a `copyInfo` flag, mutatorMath will be used to select one. This source gets its `copyInfo` flag set. If you save the document this flag will be set.
 * Use `doc.checkDefault()` to set the default font.
 
-# `Source` descriptor object attributes
+# `SourceDescriptor` object
+### Attributes
 * `path`: string. Path to the source file. MutatorMath + Varlib.
 * `name`: string. Unique identifier name of the source, used to identify it if it needs to be referenced from elsewhere in the document. MutatorMath.
 * `location`: dict. Axis values for this source. MutatorMath + Varlib
@@ -75,7 +76,7 @@ s1.mutedGlyphNames.append("Z")
 doc.addSource(s1)
 ```
 
-# `Instance` descriptor object
+# `InstanceDescriptor` object
 * `path`: string. Path to the instance file, which may or may not exist. MutatorMath.
 * `name`: string. Unique identifier name of the instance, used to identify it if it needs to be referenced from elsewhere in the document. 
 * `location`: dict. Axis values for this source. MutatorMath + Varlib.
@@ -108,7 +109,7 @@ i2.glyphs['arrow'] = glyphData
 i2.glyphs['arrow2'] = dict(mute=False)
 doc.addInstance(i2)
 ```
-# `axis` descriptor object
+# `AxisDescriptor` object
 * `tag`: string. Four letter tag for this axis. Some might be registered at the OpenType specification.
 * `name`: string. Name of the axis as it is used in the location dicts. MutatorMath + Varlib.
 * `labelNames`: dict. When defining a non-registered axis, it will be necessary to define user-facing readable names for the axis. Keyed by xml:lang code. Varlib. 
@@ -128,7 +129,7 @@ a1.labelNames[u'fa-IR'] = u"قطر"
 a1.labelNames[u'en'] = u"Wéíght"
 a1.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
 ```
-# `rule` descriptor object
+# `RuleDescriptor` object
 * `name`: string. Unique name for this rule. Will be used to reference this rule data.
 * `conditions`: list of dicts with condition data.
 * Each condition specifies the axis name it is active on and the values between which the condition is true.
@@ -146,11 +147,13 @@ The DesignSpaceDocument can take subclassed Reader and Writer objects. This allo
 
 ```python
 class MyDocReader(BaseDocReader):
+    ruleDescriptorClass = MyRuleDescriptor
     axisDescriptorClass = MyAxisDescriptor
     sourceDescriptorClass = MySourceDescriptor
     instanceDescriptorClass = MyInstanceDescriptor
     
 class MyDocWriter(BaseDocWriter):
+    ruleDescriptorClass = MyRuleDescriptor
     axisDescriptorClass = MyAxisDescriptor
     sourceDescriptorClass = MySourceDescriptor
     instanceDescriptorClass = MyInstanceDescriptor

@@ -116,7 +116,7 @@ def evaluateRule(rule, location):
             return False
     return True
 
-def applyRules(rules, location, glyphNames):
+def processRules(rules, location, glyphNames):
     """ Apply these rules at this location to these glyphnames.minimum
         - rule order matters
     """
@@ -1413,11 +1413,11 @@ if __name__ == "__main__":
         False
         >>> evaluateRule(r1, dict(aaaa = -100, bbbb = 0))
         False
-        >>> applyRules([r1], dict(aaaa = 500), ["a", "b", "c"])
+        >>> processRules([r1], dict(aaaa = 500), ["a", "b", "c"])
         ['a.alt', 'b', 'c']
-        >>> applyRules([r1], dict(aaaa = 500), ["a.alt", "b", "c"])
+        >>> processRules([r1], dict(aaaa = 500), ["a.alt", "b", "c"])
         ['a.alt', 'b', 'c']
-        >>> applyRules([r1], dict(aaaa = 2000), ["a", "b", "c"])
+        >>> processRules([r1], dict(aaaa = 2000), ["a", "b", "c"])
         ['a', 'b', 'c']
 
         >>> a1 = AxisDescriptor()

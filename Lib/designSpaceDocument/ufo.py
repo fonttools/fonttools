@@ -13,7 +13,7 @@ from pprint import pprint
 """
 
 
-from designSpaceDocument import DesignSpaceDocument, SourceDescriptor, InstanceDescriptor, AxisDescriptor
+from designSpaceDocument import DesignSpaceDocument, SourceDescriptor, InstanceDescriptor, AxisDescriptor, RuleDescriptor, processRules
 from defcon.objects.font import Font
 import defcon
 from fontMath.mathGlyph import MathGlyph
@@ -22,6 +22,99 @@ from fontMath.mathKerning import MathKerning
 from mutatorMath.objects.mutator import buildMutator
 from mutatorMath.objects.location import biasFromLocations, Location
 import os
+
+
+"""
+
+    Swap the contents of two glyphs.
+        - contours
+        - components
+        - width
+        - group membership
+        - kerning
+
+    + Remap components so that glyphs that reference either of the swapped glyphs maintain appearance
+    + Keep the unicode value of the original glyph.
+    
+    Notes
+    Parking the glyphs under a swapname is a bit lazy, but at least it guarantees the glyphs have the right parent.
+
+"""
+def swapGlyphNames(font, oldName, newName, swapNameExtension = "_______________swap"):
+    if not oldName in font or not newName in font:
+        return None
+    swapName = oldName + swapNameExtension
+    # park the old glyph 
+    if not swapName in font:
+        font.newGlyph(swapName)
+    # swap the outlines
+    font[swapName].clear()
+    p = font[swapName].getPointPen()
+    font[oldName].drawPoints(p)
+    font[swapName].width = font[oldName].width
+    
+    font[oldName].clear()
+    p = font[oldName].getPointPen()
+    font[newName].drawPoints(p)
+    font[oldName].width = font[newName].width
+    
+    font[newName].clear()
+    p = font[newName].getPointPen()
+    font[swapName].drawPoints(p)
+    font[newName].width = font[swapName].width
+    
+    # remap the components
+    for g in font:
+        for c in g.components:
+           if c.baseGlyph == oldName:
+               c.baseGlyph = swapName
+           continue
+    for g in font:
+        for c in g.components:
+           if c.baseGlyph == newName:
+               c.baseGlyph = oldName
+           continue
+    for g in font:
+        for c in g.components:
+           if c.baseGlyph == swapName:
+               c.baseGlyph = newName
+   
+    # change the names in groups
+    # the shapes will swap, that will invalidate the kerning
+    # so the names need to swap in the kerning as well.
+    newKerning = {}
+    for first, second in font.kerning.keys():
+        value = font.kerning[(first,second)]
+        if first == oldName:
+            first = newName
+        elif first == newName:
+            first = oldName
+        if second == oldName:
+            second = newName
+        elif second == newName:
+            second = oldName
+        newKerning[(first, second)] = value
+    font.kerning.clear()
+    font.kerning.update(newKerning)
+            
+    for groupName, members in font.groups.items():
+        newMembers = []
+        for name in members:
+            if name == oldName:
+                newMembers.append(newName)
+            elif name == newName:
+                newMembers.append(oldName)
+            else:
+                newMembers.append(name)
+        font.groups[groupName] = newMembers
+    
+    remove = []
+    for g in font:
+        if g.name.find(swapNameExtension)!=-1:
+            remove.append(g.name)
+    for r in remove:
+        del font[r]
+
 
 class DesignSpaceProcessor(DesignSpaceDocument):
     """
@@ -55,16 +148,18 @@ class DesignSpaceProcessor(DesignSpaceDocument):
         self._kerningMutator = None
         self.fonts = {}
         self.glyphNames = []     # list of all glyphnames
+        self.processRules = True
 
-    def generateUFO(self):
+    def generateUFO(self, processRules=True):
         # makes the instances
+        # option to execute the rules
         self.checkAxes()
         self.checkDefault()
         self.loadFonts()
         for instanceDescriptor in self.instances:
             if instanceDescriptor.path is None:
                 continue
-            font = self.makeInstance(instanceDescriptor)
+            font = self.makeInstance(instanceDescriptor, processRules)
             if not os.path.exists(os.path.dirname(instanceDescriptor.path)):
                 os.makedirs(os.path.dirname(instanceDescriptor.path))
             font.save(instanceDescriptor.path, self.ufoVersion)
@@ -119,7 +214,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
                 names = names | set(self.fonts[sourceDescriptor.name].keys())
         self.glyphNames = list(names)
 
-    def makeInstance(self, instanceDescriptor):
+    def makeInstance(self, instanceDescriptor, doRules=False):
         """ Generate a font object for this instance """
         font = self._instantiateFont(None)
         # make fonty things here
@@ -218,6 +313,11 @@ class DesignSpaceProcessor(DesignSpaceDocument):
                 font[glyphName].clear()
                 glyphInstanceObject.drawPoints(pPen)
             font[glyphName].width = glyphInstanceObject.width
+        if doRules:
+            resultNames = processRules(self.rules, loc, self.glyphNames)
+            for oldName, newName in zip(self.glyphNames, resultNames):
+                if oldName != newName:
+                    swapGlyphNames(font, oldName, newName)
         return font
 
     def _instantiateFont(self, path):
@@ -289,9 +389,12 @@ class DesignSpaceProcessor(DesignSpaceDocument):
 if __name__ == "__main__":
     # standalone test
     import shutil
+    import os
+    from defcon.objects.font import Font
 
     def addGlyphs(font, s):
         # we need to add the glyphs
+        step = 0
         for n in ['glyphOne', 'glyphTwo', 'glyphThree', 'glyphFour']:
             font.newGlyph(n)
             g = font[n]
@@ -301,8 +404,20 @@ if __name__ == "__main__":
             p.lineTo((s,s))
             p.lineTo((0,s))
             p.closePath()
-            g.move((0,s*2))
+            g.move((0,s+step))
             g.width = s
+            step += 50
+        for n, w in [('wide', 800), ('narrow', 100)]:
+            font.newGlyph(n)
+            g = font[n]
+            p = g.getPen()
+            p.moveTo((0,0))
+            p.lineTo((w,0))
+            p.lineTo((w,font.info.ascender))
+            p.lineTo((0,font.info.ascender))
+            p.closePath()
+            g.width = w
+
 
     def fillInfo(font):
         font.info.unitsPerEm = 1000
@@ -316,31 +431,38 @@ if __name__ == "__main__":
         path3 = os.path.join(rootPath, "my_test_instance_dir_one", "geometryInstance%3.3f.ufo")
         path4 = os.path.join(rootPath, "my_test_instance_dir_two", "geometryInstanceAnisotropic1.ufo")
         path5 = os.path.join(rootPath, "my_test_instance_dir_two", "geometryInstanceAnisotropic2.ufo")
-
-        # Two masters
         f1 = Font()
+        fillInfo(f1)
         addGlyphs(f1, 100)
         f1.features.text = u"# features text from master 1"
-
         f2 = Font()
+        fillInfo(f2)
         addGlyphs(f2, 500)
         f2.features.text = u"# features text from master 2"
-
-
-        fillInfo(f1)
         f1.info.ascender = 400
         f1.info.descender = -200
-        fillInfo(f2)
         f2.info.ascender = 600
         f2.info.descender = -100
-
         f1.info.copyright = u"This is the copyright notice from master 1"
         f2.info.copyright = u"This is the copyright notice from master 2"
-
-        # save
         f1.save(path1, 2)
         f2.save(path2, 2)
         return path1, path2, path3, path4, path5
+
+    def makeSwapFonts(rootPath):
+        """ Make some test fonts that have the kerning problem."""
+        path1 = os.path.join(rootPath, "Swap.ufo")
+        path2 = os.path.join(rootPath, "Swapped.ufo")
+        f1 = Font()
+        fillInfo(f1)
+        addGlyphs(f1, 100)
+        f1.features.text = u"# features text from master 1"
+        f1.info.ascender = 800
+        f1.info.descender = -200
+        f1.kerning[('glyphOne', 'glyphOne')] = -10
+        f1.kerning[('glyphTwo', 'glyphTwo')] = 10
+        f1.save(path1, 2)
+        return path1, path2
 
     def test0(docPath):
         # make the test fonts and a test document
@@ -354,7 +476,6 @@ if __name__ == "__main__":
         a.default = 0
         a.tag = "pop*"
         d.addAxis(a)
-        
         s1 = SourceDescriptor()
         s1.path = m1
         s1.location = dict(pop=a.minimum)
@@ -362,7 +483,6 @@ if __name__ == "__main__":
         s1.copyInfo = True
         s1.copyFeatures = True
         d.addSource(s1)
-
         s2 = SourceDescriptor()
         s2.path = m2
         s2.location = dict(pop=1000)
@@ -392,6 +512,21 @@ if __name__ == "__main__":
         d.read(docPath)
         d.generateUFO()
 
+    def testSwap(docPath):
+        srcPath, dstPath = makeSwapFonts(os.path.dirname(docPath))
+        
+        f = Font(srcPath)
+        swapGlyphNames(f, "narrow", "wide")
+        f.info.styleName = "Swapped"
+        f.save(dstPath)
+        
+        # test the results in newly opened fonts
+        old = Font(srcPath)
+        new = Font(dstPath)
+        assert new.kerning.get(("narrow", "narrow")) == old.kerning.get(("wide","wide"))
+        assert new.kerning.get(("wide", "wide")) == old.kerning.get(("narrow","narrow"))
+        assert old['narrow'].unicode == new['wide'].unicode
+
     selfTest = True
     if selfTest:
         testRoot = os.path.join(os.getcwd(), "automatic_testfonts")
@@ -400,3 +535,4 @@ if __name__ == "__main__":
         docPath = os.path.join(testRoot, "automatic_test.designspace")
         test0(docPath)
         test1(docPath)
+        testSwap(docPath)
