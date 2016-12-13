@@ -6,8 +6,8 @@
     </axes>
     <rules>
         <rule name="named.rule.1">
-            <condition maximum="1" minimum="0" tag="aaaa" />
-            <condition maximum="1" minimum="0" tag="bbbb" />
+            <condition maximum="1" minimum="0" name="aaaa" />
+            <condition maximum="1" minimum="0" name="bbbb" />
             <sub name="a" with="a.alt" />
         </rule>
     </rules>

@@ -108,7 +108,7 @@ i2.glyphs['arrow'] = glyphData
 i2.glyphs['arrow2'] = dict(mute=False)
 doc.addInstance(i2)
 ```
-# `Axis` descriptor object
+# `axis` descriptor object
 * `tag`: string. Four letter tag for this axis. Some might be registered at the OpenType specification.
 * `name`: string. Name of the axis as it is used in the location dicts. MutatorMath + Varlib.
 * `labelNames`: dict. When defining a non-registered axis, it will be necessary to define user-facing readable names for the axis. Keyed by xml:lang code. Varlib. 
@@ -130,13 +130,14 @@ a1.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
 ```
 # `rule` descriptor object
 * `name`: string. Unique name for this rule. Will be used to reference this rule data.
-* `conditions`: list of dicts with condition data. `
+* `conditions`: list of dicts with condition data.
+* Each condition specifies the axis name it is active on and the values between which the condition is true.
 
 ```python
 r1 = RuleDescriptor()
 r1.name = "unique.rule.name"
-r1.conditions.append(dict(tag="aaaa", minimum=-10, maximum=10))
-r1.conditions.append(dict(tag="bbbb", minimum=-10, maximum=10))
+r1.conditions.append(dict(name="aaaa", minimum=-10, maximum=10))
+r1.conditions.append(dict(name="bbbb", minimum=-10, maximum=10))
 ```
 
 # Subclassing descriptors
@@ -415,14 +416,14 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 * Between the `minimum` and `maximum` this rule is `true`.
 
 ### Attributes
-* `tag`: string, required. Must match one of the defined `axis` tag attributes.
+* `name`: string, required. Must match one of the defined `axis` name attributes.
 * `minimum`: number, required. The low value.
 * `maximum`: number, required. The high value.
 
 # 5.1.2 `sub` element
 * Child element of `rule`.
 * Defines which glyphs to replace when the rule is true.
-* This element is optional.
+* This element is optional. It may be useful for editors to know which glyphs can be used to preview the axis.
 
 ### Attributes
 * `name`: string, required. The name of the glyph this rule looks for.

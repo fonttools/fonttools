@@ -93,8 +93,10 @@ class RuleDescriptor(SimpleDescriptor):
     </rules>
 
     Discussion:
+    use axis names rather than tags - then we can evaluate the rule without having to look up the axes.
     remove the subs from the rule.
     remove 'enabled' attr form rule
+
 
     """
     _attrs = ['name', 'conditions', 'subs']   # what do we need here
@@ -102,6 +104,41 @@ class RuleDescriptor(SimpleDescriptor):
         self.name = None
         self.conditions = []    # list of dict(tag='aaaa', minimum=0, maximum=1000)
         self.subs = []          # list of substitutions stored as tuples of glyphnames ("a", "a.alt")
+
+def evaluateRule(rule, location):
+    """ Test if rule is True at location """
+    for cd in rule.conditions:
+        if not cd['name'] in location:
+            #print("skipping", cd['name'])
+            continue
+        #print(cd['minimum'] <= location[cd['name']] <= cd['maximum'])
+        if not cd['minimum'] <= location[cd['name']] <= cd['maximum']:
+            return False
+    return True
+
+def applyRules(rules, location, glyphNames):
+    """ Apply these rules at this location to these glyphnames.minimum
+        - rule order matters
+    """
+    newNames = []
+    for rule in rules:
+        if evaluateRule(rule, location):
+            for name in glyphNames:
+                swap = False
+                for a, b in rule.subs:
+                    if name == a:
+                        swap = True
+                        break
+                if swap:
+                    newNames.append(b)
+                else:
+                    newNames.append(name)
+            glyphNames = newNames
+            newNames = []
+    return glyphNames
+
+
+
 
 class InstanceDescriptor(SimpleDescriptor):
     """Simple container for data related to the instance"""
@@ -143,6 +180,7 @@ def tagForAxisName(name):
     else:
         tag = name[:4]
     return tag, dict(en = name)
+
 
 class AxisDescriptor(SimpleDescriptor):
     """Simple container for the axis data"""
@@ -270,7 +308,7 @@ class BaseDocWriter(object):
         ruleElement.attrib['name'] = ruleObject.name
         for cond in ruleObject.conditions:
             conditionElement = ET.Element('condition')
-            conditionElement.attrib['tag'] = cond.get('tag')
+            conditionElement.attrib['name'] = cond.get('name')
             conditionElement.attrib['minimum'] = self.intOrFloat(cond.get('minimum'))
             conditionElement.attrib['maximum'] = self.intOrFloat(cond.get('maximum'))
             ruleElement.append(conditionElement)
@@ -460,7 +498,7 @@ class BaseDocReader(object):
                 cd = {}
                 cd['minimum'] = float(conditionElement.attrib.get("minimum"))
                 cd['maximum'] = float(conditionElement.attrib.get("maximum"))
-                cd['tag'] = conditionElement.attrib.get("tag")
+                cd['name'] = conditionElement.attrib.get("name")
                 ruleObject.conditions.append(cd)
             for subElement in ruleElement.findall('.sub'):
                 a = subElement.attrib['name']
@@ -941,9 +979,9 @@ class DesignSpaceDocument(object):
         for rule in self.rules:
             newConditions = []
             for cond in rule.conditions:
-                minimum = self.normalizeLocation({cond['tag']:cond['minimum']}).get(cond['tag'])
-                maximum = self.normalizeLocation({cond['tag']:cond['maximum']}).get(cond['tag'])
-                newConditions.append(dict(tag=cond['tag'], minimum=minimum, maximum=maximum))
+                minimum = self.normalizeLocation({cond['name']:cond['minimum']}).get(cond['name'])
+                maximum = self.normalizeLocation({cond['name']:cond['maximum']}).get(cond['name'])
+                newConditions.append(dict(name=cond['name'], minimum=minimum, maximum=maximum))
             rule.conditions = newConditions
 
 
@@ -1071,8 +1109,8 @@ if __name__ == "__main__":
         >>> # write some rules
         >>> r1 = RuleDescriptor()
         >>> r1.name = "named.rule.1"
-        >>> r1.conditions.append(dict(tag='aaaa', minimum=0, maximum=1))
-        >>> r1.conditions.append(dict(tag='bbbb', minimum=2, maximum=3))
+        >>> r1.conditions.append(dict(name='aaaa', minimum=0, maximum=1))
+        >>> r1.conditions.append(dict(name='bbbb', minimum=2, maximum=3))
         >>> r1.subs.append(("a", "a.alt"))
         >>> doc.addRule(r1)
         >>> # write the document
@@ -1354,13 +1392,33 @@ if __name__ == "__main__":
         >>> # write some axes
         >>> r1 = RuleDescriptor()
         >>> r1.name = "named.rule.1"
-        >>> r1.conditions.append(dict(tag='aaaa', minimum=0, maximum=1000))
-        >>> r1.conditions.append(dict(tag='bbbb', minimum=0, maximum=3000))
+        >>> r1.conditions.append(dict(name='aaaa', minimum=0, maximum=1000))
+        >>> r1.conditions.append(dict(name='bbbb', minimum=0, maximum=3000))
         >>> r1.subs.append(("a", "a.alt"))
         >>>
         >>> doc.addRule(r1)
         >>> assert len(doc.rules) == 1
         >>> assert len(doc.rules[0].conditions) == 2
+        >>> evaluateRule(r1, dict(aaaa = 500, bbbb = 0))
+        True
+        >>> evaluateRule(r1, dict(aaaa = 0, bbbb = 0))
+        True
+        >>> evaluateRule(r1, dict(aaaa = 1000, bbbb = 0))
+        True
+        >>> evaluateRule(r1, dict(aaaa = 1000, bbbb = -100))
+        False
+        >>> evaluateRule(r1, dict(aaaa = 1000.0001, bbbb = 0))
+        False
+        >>> evaluateRule(r1, dict(aaaa = -0.0001, bbbb = 0))
+        False
+        >>> evaluateRule(r1, dict(aaaa = -100, bbbb = 0))
+        False
+        >>> applyRules([r1], dict(aaaa = 500), ["a", "b", "c"])
+        ['a.alt', 'b', 'c']
+        >>> applyRules([r1], dict(aaaa = 500), ["a.alt", "b", "c"])
+        ['a.alt', 'b', 'c']
+        >>> applyRules([r1], dict(aaaa = 2000), ["a", "b", "c"])
+        ['a', 'b', 'c']
 
         >>> a1 = AxisDescriptor()
         >>> a1.minimum = 0
@@ -1378,7 +1436,7 @@ if __name__ == "__main__":
         >>> doc.addAxis(b1)
 
         >>> doc.rules[0].conditions
-        [{'minimum': 0, 'tag': 'aaaa', 'maximum': 1000}, {'minimum': 0, 'tag': 'bbbb', 'maximum': 3000}]
+        [{'minimum': 0, 'maximum': 1000, 'name': 'aaaa'}, {'minimum': 0, 'maximum': 3000, 'name': 'bbbb'}]
 
         >>> doc.rules[0].subs
         [('a', 'a.alt')]
@@ -1387,7 +1445,7 @@ if __name__ == "__main__":
         >>> doc.rules[0].name
         'named.rule.1'
         >>> doc.rules[0].conditions
-        [{'minimum': 0.0, 'tag': 'aaaa', 'maximum': 1.0}, {'minimum': 0.0, 'tag': 'bbbb', 'maximum': 1.0}]
+        [{'minimum': 0.0, 'maximum': 1.0, 'name': 'aaaa'}, {'minimum': 0.0, 'maximum': 1.0, 'name': 'bbbb'}]
 
         >>> doc.write(testDocPath)
         >>> new = DesignSpaceDocument()
@@ -1398,6 +1456,7 @@ if __name__ == "__main__":
         >>> len(new.rules)
         1
         >>> new.write(testDocPath2)
+
         """
 
     p = "testCheck.designspace"
