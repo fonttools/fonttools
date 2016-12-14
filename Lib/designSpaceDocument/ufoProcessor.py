@@ -23,6 +23,7 @@ from mutatorMath.objects.mutator import buildMutator
 from mutatorMath.objects.location import biasFromLocations, Location
 import os
 
+#print("ufoProcessor reloads")
 
 """
 
@@ -140,7 +141,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
     mathKerningClass = MathKerning
 
     def __init__(self, readerClass=None, writerClass=None, fontClass=None, ufoVersion=2):
-        super(DesignSpaceProcessor, self).__init__(readerClass=None, writerClass=None, fontClass=None)
+        super(DesignSpaceProcessor, self).__init__(readerClass=readerClass, writerClass=writerClass, fontClass=fontClass)
         self.ufoVersion = ufoVersion         # target UFO version
         self.roundGeometry = False
         self._glyphMutators = {}
@@ -211,7 +212,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
             names = set()
             if not sourceDescriptor.name in self.fonts:
                 self.fonts[sourceDescriptor.name] = self._instantiateFont(sourceDescriptor.path)
-                names = names | set(self.fonts[sourceDescriptor.name].keys())
+            names = names | set(self.fonts[sourceDescriptor.name].keys())
         self.glyphNames = list(names)
 
     def makeInstance(self, instanceDescriptor, doRules=False):
@@ -391,6 +392,7 @@ if __name__ == "__main__":
     import shutil
     import os
     from defcon.objects.font import Font
+    import logging
 
     def addGlyphs(font, s):
         # we need to add the glyphs
