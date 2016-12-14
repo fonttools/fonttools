@@ -188,8 +188,8 @@ def open(file, mode='r', buffering=-1, encoding=None, errors=None,
 
 	One difference is that the 'opener' keyword argument is only supported in
 	Python 3. Here we pass the value of 'opener' only when it is not None.
-	This causes Python 2 to raise TypeError, complaining about the number of 
-	expected arguments, so it must be avoided if py2 or py2-3 contexts.
+	This causes Python 2 to raise TypeError, complaining about the number of
+	expected arguments, so it must be avoided in py2 or py2-3 contexts.
 
 	Another difference between 2 and 3, this time on Windows, has to do with
 	opening files by name or by file descriptor.
