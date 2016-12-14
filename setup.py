@@ -3,7 +3,6 @@
 from __future__ import print_function
 import sys
 from setuptools import setup, find_packages
-import versioneer
 
 # Force distutils to use py_compile.compile() function with 'doraise' argument
 # set to True, in order to raise an exception on compilation errors
@@ -45,7 +44,7 @@ TrueType/OpenType fonts to and from an XML-based format.
 
 setup(
 	name="fonttools",
-	version=versioneer.get_version(),
+	version="3.3.0",
 	description="Tools to manipulate font files",
 	author="Just van Rossum",
 	author_email="just@letterror.com",
@@ -74,6 +73,7 @@ setup(
 			"pyftinspect = fontTools.inspect:main"
 		]
 	},
-	cmdclass=versioneer.get_cmdclass(),
+	cmdclass={
+	},
 	**classifiers
 )
