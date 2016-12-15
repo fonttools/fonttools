@@ -1,3 +1,5 @@
+## TTX/FontTools Version 3.3.1 (2016-12-15)
+
 - [setup] We no longer use versioneer.py to compute fonttools version from git
   metadata, as this has caused issues for some users (#767). Now we bump the
   version strings manually with a custom `release` command of setup.py script.

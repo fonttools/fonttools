@@ -238,7 +238,7 @@ class release(Command):
 
 setup(
 	name="fonttools",
-	version="3.3.1.dev0",
+	version="3.3.1",
 	description="Tools to manipulate font files",
 	author="Just van Rossum",
 	author_email="just@letterror.com",
