@@ -26,7 +26,7 @@ with open('README.rst', 'r') as f:
 
 setup(
     name='cu2qu',
-    version='version="1.1.1"',
+    version='version="1.1.2.dev0"',
     description='Cubic-to-quadratic bezier curve conversion',
     author="James Godfrey-Kittle, Behdad Esfahbod",
     author_email="jamesgk@google.com",
