@@ -15,6 +15,8 @@
 
 from __future__ import print_function, division, absolute_import
 
+__version__ = "1.1.1.dev0"
+
 __all__ = ['curve_to_quadratic', 'curves_to_quadratic']
 
 MAX_N = 100
