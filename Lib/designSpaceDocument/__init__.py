@@ -810,7 +810,11 @@ class DesignSpaceDocument(object):
 
     def newSourceDescriptor(self):
         # Ask the writer class to make us a new sourceDescriptor
-        return self.writerClass.getSourceDecriptor()
+        return self.writerClass.getSourceDescriptor()
+
+    def newInstanceDescriptor(self):
+        # Ask the writer class to make us a new instanceDescriptor
+        return self.writerClass.getInstanceDescriptor()
 
     def getAxisOrder(self):
         names = []
