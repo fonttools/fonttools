@@ -425,6 +425,20 @@ if __name__ == "__main__":
             p.lineTo((0,font.info.ascender))
             p.closePath()
             g.width = w
+        font.newGlyph("wide.component")
+        g = font["wide.component"]
+        comp = g.instantiateComponent()
+        comp.baseGlyph = "wide"
+        comp.offset = (0,0)
+        g.appendComponent(comp)
+        g.width = font['wide'].width
+        font.newGlyph("narrow.component")
+        g = font["narrow.component"]
+        comp = g.instantiateComponent()
+        comp.baseGlyph = "narrow"
+        comp.offset = (0,0)
+        g.appendComponent(comp)
+        g.width = font['narrow'].width
         uniValue = 200
         for g in font:
             g.unicode = uniValue
@@ -537,8 +551,15 @@ if __name__ == "__main__":
         new = Font(dstPath)
         assert new.kerning.get(("narrow", "narrow")) == old.kerning.get(("wide","wide"))
         assert new.kerning.get(("wide", "wide")) == old.kerning.get(("narrow","narrow"))
-        #print(old['narrow'].unicode, new['wide'].unicode)
-        #assert old['narrow'].unicode == new['wide'].unicode # XXX
+        # after the swap these widths should be the same
+        assert old['narrow'].width == new['wide'].width
+        assert old['wide'].width == new['narrow'].width
+        # The following test may be a bit counterintuitive:
+        # the rule swaps the glyphs, but we do not want glyphs that are not
+        # specifically affected by the rule to *appear* any different.
+        # So, components have to be remapped. 
+        assert new['wide.component'].components[0].baseGlyph == "narrow"
+        assert new['narrow.component'].components[0].baseGlyph == "wide"
 
     selfTest = True
     if selfTest:
