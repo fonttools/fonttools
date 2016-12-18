@@ -106,14 +106,23 @@ class RuleDescriptor(SimpleDescriptor):
         self.subs = []          # list of substitutions stored as tuples of glyphnames ("a", "a.alt")
 
 def evaluateRule(rule, location):
-    """ Test if rule is True at location """
+    """ Test if rule is True at location.maximum
+        If a condition has no minimum, check for < maximum.
+        If a condition has no maximum, check for > minimum.
+     """
     for cd in rule.conditions:
         if not cd['name'] in location:
             #print("skipping", cd['name'])
             continue
-        #print(cd['minimum'] <= location[cd['name']] <= cd['maximum'])
-        if not cd['minimum'] <= location[cd['name']] <= cd['maximum']:
-            return False
+        if cd.get('minimum') is None:
+            if not location[cd['name']] <= cd['maximum']:
+                return False
+        elif cd.get('maximum') is None:
+            if not cd['minimum'] <= location[cd['name']]:
+                return False
+        else:
+            if not cd['minimum'] <= location[cd['name']] <= cd['maximum']:
+                return False
     return True
 
 def processRules(rules, location, glyphNames):
@@ -303,16 +312,25 @@ class BaseDocWriter(object):
         return "%f" % num
 
     def _addRule(self, ruleObject):
+        # if none of the conditions have minimum or maximum values, do not add the rule.
         self.rules.append(ruleObject)
         ruleElement  = ET.Element('rule')
         ruleElement.attrib['name'] = ruleObject.name
         for cond in ruleObject.conditions:
+            if cond.get('minimum') is None and cond.get('maximum') is None:
+                # neither is defined, don't add this condition
+                continue
             conditionElement = ET.Element('condition')
             conditionElement.attrib['name'] = cond.get('name')
-            conditionElement.attrib['minimum'] = self.intOrFloat(cond.get('minimum'))
-            conditionElement.attrib['maximum'] = self.intOrFloat(cond.get('maximum'))
+            if cond.get('minimum') is not None:
+                conditionElement.attrib['minimum'] = self.intOrFloat(cond.get('minimum'))
+            if cond.get('maximum') is not None:
+                conditionElement.attrib['maximum'] = self.intOrFloat(cond.get('maximum'))
             ruleElement.append(conditionElement)
         for sub in ruleObject.subs:
+            # skip empty subs
+            if sub[0] == '' and sub[1] == '':
+                continue
             subElement = ET.Element('sub')
             subElement.attrib['name'] = sub[0]
             subElement.attrib['with'] = sub[1]
@@ -496,8 +514,18 @@ class BaseDocReader(object):
             ruleObject.name = ruleElement.attrib.get("name")
             for conditionElement in ruleElement.findall('.condition'):
                 cd = {}
-                cd['minimum'] = float(conditionElement.attrib.get("minimum"))
-                cd['maximum'] = float(conditionElement.attrib.get("maximum"))
+                cdMin = conditionElement.attrib.get("minimum")
+                if cdMin is not None:
+                    cd['minimum'] = float(cdMin)
+                else:
+                    # will allow these to be None, assume axis.minimum
+                    cd['minimum'] = None
+                cdMax = conditionElement.attrib.get("maximum")
+                if cdMax is not None:
+                    cd['maximum'] = float(cdMax)
+                else:
+                    # will allow these to be None, assume axis.maximum
+                    cd['maximum'] = None
                 cd['name'] = conditionElement.attrib.get("name")
                 ruleObject.conditions.append(cd)
             for subElement in ruleElement.findall('.sub'):
@@ -983,8 +1011,14 @@ class DesignSpaceDocument(object):
         for rule in self.rules:
             newConditions = []
             for cond in rule.conditions:
-                minimum = self.normalizeLocation({cond['name']:cond['minimum']}).get(cond['name'])
-                maximum = self.normalizeLocation({cond['name']:cond['maximum']}).get(cond['name'])
+                if cond.get('minimum') is not None:
+                    minimum = self.normalizeLocation({cond['name']:cond['minimum']}).get(cond['name'])
+                else:
+                    minimum = None
+                if cond.get('maximum') is not None:
+                    maximum = self.normalizeLocation({cond['name']:cond['maximum']}).get(cond['name'])
+                else:
+                    maximum = None
                 newConditions.append(dict(name=cond['name'], minimum=minimum, maximum=maximum))
             rule.conditions = newConditions
 
@@ -1400,6 +1434,7 @@ if __name__ == "__main__":
         >>> r1.conditions.append(dict(name='bbbb', minimum=0, maximum=3000))
         >>> r1.subs.append(("a", "a.alt"))
         >>>
+        >>> # rule with minium and maximum
         >>> doc.addRule(r1)
         >>> assert len(doc.rules) == 1
         >>> assert len(doc.rules[0].conditions) == 2
@@ -1423,6 +1458,48 @@ if __name__ == "__main__":
         ['a.alt', 'b', 'c']
         >>> processRules([r1], dict(aaaa = 2000), ["a", "b", "c"])
         ['a', 'b', 'c']
+
+        >>> # rule with only a maximum
+        >>> r2 = RuleDescriptor()
+        >>> r2.name = "named.rule.2"
+        >>> r2.conditions.append(dict(name='aaaa', maximum=500))
+        >>> r2.subs.append(("b", "b.alt"))
+        >>>
+        >>> evaluateRule(r2, dict(aaaa = 0))
+        True
+        >>> evaluateRule(r2, dict(aaaa = -500))
+        True
+        >>> evaluateRule(r2, dict(aaaa = 1000))
+        False
+
+        >>> # rule with only a minimum
+        >>> r3 = RuleDescriptor()
+        >>> r3.name = "named.rule.3"
+        >>> r3.conditions.append(dict(name='aaaa', minimum=500))
+        >>> r3.subs.append(("c", "c.alt"))
+        >>>
+        >>> evaluateRule(r3, dict(aaaa = 0))
+        False
+        >>> evaluateRule(r3, dict(aaaa = 1000))
+        True
+        >>> evaluateRule(r3, dict(bbbb = 1000))
+        True
+
+        >>> # rule with only a minimum, maximum in separate conditions
+        >>> r4 = RuleDescriptor()
+        >>> r4.name = "named.rule.4"
+        >>> r4.conditions.append(dict(name='aaaa', minimum=500))
+        >>> r4.conditions.append(dict(name='bbbb', maximum=500))
+        >>> r4.subs.append(("c", "c.alt"))
+        >>>
+        >>> evaluateRule(r4, dict())    # is this what we expect though?
+        True
+        >>> evaluateRule(r4, dict(aaaa = 1000, bbbb = 0))
+        True
+        >>> evaluateRule(r4, dict(aaaa = 0, bbbb = 0))
+        False
+        >>> evaluateRule(r4, dict(aaaa = 1000, bbbb = 1000))
+        False
 
         >>> a1 = AxisDescriptor()
         >>> a1.minimum = 0

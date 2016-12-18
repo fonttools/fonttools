@@ -45,6 +45,18 @@ Some validation is done when reading.
 * If no source has a `copyInfo` flag, mutatorMath will be used to select one. This source gets its `copyInfo` flag set. If you save the document this flag will be set.
 * Use `doc.checkDefault()` to set the default font.
 
+# Rules
+**The `rule` element is experimental.** Some ideas behind how rules could work in designspaces come from Superpolator. Such rules can maybe be used to describe some of the conditional GSUB functionality of OpenType 1.8. The definition of a rule is not that complicated. A rule has a name, and it has a number of conditions. The rule also contains a list of glyphname pairs: the glyphs that need to be substituted.
+
+### Variable font instances
+* In an variable font the substitution happens at run time: there are no changes in the font, only in the sequence of glyphnames that is rendered.
+* The infrastructure to get this rule data in a variable font needs to be built.
+
+### UFO instances
+* When making instances as UFOs however, we need to swap the glyphs so that the original shape is still available. For instance, if a rule swaps `a` for `a.alt`, but a glyph that references `a` in a component would then show the new `a.alt`.
+* But that can lead to unexpected results. So, if there are no rules for `adieresis` (assuming it references `a`) then that glyph **should not change appearance**. That means that when the rule swaps `a` and `a.alt` it also swaps all components that reference these glyphs so they keep their appearance.
+* The swap function also needs to take care of swapping the names in kerning data.
+
 # `SourceDescriptor` object
 ### Attributes
 * `path`: string. Path to the source file. MutatorMath + Varlib.
@@ -417,11 +429,14 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 # 5.1.1 `condition` element
 * Child element of `rule`
 * Between the `minimum` and `maximum` this rule is `true`.
+* If `minimum` is not available, assume it is `axis.minimum`.
+* If `maximum` is not available, assume it is `axis.maximum`.
+* One or the other or both need to be present. 
 
 ### Attributes
 * `name`: string, required. Must match one of the defined `axis` name attributes.
-* `minimum`: number, required. The low value.
-* `maximum`: number, required. The high value.
+* `minimum`: number, required*. The low value.
+* `maximum`: number, required*. The high value.
 
 # 5.1.2 `sub` element
 * Child element of `rule`.
