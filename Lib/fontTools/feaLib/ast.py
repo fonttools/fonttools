@@ -383,7 +383,7 @@ class AttachStatement(Statement):
         return "Attach {} {};".format(self.glyphs.asFea(), " ".join([str(c) for c in self.contourPoints]));
 
 
-class ChainContextStatement(Statement) :
+class ChainContextPosStatement(Statement):
     def __init__(self, location, prefix, glyphs, suffix, lookups):
         Statement.__init__(self, location)
         self.prefix, self.glyphs, self.suffix = prefix, glyphs, suffix
@@ -397,7 +397,7 @@ class ChainContextStatement(Statement) :
             self.location, prefix, glyphs, suffix, self.lookups)
 
     def asFea(self, indent=""):
-        res = ""
+        res = "pos "
         if len(self.prefix) or len(self.suffix) or any([x is not None for x in self.lookups]) :
             res += " ".join([g.asFea() for g in self.prefix])
             if len(self.prefix) : res += " "
@@ -412,14 +412,33 @@ class ChainContextStatement(Statement) :
         return res
 
 
-class ChainContextPosStatement(ChainContextStatement):
-    def asFea(self, indent=""):
-        return "pos " + super(ChainContextPosStatement, self).asFea()
+class ChainContextSubstStatement(Statement):
+    def __init__(self, location, prefix, glyphs, suffix, lookups):
+        Statement.__init__(self, location)
+        self.prefix, self.glyphs, self.suffix = prefix, glyphs, suffix
+        self.lookups = lookups
 
+    def build(self, builder):
+        prefix = [p.glyphSet() for p in self.prefix]
+        glyphs = [g.glyphSet() for g in self.glyphs]
+        suffix = [s.glyphSet() for s in self.suffix]
+        builder.add_chain_context_subst(
+            self.location, prefix, glyphs, suffix, self.lookups)
 
-class ChainContextSubstStatement(ChainContextStatement):
     def asFea(self, indent=""):
-        return "sub " + super(ChainContextSubstStatement, self).asFea()
+        res = "pos "
+        if len(self.prefix) or len(self.suffix) or any([x is not None for x in self.lookups]) :
+            res += " ".join([g.asFea() for g in self.prefix])
+            if len(self.prefix) : res += " "
+            for i, g in enumerate(self.glyphs) :
+                res += g.asFea() + "' "
+                if self.lookups[i] is not None :
+                    res += "lookup " + self.lookups[i].name + " "
+            res += " ".join(map(asFea, self.suffix))
+        else :
+            res += " ".join(map(asFea, self.glyph))
+        res += ";"
+        return res
 
 
 class CursivePosStatement(Statement):
@@ -786,7 +805,7 @@ class ReverseChainSingleSubstStatement(Statement):
         if len(replaces) == 1 :
             replaces = replaces * len(originals)
         builder.add_reverse_chain_single_subst(self.location, prefix, suffix,
-                                dict(zip(replaces, originals)))
+                                dict(zip(originals, replaces)))
 
     def asFea(self, indent=""):
         res = "rsub "
@@ -813,6 +832,7 @@ class SingleSubstStatement(Statement):
     def build(self, builder):
         prefix = [p.glyphSet() for p in self.prefix]
         suffix = [s.glyphSet() for s in self.suffix]
+        originals = self.glyphs[0].glyphSet()
         replaces = self.replacements[0].glyphSet()
         if len(replaces) == 1 :
             replaces = replaces * len(originals)

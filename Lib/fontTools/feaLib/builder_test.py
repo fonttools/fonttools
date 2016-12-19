@@ -7,6 +7,7 @@ from fontTools.feaLib.builder import LigatureSubstBuilder
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables import otTables
+from fontTools.feaLib.parser import Parser
 import difflib
 import os
 import shutil
@@ -66,20 +67,19 @@ class BuilderTest(unittest.TestCase):
         name size size2 multiple_feature_blocks
     """.split()
 
-    TEST_FEA2FEA_FILES = """
-        Attach enum markClass language_required
-        GlyphClassDef LigatureCaretByIndex LigatureCaretByPos
-        lookup lookupflag feature_aalt ignore_pos
-        GPOS_1 GPOS_1_zero GPOS_2 GPOS_2b GPOS_3 GPOS_4 GPOS_5 GPOS_6 GPOS_8
+    # The aim is to get this down to nothing
+    TEST_FEA2FEA_SKIP_FILES = """
+        enum markClass language_required
+        GlyphClassDef
+        lookupflag feature_aalt ignore_pos
+        GPOS_1 GPOS_2 GPOS_3 GPOS_4 GPOS_5 GPOS_6 GPOS_8
         GSUB_2 GSUB_3 GSUB_6 GSUB_8
         spec4h1 spec4h2 spec5d1 spec5d2 spec5fi1 spec5fi2 spec5fi3 spec5fi4
         spec5f_ii_1 spec5f_ii_2 spec5f_ii_3 spec5f_ii_4
         spec5h1 spec6b_ii spec6d2 spec6e spec6f
         spec6h_ii spec6h_iii_1 spec6h_iii_3d spec8a spec8b spec8c
-        spec9a spec9b spec9c1 spec9c2 spec9c3 spec9d spec9e spec9f spec9g
-        spec10
-        bug453 bug457 bug463 bug501 bug502 bug504 bug505 bug506 bug509
-        bug512 bug568
+        spec9a spec9b spec9c1 spec9e spec9f
+        bug453 bug457 bug505
         name size size2 multiple_feature_blocks
     """.split()
 
@@ -149,7 +149,6 @@ class BuilderTest(unittest.TestCase):
                 font[tag].compile(font)
 
     def check_fea2fea_file(self, name):
-        import pdb; pdb.set_trace()
         f = self.getpath("{}.fea".format(name))
         p = Parser(f)
         doc = p.parse()
@@ -157,9 +156,9 @@ class BuilderTest(unittest.TestCase):
         with open(f) as ofile :
             olines = self.normal_fea(ofile.readlines())
         if olines != tlines :
-            for line in difflib.unified_diff(tlines, olines) L
+            for line in difflib.unified_diff(tlines, olines) :
                 sys.stdout.write(line)
-            sys.fail("Fea2Fea output is different from expected")
+            self.fail("Fea2Fea output is different from expected")
 
     def normal_fea(self, lines) :
         output = []
@@ -388,9 +387,11 @@ for name in BuilderTest.TEST_FEATURE_FILES:
 def generate_fea2fea_file_test(name):
     return lambda self: self.check_fea2fea_file(name)
 
-#for name in BuilderTest.TEST_FEA2FEA_FILES:
-#    setattr(BuilderTest, "test_Fea2feaFile_{}".format(name),
-#            generate_fea2fea_file_test(name))
+fea2feafiles = set(BuilderTest.TEST_FEATURE_FILES)
+fea2feafiles = fea2feafiles.difference(set(BuilderTest.TEST_FEA2FEA_SKIP_FILES))
+for name in fea2feafiles:
+    setattr(BuilderTest, "test_Fea2feaFile_{}".format(name),
+            generate_fea2fea_file_test(name))
 
 if __name__ == "__main__":
     unittest.main()
