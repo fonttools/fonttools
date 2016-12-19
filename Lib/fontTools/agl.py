@@ -780,6 +780,7 @@ def _glyphComponentToUnicode(component, isZapfDingbats):
 	# TODO: We currently use the AGLFN (Adobe glyph list for new fonts),
 	# although the spec actually mandates the legacy AGL which is
 	# a superset of the AGLFN.
+	# https://github.com/fonttools/fonttools/issues/775
 	uchar = AGL2UV.get(component)
 	if uchar:
 		return unichr(uchar)

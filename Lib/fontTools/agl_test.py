@@ -9,10 +9,12 @@ import unittest
 class AglToUnicodeTest(unittest.TestCase):
     def test_spec_examples(self):
         # https://github.com/adobe-type-tools/agl-specification#3-examples
+        #
         # TODO: Currently, we only handle AGLFN instead of legacy AGL names.
         # Therefore, the test cases below use Iogonek instead of Lcommaaccent.
         # Change Iogonek to Lcommaaccent as soon as the implementation has
         # been fixed to also support legacy AGL names.
+        # https://github.com/fonttools/fonttools/issues/775
         self.assertEqual(agl.toUnicode("Iogonek"), "Į")
         self.assertEqual(agl.toUnicode("uni20AC0308"), "\u20AC\u0308")
         self.assertEqual(agl.toUnicode("u1040C"), "\U0001040C")
