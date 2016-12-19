@@ -301,7 +301,12 @@ class DesignSpaceProcessor(DesignSpaceDocument):
                     sourceGlyphLocation = Location(glyphMaster.get("location"))
                     items.append((sourceGlyphLocation, sourceGlyph))
                 bias, glyphMutator = buildMutator(items, bias=self.defaultLoc)
-            glyphInstanceObject = glyphMutator.makeInstance(glyphInstanceLocation)
+            try:
+                glyphInstanceObject = glyphMutator.makeInstance(glyphInstanceLocation)
+            except IndexError:
+                # alignment problem with the data?
+                print("Error making instance %s"%glyphName)
+                continue
             font.newGlyph(glyphName)
             font[glyphName].clear()
             if self.roundGeometry:
