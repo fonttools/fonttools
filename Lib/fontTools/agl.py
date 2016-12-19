@@ -1,8 +1,12 @@
+# -*- coding: utf-8 -*-
 # The table below is taken from
 # http://www.adobe.com/devnet/opentype/archives/aglfn.txt
 
-from __future__ import print_function, division, absolute_import
+from __future__ import (print_function, division, absolute_import,
+                        unicode_literals)
 from fontTools.misc.py23 import *
+import re
+
 
 _aglText = """\
 # -----------------------------------------------------------
@@ -736,3 +740,135 @@ def _builddicts():
 		UV2AGL[unicode] = glyphName
 
 _builddicts()
+
+
+def toUnicode(glyph, isZapfDingbats=False):
+	"""Convert glyph names to Unicode, such as 'longs_t.oldstyle' --> u'ſt'
+
+	If isZapfDingbats is True, the implementation recognizes additional
+	glyph names (as required by the AGL specification).
+	"""
+	# https://github.com/adobe-type-tools/agl-specification#2-the-mapping
+	#
+	# 1. Drop all the characters from the glyph name starting with
+	#    the first occurrence of a period (U+002E; FULL STOP), if any.
+	glyph = glyph.split(".", 1)[0]
+
+	# 2. Split the remaining string into a sequence of components,
+	#    using underscore (U+005F; LOW LINE) as the delimiter.
+	components = glyph.split("_")
+
+	# 3. Map each component to a character string according to the
+	#    procedure below, and concatenate those strings; the result
+	#     is the character string to which the glyph name is mapped.
+	result = [_glyphComponentToUnicode(c, isZapfDingbats)
+                  for c in components]
+	return "".join(result)
+
+
+def _glyphComponentToUnicode(component, isZapfDingbats):
+	# If the font is Zapf Dingbats (PostScript FontName: ZapfDingbats),
+	# and the component is in the ITC Zapf Dingbats Glyph List, then
+	# map it to the corresponding character in that list.
+	dingbat = _zapfDingbatsToUnicode(component) if isZapfDingbats else None
+	if dingbat:
+		return dingbat
+
+	# Otherwise, if the component is in AGL, then map it
+	# to the corresponding character in that list.
+	#
+	# TODO: We currently use the AGLFN (Adobe glyph list for new fonts),
+	# although the spec actually mandates the legacy AGL which is
+	# a superset of the AGLFN.
+	uchar = AGL2UV.get(component)
+	if uchar:
+		return unichr(uchar)
+
+	# Otherwise, if the component is of the form "uni" (U+0075,
+	# U+006E, and U+0069) followed by a sequence of uppercase
+	# hexadecimal digits (0–9 and A–F, meaning U+0030 through
+	# U+0039 and U+0041 through U+0046), if the length of that
+	# sequence is a multiple of four, and if each group of four
+	# digits represents a value in the ranges 0000 through D7FF
+	# or E000 through FFFF, then interpret each as a Unicode scalar
+	# value and map the component to the string made of those
+	# scalar values. Note that the range and digit-length
+	# restrictions mean that the "uni" glyph name prefix can be
+	# used only with UVs in the Basic Multilingual Plane (BMP).
+	uni = _uniToUnicode(component)
+	if uni:
+		return uni
+
+	# Otherwise, if the component is of the form "u" (U+0075)
+	# followed by a sequence of four to six uppercase hexadecimal
+	# digits (0–9 and A–F, meaning U+0030 through U+0039 and
+	# U+0041 through U+0046), and those digits represents a value
+	# in the ranges 0000 through D7FF or E000 through 10FFFF, then
+	# interpret it as a Unicode scalar value and map the component
+	# to the string made of this scalar value.
+	uni = _uToUnicode(component)
+	if uni:
+		return uni
+
+	# Otherwise, map the component to an empty string.
+	return ''
+
+
+# https://github.com/adobe-type-tools/agl-aglfn/blob/master/zapfdingbats.txt
+_AGL_ZAPF_DINGBATS = (
+	" ✁✂✄☎✆✝✞✟✠✡☛☞✌✍✎✏✑✒✓✔✕✖✗✘✙✚✛✜✢✣✤✥✦✧★✩✪✫✬✭✮✯✰✱✲✳✴✵✶✷✸✹✺✻✼✽✾✿❀"
+	"❁❂❃❄❅❆❇❈❉❊❋●❍■❏❑▲▼◆❖ ◗❘❙❚❯❱❲❳❨❩❬❭❪❫❴❵❛❜❝❞❡❢❣❤✐❥❦❧♠♥♦♣    ✉✈✇"
+	"①②③④⑤⑥⑦⑧⑨⑩❶❷❸❹❺❻❼❽❾❿➀➁➂➃➄➅➆➇➈➉➊➋➌➍➎➏➐➑➒➓➔→➣↔"
+	"↕➙➛➜➝➞➟➠➡➢➤➥➦➧➨➩➫➭➯➲➳➵➸➺➻➼➽➾➚➪➶➹➘➴➷➬➮➱✃❐❒❮❰")
+
+
+def _zapfDingbatsToUnicode(glyph):
+	"""Helper for toUnicode()."""
+	if len(glyph) < 2 or glyph[0] != 'a':
+		return None
+	try:
+		gid = int(glyph[1:])
+	except ValueError:
+		return None
+	if gid < 0 or gid >= len(_AGL_ZAPF_DINGBATS):
+		return None
+	uchar = _AGL_ZAPF_DINGBATS[gid]
+	return uchar if uchar != ' ' else None
+
+
+_re_uni = re.compile("^uni([0-9A-F]+)$")
+
+
+def _uniToUnicode(component):
+	"""Helper for toUnicode() to handle "uniABCD" components."""
+	match = _re_uni.match(component)
+	if match is None:
+		return None
+	digits = match.group(1)
+	if len(digits) % 4 != 0:
+		return None
+	chars = [int(digits[i : i + 4], 16)
+                 for i in range(0, len(digits), 4)]
+	if any(c >= 0xD800 and c <= 0xDFFF for c in chars):
+		# The AGL specification explicitly excluded surrogate pairs.
+		return None
+	return ''.join([unichr(c) for c in chars])
+
+
+_re_u = re.compile("^u([0-9A-F]{4,6})$")
+
+
+def _uToUnicode(component):
+	"""Helper for toUnicode() to handle "u1ABCD" components."""
+	match = _re_u.match(component)
+	if match is None:
+		return None
+	digits = match.group(1)
+	try:
+		value = int(digits, 16)
+	except ValueError:
+		return None
+	if ((value >= 0x0000 and value <= 0xD7FF) or
+	    (value >= 0xE000 and value <= 0x10FFFF)):
+		return unichr(value)
+	return None
