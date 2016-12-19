@@ -573,7 +573,7 @@ class LigatureCaretByPosStatement(Statement):
 
     def build(self, builder):
         glyphs = self.glyphs.glyphSet()
-        builder.add_ligatureCaretByPos_(self.location, glyphs, self.carets)
+        builder.add_ligatureCaretByPos_(self.location, glyphs, set(self.carets))
 
     def asFea(self, indent=""):
         return "LigatureCaretByPos {} {};".format(self.glyphs.asFea(), " ".join([str(x) for x in self.carets]))
@@ -781,9 +781,12 @@ class ReverseChainSingleSubstStatement(Statement):
     def build(self, builder):
         prefix = [p.glyphSet() for p in self.old_prefix]
         suffix = [s.glyphSet() for s in self.old_suffix]
-        builder.add_reverse_chain_single_subst(
-            self.location, prefix, suffix,
-            dict(zip(self.glyphs[0].glyphSet, self.replacements[0].glyphSet)))
+        originals = self.glyphs[0].glyphSet()
+        replaces = self.replacements[0].glyphSet()
+        if len(replaces) == 1 :
+            replaces = replaces * len(originals)
+        builder.add_reverse_chain_single_subst(self.location, prefix, suffix,
+                                dict(zip(replaces, originals)))
 
     def asFea(self, indent=""):
         res = "rsub "
@@ -810,8 +813,11 @@ class SingleSubstStatement(Statement):
     def build(self, builder):
         prefix = [p.glyphSet() for p in self.prefix]
         suffix = [s.glyphSet() for s in self.suffix]
+        replaces = self.replacements[0].glyphSet()
+        if len(replaces) == 1 :
+            replaces = replaces * len(originals)
         builder.add_single_subst(self.location, prefix, suffix,
-                                 OrderedDict(zip(self.glyphs[0].glyphSet(), self.replacements[0].glyphSet())),
+                                 OrderedDict(zip(originals, replaces)),
                                  self.forceChain)
 
     def asFea(self, indent=""):

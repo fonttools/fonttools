@@ -370,9 +370,9 @@ class Parser(object):
         assert self.is_cur_keyword_("LigatureCaretByPos")
         location = self.cur_token_location_
         glyphs = self.parse_glyphclass_(accept_glyphname=True)
-        carets = {self.expect_number_()}
+        carets = [self.expect_number_()]
         while self.next_token_ != ";":
-            carets.add(self.expect_number_())
+            carets.append(self.expect_number_())
         self.expect_symbol_(";")
         return ast.LigatureCaretByPosStatement(location, glyphs, carets)
 

@@ -66,6 +66,23 @@ class BuilderTest(unittest.TestCase):
         name size size2 multiple_feature_blocks
     """.split()
 
+    TEST_FEA2FEA_FILES = """
+        Attach enum markClass language_required
+        GlyphClassDef LigatureCaretByIndex LigatureCaretByPos
+        lookup lookupflag feature_aalt ignore_pos
+        GPOS_1 GPOS_1_zero GPOS_2 GPOS_2b GPOS_3 GPOS_4 GPOS_5 GPOS_6 GPOS_8
+        GSUB_2 GSUB_3 GSUB_6 GSUB_8
+        spec4h1 spec4h2 spec5d1 spec5d2 spec5fi1 spec5fi2 spec5fi3 spec5fi4
+        spec5f_ii_1 spec5f_ii_2 spec5f_ii_3 spec5f_ii_4
+        spec5h1 spec6b_ii spec6d2 spec6e spec6f
+        spec6h_ii spec6h_iii_1 spec6h_iii_3d spec8a spec8b spec8c
+        spec9a spec9b spec9c1 spec9c2 spec9c3 spec9d spec9e spec9f spec9g
+        spec10
+        bug453 bug457 bug463 bug501 bug502 bug504 bug505 bug506 bug509
+        bug512 bug568
+        name size size2 multiple_feature_blocks
+    """.split()
+
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
         # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
@@ -130,6 +147,37 @@ class BuilderTest(unittest.TestCase):
         for tag in ('GDEF', 'GSUB', 'GPOS'):
             if tag in font:
                 font[tag].compile(font)
+
+    def check_fea2fea_file(self, name):
+        import pdb; pdb.set_trace()
+        f = self.getpath("{}.fea".format(name))
+        p = Parser(f)
+        doc = p.parse()
+        tlines = self.normal_fea(doc.asFea().split("\n"))
+        with open(f) as ofile :
+            olines = self.normal_fea(ofile.readlines())
+        if olines != tlines :
+            for line in difflib.unified_diff(tlines, olines) L
+                sys.stdout.write(line)
+            sys.fail("Fea2Fea output is different from expected")
+
+    def normal_fea(self, lines) :
+        output = []
+        skip = 0
+        for l in lines:
+            l = l.strip()
+            if l.startswith("#test-fea2fea: ") :
+                output.append(l[15:])
+                skip = 1
+            x = l.find("#")
+            if x >= 0 :
+                l = l[:x].strip()
+            if not len(l) : continue
+            if skip > 0 :
+                skip = skip - 1
+                continue
+            output.append(l)
+        return output
 
     def test_alternateSubst_multipleSubstitutionsForSameGlyph(self):
         self.assertRaisesRegex(
@@ -336,6 +384,13 @@ def generate_feature_file_test(name):
 for name in BuilderTest.TEST_FEATURE_FILES:
     setattr(BuilderTest, "test_FeatureFile_%s" % name,
             generate_feature_file_test(name))
+
+def generate_fea2fea_file_test(name):
+    return lambda self: self.check_fea2fea_file(name)
+
+#for name in BuilderTest.TEST_FEA2FEA_FILES:
+#    setattr(BuilderTest, "test_Fea2feaFile_{}".format(name),
+#            generate_fea2fea_file_test(name))
 
 if __name__ == "__main__":
     unittest.main()
