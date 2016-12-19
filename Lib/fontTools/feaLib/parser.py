@@ -78,7 +78,7 @@ class Parser(object):
                     'Unknown anchor "%s"' % name,
                     self.cur_token_location_)
             self.expect_symbol_(">")
-            return ast.Anchor(location, anchordef.x, anchordef.y,
+            return ast.Anchor(location, name, anchordef.x, anchordef.y,
                               anchordef.contourpoint,
                               xDeviceTable=None, yDeviceTable=None)
 
@@ -96,7 +96,7 @@ class Parser(object):
             xDeviceTable, yDeviceTable = None, None
 
         self.expect_symbol_(">")
-        return ast.Anchor(location, x, y, contourpoint,
+        return ast.Anchor(location, None, x, y, contourpoint,
                           xDeviceTable, yDeviceTable)
 
     def parse_anchor_marks_(self):
@@ -360,9 +360,9 @@ class Parser(object):
         assert self.is_cur_keyword_("LigatureCaretByIndex")
         location = self.cur_token_location_
         glyphs = self.parse_glyphclass_(accept_glyphname=True)
-        carets = {self.expect_number_()}
+        carets = [self.expect_number_()]
         while self.next_token_ != ";":
-            carets.add(self.expect_number_())
+            carets.append(self.expect_number_())
         self.expect_symbol_(";")
         return ast.LigatureCaretByIndexStatement(location, glyphs, carets)
 
@@ -501,7 +501,7 @@ class Parser(object):
                 '"enumerate" is not allowed with '
                 'cursive attachment positioning',
                 location)
-        glyphclass = self.parse_glyphclass_(accept_glyphname=True).glyphSet()
+        glyphclass = self.parse_glyphclass_(accept_glyphname=True)
         entryAnchor = self.parse_anchor_()
         exitAnchor = self.parse_anchor_()
         self.expect_symbol_(";")
@@ -516,7 +516,7 @@ class Parser(object):
                 '"enumerate" is not allowed with '
                 'mark-to-base attachment positioning',
                 location)
-        base = self.parse_glyphclass_(accept_glyphname=True).glyphSet()
+        base = self.parse_glyphclass_(accept_glyphname=True)
         marks = self.parse_anchor_marks_()
         self.expect_symbol_(";")
         return ast.MarkBasePosStatement(location, base, marks)
@@ -529,7 +529,7 @@ class Parser(object):
                 '"enumerate" is not allowed with '
                 'mark-to-ligature attachment positioning',
                 location)
-        ligatures = self.parse_glyphclass_(accept_glyphname=True).glyphSet()
+        ligatures = self.parse_glyphclass_(accept_glyphname=True)
         marks = [self.parse_anchor_marks_()]
         while self.next_token_ == "ligComponent":
             self.expect_keyword_("ligComponent")
@@ -545,7 +545,7 @@ class Parser(object):
                 '"enumerate" is not allowed with '
                 'mark-to-mark attachment positioning',
                 location)
-        baseMarks = self.parse_glyphclass_(accept_glyphname=True).glyphSet()
+        baseMarks = self.parse_glyphclass_(accept_glyphname=True)
         marks = self.parse_anchor_marks_()
         self.expect_symbol_(";")
         return ast.MarkMarkPosStatement(location, baseMarks, marks)
@@ -618,8 +618,7 @@ class Parser(object):
                     'but found a glyph class with %d elements' %
                     (len(glyphs), len(replacements)), location)
             return ast.SingleSubstStatement(
-                location,
-                OrderedDict(zip(glyphs, replacements)),
+                location, old, new,
                 old_prefix, old_suffix,
                 forceChain=hasMarks
             )
@@ -670,8 +669,7 @@ class Parser(object):
                     'but found a glyph class with %d elements' %
                     (len(glyphs), len(replacements)), location)
             return ast.ReverseChainSingleSubstStatement(
-                location, old_prefix, old_suffix,
-                dict(zip(glyphs, replacements)))
+                location, old_prefix, old_suffix, old, new)
 
         # GSUB lookup type 6: Chaining contextual substitution.
         assert len(new) == 0, new
