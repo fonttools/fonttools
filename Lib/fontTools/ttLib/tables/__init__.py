@@ -29,6 +29,7 @@ def _moduleFinderHint():
 	from . import L_T_S_H_
 	from . import M_A_T_H_
 	from . import M_E_T_A_
+	from . import M_V_A_R_
 	from . import O_S_2f_2
 	from . import S_I_N_G_
 	from . import S_T_A_T_
