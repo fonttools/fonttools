@@ -1,14 +1,23 @@
 table name {
+#test-fea2fea:
   nameid 1 "Ignored-1";
+#test-fea2fea:
   nameid 2 "Ignored-2";
+#test-fea2fea:
   nameid 3 "Ignored-3";
+#test-fea2fea:
   nameid 4 "Ignored-4";
+#test-fea2fea:
   nameid 5 "Ignored-5";
-  nameid 6 "Ignored-6";
+#test-fea2fea:
+    nameid 6 "Ignored-6";
+#test-fea2fea: nameid 7 "Test7";
   nameid 7 3 "Test7";
-  nameid 8 1 "Test8";
-  nameid 9 3 1 0x0409 "Test9";
-  nameid 10 1 "Test10";
-  nameid 11 1 0 0 "Test11";
+    nameid 8 1 "Test8";
+#test-fea2fea: nameid 9 "Test9";
+    nameid 9 3 1 0x0409 "Test9";
+    nameid 10 1 "Test10";
+#test-fea2fea: nameid 11 1 "Test11";
+    nameid 11 1 0 0 "Test11";
 } name;
 
