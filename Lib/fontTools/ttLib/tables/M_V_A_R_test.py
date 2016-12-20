@@ -133,3 +133,7 @@ class MVARTest(unittest.TestCase):
         data = MVAR_DATA
         data = data[:5] + b'\x00' + data[6:]
         self.assertEqual(hexStr(mvar.compile(font)), hexStr(data))
+
+
+if __name__ == '__main__':
+    unittest.main()
