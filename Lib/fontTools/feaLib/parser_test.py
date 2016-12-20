@@ -16,16 +16,18 @@ def glyphstr(glyphs):
             return '[%s]' % ' '.join(sorted(list(x)))
     return ' '.join([f(g.glyphSet()) for g in glyphs])
 
-def mapping(s) :
+
+def mapping(s):
     b = []
-    for a in s.glyphs :
+    for a in s.glyphs:
         b.extend(a.glyphSet())
     c = []
-    for a in s.replacements :
+    for a in s.replacements:
         c.extend(a.glyphSet())
-    if len(c) == 1 :
+    if len(c) == 1:
         c = c * len(b)
     return dict(zip(b, c))
+
 
 class ParserTest(unittest.TestCase):
     def __init__(self, methodName):

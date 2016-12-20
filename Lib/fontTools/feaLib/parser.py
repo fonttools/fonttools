@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.lexer import Lexer, IncludingLexer
 from fontTools.misc.py23 import *
-from collections import OrderedDict
 import fontTools.feaLib.ast as ast
 import logging
 import os
@@ -921,7 +920,7 @@ class Parser(object):
 
     def parse_base_tag_list_(self):
         assert self.cur_token_ in ("HorizAxis.BaseTagList",
-                "VertAxis.BaseTagList"), self.cur_token_
+                                   "VertAxis.BaseTagList"), self.cur_token_
         bases = []
         while self.next_token_ != ";":
             bases.append(self.expect_script_tag_())
@@ -930,7 +929,7 @@ class Parser(object):
 
     def parse_base_script_list_(self, count):
         assert self.cur_token_ in ("HorizAxis.BaseScriptList",
-                "VertAxis.BaseScriptList"), self.cur_token_
+                                   "VertAxis.BaseScriptList"), self.cur_token_
         scripts = [(self.parse_base_script_record_(count))]
         while self.next_token_ == ",":
             self.expect_symbol_(",")
