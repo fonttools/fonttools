@@ -7,6 +7,6 @@
 
 feature kern {
   enum pos @Y_LC semicolon -80;    # specific pairs
-  pos     f quoteright 30;         # specific pair
-  pos     @Y_LC @SMALL_PUNC -100;  # class pair
+  pos f quoteright 30;         # specific pair
+  pos @Y_LC @SMALL_PUNC -100;  # class pair
 } kern;

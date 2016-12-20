@@ -20,6 +20,7 @@ lookup C {
 } C;
 
 lookup D {
+#test-fea2fea: lookupflag RightToLeft IgnoreBaseGlyphs IgnoreLigatures;
     lookupflag 7;
     pos seven 7;
 } D;
