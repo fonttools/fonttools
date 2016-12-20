@@ -4,5 +4,6 @@
 languagesystem DFLT dflt;
 
 feature test {
+#test-fea2fea: rsub [a e n] d' by d.alt;
     reversesub [a e n] d' by d.alt;
 } test;

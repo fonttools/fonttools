@@ -8,6 +8,6 @@ table GDEF {
     Attach noon.final 5;
     Attach noon.initial 4;
     LigatureCaretByPos f_i 400 380;
-    LigatureCaretByPos [c_t s_t]  500;
+    LigatureCaretByPos [c_t s_t] 500;
     LigatureCaretByIndex f_f_i 23 46;
 } GDEF;

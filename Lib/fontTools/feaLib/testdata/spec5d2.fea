@@ -7,18 +7,18 @@
 
 # So:
 feature F1 {
-  sub f f by f_f;
-  sub f i by f_i;
-  sub f f i by f_f_i;
-  sub o f f i by o_f_f_i;
+    sub f f by f_f;
+    sub f i by f_i;
+    sub f f i by f_f_i;
+    sub o f f i by o_f_f_i;
 } F1;
 
 # will produce an identical representation in the font as:
 feature F2 {
-  sub o f f i by o_f_f_i;
-  sub f f i by f_f_i;
-  sub f f by f_f;
-  sub f i by f_i;
+    sub o f f i by o_f_f_i;
+    sub f f i by f_f_i;
+    sub f f by f_f;
+    sub f i by f_i;
 } F2;
 
 # In the resulting OpenType GSUB table (spec5d2.ttx),

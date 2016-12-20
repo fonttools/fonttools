@@ -69,18 +69,15 @@ class BuilderTest(unittest.TestCase):
 
     # The aim is to get this down to nothing
     TEST_FEA2FEA_SKIP_FILES = """
-        enum markClass language_required
-        GlyphClassDef
-        lookupflag feature_aalt ignore_pos
-        GPOS_1 GPOS_2 GPOS_3 GPOS_4 GPOS_5 GPOS_6 GPOS_8
-        GSUB_2 GSUB_3 GSUB_6 GSUB_8
-        spec4h1 spec4h2 spec5d1 spec5d2 spec5fi1 spec5fi2 spec5fi3 spec5fi4
-        spec5f_ii_1 spec5f_ii_2 spec5f_ii_3 spec5f_ii_4
-        spec5h1 spec6b_ii spec6d2 spec6e spec6f
-        spec6h_ii spec6h_iii_1 spec6h_iii_3d spec8a spec8b spec8c
-        spec9a spec9b spec9c1 spec9e spec9f
-        bug453 bug457 bug505
-        name size size2 multiple_feature_blocks
+        language_required
+        lookupflag ignore_pos
+        GPOS_1 GPOS_2
+        GSUB_6 GSUB_8
+        spec4h1 spec5fi2 spec5fi3
+        spec5f_ii_2 spec5f_ii_3 spec5f_ii_4
+        spec8a spec8b spec8c
+        spec9e
+        name
     """.split()
 
     def __init__(self, methodName):
@@ -156,7 +153,7 @@ class BuilderTest(unittest.TestCase):
         with open(f) as ofile :
             olines = self.normal_fea(ofile.readlines())
         if olines != tlines :
-            for line in difflib.unified_diff(tlines, olines) :
+            for line in difflib.unified_diff(olines, tlines) :
                 sys.stdout.write(line)
             self.fail("Fea2Fea output is different from expected")
 
@@ -166,7 +163,7 @@ class BuilderTest(unittest.TestCase):
         for l in lines:
             l = l.strip()
             if l.startswith("#test-fea2fea: ") :
-                output.append(l[15:])
+                output.append(l[15:].strip())
                 skip = 1
             x = l.find("#")
             if x >= 0 :

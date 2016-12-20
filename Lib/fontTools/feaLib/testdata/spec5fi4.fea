@@ -5,5 +5,5 @@
 languagesystem latn dflt;
 
 feature test {
-    substitute [e e.begin]' t' c by ampersand;
+    sub [e e.begin]' t' c by ampersand;
 } test;
