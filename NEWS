@@ -1,3 +1,9 @@
+- [feaLib] Added support for generating FEA text from abstract syntax tree
+  (AST) objects (#776). Thanks @mhosken
+- Added `agl.toUnicode` function to convert AGL-compliant glyph names to
+  Unicode strings (#774)
+- Implemented MVAR table (b4d5381)
+
 ## TTX/FontTools Version 3.3.1
 
 2016-12-15
