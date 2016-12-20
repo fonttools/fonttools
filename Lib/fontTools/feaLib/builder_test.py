@@ -135,7 +135,7 @@ class BuilderTest(unittest.TestCase):
         p = Parser(f)
         doc = p.parse()
         tlines = self.normal_fea(doc.asFea().split("\n"))
-        with open(f) as ofile:
+        with open(f, "r", encoding="utf-8") as ofile:
             olines = self.normal_fea(ofile.readlines())
         if olines != tlines:
             for line in difflib.unified_diff(olines, tlines):
