@@ -13,11 +13,11 @@ feature cswh {
     @ENDINGS_SWASH = [a.end e.end z.end];
 
     # --- Beginning-of-word swashes:
-    ignore substitute @LETTER @BEGINNINGS';
-    substitute @BEGINNINGS' by @BEGINNINGS_SWASH;
+    ignore sub @LETTER @BEGINNINGS';
+    sub @BEGINNINGS' by @BEGINNINGS_SWASH;
  
     # --- End-of-word swashes:
-    ignore substitute @ENDINGS' @LETTER;
-    substitute @ENDINGS' by @ENDINGS_SWASH;
+    ignore sub @ENDINGS' @LETTER;
+    sub @ENDINGS' by @ENDINGS_SWASH;
 
 } cswh;

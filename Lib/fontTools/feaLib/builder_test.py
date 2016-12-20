@@ -65,17 +65,6 @@ class BuilderTest(unittest.TestCase):
         name size size2 multiple_feature_blocks
     """.split()
 
-    # The aim is to get this down to nothing
-    TEST_FEA2FEA_SKIP_FILES = """
-        language_required
-        GSUB_6 GSUB_8
-        spec4h1 spec5fi3
-        spec5f_ii_2 spec5f_ii_3 spec5f_ii_4
-        spec8a spec8b spec8c
-        spec9e
-        name
-    """.split()
-
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
         # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
@@ -146,7 +135,7 @@ class BuilderTest(unittest.TestCase):
         p = Parser(f)
         doc = p.parse()
         tlines = self.normal_fea(doc.asFea().split("\n"))
-        with open(f) as ofile:
+        with open(f, "r", encoding="utf-8") as ofile:
             olines = self.normal_fea(ofile.readlines())
         if olines != tlines:
             for line in difflib.unified_diff(olines, tlines):
@@ -158,8 +147,9 @@ class BuilderTest(unittest.TestCase):
         skip = 0
         for l in lines:
             l = l.strip()
-            if l.startswith("#test-fea2fea: "):
-                output.append(l[15:].strip())
+            if l.startswith("#test-fea2fea:"):
+                if len(l) > 15:
+                    output.append(l[15:].strip())
                 skip = 1
             x = l.find("#")
             if x >= 0:
@@ -384,9 +374,7 @@ def generate_fea2fea_file_test(name):
     return lambda self: self.check_fea2fea_file(name)
 
 
-fea2feafiles = set(BuilderTest.TEST_FEATURE_FILES)
-fea2feafiles = fea2feafiles.difference(set(BuilderTest.TEST_FEA2FEA_SKIP_FILES))
-for name in fea2feafiles:
+for name in BuilderTest.TEST_FEATURE_FILES:
     setattr(BuilderTest, "test_Fea2feaFile_{}".format(name),
             generate_fea2fea_file_test(name))
 
