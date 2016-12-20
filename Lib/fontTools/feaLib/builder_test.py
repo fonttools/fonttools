@@ -71,7 +71,7 @@ class BuilderTest(unittest.TestCase):
     TEST_FEA2FEA_SKIP_FILES = """
         language_required
         GSUB_6 GSUB_8
-        spec4h1 spec5fi2 spec5fi3
+        spec4h1 spec5fi3
         spec5f_ii_2 spec5f_ii_3 spec5f_ii_4
         spec8a spec8b spec8c
         spec9e

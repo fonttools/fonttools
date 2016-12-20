@@ -7,5 +7,5 @@ languagesystem latn dflt;
 feature test {
 #test-fea2fea: lookupflag RightToLeft IgnoreBaseGlyphs IgnoreLigatures;
     lookupflag 7;
-    substitute [a e n] d' by d.alt;
+    sub [a e n] d' by d.alt;
 } test;
