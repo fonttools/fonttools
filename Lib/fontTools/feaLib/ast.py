@@ -297,10 +297,10 @@ class GlyphClassDefStatement(Statement):
 
     def asFea(self, indent=""):
         return "GlyphClassDef {}, {}, {}, {};".format(
-            self.baseGlyphs.asFea(),
-            self.ligatureGlyphs.asFea(),
-            self.markGlyphs.asFea(),
-            self.componentGlyphs.asFea())
+            self.baseGlyphs.asFea() if self.baseGlyphs else "",
+            self.ligatureGlyphs.asFea() if self.ligatureGlyphs else "",
+            self.markGlyphs.asFea() if self.markGlyphs else "",
+            self.componentGlyphs.asFea() if self.componentGlyphs else "")
 
 
 # While glyph classes can be defined only once, the feature file format
