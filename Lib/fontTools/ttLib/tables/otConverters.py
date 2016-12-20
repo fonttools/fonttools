@@ -93,7 +93,7 @@ class BaseConverter(object):
 		self.repeat = repeat
 		self.aux = aux
 		self.tableClass = tableClass
-		self.isCount = name.endswith("Count")
+		self.isCount = name.endswith("Count") or name in ['DesignAxisRecordSize', 'ValueRecordSize']
 		self.isLookupType = name.endswith("LookupType")
 		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount", "VarRegionCount", "MappingCount", "RegionAxisCount", 'DesignAxisCount', 'DesignAxisRecordSize', 'AxisValueCount', 'ValueRecordSize']
 
