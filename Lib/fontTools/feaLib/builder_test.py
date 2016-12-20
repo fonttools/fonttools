@@ -70,7 +70,6 @@ class BuilderTest(unittest.TestCase):
     # The aim is to get this down to nothing
     TEST_FEA2FEA_SKIP_FILES = """
         language_required
-        lookupflag
         GSUB_6 GSUB_8
         spec4h1 spec5fi2 spec5fi3
         spec5f_ii_2 spec5f_ii_3 spec5f_ii_4
