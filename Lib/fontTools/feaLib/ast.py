@@ -793,11 +793,11 @@ class PairPosStatement(Statement):
     def asFea(self, indent=""):
         res = "enum " if self.enumerated else ""
         if self.valuerecord2 :
-            res += "pos {} {} {} {};".format(self.glyphs1.asFea(), self.valuerecord1.makeString(False),
-                        self.glyphs2.asFea(), self.valuerecord2.makeString(False))
+            res += "pos {} {} {} {};".format(self.glyphs1.asFea(), self.valuerecord1.makeString(),
+                        self.glyphs2.asFea(), self.valuerecord2.makeString())
         else :
             res += "pos {} {} {};".format(self.glyphs1.asFea(), self.glyphs2.asFea(), 
-                        self.valuerecord1.makeString(False))
+                        self.valuerecord1.makeString())
         return res
 
 
@@ -895,11 +895,11 @@ class SinglePosStatement(Statement):
         if len(self.prefix) or len(self.suffix) or self.forceChain :
             if len(self.prefix) :
                 res += " ".join(map(asFea, self.prefix)) + " "
-            res += " ".join([asFea(x[0]) + "'" + ((" " + x[1].makeString(False)) if x[1] else "") for x in self.pos])
+            res += " ".join([asFea(x[0]) + "'" + ((" " + x[1].makeString()) if x[1] else "") for x in self.pos])
             if len(self.suffix) :
                 res += " " + " ".join(map(asFea, self.suffix))
         else :
-            res += " ".join([asFea(x[0]) + " " + (x[1].makeString(False) if x[1] else "") for x in self.pos])
+            res += " ".join([asFea(x[0]) + " " + (x[1].makeString() if x[1] else "") for x in self.pos])
         res += ";"
         return res
 
@@ -910,13 +910,14 @@ class SubtableStatement(Statement):
 
 
 class ValueRecord(Expression):
-    def __init__(self, location, xPlacement, yPlacement, xAdvance, yAdvance,
+    def __init__(self, location, vertical, xPlacement, yPlacement, xAdvance, yAdvance,
                  xPlaDevice, yPlaDevice, xAdvDevice, yAdvDevice):
         Expression.__init__(self, location)
         self.xPlacement, self.yPlacement = (xPlacement, yPlacement)
         self.xAdvance, self.yAdvance = (xAdvance, yAdvance)
         self.xPlaDevice, self.yPlaDevice = (xPlaDevice, yPlaDevice)
         self.xAdvDevice, self.yAdvDevice = (xAdvDevice, yAdvDevice)
+        self.vertical = vertical
 
     def __eq__(self, other):
         return (self.xPlacement == other.xPlacement and
@@ -935,11 +936,12 @@ class ValueRecord(Expression):
                 hash(self.xPlaDevice) ^ hash(self.yPlaDevice) ^
                 hash(self.xAdvDevice) ^ hash(self.yAdvDevice))
 
-    def makeString(self, vertical):
+    def makeString(self, vertical = None):
         x, y = self.xPlacement, self.yPlacement
         xAdvance, yAdvance = self.xAdvance, self.yAdvance
         xPlaDevice, yPlaDevice = self.xPlaDevice, self.yPlaDevice
         xAdvDevice, yAdvDevice = self.xAdvDevice, self.yAdvDevice
+        if vertical is None : vertical = self.vertical
 
         # Try format A, if possible.
         if x == 0 and y == 0:
