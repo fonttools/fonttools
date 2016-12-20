@@ -63,6 +63,7 @@ class BuilderTest(unittest.TestCase):
         bug453 bug457 bug463 bug501 bug502 bug504 bug505 bug506 bug509
         bug512 bug568
         name size size2 multiple_feature_blocks
+        omitted_GlyphClassDef
     """.split()
 
     def __init__(self, methodName):
