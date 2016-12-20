@@ -67,6 +67,17 @@ class BuilderTest(unittest.TestCase):
         name size size2 multiple_feature_blocks
     """.split()
 
+    # The aim is to get this down to nothing
+    TEST_FEA2FEA_SKIP_FILES = """
+        language_required
+        GSUB_6 GSUB_8
+        spec4h1 spec5fi3
+        spec5f_ii_2 spec5f_ii_3 spec5f_ii_4
+        spec8a spec8b spec8c
+        spec9e
+        name
+    """.split()
+
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
         # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,

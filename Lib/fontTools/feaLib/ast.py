@@ -136,6 +136,9 @@ class GlyphClassName(Expression):
     def asFea(self, indent=""):
         return "@" + self.glyphclass.name
 
+    def asFea(self, indent=""):
+        return "@" + self.glyphclass.name
+
 
 class MarkClassName(Expression):
     """A mark class name, such as @FRENCH_MARKS defined with markClass."""
@@ -362,7 +365,7 @@ class AlternateSubstStatement(Statement):
         if len(self.prefix) or len(self.suffix) :
             if len(self.prefix) :
                 res += " ".join(map(asFea, self.prefix)) + " "
-            res += asFea(self.glyph) + "'"    # even though we really only use 1
+            res += self.glyph.asFea() + "'"
             if len(self.suffix) :
                 res += " " + " ".join(map(asFea, self.suffix))
         else :

@@ -994,6 +994,23 @@ otData = [
 		('LOffsetTo(VarIdxMap)', 'VOrgMap', None, None, 'Vertical origin mapping.'),
 	]),
 
+	# Font-wide metrics variations
+
+	('MetricsValueRecord', [
+		('Tag', 'ValueTag', None, None, '4-byte font-wide measure identifier'),
+		('uint32', 'VarIdx', None, None, 'Combined outer-inner variation index'),
+		('uint8', 'MoreBytes', 'ValueRecordSize', -8, 'Extra bytes.  Set to empty array.'),
+	]),
+
+	('MVAR', [
+		('Version', 'Version', None, None, 'Version of the MVAR table-initially = 0x00010000'),
+		('uint16', 'AxisCount', None, None, ''),
+		('uint16', 'ValueRecordSize', None, None, ''),
+		('uint16', 'ValueRecordCount', None, None, ''),
+		('Offset', 'VarStore', None, None, ''),
+		('MetricsValueRecord', 'ValueRecord', 'ValueRecordCount', 0, ''),
+	]),
+
 
 	#
 	# math
