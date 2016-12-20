@@ -121,3 +121,15 @@ class MVARTest(unittest.TestCase):
         mvar.decompile(MVAR_DATA, font)
         self.maxDiff = None
         self.assertEqual(getXML(mvar.toXML), MVAR_XML)
+
+    def test_compile_fromXML(self):
+        mvar = newTable('MVAR')
+        font = TTFont()
+        self.maxDiff = None
+        for name, attrs, content in parseXML(MVAR_XML):
+            mvar.fromXML(name, attrs, content, font=font)
+        # Ignore AxisCount
+        # see https://github.com/fonttools/fonttools/issues/689
+        data = MVAR_DATA
+        data = data[:5] + b'\x00' + data[6:]
+        self.assertEqual(hexStr(mvar.compile(font)), hexStr(data))
