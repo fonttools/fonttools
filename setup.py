@@ -27,7 +27,7 @@ bumpversion = ['bumpversion'] if needs_bumpversion else []
 
 # Trove classifiers for PyPI
 classifiers = {"classifiers": [
-	"Development Status :: 4 - Beta",
+	"Development Status :: 5 - Production/Stable",
 	"Environment :: Console",
 	"Environment :: Other Environment",
 	"Intended Audience :: Developers",
@@ -38,6 +38,7 @@ classifiers = {"classifiers": [
 	"Programming Language :: Python",
 	"Programming Language :: Python 2",
 	"Programming Language :: Python 3",
+	"Topic :: Text Processing :: Fonts",
 	"Topic :: Multimedia :: Graphics",
 	"Topic :: Multimedia :: Graphics :: Graphics Conversion",
 ]}
