@@ -1,0 +1,9 @@
+anon py {
+
+builder.parse_string('''
+    feature size {
+        parameters 10.0 0;
+    } size;
+''')
+
+} py;

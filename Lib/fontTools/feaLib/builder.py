@@ -73,9 +73,12 @@ class Builder(object):
         self.hhea_ = {}
         # for table 'vhea'
         self.vhea_ = {}
+        # for anon py blocks
+        self.python = {}
 
     def build(self):
-        self.parseTree = Parser(self.file).parse()
+        self.parser = Parser(self.file)
+        self.parseTree = self.parser.parse()
         self.parseTree.build(self)
         self.build_feature_aalt_()
         self.build_head()
@@ -988,6 +991,21 @@ class Builder(object):
 
     def add_vhea_field(self, key, value):
         self.vhea_[key] = value
+
+    def process_anon_block(self, content, tag) :
+        if tag == 'py  ' :
+            if '__builtins__' not in self.python :
+                self.python = {
+                    '__builtins__' : __builtins__,
+                    # 'parser' : self.parser,
+                    'builder' : self
+                }
+            exec (content, self.python)
+
+# Methods to provide capabilities to anon py blocks on builder
+    def parse_string(self, data) :
+        doc = self.parser.parse_string(data)
+        doc.build(self)
 
 
 def makeOpenTypeAnchor(anchor):

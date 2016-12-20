@@ -237,5 +237,9 @@ class IncludingLexer(object):
             fileobj.close()
         return Lexer(data, filename)
 
+    def push_lexer(self, lexer) :
+        self.lexers_.append(lexer)
+
     def scan_anonymous_block(self, tag):
         return self.lexers_[-1].scan_anonymous_block(tag)
+

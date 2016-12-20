@@ -11,12 +11,12 @@ feature tst1 {
 
 feature tst2 {
     lookup SomeLookup;
-} tst2;
+} ;
 
 feature tst3 {
     lookup EmbeddedLookup {
         sub A by A.sc;
-    } EmbeddedLookup;
+    } ;
 } tst3;
 
 feature tst4 {
