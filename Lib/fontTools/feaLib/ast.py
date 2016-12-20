@@ -998,6 +998,15 @@ class ValueRecordDefinition(Statement):
         return "valueRecordDef {} {};".format(self.value.asFea(), self.name)
 
 
+def simplify_name_attributes(pid, eid, lid):
+    if pid == 3 and eid == 1 and lid == 1033:
+        return ""
+    elif pid == 1 and eid == 0 and lid == 0:
+        return "1"
+    else:
+        return "{} {} {}".format(pid, eid, lid)
+
+
 class NameRecord(Statement):
     def __init__(self, location, nameID, platformID,
                  platEncID, langID, string):
@@ -1014,8 +1023,10 @@ class NameRecord(Statement):
             self.platEncID, self.langID, self.string)
 
     def asFea(self, indent=""):
-        return "nameid {} {} {} {} \"{}\";".format(
-            self.nameID, self.platformID, self.platEncID, self.langID, self.string)
+        plat = simplify_name_attributes(self.platformID, self.platEncID, self.langID)
+        if plat != "":
+            plat += " "
+        return "nameid {} {}\"{}\";".format(self.nameID, plat, self.string)
 
 
 class FeatureNameStatement(NameRecord):
@@ -1028,8 +1039,10 @@ class FeatureNameStatement(NameRecord):
             tag = "sizemenuname"
         else:
             tag = "name"
-        return "{} {} {} {} \"{}\";".format(
-            tag, self.platformID, self.platEncID, self.langID, self.string)
+        plat = simplify_name_attributes(self.platformID, self.platEncID, self.langID)
+        if plat != "":
+            plat += " "
+        return "{} {}\"{}\";".format(tag, plat, self.string)
 
 
 class SizeParameters(Statement):

@@ -71,9 +71,7 @@ class BuilderTest(unittest.TestCase):
         GSUB_6 GSUB_8
         spec4h1 spec5fi3
         spec5f_ii_2 spec5f_ii_3 spec5f_ii_4
-        spec8a spec8b spec8c
-        spec9e
-        name
+        spec8a
     """.split()
 
     def __init__(self, methodName):
@@ -158,8 +156,9 @@ class BuilderTest(unittest.TestCase):
         skip = 0
         for l in lines:
             l = l.strip()
-            if l.startswith("#test-fea2fea: "):
-                output.append(l[15:].strip())
+            if l.startswith("#test-fea2fea:"):
+                if len(l) > 15:
+                    output.append(l[15:].strip())
                 skip = 1
             x = l.find("#")
             if x >= 0:
