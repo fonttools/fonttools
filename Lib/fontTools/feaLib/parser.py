@@ -217,7 +217,7 @@ class Parser(object):
                     range_end = self.expect_glyph_()
                     glyphs.add_range(range_start, range_end,
                                      self.make_glyph_range_(range_location,
-                                                           range_start, range_end))
+                                                            range_start, range_end))
                 else:
                     glyphs.append(glyph)
             elif self.next_token_type_ is Lexer.CID:
@@ -228,8 +228,8 @@ class Parser(object):
                     self.expect_symbol_("-")
                     range_end = self.expect_cid_()
                     glyphs.add_cid_range(range_start, range_end,
-                                        self.make_cid_range_(range_location,
-                                                            range_start, range_end))
+                                         self.make_cid_range_(range_location,
+                                                              range_start, range_end))
                 else:
                     glyphs.append("cid%05d" % self.cur_token_)
             elif self.next_token_type_ is Lexer.GLYPHCLASS:

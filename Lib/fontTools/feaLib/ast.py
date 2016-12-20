@@ -82,7 +82,7 @@ class GlyphName(Expression):
 
 class GlyphClass(Expression):
     """A glyph class, such as [acute cedilla grave]."""
-    def __init__(self, location, glyphs = None):
+    def __init__(self, location, glyphs=None):
         Expression.__init__(self, location)
         self.glyphs = glyphs if glyphs is not None else []
         self.original = []
@@ -92,18 +92,18 @@ class GlyphClass(Expression):
         return tuple(self.glyphs)
 
     def asFea(self, indent=""):
-        if len(self.original) :
-            if self.curr < len(self.glyphs) :
+        if len(self.original):
+            if self.curr < len(self.glyphs):
                 self.original.extend(self.glyphs[self.curr:])
                 self.curr = len(self.glyphs)
             return "[" + " ".join(map(asFea, self.original)) + "]"
-        else :
+        else:
             return "[" + " ".join(map(asFea, self.glyphs)) + "]"
 
-    def extend(self, glyphs) :
+    def extend(self, glyphs):
         self.glyphs.extend(glyphs)
 
-    def append(self, glyph) :
+    def append(self, glyph):
         self.glyphs.append(glyph)
 
     def add_range(self, start, end, glyphs):
