@@ -4,6 +4,6 @@
 
 feature test {
     @LETTER = [a-z];
-    ignore substitute @LETTER f' i';
-    substitute f' i' by f_i.begin;
+    ignore sub @LETTER f' i';
+    sub f' i' by f_i.begin;
 } test;

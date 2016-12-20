@@ -176,7 +176,7 @@ class ParserTest(unittest.TestCase):
     def test_glyphclass(self):
         [gc] = self.parse("@dash = [endash emdash figuredash];").statements
         self.assertEqual(gc.name, "dash")
-        self.assertEqual(gc.glyphs, ("endash", "emdash", "figuredash"))
+        self.assertEqual(gc.glyphSet(), ("endash", "emdash", "figuredash"))
 
     def test_glyphclass_glyphNameTooLong(self):
         self.assertRaisesRegex(
@@ -198,12 +198,12 @@ class ParserTest(unittest.TestCase):
     def test_glyphclass_empty(self):
         [gc] = self.parse("@empty_set = [];").statements
         self.assertEqual(gc.name, "empty_set")
-        self.assertEqual(gc.glyphs, tuple())
+        self.assertEqual(gc.glyphSet(), tuple())
 
     def test_glyphclass_equality(self):
         [foo, bar] = self.parse("@foo = [a b]; @bar = @foo;").statements
-        self.assertEqual(foo.glyphs, ("a", "b"))
-        self.assertEqual(bar.glyphs, ("a", "b"))
+        self.assertEqual(foo.glyphSet(), ("a", "b"))
+        self.assertEqual(bar.glyphSet(), ("a", "b"))
 
     def test_glyphclass_from_markClass(self):
         doc = self.parse(
@@ -217,7 +217,7 @@ class ParserTest(unittest.TestCase):
     def test_glyphclass_range_cid(self):
         [gc] = self.parse(r"@GlyphClass = [\999-\1001];").statements
         self.assertEqual(gc.name, "GlyphClass")
-        self.assertEqual(gc.glyphs, ("cid00999", "cid01000", "cid01001"))
+        self.assertEqual(gc.glyphSet(), ("cid00999", "cid01000", "cid01001"))
 
     def test_glyphclass_range_cid_bad(self):
         self.assertRaisesRegex(
@@ -228,24 +228,24 @@ class ParserTest(unittest.TestCase):
     def test_glyphclass_range_uppercase(self):
         [gc] = self.parse("@swashes = [X.swash-Z.swash];").statements
         self.assertEqual(gc.name, "swashes")
-        self.assertEqual(gc.glyphs, ("X.swash", "Y.swash", "Z.swash"))
+        self.assertEqual(gc.glyphSet(), ("X.swash", "Y.swash", "Z.swash"))
 
     def test_glyphclass_range_lowercase(self):
         [gc] = self.parse("@defg.sc = [d.sc-g.sc];").statements
         self.assertEqual(gc.name, "defg.sc")
-        self.assertEqual(gc.glyphs, ("d.sc", "e.sc", "f.sc", "g.sc"))
+        self.assertEqual(gc.glyphSet(), ("d.sc", "e.sc", "f.sc", "g.sc"))
 
     def test_glyphclass_range_digit1(self):
         [gc] = self.parse("@range = [foo.2-foo.5];").statements
-        self.assertEqual(gc.glyphs, ("foo.2", "foo.3", "foo.4", "foo.5"))
+        self.assertEqual(gc.glyphSet(), ("foo.2", "foo.3", "foo.4", "foo.5"))
 
     def test_glyphclass_range_digit2(self):
         [gc] = self.parse("@range = [foo.09-foo.11];").statements
-        self.assertEqual(gc.glyphs, ("foo.09", "foo.10", "foo.11"))
+        self.assertEqual(gc.glyphSet(), ("foo.09", "foo.10", "foo.11"))
 
     def test_glyphclass_range_digit3(self):
         [gc] = self.parse("@range = [foo.123-foo.125];").statements
-        self.assertEqual(gc.glyphs, ("foo.123", "foo.124", "foo.125"))
+        self.assertEqual(gc.glyphSet(), ("foo.123", "foo.124", "foo.125"))
 
     def test_glyphclass_range_bad(self):
         self.assertRaisesRegex(
@@ -264,7 +264,7 @@ class ParserTest(unittest.TestCase):
 
     def test_glyphclass_range_mixed(self):
         [gc] = self.parse("@range = [a foo.09-foo.11 X.sc-Z.sc];").statements
-        self.assertEqual(gc.glyphs, (
+        self.assertEqual(gc.glyphSet(), (
             "a", "foo.09", "foo.10", "foo.11", "X.sc", "Y.sc", "Z.sc"
         ))
 
@@ -272,9 +272,9 @@ class ParserTest(unittest.TestCase):
         [vowels_lc, vowels_uc, vowels] = self.parse(
             "@Vowels.lc = [a e i o u]; @Vowels.uc = [A E I O U];"
             "@Vowels = [@Vowels.lc @Vowels.uc y Y];").statements
-        self.assertEqual(vowels_lc.glyphs, tuple("aeiou"))
-        self.assertEqual(vowels_uc.glyphs, tuple("AEIOU"))
-        self.assertEqual(vowels.glyphs, tuple("aeiouAEIOUyY"))
+        self.assertEqual(vowels_lc.glyphSet(), tuple("aeiou"))
+        self.assertEqual(vowels_uc.glyphSet(), tuple("AEIOU"))
+        self.assertEqual(vowels.glyphSet(), tuple("aeiouAEIOUyY"))
         self.assertRaisesRegex(
             FeatureLibError, "Unknown glyph class @unknown",
             self.parse, "@bad = [@unknown];")
@@ -285,9 +285,9 @@ class ParserTest(unittest.TestCase):
             "feature liga { @bar = [@foo l]; } liga;"
             "feature smcp { @bar = [@foo s]; } smcp;"
         ).statements
-        self.assertEqual(foo.glyphs, ("a", "b"))
-        self.assertEqual(liga.statements[0].glyphs, ("a", "b", "l"))
-        self.assertEqual(smcp.statements[0].glyphs, ("a", "b", "s"))
+        self.assertEqual(foo.glyphSet(), ("a", "b"))
+        self.assertEqual(liga.statements[0].glyphSet(), ("a", "b", "l"))
+        self.assertEqual(smcp.statements[0].glyphSet(), ("a", "b", "s"))
 
     def test_glyphclass_scoping_bug496(self):
         # https://github.com/behdad/fonttools/issues/496

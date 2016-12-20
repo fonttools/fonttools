@@ -6,7 +6,7 @@ languagesystem cyrl dflt;
 feature aalt {
     feature salt;
     feature smcp;
-    substitute d by d.alt;
+    sub d by d.alt;
 } aalt;
 
 feature smcp {
