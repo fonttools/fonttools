@@ -4,6 +4,6 @@
 
 feature test {
     @LETTER = [a-z];
-    ignore substitute @LETTER a' n' d', a' n' d' @LETTER;
-    substitute a' n' d' by a_n_d;
+    ignore sub @LETTER a' n' d', a' n' d' @LETTER;
+    sub a' n' d' by a_n_d;
 } test;

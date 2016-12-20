@@ -37,6 +37,8 @@ fea_keywords = set([
 def asFea(g):
     if hasattr(g, 'asFea'):
         return g.asFea()
+    elif isinstance(g, tuple) and len(g) == 2:
+        return asFea(g[0]) + "-" + asFea(g[1])   # a range
     elif g.lower() in fea_keywords:
         return "\\" + g
     else:
@@ -80,15 +82,50 @@ class GlyphName(Expression):
 
 class GlyphClass(Expression):
     """A glyph class, such as [acute cedilla grave]."""
-    def __init__(self, location, glyphs):
+    def __init__(self, location, glyphs = None):
         Expression.__init__(self, location)
-        self.glyphs = glyphs
+        self.glyphs = glyphs if glyphs is not None else []
+        self.original = []
+        self.curr = 0
 
     def glyphSet(self):
         return tuple(self.glyphs)
 
     def asFea(self, indent=""):
-        return "[" + " ".join(map(asFea, self.glyphs)) + "]"
+        if len(self.original) :
+            if self.curr < len(self.glyphs) :
+                self.original.extend(self.glyphs[self.curr:])
+                self.curr = len(self.glyphs)
+            return "[" + " ".join(map(asFea, self.original)) + "]"
+        else :
+            return "[" + " ".join(map(asFea, self.glyphs)) + "]"
+
+    def extend(self, glyphs) :
+        self.glyphs.extend(glyphs)
+
+    def append(self, glyph) :
+        self.glyphs.append(glyph)
+
+    def add_range(self, start, end, glyphs):
+        if self.curr < len(self.glyphs):
+            self.original.extend(self.glyphs[self.curr:])
+        self.original.append((start, end))
+        self.glyphs.extend(glyphs)
+        self.curr = len(self.glyphs)
+
+    def add_cid_range(self, start, end, glyphs):
+        if self.curr < len(self.glyphs):
+            self.original.extend(self.glyphs[self.curr:])
+        self.original.append(("cid{:05d}".format(start), "cid{:05d}".format(end)))
+        self.glyphs.extend(glyphs)
+        self.curr = len(self.glyphs)
+
+    def add_class(self, gc):
+        if self.curr < len(self.glyphs):
+            self.original.extend(self.glyphs[self.curr:])
+        self.original.append(gc)
+        self.glyphs.extend(gc.glyphSet())
+        self.curr = len(self.glyphs)
 
 
 class GlyphClassName(Expression):
@@ -99,7 +136,7 @@ class GlyphClassName(Expression):
         self.glyphclass = glyphclass
 
     def glyphSet(self):
-        return tuple(self.glyphclass.glyphs)
+        return tuple(self.glyphclass.glyphSet())
 
     def asFea(self, indent=""):
         return "@" + self.glyphclass.name
@@ -234,10 +271,10 @@ class GlyphClassDefinition(Statement):
         self.glyphs = glyphs
 
     def glyphSet(self):
-        return tuple(self.glyphs)
+        return tuple(self.glyphs.glyphSet())
 
     def asFea(self, indent=""):
-        return "@" + self.name + " = [" + " ".join(map(asFea, self.glyphs)) + "];"
+        return "@" + self.name + " = " + self.glyphs.asFea() + ";"
 
 
 class GlyphClassDefStatement(Statement):
@@ -336,9 +373,9 @@ class AlternateSubstStatement(Statement):
         if len(self.prefix) or len(self.suffix):
             if len(self.prefix):
                 res += " ".join(map(asFea, self.prefix)) + " "
-            res += " " + asFea(self.glyph) + "'"    # even though we really only use 1
+            res += asFea(self.glyph) + "'"    # even though we really only use 1
             if len(self.suffix):
-                res += " ".join(map(asFea, self.suffix))
+                res += " " + " ".join(map(asFea, self.suffix))
         else:
             res += asFea(self.glyph)
         res += " from "
