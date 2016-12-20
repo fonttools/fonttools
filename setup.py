@@ -229,7 +229,7 @@ class release(Command):
 				f.seek(0)
 				content = f.read()
 				f.seek(0)
-				f.write(u"%s%s (%s)\n\n%s" % (
+				f.write(u"%s%s\n\n%s\n\n%s" % (
 					self.changelog_header,
 					version,
 					datetime.today().strftime(self.changelog_date_fmt),

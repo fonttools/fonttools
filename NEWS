@@ -1,24 +1,32 @@
-## TTX/FontTools Version 3.3.1 (2016-12-15)
+## TTX/FontTools Version 3.3.1
+
+2016-12-15
 
 - [setup] We no longer use versioneer.py to compute fonttools version from git
   metadata, as this has caused issues for some users (#767). Now we bump the
   version strings manually with a custom `release` command of setup.py script.
 
-## TTX/FontTools Version 3.3.0 (2016-12-06)
+## TTX/FontTools Version 3.3.0
+
+2016-12-06
 
 - [ttLib] Implemented STAT table from OpenType 1.8 (#758)
 - [cffLib] Fixed decompilation of CFF fonts containing non-standard key/value pairs in FontDict (issue #740; PR #744)
 - [py23] minor: in `round3` function, allow the second argument to be `None` (#757)
 - The standalone `sstruct` and `xmlWriter` modules, deprecated since vesion 3.2.0, have been removed. They can be imported from the `fontTools.misc` package.
 
-## TTX/FontTools Version 3.2.3 (2016-12-02)
+## TTX/FontTools Version 3.2.3
+
+2016-12-02
 
 - [py23] optimized performance of round3 function; added backport for py35 math.isclose() (9d8dacb)
 - [subset] fixed issue with 'narrow' (UCS-2) Python 2 builds and --text/--text-file options containing non-BMP chararcters (16d0e5e)
 - [varLib] fixed issuewhen normalizing location values (8fa2ee1, #749)
 - [inspect] Made it compatible with both python2 and python3 (167ee60, #748). Thanks @pnemade
 
-## TTX/FontTools Version 3.2.2 (2016-11-24)
+## TTX/FontTools Version 3.2.2
+
+2016-11-24
 
 - [varLib] Do not emit null axes in fvar (1bebcec). Thanks @robmck-ms
 - [varLib] Handle fonts without GPOS (7915a45)
@@ -26,12 +34,16 @@
 - [subset] Fix subsetting MathVariants (78d3cbe)
 - [OS/2] Fix "Private Use (plane 15)" range (08a0d55). Thanks @mashabow
 
-## TTX/FontTools Version 3.2.1 (2016-11-03)
+## TTX/FontTools Version 3.2.1 
+
+2016-11-03
 
 - [OS/2] fix checking `fsSelection` bits matching `head.macStyle` bits
 - [varLib] added `--build-HVAR` option to generate `HVAR` table for fonts with TrueType outlines. For `CFF2`, it is enabled by default.
 
-## TTX/FontTools Version 3.2.0 (2016-11-02)
+## TTX/FontTools Version 3.2.0
+
+2016-11-02
 
 - [varLib] Improve support for OpenType 1.8 Variable Fonts:
   * Implement GDEF's VariationStore
@@ -50,18 +62,24 @@
 - [versioning] Use versioneer instead of setuptools_scm to dynamically load version info from a git checkout at import time.
 - [feaLib] Support backslash-prefixed glyph names.
 
-## TTX/FontTools Version 3.1.2 (2016-09-27)
+## TTX/FontTools Version 3.1.2
+
+2016-09-27
 
 - restore Makefile as an alternative way to build/check/install
 - README.md: update instructions for installing package from source, and for running test suite
 - NEWS: Change log was out of sync with tagged release
 
-## TTX/FontTools Version 3.1.1 (2016-09-27)
+## TTX/FontTools Version 3.1.1
+
+2016-09-27
 
 - Fix 'ttLibVersion' attribute in TTX files still showing '3.0' instead of '3.1'.
 - Use setuptools_scm to manage package versions.
 
-## TTX/FontTools Version 3.1.0 (2016-09-26)
+## TTX/FontTools Version 3.1.0
+
+2016-09-26
 
 - [feaLib] New library to parse and compile Adobe FDK OpenType Feature files.
 - [mtiLib] New library to parse and compile Monotype 'FontDame' OpenType Layout Tables files.
