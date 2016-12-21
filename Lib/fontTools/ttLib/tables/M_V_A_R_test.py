@@ -115,17 +115,19 @@ MVAR_XML = [
 
 class MVARTest(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        cls.maxDiff = None
+
     def test_decompile_toXML(self):
         mvar = newTable('MVAR')
         font = TTFont()
         mvar.decompile(MVAR_DATA, font)
-        self.maxDiff = None
         self.assertEqual(getXML(mvar.toXML), MVAR_XML)
 
     def test_compile_fromXML(self):
         mvar = newTable('MVAR')
         font = TTFont()
-        self.maxDiff = None
         for name, attrs, content in parseXML(MVAR_XML):
             mvar.fromXML(name, attrs, content, font=font)
         # Ignore AxisCount

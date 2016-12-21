@@ -23,6 +23,10 @@ class BuilderTest(unittest.TestCase):
         if not hasattr(self, "assertRaisesRegex"):
             self.assertRaisesRegex = self.assertRaisesRegexp
 
+    @classmethod
+    def setUpClass(cls):
+        cls.maxDiff = None
+
     def test_buildAnchor_format1(self):
         anchor = builder.buildAnchor(23, 42)
         self.assertEqual(getXML(anchor.toXML),
@@ -272,7 +276,6 @@ class BuilderTest(unittest.TestCase):
             "f_i": [{2: anchor(300, -20)}, {}],
             "c_t": [{}, {1: anchor(500, 350), 2: anchor(1300, -20)}]
         }, numMarkClasses=4, glyphMap=self.GLYPHMAP)
-        self.maxDiff = None
         self.assertEqual(getXML(ligatureArray.toXML),
                          ['<LigatureArray>',
                           '  <!-- LigatureCount=2 -->',
@@ -543,7 +546,6 @@ class BuilderTest(unittest.TestCase):
             "b": {0: anchor(500, 800), 1: anchor(500, -20)}
         }
         table = builder.buildMarkBasePosSubtable(marks, bases, self.GLYPHMAP)
-        self.maxDiff = None
         self.assertEqual(getXML(table.toXML),
                          ['<MarkBasePos Format="1">',
                           '  <MarkCoverage>',
@@ -664,7 +666,6 @@ class BuilderTest(unittest.TestCase):
             ]
         }
         table = builder.buildMarkLigPosSubtable(marks, bases, self.GLYPHMAP)
-        self.maxDiff = None
         self.assertEqual(getXML(table.toXML),
                          ['<MarkLigPos Format="1">',
                           '  <MarkCoverage>',
@@ -780,7 +781,6 @@ class BuilderTest(unittest.TestCase):
             (tuple("A",), tuple(["one", "two"])):  (None, d20),
             (tuple(["B", "C"]), tuple(["zero"])): (d8020, d50),
         }, self.GLYPHMAP)
-        self.maxDiff = None
         self.assertEqual(getXML(subtable.toXML),
                          ['<PairPos Format="2">',
                           '  <Coverage>',
@@ -830,7 +830,6 @@ class BuilderTest(unittest.TestCase):
             ("A", "zero"): (None, d50),
             ("A", "one"):  (d8020, d50),
         }, self.GLYPHMAP)
-        self.maxDiff = None
         self.assertEqual(sum([getXML(t.toXML) for t in subtables], []),
                          ['<PairPos Format="1">',
                           '  <Coverage>',
