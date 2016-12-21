@@ -19,16 +19,17 @@ def parseXML(xmlSnippet):
     """
     # To support snippets with multiple elements, we add a fake root.
     reader = TestXMLReader_()
-    root = b"<root>%s</root>"
+    xml = b"<root>"
     if isinstance(xmlSnippet, bytes):
-        xml = root % xmlSnippet
+        xml += xmlSnippet
     elif isinstance(xmlSnippet, unicode):
-        xml = root % tobytes(xmlSnippet, 'utf-8')
+        xml += tobytes(xmlSnippet, 'utf-8')
     elif isinstance(xmlSnippet, collections.Iterable):
-        xml = root % b"".join(tobytes(s, 'utf-8') for s in xmlSnippet)
+        xml += b"".join(tobytes(s, 'utf-8') for s in xmlSnippet)
     else:
         raise TypeError("expected string or sequence of strings; found %r"
                         % type(xmlSnippet).__name__)
+    xml += b"</root>"
     reader.parser.Parse(xml, 0)
     return reader.root[2]
 
