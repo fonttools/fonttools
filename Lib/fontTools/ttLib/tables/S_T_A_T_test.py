@@ -2,7 +2,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.testTools import FakeFont, getXML, parseXML
 from fontTools.misc.textTools import deHexStr
-from fontTools.ttLib import getTableModule, newTable
+from fontTools.ttLib import newTable
 import unittest
 
 
@@ -225,6 +225,38 @@ class STATTest(unittest.TestCase):
         table.decompile(STAT_DATA_VERSION_1_1,
                         font=FakeFont(['.notdef']))
         self.assertEqual(getXML(table.toXML), STAT_XML_VERSION_1_1)
+
+    def test_compile_fromXML(self):
+        table = newTable('STAT')
+        font = FakeFont(['.notdef'])
+        self.maxDiff = None
+        for name, attrs, content in parseXML(STAT_XML):
+            table.fromXML(name, attrs, content, font=font)
+        self.assertEqual(table.compile(font), STAT_DATA)
+
+    def test_compile_fromXML_withAxisJunk(self):
+        table = newTable('STAT')
+        font = FakeFont(['.notdef'])
+        self.maxDiff = None
+        for name, attrs, content in parseXML(STAT_XML_WITH_AXIS_JUNK):
+            table.fromXML(name, attrs, content, font=font)
+        self.assertEqual(table.compile(font), STAT_DATA_WITH_AXIS_JUNK)
+
+    def test_compile_fromXML_format3(self):
+        table = newTable('STAT')
+        font = FakeFont(['.notdef'])
+        self.maxDiff = None
+        for name, attrs, content in parseXML(STAT_XML_AXIS_VALUE_FORMAT3):
+            table.fromXML(name, attrs, content, font=font)
+        self.assertEqual(table.compile(font), STAT_DATA_AXIS_VALUE_FORMAT3)
+
+    def test_compile_fromXML_version_1_1(self):
+        table = newTable('STAT')
+        font = FakeFont(['.notdef'])
+        self.maxDiff = None
+        for name, attrs, content in parseXML(STAT_XML_VERSION_1_1):
+            table.fromXML(name, attrs, content, font=font)
+        self.assertEqual(table.compile(font), STAT_DATA_VERSION_1_1)
 
 
 if __name__ == '__main__':
