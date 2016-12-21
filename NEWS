@@ -1,3 +1,7 @@
+## TTX/FontTools Version 3.4.0
+
+2016-12-21
+
 - [feaLib] Added support for generating FEA text from abstract syntax tree
   (AST) objects (#776). Thanks @mhosken
 - Added `agl.toUnicode` function to convert AGL-compliant glyph names to
