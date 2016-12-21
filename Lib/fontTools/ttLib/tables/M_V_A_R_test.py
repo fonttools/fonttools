@@ -52,80 +52,82 @@ MVAR_DATA = deHexStr(
     '00C8 '       # 104: VarData.deltaSets[0]=200
 )
 
-MVAR_XML = (
-    '<Version value="0x00010000"/>'
-    '<!-- AxisCount=1 -->'
-    '<ValueRecordSize value="8"/>'
-    '<!-- ValueRecordCount=7 -->'
-    '<VarStore Format="1">'
-    '  <Format value="1"/>'
-    '  <VarRegionList>'
-    '    <!-- RegionAxisCount=1 -->'
-    '    <!-- RegionCount=1 -->'
-    '    <Region index="0">'
-    '      <VarRegionAxis index="0">'
-    '        <StartCoord value="0.0"/>'
-    '        <PeakCoord value="1.0"/>'
-    '        <EndCoord value="1.0"/>'
-    '      </VarRegionAxis>'
-    '    </Region>'
-    '  </VarRegionList>'
-    '  <!-- VarDataCount=1 -->'
-    '  <VarData index="0">'
-    '    <!-- ItemCount=4 -->'
-    '    <NumShorts value="1"/>'
-    '    <!-- VarRegionCount=1 -->'
-    '    <VarRegionIndex index="0" value="0"/>'
-    '    <Item index="0" value="[-200]"/>'
-    '    <Item index="1" value="[-50]"/>'
-    '    <Item index="2" value="[100]"/>'
-    '    <Item index="3" value="[200]"/>'
-    '  </VarData>'
-    '</VarStore>'
-    '<ValueRecord index="0">'
-    '  <ValueTag value="hasc"/>'
-    '  <VarIdx value="3"/>'
-    '</ValueRecord>'
-    '<ValueRecord index="1">'
-    '  <ValueTag value="hcla"/>'
-    '  <VarIdx value="3"/>'
-    '</ValueRecord>'
-    '<ValueRecord index="2">'
-    '  <ValueTag value="hcld"/>'
-    '  <VarIdx value="3"/>'
-    '</ValueRecord>'
-    '<ValueRecord index="3">'
-    '  <ValueTag value="hdsc"/>'
-    '  <VarIdx value="0"/>'
-    '</ValueRecord>'
-    '<ValueRecord index="4">'
-    '  <ValueTag value="hlgp"/>'
-    '  <VarIdx value="2"/>'
-    '</ValueRecord>'
-    '<ValueRecord index="5">'
-    '  <ValueTag value="sbyo"/>'
-    '  <VarIdx value="1"/>'
-    '</ValueRecord>'
-    '<ValueRecord index="6">'
-    '  <ValueTag value="spyo"/>'
-    '  <VarIdx value="2"/>'
-    '</ValueRecord>'
-)
+MVAR_XML = [
+    '<Version value="0x00010000"/>',
+    '<!-- AxisCount=1 -->',
+    '<ValueRecordSize value="8"/>',
+    '<!-- ValueRecordCount=7 -->',
+    '<VarStore Format="1">',
+    '  <Format value="1"/>',
+    '  <VarRegionList>',
+    '    <!-- RegionAxisCount=1 -->',
+    '    <!-- RegionCount=1 -->',
+    '    <Region index="0">',
+    '      <VarRegionAxis index="0">',
+    '        <StartCoord value="0.0"/>',
+    '        <PeakCoord value="1.0"/>',
+    '        <EndCoord value="1.0"/>',
+    '      </VarRegionAxis>',
+    '    </Region>',
+    '  </VarRegionList>',
+    '  <!-- VarDataCount=1 -->',
+    '  <VarData index="0">',
+    '    <!-- ItemCount=4 -->',
+    '    <NumShorts value="1"/>',
+    '    <!-- VarRegionCount=1 -->',
+    '    <VarRegionIndex index="0" value="0"/>',
+    '    <Item index="0" value="[-200]"/>',
+    '    <Item index="1" value="[-50]"/>',
+    '    <Item index="2" value="[100]"/>',
+    '    <Item index="3" value="[200]"/>',
+    '  </VarData>',
+    '</VarStore>',
+    '<ValueRecord index="0">',
+    '  <ValueTag value="hasc"/>',
+    '  <VarIdx value="3"/>',
+    '</ValueRecord>',
+    '<ValueRecord index="1">',
+    '  <ValueTag value="hcla"/>',
+    '  <VarIdx value="3"/>',
+    '</ValueRecord>',
+    '<ValueRecord index="2">',
+    '  <ValueTag value="hcld"/>',
+    '  <VarIdx value="3"/>',
+    '</ValueRecord>',
+    '<ValueRecord index="3">',
+    '  <ValueTag value="hdsc"/>',
+    '  <VarIdx value="0"/>',
+    '</ValueRecord>',
+    '<ValueRecord index="4">',
+    '  <ValueTag value="hlgp"/>',
+    '  <VarIdx value="2"/>',
+    '</ValueRecord>',
+    '<ValueRecord index="5">',
+    '  <ValueTag value="sbyo"/>',
+    '  <VarIdx value="1"/>',
+    '</ValueRecord>',
+    '<ValueRecord index="6">',
+    '  <ValueTag value="spyo"/>',
+    '  <VarIdx value="2"/>',
+    '</ValueRecord>',
+]
 
 
 class MVARTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.maxDiff = None
 
     def test_decompile_toXML(self):
         mvar = newTable('MVAR')
         font = TTFont()
         mvar.decompile(MVAR_DATA, font)
-        self.maxDiff = None
         self.assertEqual(getXML(mvar.toXML), MVAR_XML)
 
     def test_compile_fromXML(self):
         mvar = newTable('MVAR')
         font = TTFont()
-        self.maxDiff = None
         for name, attrs, content in parseXML(MVAR_XML):
             mvar.fromXML(name, attrs, content, font=font)
         # Ignore AxisCount

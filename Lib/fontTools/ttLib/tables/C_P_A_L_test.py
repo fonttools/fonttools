@@ -144,16 +144,16 @@ class CPALTest(unittest.TestCase):
         cpal = newTable('CPAL')
         cpal.decompile(CPAL_DATA_V0, ttFont=None)
         self.assertEqual(getXML(cpal.toXML),
-                         '<version value="0"/>'
-                         '<numPaletteEntries value="2"/>'
-                         '<palette index="0">'
-                         '  <color index="0" value="#000000FF"/>'
-                         '  <color index="1" value="#66CCFFFF"/>'
-                         '</palette>'
-                         '<palette index="1">'
-                         '  <color index="0" value="#000000FF"/>'
-                         '  <color index="1" value="#800000FF"/>'
-                         '</palette>')
+                         ['<version value="0"/>',
+                          '<numPaletteEntries value="2"/>',
+                          '<palette index="0">',
+                          '  <color index="0" value="#000000FF"/>',
+                          '  <color index="1" value="#66CCFFFF"/>',
+                          '</palette>',
+                          '<palette index="1">',
+                          '  <color index="0" value="#000000FF"/>',
+                          '  <color index="1" value="#800000FF"/>',
+                          '</palette>'])
 
     def test_toXML_v1(self):
         name = FakeNameTable({258: "Spring theme", 259: "Winter theme",
@@ -162,25 +162,25 @@ class CPALTest(unittest.TestCase):
         ttFont = {"name": name, "CPAL": cpal}
         cpal.decompile(CPAL_DATA_V1, ttFont)
         self.assertEqual(getXML(cpal.toXML, ttFont),
-                         '<version value="1"/>'
-                         '<numPaletteEntries value="3"/>'
-                         '<palette index="0" label="258" type="1">'
-                         '  <!-- Spring theme -->'
-                         '  <color index="0" value="#CAFECAFE"/>'
-                         '  <color index="1" value="#22110033"/>'
-                         '  <color index="2" value="#66554477"/>'
-                         '</palette>'
-                         '<palette index="1" label="259" type="2">'
-                         '  <!-- Winter theme -->'
-                         '  <color index="0" value="#59413127"/>'
-                         '  <color index="1" value="#42424242"/>'
-                         '  <color index="2" value="#13330037"/>'
-                         '</palette>'
-                         '<paletteEntryLabels>'
-                         '  <label index="0" value="513"/><!-- darks -->'
-                         '  <label index="1" value="514"/>'
-                         '  <label index="2" value="515"/><!-- lights -->'
-                         '</paletteEntryLabels>')
+                         ['<version value="1"/>',
+                          '<numPaletteEntries value="3"/>',
+                          '<palette index="0" label="258" type="1">',
+                          '  <!-- Spring theme -->',
+                          '  <color index="0" value="#CAFECAFE"/>',
+                          '  <color index="1" value="#22110033"/>',
+                          '  <color index="2" value="#66554477"/>',
+                          '</palette>',
+                          '<palette index="1" label="259" type="2">',
+                          '  <!-- Winter theme -->',
+                          '  <color index="0" value="#59413127"/>',
+                          '  <color index="1" value="#42424242"/>',
+                          '  <color index="2" value="#13330037"/>',
+                          '</palette>',
+                          '<paletteEntryLabels>',
+                          '  <label index="0" value="513"/><!-- darks -->',
+                          '  <label index="1" value="514"/>',
+                          '  <label index="2" value="515"/><!-- lights -->',
+                          '</paletteEntryLabels>'])
 
     def test_fromXML_v0(self):
         cpal = newTable('CPAL')

@@ -30,47 +30,47 @@ STAT_DATA = deHexStr(
 assert(len(STAT_DATA) == 88)
 
 
-STAT_XML = (
-    '<Version value="0x00010000"/>'
-    '<DesignAxisRecordSize value="8"/>'
-    '<!-- DesignAxisCount=2 -->'
-    '<DesignAxisRecord>'
-    '  <Axis index="0">'
-    '    <AxisTag value="wght"/>'
-    '    <AxisNameID value="301"/>'
-    '    <AxisOrdering value="2"/>'
-    '  </Axis>'
-    '  <Axis index="1">'
-    '    <AxisTag value="TEST"/>'
-    '    <AxisNameID value="302"/>'
-    '    <AxisOrdering value="1"/>'
-    '  </Axis>'
-    '</DesignAxisRecord>'
-    '<!-- AxisValueCount=3 -->'
-    '<AxisValueArray>'
-    '  <AxisValue index="0" Format="1">'
-    '    <AxisIndex value="0"/>'
-    '    <Flags value="0"/>'
-    '    <ValueNameID value="401"/>'
-    '    <Value value="400.0"/>'
-    '  </AxisValue>'
-    '  <AxisValue index="1" Format="2">'
-    '    <AxisIndex value="1"/>'
-    '    <Flags value="0"/>'
-    '    <ValueNameID value="402"/>'
-    '    <NominalValue value="2.0"/>'
-    '    <RangeMinValue value="1.0"/>'
-    '    <RangeMaxValue value="3.0"/>'
-    '  </AxisValue>'
-    '  <AxisValue index="2" Format="3">'
-    '    <AxisIndex value="0"/>'
-    '    <Flags value="0"/>'
-    '    <ValueNameID value="2"/>'
-    '    <Value value="400.0"/>'
-    '    <LinkedValue value="700.0"/>'
-    '  </AxisValue>'
-    '</AxisValueArray>'
-)
+STAT_XML = [
+    '<Version value="0x00010000"/>',
+    '<DesignAxisRecordSize value="8"/>',
+    '<!-- DesignAxisCount=2 -->',
+    '<DesignAxisRecord>',
+    '  <Axis index="0">',
+    '    <AxisTag value="wght"/>',
+    '    <AxisNameID value="301"/>',
+    '    <AxisOrdering value="2"/>',
+    '  </Axis>',
+    '  <Axis index="1">',
+    '    <AxisTag value="TEST"/>',
+    '    <AxisNameID value="302"/>',
+    '    <AxisOrdering value="1"/>',
+    '  </Axis>',
+    '</DesignAxisRecord>',
+    '<!-- AxisValueCount=3 -->',
+    '<AxisValueArray>',
+    '  <AxisValue index="0" Format="1">',
+    '    <AxisIndex value="0"/>',
+    '    <Flags value="0"/>',
+    '    <ValueNameID value="401"/>',
+    '    <Value value="400.0"/>',
+    '  </AxisValue>',
+    '  <AxisValue index="1" Format="2">',
+    '    <AxisIndex value="1"/>',
+    '    <Flags value="0"/>',
+    '    <ValueNameID value="402"/>',
+    '    <NominalValue value="2.0"/>',
+    '    <RangeMinValue value="1.0"/>',
+    '    <RangeMaxValue value="3.0"/>',
+    '  </AxisValue>',
+    '  <AxisValue index="2" Format="3">',
+    '    <AxisIndex value="0"/>',
+    '    <Flags value="0"/>',
+    '    <ValueNameID value="2"/>',
+    '    <Value value="400.0"/>',
+    '    <LinkedValue value="700.0"/>',
+    '  </AxisValue>',
+    '</AxisValueArray>',
+]
 
 
 # Contains junk data for making sure we get our offset decoding right.
@@ -90,28 +90,28 @@ STAT_DATA_WITH_AXIS_JUNK = deHexStr(
 assert(len(STAT_DATA_WITH_AXIS_JUNK) == 38)
 
 
-STAT_XML_WITH_AXIS_JUNK = (
-    '<Version value="0x00010000"/>'
-    '<DesignAxisRecordSize value="10"/>'
-    '<!-- DesignAxisCount=2 -->'
-    '<DesignAxisRecord>'
-    '  <Axis index="0">'
-    '    <AxisTag value="wght"/>'
-    '    <AxisNameID value="301"/>'
-    '    <AxisOrdering value="2"/>'
-    '    <MoreBytes index="0" value="222"/>'  # 0xDE
-    '    <MoreBytes index="1" value="173"/>'  # 0xAD
-    '  </Axis>'
-    '  <Axis index="1">'
-    '    <AxisTag value="TEST"/>'
-    '    <AxisNameID value="302"/>'
-    '    <AxisOrdering value="1"/>'
-    '    <MoreBytes index="0" value="190"/>'  # 0xBE
-    '    <MoreBytes index="1" value="239"/>'  # 0xEF
-    '  </Axis>'
-    '</DesignAxisRecord>'
-    '<!-- AxisValueCount=0 -->'
-)
+STAT_XML_WITH_AXIS_JUNK = [
+    '<Version value="0x00010000"/>',
+    '<DesignAxisRecordSize value="10"/>',
+    '<!-- DesignAxisCount=2 -->',
+    '<DesignAxisRecord>',
+    '  <Axis index="0">',
+    '    <AxisTag value="wght"/>',
+    '    <AxisNameID value="301"/>',
+    '    <AxisOrdering value="2"/>',
+    '    <MoreBytes index="0" value="222"/>',  # 0xDE
+    '    <MoreBytes index="1" value="173"/>',  # 0xAD
+    '  </Axis>',
+    '  <Axis index="1">',
+    '    <AxisTag value="TEST"/>',
+    '    <AxisNameID value="302"/>',
+    '    <AxisOrdering value="1"/>',
+    '    <MoreBytes index="0" value="190"/>',  # 0xBE
+    '    <MoreBytes index="1" value="239"/>',  # 0xEF
+    '  </Axis>',
+    '</DesignAxisRecord>',
+    '<!-- AxisValueCount=0 -->',
+]
 
 
 STAT_DATA_AXIS_VALUE_FORMAT3 = deHexStr(
@@ -133,28 +133,28 @@ STAT_DATA_AXIS_VALUE_FORMAT3 = deHexStr(
 assert(len(STAT_DATA_AXIS_VALUE_FORMAT3) == 44)
 
 
-STAT_XML_AXIS_VALUE_FORMAT3 = (
-    '<Version value="0x00010000"/>'
-    '<DesignAxisRecordSize value="8"/>'
-    '<!-- DesignAxisCount=1 -->'
-    '<DesignAxisRecord>'
-    '  <Axis index="0">'
-    '    <AxisTag value="wght"/>'
-    '    <AxisNameID value="258"/>'
-    '    <AxisOrdering value="0"/>'
-    '  </Axis>'
-    '</DesignAxisRecord>'
-    '<!-- AxisValueCount=1 -->'
-    '<AxisValueArray>'
-    '  <AxisValue index="0" Format="3">'
-    '    <AxisIndex value="0"/>'
-    '    <Flags value="2"/>'
-    '    <ValueNameID value="2"/>'
-    '    <Value value="400.0"/>'
-    '    <LinkedValue value="700.0"/>'
-    '  </AxisValue>'
-    '</AxisValueArray>'
-)
+STAT_XML_AXIS_VALUE_FORMAT3 = [
+    '<Version value="0x00010000"/>',
+    '<DesignAxisRecordSize value="8"/>',
+    '<!-- DesignAxisCount=1 -->',
+    '<DesignAxisRecord>',
+    '  <Axis index="0">',
+    '    <AxisTag value="wght"/>',
+    '    <AxisNameID value="258"/>',
+    '    <AxisOrdering value="0"/>',
+    '  </Axis>',
+    '</DesignAxisRecord>',
+    '<!-- AxisValueCount=1 -->',
+    '<AxisValueArray>',
+    '  <AxisValue index="0" Format="3">',
+    '    <AxisIndex value="0"/>',
+    '    <Flags value="2"/>',
+    '    <ValueNameID value="2"/>',
+    '    <Value value="400.0"/>',
+    '    <LinkedValue value="700.0"/>',
+    '  </AxisValue>',
+    '</AxisValueArray>',
+]
 
 
 STAT_DATA_VERSION_1_1 = deHexStr(
@@ -177,36 +177,40 @@ STAT_DATA_VERSION_1_1 = deHexStr(
 assert(len(STAT_DATA_VERSION_1_1) == 46)
 
 
-STAT_XML_VERSION_1_1 = (
-    '<Version value="0x00010001"/>'
-    '<DesignAxisRecordSize value="8"/>'
-    '<!-- DesignAxisCount=1 -->'
-    '<DesignAxisRecord>'
-    '  <Axis index="0">'
-    '    <AxisTag value="wght"/>'
-    '    <AxisNameID value="258"/>'
-    '    <AxisOrdering value="0"/>'
-    '  </Axis>'
-    '</DesignAxisRecord>'
-    '<!-- AxisValueCount=1 -->'
-    '<AxisValueArray>'
-    '  <AxisValue index="0" Format="3">'
-    '    <AxisIndex value="0"/>'
-    '    <Flags value="2"/>'
-    '    <ValueNameID value="2"/>'
-    '    <Value value="400.0"/>'
-    '    <LinkedValue value="700.0"/>'
-    '  </AxisValue>'
-    '</AxisValueArray>'
-    '<ElidedFallbackNameID value="257"/>'
-)
+STAT_XML_VERSION_1_1 = [
+    '<Version value="0x00010001"/>',
+    '<DesignAxisRecordSize value="8"/>',
+    '<!-- DesignAxisCount=1 -->',
+    '<DesignAxisRecord>',
+    '  <Axis index="0">',
+    '    <AxisTag value="wght"/>',
+    '    <AxisNameID value="258"/>',
+    '    <AxisOrdering value="0"/>',
+    '  </Axis>',
+    '</DesignAxisRecord>',
+    '<!-- AxisValueCount=1 -->',
+    '<AxisValueArray>',
+    '  <AxisValue index="0" Format="3">',
+    '    <AxisIndex value="0"/>',
+    '    <Flags value="2"/>',
+    '    <ValueNameID value="2"/>',
+    '    <Value value="400.0"/>',
+    '    <LinkedValue value="700.0"/>',
+    '  </AxisValue>',
+    '</AxisValueArray>',
+    '<ElidedFallbackNameID value="257"/>',
+]
 
 
 class STATTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.maxDiff = None
+
     def test_decompile_toXML(self):
         table = newTable('STAT')
         table.decompile(STAT_DATA, font=FakeFont(['.notdef']))
-        self.maxDiff = None
         self.assertEqual(getXML(table.toXML), STAT_XML)
 
     def test_decompile_toXML_withAxisJunk(self):
@@ -229,7 +233,6 @@ class STATTest(unittest.TestCase):
     def test_compile_fromXML(self):
         table = newTable('STAT')
         font = FakeFont(['.notdef'])
-        self.maxDiff = None
         for name, attrs, content in parseXML(STAT_XML):
             table.fromXML(name, attrs, content, font=font)
         self.assertEqual(table.compile(font), STAT_DATA)
@@ -237,7 +240,6 @@ class STATTest(unittest.TestCase):
     def test_compile_fromXML_withAxisJunk(self):
         table = newTable('STAT')
         font = FakeFont(['.notdef'])
-        self.maxDiff = None
         for name, attrs, content in parseXML(STAT_XML_WITH_AXIS_JUNK):
             table.fromXML(name, attrs, content, font=font)
         self.assertEqual(table.compile(font), STAT_DATA_WITH_AXIS_JUNK)
@@ -245,7 +247,6 @@ class STATTest(unittest.TestCase):
     def test_compile_fromXML_format3(self):
         table = newTable('STAT')
         font = FakeFont(['.notdef'])
-        self.maxDiff = None
         for name, attrs, content in parseXML(STAT_XML_AXIS_VALUE_FORMAT3):
             table.fromXML(name, attrs, content, font=font)
         self.assertEqual(table.compile(font), STAT_DATA_AXIS_VALUE_FORMAT3)
@@ -253,7 +254,6 @@ class STATTest(unittest.TestCase):
     def test_compile_fromXML_version_1_1(self):
         table = newTable('STAT')
         font = FakeFont(['.notdef'])
-        self.maxDiff = None
         for name, attrs, content in parseXML(STAT_XML_VERSION_1_1):
             table.fromXML(name, attrs, content, font=font)
         self.assertEqual(table.compile(font), STAT_DATA_VERSION_1_1)

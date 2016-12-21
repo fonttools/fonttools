@@ -53,40 +53,37 @@ VHEA_VERSION_11_AS_DICT = {
 VHEA_VERSION_10_AS_DICT = dict(VHEA_VERSION_11_AS_DICT)
 VHEA_VERSION_10_AS_DICT['tableVersion'] = 0x00010000
 
-VHEA_XML_VERSION_11 = (
-    '<tableVersion value="0x00011000"/>'
-    '<ascent value="500"/>'
-    '<descent value="-500"/>'
-    '<lineGap value="0"/>'
-    '<advanceHeightMax value="3000"/>'
-    '<minTopSideBearing value="-1002"/>'
-    '<minBottomSideBearing value="-677"/>'
-    '<yMaxExtent value="2928"/>'
-    '<caretSlopeRise value="0"/>'
-    '<caretSlopeRun value="1"/>'
-    '<caretOffset value="0"/>'
-    '<reserved1 value="0"/>'
-    '<reserved2 value="0"/>'
-    '<reserved3 value="0"/>'
-    '<reserved4 value="0"/>'
-    '<metricDataFormat value="0"/>'
-    '<numberOfVMetrics value="12"/>'
-)
-
-VHEA_XML_VERSION_11_AS_FLOAT = VHEA_XML_VERSION_11.replace(
+VHEA_XML_VERSION_11 = [
     '<tableVersion value="0x00011000"/>',
-    '<tableVersion value="1.0625"/>'
-)
+    '<ascent value="500"/>',
+    '<descent value="-500"/>',
+    '<lineGap value="0"/>',
+    '<advanceHeightMax value="3000"/>',
+    '<minTopSideBearing value="-1002"/>',
+    '<minBottomSideBearing value="-677"/>',
+    '<yMaxExtent value="2928"/>',
+    '<caretSlopeRise value="0"/>',
+    '<caretSlopeRun value="1"/>',
+    '<caretOffset value="0"/>',
+    '<reserved1 value="0"/>',
+    '<reserved2 value="0"/>',
+    '<reserved3 value="0"/>',
+    '<reserved4 value="0"/>',
+    '<metricDataFormat value="0"/>',
+    '<numberOfVMetrics value="12"/>',
+]
 
-VHEA_XML_VERSION_10 = VHEA_XML_VERSION_11.replace(
-    '<tableVersion value="0x00011000"/>',
-    '<tableVersion value="0x00010000"/>'
-)
+VHEA_XML_VERSION_11_AS_FLOAT = [
+    '<tableVersion value="1.0625"/>',
+] + VHEA_XML_VERSION_11[1:]
 
-VHEA_XML_VERSION_10_AS_FLOAT = VHEA_XML_VERSION_11.replace(
-    '<tableVersion value="0x00011000"/>',
-    '<tableVersion value="1.0"/>'
-)
+VHEA_XML_VERSION_10 = [
+    '<tableVersion value="0x00010000"/>',
+] + VHEA_XML_VERSION_11[1:]
+
+VHEA_XML_VERSION_10_AS_FLOAT = [
+    '<tableVersion value="1.0"/>',
+] + VHEA_XML_VERSION_11[1:]
 
 
 class VheaCompileOrToXMLTest(unittest.TestCase):

@@ -30,46 +30,46 @@ OSAKA_VERT_TRACK_ENTRIES = {
 	 1.0: TrackTableEntry({24.0: 12, 12.0: 12}, nameIndex=267)
 	}
 
-OSAKA_TRAK_TABLE_XML = (
-	'<version value="1.0"/>'
-	'<format value="0"/>'
-	'<horizData>'
-	'  <!-- nTracks=3, nSizes=2 -->'
-	'  <trackEntry value="-1.0" nameIndex="262">'
-	'    <!-- Tight -->'
-	'    <track size="12.0" value="-12"/>'
-	'    <track size="24.0" value="-12"/>'
-	'  </trackEntry>'
-	'  <trackEntry value="0.0" nameIndex="263">'
-	'    <!-- Normal -->'
-	'    <track size="12.0" value="0"/>'
-	'    <track size="24.0" value="0"/>'
-	'  </trackEntry>'
-	'  <trackEntry value="1.0" nameIndex="264">'
-	'    <!-- Loose -->'
-	'    <track size="12.0" value="12"/>'
-	'    <track size="24.0" value="12"/>'
-	'  </trackEntry>'
-	'</horizData>'
-	'<vertData>'
-	'  <!-- nTracks=3, nSizes=2 -->'
-	'  <trackEntry value="-1.0" nameIndex="265">'
-	'    <!-- Tight -->'
-	'    <track size="12.0" value="-12"/>'
-	'    <track size="24.0" value="-12"/>'
-	'  </trackEntry>'
-	'  <trackEntry value="0.0" nameIndex="266">'
-	'    <!-- Normal -->'
-	'    <track size="12.0" value="0"/>'
-	'    <track size="24.0" value="0"/>'
-	'  </trackEntry>'
-	'  <trackEntry value="1.0" nameIndex="267">'
-	'    <!-- Loose -->'
-	'    <track size="12.0" value="12"/>'
-	'    <track size="24.0" value="12"/>'
-	'  </trackEntry>'
-	'</vertData>'
-	)
+OSAKA_TRAK_TABLE_XML = [
+	'<version value="1.0"/>',
+	'<format value="0"/>',
+	'<horizData>',
+	'  <!-- nTracks=3, nSizes=2 -->',
+	'  <trackEntry value="-1.0" nameIndex="262">',
+	'    <!-- Tight -->',
+	'    <track size="12.0" value="-12"/>',
+	'    <track size="24.0" value="-12"/>',
+	'  </trackEntry>',
+	'  <trackEntry value="0.0" nameIndex="263">',
+	'    <!-- Normal -->',
+	'    <track size="12.0" value="0"/>',
+	'    <track size="24.0" value="0"/>',
+	'  </trackEntry>',
+	'  <trackEntry value="1.0" nameIndex="264">',
+	'    <!-- Loose -->',
+	'    <track size="12.0" value="12"/>',
+	'    <track size="24.0" value="12"/>',
+	'  </trackEntry>',
+	'</horizData>',
+	'<vertData>',
+	'  <!-- nTracks=3, nSizes=2 -->',
+	'  <trackEntry value="-1.0" nameIndex="265">',
+	'    <!-- Tight -->',
+	'    <track size="12.0" value="-12"/>',
+	'    <track size="24.0" value="-12"/>',
+	'  </trackEntry>',
+	'  <trackEntry value="0.0" nameIndex="266">',
+	'    <!-- Normal -->',
+	'    <track size="12.0" value="0"/>',
+	'    <track size="24.0" value="0"/>',
+	'  </trackEntry>',
+	'  <trackEntry value="1.0" nameIndex="267">',
+	'    <!-- Loose -->',
+	'    <track size="12.0" value="12"/>',
+	'    <track size="24.0" value="12"/>',
+	'  </trackEntry>',
+	'</vertData>',
+]
 
 # made-up table containing only vertData (no horizData)
 OSAKA_VERT_ONLY_TRAK_TABLE_DATA = deHexStr(
@@ -77,31 +77,31 @@ OSAKA_VERT_ONLY_TRAK_TABLE_DATA = deHexStr(
 	'00 00 01 09 00 34 00 00 00 00 01 0a 00 38 00 01 00 00 01 0b 00 3c '
 	'00 0c 00 00 00 18 00 00 ff f4 ff f4 00 00 00 00 00 0c 00 0c')
 
-OSAKA_VERT_ONLY_TRAK_TABLE_XML = (
-	'<version value="1.0"/>'
-	'<format value="0"/>'
-	'<horizData>'
-	'  <!-- nTracks=0, nSizes=0 -->'
-	'</horizData>'
-	'<vertData>'
-	'  <!-- nTracks=3, nSizes=2 -->'
-	'  <trackEntry value="-1.0" nameIndex="265">'
-	'    <!-- Tight -->'
-	'    <track size="12.0" value="-12"/>'
-	'    <track size="24.0" value="-12"/>'
-	'  </trackEntry>'
-	'  <trackEntry value="0.0" nameIndex="266">'
-	'    <!-- Normal -->'
-	'    <track size="12.0" value="0"/>'
-	'    <track size="24.0" value="0"/>'
-	'  </trackEntry>'
-	'  <trackEntry value="1.0" nameIndex="267">'
-	'    <!-- Loose -->'
-	'    <track size="12.0" value="12"/>'
-	'    <track size="24.0" value="12"/>'
-	'  </trackEntry>'
-	'</vertData>'
-	)
+OSAKA_VERT_ONLY_TRAK_TABLE_XML = [
+	'<version value="1.0"/>',
+	'<format value="0"/>',
+	'<horizData>',
+	'  <!-- nTracks=0, nSizes=0 -->',
+	'</horizData>',
+	'<vertData>',
+	'  <!-- nTracks=3, nSizes=2 -->',
+	'  <trackEntry value="-1.0" nameIndex="265">',
+	'    <!-- Tight -->',
+	'    <track size="12.0" value="-12"/>',
+	'    <track size="24.0" value="-12"/>',
+	'  </trackEntry>',
+	'  <trackEntry value="0.0" nameIndex="266">',
+	'    <!-- Normal -->',
+	'    <track size="12.0" value="0"/>',
+	'    <track size="24.0" value="0"/>',
+	'  </trackEntry>',
+	'  <trackEntry value="1.0" nameIndex="267">',
+	'    <!-- Loose -->',
+	'    <track size="12.0" value="12"/>',
+	'    <track size="24.0" value="12"/>',
+	'  </trackEntry>',
+	'</vertData>',
+]
 
 
 # also /Library/Fonts/Skia.ttf contains a trak table with horizData
@@ -121,40 +121,40 @@ SKIA_TRACK_ENTRIES = {
 	 	{9.0: 140, 10.0: 130, 19.0: 115, 12.0: 125, 18.0: 115}, nameIndex=276)
 	}
 
-SKIA_TRAK_TABLE_XML = (
-	'<version value="1.0"/>'
-	'<format value="0"/>'
-	'<horizData>'
-	'  <!-- nTracks=3, nSizes=5 -->'
-	'  <trackEntry value="-1.0" nameIndex="275">'
-	'    <!-- Tight -->'
-	'    <track size="9.0" value="-10"/>'
-	'    <track size="10.0" value="-30"/>'
-	'    <track size="12.0" value="-60"/>'
-	'    <track size="18.0" value="-63"/>'
-	'    <track size="19.0" value="-63"/>'
-	'  </trackEntry>'
-	'  <trackEntry value="0.0" nameIndex="303">'
-	'    <!-- Normal -->'
-	'    <track size="9.0" value="15"/>'
-	'    <track size="10.0" value="0"/>'
-	'    <track size="12.0" value="-5"/>'
-	'    <track size="18.0" value="-25"/>'
-	'    <track size="19.0" value="-25"/>'
-	'  </trackEntry>'
-	'  <trackEntry value="1.0" nameIndex="276">'
-	'    <!-- Loose -->'
-	'    <track size="9.0" value="140"/>'
-	'    <track size="10.0" value="130"/>'
-	'    <track size="12.0" value="125"/>'
-	'    <track size="18.0" value="115"/>'
-	'    <track size="19.0" value="115"/>'
-	'  </trackEntry>'
-	'</horizData>'
-	'<vertData>'
-	'  <!-- nTracks=0, nSizes=0 -->'
-	'</vertData>'
-	)
+SKIA_TRAK_TABLE_XML = [
+	'<version value="1.0"/>',
+	'<format value="0"/>',
+	'<horizData>',
+	'  <!-- nTracks=3, nSizes=5 -->',
+	'  <trackEntry value="-1.0" nameIndex="275">',
+	'    <!-- Tight -->',
+	'    <track size="9.0" value="-10"/>',
+	'    <track size="10.0" value="-30"/>',
+	'    <track size="12.0" value="-60"/>',
+	'    <track size="18.0" value="-63"/>',
+	'    <track size="19.0" value="-63"/>',
+	'  </trackEntry>',
+	'  <trackEntry value="0.0" nameIndex="303">',
+	'    <!-- Normal -->',
+	'    <track size="9.0" value="15"/>',
+	'    <track size="10.0" value="0"/>',
+	'    <track size="12.0" value="-5"/>',
+	'    <track size="18.0" value="-25"/>',
+	'    <track size="19.0" value="-25"/>',
+	'  </trackEntry>',
+	'  <trackEntry value="1.0" nameIndex="276">',
+	'    <!-- Loose -->',
+	'    <track size="9.0" value="140"/>',
+	'    <track size="10.0" value="130"/>',
+	'    <track size="12.0" value="125"/>',
+	'    <track size="18.0" value="115"/>',
+	'    <track size="19.0" value="115"/>',
+	'  </trackEntry>',
+	'</horizData>',
+	'<vertData>',
+	'  <!-- nTracks=0, nSizes=0 -->',
+	'</vertData>',
+]
 
 
 class TrackingTableTest(unittest.TestCase):
@@ -273,8 +273,9 @@ class TrackingTableTest(unittest.TestCase):
 		add_name(self.font, 'Tight', nameID=275)
 		add_name(self.font, 'Normal', nameID=303)
 		add_name(self.font, 'Loose', nameID=276)
-		self.assertEqual(SKIA_TRAK_TABLE_XML,
-			         getXML(table.toXML, self.font))
+		self.assertEqual(
+			SKIA_TRAK_TABLE_XML,
+			getXML(table.toXML, self.font))
 
 	def test_toXML_horiz_and_vert(self):
 		table = self.font['trak']
@@ -286,8 +287,9 @@ class TrackingTableTest(unittest.TestCase):
 		add_name(self.font, 'Tight', nameID=265)
 		add_name(self.font, 'Normal', nameID=266)
 		add_name(self.font, 'Loose', nameID=267)
-		self.assertEqual(OSAKA_TRAK_TABLE_XML,
-				 getXML(table.toXML, self.font))
+		self.assertEqual(
+			OSAKA_TRAK_TABLE_XML,
+			getXML(table.toXML, self.font))
 
 	def test_toXML_vert(self):
 		table = self.font['trak']
@@ -295,8 +297,9 @@ class TrackingTableTest(unittest.TestCase):
 		add_name(self.font, 'Tight', nameID=265)
 		add_name(self.font, 'Normal', nameID=266)
 		add_name(self.font, 'Loose', nameID=267)
-		self.assertEqual(OSAKA_VERT_ONLY_TRAK_TABLE_XML,
-                                 getXML(table.toXML, self.font))
+		self.assertEqual(
+			OSAKA_VERT_ONLY_TRAK_TABLE_XML,
+			getXML(table.toXML, self.font))
 
 	def test_roundtrip_fromXML_toXML(self):
 		font = {}
