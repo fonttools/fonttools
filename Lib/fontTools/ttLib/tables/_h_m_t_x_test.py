@@ -180,10 +180,10 @@ class HmtxTableTest(unittest.TestCase):
 
         self.assertEqual(
             getXML(mtxTable.toXML),
-            '<mtx name="A" %s="674" %s="-11"/>'
-            '<mtx name="B" %s="632" %s="79"/>' % (
+            ('<mtx name="A" %s="674" %s="-11"/>\n'
+             '<mtx name="B" %s="632" %s="79"/>' % (
                 (self.tableClass.advanceName,
-                 self.tableClass.sideBearingName) * 2))
+                 self.tableClass.sideBearingName) * 2)).split('\n'))
 
     def test_fromXML(self):
         mtxTable = newTable(self.tag)

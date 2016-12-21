@@ -52,7 +52,7 @@ class NameIDTest(unittest.TestCase):
         writer = makeXMLWriter()
         self.converter.xmlWrite(writer, self.makeFont(), 291,
                                 "FooNameID", [("attr", "val")])
-        xml = writer.file.getvalue().decode("utf-8")
+        xml = writer.file.getvalue().decode("utf-8").rstrip()
         self.assertEqual(
             xml,
             '<FooNameID attr="val" value="291"/>  <!-- Demibold Condensed -->')
@@ -64,7 +64,7 @@ class NameIDTest(unittest.TestCase):
                                     "Entity", [("attrib", "val")])
         self.assertIn("name id 666 missing from name table",
                       [r.msg for r in captor.records])
-        xml = writer.file.getvalue().decode("utf-8")
+        xml = writer.file.getvalue().decode("utf-8").rstrip()
         self.assertEqual(
             xml,
             '<Entity attrib="val"'

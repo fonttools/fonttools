@@ -48,30 +48,29 @@ HHEA_AS_DICT = {
     'numberOfHMetrics': 42,
 }
 
-HHEA_XML = (
-    '<tableVersion value="0x00010000"/>'
-    '<ascent value="750"/>'
-    '<descent value="-250"/>'
-    '<lineGap value="200"/>'
-    '<advanceWidthMax value="1000"/>'
-    '<minLeftSideBearing value="-25"/>'
-    '<minRightSideBearing value="-20"/>'
-    '<xMaxExtent value="977"/>'
-    '<caretSlopeRise value="0"/>'
-    '<caretSlopeRun value="1"/>'
-    '<caretOffset value="16"/>'
-    '<reserved0 value="0"/>'
-    '<reserved1 value="0"/>'
-    '<reserved2 value="0"/>'
-    '<reserved3 value="0"/>'
-    '<metricDataFormat value="0"/>'
-    '<numberOfHMetrics value="42"/>'
-)
-
-HHEA_XML_VERSION_AS_FLOAT = HHEA_XML.replace(
+HHEA_XML = [
     '<tableVersion value="0x00010000"/>',
-    '<tableVersion value="1.0"/>'
-)
+    '<ascent value="750"/>',
+    '<descent value="-250"/>',
+    '<lineGap value="200"/>',
+    '<advanceWidthMax value="1000"/>',
+    '<minLeftSideBearing value="-25"/>',
+    '<minRightSideBearing value="-20"/>',
+    '<xMaxExtent value="977"/>',
+    '<caretSlopeRise value="0"/>',
+    '<caretSlopeRun value="1"/>',
+    '<caretOffset value="16"/>',
+    '<reserved0 value="0"/>',
+    '<reserved1 value="0"/>',
+    '<reserved2 value="0"/>',
+    '<reserved3 value="0"/>',
+    '<metricDataFormat value="0"/>',
+    '<numberOfHMetrics value="42"/>',
+]
+
+HHEA_XML_VERSION_AS_FLOAT = [
+    '<tableVersion value="1.0"/>',
+] + HHEA_XML[1:]
 
 
 class HheaCompileOrToXMLTest(unittest.TestCase):
