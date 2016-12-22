@@ -221,6 +221,8 @@ def test(glyphset, upem, glyphs):
 
 
 def main(args):
+	if not args:
+		return
 	filename, glyphs = args[0], args[1:]
 	if not glyphs:
 		glyphs = ['e', 'o', 'I', 'slash', 'E', 'zero', 'eight', 'minus', 'equal']
