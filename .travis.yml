@@ -22,7 +22,7 @@ matrix:
       env: TOXENV=py27-cov
     - language: generic
       os: osx
-      env: TOXENV=py35-cov
+      env: TOXENV=py36-cov
 
 install:
   - ./.travis/install.sh

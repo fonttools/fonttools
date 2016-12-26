@@ -3,34 +3,31 @@
 set -e
 set -x
 
-pip_options="--upgrade"
 ci_requirements="pip setuptools tox"
 
-if [[ "$(uname -s)" == 'Darwin' ]]; then
-    # install pyenv from the git repo (quicker than using brew)
-    git clone https://github.com/yyuu/pyenv.git ~/.pyenv
-    PYENV_ROOT="$HOME/.pyenv"
-    PATH="$PYENV_ROOT/bin:$PATH"
-    eval "$(pyenv init -)"
-
-    case "${TOXENV}" in
-        py27)
-            # install pip on the system python
-            curl -O https://bootstrap.pypa.io/get-pip.py
-            python get-pip.py --user
-            ;;
-        py35)
-            pyenv install 3.5.2
-            pyenv global 3.5.2
-            ;;
-    esac
-    pyenv rehash
-
-    # add --user option so we don't require sudo
-    pip_options="$pip_options --user"
-else
-    # on Linux, we're already in a virtualenv; no --user required
-    :
+if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+    if [[ ${TOXENV} == *"py27"* ]]; then
+        # install pip on the system python
+        curl -O https://bootstrap.pypa.io/get-pip.py
+        python get-pip.py --user
+        # install virtualenv and create virtual environment
+        python -m pip install --user virtualenv
+        python -m virtualenv .venv/
+    elif [[ ${TOXENV} == *"py3"* ]]; then
+        # install/upgrade current python3 with homebrew
+        if brew list --versions python3 > /dev/null; then
+            brew upgrade python3
+        else
+            brew install python3
+        fi
+        # create virtual environment
+        python3 -m venv .venv/
+    else
+        echo "unsupported $TOXENV: "${TOXENV}
+        exit 1
+    fi
+    # activate virtual environment
+    source .venv/bin/activate
 fi
 
-python -m pip install $pip_options $ci_requirements
+python -m pip install $ci_requirements
