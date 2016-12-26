@@ -20,7 +20,6 @@
           <PairValueRecord index="0">
             <SecondGlyph value="V"/>
             <Value1 XAdvance="-10"/>
-            <Value2/>
           </PairValueRecord>
         </PairSet>
         <PairSet index="1">
@@ -28,7 +27,6 @@
           <PairValueRecord index="0">
             <SecondGlyph value="acircumflex"/>
             <Value1 XAdvance="-18"/>
-            <Value2/>
           </PairValueRecord>
         </PairSet>
       </PairPos>
@@ -56,6 +54,8 @@
           <ClassDef glyph="Ocircumflex" class="2"/>
           <ClassDef glyph="Ograve" class="2"/>
           <ClassDef glyph="T" class="3"/>
+          <ClassDef glyph="V" class="0"/>
+          <ClassDef glyph="acircumflex" class="0"/>
         </ClassDef1>
         <ClassDef2 Format="2">
           <ClassDef glyph="V" class="1"/>
@@ -68,58 +68,46 @@
         <!-- Class2Count=3 -->
         <Class1Record index="0">
           <Class2Record index="0">
-            <Value1/>
-            <Value2/>
+            <Value1 XAdvance="0"/>
           </Class2Record>
           <Class2Record index="1">
-            <Value1/>
-            <Value2/>
+            <Value1 XAdvance="0"/>
           </Class2Record>
           <Class2Record index="2">
-            <Value1/>
-            <Value2/>
+            <Value1 XAdvance="0"/>
           </Class2Record>
         </Class1Record>
         <Class1Record index="1">
           <Class2Record index="0">
-            <Value1/>
-            <Value2/>
+            <Value1 XAdvance="0"/>
           </Class2Record>
           <Class2Record index="1">
             <Value1 XAdvance="-50"/>
-            <Value2/>
           </Class2Record>
           <Class2Record index="2">
-            <Value1/>
-            <Value2/>
+            <Value1 XAdvance="0"/>
           </Class2Record>
         </Class1Record>
         <Class1Record index="2">
           <Class2Record index="0">
-            <Value1/>
-            <Value2/>
+            <Value1 XAdvance="0"/>
           </Class2Record>
           <Class2Record index="1">
             <Value1 XAdvance="-10"/>
-            <Value2/>
           </Class2Record>
           <Class2Record index="2">
-            <Value1/>
-            <Value2/>
+            <Value1 XAdvance="0"/>
           </Class2Record>
         </Class1Record>
         <Class1Record index="3">
           <Class2Record index="0">
-            <Value1/>
-            <Value2/>
+            <Value1 XAdvance="0"/>
           </Class2Record>
           <Class2Record index="1">
-            <Value1/>
-            <Value2/>
+            <Value1 XAdvance="0"/>
           </Class2Record>
           <Class2Record index="2">
             <Value1 XAdvance="-35"/>
-            <Value2/>
           </Class2Record>
         </Class1Record>
       </PairPos>
