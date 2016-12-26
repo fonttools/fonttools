@@ -14,6 +14,7 @@ dist
 .tox/*
 .cache/
 .coverage
+.coverage.*
 htmlcov/
 
 # emacs backup files
