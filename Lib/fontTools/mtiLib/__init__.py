@@ -1156,8 +1156,8 @@ def main(args):
 		writer = xmlWriter.XMLWriter(sys.stdout)
 		writer.begintag(tag)
 		writer.newline()
-		table.toXML(writer, font)
-		#decompiled.toXML(writer, font)
+		#table.toXML(writer, font)
+		decompiled.toXML(writer, font)
 		writer.endtag(tag)
 		writer.newline()
 
