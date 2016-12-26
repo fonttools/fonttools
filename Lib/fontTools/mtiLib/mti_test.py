@@ -75,9 +75,9 @@ class BuilderTest(unittest.TestCase):
         path, _ = os.path.split(__file__)
         return os.path.join(path, "testdata", testfile)
 
-    def expect_ttx(self, actual_ttx, expected_ttx, fromfile=None, tofile=None):
-        actual = [l+'\n' for l in actual_ttx.split('\n')]
+    def expect_ttx(self, expected_ttx, actual_ttx, fromfile=None, tofile=None):
         expected = [l+'\n' for l in expected_ttx.split('\n')]
+        actual = [l+'\n' for l in actual_ttx.split('\n')]
         if actual != expected:
             print('\n')
             for line in difflib.unified_diff(
@@ -118,8 +118,8 @@ class BuilderTest(unittest.TestCase):
         writer.endtag(tableTag); writer.newline()
         xml_binary = writer.file.getvalue()
 
-        self.expect_ttx(xml_built, xml_binary, fromfile='built', tofile='decompiled')
-        self.expect_ttx(xml_built, xml_expected, fromfile='built', tofile=xml_expected_path)
+        self.expect_ttx(xml_binary,   xml_built, fromfile='decompiled',      tofile='built')
+        self.expect_ttx(xml_expected, xml_built, fromfile=xml_expected_path, tofile='built')
 
 def generate_mti_file_test(name, tableTag=None):
     return lambda self: self.check_mti_file(name, tableTag=tableTag)
