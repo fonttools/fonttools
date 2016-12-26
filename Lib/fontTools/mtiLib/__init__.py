@@ -847,7 +847,7 @@ def parseGSUBGPOS(lines, font, tableTag):
 	assert tableTag in ('GSUB', 'GPOS')
 	log.debug("Parsing %s", tableTag)
 	self = getattr(ot, tableTag)()
-	self.Version = 1.0
+	self.Version = 0x00010000
 	fields = {
 		'script table begin':
 		('ScriptList',
@@ -969,7 +969,7 @@ def parseGDEF(lines, font):
 		attr,parser = fields[typ]
 		assert getattr(self, attr) is None, attr
 		setattr(self, attr, parser(lines, font))
-	self.Version = 1.0 if self.MarkGlyphSetsDef is None else 0x00010002
+	self.Version = 0x00010000 if self.MarkGlyphSetsDef is None else 0x00010002
 	container.table = self
 	return container
 
