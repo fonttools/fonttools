@@ -27,7 +27,6 @@
           <PairValueRecord index="0">
             <SecondGlyph value="V"/>
             <Value1 XAdvance="-50"/>
-            <Value2/>
           </PairValueRecord>
         </PairSet>
         <PairSet index="1">
@@ -35,7 +34,6 @@
           <PairValueRecord index="0">
             <SecondGlyph value="V"/>
             <Value1 XAdvance="-10"/>
-            <Value2/>
           </PairValueRecord>
         </PairSet>
         <PairSet index="2">
@@ -43,7 +41,6 @@
           <PairValueRecord index="0">
             <SecondGlyph value="V"/>
             <Value1 XAdvance="-10"/>
-            <Value2/>
           </PairValueRecord>
         </PairSet>
         <PairSet index="3">
@@ -51,7 +48,6 @@
           <PairValueRecord index="0">
             <SecondGlyph value="V"/>
             <Value1 XAdvance="-50"/>
-            <Value2/>
           </PairValueRecord>
         </PairSet>
         <PairSet index="4">
@@ -59,7 +55,6 @@
           <PairValueRecord index="0">
             <SecondGlyph value="V"/>
             <Value1 XAdvance="-10"/>
-            <Value2/>
           </PairValueRecord>
         </PairSet>
         <PairSet index="5">
@@ -67,22 +62,18 @@
           <PairValueRecord index="0">
             <SecondGlyph value="a"/>
             <Value1 XAdvance="-35"/>
-            <Value2/>
           </PairValueRecord>
           <PairValueRecord index="1">
             <SecondGlyph value="acircumflex"/>
             <Value1 XAdvance="-35"/>
-            <Value2/>
           </PairValueRecord>
           <PairValueRecord index="2">
             <SecondGlyph value="aacute"/>
             <Value1 XAdvance="-35"/>
-            <Value2/>
           </PairValueRecord>
           <PairValueRecord index="3">
             <SecondGlyph value="agrave"/>
             <Value1 XAdvance="-35"/>
-            <Value2/>
           </PairValueRecord>
         </PairSet>
         <PairSet index="6">
@@ -90,7 +81,6 @@
           <PairValueRecord index="0">
             <SecondGlyph value="V"/>
             <Value1 XAdvance="-50"/>
-            <Value2/>
           </PairValueRecord>
         </PairSet>
         <PairSet index="7">
@@ -98,7 +88,6 @@
           <PairValueRecord index="0">
             <SecondGlyph value="V"/>
             <Value1 XAdvance="-50"/>
-            <Value2/>
           </PairValueRecord>
         </PairSet>
         <PairSet index="8">
@@ -106,7 +95,6 @@
           <PairValueRecord index="0">
             <SecondGlyph value="V"/>
             <Value1 XAdvance="-10"/>
-            <Value2/>
           </PairValueRecord>
         </PairSet>
       </PairPos>

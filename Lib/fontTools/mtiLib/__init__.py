@@ -286,7 +286,8 @@ def parsePair(self, lines, font, _lookupMap=None):
 				values2 = values1[glyph2]
 				pair = ot.PairValueRecord()
 				pair.SecondGlyph = glyph2
-				pair.Value1,pair.Value2 = values2
+				pair.Value1 = values2[0]
+				pair.Value2 = values2[1] if self.ValueFormat2 else None
 				records.append(pair)
 			pairset.PairValueCount = len(pairset.PairValueRecord)
 			self.PairSet.append(pairset)

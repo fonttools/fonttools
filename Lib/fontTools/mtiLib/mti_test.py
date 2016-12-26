@@ -37,7 +37,7 @@ class BuilderTest(unittest.TestCase):
 	    #'mti/gposkernset',
 	    'mti/gposmarktobase',
 	    #'mti/gpospairclass',
-	    #'mti/gpospairglyph',
+	    'mti/gpospairglyph',
 	    'mti/gpossingle',
 	    'mti/mark-to-ligature',
 	),
