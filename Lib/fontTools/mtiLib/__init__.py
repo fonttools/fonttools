@@ -1126,34 +1126,10 @@ def build(f, font, tableTag=None):
 	return parseTable(lines, font, tableTag=tableTag)
 
 
-class MockFont(object):
-
-	def __init__(self):
-		self._glyphOrder = ['.notdef']
-		class AllocatingDict(dict):
-			def __missing__(reverseDict, key):
-				self._glyphOrder.append(key)
-				gid = len(reverseDict)
-				reverseDict[key] = gid
-				return gid
-		self._reverseGlyphOrder = AllocatingDict({'.notdef': 0})
-		self.lazy = False
-
-	def getGlyphID(self, glyph, requireReal=None):
-		gid = self._reverseGlyphOrder[glyph]
-		return gid
-
-	def getReverseGlyphMap(self):
-		return self._reverseGlyphOrder
-
-	def getGlyphName(self, gid):
-		return self._glyphOrder[gid]
-
-	def getGlyphOrder(self):
-		return self._glyphOrder
-
 def main(args):
 	from fontTools import configLogger
+	from fontTools.misc.testTools import MockFont
+
 	# configure the library logger (for >= WARNING)
 	configLogger()
 	# comment this out to enable debug messages from mtiLib's logger
