@@ -35,7 +35,7 @@ class BuilderTest(unittest.TestCase):
 	    'mti/chained-glyph',
 	    'mti/gposcursive',
 	    #'mti/gposkernset',
-	    #'mti/gposmarktobase',
+	    'mti/gposmarktobase',
 	    #'mti/gpospairclass',
 	    #'mti/gpospairglyph',
 	    'mti/gpossingle',

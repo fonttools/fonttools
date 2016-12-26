@@ -34,7 +34,7 @@
           <Glyph value="lanuktagurmukhi"/>
           <Glyph value="nagurmukhi"/>
         </BaseCoverage>
-        <!-- ClassCount=None -->
+        <!-- ClassCount=1 -->
         <MarkArray>
           <!-- MarkCount=12 -->
           <MarkRecord index="0">
