@@ -416,6 +416,7 @@ def parseMarkToSomething(self, lines, font, c):
 		'base':		(baseData, c.BaseAnchorClass),
 		'ligature':	(baseData, c.BaseAnchorClass),
 	}
+	maxKlass = 0
 	for line in lines:
 		typ = line[0]
 		assert typ in ('mark', 'base', 'ligature')
@@ -431,6 +432,7 @@ def parseMarkToSomething(self, lines, font, c):
 			key,value = ((glyph,klass)+extras),anchor
 		assert key not in data, key
 		data[key] = value
+		maxKlass = max(maxKlass, klass)
 
 	# Mark
 	markCoverage = makeCoverage(markData.keys(), font, c.MarkCoverageClass)
@@ -440,6 +442,7 @@ def parseMarkToSomething(self, lines, font, c):
 	setattr(markArray, c.MarkCount, len(markRecords))
 	setattr(self, c.MarkCoverage, markCoverage)
 	setattr(self, c.MarkArray, markArray)
+	self.ClassCount = maxKlass + 1
 
 	# Base
 	self.classCount = 0 if not baseData else 1+max(k[1] for k,v in baseData.items())
