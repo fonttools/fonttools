@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GPOS>
+  <Version value="0x00010000"/>
+  <LookupList>
+    <!-- LookupCount=1 -->
+    <Lookup index="0">
+      <!-- LookupType=3 -->
+      <LookupFlag value="0"/>
+      <!-- SubTableCount=1 -->
+      <CursivePos index="0" Format="1">
+        <Coverage Format="1">
+          <Glyph value="A"/>
+          <Glyph value="B"/>
+        </Coverage>
+        <!-- EntryExitCount=2 -->
+        <EntryExitRecord index="0">
+          <EntryAnchor Format="2">
+            <XCoordinate value="560"/>
+            <YCoordinate value="1466"/>
+            <AnchorPoint value="1"/>
+          </EntryAnchor>
+          <ExitAnchor Format="2">
+            <XCoordinate value="769"/>
+            <YCoordinate value="1466"/>
+            <AnchorPoint value="2"/>
+          </ExitAnchor>
+        </EntryExitRecord>
+        <EntryExitRecord index="1">
+          <EntryAnchor Format="2">
+            <XCoordinate value="150"/>
+            <YCoordinate value="1466"/>
+            <AnchorPoint value="1"/>
+          </EntryAnchor>
+          <ExitAnchor Format="2">
+            <XCoordinate value="1186"/>
+            <YCoordinate value="1091"/>
+            <AnchorPoint value="6"/>
+          </ExitAnchor>
+        </EntryExitRecord>
+      </CursivePos>
+    </Lookup>
+  </LookupList>
+</GPOS>

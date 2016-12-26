@@ -1,0 +1,1 @@
+lookup	kernpairs	cursiveentry	A	 560, 1466	 1exit	A	 769, 1466	 2entry	B	 150, 1466	 1exit	B	 1186, 1091	 6lookup end

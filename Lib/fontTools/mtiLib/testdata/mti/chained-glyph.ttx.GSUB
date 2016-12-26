@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GSUB>
+  <Version value="0x00010000"/>
+  <LookupList>
+    <!-- LookupCount=1 -->
+    <Lookup index="0">
+      <!-- LookupType=6 -->
+      <LookupFlag value="512"/>
+      <!-- SubTableCount=1 -->
+      <ChainContextSubst index="0" Format="1">
+        <Coverage Format="1">
+          <Glyph value="uvowelsignsinh"/>
+          <Glyph value="uuvowelsignsinh"/>
+        </Coverage>
+        <!-- ChainSubRuleSetCount=2 -->
+        <ChainSubRuleSet index="0">
+          <!-- ChainSubRuleCount=1 -->
+          <ChainSubRule index="0">
+            <!-- BacktrackGlyphCount=1 -->
+            <Backtrack index="0" value="rakarsinh"/>
+            <!-- InputGlyphCount=1 -->
+            <!-- LookAheadGlyphCount=2 -->
+            <LookAhead index="0" value="1"/>
+            <LookAhead index="1" value="u2aelow-sinh"/>
+            <!-- SubstCount=0 -->
+          </ChainSubRule>
+        </ChainSubRuleSet>
+        <ChainSubRuleSet index="1">
+          <!-- ChainSubRuleCount=1 -->
+          <ChainSubRule index="0">
+            <!-- BacktrackGlyphCount=1 -->
+            <Backtrack index="0" value="rakarsinh"/>
+            <!-- InputGlyphCount=1 -->
+            <!-- LookAheadGlyphCount=2 -->
+            <LookAhead index="0" value="1"/>
+            <LookAhead index="1" value="u2aelow-sinh"/>
+            <!-- SubstCount=0 -->
+          </ChainSubRule>
+        </ChainSubRuleSet>
+      </ChainContextSubst>
+    </Lookup>
+  </LookupList>
+</GSUB>

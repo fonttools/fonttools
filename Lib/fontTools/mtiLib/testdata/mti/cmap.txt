@@ -1,0 +1,52 @@
+Font Chef Table cmap
+
+cmap subtable 0
+platformID	0
+encodingID	3
+format	4
+language	0
+0x0000	null	\#1
+0x000D	CR	\#2
+0x0020	space	\#3
+0x0021	exclam	\#4
+0x0022	quotedbl	\#5
+0x0023	numbersign	\#6
+0x0041	A
+0x0042	B
+0x0061	a
+0x0062	b
+end subtable
+
+cmap subtable 1
+platformID	1
+encodingID	0
+format	6
+language	0
+0x0000	null	\#1
+0x000D	CR	\#2
+0x0020	space	\#3
+0x0021	exclam	\#4
+0x0022	quotedbl	\#5
+0x0023	numbersign	\#6
+0x0041	A
+0x0042	B
+0x0061	a
+0x0062	b
+end subtable
+
+cmap subtable 2
+platformID	3
+encodingID	1
+format	4
+language	0
+0x0000	null	\#1
+0x000D	CR	\#2
+0x0020	space	\#3
+0x0021	exclam	\#4
+0x0022	quotedbl	\#5
+0x0023	numbersign	\#6
+0x0041	A
+0x0042	B
+0x0061	a
+0x0062	b
+end subtable

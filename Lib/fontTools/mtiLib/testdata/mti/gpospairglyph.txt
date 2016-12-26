@@ -1,0 +1,17 @@
+
+lookup	0	pair
+
+left x advance	A	V	-50
+left x advance	Aacute	V	-50
+left x advance	Agrave	V	-50
+left x advance	Acircumflex	V	-50
+left x advance	O	V	-10
+left x advance	Oacute	V	-10
+left x advance	Ograve	V	-10
+left x advance	Ocircumflex	V	-10
+left x advance	T	a	-35
+left x advance	T	aacute	-35
+left x advance	T	agrave	-35
+left x advance	T	acircumflex	-35
+
+lookup end

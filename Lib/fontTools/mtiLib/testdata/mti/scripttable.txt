@@ -1,0 +1,1 @@
+script table begincyrl	default		 3, 4, 1grek	default		 3, 4, 2latn	default		 3, 4, 0latn	DEU 		 3, 4, 0latn	ROM 		 3, 4, 0latn	TRK 		 3, 4, 0latn	VIT 		 3, 4, 5, 0script table end

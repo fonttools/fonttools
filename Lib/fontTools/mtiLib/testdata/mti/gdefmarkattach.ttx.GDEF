@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GDEF>
+  <Version value="0x00010000"/>
+  <MarkAttachClassDef Format="1">
+    <ClassDef glyph="breve" class="1"/>
+    <ClassDef glyph="commaacent" class="2"/>
+    <ClassDef glyph="dotbelow" class="2"/>
+    <ClassDef glyph="grave" class="1"/>
+  </MarkAttachClassDef>
+</GDEF>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GDEF>
+  <Version value="0x00010000"/>
+  <LigCaretList>
+    <Coverage Format="1">
+      <Glyph value="uniFB01"/>
+      <Glyph value="ffi"/>
+    </Coverage>
+    <!-- LigGlyphCount=2 -->
+    <LigGlyph index="0">
+      <!-- CaretCount=1 -->
+      <CaretValue index="0" Format="1">
+        <Coordinate value="236"/>
+      </CaretValue>
+    </LigGlyph>
+    <LigGlyph index="1">
+      <!-- CaretCount=2 -->
+      <CaretValue index="0" Format="1">
+        <Coordinate value="210"/>
+      </CaretValue>
+      <CaretValue index="1" Format="1">
+        <Coordinate value="450"/>
+      </CaretValue>
+    </LigGlyph>
+  </LigCaretList>
+</GDEF>

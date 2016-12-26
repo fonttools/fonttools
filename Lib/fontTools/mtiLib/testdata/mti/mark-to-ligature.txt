@@ -1,0 +1,93 @@
+lookup	LigMk0	mark to ligature
+
+mark	FathatanNS	0	281, 1388	0
+mark	DammatanNS	0	354, 1409	0
+mark	FathaNS	0	277, 1379	0
+mark	DammaNS	0	394, 1444	0
+mark	ShaddaNS	0	283, 1581	0
+mark	SukunNS	0	220, 1474	1
+mark	MaddaNS	0	397, 1472	1
+mark	HamzaAboveNS	0	266, 1425	2
+mark	UltapeshNS	0	454, 1128	1
+mark	DammaRflxNS	0	454, 1128	1
+mark	Fatha2dotsNS	0	272, 1097	0
+mark	AlefSuperiorNS	0	141, 874	1
+mark	ShaddaAlefNS	0	283, 1581	0
+mark	WaslaNS	0	357, 1470	0
+mark	OneDotAboveNS	0	215, 1001	3
+mark	TwoDotsAboveNS	0	346, 1003	0
+mark	ThreeDotsUpAboveNS	0	346, 1003	0
+mark	ThreeDotsDownAboveNS	0	346, 687	0
+mark	FourDotsAboveNS	0	347, 860	0
+mark	TwoDotsVerticalAboveNS	0	357, 707	1
+mark	OneDotAbove2NS	0	215, 1001	3
+mark	SharetKafNS	0	382, 520	1
+mark	ShaddaKasratanNS	0	315, 1164	55
+mark	ShaddaKasraNS	0	426, 1340	55
+mark	ShaddaFathatanNS	0	369, 1604	0
+mark	ShaddaDammatanNS	0	283, 1581	0
+mark	ShaddaDammaNS	0	283, 1581	0
+ligature	LamAlefFin.short	1	2	0	1122, 1620	96
+ligature	LamAlefFin.short	2	2	0	162, 1487	99
+ligature	LamAlefFin.cup	1	2	0	1122, 1620	105
+ligature	LamAlefFin.cup	2	2	0	162, 1487	106
+ligature	LamAlefFin.cut	1	2	0	1122, 1620	110
+ligature	LamAlefFin.cut	2	2	0	162, 1487	108
+ligature	BehxIni_RehFin	1	2	0	618, 813	59
+ligature	BehxIni_RehFin	2	2	0	282, 523	58
+ligature	BehxIni_RehFin.b	1	2	0	708, 813	65
+ligature	BehxIni_RehFin.b	2	2	0	282, 543	64
+ligature	BehxIni_NoonGhunnaFin	1	2	0	1205, 871	78
+ligature	BehxIni_NoonGhunnaFin	2	2	0	516, 565	74
+ligature	BehxIni_MeemFin	1	2	0	785, 1255	90
+ligature	BehxIni_MeemFin	2	2	0	269, 952	93
+ligature	HahIni_YehBarreeFin	1	2	0	1017, 732	83
+ligature	HahIni_YehBarreeFin	2	2	0	344, 743	86
+ligature	AinMed_YehBarreeFin	1	2	0	774, 860	105
+ligature	AinMed_YehBarreeFin	2	2	0	312, 618	108
+ligature	TahIni_YehBarreeFin	1	2	0	1253, 1065	143
+ligature	TahIni_YehBarreeFin	2	2	0	263, 419	142
+ligature	BehxMed_NoonGhunnaFin	1	2	0	1205, 1061	78
+ligature	BehxMed_NoonGhunnaFin	2	2	0	516, 755	74
+ligature	KafMed_MeemFin	1	2	0	238, 1435	182
+ligature	KafMed_MeemFin	2	2	0	84, 308	186
+ligature	LamMed_MeemFin	1	2	0	555, 1627	154
+ligature	LamMed_MeemFin	2	2	0	175, 472	155
+ligature	LamMed_MeemFin.b	1	2	0	555, 1627	156
+ligature	LamMed_MeemFin.b	2	2	0	175, 472	157
+ligature	LamIni_MeemFin	1	2	0	386, 1808	70
+ligature	LamIni_MeemFin	2	2	0	130, 701	150
+ligature	AinIni.12m_MeemFin.02	1	2	0	720, 1281	160
+ligature	AinIni.12m_MeemFin.02	2	2	0	75, 631	158
+ligature	KafMed.12_YehxFin.01	1	2	0	807, 1457	106
+ligature	KafMed.12_YehxFin.01	2	2	0	440, 418	176
+ligature	LamMed_YehxFin	1	2	0	925, 1620	157
+ligature	LamMed_YehxFin	2	2	0	490, 196	152
+ligature	LamMed_YehxFin.cup	1	2	0	935, 1620	159
+ligature	LamMed_YehxFin.cup	2	2	0	500, 196	155
+ligature	FehxMed_YehBarreeFin	1	2	0	397, 804	158
+ligature	FehxMed_YehBarreeFin	2	2	0	6,-65	161
+ligature	KafIni_YehBarreeFin	1	2	0	496, 1549	81
+ligature	KafIni_YehBarreeFin	2	2	0	328, 339	171
+ligature	KafMed_YehBarreeFin	1	2	0	465, 1407	106
+ligature	KafMed_YehBarreeFin	2	2	0	328, 251	197
+ligature	LamIni_YehBarreeFin	1	2	0	719, 1633	70
+ligature	LamIni_YehBarreeFin	2	2	0	328, 339	160
+ligature	AinIni_YehBarreeFin	1	2	0	766, 1036	82
+ligature	AinIni_YehBarreeFin	2	2	0	194, 312	151
+ligature	BehxMed_YehxFin	1	2	0	913,-285	117
+ligature	BehxMed_YehxFin	2	2	0	1223,-305	112
+ligature	BehxMed_MeemFin.py	1	2	0	777, 699	99
+ligature	BehxMed_MeemFin.py	2	2	0	194, 481	102
+ligature	BehxMed_RehFin	1	2	0	708, 1083	65
+ligature	BehxMed_RehFin	2	2	0	282, 813	64
+ligature	BehxMed_RehFin.cup	1	2	0	708, 1083	65
+ligature	BehxMed_RehFin.cup	2	2	0	282, 813	64
+ligature	BehxMed_NoonGhunnaFin.cup	1	2	0	1205, 1061	78
+ligature	BehxMed_NoonGhunnaFin.cup	2	2	0	516, 755	74
+ligature	LamAlefSep	1	2	0	1055, 1583	105
+ligature	LamAlefSep	2	2	0	198, 1528	106
+ligature	LamAlefFin	1	2	0	1122, 1620	98
+ligature	LamAlefFin	2	2	0	162, 1487	99
+
+lookup end

@@ -1,0 +1,8 @@
+lookup	raucontext-sinh	chained
+
+markattachmenttype	2
+
+glyph	rakarsinh	uvowelsignsinh	1,u2aelow-sinh
+glyph	rakarsinh	uuvowelsignsinh	1,u2aelow-sinh
+
+lookup end

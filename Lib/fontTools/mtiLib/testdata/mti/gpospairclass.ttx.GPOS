@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GPOS>
+  <Version value="0x00010000"/>
+  <LookupList>
+    <!-- LookupCount=1 -->
+    <Lookup index="0">
+      <!-- LookupType=2 -->
+      <LookupFlag value="0"/>
+      <!-- SubTableCount=1 -->
+      <PairPos index="0" Format="2">
+        <Coverage Format="2">
+          <Glyph value="A"/>
+          <Glyph value="Ograve"/>
+          <Glyph value="Ocircumflex"/>
+          <Glyph value="Aacute"/>
+          <Glyph value="O"/>
+          <Glyph value="T"/>
+          <Glyph value="Agrave"/>
+          <Glyph value="Acircumflex"/>
+          <Glyph value="Oacute"/>
+        </Coverage>
+        <ValueFormat1 value="4"/>
+        <ValueFormat2 value="0"/>
+        <ClassDef1 Format="1">
+          <ClassDef glyph="A" class="1"/>
+          <ClassDef glyph="Aacute" class="1"/>
+          <ClassDef glyph="Acircumflex" class="1"/>
+          <ClassDef glyph="Agrave" class="1"/>
+          <ClassDef glyph="O" class="2"/>
+          <ClassDef glyph="Oacute" class="2"/>
+          <ClassDef glyph="Ocircumflex" class="2"/>
+          <ClassDef glyph="Ograve" class="2"/>
+          <ClassDef glyph="T" class="3"/>
+        </ClassDef1>
+        <ClassDef2 Format="1">
+          <ClassDef glyph="V" class="1"/>
+          <ClassDef glyph="a" class="2"/>
+          <ClassDef glyph="aacute" class="2"/>
+          <ClassDef glyph="acircumflex" class="2"/>
+          <ClassDef glyph="agrave" class="2"/>
+        </ClassDef2>
+        <!-- Class1Count=4 -->
+        <!-- Class2Count=3 -->
+        <Class1Record index="0">
+          <Class2Record index="0">
+            <Value1/>
+            <Value2/>
+          </Class2Record>
+          <Class2Record index="1">
+            <Value1/>
+            <Value2/>
+          </Class2Record>
+          <Class2Record index="2">
+            <Value1/>
+            <Value2/>
+          </Class2Record>
+        </Class1Record>
+        <Class1Record index="1">
+          <Class2Record index="0">
+            <Value1/>
+            <Value2/>
+          </Class2Record>
+          <Class2Record index="1">
+            <Value1 XAdvance="-50"/>
+            <Value2/>
+          </Class2Record>
+          <Class2Record index="2">
+            <Value1/>
+            <Value2/>
+          </Class2Record>
+        </Class1Record>
+        <Class1Record index="2">
+          <Class2Record index="0">
+            <Value1/>
+            <Value2/>
+          </Class2Record>
+          <Class2Record index="1">
+            <Value1 XAdvance="-10"/>
+            <Value2/>
+          </Class2Record>
+          <Class2Record index="2">
+            <Value1/>
+            <Value2/>
+          </Class2Record>
+        </Class1Record>
+        <Class1Record index="3">
+          <Class2Record index="0">
+            <Value1/>
+            <Value2/>
+          </Class2Record>
+          <Class2Record index="1">
+            <Value1/>
+            <Value2/>
+          </Class2Record>
+          <Class2Record index="2">
+            <Value1 XAdvance="-35"/>
+            <Value2/>
+          </Class2Record>
+        </Class1Record>
+      </PairPos>
+    </Lookup>
+  </LookupList>
+</GPOS>
