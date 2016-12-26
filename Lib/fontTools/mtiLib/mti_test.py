@@ -128,7 +128,7 @@ class BuilderTest(unittest.TestCase):
         self.expect_ttx(xml_expected, xml_built, fromfile=xml_expected_path, tofile='built')
 
 def generate_mti_file_test(name, tableTag=None):
-    return lambda self: self.check_mti_file(name, tableTag=tableTag)
+    return lambda self: self.check_mti_file(os.path.join(*name.split('/')), tableTag=tableTag)
 
 
 for tableTag,tests in BuilderTest.TESTS.items():
