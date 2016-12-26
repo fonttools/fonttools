@@ -54,8 +54,6 @@
           <ClassDef glyph="Ocircumflex" class="2"/>
           <ClassDef glyph="Ograve" class="2"/>
           <ClassDef glyph="T" class="3"/>
-          <ClassDef glyph="V" class="0"/>
-          <ClassDef glyph="acircumflex" class="0"/>
         </ClassDef1>
         <ClassDef2 Format="2">
           <ClassDef glyph="V" class="1"/>

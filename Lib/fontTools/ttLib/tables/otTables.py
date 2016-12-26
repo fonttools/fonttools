@@ -389,7 +389,8 @@ class ClassDef(FormatSwitchingBaseTable):
 				endID = len(glyphOrder)
 
 			for glyphID, cls in zip(range(startID, endID), classList):
-				classDefs[glyphOrder[glyphID]] = cls
+				if cls:
+					classDefs[glyphOrder[glyphID]] = cls
 
 		elif self.Format == 2:
 			records = rawTable["ClassRangeRecord"]
@@ -412,7 +413,8 @@ class ClassDef(FormatSwitchingBaseTable):
 					# but none that we have seen in the wild.
 					endID = len(glyphOrder)
 				for glyphID in range(startID, endID):
-					classDefs[glyphOrder[glyphID]] = cls
+					if cls:
+						classDefs[glyphOrder[glyphID]] = cls
 		else:
 			assert 0, "unknown format: %s" % self.Format
 		self.classDefs = classDefs
@@ -421,13 +423,13 @@ class ClassDef(FormatSwitchingBaseTable):
 		classDefs = getattr(self, "classDefs", None)
 		if classDefs is None:
 			classDefs = self.classDefs = {}
-		items = list(classDefs.items())
 		format = 2
 		rawTable = {"ClassRangeRecord": []}
 		getGlyphID = font.getGlyphID
-		for i in range(len(items)):
-			glyphName, cls = items[i]
-			items[i] = getGlyphID(glyphName), glyphName, cls
+		items = []
+		for glyphName, cls in classDefs.items():
+			if not cls: continue
+			items.append((getGlyphID(glyphName), glyphName, cls))
 		items.sort()
 		if items:
 			last, lastName, lastCls = items[0]
