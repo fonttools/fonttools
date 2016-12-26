@@ -2,32 +2,22 @@ environment:
   matrix:
     - JOB: "2.7.12 32-bit"
       PYTHON_HOME: "C:\\Python27"
-      TOXENV: "py27"
+      TOXENV: "py27-cov"
       TOXPYTHON: "C:\\Python27\\python.exe"
-
-    - JOB: "3.4.4 32-bit"
-      PYTHON_HOME: "C:\\Python34"
-      TOXENV: "py34"
-      TOXPYTHON: "C:\\Python34\\python.exe"
 
     - JOB: "3.5.2 32-bit"
       PYTHON_HOME: "C:\\Python35"
-      TOXENV: "py35"
+      TOXENV: "py35-cov"
       TOXPYTHON: "C:\\Python35\\python.exe"
 
     - JOB: "2.7.12 64-bit"
       PYTHON_HOME: "C:\\Python27-x64"
-      TOXENV: "py27"
+      TOXENV: "py27-cov"
       TOXPYTHON: "C:\\Python27-x64\\python.exe"
-
-    - JOB: "3.4.4 64-bit"
-      PYTHON_HOME: "C:\\Python34-x64"
-      TOXENV: "py34"
-      TOXPYTHON: "C:\\Python34-x64\\python.exe"
 
     - JOB: "3.5.2 64-bit"
       PYTHON_HOME: "C:\\Python35-x64"
-      TOXENV: "py35"
+      TOXENV: "py35-cov"
       TOXPYTHON: "C:\\Python35-x64\\python.exe"
 
 install:
@@ -50,16 +40,18 @@ install:
 
   # upgrade pip and setuptools to avoid out-of-date warnings
   - "python -m pip install --disable-pip-version-check --user --upgrade pip setuptools"
-  - "python -m pip --version"
 
   # install the dependencies to run the tests
-  - "python -m pip install -r dev-requirements.txt"
+  - "python -m pip install tox"
  
 
 build: false
 
 test_script:
   - "tox"
+
+after_test:
+  - "tox -e codecov"
 
 notifications:
   - provider: Email
