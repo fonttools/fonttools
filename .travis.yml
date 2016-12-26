@@ -5,32 +5,33 @@ language: python
 matrix:
   include:
     - python: 2.7
-      env: TOXENV=py27
+      env: TOXENV=py27-cov
     - python: 3.4
-      env: TOXENV=py34
+      env: TOXENV=py34-cov
     - python: 3.5
       env:
-        - TOXENV=py35
+        - TOXENV=py35-cov
         - BUILD_DIST=true
     - python: 3.6
-      env: TOXENV=py36
+      env: TOXENV=py36-cov
     - python: pypy
-      env: TOXENV=pypy
+      # disable coverage.py on pypy because of performance problems
+      env: TOXENV=pypy-nocov
     - language: generic
       os: osx
-      env: TOXENV=py27
+      env: TOXENV=py27-cov
     - language: generic
       os: osx
-      env: TOXENV=py35
-    # coveralls is not listed in tox's envlist, but should run in travis
-    - python: 3.5
-      env: TOXENV=coveralls
+      env: TOXENV=py36-cov
 
 install:
   - ./.travis/install.sh
 
 script:
   - ./.travis/run.sh
+
+after_success:
+  - ./.travis/after_success.sh
 
 before_deploy:
   - ./.travis/before_deploy.sh
