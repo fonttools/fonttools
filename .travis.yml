@@ -59,7 +59,8 @@ deploy:
     user: anthrotype
     password:
       secure: Dz3x8kh4ergBV6qZUgcGVDOEzjoCEFzzQiO5WVw4Zfi04DD8+d1ghmMz2BY4UvoVKSsFrfKDuEB3MCWyqewJsf/zoZQczk/vnWVFjERROieyO1Ckzpz/WkCvbjtniIE0lxzB7zorSV+kGI9VigGAaRlXJyU7mCFojeAFqD6cjS4=
-    distributions: "sdist bdist_wheel"
+    skip_cleanup: true
+    distributions: pass
     on:
       tags: true
       repo: fonttools/fonttools
