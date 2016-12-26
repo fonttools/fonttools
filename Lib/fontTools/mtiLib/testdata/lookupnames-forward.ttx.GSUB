@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GSUB>
+  <Version value="0x00010000"/>
+  <ScriptList>
+    <!-- ScriptCount=1 -->
+    <ScriptRecord index="0">
+      <ScriptTag value="telu"/>
+      <Script>
+        <DefaultLangSys>
+          <ReqFeatureIndex value="65535"/>
+          <!-- FeatureCount=2 -->
+          <FeatureIndex index="0" value="0"/>
+          <FeatureIndex index="1" value="1"/>
+        </DefaultLangSys>
+        <!-- LangSysCount=0 -->
+      </Script>
+    </ScriptRecord>
+  </ScriptList>
+  <FeatureList>
+    <!-- FeatureCount=2 -->
+    <FeatureRecord index="0">
+      <FeatureTag value="akhn"/>
+      <Feature>
+        <!-- LookupCount=1 -->
+        <LookupListIndex index="0" value="1"/>
+      </Feature>
+    </FeatureRecord>
+    <FeatureRecord index="1">
+      <FeatureTag value="akh2"/>
+      <Feature>
+        <!-- LookupCount=1 -->
+        <LookupListIndex index="0" value="0"/>
+      </Feature>
+    </FeatureRecord>
+  </FeatureList>
+  <LookupList>
+    <!-- LookupCount=2 -->
+    <Lookup index="0">
+      <!-- LookupType=6 -->
+      <LookupFlag value="0"/>
+      <!-- SubTableCount=1 -->
+      <ChainContextSubst index="0" Format="2">
+        <Coverage Format="1">
+          <Glyph value="uvowelsignkannada"/>
+          <Glyph value="uuvowelsignkannada"/>
+        </Coverage>
+        <BacktrackClassDef Format="2">
+          <ClassDef glyph="pakannada" class="1"/>
+          <ClassDef glyph="pevowelkannada" class="1"/>
+          <ClassDef glyph="phakannada" class="1"/>
+          <ClassDef glyph="phevowelkannada" class="1"/>
+          <ClassDef glyph="vakannada" class="1"/>
+          <ClassDef glyph="vevowelkannada" class="1"/>
+        </BacktrackClassDef>
+        <InputClassDef Format="1">
+          <ClassDef glyph="uuvowelsignkannada" class="1"/>
+          <ClassDef glyph="uvowelsignkannada" class="1"/>
+        </InputClassDef>
+        <!-- ChainSubClassSetCount=2 -->
+        <ChainSubClassSet index="0" empty="1"/>
+        <ChainSubClassSet index="1">
+          <!-- ChainSubClassRuleCount=1 -->
+          <ChainSubClassRule index="0">
+            <!-- BacktrackGlyphCount=1 -->
+            <Backtrack index="0" value="1"/>
+            <!-- InputGlyphCount=1 -->
+            <!-- LookAheadGlyphCount=0 -->
+            <!-- SubstCount=1 -->
+            <SubstLookupRecord index="0">
+              <SequenceIndex value="0"/>
+              <LookupListIndex value="1"/>
+            </SubstLookupRecord>
+          </ChainSubClassRule>
+        </ChainSubClassSet>
+      </ChainContextSubst>
+    </Lookup>
+    <Lookup index="1">
+      <!-- LookupType=1 -->
+      <LookupFlag value="0"/>
+      <!-- SubTableCount=1 -->
+      <SingleSubst index="0" Format="1">
+        <Substitution in="uuvowelsignkannada" out="uuvowelsignaltkannada"/>
+        <Substitution in="uvowelsignkannada" out="uvowelsignaltkannada"/>
+      </SingleSubst>
+    </Lookup>
+  </LookupList>
+</GSUB>

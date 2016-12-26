@@ -20,6 +20,12 @@ class BuilderTest(unittest.TestCase):
             #'mti/cmap',
         ),
         'GSUB': (
+            'featurename-backward',
+            'featurename-forward',
+            'lookupnames-backward',
+            'lookupnames-forward',
+            'mixed-toplevels',
+
             'mti/scripttable',
             'mti/chainedclass',
             'mti/chainedcoverage',
