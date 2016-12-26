@@ -327,6 +327,12 @@ def parsePair(self, lines, font, _lookupMap=None):
 				vr = rec2.Value2
 			assert not hasattr(vr, what), (vr, what)
 			setattr(vr, what, value)
+		for rec1 in self.Class1Record:
+			for rec2 in rec1.Class2Record:
+				rec2.Value1 = ValueRecord(self.ValueFormat1, rec2.Value1)
+				rec2.Value2 = ValueRecord(self.ValueFormat2, rec2.Value2) \
+						if self.ValueFormat2 else None
+
 		self.Coverage = makeCoverage(self.ClassDef1.classDefs.keys(), font)
 	else:
 		assert 0, typ
