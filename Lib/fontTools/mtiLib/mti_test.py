@@ -476,7 +476,7 @@ def generate_mti_file_test(name, tableTag=None):
 
 for tableTag,tests in MtiTest.TESTS.items():
     for name in tests:
-        setattr(MtiTest, "test_MtiFile_%s" % name,
+        setattr(MtiTest, "test_MtiFile_%s%s" % (name, '_'+tableTag if tableTag else ''),
                 generate_mti_file_test(name, tableTag=tableTag))
 
 
