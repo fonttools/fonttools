@@ -802,11 +802,11 @@ def parseLookup(lines, tableTag, font, lookupMap=None):
 	_, name, typ = line
 	log.debug("Parsing lookup type %s %s", typ, name)
 	lookup = ot.Lookup()
+	lookup.LookupFlag,filterset = parseLookupFlags(lines)
+	if filterset is not None:
+		lookup.MarkFilteringSet = filterset
 	with lines.until('lookup end'):
 
-		lookup.LookupFlag,filterset = parseLookupFlags(lines)
-		if filterset is not None:
-			lookup.MarkFilteringSet = filterset
 		lookup.LookupType, parseLookupSubTable = {
 			'GSUB': {
 				'single':	(0,	parseSingleSubst),
