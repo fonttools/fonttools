@@ -821,39 +821,34 @@ def parseLookup(lines, tableTag, font, lookupMap=None):
 
 		lookup.LookupType, parseLookupSubTable = {
 			'GSUB': {
-				'single':	(0,	parseSingleSubst),
-				'multiple':	(0,	parseMultiple),
-				'alternate':	(0,	parseAlternate),
-				'ligature':	(0,	parseLigature),
-				'context':	(0,	parseContextSubst),
-				'chained':	(0,	parseChainedSubst),
-				'reversechained':(0,	parseReverseChainedSubst),
+				'single':	(1,	parseSingleSubst),
+				'multiple':	(2,	parseMultiple),
+				'alternate':	(3,	parseAlternate),
+				'ligature':	(4,	parseLigature),
+				'context':	(5,	parseContextSubst),
+				'chained':	(6,	parseChainedSubst),
+				'reversechained':(8,	parseReverseChainedSubst),
 			},
 			'GPOS': {
-				'single':	(0,	parseSinglePos),
-				'pair':		(0,	parsePair),
-				'kernset':	(0,	parseKernset),
-				'cursive':	(0,	parseCursive),
-				'mark to base':	(0,	parseMarkToBase),
-				'mark to ligature':(0,	parseMarkToLigature),
-				'mark to mark':	(0,	parseMarkToMark),
-				'context':	(0,	parseContextPos),
-				'chained':	(0,	parseChainedPos),
+				'single':	(1,	parseSinglePos),
+				'pair':		(2,	parsePair),
+				'kernset':	(2,	parseKernset),
+				'cursive':	(3,	parseCursive),
+				'mark to base':	(4,	parseMarkToBase),
+				'mark to ligature':(5,	parseMarkToLigature),
+				'mark to mark':	(6,	parseMarkToMark),
+				'context':	(7,	parseContextPos),
+				'chained':	(8,	parseChainedPos),
 			},
 		}[tableTag][typ]
 
 		subtables = []
 
-		typ = lookup.LookupType
 		while lines.peek():
 			with lines.until(('% subtable', 'subtable end')):
 				while lines.peek():
-					if typ is 0:
-						subtable = parseLookupSubTable(lines, font, lookupMap)
-						lookup.LookupType = subtable.LookupType
-					else:
-						subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
-						parseLookupSubTable(subtable, lines, font, lookupMap)
+					subtable = parseLookupSubTable(lines, font, lookupMap)
+					assert lookup.LookupType == subtable.LookupType
 					subtables.append(subtable)
 			if lines.peeks()[0] in ('% subtable', 'subtable end'):
 				next(lines)
