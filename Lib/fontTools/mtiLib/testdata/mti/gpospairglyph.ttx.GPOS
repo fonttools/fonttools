@@ -8,16 +8,16 @@
       <LookupFlag value="0"/>
       <!-- SubTableCount=1 -->
       <PairPos index="0" Format="1">
-        <Coverage Format="2">
+        <Coverage Format="1">
           <Glyph value="A"/>
+          <Glyph value="Acircumflex"/>
+          <Glyph value="T"/>
           <Glyph value="Aacute"/>
           <Glyph value="Agrave"/>
-          <Glyph value="Acircumflex"/>
           <Glyph value="O"/>
           <Glyph value="Oacute"/>
           <Glyph value="Ograve"/>
           <Glyph value="Ocircumflex"/>
-          <Glyph value="T"/>
         </Coverage>
         <ValueFormat1 value="4"/>
         <ValueFormat2 value="0"/>
@@ -37,10 +37,22 @@
           </PairValueRecord>
         </PairSet>
         <PairSet index="2">
-          <!-- PairValueCount=1 -->
+          <!-- PairValueCount=4 -->
           <PairValueRecord index="0">
-            <SecondGlyph value="V"/>
-            <Value1 XAdvance="-50"/>
+            <SecondGlyph value="a"/>
+            <Value1 XAdvance="-35"/>
+          </PairValueRecord>
+          <PairValueRecord index="1">
+            <SecondGlyph value="acircumflex"/>
+            <Value1 XAdvance="-35"/>
+          </PairValueRecord>
+          <PairValueRecord index="2">
+            <SecondGlyph value="aacute"/>
+            <Value1 XAdvance="-35"/>
+          </PairValueRecord>
+          <PairValueRecord index="3">
+            <SecondGlyph value="agrave"/>
+            <Value1 XAdvance="-35"/>
           </PairValueRecord>
         </PairSet>
         <PairSet index="3">
@@ -54,7 +66,7 @@
           <!-- PairValueCount=1 -->
           <PairValueRecord index="0">
             <SecondGlyph value="V"/>
-            <Value1 XAdvance="-10"/>
+            <Value1 XAdvance="-50"/>
           </PairValueRecord>
         </PairSet>
         <PairSet index="5">
@@ -79,22 +91,10 @@
           </PairValueRecord>
         </PairSet>
         <PairSet index="8">
-          <!-- PairValueCount=4 -->
+          <!-- PairValueCount=1 -->
           <PairValueRecord index="0">
-            <SecondGlyph value="a"/>
-            <Value1 XAdvance="-35"/>
-          </PairValueRecord>
-          <PairValueRecord index="1">
-            <SecondGlyph value="aacute"/>
-            <Value1 XAdvance="-35"/>
-          </PairValueRecord>
-          <PairValueRecord index="2">
-            <SecondGlyph value="agrave"/>
-            <Value1 XAdvance="-35"/>
-          </PairValueRecord>
-          <PairValueRecord index="3">
-            <SecondGlyph value="acircumflex"/>
-            <Value1 XAdvance="-35"/>
+            <SecondGlyph value="V"/>
+            <Value1 XAdvance="-10"/>
           </PairValueRecord>
         </PairSet>
       </PairPos>

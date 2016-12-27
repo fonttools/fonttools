@@ -253,7 +253,6 @@ def parseSinglePos(lines, font, _lookupMap=None):
 
 def parsePair(self, lines, font, _lookupMap=None):
 	self.ValueFormat1 = self.ValueFormat2 = 0
-	getGlyphID = font.getGlyphID
 	typ = lines.peek()[0].split()[0].lower()
 	if typ in ('left', 'right'):
 		self.Format = 1
@@ -265,8 +264,6 @@ def parsePair(self, lines, font, _lookupMap=None):
 			what = line[0][len(side):].title().replace(' ', '')
 			mask = valueRecordFormatDict[what][0]
 			glyph1, glyph2 = makeGlyphs(line[1:3])
-			getGlyphID(glyph1) # Hack to make MockFont used in tests deterministic
-			getGlyphID(glyph2) # Hack to make MockFont used in tests deterministic
 			value = int(line[3])
 			if not glyph1 in values: values[glyph1] = {}
 			if not glyph2 in values[glyph1]: values[glyph1][glyph2] = (ValueRecord(),ValueRecord())
@@ -643,13 +640,11 @@ def makeClassDef(classDefs, font, klass=ot.Coverage):
 
 def parseClassDef(lines, font, klass=ot.ClassDef):
 	classDefs = {}
-	getGlyphID = font.getGlyphID
 	with lines.between('class definition'):
 		for line in lines:
 			glyph = makeGlyph(line[0])
 			assert glyph not in classDefs, glyph
 			classDefs[glyph] = int(line[1])
-			getGlyphID(glyph) # Hack to make MockFont used in tests deterministic
 	return makeClassDef(classDefs, font, klass)
 
 def makeCoverage(glyphs, font, klass=ot.Coverage):
@@ -657,10 +652,7 @@ def makeCoverage(glyphs, font, klass=ot.Coverage):
 	if isinstance(glyphs, set):
 		glyphs = sorted(glyphs)
 	coverage = klass()
-	getGlyphID = font.getGlyphID
-	for glyph in glyphs:
-		getGlyphID(glyph) # Hack to make MockFont used in tests deterministic
-	coverage.glyphs = sorted(set(glyphs), key=getGlyphID)
+	coverage.glyphs = sorted(set(glyphs), key=font.getGlyphID)
 	return coverage
 
 def parseCoverage(lines, font, klass=ot.Coverage):
@@ -919,22 +911,18 @@ def parseGPOS(lines, font):
 
 def parseAttachList(lines, font):
 	points = {}
-	getGlyphID = font.getGlyphID
 	with lines.between('attachment list'):
 		for line in lines:
 			glyph = makeGlyph(line[0])
-			getGlyphID(glyph) # Hack to make MockFont used in tests deterministic
 			assert glyph not in points, glyph
 			points[glyph] = [int(i) for i in line[1:]]
 	return otl.buildAttachList(points, font.getReverseGlyphMap())
 
 def parseCaretList(lines, font):
 	carets = {}
-	getGlyphID = font.getGlyphID
 	with lines.between('carets'):
 		for line in lines:
 			glyph = makeGlyph(line[0])
-			getGlyphID(glyph) # Hack to make MockFont used in tests deterministic
 			assert glyph not in carets, glyph
 			num = int(line[1])
 			thisCarets = [int(i) for i in line[2:]]
@@ -1150,7 +1138,8 @@ def build(f, font, tableTag=None):
 	return parseTable(lines, font, tableTag=tableTag)
 
 
-def main(args):
+def main(args, font=None):
+	import sys
 	from fontTools import configLogger
 	from fontTools.misc.testTools import MockFont
 
@@ -1158,7 +1147,10 @@ def main(args):
 	configLogger()
 	# comment this out to enable debug messages from mtiLib's logger
 	# log.setLevel(logging.DEBUG)
-	font = MockFont()
+
+	if font is None:
+		font = MockFont()
+
 	tableTag = None
 	if args[0].startswith('-t'):
 		tableTag = args[0][2:]

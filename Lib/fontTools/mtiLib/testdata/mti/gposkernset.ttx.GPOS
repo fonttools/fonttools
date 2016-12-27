@@ -32,9 +32,9 @@
       </PairPos>
       <PairPos index="1" Format="2">
         <Coverage Format="1">
+          <Glyph value="A"/>
           <Glyph value="Acircumflex"/>
           <Glyph value="T"/>
-          <Glyph value="A"/>
           <Glyph value="Aacute"/>
           <Glyph value="Agrave"/>
           <Glyph value="O"/>
@@ -44,7 +44,7 @@
         </Coverage>
         <ValueFormat1 value="4"/>
         <ValueFormat2 value="0"/>
-        <ClassDef1 Format="1">
+        <ClassDef1 Format="2">
           <ClassDef glyph="A" class="1"/>
           <ClassDef glyph="Aacute" class="1"/>
           <ClassDef glyph="Acircumflex" class="1"/>
