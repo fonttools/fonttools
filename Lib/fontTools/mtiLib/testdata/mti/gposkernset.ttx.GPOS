@@ -31,7 +31,7 @@
         </PairSet>
       </PairPos>
       <PairPos index="1" Format="2">
-        <Coverage Format="2">
+        <Coverage Format="1">
           <Glyph value="Acircumflex"/>
           <Glyph value="T"/>
           <Glyph value="A"/>

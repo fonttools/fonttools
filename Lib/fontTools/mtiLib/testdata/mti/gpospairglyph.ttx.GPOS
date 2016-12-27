@@ -11,12 +11,12 @@
         <Coverage Format="2">
           <Glyph value="A"/>
           <Glyph value="Aacute"/>
-          <Glyph value="Acircumflex"/>
           <Glyph value="Agrave"/>
+          <Glyph value="Acircumflex"/>
           <Glyph value="O"/>
           <Glyph value="Oacute"/>
-          <Glyph value="Ocircumflex"/>
           <Glyph value="Ograve"/>
+          <Glyph value="Ocircumflex"/>
           <Glyph value="T"/>
         </Coverage>
         <ValueFormat1 value="4"/>
@@ -85,15 +85,15 @@
             <Value1 XAdvance="-35"/>
           </PairValueRecord>
           <PairValueRecord index="1">
-            <SecondGlyph value="acircumflex"/>
-            <Value1 XAdvance="-35"/>
-          </PairValueRecord>
-          <PairValueRecord index="2">
             <SecondGlyph value="aacute"/>
             <Value1 XAdvance="-35"/>
           </PairValueRecord>
-          <PairValueRecord index="3">
+          <PairValueRecord index="2">
             <SecondGlyph value="agrave"/>
+            <Value1 XAdvance="-35"/>
+          </PairValueRecord>
+          <PairValueRecord index="3">
+            <SecondGlyph value="acircumflex"/>
             <Value1 XAdvance="-35"/>
           </PairValueRecord>
         </PairSet>

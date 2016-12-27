@@ -253,6 +253,7 @@ def parseSinglePos(lines, font, _lookupMap=None):
 
 def parsePair(self, lines, font, _lookupMap=None):
 	self.ValueFormat1 = self.ValueFormat2 = 0
+	getGlyphID = font.getGlyphID
 	typ = lines.peek()[0].split()[0].lower()
 	if typ in ('left', 'right'):
 		self.Format = 1
@@ -264,6 +265,8 @@ def parsePair(self, lines, font, _lookupMap=None):
 			what = line[0][len(side):].title().replace(' ', '')
 			mask = valueRecordFormatDict[what][0]
 			glyph1, glyph2 = makeGlyphs(line[1:3])
+			getGlyphID(glyph1) # Hack to make MockFont used in tests deterministic
+			getGlyphID(glyph2) # Hack to make MockFont used in tests deterministic
 			value = int(line[3])
 			if not glyph1 in values: values[glyph1] = {}
 			if not glyph2 in values[glyph1]: values[glyph1][glyph2] = (ValueRecord(),ValueRecord())
