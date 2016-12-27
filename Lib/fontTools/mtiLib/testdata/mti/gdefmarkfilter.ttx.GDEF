@@ -7,13 +7,13 @@
     <Coverage index="0" empty="1"/>
     <Coverage index="1" Format="1">
       <Glyph value="acute"/>
-      <Glyph value="dotabove"/>
       <Glyph value="breve"/>
+      <Glyph value="dotabove"/>
     </Coverage>
     <Coverage index="2" Format="1">
+      <Glyph value="cedilla"/>
       <Glyph value="commaaccent"/>
       <Glyph value="dotbelow"/>
-      <Glyph value="cedilla"/>
     </Coverage>
     <Coverage index="3" Format="1">
       <Glyph value="dotabove"/>

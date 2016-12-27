@@ -10,18 +10,18 @@
       <PairPos index="0" Format="2">
         <Coverage Format="2">
           <Glyph value="A"/>
-          <Glyph value="Ograve"/>
-          <Glyph value="Ocircumflex"/>
           <Glyph value="Aacute"/>
-          <Glyph value="O"/>
-          <Glyph value="T"/>
           <Glyph value="Agrave"/>
           <Glyph value="Acircumflex"/>
+          <Glyph value="O"/>
           <Glyph value="Oacute"/>
+          <Glyph value="Ograve"/>
+          <Glyph value="Ocircumflex"/>
+          <Glyph value="T"/>
         </Coverage>
         <ValueFormat1 value="4"/>
         <ValueFormat2 value="0"/>
-        <ClassDef1 Format="1">
+        <ClassDef1 Format="2">
           <ClassDef glyph="A" class="1"/>
           <ClassDef glyph="Aacute" class="1"/>
           <ClassDef glyph="Acircumflex" class="1"/>

@@ -9,8 +9,8 @@
       <!-- SubTableCount=1 -->
       <ChainContextPos index="0" Format="1">
         <Coverage Format="1">
-          <Glyph value="uvowelsignsinh"/>
           <Glyph value="uuvowelsignsinh"/>
+          <Glyph value="uvowelsignsinh"/>
         </Coverage>
         <!-- ChainPosRuleSetCount=2 -->
         <ChainPosRuleSet index="0">

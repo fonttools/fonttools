@@ -10,16 +10,16 @@
       <ChainContextSubst index="0" Format="3">
         <!-- BacktrackGlyphCount=1 -->
         <BacktrackCoverage index="0" Format="2">
-          <Glyph value="seven"/>
-          <Glyph value="nine"/>
-          <Glyph value="six"/>
-          <Glyph value="three"/>
-          <Glyph value="two"/>
-          <Glyph value="four"/>
           <Glyph value="zero"/>
-          <Glyph value="five"/>
-          <Glyph value="eight"/>
           <Glyph value="one"/>
+          <Glyph value="two"/>
+          <Glyph value="three"/>
+          <Glyph value="four"/>
+          <Glyph value="five"/>
+          <Glyph value="six"/>
+          <Glyph value="seven"/>
+          <Glyph value="eight"/>
+          <Glyph value="nine"/>
         </BacktrackCoverage>
         <!-- InputGlyphCount=1 -->
         <InputCoverage index="0" Format="1">
@@ -27,16 +27,16 @@
         </InputCoverage>
         <!-- LookAheadGlyphCount=1 -->
         <LookAheadCoverage index="0" Format="2">
-          <Glyph value="seven"/>
-          <Glyph value="nine"/>
-          <Glyph value="six"/>
-          <Glyph value="three"/>
-          <Glyph value="two"/>
-          <Glyph value="four"/>
           <Glyph value="zero"/>
-          <Glyph value="five"/>
-          <Glyph value="eight"/>
           <Glyph value="one"/>
+          <Glyph value="two"/>
+          <Glyph value="three"/>
+          <Glyph value="four"/>
+          <Glyph value="five"/>
+          <Glyph value="six"/>
+          <Glyph value="seven"/>
+          <Glyph value="eight"/>
+          <Glyph value="nine"/>
         </LookAheadCoverage>
         <!-- SubstCount=1 -->
         <SubstLookupRecord index="0">

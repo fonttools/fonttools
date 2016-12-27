@@ -35,12 +35,12 @@
           <Glyph value="Acircumflex"/>
           <Glyph value="T"/>
           <Glyph value="A"/>
+          <Glyph value="Aacute"/>
+          <Glyph value="Agrave"/>
+          <Glyph value="O"/>
+          <Glyph value="Oacute"/>
           <Glyph value="Ograve"/>
           <Glyph value="Ocircumflex"/>
-          <Glyph value="Aacute"/>
-          <Glyph value="O"/>
-          <Glyph value="Agrave"/>
-          <Glyph value="Oacute"/>
         </Coverage>
         <ValueFormat1 value="4"/>
         <ValueFormat2 value="0"/>

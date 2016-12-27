@@ -276,7 +276,7 @@ def parsePair(self, lines, font, _lookupMap=None):
 				vr = rec2[1]
 			assert not hasattr(vr, what), (vr, what)
 			setattr(vr, what, value)
-		self.Coverage = makeCoverage(values.keys(), font)
+		self.Coverage = makeCoverage(set(values.keys()), font)
 		self.PairSet = []
 		for glyph1 in self.Coverage.glyphs:
 			values1 = values[glyph1]
@@ -302,7 +302,7 @@ def parsePair(self, lines, font, _lookupMap=None):
 				'second':	(1,ot.ClassDef2),
 			}[typ]
 			assert classDefs[idx] is None
-			classDefs[idx] = parseClassDef(lines, klass=klass)
+			classDefs[idx] = parseClassDef(lines, font, klass=klass)
 		self.ClassDef1, self.ClassDef2 = classDefs
 		self.Class1Count, self.Class2Count = (1+max(c.classDefs.values()) for c in classDefs)
 		self.Class1Record = [ot.Class1Record() for i in range(self.Class1Count)]
@@ -333,7 +333,7 @@ def parsePair(self, lines, font, _lookupMap=None):
 				rec2.Value2 = ValueRecord(self.ValueFormat2, rec2.Value2) \
 						if self.ValueFormat2 else None
 
-		self.Coverage = makeCoverage(self.ClassDef1.classDefs.keys(), font)
+		self.Coverage = makeCoverage(set(self.ClassDef1.classDefs.keys()), font)
 	else:
 		assert 0, typ
 
@@ -442,7 +442,7 @@ def parseMarkToSomething(self, lines, font, c):
 		maxKlass = max(maxKlass, klass)
 
 	# Mark
-	markCoverage = makeCoverage(markData.keys(), font, c.MarkCoverageClass)
+	markCoverage = makeCoverage(set(markData.keys()), font, c.MarkCoverageClass)
 	markArray = c.MarkArrayClass()
 	markRecords = makeMarkRecords(markData, markCoverage, c)
 	setattr(markArray, c.MarkRecord, markRecords)
@@ -453,7 +453,7 @@ def parseMarkToSomething(self, lines, font, c):
 
 	# Base
 	self.classCount = 0 if not baseData else 1+max(k[1] for k,v in baseData.items())
-	baseCoverage = makeCoverage([k[0] for k in baseData.keys()], font, c.BaseCoverageClass)
+	baseCoverage = makeCoverage(set([k[0] for k in baseData.keys()]), font, c.BaseCoverageClass)
 	baseArray = c.BaseArrayClass()
 	if c.Base == 'Ligature':
 		baseRecords = makeLigatureRecords(baseData, baseCoverage, c, self.classCount)
@@ -632,25 +632,32 @@ def parseLookupRecords(items, klassName, lookupMap=None):
 		lst.append(rec)
 	return lst
 
-def makeClassDef(classDefs, klass=ot.Coverage):
+def makeClassDef(classDefs, font, klass=ot.Coverage):
 	if not classDefs: return None
 	self = klass()
 	self.classDefs = dict(classDefs)
 	return self
 
-def parseClassDef(lines, klass=ot.ClassDef):
+def parseClassDef(lines, font, klass=ot.ClassDef):
 	classDefs = {}
+	getGlyphID = font.getGlyphID
 	with lines.between('class definition'):
 		for line in lines:
 			glyph = makeGlyph(line[0])
 			assert glyph not in classDefs, glyph
 			classDefs[glyph] = int(line[1])
-	return makeClassDef(classDefs, klass)
+			getGlyphID(glyph) # Hack to make MockFont used in tests deterministic
+	return makeClassDef(classDefs, font, klass)
 
 def makeCoverage(glyphs, font, klass=ot.Coverage):
 	if not glyphs: return None
+	if isinstance(glyphs, set):
+		glyphs = sorted(glyphs)
 	coverage = klass()
-	coverage.glyphs = sorted(set(glyphs), key=font.getGlyphID)
+	getGlyphID = font.getGlyphID
+	for glyph in glyphs:
+		getGlyphID(glyph) # Hack to make MockFont used in tests deterministic
+	coverage.glyphs = sorted(set(glyphs), key=getGlyphID)
 	return coverage
 
 def parseCoverage(lines, font, klass=ot.Coverage):
@@ -721,7 +728,7 @@ def parseContext(self, lines, font, Type, lookupMap=None):
 			},
 			}[c.DataLen][typ]
 			assert classDefs[idx] is None, idx
-			classDefs[idx] = parseClassDef(lines, klass=klass)
+			classDefs[idx] = parseClassDef(lines, font, klass=klass)
 		c.SetContextData(self, classDefs)
 		rules = []
 		for line in lines:
@@ -791,7 +798,7 @@ def parseReverseChainedSubst(self, lines, font, _lookupMap=None):
 		assert len(line) == 2, line
 		line = makeGlyphs(line)
 		mapping[line[0]] = line[1]
-	self.Coverage = makeCoverage(mapping.keys(), font)
+	self.Coverage = makeCoverage(set(mapping.keys()), font)
 	self.Substitute = [mapping[k] for k in self.Coverage.glyphs]
 	self.GlyphCount = len(self.Substitute)
 
@@ -909,18 +916,22 @@ def parseGPOS(lines, font):
 
 def parseAttachList(lines, font):
 	points = {}
+	getGlyphID = font.getGlyphID
 	with lines.between('attachment list'):
 		for line in lines:
 			glyph = makeGlyph(line[0])
+			getGlyphID(glyph) # Hack to make MockFont used in tests deterministic
 			assert glyph not in points, glyph
 			points[glyph] = [int(i) for i in line[1:]]
 	return otl.buildAttachList(points, font.getReverseGlyphMap())
 
 def parseCaretList(lines, font):
 	carets = {}
+	getGlyphID = font.getGlyphID
 	with lines.between('carets'):
 		for line in lines:
 			glyph = makeGlyph(line[0])
+			getGlyphID(glyph) # Hack to make MockFont used in tests deterministic
 			assert glyph not in carets, glyph
 			num = int(line[1])
 			thisCarets = [int(i) for i in line[2:]]
@@ -933,8 +944,8 @@ def makeMarkFilteringSets(sets, font):
 	self.MarkSetTableFormat = 1
 	self.MarkSetCount = 1 + max(sets.keys())
 	self.Coverage = [None] * self.MarkSetCount
-	for k,v in sets.items():
-		self.Coverage[k] = makeCoverage(v, font)
+	for k,v in sorted(sets.items()):
+		self.Coverage[k] = makeCoverage(set(v), font)
 	return self
 
 def parseMarkFilteringSets(lines, font):
@@ -957,14 +968,14 @@ def parseGDEF(lines, font):
 	fields = {
 		'class definition begin':
 			('GlyphClassDef',
-			 lambda lines, font: parseClassDef(lines, klass=ot.GlyphClassDef)),
+			 lambda lines, font: parseClassDef(lines, font, klass=ot.GlyphClassDef)),
 		'attachment list begin':
 			('AttachList', parseAttachList),
 		'carets begin':
 			('LigCaretList', parseCaretList),
 		'mark attachment class definition begin':
 			('MarkAttachClassDef',
-			 lambda lines, font: parseClassDef(lines, klass=ot.MarkAttachClassDef)),
+			 lambda lines, font: parseClassDef(lines, font, klass=ot.MarkAttachClassDef)),
 		'markfilter set definition begin':
 			('MarkGlyphSetsDef', parseMarkFilteringSets),
 	}
