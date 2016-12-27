@@ -688,7 +688,8 @@ def bucketizeRules(self, c, rules, bucketKeys):
 	setattr(self, c.RuleSet, rulesets)
 	setattr(self, c.RuleSetCount, len(rulesets))
 
-def parseContext(self, lines, font, Type, lookupMap=None):
+def parseContext(lines, font, Type, lookupMap=None):
+	self = getattr(ot, Type)()
 	typ = lines.peeks()[0].split()[0].lower()
 	if typ == 'glyph':
 		self.Format = 1
@@ -764,15 +765,16 @@ def parseContext(self, lines, font, Type, lookupMap=None):
 		setattr(self, c.LookupRecord, recs)
 	else:
 		assert 0, typ
+	return self
 
-def parseContextSubst(self, lines, font, lookupMap=None):
-	return parseContext(self, lines, font, "ContextSubst", lookupMap=lookupMap)
-def parseContextPos(self, lines, font, lookupMap=None):
-	return parseContext(self, lines, font, "ContextPos", lookupMap=lookupMap)
-def parseChainedSubst(self, lines, font, lookupMap=None):
-	return parseContext(self, lines, font, "ChainContextSubst", lookupMap=lookupMap)
-def parseChainedPos(self, lines, font, lookupMap=None):
-	return parseContext(self, lines, font, "ChainContextPos", lookupMap=lookupMap)
+def parseContextSubst(lines, font, lookupMap=None):
+	return parseContext(lines, font, "ContextSubst", lookupMap=lookupMap)
+def parseContextPos(lines, font, lookupMap=None):
+	return parseContext(lines, font, "ContextPos", lookupMap=lookupMap)
+def parseChainedSubst(lines, font, lookupMap=None):
+	return parseContext(lines, font, "ChainContextSubst", lookupMap=lookupMap)
+def parseChainedPos(lines, font, lookupMap=None):
+	return parseContext(lines, font, "ChainContextPos", lookupMap=lookupMap)
 
 def parseReverseChainedSubst(self, lines, font, _lookupMap=None):
 	self.Format = 1
@@ -813,8 +815,8 @@ def parseLookup(lines, tableTag, font, lookupMap=None):
 				'multiple':	(0,	parseMultiple),
 				'alternate':	(0,	parseAlternate),
 				'ligature':	(0,	parseLigature),
-				'context':	(5,	parseContextSubst),
-				'chained':	(6,	parseChainedSubst),
+				'context':	(0,	parseContextSubst),
+				'chained':	(0,	parseChainedSubst),
 				'reversechained':(8,	parseReverseChainedSubst),
 			},
 			'GPOS': {
@@ -825,8 +827,8 @@ def parseLookup(lines, tableTag, font, lookupMap=None):
 				'mark to base':	(4,	parseMarkToBase),
 				'mark to ligature':(5,	parseMarkToLigature),
 				'mark to mark':	(6,	parseMarkToMark),
-				'context':	(7,	parseContextPos),
-				'chained':	(8,	parseChainedPos),
+				'context':	(0,	parseContextPos),
+				'chained':	(0,	parseChainedPos),
 			},
 		}[tableTag][typ]
 
