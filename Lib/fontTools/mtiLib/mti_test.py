@@ -363,7 +363,7 @@ class MtiTest(unittest.TestCase):
             'mti/scripttable',
             'mti/chainedclass',
             'mti/chainedcoverage',
-            #'mti/chained-glyph',
+            'mti/chained-glyph',
             'mti/gsubalternate',
             'mti/gsubligature',
             'mti/gsubmultiple',
@@ -372,7 +372,7 @@ class MtiTest(unittest.TestCase):
         ),
         'GPOS': (
             'mti/scripttable',
-            #'mti/chained-glyph',
+            'mti/chained-glyph',
             'mti/gposcursive',
             'mti/gposkernset',
             'mti/gposmarktobase',
