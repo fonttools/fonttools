@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GDEF>
+  <Version value="0x00010002"/>
+  <MarkGlyphSetsDef>
+    <MarkSetTableFormat value="1"/>
+    <!-- MarkSetCount=4 -->
+    <Coverage index="0" empty="1"/>
+    <Coverage index="1" Format="1">
+      <Glyph value="breve"/>
+      <Glyph value="acute"/>
+      <Glyph value="dotabove"/>
+    </Coverage>
+    <Coverage index="2" Format="1">
+      <Glyph value="dotbelow"/>
+      <Glyph value="cedilla"/>
+      <Glyph value="commaaccent"/>
+    </Coverage>
+    <Coverage index="3" Format="1">
+      <Glyph value="dotbelow"/>
+      <Glyph value="dotabove"/>
+    </Coverage>
+  </MarkGlyphSetsDef>
+</GDEF>

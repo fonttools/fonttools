@@ -1,0 +1,1 @@
+lookup	 latinLigatures	ligatureRightToLeft	noIgnoreBaseGlyphs	noIgnoreLigatures	noIgnoreMarks	noIJ	I	Jffi	f	f	iffl	f	f	lfft	f	f	tffb	f	f	bffh	f	f	hffk	f	f	kfi	f	ifl	f	lff	f	fft	f	tfb	f	bfh	f	hfk	f	kfj	f	jij	i	jtt	t	tIJsmall	Ismall	Jsmalllookup end

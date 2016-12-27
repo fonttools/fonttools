@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GDEF>
+  <Version value="0x00010000"/>
+  <AttachList>
+    <Coverage Format="1">
+      <Glyph value="A"/>
+      <Glyph value="B"/>
+    </Coverage>
+    <!-- GlyphCount=2 -->
+    <AttachPoint index="0">
+      <!-- PointCount=1 -->
+      <PointIndex index="0" value="5"/>
+    </AttachPoint>
+    <AttachPoint index="1">
+      <!-- PointCount=3 -->
+      <PointIndex index="0" value="0"/>
+      <PointIndex index="1" value="3"/>
+      <PointIndex index="2" value="9"/>
+    </AttachPoint>
+  </AttachList>
+</GDEF>

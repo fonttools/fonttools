@@ -1,0 +1,1 @@
+lookup	 alt-fractions 	singleRightToLeft	noIgnoreBaseGlyphs	noIgnoreLigatures	noIgnoreMarks	noonehalf	onehalf.altonequarter	onequarter.altthreequarters	threequarters.altlookup end

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GPOS>
+  <Version value="0x00010000"/>
+  <LookupList>
+    <!-- LookupCount=1 -->
+    <Lookup index="0">
+      <!-- LookupType=2 -->
+      <LookupFlag value="0"/>
+      <!-- SubTableCount=1 -->
+      <PairPos index="0" Format="1">
+        <Coverage Format="1">
+          <Glyph value="A"/>
+          <Glyph value="Acircumflex"/>
+          <Glyph value="T"/>
+          <Glyph value="Aacute"/>
+          <Glyph value="Agrave"/>
+          <Glyph value="O"/>
+          <Glyph value="Oacute"/>
+          <Glyph value="Ograve"/>
+          <Glyph value="Ocircumflex"/>
+        </Coverage>
+        <ValueFormat1 value="4"/>
+        <ValueFormat2 value="0"/>
+        <!-- PairSetCount=9 -->
+        <PairSet index="0">
+          <!-- PairValueCount=1 -->
+          <PairValueRecord index="0">
+            <SecondGlyph value="V"/>
+            <Value1 XAdvance="-50"/>
+          </PairValueRecord>
+        </PairSet>
+        <PairSet index="1">
+          <!-- PairValueCount=1 -->
+          <PairValueRecord index="0">
+            <SecondGlyph value="V"/>
+            <Value1 XAdvance="-50"/>
+          </PairValueRecord>
+        </PairSet>
+        <PairSet index="2">
+          <!-- PairValueCount=4 -->
+          <PairValueRecord index="0">
+            <SecondGlyph value="a"/>
+            <Value1 XAdvance="-35"/>
+          </PairValueRecord>
+          <PairValueRecord index="1">
+            <SecondGlyph value="acircumflex"/>
+            <Value1 XAdvance="-35"/>
+          </PairValueRecord>
+          <PairValueRecord index="2">
+            <SecondGlyph value="aacute"/>
+            <Value1 XAdvance="-35"/>
+          </PairValueRecord>
+          <PairValueRecord index="3">
+            <SecondGlyph value="agrave"/>
+            <Value1 XAdvance="-35"/>
+          </PairValueRecord>
+        </PairSet>
+        <PairSet index="3">
+          <!-- PairValueCount=1 -->
+          <PairValueRecord index="0">
+            <SecondGlyph value="V"/>
+            <Value1 XAdvance="-50"/>
+          </PairValueRecord>
+        </PairSet>
+        <PairSet index="4">
+          <!-- PairValueCount=1 -->
+          <PairValueRecord index="0">
+            <SecondGlyph value="V"/>
+            <Value1 XAdvance="-50"/>
+          </PairValueRecord>
+        </PairSet>
+        <PairSet index="5">
+          <!-- PairValueCount=1 -->
+          <PairValueRecord index="0">
+            <SecondGlyph value="V"/>
+            <Value1 XAdvance="-10"/>
+          </PairValueRecord>
+        </PairSet>
+        <PairSet index="6">
+          <!-- PairValueCount=1 -->
+          <PairValueRecord index="0">
+            <SecondGlyph value="V"/>
+            <Value1 XAdvance="-10"/>
+          </PairValueRecord>
+        </PairSet>
+        <PairSet index="7">
+          <!-- PairValueCount=1 -->
+          <PairValueRecord index="0">
+            <SecondGlyph value="V"/>
+            <Value1 XAdvance="-10"/>
+          </PairValueRecord>
+        </PairSet>
+        <PairSet index="8">
+          <!-- PairValueCount=1 -->
+          <PairValueRecord index="0">
+            <SecondGlyph value="V"/>
+            <Value1 XAdvance="-10"/>
+          </PairValueRecord>
+        </PairSet>
+      </PairPos>
+    </Lookup>
+  </LookupList>
+</GPOS>

@@ -1,0 +1,37 @@
+lookup	 0 	kernset
+
+RightToLeft	no
+IgnoreBaseGlyphs	no
+IgnoreLigatures	no
+IgnoreMarks	no
+
+left x advance	Acircumflex	V	-10
+left x advance	T	acircumflex	-18
+% Below are the class definitions. Above are the exceptions.
+subtable end
+
+firstclass definition begin
+A	1
+Aacute	1
+Agrave	1
+Acircumflex	1
+O	2
+Oacute	2
+Ograve	2
+Ocircumflex	2
+T	3
+class definition end
+
+secondclass definition begin
+V	1
+a	2
+aacute	2
+agrave	2
+acircumflex	2
+class definition end
+
+left x advance	 1	 1	-50
+left x advance	 2	 1	-10
+left x advance	 3	 2	-35
+
+lookup end

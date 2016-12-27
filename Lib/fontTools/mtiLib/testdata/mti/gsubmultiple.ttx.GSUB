@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GSUB>
+  <Version value="0x00010000"/>
+  <LookupList>
+    <!-- LookupCount=1 -->
+    <Lookup index="0">
+      <!-- LookupType=2 -->
+      <LookupFlag value="0"/>
+      <!-- SubTableCount=1 -->
+      <MultipleSubst index="0" Format="1">
+        <Substitution in="janyevoweltelugu" out="jaivoweltelugu,nyasubscripttelugu"/>
+        <Substitution in="kassevoweltelugu" out="kaivoweltelugu,ssasubscripttelugu"/>
+      </MultipleSubst>
+    </Lookup>
+  </LookupList>
+</GSUB>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GSUB>
+  <Version value="0x00010000"/>
+  <LookupList>
+    <!-- LookupCount=1 -->
+    <Lookup index="0">
+      <!-- LookupType=4 -->
+      <LookupFlag value="0"/>
+      <!-- SubTableCount=1 -->
+      <LigatureSubst index="0" Format="1">
+        <LigatureSet glyph="I">
+          <Ligature components="J" glyph="IJ"/>
+        </LigatureSet>
+        <LigatureSet glyph="Ismall">
+          <Ligature components="Jsmall" glyph="IJsmall"/>
+        </LigatureSet>
+        <LigatureSet glyph="f">
+          <Ligature components="f,b" glyph="ffb"/>
+          <Ligature components="f,h" glyph="ffh"/>
+          <Ligature components="f,i" glyph="ffi"/>
+          <Ligature components="f,k" glyph="ffk"/>
+          <Ligature components="f,l" glyph="ffl"/>
+          <Ligature components="f,t" glyph="fft"/>
+          <Ligature components="b" glyph="fb"/>
+          <Ligature components="f" glyph="ff"/>
+          <Ligature components="h" glyph="fh"/>
+          <Ligature components="i" glyph="fi"/>
+          <Ligature components="j" glyph="fj"/>
+          <Ligature components="k" glyph="fk"/>
+          <Ligature components="l" glyph="fl"/>
+          <Ligature components="t" glyph="ft"/>
+        </LigatureSet>
+        <LigatureSet glyph="i">
+          <Ligature components="j" glyph="ij"/>
+        </LigatureSet>
+        <LigatureSet glyph="t">
+          <Ligature components="t" glyph="tt"/>
+        </LigatureSet>
+      </LigatureSubst>
+    </Lookup>
+  </LookupList>
+</GSUB>

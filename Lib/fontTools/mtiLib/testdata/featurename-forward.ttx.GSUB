@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GSUB>
+  <Version value="0x00010000"/>
+  <ScriptList>
+    <!-- ScriptCount=2 -->
+    <ScriptRecord index="0">
+      <ScriptTag value="tel2"/>
+      <Script>
+        <DefaultLangSys>
+          <ReqFeatureIndex value="65535"/>
+          <!-- FeatureCount=2 -->
+          <FeatureIndex index="0" value="0"/>
+          <FeatureIndex index="1" value="1"/>
+        </DefaultLangSys>
+        <!-- LangSysCount=0 -->
+      </Script>
+    </ScriptRecord>
+    <ScriptRecord index="1">
+      <ScriptTag value="telu"/>
+      <Script>
+        <DefaultLangSys>
+          <ReqFeatureIndex value="65535"/>
+          <!-- FeatureCount=2 -->
+          <FeatureIndex index="0" value="0"/>
+          <FeatureIndex index="1" value="1"/>
+        </DefaultLangSys>
+        <!-- LangSysCount=0 -->
+      </Script>
+    </ScriptRecord>
+  </ScriptList>
+  <FeatureList>
+    <!-- FeatureCount=2 -->
+    <FeatureRecord index="0">
+      <FeatureTag value="akhn"/>
+      <Feature>
+        <!-- LookupCount=1 -->
+        <LookupListIndex index="0" value="0"/>
+      </Feature>
+    </FeatureRecord>
+    <FeatureRecord index="1">
+      <FeatureTag value="akh2"/>
+      <Feature>
+        <!-- LookupCount=1 -->
+        <LookupListIndex index="0" value="0"/>
+      </Feature>
+    </FeatureRecord>
+  </FeatureList>
+  <LookupList>
+    <!-- LookupCount=1 -->
+    <Lookup index="0">
+      <!-- LookupType=1 -->
+      <LookupFlag value="0"/>
+      <!-- SubTableCount=1 -->
+      <SingleSubst index="0" Format="1">
+        <Substitution in="a" out="b"/>
+      </SingleSubst>
+    </Lookup>
+  </LookupList>
+</GSUB>

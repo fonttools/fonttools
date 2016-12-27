@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GSUB>
+  <Version value="0x00010000"/>
+  <ScriptList>
+    <!-- ScriptCount=3 -->
+    <ScriptRecord index="0">
+      <ScriptTag value="cyrl"/>
+      <Script>
+        <DefaultLangSys>
+          <ReqFeatureIndex value="65535"/>
+          <!-- FeatureCount=3 -->
+          <FeatureIndex index="0" value="3"/>
+          <FeatureIndex index="1" value="4"/>
+          <FeatureIndex index="2" value="1"/>
+        </DefaultLangSys>
+        <!-- LangSysCount=0 -->
+      </Script>
+    </ScriptRecord>
+    <ScriptRecord index="1">
+      <ScriptTag value="grek"/>
+      <Script>
+        <DefaultLangSys>
+          <ReqFeatureIndex value="65535"/>
+          <!-- FeatureCount=3 -->
+          <FeatureIndex index="0" value="3"/>
+          <FeatureIndex index="1" value="4"/>
+          <FeatureIndex index="2" value="2"/>
+        </DefaultLangSys>
+        <!-- LangSysCount=0 -->
+      </Script>
+    </ScriptRecord>
+    <ScriptRecord index="2">
+      <ScriptTag value="latn"/>
+      <Script>
+        <DefaultLangSys>
+          <ReqFeatureIndex value="65535"/>
+          <!-- FeatureCount=3 -->
+          <FeatureIndex index="0" value="3"/>
+          <FeatureIndex index="1" value="4"/>
+          <FeatureIndex index="2" value="0"/>
+        </DefaultLangSys>
+        <!-- LangSysCount=4 -->
+        <LangSysRecord index="0">
+          <LangSysTag value="DEU "/>
+          <LangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=3 -->
+            <FeatureIndex index="0" value="3"/>
+            <FeatureIndex index="1" value="4"/>
+            <FeatureIndex index="2" value="0"/>
+          </LangSys>
+        </LangSysRecord>
+        <LangSysRecord index="1">
+          <LangSysTag value="ROM "/>
+          <LangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=3 -->
+            <FeatureIndex index="0" value="3"/>
+            <FeatureIndex index="1" value="4"/>
+            <FeatureIndex index="2" value="0"/>
+          </LangSys>
+        </LangSysRecord>
+        <LangSysRecord index="2">
+          <LangSysTag value="TRK "/>
+          <LangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=3 -->
+            <FeatureIndex index="0" value="3"/>
+            <FeatureIndex index="1" value="4"/>
+            <FeatureIndex index="2" value="0"/>
+          </LangSys>
+        </LangSysRecord>
+        <LangSysRecord index="3">
+          <LangSysTag value="VIT "/>
+          <LangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=4 -->
+            <FeatureIndex index="0" value="3"/>
+            <FeatureIndex index="1" value="4"/>
+            <FeatureIndex index="2" value="5"/>
+            <FeatureIndex index="3" value="0"/>
+          </LangSys>
+        </LangSysRecord>
+      </Script>
+    </ScriptRecord>
+  </ScriptList>
+</GSUB>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cmap>
+  <tableVersion version="0"/>
+  <cmap_format_4 platformID="0" platEncID="3" language="0">
+    <map code="0x0" name="null"/><!-- ???? -->
+    <map code="0xd" name="CR"/><!-- ???? -->
+    <map code="0x20" name="space"/><!-- SPACE -->
+    <map code="0x21" name="exclam"/><!-- EXCLAMATION MARK -->
+    <map code="0x22" name="quotedbl"/><!-- QUOTATION MARK -->
+    <map code="0x23" name="numbersign"/><!-- NUMBER SIGN -->
+    <map code="0x41" name="A"/><!-- LATIN CAPITAL LETTER A -->
+    <map code="0x42" name="B"/><!-- LATIN CAPITAL LETTER B -->
+    <map code="0x61" name="a"/><!-- LATIN SMALL LETTER A -->
+    <map code="0x62" name="b"/><!-- LATIN SMALL LETTER B -->
+  </cmap_format_4>
+  <cmap_format_6 platformID="1" platEncID="0" language="0">
+    <map code="0x0" name="null"/>
+    <map code="0xd" name="CR"/>
+    <map code="0x20" name="space"/>
+    <map code="0x21" name="exclam"/>
+    <map code="0x22" name="quotedbl"/>
+    <map code="0x23" name="numbersign"/>
+    <map code="0x41" name="A"/>
+    <map code="0x42" name="B"/>
+    <map code="0x61" name="a"/>
+    <map code="0x62" name="b"/>
+  </cmap_format_6>
+  <cmap_format_4 platformID="3" platEncID="1" language="0">
+    <map code="0x0" name="null"/><!-- ???? -->
+    <map code="0xd" name="CR"/><!-- ???? -->
+    <map code="0x20" name="space"/><!-- SPACE -->
+    <map code="0x21" name="exclam"/><!-- EXCLAMATION MARK -->
+    <map code="0x22" name="quotedbl"/><!-- QUOTATION MARK -->
+    <map code="0x23" name="numbersign"/><!-- NUMBER SIGN -->
+    <map code="0x41" name="A"/><!-- LATIN CAPITAL LETTER A -->
+    <map code="0x42" name="B"/><!-- LATIN CAPITAL LETTER B -->
+    <map code="0x61" name="a"/><!-- LATIN SMALL LETTER A -->
+    <map code="0x62" name="b"/><!-- LATIN SMALL LETTER B -->
+  </cmap_format_4>
+</cmap>

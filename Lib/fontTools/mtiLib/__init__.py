@@ -186,7 +186,7 @@ def parseLookupFlags(lines):
 		'markattachmenttype',
 		'markfiltertype',
 	]
-	while lines.peek()[0].lower() in allFlags:
+	while lines.peeks()[0].lower() in allFlags:
 		line = next(lines)
 		flag = {
 			'righttoleft':		0x0001,
@@ -251,9 +251,10 @@ def parseSinglePos(lines, font, _lookupMap=None):
 		setattr(values[g], w, v)
 	return otl.buildSinglePosSubtable(values, font.getReverseGlyphMap())
 
-def parsePair(self, lines, font, _lookupMap=None):
+def parsePair(lines, font, _lookupMap=None):
+	self = ot.PairPos()
 	self.ValueFormat1 = self.ValueFormat2 = 0
-	typ = lines.peek()[0].split()[0].lower()
+	typ = lines.peeks()[0].split()[0].lower()
 	if typ in ('left', 'right'):
 		self.Format = 1
 		values = {}
@@ -276,7 +277,7 @@ def parsePair(self, lines, font, _lookupMap=None):
 				vr = rec2[1]
 			assert not hasattr(vr, what), (vr, what)
 			setattr(vr, what, value)
-		self.Coverage = makeCoverage(values.keys(), font)
+		self.Coverage = makeCoverage(set(values.keys()), font)
 		self.PairSet = []
 		for glyph1 in self.Coverage.glyphs:
 			values1 = values[glyph1]
@@ -286,7 +287,8 @@ def parsePair(self, lines, font, _lookupMap=None):
 				values2 = values1[glyph2]
 				pair = ot.PairValueRecord()
 				pair.SecondGlyph = glyph2
-				pair.Value1,pair.Value2 = values2
+				pair.Value1 = values2[0]
+				pair.Value2 = values2[1] if self.ValueFormat2 else None
 				records.append(pair)
 			pairset.PairValueCount = len(pairset.PairValueRecord)
 			self.PairSet.append(pairset)
@@ -294,14 +296,14 @@ def parsePair(self, lines, font, _lookupMap=None):
 	elif typ.endswith('class'):
 		self.Format = 2
 		classDefs = [None, None]
-		while lines.peek()[0].endswith("class definition begin"):
+		while lines.peeks()[0].endswith("class definition begin"):
 			typ = lines.peek()[0][:-len("class definition begin")].lower()
 			idx,klass = {
 				'first':	(0,ot.ClassDef1),
 				'second':	(1,ot.ClassDef2),
 			}[typ]
 			assert classDefs[idx] is None
-			classDefs[idx] = parseClassDef(lines, klass=klass)
+			classDefs[idx] = parseClassDef(lines, font, klass=klass)
 		self.ClassDef1, self.ClassDef2 = classDefs
 		self.Class1Count, self.Class2Count = (1+max(c.classDefs.values()) for c in classDefs)
 		self.Class1Record = [ot.Class1Record() for i in range(self.Class1Count)]
@@ -326,16 +328,23 @@ def parsePair(self, lines, font, _lookupMap=None):
 				vr = rec2.Value2
 			assert not hasattr(vr, what), (vr, what)
 			setattr(vr, what, value)
-		self.Coverage = makeCoverage(self.ClassDef1.classDefs.keys(), font)
+		for rec1 in self.Class1Record:
+			for rec2 in rec1.Class2Record:
+				rec2.Value1 = ValueRecord(self.ValueFormat1, rec2.Value1)
+				rec2.Value2 = ValueRecord(self.ValueFormat2, rec2.Value2) \
+						if self.ValueFormat2 else None
+
+		self.Coverage = makeCoverage(set(self.ClassDef1.classDefs.keys()), font)
 	else:
 		assert 0, typ
+	return self
 
-def parseKernset(self, lines, font, _lookupMap=None):
-	typ = lines.peek()[0].split()[0].lower()
+def parseKernset(lines, font, _lookupMap=None):
+	typ = lines.peeks()[0].split()[0].lower()
 	if typ in ('left', 'right'):
 		with lines.until(("firstclass definition begin", "secondclass definition begin")):
-			return parsePair(self, lines, font)
-	return parsePair(self, lines, font)
+			return parsePair(lines, font)
+	return parsePair(lines, font)
 
 def makeAnchor(data, klass=ot.Anchor):
 	assert len(data) <= 2
@@ -407,7 +416,8 @@ def makeLigatureRecords(data, coverage, c, classCount):
 		anchors[klass] = anchor
 	return records
 
-def parseMarkToSomething(self, lines, font, c):
+def parseMarkToSomething(lines, font, c):
+	self = c.Type()
 	self.Format = 1
 	markData = {}
 	baseData = {}
@@ -416,6 +426,7 @@ def parseMarkToSomething(self, lines, font, c):
 		'base':		(baseData, c.BaseAnchorClass),
 		'ligature':	(baseData, c.BaseAnchorClass),
 	}
+	maxKlass = 0
 	for line in lines:
 		typ = line[0]
 		assert typ in ('mark', 'base', 'ligature')
@@ -431,19 +442,21 @@ def parseMarkToSomething(self, lines, font, c):
 			key,value = ((glyph,klass)+extras),anchor
 		assert key not in data, key
 		data[key] = value
+		maxKlass = max(maxKlass, klass)
 
 	# Mark
-	markCoverage = makeCoverage(markData.keys(), font, c.MarkCoverageClass)
+	markCoverage = makeCoverage(set(markData.keys()), font, c.MarkCoverageClass)
 	markArray = c.MarkArrayClass()
 	markRecords = makeMarkRecords(markData, markCoverage, c)
 	setattr(markArray, c.MarkRecord, markRecords)
 	setattr(markArray, c.MarkCount, len(markRecords))
 	setattr(self, c.MarkCoverage, markCoverage)
 	setattr(self, c.MarkArray, markArray)
+	self.ClassCount = maxKlass + 1
 
 	# Base
 	self.classCount = 0 if not baseData else 1+max(k[1] for k,v in baseData.items())
-	baseCoverage = makeCoverage([k[0] for k in baseData.keys()], font, c.BaseCoverageClass)
+	baseCoverage = makeCoverage(set([k[0] for k in baseData.keys()]), font, c.BaseCoverageClass)
 	baseArray = c.BaseArrayClass()
 	if c.Base == 'Ligature':
 		baseRecords = makeLigatureRecords(baseData, baseCoverage, c, self.classCount)
@@ -453,6 +466,8 @@ def parseMarkToSomething(self, lines, font, c):
 	setattr(baseArray, c.BaseCount, len(baseRecords))
 	setattr(self, c.BaseCoverage, baseCoverage)
 	setattr(self, c.BaseArray, baseArray)
+
+	return self
 
 class MarkHelper(object):
 	def __init__(self):
@@ -473,19 +488,22 @@ class MarkHelper(object):
 class MarkToBaseHelper(MarkHelper):
 	Mark = 'Mark'
 	Base = 'Base'
+	Type = ot.MarkBasePos
 class MarkToMarkHelper(MarkHelper):
 	Mark = 'Mark1'
 	Base = 'Mark2'
+	Type = ot.MarkMarkPos
 class MarkToLigatureHelper(MarkHelper):
 	Mark = 'Mark'
 	Base = 'Ligature'
+	Type = ot.MarkLigPos
 
-def parseMarkToBase(self, lines, font, _lookupMap=None):
-	return parseMarkToSomething(self, lines, font, MarkToBaseHelper())
-def parseMarkToMark(self, lines, font, _lookupMap=None):
-	return parseMarkToSomething(self, lines, font, MarkToMarkHelper())
-def parseMarkToLigature(self, lines, font, _lookupMap=None):
-	return parseMarkToSomething(self, lines, font, MarkToLigatureHelper())
+def parseMarkToBase(lines, font, _lookupMap=None):
+	return parseMarkToSomething(lines, font, MarkToBaseHelper())
+def parseMarkToMark(lines, font, _lookupMap=None):
+	return parseMarkToSomething(lines, font, MarkToMarkHelper())
+def parseMarkToLigature(lines, font, _lookupMap=None):
+	return parseMarkToSomething(lines, font, MarkToLigatureHelper())
 
 def stripSplitComma(line):
 	return [s.strip() for s in line.split(',')] if line else []
@@ -622,23 +640,25 @@ def parseLookupRecords(items, klassName, lookupMap=None):
 		lst.append(rec)
 	return lst
 
-def makeClassDef(classDefs, klass=ot.Coverage):
+def makeClassDef(classDefs, font, klass=ot.Coverage):
 	if not classDefs: return None
 	self = klass()
 	self.classDefs = dict(classDefs)
 	return self
 
-def parseClassDef(lines, klass=ot.ClassDef):
+def parseClassDef(lines, font, klass=ot.ClassDef):
 	classDefs = {}
 	with lines.between('class definition'):
 		for line in lines:
 			glyph = makeGlyph(line[0])
 			assert glyph not in classDefs, glyph
 			classDefs[glyph] = int(line[1])
-	return makeClassDef(classDefs, klass)
+	return makeClassDef(classDefs, font, klass)
 
 def makeCoverage(glyphs, font, klass=ot.Coverage):
 	if not glyphs: return None
+	if isinstance(glyphs, set):
+		glyphs = sorted(glyphs)
 	coverage = klass()
 	coverage.glyphs = sorted(set(glyphs), key=font.getGlyphID)
 	return coverage
@@ -676,8 +696,9 @@ def bucketizeRules(self, c, rules, bucketKeys):
 	setattr(self, c.RuleSet, rulesets)
 	setattr(self, c.RuleSetCount, len(rulesets))
 
-def parseContext(self, lines, font, Type, lookupMap=None):
-	typ = lines.peek()[0].split()[0].lower()
+def parseContext(lines, font, Type, lookupMap=None):
+	self = getattr(ot, Type)()
+	typ = lines.peeks()[0].split()[0].lower()
 	if typ == 'glyph':
 		self.Format = 1
 		log.debug("Parsing %s format %s", Type, self.Format)
@@ -698,7 +719,7 @@ def parseContext(self, lines, font, Type, lookupMap=None):
 		log.debug("Parsing %s format %s", Type, self.Format)
 		c = ContextHelper(Type, self.Format)
 		classDefs = [None] * c.DataLen
-		while lines.peek()[0].endswith("class definition begin"):
+		while lines.peeks()[0].endswith("class definition begin"):
 			typ = lines.peek()[0][:-len("class definition begin")].lower()
 			idx,klass = {
 			1: {
@@ -711,7 +732,7 @@ def parseContext(self, lines, font, Type, lookupMap=None):
 			},
 			}[c.DataLen][typ]
 			assert classDefs[idx] is None, idx
-			classDefs[idx] = parseClassDef(lines, klass=klass)
+			classDefs[idx] = parseClassDef(lines, font, klass=klass)
 		c.SetContextData(self, classDefs)
 		rules = []
 		for line in lines:
@@ -729,7 +750,7 @@ def parseContext(self, lines, font, Type, lookupMap=None):
 		log.debug("Parsing %s format %s", Type, self.Format)
 		c = ContextHelper(Type, self.Format)
 		coverages = tuple([] for i in range(c.DataLen))
-		while lines.peek()[0].endswith("coverage definition begin"):
+		while lines.peeks()[0].endswith("coverage definition begin"):
 			typ = lines.peek()[0][:-len("coverage definition begin")].lower()
 			idx,klass = {
 			1: {
@@ -752,20 +773,22 @@ def parseContext(self, lines, font, Type, lookupMap=None):
 		setattr(self, c.LookupRecord, recs)
 	else:
 		assert 0, typ
+	return self
 
-def parseContextSubst(self, lines, font, lookupMap=None):
-	return parseContext(self, lines, font, "ContextSubst", lookupMap=lookupMap)
-def parseContextPos(self, lines, font, lookupMap=None):
-	return parseContext(self, lines, font, "ContextPos", lookupMap=lookupMap)
-def parseChainedSubst(self, lines, font, lookupMap=None):
-	return parseContext(self, lines, font, "ChainContextSubst", lookupMap=lookupMap)
-def parseChainedPos(self, lines, font, lookupMap=None):
-	return parseContext(self, lines, font, "ChainContextPos", lookupMap=lookupMap)
+def parseContextSubst(lines, font, lookupMap=None):
+	return parseContext(lines, font, "ContextSubst", lookupMap=lookupMap)
+def parseContextPos(lines, font, lookupMap=None):
+	return parseContext(lines, font, "ContextPos", lookupMap=lookupMap)
+def parseChainedSubst(lines, font, lookupMap=None):
+	return parseContext(lines, font, "ChainContextSubst", lookupMap=lookupMap)
+def parseChainedPos(lines, font, lookupMap=None):
+	return parseContext(lines, font, "ChainContextPos", lookupMap=lookupMap)
 
-def parseReverseChainedSubst(self, lines, font, _lookupMap=None):
+def parseReverseChainedSubst(lines, font, _lookupMap=None):
+	self = ot.ReverseChainSingleSubst()
 	self.Format = 1
 	coverages = ([], [])
-	while lines.peek()[0].endswith("coverage definition begin"):
+	while lines.peeks()[0].endswith("coverage definition begin"):
 		typ = lines.peek()[0][:-len("coverage definition begin")].lower()
 		idx,klass = {
 			'backtrack':	(0,ot.BacktrackCoverage),
@@ -781,62 +804,60 @@ def parseReverseChainedSubst(self, lines, font, _lookupMap=None):
 		assert len(line) == 2, line
 		line = makeGlyphs(line)
 		mapping[line[0]] = line[1]
-	self.Coverage = makeCoverage(mapping.keys(), font)
+	self.Coverage = makeCoverage(set(mapping.keys()), font)
 	self.Substitute = [mapping[k] for k in self.Coverage.glyphs]
 	self.GlyphCount = len(self.Substitute)
+	return self
 
 def parseLookup(lines, tableTag, font, lookupMap=None):
 	line = lines.expect('lookup')
 	_, name, typ = line
 	log.debug("Parsing lookup type %s %s", typ, name)
 	lookup = ot.Lookup()
+	lookup.LookupFlag,filterset = parseLookupFlags(lines)
+	if filterset is not None:
+		lookup.MarkFilteringSet = filterset
+	lookup.LookupType, parseLookupSubTable = {
+		'GSUB': {
+			'single':	(1,	parseSingleSubst),
+			'multiple':	(2,	parseMultiple),
+			'alternate':	(3,	parseAlternate),
+			'ligature':	(4,	parseLigature),
+			'context':	(5,	parseContextSubst),
+			'chained':	(6,	parseChainedSubst),
+			'reversechained':(8,	parseReverseChainedSubst),
+		},
+		'GPOS': {
+			'single':	(1,	parseSinglePos),
+			'pair':		(2,	parsePair),
+			'kernset':	(2,	parseKernset),
+			'cursive':	(3,	parseCursive),
+			'mark to base':	(4,	parseMarkToBase),
+			'mark to ligature':(5,	parseMarkToLigature),
+			'mark to mark':	(6,	parseMarkToMark),
+			'context':	(7,	parseContextPos),
+			'chained':	(8,	parseChainedPos),
+		},
+	}[tableTag][typ]
+
 	with lines.until('lookup end'):
-
-		lookup.LookupFlag,filterset = parseLookupFlags(lines)
-		if filterset is not None:
-			lookup.MarkFilteringSet = filterset
-		lookup.LookupType, parseLookupSubTable = {
-			'GSUB': {
-				'single':	(0,	parseSingleSubst),
-				'multiple':	(0,	parseMultiple),
-				'alternate':	(0,	parseAlternate),
-				'ligature':	(0,	parseLigature),
-				'context':	(5,	parseContextSubst),
-				'chained':	(6,	parseChainedSubst),
-				'reversechained':(8,	parseReverseChainedSubst),
-			},
-			'GPOS': {
-				'single':	(0,	parseSinglePos),
-				'pair':		(2,	parsePair),
-				'kernset':	(2,	parseKernset),
-				'cursive':	(0,	parseCursive),
-				'mark to base':	(4,	parseMarkToBase),
-				'mark to ligature':(5,	parseMarkToLigature),
-				'mark to mark':	(6,	parseMarkToMark),
-				'context':	(7,	parseContextPos),
-				'chained':	(8,	parseChainedPos),
-			},
-		}[tableTag][typ]
-
 		subtables = []
 
 		while lines.peek():
 			with lines.until(('% subtable', 'subtable end')):
 				while lines.peek():
-					if lookup.LookupType is 0:
-						subtable = parseLookupSubTable(lines, font, lookupMap)
-						lookup.LookupType = subtable.LookupType
-					else:
-						subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
-						parseLookupSubTable(subtable, lines, font, lookupMap)
+					subtable = parseLookupSubTable(lines, font, lookupMap)
+					assert lookup.LookupType == subtable.LookupType
 					subtables.append(subtable)
-			if lines.peek() and lines.peek()[0] in ('% subtable', 'subtable end'):
+			if lines.peeks()[0] in ('% subtable', 'subtable end'):
 				next(lines)
 	lines.expect('lookup end')
 
 	lookup.SubTable = subtables
 	lookup.SubTableCount = len(lookup.SubTable)
 	if lookup.SubTableCount is 0:
+		# Remove this return when following is fixed:
+		# https://github.com/fonttools/fonttools/issues/789
 		return None
 	return lookup
 
@@ -847,7 +868,7 @@ def parseGSUBGPOS(lines, font, tableTag):
 	assert tableTag in ('GSUB', 'GPOS')
 	log.debug("Parsing %s", tableTag)
 	self = getattr(ot, tableTag)()
-	self.Version = 1.0
+	self.Version = 0x00010000
 	fields = {
 		'script table begin':
 		('ScriptList',
@@ -923,8 +944,8 @@ def makeMarkFilteringSets(sets, font):
 	self.MarkSetTableFormat = 1
 	self.MarkSetCount = 1 + max(sets.keys())
 	self.Coverage = [None] * self.MarkSetCount
-	for k,v in sets.items():
-		self.Coverage[k] = makeCoverage(v, font)
+	for k,v in sorted(sets.items()):
+		self.Coverage[k] = makeCoverage(set(v), font)
 	return self
 
 def parseMarkFilteringSets(lines, font):
@@ -947,14 +968,14 @@ def parseGDEF(lines, font):
 	fields = {
 		'class definition begin':
 			('GlyphClassDef',
-			 lambda lines, font: parseClassDef(lines, klass=ot.GlyphClassDef)),
+			 lambda lines, font: parseClassDef(lines, font, klass=ot.GlyphClassDef)),
 		'attachment list begin':
 			('AttachList', parseAttachList),
 		'carets begin':
 			('LigCaretList', parseCaretList),
 		'mark attachment class definition begin':
 			('MarkAttachClassDef',
-			 lambda lines, font: parseClassDef(lines, klass=ot.MarkAttachClassDef)),
+			 lambda lines, font: parseClassDef(lines, font, klass=ot.MarkAttachClassDef)),
 		'markfilter set definition begin':
 			('MarkGlyphSetsDef', parseMarkFilteringSets),
 	}
@@ -969,7 +990,7 @@ def parseGDEF(lines, font):
 		attr,parser = fields[typ]
 		assert getattr(self, attr) is None, attr
 		setattr(self, attr, parser(lines, font))
-	self.Version = 1.0 if self.MarkGlyphSetsDef is None else 0x00010002
+	self.Version = 0x00010000 if self.MarkGlyphSetsDef is None else 0x00010002
 	container.table = self
 	return container
 
@@ -1003,7 +1024,7 @@ def parseCmapId(lines, field):
 
 def parseTable(lines, font, tableTag=None):
 	log.debug("Parsing table")
-	line = lines.peek()
+	line = lines.peeks()
 	tag = None
 	if line[0].split()[0] == 'FontDame':
 		tag = line[0].split()[1]
@@ -1091,6 +1112,10 @@ class Tokenizer(object):
 			return None
 		return self.buffer
 
+	def peeks(self):
+		ret = self.peek()
+		return ret if ret is not None else ('',)
+
 	@contextmanager
 	def between(self, tag):
 		start = tag + ' begin'
@@ -1126,39 +1151,19 @@ def build(f, font, tableTag=None):
 	return parseTable(lines, font, tableTag=tableTag)
 
 
-class MockFont(object):
-
-	def __init__(self):
-		self._glyphOrder = ['.notdef']
-		class AllocatingDict(dict):
-			def __missing__(reverseDict, key):
-				self._glyphOrder.append(key)
-				gid = len(reverseDict)
-				reverseDict[key] = gid
-				return gid
-		self._reverseGlyphOrder = AllocatingDict({'.notdef': 0})
-		self.lazy = False
-
-	def getGlyphID(self, glyph, requireReal=None):
-		gid = self._reverseGlyphOrder[glyph]
-		return gid
-
-	def getReverseGlyphMap(self):
-		return self._reverseGlyphOrder
-
-	def getGlyphName(self, gid):
-		return self._glyphOrder[gid]
-
-	def getGlyphOrder(self):
-		return self._glyphOrder
-
-def main(args):
+def main(args, font=None):
+	import sys
 	from fontTools import configLogger
+	from fontTools.misc.testTools import MockFont
+
 	# configure the library logger (for >= WARNING)
 	configLogger()
 	# comment this out to enable debug messages from mtiLib's logger
 	# log.setLevel(logging.DEBUG)
-	font = MockFont()
+
+	if font is None:
+		font = MockFont()
+
 	tableTag = None
 	if args[0].startswith('-t'):
 		tableTag = args[0][2:]
@@ -1176,8 +1181,8 @@ def main(args):
 		writer = xmlWriter.XMLWriter(sys.stdout)
 		writer.begintag(tag)
 		writer.newline()
-		table.toXML(writer, font)
-		#decompiled.toXML(writer, font)
+		#table.toXML(writer, font)
+		decompiled.toXML(writer, font)
 		writer.endtag(tag)
 		writer.newline()
 

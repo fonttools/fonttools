@@ -1,0 +1,36 @@
+
+lookup	0	chained
+
+backtrackclass definition begin
+pakannada	1
+phakannada	1
+vakannada	1
+pevowelkannada	1
+phevowelkannada	1
+vevowelkannada	1
+class definition end
+
+class definition begin
+uvowelsignkannada	1
+uuvowelsignkannada	1
+class definition end
+
+class-chain	1	1		1,1
+
+lookup end
+
+script table begin
+telu	default		0, 1
+script table end
+
+lookup	1	single
+
+uvowelsignkannada	uvowelsignaltkannada
+uuvowelsignkannada	uuvowelsignaltkannada
+
+lookup end
+
+feature table begin
+0	akhn	1
+1	akh2	0
+feature table end

@@ -1,0 +1,14 @@
+
+lookup	7 context
+
+RightToLeft	no
+IgnoreBaseGlyphs	no
+IgnoreLigatures	no
+IgnoreMarks	no
+
+glyph gabardeva, viramadeva, radeva	2, 8
+glyph jabardeva, viramadeva, radeva	2, 8
+glyph ddabardeva, viramadeva, radeva	2, 8
+glyph babardeva, viramadeva, radeva	2, 8
+
+lookup end

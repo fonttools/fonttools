@@ -1,0 +1,14 @@
+
+feature table begin
+f0	akhn	l1
+1	akh2	l1
+feature table end
+
+script table begin
+telu	default		0, 1
+tel2	default		f0, 1
+script table end
+
+lookup	l1	single
+a	b
+lookup end

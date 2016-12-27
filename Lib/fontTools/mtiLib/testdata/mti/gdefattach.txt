@@ -1,0 +1,7 @@
+
+attachment list begin
+
+A	5
+B	0	3	9
+
+attachment list end

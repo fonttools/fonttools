@@ -1,0 +1,1 @@
+script table begintelu	default		0, 1, 2, 3, 4script table endfeature table begin0	akhn	akhand-telugu1	blwf	belowbase-telugu2	abvs	tripleligatures-telugu,vattucontext-telugu,markra-telugu,lowsubscript-telugu,above-subst-telugu,akhand-ra-telugu3	psts	postbase-telugu4	haln	halant-telugufeature table end

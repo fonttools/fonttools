@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GPOS>
+  <Version value="0x00010000"/>
+  <LookupList>
+    <!-- LookupCount=1 -->
+    <Lookup index="0">
+      <!-- LookupType=1 -->
+      <LookupFlag value="0"/>
+      <!-- SubTableCount=1 -->
+      <SinglePos index="0" Format="1">
+        <Coverage Format="2">
+          <Glyph value="bsuperior"/>
+          <Glyph value="isuperior"/>
+          <Glyph value="vsuperior"/>
+          <Glyph value="wsuperior"/>
+          <Glyph value="periodsuperior"/>
+          <Glyph value="osuperior"/>
+          <Glyph value="tsuperior"/>
+          <Glyph value="dollarsuperior"/>
+          <Glyph value="fsuperior"/>
+          <Glyph value="gsuperior"/>
+          <Glyph value="zsuperior"/>
+          <Glyph value="dsuperior"/>
+          <Glyph value="psuperior"/>
+          <Glyph value="hsuperior"/>
+          <Glyph value="oesuperior"/>
+          <Glyph value="aesuperior"/>
+          <Glyph value="centsuperior"/>
+          <Glyph value="esuperior"/>
+          <Glyph value="lsuperior"/>
+          <Glyph value="qsuperior"/>
+          <Glyph value="csuperior"/>
+          <Glyph value="asuperior"/>
+          <Glyph value="commasuperior"/>
+          <Glyph value="xsuperior"/>
+          <Glyph value="egravesuperior"/>
+          <Glyph value="usuperior"/>
+          <Glyph value="rsuperior"/>
+          <Glyph value="nsuperior"/>
+          <Glyph value="ssuperior"/>
+          <Glyph value="msuperior"/>
+          <Glyph value="jsuperior"/>
+          <Glyph value="ysuperior"/>
+          <Glyph value="ksuperior"/>
+        </Coverage>
+        <ValueFormat value="2"/>
+        <Value YPlacement="-560"/>
+      </SinglePos>
+    </Lookup>
+  </LookupList>
+</GPOS>
