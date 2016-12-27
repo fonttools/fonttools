@@ -78,10 +78,10 @@ class MtiTest(unittest.TestCase):
     # Feature files in testdata/*.txt; output gets compared to testdata/*.ttx.
     TESTS = {
         None: (
-            #'mti/cmap',
+            'mti/cmap',
         ),
         'cmap': (
-            #'mti/cmap',
+            'mti/cmap',
         ),
         'GSUB': (
             'featurename-backward',
