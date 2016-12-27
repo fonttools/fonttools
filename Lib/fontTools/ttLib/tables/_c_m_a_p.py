@@ -21,11 +21,13 @@ def _make_map(font, chars, gids):
 	lenCmap = len(gids)
 	glyphOrder = font.getGlyphOrder()
 	for char,gid in zip(chars,gids):
+		if gid is 0:
+			continue
 		try:
 			name = glyphOrder[gid]
 		except IndexError:
 			name = font.getGlyphName(gid)
-		cmap[char] = gid
+		cmap[char] = name
 	return cmap
 
 class table__c_m_a_p(DefaultTable.DefaultTable):
