@@ -12,7 +12,7 @@ import unittest
 
 class MtiTest(unittest.TestCase):
 
-    GLYPH_ORDER = [
+    GLYPH_ORDER = ['.notdef',
         'a', 'b', 'pakannada', 'phakannada', 'vakannada', 'pevowelkannada',
         'phevowelkannada', 'vevowelkannada', 'uvowelsignkannada', 'uuvowelsignkannada',
         'uvowelsignaltkannada', 'uuvowelsignaltkannada', 'uuvowelsignsinh',
@@ -71,7 +71,8 @@ class MtiTest(unittest.TestCase):
         'KafMed_MeemFin', 'KafMed_YehBarreeFin', 'LamAlefFin', 'LamAlefFin.cup',
         'LamAlefFin.cut', 'LamAlefFin.short', 'LamAlefSep', 'LamIni_MeemFin',
         'LamIni_YehBarreeFin', 'LamMed_MeemFin', 'LamMed_MeemFin.b', 'LamMed_YehxFin',
-        'LamMed_YehxFin.cup', 'TahIni_YehBarreeFin',
+        'LamMed_YehxFin.cup', 'TahIni_YehBarreeFin', 'null', 'CR', 'space',
+        'exclam', 'quotedbl', 'numbersign',
     ]
 
     # Feature files in testdata/*.txt; output gets compared to testdata/*.ttx.
