@@ -15,6 +15,19 @@ import logging
 log = logging.getLogger(__name__)
 
 
+def _make_map(font, chars, gids):
+	assert len(chars) == len(gids)
+	cmap = {}
+	lenCmap = len(gids)
+	glyphOrder = font.getGlyphOrder()
+	try:
+		names = list(map(operator.getitem, [glyphOrder]*lenCmap, gids ))
+	except IndexError:
+		getGlyphName = font.getGlyphName
+		names = list(map(getGlyphName, gids ))
+	list(map(operator.setitem, [cmap]*lenCmap, chars, names))
+	return cmap
+
 class table__c_m_a_p(DefaultTable.DefaultTable):
 
 	def getcmap(self, platformID, platEncID):
@@ -224,13 +237,10 @@ class cmap_format_0(CmapSubtable):
 			assert (data is None and ttFont is None), "Need both data and ttFont arguments"
 		data = self.data # decompileHeader assigns the data after the header to self.data
 		assert 262 == self.length, "Format 0 cmap subtable not 262 bytes"
-		glyphIdArray = array.array("B")
-		glyphIdArray.fromstring(self.data)
-		self.cmap = cmap = {}
-		lenArray = len(glyphIdArray)
-		charCodes = list(range(lenArray))
-		names = map(self.ttFont.getGlyphName, glyphIdArray)
-		list(map(operator.setitem, [cmap]*lenArray, charCodes, names))
+		gids = array.array("B")
+		gids.fromstring(self.data)
+		charCodes = list(range(len(gids)))
+		self.cmap = _make_map(self.ttFont, charCodes, gids)
 
 	def compile(self, ttFont):
 		if self.data:
@@ -242,8 +252,8 @@ class cmap_format_0(CmapSubtable):
 		assert charCodes == list(range(256))
 		valueList = map(ttFont.getGlyphID, valueList)
 
-		glyphIdArray = array.array("B", valueList)
-		data = struct.pack(">HHH", 0, 262, self.language) + glyphIdArray.tostring()
+		gids = array.array("B", valueList)
+		data = struct.pack(">HHH", 0, 262, self.language) + gids.tostring()
 		assert len(data) == 262
 		return data
 
@@ -373,7 +383,7 @@ class cmap_format_2(CmapSubtable):
 		# value. In this case the final glyph index = 3+ 42 -> 45 for the final glyphIndex. Whew!
 
 		self.data = b""
-		self.cmap = cmap = {}
+		cmap = {}
 		notdefGI = 0
 		for firstByte in range(256):
 			subHeadindex = subHeaderKeys[firstByte]
@@ -404,17 +414,10 @@ class cmap_format_2(CmapSubtable):
 				# If not subHeader.entryCount, then all char codes with this first byte are
 				# mapped to .notdef. We can skip this subtable, and leave the glyphs un-encoded, which is the
 				# same as mapping it to .notdef.
-		# cmap values are GID's.
-		glyphOrder = self.ttFont.getGlyphOrder()
+
 		gids = list(cmap.values())
 		charCodes = list(cmap.keys())
-		lenCmap = len(gids)
-		try:
-			names = list(map(operator.getitem, [glyphOrder]*lenCmap, gids ))
-		except IndexError:
-			getGlyphName = self.ttFont.getGlyphName
-			names = list(map(getGlyphName, gids ))
-		list(map(operator.setitem, [cmap]*lenCmap, charCodes, names))
+		self.cmap = _make_map(self.ttFont, charCodes, gids)
 
 	def compile(self, ttFont):
 		if self.data:
@@ -722,15 +725,7 @@ class cmap_format_4(CmapSubtable):
 						glyphID = 0  # missing glyph
 					gids.append(glyphID & 0xFFFF)
 
-		self.cmap = cmap = {}
-		lenCmap = len(gids)
-		glyphOrder = self.ttFont.getGlyphOrder()
-		try:
-			names = list(map(operator.getitem, [glyphOrder]*lenCmap, gids ))
-		except IndexError:
-			getGlyphName = self.ttFont.getGlyphName
-			names = list(map(getGlyphName, gids ))
-		list(map(operator.setitem, [cmap]*lenCmap, charCodes, names))
+		self.cmap = _make_map(self.ttFont, charCodes, gids)
 
 	def compile(self, ttFont):
 		if self.data:
@@ -860,23 +855,14 @@ class cmap_format_6(CmapSubtable):
 		firstCode = int(firstCode)
 		data = data[4:]
 		#assert len(data) == 2 * entryCount  # XXX not true in Apple's Helvetica!!!
-		glyphIndexArray = array.array("H")
-		glyphIndexArray.fromstring(data[:2 * int(entryCount)])
+		gids = array.array("H")
+		gids.fromstring(data[:2 * int(entryCount)])
 		if sys.byteorder != "big":
-			glyphIndexArray.byteswap()
+			gids.byteswap()
 		self.data = data = None
 
-		self.cmap = cmap = {}
-
-		lenArray = len(glyphIndexArray)
-		charCodes = list(range(firstCode, firstCode + lenArray))
-		glyphOrder = self.ttFont.getGlyphOrder()
-		try:
-			names = list(map(operator.getitem, [glyphOrder]*lenArray, glyphIndexArray ))
-		except IndexError:
-			getGlyphName = self.ttFont.getGlyphName
-			names = list(map(getGlyphName, glyphIndexArray ))
-		list(map(operator.setitem, [cmap]*lenArray, charCodes, names))
+		charCodes = list(range(firstCode, firstCode + len(gids)))
+		self.cmap = _make_map(self.ttFont, charCodes, gids)
 
 	def compile(self, ttFont):
 		if self.data:
@@ -888,10 +874,10 @@ class cmap_format_6(CmapSubtable):
 			firstCode = codes[0]
 			valueList = [cmap.get(code, ".notdef") for code in codes]
 			valueList = map(ttFont.getGlyphID, valueList)
-			glyphIndexArray = array.array("H", valueList)
+			gids = array.array("H", valueList)
 			if sys.byteorder != "big":
-				glyphIndexArray.byteswap()
-			data = glyphIndexArray.tostring()
+				gids.byteswap()
+			data = gids.tostring()
 		else:
 			data = b""
 			firstCode = 0
@@ -952,15 +938,7 @@ class cmap_format_12_or_13(CmapSubtable):
 			charCodes.extend(list(range(startCharCode, endCharCode +1)))
 			gids.extend(self._computeGIDs(glyphID, lenGroup))
 		self.data = data = None
-		self.cmap = cmap = {}
-		lenCmap = len(gids)
-		glyphOrder = self.ttFont.getGlyphOrder()
-		try:
-			names = list(map(operator.getitem, [glyphOrder]*lenCmap, gids ))
-		except IndexError:
-			getGlyphName = self.ttFont.getGlyphName
-			names = list(map(getGlyphName, gids ))
-		list(map(operator.setitem, [cmap]*lenCmap, charCodes, names))
+		self.cmap = _make_map(self.ttFont, charCodes, gids)
 
 	def compile(self, ttFont):
 		if self.data:
