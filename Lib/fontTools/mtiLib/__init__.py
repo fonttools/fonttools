@@ -186,7 +186,7 @@ def parseLookupFlags(lines):
 		'markattachmenttype',
 		'markfiltertype',
 	]
-	while lines.peek()[0].lower() in allFlags:
+	while lines.peeks()[0].lower() in allFlags:
 		line = next(lines)
 		flag = {
 			'righttoleft':		0x0001,
@@ -253,7 +253,7 @@ def parseSinglePos(lines, font, _lookupMap=None):
 
 def parsePair(self, lines, font, _lookupMap=None):
 	self.ValueFormat1 = self.ValueFormat2 = 0
-	typ = lines.peek()[0].split()[0].lower()
+	typ = lines.peeks()[0].split()[0].lower()
 	if typ in ('left', 'right'):
 		self.Format = 1
 		values = {}
@@ -295,7 +295,7 @@ def parsePair(self, lines, font, _lookupMap=None):
 	elif typ.endswith('class'):
 		self.Format = 2
 		classDefs = [None, None]
-		while lines.peek()[0].endswith("class definition begin"):
+		while lines.peeks()[0].endswith("class definition begin"):
 			typ = lines.peek()[0][:-len("class definition begin")].lower()
 			idx,klass = {
 				'first':	(0,ot.ClassDef1),
@@ -338,7 +338,7 @@ def parsePair(self, lines, font, _lookupMap=None):
 		assert 0, typ
 
 def parseKernset(self, lines, font, _lookupMap=None):
-	typ = lines.peek()[0].split()[0].lower()
+	typ = lines.peeks()[0].split()[0].lower()
 	if typ in ('left', 'right'):
 		with lines.until(("firstclass definition begin", "secondclass definition begin")):
 			return parsePair(self, lines, font)
@@ -689,7 +689,7 @@ def bucketizeRules(self, c, rules, bucketKeys):
 	setattr(self, c.RuleSetCount, len(rulesets))
 
 def parseContext(self, lines, font, Type, lookupMap=None):
-	typ = lines.peek()[0].split()[0].lower()
+	typ = lines.peeks()[0].split()[0].lower()
 	if typ == 'glyph':
 		self.Format = 1
 		log.debug("Parsing %s format %s", Type, self.Format)
@@ -710,7 +710,7 @@ def parseContext(self, lines, font, Type, lookupMap=None):
 		log.debug("Parsing %s format %s", Type, self.Format)
 		c = ContextHelper(Type, self.Format)
 		classDefs = [None] * c.DataLen
-		while lines.peek()[0].endswith("class definition begin"):
+		while lines.peeks()[0].endswith("class definition begin"):
 			typ = lines.peek()[0][:-len("class definition begin")].lower()
 			idx,klass = {
 			1: {
@@ -741,7 +741,7 @@ def parseContext(self, lines, font, Type, lookupMap=None):
 		log.debug("Parsing %s format %s", Type, self.Format)
 		c = ContextHelper(Type, self.Format)
 		coverages = tuple([] for i in range(c.DataLen))
-		while lines.peek()[0].endswith("coverage definition begin"):
+		while lines.peeks()[0].endswith("coverage definition begin"):
 			typ = lines.peek()[0][:-len("coverage definition begin")].lower()
 			idx,klass = {
 			1: {
@@ -777,7 +777,7 @@ def parseChainedPos(self, lines, font, lookupMap=None):
 def parseReverseChainedSubst(self, lines, font, _lookupMap=None):
 	self.Format = 1
 	coverages = ([], [])
-	while lines.peek()[0].endswith("coverage definition begin"):
+	while lines.peeks()[0].endswith("coverage definition begin"):
 		typ = lines.peek()[0][:-len("coverage definition begin")].lower()
 		idx,klass = {
 			'backtrack':	(0,ot.BacktrackCoverage),
@@ -842,7 +842,7 @@ def parseLookup(lines, tableTag, font, lookupMap=None):
 						subtable = ot.lookupTypes[tableTag][lookup.LookupType]()
 						parseLookupSubTable(subtable, lines, font, lookupMap)
 					subtables.append(subtable)
-			if lines.peek() and lines.peek()[0] in ('% subtable', 'subtable end'):
+			if lines.peeks()[0] in ('% subtable', 'subtable end'):
 				next(lines)
 	lines.expect('lookup end')
 
@@ -1015,7 +1015,7 @@ def parseCmapId(lines, field):
 
 def parseTable(lines, font, tableTag=None):
 	log.debug("Parsing table")
-	line = lines.peek()
+	line = lines.peeks()
 	tag = None
 	if line[0].split()[0] == 'FontDame':
 		tag = line[0].split()[1]
@@ -1102,6 +1102,10 @@ class Tokenizer(object):
 		if self.buffer[0].lower() in self.stoppers:
 			return None
 		return self.buffer
+
+	def peeks(self):
+		ret = self.peek()
+		return ret if ret is not None else ('',)
 
 	@contextmanager
 	def between(self, tag):
