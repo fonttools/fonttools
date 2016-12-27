@@ -114,7 +114,7 @@ class BuilderTest(unittest.TestCase):
         if actual != expected:
             for line in difflib.unified_diff(
                     expected, actual, fromfile=path, tofile=expected_ttx):
-                sys.stdout.write(line)
+                sys.stderr.write(line)
             self.fail("TTX output is different from expected")
 
     def build(self, featureFile):
@@ -140,7 +140,7 @@ class BuilderTest(unittest.TestCase):
             olines = self.normal_fea(ofile.readlines())
         if olines != tlines:
             for line in difflib.unified_diff(olines, tlines):
-                sys.stdout.write(line)
+                sys.stderr.write(line)
             self.fail("Fea2Fea output is different from expected")
 
     def normal_fea(self, lines):

@@ -85,10 +85,10 @@ class BuilderTest(unittest.TestCase):
         expected = [l+'\n' for l in expected_ttx.split('\n')]
         actual = [l+'\n' for l in actual_ttx.split('\n')]
         if actual != expected:
-            print('\n')
+            sys.stderr.write('\n')
             for line in difflib.unified_diff(
                     expected, actual, fromfile=fromfile, tofile=tofile):
-                sys.stdout.write(line)
+                sys.stderr.write(line)
             self.fail("TTX output is different from expected")
 
     def check_mti_file(self, name, tableTag=None):
