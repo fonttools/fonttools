@@ -92,12 +92,15 @@ class BuilderTest(unittest.TestCase):
             self.fail("TTX output is different from expected")
 
     def check_mti_file(self, name, tableTag=None):
+
         xml_expected_path = self.getpath("%s.ttx" % name + ('.'+tableTag if tableTag is not None else ''))
-        xml_expected = open(xml_expected_path, 'rt', encoding="utf-8").read()
-        f = open(self.getpath("%s.txt" % name), 'rt', encoding="utf-8")
+        with open(xml_expected_path, 'rt', encoding="utf-8") as xml_expected_file:
+            xml_expected = xml_expected_file.read()
 
         font = MockFont()
-        table = mtiLib.build(f, font, tableTag=tableTag)
+
+        with open(self.getpath("%s.txt" % name), 'rt', encoding="utf-8") as f:
+            table = mtiLib.build(f, font, tableTag=tableTag)
 
         if tableTag is not None:
             self.assertEqual(tableTag, table.tableTag)
