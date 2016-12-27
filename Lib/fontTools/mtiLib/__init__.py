@@ -817,31 +817,30 @@ def parseLookup(lines, tableTag, font, lookupMap=None):
 	lookup.LookupFlag,filterset = parseLookupFlags(lines)
 	if filterset is not None:
 		lookup.MarkFilteringSet = filterset
+	lookup.LookupType, parseLookupSubTable = {
+		'GSUB': {
+			'single':	(1,	parseSingleSubst),
+			'multiple':	(2,	parseMultiple),
+			'alternate':	(3,	parseAlternate),
+			'ligature':	(4,	parseLigature),
+			'context':	(5,	parseContextSubst),
+			'chained':	(6,	parseChainedSubst),
+			'reversechained':(8,	parseReverseChainedSubst),
+		},
+		'GPOS': {
+			'single':	(1,	parseSinglePos),
+			'pair':		(2,	parsePair),
+			'kernset':	(2,	parseKernset),
+			'cursive':	(3,	parseCursive),
+			'mark to base':	(4,	parseMarkToBase),
+			'mark to ligature':(5,	parseMarkToLigature),
+			'mark to mark':	(6,	parseMarkToMark),
+			'context':	(7,	parseContextPos),
+			'chained':	(8,	parseChainedPos),
+		},
+	}[tableTag][typ]
+
 	with lines.until('lookup end'):
-
-		lookup.LookupType, parseLookupSubTable = {
-			'GSUB': {
-				'single':	(1,	parseSingleSubst),
-				'multiple':	(2,	parseMultiple),
-				'alternate':	(3,	parseAlternate),
-				'ligature':	(4,	parseLigature),
-				'context':	(5,	parseContextSubst),
-				'chained':	(6,	parseChainedSubst),
-				'reversechained':(8,	parseReverseChainedSubst),
-			},
-			'GPOS': {
-				'single':	(1,	parseSinglePos),
-				'pair':		(2,	parsePair),
-				'kernset':	(2,	parseKernset),
-				'cursive':	(3,	parseCursive),
-				'mark to base':	(4,	parseMarkToBase),
-				'mark to ligature':(5,	parseMarkToLigature),
-				'mark to mark':	(6,	parseMarkToMark),
-				'context':	(7,	parseContextPos),
-				'chained':	(8,	parseChainedPos),
-			},
-		}[tableTag][typ]
-
 		subtables = []
 
 		while lines.peek():
