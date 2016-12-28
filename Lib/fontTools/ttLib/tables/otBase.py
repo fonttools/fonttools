@@ -466,8 +466,8 @@ class OTTableWriter(object):
 	def writeSubTable(self, subWriter):
 		self.items.append(subWriter)
 
-	def writeCountReference(self, table, name, size=2):
-		ref = CountReference(table, name, size=size)
+	def writeCountReference(self, table, name, size=2, value=None):
+		ref = CountReference(table, name, size=size, value=value)
 		self.items.append(ref)
 		return ref
 
@@ -514,10 +514,12 @@ class OTTableWriter(object):
 
 class CountReference(object):
 	"""A reference to a Count value, not a count of references."""
-	def __init__(self, table, name, size=None):
+	def __init__(self, table, name, size=None, value=None):
 		self.table = table
 		self.name = name
 		self.size = size
+		if value is not None:
+			self.setValue(value)
 	def setValue(self, value):
 		table = self.table
 		name = self.name
@@ -639,7 +641,7 @@ class BaseTable(object):
 					value = []
 				countValue = len(value) - conv.aux
 				if conv.repeat in table:
-					CountReference(table, conv.repeat).setValue(countValue)
+					CountReference(table, conv.repeat, value=countValue)
 				else:
 					# conv.repeat is a propagated count
 					writer[conv.repeat].setValue(countValue)
@@ -664,7 +666,7 @@ class BaseTable(object):
 				if conv.isPropagated:
 					writer[conv.name] = ref
 			elif conv.isLookupType:
-				ref = writer.writeCountReference(table, conv.name, conv.staticSize)
+				ref = writer.writeCountReference(table, conv.name, conv.staticSize, table.get(conv.name))
 				table[conv.name] = None
 				writer['LookupType'] = ref
 			else:
@@ -731,7 +733,16 @@ class BaseTable(object):
 			if seq is None:
 				seq = []
 				setattr(self, conv.name, seq)
+				try:
+					count_conv = self.getConverterByName(conv.repeat)
+					setattr(self, conv.repeat, -conv.aux)
+				except KeyError:
+					# TODO: Count is propagated.
+					# We don't have access upstream currently.
+					pass
 			seq.append(value)
+			if hasattr(self, conv.repeat):
+				setattr(self, conv.repeat, len(seq)+conv.aux)
 		else:
 			setattr(self, conv.name, value)
 

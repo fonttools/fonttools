@@ -207,8 +207,9 @@ class UInt24(IntValue):
 
 class ComputedInt(IntValue):
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
-		xmlWriter.comment("%s=%s" % (name, value))
-		xmlWriter.newline()
+		if value is not None:
+			xmlWriter.comment("%s=%s" % (name, value))
+			xmlWriter.newline()
 
 class ComputedUShort(ComputedInt, UShort):
 	pass
