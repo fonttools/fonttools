@@ -57,7 +57,7 @@
     <LookupList>
       <!-- LookupCount=2 -->
       <Lookup index="0">
-        <!-- LookupType=4 -->
+        <LookupType value="4"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <LigatureSubst index="0">
@@ -67,7 +67,7 @@
         </LigatureSubst>
       </Lookup>
       <Lookup index="1">
-        <!-- LookupType=4 -->
+        <LookupType value="4"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <LigatureSubst index="0">

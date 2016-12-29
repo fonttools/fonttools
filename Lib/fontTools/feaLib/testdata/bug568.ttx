@@ -48,7 +48,7 @@
     <LookupList>
       <!-- LookupCount=2 -->
       <Lookup index="0">
-        <!-- LookupType=1 -->
+        <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
@@ -60,7 +60,7 @@
         </SinglePos>
       </Lookup>
       <Lookup index="1">
-        <!-- LookupType=1 -->
+        <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">

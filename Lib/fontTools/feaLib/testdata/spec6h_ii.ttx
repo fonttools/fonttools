@@ -40,7 +40,7 @@
     <LookupList>
       <!-- LookupCount=3 -->
       <Lookup index="0">
-        <!-- LookupType=2 -->
+        <LookupType value="2"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <PairPos index="0" Format="1">
@@ -64,7 +64,7 @@
         </PairPos>
       </Lookup>
       <Lookup index="1">
-        <!-- LookupType=4 -->
+        <LookupType value="4"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <MarkBasePos index="0" Format="1">
@@ -112,7 +112,7 @@
         </MarkBasePos>
       </Lookup>
       <Lookup index="2">
-        <!-- LookupType=8 -->
+        <LookupType value="8"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <ChainContextPos index="0" Format="3">

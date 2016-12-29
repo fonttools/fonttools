@@ -43,7 +43,7 @@
     <LookupList>
       <!-- LookupCount=1 -->
       <Lookup index="0">
-        <!-- LookupType=6 -->
+        <LookupType value="6"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <MarkMarkPos index="0" Format="1">

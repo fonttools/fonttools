@@ -4,7 +4,7 @@
   <LookupList>
     <!-- LookupCount=2 -->
     <Lookup index="0">
-      <!-- LookupType=8 -->
+      <LookupType value="8"/>
       <LookupFlag value="512"/>
       <!-- SubTableCount=1 -->
       <ChainContextPos index="0" Format="1">

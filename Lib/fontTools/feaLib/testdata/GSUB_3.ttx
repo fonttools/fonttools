@@ -38,7 +38,7 @@
     <LookupList>
       <!-- LookupCount=1 -->
       <Lookup index="0">
-        <!-- LookupType=3 -->
+        <LookupType value="3"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <AlternateSubst index="0">
