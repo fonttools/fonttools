@@ -61,32 +61,32 @@ class OTTableReaderTest(unittest.TestCase):
 
 class OTTableWriterTest(unittest.TestCase):
     def test_writeShort(self):
-        writer = OTTableWriter(globalState={})
+        writer = OTTableWriter()
         writer.writeShort(-12345)
         self.assertEqual(writer.getData(), deHexStr("CF C7"))
 
     def test_writeLong(self):
-        writer = OTTableWriter(globalState={})
+        writer = OTTableWriter()
         writer.writeLong(-12345678)
         self.assertEqual(writer.getData(), deHexStr("FF 43 9E B2"))
 
     def test_writeUInt8(self):
-        writer = OTTableWriter(globalState={})
+        writer = OTTableWriter()
         writer.writeUInt8(0xBE)
         self.assertEqual(writer.getData(), deHexStr("BE"))
 
     def test_writeUShort(self):
-        writer = OTTableWriter(globalState={})
+        writer = OTTableWriter()
         writer.writeUShort(0xBEEF)
         self.assertEqual(writer.getData(), deHexStr("BE EF"))
 
     def test_writeUInt24(self):
-        writer = OTTableWriter(globalState={})
+        writer = OTTableWriter()
         writer.writeUInt24(0xBEEF77)
         self.assertEqual(writer.getData(), deHexStr("BE EF 77"))
 
     def test_writeULong(self):
-        writer = OTTableWriter(globalState={})
+        writer = OTTableWriter()
         writer.writeULong(0xBEEFCAFE)
         self.assertEqual(writer.getData(), deHexStr("BE EF CA FE"))
 

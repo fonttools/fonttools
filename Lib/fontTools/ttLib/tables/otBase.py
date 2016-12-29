@@ -237,7 +237,7 @@ class OTTableWriter(object):
 
 	"""Helper class to gather and assemble data for OpenType tables."""
 
-	def __init__(self, globalState, localState=None):
+	def __init__(self, globalState={}, localState=None):
 		self.items = []
 		self.pos = None
 		self.globalState = globalState

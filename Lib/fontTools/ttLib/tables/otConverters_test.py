@@ -25,7 +25,7 @@ class GlyphIDTest(unittest.TestCase):
         self.assertEqual(reader.pos, 2)
 
     def test_write(self):
-        writer = OTTableWriter(globalState={})
+        writer = OTTableWriter()
         self.converter.write(writer, self.font, {}, "B")
         self.assertEqual(writer.getData(), deHexStr("0002"))
 
@@ -44,7 +44,7 @@ class NameIDTest(unittest.TestCase):
         self.assertEqual(self.converter.read(reader, font, {}), 0x123)
 
     def test_write(self):
-        writer = OTTableWriter(globalState={})
+        writer = OTTableWriter()
         self.converter.write(writer, self.makeFont(), {}, 0x123)
         self.assertEqual(writer.getData(), deHexStr("0123"))
 
