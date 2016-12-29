@@ -72,7 +72,7 @@
     <LookupList>
       <!-- LookupCount=12 -->
       <Lookup index="0">
-        <!-- LookupType=1 -->
+        <LookupType value="1"/>
         <LookupFlag value="1"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
@@ -84,7 +84,7 @@
         </SinglePos>
       </Lookup>
       <Lookup index="1">
-        <!-- LookupType=1 -->
+        <LookupType value="1"/>
         <LookupFlag value="2"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
@@ -96,7 +96,7 @@
         </SinglePos>
       </Lookup>
       <Lookup index="2">
-        <!-- LookupType=1 -->
+        <LookupType value="1"/>
         <LookupFlag value="4"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
@@ -108,7 +108,7 @@
         </SinglePos>
       </Lookup>
       <Lookup index="3">
-        <!-- LookupType=1 -->
+        <LookupType value="1"/>
         <LookupFlag value="7"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
@@ -120,7 +120,7 @@
         </SinglePos>
       </Lookup>
       <Lookup index="4">
-        <!-- LookupType=1 -->
+        <LookupType value="1"/>
         <LookupFlag value="8"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
@@ -132,7 +132,7 @@
         </SinglePos>
       </Lookup>
       <Lookup index="5">
-        <!-- LookupType=1 -->
+        <LookupType value="1"/>
         <LookupFlag value="256"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
@@ -144,7 +144,7 @@
         </SinglePos>
       </Lookup>
       <Lookup index="6">
-        <!-- LookupType=1 -->
+        <LookupType value="1"/>
         <LookupFlag value="512"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
@@ -156,7 +156,7 @@
         </SinglePos>
       </Lookup>
       <Lookup index="7">
-        <!-- LookupType=1 -->
+        <LookupType value="1"/>
         <LookupFlag value="260"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
@@ -168,7 +168,7 @@
         </SinglePos>
       </Lookup>
       <Lookup index="8">
-        <!-- LookupType=1 -->
+        <LookupType value="1"/>
         <LookupFlag value="16"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
@@ -181,7 +181,7 @@
         <MarkFilteringSet value="0"/>
       </Lookup>
       <Lookup index="9">
-        <!-- LookupType=1 -->
+        <LookupType value="1"/>
         <LookupFlag value="16"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
@@ -194,7 +194,7 @@
         <MarkFilteringSet value="1"/>
       </Lookup>
       <Lookup index="10">
-        <!-- LookupType=1 -->
+        <LookupType value="1"/>
         <LookupFlag value="20"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
@@ -207,7 +207,7 @@
         <MarkFilteringSet value="0"/>
       </Lookup>
       <Lookup index="11">
-        <!-- LookupType=1 -->
+        <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">

@@ -31,7 +31,7 @@
     <LookupList>
       <!-- LookupCount=6 -->
       <Lookup index="0">
-        <!-- LookupType=8 -->
+        <LookupType value="8"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <ChainContextPos index="0" Format="3">
@@ -73,7 +73,7 @@
         </ChainContextPos>
       </Lookup>
       <Lookup index="1">
-        <!-- LookupType=1 -->
+        <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="2">
@@ -88,7 +88,7 @@
         </SinglePos>
       </Lookup>
       <Lookup index="2">
-        <!-- LookupType=1 -->
+        <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="2">
@@ -103,7 +103,7 @@
         </SinglePos>
       </Lookup>
       <Lookup index="3">
-        <!-- LookupType=1 -->
+        <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
@@ -115,7 +115,7 @@
         </SinglePos>
       </Lookup>
       <Lookup index="4">
-        <!-- LookupType=1 -->
+        <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
@@ -127,7 +127,7 @@
         </SinglePos>
       </Lookup>
       <Lookup index="5">
-        <!-- LookupType=8 -->
+        <LookupType value="8"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <ChainContextPos index="0" Format="3">

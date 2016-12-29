@@ -30,7 +30,7 @@
     <LookupList>
       <!-- LookupCount=1 -->
       <Lookup index="0">
-        <!-- LookupType=8 -->
+        <LookupType value="8"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=3 -->
         <ReverseChainSingleSubst index="0" Format="1">

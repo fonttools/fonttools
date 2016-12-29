@@ -23,7 +23,7 @@ def buildConverters(tableSpec, tableNamespace):
 		if name.startswith("ValueFormat"):
 			assert tp == "uint16"
 			converterClass = ValueFormat
-		elif name.endswith("Count") or name.endswith("LookupType"):
+		elif name.endswith("Count"):
 			assert tp in ("uint16", "uint32")
 			converterClass = ComputedUShort if tp == 'uint16' else ComputedULong
 		elif name == "SubTable":

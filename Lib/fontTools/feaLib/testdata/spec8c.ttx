@@ -49,7 +49,7 @@
     <LookupList>
       <!-- LookupCount=1 -->
       <Lookup index="0">
-        <!-- LookupType=1 -->
+        <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <SingleSubst index="0">

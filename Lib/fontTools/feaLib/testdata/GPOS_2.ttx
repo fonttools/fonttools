@@ -39,7 +39,7 @@
     <LookupList>
       <!-- LookupCount=3 -->
       <Lookup index="0">
-        <!-- LookupType=2 -->
+        <LookupType value="2"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=2 -->
         <PairPos index="0" Format="1">
@@ -84,7 +84,7 @@
         </PairPos>
       </Lookup>
       <Lookup index="1">
-        <!-- LookupType=2 -->
+        <LookupType value="2"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=2 -->
         <PairPos index="0" Format="1">
@@ -159,7 +159,7 @@
         </PairPos>
       </Lookup>
       <Lookup index="2">
-        <!-- LookupType=2 -->
+        <LookupType value="2"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <PairPos index="0" Format="1">

@@ -449,7 +449,7 @@ class BuilderTest(unittest.TestCase):
         lookup = builder.buildLookup([s1, s2], flags=7)
         self.assertEqual(getXML(lookup.toXML),
                          ['<Lookup>',
-                          '  <!-- LookupType=1 -->',
+                          '  <LookupType value="1"/>',
                           '  <LookupFlag value="7"/>',
                           '  <!-- SubTableCount=2 -->',
                           '  <SingleSubst index="0">',
@@ -495,7 +495,7 @@ class BuilderTest(unittest.TestCase):
         lookup = builder.buildLookup([s], flags, markFilterSet=999)
         self.assertEqual(getXML(lookup.toXML),
                          ['<Lookup>',
-                          '  <!-- LookupType=1 -->',
+                          '  <LookupType value="1"/>',
                           '  <LookupFlag value="17"/>',
                           '  <!-- SubTableCount=1 -->',
                           '  <SingleSubst index="0">',

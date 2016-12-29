@@ -36,26 +36,10 @@ class BaseTTXConverter(DefaultTable):
 
 	def decompile(self, data, font):
 		from . import otTables
-		cachingStats = None if True else {}
-		class GlobalState(object):
-			def __init__(self, tableType, cachingStats):
-				self.tableType = tableType
-				self.cachingStats = cachingStats
-		globalState = GlobalState(tableType=self.tableTag,
-					cachingStats=cachingStats)
-		reader = OTTableReader(data, globalState)
+		reader = OTTableReader(data, tableTag=self.tableTag)
 		tableClass = getattr(otTables, self.tableTag)
 		self.table = tableClass()
 		self.table.decompile(reader, font)
-		if cachingStats:
-			stats = sorted([(v, k) for k, v in cachingStats.items()])
-			stats.reverse()
-			log.debug("cachingStats for %s", self.tableTag)
-			for v, k in stats:
-				if v < 2:
-					break
-				log.debug("%s %s", v, k)
-			log.debug("--- %s", len(stats))
 
 	def compile(self, font):
 		""" Create a top-level OTFWriter for the GPOS/GSUB table.
@@ -78,15 +62,11 @@ class BaseTTXConverter(DefaultTable):
 
 				If a lookup subtable overflows an offset, we have to start all over.
 		"""
-		class GlobalState(object):
-			def __init__(self, tableType):
-				self.tableType = tableType
-		globalState = GlobalState(tableType=self.tableTag)
 		overflowRecord = None
 
 		while True:
 			try:
-				writer = OTTableWriter(globalState)
+				writer = OTTableWriter(tableTag=self.tableTag)
 				self.table.compile(writer, font)
 				return writer.getAllData()
 
@@ -124,14 +104,14 @@ class OTTableReader(object):
 
 	"""Helper class to retrieve data from an OpenType table."""
 
-	__slots__ = ('data', 'offset', 'pos', 'globalState', 'localState')
+	__slots__ = ('data', 'offset', 'pos', 'localState', 'tableTag')
 
-	def __init__(self, data, globalState={}, localState=None, offset=0):
+	def __init__(self, data, localState=None, offset=0, tableTag=None):
 		self.data = data
 		self.offset = offset
 		self.pos = offset
-		self.globalState = globalState
 		self.localState = localState
+		self.tableTag = tableTag
 
 	def advance(self, count):
 		self.pos += count
@@ -140,13 +120,13 @@ class OTTableReader(object):
 		self.pos = pos
 
 	def copy(self):
-		other = self.__class__(self.data, self.globalState, self.localState, self.offset)
+		other = self.__class__(self.data, self.localState, self.offset, self.tableTag)
 		other.pos = self.pos
 		return other
 
 	def getSubReader(self, offset):
 		offset = self.offset + offset
-		return self.__class__(self.data, self.globalState, self.localState, offset)
+		return self.__class__(self.data, self.localState, offset, self.tableTag)
 
 	def readUShort(self):
 		pos = self.pos
@@ -237,11 +217,11 @@ class OTTableWriter(object):
 
 	"""Helper class to gather and assemble data for OpenType tables."""
 
-	def __init__(self, globalState, localState=None):
+	def __init__(self, localState=None, tableTag=None):
 		self.items = []
 		self.pos = None
-		self.globalState = globalState
 		self.localState = localState
+		self.tableTag = tableTag
 		self.longOffset = False
 		self.parent = None
 
@@ -424,7 +404,7 @@ class OTTableWriter(object):
 	# interface for gathering data, as used by table.compile()
 
 	def getSubWriter(self):
-		subwriter = self.__class__(self.globalState, self.localState)
+		subwriter = self.__class__(self.localState, self.tableTag)
 		subwriter.parent = self # because some subtables have idential values, we discard
 					# the duplicates under the getAllData method. Hence some
 					# subtable writers can have more than one parent writer.
@@ -509,7 +489,7 @@ class OTTableWriter(object):
 						LookupListIndex = p1.parent.repeatIndex
 						SubTableIndex = p1.repeatIndex
 
-		return OverflowErrorRecord( (self.globalState.tableType, LookupListIndex, SubTableIndex, itemName, itemIndex) )
+		return OverflowErrorRecord( (self.tableTag, LookupListIndex, SubTableIndex, itemName, itemIndex) )
 
 
 class CountReference(object):
@@ -594,10 +574,10 @@ class BaseTable(object):
 		converters = self.getConverters()
 		for conv in converters:
 			if conv.name == "SubTable":
-				conv = conv.getConverter(reader.globalState.tableType,
+				conv = conv.getConverter(reader.tableTag,
 						table["LookupType"])
 			if conv.name == "ExtSubTable":
-				conv = conv.getConverter(reader.globalState.tableType,
+				conv = conv.getConverter(reader.tableTag,
 						table["ExtensionLookupType"])
 			if conv.name == "FeatureParams":
 				conv = conv.getConverter(reader["FeatureTag"])
@@ -666,8 +646,10 @@ class BaseTable(object):
 				if conv.isPropagated:
 					writer[conv.name] = ref
 			elif conv.isLookupType:
+				# We make sure that subtables have the same lookup type,
+				# and that the type is the same as the one set on the
+				# Lookup object, if any is set.
 				ref = writer.writeCountReference(table, conv.name, conv.staticSize, table.get(conv.name))
-				table[conv.name] = None
 				writer['LookupType'] = ref
 			else:
 				if conv.aux and not eval(conv.aux, None, table):

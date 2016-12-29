@@ -34,7 +34,7 @@
     <LookupList>
       <!-- LookupCount=9 -->
       <Lookup index="0">
-        <!-- LookupType=6 -->
+        <LookupType value="6"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=2 -->
         <ChainContextSubst index="0" Format="3">
@@ -81,7 +81,7 @@
         </ChainContextSubst>
       </Lookup>
       <Lookup index="1">
-        <!-- LookupType=1 -->
+        <LookupType value="1"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <SingleSubst index="0">
@@ -92,7 +92,7 @@
         </SingleSubst>
       </Lookup>
       <Lookup index="2">
-        <!-- LookupType=6 -->
+        <LookupType value="6"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <ChainContextSubst index="0" Format="3">
@@ -140,7 +140,7 @@
         </ChainContextSubst>
       </Lookup>
       <Lookup index="3">
-        <!-- LookupType=2 -->
+        <LookupType value="2"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <MultipleSubst index="0">
@@ -148,7 +148,7 @@
         </MultipleSubst>
       </Lookup>
       <Lookup index="4">
-        <!-- LookupType=6 -->
+        <LookupType value="6"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <ChainContextSubst index="0" Format="3">
@@ -171,7 +171,7 @@
         </ChainContextSubst>
       </Lookup>
       <Lookup index="5">
-        <!-- LookupType=3 -->
+        <LookupType value="3"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <AlternateSubst index="0">
@@ -182,7 +182,7 @@
         </AlternateSubst>
       </Lookup>
       <Lookup index="6">
-        <!-- LookupType=6 -->
+        <LookupType value="6"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <ChainContextSubst index="0" Format="3">
@@ -211,7 +211,7 @@
         </ChainContextSubst>
       </Lookup>
       <Lookup index="7">
-        <!-- LookupType=4 -->
+        <LookupType value="4"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <LigatureSubst index="0">
@@ -226,7 +226,7 @@
         </LigatureSubst>
       </Lookup>
       <Lookup index="8">
-        <!-- LookupType=6 -->
+        <LookupType value="6"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
         <ChainContextSubst index="0" Format="3">
