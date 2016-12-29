@@ -666,8 +666,10 @@ class BaseTable(object):
 				if conv.isPropagated:
 					writer[conv.name] = ref
 			elif conv.isLookupType:
+				# We make sure that subtables have the same lookup type,
+				# and that the type is the same as the one set on the
+				# Lookup object, if any is set.
 				ref = writer.writeCountReference(table, conv.name, conv.staticSize, table.get(conv.name))
-				table[conv.name] = None
 				writer['LookupType'] = ref
 			else:
 				if conv.aux and not eval(conv.aux, None, table):
