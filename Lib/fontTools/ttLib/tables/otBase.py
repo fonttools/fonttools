@@ -596,13 +596,20 @@ class BaseTable(object):
 				if conv.isPropagated:
 					reader[conv.name] = table[conv.name]
 
-		self.postRead(table, font)
+		if hasattr(self, 'postRead'):
+			self.postRead(table, font)
+		else:
+			self.__dict__.update(table)
 
 		del self.__rawTable  # succeeded, get rid of debugging info
 
 	def compile(self, writer, font):
 		self.ensureDecompiled()
-		table = self.preWrite(font)
+		if hasattr(self, 'preWrite'):
+			table = self.preWrite(font)
+		else:
+			table = self.__dict__.copy()
+
 
 		if hasattr(self, 'sortCoverageLast'):
 			writer.sortCoverageLast = 1
@@ -668,12 +675,6 @@ class BaseTable(object):
 
 	def writeFormat(self, writer):
 		pass
-
-	def postRead(self, table, font):
-		self.__dict__.update(table)
-
-	def preWrite(self, font):
-		return self.__dict__.copy()
 
 	def toXML(self, xmlWriter, font, attrs=None, name=None):
 		tableName = name if name else self.__class__.__name__
