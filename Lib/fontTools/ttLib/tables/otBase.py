@@ -36,26 +36,14 @@ class BaseTTXConverter(DefaultTable):
 
 	def decompile(self, data, font):
 		from . import otTables
-		cachingStats = None if True else {}
 		class GlobalState(object):
-			def __init__(self, tableType, cachingStats):
+			def __init__(self, tableType):
 				self.tableType = tableType
-				self.cachingStats = cachingStats
-		globalState = GlobalState(tableType=self.tableTag,
-					cachingStats=cachingStats)
+		globalState = GlobalState(tableType=self.tableTag)
 		reader = OTTableReader(data, globalState)
 		tableClass = getattr(otTables, self.tableTag)
 		self.table = tableClass()
 		self.table.decompile(reader, font)
-		if cachingStats:
-			stats = sorted([(v, k) for k, v in cachingStats.items()])
-			stats.reverse()
-			log.debug("cachingStats for %s", self.tableTag)
-			for v, k in stats:
-				if v < 2:
-					break
-				log.debug("%s %s", v, k)
-			log.debug("--- %s", len(stats))
 
 	def compile(self, font):
 		""" Create a top-level OTFWriter for the GPOS/GSUB table.
