@@ -339,13 +339,17 @@ class Struct(BaseConverter):
 		Format = attrs.get("Format")
 		if Format is not None:
 			table.Format = int(Format)
+
 		for element in content:
 			if isinstance(element, tuple):
 				name, attrs, content = element
 				table.fromXML(name, attrs, content, font)
 			else:
 				pass
-		# TODO Fill in items that are not set by XML.
+
+		if not hasattr(table, 'postRead'):
+			table.populateDefaults()
+
 		return table
 
 	def __repr__(self):

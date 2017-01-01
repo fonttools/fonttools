@@ -567,12 +567,35 @@ class BaseTable(object):
 	def getConverterByName(self, name):
 		return self.convertersByName[name]
 
+	def populateDefaults(self, propagator=None):
+		for conv in self.getConverters():
+			if conv.repeat:
+				if not hasattr(self, conv.name):
+					setattr(self, conv.name, [])
+				countValue = len(getattr(self, conv.name)) - conv.aux
+				try:
+					count_conv = self.getConverterByName(conv.repeat)
+					setattr(self, conv.repeat, countValue)
+				except KeyError:
+					# conv.repeat is a propagated count
+					if propagator and conv.repeat in propagator:
+						propagator[conv.repeat].setValue(countValue)
+			else:
+				if conv.aux and not eval(conv.aux, None, self.__dict__):
+					continue
+				if hasattr(self, conv.name):
+					continue # Warn if it should NOT be present?!
+				if hasattr(conv, 'writeNullOffset'):
+					setattr(self, conv.name, None) # Warn?
+				#elif not conv.isCount:
+				#	# Warn?
+				#	pass
+
 	def decompile(self, reader, font):
 		self.readFormat(reader)
 		table = {}
 		self.__rawTable = table  # for debugging
-		converters = self.getConverters()
-		for conv in converters:
+		for conv in self.getConverters():
 			if conv.name == "SubTable":
 				conv = conv.getConverter(reader.tableTag,
 						table["LookupType"])
@@ -716,16 +739,7 @@ class BaseTable(object):
 			if seq is None:
 				seq = []
 				setattr(self, conv.name, seq)
-				try:
-					count_conv = self.getConverterByName(conv.repeat)
-					setattr(self, conv.repeat, -conv.aux)
-				except KeyError:
-					# TODO: Count is propagated.
-					# We don't have access upstream currently.
-					pass
 			seq.append(value)
-			if hasattr(self, conv.repeat):
-				setattr(self, conv.repeat, len(seq)+conv.aux)
 		else:
 			setattr(self, conv.name, value)
 
