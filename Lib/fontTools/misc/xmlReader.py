@@ -37,7 +37,9 @@ class XMLReader(object):
 		self.contentStack = []
 		self.stackSize = 0
 
-	def read(self):
+	def read(self, rootless=False):
+	        if rootless:
+			self.stackSize += 1
 		if self.progress:
 			self.file.seek(0, 2)
 			fileSize = self.file.tell()
@@ -46,6 +48,8 @@ class XMLReader(object):
 		self._parseFile(self.file)
 		if self._closeStream:
 			self.close()
+	        if rootless:
+			self.stackSize -= 1
 
 	def close(self):
 		self.file.close()
