@@ -200,6 +200,24 @@ class MtiTest(unittest.TestCase):
         self.expect_ttx(xml_binary,   xml_built, fromfile='decompiled',      tofile='built')
         self.expect_ttx(xml_expected, xml_built, fromfile=xml_expected_path, tofile='built')
 
+        from fontTools.misc import xmlReader
+        f = StringIO()
+        f.write(xml_expected)
+        f.seek(0)
+        font2 = TTFont()
+        font2.setGlyphOrder(font.getGlyphOrder())
+        reader = xmlReader.XMLReader(f, font2)
+        reader.read(rootless=True)
+
+        # XML from object read from XML.
+        writer = XMLWriter(StringIO(), newlinestr='\n')
+        writer.begintag(tableTag); writer.newline()
+        font2[tableTag].toXML(writer, font)
+        writer.endtag(tableTag); writer.newline()
+        xml_fromxml = writer.file.getvalue()
+
+        self.expect_ttx(xml_expected, xml_fromxml, fromfile=xml_expected_path, tofile='fromxml')
+
 def generate_mti_file_test(name, tableTag=None):
     return lambda self: self.check_mti_file(os.path.join(*name.split('/')), tableTag=tableTag)
 
