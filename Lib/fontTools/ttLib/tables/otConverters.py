@@ -4,7 +4,7 @@ from fontTools.misc.textTools import safeEval
 from fontTools.misc.fixedTools import (
 	fixedToFloat as fi2fl, floatToFixed as fl2fi, ensureVersionIsLong as fi2ve,
 	versionToFixed as ve2fi)
-from .otBase import ValueRecordFactory
+from .otBase import ValueRecordFactory, CountReference
 from functools import partial
 import logging
 
@@ -340,6 +340,20 @@ class Struct(BaseConverter):
 		if Format is not None:
 			table.Format = int(Format)
 
+		noPostRead = not hasattr(table, 'postRead')
+		if noPostRead:
+			# TODO Cache table.hasPropagated.
+			cleanPropagation = False
+			for conv in table.getConverters():
+				if conv.isPropagated:
+					cleanPropagation = True
+					if not hasattr(font, '_propagator'):
+						font._propagator = {}
+					propagator = font._propagator
+					assert conv.name not in propagator
+					setattr(table, conv.name, None)
+					propagator[conv.name] = CountReference(table.__dict__, conv.name)
+
 		for element in content:
 			if isinstance(element, tuple):
 				name, attrs, content = element
@@ -347,8 +361,15 @@ class Struct(BaseConverter):
 			else:
 				pass
 
-		if not hasattr(table, 'postRead'):
-			table.populateDefaults()
+		if noPostRead:
+			table.populateDefaults(propagator=getattr(font, '_propagator', None))
+			if cleanPropagation:
+				for conv in table.getConverters():
+					if conv.isPropagated:
+						propagator = font._propagator
+						del propagator[conv.name]
+						if not propagator:
+							del font._propagator
 
 		return table
 
