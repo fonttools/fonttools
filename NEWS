@@ -1,3 +1,8 @@
+- [otlLib] Make ClassDef sorting deterministic. Fixes #766 (7d1ddb2)
+- [mtiLib] Added unit tests (#787)
+- [ci] Measure test coverage on all supported python versions and OSes, combine coverage data and upload to https://codecov.io/gh/fonttools/fonttools (#786)
+- [ci] Configured Travis and Appveyor for running tests on Python 3.6 (#785, 55c03bc)
+
 ## TTX/FontTools Version 3.4.0
 
 2016-12-21
