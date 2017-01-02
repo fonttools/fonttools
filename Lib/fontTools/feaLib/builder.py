@@ -401,7 +401,7 @@ class Builder(object):
                                   self.glyphMap)
         gdef.MarkAttachClassDef = self.buildGDEFMarkAttachClassDef_()
         gdef.MarkGlyphSetsDef = self.buildGDEFMarkGlyphSetsDef_()
-        gdef.Version = 0x00010002 if gdef.MarkGlyphSetsDef else 1.0
+        gdef.Version = 0x00010002 if gdef.MarkGlyphSetsDef else 0x00010000
         if any((gdef.GlyphClassDef, gdef.AttachList, gdef.LigCaretList,
                 gdef.MarkAttachClassDef, gdef.MarkGlyphSetsDef)):
             result = newTable("GDEF")
