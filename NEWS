@@ -1,3 +1,6 @@
+- Font tables read from XML can now be written back to XML with no loss.
+- GSUB/GPOS LookupType is written out in XML as an element, not comment. (#792)
+- When parsing cmap table, do not store items mapped to glyph id 0. (#790)
 - [otlLib] Make ClassDef sorting deterministic. Fixes #766 (7d1ddb2)
 - [mtiLib] Added unit tests (#787)
 - [ci] Measure test coverage on all supported python versions and OSes, combine coverage data and upload to https://codecov.io/gh/fonttools/fonttools (#786)
