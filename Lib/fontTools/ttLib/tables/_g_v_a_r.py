@@ -15,7 +15,9 @@ import logging
 
 log = logging.getLogger(__name__)
 
-
+# https://www.microsoft.com/typography/otspec/gvar.htm
+# https://www.microsoft.com/typography/otspec/otvarcommonformats.htm
+#
 # Apple's documentation of 'gvar':
 # https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6gvar.html
 #
@@ -39,8 +41,8 @@ GVAR_HEADER_SIZE = sstruct.calcsize(GVAR_HEADER_FORMAT)
 TUPLES_SHARE_POINT_NUMBERS = 0x8000
 TUPLE_COUNT_MASK = 0x0fff
 
-EMBEDDED_TUPLE_COORD = 0x8000
-INTERMEDIATE_TUPLE = 0x4000
+EMBEDDED_PEAK_TUPLE = 0x8000
+INTERMEDIATE_REGION = 0x4000
 PRIVATE_POINT_NUMBERS = 0x2000
 TUPLE_INDEX_MASK = 0x0fff
 
@@ -266,11 +268,11 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		flags = struct.unpack(">H", data[2:4])[0]
 
 		pos = 4
-		if (flags & EMBEDDED_TUPLE_COORD) == 0:
+		if (flags & EMBEDDED_PEAK_TUPLE) == 0:
 			coord = sharedCoords[flags & TUPLE_INDEX_MASK]
 		else:
 			coord, pos = GlyphVariation.decompileCoord_(axisTags, data, pos)
-		if (flags & INTERMEDIATE_TUPLE) != 0:
+		if (flags & INTERMEDIATE_REGION) != 0:
 			minCoord, pos = GlyphVariation.decompileCoord_(axisTags, data, pos)
 			maxCoord, pos = GlyphVariation.decompileCoord_(axisTags, data, pos)
 		else:
@@ -433,12 +435,12 @@ class GlyphVariation(object):
 		if coord in sharedCoordIndices:
 			flags = sharedCoordIndices[coord]
 		else:
-			flags = EMBEDDED_TUPLE_COORD
+			flags = EMBEDDED_PEAK_TUPLE
 			tupleData.append(coord)
 
 		intermediateCoord = self.compileIntermediateCoord(axisTags)
 		if intermediateCoord is not None:
-			flags |= INTERMEDIATE_TUPLE
+			flags |= INTERMEDIATE_REGION
 			tupleData.append(intermediateCoord)
 
 		if sharedPoints is not None:
@@ -742,8 +744,8 @@ class GlyphVariation(object):
 	@staticmethod
 	def getTupleSize_(flags, axisCount):
 		size = 4
-		if (flags & EMBEDDED_TUPLE_COORD) != 0:
+		if (flags & EMBEDDED_PEAK_TUPLE) != 0:
 			size += axisCount * 2
-		if (flags & INTERMEDIATE_TUPLE) != 0:
+		if (flags & INTERMEDIATE_REGION) != 0:
 			size += axisCount * 4
 		return size
