@@ -27,14 +27,14 @@ TupleVariation = tv.TupleVariation
 
 GVAR_HEADER_FORMAT = """
 	> # big endian
-	version:		H
-	reserved:		H
-	axisCount:		H
-	sharedCoordCount:	H
-	offsetToCoord:		I
-	glyphCount:		H
-	flags:			H
-	offsetToData:		I
+	version:			H
+	reserved:			H
+	axisCount:			H
+	sharedTupleCount:		H
+	offsetToSharedTuples:		I
+	glyphCount:			H
+	flags:				H
+	offsetToGlyphVariationData:	I
 """
 
 GVAR_HEADER_SIZE = sstruct.calcsize(GVAR_HEADER_FORMAT)
@@ -68,11 +68,11 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		header["version"] = self.version
 		header["reserved"] = self.reserved
 		header["axisCount"] = len(axisTags)
-		header["sharedCoordCount"] = len(sharedCoords)
-		header["offsetToCoord"] = GVAR_HEADER_SIZE + len(compiledOffsets)
+		header["sharedTupleCount"] = len(sharedCoords)
+		header["offsetToSharedTuples"] = GVAR_HEADER_SIZE + len(compiledOffsets)
 		header["glyphCount"] = len(compiledGlyphs)
 		header["flags"] = tableFormat
-		header["offsetToData"] = header["offsetToCoord"] + sharedCoordSize
+		header["offsetToGlyphVariationData"] = header["offsetToSharedTuples"] + sharedCoordSize
 		compiledHeader = sstruct.pack(GVAR_HEADER_FORMAT, header)
 
 		result = [compiledHeader, compiledOffsets]
@@ -176,16 +176,17 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		offsets = self.decompileOffsets_(data[GVAR_HEADER_SIZE:], tableFormat=(self.flags & 1), glyphCount=self.glyphCount)
 		sharedCoords = self.decompileSharedCoords_(axisTags, data)
 		self.variations = {}
+		offsetToData = self.offsetToGlyphVariationData
 		for i in range(self.glyphCount):
 			glyphName = glyphs[i]
 			glyph = ttFont["glyf"][glyphName]
 			numPointsInGlyph = self.getNumPoints_(glyph)
-			gvarData = data[self.offsetToData + offsets[i] : self.offsetToData + offsets[i + 1]]
+			gvarData = data[offsetToData + offsets[i] : offsetToData + offsets[i + 1]]
 			self.variations[glyphName] = \
 				self.decompileGlyph_(numPointsInGlyph, sharedCoords, axisTags, gvarData)
 
 	def decompileSharedCoords_(self, axisTags, data):
-		result, _pos = TupleVariation.decompileCoords_(axisTags, self.sharedCoordCount, data, self.offsetToCoord)
+		result, _pos = TupleVariation.decompileCoords_(axisTags, self.sharedTupleCount, data, self.offsetToSharedTuples)
 		return result
 
 	@staticmethod

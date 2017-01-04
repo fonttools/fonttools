@@ -113,8 +113,8 @@ class GVARTableTest(unittest.TestCase):
 
 	def test_decompileSharedCoords_Skia(self):
 		table = table__g_v_a_r()
-		table.offsetToCoord = 0
-		table.sharedCoordCount = 8
+		table.offsetToSharedTuples = 0
+		table.sharedTupleCount = 8
 		sharedCoords = table.decompileSharedCoords_(["wght", "wdth"], SKIA_SHARED_COORDS)
 		self.assertEqual([
 			{"wght": 1.0, "wdth": 0.0},
@@ -129,15 +129,15 @@ class GVARTableTest(unittest.TestCase):
 
 	def test_decompileSharedCoords_empty(self):
 		table = table__g_v_a_r()
-		table.offsetToCoord = 0
-		table.sharedCoordCount = 0
+		table.offsetToSharedTuples = 0
+		table.sharedTupleCount = 0
 		self.assertEqual([], table.decompileSharedCoords_(["wght"], b""))
 
 	def test_decompileGlyph_Skia_I(self):
 		axes = ["wght", "wdth"]
 		table = table__g_v_a_r()
-		table.offsetToCoord = 0
-		table.sharedCoordCount = 8
+		table.offsetToSharedTuples = 0
+		table.sharedTupleCount = 8
 		table.axisCount = len(axes)
 		sharedCoords = table.decompileSharedCoords_(axes, SKIA_SHARED_COORDS)
 		tuples = table.decompileGlyph_(18, sharedCoords, axes, SKIA_GVAR_I)
