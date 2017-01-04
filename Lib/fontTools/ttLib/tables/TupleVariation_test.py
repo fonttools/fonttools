@@ -1,9 +1,10 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
+from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.misc.testTools import parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
-from fontTools.ttLib.tables.TupleVariation import TupleVariation
+from fontTools.ttLib.tables.TupleVariation import log, TupleVariation
 import random
 import unittest
 
@@ -11,6 +12,13 @@ import unittest
 def hexencode(s):
 	h = hexStr(s).upper()
 	return ' '.join([h[i:i+2] for i in range(0, len(h), 2)])
+
+
+AXES = {
+	"wdth":(0.3, 0.4, 0.5),
+	"wght":(0.0, 1.0, 1.0),
+	"opsz":(-0.7, -0.7, 0.0)
+}
 
 
 class TupleVariationTest(unittest.TestCase):
@@ -44,10 +52,38 @@ class TupleVariationTest(unittest.TestCase):
 		gvar = TupleVariation(axes, [None, None, None])
 		self.assertFalse(gvar.hasImpact())
 
-	def test_toXML(self):
+	def test_toXML_badDeltaFormat(self):
 		writer = XMLWriter(BytesIO())
-		axes = {"wdth":(0.3, 0.4, 0.5), "wght":(0.0, 1.0, 1.0), "opsz":(-0.7, -0.7, 0.0)}
-		g = TupleVariation(axes, [(9,8), None, (7,6), (0,0), (-1,-2), None])
+		g = TupleVariation(AXES, ["String"])
+		with CapturingLogHandler(log, "ERROR") as captor:
+			g.toXML(writer, ["wdth"])
+		self.assertIn("bad delta format", [r.msg for r in captor.records])
+		self.assertEqual([
+			'<tuple>',
+			  '<coord axis="wdth" max="0.5" min="0.3" value="0.4"/>',
+			  '<!-- bad delta #0 -->',
+			'</tuple>',
+		], TupleVariationTest.xml_lines(writer))
+
+	def test_toXML_constants(self):
+		writer = XMLWriter(BytesIO())
+		g = TupleVariation(AXES, [42, None, 23, 0, -17, None])
+		g.toXML(writer, ["wdth", "wght", "opsz"])
+		self.assertEqual([
+			'<tuple>',
+			  '<coord axis="wdth" max="0.5" min="0.3" value="0.4"/>',
+			  '<coord axis="wght" value="1.0"/>',
+			  '<coord axis="opsz" value="-0.7"/>',
+			  '<delta cvt="0" value="42"/>',
+			  '<delta cvt="2" value="23"/>',
+			  '<delta cvt="3" value="0"/>',
+			  '<delta cvt="4" value="-17"/>',
+			'</tuple>'
+		], TupleVariationTest.xml_lines(writer))
+
+	def test_toXML_points(self):
+		writer = XMLWriter(BytesIO())
+		g = TupleVariation(AXES, [(9,8), None, (7,6), (0,0), (-1,-2), None])
 		g.toXML(writer, ["wdth", "wght", "opsz"])
 		self.assertEqual([
 			'<tuple>',
@@ -73,20 +109,36 @@ class TupleVariationTest(unittest.TestCase):
 			'</tuple>'
 		], TupleVariationTest.xml_lines(writer))
 
-	def test_fromXML(self):
+	def test_fromXML_badDeltaFormat(self):
+		g = TupleVariation({}, [])
+		with CapturingLogHandler(log, "WARNING") as captor:
+			for name, attrs, content in parseXML('<delta a="1" b="2"/>'):
+				g.fromXML(name, attrs, content)
+		self.assertIn("bad delta format: a, b",
+		              [r.msg for r in captor.records])
+
+	def test_fromXML_constants(self):
 		g = TupleVariation({}, [None] * 4)
 		for name, attrs, content in parseXML(
 				'<coord axis="wdth" min="0.3" value="0.4" max="0.5"/>'
 				'<coord axis="wght" value="1.0"/>'
-				'<coord axis="opsz" value="-0.5"/>'
+				'<coord axis="opsz" value="-0.7"/>'
+				'<delta cvt="1" value="42"/>'
+				'<delta cvt="2" value="-23"/>'):
+			g.fromXML(name, attrs, content)
+		self.assertEqual(AXES, g.axes)
+		self.assertEqual([None, 42, -23, None], g.coordinates)
+
+	def test_fromXML_points(self):
+		g = TupleVariation({}, [None] * 4)
+		for name, attrs, content in parseXML(
+				'<coord axis="wdth" min="0.3" value="0.4" max="0.5"/>'
+				'<coord axis="wght" value="1.0"/>'
+				'<coord axis="opsz" value="-0.7"/>'
 				'<delta pt="1" x="33" y="44"/>'
 				'<delta pt="2" x="-2" y="170"/>'):
 			g.fromXML(name, attrs, content)
-		self.assertEqual({
-			"wdth":( 0.3,  0.4, 0.5),
-			"wght":( 0.0,  1.0, 1.0),
-			"opsz":(-0.5, -0.5, 0.0)
-		}, g.axes)
+		self.assertEqual(AXES, g.axes)
 		self.assertEqual([None, (33, 44), (-2, 170), None], g.coordinates)
 
 	def test_compile_sharedCoords_nonIntermediate_sharedPoints(self):

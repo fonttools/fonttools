@@ -69,13 +69,22 @@ class TupleVariation(object):
 				else:
 					writer.simpletag("coord", axis=axis, value=value, min=minValue, max=maxValue)
 				writer.newline()
-		wrote_any_points = False
-		for i, point in enumerate(self.coordinates):
-			if point is not None:
-				writer.simpletag("delta", pt=i, x=point[0], y=point[1])
+		wrote_any_deltas = False
+		for i, delta in enumerate(self.coordinates):
+			if type(delta) == tuple and len(delta) == 2:
+				writer.simpletag("delta", pt=i, x=delta[0], y=delta[1])
 				writer.newline()
-				wrote_any_points = True
-		if not wrote_any_points:
+				wrote_any_deltas = True
+			elif type(delta) == int:
+				writer.simpletag("delta", cvt=i, value=delta)
+				writer.newline()
+				wrote_any_deltas = True
+			elif delta is not None:
+				log.error("bad delta format")
+				writer.comment("bad delta #%d" % i)
+				writer.newline()
+				wrote_any_deltas = True
+		if not wrote_any_deltas:
 			writer.comment("no deltas")
 			writer.newline()
 		writer.endtag("tuple")
@@ -91,10 +100,18 @@ class TupleVariation(object):
 			maxValue = float(attrs.get("max", defaultMaxValue))
 			self.axes[axis] = (minValue, value, maxValue)
 		elif name == "delta":
-			point = safeEval(attrs["pt"])
-			x = safeEval(attrs["x"])
-			y = safeEval(attrs["y"])
-			self.coordinates[point] = (x, y)
+			if "pt" in attrs:
+				point = safeEval(attrs["pt"])
+				x = safeEval(attrs["x"])
+				y = safeEval(attrs["y"])
+				self.coordinates[point] = (x, y)
+			elif "cvt" in attrs:
+				cvt = safeEval(attrs["cvt"])
+				value = safeEval(attrs["value"])
+				self.coordinates[cvt] = value
+			else:
+				log.warning("bad delta format: %s" %
+				            ", ".join(sorted(attrs.keys())))
 
 	def compile(self, axisTags, sharedCoordIndices, sharedPoints):
 		tupleData = []
