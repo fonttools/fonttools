@@ -1,0 +1,10 @@
+languagesystem DFLT dflt;
+
+markClass [acute] <anchor 350 0> @TOP_MARKS;
+baseClass [a] <anchor 500 500> @BASE_TOPS;
+baseClass b <anchor 500 750> @BASE_TOPS;
+
+feature test {
+    pos base @BASE_TOPS mark @TOP_MARKS;
+} test;
+
