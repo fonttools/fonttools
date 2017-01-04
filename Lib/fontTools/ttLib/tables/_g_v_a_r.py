@@ -192,7 +192,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 				self.decompileGlyph_(numPointsInGlyph, sharedCoords, axisTags, gvarData)
 
 	def decompileSharedCoords_(self, axisTags, data):
-		result, _pos = GlyphVariation.decompileCoords_(axisTags, self.sharedCoordCount, data, self.offsetToCoord)
+		result, _pos = TupleVariation.decompileCoords_(axisTags, self.sharedCoordCount, data, self.offsetToCoord)
 		return result
 
 	@staticmethod
@@ -250,12 +250,12 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		pos = 4
 		dataPos = offsetToData
 		if (flags & TUPLES_SHARE_POINT_NUMBERS) != 0:
-			sharedPoints, dataPos = GlyphVariation.decompilePoints_(numPointsInGlyph, data, dataPos)
+			sharedPoints, dataPos = TupleVariation.decompilePoints_(numPointsInGlyph, data, dataPos)
 		else:
 			sharedPoints = []
 		for _ in range(flags & TUPLE_COUNT_MASK):
 			dataSize, flags = struct.unpack(">HH", data[pos:pos+4])
-			tupleSize = GlyphVariation.getTupleSize_(flags, numAxes)
+			tupleSize = TupleVariation.getTupleSize_(flags, numAxes)
 			tupleData = data[pos : pos + tupleSize]
 			pointDeltaData = data[dataPos : dataPos + dataSize]
 			tuples.append(self.decompileTuple_(numPointsInGlyph, sharedCoords, sharedPoints, axisTags, tupleData, pointDeltaData))
@@ -271,10 +271,10 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		if (flags & EMBEDDED_PEAK_TUPLE) == 0:
 			coord = sharedCoords[flags & TUPLE_INDEX_MASK]
 		else:
-			coord, pos = GlyphVariation.decompileCoord_(axisTags, data, pos)
+			coord, pos = TupleVariation.decompileCoord_(axisTags, data, pos)
 		if (flags & INTERMEDIATE_REGION) != 0:
-			minCoord, pos = GlyphVariation.decompileCoord_(axisTags, data, pos)
-			maxCoord, pos = GlyphVariation.decompileCoord_(axisTags, data, pos)
+			minCoord, pos = TupleVariation.decompileCoord_(axisTags, data, pos)
+			maxCoord, pos = TupleVariation.decompileCoord_(axisTags, data, pos)
 		else:
 			minCoord, maxCoord = table__g_v_a_r.computeMinMaxCoord_(coord)
 		axes = {}
@@ -284,16 +284,16 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 				axes[axis] = coords
 		pos = 0
 		if (flags & PRIVATE_POINT_NUMBERS) != 0:
-			points, pos = GlyphVariation.decompilePoints_(numPointsInGlyph, tupleData, pos)
+			points, pos = TupleVariation.decompilePoints_(numPointsInGlyph, tupleData, pos)
 		else:
 			points = sharedPoints
-		deltas_x, pos = GlyphVariation.decompileDeltas_(len(points), tupleData, pos)
-		deltas_y, pos = GlyphVariation.decompileDeltas_(len(points), tupleData, pos)
+		deltas_x, pos = TupleVariation.decompileDeltas_(len(points), tupleData, pos)
+		deltas_y, pos = TupleVariation.decompileDeltas_(len(points), tupleData, pos)
 		deltas = [None] * numPointsInGlyph
 		for p, x, y in zip(points, deltas_x, deltas_y):
 				if 0 <= p < numPointsInGlyph:
 					deltas[p] = (x, y)
-		return GlyphVariation(axes, deltas)
+		return TupleVariation(axes, deltas)
 
 	@staticmethod
 	def computeMinMaxCoord_(coord):
@@ -337,7 +337,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 				if isinstance(element, tuple):
 					name, attrs, content = element
 					if name == "tuple":
-						gvar = GlyphVariation({}, [None] * numPointsInGlyph)
+						gvar = TupleVariation({}, [None] * numPointsInGlyph)
 						glyphVariations.append(gvar)
 						for tupleElement in content:
 							if isinstance(tupleElement, tuple):
@@ -355,14 +355,14 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			return len(getattr(glyph, "coordinates", [])) + NUM_PHANTOM_POINTS
 
 
-class GlyphVariation(object):
+class TupleVariation(object):
 	def __init__(self, axes, coordinates):
 		self.axes = axes
 		self.coordinates = coordinates
 
 	def __repr__(self):
 		axes = ",".join(sorted(["%s=%s" % (name, value) for (name, value) in self.axes.items()]))
-		return "<GlyphVariation %s %s>" % (axes, self.coordinates)
+		return "<TupleVariation %s %s>" % (axes, self.coordinates)
 
 	def __eq__(self, other):
 		return self.coordinates == other.coordinates and self.axes == other.axes
@@ -375,9 +375,9 @@ class GlyphVariation(object):
 		return result
 
 	def hasImpact(self):
-		"""Returns True if this GlyphVariation has any visible impact.
+		"""Returns True if this TupleVariation has any visible impact.
 
-		If the result is False, the GlyphVariation can be omitted from the font
+		If the result is False, the TupleVariation can be omitted from the font
 		without making any visible difference.
 		"""
 		for c in self.coordinates:
@@ -494,7 +494,7 @@ class GlyphVariation(object):
 		result = []
 		pos = offset
 		for _ in range(numCoords):
-			coord, pos = GlyphVariation.decompileCoord_(axisTags, data, pos)
+			coord, pos = TupleVariation.decompileCoord_(axisTags, data, pos)
 			result.append(coord)
 		return result, pos
 
@@ -634,11 +634,11 @@ class GlyphVariation(object):
 		while pos < len(deltas):
 			value = deltas[pos]
 			if value == 0:
-				pos = GlyphVariation.encodeDeltaRunAsZeroes_(deltas, pos, stream)
+				pos = TupleVariation.encodeDeltaRunAsZeroes_(deltas, pos, stream)
 			elif value >= -128 and value <= 127:
-				pos = GlyphVariation.encodeDeltaRunAsBytes_(deltas, pos, stream)
+				pos = TupleVariation.encodeDeltaRunAsBytes_(deltas, pos, stream)
 			else:
-				pos = GlyphVariation.encodeDeltaRunAsWords_(deltas, pos, stream)
+				pos = TupleVariation.encodeDeltaRunAsWords_(deltas, pos, stream)
 		return stream.getvalue()
 
 	@staticmethod

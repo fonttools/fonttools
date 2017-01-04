@@ -25,7 +25,7 @@ from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._n_a_m_e import NameRecord
 from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
-from fontTools.ttLib.tables._g_v_a_r import GlyphVariation
+from fontTools.ttLib.tables._g_v_a_r import TupleVariation
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables import otBase as otBase
 from fontTools.varLib import designspace, models, builder
@@ -179,7 +179,7 @@ def _add_gvar(font, model, master_ttfs):
 		supports = model.supports
 		assert len(deltas) == len(supports)
 		for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
-			var = GlyphVariation(support, delta)
+			var = TupleVariation(support, delta)
 			gvar.variations[glyph].append(var)
 
 def _add_HVAR(font, model, master_ttfs, axisTags):

@@ -4,7 +4,7 @@ from fontTools.misc.testTools import parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib import TTLibError
-from fontTools.ttLib.tables._g_v_a_r import table__g_v_a_r, GlyphVariation
+from fontTools.ttLib.tables._g_v_a_r import table__g_v_a_r, TupleVariation
 import random
 import unittest
 
@@ -40,7 +40,7 @@ SKIA_SHARED_COORDS = deHexStr(
 	"C0 00 C0 00 40 00 C0 00 40 00 40 00 C0 00 40 00")
 
 
-class GlyphVariationTableTest(unittest.TestCase):
+class GVARTableTest(unittest.TestCase):
 	def test_compileOffsets_shortFormat(self):
 		self.assertEqual((deHexStr("00 00 00 02 FF C0"), 0),
 				 table__g_v_a_r.compileOffsets_([0, 4, 0x1ff80]))
@@ -75,9 +75,9 @@ class GlyphVariationTableTest(unittest.TestCase):
 		table = table__g_v_a_r()
 		axes = {"wght": (0.3, 0.4, 0.5), "opsz": (0.7, 0.8, 0.9)}
 		table.variations = {"glyphname": [
-			GlyphVariation(axes, [None] * 4),
-			GlyphVariation(axes, [None] * 4),
-			GlyphVariation(axes, [None] * 4)
+			TupleVariation(axes, [None] * 4),
+			TupleVariation(axes, [None] * 4),
+			TupleVariation(axes, [None] * 4)
 		]}
 		self.assertEqual(b"", table.compileGlyph_("glyphname", 8, ["wght", "opsz"], {}))
 
@@ -86,8 +86,8 @@ class GlyphVariationTableTest(unittest.TestCase):
 		axisTags = ["wght", "wdth"]
 		numPointsInGlyph = 4
 		glyphCoords = [(1,1), (2,2), (3,3), (4,4)]
-		gvar1 = GlyphVariation({"wght": (0.5, 1.0, 1.0), "wdth": (1.0, 1.0, 1.0)}, glyphCoords)
-		gvar2 = GlyphVariation({"wght": (1.0, 1.0, 1.0), "wdth": (1.0, 1.0, 1.0)}, glyphCoords)
+		gvar1 = TupleVariation({"wght": (0.5, 1.0, 1.0), "wdth": (1.0, 1.0, 1.0)}, glyphCoords)
+		gvar2 = TupleVariation({"wght": (1.0, 1.0, 1.0), "wdth": (1.0, 1.0, 1.0)}, glyphCoords)
 		table.variations = {"oslash": [gvar1, gvar2]}
 		data = table.compileGlyph_("oslash", numPointsInGlyph, axisTags, {})
 		self.assertEqual([gvar1, gvar2], table.decompileGlyph_(numPointsInGlyph, {}, axisTags, data))
@@ -97,16 +97,16 @@ class GlyphVariationTableTest(unittest.TestCase):
 		table.variations = {}
 		deltas = [None] * 4
 		table.variations["A"] = [
-			GlyphVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.5, 0.7, 1.0)}, deltas)
+			TupleVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.5, 0.7, 1.0)}, deltas)
 		]
 		table.variations["B"] = [
-			GlyphVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.2, 0.7, 1.0)}, deltas),
-			GlyphVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.2, 0.8, 1.0)}, deltas)
+			TupleVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.2, 0.7, 1.0)}, deltas),
+			TupleVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.2, 0.8, 1.0)}, deltas)
 		]
 		table.variations["C"] = [
-			GlyphVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.3, 0.7, 1.0)}, deltas),
-			GlyphVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.3, 0.8, 1.0)}, deltas),
-			GlyphVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.3, 0.9, 1.0)}, deltas)
+			TupleVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.3, 0.7, 1.0)}, deltas),
+			TupleVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.3, 0.8, 1.0)}, deltas),
+			TupleVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.3, 0.9, 1.0)}, deltas)
 		]
 		# {"wght":1.0, "wdth":0.7} is shared 3 times; {"wght":1.0, "wdth":0.8} is shared twice.
 		# Min and max values are not part of the shared coordinate pool and should get ignored.
@@ -159,41 +159,41 @@ class GlyphVariationTableTest(unittest.TestCase):
 		self.assertEqual({"wght": -0.3, "wdth": 0.0}, minCoord)
 		self.assertEqual({"wght": 0.0, "wdth": 0.7}, maxCoord)
 
-class GlyphVariationTest(unittest.TestCase):
+class TupleVariationTest(unittest.TestCase):
 	def test_equal(self):
-		gvar1 = GlyphVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
-		gvar2 = GlyphVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
+		gvar1 = TupleVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
+		gvar2 = TupleVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
 		self.assertEqual(gvar1, gvar2)
 
 	def test_equal_differentAxes(self):
-		gvar1 = GlyphVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
-		gvar2 = GlyphVariation({"wght":(0.7, 0.8, 0.9)}, [(0,0), (9,8), (7,6)])
+		gvar1 = TupleVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
+		gvar2 = TupleVariation({"wght":(0.7, 0.8, 0.9)}, [(0,0), (9,8), (7,6)])
 		self.assertNotEqual(gvar1, gvar2)
 
 	def test_equal_differentCoordinates(self):
-		gvar1 = GlyphVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
-		gvar2 = GlyphVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8)])
+		gvar1 = TupleVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
+		gvar2 = TupleVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8)])
 		self.assertNotEqual(gvar1, gvar2)
 
 	def test_hasImpact_someDeltasNotZero(self):
 		axes = {"wght":(0.0, 1.0, 1.0)}
-		gvar = GlyphVariation(axes, [(0,0), (9,8), (7,6)])
+		gvar = TupleVariation(axes, [(0,0), (9,8), (7,6)])
 		self.assertTrue(gvar.hasImpact())
 
 	def test_hasImpact_allDeltasZero(self):
 		axes = {"wght":(0.0, 1.0, 1.0)}
-		gvar = GlyphVariation(axes, [(0,0), (0,0), (0,0)])
+		gvar = TupleVariation(axes, [(0,0), (0,0), (0,0)])
 		self.assertTrue(gvar.hasImpact())
 
 	def test_hasImpact_allDeltasNone(self):
 		axes = {"wght":(0.0, 1.0, 1.0)}
-		gvar = GlyphVariation(axes, [None, None, None])
+		gvar = TupleVariation(axes, [None, None, None])
 		self.assertFalse(gvar.hasImpact())
 
 	def test_toXML(self):
 		writer = XMLWriter(BytesIO())
 		axes = {"wdth":(0.3, 0.4, 0.5), "wght":(0.0, 1.0, 1.0), "opsz":(-0.7, -0.7, 0.0)}
-		g = GlyphVariation(axes, [(9,8), None, (7,6), (0,0), (-1,-2), None])
+		g = TupleVariation(axes, [(9,8), None, (7,6), (0,0), (-1,-2), None])
 		g.toXML(writer, ["wdth", "wght", "opsz"])
 		self.assertEqual([
 			'<tuple>',
@@ -205,22 +205,22 @@ class GlyphVariationTest(unittest.TestCase):
 			  '<delta pt="3" x="0" y="0"/>',
 			  '<delta pt="4" x="-1" y="-2"/>',
 			'</tuple>'
-		], GlyphVariationTest.xml_lines(writer))
+		], TupleVariationTest.xml_lines(writer))
 
 	def test_toXML_allDeltasNone(self):
 		writer = XMLWriter(BytesIO())
 		axes = {"wght":(0.0, 1.0, 1.0)}
-		g = GlyphVariation(axes, [None] * 5)
+		g = TupleVariation(axes, [None] * 5)
 		g.toXML(writer, ["wght", "wdth"])
 		self.assertEqual([
 			'<tuple>',
 			  '<coord axis="wght" value="1.0"/>',
 			  '<!-- no deltas -->',
 			'</tuple>'
-		], GlyphVariationTest.xml_lines(writer))
+		], TupleVariationTest.xml_lines(writer))
 
 	def test_fromXML(self):
-		g = GlyphVariation({}, [None] * 4)
+		g = TupleVariation({}, [None] * 4)
 		for name, attrs, content in parseXML(
 				'<coord axis="wdth" min="0.3" value="0.4" max="0.5"/>'
 				'<coord axis="wght" value="1.0"/>'
@@ -236,7 +236,7 @@ class GlyphVariationTest(unittest.TestCase):
 		self.assertEqual([None, (33, 44), (-2, 170), None], g.coordinates)
 
 	def test_compile_sharedCoords_nonIntermediate_sharedPoints(self):
-		gvar = GlyphVariation({"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
+		gvar = TupleVariation({"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
 				      [(7,4), (8,5), (9,6)])
 		axisTags = ["wght", "wdth"]
 		sharedCoordIndices = { gvar.compileCoord(axisTags): 0x77 }
@@ -249,7 +249,7 @@ class GlyphVariationTest(unittest.TestCase):
 				 hexencode(data))
 
 	def test_compile_sharedCoords_intermediate_sharedPoints(self):
-		gvar = GlyphVariation({"wght": (0.3, 0.5, 0.7), "wdth": (0.1, 0.8, 0.9)},
+		gvar = TupleVariation({"wght": (0.3, 0.5, 0.7), "wdth": (0.1, 0.8, 0.9)},
 				      [(7,4), (8,5), (9,6)])
 		axisTags = ["wght", "wdth"]
 		sharedCoordIndices = { gvar.compileCoord(axisTags): 0x77 }
@@ -262,7 +262,7 @@ class GlyphVariationTest(unittest.TestCase):
 				 hexencode(data))
 
 	def test_compile_sharedCoords_nonIntermediate_privatePoints(self):
-		gvar = GlyphVariation({"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
+		gvar = TupleVariation({"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
 				      [(7,4), (8,5), (9,6)])
 		axisTags = ["wght", "wdth"]
 		sharedCoordIndices = { gvar.compileCoord(axisTags): 0x77 }
@@ -276,7 +276,7 @@ class GlyphVariationTest(unittest.TestCase):
 				 hexencode(data))
 
 	def test_compile_sharedCoords_intermediate_privatePoints(self):
-		gvar = GlyphVariation({"wght": (0.0, 0.5, 1.0), "wdth": (0.0, 0.8, 1.0)},
+		gvar = TupleVariation({"wght": (0.0, 0.5, 1.0), "wdth": (0.0, 0.8, 1.0)},
 				      [(7,4), (8,5), (9,6)])
 		axisTags = ["wght", "wdth"]
 		sharedCoordIndices = { gvar.compileCoord(axisTags): 0x77 }
@@ -290,7 +290,7 @@ class GlyphVariationTest(unittest.TestCase):
 				 hexencode(data))
 
 	def test_compile_embeddedCoords_nonIntermediate_sharedPoints(self):
-		gvar = GlyphVariation({"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
+		gvar = TupleVariation({"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
 				      [(7,4), (8,5), (9,6)])
 		axisTags = ["wght", "wdth"]
 		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints={0,1,2})
@@ -302,7 +302,7 @@ class GlyphVariationTest(unittest.TestCase):
 				 hexencode(data))
 
 	def test_compile_embeddedCoords_intermediate_sharedPoints(self):
-		gvar = GlyphVariation({"wght": (0.0, 0.5, 1.0), "wdth": (0.0, 0.8, 0.8)},
+		gvar = TupleVariation({"wght": (0.0, 0.5, 1.0), "wdth": (0.0, 0.8, 0.8)},
 				      [(7,4), (8,5), (9,6)])
 		axisTags = ["wght", "wdth"]
 		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints={0,1,2})
@@ -314,7 +314,7 @@ class GlyphVariationTest(unittest.TestCase):
 				 hexencode(data))
 
 	def test_compile_embeddedCoords_nonIntermediate_privatePoints(self):
-		gvar = GlyphVariation({"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
+		gvar = TupleVariation({"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
 				      [(7,4), (8,5), (9,6)])
 		axisTags = ["wght", "wdth"]
 		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints=None)
@@ -327,7 +327,7 @@ class GlyphVariationTest(unittest.TestCase):
 				 hexencode(data))
 
 	def test_compile_embeddedCoords_intermediate_privatePoints(self):
-		gvar = GlyphVariation({"wght": (0.4, 0.5, 0.6), "wdth": (0.7, 0.8, 0.9)},
+		gvar = TupleVariation({"wght": (0.4, 0.5, 0.6), "wdth": (0.7, 0.8, 0.9)},
 				      [(7,4), (8,5), (9,6)])
 		axisTags = ["wght", "wdth"]
 		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints=None)
@@ -340,33 +340,33 @@ class GlyphVariationTest(unittest.TestCase):
 				 hexencode(data))
 
 	def test_compileCoord(self):
-		gvar = GlyphVariation({"wght": (-1.0, -1.0, -1.0), "wdth": (0.4, 0.5, 0.6)}, [None] * 4)
+		gvar = TupleVariation({"wght": (-1.0, -1.0, -1.0), "wdth": (0.4, 0.5, 0.6)}, [None] * 4)
 		self.assertEqual("C0 00 20 00", hexencode(gvar.compileCoord(["wght", "wdth"])))
 		self.assertEqual("20 00 C0 00", hexencode(gvar.compileCoord(["wdth", "wght"])))
 		self.assertEqual("C0 00", hexencode(gvar.compileCoord(["wght"])))
 
 	def test_compileIntermediateCoord(self):
-		gvar = GlyphVariation({"wght": (-1.0, -1.0, 0.0), "wdth": (0.4, 0.5, 0.6)}, [None] * 4)
+		gvar = TupleVariation({"wght": (-1.0, -1.0, 0.0), "wdth": (0.4, 0.5, 0.6)}, [None] * 4)
 		self.assertEqual("C0 00 19 9A 00 00 26 66", hexencode(gvar.compileIntermediateCoord(["wght", "wdth"])))
 		self.assertEqual("19 9A C0 00 26 66 00 00", hexencode(gvar.compileIntermediateCoord(["wdth", "wght"])))
 		self.assertEqual(None, gvar.compileIntermediateCoord(["wght"]))
 		self.assertEqual("19 9A 26 66", hexencode(gvar.compileIntermediateCoord(["wdth"])))
 
 	def test_decompileCoord(self):
-		decompileCoord = GlyphVariation.decompileCoord_
+		decompileCoord = TupleVariation.decompileCoord_
 		data = deHexStr("DE AD C0 00 20 00 DE AD")
 		self.assertEqual(({"wght": -1.0, "wdth": 0.5}, 6), decompileCoord(["wght", "wdth"], data, 2))
 
 	def test_decompileCoord_roundTrip(self):
 		# Make sure we are not affected by https://github.com/behdad/fonttools/issues/286
 		data = deHexStr("7F B9 80 35")
-		values, _ = GlyphVariation.decompileCoord_(["wght", "wdth"], data, 0)
+		values, _ = TupleVariation.decompileCoord_(["wght", "wdth"], data, 0)
 		axisValues = {axis:(val, val, val) for axis, val in  values.items()}
-		gvar = GlyphVariation(axisValues, [None] * 4)
+		gvar = TupleVariation(axisValues, [None] * 4)
 		self.assertEqual("7F B9 80 35", hexencode(gvar.compileCoord(["wght", "wdth"])))
 
 	def test_decompileCoords(self):
-		decompileCoords = GlyphVariation.decompileCoords_
+		decompileCoords = TupleVariation.decompileCoords_
 		axes = ["wght", "wdth", "opsz"]
 		coords = [
 			{"wght":  1.0, "wdth": 0.0, "opsz": 0.5},
@@ -377,7 +377,7 @@ class GlyphVariationTest(unittest.TestCase):
 		self.assertEqual((coords, 20), decompileCoords(axes, numCoords=3, data=data, offset=2))
 
 	def test_compilePoints(self):
-		compilePoints = lambda p: GlyphVariation.compilePoints(set(p), numPointsInGlyph=999)
+		compilePoints = lambda p: TupleVariation.compilePoints(set(p), numPointsInGlyph=999)
 		self.assertEqual("00", hexencode(compilePoints(range(999))))  # all points in glyph
 		self.assertEqual("01 00 07", hexencode(compilePoints([7])))
 		self.assertEqual("01 80 FF FF", hexencode(compilePoints([65535])))
@@ -402,7 +402,7 @@ class GlyphVariationTest(unittest.TestCase):
 		numPointsInGlyph = 65536
 		allPoints = list(range(numPointsInGlyph))
 		def decompilePoints(data, offset):
-			points, offset = GlyphVariation.decompilePoints_(numPointsInGlyph, deHexStr(data), offset)
+			points, offset = TupleVariation.decompilePoints_(numPointsInGlyph, deHexStr(data), offset)
 			# Conversion to list needed for Python 3.
 			return (list(points), offset)
 		# all points in glyph
@@ -439,15 +439,15 @@ class GlyphVariationTest(unittest.TestCase):
 		    0)[0]))
 
 	def test_decompilePoints_shouldAcceptBadPointNumbers(self):
-		decompilePoints = GlyphVariation.decompilePoints_
+		decompilePoints = TupleVariation.decompilePoints_
 		# 2 points; first run: [3, 9].
 		numPointsInGlyph = 8
 		decompilePoints(numPointsInGlyph, deHexStr("02 01 03 06"), 0)
 
 	def test_decompilePoints_roundTrip(self):
 		numPointsInGlyph = 500  # greater than 255, so we also exercise code path for 16-bit encoding
-		compile = lambda points: GlyphVariation.compilePoints(points, numPointsInGlyph)
-		decompile = lambda data: set(GlyphVariation.decompilePoints_(numPointsInGlyph, data, 0)[0])
+		compile = lambda points: TupleVariation.compilePoints(points, numPointsInGlyph)
+		decompile = lambda data: set(TupleVariation.decompilePoints_(numPointsInGlyph, data, 0)[0])
 		for i in range(50):
 			points = set(random.sample(range(numPointsInGlyph), 30))
 			self.assertSetEqual(points, decompile(compile(points)),
@@ -456,13 +456,13 @@ class GlyphVariationTest(unittest.TestCase):
 		self.assertSetEqual(allPoints, decompile(compile(allPoints)))
 
 	def test_compileDeltas(self):
-		gvar = GlyphVariation({}, [(0,0), (1, 0), (2, 0), (3, 3)])
+		gvar = TupleVariation({}, [(0,0), (1, 0), (2, 0), (3, 3)])
 		points = {1, 2}
 		# deltaX for points: [1, 2]; deltaY for points: [0, 0]
 		self.assertEqual("01 01 02 81", hexencode(gvar.compileDeltas(points)))
 
 	def test_compileDeltaValues(self):
-		compileDeltaValues = lambda values: hexencode(GlyphVariation.compileDeltaValues_(values))
+		compileDeltaValues = lambda values: hexencode(TupleVariation.compileDeltaValues_(values))
 		# zeroes
 		self.assertEqual("80", compileDeltaValues([0]))
 		self.assertEqual("BF", compileDeltaValues([0] * 64))
@@ -503,7 +503,7 @@ class GlyphVariationTest(unittest.TestCase):
 		self.assertEqual("40 66 66 81", compileDeltaValues([0x6666, 0, 0]))
 
 	def test_decompileDeltas(self):
-		decompileDeltas = GlyphVariation.decompileDeltas_
+		decompileDeltas = TupleVariation.decompileDeltas_
 		# 83 = zero values (0x80), count = 4 (1 + 0x83 & 0x3F)
 		self.assertEqual(([0, 0, 0, 0], 1), decompileDeltas(4, deHexStr("83"), 0))
 		# 41 01 02 FF FF = signed 16-bit values (0x40), count = 2 (1 + 0x41 & 0x3F)
@@ -516,8 +516,8 @@ class GlyphVariationTest(unittest.TestCase):
 
 	def test_decompileDeltas_roundTrip(self):
 		numDeltas = 30
-		compile = GlyphVariation.compileDeltaValues_
-		decompile = lambda data: GlyphVariation.decompileDeltas_(numDeltas, data, 0)[0]
+		compile = TupleVariation.compileDeltaValues_
+		decompile = lambda data: TupleVariation.decompileDeltas_(numDeltas, data, 0)[0]
 		for i in range(50):
 			deltas = random.sample(range(-128, 127), 10)
 			deltas.extend(random.sample(range(-32768, 32767), 10))
@@ -526,7 +526,7 @@ class GlyphVariationTest(unittest.TestCase):
 			self.assertListEqual(deltas, decompile(compile(deltas)))
 
 	def test_getTupleSize(self):
-		getTupleSize = GlyphVariation.getTupleSize_
+		getTupleSize = TupleVariation.getTupleSize_
 		numAxes = 3
 		self.assertEqual(4 + numAxes * 2, getTupleSize(0x8042, numAxes))
 		self.assertEqual(4 + numAxes * 4, getTupleSize(0x4077, numAxes))

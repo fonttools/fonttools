@@ -26,7 +26,7 @@ from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._n_a_m_e import NameRecord
 from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis, NamedInstance
-from fontTools.ttLib.tables._g_v_a_r import table__g_v_a_r, GlyphVariation
+from fontTools.ttLib.tables._g_v_a_r import table__g_v_a_r, TupleVariation
 import logging
 
 
@@ -89,8 +89,8 @@ def AddGlyphVariations(font, thin, regular, black):
                 zip(regularCoord, blackCoord, thinCoord):
             thinDelta.append(((thinX - regX, thinY - regY)))
             blackDelta.append((blackX - regX, blackY - regY))
-        thinVar = GlyphVariation({"wght": (-1.0, -1.0, 0.0)}, thinDelta)
-        blackVar = GlyphVariation({"wght": (0.0, 1.0, 1.0)}, blackDelta)
+        thinVar = TupleVariation({"wght": (-1.0, -1.0, 0.0)}, thinDelta)
+        blackVar = TupleVariation({"wght": (0.0, 1.0, 1.0)}, blackDelta)
         gvar.variations[glyphName] = [thinVar, blackVar]
 
 
