@@ -12,6 +12,7 @@ include tox.ini
 include run-tests.sh
 
 recursive-include Lib/fontTools testdata/*.ttx testdata/*.otx testdata/*.fea
+recursive-include Lib/fontTools testdata/*.feax
 recursive-include Lib/fontTools testdata/*.txt testdata/*.ttx.*
 recursive-include Lib/fontTools testdata/mti/*.txt testdata/mti/*.ttx.*
 recursive-include Lib/fontTools testdata/mti/*.ttx testdata/mti/README
