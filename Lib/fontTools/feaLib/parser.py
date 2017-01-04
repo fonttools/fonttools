@@ -82,8 +82,8 @@ class Parser(object):
                     self.cur_token_location_)
             self.expect_symbol_(">")
             return self.ast.Anchor(location, name, anchordef.x, anchordef.y,
-                              anchordef.contourpoint,
-                              xDeviceTable=None, yDeviceTable=None)
+                                   anchordef.contourpoint,
+                                   xDeviceTable=None, yDeviceTable=None)
 
         x, y = self.expect_number_(), self.expect_number_()
 
@@ -100,7 +100,7 @@ class Parser(object):
 
         self.expect_symbol_(">")
         return self.ast.Anchor(location, None, x, y, contourpoint,
-                          xDeviceTable, yDeviceTable)
+                               xDeviceTable, yDeviceTable)
 
     def parse_anchor_marks_(self):
         """Parses a sequence of [<anchor> mark @MARKCLASS]*."""
@@ -179,7 +179,7 @@ class Parser(object):
             componentGlyphs = None
         self.expect_symbol_(";")
         return self.ast.GlyphClassDefStatement(location, baseGlyphs, markGlyphs,
-                                          ligatureGlyphs, componentGlyphs)
+                                               ligatureGlyphs, componentGlyphs)
 
     def parse_glyphclass_definition_(self):
         """Parses glyph class definitions such as '@UPPERCASE = [A-Z];'"""
@@ -358,7 +358,7 @@ class Parser(object):
             required = True
         self.expect_symbol_(";")
         return self.ast.LanguageStatement(location, language,
-                                     include_default, required)
+                                          include_default, required)
 
     def parse_ligatureCaretByIndex_(self):
         assert self.is_cur_keyword_("LigatureCaretByIndex")
@@ -439,7 +439,7 @@ class Parser(object):
                     self.next_token_location_)
         self.expect_symbol_(";")
         return self.ast.LookupFlagStatement(location, value,
-                                       markAttachment, markFilteringSet)
+                                            markAttachment, markFilteringSet)
 
     def parse_markClass_(self):
         assert self.is_cur_keyword_("markClass")
@@ -495,7 +495,7 @@ class Parser(object):
             raise FeatureLibError(
                 '"enumerate" is only allowed with pair positionings', location)
         return self.ast.SinglePosStatement(location, list(zip(glyphs, values)),
-                                      prefix, suffix, forceChain=hasMarks)
+                                           prefix, suffix, forceChain=hasMarks)
 
     def parse_position_cursive_(self, enumerated, vertical):
         location = self.cur_token_location_
@@ -701,14 +701,14 @@ class Parser(object):
 
         self.expect_symbol_(";")
         return self.ast.SizeParameters(location, DesignSize, SubfamilyID,
-                                  RangeStart, RangeEnd)
+                                       RangeStart, RangeEnd)
 
     def parse_size_menuname_(self):
         assert self.is_cur_keyword_("sizemenuname")
         location = self.cur_token_location_
         platformID, platEncID, langID, string = self.parse_name_()
         return self.ast.FeatureNameStatement(location, "size", platformID,
-                                        platEncID, langID, string)
+                                             platEncID, langID, string)
 
     def parse_table_(self):
         assert self.is_cur_keyword_("table")
@@ -856,7 +856,7 @@ class Parser(object):
 
         platformID, platEncID, langID, string = self.parse_name_()
         return self.ast.NameRecord(location, nameID, platformID, platEncID,
-                              langID, string)
+                                   langID, string)
 
     def unescape_mac_name_string(self, string):
         def unescape(match):
@@ -884,14 +884,14 @@ class Parser(object):
                 horiz_scripts = self.parse_base_script_list_(len(horiz_bases))
                 statements.append(
                         self.ast.BaseAxis(self.cur_token_location_, horiz_bases,
-                                     horiz_scripts, False))
+                                          horiz_scripts, False))
             elif self.is_cur_keyword_("VertAxis.BaseTagList"):
                 vert_bases = self.parse_base_tag_list_()
             elif self.is_cur_keyword_("VertAxis.BaseScriptList"):
                 vert_scripts = self.parse_base_script_list_(len(vert_bases))
                 statements.append(
                         self.ast.BaseAxis(self.cur_token_location_, vert_bases,
-                                     vert_scripts, True))
+                                          vert_scripts, True))
             elif self.cur_token_ == ";":
                 continue
 
@@ -971,10 +971,10 @@ class Parser(object):
             number, location = self.expect_number_(), self.cur_token_location_
             if vertical:
                 val = self.ast.ValueRecord(location, vertical, 0, 0, 0, number,
-                                      None, None, None, None)
+                                           None, None, None, None)
             else:
                 val = self.ast.ValueRecord(location, vertical, 0, 0, number, 0,
-                                      None, None, None, None)
+                                           None, None, None, None)
             return val
         self.expect_symbol_("<")
         location = self.cur_token_location_
@@ -1081,7 +1081,7 @@ class Parser(object):
             platformID, platEncID, langID, string = self.parse_name_()
             statements.append(
                     self.ast.FeatureNameStatement(location, tag, platformID,
-                                             platEncID, langID, string))
+                                                  platEncID, langID, string))
 
         self.expect_symbol_("}")
 
