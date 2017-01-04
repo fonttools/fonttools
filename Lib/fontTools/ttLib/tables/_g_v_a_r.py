@@ -142,8 +142,11 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		for gvar in variations:
 			privateTuple, privateData = gvar.compile(axisTags, sharedCoordIndices, sharedPoints=None)
 			sharedTuple, sharedData = gvar.compile(axisTags, sharedCoordIndices, sharedPoints=allPoints)
-			# TODO: If we use shared points, Apple MacOS X 10.9.5 cannot display our fonts.
-			# This is probably a problem with our code; find the problem and fix it.
+			# TODO: Apple macOS 10.9.5 (maybe also earlier) up to 10.12 had a bug
+			# that broke variations if the `gvar` table contains shared tuples.
+			# Apple will likely fix this in macOS 10.13. But for the time being,
+			# we never emit shared points although the result would be more compact.
+			# https://rawgit.com/unicode-org/text-rendering-tests/master/reports/CoreText.html#GVAR-1
 			#if (len(sharedTuple) + len(sharedData)) < (len(privateTuple) + len(privateData)):
 			if False:
 				tuples.append(sharedTuple)
