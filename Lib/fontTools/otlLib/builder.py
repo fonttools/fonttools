@@ -590,9 +590,8 @@ class ClassDefBuilder(object):
 
     def canAdd(self, glyphs):
         if isinstance(glyphs, (set, frozenset)):
-            glyphs = tuple(sorted(glyphs))
-        elif not isinstance(glyphs, tuple):
-            glyphs = tuple(glyphs)
+            glyphs = sorted(glyphs)
+        glyphs = tuple(glyphs)
         if glyphs in self.classes_:
             return True
         for glyph in glyphs:
@@ -602,9 +601,8 @@ class ClassDefBuilder(object):
 
     def add(self, glyphs):
         if isinstance(glyphs, (set, frozenset)):
-            glyphs = tuple(sorted(glyphs))
-        elif not isinstance(glyphs, tuple):
-            glyphs = tuple(glyphs)
+            glyphs = sorted(glyphs)
+        glyphs = tuple(glyphs)
         if glyphs in self.classes_:
             return
         self.classes_.add(glyphs)
