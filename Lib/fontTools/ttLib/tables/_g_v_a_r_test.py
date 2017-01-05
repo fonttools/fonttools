@@ -151,12 +151,6 @@ class GVARTableTest(unittest.TestCase):
 		table = table__g_v_a_r()
 		self.assertEqual([], table.decompileGlyph_(numPointsInGlyph=5, sharedCoords=[], axisTags=[], data=b""))
 
-	def test_computeMinMaxCord(self):
-		coord = {"wght": -0.3, "wdth": 0.7}
-		minCoord, maxCoord = table__g_v_a_r.computeMinMaxCoord_(coord)
-		self.assertEqual({"wght": -0.3, "wdth": 0.0}, minCoord)
-		self.assertEqual({"wght": 0.0, "wdth": 0.7}, maxCoord)
-
 
 if __name__ == "__main__":
 	unittest.main()

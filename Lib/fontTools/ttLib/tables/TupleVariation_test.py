@@ -1,10 +1,12 @@
-from __future__ import print_function, division, absolute_import, unicode_literals
+from __future__ import \
+	print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.misc.testTools import parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
-from fontTools.ttLib.tables.TupleVariation import log, TupleVariation
+from fontTools.ttLib.tables.TupleVariation import \
+	log, TupleVariation, inferRegion_
 import random
 import unittest
 
@@ -15,9 +17,9 @@ def hexencode(s):
 
 
 AXES = {
-	"wdth":(0.3, 0.4, 0.5),
-	"wght":(0.0, 1.0, 1.0),
-	"opsz":(-0.7, -0.7, 0.0)
+	"wdth": (0.3, 0.4, 0.5),
+	"wght": (0.0, 1.0, 1.0),
+	"opsz": (-0.7, -0.7, 0.0)
 }
 
 
@@ -442,6 +444,11 @@ class TupleVariationTest(unittest.TestCase):
 		self.assertEqual(4 + numAxes * 4, getTupleSize(0x4077, numAxes))
 		self.assertEqual(4, getTupleSize(0x2077, numAxes))
 		self.assertEqual(4, getTupleSize(11, numAxes))
+
+	def test_inferRegion(self):
+		start, end = inferRegion_({"wght": -0.3, "wdth": 0.7})
+		self.assertEqual(start, {"wght": -0.3, "wdth": 0.0})
+		self.assertEqual(end, {"wght": 0.0, "wdth": 0.7})
 
 	@staticmethod
 	def xml_lines(writer):

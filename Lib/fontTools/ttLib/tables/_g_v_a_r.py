@@ -270,7 +270,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			minCoord, pos = TupleVariation.decompileCoord_(axisTags, data, pos)
 			maxCoord, pos = TupleVariation.decompileCoord_(axisTags, data, pos)
 		else:
-			minCoord, maxCoord = table__g_v_a_r.computeMinMaxCoord_(coord)
+			minCoord, maxCoord = tv.inferRegion_(coord)
 		axes = {}
 		for axis in axisTags:
 			coords = minCoord[axis], coord[axis], maxCoord[axis]
@@ -288,15 +288,6 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 				if 0 <= p < numPointsInGlyph:
 					deltas[p] = (x, y)
 		return TupleVariation(axes, deltas)
-
-	@staticmethod
-	def computeMinMaxCoord_(coord):
-		minCoord = {}
-		maxCoord = {}
-		for (axis, value) in coord.items():
-			minCoord[axis] = min(value, 0.0)  # -0.3 --> -0.3; 0.7 --> 0.0
-			maxCoord[axis] = max(value, 0.0)  # -0.3 -->  0.0; 0.7 --> 0.7
-		return (minCoord, maxCoord)
 
 	def toXML(self, writer, ttFont, progress=None):
 		writer.simpletag("version", value=self.version)
