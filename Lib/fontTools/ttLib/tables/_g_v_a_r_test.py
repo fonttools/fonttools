@@ -1,14 +1,19 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.misc.textTools import deHexStr, hexStr
-from fontTools.ttLib import TTLibError
+from fontTools.ttLib import TTLibError, getTableModule
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables._g_v_a_r import table__g_v_a_r
 import unittest
 
+
+gvar = getTableModule("gvar")
+
+
 def hexencode(s):
 	h = hexStr(s).upper()
 	return ' '.join([h[i:i+2] for i in range(0, len(h), 2)])
+
 
 # Glyph variation table of uppercase I in the Skia font, as printed in Apple's
 # TrueType spec. The actual Skia font uses a different table for uppercase I.
@@ -32,8 +37,8 @@ SKIA_GVAR_I = deHexStr(
 	"01 84 91 00 80 06 07 08 08 08 08 0A 07 80 03 FE "
 	"FF FF FF 81 00 08 81 82 02 EE EE EE 8B 6D 00")
 
-# Shared coordinates in the Skia font, as printed in Apple's TrueType spec.
-SKIA_SHARED_COORDS = deHexStr(
+# Shared tuples in the Skia font, as printed in Apple's TrueType spec.
+SKIA_SHARED_TUPLES = deHexStr(
 	"40 00 00 00 C0 00 00 00 00 00 40 00 00 00 C0 00 "
 	"C0 00 C0 00 40 00 C0 00 40 00 40 00 C0 00 40 00")
 
@@ -111,12 +116,11 @@ class GVARTableTest(unittest.TestCase):
 		result = table.compileSharedCoords_(["wght", "wdth"])
 		self.assertEqual(["40 00 2C CD", "40 00 33 33"], [hexencode(c) for c in result])
 
-	def test_decompileSharedCoords_Skia(self):
-		table = table__g_v_a_r()
-		table.offsetToSharedTuples = 0
-		table.sharedTupleCount = 8
-		sharedCoords = table.decompileSharedCoords_(["wght", "wdth"], SKIA_SHARED_COORDS)
-		self.assertEqual([
+	def test_decompileSharedTuples_Skia(self):
+		sharedCoords = gvar.decompileSharedTuples_(
+            axisTags=["wght", "wdth"], sharedTupleCount=8,
+            data=SKIA_SHARED_TUPLES, offset=0)
+		self.assertEqual(sharedCoords, [
 			{"wght": 1.0, "wdth": 0.0},
 			{"wght": -1.0, "wdth": 0.0},
 			{"wght": 0.0, "wdth": 1.0},
@@ -125,13 +129,10 @@ class GVARTableTest(unittest.TestCase):
 			{"wght": 1.0, "wdth": -1.0},
 			{"wght": 1.0, "wdth": 1.0},
 			{"wght": -1.0, "wdth": 1.0}
-		], sharedCoords)
+		])
 
-	def test_decompileSharedCoords_empty(self):
-		table = table__g_v_a_r()
-		table.offsetToSharedTuples = 0
-		table.sharedTupleCount = 0
-		self.assertEqual([], table.decompileSharedCoords_(["wght"], b""))
+	def test_decompileSharedTuples_empty(self):
+		self.assertEqual(gvar.decompileSharedTuples_(["wght"], 0, b"", 0), [])
 
 	def test_decompileGlyph_Skia_I(self):
 		axes = ["wght", "wdth"]
@@ -139,8 +140,10 @@ class GVARTableTest(unittest.TestCase):
 		table.offsetToSharedTuples = 0
 		table.sharedTupleCount = 8
 		table.axisCount = len(axes)
-		sharedCoords = table.decompileSharedCoords_(axes, SKIA_SHARED_COORDS)
-		tuples = table.decompileGlyph_(18, sharedCoords, axes, SKIA_GVAR_I)
+		sharedTuples = gvar.decompileSharedTuples_(
+			axisTags=axes, sharedTupleCount=8,
+			data=SKIA_SHARED_TUPLES, offset=0)
+		tuples = table.decompileGlyph_(18, sharedTuples, axes, SKIA_GVAR_I)
 		self.assertEqual(8, len(tuples))
 		self.assertEqual({"wght": (0.0, 1.0, 1.0)}, tuples[0].axes)
 		self.assertEqual("257,0 -127,0 -128,58 -130,90 -130,62 -130,67 -130,32 -127,0 257,0 "
