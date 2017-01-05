@@ -273,17 +273,6 @@ class TupleVariationTest(unittest.TestCase):
 		gvar = TupleVariation(axisValues, [None] * 4)
 		self.assertEqual("7F B9 80 35", hexencode(gvar.compileCoord(["wght", "wdth"])))
 
-	def test_decompileCoords(self):
-		decompileCoords = TupleVariation.decompileCoords_
-		axes = ["wght", "wdth", "opsz"]
-		coords = [
-			{"wght":  1.0, "wdth": 0.0, "opsz": 0.5},
-			{"wght": -1.0, "wdth": 0.0, "opsz": 0.25},
-			{"wght":  0.0, "wdth": -1.0, "opsz": 1.0}
-		]
-		data = deHexStr("DE AD 40 00 00 00 20 00 C0 00 00 00 10 00 00 00 C0 00 40 00")
-		self.assertEqual((coords, 20), decompileCoords(axes, numCoords=3, data=data, offset=2))
-
 	def test_compilePoints(self):
 		compilePoints = lambda p: TupleVariation.compilePoints(set(p), numPointsInGlyph=999)
 		self.assertEqual("00", hexencode(compilePoints(range(999))))  # all points in glyph

@@ -177,15 +177,6 @@ class TupleVariation(object):
 		return coord, pos
 
 	@staticmethod
-	def decompileCoords_(axisTags, numCoords, data, offset):
-		result = []
-		pos = offset
-		for _ in range(numCoords):
-			coord, pos = TupleVariation.decompileCoord_(axisTags, data, pos)
-			result.append(coord)
-		return result, pos
-
-	@staticmethod
 	def compilePoints(points, numPointsInGlyph):
 		# If the set consists of all points in the glyph, it gets encoded with
 		# a special encoding: a single zero byte.
