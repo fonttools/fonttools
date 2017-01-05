@@ -244,8 +244,9 @@ class TupleVariation(object):
 		return bytesjoin(result)
 
 	@staticmethod
-	def decompilePoints_(numPointsInGlyph, data, offset):
-		"""(numPointsInGlyph, data, offset) --> ([point1, point2, ...], newOffset)"""
+	def decompilePoints_(numPoints, data, offset, tableTag):
+		"""(numPoints, data, offset, tableTag) --> ([point1, point2, ...], newOffset)"""
+		assert tableTag in ('cvar', 'gvar')
 		pos = offset
 		numPointsInData = byteord(data[pos])
 		pos += 1
@@ -253,7 +254,7 @@ class TupleVariation(object):
 			numPointsInData = (numPointsInData & POINT_RUN_COUNT_MASK) << 8 | byteord(data[pos])
 			pos += 1
 		if numPointsInData == 0:
-			return (range(numPointsInGlyph), pos)
+			return (range(numPoints), pos)
 
 		result = []
 		while len(result) < numPointsInData:
@@ -285,8 +286,10 @@ class TupleVariation(object):
 		result = absolute
 		del absolute
 
-		if max(result) >= numPointsInGlyph or min(result) < 0:
-			log.warning("point number out of range in 'gvar' table")
+		badPoints = {str(p) for p in result if p < 0 or p >= numPoints}
+		if badPoints:
+			log.warning("point %s out of range in '%s' table" %
+			            (",".join(sorted(badPoints)), tableTag))
 		return (result, pos)
 
 	def compileDeltas(self, points):

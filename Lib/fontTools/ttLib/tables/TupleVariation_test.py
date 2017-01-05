@@ -308,7 +308,7 @@ class TupleVariationTest(unittest.TestCase):
 		numPointsInGlyph = 65536
 		allPoints = list(range(numPointsInGlyph))
 		def decompilePoints(data, offset):
-			points, offset = TupleVariation.decompilePoints_(numPointsInGlyph, deHexStr(data), offset)
+			points, offset = TupleVariation.decompilePoints_(numPointsInGlyph, deHexStr(data), offset, "gvar")
 			# Conversion to list needed for Python 3.
 			return (list(points), offset)
 		# all points in glyph
@@ -348,12 +348,16 @@ class TupleVariationTest(unittest.TestCase):
 		decompilePoints = TupleVariation.decompilePoints_
 		# 2 points; first run: [3, 9].
 		numPointsInGlyph = 8
-		decompilePoints(numPointsInGlyph, deHexStr("02 01 03 06"), 0)
+		with CapturingLogHandler(log, "WARNING") as captor:
+			decompilePoints(numPointsInGlyph,
+			                deHexStr("02 01 03 06"), 0, "cvar")
+		self.assertIn("point 9 out of range in 'cvar' table",
+		              [r.msg for r in captor.records])
 
 	def test_decompilePoints_roundTrip(self):
 		numPointsInGlyph = 500  # greater than 255, so we also exercise code path for 16-bit encoding
 		compile = lambda points: TupleVariation.compilePoints(points, numPointsInGlyph)
-		decompile = lambda data: set(TupleVariation.decompilePoints_(numPointsInGlyph, data, 0)[0])
+		decompile = lambda data: set(TupleVariation.decompilePoints_(numPointsInGlyph, data, 0, "gvar")[0])
 		for i in range(50):
 			points = set(random.sample(range(numPointsInGlyph), 30))
 			self.assertSetEqual(points, decompile(compile(points)),

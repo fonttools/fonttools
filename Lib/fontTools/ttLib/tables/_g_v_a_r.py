@@ -244,7 +244,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		pos = 4
 		dataPos = offsetToData
 		if (flags & TUPLES_SHARE_POINT_NUMBERS) != 0:
-			sharedPoints, dataPos = TupleVariation.decompilePoints_(numPointsInGlyph, data, dataPos)
+			sharedPoints, dataPos = TupleVariation.decompilePoints_(numPointsInGlyph, data, dataPos, "gvar")
 		else:
 			sharedPoints = []
 		for _ in range(flags & TUPLE_COUNT_MASK):
@@ -278,7 +278,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 				axes[axis] = coords
 		pos = 0
 		if (flags & tv.PRIVATE_POINT_NUMBERS) != 0:
-			points, pos = TupleVariation.decompilePoints_(numPointsInGlyph, tupleData, pos)
+			points, pos = TupleVariation.decompilePoints_(numPointsInGlyph, tupleData, pos, "gvar")
 		else:
 			points = sharedPoints
 		deltas_x, pos = TupleVariation.decompileDeltas_(len(points), tupleData, pos)
