@@ -327,7 +327,7 @@ def _merge_OTL(font, model, master_fonts, axisTags, base_idx):
 	GDEF.VarStore = store
 
 
-def build(designspace_filename, master_finder=lambda s:s, axisMap=None, build_HVAR=False):
+def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	"""
 	Build variation font from a designspace file.
 
@@ -420,10 +420,7 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None, build_HV
 	print("Building variations tables")
 	if 'glyf' in gx:
 		_add_gvar(gx, model, master_fonts)
-	if build_HVAR or 'glyf' not in gx:
-		# HVAR generation is currently disabled for TTF because of
-		# https://github.com/fonttools/fonttools/issues/705
-		_add_HVAR(gx, model, master_fonts, axisTags)
+	_add_HVAR(gx, model, master_fonts, axisTags)
 	_merge_OTL(gx, model, master_fonts, axisTags, base_idx)
 
 	return gx, model, master_ttfs
@@ -433,14 +430,13 @@ def main(args=None):
 
 	parser = ArgumentParser(prog='varLib')
 	parser.add_argument('designspace')
-	parser.add_argument('--build-HVAR', action='store_true')
 	options = parser.parse_args(args)
 
 	designspace_filename = options.designspace
 	finder = lambda s: s.replace('master_ufo', 'master_ttf_interpolatable').replace('.ufo', '.ttf')
 	outfile = os.path.splitext(designspace_filename)[0] + '-VF.ttf'
 
-	gx, model, master_ttfs = build(designspace_filename, finder, build_HVAR=options.build_HVAR)
+	gx, model, master_ttfs = build(designspace_filename, finder)
 
 	print("Saving variation font", outfile)
 	gx.save(outfile)
