@@ -112,7 +112,6 @@ def evaluateRule(rule, location):
      """
     for cd in rule.conditions:
         if not cd['name'] in location:
-            #print("skipping", cd['name'])
             continue
         if cd.get('minimum') is None:
             if not location[cd['name']] <= cd['maximum']:
@@ -902,6 +901,22 @@ class DesignSpaceDocument(object):
                 self.defaultLoc = self.default.location
         self.default.copyInfo = True
 
+    def _prepAxesForBender(self):
+        """
+            Make the axis data we have available in
+        """
+        benderAxes = {}
+        for axisDescriptor in self.axes:
+            d = {
+                'name': axisDescriptor.name,
+                'tag': axisDescriptor.tag,
+                'minimum': axisDescriptor.minimum,
+                'maximum': axisDescriptor.maximum,
+                'default': axisDescriptor.default,
+                'map': axisDescriptor.map,
+            }
+            benderAxes[axisDescriptor.name] = d
+        return benderAxes
 
     def checkAxes(self, overwrite=False):
         """
@@ -1023,6 +1038,23 @@ class DesignSpaceDocument(object):
             rule.conditions = newConditions
 
 
+def rulesToFeature(doc, whiteSpace="\t", newLine="\n"):
+    """ Showing how rules could be expressed as FDK feature text.
+        Speculative. Experimental.
+    """
+    axisNames = {axis.name: axis.tag for axis in doc.axes}
+    axisDims = {axis.tag: (axis.minimum, axis.maximum) for axis in doc.axes}
+    text = []
+    for rule in doc.rules:
+        text.append("rule %s{"%rule.name)
+        for cd in rule.conditions:
+            axisTag = axisNames.get(cd.get('name'), "****")
+            axisMinimum = cd.get('minimum', axisDims.get(axisTag, [0,0])[0])
+            axisMaximum = cd.get('maximum', axisDims.get(axisTag, [0,0])[1])
+            text.append("%s%s %f %f;"%(whiteSpace, axisTag, axisMinimum, axisMaximum))
+        text.append("} %s;"%rule.name)
+    return newLine.join(text)
+
 if __name__ == "__main__":
 
     def __removeAxesFromDesignSpace(path):
@@ -1037,12 +1069,6 @@ if __name__ == "__main__":
         f = open(path, 'w')
         f.write(n)
         f.close()
-
-    # print(tagForAxisName('weight'))
-    # print(tagForAxisName('width'))
-    # print(tagForAxisName('Optical'))
-    # print(tagForAxisName('Poids'))
-    # print(tagForAxisName('wt'))
 
     def test():
         """
@@ -1428,6 +1454,21 @@ if __name__ == "__main__":
         >>> testDocPath2 = os.path.join(os.getcwd(), "testRules_roundtrip.designspace")
         >>> doc = DesignSpaceDocument()
         >>> # write some axes
+        >>> a1 = AxisDescriptor()
+        >>> a1.tag = "taga"
+        >>> a1.name = "aaaa"
+        >>> a1.minimum = 0
+        >>> a1.maximum = 1000
+        >>> a1.default = 0
+        >>> doc.addAxis(a1)
+        >>> a2 = AxisDescriptor()
+        >>> a2.tag = "tagb"
+        >>> a2.name = "bbbb"
+        >>> a2.minimum = 0
+        >>> a2.maximum = 3000
+        >>> a2.default = 0
+        >>> doc.addAxis(a2)
+
         >>> r1 = RuleDescriptor()
         >>> r1.name = "named.rule.1"
         >>> r1.conditions.append(dict(name='aaaa', minimum=0, maximum=1000))
@@ -1458,6 +1499,13 @@ if __name__ == "__main__":
         ['a.alt', 'b', 'c']
         >>> processRules([r1], dict(aaaa = 2000), ["a", "b", "c"])
         ['a', 'b', 'c']
+
+        >>> r = rulesToFeature(doc)
+        >>> str(r)
+        'rule named.rule.1 {
+            taga 0.000000 1000.000000;
+            tagb 0.000000 3000.000000;
+        }named.rule.1;'
 
         >>> # rule with only a maximum
         >>> r2 = RuleDescriptor()
@@ -1515,6 +1563,9 @@ if __name__ == "__main__":
         >>> b1.tag = "bbbb"
         >>> doc.addAxis(a1)
         >>> doc.addAxis(b1)
+        >>> doc._prepAxesForBender()
+        {'aaaa': {'map': [], 'name': 'aaaa', 'default': 0, 'minimum': 0, 'maximum': 1000, 'tag': 'aaaa'}, 'bbbb': {'map': [], 'name': 'bbbb', 'default': 2000, 'minimum': 2000, 'maximum': 3000, 'tag': 'bbbb'}}
+
 
         >>> doc.rules[0].conditions
         [{'minimum': 0, 'maximum': 1000, 'name': 'aaaa'}, {'minimum': 0, 'maximum': 3000, 'name': 'bbbb'}]
@@ -1533,7 +1584,7 @@ if __name__ == "__main__":
 
         >>> new.read(testDocPath)
         >>> len(new.axes)
-        2
+        4
         >>> len(new.rules)
         1
         >>> new.write(testDocPath2)

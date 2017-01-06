@@ -23,8 +23,6 @@ from mutatorMath.objects.mutator import buildMutator
 from mutatorMath.objects.location import biasFromLocations, Location
 import os
 
-#print("ufoProcessor reloads")
-
 """
 
     Swap the contents of two glyphs.
@@ -147,6 +145,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
         self._glyphMutators = {}
         self._infoMutator = None
         self._kerningMutator = None
+        self._preppedAxes = None
         self.fonts = {}
         self.glyphNames = []     # list of all glyphnames
         self.processRules = True
@@ -154,7 +153,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
     def generateUFO(self, processRules=True):
         # makes the instances
         # option to execute the rules
-        self.checkAxes()
+        #self.checkAxes()
         self.checkDefault()
         self.loadFonts()
         for instanceDescriptor in self.instances:
@@ -174,7 +173,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
             loc = Location(sourceDescriptor.location)
             sourceFont = self.fonts[sourceDescriptor.name]
             infoItems.append((loc, self.mathInfoClass(sourceFont.info)))
-        bias, self._infoMutator = buildMutator(infoItems, bias=self.defaultLoc)
+        bias, self._infoMutator = buildMutator(infoItems, axes=self._preppedAxes, bias=self.defaultLoc)
         return self._infoMutator
 
     def getKerningMutator(self):
@@ -186,7 +185,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
             loc = Location(sourceDescriptor.location)
             sourceFont = self.fonts[sourceDescriptor.name]
             kerningItems.append((loc, self.mathKerningClass(sourceFont.kerning, sourceFont.groups)))
-        bias, self._kerningMutator = buildMutator(kerningItems, bias=self.defaultLoc)
+        bias, self._kerningMutator = buildMutator(kerningItems, axes=self._preppedAxes, bias=self.defaultLoc)
         return self._kerningMutator
 
     def getGlyphMutator(self, glyphName):
@@ -203,7 +202,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
                 # log this>
                 continue
             items.append((loc, self.mathGlyphClass(f[glyphName])))
-        bias, self._glyphMutators[glyphName] = buildMutator(items, bias=self.defaultLoc)
+        bias, self._glyphMutators[glyphName] = buildMutator(items, axes=self._preppedAxes, bias=self.defaultLoc)
         return self._glyphMutators[glyphName]
 
     def loadFonts(self):
@@ -218,6 +217,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
     def makeInstance(self, instanceDescriptor, doRules=False):
         """ Generate a font object for this instance """
         font = self._instantiateFont(None)
+        self._preppedAxes = self._prepAxesForBender()
         # make fonty things here
         loc = Location(instanceDescriptor.location)
         # make the kerning
@@ -300,7 +300,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
                     sourceGlyph = MathGlyph(m[sourceGlyphName])
                     sourceGlyphLocation = Location(glyphMaster.get("location"))
                     items.append((sourceGlyphLocation, sourceGlyph))
-                bias, glyphMutator = buildMutator(items, bias=self.defaultLoc)
+                bias, glyphMutator = buildMutator(items, axes=self._preppedAxes, bias=self.defaultLoc)
             try:
                 glyphInstanceObject = glyphMutator.makeInstance(glyphInstanceLocation)
             except IndexError:
@@ -395,6 +395,9 @@ class DesignSpaceProcessor(DesignSpaceDocument):
             if copy:
                 value = getattr(sourceInfo, infoAttribute)
                 setattr(targetInfo, infoAttribute, value)
+
+
+
 
 
 if __name__ == "__main__":
