@@ -32,7 +32,10 @@ from fontTools.varLib import designspace, models, builder
 from fontTools.varLib.merger import merge_tables, Merger
 import warnings
 import os.path
-from argparse import ArgumentParser
+import logging
+from pprint import pformat
+
+log = logging.getLogger(__name__)
 
 #
 # Creation routines
@@ -155,7 +158,7 @@ def _SetCoordinates(font, glyphName, coord):
 
 def _add_gvar(font, model, master_ttfs):
 
-	print("Generating gvar")
+	log.info("Generating gvar")
 	assert "gvar" not in font
 	gvar = font["gvar"] = newTable('gvar')
 	gvar.version = 1
@@ -184,7 +187,7 @@ def _add_gvar(font, model, master_ttfs):
 
 def _add_HVAR(font, model, master_ttfs, axisTags):
 
-	print("Generating HVAR")
+	log.info("Generating HVAR")
 
 	hAdvanceDeltas = {}
 	metricses = [m["hmtx"].metrics for m in master_ttfs]
@@ -311,7 +314,7 @@ def merge(merger, self, lst):
 
 def _merge_OTL(font, model, master_fonts, axisTags, base_idx):
 
-	print("Merging OpenType Layout tables")
+	log.info("Merging OpenType Layout tables")
 	merger = VariationMerger(model, axisTags, font)
 
 	merge_tables(font, merger, master_fonts, axisTags, base_idx, ['GPOS'])
@@ -347,11 +350,10 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 			base_idx = i
 	assert base_idx is not None, "Cannot find 'base' master; Add <info> element to one of the masters in the .designspace document."
 
-	from pprint import pprint
-	print("Index of base master:", base_idx)
+	log.info("Index of base master: %s", base_idx)
 
-	print("Building variable font")
-	print("Loading TTF masters")
+	log.info("Building variable font")
+	log.info("Loading TTF masters")
 	basedir = os.path.dirname(designspace_filename)
 	master_ttfs = [master_finder(os.path.join(basedir, m['filename'])) for m in masters]
 	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
@@ -385,11 +387,9 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 		if default == lower == upper:
 			continue
 		axes[tag] = (lower, default, upper)
-	print("Axes:")
-	pprint(axes)
+	log.info("Axes:\n%s", pformat(axes))
 
-	print("Master locations:")
-	pprint(master_locs)
+	log.info("Master locations:\n%s", pformat(master_locs))
 
 	# We can use the base font straight, but it's faster to load it again since
 	# then we won't be recompiling the existing ('glyf', 'hmtx', ...) tables.
@@ -403,8 +403,7 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	# Normalize master locations
 	master_locs = [models.normalizeLocation(m, axes) for m in master_locs]
 
-	print("Normalized master locations:")
-	pprint(master_locs)
+	log.info("Normalized master locations:\n%s", pformat(master_locs))
 
 	# TODO Clean this up.
 	del instances
@@ -417,7 +416,7 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	model = models.VariationModel(master_locs)
 	assert 0 == model.mapping[base_idx]
 
-	print("Building variations tables")
+	log.info("Building variations tables")
 	if 'glyf' in gx:
 		_add_gvar(gx, model, master_fonts)
 	_add_HVAR(gx, model, master_fonts, axisTags)
@@ -427,10 +426,15 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 
 
 def main(args=None):
+	from argparse import ArgumentParser
+	from fontTools import configLogger
 
 	parser = ArgumentParser(prog='varLib')
 	parser.add_argument('designspace')
 	options = parser.parse_args(args)
+
+	# TODO: allow user to configure logging via command-line options
+	configLogger(level="INFO")
 
 	designspace_filename = options.designspace
 	finder = lambda s: s.replace('master_ufo', 'master_ttf_interpolatable').replace('.ufo', '.ttf')
@@ -438,7 +442,7 @@ def main(args=None):
 
 	gx, model, master_ttfs = build(designspace_filename, finder)
 
-	print("Saving variation font", outfile)
+	log.info("Saving variation font %s", outfile)
 	gx.save(outfile)
 
 
