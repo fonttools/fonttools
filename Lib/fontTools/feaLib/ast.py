@@ -319,13 +319,12 @@ class MarkClass(object):
         assert isinstance(definition, MarkClassDefinition)
         self.definitions.append(definition)
         for glyph in definition.glyphSet():
-# Fixing this code fails tests!
-#            if glyph in self.glyphs:
-#                otherLoc = self.glyphs[glyph].location
-#                raise FeatureLibError(
-#                    "Glyph %s already defined at %s:%d:%d" % (
-#                        glyph, otherLoc[0], otherLoc[1], otherLoc[2]),
-#                    definition.location)
+            if glyph in self.definitions:
+                otherLoc = self.definitions[glyph].location
+                raise FeatureLibError(
+                    "Glyph %s already defined at %s:%d:%d" % (
+                        glyph, otherLoc[0], otherLoc[1], otherLoc[2]),
+                    definition.location)
             self.glyphs[glyph] = definition
 
     def glyphSet(self):
