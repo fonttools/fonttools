@@ -52,7 +52,7 @@ class Parser(object):
             elif self.is_cur_keyword_("valueRecordDef"):
                 statements.append(
                     self.parse_valuerecord_definition_(vertical=False))
-            elif self.cur_token_type_ is Lexer.NAME and self.cur_token_ in self.extensions :
+            elif self.cur_token_type_ is Lexer.NAME and self.cur_token_ in self.extensions:
                 statements.append(self.extensions[self.cur_token_](self))
             elif self.cur_token_type_ is Lexer.SYMBOL and self.cur_token_ == ";":
                 continue
@@ -1146,7 +1146,7 @@ class Parser(object):
                 statements.append(self.parse_size_parameters_())
             elif size_feature and self.is_cur_keyword_("sizemenuname"):
                 statements.append(self.parse_size_menuname_())
-            elif self.cur_token_type_ is Lexer.NAME and self.cur_token_ in self.extensions :
+            elif self.cur_token_type_ is Lexer.NAME and self.cur_token_ in self.extensions:
                 statements.append(self.extensions[self.cur_token_](self))
             elif self.cur_token_ == ";":
                 continue
