@@ -436,7 +436,7 @@ class TupleVariation(object):
 		return size
 
 
-def decompileTupleVariation_(numPointsInGlyph, sharedTuples, sharedPoints,
+def decompileTupleVariation_(pointCount, sharedTuples, sharedPoints,
 							 tableTag, axisTags, data, tupleData):
 	assert tableTag in ("cvar", "gvar"), tableTag
 	flags = struct.unpack(">H", data[2:4])[0]
@@ -458,17 +458,17 @@ def decompileTupleVariation_(numPointsInGlyph, sharedTuples, sharedPoints,
 	pos = 0
 	if (flags & PRIVATE_POINT_NUMBERS) != 0:
 		points, pos = TupleVariation.decompilePoints_(
-			numPointsInGlyph, tupleData, pos, "gvar")
+			pointCount, tupleData, pos, "gvar")
 	else:
 		points = sharedPoints
 
-	deltas = [None] * numPointsInGlyph
+	deltas = [None] * pointCount
 
 	if tableTag == "cvar":
 		deltas_cvt, pos = TupleVariation.decompileDeltas_(
 			len(points), tupleData, pos)
 		for p, delta in zip(points, deltas_cvt):
-			if 0 <= p < numPointsInGlyph:
+			if 0 <= p < pointCount:
 				deltas[p] = delta
 
 	elif tableTag == "gvar":
@@ -477,7 +477,7 @@ def decompileTupleVariation_(numPointsInGlyph, sharedTuples, sharedPoints,
 		deltas_y, pos = TupleVariation.decompileDeltas_(
 			len(points), tupleData, pos)
 		for p, x, y in zip(points, deltas_x, deltas_y):
-			if 0 <= p < numPointsInGlyph:
+			if 0 <= p < pointCount:
 				deltas[p] = (x, y)
 
 	return TupleVariation(axes, deltas)
