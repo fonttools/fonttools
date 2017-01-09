@@ -679,7 +679,9 @@ class BaseTable(object):
 				# We make sure that subtables have the same lookup type,
 				# and that the type is the same as the one set on the
 				# Lookup object, if any is set.
-				ref = writer.writeCountReference(table, conv.name, conv.staticSize, table.get(conv.name))
+				if conv.name not in table:
+					table[conv.name] = None
+				ref = writer.writeCountReference(table, conv.name, conv.staticSize, table[conv.name])
 				writer['LookupType'] = ref
 			else:
 				if conv.aux and not eval(conv.aux, None, table):
