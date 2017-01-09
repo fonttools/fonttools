@@ -276,7 +276,7 @@ setup(
 	include_package_data=True,
 	data_files=[
 		('share/man/man1', ["Doc/ttx.1"])
-	] if sys.platform.startswith('linux') else [],
+	],
 	setup_requires=pytest_runner + wheel + bumpversion,
 	tests_require=[
 		'pytest>=2.8',
