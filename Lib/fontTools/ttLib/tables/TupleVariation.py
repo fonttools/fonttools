@@ -458,7 +458,7 @@ def decompileTupleVariation_(pointCount, sharedTuples, sharedPoints,
 	pos = 0
 	if (flags & PRIVATE_POINT_NUMBERS) != 0:
 		points, pos = TupleVariation.decompilePoints_(
-			pointCount, tupleData, pos, "gvar")
+			pointCount, tupleData, pos, tableTag)
 	else:
 		points = sharedPoints
 
