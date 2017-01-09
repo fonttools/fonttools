@@ -22,6 +22,10 @@ DELTA_RUN_COUNT_MASK = 0x3f
 POINTS_ARE_WORDS = 0x80
 POINT_RUN_COUNT_MASK = 0x7f
 
+TUPLES_SHARE_POINT_NUMBERS = 0x8000
+TUPLE_COUNT_MASK = 0x0fff
+TUPLE_INDEX_MASK = 0x0fff
+
 log = logging.getLogger(__name__)
 
 
@@ -430,6 +434,53 @@ class TupleVariation(object):
 		if (flags & INTERMEDIATE_REGION) != 0:
 			size += axisCount * 4
 		return size
+
+
+def decompileTupleVariation_(numPointsInGlyph, sharedTuples, sharedPoints,
+							 tableTag, axisTags, data, tupleData):
+	assert tableTag in ("cvar", "gvar"), tableTag
+	flags = struct.unpack(">H", data[2:4])[0]
+	pos = 4
+	if (flags & EMBEDDED_PEAK_TUPLE) == 0:
+		peak = sharedTuples[flags & TUPLE_INDEX_MASK]
+	else:
+		peak, pos = TupleVariation.decompileCoord_(axisTags, data, pos)
+	if (flags & INTERMEDIATE_REGION) != 0:
+		start, pos = TupleVariation.decompileCoord_(axisTags, data, pos)
+		end, pos = TupleVariation.decompileCoord_(axisTags, data, pos)
+	else:
+		start, end = inferRegion_(peak)
+	axes = {}
+	for axis in axisTags:
+		region = start[axis], peak[axis], end[axis]
+		if region != (0.0, 0.0, 0.0):
+			axes[axis] = region
+	pos = 0
+	if (flags & PRIVATE_POINT_NUMBERS) != 0:
+		points, pos = TupleVariation.decompilePoints_(
+			numPointsInGlyph, tupleData, pos, "gvar")
+	else:
+		points = sharedPoints
+
+	deltas = [None] * numPointsInGlyph
+
+	if tableTag == "cvar":
+		deltas_cvt, pos = TupleVariation.decompileDeltas_(
+			len(points), tupleData, pos)
+		for p, delta in zip(points, deltas_cvt):
+			if 0 <= p < numPointsInGlyph:
+				deltas[p] = delta
+
+	elif tableTag == "gvar":
+		deltas_x, pos = TupleVariation.decompileDeltas_(
+			len(points), tupleData, pos)
+		deltas_y, pos = TupleVariation.decompileDeltas_(
+			len(points), tupleData, pos)
+		for p, x, y in zip(points, deltas_x, deltas_y):
+			if 0 <= p < numPointsInGlyph:
+				deltas[p] = (x, y)
+
+	return TupleVariation(axes, deltas)
 
 
 def inferRegion_(peak):

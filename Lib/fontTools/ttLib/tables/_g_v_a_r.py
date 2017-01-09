@@ -39,10 +39,6 @@ GVAR_HEADER_FORMAT = """
 
 GVAR_HEADER_SIZE = sstruct.calcsize(GVAR_HEADER_FORMAT)
 
-TUPLES_SHARE_POINT_NUMBERS = 0x8000
-TUPLE_COUNT_MASK = 0x0fff
-TUPLE_INDEX_MASK = 0x0fff
-
 
 class table__g_v_a_r(DefaultTable.DefaultTable):
 
@@ -88,7 +84,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 				coordCount[coord] = coordCount.get(coord, 0) + 1
 		sharedCoords = [(count, coord) for (coord, count) in coordCount.items() if count > 1]
 		sharedCoords.sort(reverse=True)
-		MAX_NUM_SHARED_COORDS = TUPLE_INDEX_MASK + 1
+		MAX_NUM_SHARED_COORDS = tv.TUPLE_INDEX_MASK + 1
 		sharedCoords = sharedCoords[:MAX_NUM_SHARED_COORDS]
 		return [c[1] for c in sharedCoords]  # Strip off counts.
 
@@ -157,7 +153,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 				data.append(privateData)
 		if someTuplesSharePoints:
 			data = bytechr(0) + bytesjoin(data)  # 0x00 = "all points in glyph"
-			tupleCount = TUPLES_SHARE_POINT_NUMBERS | len(tuples)
+			tupleCount = tv.TUPLES_SHARE_POINT_NUMBERS | len(tuples)
 		else:
 			data = bytesjoin(data)
 			tupleCount = len(tuples)
@@ -240,51 +236,21 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		flags, offsetToData = struct.unpack(">HH", data[:4])
 		pos = 4
 		dataPos = offsetToData
-		if (flags & TUPLES_SHARE_POINT_NUMBERS) != 0:
+		if (flags & tv.TUPLES_SHARE_POINT_NUMBERS) != 0:
 			sharedPoints, dataPos = TupleVariation.decompilePoints_(numPointsInGlyph, data, dataPos, "gvar")
 		else:
 			sharedPoints = []
-		for _ in range(flags & TUPLE_COUNT_MASK):
+		for _ in range(flags & tv.TUPLE_COUNT_MASK):
 			dataSize, flags = struct.unpack(">HH", data[pos:pos+4])
 			tupleSize = TupleVariation.getTupleSize_(flags, numAxes)
 			tupleData = data[pos : pos + tupleSize]
 			pointDeltaData = data[dataPos : dataPos + dataSize]
-			tuples.append(self.decompileTuple_(numPointsInGlyph, sharedCoords, sharedPoints, axisTags, tupleData, pointDeltaData))
+			tuples.append(tv.decompileTupleVariation_(
+                numPointsInGlyph, sharedCoords, sharedPoints,
+                "gvar", axisTags, tupleData, pointDeltaData))
 			pos += tupleSize
 			dataPos += dataSize
 		return tuples
-
-	@staticmethod
-	def decompileTuple_(numPointsInGlyph, sharedCoords, sharedPoints, axisTags, data, tupleData):
-		flags = struct.unpack(">H", data[2:4])[0]
-
-		pos = 4
-		if (flags & tv.EMBEDDED_PEAK_TUPLE) == 0:
-			coord = sharedCoords[flags & TUPLE_INDEX_MASK]
-		else:
-			coord, pos = TupleVariation.decompileCoord_(axisTags, data, pos)
-		if (flags & tv.INTERMEDIATE_REGION) != 0:
-			minCoord, pos = TupleVariation.decompileCoord_(axisTags, data, pos)
-			maxCoord, pos = TupleVariation.decompileCoord_(axisTags, data, pos)
-		else:
-			minCoord, maxCoord = tv.inferRegion_(coord)
-		axes = {}
-		for axis in axisTags:
-			coords = minCoord[axis], coord[axis], maxCoord[axis]
-			if coords != (0.0, 0.0, 0.0):
-				axes[axis] = coords
-		pos = 0
-		if (flags & tv.PRIVATE_POINT_NUMBERS) != 0:
-			points, pos = TupleVariation.decompilePoints_(numPointsInGlyph, tupleData, pos, "gvar")
-		else:
-			points = sharedPoints
-		deltas_x, pos = TupleVariation.decompileDeltas_(len(points), tupleData, pos)
-		deltas_y, pos = TupleVariation.decompileDeltas_(len(points), tupleData, pos)
-		deltas = [None] * numPointsInGlyph
-		for p, x, y in zip(points, deltas_x, deltas_y):
-				if 0 <= p < numPointsInGlyph:
-					deltas[p] = (x, y)
-		return TupleVariation(axes, deltas)
 
 	def toXML(self, writer, ttFont, progress=None):
 		writer.simpletag("version", value=self.version)
