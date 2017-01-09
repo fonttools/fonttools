@@ -3,13 +3,14 @@ include LICENSE
 include NEWS
 include Snippets/*.py
 include Snippets/README.md
-include Doc/ttx.1
 include MetaTools/*.py
 include Lib/fontTools/ttLib/tables/table_API_readme.txt
 
 include *requirements.txt
 include tox.ini
 include run-tests.sh
+
+recursive-include Doc/man/man1 *.1
 
 recursive-include Lib/fontTools testdata/*.ttx testdata/*.otx testdata/*.fea
 recursive-include Lib/fontTools testdata/*.txt testdata/*.ttx.*
