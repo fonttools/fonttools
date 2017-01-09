@@ -206,7 +206,7 @@ class VarData(BaseTable):
 
 		numShorts = 0
 		count = len(self.VarRegionIndex)
-		for item in getattr(self, Item, []):
+		for item in getattr(self, 'Item', []):
 			assert len(item) == count, ("Item length mismatch", len(item), count)
 			for i in range(count - 1, numShorts - 1, -1):
 				if not (-128 <= item[i] <= 127):
