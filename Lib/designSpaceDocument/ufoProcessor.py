@@ -149,6 +149,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
         self.fonts = {}
         self.glyphNames = []     # list of all glyphnames
         self.processRules = True
+        self.problems = []  # receptacle for problem notifications. Not big enough to break, but also not small enough to ignore.
 
     def generateUFO(self, processRules=True):
         # makes the instances
