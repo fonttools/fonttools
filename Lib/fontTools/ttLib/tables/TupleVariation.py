@@ -444,6 +444,19 @@ def decompileSharedTuples(axisTags, sharedTupleCount, data, offset):
 	return result
 
 
+def compileSharedTuples(axisTags, variations):
+	coordCount = {}
+	for var in variations:
+		coord = var.compileCoord(axisTags)
+		coordCount[coord] = coordCount.get(coord, 0) + 1
+	sharedCoords = [(count, coord)
+					for (coord, count) in coordCount.items() if count > 1]
+	sharedCoords.sort(reverse=True)
+	MAX_NUM_SHARED_COORDS = TUPLE_INDEX_MASK + 1
+	sharedCoords = sharedCoords[:MAX_NUM_SHARED_COORDS]
+	return [c[1] for c in sharedCoords]  # Strip off counts.
+
+
 def decompileTupleVariations(pointCount, sharedTuples,
 							 tableTag, axisTags, data):
 	if len(data) < 4:

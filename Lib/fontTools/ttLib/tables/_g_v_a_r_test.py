@@ -73,27 +73,6 @@ class GVARTableTest(unittest.TestCase):
 			decompileTupleVariations(numPointsInGlyph, {},
 									 "gvar", axisTags, data))
 
-	def test_compileSharedCoords(self):
-		table = newTable("gvar")
-		table.variations = {}
-		deltas = [None] * 4
-		table.variations["A"] = [
-			TupleVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.5, 0.7, 1.0)}, deltas)
-		]
-		table.variations["B"] = [
-			TupleVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.2, 0.7, 1.0)}, deltas),
-			TupleVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.2, 0.8, 1.0)}, deltas)
-		]
-		table.variations["C"] = [
-			TupleVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.3, 0.7, 1.0)}, deltas),
-			TupleVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.3, 0.8, 1.0)}, deltas),
-			TupleVariation({"wght": (1.0, 1.0, 1.0), "wdth": (0.3, 0.9, 1.0)}, deltas)
-		]
-		# {"wght":1.0, "wdth":0.7} is shared 3 times; {"wght":1.0, "wdth":0.8} is shared twice.
-		# Min and max values are not part of the shared coordinate pool and should get ignored.
-		result = table.compileSharedCoords_(["wght", "wdth"])
-		self.assertEqual(["40 00 2C CD", "40 00 33 33"], [hexencode(c) for c in result])
-
 
 if __name__ == "__main__":
 	unittest.main()

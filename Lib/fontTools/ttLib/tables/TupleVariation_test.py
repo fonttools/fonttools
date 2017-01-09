@@ -6,8 +6,8 @@ from fontTools.misc.testTools import parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib.tables.TupleVariation import \
-	log, TupleVariation, decompileSharedTuples, decompileTupleVariations, \
-	inferRegion_
+	log, TupleVariation, compileSharedTuples, decompileSharedTuples, \
+	decompileTupleVariations, inferRegion_
 import random
 import unittest
 
@@ -470,6 +470,42 @@ class TupleVariationTest(unittest.TestCase):
 			deltas.extend([0] * 10)
 			random.shuffle(deltas)
 			self.assertListEqual(deltas, decompile(compile(deltas)))
+
+	def test_compileSharedTuples(self):
+		# Below, the peak coordinate {"wght": 1.0, "wdth": 0.7} appears
+		# three times; {"wght": 1.0, "wdth": 0.8} appears twice.
+		# Because the start and end of variation ranges is not encoded
+		# into the shared pool, they should get ignored.
+		deltas = [None] * 4
+		variations = [
+			TupleVariation({
+				"wght": (1.0, 1.0, 1.0),
+				"wdth": (0.5, 0.7, 1.0)
+			}, deltas),
+			TupleVariation({
+				"wght": (1.0, 1.0, 1.0),
+				"wdth": (0.2, 0.7, 1.0)
+			}, deltas),
+			TupleVariation({
+				"wght": (1.0, 1.0, 1.0),
+				"wdth": (0.2, 0.8, 1.0)
+			}, deltas),
+			TupleVariation({
+				"wght": (1.0, 1.0, 1.0),
+				"wdth": (0.3, 0.7, 1.0)
+			}, deltas),
+			TupleVariation({
+				"wght": (1.0, 1.0, 1.0),
+				"wdth": (0.3, 0.8, 1.0)
+			}, deltas),
+			TupleVariation({
+				"wght": (1.0, 1.0, 1.0),
+				"wdth": (0.3, 0.9, 1.0)
+            }, deltas)
+		]
+		result = compileSharedTuples(["wght", "wdth"], variations)
+		self.assertEqual([hexencode(c) for c in result],
+		                 ["40 00 2C CD", "40 00 33 33"])
 
 	def test_decompileSharedTuples_Skia(self):
 		sharedTuples = decompileSharedTuples(

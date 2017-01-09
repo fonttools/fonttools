@@ -6,9 +6,10 @@ from fontTools.misc.textTools import safeEval
 from fontTools.ttLib import TTLibError
 from . import DefaultTable
 import array
-import sys
-import struct
+import itertools
 import logging
+import struct
+import sys
 import fontTools.ttLib.tables.TupleVariation as tv
 
 
@@ -46,12 +47,12 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 
 	def compile(self, ttFont):
 		axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
-
-		sharedCoords = self.compileSharedCoords_(axisTags)
-		sharedCoordIndices = {coord:i for i, coord in enumerate(sharedCoords)}
-		sharedCoordSize = sum([len(c) for c in sharedCoords])
-
-		compiledGlyphs = self.compileGlyphs_(ttFont, axisTags, sharedCoordIndices)
+		sharedTuples =  tv.compileSharedTuples(
+			axisTags, itertools.chain(*self.variations.values()))
+		sharedTupleIndices = {coord:i for i, coord in enumerate(sharedTuples)}
+		sharedTupleSize = sum([len(c) for c in sharedTuples])
+		compiledGlyphs = self.compileGlyphs_(
+			ttFont, axisTags, sharedTupleIndices)
 		offset = 0
 		offsets = []
 		for glyph in compiledGlyphs:
@@ -64,29 +65,17 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		header["version"] = self.version
 		header["reserved"] = self.reserved
 		header["axisCount"] = len(axisTags)
-		header["sharedTupleCount"] = len(sharedCoords)
+		header["sharedTupleCount"] = len(sharedTuples)
 		header["offsetToSharedTuples"] = GVAR_HEADER_SIZE + len(compiledOffsets)
 		header["glyphCount"] = len(compiledGlyphs)
 		header["flags"] = tableFormat
-		header["offsetToGlyphVariationData"] = header["offsetToSharedTuples"] + sharedCoordSize
+		header["offsetToGlyphVariationData"] = header["offsetToSharedTuples"] + sharedTupleSize
 		compiledHeader = sstruct.pack(GVAR_HEADER_FORMAT, header)
 
 		result = [compiledHeader, compiledOffsets]
-		result.extend(sharedCoords)
+		result.extend(sharedTuples)
 		result.extend(compiledGlyphs)
 		return bytesjoin(result)
-
-	def compileSharedCoords_(self, axisTags):
-		coordCount = {}
-		for variations in self.variations.values():
-			for gvar in variations:
-				coord = gvar.compileCoord(axisTags)
-				coordCount[coord] = coordCount.get(coord, 0) + 1
-		sharedCoords = [(count, coord) for (coord, count) in coordCount.items() if count > 1]
-		sharedCoords.sort(reverse=True)
-		MAX_NUM_SHARED_COORDS = tv.TUPLE_INDEX_MASK + 1
-		sharedCoords = sharedCoords[:MAX_NUM_SHARED_COORDS]
-		return [c[1] for c in sharedCoords]  # Strip off counts.
 
 	def compileGlyphs_(self, ttFont, axisTags, sharedCoordIndices):
 		result = []
