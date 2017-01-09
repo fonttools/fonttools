@@ -7,7 +7,7 @@ from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib.tables.TupleVariation import \
 	log, TupleVariation, compileSharedTuples, decompileSharedTuples, \
-	compileTupleVariationStore, decompileTupleVariations, inferRegion_
+	compileTupleVariationStore, decompileTupleVariationStore, inferRegion_
 import random
 import unittest
 
@@ -548,13 +548,13 @@ class TupleVariationTest(unittest.TestCase):
 		                                  axisTags=["wght", "wdth"],
 		                                  sharedCoordIndices={})
 		self.assertEqual(
-			decompileTupleVariations(pointCount=4, sharedTuples={},
-									 tableTag="gvar",
-                                     axisTags=["wght", "wdth"], data=data),
+			decompileTupleVariationStore(pointCount=4, sharedTuples={},
+									     tableTag="gvar",
+                                         axisTags=["wght", "wdth"], data=data),
             variations)
 
-	def test_decompileTupleVariations_Skia_I(self):
-		tvar = decompileTupleVariations(
+	def test_decompileTupleVariationStore_Skia_I(self):
+		tvar = decompileTupleVariationStore(
 			pointCount=18, sharedTuples=SKIA_GVAR_SHARED_TUPLES,
 			tableTag="gvar", axisTags=["wght", "wdth"], data=SKIA_GVAR_I_DATA)
 		self.assertEqual(len(tvar), 8)
@@ -564,10 +564,11 @@ class TupleVariationTest(unittest.TestCase):
 			"257,0 -127,0 -128,58 -130,90 -130,62 -130,67 -130,32 -127,0 "
 			"257,0 259,14 260,64 260,21 260,69 258,124 0,0 130,0 0,0 0,0")
 
-	def test_decompileTupleVariations_empty(self):
+	def test_decompileTupleVariationStore_empty(self):
 		self.assertEqual(
-			decompileTupleVariations(pointCount=5, sharedTuples=[],
-									 tableTag="gvar", axisTags=[], data=b""),
+			decompileTupleVariationStore(pointCount=5, sharedTuples=[],
+									     tableTag="gvar", axisTags=[],
+                                         data=b""),
 			[])
 
 	def test_getTupleSize(self):

@@ -103,7 +103,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			glyph = ttFont["glyf"][glyphName]
 			numPointsInGlyph = self.getNumPoints_(glyph)
 			gvarData = data[offsetToData + offsets[i] : offsetToData + offsets[i + 1]]
-			self.variations[glyphName] = tv.decompileTupleVariations(
+			self.variations[glyphName] = tv.decompileTupleVariationStore(
 				numPointsInGlyph, sharedCoords, "gvar", axisTags, gvarData)
 
 	@staticmethod

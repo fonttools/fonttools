@@ -529,8 +529,8 @@ def compileTupleVariationStore(variations, pointCount,
 	return result
 
 
-def decompileTupleVariations(pointCount, sharedTuples,
-							 tableTag, axisTags, data):
+def decompileTupleVariationStore(pointCount, sharedTuples,
+							     tableTag, axisTags, data):
 	if len(data) < 4:
 		return []
 	numAxes = len(axisTags)
