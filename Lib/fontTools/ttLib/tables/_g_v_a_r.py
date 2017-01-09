@@ -170,7 +170,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		assert len(glyphs) == self.glyphCount
 		assert len(axisTags) == self.axisCount
 		offsets = self.decompileOffsets_(data[GVAR_HEADER_SIZE:], tableFormat=(self.flags & 1), glyphCount=self.glyphCount)
-		sharedCoords = decompileSharedTuples_(
+		sharedCoords = tv.decompileSharedTuples(
 			axisTags, self.sharedTupleCount, data, self.offsetToSharedTuples)
 		self.variations = {}
 		offsetToData = self.offsetToGlyphVariationData
@@ -277,11 +277,3 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		else:
 			# Empty glyphs (eg. space, nonmarkingreturn) have no "coordinates" attribute.
 			return len(getattr(glyph, "coordinates", [])) + NUM_PHANTOM_POINTS
-
-
-def decompileSharedTuples_(axisTags, sharedTupleCount, data, offset):
-    result = []
-    for _ in range(sharedTupleCount):
-        t, offset = TupleVariation.decompileCoord_(axisTags, data, offset)
-        result.append(t)
-    return result

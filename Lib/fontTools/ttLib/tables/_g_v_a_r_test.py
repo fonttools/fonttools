@@ -16,12 +16,6 @@ def hexencode(s):
 	return ' '.join([h[i:i+2] for i in range(0, len(h), 2)])
 
 
-# Shared tuples in the Skia font, as printed in Apple's TrueType spec.
-SKIA_SHARED_TUPLES = deHexStr(
-	"40 00 00 00 C0 00 00 00 00 00 40 00 00 00 C0 00 "
-	"C0 00 C0 00 40 00 C0 00 40 00 40 00 C0 00 40 00")
-
-
 class GVARTableTest(unittest.TestCase):
 	def test_compileOffsets_shortFormat(self):
 		self.assertEqual((deHexStr("00 00 00 02 FF C0"), 0),
@@ -99,24 +93,6 @@ class GVARTableTest(unittest.TestCase):
 		# Min and max values are not part of the shared coordinate pool and should get ignored.
 		result = table.compileSharedCoords_(["wght", "wdth"])
 		self.assertEqual(["40 00 2C CD", "40 00 33 33"], [hexencode(c) for c in result])
-
-	def test_decompileSharedTuples_Skia(self):
-		sharedCoords = gvar.decompileSharedTuples_(
-            axisTags=["wght", "wdth"], sharedTupleCount=8,
-            data=SKIA_SHARED_TUPLES, offset=0)
-		self.assertEqual(sharedCoords, [
-			{"wght": 1.0, "wdth": 0.0},
-			{"wght": -1.0, "wdth": 0.0},
-			{"wght": 0.0, "wdth": 1.0},
-			{"wght": 0.0, "wdth": -1.0},
-			{"wght": -1.0, "wdth": -1.0},
-			{"wght": 1.0, "wdth": -1.0},
-			{"wght": 1.0, "wdth": 1.0},
-			{"wght": -1.0, "wdth": 1.0}
-		])
-
-	def test_decompileSharedTuples_empty(self):
-		self.assertEqual(gvar.decompileSharedTuples_(["wght"], 0, b"", 0), [])
 
 
 if __name__ == "__main__":

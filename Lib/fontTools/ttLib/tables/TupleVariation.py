@@ -436,6 +436,14 @@ class TupleVariation(object):
 		return size
 
 
+def decompileSharedTuples(axisTags, sharedTupleCount, data, offset):
+	result = []
+	for _ in range(sharedTupleCount):
+		t, offset = TupleVariation.decompileCoord_(axisTags, data, offset)
+		result.append(t)
+	return result
+
+
 def decompileTupleVariations(pointCount, sharedTuples,
 							 tableTag, axisTags, data):
 	if len(data) < 4:

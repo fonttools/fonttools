@@ -6,7 +6,8 @@ from fontTools.misc.testTools import parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib.tables.TupleVariation import \
-	log, TupleVariation, decompileTupleVariations, inferRegion_
+	log, TupleVariation, decompileSharedTuples, decompileTupleVariations, \
+	inferRegion_
 import random
 import unittest
 
@@ -469,6 +470,15 @@ class TupleVariationTest(unittest.TestCase):
 			deltas.extend([0] * 10)
 			random.shuffle(deltas)
 			self.assertListEqual(deltas, decompile(compile(deltas)))
+
+	def test_decompileSharedTuples_Skia(self):
+		sharedTuples = decompileSharedTuples(
+			axisTags=["wght", "wdth"], sharedTupleCount=8,
+			data=SKIA_GVAR_SHARED_TUPLES_DATA, offset=0)
+		self.assertEqual(sharedTuples, SKIA_GVAR_SHARED_TUPLES)
+
+	def test_decompileSharedTuples_empty(self):
+		self.assertEqual(decompileSharedTuples(["wght"], 0, b"", 0), [])
 
 	def test_decompileTupleVariations_Skia_I(self):
 		tvar = decompileTupleVariations(
