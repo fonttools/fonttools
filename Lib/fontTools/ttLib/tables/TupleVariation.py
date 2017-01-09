@@ -457,6 +457,78 @@ def compileSharedTuples(axisTags, variations):
 	return [c[1] for c in sharedCoords]  # Strip off counts.
 
 
+def compileTupleVariationStore(variations, pointCount,
+                               axisTags, sharedCoordIndices):
+	variations = [v for v in variations if v.hasImpact()]
+	if len(variations) == 0:
+		return b""
+
+	# Each glyph variation tuples modifies a set of control points. To
+	# indicate which exact points are getting modified, a single tuple
+	# can either refer to a shared set of points, or the tuple can
+	# supply its private point numbers.  Because the impact of sharing
+	# can be positive (no need for a private point list) or negative
+	# (need to supply 0,0 deltas for unused points), it is not obvious
+	# how to determine which tuples should take their points from the
+	# shared pool versus have their own. Perhaps we should resort to
+	# brute force, and try all combinations? However, if a glyph has n
+	# variation tuples, we would need to try 2^n combinations (because
+	# each tuple may or may not be part of the shared set). How many
+	# variations tuples do glyphs have?
+	#
+	#   Skia.ttf: {3: 1, 5: 11, 6: 41, 7: 62, 8: 387, 13: 1, 14: 3}
+	#   JamRegular.ttf: {3: 13, 4: 122, 5: 1, 7: 4, 8: 1, 9: 1, 10: 1}
+	#   BuffaloGalRegular.ttf: {1: 16, 2: 13, 4: 2, 5: 4, 6: 19, 7: 1, 8: 3, 9: 8}
+	#   (Reading example: In Skia.ttf, 41 glyphs have 6 variation tuples).
+	#
+
+	# Is this even worth optimizing? If we never use a shared point
+	# list, the private lists will consume 112K for Skia, 5K for
+	# BuffaloGalRegular, and 15K for JamRegular. If we always use a
+	# shared point list, the shared lists will consume 16K for Skia,
+	# 3K for BuffaloGalRegular, and 10K for JamRegular. However, in
+	# the latter case the delta arrays will become larger, but I
+	# haven't yet measured by how much. From gut feeling (which may be
+	# wrong), the optimum is to share some but not all points;
+	# however, then we would need to try all combinations.
+	#
+	# For the time being, we try two variants and then pick the better one:
+	# (a) each tuple supplies its own private set of points;
+	# (b) all tuples refer to a shared set of points, which consists of
+	#     "every control point in the glyph".
+	allPoints = set(range(pointCount))
+	tuples = []
+	data = []
+	someTuplesSharePoints = False
+	for v in variations:
+		privateTuple, privateData = v.compile(axisTags, sharedCoordIndices, sharedPoints=None)
+		sharedTuple, sharedData = v.compile(axisTags, sharedCoordIndices, sharedPoints=allPoints)
+		# TODO: Apple macOS 10.9.5 (maybe also earlier) up to 10.12 had a bug
+		# that broke variations if the `gvar` table contains shared tuples.
+		# Apple will likely fix this in macOS 10.13. But for the time being,
+		# we never emit shared points although the result would be more compact.
+		# https://rawgit.com/unicode-org/text-rendering-tests/master/reports/CoreText.html#GVAR-1
+		#if (len(sharedTuple) + len(sharedData)) < (len(privateTuple) + len(privateData)):
+		if False:
+			tuples.append(sharedTuple)
+			data.append(sharedData)
+			someTuplesSharePoints = True
+		else:
+			tuples.append(privateTuple)
+			data.append(privateData)
+	if someTuplesSharePoints:
+		data = bytechr(0) + bytesjoin(data)  # 0x00 = "all points in glyph"
+		tupleCount = tv.TUPLES_SHARE_POINT_NUMBERS | len(tuples)
+	else:
+		data = bytesjoin(data)
+		tupleCount = len(tuples)
+	tuples = bytesjoin(tuples)
+	result = struct.pack(">HH", tupleCount, 4 + len(tuples)) + tuples + data
+	if len(result) % 2 != 0:
+		result = result + b"\0"  # padding
+	return result
+
+
 def decompileTupleVariations(pointCount, sharedTuples,
 							 tableTag, axisTags, data):
 	if len(data) < 4:

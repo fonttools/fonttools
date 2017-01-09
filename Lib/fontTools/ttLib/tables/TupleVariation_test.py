@@ -7,7 +7,7 @@ from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib.tables.TupleVariation import \
 	log, TupleVariation, compileSharedTuples, decompileSharedTuples, \
-	decompileTupleVariations, inferRegion_
+	compileTupleVariationStore, decompileTupleVariations, inferRegion_
 import random
 import unittest
 
@@ -515,6 +515,43 @@ class TupleVariationTest(unittest.TestCase):
 
 	def test_decompileSharedTuples_empty(self):
 		self.assertEqual(decompileSharedTuples(["wght"], 0, b"", 0), [])
+
+	def test_compileTupleVariationStore_allVariationsRedundant(self):
+		axes = {"wght": (0.3, 0.4, 0.5), "opsz": (0.7, 0.8, 0.9)}
+		variations = [
+			TupleVariation(axes, [None] * 4),
+			TupleVariation(axes, [None] * 4),
+			TupleVariation(axes, [None] * 4)
+		]
+		self.assertEqual(
+			compileTupleVariationStore(variations, pointCount=8,
+			                           axisTags=["wght", "opsz"],
+			                           sharedCoordIndices={}),
+            b"")
+
+	def test_compileTupleVariationStore_noVariations(self):
+		self.assertEqual(
+			compileTupleVariationStore(variations=[], pointCount=8,
+			                           axisTags=["wght", "opsz"],
+			                           sharedCoordIndices={}),
+            b"")
+
+	def test_compileTupleVariationStore_roundTrip_gvar(self):
+		deltas = [(1,1), (2,2), (3,3), (4,4)]
+		variations = [
+			TupleVariation({"wght": (0.5, 1.0, 1.0), "wdth": (1.0, 1.0, 1.0)},
+			               deltas),
+			TupleVariation({"wght": (1.0, 1.0, 1.0), "wdth": (1.0, 1.0, 1.0)},
+			               deltas)
+		]
+		data = compileTupleVariationStore(variations, pointCount=4,
+		                                  axisTags=["wght", "wdth"],
+		                                  sharedCoordIndices={})
+		self.assertEqual(
+			decompileTupleVariations(pointCount=4, sharedTuples={},
+									 tableTag="gvar",
+                                     axisTags=["wght", "wdth"], data=data),
+            variations)
 
 	def test_decompileTupleVariations_Skia_I(self):
 		tvar = decompileTupleVariations(
