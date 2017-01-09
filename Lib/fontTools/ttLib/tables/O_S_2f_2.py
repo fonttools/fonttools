@@ -209,6 +209,8 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			setattr(self, name, safeEval(attrs["value"]))
 
 	def updateFirstAndLastCharIndex(self, ttFont):
+		if 'cmap' not in ttFont:
+			return
 		codes = set()
 		for table in getattr(ttFont['cmap'], 'tables', []):
 			if table.isUnicode():
