@@ -6,7 +6,7 @@ from fontTools.misc.testTools import parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib.tables.TupleVariation import \
-	log, TupleVariation, inferRegion_
+	log, TupleVariation, decompileTupleVariations, inferRegion_
 import random
 import unittest
 
@@ -21,6 +21,50 @@ AXES = {
 	"wght": (0.0, 1.0, 1.0),
 	"opsz": (-0.7, -0.7, 0.0)
 }
+
+
+# Shared tuples in the 'gvar' table of the Skia font, as printed
+# in Apple's TrueType specification.
+# https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6gvar.html
+SKIA_GVAR_SHARED_TUPLES_DATA = deHexStr(
+	"40 00 00 00 C0 00 00 00 00 00 40 00 00 00 C0 00 "
+	"C0 00 C0 00 40 00 C0 00 40 00 40 00 C0 00 40 00")
+
+SKIA_GVAR_SHARED_TUPLES = [
+	{"wght": 1.0, "wdth": 0.0},
+	{"wght": -1.0, "wdth": 0.0},
+	{"wght": 0.0, "wdth": 1.0},
+	{"wght": 0.0, "wdth": -1.0},
+	{"wght": -1.0, "wdth": -1.0},
+	{"wght": 1.0, "wdth": -1.0},
+	{"wght": 1.0, "wdth": 1.0},
+	{"wght": -1.0, "wdth": 1.0}
+]
+
+
+# Tuple Variation Store of uppercase I in the Skia font, as printed in Apple's
+# TrueType spec. The actual Skia font uses a different table for uppercase I
+# than what is printed in Apple's spec, but we still want to make sure that
+# we can parse the data as it appears in the specification.
+# https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6gvar.html
+SKIA_GVAR_I_DATA = deHexStr(
+	"00 08 00 24 00 33 20 00 00 15 20 01 00 1B 20 02 "
+	"00 24 20 03 00 15 20 04 00 26 20 07 00 0D 20 06 "
+	"00 1A 20 05 00 40 01 01 01 81 80 43 FF 7E FF 7E "
+	"FF 7E FF 7E 00 81 45 01 01 01 03 01 04 01 04 01 "
+	"04 01 02 80 40 00 82 81 81 04 3A 5A 3E 43 20 81 "
+	"04 0E 40 15 45 7C 83 00 0D 9E F3 F2 F0 F0 F0 F0 "
+	"F3 9E A0 A1 A1 A1 9F 80 00 91 81 91 00 0D 0A 0A "
+	"09 0A 0A 0A 0A 0A 0A 0A 0A 0A 0A 0B 80 00 15 81 "
+	"81 00 C4 89 00 C4 83 00 0D 80 99 98 96 96 96 96 "
+	"99 80 82 83 83 83 81 80 40 FF 18 81 81 04 E6 F9 "
+	"10 21 02 81 04 E8 E5 EB 4D DA 83 00 0D CE D3 D4 "
+	"D3 D3 D3 D5 D2 CE CC CD CD CD CD 80 00 A1 81 91 "
+	"00 0D 07 03 04 02 02 02 03 03 07 07 08 08 08 07 "
+	"80 00 09 81 81 00 28 40 00 A4 02 24 24 66 81 04 "
+	"08 FA FA FA 28 83 00 82 02 FF FF FF 83 02 01 01 "
+	"01 84 91 00 80 06 07 08 08 08 08 0A 07 80 03 FE "
+	"FF FF FF 81 00 08 81 82 02 EE EE EE 8B 6D 00")
 
 
 class TupleVariationTest(unittest.TestCase):
@@ -425,6 +469,23 @@ class TupleVariationTest(unittest.TestCase):
 			deltas.extend([0] * 10)
 			random.shuffle(deltas)
 			self.assertListEqual(deltas, decompile(compile(deltas)))
+
+	def test_decompileTupleVariations_Skia_I(self):
+		tvar = decompileTupleVariations(
+			pointCount=18, sharedTuples=SKIA_GVAR_SHARED_TUPLES,
+			tableTag="gvar", axisTags=["wght", "wdth"], data=SKIA_GVAR_I_DATA)
+		self.assertEqual(len(tvar), 8)
+		self.assertEqual(tvar[0].axes, {"wght": (0.0, 1.0, 1.0)})
+		self.assertEqual(
+			" ".join(["%d,%d" % c for c in tvar[0].coordinates]),
+			"257,0 -127,0 -128,58 -130,90 -130,62 -130,67 -130,32 -127,0 "
+			"257,0 259,14 260,64 260,21 260,69 258,124 0,0 130,0 0,0 0,0")
+
+	def test_decompileTupleVariations_empty(self):
+		self.assertEqual(
+			decompileTupleVariations(pointCount=5, sharedTuples=[],
+									 tableTag="gvar", axisTags=[], data=b""),
+			[])
 
 	def test_getTupleSize(self):
 		getTupleSize = TupleVariation.getTupleSize_

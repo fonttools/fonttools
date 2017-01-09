@@ -179,8 +179,8 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			glyph = ttFont["glyf"][glyphName]
 			numPointsInGlyph = self.getNumPoints_(glyph)
 			gvarData = data[offsetToData + offsets[i] : offsetToData + offsets[i + 1]]
-			self.variations[glyphName] = \
-				self.decompileGlyph_(numPointsInGlyph, sharedCoords, axisTags, gvarData)
+			self.variations[glyphName] = tv.decompileTupleVariations(
+				numPointsInGlyph, sharedCoords, "gvar", axisTags, gvarData)
 
 	@staticmethod
 	def decompileOffsets_(data, tableFormat, glyphCount):
@@ -227,30 +227,6 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		if sys.byteorder != "big":
 			packed.byteswap()
 		return (packed.tostring(), tableFormat)
-
-	def decompileGlyph_(self, numPointsInGlyph, sharedCoords, axisTags, data):
-		if len(data) < 4:
-			return []
-		numAxes = len(axisTags)
-		tuples = []
-		flags, offsetToData = struct.unpack(">HH", data[:4])
-		pos = 4
-		dataPos = offsetToData
-		if (flags & tv.TUPLES_SHARE_POINT_NUMBERS) != 0:
-			sharedPoints, dataPos = TupleVariation.decompilePoints_(numPointsInGlyph, data, dataPos, "gvar")
-		else:
-			sharedPoints = []
-		for _ in range(flags & tv.TUPLE_COUNT_MASK):
-			dataSize, flags = struct.unpack(">HH", data[pos:pos+4])
-			tupleSize = TupleVariation.getTupleSize_(flags, numAxes)
-			tupleData = data[pos : pos + tupleSize]
-			pointDeltaData = data[dataPos : dataPos + dataSize]
-			tuples.append(tv.decompileTupleVariation_(
-                numPointsInGlyph, sharedCoords, sharedPoints,
-                "gvar", axisTags, tupleData, pointDeltaData))
-			pos += tupleSize
-			dataPos += dataSize
-		return tuples
 
 	def toXML(self, writer, ttFont, progress=None):
 		writer.simpletag("version", value=self.version)

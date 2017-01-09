@@ -436,6 +436,33 @@ class TupleVariation(object):
 		return size
 
 
+def decompileTupleVariations(pointCount, sharedTuples,
+							 tableTag, axisTags, data):
+	if len(data) < 4:
+		return []
+	numAxes = len(axisTags)
+	result = []
+	flags, offsetToData = struct.unpack(">HH", data[:4])
+	pos = 4
+	dataPos = offsetToData
+	if (flags & TUPLES_SHARE_POINT_NUMBERS) != 0:
+		sharedPoints, dataPos = TupleVariation.decompilePoints_(
+			pointCount, data, dataPos, tableTag)
+	else:
+		sharedPoints = []
+	for _ in range(flags & TUPLE_COUNT_MASK):
+		dataSize, flags = struct.unpack(">HH", data[pos:pos+4])
+		tupleSize = TupleVariation.getTupleSize_(flags, numAxes)
+		tupleData = data[pos : pos + tupleSize]
+		pointDeltaData = data[dataPos : dataPos + dataSize]
+		result.append(decompileTupleVariation_(
+			pointCount, sharedTuples, sharedPoints,
+			tableTag, axisTags, tupleData, pointDeltaData))
+		pos += tupleSize
+		dataPos += dataSize
+	return result
+
+
 def decompileTupleVariation_(pointCount, sharedTuples, sharedPoints,
 							 tableTag, axisTags, data, tupleData):
 	assert tableTag in ("cvar", "gvar"), tableTag
