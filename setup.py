@@ -3,8 +3,12 @@
 from __future__ import print_function
 import io
 import sys
+import os
+from os.path import isfile, join as pjoin
+from glob import glob
 from setuptools import setup, find_packages, Command
 from distutils import log
+from distutils.util import convert_path
 import subprocess as sp
 import contextlib
 
@@ -259,6 +263,49 @@ class PassCommand(Command):
 		pass
 
 
+def find_data_files(manpath="share/man"):
+	""" Find FontTools's data_files (just man pages at this point).
+
+	By default, we install man pages to "share/man" directory relative to the
+	base installation directory for data_files. The latter can be changed with
+	the --install-data option of 'setup.py install' sub-command.
+
+	E.g., if the data files installation directory is "/usr", the default man
+	page installation directory will be "/usr/share/man".
+
+	You can override this via the $FONTTOOLS_MANPATH environment variable.
+
+	E.g., on some BSD systems man pages are installed to 'man' instead of
+	'share/man'; you can export $FONTTOOLS_MANPATH variable just before
+	installing:
+
+	$ FONTTOOLS_MANPATH="man" pip install -v .
+	    [...]
+	    running install_data
+	    copying Doc/man/ttx.1 -> /usr/man/man1
+
+	When installing from PyPI, for this variable to have effect you need to
+	force pip to install from the source distribution instead of the wheel
+	package (otherwise setup.py is not run), by using the --no-binary option:
+
+	$ FONTTOOLS_MANPATH="man" pip install --no-binary=fonttools fonttools
+
+	Note that you can only override the base man path, i.e. without the
+	section number (man1, man3, etc.). The latter is always implied to be 1,
+	for "general commands".
+	"""
+
+	# get base installation directory for man pages
+	manpagebase = os.environ.get('FONTTOOLS_MANPATH', convert_path(manpath))
+	# all our man pages go to section 1
+	manpagedir = pjoin(manpagebase, 'man1')
+
+	manpages = [f for f in glob(pjoin('Doc', 'man', 'man1', '*.1')) if isfile(f)]
+
+	data_files = [(manpagedir, manpages)]
+	return data_files
+
+
 setup(
 	name="fonttools",
 	version="3.5.0.dev0",
@@ -274,9 +321,7 @@ setup(
 	package_dir={'': 'Lib'},
 	packages=find_packages("Lib"),
 	include_package_data=True,
-	data_files=[
-		('share/man/man1', ["Doc/ttx.1"])
-	],
+	data_files=find_data_files(),
 	setup_requires=pytest_runner + wheel + bumpversion,
 	tests_require=[
 		'pytest>=2.8',
