@@ -196,7 +196,7 @@ class TupleVariationTest(unittest.TestCase):
 		sharedPeakIndices = { var.compileCoord(axisTags): 0x77 }
 		tup, deltas = var.compile(axisTags, sharedPeakIndices,
 		                          sharedPoints={0,1,2})
-		# len(data)=8; flags=None; tupleIndex=0x77
+		# len(deltas)=8; flags=None; tupleIndex=0x77
 		# embeddedPeaks=[]; intermediateCoord=[]
 		self.assertEqual("00 08 00 77", hexencode(tup))
 		self.assertEqual("02 07 08 09 "     # deltaX: [7, 8, 9]
@@ -211,7 +211,7 @@ class TupleVariationTest(unittest.TestCase):
 		sharedPeakIndices = { var.compileCoord(axisTags): 0x77 }
 		tup, deltas = var.compile(axisTags, sharedPeakIndices,
 		                          sharedPoints={0,1,2})
-		# len(data)=8; flags=INTERMEDIATE_REGION; tupleIndex=0x77
+		# len(deltas)=8; flags=INTERMEDIATE_REGION; tupleIndex=0x77
 		# embeddedPeak=[]; intermediateCoord=[(0.3, 0.1), (0.7, 0.9)]
 		self.assertEqual("00 08 40 77 13 33 06 66 2C CD 39 9A", hexencode(tup))
 		self.assertEqual("02 07 08 09 "     # deltaX: [7, 8, 9]
@@ -226,7 +226,7 @@ class TupleVariationTest(unittest.TestCase):
 		sharedPeakIndices = { var.compileCoord(axisTags): 0x77 }
 		tup, deltas = var.compile(axisTags, sharedPeakIndices,
 		                          sharedPoints=None)
-		# len(data)=13; flags=PRIVATE_POINT_NUMBERS; tupleIndex=0x77
+		# len(deltas)=9; flags=PRIVATE_POINT_NUMBERS; tupleIndex=0x77
 		# embeddedPeak=[]; intermediateCoord=[]
 		self.assertEqual("00 09 20 77", hexencode(tup))
 		self.assertEqual("00 "              # all points in glyph
@@ -242,7 +242,7 @@ class TupleVariationTest(unittest.TestCase):
 		sharedPeakIndices = { var.compileCoord(axisTags): 0x77 }
 		tuple, deltas = var.compile(axisTags,
 		                            sharedPeakIndices, sharedPoints=None)
-		# len(data)=13; flags=PRIVATE_POINT_NUMBERS; tupleIndex=0x77
+		# len(deltas)=9; flags=PRIVATE_POINT_NUMBERS; tupleIndex=0x77
 		# embeddedPeak=[]; intermediateCoord=[(0.0, 0.0), (1.0, 1.0)]
 		self.assertEqual("00 09 60 77 00 00 00 00 40 00 40 00",
 		                 hexencode(tuple))
@@ -257,11 +257,23 @@ class TupleVariationTest(unittest.TestCase):
 			[(7,4), (8,5), (9,6)])
 		tup, deltas = var.compile(axisTags=["wght", "wdth"],
 		                          sharedCoordIndices={}, sharedPoints={0, 1, 2})
-		# len(data)=8; flags=EMBEDDED_PEAK_TUPLE
+		# len(deltas)=8; flags=EMBEDDED_PEAK_TUPLE
 		# embeddedPeak=[(0.5, 0.8)]; intermediateCoord=[]
 		self.assertEqual("00 08 80 00 20 00 33 33", hexencode(tup))
 		self.assertEqual("02 07 08 09 "     # deltaX: [7, 8, 9]
 						 "02 04 05 06",     # deltaY: [4, 5, 6]
+						 hexencode(deltas))
+
+	def test_compile_embeddedPeak_nonIntermediate_sharedConstants(self):
+		var = TupleVariation(
+			{"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
+			[3, 1, 4])
+		tup, deltas = var.compile(axisTags=["wght", "wdth"],
+		                          sharedCoordIndices={}, sharedPoints={0, 1, 2})
+		# len(deltas)=4; flags=EMBEDDED_PEAK_TUPLE
+		# embeddedPeak=[(0.5, 0.8)]; intermediateCoord=[]
+		self.assertEqual("00 04 80 00 20 00 33 33", hexencode(tup))
+		self.assertEqual("02 03 01 04",     # delta: [3, 1, 4]
 						 hexencode(deltas))
 
 	def test_compile_embeddedPeak_intermediate_sharedPoints(self):
@@ -271,7 +283,7 @@ class TupleVariationTest(unittest.TestCase):
 		tup, deltas = var.compile(axisTags=["wght", "wdth"],
 		                          sharedCoordIndices={},
 		                          sharedPoints={0, 1, 2})
-		# len(data)=8; flags=EMBEDDED_PEAK_TUPLE
+		# len(deltas)=8; flags=EMBEDDED_PEAK_TUPLE
 		# embeddedPeak=[(0.5, 0.8)]; intermediateCoord=[(0.0, 0.0), (1.0, 0.8)]
 		self.assertEqual("00 08 C0 00 20 00 33 33 00 00 00 00 40 00 33 33",
 		                hexencode(tup))
@@ -285,12 +297,25 @@ class TupleVariationTest(unittest.TestCase):
 			[(7,4), (8,5), (9,6)])
 		tup, deltas = var.compile(
 			axisTags=["wght", "wdth"], sharedCoordIndices={}, sharedPoints=None)
-		# len(data)=13; flags=PRIVATE_POINT_NUMBERS|EMBEDDED_PEAK_TUPLE
+		# len(deltas)=9; flags=PRIVATE_POINT_NUMBERS|EMBEDDED_PEAK_TUPLE
 		# embeddedPeak=[(0.5, 0.8)]; intermediateCoord=[]
 		self.assertEqual("00 09 A0 00 20 00 33 33", hexencode(tup))
 		self.assertEqual("00 "           # all points in glyph
 		                 "02 07 08 09 "  # deltaX: [7, 8, 9]
 		                 "02 04 05 06",  # deltaY: [4, 5, 6]
+		                 hexencode(deltas))
+
+	def test_compile_embeddedPeak_nonIntermediate_privateConstants(self):
+		var = TupleVariation(
+			{"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
+			[7, 8, 9])
+		tup, deltas = var.compile(
+			axisTags=["wght", "wdth"], sharedCoordIndices={}, sharedPoints=None)
+		# len(deltas)=5; flags=PRIVATE_POINT_NUMBERS|EMBEDDED_PEAK_TUPLE
+		# embeddedPeak=[(0.5, 0.8)]; intermediateCoord=[]
+		self.assertEqual("00 05 A0 00 20 00 33 33", hexencode(tup))
+		self.assertEqual("00 "           # all points in glyph
+		                 "02 07 08 09",  # delta: [7, 8, 9]
 		                 hexencode(deltas))
 
 	def test_compile_embeddedPeak_intermediate_privatePoints(self):
@@ -300,7 +325,7 @@ class TupleVariationTest(unittest.TestCase):
 		tup, deltas = var.compile(
 			axisTags = ["wght", "wdth"],
 			sharedCoordIndices={}, sharedPoints=None)
-		# len(data)=13;
+		# len(deltas)=9;
 		# flags=PRIVATE_POINT_NUMBERS|INTERMEDIATE_REGION|EMBEDDED_PEAK_TUPLE
 		# embeddedPeak=(0.5, 0.8); intermediateCoord=[(0.4, 0.7), (0.6, 0.9)]
 		self.assertEqual("00 09 E0 00 20 00 33 33 19 9A 2C CD 26 66 39 9A",
@@ -308,6 +333,22 @@ class TupleVariationTest(unittest.TestCase):
 		self.assertEqual("00 "              # all points in glyph
 		                 "02 07 08 09 "     # deltaX: [7, 8, 9]
 		                 "02 04 05 06",     # deltaY: [4, 5, 6]
+		                 hexencode(deltas))
+
+	def test_compile_embeddedPeak_intermediate_privateConstants(self):
+		var = TupleVariation(
+			{"wght": (0.4, 0.5, 0.6), "wdth": (0.7, 0.8, 0.9)},
+			[7, 8, 9])
+		tup, deltas = var.compile(
+			axisTags = ["wght", "wdth"],
+			sharedCoordIndices={}, sharedPoints=None)
+		# len(deltas)=5;
+		# flags=PRIVATE_POINT_NUMBERS|INTERMEDIATE_REGION|EMBEDDED_PEAK_TUPLE
+		# embeddedPeak=(0.5, 0.8); intermediateCoord=[(0.4, 0.7), (0.6, 0.9)]
+		self.assertEqual("00 05 E0 00 20 00 33 33 19 9A 2C CD 26 66 39 9A",
+		                 hexencode(tup))
+		self.assertEqual("00 "             # all points in glyph
+		                 "02 07 08 09",    # delta: [7, 8, 9]
 		                 hexencode(deltas))
 
 	def test_compileCoord(self):

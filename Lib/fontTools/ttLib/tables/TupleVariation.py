@@ -292,9 +292,13 @@ class TupleVariation(object):
 		deltaY = []
 		for p in sorted(list(points)):
 			c = self.coordinates[p]
-			if c is not None:
+			if type(c) is tuple and len(c) == 2:
 				deltaX.append(c[0])
 				deltaY.append(c[1])
+			elif type(c) is int:
+				deltaX.append(c)
+			else:
+				raise ValueError("invalid type of delta: %s" % type(c))
 		return self.compileDeltaValues_(deltaX) + self.compileDeltaValues_(deltaY)
 
 	@staticmethod
