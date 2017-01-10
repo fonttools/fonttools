@@ -719,6 +719,7 @@ def fixLookupOverFlows(ttf, overflowRecord):
 			return ok
 		lookup = lookups[lookupIndex]
 
+	lookup.LookupType = extType
 	for si in range(len(lookup.SubTable)):
 		subTable = lookup.SubTable[si]
 		extSubTableClass = lookupTypes[overflowRecord.tableType][extType]
