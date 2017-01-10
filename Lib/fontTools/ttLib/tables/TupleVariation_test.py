@@ -601,6 +601,23 @@ class TupleVariationTest(unittest.TestCase):
 			                           sharedCoordIndices={}),
             b"")
 
+	def test_compileTupleVariationStore_roundTrip_cvar(self):
+		deltas = [1, 2, 3, 4]
+		variations = [
+			TupleVariation({"wght": (0.5, 1.0, 1.0), "wdth": (1.0, 1.0, 1.0)},
+			               deltas),
+			TupleVariation({"wght": (1.0, 1.0, 1.0), "wdth": (1.0, 1.0, 1.0)},
+			               deltas)
+		]
+		data = compileTupleVariationStore(variations, pointCount=4,
+		                                  axisTags=["wght", "wdth"],
+		                                  sharedCoordIndices={})
+		self.assertEqual(
+			decompileTupleVariationStore(pointCount=4, sharedTuples={},
+									     tableTag="cvar",
+                                         axisTags=["wght", "wdth"], data=data),
+            variations)
+
 	def test_compileTupleVariationStore_roundTrip_gvar(self):
 		deltas = [(1,1), (2,2), (3,3), (4,4)]
 		variations = [
