@@ -462,10 +462,10 @@ def compileSharedTuples(axisTags, variations):
 
 
 def compileTupleVariationStore(variations, pointCount,
-                               axisTags, sharedCoordIndices):
+                               axisTags, sharedTupleIndices):
 	variations = [v for v in variations if v.hasImpact()]
 	if len(variations) == 0:
-		return b""
+		return (0, b"", b"")
 
 	# Each glyph variation tuples modifies a set of control points. To
 	# indicate which exact points are getting modified, a single tuple
@@ -505,8 +505,10 @@ def compileTupleVariationStore(variations, pointCount,
 	data = []
 	someTuplesSharePoints = False
 	for v in variations:
-		privateTuple, privateData = v.compile(axisTags, sharedCoordIndices, sharedPoints=None)
-		sharedTuple, sharedData = v.compile(axisTags, sharedCoordIndices, sharedPoints=allPoints)
+		privateTuple, privateData = v.compile(
+			axisTags, sharedTupleIndices, sharedPoints=None)
+		sharedTuple, sharedData = v.compile(
+			axisTags, sharedTupleIndices, sharedPoints=allPoints)
 		# TODO: Apple macOS 10.9.5 (maybe also earlier) up to 10.12 had a bug
 		# that broke variations if the `gvar` table contains shared tuples.
 		# Apple will likely fix this in macOS 10.13. But for the time being,
@@ -522,32 +524,25 @@ def compileTupleVariationStore(variations, pointCount,
 			data.append(privateData)
 	if someTuplesSharePoints:
 		data = bytechr(0) + bytesjoin(data)  # 0x00 = "all points in glyph"
-		tupleCount = tv.TUPLES_SHARE_POINT_NUMBERS | len(tuples)
+		tupleVariationCount = tv.TUPLES_SHARE_POINT_NUMBERS | len(tuples)
 	else:
 		data = bytesjoin(data)
-		tupleCount = len(tuples)
+		tupleVariationCount = len(tuples)
 	tuples = bytesjoin(tuples)
-	result = struct.pack(">HH", tupleCount, 4 + len(tuples)) + tuples + data
-	if len(result) % 2 != 0:
-		result = result + b"\0"  # padding
-	return result
+	return tupleVariationCount, tuples, data
 
 
-def decompileTupleVariationStore(pointCount, sharedTuples,
-							     tableTag, axisTags, data):
-	if len(data) < 4:
-		return []
+def decompileTupleVariationStore(tableTag, axisTags,
+                                 tupleVariationCount, pointCount, sharedTuples,
+							     data, pos, dataPos):
 	numAxes = len(axisTags)
 	result = []
-	flags, offsetToData = struct.unpack(">HH", data[:4])
-	pos = 4
-	dataPos = offsetToData
-	if (flags & TUPLES_SHARE_POINT_NUMBERS) != 0:
+	if (tupleVariationCount & TUPLES_SHARE_POINT_NUMBERS) != 0:
 		sharedPoints, dataPos = TupleVariation.decompilePoints_(
 			pointCount, data, dataPos, tableTag)
 	else:
 		sharedPoints = []
-	for _ in range(flags & TUPLE_COUNT_MASK):
+	for _ in range(tupleVariationCount & TUPLE_COUNT_MASK):
 		dataSize, flags = struct.unpack(">HH", data[pos:pos+4])
 		tupleSize = TupleVariation.getTupleSize_(flags, numAxes)
 		tupleData = data[pos : pos + tupleSize]

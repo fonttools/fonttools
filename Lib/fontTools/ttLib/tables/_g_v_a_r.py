@@ -42,8 +42,12 @@ GVAR_HEADER_SIZE = sstruct.calcsize(GVAR_HEADER_FORMAT)
 
 
 class table__g_v_a_r(DefaultTable.DefaultTable):
-
 	dependencies = ["fvar", "glyf"]
+
+	def __init__(self, tag=None):
+		DefaultTable.DefaultTable.__init__(self, tag)
+		self.version, self.reserved = 1, 0
+		self.variations = {}
 
 	def compile(self, ttFont):
 		axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
@@ -83,8 +87,8 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			glyph = ttFont["glyf"][glyphName]
 			pointCount = self.getNumPoints_(glyph)
 			variations = self.variations.get(glyphName, [])
-			result.append(tv.compileTupleVariationStore(
-				variations, pointCount, axisTags, sharedCoordIndices))
+			result.append(compileGlyph_(variations, pointCount,
+			                            axisTags, sharedCoordIndices))
 		return result
 
 	def decompile(self, data, ttFont):
@@ -103,8 +107,8 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			glyph = ttFont["glyf"][glyphName]
 			numPointsInGlyph = self.getNumPoints_(glyph)
 			gvarData = data[offsetToData + offsets[i] : offsetToData + offsets[i + 1]]
-			self.variations[glyphName] = tv.decompileTupleVariationStore(
-				numPointsInGlyph, sharedCoords, "gvar", axisTags, gvarData)
+			self.variations[glyphName] = decompileGlyph_(
+				numPointsInGlyph, sharedCoords, axisTags, gvarData)
 
 	@staticmethod
 	def decompileOffsets_(data, tableFormat, glyphCount):
@@ -201,3 +205,25 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		else:
 			# Empty glyphs (eg. space, nonmarkingreturn) have no "coordinates" attribute.
 			return len(getattr(glyph, "coordinates", [])) + NUM_PHANTOM_POINTS
+
+
+def compileGlyph_(variations, pointCount, axisTags, sharedCoordIndices):
+	tupleVariationCount, tuples, data = tv.compileTupleVariationStore(
+		variations, pointCount, axisTags, sharedCoordIndices)
+	if tupleVariationCount == 0:
+		return b""
+	result = (struct.pack(">HH", tupleVariationCount, 4 + len(tuples)) +
+	          tuples + data)
+	if len(result) % 2 != 0:
+		result = result + b"\0"  # padding
+	return result
+
+
+def decompileGlyph_(pointCount, sharedTuples, axisTags, data):
+	if len(data) < 4:
+		return []
+	tupleVariationCount, offsetToData = struct.unpack(">HH", data[:4])
+	dataPos = offsetToData
+	return tv.decompileTupleVariationStore("gvar", axisTags,
+                                           tupleVariationCount, pointCount,
+                                           sharedTuples, data, 4, offsetToData)

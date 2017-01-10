@@ -78,9 +78,9 @@ The following tables are currently supported:
     BASE, CBDT, CBLC, CFF, COLR, CPAL, DSIG, EBDT, EBLC, FFTM, GDEF,
     GMAP, GPKG, GPOS, GSUB, HVAR, JSTF, LTSH, MATH, META, MVAR, OS/2,
     SING, STAT, SVG, TSI0, TSI1, TSI2, TSI3, TSI5, TSIB, TSID, TSIJ,
-    TSIP, TSIS, TSIV, VDMX, VORG, VVAR, avar, cmap, cvt, feat, fpgm,
-    fvar, gasp, glyf, gvar, hdmx, head, hhea, hmtx, kern, loca, ltag,
-    maxp, meta, name, post, prep, sbix, trak, vhea and vmtx
+    TSIP, TSIS, TSIV, VDMX, VORG, VVAR, avar, cmap, cvar, cvt, feat,
+    fpgm, fvar, gasp, glyf, gvar, hdmx, head, hhea, hmtx, kern, loca,
+    ltag, maxp, meta, name, post, prep, sbix, trak, vhea and vmtx
 <!-- end table list -->
 Other tables are dumped as hexadecimal data.
 

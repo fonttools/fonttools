@@ -591,15 +591,15 @@ class TupleVariationTest(unittest.TestCase):
 		self.assertEqual(
 			compileTupleVariationStore(variations, pointCount=8,
 			                           axisTags=["wght", "opsz"],
-			                           sharedCoordIndices={}),
-            b"")
+			                           sharedTupleIndices={}),
+            (0, b"", b""))
 
 	def test_compileTupleVariationStore_noVariations(self):
 		self.assertEqual(
 			compileTupleVariationStore(variations=[], pointCount=8,
 			                           axisTags=["wght", "opsz"],
-			                           sharedCoordIndices={}),
-            b"")
+			                           sharedTupleIndices={}),
+            (0, b"", b""))
 
 	def test_compileTupleVariationStore_roundTrip_cvar(self):
 		deltas = [1, 2, 3, 4]
@@ -609,13 +609,14 @@ class TupleVariationTest(unittest.TestCase):
 			TupleVariation({"wght": (1.0, 1.0, 1.0), "wdth": (1.0, 1.0, 1.0)},
 			               deltas)
 		]
-		data = compileTupleVariationStore(variations, pointCount=4,
-		                                  axisTags=["wght", "wdth"],
-		                                  sharedCoordIndices={})
+		tupleVariationCount, tuples, data = compileTupleVariationStore(
+			variations, pointCount=4, axisTags=["wght", "wdth"],
+			sharedTupleIndices={})
 		self.assertEqual(
-			decompileTupleVariationStore(pointCount=4, sharedTuples={},
-									     tableTag="cvar",
-                                         axisTags=["wght", "wdth"], data=data),
+			decompileTupleVariationStore("cvar", ["wght", "wdth"],
+			                             tupleVariationCount, pointCount=4,
+			                             sharedTuples={}, data=(tuples + data),
+			                             pos=0, dataPos=len(tuples)),
             variations)
 
 	def test_compileTupleVariationStore_roundTrip_gvar(self):
@@ -626,19 +627,22 @@ class TupleVariationTest(unittest.TestCase):
 			TupleVariation({"wght": (1.0, 1.0, 1.0), "wdth": (1.0, 1.0, 1.0)},
 			               deltas)
 		]
-		data = compileTupleVariationStore(variations, pointCount=4,
-		                                  axisTags=["wght", "wdth"],
-		                                  sharedCoordIndices={})
+		tupleVariationCount, tuples, data = compileTupleVariationStore(
+			variations, pointCount=4, axisTags=["wght", "wdth"],
+			sharedTupleIndices={})
 		self.assertEqual(
-			decompileTupleVariationStore(pointCount=4, sharedTuples={},
-									     tableTag="gvar",
-                                         axisTags=["wght", "wdth"], data=data),
+			decompileTupleVariationStore("gvar", ["wght", "wdth"],
+			                             tupleVariationCount, pointCount=4,
+			                             sharedTuples={}, data=(tuples + data),
+			                             pos=0, dataPos=len(tuples)),
             variations)
 
 	def test_decompileTupleVariationStore_Skia_I(self):
 		tvar = decompileTupleVariationStore(
-			pointCount=18, sharedTuples=SKIA_GVAR_SHARED_TUPLES,
-			tableTag="gvar", axisTags=["wght", "wdth"], data=SKIA_GVAR_I_DATA)
+			tableTag="gvar", axisTags=["wght", "wdth"],
+			tupleVariationCount=8, pointCount=18,
+			sharedTuples=SKIA_GVAR_SHARED_TUPLES,
+			data=SKIA_GVAR_I_DATA, pos=4, dataPos=36)
 		self.assertEqual(len(tvar), 8)
 		self.assertEqual(tvar[0].axes, {"wght": (0.0, 1.0, 1.0)})
 		self.assertEqual(
@@ -648,9 +652,10 @@ class TupleVariationTest(unittest.TestCase):
 
 	def test_decompileTupleVariationStore_empty(self):
 		self.assertEqual(
-			decompileTupleVariationStore(pointCount=5, sharedTuples=[],
-									     tableTag="gvar", axisTags=[],
-                                         data=b""),
+			decompileTupleVariationStore(tableTag="gvar", axisTags=[],
+			                             tupleVariationCount=0, pointCount=5,
+			                             sharedTuples=[],
+			                             data=b"", pos=4, dataPos=4),
 			[])
 
 	def test_getTupleSize(self):

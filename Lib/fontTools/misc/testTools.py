@@ -38,6 +38,10 @@ class FakeFont:
     def __init__(self, glyphs):
         self.glyphOrder_ = glyphs
         self.lazy = False
+        self.tables = {}
+
+    def __getitem__(self, tag):
+        return self.tables[tag]
 
     def getGlyphID(self, name):
         return self.glyphOrder_.index(name)
