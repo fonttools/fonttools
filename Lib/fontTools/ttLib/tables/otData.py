@@ -1004,7 +1004,7 @@ otData = [
 
 	('MVAR', [
 		('Version', 'Version', None, None, 'Version of the MVAR table-initially = 0x00010000'),
-		('uint16', 'AxisCount', None, None, ''),
+		('uint16', 'Reserved', None, None, 'Set to 0'),
 		('uint16', 'ValueRecordSize', None, None, ''),
 		('uint16', 'ValueRecordCount', None, None, ''),
 		('Offset', 'VarStore', None, None, ''),

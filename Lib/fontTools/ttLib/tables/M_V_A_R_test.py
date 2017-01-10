@@ -9,7 +9,7 @@ import unittest
 
 MVAR_DATA = deHexStr(
     '0001 0000 '  # 0:   version=1.0
-    '0001 0008 '  # 4:   axisCount=1, valueRecordSize=8
+    '0000 0008 '  # 4:   reserved=0, valueRecordSize=8
     '0007 '       # 8:   valueRecordCount=7
     '0044 '       # 10:  offsetToItemVariationStore=68
     '6861 7363 '  # 12:  ValueRecord.valueTag="hasc"
@@ -54,7 +54,7 @@ MVAR_DATA = deHexStr(
 
 MVAR_XML = [
     '<Version value="0x00010000"/>',
-    '<!-- AxisCount=1 -->',
+    '<Reserved value="0"/>',
     '<ValueRecordSize value="8"/>',
     '<!-- ValueRecordCount=7 -->',
     '<VarStore Format="1">',
@@ -130,10 +130,7 @@ class MVARTest(unittest.TestCase):
         font = TTFont()
         for name, attrs, content in parseXML(MVAR_XML):
             mvar.fromXML(name, attrs, content, font=font)
-        # Ignore AxisCount
-        # see https://github.com/fonttools/fonttools/issues/689
         data = MVAR_DATA
-        data = data[:5] + b'\x00' + data[6:]
         self.assertEqual(hexStr(mvar.compile(font)), hexStr(data))
 
 
