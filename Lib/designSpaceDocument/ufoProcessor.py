@@ -155,8 +155,8 @@ class DesignSpaceProcessor(DesignSpaceDocument):
         # makes the instances
         # option to execute the rules
         #self.checkAxes()
-        self.checkDefault()
         self.loadFonts()
+        self.checkDefault()
         for instanceDescriptor in self.instances:
             if instanceDescriptor.path is None:
                 continue
@@ -208,8 +208,8 @@ class DesignSpaceProcessor(DesignSpaceDocument):
 
     def loadFonts(self):
         # Load the fonts and find the default candidate based on the info flag
+        names = set()
         for sourceDescriptor in self.sources:
-            names = set()
             if not sourceDescriptor.name in self.fonts:
                 self.fonts[sourceDescriptor.name] = self._instantiateFont(sourceDescriptor.path)
             names = names | set(self.fonts[sourceDescriptor.name].keys())
