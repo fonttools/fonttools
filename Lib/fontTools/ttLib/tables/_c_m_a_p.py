@@ -248,11 +248,10 @@ class cmap_format_0(CmapSubtable):
 		if self.data:
 			return struct.pack(">HHH", 0, 262, self.language) + self.data
 
-		charCodeList = sorted(self.cmap.items())
-		charCodes = [entry[0] for entry in charCodeList]
-		valueList = [entry[1] for entry in charCodeList]
-		assert charCodes == list(range(256))
-		valueList = map(ttFont.getGlyphID, valueList)
+		cmap = self.cmap
+		assert set(cmap.keys()).issubset(range(256))
+		getGlyphID = ttFont.getGlyphID
+		valueList = [getGlyphID(cmap[i]) if i in cmap else 0 for i in range(256)]
 
 		gids = array.array("B", valueList)
 		data = struct.pack(">HHH", 0, 262, self.language) + gids.tostring()
