@@ -70,34 +70,34 @@ SKIA_GVAR_I_DATA = deHexStr(
 
 class TupleVariationTest(unittest.TestCase):
 	def test_equal(self):
-		gvar1 = TupleVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
-		gvar2 = TupleVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
-		self.assertEqual(gvar1, gvar2)
+		var1 = TupleVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
+		var2 = TupleVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
+		self.assertEqual(var1, var2)
 
 	def test_equal_differentAxes(self):
-		gvar1 = TupleVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
-		gvar2 = TupleVariation({"wght":(0.7, 0.8, 0.9)}, [(0,0), (9,8), (7,6)])
-		self.assertNotEqual(gvar1, gvar2)
+		var1 = TupleVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
+		var2 = TupleVariation({"wght":(0.7, 0.8, 0.9)}, [(0,0), (9,8), (7,6)])
+		self.assertNotEqual(var1, var2)
 
 	def test_equal_differentCoordinates(self):
-		gvar1 = TupleVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
-		gvar2 = TupleVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8)])
-		self.assertNotEqual(gvar1, gvar2)
+		var1 = TupleVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
+		var2 = TupleVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8)])
+		self.assertNotEqual(var1, var2)
 
 	def test_hasImpact_someDeltasNotZero(self):
 		axes = {"wght":(0.0, 1.0, 1.0)}
-		gvar = TupleVariation(axes, [(0,0), (9,8), (7,6)])
-		self.assertTrue(gvar.hasImpact())
+		var = TupleVariation(axes, [(0,0), (9,8), (7,6)])
+		self.assertTrue(var.hasImpact())
 
 	def test_hasImpact_allDeltasZero(self):
 		axes = {"wght":(0.0, 1.0, 1.0)}
-		gvar = TupleVariation(axes, [(0,0), (0,0), (0,0)])
-		self.assertTrue(gvar.hasImpact())
+		var = TupleVariation(axes, [(0,0), (0,0), (0,0)])
+		self.assertTrue(var.hasImpact())
 
 	def test_hasImpact_allDeltasNone(self):
 		axes = {"wght":(0.0, 1.0, 1.0)}
-		gvar = TupleVariation(axes, [None, None, None])
-		self.assertFalse(gvar.hasImpact())
+		var = TupleVariation(axes, [None, None, None])
+		self.assertFalse(var.hasImpact())
 
 	def test_toXML_badDeltaFormat(self):
 		writer = XMLWriter(BytesIO())
@@ -188,122 +188,140 @@ class TupleVariationTest(unittest.TestCase):
 		self.assertEqual(AXES, g.axes)
 		self.assertEqual([None, (33, 44), (-2, 170), None], g.coordinates)
 
-	def test_compile_sharedCoords_nonIntermediate_sharedPoints(self):
-		gvar = TupleVariation({"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
-				      [(7,4), (8,5), (9,6)])
+	def test_compile_sharedPeaks_nonIntermediate_sharedPoints(self):
+		var = TupleVariation(
+			{"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
+			[(7,4), (8,5), (9,6)])
 		axisTags = ["wght", "wdth"]
-		sharedCoordIndices = { gvar.compileCoord(axisTags): 0x77 }
-		tuple, data = gvar.compile(axisTags, sharedCoordIndices, sharedPoints={0,1,2})
+		sharedPeakIndices = { var.compileCoord(axisTags): 0x77 }
+		tup, deltas = var.compile(axisTags, sharedPeakIndices,
+		                          sharedPoints={0,1,2})
 		# len(data)=8; flags=None; tupleIndex=0x77
-		# embeddedCoord=[]; intermediateCoord=[]
-		self.assertEqual("00 08 00 77", hexencode(tuple))
+		# embeddedPeaks=[]; intermediateCoord=[]
+		self.assertEqual("00 08 00 77", hexencode(tup))
 		self.assertEqual("02 07 08 09 "     # deltaX: [7, 8, 9]
-				 "02 04 05 06",     # deltaY: [4, 5, 6]
-				 hexencode(data))
+						 "02 04 05 06",     # deltaY: [4, 5, 6]
+						 hexencode(deltas))
 
-	def test_compile_sharedCoords_intermediate_sharedPoints(self):
-		gvar = TupleVariation({"wght": (0.3, 0.5, 0.7), "wdth": (0.1, 0.8, 0.9)},
-				      [(7,4), (8,5), (9,6)])
+	def test_compile_sharedPeaks_intermediate_sharedPoints(self):
+		var = TupleVariation(
+			{"wght": (0.3, 0.5, 0.7), "wdth": (0.1, 0.8, 0.9)},
+			[(7,4), (8,5), (9,6)])
 		axisTags = ["wght", "wdth"]
-		sharedCoordIndices = { gvar.compileCoord(axisTags): 0x77 }
-		tuple, data = gvar.compile(axisTags, sharedCoordIndices, sharedPoints={0,1,2})
+		sharedPeakIndices = { var.compileCoord(axisTags): 0x77 }
+		tup, deltas = var.compile(axisTags, sharedPeakIndices,
+		                          sharedPoints={0,1,2})
 		# len(data)=8; flags=INTERMEDIATE_REGION; tupleIndex=0x77
-		# embeddedCoord=[]; intermediateCoord=[(0.3, 0.1), (0.7, 0.9)]
-		self.assertEqual("00 08 40 77 13 33 06 66 2C CD 39 9A", hexencode(tuple))
+		# embeddedPeak=[]; intermediateCoord=[(0.3, 0.1), (0.7, 0.9)]
+		self.assertEqual("00 08 40 77 13 33 06 66 2C CD 39 9A", hexencode(tup))
 		self.assertEqual("02 07 08 09 "     # deltaX: [7, 8, 9]
-				 "02 04 05 06",     # deltaY: [4, 5, 6]
-				 hexencode(data))
+						 "02 04 05 06",     # deltaY: [4, 5, 6]
+						 hexencode(deltas))
 
-	def test_compile_sharedCoords_nonIntermediate_privatePoints(self):
-		gvar = TupleVariation({"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
-				      [(7,4), (8,5), (9,6)])
+	def test_compile_sharedPeaks_nonIntermediate_privatePoints(self):
+		var = TupleVariation(
+			{"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
+			[(7,4), (8,5), (9,6)])
 		axisTags = ["wght", "wdth"]
-		sharedCoordIndices = { gvar.compileCoord(axisTags): 0x77 }
-		tuple, data = gvar.compile(axisTags, sharedCoordIndices, sharedPoints=None)
+		sharedPeakIndices = { var.compileCoord(axisTags): 0x77 }
+		tup, deltas = var.compile(axisTags, sharedPeakIndices,
+		                          sharedPoints=None)
 		# len(data)=13; flags=PRIVATE_POINT_NUMBERS; tupleIndex=0x77
-		# embeddedCoord=[]; intermediateCoord=[]
-		self.assertEqual("00 09 20 77", hexencode(tuple))
+		# embeddedPeak=[]; intermediateCoord=[]
+		self.assertEqual("00 09 20 77", hexencode(tup))
 		self.assertEqual("00 "              # all points in glyph
-				 "02 07 08 09 "     # deltaX: [7, 8, 9]
-				 "02 04 05 06",     # deltaY: [4, 5, 6]
-				 hexencode(data))
+						 "02 07 08 09 "     # deltaX: [7, 8, 9]
+						 "02 04 05 06",     # deltaY: [4, 5, 6]
+						 hexencode(deltas))
 
-	def test_compile_sharedCoords_intermediate_privatePoints(self):
-		gvar = TupleVariation({"wght": (0.0, 0.5, 1.0), "wdth": (0.0, 0.8, 1.0)},
-				      [(7,4), (8,5), (9,6)])
+	def test_compile_sharedPeaks_intermediate_privatePoints(self):
+		var = TupleVariation(
+			{"wght": (0.0, 0.5, 1.0), "wdth": (0.0, 0.8, 1.0)},
+			[(7,4), (8,5), (9,6)])
 		axisTags = ["wght", "wdth"]
-		sharedCoordIndices = { gvar.compileCoord(axisTags): 0x77 }
-		tuple, data = gvar.compile(axisTags, sharedCoordIndices, sharedPoints=None)
+		sharedPeakIndices = { var.compileCoord(axisTags): 0x77 }
+		tuple, deltas = var.compile(axisTags,
+		                            sharedPeakIndices, sharedPoints=None)
 		# len(data)=13; flags=PRIVATE_POINT_NUMBERS; tupleIndex=0x77
-		# embeddedCoord=[]; intermediateCoord=[(0.0, 0.0), (1.0, 1.0)]
-		self.assertEqual("00 09 60 77 00 00 00 00 40 00 40 00", hexencode(tuple))
+		# embeddedPeak=[]; intermediateCoord=[(0.0, 0.0), (1.0, 1.0)]
+		self.assertEqual("00 09 60 77 00 00 00 00 40 00 40 00",
+		                 hexencode(tuple))
 		self.assertEqual("00 "              # all points in glyph
-				 "02 07 08 09 "     # deltaX: [7, 8, 9]
-				 "02 04 05 06",     # deltaY: [4, 5, 6]
-				 hexencode(data))
+						 "02 07 08 09 "     # deltaX: [7, 8, 9]
+						 "02 04 05 06",     # deltaY: [4, 5, 6]
+						 hexencode(deltas))
 
-	def test_compile_embeddedCoords_nonIntermediate_sharedPoints(self):
-		gvar = TupleVariation({"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
-				      [(7,4), (8,5), (9,6)])
-		axisTags = ["wght", "wdth"]
-		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints={0,1,2})
+	def test_compile_embeddedPeak_nonIntermediate_sharedPoints(self):
+		var = TupleVariation(
+			{"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
+			[(7,4), (8,5), (9,6)])
+		tup, deltas = var.compile(axisTags=["wght", "wdth"],
+		                          sharedCoordIndices={}, sharedPoints={0, 1, 2})
 		# len(data)=8; flags=EMBEDDED_PEAK_TUPLE
-		# embeddedCoord=[(0.5, 0.8)]; intermediateCoord=[]
-		self.assertEqual("00 08 80 00 20 00 33 33", hexencode(tuple))
+		# embeddedPeak=[(0.5, 0.8)]; intermediateCoord=[]
+		self.assertEqual("00 08 80 00 20 00 33 33", hexencode(tup))
 		self.assertEqual("02 07 08 09 "     # deltaX: [7, 8, 9]
-				 "02 04 05 06",     # deltaY: [4, 5, 6]
-				 hexencode(data))
+						 "02 04 05 06",     # deltaY: [4, 5, 6]
+						 hexencode(deltas))
 
-	def test_compile_embeddedCoords_intermediate_sharedPoints(self):
-		gvar = TupleVariation({"wght": (0.0, 0.5, 1.0), "wdth": (0.0, 0.8, 0.8)},
-				      [(7,4), (8,5), (9,6)])
-		axisTags = ["wght", "wdth"]
-		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints={0,1,2})
+	def test_compile_embeddedPeak_intermediate_sharedPoints(self):
+		var = TupleVariation(
+			{"wght": (0.0, 0.5, 1.0), "wdth": (0.0, 0.8, 0.8)},
+			[(7,4), (8,5), (9,6)])
+		tup, deltas = var.compile(axisTags=["wght", "wdth"],
+		                          sharedCoordIndices={},
+		                          sharedPoints={0, 1, 2})
 		# len(data)=8; flags=EMBEDDED_PEAK_TUPLE
-		# embeddedCoord=[(0.5, 0.8)]; intermediateCoord=[(0.0, 0.0), (1.0, 0.8)]
-		self.assertEqual("00 08 C0 00 20 00 33 33 00 00 00 00 40 00 33 33", hexencode(tuple))
-		self.assertEqual("02 07 08 09 "     # deltaX: [7, 8, 9]
-				 "02 04 05 06",     # deltaY: [4, 5, 6]
-				 hexencode(data))
+		# embeddedPeak=[(0.5, 0.8)]; intermediateCoord=[(0.0, 0.0), (1.0, 0.8)]
+		self.assertEqual("00 08 C0 00 20 00 33 33 00 00 00 00 40 00 33 33",
+		                hexencode(tup))
+		self.assertEqual("02 07 08 09 "  # deltaX: [7, 8, 9]
+						 "02 04 05 06",  # deltaY: [4, 5, 6]
+						 hexencode(deltas))
 
-	def test_compile_embeddedCoords_nonIntermediate_privatePoints(self):
-		gvar = TupleVariation({"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
-				      [(7,4), (8,5), (9,6)])
-		axisTags = ["wght", "wdth"]
-		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints=None)
+	def test_compile_embeddedPeak_nonIntermediate_privatePoints(self):
+		var = TupleVariation(
+			{"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
+			[(7,4), (8,5), (9,6)])
+		tup, deltas = var.compile(
+			axisTags=["wght", "wdth"], sharedCoordIndices={}, sharedPoints=None)
 		# len(data)=13; flags=PRIVATE_POINT_NUMBERS|EMBEDDED_PEAK_TUPLE
-		# embeddedCoord=[(0.5, 0.8)]; intermediateCoord=[]
-		self.assertEqual("00 09 A0 00 20 00 33 33", hexencode(tuple))
-		self.assertEqual("00 "              # all points in glyph
-				 "02 07 08 09 "     # deltaX: [7, 8, 9]
-				 "02 04 05 06",     # deltaY: [4, 5, 6]
-				 hexencode(data))
+		# embeddedPeak=[(0.5, 0.8)]; intermediateCoord=[]
+		self.assertEqual("00 09 A0 00 20 00 33 33", hexencode(tup))
+		self.assertEqual("00 "           # all points in glyph
+		                 "02 07 08 09 "  # deltaX: [7, 8, 9]
+		                 "02 04 05 06",  # deltaY: [4, 5, 6]
+		                 hexencode(deltas))
 
-	def test_compile_embeddedCoords_intermediate_privatePoints(self):
-		gvar = TupleVariation({"wght": (0.4, 0.5, 0.6), "wdth": (0.7, 0.8, 0.9)},
-				      [(7,4), (8,5), (9,6)])
-		axisTags = ["wght", "wdth"]
-		tuple, data = gvar.compile(axisTags, sharedCoordIndices={}, sharedPoints=None)
-		# len(data)=13; flags=PRIVATE_POINT_NUMBERS|INTERMEDIATE_REGION|EMBEDDED_PEAK_TUPLE
-		# embeddedCoord=(0.5, 0.8); intermediateCoord=[(0.4, 0.7), (0.6, 0.9)]
-		self.assertEqual("00 09 E0 00 20 00 33 33 19 9A 2C CD 26 66 39 9A", hexencode(tuple))
+	def test_compile_embeddedPeak_intermediate_privatePoints(self):
+		var = TupleVariation(
+			{"wght": (0.4, 0.5, 0.6), "wdth": (0.7, 0.8, 0.9)},
+			[(7,4), (8,5), (9,6)])
+		tup, deltas = var.compile(
+			axisTags = ["wght", "wdth"],
+			sharedCoordIndices={}, sharedPoints=None)
+		# len(data)=13;
+		# flags=PRIVATE_POINT_NUMBERS|INTERMEDIATE_REGION|EMBEDDED_PEAK_TUPLE
+		# embeddedPeak=(0.5, 0.8); intermediateCoord=[(0.4, 0.7), (0.6, 0.9)]
+		self.assertEqual("00 09 E0 00 20 00 33 33 19 9A 2C CD 26 66 39 9A",
+		                 hexencode(tup))
 		self.assertEqual("00 "              # all points in glyph
-				 "02 07 08 09 "     # deltaX: [7, 8, 9]
-				 "02 04 05 06",     # deltaY: [4, 5, 6]
-				 hexencode(data))
+		                 "02 07 08 09 "     # deltaX: [7, 8, 9]
+		                 "02 04 05 06",     # deltaY: [4, 5, 6]
+		                 hexencode(deltas))
 
 	def test_compileCoord(self):
-		gvar = TupleVariation({"wght": (-1.0, -1.0, -1.0), "wdth": (0.4, 0.5, 0.6)}, [None] * 4)
-		self.assertEqual("C0 00 20 00", hexencode(gvar.compileCoord(["wght", "wdth"])))
-		self.assertEqual("20 00 C0 00", hexencode(gvar.compileCoord(["wdth", "wght"])))
-		self.assertEqual("C0 00", hexencode(gvar.compileCoord(["wght"])))
+		var = TupleVariation({"wght": (-1.0, -1.0, -1.0), "wdth": (0.4, 0.5, 0.6)}, [None] * 4)
+		self.assertEqual("C0 00 20 00", hexencode(var.compileCoord(["wght", "wdth"])))
+		self.assertEqual("20 00 C0 00", hexencode(var.compileCoord(["wdth", "wght"])))
+		self.assertEqual("C0 00", hexencode(var.compileCoord(["wght"])))
 
 	def test_compileIntermediateCoord(self):
-		gvar = TupleVariation({"wght": (-1.0, -1.0, 0.0), "wdth": (0.4, 0.5, 0.6)}, [None] * 4)
-		self.assertEqual("C0 00 19 9A 00 00 26 66", hexencode(gvar.compileIntermediateCoord(["wght", "wdth"])))
-		self.assertEqual("19 9A C0 00 26 66 00 00", hexencode(gvar.compileIntermediateCoord(["wdth", "wght"])))
-		self.assertEqual(None, gvar.compileIntermediateCoord(["wght"]))
-		self.assertEqual("19 9A 26 66", hexencode(gvar.compileIntermediateCoord(["wdth"])))
+		var = TupleVariation({"wght": (-1.0, -1.0, 0.0), "wdth": (0.4, 0.5, 0.6)}, [None] * 4)
+		self.assertEqual("C0 00 19 9A 00 00 26 66", hexencode(var.compileIntermediateCoord(["wght", "wdth"])))
+		self.assertEqual("19 9A C0 00 26 66 00 00", hexencode(var.compileIntermediateCoord(["wdth", "wght"])))
+		self.assertEqual(None, var.compileIntermediateCoord(["wght"]))
+		self.assertEqual("19 9A 26 66", hexencode(var.compileIntermediateCoord(["wdth"])))
 
 	def test_decompileCoord(self):
 		decompileCoord = TupleVariation.decompileCoord_
@@ -315,8 +333,8 @@ class TupleVariationTest(unittest.TestCase):
 		data = deHexStr("7F B9 80 35")
 		values, _ = TupleVariation.decompileCoord_(["wght", "wdth"], data, 0)
 		axisValues = {axis:(val, val, val) for axis, val in  values.items()}
-		gvar = TupleVariation(axisValues, [None] * 4)
-		self.assertEqual("7F B9 80 35", hexencode(gvar.compileCoord(["wght", "wdth"])))
+		var = TupleVariation(axisValues, [None] * 4)
+		self.assertEqual("7F B9 80 35", hexencode(var.compileCoord(["wght", "wdth"])))
 
 	def test_compilePoints(self):
 		compilePoints = lambda p: TupleVariation.compilePoints(set(p), numPointsInGlyph=999)
@@ -402,10 +420,10 @@ class TupleVariationTest(unittest.TestCase):
 		self.assertSetEqual(allPoints, decompile(compile(allPoints)))
 
 	def test_compileDeltas(self):
-		gvar = TupleVariation({}, [(0,0), (1, 0), (2, 0), (3, 3)])
+		var = TupleVariation({}, [(0,0), (1, 0), (2, 0), (3, 3)])
 		points = {1, 2}
 		# deltaX for points: [1, 2]; deltaY for points: [0, 0]
-		self.assertEqual("01 01 02 81", hexencode(gvar.compileDeltas(points)))
+		self.assertEqual("01 01 02 81", hexencode(var.compileDeltas(points)))
 
 	def test_compileDeltaValues(self):
 		compileDeltaValues = lambda values: hexencode(TupleVariation.compileDeltaValues_(values))
