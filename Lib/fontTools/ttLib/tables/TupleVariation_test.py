@@ -460,11 +460,17 @@ class TupleVariationTest(unittest.TestCase):
 		allPoints = set(range(numPointsInGlyph))
 		self.assertSetEqual(allPoints, decompile(compile(allPoints)))
 
-	def test_compileDeltas(self):
-		var = TupleVariation({}, [(0,0), (1, 0), (2, 0), (3, 3)])
-		points = {1, 2}
-		# deltaX for points: [1, 2]; deltaY for points: [0, 0]
-		self.assertEqual("01 01 02 81", hexencode(var.compileDeltas(points)))
+	def test_compileDeltas_points(self):
+		var = TupleVariation({}, [(0,0), (1, 0), (2, 0), None, (4, 0), (5, 0)])
+		points = {1, 2, 3, 4}
+		# deltaX for points: [1, 2, 4]; deltaY for points: [0, 0, 0]
+		self.assertEqual("02 01 02 04 82", hexencode(var.compileDeltas(points)))
+
+	def test_compileDeltas_constants(self):
+		var = TupleVariation({}, [0, 1, 2, None, 4, 5])
+		cvts = {1, 2, 3, 4}
+		# delta for cvts: [1, 2, 4]
+		self.assertEqual("02 01 02 04", hexencode(var.compileDeltas(cvts)))
 
 	def test_compileDeltaValues(self):
 		compileDeltaValues = lambda values: hexencode(TupleVariation.compileDeltaValues_(values))

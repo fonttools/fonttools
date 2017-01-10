@@ -297,7 +297,7 @@ class TupleVariation(object):
 				deltaY.append(c[1])
 			elif type(c) is int:
 				deltaX.append(c)
-			else:
+			elif c is not None:
 				raise ValueError("invalid type of delta: %s" % type(c))
 		return self.compileDeltaValues_(deltaX) + self.compileDeltaValues_(deltaY)
 
