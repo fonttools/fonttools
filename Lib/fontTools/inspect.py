@@ -262,10 +262,10 @@ def main(args=None):
 		args = sys.argv[1:]
 	if len(args) < 1:
 		print("usage: pyftinspect font...", file=sys.stderr)
-		sys.exit(1)
+		return 1
 	for arg in args:
 		Inspect(arg)
 	gtk.main()
 
 if __name__ == "__main__":
-	main()
+	sys.exit(main())

@@ -2872,7 +2872,7 @@ def main(args=None):
 
     if '--help' in args:
         print(__doc__)
-        sys.exit(0)
+        return 0
 
     options = Options()
     try:
@@ -2885,11 +2885,11 @@ def main(args=None):
     except options.OptionError as e:
         usage()
         print("ERROR:", e, file=sys.stderr)
-        sys.exit(2)
+        return 2
 
     if len(args) < 2:
         usage()
-        sys.exit(1)
+        return 1
 
     configLogger(level=logging.INFO if options.verbose else logging.WARNING)
     if options.timing:
@@ -2995,4 +2995,4 @@ __all__ = [
 ]
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

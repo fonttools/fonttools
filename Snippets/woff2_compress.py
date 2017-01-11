@@ -13,7 +13,7 @@ def main(args=None):
         args = sys.argv[1:]
     if len(args) < 1:
         print("One argument, the input filename, must be provided.", file=sys.stderr)
-        sys.exit(1)
+        return 1
 
     filename = args[0]
     outfilename = makeOutputFileName(filename, outputDir=None, extension='.woff2')
@@ -26,4 +26,4 @@ def main(args=None):
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

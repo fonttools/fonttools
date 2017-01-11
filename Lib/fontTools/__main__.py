@@ -1,7 +1,8 @@
 from __future__ import print_function, division, absolute_import
+import sys
+
 
 def main(args=None):
-	import sys
 	if args is None:
 		args = sys.argv[1:]
 
@@ -27,5 +28,6 @@ def main(args=None):
 	import runpy
 	runpy.run_module(mod, run_name='__main__')
 
+
 if __name__ == '__main__':
-	main()
+	sys.exit(main())

@@ -1151,10 +1151,13 @@ def build(f, font, tableTag=None):
 	return parseTable(lines, font, tableTag=tableTag)
 
 
-def main(args, font=None):
+def main(args=None, font=None):
 	import sys
 	from fontTools import configLogger
 	from fontTools.misc.testTools import MockFont
+
+	if args is None:
+		args = sys.argv[1:]
 
 	# configure the library logger (for >= WARNING)
 	configLogger()
@@ -1186,6 +1189,7 @@ def main(args, font=None):
 		writer.endtag(tag)
 		writer.newline()
 
+
 if __name__ == '__main__':
 	import sys
-	main (sys.argv[1:])
+	sys.exit(main())
