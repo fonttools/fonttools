@@ -337,4 +337,5 @@ def add_name(font, string, nameID):
 
 
 if __name__ == "__main__":
-	unittest.main()
+	import sys
+	sys.exit(unittest.main())

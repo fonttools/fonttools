@@ -51,4 +51,5 @@ class Test_l_t_a_g(unittest.TestCase):
 
 
 if __name__ == '__main__':
-	unittest.main()
+	import sys
+	sys.exit(unittest.main())

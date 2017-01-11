@@ -390,4 +390,4 @@ class IsCloseTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
-	unittest.main()
+	sys.exit(unittest.main())

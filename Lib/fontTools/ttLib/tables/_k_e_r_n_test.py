@@ -26,4 +26,5 @@ class KernTable_format_0_Test(unittest.TestCase):
                 self.assertEqual(subtable[("glyph00001", "glyph65535")], 2)
 
 if __name__ == "__main__":
-        unittest.main()
+        import sys
+        sys.exit(unittest.main())

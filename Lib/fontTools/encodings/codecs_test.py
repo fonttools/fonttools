@@ -22,4 +22,5 @@ class ExtendedCodecsTest(unittest.TestCase):
 				 unichr(0x78)+unichr(0x02DA))
 
 if __name__ == '__main__':
-	unittest.main()
+	import sys
+	sys.exit(unittest.main())

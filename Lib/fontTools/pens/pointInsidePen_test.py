@@ -220,5 +220,6 @@ class PointInsidePenTest(unittest.TestCase):
         self.assertEqual(piPen.getWinding(), 0)
 
 if __name__ == "__main__":
-    unittest.main()
+    import sys
+    sys.exit(unittest.main())
 

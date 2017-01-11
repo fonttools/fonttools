@@ -196,4 +196,5 @@ class NameRecordTest(unittest.TestCase):
 		self.assertEqual(name.getEncoding(default=None), None)
 
 if __name__ == "__main__":
-	unittest.main()
+	import sys
+	sys.exit(unittest.main())

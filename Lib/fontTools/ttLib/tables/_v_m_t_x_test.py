@@ -15,4 +15,5 @@ class VmtxTableTest(_h_m_t_x_test.HmtxTableTest):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    import sys
+    sys.exit(unittest.main())

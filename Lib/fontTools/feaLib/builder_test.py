@@ -381,4 +381,4 @@ for name in BuilderTest.TEST_FEATURE_FILES:
 
 
 if __name__ == "__main__":
-    unittest.main()
+    sys.exit(unittest.main())

@@ -64,4 +64,5 @@ class AglToUnicodeTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    import sys
+    sys.exit(unittest.main())

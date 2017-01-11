@@ -229,10 +229,8 @@ for tableTag,tests in MtiTest.TESTS.items():
 
 
 if __name__ == "__main__":
-    import sys
     if len(sys.argv) > 1:
         from fontTools.mtiLib import main
         font = MtiTest.create_font()
-        main (sys.argv[1:], font)
-        sys.exit()
-    unittest.main()
+        sys.exit(main(sys.argv[1:], font))
+    sys.exit(unittest.main())

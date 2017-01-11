@@ -28,4 +28,5 @@ class EncodingTest(unittest.TestCase):
 		self.assertEqual(getEncoding(10, 11, 12, default="ascii"), "ascii")
 
 if __name__ == "__main__":
-	unittest.main()
+	import sys
+	sys.exit(unittest.main())
