@@ -3,6 +3,7 @@
 - When parsing cmap table, do not store items mapped to glyph id 0. (#790)
 - [otlLib] Make ClassDef sorting deterministic. Fixes #766 (7d1ddb2)
 - [mtiLib] Added unit tests (#787)
+- [cvar] Implemented cvar table
 - [gvar] Renamed GlyphVariation to TupleVariation to match OpenType terminology.
 - [otTables] Handle gracefully empty VarData.Item array when compiling XML. (#797)
 - [varLib] Re-enabled generation of `HVAR` table for fonts with TrueType
