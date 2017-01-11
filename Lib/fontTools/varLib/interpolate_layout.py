@@ -338,5 +338,5 @@ if __name__ == "__main__":
 	import sys
 	if len(sys.argv) > 1:
 		sys.exit(main())
-	import doctest, sys
+	import doctest
 	sys.exit(doctest.testmod().failed)
