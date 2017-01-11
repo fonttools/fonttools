@@ -95,7 +95,7 @@ import re
 import logging
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("fontTools.ttx")
 
 numberAddedRE = re.compile("#\d+$")
 opentypeheaderRE = re.compile('''sfntVersion=['"]OTTO["']''')

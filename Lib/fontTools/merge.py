@@ -19,7 +19,7 @@ import operator
 import logging
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("fontTools.merge")
 timer = Timer(logger=logging.getLogger(__name__+".timer"), level=logging.INFO)
 
 

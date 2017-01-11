@@ -333,7 +333,7 @@ Example:
 """
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("fontTools.subset")
 
 def _log_glyphs(self, glyphs, font=None):
     self.info("Glyph names: %s", sorted(glyphs))
@@ -346,7 +346,7 @@ log.glyphs = MethodType(_log_glyphs, log)
 
 # I use a different timing channel so I can configure it separately from the
 # main module's logger
-timer = Timer(logger=logging.getLogger(__name__+".timer"))
+timer = Timer(logger=logging.getLogger("fontTools.subset.timer"))
 
 
 def _add_method(*clazzes):

@@ -35,7 +35,7 @@ import os.path
 import logging
 from pprint import pformat
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("fontTools.varLib")
 
 #
 # Creation routines

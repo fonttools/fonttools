@@ -25,7 +25,7 @@ class FeatureNotFoundError(ReferenceNotFoundError): pass
 class LookupNotFoundError(ReferenceNotFoundError): pass
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("fontTools.mtiLib")
 
 
 def makeGlyph(s):
