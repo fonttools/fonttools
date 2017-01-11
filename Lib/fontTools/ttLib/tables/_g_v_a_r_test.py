@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
-from fontTools.misc.testTools import FakeFont
+from fontTools.misc.testTools import FakeFont, getXML, parseXML
 from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.ttLib import TTLibError, getTableClass, getTableModule, newTable
 import unittest
@@ -80,6 +80,44 @@ GVAR_VARIATIONS = {
 }
 
 
+GVAR_XML = [
+    '<version value="1"/>',
+    '<reserved value="0"/>',
+    '<glyphVariations glyph="space">',
+    '  <tuple>',
+    '    <coord axis="wdth" value="0.7"/>',
+    '    <delta pt="0" x="1" y="11"/>',
+    '    <delta pt="1" x="2" y="22"/>',
+    '    <delta pt="2" x="3" y="33"/>',
+    '    <delta pt="3" x="4" y="44"/>',
+    '  </tuple>',
+    '</glyphVariations>',
+    '<glyphVariations glyph="I">',
+    '  <tuple>',
+    '    <coord axis="wght" max="1.0" min="0.0" value="0.5"/>',
+    '    <delta pt="0" x="3" y="3"/>',
+    '    <delta pt="1" x="1" y="1"/>',
+    '    <delta pt="2" x="4" y="4"/>',
+    '    <delta pt="3" x="1" y="1"/>',
+    '    <delta pt="4" x="5" y="5"/>',
+    '    <delta pt="5" x="9" y="9"/>',
+    '    <delta pt="6" x="2" y="2"/>',
+    '    <delta pt="7" x="6" y="6"/>',
+    '  </tuple>',
+    '  <tuple>',
+    '    <coord axis="wght" value="-1.0"/>',
+    '    <coord axis="wdth" value="0.8"/>',
+    '    <delta pt="0" x="-8" y="-88"/>',
+    '    <delta pt="1" x="7" y="77"/>',
+    '    <delta pt="4" x="-4" y="44"/>',
+    '    <delta pt="5" x="3" y="33"/>',
+    '    <delta pt="6" x="-2" y="-22"/>',
+    '    <delta pt="7" x="1" y="11"/>',
+    '  </tuple>',
+    '</glyphVariations>',
+]
+
+
 GVAR_DATA_EMPTY_VARIATIONS = deHexStr(
     "0001 0000 "           #  0: majorVersion=1 minorVersion=0
     "0002 0000 "           #  4: axisCount=2 sharedTupleCount=0
@@ -96,7 +134,8 @@ def hexencode(s):
 
 
 class GVARTableTest(unittest.TestCase):
-	def makeFont(self, glyphs=[".notdef", "space", "I"]):
+	def makeFont(self, variations):
+		glyphs=[".notdef", "space", "I"]
 		Axis = getTableModule("fvar").Axis
 		Glyph = getTableModule("glyf").Glyph
 		glyf, fvar, gvar = newTable("glyf"), newTable("fvar"), newTable("gvar")
@@ -106,34 +145,44 @@ class GVARTableTest(unittest.TestCase):
 		glyf.glyphs["I"].coordinates = [(10, 10), (10, 20), (20, 20), (20, 10)]
 		fvar.axes = [Axis(), Axis()]
 		fvar.axes[0].axisTag, fvar.axes[1].axisTag = "wght", "wdth"
+		gvar.variations = variations
 		return font, gvar
 
 	def test_compile(self):
-		font, gvar = self.makeFont()
-		gvar.variations = GVAR_VARIATIONS
+		font, gvar = self.makeFont(GVAR_VARIATIONS)
 		self.assertEqual(hexStr(gvar.compile(font)), hexStr(GVAR_DATA))
 
 	def test_compile_noVariations(self):
-		font, gvar = self.makeFont()
+		font, gvar = self.makeFont({})
 		self.assertEqual(hexStr(gvar.compile(font)),
 		                 hexStr(GVAR_DATA_EMPTY_VARIATIONS))
 
 	def test_compile_emptyVariations(self):
-		font, gvar = self.makeFont()
-		gvar.variations = {".notdef": [], "space": [], "I": []}
+		font, gvar = self.makeFont({".notdef": [], "space": [], "I": []})
 		self.assertEqual(hexStr(gvar.compile(font)),
 		                 hexStr(GVAR_DATA_EMPTY_VARIATIONS))
 
 	def test_decompile(self):
-		font, gvar = self.makeFont()
+		font, gvar = self.makeFont({})
 		gvar.decompile(GVAR_DATA, font)
 		self.assertEqual(gvar.variations, GVAR_VARIATIONS)
 
 	def test_decompile_noVariations(self):
-		font, gvar = self.makeFont()
+		font, gvar = self.makeFont({})
 		gvar.decompile(GVAR_DATA_EMPTY_VARIATIONS, font)
 		self.assertEqual(gvar.variations,
 		                 {".notdef": [], "space": [], "I": []})
+
+	def test_fromXML(self):
+		font, gvar = self.makeFont({})
+		for name, attrs, content in parseXML(GVAR_XML):
+			gvar.fromXML(name, attrs, content, ttFont=font)
+		self.assertEqual(gvar.variations,
+                         {g:v for g,v in GVAR_VARIATIONS.items() if v})
+
+	def test_toXML(self):
+		font, gvar = self.makeFont(GVAR_VARIATIONS)
+		self.assertEqual(getXML(gvar.toXML, font), GVAR_XML)
 
 	def test_compileOffsets_shortFormat(self):
 		self.assertEqual((deHexStr("00 00 00 02 FF C0"), 0),
