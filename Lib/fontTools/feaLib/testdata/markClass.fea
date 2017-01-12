@@ -3,7 +3,7 @@ languagesystem DFLT dflt;
 markClass [acute] <anchor 350 0> @TOP_MARKS;
 
 feature foo {
-    markClass [acute grave] <anchor 350 0> @TOP_MARKS;
+    markClass [grave] <anchor 350 0> @TOP_MARKS;
     markClass cedilla <anchor 300 0> @BOTTOM_MARKS;
 } foo;
 

@@ -448,6 +448,13 @@ class BuilderTest(unittest.TestCase):
         self.check_fea2fea_file(
             "baseClass.feax", base="baseClass.fea", parser=testParser)
 
+    def test_markClass_same_glyph_redefined(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Glyph acute already defined",
+            self.build,
+            "markClass [acute] <anchor 350 0> @TOP_MARKS;"*2)
+
 
 def generate_feature_file_test(name):
     return lambda self: self.check_feature_file(name)
