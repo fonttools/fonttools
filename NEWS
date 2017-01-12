@@ -8,6 +8,9 @@
 - [otTables] Handle gracefully empty VarData.Item array when compiling XML. (#797)
 - [varLib] Re-enabled generation of `HVAR` table for fonts with TrueType
   outlines; removed `--build-HVAR` command-line option.
+- [feaLib] The parser can now be extended to support non-standard statements in
+  FEA code by using a customized Abstract Syntax Tree. See, for example,
+  `feaLib.builder_test.test_extensions` and baseClass.feax (#794, fixes #773).
 - [ci] Measure test coverage on all supported python versions and OSes, combine
   coverage data and upload to https://codecov.io/gh/fonttools/fonttools (#786)
 - [ci] Configured Travis and Appveyor for running tests on Python 3.6 (#785, 55c03bc)
