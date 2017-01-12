@@ -134,20 +134,23 @@ class BuilderTest(unittest.TestCase):
                 font[tag].compile(font)
 
     def check_fea2fea_file(self, name, base=None, parser=Parser):
-        if '.' not in name :
-            name = name + ".fea"
-        if base is None :
-            base = name
-        f = self.getpath(name)
-        p = parser(f)
+        fname = (name + ".fea") if '.' not in name else name
+        p = parser(self.getpath(fname))
         doc = p.parse()
-        tlines = self.normal_fea(doc.asFea().split("\n"))
-        with open(self.getpath(base), "r", encoding="utf-8") as ofile:
-            olines = self.normal_fea(ofile.readlines())
-        if olines != tlines:
-            for line in difflib.unified_diff(olines, tlines):
-                sys.stderr.write(line)
-            self.fail("Fea2Fea output is different from expected. Generated:\n{}\n".format("\n".join(tlines)))
+        actual = self.normal_fea(doc.asFea().split("\n"))
+
+        with open(self.getpath(base or fname), "r", encoding="utf-8") as ofile:
+            expected = self.normal_fea(ofile.readlines())
+
+        if expected != actual:
+            fname = name.rsplit(".", 1)[0] + ".fea"
+            for line in difflib.unified_diff(
+                    expected, actual,
+                    fromfile=fname + " (expected)",
+                    tofile=fname + " (actual)"):
+                sys.stderr.write(line+"\n")
+            self.fail("Fea2Fea output is different from expected. "
+                      "Generated:\n{}\n".format("\n".join(actual)))
 
     def normal_fea(self, lines):
         output = []
@@ -442,7 +445,8 @@ class BuilderTest(unittest.TestCase):
             }
             ast = testAst()
 
-        self.check_fea2fea_file("baseClass.feax", base="baseClass.fea", parser=testParser)
+        self.check_fea2fea_file(
+            "baseClass.feax", base="baseClass.fea", parser=testParser)
 
 
 def generate_feature_file_test(name):
