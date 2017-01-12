@@ -13,6 +13,8 @@
 - [ci] Configured Travis and Appveyor for running tests on Python 3.6 (#785, 55c03bc)
 - The manual pages installation directory can be customized through
   FONTTOOLS_MANPATH environment variable (#799, fixes #84).
+- [Snippets] Added otf2ttf.py, for converting fonts from CFF to TrueType using
+  the googlei18n/cu2qu module (#802)
 
 ## TTX/FontTools Version 3.4.0
 
