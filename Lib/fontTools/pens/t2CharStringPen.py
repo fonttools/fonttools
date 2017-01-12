@@ -7,15 +7,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.psCharStrings import T2CharString
 from fontTools.pens.basePen import BasePen
-
-
-def roundInt(v):
-    return int(round(v))
-
-
-def roundIntPoint(point):
-    x, y = point
-    return roundInt(x), roundInt(y)
+from math import fabs
 
 
 class RelativeCoordinatePen(BasePen):
@@ -75,20 +67,44 @@ class RelativeCoordinatePen(BasePen):
         raise NotImplementedError
 
 
+def makeRoundFuncs(tolerance):
+    assert 0 <= tolerance <= 1
+
+    def _round(number):
+        if tolerance == 0:
+            return number  # no-op
+        rounded = round(number)
+        # return rounded integer if the tolerance is >= 0.5, or if the
+        # absolute difference between the original float and the rounded
+        # integer is within the tolerance
+        if tolerance >= .5 or fabs(rounded - number) <= tolerance:
+            return rounded
+        else:
+            # else return the value un-rounded
+            return number
+
+    def _roundPoint(point):
+        x, y = point
+        return _round(x), _round(y)
+
+    return _round, _roundPoint
+
+
 class T2CharStringPen(RelativeCoordinatePen):
 
-    def __init__(self, width, glyphSet):
+    def __init__(self, width, glyphSet, roundTolerance=0.0):
         RelativeCoordinatePen.__init__(self, glyphSet)
+        self.round, self.roundPoint = makeRoundFuncs(roundTolerance)
         self._heldMove = None
         self._program = []
         if width is not None:
-            self._program.append(roundInt(width))
+            self._program.append(self.round(width))
 
     def _moveTo(self, pt):
-        RelativeCoordinatePen._moveTo(self, roundIntPoint(pt))
+        RelativeCoordinatePen._moveTo(self, self.roundPoint(pt))
 
     def _relativeMoveTo(self, pt):
-        pt = roundIntPoint(pt)
+        pt = self.roundPoint(pt)
         x, y = pt
         self._heldMove = [x, y, "rmoveto"]
 
@@ -98,22 +114,25 @@ class T2CharStringPen(RelativeCoordinatePen):
             self._heldMove = None
 
     def _lineTo(self, pt):
-        RelativeCoordinatePen._lineTo(self, roundIntPoint(pt))
+        RelativeCoordinatePen._lineTo(self, self.roundPoint(pt))
 
     def _relativeLineTo(self, pt):
         self._storeHeldMove()
-        pt = roundIntPoint(pt)
+        pt = self.roundPoint(pt)
         x, y = pt
         self._program.extend([x, y, "rlineto"])
 
     def _curveToOne(self, pt1, pt2, pt3):
-        RelativeCoordinatePen._curveToOne(self, roundIntPoint(pt1), roundIntPoint(pt2), roundIntPoint(pt3))
+        RelativeCoordinatePen._curveToOne(self,
+                                          self.roundPoint(pt1),
+                                          self.roundPoint(pt2),
+                                          self.roundPoint(pt3))
 
     def _relativeCurveToOne(self, pt1, pt2, pt3):
         self._storeHeldMove()
-        pt1 = roundIntPoint(pt1)
-        pt2 = roundIntPoint(pt2)
-        pt3 = roundIntPoint(pt3)
+        pt1 = self.roundPoint(pt1)
+        pt2 = self.roundPoint(pt2)
+        pt3 = self.roundPoint(pt3)
         x1, y1 = pt1
         x2, y2 = pt2
         x3, y3 = pt3
@@ -127,5 +146,6 @@ class T2CharStringPen(RelativeCoordinatePen):
 
     def getCharString(self, private=None, globalSubrs=None):
         program = self._program + ["endchar"]
-        charString = T2CharString(program=program, private=private, globalSubrs=globalSubrs)
+        charString = T2CharString(
+            program=program, private=private, globalSubrs=globalSubrs)
         return charString
