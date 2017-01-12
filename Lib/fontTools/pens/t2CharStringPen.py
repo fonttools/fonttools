@@ -67,7 +67,7 @@ class RelativeCoordinatePen(BasePen):
         raise NotImplementedError
 
 
-def makeRoundFuncs(tolerance):
+def makeRoundFunc(tolerance):
     assert 0 <= tolerance <= 0.5
 
     def _round(number):
@@ -83,22 +83,22 @@ def makeRoundFuncs(tolerance):
             # else return the value un-rounded
             return number
 
-    def _roundPoint(point):
+    def roundPoint(point):
         x, y = point
         return _round(x), _round(y)
 
-    return _round, _roundPoint
+    return roundPoint
 
 
 class T2CharStringPen(RelativeCoordinatePen):
 
     def __init__(self, width, glyphSet, roundTolerance=0.5):
         RelativeCoordinatePen.__init__(self, glyphSet)
-        self.round, self.roundPoint = makeRoundFuncs(roundTolerance)
+        self.roundPoint = makeRoundFunc(roundTolerance)
         self._heldMove = None
         self._program = []
         if width is not None:
-            self._program.append(self.round(width))
+            self._program.append(round(width))
 
     def _moveTo(self, pt):
         RelativeCoordinatePen._moveTo(self, self.roundPoint(pt))

@@ -63,7 +63,7 @@ class T2CharStringPenTest(unittest.TestCase):
         charstring = pen.getCharString(None, None)
 
         self.assertAlmostEqualProgram(
-            [100.1,
+            [100,  # we always round the advance width
              0, 0, 'rmoveto',
              10.1, 0.1, 9.8, 9.8, 0.59, 10.59, 'rrcurveto',
              0, 10, -10.59, 9.41, -9.8, 0.2, 'rrcurveto',
