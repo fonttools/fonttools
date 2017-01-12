@@ -14,7 +14,7 @@ def glyphstr(glyphs):
             return list(x)[0]
         else:
             return '[%s]' % ' '.join(sorted(list(x)))
-    return ' '.join([f(g.glyphSet()) for g in glyphs])
+    return ' '.join(f(g.glyphSet()) for g in glyphs)
 
 
 def mapping(s):

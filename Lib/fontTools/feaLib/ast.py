@@ -11,7 +11,7 @@ def deviceToString(device):
     if device is None:
         return "<device NULL>"
     else:
-        return "<device %s>" % ", ".join(["%d %d" % t for t in device])
+        return "<device %s>" % ", ".join("%d %d" % t for t in device)
 
 
 fea_keywords = set([
@@ -189,7 +189,7 @@ class FeatureFile(Block):
         self.markClasses = {}  # name --> ast.MarkClass
 
     def asFea(self, indent=""):
-        return "\n".join([s.asFea(indent=indent) for s in self.statements])
+        return "\n".join(s.asFea(indent=indent) for s in self.statements)
 
 
 class FeatureBlock(Block):
@@ -331,7 +331,7 @@ class MarkClass(object):
         return tuple(self.glyphs.keys())
 
     def asFea(self, indent=""):
-        res = "\n".join([d.asFea(indent=indent) for d in self.definitions])
+        res = "\n".join(d.asFea(indent=indent) for d in self.definitions)
         return res
 
 
@@ -429,7 +429,7 @@ class AttachStatement(Statement):
 
     def asFea(self, indent=""):
         return "Attach {} {};".format(
-            self.glyphs.asFea(), " ".join([str(c) for c in self.contourPoints]))
+            self.glyphs.asFea(), " ".join(str(c) for c in self.contourPoints))
 
 
 class ChainContextPosStatement(Statement):
@@ -449,7 +449,7 @@ class ChainContextPosStatement(Statement):
         res = "pos "
         if len(self.prefix) or len(self.suffix) or any([x is not None for x in self.lookups]):
             if len(self.prefix):
-                res += " ".join([g.asFea() for g in self.prefix]) + " "
+                res += " ".join(g.asFea() for g in self.prefix) + " "
             for i, g in enumerate(self.glyphs):
                 res += g.asFea() + "'"
                 if self.lookups[i] is not None:
@@ -481,7 +481,7 @@ class ChainContextSubstStatement(Statement):
         res = "sub "
         if len(self.prefix) or len(self.suffix) or any([x is not None for x in self.lookups]):
             if len(self.prefix):
-                res += " ".join([g.asFea() for g in self.prefix]) + " "
+                res += " ".join(g.asFea() for g in self.prefix) + " "
             for i, g in enumerate(self.glyphs):
                 res += g.asFea() + "'"
                 if self.lookups[i] is not None:
@@ -545,7 +545,7 @@ class IgnorePosStatement(Statement):
             if len(prefix) or len(suffix):
                 if len(prefix):
                     res += " ".join(map(asFea, prefix)) + " "
-                res += " ".join([g.asFea() + "'" for g in glyphs])
+                res += " ".join(g.asFea() + "'" for g in glyphs)
                 if len(suffix):
                     res += " " + " ".join(map(asFea, suffix))
             else:
@@ -574,7 +574,7 @@ class IgnoreSubstStatement(Statement):
             if len(prefix) or len(suffix):
                 if len(prefix):
                     res += " ".join(map(asFea, prefix)) + " "
-                res += " ".join([g.asFea() + "'" for g in glyphs])
+                res += " ".join(g.asFea() + "'" for g in glyphs)
                 if len(suffix):
                     res += " " + " ".join(map(asFea, suffix))
             else:
@@ -641,7 +641,7 @@ class LigatureCaretByIndexStatement(Statement):
 
     def asFea(self, indent=""):
         return "LigatureCaretByIndex {} {};".format(
-            self.glyphs.asFea(), " ".join([str(x) for x in self.carets]))
+            self.glyphs.asFea(), " ".join(str(x) for x in self.carets))
 
 
 class LigatureCaretByPosStatement(Statement):
@@ -655,7 +655,7 @@ class LigatureCaretByPosStatement(Statement):
 
     def asFea(self, indent=""):
         return "LigatureCaretByPos {} {};".format(
-            self.glyphs.asFea(), " ".join([str(x) for x in self.carets]))
+            self.glyphs.asFea(), " ".join(str(x) for x in self.carets))
 
 
 class LigatureSubstStatement(Statement):
@@ -677,12 +677,12 @@ class LigatureSubstStatement(Statement):
         res = "sub "
         if len(self.prefix) or len(self.suffix) or self.forceChain:
             if len(self.prefix):
-                res += " ".join([g.asFea() for g in self.prefix]) + " "
-            res += " ".join([g.asFea() + "'" for g in self.glyphs])
+                res += " ".join(g.asFea() for g in self.prefix) + " "
+            res += " ".join(g.asFea() + "'" for g in self.glyphs)
             if len(self.suffix):
-                res += " " + " ".join([g.asFea() for g in self.suffix])
+                res += " " + " ".join(g.asFea() for g in self.suffix)
         else:
-            res += " ".join([g.asFea() for g in self.glyphs])
+            res += " ".join(g.asFea() for g in self.glyphs)
         res += " by "
         res += asFea(self.replacement)
         res += ";"
@@ -880,13 +880,13 @@ class ReverseChainSingleSubstStatement(Statement):
         res = "rsub "
         if len(self.old_prefix) or len(self.old_suffix):
             if len(self.old_prefix):
-                res += " ".join([asFea(g) for g in self.old_prefix]) + " "
-            res += " ".join([asFea(g) + "'" for g in self.glyphs])
+                res += " ".join(asFea(g) for g in self.old_prefix) + " "
+            res += " ".join(asFea(g) + "'" for g in self.glyphs)
             if len(self.old_suffix):
-                res += " " + " ".join([asFea(g) for g in self.old_suffix])
+                res += " " + " ".join(asFea(g) for g in self.old_suffix)
         else:
             res += " ".join(map(asFea, self.glyphs))
-        res += " by {};".format(" ".join([asFea(g) for g in self.replacements]))
+        res += " by {};".format(" ".join(asFea(g) for g in self.replacements))
         return res
 
 
@@ -913,13 +913,13 @@ class SingleSubstStatement(Statement):
         res = "sub "
         if len(self.prefix) or len(self.suffix) or self.forceChain:
             if len(self.prefix):
-                res += " ".join([asFea(g) for g in self.prefix]) + " "
-            res += " ".join([asFea(g) + "'" for g in self.glyphs])
+                res += " ".join(asFea(g) for g in self.prefix) + " "
+            res += " ".join(asFea(g) + "'" for g in self.glyphs)
             if len(self.suffix):
-                res += " " + " ".join([asFea(g) for g in self.suffix])
+                res += " " + " ".join(asFea(g) for g in self.suffix)
         else:
-            res += " ".join([asFea(g) for g in self.glyphs])
-        res += " by {};".format(" ".join([asFea(g) for g in self.replacements]))
+            res += " ".join(asFea(g) for g in self.glyphs)
+        res += " by {};".format(" ".join(asFea(g) for g in self.replacements))
         return res
 
 
