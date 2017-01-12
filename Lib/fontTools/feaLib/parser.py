@@ -13,8 +13,10 @@ log = logging.getLogger(__name__)
 
 
 class Parser(object):
+
     extensions = {}
     ast = ast
+
     def __init__(self, featurefile):
         self.doc_ = self.ast.FeatureFile()
         self.anchors_ = SymbolTable()

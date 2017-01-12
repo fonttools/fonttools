@@ -346,8 +346,9 @@ class MarkClassDefinition(Statement):
         return self.glyphs.glyphSet()
 
     def asFea(self, indent=""):
-        return "{}markClass {} {} @{};".format(indent,
-            self.glyphs.asFea(), self.anchor.asFea(), self.markClass.name)
+        return "{}markClass {} {} @{};".format(
+            indent, self.glyphs.asFea(), self.anchor.asFea(),
+            self.markClass.name)
 
 
 class AlternateSubstStatement(Statement):
