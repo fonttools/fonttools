@@ -55,7 +55,6 @@ class T2CharStringPenTest(unittest.TestCase):
         self.assertEqual(['endchar'], charstring.program)
 
     def test_no_round(self):
-        # no rounding is the default
         pen = T2CharStringPen(100.1, {}, roundTolerance=0.0)
         pen.moveTo((0, 0))
         pen.curveTo((10.1, 0.1), (19.9, 9.9), (20.49, 20.49))
@@ -72,8 +71,7 @@ class T2CharStringPenTest(unittest.TestCase):
             charstring.program)
 
     def test_round_all(self):
-        # 1.0 rounds everything
-        pen = T2CharStringPen(100.1, {}, roundTolerance=1.0)
+        pen = T2CharStringPen(100.1, {}, roundTolerance=0.5)
         pen.moveTo((0, 0))
         pen.curveTo((10.1, 0.1), (19.9, 9.9), (20.49, 20.49))
         pen.curveTo((20.49, 30.49), (9.9, 39.9), (0.1, 40.1))

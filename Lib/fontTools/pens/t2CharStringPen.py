@@ -68,16 +68,16 @@ class RelativeCoordinatePen(BasePen):
 
 
 def makeRoundFuncs(tolerance):
-    assert 0 <= tolerance <= 1
+    assert 0 <= tolerance <= 0.5
 
     def _round(number):
         if tolerance == 0:
             return number  # no-op
         rounded = round(number)
-        # return rounded integer if the tolerance is >= 0.5, or if the
-        # absolute difference between the original float and the rounded
-        # integer is within the tolerance
-        if tolerance >= .5 or fabs(rounded - number) <= tolerance:
+        # return rounded integer if the tolerance is 0.5, or if the absolute
+        # difference between the original float and the rounded integer is
+        # within the tolerance
+        if tolerance == .5 or fabs(rounded - number) <= tolerance:
             return rounded
         else:
             # else return the value un-rounded
@@ -92,7 +92,7 @@ def makeRoundFuncs(tolerance):
 
 class T2CharStringPen(RelativeCoordinatePen):
 
-    def __init__(self, width, glyphSet, roundTolerance=0.0):
+    def __init__(self, width, glyphSet, roundTolerance=0.5):
         RelativeCoordinatePen.__init__(self, glyphSet)
         self.round, self.roundPoint = makeRoundFuncs(roundTolerance)
         self._heldMove = None
