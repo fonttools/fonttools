@@ -6,6 +6,8 @@ from fontTools.feaLib.builder import Builder, addOpenTypeFeatures, \
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.ttLib import TTFont
 from fontTools.feaLib.parser import Parser
+from fontTools.feaLib import ast
+from fontTools.feaLib.lexer import Lexer
 import difflib
 import os
 import shutil
@@ -131,17 +133,21 @@ class BuilderTest(unittest.TestCase):
             if tag in font:
                 font[tag].compile(font)
 
-    def check_fea2fea_file(self, name):
-        f = self.getpath("{}.fea".format(name))
-        p = Parser(f)
+    def check_fea2fea_file(self, name, base=None, parser=Parser):
+        if '.' not in name :
+            name = name + ".fea"
+        if base is None :
+            base = name
+        f = self.getpath(name)
+        p = parser(f)
         doc = p.parse()
         tlines = self.normal_fea(doc.asFea().split("\n"))
-        with open(f, "r", encoding="utf-8") as ofile:
+        with open(self.getpath(base), "r", encoding="utf-8") as ofile:
             olines = self.normal_fea(ofile.readlines())
         if olines != tlines:
             for line in difflib.unified_diff(olines, tlines):
                 sys.stderr.write(line)
-            self.fail("Fea2Fea output is different from expected")
+            self.fail("Fea2Fea output is different from expected. Generated:\n{}\n".format("\n".join(tlines)))
 
     def normal_fea(self, lines):
         output = []
@@ -360,6 +366,83 @@ class BuilderTest(unittest.TestCase):
             FeatureLibError,
             "Lookup blocks cannot be placed inside 'aalt' features",
             self.build, "feature aalt {lookup L {} L;} aalt;")
+
+    def test_extensions(self):
+        class ast_BaseClass(ast.MarkClass):
+            def asFea(self, indent=""):
+                return ""
+
+        class ast_BaseClassDefinition(ast.MarkClassDefinition):
+            def asFea(self, indent=""):
+                return ""
+
+        class ast_MarkBasePosStatement(ast.MarkBasePosStatement):
+            def asFea(self, indent=""):
+                if isinstance(self.base, ast.MarkClassName):
+                    res = ""
+                    for bcd in self.base.markClass.definitions:
+                        if res != "":
+                            res += "\n{}".format(indent)
+                        res += "pos base {} {}".format(bcd.glyphs.asFea(), bcd.anchor.asFea())
+                        for m in self.marks:
+                            res += " mark @{}".format(m.name)
+                        res += ";"
+                else:
+                    res = "pos base {}".format(self.base.asFea())
+                    for a, m in self.marks:
+                        res += " {} mark @{}".format(a.asFea(), m.name)
+                    res += ";"
+                return res
+
+        class testAst(object):
+            MarkBasePosStatement = ast_MarkBasePosStatement
+            def __getattr__(self, name):
+                return getattr(ast, name)
+
+        class testParser(Parser):
+            def parse_position_base_(self, enumerated, vertical):
+                location = self.cur_token_location_
+                self.expect_keyword_("base")
+                if enumerated:
+                    raise FeatureLibError(
+                        '"enumerate" is not allowed with '
+                        'mark-to-base attachment positioning',
+                        location)
+                base = self.parse_glyphclass_(accept_glyphname=True)
+                if self.next_token_ == "<":
+                    marks = self.parse_anchor_marks_()
+                else:
+                    marks = []
+                    while self.next_token_ == "mark":
+                        self.expect_keyword_("mark")
+                        m = self.expect_markClass_reference_()
+                        marks.append(m)
+                self.expect_symbol_(";")
+                return self.ast.MarkBasePosStatement(location, base, marks)
+
+            def parseBaseClass(self):
+                if not hasattr(self.doc_, 'baseClasses'):
+                    self.doc_.baseClasses = {}
+                location = self.cur_token_location_
+                glyphs = self.parse_glyphclass_(accept_glyphname=True)
+                anchor = self.parse_anchor_()
+                name = self.expect_class_name_()
+                self.expect_symbol_(";")
+                baseClass = self.doc_.baseClasses.get(name)
+                if baseClass is None:
+                    baseClass = ast_BaseClass(name)
+                    self.doc_.baseClasses[name] = baseClass
+                    self.glyphclasses_.define(name, baseClass)
+                bcdef = ast_BaseClassDefinition(location, baseClass, anchor, glyphs)
+                baseClass.addDefinition(bcdef)
+                return bcdef
+
+            extensions = {
+                'baseClass' : lambda s : s.parseBaseClass()
+            }
+            ast = testAst()
+
+        self.check_fea2fea_file("baseClass.feax", base="baseClass.fea", parser=testParser)
 
 
 def generate_feature_file_test(name):
