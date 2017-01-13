@@ -2494,11 +2494,12 @@ class Options(object):
             setattr(self, k, v)
 
     def parse_opts(self, argv, ignore_unknown=False):
-        ret = []
+        posargs = []
+        passthru_options = []
         for a in argv:
             orig_a = a
             if not a.startswith('--'):
-                ret.append(a)
+                posargs.append(a)
                 continue
             a = a[2:]
             i = a.find('=')
@@ -2528,7 +2529,7 @@ class Options(object):
             k = k.replace('-', '_')
             if not hasattr(self, k):
                 if ignore_unknown is True or ok in ignore_unknown:
-                    ret.append(orig_a)
+                    passthru_options.append(orig_a)
                     continue
                 else:
                     raise self.UnknownOptionError("Unknown option '%s'" % a)
@@ -2565,7 +2566,7 @@ class Options(object):
 
             setattr(self, k, v)
 
-        return ret
+        return posargs + passthru_options
 
 
 class Subsetter(object):
