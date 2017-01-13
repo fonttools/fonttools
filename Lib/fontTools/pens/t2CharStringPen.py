@@ -7,7 +7,6 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.psCharStrings import T2CharString
 from fontTools.pens.basePen import BasePen
-from math import fabs
 
 
 class RelativeCoordinatePen(BasePen):
@@ -77,7 +76,7 @@ def makeRoundFunc(tolerance):
         # return rounded integer if the tolerance is 0.5, or if the absolute
         # difference between the original float and the rounded integer is
         # within the tolerance
-        if tolerance == .5 or fabs(rounded - number) <= tolerance:
+        if tolerance == .5 or abs(rounded - number) <= tolerance:
             return rounded
         else:
             # else return the value un-rounded
