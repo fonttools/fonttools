@@ -18,9 +18,12 @@ log = logging.getLogger(__name__)
 
 AVAR_HEADER_FORMAT = """
     > # big endian
-    version:    L
-    axisCount:  L
+    majorVersion:  H
+    minorVersion:  H
+    reserved:      H
+    axisCount:     H
 """
+assert sstruct.calcsize(AVAR_HEADER_FORMAT) == 8, sstruct.calcsize(AVAR_HEADER_FORMAT)
 
 
 class table__a_v_a_r(DefaultTable.DefaultTable):
@@ -33,7 +36,12 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
 
     def compile(self, ttFont):
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
-        header = {"version": 0x00010000, "axisCount": len(axisTags)}
+        header = {
+            "majorVersion": 1,
+            "minorVersion": 0,
+            "reserved": 0,
+            "axisCount": len(axisTags)
+        }
         result = [sstruct.pack(AVAR_HEADER_FORMAT, header)]
         for axis in axisTags:
             mappings = sorted(self.segments[axis].items())
@@ -49,8 +57,9 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
         header = {}
         headerSize = sstruct.calcsize(AVAR_HEADER_FORMAT)
         header = sstruct.unpack(AVAR_HEADER_FORMAT, data[0:headerSize])
-        if header["version"] != 0x00010000:
-            raise TTLibError("unsupported 'avar' version %04x" % header["version"])
+        majorVersion = header["majorVersion"]
+        if majorVersion != 1:
+            raise TTLibError("unsupported 'avar' version %d" % majorVersion)
         pos = headerSize
         for axis in axisTags:
             segments = self.segments[axis] = {}
