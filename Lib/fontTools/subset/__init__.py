@@ -2866,6 +2866,7 @@ def usage():
 
 @timer("make one with everything (TOTAL TIME)")
 def main(args=None):
+    from os.path import splitext
     from fontTools import configLogger
 
     if args is None:
@@ -2902,7 +2903,8 @@ def main(args=None):
     args = args[1:]
 
     subsetter = Subsetter(options=options)
-    outfile = fontfile + '.subset'
+    basename, extension = splitext(fontfile)
+    outfile = basename + '.subset' + extension
     glyphs = []
     gids = []
     unicodes = []
