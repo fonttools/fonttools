@@ -114,11 +114,10 @@ class T2CharStringPenTest(unittest.TestCase):
             charstring.program)
 
     def test_invalid_tolerance(self):
-        for value in (-0.1, 0.6):
-            self.assertRaisesRegex(
-                ValueError,
-                "Rounding tolerance out of range",
-                T2CharStringPen, None, {}, roundTolerance=value)
+        self.assertRaisesRegex(
+            ValueError,
+            "Rounding tolerance must be positive",
+            T2CharStringPen, None, {}, roundTolerance=-0.1)
 
 
 if __name__ == '__main__':
