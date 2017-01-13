@@ -88,6 +88,7 @@ from fontTools.misc.macCreatorType import getMacCreatorAndType
 from fontTools.unicode import setUnicodeData
 from fontTools.misc.timeTools import timestampSinceEpoch
 from fontTools.misc.loggingTools import Timer
+from fontTools.misc.cliTools import makeOutputFileName
 import os
 import sys
 import getopt
@@ -97,22 +98,7 @@ import logging
 
 log = logging.getLogger("fontTools.ttx")
 
-numberAddedRE = re.compile("#\d+$")
 opentypeheaderRE = re.compile('''sfntVersion=['"]OTTO["']''')
-
-def makeOutputFileName(input, outputDir, extension, overWrite=False):
-	dirName, fileName = os.path.split(input)
-	fileName, ext = os.path.splitext(fileName)
-	if outputDir:
-		dirName = outputDir
-	fileName = numberAddedRE.split(fileName)[0]
-	output = os.path.join(dirName, fileName + extension)
-	n = 1
-	if not overWrite:
-		while os.path.exists(output):
-			output = os.path.join(dirName, fileName + "#" + repr(n) + extension)
-			n = n + 1
-	return output
 
 
 class Options(object):
