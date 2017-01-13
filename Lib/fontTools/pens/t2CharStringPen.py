@@ -67,7 +67,8 @@ class RelativeCoordinatePen(BasePen):
 
 
 def makeRoundFunc(tolerance):
-    assert 0 <= tolerance <= 0.5
+    if not (0 <= tolerance <= 0.5):
+        raise ValueError("Rounding tolerance out of range: %g" % tolerance)
 
     def _round(number):
         if tolerance == 0:

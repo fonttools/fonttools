@@ -6,6 +6,13 @@ import unittest
 
 class T2CharStringPenTest(unittest.TestCase):
 
+    def __init__(self, methodName):
+        unittest.TestCase.__init__(self, methodName)
+        # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
+        # and fires deprecation warnings if a program uses the old name.
+        if not hasattr(self, "assertRaisesRegex"):
+            self.assertRaisesRegex = self.assertRaisesRegexp
+
     def assertAlmostEqualProgram(self, expected, actual):
         self.assertEqual(len(expected), len(actual))
         for i1, i2 in zip(expected, actual):
@@ -105,6 +112,13 @@ class T2CharStringPenTest(unittest.TestCase):
              0.49, 10.49, 'rlineto',
              'endchar'],
             charstring.program)
+
+    def test_invalid_tolerance(self):
+        for value in (-0.1, 0.6):
+            self.assertRaisesRegex(
+                ValueError,
+                "Rounding tolerance out of range",
+                T2CharStringPen, None, {}, roundTolerance=value)
 
 
 if __name__ == '__main__':
