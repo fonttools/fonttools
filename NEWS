@@ -13,6 +13,8 @@
   `feaLib.builder_test.test_extensions` and baseClass.feax (#794, fixes #773).
 - [feaLib] Added `feaLib` command to the 'fonttools' command-line tool; applies
   a feature file to a font. `fonttools feaLib -h` for help.
+- [pens] The `T2CharStringPen` now takes an optional `roundTolerance` argument
+  to control the rounding of coordinates (#804, fixes #769).
 - [ci] Measure test coverage on all supported python versions and OSes, combine
   coverage data and upload to https://codecov.io/gh/fonttools/fonttools (#786)
 - [ci] Configured Travis and Appveyor for running tests on Python 3.6 (#785, 55c03bc)
