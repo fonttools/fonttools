@@ -224,6 +224,47 @@ class SubsetTest(unittest.TestCase):
         self.assertEqual(subsetfont['maxp'].numGlyphs, 3)
         self.assertEqual(subsetfont.getGlyphOrder(), ['.notdef', 'A', 'u1F6D2'])
 
+    def test_no_hinting_CFF(self):
+        ttxpath = self.getpath("Lobster.subset.ttx")
+        _, fontpath = self.compile_font(ttxpath, ".otf")
+        subsetpath = self.temp_path(".otf")
+        subset.main([fontpath, "--no-hinting", "--notdef-outline",
+                     "--output-file=%s" % subsetpath, "*"])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath(
+            "expect_no_hinting_CFF.ttx"), ["CFF "])
+
+    def test_desubroutinize_CFF(self):
+        ttxpath = self.getpath("Lobster.subset.ttx")
+        _, fontpath = self.compile_font(ttxpath, ".otf")
+        subsetpath = self.temp_path(".otf")
+        subset.main([fontpath, "--desubroutinize", "--notdef-outline",
+                     "--output-file=%s" % subsetpath, "*"])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath(
+            "expect_desubroutinize_CFF.ttx"), ["CFF "])
+
+    def test_no_hinting_desubroutinize_CFF(self):
+        ttxpath = self.getpath("Lobster.subset.ttx")
+        _, fontpath = self.compile_font(ttxpath, ".otf")
+        subsetpath = self.temp_path(".otf")
+        subset.main([fontpath, "--no-hinting", "--desubroutinize", "--notdef-outline",
+                     "--output-file=%s" % subsetpath, "*"])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath(
+            "expect_no_hinting_desubroutinize_CFF.ttx"), ["CFF "])
+
+    def test_no_hinting_TTF(self):
+        _, fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--no-hinting", "--notdef-outline",
+                     "--output-file=%s" % subsetpath, "*"])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath(
+            "expect_no_hinting_TTF.ttx"), ["glyf", "maxp"])
+        for tag in subset.Options().hinting_tables:
+            self.assertTrue(tag not in subsetfont)
+
 
 if __name__ == "__main__":
     sys.exit(unittest.main())
