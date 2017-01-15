@@ -5,7 +5,7 @@ import os
 import tempfile
 import unittest
 from fontTools.misc.textTools import deHexStr
-from .macRes import ResourceReader
+from fontTools.misc.macRes import ResourceReader
 
 
 # test resource data in DeRez notation

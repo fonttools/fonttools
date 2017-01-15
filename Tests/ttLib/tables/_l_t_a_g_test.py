@@ -5,7 +5,7 @@ from fontTools.misc.xmlWriter import XMLWriter
 import os
 import struct
 import unittest
-from ._l_t_a_g import table__l_t_a_g
+from fontTools.ttLib.tables._l_t_a_g import table__l_t_a_g
 
 class Test_l_t_a_g(unittest.TestCase):
 

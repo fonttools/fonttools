@@ -5,7 +5,7 @@ from fontTools.misc.py23 import *
 import os
 import unittest
 from fontTools.ttLib import TTFont
-from .xmlReader import XMLReader, ProgressPrinter, BUFSIZE
+from fontTools.misc.xmlReader import XMLReader, ProgressPrinter, BUFSIZE
 import tempfile
 
 

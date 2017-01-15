@@ -6,8 +6,8 @@ from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.misc.loggingTools import CapturingLogHandler
 import struct
 import unittest
-from ._n_a_m_e import table__n_a_m_e, NameRecord, nameRecordFormat, nameRecordSize
-from ._n_a_m_e import makeName, log
+from fontTools.ttLib.tables._n_a_m_e import (
+	table__n_a_m_e, NameRecord, nameRecordFormat, nameRecordSize, makeName, log)
 
 
 class NameTableTest(unittest.TestCase):

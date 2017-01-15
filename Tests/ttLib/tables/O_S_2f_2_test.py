@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.ttLib import TTFont, newTable, getTableModule
-from .O_S_2f_2 import *
+from fontTools.ttLib.tables.O_S_2f_2 import *
 import unittest
 
 

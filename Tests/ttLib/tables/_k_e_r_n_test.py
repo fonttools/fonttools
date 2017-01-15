@@ -2,7 +2,7 @@ from __future__ import print_function, absolute_import
 from fontTools.misc.py23 import *
 from fontTools import ttLib
 import unittest
-from ._k_e_r_n import KernTable_format_0
+from fontTools.ttLib.tables._k_e_r_n import KernTable_format_0
 
 class MockFont(object):
 
