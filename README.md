@@ -130,13 +130,23 @@ To run the test suite, you can do:
 python setup.py test
 ```
 
-Or if you have [pytest](http://docs.pytest.org/en/latest/), you can run the `pytest` command directly.
+If you have [pytest](http://docs.pytest.org/en/latest/), you can run the `pytest` command directly.
+The tests will run against the installed `fontTools` package, or the first one found in the `PYTHONPATH`.
 
-We also use [tox](https://testrun.org/tox/latest/) to automatically test on different Python versions in isolated virtual environments.
+You can also use [tox](https://testrun.org/tox/latest/) to automatically run tests on different Python versions in isolated virtual environments.
 
 ```sh
-pip install -r dev-requirements.txt
+pip install tox
 tox
+```
+
+Note that when you run `tox` without arguments, the tests are executed for all the environments listed in tox.ini's `envlist`. In our case, this includes Python 2.7, 3.5 and 3.6, so for this to work the `python2.7`, `python3.5` and `python3.6` executables must be available in your `PATH`.
+
+You can specify an alternative environment list via the `-e` option, or the `TOXENV` environment variable:
+
+```sh
+tox -e py27-nocov
+TOXENV="py{27,36}-cov" tox
 ```
 
 ### Development Community
