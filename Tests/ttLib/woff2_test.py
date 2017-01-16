@@ -29,7 +29,7 @@ if not hasattr(unittest.TestCase, 'assertRaisesRegex'):
 
 
 current_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-data_dir = os.path.join(current_dir, 'testdata')
+data_dir = os.path.join(current_dir, 'data')
 TTX = os.path.join(data_dir, 'TestTTF-Regular.ttx')
 OTX = os.path.join(data_dir, 'TestOTF-Regular.otx')
 METADATA = os.path.join(data_dir, 'test_woff2_metadata.xml')

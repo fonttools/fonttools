@@ -29,7 +29,7 @@ class DesignspaceTest(unittest.TestCase):
 
 def _getpath(testfile):
     path, _ = os.path.split(__file__)
-    return os.path.join(path, "testdata", testfile)
+    return os.path.join(path, "data", testfile)
 
 
 if __name__ == "__main__":

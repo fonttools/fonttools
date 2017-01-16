@@ -75,7 +75,7 @@ class MtiTest(unittest.TestCase):
         'exclam', 'quotedbl', 'numbersign',
     ]
 
-    # Feature files in testdata/*.txt; output gets compared to testdata/*.ttx.
+    # Feature files in data/*.txt; output gets compared to data/*.ttx.
     TESTS = {
         None: (
             'mti/cmap',
@@ -143,7 +143,7 @@ class MtiTest(unittest.TestCase):
     @staticmethod
     def getpath(testfile):
         path, _ = os.path.split(__file__)
-        return os.path.join(path, "testdata", testfile)
+        return os.path.join(path, "data", testfile)
 
     def expect_ttx(self, expected_ttx, actual_ttx, fromfile=None, tofile=None):
         expected = [l+'\n' for l in expected_ttx.split('\n')]

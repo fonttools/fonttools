@@ -49,7 +49,7 @@ def makeTTFont():
 
 
 class BuilderTest(unittest.TestCase):
-    # Feature files in testdata/*.fea; output gets compared to testdata/*.ttx.
+    # Feature files in data/*.fea; output gets compared to data/*.ttx.
     TEST_FEATURE_FILES = """
         Attach enum markClass language_required
         GlyphClassDef LigatureCaretByIndex LigatureCaretByPos
@@ -86,7 +86,7 @@ class BuilderTest(unittest.TestCase):
     @staticmethod
     def getpath(testfile):
         path, _ = os.path.split(__file__)
-        return os.path.join(path, "testdata", testfile)
+        return os.path.join(path, "data", testfile)
 
     def temp_path(self, suffix):
         if not self.tempdir:

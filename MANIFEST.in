@@ -13,10 +13,10 @@ include run-tests.sh
 recursive-include Doc/man/man1 *.1
 
 recursive-include Tests *.py
-recursive-include Tests testdata/*.ttx testdata/*.otx testdata/*.fea
-recursive-include Tests testdata/*.feax
-recursive-include Tests testdata/*.txt testdata/*.ttx.*
-recursive-include Tests testdata/mti/*.txt testdata/mti/*.ttx.*
-recursive-include Tests testdata/mti/*.ttx testdata/mti/README
-recursive-include Tests testdata/*.lwfn testdata/*.pfa testdata/*.pfb
-recursive-include Tests testdata/*.xml testdata/*.designspace testdata/*.bin
+recursive-include Tests data/*.ttx data/*.otx data/*.fea
+recursive-include Tests data/*.feax
+recursive-include Tests data/*.txt data/*.ttx.*
+recursive-include Tests data/mti/*.txt data/mti/*.ttx.*
+recursive-include Tests data/mti/*.ttx data/mti/README
+recursive-include Tests data/*.lwfn data/*.pfa data/*.pfb
+recursive-include Tests data/*.xml data/*.designspace data/*.bin

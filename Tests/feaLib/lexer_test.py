@@ -130,7 +130,7 @@ class IncludingLexerTest(unittest.TestCase):
     @staticmethod
     def getpath(filename):
         path, _ = os.path.split(__file__)
-        return os.path.join(path, "testdata", filename)
+        return os.path.join(path, "data", filename)
 
     def test_include(self):
         lexer = IncludingLexer(self.getpath("include4.fea"))

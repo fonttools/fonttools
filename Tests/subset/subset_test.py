@@ -31,7 +31,7 @@ class SubsetTest(unittest.TestCase):
     @staticmethod
     def getpath(testfile):
         path, _ = os.path.split(__file__)
-        return os.path.join(path, "testdata", testfile)
+        return os.path.join(path, "data", testfile)
 
     def temp_path(self, suffix):
         if not self.tempdir:
