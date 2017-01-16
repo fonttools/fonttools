@@ -6,9 +6,10 @@ from fontTools.ttLib.woff2 import (
 	woff2FlagsSize, woff2UnknownTagSize, woff2Base128MaxSize, WOFF2DirectoryEntry,
 	getKnownTagIndex, packBase128, base128Size, woff2UnknownTagIndex,
 	WOFF2FlavorData, woff2TransformedTableTags, WOFF2GlyfTable, WOFF2LocaTable,
-	WOFF2Writer)
+	WOFF2Writer, unpackBase128, unpack255UShort, pack255UShort)
 import unittest
 from fontTools.misc import sstruct
+import struct
 import os
 import random
 import copy
@@ -744,6 +745,94 @@ class WOFF2GlyfTableTest(unittest.TestCase):
 		reconstructedData = newGlyfTable.compile(self.font)
 		normGlyfData = normalise_table(self.font, 'glyf', newGlyfTable.padding)
 		self.assertEqual(normGlyfData, reconstructedData)
+
+
+class Base128Test(unittest.TestCase):
+
+	def test_unpackBase128(self):
+		self.assertEqual(unpackBase128(b'\x3f\x00\x00'), (63, b"\x00\x00"))
+		self.assertEqual(unpackBase128(b'\x8f\xff\xff\xff\x7f')[0], 4294967295)
+
+		self.assertRaisesRegex(
+			ttLib.TTLibError,
+			"UIntBase128 value must not start with leading zeros",
+			unpackBase128, b'\x80\x80\x3f')
+
+		self.assertRaisesRegex(
+			ttLib.TTLibError,
+			"UIntBase128-encoded sequence is longer than 5 bytes",
+			unpackBase128, b'\x8f\xff\xff\xff\xff\x7f')
+
+		self.assertRaisesRegex(
+			ttLib.TTLibError,
+			"UIntBase128 value exceeds 2\*\*32-1",
+			unpackBase128, b'\x90\x80\x80\x80\x00')
+
+		self.assertRaisesRegex(
+			ttLib.TTLibError,
+			"not enough data to unpack UIntBase128",
+			unpackBase128, b'')
+
+	def test_base128Size(self):
+		self.assertEqual(base128Size(0), 1)
+		self.assertEqual(base128Size(24567), 3)
+		self.assertEqual(base128Size(2**32-1), 5)
+
+	def test_packBase128(self):
+		self.assertEqual(packBase128(63), b"\x3f")
+		self.assertEqual(packBase128(2**32-1), b'\x8f\xff\xff\xff\x7f')
+		self.assertRaisesRegex(
+			ttLib.TTLibError,
+			"UIntBase128 format requires 0 <= integer <= 2\*\*32-1",
+			packBase128, 2**32+1)
+		self.assertRaisesRegex(
+			ttLib.TTLibError,
+			"UIntBase128 format requires 0 <= integer <= 2\*\*32-1",
+			packBase128, -1)
+
+
+class UShort255Test(unittest.TestCase):
+
+	def test_unpack255UShort(self):
+		self.assertEqual(unpack255UShort(bytechr(252))[0], 252)
+		# some numbers (e.g. 506) can have multiple encodings
+		self.assertEqual(
+			unpack255UShort(struct.pack("BB", 254, 0))[0], 506)
+		self.assertEqual(
+			unpack255UShort(struct.pack("BB", 255, 253))[0], 506)
+		self.assertEqual(
+			unpack255UShort(struct.pack("BBB", 253, 1, 250))[0], 506)
+
+		self.assertRaisesRegex(
+			ttLib.TTLibError,
+			"not enough data to unpack 255UInt16",
+			unpack255UShort, struct.pack("BB", 253, 0))
+
+		self.assertRaisesRegex(
+			ttLib.TTLibError,
+			"not enough data to unpack 255UInt16",
+			unpack255UShort, struct.pack("B", 254))
+
+		self.assertRaisesRegex(
+			ttLib.TTLibError,
+			"not enough data to unpack 255UInt16",
+			unpack255UShort, struct.pack("B", 255))
+
+	def test_pack255UShort(self):
+		self.assertEqual(pack255UShort(252), b'\xfc')
+		self.assertEqual(pack255UShort(505), b'\xff\xfc')
+		self.assertEqual(pack255UShort(506), b'\xfe\x00')
+		self.assertEqual(pack255UShort(762), b'\xfd\x02\xfa')
+
+		self.assertRaisesRegex(
+			ttLib.TTLibError,
+			"255UInt16 format requires 0 <= integer <= 65535",
+			pack255UShort, -1)
+
+		self.assertRaisesRegex(
+			ttLib.TTLibError,
+			"255UInt16 format requires 0 <= integer <= 65535",
+			pack255UShort, 0xFFFF+1)
 
 
 if __name__ == "__main__":
