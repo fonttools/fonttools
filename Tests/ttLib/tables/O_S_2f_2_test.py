@@ -49,6 +49,13 @@ class OS2TableTest(unittest.TestCase):
 		# the bit 122 and the special bit 57 ('Non Plane 0') are also enabled
 		self.assertEqual(os2.recalcUnicodeRanges(font), {0, 7, 9, 57, 122})
 
+	def test_intersectUnicodeRanges(self):
+		self.assertEqual(intersectUnicodeRanges([0x0410]), {9})
+		self.assertEqual(intersectUnicodeRanges([0x0410, 0x1F000]), {9, 57, 122})
+		self.assertEqual(
+			intersectUnicodeRanges([0x0410, 0x1F000], inverse=True),
+			(set(range(123)) - {9, 57, 122}))
+
 
 if __name__ == "__main__":
 	import sys
