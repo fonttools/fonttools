@@ -324,7 +324,7 @@ setup(
 	data_files=find_data_files(),
 	setup_requires=pytest_runner + wheel + bumpversion,
 	tests_require=[
-		'pytest>=2.8',
+		'pytest>=3.0',
 	],
 	entry_points={
 		'console_scripts': [
