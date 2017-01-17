@@ -23,7 +23,7 @@ def calcIntBounds(array):
     tuple: (xMin, yMin, xMax, yMax)
     Values are rounded to closest integer.
     """
-    return tuple(int(round(v)) for v in calcBounds(array))
+    return tuple(round(v) for v in calcBounds(array))
 
 
 def updateBounds(bounds, p, min=min, max=max):
