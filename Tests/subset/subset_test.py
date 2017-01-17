@@ -59,7 +59,7 @@ class SubsetTest(unittest.TestCase):
         expected = self.read_ttx(expected_ttx)
         if actual != expected:
             for line in difflib.unified_diff(
-                    expected, actual, fromfile=path, tofile=expected_ttx):
+                    expected, actual, fromfile=expected_ttx, tofile=path):
                 sys.stdout.write(line)
             self.fail("TTX output is different from expected")
 
@@ -152,7 +152,6 @@ class SubsetTest(unittest.TestCase):
 
     def test_timing_publishes_parts(self):
         _, fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
-        subsetpath = self.temp_path(".ttf")
 
         options = subset.Options()
         options.timing = True
