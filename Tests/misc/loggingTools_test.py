@@ -58,23 +58,22 @@ class TimerTest(object):
         timer = Timer()
         time.sleep(0.01)
         fist_lap =  timer.split()
-        assert fist_lap >= 0.01
         assert timer.elapsed == fist_lap
         time.sleep(0.02)
         second_lap = timer.split()
-        assert second_lap >= 0.02
+        assert second_lap > fist_lap
         assert timer.elapsed == second_lap
 
     def test_time(self):
         timer = Timer()
         time.sleep(0.01)
         overall_time = timer.time()
-        assert overall_time >= 0.01
+        assert overall_time > 0
 
     def test_context_manager(self):
         with Timer() as t:
             time.sleep(0.01)
-        assert t.elapsed >= 0.01
+        assert t.elapsed > 0
 
     def test_using_logger(self, logger):
         with Timer(logger, 'do something'):
