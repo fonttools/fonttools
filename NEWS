@@ -1,3 +1,8 @@
+- [ttx] Fixed 'I/O operation on closed file' error when dumping multiple TTXs
+  to standard output with the '-o -' option.
+- The unit test modules (*_test.py) have been moved outside of the fontTools
+  package to the Tests folder, thus they are no longer installed (#811).
+
 ## TTX/FontTools Version 3.5.0
 
 2017-01-14
