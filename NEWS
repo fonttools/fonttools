@@ -3,9 +3,7 @@
 - The unit test modules (*_test.py) have been moved outside of the fontTools
   package to the Tests folder, thus they are no longer installed (#811).
 
-## TTX/FontTools Version 3.5.0
-
-2017-01-14
+## 3.5.0 (released 2017-01-14)
 
 - Font tables read from XML can now be written back to XML with no loss.
 - GSUB/GPOS LookupType is written out in XML as an element, not comment. (#792)
@@ -32,9 +30,7 @@
 - [Snippets] Added otf2ttf.py, for converting fonts from CFF to TrueType using
   the googlei18n/cu2qu module (#802)
 
-## TTX/FontTools Version 3.4.0
-
-2016-12-21
+## 3.4.0 (released 2016-12-21)
 
 - [feaLib] Added support for generating FEA text from abstract syntax tree
   (AST) objects (#776). Thanks @mhosken
@@ -42,35 +38,27 @@
   Unicode strings (#774)
 - Implemented MVAR table (b4d5381)
 
-## TTX/FontTools Version 3.3.1
-
-2016-12-15
+## 3.3.1 (released 2016-12-15)
 
 - [setup] We no longer use versioneer.py to compute fonttools version from git
   metadata, as this has caused issues for some users (#767). Now we bump the
   version strings manually with a custom `release` command of setup.py script.
 
-## TTX/FontTools Version 3.3.0
-
-2016-12-06
+## 3.3.0 (released 2016-12-06)
 
 - [ttLib] Implemented STAT table from OpenType 1.8 (#758)
 - [cffLib] Fixed decompilation of CFF fonts containing non-standard key/value pairs in FontDict (issue #740; PR #744)
 - [py23] minor: in `round3` function, allow the second argument to be `None` (#757)
 - The standalone `sstruct` and `xmlWriter` modules, deprecated since vesion 3.2.0, have been removed. They can be imported from the `fontTools.misc` package.
 
-## TTX/FontTools Version 3.2.3
-
-2016-12-02
+## 3.2.3 (released 2016-12-02)
 
 - [py23] optimized performance of round3 function; added backport for py35 math.isclose() (9d8dacb)
 - [subset] fixed issue with 'narrow' (UCS-2) Python 2 builds and --text/--text-file options containing non-BMP chararcters (16d0e5e)
 - [varLib] fixed issuewhen normalizing location values (8fa2ee1, #749)
 - [inspect] Made it compatible with both python2 and python3 (167ee60, #748). Thanks @pnemade
 
-## TTX/FontTools Version 3.2.2
-
-2016-11-24
+## 3.2.2 (released 2016-11-24)
 
 - [varLib] Do not emit null axes in fvar (1bebcec). Thanks @robmck-ms
 - [varLib] Handle fonts without GPOS (7915a45)
@@ -78,16 +66,12 @@
 - [subset] Fix subsetting MathVariants (78d3cbe)
 - [OS/2] Fix "Private Use (plane 15)" range (08a0d55). Thanks @mashabow
 
-## TTX/FontTools Version 3.2.1 
-
-2016-11-03
+## 3.2.1 (released 2016-11-03)
 
 - [OS/2] fix checking `fsSelection` bits matching `head.macStyle` bits
 - [varLib] added `--build-HVAR` option to generate `HVAR` table for fonts with TrueType outlines. For `CFF2`, it is enabled by default.
 
-## TTX/FontTools Version 3.2.0
-
-2016-11-02
+## 3.2.0 (released 2016-11-02)
 
 - [varLib] Improve support for OpenType 1.8 Variable Fonts:
   * Implement GDEF's VariationStore
@@ -106,24 +90,18 @@
 - [versioning] Use versioneer instead of setuptools_scm to dynamically load version info from a git checkout at import time.
 - [feaLib] Support backslash-prefixed glyph names.
 
-## TTX/FontTools Version 3.1.2
-
-2016-09-27
+## 3.1.2 (released 2016-09-27)
 
 - restore Makefile as an alternative way to build/check/install
 - README.md: update instructions for installing package from source, and for running test suite
 - NEWS: Change log was out of sync with tagged release
 
-## TTX/FontTools Version 3.1.1
-
-2016-09-27
+## 3.1.1 (released 2016-09-27)
 
 - Fix 'ttLibVersion' attribute in TTX files still showing '3.0' instead of '3.1'.
 - Use setuptools_scm to manage package versions.
 
-## TTX/FontTools Version 3.1.0
-
-2016-09-26
+## 3.1.0 (released 2016-09-26)
 
 - [feaLib] New library to parse and compile Adobe FDK OpenType Feature files.
 - [mtiLib] New library to parse and compile Monotype 'FontDame' OpenType Layout Tables files.
@@ -140,9 +118,7 @@
 - [loggingTools] Use Python built-in logging module to print messages.
 - [py23] Make round() behave like Python 3 built-in round(); define round2() and round3().
 
-## TTX/FontTools Version 3.0
-
-2015-09-01 <https://github.com/behdad/fonttools/commit/58f86f318af8b2f8b553e8cceef678d6ce0017c5>
+## 3.0 (released 2015-09-01)
 
 - Add Snippet scripts for cmap subtable format conversion, printing GSUB/GPOS features, building a GX font from two masters
 - TTX WOFF2 support and a `-f` option to overwrite output file(s)
@@ -152,9 +128,7 @@
 - Add Roman Croatian and Romanian encodings, codecs for mac-extended East Asian encodings
 - Implement optimal GLYF glyph outline packing; disabled by default
 
-## TTX/FontTools Version 2.5
-
-2014-09-24 <https://github.com/behdad/fonttools/commit/8388a2e37ce349dac6555bb824c82723e3b65fbf>
+## 2.5 (released 2014-09-24)
 
 - Add a Qt pen
 - Add VDMX table converter
@@ -171,7 +145,7 @@
 - Add pyftsubset and Subsetter object, supporting CFF and TTF
 - Add to ttx args for -q for quiet mode, -z to choose a bitmap dump format
 
-## TTX/FontTools Version 2.4
+## 2.4 (released 2013-06-22)
 
 - Option to write to arbitrary files
 - Better dump format for DSIG
@@ -183,14 +157,14 @@
 - Fix some modern MacOS issues
 - Fix minor issues and typos
 
-## TTX/FontTools Version 2.3
+## 2.3 (released 2009-11-08)
 
 - TrueType Collection (TTC) support
 - Python 2.6 support
 - Update Unicode data to 5.2.0
 - Couple of bug fixes
 
-## TTX/FontTools Version 2.2
+## 2.2 (released 2008-05-18)
 
 - ClearType support
 - cmap format 1 support
@@ -200,11 +174,11 @@
 - Update AGLFN data to 1.6
 - Many bug fixes
 
-## TTX/FontTools Version 2.1
+## 2.1 (released 2008-01-28)
 
 - Many years worth of fixes and features
 
-## TTX/FontTools Version 2.0 beta 2 (released ??? 2002)
+## 2.0b2 (released 2002-??-??)
 
 - Be "forgiving" when interpreting the maxp table version field:
   interpret any value as 1.0 if it's not 0.5. Fixes dumping of these
@@ -215,7 +189,7 @@
 - Fixed bug in ClassDef format 1 subtable (Andreas Seidel bumped into
   this one).
 
-## TTX/FontTools Version 2.0 beta 1 (released September 10 2002)
+## 2.0b1 (released 2002-09-10)
 
 - Fixed embarrassing bug: the master checksum in the head table is now
   calculated correctly even on little-endian platforms (such as Intel).
@@ -267,9 +241,7 @@
 - Couple of fixes to the 'post' table.
 - Updated OS/2 table to latest spec.
 
-## TTX/FontTools Version 1.0 beta 1 
-
-2001-08-10
+## 1.0b1 (released 2001-08-10)
 
 - Reorganized the command line interface for ttDump.py and ttCompile.py,
   they now behave more like "normal" command line tool, in that they accept
@@ -286,9 +258,7 @@
   Windows registry.
 - Moved the project to SourceForge.
 
-## TTX/FontTools Version 1.0 alpha 6
-
-2000-03-15
+## 1.0a6 (released 2000-03-15)
 
 - Big reorganization: made ttLib a subpackage of the new fontTools package,
   changed several module names. Called the entire suite "FontTools"
@@ -303,22 +273,20 @@
 - TTX is now the name of the XML-based *format* for TT fonts, and not just
   an application.
 
-## Version 1.0 alpha 5
+## 1.0a5
 
 Never released
 
 - More tables supported: hdmx, vhea, vmtx
 
-## Version 1.0 alpha 3 & 4
+## 1.0a3 & 1.0a4
 
 Never released
 
 - fixed most portability issues
 - retracted the "Euro_or_currency" change from 1.0a2: it was nonsense!
 
-## Version 1.0 alpha 2 
-
-1999-05-02
+## 1.0a2 (released 1999-05-02)
 
 - binary release for MacOS
 - genenates full FOND resources: including width table, PS
@@ -340,9 +308,7 @@ Fixed bugs:
 - 'hhea' table is now recalculated correctly 
 - fixed wrong assumption about sfnt resource names
 
-## Version 1.0 alpha 1
-
-1999-04-27
+## 1.0a1 (released 1999-04-27)
 
 - initial binary release for MacOS
 
