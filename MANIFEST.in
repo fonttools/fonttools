@@ -1,6 +1,6 @@
-include README.md
+include README.rst
 include LICENSE
-include NEWS
+include NEWS.rst
 include Snippets/*.py
 include Snippets/README.md
 include MetaTools/*.py
