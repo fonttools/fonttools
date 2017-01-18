@@ -314,8 +314,9 @@ class TTFont(object):
 			progress.set((i + 1))
 		writer.endtag("ttFont")
 		writer.newline()
-		# close if 'fileOrPath' is a path; leave it open if it's a file
-		if not hasattr(fileOrPath, "write"):
+		# close if 'fileOrPath' is a path; leave it open if it's a file.
+		# The special string "-" means standard output so leave that open too
+		if not hasattr(fileOrPath, "write") and fileOrPath != "-":
 			writer.close()
 
 	def _tableToXML(self, writer, tag, progress, quiet=None):
