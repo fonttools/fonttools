@@ -221,19 +221,15 @@ def merge(merger, self, lst):
 			    exclude=('Coverage',
 				     'PairSet', 'PairSetCount'))
 
-	# Align them
-	glyphs, padded = _merge_GlyphOrders(merger.font,
-					    [v.Coverage.glyphs for v in lst],
-					    [v.PairSet for v in lst])
-
 	empty = ot.PairSet()
 	empty.PairValueRecord = []
 	empty.PairValueCount = 0
 
-	for i,values in enumerate(padded):
-		for j,glyph in enumerate(glyphs):
-			if values[j] is not None: continue
-			values[j] = empty
+	# Align them
+	glyphs, padded = _merge_GlyphOrders(merger.font,
+					    [v.Coverage.glyphs for v in lst],
+					    [v.PairSet for v in lst],
+					    default=empty)
 
 	self.Coverage.glyphs = glyphs
 	self.PairSet = [ot.PairSet() for g in glyphs]
