@@ -10,7 +10,7 @@ import unittest
 
 
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-DATA_DIR = os.path.join(CURR_DIR, 'testdata')
+DATA_DIR = os.path.join(CURR_DIR, 'data')
 
 CFF_TTX = os.path.join(DATA_DIR, "C_F_F__2.ttx")
 CFF_BIN = os.path.join(DATA_DIR, "C_F_F__2.bin")
