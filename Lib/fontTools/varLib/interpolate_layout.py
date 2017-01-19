@@ -188,20 +188,23 @@ def merge(merger, self, lst):
 
 	for i,values in enumerate(padded):
 		for j,glyph in enumerate(glyphs):
-			if values[j] is not None: continue
 			# Fill in value from other subtables
 			v = ot.PairValueRecord()
 			v.SecondGlyph = glyph
-			vpair = _Lookup_PairPos_get_effective_value_pair(merger.lookups[i], self._firstGlyph, glyph)
-			if vpair is None:
-				v.Value1 = otBase.ValueRecord(merger.valueFormat1) if merger.valueFormat1 else None
-				v.Value2 = otBase.ValueRecord(merger.valueFormat2) if merger.valueFormat2 else None
+			if values[j] is not None:
+				vpair = values[j]
 			else:
-				v.Value1, v.Value2 = vpair.Value1, vpair.Value2
+				vpair = _Lookup_PairPos_get_effective_value_pair(merger.lookups[i], self._firstGlyph, glyph)
+			if vpair is None:
+				v1, v2 = None, None
+			else:
+				v1, v2 = vpair.Value1, vpair.Value2
+			v.Value1 = otBase.ValueRecord(merger.valueFormat1, src=v1) if merger.valueFormat1 else None
+			v.Value2 = otBase.ValueRecord(merger.valueFormat2, src=v2) if merger.valueFormat2 else None
 			values[j] = v
 	del self._firstGlyph
 
-	merger.mergeThings(self.PairValueRecord, padded)
+	merger.mergeLists(self.PairValueRecord, padded)
 
 @InstancerMerger.merger(ot.PairPos)
 def merge(merger, self, lst):
@@ -237,14 +240,84 @@ def merge(merger, self, lst):
 	for glyph, ps in zip(glyphs, self.PairSet):
 		ps._firstGlyph = glyph
 
-	merger.mergeThings(self.PairSet, padded)
+	merger.mergeLists(self.PairSet, padded)
 
 	del merger.valueFormat1, merger.valueFormat2
+
+
+def _PairSet_merge_overlay(lst, font):
+	self = ot.PairSet()
+	self.Coverage = ot.Coverage()
+
+	# Align them
+	glyphs, padded = _merge_GlyphOrders(font,
+				[[v.SecondGlyph for v in vs.PairValueRecord] for vs in lst],
+				[vs.PairValueRecord for vs in lst])
+
+	self.Coverage.glyphs = glyphs
+	self.PairValueRecord = pvrs = []
+	for values in zip(*padded):
+		for v in values:
+			if v is not None:
+				pvrs.append(v)
+				break
+		else:
+			assert False
+	self.PairValueCount = len(self.PairValueRecord)
+
+	return self
+
+def _Lookup_PairPosFormat1_subtables_merge_overlay(lst, font):
+	self = ot.PairPos()
+	self.Format = 1
+	self.Coverage = ot.Coverage()
+	self.ValueFormat1 = reduce(int.__or__, [l.ValueFormat1 for l in lst])
+	self.ValueFormat2 = reduce(int.__or__, [l.ValueFormat2 for l in lst])
+
+	# Align them
+	glyphs, padded = _merge_GlyphOrders(font,
+					    [v.Coverage.glyphs for v in lst],
+					    [v.PairSet for v in lst])
+
+	self.Coverage.glyphs = glyphs
+	self.PairSet = [_PairSet_merge_overlay([v for v in values if v is not None], font)
+		        for values in zip(*padded)]
+	self.PairSetCount = len(self.PairSet)
+	return self
+
+def _Lookup_PairPos_subtables_canonicalize(lst, font):
+	"""Merges multiple Format1 subtables at the beginning of lst.  Returns new list."""
+	head = []
+	tail = []
+	it = iter(lst)
+	for subtable in it:
+		if subtable.Format == 1:
+			head.append(subtable)
+			continue
+		tail.append(subtable)
+		break
+	tail.extend(it)
+	# TODO Only do this if at least one font has a Format1.
+	tail.insert(0, _Lookup_PairPosFormat1_subtables_merge_overlay(head, font))
+	return tail
 
 @InstancerMerger.merger(ot.Lookup)
 def merge(merger, self, lst):
 	merger.lookups = lst
-	merger.mergeObjects(self, lst)
+
+	exclude = []
+	if self.SubTable and isinstance(self.SubTable[0], ot.PairPos):
+		# AFDKO and feaLib sometimes generate two Format1 subtables instead of one.
+		# Merge those before continuing.
+		# https://github.com/fonttools/fonttools/issues/719
+		self.SubTable = _Lookup_PairPos_subtables_canonicalize(self.SubTable, merger.font)
+		subtables = [_Lookup_PairPos_subtables_canonicalize(l.SubTable, merger.font) for l in lst]
+		merger.mergeLists(self.SubTable, subtables)
+		self.SubTableCount = len(self.SubTable)
+		exclude.extend(['SubTable', 'SubTableCount'])
+
+	merger.mergeObjects(self, lst, exclude=exclude)
+
 	del merger.lookups
 
 
