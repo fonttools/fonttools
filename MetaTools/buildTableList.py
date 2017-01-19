@@ -11,7 +11,7 @@ fontToolsDir = os.path.dirname(os.path.dirname(os.path.join(os.getcwd(), sys.arg
 fontToolsDir= os.path.normpath(fontToolsDir)
 tablesDir = os.path.join(fontToolsDir,
 		"Lib", "fontTools", "ttLib", "tables")
-docFile = os.path.join(fontToolsDir, "README.md")
+docFile = os.path.join(fontToolsDir, "README.rst")
 
 names = glob.glob1(tablesDir, "*.py")
 
@@ -57,8 +57,8 @@ if __name__ == "__main__":
 file.close()
 
 
-begin = "<!-- begin table list -->"
-end = "<!-- end table list -->"
+begin = ".. begin table list\n.. code::\n"
+end = ".. end table list"
 doc = open(docFile).read()
 beginPos = doc.find(begin)
 assert beginPos > 0

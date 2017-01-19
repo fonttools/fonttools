@@ -11,6 +11,7 @@ from distutils import log
 from distutils.util import convert_path
 import subprocess as sp
 import contextlib
+import re
 
 # Force distutils to use py_compile.compile() function with 'doraise' argument
 # set to True, in order to raise an exception on compilation errors
@@ -47,13 +48,14 @@ classifiers = {"classifiers": [
 	"Topic :: Multimedia :: Graphics :: Graphics Conversion",
 ]}
 
-long_description = """\
-FontTools/TTX is a library to manipulate font files from Python.
-It supports reading and writing of TrueType/OpenType fonts, reading
-and writing of AFM files, reading (and partially writing) of PS Type 1
-fonts. The package also contains a tool called "TTX" which converts
-TrueType/OpenType fonts to and from an XML-based format.
-"""
+
+# concatenate README.rst and NEWS.rest into long_description so they are
+# displayed on the FontTols project page on PyPI
+with io.open("README.rst", "r", encoding="utf-8") as readme:
+	long_description = readme.read()
+long_description += "\n"
+with io.open("NEWS.rst", "r", encoding="utf-8") as changelog:
+	long_description += changelog.read()
 
 
 @contextlib.contextmanager
@@ -89,8 +91,8 @@ class release(Command):
 	new backward-compatible functionalities. No options imply 'patch' or bug-fix
 	release.
 
-	A new header is also added to the changelog file ("NEWS"), containing the
-	new version string and the current 'YYYY-MM-DD' date.
+	A new header is also added to the changelog file ("NEWS.rst"), containing
+	the new version string and the current 'YYYY-MM-DD' date.
 
 	All changes are committed, and an annotated git tag is generated. With the
 	--sign option, the tag is GPG-signed with the user's default key.
@@ -114,9 +116,10 @@ class release(Command):
 		("allow-dirty", None, "don't abort if working directory is dirty"),
 	]
 
-	changelog_name = "NEWS"
-	changelog_header = u"## TTX/FontTools Version "
-	changelog_date_fmt = "%Y-%m-%d"
+	changelog_name = "NEWS.rst"
+	version_RE = re.compile("^[0-9]+\.[0-9]+")
+	date_fmt = u"%Y-%m-%d"
+	header_fmt = u"%s (released %s)"
 	commit_message = "Release {new_version}"
 	tag_name = "{new_version}"
 	version_files = [
@@ -226,19 +229,17 @@ class release(Command):
 		changes = []
 		with io.open(self.changelog_name, "r+", encoding="utf-8") as f:
 			for ln in f:
-				if ln.startswith(self.changelog_header):
+				if self.version_RE.match(ln):
 					break
 				else:
 					changes.append(ln)
 			if not self.dry_run:
 				f.seek(0)
 				content = f.read()
+				date = datetime.today().strftime(self.date_fmt)
 				f.seek(0)
-				f.write(u"%s%s\n\n%s\n\n%s" % (
-					self.changelog_header,
-					version,
-					datetime.today().strftime(self.changelog_date_fmt),
-					content))
+				header = self.header_fmt % (version, date)
+				f.write(header + u"\n" + u"-"*len(header) + u"\n\n" + content)
 
 		return u"".join(changes)
 
