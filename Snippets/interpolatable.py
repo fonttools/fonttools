@@ -77,36 +77,36 @@ def _matching_cost(G, matching):
 
 def min_cost_perfect_bipartite_matching(G):
 	n = len(G)
-	if n <= 8:
-		# brute-force
-		permutations = itertools.permutations(range(n))
-		best = list(next(permutations))
-		best_cost = _matching_cost(G, best)
-		for p in permutations:
-			cost = _matching_cost(G, p)
-			if cost < best_cost:
-				best, best_cost = list(p), cost
-		return best, best_cost
-	else:
+	try:
+		from scipy.optimize import linear_sum_assignment
+		rows, cols = linear_sum_assignment(G)
+		# This branch untested
+		assert rows == list(range(n))
+		return cols, _matching_cost(G, cols)
+	except ImportError:
+		pass
 
-		# Set up current matching and inverse
-		matching = list(range(n)) # identity matching
-		matching_cost = _matching_cost(G, matching)
-		reverse = list(matching)
+	try:
+		from munkres import Munkres
+		cols = [None] * n
+		for row,col in Munkres().compute(G):
+			cols[row] = col
+		return cols, _matching_cost(G, cols)
+	except ImportError:
+		pass
 
-		return matching, matching_cost
-		# TODO implement real matching here
+	if n > 6:
+		raise Exception("Install Python module 'munkres' or 'scipy >= 0.17.0'")
 
-		# Set up cover
-		cover0 = [max(c for c in row) for row in G]
-		cover1 = [0] * n
-		cover_weight = sum(cover0)
-
-		while cover_weight < matching_cost:
-			break
-			NotImplemented
-
-		return matching, matching_cost
+	# Otherwise just brute-force
+	permutations = itertools.permutations(range(n))
+	best = list(next(permutations))
+	best_cost = _matching_cost(G, best)
+	for p in permutations:
+		cost = _matching_cost(G, p)
+		if cost < best_cost:
+			best, best_cost = list(p), cost
+	return best, best_cost
 
 
 def test(glyphsets, glyphs=None, names=None):
