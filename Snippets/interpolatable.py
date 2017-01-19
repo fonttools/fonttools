@@ -80,9 +80,8 @@ def min_cost_perfect_bipartite_matching(G):
 	try:
 		from scipy.optimize import linear_sum_assignment
 		rows, cols = linear_sum_assignment(G)
-		# This branch untested
-		assert rows == list(range(n))
-		return cols, _matching_cost(G, cols)
+		assert (rows == list(range(n))).all()
+		return list(cols), _matching_cost(G, cols)
 	except ImportError:
 		pass
 
