@@ -53,7 +53,7 @@ classifiers = {"classifiers": [
 # displayed on the FontTols project page on PyPI
 with io.open("README.rst", "r", encoding="utf-8") as readme:
 	long_description = readme.read()
-long_description += "\n"
+long_description += "\nChangelog\n~~~~~~~~~\n\n"
 with io.open("NEWS.rst", "r", encoding="utf-8") as changelog:
 	long_description += changelog.read()
 
