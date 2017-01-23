@@ -194,6 +194,8 @@ _whiteRE = re.compile(r"\s*")
 
 _pushCountPat = re.compile(r"[A-Z][A-Z0-9]*\s*\[.*?\]\s*/\* ([0-9]+).*?\*/")
 
+_indentRE = re.compile("^FDEF|IF|ELSE\[ \]\t.+")
+_unindentRE = re.compile("^ELSE|ENDF|EIF\[ \]\t.+")
 
 def _skipWhite(data, pos):
 	m = _whiteRE.match(data, pos)
@@ -248,9 +250,13 @@ class Program(object):
 				writer.begintag("assembly")
 				writer.newline()
 				i = 0
+				indent = 0
 				nInstr = len(assembly)
 				while i < nInstr:
 					instr = assembly[i]
+					if _unindentRE.match(instr):
+						indent -= 1
+					writer.write("  " + "    " * indent)
 					writer.write(instr)
 					writer.newline()
 					m = _pushCountPat.match(instr)
@@ -261,13 +267,17 @@ class Program(object):
 						j = 0
 						for j in range(nValues):
 							if j and not (j % 25):
+								writer.write("  " + "    " * indent)
 								writer.write(' '.join(line))
 								writer.newline()
 								line = []
 							line.append(assembly[i+j])
+						writer.write("  " + "    " * indent)
 						writer.write(' '.join(line))
 						writer.newline()
 						i = i + j + 1
+					if _indentRE.match(instr):
+						indent += 1
 				writer.endtag("assembly")
 		else:
 			writer.begintag("bytecode")
