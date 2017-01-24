@@ -4,7 +4,6 @@ from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib.tables.ttProgram import Program
 from fontTools.misc.textTools import deHexStr
 import array
-import io
 import os
 import re
 import unittest
@@ -101,19 +100,19 @@ class ProgramTest(unittest.TestCase):
         assert BYTECODE == p.getBytecode()
 
     def test_xml_indentation(self):
-        with open(TTPROGRAM_TTX, 'rb') as f:
-            ttProgramXML = f.read().splitlines()
+        with open(TTPROGRAM_TTX, 'r') as f:
+            ttProgramXML = f.read()
         p = Program()
         p.fromBytecode(BYTECODE)
         ttfont = TestFont()
-        buf = io.BytesIO()
+        buf = UnicodeIO()
         writer = XMLWriter(buf)
         try:
             p.toXML(writer, ttfont)
         finally:
             output_string = buf.getvalue()
             buf.close()
-        assert output_string.splitlines() == ttProgramXML
+        assert output_string == ttProgramXML
         
 
 if __name__ == '__main__':
