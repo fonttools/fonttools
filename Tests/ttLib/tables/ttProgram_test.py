@@ -100,7 +100,7 @@ class ProgramTest(unittest.TestCase):
         assert BYTECODE == p.getBytecode()
 
     def test_xml_indentation(self):
-        with open(TTPROGRAM_TTX, 'r') as f:
+        with open(TTPROGRAM_TTX, 'r', encoding='utf-8') as f:
             ttProgramXML = f.read()
         p = Program()
         p.fromBytecode(BYTECODE)
@@ -111,7 +111,6 @@ class ProgramTest(unittest.TestCase):
             p.toXML(writer, ttfont)
         finally:
             output_string = buf.getvalue()
-            buf.close()
         assert output_string == ttProgramXML
         
 
