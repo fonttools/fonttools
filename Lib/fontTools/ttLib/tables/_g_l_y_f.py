@@ -356,7 +356,9 @@ class Glyph(object):
 				compo.toXML(writer, ttFont)
 			if hasattr(self, "program"):
 				writer.begintag("instructions")
+				writer.newline()
 				self.program.toXML(writer, ttFont)
+				writer.newline()
 				writer.endtag("instructions")
 				writer.newline()
 		else:
@@ -375,7 +377,9 @@ class Glyph(object):
 				writer.newline()
 			if self.numberOfContours:
 				writer.begintag("instructions")
+				writer.newline()
 				self.program.toXML(writer, ttFont)
+				writer.newline()
 				writer.endtag("instructions")
 				writer.newline()
 
