@@ -371,10 +371,13 @@ class Glyph(object):
 				writer.newline()
 			haveInstructions = self.numberOfContours > 0
 		if haveInstructions:
-			writer.begintag("instructions")
-			writer.newline()
-			self.program.toXML(writer, ttFont)
-			writer.endtag("instructions")
+			if self.program:
+				writer.begintag("instructions")
+				writer.newline()
+				self.program.toXML(writer, ttFont)
+				writer.endtag("instructions")
+			else:
+				writer.simpletag("instructions")
 			writer.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
