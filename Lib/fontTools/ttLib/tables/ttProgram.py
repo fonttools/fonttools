@@ -246,6 +246,7 @@ class Program(object):
 				writer.newline()
 				writer.dumphex(self.getBytecode())
 				writer.endtag("bytecode")
+				writer.newline()
 			else:
 				writer.begintag("assembly")
 				writer.newline()
@@ -279,11 +280,13 @@ class Program(object):
 					if _indentRE.match(instr):
 						indent += 1
 				writer.endtag("assembly")
+				writer.newline()
 		else:
 			writer.begintag("bytecode")
 			writer.newline()
 			writer.dumphex(self.getBytecode())
 			writer.endtag("bytecode")
+			writer.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
 		if name == "assembly":

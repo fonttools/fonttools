@@ -358,7 +358,6 @@ class Glyph(object):
 				writer.begintag("instructions")
 				writer.newline()
 				self.program.toXML(writer, ttFont)
-				writer.newline()
 				writer.endtag("instructions")
 				writer.newline()
 		else:
@@ -379,7 +378,6 @@ class Glyph(object):
 				writer.begintag("instructions")
 				writer.newline()
 				self.program.toXML(writer, ttFont)
-				writer.newline()
 				writer.endtag("instructions")
 				writer.newline()
 
