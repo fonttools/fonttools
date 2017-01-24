@@ -442,7 +442,8 @@
         <pt x="265" y="633" on="1"/>
         <pt x="66" y="633" on="1"/>
       </contour>
-      <instructions><assembly>
+      <instructions>
+        <assembly>
           PUSH[ ]	/* 2 values pushed */
           1 0
           MDAP[1]	/* MoveDirectAbsPt */
@@ -476,7 +477,8 @@
           1 2 0
           MIRP[01101]	/* MoveIndirectRelPt */
           SHP[0]	/* ShiftPointByLastPoint */
-        </assembly></instructions>
+        </assembly>
+      </instructions>
     </TTGlyph>
 
     <TTGlyph name=".null"/><!-- contains no outline data -->
@@ -488,8 +490,10 @@
         <pt x="305" y="0" on="1"/>
         <pt x="100" y="0" on="1"/>
       </contour>
-      <instructions><assembly>
-        </assembly></instructions>
+      <instructions>
+        <assembly>
+        </assembly>
+      </instructions>
     </TTGlyph>
 
     <TTGlyph name="b" xMin="100" yMin="0" xMax="305" yMax="205">
@@ -499,8 +503,10 @@
         <pt x="305" y="0" on="1"/>
         <pt x="100" y="0" on="1"/>
       </contour>
-      <instructions><assembly>
-        </assembly></instructions>
+      <instructions>
+        <assembly>
+        </assembly>
+      </instructions>
     </TTGlyph>
 
     <TTGlyph name="c" xMin="100" yMin="0" xMax="305" yMax="205">
@@ -510,8 +516,10 @@
         <pt x="305" y="0" on="1"/>
         <pt x="100" y="0" on="1"/>
       </contour>
-      <instructions><assembly>
-        </assembly></instructions>
+      <instructions>
+        <assembly>
+        </assembly>
+      </instructions>
     </TTGlyph>
 
     <TTGlyph name="nonmarkingreturn"/><!-- contains no outline data -->
@@ -577,8 +585,10 @@
         <pt x="354" y="430" on="0"/>
         <pt x="320" y="430" on="0"/>
       </contour>
-      <instructions><assembly>
-        </assembly></instructions>
+      <instructions>
+        <assembly>
+        </assembly>
+      </instructions>
     </TTGlyph>
 
     <TTGlyph name="smileface.84380d" xMin="238" yMin="181" xMax="761" yMax="606">
@@ -622,8 +632,10 @@
         <pt x="354" y="430" on="0"/>
         <pt x="320" y="430" on="0"/>
       </contour>
-      <instructions><assembly>
-        </assembly></instructions>
+      <instructions>
+        <assembly>
+        </assembly>
+      </instructions>
     </TTGlyph>
 
     <TTGlyph name="smileface.e59b25" xMin="100" yMin="0" xMax="900" yMax="800">
@@ -647,8 +659,10 @@
         <pt x="653" y="770" on="0"/>
         <pt x="347" y="770" on="0"/>
       </contour>
-      <instructions><assembly>
-        </assembly></instructions>
+      <instructions>
+        <assembly>
+        </assembly>
+      </instructions>
     </TTGlyph>
 
     <TTGlyph name="smileface.ffe08a" xMin="100" yMin="0" xMax="900" yMax="800">
@@ -662,8 +676,10 @@
         <pt x="666" y="0" on="0"/>
         <pt x="334" y="0" on="0"/>
       </contour>
-      <instructions><assembly>
-        </assembly></instructions>
+      <instructions>
+        <assembly>
+        </assembly>
+      </instructions>
     </TTGlyph>
 
   </glyf>
