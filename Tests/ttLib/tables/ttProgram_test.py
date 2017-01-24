@@ -1,9 +1,19 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib.tables.ttProgram import Program
 from fontTools.misc.textTools import deHexStr
 import array
+import io
+import os
+import re
+import unittest
 
+CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
+DATA_DIR = os.path.join(CURR_DIR, 'data')
+
+TTPROGRAM_TTX = os.path.join(DATA_DIR, "ttProgram.ttx")
+#TTPROGRAM_BIN = os.path.join(DATA_DIR, "ttProgram.bin")
 
 BYTECODE = deHexStr(
     '403b3a393837363534333231302f2e2d2c2b2a292827262524232221201f1e1d1c1b1a'
@@ -58,7 +68,11 @@ BYTECODE = deHexStr(
     '20392f2d')
 
 
-class ProgramTest(object):
+class TestFont(object):
+    disassembleInstructions = True
+
+
+class ProgramTest(unittest.TestCase):
 
     def test__bool__(self):
         p = Program()
@@ -85,3 +99,23 @@ class ProgramTest(object):
         asm = p.getAssembly(preserve=True)
         p.fromAssembly(asm)
         assert BYTECODE == p.getBytecode()
+
+    def test_xml_indentation(self):
+        with open(TTPROGRAM_TTX, 'rb') as f:
+            ttProgramXML = f.read()
+        p = Program()
+        p.fromBytecode(BYTECODE)
+        ttfont = TestFont()
+        buf = io.BytesIO()
+        writer = XMLWriter(buf)
+        try:
+            p.toXML(writer, ttfont)
+        finally:
+            output_string = buf.getvalue()
+            buf.close()
+        assert output_string == ttProgramXML
+        
+
+if __name__ == '__main__':
+    import sys
+    sys.exit(unittest.main())
