@@ -256,7 +256,7 @@ class Program(object):
 					instr = assembly[i]
 					if _unindentRE.match(instr):
 						indent -= 1
-					writer.write("  " + "    " * indent)
+					writer.write(writer.indentwhite * indent)
 					writer.write(instr)
 					writer.newline()
 					m = _pushCountPat.match(instr)
@@ -267,12 +267,12 @@ class Program(object):
 						j = 0
 						for j in range(nValues):
 							if j and not (j % 25):
-								writer.write("  " + "    " * indent)
+								writer.write(writer.indentwhite * indent)
 								writer.write(' '.join(line))
 								writer.newline()
 								line = []
 							line.append(assembly[i+j])
-						writer.write("  " + "    " * indent)
+						writer.write(writer.indentwhite * indent)
 						writer.write(' '.join(line))
 						writer.newline()
 						i = i + j + 1
