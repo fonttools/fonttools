@@ -102,7 +102,7 @@ class ProgramTest(unittest.TestCase):
 
     def test_xml_indentation(self):
         with open(TTPROGRAM_TTX, 'rb') as f:
-            ttProgramXML = f.read()
+            ttProgramXML = f.read().splitlines()
         p = Program()
         p.fromBytecode(BYTECODE)
         ttfont = TestFont()
@@ -113,7 +113,7 @@ class ProgramTest(unittest.TestCase):
         finally:
             output_string = buf.getvalue()
             buf.close()
-        assert output_string == ttProgramXML
+        assert output_string.splitlines() == ttProgramXML
         
 
 if __name__ == '__main__':
