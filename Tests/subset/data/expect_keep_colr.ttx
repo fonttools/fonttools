@@ -36,8 +36,7 @@
         <pt x="666" y="0" on="0"/>
         <pt x="334" y="0" on="0"/>
       </contour>
-      <instructions>
-      </instructions>
+      <instructions/>
     </TTGlyph>
 
     <TTGlyph name="glyph00003" xMin="100" yMin="0" xMax="900" yMax="800">
@@ -61,8 +60,7 @@
         <pt x="653" y="770" on="0"/>
         <pt x="347" y="770" on="0"/>
       </contour>
-      <instructions>
-      </instructions>
+      <instructions/>
     </TTGlyph>
 
     <TTGlyph name="glyph00004" xMin="238" yMin="181" xMax="761" yMax="606">
@@ -106,8 +104,7 @@
         <pt x="354" y="430" on="0"/>
         <pt x="320" y="430" on="0"/>
       </contour>
-      <instructions>
-      </instructions>
+      <instructions/>
     </TTGlyph>
 
     <TTGlyph name="smileface" xMin="100" yMin="0" xMax="900" yMax="800">
@@ -171,8 +168,7 @@
         <pt x="354" y="430" on="0"/>
         <pt x="320" y="430" on="0"/>
       </contour>
-      <instructions>
-      </instructions>
+      <instructions/>
     </TTGlyph>
 
   </glyf>
