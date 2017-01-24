@@ -248,6 +248,8 @@ class Program(object):
 				writer.endtag("bytecode")
 				writer.newline()
 			else:
+				if not assembly:
+					return
 				writer.begintag("assembly")
 				writer.newline()
 				i = 0
@@ -282,9 +284,12 @@ class Program(object):
 				writer.endtag("assembly")
 				writer.newline()
 		else:
+			bytecode = self.getBytecode()
+			if not bytecode:
+				return
 			writer.begintag("bytecode")
 			writer.newline()
-			writer.dumphex(self.getBytecode())
+			writer.dumphex(bytecode)
 			writer.endtag("bytecode")
 			writer.newline()
 
@@ -298,7 +303,7 @@ class Program(object):
 			self.fromBytecode(readHex(content))
 
 	def _assemble(self):
-		assembly = self.assembly
+		assembly = getattr(self, 'assembly', [])
 		if isinstance(assembly, type([])):
 			assembly = ' '.join(assembly)
 		bytecode = []
@@ -423,7 +428,7 @@ class Program(object):
 	def _disassemble(self, preserve=False):
 		assembly = []
 		i = 0
-		bytecode = self.bytecode
+		bytecode = getattr(self, 'bytecode', [])
 		numBytecode = len(bytecode)
 		while i < numBytecode:
 			op = bytecode[i]
