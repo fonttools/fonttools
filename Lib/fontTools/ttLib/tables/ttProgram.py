@@ -194,6 +194,8 @@ _whiteRE = re.compile(r"\s*")
 
 _pushCountPat = re.compile(r"[A-Z][A-Z0-9]*\s*\[.*?\]\s*/\* ([0-9]+).*?\*/")
 
+_indentRE = re.compile("^FDEF|IF|ELSE\[ \]\t.+")
+_unindentRE = re.compile("^ELSE|ENDF|EIF\[ \]\t.+")
 
 def _skipWhite(data, pos):
 	m = _whiteRE.match(data, pos)
@@ -244,13 +246,20 @@ class Program(object):
 				writer.newline()
 				writer.dumphex(self.getBytecode())
 				writer.endtag("bytecode")
+				writer.newline()
 			else:
+				if not assembly:
+					return
 				writer.begintag("assembly")
 				writer.newline()
 				i = 0
+				indent = 0
 				nInstr = len(assembly)
 				while i < nInstr:
 					instr = assembly[i]
+					if _unindentRE.match(instr):
+						indent -= 1
+					writer.write(writer.indentwhite * indent)
 					writer.write(instr)
 					writer.newline()
 					m = _pushCountPat.match(instr)
@@ -261,19 +270,28 @@ class Program(object):
 						j = 0
 						for j in range(nValues):
 							if j and not (j % 25):
+								writer.write(writer.indentwhite * indent)
 								writer.write(' '.join(line))
 								writer.newline()
 								line = []
 							line.append(assembly[i+j])
+						writer.write(writer.indentwhite * indent)
 						writer.write(' '.join(line))
 						writer.newline()
 						i = i + j + 1
+					if _indentRE.match(instr):
+						indent += 1
 				writer.endtag("assembly")
+				writer.newline()
 		else:
+			bytecode = self.getBytecode()
+			if not bytecode:
+				return
 			writer.begintag("bytecode")
 			writer.newline()
-			writer.dumphex(self.getBytecode())
+			writer.dumphex(bytecode)
 			writer.endtag("bytecode")
+			writer.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
 		if name == "assembly":
@@ -285,7 +303,7 @@ class Program(object):
 			self.fromBytecode(readHex(content))
 
 	def _assemble(self):
-		assembly = self.assembly
+		assembly = getattr(self, 'assembly', [])
 		if isinstance(assembly, type([])):
 			assembly = ' '.join(assembly)
 		bytecode = []
@@ -410,7 +428,7 @@ class Program(object):
 	def _disassemble(self, preserve=False):
 		assembly = []
 		i = 0
-		bytecode = self.bytecode
+		bytecode = getattr(self, 'bytecode', [])
 		numBytecode = len(bytecode)
 		while i < numBytecode:
 			op = bytecode[i]

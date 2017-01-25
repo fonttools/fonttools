@@ -1,3 +1,6 @@
+-  Assembly code in the fpgm, prep, and glyf tables is now indented in
+   XML output for improved readability. The ``instruction`` element is
+   written as a simple tag if empty (#819).
 -  [ttx] Fixed 'I/O operation on closed file' error when dumping
    multiple TTXs to standard output with the '-o -' option.
 -  The unit test modules (``*_test.py``) have been moved outside of the
