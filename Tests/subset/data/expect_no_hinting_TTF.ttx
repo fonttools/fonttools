@@ -39,8 +39,7 @@
         <pt x="293" y="340" on="1"/>
         <pt x="419" y="110" on="1"/>
       </contour>
-      <instructions><assembly>
-        </assembly></instructions>
+      <instructions/>
     </TTGlyph>
 
     <TTGlyph name="A" xMin="132" yMin="304" xMax="365" yMax="567">
@@ -50,8 +49,7 @@
         <pt x="365" y="304" on="1"/>
         <pt x="132" y="304" on="1"/>
       </contour>
-      <instructions><assembly>
-        </assembly></instructions>
+      <instructions/>
     </TTGlyph>
 
     <TTGlyph name="B" xMin="132" yMin="304" xMax="365" yMax="567">
@@ -61,8 +59,7 @@
         <pt x="365" y="304" on="1"/>
         <pt x="132" y="304" on="1"/>
       </contour>
-      <instructions><assembly>
-        </assembly></instructions>
+      <instructions/>
     </TTGlyph>
 
     <TTGlyph name="C"/><!-- contains no outline data -->
