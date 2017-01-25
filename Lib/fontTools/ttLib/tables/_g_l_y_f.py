@@ -354,12 +354,7 @@ class Glyph(object):
 		if self.isComposite():
 			for compo in self.components:
 				compo.toXML(writer, ttFont)
-			if hasattr(self, "program"):
-				writer.begintag("instructions")
-				writer.newline()
-				self.program.toXML(writer, ttFont)
-				writer.endtag("instructions")
-				writer.newline()
+			haveInstructions = hasattr(self, "program")
 		else:
 			last = 0
 			for i in range(self.numberOfContours):
@@ -374,12 +369,16 @@ class Glyph(object):
 				last = self.endPtsOfContours[i] + 1
 				writer.endtag("contour")
 				writer.newline()
-			if self.numberOfContours:
+			haveInstructions = self.numberOfContours > 0
+		if haveInstructions:
+			if self.program:
 				writer.begintag("instructions")
 				writer.newline()
 				self.program.toXML(writer, ttFont)
 				writer.endtag("instructions")
-				writer.newline()
+			else:
+				writer.simpletag("instructions")
+			writer.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
 		if name == "contour":

@@ -15,7 +15,6 @@ class table__f_p_g_m(DefaultTable.DefaultTable):
 
 	def toXML(self, writer, ttFont):
 		self.program.toXML(writer, ttFont)
-		writer.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
 		program = ttProgram.Program()
