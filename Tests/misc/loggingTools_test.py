@@ -59,7 +59,7 @@ class TimerTest(object):
         time.sleep(0.01)
         fist_lap =  timer.split()
         assert timer.elapsed == fist_lap
-        time.sleep(0.02)
+        time.sleep(0.1)
         second_lap = timer.split()
         assert second_lap > fist_lap
         assert timer.elapsed == second_lap
