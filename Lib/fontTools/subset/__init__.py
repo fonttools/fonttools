@@ -2047,7 +2047,7 @@ class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
         cs = self.callingStack[-1]
         hints = cs._hints
         hints.has_hintmask = True
-        if hints.status != 2 and hints.has_hint:
+        if hints.status != 2:
             # Check from last_check, see if we may be an implicit vstem
             for i in range(hints.last_checked, index - 1):
                 if isinstance(cs.program[i], str):
@@ -2055,6 +2055,7 @@ class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
                     break
             if hints.status != 2:
                 # We are an implicit vstem
+                hints.has_hint = True
                 hints.last_hint = index + 1
                 hints.status = 0
         hints.last_checked = index + 1
