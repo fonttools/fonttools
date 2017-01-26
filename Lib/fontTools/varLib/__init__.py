@@ -27,7 +27,7 @@ from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.ttLib.tables._g_v_a_r import TupleVariation
 from fontTools.ttLib.tables import otTables as ot
-from fontTools.varLib import designspace, models, builder
+from fontTools.varLib import designspace, models
 from fontTools.varLib.merger import VariationMerger
 import warnings
 import os.path
@@ -234,20 +234,6 @@ def _add_HVAR(font, model, master_ttfs, axisTags):
 	hvar.AdvWidthMap = advanceMapping
 	hvar.LsbMap = hvar.RsbMap = None
 
-
-def _all_equal(lst):
-	it = iter(lst)
-	v0 = next(it)
-	for v in it:
-		if v0 != v:
-			return False
-	return True
-
-def buildVarDevTable(store_builder, master_values):
-	if _all_equal(master_values):
-		return None
-	varIdx = store_builder.storeMasters(master_values)
-	return builder.buildVarDevTable(varIdx)
 
 def _merge_OTL(font, model, master_fonts, axisTags, base_idx):
 

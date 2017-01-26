@@ -6,6 +6,7 @@ from fontTools.misc.py23 import *
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables import otBase as otBase
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
+from fontTools.varLib import builder
 
 class Merger(object):
 
@@ -103,40 +104,10 @@ class Merger(object):
 			self.mergeThings(font[tag], [m[tag] for m in master_ttfs])
 
 #
-# InstancerMerger
+# Aligning merger
 #
-class InstancerMerger(Merger):
-
-	def __init__(self, font, model, location):
-		Merger.__init__(self, font)
-		self.model = model
-		self.location = location
-
-@InstancerMerger.merger(ot.Anchor)
-def merge(merger, self, lst):
-	XCoords = [a.XCoordinate for a in lst]
-	YCoords = [a.YCoordinate for a in lst]
-	model = merger.model
-	location = merger.location
-	self.XCoordinate = round(model.interpolateFromMasters(location, XCoords))
-	self.YCoordinate = round(model.interpolateFromMasters(location, YCoords))
-
-@InstancerMerger.merger(otBase.ValueRecord)
-def merge(merger, self, lst):
-	model = merger.model
-	location = merger.location
-	# TODO Handle differing valueformats
-	for name, tableName in [('XAdvance','XAdvDevice'),
-				('YAdvance','YAdvDevice'),
-				('XPlacement','XPlaDevice'),
-				('YPlacement','YPlaDevice')]:
-
-		assert not hasattr(self, tableName)
-
-		if hasattr(self, name):
-			values = [getattr(a, name, 0) for a in lst]
-			value = round(model.interpolateFromMasters(location, values))
-			setattr(self, name, value)
+class AligningMerger(Merger):
+	pass
 
 def _SinglePosUpgradeToFormat2(self):
 	if self.Format == 2: return self
@@ -224,7 +195,7 @@ def _Lookup_PairPos_get_effective_value_pair(self, firstGlyph, secondGlyph):
 			assert 0
 	return None
 
-@InstancerMerger.merger(ot.SinglePos)
+@AligningMerger.merger(ot.SinglePos)
 def merge(merger, self, lst):
 	self.ValueFormat = valueFormat = reduce(int.__or__, [l.ValueFormat for l in lst])
 	assert valueFormat & ~0xF == 0, valueFormat
@@ -263,7 +234,7 @@ def merge(merger, self, lst):
 	merger.mergeObjects(self, lst,
 			    exclude=('Format', 'Coverage', 'ValueRecord', 'Value', 'ValueCount'))
 
-@InstancerMerger.merger(ot.PairSet)
+@AligningMerger.merger(ot.PairSet)
 def merge(merger, self, lst):
 	# Align them
 	glyphs, padded = _merge_GlyphOrders(merger.font,
@@ -299,7 +270,7 @@ def merge(merger, self, lst):
 
 	merger.mergeLists(self.PairValueRecord, padded)
 
-@InstancerMerger.merger(ot.PairPos)
+@AligningMerger.merger(ot.PairPos)
 def merge(merger, self, lst):
 	# TODO Support differing ValueFormats.
 	merger.valueFormat1 = self.ValueFormat1
@@ -394,7 +365,7 @@ def _Lookup_PairPos_subtables_canonicalize(lst, font):
 	tail.insert(0, _Lookup_PairPosFormat1_subtables_merge_overlay(head, font))
 	return tail
 
-@InstancerMerger.merger(ot.Lookup)
+@AligningMerger.merger(ot.Lookup)
 def merge(merger, self, lst):
 	merger.lookups = lst
 
@@ -413,18 +384,68 @@ def merge(merger, self, lst):
 
 	del merger.lookups
 
+#
+# InstancerMerger
+#
+class InstancerMerger(AligningMerger):
+
+	def __init__(self, font, model, location):
+		Merger.__init__(self, font)
+		self.model = model
+		self.location = location
+
+@InstancerMerger.merger(ot.Anchor)
+def merge(merger, self, lst):
+	XCoords = [a.XCoordinate for a in lst]
+	YCoords = [a.YCoordinate for a in lst]
+	model = merger.model
+	location = merger.location
+	self.XCoordinate = round(model.interpolateFromMasters(location, XCoords))
+	self.YCoordinate = round(model.interpolateFromMasters(location, YCoords))
+
+@InstancerMerger.merger(otBase.ValueRecord)
+def merge(merger, self, lst):
+	model = merger.model
+	location = merger.location
+	# TODO Handle differing valueformats
+	for name, tableName in [('XAdvance','XAdvDevice'),
+				('YAdvance','YAdvDevice'),
+				('XPlacement','XPlaDevice'),
+				('YPlacement','YPlaDevice')]:
+
+		assert not hasattr(self, tableName)
+
+		if hasattr(self, name):
+			values = [getattr(a, name, 0) for a in lst]
+			value = round(model.interpolateFromMasters(location, values))
+			setattr(self, name, value)
+
 
 #
 # VariationMerger
 #
 
-class VariationMerger(Merger):
+class VariationMerger(AligningMerger):
 
 	def __init__(self, model, axisTags, font):
 		Merger.__init__(self, font)
 		self.model = model
 		self.store_builder = builder.OnlineVarStoreBuilder(axisTags)
 		self.store_builder.setModel(model)
+
+def _all_equal(lst):
+	it = iter(lst)
+	v0 = next(it)
+	for v in it:
+		if v0 != v:
+			return False
+	return True
+
+def buildVarDevTable(store_builder, master_values):
+	if _all_equal(master_values):
+		return None
+	varIdx = store_builder.storeMasters(master_values)
+	return builder.buildVarDevTable(varIdx)
 
 @VariationMerger.merger(ot.Anchor)
 def merge(merger, self, lst):
