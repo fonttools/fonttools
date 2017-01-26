@@ -56,8 +56,12 @@ class Merger(object):
 	def mergeLists(self, out, lst):
 		count = len(out)
 		assert all(count == len(v) for v in lst), (count, [len(v) for v in lst])
-		for value,values in zip(out, zip(*lst)):
-			self.mergeThings(value, values)
+		for i,(value,values) in enumerate(zip(out, zip(*lst))):
+			try:
+				self.mergeThings(value, values)
+			except Exception as e:
+				e.args = e.args + ('[%d]' % i,)
+				raise
 
 	def mergeThings(self, out, lst, _default={None:None}):
 		clazz = type(out)
