@@ -37,11 +37,21 @@ class Merger(object):
 			return None
 		return wrapper
 
-	def mergeObjects(self, out, lst, exclude=(), _default={}):
+	@classmethod
+	def mergersFor(celf, thing, _default={}):
+		typ = type(thing)
+
+		m = celf.mergers.get(typ, None)
+		if m is not None:
+			return m
+
+		return _default
+
+	def mergeObjects(self, out, lst, exclude=()):
 		keys = sorted(vars(out).keys())
 		assert all(keys == sorted(vars(v).keys()) for v in lst), \
 			(keys, [sorted(vars(v).keys()) for v in lst])
-		mergers = self.mergers.get(type(out), _default)
+		mergers = self.mergersFor(out)
 		defaultMerger = mergers.get('*', self.__class__.mergeThings)
 		try:
 			for key in keys:
@@ -64,11 +74,11 @@ class Merger(object):
 				e.args = e.args + ('[%d]' % i,)
 				raise
 
-	def mergeThings(self, out, lst, _default={None:None}):
+	def mergeThings(self, out, lst):
 		clazz = type(out)
 		try:
 			assert all(type(item) == clazz for item in lst), (out, lst)
-			mergerFunc = self.mergers.get(type(out), _default).get(None, None)
+			mergerFunc = self.mergersFor(out).get(None, None)
 			if mergerFunc is not None:
 				mergerFunc(self, out, lst)
 			elif hasattr(out, '__dict__'):
