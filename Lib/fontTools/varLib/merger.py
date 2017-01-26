@@ -9,15 +9,13 @@ from fontTools.ttLib.tables.DefaultTable import DefaultTable
 
 class Merger(object):
 
-	mergers = None
-
 	def __init__(self, font=None):
 		self.font = font
 
 	@classmethod
 	def merger(celf, clazzes, attrs=(None,)):
 		assert celf != Merger, 'Subclass Merger instead.'
-		if celf.mergers is None:
+		if 'mergers' not in celf.__dict__:
 			celf.mergers = {}
 		if type(clazzes) == type:
 			clazzes = (clazzes,)
@@ -41,9 +39,15 @@ class Merger(object):
 	def mergersFor(celf, thing, _default={}):
 		typ = type(thing)
 
-		m = celf.mergers.get(typ, None)
-		if m is not None:
-			return m
+		for celf in celf.mro():
+
+			mergers = getattr(celf, 'mergers', None)
+			if mergers is None:
+				break;
+
+			m = celf.mergers.get(typ, None)
+			if m is not None:
+				return m
 
 		return _default
 
