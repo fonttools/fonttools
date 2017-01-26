@@ -27,9 +27,8 @@ from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.ttLib.tables._g_v_a_r import TupleVariation
 from fontTools.ttLib.tables import otTables as ot
-from fontTools.ttLib.tables import otBase as otBase
 from fontTools.varLib import designspace, models, builder
-from fontTools.varLib.merger import merge_tables, Merger
+from fontTools.varLib.merger import VariationMerger
 import warnings
 import os.path
 import logging
@@ -250,74 +249,12 @@ def buildVarDevTable(store_builder, master_values):
 	varIdx = store_builder.storeMasters(master_values)
 	return builder.buildVarDevTable(varIdx)
 
-class VariationMerger(Merger):
-
-	def __init__(self, model, axisTags, font):
-		Merger.__init__(self, font)
-		self.model = model
-		self.store_builder = builder.OnlineVarStoreBuilder(axisTags)
-		self.store_builder.setModel(model)
-
-@VariationMerger.merger(ot.Anchor)
-def merge(merger, self, lst):
-	assert self.Format == 1
-	XDeviceTable = buildVarDevTable(merger.store_builder, [a.XCoordinate for a in lst])
-	YDeviceTable = buildVarDevTable(merger.store_builder, [a.YCoordinate for a in lst])
-	if XDeviceTable or YDeviceTable:
-		self.Format = 3
-		self.XDeviceTable = XDeviceTable
-		self.YDeviceTable = YDeviceTable
-
-@VariationMerger.merger(ot.PairPos)
-def merge(merger, self, lst):
-	# We need to interecept the merger processing of the object tree here so
-	# that we can change the PairPos value formats after the ValueRecords are
-	# changed.
-	merger.mergeObjects(self, lst)
-	# Now examine the list of value records, and update to the union of format values.
-	vf1 = self.ValueFormat1
-	vf2 = self.ValueFormat2
-	if self.Format == 1:
-		for pairSet in self.PairSet:
-			for pairValueRecord in pairSet.PairValueRecord:
-				pv1 = pairValueRecord.Value1
-				if pv1 is not None:
-					vf1 |= pv1.getFormat()
-				pv2 = pairValueRecord.Value2
-				if pv2 is not None:
-					vf2 |= pv2.getFormat()
-	elif self.Format == 2:
-		for class1Record in self.Class1Record:
-			for class2Record in class1Record.Class2Record:
-				pv1 = class2Record.Value1
-				if pv1 is not None:
-					vf1 |= pv1.getFormat()
-				pv2 = class2Record.Value2
-				if pv2 is not None:
-					vf2 |= pv2.getFormat()
-	self.ValueFormat1 = vf1
-	self.ValueFormat2 = vf2
-
-@VariationMerger.merger(otBase.ValueRecord)
-def merge(merger, self, lst):
-	for name, tableName in [('XAdvance','XAdvDevice'),
-				('YAdvance','YAdvDevice'),
-				('XPlacement','XPlaDevice'),
-				('YPlacement','YPlaDevice')]:
-
-		if hasattr(self, name):
-			deviceTable = buildVarDevTable(merger.store_builder,
-						       [getattr(a, name, 0) for a in lst])
-			if deviceTable:
-				setattr(self, tableName, deviceTable)
-
-
 def _merge_OTL(font, model, master_fonts, axisTags, base_idx):
 
 	log.info("Merging OpenType Layout tables")
 	merger = VariationMerger(model, axisTags, font)
 
-	merge_tables(font, merger, master_fonts, axisTags, base_idx, ['GPOS'])
+	merger.mergeTables(font, master_fonts, axisTags, base_idx, ['GPOS'])
 	store = merger.store_builder.finish()
 	try:
 		GDEF = font['GDEF'].table
