@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.5">
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="latn"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="test"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="4"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=5 -->
+      <Lookup index="0">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0" Format="1">
+          <Substitution in="g20" out="g60"/>
+          <Substitution in="g21" out="g61"/>
+          <Substitution in="g22" out="g62"/>
+          <Substitution in="g23" out="g63"/>
+          <Substitution in="g24" out="g64"/>
+          <Substitution in="g25" out="g65"/>
+          <Substitution in="g26" out="g66"/>
+          <Substitution in="g27" out="g67"/>
+          <Substitution in="g28" out="g68"/>
+          <Substitution in="g29" out="g69"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="1">
+        <LookupType value="4"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <LigatureSubst index="0" Format="1">
+          <LigatureSet glyph="g21">
+            <Ligature components="g22" glyph="g61"/>
+          </LigatureSet>
+        </LigatureSubst>
+      </Lookup>
+      <Lookup index="2">
+        <LookupType value="4"/>
+        <LookupFlag value="8"/>
+        <!-- SubTableCount=1 -->
+        <LigatureSubst index="0" Format="1">
+          <LigatureSet glyph="g21">
+            <Ligature components="g22" glyph="g61"/>
+          </LigatureSet>
+        </LigatureSubst>
+      </Lookup>
+      <Lookup index="3">
+        <LookupType value="2"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <MultipleSubst index="0" Format="1">
+          <Substitution in="g21" out="g61,g62,g63"/>
+        </MultipleSubst>
+      </Lookup>
+      <Lookup index="4">
+        <LookupType value="5"/>
+        <LookupFlag value="8"/>
+        <!-- SubTableCount=1 -->
+        <ContextSubst index="0" Format="3">
+          <!-- GlyphCount=3 -->
+          <!-- SubstCount=3 -->
+          <Coverage index="0" Format="1">
+            <Glyph value="g20"/>
+          </Coverage>
+          <Coverage index="1" Format="1">
+            <Glyph value="g21"/>
+          </Coverage>
+          <Coverage index="2" Format="1">
+            <Glyph value="g22"/>
+          </Coverage>
+          <SubstLookupRecord index="0">
+            <SequenceIndex value="0"/>
+            <LookupListIndex value="0"/>
+          </SubstLookupRecord>
+          <SubstLookupRecord index="1">
+            <SequenceIndex value="1"/>
+            <LookupListIndex value="0"/>
+          </SubstLookupRecord>
+          <SubstLookupRecord index="2">
+            <SequenceIndex value="2"/>
+            <LookupListIndex value="0"/>
+          </SubstLookupRecord>
+        </ContextSubst>
+      </Lookup>
+    </LookupList>
+  </GSUB>
+
+</ttFont>

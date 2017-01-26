@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.5">
+
+  <GDEF>
+    <Version value="0x00010000"/>
+    <GlyphClassDef Format="2">
+      <ClassDef glyph="g80" class="1"/>
+      <ClassDef glyph="g81" class="1"/>
+      <ClassDef glyph="g82" class="1"/>
+      <ClassDef glyph="g83" class="1"/>
+      <ClassDef glyph="g84" class="1"/>
+      <ClassDef glyph="g85" class="2"/>
+      <ClassDef glyph="g86" class="2"/>
+      <ClassDef glyph="g87" class="2"/>
+      <ClassDef glyph="g88" class="2"/>
+      <ClassDef glyph="g89" class="2"/>
+      <ClassDef glyph="g90" class="3"/>
+      <ClassDef glyph="g91" class="3"/>
+      <ClassDef glyph="g92" class="3"/>
+      <ClassDef glyph="g93" class="3"/>
+      <ClassDef glyph="g94" class="3"/>
+      <ClassDef glyph="g95" class="4"/>
+      <ClassDef glyph="g96" class="4"/>
+      <ClassDef glyph="g97" class="4"/>
+      <ClassDef glyph="g98" class="4"/>
+      <ClassDef glyph="g99" class="4"/>
+    </GlyphClassDef>
+  </GDEF>
+
+</ttFont>

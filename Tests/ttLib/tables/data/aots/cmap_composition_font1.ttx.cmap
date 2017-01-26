@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.5">
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_12 platformID="3" platEncID="10" format="12" reserved="0" length="76" language="0" nGroups="5">
+      <map code="0xe9" name="g5"/><!-- LATIN SMALL LETTER E WITH ACUTE -->
+      <map code="0x1ec3" name="g6"/><!-- LATIN SMALL LETTER E WITH CIRCUMFLEX AND HOOK ABOVE -->
+      <map code="0x1fad" name="g7"/><!-- GREEK CAPITAL LETTER OMEGA WITH DASIA AND OXIA AND PROSGEGRAMMENI -->
+      <map code="0x2adc" name="g8"/><!-- FORKING -->
+      <map code="0x1d163" name="g9"/><!-- MUSICAL SYMBOL SIXTY-FOURTH NOTE -->
+    </cmap_format_12>
+  </cmap>
+
+</ttFont>

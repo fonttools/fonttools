@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.5">
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_0 platformID="3" platEncID="1" language="0">
+      <map code="0x34" name="g17"/><!-- DIGIT FOUR -->
+      <map code="0x35" name="g56"/><!-- DIGIT FIVE -->
+      <map code="0x36" name="g12"/><!-- DIGIT SIX -->
+    </cmap_format_0>
+  </cmap>
+
+</ttFont>

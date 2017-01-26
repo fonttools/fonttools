@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.5">
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_2 platformID="3" platEncID="1" language="0">
+      <map code="0x34" name="g17"/><!-- DIGIT FOUR -->
+      <map code="0x35" name="g56"/><!-- DIGIT FIVE -->
+      <map code="0x36" name="g12"/><!-- DIGIT SIX -->
+      <map code="0x8432" name="g20"/><!-- CJK UNIFIED IDEOGRAPH-8432 -->
+      <map code="0x8433" name="g21"/><!-- CJK UNIFIED IDEOGRAPH-8433 -->
+      <map code="0x8434" name="g22"/><!-- CJK UNIFIED IDEOGRAPH-8434 -->
+      <map code="0x9232" name="g23"/><!-- CJK UNIFIED IDEOGRAPH-9232 -->
+      <map code="0x9233" name="g24"/><!-- CJK UNIFIED IDEOGRAPH-9233 -->
+      <map code="0x9234" name="g25"/><!-- CJK UNIFIED IDEOGRAPH-9234 -->
+    </cmap_format_2>
+  </cmap>
+
+</ttFont>

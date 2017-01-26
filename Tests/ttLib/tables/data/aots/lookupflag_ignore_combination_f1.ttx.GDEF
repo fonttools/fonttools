@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.5">
+
+  <GDEF>
+    <Version value="0x00010000"/>
+    <GlyphClassDef Format="2">
+      <ClassDef glyph="g24" class="1"/>
+      <ClassDef glyph="g25" class="1"/>
+      <ClassDef glyph="g26" class="1"/>
+      <ClassDef glyph="g27" class="2"/>
+      <ClassDef glyph="g28" class="2"/>
+      <ClassDef glyph="g29" class="2"/>
+      <ClassDef glyph="g30" class="3"/>
+      <ClassDef glyph="g31" class="3"/>
+      <ClassDef glyph="g32" class="3"/>
+    </GlyphClassDef>
+    <MarkAttachClassDef Format="2">
+      <ClassDef glyph="g25" class="1"/>
+      <ClassDef glyph="g26" class="2"/>
+      <ClassDef glyph="g28" class="1"/>
+      <ClassDef glyph="g29" class="2"/>
+      <ClassDef glyph="g31" class="1"/>
+      <ClassDef glyph="g32" class="2"/>
+      <ClassDef glyph="g34" class="1"/>
+      <ClassDef glyph="g35" class="2"/>
+    </MarkAttachClassDef>
+  </GDEF>
+
+</ttFont>

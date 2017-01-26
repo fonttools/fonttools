@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.5">
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_6 platformID="3" platEncID="1" language="0">
+      <map code="0x22" name="g17"/><!-- QUOTATION MARK -->
+      <map code="0x23" name="g56"/><!-- NUMBER SIGN -->
+      <map code="0x24" name="g12"/><!-- DOLLAR SIGN -->
+    </cmap_format_6>
+  </cmap>
+
+</ttFont>

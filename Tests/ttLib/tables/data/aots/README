@@ -1,0 +1,10 @@
+The *.otf data in this directory was built from:
+
+https://github.com/adobe-type-tools/aots
+
+at the following revision:
+
+1c41fd20d2b020177625541a228c4c7c934879ef
+
+Fonts were built by running "make" and copying tests/*.otf over.
+Original .xml files were not copied to save space.
