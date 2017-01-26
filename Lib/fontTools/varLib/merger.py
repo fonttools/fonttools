@@ -308,6 +308,31 @@ def merge(merger, self, lst):
 
 	del merger.valueFormat1, merger.valueFormat2
 
+	# Now examine the list of value records, and update to the union of format values,
+	# as merge might have created new values.
+	vf1 = 0
+	vf2 = 0
+	if self.Format == 1:
+		for pairSet in self.PairSet:
+			for pairValueRecord in pairSet.PairValueRecord:
+				pv1 = pairValueRecord.Value1
+				if pv1 is not None:
+					vf1 |= pv1.getFormat()
+				pv2 = pairValueRecord.Value2
+				if pv2 is not None:
+					vf2 |= pv2.getFormat()
+	elif self.Format == 2:
+		for class1Record in self.Class1Record:
+			for class2Record in class1Record.Class2Record:
+				pv1 = class2Record.Value1
+				if pv1 is not None:
+					vf1 |= pv1.getFormat()
+				pv2 = class2Record.Value2
+				if pv2 is not None:
+					vf2 |= pv2.getFormat()
+	self.ValueFormat1 = vf1
+	self.ValueFormat2 = vf2
+
 
 def _PairSet_merge_overlay(lst, font):
 	self = ot.PairSet()
@@ -456,36 +481,6 @@ def merge(merger, self, lst):
 		self.Format = 3
 		self.XDeviceTable = XDeviceTable
 		self.YDeviceTable = YDeviceTable
-
-@VariationMerger.merger(ot.PairPos)
-def merge(merger, self, lst):
-	# We need to interecept the merger processing of the object tree here so
-	# that we can change the PairPos value formats after the ValueRecords are
-	# changed.
-	merger.mergeObjects(self, lst)
-	# Now examine the list of value records, and update to the union of format values.
-	vf1 = self.ValueFormat1
-	vf2 = self.ValueFormat2
-	if self.Format == 1:
-		for pairSet in self.PairSet:
-			for pairValueRecord in pairSet.PairValueRecord:
-				pv1 = pairValueRecord.Value1
-				if pv1 is not None:
-					vf1 |= pv1.getFormat()
-				pv2 = pairValueRecord.Value2
-				if pv2 is not None:
-					vf2 |= pv2.getFormat()
-	elif self.Format == 2:
-		for class1Record in self.Class1Record:
-			for class2Record in class1Record.Class2Record:
-				pv1 = class2Record.Value1
-				if pv1 is not None:
-					vf1 |= pv1.getFormat()
-				pv2 = class2Record.Value2
-				if pv2 is not None:
-					vf2 |= pv2.getFormat()
-	self.ValueFormat1 = vf1
-	self.ValueFormat2 = vf2
 
 @VariationMerger.merger(otBase.ValueRecord)
 def merge(merger, self, lst):
