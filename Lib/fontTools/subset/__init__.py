@@ -1964,7 +1964,7 @@ class _MarkingT2Decompiler(psCharStrings.SimpleT2Decompiler):
         self.globalSubrs._used.add(self.operandStack[-1]+self.globalBias)
         psCharStrings.SimpleT2Decompiler.op_callgsubr(self, index)
 
-class _DehintingT2Decompiler(psCharStrings.SimpleT2Decompiler):
+class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
 
     class Hints(object):
         def __init__(self):
@@ -1985,17 +1985,16 @@ class _DehintingT2Decompiler(psCharStrings.SimpleT2Decompiler):
             self.has_hintmask = False
         pass
 
-    def __init__(self, css, localSubrs, globalSubrs):
+    def __init__(self, css, localSubrs, globalSubrs, nominalWidthX, defaultWidthX):
         self._css = css
-        psCharStrings.SimpleT2Decompiler.__init__(self,
-                                                  localSubrs,
-                                                  globalSubrs)
+        psCharStrings.T2WidthExtractor.__init__(
+            self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX)
 
     def execute(self, charString):
         old_hints = charString._hints if hasattr(charString, '_hints') else None
         charString._hints = self.Hints()
 
-        psCharStrings.SimpleT2Decompiler.execute(self, charString)
+        psCharStrings.T2WidthExtractor.execute(self, charString)
 
         hints = charString._hints
 
@@ -2017,31 +2016,31 @@ class _DehintingT2Decompiler(psCharStrings.SimpleT2Decompiler):
 
     def op_callsubr(self, index):
         subr = self.localSubrs[self.operandStack[-1]+self.localBias]
-        psCharStrings.SimpleT2Decompiler.op_callsubr(self, index)
+        psCharStrings.T2WidthExtractor.op_callsubr(self, index)
         self.processSubr(index, subr)
 
     def op_callgsubr(self, index):
         subr = self.globalSubrs[self.operandStack[-1]+self.globalBias]
-        psCharStrings.SimpleT2Decompiler.op_callgsubr(self, index)
+        psCharStrings.T2WidthExtractor.op_callgsubr(self, index)
         self.processSubr(index, subr)
 
     def op_hstem(self, index):
-        psCharStrings.SimpleT2Decompiler.op_hstem(self, index)
+        psCharStrings.T2WidthExtractor.op_hstem(self, index)
         self.processHint(index)
     def op_vstem(self, index):
-        psCharStrings.SimpleT2Decompiler.op_vstem(self, index)
+        psCharStrings.T2WidthExtractor.op_vstem(self, index)
         self.processHint(index)
     def op_hstemhm(self, index):
-        psCharStrings.SimpleT2Decompiler.op_hstemhm(self, index)
+        psCharStrings.T2WidthExtractor.op_hstemhm(self, index)
         self.processHint(index)
     def op_vstemhm(self, index):
-        psCharStrings.SimpleT2Decompiler.op_vstemhm(self, index)
+        psCharStrings.T2WidthExtractor.op_vstemhm(self, index)
         self.processHint(index)
     def op_hintmask(self, index):
-        psCharStrings.SimpleT2Decompiler.op_hintmask(self, index)
+        psCharStrings.T2WidthExtractor.op_hintmask(self, index)
         self.processHintmask(index)
     def op_cntrmask(self, index):
-        psCharStrings.SimpleT2Decompiler.op_cntrmask(self, index)
+        psCharStrings.T2WidthExtractor.op_cntrmask(self, index)
         self.processHintmask(index)
 
     def processHintmask(self, index):
@@ -2209,11 +2208,12 @@ def prune_post_subset(self, options):
                 c,sel = cs.getItemAndSelector(g)
                 c.decompile()
                 subrs = getattr(c.private, "Subrs", [])
-                decompiler = _DehintingT2Decompiler(css, subrs, c.globalSubrs)
+                decompiler = _DehintingT2Decompiler(css, subrs, c.globalSubrs,
+                                                    c.private.nominalWidthX,
+                                                    c.private.defaultWidthX)
                 decompiler.execute(c)
-            pen = NullPen()
+                c.width = decompiler.width
             for charstring in css:
-                charstring.draw(pen)  # this will set the charstring's width
                 charstring.drop_hints()
             del css
 
