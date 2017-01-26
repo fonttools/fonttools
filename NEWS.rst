@@ -1,3 +1,6 @@
+3.6.0 (released 2017-01-26)
+---------------------------
+
 -  [varLib] Refactored and improved the variation-font-building process.
 -  Assembly code in the fpgm, prep, and glyf tables is now indented in
    XML output for improved readability. The ``instruction`` element is
