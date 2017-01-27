@@ -90,7 +90,7 @@ these are explained in the help text, as displayed when typing
 -  disabling TrueType instruction disassembly
 
 The TTX file format
-^^^^^^^^^^^^^^^^^^^
+-------------------
 
 The following tables are currently supported:
 
