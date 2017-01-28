@@ -455,7 +455,12 @@ class _StderrHandler(logging.StreamHandler):
 
 	@property
 	def stream(self):
-		return sys.stderr
+		# the try/execept avoids failures during interpreter shutdown, when
+		# globals are set to None
+		try:
+			return sys.stderr
+		except AttributeError:
+			return __import__('sys').stderr
 
 
 if not hasattr(logging, 'lastResort'):
