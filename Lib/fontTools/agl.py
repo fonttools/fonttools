@@ -731,7 +731,7 @@ def _builddicts():
 		unicode = m.group(1)
 		assert len(unicode) == 4
 		unicode = int(unicode, 16)
-		glyphName = m.group(2)
+		glyphName = tostr(m.group(2))
 		if glyphName in AGL2UV:
 			# the above table contains identical duplicates
 			assert AGL2UV[glyphName] == unicode
