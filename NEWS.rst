@@ -1,3 +1,10 @@
+-  [py23] Fixed unhandled exception occurring at interpreter shutdown in
+   the "last resort" logging handler (972b3e6).
+-  [agl] Ensure all glyph names are of native 'str' type; avoid mixing
+   'str' and 'unicode' in TTFont.glyphOrder (d8c4058).
+-  Fixed inconsistent title levels in README.rst that caused PyPI to
+   incorrectly render the reStructuredText page.
+
 3.6.0 (released 2017-01-26)
 ---------------------------
 
