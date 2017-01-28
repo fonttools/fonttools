@@ -1,3 +1,6 @@
+3.6.1 (released 2017-01-28)
+---------------------------
+
 -  [py23] Fixed unhandled exception occurring at interpreter shutdown in
    the "last resort" logging handler (972b3e6).
 -  [agl] Ensure all glyph names are of native 'str' type; avoid mixing
