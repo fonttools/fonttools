@@ -215,7 +215,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
             names = names | set(self.fonts[sourceDescriptor.name].keys())
         self.glyphNames = list(names)
 
-    def makeInstance(self, instanceDescriptor, doRules=False):
+    def makeInstance(self, instanceDescriptor, doRules=False, glyphNames=None):
         """ Generate a font object for this instance """
         font = self._instantiateFont(None)
         self._preppedAxes = self._prepAxesForBender()
@@ -248,7 +248,11 @@ class DesignSpaceProcessor(DesignSpaceDocument):
                 elif isinstance(featuresText, unicode):
                     font.features.text = featuresText
         # glyphs
-        for glyphName in self.glyphNames:
+        if glyphNames:
+            selectedGlyphNames = glyphNames
+        else:
+            selectedGlyphNames = self.glyphNames
+        for glyphName in selectedGlyphNames:
             glyphMutator = self.getGlyphMutator(glyphName)
             if glyphName in instanceDescriptor.glyphs.keys():
                 # reminder: this is what the glyphData can look like

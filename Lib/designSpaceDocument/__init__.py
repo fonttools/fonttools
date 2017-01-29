@@ -15,7 +15,7 @@ from mutatorMath.objects.location import biasFromLocations, Location
     - warpmap is stored in its axis element
 """
 
-__all__ = [ 'DesignSpaceDocumentError', 'BaseDocReader', 'DesignSpaceDocument', 'SourceDescriptor', 'InstanceDescriptor', 'AxisDescriptor', 'BaseDocReader', 'BaseDocWriter']
+__all__ = [ 'DesignSpaceDocumentError', 'DesignSpaceDocument', 'SourceDescriptor', 'InstanceDescriptor', 'AxisDescriptor', 'BaseDocReader', 'BaseDocWriter']
 
 
 class DesignSpaceDocumentError(Exception):
