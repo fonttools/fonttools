@@ -6,7 +6,6 @@ from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.varLib import designspace, models
 from fontTools.varLib.merger import InstancerMerger
-from functools import reduce
 import os.path
 
 
