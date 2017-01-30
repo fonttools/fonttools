@@ -1,3 +1,9 @@
+3.6.2 (released 2017-01-30)
+---------------------------
+
+- [varLib.merger] Fixed "TypeError: reduce() of empty sequence with no
+  initial value" (3717dc6).
+
 3.6.1 (released 2017-01-28)
 ---------------------------
 
