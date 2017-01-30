@@ -7,6 +7,8 @@ from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables import otBase as otBase
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.varLib import builder
+from functools import reduce
+
 
 class Merger(object):
 
@@ -197,7 +199,7 @@ def _Lookup_PairPos_get_effective_value_pair(self, firstGlyph, secondGlyph):
 
 @AligningMerger.merger(ot.SinglePos)
 def merge(merger, self, lst):
-	self.ValueFormat = valueFormat = reduce(int.__or__, [l.ValueFormat for l in lst])
+	self.ValueFormat = valueFormat = reduce(int.__or__, [l.ValueFormat for l in lst], 0)
 	assert valueFormat & ~0xF == 0, valueFormat
 
 	# If all have same coverage table and all are format 1,
@@ -360,8 +362,8 @@ def _Lookup_PairPosFormat1_subtables_merge_overlay(lst, font):
 	self = ot.PairPos()
 	self.Format = 1
 	self.Coverage = ot.Coverage()
-	self.ValueFormat1 = reduce(int.__or__, [l.ValueFormat1 for l in lst])
-	self.ValueFormat2 = reduce(int.__or__, [l.ValueFormat2 for l in lst])
+	self.ValueFormat1 = reduce(int.__or__, [l.ValueFormat1 for l in lst], 0)
+	self.ValueFormat2 = reduce(int.__or__, [l.ValueFormat2 for l in lst], 0)
 
 	# Align them
 	glyphs, padded = _merge_GlyphOrders(font,
