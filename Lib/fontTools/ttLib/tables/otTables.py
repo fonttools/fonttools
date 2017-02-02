@@ -356,7 +356,7 @@ class MultipleSubst(FormatSwitchingBaseTable):
 			return
 
                 # TTX v3.1 and later.
-		outGlyphs = attrs["out"].split(",")
+		outGlyphs = attrs["out"].split(",") if attrs["out"] else []
 		mapping[attrs["in"]] = [g.strip() for g in outGlyphs]
 
 	@staticmethod
