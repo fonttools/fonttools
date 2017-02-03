@@ -361,8 +361,9 @@ class Struct(BaseConverter):
 			else:
 				pass
 
+		table.populateDefaults(propagator=getattr(font, '_propagator', None))
+
 		if noPostRead:
-			table.populateDefaults(propagator=getattr(font, '_propagator', None))
 			if cleanPropagation:
 				for conv in table.getConverters():
 					if conv.isPropagated:

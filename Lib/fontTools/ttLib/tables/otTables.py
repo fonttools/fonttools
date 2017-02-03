@@ -37,6 +37,10 @@ class Coverage(FormatSwitchingBaseTable):
 
 	# manual implementation to get rid of glyphID dependencies
 
+	def populateDefaults(self, propagator=None):
+		if not hasattr(self, 'glyphs'):
+			self.glyphs = []
+
 	def postRead(self, rawTable, font):
 		if self.Format == 1:
 			# TODO only allow glyphs that are valid?
@@ -136,6 +140,10 @@ class Coverage(FormatSwitchingBaseTable):
 
 class VarIdxMap(BaseTable):
 
+	def populateDefaults(self, propagator=None):
+		if not hasattr(self, 'mapping'):
+			self.mapping = []
+
 	def postRead(self, rawTable, font):
 		assert (rawTable['EntryFormat'] & 0xFFC0) == 0
 		self.mapping = rawTable['mapping']
@@ -221,6 +229,10 @@ class VarData(BaseTable):
 
 class SingleSubst(FormatSwitchingBaseTable):
 
+	def populateDefaults(self, propagator=None):
+		if not hasattr(self, 'mapping'):
+			self.mapping = {}
+
 	def postRead(self, rawTable, font):
 		mapping = {}
 		input = _getGlyphsFromCoverageTable(rawTable["Coverage"])
@@ -295,6 +307,11 @@ class SingleSubst(FormatSwitchingBaseTable):
 
 
 class MultipleSubst(FormatSwitchingBaseTable):
+
+	def populateDefaults(self, propagator=None):
+		if not hasattr(self, 'mapping'):
+			self.mapping = {}
+
 	def postRead(self, rawTable, font):
 		mapping = {}
 		if self.Format == 1:
@@ -367,6 +384,10 @@ class MultipleSubst(FormatSwitchingBaseTable):
 
 
 class ClassDef(FormatSwitchingBaseTable):
+
+	def populateDefaults(self, propagator=None):
+		if not hasattr(self, 'classDefs'):
+			self.classDefs = {}
 
 	def postRead(self, rawTable, font):
 		classDefs = {}
@@ -485,6 +506,10 @@ class ClassDef(FormatSwitchingBaseTable):
 
 class AlternateSubst(FormatSwitchingBaseTable):
 
+	def populateDefaults(self, propagator=None):
+		if not hasattr(self, 'alternates'):
+			self.alternates = {}
+
 	def postRead(self, rawTable, font):
 		alternates = {}
 		if self.Format == 1:
@@ -550,6 +575,10 @@ class AlternateSubst(FormatSwitchingBaseTable):
 
 
 class LigatureSubst(FormatSwitchingBaseTable):
+
+	def populateDefaults(self, propagator=None):
+		if not hasattr(self, 'ligatures'):
+			self.ligatures = {}
 
 	def postRead(self, rawTable, font):
 		ligatures = {}
