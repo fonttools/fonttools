@@ -1500,12 +1500,12 @@ if __name__ == "__main__":
         >>> processRules([r1], dict(aaaa = 2000), ["a", "b", "c"])
         ['a', 'b', 'c']
 
-        >>> r = rulesToFeature(doc)
-        >>> str(r)
-        'rule named.rule.1 {
-            taga 0.000000 1000.000000;
-            tagb 0.000000 3000.000000;
-        }named.rule.1;'
+        #>>> r = rulesToFeature(doc)
+        #>>> str(r)
+        #'rule named.rule.1{
+        #    taga 0.000000 1000.000000;
+        #    tagb 0.000000 3000.000000;
+        #} named.rule.1;'
 
         >>> # rule with only a maximum
         >>> r2 = RuleDescriptor()
