@@ -885,18 +885,21 @@ class DesignSpaceDocument(object):
             loc[axisDescriptor.name] = axisDescriptor.default
         return loc
 
-    def updateFilenameFromPath(self, masters=True, instances=True):
+    def updateFilenameFromPath(self, masters=True, instances=True, force=False):
         # set a descriptor filename attr from the path and this document path
+        # if the filename attribute is not None: skip it.
         if masters:
             for descriptor in self.sources:
-                if descriptor.filename is not None:
+                if descriptor.filename is not None and not force:
                     continue
-                descriptor.filename = os.path.relpath(descriptor.path, os.path.dirname(self.path))
+                if self.path is not None:
+                    descriptor.filename = os.path.relpath(descriptor.path, os.path.dirname(self.path))
         if instances:
            for descriptor in self.instances:
-                if descriptor.filename is not None:
+                if descriptor.filename is not None and not force:
                     continue
-                descriptor.filename = os.path.relpath(descriptor.path, os.path.dirname(self.path))
+                if self.path is not None:
+                    descriptor.filename = os.path.relpath(descriptor.path, os.path.dirname(self.path))
 
     def getFonts(self):
         # convenience method that delivers the masters and their locations
@@ -1297,11 +1300,14 @@ if __name__ == "__main__":
         >>> testDocPath2 = os.path.join(os.getcwd(), "testPathName_case2.designspace")
         >>> testDocPath3 = os.path.join(os.getcwd(), "testPathName_case3.designspace")
         >>> testDocPath4 = os.path.join(os.getcwd(), "testPathName_case4.designspace")
+        >>> testDocPath5 = os.path.join(os.getcwd(), "testPathName_case5.designspace")
+        >>> testDocPath6 = os.path.join(os.getcwd(), "testPathName_case6.designspace")
         >>> masterPath1 = os.path.join(os.getcwd(), "masters", "masterTest1.ufo")
         >>> masterPath2 = os.path.join(os.getcwd(), "masters", "masterTest2.ufo")
         >>> instancePath1 = os.path.join(os.getcwd(), "instances", "instanceTest1.ufo")
         >>> instancePath2 = os.path.join(os.getcwd(), "instances", "instanceTest2.ufo")
         
+        # Case 1: filename and path are both empty. Nothing to calculate, nothing to put in the file.
         >>> doc = DesignSpaceDocument()
         >>> s = SourceDescriptor()
         >>> s.filename = None
@@ -1314,11 +1320,10 @@ if __name__ == "__main__":
         >>> doc.write(testDocPath1)
         >>> verify = DesignSpaceDocument()
         >>> verify.read(testDocPath1)
-        >>> print(verify.sources[0].filename)
-        None
-        >>> print(verify.sources[0].path)
-        None
-
+        >>> assert verify.sources[0].filename == None
+        >>> assert verify.sources[0].path == None
+        
+        # Case 2: filename is empty, path points somewhere: calculate a new filename.
         >>> doc = DesignSpaceDocument()
         >>> s = SourceDescriptor()
         >>> s.filename = None
@@ -1331,11 +1336,10 @@ if __name__ == "__main__":
         >>> doc.write(testDocPath2)
         >>> verify = DesignSpaceDocument()
         >>> verify.read(testDocPath2)
-        >>> print(verify.sources[0].filename)
-        masters/masterTest1.ufo
-        >>> verify.sources[0].path == masterPath1
-        True
-
+        >>> assert verify.sources[0].filename == "masters/masterTest1.ufo"
+        >>> assert verify.sources[0].path == masterPath1
+        
+        # Case 3: the filename is set, the path is None. 
         >>> doc = DesignSpaceDocument()
         >>> s = SourceDescriptor()
         >>> s.filename = "../somewhere/over/the/rainbow.ufo"
@@ -1348,7 +1352,12 @@ if __name__ == "__main__":
         >>> doc.write(testDocPath3)
         >>> verify = DesignSpaceDocument()
         >>> verify.read(testDocPath3)
-
+        >>> assert verify.sources[0].filename == "../somewhere/over/the/rainbow.ufo"
+        >>> # make the absolute path for filename so we can see if it matches the path
+        >>> p = os.path.abspath(os.path.join(os.path.dirname(testDocPath3), verify.sources[0].filename))
+        >>> assert verify.sources[0].path == p
+        
+        # Case 4: the filename points to one file, the path points to another. The path takes precedence.
         >>> doc = DesignSpaceDocument()
         >>> s = SourceDescriptor()
         >>> s.filename = "../somewhere/over/the/rainbow.ufo"
@@ -1359,8 +1368,41 @@ if __name__ == "__main__":
         >>> s.styleName = "MasterStyleNameOne"
         >>> doc.addSource(s)
         >>> doc.write(testDocPath4)
+        >>> verify = DesignSpaceDocument()
+        >>> verify.read(testDocPath4)
+        >>> assert verify.sources[0].filename == "masters/masterTest1.ufo"
+
+        # Case 5: the filename is None, path has a value, update the filename
+        >>> doc = DesignSpaceDocument()
+        >>> s = SourceDescriptor()
+        >>> s.filename = None
+        >>> s.path = masterPath1
+        >>> s.copyInfo = True
+        >>> s.location = dict(weight=0)
+        >>> s.familyName = "MasterFamilyName"
+        >>> s.styleName = "MasterStyleNameOne"
+        >>> doc.addSource(s)
+        >>> doc.write(testDocPath5) # so that the document has a path
+        >>> doc.updateFilenameFromPath()
+        >>> assert doc.sources[0].filename == "masters/masterTest1.ufo"
+        
+        # Case 6: the filename has a value, path has a value, update the filenames with force
+        >>> doc = DesignSpaceDocument()
+        >>> s = SourceDescriptor()
+        >>> s.filename = "../somewhere/over/the/rainbow.ufo"
+        >>> s.path = masterPath1
+        >>> s.copyInfo = True
+        >>> s.location = dict(weight=0)
+        >>> s.familyName = "MasterFamilyName"
+        >>> s.styleName = "MasterStyleNameOne"
+        >>> doc.write(testDocPath5) # so that the document has a path
+        >>> doc.addSource(s)
+        >>> assert doc.sources[0].filename == "../somewhere/over/the/rainbow.ufo"
+        >>> doc.updateFilenameFromPath(force=True)
+        >>> assert doc.sources[0].filename == "masters/masterTest1.ufo"
 
         """
+
     def testNormalise():
         """
         >>> doc = DesignSpaceDocument()
