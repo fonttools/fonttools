@@ -818,7 +818,7 @@ class DesignSpaceDocument(object):
             descriptor.filename == None
             descriptor.path == None
 
-            -- resolve:
+            -- action:
             write as is, descriptors will not have a filename attr.
             useless, but no reason to interfere.
 
@@ -827,7 +827,7 @@ class DesignSpaceDocument(object):
             descriptor.filename == "../something"
             descriptor.path == None
 
-            -- resolve:
+            -- action:
             write as is. The filename attr should not be touched.
 
 
@@ -835,7 +835,7 @@ class DesignSpaceDocument(object):
             descriptor.filename == None
             descriptor.path == "~/absolute/path/there"
 
-            -- resolve:
+            -- action:
             calculate the relative path for filename.
             We're not overwriting some other value for filename, it should be fine
 
@@ -844,8 +844,8 @@ class DesignSpaceDocument(object):
             descriptor.filename == '../somewhere'
             descriptor.path == "~/absolute/path/there"
 
-            -- resolve:
-            there is a conflict between the give filename,  and the paths. 
+            -- action:
+            there is a conflict between the given filename, and the path. 
             So we know where the file is relative to the document.
             Should we still preserve the filename value or can we overwrite it?
 
@@ -891,12 +891,12 @@ class DesignSpaceDocument(object):
             for descriptor in self.sources:
                 if descriptor.filename is not None:
                     continue
-                print("xxx", 'descriptor.path', descriptor.path)
-                print("xxx", 'self.path', self.path)
                 descriptor.filename = os.path.relpath(descriptor.path, os.path.dirname(self.path))
-        #if instances:
-        #    for descriptor in self.instances:
-        #        descriptor.filename = os.path.relpath(descriptor.path, os.path.dirname(self.path))
+        if instances:
+           for descriptor in self.instances:
+                if descriptor.filename is not None:
+                    continue
+               descriptor.filename = os.path.relpath(descriptor.path, os.path.dirname(self.path))
 
     def getFonts(self):
         # convenience method that delivers the masters and their locations
