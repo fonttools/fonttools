@@ -6,3 +6,9 @@ __pycache__
 .DS_Store
 Lib/designSpaceDocument/automatic_testfonts
 testCheck.designspace
+Lib/designSpaceDocument/testPathName_case1.designspace
+Lib/designSpaceDocument/testPathName_case2.designspace
+Lib/designSpaceDocument/testPathName_case3.designspace
+Lib/designSpaceDocument/testPathName_case4.designspace
+Lib/designSpaceDocument/testPathName_case5.designspace
+Lib/designSpaceDocument/testPathNames.designspace
