@@ -1,3 +1,6 @@
+3.6.3 (released 2017-02-06)
+---------------------------
+
 - [varLib] Fix building variation of PairPosFormat2 (b5c34ce).
 - Populate defaults even for otTables that have postRead (e45297b).
 - Fix compiling of MultipleSubstFormat1 with zero 'out' glyphs (b887860).
