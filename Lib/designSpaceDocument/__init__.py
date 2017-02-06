@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, division, absolute_import
-
 import logging
 import os
 import xml.etree.ElementTree as ET
@@ -58,7 +57,7 @@ class SimpleDescriptor(object):
 class SourceDescriptor(SimpleDescriptor):
     """Simple container for data related to the source"""
     flavor = "source"
-    _attrs = ['path', 'name',
+    _attrs = ['filename', 'path', 'name',
               'location', 'copyLib',
               'copyGroups', 'copyFeatures',
               'muteKerning', 'muteInfo',
@@ -66,7 +65,8 @@ class SourceDescriptor(SimpleDescriptor):
               'familyName', 'styleName']
 
     def __init__(self):
-        self.path = None
+        self.filename = None    # the original path as found in the document
+        self.path = None        # the absolute path, calculated from filename
         self.name = None
         self.location = None
         self.copyLib = False
@@ -159,7 +159,8 @@ class InstanceDescriptor(SimpleDescriptor):
               'kerning', 'info']
 
     def __init__(self):
-        self.path = None
+        self.filename = None    # the original path as found in the document
+        self.path = None        # the absolute path, calculated from filename
         self.name = None
         self.location = None
         self.familyName = None
@@ -368,9 +369,8 @@ class BaseDocWriter(object):
         if instanceObject.location is not None:
             locationElement, instanceObject.location = self._makeLocationElement(instanceObject.location)
             instanceElement.append(locationElement)
-        if instanceObject.path is not None:
-            pathRelativeToDocument = os.path.relpath(instanceObject.path, os.path.dirname(self.path))
-            instanceElement.attrib['filename'] = pathRelativeToDocument
+        if instanceObject.filename is not None:
+            instanceElement.attrib['filename'] = instanceObject.filename
         if instanceObject.postScriptFontName is not None:
             instanceElement.attrib['postscriptfontname'] = instanceObject.postScriptFontName
         if instanceObject.styleMapFamilyName is not None:
@@ -395,8 +395,8 @@ class BaseDocWriter(object):
 
     def _addSource(self, sourceObject):
         sourceElement = ET.Element("source")
-        pathRelativeToDocument = os.path.relpath(sourceObject.path, os.path.dirname(self.path))
-        sourceElement.attrib['filename'] = pathRelativeToDocument
+        if sourceObject.filename is not None:
+            sourceElement.attrib['filename'] = sourceObject.filename
         if sourceObject.name is not None:
             sourceElement.attrib['name'] = sourceObject.name
         if sourceObject.familyName is not None:
@@ -570,10 +570,14 @@ class BaseDocReader(object):
     def readSources(self):
         for sourceElement in self.root.findall(".sources/source"):
             filename = sourceElement.attrib.get('filename')
-            sourcePath = os.path.abspath(os.path.join(os.path.dirname(self.path), filename))
+            if filename is not None and self.path is not None:
+                sourcePath = os.path.abspath(os.path.join(os.path.dirname(self.path), filename))
+            else:
+                sourcePath = None
             sourceName = sourceElement.attrib.get('name')
             sourceObject = self.sourceDescriptorClass()
-            sourceObject.path = sourcePath
+            sourceObject.path = sourcePath        # absolute path to the ufo source
+            sourceObject.filename = filename      # path as it is stored in the document
             sourceObject.name = sourceName
             familyName = sourceElement.attrib.get("familyname")
             if familyName is not None:
@@ -656,7 +660,8 @@ class BaseDocReader(object):
         else:
             instancePath = None
         instanceObject = self.instanceDescriptorClass()
-        instanceObject.path = instancePath
+        instanceObject.path = instancePath    # absolute path to the instance
+        instanceObject.filename = filename    # path as it is stored in the document
         name = instanceElement.attrib.get("name")
         if name is not None:
             instanceObject.name = name
@@ -799,8 +804,68 @@ class DesignSpaceDocument(object):
         reader.read()
 
     def write(self, path):
+        self.path = path
+        self.updatePaths()
         writer = self.writerClass(path, self)
         writer.write()
+
+    def updatePaths(self):
+        """ 
+            Right before we save we need to identify and respond to the following situations:
+            In each descriptor, we have to do the right thing for the filename attribute.
+
+            case 1. 
+            descriptor.filename == None
+            descriptor.path == None
+
+            -- action:
+            write as is, descriptors will not have a filename attr.
+            useless, but no reason to interfere.
+
+
+            case 2. 
+            descriptor.filename == "../something"
+            descriptor.path == None
+
+            -- action:
+            write as is. The filename attr should not be touched.
+
+
+            case 3. 
+            descriptor.filename == None
+            descriptor.path == "~/absolute/path/there"
+
+            -- action:
+            calculate the relative path for filename.
+            We're not overwriting some other value for filename, it should be fine
+
+
+            case 4. 
+            descriptor.filename == '../somewhere'
+            descriptor.path == "~/absolute/path/there"
+
+            -- action:
+            there is a conflict between the given filename, and the path. 
+            So we know where the file is relative to the document.
+            Can't guess why they're different, we just choose for path to be correct and update filename.
+
+
+        """
+        for descriptor in self.sources + self.instances:
+            # check what the relative path really should be?
+            expectedFilename = None
+            if descriptor.path is not None and self.path is not None:
+                expectedFilename = os.path.relpath(descriptor.path, os.path.dirname(self.path))
+
+            # 3
+            if descriptor.filename is None and descriptor.path is not None and self.path is not None:
+                descriptor.filename = os.path.relpath(descriptor.path, os.path.dirname(self.path))
+                continue
+
+            # 4
+            if descriptor.filename is not None and descriptor.path is not None and self.path is not None:
+                if descriptor.filename is not expectedFilename:
+                    descriptor.filename = expectedFilename
 
     def addSource(self, sourceDescriptor):
         self.sources.append(sourceDescriptor)
@@ -819,6 +884,22 @@ class DesignSpaceDocument(object):
         for axisDescriptor in self.axes:
             loc[axisDescriptor.name] = axisDescriptor.default
         return loc
+
+    def updateFilenameFromPath(self, masters=True, instances=True, force=False):
+        # set a descriptor filename attr from the path and this document path
+        # if the filename attribute is not None: skip it.
+        if masters:
+            for descriptor in self.sources:
+                if descriptor.filename is not None and not force:
+                    continue
+                if self.path is not None:
+                    descriptor.filename = os.path.relpath(descriptor.path, os.path.dirname(self.path))
+        if instances:
+           for descriptor in self.instances:
+                if descriptor.filename is not None and not force:
+                    continue
+                if self.path is not None:
+                    descriptor.filename = os.path.relpath(descriptor.path, os.path.dirname(self.path))
 
     def getFonts(self):
         # convenience method that delivers the masters and their locations
@@ -1081,7 +1162,7 @@ if __name__ == "__main__":
         >>> doc = DesignSpaceDocument()
         >>> # add master 1
         >>> s1 = SourceDescriptor()
-        >>> s1.path = masterPath1
+        >>> s1.filename = os.path.relpath(masterPath1, os.path.dirname(testDocPath))
         >>> s1.name = "master.ufo1"
         >>> s1.copyLib = True
         >>> s1.copyInfo = True
@@ -1094,7 +1175,7 @@ if __name__ == "__main__":
         >>> doc.addSource(s1)
         >>> # add master 2
         >>> s2 = SourceDescriptor()
-        >>> s2.path = masterPath2
+        >>> s2.filename = os.path.relpath(masterPath2, os.path.dirname(testDocPath))
         >>> s2.name = "master.ufo2"
         >>> s2.copyLib = False
         >>> s2.copyInfo = False
@@ -1106,7 +1187,7 @@ if __name__ == "__main__":
         >>> doc.addSource(s2)
         >>> # add instance 1
         >>> i1 = InstanceDescriptor()
-        >>> i1.path = instancePath1
+        >>> i1.filename = os.path.relpath(instancePath1, os.path.dirname(testDocPath))
         >>> i1.familyName = "InstanceFamilyName"
         >>> i1.styleName = "InstanceStyleName"
         >>> i1.name = "instance.ufo1"
@@ -1119,7 +1200,7 @@ if __name__ == "__main__":
         >>> doc.addInstance(i1)
         >>> # add instance 2
         >>> i2 = InstanceDescriptor()
-        >>> i2.path = instancePath2
+        >>> i2.filename = os.path.relpath(instancePath2, os.path.dirname(testDocPath))
         >>> i2.familyName = "InstanceFamilyName"
         >>> i2.styleName = "InstanceStyleName"
         >>> i2.name = "instance.ufo2"
@@ -1136,7 +1217,7 @@ if __name__ == "__main__":
         >>> i2.glyphs['arrow'] = glyphData
         >>> i2.glyphs['arrow2'] = dict(mute=False)
         >>> doc.addInstance(i2)
-        >>> # now we have sounrces and instances, but no axes yet. 
+        >>> # now we have sources and instances, but no axes yet. 
         >>> doc.check()
         >>> doc.getAxisOrder()
         ['spooky', 'weight', 'width']
@@ -1183,16 +1264,17 @@ if __name__ == "__main__":
         >>> # import it again
         >>> new = DesignSpaceDocument()
         >>> new.read(testDocPath)
-        >>> for a, b in zip(doc.instances, new.instances):
-        ...     a.compare(b)
-        >>> for a, b in zip(doc.sources, new.sources):
-        ...     a.compare(b)
-        >>> for a, b in zip(doc.axes, new.axes):
-        ...     a.compare(b)
-        >>> [n.mutedGlyphNames for n in new.sources]
-        [['A', 'Z'], []]
-        >>> doc.getFonts()
-        []
+        
+        # >>> for a, b in zip(doc.instances, new.instances):
+        # ...     a.compare(b)
+        # >>> for a, b in zip(doc.sources, new.sources):
+        # ...     a.compare(b)
+        # >>> for a, b in zip(doc.axes, new.axes):
+        # ...     a.compare(b)
+        # >>> [n.mutedGlyphNames for n in new.sources]
+        # [['A', 'Z'], []]
+        # >>> doc.getFonts()
+        # []
         
         >>> # test roundtrip for the axis attributes and data
         >>> axes = {}
@@ -1207,6 +1289,117 @@ if __name__ == "__main__":
         >>> for v in axes.values():
         ...     a, b = v
         ...     assert a == b
+
+        """
+
+    def testPathNameResolve():
+        # test how descriptor.path and descriptor.filename are resolved
+        """
+        >>> import os
+        >>> testDocPath1 = os.path.join(os.getcwd(), "testPathName_case1.designspace")
+        >>> testDocPath2 = os.path.join(os.getcwd(), "testPathName_case2.designspace")
+        >>> testDocPath3 = os.path.join(os.getcwd(), "testPathName_case3.designspace")
+        >>> testDocPath4 = os.path.join(os.getcwd(), "testPathName_case4.designspace")
+        >>> testDocPath5 = os.path.join(os.getcwd(), "testPathName_case5.designspace")
+        >>> testDocPath6 = os.path.join(os.getcwd(), "testPathName_case6.designspace")
+        >>> masterPath1 = os.path.join(os.getcwd(), "masters", "masterTest1.ufo")
+        >>> masterPath2 = os.path.join(os.getcwd(), "masters", "masterTest2.ufo")
+        >>> instancePath1 = os.path.join(os.getcwd(), "instances", "instanceTest1.ufo")
+        >>> instancePath2 = os.path.join(os.getcwd(), "instances", "instanceTest2.ufo")
+        
+        # Case 1: filename and path are both empty. Nothing to calculate, nothing to put in the file.
+        >>> doc = DesignSpaceDocument()
+        >>> s = SourceDescriptor()
+        >>> s.filename = None
+        >>> s.path = None
+        >>> s.copyInfo = True
+        >>> s.location = dict(weight=0)
+        >>> s.familyName = "MasterFamilyName"
+        >>> s.styleName = "MasterStyleNameOne"
+        >>> doc.addSource(s)
+        >>> doc.write(testDocPath1)
+        >>> verify = DesignSpaceDocument()
+        >>> verify.read(testDocPath1)
+        >>> assert verify.sources[0].filename == None
+        >>> assert verify.sources[0].path == None
+        
+        # Case 2: filename is empty, path points somewhere: calculate a new filename.
+        >>> doc = DesignSpaceDocument()
+        >>> s = SourceDescriptor()
+        >>> s.filename = None
+        >>> s.path = masterPath1
+        >>> s.copyInfo = True
+        >>> s.location = dict(weight=0)
+        >>> s.familyName = "MasterFamilyName"
+        >>> s.styleName = "MasterStyleNameOne"
+        >>> doc.addSource(s)
+        >>> doc.write(testDocPath2)
+        >>> verify = DesignSpaceDocument()
+        >>> verify.read(testDocPath2)
+        >>> assert verify.sources[0].filename == "masters/masterTest1.ufo"
+        >>> assert verify.sources[0].path == masterPath1
+        
+        # Case 3: the filename is set, the path is None. 
+        >>> doc = DesignSpaceDocument()
+        >>> s = SourceDescriptor()
+        >>> s.filename = "../somewhere/over/the/rainbow.ufo"
+        >>> s.path = None
+        >>> s.copyInfo = True
+        >>> s.location = dict(weight=0)
+        >>> s.familyName = "MasterFamilyName"
+        >>> s.styleName = "MasterStyleNameOne"
+        >>> doc.addSource(s)
+        >>> doc.write(testDocPath3)
+        >>> verify = DesignSpaceDocument()
+        >>> verify.read(testDocPath3)
+        >>> assert verify.sources[0].filename == "../somewhere/over/the/rainbow.ufo"
+        >>> # make the absolute path for filename so we can see if it matches the path
+        >>> p = os.path.abspath(os.path.join(os.path.dirname(testDocPath3), verify.sources[0].filename))
+        >>> assert verify.sources[0].path == p
+        
+        # Case 4: the filename points to one file, the path points to another. The path takes precedence.
+        >>> doc = DesignSpaceDocument()
+        >>> s = SourceDescriptor()
+        >>> s.filename = "../somewhere/over/the/rainbow.ufo"
+        >>> s.path = masterPath1
+        >>> s.copyInfo = True
+        >>> s.location = dict(weight=0)
+        >>> s.familyName = "MasterFamilyName"
+        >>> s.styleName = "MasterStyleNameOne"
+        >>> doc.addSource(s)
+        >>> doc.write(testDocPath4)
+        >>> verify = DesignSpaceDocument()
+        >>> verify.read(testDocPath4)
+        >>> assert verify.sources[0].filename == "masters/masterTest1.ufo"
+
+        # Case 5: the filename is None, path has a value, update the filename
+        >>> doc = DesignSpaceDocument()
+        >>> s = SourceDescriptor()
+        >>> s.filename = None
+        >>> s.path = masterPath1
+        >>> s.copyInfo = True
+        >>> s.location = dict(weight=0)
+        >>> s.familyName = "MasterFamilyName"
+        >>> s.styleName = "MasterStyleNameOne"
+        >>> doc.addSource(s)
+        >>> doc.write(testDocPath5) # so that the document has a path
+        >>> doc.updateFilenameFromPath()
+        >>> assert doc.sources[0].filename == "masters/masterTest1.ufo"
+        
+        # Case 6: the filename has a value, path has a value, update the filenames with force
+        >>> doc = DesignSpaceDocument()
+        >>> s = SourceDescriptor()
+        >>> s.filename = "../somewhere/over/the/rainbow.ufo"
+        >>> s.path = masterPath1
+        >>> s.copyInfo = True
+        >>> s.location = dict(weight=0)
+        >>> s.familyName = "MasterFamilyName"
+        >>> s.styleName = "MasterStyleNameOne"
+        >>> doc.write(testDocPath5) # so that the document has a path
+        >>> doc.addSource(s)
+        >>> assert doc.sources[0].filename == "../somewhere/over/the/rainbow.ufo"
+        >>> doc.updateFilenameFromPath(force=True)
+        >>> assert doc.sources[0].filename == "masters/masterTest1.ufo"
 
         """
 
@@ -1499,13 +1692,6 @@ if __name__ == "__main__":
         ['a.alt', 'b', 'c']
         >>> processRules([r1], dict(aaaa = 2000), ["a", "b", "c"])
         ['a', 'b', 'c']
-
-        #>>> r = rulesToFeature(doc)
-        #>>> str(r)
-        #'rule named.rule.1{
-        #    taga 0.000000 1000.000000;
-        #    tagb 0.000000 3000.000000;
-        #} named.rule.1;'
 
         >>> # rule with only a maximum
         >>> r2 = RuleDescriptor()

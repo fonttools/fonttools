@@ -59,7 +59,8 @@ Some validation is done when reading.
 
 # `SourceDescriptor` object
 ### Attributes
-* `path`: string. Path to the source file. MutatorMath + Varlib.
+* `filename`: string. A relative path to the source file, **as it is in the document**. MutatorMath + Varlib.
+* `path`: string. Absolute path to the source file, calculated from the document path and the string in the filename attr. MutatorMath + Varlib.
 * `name`: string. Unique identifier name of the source, used to identify it if it needs to be referenced from elsewhere in the document. MutatorMath.
 * `location`: dict. Axis values for this source. MutatorMath + Varlib
 * `copyLib`: bool. Indicates if the contents of the font.lib need to be copied to the instances. MutatorMath. 
@@ -89,7 +90,8 @@ doc.addSource(s1)
 ```
 
 # `InstanceDescriptor` object
-* `path`: string. Path to the instance file, which may or may not exist. MutatorMath.
+* `filename`: string. Relative path to the instance file, **as it is in the document**. The file may or may not exist. MutatorMath.
+* `path`: string. Absolute path to the source file, calculated from the document path and the string in the filename attr. The file may or may not exist. MutatorMath.
 * `name`: string. Unique identifier name of the instance, used to identify it if it needs to be referenced from elsewhere in the document. 
 * `location`: dict. Axis values for this source. MutatorMath + Varlib.
 * `familyName`: string. Family name of this instance. MutatorMath + Varlib.
@@ -456,9 +458,76 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 		<sub name="dollar" byname="dollar.alt"/>
 	</rule>
 </rules>
+```
+
+# 6 Notes
+
+## Paths and filenames
+A designspace file needs to store many references to UFO files.
+
+* designspace files can be part of versioning systems and appear on different computers. This means it is not possible to store absolute paths.
+* So, all paths are relative to the designspace document path.
+* Using relative paths allows designspace files and UFO files to be **near** each other, and that they can be **found** without enforcing one particular structure.
+* The **filename** attribute in the `SourceDescriptor` and `InstanceDescriptor` classes stores the preferred relative path.
+* The **path** attribute in these objects stores the absolute path. It is calculated from the document path and the relative path in the filename attribute when the object is created.
+* Only the **filename** attribute is written to file. 
+
+Right before we save we need to identify and respond to the following situations: 
+
+In each descriptor, we have to do the right thing for the filename attribute. Before writing to file, the `documentObject.updatePaths()` method prepares the paths as follows:
+
+**Case 1**
 
 ```
-## Notes on this document
+descriptor.filename == None
+descriptor.path == None
+```
+**Action**
+
+* write as is, descriptors will not have a filename attr. Useless, but no reason to interfere.
+
+**Case 2**
+
+```
+descriptor.filename == "../something"
+descriptor.path == None
+```
+
+**Action**
+
+* write as is. The filename attr should not be touched.
+
+
+**Case 3**
+
+```
+descriptor.filename == None
+descriptor.path == "~/absolute/path/there"
+```
+
+**Action**
+
+* calculate the relative path for filename. We're not overwriting some other value for filename, it should be fine.
+
+
+**Case 4**
+
+```
+descriptor.filename == '../somewhere'
+descriptor.path == "~/absolute/path/there"
+```
+
+**Action**
+
+* There is a conflict between the given filename, and the path. The difference could have happened for any number of reasons. Assuming the values were not in conflict when the object was created, either could have changed. We can't guess.
+* Assume the path attribute is more up to date. Calculate a new value for filename based on the path and the document path.
+
+## Recommendation for editors
+* If you want to explicitly set the **filename** attribute, leave the path attribute empty.
+* If you want to explicitly set the **path** attribute, leave the filename attribute empty. It will be recalculated.
+* Use `documentObject.updateFilenameFromPath()` to explicitly set the **filename** attributes for all instance and source descriptors.
+
+# 7 This document
 
 * The package is rather new and changes are to be expected.
 
