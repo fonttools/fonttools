@@ -272,6 +272,34 @@ def merge(merger, self, lst):
 
 	merger.mergeLists(self.PairValueRecord, padded)
 
+def _PairPosFormat1_merge(self, lst, merger):
+	# Merge everything else; makes sure Format is the same.
+	merger.mergeObjects(self, lst,
+			    exclude=('Coverage',
+				     'PairSet', 'PairSetCount'))
+
+	empty = ot.PairSet()
+	empty.PairValueRecord = []
+	empty.PairValueCount = 0
+
+	# Align them
+	glyphs, padded = _merge_GlyphOrders(merger.font,
+					    [v.Coverage.glyphs for v in lst],
+					    [v.PairSet for v in lst],
+					    default=empty)
+
+	self.Coverage.glyphs = glyphs
+	self.PairSet = [ot.PairSet() for g in glyphs]
+	self.PairSetCount = len(self.PairSet)
+	for glyph, ps in zip(glyphs, self.PairSet):
+		ps._firstGlyph = glyph
+
+	merger.mergeLists(self.PairSet, padded)
+
+def _PairPosFormat2_merge(self, lst, merger):
+	# Everything must match; we don't support smart merge yet.
+	merger.mergeObjects(self, lst)
+
 @AligningMerger.merger(ot.PairPos)
 def merge(merger, self, lst):
 	# TODO Support differing ValueFormats.
@@ -279,35 +307,9 @@ def merge(merger, self, lst):
 	merger.valueFormat2 = self.ValueFormat2
 
 	if self.Format == 1:
-
-		# Merge everything else; makes sure Format is the same.
-		merger.mergeObjects(self, lst,
-				    exclude=('Coverage',
-					     'PairSet', 'PairSetCount'))
-
-		empty = ot.PairSet()
-		empty.PairValueRecord = []
-		empty.PairValueCount = 0
-
-		# Align them
-		glyphs, padded = _merge_GlyphOrders(merger.font,
-						    [v.Coverage.glyphs for v in lst],
-						    [v.PairSet for v in lst],
-						    default=empty)
-
-		self.Coverage.glyphs = glyphs
-		self.PairSet = [ot.PairSet() for g in glyphs]
-		self.PairSetCount = len(self.PairSet)
-		for glyph, ps in zip(glyphs, self.PairSet):
-			ps._firstGlyph = glyph
-
-		merger.mergeLists(self.PairSet, padded)
-
+		_PairPosFormat1_merge(self, lst, merger)
 	elif self.Format == 2:
-
-		# Everything must match; we don't support smart merge yet.
-		merger.mergeObjects(self, lst)
-
+		_PairPosFormat2_merge(self, lst, merger)
 	else:
 		assert 0
 
