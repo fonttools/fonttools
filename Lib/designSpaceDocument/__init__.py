@@ -1312,6 +1312,12 @@ if __name__ == "__main__":
         >>> s.styleName = "MasterStyleNameOne"
         >>> doc.addSource(s)
         >>> doc.write(testDocPath1)
+        >>> verify = DesignSpaceDocument()
+        >>> verify.read(testDocPath1)
+        >>> print(verify.sources[0].filename)
+        None
+        >>> print(verify.sources[0].path)
+        None
 
         >>> doc = DesignSpaceDocument()
         >>> s = SourceDescriptor()
@@ -1323,6 +1329,12 @@ if __name__ == "__main__":
         >>> s.styleName = "MasterStyleNameOne"
         >>> doc.addSource(s)
         >>> doc.write(testDocPath2)
+        >>> verify = DesignSpaceDocument()
+        >>> verify.read(testDocPath2)
+        >>> print(verify.sources[0].filename)
+        masters/masterTest1.ufo
+        >>> verify.sources[0].path == masterPath1
+        True
 
         >>> doc = DesignSpaceDocument()
         >>> s = SourceDescriptor()
@@ -1334,6 +1346,8 @@ if __name__ == "__main__":
         >>> s.styleName = "MasterStyleNameOne"
         >>> doc.addSource(s)
         >>> doc.write(testDocPath3)
+        >>> verify = DesignSpaceDocument()
+        >>> verify.read(testDocPath3)
 
         >>> doc = DesignSpaceDocument()
         >>> s = SourceDescriptor()
