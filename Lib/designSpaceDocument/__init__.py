@@ -847,7 +847,7 @@ class DesignSpaceDocument(object):
             -- action:
             there is a conflict between the given filename, and the path. 
             So we know where the file is relative to the document.
-            Should we still preserve the filename value or can we overwrite it?
+            Can't guess why they're different, we just choose for path to be correct and update filename.
 
 
         """
@@ -896,7 +896,7 @@ class DesignSpaceDocument(object):
            for descriptor in self.instances:
                 if descriptor.filename is not None:
                     continue
-               descriptor.filename = os.path.relpath(descriptor.path, os.path.dirname(self.path))
+                descriptor.filename = os.path.relpath(descriptor.path, os.path.dirname(self.path))
 
     def getFonts(self):
         # convenience method that delivers the masters and their locations
