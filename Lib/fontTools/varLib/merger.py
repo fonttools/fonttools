@@ -278,35 +278,38 @@ def merge(merger, self, lst):
 	merger.valueFormat1 = self.ValueFormat1
 	merger.valueFormat2 = self.ValueFormat2
 
-	if self.Format == 2:
+	if self.Format == 1:
+
+		# Merge everything else; makes sure Format is the same.
+		merger.mergeObjects(self, lst,
+				    exclude=('Coverage',
+					     'PairSet', 'PairSetCount'))
+
+		empty = ot.PairSet()
+		empty.PairValueRecord = []
+		empty.PairValueCount = 0
+
+		# Align them
+		glyphs, padded = _merge_GlyphOrders(merger.font,
+						    [v.Coverage.glyphs for v in lst],
+						    [v.PairSet for v in lst],
+						    default=empty)
+
+		self.Coverage.glyphs = glyphs
+		self.PairSet = [ot.PairSet() for g in glyphs]
+		self.PairSetCount = len(self.PairSet)
+		for glyph, ps in zip(glyphs, self.PairSet):
+			ps._firstGlyph = glyph
+
+		merger.mergeLists(self.PairSet, padded)
+
+	elif self.Format == 2:
+
 		# Everything must match; we don't support smart merge yet.
 		merger.mergeObjects(self, lst)
-		del merger.valueFormat1, merger.valueFormat2
-		return
 
-	assert self.Format == 1
-	# Merge everything else; makes sure Format is the same.
-	merger.mergeObjects(self, lst,
-			    exclude=('Coverage',
-				     'PairSet', 'PairSetCount'))
-
-	empty = ot.PairSet()
-	empty.PairValueRecord = []
-	empty.PairValueCount = 0
-
-	# Align them
-	glyphs, padded = _merge_GlyphOrders(merger.font,
-					    [v.Coverage.glyphs for v in lst],
-					    [v.PairSet for v in lst],
-					    default=empty)
-
-	self.Coverage.glyphs = glyphs
-	self.PairSet = [ot.PairSet() for g in glyphs]
-	self.PairSetCount = len(self.PairSet)
-	for glyph, ps in zip(glyphs, self.PairSet):
-		ps._firstGlyph = glyph
-
-	merger.mergeLists(self.PairSet, padded)
+	else:
+		assert 0
 
 	del merger.valueFormat1, merger.valueFormat2
 
