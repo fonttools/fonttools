@@ -3,6 +3,7 @@ Merge OpenType Layout tables (GDEF / GPOS / GSUB).
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc import classifyTools
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables import otBase as otBase
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
@@ -296,9 +297,71 @@ def _PairPosFormat1_merge(self, lst, merger):
 
 	merger.mergeLists(self.PairSet, padded)
 
+def _ClassDef_invert(self):
+	if not self or not self.classDefs:
+		return []
+
+	classDefs = self.classDefs
+	m = max(classDefs.values())
+
+	ret = []
+	for _ in range(m + 1):
+		ret.append(set())
+
+	for k,v in classDefs.items():
+		ret[v].add(k)
+
+	return ret
+
+def _ClassDef_merge_classify(lst, ignoreClass0=False):
+	self = ot.ClassDef()
+	self.classDefs = classDefs = {}
+
+	classifier = classifyTools.Classifier(sort=False)
+	for l in lst:
+		sets = _ClassDef_invert(l)
+		if ignoreClass0:
+			sets = sets[1:]
+		classifier.update(sets)
+	classes = classifier.getClasses()
+
+	if ignoreClass0:
+		classes.insert(0, set())
+
+	for i,classSet in enumerate(classes):
+		for g in classSet:
+			classDefs[g] = i
+
+	return self, classes
+
 def _PairPosFormat2_merge(self, lst, merger):
-	# Everything must match; we don't support smart merge yet.
-	merger.mergeObjects(self, lst)
+	merger.mergeObjects(self, lst,
+			    exclude=('ClassDef2', 'Class2Count',
+				     'Class1Record'))
+
+	self.ClassDef2, classes = _ClassDef_merge_classify([l.ClassDef2 for l in lst], ignoreClass0=True)
+	self.Class2Count = len(classes)
+	class1Recordses = []
+	for l in lst:
+		classDef2 = l.ClassDef2.classDefs
+		class1Records = []
+		for rec1old in l.Class1Record:
+			oldClass2Records = rec1old.Class2Record
+			rec1new = ot.Class1Record()
+			class2Records = rec1new.Class2Record = []
+			for classSet in classes:
+				if not classSet: # class=0
+					rec2 = oldClass2Records[0]
+				else:
+					exemplarGlyph = next(iter(classSet))
+					klass = classDef2.get(exemplarGlyph, 0)
+					rec2 = oldClass2Records[klass]
+				class2Records.append(rec2)
+			class1Records.append(rec1new)
+		class1Recordses.append(class1Records)
+
+	self.Class1Record = list(class1Recordses[0]) # TODO move merger to be selfless
+	merger.mergeLists(self.Class1Record, class1Recordses)
 
 @AligningMerger.merger(ot.PairPos)
 def merge(merger, self, lst):
