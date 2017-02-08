@@ -313,22 +313,28 @@ def _ClassDef_invert(self):
 
 	return ret
 
-def _ClassDef_merge_classify(lst, ignoreClass0=False):
+def _ClassDef_merge_classify(lst, allGlyphs=None):
 	self = ot.ClassDef()
 	self.classDefs = classDefs = {}
 
-	classifier = classifyTools.Classifier(sort=False)
+	classifier = classifyTools.Classifier()
 	for l in lst:
 		sets = _ClassDef_invert(l)
-		if ignoreClass0:
+		if allGlyphs is None:
 			sets = sets[1:]
+		else:
+			sets[0] = set(allGlyphs)
+			for s in sets[1:]:
+				sets[0].difference_update(s)
 		classifier.update(sets)
 	classes = classifier.getClasses()
 
-	if ignoreClass0:
+	if allGlyphs is None:
 		classes.insert(0, set())
 
 	for i,classSet in enumerate(classes):
+		if i == 0:
+			continue
 		for g in classSet:
 			classDefs[g] = i
 
@@ -336,16 +342,31 @@ def _ClassDef_merge_classify(lst, ignoreClass0=False):
 
 def _PairPosFormat2_merge(self, lst, merger):
 	merger.mergeObjects(self, lst,
-			    exclude=('ClassDef2', 'Class2Count',
+			    exclude=('Coverage',
+				     'ClassDef1', 'Class1Count',
+				     'ClassDef2', 'Class2Count',
 				     'Class1Record'))
 
-	self.ClassDef2, classes = _ClassDef_merge_classify([l.ClassDef2 for l in lst], ignoreClass0=True)
+	# Align coverages
+	glyphs, _ = _merge_GlyphOrders(merger.font,
+				       [v.Coverage.glyphs for v in lst])
+	self.Coverage.glyphs = glyphs
+	glyphSet = set(glyphs)
+
+	# Align first classes
+	#self.ClassDef1, classes = _ClassDef_merge_classify([l.ClassDef1 for l in lst], allGlyphs=glyphSet)
+	#self.Class1Count = len(classes)
+
+	matrices = [l.Class1Record for l in lst]
+
+	# Align second classes
+	self.ClassDef2, classes = _ClassDef_merge_classify([l.ClassDef2 for l in lst])
 	self.Class2Count = len(classes)
-	class1Recordses = []
-	for l in lst:
+	new_matrices = []
+	for l,matrix in zip(lst, matrices):
 		classDef2 = l.ClassDef2.classDefs
 		class1Records = []
-		for rec1old in l.Class1Record:
+		for rec1old in matrix:
 			oldClass2Records = rec1old.Class2Record
 			rec1new = ot.Class1Record()
 			class2Records = rec1new.Class2Record = []
@@ -358,10 +379,12 @@ def _PairPosFormat2_merge(self, lst, merger):
 					rec2 = oldClass2Records[klass]
 				class2Records.append(rec2)
 			class1Records.append(rec1new)
-		class1Recordses.append(class1Records)
+		new_matrices.append(class1Records)
+	matrices = new_matrices
+	del new_matrices
 
-	self.Class1Record = list(class1Recordses[0]) # TODO move merger to be selfless
-	merger.mergeLists(self.Class1Record, class1Recordses)
+	self.Class1Record = list(matrices[0]) # TODO move merger to be selfless
+	merger.mergeLists(self.Class1Record, matrices)
 
 @AligningMerger.merger(ot.PairPos)
 def merge(merger, self, lst):
