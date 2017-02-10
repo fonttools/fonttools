@@ -500,7 +500,15 @@ def merge(self, m, tables):
 	assert len(tables) == len(m.duplicateGlyphsPerFont)
 	for i,(table,dups) in enumerate(zip(tables, m.duplicateGlyphsPerFont)):
 		if not dups: continue
-		assert (table is not None and table is not NotImplemented), "Have duplicates to resolve for font %d but no GSUB" % (i + 1)
+		if table is None or table is NotImplemented:
+			# Checks whether the dups are equivalent or not.
+			# Discard gid if its shape is not equal to that of oldgid.
+			for oldgid, gid in dups.items():
+				if not isGlyphSame(m.fonts, oldgid, gid):
+					oldgname, oldidx = getGlyphNameAndFontIndex(oldgid)
+					gname, idx = getGlyphNameAndFontIndex(gid)
+					log.warn("%s:<%s> is dropped and replaced by %s:<%s>" % (m.fontfiles[idx], gname, m.fontfiles[oldidx], oldgname))
+			continue
 		lookupMap = {id(v):v for v in table.table.LookupList.Lookup}
 		featureMap = {id(v):v for v in table.table.FeatureList.FeatureRecord}
 		synthFeature = None
@@ -558,6 +566,64 @@ def merge(self, m, tables):
 		otTables.MarkMarkPos)
 def mapLookups(self, lookupMap):
 	pass
+
+def getGlyphNameAndFontIndex(gid):
+	"""Gets glyph name and font index from the composite glyph id.
+
+	Args:
+		gid: string representing glyph id. E.g. uni0000#0
+
+	Returns:
+		A tuple with two elements. The first element is a string representing the
+		glyph name. The second element is an integer representing the font index in
+		command line args.
+
+	Example:
+		'uni0000', 3 = getGlyphNameAndFontIndex('uni0000#3')
+	"""
+	assert '#' in gid and gid.rsplit('#', 1)[1].isdigit(), 'incorrect gid format'
+	return gid.rsplit('#', 1)[0], int(gid.rsplit('#', 1)[1])
+
+
+def isGlyphSame(fonts, gid_0, gid_1):
+	"""Checks if the given glyphs specified by gid are equal or not.
+
+	Two glyphs are considered as equal iff:
+	1) Their outlines are equal and 2) their advance widths are equal.
+
+	Args:
+		fonts: a list of TTFont instances.
+		gid_0: a string representing glyph id. E.g. uni0000#0
+		gid_1: a string representing glyph id. E.g. uni000A#3
+
+	Returns:
+		A bool indicating whether the given glyphs are equal or not.
+	"""
+	# Checks outline
+	index_0 = getGlyphNameAndFontIndex(gid_0)[1]
+	index_1 = getGlyphNameAndFontIndex(gid_1)[1]
+
+	assert 'glyf' in fonts[index_0] and 'glyf' in fonts[index_1]
+	glyfTable_0 = fonts[index_0]['glyf']
+	glyfTable_1 = fonts[index_1]['glyf']
+	data_0 = glyfTable_0[gid_0].compile(glyfTable_0)
+	data_1 = glyfTable_1[gid_1].compile(glyfTable_1)
+	if data_0 != data_1:
+		# Binary data is not printable. Prints out coordinates instead.
+		log.info("outlines are different: %s:%s, %s:%s" % (gid_0, glyfTable_0[gid_0].getCoordinates(glyfTable_0), gid_1, glyfTable_1[gid_1].getCoordinates(glyfTable_1)))
+		return False
+
+	# Checks advance width and left bearing
+	if 'vmtx' in fonts[index_0] and 'vmtx' in fonts[index_1]:
+		isEqual = fonts[index_0]['vmtx'].metrics[gid_0] == fonts[index_1]['vmtx'].metrics[gid_1]
+		if not isEqual:
+			log.info("advance height is different:%s, %s " % (fonts[index_0]['vmtx'].metrics[gid_0], fonts[index_1]['vmtx'].metrics[gid_1]))
+		return isEqual
+	assert 'hmtx' in fonts[index_0] and 'hmtx' in fonts[index_1]
+	isEqual = fonts[index_0]['hmtx'].metrics[gid_0] == fonts[index_1]['hmtx'].metrics[gid_1]
+	if not isEqual:
+		log.info("advance width is different: %s, %s" %(fonts[index_0]['hmtx'].metrics[gid_0], fonts[index_1]['hmtx'].metrics[gid_1]))
+	return isEqual
 
 # Copied and trimmed down from subset.py
 @_add_method(otTables.ContextSubst,
@@ -788,7 +854,8 @@ class Merger(object):
 			self._preMerge(font)
 
 		self.duplicateGlyphsPerFont = [{} for f in fonts]
-
+		self.fonts = fonts
+		self.fontfiles = fontfiles
 		allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
 		allTags.remove('GlyphOrder')
 

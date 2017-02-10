@@ -8,6 +8,7 @@ class MergeIntegrationTest(unittest.TestCase):
 	# TODO
 	pass
 
+
 class gaspMergeUnitTest(unittest.TestCase):
 	def setUp(self):
 		self.merger = Merger()
