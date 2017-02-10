@@ -593,15 +593,15 @@ def _all_equal(lst):
 
 def buildVarDevTable(store_builder, master_values):
 	if _all_equal(master_values):
-		return None
-	varIdx = store_builder.storeMasters(master_values)
-	return builder.buildVarDevTable(varIdx)
+		return master_values[0], None
+	base, varIdx = store_builder.storeMasters(master_values)
+	return base, builder.buildVarDevTable(varIdx)
 
 @VariationMerger.merger(ot.Anchor)
 def merge(merger, self, lst):
 	assert self.Format == 1
-	XDeviceTable = buildVarDevTable(merger.store_builder, [a.XCoordinate for a in lst])
-	YDeviceTable = buildVarDevTable(merger.store_builder, [a.YCoordinate for a in lst])
+	self.XCoordinate, XDeviceTable = buildVarDevTable(merger.store_builder, [a.XCoordinate for a in lst])
+	self.YCoordinate, YDeviceTable = buildVarDevTable(merger.store_builder, [a.YCoordinate for a in lst])
 	if XDeviceTable or YDeviceTable:
 		self.Format = 3
 		self.XDeviceTable = XDeviceTable
@@ -615,7 +615,8 @@ def merge(merger, self, lst):
 				('YPlacement','YPlaDevice')]:
 
 		if hasattr(self, name):
-			deviceTable = buildVarDevTable(merger.store_builder,
-						       [getattr(a, name, 0) for a in lst])
+			value, deviceTable = buildVarDevTable(merger.store_builder,
+							      [getattr(a, name, 0) for a in lst])
+			setattr(self, name, value)
 			if deviceTable:
 				setattr(self, tableName, deviceTable)

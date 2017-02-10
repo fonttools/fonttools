@@ -124,11 +124,12 @@ class OnlineVarStoreBuilder(object):
 		return self._store
 
 	def storeMasters(self, master_values):
-		deltas = [int(round(d)) for d in self._model.getDeltas(master_values)[1:]]
+		deltas = [int(round(d)) for d in self._model.getDeltas(master_values)]
+		base = deltas.pop(0)
 		inner = len(self._data.Item)
 		self._data.Item.append(deltas)
 		# TODO Check for full data array?
-		return (self._outer << 16) + inner
+		return base, (self._outer << 16) + inner
 
 
 
