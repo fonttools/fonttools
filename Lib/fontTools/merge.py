@@ -505,7 +505,9 @@ def merge(self, m, tables):
 	assert len(tables) == len(m.duplicateGlyphsPerFont)
 	for i,(table,dups) in enumerate(zip(tables, m.duplicateGlyphsPerFont)):
 		if not dups: continue
-		assert (table is not None and table is not NotImplemented), "Have duplicates to resolve for font %d but no GSUB" % (i + 1)
+		if table is None or table is NotImplemented:
+			print("Have duplicate glyphs (%s) to resolve for font %d but there is GSUB table in it" % (dups, (i + 1)))
+			continue
 		lookupMap = {id(v):v for v in table.table.LookupList.Lookup}
 		featureMap = {id(v):v for v in table.table.FeatureList.FeatureRecord}
 		synthFeature = None
