@@ -134,8 +134,9 @@ class BuilderTest(unittest.TestCase):
                 font[tag].compile(font)
 
     def check_fea2fea_file(self, name, base=None, parser=Parser):
+        font = makeTTFont()
         fname = (name + ".fea") if '.' not in name else name
-        p = parser(self.getpath(fname))
+        p = parser(self.getpath(fname), glyphMap=font.getReverseGlyphMap())
         doc = p.parse()
         actual = self.normal_fea(doc.asFea().split("\n"))
 

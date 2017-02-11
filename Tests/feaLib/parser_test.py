@@ -29,6 +29,23 @@ def mapping(s):
     return dict(zip(b, c))
 
 
+def makeGlyphMap(glyphs):
+    return {g: i for i, g in enumerate(glyphs)}
+
+
+GLYPHMAP = makeGlyphMap(("""
+    .notdef space A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+    A.sc B.sc C.sc D.sc E.sc F.sc G.sc H.sc I.sc J.sc K.sc L.sc M.sc
+    N.sc O.sc P.sc Q.sc R.sc S.sc T.sc U.sc V.sc W.sc X.sc Y.sc Z.sc
+    A.swash B.swash X.swash Y.swash Z.swash
+    a b c d e f g h i j k l m n o p q r s t u v w x y z
+    a.sc b.sc c.sc d.sc e.sc f.sc g.sc h.sc i.sc j.sc k.sc l.sc m.sc
+    n.sc o.sc p.sc q.sc r.sc s.sc t.sc u.sc v.sc w.sc x.sc y.sc z.sc
+    a.swash b.swash x.swash y.swash z.swash
+    foobar foo.09 foo.1234 foo.9876
+""").split() + ["foo.%d" % i for i in range(1, 200)])
+
+
 class ParserTest(unittest.TestCase):
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
@@ -236,6 +253,33 @@ class ParserTest(unittest.TestCase):
         [gc] = self.parse("@defg.sc = [d.sc-g.sc];").statements
         self.assertEqual(gc.name, "defg.sc")
         self.assertEqual(gc.glyphSet(), ("d.sc", "e.sc", "f.sc", "g.sc"))
+
+    def test_glyphclass_range_dash(self):
+        glyphMap = makeGlyphMap("A-foo.sc B-foo.sc C-foo.sc".split())
+        [gc] = self.parse("@range = [A-foo.sc-C-foo.sc];", glyphMap).statements
+        self.assertEqual(gc.glyphSet(), ("A-foo.sc", "B-foo.sc", "C-foo.sc"))
+
+    def test_glyphclass_range_dash_with_space(self):
+        g = makeGlyphMap("A-foo.sc B-foo.sc C-foo.sc".split())
+        [gc] = self.parse("@range = [A-foo.sc - C-foo.sc];", g).statements
+        self.assertEqual(gc.glyphSet(), ("A-foo.sc", "B-foo.sc", "C-foo.sc"))
+
+    def test_glyphclass_glyph_name_should_win_over_range(self):
+        # The OpenType Feature File Specification v1.20 makes it clear
+        # that if a dashed name could be interpreted either as a glyph name
+        # or as a range, then the semantics should be the single dashed name.
+        glyphMap = makeGlyphMap(
+            "A-foo.sc-C-foo.sc A-foo.sc B-foo.sc C-foo.sc".split())
+        [gc] = self.parse("@range = [A-foo.sc-C-foo.sc];", glyphMap).statements
+        self.assertEqual(gc.glyphSet(), ("A-foo.sc-C-foo.sc",))
+
+    def test_glyphclass_range_dash_ambiguous(self):
+        glyphMap = makeGlyphMap("A B C A-B B-C".split())
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'Ambiguous glyph range "A-B-C"; '
+            'please use "A - B-C" or "A-B - C" to clarify what you mean',
+            self.parse, r"@bad = [A-B-C];", glyphMap)
 
     def test_glyphclass_range_digit1(self):
         [gc] = self.parse("@range = [foo.2-foo.5];").statements
@@ -1114,7 +1158,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(glyphstr(sub.suffix), "Z")
 
     def test_substitute_lookups(self):  # GSUB LookupType 6
-        doc = Parser(self.getpath("spec5fi1.fea")).parse()
+        doc = Parser(self.getpath("spec5fi1.fea"), GLYPHMAP).parse()
         [langsys, ligs, sub, feature] = doc.statements
         self.assertEqual(feature.statements[0].lookups, [ligs, None, sub])
         self.assertEqual(feature.statements[1].lookups, [ligs, None, sub])
@@ -1274,9 +1318,9 @@ class ParserTest(unittest.TestCase):
         doc = self.parse(";;;")
         self.assertFalse(doc.statements)
 
-    def parse(self, text):
+    def parse(self, text, glyphMap=GLYPHMAP):
         featurefile = UnicodeIO(text)
-        return Parser(featurefile).parse()
+        return Parser(featurefile, glyphMap).parse()
 
     @staticmethod
     def getpath(testfile):
