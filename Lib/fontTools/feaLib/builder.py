@@ -75,7 +75,7 @@ class Builder(object):
         self.vhea_ = {}
 
     def build(self):
-        self.parseTree = Parser(self.file).parse()
+        self.parseTree = Parser(self.file, self.glyphMap).parse()
         self.parseTree.build(self)
         self.build_feature_aalt_()
         self.build_head()

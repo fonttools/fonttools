@@ -1,3 +1,6 @@
+- [feaLib] Glyph names can have dashes, as per new AFDKO syntax v1.20 (#559).
+- [feaLib] feaLib.Parser now needs the font's glyph map for parsing.
+
 3.6.3 (released 2017-02-06)
 ---------------------------
 

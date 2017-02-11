@@ -29,6 +29,7 @@ class LexerTest(unittest.TestCase):
         self.assertEqual(lex("_"), [(Lexer.NAME, "_")])
         self.assertEqual(lex("\\table"), [(Lexer.NAME, "\\table")])
         self.assertEqual(lex("a+*:^~!"), [(Lexer.NAME, "a+*:^~!")])
+        self.assertEqual(lex("with-dash"), [(Lexer.NAME, "with-dash")])
 
     def test_cid(self):
         self.assertEqual(lex("\\0 \\987"), [(Lexer.CID, 0), (Lexer.CID, 987)])
@@ -72,6 +73,8 @@ class LexerTest(unittest.TestCase):
 
     def test_symbol(self):
         self.assertEqual(lex("a'"), [(Lexer.NAME, "a"), (Lexer.SYMBOL, "'")])
+        self.assertEqual(lex("-A-B"),
+                         [(Lexer.SYMBOL, "-"), (Lexer.NAME, "A-B")])
         self.assertEqual(
             lex("foo - -2"),
             [(Lexer.NAME, "foo"), (Lexer.SYMBOL, "-"), (Lexer.NUMBER, -2)])
