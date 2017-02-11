@@ -1,6 +1,11 @@
+3.7.0 (released 2017-02-11)
+---------------------------
+
 - [ttx, mtiLib] Preserve ordering of glyph alternates in GSUB type 3 (#833).
 - [feaLib] Glyph names can have dashes, as per new AFDKO syntax v1.20 (#559).
 - [feaLib] feaLib.Parser now needs the font's glyph map for parsing.
+- [varLib] Fix regression where GPOS values were stored as 0.
+- [varLib] Allow merging of class-based kerning when ClassDefs are different
 
 3.6.3 (released 2017-02-06)
 ---------------------------
