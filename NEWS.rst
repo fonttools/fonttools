@@ -1,3 +1,4 @@
+- [ttx, mtiLib] Preserve ordering of glyph alternates in GSUB type 3 (#833).
 - [feaLib] Glyph names can have dashes, as per new AFDKO syntax v1.20 (#559).
 - [feaLib] feaLib.Parser now needs the font's glyph map for parsing.
 
