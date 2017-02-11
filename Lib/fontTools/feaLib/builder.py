@@ -159,6 +159,8 @@ class Builder(object):
                         alternates.setdefault(glyph, set()).update(alts)
         single = {glyph: list(repl)[0] for glyph, repl in alternates.items()
                   if len(repl) == 1}
+        # TODO: Figure out the glyph alternate ordering used by makeotf.
+        # https://github.com/fonttools/fonttools/issues/836
         multi = {glyph: sorted(repl, key=self.font.getGlyphID)
                  for glyph, repl in alternates.items()
                  if len(repl) > 1}

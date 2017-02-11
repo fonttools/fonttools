@@ -536,7 +536,7 @@ class AlternateSubst(FormatSwitchingBaseTable):
 		cov.glyphs = [ item[1] for item in items]
 		alternates = []
 		setList = [ item[-1] for item in items]
-		for  set in setList:
+		for set in setList:
 			alts = AlternateSet()
 			alts.Alternate = set
 			alternates.append(alts)
@@ -553,7 +553,7 @@ class AlternateSubst(FormatSwitchingBaseTable):
 		for glyphName, alternates in items:
 			xmlWriter.begintag("AlternateSet", glyph=glyphName)
 			xmlWriter.newline()
-			for alt in sorted(alternates):
+			for alt in alternates:
 				xmlWriter.simpletag("Alternate", glyph=alt)
 				xmlWriter.newline()
 			xmlWriter.endtag("AlternateSet")
