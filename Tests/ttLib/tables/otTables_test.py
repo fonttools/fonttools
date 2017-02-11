@@ -308,13 +308,13 @@ class AlternateSubstTest(unittest.TestCase):
         rawTable = {
             "Coverage": makeCoverage(["G", "Z"]),
             "AlternateSet": [
-                self.makeAlternateSet("G.alt1 G.alt2"),
+                self.makeAlternateSet("G.alt2 G.alt1"),
                 self.makeAlternateSet("Z.fina")
             ]
         }
         table.postRead(rawTable, self.font)
         self.assertEqual(table.alternates, {
-            "G": ["G.alt1", "G.alt2"],
+            "G": ["G.alt2", "G.alt1"],
             "Z": ["Z.fina"]
         })
 
@@ -325,25 +325,25 @@ class AlternateSubstTest(unittest.TestCase):
 
     def test_preWrite_format1(self):
         table = otTables.AlternateSubst()
-        table.alternates = {"G": ["G.alt1", "G.alt2"], "Z": ["Z.fina"]}
+        table.alternates = {"G": ["G.alt2", "G.alt1"], "Z": ["Z.fina"]}
         rawTable = table.preWrite(self.font)
         self.assertEqual(table.Format, 1)
         self.assertEqual(rawTable["Coverage"].glyphs, ["G", "Z"])
         [g, z] = rawTable["AlternateSet"]
         self.assertIsInstance(g, otTables.AlternateSet)
-        self.assertEqual(g.Alternate, ["G.alt1", "G.alt2"])
+        self.assertEqual(g.Alternate, ["G.alt2", "G.alt1"])
         self.assertIsInstance(z, otTables.AlternateSet)
         self.assertEqual(z.Alternate, ["Z.fina"])
 
     def test_toXML2(self):
         writer = XMLWriter(StringIO())
         table = otTables.AlternateSubst()
-        table.alternates = {"G": ["G.alt1", "G.alt2"], "Z": ["Z.fina"]}
+        table.alternates = {"G": ["G.alt2", "G.alt1"], "Z": ["Z.fina"]}
         table.toXML2(writer, self.font)
         self.assertEqual(writer.file.getvalue().splitlines()[1:], [
             '<AlternateSet glyph="G">',
-            '  <Alternate glyph="G.alt1"/>',
             '  <Alternate glyph="G.alt2"/>',
+            '  <Alternate glyph="G.alt1"/>',
             '</AlternateSet>',
             '<AlternateSet glyph="Z">',
             '  <Alternate glyph="Z.fina"/>',
@@ -354,15 +354,15 @@ class AlternateSubstTest(unittest.TestCase):
         table = otTables.AlternateSubst()
         for name, attrs, content in parseXML(
                 '<AlternateSet glyph="G">'
-                '  <Alternate glyph="G.alt1"/>'
                 '  <Alternate glyph="G.alt2"/>'
+                '  <Alternate glyph="G.alt1"/>'
                 '</AlternateSet>'
                 '<AlternateSet glyph="Z">'
                 '  <Alternate glyph="Z.fina"/>'
                 '</AlternateSet>'):
             table.fromXML(name, attrs, content, self.font)
         self.assertEqual(table.alternates, {
-            "G": ["G.alt1", "G.alt2"],
+            "G": ["G.alt2", "G.alt1"],
             "Z": ["Z.fina"]
         })
 
