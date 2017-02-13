@@ -18,7 +18,10 @@ def read_operator(self, b0, data, index):
 		index = index+1
 	else:
 		op = b0
-	operator = self.operators[op]
+	try:
+		operator = self.operators[op]
+	except KeyError:
+		return None, index
 	value = self.handle_operator(operator)
 	return value, index
 
@@ -87,6 +90,8 @@ realNibbles = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
 		'.', 'E', 'E-', None, '-']
 realNibblesDict = {v:i for i,v in enumerate(realNibbles)}
 
+maxOpStack = 193
+
 
 class ByteCodeBase(object):
 	pass
@@ -119,6 +124,7 @@ t2Operators = [
 	(10,		'callsubr'),
 	(11,		'return'),
 	(14,		'endchar'),
+	
 	(16,		'blend'),
 	(18,		'hstemhm'),
 	(19,		'hintmask'),
@@ -164,6 +170,21 @@ t2Operators = [
 	((12, 37),	'flex1'),
 ]
 
+CFF2Operators = [entry for entry in t2Operators if ((isinstance(entry[0], int) or
+											(entry[0][1] < 34)) and (not entry[0] in [11,14])) ]
+CFF2Operators.extend(
+[
+	(15,		'vsindex'),
+	(16,		'blend'),
+])
+
+def sortOps(entry):
+	opCode = entry[0]
+	if isinstance(opCode, int):
+		opCode = (opCode,)
+	return opCode
+
+CFF2Operators.sort(key=sortOps)
 
 def getIntEncoder(format):
 	if format == "cff":
@@ -244,254 +265,6 @@ def encodeFloat(f):
 class CharStringCompileError(Exception): pass
 
 
-class T2CharString(ByteCodeBase):
-
-	operandEncoding = t2OperandEncoding
-	operators, opcodes = buildOperatorDict(t2Operators)
-
-	def __init__(self, bytecode=None, program=None, private=None, globalSubrs=None):
-		if program is None:
-			program = []
-		self.bytecode = bytecode
-		self.program = program
-		self.private = private
-		self.globalSubrs = globalSubrs if globalSubrs is not None else []
-
-	def __repr__(self):
-		if self.bytecode is None:
-			return "<%s (source) at %x>" % (self.__class__.__name__, id(self))
-		else:
-			return "<%s (bytecode) at %x>" % (self.__class__.__name__, id(self))
-
-	def getIntEncoder(self):
-		return encodeIntT2
-
-	def getFixedEncoder(self):
-		return encodeFixed
-
-	def decompile(self):
-		if not self.needsDecompilation():
-			return
-		subrs = getattr(self.private, "Subrs", [])
-		decompiler = SimpleT2Decompiler(subrs, self.globalSubrs)
-		decompiler.execute(self)
-
-	def draw(self, pen):
-		subrs = getattr(self.private, "Subrs", [])
-		extractor = T2OutlineExtractor(pen, subrs, self.globalSubrs,
-				self.private.nominalWidthX, self.private.defaultWidthX)
-		extractor.execute(self)
-		self.width = extractor.width
-
-	def compile(self):
-		if self.bytecode is not None:
-			return
-		assert self.program, "illegal CharString: decompiled to empty program"
-		assert self.program[-1] in ("endchar", "return", "callsubr", "callgsubr",
-				"seac"), "illegal CharString"
-		bytecode = []
-		opcodes = self.opcodes
-		program = self.program
-		encodeInt = self.getIntEncoder()
-		encodeFixed = self.getFixedEncoder()
-		i = 0
-		end = len(program)
-		while i < end:
-			token = program[i]
-			i = i + 1
-			tp = type(token)
-			if issubclass(tp, basestring):
-				try:
-					bytecode.extend(bytechr(b) for b in opcodes[token])
-				except KeyError:
-					raise CharStringCompileError("illegal operator: %s" % token)
-				if token in ('hintmask', 'cntrmask'):
-					bytecode.append(program[i])  # hint mask
-					i = i + 1
-			elif tp == int:
-				bytecode.append(encodeInt(token))
-			elif tp == float:
-				bytecode.append(encodeFixed(token))
-			else:
-				assert 0, "unsupported type: %s" % tp
-		try:
-			bytecode = bytesjoin(bytecode)
-		except TypeError:
-			log.error(bytecode)
-			raise
-		self.setBytecode(bytecode)
-
-	def needsDecompilation(self):
-		return self.bytecode is not None
-
-	def setProgram(self, program):
-		self.program = program
-		self.bytecode = None
-
-	def setBytecode(self, bytecode):
-		self.bytecode = bytecode
-		self.program = None
-
-	def getToken(self, index,
-			len=len, byteord=byteord, basestring=basestring,
-			isinstance=isinstance):
-		if self.bytecode is not None:
-			if index >= len(self.bytecode):
-				return None, 0, 0
-			b0 = byteord(self.bytecode[index])
-			index = index + 1
-			handler = self.operandEncoding[b0]
-			token, index = handler(self, b0, self.bytecode, index)
-		else:
-			if index >= len(self.program):
-				return None, 0, 0
-			token = self.program[index]
-			index = index + 1
-		isOperator = isinstance(token, basestring)
-		return token, isOperator, index
-
-	def getBytes(self, index, nBytes):
-		if self.bytecode is not None:
-			newIndex = index + nBytes
-			bytes = self.bytecode[index:newIndex]
-			index = newIndex
-		else:
-			bytes = self.program[index]
-			index = index + 1
-		assert len(bytes) == nBytes
-		return bytes, index
-
-	def handle_operator(self, operator):
-		return operator
-
-	def toXML(self, xmlWriter):
-		from fontTools.misc.textTools import num2binary
-		if self.bytecode is not None:
-			xmlWriter.dumphex(self.bytecode)
-		else:
-			index = 0
-			args = []
-			while True:
-				token, isOperator, index = self.getToken(index)
-				if token is None:
-					break
-				if isOperator:
-					args = [str(arg) for arg in args]
-					if token in ('hintmask', 'cntrmask'):
-						hintMask, isOperator, index = self.getToken(index)
-						bits = []
-						for byte in hintMask:
-							bits.append(num2binary(byteord(byte), 8))
-						hintMask = strjoin(bits)
-						line = ' '.join(args + [token, hintMask])
-					else:
-						line = ' '.join(args + [token])
-					xmlWriter.write(line)
-					xmlWriter.newline()
-					args = []
-				else:
-					args.append(token)
-
-	def fromXML(self, name, attrs, content):
-		from fontTools.misc.textTools import binary2num, readHex
-		if attrs.get("raw"):
-			self.setBytecode(readHex(content))
-			return
-		content = strjoin(content)
-		content = content.split()
-		program = []
-		end = len(content)
-		i = 0
-		while i < end:
-			token = content[i]
-			i = i + 1
-			try:
-				token = int(token)
-			except ValueError:
-				try:
-					token = float(token)
-				except ValueError:
-					program.append(token)
-					if token in ('hintmask', 'cntrmask'):
-						mask = content[i]
-						maskBytes = b""
-						for j in range(0, len(mask), 8):
-							maskBytes = maskBytes + bytechr(binary2num(mask[j:j+8]))
-						program.append(maskBytes)
-						i = i + 1
-				else:
-					program.append(token)
-			else:
-				program.append(token)
-		self.setProgram(program)
-
-
-t1Operators = [
-#	opcode		name
-	(1,		'hstem'),
-	(3,		'vstem'),
-	(4,		'vmoveto'),
-	(5,		'rlineto'),
-	(6,		'hlineto'),
-	(7,		'vlineto'),
-	(8,		'rrcurveto'),
-	(9,		'closepath'),
-	(10,		'callsubr'),
-	(11,		'return'),
-	(13,		'hsbw'),
-	(14,		'endchar'),
-	(21,		'rmoveto'),
-	(22,		'hmoveto'),
-	(30,		'vhcurveto'),
-	(31,		'hvcurveto'),
-	((12, 0),	'dotsection'),
-	((12, 1),	'vstem3'),
-	((12, 2),	'hstem3'),
-	((12, 6),	'seac'),
-	((12, 7),	'sbw'),
-	((12, 12),	'div'),
-	((12, 16),	'callothersubr'),
-	((12, 17),	'pop'),
-	((12, 33),	'setcurrentpoint'),
-]
-
-class T1CharString(T2CharString):
-
-	operandEncoding = t1OperandEncoding
-	operators, opcodes = buildOperatorDict(t1Operators)
-
-	def __init__(self, bytecode=None, program=None, subrs=None):
-		if program is None:
-			program = []
-		self.bytecode = bytecode
-		self.program = program
-		self.subrs = subrs
-
-	def getIntEncoder(self):
-		return encodeIntT1
-
-	def getFixedEncoder(self):
-		def encodeFixed(value):
-			raise TypeError("Type 1 charstrings don't support floating point operands")
-
-	def decompile(self):
-		if self.bytecode is None:
-			return
-		program = []
-		index = 0
-		while True:
-			token, isOperator, index = self.getToken(index)
-			if token is None:
-				break
-			program.append(token)
-		self.setProgram(program)
-
-	def draw(self, pen):
-		extractor = T1OutlineExtractor(pen, self.subrs)
-		extractor.execute(self)
-		self.width = extractor.width
-
-
 class SimpleT2Decompiler(object):
 
 	def __init__(self, localSubrs, globalSubrs):
@@ -506,6 +279,11 @@ class SimpleT2Decompiler(object):
 		self.operandStack = []
 		self.hintCount = 0
 		self.hintMaskBytes = 0
+
+	def check_program(self, program):
+		assert program, "illegal CharString: decompiled to empty program"
+		assert program[-1] in ("endchar", "return", "callsubr", "callgsubr",
+				"seac"), "illegal CharString"
 
 	def execute(self, charString):
 		self.callingStack.append(charString)
@@ -535,9 +313,7 @@ class SimpleT2Decompiler(object):
 			else:
 				pushToStack(token)
 		if needsDecompilation:
-			assert program, "illegal CharString: decompiled to empty program"
-			assert program[-1] in ("endchar", "return", "callsubr", "callgsubr",
-					"seac"), "illegal CharString"
+			self.check_program(program)
 			charString.setProgram(program)
 		del self.callingStack[-1]
 
@@ -641,6 +417,63 @@ class SimpleT2Decompiler(object):
 		raise NotImplementedError
 	def op_roll(self, index):
 		raise NotImplementedError
+
+class SimpleCFF2Decompiler(SimpleT2Decompiler):
+	def __init__(self, localSubrs, globalSubrs, private = None):
+		super(SimpleCFF2Decompiler, self).__init__(localSubrs, globalSubrs)
+		self.private = private
+
+	def reset(self):
+		super(SimpleCFF2Decompiler, self).reset()
+		self.numRegions = 0
+
+	def check_program(self, program):
+		if program:
+			assert program[-1] not in ("seac"), "illegal CharString Terminator"
+
+	def op_blend(self, index):
+		if self.numRegions == 0:
+			self.numRegions = self.private.getNumRegions()
+		numBlends = self.pop()
+		numOps = numBlends*self.numRegions
+		blendArgs = self.operandStack[-numOps:]
+		del self.operandStack[:-(numOps-numBlends)] # Leave the default operands on the stack.
+		
+	
+	def op_vsindex(self, index):
+		vi = self.pop()
+		self.numRegions = self.private.getNumRegions(vi)
+
+
+	
+t1Operators = [
+#	opcode		name
+	(1,		'hstem'),
+	(3,		'vstem'),
+	(4,		'vmoveto'),
+	(5,		'rlineto'),
+	(6,		'hlineto'),
+	(7,		'vlineto'),
+	(8,		'rrcurveto'),
+	(9,		'closepath'),
+	(10,		'callsubr'),
+	(11,		'return'),
+	(13,		'hsbw'),
+	(14,		'endchar'),
+	(21,		'rmoveto'),
+	(22,		'hmoveto'),
+	(30,		'vhcurveto'),
+	(31,		'hvcurveto'),
+	((12, 0),	'dotsection'),
+	((12, 1),	'vstem3'),
+	((12, 2),	'hstem3'),
+	((12, 6),	'seac'),
+	((12, 7),	'sbw'),
+	((12, 12),	'div'),
+	((12, 16),	'callothersubr'),
+	((12, 17),	'pop'),
+	((12, 33),	'setcurrentpoint'),
+]
 
 class T2OutlineExtractor(SimpleT2Decompiler):
 
@@ -959,7 +792,9 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 		self.rCurveTo((dxa, 0), (dxb, dyb), (dxc, dyc))
 		return args
 
-
+class CFF2OutlineExtractor(T2OutlineExtractor):
+	pass
+	
 class T1OutlineExtractor(T2OutlineExtractor):
 
 	def __init__(self, pen, subrs):
@@ -1102,6 +937,259 @@ class T1OutlineExtractor(T2OutlineExtractor):
 	def op_vstem3(self, index):
 		self.popall()  # XXX
 
+class T2CharString(ByteCodeBase):
+
+	operandEncoding = t2OperandEncoding
+	operators, opcodes = buildOperatorDict(t2Operators)
+	decompilerClass = SimpleT2Decompiler
+	outlineExtractor = T2OutlineExtractor
+	
+	def __init__(self, bytecode=None, program=None, private=None, globalSubrs=None):
+		if program is None:
+			program = []
+		self.bytecode = bytecode
+		self.program = program
+		self.private = private
+		self.globalSubrs = globalSubrs if globalSubrs is not None else []
+
+	def __repr__(self):
+		if self.bytecode is None:
+			return "<%s (source) at %x>" % (self.__class__.__name__, id(self))
+		else:
+			return "<%s (bytecode) at %x>" % (self.__class__.__name__, id(self))
+
+	def getIntEncoder(self):
+		return encodeIntT2
+
+	def getFixedEncoder(self):
+		return encodeFixed
+
+	def decompile(self):
+		if not self.needsDecompilation():
+			return
+		subrs = getattr(self.private, "Subrs", [])
+		decompiler = self.decompilerClass(subrs, self.globalSubrs)
+		decompiler.execute(self)
+
+	def draw(self, pen):
+		subrs = getattr(self.private, "Subrs", [])
+		extractor = self.outlineExtractor(pen, subrs, self.globalSubrs,
+				self.private.nominalWidthX, self.private.defaultWidthX)
+		extractor.execute(self)
+		self.width = extractor.width
+
+	def check_program(self, program):
+		assert self.program, "illegal CharString: decompiled to empty program"
+		assert self.program[-1] in ("endchar", "return", "callsubr", "callgsubr",
+				"seac"), "illegal CharString"
+
+	def compile(self):
+		if self.bytecode is not None:
+			return
+		opcodes = self.opcodes
+		program = self.program
+		self.check_program(program)
+		bytecode = []
+		encodeInt = self.getIntEncoder()
+		encodeFixed = self.getFixedEncoder()
+		i = 0
+		end = len(program)
+		while i < end:
+			token = program[i]
+			i = i + 1
+			tp = type(token)
+			if issubclass(tp, basestring):
+				try:
+					bytecode.extend(bytechr(b) for b in opcodes[token])
+				except KeyError:
+					raise CharStringCompileError("illegal operator: %s" % token)
+				if token in ('hintmask', 'cntrmask'):
+					bytecode.append(program[i])  # hint mask
+					i = i + 1
+			elif tp == int:
+				bytecode.append(encodeInt(token))
+			elif tp == float:
+				bytecode.append(encodeFixed(token))
+			else:
+				assert 0, "unsupported type: %s" % tp
+		try:
+			bytecode = bytesjoin(bytecode)
+		except TypeError:
+			log.error(bytecode)
+			raise
+		self.setBytecode(bytecode)
+
+	def needsDecompilation(self):
+		return self.bytecode is not None
+
+	def setProgram(self, program):
+		self.program = program
+		self.bytecode = None
+
+	def setBytecode(self, bytecode):
+		self.bytecode = bytecode
+		self.program = None
+
+	def getToken(self, index,
+			len=len, byteord=byteord, basestring=basestring,
+			isinstance=isinstance):
+		if self.bytecode is not None:
+			if index >= len(self.bytecode):
+				return None, 0, 0
+			b0 = byteord(self.bytecode[index])
+			index = index + 1
+			handler = self.operandEncoding[b0]
+			token, index = handler(self, b0, self.bytecode, index)
+		else:
+			if index >= len(self.program):
+				return None, 0, 0
+			token = self.program[index]
+			index = index + 1
+		isOperator = isinstance(token, basestring)
+		return token, isOperator, index
+
+	def getBytes(self, index, nBytes):
+		if self.bytecode is not None:
+			newIndex = index + nBytes
+			bytes = self.bytecode[index:newIndex]
+			index = newIndex
+		else:
+			bytes = self.program[index]
+			index = index + 1
+		assert len(bytes) == nBytes
+		return bytes, index
+
+	def handle_operator(self, operator):
+		return operator
+
+	def toXML(self, xmlWriter):
+		from fontTools.misc.textTools import num2binary
+		if self.bytecode is not None:
+			xmlWriter.dumphex(self.bytecode)
+		else:
+			index = 0
+			args = []
+			while True:
+				token, isOperator, index = self.getToken(index)
+				if token is None:
+					break
+				if isOperator:
+					args = [str(arg) for arg in args]
+					if token in ('hintmask', 'cntrmask'):
+						hintMask, isOperator, index = self.getToken(index)
+						bits = []
+						for byte in hintMask:
+							bits.append(num2binary(byteord(byte), 8))
+						hintMask = strjoin(bits)
+						line = ' '.join(args + [token, hintMask])
+					else:
+						line = ' '.join(args + [token])
+					xmlWriter.write(line)
+					xmlWriter.newline()
+					args = []
+				else:
+					args.append(token)
+
+	def fromXML(self, name, attrs, content):
+		from fontTools.misc.textTools import binary2num, readHex
+		if attrs.get("raw"):
+			self.setBytecode(readHex(content))
+			return
+		content = strjoin(content)
+		content = content.split()
+		program = []
+		end = len(content)
+		i = 0
+		while i < end:
+			token = content[i]
+			i = i + 1
+			try:
+				token = int(token)
+			except ValueError:
+				try:
+					token = float(token)
+				except ValueError:
+					program.append(token)
+					if token in ('hintmask', 'cntrmask'):
+						mask = content[i]
+						maskBytes = b""
+						for j in range(0, len(mask), 8):
+							maskBytes = maskBytes + bytechr(binary2num(mask[j:j+8]))
+						program.append(maskBytes)
+						i = i + 1
+				else:
+					program.append(token)
+			else:
+				program.append(token)
+		self.setProgram(program)
+
+class CFF2CharString(T2CharString):
+
+	operandEncoding = t2OperandEncoding
+	operators, opcodes = buildOperatorDict(CFF2Operators)
+	decompilerClass = SimpleCFF2Decompiler
+	outlineExtractor = CFF2OutlineExtractor
+
+	def check_program(self, program):
+		#assert self.program, "illegal CharString: decompiled to empty program"
+		# Empty program is OK for CFF2 Charstring - same a T2 with only an endchar.
+		if self.program:
+			assert self.program[-1] not in ("seac"), "illegal CFF2 CharString Termination"
+		
+	def compile(self):
+		# Remove endchar, if there is one.
+		super(CFF2CharString, self).compile()
+		if self.bytecode and (byteord(self.bytecode[-1]) in (11, 14)):
+			self.bytecode = self.bytecode[:-1]
+			
+	def decompile(self):
+		# Remove endchar, if there is one.
+		if not self.needsDecompilation():
+			return
+		subrs = getattr(self.private, "Subrs", [])
+		decompiler = self.decompilerClass(subrs, self.globalSubrs, self.private)
+		decompiler.execute(self)
+		
+class CFF2SubrCharString(CFF2CharString):
+	pass
+
+
+class T1CharString(T2CharString):
+
+	operandEncoding = t1OperandEncoding
+	operators, opcodes = buildOperatorDict(t1Operators)
+
+	def __init__(self, bytecode=None, program=None, subrs=None):
+		if program is None:
+			program = []
+		self.bytecode = bytecode
+		self.program = program
+		self.subrs = subrs
+
+	def getIntEncoder(self):
+		return encodeIntT1
+
+	def getFixedEncoder(self):
+		def encodeFixed(value):
+			raise TypeError("Type 1 charstrings don't support floating point operands")
+
+	def decompile(self):
+		if self.bytecode is None:
+			return
+		program = []
+		index = 0
+		while True:
+			token, isOperator, index = self.getToken(index)
+			if token is None:
+				break
+			program.append(token)
+		self.setProgram(program)
+
+	def draw(self, pen):
+		extractor = T1OutlineExtractor(pen, self.subrs)
+		extractor.execute(self)
+		self.width = extractor.width
+
 
 class DictDecompiler(ByteCodeBase):
 
@@ -1127,7 +1215,6 @@ class DictDecompiler(ByteCodeBase):
 			value, index = handler(self, b0, data, index)
 			if value is not None:
 				push(value)
-
 	def pop(self):
 		value = self.stack[-1]
 		del self.stack[-1]
@@ -1140,7 +1227,7 @@ class DictDecompiler(ByteCodeBase):
 
 	def handle_operator(self, operator):
 		operator, argType = operator
-		if isinstance(argType, type(())):
+		if isinstance(argType, tuple):
 			value = ()
 			for i in range(len(argType)-1, -1, -1):
 				arg = argType[i]
@@ -1149,20 +1236,73 @@ class DictDecompiler(ByteCodeBase):
 		else:
 			arghandler = getattr(self, "arg_" + argType)
 			value = arghandler(operator)
-		self.dict[operator] = value
+		if operator == "blend":
+			self.stack.extend(value)
+		else:
+			self.dict[operator] = value
 
 	def arg_number(self, name):
-		return self.pop()
+		if isinstance(self.stack[0], list):
+			out = self.arg_blend_number(self.stack)
+		else:
+			out = self.pop()
+		return out
+		
+	def arg_blend_number(self, name):
+		out = []
+		blendArgs = self.pop()
+		numMasters = len(blendArgs)
+		out.append(blendArgs)
+		out.append("blend")
+		dummy = self.popall()
+		return blendArgs
+
 	def arg_SID(self, name):
 		return self.strings[self.pop()]
 	def arg_array(self, name):
 		return self.popall()
+	def arg_blendList(self, name):
+		# The last item on the stack is the number of return values, aka numValues.
+		# before that we have [numValues: args from first master]
+		# then numValues blend lists, where each blend list is numMasters -1
+		# Total number of values is numValues + (numValues * (numMasters -1)), == numValues * numMasters.
+		# reformat list to be numReturnValues tuples, each tuple with nMaster values
+		numReturnValues = self.pop()
+		args = self.popall()
+		numArgs = len(args)
+		vsindex = self.dict.get('vsindex', 0)
+		numMasters = self.parent.getNumRegions(vsindex) # only a PrivateDict has blended ops.
+		value = [None]*numReturnValues
+		numDeltas = numMasters-1
+		i = 0
+		prevVal = 0
+		prevValueList = [0]*numMasters
+		while i < numReturnValues:
+			newVal = args[i] + prevVal
+			blendList = [newVal]*numMasters
+			prevVal = newVal
+			value[i] = blendList
+			j = 1
+			while j < numMasters:
+				masterOffset = numReturnValues + (i* numDeltas)
+				mi = masterOffset +(j-1)
+				delta = args[i] + args[mi]
+				blendList[j]= delta + prevValueList[j]
+				j += 1
+			prevValueList = blendList
+			i += 1
+		return value
+		
 	def arg_delta(self, name):
+		valueList = self.popall()
 		out = []
-		current = 0
-		for v in self.popall():
-			current = current + v
-			out.append(current)
+		if isinstance(valueList[0], list): # arg_blendList() has already converted these to absolute values.
+			out = valueList
+		else:
+			current = 0
+			for v in valueList:
+				current = current + v
+				out.append(current)
 		return out
 
 
