@@ -17,7 +17,8 @@ class Parser(object):
     extensions = {}
     ast = ast
 
-    def __init__(self, featurefile):
+    def __init__(self, featurefile, glyphMap):
+        self.glyphMap_ = glyphMap
         self.doc_ = self.ast.FeatureFile()
         self.anchors_ = SymbolTable()
         self.glyphclasses_ = SymbolTable()
@@ -193,6 +194,45 @@ class Parser(object):
         self.glyphclasses_.define(name, glyphclass)
         return glyphclass
 
+    def split_glyph_range_(self, name, location):
+        # Since v1.20, the OpenType Feature File specification allows
+        # for dashes in glyph names. A sequence like "a-b-c-d" could
+        # therefore mean a single glyph whose name happens to be
+        # "a-b-c-d", or it could mean a range from glyph "a" to glyph
+        # "b-c-d", or a range from glyph "a-b" to glyph "c-d", or a
+        # range from glyph "a-b-c" to glyph "d".Technically, this
+        # example could be resolved because the (pretty complex)
+        # definition of glyph ranges renders most of these splits
+        # invalid. But the specification does not say that a compiler
+        # should try to apply such fancy heuristics. To encourage
+        # unambiguous feature files, we therefore try all possible
+        # splits and reject the feature file if there are multiple
+        # splits possible. It is intentional that we don't just emit a
+        # warning; warnings tend to get ignored. To fix the problem,
+        # font designers can trivially add spaces around the intended
+        # split point, and we emit a compiler error that suggests
+        # how exactly the source should be rewritten to make things
+        # unambiguous.
+        parts = name.split("-")
+        solutions = []
+        for i in range(len(parts)):
+            start, limit = "-".join(parts[0:i]), "-".join(parts[i:])
+            if start in self.glyphMap_ and limit in self.glyphMap_:
+                solutions.append((start, limit))
+        if len(solutions) == 1:
+            start, limit = solutions[0]
+            return start, limit
+        elif len(solutions) == 0:
+            raise FeatureLibError(
+                "\"%s\" is not a glyph in the font, and it can not be split "
+                "into a range of known glyphs" % name, location)
+        else:
+            ranges = " or ".join(["\"%s - %s\"" % (s, l) for s, l in solutions])
+            raise FeatureLibError(
+                "Ambiguous glyph range \"%s\"; "
+                "please use %s to clarify what you mean" % (name, ranges),
+                location)
+
     def parse_glyphclass_(self, accept_glyphname):
         if (accept_glyphname and
                 self.next_token_type_ in (Lexer.NAME, Lexer.CID)):
@@ -216,14 +256,19 @@ class Parser(object):
         while self.next_token_ != "]":
             if self.next_token_type_ is Lexer.NAME:
                 glyph = self.expect_glyph_()
-                if self.next_token_ == "-":
-                    range_location = self.cur_token_location_
-                    range_start = glyph
+                location = self.cur_token_location_
+                if '-' in glyph and glyph not in self.glyphMap_:
+                    start, limit = self.split_glyph_range_(glyph, location)
+                    glyphs.add_range(
+                        start, limit,
+                        self.make_glyph_range_(location, start, limit))
+                elif self.next_token_ == "-":
+                    start = glyph
                     self.expect_symbol_("-")
-                    range_end = self.expect_glyph_()
-                    glyphs.add_range(range_start, range_end,
-                                     self.make_glyph_range_(range_location,
-                                                            range_start, range_end))
+                    limit = self.expect_glyph_()
+                    glyphs.add_range(
+                        start, limit,
+                        self.make_glyph_range_(location, start, limit))
                 else:
                     glyphs.append(glyph)
             elif self.next_token_type_ is Lexer.CID:

@@ -26,7 +26,7 @@ class Lexer(object):
     CHAR_HEXDIGIT_ = "0123456789ABCDEFabcdef"
     CHAR_LETTER_ = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
     CHAR_NAME_START_ = CHAR_LETTER_ + "_+*:.^~!\\"
-    CHAR_NAME_CONTINUATION_ = CHAR_LETTER_ + CHAR_DIGIT_ + "_.+*:^~!/"
+    CHAR_NAME_CONTINUATION_ = CHAR_LETTER_ + CHAR_DIGIT_ + "_.+*:^~!/-"
 
     RE_GLYPHCLASS = re.compile(r"^[A-Za-z_0-9.]+$")
 
@@ -188,6 +188,7 @@ class Lexer(object):
 class IncludingLexer(object):
     def __init__(self, featurefile):
         self.lexers_ = [self.make_lexer_(featurefile)]
+        self.featurefilepath = self.lexers_[0].filename_
 
     def __iter__(self):
         return self
@@ -210,7 +211,7 @@ class IncludingLexer(object):
                 #semi_type, semi_token, semi_location = lexer.next()
                 #if semi_type is not Lexer.SYMBOL or semi_token != ";":
                 #    raise FeatureLibError("Expected ';'", semi_location)
-                curpath = os.path.dirname(lexer.filename_)
+                curpath = os.path.dirname(self.featurefilepath)
                 path = os.path.join(curpath, fname_token)
                 if len(self.lexers_) >= 5:
                     raise FeatureLibError("Too many recursive includes",

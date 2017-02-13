@@ -75,7 +75,7 @@ class Builder(object):
         self.vhea_ = {}
 
     def build(self):
-        self.parseTree = Parser(self.file).parse()
+        self.parseTree = Parser(self.file, self.glyphMap).parse()
         self.parseTree.build(self)
         self.build_feature_aalt_()
         self.build_head()
@@ -159,6 +159,8 @@ class Builder(object):
                         alternates.setdefault(glyph, set()).update(alts)
         single = {glyph: list(repl)[0] for glyph, repl in alternates.items()
                   if len(repl) == 1}
+        # TODO: Figure out the glyph alternate ordering used by makeotf.
+        # https://github.com/fonttools/fonttools/issues/836
         multi = {glyph: sorted(repl, key=self.font.getGlyphID)
                  for glyph, repl in alternates.items()
                  if len(repl) > 1}
