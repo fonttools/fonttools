@@ -313,22 +313,28 @@ def _ClassDef_invert(self):
 
 	return ret
 
-def _ClassDef_merge_classify(lst, ignoreClass0=False):
+def _ClassDef_merge_classify(lst, allGlyphs=None):
 	self = ot.ClassDef()
 	self.classDefs = classDefs = {}
 
-	classifier = classifyTools.Classifier(sort=False)
+	classifier = classifyTools.Classifier()
 	for l in lst:
 		sets = _ClassDef_invert(l)
-		if ignoreClass0:
+		if allGlyphs is None:
 			sets = sets[1:]
+		else:
+			sets[0] = set(allGlyphs)
+			for s in sets[1:]:
+				sets[0].difference_update(s)
 		classifier.update(sets)
 	classes = classifier.getClasses()
 
-	if ignoreClass0:
+	if allGlyphs is None:
 		classes.insert(0, set())
 
 	for i,classSet in enumerate(classes):
+		if i == 0:
+			continue
 		for g in classSet:
 			classDefs[g] = i
 
@@ -336,16 +342,63 @@ def _ClassDef_merge_classify(lst, ignoreClass0=False):
 
 def _PairPosFormat2_merge(self, lst, merger):
 	merger.mergeObjects(self, lst,
-			    exclude=('ClassDef2', 'Class2Count',
+			    exclude=('Coverage',
+				     'ClassDef1', 'Class1Count',
+				     'ClassDef2', 'Class2Count',
 				     'Class1Record'))
 
-	self.ClassDef2, classes = _ClassDef_merge_classify([l.ClassDef2 for l in lst], ignoreClass0=True)
+	# Align coverages
+	glyphs, _ = _merge_GlyphOrders(merger.font,
+				       [v.Coverage.glyphs for v in lst])
+	self.Coverage.glyphs = glyphs
+	glyphSet = set(glyphs)
+
+	# Currently, if the coverage of PairPosFormat2 subtables are different,
+	# we do NOT bother walking down the subtable list when filling in new
+	# rows for alignment.  As such, this is only correct if current subtable
+	# is the last subtable in the lookup.  Ensure that.
+	# TODO: Remove this requirement
+	for l,lookup in zip(lst,merger.lookups):
+		if l.Coverage.glyphs != glyphs:
+			assert l == lookup.SubTable[-1]
+
+	matrices = [l.Class1Record for l in lst]
+
+	# Align first classes
+	self.ClassDef1, classes = _ClassDef_merge_classify([l.ClassDef1 for l in lst], allGlyphs=glyphSet)
+	self.Class1Count = len(classes)
+	new_matrices = []
+	for l,matrix in zip(lst, matrices):
+		nullRow = None
+		coverage = set(l.Coverage.glyphs)
+		classDef1 = l.ClassDef1.classDefs
+		class1Records = []
+		for classSet in classes:
+			exemplarGlyph = next(iter(classSet))
+			if exemplarGlyph not in coverage:
+				if nullRow is None:
+					rec2 = ot.Class2Record()
+					rec2.Value1 = otBase.ValueRecord(l.ValueFormat1) if l.ValueFormat1 else None
+					rec2.Value2 = otBase.ValueRecord(l.ValueFormat2) if l.ValueFormat2 else None
+					nullRow = ot.Class1Record()
+					nullRow.Class2Record = [rec2] * l.Class2Count
+				rec1 = nullRow
+			else:
+				klass = classDef1.get(exemplarGlyph, 0)
+				rec1 = matrix[klass] # TODO handle out-of-range?
+			class1Records.append(rec1)
+		new_matrices.append(class1Records)
+	matrices = new_matrices
+	del new_matrices
+
+	# Align second classes
+	self.ClassDef2, classes = _ClassDef_merge_classify([l.ClassDef2 for l in lst])
 	self.Class2Count = len(classes)
-	class1Recordses = []
-	for l in lst:
+	new_matrices = []
+	for l,matrix in zip(lst, matrices):
 		classDef2 = l.ClassDef2.classDefs
 		class1Records = []
-		for rec1old in l.Class1Record:
+		for rec1old in matrix:
 			oldClass2Records = rec1old.Class2Record
 			rec1new = ot.Class1Record()
 			class2Records = rec1new.Class2Record = []
@@ -358,10 +411,12 @@ def _PairPosFormat2_merge(self, lst, merger):
 					rec2 = oldClass2Records[klass]
 				class2Records.append(rec2)
 			class1Records.append(rec1new)
-		class1Recordses.append(class1Records)
+		new_matrices.append(class1Records)
+	matrices = new_matrices
+	del new_matrices
 
-	self.Class1Record = list(class1Recordses[0]) # TODO move merger to be selfless
-	merger.mergeLists(self.Class1Record, class1Recordses)
+	self.Class1Record = list(matrices[0]) # TODO move merger to be selfless
+	merger.mergeLists(self.Class1Record, matrices)
 
 @AligningMerger.merger(ot.PairPos)
 def merge(merger, self, lst):
