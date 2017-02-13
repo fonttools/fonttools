@@ -506,7 +506,7 @@ def merge(self, m, tables):
 	for i,(table,dups) in enumerate(zip(tables, m.duplicateGlyphsPerFont)):
 		if not dups: continue
 		if table is None or table is NotImplemented:
-			print("Have duplicate glyphs (%s) to resolve for font %d but there is GSUB table in it" % (dups, (i + 1)))
+			log.warn("Have duplicates %s to resolve for font %d but no GSUB" % (dups, (i + 1)))
 			continue
 		lookupMap = {id(v):v for v in table.table.LookupList.Lookup}
 		featureMap = {id(v):v for v in table.table.FeatureList.FeatureRecord}
@@ -925,7 +925,6 @@ __all__ = [
 @timer("make one with everything (TOTAL TIME)")
 def main(args=None):
 	from fontTools import configLogger
-
 	if args is None:
 		args = sys.argv[1:]
 
