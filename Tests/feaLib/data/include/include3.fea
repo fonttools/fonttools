@@ -1,0 +1,4 @@
+I3a
+include(subdir/include2.fea);
+I3b
+

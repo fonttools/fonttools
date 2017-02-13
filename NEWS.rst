@@ -1,3 +1,5 @@
+- [feaLib] include statements now resolve relative paths like makeotf (#838)
+
 3.7.0 (released 2017-02-11)
 ---------------------------
 
