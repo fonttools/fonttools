@@ -1,6 +1,8 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
+from fontTools.misc.py23 import *
 from fontTools.feaLib.error import FeatureLibError
+from fontTools.misc.encodingTools import getEncoding
 from collections import OrderedDict
 import itertools
 
@@ -1059,10 +1061,27 @@ class NameRecord(Statement):
             self.platEncID, self.langID, self.string)
 
     def asFea(self, indent=""):
-        plat = simplify_name_attributes(self.platformID, self.platEncID, self.langID)
+        def escape(c, escape_pattern):
+            # Also escape U+0022 QUOTATION MARK and U+005C REVERSE SOLIDUS
+            if c >= 0x20 and c <= 0x7E and c not in (0x22, 0x5C):
+                return unichr(c)
+            else:
+                return escape_pattern % c
+        encoding = getEncoding(self.platformID, self.platEncID, self.langID)
+        if encoding is None:
+            raise FeatureLibError("Unsupported encoding", self.location)
+        s = tobytes(self.string, encoding=encoding)
+        if encoding == "utf_16_be":
+            escaped_string = "".join([
+                escape(byteord(s[i]) * 256 + byteord(s[i + 1]), r"\%04x")
+                for i in range(0, len(s), 2)])
+        else:
+            escaped_string = "".join([escape(byteord(b), r"\%02x") for b in s])
+        plat = simplify_name_attributes(
+            self.platformID, self.platEncID, self.langID)
         if plat != "":
             plat += " "
-        return "nameid {} {}\"{}\";".format(self.nameID, plat, self.string)
+        return "nameid {} {}\"{}\";".format(self.nameID, plat, escaped_string)
 
 
 class FeatureNameStatement(NameRecord):
