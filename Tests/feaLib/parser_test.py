@@ -907,55 +907,55 @@ class ParserTest(unittest.TestCase):
             r'table name { nameid 9 "M\00fcller-Lanc\00e9"; } name;')
         name = doc.statements[0].statements[0]
         self.assertIsInstance(name, ast.NameRecord)
-        self.assertEquals(name.nameID, 9)
-        self.assertEquals(name.platformID, 3)
-        self.assertEquals(name.platEncID, 1)
-        self.assertEquals(name.langID, 0x0409)
-        self.assertEquals(name.string, "Müller-Lancé")
-        self.assertEquals(name.asFea(), r'nameid 9 "M\00fcller-Lanc\00e9";')
+        self.assertEqual(name.nameID, 9)
+        self.assertEqual(name.platformID, 3)
+        self.assertEqual(name.platEncID, 1)
+        self.assertEqual(name.langID, 0x0409)
+        self.assertEqual(name.string, "Müller-Lancé")
+        self.assertEqual(name.asFea(), r'nameid 9 "M\00fcller-Lanc\00e9";')
 
     def test_nameid_windows_utf16_backslash(self):
         doc = self.parse(r'table name { nameid 9 "Back\005cslash"; } name;')
         name = doc.statements[0].statements[0]
-        self.assertEquals(name.string, r"Back\slash")
-        self.assertEquals(name.asFea(), r'nameid 9 "Back\005cslash";')
+        self.assertEqual(name.string, r"Back\slash")
+        self.assertEqual(name.asFea(), r'nameid 9 "Back\005cslash";')
 
     def test_nameid_windows_utf16_quotation_mark(self):
         doc = self.parse(
             r'table name { nameid 9 "Quotation \0022Mark\0022"; } name;')
         name = doc.statements[0].statements[0]
-        self.assertEquals(name.string, 'Quotation "Mark"')
-        self.assertEquals(name.asFea(), r'nameid 9 "Quotation \0022Mark\0022";')
+        self.assertEqual(name.string, 'Quotation "Mark"')
+        self.assertEqual(name.asFea(), r'nameid 9 "Quotation \0022Mark\0022";')
 
     def test_nameid_windows_utf16_surroates(self):
         doc = self.parse(r'table name { nameid 9 "Carrot \D83E\DD55"; } name;')
         name = doc.statements[0].statements[0]
-        self.assertEquals(name.string, r"Carrot 🥕")
-        self.assertEquals(name.asFea(), r'nameid 9 "Carrot \d83e\dd55";')
+        self.assertEqual(name.string, r"Carrot 🥕")
+        self.assertEqual(name.asFea(), r'nameid 9 "Carrot \d83e\dd55";')
 
     def test_nameid_mac_roman(self):
         doc = self.parse(
             r'table name { nameid 9 1 "Joachim M\9fller-Lanc\8e"; } name;')
         name = doc.statements[0].statements[0]
         self.assertIsInstance(name, ast.NameRecord)
-        self.assertEquals(name.nameID, 9)
-        self.assertEquals(name.platformID, 1)
-        self.assertEquals(name.platEncID, 0)
-        self.assertEquals(name.langID, 0)
-        self.assertEquals(name.string, "Joachim Müller-Lancé")
-        self.assertEquals(name.asFea(),
-                          r'nameid 9 1 "Joachim M\9fller-Lanc\8e";')
+        self.assertEqual(name.nameID, 9)
+        self.assertEqual(name.platformID, 1)
+        self.assertEqual(name.platEncID, 0)
+        self.assertEqual(name.langID, 0)
+        self.assertEqual(name.string, "Joachim Müller-Lancé")
+        self.assertEqual(name.asFea(),
+                         r'nameid 9 1 "Joachim M\9fller-Lanc\8e";')
 
     def test_nameid_mac_croatian(self):
         doc = self.parse(
             r'table name { nameid 9 1 0 18 "Jovica Veljovi\e6"; } name;')
         name = doc.statements[0].statements[0]
-        self.assertEquals(name.nameID, 9)
-        self.assertEquals(name.platformID, 1)
-        self.assertEquals(name.platEncID, 0)
-        self.assertEquals(name.langID, 18)
-        self.assertEquals(name.string, "Jovica Veljović")
-        self.assertEquals(name.asFea(), r'nameid 9 1 0 18 "Jovica Veljovi\e6";')
+        self.assertEqual(name.nameID, 9)
+        self.assertEqual(name.platformID, 1)
+        self.assertEqual(name.platEncID, 0)
+        self.assertEqual(name.langID, 18)
+        self.assertEqual(name.string, "Jovica Veljović")
+        self.assertEqual(name.asFea(), r'nameid 9 1 0 18 "Jovica Veljovi\e6";')
 
     def test_nameid_unsupported_platform(self):
         self.assertRaisesRegex(
