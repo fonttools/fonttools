@@ -4,5 +4,9 @@ feature size {
 # 139 - range end (inclusive, decipoints)
    sizemenuname "Win MinionPro Size Name";
    sizemenuname 1 "Mac MinionPro Size Name";
-   sizemenuname 1 21 0 "Mac MinionPro Size Name";
+   # The specification says: sizemenuname 1 21 0 "Mac MinionPro Size Name";
+   # which means Macintosh platform, MacOS Thai encoding, English language.
+   # Since fonttools currently does not support the MacOS Thai encoding,
+   # we use instead MacOS Roman encoding (0), Swedish language (5) for our test.
+   sizemenuname 1 0 5 "Mac MinionPro Size Name";
 } size;

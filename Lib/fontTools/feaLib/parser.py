@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.lexer import Lexer, IncludingLexer
+from fontTools.misc.encodingTools import getEncoding
 from fontTools.misc.py23 import *
 import fontTools.feaLib.ast as ast
 import logging
@@ -863,14 +864,15 @@ class Parser(object):
         langID = None
         if self.next_token_type_ == Lexer.NUMBER:
             platformID = self.expect_number_()
+            location = self.cur_token_location_
             if platformID not in (1, 3):
-                raise FeatureLibError("Expected platform id 1 or 3",
-                                      self.cur_token_location_)
+                raise FeatureLibError("Expected platform id 1 or 3", location)
             if self.next_token_type_ == Lexer.NUMBER:
                 platEncID = self.expect_number_()
                 langID = self.expect_number_()
         else:
             platformID = 3
+            location = self.cur_token_location_
 
         if platformID == 1:                # Macintosh
             platEncID = platEncID or 0     # Roman
@@ -882,12 +884,11 @@ class Parser(object):
         string = self.expect_string_()
         self.expect_symbol_(";")
 
-        if platformID == 1 and platEncID == 0:
-            string = self.unescape_mac_name_string(string)
-        elif platformID == 3 and platEncID == 1:
-            string = self.unescape_windows_name_string(string)
-
-        return platformID, platEncID, langID, string
+        encoding = getEncoding(platformID, platEncID, langID)
+        if encoding is None:
+            raise FeatureLibError("Unsupported encoding", location)
+        unescaped = self.unescape_string_(string, encoding)
+        return platformID, platEncID, langID, unescaped
 
     def parse_nameid_(self):
         assert self.cur_token_ == "nameid", self.cur_token_
@@ -905,21 +906,27 @@ class Parser(object):
         return self.ast.NameRecord(location, nameID, platformID, platEncID,
                                    langID, string)
 
-    def unescape_mac_name_string(self, string):
-        def unescape(match):
-            n = match.group(0)[1:]
-            c = bytechr(int(n, 16)).decode('mac_roman')
-            return c
+    def unescape_string_(self, string, encoding):
+        if encoding == "utf_16_be":
+            s = re.sub(r"\\[0-9a-fA-F]{4}", self.unescape_unichr_, string)
+        else:
+            unescape = lambda m: self.unescape_byte_(m, encoding)
+            s = re.sub(r"\\[0-9a-fA-F]{2}", unescape, string)
+        # We now have a Unicode string, but it might contain surrogate pairs.
+        # We convert surrogates to actual Unicode by round-tripping through
+        # Python's UTF-16 codec in a special mode.
+        utf16 = tobytes(s, "utf_16_be", "surrogatepass")
+        return tounicode(utf16, "utf_16_be")
 
-        return re.sub(r'\\[0-9a-fA-F]{2}', unescape, string)
+    @staticmethod
+    def unescape_unichr_(match):
+        n = match.group(0)[1:]
+        return unichr(int(n, 16))
 
-    def unescape_windows_name_string(self, string):
-        def unescape(match):
-            n = match.group(0)[1:]
-            c = unichr(int(n, 16))
-            return c
-
-        return re.sub(r'\\[0-9a-fA-F]{4}', unescape, string)
+    @staticmethod
+    def unescape_byte_(match, encoding):
+        n = match.group(0)[1:]
+        return bytechr(int(n, 16)).decode(encoding)
 
     def parse_table_BASE_(self, table):
         statements = table.statements

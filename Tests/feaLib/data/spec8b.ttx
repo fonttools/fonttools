@@ -8,7 +8,7 @@
     <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
       Mac MinionPro Size Name
     </namerecord>
-    <namerecord nameID="256" platformID="1" platEncID="21" langID="0x0" unicode="True">
+    <namerecord nameID="256" platformID="1" platEncID="0" langID="0x5" unicode="True">
       Mac MinionPro Size Name
     </namerecord>
   </name>
