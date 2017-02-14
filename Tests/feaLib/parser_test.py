@@ -928,12 +928,10 @@ class ParserTest(unittest.TestCase):
         self.assertEquals(name.asFea(), r'nameid 9 "Quotation \0022Mark\0022";')
 
     def test_nameid_windows_utf16_surroates(self):
-        pass
-        # TODO: https://github.com/fonttools/fonttools/issues/842
-        # doc = self.parse(r'table name { nameid 9 "Carrot \D83E\DD55"; } name;')
-        # name = doc.statements[0].statements[0]
-        # self.assertEquals(name.string, r"Carrot 🥕")
-        # self.assertEquals(name.asFea(), r'nameid 9 "Carrot \d83e\dd55";')
+        doc = self.parse(r'table name { nameid 9 "Carrot \D83E\DD55"; } name;')
+        name = doc.statements[0].statements[0]
+        self.assertEquals(name.string, r"Carrot 🥕")
+        self.assertEquals(name.asFea(), r'nameid 9 "Carrot \d83e\dd55";')
 
     def test_nameid_mac_roman(self):
         doc = self.parse(
@@ -956,9 +954,8 @@ class ParserTest(unittest.TestCase):
         self.assertEquals(name.platformID, 1)
         self.assertEquals(name.platEncID, 0)
         self.assertEquals(name.langID, 18)
-        # TODO: https://github.com/fonttools/fonttools/issues/842
-        # self.assertEquals(name.string, "Jovica Veljović")
-        # self.assertEquals(name.asFea(), r'nameid 9 1 0 18 "Jovica Veljovi\e6";')
+        self.assertEquals(name.string, "Jovica Veljović")
+        self.assertEquals(name.asFea(), r'nameid 9 1 0 18 "Jovica Veljovi\e6";')
 
     def test_nameid_unsupported_platform(self):
         self.assertRaisesRegex(
