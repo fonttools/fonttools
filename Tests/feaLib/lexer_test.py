@@ -87,7 +87,15 @@ class LexerTest(unittest.TestCase):
                          [(Lexer.STRING, "foo"), (Lexer.STRING, "bar")])
         self.assertEqual(lex('"foo \nbar\r baz \r\nqux\n\n "'),
                          [(Lexer.STRING, "foo bar baz qux ")])
-        self.assertRaises(FeatureLibError, lambda: lex('"foo\n bar'))
+        # The lexer should preserve escape sequences because they have
+        # different interpretations depending on context. For better
+        # or for worse, that is how the OpenType Feature File Syntax
+        # has been specified; see section 9.e (name table) for examples.
+        self.assertEqual(lex(r'"M\00fcller-Lanc\00e9"'),  # 'nameid 9'
+                         [(Lexer.STRING, r"M\00fcller-Lanc\00e9")])
+        self.assertEqual(lex(r'"M\9fller-Lanc\8e"'),  # 'nameid 9 1'
+                         [(Lexer.STRING, r"M\9fller-Lanc\8e")])
+        self.assertRaises(FeatureLibError, lex, '"foo\n bar')
 
     def test_bad_character(self):
         self.assertRaises(FeatureLibError, lambda: lex("123 \u0001"))

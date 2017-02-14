@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.feaLib.error import FeatureLibError
@@ -900,6 +901,69 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(mc.markClass.name, "MARKS")
         self.assertEqual(mc.glyphSet(), ("acute", "grave"))
         self.assertEqual((mc.anchor.x, mc.anchor.y), (350, 3))
+
+    def test_nameid_windows_utf16(self):
+        doc = self.parse(
+            r'table name { nameid 9 "M\00fcller-Lanc\00e9"; } name;')
+        name = doc.statements[0].statements[0]
+        self.assertIsInstance(name, ast.NameRecord)
+        self.assertEquals(name.nameID, 9)
+        self.assertEquals(name.platformID, 3)
+        self.assertEquals(name.platEncID, 1)
+        self.assertEquals(name.langID, 0x0409)
+        self.assertEquals(name.string, "Müller-Lancé")
+        self.assertEquals(name.asFea(), r'nameid 9 "M\00fcller-Lanc\00e9";')
+
+    def test_nameid_windows_utf16_backslash(self):
+        doc = self.parse(r'table name { nameid 9 "Back\005cslash"; } name;')
+        name = doc.statements[0].statements[0]
+        self.assertEquals(name.string, r"Back\slash")
+        self.assertEquals(name.asFea(), r'nameid 9 "Back\005cslash";')
+
+    def test_nameid_windows_utf16_quotation_mark(self):
+        doc = self.parse(
+            r'table name { nameid 9 "Quotation \0022Mark\0022"; } name;')
+        name = doc.statements[0].statements[0]
+        self.assertEquals(name.string, 'Quotation "Mark"')
+        self.assertEquals(name.asFea(), r'nameid 9 "Quotation \0022Mark\0022";')
+
+    def test_nameid_windows_utf16_surroates(self):
+        pass
+        # TODO: https://github.com/fonttools/fonttools/issues/842
+        # doc = self.parse(r'table name { nameid 9 "Carrot \D83E\DD55"; } name;')
+        # name = doc.statements[0].statements[0]
+        # self.assertEquals(name.string, r"Carrot 🥕")
+        # self.assertEquals(name.asFea(), r'nameid 9 "Carrot \d83e\dd55";')
+
+    def test_nameid_mac_roman(self):
+        doc = self.parse(
+            r'table name { nameid 9 1 "Joachim M\9fller-Lanc\8e"; } name;')
+        name = doc.statements[0].statements[0]
+        self.assertIsInstance(name, ast.NameRecord)
+        self.assertEquals(name.nameID, 9)
+        self.assertEquals(name.platformID, 1)
+        self.assertEquals(name.platEncID, 0)
+        self.assertEquals(name.langID, 0)
+        self.assertEquals(name.string, "Joachim Müller-Lancé")
+        self.assertEquals(name.asFea(),
+                          r'nameid 9 1 "Joachim M\9fller-Lanc\8e";')
+
+    def test_nameid_mac_croatian(self):
+        doc = self.parse(
+            r'table name { nameid 9 1 0 18 "Jovica Veljovi\e6"; } name;')
+        name = doc.statements[0].statements[0]
+        self.assertEquals(name.nameID, 9)
+        self.assertEquals(name.platformID, 1)
+        self.assertEquals(name.platEncID, 0)
+        self.assertEquals(name.langID, 18)
+        # TODO: https://github.com/fonttools/fonttools/issues/842
+        # self.assertEquals(name.string, "Jovica Veljović")
+        # self.assertEquals(name.asFea(), r'nameid 9 1 0 18 "Jovica Veljovi\e6";')
+
+    def test_nameid_unsupported_platform(self):
+        self.assertRaisesRegex(
+            FeatureLibError, "Expected platform id 1 or 3",
+            self.parse, 'table name { nameid 9 666 "Foo"; } name;')
 
     def test_rsub_format_a(self):
         doc = self.parse("feature test {rsub a [b B] c' d [e E] by C;} test;")
