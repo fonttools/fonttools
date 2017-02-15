@@ -2053,7 +2053,7 @@ class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
                 if isinstance(cs.program[i], str):
                     hints.status = 2
                     break
-            if hints.status != 2:
+            else:
                 # We are an implicit vstem
                 hints.has_hint = True
                 hints.last_hint = index + 1
