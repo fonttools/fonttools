@@ -1923,7 +1923,13 @@ def subset_subroutines(self, subrs, gsubrs):
 def drop_hints(self):
     hints = self._hints
 
+    if hints.deletions:
+        p = self.program
+        for idx in reversed(hints.deletions):
+            del p[idx-2:idx]
+
     if hints.has_hint:
+        assert not hints.deletions or hints.last_hint <= hints.deletions[0]
         self.program = self.program[hints.last_hint:]
         if hasattr(self, 'width'):
             # Insert width back if needed
@@ -1939,8 +1945,6 @@ def drop_hints(self):
                 del p[i:i+2]
                 continue
             i += 1
-
-    # TODO: we currently don't drop calls to "empty" subroutines.
 
     assert len(self.program)
 
@@ -1986,6 +1990,8 @@ class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
             self.status = 0
             # Has hintmask instructions; not recursive
             self.has_hintmask = False
+            # List of indices of calls to empty subroutines to remove.
+            self.deletions = []
         pass
 
     def __init__(self, css, localSubrs, globalSubrs, nominalWidthX, defaultWidthX):
@@ -2093,6 +2099,8 @@ class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
                 hints.last_hint = index
             else:
                 hints.last_hint = index - 2 # Leave the subr call in
+        elif subr_hints.status == 0:
+            hints.deletions.append(index)
 
         hints.status = max(hints.status, subr_hints.status)
 
