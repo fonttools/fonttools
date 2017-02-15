@@ -1,3 +1,6 @@
+3.7.1 (released 2017-02-15)
+---------------------------
+
 - [subset] Fixed issue with ``--no-hinting`` option whereby advance widths in
   Type 2 charstrings were also being stripped (#709, #343)
 - [feaLib] include statements now resolve relative paths like makeotf (#838)
