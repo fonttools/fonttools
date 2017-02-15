@@ -1,5 +1,7 @@
+- [subset] Fixed issue with ``--no-hinting`` option whereby advance widths in
+  Type 2 charstrings were also being stripped (#709, #343)
 - [feaLib] include statements now resolve relative paths like makeotf (#838)
-- [feaLib] `table name` now handles Unicode codepoints beyond the Basic
+- [feaLib] table ``name`` now handles Unicode codepoints beyond the Basic
   Multilingual Plane, also supports old-style MacOS platform encodings (#842)
 - [feaLib] correctly escape string literals when emitting feature syntax (#780)
 
