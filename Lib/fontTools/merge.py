@@ -501,12 +501,15 @@ ttLib.getTableClass('MATH').mergeMap = \
 
 @_add_method(ttLib.getTableClass('GSUB'))
 def merge(self, m, tables):
-
+  
 	assert len(tables) == len(m.duplicateGlyphsPerFont)
 	for i,(table,dups) in enumerate(zip(tables, m.duplicateGlyphsPerFont)):
 		if not dups: continue
 		if table is None or table is NotImplemented:
-			log.warn("Have duplicates %s to resolve for font %d but no GSUB" % (dups, (i + 1)))
+			# check whether the dups are equivalent or not.
+			for oldgid, gid in dups.iteritems():
+				if not isGlyphSame(m.fonts, oldgid, gid):
+					log.warn("Have duplicates %s to resolve for font %d but no GSUB" % (dups, (i + 1)))
 			continue
 		lookupMap = {id(v):v for v in table.table.LookupList.Lookup}
 		featureMap = {id(v):v for v in table.table.FeatureList.FeatureRecord}
@@ -565,6 +568,30 @@ def merge(self, m, tables):
 		otTables.MarkMarkPos)
 def mapLookups(self, lookupMap):
 	pass
+
+# Check if the given glyphs specified by gid are euqal or not.
+# Two glyphs are considered as equal iff:
+# 1. Outlines are equal.
+# 2. Advance width are equal.
+def isGlyphSame(fonts, gid_0, gid_1):
+	# Checks outline
+  assert '#' in gid_0 and '#' in gid_1
+  index_0 = int(gid_0.split('#')[-1])
+  index_1 = int(gid_1.split('#')[-1])
+  
+  assert fonts[index_0].has_key('glyf') and fonts[index_1].has_key('glyf')
+  glyfTable_0 = fonts[index_0]['glyf']
+  glyfTable_1 = fonts[index_1]['glyf']
+  data_0 = glyfTable_0[gid_0].compile(glyfTable_0)
+  data_1 = glyfTable_1[gid_1].compile(glyfTable_1)
+  if data_0 != data_1:
+  	return False
+
+  # Checks advance width and left bearing
+  if (fonts[index_0].has_key('vmtx') and fonts[index_1].has_key('vmtx')):
+  	return fonts[index_0]['vmtx'].metrics[gid_0] == fonts[index_1]['vmtx'].metrics[gid_1]	
+  assert fonts[index_0].has_key('hmtx') and fonts[index_1].has_key('hmtx')
+  return fonts[index_0]['hmtx'].metrics[gid_0] == fonts[index_1]['hmtx'].metrics[gid_1]
 
 # Copied and trimmed down from subset.py
 @_add_method(otTables.ContextSubst,
@@ -795,7 +822,7 @@ class Merger(object):
 			self._preMerge(font)
 
 		self.duplicateGlyphsPerFont = [{} for f in fonts]
-
+		self.fonts = fonts
 		allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
 		allTags.remove('GlyphOrder')
 
