@@ -1969,6 +1969,9 @@ class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
     class Hints(object):
         def __init__(self):
             # Whether calling this charstring produces any hint stems
+            # Note that if a charstring starts with hintmask, it will
+            # have has_hint set to True, because it *might* produce an
+            # implicit vstem if called under certain conditions.
             self.has_hint = False
             # Index to start at to drop all hints
             self.last_hint = 0
@@ -2083,12 +2086,12 @@ class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
                 else:
                     hints.last_hint = index - 2 # Leave the subr call in
             else:
-                # In my understanding, this is a font bug.
-                # I.e., it has hint stems *after* path construction.
-                # I've seen this in widespread fonts.
-                # Best to ignore the hints I suppose...
+                # If we get here, it's either a font bug, i.e., it has hint
+                # stems *after* path construction; Or, the subroutine starts
+                # with a hintmask, which is an ambiguious case.  In that case
+                # since we know there cannot be any further hints.  In both
+                # cases, we ignore.
                 pass
-                #assert 0
         else:
             hints.status = max(hints.status, subr_hints.status)
             if hints.status != 2:
