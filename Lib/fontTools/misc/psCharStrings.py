@@ -642,19 +642,57 @@ class SimpleT2Decompiler(object):
 	def op_roll(self, index):
 		raise NotImplementedError
 
-class T2OutlineExtractor(SimpleT2Decompiler):
 
-	def __init__(self, pen, localSubrs, globalSubrs, nominalWidthX, defaultWidthX):
+class T2WidthExtractor(SimpleT2Decompiler):
+
+	def __init__(self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX):
 		SimpleT2Decompiler.__init__(self, localSubrs, globalSubrs)
-		self.pen = pen
 		self.nominalWidthX = nominalWidthX
 		self.defaultWidthX = defaultWidthX
 
 	def reset(self):
 		SimpleT2Decompiler.reset(self)
-		self.hints = []
 		self.gotWidth = 0
 		self.width = 0
+
+	def popallWidth(self, evenOdd=0):
+		args = self.popall()
+		if not self.gotWidth:
+			if evenOdd ^ (len(args) % 2):
+				self.width = self.nominalWidthX + args[0]
+				args = args[1:]
+			else:
+				self.width = self.defaultWidthX
+			self.gotWidth = 1
+		return args
+
+	def countHints(self):
+		args = self.popallWidth()
+		self.hintCount = self.hintCount + len(args) // 2
+
+	def op_rmoveto(self, index):
+		self.popallWidth()
+
+	def op_hmoveto(self, index):
+		self.popallWidth(1)
+
+	def op_vmoveto(self, index):
+		self.popallWidth(1)
+
+	def op_endchar(self, index):
+		self.popallWidth()
+
+
+class T2OutlineExtractor(T2WidthExtractor):
+
+	def __init__(self, pen, localSubrs, globalSubrs, nominalWidthX, defaultWidthX):
+		T2WidthExtractor.__init__(
+			self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX)
+		self.pen = pen
+
+	def reset(self):
+		T2WidthExtractor.reset(self)
+		self.hints = []  # XXX this attribute seems to be unused
 		self.currentPoint = (0, 0)
 		self.sawMoveTo = 0
 
@@ -688,21 +726,6 @@ class T2OutlineExtractor(SimpleT2Decompiler):
 		# In T2 there are no open paths, so always do a closePath when
 		# finishing a sub path.
 		self.closePath()
-
-	def popallWidth(self, evenOdd=0):
-		args = self.popall()
-		if not self.gotWidth:
-			if evenOdd ^ (len(args) % 2):
-				self.width = self.nominalWidthX + args[0]
-				args = args[1:]
-			else:
-				self.width = self.defaultWidthX
-			self.gotWidth = 1
-		return args
-
-	def countHints(self):
-		args = self.popallWidth()
-		self.hintCount = self.hintCount + len(args) // 2
 
 	#
 	# hint operators
