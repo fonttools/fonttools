@@ -2079,7 +2079,7 @@ class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
             if hints.status != 2:
                 hints.has_hint = True
                 hints.last_checked = index
-                hints.status = max(hints.status, subr_hints.status)
+                hints.status = subr_hints.status
                 # Decide where to chop off from
                 if subr_hints.status == 0:
                     hints.last_hint = index
