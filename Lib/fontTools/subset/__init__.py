@@ -2075,16 +2075,25 @@ class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
         hints = cs._hints
         subr_hints = subr._hints
 
+        if hints.status != 2:
+            # Check from last_check, make sure we didn't have
+            # any operators.
+            for i in range(hints.last_checked, index - 1):
+                if isinstance(cs.program[i], str):
+                    hints.status = 2
+                    break
+            hints.last_checked = index
+
         if subr_hints.has_hint:
             if hints.status != 2:
-                hints.has_hint = True
-                hints.last_checked = index
-                hints.status = subr_hints.status
                 # Decide where to chop off from
                 if subr_hints.status == 0:
                     hints.last_hint = index
                 else:
                     hints.last_hint = index - 2 # Leave the subr call in
+
+                hints.has_hint = True
+                hints.status = subr_hints.status
             else:
                 # If we get here, it's either a font bug, i.e., it has hint
                 # stems *after* path construction; Or, the subroutine starts
@@ -2094,14 +2103,7 @@ class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
                 pass
         else:
             hints.status = max(hints.status, subr_hints.status)
-            if hints.status != 2:
-                # Check from last_check, make sure we didn't have
-                # any operators.
-                for i in range(hints.last_checked, index - 1):
-                    if isinstance(cs.program[i], str):
-                        hints.status = 2
-                        break
-                hints.last_checked = index
+
             if hints.status != 2:
                 # Decide where to chop off from
                 if subr_hints.status == 0:
