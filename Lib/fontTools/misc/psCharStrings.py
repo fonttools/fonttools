@@ -692,7 +692,6 @@ class T2OutlineExtractor(T2WidthExtractor):
 
 	def reset(self):
 		T2WidthExtractor.reset(self)
-		self.hints = []  # XXX this attribute seems to be unused
 		self.currentPoint = (0, 0)
 		self.sawMoveTo = 0
 
