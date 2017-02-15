@@ -2075,8 +2075,9 @@ class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
         hints = cs._hints
         subr_hints = subr._hints
 
+        hints.status = max(hints.status, subr_hints.status)
+
         if subr_hints.has_hint:
-            hints.status = max(hints.status, subr_hints.status)
             if hints.status != 2:
                 hints.has_hint = True
                 hints.last_checked = index
@@ -2093,7 +2094,6 @@ class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
                 # cases, we ignore.
                 pass
         else:
-            hints.status = max(hints.status, subr_hints.status)
             if hints.status != 2:
                 # Check from last_check, make sure we didn't have
                 # any operators.
