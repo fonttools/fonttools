@@ -57,12 +57,6 @@
             -1 9 -13 8 51 vvcurveto
             return
           </CharString>
-          <CharString index="4">
-            return
-          </CharString>
-          <CharString index="5">
-            return
-          </CharString>
         </Subrs>
       </Private>
       <CharStrings>
@@ -107,7 +101,6 @@
           -76 -26 -104 -73 -23 -19 10 26 -25 vhcurveto
           -9 -23 -4 -19 -16 vvcurveto
           -61 56 -13 43 167 52 192 96 75 -33 69 -85 17 vhcurveto
-          -103 callsubr
           65 37 35 63 59 vvcurveto
           82 -66 77 -147 -189 -174 -127 -138 -104 callsubr
           165 133 78 117 95 37 -51 -57 -75 -64 -87 -80 vhcurveto
@@ -176,7 +169,6 @@
           -80 -41 -60 -83 -154 141 -16 58 171 111 136 121 71 -38 65 -88 29 hvcurveto
           92 46 45 74 66 vvcurveto
           78 -63 68 -123 vhcurveto
-          -102 callsubr
           -116 -91 -61 -91 -54 32 -31 40 24 27 11 23 25 hvcurveto
           -28 8 -10 36 27 vvcurveto
           47 31 31 48 51 25 -36 -46 -70 -58 -94 -113 -31 vhcurveto
