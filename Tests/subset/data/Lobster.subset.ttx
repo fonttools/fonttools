@@ -269,6 +269,10 @@ This license is available with a FAQ at: http://scripts.sil.org/OFL
             hintmask 10111010
             return
           </CharString>
+          <CharString index="6">
+            hintmask 11100110
+            return
+          </CharString>
         </Subrs>
       </Private>
       <CharStrings>
@@ -404,7 +408,7 @@ This license is available with a FAQ at: http://scripts.sil.org/OFL
           -80 -41 -60 -83 -154 141 -16 58 171 111 136 121 71 -38 65 -88 29 hvcurveto
           92 46 45 74 66 vvcurveto
           78 -63 68 -123 vhcurveto
-          hintmask 11100110
+          -101 callsubr
           -116 -91 -61 -91 -54 32 -31 40 24 27 11 23 25 hvcurveto
           -28 8 -10 36 27 vvcurveto
           hintmask 11011001
