@@ -591,7 +591,7 @@ def getGlyphNameAndFontIndex(gid):
 	
 
 def isGlyphSame(fonts, gid_0, gid_1):
-	"""Checks if the given glyphs specified by gid are euqal or not.
+	"""Checks if the given glyphs specified by gid are equal or not.
 
 	Two glyphs are considered as equal iff:
 	1) Their outlines are equal and 2) their advance widths are equal.
