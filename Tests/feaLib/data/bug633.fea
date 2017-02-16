@@ -1,0 +1,10 @@
+# https://github.com/fonttools/fonttools/issues/633
+
+@public.kern1.K = [K X];
+@public.kern2.O = [C O];
+@public.kern2.V = [V W];
+
+feature kern {
+    pos @public.kern1.K @public.kern2.O -20;
+    pos @public.kern1.K @public.kern2.V 0;
+} kern;
