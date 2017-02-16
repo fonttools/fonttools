@@ -265,6 +265,14 @@ class SubsetTest(unittest.TestCase):
         for tag in subset.Options().hinting_tables:
             self.assertTrue(tag not in subsetfont)
 
+    def test_notdef_width_cid(self):
+        # https://github.com/fonttools/fonttools/pull/845
+        _, fontpath = self.compile_font(self.getpath("NotdefWidthCID-Regular.ttx"), ".otf")
+        subsetpath = self.temp_path(".otf")
+        subset.main([fontpath, "--no-notdef-outline", "--gids=0,1", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_notdef_width_cid.ttx"), ["CFF "])
+
 
 if __name__ == "__main__":
     sys.exit(unittest.main())
