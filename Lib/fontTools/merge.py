@@ -508,7 +508,7 @@ def merge(self, m, tables):
 		if table is None or table is NotImplemented:
 			# Checks whether the dups are equivalent or not.
 			# Discard gid if its shape is not equal to that of oldgid.
-			for oldgid, gid in dups.iteritems():
+			for oldgid, gid in dups.items():
 				if not isGlyphSame(m.fonts, oldgid, gid):
 					oldgname, oldidx = getGlyphNameAndFontIndex(oldgid)
 					gname, idx = getGlyphNameAndFontIndex(gid)
@@ -608,7 +608,7 @@ def isGlyphSame(fonts, gid_0, gid_1):
 	index_0 = getGlyphNameAndFontIndex(gid_0)[1]
 	index_1 = getGlyphNameAndFontIndex(gid_1)[1]
 	
-	assert fonts[index_0].has_key('glyf') and fonts[index_1].has_key('glyf')
+	assert 'glyf' in fonts[index_0] and 'glyf' in fonts[index_1]
 	glyfTable_0 = fonts[index_0]['glyf']
 	glyfTable_1 = fonts[index_1]['glyf']
 	data_0 = glyfTable_0[gid_0].compile(glyfTable_0)
@@ -619,12 +619,12 @@ def isGlyphSame(fonts, gid_0, gid_1):
 		return False
 
 	# Checks advance width and left bearing
-	if (fonts[index_0].has_key('vmtx') and fonts[index_1].has_key('vmtx')):
+	if 'vmtx' in fonts[index_0] and 'vmtx' in fonts[index_1]:
 		isEqual = fonts[index_0]['vmtx'].metrics[gid_0] == fonts[index_1]['vmtx'].metrics[gid_1]
 		if not isEqual:
 			log.info("advance height is different:%s, %s " % (fonts[index_0]['vmtx'].metrics[gid_0], fonts[index_1]['vmtx'].metrics[gid_1]))
 		return isEqual	
-	assert fonts[index_0].has_key('hmtx') and fonts[index_1].has_key('hmtx')
+	assert 'hmtx' in fonts[index_0] and 'hmtx' in fonts[index_1]
 	isEqual = fonts[index_0]['hmtx'].metrics[gid_0] == fonts[index_1]['hmtx'].metrics[gid_1]
 	if not isEqual:
 		log.info("advance width is different: %s, %s" %(fonts[index_0]['hmtx'].metrics[gid_0], fonts[index_1]['hmtx'].metrics[gid_1]))
@@ -990,6 +990,7 @@ __all__ = [
 @timer("make one with everything (TOTAL TIME)")
 def main(args=None):
 	from fontTools import configLogger
+
 	if args is None:
 		args = sys.argv[1:]
 
@@ -999,6 +1000,7 @@ def main(args=None):
 	if len(args) < 1:
 		print("usage: pyftmerge font...", file=sys.stderr)
 		return 1
+
 	configLogger(level=logging.INFO if options.verbose else logging.WARNING)
 	if options.timing:
 		timer.logger.setLevel(logging.DEBUG)
