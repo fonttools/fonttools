@@ -1876,7 +1876,7 @@ def subset_glyphs(self, s):
         # Load all glyphs
         for g in font.charset:
             if g not in s.glyphs: continue
-            c,sel = cs.getItemAndSelector(g)
+            c, _ = cs.getItemAndSelector(g)
 
         if cs.charStringsAreIndexed:
             indices = [i for i,g in enumerate(font.charset) if g in s.glyphs]
@@ -2177,7 +2177,7 @@ def prune_post_subset(self, options):
         # Desubroutinize if asked for
         if options.desubroutinize:
             for g in font.charset:
-                c,sel = cs.getItemAndSelector(g)
+                c, _ = cs.getItemAndSelector(g)
                 c.decompile()
                 subrs = getattr(c.private, "Subrs", [])
                 decompiler = _DesubroutinizingT2Decompiler(subrs, c.globalSubrs)
@@ -2204,7 +2204,7 @@ def prune_post_subset(self, options):
             #     thing, recursively... Good luck understanding that :(
             css = set()
             for g in font.charset:
-                c,sel = cs.getItemAndSelector(g)
+                c, _ = cs.getItemAndSelector(g)
                 c.decompile()
                 subrs = getattr(c.private, "Subrs", [])
                 decompiler = _DehintingT2Decompiler(css, subrs, c.globalSubrs,
@@ -2234,7 +2234,7 @@ def prune_post_subset(self, options):
 
         # Mark all used subroutines
         for g in font.charset:
-            c,sel = cs.getItemAndSelector(g)
+            c, _ = cs.getItemAndSelector(g)
             subrs = getattr(c.private, "Subrs", [])
             decompiler = _MarkingT2Decompiler(subrs, c.globalSubrs)
             decompiler.execute(c)
@@ -2257,7 +2257,7 @@ def prune_post_subset(self, options):
 
         # Renumber glyph charstrings
         for g in font.charset:
-            c,sel = cs.getItemAndSelector(g)
+            c, _ = cs.getItemAndSelector(g)
             subrs = getattr(c.private, "Subrs", [])
             c.subset_subroutines (subrs, font.GlobalSubrs)
 
