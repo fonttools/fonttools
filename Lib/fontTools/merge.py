@@ -572,24 +572,38 @@ def merge(self, m, tables):
 def mapLookups(self, lookupMap):
 	pass
 
-
-# Gets unicode and font index from the composite gid
-# @param {string} gid - e.g. uni000A#2
-# @return {string} - glyph name
-# @return {int} - font index
 def getGlyphNameAndFontIndex(gid):
+	"""Gets glyph name and font index from the composite glyph id.
+
+	Args:
+		gid: string representing glyph id. E.g. uni0000#0
+
+	Returns:
+		A tuple with two elements. The first element is a string representing the 
+		glyph name. The second element is an integer representing the font index in 
+		command line args.
+	
+	Example:
+		'uni0000', 3 = getGlyphNameAndFontIndex('uni0000#3')
+	"""
 	assert '#' in gid and gid.split('#')[-1].isdigit() and len(gid.split('#')) == 2, 'incorrect gid format'
 	return gid.split('#')[0], int(gid.split('#')[1])
 	
-# Checks if the given glyphs specified by gid are euqal or not.
-# Two glyphs are considered as equal iff:
-# 1. Outlines are equal.
-# 2. Advance width are equal.
-# @param {list<TTFont>} fonts
-# @param {string} gid_0 - e.g. uni0000#1
-# @param {string} gid_1 - e.g. space#2
-# @return {bool}
+
 def isGlyphSame(fonts, gid_0, gid_1):
+	"""Checks if the given glyphs specified by gid are euqal or not.
+
+	Two glyphs are considered as equal iff:
+	1) Their outlines are equal and 2) their advance widths are equal.
+
+	Args:
+		fonts: a list of TTFont instances.
+		gid_0: a string representing glyph id. E.g. uni0000#0
+		gid_1: a string representing glyph id. E.g. uni000A#3
+
+	Returns:
+		A bool indicating whether the given glyphs are equal or not.
+	"""
 	# Checks outline
 	index_0 = getGlyphNameAndFontIndex(gid_0)[1]
 	index_1 = getGlyphNameAndFontIndex(gid_1)[1]
