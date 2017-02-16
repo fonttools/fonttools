@@ -7,7 +7,7 @@ from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
 from fontTools.misc import psCharStrings
-from fontTools.pens.boundsPen import BoundsPen
+from fontTools.pens.basePen import NullPen
 from fontTools.misc.loggingTools import Timer
 import sys
 import struct
@@ -1851,8 +1851,8 @@ def prune_pre_subset(self, font, options):
                 private = font.Private
             dfltWdX = private.defaultWidthX
             nmnlWdX = private.nominalWidthX
-            pen = BoundsPen(None)
-            c.draw(pen) # this will set the charstring's width
+            pen = NullPen()
+            c.draw(pen)  # this will set the charstring's width
             if c.width != dfltWdX:
                 c.program = [c.width - nmnlWdX, 'endchar']
             else:
@@ -1923,7 +1923,13 @@ def subset_subroutines(self, subrs, gsubrs):
 def drop_hints(self):
     hints = self._hints
 
+    if hints.deletions:
+        p = self.program
+        for idx in reversed(hints.deletions):
+            del p[idx-2:idx]
+
     if hints.has_hint:
+        assert not hints.deletions or hints.last_hint <= hints.deletions[0]
         self.program = self.program[hints.last_hint:]
         if hasattr(self, 'width'):
             # Insert width back if needed
@@ -1939,8 +1945,6 @@ def drop_hints(self):
                 del p[i:i+2]
                 continue
             i += 1
-
-    # TODO: we currently don't drop calls to "empty" subroutines.
 
     assert len(self.program)
 
@@ -1964,11 +1968,14 @@ class _MarkingT2Decompiler(psCharStrings.SimpleT2Decompiler):
         self.globalSubrs._used.add(self.operandStack[-1]+self.globalBias)
         psCharStrings.SimpleT2Decompiler.op_callgsubr(self, index)
 
-class _DehintingT2Decompiler(psCharStrings.SimpleT2Decompiler):
+class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
 
     class Hints(object):
         def __init__(self):
             # Whether calling this charstring produces any hint stems
+            # Note that if a charstring starts with hintmask, it will
+            # have has_hint set to True, because it *might* produce an
+            # implicit vstem if called under certain conditions.
             self.has_hint = False
             # Index to start at to drop all hints
             self.last_hint = 0
@@ -1983,19 +1990,20 @@ class _DehintingT2Decompiler(psCharStrings.SimpleT2Decompiler):
             self.status = 0
             # Has hintmask instructions; not recursive
             self.has_hintmask = False
+            # List of indices of calls to empty subroutines to remove.
+            self.deletions = []
         pass
 
-    def __init__(self, css, localSubrs, globalSubrs):
+    def __init__(self, css, localSubrs, globalSubrs, nominalWidthX, defaultWidthX):
         self._css = css
-        psCharStrings.SimpleT2Decompiler.__init__(self,
-                                                  localSubrs,
-                                                  globalSubrs)
+        psCharStrings.T2WidthExtractor.__init__(
+            self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX)
 
     def execute(self, charString):
         old_hints = charString._hints if hasattr(charString, '_hints') else None
         charString._hints = self.Hints()
 
-        psCharStrings.SimpleT2Decompiler.execute(self, charString)
+        psCharStrings.T2WidthExtractor.execute(self, charString)
 
         hints = charString._hints
 
@@ -2017,45 +2025,46 @@ class _DehintingT2Decompiler(psCharStrings.SimpleT2Decompiler):
 
     def op_callsubr(self, index):
         subr = self.localSubrs[self.operandStack[-1]+self.localBias]
-        psCharStrings.SimpleT2Decompiler.op_callsubr(self, index)
+        psCharStrings.T2WidthExtractor.op_callsubr(self, index)
         self.processSubr(index, subr)
 
     def op_callgsubr(self, index):
         subr = self.globalSubrs[self.operandStack[-1]+self.globalBias]
-        psCharStrings.SimpleT2Decompiler.op_callgsubr(self, index)
+        psCharStrings.T2WidthExtractor.op_callgsubr(self, index)
         self.processSubr(index, subr)
 
     def op_hstem(self, index):
-        psCharStrings.SimpleT2Decompiler.op_hstem(self, index)
+        psCharStrings.T2WidthExtractor.op_hstem(self, index)
         self.processHint(index)
     def op_vstem(self, index):
-        psCharStrings.SimpleT2Decompiler.op_vstem(self, index)
+        psCharStrings.T2WidthExtractor.op_vstem(self, index)
         self.processHint(index)
     def op_hstemhm(self, index):
-        psCharStrings.SimpleT2Decompiler.op_hstemhm(self, index)
+        psCharStrings.T2WidthExtractor.op_hstemhm(self, index)
         self.processHint(index)
     def op_vstemhm(self, index):
-        psCharStrings.SimpleT2Decompiler.op_vstemhm(self, index)
+        psCharStrings.T2WidthExtractor.op_vstemhm(self, index)
         self.processHint(index)
     def op_hintmask(self, index):
-        psCharStrings.SimpleT2Decompiler.op_hintmask(self, index)
+        psCharStrings.T2WidthExtractor.op_hintmask(self, index)
         self.processHintmask(index)
     def op_cntrmask(self, index):
-        psCharStrings.SimpleT2Decompiler.op_cntrmask(self, index)
+        psCharStrings.T2WidthExtractor.op_cntrmask(self, index)
         self.processHintmask(index)
 
     def processHintmask(self, index):
         cs = self.callingStack[-1]
         hints = cs._hints
         hints.has_hintmask = True
-        if hints.status != 2 and hints.has_hint:
+        if hints.status != 2:
             # Check from last_check, see if we may be an implicit vstem
             for i in range(hints.last_checked, index - 1):
                 if isinstance(cs.program[i], str):
                     hints.status = 2
                     break
-            if hints.status != 2:
+            else:
                 # We are an implicit vstem
+                hints.has_hint = True
                 hints.last_hint = index + 1
                 hints.status = 0
         hints.last_checked = index + 1
@@ -2072,39 +2081,28 @@ class _DehintingT2Decompiler(psCharStrings.SimpleT2Decompiler):
         hints = cs._hints
         subr_hints = subr._hints
 
-        if subr_hints.has_hint:
-            if hints.status != 2:
+        # Check from last_check, make sure we didn't have
+        # any operators.
+        if hints.status != 2:
+            for i in range(hints.last_checked, index - 1):
+                if isinstance(cs.program[i], str):
+                    hints.status = 2
+                    break
+            hints.last_checked = index
+
+        if hints.status != 2:
+            if subr_hints.has_hint:
                 hints.has_hint = True
-                hints.last_checked = index
-                hints.status = subr_hints.status
-                # Decide where to chop off from
-                if subr_hints.status == 0:
-                    hints.last_hint = index
-                else:
-                    hints.last_hint = index - 2 # Leave the subr call in
+
+            # Decide where to chop off from
+            if subr_hints.status == 0:
+                hints.last_hint = index
             else:
-                # In my understanding, this is a font bug.
-                # I.e., it has hint stems *after* path construction.
-                # I've seen this in widespread fonts.
-                # Best to ignore the hints I suppose...
-                pass
-                #assert 0
-        else:
-            hints.status = max(hints.status, subr_hints.status)
-            if hints.status != 2:
-                # Check from last_check, make sure we didn't have
-                # any operators.
-                for i in range(hints.last_checked, index - 1):
-                    if isinstance(cs.program[i], str):
-                        hints.status = 2
-                        break
-                hints.last_checked = index
-            if hints.status != 2:
-                # Decide where to chop off from
-                if subr_hints.status == 0:
-                    hints.last_hint = index
-                else:
-                    hints.last_hint = index - 2 # Leave the subr call in
+                hints.last_hint = index - 2 # Leave the subr call in
+        elif subr_hints.status == 0:
+            hints.deletions.append(index)
+
+        hints.status = max(hints.status, subr_hints.status)
 
 class _DesubroutinizingT2Decompiler(psCharStrings.SimpleT2Decompiler):
 
@@ -2209,8 +2207,11 @@ def prune_post_subset(self, options):
                 c,sel = cs.getItemAndSelector(g)
                 c.decompile()
                 subrs = getattr(c.private, "Subrs", [])
-                decompiler = _DehintingT2Decompiler(css, subrs, c.globalSubrs)
+                decompiler = _DehintingT2Decompiler(css, subrs, c.globalSubrs,
+                                                    c.private.nominalWidthX,
+                                                    c.private.defaultWidthX)
                 decompiler.execute(c)
+                c.width = decompiler.width
             for charstring in css:
                 charstring.drop_hints()
             del css

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.0">
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef" xMin="10" yMin="0" xMax="486" yMax="660">
+      <contour>
+        <pt x="10" y="660" on="1"/>
+        <pt x="486" y="660" on="1"/>
+        <pt x="486" y="0" on="1"/>
+        <pt x="10" y="0" on="1"/>
+      </contour>
+      <contour>
+        <pt x="375" y="58" on="1"/>
+        <pt x="302" y="190" on="1"/>
+        <pt x="250" y="293" on="1"/>
+        <pt x="246" y="293" on="1"/>
+        <pt x="192" y="190" on="1"/>
+        <pt x="118" y="58" on="1"/>
+      </contour>
+      <contour>
+        <pt x="250" y="387" on="1"/>
+        <pt x="299" y="481" on="1"/>
+        <pt x="365" y="600" on="1"/>
+        <pt x="130" y="600" on="1"/>
+        <pt x="196" y="481" on="1"/>
+        <pt x="246" y="387" on="1"/>
+      </contour>
+      <contour>
+        <pt x="202" y="340" on="1"/>
+        <pt x="75" y="572" on="1"/>
+        <pt x="75" y="110" on="1"/>
+      </contour>
+      <contour>
+        <pt x="419" y="572" on="1"/>
+        <pt x="293" y="340" on="1"/>
+        <pt x="419" y="110" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="A" xMin="132" yMin="304" xMax="365" yMax="567">
+      <contour>
+        <pt x="132" y="567" on="1"/>
+        <pt x="365" y="567" on="1"/>
+        <pt x="365" y="304" on="1"/>
+        <pt x="132" y="304" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="B" xMin="132" yMin="304" xMax="365" yMax="567">
+      <contour>
+        <pt x="132" y="567" on="1"/>
+        <pt x="365" y="567" on="1"/>
+        <pt x="365" y="304" on="1"/>
+        <pt x="132" y="304" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="C"/><!-- contains no outline data -->
+
+  </glyf>
+
+  <maxp>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="0x10000"/>
+    <numGlyphs value="4"/>
+    <maxPoints value="22"/>
+    <maxContours value="5"/>
+    <maxCompositePoints value="0"/>
+    <maxCompositeContours value="0"/>
+    <maxZones value="1"/>
+    <maxTwilightPoints value="0"/>
+    <maxStorage value="0"/>
+    <maxFunctionDefs value="0"/>
+    <maxInstructionDefs value="0"/>
+    <maxStackElements value="0"/>
+    <maxSizeOfInstructions value="0"/>
+    <maxComponentElements value="0"/>
+    <maxComponentDepth value="0"/>
+  </maxp>
+
+</ttFont>
