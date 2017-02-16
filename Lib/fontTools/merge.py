@@ -501,15 +501,18 @@ ttLib.getTableClass('MATH').mergeMap = \
 
 @_add_method(ttLib.getTableClass('GSUB'))
 def merge(self, m, tables):
-  
+
 	assert len(tables) == len(m.duplicateGlyphsPerFont)
 	for i,(table,dups) in enumerate(zip(tables, m.duplicateGlyphsPerFont)):
 		if not dups: continue
 		if table is None or table is NotImplemented:
-			# check whether the dups are equivalent or not.
+			# Checks whether the dups are equivalent or not.
+			# Discard gid if its shape is not equal to that of oldgid.
 			for oldgid, gid in dups.iteritems():
 				if not isGlyphSame(m.fonts, oldgid, gid):
-					log.warn("Have duplicates %s to resolve for font %d but no GSUB" % (dups, (i + 1)))
+					oldgname, oldidx = getGlyphNameAndFontIndex(oldgid)
+					gname, idx = getGlyphNameAndFontIndex(gid)
+					log.warn("%s:<%s> is dropped and replaced by %s:<%s>" % (m.fontfiles[idx], gname, m.fontfiles[oldidx], oldgname))
 			continue
 		lookupMap = {id(v):v for v in table.table.LookupList.Lookup}
 		featureMap = {id(v):v for v in table.table.FeatureList.FeatureRecord}
@@ -569,29 +572,49 @@ def merge(self, m, tables):
 def mapLookups(self, lookupMap):
 	pass
 
-# Check if the given glyphs specified by gid are euqal or not.
+
+# Get unicode and font index from the composite gid
+# @param {string} gid - e.g. uni000A#2
+# @return {string} - glyph name
+# @return {int} - font index
+def getGlyphNameAndFontIndex(gid):
+	assert '#' in gid and gid.split('#')[-1].isdigit() and len(gid.split('#')) == 2, 'incorrect gid format'
+	return gid.split('#')[0], int(gid.split('#')[1])
+	
+# Checks if the given glyphs specified by gid are euqal or not.
 # Two glyphs are considered as equal iff:
 # 1. Outlines are equal.
 # 2. Advance width are equal.
+# @param {list<TTFont>} fonts
+# @param {string} gid_0 - e.g. uni0000#1
+# @param {string} gid_1 - e.g. space#2
+# @return {bool}
 def isGlyphSame(fonts, gid_0, gid_1):
 	# Checks outline
-  assert '#' in gid_0 and '#' in gid_1
-  index_0 = int(gid_0.split('#')[-1])
-  index_1 = int(gid_1.split('#')[-1])
-  
-  assert fonts[index_0].has_key('glyf') and fonts[index_1].has_key('glyf')
-  glyfTable_0 = fonts[index_0]['glyf']
-  glyfTable_1 = fonts[index_1]['glyf']
-  data_0 = glyfTable_0[gid_0].compile(glyfTable_0)
-  data_1 = glyfTable_1[gid_1].compile(glyfTable_1)
-  if data_0 != data_1:
-  	return False
+	index_0 = getGlyphNameAndFontIndex(gid_0)[1]
+	index_1 = getGlyphNameAndFontIndex(gid_1)[1]
+	
+	assert fonts[index_0].has_key('glyf') and fonts[index_1].has_key('glyf')
+	glyfTable_0 = fonts[index_0]['glyf']
+	glyfTable_1 = fonts[index_1]['glyf']
+	data_0 = glyfTable_0[gid_0].compile(glyfTable_0)
+	data_1 = glyfTable_1[gid_1].compile(glyfTable_1)
+	if data_0 != data_1:
+		# Binary data is not printable. Prints out coordinates instead.  
+		log.info("outlines are different: %s:%s, %s:%s" % (gid_0, glyfTable_0[gid_0].getCoordinates(glyfTable_0), gid_1, glyfTable_1[gid_1].getCoordinates(glyfTable_1)))
+		return False
 
-  # Checks advance width and left bearing
-  if (fonts[index_0].has_key('vmtx') and fonts[index_1].has_key('vmtx')):
-  	return fonts[index_0]['vmtx'].metrics[gid_0] == fonts[index_1]['vmtx'].metrics[gid_1]	
-  assert fonts[index_0].has_key('hmtx') and fonts[index_1].has_key('hmtx')
-  return fonts[index_0]['hmtx'].metrics[gid_0] == fonts[index_1]['hmtx'].metrics[gid_1]
+	# Checks advance width and left bearing
+	if (fonts[index_0].has_key('vmtx') and fonts[index_1].has_key('vmtx')):
+		isEqual = fonts[index_0]['vmtx'].metrics[gid_0] == fonts[index_1]['vmtx'].metrics[gid_1]
+		if not isEqual:
+			log.info("advance height is different:%s, %s " % (fonts[index_0]['vmtx'].metrics[gid_0], fonts[index_1]['vmtx'].metrics[gid_1]))
+		return isEqual	
+	assert fonts[index_0].has_key('hmtx') and fonts[index_1].has_key('hmtx')
+	isEqual = fonts[index_0]['hmtx'].metrics[gid_0] == fonts[index_1]['hmtx'].metrics[gid_1]
+	if not isEqual:
+		log.info("advance width is different: %s, %s" %(fonts[index_0]['hmtx'].metrics[gid_0], fonts[index_1]['hmtx'].metrics[gid_1]))
+	return isEqual
 
 # Copied and trimmed down from subset.py
 @_add_method(otTables.ContextSubst,
@@ -823,6 +846,7 @@ class Merger(object):
 
 		self.duplicateGlyphsPerFont = [{} for f in fonts]
 		self.fonts = fonts
+		self.fontfiles = fontfiles
 		allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
 		allTags.remove('GlyphOrder')
 
@@ -961,7 +985,6 @@ def main(args=None):
 	if len(args) < 1:
 		print("usage: pyftmerge font...", file=sys.stderr)
 		return 1
-
 	configLogger(level=logging.INFO if options.verbose else logging.WARNING)
 	if options.timing:
 		timer.logger.setLevel(logging.DEBUG)
