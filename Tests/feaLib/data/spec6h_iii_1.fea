@@ -5,6 +5,5 @@
 languagesystem DFLT dflt;
 
 feature test {
-#test-fea2fea: pos [quoteleft quotedblleft] [Y T]' 20 [quoteright quotedblright];
     pos [quoteleft quotedblleft] [Y T]' <0 0 20 0> [quoteright quotedblright];
 } test;

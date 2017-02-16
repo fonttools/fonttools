@@ -26,7 +26,6 @@ feature kern {
     # single adjustment positionings, provided the re-definition is using
     # the same value.  We replicate this behavior.
     pos four 400;
-#test-fea2fea: pos four 400;
     pos four <0 0 400 0>;
     pos nine -100;
 } kern;

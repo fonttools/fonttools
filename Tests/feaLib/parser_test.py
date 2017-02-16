@@ -529,7 +529,7 @@ class ParserTest(unittest.TestCase):
         [look] = liga.statements
         [foo] = look.statements
         self.assertEqual(foo.value.xAdvance, 123)
-        self.assertEqual(foo.value.yAdvance, 0)
+        self.assertIsNone(foo.value.yAdvance)
 
     def test_lookup_block_with_vertical_valueRecordDef(self):
         doc = self.parse("feature vkrn {"
@@ -540,7 +540,7 @@ class ParserTest(unittest.TestCase):
         [vkrn] = doc.statements
         [look] = vkrn.statements
         [foo] = look.statements
-        self.assertEqual(foo.value.xAdvance, 0)
+        self.assertIsNone(foo.value.xAdvance)
         self.assertEqual(foo.value.yAdvance, 123)
 
     def test_lookup_reference(self):
@@ -1248,26 +1248,54 @@ class ParserTest(unittest.TestCase):
     def test_valuerecord_format_a_horizontal(self):
         doc = self.parse("feature liga {valueRecordDef 123 foo;} liga;")
         value = doc.statements[0].statements[0].value
-        self.assertEqual(value.xPlacement, 0)
-        self.assertEqual(value.yPlacement, 0)
+        self.assertIsNone(value.xPlacement)
+        self.assertIsNone(value.yPlacement)
         self.assertEqual(value.xAdvance, 123)
-        self.assertEqual(value.yAdvance, 0)
+        self.assertIsNone(value.yAdvance)
         self.assertIsNone(value.xPlaDevice)
         self.assertIsNone(value.yPlaDevice)
         self.assertIsNone(value.xAdvDevice)
         self.assertIsNone(value.yAdvDevice)
+        self.assertEqual(value.makeString(vertical=False), "123")
 
     def test_valuerecord_format_a_vertical(self):
         doc = self.parse("feature vkrn {valueRecordDef 123 foo;} vkrn;")
         value = doc.statements[0].statements[0].value
-        self.assertEqual(value.xPlacement, 0)
-        self.assertEqual(value.yPlacement, 0)
-        self.assertEqual(value.xAdvance, 0)
+        self.assertIsNone(value.xPlacement)
+        self.assertIsNone(value.yPlacement)
+        self.assertIsNone(value.xAdvance)
         self.assertEqual(value.yAdvance, 123)
         self.assertIsNone(value.xPlaDevice)
         self.assertIsNone(value.yPlaDevice)
         self.assertIsNone(value.xAdvDevice)
         self.assertIsNone(value.yAdvDevice)
+        self.assertEqual(value.makeString(vertical=True), "123")
+
+    def test_valuerecord_format_a_zero_horizontal(self):
+        doc = self.parse("feature liga {valueRecordDef 0 foo;} liga;")
+        value = doc.statements[0].statements[0].value
+        self.assertIsNone(value.xPlacement)
+        self.assertIsNone(value.yPlacement)
+        self.assertEqual(value.xAdvance, 0)
+        self.assertIsNone(value.yAdvance)
+        self.assertIsNone(value.xPlaDevice)
+        self.assertIsNone(value.yPlaDevice)
+        self.assertIsNone(value.xAdvDevice)
+        self.assertIsNone(value.yAdvDevice)
+        self.assertEqual(value.makeString(vertical=False), "0")
+
+    def test_valuerecord_format_a_zero_vertical(self):
+        doc = self.parse("feature vkrn {valueRecordDef 0 foo;} vkrn;")
+        value = doc.statements[0].statements[0].value
+        self.assertIsNone(value.xPlacement)
+        self.assertIsNone(value.yPlacement)
+        self.assertIsNone(value.xAdvance)
+        self.assertEqual(value.yAdvance, 0)
+        self.assertIsNone(value.xPlaDevice)
+        self.assertIsNone(value.yPlaDevice)
+        self.assertIsNone(value.xAdvDevice)
+        self.assertIsNone(value.yAdvDevice)
+        self.assertEqual(value.makeString(vertical=True), "0")
 
     def test_valuerecord_format_a_vertical_contexts_(self):
         for tag in "vkrn vpal vhal valt".split():
@@ -1289,6 +1317,20 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(value.yPlaDevice)
         self.assertIsNone(value.xAdvDevice)
         self.assertIsNone(value.yAdvDevice)
+        self.assertEqual(value.makeString(vertical=False), "<1 2 3 4>")
+
+    def test_valuerecord_format_b_zero(self):
+        doc = self.parse("feature liga {valueRecordDef <0 0 0 0> foo;} liga;")
+        value = doc.statements[0].statements[0].value
+        self.assertEqual(value.xPlacement, 0)
+        self.assertEqual(value.yPlacement, 0)
+        self.assertEqual(value.xAdvance, 0)
+        self.assertEqual(value.yAdvance, 0)
+        self.assertIsNone(value.xPlaDevice)
+        self.assertIsNone(value.yPlaDevice)
+        self.assertIsNone(value.xAdvDevice)
+        self.assertIsNone(value.yAdvDevice)
+        self.assertEqual(value.makeString(vertical=False), "<0 0 0 0>")
 
     def test_valuerecord_format_c(self):
         doc = self.parse(
@@ -1310,6 +1352,9 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(value.yPlaDevice, ((11, 111), (12, 112)))
         self.assertIsNone(value.xAdvDevice)
         self.assertEqual(value.yAdvDevice, ((33, -113), (44, -114), (55, 115)))
+        self.assertEqual(value.makeString(vertical=False),
+                         "<1 2 3 4 <device 8 88> <device 11 111, 12 112>"
+                         " <device NULL> <device 33 -113, 44 -114, 55 115>>")
 
     def test_valuerecord_format_d(self):
         doc = self.parse("feature test {valueRecordDef <NULL> foo;} test;")

@@ -1024,10 +1024,12 @@ class Parser(object):
         if self.next_token_type_ is Lexer.NUMBER:
             number, location = self.expect_number_(), self.cur_token_location_
             if vertical:
-                val = self.ast.ValueRecord(location, vertical, 0, 0, 0, number,
+                val = self.ast.ValueRecord(location, vertical,
+                                           None, None, None, number,
                                            None, None, None, None)
             else:
-                val = self.ast.ValueRecord(location, vertical, 0, 0, number, 0,
+                val = self.ast.ValueRecord(location, vertical,
+                                           None, None, number, None,
                                            None, None, None, None)
             return val
         self.expect_symbol_("<")

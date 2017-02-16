@@ -1012,7 +1012,7 @@ _VALUEREC_ATTRS = {
 }
 
 
-def makeOpenTypeValueRecord(v):
+def makeOpenTypeValueRecord(v, pairPosContext):
     """ast.ValueRecord --> (otBase.ValueRecord, int ValueFormat)"""
     if v is None:
         return None, 0
@@ -1022,7 +1022,8 @@ def makeOpenTypeValueRecord(v):
         val = getattr(v, astName, None)
         if val:
             vr[otName] = otl.buildDevice(dict(val)) if isDevice else val
-
+    if pairPosContext and not vr:
+        vr = {"YAdvance": 0} if v.vertical else {"XAdvance": 0}
     valRec = otl.buildValue(vr)
     return valRec, valRec.getFormat()
 
@@ -1420,8 +1421,8 @@ class PairPosBuilder(LookupBuilder):
                 'Already defined position for pair %s %s at %s:%d:%d'
                 % (glyph1, glyph2, otherLoc[0], otherLoc[1], otherLoc[2]),
                 location)
-        val1, _ = makeOpenTypeValueRecord(value1)
-        val2, _ = makeOpenTypeValueRecord(value2)
+        val1, _ = makeOpenTypeValueRecord(value1, pairPosContext=True)
+        val2, _ = makeOpenTypeValueRecord(value2, pairPosContext=True)
         self.glyphPairs[key] = (val1, val2)
         self.locations[key] = location
 
@@ -1442,8 +1443,10 @@ class PairPosBuilder(LookupBuilder):
                 if builder is not None:
                     builder.addSubtableBreak()
                 continue
-            val1, valFormat1 = makeOpenTypeValueRecord(value1)
-            val2, valFormat2 = makeOpenTypeValueRecord(value2)
+            val1, valFormat1 = makeOpenTypeValueRecord(
+                value1, pairPosContext=True)
+            val2, valFormat2 = makeOpenTypeValueRecord(
+                value2, pairPosContext=True)
             builder = builders.get((valFormat1, valFormat2))
             if builder is None:
                 builder = ClassPairPosSubtableBuilder(
@@ -1466,7 +1469,8 @@ class SinglePosBuilder(LookupBuilder):
         self.mapping = {}  # glyph -> otTables.ValueRecord
 
     def add_pos(self, location, glyph, valueRecord):
-        otValueRecord, _ = makeOpenTypeValueRecord(valueRecord)
+        otValueRecord, _ = makeOpenTypeValueRecord(
+            valueRecord, pairPosContext=False)
         curValue = self.mapping.get(glyph)
         if curValue is not None and curValue != otValueRecord:
             otherLoc = self.locations[glyph]
