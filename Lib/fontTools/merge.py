@@ -573,7 +573,7 @@ def mapLookups(self, lookupMap):
 	pass
 
 
-# Get unicode and font index from the composite gid
+# Gets unicode and font index from the composite gid
 # @param {string} gid - e.g. uni000A#2
 # @return {string} - glyph name
 # @return {int} - font index
