@@ -1,0 +1,9 @@
+# For PairPos statements in vertical compilation contexts,
+# zero values should get compiled to ValueRecord format 8.
+# https://github.com/fonttools/fonttools/issues/633
+feature vkrn {
+  pos A 0 A 0;
+  pos A 0 B <0 0 0 0>;
+  pos B <0 0 0 0> A 0;
+  pos B <0 0 0 0> B <0 0 0 0>;
+} vkrn;
