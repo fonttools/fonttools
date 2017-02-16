@@ -66,6 +66,7 @@ class BuilderTest(unittest.TestCase):
         bug512 bug568
         name size size2 multiple_feature_blocks omitted_GlyphClassDef
         ZeroValue_SinglePos
+        ZeroValue_PairPos_horizontal ZeroValue_PairPos_vertical
     """.split()
 
     def __init__(self, methodName):
