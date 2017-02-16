@@ -579,16 +579,16 @@ def getGlyphNameAndFontIndex(gid):
 		gid: string representing glyph id. E.g. uni0000#0
 
 	Returns:
-		A tuple with two elements. The first element is a string representing the 
-		glyph name. The second element is an integer representing the font index in 
+		A tuple with two elements. The first element is a string representing the
+		glyph name. The second element is an integer representing the font index in
 		command line args.
-	
+
 	Example:
 		'uni0000', 3 = getGlyphNameAndFontIndex('uni0000#3')
 	"""
-	assert '#' in gid and gid.split('#')[-1].isdigit() and len(gid.split('#')) == 2, 'incorrect gid format'
-	return gid.split('#')[0], int(gid.split('#')[1])
-	
+	assert '#' in gid and gid.rsplit('#', 1)[1].isdigit(), 'incorrect gid format'
+	return gid.rsplit('#', 1)[0], int(gid.rsplit('#', 1)[1])
+
 
 def isGlyphSame(fonts, gid_0, gid_1):
 	"""Checks if the given glyphs specified by gid are equal or not.
@@ -607,14 +607,14 @@ def isGlyphSame(fonts, gid_0, gid_1):
 	# Checks outline
 	index_0 = getGlyphNameAndFontIndex(gid_0)[1]
 	index_1 = getGlyphNameAndFontIndex(gid_1)[1]
-	
+
 	assert 'glyf' in fonts[index_0] and 'glyf' in fonts[index_1]
 	glyfTable_0 = fonts[index_0]['glyf']
 	glyfTable_1 = fonts[index_1]['glyf']
 	data_0 = glyfTable_0[gid_0].compile(glyfTable_0)
 	data_1 = glyfTable_1[gid_1].compile(glyfTable_1)
 	if data_0 != data_1:
-		# Binary data is not printable. Prints out coordinates instead.  
+		# Binary data is not printable. Prints out coordinates instead.
 		log.info("outlines are different: %s:%s, %s:%s" % (gid_0, glyfTable_0[gid_0].getCoordinates(glyfTable_0), gid_1, glyfTable_1[gid_1].getCoordinates(glyfTable_1)))
 		return False
 
@@ -623,7 +623,7 @@ def isGlyphSame(fonts, gid_0, gid_1):
 		isEqual = fonts[index_0]['vmtx'].metrics[gid_0] == fonts[index_1]['vmtx'].metrics[gid_1]
 		if not isEqual:
 			log.info("advance height is different:%s, %s " % (fonts[index_0]['vmtx'].metrics[gid_0], fonts[index_1]['vmtx'].metrics[gid_1]))
-		return isEqual	
+		return isEqual
 	assert 'hmtx' in fonts[index_0] and 'hmtx' in fonts[index_1]
 	isEqual = fonts[index_0]['hmtx'].metrics[gid_0] == fonts[index_1]['hmtx'].metrics[gid_1]
 	if not isEqual:
