@@ -1844,9 +1844,9 @@ def prune_pre_subset(self, font, options):
     if options.notdef_glyph and not options.notdef_outline:
         for fontname in cff.keys():
             font = cff[fontname]
-            c,sel = font.CharStrings.getItemAndSelector('.notdef')
+            c, fdSelectIndex = font.CharStrings.getItemAndSelector('.notdef')
             if hasattr(font, 'FDArray') and font.FDArray is not None:
-                private = font.FDArray[font.FDSelect[sel]].Private
+                private = font.FDArray[fdSelectIndex].Private
             else:
                 private = font.Private
             dfltWdX = private.defaultWidthX
