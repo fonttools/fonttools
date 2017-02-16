@@ -973,7 +973,8 @@ class SubtableStatement(Statement):
 
 
 class ValueRecord(Expression):
-    def __init__(self, location, vertical, xPlacement, yPlacement, xAdvance, yAdvance,
+    def __init__(self, location, vertical,
+                 xPlacement, yPlacement, xAdvance, yAdvance,
                  xPlaDevice, yPlaDevice, xAdvDevice, yAdvDevice):
         Expression.__init__(self, location)
         self.xPlacement, self.yPlacement = (xPlacement, yPlacement)
@@ -1008,10 +1009,10 @@ class ValueRecord(Expression):
             vertical = self.vertical
 
         # Try format A, if possible.
-        if x == 0 and y == 0:
-            if xAdvance == 0 and vertical:
+        if x is None and y is None:
+            if xAdvance is None and vertical:
                 return str(yAdvance)
-            elif yAdvance == 0 and not vertical:
+            elif yAdvance is None and not vertical:
                 return str(xAdvance)
 
         # Try format B, if possible.
