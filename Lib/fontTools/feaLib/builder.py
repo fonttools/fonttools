@@ -933,16 +933,31 @@ class Builder(object):
                 for glyph in glyphs:
                     lookup.add_pos(location, glyph, value)
 
+    def find_chainable_SinglePos_(self, lookups, glyphs, value):
+        """Helper for add_single_pos_chained_()"""
+        for look in lookups:
+            if all(look.can_add(glyph, value) for glyph in glyphs):
+                return look
+        return None
+
     def add_single_pos_chained_(self, location, prefix, suffix, pos):
+        # https://github.com/fonttools/fonttools/issues/514
         chain = self.get_lookup_(location, ChainContextPosBuilder)
-        sub = self.get_chained_lookup_(location, SinglePosBuilder)
+        targets = []
+        for _, _, _, lookups in chain.rules:
+            for lookup in lookups:
+                if isinstance(lookup, SinglePosBuilder):
+                    targets.append(lookup)
         subs = []
         for glyphs, value in pos:
             if value is None:
                 subs.append(None)
                 continue
-            if not set(glyphs).isdisjoint(sub.mapping.keys()):
+            otValue, _ = makeOpenTypeValueRecord(value, pairPosContext=False)
+            sub = self.find_chainable_SinglePos_(targets, glyphs, otValue)
+            if sub is None:
                 sub = self.get_chained_lookup_(location, SinglePosBuilder)
+                targets.append(sub)
             for glyph in glyphs:
                 sub.add_pos(location, glyph, value)
             subs.append(sub)
@@ -1471,8 +1486,7 @@ class SinglePosBuilder(LookupBuilder):
     def add_pos(self, location, glyph, valueRecord):
         otValueRecord, _ = makeOpenTypeValueRecord(
             valueRecord, pairPosContext=False)
-        curValue = self.mapping.get(glyph)
-        if curValue is not None and curValue != otValueRecord:
+        if not self.can_add(glyph, otValueRecord):
             otherLoc = self.locations[glyph]
             raise FeatureLibError(
                 'Already defined different position for glyph "%s" at %s:%d:%d'
@@ -1481,6 +1495,11 @@ class SinglePosBuilder(LookupBuilder):
         if otValueRecord:
             self.mapping[glyph] = otValueRecord
         self.locations[glyph] = location
+
+    def can_add(self, glyph, value):
+        assert isinstance(value, otl.ValueRecord)
+        curValue = self.mapping.get(glyph)
+        return curValue is None or curValue == value
 
     def equals(self, other):
         return (LookupBuilder.equals(self, other) and
