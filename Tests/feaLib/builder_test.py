@@ -65,7 +65,7 @@ class BuilderTest(unittest.TestCase):
         bug453 bug457 bug463 bug501 bug502 bug504 bug505 bug506 bug509
         bug512 bug514 bug568 bug633
         name size size2 multiple_feature_blocks omitted_GlyphClassDef
-        ZeroValue_SinglePos
+        ZeroValue_SinglePos_horizontal ZeroValue_SinglePos_vertical
         ZeroValue_PairPos_horizontal ZeroValue_PairPos_vertical
         ZeroValue_ChainSinglePos_horizontal ZeroValue_ChainSinglePos_vertical
     """.split()

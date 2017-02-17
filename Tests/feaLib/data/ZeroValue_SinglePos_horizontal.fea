@@ -1,0 +1,8 @@
+# For SinglePos statements, zeroes should get compiled to ValueRecord format 0.
+# https://github.com/fonttools/fonttools/issues/633
+
+# Zero value in a horizontal context.
+feature kern {
+    pos A 0;          # format A
+    pos B <0 0 0 0>;  # format B
+} kern;
