@@ -1,0 +1,11 @@
+# The many chain targets for this feature should get combined into
+# two separate SinglePos lookups: {A:-40, B:-40, C:-40} and {A:-111}.
+# https://github.com/fonttools/fonttools/issues/514
+#
+# makeotf produces {A:-40, B:-40, C:-40} and {A:-111, B:-40} which
+# is redundant. https://github.com/adobe-type-tools/afdko/issues/169
+feature test {
+    pos X [A-B]' -40 B' -40 A' -40 Y;
+    pos X A' -111 Y;
+    pos X B' -40 A' -111 [A-C]' -40 Y;
+} test;
