@@ -44,9 +44,11 @@ BezierCurve = tuple(
 	for n,bernsteins in enumerate(BernsteinPolynomial))
 
 def green(f, Bezier=BezierCurve[n]):
-	f1 = -sp.integrate(sp.sympify(f), y)
-	f2 = f1.subs({x:Bezier[0], y:Bezier[1]})
-	return sp.integrate(f2 * sp.diff(Bezier[0], t), (t, 0, 1))
+	f = -sp.integrate(sp.sympify(f), y)
+	f = f.subs({x:Bezier[0], y:Bezier[1]})
+	f = sp.integrate(f * sp.diff(Bezier[0], t), (t, 0, 1))
+	f = sp.gcd_terms(f.collect(sum(P,()))) # Optimize a bit
+	return f
 
 class BezierFuncs(object):
 
