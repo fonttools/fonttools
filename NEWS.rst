@@ -1,3 +1,7 @@
+- [feaLib] Zero values now produce the same results as makeotf (#633, #848)
+- [feaLib] More compact encoding for “Contextual positioning with in-line
+  single positioning rules” (#514)
+
 3.7.1 (released 2017-02-15)
 ---------------------------
 
