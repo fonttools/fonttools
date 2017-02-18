@@ -1,3 +1,6 @@
+3.7.2 (released 2017-02-17)
+---------------------------
+
 - [subset] Keep advance widths when stripping ".notdef" glyph outline in
   CID-keyed CFF fonts (#845)
 - [feaLib] Zero values now produce the same results as makeotf (#633, #848)
