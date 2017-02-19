@@ -23,8 +23,10 @@ from itertools import count
 n = 3 # Max Bezier degree; 3 for cubic, 2 for quadratic
 
 t, x, y = sp.symbols('t x y', real=True)
+c = sp.symbols('c', real=False) # Complex representation instead of x/y
 
 P = tuple(zip(*(sp.symbols('%s:%d'%(w,n+1), real=True) for w in 'xy')))
+C = tuple(sp.symbols('c:%d'%(n+1), real=False))
 
 # Cubic Bernstein basis functions
 BinomialCoefficient = [(1, 0)]
@@ -33,6 +35,7 @@ for i in range(1, n+1):
 	this = tuple(last[j-1]+last[j] for j in range(len(last)))+(0,)
 	BinomialCoefficient.append(this)
 BinomialCoefficient = tuple(tuple(item[:-1]) for item in BinomialCoefficient)
+del last, this
 
 BernsteinPolynomial = tuple(
 	tuple(c * t**i * (1-t)**(n-i) for i,c in enumerate(coeffs))
@@ -42,12 +45,16 @@ BezierCurve = tuple(
 	tuple(sum(P[i][j]*bernstein for i,bernstein in enumerate(bernsteins))
 		for j in range(2))
 	for n,bernsteins in enumerate(BernsteinPolynomial))
+BezierCurveC = tuple(
+	sum(C[i]*bernstein for i,bernstein in enumerate(bernsteins))
+	for n,bernsteins in enumerate(BernsteinPolynomial))
 
-def green(f, Bezier=BezierCurve[n]):
+def green(f, curveXY, optimize=True):
 	f = -sp.integrate(sp.sympify(f), y)
-	f = f.subs({x:Bezier[0], y:Bezier[1]})
-	f = sp.integrate(f * sp.diff(Bezier[0], t), (t, 0, 1))
-	f = sp.gcd_terms(f.collect(sum(P,()))) # Optimize a bit
+	f = f.subs({x:curveXY[0], y:curveXY[1]})
+	f = sp.integrate(f * sp.diff(curveXY[0], t), (t, 0, 1))
+	if optimize:
+		f = sp.gcd_terms(f.collect(sum(P,())))
 	return f
 
 class BezierFuncs(object):
@@ -62,7 +69,7 @@ class BezierFuncs(object):
 			for d in range(i+1):
 				args.append('x%d' % d)
 				args.append('y%d' % d)
-			self._bezfuncs[i] = sp.lambdify(args, green(self._symfunc, Bezier=BezierCurve[i]))
+			self._bezfuncs[i] = sp.lambdify(args, green(self._symfunc, BezierCurve[i]))
 		return self._bezfuncs[i]
 
 _BezierFuncs = {}
@@ -78,7 +85,7 @@ def printCache(func):
 	funcstr = str(func)
 	print("_BezierFuncs['%s'] = [" % funcstr)
 	for i in range(n+1):
-		print('	lambda P:', green(func, Bezier=BezierCurve[i]), ',')
+		print('	lambda P:', green(func, BezierCurve[i]), ',')
 	print(']')
 
 def printPen(name, funcs):
@@ -128,7 +135,7 @@ class {name}(BasePen):
 		x2,y2 = p2
 		x3,y3 = p3
 ''')
-		defs, exprs = sp.cse([green(f,Bezier=BezierCurve[n]) for name,f in funcs],
+		defs, exprs = sp.cse([green(f, BezierCurve[n]) for name,f in funcs],
 				     optimizations='basic',
 				     symbols=(sp.Symbol('r%d'%i) for i in count()))
 		for name,value in defs:
