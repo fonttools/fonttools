@@ -18,6 +18,7 @@ from fontTools.pens.perimeterPen import PerimeterPen
 from fontTools.pens.areaPen import AreaPen
 from fontTools.misc.transform import Scale
 from functools import partial
+from itertools import count
 
 n = 3 # Max Bezier degree; 3 for cubic, 2 for quadratic
 
@@ -79,6 +80,70 @@ def printCache(func):
 	for i in range(n+1):
 		print('	lambda P:', green(func, Bezier=BezierCurve[i]), ',')
 	print(']')
+
+def printPen(name, funcs):
+	print(
+'''from __future__ import print_function, division, absolute_import
+from fontTools.misc.py23 import *
+
+from fontTools.pens.basePen import BasePen
+
+class {name}(BasePen):
+
+	def __init__(self, func, glyphset=None):
+		BasePen.__init__(self, glyphset)
+'''.format(name=name))
+	for name,f in funcs:
+		print('		self.%s = 0' % name)
+	print('''
+	def _moveTo(self, p0):
+		self.__startPoint = p0
+
+	def _closePath(self):
+		p0 = self._getCurrentPoint()
+		if p0 != self.__startPoint:
+			p1 = self.__startPoint
+			self._lineTo(p1)''')
+
+	for n in (1, 2, 3):
+
+		if n == 1:
+			print('''
+	def _lineTo(self, p1):
+		x0,y0 = self._getCurrentPoint()
+		x1,y1 = p1
+''')
+		elif n == 2:
+			print('''
+	def _qCurveToOne(self, p1, p2):
+		x0,y0 = self._getCurrentPoint()
+		x1,y1 = p1
+		x2,y2 = p2
+''')
+		elif n == 3:
+			print('''
+	def _curveToOne(self, p1, p2, p3):
+		x0,y0 = self._getCurrentPoint()
+		x1,y1 = p1
+		x2,y2 = p2
+		x3,y3 = p3
+''')
+		defs, exprs = sp.cse([green(f,Bezier=BezierCurve[n]) for name,f in funcs],
+				     optimizations='basic',
+				     symbols=(sp.Symbol('r%d'%i) for i in count()))
+		for name,value in defs:
+			print('		%s = %s' % (name, value))
+		print()
+		for name,value in zip([f[0] for f in funcs], exprs):
+			print('		self.%s += %s' % (name, value))
+
+#printPen('MomentsPen',
+#	 [('area', 1),
+#	  ('momentX', x),
+#	  ('momentY', y),
+#	  ('momentXX', x*x),
+#	  ('momentXY', x*y),
+#	  ('momentYY', y*y)])
 
 class GreenPen(BasePen):
 
