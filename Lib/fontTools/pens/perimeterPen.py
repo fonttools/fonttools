@@ -1,4 +1,5 @@
 """Calculate the perimeter of a glyph."""
+# -*- coding: utf-8-*-
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
@@ -28,6 +29,17 @@ class PerimeterPen(BasePen):
 		BasePen.__init__(self, glyphset)
 		self.value = 0
 		self._mult = 1.+1.5*tolerance # The 1.5 is a empirical hack; no math
+
+		# Choose which algorithm to use for cubic. Recursive algorithm is
+		# accurate to arbitrary tolerances whereas the Lobatto algorithm has
+		# fixed error characteristics, but is faster.
+		#
+		# The 0.0015 cutoff has been empirically determined by measuring error
+		# of the Lobatto approach on a realworld font.
+		if tolerance < 0.0015:
+			self._addCubic = self._addCubicRecursive
+		else:
+			self._addCubic = self._addCubicLobatto
 
 	def _moveTo(self, p0):
 		self.__startPoint = p0
@@ -60,15 +72,44 @@ class PerimeterPen(BasePen):
 		Len = abs(2 * (_intSecAtan(x1) - _intSecAtan(x0)) * origDist / (scale * (x1 - x0)))
 		self.value += Len
 
-	def _addCubic(self, p0, p1, p2, p3):
+	def _addCubicRecursive(self, p0, p1, p2, p3):
 		arch = abs(p0-p3)
 		box = abs(p0-p1) + abs(p1-p2) + abs(p2-p3)
 		if arch * self._mult >= box:
 			self.value += (arch + box) * .5
 		else:
 			one,two = _split_cubic_into_two(p0,p1,p2,p3)
-			self._addCubic(*one)
-			self._addCubic(*two)
+			self._addCubicRecursive(*one)
+			self._addCubicRecursive(*two)
+
+	def _addCubicLobatto(self, c0, c1, c2, c3, _q=(3/28)**.5):
+		# Approximate length of cubic Bezier curve using Lobatto quadrature
+		# with n=5 points: endpoints, midpoint, and at t=.5±sqrt(21)/14
+		#
+		# This, essentially, approximates the length-of-derivative function
+		# to be integrated with the best-matching seventh-degree polynomial
+		# approximation of it.
+		#
+		# https://en.wikipedia.org/wiki/Gaussian_quadrature#Gauss.E2.80.93Lobatto_rules
+
+		v0 = abs(c1-c0)*3
+		v4 = abs(c3-c2)*3
+		v2 = abs(c3-c0+c2-c1)*.75
+
+		# v1=(BezierCurveC[3].diff(t).subs({t:.5-_q}))
+		# v3=(BezierCurveC[3].diff(t).subs({t:.5+_q}))
+		# sp.cse([v1,v3], symbols=(sp.Symbol('r%d'%i) for i in count()))
+		r0 = _q + 0.5
+		r1 = 3*r0**2
+		r2 = -_q + 0.5
+		r3 = 3*r2**2
+		r4 = 6*c2*r0*r2
+		r5 = 3*c1
+		r6 = 2*_q
+		v1 = abs(-c0*r1 + c1*r1 - c2*r3 + c3*r3 + r2*r5*(-r6 - 1.0) + r4)
+		v3 = abs(-c0*r3 + c1*r3 - c2*r1 + c3*r1 + r0*r5*(r6 - 1.0) + r4)
+
+		self.value += (9*(v0+v4) + 64*v2 + 49*(v1+v3))/180
 
 	def _curveToOne(self, p1, p2, p3):
 		p0 = self._getCurrentPoint()
