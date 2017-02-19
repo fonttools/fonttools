@@ -235,10 +235,10 @@ class GlyphStatistics(object):
 	#  Var(X) = E[X^2] - E[X]^2
 	@property
 	def VarianceX(self):
-		return max(0, self.Moment2XX / self.Area - self.MeanX**2)
+		return self.Moment2XX / self.Area - self.MeanX**2
 	@property
 	def VarianceY(self):
-		return max(0, self.Moment2YY / self.Area - self.MeanY**2)
+		return self.Moment2YY / self.Area - self.MeanY**2
 	
 	@property
 	def StdDevX(self):
