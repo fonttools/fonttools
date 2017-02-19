@@ -17,7 +17,6 @@ from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.perimeterPen import PerimeterPen
 from fontTools.pens.areaPen import AreaPen
 from fontTools.misc.transform import Scale
-from fontTools.misc.bezierTools import splitQuadraticAtT, splitCubicAtT
 from functools import partial
 
 n = 3 # Max Bezier degree; 3 for cubic, 2 for quadratic
