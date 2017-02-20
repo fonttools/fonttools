@@ -14,7 +14,9 @@ n = 3 # Max Bezier degree; 3 for cubic, 2 for quadratic
 t, x, y = sp.symbols('t x y', real=True)
 c = sp.symbols('c', real=False) # Complex representation instead of x/y
 
-P = tuple(zip(*(sp.symbols('P:%d[%s]'%(n+1,w), real=True) for w in '01')))
+X = tuple(sp.symbols('x:%d'%(n+1), real=True))
+Y = tuple(sp.symbols('y:%d'%(n+1), real=True))
+P = tuple(zip(*(sp.symbols('p:%d[%s]'%(n+1,w), real=True) for w in '01')))
 C = tuple(sp.symbols('c:%d'%(n+1), real=False))
 
 # Cubic Bernstein basis functions
@@ -98,7 +100,9 @@ class %s(BasePen):
 		x2,y2 = p2
 		x3,y3 = p3
 ''', file=file)
-		defs, exprs = sp.cse([green(f, BezierCurve[n]) for name,f in funcs],
+		subs = {P[i][j]: [X, Y][j][i] for i in range(n+1) for j in range(2)}
+		greens = [green(f, BezierCurve[n]).subs(subs) for name,f in funcs]
+		defs, exprs = sp.cse(greens,
 				     optimizations='basic',
 				     symbols=(sp.Symbol('r%d'%i) for i in count()))
 		for name,value in defs:
@@ -123,7 +127,7 @@ class BezierFuncs(dict):
 		self._bezfuncs = {}
 
 	def __missing__(self, i):
-		args = ['P%d'%d for d in range(i+1)]
+		args = ['p%d'%d for d in range(i+1)]
 		return sp.lambdify(args, green(self._symfunc, BezierCurve[i]))
 
 class GreenPen(BasePen):
