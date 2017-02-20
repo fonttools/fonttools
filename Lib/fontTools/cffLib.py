@@ -1631,9 +1631,7 @@ class TopDict(BaseDict):
 				charString.decompile()
 			except:
 				log.error("Error in charstring %s", i)
-				import sys
-				typ, value = sys.exc_info()[0:2]
-				raise typ(value)
+				raise
 			if not i % 30 and progress:
 				progress.increment(0)  # update
 			i = i + 1
