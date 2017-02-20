@@ -122,7 +122,7 @@ def test(glyphsets, glyphs=None, names=None):
 
 		try:
 			allVectors = []
-			for glyphset in glyphsets:
+			for glyphset,name in zip(glyphsets, names):
 				#print('.', end='')
 				glyph = glyphset[glyph_name]
 
@@ -169,7 +169,8 @@ def test(glyphsets, glyphs=None, names=None):
 
 
 		except ValueError as e:
-			print('%s: math error %s; skipping glyph' % (glyph_name, e))
+			print('%s: %s: math error %s; skipping glyph.' % (glyph_name, name, e))
+			print(contour.value)
 			#raise
 	#for x in hist:
 	#	print(x)
