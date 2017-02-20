@@ -40,12 +40,10 @@ BezierCurveC = tuple(
 	sum(C[i]*bernstein for i,bernstein in enumerate(bernsteins))
 	for n,bernsteins in enumerate(BernsteinPolynomial))
 
-def green(f, curveXY, optimize=True):
+def green(f, curveXY):
 	f = -sp.integrate(sp.sympify(f), y)
 	f = f.subs({x:curveXY[0], y:curveXY[1]})
 	f = sp.integrate(f * sp.diff(curveXY[0], t), (t, 0, 1))
-	if optimize:
-		f = sp.gcd_terms(f.collect(sum(P,())))
 	return f
 
 def printPen(penName, funcs, file=sys.stdout):
@@ -101,7 +99,9 @@ class %s(BasePen):
 		x3,y3 = p3
 ''', file=file)
 		subs = {P[i][j]: [X, Y][j][i] for i in range(n+1) for j in range(2)}
-		greens = [green(f, BezierCurve[n]).subs(subs) for name,f in funcs]
+		greens = [green(f, BezierCurve[n]) for name,f in funcs]
+		greens = [sp.gcd_terms(f.collect(sum(P,()))) for f in greens] # Optimize
+		greens = [f.subs(subs) for f in greens] # Convert to p to x/y
 		defs, exprs = sp.cse(greens,
 				     optimizations='basic',
 				     symbols=(sp.Symbol('r%d'%i) for i in count()))
@@ -128,7 +128,9 @@ class BezierFuncs(dict):
 
 	def __missing__(self, i):
 		args = ['p%d'%d for d in range(i+1)]
-		return sp.lambdify(args, green(self._symfunc, BezierCurve[i]))
+		f = green(self._symfunc, BezierCurve[i])
+		f = sp.gcd_terms(f.collect(sum(P,()))) # Optimize
+		return sp.lambdify(args, f)
 
 class GreenPen(BasePen):
 
