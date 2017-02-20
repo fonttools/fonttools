@@ -124,7 +124,6 @@ def test(glyphsets, glyphs=None, names=None):
 			allVectors = []
 			for glyphset in glyphsets:
 				#print('.', end='')
-				#print()
 				glyph = glyphset[glyph_name]
 
 				perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
@@ -136,14 +135,15 @@ def test(glyphsets, glyphs=None, names=None):
 				allVectors.append(contourVectors)
 				for contour in contourPens:
 					stats = GlyphStatistics(contour, glyphset=glyphset)
+					size = abs(stats.Area) ** .5 * .5
 					vector = (
 						int(stats.Perimeter * .125),
-						int(abs(stats.Area) ** .5 * .5),
+						int(size),
 						int(stats.MeanX),
 						int(stats.MeanY),
 						int(stats.StdDevX * 2),
 						int(stats.StdDevY * 2),
-						int(stats.Covariance/(stats.StdDevX*stats.StdDevY)**.5),
+						int(stats.Correlation * size),
 					)
 					contourVectors.append(vector)
 					#print(vector)
