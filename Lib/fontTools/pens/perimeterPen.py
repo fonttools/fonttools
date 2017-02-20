@@ -31,10 +31,10 @@ class PerimeterPen(BasePen):
 		self._mult = 1.+1.5*tolerance # The 1.5 is a empirical hack; no math
 
 		# Choose which algorithm to use for quadratic and for cubic.
-		# Lobatto is faster but has fixed error characteristic with no strong
+		# Quadrature is faster but has fixed error characteristic with no strong
 		# error bound.  The cutoff points are derived empirically.
-		self._addCubic = self._addCubicLobatto if tolerance >= 0.0015 else self._addCubicRecursive
-		self._addQuadratic = self._addQuadraticLobatto if tolerance >= 0.00075 else self._addQuadraticExact
+		self._addCubic = self._addCubicQuadrature if tolerance >= 0.0015 else self._addCubicRecursive
+		self._addQuadratic = self._addQuadraticQuadrature if tolerance >= 0.00075 else self._addQuadraticExact
 
 	def _moveTo(self, p0):
 		self.__startPoint = p0
@@ -65,7 +65,7 @@ class PerimeterPen(BasePen):
 		Len = abs(2 * (_intSecAtan(x1) - _intSecAtan(x0)) * origDist / (scale * (x1 - x0)))
 		self.value += Len
 
-	def _addQuadraticLobatto(self, c0, c1, c2):
+	def _addQuadraticQuadrature(self, c0, c1, c2):
 		# Approximate length of quadratic Bezier curve using Lobatto quadrature
 		# with n=4 points: endpoints and at t=.5±sqrt(1/5)/2
 		#
@@ -98,7 +98,7 @@ class PerimeterPen(BasePen):
 			self._addCubicRecursive(*one)
 			self._addCubicRecursive(*two)
 
-	def _addCubicLobatto(self, c0, c1, c2, c3):
+	def _addCubicQuadrature(self, c0, c1, c2, c3):
 		# Approximate length of cubic Bezier curve using Lobatto quadrature
 		# with n=5 points: endpoints, midpoint, and at t=.5±sqrt(3/7)/2
 		#
