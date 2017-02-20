@@ -66,23 +66,22 @@ class PerimeterPen(BasePen):
 		self.value += Len
 
 	def _addQuadraticQuadrature(self, c0, c1, c2):
-		# Approximate length of quadratic Bezier curve using Lobatto quadrature
-		# with n=4 points: endpoints and at t=.5±sqrt(1/5)/2
+		# Approximate length of quadratic Bezier curve using Gauss-Legendre quadrature
+		# with n=3 points.
 		#
 		# This, essentially, approximates the length-of-derivative function
 		# to be integrated with the best-matching fifth-degree polynomial
 		# approximation of it.
 		#
-		# https://en.wikipedia.org/wiki/Gaussian_quadrature#Gauss.E2.80.93Lobatto_rules
+		#https://en.wikipedia.org/wiki/Gaussian_quadrature#Gauss.E2.80.93Legendre_quadrature
 
-		# abs(BezierCurveC[3].diff(t).subs({t:T})) for T in (0, .5-(1/5)**.5/2, .5, .5+(1/5)**.5/2, 1),
-		# weighted 1/20, 49/180, 32/90, 49/180, 1/20 respectively.
-		v0 = abs(c1-c0)*0.166666666666667
-		v1 = abs(-0.603005664791649*c0 + 0.372677996249965*c1 + 0.230327668541684*c2)
-		v2 = abs(-0.230327668541684*c0 - 0.372677996249965*c1 + 0.603005664791649*c2)
-		v3 = abs(c2-c1)*0.166666666666667
+		# abs(BezierCurveC[2].diff(t).subs({t:T})) for T in sorted(.5, .5±sqrt(3/5)/2),
+		# weighted 5/18, 8/18, 5/18 respectively.
+		v0 = abs(-0.492943519233745*c0 + 0.430331482911935*c1 + 0.0626120363218102*c2)
+		v1 = abs(c2-c0)*0.4444444444444444
+		v2 = abs(-0.0626120363218102*c0 - 0.430331482911935*c1 + 0.492943519233745*c2)
 
-		self.value += v0 + v1 + v2 + v3
+		self.value += v0 + v1 + v2
 
 	def _qCurveToOne(self, p1, p2):
 		p0 = self._getCurrentPoint()
@@ -99,8 +98,8 @@ class PerimeterPen(BasePen):
 			self._addCubicRecursive(*two)
 
 	def _addCubicQuadrature(self, c0, c1, c2, c3):
-		# Approximate length of cubic Bezier curve using Lobatto quadrature
-		# with n=5 points: endpoints, midpoint, and at t=.5±sqrt(3/7)/2
+		# Approximate length of cubic Bezier curve using Gauss-Lobatto quadrature
+		# with n=5 points.
 		#
 		# This, essentially, approximates the length-of-derivative function
 		# to be integrated with the best-matching seventh-degree polynomial
@@ -108,7 +107,7 @@ class PerimeterPen(BasePen):
 		#
 		# https://en.wikipedia.org/wiki/Gaussian_quadrature#Gauss.E2.80.93Lobatto_rules
 
-		# abs(BezierCurveC[3].diff(t).subs({t:T})) for T in (0, .5-(3/7)**.5/2, .5, .5+(3/7)**.5/2, 1),
+		# abs(BezierCurveC[3].diff(t).subs({t:T})) for T in sorted(0, .5±(3/7)**.5/2, .5, 1),
 		# weighted 1/20, 49/180, 32/90, 49/180, 1/20 respectively.
 		v0 = abs(c1-c0)*.15
 		v1 = abs(-0.558983582205757*c0 + 0.325650248872424*c1 + 0.208983582205757*c2 + 0.024349751127576*c3)
