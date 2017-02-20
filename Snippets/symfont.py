@@ -192,61 +192,48 @@ MomentXYPen = partial(GreenPen, func=x*y)
 # Glyph statistics object
 #
 
-class GlyphStatistics(object):
+class StatisticsPen(MomentsPen):
 
-	def __init__(self, glyph, transform=None, glyphset=None):
-		self._glyph = glyph
-		self._glyphset = glyphset
-		self._transform = transform
+	# Center of mass
+	# https://en.wikipedia.org/wiki/Center_of_mass#A_continuous_volume
+	@property
+	def meanX(self):
+		return self.momentX / self.area if self.area else 0
+	@property
+	def meanY(self):
+		return self.momentY / self.area if self.area else 0
 
-		Pen = MomentsPen
-		pen = transformer = Pen(glyphset=self._glyphset)
-		if self._transform:
-			transformer = TransformPen(pen, self._transform)
-		self._glyph.draw(transformer)
-		self.m = m = pen
+	#  Var(X) = E[X^2] - E[X]^2
+	@property
+	def varianceX(self):
+		return self.momentXX / self.area - self.meanX**2 if self.area else 0
+	@property
+	def varianceY(self):
+		return self.momentYY / self.area - self.meanY**2 if self.area else 0
 
-		self.area = area = m.area
-		self.momentX = m.momentX
-		self.momentY = m.momentY
-		self.momentXX = m.momentXX
-		self.momentXY = m.momentXY
-		self.momentYY = m.momentYY
+	@property
+	def stddevX(self):
+		return math.copysign(abs(self.varianceX)**.5, self.varianceX)
+	@property
+	def stddevY(self):
+		return math.copysign(abs(self.varianceY)**.5, self.varianceY)
 
-		if not area:
-			self.meanX = 0.
-			self.meanY = 0.
-			self.varianceX = 0.
-			self.varianceY = 0.
-			self.stddevX = 0.
-			self.stddevY = 0.
-			self.covariance = 0.
-			self.correlation = 0.
-			self.slant = 0.
-			return
+	#  Covariance(X,Y) = ( E[X.Y] - E[X]E[Y] )
+	@property
+	def covariance(self):
+		return self.momentXY / self.area - self.meanX*self.meanY if self.area else 0
 
-		# Center of mass
-		# https://en.wikipedia.org/wiki/Center_of_mass#A_continuous_volume
-		self.meanX = self.momentX / area
-		self.meanY = self.momentY / area
+	#  Correlation(X,Y) = Covariance(X,Y) / ( stddev(X) * stddev(Y) )
+	# https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient
+	@property
+	def correlation(self):
+		correlation = self.covariance / (self.stddevX * self.stddevY) if self.area else 0
+		return correlation if abs(correlation) > 1e-3 else 0
 
-		#  Var(X) = E[X^2] - E[X]^2
-		self.varianceX = self.momentXX / area - self.meanX**2
-		self.varianceY = self.momentYY / area - self.meanY**2
-
-		self.stddevX = math.copysign(abs(self.varianceX)**.5, self.varianceX)
-		self.stddevY = math.copysign(abs(self.varianceY)**.5, self.varianceY)
-
-		#  Covariance(X,Y) = ( E[X.Y] - E[X]E[Y] )
-		self.covariance = self.momentXY / area - self.meanX*self.meanY
-
-		#  Correlation(X,Y) = Covariance(X,Y) / ( stddev(X) * stddev(Y)) )
-		# https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient
-		correlation = self.covariance / (self.stddevX * self.stddevY)
-		self.correlation = correlation if abs(correlation) > 1e-3 else 0
-
-		slant = self.covariance / self.varianceY
-		self.slant = slant if abs(slant) > 1e-3 else 0
+	@property
+	def slant(self):
+		slant = self.covariance / self.varianceY if self.area else 0
+		return slant if abs(slant) > 1e-3 else 0
 
 
 def test(glyphset, upem, glyphs):
@@ -256,10 +243,12 @@ def test(glyphset, upem, glyphs):
 		print()
 		print("glyph:", glyph_name)
 		glyph = glyphset[glyph_name]
-		stats = GlyphStatistics(glyph, transform=Scale(1./upem), glyphset=glyphset)
-		for item in dir(stats):
+		pen = StatisticsPen(glyphset=glyphset)
+		transformer = TransformPen(pen, Scale(1./upem))
+		glyph.draw(transformer)
+		for item in ['area', 'momentX', 'momentY', 'momentXX', 'momentYY', 'momentXY', 'meanX', 'meanY', 'varianceX', 'varianceY', 'stddevX', 'stddevY', 'covariance', 'correlation', 'slant']:
 			if item[0] == '_': continue
-			print ("%s: %g" % (item, getattr(stats, item)))
+			print ("%s: %g" % (item, getattr(pen, item)))
 
 
 def main(args):

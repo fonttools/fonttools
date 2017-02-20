@@ -9,7 +9,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
 from fontTools.pens.basePen import BasePen
-from symfont import GlyphStatistics
+from symfont import StatisticsPen
 import itertools
 
 class PerContourOrComponentPen(BasePen):
@@ -134,7 +134,8 @@ def test(glyphsets, glyphs=None, names=None):
 				contourVectors = []
 				allVectors.append(contourVectors)
 				for contour in contourPens:
-					stats = GlyphStatistics(contour, glyphset=glyphset)
+					stats = StatisticsPen(glyphset=glyphset)
+					contour.draw(stats)
 					size = abs(stats.area) ** .5 * .5
 					vector = (
 						int(size),
