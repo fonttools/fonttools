@@ -137,7 +137,6 @@ def test(glyphsets, glyphs=None, names=None):
 					stats = GlyphStatistics(contour, glyphset=glyphset)
 					size = abs(stats.Area) ** .5 * .5
 					vector = (
-						int(stats.Perimeter * .125),
 						int(size),
 						int(stats.MeanX),
 						int(stats.MeanY),

@@ -15,7 +15,6 @@ import sys
 import math
 from fontTools.pens.basePen import BasePen
 from fontTools.pens.transformPen import TransformPen
-from fontTools.pens.perimeterPen import PerimeterPen
 from fontTools.pens.momentsPen import MomentsPen
 from fontTools.pens.areaPen import AreaPen
 from fontTools.misc.transform import Scale
@@ -200,12 +199,6 @@ class GlyphStatistics(object):
 		self._glyph = glyph
 		self._glyphset = glyphset
 		self._transform = transform
-
-		pen = transformer = PerimeterPen(glyphset=self._glyphset)
-		if self._transform:
-			transformer = TransformPen(pen, self._transform)
-		self._glyph.draw(transformer)
-		self.Perimeter = pen.value
 
 		Pen = MomentsPen
 		pen = transformer = Pen(glyphset=self._glyphset)
