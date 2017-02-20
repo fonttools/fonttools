@@ -55,10 +55,8 @@ class RecordingPen(BasePen):
 		self.value.append(('closePath', ()))
 	def _endPath(self):
 		self.value.append(('endPath', ()))
-	# Humm, adding the following method slows things down some 20%.
-	# We don't have as much control as we like currently.
-	#def addComponent(self, glyphName, transformation):
-	#	self.value.append(('addComponent', (glyphName, transformation)))
+	def addComponent(self, glyphName, transformation):
+		self.value.append(('addComponent', (glyphName, transformation)))
 
 	def draw(self, pen):
 		for operator,operands in self.value:
