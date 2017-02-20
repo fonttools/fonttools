@@ -30,16 +30,11 @@ class PerimeterPen(BasePen):
 		self.value = 0
 		self._mult = 1.+1.5*tolerance # The 1.5 is a empirical hack; no math
 
-		# Choose which algorithm to use for cubic. Recursive algorithm is
-		# accurate to arbitrary tolerances whereas the Lobatto algorithm has
-		# fixed error characteristics, but is faster.
-		#
-		# The 0.0015 cutoff has been empirically determined by measuring error
-		# of the Lobatto approach on a realworld font.
-		if tolerance < 0.0015:
-			self._addCubic = self._addCubicRecursive
-		else:
-			self._addCubic = self._addCubicLobatto
+		# Choose which algorithm to use for quadratic and for cubic.
+		# Lobatto is faster but has fixed error characteristic with no strong
+		# error bound.  The cutoff points are derived empirically.
+		self._addCubic = self._addCubicLobatto if tolerance >= 0.0015 else self._addCubicRecursive
+		self._addQuadratic = self._addQuadraticLobatto if tolerance >= 0.00075 else self._addQuadraticExact
 
 	def _moveTo(self, p0):
 		self.__startPoint = p0
@@ -48,29 +43,50 @@ class PerimeterPen(BasePen):
 		p0 = self._getCurrentPoint()
 		self.value += _distance(p0, p1)
 
-	def _qCurveToOne(self, p1, p2):
+	def _addQuadraticExact(self, c0, c1, c2):
 		# Analytical solution to the length of a quadratic bezier.
 		# I'll explain how I arrived at this later.
-		p0 = self._getCurrentPoint()
-		_p1 = complex(*p1)
-		d0 = _p1 - complex(*p0)
-		d1 = complex(*p2) - _p1
+		d0 = c1 - c0
+		d1 = c2 - c1
 		d = d1 - d0
 		n = d * 1j
 		scale = abs(n)
 		if scale == 0.:
-			self._lineTo(p2)
+			self.value += abs(c2-c0)
 			return
 		origDist = _dot(n,d0)
 		if origDist == 0.:
 			if _dot(d0,d1) >= 0:
-				self._lineTo(p2)
+				self.value += abs(c2-c0)
 				return
 			assert 0 # TODO handle cusps
 		x0 = _dot(d,d0) / origDist
 		x1 = _dot(d,d1) / origDist
 		Len = abs(2 * (_intSecAtan(x1) - _intSecAtan(x0)) * origDist / (scale * (x1 - x0)))
 		self.value += Len
+
+	def _addQuadraticLobatto(self, c0, c1, c2):
+		# Approximate length of quadratic Bezier curve using Lobatto quadrature
+		# with n=4 points: endpoints and at t=.5±sqrt(1/5)/2
+		#
+		# This, essentially, approximates the length-of-derivative function
+		# to be integrated with the best-matching fifth-degree polynomial
+		# approximation of it.
+		#
+		# https://en.wikipedia.org/wiki/Gaussian_quadrature#Gauss.E2.80.93Lobatto_rules
+
+		# abs(BezierCurveC[3].diff(t).subs({t:T})) for T in (0, .5-(1/5)**.5/2, .5, .5+(1/5)**.5/2, 1),
+		# weighted 1/20, 49/180, 32/90, 49/180, 1/20 respectively.
+		v0 = abs(c1-c0)*0.166666666666667
+		v1 = abs(-0.603005664791649*c0 + 0.372677996249965*c1 + 0.230327668541684*c2)
+		v2 = abs(-0.230327668541684*c0 - 0.372677996249965*c1 + 0.603005664791649*c2)
+		v3 = abs(c2-c1)*0.166666666666667
+
+		self.value += v0 + v1 + v2 + v3
+
+	def _qCurveToOne(self, p1, p2):
+		p0 = self._getCurrentPoint()
+		self._addQuadratic(complex(*p0), complex(*p1), complex(*p2))
 
 	def _addCubicRecursive(self, p0, p1, p2, p3):
 		arch = abs(p0-p3)
@@ -84,7 +100,7 @@ class PerimeterPen(BasePen):
 
 	def _addCubicLobatto(self, c0, c1, c2, c3):
 		# Approximate length of cubic Bezier curve using Lobatto quadrature
-		# with n=5 points: endpoints, midpoint, and at t=.5±sqrt(21)/14
+		# with n=5 points: endpoints, midpoint, and at t=.5±sqrt(3/7)/2
 		#
 		# This, essentially, approximates the length-of-derivative function
 		# to be integrated with the best-matching seventh-degree polynomial
@@ -92,7 +108,7 @@ class PerimeterPen(BasePen):
 		#
 		# https://en.wikipedia.org/wiki/Gaussian_quadrature#Gauss.E2.80.93Lobatto_rules
 
-		# abs(beziercurvec[3].diff(t).subs({t:T})) for T in (0, .5-(3/28)**.5, .5, .5+(3/28)**.5, 1),
+		# abs(BezierCurveC[3].diff(t).subs({t:T})) for T in (0, .5-(3/7)**.5/2, .5, .5+(3/7)**.5/2, 1),
 		# weighted 1/20, 49/180, 32/90, 49/180, 1/20 respectively.
 		v0 = abs(c1-c0)*.15
 		v1 = abs(-0.558983582205757*c0 + 0.325650248872424*c1 + 0.208983582205757*c2 + 0.024349751127576*c3)
