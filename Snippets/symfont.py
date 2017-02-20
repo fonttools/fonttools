@@ -267,7 +267,7 @@ class GlyphStatistics(object):
 
 	@property
 	def Slant(self):
-		slant = self.Covariance / self.VarianceY
+		slant = self.Covariance / self.VarianceY if self.VarianceY else 0
 		if abs(slant) < 1e-3: slant = 0
 		return slant
 
