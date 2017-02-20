@@ -11,6 +11,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
 import sympy as sp
+import sys
 import math
 from fontTools.pens.basePen import BasePen
 from fontTools.pens.transformPen import TransformPen
@@ -81,14 +82,14 @@ def getGreenBezierFuncs(func):
 		_BezierFuncs[funcstr] = BezierFuncs(func)
 	return _BezierFuncs[funcstr]
 
-def printCache(func):
+def printCache(func, file=sys.stdout):
 	funcstr = str(func)
-	print("_BezierFuncs['%s'] = [" % funcstr)
+	print("_BezierFuncs['%s'] = [" % funcstr, file=file)
 	for i in range(n+1):
 		print('	lambda P:', green(func, BezierCurve[i]), ',')
-	print(']')
+	print(']', file=file)
 
-def printPen(name, funcs):
+def printPen(name, funcs, file=sys.stdout):
 	print(
 '''from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
@@ -99,9 +100,9 @@ class {name}(BasePen):
 
 	def __init__(self, func, glyphset=None):
 		BasePen.__init__(self, glyphset)
-'''.format(name=name))
+'''.format(name=name), file=file)
 	for name,f in funcs:
-		print('		self.%s = 0' % name)
+		print('		self.%s = 0' % name, file=file)
 	print('''
 	def _moveTo(self, p0):
 		self.__startPoint = p0
@@ -110,7 +111,7 @@ class {name}(BasePen):
 		p0 = self._getCurrentPoint()
 		if p0 != self.__startPoint:
 			p1 = self.__startPoint
-			self._lineTo(p1)''')
+			self._lineTo(p1)''', file=file)
 
 	for n in (1, 2, 3):
 
@@ -119,14 +120,14 @@ class {name}(BasePen):
 	def _lineTo(self, p1):
 		x0,y0 = self._getCurrentPoint()
 		x1,y1 = p1
-''')
+''', file=file)
 		elif n == 2:
 			print('''
 	def _qCurveToOne(self, p1, p2):
 		x0,y0 = self._getCurrentPoint()
 		x1,y1 = p1
 		x2,y2 = p2
-''')
+''', file=file)
 		elif n == 3:
 			print('''
 	def _curveToOne(self, p1, p2, p3):
@@ -134,15 +135,15 @@ class {name}(BasePen):
 		x1,y1 = p1
 		x2,y2 = p2
 		x3,y3 = p3
-''')
+''', file=file)
 		defs, exprs = sp.cse([green(f, BezierCurve[n]) for name,f in funcs],
 				     optimizations='basic',
 				     symbols=(sp.Symbol('r%d'%i) for i in count()))
 		for name,value in defs:
-			print('		%s = %s' % (name, value))
-		print()
+			print('		%s = %s' % (name, value), file=file)
+		print(file=file)
 		for name,value in zip([f[0] for f in funcs], exprs):
-			print('		self.%s += %s' % (name, value))
+			print('		self.%s += %s' % (name, value), file=file)
 
 #printPen('MomentsPen',
 #	 [('area', 1),
