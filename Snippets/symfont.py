@@ -117,20 +117,18 @@ class {name}(BasePen):
 #	  ('momentYY', y*y)])
 
 
-class BezierFuncs(object):
+class BezierFuncs(dict):
 
 	def __init__(self, symfunc):
 		self._symfunc = symfunc
 		self._bezfuncs = {}
 
-	def __getitem__(self, i):
-		if i not in self._bezfuncs:
-			args = []
-			for d in range(i+1):
-				args.append('x%d' % d)
-				args.append('y%d' % d)
-			self._bezfuncs[i] = sp.lambdify(args, green(self._symfunc, BezierCurve[i]))
-		return self._bezfuncs[i]
+	def __missing__(self, i):
+		args = []
+		for d in range(i+1):
+			args.append('x%d' % d)
+			args.append('y%d' % d)
+		return sp.lambdify(args, green(self._symfunc, BezierCurve[i]))
 
 def printCache(func, file=sys.stdout):
 	funcstr = str(func)
