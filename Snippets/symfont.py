@@ -46,17 +46,17 @@ def green(f, curveXY, optimize=True):
 		f = sp.gcd_terms(f.collect(sum(P,())))
 	return f
 
-def printPen(name, funcs, file=sys.stdout):
+def printPen(penName, funcs, file=sys.stdout):
 	print(
 '''from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.pens.basePen import BasePen
 
-class {name}(BasePen):
+class %s(BasePen):
 
 	def __init__(self, glyphset=None):
 		BasePen.__init__(self, glyphset)
-'''.format(name=name), file=file)
+'''%penName, file=file)
 	for name,f in funcs:
 		print('		self.%s = 0' % name, file=file)
 	print('''
@@ -101,13 +101,13 @@ class {name}(BasePen):
 		for name,value in zip([f[0] for f in funcs], exprs):
 			print('		self.%s += %s' % (name, value), file=file)
 
-#printPen('MomentsPen',
-#	 [('area', 1),
-#	  ('momentX', x),
-#	  ('momentY', y),
-#	  ('momentXX', x*x),
-#	  ('momentXY', x*y),
-#	  ('momentYY', y*y)])
+	print('''
+if __name__ == '__main__':
+	from symfont import x, y, printPen
+	printPen('%s', ['''%penName, file=file)
+	for name,f in funcs:
+		print("		 ('%s', %s)," % (name, str(f)), file=file)
+	print('		])', file=file)
 
 
 class BezierFuncs(dict):
