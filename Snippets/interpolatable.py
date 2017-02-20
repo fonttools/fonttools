@@ -12,7 +12,8 @@ from fontTools.pens.basePen import BasePen
 from fontTools.pens.statisticsPen import StatisticsPen
 import itertools
 
-class PerContourOrComponentPen(BasePen):
+
+class PerContourPen(BasePen):
 	def __init__(self, Pen, glyphset=None):
 		BasePen.__init__(self, glyphset)
 		self._glyphset = glyphset
@@ -31,12 +32,16 @@ class PerContourOrComponentPen(BasePen):
 		self.value[-1].closePath()
 	def _endPath(self):
 		self.value[-1].endPath()
+
+	def _newItem(self):
+		self.value.append(self._Pen(glyphset=self._glyphset))
+
+class PerContourOrComponentPen(PerContourPen):
+
 	def addComponent(self, glyphName, transformation):
 		self._newItem()
 		self.value[-1].addComponent(glyphName, transformation)
 
-	def _newItem(self):
-		self.value.append(self._Pen(glyphset=self._glyphset))
 
 class RecordingPen(BasePen):
 	def __init__(self, glyphset):
