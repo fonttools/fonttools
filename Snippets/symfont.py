@@ -202,6 +202,12 @@ class GlyphStatistics(object):
 		self._glyphset = glyphset
 		self._transform = transform
 
+		pen = transformer = PerimeterPen(glyphset=self._glyphset)
+		if self._transform:
+			transformer = TransformPen(pen, self._transform)
+		self._glyph.draw(transformer)
+		self.Perimeter = pen.value
+
 		Pen = MomentsPen
 		pen = transformer = Pen(glyphset=self._glyphset)
 		if self._transform:
@@ -209,78 +215,47 @@ class GlyphStatistics(object):
 		self._glyph.draw(transformer)
 		self.m = m = pen
 
-		self.Area = m.area
+		self.Area = area = m.area
 		self.Moment1X = m.momentX
 		self.Moment1Y = m.momentY
 		self.Moment2XX = m.momentXX
 		self.Moment2XY = m.momentXY
 		self.Moment2YY = m.momentYY
 
-	def _penAttr(self, attr):
-		internalName = '_'+attr
-		if internalName not in self.__dict__:
-			Pen = globals()[attr+'Pen']
-			pen = transformer = Pen(glyphset=self._glyphset)
-			if self._transform:
-				transformer = TransformPen(pen, self._transform)
-			self._glyph.draw(transformer)
-			self.__dict__[internalName] = pen.value
-		return self.__dict__[internalName]
+		if not area:
+			self.MeanX = 0.
+			self.MeanY = 0.
+			self.VarianceX = 0.
+			self.VarianceY = 0.
+			self.StdDevX = 0.
+			self.StdDevY = 0.
+			self.Covariance = 0.
+			self.Correlation = 0.
+			self.Slant = 0.
+			return
 
-	#Area = property(partial(_penAttr, attr='Area'))
-	Perimeter = property(partial(_penAttr, attr='Perimeter'))
-	#Moment1X = property(partial(_penAttr, attr='Moment1X'))
-	#Moment1Y = property(partial(_penAttr, attr='Moment1Y'))
-	#Moment2XX = property(partial(_penAttr, attr='Moment2XX'))
-	#Moment2YY = property(partial(_penAttr, attr='Moment2YY'))
-	#Moment2XY = property(partial(_penAttr, attr='Moment2XY'))
+		# Center of mass
+		# https://en.wikipedia.org/wiki/Center_of_mass#A_continuous_volume
+		self.MeanX = self.Moment1X / area
+		self.MeanY = self.Moment1Y / area
 
-	# TODO Memoize properties below
+		#  Var(X) = E[X^2] - E[X]^2
+		self.VarianceX = self.Moment2XX / area - self.MeanX**2
+		self.VarianceY = self.Moment2YY / area - self.MeanY**2
 
-	# Center of mass
-	# https://en.wikipedia.org/wiki/Center_of_mass#A_continuous_volume
-	@property
-	def MeanX(self):
-		return self.Moment1X / self.Area if self.Area else 0
-	@property
-	def MeanY(self):
-		return self.Moment1Y / self.Area if self.Area else 0
+		self.StdDevX = math.copysign(abs(self.VarianceX)**.5, self.VarianceX)
+		self.StdDevY = math.copysign(abs(self.VarianceY)**.5, self.VarianceY)
 
-	# https://en.wikipedia.org/wiki/Second_moment_of_area
+		#  Covariance(X,Y) = ( E[X.Y] - E[X]E[Y] )
+		self.Covariance = self.Moment2XY / area - self.MeanX*self.MeanY
 
-	#  Var(X) = E[X^2] - E[X]^2
-	@property
-	def VarianceX(self):
-		return self.Moment2XX / self.Area - self.MeanX**2 if self.Area else 0
-	@property
-	def VarianceY(self):
-		return self.Moment2YY / self.Area - self.MeanY**2 if self.Area else 0
-	
-	@property
-	def StdDevX(self):
-		return math.copysign(abs(self.VarianceX)**.5, self.VarianceX)
-	@property
-	def StdDevY(self):
-		return math.copysign(abs(self.VarianceY)**.5, self.VarianceY)
+		#  Correlation(X,Y) = Covariance(X,Y) / ( StdDev(X) * StdDev(Y)) )
+		# https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient
+		corr = self.Covariance / (self.StdDevX * self.StdDevY)
+		self.Correlation = corr if abs(corr) > 1e-3 else 0
 
-	#  Covariance(X,Y) = ( E[X.Y] - E[X]E[Y] )
-	@property
-	def Covariance(self):
-		return self.Moment2XY / self.Area - self.MeanX*self.MeanY if self.Area else 0
-
-	#  Correlation(X,Y) = Covariance(X,Y) / ( StdDev(X) * StdDev(Y)) )
-	# https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient
-	@property
-	def Correlation(self):
-		corr = self.Covariance / (self.StdDevX * self.StdDevY) if self.Area else 0
-		if abs(corr) < 1e-3: corr = 0
-		return corr
-
-	@property
-	def Slant(self):
-		slant = self.Covariance / self.VarianceY if self.VarianceY else 0
-		if abs(slant) < 1e-3: slant = 0
-		return slant
+		slant = self.Covariance / self.VarianceY
+		self.Slant = slant if abs(slant) > 1e-3 else 0
 
 
 def test(glyphset, upem, glyphs):
