@@ -174,6 +174,9 @@ class GreenPen(BasePen):
 		p0 = self._getCurrentPoint()
 		self.value += self._funcs[3](p0, p1, p2, p3)
 
+# Sample pens.
+# Do not use this in real code.
+# Use fontTools.pens.momentsPen.MomentsPen instead.
 AreaPen = partial(GreenPen, func=1)
 MomentXPen = partial(GreenPen, func=x)
 MomentYPen = partial(GreenPen, func=y)
