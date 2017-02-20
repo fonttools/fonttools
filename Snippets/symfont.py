@@ -257,14 +257,6 @@ class GlyphStatistics(object):
 		cov = self.Covariance
 		return ((self.VarianceX, cov), (cov, self.VarianceY))
 
-	@property
-	def _Eigen(self):
-		mat = self.CovarianceMatrix
-		from numpy.linalg import eigh
-		vals,vecs = eigh(mat)
-		# Note: we return eigen-vectors row-major, unlike Matlab, et al
-		return tuple(vals), tuple(tuple(row) for row in vecs)
-
 	#  Correlation(X,Y) = Covariance(X,Y) / ( StdDev(X) * StdDev(Y)) )
 	# https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient
 	@property
