@@ -14,7 +14,7 @@ n = 3 # Max Bezier degree; 3 for cubic, 2 for quadratic
 t, x, y = sp.symbols('t x y', real=True)
 c = sp.symbols('c', real=False) # Complex representation instead of x/y
 
-P = tuple(zip(*(sp.symbols('%s:%d'%(w,n+1), real=True) for w in 'xy')))
+P = tuple(zip(*(sp.symbols('P:%d[%s]'%(n+1,w), real=True) for w in '01')))
 C = tuple(sp.symbols('c:%d'%(n+1), real=False))
 
 # Cubic Bernstein basis functions
@@ -116,10 +116,7 @@ class BezierFuncs(dict):
 		self._bezfuncs = {}
 
 	def __missing__(self, i):
-		args = []
-		for d in range(i+1):
-			args.append('x%d' % d)
-			args.append('y%d' % d)
+		args = ['P%d'%d for d in range(i+1)]
 		return sp.lambdify(args, green(self._symfunc, BezierCurve[i]))
 
 class GreenPen(BasePen):
@@ -141,23 +138,22 @@ class GreenPen(BasePen):
 	def _moveTo(self, p0):
 		self.__startPoint = p0
 
-	def _lineTo(self, p1):
-		p0 = self._getCurrentPoint()
-		self.value += self._funcs[1](p0[0],p0[1],p1[0],p1[1])
-
-	def _qCurveToOne(self, p1, p2):
-		p0 = self._getCurrentPoint()
-		self.value += self._funcs[2](p0[0],p0[1],p1[0],p1[1],p2[0],p2[1])
-
-	def _curveToOne(self, p1, p2, p3):
-		p0 = self._getCurrentPoint()
-		self.value += self._funcs[3](p0[0],p0[1],p1[0],p1[1],p2[0],p2[1],p3[0],p3[1])
-
 	def _closePath(self):
 		p0 = self._getCurrentPoint()
 		if p0 != self.__startPoint:
-			p1 = self.__startPoint
-			self.value += self._funcs[1](p0[0],p0[1],p1[0],p1[1])
+			self._lineTo(self.__startPoint)
+
+	def _lineTo(self, p1):
+		p0 = self._getCurrentPoint()
+		self.value += self._funcs[1](p0, p1)
+
+	def _qCurveToOne(self, p1, p2):
+		p0 = self._getCurrentPoint()
+		self.value += self._funcs[2](p0, p1, p2)
+
+	def _curveToOne(self, p1, p2, p3):
+		p0 = self._getCurrentPoint()
+		self.value += self._funcs[3](p0, p1, p2, p3)
 
 AreaPen = partial(GreenPen, func=1)
 MomentXPen = partial(GreenPen, func=x)
@@ -172,6 +168,7 @@ if __name__ == '__main__':
 	pen.moveTo((100,100))
 	pen.lineTo((100,200))
 	pen.lineTo((200,200))
+	pen.curveTo((200,250),(300,300),(250,350))
 	pen.lineTo((200,100))
 	pen.closePath()
 	print(pen.value)
