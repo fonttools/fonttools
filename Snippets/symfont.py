@@ -268,11 +268,6 @@ class GlyphStatistics(object):
 	def Covariance(self):
 		return self.Moment2XY / self.Area - self.MeanX*self.MeanY if self.Area else 0
 
-	@property
-	def _CovarianceMatrix(self):
-		cov = self.Covariance
-		return ((self.VarianceX, cov), (cov, self.VarianceY))
-
 	#  Correlation(X,Y) = Covariance(X,Y) / ( StdDev(X) * StdDev(Y)) )
 	# https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient
 	@property
