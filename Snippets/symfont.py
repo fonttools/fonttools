@@ -130,14 +130,6 @@ class BezierFuncs(dict):
 			args.append('y%d' % d)
 		return sp.lambdify(args, green(self._symfunc, BezierCurve[i]))
 
-def printCache(func, file=sys.stdout):
-	funcstr = str(func)
-	print("GreenPen._BezierFuncs['%s'] = [" % funcstr, file=file)
-	for i in range(n+1):
-		print('	lambda P:', green(func, BezierCurve[i]), ',')
-	print(']', file=file)
-
-
 class GreenPen(BasePen):
 
 	_BezierFuncs = {}
