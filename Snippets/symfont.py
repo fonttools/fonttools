@@ -53,37 +53,6 @@ def green(f, curveXY, optimize=True):
 		f = sp.gcd_terms(f.collect(sum(P,())))
 	return f
 
-class BezierFuncs(object):
-
-	def __init__(self, symfunc):
-		self._symfunc = symfunc
-		self._bezfuncs = {}
-
-	def __getitem__(self, i):
-		if i not in self._bezfuncs:
-			args = []
-			for d in range(i+1):
-				args.append('x%d' % d)
-				args.append('y%d' % d)
-			self._bezfuncs[i] = sp.lambdify(args, green(self._symfunc, BezierCurve[i]))
-		return self._bezfuncs[i]
-
-_BezierFuncs = {}
-
-def getGreenBezierFuncs(func):
-	funcstr = str(func)
-	global _BezierFuncs
-	if not funcstr in _BezierFuncs:
-		_BezierFuncs[funcstr] = BezierFuncs(func)
-	return _BezierFuncs[funcstr]
-
-def printCache(func, file=sys.stdout):
-	funcstr = str(func)
-	print("_BezierFuncs['%s'] = [" % funcstr, file=file)
-	for i in range(n+1):
-		print('	lambda P:', green(func, BezierCurve[i]), ',')
-	print(']', file=file)
-
 def printPen(name, funcs, file=sys.stdout):
 	print(
 '''from __future__ import print_function, division, absolute_import
@@ -147,11 +116,44 @@ class {name}(BasePen):
 #	  ('momentXY', x*y),
 #	  ('momentYY', y*y)])
 
+
+class BezierFuncs(object):
+
+	def __init__(self, symfunc):
+		self._symfunc = symfunc
+		self._bezfuncs = {}
+
+	def __getitem__(self, i):
+		if i not in self._bezfuncs:
+			args = []
+			for d in range(i+1):
+				args.append('x%d' % d)
+				args.append('y%d' % d)
+			self._bezfuncs[i] = sp.lambdify(args, green(self._symfunc, BezierCurve[i]))
+		return self._bezfuncs[i]
+
+def printCache(func, file=sys.stdout):
+	funcstr = str(func)
+	print("GreenPen._BezierFuncs['%s'] = [" % funcstr, file=file)
+	for i in range(n+1):
+		print('	lambda P:', green(func, BezierCurve[i]), ',')
+	print(']', file=file)
+
+
 class GreenPen(BasePen):
+
+	_BezierFuncs = {}
+
+	@classmethod
+	def _getGreenBezierFuncs(celf, func):
+		funcstr = str(func)
+		if not funcstr in celf._BezierFuncs:
+			celf._BezierFuncs[funcstr] = BezierFuncs(func)
+		return celf._BezierFuncs[funcstr]
 
 	def __init__(self, func, glyphset=None):
 		BasePen.__init__(self, glyphset)
-		self._funcs = getGreenBezierFuncs(func)
+		self._funcs = self._getGreenBezierFuncs(func)
 		self.value = 0
 
 	def _moveTo(self, p0):
@@ -183,4 +185,11 @@ MomentYYPen = partial(GreenPen, func=y*y)
 MomentXYPen = partial(GreenPen, func=x*y)
 
 
-
+if __name__ == '__main__':
+	pen = AreaPen()
+	pen.moveTo((100,100))
+	pen.lineTo((100,200))
+	pen.lineTo((200,200))
+	pen.lineTo((200,100))
+	pen.closePath()
+	print(pen.value)
