@@ -16,6 +16,7 @@ import math
 from fontTools.pens.basePen import BasePen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.perimeterPen import PerimeterPen
+from momentsPen import MomentsPen
 from fontTools.pens.areaPen import AreaPen
 from fontTools.misc.transform import Scale
 from functools import partial
@@ -98,7 +99,7 @@ from fontTools.pens.basePen import BasePen
 
 class {name}(BasePen):
 
-	def __init__(self, func, glyphset=None):
+	def __init__(self, glyphset=None):
 		BasePen.__init__(self, glyphset)
 '''.format(name=name), file=file)
 	for name,f in funcs:
@@ -201,6 +202,20 @@ class GlyphStatistics(object):
 		self._glyphset = glyphset
 		self._transform = transform
 
+		Pen = MomentsPen
+		pen = transformer = Pen(glyphset=self._glyphset)
+		if self._transform:
+			transformer = TransformPen(pen, self._transform)
+		self._glyph.draw(transformer)
+		self.m = m = pen
+
+		self.Area = m.area
+		self.Moment1X = m.momentX
+		self.Moment1Y = m.momentY
+		self.Moment2XX = m.momentXX
+		self.Moment2XY = m.momentXY
+		self.Moment2YY = m.momentYY
+
 	def _penAttr(self, attr):
 		internalName = '_'+attr
 		if internalName not in self.__dict__:
@@ -212,13 +227,13 @@ class GlyphStatistics(object):
 			self.__dict__[internalName] = pen.value
 		return self.__dict__[internalName]
 
-	Area = property(partial(_penAttr, attr='Area'))
+	#Area = property(partial(_penAttr, attr='Area'))
 	Perimeter = property(partial(_penAttr, attr='Perimeter'))
-	Moment1X = property(partial(_penAttr, attr='Moment1X'))
-	Moment1Y = property(partial(_penAttr, attr='Moment1Y'))
-	Moment2XX = property(partial(_penAttr, attr='Moment2XX'))
-	Moment2YY = property(partial(_penAttr, attr='Moment2YY'))
-	Moment2XY = property(partial(_penAttr, attr='Moment2XY'))
+	#Moment1X = property(partial(_penAttr, attr='Moment1X'))
+	#Moment1Y = property(partial(_penAttr, attr='Moment1Y'))
+	#Moment2XX = property(partial(_penAttr, attr='Moment2XX'))
+	#Moment2YY = property(partial(_penAttr, attr='Moment2YY'))
+	#Moment2XY = property(partial(_penAttr, attr='Moment2XY'))
 
 	# TODO Memoize properties below
 

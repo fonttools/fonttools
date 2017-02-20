@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 """
-Tool to find wront contour order between different masters, and
+Tool to find wrong contour order between different masters, and
 other interpolatability (or lack thereof) issues.
 """
 
