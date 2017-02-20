@@ -225,32 +225,32 @@ class GlyphStatistics(object):
 	# https://en.wikipedia.org/wiki/Center_of_mass#A_continuous_volume
 	@property
 	def MeanX(self):
-		return self.Moment1X / self.Area
+		return self.Moment1X / self.Area if self.Area else 0
 	@property
 	def MeanY(self):
-		return self.Moment1Y / self.Area
+		return self.Moment1Y / self.Area if self.Area else 0
 
 	# https://en.wikipedia.org/wiki/Second_moment_of_area
 
 	#  Var(X) = E[X^2] - E[X]^2
 	@property
 	def VarianceX(self):
-		return self.Moment2XX / self.Area - self.MeanX**2
+		return self.Moment2XX / self.Area - self.MeanX**2 if self.Area else 0
 	@property
 	def VarianceY(self):
-		return self.Moment2YY / self.Area - self.MeanY**2
+		return self.Moment2YY / self.Area - self.MeanY**2 if self.Area else 0
 	
 	@property
 	def StdDevX(self):
-		return self.VarianceX**.5
+		return math.copysign(abs(self.VarianceX)**.5, self.VarianceX)
 	@property
 	def StdDevY(self):
-		return self.VarianceY**.5
+		return math.copysign(abs(self.VarianceY)**.5, self.VarianceY)
 
 	#  Covariance(X,Y) = ( E[X.Y] - E[X]E[Y] )
 	@property
 	def Covariance(self):
-		return self.Moment2XY / self.Area - self.MeanX*self.MeanY
+		return self.Moment2XY / self.Area - self.MeanX*self.MeanY if self.Area else 0
 
 	@property
 	def _CovarianceMatrix(self):
@@ -269,7 +269,7 @@ class GlyphStatistics(object):
 	# https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient
 	@property
 	def Correlation(self):
-		corr = self.Covariance / (self.StdDevX * self.StdDevY)
+		corr = self.Covariance / (self.StdDevX * self.StdDevY) if self.Area else 0
 		if abs(corr) < 1e-3: corr = 0
 		return corr
 
