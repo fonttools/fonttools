@@ -16,7 +16,6 @@ import math
 from fontTools.pens.basePen import BasePen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.momentsPen import MomentsPen
-from fontTools.pens.areaPen import AreaPen
 from fontTools.misc.transform import Scale
 from functools import partial
 from itertools import count
@@ -180,12 +179,12 @@ class GreenPen(BasePen):
 			p1 = self.__startPoint
 			self.value += self._funcs[1](p0[0],p0[1],p1[0],p1[1])
 
-#AreaPen = partial(GreenPen, func=1)
-Moment1XPen = partial(GreenPen, func=x)
-Moment1YPen = partial(GreenPen, func=y)
-Moment2XXPen = partial(GreenPen, func=x*x)
-Moment2YYPen = partial(GreenPen, func=y*y)
-Moment2XYPen = partial(GreenPen, func=x*y)
+AreaPen = partial(GreenPen, func=1)
+MomentXPen = partial(GreenPen, func=x)
+MomentYPen = partial(GreenPen, func=y)
+MomentXXPen = partial(GreenPen, func=x*x)
+MomentYYPen = partial(GreenPen, func=y*y)
+MomentXYPen = partial(GreenPen, func=x*y)
 
 
 
@@ -207,47 +206,47 @@ class GlyphStatistics(object):
 		self._glyph.draw(transformer)
 		self.m = m = pen
 
-		self.Area = area = m.area
-		self.Moment1X = m.momentX
-		self.Moment1Y = m.momentY
-		self.Moment2XX = m.momentXX
-		self.Moment2XY = m.momentXY
-		self.Moment2YY = m.momentYY
+		self.area = area = m.area
+		self.momentX = m.momentX
+		self.momentY = m.momentY
+		self.momentXX = m.momentXX
+		self.momentXY = m.momentXY
+		self.momentYY = m.momentYY
 
 		if not area:
-			self.MeanX = 0.
-			self.MeanY = 0.
-			self.VarianceX = 0.
-			self.VarianceY = 0.
-			self.StdDevX = 0.
-			self.StdDevY = 0.
-			self.Covariance = 0.
-			self.Correlation = 0.
-			self.Slant = 0.
+			self.meanX = 0.
+			self.meanY = 0.
+			self.varianceX = 0.
+			self.varianceY = 0.
+			self.stddevX = 0.
+			self.stddevY = 0.
+			self.covariance = 0.
+			self.correlation = 0.
+			self.slant = 0.
 			return
 
 		# Center of mass
 		# https://en.wikipedia.org/wiki/Center_of_mass#A_continuous_volume
-		self.MeanX = self.Moment1X / area
-		self.MeanY = self.Moment1Y / area
+		self.meanX = self.momentX / area
+		self.meanY = self.momentY / area
 
 		#  Var(X) = E[X^2] - E[X]^2
-		self.VarianceX = self.Moment2XX / area - self.MeanX**2
-		self.VarianceY = self.Moment2YY / area - self.MeanY**2
+		self.varianceX = self.momentXX / area - self.meanX**2
+		self.varianceY = self.momentYY / area - self.meanY**2
 
-		self.StdDevX = math.copysign(abs(self.VarianceX)**.5, self.VarianceX)
-		self.StdDevY = math.copysign(abs(self.VarianceY)**.5, self.VarianceY)
+		self.stddevX = math.copysign(abs(self.varianceX)**.5, self.varianceX)
+		self.stddevY = math.copysign(abs(self.varianceY)**.5, self.varianceY)
 
 		#  Covariance(X,Y) = ( E[X.Y] - E[X]E[Y] )
-		self.Covariance = self.Moment2XY / area - self.MeanX*self.MeanY
+		self.covariance = self.momentXY / area - self.meanX*self.meanY
 
-		#  Correlation(X,Y) = Covariance(X,Y) / ( StdDev(X) * StdDev(Y)) )
+		#  Correlation(X,Y) = Covariance(X,Y) / ( stddev(X) * stddev(Y)) )
 		# https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient
-		corr = self.Covariance / (self.StdDevX * self.StdDevY)
-		self.Correlation = corr if abs(corr) > 1e-3 else 0
+		correlation = self.covariance / (self.stddevX * self.stddevY)
+		self.correlation = correlation if abs(correlation) > 1e-3 else 0
 
-		slant = self.Covariance / self.VarianceY
-		self.Slant = slant if abs(slant) > 1e-3 else 0
+		slant = self.covariance / self.varianceY
+		self.slant = slant if abs(slant) > 1e-3 else 0
 
 
 def test(glyphset, upem, glyphs):

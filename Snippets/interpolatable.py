@@ -135,14 +135,14 @@ def test(glyphsets, glyphs=None, names=None):
 				allVectors.append(contourVectors)
 				for contour in contourPens:
 					stats = GlyphStatistics(contour, glyphset=glyphset)
-					size = abs(stats.Area) ** .5 * .5
+					size = abs(stats.area) ** .5 * .5
 					vector = (
 						int(size),
-						int(stats.MeanX),
-						int(stats.MeanY),
-						int(stats.StdDevX * 2),
-						int(stats.StdDevY * 2),
-						int(stats.Correlation * size),
+						int(stats.meanX),
+						int(stats.meanY),
+						int(stats.stddevX * 2),
+						int(stats.stddevY * 2),
+						int(stats.correlation * size),
 					)
 					contourVectors.append(vector)
 					#print(vector)
