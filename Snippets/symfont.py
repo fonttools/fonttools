@@ -66,8 +66,7 @@ class %s(BasePen):
 	def _closePath(self):
 		p0 = self._getCurrentPoint()
 		if p0 != self.__startPoint:
-			p1 = self.__startPoint
-			self._lineTo(p1)''', file=file)
+			self._lineTo(self.__startPoint)''', file=file)
 
 	for n in (1, 2, 3):
 

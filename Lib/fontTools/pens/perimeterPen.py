@@ -39,6 +39,11 @@ class PerimeterPen(BasePen):
 	def _moveTo(self, p0):
 		self.__startPoint = p0
 
+	def _closePath(self):
+		p0 = self._getCurrentPoint()
+		if p0 != self.__startPoint:
+			self._lineTo(self.__startPoint)
+
 	def _lineTo(self, p1):
 		p0 = self._getCurrentPoint()
 		self.value += _distance(p0, p1)
@@ -120,8 +125,3 @@ class PerimeterPen(BasePen):
 	def _curveToOne(self, p1, p2, p3):
 		p0 = self._getCurrentPoint()
 		self._addCubic(complex(*p0), complex(*p1), complex(*p2), complex(*p3))
-
-	def _closePath(self):
-		p0 = self._getCurrentPoint()
-		if p0 != self.__startPoint:
-			self.value += _distance(p0, self.__startPoint)
