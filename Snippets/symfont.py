@@ -16,7 +16,7 @@ import math
 from fontTools.pens.basePen import BasePen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.perimeterPen import PerimeterPen
-from momentsPen import MomentsPen
+from fontTools.pens.momentsPen import MomentsPen
 from fontTools.pens.areaPen import AreaPen
 from fontTools.misc.transform import Scale
 from functools import partial
@@ -94,7 +94,6 @@ def printPen(name, funcs, file=sys.stdout):
 	print(
 '''from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-
 from fontTools.pens.basePen import BasePen
 
 class {name}(BasePen):
