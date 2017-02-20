@@ -82,7 +82,7 @@ class PerimeterPen(BasePen):
 			self._addCubicRecursive(*one)
 			self._addCubicRecursive(*two)
 
-	def _addCubicLobatto(self, c0, c1, c2, c3, _q=(3/28)**.5):
+	def _addCubicLobatto(self, c0, c1, c2, c3):
 		# Approximate length of cubic Bezier curve using Lobatto quadrature
 		# with n=5 points: endpoints, midpoint, and at t=.5±sqrt(21)/14
 		#
@@ -92,24 +92,15 @@ class PerimeterPen(BasePen):
 		#
 		# https://en.wikipedia.org/wiki/Gaussian_quadrature#Gauss.E2.80.93Lobatto_rules
 
-		v0 = abs(c1-c0)*3
-		v4 = abs(c3-c2)*3
-		v2 = abs(c3-c0+c2-c1)*.75
+		# abs(beziercurvec[3].diff(t).subs({t:T})) for T in (0, .5-(3/28)**.5, .5, .5+(3/28)**.5, 1),
+		# weighted 1/20, 49/180, 32/90, 49/180, 1/20 respectively.
+		v0 = abs(c1-c0)*.15
+		v1 = abs(-0.558983582205757*c0 + 0.325650248872424*c1 + 0.208983582205757*c2 + 0.024349751127576*c3)
+		v2 = abs(c3-c0+c2-c1)*0.26666666666666666
+		v3 = abs(-0.024349751127576*c0 - 0.208983582205757*c1 - 0.325650248872424*c2 + 0.558983582205757*c3)
+		v4 = abs(c3-c2)*.15
 
-		# v1=(BezierCurveC[3].diff(t).subs({t:.5-_q}))
-		# v3=(BezierCurveC[3].diff(t).subs({t:.5+_q}))
-		# sp.cse([v1,v3], symbols=(sp.Symbol('r%d'%i) for i in count()))
-		r0 = _q + 0.5
-		r1 = 3*r0**2
-		r2 = -_q + 0.5
-		r3 = 3*r2**2
-		r4 = 6*c2*r0*r2
-		r5 = 3*c1
-		r6 = 2*_q
-		v1 = abs(-c0*r1 + c1*r1 - c2*r3 + c3*r3 + r2*r5*(-r6 - 1.0) + r4)
-		v3 = abs(-c0*r3 + c1*r3 - c2*r1 + c3*r1 + r0*r5*(r6 - 1.0) + r4)
-
-		self.value += (9*(v0+v4) + 64*v2 + 49*(v1+v3))/180
+		self.value += v0 + v1 + v2 + v3 + v4
 
 	def _curveToOne(self, p1, p2, p3):
 		p0 = self._getCurrentPoint()
