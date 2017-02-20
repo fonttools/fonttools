@@ -1,12 +1,5 @@
 #! /usr/bin/env python
 
-"""
-Pen to calculate geometrical glyph statistics.
-
-When this is fully fleshed out, it will be moved to a more prominent
-place, like fontTools.pens.
-"""
-
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
