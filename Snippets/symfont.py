@@ -66,7 +66,14 @@ class %s(BasePen):
 	def _closePath(self):
 		p0 = self._getCurrentPoint()
 		if p0 != self.__startPoint:
-			self._lineTo(self.__startPoint)''', file=file)
+			self._lineTo(self.__startPoint)
+
+	def _endPath(self):
+		p0 = self._getCurrentPoint()
+		if p0 != self.__startPoint:
+			# Green theorem is not defined on open contours.
+			raise NotImplementedError
+''', end='', file=file)
 
 	for n in (1, 2, 3):
 
@@ -142,6 +149,12 @@ class GreenPen(BasePen):
 		p0 = self._getCurrentPoint()
 		if p0 != self.__startPoint:
 			self._lineTo(self.__startPoint)
+
+	def _endPath(self):
+		p0 = self._getCurrentPoint()
+		if p0 != self.__startPoint:
+			# Green theorem is not defined on open contours.
+			raise NotImplementedError
 
 	def _lineTo(self, p1):
 		p0 = self._getCurrentPoint()

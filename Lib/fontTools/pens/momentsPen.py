@@ -22,6 +22,12 @@ class MomentsPen(BasePen):
 		if p0 != self.__startPoint:
 			self._lineTo(self.__startPoint)
 
+	def _endPath(self):
+		p0 = self._getCurrentPoint()
+		if p0 != self.__startPoint:
+			# Green theorem is not defined on open contours.
+			raise NotImplementedError
+
 	def _lineTo(self, p1):
 		x0,y0 = self._getCurrentPoint()
 		x1,y1 = p1
