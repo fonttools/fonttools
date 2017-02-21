@@ -47,7 +47,7 @@ class PerContourOrComponentPen(PerContourPen):
 		self.value[-1].addComponent(glyphName, transformation)
 
 
-class RecordingPen(BasePen):
+class RecordingNoComponentsPen(BasePen):
 	def __init__(self, glyphset):
 		BasePen.__init__(self, glyphset)
 		self._glyphset = glyphset
@@ -64,12 +64,16 @@ class RecordingPen(BasePen):
 		self.value.append(('closePath', ()))
 	def _endPath(self):
 		self.value.append(('endPath', ()))
-	def addComponent(self, glyphName, transformation):
-		self.value.append(('addComponent', (glyphName, transformation)))
 
 	def draw(self, pen):
 		for operator,operands in self.value:
 			getattr(pen, operator)(*operands)
+
+class RecordingPen(RecordingNoComponentsPen):
+
+	def addComponent(self, glyphName, transformation):
+		self.value.append(('addComponent', (glyphName, transformation)))
+
 
 def _vdiff(v0, v1):
 	return tuple(b-a for a,b in zip(v0,v1))
