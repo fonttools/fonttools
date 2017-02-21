@@ -18,23 +18,27 @@ class PerContourPen(BasePen):
 		BasePen.__init__(self, glyphset)
 		self._glyphset = glyphset
 		self._Pen = Pen
+		self._pen = None
 		self.value = []
 	def _moveTo(self, p0):
 		self._newItem()
-		self.value[-1].moveTo(p0)
+		self._pen.moveTo(p0)
 	def _lineTo(self, p1):
-		self.value[-1].lineTo(p1)
+		self._pen.lineTo(p1)
 	def _qCurveToOne(self, p1, p2):
-		self.value[-1].qCurveTo(p1, p2)
+		self._pen.qCurveTo(p1, p2)
 	def _curveToOne(self, p1, p2, p3):
-		self.value[-1].curveTo(p1, p2, p3)
+		self._pen.curveTo(p1, p2, p3)
 	def _closePath(self):
-		self.value[-1].closePath()
+		self._pen.closePath()
+		self._pen = None
 	def _endPath(self):
-		self.value[-1].endPath()
+		self._pen.endPath()
+		self._pen = None
 
 	def _newItem(self):
-		self.value.append(self._Pen(glyphset=self._glyphset))
+		self._pen = pen = self._Pen(glyphset=self._glyphset)
+		self.value.append(pen)
 
 class PerContourOrComponentPen(PerContourPen):
 
