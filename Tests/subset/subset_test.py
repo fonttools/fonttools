@@ -273,13 +273,28 @@ class SubsetTest(unittest.TestCase):
         subsetfont = TTFont(subsetpath)
         self.expect_ttx(subsetfont, self.getpath("expect_notdef_width_cid.ttx"), ["CFF "])
 
-    def test_recalc_timestamp(self):
+    def test_recalc_timestamp_ttf(self):
         ttxpath = self.getpath("TestTTF-Regular.ttx")
         font = TTFont()
         font.importXML(ttxpath)
         modified = font['head'].modified
         _, fontpath = self.compile_font(ttxpath, ".ttf")
         subsetpath = self.temp_path(".ttf")
+
+        # by default, the subsetter does not recalculate the modified timestamp
+        subset.main([fontpath, "--output-file=%s" % subsetpath, "*"])
+        self.assertEqual(modified, TTFont(subsetpath)['head'].modified)
+
+        subset.main([fontpath, "--recalc-timestamp", "--output-file=%s" % subsetpath, "*"])
+        self.assertLess(modified, TTFont(subsetpath)['head'].modified)
+
+    def test_recalc_timestamp_otf(self):
+        ttxpath = self.getpath("TestOTF-Regular.ttx")
+        font = TTFont()
+        font.importXML(ttxpath)
+        modified = font['head'].modified
+        _, fontpath = self.compile_font(ttxpath, ".otf")
+        subsetpath = self.temp_path(".otf")
 
         # by default, the subsetter does not recalculate the modified timestamp
         subset.main([fontpath, "--output-file=%s" % subsetpath, "*"])

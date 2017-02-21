@@ -203,6 +203,9 @@ class TTFont(object):
 			# assume "file" is a writable file object
 			closeStream = False
 
+		if self.recalcTimestamp and 'head' in self:
+			self['head']  # make sure 'head' is loaded to make sure the recalculation is done
+
 		tags = list(self.keys())
 		if "GlyphOrder" in tags:
 			tags.remove("GlyphOrder")
