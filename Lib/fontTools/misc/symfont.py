@@ -44,7 +44,7 @@ def green(f, curveXY):
 	f = sp.integrate(f * sp.diff(curveXY[0], t), (t, 0, 1))
 	return f
 
-class BezierFuncs(dict):
+class _BezierFuncsLazy(dict):
 
 	def __init__(self, symfunc):
 		self._symfunc = symfunc
@@ -64,7 +64,7 @@ class GreenPen(BasePen):
 	def _getGreenBezierFuncs(celf, func):
 		funcstr = str(func)
 		if not funcstr in celf._BezierFuncs:
-			celf._BezierFuncs[funcstr] = BezierFuncs(func)
+			celf._BezierFuncs[funcstr] = _BezierFuncsLazy(func)
 		return celf._BezierFuncs[funcstr]
 
 	def __init__(self, func, glyphset=None):
