@@ -75,34 +75,6 @@ class RecordingPen(RecordingNoComponentsPen):
 		self.value.append(('addComponent', (glyphName, transformation)))
 
 
-class TeePen(object):
-	def __init__(self, *pens, glyphset=None): # glyphset is unused
-		if len(pens) == 1:
-			pens = pens[0]
-		self.pens = pens
-	def moveTo(self, p0):
-		for pen in self.pens:
-			pen.moveTo(p0)
-	def lineTo(self, p1):
-		for pen in self.pens:
-			pen.lineTo(p1)
-	def qCurveTo(self, p1, p2):
-		for pen in self.pens:
-			pen.qCurveTo(p1, p2)
-	def curveTo(self, p1, p2, p3):
-		for pen in self.pens:
-			pen.curveTo(p1, p2, p3)
-	def closePath(self):
-		for pen in self.pens:
-			pen.closePath()
-	def endPath(self):
-		for pen in self.pens:
-			pen.endPath()
-	def addComponent(self, glyphName, transformation):
-		for pen in self.pens:
-			pen.addComponent(glyphName, transformation)
-
-
 def _vdiff(v0, v1):
 	return tuple(b-a for a,b in zip(v0,v1))
 def _vlen(vec):
