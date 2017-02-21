@@ -9,6 +9,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
 from fontTools.pens.basePen import AbstractPen, BasePen
+from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.statisticsPen import StatisticsPen
 import itertools
 
@@ -45,29 +46,6 @@ class PerContourOrComponentPen(PerContourPen):
 	def addComponent(self, glyphName, transformation):
 		self._newItem()
 		self.value[-1].addComponent(glyphName, transformation)
-
-
-class RecordingPen(AbstractPen):
-	def __init__(self):
-		self.value = []
-	def moveTo(self, p0):
-		self.value.append(('moveTo', (p0,)))
-	def lineTo(self, p1):
-		self.value.append(('lineTo', (p1,)))
-	def qCurveTo(self, *points):
-		self.value.append(('qCurveTo', points))
-	def curveTo(self, *points):
-		self.value.append(('curveTo', points))
-	def closePath(self):
-		self.value.append(('closePath', ()))
-	def endPath(self):
-		self.value.append(('endPath', ()))
-	def addComponent(self, glyphName, transformation):
-		self.value.append(('addComponent', (glyphName, transformation)))
-
-	def replay(self, pen):
-		for operator,operands in self.value:
-			getattr(pen, operator)(*operands)
 
 
 def _vdiff(v0, v1):
