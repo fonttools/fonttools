@@ -65,7 +65,7 @@ class RecordingNoComponentsPen(BasePen):
 	def _endPath(self):
 		self.value.append(('endPath', ()))
 
-	def draw(self, pen):
+	def replay(self, pen):
 		for operator,operands in self.value:
 			getattr(pen, operator)(*operands)
 
@@ -146,7 +146,7 @@ def test(glyphsets, glyphs=None, names=None):
 				allVectors.append(contourVectors)
 				for contour in contourPens:
 					stats = StatisticsPen(glyphset=glyphset)
-					contour.draw(stats)
+					contour.replay(stats)
 					size = abs(stats.area) ** .5 * .5
 					vector = (
 						int(size),
