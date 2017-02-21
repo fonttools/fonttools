@@ -48,7 +48,7 @@ class PerContourOrComponentPen(PerContourPen):
 
 
 class RecordingNoComponentsPen(BasePen):
-	def __init__(self, glyphset):
+	def __init__(self, glyphset=None): # glyphset is unused
 		BasePen.__init__(self, glyphset)
 		self._glyphset = glyphset
 		self.value = []
@@ -76,7 +76,7 @@ class RecordingPen(RecordingNoComponentsPen):
 
 
 class TeePen(object):
-	def __init__(self, *pens):
+	def __init__(self, *pens, glyphset=None): # glyphset is unused
 		if len(pens) == 1:
 			pens = pens[0]
 		self.pens = pens

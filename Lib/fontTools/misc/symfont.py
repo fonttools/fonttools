@@ -44,6 +44,7 @@ def green(f, curveXY):
 	f = sp.integrate(f * sp.diff(curveXY[0], t), (t, 0, 1))
 	return f
 
+
 class _BezierFuncsLazy(dict):
 
 	def __init__(self, symfunc):
