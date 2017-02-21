@@ -42,11 +42,8 @@ class TransformPen(AbstractPen):
 		self._outPen.qCurveTo(*points)
 
 	def _transformPoints(self, points):
-		new = []
 		transformPoint = self._transformPoint
-		for pt in points:
-			new.append(transformPoint(pt))
-		return new
+		return [transformPoint(pt) for pt in points]
 
 	def closePath(self):
 		self._outPen.closePath()
