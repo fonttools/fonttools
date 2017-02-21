@@ -797,26 +797,26 @@ class UShort255Test(unittest.TestCase):
 		self.assertEqual(unpack255UShort(bytechr(252))[0], 252)
 		# some numbers (e.g. 506) can have multiple encodings
 		self.assertEqual(
-			unpack255UShort(struct.pack("BB", 254, 0))[0], 506)
+			unpack255UShort(struct.pack(b"BB", 254, 0))[0], 506)
 		self.assertEqual(
-			unpack255UShort(struct.pack("BB", 255, 253))[0], 506)
+			unpack255UShort(struct.pack(b"BB", 255, 253))[0], 506)
 		self.assertEqual(
-			unpack255UShort(struct.pack("BBB", 253, 1, 250))[0], 506)
+			unpack255UShort(struct.pack(b"BBB", 253, 1, 250))[0], 506)
 
 		self.assertRaisesRegex(
 			ttLib.TTLibError,
 			"not enough data to unpack 255UInt16",
-			unpack255UShort, struct.pack("BB", 253, 0))
+			unpack255UShort, struct.pack(b"BB", 253, 0))
 
 		self.assertRaisesRegex(
 			ttLib.TTLibError,
 			"not enough data to unpack 255UInt16",
-			unpack255UShort, struct.pack("B", 254))
+			unpack255UShort, struct.pack(b"B", 254))
 
 		self.assertRaisesRegex(
 			ttLib.TTLibError,
 			"not enough data to unpack 255UInt16",
-			unpack255UShort, struct.pack("B", 255))
+			unpack255UShort, struct.pack(b"B", 255))
 
 	def test_pack255UShort(self):
 		self.assertEqual(pack255UShort(252), b'\xfc')
