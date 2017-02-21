@@ -8,7 +8,7 @@ other interpolatability (or lack thereof) issues.
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
-from fontTools.pens.basePen import BasePen
+from fontTools.pens.basePen import AbstractPen, BasePen
 from fontTools.pens.statisticsPen import StatisticsPen
 import itertools
 
@@ -47,32 +47,27 @@ class PerContourOrComponentPen(PerContourPen):
 		self.value[-1].addComponent(glyphName, transformation)
 
 
-class RecordingNoComponentsPen(BasePen):
-	def __init__(self, glyphset=None): # glyphset is unused
-		BasePen.__init__(self, glyphset)
-		self._glyphset = glyphset
+class RecordingPen(AbstractPen):
+	def __init__(self):
 		self.value = []
-	def _moveTo(self, p0):
+	def moveTo(self, p0):
 		self.value.append(('moveTo', (p0,)))
-	def _lineTo(self, p1):
+	def lineTo(self, p1):
 		self.value.append(('lineTo', (p1,)))
-	def _qCurveToOne(self, p1, p2):
-		self.value.append(('qCurveTo', (p1,p2)))
-	def _curveToOne(self, p1, p2, p3):
-		self.value.append(('curveTo', (p1,p2,p3)))
-	def _closePath(self):
+	def qCurveTo(self, *points):
+		self.value.append(('qCurveTo', points))
+	def curveTo(self, *points):
+		self.value.append(('curveTo', points))
+	def closePath(self):
 		self.value.append(('closePath', ()))
-	def _endPath(self):
+	def endPath(self):
 		self.value.append(('endPath', ()))
+	def addComponent(self, glyphName, transformation):
+		self.value.append(('addComponent', (glyphName, transformation)))
 
 	def replay(self, pen):
 		for operator,operands in self.value:
 			getattr(pen, operator)(*operands)
-
-class RecordingPen(RecordingNoComponentsPen):
-
-	def addComponent(self, glyphName, transformation):
-		self.value.append(('addComponent', (glyphName, transformation)))
 
 
 def _vdiff(v0, v1):
@@ -137,7 +132,8 @@ def test(glyphsets, glyphs=None, names=None):
 				#print('.', end='')
 				glyph = glyphset[glyph_name]
 
-				perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
+				penClass = lambda glyphset: RecordingPen()
+				perContourPen = PerContourOrComponentPen(penClass, glyphset=glyphset)
 				glyph.draw(perContourPen)
 				contourPens = perContourPen.value
 				del perContourPen
