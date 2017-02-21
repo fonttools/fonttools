@@ -8,6 +8,9 @@ from fontTools.misc.bezierTools import splitQuadraticAtT, splitCubicAtT
 import math
 
 
+__all__ = ["PerimeterPen"]
+
+
 def _distance(p0, p1):
 	return math.hypot(p0[0] - p1[0], p0[1] - p1[1])
 def _dot(v1, v2):

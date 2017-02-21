@@ -5,6 +5,9 @@ from fontTools.misc.py23 import *
 from fontTools.pens.basePen import BasePen
 
 
+__all__ = ["AreaPen"]
+
+
 class AreaPen(BasePen):
 
 	def __init__(self, glyphset=None):

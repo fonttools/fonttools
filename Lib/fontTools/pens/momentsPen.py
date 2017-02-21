@@ -2,6 +2,10 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.pens.basePen import BasePen
 
+
+__all__ = ["MomentsPen"]
+
+
 class MomentsPen(BasePen):
 
 	def __init__(self, glyphset=None):

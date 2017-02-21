@@ -3,6 +3,9 @@ from fontTools.misc.py23 import *
 import math
 from fontTools.pens.momentsPen import MomentsPen
 
+__all__ = ["StatisticsPen"]
+
+
 class StatisticsPen(MomentsPen):
 
 	# Center of mass

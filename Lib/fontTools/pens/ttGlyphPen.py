@@ -1,6 +1,5 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-
 from array import array
 from fontTools.pens.basePen import AbstractPen
 from fontTools.pens.transformPen import TransformPen
