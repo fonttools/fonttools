@@ -277,12 +277,12 @@ class MomentsPen(BasePen):
 		self.momentYY += -r108*r121/9240 - r133*r73/9240 - r134*x3/12 - r135*r55/9240 - 3*r136*(r25 + r37)/3080 - r137*(r25 + r31 + x3)/660 + r26*(r135 + 126*r46 + 378*y2*y3)/9240 + r5*(r110*r127 + 27*r133 + 42*r134 + r138 + 70*r139 + r46*r62 + 27*r51*y2 + 15*r51*y3)/9240 - r52*(r56 + r63 + r78 + r79)/9240 - r53*(r128 + r25*y3 + 42*r43 + r82 + 42*r83 + 210*r84)/9240 - r6*(r114*x3 + r116 - 14*r119 + 84*r45)/9240 + x0*(r104*r51 + r109*r64 + 90*r110*y3 + r113*y0 + r114*y0 + r129*y1 + r132*y2 + 45*r133 + 14*r134 + 126*r136 + 770*r137 + r138 + 42*r139 + 135*r46*y1 + 14*r53*y3 + r64*r90 + r66*y3 + r69*y3 + r70*y0)/9240 - y0*(90*r118 + 63*r120 + r123 - 18*r124 - 30*r125 + 162*r126 - 27*r130 - 9*r131 + r36*y3 + 30*r43*y3 + 42*r45 + r48 + r51*r93)/9240
 
 if __name__ == '__main__':
-	from symfont import x, y, printPen
-	printPen('MomentsPen', [
-		 ('area', 1),
-		 ('momentX', x),
-		 ('momentY', y),
-		 ('momentXX', x**2),
-		 ('momentXY', x*y),
-		 ('momentYY', y**2),
-		])
+	from fontTools.misc.symfont import x, y, printGreenPen
+	printGreenPen('MomentsPen', [
+		      ('area', 1),
+		      ('momentX', x),
+		      ('momentY', y),
+		      ('momentXX', x**2),
+		      ('momentXY', x*y),
+		      ('momentYY', y**2),
+		     ])

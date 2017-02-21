@@ -1,13 +1,10 @@
-#! /usr/bin/env python
-
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-
-import sympy as sp
-import sys
 from fontTools.pens.basePen import BasePen
 from functools import partial
 from itertools import count
+import sympy as sp
+import sys
 
 n = 3 # Max Bezier degree; 3 for cubic, 2 for quadratic
 
@@ -40,13 +37,80 @@ BezierCurveC = tuple(
 	sum(C[i]*bernstein for i,bernstein in enumerate(bernsteins))
 	for n,bernsteins in enumerate(BernsteinPolynomial))
 
+
 def green(f, curveXY):
 	f = -sp.integrate(sp.sympify(f), y)
 	f = f.subs({x:curveXY[0], y:curveXY[1]})
 	f = sp.integrate(f * sp.diff(curveXY[0], t), (t, 0, 1))
 	return f
 
-def printPen(penName, funcs, file=sys.stdout):
+class BezierFuncs(dict):
+
+	def __init__(self, symfunc):
+		self._symfunc = symfunc
+		self._bezfuncs = {}
+
+	def __missing__(self, i):
+		args = ['p%d'%d for d in range(i+1)]
+		f = green(self._symfunc, BezierCurve[i])
+		f = sp.gcd_terms(f.collect(sum(P,()))) # Optimize
+		return sp.lambdify(args, f)
+
+class GreenPen(BasePen):
+
+	_BezierFuncs = {}
+
+	@classmethod
+	def _getGreenBezierFuncs(celf, func):
+		funcstr = str(func)
+		if not funcstr in celf._BezierFuncs:
+			celf._BezierFuncs[funcstr] = BezierFuncs(func)
+		return celf._BezierFuncs[funcstr]
+
+	def __init__(self, func, glyphset=None):
+		BasePen.__init__(self, glyphset)
+		self._funcs = self._getGreenBezierFuncs(func)
+		self.value = 0
+
+	def _moveTo(self, p0):
+		self.__startPoint = p0
+
+	def _closePath(self):
+		p0 = self._getCurrentPoint()
+		if p0 != self.__startPoint:
+			self._lineTo(self.__startPoint)
+
+	def _endPath(self):
+		p0 = self._getCurrentPoint()
+		if p0 != self.__startPoint:
+			# Green theorem is not defined on open contours.
+			raise NotImplementedError
+
+	def _lineTo(self, p1):
+		p0 = self._getCurrentPoint()
+		self.value += self._funcs[1](p0, p1)
+
+	def _qCurveToOne(self, p1, p2):
+		p0 = self._getCurrentPoint()
+		self.value += self._funcs[2](p0, p1, p2)
+
+	def _curveToOne(self, p1, p2, p3):
+		p0 = self._getCurrentPoint()
+		self.value += self._funcs[3](p0, p1, p2, p3)
+
+# Sample pens.
+# Do not use this in real code.
+# Use fontTools.pens.momentsPen.MomentsPen instead.
+AreaPen = partial(GreenPen, func=1)
+MomentXPen = partial(GreenPen, func=x)
+MomentYPen = partial(GreenPen, func=y)
+MomentXXPen = partial(GreenPen, func=x*x)
+MomentYYPen = partial(GreenPen, func=y*y)
+MomentXYPen = partial(GreenPen, func=x*y)
+
+
+def printGreenPen(penName, funcs, file=sys.stdout):
+
 	print(
 '''from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
@@ -113,76 +177,11 @@ class %s(BasePen):
 
 	print('''
 if __name__ == '__main__':
-	from symfont import x, y, printPen
-	printPen('%s', ['''%penName, file=file)
+	from fontTools.misc.symfont import x, y, printGreenPen
+	printGreenPen('%s', ['''%penName, file=file)
 	for name,f in funcs:
-		print("		 ('%s', %s)," % (name, str(f)), file=file)
-	print('		])', file=file)
-
-
-class BezierFuncs(dict):
-
-	def __init__(self, symfunc):
-		self._symfunc = symfunc
-		self._bezfuncs = {}
-
-	def __missing__(self, i):
-		args = ['p%d'%d for d in range(i+1)]
-		f = green(self._symfunc, BezierCurve[i])
-		f = sp.gcd_terms(f.collect(sum(P,()))) # Optimize
-		return sp.lambdify(args, f)
-
-class GreenPen(BasePen):
-
-	_BezierFuncs = {}
-
-	@classmethod
-	def _getGreenBezierFuncs(celf, func):
-		funcstr = str(func)
-		if not funcstr in celf._BezierFuncs:
-			celf._BezierFuncs[funcstr] = BezierFuncs(func)
-		return celf._BezierFuncs[funcstr]
-
-	def __init__(self, func, glyphset=None):
-		BasePen.__init__(self, glyphset)
-		self._funcs = self._getGreenBezierFuncs(func)
-		self.value = 0
-
-	def _moveTo(self, p0):
-		self.__startPoint = p0
-
-	def _closePath(self):
-		p0 = self._getCurrentPoint()
-		if p0 != self.__startPoint:
-			self._lineTo(self.__startPoint)
-
-	def _endPath(self):
-		p0 = self._getCurrentPoint()
-		if p0 != self.__startPoint:
-			# Green theorem is not defined on open contours.
-			raise NotImplementedError
-
-	def _lineTo(self, p1):
-		p0 = self._getCurrentPoint()
-		self.value += self._funcs[1](p0, p1)
-
-	def _qCurveToOne(self, p1, p2):
-		p0 = self._getCurrentPoint()
-		self.value += self._funcs[2](p0, p1, p2)
-
-	def _curveToOne(self, p1, p2, p3):
-		p0 = self._getCurrentPoint()
-		self.value += self._funcs[3](p0, p1, p2, p3)
-
-# Sample pens.
-# Do not use this in real code.
-# Use fontTools.pens.momentsPen.MomentsPen instead.
-AreaPen = partial(GreenPen, func=1)
-MomentXPen = partial(GreenPen, func=x)
-MomentYPen = partial(GreenPen, func=y)
-MomentXXPen = partial(GreenPen, func=x*x)
-MomentYYPen = partial(GreenPen, func=y*y)
-MomentXYPen = partial(GreenPen, func=x*y)
+		print("		      ('%s', %s)," % (name, str(f)), file=file)
+	print('		     ])', file=file)
 
 
 if __name__ == '__main__':
