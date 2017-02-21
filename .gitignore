@@ -12,3 +12,5 @@ Lib/designSpaceDocument/testPathName_case3.designspace
 Lib/designSpaceDocument/testPathName_case4.designspace
 Lib/designSpaceDocument/testPathName_case5.designspace
 Lib/designSpaceDocument/testPathNames.designspace
+testNoAxes_recontructed.designspace
+testNoAxes_source.designspace

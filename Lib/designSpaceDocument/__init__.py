@@ -565,7 +565,69 @@ class BaseDocReader(object):
             self.documentObject.axes.append(axisObject)
             self.axisDefaults[axisObject.name] = axisObject.default
         if not axes:
+            self.guessAxes()
             self._strictAxisNames = False
+
+    def _locationFromElement(self, locationElement):
+        # mostly duplicated from readLocationElement, Needs Resolve.
+        loc = {}
+        for dimensionElement in locationElement.findall(".dimension"):
+            dimName = dimensionElement.attrib.get("name")
+            xValue = yValue = None
+            try:
+                xValue = dimensionElement.attrib.get('xvalue')
+                xValue = float(xValue)
+            except ValueError:
+                self.logger.info("KeyError in readLocation xValue %3.3f", xValue)
+            try:
+                yValue = dimensionElement.attrib.get('yvalue')
+                if yValue is not None:
+                    yValue = float(yValue)
+            except ValueError:
+                pass
+            if yValue is not None:
+                loc[dimName] = (xValue, yValue)
+            else:
+                loc[dimName] = xValue
+        return loc
+
+    def guessAxes(self):
+        # Called when we have no axes element in the file.
+        # Look at all locations and collect the axis names and values
+        # assumptions:
+        # look for the default value on an axis from a master location
+        allLocations = []
+        minima = {}
+        maxima = {}
+        for locationElement in self.root.findall(".sources/source/location"):
+            allLocations.append(self._locationFromElement(locationElement))
+        for locationElement in self.root.findall(".instances/instance/location"):
+            allLocations.append(self._locationFromElement(locationElement))
+        for loc in allLocations:
+            for dimName, value in loc.items():
+                if not isinstance(value, tuple):
+                    value = [value]
+                for v in value:
+                    if dimName not in minima:
+                        minima[dimName] = v
+                        continue
+                    if minima[dimName] > v:
+                        minima[dimName] = v
+                    if dimName not in maxima:
+                        maxima[dimName] = v
+                        continue
+                    if maxima[dimName] < v:
+                        maxima[dimName] = v
+        newAxes = []
+        counter = 1
+        for axisName in maxima.keys():
+            a = self.axisDescriptorClass()
+            a.default = a.minimum = minima[axisName]
+            a.maximum = maxima[axisName]
+            a.name = axisName
+            a.tag = "_%03d"%(counter)
+            counter += 1
+            self.documentObject.axes.append(a)
 
     def readSources(self):
         for sourceElement in self.root.findall(".sources/source"):
@@ -1283,6 +1345,7 @@ if __name__ == "__main__":
         ...         axes[axis.tag] = []
         ...     axes[axis.tag].append(axis.serialize())
         >>> for axis in new.axes:
+        ...     if axis.tag[0] == "_": continue
         ...     if not axis.tag in axes:
         ...         axes[axis.tag] = []
         ...     axes[axis.tag].append(axis.serialize())
@@ -1290,6 +1353,72 @@ if __name__ == "__main__":
         ...     a, b = v
         ...     assert a == b
 
+        """
+
+    def testHandleNoAxes():
+        # test what happens if the designspacedocument has no axes element.
+        """
+        >>> import os
+        >>> testDocPath = os.path.join(os.getcwd(), "testNoAxes_source.designspace")
+        >>> testDocPath2 = os.path.join(os.getcwd(), "testNoAxes_recontructed.designspace")
+        >>> masterPath1 = os.path.join(os.getcwd(), "masters", "masterTest1.ufo")
+        >>> masterPath2 = os.path.join(os.getcwd(), "masters", "masterTest2.ufo")
+        >>> instancePath1 = os.path.join(os.getcwd(), "instances", "instanceTest1.ufo")
+        >>> instancePath2 = os.path.join(os.getcwd(), "instances", "instanceTest2.ufo")
+        
+        # Case 1: No axes element in the document, but there are sources and instances
+        >>> doc = DesignSpaceDocument()
+
+        >>> for name, value in [('One', 1),('Two', 2),('Three', 3)]:
+        ...     a = AxisDescriptor()
+        ...     a.minimum = 0
+        ...     a.maximum = 1000
+        ...     a.default = 0
+        ...     a.name = "axisName%s"%(name)
+        ...     a.tag = "ax_%d"%(value)
+        ...     doc.addAxis(a)
+
+        >>> # add master 1
+        >>> s1 = SourceDescriptor()
+        >>> s1.filename = os.path.relpath(masterPath1, os.path.dirname(testDocPath))
+        >>> s1.name = "master.ufo1"
+        >>> s1.copyLib = True
+        >>> s1.copyInfo = True
+        >>> s1.copyFeatures = True
+        >>> s1.location = dict(axisNameOne=-1000, axisNameTwo=0, axisNameThree=1000)
+        >>> s1.familyName = "MasterFamilyName"
+        >>> s1.styleName = "MasterStyleNameOne"
+        >>> doc.addSource(s1)
+
+        >>> # add master 2
+        >>> s2 = SourceDescriptor()
+        >>> s2.filename = os.path.relpath(masterPath2, os.path.dirname(testDocPath))
+        >>> s2.name = "master.ufo1"
+        >>> s2.copyLib = False
+        >>> s2.copyInfo = False
+        >>> s2.copyFeatures = False
+        >>> s2.location = dict(axisNameOne=1000, axisNameTwo=1000, axisNameThree=0)
+        >>> s2.familyName = "MasterFamilyName"
+        >>> s2.styleName = "MasterStyleNameTwo"
+        >>> doc.addSource(s2)
+
+        >>> # add instance 1
+        >>> i1 = InstanceDescriptor()
+        >>> i1.filename = os.path.relpath(instancePath1, os.path.dirname(testDocPath))
+        >>> i1.familyName = "InstanceFamilyName"
+        >>> i1.styleName = "InstanceStyleName"
+        >>> i1.name = "instance.ufo1"
+        >>> i1.location = dict(axisNameOne=(-1000,500), axisNameTwo=100)
+        >>> i1.postScriptFontName = "InstancePostscriptName"
+        >>> i1.styleMapFamilyName = "InstanceStyleMapFamilyName"
+        >>> i1.styleMapStyleName = "InstanceStyleMapStyleName"
+        >>> doc.addInstance(i1)
+
+        >>> doc.write(testDocPath)
+        >>> __removeAxesFromDesignSpace(testDocPath)
+        >>> verify = DesignSpaceDocument()
+        >>> verify.read(testDocPath)
+        >>> verify.write(testDocPath2)
         """
 
     def testPathNameResolve():
@@ -1631,11 +1760,11 @@ if __name__ == "__main__":
 
         >>> new = DesignSpaceDocument()
         >>> new.read(testDocPath)
-        >>> new.axes
-        []
+        >>> len(new.axes)   # include 2 new guessed axes
+        2
         >>> new.checkAxes()
         >>> len(new.axes)
-        2
+        4
         >>> new.write(testDocPath)
 
         """
