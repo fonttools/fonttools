@@ -9,6 +9,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
 from fontTools.pens.basePen import BasePen
+from fontTools.pens.perimeterPen import PerimeterPen
 from fontTools.pens.statisticsPen import StatisticsPen
 import itertools
 
@@ -73,6 +74,34 @@ class RecordingPen(RecordingNoComponentsPen):
 
 	def addComponent(self, glyphName, transformation):
 		self.value.append(('addComponent', (glyphName, transformation)))
+
+
+class TeePen(object):
+	def __init__(self, *pens):
+		if len(pens) == 1:
+			pens = pens[0]
+		self.pens = pens
+	def moveTo(self, p0):
+		for pen in self.pens:
+			pen.moveTo(p0)
+	def lineTo(self, p1):
+		for pen in self.pens:
+			pen.lineTo(p1)
+	def qCurveTo(self, p1, p2):
+		for pen in self.pens:
+			pen.qCurveTo(p1, p2)
+	def curveTo(self, p1, p2, p3):
+		for pen in self.pens:
+			pen.curveTo(p1, p2, p3)
+	def closePath(self):
+		for pen in self.pens:
+			pen.closePath()
+	def endPath(self):
+		for pen in self.pens:
+			pen.endPath()
+	def addComponent(self, glyphName, transformation):
+		for pen in self.pens:
+			pen.addComponent(glyphName, transformation)
 
 
 def _vdiff(v0, v1):
@@ -146,9 +175,12 @@ def test(glyphsets, glyphs=None, names=None):
 				allVectors.append(contourVectors)
 				for contour in contourPens:
 					stats = StatisticsPen(glyphset=glyphset)
-					contour.draw(stats)
+					perim = PerimeterPen(glyphset=glyphset)
+					tee = TeePen([stats, perim])
+					contour.draw(tee)
 					size = abs(stats.area) ** .5 * .5
 					vector = (
+						int(perim.value),
 						int(size),
 						int(stats.meanX),
 						int(stats.meanY),
