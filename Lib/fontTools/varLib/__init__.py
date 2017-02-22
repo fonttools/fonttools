@@ -27,7 +27,7 @@ from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.ttLib.tables._g_v_a_r import TupleVariation
 from fontTools.ttLib.tables import otTables as ot
-from fontTools.varLib import designspace, models
+from fontTools.varLib import builder, designspace, models
 from fontTools.varLib.merger import VariationMerger
 import warnings
 import os.path
