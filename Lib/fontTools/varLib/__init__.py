@@ -14,7 +14,7 @@ a Glyphs source, eg., using noto-source as an example:
 
 Then you can make a variable-font this way:
 
-  $ python fonttools/Lib/fontTools/varLib/__init__.py master_ufo/NotoSansArabic.designspace
+  $ fonttools varLib master_ufo/NotoSansArabic.designspace
 
 API *will* change in near future.
 """
