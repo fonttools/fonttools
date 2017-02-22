@@ -38,7 +38,7 @@ class PerContourPen(BasePen):
 		self._pen = None
 
 	def _newItem(self):
-		self._pen = pen = self._Pen(glyphset=self._glyphset)
+		self._pen = pen = self._Pen()
 		self.value.append(pen)
 
 class PerContourOrComponentPen(PerContourPen):
@@ -110,8 +110,7 @@ def test(glyphsets, glyphs=None, names=None):
 				#print('.', end='')
 				glyph = glyphset[glyph_name]
 
-				penClass = lambda glyphset: RecordingPen()
-				perContourPen = PerContourOrComponentPen(penClass, glyphset=glyphset)
+				perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
 				glyph.draw(perContourPen)
 				contourPens = perContourPen.value
 				del perContourPen
