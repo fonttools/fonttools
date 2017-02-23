@@ -597,7 +597,6 @@ class BaseDocReader(object):
         # Look at all locations and collect the axis names and values
         # assumptions:
         # look for the default value on an axis from a master location
-        print("guessing axes")
         allLocations = []
         minima = {}
         maxima = {}
@@ -1763,10 +1762,10 @@ if __name__ == "__main__":
         >>> new = DesignSpaceDocument()
         >>> new.read(testDocPath)
         >>> len(new.axes)
-        0
+        2
         >>> new.checkAxes()
         >>> len(new.axes)
-        0
+        4
         >>> new.write(testDocPath)
 
         """

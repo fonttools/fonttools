@@ -61,7 +61,7 @@ Some validation is done when reading.
 ### Attributes
 * `filename`: string. A relative path to the source file, **as it is in the document**. MutatorMath + Varlib.
 * `path`: string. Absolute path to the source file, calculated from the document path and the string in the filename attr. MutatorMath + Varlib.
-* `name`: string. Unique identifier name of the source, used to identify it if it needs to be referenced from elsewhere in the document. MutatorMath.
+* `name`: string. Optional. Unique identifier name for this source, if there is one or more `instance.glyph` elements in the document. MutatorMath.
 * `location`: dict. Axis values for this source. MutatorMath + Varlib
 * `copyLib`: bool. Indicates if the contents of the font.lib need to be copied to the instances. MutatorMath. 
 * `copyInfo` bool. Indicates if the non-interpolating font.info needs to be copied to the instances. Also indicates this source is expected to be the default font. MutatorMath + Varlib
