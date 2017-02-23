@@ -1,5 +1,6 @@
 """Rudimentary support for loading MutatorMath .designspace files."""
 from __future__ import print_function, division, absolute_import
+import collections
 from fontTools.misc.py23 import *
 try:
 	import xml.etree.cElementTree as ET
@@ -7,6 +8,14 @@ except ImportError:
 	import xml.etree.ElementTree as ET
 
 __all__ = ['load', 'loads']
+
+standard_axis_map = collections.OrderedDict(
+	[['weight', ('wght', 'Weight')],
+	['width', ('wdth', 'Width')],
+	['slant', ('slnt', 'Slant')],
+	['optical', ('opsz', 'Optical Size')],
+	['custom',('xxxx', 'Custom')]]
+	)
 
 def _xmlParseLocation(et):
 	loc = {}
@@ -32,8 +41,24 @@ def _loadItem(et):
 	return item
 
 def _load(et):
-	masters = []
 	ds = et.getroot()
+	
+	axisMap = collections.OrderedDict()
+	axesET = ds.find('axes')
+	if axesET:
+		axisList = axesET.findall('axis')
+		for axisET in axisList:
+			axisName = axisET.attrib["name"]
+			labelET = axisET.find('labelname')
+			if (None == labelET):
+				# If the designpsace file axes is a std axes, the label name may be omitted.
+				tag, label = standard_axis_map[axisName]
+			else:
+				label = labelET.text
+				tag = axisET.attrib["tag"]
+			axisMap[axisName] = (tag,  label)
+
+	masters = []
 	for et in ds.find('sources'):
 		masters.append(_loadItem(et))
 
@@ -41,7 +66,7 @@ def _load(et):
 	for et in ds.find('instances'):
 		instances.append(_loadItem(et))
 
-	return masters, instances
+	return masters, instances, axisMap
 
 def load(filename):
 	"""Load designspace from a file name or object.  Returns two items:
