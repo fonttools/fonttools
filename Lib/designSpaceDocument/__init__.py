@@ -537,6 +537,10 @@ class BaseDocReader(object):
     def readAxes(self):
         # read the axes elements, including the warp map.
         axes = []
+        if len(self.root.findall(".axes/axis"))==0:
+            self.guessAxes()
+            self._strictAxisNames = False
+            return
         for axisElement in self.root.findall(".axes/axis"):
             axisObject = self.axisDescriptorClass()
             axisObject.name = axisElement.attrib.get("name")
@@ -564,9 +568,6 @@ class BaseDocReader(object):
                     axisObject.labelNames[lang] = labelName
             self.documentObject.axes.append(axisObject)
             self.axisDefaults[axisObject.name] = axisObject.default
-        if len(axes)>0:
-            self.guessAxes()
-            self._strictAxisNames = False
 
     def _locationFromElement(self, locationElement):
         # mostly duplicated from readLocationElement, Needs Resolve.
@@ -596,6 +597,7 @@ class BaseDocReader(object):
         # Look at all locations and collect the axis names and values
         # assumptions:
         # look for the default value on an axis from a master location
+        print("guessing axes")
         allLocations = []
         minima = {}
         maxima = {}
