@@ -7,7 +7,16 @@ import unittest
 class MergeIntegrationTest(unittest.TestCase):
 	# TODO
 	pass
-
+class GSUBMergUnitTest(unittest.TestCase):
+	def setUp(self):
+		self.merger = Merger()
+		self.table1 = ttLib.newTable('GSUB')
+		self.table2 = ttLib.newTable('GSUB')
+		self.mergedTable = ttLib.newTable('GSUB')
+		
+	def test_GSUB_merge_no_dupes(self):
+		module = ttLib.getTableModule('GSUB')
+		
 class CmapMergeUnitTest(unittest.TestCase):
 	def setUp(self):
 		self.merger = Merger()

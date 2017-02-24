@@ -317,7 +317,7 @@ ttLib.getTableClass('vmtx').mergeMap = ttLib.getTableClass('hmtx').mergeMap = {
 }
 
 ttLib.getTableClass('gasp').mergeMap = {
-	'tableTag': equal,
+	'tableTag': first,
 	'version': max,
 	'gaspRange': first, # FIXME? Appears irreconcilable
 }
