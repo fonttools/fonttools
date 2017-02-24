@@ -8,48 +8,54 @@ __all__ = ["StatisticsPen"]
 
 class StatisticsPen(MomentsPen):
 
-	# Center of mass
-	# https://en.wikipedia.org/wiki/Center_of_mass#A_continuous_volume
-	@property
-	def meanX(self):
-		return self.momentX / self.area if self.area else 0
-	@property
-	def meanY(self):
-		return self.momentY / self.area if self.area else 0
+	def __init__(self, glyphset=None):
+		MomentsPen.__init__(self, glyphset=glyphset)
+		self.__zero()
 
-	#  Var(X) = E[X^2] - E[X]^2
-	@property
-	def varianceX(self):
-		return self.momentXX / self.area - self.meanX**2 if self.area else 0
-	@property
-	def varianceY(self):
-		return self.momentYY / self.area - self.meanY**2 if self.area else 0
+	def _closePath(self):
+		MomentsPen._closePath(self)
+		self.__update()
 
-	@property
-	def stddevX(self):
-		variance = self.varianceX
-		return math.copysign(abs(variance)**.5, variance)
-	@property
-	def stddevY(self):
-		variance = self.varianceY
-		return math.copysign(abs(variance)**.5, variance)
+	def __zero(self):
+		self.meanX = 0
+		self.meanY = 0
+		self.varianceX = 0
+		self.varianceY = 0
+		self.stddevX = 0
+		self.stddevY = 0
+		self.covariance = 0
+		self.correlation = 0
+		self.slant = 0
 
-	#  Covariance(X,Y) = ( E[X.Y] - E[X]E[Y] )
-	@property
-	def covariance(self):
-		return self.momentXY / self.area - self.meanX*self.meanY if self.area else 0
+	def __update(self):
 
-	#  Correlation(X,Y) = Covariance(X,Y) / ( stddev(X) * stddev(Y) )
-	# https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient
-	@property
-	def correlation(self):
-		correlation = self.covariance / (self.stddevX * self.stddevY) if self.area else 0
-		return correlation if abs(correlation) > 1e-3 else 0
+		area = self.area
+		if not area:
+			self.__zero()
+			return
 
-	@property
-	def slant(self):
-		slant = self.covariance / self.varianceY if self.area else 0
-		return slant if abs(slant) > 1e-3 else 0
+		# Center of mass
+		# https://en.wikipedia.org/wiki/Center_of_mass#A_continuous_volume
+		self.meanX = meanX = self.momentX / area
+		self.meanY = meanY = self.momentY / area
+
+		#  Var(X) = E[X^2] - E[X]^2
+		self.varianceX = varianceX = self.momentXX / area - meanX**2
+		self.varianceY = varianceY = self.momentYY / area - meanY**2
+
+		self.stddevX = stddevX = math.copysign(abs(varianceX)**.5, varianceX)
+		self.stddevY = stddevY = math.copysign(abs(varianceY)**.5, varianceY)
+
+		#  Covariance(X,Y) = ( E[X.Y] - E[X]E[Y] )
+		self.covariance = covariance = self.momentXY / area - meanX*meanY
+
+		#  Correlation(X,Y) = Covariance(X,Y) / ( stddev(X) * stddev(Y) )
+		# https://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient
+		correlation = covariance / (stddevX * stddevY)
+		self.correlation = correlation if abs(correlation) > 1e-3 else 0
+
+		slant = covariance / varianceY
+		self.slant = slant if abs(slant) > 1e-3 else 0
 
 
 def _test(glyphset, upem, glyphs):
