@@ -27,10 +27,12 @@ class StatisticsPen(MomentsPen):
 
 	@property
 	def stddevX(self):
-		return math.copysign(abs(self.varianceX)**.5, self.varianceX)
+		variance = self.varianceX
+		return math.copysign(abs(variance)**.5, variance)
 	@property
 	def stddevY(self):
-		return math.copysign(abs(self.varianceY)**.5, self.varianceY)
+		variance = self.varianceY
+		return math.copysign(abs(variance)**.5, variance)
 
 	#  Covariance(X,Y) = ( E[X.Y] - E[X]E[Y] )
 	@property
