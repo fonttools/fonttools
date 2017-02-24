@@ -366,7 +366,7 @@ class TupleVariation(object):
 		assert runLength >= 1 and runLength <= 64
 		stream.write(bytechr(runLength - 1))
 		for i in range(offset, pos):
-			stream.write(struct.pack('b', deltas[i]))
+			stream.write(struct.pack('b', round(deltas[i])))
 		return pos
 
 	@staticmethod
@@ -400,7 +400,7 @@ class TupleVariation(object):
 		assert runLength >= 1 and runLength <= 64
 		stream.write(bytechr(DELTAS_ARE_WORDS | (runLength - 1)))
 		for i in range(offset, pos):
-			stream.write(struct.pack('>h', deltas[i]))
+			stream.write(struct.pack('>h', round(deltas[i])))
 		return pos
 
 	@staticmethod
