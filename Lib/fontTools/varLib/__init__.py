@@ -61,7 +61,7 @@ def _add_fvar(font, axes, instances, axis_map):
 	nameTable = font['name']
 
 	for iden in axis_map.keys():
-		if not axes.has_key(iden):
+		if not iden in axes:
 			continue
 		axis = Axis()
 		axis.axisTag = Tag(axis_map[iden][0])
