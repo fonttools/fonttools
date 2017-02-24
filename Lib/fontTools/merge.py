@@ -349,7 +349,7 @@ def merge(self, m, tables):
 ttLib.getTableClass('prep').mergeMap = lambda self, lst: first(lst)
 ttLib.getTableClass('fpgm').mergeMap = lambda self, lst: first(lst)
 ttLib.getTableClass('cvt ').mergeMap = lambda self, lst: first(lst)
-ttLib.getTableClass('gasp').mergeMap = lambda self, lst: first(lst)
+ttLib.getTableClass('gasp').mergeMap = lambda self, lst: first(lst) # FIXME? Appears irreconcilable
 
 @_add_method(ttLib.getTableClass('cmap'))
 def merge(self, m, tables):
