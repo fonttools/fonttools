@@ -29,6 +29,7 @@ from fontTools.ttLib.tables._g_v_a_r import TupleVariation
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib import builder, designspace, models
 from fontTools.varLib.merger import VariationMerger
+import collections
 import warnings
 import os.path
 import logging
@@ -36,51 +37,95 @@ from pprint import pformat
 
 log = logging.getLogger("fontTools.varLib")
 
+VarAxis = collections.namedtuple(
+	"VarAxis",
+	"key, tag, name, "
+	"minLocation, defaultLocation, maxLocation, "  # in MutatorMath space
+	"minValue, defaultValue, maxValue, "  # in fvar user space, eg 100..900
+	"mapping")  # MutatorMath->fvar user space, eg {26:100, 90:400, 190:900}
+
 #
 # Creation routines
 #
 
-# Move to fvar table proper?
-# TODO how to provide axis order?
-def _add_fvar(font, axes, instances, axis_map):
+def _add_fvar(font, axes, instances):
 	"""
 	Add 'fvar' table to font.
 
-	axes is a dictionary mapping axis-id to axis (min,default,max)
-	coordinate values.
+	axes is a list of VarAxis namedtuples with tag, name, etc.
 
 	instances is list of dictionary objects with 'location', 'stylename',
 	and possibly 'postscriptfontname' entries.
-
-	axisMap is dictionary mapping axis-id to (axis-tag, axis-name).
 	"""
-
 	assert "fvar" not in font
 	font['fvar'] = fvar = newTable('fvar')
 	nameTable = font['name']
-
-	for iden in sorted(axes.keys(), key=lambda k: axis_map[k][0]):
+	for a in axes:
 		axis = Axis()
-		axis.axisTag = Tag(axis_map[iden][0])
-		axis.minValue, axis.defaultValue, axis.maxValue = axes[iden]
-		axisName = tounicode(axis_map[iden][1])
+		axis.axisTag = a.tag
+		axis.minValue, axis.maxValue = a.minValue, a.maxValue
+		axis.defaultValue = a.defaultValue
+		axisName = tounicode(a.name)
 		axis.axisNameID = nameTable.addName(axisName)
 		fvar.axes.append(axis)
-
 	for instance in instances:
-		coordinates = instance['location']
+		location = instance['location']
 		name = tounicode(instance['stylename'])
 		psname = instance.get('postscriptfontname')
-
 		inst = NamedInstance()
 		inst.subfamilyNameID = nameTable.addName(name)
 		if psname is not None:
 			psname = tounicode(psname)
 			inst.postscriptNameID = nameTable.addName(psname)
-		inst.coordinates = {axis_map[k][0]:v for k,v in coordinates.items()}
+		inst.coordinates = {a.tag: _map_fvar_value(a, location[a.key])
+		                    for a in axes}
 		fvar.instances.append(inst)
-
 	return fvar
+
+
+def _map_fvar_value(axis, value):
+	# linear interpolation on axis.mapping, for example
+	# [(26.0, 300), (90.0, 400.0), (151.0, 600.0), (190.0, 700.0)]
+	m = axis.mapping
+	assert len(m) > 0, axis
+	assert value >= m[0][0], (axis, value, m)
+	assert value <= m[-1][0], (axis, value, m)
+	for i, (start, startVal) in enumerate(m[:-1]):
+		limit, limitVal = m[i + 1]
+		if value == start:
+			return startVal
+		elif value == limit:
+			return limitVal
+		elif value >= start and value <= limit:
+			fraction = (value - start) / (limit - start)
+			return startVal + fraction * (limitVal - startVal)
+	assert False, "no value found; axis: %s; value: %s" % (axis, value)
+
+
+def _add_avar(font, axes, locAxes, valAxes):
+        defaultLocation = {a.key: a.defaultLocation for a in axes}
+        defaultValue = {a.key: a.defaultValue for a in axes}
+        avar = newTable('avar')
+	for axis in axes:
+                axisLocation = defaultLocation.copy()
+                axisValue = defaultValue.copy()
+                curve = avar.segments[axis.tag] = {}
+                for loc, val in axis.mapping:
+                        axisLocation[axis.key] = loc
+                        axisValue[axis.key] = val
+                        normLoc = models.normalizeLocation(axisLocation, locAxes)
+                        normVal = models.normalizeLocation(axisValue, valAxes)
+                        curve[normLoc[axis.key]] = normVal[axis.key]
+        interesting = False
+        for tag, curve in  avar.segments.items():
+                if curve != {-1.0: -1.0, 0.0: 0.0, 1.0:1.0}:
+                        interesting = True
+                        break
+        if not interesting:
+                return None
+        font['avar'] = avar
+        return avar
+
 
 # TODO Move to glyf or gvar table proper
 def _GetCoordinates(font, glyphName):
@@ -153,6 +198,70 @@ def _SetCoordinates(font, glyphName, coord):
 	# XXX Handle vertical
 	# XXX Remove the round when https://github.com/behdad/fonttools/issues/593 is fixed
 	font["hmtx"].metrics[glyphName] = int(round(horizontalAdvanceWidth)), int(round(leftSideBearing))
+
+
+# TODO: Double-check that this mapping matches the spec for OS/2.usWidthClass.
+_OS2_WIDTH_CLASSES = {
+        1: 50.0,
+        2: 65.0,
+        3: 70.0,
+        4: 85.0,
+        5: 100.0,
+        6: 125.0,
+        7: 150.0,
+        8: 175.0,
+        9: 200.0,
+}
+
+
+def _get_axis_value(font, axisTag, defaultValue):
+	if 'STAT' in font:
+		# TODO: This code has not been tested; there might be typos.
+		stat = font['STAT']
+		for axisValue in stat.DesignAxisValueArray:
+			axis = stat.DesignAxisRecord[axisValue.AxisIndex]
+			if axis.AxisTag == axisTag:
+				return axisValue.Value
+	if axisTag == 'wdth':
+		return _OS2_WIDTH_CLASSES[font['OS/2'].usWidthClass]
+	elif axisTag == 'wght':
+		return float(font['OS/2'].usWeightClass)
+	# TODO: Should we really take MutatorMath locations as OpenType
+	# axis values? Or bail out?
+	return defaultValue
+
+
+def _get_axes(masters, master_fonts, base_idx, axis_map):
+	master_locs = [m['location'] for m in masters]
+	used_keys = sorted(set(master_locs[base_idx].keys()))
+	assert all(used_keys == sorted(set(loc.keys())) for loc in master_locs)
+	axes = []
+	for key in used_keys:
+		tag, name, instanceMapping = axis_map[key]
+		tag = Tag(tag)
+		locs = [loc[key] for loc in master_locs]
+		values = [_get_axis_value(font, tag, loc)
+		          for loc, font in zip(locs, master_fonts)]
+		minValue, maxValue = min(values), max(values)
+		defaultValue = values[base_idx]
+		if minValue == maxValue == defaultValue:
+			continue
+		upper = max(m[key] for m in master_locs)
+
+		mapping = dict(zip(locs, values))  # from masters
+		mapping.update(instanceMapping)    # from instances
+		mapping = sorted(mapping.items())
+		axes.append(VarAxis(key=key, tag=tag, name=name,
+		                    minValue=minValue,
+		                    defaultValue=defaultValue,
+		                    maxValue=maxValue,
+                                    minLocation=min(m[key] for m in master_locs),
+                                    defaultLocation=master_locs[base_idx][key],
+                                    maxLocation=max(m[key] for m in master_locs),
+		                    mapping=mapping))
+
+	# TODO: Sort axes by ordering specified in masters STAT table.
+	return axes
 
 
 def _add_gvar(font, model, master_ttfs):
@@ -262,7 +371,7 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	binary as to be opened (eg. .ttf or .otf).
 
 	If axisMap is set, it should be dictionary mapping axis-id to
-	(axis-tag, axis-name).
+	(axis-tag, axis-name, {interpolation-value: fvar-value}}).
 	"""
 
 	masters, instances = designspace.load(designspace_filename)
@@ -282,11 +391,11 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
 
 	standard_axis_map = {
-		'weight':  ('wght', 'Weight'),
-		'width':   ('wdth', 'Width'),
-		'slant':   ('slnt', 'Slant'),
-		'optical': ('opsz', 'Optical Size'),
-		'custom':  ('xxxx', 'Custom'),
+		'weight':  ('wght', 'Weight', {}),
+		'width':   ('wdth', 'Width', {}),
+		'slant':   ('slnt', 'Slant', {}),
+		'optical': ('opsz', 'Optical Size', {}),
+		'custom':  ('xxxx', 'Custom', {}),
 	}
 
 	axis_map = standard_axis_map
@@ -294,24 +403,12 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 		axis_map = axis_map.copy()
 		axis_map.update(axisMap)
 
-	# TODO: For weight & width, use OS/2 values and setup 'avar' mapping.
-
+        axes = _get_axes(masters, master_fonts, base_idx, axis_map)
 	master_locs = [o['location'] for o in masters]
+	axis_keys = set(master_locs[base_idx].keys())
+	assert all(axis_keys == set(m.keys()) for m in master_locs)
 
-	axis_tags = set(master_locs[0].keys())
-	assert all(axis_tags == set(m.keys()) for m in master_locs)
-
-	# Set up axes
-	axes = {}
-	for tag in axis_tags:
-		default = master_locs[base_idx][tag]
-		lower = min(m[tag] for m in master_locs)
-		upper = max(m[tag] for m in master_locs)
-		if default == lower == upper:
-			continue
-		axes[tag] = (lower, default, upper)
 	log.info("Axes:\n%s", pformat(axes))
-
 	log.info("Master locations:\n%s", pformat(master_locs))
 
 	# We can use the base font straight, but it's faster to load it again since
@@ -319,20 +416,20 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	#gx = master_fonts[base_idx]
 	gx = TTFont(master_ttfs[base_idx])
 
-	# TODO append masters as named-instances as well; needs .designspace change.
-	fvar = _add_fvar(gx, axes, instances, axis_map)
+        locAxes, valAxes = {}, {}
+        for a in axes:
+                locAxes[a.key] = (a.minLocation, a.defaultLocation, a.maxLocation)
+                valAxes[a.key] = (a.minValue, a.defaultValue, a.maxValue)
 
+	fvar = _add_fvar(gx, axes, instances)
+	avar = _add_avar(gx, axes, locAxes, valAxes)
 
-	# Normalize master locations
-	master_locs = [models.normalizeLocation(m, axes) for m in master_locs]
-
+	master_locs = [models.normalizeLocation(m, locAxes) for m in master_locs]
 	log.info("Normalized master locations:\n%s", pformat(master_locs))
 
 	# TODO Clean this up.
 	del instances
-	del axes
 	master_locs = [{axis_map[k][0]:v for k,v in loc.items()} for loc in master_locs]
-	#instance_locs = [{axis_map[k][0]:v for k,v in loc.items()} for loc in instance_locs]
 	axisTags = [axis.axisTag for axis in fvar.axes]
 
 	# Assume single-model for now.
@@ -363,7 +460,30 @@ def main(args=None):
 	finder = lambda s: s.replace('master_ufo', 'master_ttf_interpolatable').replace('.ufo', '.ttf')
 	outfile = os.path.splitext(designspace_filename)[0] + '-VF.ttf'
 
-	gx, model, master_ttfs = build(designspace_filename, finder)
+        # TODO: Find out if this information can be passed as part of the
+        # designspace. If not, change fontmake to pass this structure.
+        # These parameters are those for NotoSansArabic-MM.glyphs.
+        axisMap = {
+                'width':  ('wdth', 'Width', {
+                        70.0: 70.0,
+                        79.0: 80.0,
+                        89.0: 90.0,
+                        100.0: 100.0
+                }),
+                'weight':  ('wght', 'Weight', {
+                        26.0: 100.0,
+                        39.0: 200.0,
+                        58.0: 300.0,
+                        90.0: 400.0,
+                        108.0: 500.0,
+                        128.0: 600.0,
+                        151.0: 700.0,
+                        169.0: 800.0,
+                        190.0: 900.0,
+                })
+        }
+
+	gx, model, master_ttfs = build(designspace_filename, finder, axisMap)
 
 	log.info("Saving variation font %s", outfile)
 	gx.save(outfile)
