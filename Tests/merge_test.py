@@ -8,6 +8,39 @@ class MergeIntegrationTest(unittest.TestCase):
 	# TODO
 	pass
 
+class gaspMergeUnitTest(unittest.TestCase):
+	def setUp(self):
+		self.merger = Merger()
+		# Construct table 1
+		self.table1 = ttLib.newTable('gasp')
+		self.table2 = ttLib.newTable('gasp')
+		self.table1.version = 1
+		self.table1.gaspRange = {
+			0x8: 0xA ,
+			0x10: 0x5,
+		}
+		self.table2.version = 1
+		self.table1.gaspRange = {
+			0x6: 0xB ,
+			0xFF: 0x4,
+		}
+		self.result = ttLib.newTable('gasp')
+
+	def test_gasp_merge_basic(self):
+		result = self.result.merge(self.merger, [self.table1, self.table2])
+		self.assertEqual(result, self.table1)
+
+		result = self.result.merge(self.merger, [self.table2, self.table1])
+		self.assertEqual(result, self.table2)
+
+	def test_gasp_merge_notImplemented(self):
+		result = self.result.merge(self.merger, [NotImplemented, self.table1])
+		self.assertEqual(result, NotImplemented)
+
+		result = self.result.merge(self.merger, [self.table1, NotImplemented])
+		self.assertEqual(result, self.table1)
+
+
 class CmapMergeUnitTest(unittest.TestCase):
 	def setUp(self):
 		self.merger = Merger()
