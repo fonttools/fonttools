@@ -11,19 +11,21 @@ class MergeIntegrationTest(unittest.TestCase):
 class gaspMergeUnitTest(unittest.TestCase):
 	def setUp(self):
 		self.merger = Merger()
-		# Construct table 1
+
 		self.table1 = ttLib.newTable('gasp')
-		self.table2 = ttLib.newTable('gasp')
 		self.table1.version = 1
 		self.table1.gaspRange = {
 			0x8: 0xA ,
 			0x10: 0x5,
 		}
+
+		self.table2 = ttLib.newTable('gasp')
 		self.table2.version = 1
-		self.table1.gaspRange = {
+		self.table2.gaspRange = {
 			0x6: 0xB ,
 			0xFF: 0x4,
 		}
+
 		self.result = ttLib.newTable('gasp')
 
 	def test_gasp_merge_basic(self):
