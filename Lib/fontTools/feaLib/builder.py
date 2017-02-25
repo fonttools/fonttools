@@ -440,9 +440,10 @@ class Builder(object):
         return result
 
     def buildGDEFMarkGlyphSetsDef_(self):
-        sets = [None] * len(self.markFilterSets_)
-        for glyphs, id in self.markFilterSets_.items():
-            sets[id] = glyphs
+        sets = []
+        for glyphs, id in sorted(self.markFilterSets_.items(),
+                                 key=lambda item: item[1]):
+            sets.append(glyphs)
         return otl.buildMarkGlyphSetsDef(sets, self.glyphMap)
 
     def buildLookups_(self, tag):
