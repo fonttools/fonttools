@@ -154,8 +154,7 @@ def _SetCoordinates(font, glyphName, coord):
 	horizontalAdvanceWidth = rightSideX - leftSideX
 	leftSideBearing = glyph.xMin - leftSideX
 	# XXX Handle vertical
-	# XXX Remove the round when https://github.com/behdad/fonttools/issues/593 is fixed
-	font["hmtx"].metrics[glyphName] = int(round(horizontalAdvanceWidth)), int(round(leftSideBearing))
+	font["hmtx"].metrics[glyphName] = horizontalAdvanceWidth, leftSideBearing
 
 
 def _add_gvar(font, model, master_ttfs):
