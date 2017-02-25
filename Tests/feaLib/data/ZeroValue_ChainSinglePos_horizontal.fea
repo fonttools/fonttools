@@ -1,0 +1,9 @@
+# For contextual positioning statements with in-line single positioning rules,
+# zeroes should get compiled to ValueRecord format 0.
+# https://github.com/fonttools/fonttools/issues/633
+
+# Zero value in a horizontal context.
+feature kern {
+    pos A G' 0 A;          # value format A
+    pos B G' <0 0 0 0> B;  # value format B
+} kern;

@@ -512,6 +512,11 @@ class TupleVariationTest(unittest.TestCase):
 		# words, zeroes
 		self.assertEqual("40 66 66 80", compileDeltaValues([0x6666, 0]))
 		self.assertEqual("40 66 66 81", compileDeltaValues([0x6666, 0, 0]))
+		# bytes or words from floats
+		self.assertEqual("00 01", compileDeltaValues([1.1]))
+		self.assertEqual("00 02", compileDeltaValues([1.9]))
+		self.assertEqual("40 66 66", compileDeltaValues([0x6666 + 0.1]))
+		self.assertEqual("40 66 66", compileDeltaValues([0x6665 + 0.9]))
 
 	def test_decompileDeltas(self):
 		decompileDeltas = TupleVariation.decompileDeltas_

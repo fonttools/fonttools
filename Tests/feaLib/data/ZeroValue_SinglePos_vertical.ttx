@@ -20,7 +20,7 @@
     <FeatureList>
       <!-- FeatureCount=1 -->
       <FeatureRecord index="0">
-        <FeatureTag value="TEST"/>
+        <FeatureTag value="vkrn"/>
         <Feature>
           <!-- LookupCount=1 -->
           <LookupListIndex index="0" value="0"/>

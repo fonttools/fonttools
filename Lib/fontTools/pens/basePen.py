@@ -149,7 +149,7 @@ class BasePen(AbstractPen):
 	methods.
 	"""
 
-	def __init__(self, glyphSet):
+	def __init__(self, glyphSet=None):
 		self.glyphSet = glyphSet
 		self.__currentPoint = None
 

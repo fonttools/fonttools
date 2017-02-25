@@ -274,7 +274,10 @@ def ttCompile(input, output, options):
 	if not options.recalcTimestamp:
 		# use TTX file modification time for head "modified" timestamp
 		mtime = os.path.getmtime(input)
-		ttf['head'].modified = timestampSinceEpoch(mtime)
+		try:
+			ttf['head'].modified = timestampSinceEpoch(mtime)
+		except KeyError:
+			raise TTLibError("missing required table: head")
 
 	ttf.save(output)
 

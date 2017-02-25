@@ -12,7 +12,7 @@ import os.path
 
 def interpolate_layout(designspace_filename, loc, finder):
 
-	masters, instances = designspace.load(designspace_filename)
+	masters, instances, axisMap = designspace.load(designspace_filename)
 	base_idx = None
 	for i,m in enumerate(masters):
 		if 'info' in m and m['info']['copy']:

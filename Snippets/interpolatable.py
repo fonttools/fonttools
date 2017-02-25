@@ -1,68 +1,52 @@
 #! /usr/bin/env python
 
 """
-Tool to find wront contour order between different masters, and
+Tool to find wrong contour order between different masters, and
 other interpolatability (or lack thereof) issues.
 """
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
-from fontTools.pens.basePen import BasePen
-from symfont import GlyphStatistics
+from fontTools.pens.basePen import AbstractPen, BasePen
+from fontTools.pens.recordingPen import RecordingPen
+from fontTools.pens.statisticsPen import StatisticsPen
 import itertools
 
-class PerContourOrComponentPen(BasePen):
+
+class PerContourPen(BasePen):
 	def __init__(self, Pen, glyphset=None):
 		BasePen.__init__(self, glyphset)
 		self._glyphset = glyphset
 		self._Pen = Pen
+		self._pen = None
 		self.value = []
 	def _moveTo(self, p0):
 		self._newItem()
-		self.value[-1].moveTo(p0)
+		self._pen.moveTo(p0)
 	def _lineTo(self, p1):
-		self.value[-1].lineTo(p1)
+		self._pen.lineTo(p1)
 	def _qCurveToOne(self, p1, p2):
-		self.value[-1].qCurveTo(p1, p2)
+		self._pen.qCurveTo(p1, p2)
 	def _curveToOne(self, p1, p2, p3):
-		self.value[-1].curveTo(p1, p2, p3)
+		self._pen.curveTo(p1, p2, p3)
 	def _closePath(self):
-		self.value[-1].closePath()
+		self._pen.closePath()
+		self._pen = None
 	def _endPath(self):
-		self.value[-1].endPath()
+		self._pen.endPath()
+		self._pen = None
+
+	def _newItem(self):
+		self._pen = pen = self._Pen()
+		self.value.append(pen)
+
+class PerContourOrComponentPen(PerContourPen):
+
 	def addComponent(self, glyphName, transformation):
 		self._newItem()
 		self.value[-1].addComponent(glyphName, transformation)
 
-	def _newItem(self):
-		self.value.append(self._Pen(glyphset=self._glyphset))
-
-class RecordingPen(BasePen):
-	def __init__(self, glyphset):
-		BasePen.__init__(self, glyphset)
-		self._glyphset = glyphset
-		self.value = []
-	def _moveTo(self, p0):
-		self.value.append(('moveTo', (p0,)))
-	def _lineTo(self, p1):
-		self.value.append(('lineTo', (p1,)))
-	def _qCurveToOne(self, p1, p2):
-		self.value.append(('qCurveTo', (p1,p2)))
-	def _curveToOne(self, p1, p2, p3):
-		self.value.append(('curveTo', (p1,p2,p3)))
-	def _closePath(self):
-		self.value.append(('closePath', ()))
-	def _endPath(self):
-		self.value.append(('endPath', ()))
-	# Humm, adding the following method slows things down some 20%.
-	# We don't have as much control as we like currently.
-	#def addComponent(self, glyphName, transformation):
-	#	self.value.append(('addComponent', (glyphName, transformation)))
-
-	def draw(self, pen):
-		for operator,operands in self.value:
-			getattr(pen, operator)(*operands)
 
 def _vdiff(v0, v1):
 	return tuple(b-a for a,b in zip(v0,v1))
@@ -122,9 +106,8 @@ def test(glyphsets, glyphs=None, names=None):
 
 		try:
 			allVectors = []
-			for glyphset in glyphsets:
+			for glyphset,name in zip(glyphsets, names):
 				#print('.', end='')
-				#print()
 				glyph = glyphset[glyph_name]
 
 				perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
@@ -135,15 +118,16 @@ def test(glyphsets, glyphs=None, names=None):
 				contourVectors = []
 				allVectors.append(contourVectors)
 				for contour in contourPens:
-					stats = GlyphStatistics(contour, glyphset=glyphset)
+					stats = StatisticsPen(glyphset=glyphset)
+					contour.replay(stats)
+					size = abs(stats.area) ** .5 * .5
 					vector = (
-						int(stats.Perimeter * .125),
-						int(abs(stats.Area) ** .5 * .5),
-						int(stats.MeanX),
-						int(stats.MeanY),
-						int(stats.StdDevX * 2),
-						int(stats.StdDevY * 2),
-						int(stats.Covariance/(stats.StdDevX*stats.StdDevY)**.5),
+						int(size),
+						int(stats.meanX),
+						int(stats.meanY),
+						int(stats.stddevX * 2),
+						int(stats.stddevY * 2),
+						int(stats.correlation * size),
 					)
 					contourVectors.append(vector)
 					#print(vector)
@@ -169,7 +153,8 @@ def test(glyphsets, glyphs=None, names=None):
 
 
 		except ValueError as e:
-			print('%s: math error %s; skipping glyph' % (glyph_name, e))
+			print('%s: %s: math error %s; skipping glyph.' % (glyph_name, name, e))
+			print(contour.value)
 			#raise
 	#for x in hist:
 	#	print(x)
