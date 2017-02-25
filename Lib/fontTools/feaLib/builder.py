@@ -672,6 +672,7 @@ class Builder(object):
             self.required_features_[key] = self.cur_feature_name_
 
     def getMarkAttachClass_(self, location, glyphs):
+        glyphs = frozenset(glyphs)
         id = self.markAttachClassID_.get(glyphs)
         if id is not None:
             return id
@@ -689,6 +690,7 @@ class Builder(object):
         return id
 
     def getMarkFilterSet_(self, location, glyphs):
+        glyphs = frozenset(glyphs)
         id = self.markFilterSets_.get(glyphs)
         if id is not None:
             return id
