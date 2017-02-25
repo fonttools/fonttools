@@ -9,14 +9,17 @@
     </GlyphClassDef>
     <MarkAttachClassDef>
       <ClassDef glyph="acute" class="1"/>
+      <ClassDef glyph="breve" class="3"/>
+      <ClassDef glyph="caron" class="3"/>
       <ClassDef glyph="cedilla" class="2"/>
       <ClassDef glyph="grave" class="1"/>
       <ClassDef glyph="macron" class="1"/>
       <ClassDef glyph="ogonek" class="2"/>
+      <ClassDef glyph="umlaut" class="3"/>
     </MarkAttachClassDef>
     <MarkGlyphSetsDef>
       <MarkSetTableFormat value="1"/>
-      <!-- MarkSetCount=2 -->
+      <!-- MarkSetCount=3 -->
       <Coverage index="0">
         <Glyph value="grave"/>
         <Glyph value="acute"/>
@@ -28,6 +31,11 @@
         <Glyph value="dieresis"/>
         <Glyph value="circumflex"/>
         <Glyph value="cedilla"/>
+      </Coverage>
+      <Coverage index="2">
+        <Glyph value="breve"/>
+        <Glyph value="umlaut"/>
+        <Glyph value="caron"/>
       </Coverage>
     </MarkGlyphSetsDef>
   </GDEF>
@@ -53,7 +61,7 @@
       <FeatureRecord index="0">
         <FeatureTag value="test"/>
         <Feature>
-          <!-- LookupCount=12 -->
+          <!-- LookupCount=14 -->
           <LookupListIndex index="0" value="0"/>
           <LookupListIndex index="1" value="1"/>
           <LookupListIndex index="2" value="2"/>
@@ -66,11 +74,13 @@
           <LookupListIndex index="9" value="9"/>
           <LookupListIndex index="10" value="10"/>
           <LookupListIndex index="11" value="11"/>
+          <LookupListIndex index="12" value="12"/>
+          <LookupListIndex index="13" value="13"/>
         </Feature>
       </FeatureRecord>
     </FeatureList>
     <LookupList>
-      <!-- LookupCount=12 -->
+      <!-- LookupCount=14 -->
       <Lookup index="0">
         <LookupType value="1"/>
         <LookupFlag value="1"/>
@@ -213,6 +223,31 @@
         <SinglePos index="0" Format="1">
           <Coverage>
             <Glyph value="L"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="12">
+        <LookupType value="1"/>
+        <LookupFlag value="16"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="M"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
+        <MarkFilteringSet value="2"/>
+      </Lookup>
+      <Lookup index="13">
+        <LookupType value="1"/>
+        <LookupFlag value="768"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="N"/>
           </Coverage>
           <ValueFormat value="4"/>
           <Value XAdvance="1"/>
