@@ -441,7 +441,7 @@ class Builder(object):
 
     def buildGDEFMarkGlyphSetsDef_(self):
         sets = []
-        for glyphs, id in sorted(self.markFilterSets_.items(),
+        for glyphs, id_ in sorted(self.markFilterSets_.items(),
                                  key=lambda item: item[1]):
             sets.append(glyphs)
         return otl.buildMarkGlyphSetsDef(sets, self.glyphMap)
@@ -674,11 +674,11 @@ class Builder(object):
 
     def getMarkAttachClass_(self, location, glyphs):
         glyphs = frozenset(glyphs)
-        id = self.markAttachClassID_.get(glyphs)
-        if id is not None:
-            return id
-        id = len(self.markAttachClassID_) + 1
-        self.markAttachClassID_[glyphs] = id
+        id_ = self.markAttachClassID_.get(glyphs)
+        if id_ is not None:
+            return id_
+        id_ = len(self.markAttachClassID_) + 1
+        self.markAttachClassID_[glyphs] = id_
         for glyph in glyphs:
             if glyph in self.markAttach_:
                 _, loc = self.markAttach_[glyph]
@@ -687,17 +687,17 @@ class Builder(object):
                     "a MarkAttachmentType at %s:%d:%d" % (
                         glyph, loc[0], loc[1], loc[2]),
                     location)
-            self.markAttach_[glyph] = (id, location)
-        return id
+            self.markAttach_[glyph] = (id_, location)
+        return id_
 
     def getMarkFilterSet_(self, location, glyphs):
         glyphs = frozenset(glyphs)
-        id = self.markFilterSets_.get(glyphs)
-        if id is not None:
-            return id
-        id = len(self.markFilterSets_)
-        self.markFilterSets_[glyphs] = id
-        return id
+        id_ = self.markFilterSets_.get(glyphs)
+        if id_ is not None:
+            return id_
+        id_ = len(self.markFilterSets_)
+        self.markFilterSets_[glyphs] = id_
+        return id_
 
     def set_lookup_flag(self, location, value, markAttach, markFilter):
         value = value & 0xFF
