@@ -61,6 +61,7 @@ def _loadAxis(et):
 	return item
 
 def _load(et):
+	designspace = {}
 	ds = et.getroot()
 
 	axes = []
@@ -68,20 +69,23 @@ def _load(et):
 	if ds_axes:
 		for et in ds_axes:
 			axes.append(_loadAxis(et))
+	designspace['axes'] = axes
 
 	masters = []
 	for et in ds.find('sources'):
 		masters.append(_loadItem(et))
+	designspace['masters'] = masters
 
 	instances = []
 	for et in ds.find('instances'):
 		instances.append(_loadItem(et))
+	designspace['instances'] = instances
 
-	return axes, masters, instances
+	return designspace
 
 def load(filename):
 	"""Load designspace from a file name or object.
-	   Returns three items:
+	   Returns a dictionary containing three items:
 	   - list of axes
 	   - list of masters (aka sources)
 	   - list of instances"""

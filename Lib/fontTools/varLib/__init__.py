@@ -265,7 +265,11 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	(axis-tag, axis-name).
 	"""
 
-	axes, masters, instances = designspace.load(designspace_filename)
+	ds = designspace.load(designspace_filename)
+	axes = ds['axes']
+	masters = ds['masters']
+	instances = ds['instances']
+
 	base_idx = None
 	for i,m in enumerate(masters):
 		if 'info' in m and m['info']['copy']:

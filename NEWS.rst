@@ -1,3 +1,6 @@
+- [varLib] designspace.load() now returns a dictionary, instead of a tuple,
+  and supports <axes> element (#864)
+
 3.7.2 (released 2017-02-17)
 ---------------------------
 
