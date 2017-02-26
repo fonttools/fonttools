@@ -3,7 +3,7 @@ from fontTools.misc.py23 import *
 from fontTools.pens.basePen import AbstractPen
 
 
-__all__ = ["AbstractPen"]
+__all__ = ["RecordingPen"]
 
 
 class RecordingPen(AbstractPen):
