@@ -9,21 +9,46 @@ class DesignspaceTest(unittest.TestCase):
     def test_load(self):
         self.assertEqual(
             designspace.load(_getpath("VarLibTest.designspace")),
-                ([{'filename': 'VarLibTest-Light.ufo',
-                   'groups': {'copy': True},
-                   'info': {'copy': True},
+
+                # axes
+                ([{'map': [{'input': 0.0, 'output': 10.0},
+                           {'input': 401.0, 'output': 66.0},
+                           {'input': 1000.0, 'output': 990.0}],
+                   'name': 'weight',
+                   'default': 0.0,
+                   'tag': 'wght',
+                   'maximum': 1000.0,
+                   'minimum': 0.0},
+                  {'default': 250.0,
+                   'minimum': 0.0,
+                   'tag': 'wdth',
+                   'maximum': 1000.0,
+                   'name': 'width'},
+                  {'name': 'contrast',
+                   'default': 0.0,
+                   'tag': 'cntr',
+                   'maximum': 100.0,
+                   'minimum': 0.0,
+                   'labelname': {'de': 'Kontrast', 'en': 'Contrast'}}],
+
+                 # masters (aka sources)
+                 [{'info': {'copy': True},
+                   'name': 'master_1',
                    'lib': {'copy': True},
+                   'filename': 'VarLibTest-Light.ufo',
                    'location': {'weight': 0.0},
-                   'name': 'master_1'},
-                  {'filename': 'VarLibTest-Bold.ufo',
-                   'location': {'weight': 1.0},
-                   'name': 'master_2'}],
-                 [{'filename': 'instance/VarLibTest-Medium.ufo',
-                   'location': {'weight': 0.5},
+                   'groups': {'copy': True}},
+                  {'location': {'weight': 1.0},
+                   'name': 'master_2',
+                   'filename': 'VarLibTest-Bold.ufo'}],
+
+                 # instances
+                 [{'info': {},
                    'familyname': 'VarLibTest',
-                   'stylename': 'Medium',
-                   'info': {},
-                   'kerning': {}}])
+                   'filename': 'instance/VarLibTest-Medium.ufo',
+                   'kerning': {},
+                   'location': {'weight': 0.5},
+                   'stylename': 'Medium'}])
         )
 
 
