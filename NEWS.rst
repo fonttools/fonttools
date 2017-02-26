@@ -1,3 +1,4 @@
+- New pens: MomentsPen, StatisticsPen, RecordingPen, and TeePen.
 - [varLib] designspace.load() now returns a dictionary, instead of a tuple,
   and supports <axes> element (#864)
 

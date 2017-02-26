@@ -1,3 +1,4 @@
+"""Pen recording operations that can be accessed or replayed."""
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.pens.basePen import AbstractPen
@@ -7,6 +8,11 @@ __all__ = ["RecordingPen"]
 
 
 class RecordingPen(AbstractPen):
+	"""Pen recording operations that can be accessed or replayed.
+
+	The recording can be accessed as pen.value; or replayed using
+	pen.replay(otherPen)."""
+
 	def __init__(self):
 		self.value = []
 	def moveTo(self, p0):
@@ -23,7 +29,6 @@ class RecordingPen(AbstractPen):
 		self.value.append(('endPath', ()))
 	def addComponent(self, glyphName, transformation):
 		self.value.append(('addComponent', (glyphName, transformation)))
-
 	def replay(self, pen):
 		for operator,operands in self.value:
 			getattr(pen, operator)(*operands)
