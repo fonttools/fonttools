@@ -29,7 +29,7 @@ from fontTools.ttLib.tables._g_v_a_r import TupleVariation
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib import builder, designspace, models
 from fontTools.varLib.merger import VariationMerger
-import collections
+from collections import OrderedDict
 import warnings
 import os.path
 import logging
@@ -42,7 +42,6 @@ log = logging.getLogger("fontTools.varLib")
 #
 
 # Move to fvar table proper?
-# TODO how to provide axis order?
 def _add_fvar(font, axes, instances, axis_map):
 	"""
 	Add 'fvar' table to font.
@@ -53,16 +52,14 @@ def _add_fvar(font, axes, instances, axis_map):
 	instances is list of dictionary objects with 'location', 'stylename',
 	and possibly 'postscriptfontname' entries.
 
-	axisMap is dictionary mapping axis-id to (axis-tag, axis-name).
+	axis_map is dictionary mapping axis-id to (axis-tag, axis-name).
 	"""
 
 	assert "fvar" not in font
 	font['fvar'] = fvar = newTable('fvar')
 	nameTable = font['name']
 
-	for iden in axis_map.keys():
-		if not iden in axes:
-			continue
+	for iden in sorted(axes.keys(), key=lambda i: axis_map.keys().index(i)):
 		axis = Axis()
 		axis.axisTag = Tag(axis_map[iden][0])
 		axis.minValue, axis.defaultValue, axis.maxValue = axes[iden]
@@ -267,7 +264,11 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	(axis-tag, axis-name).
 	"""
 
-	masters, instances, axisMapDS = designspace.load(designspace_filename)
+	ds = designspace.load(designspace_filename)
+	axes = ds['axes']
+	masters = ds['masters']
+	instances = ds['instances']
+
 	base_idx = None
 	for i,m in enumerate(masters):
 		if 'info' in m and m['info']['copy']:
@@ -283,32 +284,62 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	master_ttfs = [master_finder(os.path.join(basedir, m['filename'])) for m in masters]
 	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
 
+	standard_axis_map = OrderedDict([
+		('weight',  ('wght', 'Weight')),
+		('width',   ('wdth', 'Width')),
+		('slant',   ('slnt', 'Slant')),
+		('optical', ('opsz', 'Optical Size')),
+		('custom',  ('xxxx', 'Custom'))
+		])
+
 	if axisMap:
-		axis_map = designspace.standard_axis_map.copy()
+		# a dictionary mapping axis-id to (axis-tag, axis-name) was provided
+		axis_map = standard_axis_map.copy()
 		axis_map.update(axisMap)
-	elif axisMapDS:
-		axis_map = axisMapDS
+	elif axes:
+		# the designspace file loaded had an <axes> element.
+		# honor the order of the axes
+		axis_map = OrderedDict()
+		for axis in axes:
+			axis_name = axis['name']
+			if axis_name in standard_axis_map:
+				axis_map[axis_name] = standard_axis_map[axis_name]
+			else:
+				tag = axis['tag']
+				assert axis['labelname']['en']
+				label = axis['labelname']['en']
+				axis_map[axis_name] = (tag, label)
 	else:
-		axis_map = designspace.standard_axis_map
-	
+		axis_map = standard_axis_map
+
 
 	# TODO: For weight & width, use OS/2 values and setup 'avar' mapping.
 
 	master_locs = [o['location'] for o in masters]
 
-	axis_tags = set(master_locs[0].keys())
-	assert all(axis_tags == set(m.keys()) for m in master_locs)
+	axis_names = set(master_locs[0].keys())
+	assert all(axis_names == set(m.keys()) for m in master_locs)
 
 	# Set up axes
-	axes = {}
-	for tag in axis_tags:
-		default = master_locs[base_idx][tag]
-		lower = min(m[tag] for m in master_locs)
-		upper = max(m[tag] for m in master_locs)
-		if default == lower == upper:
-			continue
-		axes[tag] = (lower, default, upper)
-	log.info("Axes:\n%s", pformat(axes))
+	axes_dict = {}
+	if axes:
+		# the designspace file loaded had an <axes> element
+		for axis in axes:
+			default = axis['default']
+			lower = axis['minimum']
+			upper = axis['maximum']
+			name = axis['name']
+			axes_dict[name] = (lower, default, upper)
+	else:
+		for name in axis_names:
+			default = master_locs[base_idx][name]
+			lower = min(m[name] for m in master_locs)
+			upper = max(m[name] for m in master_locs)
+			if default == lower == upper:
+				continue
+			axes_dict[name] = (lower, default, upper)
+	log.info("Axes:\n%s", pformat(axes_dict))
+	assert all(name in axis_map for name in axes_dict.keys())
 
 	log.info("Master locations:\n%s", pformat(master_locs))
 
@@ -318,17 +349,17 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	gx = TTFont(master_ttfs[base_idx])
 
 	# TODO append masters as named-instances as well; needs .designspace change.
-	fvar = _add_fvar(gx, axes, instances, axis_map)
+	fvar = _add_fvar(gx, axes_dict, instances, axis_map)
 
 
 	# Normalize master locations
-	master_locs = [models.normalizeLocation(m, axes) for m in master_locs]
+	master_locs = [models.normalizeLocation(m, axes_dict) for m in master_locs]
 
 	log.info("Normalized master locations:\n%s", pformat(master_locs))
 
 	# TODO Clean this up.
 	del instances
-	del axes
+	del axes_dict
 	master_locs = [{axis_map[k][0]:v for k,v in loc.items()} for loc in master_locs]
 	#instance_locs = [{axis_map[k][0]:v for k,v in loc.items()} for loc in instance_locs]
 	axisTags = [axis.axisTag for axis in fvar.axes]
