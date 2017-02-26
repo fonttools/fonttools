@@ -9,13 +9,7 @@ except ImportError:
 
 __all__ = ['load', 'loads']
 
-standard_axis_map = collections.OrderedDict(
-	[['weight', ('wght', 'Weight')],
-	['width', ('wdth', 'Width')],
-	['slant', ('slnt', 'Slant')],
-	['optical', ('opsz', 'Optical Size')],
-	['custom',('xxxx', 'Custom')]]
-	)
+namespaces = {'xml': '{http://www.w3.org/XML/1998/namespace}'}
 
 def _xmlParseLocation(et):
 	loc = {}
@@ -40,23 +34,40 @@ def _loadItem(et):
 		item[elt.tag] = value
 	return item
 
+def _xmlParseAxisOrMap(elt):
+	dic = {}
+	for name in elt.attrib:
+		if name in ['name', 'tag']:
+			dic[name] = elt.attrib[name]
+		else:
+			dic[name] = float(elt.attrib[name])
+	return dic
+
+def _loadAxis(et):
+	item = dict(_xmlParseAxisOrMap(et))
+	maps = []
+	labelnames = {}
+	for elt in et:
+		assert elt.tag in ['labelname', 'map']
+		if elt.tag == 'labelname':
+			lang = elt.attrib["{0}lang".format(namespaces['xml'])]
+			labelnames[lang] = elt.text
+		elif elt.tag == 'map':
+			maps.append(_xmlParseAxisOrMap(elt))
+	if labelnames:
+		item['labelname'] = labelnames
+	if maps:
+		item['map'] = maps
+	return item
+
 def _load(et):
 	ds = et.getroot()
-	
-	axisMap = collections.OrderedDict()
-	axesET = ds.find('axes')
-	if axesET:
-		axisList = axesET.findall('axis')
-		for axisET in axisList:
-			axisName = axisET.attrib["name"]
-			labelET = axisET.find('labelname')
-			if (None == labelET):
-				# If the designpsace file axes is a std axes, the label name may be omitted.
-				tag, label = standard_axis_map[axisName]
-			else:
-				label = labelET.text
-				tag = axisET.attrib["tag"]
-			axisMap[axisName] = (tag,  label)
+
+	axes = []
+	ds_axes = ds.find('axes')
+	if ds_axes:
+		for et in ds_axes:
+			axes.append(_loadAxis(et))
 
 	masters = []
 	for et in ds.find('sources'):
@@ -66,11 +77,14 @@ def _load(et):
 	for et in ds.find('instances'):
 		instances.append(_loadItem(et))
 
-	return masters, instances, axisMap
+	return axes, masters, instances
 
 def load(filename):
-	"""Load designspace from a file name or object.  Returns two items:
-	list of masters (aka sources) and list of instances."""
+	"""Load designspace from a file name or object.
+	   Returns three items:
+	   - list of axes
+	   - list of masters (aka sources)
+	   - list of instances"""
 	return _load(ET.parse(filename))
 
 def loads(string):
