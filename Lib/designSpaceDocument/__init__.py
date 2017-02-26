@@ -620,14 +620,12 @@ class BaseDocReader(object):
                     if maxima[dimName] < v:
                         maxima[dimName] = v
         newAxes = []
-        counter = 1
         for axisName in maxima.keys():
             a = self.axisDescriptorClass()
             a.default = a.minimum = minima[axisName]
             a.maximum = maxima[axisName]
             a.name = axisName
-            a.tag = "_%03d"%(counter)
-            counter += 1
+            a.tag, a.labelNames = tagForAxisName(axisName)
             self.documentObject.axes.append(a)
 
     def readSources(self):
