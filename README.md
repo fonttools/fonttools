@@ -227,8 +227,8 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 
 ### Example
 ```xml
-<labelName xml:lang="fa-IR">قطر</labelName>
-<labelName xml:lang="en">Wéíght</labelName>
+<labelname xml:lang="fa-IR">قطر</labelname>
+<labelname xml:lang="en">Wéíght</labelname>
 ```
 
 # 1.2 `map` element
@@ -247,8 +247,8 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 ```xml
     <axes>
         <axis default="0" maximum="1000" minimum="0" name="weight" tag="wght">
-            <labelName xml:lang="fa-IR">قطر</labelName>
-            <labelName xml:lang="en">Wéíght</labelName>
+            <labelname xml:lang="fa-IR">قطر</labelname>
+            <labelname xml:lang="en">Wéíght</labelname>
         </axis>
         <axis default="0" maximum="1000" minimum="0" name="width" tag="wdth">
             <map input="0.0" output="10.0" />
