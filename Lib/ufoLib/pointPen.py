@@ -23,7 +23,7 @@ class AbstractPointPen(object):
 	Baseclass for all PointPens.
 	"""
 
-	def beginPath(self, identifier=None):
+	def beginPath(self, identifier=None, **kwargs):
 		"""Start a new sub path."""
 		raise NotImplementedError
 
@@ -36,7 +36,8 @@ class AbstractPointPen(object):
 		"""Add a point to the current sub path."""
 		raise NotImplementedError
 
-	def addComponent(self, baseGlyphName, transformation, identifier=None):
+	def addComponent(self, baseGlyphName, transformation, identifier=None,
+					 **kwargs):
 		"""Add a sub glyph."""
 		raise NotImplementedError
 
