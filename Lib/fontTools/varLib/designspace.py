@@ -76,8 +76,7 @@ def _load(et):
 		sources = []
 		for et in sources_element:
 			sources.append(_loadItem(et))
-		# XXX: why don't we call it 'sources'?
-		designspace['masters'] = sources
+		designspace['sources'] = sources
 
 	instances_element = ds.find('instances')
 	if instances_element is not None:
@@ -91,9 +90,10 @@ def _load(et):
 def load(filename):
 	"""Load designspace from a file name or object.
 	   Returns a dictionary containing three items:
-	   - list of axes
-	   - list of masters (aka sources)
-	   - list of instances"""
+	   - list of "axes"
+	   - list of "sources" (aka masters)
+	   - list of "instances"
+	"""
 	return _load(ET.parse(filename))
 
 def loads(string):
