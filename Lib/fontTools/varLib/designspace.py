@@ -64,22 +64,27 @@ def _load(et):
 	designspace = {}
 	ds = et.getroot()
 
-	axes = []
-	ds_axes = ds.find('axes')
-	if ds_axes:
-		for et in ds_axes:
+	axes_element = ds.find('axes')
+	if axes_element is not None:
+		axes = []
+		for et in axes_element:
 			axes.append(_loadAxis(et))
-	designspace['axes'] = axes
+		designspace['axes'] = axes
 
-	masters = []
-	for et in ds.find('sources'):
-		masters.append(_loadItem(et))
-	designspace['masters'] = masters
+	sources_element = ds.find('sources')
+	if sources_element is not None:
+		sources = []
+		for et in sources_element:
+			sources.append(_loadItem(et))
+		# XXX: why don't we call it 'sources'?
+		designspace['masters'] = sources
 
-	instances = []
-	for et in ds.find('instances'):
-		instances.append(_loadItem(et))
-	designspace['instances'] = instances
+	instances_element = ds.find('instances')
+	if instances_element is not None:
+		instances = []
+		for et in instances_element:
+			instances.append(_loadItem(et))
+		designspace['instances'] = instances
 
 	return designspace
 
