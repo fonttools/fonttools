@@ -56,14 +56,16 @@ def _add_fvar(font, axes, instances, axis_map):
 	instances is list of dictionary objects with 'location', 'stylename',
 	and possibly 'postscriptfontname' entries.
 
-	axis_map is dictionary mapping axis-id to (axis-tag, axis-name).
+	axis_map is an ordered dictionary mapping axis-id to (axis-tag, axis-name).
 	"""
 
 	assert "fvar" not in font
 	font['fvar'] = fvar = newTable('fvar')
 	nameTable = font['name']
 
-	for iden in sorted(axes.keys(), key=lambda i: axis_map.keys().index(i)):
+	for iden in axis_map.keys():
+		if iden not in axes:
+			continue
 		axis = Axis()
 		axis.axisTag = Tag(axis_map[iden][0])
 		axis.minValue, axis.defaultValue, axis.maxValue = axes[iden]
@@ -264,7 +266,7 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	filename as found in designspace file and map it to master font
 	binary as to be opened (eg. .ttf or .otf).
 
-	If axisMap is set, it should be dictionary mapping axis-id to
+	If axisMap is set, it should be an ordered dictionary mapping axis-id to
 	(axis-tag, axis-name).
 	"""
 
