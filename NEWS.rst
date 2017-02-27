@@ -1,6 +1,16 @@
 - New pens: MomentsPen, StatisticsPen, RecordingPen, and TeePen.
+- [misc] Added new ``fontTools.misc.symfont`` module, for symbolic font
+  statistical analysis; requires ``sympy`` (http://www.sympy.org/en/index.html)
+- [varLib] Added experimental ``fontTools.varLib.interpolatable`` module for
+  finding wrong contour order between different masters
 - [varLib] designspace.load() now returns a dictionary, instead of a tuple,
-  and supports <axes> element (#864)
+  and supports <axes> element (#864); the 'masters' item was renamed 'sources',
+  like the <sources> element in the designspace document
+- [ttLib] Fixed issue with recalculating ``head`` modified timestamp when
+  saving CFF fonts
+- [ttLib] In TupleVariation, round deltas before compiling (#861, fixed #592)
+- [feaLib] Ignore duplicate glyphs in classes used as MarkFilteringSet and
+  MarkAttachmentType (#863)
 
 3.7.2 (released 2017-02-17)
 ---------------------------
