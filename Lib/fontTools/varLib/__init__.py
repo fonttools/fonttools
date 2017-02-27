@@ -272,6 +272,7 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	axes = ds['axes'] if 'axes' in ds else []
 	if 'sources' not in ds or not ds['sources']:
 		raise VarLibError("no 'sources' defined in .designspace")
+	masters = ds['sources']
 	instances = ds['instances'] if 'instances' in ds else []
 
 	base_idx = None
