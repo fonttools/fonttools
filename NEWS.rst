@@ -11,6 +11,8 @@
 - [ttLib] In TupleVariation, round deltas before compiling (#861, fixed #592)
 - [feaLib] Ignore duplicate glyphs in classes used as MarkFilteringSet and
   MarkAttachmentType (#863)
+- [merge] Changed the ``gasp`` table merge logic so that only the one from
+  the first font is retained, similar to other hinting tables (#862)
 
 3.7.2 (released 2017-02-17)
 ---------------------------
