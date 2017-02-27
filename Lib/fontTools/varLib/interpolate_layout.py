@@ -4,7 +4,7 @@ Interpolate OpenType Layout tables (GDEF / GPOS / GSUB).
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
-from fontTools.varLib import designspace, models
+from fontTools.varLib import designspace, models, VarLibError
 from fontTools.varLib.merger import InstancerMerger
 import os.path
 
@@ -13,9 +13,10 @@ import os.path
 def interpolate_layout(designspace_filename, loc, finder):
 
 	ds = designspace.load(designspace_filename)
-	axes = ds['axes']
-	masters = ds['masters']
-	instances = ds['instances']
+	axes = ds['axes'] if 'axes' in ds else []
+	if 'sources' not in ds or not ds['sources']:
+		raise VarLibError("no 'sources' defined in .designspace")
+	masters = ds['sources']
 
 	base_idx = None
 	for i,m in enumerate(masters):
