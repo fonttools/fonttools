@@ -94,7 +94,7 @@ def _load(et):
 
 def load(filename):
 	"""Load designspace from a file name or object.
-	   Returns a dictionary containing three items:
+	   Returns a dictionary containing three (optional) items:
 	   - list of "axes"
 	   - list of "sources" (aka masters)
 	   - list of "instances"
