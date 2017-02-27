@@ -18,7 +18,7 @@ class DesignspaceTest(unittest.TestCase):
                     'location': {'weight': 0.5},
                     'stylename': 'Medium'}],
 
-                 'masters':
+                 'sources':
                   [{'info': {'copy': True},
                     'name': 'master_1',
                     'lib': {'copy': True},

@@ -37,6 +37,10 @@ from pprint import pformat
 
 log = logging.getLogger("fontTools.varLib")
 
+
+class VarLibError(Exception):
+	pass
+
 #
 # Creation routines
 #
@@ -265,9 +269,10 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	"""
 
 	ds = designspace.load(designspace_filename)
-	axes = ds['axes']
-	masters = ds['masters']
-	instances = ds['instances']
+	axes = ds['axes'] if 'axes' in ds else []
+	if 'sources' not in ds or not ds['sources']:
+		raise VarLibError("no 'sources' defined in .designspace")
+	instances = ds['instances'] if 'instances' in ds else []
 
 	base_idx = None
 	for i,m in enumerate(masters):
