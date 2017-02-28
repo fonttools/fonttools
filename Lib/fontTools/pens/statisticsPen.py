@@ -1,3 +1,5 @@
+"""Pen calculating area, center of mass, variance and standard-deviation,
+covariance and correlation, and slant, of glyph shapes."""
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 import math
@@ -7,6 +9,16 @@ __all__ = ["StatisticsPen"]
 
 
 class StatisticsPen(MomentsPen):
+
+	"""Pen calculating area, center of mass, variance and
+	standard-deviation, covariance and correlation, and slant,
+	of glyph shapes.
+
+	Note that all the calculated values are 'signed'. Ie. if the
+	glyph shape is self-intersecting, the values are not correct
+	(but well-defined). As such, area will be negative if contour
+	directions are clockwise.  Moreover, variance might be negative
+	if the shapes are self-intersecting in certain ways."""
 
 	def __init__(self, glyphset=None):
 		MomentsPen.__init__(self, glyphset=glyphset)

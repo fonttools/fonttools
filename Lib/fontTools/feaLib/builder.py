@@ -440,9 +440,10 @@ class Builder(object):
         return result
 
     def buildGDEFMarkGlyphSetsDef_(self):
-        sets = [None] * len(self.markFilterSets_)
-        for glyphs, id in self.markFilterSets_.items():
-            sets[id] = glyphs
+        sets = []
+        for glyphs, id_ in sorted(self.markFilterSets_.items(),
+                                 key=lambda item: item[1]):
+            sets.append(glyphs)
         return otl.buildMarkGlyphSetsDef(sets, self.glyphMap)
 
     def buildLookups_(self, tag):
@@ -672,11 +673,12 @@ class Builder(object):
             self.required_features_[key] = self.cur_feature_name_
 
     def getMarkAttachClass_(self, location, glyphs):
-        id = self.markAttachClassID_.get(glyphs)
-        if id is not None:
-            return id
-        id = len(self.markAttachClassID_) + 1
-        self.markAttachClassID_[glyphs] = id
+        glyphs = frozenset(glyphs)
+        id_ = self.markAttachClassID_.get(glyphs)
+        if id_ is not None:
+            return id_
+        id_ = len(self.markAttachClassID_) + 1
+        self.markAttachClassID_[glyphs] = id_
         for glyph in glyphs:
             if glyph in self.markAttach_:
                 _, loc = self.markAttach_[glyph]
@@ -685,16 +687,17 @@ class Builder(object):
                     "a MarkAttachmentType at %s:%d:%d" % (
                         glyph, loc[0], loc[1], loc[2]),
                     location)
-            self.markAttach_[glyph] = (id, location)
-        return id
+            self.markAttach_[glyph] = (id_, location)
+        return id_
 
     def getMarkFilterSet_(self, location, glyphs):
-        id = self.markFilterSets_.get(glyphs)
-        if id is not None:
-            return id
-        id = len(self.markFilterSets_)
-        self.markFilterSets_[glyphs] = id
-        return id
+        glyphs = frozenset(glyphs)
+        id_ = self.markFilterSets_.get(glyphs)
+        if id_ is not None:
+            return id_
+        id_ = len(self.markFilterSets_)
+        self.markFilterSets_[glyphs] = id_
+        return id_
 
     def set_lookup_flag(self, location, value, markAttach, markFilter):
         value = value & 0xFF

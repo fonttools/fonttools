@@ -4,7 +4,7 @@ Interpolate OpenType Layout tables (GDEF / GPOS / GSUB).
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
-from fontTools.varLib import designspace, models
+from fontTools.varLib import designspace, models, VarLibError
 from fontTools.varLib.merger import InstancerMerger
 import os.path
 
@@ -12,7 +12,12 @@ import os.path
 
 def interpolate_layout(designspace_filename, loc, finder):
 
-	masters, instances, axisMap = designspace.load(designspace_filename)
+	ds = designspace.load(designspace_filename)
+	axes = ds['axes'] if 'axes' in ds else []
+	if 'sources' not in ds or not ds['sources']:
+		raise VarLibError("no 'sources' defined in .designspace")
+	masters = ds['sources']
+
 	base_idx = None
 	for i,m in enumerate(masters):
 		if 'info' in m and m['info']['copy']:
@@ -34,26 +39,37 @@ def interpolate_layout(designspace_filename, loc, finder):
 
 	master_locs = [o['location'] for o in masters]
 
-	axis_tags = set(master_locs[0].keys())
-	assert all(axis_tags == set(m.keys()) for m in master_locs)
+	axis_names = set(master_locs[0].keys())
+	assert all(axis_names == set(m.keys()) for m in master_locs)
 
 	# Set up axes
-	axes = {}
-	for tag in axis_tags:
-		default = master_locs[base_idx][tag]
-		lower = min(m[tag] for m in master_locs)
-		upper = max(m[tag] for m in master_locs)
-		axes[tag] = (lower, default, upper)
+	axes_dict = {}
+	if axes:
+		# the designspace file loaded had an <axes> element
+		for axis in axes:
+			default = axis['default']
+			lower = axis['minimum']
+			upper = axis['maximum']
+			name = axis['name']
+			axes_dict[name] = (lower, default, upper)
+	else:
+		for tag in axis_names:
+			default = master_locs[base_idx][tag]
+			lower = min(m[tag] for m in master_locs)
+			upper = max(m[tag] for m in master_locs)
+			if default == lower == upper:
+				continue
+			axes_dict[tag] = (lower, default, upper)
 	print("Axes:")
-	pprint(axes)
+	pprint(axes_dict)
 
 	print("Location:", loc)
 	print("Master locations:")
 	pprint(master_locs)
 
 	# Normalize locations
-	loc = models.normalizeLocation(loc, axes)
-	master_locs = [models.normalizeLocation(m, axes) for m in master_locs]
+	loc = models.normalizeLocation(loc, axes_dict)
+	master_locs = [models.normalizeLocation(m, axes_dict) for m in master_locs]
 
 	print("Normalized location:", loc)
 	print("Normalized master locations:")
@@ -66,7 +82,7 @@ def interpolate_layout(designspace_filename, loc, finder):
 	merger = InstancerMerger(font, model, loc)
 
 	print("Building variations tables")
-	merger.mergeTables(font, master_fonts, axes, base_idx, ['GPOS'])
+	merger.mergeTables(font, master_fonts, axes_dict, base_idx, ['GPOS'])
 	return font
 
 
