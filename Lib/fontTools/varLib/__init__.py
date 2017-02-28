@@ -287,7 +287,7 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	log.info("Index of base master: %s", base_idx)
 
 	log.info("Building variable font")
-	log.info("Loading TTF masters")
+	log.info("Loading master fonts")
 	basedir = os.path.dirname(designspace_filename)
 	master_ttfs = [master_finder(os.path.join(basedir, m['filename'])) for m in masters]
 	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]

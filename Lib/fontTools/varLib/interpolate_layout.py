@@ -28,8 +28,8 @@ def interpolate_layout(designspace_filename, loc, finder):
 	from pprint import pprint
 	print("Index of base master:", base_idx)
 
-	print("Building GX")
-	print("Loading TTF masters")
+	print("Building variable font")
+	print("Loading master fonts")
 	basedir = os.path.dirname(designspace_filename)
 	master_ttfs = [finder(os.path.join(basedir, m['filename'])) for m in masters]
 	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
