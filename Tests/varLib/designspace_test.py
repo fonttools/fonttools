@@ -52,6 +52,11 @@ class DesignspaceTest(unittest.TestCase):
                 }
         )
 
+    def test_load2(self):
+        self.assertEqual(
+            designspace.load(_getpath("VarLibTest2.designspace")),
+                    {'instances': [{}], 'sources': []})
+
 
 def _getpath(testfile):
     path, _ = os.path.split(__file__)
