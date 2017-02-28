@@ -98,7 +98,6 @@ def mergeObjects(lst):
 	lst = [item for item in lst if item is not None]
 	if not lst:
 		return None
-
 	clazz = lst[0].__class__
 	assert all(type(item) == clazz for item in lst), lst
 
@@ -586,6 +585,7 @@ def getGlyphNameAndFontIndex(gid):
 	Example:
 		'uni0000', 3 = getGlyphNameAndFontIndex('uni0000#3')
 	"""
+	# FIXME? This is too hacky. Find another way to wire down the fonts to this function.
 	assert '#' in gid and gid.rsplit('#', 1)[1].isdigit(), 'incorrect gid format'
 	return gid.rsplit('#', 1)[0], int(gid.rsplit('#', 1)[1])
 
@@ -604,18 +604,20 @@ def isGlyphSame(fonts, gid_0, gid_1):
 	Returns:
 		A bool indicating whether the given glyphs are equal or not.
 	"""
+	from fontTools.pens.recordingPen import RecordingPen
 	# Checks outline
-	index_0 = getGlyphNameAndFontIndex(gid_0)[1]
-	index_1 = getGlyphNameAndFontIndex(gid_1)[1]
+	pen_0 = RecordingPen()
+	pen_1 = RecordingPen()
+	gid_0, index_0 = getGlyphNameAndFontIndex(gid_0)
+	gid_1, index_1 = getGlyphNameAndFontIndex(gid_1)
 
-	assert 'glyf' in fonts[index_0] and 'glyf' in fonts[index_1]
-	glyfTable_0 = fonts[index_0]['glyf']
-	glyfTable_1 = fonts[index_1]['glyf']
-	data_0 = glyfTable_0[gid_0].compile(glyfTable_0)
-	data_1 = glyfTable_1[gid_1].compile(glyfTable_1)
-	if data_0 != data_1:
-		# Binary data is not printable. Prints out coordinates instead.
-		log.info("outlines are different: %s:%s, %s:%s" % (gid_0, glyfTable_0[gid_0].getCoordinates(glyfTable_0), gid_1, glyfTable_1[gid_1].getCoordinates(glyfTable_1)))
+
+	fonts[index_0].getGlyphSet()[gid_0].draw(pen_0)
+	fonts[index_1].getGlyphSet()[gid_1].draw(pen_1)
+
+
+	if pen_0.value != pen_1.value:
+		log.info("outlines are different: %s:%s, %s:%s" % (gid_0, pen_0.value, gid_1, pen_1.value))
 		return False
 
 	# Checks advance width and left bearing
@@ -838,6 +840,7 @@ class Merger(object):
 		self.options = options
 
 	def merge(self, fontfiles):
+		import copy
 
 		mega = ttLib.TTFont()
 
@@ -851,6 +854,7 @@ class Merger(object):
 		# TODO Is it necessary to reload font?  I think it is.  At least
 		# it's safer, in case tables were loaded to provide glyph names.
 		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
+		self.fonts = copy.deepcopy(fonts)
 		for font,glyphOrder in zip(fonts, glyphOrders):
 			font.setGlyphOrder(glyphOrder)
 		mega.setGlyphOrder(megaGlyphOrder)
@@ -859,7 +863,6 @@ class Merger(object):
 			self._preMerge(font)
 
 		self.duplicateGlyphsPerFont = [{} for f in fonts]
-		self.fonts = fonts
 		self.fontfiles = fontfiles
 		allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
 		allTags.remove('GlyphOrder')
@@ -987,10 +990,10 @@ __all__ = [
 	'main'
 ]
 
+
 @timer("make one with everything (TOTAL TIME)")
 def main(args=None):
 	from fontTools import configLogger
-
 	if args is None:
 		args = sys.argv[1:]
 
