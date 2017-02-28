@@ -1,6 +1,5 @@
 """Rudimentary support for loading MutatorMath .designspace files."""
 from __future__ import print_function, division, absolute_import
-import collections
 from fontTools.misc.py23 import *
 try:
 	import xml.etree.cElementTree as ET
@@ -9,15 +8,10 @@ except ImportError:
 
 __all__ = ['load', 'loads']
 
-standard_axis_map = collections.OrderedDict(
-	[['weight', ('wght', 'Weight')],
-	['width', ('wdth', 'Width')],
-	['slant', ('slnt', 'Slant')],
-	['optical', ('opsz', 'Optical Size')],
-	['custom',('xxxx', 'Custom')]]
-	)
+namespaces = {'xml': '{http://www.w3.org/XML/1998/namespace}'}
 
-def _xmlParseLocation(et):
+
+def _xml_parse_location(et):
 	loc = {}
 	for dim in et.find('location'):
 		assert dim.tag == 'dimension'
@@ -27,51 +21,86 @@ def _xmlParseLocation(et):
 		loc[name] = value
 	return loc
 
-def _loadItem(et):
+
+def _load_item(et):
 	item = dict(et.attrib)
-	for elt in et:
-		if elt.tag == 'location':
-			value = _xmlParseLocation(et)
+	for element in et:
+		if element.tag == 'location':
+			value = _xml_parse_location(et)
 		else:
 			value = {}
-			if 'copy' in elt.attrib:
-				value['copy'] = bool(int(elt.attrib['copy']))
+			if 'copy' in element.attrib:
+				value['copy'] = bool(int(element.attrib['copy']))
 			# TODO load more?!
-		item[elt.tag] = value
+		item[element.tag] = value
 	return item
 
+
+def _xml_parse_axis_or_map(element):
+	dic = {}
+	for name in element.attrib:
+		if name in ['name', 'tag']:
+			dic[name] = element.attrib[name]
+		else:
+			dic[name] = float(element.attrib[name])
+	return dic
+
+
+def _load_axis(et):
+	item = _xml_parse_axis_or_map(et)
+	maps = []
+	labelnames = {}
+	for element in et:
+		assert element.tag in ['labelname', 'map']
+		if element.tag == 'labelname':
+			lang = element.attrib["{0}lang".format(namespaces['xml'])]
+			labelnames[lang] = element.text
+		elif element.tag == 'map':
+			maps.append(_xml_parse_axis_or_map(element))
+	if labelnames:
+		item['labelname'] = labelnames
+	if maps:
+		item['map'] = maps
+	return item
+
+
 def _load(et):
+	designspace = {}
 	ds = et.getroot()
-	
-	axisMap = collections.OrderedDict()
-	axesET = ds.find('axes')
-	if axesET:
-		axisList = axesET.findall('axis')
-		for axisET in axisList:
-			axisName = axisET.attrib["name"]
-			labelET = axisET.find('labelname')
-			if (None == labelET):
-				# If the designpsace file axes is a std axes, the label name may be omitted.
-				tag, label = standard_axis_map[axisName]
-			else:
-				label = labelET.text
-				tag = axisET.attrib["tag"]
-			axisMap[axisName] = (tag,  label)
 
-	masters = []
-	for et in ds.find('sources'):
-		masters.append(_loadItem(et))
+	axes_element = ds.find('axes')
+	if axes_element is not None:
+		axes = []
+		for et in axes_element:
+			axes.append(_load_axis(et))
+		designspace['axes'] = axes
 
-	instances = []
-	for et in ds.find('instances'):
-		instances.append(_loadItem(et))
+	sources_element = ds.find('sources')
+	if sources_element is not None:
+		sources = []
+		for et in sources_element:
+			sources.append(_load_item(et))
+		designspace['sources'] = sources
 
-	return masters, instances, axisMap
+	instances_element = ds.find('instances')
+	if instances_element is not None:
+		instances = []
+		for et in instances_element:
+			instances.append(_load_item(et))
+		designspace['instances'] = instances
+
+	return designspace
+
 
 def load(filename):
-	"""Load designspace from a file name or object.  Returns two items:
-	list of masters (aka sources) and list of instances."""
+	"""Load designspace from a file name or object.
+	   Returns a dictionary containing three (optional) items:
+	   - list of "axes"
+	   - list of "sources" (aka masters)
+	   - list of "instances"
+	"""
 	return _load(ET.parse(filename))
+
 
 def loads(string):
 	"""Load designspace from a string."""

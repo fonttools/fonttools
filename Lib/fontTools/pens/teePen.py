@@ -1,3 +1,4 @@
+"""Pen multiplexing drawing to one or more pens."""
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.pens.basePen import AbstractPen
@@ -7,6 +8,10 @@ __all__ = ["TeePen"]
 
 
 class TeePen(AbstractPen):
+	"""Pen multiplexing drawing to one or more pens.
+
+	Use either as TeePen(pen1, pen2, ...) or TeePen(iterableOfPens)."""
+
 	def __init__(self, *pens):
 		if len(pens) == 1:
 			pens = pens[0]

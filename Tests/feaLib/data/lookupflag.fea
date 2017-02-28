@@ -3,6 +3,7 @@ languagesystem DFLT dflt;
 @TOP_MARKS = [acute grave macron];
 markClass [cedilla ogonek] <anchor 350 -20> @BOTTOM_MARKS;
 @FRENCH_MARKS = [acute grave cedilla dieresis circumflex];
+@MARKS_WITH_DUPLICATES = [breve caron umlaut breve caron umlaut];
 
 lookup A {
     lookupflag RightToLeft;
@@ -68,6 +69,16 @@ lookup L {
     pos L 1;
 } L;
 
+lookup M {
+    lookupflag UseMarkFilteringSet @MARKS_WITH_DUPLICATES;
+    pos M 1;
+} M;
+
+lookup N {
+    lookupflag MarkAttachmentType @MARKS_WITH_DUPLICATES;
+    pos N 1;
+} N;
+
 feature test {
     lookup A;
     lookup B;
@@ -81,4 +92,6 @@ feature test {
     lookup J;
     lookup K;
     lookup L;
+    lookup M;
+    lookup N;
 } test;
