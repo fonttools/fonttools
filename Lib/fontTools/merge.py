@@ -990,10 +990,10 @@ __all__ = [
 	'main'
 ]
 
-
 @timer("make one with everything (TOTAL TIME)")
 def main(args=None):
 	from fontTools import configLogger
+
 	if args is None:
 		args = sys.argv[1:]
 
