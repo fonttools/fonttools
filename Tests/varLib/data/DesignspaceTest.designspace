@@ -13,7 +13,7 @@
         </axis>
     </axes>
     <sources>
-        <source filename="VarLibTest-Light.ufo" name="master_1">
+        <source filename="DesignspaceTest-Light.ufo" name="master_1">
             <lib copy="1"/>
             <groups copy="1"/>
             <info copy="1"/>
@@ -21,14 +21,14 @@
                 <dimension name="weight" xvalue="0.0"/>
             </location>
         </source>
-        <source filename="VarLibTest-Bold.ufo" name="master_2">
+        <source filename="DesignspaceTest-Bold.ufo" name="master_2">
             <location>
                 <dimension name="weight" xvalue="1.0"/>
             </location>
         </source>
     </sources>
     <instances>
-        <instance familyname="VarLibTest" filename="instance/VarLibTest-Medium.ufo" stylename="Medium">
+        <instance familyname="DesignspaceTest" filename="instance/DesignspaceTest-Medium.ufo" stylename="Medium">
             <location>
                 <dimension name="weight" xvalue="0.5"/>
             </location>

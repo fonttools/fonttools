@@ -8,12 +8,12 @@ import unittest
 class DesignspaceTest(unittest.TestCase):
     def test_load(self):
         self.assertEqual(
-            designspace.load(_getpath("VarLibTest.designspace")),
+            designspace.load(_getpath("DesignspaceTest.designspace")),
 
                 {'instances':
                   [{'info': {},
-                    'familyname': 'VarLibTest',
-                    'filename': 'instance/VarLibTest-Medium.ufo',
+                    'familyname': 'DesignspaceTest',
+                    'filename': 'instance/DesignspaceTest-Medium.ufo',
                     'kerning': {},
                     'location': {'weight': 0.5},
                     'stylename': 'Medium'}],
@@ -22,12 +22,12 @@ class DesignspaceTest(unittest.TestCase):
                   [{'info': {'copy': True},
                     'name': 'master_1',
                     'lib': {'copy': True},
-                    'filename': 'VarLibTest-Light.ufo',
+                    'filename': 'DesignspaceTest-Light.ufo',
                     'location': {'weight': 0.0},
                     'groups': {'copy': True}},
                    {'location': {'weight': 1.0},
                     'name': 'master_2',
-                    'filename': 'VarLibTest-Bold.ufo'}],
+                    'filename': 'DesignspaceTest-Bold.ufo'}],
 
                  'axes':
                   [{'map': [{'input': 0.0, 'output': 10.0},
@@ -54,7 +54,7 @@ class DesignspaceTest(unittest.TestCase):
 
     def test_load2(self):
         self.assertEqual(
-            designspace.load(_getpath("VarLibTest2.designspace")),
+            designspace.load(_getpath("DesignspaceTest2.designspace")),
                     {'instances': [{}], 'sources': []})
 
 
