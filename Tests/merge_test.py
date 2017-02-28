@@ -249,11 +249,11 @@ class GSUBMergUnitTest(unittest.TestCase):
 
 class IsGlyphSame(unittest.TestCase):
 		def setUp(self):
-			# FIXME? This test requires lat least one complete TTFont object including
-			# glyf, hmtx, vmtx tables.
-			# Importing data/TestTTF-Regular.ttx and adding 'hmtx', 'vmtx' manually
-			# does not work since its glyf table isn't intact. Probably we need to
-			# import a true Font file as our test case data source.
+			# FIXME? This test requires at least one complete TTFont object including
+			# glyf, hmtx and vmtx tables.
+			# Importing 'data/TestTTF-Regular.ttx' file and adding 'hmtx', 'vmtx'
+			# manually doesn't work since its glyf table isn't intact. Probably we
+			# need to import a true Font file as our test case data source.
 			pass
 
 class gaspMergeUnitTest(unittest.TestCase):
