@@ -233,8 +233,7 @@ class GSUBMergUnitTest(unittest.TestCase):
 
 		table = self.mergedTable.table
 		self.assertEqual(table, self.table1.table)
-		self.assertTrue(len(captor.records) > 0)
-
+		self.assertTrue(len([r for r in captor.records if r.msg != '']) > 0)
 class IsGlyphSame(unittest.TestCase):
 		def setUp(self):
 			# FIXME? This test requires at least one complete TTFont object including
