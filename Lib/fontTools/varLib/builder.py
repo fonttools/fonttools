@@ -68,6 +68,16 @@ def buildVarData(varRegionIndices, items, optimize=True):
 			assert len(item) == regionCount
 			records.append(list(item))
 	self.ItemCount = len(self.Item)
+	numShorts = 0
+	for item in records:
+		assert len(item) == regionCount, ("Item length mismatch", len(item), regionCount)
+		for i in range(regionCount - 1, numShorts - 1, -1):
+			if not (-128 <= item[i] <= 127):
+				numShorts = i + 1
+				break
+		if numShorts == regionCount:
+			break
+	self.NumShorts = numShorts
 	if items and optimize:
 		optimizeVarData(self)
 	return self

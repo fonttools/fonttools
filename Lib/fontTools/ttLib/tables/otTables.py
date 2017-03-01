@@ -205,28 +205,6 @@ class VarIdxMap(BaseTable):
 		mapping.append((outer << 16) | inner)
 
 
-class VarData(BaseTable):
-
-	def preWrite(self, font):
-		rawTable = self.__dict__.copy()
-
-		# TODO Remove this abstraction/optimization and move it varLib.builder?
-
-		numShorts = 0
-		count = len(self.VarRegionIndex)
-		for item in getattr(self, 'Item', []):
-			assert len(item) == count, ("Item length mismatch", len(item), count)
-			for i in range(count - 1, numShorts - 1, -1):
-				if not (-128 <= item[i] <= 127):
-					numShorts = i + 1
-					break
-			if numShorts == count:
-				break
-
-		rawTable['NumShorts'] = numShorts
-		return rawTable
-
-
 class SingleSubst(FormatSwitchingBaseTable):
 
 	def populateDefaults(self, propagator=None):
