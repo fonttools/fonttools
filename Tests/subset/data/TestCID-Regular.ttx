@@ -31,7 +31,7 @@
   </head>
 
   <hhea>
-    <tableVersion value="1.0"/>
+    <tableVersion value="0x00010000"/>
     <ascent value="1000"/>
     <descent value="-320"/>
     <lineGap value="0"/>
@@ -360,7 +360,7 @@
   </hmtx>
 
   <vhea>
-    <tableVersion value="1.0625"/>
+    <tableVersion value="0x00011000"/>
     <ascent value="500"/>
     <descent value="-500"/>
     <lineGap value="0"/>

@@ -37,7 +37,7 @@
   </head>
 
   <hhea>
-    <tableVersion value="1.0"/>
+    <tableVersion value="0x00010000"/>
     <ascent value="800"/>
     <descent value="0"/>
     <lineGap value="90"/>
@@ -685,7 +685,7 @@
       TestCLR
     </namerecord>
     <namerecord nameID="5" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Version 001.000 
+      Version 001.000
     </namerecord>
     <namerecord nameID="6" platformID="1" platEncID="0" langID="0x0" unicode="True">
       TestCLR-Regular
@@ -706,7 +706,7 @@
       TestCLR
     </namerecord>
     <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
-      Version 001.000 
+      Version 001.000
     </namerecord>
     <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
       TestCLR-Regular
