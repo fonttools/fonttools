@@ -116,7 +116,7 @@ Output options:
       Use the Google Zopfli algorithm to compress WOFF. The output is 3-8 %
       smaller than pure zlib, but the compression speed is much slower.
       The Zopfli Python bindings are available at:
-      https://github.com/anthrotype/py-zopfli
+      https://pypi.python.org/pypi/zopfli
 
 Glyph set expansion:
   These options control how additional glyphs are added to the subset.

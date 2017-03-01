@@ -77,7 +77,7 @@ usage: ttx [options] inputfile1 [... inputfileN]
       or 'woff2'. Note that WOFF2 requires the Brotli Python extension,
       available at https://github.com/google/brotli
     --with-zopfli Use Zopfli instead of Zlib to compress WOFF. The Python
-      extension is available at https://github.com/anthrotype/py-zopfli
+      extension is available at https://pypi.python.org/pypi/zopfli
 """
 
 

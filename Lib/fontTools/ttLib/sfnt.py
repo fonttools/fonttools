@@ -137,7 +137,7 @@ class SFNTReader(object):
 ZLIB_COMPRESSION_LEVEL = 6
 
 # if set to True, use zopfli instead of zlib for compressing WOFF 1.0.
-# The Python bindings are available at https://github.com/anthrotype/py-zopfli
+# The Python bindings are available at https://pypi.python.org/pypi/zopfli
 USE_ZOPFLI = False
 
 # mapping between zlib's compression levels and zopfli's 'numiterations'.
