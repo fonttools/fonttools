@@ -57,7 +57,8 @@ def calculateNumShorts(self, optimize=True):
 			items[i] = _reorderItem(items[i], narrows)
 		self.NumShorts = count - len(narrows)
 	else:
-		self.NumShorts = 1 + max(set(range(count)) - narrows)
+		wides = set(range(count)) - narrows
+		self.NumShorts = 1+max(wides) if wides else 0
 	return self
 
 def buildVarData(varRegionIndices, items, optimize=True):
