@@ -50,12 +50,14 @@ def calculateNumShorts(self, optimize=True):
 				break
 		if not narrows:
 			break
-	self.NumShorts = count - len(narrows)
 	if optimize:
 		# Reorder columns such that all SHORT columns come before UINT8
 		self.VarRegionIndex = _reorderItem(self.VarRegionIndex, narrows)
 		for i in range(self.ItemCount):
 			items[i] = _reorderItem(items[i], narrows)
+		self.NumShorts = count - len(narrows)
+	else:
+		self.NumShorts = 1 + max(set(range(count)) - narrows)
 	return self
 
 def buildVarData(varRegionIndices, items, optimize=True):
