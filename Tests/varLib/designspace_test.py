@@ -7,50 +7,56 @@ import unittest
 
 class DesignspaceTest(unittest.TestCase):
     def test_load(self):
+        self.maxDiff = None
         self.assertEqual(
-            designspace.load(_getpath("VarLibTest.designspace")),
+            designspace.load(_getpath("DesignspaceTest.designspace")),
 
-                {'instances':
-                  [{'info': {},
-                    'familyname': 'VarLibTest',
-                    'filename': 'instance/VarLibTest-Medium.ufo',
-                    'kerning': {},
-                    'location': {'weight': 0.5},
-                    'stylename': 'Medium'}],
-
-                 'sources':
-                  [{'info': {'copy': True},
+                {'sources':
+                  [{'location': {'weight': 0.0},
+                    'groups': {'copy': True},
+                    'filename': 'DesignspaceTest-Light.ufo',
+                    'info': {'copy': True},
                     'name': 'master_1',
-                    'lib': {'copy': True},
-                    'filename': 'VarLibTest-Light.ufo',
-                    'location': {'weight': 0.0},
-                    'groups': {'copy': True}},
+                    'lib': {'copy': True}},
                    {'location': {'weight': 1.0},
                     'name': 'master_2',
-                    'filename': 'VarLibTest-Bold.ufo'}],
+                    'filename': 'DesignspaceTest-Bold.ufo'}],
+
+                 'instances':
+                  [{'location': {'weight': 0.5},
+                    'familyname': 'DesignspaceTest',
+                    'filename': 'instance/DesignspaceTest-Medium.ufo',
+                    'kerning': {},
+                    'info': {},
+                    'stylename': 'Medium'}],
 
                  'axes':
-                  [{'map': [{'input': 0.0, 'output': 10.0},
+                  [{'name': 'weight',
+                    'map': [{'input': 0.0, 'output': 10.0},
                             {'input': 401.0, 'output': 66.0},
                             {'input': 1000.0, 'output': 990.0}],
-                    'name': 'weight',
-                    'default': 0.0,
                     'tag': 'wght',
                     'maximum': 1000.0,
-                    'minimum': 0.0},
-                   {'default': 250.0,
                     'minimum': 0.0,
-                    'tag': 'wdth',
-                    'maximum': 1000.0,
-                    'name': 'width'},
+                    'default': 0.0},
+                   {'maximum': 1000.0,
+                    'default': 250.0,
+                    'minimum': 0.0,
+                    'name': 'width',
+                    'tag': 'wdth'},
                    {'name': 'contrast',
-                    'default': 0.0,
                     'tag': 'cntr',
                     'maximum': 100.0,
                     'minimum': 0.0,
+                    'default': 0.0,
                     'labelname': {'de': 'Kontrast', 'en': 'Contrast'}}]
                 }
         )
+
+    def test_load2(self):
+        self.assertEqual(
+            designspace.load(_getpath("DesignspaceTest2.designspace")),
+                    {'sources': [], 'instances': [{}]})
 
 
 def _getpath(testfile):
