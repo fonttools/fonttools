@@ -203,11 +203,8 @@ class TTFont(object):
 			# assume "file" is a writable file object
 			closeStream = False
 
-		if 'head' not in self:
-			raise TTLibError("missing required table: head")
-		elif self.recalcTimestamp and not self.isLoaded('head'):
-			# make sure 'head' is loaded so the recalculation is actually done
-			self['head']
+		if self.recalcTimestamp and 'head' in self:
+			self['head']  # make sure 'head' is loaded so the recalculation is actually done
 
 		tags = list(self.keys())
 		if "GlyphOrder" in tags:

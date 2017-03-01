@@ -271,13 +271,10 @@ def ttCompile(input, output, options):
 			allowVID=options.allowVID)
 	ttf.importXML(input)
 
-	if not options.recalcTimestamp:
+	if not options.recalcTimestamp and 'head' in ttf:
 		# use TTX file modification time for head "modified" timestamp
 		mtime = os.path.getmtime(input)
-		try:
-			ttf['head'].modified = timestampSinceEpoch(mtime)
-		except KeyError:
-			raise TTLibError("missing required table: head")
+		ttf['head'].modified = timestampSinceEpoch(mtime)
 
 	ttf.save(output)
 
