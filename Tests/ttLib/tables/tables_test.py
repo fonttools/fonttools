@@ -8,6 +8,16 @@ import re
 import contextlib
 import pytest
 
+try:
+    import unicodedata2
+except ImportError:
+    if sys.version_info[:2] < (3, 6):
+        unicodedata2 = None
+    else:
+        # on 3.6 the built-in unicodedata is the same as unicodedata2 backport
+        import unicodedata
+        unicodedata2 = unicodedata
+
 
 # Font files in data/*.{o,t}tf; output gets compared to data/*.ttx.*
 TESTS = {
@@ -222,6 +232,11 @@ TESTS = {
 }
 
 
+TEST_REQUIREMENTS = {
+    "aots/cmap4_font4.otf":                         ("unicodedata2",),
+}
+
+
 ttLibVersion_RE = re.compile(r' ttLibVersion=".*"')
 
 
@@ -262,8 +277,17 @@ def open_font(testfile):
         font.close()
 
 
+def _skip_if_requirement_missing(testfile):
+    if testfile in TEST_REQUIREMENTS:
+        for req in TEST_REQUIREMENTS[testfile]:
+            if globals()[req] is None:
+                pytest.skip('%s not installed' % req)
+
+
 def test_xml_from_binary(testfile, tableTag):
     "Check XML from decompiled object."""
+    _skip_if_requirement_missing(testfile)
+
     xml_expected = read_expected_ttx(testfile, tableTag)
 
     with open_font(testfile) as font:
@@ -274,6 +298,8 @@ def test_xml_from_binary(testfile, tableTag):
 
 def test_xml_from_xml(testfile, tableTag):
     "Check XML from object read from XML."""
+    _skip_if_requirement_missing(testfile)
+
     xml_expected = read_expected_ttx(testfile, tableTag)
 
     font = load_ttx(xml_expected)
