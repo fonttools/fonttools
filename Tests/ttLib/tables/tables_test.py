@@ -314,8 +314,8 @@ def pytest_generate_tests(metafunc):
     argnames = ("testfile", "tableTag")
     if all(fn in fixturenames for fn in argnames):
         argvalues = [(testfile, tableTag)
-             for testfile, tableTags in sorted(TESTS.items())
-             for tableTag in tableTags]
+                     for testfile, tableTags in sorted(TESTS.items())
+                     for tableTag in tableTags]
         metafunc.parametrize(argnames, argvalues)
 
 
