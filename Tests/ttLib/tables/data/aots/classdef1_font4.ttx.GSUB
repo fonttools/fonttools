@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.5">
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="latn"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="test"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="3"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=4 -->
+      <Lookup index="0">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0" Format="1">
+          <Substitution in=".notdef" out="g3"/>
+          <Substitution in="g1" out="g4"/>
+          <Substitution in="g10" out="g13"/>
+          <Substitution in="g11" out="g14"/>
+          <Substitution in="g12" out="g15"/>
+          <Substitution in="g13" out="g16"/>
+          <Substitution in="g14" out="g17"/>
+          <Substitution in="g15" out="g18"/>
+          <Substitution in="g16" out="g19"/>
+          <Substitution in="g17" out="g20"/>
+          <Substitution in="g18" out="g21"/>
+          <Substitution in="g19" out="g22"/>
+          <Substitution in="g2" out="g5"/>
+          <Substitution in="g20" out="g23"/>
+          <Substitution in="g21" out="g24"/>
+          <Substitution in="g22" out="g25"/>
+          <Substitution in="g23" out="g26"/>
+          <Substitution in="g24" out="g27"/>
+          <Substitution in="g25" out="g28"/>
+          <Substitution in="g26" out="g29"/>
+          <Substitution in="g27" out="g30"/>
+          <Substitution in="g28" out="g31"/>
+          <Substitution in="g29" out="g32"/>
+          <Substitution in="g3" out="g6"/>
+          <Substitution in="g30" out="g33"/>
+          <Substitution in="g31" out="g34"/>
+          <Substitution in="g32" out="g35"/>
+          <Substitution in="g33" out="g36"/>
+          <Substitution in="g34" out="g37"/>
+          <Substitution in="g35" out="g38"/>
+          <Substitution in="g36" out="g39"/>
+          <Substitution in="g37" out="g40"/>
+          <Substitution in="g38" out="g41"/>
+          <Substitution in="g39" out="g42"/>
+          <Substitution in="g4" out="g7"/>
+          <Substitution in="g40" out="g43"/>
+          <Substitution in="g41" out="g44"/>
+          <Substitution in="g42" out="g45"/>
+          <Substitution in="g43" out="g46"/>
+          <Substitution in="g44" out="g47"/>
+          <Substitution in="g45" out="g48"/>
+          <Substitution in="g46" out="g49"/>
+          <Substitution in="g47" out="g50"/>
+          <Substitution in="g48" out="g51"/>
+          <Substitution in="g49" out="g52"/>
+          <Substitution in="g5" out="g8"/>
+          <Substitution in="g50" out="g53"/>
+          <Substitution in="g51" out="g54"/>
+          <Substitution in="g52" out="g55"/>
+          <Substitution in="g53" out="g56"/>
+          <Substitution in="g54" out="g57"/>
+          <Substitution in="g55" out="g58"/>
+          <Substitution in="g56" out="g59"/>
+          <Substitution in="g57" out="g60"/>
+          <Substitution in="g58" out="g61"/>
+          <Substitution in="g59" out="g62"/>
+          <Substitution in="g6" out="g9"/>
+          <Substitution in="g60" out="g63"/>
+          <Substitution in="g61" out="g64"/>
+          <Substitution in="g62" out="g65"/>
+          <Substitution in="g63" out="g66"/>
+          <Substitution in="g64" out="g67"/>
+          <Substitution in="g65" out="g68"/>
+          <Substitution in="g66" out="g69"/>
+          <Substitution in="g67" out="g70"/>
+          <Substitution in="g68" out="g71"/>
+          <Substitution in="g69" out="g72"/>
+          <Substitution in="g7" out="g10"/>
+          <Substitution in="g70" out="g73"/>
+          <Substitution in="g71" out="g74"/>
+          <Substitution in="g72" out="g75"/>
+          <Substitution in="g73" out="g76"/>
+          <Substitution in="g74" out="g77"/>
+          <Substitution in="g75" out="g78"/>
+          <Substitution in="g76" out="g79"/>
+          <Substitution in="g77" out="g80"/>
+          <Substitution in="g78" out="g81"/>
+          <Substitution in="g79" out="g82"/>
+          <Substitution in="g8" out="g11"/>
+          <Substitution in="g80" out="g83"/>
+          <Substitution in="g81" out="g84"/>
+          <Substitution in="g82" out="g85"/>
+          <Substitution in="g83" out="g86"/>
+          <Substitution in="g84" out="g87"/>
+          <Substitution in="g85" out="g88"/>
+          <Substitution in="g86" out="g89"/>
+          <Substitution in="g87" out="g90"/>
+          <Substitution in="g88" out="g91"/>
+          <Substitution in="g89" out="g92"/>
+          <Substitution in="g9" out="g12"/>
+          <Substitution in="g90" out="g93"/>
+          <Substitution in="g91" out="g94"/>
+          <Substitution in="g92" out="g95"/>
+          <Substitution in="g93" out="g96"/>
+          <Substitution in="g94" out="g97"/>
+          <Substitution in="g95" out="g98"/>
+          <Substitution in="g96" out="g99"/>
+          <Substitution in="g97" out="glyph00100"/>
+          <Substitution in="g98" out="glyph00101"/>
+          <Substitution in="g99" out="glyph00102"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="1">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0" Format="1">
+          <Substitution in=".notdef" out="g4"/>
+          <Substitution in="g1" out="g5"/>
+          <Substitution in="g10" out="g14"/>
+          <Substitution in="g11" out="g15"/>
+          <Substitution in="g12" out="g16"/>
+          <Substitution in="g13" out="g17"/>
+          <Substitution in="g14" out="g18"/>
+          <Substitution in="g15" out="g19"/>
+          <Substitution in="g16" out="g20"/>
+          <Substitution in="g17" out="g21"/>
+          <Substitution in="g18" out="g22"/>
+          <Substitution in="g19" out="g23"/>
+          <Substitution in="g2" out="g6"/>
+          <Substitution in="g20" out="g24"/>
+          <Substitution in="g21" out="g25"/>
+          <Substitution in="g22" out="g26"/>
+          <Substitution in="g23" out="g27"/>
+          <Substitution in="g24" out="g28"/>
+          <Substitution in="g25" out="g29"/>
+          <Substitution in="g26" out="g30"/>
+          <Substitution in="g27" out="g31"/>
+          <Substitution in="g28" out="g32"/>
+          <Substitution in="g29" out="g33"/>
+          <Substitution in="g3" out="g7"/>
+          <Substitution in="g30" out="g34"/>
+          <Substitution in="g31" out="g35"/>
+          <Substitution in="g32" out="g36"/>
+          <Substitution in="g33" out="g37"/>
+          <Substitution in="g34" out="g38"/>
+          <Substitution in="g35" out="g39"/>
+          <Substitution in="g36" out="g40"/>
+          <Substitution in="g37" out="g41"/>
+          <Substitution in="g38" out="g42"/>
+          <Substitution in="g39" out="g43"/>
+          <Substitution in="g4" out="g8"/>
+          <Substitution in="g40" out="g44"/>
+          <Substitution in="g41" out="g45"/>
+          <Substitution in="g42" out="g46"/>
+          <Substitution in="g43" out="g47"/>
+          <Substitution in="g44" out="g48"/>
+          <Substitution in="g45" out="g49"/>
+          <Substitution in="g46" out="g50"/>
+          <Substitution in="g47" out="g51"/>
+          <Substitution in="g48" out="g52"/>
+          <Substitution in="g49" out="g53"/>
+          <Substitution in="g5" out="g9"/>
+          <Substitution in="g50" out="g54"/>
+          <Substitution in="g51" out="g55"/>
+          <Substitution in="g52" out="g56"/>
+          <Substitution in="g53" out="g57"/>
+          <Substitution in="g54" out="g58"/>
+          <Substitution in="g55" out="g59"/>
+          <Substitution in="g56" out="g60"/>
+          <Substitution in="g57" out="g61"/>
+          <Substitution in="g58" out="g62"/>
+          <Substitution in="g59" out="g63"/>
+          <Substitution in="g6" out="g10"/>
+          <Substitution in="g60" out="g64"/>
+          <Substitution in="g61" out="g65"/>
+          <Substitution in="g62" out="g66"/>
+          <Substitution in="g63" out="g67"/>
+          <Substitution in="g64" out="g68"/>
+          <Substitution in="g65" out="g69"/>
+          <Substitution in="g66" out="g70"/>
+          <Substitution in="g67" out="g71"/>
+          <Substitution in="g68" out="g72"/>
+          <Substitution in="g69" out="g73"/>
+          <Substitution in="g7" out="g11"/>
+          <Substitution in="g70" out="g74"/>
+          <Substitution in="g71" out="g75"/>
+          <Substitution in="g72" out="g76"/>
+          <Substitution in="g73" out="g77"/>
+          <Substitution in="g74" out="g78"/>
+          <Substitution in="g75" out="g79"/>
+          <Substitution in="g76" out="g80"/>
+          <Substitution in="g77" out="g81"/>
+          <Substitution in="g78" out="g82"/>
+          <Substitution in="g79" out="g83"/>
+          <Substitution in="g8" out="g12"/>
+          <Substitution in="g80" out="g84"/>
+          <Substitution in="g81" out="g85"/>
+          <Substitution in="g82" out="g86"/>
+          <Substitution in="g83" out="g87"/>
+          <Substitution in="g84" out="g88"/>
+          <Substitution in="g85" out="g89"/>
+          <Substitution in="g86" out="g90"/>
+          <Substitution in="g87" out="g91"/>
+          <Substitution in="g88" out="g92"/>
+          <Substitution in="g89" out="g93"/>
+          <Substitution in="g9" out="g13"/>
+          <Substitution in="g90" out="g94"/>
+          <Substitution in="g91" out="g95"/>
+          <Substitution in="g92" out="g96"/>
+          <Substitution in="g93" out="g97"/>
+          <Substitution in="g94" out="g98"/>
+          <Substitution in="g95" out="g99"/>
+          <Substitution in="g96" out="glyph00100"/>
+          <Substitution in="g97" out="glyph00101"/>
+          <Substitution in="g98" out="glyph00102"/>
+          <Substitution in="g99" out="glyph00103"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="2">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0" Format="1">
+          <Substitution in=".notdef" out="g5"/>
+          <Substitution in="g1" out="g6"/>
+          <Substitution in="g10" out="g15"/>
+          <Substitution in="g11" out="g16"/>
+          <Substitution in="g12" out="g17"/>
+          <Substitution in="g13" out="g18"/>
+          <Substitution in="g14" out="g19"/>
+          <Substitution in="g15" out="g20"/>
+          <Substitution in="g16" out="g21"/>
+          <Substitution in="g17" out="g22"/>
+          <Substitution in="g18" out="g23"/>
+          <Substitution in="g19" out="g24"/>
+          <Substitution in="g2" out="g7"/>
+          <Substitution in="g20" out="g25"/>
+          <Substitution in="g21" out="g26"/>
+          <Substitution in="g22" out="g27"/>
+          <Substitution in="g23" out="g28"/>
+          <Substitution in="g24" out="g29"/>
+          <Substitution in="g25" out="g30"/>
+          <Substitution in="g26" out="g31"/>
+          <Substitution in="g27" out="g32"/>
+          <Substitution in="g28" out="g33"/>
+          <Substitution in="g29" out="g34"/>
+          <Substitution in="g3" out="g8"/>
+          <Substitution in="g30" out="g35"/>
+          <Substitution in="g31" out="g36"/>
+          <Substitution in="g32" out="g37"/>
+          <Substitution in="g33" out="g38"/>
+          <Substitution in="g34" out="g39"/>
+          <Substitution in="g35" out="g40"/>
+          <Substitution in="g36" out="g41"/>
+          <Substitution in="g37" out="g42"/>
+          <Substitution in="g38" out="g43"/>
+          <Substitution in="g39" out="g44"/>
+          <Substitution in="g4" out="g9"/>
+          <Substitution in="g40" out="g45"/>
+          <Substitution in="g41" out="g46"/>
+          <Substitution in="g42" out="g47"/>
+          <Substitution in="g43" out="g48"/>
+          <Substitution in="g44" out="g49"/>
+          <Substitution in="g45" out="g50"/>
+          <Substitution in="g46" out="g51"/>
+          <Substitution in="g47" out="g52"/>
+          <Substitution in="g48" out="g53"/>
+          <Substitution in="g49" out="g54"/>
+          <Substitution in="g5" out="g10"/>
+          <Substitution in="g50" out="g55"/>
+          <Substitution in="g51" out="g56"/>
+          <Substitution in="g52" out="g57"/>
+          <Substitution in="g53" out="g58"/>
+          <Substitution in="g54" out="g59"/>
+          <Substitution in="g55" out="g60"/>
+          <Substitution in="g56" out="g61"/>
+          <Substitution in="g57" out="g62"/>
+          <Substitution in="g58" out="g63"/>
+          <Substitution in="g59" out="g64"/>
+          <Substitution in="g6" out="g11"/>
+          <Substitution in="g60" out="g65"/>
+          <Substitution in="g61" out="g66"/>
+          <Substitution in="g62" out="g67"/>
+          <Substitution in="g63" out="g68"/>
+          <Substitution in="g64" out="g69"/>
+          <Substitution in="g65" out="g70"/>
+          <Substitution in="g66" out="g71"/>
+          <Substitution in="g67" out="g72"/>
+          <Substitution in="g68" out="g73"/>
+          <Substitution in="g69" out="g74"/>
+          <Substitution in="g7" out="g12"/>
+          <Substitution in="g70" out="g75"/>
+          <Substitution in="g71" out="g76"/>
+          <Substitution in="g72" out="g77"/>
+          <Substitution in="g73" out="g78"/>
+          <Substitution in="g74" out="g79"/>
+          <Substitution in="g75" out="g80"/>
+          <Substitution in="g76" out="g81"/>
+          <Substitution in="g77" out="g82"/>
+          <Substitution in="g78" out="g83"/>
+          <Substitution in="g79" out="g84"/>
+          <Substitution in="g8" out="g13"/>
+          <Substitution in="g80" out="g85"/>
+          <Substitution in="g81" out="g86"/>
+          <Substitution in="g82" out="g87"/>
+          <Substitution in="g83" out="g88"/>
+          <Substitution in="g84" out="g89"/>
+          <Substitution in="g85" out="g90"/>
+          <Substitution in="g86" out="g91"/>
+          <Substitution in="g87" out="g92"/>
+          <Substitution in="g88" out="g93"/>
+          <Substitution in="g89" out="g94"/>
+          <Substitution in="g9" out="g14"/>
+          <Substitution in="g90" out="g95"/>
+          <Substitution in="g91" out="g96"/>
+          <Substitution in="g92" out="g97"/>
+          <Substitution in="g93" out="g98"/>
+          <Substitution in="g94" out="g99"/>
+          <Substitution in="g95" out="glyph00100"/>
+          <Substitution in="g96" out="glyph00101"/>
+          <Substitution in="g97" out="glyph00102"/>
+          <Substitution in="g98" out="glyph00103"/>
+          <Substitution in="g99" out="glyph00104"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="3">
+        <LookupType value="5"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <ContextSubst index="0" Format="2">
+          <Coverage Format="1">
+            <Glyph value=".notdef"/>
+            <Glyph value="g1"/>
+            <Glyph value="g2"/>
+            <Glyph value="g3"/>
+            <Glyph value="g4"/>
+            <Glyph value="g5"/>
+            <Glyph value="g6"/>
+            <Glyph value="g7"/>
+            <Glyph value="g8"/>
+            <Glyph value="g9"/>
+            <Glyph value="g10"/>
+            <Glyph value="g11"/>
+            <Glyph value="g12"/>
+            <Glyph value="g13"/>
+            <Glyph value="g14"/>
+            <Glyph value="g15"/>
+            <Glyph value="g16"/>
+            <Glyph value="g17"/>
+            <Glyph value="g18"/>
+            <Glyph value="g19"/>
+            <Glyph value="g20"/>
+            <Glyph value="g21"/>
+            <Glyph value="g22"/>
+            <Glyph value="g23"/>
+            <Glyph value="g24"/>
+            <Glyph value="g25"/>
+            <Glyph value="g26"/>
+            <Glyph value="g27"/>
+            <Glyph value="g28"/>
+            <Glyph value="g29"/>
+            <Glyph value="g30"/>
+            <Glyph value="g31"/>
+            <Glyph value="g32"/>
+            <Glyph value="g33"/>
+            <Glyph value="g34"/>
+            <Glyph value="g35"/>
+            <Glyph value="g36"/>
+            <Glyph value="g37"/>
+            <Glyph value="g38"/>
+            <Glyph value="g39"/>
+            <Glyph value="g40"/>
+            <Glyph value="g41"/>
+            <Glyph value="g42"/>
+            <Glyph value="g43"/>
+            <Glyph value="g44"/>
+            <Glyph value="g45"/>
+            <Glyph value="g46"/>
+            <Glyph value="g47"/>
+            <Glyph value="g48"/>
+            <Glyph value="g49"/>
+            <Glyph value="g50"/>
+            <Glyph value="g51"/>
+            <Glyph value="g52"/>
+            <Glyph value="g53"/>
+            <Glyph value="g54"/>
+            <Glyph value="g55"/>
+            <Glyph value="g56"/>
+            <Glyph value="g57"/>
+            <Glyph value="g58"/>
+            <Glyph value="g59"/>
+            <Glyph value="g60"/>
+            <Glyph value="g61"/>
+            <Glyph value="g62"/>
+            <Glyph value="g63"/>
+            <Glyph value="g64"/>
+            <Glyph value="g65"/>
+            <Glyph value="g66"/>
+            <Glyph value="g67"/>
+            <Glyph value="g68"/>
+            <Glyph value="g69"/>
+            <Glyph value="g70"/>
+            <Glyph value="g71"/>
+            <Glyph value="g72"/>
+            <Glyph value="g73"/>
+            <Glyph value="g74"/>
+            <Glyph value="g75"/>
+            <Glyph value="g76"/>
+            <Glyph value="g77"/>
+            <Glyph value="g78"/>
+            <Glyph value="g79"/>
+            <Glyph value="g80"/>
+            <Glyph value="g81"/>
+            <Glyph value="g82"/>
+            <Glyph value="g83"/>
+            <Glyph value="g84"/>
+            <Glyph value="g85"/>
+            <Glyph value="g86"/>
+            <Glyph value="g87"/>
+            <Glyph value="g88"/>
+            <Glyph value="g89"/>
+            <Glyph value="g90"/>
+            <Glyph value="g91"/>
+            <Glyph value="g92"/>
+            <Glyph value="g93"/>
+            <Glyph value="g94"/>
+            <Glyph value="g95"/>
+            <Glyph value="g96"/>
+            <Glyph value="g97"/>
+            <Glyph value="g98"/>
+            <Glyph value="g99"/>
+          </Coverage>
+          <ClassDef Format="1">
+          </ClassDef>
+          <!-- SubClassSetCount=1 -->
+          <SubClassSet index="0" empty="1"/>
+        </ContextSubst>
+      </Lookup>
+    </LookupList>
+  </GSUB>
+
+</ttFont>

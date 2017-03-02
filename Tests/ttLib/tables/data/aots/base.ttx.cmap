@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.5">
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x1" name="g1"/><!-- ???? -->
+      <map code="0x2" name="g2"/><!-- ???? -->
+      <map code="0x3" name="g3"/><!-- ???? -->
+      <map code="0x4" name="g4"/><!-- ???? -->
+      <map code="0x5" name="g5"/><!-- ???? -->
+      <map code="0x6" name="g6"/><!-- ???? -->
+      <map code="0x7" name="g7"/><!-- ???? -->
+      <map code="0x8" name="g8"/><!-- ???? -->
+      <map code="0x9" name="g9"/><!-- ???? -->
+      <map code="0xa" name="g10"/><!-- ???? -->
+      <map code="0xb" name="g11"/><!-- ???? -->
+      <map code="0xc" name="g12"/><!-- ???? -->
+      <map code="0xd" name="g13"/><!-- ???? -->
+      <map code="0xe" name="g14"/><!-- ???? -->
+      <map code="0xf" name="g15"/><!-- ???? -->
+      <map code="0x10" name="g16"/><!-- ???? -->
+      <map code="0x11" name="g17"/><!-- ???? -->
+      <map code="0x12" name="g18"/><!-- ???? -->
+      <map code="0x13" name="g19"/><!-- ???? -->
+      <map code="0x14" name="g20"/><!-- ???? -->
+      <map code="0x15" name="g21"/><!-- ???? -->
+      <map code="0x16" name="g22"/><!-- ???? -->
+      <map code="0x17" name="g23"/><!-- ???? -->
+      <map code="0x18" name="g24"/><!-- ???? -->
+      <map code="0x19" name="g25"/><!-- ???? -->
+      <map code="0x1a" name="g26"/><!-- ???? -->
+      <map code="0x1b" name="g27"/><!-- ???? -->
+      <map code="0x1c" name="g28"/><!-- ???? -->
+      <map code="0x1d" name="g29"/><!-- ???? -->
+      <map code="0x1e" name="g30"/><!-- ???? -->
+      <map code="0x1f" name="g31"/><!-- ???? -->
+      <map code="0x20" name="g32"/><!-- SPACE -->
+      <map code="0x21" name="g33"/><!-- EXCLAMATION MARK -->
+      <map code="0x22" name="g34"/><!-- QUOTATION MARK -->
+      <map code="0x23" name="g35"/><!-- NUMBER SIGN -->
+      <map code="0x24" name="g36"/><!-- DOLLAR SIGN -->
+      <map code="0x25" name="g37"/><!-- PERCENT SIGN -->
+      <map code="0x26" name="g38"/><!-- AMPERSAND -->
+      <map code="0x27" name="g39"/><!-- APOSTROPHE -->
+      <map code="0x28" name="g40"/><!-- LEFT PARENTHESIS -->
+      <map code="0x29" name="g41"/><!-- RIGHT PARENTHESIS -->
+      <map code="0x2a" name="g42"/><!-- ASTERISK -->
+      <map code="0x2b" name="g43"/><!-- PLUS SIGN -->
+      <map code="0x2c" name="g44"/><!-- COMMA -->
+      <map code="0x2d" name="g45"/><!-- HYPHEN-MINUS -->
+      <map code="0x2e" name="g46"/><!-- FULL STOP -->
+      <map code="0x2f" name="g47"/><!-- SOLIDUS -->
+      <map code="0x30" name="g48"/><!-- DIGIT ZERO -->
+      <map code="0x31" name="g49"/><!-- DIGIT ONE -->
+      <map code="0x32" name="g50"/><!-- DIGIT TWO -->
+      <map code="0x33" name="g51"/><!-- DIGIT THREE -->
+      <map code="0x34" name="g52"/><!-- DIGIT FOUR -->
+      <map code="0x35" name="g53"/><!-- DIGIT FIVE -->
+      <map code="0x36" name="g54"/><!-- DIGIT SIX -->
+      <map code="0x37" name="g55"/><!-- DIGIT SEVEN -->
+      <map code="0x38" name="g56"/><!-- DIGIT EIGHT -->
+      <map code="0x39" name="g57"/><!-- DIGIT NINE -->
+      <map code="0x3a" name="g58"/><!-- COLON -->
+      <map code="0x3b" name="g59"/><!-- SEMICOLON -->
+      <map code="0x3c" name="g60"/><!-- LESS-THAN SIGN -->
+      <map code="0x3d" name="g61"/><!-- EQUALS SIGN -->
+      <map code="0x3e" name="g62"/><!-- GREATER-THAN SIGN -->
+      <map code="0x3f" name="g63"/><!-- QUESTION MARK -->
+      <map code="0x40" name="g64"/><!-- COMMERCIAL AT -->
+      <map code="0x41" name="g65"/><!-- LATIN CAPITAL LETTER A -->
+      <map code="0x42" name="g66"/><!-- LATIN CAPITAL LETTER B -->
+      <map code="0x43" name="g67"/><!-- LATIN CAPITAL LETTER C -->
+      <map code="0x44" name="g68"/><!-- LATIN CAPITAL LETTER D -->
+      <map code="0x45" name="g69"/><!-- LATIN CAPITAL LETTER E -->
+      <map code="0x46" name="g70"/><!-- LATIN CAPITAL LETTER F -->
+      <map code="0x47" name="g71"/><!-- LATIN CAPITAL LETTER G -->
+      <map code="0x48" name="g72"/><!-- LATIN CAPITAL LETTER H -->
+      <map code="0x49" name="g73"/><!-- LATIN CAPITAL LETTER I -->
+      <map code="0x4a" name="g74"/><!-- LATIN CAPITAL LETTER J -->
+      <map code="0x4b" name="g75"/><!-- LATIN CAPITAL LETTER K -->
+      <map code="0x4c" name="g76"/><!-- LATIN CAPITAL LETTER L -->
+      <map code="0x4d" name="g77"/><!-- LATIN CAPITAL LETTER M -->
+      <map code="0x4e" name="g78"/><!-- LATIN CAPITAL LETTER N -->
+      <map code="0x4f" name="g79"/><!-- LATIN CAPITAL LETTER O -->
+      <map code="0x50" name="g80"/><!-- LATIN CAPITAL LETTER P -->
+      <map code="0x51" name="g81"/><!-- LATIN CAPITAL LETTER Q -->
+      <map code="0x52" name="g82"/><!-- LATIN CAPITAL LETTER R -->
+      <map code="0x53" name="g83"/><!-- LATIN CAPITAL LETTER S -->
+      <map code="0x54" name="g84"/><!-- LATIN CAPITAL LETTER T -->
+      <map code="0x55" name="g85"/><!-- LATIN CAPITAL LETTER U -->
+      <map code="0x56" name="g86"/><!-- LATIN CAPITAL LETTER V -->
+      <map code="0x57" name="g87"/><!-- LATIN CAPITAL LETTER W -->
+      <map code="0x58" name="g88"/><!-- LATIN CAPITAL LETTER X -->
+      <map code="0x59" name="g89"/><!-- LATIN CAPITAL LETTER Y -->
+      <map code="0x5a" name="g90"/><!-- LATIN CAPITAL LETTER Z -->
+      <map code="0x5b" name="g91"/><!-- LEFT SQUARE BRACKET -->
+      <map code="0x5c" name="g92"/><!-- REVERSE SOLIDUS -->
+      <map code="0x5d" name="g93"/><!-- RIGHT SQUARE BRACKET -->
+      <map code="0x5e" name="g94"/><!-- CIRCUMFLEX ACCENT -->
+      <map code="0x5f" name="g95"/><!-- LOW LINE -->
+      <map code="0x60" name="g96"/><!-- GRAVE ACCENT -->
+      <map code="0x61" name="g97"/><!-- LATIN SMALL LETTER A -->
+      <map code="0x62" name="g98"/><!-- LATIN SMALL LETTER B -->
+      <map code="0x63" name="g99"/><!-- LATIN SMALL LETTER C -->
+    </cmap_format_4>
+    <cmap_format_12 platformID="3" platEncID="10" format="12" reserved="0" length="28" language="0" nGroups="1">
+      <map code="0x1" name="g1"/><!-- ???? -->
+      <map code="0x2" name="g2"/><!-- ???? -->
+      <map code="0x3" name="g3"/><!-- ???? -->
+      <map code="0x4" name="g4"/><!-- ???? -->
+      <map code="0x5" name="g5"/><!-- ???? -->
+      <map code="0x6" name="g6"/><!-- ???? -->
+      <map code="0x7" name="g7"/><!-- ???? -->
+      <map code="0x8" name="g8"/><!-- ???? -->
+      <map code="0x9" name="g9"/><!-- ???? -->
+      <map code="0xa" name="g10"/><!-- ???? -->
+      <map code="0xb" name="g11"/><!-- ???? -->
+      <map code="0xc" name="g12"/><!-- ???? -->
+      <map code="0xd" name="g13"/><!-- ???? -->
+      <map code="0xe" name="g14"/><!-- ???? -->
+      <map code="0xf" name="g15"/><!-- ???? -->
+      <map code="0x10" name="g16"/><!-- ???? -->
+      <map code="0x11" name="g17"/><!-- ???? -->
+      <map code="0x12" name="g18"/><!-- ???? -->
+      <map code="0x13" name="g19"/><!-- ???? -->
+      <map code="0x14" name="g20"/><!-- ???? -->
+      <map code="0x15" name="g21"/><!-- ???? -->
+      <map code="0x16" name="g22"/><!-- ???? -->
+      <map code="0x17" name="g23"/><!-- ???? -->
+      <map code="0x18" name="g24"/><!-- ???? -->
+      <map code="0x19" name="g25"/><!-- ???? -->
+      <map code="0x1a" name="g26"/><!-- ???? -->
+      <map code="0x1b" name="g27"/><!-- ???? -->
+      <map code="0x1c" name="g28"/><!-- ???? -->
+      <map code="0x1d" name="g29"/><!-- ???? -->
+      <map code="0x1e" name="g30"/><!-- ???? -->
+      <map code="0x1f" name="g31"/><!-- ???? -->
+      <map code="0x20" name="g32"/><!-- SPACE -->
+      <map code="0x21" name="g33"/><!-- EXCLAMATION MARK -->
+      <map code="0x22" name="g34"/><!-- QUOTATION MARK -->
+      <map code="0x23" name="g35"/><!-- NUMBER SIGN -->
+      <map code="0x24" name="g36"/><!-- DOLLAR SIGN -->
+      <map code="0x25" name="g37"/><!-- PERCENT SIGN -->
+      <map code="0x26" name="g38"/><!-- AMPERSAND -->
+      <map code="0x27" name="g39"/><!-- APOSTROPHE -->
+      <map code="0x28" name="g40"/><!-- LEFT PARENTHESIS -->
+      <map code="0x29" name="g41"/><!-- RIGHT PARENTHESIS -->
+      <map code="0x2a" name="g42"/><!-- ASTERISK -->
+      <map code="0x2b" name="g43"/><!-- PLUS SIGN -->
+      <map code="0x2c" name="g44"/><!-- COMMA -->
+      <map code="0x2d" name="g45"/><!-- HYPHEN-MINUS -->
+      <map code="0x2e" name="g46"/><!-- FULL STOP -->
+      <map code="0x2f" name="g47"/><!-- SOLIDUS -->
+      <map code="0x30" name="g48"/><!-- DIGIT ZERO -->
+      <map code="0x31" name="g49"/><!-- DIGIT ONE -->
+      <map code="0x32" name="g50"/><!-- DIGIT TWO -->
+      <map code="0x33" name="g51"/><!-- DIGIT THREE -->
+      <map code="0x34" name="g52"/><!-- DIGIT FOUR -->
+      <map code="0x35" name="g53"/><!-- DIGIT FIVE -->
+      <map code="0x36" name="g54"/><!-- DIGIT SIX -->
+      <map code="0x37" name="g55"/><!-- DIGIT SEVEN -->
+      <map code="0x38" name="g56"/><!-- DIGIT EIGHT -->
+      <map code="0x39" name="g57"/><!-- DIGIT NINE -->
+      <map code="0x3a" name="g58"/><!-- COLON -->
+      <map code="0x3b" name="g59"/><!-- SEMICOLON -->
+      <map code="0x3c" name="g60"/><!-- LESS-THAN SIGN -->
+      <map code="0x3d" name="g61"/><!-- EQUALS SIGN -->
+      <map code="0x3e" name="g62"/><!-- GREATER-THAN SIGN -->
+      <map code="0x3f" name="g63"/><!-- QUESTION MARK -->
+      <map code="0x40" name="g64"/><!-- COMMERCIAL AT -->
+      <map code="0x41" name="g65"/><!-- LATIN CAPITAL LETTER A -->
+      <map code="0x42" name="g66"/><!-- LATIN CAPITAL LETTER B -->
+      <map code="0x43" name="g67"/><!-- LATIN CAPITAL LETTER C -->
+      <map code="0x44" name="g68"/><!-- LATIN CAPITAL LETTER D -->
+      <map code="0x45" name="g69"/><!-- LATIN CAPITAL LETTER E -->
+      <map code="0x46" name="g70"/><!-- LATIN CAPITAL LETTER F -->
+      <map code="0x47" name="g71"/><!-- LATIN CAPITAL LETTER G -->
+      <map code="0x48" name="g72"/><!-- LATIN CAPITAL LETTER H -->
+      <map code="0x49" name="g73"/><!-- LATIN CAPITAL LETTER I -->
+      <map code="0x4a" name="g74"/><!-- LATIN CAPITAL LETTER J -->
+      <map code="0x4b" name="g75"/><!-- LATIN CAPITAL LETTER K -->
+      <map code="0x4c" name="g76"/><!-- LATIN CAPITAL LETTER L -->
+      <map code="0x4d" name="g77"/><!-- LATIN CAPITAL LETTER M -->
+      <map code="0x4e" name="g78"/><!-- LATIN CAPITAL LETTER N -->
+      <map code="0x4f" name="g79"/><!-- LATIN CAPITAL LETTER O -->
+      <map code="0x50" name="g80"/><!-- LATIN CAPITAL LETTER P -->
+      <map code="0x51" name="g81"/><!-- LATIN CAPITAL LETTER Q -->
+      <map code="0x52" name="g82"/><!-- LATIN CAPITAL LETTER R -->
+      <map code="0x53" name="g83"/><!-- LATIN CAPITAL LETTER S -->
+      <map code="0x54" name="g84"/><!-- LATIN CAPITAL LETTER T -->
+      <map code="0x55" name="g85"/><!-- LATIN CAPITAL LETTER U -->
+      <map code="0x56" name="g86"/><!-- LATIN CAPITAL LETTER V -->
+      <map code="0x57" name="g87"/><!-- LATIN CAPITAL LETTER W -->
+      <map code="0x58" name="g88"/><!-- LATIN CAPITAL LETTER X -->
+      <map code="0x59" name="g89"/><!-- LATIN CAPITAL LETTER Y -->
+      <map code="0x5a" name="g90"/><!-- LATIN CAPITAL LETTER Z -->
+      <map code="0x5b" name="g91"/><!-- LEFT SQUARE BRACKET -->
+      <map code="0x5c" name="g92"/><!-- REVERSE SOLIDUS -->
+      <map code="0x5d" name="g93"/><!-- RIGHT SQUARE BRACKET -->
+      <map code="0x5e" name="g94"/><!-- CIRCUMFLEX ACCENT -->
+      <map code="0x5f" name="g95"/><!-- LOW LINE -->
+      <map code="0x60" name="g96"/><!-- GRAVE ACCENT -->
+      <map code="0x61" name="g97"/><!-- LATIN SMALL LETTER A -->
+      <map code="0x62" name="g98"/><!-- LATIN SMALL LETTER B -->
+      <map code="0x63" name="g99"/><!-- LATIN SMALL LETTER C -->
+    </cmap_format_12>
+  </cmap>
+
+</ttFont>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.5">
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="latn"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="test"/>
+        <Feature>
+          <!-- LookupCount=2 -->
+          <LookupListIndex index="0" value="0"/>
+          <LookupListIndex index="1" value="1"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=2 -->
+      <Lookup index="0">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=2 -->
+        <SingleSubst index="0" Format="1">
+          <Substitution in="g21" out="glyph32787"/>
+          <Substitution in="g22" out="glyph32788"/>
+        </SingleSubst>
+        <SingleSubst index="1" Format="1">
+          <Substitution in="g19" out="glyph32789"/>
+          <Substitution in="g20" out="glyph32790"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="1">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=4 -->
+        <SingleSubst index="0" Format="1">
+          <Substitution in="glyph32787" out="g23"/>
+        </SingleSubst>
+        <SingleSubst index="1" Format="1">
+          <Substitution in="glyph32788" out="g18"/>
+        </SingleSubst>
+        <SingleSubst index="2" Format="1">
+          <Substitution in="glyph32789" out="g17"/>
+        </SingleSubst>
+        <SingleSubst index="3" Format="1">
+          <Substitution in="glyph32790" out="g24"/>
+        </SingleSubst>
+      </Lookup>
+    </LookupList>
+  </GSUB>
+
+</ttFont>

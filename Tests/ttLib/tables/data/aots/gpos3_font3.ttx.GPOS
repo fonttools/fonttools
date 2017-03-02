@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.5">
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="latn"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="test"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <LookupType value="3"/>
+        <LookupFlag value="2"/>
+        <!-- SubTableCount=1 -->
+        <CursivePos index="0" Format="1">
+          <Coverage Format="1">
+            <Glyph value="g18"/>
+            <Glyph value="g19"/>
+            <Glyph value="g20"/>
+          </Coverage>
+          <!-- EntryExitCount=3 -->
+          <EntryExitRecord index="0">
+            <EntryAnchor Format="1">
+              <XCoordinate value="100"/>
+              <YCoordinate value="150"/>
+            </EntryAnchor>
+            <ExitAnchor Format="1">
+              <XCoordinate value="200"/>
+              <YCoordinate value="250"/>
+            </ExitAnchor>
+          </EntryExitRecord>
+          <EntryExitRecord index="1">
+            <EntryAnchor Format="1">
+              <XCoordinate value="101"/>
+              <YCoordinate value="151"/>
+            </EntryAnchor>
+          </EntryExitRecord>
+          <EntryExitRecord index="2">
+            <ExitAnchor Format="1">
+              <XCoordinate value="202"/>
+              <YCoordinate value="252"/>
+            </ExitAnchor>
+          </EntryExitRecord>
+        </CursivePos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+</ttFont>

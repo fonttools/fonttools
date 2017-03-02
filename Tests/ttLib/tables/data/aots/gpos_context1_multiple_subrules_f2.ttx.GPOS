@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.5">
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="latn"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="test"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="4"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=5 -->
+      <Lookup index="0">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage Format="1">
+            <Glyph value="g20"/>
+            <Glyph value="g21"/>
+            <Glyph value="g22"/>
+            <Glyph value="g23"/>
+            <Glyph value="g24"/>
+            <Glyph value="g25"/>
+            <Glyph value="g26"/>
+            <Glyph value="g27"/>
+            <Glyph value="g28"/>
+            <Glyph value="g29"/>
+          </Coverage>
+          <ValueFormat value="1"/>
+          <Value XPlacement="20"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="1">
+        <LookupType value="2"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <PairPos index="0" Format="1">
+          <Coverage Format="1">
+            <Glyph value="g21"/>
+          </Coverage>
+          <ValueFormat1 value="1"/>
+          <ValueFormat2 value="0"/>
+          <!-- PairSetCount=1 -->
+          <PairSet index="0">
+            <!-- PairValueCount=1 -->
+            <PairValueRecord index="0">
+              <SecondGlyph value="g22"/>
+              <Value1 XPlacement="20"/>
+            </PairValueRecord>
+          </PairSet>
+        </PairPos>
+      </Lookup>
+      <Lookup index="2">
+        <LookupType value="2"/>
+        <LookupFlag value="8"/>
+        <!-- SubTableCount=1 -->
+        <PairPos index="0" Format="1">
+          <Coverage Format="1">
+            <Glyph value="g21"/>
+          </Coverage>
+          <ValueFormat1 value="1"/>
+          <ValueFormat2 value="0"/>
+          <!-- PairSetCount=1 -->
+          <PairSet index="0">
+            <!-- PairValueCount=1 -->
+            <PairValueRecord index="0">
+              <SecondGlyph value="g22"/>
+              <Value1 XPlacement="20"/>
+            </PairValueRecord>
+          </PairSet>
+        </PairPos>
+      </Lookup>
+      <Lookup index="3">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=0 -->
+      </Lookup>
+      <Lookup index="4">
+        <LookupType value="7"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <ContextPos index="0" Format="1">
+          <Coverage Format="1">
+            <Glyph value="g20"/>
+          </Coverage>
+          <!-- PosRuleSetCount=1 -->
+          <PosRuleSet index="0">
+            <!-- PosRuleCount=2 -->
+            <PosRule index="0">
+              <!-- GlyphCount=2 -->
+              <!-- PosCount=1 -->
+              <Input index="0" value="g21"/>
+              <PosLookupRecord index="0">
+                <SequenceIndex value="1"/>
+                <LookupListIndex value="0"/>
+              </PosLookupRecord>
+            </PosRule>
+            <PosRule index="1">
+              <!-- GlyphCount=3 -->
+              <!-- PosCount=1 -->
+              <Input index="0" value="g21"/>
+              <Input index="1" value="g22"/>
+              <PosLookupRecord index="0">
+                <SequenceIndex value="0"/>
+                <LookupListIndex value="0"/>
+              </PosLookupRecord>
+            </PosRule>
+          </PosRuleSet>
+        </ContextPos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+</ttFont>

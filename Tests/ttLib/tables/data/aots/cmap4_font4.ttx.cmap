@@ -1,0 +1,1011 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.5">
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x64" name="glyph65136"/><!-- LATIN SMALL LETTER D -->
+      <map code="0x65" name="glyph65137"/><!-- LATIN SMALL LETTER E -->
+      <map code="0x66" name="glyph65138"/><!-- LATIN SMALL LETTER F -->
+      <map code="0x67" name="glyph65139"/><!-- LATIN SMALL LETTER G -->
+      <map code="0x68" name="glyph65140"/><!-- LATIN SMALL LETTER H -->
+      <map code="0x69" name="glyph65141"/><!-- LATIN SMALL LETTER I -->
+      <map code="0x6a" name="glyph65142"/><!-- LATIN SMALL LETTER J -->
+      <map code="0x6b" name="glyph65143"/><!-- LATIN SMALL LETTER K -->
+      <map code="0x6c" name="glyph65144"/><!-- LATIN SMALL LETTER L -->
+      <map code="0x6d" name="glyph65145"/><!-- LATIN SMALL LETTER M -->
+      <map code="0x6e" name="glyph65146"/><!-- LATIN SMALL LETTER N -->
+      <map code="0x6f" name="glyph65147"/><!-- LATIN SMALL LETTER O -->
+      <map code="0x70" name="glyph65148"/><!-- LATIN SMALL LETTER P -->
+      <map code="0x71" name="glyph65149"/><!-- LATIN SMALL LETTER Q -->
+      <map code="0x72" name="glyph65150"/><!-- LATIN SMALL LETTER R -->
+      <map code="0x73" name="glyph65151"/><!-- LATIN SMALL LETTER S -->
+      <map code="0x74" name="glyph65152"/><!-- LATIN SMALL LETTER T -->
+      <map code="0x75" name="glyph65153"/><!-- LATIN SMALL LETTER U -->
+      <map code="0x76" name="glyph65154"/><!-- LATIN SMALL LETTER V -->
+      <map code="0x77" name="glyph65155"/><!-- LATIN SMALL LETTER W -->
+      <map code="0x78" name="glyph65156"/><!-- LATIN SMALL LETTER X -->
+      <map code="0x79" name="glyph65157"/><!-- LATIN SMALL LETTER Y -->
+      <map code="0x7a" name="glyph65158"/><!-- LATIN SMALL LETTER Z -->
+      <map code="0x7b" name="glyph65159"/><!-- LEFT CURLY BRACKET -->
+      <map code="0x7c" name="glyph65160"/><!-- VERTICAL LINE -->
+      <map code="0x7d" name="glyph65161"/><!-- RIGHT CURLY BRACKET -->
+      <map code="0x7e" name="glyph65162"/><!-- TILDE -->
+      <map code="0x7f" name="glyph65163"/><!-- ???? -->
+      <map code="0x80" name="glyph65164"/><!-- ???? -->
+      <map code="0x81" name="glyph65165"/><!-- ???? -->
+      <map code="0x82" name="glyph65166"/><!-- ???? -->
+      <map code="0x83" name="glyph65167"/><!-- ???? -->
+      <map code="0x84" name="glyph65168"/><!-- ???? -->
+      <map code="0x85" name="glyph65169"/><!-- ???? -->
+      <map code="0x86" name="glyph65170"/><!-- ???? -->
+      <map code="0x87" name="glyph65171"/><!-- ???? -->
+      <map code="0x88" name="glyph65172"/><!-- ???? -->
+      <map code="0x89" name="glyph65173"/><!-- ???? -->
+      <map code="0x8a" name="glyph65174"/><!-- ???? -->
+      <map code="0x8b" name="glyph65175"/><!-- ???? -->
+      <map code="0x8c" name="glyph65176"/><!-- ???? -->
+      <map code="0x8d" name="glyph65177"/><!-- ???? -->
+      <map code="0x8e" name="glyph65178"/><!-- ???? -->
+      <map code="0x8f" name="glyph65179"/><!-- ???? -->
+      <map code="0x90" name="glyph65180"/><!-- ???? -->
+      <map code="0x91" name="glyph65181"/><!-- ???? -->
+      <map code="0x92" name="glyph65182"/><!-- ???? -->
+      <map code="0x93" name="glyph65183"/><!-- ???? -->
+      <map code="0x94" name="glyph65184"/><!-- ???? -->
+      <map code="0x95" name="glyph65185"/><!-- ???? -->
+      <map code="0x96" name="glyph65186"/><!-- ???? -->
+      <map code="0x97" name="glyph65187"/><!-- ???? -->
+      <map code="0x98" name="glyph65188"/><!-- ???? -->
+      <map code="0x99" name="glyph65189"/><!-- ???? -->
+      <map code="0x9a" name="glyph65190"/><!-- ???? -->
+      <map code="0x9b" name="glyph65191"/><!-- ???? -->
+      <map code="0x9c" name="glyph65192"/><!-- ???? -->
+      <map code="0x9d" name="glyph65193"/><!-- ???? -->
+      <map code="0x9e" name="glyph65194"/><!-- ???? -->
+      <map code="0x9f" name="glyph65195"/><!-- ???? -->
+      <map code="0xa0" name="glyph65196"/><!-- NO-BREAK SPACE -->
+      <map code="0xa1" name="glyph65197"/><!-- INVERTED EXCLAMATION MARK -->
+      <map code="0xa2" name="glyph65198"/><!-- CENT SIGN -->
+      <map code="0xa3" name="glyph65199"/><!-- POUND SIGN -->
+      <map code="0xa4" name="glyph65200"/><!-- CURRENCY SIGN -->
+      <map code="0xa5" name="glyph65201"/><!-- YEN SIGN -->
+      <map code="0xa6" name="glyph65202"/><!-- BROKEN BAR -->
+      <map code="0xa7" name="glyph65203"/><!-- SECTION SIGN -->
+      <map code="0xa8" name="glyph65204"/><!-- DIAERESIS -->
+      <map code="0xa9" name="glyph65205"/><!-- COPYRIGHT SIGN -->
+      <map code="0xaa" name="glyph65206"/><!-- FEMININE ORDINAL INDICATOR -->
+      <map code="0xab" name="glyph65207"/><!-- LEFT-POINTING DOUBLE ANGLE QUOTATION MARK -->
+      <map code="0xac" name="glyph65208"/><!-- NOT SIGN -->
+      <map code="0xad" name="glyph65209"/><!-- SOFT HYPHEN -->
+      <map code="0xae" name="glyph65210"/><!-- REGISTERED SIGN -->
+      <map code="0xaf" name="glyph65211"/><!-- MACRON -->
+      <map code="0xb0" name="glyph65212"/><!-- DEGREE SIGN -->
+      <map code="0xb1" name="glyph65213"/><!-- PLUS-MINUS SIGN -->
+      <map code="0xb2" name="glyph65214"/><!-- SUPERSCRIPT TWO -->
+      <map code="0xb3" name="glyph65215"/><!-- SUPERSCRIPT THREE -->
+      <map code="0xb4" name="glyph65216"/><!-- ACUTE ACCENT -->
+      <map code="0xb5" name="glyph65217"/><!-- MICRO SIGN -->
+      <map code="0xb6" name="glyph65218"/><!-- PILCROW SIGN -->
+      <map code="0xb7" name="glyph65219"/><!-- MIDDLE DOT -->
+      <map code="0xb8" name="glyph65220"/><!-- CEDILLA -->
+      <map code="0xb9" name="glyph65221"/><!-- SUPERSCRIPT ONE -->
+      <map code="0xba" name="glyph65222"/><!-- MASCULINE ORDINAL INDICATOR -->
+      <map code="0xbb" name="glyph65223"/><!-- RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK -->
+      <map code="0xbc" name="glyph65224"/><!-- VULGAR FRACTION ONE QUARTER -->
+      <map code="0xbd" name="glyph65225"/><!-- VULGAR FRACTION ONE HALF -->
+      <map code="0xbe" name="glyph65226"/><!-- VULGAR FRACTION THREE QUARTERS -->
+      <map code="0xbf" name="glyph65227"/><!-- INVERTED QUESTION MARK -->
+      <map code="0xc0" name="glyph65228"/><!-- LATIN CAPITAL LETTER A WITH GRAVE -->
+      <map code="0xc1" name="glyph65229"/><!-- LATIN CAPITAL LETTER A WITH ACUTE -->
+      <map code="0xc2" name="glyph65230"/><!-- LATIN CAPITAL LETTER A WITH CIRCUMFLEX -->
+      <map code="0xc3" name="glyph65231"/><!-- LATIN CAPITAL LETTER A WITH TILDE -->
+      <map code="0xc4" name="glyph65232"/><!-- LATIN CAPITAL LETTER A WITH DIAERESIS -->
+      <map code="0xc5" name="glyph65233"/><!-- LATIN CAPITAL LETTER A WITH RING ABOVE -->
+      <map code="0xc6" name="glyph65234"/><!-- LATIN CAPITAL LETTER AE -->
+      <map code="0xc7" name="glyph65235"/><!-- LATIN CAPITAL LETTER C WITH CEDILLA -->
+      <map code="0xc8" name="glyph65236"/><!-- LATIN CAPITAL LETTER E WITH GRAVE -->
+      <map code="0xc9" name="glyph65237"/><!-- LATIN CAPITAL LETTER E WITH ACUTE -->
+      <map code="0xca" name="glyph65238"/><!-- LATIN CAPITAL LETTER E WITH CIRCUMFLEX -->
+      <map code="0xcb" name="glyph65239"/><!-- LATIN CAPITAL LETTER E WITH DIAERESIS -->
+      <map code="0xcc" name="glyph65240"/><!-- LATIN CAPITAL LETTER I WITH GRAVE -->
+      <map code="0xcd" name="glyph65241"/><!-- LATIN CAPITAL LETTER I WITH ACUTE -->
+      <map code="0xce" name="glyph65242"/><!-- LATIN CAPITAL LETTER I WITH CIRCUMFLEX -->
+      <map code="0xcf" name="glyph65243"/><!-- LATIN CAPITAL LETTER I WITH DIAERESIS -->
+      <map code="0xd0" name="glyph65244"/><!-- LATIN CAPITAL LETTER ETH -->
+      <map code="0xd1" name="glyph65245"/><!-- LATIN CAPITAL LETTER N WITH TILDE -->
+      <map code="0xd2" name="glyph65246"/><!-- LATIN CAPITAL LETTER O WITH GRAVE -->
+      <map code="0xd3" name="glyph65247"/><!-- LATIN CAPITAL LETTER O WITH ACUTE -->
+      <map code="0xd4" name="glyph65248"/><!-- LATIN CAPITAL LETTER O WITH CIRCUMFLEX -->
+      <map code="0xd5" name="glyph65249"/><!-- LATIN CAPITAL LETTER O WITH TILDE -->
+      <map code="0xd6" name="glyph65250"/><!-- LATIN CAPITAL LETTER O WITH DIAERESIS -->
+      <map code="0xd7" name="glyph65251"/><!-- MULTIPLICATION SIGN -->
+      <map code="0xd8" name="glyph65252"/><!-- LATIN CAPITAL LETTER O WITH STROKE -->
+      <map code="0xd9" name="glyph65253"/><!-- LATIN CAPITAL LETTER U WITH GRAVE -->
+      <map code="0xda" name="glyph65254"/><!-- LATIN CAPITAL LETTER U WITH ACUTE -->
+      <map code="0xdb" name="glyph65255"/><!-- LATIN CAPITAL LETTER U WITH CIRCUMFLEX -->
+      <map code="0xdc" name="glyph65256"/><!-- LATIN CAPITAL LETTER U WITH DIAERESIS -->
+      <map code="0xdd" name="glyph65257"/><!-- LATIN CAPITAL LETTER Y WITH ACUTE -->
+      <map code="0xde" name="glyph65258"/><!-- LATIN CAPITAL LETTER THORN -->
+      <map code="0xdf" name="glyph65259"/><!-- LATIN SMALL LETTER SHARP S -->
+      <map code="0xe0" name="glyph65260"/><!-- LATIN SMALL LETTER A WITH GRAVE -->
+      <map code="0xe1" name="glyph65261"/><!-- LATIN SMALL LETTER A WITH ACUTE -->
+      <map code="0xe2" name="glyph65262"/><!-- LATIN SMALL LETTER A WITH CIRCUMFLEX -->
+      <map code="0xe3" name="glyph65263"/><!-- LATIN SMALL LETTER A WITH TILDE -->
+      <map code="0xe4" name="glyph65264"/><!-- LATIN SMALL LETTER A WITH DIAERESIS -->
+      <map code="0xe5" name="glyph65265"/><!-- LATIN SMALL LETTER A WITH RING ABOVE -->
+      <map code="0xe6" name="glyph65266"/><!-- LATIN SMALL LETTER AE -->
+      <map code="0xe7" name="glyph65267"/><!-- LATIN SMALL LETTER C WITH CEDILLA -->
+      <map code="0xe8" name="glyph65268"/><!-- LATIN SMALL LETTER E WITH GRAVE -->
+      <map code="0xe9" name="glyph65269"/><!-- LATIN SMALL LETTER E WITH ACUTE -->
+      <map code="0xea" name="glyph65270"/><!-- LATIN SMALL LETTER E WITH CIRCUMFLEX -->
+      <map code="0xeb" name="glyph65271"/><!-- LATIN SMALL LETTER E WITH DIAERESIS -->
+      <map code="0xec" name="glyph65272"/><!-- LATIN SMALL LETTER I WITH GRAVE -->
+      <map code="0xed" name="glyph65273"/><!-- LATIN SMALL LETTER I WITH ACUTE -->
+      <map code="0xee" name="glyph65274"/><!-- LATIN SMALL LETTER I WITH CIRCUMFLEX -->
+      <map code="0xef" name="glyph65275"/><!-- LATIN SMALL LETTER I WITH DIAERESIS -->
+      <map code="0xf0" name="glyph65276"/><!-- LATIN SMALL LETTER ETH -->
+      <map code="0xf1" name="glyph65277"/><!-- LATIN SMALL LETTER N WITH TILDE -->
+      <map code="0xf2" name="glyph65278"/><!-- LATIN SMALL LETTER O WITH GRAVE -->
+      <map code="0xf3" name="glyph65279"/><!-- LATIN SMALL LETTER O WITH ACUTE -->
+      <map code="0xf4" name="glyph65280"/><!-- LATIN SMALL LETTER O WITH CIRCUMFLEX -->
+      <map code="0xf5" name="glyph65281"/><!-- LATIN SMALL LETTER O WITH TILDE -->
+      <map code="0xf6" name="glyph65282"/><!-- LATIN SMALL LETTER O WITH DIAERESIS -->
+      <map code="0xf7" name="glyph65283"/><!-- DIVISION SIGN -->
+      <map code="0xf8" name="glyph65284"/><!-- LATIN SMALL LETTER O WITH STROKE -->
+      <map code="0xf9" name="glyph65285"/><!-- LATIN SMALL LETTER U WITH GRAVE -->
+      <map code="0xfa" name="glyph65286"/><!-- LATIN SMALL LETTER U WITH ACUTE -->
+      <map code="0xfb" name="glyph65287"/><!-- LATIN SMALL LETTER U WITH CIRCUMFLEX -->
+      <map code="0xfc" name="glyph65288"/><!-- LATIN SMALL LETTER U WITH DIAERESIS -->
+      <map code="0xfd" name="glyph65289"/><!-- LATIN SMALL LETTER Y WITH ACUTE -->
+      <map code="0xfe" name="glyph65290"/><!-- LATIN SMALL LETTER THORN -->
+      <map code="0xff" name="glyph65291"/><!-- LATIN SMALL LETTER Y WITH DIAERESIS -->
+      <map code="0x100" name="glyph65292"/><!-- LATIN CAPITAL LETTER A WITH MACRON -->
+      <map code="0x101" name="glyph65293"/><!-- LATIN SMALL LETTER A WITH MACRON -->
+      <map code="0x102" name="glyph65294"/><!-- LATIN CAPITAL LETTER A WITH BREVE -->
+      <map code="0x103" name="glyph65295"/><!-- LATIN SMALL LETTER A WITH BREVE -->
+      <map code="0x104" name="glyph65296"/><!-- LATIN CAPITAL LETTER A WITH OGONEK -->
+      <map code="0x105" name="glyph65297"/><!-- LATIN SMALL LETTER A WITH OGONEK -->
+      <map code="0x106" name="glyph65298"/><!-- LATIN CAPITAL LETTER C WITH ACUTE -->
+      <map code="0x107" name="glyph65299"/><!-- LATIN SMALL LETTER C WITH ACUTE -->
+      <map code="0x108" name="glyph65300"/><!-- LATIN CAPITAL LETTER C WITH CIRCUMFLEX -->
+      <map code="0x109" name="glyph65301"/><!-- LATIN SMALL LETTER C WITH CIRCUMFLEX -->
+      <map code="0x10a" name="glyph65302"/><!-- LATIN CAPITAL LETTER C WITH DOT ABOVE -->
+      <map code="0x10b" name="glyph65303"/><!-- LATIN SMALL LETTER C WITH DOT ABOVE -->
+      <map code="0x10c" name="glyph65304"/><!-- LATIN CAPITAL LETTER C WITH CARON -->
+      <map code="0x10d" name="glyph65305"/><!-- LATIN SMALL LETTER C WITH CARON -->
+      <map code="0x10e" name="glyph65306"/><!-- LATIN CAPITAL LETTER D WITH CARON -->
+      <map code="0x10f" name="glyph65307"/><!-- LATIN SMALL LETTER D WITH CARON -->
+      <map code="0x110" name="glyph65308"/><!-- LATIN CAPITAL LETTER D WITH STROKE -->
+      <map code="0x111" name="glyph65309"/><!-- LATIN SMALL LETTER D WITH STROKE -->
+      <map code="0x112" name="glyph65310"/><!-- LATIN CAPITAL LETTER E WITH MACRON -->
+      <map code="0x113" name="glyph65311"/><!-- LATIN SMALL LETTER E WITH MACRON -->
+      <map code="0x114" name="glyph65312"/><!-- LATIN CAPITAL LETTER E WITH BREVE -->
+      <map code="0x115" name="glyph65313"/><!-- LATIN SMALL LETTER E WITH BREVE -->
+      <map code="0x116" name="glyph65314"/><!-- LATIN CAPITAL LETTER E WITH DOT ABOVE -->
+      <map code="0x117" name="glyph65315"/><!-- LATIN SMALL LETTER E WITH DOT ABOVE -->
+      <map code="0x118" name="glyph65316"/><!-- LATIN CAPITAL LETTER E WITH OGONEK -->
+      <map code="0x119" name="glyph65317"/><!-- LATIN SMALL LETTER E WITH OGONEK -->
+      <map code="0x11a" name="glyph65318"/><!-- LATIN CAPITAL LETTER E WITH CARON -->
+      <map code="0x11b" name="glyph65319"/><!-- LATIN SMALL LETTER E WITH CARON -->
+      <map code="0x11c" name="glyph65320"/><!-- LATIN CAPITAL LETTER G WITH CIRCUMFLEX -->
+      <map code="0x11d" name="glyph65321"/><!-- LATIN SMALL LETTER G WITH CIRCUMFLEX -->
+      <map code="0x11e" name="glyph65322"/><!-- LATIN CAPITAL LETTER G WITH BREVE -->
+      <map code="0x11f" name="glyph65323"/><!-- LATIN SMALL LETTER G WITH BREVE -->
+      <map code="0x120" name="glyph65324"/><!-- LATIN CAPITAL LETTER G WITH DOT ABOVE -->
+      <map code="0x121" name="glyph65325"/><!-- LATIN SMALL LETTER G WITH DOT ABOVE -->
+      <map code="0x122" name="glyph65326"/><!-- LATIN CAPITAL LETTER G WITH CEDILLA -->
+      <map code="0x123" name="glyph65327"/><!-- LATIN SMALL LETTER G WITH CEDILLA -->
+      <map code="0x124" name="glyph65328"/><!-- LATIN CAPITAL LETTER H WITH CIRCUMFLEX -->
+      <map code="0x125" name="glyph65329"/><!-- LATIN SMALL LETTER H WITH CIRCUMFLEX -->
+      <map code="0x126" name="glyph65330"/><!-- LATIN CAPITAL LETTER H WITH STROKE -->
+      <map code="0x127" name="glyph65331"/><!-- LATIN SMALL LETTER H WITH STROKE -->
+      <map code="0x128" name="glyph65332"/><!-- LATIN CAPITAL LETTER I WITH TILDE -->
+      <map code="0x129" name="glyph65333"/><!-- LATIN SMALL LETTER I WITH TILDE -->
+      <map code="0x12a" name="glyph65334"/><!-- LATIN CAPITAL LETTER I WITH MACRON -->
+      <map code="0x12b" name="glyph65335"/><!-- LATIN SMALL LETTER I WITH MACRON -->
+      <map code="0x12c" name="glyph65336"/><!-- LATIN CAPITAL LETTER I WITH BREVE -->
+      <map code="0x12d" name="glyph65337"/><!-- LATIN SMALL LETTER I WITH BREVE -->
+      <map code="0x12e" name="glyph65338"/><!-- LATIN CAPITAL LETTER I WITH OGONEK -->
+      <map code="0x12f" name="glyph65339"/><!-- LATIN SMALL LETTER I WITH OGONEK -->
+      <map code="0x130" name="glyph65340"/><!-- LATIN CAPITAL LETTER I WITH DOT ABOVE -->
+      <map code="0x131" name="glyph65341"/><!-- LATIN SMALL LETTER DOTLESS I -->
+      <map code="0x132" name="glyph65342"/><!-- LATIN CAPITAL LIGATURE IJ -->
+      <map code="0x133" name="glyph65343"/><!-- LATIN SMALL LIGATURE IJ -->
+      <map code="0x134" name="glyph65344"/><!-- LATIN CAPITAL LETTER J WITH CIRCUMFLEX -->
+      <map code="0x135" name="glyph65345"/><!-- LATIN SMALL LETTER J WITH CIRCUMFLEX -->
+      <map code="0x136" name="glyph65346"/><!-- LATIN CAPITAL LETTER K WITH CEDILLA -->
+      <map code="0x137" name="glyph65347"/><!-- LATIN SMALL LETTER K WITH CEDILLA -->
+      <map code="0x138" name="glyph65348"/><!-- LATIN SMALL LETTER KRA -->
+      <map code="0x139" name="glyph65349"/><!-- LATIN CAPITAL LETTER L WITH ACUTE -->
+      <map code="0x13a" name="glyph65350"/><!-- LATIN SMALL LETTER L WITH ACUTE -->
+      <map code="0x13b" name="glyph65351"/><!-- LATIN CAPITAL LETTER L WITH CEDILLA -->
+      <map code="0x13c" name="glyph65352"/><!-- LATIN SMALL LETTER L WITH CEDILLA -->
+      <map code="0x13d" name="glyph65353"/><!-- LATIN CAPITAL LETTER L WITH CARON -->
+      <map code="0x13e" name="glyph65354"/><!-- LATIN SMALL LETTER L WITH CARON -->
+      <map code="0x13f" name="glyph65355"/><!-- LATIN CAPITAL LETTER L WITH MIDDLE DOT -->
+      <map code="0x140" name="glyph65356"/><!-- LATIN SMALL LETTER L WITH MIDDLE DOT -->
+      <map code="0x141" name="glyph65357"/><!-- LATIN CAPITAL LETTER L WITH STROKE -->
+      <map code="0x142" name="glyph65358"/><!-- LATIN SMALL LETTER L WITH STROKE -->
+      <map code="0x143" name="glyph65359"/><!-- LATIN CAPITAL LETTER N WITH ACUTE -->
+      <map code="0x144" name="glyph65360"/><!-- LATIN SMALL LETTER N WITH ACUTE -->
+      <map code="0x145" name="glyph65361"/><!-- LATIN CAPITAL LETTER N WITH CEDILLA -->
+      <map code="0x146" name="glyph65362"/><!-- LATIN SMALL LETTER N WITH CEDILLA -->
+      <map code="0x147" name="glyph65363"/><!-- LATIN CAPITAL LETTER N WITH CARON -->
+      <map code="0x148" name="glyph65364"/><!-- LATIN SMALL LETTER N WITH CARON -->
+      <map code="0x149" name="glyph65365"/><!-- LATIN SMALL LETTER N PRECEDED BY APOSTROPHE -->
+      <map code="0x14a" name="glyph65366"/><!-- LATIN CAPITAL LETTER ENG -->
+      <map code="0x14b" name="glyph65367"/><!-- LATIN SMALL LETTER ENG -->
+      <map code="0x14c" name="glyph65368"/><!-- LATIN CAPITAL LETTER O WITH MACRON -->
+      <map code="0x14d" name="glyph65369"/><!-- LATIN SMALL LETTER O WITH MACRON -->
+      <map code="0x14e" name="glyph65370"/><!-- LATIN CAPITAL LETTER O WITH BREVE -->
+      <map code="0x14f" name="glyph65371"/><!-- LATIN SMALL LETTER O WITH BREVE -->
+      <map code="0x150" name="glyph65372"/><!-- LATIN CAPITAL LETTER O WITH DOUBLE ACUTE -->
+      <map code="0x151" name="glyph65373"/><!-- LATIN SMALL LETTER O WITH DOUBLE ACUTE -->
+      <map code="0x152" name="glyph65374"/><!-- LATIN CAPITAL LIGATURE OE -->
+      <map code="0x153" name="glyph65375"/><!-- LATIN SMALL LIGATURE OE -->
+      <map code="0x154" name="glyph65376"/><!-- LATIN CAPITAL LETTER R WITH ACUTE -->
+      <map code="0x155" name="glyph65377"/><!-- LATIN SMALL LETTER R WITH ACUTE -->
+      <map code="0x156" name="glyph65378"/><!-- LATIN CAPITAL LETTER R WITH CEDILLA -->
+      <map code="0x157" name="glyph65379"/><!-- LATIN SMALL LETTER R WITH CEDILLA -->
+      <map code="0x158" name="glyph65380"/><!-- LATIN CAPITAL LETTER R WITH CARON -->
+      <map code="0x159" name="glyph65381"/><!-- LATIN SMALL LETTER R WITH CARON -->
+      <map code="0x15a" name="glyph65382"/><!-- LATIN CAPITAL LETTER S WITH ACUTE -->
+      <map code="0x15b" name="glyph65383"/><!-- LATIN SMALL LETTER S WITH ACUTE -->
+      <map code="0x15c" name="glyph65384"/><!-- LATIN CAPITAL LETTER S WITH CIRCUMFLEX -->
+      <map code="0x15d" name="glyph65385"/><!-- LATIN SMALL LETTER S WITH CIRCUMFLEX -->
+      <map code="0x15e" name="glyph65386"/><!-- LATIN CAPITAL LETTER S WITH CEDILLA -->
+      <map code="0x15f" name="glyph65387"/><!-- LATIN SMALL LETTER S WITH CEDILLA -->
+      <map code="0x160" name="glyph65388"/><!-- LATIN CAPITAL LETTER S WITH CARON -->
+      <map code="0x161" name="glyph65389"/><!-- LATIN SMALL LETTER S WITH CARON -->
+      <map code="0x162" name="glyph65390"/><!-- LATIN CAPITAL LETTER T WITH CEDILLA -->
+      <map code="0x163" name="glyph65391"/><!-- LATIN SMALL LETTER T WITH CEDILLA -->
+      <map code="0x164" name="glyph65392"/><!-- LATIN CAPITAL LETTER T WITH CARON -->
+      <map code="0x165" name="glyph65393"/><!-- LATIN SMALL LETTER T WITH CARON -->
+      <map code="0x166" name="glyph65394"/><!-- LATIN CAPITAL LETTER T WITH STROKE -->
+      <map code="0x167" name="glyph65395"/><!-- LATIN SMALL LETTER T WITH STROKE -->
+      <map code="0x168" name="glyph65396"/><!-- LATIN CAPITAL LETTER U WITH TILDE -->
+      <map code="0x169" name="glyph65397"/><!-- LATIN SMALL LETTER U WITH TILDE -->
+      <map code="0x16a" name="glyph65398"/><!-- LATIN CAPITAL LETTER U WITH MACRON -->
+      <map code="0x16b" name="glyph65399"/><!-- LATIN SMALL LETTER U WITH MACRON -->
+      <map code="0x16c" name="glyph65400"/><!-- LATIN CAPITAL LETTER U WITH BREVE -->
+      <map code="0x16d" name="glyph65401"/><!-- LATIN SMALL LETTER U WITH BREVE -->
+      <map code="0x16e" name="glyph65402"/><!-- LATIN CAPITAL LETTER U WITH RING ABOVE -->
+      <map code="0x16f" name="glyph65403"/><!-- LATIN SMALL LETTER U WITH RING ABOVE -->
+      <map code="0x170" name="glyph65404"/><!-- LATIN CAPITAL LETTER U WITH DOUBLE ACUTE -->
+      <map code="0x171" name="glyph65405"/><!-- LATIN SMALL LETTER U WITH DOUBLE ACUTE -->
+      <map code="0x172" name="glyph65406"/><!-- LATIN CAPITAL LETTER U WITH OGONEK -->
+      <map code="0x173" name="glyph65407"/><!-- LATIN SMALL LETTER U WITH OGONEK -->
+      <map code="0x174" name="glyph65408"/><!-- LATIN CAPITAL LETTER W WITH CIRCUMFLEX -->
+      <map code="0x175" name="glyph65409"/><!-- LATIN SMALL LETTER W WITH CIRCUMFLEX -->
+      <map code="0x176" name="glyph65410"/><!-- LATIN CAPITAL LETTER Y WITH CIRCUMFLEX -->
+      <map code="0x177" name="glyph65411"/><!-- LATIN SMALL LETTER Y WITH CIRCUMFLEX -->
+      <map code="0x178" name="glyph65412"/><!-- LATIN CAPITAL LETTER Y WITH DIAERESIS -->
+      <map code="0x179" name="glyph65413"/><!-- LATIN CAPITAL LETTER Z WITH ACUTE -->
+      <map code="0x17a" name="glyph65414"/><!-- LATIN SMALL LETTER Z WITH ACUTE -->
+      <map code="0x17b" name="glyph65415"/><!-- LATIN CAPITAL LETTER Z WITH DOT ABOVE -->
+      <map code="0x17c" name="glyph65416"/><!-- LATIN SMALL LETTER Z WITH DOT ABOVE -->
+      <map code="0x17d" name="glyph65417"/><!-- LATIN CAPITAL LETTER Z WITH CARON -->
+      <map code="0x17e" name="glyph65418"/><!-- LATIN SMALL LETTER Z WITH CARON -->
+      <map code="0x17f" name="glyph65419"/><!-- LATIN SMALL LETTER LONG S -->
+      <map code="0x180" name="glyph65420"/><!-- LATIN SMALL LETTER B WITH STROKE -->
+      <map code="0x181" name="glyph65421"/><!-- LATIN CAPITAL LETTER B WITH HOOK -->
+      <map code="0x182" name="glyph65422"/><!-- LATIN CAPITAL LETTER B WITH TOPBAR -->
+      <map code="0x183" name="glyph65423"/><!-- LATIN SMALL LETTER B WITH TOPBAR -->
+      <map code="0x184" name="glyph65424"/><!-- LATIN CAPITAL LETTER TONE SIX -->
+      <map code="0x185" name="glyph65425"/><!-- LATIN SMALL LETTER TONE SIX -->
+      <map code="0x186" name="glyph65426"/><!-- LATIN CAPITAL LETTER OPEN O -->
+      <map code="0x187" name="glyph65427"/><!-- LATIN CAPITAL LETTER C WITH HOOK -->
+      <map code="0x188" name="glyph65428"/><!-- LATIN SMALL LETTER C WITH HOOK -->
+      <map code="0x189" name="glyph65429"/><!-- LATIN CAPITAL LETTER AFRICAN D -->
+      <map code="0x18a" name="glyph65430"/><!-- LATIN CAPITAL LETTER D WITH HOOK -->
+      <map code="0x18b" name="glyph65431"/><!-- LATIN CAPITAL LETTER D WITH TOPBAR -->
+      <map code="0x18c" name="glyph65432"/><!-- LATIN SMALL LETTER D WITH TOPBAR -->
+      <map code="0x18d" name="glyph65433"/><!-- LATIN SMALL LETTER TURNED DELTA -->
+      <map code="0x18e" name="glyph65434"/><!-- LATIN CAPITAL LETTER REVERSED E -->
+      <map code="0x18f" name="glyph65435"/><!-- LATIN CAPITAL LETTER SCHWA -->
+      <map code="0x190" name="glyph65436"/><!-- LATIN CAPITAL LETTER OPEN E -->
+      <map code="0x191" name="glyph65437"/><!-- LATIN CAPITAL LETTER F WITH HOOK -->
+      <map code="0x192" name="glyph65438"/><!-- LATIN SMALL LETTER F WITH HOOK -->
+      <map code="0x193" name="glyph65439"/><!-- LATIN CAPITAL LETTER G WITH HOOK -->
+      <map code="0x194" name="glyph65440"/><!-- LATIN CAPITAL LETTER GAMMA -->
+      <map code="0x195" name="glyph65441"/><!-- LATIN SMALL LETTER HV -->
+      <map code="0x196" name="glyph65442"/><!-- LATIN CAPITAL LETTER IOTA -->
+      <map code="0x197" name="glyph65443"/><!-- LATIN CAPITAL LETTER I WITH STROKE -->
+      <map code="0x198" name="glyph65444"/><!-- LATIN CAPITAL LETTER K WITH HOOK -->
+      <map code="0x199" name="glyph65445"/><!-- LATIN SMALL LETTER K WITH HOOK -->
+      <map code="0x19a" name="glyph65446"/><!-- LATIN SMALL LETTER L WITH BAR -->
+      <map code="0x19b" name="glyph65447"/><!-- LATIN SMALL LETTER LAMBDA WITH STROKE -->
+      <map code="0x19c" name="glyph65448"/><!-- LATIN CAPITAL LETTER TURNED M -->
+      <map code="0x19d" name="glyph65449"/><!-- LATIN CAPITAL LETTER N WITH LEFT HOOK -->
+      <map code="0x19e" name="glyph65450"/><!-- LATIN SMALL LETTER N WITH LONG RIGHT LEG -->
+      <map code="0x19f" name="glyph65451"/><!-- LATIN CAPITAL LETTER O WITH MIDDLE TILDE -->
+      <map code="0x1a0" name="glyph65452"/><!-- LATIN CAPITAL LETTER O WITH HORN -->
+      <map code="0x1a1" name="glyph65453"/><!-- LATIN SMALL LETTER O WITH HORN -->
+      <map code="0x1a2" name="glyph65454"/><!-- LATIN CAPITAL LETTER OI -->
+      <map code="0x1a3" name="glyph65455"/><!-- LATIN SMALL LETTER OI -->
+      <map code="0x1a4" name="glyph65456"/><!-- LATIN CAPITAL LETTER P WITH HOOK -->
+      <map code="0x1a5" name="glyph65457"/><!-- LATIN SMALL LETTER P WITH HOOK -->
+      <map code="0x1a6" name="glyph65458"/><!-- LATIN LETTER YR -->
+      <map code="0x1a7" name="glyph65459"/><!-- LATIN CAPITAL LETTER TONE TWO -->
+      <map code="0x1a8" name="glyph65460"/><!-- LATIN SMALL LETTER TONE TWO -->
+      <map code="0x1a9" name="glyph65461"/><!-- LATIN CAPITAL LETTER ESH -->
+      <map code="0x1aa" name="glyph65462"/><!-- LATIN LETTER REVERSED ESH LOOP -->
+      <map code="0x1ab" name="glyph65463"/><!-- LATIN SMALL LETTER T WITH PALATAL HOOK -->
+      <map code="0x1ac" name="glyph65464"/><!-- LATIN CAPITAL LETTER T WITH HOOK -->
+      <map code="0x1ad" name="glyph65465"/><!-- LATIN SMALL LETTER T WITH HOOK -->
+      <map code="0x1ae" name="glyph65466"/><!-- LATIN CAPITAL LETTER T WITH RETROFLEX HOOK -->
+      <map code="0x1af" name="glyph65467"/><!-- LATIN CAPITAL LETTER U WITH HORN -->
+      <map code="0x1b0" name="glyph65468"/><!-- LATIN SMALL LETTER U WITH HORN -->
+      <map code="0x1b1" name="glyph65469"/><!-- LATIN CAPITAL LETTER UPSILON -->
+      <map code="0x1b2" name="glyph65470"/><!-- LATIN CAPITAL LETTER V WITH HOOK -->
+      <map code="0x1b3" name="glyph65471"/><!-- LATIN CAPITAL LETTER Y WITH HOOK -->
+      <map code="0x1b4" name="glyph65472"/><!-- LATIN SMALL LETTER Y WITH HOOK -->
+      <map code="0x1b5" name="glyph65473"/><!-- LATIN CAPITAL LETTER Z WITH STROKE -->
+      <map code="0x1b6" name="glyph65474"/><!-- LATIN SMALL LETTER Z WITH STROKE -->
+      <map code="0x1b7" name="glyph65475"/><!-- LATIN CAPITAL LETTER EZH -->
+      <map code="0x1b8" name="glyph65476"/><!-- LATIN CAPITAL LETTER EZH REVERSED -->
+      <map code="0x1b9" name="glyph65477"/><!-- LATIN SMALL LETTER EZH REVERSED -->
+      <map code="0x1ba" name="glyph65478"/><!-- LATIN SMALL LETTER EZH WITH TAIL -->
+      <map code="0x1bb" name="glyph65479"/><!-- LATIN LETTER TWO WITH STROKE -->
+      <map code="0x1bc" name="glyph65480"/><!-- LATIN CAPITAL LETTER TONE FIVE -->
+      <map code="0x1bd" name="glyph65481"/><!-- LATIN SMALL LETTER TONE FIVE -->
+      <map code="0x1be" name="glyph65482"/><!-- LATIN LETTER INVERTED GLOTTAL STOP WITH STROKE -->
+      <map code="0x1bf" name="glyph65483"/><!-- LATIN LETTER WYNN -->
+      <map code="0x1c0" name="glyph65484"/><!-- LATIN LETTER DENTAL CLICK -->
+      <map code="0x1c1" name="glyph65485"/><!-- LATIN LETTER LATERAL CLICK -->
+      <map code="0x1c2" name="glyph65486"/><!-- LATIN LETTER ALVEOLAR CLICK -->
+      <map code="0x1c3" name="glyph65487"/><!-- LATIN LETTER RETROFLEX CLICK -->
+      <map code="0x1c4" name="glyph65488"/><!-- LATIN CAPITAL LETTER DZ WITH CARON -->
+      <map code="0x1c5" name="glyph65489"/><!-- LATIN CAPITAL LETTER D WITH SMALL LETTER Z WITH CARON -->
+      <map code="0x1c6" name="glyph65490"/><!-- LATIN SMALL LETTER DZ WITH CARON -->
+      <map code="0x1c7" name="glyph65491"/><!-- LATIN CAPITAL LETTER LJ -->
+      <map code="0x1c8" name="glyph65492"/><!-- LATIN CAPITAL LETTER L WITH SMALL LETTER J -->
+      <map code="0x1c9" name="glyph65493"/><!-- LATIN SMALL LETTER LJ -->
+      <map code="0x1ca" name="glyph65494"/><!-- LATIN CAPITAL LETTER NJ -->
+      <map code="0x1cb" name="glyph65495"/><!-- LATIN CAPITAL LETTER N WITH SMALL LETTER J -->
+      <map code="0x1cc" name="glyph65496"/><!-- LATIN SMALL LETTER NJ -->
+      <map code="0x1cd" name="glyph65497"/><!-- LATIN CAPITAL LETTER A WITH CARON -->
+      <map code="0x1ce" name="glyph65498"/><!-- LATIN SMALL LETTER A WITH CARON -->
+      <map code="0x1cf" name="glyph65499"/><!-- LATIN CAPITAL LETTER I WITH CARON -->
+      <map code="0x1d0" name="glyph65500"/><!-- LATIN SMALL LETTER I WITH CARON -->
+      <map code="0x1d1" name="glyph65501"/><!-- LATIN CAPITAL LETTER O WITH CARON -->
+      <map code="0x1d2" name="glyph65502"/><!-- LATIN SMALL LETTER O WITH CARON -->
+      <map code="0x1d3" name="glyph65503"/><!-- LATIN CAPITAL LETTER U WITH CARON -->
+      <map code="0x1d4" name="glyph65504"/><!-- LATIN SMALL LETTER U WITH CARON -->
+      <map code="0x1d5" name="glyph65505"/><!-- LATIN CAPITAL LETTER U WITH DIAERESIS AND MACRON -->
+      <map code="0x1d6" name="glyph65506"/><!-- LATIN SMALL LETTER U WITH DIAERESIS AND MACRON -->
+      <map code="0x1d7" name="glyph65507"/><!-- LATIN CAPITAL LETTER U WITH DIAERESIS AND ACUTE -->
+      <map code="0x1d8" name="glyph65508"/><!-- LATIN SMALL LETTER U WITH DIAERESIS AND ACUTE -->
+      <map code="0x1d9" name="glyph65509"/><!-- LATIN CAPITAL LETTER U WITH DIAERESIS AND CARON -->
+      <map code="0x1da" name="glyph65510"/><!-- LATIN SMALL LETTER U WITH DIAERESIS AND CARON -->
+      <map code="0x1db" name="glyph65511"/><!-- LATIN CAPITAL LETTER U WITH DIAERESIS AND GRAVE -->
+      <map code="0x1dc" name="glyph65512"/><!-- LATIN SMALL LETTER U WITH DIAERESIS AND GRAVE -->
+      <map code="0x1dd" name="glyph65513"/><!-- LATIN SMALL LETTER TURNED E -->
+      <map code="0x1de" name="glyph65514"/><!-- LATIN CAPITAL LETTER A WITH DIAERESIS AND MACRON -->
+      <map code="0x1df" name="glyph65515"/><!-- LATIN SMALL LETTER A WITH DIAERESIS AND MACRON -->
+      <map code="0x1e0" name="glyph65516"/><!-- LATIN CAPITAL LETTER A WITH DOT ABOVE AND MACRON -->
+      <map code="0x1e1" name="glyph65517"/><!-- LATIN SMALL LETTER A WITH DOT ABOVE AND MACRON -->
+      <map code="0x1e2" name="glyph65518"/><!-- LATIN CAPITAL LETTER AE WITH MACRON -->
+      <map code="0x1e3" name="glyph65519"/><!-- LATIN SMALL LETTER AE WITH MACRON -->
+      <map code="0x1e4" name="glyph65520"/><!-- LATIN CAPITAL LETTER G WITH STROKE -->
+      <map code="0x1e5" name="glyph65521"/><!-- LATIN SMALL LETTER G WITH STROKE -->
+      <map code="0x1e6" name="glyph65522"/><!-- LATIN CAPITAL LETTER G WITH CARON -->
+      <map code="0x1e7" name="glyph65523"/><!-- LATIN SMALL LETTER G WITH CARON -->
+      <map code="0x1e8" name="glyph65524"/><!-- LATIN CAPITAL LETTER K WITH CARON -->
+      <map code="0x1e9" name="glyph65525"/><!-- LATIN SMALL LETTER K WITH CARON -->
+      <map code="0x1ea" name="glyph65526"/><!-- LATIN CAPITAL LETTER O WITH OGONEK -->
+      <map code="0x1eb" name="glyph65527"/><!-- LATIN SMALL LETTER O WITH OGONEK -->
+      <map code="0x1ec" name="glyph65528"/><!-- LATIN CAPITAL LETTER O WITH OGONEK AND MACRON -->
+      <map code="0x1ed" name="glyph65529"/><!-- LATIN SMALL LETTER O WITH OGONEK AND MACRON -->
+      <map code="0x1ee" name="glyph65530"/><!-- LATIN CAPITAL LETTER EZH WITH CARON -->
+      <map code="0x1ef" name="glyph65531"/><!-- LATIN SMALL LETTER EZH WITH CARON -->
+      <map code="0x1f0" name="glyph65532"/><!-- LATIN SMALL LETTER J WITH CARON -->
+      <map code="0x1f1" name="glyph65533"/><!-- LATIN CAPITAL LETTER DZ -->
+      <map code="0x1f2" name="glyph65534"/><!-- LATIN CAPITAL LETTER D WITH SMALL LETTER Z -->
+      <map code="0x1f3" name="glyph65535"/><!-- LATIN SMALL LETTER DZ -->
+      <map code="0x1f5" name="g1"/><!-- LATIN SMALL LETTER G WITH ACUTE -->
+      <map code="0x1f6" name="g2"/><!-- LATIN CAPITAL LETTER HWAIR -->
+      <map code="0x1f7" name="g3"/><!-- LATIN CAPITAL LETTER WYNN -->
+      <map code="0x1f8" name="g4"/><!-- LATIN CAPITAL LETTER N WITH GRAVE -->
+      <map code="0x1f9" name="g5"/><!-- LATIN SMALL LETTER N WITH GRAVE -->
+      <map code="0x1fa" name="g6"/><!-- LATIN CAPITAL LETTER A WITH RING ABOVE AND ACUTE -->
+      <map code="0x1fb" name="g7"/><!-- LATIN SMALL LETTER A WITH RING ABOVE AND ACUTE -->
+      <map code="0x1fc" name="g8"/><!-- LATIN CAPITAL LETTER AE WITH ACUTE -->
+      <map code="0x1fd" name="g9"/><!-- LATIN SMALL LETTER AE WITH ACUTE -->
+      <map code="0x1fe" name="g10"/><!-- LATIN CAPITAL LETTER O WITH STROKE AND ACUTE -->
+      <map code="0x1ff" name="g11"/><!-- LATIN SMALL LETTER O WITH STROKE AND ACUTE -->
+      <map code="0x200" name="g12"/><!-- LATIN CAPITAL LETTER A WITH DOUBLE GRAVE -->
+      <map code="0x201" name="g13"/><!-- LATIN SMALL LETTER A WITH DOUBLE GRAVE -->
+      <map code="0x202" name="g14"/><!-- LATIN CAPITAL LETTER A WITH INVERTED BREVE -->
+      <map code="0x203" name="g15"/><!-- LATIN SMALL LETTER A WITH INVERTED BREVE -->
+      <map code="0x204" name="g16"/><!-- LATIN CAPITAL LETTER E WITH DOUBLE GRAVE -->
+      <map code="0x205" name="g17"/><!-- LATIN SMALL LETTER E WITH DOUBLE GRAVE -->
+      <map code="0x206" name="g18"/><!-- LATIN CAPITAL LETTER E WITH INVERTED BREVE -->
+      <map code="0x207" name="g19"/><!-- LATIN SMALL LETTER E WITH INVERTED BREVE -->
+      <map code="0x208" name="g20"/><!-- LATIN CAPITAL LETTER I WITH DOUBLE GRAVE -->
+      <map code="0x209" name="g21"/><!-- LATIN SMALL LETTER I WITH DOUBLE GRAVE -->
+      <map code="0x20a" name="g22"/><!-- LATIN CAPITAL LETTER I WITH INVERTED BREVE -->
+      <map code="0x20b" name="g23"/><!-- LATIN SMALL LETTER I WITH INVERTED BREVE -->
+      <map code="0x20c" name="g24"/><!-- LATIN CAPITAL LETTER O WITH DOUBLE GRAVE -->
+      <map code="0x20d" name="g25"/><!-- LATIN SMALL LETTER O WITH DOUBLE GRAVE -->
+      <map code="0x20e" name="g26"/><!-- LATIN CAPITAL LETTER O WITH INVERTED BREVE -->
+      <map code="0x20f" name="g27"/><!-- LATIN SMALL LETTER O WITH INVERTED BREVE -->
+      <map code="0x210" name="g28"/><!-- LATIN CAPITAL LETTER R WITH DOUBLE GRAVE -->
+      <map code="0x211" name="g29"/><!-- LATIN SMALL LETTER R WITH DOUBLE GRAVE -->
+      <map code="0x212" name="g30"/><!-- LATIN CAPITAL LETTER R WITH INVERTED BREVE -->
+      <map code="0x213" name="g31"/><!-- LATIN SMALL LETTER R WITH INVERTED BREVE -->
+      <map code="0x214" name="g32"/><!-- LATIN CAPITAL LETTER U WITH DOUBLE GRAVE -->
+      <map code="0x215" name="g33"/><!-- LATIN SMALL LETTER U WITH DOUBLE GRAVE -->
+      <map code="0x216" name="g34"/><!-- LATIN CAPITAL LETTER U WITH INVERTED BREVE -->
+      <map code="0x217" name="g35"/><!-- LATIN SMALL LETTER U WITH INVERTED BREVE -->
+      <map code="0x218" name="g36"/><!-- LATIN CAPITAL LETTER S WITH COMMA BELOW -->
+      <map code="0x219" name="g37"/><!-- LATIN SMALL LETTER S WITH COMMA BELOW -->
+      <map code="0x21a" name="g38"/><!-- LATIN CAPITAL LETTER T WITH COMMA BELOW -->
+      <map code="0x21b" name="g39"/><!-- LATIN SMALL LETTER T WITH COMMA BELOW -->
+      <map code="0x21c" name="g40"/><!-- LATIN CAPITAL LETTER YOGH -->
+      <map code="0x21d" name="g41"/><!-- LATIN SMALL LETTER YOGH -->
+      <map code="0x21e" name="g42"/><!-- LATIN CAPITAL LETTER H WITH CARON -->
+      <map code="0x21f" name="g43"/><!-- LATIN SMALL LETTER H WITH CARON -->
+      <map code="0x220" name="g44"/><!-- LATIN CAPITAL LETTER N WITH LONG RIGHT LEG -->
+      <map code="0x221" name="g45"/><!-- LATIN SMALL LETTER D WITH CURL -->
+      <map code="0x222" name="g46"/><!-- LATIN CAPITAL LETTER OU -->
+      <map code="0x223" name="g47"/><!-- LATIN SMALL LETTER OU -->
+      <map code="0x224" name="g48"/><!-- LATIN CAPITAL LETTER Z WITH HOOK -->
+      <map code="0x225" name="g49"/><!-- LATIN SMALL LETTER Z WITH HOOK -->
+      <map code="0x226" name="g50"/><!-- LATIN CAPITAL LETTER A WITH DOT ABOVE -->
+      <map code="0x227" name="g51"/><!-- LATIN SMALL LETTER A WITH DOT ABOVE -->
+      <map code="0x228" name="g52"/><!-- LATIN CAPITAL LETTER E WITH CEDILLA -->
+      <map code="0x229" name="g53"/><!-- LATIN SMALL LETTER E WITH CEDILLA -->
+      <map code="0x22a" name="g54"/><!-- LATIN CAPITAL LETTER O WITH DIAERESIS AND MACRON -->
+      <map code="0x22b" name="g55"/><!-- LATIN SMALL LETTER O WITH DIAERESIS AND MACRON -->
+      <map code="0x22c" name="g56"/><!-- LATIN CAPITAL LETTER O WITH TILDE AND MACRON -->
+      <map code="0x22d" name="g57"/><!-- LATIN SMALL LETTER O WITH TILDE AND MACRON -->
+      <map code="0x22e" name="g58"/><!-- LATIN CAPITAL LETTER O WITH DOT ABOVE -->
+      <map code="0x22f" name="g59"/><!-- LATIN SMALL LETTER O WITH DOT ABOVE -->
+      <map code="0x230" name="g60"/><!-- LATIN CAPITAL LETTER O WITH DOT ABOVE AND MACRON -->
+      <map code="0x231" name="g61"/><!-- LATIN SMALL LETTER O WITH DOT ABOVE AND MACRON -->
+      <map code="0x232" name="g62"/><!-- LATIN CAPITAL LETTER Y WITH MACRON -->
+      <map code="0x233" name="g63"/><!-- LATIN SMALL LETTER Y WITH MACRON -->
+      <map code="0x234" name="g64"/><!-- LATIN SMALL LETTER L WITH CURL -->
+      <map code="0x235" name="g65"/><!-- LATIN SMALL LETTER N WITH CURL -->
+      <map code="0x236" name="g66"/><!-- LATIN SMALL LETTER T WITH CURL -->
+      <map code="0x237" name="g67"/><!-- LATIN SMALL LETTER DOTLESS J -->
+      <map code="0x238" name="g68"/><!-- LATIN SMALL LETTER DB DIGRAPH -->
+      <map code="0x239" name="g69"/><!-- LATIN SMALL LETTER QP DIGRAPH -->
+      <map code="0x23a" name="g70"/><!-- LATIN CAPITAL LETTER A WITH STROKE -->
+      <map code="0x23b" name="g71"/><!-- LATIN CAPITAL LETTER C WITH STROKE -->
+      <map code="0x23c" name="g72"/><!-- LATIN SMALL LETTER C WITH STROKE -->
+      <map code="0x23d" name="g73"/><!-- LATIN CAPITAL LETTER L WITH BAR -->
+      <map code="0x23e" name="g74"/><!-- LATIN CAPITAL LETTER T WITH DIAGONAL STROKE -->
+      <map code="0x23f" name="g75"/><!-- LATIN SMALL LETTER S WITH SWASH TAIL -->
+      <map code="0x240" name="g76"/><!-- LATIN SMALL LETTER Z WITH SWASH TAIL -->
+      <map code="0x241" name="g77"/><!-- LATIN CAPITAL LETTER GLOTTAL STOP -->
+      <map code="0x242" name="g78"/><!-- LATIN SMALL LETTER GLOTTAL STOP -->
+      <map code="0x243" name="g79"/><!-- LATIN CAPITAL LETTER B WITH STROKE -->
+      <map code="0x244" name="g80"/><!-- LATIN CAPITAL LETTER U BAR -->
+      <map code="0x245" name="g81"/><!-- LATIN CAPITAL LETTER TURNED V -->
+      <map code="0x246" name="g82"/><!-- LATIN CAPITAL LETTER E WITH STROKE -->
+      <map code="0x247" name="g83"/><!-- LATIN SMALL LETTER E WITH STROKE -->
+      <map code="0x248" name="g84"/><!-- LATIN CAPITAL LETTER J WITH STROKE -->
+      <map code="0x249" name="g85"/><!-- LATIN SMALL LETTER J WITH STROKE -->
+      <map code="0x24a" name="g86"/><!-- LATIN CAPITAL LETTER SMALL Q WITH HOOK TAIL -->
+      <map code="0x24b" name="g87"/><!-- LATIN SMALL LETTER Q WITH HOOK TAIL -->
+      <map code="0x24c" name="g88"/><!-- LATIN CAPITAL LETTER R WITH STROKE -->
+      <map code="0x24d" name="g89"/><!-- LATIN SMALL LETTER R WITH STROKE -->
+      <map code="0x24e" name="g90"/><!-- LATIN CAPITAL LETTER Y WITH STROKE -->
+      <map code="0x24f" name="g91"/><!-- LATIN SMALL LETTER Y WITH STROKE -->
+      <map code="0x250" name="g92"/><!-- LATIN SMALL LETTER TURNED A -->
+      <map code="0x251" name="g93"/><!-- LATIN SMALL LETTER ALPHA -->
+      <map code="0x252" name="g94"/><!-- LATIN SMALL LETTER TURNED ALPHA -->
+      <map code="0x253" name="g95"/><!-- LATIN SMALL LETTER B WITH HOOK -->
+      <map code="0x254" name="g96"/><!-- LATIN SMALL LETTER OPEN O -->
+      <map code="0x255" name="g97"/><!-- LATIN SMALL LETTER C WITH CURL -->
+      <map code="0x256" name="g98"/><!-- LATIN SMALL LETTER D WITH TAIL -->
+      <map code="0x257" name="g99"/><!-- LATIN SMALL LETTER D WITH HOOK -->
+      <map code="0x258" name="glyph00100"/><!-- LATIN SMALL LETTER REVERSED E -->
+      <map code="0x259" name="glyph00101"/><!-- LATIN SMALL LETTER SCHWA -->
+      <map code="0x25a" name="glyph00102"/><!-- LATIN SMALL LETTER SCHWA WITH HOOK -->
+      <map code="0x25b" name="glyph00103"/><!-- LATIN SMALL LETTER OPEN E -->
+      <map code="0x25c" name="glyph00104"/><!-- LATIN SMALL LETTER REVERSED OPEN E -->
+      <map code="0x25d" name="glyph00105"/><!-- LATIN SMALL LETTER REVERSED OPEN E WITH HOOK -->
+      <map code="0x25e" name="glyph00106"/><!-- LATIN SMALL LETTER CLOSED REVERSED OPEN E -->
+      <map code="0x25f" name="glyph00107"/><!-- LATIN SMALL LETTER DOTLESS J WITH STROKE -->
+      <map code="0x260" name="glyph00108"/><!-- LATIN SMALL LETTER G WITH HOOK -->
+      <map code="0x261" name="glyph00109"/><!-- LATIN SMALL LETTER SCRIPT G -->
+      <map code="0x262" name="glyph00110"/><!-- LATIN LETTER SMALL CAPITAL G -->
+      <map code="0x263" name="glyph00111"/><!-- LATIN SMALL LETTER GAMMA -->
+      <map code="0x264" name="glyph00112"/><!-- LATIN SMALL LETTER RAMS HORN -->
+      <map code="0x265" name="glyph00113"/><!-- LATIN SMALL LETTER TURNED H -->
+      <map code="0x266" name="glyph00114"/><!-- LATIN SMALL LETTER H WITH HOOK -->
+      <map code="0x267" name="glyph00115"/><!-- LATIN SMALL LETTER HENG WITH HOOK -->
+      <map code="0x268" name="glyph00116"/><!-- LATIN SMALL LETTER I WITH STROKE -->
+      <map code="0x269" name="glyph00117"/><!-- LATIN SMALL LETTER IOTA -->
+      <map code="0x26a" name="glyph00118"/><!-- LATIN LETTER SMALL CAPITAL I -->
+      <map code="0x26b" name="glyph00119"/><!-- LATIN SMALL LETTER L WITH MIDDLE TILDE -->
+      <map code="0x26c" name="glyph00120"/><!-- LATIN SMALL LETTER L WITH BELT -->
+      <map code="0x26d" name="glyph00121"/><!-- LATIN SMALL LETTER L WITH RETROFLEX HOOK -->
+      <map code="0x26e" name="glyph00122"/><!-- LATIN SMALL LETTER LEZH -->
+      <map code="0x26f" name="glyph00123"/><!-- LATIN SMALL LETTER TURNED M -->
+      <map code="0x270" name="glyph00124"/><!-- LATIN SMALL LETTER TURNED M WITH LONG LEG -->
+      <map code="0x271" name="glyph00125"/><!-- LATIN SMALL LETTER M WITH HOOK -->
+      <map code="0x272" name="glyph00126"/><!-- LATIN SMALL LETTER N WITH LEFT HOOK -->
+      <map code="0x273" name="glyph00127"/><!-- LATIN SMALL LETTER N WITH RETROFLEX HOOK -->
+      <map code="0x274" name="glyph00128"/><!-- LATIN LETTER SMALL CAPITAL N -->
+      <map code="0x275" name="glyph00129"/><!-- LATIN SMALL LETTER BARRED O -->
+      <map code="0x276" name="glyph00130"/><!-- LATIN LETTER SMALL CAPITAL OE -->
+      <map code="0x277" name="glyph00131"/><!-- LATIN SMALL LETTER CLOSED OMEGA -->
+      <map code="0x278" name="glyph00132"/><!-- LATIN SMALL LETTER PHI -->
+      <map code="0x279" name="glyph00133"/><!-- LATIN SMALL LETTER TURNED R -->
+      <map code="0x27a" name="glyph00134"/><!-- LATIN SMALL LETTER TURNED R WITH LONG LEG -->
+      <map code="0x27b" name="glyph00135"/><!-- LATIN SMALL LETTER TURNED R WITH HOOK -->
+      <map code="0x27c" name="glyph00136"/><!-- LATIN SMALL LETTER R WITH LONG LEG -->
+      <map code="0x27d" name="glyph00137"/><!-- LATIN SMALL LETTER R WITH TAIL -->
+      <map code="0x27e" name="glyph00138"/><!-- LATIN SMALL LETTER R WITH FISHHOOK -->
+      <map code="0x27f" name="glyph00139"/><!-- LATIN SMALL LETTER REVERSED R WITH FISHHOOK -->
+      <map code="0x280" name="glyph00140"/><!-- LATIN LETTER SMALL CAPITAL R -->
+      <map code="0x281" name="glyph00141"/><!-- LATIN LETTER SMALL CAPITAL INVERTED R -->
+      <map code="0x282" name="glyph00142"/><!-- LATIN SMALL LETTER S WITH HOOK -->
+      <map code="0x283" name="glyph00143"/><!-- LATIN SMALL LETTER ESH -->
+      <map code="0x284" name="glyph00144"/><!-- LATIN SMALL LETTER DOTLESS J WITH STROKE AND HOOK -->
+      <map code="0x285" name="glyph00145"/><!-- LATIN SMALL LETTER SQUAT REVERSED ESH -->
+      <map code="0x286" name="glyph00146"/><!-- LATIN SMALL LETTER ESH WITH CURL -->
+      <map code="0x287" name="glyph00147"/><!-- LATIN SMALL LETTER TURNED T -->
+      <map code="0x288" name="glyph00148"/><!-- LATIN SMALL LETTER T WITH RETROFLEX HOOK -->
+      <map code="0x289" name="glyph00149"/><!-- LATIN SMALL LETTER U BAR -->
+      <map code="0x28a" name="glyph00150"/><!-- LATIN SMALL LETTER UPSILON -->
+      <map code="0x28b" name="glyph00151"/><!-- LATIN SMALL LETTER V WITH HOOK -->
+      <map code="0x28c" name="glyph00152"/><!-- LATIN SMALL LETTER TURNED V -->
+      <map code="0x28d" name="glyph00153"/><!-- LATIN SMALL LETTER TURNED W -->
+      <map code="0x28e" name="glyph00154"/><!-- LATIN SMALL LETTER TURNED Y -->
+      <map code="0x28f" name="glyph00155"/><!-- LATIN LETTER SMALL CAPITAL Y -->
+      <map code="0x290" name="glyph00156"/><!-- LATIN SMALL LETTER Z WITH RETROFLEX HOOK -->
+      <map code="0x291" name="glyph00157"/><!-- LATIN SMALL LETTER Z WITH CURL -->
+      <map code="0x292" name="glyph00158"/><!-- LATIN SMALL LETTER EZH -->
+      <map code="0x293" name="glyph00159"/><!-- LATIN SMALL LETTER EZH WITH CURL -->
+      <map code="0x294" name="glyph00160"/><!-- LATIN LETTER GLOTTAL STOP -->
+      <map code="0x295" name="glyph00161"/><!-- LATIN LETTER PHARYNGEAL VOICED FRICATIVE -->
+      <map code="0x296" name="glyph00162"/><!-- LATIN LETTER INVERTED GLOTTAL STOP -->
+      <map code="0x297" name="glyph00163"/><!-- LATIN LETTER STRETCHED C -->
+      <map code="0x298" name="glyph00164"/><!-- LATIN LETTER BILABIAL CLICK -->
+      <map code="0x299" name="glyph00165"/><!-- LATIN LETTER SMALL CAPITAL B -->
+      <map code="0x29a" name="glyph00166"/><!-- LATIN SMALL LETTER CLOSED OPEN E -->
+      <map code="0x29b" name="glyph00167"/><!-- LATIN LETTER SMALL CAPITAL G WITH HOOK -->
+      <map code="0x29c" name="glyph00168"/><!-- LATIN LETTER SMALL CAPITAL H -->
+      <map code="0x29d" name="glyph00169"/><!-- LATIN SMALL LETTER J WITH CROSSED-TAIL -->
+      <map code="0x29e" name="glyph00170"/><!-- LATIN SMALL LETTER TURNED K -->
+      <map code="0x29f" name="glyph00171"/><!-- LATIN LETTER SMALL CAPITAL L -->
+      <map code="0x2a0" name="glyph00172"/><!-- LATIN SMALL LETTER Q WITH HOOK -->
+      <map code="0x2a1" name="glyph00173"/><!-- LATIN LETTER GLOTTAL STOP WITH STROKE -->
+      <map code="0x2a2" name="glyph00174"/><!-- LATIN LETTER REVERSED GLOTTAL STOP WITH STROKE -->
+      <map code="0x2a3" name="glyph00175"/><!-- LATIN SMALL LETTER DZ DIGRAPH -->
+      <map code="0x2a4" name="glyph00176"/><!-- LATIN SMALL LETTER DEZH DIGRAPH -->
+      <map code="0x2a5" name="glyph00177"/><!-- LATIN SMALL LETTER DZ DIGRAPH WITH CURL -->
+      <map code="0x2a6" name="glyph00178"/><!-- LATIN SMALL LETTER TS DIGRAPH -->
+      <map code="0x2a7" name="glyph00179"/><!-- LATIN SMALL LETTER TESH DIGRAPH -->
+      <map code="0x2a8" name="glyph00180"/><!-- LATIN SMALL LETTER TC DIGRAPH WITH CURL -->
+      <map code="0x2a9" name="glyph00181"/><!-- LATIN SMALL LETTER FENG DIGRAPH -->
+      <map code="0x2aa" name="glyph00182"/><!-- LATIN SMALL LETTER LS DIGRAPH -->
+      <map code="0x2ab" name="glyph00183"/><!-- LATIN SMALL LETTER LZ DIGRAPH -->
+      <map code="0x2ac" name="glyph00184"/><!-- LATIN LETTER BILABIAL PERCUSSIVE -->
+      <map code="0x2ad" name="glyph00185"/><!-- LATIN LETTER BIDENTAL PERCUSSIVE -->
+      <map code="0x2ae" name="glyph00186"/><!-- LATIN SMALL LETTER TURNED H WITH FISHHOOK -->
+      <map code="0x2af" name="glyph00187"/><!-- LATIN SMALL LETTER TURNED H WITH FISHHOOK AND TAIL -->
+      <map code="0x2b0" name="glyph00188"/><!-- MODIFIER LETTER SMALL H -->
+      <map code="0x2b1" name="glyph00189"/><!-- MODIFIER LETTER SMALL H WITH HOOK -->
+      <map code="0x2b2" name="glyph00190"/><!-- MODIFIER LETTER SMALL J -->
+      <map code="0x2b3" name="glyph00191"/><!-- MODIFIER LETTER SMALL R -->
+      <map code="0x2b4" name="glyph00192"/><!-- MODIFIER LETTER SMALL TURNED R -->
+      <map code="0x2b5" name="glyph00193"/><!-- MODIFIER LETTER SMALL TURNED R WITH HOOK -->
+      <map code="0x2b6" name="glyph00194"/><!-- MODIFIER LETTER SMALL CAPITAL INVERTED R -->
+      <map code="0x2b7" name="glyph00195"/><!-- MODIFIER LETTER SMALL W -->
+      <map code="0x2b8" name="glyph00196"/><!-- MODIFIER LETTER SMALL Y -->
+      <map code="0x2b9" name="glyph00197"/><!-- MODIFIER LETTER PRIME -->
+      <map code="0x2ba" name="glyph00198"/><!-- MODIFIER LETTER DOUBLE PRIME -->
+      <map code="0x2bb" name="glyph00199"/><!-- MODIFIER LETTER TURNED COMMA -->
+      <map code="0x2bc" name="glyph00200"/><!-- MODIFIER LETTER APOSTROPHE -->
+      <map code="0x2bd" name="glyph00201"/><!-- MODIFIER LETTER REVERSED COMMA -->
+      <map code="0x2be" name="glyph00202"/><!-- MODIFIER LETTER RIGHT HALF RING -->
+      <map code="0x2bf" name="glyph00203"/><!-- MODIFIER LETTER LEFT HALF RING -->
+      <map code="0x2c0" name="glyph00204"/><!-- MODIFIER LETTER GLOTTAL STOP -->
+      <map code="0x2c1" name="glyph00205"/><!-- MODIFIER LETTER REVERSED GLOTTAL STOP -->
+      <map code="0x2c2" name="glyph00206"/><!-- MODIFIER LETTER LEFT ARROWHEAD -->
+      <map code="0x2c3" name="glyph00207"/><!-- MODIFIER LETTER RIGHT ARROWHEAD -->
+      <map code="0x2c4" name="glyph00208"/><!-- MODIFIER LETTER UP ARROWHEAD -->
+      <map code="0x2c5" name="glyph00209"/><!-- MODIFIER LETTER DOWN ARROWHEAD -->
+      <map code="0x2c6" name="glyph00210"/><!-- MODIFIER LETTER CIRCUMFLEX ACCENT -->
+      <map code="0x2c7" name="glyph00211"/><!-- CARON -->
+      <map code="0x2c8" name="glyph00212"/><!-- MODIFIER LETTER VERTICAL LINE -->
+      <map code="0x2c9" name="glyph00213"/><!-- MODIFIER LETTER MACRON -->
+      <map code="0x2ca" name="glyph00214"/><!-- MODIFIER LETTER ACUTE ACCENT -->
+      <map code="0x2cb" name="glyph00215"/><!-- MODIFIER LETTER GRAVE ACCENT -->
+      <map code="0x2cc" name="glyph00216"/><!-- MODIFIER LETTER LOW VERTICAL LINE -->
+      <map code="0x2cd" name="glyph00217"/><!-- MODIFIER LETTER LOW MACRON -->
+      <map code="0x2ce" name="glyph00218"/><!-- MODIFIER LETTER LOW GRAVE ACCENT -->
+      <map code="0x2cf" name="glyph00219"/><!-- MODIFIER LETTER LOW ACUTE ACCENT -->
+      <map code="0x2d0" name="glyph00220"/><!-- MODIFIER LETTER TRIANGULAR COLON -->
+      <map code="0x2d1" name="glyph00221"/><!-- MODIFIER LETTER HALF TRIANGULAR COLON -->
+      <map code="0x2d2" name="glyph00222"/><!-- MODIFIER LETTER CENTRED RIGHT HALF RING -->
+      <map code="0x2d3" name="glyph00223"/><!-- MODIFIER LETTER CENTRED LEFT HALF RING -->
+      <map code="0x2d4" name="glyph00224"/><!-- MODIFIER LETTER UP TACK -->
+      <map code="0x2d5" name="glyph00225"/><!-- MODIFIER LETTER DOWN TACK -->
+      <map code="0x2d6" name="glyph00226"/><!-- MODIFIER LETTER PLUS SIGN -->
+      <map code="0x2d7" name="glyph00227"/><!-- MODIFIER LETTER MINUS SIGN -->
+      <map code="0x2d8" name="glyph00228"/><!-- BREVE -->
+      <map code="0x2d9" name="glyph00229"/><!-- DOT ABOVE -->
+      <map code="0x2da" name="glyph00230"/><!-- RING ABOVE -->
+      <map code="0x2db" name="glyph00231"/><!-- OGONEK -->
+      <map code="0x2dc" name="glyph00232"/><!-- SMALL TILDE -->
+      <map code="0x2dd" name="glyph00233"/><!-- DOUBLE ACUTE ACCENT -->
+      <map code="0x2de" name="glyph00234"/><!-- MODIFIER LETTER RHOTIC HOOK -->
+      <map code="0x2df" name="glyph00235"/><!-- MODIFIER LETTER CROSS ACCENT -->
+      <map code="0x2e0" name="glyph00236"/><!-- MODIFIER LETTER SMALL GAMMA -->
+      <map code="0x2e1" name="glyph00237"/><!-- MODIFIER LETTER SMALL L -->
+      <map code="0x2e2" name="glyph00238"/><!-- MODIFIER LETTER SMALL S -->
+      <map code="0x2e3" name="glyph00239"/><!-- MODIFIER LETTER SMALL X -->
+      <map code="0x2e4" name="glyph00240"/><!-- MODIFIER LETTER SMALL REVERSED GLOTTAL STOP -->
+      <map code="0x2e5" name="glyph00241"/><!-- MODIFIER LETTER EXTRA-HIGH TONE BAR -->
+      <map code="0x2e6" name="glyph00242"/><!-- MODIFIER LETTER HIGH TONE BAR -->
+      <map code="0x2e7" name="glyph00243"/><!-- MODIFIER LETTER MID TONE BAR -->
+      <map code="0x2e8" name="glyph00244"/><!-- MODIFIER LETTER LOW TONE BAR -->
+      <map code="0x2e9" name="glyph00245"/><!-- MODIFIER LETTER EXTRA-LOW TONE BAR -->
+      <map code="0x2ea" name="glyph00246"/><!-- MODIFIER LETTER YIN DEPARTING TONE MARK -->
+      <map code="0x2eb" name="glyph00247"/><!-- MODIFIER LETTER YANG DEPARTING TONE MARK -->
+      <map code="0x2ec" name="glyph00248"/><!-- MODIFIER LETTER VOICING -->
+      <map code="0x2ed" name="glyph00249"/><!-- MODIFIER LETTER UNASPIRATED -->
+      <map code="0x2ee" name="glyph00250"/><!-- MODIFIER LETTER DOUBLE APOSTROPHE -->
+      <map code="0x2ef" name="glyph00251"/><!-- MODIFIER LETTER LOW DOWN ARROWHEAD -->
+      <map code="0x2f0" name="glyph00252"/><!-- MODIFIER LETTER LOW UP ARROWHEAD -->
+      <map code="0x2f1" name="glyph00253"/><!-- MODIFIER LETTER LOW LEFT ARROWHEAD -->
+      <map code="0x2f2" name="glyph00254"/><!-- MODIFIER LETTER LOW RIGHT ARROWHEAD -->
+      <map code="0x2f3" name="glyph00255"/><!-- MODIFIER LETTER LOW RING -->
+      <map code="0x2f4" name="glyph00256"/><!-- MODIFIER LETTER MIDDLE GRAVE ACCENT -->
+      <map code="0x2f5" name="glyph00257"/><!-- MODIFIER LETTER MIDDLE DOUBLE GRAVE ACCENT -->
+      <map code="0x2f6" name="glyph00258"/><!-- MODIFIER LETTER MIDDLE DOUBLE ACUTE ACCENT -->
+      <map code="0x2f7" name="glyph00259"/><!-- MODIFIER LETTER LOW TILDE -->
+      <map code="0x2f8" name="glyph00260"/><!-- MODIFIER LETTER RAISED COLON -->
+      <map code="0x2f9" name="glyph00261"/><!-- MODIFIER LETTER BEGIN HIGH TONE -->
+      <map code="0x2fa" name="glyph00262"/><!-- MODIFIER LETTER END HIGH TONE -->
+      <map code="0x2fb" name="glyph00263"/><!-- MODIFIER LETTER BEGIN LOW TONE -->
+      <map code="0x2fc" name="glyph00264"/><!-- MODIFIER LETTER END LOW TONE -->
+      <map code="0x2fd" name="glyph00265"/><!-- MODIFIER LETTER SHELF -->
+      <map code="0x2fe" name="glyph00266"/><!-- MODIFIER LETTER OPEN SHELF -->
+      <map code="0x2ff" name="glyph00267"/><!-- MODIFIER LETTER LOW LEFT ARROW -->
+      <map code="0x300" name="glyph00268"/><!-- COMBINING GRAVE ACCENT -->
+      <map code="0x301" name="glyph00269"/><!-- COMBINING ACUTE ACCENT -->
+      <map code="0x302" name="glyph00270"/><!-- COMBINING CIRCUMFLEX ACCENT -->
+      <map code="0x303" name="glyph00271"/><!-- COMBINING TILDE -->
+      <map code="0x304" name="glyph00272"/><!-- COMBINING MACRON -->
+      <map code="0x305" name="glyph00273"/><!-- COMBINING OVERLINE -->
+      <map code="0x306" name="glyph00274"/><!-- COMBINING BREVE -->
+      <map code="0x307" name="glyph00275"/><!-- COMBINING DOT ABOVE -->
+      <map code="0x308" name="glyph00276"/><!-- COMBINING DIAERESIS -->
+      <map code="0x309" name="glyph00277"/><!-- COMBINING HOOK ABOVE -->
+      <map code="0x30a" name="glyph00278"/><!-- COMBINING RING ABOVE -->
+      <map code="0x30b" name="glyph00279"/><!-- COMBINING DOUBLE ACUTE ACCENT -->
+      <map code="0x30c" name="glyph00280"/><!-- COMBINING CARON -->
+      <map code="0x30d" name="glyph00281"/><!-- COMBINING VERTICAL LINE ABOVE -->
+      <map code="0x30e" name="glyph00282"/><!-- COMBINING DOUBLE VERTICAL LINE ABOVE -->
+      <map code="0x30f" name="glyph00283"/><!-- COMBINING DOUBLE GRAVE ACCENT -->
+      <map code="0x310" name="glyph00284"/><!-- COMBINING CANDRABINDU -->
+      <map code="0x311" name="glyph00285"/><!-- COMBINING INVERTED BREVE -->
+      <map code="0x312" name="glyph00286"/><!-- COMBINING TURNED COMMA ABOVE -->
+      <map code="0x313" name="glyph00287"/><!-- COMBINING COMMA ABOVE -->
+      <map code="0x314" name="glyph00288"/><!-- COMBINING REVERSED COMMA ABOVE -->
+      <map code="0x315" name="glyph00289"/><!-- COMBINING COMMA ABOVE RIGHT -->
+      <map code="0x316" name="glyph00290"/><!-- COMBINING GRAVE ACCENT BELOW -->
+      <map code="0x317" name="glyph00291"/><!-- COMBINING ACUTE ACCENT BELOW -->
+      <map code="0x318" name="glyph00292"/><!-- COMBINING LEFT TACK BELOW -->
+      <map code="0x319" name="glyph00293"/><!-- COMBINING RIGHT TACK BELOW -->
+      <map code="0x31a" name="glyph00294"/><!-- COMBINING LEFT ANGLE ABOVE -->
+      <map code="0x31b" name="glyph00295"/><!-- COMBINING HORN -->
+      <map code="0x31c" name="glyph00296"/><!-- COMBINING LEFT HALF RING BELOW -->
+      <map code="0x31d" name="glyph00297"/><!-- COMBINING UP TACK BELOW -->
+      <map code="0x31e" name="glyph00298"/><!-- COMBINING DOWN TACK BELOW -->
+      <map code="0x31f" name="glyph00299"/><!-- COMBINING PLUS SIGN BELOW -->
+      <map code="0x320" name="glyph00300"/><!-- COMBINING MINUS SIGN BELOW -->
+      <map code="0x321" name="glyph00301"/><!-- COMBINING PALATALIZED HOOK BELOW -->
+      <map code="0x322" name="glyph00302"/><!-- COMBINING RETROFLEX HOOK BELOW -->
+      <map code="0x323" name="glyph00303"/><!-- COMBINING DOT BELOW -->
+      <map code="0x324" name="glyph00304"/><!-- COMBINING DIAERESIS BELOW -->
+      <map code="0x325" name="glyph00305"/><!-- COMBINING RING BELOW -->
+      <map code="0x326" name="glyph00306"/><!-- COMBINING COMMA BELOW -->
+      <map code="0x327" name="glyph00307"/><!-- COMBINING CEDILLA -->
+      <map code="0x328" name="glyph00308"/><!-- COMBINING OGONEK -->
+      <map code="0x329" name="glyph00309"/><!-- COMBINING VERTICAL LINE BELOW -->
+      <map code="0x32a" name="glyph00310"/><!-- COMBINING BRIDGE BELOW -->
+      <map code="0x32b" name="glyph00311"/><!-- COMBINING INVERTED DOUBLE ARCH BELOW -->
+      <map code="0x32c" name="glyph00312"/><!-- COMBINING CARON BELOW -->
+      <map code="0x32d" name="glyph00313"/><!-- COMBINING CIRCUMFLEX ACCENT BELOW -->
+      <map code="0x32e" name="glyph00314"/><!-- COMBINING BREVE BELOW -->
+      <map code="0x32f" name="glyph00315"/><!-- COMBINING INVERTED BREVE BELOW -->
+      <map code="0x330" name="glyph00316"/><!-- COMBINING TILDE BELOW -->
+      <map code="0x331" name="glyph00317"/><!-- COMBINING MACRON BELOW -->
+      <map code="0x332" name="glyph00318"/><!-- COMBINING LOW LINE -->
+      <map code="0x333" name="glyph00319"/><!-- COMBINING DOUBLE LOW LINE -->
+      <map code="0x334" name="glyph00320"/><!-- COMBINING TILDE OVERLAY -->
+      <map code="0x335" name="glyph00321"/><!-- COMBINING SHORT STROKE OVERLAY -->
+      <map code="0x336" name="glyph00322"/><!-- COMBINING LONG STROKE OVERLAY -->
+      <map code="0x337" name="glyph00323"/><!-- COMBINING SHORT SOLIDUS OVERLAY -->
+      <map code="0x338" name="glyph00324"/><!-- COMBINING LONG SOLIDUS OVERLAY -->
+      <map code="0x339" name="glyph00325"/><!-- COMBINING RIGHT HALF RING BELOW -->
+      <map code="0x33a" name="glyph00326"/><!-- COMBINING INVERTED BRIDGE BELOW -->
+      <map code="0x33b" name="glyph00327"/><!-- COMBINING SQUARE BELOW -->
+      <map code="0x33c" name="glyph00328"/><!-- COMBINING SEAGULL BELOW -->
+      <map code="0x33d" name="glyph00329"/><!-- COMBINING X ABOVE -->
+      <map code="0x33e" name="glyph00330"/><!-- COMBINING VERTICAL TILDE -->
+      <map code="0x33f" name="glyph00331"/><!-- COMBINING DOUBLE OVERLINE -->
+      <map code="0x340" name="glyph00332"/><!-- COMBINING GRAVE TONE MARK -->
+      <map code="0x341" name="glyph00333"/><!-- COMBINING ACUTE TONE MARK -->
+      <map code="0x342" name="glyph00334"/><!-- COMBINING GREEK PERISPOMENI -->
+      <map code="0x343" name="glyph00335"/><!-- COMBINING GREEK KORONIS -->
+      <map code="0x344" name="glyph00336"/><!-- COMBINING GREEK DIALYTIKA TONOS -->
+      <map code="0x345" name="glyph00337"/><!-- COMBINING GREEK YPOGEGRAMMENI -->
+      <map code="0x346" name="glyph00338"/><!-- COMBINING BRIDGE ABOVE -->
+      <map code="0x347" name="glyph00339"/><!-- COMBINING EQUALS SIGN BELOW -->
+      <map code="0x348" name="glyph00340"/><!-- COMBINING DOUBLE VERTICAL LINE BELOW -->
+      <map code="0x349" name="glyph00341"/><!-- COMBINING LEFT ANGLE BELOW -->
+      <map code="0x34a" name="glyph00342"/><!-- COMBINING NOT TILDE ABOVE -->
+      <map code="0x34b" name="glyph00343"/><!-- COMBINING HOMOTHETIC ABOVE -->
+      <map code="0x34c" name="glyph00344"/><!-- COMBINING ALMOST EQUAL TO ABOVE -->
+      <map code="0x34d" name="glyph00345"/><!-- COMBINING LEFT RIGHT ARROW BELOW -->
+      <map code="0x34e" name="glyph00346"/><!-- COMBINING UPWARDS ARROW BELOW -->
+      <map code="0x34f" name="glyph00347"/><!-- COMBINING GRAPHEME JOINER -->
+      <map code="0x350" name="glyph00348"/><!-- COMBINING RIGHT ARROWHEAD ABOVE -->
+      <map code="0x351" name="glyph00349"/><!-- COMBINING LEFT HALF RING ABOVE -->
+      <map code="0x352" name="glyph00350"/><!-- COMBINING FERMATA -->
+      <map code="0x353" name="glyph00351"/><!-- COMBINING X BELOW -->
+      <map code="0x354" name="glyph00352"/><!-- COMBINING LEFT ARROWHEAD BELOW -->
+      <map code="0x355" name="glyph00353"/><!-- COMBINING RIGHT ARROWHEAD BELOW -->
+      <map code="0x356" name="glyph00354"/><!-- COMBINING RIGHT ARROWHEAD AND UP ARROWHEAD BELOW -->
+      <map code="0x357" name="glyph00355"/><!-- COMBINING RIGHT HALF RING ABOVE -->
+      <map code="0x358" name="glyph00356"/><!-- COMBINING DOT ABOVE RIGHT -->
+      <map code="0x359" name="glyph00357"/><!-- COMBINING ASTERISK BELOW -->
+      <map code="0x35a" name="glyph00358"/><!-- COMBINING DOUBLE RING BELOW -->
+      <map code="0x35b" name="glyph00359"/><!-- COMBINING ZIGZAG ABOVE -->
+      <map code="0x35c" name="glyph00360"/><!-- COMBINING DOUBLE BREVE BELOW -->
+      <map code="0x35d" name="glyph00361"/><!-- COMBINING DOUBLE BREVE -->
+      <map code="0x35e" name="glyph00362"/><!-- COMBINING DOUBLE MACRON -->
+      <map code="0x35f" name="glyph00363"/><!-- COMBINING DOUBLE MACRON BELOW -->
+      <map code="0x360" name="glyph00364"/><!-- COMBINING DOUBLE TILDE -->
+      <map code="0x361" name="glyph00365"/><!-- COMBINING DOUBLE INVERTED BREVE -->
+      <map code="0x362" name="glyph00366"/><!-- COMBINING DOUBLE RIGHTWARDS ARROW BELOW -->
+      <map code="0x363" name="glyph00367"/><!-- COMBINING LATIN SMALL LETTER A -->
+      <map code="0x364" name="glyph00368"/><!-- COMBINING LATIN SMALL LETTER E -->
+      <map code="0x365" name="glyph00369"/><!-- COMBINING LATIN SMALL LETTER I -->
+      <map code="0x366" name="glyph00370"/><!-- COMBINING LATIN SMALL LETTER O -->
+      <map code="0x367" name="glyph00371"/><!-- COMBINING LATIN SMALL LETTER U -->
+      <map code="0x368" name="glyph00372"/><!-- COMBINING LATIN SMALL LETTER C -->
+      <map code="0x369" name="glyph00373"/><!-- COMBINING LATIN SMALL LETTER D -->
+      <map code="0x36a" name="glyph00374"/><!-- COMBINING LATIN SMALL LETTER H -->
+      <map code="0x36b" name="glyph00375"/><!-- COMBINING LATIN SMALL LETTER M -->
+      <map code="0x36c" name="glyph00376"/><!-- COMBINING LATIN SMALL LETTER R -->
+      <map code="0x36d" name="glyph00377"/><!-- COMBINING LATIN SMALL LETTER T -->
+      <map code="0x36e" name="glyph00378"/><!-- COMBINING LATIN SMALL LETTER V -->
+      <map code="0x36f" name="glyph00379"/><!-- COMBINING LATIN SMALL LETTER X -->
+      <map code="0x370" name="glyph00380"/><!-- GREEK CAPITAL LETTER HETA -->
+      <map code="0x371" name="glyph00381"/><!-- GREEK SMALL LETTER HETA -->
+      <map code="0x372" name="glyph00382"/><!-- GREEK CAPITAL LETTER ARCHAIC SAMPI -->
+      <map code="0x373" name="glyph00383"/><!-- GREEK SMALL LETTER ARCHAIC SAMPI -->
+      <map code="0x374" name="glyph00384"/><!-- GREEK NUMERAL SIGN -->
+      <map code="0x375" name="glyph00385"/><!-- GREEK LOWER NUMERAL SIGN -->
+      <map code="0x376" name="glyph00386"/><!-- GREEK CAPITAL LETTER PAMPHYLIAN DIGAMMA -->
+      <map code="0x377" name="glyph00387"/><!-- GREEK SMALL LETTER PAMPHYLIAN DIGAMMA -->
+      <map code="0x378" name="glyph00388"/><!-- ???? -->
+      <map code="0x379" name="glyph00389"/><!-- ???? -->
+      <map code="0x37a" name="glyph00390"/><!-- GREEK YPOGEGRAMMENI -->
+      <map code="0x37b" name="glyph00391"/><!-- GREEK SMALL REVERSED LUNATE SIGMA SYMBOL -->
+      <map code="0x37c" name="glyph00392"/><!-- GREEK SMALL DOTTED LUNATE SIGMA SYMBOL -->
+      <map code="0x37d" name="glyph00393"/><!-- GREEK SMALL REVERSED DOTTED LUNATE SIGMA SYMBOL -->
+      <map code="0x37e" name="glyph00394"/><!-- GREEK QUESTION MARK -->
+      <map code="0x37f" name="glyph00395"/><!-- GREEK CAPITAL LETTER YOT -->
+      <map code="0x380" name="glyph00396"/><!-- ???? -->
+      <map code="0x381" name="glyph00397"/><!-- ???? -->
+      <map code="0x382" name="glyph00398"/><!-- ???? -->
+      <map code="0x383" name="glyph00399"/><!-- ???? -->
+      <map code="0x384" name="glyph00400"/><!-- GREEK TONOS -->
+      <map code="0x385" name="glyph00401"/><!-- GREEK DIALYTIKA TONOS -->
+      <map code="0x386" name="glyph00402"/><!-- GREEK CAPITAL LETTER ALPHA WITH TONOS -->
+      <map code="0x387" name="glyph00403"/><!-- GREEK ANO TELEIA -->
+      <map code="0x388" name="glyph00404"/><!-- GREEK CAPITAL LETTER EPSILON WITH TONOS -->
+      <map code="0x389" name="glyph00405"/><!-- GREEK CAPITAL LETTER ETA WITH TONOS -->
+      <map code="0x38a" name="glyph00406"/><!-- GREEK CAPITAL LETTER IOTA WITH TONOS -->
+      <map code="0x38b" name="glyph00407"/><!-- ???? -->
+      <map code="0x38c" name="glyph00408"/><!-- GREEK CAPITAL LETTER OMICRON WITH TONOS -->
+      <map code="0x38d" name="glyph00409"/><!-- ???? -->
+      <map code="0x38e" name="glyph00410"/><!-- GREEK CAPITAL LETTER UPSILON WITH TONOS -->
+      <map code="0x38f" name="glyph00411"/><!-- GREEK CAPITAL LETTER OMEGA WITH TONOS -->
+      <map code="0x390" name="glyph00412"/><!-- GREEK SMALL LETTER IOTA WITH DIALYTIKA AND TONOS -->
+      <map code="0x391" name="glyph00413"/><!-- GREEK CAPITAL LETTER ALPHA -->
+      <map code="0x392" name="glyph00414"/><!-- GREEK CAPITAL LETTER BETA -->
+      <map code="0x393" name="glyph00415"/><!-- GREEK CAPITAL LETTER GAMMA -->
+      <map code="0x394" name="glyph00416"/><!-- GREEK CAPITAL LETTER DELTA -->
+      <map code="0x395" name="glyph00417"/><!-- GREEK CAPITAL LETTER EPSILON -->
+      <map code="0x396" name="glyph00418"/><!-- GREEK CAPITAL LETTER ZETA -->
+      <map code="0x397" name="glyph00419"/><!-- GREEK CAPITAL LETTER ETA -->
+      <map code="0x398" name="glyph00420"/><!-- GREEK CAPITAL LETTER THETA -->
+      <map code="0x399" name="glyph00421"/><!-- GREEK CAPITAL LETTER IOTA -->
+      <map code="0x39a" name="glyph00422"/><!-- GREEK CAPITAL LETTER KAPPA -->
+      <map code="0x39b" name="glyph00423"/><!-- GREEK CAPITAL LETTER LAMDA -->
+      <map code="0x39c" name="glyph00424"/><!-- GREEK CAPITAL LETTER MU -->
+      <map code="0x39d" name="glyph00425"/><!-- GREEK CAPITAL LETTER NU -->
+      <map code="0x39e" name="glyph00426"/><!-- GREEK CAPITAL LETTER XI -->
+      <map code="0x39f" name="glyph00427"/><!-- GREEK CAPITAL LETTER OMICRON -->
+      <map code="0x3a0" name="glyph00428"/><!-- GREEK CAPITAL LETTER PI -->
+      <map code="0x3a1" name="glyph00429"/><!-- GREEK CAPITAL LETTER RHO -->
+      <map code="0x3a2" name="glyph00430"/><!-- ???? -->
+      <map code="0x3a3" name="glyph00431"/><!-- GREEK CAPITAL LETTER SIGMA -->
+      <map code="0x3a4" name="glyph00432"/><!-- GREEK CAPITAL LETTER TAU -->
+      <map code="0x3a5" name="glyph00433"/><!-- GREEK CAPITAL LETTER UPSILON -->
+      <map code="0x3a6" name="glyph00434"/><!-- GREEK CAPITAL LETTER PHI -->
+      <map code="0x3a7" name="glyph00435"/><!-- GREEK CAPITAL LETTER CHI -->
+      <map code="0x3a8" name="glyph00436"/><!-- GREEK CAPITAL LETTER PSI -->
+      <map code="0x3a9" name="glyph00437"/><!-- GREEK CAPITAL LETTER OMEGA -->
+      <map code="0x3aa" name="glyph00438"/><!-- GREEK CAPITAL LETTER IOTA WITH DIALYTIKA -->
+      <map code="0x3ab" name="glyph00439"/><!-- GREEK CAPITAL LETTER UPSILON WITH DIALYTIKA -->
+      <map code="0x3ac" name="glyph00440"/><!-- GREEK SMALL LETTER ALPHA WITH TONOS -->
+      <map code="0x3ad" name="glyph00441"/><!-- GREEK SMALL LETTER EPSILON WITH TONOS -->
+      <map code="0x3ae" name="glyph00442"/><!-- GREEK SMALL LETTER ETA WITH TONOS -->
+      <map code="0x3af" name="glyph00443"/><!-- GREEK SMALL LETTER IOTA WITH TONOS -->
+      <map code="0x3b0" name="glyph00444"/><!-- GREEK SMALL LETTER UPSILON WITH DIALYTIKA AND TONOS -->
+      <map code="0x3b1" name="glyph00445"/><!-- GREEK SMALL LETTER ALPHA -->
+      <map code="0x3b2" name="glyph00446"/><!-- GREEK SMALL LETTER BETA -->
+      <map code="0x3b3" name="glyph00447"/><!-- GREEK SMALL LETTER GAMMA -->
+      <map code="0x3b4" name="glyph00448"/><!-- GREEK SMALL LETTER DELTA -->
+      <map code="0x3b5" name="glyph00449"/><!-- GREEK SMALL LETTER EPSILON -->
+      <map code="0x3b6" name="glyph00450"/><!-- GREEK SMALL LETTER ZETA -->
+      <map code="0x3b7" name="glyph00451"/><!-- GREEK SMALL LETTER ETA -->
+      <map code="0x3b8" name="glyph00452"/><!-- GREEK SMALL LETTER THETA -->
+      <map code="0x3b9" name="glyph00453"/><!-- GREEK SMALL LETTER IOTA -->
+      <map code="0x3ba" name="glyph00454"/><!-- GREEK SMALL LETTER KAPPA -->
+      <map code="0x3bb" name="glyph00455"/><!-- GREEK SMALL LETTER LAMDA -->
+      <map code="0x3bc" name="glyph00456"/><!-- GREEK SMALL LETTER MU -->
+      <map code="0x3bd" name="glyph00457"/><!-- GREEK SMALL LETTER NU -->
+      <map code="0x3be" name="glyph00458"/><!-- GREEK SMALL LETTER XI -->
+      <map code="0x3bf" name="glyph00459"/><!-- GREEK SMALL LETTER OMICRON -->
+      <map code="0x3c0" name="glyph00460"/><!-- GREEK SMALL LETTER PI -->
+      <map code="0x3c1" name="glyph00461"/><!-- GREEK SMALL LETTER RHO -->
+      <map code="0x3c2" name="glyph00462"/><!-- GREEK SMALL LETTER FINAL SIGMA -->
+      <map code="0x3c3" name="glyph00463"/><!-- GREEK SMALL LETTER SIGMA -->
+      <map code="0x3c4" name="glyph00464"/><!-- GREEK SMALL LETTER TAU -->
+      <map code="0x3c5" name="glyph00465"/><!-- GREEK SMALL LETTER UPSILON -->
+      <map code="0x3c6" name="glyph00466"/><!-- GREEK SMALL LETTER PHI -->
+      <map code="0x3c7" name="glyph00467"/><!-- GREEK SMALL LETTER CHI -->
+      <map code="0x3c8" name="glyph00468"/><!-- GREEK SMALL LETTER PSI -->
+      <map code="0x3c9" name="glyph00469"/><!-- GREEK SMALL LETTER OMEGA -->
+      <map code="0x3ca" name="glyph00470"/><!-- GREEK SMALL LETTER IOTA WITH DIALYTIKA -->
+      <map code="0x3cb" name="glyph00471"/><!-- GREEK SMALL LETTER UPSILON WITH DIALYTIKA -->
+      <map code="0x3cc" name="glyph00472"/><!-- GREEK SMALL LETTER OMICRON WITH TONOS -->
+      <map code="0x3cd" name="glyph00473"/><!-- GREEK SMALL LETTER UPSILON WITH TONOS -->
+      <map code="0x3ce" name="glyph00474"/><!-- GREEK SMALL LETTER OMEGA WITH TONOS -->
+      <map code="0x3cf" name="glyph00475"/><!-- GREEK CAPITAL KAI SYMBOL -->
+      <map code="0x3d0" name="glyph00476"/><!-- GREEK BETA SYMBOL -->
+      <map code="0x3d1" name="glyph00477"/><!-- GREEK THETA SYMBOL -->
+      <map code="0x3d2" name="glyph00478"/><!-- GREEK UPSILON WITH HOOK SYMBOL -->
+      <map code="0x3d3" name="glyph00479"/><!-- GREEK UPSILON WITH ACUTE AND HOOK SYMBOL -->
+      <map code="0x3d4" name="glyph00480"/><!-- GREEK UPSILON WITH DIAERESIS AND HOOK SYMBOL -->
+      <map code="0x3d5" name="glyph00481"/><!-- GREEK PHI SYMBOL -->
+      <map code="0x3d6" name="glyph00482"/><!-- GREEK PI SYMBOL -->
+      <map code="0x3d7" name="glyph00483"/><!-- GREEK KAI SYMBOL -->
+      <map code="0x3d8" name="glyph00484"/><!-- GREEK LETTER ARCHAIC KOPPA -->
+      <map code="0x3d9" name="glyph00485"/><!-- GREEK SMALL LETTER ARCHAIC KOPPA -->
+      <map code="0x3da" name="glyph00486"/><!-- GREEK LETTER STIGMA -->
+      <map code="0x3db" name="glyph00487"/><!-- GREEK SMALL LETTER STIGMA -->
+      <map code="0x3dc" name="glyph00488"/><!-- GREEK LETTER DIGAMMA -->
+      <map code="0x3dd" name="glyph00489"/><!-- GREEK SMALL LETTER DIGAMMA -->
+      <map code="0x3de" name="glyph00490"/><!-- GREEK LETTER KOPPA -->
+      <map code="0x3df" name="glyph00491"/><!-- GREEK SMALL LETTER KOPPA -->
+      <map code="0x3e0" name="glyph00492"/><!-- GREEK LETTER SAMPI -->
+      <map code="0x3e1" name="glyph00493"/><!-- GREEK SMALL LETTER SAMPI -->
+      <map code="0x3e2" name="glyph00494"/><!-- COPTIC CAPITAL LETTER SHEI -->
+      <map code="0x3e3" name="glyph00495"/><!-- COPTIC SMALL LETTER SHEI -->
+      <map code="0x3e4" name="glyph00496"/><!-- COPTIC CAPITAL LETTER FEI -->
+      <map code="0x3e5" name="glyph00497"/><!-- COPTIC SMALL LETTER FEI -->
+      <map code="0x3e6" name="glyph00498"/><!-- COPTIC CAPITAL LETTER KHEI -->
+      <map code="0x3e7" name="glyph00499"/><!-- COPTIC SMALL LETTER KHEI -->
+      <map code="0x3e8" name="glyph00500"/><!-- COPTIC CAPITAL LETTER HORI -->
+      <map code="0xafc8" name="glyph44500"/><!-- HANGUL SYLLABLE GGUM -->
+      <map code="0xafc9" name="glyph44501"/><!-- HANGUL SYLLABLE GGUB -->
+      <map code="0xafca" name="glyph44502"/><!-- HANGUL SYLLABLE GGUBS -->
+      <map code="0xafcb" name="glyph44503"/><!-- HANGUL SYLLABLE GGUS -->
+      <map code="0xafcc" name="glyph44504"/><!-- HANGUL SYLLABLE GGUSS -->
+      <map code="0xafcd" name="glyph44505"/><!-- HANGUL SYLLABLE GGUNG -->
+      <map code="0xafce" name="glyph44506"/><!-- HANGUL SYLLABLE GGUJ -->
+      <map code="0xafcf" name="glyph44507"/><!-- HANGUL SYLLABLE GGUC -->
+      <map code="0xafd0" name="glyph44508"/><!-- HANGUL SYLLABLE GGUK -->
+      <map code="0xafd1" name="glyph44509"/><!-- HANGUL SYLLABLE GGUT -->
+      <map code="0xafd2" name="glyph44510"/><!-- HANGUL SYLLABLE GGUP -->
+      <map code="0xafd3" name="glyph44511"/><!-- HANGUL SYLLABLE GGUH -->
+      <map code="0xafd4" name="glyph44512"/><!-- HANGUL SYLLABLE GGWEO -->
+      <map code="0xafd5" name="glyph44513"/><!-- HANGUL SYLLABLE GGWEOG -->
+      <map code="0xafd6" name="glyph44514"/><!-- HANGUL SYLLABLE GGWEOGG -->
+      <map code="0xafd7" name="glyph44515"/><!-- HANGUL SYLLABLE GGWEOGS -->
+      <map code="0xafd8" name="glyph44516"/><!-- HANGUL SYLLABLE GGWEON -->
+      <map code="0xafd9" name="glyph44517"/><!-- HANGUL SYLLABLE GGWEONJ -->
+      <map code="0xafda" name="glyph44518"/><!-- HANGUL SYLLABLE GGWEONH -->
+      <map code="0xafdb" name="glyph44519"/><!-- HANGUL SYLLABLE GGWEOD -->
+      <map code="0xafdc" name="glyph44520"/><!-- HANGUL SYLLABLE GGWEOL -->
+      <map code="0xafdd" name="glyph44521"/><!-- HANGUL SYLLABLE GGWEOLG -->
+      <map code="0xafde" name="glyph44522"/><!-- HANGUL SYLLABLE GGWEOLM -->
+      <map code="0xafdf" name="glyph44523"/><!-- HANGUL SYLLABLE GGWEOLB -->
+      <map code="0xafe0" name="glyph44524"/><!-- HANGUL SYLLABLE GGWEOLS -->
+      <map code="0xafe1" name="glyph44525"/><!-- HANGUL SYLLABLE GGWEOLT -->
+      <map code="0xafe2" name="glyph44526"/><!-- HANGUL SYLLABLE GGWEOLP -->
+      <map code="0xafe3" name="glyph44527"/><!-- HANGUL SYLLABLE GGWEOLH -->
+      <map code="0xafe4" name="glyph44528"/><!-- HANGUL SYLLABLE GGWEOM -->
+      <map code="0xafe5" name="glyph44529"/><!-- HANGUL SYLLABLE GGWEOB -->
+      <map code="0xafe6" name="glyph44530"/><!-- HANGUL SYLLABLE GGWEOBS -->
+      <map code="0xafe7" name="glyph44531"/><!-- HANGUL SYLLABLE GGWEOS -->
+      <map code="0xafe8" name="glyph44532"/><!-- HANGUL SYLLABLE GGWEOSS -->
+      <map code="0xafe9" name="glyph44533"/><!-- HANGUL SYLLABLE GGWEONG -->
+      <map code="0xafea" name="glyph44534"/><!-- HANGUL SYLLABLE GGWEOJ -->
+      <map code="0xafeb" name="glyph44535"/><!-- HANGUL SYLLABLE GGWEOC -->
+      <map code="0xafec" name="glyph44536"/><!-- HANGUL SYLLABLE GGWEOK -->
+      <map code="0xafed" name="glyph44537"/><!-- HANGUL SYLLABLE GGWEOT -->
+      <map code="0xafee" name="glyph44538"/><!-- HANGUL SYLLABLE GGWEOP -->
+      <map code="0xafef" name="glyph44539"/><!-- HANGUL SYLLABLE GGWEOH -->
+      <map code="0xaff0" name="glyph44540"/><!-- HANGUL SYLLABLE GGWE -->
+      <map code="0xaff1" name="glyph44541"/><!-- HANGUL SYLLABLE GGWEG -->
+      <map code="0xaff2" name="glyph44542"/><!-- HANGUL SYLLABLE GGWEGG -->
+      <map code="0xaff3" name="glyph44543"/><!-- HANGUL SYLLABLE GGWEGS -->
+      <map code="0xaff4" name="glyph44544"/><!-- HANGUL SYLLABLE GGWEN -->
+      <map code="0xaff5" name="glyph44545"/><!-- HANGUL SYLLABLE GGWENJ -->
+      <map code="0xaff6" name="glyph44546"/><!-- HANGUL SYLLABLE GGWENH -->
+      <map code="0xaff7" name="glyph44547"/><!-- HANGUL SYLLABLE GGWED -->
+      <map code="0xaff8" name="glyph44548"/><!-- HANGUL SYLLABLE GGWEL -->
+      <map code="0xaff9" name="glyph44549"/><!-- HANGUL SYLLABLE GGWELG -->
+      <map code="0xaffa" name="glyph44550"/><!-- HANGUL SYLLABLE GGWELM -->
+      <map code="0xaffb" name="glyph44551"/><!-- HANGUL SYLLABLE GGWELB -->
+      <map code="0xaffc" name="glyph44552"/><!-- HANGUL SYLLABLE GGWELS -->
+      <map code="0xaffd" name="glyph44553"/><!-- HANGUL SYLLABLE GGWELT -->
+      <map code="0xaffe" name="glyph44554"/><!-- HANGUL SYLLABLE GGWELP -->
+      <map code="0xafff" name="glyph44555"/><!-- HANGUL SYLLABLE GGWELH -->
+      <map code="0xb000" name="glyph44556"/><!-- HANGUL SYLLABLE GGWEM -->
+      <map code="0xb001" name="glyph44557"/><!-- HANGUL SYLLABLE GGWEB -->
+      <map code="0xb002" name="glyph44558"/><!-- HANGUL SYLLABLE GGWEBS -->
+      <map code="0xb003" name="glyph44559"/><!-- HANGUL SYLLABLE GGWES -->
+      <map code="0xb004" name="glyph44560"/><!-- HANGUL SYLLABLE GGWESS -->
+      <map code="0xb005" name="glyph44561"/><!-- HANGUL SYLLABLE GGWENG -->
+      <map code="0xb006" name="glyph44562"/><!-- HANGUL SYLLABLE GGWEJ -->
+      <map code="0xb007" name="glyph44563"/><!-- HANGUL SYLLABLE GGWEC -->
+      <map code="0xb008" name="glyph44564"/><!-- HANGUL SYLLABLE GGWEK -->
+      <map code="0xb009" name="glyph44565"/><!-- HANGUL SYLLABLE GGWET -->
+      <map code="0xb00a" name="glyph44566"/><!-- HANGUL SYLLABLE GGWEP -->
+      <map code="0xb00b" name="glyph44567"/><!-- HANGUL SYLLABLE GGWEH -->
+      <map code="0xb00c" name="glyph44568"/><!-- HANGUL SYLLABLE GGWI -->
+      <map code="0xb00d" name="glyph44569"/><!-- HANGUL SYLLABLE GGWIG -->
+      <map code="0xb00e" name="glyph44570"/><!-- HANGUL SYLLABLE GGWIGG -->
+      <map code="0xb00f" name="glyph44571"/><!-- HANGUL SYLLABLE GGWIGS -->
+      <map code="0xb010" name="glyph44572"/><!-- HANGUL SYLLABLE GGWIN -->
+      <map code="0xb011" name="glyph44573"/><!-- HANGUL SYLLABLE GGWINJ -->
+      <map code="0xb012" name="glyph44574"/><!-- HANGUL SYLLABLE GGWINH -->
+      <map code="0xb013" name="glyph44575"/><!-- HANGUL SYLLABLE GGWID -->
+      <map code="0xb014" name="glyph44576"/><!-- HANGUL SYLLABLE GGWIL -->
+      <map code="0xb015" name="glyph44577"/><!-- HANGUL SYLLABLE GGWILG -->
+      <map code="0xb016" name="glyph44578"/><!-- HANGUL SYLLABLE GGWILM -->
+      <map code="0xb017" name="glyph44579"/><!-- HANGUL SYLLABLE GGWILB -->
+      <map code="0xb018" name="glyph44580"/><!-- HANGUL SYLLABLE GGWILS -->
+      <map code="0xb019" name="glyph44581"/><!-- HANGUL SYLLABLE GGWILT -->
+      <map code="0xb01a" name="glyph44582"/><!-- HANGUL SYLLABLE GGWILP -->
+      <map code="0xb01b" name="glyph44583"/><!-- HANGUL SYLLABLE GGWILH -->
+      <map code="0xb01c" name="glyph44584"/><!-- HANGUL SYLLABLE GGWIM -->
+      <map code="0xb01d" name="glyph44585"/><!-- HANGUL SYLLABLE GGWIB -->
+      <map code="0xb01e" name="glyph44586"/><!-- HANGUL SYLLABLE GGWIBS -->
+      <map code="0xb01f" name="glyph44587"/><!-- HANGUL SYLLABLE GGWIS -->
+      <map code="0xb020" name="glyph44588"/><!-- HANGUL SYLLABLE GGWISS -->
+      <map code="0xb021" name="glyph44589"/><!-- HANGUL SYLLABLE GGWING -->
+      <map code="0xb022" name="glyph44590"/><!-- HANGUL SYLLABLE GGWIJ -->
+      <map code="0xb023" name="glyph44591"/><!-- HANGUL SYLLABLE GGWIC -->
+      <map code="0xb024" name="glyph44592"/><!-- HANGUL SYLLABLE GGWIK -->
+      <map code="0xb025" name="glyph44593"/><!-- HANGUL SYLLABLE GGWIT -->
+      <map code="0xb026" name="glyph44594"/><!-- HANGUL SYLLABLE GGWIP -->
+      <map code="0xb027" name="glyph44595"/><!-- HANGUL SYLLABLE GGWIH -->
+      <map code="0xb028" name="glyph44596"/><!-- HANGUL SYLLABLE GGYU -->
+      <map code="0xb029" name="glyph44597"/><!-- HANGUL SYLLABLE GGYUG -->
+      <map code="0xb02a" name="glyph44598"/><!-- HANGUL SYLLABLE GGYUGG -->
+      <map code="0xb02b" name="glyph44599"/><!-- HANGUL SYLLABLE GGYUGS -->
+      <map code="0xb02c" name="glyph44600"/><!-- HANGUL SYLLABLE GGYUN -->
+    </cmap_format_4>
+  </cmap>
+
+</ttFont>

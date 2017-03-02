@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.5">
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_12 platformID="3" platEncID="1" format="12" reserved="0" length="40" language="0" nGroups="2">
+      <map code="0x101723" name="g23"/><!-- ???? -->
+      <map code="0x101724" name="g24"/><!-- ???? -->
+      <map code="0x101725" name="g25"/><!-- ???? -->
+      <map code="0x101726" name="g26"/><!-- ???? -->
+      <map code="0x101727" name="g27"/><!-- ???? -->
+      <map code="0x102523" name="g53"/><!-- ???? -->
+      <map code="0x102524" name="g54"/><!-- ???? -->
+      <map code="0x102525" name="g55"/><!-- ???? -->
+      <map code="0x102526" name="g56"/><!-- ???? -->
+      <map code="0x102527" name="g57"/><!-- ???? -->
+    </cmap_format_12>
+  </cmap>
+
+</ttFont>

@@ -1573,7 +1573,16 @@ class BaseDict(object):
 			if name in self.skipNames:
 				continue
 			value = getattr(self, name, None)
-			if value is None:
+			# XXX For "charset" we never skip calling xmlWrite even if the
+			# value is None, so we always write the following XML comment:
+			#
+			# <!-- charset is dumped separately as the 'GlyphOrder' element -->
+			#
+			# Charset is None when 'CFF ' table is imported from XML into an
+			# empty TTFont(). By writing this comment all the time, we obtain
+			# the same XML output whether roundtripping XML-to-XML or
+			# dumping binary-to-XML
+			if value is None and name != "charset":
 				continue
 			conv = self.converters[name]
 			conv.xmlWrite(xmlWriter, name, value, progress)

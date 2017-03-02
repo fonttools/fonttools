@@ -1,0 +1,735 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.5">
+
+  <CFF>
+    <major value="1"/>
+    <minor value="0"/>
+    <CFFFont name="dummy">
+      <version value="001.000"/>
+      <Notice value="Copyright (c) 2002 Adobe Systems Incorporated. All Rights Reserved."/>
+      <FullName value="dummy"/>
+      <FamilyName value="dummy"/>
+      <Weight value="Regular"/>
+      <isFixedPitch value="0"/>
+      <ItalicAngle value="0"/>
+      <UnderlinePosition value="-125"/>
+      <UnderlineThickness value="50"/>
+      <PaintType value="0"/>
+      <CharstringType value="2"/>
+      <FontMatrix value="0.0008 0 0 0.0008 0 0"/>
+      <UniqueID value="44788"/>
+      <FontBBox value="0 0 2500 2150"/>
+      <StrokeWidth value="0"/>
+      <!-- charset is dumped separately as the 'GlyphOrder' element -->
+      <Encoding name="StandardEncoding"/>
+      <Private>
+        <BlueValues value="-25 0 657 682 439 464 640 653 708 733 475 500"/>
+        <OtherBlues value="283 308 -251 -226 -154 -129 -194 -169"/>
+        <FamilyBlues value="-25 0 657 682 439 464 640 653 708 733 475 500"/>
+        <FamilyOtherBlues value="283 308 -251 -226 -154 -129 -194 -169"/>
+        <BlueScale value="0.039625"/>
+        <BlueShift value="7"/>
+        <BlueFuzz value="1"/>
+        <StdHW value="32"/>
+        <StdVW value="85"/>
+        <StemSnapH value="32"/>
+        <StemSnapV value="85 90"/>
+        <ForceBold value="0"/>
+        <LanguageGroup value="0"/>
+        <ExpansionFactor value="0.06"/>
+        <initialRandomSeed value="0"/>
+        <defaultWidthX value="2500"/>
+        <nominalWidthX value="2500"/>
+        <Subrs>
+          <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+          <CharString index="0">
+            145 665 rmoveto
+            -74 -43 -28 -166 -6 -75 -10 -124 21 -220 148 -44 rrcurveto
+            -11 37 40 7 39 hhcurveto
+            6 8 3 4 4 hvcurveto
+            69 60 39 31 2 103 1 44 5 43 -4 43 -7 87 -50 217 -88 45 -24 13 -29 1 -28 7 -12 -1 -8 -4 -6 -7 -16 -2 -16 -3 -13 -8 rrcurveto
+            122 -50 rmoveto
+            97 -69 31 -246 -15 -107 -13 -95 -42 -80 -111 33 -52 16 -30 55 -16 46 -32 98 -1 279 95 68 13 9 18 -2 15 4 1 1 2 1 2 1 14 -2 13 -2 11 -8 rrcurveto
+            233 -615 rmoveto
+            return
+          </CharString>
+          <CharString index="1">
+            175 661 rmoveto
+            1 -215 6 -215 1 -215 4 -42 54 3 2 41 -1 216 -6 214 -1 215 -11 35 -42 0 -7 -37 rrcurveto
+            325 -661 rmoveto
+            return
+          </CharString>
+          <CharString index="2">
+            143 536 rmoveto
+            59 22 61 39 64 3 78 5 3 -97 -32 -48 -76 -117 -268 -55 -9 -168 -2 -31 11 -30 5 -31 5 -10 5 -5 10 -5 50 -15 58 8 50 1 65 1 66 3 65 1 37 7 0 42 -35 11 rrcurveto
+            -106 -2 -108 -7 -107 4 -2 18 -8 18 2 17 16 141 259 55 69 117 72 122 -67 142 -156 -40 -52 -14 -48 -26 -51 -19 -40 -14 16 -51 41 8 rrcurveto
+            357 -536 rmoveto
+            return
+          </CharString>
+          <CharString index="3">
+            92 580 rmoveto
+            13 6 13 7 14 4 54 16 184 1 9 -81 1 -13 -3 -13 -3 -14 -9 -45 -124 -14 -42 -8 rrcurveto
+            -2 -2 1 -1 hhcurveto
+            -2 vlineto
+            -30 -15 5 -40 35 -4 60 -5 62 -4 47 -43 83 -75 -108 -134 -82 -20 -75 -17 -101 91 -42 -14 -22 -8 -7 -18 10 -21 2 -2 2 -2 1 -2 10 -10 11 -3 10 2 rrcurveto
+            2 2 -1 1 hhcurveto
+            16 -7 15 -7 15 -7 33 -14 33 -14 35 -7 103 -18 81 94 48 78 51 83 -64 98 -77 36 -4 1 -3 2 -4 2 17 7 16 9 15 12 77 61 -32 107 -79 40 -91 47 -115 -9 -91 -40 rrcurveto
+            -27 -24 18 -37 36 7 rrcurveto
+            408 -580 rmoveto
+            return
+          </CharString>
+          <CharString index="4">
+            336 627 rmoveto
+            -73 -94 -78 -92 -70 -97 -32 -45 -39 -39 -2 -56 2 -16 5 -7 14 -7 76 -39 130 16 102 10 -2 -44 -2 -44 -1 -43 4 -42 54 3 2 41 1 45 2 45 2 45 rrcurveto
+            6 6 0 1 5 hvcurveto
+            41 8 -6 54 -42 -3 rrcurveto
+            -2 -3 -1 -2 hhcurveto
+            4 135 -3 133 -49 127 -2 3 -3 2 -2 2 -6 6 -8 4 -9 -1 rrcurveto
+            -6 -6 -3 -4 -4 hvcurveto
+            -2 -1 -1 -1 -1 -1 rrcurveto
+            -230 -408 rmoveto
+            9 14 6 14 9 13 16 24 37 51 17 22 48 64 50 62 50 62 29 -105 1 -110 -4 -109 -87 -9 -131 -13 -50 20 rrcurveto
+            394 -219 rmoveto
+            return
+          </CharString>
+          <CharString index="5">
+            41 642 rmoveto
+            1 -2 1 -1 -1 vvcurveto
+            -7 2 -7 5 -5 vhcurveto
+            15 -69 -71 -105 61 -45 71 -50 214 60 48 -116 9 -20 3 -24 -3 -22 -13 -128 -51 -35 -120 -6 -38 -1 -62 -5 -26 34 -29 22 -33 -28 16 -33 39 -51 75 0 59 2 83 5 76 21 49 69 rrcurveto
+            25 36 0 48 11 42 19 72 -43 43 -42 45 -62 68 -159 -25 -76 26 -20 43 44 56 -6 66 101 14 102 -5 103 -1 37 7 0 42 -35 11 -109 1 -110 5 -108 -17 rrcurveto
+            -1 1 0 0 1 vvcurveto
+            -25 33 -45 -26 18 -38 rrcurveto
+            407 -673 rmoveto
+            return
+          </CharString>
+          <CharString index="6">
+            399 660 rmoveto
+            -36 2 -37 10 -35 -8 -152 -32 -56 -137 -37 -134 -35 -130 55 -175 141 -42 156 -46 135 253 -64 123 -39 78 -32 -3 -81 14 -26 5 -36 -14 -24 -10 -36 -15 -28 -18 -26 -26 19 101 63 130 114 18 rrcurveto
+            32 5 31 -8 32 -1 37 7 0 42 -35 11 rrcurveto
+            -263 -360 rmoveto
+            52 57 149 71 42 -110 33 -84 -77 -193 -113 33 -98 30 -29 103 4 92 9 -7 14 -1 14 9 rrcurveto
+            401 -299 rmoveto
+            return
+          </CharString>
+          <CharString index="7">
+            99 610 rmoveto
+            63 14 62 -15 64 -2 rrcurveto
+            22 23 1 2 22 hvcurveto
+            -24 -33 -19 -38 -22 -38 -85 -149 -77 -149 -19 -173 4 -37 43 -4 12 34 19 165 74 145 83 142 34 57 25 61 56 36 21 24 -14 30 -32 -2 rrcurveto
+            -6 -47 -49 -8 -48 hhcurveto
+            -71 2 -67 15 -70 -17 -40 -14 16 -51 41 8 rrcurveto
+            418 -667 rmoveto
+            return
+          </CharString>
+          <CharString index="8">
+            289 676 rmoveto
+            -88 12 -105 -100 -7 -86 -1 -23 -10 -26 9 -22 9 -21 8 -23 13 -20 6 -8 8 -7 9 -5 -42 -15 -31 -26 -21 -57 -31 -83 41 -138 89 -34 25 -9 24 -16 27 1 90 2 -6 -5 70 46 rrcurveto
+            60 39 -5 113 -8 58 -2 24 -13 22 -9 22 -8 20 -18 15 -15 16 -7 7 -9 4 -9 3 3 5 3 5 3 6 43 84 -21 87 -3 90 -6 20 -17 8 -14 -3 -10 9 -11 8 -13 1 rrcurveto
+            -12 -364 rmoveto
+            2 -2 2 -1 3 -1 12 -4 13 -1 9 -8 26 -18 13 -38 6 -28 24 -103 -43 -94 -120 16 -104 15 -73 140 80 83 31 33 22 -2 42 7 19 -4 19 3 17 7 rrcurveto
+            32 196 rmoveto
+            2 -48 -9 -48 -33 -37 -30 -34 -85 64 -8 41 -11 56 73 136 70 -23 8 -3 8 -6 7 -6 2 -31 4 -31 2 -30 rrcurveto
+            191 -508 rmoveto
+            return
+          </CharString>
+          <CharString index="9">
+            379 635 rmoveto
+            -50 16 -48 25 -52 6 -169 23 -32 -255 81 -95 66 -76 -16 4 97 -2 rrcurveto
+            6 9 3 4 4 hvcurveto
+            21 21 19 16 16 17 8 -65 4 -65 -6 -62 -4 -33 -9 -54 -40 -14 -66 -23 -78 47 -54 20 -40 13 -19 -50 37 -19 46 -17 45 -17 45 -16 31 -11 34 12 32 2 104 6 0 190 -4 62 rrcurveto
+            -1 36 -5 36 -5 36 -2 23 -4 24 -3 23 13 51 -17 20 19 51 5 16 -4 13 -9 8 15 11 0 23 -20 16 rrcurveto
+            -72 -84 rmoveto
+            2 -34 4 -35 5 -35 -3 -19 -4 -16 -6 -7 -19 -22 -22 -20 -21 -21 -14 1 -14 0 -15 1 -53 58 -34 59 18 84 5 21 15 17 10 18 21 7 21 16 22 -3 41 -5 38 -19 40 -14 rrcurveto
+            -1 -2 -2 -1 -1 -2 -14 3 -15 -9 -4 -21 rrcurveto
+            193 -551 rmoveto
+            return
+          </CharString>
+          <CharString index="10" raw="1">
+            f75af910 158c838c 828d8387 5d8a7d7a
+            4d5ffb37 3afb2878 fb3e8f66 b68797ad
+            92c79ac5 9dc3c287 bf99c18f 9d559f55
+            a4569e66 bd9e7eb3 0838f74a 65f7516b
+            f7570892 8c938c93 1e8da478 977a887a
+            8d797d8e 7208acfb 50159847 9b489e49
+            61866381 618ca4d2 a8d2a1d4 08f7a1fc
+            54150b   
+          </CharString>
+          <CharString index="11" raw="1">
+            c0f8f115 78538277 884f8830 a6318e30
+            8e468891 7e480888 8c878c89 1e867b95
+            78a389c9 91f72b8d c3c1a0a0 a49d9aa4
+            c7f22be8 2baea298 a39ba6a1 cfc272f6
+            57be799e 71937497 50aa4068 55790871
+            82897396 7d898989 898a8808 b4fba915
+            dd8daf97 d367d665 9f323c5c 47625089
+            428593b6 8e9f89c0 89b584b6 84b708f7
+            28f7bd15 ce79b23d 5852564f 3b7f3f7f
+            088a8b8a 8a1b8c84 07898b8a 8c8a1e73
+            7b9168aa 86d696bb 96bda779 9179907a
+            8d618f61 85608a86 b98ab995 b990a194
+            9e92a008 928a9188 901ebe9d a79ac37d
+            08fb36fb 85158f78 90798f78 088c0688
+            9f889e89 9f08f833 fc17150b 
+          </CharString>
+          <CharString index="12" raw="1">
+            f83bf8f9 155ea564 b85791fb 5ba649fc
+            1bb1fb10 bafb2b70 a9f70734 08879092
+            89911bda 90d09eb3 cc9ba696 a1a29fa4
+            a771ac69 7f7e8080 82807d7d 78745176
+            85698168 83688276 9b6e967d a143f70b
+            9df7b1f4 ec089e9d aa8ba393 b175b075
+            b075b179 a5b86aa4 08d4fcf9 150b
+          </CharString>
+          <CharString index="13" raw="1">
+            cef8ec15 93948c94 1b6efb1f 9efb1d9d
+            fb200889 0791578a 998e4408 8807838d
+            848c848e 89997f97 778a0888 888b8a88
+            1f808787 88848008 8a8b8a8a 891e887c
+            8e829680 df3ff75a cbc2e0e8 f724a2f7
+            0e4ef734 81a6729e 79a14dd6 fb1b7c34
+            81088a85 858b851b 62898855 b58708f7
+            9a6b15f7 052b64fb 6f38266a 624c6e54
+            82088e07 84f7455a f743b4f7 42089007
+            c991c88a bf5f08f7 3ffccc15 0b
+          </CharString>
+          <CharString index="14" raw="1">
+            bff8fa15 9f36903a 87338957 88678757
+            08857bfb 4392751e 9669b487 a98a08f3
+            ecb091f2 1fb49385 c1618820 85215cfb
+            019a94c4 8ac48ec4 8daa8dab 8daabd8d
+            be90bd8c b0928bb5 6896598a 5a865889
+            8ed988d9 7bd908e8 a0f7088b e7799e77
+            ab958dab 8a8e8b8e 8a8e869a 85927b8f
+            21a3fb2e 88216d08 7a85857f 801a8a88
+            8b888c88 08f854fc fa150b 
+          </CharString>
+          <CharString index="15" raw="1">
+            cef90215 90068e6c 7969876d 876b8c7f
+            8a61082d 0783808c 7d93828d fb0190fb
+            018cfb01 8f61c18e 8db48af5 85f689f6
+            d79ad97b d99caa9d 7fb46789 437b4298
+            44818ab6 8cb68db6 088db59e b48cb2f7
+            0287f584 f702a3aa 9d7fb467 89fb0174
+            fb0095fb 028f7ba1 7286817b 67858b5a
+            b38708f8 45fd0215 0b 
+          </CharString>
+          <CharString index="16">
+            500 0 rmoveto
+            return
+          </CharString>
+          <CharString index="17" raw="1">
+            0b   
+          </CharString>
+        </Subrs>
+      </Private>
+      <CharStrings>
+        <CharString name=".notdef">
+          -91 callsubr
+          -91 callsubr
+          endchar
+        </CharString>
+        <CharString name="g1">
+          -107 callsubr
+          -106 callsubr
+          endchar
+        </CharString>
+        <CharString name="g10">
+          -106 callsubr
+          -107 callsubr
+          endchar
+        </CharString>
+        <CharString name="g11">
+          -106 callsubr
+          -106 callsubr
+          endchar
+        </CharString>
+        <CharString name="g12">
+          -106 callsubr
+          -105 callsubr
+          endchar
+        </CharString>
+        <CharString name="g13">
+          -106 callsubr
+          -104 callsubr
+          endchar
+        </CharString>
+        <CharString name="g14">
+          -106 callsubr
+          -103 callsubr
+          endchar
+        </CharString>
+        <CharString name="g15">
+          -106 callsubr
+          -102 callsubr
+          endchar
+        </CharString>
+        <CharString name="g16">
+          -106 callsubr
+          -101 callsubr
+          endchar
+        </CharString>
+        <CharString name="g17">
+          -106 callsubr
+          -100 callsubr
+          endchar
+        </CharString>
+        <CharString name="g18">
+          -106 callsubr
+          -99 callsubr
+          endchar
+        </CharString>
+        <CharString name="g19">
+          -106 callsubr
+          -98 callsubr
+          endchar
+        </CharString>
+        <CharString name="g2">
+          -107 callsubr
+          -105 callsubr
+          endchar
+        </CharString>
+        <CharString name="g20">
+          -105 callsubr
+          -107 callsubr
+          endchar
+        </CharString>
+        <CharString name="g21">
+          -105 callsubr
+          -106 callsubr
+          endchar
+        </CharString>
+        <CharString name="g22">
+          -105 callsubr
+          -105 callsubr
+          endchar
+        </CharString>
+        <CharString name="g23">
+          -105 callsubr
+          -104 callsubr
+          endchar
+        </CharString>
+        <CharString name="g24">
+          -105 callsubr
+          -103 callsubr
+          endchar
+        </CharString>
+        <CharString name="g25">
+          -105 callsubr
+          -102 callsubr
+          endchar
+        </CharString>
+        <CharString name="g26">
+          -105 callsubr
+          -101 callsubr
+          endchar
+        </CharString>
+        <CharString name="g27">
+          -105 callsubr
+          -100 callsubr
+          endchar
+        </CharString>
+        <CharString name="g28">
+          -105 callsubr
+          -99 callsubr
+          endchar
+        </CharString>
+        <CharString name="g29">
+          -105 callsubr
+          -98 callsubr
+          endchar
+        </CharString>
+        <CharString name="g3">
+          -107 callsubr
+          -104 callsubr
+          endchar
+        </CharString>
+        <CharString name="g30">
+          -104 callsubr
+          -107 callsubr
+          endchar
+        </CharString>
+        <CharString name="g31">
+          -104 callsubr
+          -106 callsubr
+          endchar
+        </CharString>
+        <CharString name="g32">
+          -104 callsubr
+          -105 callsubr
+          endchar
+        </CharString>
+        <CharString name="g33">
+          -104 callsubr
+          -104 callsubr
+          endchar
+        </CharString>
+        <CharString name="g34">
+          -104 callsubr
+          -103 callsubr
+          endchar
+        </CharString>
+        <CharString name="g35">
+          -104 callsubr
+          -102 callsubr
+          endchar
+        </CharString>
+        <CharString name="g36">
+          -104 callsubr
+          -101 callsubr
+          endchar
+        </CharString>
+        <CharString name="g37">
+          -104 callsubr
+          -100 callsubr
+          endchar
+        </CharString>
+        <CharString name="g38">
+          -104 callsubr
+          -99 callsubr
+          endchar
+        </CharString>
+        <CharString name="g39">
+          -104 callsubr
+          -98 callsubr
+          endchar
+        </CharString>
+        <CharString name="g4">
+          -107 callsubr
+          -103 callsubr
+          endchar
+        </CharString>
+        <CharString name="g40">
+          -103 callsubr
+          -107 callsubr
+          endchar
+        </CharString>
+        <CharString name="g41">
+          -103 callsubr
+          -106 callsubr
+          endchar
+        </CharString>
+        <CharString name="g42">
+          -103 callsubr
+          -105 callsubr
+          endchar
+        </CharString>
+        <CharString name="g43">
+          -103 callsubr
+          -104 callsubr
+          endchar
+        </CharString>
+        <CharString name="g44">
+          -103 callsubr
+          -103 callsubr
+          endchar
+        </CharString>
+        <CharString name="g45">
+          -103 callsubr
+          -102 callsubr
+          endchar
+        </CharString>
+        <CharString name="g46">
+          -103 callsubr
+          -101 callsubr
+          endchar
+        </CharString>
+        <CharString name="g47">
+          -103 callsubr
+          -100 callsubr
+          endchar
+        </CharString>
+        <CharString name="g48">
+          -103 callsubr
+          -99 callsubr
+          endchar
+        </CharString>
+        <CharString name="g49">
+          -103 callsubr
+          -98 callsubr
+          endchar
+        </CharString>
+        <CharString name="g5">
+          -107 callsubr
+          -102 callsubr
+          endchar
+        </CharString>
+        <CharString name="g50">
+          -102 callsubr
+          -107 callsubr
+          endchar
+        </CharString>
+        <CharString name="g51">
+          -102 callsubr
+          -106 callsubr
+          endchar
+        </CharString>
+        <CharString name="g52">
+          -102 callsubr
+          -105 callsubr
+          endchar
+        </CharString>
+        <CharString name="g53">
+          -102 callsubr
+          -104 callsubr
+          endchar
+        </CharString>
+        <CharString name="g54">
+          -102 callsubr
+          -103 callsubr
+          endchar
+        </CharString>
+        <CharString name="g55">
+          -102 callsubr
+          -102 callsubr
+          endchar
+        </CharString>
+        <CharString name="g56">
+          -102 callsubr
+          -101 callsubr
+          endchar
+        </CharString>
+        <CharString name="g57">
+          -102 callsubr
+          -100 callsubr
+          endchar
+        </CharString>
+        <CharString name="g58">
+          -102 callsubr
+          -99 callsubr
+          endchar
+        </CharString>
+        <CharString name="g59">
+          -102 callsubr
+          -98 callsubr
+          endchar
+        </CharString>
+        <CharString name="g6">
+          -107 callsubr
+          -101 callsubr
+          endchar
+        </CharString>
+        <CharString name="g60">
+          -101 callsubr
+          -107 callsubr
+          endchar
+        </CharString>
+        <CharString name="g61">
+          -101 callsubr
+          -106 callsubr
+          endchar
+        </CharString>
+        <CharString name="g62">
+          -101 callsubr
+          -105 callsubr
+          endchar
+        </CharString>
+        <CharString name="g63">
+          -101 callsubr
+          -104 callsubr
+          endchar
+        </CharString>
+        <CharString name="g64">
+          -101 callsubr
+          -103 callsubr
+          endchar
+        </CharString>
+        <CharString name="g65">
+          -101 callsubr
+          -102 callsubr
+          endchar
+        </CharString>
+        <CharString name="g66">
+          -101 callsubr
+          -101 callsubr
+          endchar
+        </CharString>
+        <CharString name="g67">
+          -101 callsubr
+          -100 callsubr
+          endchar
+        </CharString>
+        <CharString name="g68">
+          -101 callsubr
+          -99 callsubr
+          endchar
+        </CharString>
+        <CharString name="g69">
+          -101 callsubr
+          -98 callsubr
+          endchar
+        </CharString>
+        <CharString name="g7">
+          -107 callsubr
+          -100 callsubr
+          endchar
+        </CharString>
+        <CharString name="g70">
+          -100 callsubr
+          -107 callsubr
+          endchar
+        </CharString>
+        <CharString name="g71">
+          -100 callsubr
+          -106 callsubr
+          endchar
+        </CharString>
+        <CharString name="g72">
+          -100 callsubr
+          -105 callsubr
+          endchar
+        </CharString>
+        <CharString name="g73">
+          -100 callsubr
+          -104 callsubr
+          endchar
+        </CharString>
+        <CharString name="g74">
+          -100 callsubr
+          -103 callsubr
+          endchar
+        </CharString>
+        <CharString name="g75">
+          -100 callsubr
+          -102 callsubr
+          endchar
+        </CharString>
+        <CharString name="g76">
+          -100 callsubr
+          -101 callsubr
+          endchar
+        </CharString>
+        <CharString name="g77">
+          -100 callsubr
+          -100 callsubr
+          endchar
+        </CharString>
+        <CharString name="g78">
+          -100 callsubr
+          -99 callsubr
+          endchar
+        </CharString>
+        <CharString name="g79">
+          -100 callsubr
+          -98 callsubr
+          endchar
+        </CharString>
+        <CharString name="g8">
+          -107 callsubr
+          -99 callsubr
+          endchar
+        </CharString>
+        <CharString name="g80">
+          -99 callsubr
+          -107 callsubr
+          endchar
+        </CharString>
+        <CharString name="g81">
+          -99 callsubr
+          -106 callsubr
+          endchar
+        </CharString>
+        <CharString name="g82">
+          -99 callsubr
+          -105 callsubr
+          endchar
+        </CharString>
+        <CharString name="g83">
+          -99 callsubr
+          -104 callsubr
+          endchar
+        </CharString>
+        <CharString name="g84">
+          -99 callsubr
+          -103 callsubr
+          endchar
+        </CharString>
+        <CharString name="g85">
+          -99 callsubr
+          -102 callsubr
+          endchar
+        </CharString>
+        <CharString name="g86">
+          -99 callsubr
+          -101 callsubr
+          endchar
+        </CharString>
+        <CharString name="g87">
+          -99 callsubr
+          -100 callsubr
+          endchar
+        </CharString>
+        <CharString name="g88">
+          -99 callsubr
+          -99 callsubr
+          endchar
+        </CharString>
+        <CharString name="g89">
+          -99 callsubr
+          -98 callsubr
+          endchar
+        </CharString>
+        <CharString name="g9">
+          -107 callsubr
+          -98 callsubr
+          endchar
+        </CharString>
+        <CharString name="g90">
+          -98 callsubr
+          -107 callsubr
+          endchar
+        </CharString>
+        <CharString name="g91">
+          -98 callsubr
+          -106 callsubr
+          endchar
+        </CharString>
+        <CharString name="g92">
+          -98 callsubr
+          -105 callsubr
+          endchar
+        </CharString>
+        <CharString name="g93">
+          -98 callsubr
+          -104 callsubr
+          endchar
+        </CharString>
+        <CharString name="g94">
+          -98 callsubr
+          -103 callsubr
+          endchar
+        </CharString>
+        <CharString name="g95">
+          -98 callsubr
+          -102 callsubr
+          endchar
+        </CharString>
+        <CharString name="g96">
+          -98 callsubr
+          -101 callsubr
+          endchar
+        </CharString>
+        <CharString name="g97">
+          -98 callsubr
+          -100 callsubr
+          endchar
+        </CharString>
+        <CharString name="g98">
+          -98 callsubr
+          -99 callsubr
+          endchar
+        </CharString>
+        <CharString name="g99">
+          -98 callsubr
+          -98 callsubr
+          endchar
+        </CharString>
+      </CharStrings>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF>
+
+</ttFont>

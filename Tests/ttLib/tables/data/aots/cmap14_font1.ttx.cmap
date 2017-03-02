@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.5">
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_14 platformID="0" platEncID="5" format="14" length="47" numVarSelectorRecords="1">
+      <map uvs="0xe0100" uv="0x4e00" name="None"/>
+      <map uvs="0xe0100" uv="0x4e03" name="None"/>
+      <map uvs="0xe0100" uv="0x4e04" name="None"/>
+      <map uvs="0xe0100" uv="0x4e05" name="None"/>
+      <map uvs="0xe0100" uv="0x4e06" name="None"/>
+      <map uvs="0xe0100" uv="0x4e10" name="g25"/>
+      <map uvs="0xe0100" uv="0x4e11" name="g26"/>
+    </cmap_format_14>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x4e00" name="g10"/><!-- CJK UNIFIED IDEOGRAPH-4E00 -->
+      <map code="0x4e01" name="g11"/><!-- CJK UNIFIED IDEOGRAPH-4E01 -->
+      <map code="0x4e02" name="g12"/><!-- CJK UNIFIED IDEOGRAPH-4E02 -->
+      <map code="0x4e03" name="g13"/><!-- CJK UNIFIED IDEOGRAPH-4E03 -->
+      <map code="0x4e04" name="g14"/><!-- CJK UNIFIED IDEOGRAPH-4E04 -->
+      <map code="0x4e05" name="g15"/><!-- CJK UNIFIED IDEOGRAPH-4E05 -->
+      <map code="0x4e06" name="g16"/><!-- CJK UNIFIED IDEOGRAPH-4E06 -->
+      <map code="0x4e07" name="g17"/><!-- CJK UNIFIED IDEOGRAPH-4E07 -->
+      <map code="0x4e08" name="g18"/><!-- CJK UNIFIED IDEOGRAPH-4E08 -->
+      <map code="0x4e09" name="g19"/><!-- CJK UNIFIED IDEOGRAPH-4E09 -->
+    </cmap_format_4>
+  </cmap>
+
+</ttFont>
