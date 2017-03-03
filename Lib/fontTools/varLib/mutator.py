@@ -1,7 +1,7 @@
 """
 Instantiate a variation font.  Run, eg:
 
-$ python mutator.py ./NotoSansArabic-GX.ttf wght=140 wdth=85
+$ python mutator.py ./NotoSansArabic-VF.ttf wght=140 wdth=85
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
@@ -28,7 +28,7 @@ def main(args=None):
 		loc[tag.ljust(4)] = float(val)
 	print("Location:", loc)
 
-	print("Loading GX font")
+	print("Loading variable font")
 	varfont = TTFont(varfilename)
 
 	fvar = varfont['fvar']
@@ -48,8 +48,8 @@ def main(args=None):
 			coordinates += GlyphCoordinates(var.coordinates) * scalar
 		_SetCoordinates(varfont, glyphname, coordinates)
 
-	print("Removing GX tables")
-	for tag in ('fvar','avar','gvar'):
+	print("Removing variable tables")
+	for tag in ('fvar','avar','gvar','HVAR'):
 		if tag in varfont:
 			del varfont[tag]
 
