@@ -89,7 +89,11 @@ class InterpolateLayoutTest(unittest.TestCase):
 # -----
 
     def test_varlib_interpolate_layout_GSUB_only_ttf(self):
-        """Only GSUB, and only in the base master."""
+        """Only GSUB, and only in the base master.
+
+        The variable font will inherit the GSUB table from the
+        base master.
+        """
         suffix = '.ttf'
         ds_path = self.get_test_input('InterpolateLayoutTest.designspace')
         ufo_dir = self.get_test_input('master_ufo')
