@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>public.glyphOrder</key>
+	<array>
+		<string>.notdef</string>
+		<string>space</string>
+		<string>A</string>
+		<string>a</string>
+		<string>d</string>
+		<string>f</string>
+		<string>n</string>
+		<string>t</string>
+		<string>f_t</string>
+		<string>a.alt</string>
+		<string>A.sc</string>
+		<string>ampersand</string>
+		<string>circledotted</string>
+		<string>tildecmb</string>
+		<string>dieresiscmb</string>
+		<string>tildebelowcmb</string>
+		<string>dieresisbelowcmb</string>
+	</array>
+	<key>public.postscriptNames</key>
+	<dict>
+		<key>circledotted</key>
+		<string>uni25CC</string>
+		<key>dieresisbelowcmb</key>
+		<string>uni0324</string>
+		<key>dieresiscmb</key>
+		<string>uni0308</string>
+		<key>tildebelowcmb</key>
+		<string>uni0330</string>
+		<key>tildecmb</key>
+		<string>uni0303</string>
+	</dict>
+</dict>
+</plist>

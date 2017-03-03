@@ -1,0 +1,81 @@
+table head {
+    FontRevision 2.020;
+} head;
+
+
+table name {
+    nameid 9 "Paul D. Hunt";
+    nameid 9 1 "Paul D. Hunt";
+} name;
+
+
+table hhea {
+    Ascender 984;
+    Descender -273;
+    LineGap 0;
+} hhea;
+
+
+table BASE {
+    HorizAxis.BaseTagList ideo romn;
+    HorizAxis.BaseScriptList
+    latn romn -170 0,
+    grek romn -170 0,
+    cyrl romn -170 0,
+    DFLT romn -170 0;
+} BASE;
+
+
+table OS/2 {
+    Panose 2 11 3 3 3 4 3 2 2 4;
+    XHeight 478;
+    WeightClass 200;
+
+    TypoAscender 750;
+    TypoDescender -250;
+    TypoLineGap 0;
+    winAscent 984;
+    winDescent 273;
+
+    CapHeight 660;
+    WidthClass 5;
+    Vendor "ADBO";
+    FSType 0;
+} OS/2;
+
+
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+# GSUB =========================================
+# Merging of GSUB is not performed. The variable
+# font will inherit the GSUB table from the
+# base master.
+
+feature c2sc {
+    sub A by A.sc; # GSUB LookupType 1
+} c2sc;
+
+feature ss01 {
+    featureNames {
+        name "Alternate a";
+        name 1 0 0 "Alternate a";};
+    sub a by a.alt;
+} ss01;
+
+feature ccmp {
+    sub ampersand by a n d; # GSUB LookupType 2
+} ccmp;
+
+feature salt {
+    sub a from [a.alt A.sc]; # GSUB LookupType 3
+} salt;
+
+feature liga {
+    sub f t by f_t; # GSUB LookupType 4
+} liga;
+
+feature calt {
+    sub a' t by a.alt; # GSUB LookupType 6
+} calt;
+

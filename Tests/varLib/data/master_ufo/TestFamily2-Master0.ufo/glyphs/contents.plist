@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+	<dict>
+		<key>.notdef</key>
+		<string>_notdef.glif</string>
+		<key>A</key>
+		<string>A_.glif</string>
+		<key>A.sc</key>
+		<string>A_.sc.glif</string>
+		<key>a</key>
+		<string>a.glif</string>
+		<key>a.alt</key>
+		<string>a.alt.glif</string>
+		<key>ampersand</key>
+		<string>ampersand.glif</string>
+		<key>circledotted</key>
+		<string>circledotted.glif</string>
+		<key>d</key>
+		<string>d.glif</string>
+		<key>dieresisbelowcmb</key>
+		<string>dieresisbelowcmb.glif</string>
+		<key>dieresiscmb</key>
+		<string>dieresiscmb.glif</string>
+		<key>f</key>
+		<string>f.glif</string>
+		<key>f_t</key>
+		<string>f_t.glif</string>
+		<key>n</key>
+		<string>n.glif</string>
+		<key>space</key>
+		<string>space.glif</string>
+		<key>t</key>
+		<string>t.glif</string>
+		<key>tildebelowcmb</key>
+		<string>tildebelowcmb.glif</string>
+		<key>tildecmb</key>
+		<string>tildecmb.glif</string>
+	</dict>
+</plist>
