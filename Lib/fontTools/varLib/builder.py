@@ -6,7 +6,7 @@ from fontTools.ttLib.tables import otTables as ot
 
 def buildVarRegionAxis(axisSupport):
 	self = ot.VarRegionAxis()
-	self.StartCoord, self.PeakCoord, self.EndCoord = axisSupport
+	self.StartCoord, self.PeakCoord, self.EndCoord = [float(v) for v in axisSupport]
 	return self
 
 def buildVarRegion(support, axisTags):
@@ -20,7 +20,7 @@ def buildVarRegion(support, axisTags):
 
 def buildVarRegionList(supports, axisTags):
 	self = ot.VarRegionList()
-	self.AxisCount = len(axisTags)
+	self.RegionAxisCount = len(axisTags)
 	self.Region = []
 	for support in supports:
 		self.Region.append(buildVarRegion(support, axisTags))
@@ -39,8 +39,7 @@ def _reorderItem(lst, narrows):
 			out.append(lst[i])
 	return out
 
-def optimizeVarData(self):
-	# Reorder columns such that all SHORT columns come before UINT8
+def calculateNumShorts(self, optimize=True):
 	count = self.VarRegionCount
 	items = self.Item
 	narrows = set(range(count))
@@ -51,11 +50,15 @@ def optimizeVarData(self):
 				break
 		if not narrows:
 			break
-
-	self.VarRegionIndex = _reorderItem(self.VarRegionIndex, narrows)
-	for i in range(self.ItemCount):
-		items[i] = _reorderItem(items[i], narrows)
-
+	if optimize:
+		# Reorder columns such that all SHORT columns come before UINT8
+		self.VarRegionIndex = _reorderItem(self.VarRegionIndex, narrows)
+		for i in range(self.ItemCount):
+			items[i] = _reorderItem(items[i], narrows)
+		self.NumShorts = count - len(narrows)
+	else:
+		wides = set(range(count)) - narrows
+		self.NumShorts = 1+max(wides) if wides else 0
 	return self
 
 def buildVarData(varRegionIndices, items, optimize=True):
@@ -68,8 +71,7 @@ def buildVarData(varRegionIndices, items, optimize=True):
 			assert len(item) == regionCount
 			records.append(list(item))
 	self.ItemCount = len(self.Item)
-	if items and optimize:
-		optimizeVarData(self)
+	calculateNumShorts(self, optimize=optimize)
 	return self
 
 
@@ -119,8 +121,7 @@ class OnlineVarStoreBuilder(object):
 		self._store.VarDataCount = len(self._store.VarData)
 		for data in self._store.VarData:
 			data.ItemCount = len(data.Item)
-			if optimize:
-				optimizeVarData(data)
+			calculateNumShorts(data, optimize)
 		return self._store
 
 	def storeMasters(self, master_values):

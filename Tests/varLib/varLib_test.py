@@ -97,9 +97,13 @@ class BuildTest(unittest.TestCase):
         varfont, model, _ = build(ds_path, finder)
 
         tables = ['GDEF', 'HVAR', 'fvar', 'gvar']
-        #varfont.save(ds_path.replace('.designspace', suffix))
-        #varfont.saveXML(ds_path.replace('.designspace', '.ttx'), tables=tables)
-        self.expect_ttx(varfont, self.get_test_input('BuildTest.ttx'), tables)
+        expected_ttx = self.get_test_input('BuildTest.ttx')
+        self.expect_ttx(varfont, expected_ttx, tables)
+
+        # ensure the TTX dump is the same after saving and reloading font
+        varfont_path = os.path.join(self.tempdir, 'BuildTest.ttf')
+        varfont.save(varfont_path)
+        self.expect_ttx(TTFont(varfont_path), expected_ttx, tables)
 
 
 if __name__ == "__main__":

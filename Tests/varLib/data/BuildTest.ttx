@@ -6,15 +6,16 @@
     <VarStore Format="1">
       <Format value="1"/>
       <VarRegionList>
+        <!-- RegionAxisCount=2 -->
         <!-- RegionCount=5 -->
         <Region index="0">
           <VarRegionAxis index="0">
-            <StartCoord value="0"/>
-            <PeakCoord value="0"/>
-            <EndCoord value="0"/>
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
           </VarRegionAxis>
           <VarRegionAxis index="1">
-            <StartCoord value="0"/>
+            <StartCoord value="0.0"/>
             <PeakCoord value="1.0"/>
             <EndCoord value="1.0"/>
           </VarRegionAxis>
@@ -23,46 +24,46 @@
           <VarRegionAxis index="0">
             <StartCoord value="-1.0"/>
             <PeakCoord value="-1.0"/>
-            <EndCoord value="0"/>
+            <EndCoord value="0.0"/>
           </VarRegionAxis>
           <VarRegionAxis index="1">
-            <StartCoord value="0"/>
-            <PeakCoord value="0"/>
-            <EndCoord value="0"/>
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
           </VarRegionAxis>
         </Region>
         <Region index="2">
           <VarRegionAxis index="0">
-            <StartCoord value="0"/>
+            <StartCoord value="0.0"/>
             <PeakCoord value="1.0"/>
             <EndCoord value="1.0"/>
           </VarRegionAxis>
           <VarRegionAxis index="1">
-            <StartCoord value="0"/>
-            <PeakCoord value="0"/>
-            <EndCoord value="0"/>
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
           </VarRegionAxis>
         </Region>
         <Region index="3">
           <VarRegionAxis index="0">
             <StartCoord value="-1.0"/>
             <PeakCoord value="-1.0"/>
-            <EndCoord value="0"/>
+            <EndCoord value="0.0"/>
           </VarRegionAxis>
           <VarRegionAxis index="1">
-            <StartCoord value="0"/>
+            <StartCoord value="0.0"/>
             <PeakCoord value="1.0"/>
             <EndCoord value="1.0"/>
           </VarRegionAxis>
         </Region>
         <Region index="4">
           <VarRegionAxis index="0">
-            <StartCoord value="0"/>
+            <StartCoord value="0.0"/>
             <PeakCoord value="1.0"/>
             <EndCoord value="1.0"/>
           </VarRegionAxis>
           <VarRegionAxis index="1">
-            <StartCoord value="0"/>
+            <StartCoord value="0.0"/>
             <PeakCoord value="1.0"/>
             <EndCoord value="1.0"/>
           </VarRegionAxis>
@@ -71,7 +72,7 @@
       <!-- VarDataCount=1 -->
       <VarData index="0">
         <!-- ItemCount=0 -->
-        <NumShorts value="None"/>
+        <NumShorts value="0"/>
         <!-- VarRegionCount=5 -->
         <VarRegionIndex index="0" value="0"/>
         <VarRegionIndex index="1" value="1"/>
@@ -87,15 +88,16 @@
     <VarStore Format="1">
       <Format value="1"/>
       <VarRegionList>
+        <!-- RegionAxisCount=2 -->
         <!-- RegionCount=5 -->
         <Region index="0">
           <VarRegionAxis index="0">
-            <StartCoord value="0"/>
-            <PeakCoord value="0"/>
-            <EndCoord value="0"/>
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
           </VarRegionAxis>
           <VarRegionAxis index="1">
-            <StartCoord value="0"/>
+            <StartCoord value="0.0"/>
             <PeakCoord value="1.0"/>
             <EndCoord value="1.0"/>
           </VarRegionAxis>
@@ -104,46 +106,46 @@
           <VarRegionAxis index="0">
             <StartCoord value="-1.0"/>
             <PeakCoord value="-1.0"/>
-            <EndCoord value="0"/>
+            <EndCoord value="0.0"/>
           </VarRegionAxis>
           <VarRegionAxis index="1">
-            <StartCoord value="0"/>
-            <PeakCoord value="0"/>
-            <EndCoord value="0"/>
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
           </VarRegionAxis>
         </Region>
         <Region index="2">
           <VarRegionAxis index="0">
-            <StartCoord value="0"/>
+            <StartCoord value="0.0"/>
             <PeakCoord value="1.0"/>
             <EndCoord value="1.0"/>
           </VarRegionAxis>
           <VarRegionAxis index="1">
-            <StartCoord value="0"/>
-            <PeakCoord value="0"/>
-            <EndCoord value="0"/>
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
           </VarRegionAxis>
         </Region>
         <Region index="3">
           <VarRegionAxis index="0">
             <StartCoord value="-1.0"/>
             <PeakCoord value="-1.0"/>
-            <EndCoord value="0"/>
+            <EndCoord value="0.0"/>
           </VarRegionAxis>
           <VarRegionAxis index="1">
-            <StartCoord value="0"/>
+            <StartCoord value="0.0"/>
             <PeakCoord value="1.0"/>
             <EndCoord value="1.0"/>
           </VarRegionAxis>
         </Region>
         <Region index="4">
           <VarRegionAxis index="0">
-            <StartCoord value="0"/>
+            <StartCoord value="0.0"/>
             <PeakCoord value="1.0"/>
             <EndCoord value="1.0"/>
           </VarRegionAxis>
           <VarRegionAxis index="1">
-            <StartCoord value="0"/>
+            <StartCoord value="0.0"/>
             <PeakCoord value="1.0"/>
             <EndCoord value="1.0"/>
           </VarRegionAxis>
@@ -152,7 +154,7 @@
       <!-- VarDataCount=1 -->
       <VarData index="0">
         <!-- ItemCount=6 -->
-        <NumShorts value="None"/>
+        <NumShorts value="0"/>
         <!-- VarRegionCount=5 -->
         <VarRegionIndex index="0" value="0"/>
         <VarRegionIndex index="1" value="1"/>
