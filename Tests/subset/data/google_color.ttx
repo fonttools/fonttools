@@ -30,7 +30,7 @@
   </head>
 
   <hhea>
-    <tableVersion value="1.0"/>
+    <tableVersion value="0x00010000"/>
     <ascent value="1536"/>
     <descent value="-512"/>
     <lineGap value="256"/>
