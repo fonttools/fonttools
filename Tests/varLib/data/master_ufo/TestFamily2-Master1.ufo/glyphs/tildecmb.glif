@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<glyph name="tildecmb" format="1">
+	<unicode hex="0303"/>
+	<outline>
+		<contour>
+			<point x="64" y="572" type="curve" smooth="yes"/>
+			<point x="144" y="572"/>
+			<point x="194" y="617"/>
+			<point x="196" y="730" type="curve"/>
+			<point x="90" y="736" type="line"/>
+			<point x="86" y="700"/>
+			<point x="76" y="690"/>
+			<point x="60" y="690" type="curve" smooth="yes"/>
+			<point x="34" y="690"/>
+			<point x="-4" y="746"/>
+			<point x="-64" y="746" type="curve" smooth="yes"/>
+			<point x="-144" y="746"/>
+			<point x="-194" y="701"/>
+			<point x="-196" y="588" type="curve"/>
+			<point x="-90" y="582" type="line"/>
+			<point x="-86" y="618"/>
+			<point x="-76" y="628"/>
+			<point x="-60" y="628" type="curve" smooth="yes"/>
+			<point x="-34" y="628"/>
+			<point x="4" y="572"/>
+		</contour>
+	</outline>
+</glyph>
