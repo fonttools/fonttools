@@ -48,8 +48,8 @@ def main(args=None):
 			coordinates += GlyphCoordinates(var.coordinates) * scalar
 		_SetCoordinates(varfont, glyphname, coordinates)
 
-	print("Removing GX tables")
-	for tag in ('fvar','avar','gvar'):
+	print("Removing variable tables")
+	for tag in ('avar','cvar','fvar','gvar','HVAR','MVAR','VVAR','STAT'):
 		if tag in varfont:
 			del varfont[tag]
 
