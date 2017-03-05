@@ -1,3 +1,6 @@
+- [ttLib] Added support for reading/writing ``CFF2`` table (thanks to
+  @readroberts at Adobe)
+
 3.8.0 (released 2017-03-05)
 ---------------------------
 
