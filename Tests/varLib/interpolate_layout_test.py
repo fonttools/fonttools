@@ -32,6 +32,11 @@ class InterpolateLayoutTest(unittest.TestCase):
         return os.path.join(path, "data", test_file_or_folder)
 
     @staticmethod
+    def get_test_output(test_file_or_folder):
+        path, _ = os.path.split(__file__)
+        return os.path.join(path, "data", "test_results", test_file_or_folder)
+
+    @staticmethod
     def get_file_list(folder, suffix):
         all_files = os.listdir(folder)
         return [os.path.abspath(os.path.join(folder, p)) for p in all_files
@@ -95,7 +100,7 @@ class InterpolateLayoutTest(unittest.TestCase):
         base master.
         """
         suffix = '.ttf'
-        ds_path = self.get_test_input('InterpolateLayoutTest.designspace')
+        ds_path = self.get_test_input('InterpolateLayout.designspace')
         ufo_dir = self.get_test_input('master_ufo')
         ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
 
@@ -108,7 +113,7 @@ class InterpolateLayoutTest(unittest.TestCase):
         instfont = interpolate_layout(ds_path, {'weight': 500}, finder)
 
         tables = ['GSUB']
-        expected_ttx_path = ds_path.replace('.designspace', '.ttx')
+        expected_ttx_path = self.get_test_output('InterpolateLayout.ttx')
         self.expect_ttx(instfont, expected_ttx_path, tables)
         self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
 

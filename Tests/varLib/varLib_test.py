@@ -32,6 +32,11 @@ class BuildTest(unittest.TestCase):
         return os.path.join(path, "data", test_file_or_folder)
 
     @staticmethod
+    def get_test_output(test_file_or_folder):
+        path, _ = os.path.split(__file__)
+        return os.path.join(path, "data", "test_results", test_file_or_folder)
+
+    @staticmethod
     def get_file_list(folder, suffix):
         all_files = os.listdir(folder)
         return [os.path.abspath(os.path.join(folder, p)) for p in all_files
@@ -70,6 +75,12 @@ class BuildTest(unittest.TestCase):
                 sys.stdout.write(line)
             self.fail("TTX output is different from expected")
 
+    def check_ttx_dump(self, font, expected_ttx, tables, suffix):
+        """Ensure the TTX dump is the same after saving and reloading the font."""
+        path = self.temp_path(suffix=suffix)
+        font.save(path)
+        self.expect_ttx(TTFont(path), expected_ttx, tables)
+
     def compile_font(self, path, suffix, temp_dir):
         ttx_filename = os.path.basename(path)
         savepath = os.path.join(temp_dir, ttx_filename.replace('.ttx', suffix))
@@ -84,7 +95,7 @@ class BuildTest(unittest.TestCase):
 
     def test_varlib_build_ttf(self):
         suffix = '.ttf'
-        ds_path = self.get_test_input('BuildTest.designspace')
+        ds_path = self.get_test_input('Build.designspace')
         ufo_dir = self.get_test_input('master_ufo')
         ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
 
@@ -97,13 +108,9 @@ class BuildTest(unittest.TestCase):
         varfont, model, _ = build(ds_path, finder)
 
         tables = ['GDEF', 'HVAR', 'fvar', 'gvar']
-        expected_ttx = self.get_test_input('BuildTest.ttx')
-        self.expect_ttx(varfont, expected_ttx, tables)
-
-        # ensure the TTX dump is the same after saving and reloading font
-        varfont_path = os.path.join(self.tempdir, 'BuildTest.ttf')
-        varfont.save(varfont_path)
-        self.expect_ttx(TTFont(varfont_path), expected_ttx, tables)
+        expected_ttx_path = self.get_test_output('Build.ttx')
+        self.expect_ttx(varfont, expected_ttx_path, tables)
+        self.check_ttx_dump(varfont, expected_ttx_path, tables, suffix)
 
 
 if __name__ == "__main__":
