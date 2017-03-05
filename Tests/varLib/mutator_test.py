@@ -33,6 +33,11 @@ class MutatorTest(unittest.TestCase):
         return os.path.join(path, "data", test_file_or_folder)
 
     @staticmethod
+    def get_test_output(test_file_or_folder):
+        path, _ = os.path.split(__file__)
+        return os.path.join(path, "data", "test_results", test_file_or_folder)
+
+    @staticmethod
     def get_file_list(folder, suffix):
         all_files = os.listdir(folder)
         return [os.path.abspath(os.path.join(folder, p)) for p in all_files
@@ -96,7 +101,8 @@ class MutatorTest(unittest.TestCase):
 
         finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
         varfont, _, _ = build(ds_path, finder)
-        varfont_path = os.path.join(self.tempdir, 'Mutator' + suffix)
+        varfont_name = 'Mutator'
+        varfont_path = os.path.join(self.tempdir, varfont_name + suffix)
         varfont.save(varfont_path)
 
         args = [varfont_path, 'wght=500', 'cntr=50']
@@ -105,7 +111,7 @@ class MutatorTest(unittest.TestCase):
         instfont_path = os.path.splitext(varfont_path)[0] + '-instance' + suffix
         instfont = TTFont(instfont_path)
         tables = [table_tag for table_tag in instfont.keys() if table_tag != 'head']
-        expected_ttx = self.get_test_input('Mutator.ttx')
+        expected_ttx = self.get_test_output(varfont_name + '.ttx')
         self.expect_ttx(instfont, expected_ttx, tables)
 
 
