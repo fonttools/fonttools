@@ -9,7 +9,7 @@ class DesignspaceTest(unittest.TestCase):
     def test_load(self):
         self.maxDiff = None
         self.assertEqual(
-            designspace.load(_getpath("DesignspaceTest.designspace")),
+            designspace.load(_getpath("Designspace.designspace")),
 
                 {'sources':
                   [{'location': {'weight': 0.0},
@@ -55,7 +55,7 @@ class DesignspaceTest(unittest.TestCase):
 
     def test_load2(self):
         self.assertEqual(
-            designspace.load(_getpath("DesignspaceTest2.designspace")),
+            designspace.load(_getpath("Designspace2.designspace")),
                     {'sources': [], 'instances': [{}]})
 
 

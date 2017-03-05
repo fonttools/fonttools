@@ -95,7 +95,7 @@ class InterpolateLayoutTest(unittest.TestCase):
         base master.
         """
         suffix = '.ttf'
-        ds_path = self.get_test_input('InterpolateLayoutTest.designspace')
+        ds_path = self.get_test_input('InterpolateLayout.designspace')
         ufo_dir = self.get_test_input('master_ufo')
         ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
 

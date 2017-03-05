@@ -84,7 +84,7 @@ class BuildTest(unittest.TestCase):
 
     def test_varlib_build_ttf(self):
         suffix = '.ttf'
-        ds_path = self.get_test_input('BuildTest.designspace')
+        ds_path = self.get_test_input('Build.designspace')
         ufo_dir = self.get_test_input('master_ufo')
         ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
 
@@ -97,11 +97,11 @@ class BuildTest(unittest.TestCase):
         varfont, model, _ = build(ds_path, finder)
 
         tables = ['GDEF', 'HVAR', 'fvar', 'gvar']
-        expected_ttx = self.get_test_input('BuildTest.ttx')
+        expected_ttx = self.get_test_input('Build.ttx')
         self.expect_ttx(varfont, expected_ttx, tables)
 
         # ensure the TTX dump is the same after saving and reloading font
-        varfont_path = os.path.join(self.tempdir, 'BuildTest.ttf')
+        varfont_path = os.path.join(self.tempdir, 'Build.ttf')
         varfont.save(varfont_path)
         self.expect_ttx(TTFont(varfont_path), expected_ttx, tables)
 
