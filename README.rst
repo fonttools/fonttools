@@ -210,7 +210,7 @@ are needed to unlock optional features.
    *  `sympy <https://pypi.python.org/pypi/sympy>`__: the Python library for
       symbolic mathematics.
 
--  ``fontTools.t1Lib``
+-  ``Lib/fontTools/t1Lib.py``
 
    To get the file creator and type of Macintosh PostScript Type 1 fonts
    on Python 3 you need to install the following module, as the old ``MacOS``
@@ -240,7 +240,7 @@ are needed to unlock optional features.
    *  `reportlab <https://pypi.python.org/pypi/reportlab>`__: Python toolkit
       for generating PDFs and graphics.
 
--  ``fontTools.inspect``
+-  ``Lib/fontTools/inspect.py``
 
    A GUI font inspector, requires one of the following packages:
 
