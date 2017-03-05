@@ -154,8 +154,8 @@ def _SetCoordinates(font, glyphName, coord):
 
 	glyph.recalcBounds(glyf)
 
-	horizontalAdvanceWidth = rightSideX - leftSideX
-	leftSideBearing = glyph.xMin - leftSideX
+	horizontalAdvanceWidth = round(rightSideX - leftSideX)
+	leftSideBearing = round(glyph.xMin - leftSideX)
 	# XXX Handle vertical
 	font["hmtx"].metrics[glyphName] = horizontalAdvanceWidth, leftSideBearing
 
