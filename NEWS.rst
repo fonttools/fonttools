@@ -13,6 +13,9 @@
   MarkAttachmentType (#863)
 - [merge] Changed the ``gasp`` table merge logic so that only the one from
   the first font is retained, similar to other hinting tables (#862)
+- [Tests] Added tests for the ``varLib`` package, as well as test fonts
+  from the "Annotated OpenType Specification" (AOTS) to exercise ``ttLib``'s
+  table readers/writers (<https://github.com/adobe-type-tools/aots>)
 
 3.7.2 (released 2017-02-17)
 ---------------------------
