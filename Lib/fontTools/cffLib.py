@@ -1031,9 +1031,10 @@ class Latin1Converter(SimpleConverter):
 	def write(self, parent, value):
 		return tobytes(value, encoding='latin1')
 	def xmlWrite(self, xmlWriter, name, value, progress):
+		value = tounicode(value, encoding="latin1")
 		if name in ['Notice', 'Copyright']:
 			value = re.sub(r"[\r\n]\s+", " ", value)
-		xmlWriter.simpletag(name, value=tounicode(value, encoding="latin1"))
+		xmlWriter.simpletag(name, value=value)
 		xmlWriter.newline()
 	def xmlRead(self, name, attrs, content, parent):
 		return tobytes(attrs["value"], encoding=("latin1"))
