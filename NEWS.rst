@@ -1,3 +1,6 @@
+3.8.0 (released 2017-03-05)
+---------------------------
+
 - New pens: MomentsPen, StatisticsPen, RecordingPen, and TeePen.
 - [misc] Added new ``fontTools.misc.symfont`` module, for symbolic font
   statistical analysis; requires ``sympy`` (http://www.sympy.org/en/index.html)
