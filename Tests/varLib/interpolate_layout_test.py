@@ -1,7 +1,9 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
+from fontTools.varLib import build
 from fontTools.varLib.interpolate_layout import interpolate_layout
+from fontTools.varLib.interpolate_layout import main as interpolate_layout_main
 import difflib
 import os
 import shutil
@@ -37,10 +39,13 @@ class InterpolateLayoutTest(unittest.TestCase):
         return os.path.join(path, "data", "test_results", test_file_or_folder)
 
     @staticmethod
-    def get_file_list(folder, suffix):
+    def get_file_list(folder, suffix, prefix=''):
         all_files = os.listdir(folder)
-        return [os.path.abspath(os.path.join(folder, p)) for p in all_files
-                                                          if p.endswith(suffix)]
+        file_list = []
+        for p in all_files:
+            if p.startswith(prefix) and p.endswith(suffix):
+                file_list.append(os.path.abspath(os.path.join(folder, p)))
+        return file_list
 
     def temp_path(self, suffix):
         self.temp_dir()
@@ -104,8 +109,8 @@ class InterpolateLayoutTest(unittest.TestCase):
         ufo_dir = self.get_test_input('master_ufo')
         ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
 
-        ttx_paths = self.get_file_list(ttx_dir, '.ttx')
         self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily2-')
         for path in ttx_paths:
             self.compile_font(path, suffix, self.tempdir)
 
@@ -116,6 +121,89 @@ class InterpolateLayoutTest(unittest.TestCase):
         expected_ttx_path = self.get_test_output('InterpolateLayout.ttx')
         self.expect_ttx(instfont, expected_ttx_path, tables)
         self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
+
+
+    def test_varlib_interpolate_layout_no_GSUB_ttf(self):
+        """The base master has no GSUB table.
+
+        The variable font will end up without a GSUB table.
+        """
+        suffix = '.ttf'
+        ds_path = self.get_test_input('InterpolateLayout2.designspace')
+        ufo_dir = self.get_test_input('master_ufo')
+        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily2-')
+        for path in ttx_paths:
+            self.compile_font(path, suffix, self.tempdir)
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
+        instfont = interpolate_layout(ds_path, {'weight': 500}, finder)
+
+        tables = ['GSUB']
+        expected_ttx_path = self.get_test_output('InterpolateLayout2.ttx')
+        self.expect_ttx(instfont, expected_ttx_path, tables)
+        self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
+
+
+    def test_varlib_interpolate_layout_GSUB_only_no_axes_ttf(self):
+        """Only GSUB, and only in the base master.
+        Designspace file has no <axes> element.
+
+        The variable font will inherit the GSUB table from the
+        base master.
+        """
+        suffix = '.ttf'
+        ds_path = self.get_test_input('InterpolateLayout3.designspace')
+        ufo_dir = self.get_test_input('master_ufo')
+        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily2-')
+        for path in ttx_paths:
+            self.compile_font(path, suffix, self.tempdir)
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
+        instfont = interpolate_layout(ds_path, {'weight': 500}, finder)
+
+        tables = ['GSUB']
+        expected_ttx_path = self.get_test_output('InterpolateLayout.ttx')
+        self.expect_ttx(instfont, expected_ttx_path, tables)
+        self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
+
+
+    def test_varlib_interpolate_layout_main_ttf(self):
+        """Mostly for testing varLib.interpolate_layout.main()
+        """
+        suffix = '.ttf'
+        ds_path = self.get_test_input('Build.designspace')
+        ufo_dir = self.get_test_input('master_ufo')
+        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+
+        self.temp_dir()
+        ttf_dir = os.path.join(self.tempdir, 'master_ttf_interpolatable')
+        os.makedirs(ttf_dir)
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily-')
+        for path in ttx_paths:
+            self.compile_font(path, suffix, ttf_dir)
+
+        finder = lambda s: s.replace(ufo_dir, ttf_dir).replace('.ufo', suffix)
+        varfont, _, _ = build(ds_path, finder)
+        varfont_name = 'InterpolateLayoutMain'
+        varfont_path = os.path.join(self.tempdir, varfont_name + suffix)
+        varfont.save(varfont_path)
+
+        ds_copy = os.path.splitext(varfont_path)[0] + '.designspace'
+        shutil.copy2(ds_path, ds_copy)
+        args = [ds_copy, 'wght=500', 'cntr=50']
+        interpolate_layout_main(args)
+
+        instfont_path = os.path.splitext(varfont_path)[0] + '-instance' + suffix
+        instfont = TTFont(instfont_path)
+        tables = [table_tag for table_tag in instfont.keys() if table_tag != 'head']
+        expected_ttx_path = self.get_test_output(varfont_name + '.ttx')
+        self.expect_ttx(instfont, expected_ttx_path, tables)
 
 
 if __name__ == "__main__":

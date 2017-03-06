@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.varLib import build
+from fontTools.varLib import main as varLib_main
 import difflib
 import os
 import shutil
@@ -37,10 +38,13 @@ class BuildTest(unittest.TestCase):
         return os.path.join(path, "data", "test_results", test_file_or_folder)
 
     @staticmethod
-    def get_file_list(folder, suffix):
+    def get_file_list(folder, suffix, prefix=''):
         all_files = os.listdir(folder)
-        return [os.path.abspath(os.path.join(folder, p)) for p in all_files
-                                                          if p.endswith(suffix)]
+        file_list = []
+        for p in all_files:
+            if p.startswith(prefix) and p.endswith(suffix):
+                file_list.append(os.path.abspath(os.path.join(folder, p)))
+        return file_list
 
     def temp_path(self, suffix):
         self.temp_dir()
@@ -94,13 +98,16 @@ class BuildTest(unittest.TestCase):
 # -----
 
     def test_varlib_build_ttf(self):
+        """Designspace file contains <axes> element.
+        build() is called without an axisMap parameter.
+        """
         suffix = '.ttf'
         ds_path = self.get_test_input('Build.designspace')
         ufo_dir = self.get_test_input('master_ufo')
         ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
 
-        ttx_paths = self.get_file_list(ttx_dir, '.ttx')
         self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily-')
         for path in ttx_paths:
             self.compile_font(path, suffix, self.tempdir)
 
@@ -111,6 +118,79 @@ class BuildTest(unittest.TestCase):
         expected_ttx_path = self.get_test_output('Build.ttx')
         self.expect_ttx(varfont, expected_ttx_path, tables)
         self.check_ttx_dump(varfont, expected_ttx_path, tables, suffix)
+
+
+    def test_varlib_build2_ttf(self):
+        """Designspace file does not contain an <axes> element.
+        build() is called with an axisMap parameter.
+        """
+        suffix = '.ttf'
+        ds_path = self.get_test_input('Build2.designspace')
+        ufo_dir = self.get_test_input('master_ufo')
+        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily-')
+        for path in ttx_paths:
+            self.compile_font(path, suffix, self.tempdir)
+
+        axisMap = {'contrast': ('cntr', 'Contrast')}
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
+        varfont, model, _ = build(ds_path, finder, axisMap)
+
+        tables = ['GDEF', 'HVAR', 'fvar', 'gvar']
+        expected_ttx_path = self.get_test_output('Build.ttx')
+        self.expect_ttx(varfont, expected_ttx_path, tables)
+        self.check_ttx_dump(varfont, expected_ttx_path, tables, suffix)
+
+
+    def test_varlib_build3_ttf(self):
+        """Designspace file does not contain an <axes> element.
+        build() is called without an axisMap parameter.
+        """
+        suffix = '.ttf'
+        ds_path = self.get_test_input('InterpolateLayout3.designspace')
+        ufo_dir = self.get_test_input('master_ufo')
+        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily2-')
+        for path in ttx_paths:
+            self.compile_font(path, suffix, self.tempdir)
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
+        varfont, model, _ = build(ds_path, finder)
+
+        tables = ['GDEF', 'HVAR', 'fvar', 'gvar']
+        expected_ttx_path = self.get_test_output('Build3.ttx')
+        self.expect_ttx(varfont, expected_ttx_path, tables)
+        self.check_ttx_dump(varfont, expected_ttx_path, tables, suffix)
+
+
+    def test_varlib_main_ttf(self):
+        """Mostly for testing varLib.main()
+        """
+        suffix = '.ttf'
+        ds_path = self.get_test_input('Build.designspace')
+        ufo_dir = self.get_test_input('master_ufo')
+        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+
+        self.temp_dir()
+        ttf_dir = os.path.join(self.tempdir, 'master_ttf_interpolatable')
+        os.makedirs(ttf_dir)
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily-')
+        for path in ttx_paths:
+            self.compile_font(path, suffix, ttf_dir)
+
+        ds_copy = os.path.join(self.tempdir, 'BuildMain.designspace')
+        shutil.copy2(ds_path, ds_copy)
+        varLib_main([ds_copy])
+
+        varfont_path = os.path.splitext(ds_copy)[0] + '-VF' + suffix
+        varfont = TTFont(varfont_path)
+        tables = [table_tag for table_tag in varfont.keys() if table_tag != 'head']
+        expected_ttx_path = self.get_test_output('BuildMain.ttx')
+        self.expect_ttx(varfont, expected_ttx_path, tables)
 
 
 if __name__ == "__main__":

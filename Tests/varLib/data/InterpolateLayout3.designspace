@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<designspace format="3">
+    <sources>
+        <source familyname="Test Family 2" filename="master_ufo/TestFamily2-Master0.ufo" name="master_0" stylename="Master0">
+            <lib copy="1" />
+            <groups copy="1" />
+            <info copy="1" />
+            <location>
+                <dimension name="weight" xvalue="0" />
+            </location>
+        </source>
+        <source familyname="Test Family 2" filename="master_ufo/TestFamily2-Master1.ufo" name="master_1" stylename="Master1">
+            <location>
+                <dimension name="weight" xvalue="1000" />
+            </location>
+        </source>
+    </sources>
+    <instances>
+        <instance familyname="Test Family 2" filename="instances/TestFamily2-ExtraLight.ufo" name="instance_ExtraLight" postscriptfontname="TestFamily2-ExtraLight" stylename="ExtraLight">
+            <location>
+                <dimension name="weight" xvalue="0" />
+            </location>
+            <kerning />
+            <info />
+        </instance>
+        <instance familyname="Test Family 2" filename="instances/TestFamily2-Light.ufo" name="instance_Light" postscriptfontname="TestFamily2-Light" stylename="Light">
+            <location>
+                <dimension name="weight" xvalue="100" />
+            </location>
+            <kerning />
+            <info />
+        </instance>
+        <instance familyname="Test Family 2" filename="instances/TestFamily2-Regular.ufo" name="instance_Regular" postscriptfontname="TestFamily2-Regular" stylename="Regular">
+            <location>
+                <dimension name="weight" xvalue="368" />
+            </location>
+            <kerning />
+            <info />
+        </instance>
+        <instance familyname="Test Family 2" filename="instances/TestFamily2-Semibold.ufo" name="instance_Semibold" postscriptfontname="TestFamily2-Semibold" stylename="Semibold">
+            <location>
+                <dimension name="weight" xvalue="600" />
+            </location>
+            <kerning />
+            <info />
+        </instance>
+        <instance familyname="Test Family 2" filename="instances/TestFamily2-Bold.ufo" name="instance_Bold" postscriptfontname="TestFamily2-Bold" stylename="Bold">
+            <location>
+                <dimension name="weight" xvalue="824" />
+            </location>
+            <kerning />
+            <info />
+        </instance>
+        <instance familyname="Test Family 2" filename="instances/TestFamily2-Black.ufo" name="instance_Black" postscriptfontname="TestFamily2-Black" stylename="Black">
+            <location>
+                <dimension name="weight" xvalue="1000" />
+            </location>
+            <kerning />
+            <info />
+        </instance>
+    </instances>
+</designspace>

@@ -38,10 +38,13 @@ class MutatorTest(unittest.TestCase):
         return os.path.join(path, "data", "test_results", test_file_or_folder)
 
     @staticmethod
-    def get_file_list(folder, suffix):
+    def get_file_list(folder, suffix, prefix=''):
         all_files = os.listdir(folder)
-        return [os.path.abspath(os.path.join(folder, p)) for p in all_files
-                                                          if p.endswith(suffix)]
+        file_list = []
+        for p in all_files:
+            if p.startswith(prefix) and p.endswith(suffix):
+                file_list.append(os.path.abspath(os.path.join(folder, p)))
+        return file_list
 
     def temp_path(self, suffix):
         self.temp_dir()
@@ -94,8 +97,8 @@ class MutatorTest(unittest.TestCase):
         ufo_dir = self.get_test_input('master_ufo')
         ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
 
-        ttx_paths = self.get_file_list(ttx_dir, '.ttx')
         self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily-')
         for path in ttx_paths:
             self.compile_font(path, suffix, self.tempdir)
 
@@ -111,8 +114,8 @@ class MutatorTest(unittest.TestCase):
         instfont_path = os.path.splitext(varfont_path)[0] + '-instance' + suffix
         instfont = TTFont(instfont_path)
         tables = [table_tag for table_tag in instfont.keys() if table_tag != 'head']
-        expected_ttx = self.get_test_output(varfont_name + '.ttx')
-        self.expect_ttx(instfont, expected_ttx, tables)
+        expected_ttx_path = self.get_test_output(varfont_name + '.ttx')
+        self.expect_ttx(instfont, expected_ttx_path, tables)
 
 
 if __name__ == "__main__":
