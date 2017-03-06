@@ -43,7 +43,7 @@
       </VarRegionList>
       <!-- VarDataCount=1 -->
       <VarData index="0">
-        <!-- ItemCount=17 -->
+        <!-- ItemCount=18 -->
         <NumShorts value="1"/>
         <!-- VarRegionCount=1 -->
         <VarRegionIndex index="0" value="0"/>
@@ -58,12 +58,13 @@
         <Item index="8" value="[206]"/>
         <Item index="9" value="[40]"/>
         <Item index="10" value="[72]"/>
-        <Item index="11" value="[128]"/>
-        <Item index="12" value="[-18]"/>
-        <Item index="13" value="[0]"/>
+        <Item index="11" value="[50]"/>
+        <Item index="12" value="[128]"/>
+        <Item index="13" value="[-18]"/>
         <Item index="14" value="[0]"/>
         <Item index="15" value="[0]"/>
         <Item index="16" value="[0]"/>
+        <Item index="17" value="[0]"/>
       </VarData>
     </VarStore>
   </HVAR>
@@ -479,6 +480,17 @@
         <delta pt="19" x="72" y="0"/>
         <delta pt="20" x="0" y="22"/>
         <delta pt="21" x="0" y="0"/>
+      </tuple>
+    </glyphVariations>
+    <glyphVariations glyph="atilde">
+      <tuple>
+        <coord axis="wght" value="1.0"/>
+        <delta pt="0" x="0" y="0"/>
+        <delta pt="1" x="24" y="0"/>
+        <delta pt="2" x="0" y="0"/>
+        <delta pt="3" x="50" y="0"/>
+        <delta pt="4" x="0" y="40"/>
+        <delta pt="5" x="0" y="0"/>
       </tuple>
     </glyphVariations>
     <glyphVariations glyph="ampersand">

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.7">
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.8">
 
   <GlyphOrder>
     <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
@@ -14,24 +14,25 @@
     <GlyphID id="8" name="f_t"/>
     <GlyphID id="9" name="a.alt"/>
     <GlyphID id="10" name="A.sc"/>
-    <GlyphID id="11" name="ampersand"/>
-    <GlyphID id="12" name="uni25CC"/>
-    <GlyphID id="13" name="uni0303"/>
-    <GlyphID id="14" name="uni0308"/>
-    <GlyphID id="15" name="uni0330"/>
-    <GlyphID id="16" name="uni0324"/>
+    <GlyphID id="11" name="atilde"/>
+    <GlyphID id="12" name="ampersand"/>
+    <GlyphID id="13" name="uni25CC"/>
+    <GlyphID id="14" name="uni0303"/>
+    <GlyphID id="15" name="uni0308"/>
+    <GlyphID id="16" name="uni0330"/>
+    <GlyphID id="17" name="uni0324"/>
   </GlyphOrder>
 
   <head>
     <!-- Most of this table will be recalculated by the compiler -->
     <tableVersion value="1.0"/>
     <fontRevision value="2.02"/>
-    <checkSumAdjustment value="0x4e99b130"/>
+    <checkSumAdjustment value="0xf545c03c"/>
     <magicNumber value="0x5f0f3cf5"/>
     <flags value="00000000 00000001"/>
     <unitsPerEm value="1000"/>
-    <created value="Thu Mar  2 22:23:11 2017"/>
-    <modified value="Thu Mar  2 22:23:11 2017"/>
+    <created value="Mon Mar  6 09:06:52 2017"/>
+    <modified value="Mon Mar  6 09:06:52 2017"/>
     <xMin value="-196"/>
     <yMin value="-228"/>
     <xMax value="706"/>
@@ -60,17 +61,17 @@
     <reserved2 value="0"/>
     <reserved3 value="0"/>
     <metricDataFormat value="0"/>
-    <numberOfHMetrics value="14"/>
+    <numberOfHMetrics value="15"/>
   </hhea>
 
   <maxp>
     <!-- Most of this table will be recalculated by the compiler -->
     <tableVersion value="0x10000"/>
-    <numGlyphs value="17"/>
+    <numGlyphs value="18"/>
     <maxPoints value="123"/>
     <maxContours value="12"/>
-    <maxCompositePoints value="24"/>
-    <maxCompositeContours value="2"/>
+    <maxCompositePoints value="58"/>
+    <maxCompositeContours value="3"/>
     <maxZones value="1"/>
     <maxTwilightPoints value="0"/>
     <maxStorage value="0"/>
@@ -78,7 +79,7 @@
     <maxInstructionDefs value="0"/>
     <maxStackElements value="0"/>
     <maxSizeOfInstructions value="0"/>
-    <maxComponentElements value="1"/>
+    <maxComponentElements value="2"/>
     <maxComponentDepth value="1"/>
   </maxp>
 
@@ -86,7 +87,7 @@
     <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
          will be recalculated by the compiler -->
     <version value="4"/>
-    <xAvgCharWidth value="541"/>
+    <xAvgCharWidth value="540"/>
     <usWeightClass value="900"/>
     <usWidthClass value="5"/>
     <fsType value="00000000 00000000"/>
@@ -142,6 +143,7 @@
     <mtx name="a" width="536" lsb="38"/>
     <mtx name="a.alt" width="580" lsb="36"/>
     <mtx name="ampersand" width="690" lsb="21"/>
+    <mtx name="atilde" width="536" lsb="38"/>
     <mtx name="d" width="580" lsb="36"/>
     <mtx name="f" width="360" lsb="22"/>
     <mtx name="f_t" width="724" lsb="22"/>
@@ -166,6 +168,7 @@
       <map code="0x66" name="f"/><!-- LATIN SMALL LETTER F -->
       <map code="0x6e" name="n"/><!-- LATIN SMALL LETTER N -->
       <map code="0x74" name="t"/><!-- LATIN SMALL LETTER T -->
+      <map code="0xe3" name="atilde"/><!-- LATIN SMALL LETTER A WITH TILDE -->
       <map code="0x303" name="uni0303"/><!-- COMBINING TILDE -->
       <map code="0x308" name="uni0308"/><!-- COMBINING DIAERESIS -->
       <map code="0x324" name="uni0324"/><!-- COMBINING DIAERESIS BELOW -->
@@ -181,6 +184,7 @@
       <map code="0x66" name="f"/><!-- LATIN SMALL LETTER F -->
       <map code="0x6e" name="n"/><!-- LATIN SMALL LETTER N -->
       <map code="0x74" name="t"/><!-- LATIN SMALL LETTER T -->
+      <map code="0xe3" name="atilde"/><!-- LATIN SMALL LETTER A WITH TILDE -->
       <map code="0x303" name="uni0303"/><!-- COMBINING TILDE -->
       <map code="0x308" name="uni0308"/><!-- COMBINING DIAERESIS -->
       <map code="0x324" name="uni0324"/><!-- COMBINING DIAERESIS BELOW -->
@@ -431,6 +435,11 @@
         <pt x="333" y="-12" on="0"/>
       </contour>
       <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="atilde" xMin="38" yMin="-12" xMax="482" yMax="746">
+      <component glyphName="a" x="0" y="0" flags="0x204"/>
+      <component glyphName="uni0303" x="266" y="0" flags="0x4"/>
     </TTGlyph>
 
     <TTGlyph name="d" xMin="36" yMin="-12" xMax="522" yMax="696">
