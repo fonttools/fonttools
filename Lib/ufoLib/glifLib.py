@@ -1019,11 +1019,6 @@ pointTypeOptions = set(["move", "line", "offcurve", "curve", "qcurve"])
 
 # format 1
 
-componentAttributesFormat1 = set(["base", "xScale", "xyScale", "yxScale", "yScale", "xOffset", "yOffset"])
-pointAttributesFormat1 = set(["x", "y", "type", "smooth", "name"])
-pointSmoothOptions = set(("no", "yes"))
-pointTypeOptions = set(["move", "line", "offcurve", "curve", "qcurve"])
-
 def buildOutlineFormat1(glyphObject, pen, outline):
 	anchors = []
 	for element in outline:
