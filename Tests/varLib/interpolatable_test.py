@@ -8,7 +8,18 @@ import sys
 import tempfile
 import unittest
 
+try:
+    import scipy
+except:
+    scipy = None
 
+try:
+    import munkres
+except ImportError:
+    munkres = None
+
+
+@unittest.skipUnless(scipy or munkres, "scipy or munkres not installed")
 class InterpolatableTest(unittest.TestCase):
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
