@@ -2,4 +2,4 @@ brotli==0.5.2
 unicodedata2==9.0.0.post4; python_version < '3.6' and platform_python_implementation != "PyPy"
 # TODO(anthrotype): update munkres to 1.0.9 once available:
 # https://github.com/bmc/munkres/issues/21
-munkres==1.0.8
+munkres==1.0.9
