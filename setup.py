@@ -326,6 +326,7 @@ setup(
 	setup_requires=pytest_runner + wheel + bumpversion,
 	tests_require=[
 		'pytest>=3.0',
+		'munkres',
 	],
 	entry_points={
 		'console_scripts': [
