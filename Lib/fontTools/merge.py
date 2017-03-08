@@ -434,10 +434,12 @@ otTables.LookupList.mergeMap = {
 }
 
 otTables.Coverage.mergeMap = {
+	'Format': min,
 	'glyphs': sumLists,
 }
 
 otTables.ClassDef.mergeMap = {
+	'Format': min,
 	'classDefs': sumDicts,
 }
 
