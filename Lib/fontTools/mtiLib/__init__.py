@@ -103,6 +103,8 @@ def parseScriptList(lines, featureMap=None):
 	records = []
 	with lines.between('script table'):
 		for line in lines:
+			while len(line) < 4:
+				line.append('')
 			scriptTag, langSysTag, defaultFeature, features = line
 			log.debug("Adding script %s language-system %s", scriptTag, langSysTag)
 
