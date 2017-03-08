@@ -1368,7 +1368,7 @@ class Parser(object):
             self.cur_token_type_ = Lexer.COMMENT
             self.cur_token_, self.cur_token_location_ = self.cur_comments_.pop(0)
             return
-        else 
+        else:
             self.cur_token_type_, self.cur_token_, self.cur_token_location_ = (
                 self.next_token_type_, self.next_token_, self.next_token_location_)
             self.cur_comments_ = []
