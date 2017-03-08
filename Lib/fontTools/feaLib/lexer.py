@@ -5,6 +5,7 @@ from fontTools.feaLib.error import FeatureLibError
 import re
 import os
 
+
 class Lexer(object):
     NUMBER = "NUMBER"
     FLOAT = "FLOAT"

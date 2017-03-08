@@ -10,7 +10,6 @@ import os
 import re
 
 
-
 log = logging.getLogger(__name__)
 
 
@@ -18,7 +17,7 @@ class Parser(object):
 
     extensions = {}
     ast = ast
-    ignore_comments=True
+    ignore_comments = True
 
     def __init__(self, featurefile, glyphMap):
         self.glyphMap_ = glyphMap
