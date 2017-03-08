@@ -9,6 +9,16 @@ import unittest
 def lex(s):
     return [(typ, tok) for (typ, tok, _) in Lexer(s, "test.fea")]
 
+def lex_with_comments(s):
+    l = Lexer(s, "test.fea")
+    res = []
+    while True:
+        try:
+            (typ, tok, _) = l.next(comments=True)
+            res.append((typ, tok))
+        except StopIteration :
+            break
+    return res
 
 class LexerTest(unittest.TestCase):
     def __init__(self, methodName):
@@ -82,6 +92,10 @@ class LexerTest(unittest.TestCase):
     def test_comment(self):
         self.assertEqual(lex("# Comment\n#"), [])
 
+    def test_comment_kept(self):
+        self.assertEqual(lex_with_comments("# Comment\n#"),
+                         [(Lexer.COMMENT, "# Comment"), (Lexer.COMMENT, "#")])
+            
     def test_string(self):
         self.assertEqual(lex('"foo" "bar"'),
                          [(Lexer.STRING, "foo"), (Lexer.STRING, "bar")])

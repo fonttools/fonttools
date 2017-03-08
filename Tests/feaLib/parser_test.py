@@ -55,6 +55,20 @@ class ParserTest(unittest.TestCase):
         if not hasattr(self, "assertRaisesRegex"):
             self.assertRaisesRegex = self.assertRaisesRegexp
 
+    def test_comments(self):
+        doc = self.parse(
+            """ # Initial
+                feature test {
+                    sub A by B; # simple
+                } test;""", comments=True)
+        c1 = doc.statements[0]
+        c2 = doc.statements[1].statements[1]
+        self.assertEqual(type(c1), ast.Comment)
+        self.assertEqual(c1.text, "# Initial")
+        self.assertEqual(type(c2), ast.Comment)
+        self.assertEqual(c2.text, "# simple")
+        self.assertEqual(doc.statements[1].name, "test")
+
     def test_anchor_format_a(self):
         doc = self.parse(
             "feature test {"
@@ -1424,9 +1438,12 @@ class ParserTest(unittest.TestCase):
         doc = self.parse(";;;")
         self.assertFalse(doc.statements)
 
-    def parse(self, text, glyphMap=GLYPHMAP):
+    def parse(self, text, glyphMap=GLYPHMAP, comments=False):
         featurefile = UnicodeIO(text)
-        return Parser(featurefile, glyphMap).parse()
+        p = Parser(featurefile, glyphMap)
+        if comments :
+            p.ignore_comments = False
+        return p.parse()
 
     @staticmethod
     def getpath(testfile):

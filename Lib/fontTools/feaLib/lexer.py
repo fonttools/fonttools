@@ -32,8 +32,8 @@ class Lexer(object):
     MODE_NORMAL_ = "NORMAL"
     MODE_FILENAME_ = "FILENAME"
 
-    _OMITS = {NEWLINE}
-    _OMITC = {NEWLINE, COMMENT}
+    _OMITMINIMUM = {NEWLINE}
+    _OMITCOMMENTS = {NEWLINE, COMMENT}
 
     def __init__(self, text, filename):
         self.filename_ = filename
@@ -47,13 +47,13 @@ class Lexer(object):
     def __iter__(self):
         return self
 
-    def next(self, comments = False):  # Python 2
+    def next(self, comments=False):  # Python 2
         return self.__next__(comments)
 
-    def __next__(self, comments = False):  # Python 3
+    def __next__(self, comments=False):  # Python 3
         while True:
             token_type, token, location = self.next_()
-            if token_type not in (Lexer._OMITS if comments else Lexer._OMITC):
+            if token_type not in (Lexer._OMITMINIMUM if comments else Lexer._OMITCOMMENTS):
                 return (token_type, token, location)
 
     def location_(self):
@@ -195,10 +195,10 @@ class IncludingLexer(object):
     def __iter__(self):
         return self
 
-    def next(self, comments = False):  # Python 2
+    def next(self, comments=False):  # Python 2
         return self.__next__(comments)
 
-    def __next__(self, comments = False):  # Python 3
+    def __next__(self, comments=False):  # Python 3
         while self.lexers_:
             lexer = self.lexers_[-1]
             try:
