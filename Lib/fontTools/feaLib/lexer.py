@@ -200,7 +200,7 @@ class IncludingLexer(object):
         while self.lexers_:
             lexer = self.lexers_[-1]
             try:
-                token_type, token, location = lexer.next()
+                token_type, token, location = next(lexer)
             except StopIteration:
                 self.lexers_.pop()
                 continue

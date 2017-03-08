@@ -140,23 +140,25 @@ class BuilderTest(unittest.TestCase):
         fname = (name + ".fea") if '.' not in name else name
         temp = parser.ignore_comments
         parser.ignore_comments = False
-        p = parser(self.getpath(fname), glyphMap=font.getReverseGlyphMap())
-        doc = p.parse()
-        actual = self.normal_fea(doc.asFea().split("\n"))
+        try:
+            p = parser(self.getpath(fname), glyphMap=font.getReverseGlyphMap())
+            doc = p.parse()
+            actual = self.normal_fea(doc.asFea().split("\n"))
 
-        with open(self.getpath(base or fname), "r", encoding="utf-8") as ofile:
-            expected = self.normal_fea(ofile.readlines())
+            with open(self.getpath(base or fname), "r", encoding="utf-8") as ofile:
+                expected = self.normal_fea(ofile.readlines())
 
-        if expected != actual:
-            fname = name.rsplit(".", 1)[0] + ".fea"
-            for line in difflib.unified_diff(
-                    expected, actual,
-                    fromfile=fname + " (expected)",
-                    tofile=fname + " (actual)"):
-                sys.stderr.write(line+"\n")
-            self.fail("Fea2Fea output is different from expected. "
-                      "Generated:\n{}\n".format("\n".join(actual)))
-        parser.ignore_comments = temp
+            if expected != actual:
+                fname = name.rsplit(".", 1)[0] + ".fea"
+                for line in difflib.unified_diff(
+                        expected, actual,
+                        fromfile=fname + " (expected)",
+                        tofile=fname + " (actual)"):
+                    sys.stderr.write(line+"\n")
+                self.fail("Fea2Fea output is different from expected. "
+                          "Generated:\n{}\n".format("\n".join(actual)))
+        finally:
+            parser.ignore_comments = temp
 
     def normal_fea(self, lines):
         output = []
