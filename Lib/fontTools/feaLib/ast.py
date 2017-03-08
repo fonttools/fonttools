@@ -69,6 +69,18 @@ class Expression(object):
         pass
 
 
+class Comment(object):
+    def __init__(self, location, text):
+        self.location = location
+        self.text = text
+
+    def build(self, builder):
+        pass
+
+    def asFea(self, indent=""):
+        return self.text
+
+
 class GlyphName(Expression):
     """A single glyph name, such as cedilla."""
     def __init__(self, location, glyph):

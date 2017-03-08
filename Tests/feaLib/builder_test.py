@@ -138,6 +138,8 @@ class BuilderTest(unittest.TestCase):
     def check_fea2fea_file(self, name, base=None, parser=Parser):
         font = makeTTFont()
         fname = (name + ".fea") if '.' not in name else name
+        temp = parser.ignore_comments
+        parser.ignore_comments = False
         p = parser(self.getpath(fname), glyphMap=font.getReverseGlyphMap())
         doc = p.parse()
         actual = self.normal_fea(doc.asFea().split("\n"))
@@ -154,6 +156,7 @@ class BuilderTest(unittest.TestCase):
                 sys.stderr.write(line+"\n")
             self.fail("Fea2Fea output is different from expected. "
                       "Generated:\n{}\n".format("\n".join(actual)))
+        parser.ignore_comments = temp
 
     def normal_fea(self, lines):
         output = []

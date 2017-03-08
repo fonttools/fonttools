@@ -5,7 +5,6 @@ from fontTools.feaLib.error import FeatureLibError
 import re
 import os
 
-
 class Lexer(object):
     NUMBER = "NUMBER"
     FLOAT = "FLOAT"
@@ -33,6 +32,9 @@ class Lexer(object):
     MODE_NORMAL_ = "NORMAL"
     MODE_FILENAME_ = "FILENAME"
 
+    _OMITS = {NEWLINE}
+    _OMITC = {NEWLINE, COMMENT}
+
     def __init__(self, text, filename):
         self.filename_ = filename
         self.line_ = 1
@@ -45,13 +47,13 @@ class Lexer(object):
     def __iter__(self):
         return self
 
-    def next(self):  # Python 2
-        return self.__next__()
+    def next(self, comments = False):  # Python 2
+        return self.__next__(comments)
 
-    def __next__(self):  # Python 3
+    def __next__(self, comments = False):  # Python 3
         while True:
             token_type, token, location = self.next_()
-            if token_type not in {Lexer.COMMENT, Lexer.NEWLINE}:
+            if token_type not in (Lexer._OMITS if comments else Lexer._OMITC):
                 return (token_type, token, location)
 
     def location_(self):
@@ -193,14 +195,14 @@ class IncludingLexer(object):
     def __iter__(self):
         return self
 
-    def next(self):  # Python 2
-        return self.__next__()
+    def next(self, comments = False):  # Python 2
+        return self.__next__(comments)
 
-    def __next__(self):  # Python 3
+    def __next__(self, comments = False):  # Python 3
         while self.lexers_:
             lexer = self.lexers_[-1]
             try:
-                token_type, token, location = lexer.next()
+                token_type, token, location = lexer.next(comments)
             except StopIteration:
                 self.lexers_.pop()
                 continue
