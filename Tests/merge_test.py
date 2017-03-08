@@ -1,11 +1,22 @@
-from fontTools.misc.py23 import *
+import sys
+import unittest
+import contextlib
+
 import fontTools
+from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.merge import *
-import unittest
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.ttLib.tables.otTables import GSUB, SingleSubst, LangSys, LookupList, Lookup, Feature, FeatureList, FeatureRecord, Script, ScriptList, ScriptRecord, LigatureSubst, Ligature
-import sys
+
+
+@contextlib.contextmanager
+def mockIsGlyphSame(boolean):
+	tmp = fontTools.merge.isGlyphSame
+	fontTools.merge.isGlyphSame = lambda fonts, ogid, gid : boolean
+	yield
+	fontTools.merge.isGlyphSame = tmp
+
 
 class MergeIntegrationTest(unittest.TestCase):
 	# TODO
@@ -214,10 +225,8 @@ class GSUBMergUnitTest(unittest.TestCase):
 		self.table2 = NotImplemented
 		self.merger.duplicateGlyphsPerFont = [{}, {'uni0032#0': 'uni0032#1'}]
 		self.merger.fonts = []
-		fontTools.merge.isGlyphSame = lambda fonts, ogid, gid : True
-
-		self.mergedTable.merge(self.merger, [self.table1, self.table2])
-
+		with mockIsGlyphSame(True):
+			self.mergedTable.merge(self.merger, [self.table1, self.table2])
 		table = self.mergedTable.table
 		self.assertEqual(table, self.table1.table)
 
@@ -226,10 +235,9 @@ class GSUBMergUnitTest(unittest.TestCase):
 		self.merger.duplicateGlyphsPerFont = [{}, {'uni0032#0': 'uni0032#1'}]
 		self.merger.fonts = []
 		self.merger.fontfiles = ['font1', 'font2']
-		fontTools.merge.isGlyphSame = lambda fonts, ogid, gid : False
-
-		with CapturingLogHandler(fontTools.merge.log, "WARNING") as captor:
-			self.mergedTable.merge(self.merger, [self.table1, self.table2])
+		with mockIsGlyphSame(False):
+			with CapturingLogHandler(fontTools.merge.log, "WARNING") as captor:
+				self.mergedTable.merge(self.merger, [self.table1, self.table2])
 
 		table = self.mergedTable.table
 		self.assertEqual(table, self.table1.table)
