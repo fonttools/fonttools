@@ -1376,7 +1376,7 @@ class Parser(object):
         while True:
             try:
                 (self.next_token_type_, self.next_token_,
-                 self.next_token_location_) = self.lexer_.next(comments=True)
+                 self.next_token_location_) = self.lexer_.next()
             except StopIteration:
                 self.next_token_type_, self.next_token_ = (None, None)
             if self.next_token_type_ != Lexer.COMMENT:
