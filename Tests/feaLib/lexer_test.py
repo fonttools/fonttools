@@ -9,7 +9,6 @@ import unittest
 def lex(s):
     return [(typ, tok) for (typ, tok, _) in Lexer(s, "test.fea")]
 
-
 class LexerTest(unittest.TestCase):
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
@@ -55,6 +54,7 @@ class LexerTest(unittest.TestCase):
         ])
         self.assertEqual(lex("include # Comment\n    (foo) \n;"), [
             (Lexer.NAME, "include"),
+            (Lexer.COMMENT, "# Comment"),
             (Lexer.FILENAME, "foo"),
             (Lexer.SYMBOL, ";")
         ])
@@ -79,9 +79,13 @@ class LexerTest(unittest.TestCase):
             lex("foo - -2"),
             [(Lexer.NAME, "foo"), (Lexer.SYMBOL, "-"), (Lexer.NUMBER, -2)])
 
-    def test_comment(self):
-        self.assertEqual(lex("# Comment\n#"), [])
+    #def test_comment(self):
+    #    self.assertEqual(lex("# Comment\n#"), [])
 
+    def test_comment_kept(self):
+        self.assertEqual(lex("# Comment\n#"),
+                         [(Lexer.COMMENT, "# Comment"), (Lexer.COMMENT, "#")])
+            
     def test_string(self):
         self.assertEqual(lex('"foo" "bar"'),
                          [(Lexer.STRING, "foo"), (Lexer.STRING, "bar")])
@@ -112,7 +116,7 @@ class LexerTest(unittest.TestCase):
         def locs(s):
             return ["%s:%d:%d" % loc for (_, _, loc) in Lexer(s, "test.fea")]
         self.assertEqual(locs("a b # Comment\n12 @x"), [
-            "test.fea:1:1", "test.fea:1:3", "test.fea:2:1",
+            "test.fea:1:1", "test.fea:1:3", "test.fea:1:5", "test.fea:2:1",
             "test.fea:2:4"
         ])
 

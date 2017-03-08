@@ -51,7 +51,7 @@ class Lexer(object):
     def __next__(self):  # Python 3
         while True:
             token_type, token, location = self.next_()
-            if token_type not in {Lexer.COMMENT, Lexer.NEWLINE}:
+            if token_type != Lexer.NEWLINE:
                 return (token_type, token, location)
 
     def location_(self):
@@ -200,7 +200,7 @@ class IncludingLexer(object):
         while self.lexers_:
             lexer = self.lexers_[-1]
             try:
-                token_type, token, location = lexer.next()
+                token_type, token, location = next(lexer)
             except StopIteration:
                 self.lexers_.pop()
                 continue
