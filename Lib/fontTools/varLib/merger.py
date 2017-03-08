@@ -462,6 +462,7 @@ def merge(merger, self, lst):
 def _PairSet_merge_overlay(lst, font):
 	self = ot.PairSet()
 	self.Coverage = ot.Coverage()
+	self.Coverage.Format = 1
 
 	# Align them
 	glyphs, padded = _merge_GlyphOrders(font,
@@ -485,6 +486,7 @@ def _Lookup_PairPosFormat1_subtables_merge_overlay(lst, font):
 	self = ot.PairPos()
 	self.Format = 1
 	self.Coverage = ot.Coverage()
+	self.Coverage.Format = 1
 	self.ValueFormat1 = reduce(int.__or__, [l.ValueFormat1 for l in lst], 0)
 	self.ValueFormat2 = reduce(int.__or__, [l.ValueFormat2 for l in lst], 0)
 
