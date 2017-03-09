@@ -1086,7 +1086,7 @@ class NumberConverter(SimpleConverter):
 
 class ArrayConverter(SimpleConverter):
 	def xmlWrite(self, xmlWriter, name, value, progress):
-		if isinstance(value[0], list):
+		if value and isinstance(value[0], list):
 			xmlWriter.begintag(name)
 			xmlWriter.newline()
 			xmlWriter.indent()
