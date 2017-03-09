@@ -14,10 +14,8 @@ log = logging.getLogger(__name__)
 
 
 class Parser(object):
-
     extensions = {}
     ast = ast
-    ignore_comments = True
 
     def __init__(self, featurefile, glyphMap):
         self.glyphMap_ = glyphMap
@@ -791,7 +789,7 @@ class Parser(object):
 
     def parse_table_GDEF_(self, table):
         statements = table.statements
-        while self.next_token_ != "}" or (not self.ignore_comments and len(self.cur_comments_)):
+        while self.next_token_ != "}" or self.cur_comments_:
             self.advance_lexer_(comments=True)
             if self.cur_token_type_ is Lexer.COMMENT:
                 statements.append(self.ast.Comment(self.cur_token_location_, self.cur_token_))
@@ -813,7 +811,7 @@ class Parser(object):
 
     def parse_table_head_(self, table):
         statements = table.statements
-        while self.next_token_ != "}" or (not self.ignore_comments and len(self.cur_comments_)):
+        while self.next_token_ != "}" or self.cur_comments_:
             self.advance_lexer_(comments=True)
             if self.cur_token_type_ is Lexer.COMMENT:
                 statements.append(self.ast.Comment(self.cur_token_location_, self.cur_token_))
@@ -828,7 +826,7 @@ class Parser(object):
     def parse_table_hhea_(self, table):
         statements = table.statements
         fields = ("CaretOffset", "Ascender", "Descender", "LineGap")
-        while self.next_token_ != "}" or (not self.ignore_comments and len(self.cur_comments_)):
+        while self.next_token_ != "}" or self.cur_comments_:
             self.advance_lexer_(comments=True)
             if self.cur_token_type_ is Lexer.COMMENT:
                 statements.append(self.ast.Comment(self.cur_token_location_, self.cur_token_))
@@ -849,7 +847,7 @@ class Parser(object):
     def parse_table_vhea_(self, table):
         statements = table.statements
         fields = ("VertTypoAscender", "VertTypoDescender", "VertTypoLineGap")
-        while self.next_token_ != "}" or (not self.ignore_comments and len(self.cur_comments_)):
+        while self.next_token_ != "}" or self.cur_comments_:
             self.advance_lexer_(comments=True)
             if self.cur_token_type_ is Lexer.COMMENT:
                 statements.append(self.ast.Comment(self.cur_token_location_, self.cur_token_))
@@ -869,7 +867,7 @@ class Parser(object):
 
     def parse_table_name_(self, table):
         statements = table.statements
-        while self.next_token_ != "}" or (not self.ignore_comments and len(self.cur_comments_)):
+        while self.next_token_ != "}" or self.cur_comments_:
             self.advance_lexer_(comments=True)
             if self.cur_token_type_ is Lexer.COMMENT:
                 statements.append(self.ast.Comment(self.cur_token_location_, self.cur_token_))
@@ -954,7 +952,7 @@ class Parser(object):
 
     def parse_table_BASE_(self, table):
         statements = table.statements
-        while self.next_token_ != "}" or (not self.ignore_comments and len(self.cur_comments_)):
+        while self.next_token_ != "}" or self.cur_comments_:
             self.advance_lexer_(comments=True)
             if self.cur_token_type_ is Lexer.COMMENT:
                 statements.append(self.ast.Comment(self.cur_token_location_, self.cur_token_))
@@ -981,7 +979,7 @@ class Parser(object):
                    "winAscent", "winDescent", "XHeight", "CapHeight",
                    "WeightClass", "WidthClass", "LowerOpSize", "UpperOpSize")
         ranges = ("UnicodeRange", "CodePageRange")
-        while self.next_token_ != "}" or (not self.ignore_comments and len(self.cur_comments_)):
+        while self.next_token_ != "}" or self.cur_comments_:
             self.advance_lexer_(comments=True)
             if self.cur_token_type_ is Lexer.COMMENT:
                 statements.append(self.ast.Comment(self.cur_token_location_, self.cur_token_))
@@ -1192,7 +1190,7 @@ class Parser(object):
             symtab.enter_scope()
 
         statements = block.statements
-        while self.next_token_ != "}" or (not self.ignore_comments and len(self.cur_comments_)):
+        while self.next_token_ != "}" or self.cur_comments_:
             self.advance_lexer_(comments=True)
             if self.cur_token_type_ is Lexer.COMMENT:
                 statements.append(self.ast.Comment(self.cur_token_location_, self.cur_token_))
@@ -1369,8 +1367,8 @@ class Parser(object):
             return self.cur_token_
         raise FeatureLibError("Expected a string", self.cur_token_location_)
 
-    def advance_lexer_(self, comments = False):
-        if not self.ignore_comments and comments and len(self.cur_comments_):
+    def advance_lexer_(self, comments=False):
+        if comments and self.cur_comments_:
             self.cur_token_type_ = Lexer.COMMENT
             self.cur_token_, self.cur_token_location_ = self.cur_comments_.pop(0)
             return
