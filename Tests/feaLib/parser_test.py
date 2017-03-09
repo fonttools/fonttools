@@ -1437,6 +1437,9 @@ class ParserTest(unittest.TestCase):
         self.assertFalse(doc.statements[0].statements)
         doc = self.parse(";;;")
         self.assertFalse(doc.statements)
+        for table in "BASE GDEF OS/2 head hhea name vhea".split():
+            doc = self.parse("table %s { ;;; } %s;" % (table, table))
+            self.assertEqual(doc.statements[0].statements, [])
 
     def parse(self, text, glyphMap=GLYPHMAP, comments=False):
         featurefile = UnicodeIO(text)

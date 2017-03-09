@@ -803,6 +803,8 @@ class Parser(object):
                 statements.append(self.parse_ligatureCaretByIndex_())
             elif self.is_cur_keyword_("LigatureCaretByPos"):
                 statements.append(self.parse_ligatureCaretByPos_())
+            elif self.cur_token_ == ";":
+                continue
             else:
                 raise FeatureLibError(
                     "Expected Attach, LigatureCaretByIndex, "
@@ -817,6 +819,8 @@ class Parser(object):
                 statements.append(self.ast.Comment(self.cur_token_location_, self.cur_token_))
             elif self.is_cur_keyword_("FontRevision"):
                 statements.append(self.parse_FontRevision_())
+            elif self.cur_token_ == ";":
+                continue
             else:
                 raise FeatureLibError("Expected FontRevision",
                                       self.cur_token_location_)
@@ -873,6 +877,8 @@ class Parser(object):
                 statement = self.parse_nameid_()
                 if statement:
                     statements.append(statement)
+            elif self.cur_token_ == ";":
+                continue
             else:
                 raise FeatureLibError("Expected nameid",
                                       self.cur_token_location_)
