@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.8">
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="xxxx"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <LookupType value="5"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <MarkLigPos index="0" Format="1">
+          <MarkCoverage Format="1">
+            <Glyph value="uni0330"/>
+          </MarkCoverage>
+          <LigatureCoverage Format="1">
+            <Glyph value="f_t"/>
+          </LigatureCoverage>
+          <!-- ClassCount=1 -->
+          <MarkArray>
+            <!-- MarkCount=1 -->
+            <MarkRecord index="0">
+              <Class value="0"/>
+              <MarkAnchor Format="1">
+                <XCoordinate value="0"/>
+                <YCoordinate value="-35"/>
+              </MarkAnchor>
+            </MarkRecord>
+          </MarkArray>
+          <LigatureArray>
+            <!-- LigatureCount=1 -->
+            <LigatureAttach index="0">
+              <!-- ComponentCount=2 -->
+              <ComponentRecord index="0">
+                <LigatureAnchor index="0" Format="1">
+                  <XCoordinate value="144"/>
+                  <YCoordinate value="-35"/>
+                </LigatureAnchor>
+              </ComponentRecord>
+              <ComponentRecord index="1">
+                <LigatureAnchor index="0" Format="1">
+                  <XCoordinate value="504"/>
+                  <YCoordinate value="-35"/>
+                </LigatureAnchor>
+              </ComponentRecord>
+            </LigatureAttach>
+          </LigatureArray>
+        </MarkLigPos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+</ttFont>

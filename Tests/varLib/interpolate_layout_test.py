@@ -176,6 +176,35 @@ class InterpolateLayoutTest(unittest.TestCase):
         self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
 
 
+    def test_varlib_interpolate_layout_GPOS_only_size_feat_same_val_ttf(self):
+        """Only GPOS; 'size' feature; same values in all masters.
+        """
+        suffix = '.ttf'
+        ds_path = self.get_test_input('InterpolateLayout.designspace')
+        ufo_dir = self.get_test_input('master_ufo')
+        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+
+        fea_str = """
+        feature size {
+            parameters 10.0 0;
+        } size;
+        """
+        features = [fea_str] * 2
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily2-')
+        for i, path in enumerate(ttx_paths):
+            self.compile_font(path, suffix, self.tempdir, features[i])
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
+        instfont = interpolate_layout(ds_path, {'weight': 500}, finder)
+
+        tables = ['GPOS']
+        expected_ttx_path = self.get_test_output('InterpolateLayoutGPOS_size_feat_same.ttx')
+        self.expect_ttx(instfont, expected_ttx_path, tables)
+        self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
+
+
     def test_varlib_interpolate_layout_GPOS_only_LookupType_1_same_val_ttf(self):
         """Only GPOS; LookupType 1; same values in all masters.
         """
@@ -368,6 +397,360 @@ class InterpolateLayoutTest(unittest.TestCase):
 
         tables = ['GPOS']
         expected_ttx_path = self.get_test_output('InterpolateLayoutGPOS_2_spec_diff2.ttx')
+        self.expect_ttx(instfont, expected_ttx_path, tables)
+        self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
+
+
+    def test_varlib_interpolate_layout_GPOS_only_LookupType_3_same_val_ttf(self):
+        """Only GPOS; LookupType 3; same values in all masters.
+        """
+        suffix = '.ttf'
+        ds_path = self.get_test_input('InterpolateLayout.designspace')
+        ufo_dir = self.get_test_input('master_ufo')
+        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+
+        fea_str = """
+        feature xxxx {
+            pos cursive a <anchor 60 15> <anchor 405 310>;
+        } xxxx;
+        """
+        features = [fea_str] * 2
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily2-')
+        for i, path in enumerate(ttx_paths):
+            self.compile_font(path, suffix, self.tempdir, features[i])
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
+        instfont = interpolate_layout(ds_path, {'weight': 500}, finder)
+
+        tables = ['GPOS']
+        expected_ttx_path = self.get_test_output('InterpolateLayoutGPOS_3_same.ttx')
+        self.expect_ttx(instfont, expected_ttx_path, tables)
+        self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
+
+
+    def test_varlib_interpolate_layout_GPOS_only_LookupType_3_diff_val_ttf(self):
+        """Only GPOS; LookupType 3; different values in each master.
+        """
+        suffix = '.ttf'
+        ds_path = self.get_test_input('InterpolateLayout.designspace')
+        ufo_dir = self.get_test_input('master_ufo')
+        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+
+        fea_str_0 = """
+        feature xxxx {
+            pos cursive a <anchor 60 15> <anchor 405 310>;
+        } xxxx;
+        """
+        fea_str_1 = """
+        feature xxxx {
+            pos cursive a <anchor 38 42> <anchor 483 279>;
+        } xxxx;
+        """
+        features = [fea_str_0, fea_str_1]
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily2-')
+        for i, path in enumerate(ttx_paths):
+            self.compile_font(path, suffix, self.tempdir, features[i])
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
+        instfont = interpolate_layout(ds_path, {'weight': 500}, finder)
+
+        tables = ['GPOS']
+        expected_ttx_path = self.get_test_output('InterpolateLayoutGPOS_3_diff.ttx')
+        self.expect_ttx(instfont, expected_ttx_path, tables)
+        self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
+
+
+    def test_varlib_interpolate_layout_GPOS_only_LookupType_4_same_val_ttf(self):
+        """Only GPOS; LookupType 4; same values in all masters.
+        """
+        suffix = '.ttf'
+        ds_path = self.get_test_input('InterpolateLayout.designspace')
+        ufo_dir = self.get_test_input('master_ufo')
+        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+
+        fea_str = """
+        markClass uni0303 <anchor 0 500> @MARKS_ABOVE;
+        feature xxxx {
+            pos base a <anchor 260 500> mark @MARKS_ABOVE;
+        } xxxx;
+        """
+        features = [fea_str] * 2
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily2-')
+        for i, path in enumerate(ttx_paths):
+            self.compile_font(path, suffix, self.tempdir, features[i])
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
+        instfont = interpolate_layout(ds_path, {'weight': 500}, finder)
+
+        tables = ['GPOS']
+        expected_ttx_path = self.get_test_output('InterpolateLayoutGPOS_4_same.ttx')
+        self.expect_ttx(instfont, expected_ttx_path, tables)
+        self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
+
+
+    def test_varlib_interpolate_layout_GPOS_only_LookupType_4_diff_val_ttf(self):
+        """Only GPOS; LookupType 4; different values in each master.
+        """
+        suffix = '.ttf'
+        ds_path = self.get_test_input('InterpolateLayout.designspace')
+        ufo_dir = self.get_test_input('master_ufo')
+        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+
+        fea_str_0 = """
+        markClass uni0303 <anchor 0 500> @MARKS_ABOVE;
+        feature xxxx {
+            pos base a <anchor 260 500> mark @MARKS_ABOVE;
+        } xxxx;
+        """
+        fea_str_1 = """
+        markClass uni0303 <anchor 0 520> @MARKS_ABOVE;
+        feature xxxx {
+            pos base a <anchor 285 520> mark @MARKS_ABOVE;
+        } xxxx;
+        """
+        features = [fea_str_0, fea_str_1]
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily2-')
+        for i, path in enumerate(ttx_paths):
+            self.compile_font(path, suffix, self.tempdir, features[i])
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
+        instfont = interpolate_layout(ds_path, {'weight': 500}, finder)
+
+        tables = ['GPOS']
+        expected_ttx_path = self.get_test_output('InterpolateLayoutGPOS_4_diff.ttx')
+        self.expect_ttx(instfont, expected_ttx_path, tables)
+        self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
+
+
+    def test_varlib_interpolate_layout_GPOS_only_LookupType_5_same_val_ttf(self):
+        """Only GPOS; LookupType 5; same values in all masters.
+        """
+        suffix = '.ttf'
+        ds_path = self.get_test_input('InterpolateLayout.designspace')
+        ufo_dir = self.get_test_input('master_ufo')
+        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+
+        fea_str = """
+        markClass uni0330 <anchor 0 -50> @MARKS_BELOW;
+        feature xxxx {
+            pos ligature f_t <anchor 115 -50> mark @MARKS_BELOW
+                ligComponent <anchor 430 -50> mark @MARKS_BELOW;
+        } xxxx;
+        """
+        features = [fea_str] * 2
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily2-')
+        for i, path in enumerate(ttx_paths):
+            self.compile_font(path, suffix, self.tempdir, features[i])
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
+        instfont = interpolate_layout(ds_path, {'weight': 500}, finder)
+
+        tables = ['GPOS']
+        expected_ttx_path = self.get_test_output('InterpolateLayoutGPOS_5_same.ttx')
+        self.expect_ttx(instfont, expected_ttx_path, tables)
+        self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
+
+
+    def test_varlib_interpolate_layout_GPOS_only_LookupType_5_diff_val_ttf(self):
+        """Only GPOS; LookupType 5; different values in each master.
+        """
+        suffix = '.ttf'
+        ds_path = self.get_test_input('InterpolateLayout.designspace')
+        ufo_dir = self.get_test_input('master_ufo')
+        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+
+        fea_str_0 = """
+        markClass uni0330 <anchor 0 -50> @MARKS_BELOW;
+        feature xxxx {
+            pos ligature f_t <anchor 115 -50> mark @MARKS_BELOW
+                ligComponent <anchor 430 -50> mark @MARKS_BELOW;
+        } xxxx;
+        """
+        fea_str_1 = """
+        markClass uni0330 <anchor 0 -20> @MARKS_BELOW;
+        feature xxxx {
+            pos ligature f_t <anchor 173 -20> mark @MARKS_BELOW
+                ligComponent <anchor 577 -20> mark @MARKS_BELOW;
+        } xxxx;
+        """
+        features = [fea_str_0, fea_str_1]
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily2-')
+        for i, path in enumerate(ttx_paths):
+            self.compile_font(path, suffix, self.tempdir, features[i])
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
+        instfont = interpolate_layout(ds_path, {'weight': 500}, finder)
+
+        tables = ['GPOS']
+        expected_ttx_path = self.get_test_output('InterpolateLayoutGPOS_5_diff.ttx')
+        self.expect_ttx(instfont, expected_ttx_path, tables)
+        self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
+
+
+    def test_varlib_interpolate_layout_GPOS_only_LookupType_6_same_val_ttf(self):
+        """Only GPOS; LookupType 6; same values in all masters.
+        """
+        suffix = '.ttf'
+        ds_path = self.get_test_input('InterpolateLayout.designspace')
+        ufo_dir = self.get_test_input('master_ufo')
+        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+
+        fea_str = """
+        markClass uni0303 <anchor 0 500> @MARKS_ABOVE;
+        feature xxxx {
+            pos mark uni0308 <anchor 0 675> mark @MARKS_ABOVE;
+        } xxxx;
+        """
+        features = [fea_str] * 2
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily2-')
+        for i, path in enumerate(ttx_paths):
+            self.compile_font(path, suffix, self.tempdir, features[i])
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
+        instfont = interpolate_layout(ds_path, {'weight': 500}, finder)
+
+        tables = ['GPOS']
+        expected_ttx_path = self.get_test_output('InterpolateLayoutGPOS_6_same.ttx')
+        self.expect_ttx(instfont, expected_ttx_path, tables)
+        self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
+
+
+    def test_varlib_interpolate_layout_GPOS_only_LookupType_6_diff_val_ttf(self):
+        """Only GPOS; LookupType 6; different values in each master.
+        """
+        suffix = '.ttf'
+        ds_path = self.get_test_input('InterpolateLayout.designspace')
+        ufo_dir = self.get_test_input('master_ufo')
+        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+
+        fea_str_0 = """
+        markClass uni0303 <anchor 0 500> @MARKS_ABOVE;
+        feature xxxx {
+            pos mark uni0308 <anchor 0 675> mark @MARKS_ABOVE;
+        } xxxx;
+        """
+        fea_str_1 = """
+        markClass uni0303 <anchor 0 520> @MARKS_ABOVE;
+        feature xxxx {
+            pos mark uni0308 <anchor 0 730> mark @MARKS_ABOVE;
+        } xxxx;
+        """
+        features = [fea_str_0, fea_str_1]
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily2-')
+        for i, path in enumerate(ttx_paths):
+            self.compile_font(path, suffix, self.tempdir, features[i])
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
+        instfont = interpolate_layout(ds_path, {'weight': 500}, finder)
+
+        tables = ['GPOS']
+        expected_ttx_path = self.get_test_output('InterpolateLayoutGPOS_6_diff.ttx')
+        self.expect_ttx(instfont, expected_ttx_path, tables)
+        self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
+
+
+    def test_varlib_interpolate_layout_GPOS_only_LookupType_8_same_val_ttf(self):
+        """Only GPOS; LookupType 8; same values in all masters.
+        """
+        suffix = '.ttf'
+        ds_path = self.get_test_input('InterpolateLayout.designspace')
+        ufo_dir = self.get_test_input('master_ufo')
+        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+
+        fea_str = """
+        markClass uni0303 <anchor 0 500> @MARKS_ABOVE;
+        lookup CNTXT_PAIR_POS {
+            pos A a -23;
+        } CNTXT_PAIR_POS;
+
+        lookup CNTXT_MARK_TO_BASE {
+            pos base a <anchor 260 500> mark @MARKS_ABOVE;
+        } CNTXT_MARK_TO_BASE;
+
+        feature xxxx {
+            pos A' lookup CNTXT_PAIR_POS a' @MARKS_ABOVE' lookup CNTXT_MARK_TO_BASE;
+        } xxxx;
+        """
+        features = [fea_str] * 2
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily2-')
+        for i, path in enumerate(ttx_paths):
+            self.compile_font(path, suffix, self.tempdir, features[i])
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
+        instfont = interpolate_layout(ds_path, {'weight': 500}, finder)
+
+        tables = ['GPOS']
+        expected_ttx_path = self.get_test_output('InterpolateLayoutGPOS_8_same.ttx')
+        self.expect_ttx(instfont, expected_ttx_path, tables)
+        self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
+
+
+    def test_varlib_interpolate_layout_GPOS_only_LookupType_8_diff_val_ttf(self):
+        """Only GPOS; LookupType 8; different values in each master.
+        """
+        suffix = '.ttf'
+        ds_path = self.get_test_input('InterpolateLayout.designspace')
+        ufo_dir = self.get_test_input('master_ufo')
+        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+
+        fea_str_0 = """
+        markClass uni0303 <anchor 0 500> @MARKS_ABOVE;
+        lookup CNTXT_PAIR_POS {
+            pos A a -23;
+        } CNTXT_PAIR_POS;
+
+        lookup CNTXT_MARK_TO_BASE {
+            pos base a <anchor 260 500> mark @MARKS_ABOVE;
+        } CNTXT_MARK_TO_BASE;
+
+        feature xxxx {
+            pos A' lookup CNTXT_PAIR_POS a' @MARKS_ABOVE' lookup CNTXT_MARK_TO_BASE;
+        } xxxx;
+        """
+        fea_str_1 = """
+        markClass uni0303 <anchor 0 520> @MARKS_ABOVE;
+        lookup CNTXT_PAIR_POS {
+            pos A a 57;
+        } CNTXT_PAIR_POS;
+
+        lookup CNTXT_MARK_TO_BASE {
+            pos base a <anchor 285 520> mark @MARKS_ABOVE;
+        } CNTXT_MARK_TO_BASE;
+
+        feature xxxx {
+            pos A' lookup CNTXT_PAIR_POS a' @MARKS_ABOVE' lookup CNTXT_MARK_TO_BASE;
+        } xxxx;
+        """
+        features = [fea_str_0, fea_str_1]
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily2-')
+        for i, path in enumerate(ttx_paths):
+            self.compile_font(path, suffix, self.tempdir, features[i])
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
+        instfont = interpolate_layout(ds_path, {'weight': 500}, finder)
+
+        tables = ['GPOS']
+        expected_ttx_path = self.get_test_output('InterpolateLayoutGPOS_8_diff.ttx')
         self.expect_ttx(instfont, expected_ttx_path, tables)
         self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
 
