@@ -1,5 +1,6 @@
 - [feaLib] Added (partial) support for parsing feature file comments ``# ...``
   appearing in between statements (#879).
+- [feaLib] Cleaned up syntax tree for FeatureNames.
 - [ttLib] Added support for reading/writing ``CFF2`` table (thanks to
   @readroberts at Adobe), and ``TTFA`` (ttfautohint) table.
 

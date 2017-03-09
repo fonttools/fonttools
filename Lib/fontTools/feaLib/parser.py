@@ -1152,27 +1152,30 @@ class Parser(object):
 
     def parse_featureNames_(self, tag):
         assert self.cur_token_ == "featureNames", self.cur_token_
+        block = self.ast.FeatureNamesBlock(self.cur_token_location_)
         self.expect_symbol_("{")
         for symtab in self.symbol_tables_:
             symtab.enter_scope()
-
-        statements = []
-        while self.next_token_ != "}":
-            self.expect_keyword_("name")
-            location = self.cur_token_location_
-            platformID, platEncID, langID, string = self.parse_name_()
-            statements.append(
+        while self.next_token_ != "}" or self.cur_comments_:
+            self.advance_lexer_(comments=True)
+            if self.cur_token_type_ is Lexer.COMMENT:
+                block.statements.append(self.ast.Comment(self.cur_token_location_, self.cur_token_))
+            elif self.is_cur_keyword_("name"):
+                location = self.cur_token_location_
+                platformID, platEncID, langID, string = self.parse_name_()
+                block.statements.append(
                     self.ast.FeatureNameStatement(location, tag, platformID,
                                                   platEncID, langID, string))
-
+            elif self.cur_token_ == ";":
+                continue
+            else:
+                raise FeatureLibError('Expected "name"',
+                                      self.cur_token_location_)
         self.expect_symbol_("}")
-
         for symtab in self.symbol_tables_:
             symtab.exit_scope()
-
         self.expect_symbol_(";")
-
-        return statements
+        return block
 
     def parse_FontRevision_(self):
         assert self.cur_token_ == "FontRevision", self.cur_token_
@@ -1225,7 +1228,7 @@ class Parser(object):
             elif self.is_cur_keyword_("valueRecordDef"):
                 statements.append(self.parse_valuerecord_definition_(vertical))
             elif stylisticset and self.is_cur_keyword_("featureNames"):
-                statements.extend(self.parse_featureNames_(stylisticset))
+                statements.append(self.parse_featureNames_(stylisticset))
             elif size_feature and self.is_cur_keyword_("parameters"):
                 statements.append(self.parse_size_parameters_())
             elif size_feature and self.is_cur_keyword_("sizemenuname"):

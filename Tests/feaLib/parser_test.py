@@ -202,6 +202,27 @@ class ParserTest(unittest.TestCase):
         self.assertIsInstance(ref, ast.FeatureReferenceStatement)
         self.assertEqual(ref.featureName, "salt")
 
+    def test_FeatureNames_bad(self):
+        self.assertRaisesRegex(
+            FeatureLibError, 'Expected "name"',
+            self.parse, "feature ss01 { featureNames { feature test; } ss01;")
+
+    def test_FeatureNames_comment(self):
+        [feature] = self.parse(
+            "feature ss01 { featureNames { # Comment\n }; } ss01;").statements
+        [featureNames] = feature.statements
+        self.assertIsInstance(featureNames, ast.FeatureNamesBlock)
+        [comment] = featureNames.statements
+        self.assertIsInstance(comment, ast.Comment)
+        self.assertEqual(comment.text, "# Comment")
+
+    def test_FeatureNames_emptyStatements(self):
+        [feature] = self.parse(
+            "feature ss01 { featureNames { ;;; }; } ss01;").statements
+        [featureNames] = feature.statements
+        self.assertIsInstance(featureNames, ast.FeatureNamesBlock)
+        self.assertEqual(featureNames.statements, [])
+
     def test_FontRevision(self):
         doc = self.parse("table head {FontRevision 2.5;} head;")
         s = doc.statements[0].statements[0]

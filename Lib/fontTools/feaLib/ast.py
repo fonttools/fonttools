@@ -225,25 +225,20 @@ class FeatureBlock(Block):
         builder.end_feature()
 
     def asFea(self, indent=""):
-        res = indent + "feature {} {{\n".format(self.name.strip())
-        indent += SHIFT
-        if len(self.statements) and isinstance(self.statements[0], FeatureNameStatement):
-            res += indent + "featureNames {\n"
-            res += indent + SHIFT
-            res += ("\n" + indent + SHIFT).join(
-                [s.asFea(indent=indent + SHIFT * 2)
-                 for s in self.statements if isinstance(s, FeatureNameStatement)])
-            res += "\n"
-            res += indent + "};\n" + indent
-            res += ("\n" + indent).join(
-                [s.asFea(indent=indent)
-                 for s in self.statements if not isinstance(s, FeatureNameStatement)])
-            res += "\n"
-        else:
-            res += indent
-            res += ("\n" + indent).join([s.asFea(indent=indent) for s in self.statements])
-            res += "\n"
-        res += "{}}} {};\n".format(indent[:-len(SHIFT)], self.name.strip())
+        res = indent + "feature %s {\n" % self.name.strip()
+        res += Block.asFea(self, indent=indent)
+        res += indent + "} %s;\n" % self.name.strip()
+        return res
+
+
+class FeatureNamesBlock(Block):
+    def __init__(self, location):
+        Block.__init__(self, location)
+
+    def asFea(self, indent=""):
+        res = indent + "featureNames {\n"
+        res += Block.asFea(self, indent=indent)
+        res += indent + "};\n"
         return res
 
 
