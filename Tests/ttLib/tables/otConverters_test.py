@@ -30,6 +30,31 @@ class GlyphIDTest(unittest.TestCase):
         self.assertEqual(writer.getData(), deHexStr("0002"))
 
 
+class LongTest(unittest.TestCase):
+    font = FakeFont([])
+    converter = otConverters.Long('Long', 0, None, None)
+
+    def test_read(self):
+        reader = OTTableReader(deHexStr("FF0000EE"))
+        self.assertEqual(self.converter.read(reader, self.font, {}), -16776978)
+        self.assertEqual(reader.pos, 4)
+
+    def test_write(self):
+        writer = OTTableWriter()
+        self.converter.write(writer, self.font, {}, -16777213)
+        self.assertEqual(writer.getData(), deHexStr("FF000003"))
+
+    def test_xmlRead(self):
+        value = self.converter.xmlRead({"value": "314159"}, [], self.font)
+        self.assertEqual(value, 314159)
+
+    def test_xmlWrite(self):
+        writer = makeXMLWriter()
+        self.converter.xmlWrite(writer, self.font, 291, "Foo", [("attr", "v")])
+        xml = writer.file.getvalue().decode("utf-8").rstrip()
+        self.assertEqual(xml, '<Foo attr="v" value="291"/>')
+
+
 class NameIDTest(unittest.TestCase):
     converter = otConverters.NameID('NameID', 0, None, None)
 
