@@ -1907,6 +1907,8 @@ class DictCompiler(object):
 			data.append(self.arg_number(num))
 		return bytesjoin(data)
 	def arg_delta(self, value):
+		if not value:
+			return b""
 		val0 = value[0]
 		if isinstance(val0, list):
 			data = self.arg_delta_blend(value)
