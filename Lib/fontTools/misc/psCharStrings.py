@@ -1319,7 +1319,8 @@ class DictDecompiler(ByteCodeBase):
 	def arg_delta(self, name):
 		valueList = self.popall()
 		out = []
-		if isinstance(valueList[0], list): # arg_blendList() has already converted these to absolute values.
+		if valueList and isinstance(valueList[0], list):
+			# arg_blendList() has already converted these to absolute values.
 			out = valueList
 		else:
 			current = 0
