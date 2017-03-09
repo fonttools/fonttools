@@ -79,13 +79,10 @@ class LexerTest(unittest.TestCase):
             lex("foo - -2"),
             [(Lexer.NAME, "foo"), (Lexer.SYMBOL, "-"), (Lexer.NUMBER, -2)])
 
-    #def test_comment(self):
-    #    self.assertEqual(lex("# Comment\n#"), [])
-
-    def test_comment_kept(self):
+    def test_comment(self):
         self.assertEqual(lex("# Comment\n#"),
                          [(Lexer.COMMENT, "# Comment"), (Lexer.COMMENT, "#")])
-            
+
     def test_string(self):
         self.assertEqual(lex('"foo" "bar"'),
                          [(Lexer.STRING, "foo"), (Lexer.STRING, "bar")])
