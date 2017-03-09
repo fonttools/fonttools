@@ -96,6 +96,31 @@ class NameIDTest(unittest.TestCase):
             ' value="666"/>  <!-- missing from name table -->')
 
 
+class UInt8Test(unittest.TestCase):
+    font = FakeFont([])
+    converter = otConverters.UInt8("UInt8", 0, None, None)
+
+    def test_read(self):
+        reader = OTTableReader(deHexStr("FE"))
+        self.assertEqual(self.converter.read(reader, self.font, {}), 254)
+        self.assertEqual(reader.pos, 1)
+
+    def test_write(self):
+        writer = OTTableWriter()
+        self.converter.write(writer, self.font, {}, 253)
+        self.assertEqual(writer.getData(), deHexStr("FD"))
+
+    def test_xmlRead(self):
+        value = self.converter.xmlRead({"value": "254"}, [], self.font)
+        self.assertEqual(value, 254)
+
+    def test_xmlWrite(self):
+        writer = makeXMLWriter()
+        self.converter.xmlWrite(writer, self.font, 251, "Foo", [("attr", "v")])
+        xml = writer.file.getvalue().decode("utf-8").rstrip()
+        self.assertEqual(xml, '<Foo attr="v" value="251"/>')
+
+
 if __name__ == "__main__":
     import sys
     sys.exit(unittest.main())
