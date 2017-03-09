@@ -60,7 +60,7 @@ class ParserTest(unittest.TestCase):
             """ # Initial
                 feature test {
                     sub A by B; # simple
-                } test;""", comments=True)
+                } test;""")
         c1 = doc.statements[0]
         c2 = doc.statements[1].statements[1]
         self.assertEqual(type(c1), ast.Comment)
@@ -189,6 +189,12 @@ class ParserTest(unittest.TestCase):
         [liga] = self.parse("feature liga useExtension {} liga;").statements
         self.assertEqual(liga.name, "liga")
         self.assertTrue(liga.use_extension)
+
+    def test_feature_comment(self):
+        [liga] = self.parse("feature liga { # Comment\n } liga;").statements
+        [comment] = liga.statements
+        self.assertIsInstance(comment, ast.Comment)
+        self.assertEqual(comment.text, "# Comment")
 
     def test_feature_reference(self):
         doc = self.parse("feature aalt { feature salt; } aalt;")
@@ -556,6 +562,12 @@ class ParserTest(unittest.TestCase):
         [foo] = look.statements
         self.assertIsNone(foo.value.xAdvance)
         self.assertEqual(foo.value.yAdvance, 123)
+
+    def test_lookup_comment(self):
+        [lookup] = self.parse("lookup L { # Comment\n } L;").statements
+        [comment] = lookup.statements
+        self.assertIsInstance(comment, ast.Comment)
+        self.assertEqual(comment.text, "# Comment")
 
     def test_lookup_reference(self):
         [foo, bar] = self.parse("lookup Foo {} Foo;"
@@ -1247,12 +1259,19 @@ class ParserTest(unittest.TestCase):
     def test_subtable(self):
         doc = self.parse("feature test {subtable;} test;")
         s = doc.statements[0].statements[0]
-        self.assertEqual(type(s), ast.SubtableStatement)
+        self.assertIsInstance(s, ast.SubtableStatement)
 
     def test_table_badEnd(self):
         self.assertRaisesRegex(
             FeatureLibError, 'Expected "GDEF"', self.parse,
             "table GDEF {LigatureCaretByPos f_i 400;} ABCD;")
+
+    def test_table_comment(self):
+        for table in "BASE GDEF OS/2 head hhea name vhea".split():
+            doc = self.parse("table %s { # Comment\n } %s;" % (table, table))
+            comment = doc.statements[0].statements[0]
+            self.assertIsInstance(comment, ast.Comment)
+            self.assertEqual(comment.text, "# Comment")
 
     def test_table_unsupported(self):
         self.assertRaisesRegex(
@@ -1441,11 +1460,10 @@ class ParserTest(unittest.TestCase):
             doc = self.parse("table %s { ;;; } %s;" % (table, table))
             self.assertEqual(doc.statements[0].statements, [])
 
-    def parse(self, text, glyphMap=GLYPHMAP, comments=False):
+    def parse(self, text, glyphMap=GLYPHMAP):
         featurefile = UnicodeIO(text)
         p = Parser(featurefile, glyphMap)
-        if comments :
-            p.ignore_comments = False
+        p.ignore_comments = False
         return p.parse()
 
     @staticmethod
