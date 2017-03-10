@@ -837,8 +837,6 @@ class Merger(object):
 		self.options = options
 
 	def merge(self, fontfiles):
-		import copy
-
 		mega = ttLib.TTFont()
 
 		#

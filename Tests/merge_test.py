@@ -248,16 +248,6 @@ class GSUBMergUnitTest(unittest.TestCase):
 		self.assertTrue(len([r for r in captor.records if r.msg != '']) > 0)
 
 
-class IsGlyphSame(unittest.TestCase):
-		def setUp(self):
-			# FIXME? This test requires at least one complete TTFont object including
-			# glyf, hmtx and vmtx tables.
-			# Importing 'data/TestTTF-Regular.ttx' file and adding 'hmtx', 'vmtx'
-			# manually doesn't work since its glyf table isn't intact. Probably we
-			# need to import a true Font file as our test case data source.
-			pass
-
-
 class gaspMergeUnitTest(unittest.TestCase):
 
 	def setUp(self):
