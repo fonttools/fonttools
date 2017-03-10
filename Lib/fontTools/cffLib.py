@@ -26,6 +26,9 @@ cffHeaderFormat = """
 	hdrSize: B
 """
 
+defaultMaxStack = 193
+maxStackLimit = 513
+
 class CFFFontSet(object):
 
 	def __init__(self):
@@ -414,6 +417,7 @@ class IndexedStringsCompiler(IndexCompiler):
 
 
 class TopDictIndexCompiler(IndexCompiler):
+	maxOpStack = defaultMaxStack
 
 	def getItems(self, items, strings):
 		out = []
@@ -497,6 +501,13 @@ class SubrsCompiler(GlobalSubrsCompiler):
 		self.parent.rawDict["Subrs"] = offset
 
 class CharStringsCompiler(GlobalSubrsCompiler):
+	def getItems(self, items, strings):
+		out = []
+		for cs in items:
+			cs.compile()
+			out.append(cs.bytecode)
+		return out
+
 	def setPos(self, pos, endPos):
 		self.parent.rawDict["CharStrings"] = pos
 
@@ -1696,6 +1707,7 @@ class ROSConverter(SimpleConverter):
 
 topDictOperators = [
 #	opcode		name			argument type	default	converter
+	(25,		'maxstack',		'number',	None,	None),
 	((12, 30),	'ROS',	('SID', 'SID', 'number'),	None,	ROSConverter()),
 	((12, 20),	'SyntheticBase',	'number',	None,	None),
 	(0,		'version',		'SID',		None,	None),
@@ -1731,17 +1743,16 @@ topDictOperators = [
 	((12, 36),	'FDArray',		'number',	None,	FDArrayConverter()),
 	(17,		'CharStrings',		'number',	None,	CharStringsConverter()),
 	(24,		'VarStore',		'number',	None,	VarStoreConverter()),
-	(25,		'maxstack',		'number',	None,	None),
 ]
 
 topDictOperators2 = [
 #	opcode		name			argument type	default	converter
+	(25,		'maxstack',		'number',	None,	None),
 	((12, 7),	'FontMatrix',		'array',	[0.001, 0, 0, 0.001, 0, 0],	None),
 	((12, 37),	'FDSelect',		'number',	None,	FDSelectConverter()),
 	((12, 36),	'FDArray',		'number',	None,	FDArrayConverter()),
 	(17,		'CharStrings',		'number',	None,	CharStringsConverter()),
 	(24,		'VarStore',		'number',	None,	VarStoreConverter()),
-	(25,		'maxstack',		'number',	None,	None),
 ]
 
 # Note! FDSelect and FDArray must both preceed CharStrings in the output XML build order,
@@ -1832,6 +1843,7 @@ class PrivateDict2Decompiler(psCharStrings.DictDecompiler):
 		super(PrivateDict2Decompiler, self).__init__(strings)
 
 class DictCompiler(object):
+	maxBlendStack = 0
 
 	def __init__(self, dictObj, strings, parent):
 		if strings:
@@ -1924,35 +1936,58 @@ class DictCompiler(object):
 		return bytesjoin(data)
 
 	def arg_delta_blend(self, value):
-		#  A delta list with blend lists has to be *all" blend lists.
-		# We have a list of master value lists, where the nth
-		# master value list contains the absolute values from each master for the nth entry in the current array.
+		# A delta list with blend lists has to be *all* blend lists.
+		# We have a list of master value lists, where the nth master value list contains
+		# the absolute values from each master for the nth entry in the current array.
 		# We first convert these to relative values from the previous entry.
 		numMasters = len(value[0])
 		numValues = len(value)
-		firstList = [0]*numValues
-		deltaList = [None]*(numValues)
-		i = 0
-		prevValList = numMasters*[0]
-		while i < numValues:
-			masterValList =  value[i]
-			firstVal = firstList[i] = masterValList[0] - prevValList[0]
-			j = 1
-			deltaEntry = (numMasters-1)*[0]
-			while j < numMasters:
-				masterValDelta = masterValList[j] - prevValList[j]
-				deltaEntry[j-1] = masterValDelta - firstVal
-				j += 1
-			deltaList[i] = deltaEntry
-			i +=1
-			prevValList = masterValList
+		numStack = (numValues * numMasters) + 1
+		if numStack > self.maxBlendStack:
+			if numStack > maxStackLimit:
+				self.maxBlendStack = maxStackLimit
+			else:
+				self.maxBlendStack = numStack
+			self.setMaxStack(numStack)
 
-		relValueList = firstList
-		for blendList in deltaList:
-			relValueList.extend(blendList)
-		out = [encodeNumber(val) for val in relValueList]
-		out.append(encodeNumber(numValues))
-		out.append(bytechr(blendOp))
+		if numStack > self.maxBlendStack:
+			# Figure out the max number of value we can blend
+			# and divide this list up into chunks of that size.
+
+			numBlendValues = int((self.maxBlendStack-1)/numMasters)
+			out = []
+			while True:
+				numVal = min(len(value), numBlendValues)
+				if numVal == 0:
+					break
+				valList = value[0:numVal]
+				out1 = self.arg_delta_blend(valList)
+				out.extend(out1)
+				value = value[numVal:]
+		else:
+			firstList = [0]*numValues
+			deltaList = [None]*(numValues)
+			i = 0
+			prevValList = numMasters*[0]
+			while i < numValues:
+				masterValList =  value[i]
+				firstVal = firstList[i] = masterValList[0] - prevValList[0]
+				j = 1
+				deltaEntry = (numMasters-1)*[0]
+				while j < numMasters:
+					masterValDelta = masterValList[j] - prevValList[j]
+					deltaEntry[j-1] = masterValDelta - firstVal
+					j += 1
+				deltaList[i] = deltaEntry
+				i +=1
+				prevValList = masterValList
+
+			relValueList = firstList
+			for blendList in deltaList:
+				relValueList.extend(blendList)
+			out = [encodeNumber(val) for val in relValueList]
+			out.append(encodeNumber(numValues))
+			out.append(bytechr(blendOp))
 		return out
 
 
@@ -2056,6 +2091,7 @@ class FontDictCompiler(TopDictCompiler):
 
 
 class PrivateDictCompiler(DictCompiler):
+	maxBlendStack = defaultMaxStack
 
 	opcodes = buildOpcodeDict(privateDictOperators)
 
@@ -2069,6 +2105,11 @@ class PrivateDictCompiler(DictCompiler):
 		if hasattr(self.dictObj, "Subrs"):
 			children.append(self.dictObj.Subrs.getCompiler(strings, self))
 		return children
+
+	def setMaxStack(self, numStack):
+		topDict = self.parent.parent.parent.dictObj
+		topDict.maxstack = numStack
+		topDict.rawDict['maxstack'] = numStack
 
 class PrivateDict2Compiler(PrivateDictCompiler):
 	opcodes = buildOpcodeDict(privateDictOperators2)

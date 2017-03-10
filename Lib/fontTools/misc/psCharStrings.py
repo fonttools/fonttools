@@ -1290,11 +1290,13 @@ class DictDecompiler(ByteCodeBase):
 		# then numValues blend lists, where each blend list is numMasters -1
 		# Total number of values is numValues + (numValues * (numMasters -1)), == numValues * numMasters.
 		# reformat list to be numReturnValues tuples, each tuple with nMaster values
-		numReturnValues = self.pop()
-		args = self.popall()
-		numArgs = len(args)
 		vsindex = self.dict.get('vsindex', 0)
 		numMasters = self.parent.getNumRegions(vsindex) # only a PrivateDict has blended ops.
+		numReturnValues = self.pop()
+		stackIndex = -numMasters * numReturnValues
+		args = self.stack[stackIndex:]
+		del self.stack[stackIndex:]
+		numArgs = len(args)
 		value = [None]*numReturnValues
 		numDeltas = numMasters-1
 		i = 0
