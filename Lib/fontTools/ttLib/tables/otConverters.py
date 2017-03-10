@@ -306,6 +306,37 @@ class Version(BaseConverter):
 		return fl2fi(v, 16)
 
 
+class Char64(SimpleValue):
+	"""An ASCII string with up to 64 characters.
+
+	Unused character positions are filled with 0x00 bytes.
+	Used in Apple AAT fonts in the `gcid` table.
+	"""
+	staticSize = 64
+
+	def read(self, reader, font, tableDict):
+		data = reader.readData(self.staticSize)
+		zeroPos = data.find(b"\0")
+		if zeroPos >= 0:
+			data = data[:zeroPos]
+		s = tounicode(data, encoding="ascii", errors="replace")
+		if s != tounicode(data, encoding="ascii", errors="ignore"):
+			log.warning('replaced non-ASCII characters in "%s"' %
+			            s)
+		return s
+
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		data = tobytes(value, encoding="ascii", errors="replace")
+		if data != tobytes(value, encoding="ascii", errors="ignore"):
+			log.warning('replacing non-ASCII characters in "%s"' %
+			            value)
+		if len(data) > self.staticSize:
+			log.warning('truncating overlong "%s" to %d bytes' %
+			            (value, self.staticSize))
+		data = (data + b"\0" * self.staticSize)[:self.staticSize]
+		writer.writeData(data)
+
+
 class Struct(BaseConverter):
 
 	def getRecordSize(self, reader):
@@ -628,6 +659,7 @@ converterMapping = {
 	"uint16":	UShort,
 	"uint24":	UInt24,
 	"uint32":	ULong,
+	"char64":	Char64,
 	"Version":	Version,
 	"Tag":		Tag,
 	"GlyphID":	GlyphID,

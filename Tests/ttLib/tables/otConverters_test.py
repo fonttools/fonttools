@@ -1,4 +1,6 @@
-from __future__ import print_function, division, absolute_import
+# coding: utf-8
+from __future__ import print_function, division, absolute_import, \
+    unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.misc.testTools import FakeFont, makeXMLWriter
@@ -7,6 +9,57 @@ import fontTools.ttLib.tables.otConverters as otConverters
 from fontTools.ttLib import newTable
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
 import unittest
+
+
+class Char64Test(unittest.TestCase):
+    font = FakeFont([])
+    converter = otConverters.Char64("char64", 0, None, None)
+
+    def test_read(self):
+        reader = OTTableReader(b"Hello\0junk after zero byte" + 100 * b"\0")
+        self.assertEqual(self.converter.read(reader, self.font, {}), "Hello")
+        self.assertEqual(reader.pos, 64)
+
+    def test_read_replace_not_ascii(self):
+        reader = OTTableReader(b"Hello \xE4 world" + 100 * b"\0")
+        with CapturingLogHandler(otConverters.log, "WARNING") as captor:
+            data = self.converter.read(reader, self.font, {})
+        self.assertEqual(data, "Hello � world")
+        self.assertEqual(reader.pos, 64)
+        self.assertIn('replaced non-ASCII characters in "Hello � world"',
+                      [r.msg for r in captor.records])
+
+    def test_write(self):
+        writer = OTTableWriter()
+        self.converter.write(writer, self.font, {}, "Hello world")
+        self.assertEqual(writer.getData(), b"Hello world" + 53 * b"\0")
+
+    def test_write_replace_not_ascii(self):
+        writer = OTTableWriter()
+        with CapturingLogHandler(otConverters.log, "WARNING") as captor:
+            self.converter.write(writer, self.font, {}, "Hello 🌍")
+        self.assertEqual(writer.getData(), b"Hello ?" + 57 * b"\0")
+        self.assertIn('replacing non-ASCII characters in "Hello 🌍"',
+                      [r.msg for r in captor.records])
+
+    def test_write_truncated(self):
+        writer = OTTableWriter()
+        with CapturingLogHandler(otConverters.log, "WARNING") as captor:
+            self.converter.write(writer, self.font, {}, "A" * 80)
+        self.assertEqual(writer.getData(), b"A" * 64)
+        self.assertIn('truncating overlong "' + "A" * 80 + '" to 64 bytes',
+                      [r.msg for r in captor.records])
+
+    def test_xmlRead(self):
+        value = self.converter.xmlRead({"value": "Foo"}, [], self.font)
+        self.assertEqual(value, "Foo")
+
+    def test_xmlWrite(self):
+        writer = makeXMLWriter()
+        self.converter.xmlWrite(writer, self.font, "Hello world", "Element",
+                                [("attr", "v")])
+        xml = writer.file.getvalue().decode("utf-8").rstrip()
+        self.assertEqual(xml, '<Element attr="v" value="Hello world"/>')
 
 
 class GlyphIDTest(unittest.TestCase):
