@@ -37,9 +37,9 @@ class Char64Test(unittest.TestCase):
     def test_write_replace_not_ascii(self):
         writer = OTTableWriter()
         with CapturingLogHandler(otConverters.log, "WARNING") as captor:
-            self.converter.write(writer, self.font, {}, "Hello 🌍")
+            self.converter.write(writer, self.font, {}, "Hello ☃")
         self.assertEqual(writer.getData(), b"Hello ?" + 57 * b"\0")
-        self.assertIn('replacing non-ASCII characters in "Hello 🌍"',
+        self.assertIn('replacing non-ASCII characters in "Hello ☃"',
                       [r.msg for r in captor.records])
 
     def test_write_truncated(self):
