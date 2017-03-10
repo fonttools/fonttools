@@ -44,10 +44,8 @@ def calculateNumShorts(self, optimize=True):
 	items = self.Item
 	narrows = set(range(count))
 	for item in items:
-		for i in narrows:
-			if not (-128 <= item[i] <= 127):
-				narrows.remove(i)
-				break
+		wides = [i for i in narrows if not (-128 <= item[i] <= 127)]
+		narrows.difference_update(wides)
 		if not narrows:
 			break
 	if optimize:
