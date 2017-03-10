@@ -566,6 +566,7 @@ def merge(self, m, tables):
 def mapLookups(self, lookupMap):
 	pass
 
+
 def getGlyphNameAndFontIndex(gid):
 	"""Gets glyph name and font index from the composite glyph id.
 
@@ -603,8 +604,8 @@ def isGlyphSame(fonts, gid_0, gid_1):
 	# Checks outline
 	pen_0 = RecordingPen()
 	pen_1 = RecordingPen()
-	gid_0, index_0 = getGlyphNameAndFontIndex(gid_0)
-	gid_1, index_1 = getGlyphNameAndFontIndex(gid_1)
+	index_0 = getGlyphNameAndFontIndex(gid_0)[1]
+	index_1 = getGlyphNameAndFontIndex(gid_1)[1]
 
 
 	fonts[index_0].getGlyphSet()[gid_0].draw(pen_0)
@@ -626,6 +627,7 @@ def isGlyphSame(fonts, gid_0, gid_1):
 	if not isEqual:
 		log.info("advance width is different: %s, %s" %(fonts[index_0]['hmtx'].metrics[gid_0], fonts[index_1]['hmtx'].metrics[gid_1]))
 	return isEqual
+
 
 # Copied and trimmed down from subset.py
 @_add_method(otTables.ContextSubst,
@@ -849,7 +851,6 @@ class Merger(object):
 		# TODO Is it necessary to reload font?  I think it is.  At least
 		# it's safer, in case tables were loaded to provide glyph names.
 		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
-		self.fonts = copy.deepcopy(fonts)
 		for font,glyphOrder in zip(fonts, glyphOrders):
 			font.setGlyphOrder(glyphOrder)
 		mega.setGlyphOrder(megaGlyphOrder)
@@ -858,6 +859,7 @@ class Merger(object):
 			self._preMerge(font)
 
 		self.duplicateGlyphsPerFont = [{} for f in fonts]
+		self.fonts = fonts
 		self.fontfiles = fontfiles
 		allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
 		allTags.remove('GlyphOrder')

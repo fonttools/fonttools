@@ -2,10 +2,10 @@ import sys
 import unittest
 import contextlib
 
-import fontTools
+import fontTools.merge
 from fontTools.misc.py23 import *
 from fontTools import ttLib
-from fontTools.merge import *
+from fontTools.merge import Merger
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.ttLib.tables.otTables import GSUB, SingleSubst, LangSys, LookupList, Lookup, Feature, FeatureList, FeatureRecord, Script, ScriptList, ScriptRecord, LigatureSubst, Ligature
 
