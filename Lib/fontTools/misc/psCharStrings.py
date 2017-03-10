@@ -124,7 +124,7 @@ t2Operators = [
 	(10,		'callsubr'),
 	(11,		'return'),
 	(14,		'endchar'),
-	
+
 	(16,		'blend'),
 	(18,		'hstemhm'),
 	(19,		'hintmask'),
@@ -439,14 +439,14 @@ class SimpleCFF2Decompiler(SimpleT2Decompiler):
 		numOps = numBlends*self.numRegions
 		blendArgs = self.operandStack[-numOps:]
 		del self.operandStack[:-(numOps-numBlends)] # Leave the default operands on the stack.
-		
-	
+
+
 	def op_vsindex(self, index):
 		vi = self.pop()
 		self.numRegions = self.private.getNumRegions(vi)
 
 
-	
+
 t1Operators = [
 #	opcode		name
 	(1,		'hstem'),
@@ -817,7 +817,7 @@ class T2OutlineExtractor(T2WidthExtractor):
 
 class CFF2OutlineExtractor(T2OutlineExtractor):
 	pass
-	
+
 class T1OutlineExtractor(T2OutlineExtractor):
 
 	def __init__(self, pen, subrs):
@@ -966,7 +966,7 @@ class T2CharString(ByteCodeBase):
 	operators, opcodes = buildOperatorDict(t2Operators)
 	decompilerClass = SimpleT2Decompiler
 	outlineExtractor = T2OutlineExtractor
-	
+
 	def __init__(self, bytecode=None, program=None, private=None, globalSubrs=None):
 		if program is None:
 			program = []
@@ -1158,13 +1158,13 @@ class CFF2CharString(T2CharString):
 		# Empty program is OK for CFF2 Charstring - same a T2 with only an endchar.
 		if self.program:
 			assert self.program[-1] not in ("seac"), "illegal CFF2 CharString Termination"
-		
+
 	def compile(self):
 		# Remove endchar, if there is one.
 		super(CFF2CharString, self).compile()
 		if self.bytecode and (byteord(self.bytecode[-1]) in (11, 14)):
 			self.bytecode = self.bytecode[:-1]
-			
+
 	def decompile(self):
 		# Remove endchar, if there is one.
 		if not self.needsDecompilation():
@@ -1172,7 +1172,7 @@ class CFF2CharString(T2CharString):
 		subrs = getattr(self.private, "Subrs", [])
 		decompiler = self.decompilerClass(subrs, self.globalSubrs, self.private)
 		decompiler.execute(self)
-		
+
 class CFF2SubrCharString(CFF2CharString):
 	pass
 
@@ -1270,7 +1270,7 @@ class DictDecompiler(ByteCodeBase):
 		else:
 			out = self.pop()
 		return out
-		
+
 	def arg_blend_number(self, name):
 		out = []
 		blendArgs = self.pop()
@@ -1315,7 +1315,7 @@ class DictDecompiler(ByteCodeBase):
 			prevValueList = blendList
 			i += 1
 		return value
-		
+
 	def arg_delta(self, name):
 		valueList = self.popall()
 		out = []
