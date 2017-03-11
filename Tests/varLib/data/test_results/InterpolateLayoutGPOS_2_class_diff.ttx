@@ -39,15 +39,16 @@
           </Coverage>
           <ValueFormat1 value="4"/>
           <ValueFormat2 value="0"/>
-          <ClassDef1>
+          <ClassDef1 Format="2">
           </ClassDef1>
-          <ClassDef2>
+          <ClassDef2 Format="1">
             <ClassDef glyph="a" class="1"/>
           </ClassDef2>
           <!-- Class1Count=1 -->
           <!-- Class2Count=2 -->
           <Class1Record index="0">
             <Class2Record index="0">
+              <Value1 XAdvance="0"/>
             </Class2Record>
             <Class2Record index="1">
               <Value1 XAdvance="-40"/>
