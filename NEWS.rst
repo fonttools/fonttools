@@ -1,3 +1,6 @@
+3.9.0 (released 2017-03-13)
+---------------------------
+
 - [feaLib] Added (partial) support for parsing feature file comments ``# ...``
   appearing in between statements (#879).
 - [feaLib] Cleaned up syntax tree for FeatureNames.
