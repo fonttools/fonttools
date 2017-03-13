@@ -285,7 +285,7 @@ def _skip_if_requirement_missing(testfile):
 
 
 def test_xml_from_binary(testfile, tableTag):
-    "Check XML from decompiled object."""
+    """Check XML from decompiled object."""
     _skip_if_requirement_missing(testfile)
 
     xml_expected = read_expected_ttx(testfile, tableTag)
@@ -297,7 +297,7 @@ def test_xml_from_binary(testfile, tableTag):
 
 
 def test_xml_from_xml(testfile, tableTag):
-    "Check XML from object read from XML."""
+    """Check XML from object read from XML."""
     _skip_if_requirement_missing(testfile)
 
     xml_expected = read_expected_ttx(testfile, tableTag)
