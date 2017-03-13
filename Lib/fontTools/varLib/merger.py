@@ -369,6 +369,10 @@ def _PairPosFormat2_merge(self, lst, merger):
 	# Align first classes
 	self.ClassDef1, classes = _ClassDef_merge_classify([l.ClassDef1 for l in lst], allGlyphs=glyphSet)
 	self.Class1Count = len(classes)
+	if self.Class1Count > 1:
+		self.ClassDef1.Format = 1
+	else:
+		self.ClassDef1.Format = 2
 	new_matrices = []
 	for l,matrix in zip(lst, matrices):
 		nullRow = None
@@ -396,6 +400,10 @@ def _PairPosFormat2_merge(self, lst, merger):
 	# Align second classes
 	self.ClassDef2, classes = _ClassDef_merge_classify([l.ClassDef2 for l in lst])
 	self.Class2Count = len(classes)
+	if self.Class2Count > 1:
+		self.ClassDef2.Format = 1
+	else:
+		self.ClassDef2.Format = 2
 	new_matrices = []
 	for l,matrix in zip(lst, matrices):
 		classDef2 = l.ClassDef2.classDefs
