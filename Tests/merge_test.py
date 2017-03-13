@@ -245,7 +245,7 @@ class GSUBMergUnitTest(unittest.TestCase):
 
 		table = self.mergedTable.table
 		self.assertEqual(table, self.table1.table)
-		self.assertTrue(len([r for r in captor.records if r.msg != '']) > 0)
+		self.assertTrue(any('is dropped and replaced by' in r.msg for r in captor.records))
 
 
 class gaspMergeUnitTest(unittest.TestCase):
