@@ -26,6 +26,9 @@ cffHeaderFormat = """
 	hdrSize: B
 """
 
+defaultMaxStack = 193
+maxStackLimit = 513
+
 class CFFFontSet(object):
 
 	def __init__(self):
@@ -63,7 +66,7 @@ class CFFFontSet(object):
 
 	def __len__(self):
 		return len(self.fontNames)
-		
+
 	def keys(self):
 		return list(self.fontNames)
 
@@ -100,7 +103,7 @@ class CFFFontSet(object):
 			writer.add(struct.pack(">H", self.topDictSize))
 		else:
 			self.hdrSize = 4
-			self.offSize = 4 # will most likely change in CFFWriter.toFile(). 
+			self.offSize = 4 # will most likely change in CFFWriter.toFile().
 			writer.add(sstruct.pack(cffHeaderFormat, self))
 			writer.add(struct.pack("B", self.offSize))
 		if not isCFF2:
@@ -158,7 +161,7 @@ class CFFFontSet(object):
 				self.hdrSize = 4
 		if not hasattr(self, "offSize"):
 			self.offSize = 4 # this will be recalculated when the cff is compiled.
-			
+
 		if name == "CFFFont":
 			if self.major == 1:
 				isCFF2 = False
@@ -210,7 +213,7 @@ class CFFFontSet(object):
 			self.major = int(attrs['value'])
 		elif name == "minor":
 			self.minor = int(attrs['value'])
-		
+
 	def convertCFFToCFF2(self, otFont):
 		# This assumes a decompiled CFF table.
 		self.major = 2
@@ -233,7 +236,7 @@ class CFFFontSet(object):
 					del topDict.rawDict[key]
 				if hasattr(topDict, key):
 					exec("del topDict.%s" % (key))
-				
+
 		if not hasattr(topDict, "FDArray"):
 			fdArray = topDict.FDArray = FDArrayIndex()
 			fdArray.strings = None
@@ -368,7 +371,7 @@ class IndexCompiler(object):
 			countSize = 4
 		else:
 			countSize = 2
-		
+
 		if self.items:
 			lastOffset = self.getOffsets()[-1]
 			offSize = calcOffSize(lastOffset)
@@ -414,13 +417,14 @@ class IndexedStringsCompiler(IndexCompiler):
 
 
 class TopDictIndexCompiler(IndexCompiler):
+	maxOpStack = defaultMaxStack
 
 	def getItems(self, items, strings):
 		out = []
 		for item in items:
 			out.append(item.getCompiler(strings, self))
 		return out
-		
+
 	def getChildren(self, strings):
 		children = []
 		for topDict in self.items:
@@ -432,11 +436,11 @@ class TopDictDataCompiler(TopDictIndexCompiler):
 	def getTopDictLen(self):
 		topDictLen = self.items[0].getDataLength()
 		return topDictLen
-		
+
 	def getOffsets(self):
 		offsets = [0, self.items[0].getDataLength()]
 		return offsets
-		
+
 	def getDataLength(self):
 		dataLength = self.items[0].getDataLength()
 		return dataLength
@@ -497,6 +501,13 @@ class SubrsCompiler(GlobalSubrsCompiler):
 		self.parent.rawDict["Subrs"] = offset
 
 class CharStringsCompiler(GlobalSubrsCompiler):
+	def getItems(self, items, strings):
+		out = []
+		for cs in items:
+			cs.compile()
+			out.append(cs.bytecode)
+		return out
+
 	def setPos(self, pos, endPos):
 		self.parent.rawDict["CharStrings"] = pos
 
@@ -554,7 +565,7 @@ class Index(object):
 
 	def __setitem__(self, index, item):
 		self.items[index] = item
-		
+
 	def produceItem(self, index, data, file, offset, size):
 		return data
 
@@ -653,7 +664,7 @@ class TopDictIndex(Index):
 	def __init__(self, file=None, cff2GetGlyphOrder = None):
 		self.cff2GetGlyphOrder = cff2GetGlyphOrder
 		super(TopDictIndex, self).__init__(file)
-		
+
 	def produceItem(self, index, data, file, offset, size):
 		top = TopDict(self.strings, file, offset, self.GlobalSubrs, self.cff2GetGlyphOrder)
 		top.decompile(data)
@@ -670,7 +681,7 @@ class TopDictIndex(Index):
 class TopDictData(TopDictIndex):
 	""" Index-like wrapper for CFF2 TopDict. The TopDict is written as is in the file, but we provide the wrapper so as to miniimize code changes for the logic that supports CFF. """
 	compilerClass = TopDictDataCompiler
-	
+
 	def __init__(self, topSize, cff2GetGlyphOrder, file=None):
 		self.cff2GetGlyphOrder = cff2GetGlyphOrder
 		self.items = []
@@ -727,7 +738,7 @@ class	VarStoreData(object):
 		self.data = None
 		self.otVarStore = otVarStore
 		self.font = TTFont() # dummy font for the decompile function.
-		
+
 	def decompile(self):
 		retval = None
 		if self.file:
@@ -752,7 +763,7 @@ class	VarStoreData(object):
 
 	def writeXML(self, xmlWriter, name):
 		self.otVarStore.toXML(xmlWriter, self.font)
-		
+
 	def xmlRead(self, name, attrs, content, parent):
 		self.otVarStore = ot.VarStore()
 		for element in content:
@@ -762,7 +773,7 @@ class	VarStoreData(object):
 			else:
 				pass
 		return None
-		
+
 	def __len__(self):
 		return len(self.data)
 
@@ -770,7 +781,7 @@ class	VarStoreData(object):
 		varData = self.otVarStore.VarData[vsIndex]
 		numRegions = varData.VarRegionCount +1 # The VarData VarRegionCount does not include the defautl region; the blend arg list does.
 		return numRegions
-		
+
 
 class FDSelect:
 	def __init__(self, file=None, numGlyphs=None, format=None):
@@ -1059,7 +1070,7 @@ def parseBlendList(s):
 	if len(valueList) == 1:
 		valueList = valueList[0]
 	return valueList
-	
+
 class NumberConverter(SimpleConverter):
 	def xmlWrite(self, xmlWriter, name, value, progress):
 		if isinstance(value, list):
@@ -1075,7 +1086,7 @@ class NumberConverter(SimpleConverter):
 		else:
 			xmlWriter.simpletag(name, value=value)
 			xmlWriter.newline()
-		
+
 	def xmlRead(self, name, attrs, content, parent):
 		valueString = attrs.get("value", None)
 		if valueString == None:
@@ -1135,7 +1146,7 @@ class PrivateDictConverter(TableConverter):
 			return PrivateDict2
 		else:
 			return PrivateDict
-			
+
 	def read(self, parent, value):
 		size, offset = value
 		file = parent.file
@@ -1157,7 +1168,7 @@ class SubrsConverter(TableConverter):
 			return SubrsIndex2
 		else:
 			return SubrsIndex
-			
+
 	def read(self, parent, value):
 		file = parent.file
 		file.seek(parent.offset + value)  # Offset(self)
@@ -1182,7 +1193,7 @@ class CharStringsConverter(TableConverter):
 			private = parent.Private
 		file.seek(value)  # Offset(0)
 		return CharStrings(file, charset, globalSubrs, private, fdSelect, fdArray)
-		
+
 	def write(self, parent, value):
 		return 0  # dummy value
 	def xmlRead(self, name, attrs, content, parent):
@@ -1589,18 +1600,18 @@ class VarStoreConverter(SimpleConverter):
 		varStore = VarStoreData(file)
 		varStore.decompile()
 		return varStore
-		
+
 	def write(self, parent, value):
 		return 0  # dummy value
-		
+
 	def xmlWrite(self, xmlWriter, name, value, progress):
 		value.writeXML(xmlWriter, name)
-		
+
 	def xmlRead(self, name, attrs, content, parent):
 		varStore = VarStoreData()
 		varStore.xmlRead(name, attrs, content, parent)
 		return varStore
-	
+
 
 def packFDSelect0(fdSelectArray):
 	fmt = 0
@@ -1696,6 +1707,7 @@ class ROSConverter(SimpleConverter):
 
 topDictOperators = [
 #	opcode		name			argument type	default	converter
+	(25,		'maxstack',		'number',	None,	None),
 	((12, 30),	'ROS',	('SID', 'SID', 'number'),	None,	ROSConverter()),
 	((12, 20),	'SyntheticBase',	'number',	None,	None),
 	(0,		'version',		'SID',		None,	None),
@@ -1731,17 +1743,16 @@ topDictOperators = [
 	((12, 36),	'FDArray',		'number',	None,	FDArrayConverter()),
 	(17,		'CharStrings',		'number',	None,	CharStringsConverter()),
 	(24,		'VarStore',		'number',	None,	VarStoreConverter()),
-	(25,		'maxstack',		'number',	None,	None),
 ]
 
 topDictOperators2 = [
 #	opcode		name			argument type	default	converter
+	(25,		'maxstack',		'number',	None,	None),
 	((12, 7),	'FontMatrix',		'array',	[0.001, 0, 0, 0.001, 0, 0],	None),
 	((12, 37),	'FDSelect',		'number',	None,	FDSelectConverter()),
 	((12, 36),	'FDArray',		'number',	None,	FDArrayConverter()),
 	(17,		'CharStrings',		'number',	None,	CharStringsConverter()),
 	(24,		'VarStore',		'number',	None,	VarStoreConverter()),
-	(25,		'maxstack',		'number',	None,	None),
 ]
 
 # Note! FDSelect and FDArray must both preceed CharStrings in the output XML build order,
@@ -1832,6 +1843,7 @@ class PrivateDict2Decompiler(psCharStrings.DictDecompiler):
 		super(PrivateDict2Decompiler, self).__init__(strings)
 
 class DictCompiler(object):
+	maxBlendStack = 0
 
 	def __init__(self, dictObj, strings, parent):
 		if strings:
@@ -1924,35 +1936,58 @@ class DictCompiler(object):
 		return bytesjoin(data)
 
 	def arg_delta_blend(self, value):
-		#  A delta list with blend lists has to be *all" blend lists.
-		# We have a list of master value lists, where the nth 
-		# master value list contains the absolute values from each master for the nth entry in the current array.
+		# A delta list with blend lists has to be *all* blend lists.
+		# We have a list of master value lists, where the nth master value list contains
+		# the absolute values from each master for the nth entry in the current array.
 		# We first convert these to relative values from the previous entry.
 		numMasters = len(value[0])
 		numValues = len(value)
-		firstList = [0]*numValues
-		deltaList = [None]*(numValues)
-		i = 0
-		prevValList = numMasters*[0]
-		while i < numValues:
-			masterValList =  value[i]
-			firstVal = firstList[i] = masterValList[0] - prevValList[0]
-			j = 1
-			deltaEntry = (numMasters-1)*[0]
-			while j < numMasters:
-				masterValDelta = masterValList[j] - prevValList[j]
-				deltaEntry[j-1] = masterValDelta - firstVal  
-				j += 1
-			deltaList[i] = deltaEntry
-			i +=1
-			prevValList = masterValList
-				
-		relValueList = firstList
-		for blendList in deltaList:
-			relValueList.extend(blendList)
-		out = [encodeNumber(val) for val in relValueList]
-		out.append(encodeNumber(numValues))
-		out.append(bytechr(blendOp))
+		numStack = (numValues * numMasters) + 1
+		if numStack > self.maxBlendStack:
+			if numStack > maxStackLimit:
+				self.maxBlendStack = maxStackLimit
+			else:
+				self.maxBlendStack = numStack
+			self.setMaxStack(numStack)
+
+		if numStack > self.maxBlendStack:
+			# Figure out the max number of value we can blend
+			# and divide this list up into chunks of that size.
+
+			numBlendValues = int((self.maxBlendStack-1)/numMasters)
+			out = []
+			while True:
+				numVal = min(len(value), numBlendValues)
+				if numVal == 0:
+					break
+				valList = value[0:numVal]
+				out1 = self.arg_delta_blend(valList)
+				out.extend(out1)
+				value = value[numVal:]
+		else:
+			firstList = [0]*numValues
+			deltaList = [None]*(numValues)
+			i = 0
+			prevValList = numMasters*[0]
+			while i < numValues:
+				masterValList =  value[i]
+				firstVal = firstList[i] = masterValList[0] - prevValList[0]
+				j = 1
+				deltaEntry = (numMasters-1)*[0]
+				while j < numMasters:
+					masterValDelta = masterValList[j] - prevValList[j]
+					deltaEntry[j-1] = masterValDelta - firstVal
+					j += 1
+				deltaList[i] = deltaEntry
+				i +=1
+				prevValList = masterValList
+
+			relValueList = firstList
+			for blendList in deltaList:
+				relValueList.extend(blendList)
+			out = [encodeNumber(val) for val in relValueList]
+			out.append(encodeNumber(numValues))
+			out.append(bytechr(blendOp))
 		return out
 
 
@@ -2056,6 +2091,7 @@ class FontDictCompiler(TopDictCompiler):
 
 
 class PrivateDictCompiler(DictCompiler):
+	maxBlendStack = defaultMaxStack
 
 	opcodes = buildOpcodeDict(privateDictOperators)
 
@@ -2069,6 +2105,11 @@ class PrivateDictCompiler(DictCompiler):
 		if hasattr(self.dictObj, "Subrs"):
 			children.append(self.dictObj.Subrs.getCompiler(strings, self))
 		return children
+
+	def setMaxStack(self, numStack):
+		topDict = self.parent.parent.parent.dictObj
+		topDict.maxstack = numStack
+		topDict.rawDict['maxstack'] = numStack
 
 class PrivateDict2Compiler(PrivateDictCompiler):
 	opcodes = buildOpcodeDict(privateDictOperators2)
@@ -2163,7 +2204,7 @@ class TopDict(BaseDict):
 			self.numGlyphs = readCard32(self.file)
 		else:
 			self.numGlyphs = readCard16(self.file)
-		
+
 
 	def toXML(self, xmlWriter, progress):
 		if hasattr(self, "CharStrings"):
@@ -2249,7 +2290,7 @@ class PrivateDict(BaseDict):
 	def __init__(self, strings=None, file=None, offset=None, parent= None):
 		super(PrivateDict, self).__init__(strings, file, offset)
 		self.fontDict = parent
-		
+
 
 class PrivateDict2(PrivateDict):
 	defaults = buildDefaults(privateDictOperators2)
