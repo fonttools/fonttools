@@ -3,6 +3,9 @@
 - [feaLib] Cleaned up syntax tree for FeatureNames.
 - [ttLib] Added support for reading/writing ``CFF2`` table (thanks to
   @readroberts at Adobe), and ``TTFA`` (ttfautohint) table.
+- [varLib] Fixed regression introduced with 3.8.0 in the calculation of
+  ``NumShorts``, i.e. the number of deltas in ItemVariationData's delta sets
+  that use a 16-bit representation (b2825ff).
 
 3.8.0 (released 2017-03-05)
 ---------------------------
