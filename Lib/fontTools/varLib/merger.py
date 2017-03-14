@@ -322,10 +322,12 @@ def _ClassDef_merge_classify(lst, allGlyphs=None):
 		sets = _ClassDef_invert(l)
 		if allGlyphs is None:
 			sets = sets[1:]
-		else:
+		elif sets:
 			sets[0] = set(allGlyphs)
 			for s in sets[1:]:
 				sets[0].difference_update(s)
+		else:
+			sets = [set(allGlyphs)]
 		classifier.update(sets)
 	classes = classifier.getClasses()
 
