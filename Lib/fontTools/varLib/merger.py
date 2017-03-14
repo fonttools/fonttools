@@ -342,6 +342,18 @@ def _ClassDef_merge_classify(lst, allGlyphs=None):
 
 	return self, classes
 
+def _ClassDef_calculate_Format(self, font):
+	fmt = 2
+	ranges = self._getClassRanges(font)
+	if ranges:
+		startGlyph = ranges[0][1]
+		endGlyph = ranges[-1][3]
+		glyphCount = endGlyph - startGlyph + 1
+		if len(ranges) * 3 >= glyphCount + 1:
+			# Format 1 is more compact
+			fmt = 1
+	self.Format = fmt
+
 def _PairPosFormat2_merge(self, lst, merger):
 	merger.mergeObjects(self, lst,
 			    exclude=('Coverage',
@@ -368,6 +380,7 @@ def _PairPosFormat2_merge(self, lst, merger):
 
 	# Align first classes
 	self.ClassDef1, classes = _ClassDef_merge_classify([l.ClassDef1 for l in lst], allGlyphs=glyphSet)
+	_ClassDef_calculate_Format(self.ClassDef1, merger.font)
 	self.Class1Count = len(classes)
 	new_matrices = []
 	for l,matrix in zip(lst, matrices):
@@ -397,6 +410,7 @@ def _PairPosFormat2_merge(self, lst, merger):
 
 	# Align second classes
 	self.ClassDef2, classes = _ClassDef_merge_classify([l.ClassDef2 for l in lst])
+	_ClassDef_calculate_Format(self.ClassDef2, merger.font)
 	self.Class2Count = len(classes)
 	new_matrices = []
 	for l,matrix in zip(lst, matrices):

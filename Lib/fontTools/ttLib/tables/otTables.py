@@ -418,19 +418,19 @@ class ClassDef(FormatSwitchingBaseTable):
 			assert 0, "unknown format: %s" % self.Format
 		self.classDefs = classDefs
 
-	def preWrite(self, font):
+	def _getClassRanges(self, font):
 		classDefs = getattr(self, "classDefs", None)
 		if classDefs is None:
-			classDefs = self.classDefs = {}
-		format = 2
-		rawTable = {"ClassRangeRecord": []}
+			self.classDefs = {}
+			return
 		getGlyphID = font.getGlyphID
 		items = []
 		for glyphName, cls in classDefs.items():
-			if not cls: continue
+			if not cls:
+				continue
 			items.append((getGlyphID(glyphName), glyphName, cls))
-		items.sort()
 		if items:
+			items.sort()
 			last, lastName, lastCls = items[0]
 			ranges = [[lastCls, last, lastName]]
 			for glyphID, glyphName, cls in items[1:]:
@@ -441,7 +441,13 @@ class ClassDef(FormatSwitchingBaseTable):
 				lastName = glyphName
 				lastCls = cls
 			ranges[-1].extend([last, lastName])
+			return ranges
 
+	def preWrite(self, font):
+		format = 2
+		rawTable = {"ClassRangeRecord": []}
+		ranges = self._getClassRanges(font)
+		if ranges:
 			startGlyph = ranges[0][1]
 			endGlyph = ranges[-1][3]
 			glyphCount = endGlyph - startGlyph + 1
