@@ -379,11 +379,13 @@ def _PairPosFormat2_merge(self, lst, merger):
 			exemplarGlyph = next(iter(classSet))
 			if exemplarGlyph not in coverage:
 				if nullRow is None:
-					rec2 = ot.Class2Record()
-					rec2.Value1 = otBase.ValueRecord(l.ValueFormat1) if l.ValueFormat1 else None
-					rec2.Value2 = otBase.ValueRecord(l.ValueFormat2) if l.ValueFormat2 else None
 					nullRow = ot.Class1Record()
-					nullRow.Class2Record = [rec2] * l.Class2Count
+					class2records = nullRow.Class2Record = []
+					for _ in range(l.Class2Count):
+						rec2 = ot.Class2Record()
+						rec2.Value1 = otBase.ValueRecord(l.ValueFormat1) if l.ValueFormat1 else None
+						rec2.Value2 = otBase.ValueRecord(l.ValueFormat2) if l.ValueFormat2 else None
+						class2records.append(rec2)
 				rec1 = nullRow
 			else:
 				klass = classDef1.get(exemplarGlyph, 0)
