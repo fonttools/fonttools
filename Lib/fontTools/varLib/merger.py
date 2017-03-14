@@ -508,15 +508,18 @@ def _Lookup_PairPos_subtables_canonicalize(lst, font):
 	head = []
 	tail = []
 	it = iter(lst)
+	has_Format1 = False
 	for subtable in it:
 		if subtable.Format == 1:
 			head.append(subtable)
+			has_Format1 = True
 			continue
 		tail.append(subtable)
 		break
 	tail.extend(it)
-	# TODO Only do this if at least one font has a Format1.
-	tail.insert(0, _Lookup_PairPosFormat1_subtables_merge_overlay(head, font))
+	if has_Format1:
+		# only insert if at least one font has a Format1
+		tail.insert(0, _Lookup_PairPosFormat1_subtables_merge_overlay(head, font))
 	return tail
 
 @AligningMerger.merger(ot.Lookup)
