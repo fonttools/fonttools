@@ -39,6 +39,7 @@ class SFNTResourceReader(BytesIO):
 	"""Simple read-only file wrapper for 'sfnt' resources."""
 
 	def __init__(self, path, res_name_or_index):
+		from fontTools import ttLib
 		reader = ResourceReader(path)
 		if isinstance(res_name_or_index, basestring):
 			rsrc = reader.getNamedResource('sfnt', res_name_or_index)
