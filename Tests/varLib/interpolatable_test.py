@@ -85,5 +85,18 @@ class InterpolatableTest(unittest.TestCase):
         self.assertIsNone(interpolatable_main(ttf_paths))
 
 
+    def test_interpolatable_otf(self):
+        suffix = '.otf'
+        ttx_dir = self.get_test_input('master_ttx_interpolatable_otf')
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily2-')
+        for path in ttx_paths:
+            self.compile_font(path, suffix, self.tempdir)
+
+        otf_paths = self.get_file_list(self.tempdir, suffix)
+        self.assertIsNone(interpolatable_main(otf_paths))
+
+
 if __name__ == "__main__":
     sys.exit(unittest.main())

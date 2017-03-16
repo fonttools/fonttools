@@ -1,0 +1,855 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.9">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="space"/>
+    <GlyphID id="2" name="A"/>
+    <GlyphID id="3" name="a"/>
+    <GlyphID id="4" name="d"/>
+    <GlyphID id="5" name="f"/>
+    <GlyphID id="6" name="n"/>
+    <GlyphID id="7" name="t"/>
+    <GlyphID id="8" name="f_t"/>
+    <GlyphID id="9" name="a.alt"/>
+    <GlyphID id="10" name="A.sc"/>
+    <GlyphID id="11" name="atilde"/>
+    <GlyphID id="12" name="ampersand"/>
+    <GlyphID id="13" name="uni25CC"/>
+    <GlyphID id="14" name="uni0303"/>
+    <GlyphID id="15" name="uni0308"/>
+    <GlyphID id="16" name="uni0330"/>
+    <GlyphID id="17" name="uni0324"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="2.02"/>
+    <checkSumAdjustment value="0xa2f07d9e"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Thu Mar 16 05:26:39 2017"/>
+    <modified value="Thu Mar 16 05:26:39 2017"/>
+    <xMin value="-160"/>
+    <yMin value="-220"/>
+    <xMax value="550"/>
+    <yMax value="734"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="6"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="984"/>
+    <descent value="-273"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="624"/>
+    <minLeftSideBearing value="-160"/>
+    <minRightSideBearing value="-160"/>
+    <xMaxExtent value="550"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="15"/>
+  </hhea>
+
+  <maxp>
+    <tableVersion value="0x5000"/>
+    <numGlyphs value="18"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="4"/>
+    <xAvgCharWidth value="471"/>
+    <usWeightClass value="200"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000000"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="600"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="75"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="600"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="350"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="287"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="2"/>
+      <bSerifStyle value="11"/>
+      <bWeight value="3"/>
+      <bProportion value="3"/>
+      <bContrast value="3"/>
+      <bStrokeVariation value="4"/>
+      <bArmStyle value="3"/>
+      <bLetterForm value="2"/>
+      <bMidline value="2"/>
+      <bXHeight value="4"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000011"/>
+    <ulUnicodeRange2 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="ADBO"/>
+    <fsSelection value="00000000 01000000"/>
+    <usFirstCharIndex value="32"/>
+    <usLastCharIndex value="9676"/>
+    <sTypoAscender value="750"/>
+    <sTypoDescender value="-250"/>
+    <sTypoLineGap value="0"/>
+    <usWinAscent value="984"/>
+    <usWinDescent value="273"/>
+    <ulCodePageRange1 value="00100000 00000000 00000000 00000011"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="478"/>
+    <sCapHeight value="660"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="2"/>
+  </OS_2>
+
+  <name>
+    <namerecord nameID="9" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Paul D. Hunt
+    </namerecord>
+    <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Alternate a
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      Test Family 2
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      Version 2.020;ADBO;Test Family 2 Regular
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      Test Family 2
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 2.020
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      TestFamily2-Master0
+    </namerecord>
+    <namerecord nameID="9" platformID="3" platEncID="1" langID="0x409">
+      Paul D. Hunt
+    </namerecord>
+    <namerecord nameID="17" platformID="3" platEncID="1" langID="0x409">
+      Master 0
+    </namerecord>
+    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
+      Alternate a
+    </namerecord>
+  </name>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x20" name="space"/><!-- SPACE -->
+      <map code="0x26" name="ampersand"/><!-- AMPERSAND -->
+      <map code="0x41" name="A"/><!-- LATIN CAPITAL LETTER A -->
+      <map code="0x61" name="a"/><!-- LATIN SMALL LETTER A -->
+      <map code="0x64" name="d"/><!-- LATIN SMALL LETTER D -->
+      <map code="0x66" name="f"/><!-- LATIN SMALL LETTER F -->
+      <map code="0x6e" name="n"/><!-- LATIN SMALL LETTER N -->
+      <map code="0x74" name="t"/><!-- LATIN SMALL LETTER T -->
+      <map code="0xe3" name="atilde"/><!-- LATIN SMALL LETTER A WITH TILDE -->
+      <map code="0x303" name="uni0303"/><!-- COMBINING TILDE -->
+      <map code="0x308" name="uni0308"/><!-- COMBINING DIAERESIS -->
+      <map code="0x324" name="uni0324"/><!-- COMBINING DIAERESIS BELOW -->
+      <map code="0x330" name="uni0330"/><!-- COMBINING TILDE BELOW -->
+      <map code="0x25cc" name="uni25CC"/><!-- DOTTED CIRCLE -->
+    </cmap_format_4>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x20" name="space"/><!-- SPACE -->
+      <map code="0x26" name="ampersand"/><!-- AMPERSAND -->
+      <map code="0x41" name="A"/><!-- LATIN CAPITAL LETTER A -->
+      <map code="0x61" name="a"/><!-- LATIN SMALL LETTER A -->
+      <map code="0x64" name="d"/><!-- LATIN SMALL LETTER D -->
+      <map code="0x66" name="f"/><!-- LATIN SMALL LETTER F -->
+      <map code="0x6e" name="n"/><!-- LATIN SMALL LETTER N -->
+      <map code="0x74" name="t"/><!-- LATIN SMALL LETTER T -->
+      <map code="0xe3" name="atilde"/><!-- LATIN SMALL LETTER A WITH TILDE -->
+      <map code="0x303" name="uni0303"/><!-- COMBINING TILDE -->
+      <map code="0x308" name="uni0308"/><!-- COMBINING DIAERESIS -->
+      <map code="0x324" name="uni0324"/><!-- COMBINING DIAERESIS BELOW -->
+      <map code="0x330" name="uni0330"/><!-- COMBINING TILDE BELOW -->
+      <map code="0x25cc" name="uni25CC"/><!-- DOTTED CIRCLE -->
+    </cmap_format_4>
+  </cmap>
+
+  <post>
+    <formatType value="3.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-75"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+  </post>
+
+  <CFF>
+    <major value="1"/>
+    <minor value="0"/>
+    <CFFFont name="TestFamily2-Master0">
+      <version value="2.20"/>
+      <Notice value=""/>
+      <Copyright value=""/>
+      <FullName value="Test Family 2 Master 0"/>
+      <FontName value="TestFamily2-Master0"/>
+      <FamilyName value="Test Family 2"/>
+      <Weight value="Extra-light"/>
+      <isFixedPitch value="0"/>
+      <ItalicAngle value="0"/>
+      <UnderlinePosition value="-75"/>
+      <UnderlineThickness value="50"/>
+      <PaintType value="0"/>
+      <CharstringType value="2"/>
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FontBBox value="-160 -220 550 734"/>
+      <StrokeWidth value="0"/>
+      <!-- charset is dumped separately as the 'GlyphOrder' element -->
+      <Encoding name="StandardEncoding"/>
+      <Private>
+        <BlueValues value="-12 0 478 490 510 522 570 582 640 652 660 672 722 734"/>
+        <OtherBlues value="-234 -222"/>
+        <FamilyBlues value="-12 0 486 498 518 530 574 586 638 650 656 668 712 724"/>
+        <FamilyOtherBlues value="-217 -205"/>
+        <BlueScale value="0.0625"/>
+        <BlueShift value="7"/>
+        <BlueFuzz value="0"/>
+        <StdHW value="28"/>
+        <StdVW value="32"/>
+        <StemSnapH value="28 40"/>
+        <StemSnapV value="32 48"/>
+        <ForceBold value="0"/>
+        <LanguageGroup value="0"/>
+        <ExpansionFactor value="0.06"/>
+        <initialRandomSeed value="0"/>
+        <defaultWidthX value="200"/>
+        <nominalWidthX value="0"/>
+        <Subrs>
+          <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+          <CharString index="0">
+            rmoveto
+            18 0 14 14 0 18 rrcurveto
+            0 18 -14 14 -18 0 rrcurveto
+            -18 0 -14 -14 0 -18 rrcurveto
+            0 -18 14 -14 18 0 rrcurveto
+            return
+          </CharString>
+          <CharString index="1">
+            rmoveto
+            64 0 60 36 50 40 rrcurveto
+            2 0 rlineto
+            4 -64 rlineto
+            26 0 rlineto
+            0 310 rlineto
+            0 96 -34 84 -112 0 rrcurveto
+            -78 0 -66 -40 -30 -22 rrcurveto
+            16 -24 rlineto
+            30 24 58 34 68 0 rrcurveto
+            100 0 20 -86 -2 -78 rrcurveto
+            -216 -24 -98 -50 0 -107 rrcurveto
+            0 -91 64 -38 74 0 rrcurveto
+            2 28 rmoveto
+            -58 0 -50 28 0 74 rrcurveto
+            0 82 72 48 210 24 rrcurveto
+            0 -174 rlineto
+            -64 -54 -52 -28 -58 0 rrcurveto
+            endchar
+          </CharString>
+          <CharString index="2">
+            -40 22 -58 0 rrcurveto
+            -116 0 -98 -98 0 -154 rrcurveto
+            0 -162 78 -88 120 0 rrcurveto
+            2 28 rmoveto
+            -108 0 -60 90 0 132 rrcurveto
+            0 124 78 100 102 0 rrcurveto
+            50 0 44 -18 54 -48 rrcurveto
+            0 -296 rlineto
+            -54 -54 -50 -30 -56 0 rrcurveto
+            endchar
+          </CharString>
+          <CharString index="3">
+            0 rlineto
+            0 114 rlineto
+            0 72 24 42 54 0 rrcurveto
+            18 0 20 -4 20 -10 rrcurveto
+            10 26 rlineto
+            -22 10 -24 6 -20 0 rrcurveto
+            -68 0 -42 -44 0 -94 rrcurveto
+            0 -118 rlineto
+            -66 -4 rlineto
+            0 -24 rlineto
+            66 0 rlineto
+            0 -450 rlineto
+            30 0 rlineto
+            0 450 rlineto
+            return
+          </CharString>
+          <CharString index="4">
+            580 rmoveto
+            63 0 16 66 4 56 rrcurveto
+            -26 2 rlineto
+            -2 -52 -16 -46 -37 0 rrcurveto
+            -59 0 -20 100 -76 0 rrcurveto
+            -64 0 -16 -65 -4 -57 rrcurveto
+            26 -2 rlineto
+            2 54 16 44 38 0 rrcurveto
+            58 0 20 -100 77 0 rrcurveto
+            return
+          </CharString>
+          <CharString index="5">
+            -10 26 rlineto
+            -18 -8 -26 -8 -18 0 rrcurveto
+            -70 0 -14 44 0 62 rrcurveto
+            0 328 rlineto
+            142 0 rlineto
+            0 28 rlineto
+            -142 0 rlineto
+            0 140 rlineto
+            -26 0 rlineto
+            -4 -140 rlineto
+            return
+          </CharString>
+          <CharString index="6">
+            540 252 -12 rmoveto
+            66 0 54 36 40 40 rrcurveto
+            2 0 rlineto
+            4 -64 rlineto
+            26 0 rlineto
+            0 return
+          </CharString>
+          <CharString index="7">
+            0 21 rrcurveto
+            0 20 -13 11 -18 0 rrcurveto
+            -16 0 -13 -11 0 -20 rrcurveto
+            0 -21 13 return
+          </CharString>
+        </Subrs>
+      </Private>
+      <CharStrings>
+        <CharString name=".notdef">
+          624 96 0 rmoveto
+          432 0 rlineto
+          0 660 rlineto
+          -432 0 rlineto
+          214 -294 rmoveto
+          -56 92 rlineto
+          -94 168 rlineto
+          302 0 rlineto
+          -94 -168 rlineto
+          -54 -92 rlineto
+          -180 -292 rmoveto
+          0 536 rlineto
+          154 -270 rlineto
+          200 -266 rmoveto
+          -152 266 rlineto
+          152 270 rlineto
+          -344 -578 rmoveto
+          102 176 rlineto
+          64 106 rlineto
+          4 0 rlineto
+          62 -106 rlineto
+          100 -176 rlineto
+          endchar
+        </CharString>
+        <CharString name="A">
+          520 476 0 rmoveto
+          34 0 rlineto
+          -236 660 rlineto
+          -28 0 rlineto
+          -236 -660 rlineto
+          32 0 rlineto
+          83 236 rlineto
+          269 0 rlineto
+          -212 160 rmoveto
+          28 80 24 68 24 82 rrcurveto
+          4 0 rlineto
+          24 -82 24 -68 28 -80 rrcurveto
+          46 -132 rlineto
+          -249 0 rlineto
+          endchar
+        </CharString>
+        <CharString name="A.sc">
+          444 400 0 rmoveto
+          34 0 rlineto
+          -198 510 rlineto
+          -29 0 rlineto
+          -197 -510 rlineto
+          32 0 rlineto
+          67 176 rlineto
+          225 0 rlineto
+          -176 128 rmoveto
+          23 62 18 48 21 61 rrcurveto
+          4 0 rlineto
+          21 -60 18 -48 23 -63 rrcurveto
+          38 -100 rlineto
+          -204 0 rlineto
+          endchar
+        </CharString>
+        <CharString name="a">
+          486 198 -12 -106 callsubr
+        </CharString>
+        <CharString name="a.alt">
+          -101 callsubr
+          478 rlineto
+          -28 0 rlineto
+          -2 -46 rlineto
+          -2 0 rlineto
+          -46 36 -105 callsubr
+        </CharString>
+        <CharString name="ampersand">
+          562 550 16 rmoveto
+          -39 15 -44 27 -47 39 rrcurveto
+          53 67 39 86 26 92 rrcurveto
+          -30 0 rlineto
+          -24 -88 -35 -77 -50 -62 rrcurveto
+          -70 64 -72 88 -47 90 rrcurveto
+          76 58 78 57 0 84 rrcurveto
+          0 66 -36 50 -68 0 rrcurveto
+          -76 0 -54 -60 0 -84 rrcurveto
+          0 -52 17 -57 28 -57 rrcurveto
+          -70 -53 -67 -58 0 -85 rrcurveto
+          0 -110 86 -68 100 0 rrcurveto
+          73 0 56 35 48 51 rrcurveto
+          51 -43 46 -28 40 -15 rrcurveto
+          -378 542 rmoveto
+          0 62 36 52 62 0 rrcurveto
+          56 0 20 -46 0 -44 rrcurveto
+          0 -72 -66 -50 -69 -52 rrcurveto
+          -24 52 -15 51 0 47 rrcurveto
+          -90 -362 rmoveto
+          0 71 54 51 63 49 rrcurveto
+          48 -91 73 -88 72 -67 rrcurveto
+          -43 -45 -53 -32 -58 0 rrcurveto
+          -84 0 -72 60 0 92 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="atilde">
+          486 319 -103 callsubr
+          -121 -592 -106 callsubr
+        </CharString>
+        <CharString name="d">
+          -101 callsubr
+          722 rlineto
+          -30 0 rlineto
+          0 -202 rlineto
+          2 -90 rlineto
+          -50 38 -105 callsubr
+        </CharString>
+        <CharString name="f">
+          252 244 450 rmoveto
+          0 28 rlineto
+          -114 -104 callsubr
+          endchar
+        </CharString>
+        <CharString name="f_t">
+          518 508 6 rmoveto
+          -102 callsubr
+          -192 -104 callsubr
+          192 0 rlineto
+          0 -324 rlineto
+          0 -82 24 -56 88 0 rrcurveto
+          16 0 30 8 28 10 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="n">
+          526 96 0 rmoveto
+          30 0 rlineto
+          0 366 rlineto
+          62 64 44 32 60 0 rrcurveto
+          82 0 34 -52 0 -106 rrcurveto
+          0 -304 rlineto
+          30 0 rlineto
+          0 308 rlineto
+          0 124 -46 58 -98 0 rrcurveto
+          -66 0 -50 -38 -50 -50 rrcurveto
+          -2 0 rlineto
+          -4 76 rlineto
+          -26 0 rlineto
+          endchar
+        </CharString>
+        <CharString name="space">
+          200 endchar
+        </CharString>
+        <CharString name="t">
+          302 218 -12 rmoveto
+          16 0 30 8 28 10 rrcurveto
+          -102 callsubr
+          -76 -4 rlineto
+          0 -24 rlineto
+          76 0 rlineto
+          0 -324 rlineto
+          0 -82 24 -56 88 0 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="uni0303">
+          0 77 -103 callsubr
+          endchar
+        </CharString>
+        <CharString name="uni0308">
+          0 -86 602 -107 callsubr
+          172 0 -107 callsubr
+          endchar
+        </CharString>
+        <CharString name="uni0324">
+          0 -86 -188 -107 callsubr
+          172 0 -107 callsubr
+          endchar
+        </CharString>
+        <CharString name="uni0330">
+          0 77 -220 rmoveto
+          63 0 16 66 4 56 rrcurveto
+          -26 2 rlineto
+          -2 -52 -16 -46 -37 0 rrcurveto
+          -59 0 -20 100 -76 0 rrcurveto
+          -64 0 -16 -65 -4 -57 rrcurveto
+          26 -2 rlineto
+          2 54 16 44 38 0 rrcurveto
+          58 0 20 -100 77 0 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="uni25CC">
+          592 295 426 rmoveto
+          18 0 13 12 0 20 rrcurveto
+          0 20 -13 12 -18 0 rrcurveto
+          -16 0 -13 -12 0 -20 rrcurveto
+          0 -20 13 -12 16 0 rrcurveto
+          -106 -26 rmoveto
+          18 0 12 12 0 19 rrcurveto
+          0 22 -13 10 -17 0 rrcurveto
+          -16 0 -13 -10 0 -22 rrcurveto
+          0 -19 13 -12 16 0 rrcurveto
+          212 -1 rmoveto
+          19 0 11 13 0 19 rrcurveto
+          0 21 -13 10 -17 0 rrcurveto
+          -15 0 -13 -10 0 -21 rrcurveto
+          0 -19 13 -13 15 0 rrcurveto
+          -291 -81 rmoveto
+          19 0 12 12 -100 callsubr
+          -12 16 0 rrcurveto
+          370 -1 rmoveto
+          19 0 11 12 0 20 rrcurveto
+          0 20 -13 11 -17 0 rrcurveto
+          -15 0 -14 -11 0 -20 rrcurveto
+          0 -20 14 -12 15 0 rrcurveto
+          -398 -110 rmoveto
+          19 0 13 12 0 20 rrcurveto
+          0 21 -13 10 -19 0 rrcurveto
+          -15 0 -13 -10 0 -21 rrcurveto
+          0 -20 13 -12 15 0 rrcurveto
+          426 0 rmoveto
+          18 0 12 12 0 20 rrcurveto
+          0 21 -15 10 -15 0 rrcurveto
+          -17 0 -13 -10 0 -21 rrcurveto
+          0 -20 13 -12 17 0 rrcurveto
+          -398 -110 rmoveto
+          19 0 12 13 0 19 rrcurveto
+          0 21 -13 11 -18 0 rrcurveto
+          -16 0 -13 -11 0 -21 rrcurveto
+          0 -19 13 -13 16 0 rrcurveto
+          370 0 rmoveto
+          19 0 11 13 0 19 rrcurveto
+          0 21 -13 11 -17 0 rrcurveto
+          -15 0 -14 -11 0 -21 rrcurveto
+          0 -19 14 -13 15 0 rrcurveto
+          -291 -82 rmoveto
+          18 0 12 12 0 22 rrcurveto
+          0 19 -13 10 -17 0 rrcurveto
+          -16 0 -13 -10 0 -19 rrcurveto
+          0 -22 13 -12 16 0 rrcurveto
+          212 0 rmoveto
+          19 0 11 12 0 22 rrcurveto
+          0 19 -13 10 -17 0 rrcurveto
+          -15 0 -13 -10 0 -19 rrcurveto
+          0 -22 13 -12 15 0 rrcurveto
+          -106 -27 rmoveto
+          18 0 13 11 -100 callsubr
+          -11 16 0 rrcurveto
+          endchar
+        </CharString>
+      </CharStrings>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF>
+
+  <BASE>
+    <Version value="0x00010000"/>
+    <HorizAxis>
+      <BaseTagList>
+        <!-- BaseTagCount=2 -->
+        <BaselineTag index="0" value="ideo"/>
+        <BaselineTag index="1" value="romn"/>
+      </BaseTagList>
+      <BaseScriptList>
+        <!-- BaseScriptCount=4 -->
+        <BaseScriptRecord index="0">
+          <BaseScriptTag value="DFLT"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="1"/>
+              <!-- BaseCoordCount=2 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="-170"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="1">
+          <BaseScriptTag value="cyrl"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="1"/>
+              <!-- BaseCoordCount=2 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="-170"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="2">
+          <BaseScriptTag value="grek"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="1"/>
+              <!-- BaseCoordCount=2 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="-170"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="3">
+          <BaseScriptTag value="latn"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="1"/>
+              <!-- BaseCoordCount=2 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="-170"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+      </BaseScriptList>
+    </HorizAxis>
+  </BASE>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=2 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=6 -->
+            <FeatureIndex index="0" value="0"/>
+            <FeatureIndex index="1" value="1"/>
+            <FeatureIndex index="2" value="2"/>
+            <FeatureIndex index="3" value="3"/>
+            <FeatureIndex index="4" value="4"/>
+            <FeatureIndex index="5" value="5"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="1">
+        <ScriptTag value="latn"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=6 -->
+            <FeatureIndex index="0" value="0"/>
+            <FeatureIndex index="1" value="1"/>
+            <FeatureIndex index="2" value="2"/>
+            <FeatureIndex index="3" value="3"/>
+            <FeatureIndex index="4" value="4"/>
+            <FeatureIndex index="5" value="5"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=6 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="c2sc"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="1">
+        <FeatureTag value="calt"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="5"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="2">
+        <FeatureTag value="ccmp"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="2"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="3">
+        <FeatureTag value="liga"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="4"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="4">
+        <FeatureTag value="salt"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="3"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="5">
+        <FeatureTag value="ss01"/>
+        <Feature>
+          <FeatureParamsStylisticSet>
+            <Version value="0"/>
+            <UINameID value="256"/>  <!-- Alternate a -->
+          </FeatureParamsStylisticSet>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="1"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=6 -->
+      <Lookup index="0">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0" Format="1">
+          <Substitution in="A" out="A.sc"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="1">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0" Format="1">
+          <Substitution in="a" out="a.alt"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="2">
+        <LookupType value="2"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <MultipleSubst index="0" Format="1">
+          <Substitution in="ampersand" out="a,n,d"/>
+        </MultipleSubst>
+      </Lookup>
+      <Lookup index="3">
+        <LookupType value="3"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <AlternateSubst index="0" Format="1">
+          <AlternateSet glyph="a">
+            <Alternate glyph="a.alt"/>
+            <Alternate glyph="A.sc"/>
+          </AlternateSet>
+        </AlternateSubst>
+      </Lookup>
+      <Lookup index="4">
+        <LookupType value="4"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <LigatureSubst index="0" Format="1">
+          <LigatureSet glyph="f">
+            <Ligature components="t" glyph="f_t"/>
+          </LigatureSet>
+        </LigatureSubst>
+      </Lookup>
+      <Lookup index="5">
+        <LookupType value="6"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <ChainContextSubst index="0" Format="3">
+          <!-- BacktrackGlyphCount=0 -->
+          <!-- InputGlyphCount=1 -->
+          <InputCoverage index="0" Format="1">
+            <Glyph value="a"/>
+          </InputCoverage>
+          <!-- LookAheadGlyphCount=1 -->
+          <LookAheadCoverage index="0" Format="1">
+            <Glyph value="t"/>
+          </LookAheadCoverage>
+          <!-- SubstCount=1 -->
+          <SubstLookupRecord index="0">
+            <SequenceIndex value="0"/>
+            <LookupListIndex value="1"/>
+          </SubstLookupRecord>
+        </ChainContextSubst>
+      </Lookup>
+    </LookupList>
+  </GSUB>
+
+  <hmtx>
+    <mtx name=".notdef" width="624" lsb="96"/>
+    <mtx name="A" width="520" lsb="10"/>
+    <mtx name="A.sc" width="444" lsb="10"/>
+    <mtx name="a" width="486" lsb="60"/>
+    <mtx name="a.alt" width="540" lsb="54"/>
+    <mtx name="ampersand" width="562" lsb="38"/>
+    <mtx name="atilde" width="486" lsb="60"/>
+    <mtx name="d" width="540" lsb="54"/>
+    <mtx name="f" width="252" lsb="34"/>
+    <mtx name="f_t" width="518" lsb="34"/>
+    <mtx name="n" width="526" lsb="96"/>
+    <mtx name="space" width="200" lsb="0"/>
+    <mtx name="t" width="302" lsb="30"/>
+    <mtx name="uni0303" width="0" lsb="-160"/>
+    <mtx name="uni0308" width="0" lsb="-118"/>
+    <mtx name="uni0324" width="0" lsb="-118"/>
+    <mtx name="uni0330" width="0" lsb="-160"/>
+    <mtx name="uni25CC" width="592" lsb="54"/>
+  </hmtx>
+
+</ttFont>
