@@ -394,6 +394,7 @@ def _PairPosFormat2_merge(self, lst, merger):
 				if nullRow is None:
 					nullRow = ot.Class1Record()
 					class2records = nullRow.Class2Record = []
+					# TODO: When merger becomes selfless, revert e6125b353e1f54a0280ded5434b8e40d042de69f
 					for _ in range(l.Class2Count):
 						rec2 = ot.Class2Record()
 						rec2.Value1 = otBase.ValueRecord(l.ValueFormat1) if l.ValueFormat1 else None
