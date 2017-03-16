@@ -531,7 +531,6 @@ def _Lookup_PairPos_subtables_canonicalize(lst, font):
 		tail.append(subtable)
 		break
 	tail.extend(it)
-	# TODO Only do this if at least one font has a Format1.
 	tail.insert(0, _Lookup_PairPosFormat1_subtables_merge_overlay(head, font))
 	return tail
 
@@ -541,12 +540,20 @@ def merge(merger, self, lst):
 
 	exclude = []
 	if self.SubTable and isinstance(self.SubTable[0], ot.PairPos):
+
 		# AFDKO and feaLib sometimes generate two Format1 subtables instead of one.
 		# Merge those before continuing.
 		# https://github.com/fonttools/fonttools/issues/719
 		self.SubTable = _Lookup_PairPos_subtables_canonicalize(self.SubTable, merger.font)
 		subtables = [_Lookup_PairPos_subtables_canonicalize(l.SubTable, merger.font) for l in lst]
+
 		merger.mergeLists(self.SubTable, subtables)
+
+		# If format-1 subtable created during canonicalization is empty, remove it.
+		assert len(self.SubTable) >= 1 and self.SubTable[0].Format == 1
+		if not self.SubTable[0].Coverage.glyphs:
+			self.SubTable.pop(0)
+
 		self.SubTableCount = len(self.SubTable)
 		exclude.extend(['SubTable', 'SubTableCount'])
 
