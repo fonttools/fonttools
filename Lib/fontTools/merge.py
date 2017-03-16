@@ -413,10 +413,33 @@ def merge(self, m, tables):
 	self.numSubTables = len(self.tables)
 	return self
 
+def mergeScriptRecord(lst):
+	"""Merge ScriptRecord. Merge all DFLT records into one.
+	"""
+	# TODO: merge all other duplicated tags?
+	lst = sumLists(lst)
+	records = []
+	DFLTRecord = None
+	for record in lst:
+		if record.ScriptTag == 'DFLT':
+			script = record.Script
+			assert hasattr(script, 'DefaultLangSys') and script.DefaultLangSys, 'DefaultLangSys must present in DFLT script'
+			assert script.LangSysCount == 0, 'LangSysCount must be 0 in DFLT script'
+			if DFLTRecord == None:
+				DFLTRecord = record
+			else:
+				DFLTRecord.Script.DefaultLangSys.FeatureIndex.extend(script.DefaultLangSys.FeatureIndex)
+		else:
+			records.append(record)
+	if DFLTRecord:
+		DFLTRecord.Script.DefaultLangSys.FeatureCount = len(DFLTRecord.Script.DefaultLangSys.FeatureIndex)
+		records = [DFLTRecord] + records
+	return sorted(records, key=lambda s: s.ScriptTag)
 
 otTables.ScriptList.mergeMap = {
-	'ScriptCount': sum,
-	'ScriptRecord': lambda lst: sorted(sumLists(lst), key=lambda s: s.ScriptTag),
+	'ScriptCount': sum, # This is wrong. Duplicated DFLT records are merged so the result is not sum of each element. 
+	                    # This value is fixed later in postMerge().
+	'ScriptRecord': mergeScriptRecord,
 }
 otTables.BaseScriptList.mergeMap = {
 	'BaseScriptCount': sum,
@@ -816,7 +839,7 @@ class Merger(object):
 					log.info("Dropped '%s'.", tag)
 
 		del self.duplicateGlyphsPerFont
-
+		
 		self._postMerge(mega)
 
 		return mega
@@ -904,6 +927,9 @@ class Merger(object):
 				# XXX Handle present ScriptList but absent FeatureList
 				featureMap = {id(v):i for i,v in enumerate(t.table.FeatureList.FeatureRecord)}
 				t.table.ScriptList.mapFeatures(featureMap)
+			if t.table.ScriptList:
+				# Fix the inconsistent issue between count an len(record) introduced by otTables.ScriptList.mergeMap logic.
+				t.table.ScriptList.ScriptCount = len(t.table.ScriptList.ScriptRecord)
 
 		# TODO GDEF/Lookup MarkFilteringSets
 		# TODO FeatureParams nameIDs
