@@ -322,10 +322,12 @@ def _ClassDef_merge_classify(lst, allGlyphs=None):
 		sets = _ClassDef_invert(l)
 		if allGlyphs is None:
 			sets = sets[1:]
-		else:
+		elif sets:
 			sets[0] = set(allGlyphs)
 			for s in sets[1:]:
 				sets[0].difference_update(s)
+		else:
+			sets = [set(allGlyphs)]
 		classifier.update(sets)
 	classes = classifier.getClasses()
 
@@ -339,6 +341,18 @@ def _ClassDef_merge_classify(lst, allGlyphs=None):
 			classDefs[g] = i
 
 	return self, classes
+
+def _ClassDef_calculate_Format(self, font):
+	fmt = 2
+	ranges = self._getClassRanges(font)
+	if ranges:
+		startGlyph = ranges[0][1]
+		endGlyph = ranges[-1][3]
+		glyphCount = endGlyph - startGlyph + 1
+		if len(ranges) * 3 >= glyphCount + 1:
+			# Format 1 is more compact
+			fmt = 1
+	self.Format = fmt
 
 def _PairPosFormat2_merge(self, lst, merger):
 	merger.mergeObjects(self, lst,
@@ -366,6 +380,7 @@ def _PairPosFormat2_merge(self, lst, merger):
 
 	# Align first classes
 	self.ClassDef1, classes = _ClassDef_merge_classify([l.ClassDef1 for l in lst], allGlyphs=glyphSet)
+	_ClassDef_calculate_Format(self.ClassDef1, merger.font)
 	self.Class1Count = len(classes)
 	new_matrices = []
 	for l,matrix in zip(lst, matrices):
@@ -377,11 +392,13 @@ def _PairPosFormat2_merge(self, lst, merger):
 			exemplarGlyph = next(iter(classSet))
 			if exemplarGlyph not in coverage:
 				if nullRow is None:
-					rec2 = ot.Class2Record()
-					rec2.Value1 = otBase.ValueRecord(l.ValueFormat1) if l.ValueFormat1 else None
-					rec2.Value2 = otBase.ValueRecord(l.ValueFormat2) if l.ValueFormat2 else None
 					nullRow = ot.Class1Record()
-					nullRow.Class2Record = [rec2] * l.Class2Count
+					class2records = nullRow.Class2Record = []
+					for _ in range(l.Class2Count):
+						rec2 = ot.Class2Record()
+						rec2.Value1 = otBase.ValueRecord(l.ValueFormat1) if l.ValueFormat1 else None
+						rec2.Value2 = otBase.ValueRecord(l.ValueFormat2) if l.ValueFormat2 else None
+						class2records.append(rec2)
 				rec1 = nullRow
 			else:
 				klass = classDef1.get(exemplarGlyph, 0)
@@ -393,6 +410,7 @@ def _PairPosFormat2_merge(self, lst, merger):
 
 	# Align second classes
 	self.ClassDef2, classes = _ClassDef_merge_classify([l.ClassDef2 for l in lst])
+	_ClassDef_calculate_Format(self.ClassDef2, merger.font)
 	self.Class2Count = len(classes)
 	new_matrices = []
 	for l,matrix in zip(lst, matrices):
@@ -506,15 +524,18 @@ def _Lookup_PairPos_subtables_canonicalize(lst, font):
 	head = []
 	tail = []
 	it = iter(lst)
+	has_Format1 = False
 	for subtable in it:
 		if subtable.Format == 1:
 			head.append(subtable)
+			has_Format1 = True
 			continue
 		tail.append(subtable)
 		break
 	tail.extend(it)
-	# TODO Only do this if at least one font has a Format1.
-	tail.insert(0, _Lookup_PairPosFormat1_subtables_merge_overlay(head, font))
+	if has_Format1:
+		# only insert if at least one font has a Format1
+		tail.insert(0, _Lookup_PairPosFormat1_subtables_merge_overlay(head, font))
 	return tail
 
 @AligningMerger.merger(ot.Lookup)
