@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.8">
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="xxxx"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <LookupType value="2"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <PairPos index="0" Format="2">
+          <Coverage Format="1">
+            <Glyph value="A"/>
+          </Coverage>
+          <ValueFormat1 value="4"/>
+          <ValueFormat2 value="0"/>
+          <ClassDef1 Format="2">
+          </ClassDef1>
+          <ClassDef2 Format="1">
+            <ClassDef glyph="a" class="1"/>
+          </ClassDef2>
+          <!-- Class1Count=1 -->
+          <!-- Class2Count=2 -->
+          <Class1Record index="0">
+            <Class2Record index="0">
+              <Value1 XAdvance="0"/>
+            </Class2Record>
+            <Class2Record index="1">
+              <Value1 XAdvance="-40"/>
+            </Class2Record>
+          </Class1Record>
+        </PairPos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+</ttFont>

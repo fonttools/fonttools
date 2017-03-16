@@ -322,10 +322,12 @@ def _ClassDef_merge_classify(lst, allGlyphs=None):
 		sets = _ClassDef_invert(l)
 		if allGlyphs is None:
 			sets = sets[1:]
-		else:
+		elif sets:
 			sets[0] = set(allGlyphs)
 			for s in sets[1:]:
 				sets[0].difference_update(s)
+		else:
+		    sets = [set(allGlyphs)]
 		classifier.update(sets)
 	classes = classifier.getClasses()
 
@@ -367,6 +369,10 @@ def _PairPosFormat2_merge(self, lst, merger):
 	# Align first classes
 	self.ClassDef1, classes = _ClassDef_merge_classify([l.ClassDef1 for l in lst], allGlyphs=glyphSet)
 	self.Class1Count = len(classes)
+	if self.Class1Count > 1:
+		self.ClassDef1.Format = 1
+	else:
+		self.ClassDef1.Format = 2
 	new_matrices = []
 	for l,matrix in zip(lst, matrices):
 		nullRow = None
@@ -394,6 +400,10 @@ def _PairPosFormat2_merge(self, lst, merger):
 	# Align second classes
 	self.ClassDef2, classes = _ClassDef_merge_classify([l.ClassDef2 for l in lst])
 	self.Class2Count = len(classes)
+	if self.Class2Count > 1:
+		self.ClassDef2.Format = 1
+	else:
+		self.ClassDef2.Format = 2
 	new_matrices = []
 	for l,matrix in zip(lst, matrices):
 		classDef2 = l.ClassDef2.classDefs
@@ -506,15 +516,18 @@ def _Lookup_PairPos_subtables_canonicalize(lst, font):
 	head = []
 	tail = []
 	it = iter(lst)
+	has_Format1 = False
 	for subtable in it:
 		if subtable.Format == 1:
 			head.append(subtable)
+			has_Format1 = True
 			continue
 		tail.append(subtable)
 		break
 	tail.extend(it)
-	# TODO Only do this if at least one font has a Format1.
-	tail.insert(0, _Lookup_PairPosFormat1_subtables_merge_overlay(head, font))
+	if has_Format1:
+	    # only insert if at least one font has a Format1
+	    tail.insert(0, _Lookup_PairPosFormat1_subtables_merge_overlay(head, font))
 	return tail
 
 @AligningMerger.merger(ot.Lookup)
