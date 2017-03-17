@@ -371,6 +371,10 @@ def _PairPosFormat2_merge(self, lst, merger):
 	# we do NOT bother walking down the subtable list when filling in new
 	# rows for alignment.  As such, this is only correct if current subtable
 	# is the last subtable in the lookup.  Ensure that.
+	#
+	# Note that our canonicalization process merges some PairPosFormat2's,
+	# so in reality this might not be common.
+	#
 	# TODO: Remove this requirement
 	for l,lookup in zip(lst,merger.lookups):
 		if l.Coverage.glyphs != glyphs:
@@ -520,19 +524,69 @@ def _Lookup_PairPosFormat1_subtables_merge_overlay(lst, font):
 	self.PairSetCount = len(self.PairSet)
 	return self
 
+def _Lookup_PairPosFormat2_subtables_recombine(a, b, font):
+	"""Combine two subtables that have the same general structure already."""
+	self = ot.PairPos()
+	self.Format = 2
+	self.Coverage = ot.Coverage()
+	self.Coverage.Format = 1
+	glyphs, _ = _merge_GlyphOrders(font,
+				       [v.Coverage.glyphs for v in (a, b)])
+
+	self.Coverage.glyphs = glyphs
+	self.Class1Count = a.Class1Count + b.Class1Count
+	self.ClassDef1 = ot.ClassDef()
+
+	classDefs = ot.ClassDef1.classDefs = {}
+	offset = a.Class1Count
+	# First subtable overrides any possible shared glyph, so add b first.
+	sets = _ClassDef_invert(b.ClassDef1, allGlyphs=b.Coverage.glyphs)
+	for i,s in enumerate(sets):
+		for g in s:
+			classDefs[g] = i + offset
+	sets = _ClassDef_invert(a.ClassDef1, allGlyphs=a.Coverage.glyphs)
+	assert len(sets) <= offset
+	for i,s in enumerate(sets):
+		for g in s:
+			classDefs[g] = i
+
+	records = ot.Class1Record = []
+	assert a.Class1Count == len(a.Class1Record)
+	assert b.Class1Count == len(b.Class1Record)
+	records.extend(a.Class1Record)
+	records.extend(b.Class1Record)
+
+	for name in ('Class2Count', 'ClassDef2', 'ValueFormat1', 'ValueFormat2'):
+		setattr(self, name, getattr(a, name))
+
 def _Lookup_PairPos_subtables_canonicalize(lst, font):
-	"""Merges multiple Format1 subtables at the beginning of lst.  Returns new list."""
+	"""Merge multiple Format1 subtables at the beginning of lst,
+	and merge multiple consecutive Format2 subtables that have the same
+	Class2 (ie. were split because of offset overflows).  Returns new list."""
 	head = []
 	tail = []
 	it = iter(lst)
+
 	for subtable in it:
 		if subtable.Format == 1:
 			head.append(subtable)
 			continue
 		tail.append(subtable)
 		break
-	tail.extend(it)
 	tail.insert(0, _Lookup_PairPosFormat1_subtables_merge_overlay(head, font))
+
+	for subtable in it:
+		oldtable = tail[-1]
+		if oldtable.Format == 2 and subtable.Format == 2:
+			if (oldtable.Class2Count == subtable.Class2Count and
+			    oldtable.ClassDef2.classDefs == subtable.ClassDef2.classDefs and
+			    oldtable.ValueFormat1 == subtable.ValueFormat1 and
+			    oldtable.ValueFormat2 == subtable.ValueFormat2):
+				newtable = _Lookup_PairPosFormat2_subtables_recombine(oldtable, subtable, font)
+				tail[-1] = newtable
+			continue
+		tail.append(subtable)
+
 	return tail
 
 @AligningMerger.merger(ot.Lookup)
