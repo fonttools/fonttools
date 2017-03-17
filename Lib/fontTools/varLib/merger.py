@@ -297,12 +297,10 @@ def _PairPosFormat1_merge(self, lst, merger):
 
 	merger.mergeLists(self.PairSet, padded)
 
-def _ClassDef_invert(self):
-	if not self or not self.classDefs:
-		return []
+def _ClassDef_invert(self, allGlyphs=None):
 
-	classDefs = self.classDefs
-	m = max(classDefs.values())
+	classDefs = self.classDefs if self and self.classDefs else {}
+	m = max(classDefs.values()) if classDefs else 0
 
 	ret = []
 	for _ in range(m + 1):
@@ -310,6 +308,14 @@ def _ClassDef_invert(self):
 
 	for k,v in classDefs.items():
 		ret[v].add(k)
+
+	# Class-0 is special.  It's "everything else".
+	if allGlyphs is None:
+		ret[0] = None
+	else:
+		ret[0] = set(allGlyphs)
+		for s in ret[1:]:
+			ret[0].difference_update(s)
 
 	return ret
 
@@ -319,15 +325,9 @@ def _ClassDef_merge_classify(lst, allGlyphs=None):
 
 	classifier = classifyTools.Classifier()
 	for l in lst:
-		sets = _ClassDef_invert(l)
+		sets = _ClassDef_invert(l, allGlyphs=allGlyphs)
 		if allGlyphs is None:
 			sets = sets[1:]
-		elif sets:
-			sets[0] = set(allGlyphs)
-			for s in sets[1:]:
-				sets[0].difference_update(s)
-		else:
-			sets = [set(allGlyphs)]
 		classifier.update(sets)
 	classes = classifier.getClasses()
 
