@@ -157,9 +157,7 @@ def _merge_GlyphOrders(font, lst, values_lst=None, default=None):
 			  for dict_set in dict_sets]
 	return order, padded
 
-def _Lookup_SinglePos_get_effective_value(self, glyph):
-	if self is None: return None
-	subtables = self.SubTable
+def _Lookup_SinglePos_get_effective_value(subtables, glyph):
 	for self in subtables:
 		if self is None or \
 		   type(self) != ot.SinglePos or \
@@ -174,9 +172,7 @@ def _Lookup_SinglePos_get_effective_value(self, glyph):
 			assert 0
 	return None
 
-def _Lookup_PairPos_get_effective_value_pair(self, firstGlyph, secondGlyph):
-	if self is None: return None
-	subtables = self.SubTable
+def _Lookup_PairPos_get_effective_value_pair(subtables, firstGlyph, secondGlyph):
 	for self in subtables:
 		if self is None or \
 		   type(self) != ot.PairPos or \
@@ -226,7 +222,7 @@ def merge(merger, self, lst):
 		for j,glyph in enumerate(glyphs):
 			if values[j] is not None: continue
 			# Fill in value from other subtables
-			v = _Lookup_SinglePos_get_effective_value(merger.lookups[i], glyph)
+			v = _Lookup_SinglePos_get_effective_value(merger.lookup_subtables[i], glyph)
 			if v is None:
 				v = otBase.ValueRecord(valueFormat)
 			values[j] = v
@@ -261,7 +257,7 @@ def merge(merger, self, lst):
 			if values[j] is not None:
 				vpair = values[j]
 			else:
-				vpair = _Lookup_PairPos_get_effective_value_pair(merger.lookups[i], self._firstGlyph, glyph)
+				vpair = _Lookup_PairPos_get_effective_value_pair(merger.lookup_subtables[i], self._firstGlyph, glyph)
 			if vpair is None:
 				v1, v2 = None, None
 			else:
@@ -376,9 +372,9 @@ def _PairPosFormat2_merge(self, lst, merger):
 	# so in reality this might not be common.
 	#
 	# TODO: Remove this requirement
-	for l,lookup in zip(lst,merger.lookups):
+	for l,subtables in zip(lst,merger.lookup_subtables):
 		if l.Coverage.glyphs != glyphs:
-			assert l == lookup.SubTable[-1]
+			assert l == subtables[-1]
 
 	matrices = [l.Class1Record for l in lst]
 
@@ -550,7 +546,7 @@ def _Lookup_PairPosFormat2_subtables_recombine(a, b, font):
 		for g in s:
 			classDefs[g] = i
 
-	records = ot.Class1Record = []
+	records = self.Class1Record = []
 	assert a.Class1Count == len(a.Class1Record)
 	assert b.Class1Count == len(b.Class1Record)
 	records.extend(a.Class1Record)
@@ -558,6 +554,8 @@ def _Lookup_PairPosFormat2_subtables_recombine(a, b, font):
 
 	for name in ('Class2Count', 'ClassDef2', 'ValueFormat1', 'ValueFormat2'):
 		setattr(self, name, getattr(a, name))
+
+	return self
 
 def _Lookup_PairPos_subtables_canonicalize(lst, font):
 	"""Merge multiple Format1 subtables at the beginning of lst,
@@ -591,7 +589,7 @@ def _Lookup_PairPos_subtables_canonicalize(lst, font):
 
 @AligningMerger.merger(ot.Lookup)
 def merge(merger, self, lst):
-	merger.lookups = lst
+	merger.lookup_subtables = [l.SubTable for l in lst]
 
 	exclude = []
 	if self.SubTable and isinstance(self.SubTable[0], ot.PairPos):
@@ -602,6 +600,7 @@ def merge(merger, self, lst):
 		self.SubTable = _Lookup_PairPos_subtables_canonicalize(self.SubTable, merger.font)
 		subtables = [_Lookup_PairPos_subtables_canonicalize(l.SubTable, merger.font) for l in lst]
 
+		merger.lookup_subtables = subtables
 		merger.mergeLists(self.SubTable, subtables)
 
 		# If format-1 subtable created during canonicalization is empty, remove it.
@@ -614,7 +613,7 @@ def merge(merger, self, lst):
 
 	merger.mergeObjects(self, lst, exclude=exclude)
 
-	del merger.lookups
+	del merger.lookup_subtables
 
 #
 # InstancerMerger
