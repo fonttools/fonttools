@@ -7,7 +7,7 @@ from pprint import pprint
     
     A subclassed DesignSpaceDocument that can
         - process the document and generate finished UFOs with MutatorMath.
-        - read and write
+        - read and write documents
         - bypass and eventually replace the mutatormath ufo generator.
 
 """
@@ -223,17 +223,23 @@ class DesignSpaceProcessor(DesignSpaceDocument):
         loc = Location(instanceDescriptor.location)
         # make the kerning
         if instanceDescriptor.kerning:
-            self.getKerningMutator().makeInstance(loc).extractKerning(font)
+            try:
+                self.getKerningMutator().makeInstance(loc).extractKerning(font)
+            except:
+                self.problems.append("Could not make kerning for %s"%loc)
         # make the info
         if instanceDescriptor.info:
-            self.getInfoMutator().makeInstance(loc).extractInfo(font.info)
-            info = self._infoMutator.makeInstance(loc)
-            info.extractInfo(font.info)
-            font.info.familyName = instanceDescriptor.familyName
-            font.info.styleName = instanceDescriptor.styleName
-            font.info.postScriptFontName = instanceDescriptor.postScriptFontName
-            font.info.styleMapFamilyName = instanceDescriptor.styleMapFamilyName
-            font.info.styleMapStyleName = instanceDescriptor.styleMapStyleName
+            try:
+                self.getInfoMutator().makeInstance(loc).extractInfo(font.info)
+                info = self._infoMutator.makeInstance(loc)
+                info.extractInfo(font.info)
+                font.info.familyName = instanceDescriptor.familyName
+                font.info.styleName = instanceDescriptor.styleName
+                font.info.postScriptFontName = instanceDescriptor.postScriptFontName
+                font.info.styleMapFamilyName = instanceDescriptor.styleMapFamilyName
+                font.info.styleMapStyleName = instanceDescriptor.styleMapStyleName
+            except:
+                self.problems.append("Could not make fontinfo for %s"%loc)
         # copied info
         for sourceDescriptor in self.sources:
             if sourceDescriptor.copyInfo:
@@ -253,7 +259,11 @@ class DesignSpaceProcessor(DesignSpaceDocument):
         else:
             selectedGlyphNames = self.glyphNames
         for glyphName in selectedGlyphNames:
-            glyphMutator = self.getGlyphMutator(glyphName)
+            try:
+                glyphMutator = self.getGlyphMutator(glyphName)
+            except:
+                self.problems.append("Could not make mutator for glyph %s"%glyphName)
+                continue
             if glyphName in instanceDescriptor.glyphs.keys():
                 # reminder: this is what the glyphData can look like
                 # {'instanceLocation': {'custom': 0.0, 'weight': 824.0},
