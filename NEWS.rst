@@ -1,3 +1,14 @@
+- [varLib.merger] Fixed issue while recombining multiple PairPosFormat2
+  subtables if they were split because of offset overflows (9798c30).
+- [varLib.merger] Only merge multiple PairPosFormat1 subtables if there is
+  at least one of the fonts with a non-empty Format1 subtable (0f5a46b).
+- [varLib.merger] Fixed IndexError with empty ClassDef1 in PairPosFormat2
+  (aad0d46).
+- [varLib.merger] Avoid reusing Class2Record (mutable) objects (e6125b3).
+- [varLib.merger] Calculate ClassDef1 and ClassDef2's Format when merging
+  PairPosFormat2 (23511fd).
+- [macUtils] Added missing ttLib import (b05f203).
+
 3.9.0 (released 2017-03-13)
 ---------------------------
 
