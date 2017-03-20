@@ -1,3 +1,6 @@
+3.9.1 (released 2017-03-20)
+---------------------------
+
 - [varLib.merger] Fixed issue while recombining multiple PairPosFormat2
   subtables if they were split because of offset overflows (9798c30).
 - [varLib.merger] Only merge multiple PairPosFormat1 subtables if there is
