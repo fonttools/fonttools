@@ -416,10 +416,12 @@ def merge(self, m, tables):
 
 otTables.ScriptList.mergeMap = {
 	'ScriptCount': sum,
+	# TODO: Merge duplicate entries
 	'ScriptRecord': lambda lst: sorted(sumLists(lst), key=lambda s: s.ScriptTag),
 }
 otTables.BaseScriptList.mergeMap = {
 	'BaseScriptCount': sum,
+	# TODO: Merge duplicate entries
 	'BaseScriptRecord': lambda lst: sorted(sumLists(lst), key=lambda s: s.BaseScriptTag),
 }
 
