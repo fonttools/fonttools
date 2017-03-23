@@ -1,10 +1,10 @@
 """Pen recording operations that can be accessed or replayed."""
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.pens.basePen import AbstractPen
+from fontTools.pens.basePen import AbstractPen, DecomposingPen
 
 
-__all__ = ["RecordingPen"]
+__all__ = ["RecordingPen", "DecomposingRecordingPen"]
 
 
 class RecordingPen(AbstractPen):
@@ -49,6 +49,34 @@ class RecordingPen(AbstractPen):
 	def replay(self, pen):
 		for operator,operands in self.value:
 			getattr(pen, operator)(*operands)
+
+
+class DecomposingRecordingPen(DecomposingPen, RecordingPen):
+	""" Same as RecordingPen, except that it doesn't keep components
+	as references, but draws them decomposed as regular contours.
+
+	The constructor takes a single 'glyphSet' positional argument,
+	a dictionary of glyph objects (i.e. with a 'draw' method) keyed
+	by thir name.
+
+	>>> class SimpleGlyph(object):
+	...     def draw(self, pen):
+	...         pen.moveTo((0, 0))
+	...         pen.curveTo((1, 1), (2, 2), (3, 3))
+	...         pen.closePath()
+	>>> class CompositeGlyph(object):
+	...     def draw(self, pen):
+	...         pen.addComponent('a', (1, 0, 0, 1, -1, 1))
+	>>> glyphSet = {'a': SimpleGlyph(), 'b': CompositeGlyph()}
+	>>> for name, glyph in sorted(glyphSet.items()):
+	...     pen = DecomposingRecordingPen(glyphSet)
+	...     glyph.draw(pen)
+	...     print("{}: {}".format(name, pen.value))
+	a: [('moveTo', ((0, 0),)), ('curveTo', ((1, 1), (2, 2), (3, 3))), ('closePath', ())]
+	b: [('moveTo', ((-1, 1),)), ('curveTo', ((0, 2), (1, 3), (2, 4))), ('closePath', ())]
+	"""
+	# raises KeyError if base glyph is not found in glyphSet
+	skipMissingComponents = False
 
 
 if __name__ == "__main__":
