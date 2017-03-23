@@ -38,6 +38,7 @@ sequence of length 2 will do.
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.loggingTools import LogMixin
 
 __all__ =  ["AbstractPen", "NullPen", "BasePen",
 			"decomposeSuperBezierSegment", "decomposeQuadraticSegment"]
@@ -141,7 +142,50 @@ class NullPen(object):
 		pass
 
 
-class BasePen(AbstractPen):
+class LoggingPen(LogMixin, AbstractPen):
+	"""A pen with a `log` property (see fontTools.misc.loggingTools.LogMixin)
+	"""
+	pass
+
+
+class DecomposingPen(LoggingPen):
+
+	""" Implements a 'addComponent' method that decomposes components
+	(i.e. draws them onto self as simple contours).
+	It can also be used as a mixin class (e.g. see ContourRecordingPen).
+
+	You must override moveTo, lineTo, curveTo and qCurveTo. You may
+	additionally override closePath, endPath and addComponent.
+	"""
+
+	# By default a warning message is logged when a base glyph is missing;
+	# set this to False if you want to raise a 'KeyError' exception
+	skipMissingComponents = True
+
+	def __init__(self, glyphSet):
+		""" Takes a single 'glyphSet' argument (dict), in which the glyphs
+		that are referenced as components are looked up by their name.
+		"""
+		super(DecomposingPen, self).__init__()
+		self.glyphSet = glyphSet
+
+	def addComponent(self, glyphName, transformation):
+		""" Transform the points of the base glyph and draw it onto self.
+		"""
+		from fontTools.pens.transformPen import TransformPen
+		try:
+			glyph = self.glyphSet[glyphName]
+		except KeyError:
+			if not self.skipMissingComponents:
+				raise
+			self.log.warning(
+				"glyph '%s' is missing from glyphSet; skipped" % glyphName)
+		else:
+			tPen = TransformPen(self, transformation)
+			glyph.draw(tPen)
+
+
+class BasePen(DecomposingPen):
 
 	"""Base class for drawing pens. You must override _moveTo, _lineTo and
 	_curveToOne. You may additionally override _closePath, _endPath,
@@ -150,7 +194,7 @@ class BasePen(AbstractPen):
 	"""
 
 	def __init__(self, glyphSet=None):
-		self.glyphSet = glyphSet
+		super(BasePen, self).__init__(glyphSet)
 		self.__currentPoint = None
 
 	# must override
@@ -185,19 +229,6 @@ class BasePen(AbstractPen):
 		mid2x = pt2x + 0.66666666666666667 * (pt1x - pt2x)
 		mid2y = pt2y + 0.66666666666666667 * (pt1y - pt2y)
 		self._curveToOne((mid1x, mid1y), (mid2x, mid2y), pt2)
-
-	def addComponent(self, glyphName, transformation):
-		"""This default implementation simply transforms the points
-		of the base glyph and draws it onto self.
-		"""
-		from fontTools.pens.transformPen import TransformPen
-		try:
-			glyph = self.glyphSet[glyphName]
-		except KeyError:
-			pass
-		else:
-			tPen = TransformPen(self, transformation)
-			glyph.draw(tPen)
 
 	# don't override
 
