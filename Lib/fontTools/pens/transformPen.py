@@ -1,12 +1,12 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.pens.basePen import AbstractPen
+from fontTools.pens.filterPen import FilterPen
 
 
 __all__ = ["TransformPen"]
 
 
-class TransformPen(AbstractPen):
+class TransformPen(FilterPen):
 
 	"""Pen that transforms all coordinates using a Affine transformation,
 	and passes them to another pen.
@@ -17,12 +17,12 @@ class TransformPen(AbstractPen):
 		transformed coordinates. The 'transformation' argument can either
 		be a six-tuple, or a fontTools.misc.transform.Transform object.
 		"""
+		super(TransformPen, self).__init__(outPen)
 		if not hasattr(transformation, "transformPoint"):
 			from fontTools.misc.transform import Transform
 			transformation = Transform(*transformation)
 		self._transformation = transformation
 		self._transformPoint = transformation.transformPoint
-		self._outPen = outPen
 		self._stack = []
 
 	def moveTo(self, pt):
