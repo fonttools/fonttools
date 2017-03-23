@@ -436,7 +436,7 @@ class SimpleCFF2Decompiler(SimpleT2Decompiler):
 		if self.numRegions == 0:
 			self.numRegions = self.private.getNumRegions()
 		numBlends = self.pop()
-		numOps = numBlends*self.numRegions
+		numOps = numBlends * (self.numRegions + 1)
 		blendArgs = self.operandStack[-numOps:]
 		del self.operandStack[:-(numOps-numBlends)] # Leave the default operands on the stack.
 
@@ -1291,7 +1291,7 @@ class DictDecompiler(ByteCodeBase):
 		# Total number of values is numValues + (numValues * (numMasters -1)), == numValues * numMasters.
 		# reformat list to be numReturnValues tuples, each tuple with nMaster values
 		vsindex = self.dict.get('vsindex', 0)
-		numMasters = self.parent.getNumRegions(vsindex) # only a PrivateDict has blended ops.
+		numMasters = self.parent.getNumRegions(vsindex) + 1 # only a PrivateDict has blended ops.
 		numReturnValues = self.pop()
 		stackIndex = -numMasters * numReturnValues
 		args = self.stack[stackIndex:]

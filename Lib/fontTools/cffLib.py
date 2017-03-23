@@ -779,7 +779,7 @@ class	VarStoreData(object):
 
 	def getNumRegions(self, vsIndex):
 		varData = self.otVarStore.VarData[vsIndex]
-		numRegions = varData.VarRegionCount +1 # The VarData VarRegionCount does not include the defautl region; the blend arg list does.
+		numRegions = varData.VarRegionCount
 		return numRegions
 
 
