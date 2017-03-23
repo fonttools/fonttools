@@ -706,6 +706,7 @@ class _TTGlyphSet(object):
 	def __init__(self, ttFont, glyphs, glyphType):
 		self._glyphs = glyphs
 		self._hmtx = ttFont['hmtx']
+		self._vmtx = ttFont['vmtx'] if 'vmtx' in ttFont else None
 		self._glyphType = glyphType
 
 	def keys(self):
@@ -717,7 +718,10 @@ class _TTGlyphSet(object):
 	__contains__ = has_key
 
 	def __getitem__(self, glyphName):
-		return self._glyphType(self, self._glyphs[glyphName], self._hmtx[glyphName])
+		horizontalMetrics = self._hmtx[glyphName]
+		verticalMetrics = self._vmtx[glyphName] if self._vmtx else None
+		return self._glyphType(
+			self, self._glyphs[glyphName], horizontalMetrics, verticalMetrics)
 
 	def get(self, glyphName, default=None):
 		try:
@@ -729,13 +733,21 @@ class _TTGlyph(object):
 
 	"""Wrapper for a TrueType glyph that supports the Pen protocol, meaning
 	that it has a .draw() method that takes a pen object as its only
-	argument. Additionally there is a 'width' attribute.
+	argument. Additionally there are 'width' and 'lsb' attributes, read from
+	the 'hmtx' table.
+
+	If the font contains a 'vmtx' table, there will also be 'height' and 'tsb'
+	attributes.
 	"""
 
-	def __init__(self, glyphset, glyph, metrics):
+	def __init__(self, glyphset, glyph, horizontalMetrics, verticalMetrics=None):
 		self._glyphset = glyphset
 		self._glyph = glyph
-		self.width, self.lsb = metrics
+		self.width, self.lsb = horizontalMetrics
+		if verticalMetrics:
+			self.height, self.tsb = verticalMetrics
+		else:
+			self.height, self.tsb = None, None
 
 	def draw(self, pen):
 		"""Draw the glyph onto Pen. See fontTools.pens.basePen for details
