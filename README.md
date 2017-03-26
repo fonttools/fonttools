@@ -453,8 +453,8 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 ```xml
 <rules>
 	<rule name="named.rule.1">
-   		<condition maximum="1" minimum="0" tag="aaaa" />
-		<condition maximum="3" minimum="2" tag="bbbb" />
+   		<condition maximum="250" minimum="750" name="weight" />
+		<condition maximum="500" minimum="1000" name="width" />
 		<sub name="dollar" byname="dollar.alt"/>
 	</rule>
 </rules>
