@@ -151,8 +151,8 @@ a1.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
 ```python
 r1 = RuleDescriptor()
 r1.name = "unique.rule.name"
-r1.conditions.append(dict(name="aaaa", minimum=-10, maximum=10))
-r1.conditions.append(dict(name="bbbb", minimum=-10, maximum=10))
+r1.conditions.append(dict(name="weight", minimum=-10, maximum=10))
+r1.conditions.append(dict(name="width", minimum=-10, maximum=10))
 ```
 
 # Subclassing descriptors
@@ -454,7 +454,7 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 <rules>
 	<rule name="named.rule.1">
    		<condition maximum="250" minimum="750" name="weight" />
-		<condition maximum="500" minimum="1000" name="width" />
+		<condition maximum="1000" minimum="500" name="width" />
 		<sub name="dollar" byname="dollar.alt"/>
 	</rule>
 </rules>
