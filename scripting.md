@@ -7,7 +7,6 @@ So, suppose you installed the [designSpaceDocument](https://github.com/LettError
 The `DesignSpaceDocument` object represents the document, whether it already exists or not. Make a new one:
 
 ```python
-import os
 from designSpaceDocument import DesignSpaceDocument, AxisDescriptor, SourceDescriptor, InstanceDescriptor
 doc = DesignSpaceDocument()
 ```
@@ -34,6 +33,7 @@ doc.addAxis(a1)
 ```
 * You can add as many axes as you need. OpenType has a maximum of around 64K. DesignSpaceEditor has a maximum of 5.
 * The `name` attribute is the name you'll be using as the axis name in the locations.
+* The `tag` attribute is the one of the registered [OpenType Variation Axis Tags](https://www.microsoft.com/typography/otspec/fvar.htm#VAT)
 
 ### Option: add label names
 
