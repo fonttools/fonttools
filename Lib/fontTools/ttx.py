@@ -285,12 +285,13 @@ def guessFileType(fileName):
 		f = open(fileName, "rb")
 	except IOError:
 		return None
+	header = f.read(256).lstrip(b'\xef\xbb\xbf')
+	f.close()
 	cr, tp = getMacCreatorAndType(fileName)
 	if tp in ("sfnt", "FFIL"):
 		return "TTF"
 	if ext == ".dfont":
 		return "TTF"
-	header = f.read(256).lstrip(b'\xef\xbb\xbf')
 	head = Tag(header[:4])
 	if head == "OTTO":
 		return "OTF"
