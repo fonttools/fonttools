@@ -11,7 +11,7 @@ from designSpaceDocument import DesignSpaceDocument, AxisDescriptor, SourceDescr
 doc = DesignSpaceDocument()
 ```
 
-We want to create definitions for axes, sources and instances. That means there are a lot of attributes to set. The **DesignSpaceDocument object** uses objects to descibe the axes, sources and instances. These are relatively simple objects, think of these as collections of attributes.
+We want to create definitions for axes, sources and instances. That means there are a lot of attributes to set. The **DesignSpaceDocument object** uses objects to describe the axes, sources and instances. These are relatively simple objects, think of these as collections of attributes.
 
 * [Attributes of the Source descriptor](https://github.com/LettError/designSpaceDocument#source-descriptor-object-attributes)
 * [Attributes of the Instance descriptor](https://github.com/LettError/designSpaceDocument#instance-descriptor-object)
