@@ -290,7 +290,7 @@ def guessFileType(fileName):
 		return "TTF"
 	if ext == ".dfont":
 		return "TTF"
-	header = f.read(256)
+	header = f.read(256).lstrip(b'\xef\xbb\xbf')
 	head = Tag(header[:4])
 	if head == "OTTO":
 		return "OTF"
