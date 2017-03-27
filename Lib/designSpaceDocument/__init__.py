@@ -1089,9 +1089,13 @@ class DesignSpaceDocument(object):
                     axisValues[name].append(value)
         have = self.getAxisOrder()
         for name, values in axisValues.items():
-            if name in have and overwrite:
-                # we're making a new axis
-                a = self.getAxis(name)
+            a = None
+            if name in have:
+                if overwrite:
+                    # we're making a new axis
+                    a = self.getAxis(name)
+                else:
+                    continue
             else:
                 # we need to make this axis
                 a = self.newAxisDescriptor()
