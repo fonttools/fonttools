@@ -1,3 +1,4 @@
+- [ttx] Support reading TTX files with BOM (#896)
 - [CFF2] Fixed the reporting of the number of regions in the font.
 
 3.9.1 (released 2017-03-20)
