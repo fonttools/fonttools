@@ -305,7 +305,7 @@ def guessFileType(fileName):
 		return "WOFF"
 	elif head == "wOF2":
 		return "WOFF2"
-	elif head.lower() == "<?xm":
+	elif head == "<?xm":
 		# Use 'latin1' because that can't fail.
 		header = tostr(header, 'latin1')
 		if opentypeheaderRE.search(header):
