@@ -285,8 +285,10 @@ def guessFileType(fileName):
 		f = open(fileName, "rb")
 	except IOError:
 		return None
-	header = f.read(256).lstrip(b'\xef\xbb\xbf')
+	header = f.read(256)
 	f.close()
+	if header.startswith(b'\xef\xbb\xbf<?xml'):
+		header = header.lstrip(b'\xef\xbb\xbf')
 	cr, tp = getMacCreatorAndType(fileName)
 	if tp in ("sfnt", "FFIL"):
 		return "TTF"
