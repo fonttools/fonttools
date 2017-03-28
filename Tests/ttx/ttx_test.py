@@ -8,15 +8,6 @@ import sys
 import tempfile
 import unittest
 
-try:
-    import xattr
-except ImportError:
-    xattr = None
-try:
-    import MacOS
-except ImportError:
-    MacOS = None
-
 
 class TTXTest(unittest.TestCase):
     def __init__(self, methodName):
@@ -159,12 +150,6 @@ class TTXTest(unittest.TestCase):
 
     def test_guessFileType_dfont(self):
         file_name = 'TestDFONT.dfont'
-        font_path = self.getpath(file_name)
-        self.assertEqual(ttx.guessFileType(font_path), 'TTF')
-
-    @unittest.skipUnless(xattr or MacOS, "xattr or MacOS not installed")
-    def test_guessFileType_ffil(self):
-        file_name = 'TestFFIL'
         font_path = self.getpath(file_name)
         self.assertEqual(ttx.guessFileType(font_path), 'TTF')
 
