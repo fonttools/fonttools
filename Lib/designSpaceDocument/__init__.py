@@ -631,8 +631,7 @@ class BaseDocReader(object):
             self.documentObject.axes.append(a)
 
     def readSources(self):
-        sourceCount = 0
-        for sourceElement in self.root.findall(".sources/source"):
+        for sourceCount, sourceElement in enumerate(self.root.findall(".sources/source")):
             filename = sourceElement.attrib.get('filename')
             if filename is not None and self.path is not None:
                 sourcePath = os.path.abspath(os.path.join(os.path.dirname(self.path), filename))
@@ -677,7 +676,6 @@ class BaseDocReader(object):
                 if kerningElement.attrib.get('mute') == '1':
                     sourceObject.muteKerning = True
             self.documentObject.sources.append(sourceObject)
-            sourceCount += 1
 
     def locationFromElement(self, element):
         elementLocation = None
