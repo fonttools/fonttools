@@ -559,7 +559,7 @@ class TTFont(object):
 
 	def getGlyphNames(self):
 		"""Get a list of glyph names, sorted alphabetically."""
-		glyphNames = sorted(self.getGlyphOrder()[:])
+		glyphNames = sorted(self.getGlyphOrder())
 		return glyphNames
 
 	def getGlyphNames2(self):
