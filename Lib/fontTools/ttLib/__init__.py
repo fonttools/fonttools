@@ -685,7 +685,7 @@ class TTFont(object):
 		the 'preferCFF' argument to specify which one should be taken.
 		"""
 		glyphs = None
-		if (preferCFF and "CFF " in self) or "glyf" not in self:
+		if (preferCFF and "CFF " in self) or ("glyf" not in self and "CFF " in self):
 			glyphs = _TTGlyphSet(self, list(self["CFF "].cff.values())[0].CharStrings, _TTGlyphCFF)
 
 		if glyphs is None and "glyf" in self:
