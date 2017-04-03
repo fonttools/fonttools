@@ -135,3 +135,11 @@ class GlyphCoordinatesTest(object):
         g /= (.5,1.5)
         g /= 2
         assert g == GlyphCoordinates([(1.0, 1.0)])
+
+    def test__bool__(self):
+        g = GlyphCoordinates([(0,0), (0.,0)])
+        assert bool(g) == False;
+        g = GlyphCoordinates([(0,0), (1,0)])
+        assert bool(g) == True;
+        g = GlyphCoordinates([(0,.5), (0,0)])
+        assert bool(g) == True;

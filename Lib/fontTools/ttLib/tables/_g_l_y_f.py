@@ -1471,6 +1471,22 @@ class GlyphCoordinates(object):
 			return self
 		return NotImplemented
 
+	def __bool__(self):
+		"""
+		>>> g = GlyphCoordinates([(0,0), (0.,0)])
+		>>> bool(g)
+		False
+		>>> g = GlyphCoordinates([(0,0), (1,0)])
+		>>> bool(g)
+		True
+		>>> g = GlyphCoordinates([(0,.5), (0,0)])
+		>>> bool(g)
+		True
+		"""
+		return any(v for v in self._a)
+
+	__nonzero__ = __bool__
+
 
 def reprflag(flag):
 	bin = ""
