@@ -160,7 +160,7 @@ def _SetCoordinates(font, glyphName, coord):
 	font["hmtx"].metrics[glyphName] = horizontalAdvanceWidth, leftSideBearing
 
 
-def _add_gvar(font, model, master_ttfs):
+def _add_gvar(font, model, master_ttfs, tolerance=.5):
 
 	log.info("Generating gvar")
 	assert "gvar" not in font
@@ -187,6 +187,8 @@ def _add_gvar(font, model, master_ttfs):
 		assert len(deltas) == len(supports)
 		for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
 			if not delta:
+				continue
+			if tolerance and max(abs(delta).array) <= tolerance:
 				continue
 			var = TupleVariation(support, delta)
 			gvar.variations[glyph].append(var)
