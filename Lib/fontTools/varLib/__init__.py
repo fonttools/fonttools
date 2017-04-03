@@ -186,6 +186,8 @@ def _add_gvar(font, model, master_ttfs):
 		supports = model.supports
 		assert len(deltas) == len(supports)
 		for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
+			if not delta:
+				continue
 			var = TupleVariation(support, delta)
 			gvar.variations[glyph].append(var)
 
