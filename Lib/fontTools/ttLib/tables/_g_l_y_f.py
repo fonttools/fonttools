@@ -1161,6 +1161,10 @@ class GlyphCoordinates(object):
 		self._a = array.array(typecode)
 		self.extend(iterable)
 
+	@property
+	def array(self):
+		return self._a
+
 	def isFloat(self):
 		return self._a.typecode == 'f'
 
