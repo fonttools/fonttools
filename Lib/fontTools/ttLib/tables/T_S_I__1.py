@@ -1,6 +1,8 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from . import DefaultTable
+import logging
+
 
 class table_T_S_I__1(DefaultTable.DefaultTable):
 
@@ -8,33 +10,69 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 
 	indextable = "TSI0"
 
-	def decompile(self, data, ttFont):
-		indextable = ttFont[self.indextable]
-		self.glyphPrograms = {}
-		for i in range(len(indextable.indices)):
-			glyphID, textLength, textOffset = indextable.indices[i]
-			if textLength == 0x8000:
-				# Ugh. Hi Beat!
-				textLength = indextable.indices[i+1][1]
-			if textLength > 0x8000:
-				pass  # XXX Hmmm.
-			text = data[textOffset:textOffset+textLength]
-			assert len(text) == textLength
-			if text:
-				self.glyphPrograms[ttFont.getGlyphName(glyphID)] = text
+	def __init__(self, tag=None):
+		super(table_T_S_I__1, self).__init__(tag)
+		self.log = logging.getLogger(self.__class__.__module__)
 
-		self.extraPrograms = {}
-		for i in range(len(indextable.extra_indices)):
-			extraCode, textLength, textOffset = indextable.extra_indices[i]
-			if textLength == 0x8000:
-				if self.extras[extraCode] == "fpgm":	# this is the last one
-					textLength = len(data) - textOffset
+	def decompile(self, data, ttFont):
+		totalLength = len(data)
+		indextable = ttFont[self.indextable]
+		for indices, isExtra in zip(
+				(indextable.indices, indextable.extra_indices), (False, True)):
+			programs = {}
+			for i, (glyphID, textLength, textOffset) in enumerate(indices):
+				if isExtra:
+					name = self.extras[glyphID]
 				else:
-					textLength = indextable.extra_indices[i+1][1]
-			text = data[textOffset:textOffset+textLength]
-			assert len(text) == textLength
-			if text:
-				self.extraPrograms[self.extras[extraCode]] = text
+					name = ttFont.getGlyphName(glyphID)
+				if textOffset > totalLength:
+					self.log.warning("textOffset > totalLength; %r skipped" % name)
+					continue
+				if textLength < 0x8000:
+					# If the length stored in the record is less than 32768, then use
+					# that as the length of the record.
+					pass
+				elif textLength == 0x8000:
+					# If the length is 32768, compute the actual length as follows:
+					isLast = i == (len(indices)-1)
+					if isLast:
+						if isExtra:
+							# For the last "extra" record (the very last record of the
+							# table), the length is the difference between the total
+							# length of the TSI1 table and the textOffset of the final
+							# record.
+							nextTextOffset = totalLength
+						else:
+							# For the last "normal" record (the last record just prior
+							# to the record containing the "magic number"), the length
+							# is the difference between the textOffset of the record
+							# following the "magic number" (0xFFFE) record (i.e. the
+							# first "extra" record), and the textOffset of the last
+							# "normal" record.
+							nextTextOffset = indextable.extra_indices[0][2]
+					else:
+						# For all other records with a length of 0x8000, the length is
+						# the difference between the textOffset of the record in
+						# question and the textOffset of the next record.
+						nextTextOffset = indices[i+1][2]
+					assert nextTextOffset >= textOffset, "entries not sorted by offset"
+					if nextTextOffset > totalLength:
+						self.log.warning(
+							"nextTextOffset > totalLength; %r truncated" % name)
+						nextTextOffset = totalLength
+					textLength = nextTextOffset - textOffset
+				else:
+					from fontTools import ttLib
+					raise ttLib.TTLibError(
+						"%r textLength (%d) must not be > 32768" % (name, textLength))
+				text = data[textOffset:textOffset+textLength]
+				assert len(text) == textLength
+				if text:
+					programs[name] = text
+			if isExtra:
+				self.extraPrograms = programs
+			else:
+				self.glyphPrograms = programs
 
 	def compile(self, ttFont):
 		if not hasattr(self, "glyphPrograms"):
@@ -55,7 +93,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 				text = b""
 			textLength = len(text)
 			if textLength >= 0x8000:
-				textLength = 0x8000  # XXX ???
+				textLength = 0x8000
 			indices.append((i, textLength, len(data)))
 			data = data + text
 
@@ -71,7 +109,7 @@ class table_T_S_I__1(DefaultTable.DefaultTable):
 				text = b""
 			textLength = len(text)
 			if textLength >= 0x8000:
-				textLength = 0x8000  # XXX ???
+				textLength = 0x8000
 			extra_indices.append((code, textLength, len(data)))
 			data = data + text
 		indextable.set(indices, extra_indices)
