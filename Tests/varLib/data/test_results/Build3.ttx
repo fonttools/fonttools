@@ -151,15 +151,6 @@
         <delta pt="25" x="0" y="0"/>
       </tuple>
     </glyphVariations>
-    <glyphVariations glyph="space">
-      <tuple>
-        <coord axis="wght" value="1.0"/>
-        <delta pt="0" x="0" y="0"/>
-        <delta pt="1" x="0" y="0"/>
-        <delta pt="2" x="0" y="0"/>
-        <delta pt="3" x="0" y="0"/>
-      </tuple>
-    </glyphVariations>
     <glyphVariations glyph="A">
       <tuple>
         <coord axis="wght" value="1.0"/>

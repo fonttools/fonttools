@@ -954,13 +954,6 @@
     </glyphVariations>
     <glyphVariations glyph="uni0020">
       <tuple>
-        <coord axis="cntr" value="1.0"/>
-        <delta pt="0" x="0" y="0"/>
-        <delta pt="1" x="0" y="0"/>
-        <delta pt="2" x="0" y="0"/>
-        <delta pt="3" x="0" y="0"/>
-      </tuple>
-      <tuple>
         <coord axis="wght" value="-1.0"/>
         <delta pt="0" x="0" y="0"/>
         <delta pt="1" x="14" y="0"/>
@@ -971,22 +964,6 @@
         <coord axis="wght" value="1.0"/>
         <delta pt="0" x="0" y="0"/>
         <delta pt="1" x="-28" y="0"/>
-        <delta pt="2" x="0" y="0"/>
-        <delta pt="3" x="0" y="0"/>
-      </tuple>
-      <tuple>
-        <coord axis="wght" value="-1.0"/>
-        <coord axis="cntr" value="1.0"/>
-        <delta pt="0" x="0" y="0"/>
-        <delta pt="1" x="0" y="0"/>
-        <delta pt="2" x="0" y="0"/>
-        <delta pt="3" x="0" y="0"/>
-      </tuple>
-      <tuple>
-        <coord axis="wght" value="1.0"/>
-        <coord axis="cntr" value="1.0"/>
-        <delta pt="0" x="0" y="0"/>
-        <delta pt="1" x="0" y="0"/>
         <delta pt="2" x="0" y="0"/>
         <delta pt="3" x="0" y="0"/>
       </tuple>
