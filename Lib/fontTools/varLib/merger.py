@@ -103,7 +103,6 @@ class Merger(object):
 
 		for tag in tables:
 			if tag not in font: continue
-			print('Merging', tag)
 			self.mergeThings(font[tag], [m[tag] for m in master_ttfs])
 
 #
@@ -351,6 +350,7 @@ def _ClassDef_calculate_Format(self, font):
 	self.Format = fmt
 
 def _PairPosFormat2_merge(self, lst, merger):
+
 	merger.mergeObjects(self, lst,
 			    exclude=('Coverage',
 				     'ClassDef1', 'Class1Count',
