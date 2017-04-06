@@ -533,7 +533,7 @@ def _Lookup_PairPosFormat2_subtables_recombine(a, b, font):
 	self.Class1Count = a.Class1Count + b.Class1Count
 	self.ClassDef1 = ot.ClassDef()
 
-	classDefs = ot.ClassDef1.classDefs = {}
+	classDefs = self.ClassDef1.classDefs = {}
 	offset = a.Class1Count
 	# First subtable overrides any possible shared glyph, so add b first.
 	sets = _ClassDef_invert(b.ClassDef1, allGlyphs=b.Coverage.glyphs)
