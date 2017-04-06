@@ -856,7 +856,7 @@ def splitPairPos(oldSubTable, newSubTable, overflowRecord):
 		oldSubTable.Class1Record = records[:oldCount]
 
 		newSubTable.Coverage.glyphs = [g for g in coverage if g in newGlyphs]
-		newSubTable.ClassDef1.classDefs = {k:(v-oldCount) for k,v in classDefs.items() if v >= oldCount}
+		newSubTable.ClassDef1.classDefs = {k:(v-oldCount) for k,v in classDefs.items() if v > oldCount}
 		newSubTable.Class1Record = records[oldCount:]
 
 		oldSubTable.Class1Count = len(oldSubTable.Class1Record)
