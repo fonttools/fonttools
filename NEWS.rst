@@ -1,3 +1,6 @@
+3.9.2 (released 2017-04-08)
+---------------------------
+
 - [pens] Added pen to draw glyphs using WxPython ``GraphicsPath`` class:
   https://wxpython.org/docs/api/wx.GraphicsPath-class.html
 - [varLib.merger] Fixed issue with recombining multiple PairPosFormat2
