@@ -1,3 +1,13 @@
+- [pens] Added pen to draw glyphs using WxPython ``GraphicsPath`` class:
+  https://wxpython.org/docs/api/wx.GraphicsPath-class.html
+- [varLib.merger] Fixed issue with recombining multiple PairPosFormat2
+  subtables (#888)
+- [varLib] Do not encode gvar deltas that are all zeroes, or if all values
+  are smaller than tolerance.
+- [ttLib] _TTGlyphSet glyphs now also have ``height`` and ``tsb`` (top
+  side bearing) attributes from the ``vmtx`` table, if present.
+- [glyf] In ``GlyphCoordintes`` class, added ``__bool__`` / ``__nonzero__``
+  methods, and ``array`` property to get raw array.
 - [ttx] Support reading TTX files with BOM (#896)
 - [CFF2] Fixed the reporting of the number of regions in the font.
 
