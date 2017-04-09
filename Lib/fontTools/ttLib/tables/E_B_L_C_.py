@@ -538,7 +538,7 @@ class eblc_index_sub_table_2(FixedSizeIndexSubTableMixin, EblcIndexSubTable):
 		glyphIds = list(map(ttFont.getGlyphID, self.names))
 		# Make sure all the ids are consecutive. This is required by Format 2.
 		assert glyphIds == list(range(self.firstGlyphIndex, self.lastGlyphIndex+1)), "Format 2 ids must be consecutive."
-		self.imageDataOffset = min(zip(*self.locations)[0])
+		self.imageDataOffset = min(next(iter(zip(*self.locations))))
 
 		dataList = [EblcIndexSubTable.compile(self, ttFont)]
 		dataList.append(struct.pack(">L", self.imageSize))
@@ -606,7 +606,7 @@ class eblc_index_sub_table_5(FixedSizeIndexSubTableMixin, EblcIndexSubTable):
 		del self.data, self.ttFont
 
 	def compile(self, ttFont):
-		self.imageDataOffset = min(zip(*self.locations)[0])
+		self.imageDataOffset = min(next(iter(zip(*self.locations))))
 		dataList = [EblcIndexSubTable.compile(self, ttFont)]
 		dataList.append(struct.pack(">L", self.imageSize))
 		dataList.append(sstruct.pack(bigGlyphMetricsFormat, self.metrics))
