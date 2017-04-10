@@ -30,7 +30,7 @@ class table_T_S_I__0(DefaultTable.DefaultTable):
 		if not hasattr(self, "indices"):
 			# We have no corresponding table (TSI1 or TSI3); let's return
 			# no data, which effectively means "ignore us".
-			return ""
+			return b""
 		data = b""
 		for index, textLength, textOffset in self.indices:
 			data = data + struct.pack(tsi0Format, index, textLength, textOffset)
