@@ -276,9 +276,8 @@ environments.
 
 Note that when you run ``tox`` without arguments, the tests are executed
 for all the environments listed in tox.ini's ``envlist``. In our case,
-this includes Python 2.7, 3.5 and 3.6, so for this to work the
-``python2.7``, ``python3.5`` and ``python3.6`` executables must be
-available in your ``PATH``.
+this includes Python 2.7 and 3.6, so for this to work the ``python2.7``
+and ``python3.6`` executables must be available in your ``PATH``.
 
 You can specify an alternative environment list via the ``-e`` option,
 or the ``TOXENV`` environment variable:
@@ -286,7 +285,7 @@ or the ``TOXENV`` environment variable:
 .. code:: sh
 
     tox -e py27-nocov
-    TOXENV="py{27,36}-cov" tox
+    TOXENV="py36-cov,htmlcov" tox
 
 Development Community
 ~~~~~~~~~~~~~~~~~~~~~
