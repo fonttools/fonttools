@@ -463,6 +463,13 @@ class CapturingLogHandler(logging.Handler):
 	def createLock(self):
 		self.lock = None
 
+	def match(self, regexp):
+		import re
+		pattern = re.compile(regexp)
+		for r in self.records:
+			if pattern.search(r.msg):
+				return True
+		assert 0, "Pattern '%s' not found in logger records" % regexp
 
 def deprecateArgument(name, msg, category=UserWarning):
 	""" Raise a warning about deprecated function argument 'name'. """
