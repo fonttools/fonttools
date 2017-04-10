@@ -28,7 +28,7 @@ from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.ttLib.tables._g_v_a_r import TupleVariation
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib import builder, designspace, models
-from fontTools.varLib.merger import VariationMerger
+from fontTools.varLib.merger import VariationMerger, _all_equal
 from collections import OrderedDict
 import warnings
 import os.path
@@ -243,6 +243,95 @@ def _add_HVAR(font, model, master_ttfs, axisTags):
 	hvar.AdvWidthMap = advanceMapping
 	hvar.LsbMap = hvar.RsbMap = None
 
+_MVAR_entries = {
+	'hasc': ('OS/2', 'sTypoAscender'),		 # horizontal ascender
+	'hdsc': ('OS/2', 'sTypoDescender'),		 # horizontal descender
+	'hlgp': ('OS/2', 'sTypoLineGap'),		 # horizontal line gap
+	'hcla': ('OS/2', 'usWinAscent'),		 # horizontal clipping ascent
+	'hcld': ('OS/2', 'usWinDescent'),		 # horizontal clipping descent
+	'vasc': ('vhea', 'ascent'),			 # vertical ascender
+	'vdsc': ('vhea', 'descent'),			 # vertical descender
+	'vlgp': ('vhea', 'lineGap'),			 # vertical line gap
+	'hcrs': ('hhea', 'caretSlopeRise'),		 # horizontal caret rise
+	'hcrn': ('hhea', 'caretSlopeRun'),		 # horizontal caret run
+	'hcof': ('hhea', 'caretOffset'),		 # horizontal caret offset
+	'vcrs': ('vhea', 'caretSlopeRise'),		 # vertical caret rise
+	'vcrn': ('vhea', 'caretSlopeRun'),		 # vertical caret run
+	'vcof': ('vhea', 'caretOffset'),		 # vertical caret offset
+	'xhgt': ('OS/2', 'sxHeight'),			 # x height
+	'cpht': ('OS/2', 'sCapHeight'),			 # cap height
+	'sbxs': ('OS/2', 'ySubscriptXSize'),		 # subscript em x size
+	'sbys': ('OS/2', 'ySubscriptYSize'),		 # subscript em y size
+	'sbxo': ('OS/2', 'ySubscriptXOffset'),		 # subscript em x offset
+	'sbyo': ('OS/2', 'ySubscriptYOffset'),		 # subscript em y offset
+	'spxs': ('OS/2', 'ySuperscriptXSize'),		 # superscript em x size
+	'spys': ('OS/2', 'ySuperscriptYSize'),		 # superscript em y size
+	'spxo': ('OS/2', 'ySuperscriptXOffset'),	 # superscript em x offset
+	'spyo': ('OS/2', 'ySuperscriptYOffset'),	 # superscript em y offset
+	'strs': ('OS/2', 'yStrikeoutSize'),		 # strikeout size
+	'stro': ('OS/2', 'yStrikeoutPosition'),		 # strikeout offset
+	'unds': ('post', 'underlineThickness'),		 # underline size
+	'undo': ('post', 'underlinePosition'),		 # underline offset
+	#'gsp0': ('gasp', 'gaspRange[0].rangeMaxPPEM'),	 # gaspRange[0]
+	#'gsp1': ('gasp', 'gaspRange[1].rangeMaxPPEM'),	 # gaspRange[1]
+	#'gsp2': ('gasp', 'gaspRange[2].rangeMaxPPEM'),	 # gaspRange[2]
+	#'gsp3': ('gasp', 'gaspRange[3].rangeMaxPPEM'),	 # gaspRange[3]
+	#'gsp4': ('gasp', 'gaspRange[4].rangeMaxPPEM'),	 # gaspRange[4]
+	#'gsp5': ('gasp', 'gaspRange[5].rangeMaxPPEM'),	 # gaspRange[5]
+	#'gsp6': ('gasp', 'gaspRange[6].rangeMaxPPEM'),	 # gaspRange[6]
+	#'gsp7': ('gasp', 'gaspRange[7].rangeMaxPPEM'),	 # gaspRange[7]
+	#'gsp8': ('gasp', 'gaspRange[8].rangeMaxPPEM'),	 # gaspRange[8]
+	#'gsp9': ('gasp', 'gaspRange[9].rangeMaxPPEM'),	 # gaspRange[9]
+}
+
+
+def _add_MVAR(font, model, master_ttfs, axisTags):
+
+	log.info("Generating MVAR")
+
+	store_builder = builder.OnlineVarStoreBuilder(axisTags)
+	store_builder.setModel(model)
+
+	records = []
+	lastTableTag = None
+	fontTable = None
+	tables = None
+	for tag, (tableTag, itemName) in sorted(_MVAR_entries.items(), key=lambda kv: kv[1]):
+		if tableTag != lastTableTag:
+			tables = fontTable = None
+			if tableTag in font:
+				# TODO Check all masters have same table set?
+				fontTable = font[tableTag]
+				tables = [master[tableTag] for master in master_ttfs]
+			lastTableTag = tableTag
+		if tables is None:
+			continue
+
+		# TODO support gasp entries
+
+		master_values = [getattr(table, itemName) for table in tables]
+		if _all_equal(master_values):
+			base, varIdx = master_values[0], None
+		else:
+			base, varIdx = store_builder.storeMasters(master_values)
+		setattr(fontTable, itemName, base)
+
+		if varIdx is None:
+			continue
+		log.info('	%s: %s.%s	%s', tag, tableTag, itemName, master_values)
+		rec = ot.MetricsValueRecord()
+		rec.ValueTag = tag
+		rec.VarIdx = varIdx
+		records.append(rec)
+
+	assert "MVAR" not in font
+	MVAR = font["MVAR"] = newTable('MVAR')
+	mvar = MVAR.table = ot.MVAR()
+	mvar.Version = 0x00010000
+	mvar.Reserved = 0
+	mvar.VarStore = store_builder.finish()
+	mvar.ValueRecord = sorted(records, key=lambda r: r.ValueTag)
+
 
 def _merge_OTL(font, model, master_fonts, axisTags, base_idx):
 
@@ -381,6 +470,7 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	assert 0 == model.mapping[base_idx]
 
 	log.info("Building variations tables")
+	_add_MVAR(gx, model, master_fonts, axisTags)
 	if 'glyf' in gx:
 		_add_gvar(gx, model, master_fonts)
 	_add_HVAR(gx, model, master_fonts, axisTags)
