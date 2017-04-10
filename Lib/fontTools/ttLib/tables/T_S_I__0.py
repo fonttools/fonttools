@@ -3,7 +3,7 @@ from fontTools.misc.py23 import *
 from . import DefaultTable
 import struct
 
-tsi0Format = '>HHl'
+tsi0Format = '>HHL'
 
 def fixlongs(glyphID, textLength, textOffset):
 	return int(glyphID), int(textLength), textOffset
@@ -22,7 +22,7 @@ class table_T_S_I__0(DefaultTable.DefaultTable):
 			indices.append((glyphID, textLength, textOffset))
 			data = data[size:]
 		assert len(data) == 0
-		assert indices[-5] == (0XFFFE, 0, -1409540300), "bad magic number"  # 0xABFC1F34
+		assert indices[-5] == (0XFFFE, 0, 0xABFC1F34), "bad magic number"
 		self.indices = indices[:-5]
 		self.extra_indices = indices[-4:]
 
@@ -34,7 +34,7 @@ class table_T_S_I__0(DefaultTable.DefaultTable):
 		data = b""
 		for index, textLength, textOffset in self.indices:
 			data = data + struct.pack(tsi0Format, index, textLength, textOffset)
-		data = data + struct.pack(tsi0Format, 0XFFFE, 0, -1409540300)  # 0xABFC1F34
+		data = data + struct.pack(tsi0Format, 0XFFFE, 0, 0xABFC1F34)
 		for index, textLength, textOffset in self.extra_indices:
 			data = data + struct.pack(tsi0Format, index, textLength, textOffset)
 		return data
