@@ -16,7 +16,7 @@ A couple of differences between things that use designspaces:
 * MutatorMath and Superpolator will extrapolate over the boundaries of the axes. Varlib can not.
 * Varlib requires much less data to define an instance than MutatorMath.
 * The goals of Varlib and MutatorMath are different, so not all attributes are always needed.
-* Need to expand the description of FDK use of deisgnspace files.
+* Need to expand the description of FDK use of designspace files.
 
 The DesignSpaceDocument object can read and write .designspace data. It imports the axes, sources and instances to very basic **descriptor** objects that store the data in attributes. Data is added to the document by creating such descriptor objects, filling them with data and then adding them to the document. This makes it easy to integrate this object in different contexts.
 
@@ -124,7 +124,7 @@ i2.glyphs['arrow2'] = dict(mute=False)
 doc.addInstance(i2)
 ```
 # `AxisDescriptor` object
-* `tag`: string. Four letter tag for this axis. Some might be registered at the OpenType specification.
+* `tag`: string. Four letter tag for this axis. Some might be registered at the [OpenType specification](https://www.microsoft.com/typography/otspec/fvar.htm#VAT). Privately-defined axis tags must begin with an uppercase letter and use only uppercase letters or digits.
 * `name`: string. Name of the axis as it is used in the location dicts. MutatorMath + Varlib.
 * `labelNames`: dict. When defining a non-registered axis, it will be necessary to define user-facing readable names for the axis. Keyed by xml:lang code. Varlib. 
 * `minimum`: number. The minimum value for this axis. MutatorMath + Varlib.
@@ -134,14 +134,14 @@ doc.addInstance(i2)
 
 ```python
 a1 = AxisDescriptor()
-a1.minimum = 0
+a1.minimum = 1
 a1.maximum = 1000
-a1.default = 0
+a1.default = 400
 a1.name = "weight"
 a1.tag = "wght"
 a1.labelNames[u'fa-IR'] = u"قطر"
 a1.labelNames[u'en'] = u"Wéíght"
-a1.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
+a1.map = [(1.0, 10.0), (400.0, 66.0), (1000.0, 990.0)]
 ```
 # `RuleDescriptor` object
 * `name`: string. Unique name for this rule. Will be used to reference this rule data.
@@ -179,7 +179,7 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 
 *	The `axes` element contains one or more `axis` elements.
 *	The `sources` element contains one or more `source` elements.
-* 	The `instances` element contains one or more `instance` elements.
+*	The `instances` element contains one or more `instance` elements.
 
 ```xml
 <?xml version='1.0' encoding='utf-8'?>
@@ -210,7 +210,7 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 * `default`: required, number. The default value for this axis.
 
 ```xml
-<axis name="weight" tag="wght" minimum="-1000" maximum="1000" default="0">
+<axis name="weight" tag="wght" minimum="1" maximum="1000" default="400">
 ```
 
 # 1.1 `labelname` element
@@ -238,22 +238,22 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 
 ### Example
 ```xml
-<map input="0.0" output="10.0" />
-<map input="401.0" output="66.0" />
+<map input="1.0" output="10.0" />
+<map input="400.0" output="66.0" />
 <map input="1000.0" output="990.0" />
 ```
 
 ### Example of all axis elements together:
 ```xml
     <axes>
-        <axis default="0" maximum="1000" minimum="0" name="weight" tag="wght">
+        <axis default="1" maximum="1000" minimum="0" name="weight" tag="wght">
             <labelname xml:lang="fa-IR">قطر</labelname>
             <labelname xml:lang="en">Wéíght</labelname>
         </axis>
-        <axis default="0" maximum="1000" minimum="0" name="width" tag="wdth">
-            <map input="0.0" output="10.0" />
-            <map input="401.0" output="66.0" />
-            <map input="1000.0" output="990.0" />
+        <axis default="100" maximum="200" minimum="50" name="width" tag="wdth">
+            <map input="50.0" output="10.0" />
+            <map input="100.0" output="66.0" />
+            <map input="200.0" output="990.0" />
         </axis>
     </axes>
 ```
@@ -353,7 +353,7 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 <instance familyname="InstanceFamilyName" filename="instances/instanceTest2.ufo" name="instance.ufo2" postscriptfontname="InstancePostscriptName" stylemapfamilyname="InstanceStyleMapFamilyName" stylemapstylename="InstanceStyleMapStyleName" stylename="InstanceStyleName">
 <location>
 	<dimension name="width" xvalue="400" yvalue="300" />
-   <dimension name="weight" xvalue="500" />
+   <dimension name="weight" xvalue="66" />
 </location>
 <kerning />
 <info />
@@ -392,7 +392,7 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 <instance familyname="InstanceFamilyName" filename="instances/instanceTest2.ufo" name="instance.ufo2" postscriptfontname="InstancePostscriptName" stylemapfamilyname="InstanceStyleMapFamilyName" stylemapstylename="InstanceStyleMapStyleName" stylename="InstanceStyleName">
 <location>
 	<dimension name="width" xvalue="400" yvalue="300" />
-   <dimension name="weight" xvalue="500" />
+   <dimension name="weight" xvalue="66" />
 </location>
 <glyphs>
 	<glyph name="arrow2" />
@@ -453,8 +453,8 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 ```xml
 <rules>
 	<rule name="named.rule.1">
-   		<condition maximum="250" minimum="750" name="weight" />
-		<condition maximum="1000" minimum="500" name="width" />
+		<condition minimum="250" maximum="750" name="weight" />
+		<condition minimum="50" maximum="100" name="width" />
 		<sub name="dollar" byname="dollar.alt"/>
 	</rule>
 </rules>
@@ -530,5 +530,3 @@ descriptor.path == "~/absolute/path/there"
 # 7 This document
 
 * The package is rather new and changes are to be expected.
-
-
