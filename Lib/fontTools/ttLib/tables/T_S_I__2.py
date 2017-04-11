@@ -1,3 +1,10 @@
+""" TSI{0,1,2,3,5} are private tables used by Microsoft Visual TrueType (VTT)
+tool to store its hinting source data.
+
+TSI2 is the index table containing the lengths and offsets for the glyph
+programs that are contained in the TSI3 table. It uses the same format as
+the TSI0 table.
+"""
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools import ttLib
