@@ -477,6 +477,25 @@ if not hasattr(logging, 'lastResort'):
 	logging.setLoggerClass(_Logger)
 
 
+try:
+	from types import SimpleNamespace
+except ImportError:
+	class SimpleNamespace(object):
+		"""
+		A backport of Python 3.3's ``types.SimpleNamespace``.
+		"""
+		def __init__(self, **kwargs):
+			self.__dict__.update(kwargs)
+
+		def __repr__(self):
+			keys = sorted(self.__dict__)
+			items = ("{0}={1!r}".format(k, self.__dict__[k]) for k in keys)
+			return "{0}({1})".format(type(self).__name__, ", ".join(items))
+
+		def __eq__(self, other):
+			return self.__dict__ == other.__dict__
+
+
 if __name__ == "__main__":
 	import doctest, sys
 	sys.exit(doctest.testmod().failed)
