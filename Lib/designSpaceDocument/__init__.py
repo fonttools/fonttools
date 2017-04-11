@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, division, absolute_import
+import collections
 import logging
 import os
 import xml.etree.ElementTree as ET
@@ -255,7 +256,7 @@ class BaseDocWriter(object):
         self.rules = []
 
     def newDefaultLocation(self):
-        loc = {}
+        loc = collections.OrderedDict()
         for axisDescriptor in self.axes:
             loc[axisDescriptor.name] = axisDescriptor.default
         return loc
@@ -291,7 +292,9 @@ class BaseDocWriter(object):
         if name is not None:
             locElement.attrib['name'] = name
         defaultLoc = self.newDefaultLocation()
-        validatedLocation = {}
+        # Without OrderedDict, output XML would be non-deterministic.
+        # https://github.com/LettError/designSpaceDocument/issues/10
+        validatedLocation = collections.OrderedDict()
         for axisName, axisValue in defaultLoc.items():
             # update the location dict with missing default axis values
             validatedLocation[axisName] = locationObject.get(axisName, axisValue)
