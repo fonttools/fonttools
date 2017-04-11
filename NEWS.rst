@@ -1,3 +1,8 @@
+- [TSI1] Fixed computation of the textLength of VTT private tables (#913).
+- [loggingTools] Added ``assertRegex`` method to ``CapturingLogHandler``.
+- [py23] Added backport for python 3's ``types.SimpleNamespace`` class.
+- [EBLC] Fixed issue with python 3 ``zip`` iterator.
+
 3.9.2 (released 2017-04-08)
 ---------------------------
 
