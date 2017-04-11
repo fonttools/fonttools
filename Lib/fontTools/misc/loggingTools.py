@@ -463,7 +463,7 @@ class CapturingLogHandler(logging.Handler):
 	def createLock(self):
 		self.lock = None
 
-	def match(self, regexp):
+	def assertRegex(self, regexp):
 		import re
 		pattern = re.compile(regexp)
 		for r in self.records:

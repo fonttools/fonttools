@@ -153,7 +153,7 @@ def test_decompile_magic_length_non_last(empty_font):
     table = table_T_S_I__1()
     with CapturingLogHandler(table.log, "WARNING") as captor:
         table.decompile(data[:-1], empty_font)  # last entry is truncated
-    assert captor.match("nextTextOffset > totalLength")
+    captor.assertRegex("nextTextOffset > totalLength")
     assert table.extraPrograms['cvt'] == cvt_data[:-1]
 
 
