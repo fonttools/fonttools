@@ -7,18 +7,14 @@ code, as well as the 'extra' programs 'fpgm', 'ppgm' (i.e. 'prep'), and 'cvt'.
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from . import DefaultTable
-import logging
+from fontTools.misc.loggingTools import LogMixin
 
 
-class table_T_S_I__1(DefaultTable.DefaultTable):
+class table_T_S_I__1(LogMixin, DefaultTable.DefaultTable):
 
 	extras = {0xfffa: "ppgm", 0xfffb: "cvt", 0xfffc: "reserved", 0xfffd: "fpgm"}
 
 	indextable = "TSI0"
-
-	def __init__(self, tag=None):
-		super(table_T_S_I__1, self).__init__(tag)
-		self.log = logging.getLogger(self.__class__.__module__)
 
 	def decompile(self, data, ttFont):
 		totalLength = len(data)

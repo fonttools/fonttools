@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import (
-    LevelFormatter, Timer, configLogger, ChannelsFilter)
+    LevelFormatter, Timer, configLogger, ChannelsFilter, LogMixin)
 import logging
 import textwrap
 import time
@@ -148,3 +148,25 @@ def test_ChannelsFilter(logger):
 
     logging.getLogger(n+'.C.DE').debug('neither this one!')
     assert before == stream.getvalue()
+
+
+def test_LogMixin():
+
+    class Base(object):
+        pass
+
+    class A(LogMixin, Base):
+        pass
+
+    class B(A):
+        pass
+
+    a = A()
+    b = B()
+
+    assert hasattr(a, 'log')
+    assert hasattr(b, 'log')
+    assert isinstance(a.log, logging.Logger)
+    assert isinstance(b.log, logging.Logger)
+    assert a.log.name == "loggingTools_test.A"
+    assert b.log.name == "loggingTools_test.B"

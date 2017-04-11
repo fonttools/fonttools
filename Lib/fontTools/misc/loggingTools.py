@@ -471,6 +471,18 @@ class CapturingLogHandler(logging.Handler):
 				return True
 		assert 0, "Pattern '%s' not found in logger records" % regexp
 
+
+class LogMixin(object):
+	""" Mixin class that adds a 'log' property getter returning an instance
+	of logging.Logger class, which is named after self <module>.<class> name.
+	"""
+
+	@property
+	def log(self):
+		name = ".".join([self.__class__.__module__, self.__class__.__name__])
+		return logging.getLogger(name)
+
+
 def deprecateArgument(name, msg, category=UserWarning):
 	""" Raise a warning about deprecated function argument 'name'. """
 	warnings.warn(
