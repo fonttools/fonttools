@@ -1,3 +1,5 @@
+- [loggintTools] Added ``LogMixin`` class providing a ``log`` property to
+  subclasses, which returns a ``logging.Logger`` named after the latter.
 - [TSI1] Fixed computation of the textLength of VTT private tables (#913).
 - [loggingTools] Added ``assertRegex`` method to ``CapturingLogHandler``.
 - [py23] Added backport for python 3's ``types.SimpleNamespace`` class.
