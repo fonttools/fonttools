@@ -105,3 +105,9 @@ def load(filename):
 def loads(string):
 	"""Load designspace from a string."""
 	return _load(ET.fromstring(string))
+
+if __name__ == '__main__':
+	import sys
+	from pprint import pprint
+	for f in sys.argv[1:]:
+		pprint(load(f))
