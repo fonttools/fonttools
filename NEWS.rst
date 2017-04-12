@@ -1,3 +1,5 @@
+- [varLib] Added partial support for building ``MVAR`` table; does not
+  implement ``gasp`` table variations yet.
 - [loggintTools] Added ``LogMixin`` class providing a ``log`` property to
   subclasses, which returns a ``logging.Logger`` named after the latter.
 - [TSI1] Fixed computation of the textLength of VTT private tables (#913).
