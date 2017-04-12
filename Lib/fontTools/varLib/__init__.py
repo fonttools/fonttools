@@ -368,15 +368,6 @@ def build(designspace_filename, master_finder=lambda s:s):
 		raise VarLibError("no sources found in .designspace")
 	instances = ds.get('instances', [])
 
-	base_idx = None
-	for i,m in enumerate(masters):
-		if 'info' in m and m['info']['copy']:
-			assert base_idx is None
-			base_idx = i
-	assert base_idx is not None, "Cannot find 'base' master; Add <info> element to one of the masters in the .designspace document."
-
-	log.info("Index of base master: %s", base_idx)
-
 	log.info("Building variable font")
 	log.info("Loading master fonts")
 	basedir = os.path.dirname(designspace_filename)
@@ -412,6 +403,12 @@ def build(designspace_filename, master_finder=lambda s:s):
 	axis_names = set(master_locs[0].keys())
 	assert all(axis_names == set(m.keys()) for m in master_locs)
 
+	base_idx = None
+	for i,m in enumerate(masters):
+		if 'info' in m and m['info']['copy']:
+			assert base_idx is None
+			base_idx = i
+
 	# Set up axes
 	axes_dict = {}
 	if axes is not None:
@@ -423,6 +420,7 @@ def build(designspace_filename, master_finder=lambda s:s):
 			name = axis['name']
 			axes_dict[name] = (lower, default, upper)
 	else:
+
 		for name in axis_names:
 			default = master_locs[base_idx][name]
 			lower = min(m[name] for m in master_locs)
@@ -432,6 +430,9 @@ def build(designspace_filename, master_finder=lambda s:s):
 			axes_dict[name] = (lower, default, upper)
 	log.info("Axes:\n%s", pformat(axes_dict))
 	assert all(name in axis_map for name in axes_dict.keys())
+
+	assert base_idx is not None, "Cannot find 'base' master; Either add <axes> element to .designspace document, or add <info> element to one of the sources in the .designspace document."
+	log.info("Index of base master: %s", base_idx)
 
 	log.info("Master locations:\n%s", pformat(master_locs))
 
