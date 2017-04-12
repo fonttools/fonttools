@@ -364,11 +364,11 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	"""
 
 	ds = designspace.load(designspace_filename)
-	axes = ds['axes'] if 'axes' in ds else []
-	if 'sources' not in ds or not ds['sources']:
-		raise VarLibError("no 'sources' defined in .designspace")
-	masters = ds['sources']
-	instances = ds['instances'] if 'instances' in ds else []
+	axes = ds.get('axes')
+	masters = ds.get('sources')
+	if not masters:
+		raise VarLibError("no sources found in .designspace")
+	instances = ds.get('instances', [])
 
 	base_idx = None
 	for i,m in enumerate(masters):
@@ -397,7 +397,7 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 		# a dictionary mapping axis-id to (axis-tag, axis-name) was provided
 		axis_map = standard_axis_map.copy()
 		axis_map.update(axisMap)
-	elif axes:
+	elif axes is not None:
 		# the designspace file loaded had an <axes> element.
 		# honor the order of the axes
 		axis_map = OrderedDict()
@@ -423,7 +423,7 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 
 	# Set up axes
 	axes_dict = {}
-	if axes:
+	if axes is not None:
 		# the designspace file loaded had an <axes> element
 		for axis in axes:
 			default = axis['default']
