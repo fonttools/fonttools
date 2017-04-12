@@ -56,7 +56,7 @@ def _add_fvar(font, axes, instances, axis_map):
 	instances is list of dictionary objects with 'location', 'stylename',
 	and possibly 'postscriptfontname' entries.
 
-	axis_map is an ordered dictionary mapping axis-id to (axis-tag, axis-name).
+	axis_map is an ordered dictionary mapping axis-id to (axis-tag, axis-name-dict).
 	"""
 
 	assert "fvar" not in font
@@ -69,7 +69,8 @@ def _add_fvar(font, axes, instances, axis_map):
 		axis = Axis()
 		axis.axisTag = Tag(axis_map[iden][0])
 		axis.minValue, axis.defaultValue, axis.maxValue = axes[iden]
-		axisName = tounicode(axis_map[iden][1])
+		# TODO: Add all languages: https://github.com/fonttools/fonttools/issues/921
+		axisName = tounicode(axis_map[iden][1]['en'])
 		axis.axisNameID = nameTable.addName(axisName)
 		fvar.axes.append(axis)
 
@@ -383,10 +384,10 @@ def build(designspace_filename, master_finder=lambda s:s):
 	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
 
 	standard_axis_map = OrderedDict([
-		('weight',  ('wght', 'Weight')),
-		('width',   ('wdth', 'Width')),
-		('slant',   ('slnt', 'Slant')),
-		('optical', ('opsz', 'Optical Size')),
+		('weight',  ('wght', {'en':'Weight'})),
+		('width',   ('wdth', {'en':'Width'})),
+		('slant',   ('slnt', {'en':'Slant'})),
+		('optical', ('opsz', {'en':'Optical Size'})),
 		])
 
 	if axes is not None:
@@ -400,8 +401,8 @@ def build(designspace_filename, master_finder=lambda s:s):
 			else:
 				tag = axis['tag']
 				assert axis['labelname']['en']
-				label = axis['labelname']['en']
-				axis_map[axis_name] = (tag, label)
+				labels = axis['labelname']
+				axis_map[axis_name] = (tag, labels)
 	else:
 		axis_map = standard_axis_map
 
