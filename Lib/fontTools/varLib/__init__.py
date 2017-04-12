@@ -387,7 +387,6 @@ def build(designspace_filename, master_finder=lambda s:s):
 		('width',   ('wdth', 'Width')),
 		('slant',   ('slnt', 'Slant')),
 		('optical', ('opsz', 'Optical Size')),
-		('custom',  ('xxxx', 'Custom'))
 		])
 
 	if axes is not None:
