@@ -351,16 +351,13 @@ def _merge_OTL(font, model, master_fonts, axisTags, base_idx):
 	GDEF.VarStore = store
 
 
-def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
+def build(designspace_filename, master_finder=lambda s:s):
 	"""
 	Build variation font from a designspace file.
 
 	If master_finder is set, it should be a callable that takes master
 	filename as found in designspace file and map it to master font
 	binary as to be opened (eg. .ttf or .otf).
-
-	If axisMap is set, it should be an ordered dictionary mapping axis-id to
-	(axis-tag, axis-name).
 	"""
 
 	ds = designspace.load(designspace_filename)
@@ -393,11 +390,7 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 		('custom',  ('xxxx', 'Custom'))
 		])
 
-	if axisMap:
-		# a dictionary mapping axis-id to (axis-tag, axis-name) was provided
-		axis_map = standard_axis_map.copy()
-		axis_map.update(axisMap)
-	elif axes is not None:
+	if axes is not None:
 		# the designspace file loaded had an <axes> element.
 		# honor the order of the axes
 		axis_map = OrderedDict()
@@ -413,8 +406,6 @@ def build(designspace_filename, master_finder=lambda s:s, axisMap=None):
 	else:
 		axis_map = standard_axis_map
 
-
-	# TODO: For weight & width, use OS/2 values and setup 'avar' mapping.
 
 	master_locs = [o['location'] for o in masters]
 
