@@ -6,7 +6,7 @@ from fontTools.varLib.models import (
 
 def test_normalizeLocation():
     axes = {"wght": (100, 400, 900)}
-    assert normalizeLocation({"wght": 400}, axes) == {'wght': 0}
+    assert normalizeLocation({"wght": 400}, axes) == {'wght': 0.0}
     assert normalizeLocation({"wght": 100}, axes) == {'wght': -1.0}
     assert normalizeLocation({"wght": 900}, axes) == {'wght': 1.0}
     assert normalizeLocation({"wght": 650}, axes) == {'wght': 0.5}
@@ -14,8 +14,8 @@ def test_normalizeLocation():
     assert normalizeLocation({"wght": 0}, axes) == {'wght': -1.0}
 
     axes = {"wght": (0, 0, 1000)}
-    assert normalizeLocation({"wght": 0}, axes) == {'wght': 0}
-    assert normalizeLocation({"wght": -1}, axes) == {'wght': 0}
+    assert normalizeLocation({"wght": 0}, axes) == {'wght': 0.0}
+    assert normalizeLocation({"wght": -1}, axes) == {'wght': 0.0}
     assert normalizeLocation({"wght": 1000}, axes) == {'wght': 1.0}
     assert normalizeLocation({"wght": 500}, axes) == {'wght': 0.5}
     assert normalizeLocation({"wght": 1001}, axes) == {'wght': 1.0}
@@ -24,8 +24,8 @@ def test_normalizeLocation():
     assert normalizeLocation({"wght": 0}, axes) == {'wght': -1.0}
     assert normalizeLocation({"wght": -1}, axes) == {'wght': -1.0}
     assert normalizeLocation({"wght": 500}, axes) == {'wght': -0.5}
-    assert normalizeLocation({"wght": 1000}, axes) == {'wght': 0}
-    assert normalizeLocation({"wght": 1001}, axes) == {'wght': 0}
+    assert normalizeLocation({"wght": 1000}, axes) == {'wght': 0.0}
+    assert normalizeLocation({"wght": 1001}, axes) == {'wght': 0.0}
 
 
 def test_supportScalar():

@@ -45,8 +45,7 @@ class VarLibError(Exception):
 # Creation routines
 #
 
-# Move to fvar table proper?
-def _add_fvar(font, axes, instances):
+def _add_fvar_avar(font, axes, instances):
 	"""
 	Add 'fvar' table to font.
 
@@ -56,8 +55,12 @@ def _add_fvar(font, axes, instances):
 	and possibly 'postscriptfontname' entries.
 	"""
 
-	assert "fvar" not in font
-	font['fvar'] = fvar = newTable('fvar')
+	assert axes
+	assert isinstance(axes, OrderedDict)
+
+	log.info("Generating fvar / avar")
+
+	fvar = newTable('fvar')
 	nameTable = font['name']
 
 	for a in axes.values():
@@ -78,10 +81,51 @@ def _add_fvar(font, axes, instances):
 		if psname is not None:
 			psname = tounicode(psname)
 			inst.postscriptNameID = nameTable.addName(psname)
-		inst.coordinates = {axes[k].tag:v for k,v in coordinates.items()}
+		inst.coordinates = {axes[k].tag:axes[k].map_backward(v) for k,v in coordinates.items()}
 		fvar.instances.append(inst)
 
-	return fvar
+	avar = newTable('avar')
+	interesting = False
+	for axis in axes.values():
+		curve = avar.segments[axis.tag] = {}
+		if not axis.map or all(k==v for k,v in axis.map.items()):
+			continue
+		interesting = True
+
+		items = sorted(axis.map.items())
+		keys   = [item[0] for item in items]
+		vals = [item[1] for item in items]
+
+		# Current avar requirements.  We don't have to enforce
+		# these on the designer and can deduce some ourselves,
+		# but for now just enforce them.
+		assert axis.minimum == min(keys)
+		assert axis.maximum == max(keys)
+		assert axis.default in keys
+		# No duplicates
+		assert len(set(keys)) == len(keys)
+		assert len(set(vals)) == len(vals)
+		# Ascending values
+		assert sorted(vals) == vals
+
+		keys_triple = (axis.minimum, axis.default, axis.maximum)
+		vals_triple = tuple(axis.map_forward(v) for v in keys_triple)
+
+		keys = [models.normalizeValue(v, keys_triple) for v in keys]
+		vals = [models.normalizeValue(v, vals_triple) for v in vals]
+		curve.update(zip(keys, vals))
+
+	if not interesting:
+		log.info("No need for avar")
+		avar = None
+
+	assert "fvar" not in font
+	font['fvar'] = fvar
+	assert "avar" not in font
+	if avar:
+		font['avar'] = avar
+
+	return fvar,avar
 
 # TODO Move to glyf or gvar table proper
 def _GetCoordinates(font, glyphName):
@@ -369,16 +413,49 @@ def build(designspace_filename, master_finder=lambda s:s):
 		('optical', ('opsz', {'en':'Optical Size'})),
 		])
 
+
 	# Setup axes
 	class DesignspaceAxis(object):
-		pass
+
+		@staticmethod
+		def _map(v, map):
+			keys = map.keys()
+			if not keys:
+				return v
+			if v in keys:
+				return map[v]
+			k = min(keys)
+			if v < k:
+				return v + map[k] - k
+			k = max(keys)
+			if v > k:
+				return v + map[k] - k
+			# Interpolate
+			a = max(k for k in keys if k < v)
+			b = min(k for k in keys if k > v)
+			va = map[a]
+			vb = map[b]
+			return va + (vb - va) * (v - a) / (b - a)
+
+		def map_forward(self, v):
+			if self.map is None: return v
+			return self._map(v, self.map)
+
+		def map_backward(self, v):
+			if self.map is None: return v
+			map = {v:k for k,v in self.map.items()}
+			return self._map(v, map)
+
 	axis_objects = OrderedDict()
 	if axes is not None:
 		for axis_dict in axes:
 			axis_name = axis_dict.get('name')
 			if not axis_name:
 				axis_name = axis_dict['name'] = axis_dict['tag']
-
+			if 'map' not in axis_dict:
+				axis_dict['map'] = None
+			else:
+				axis_dict['map'] = {m['input']:m['output'] for m in axis_dict['map']}
 
 			if axis_name in standard_axis_map:
 				if 'tag' not in axis_dict:
@@ -387,7 +464,7 @@ def build(designspace_filename, master_finder=lambda s:s):
 					axis_dict['labelname'] = standard_axis_map[axis_name][1].copy()
 
 			axis = DesignspaceAxis()
-			for item in ['name', 'tag', 'labelname', 'minimum', 'default', 'maximum']:
+			for item in ['name', 'tag', 'labelname', 'minimum', 'default', 'maximum', 'map']:
 				assert item in axis_dict, 'Axis does not have "%s"' % item
 			axis.__dict__ = axis_dict
 			axis_objects[axis_name] = axis
@@ -416,15 +493,13 @@ def build(designspace_filename, master_finder=lambda s:s):
 			axis.default = base_loc[name]
 			axis.minimum = min(m[name] for m in master_locs if name in m)
 			axis.maximum = max(m[name] for m in master_locs if name in m)
+			axis.map = None
+			# TODO Fill in weight / width mapping from OS/2 table? Need loading fonts...
 			axis_objects[name] = axis
 		del base_idx, base_loc, axis_names, master_locs
 	axes = axis_objects
 	del axis_objects
 
-	axis_supports = {}
-	for axis in axes.values():
-		axis_supports[axis.name] = (axis.minimum, axis.default, axis.maximum)
-	log.info("Axis supports:\n%s", pformat(axis_supports))
 
 	# Check all master and instance locations are valid and fill in defaults
 	for obj in masters+instances:
@@ -436,15 +511,24 @@ def build(designspace_filename, master_finder=lambda s:s):
 			if axis_name not in loc:
 				loc[axis_name] = axis.default
 			else:
-				v = loc[axis_name]
-				assert axis.minimum <= v <= axis.maximum, "Location for axis '%s' (%s) out of range for '%s'" % (name, v, obj_name)
+				v = axis.map_backward(loc[axis_name])
+				assert axis.minimum <= v <= axis.maximum, "Location for axis '%s' (mapped to %s) out of range for '%s' [%s..%s]" % (name, v, obj_name, axis.minimum, axis.maximum)
 
-	master_locs = [o['location'] for o in masters]
-	log.info("Master locations:\n%s", pformat(master_locs))
 
 	# Normalize master locations
+
+	master_locs = [o['location'] for o in masters]
+	log.info("Internal master locations:\n%s", pformat(master_locs))
+
+	axis_supports = {}
+	for axis in axes.values():
+		triple = (axis.minimum, axis.default, axis.maximum)
+		axis_supports[axis.name] = [axis.map_forward(v) for v in triple]
+	log.info("Internal axis supports:\n%s", pformat(axis_supports))
+
 	master_locs = [models.normalizeLocation(m, axis_supports) for m in master_locs]
 	log.info("Normalized master locations:\n%s", pformat(master_locs))
+
 
 	# Find base master
 	base_idx = None
@@ -456,7 +540,6 @@ def build(designspace_filename, master_finder=lambda s:s):
 	log.info("Index of base master: %s", base_idx)
 
 
-
 	log.info("Building variable font")
 	log.info("Loading master fonts")
 	basedir = os.path.dirname(designspace_filename)
@@ -466,7 +549,7 @@ def build(designspace_filename, master_finder=lambda s:s):
 	vf = TTFont(master_ttfs[base_idx])
 
 	# TODO append masters as named-instances as well; needs .designspace change.
-	fvar = _add_fvar(vf, axes, instances)
+	fvar,avar = _add_fvar_avar(vf, axes, instances)
 
 	# TODO Clean this up.
 	del instances

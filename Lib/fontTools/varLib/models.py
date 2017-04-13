@@ -2,13 +2,33 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
-__all__ = ['normalizeLocation', 'supportScalar', 'VariationModel']
+__all__ = ['normalizeValue', 'normalizeLocation', 'supportScalar', 'VariationModel']
+
+def normalizeValue(v, triple):
+	"""Normalizes value based on a min/default/max triple.
+	>>> normalizeValue(400, (100, 400, 900))
+	0.0
+	>>> normalizeValue(100, (100, 400, 900))
+	-1.0
+	>>> normalizeValue(650, (100, 400, 900))
+	0.5
+	"""
+	lower, default, upper = triple
+	assert lower <= default <= upper, "invalid axis values"
+	v = max(min(v, upper), lower)
+	if v == default:
+		v = 0.
+	elif v < default:
+		v = (v - default) / (default - lower)
+	else:
+		v = (v - default) / (upper - default)
+	return v
 
 def normalizeLocation(location, axes):
 	"""Normalizes location based on axis min/default/max values from axes.
 	>>> axes = {"wght": (100, 400, 900)}
 	>>> normalizeLocation({"wght": 400}, axes)
-	{'wght': 0}
+	{'wght': 0.0}
 	>>> normalizeLocation({"wght": 100}, axes)
 	{'wght': -1.0}
 	>>> normalizeLocation({"wght": 900}, axes)
@@ -21,9 +41,9 @@ def normalizeLocation(location, axes):
 	{'wght': -1.0}
 	>>> axes = {"wght": (0, 0, 1000)}
 	>>> normalizeLocation({"wght": 0}, axes)
-	{'wght': 0}
+	{'wght': 0.0}
 	>>> normalizeLocation({"wght": -1}, axes)
-	{'wght': 0}
+	{'wght': 0.0}
 	>>> normalizeLocation({"wght": 1000}, axes)
 	{'wght': 1.0}
 	>>> normalizeLocation({"wght": 500}, axes)
@@ -38,22 +58,14 @@ def normalizeLocation(location, axes):
 	>>> normalizeLocation({"wght": 500}, axes)
 	{'wght': -0.5}
 	>>> normalizeLocation({"wght": 1000}, axes)
-	{'wght': 0}
+	{'wght': 0.0}
 	>>> normalizeLocation({"wght": 1001}, axes)
-	{'wght': 0}
+	{'wght': 0.0}
 	"""
 	out = {}
-	for tag,(lower,default,upper) in axes.items():
-		assert lower <= default <= upper, "invalid axis values"
-		v = location.get(tag, default)
-		v = max(min(v, upper), lower)
-		if v == default:
-			v = 0
-		elif v < default:
-			v = (v - default) / (default - lower)
-		else:
-			v = (v - default) / (upper - default)
-		out[tag] = v
+	for tag,triple in axes.items():
+		v = location.get(tag, triple[1])
+		out[tag] = normalizeValue(v, triple)
 	return out
 
 def supportScalar(location, support):
