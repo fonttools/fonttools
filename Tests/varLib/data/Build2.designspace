@@ -4,7 +4,6 @@
         <source familyname="Test Family" filename="master_ufo/TestFamily-Master0.ufo" name="master_0" stylename="Master0">
             <location>
                 <dimension name="weight" xvalue="0" />
-                <dimension name="contrast" xvalue="0" />
             </location>
         </source>
         <source familyname="Test Family" filename="master_ufo/TestFamily-Master1.ufo" name="master_1" stylename="Master1">

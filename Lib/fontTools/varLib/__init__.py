@@ -426,8 +426,18 @@ def build(designspace_filename, master_finder=lambda s:s):
 		axis_supports[axis.name] = (axis.minimum, axis.default, axis.maximum)
 	log.info("Axis supports:\n%s", pformat(axis_supports))
 
-	# TODO
-	# check all masters and instances locations are valid and fill in default items
+	# Check all master and instance locations are valid and fill in defaults
+	for obj in masters+instances:
+		obj_name = obj.get('name', obj.get('stylename', ''))
+		loc = obj['location']
+		for name in loc.keys():
+			assert name in axes, "Location axis '%s' unknown for '%s'." % (name, obj_name)
+		for axis_name,axis in axes.items():
+			if axis_name not in loc:
+				loc[axis_name] = axis.default
+			else:
+				v = loc[axis_name]
+				assert axis.minimum <= v <= axis.maximum, "Location for axis '%s' (%s) out of range for '%s'" % (name, v, obj_name)
 
 	master_locs = [o['location'] for o in masters]
 	log.info("Master locations:\n%s", pformat(master_locs))
