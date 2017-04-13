@@ -69,7 +69,6 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
                 fromValue, toValue = struct.unpack(">hh", data[pos:pos+4])
                 segments[fixedToFloat(fromValue, 14)] = fixedToFloat(toValue, 14)
                 pos = pos + 4
-        self.fixupSegments_()
 
     def toXML(self, writer, ttFont, progress=None):
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
@@ -96,11 +95,3 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
                             log.warning("duplicate entry for %s in axis '%s'",
                                         fromValue, axis)
                         segment[fromValue] = toValue
-            self.fixupSegments_()
-
-    def fixupSegments_(self):
-        for axis, mappings in self.segments.items():
-            for k in [-1.0, 0.0, 1.0]:
-                if mappings.get(k) != k:
-                    log.warning("avar axis '%s' should map %s to %s", axis, k, k)
-                    mappings[k] = k
