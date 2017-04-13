@@ -98,9 +98,7 @@ class BuildTest(unittest.TestCase):
 # -----
 
     def test_varlib_build_ttf(self):
-        """Designspace file contains <axes> element.
-        build() is called without an axisMap parameter.
-        """
+        """Designspace file contains <axes> element."""
         suffix = '.ttf'
         ds_path = self.get_test_input('Build.designspace')
         ufo_dir = self.get_test_input('master_ufo')
@@ -121,9 +119,7 @@ class BuildTest(unittest.TestCase):
 
 
     def test_varlib_build2_ttf(self):
-        """Designspace file does not contain an <axes> element.
-        build() is called with an axisMap parameter.
-        """
+        """Designspace file does not contain an <axes> element."""
         suffix = '.ttf'
         ds_path = self.get_test_input('Build2.designspace')
         ufo_dir = self.get_test_input('master_ufo')
@@ -134,9 +130,8 @@ class BuildTest(unittest.TestCase):
         for path in ttx_paths:
             self.compile_font(path, suffix, self.tempdir)
 
-        axisMap = {'contrast': ('cntr', 'Contrast')}
         finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
-        varfont, model, _ = build(ds_path, finder, axisMap)
+        varfont, model, _ = build(ds_path, finder)
 
         tables = ['GDEF', 'HVAR', 'fvar', 'gvar']
         expected_ttx_path = self.get_test_output('Build.ttx')

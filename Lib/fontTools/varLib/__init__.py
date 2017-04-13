@@ -46,32 +46,26 @@ class VarLibError(Exception):
 #
 
 # Move to fvar table proper?
-def _add_fvar(font, axes, instances, axis_map):
+def _add_fvar(font, axes, instances):
 	"""
 	Add 'fvar' table to font.
 
-	axes is a dictionary mapping axis-id to axis (min,default,max)
-	coordinate values.
+	axes is an ordered dictionary of DesignspaceAxis objects.
 
 	instances is list of dictionary objects with 'location', 'stylename',
 	and possibly 'postscriptfontname' entries.
-
-	axis_map is an ordered dictionary mapping axis-id to (axis-tag, axis-name-dict).
 	"""
 
 	assert "fvar" not in font
 	font['fvar'] = fvar = newTable('fvar')
 	nameTable = font['name']
 
-	for iden in axis_map.keys():
-		if iden not in axes:
-			continue
+	for a in axes.values():
 		axis = Axis()
-		axis.axisTag = Tag(axis_map[iden][0])
-		axis.minValue, axis.defaultValue, axis.maxValue = axes[iden]
+		axis.axisTag = Tag(a.tag)
+		axis.minValue, axis.defaultValue, axis.maxValue = a.minimum, a.default, a.maximum
 		# TODO: Add all languages: https://github.com/fonttools/fonttools/issues/921
-		axisName = tounicode(axis_map[iden][1]['en'])
-		axis.axisNameID = nameTable.addName(axisName)
+		axis.axisNameID = nameTable.addName(tounicode(a.labelname['en']))
 		fvar.axes.append(axis)
 
 	for instance in instances:
@@ -84,7 +78,7 @@ def _add_fvar(font, axes, instances, axis_map):
 		if psname is not None:
 			psname = tounicode(psname)
 			inst.postscriptNameID = nameTable.addName(psname)
-		inst.coordinates = {axis_map[k][0]:v for k,v in coordinates.items()}
+		inst.coordinates = {axes[k].tag:v for k,v in coordinates.items()}
 		fvar.instances.append(inst)
 
 	return fvar
@@ -368,12 +362,6 @@ def build(designspace_filename, master_finder=lambda s:s):
 		raise VarLibError("no sources found in .designspace")
 	instances = ds.get('instances', [])
 
-	log.info("Building variable font")
-	log.info("Loading master fonts")
-	basedir = os.path.dirname(designspace_filename)
-	master_ttfs = [master_finder(os.path.join(basedir, m['filename'])) for m in masters]
-	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
-
 	standard_axis_map = OrderedDict([
 		('weight',  ('wght', {'en':'Weight'})),
 		('width',   ('wdth', {'en':'Width'})),
@@ -381,80 +369,103 @@ def build(designspace_filename, master_finder=lambda s:s):
 		('optical', ('opsz', {'en':'Optical Size'})),
 		])
 
+	# Setup axes
+	class DesignspaceAxis(object):
+		pass
+	axis_objects = OrderedDict()
 	if axes is not None:
-		# the designspace file loaded had an <axes> element.
-		# honor the order of the axes
-		axis_map = OrderedDict()
-		for axis in axes:
-			axis_name = axis['name']
-			if axis_name in standard_axis_map:
-				axis_map[axis_name] = standard_axis_map[axis_name]
-			else:
-				tag = axis['tag']
-				assert axis['labelname']['en']
-				labels = axis['labelname']
-				axis_map[axis_name] = (tag, labels)
-	else:
-		axis_map = standard_axis_map
+		for axis_dict in axes:
+			axis_name = axis_dict.get('name')
+			if not axis_name:
+				axis_name = axis_dict['name'] = axis_dict['tag']
 
+
+			if axis_name in standard_axis_map:
+				if 'tag' not in axis_dict:
+					axis_dict['tag'] = standard_axis_map[axis_name][0]
+				if 'labelname' not in axis_dict:
+					axis_dict['labelname'] = standard_axis_map[axis_name][1].copy()
+
+			axis = DesignspaceAxis()
+			for item in ['name', 'tag', 'labelname', 'minimum', 'default', 'maximum']:
+				assert item in axis_dict, 'Axis does not have "%s"' % item
+			axis.__dict__ = axis_dict
+			axis_objects[axis_name] = axis
+	else:
+		# No <axes> element. Guess things...
+		base_idx = None
+		for i,m in enumerate(masters):
+			if 'info' in m and m['info']['copy']:
+				assert base_idx is None
+				base_idx = i
+		assert base_idx is not None, "Cannot find 'base' master; Either add <axes> element to .designspace document, or add <info> element to one of the sources in the .designspace document."
+
+		master_locs = [o['location'] for o in masters]
+		base_loc = master_locs[base_idx]
+		axis_names = set(base_loc.keys())
+		assert all(name in standard_axis_map for name in axis_names), "Non-standard axis found and there exist no <axes> element."
+
+		for name,(tag,labelname) in standard_axis_map.items():
+			if name not in axis_names:
+				continue
+
+			axis = Axis()
+			axis.name = name
+			axis.tag = tag
+			axis.labelname = labelname.copy()
+			axis.default = base_loc[name]
+			axis.minimum = min(m[name] for m in master_locs if name in m)
+			axis.maximum = max(m[name] for m in master_locs if name in m)
+			axis_objects[name] = axis
+		del base_idx, base_loc, axis_names, master_locs
+	axes = axis_objects
+	del axis_objects
+
+	axis_supports = {}
+	for axis in axes.values():
+		axis_supports[axis.name] = (axis.minimum, axis.default, axis.maximum)
+	log.info("Axis supports:\n%s", pformat(axis_supports))
+
+	# TODO
+	# check all masters and instances locations are valid and fill in default items
 
 	master_locs = [o['location'] for o in masters]
-
-	axis_names = set(master_locs[0].keys())
-	assert all(axis_names == set(m.keys()) for m in master_locs)
-
-	base_idx = None
-	for i,m in enumerate(masters):
-		if 'info' in m and m['info']['copy']:
-			assert base_idx is None
-			base_idx = i
-
-	# Set up axes
-	axes_dict = {}
-	if axes is not None:
-		# the designspace file loaded had an <axes> element
-		for axis in axes:
-			default = axis['default']
-			lower = axis['minimum']
-			upper = axis['maximum']
-			name = axis['name']
-			axes_dict[name] = (lower, default, upper)
-	else:
-
-		for name in axis_names:
-			default = master_locs[base_idx][name]
-			lower = min(m[name] for m in master_locs)
-			upper = max(m[name] for m in master_locs)
-			if default == lower == upper:
-				continue
-			axes_dict[name] = (lower, default, upper)
-	log.info("Axes:\n%s", pformat(axes_dict))
-	assert all(name in axis_map for name in axes_dict.keys())
-
-	assert base_idx is not None, "Cannot find 'base' master; Either add <axes> element to .designspace document, or add <info> element to one of the sources in the .designspace document."
-	log.info("Index of base master: %s", base_idx)
-
 	log.info("Master locations:\n%s", pformat(master_locs))
 
-	# We can use the base font straight, but it's faster to load it again since
-	# then we won't be recompiling the existing ('glyf', 'hmtx', ...) tables.
-	#gx = master_fonts[base_idx]
-	gx = TTFont(master_ttfs[base_idx])
+	# Normalize master locations
+	master_locs = [models.normalizeLocation(m, axis_supports) for m in master_locs]
+	log.info("Normalized master locations:\n%s", pformat(master_locs))
+
+	# Find base master
+	base_idx = None
+	for i,m in enumerate(master_locs):
+		if all(v == 0 for v in m.values()):
+			assert base_idx is None
+			base_idx = i
+	assert base_idx is not None, "Base master not found; no master at default location?"
+	log.info("Index of base master: %s", base_idx)
+
+
+
+	log.info("Building variable font")
+	log.info("Loading master fonts")
+	basedir = os.path.dirname(designspace_filename)
+	master_ttfs = [master_finder(os.path.join(basedir, m['filename'])) for m in masters]
+	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
+	# Reload base font as target font
+	vf = TTFont(master_ttfs[base_idx])
 
 	# TODO append masters as named-instances as well; needs .designspace change.
-	fvar = _add_fvar(gx, axes_dict, instances, axis_map)
-
-
-	# Normalize master locations
-	master_locs = [models.normalizeLocation(m, axes_dict) for m in master_locs]
-
-	log.info("Normalized master locations:\n%s", pformat(master_locs))
+	fvar = _add_fvar(vf, axes, instances)
 
 	# TODO Clean this up.
 	del instances
-	del axes_dict
-	master_locs = [{axis_map[k][0]:v for k,v in loc.items()} for loc in master_locs]
-	#instance_locs = [{axis_map[k][0]:v for k,v in loc.items()} for loc in instance_locs]
+	del axis_supports
+
+	# Map from axis names to axis tags...
+	master_locs = [{axes[k].tag:v for k,v in loc.items()} for loc in master_locs]
+	#del axes
+	# From here on, we use fvar axes only
 	axisTags = [axis.axisTag for axis in fvar.axes]
 
 	# Assume single-model for now.
@@ -462,13 +473,13 @@ def build(designspace_filename, master_finder=lambda s:s):
 	assert 0 == model.mapping[base_idx]
 
 	log.info("Building variations tables")
-	_add_MVAR(gx, model, master_fonts, axisTags)
-	if 'glyf' in gx:
-		_add_gvar(gx, model, master_fonts)
-	_add_HVAR(gx, model, master_fonts, axisTags)
-	_merge_OTL(gx, model, master_fonts, axisTags, base_idx)
+	_add_MVAR(vf, model, master_fonts, axisTags)
+	if 'glyf' in vf:
+		_add_gvar(vf, model, master_fonts)
+	_add_HVAR(vf, model, master_fonts, axisTags)
+	_merge_OTL(vf, model, master_fonts, axisTags, base_idx)
 
-	return gx, model, master_ttfs
+	return vf, model, master_ttfs
 
 
 def main(args=None):
@@ -486,10 +497,10 @@ def main(args=None):
 	finder = lambda s: s.replace('master_ufo', 'master_ttf_interpolatable').replace('.ufo', '.ttf')
 	outfile = os.path.splitext(designspace_filename)[0] + '-VF.ttf'
 
-	gx, model, master_ttfs = build(designspace_filename, finder)
+	vf, model, master_ttfs = build(designspace_filename, finder)
 
 	log.info("Saving variation font %s", outfile)
-	gx.save(outfile)
+	vf.save(outfile)
 
 
 if __name__ == "__main__":
