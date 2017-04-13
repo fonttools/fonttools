@@ -1,10 +1,10 @@
 """Pen recording operations that can be accessed or replayed."""
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.pens.basePen import AbstractPen
+from fontTools.pens.basePen import AbstractPen, DecomposingPen
 
 
-__all__ = ["RecordingPen"]
+__all__ = ["RecordingPen", "ContourRecordingPen"]
 
 
 class RecordingPen(AbstractPen):
@@ -49,6 +49,12 @@ class RecordingPen(AbstractPen):
 	def replay(self, pen):
 		for operator,operands in self.value:
 			getattr(pen, operator)(*operands)
+
+
+class ContourRecordingPen(DecomposingPen, RecordingPen):
+	""" Same as RecordingPen, except that it doesn't keep components
+	as references, but draws them decomposed as regular contours.
+	"""
 
 
 if __name__ == "__main__":
