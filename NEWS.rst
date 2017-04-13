@@ -7,7 +7,10 @@
   added before when glyphsLib was always exporting the (unused) custom axis.
 - [varLib] Added partial support for building ``MVAR`` table; does not
   implement ``gasp`` table variations yet.
-- [pens] Added FilterPen base class, for pens that control another pen.
+- [pens] Added FilterPen base class, for pens that control another pen;
+  factored out ``addComponent`` method from BasePen into a separate abstract
+  DecomposingPen class; added DecomposingRecordingPen, which records
+  components decomposed as regular contours.
 - [TSI1] Fixed computation of the textLength of VTT private tables (#913).
 - [loggingTools] Added ``LogMixin`` class providing a ``log`` property to
   subclasses, which returns a ``logging.Logger`` named after the latter.
