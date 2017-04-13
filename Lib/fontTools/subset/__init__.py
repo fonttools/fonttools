@@ -176,11 +176,6 @@ Hinting options:
       respectively. This produces (sometimes up to 30%) smaller fonts that
       are suitable for extremely high-resolution systems, like high-end
       mobile devices and retina displays.
-      XXX Note: Currently there is a known bug in 'CFF ' hint stripping that
-      might make the font unusable as a webfont as they will be rejected by
-      OpenType Sanitizer used in common browsers. For more information see:
-      https://github.com/behdad/fonttools/issues/144
-      The --desubroutinize options works around that bug.
 
 Optimization options:
   --desubroutinize
