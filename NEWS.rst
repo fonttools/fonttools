@@ -1,8 +1,16 @@
+- [varLib] Added support for building ``avar`` table, using the designspace
+  ``<map>`` elements.
+- [varLib] Removed unused ``build(..., axisMap)`` argument. Axis map should
+  be specified in designspace file now. We do not accept nonstandard axes
+  if ``<axes>`` element is not present.
+- [varLib] Removed "custom" axis from the ``standard_axis_map``. This was
+  added before when glyphsLib was always exporting the (unused) custom axis.
 - [varLib] Added partial support for building ``MVAR`` table; does not
   implement ``gasp`` table variations yet.
-- [loggintTools] Added ``LogMixin`` class providing a ``log`` property to
-  subclasses, which returns a ``logging.Logger`` named after the latter.
+- [pens] Added FilterPen base class, for pens that control another pen.
 - [TSI1] Fixed computation of the textLength of VTT private tables (#913).
+- [loggingTools] Added ``LogMixin`` class providing a ``log`` property to
+  subclasses, which returns a ``logging.Logger`` named after the latter.
 - [loggingTools] Added ``assertRegex`` method to ``CapturingLogHandler``.
 - [py23] Added backport for python 3's ``types.SimpleNamespace`` class.
 - [EBLC] Fixed issue with python 3 ``zip`` iterator.
