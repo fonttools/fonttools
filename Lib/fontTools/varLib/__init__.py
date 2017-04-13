@@ -520,6 +520,7 @@ def build(designspace_filename, master_finder=lambda s:s):
 	master_locs = [o['location'] for o in masters]
 	log.info("Internal master locations:\n%s", pformat(master_locs))
 
+	# TODO This mapping should ideally be moved closer to logic in _add_fvar_avar
 	axis_supports = {}
 	for axis in axes.values():
 		triple = (axis.minimum, axis.default, axis.maximum)
@@ -528,6 +529,7 @@ def build(designspace_filename, master_finder=lambda s:s):
 
 	master_locs = [models.normalizeLocation(m, axis_supports) for m in master_locs]
 	log.info("Normalized master locations:\n%s", pformat(master_locs))
+	del axis_supports
 
 
 	# Find base master
@@ -550,10 +552,7 @@ def build(designspace_filename, master_finder=lambda s:s):
 
 	# TODO append masters as named-instances as well; needs .designspace change.
 	fvar,avar = _add_fvar_avar(vf, axes, instances)
-
-	# TODO Clean this up.
 	del instances
-	del axis_supports
 
 	# Map from axis names to axis tags...
 	master_locs = [{axes[k].tag:v for k,v in loc.items()} for loc in master_locs]
