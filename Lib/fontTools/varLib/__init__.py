@@ -409,7 +409,7 @@ def build(designspace_filename, master_finder=lambda s:s):
 			if name not in axis_names:
 				continue
 
-			axis = Axis()
+			axis = DesignspaceAxis()
 			axis.name = name
 			axis.tag = tag
 			axis.labelname = labelname.copy()
