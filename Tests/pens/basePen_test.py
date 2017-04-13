@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.pens.basePen import \
     BasePen, decomposeSuperBezierSegment, decomposeQuadraticSegment
+from fontTools.misc.loggingTools import CapturingLogHandler
 import unittest
 
 
@@ -141,6 +142,12 @@ class BasePenTest(unittest.TestCase):
                          "118.75 240.0 102.5 200.0 -10.0 0.0 curveto "
                          "closepath", repr(pen))
         self.assertEqual(None, pen.getCurrentPoint())
+
+    def test_addComponent_skip_missing(self):
+        pen = _TestPen()
+        with CapturingLogHandler(pen.log, "WARNING") as captor:
+            pen.addComponent("nonexistent", (1, 0, 0, 1, 0, 0))
+        captor.assertRegex("glyph '.*' is missing from glyphSet; skipped")
 
 
 class DecomposeSegmentTest(unittest.TestCase):
