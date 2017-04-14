@@ -18,7 +18,6 @@ log = logging.getLogger(__name__)
 def _make_map(font, chars, gids):
 	assert len(chars) == len(gids)
 	cmap = {}
-	lenCmap = len(gids)
 	glyphOrder = font.getGlyphOrder()
 	for char,gid in zip(chars,gids):
 		if gid is 0:
