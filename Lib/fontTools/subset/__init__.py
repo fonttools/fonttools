@@ -210,7 +210,7 @@ Font table options:
       By default, the following tables are included in this list, as
       they do not need subsetting (ignore the fact that 'loca' is listed
       here): 'gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca',
-      'name', 'cvt ', 'fpgm', 'prep', 'VMDX', 'DSIG' and 'CPAL'.
+      'name', 'cvt ', 'fpgm', 'prep', 'VMDX', 'DSIG', 'CPAL', 'MVAR', 'STAT'.
       By default, tables that the tool does not know how to subset and are not
       specified here will be dropped from the font, unless --passthrough-tables
       option is passed.
@@ -2425,7 +2425,8 @@ class Options(object):
     _no_subset_tables_default = ['avar', 'fvar',
                                  'gasp', 'head', 'hhea', 'maxp',
                                  'vhea', 'OS/2', 'loca', 'name', 'cvt',
-                                 'fpgm', 'prep', 'VDMX', 'DSIG', 'CPAL']
+                                 'fpgm', 'prep', 'VDMX', 'DSIG', 'CPAL',
+                                 'MVAR', 'STAT']
     _hinting_tables_default = ['cvar', 'cvt', 'fpgm', 'prep', 'hdmx', 'VDMX']
 
     # Based on HarfBuzz shapers
