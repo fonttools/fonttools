@@ -1,3 +1,6 @@
+3.10.0 (released 2017-04-14)
+----------------------------
+
 - [varLib] Added support for building ``avar`` table, using the designspace
   ``<map>`` elements.
 - [varLib] Removed unused ``build(..., axisMap)`` argument. Axis map should
