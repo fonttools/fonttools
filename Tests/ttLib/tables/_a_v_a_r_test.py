@@ -64,20 +64,6 @@ class AxisVariationTableTest(unittest.TestCase):
         self.assertEqual({"wdth": {-1: -1, 0: 0, 0.7: 0.2, 1.0: 1.0}},
                          avar.segments)
 
-    def test_fixupSegments(self):
-        avar = table__a_v_a_r()
-        logger = logging.getLogger(table__a_v_a_r.__module__)
-        sio = StringIO()
-        logger.addHandler(logging.StreamHandler(stream=sio))
-        avar.segments = {"wdth": {0.3: 0.8, 1.0: 0.7}}
-        avar.fixupSegments_()
-        self.assertEqual({"wdth": {-1.0: -1.0, 0.0: 0.0, 0.3: 0.8, 1.0: 1.0}}, avar.segments)
-        self.assertEqual([
-                "avar axis 'wdth' should map -1.0 to -1.0",
-                "avar axis 'wdth' should map 0.0 to 0.0",
-                "avar axis 'wdth' should map 1.0 to 1.0"
-        ], sio.getvalue().splitlines())
-
     @staticmethod
     def makeFont(axisTags):
         """['opsz', 'wdth'] --> ttFont"""
