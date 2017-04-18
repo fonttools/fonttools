@@ -43,6 +43,12 @@ class FakeFont:
     def __getitem__(self, tag):
         return self.tables[tag]
 
+    def __setitem__(self, tag, table):
+        self.tables[tag] = table
+
+    def get(self, tag, default=None):
+        return self.tables.get(tag, default)
+
     def getGlyphID(self, name):
         return self.glyphOrder_.index(name)
 
