@@ -7,6 +7,21 @@ import struct
 # https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6ltag.html
 
 class table__l_t_a_g(DefaultTable.DefaultTable):
+	def __init__(self, tag=None):
+		DefaultTable.DefaultTable.__init__(self, tag)
+		self.version, self.flags = 1, 0
+		self.tags = []
+
+	def addTag(self, tag):
+		"""Add 'tag' to the list of langauge tags if not already there.
+
+		Returns the integer index of 'tag' in the list of all tags.
+		"""
+		try:
+			return self.tags.index(tag)
+		except ValueError:
+			self.tags.append(tag)
+			return len(self.tags) - 1
 
 	def decompile(self, data, ttFont):
 		self.version, self.flags, numTags = struct.unpack(">LLL", data[:12])

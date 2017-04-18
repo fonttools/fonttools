@@ -5,15 +5,23 @@ from fontTools.misc.xmlWriter import XMLWriter
 import os
 import struct
 import unittest
-from fontTools.ttLib.tables._l_t_a_g import table__l_t_a_g
+from fontTools.ttLib import newTable
+
 
 class Test_l_t_a_g(unittest.TestCase):
 
 	DATA_ = struct.pack(b">LLLHHHHHH", 1, 0, 3, 24 + 0, 2, 24 + 2, 7, 24 + 2, 2) + b"enzh-Hant"
 	TAGS_ = ["en", "zh-Hant", "zh"]
 
+	def test_addTag(self):
+		table = newTable("ltag")
+		self.assertEqual(table.addTag("de-CH"), 0)
+		self.assertEqual(table.addTag("gsw-LI"), 1)
+		self.assertEqual(table.addTag("de-CH"), 0)
+		self.assertEqual(table.tags, ["de-CH", "gsw-LI"])
+
 	def test_decompile_compile(self):
-		table = table__l_t_a_g()
+		table = newTable("ltag")
 		table.decompile(self.DATA_, ttFont=None)
 		self.assertEqual(1, table.version)
 		self.assertEqual(0, table.flags)
@@ -23,7 +31,7 @@ class Test_l_t_a_g(unittest.TestCase):
 		self.assertIsInstance(compiled, bytes)
 
 	def test_fromXML(self):
-		table = table__l_t_a_g()
+		table = newTable("ltag")
 		for name, attrs, content in parseXML(
 				'<version value="1"/>'
 				'<flags value="777"/>'
@@ -36,7 +44,7 @@ class Test_l_t_a_g(unittest.TestCase):
 
 	def test_toXML(self):
 		writer = XMLWriter(BytesIO())
-		table = table__l_t_a_g()
+		table = newTable("ltag")
 		table.decompile(self.DATA_, ttFont=None)
 		table.toXML(writer, ttFont=None)
 		expected = os.linesep.join([
