@@ -41,7 +41,7 @@
           <ValueFormat1 value="4"/>
           <ValueFormat2 value="0"/>
           <ClassDef1 Format="1">
-            <ClassDef glyph="A" class="1"/>
+            <ClassDef glyph="a" class="1"/>
           </ClassDef1>
           <ClassDef2 Format="1">
             <ClassDef glyph="a" class="1"/>
@@ -53,7 +53,7 @@
               <Value1 XAdvance="0"/>
             </Class2Record>
             <Class2Record index="1">
-              <Value1 XAdvance="10"/>
+              <Value1 XAdvance="-40"/>
             </Class2Record>
           </Class1Record>
           <Class1Record index="1">
@@ -61,7 +61,7 @@
               <Value1 XAdvance="0"/>
             </Class2Record>
             <Class2Record index="1">
-              <Value1 XAdvance="-40"/>
+              <Value1 XAdvance="10"/>
             </Class2Record>
           </Class1Record>
         </PairPos>

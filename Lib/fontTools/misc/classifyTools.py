@@ -76,7 +76,7 @@ class Classifier(object):
 		self._sets = [s for s in sets if s]
 
 		if self._sort:
-			self._sets = sorted(self._sets, key=lambda s: (-len(s), s))
+			self._sets = sorted(self._sets, key=lambda s: (-len(s), sorted(s)))
 
 		self._dirty = False
 
@@ -140,7 +140,7 @@ def classify(list_of_sets, sort=True):
 	True
 	>>> classify([[1,2],[2]]) == ([{1}, {2}], {1: {1}, 2: {2}})
 	True
-	>>> classify([[1,2],[2,4]]) == ([{1}, {4}, {2}], {1: {1}, 2: {2}, 4: {4}})
+	>>> classify([[1,2],[2,4]]) == ([{1}, {2}, {4}], {1: {1}, 2: {2}, 4: {4}})
 	True
 	>>> classify([[1,2],[2,4,5]]) == (
 	...     [{4, 5}, {1}, {2}], {1: {1}, 2: {2}, 4: {4, 5}, 5: {4, 5}})
