@@ -2,10 +2,12 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
-from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.misc.loggingTools import CapturingLogHandler
+from fontTools.misc.testTools import FakeFont
+from fontTools.misc.xmlWriter import XMLWriter
 import struct
 import unittest
+from fontTools.ttLib import newTable
 from fontTools.ttLib.tables._n_a_m_e import (
 	table__n_a_m_e, NameRecord, nameRecordFormat, nameRecordSize, makeName, log)
 
@@ -66,6 +68,34 @@ class NameTableTest(unittest.TestCase):
 			table.addName('Invalid nameID', minNameID=32767)
 		with self.assertRaises(TypeError):
 			table.addName(b"abc")  # must be unicode string
+
+	def test_addMultilingualName(self):
+		font = FakeFont(glyphs=[".notdef", "A"])
+		nameTable = font.tables['name'] = newTable("name")
+		widthID = nameTable.addMultilingualName(
+			{"en": "Width", "de-CH": "Breite", "gsw": "Bräiti"},
+			ttFont=font)
+		xHeightID = nameTable.addMultilingualName(
+			{"en": "X-Height", "gsw": "X-Hööchi"}, ttFont=font)
+		self.assertEqual(widthID, 256)
+		self.assertEqual(xHeightID, 257)
+		names = [(n.nameID, n.platformID, n.platEncID, n.langID, n.string)
+		         for n in nameTable.names]
+		names.sort()
+		self.assertEqual(names, [
+			(256, 1, 0,      0, "Width"),
+			(256, 2, 4,      0, "Breite"),
+			(256, 2, 4,      1, "Bräiti"),
+			(256, 3, 1, 0x0409, "Width"),
+			(256, 3, 1, 0x0484, "Bräiti"),
+			(256, 3, 1, 0x0807, "Breite"),
+			(257, 1, 0,      0, "X-Height"),
+			(257, 2, 4,      1, "X-Hööchi"),
+			(257, 3, 1, 0x0409, "X-Height"),
+			(257, 3, 1, 0x0484, "X-Hööchi"),
+		])
+		self.assertEqual(set(font.tables.keys()), {"ltag", "name"})
+		self.assertEqual(font["ltag"].tags, ["de-CH", "gsw"])
 
 	def test_decompile_badOffset(self):
                 # https://github.com/behdad/fonttools/issues/525
