@@ -3,7 +3,7 @@ from __future__ import print_function, division, absolute_import
 import sys
 import os.path
 
-libdir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'Lib'))
+libdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Lib')
 sys.path.insert(0, libdir)
 
 from fontTools.__main__ import main
