@@ -67,8 +67,12 @@ def _add_fvar_avar(font, axes, instances):
 		axis = Axis()
 		axis.axisTag = Tag(a.tag)
 		axis.minValue, axis.defaultValue, axis.maxValue = a.minimum, a.default, a.maximum
-		# TODO: Add all languages: https://github.com/fonttools/fonttools/issues/921
 		axis.axisNameID = nameTable.addName(tounicode(a.labelname['en']))
+		# TODO:
+		# Replace previous line with the following when the following issues are resolved:
+		# https://github.com/fonttools/fonttools/issues/930
+		# https://github.com/fonttools/fonttools/issues/931
+		# axis.axisNameID = nameTable.addMultilingualName(a.labelname, font)
 		fvar.axes.append(axis)
 
 	for instance in instances:
