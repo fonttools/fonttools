@@ -83,14 +83,14 @@ class NameTableTest(unittest.TestCase):
 		         for n in nameTable.names]
 		names.sort()
 		self.assertEqual(names, [
+			(256, 0, 4,      0, "Breite"),
+			(256, 0, 4,      1, "Bräiti"),
 			(256, 1, 0,      0, "Width"),
-			(256, 2, 4,      0, "Breite"),
-			(256, 2, 4,      1, "Bräiti"),
 			(256, 3, 1, 0x0409, "Width"),
 			(256, 3, 1, 0x0484, "Bräiti"),
 			(256, 3, 1, 0x0807, "Breite"),
+			(257, 0, 4,      1, "X-Hööchi"),
 			(257, 1, 0,      0, "X-Height"),
-			(257, 2, 4,      1, "X-Hööchi"),
 			(257, 3, 1, 0x0409, "X-Height"),
 			(257, 3, 1, 0x0484, "X-Hööchi"),
 		])

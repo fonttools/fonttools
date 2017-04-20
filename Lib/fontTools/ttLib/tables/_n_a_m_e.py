@@ -177,7 +177,10 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 				ltag = ttFont.tables.get("ltag")
 				if ltag is None:
 					ltag = ttFont["ltag"] = newTable("ltag")
-				self.names.append(makeName(name, nameID, 2, 4, ltag.addTag(lang)))
+				# 0 = Unicode; 4 = “Unicode 2.0 or later semantics (non-BMP characters allowed)”
+				# “The preferred platform-specific code for Unicode would be 3 or 4.”
+				# https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6name.html
+				self.names.append(makeName(name, nameID, 0, 4, ltag.addTag(lang)))
 			# Add a Windows name.
 			windowsLang = _WINDOWS_LANGUAGE_CODES.get(lang.lower())
 			if windowsLang is not None:
