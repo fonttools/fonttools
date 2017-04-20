@@ -4,7 +4,19 @@ from fontTools.misc.py23 import *
 from fontTools.pens.basePen import AbstractPen, DecomposingPen
 
 
-__all__ = ["RecordingPen", "DecomposingRecordingPen"]
+__all__ = ["replayRecording", "RecordingPen", "DecomposingRecordingPen"]
+
+
+def replayRecording(recording, pen):
+	"""Replay a recording, as produced by RecordingPen or DecomposingRecordingPen,
+	to a pen.
+
+	Note that recording does not have to be produced by those pens.
+	It can be any iterable of tuples of method name and tuple-of-arguments.
+	Likewise, pen can be any objects receiving those method calls.
+	"""
+	for operator,operands in recording:
+		getattr(pen, operator)(*operands)
 
 
 class RecordingPen(AbstractPen):
@@ -47,8 +59,7 @@ class RecordingPen(AbstractPen):
 	def addComponent(self, glyphName, transformation):
 		self.value.append(('addComponent', (glyphName, transformation)))
 	def replay(self, pen):
-		for operator,operands in self.value:
-			getattr(pen, operator)(*operands)
+		replayRecording(self.value, pen)
 
 
 class DecomposingRecordingPen(DecomposingPen, RecordingPen):
