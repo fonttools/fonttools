@@ -161,32 +161,41 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			raise ValueError("nameID must be less than 32768")
 		return nameID
 
-	def addMultilingualName(self, names, ttFont, nameID=None):
+	def addMultilingualName(self, names, ttFont=None, nameID=None):
+		"""Add a multilingual name, returning its name ID
+
+		'names' is a dictionary with the name in multiple languages,
+		such as {'en': 'Pale', 'de': 'Blaß', 'de-CH': 'Blass'}.
+		The keys can be arbitrary IETF BCP 47 language codes;
+		the values are Unicode strings.
+
+		'ttFont' is the TTFont to which the names are added, or None.
+		If present, the font's 'ltag' table can get populated
+		to store exotic language codes, which allows encoding
+		names that otherwise cannot get encoded at all.
+
+		'nameID' is the name ID to be used, or None to let the library
+		pick an unused name ID.
+		"""
 		if not hasattr(self, 'names'):
 			self.names = []
 		if nameID is None:
 			nameID = self._findUnusedNameID()
+		# TODO: Should minimize BCP 47 language codes.
+		# https://github.com/fonttools/fonttools/issues/930
 		for lang, name in sorted(names.items()):
-			# Add a Macintosh name. See section “The language identifier” in
-			# https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6name.html
-			macLang = _MAC_LANGUAGE_CODES.get(lang.lower())
-			if macLang is not None:
-				macScript = _MAC_LANGUAGE_TO_SCRIPT[macLang]
-				self.names.append(makeName(name, nameID, 1, macScript, macLang))
+			# Apple platforms have been recognizing Windows names
+			# since early OSX (~2001), so we only add names
+			# for the Macintosh platform when we cannot not make
+			# a Windows name. This can happen for exotic BCP47
+			# language tags that have no Windows language code.
+			windowsName = _makeWindowsName(name, nameID, lang)
+			if windowsName is not None:
+				self.names.append(windowsName)
 			else:
-				ltag = ttFont.tables.get("ltag")
-				if ltag is None:
-					ltag = ttFont["ltag"] = newTable("ltag")
-				# 0 = Unicode; 4 = “Unicode 2.0 or later semantics (non-BMP characters allowed)”
-				# “The preferred platform-specific code for Unicode would be 3 or 4.”
-				# https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6name.html
-				self.names.append(makeName(name, nameID, 0, 4, ltag.addTag(lang)))
-			# Add a Windows name.
-			windowsLang = _WINDOWS_LANGUAGE_CODES.get(lang.lower())
-			if windowsLang is not None:
-				self.names.append(makeName(name, nameID, 3, 1, windowsLang))
-			else:
-				log.warning("cannot add name in language %s because fonttools does not yet support name table format 1" % lang)
+				macName = _makeMacName(name, nameID, lang, ttFont)
+				if macName is not None:
+					self.names.append(macName)
 		return nameID
 
 	def addName(self, string, platforms=((1, 0, 0), (3, 1, 0x409)), minNameID=255):
@@ -222,6 +231,76 @@ def makeName(string, nameID, platformID, platEncID, langID):
 	name.string, name.nameID, name.platformID, name.platEncID, name.langID = (
 		string, nameID, platformID, platEncID, langID)
 	return name
+
+
+def _makeWindowsName(name, nameID, language):
+	"""Create a NameRecord for the Microsoft Windows platform
+
+	'language' is an arbitrary IETF BCP 47 language identifier such
+	as 'en', 'de-CH', 'de-AT-1901', or 'fa-Latn'. If Microsoft Windows
+	does not support the desired language, the result will be None.
+	Future versions of fonttools might return a NameRecord for the
+	OpenType 'name' table format 1, but this is not implemented yet.
+	"""
+	langID = _WINDOWS_LANGUAGE_CODES.get(language.lower())
+	if langID is not None:
+		return makeName(name, nameID, 3, 1, langID)
+	else:
+		log.warning("cannot add Windows name in language %s "
+		            "because fonttools does not yet support "
+		            "name table format 1" % language)
+		return None
+
+
+def _makeMacName(name, nameID, language, font=None):
+	"""Create a NameRecord for Apple platforms
+
+	'language' is an arbitrary IETF BCP 47 language identifier such
+	as 'en', 'de-CH', 'de-AT-1901', or 'fa-Latn'. When possible, we
+	create a Macintosh NameRecord that is understood by old applications
+	(platform ID 1 and an old-style Macintosh language enum). If this
+	is not possible, we create a Unicode NameRecord (platform ID 0)
+	whose language points to the font’s 'ltag' table. The latter
+	can encode any string in any language, but legacy applications
+	might not recognize the format (in which case they will ignore
+	those names).
+
+	'font' should be the TTFont for which you want to create a name.
+	If 'font' is None, we only return NameRecords for legacy Macintosh;
+	in that case, the result will be None for names that need to
+	be encoded with an 'ltag' table.
+
+	See the section “The language identifier” in Apple’s specification:
+	https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6name.html
+	"""
+	macLang = _MAC_LANGUAGE_CODES.get(language.lower())
+	macScript = _MAC_LANGUAGE_TO_SCRIPT.get(macLang)
+	if macLang is not None and macScript is not None:
+		encoding = getEncoding(1, macScript, macLang, default="ascii")
+		# Check if we can actually encode this name. If we can't,
+		# for example because we have no support for the legacy
+		# encoding, or because the name string contains Unicode
+		# characters that the legacy encoding cannot represent,
+		# we fall back to encoding the name in Unicode and put
+		# the language tag into the ltag table.
+		try:
+			_ = tobytes(name, encoding, errors="strict")
+			return makeName(name, nameID, 1, macScript, macLang)
+		except UnicodeEncodeError:
+			pass
+	if font is not None:
+		ltag = font.tables.get("ltag")
+		if ltag is None:
+			ltag = font["ltag"] = newTable("ltag")
+		# 0 = Unicode; 4 = “Unicode 2.0 or later semantics (non-BMP characters allowed)”
+		# “The preferred platform-specific code for Unicode would be 3 or 4.”
+		# https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6name.html
+		return makeName(name, nameID, 0, 4, ltag.addTag(language))
+	else:
+		log.warning("cannot store language %s into 'ltag' table "
+		            "without having access to the TTFont object" %
+		            language)
+		return None
 
 
 class NameRecord(object):

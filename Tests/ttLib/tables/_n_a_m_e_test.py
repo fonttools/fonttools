@@ -12,6 +12,13 @@ from fontTools.ttLib.tables._n_a_m_e import (
 	table__n_a_m_e, NameRecord, nameRecordFormat, nameRecordSize, makeName, log)
 
 
+def names(nameTable):
+	result = [(n.nameID, n.platformID, n.platEncID, n.langID, n.string)
+                  for n in nameTable.names]
+	result.sort()
+	return result
+
+
 class NameTableTest(unittest.TestCase):
 
 	def test_getDebugName(self):
@@ -70,32 +77,98 @@ class NameTableTest(unittest.TestCase):
 			table.addName(b"abc")  # must be unicode string
 
 	def test_addMultilingualName(self):
+		# Microsoft Windows has language codes for “English” (en)
+		# and for “Standard German as used in Switzerland” (de-CH).
+		# In this case, we expect that the implementation just
+		# encodes the name for the Windows platform; Apple platforms
+		# have been able to decode Windows names since the early days
+		# of OSX (~2001). However, Windows has no language code for
+		# “Swiss German as used in Liechtenstein” (gsw-LI), so we
+		# expect that the implementation populates the 'ltag' table
+ 		# to represent that particular, rather exotic BCP47 code.
 		font = FakeFont(glyphs=[".notdef", "A"])
 		nameTable = font.tables['name'] = newTable("name")
-		widthID = nameTable.addMultilingualName(
-			{"en": "Width", "de-CH": "Breite", "gsw": "Bräiti"},
-			ttFont=font)
-		xHeightID = nameTable.addMultilingualName(
-			{"en": "X-Height", "gsw": "X-Hööchi"}, ttFont=font)
-		self.assertEqual(widthID, 256)
-		self.assertEqual(xHeightID, 257)
-		names = [(n.nameID, n.platformID, n.platEncID, n.langID, n.string)
-		         for n in nameTable.names]
-		names.sort()
-		self.assertEqual(names, [
-			(256, 0, 4,      0, "Breite"),
-			(256, 0, 4,      1, "Bräiti"),
-			(256, 1, 0,      0, "Width"),
+		with CapturingLogHandler(log, "WARNING") as captor:
+			widthID = nameTable.addMultilingualName({
+				"en": "Width",
+				"de-CH": "Breite",
+				"gsw-LI": "Bräiti",
+			}, ttFont=font)
+			self.assertEqual(widthID, 256)
+			xHeightID = nameTable.addMultilingualName({
+				"en": "X-Height",
+				"gsw-LI": "X-Hööchi"
+			}, ttFont=font)
+			self.assertEqual(xHeightID, 257)
+		captor.assertRegex("cannot add Windows name in language gsw-LI")
+		self.assertEqual(names(nameTable), [
+			(256, 0, 4,      0, "Bräiti"),
 			(256, 3, 1, 0x0409, "Width"),
-			(256, 3, 1, 0x0484, "Bräiti"),
 			(256, 3, 1, 0x0807, "Breite"),
-			(257, 0, 4,      1, "X-Hööchi"),
-			(257, 1, 0,      0, "X-Height"),
+			(257, 0, 4,      0, "X-Hööchi"),
 			(257, 3, 1, 0x0409, "X-Height"),
-			(257, 3, 1, 0x0484, "X-Hööchi"),
 		])
 		self.assertEqual(set(font.tables.keys()), {"ltag", "name"})
-		self.assertEqual(font["ltag"].tags, ["de-CH", "gsw"])
+		self.assertEqual(font["ltag"].tags, ["gsw-LI"])
+
+	def test_addMultilingualName_legacyMacEncoding(self):
+		# Windows has no language code for Latin; MacOS has a code;
+		# and we actually can convert the name to the legacy MacRoman
+		# encoding. In this case, we expect that the name gets encoded
+		# as Macintosh name (platformID 1) with the corresponding Mac
+		# language code (133); the 'ltag' table should not be used.
+		font = FakeFont(glyphs=[".notdef", "A"])
+		nameTable = font.tables['name'] = newTable("name")
+		with CapturingLogHandler(log, "WARNING") as captor:
+			nameTable.addMultilingualName({"la": "SPQR"},
+			                              ttFont=font)
+		captor.assertRegex("cannot add Windows name in language la")
+		self.assertEqual(names(nameTable), [(256, 1, 0, 131, "SPQR")])
+		self.assertNotIn("ltag", font.tables.keys())
+
+	def test_addMultilingualName_legacyMacEncodingButUnencodableName(self):
+		# Windows has no language code for Latin; MacOS has a code;
+		# but we cannot encode the name into this encoding because
+		# it contains characters that are not representable.
+		# In this case, we expect that the name gets encoded as
+		# Unicode name (platformID 0) with the language tag being
+		# added to the 'ltag' table.
+		font = FakeFont(glyphs=[".notdef", "A"])
+		nameTable = font.tables['name'] = newTable("name")
+		with CapturingLogHandler(log, "WARNING") as captor:
+			nameTable.addMultilingualName({"la": "ⱾƤℚⱤ"},
+			                              ttFont=font)
+		captor.assertRegex("cannot add Windows name in language la")
+		self.assertEqual(names(nameTable), [(256, 0, 4, 0, "ⱾƤℚⱤ")])
+		self.assertIn("ltag", font.tables)
+		self.assertEqual(font["ltag"].tags, ["la"])
+
+	def test_addMultilingualName_legacyMacEncodingButNoCodec(self):
+		# Windows has no language code for “Azeri written in the
+		# Arabic script” (az-Arab); MacOS would have a code (50);
+		# but we cannot encode the name into the legacy encoding
+		# because we have no codec for MacArabic in fonttools.
+		# In this case, we expect that the name gets encoded as
+		# Unicode name (platformID 0) with the language tag being
+		# added to the 'ltag' table.
+		font = FakeFont(glyphs=[".notdef", "A"])
+		nameTable = font.tables['name'] = newTable("name")
+		with CapturingLogHandler(log, "WARNING") as captor:
+			nameTable.addMultilingualName({"az-Arab": "آذربايجان ديلی"},
+			                              ttFont=font)
+		captor.assertRegex("cannot add Windows name in language az-Arab")
+		self.assertEqual(names(nameTable), [(256, 0, 4, 0, "آذربايجان ديلی")])
+		self.assertIn("ltag", font.tables)
+		self.assertEqual(font["ltag"].tags, ["az-Arab"])
+
+	def test_addMultilingualName_noTTFont(self):
+		# If the ttFont argument is not passed, the implementation
+		# should add whatever names it can, but it should not crash
+		# just because it cannot build an ltag table.
+		nameTable = newTable("name")
+		with CapturingLogHandler(log, "WARNING") as captor:
+			nameTable.addMultilingualName({"en": "A", "la": "ⱾƤℚⱤ"})
+		captor.assertRegex("cannot store language la into 'ltag' table")
 
 	def test_decompile_badOffset(self):
                 # https://github.com/behdad/fonttools/issues/525
