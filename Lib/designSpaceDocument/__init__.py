@@ -169,29 +169,33 @@ class InstanceDescriptor(SimpleDescriptor):
         self.postScriptFontName = None
         self.styleMapFamilyName = None
         self.styleMapStyleName = None
+        self.localisedStyleName = {}
+        self.localisedFamilyName = {}
+        self.localisedStyleMapStyleName = {}
+        self.localisedStyleMapFamilyName = {}
         self.glyphs = {}
         self.kerning = True
         self.info = True
 
-def setStyleName(self, styleName, languageCode="en"):
-    self.localisedStyleName[self._defaultLanguageCode] = styleName
-def getStyleName(self, languageCode="en"):
-    return self.localisedStyleName.get(self._defaultLanguageCode)
+    def setStyleName(self, styleName, languageCode="en"):
+        self.localisedStyleName[languageCode] = styleName
+    def getStyleName(self, languageCode="en"):
+        return self.localisedStyleName.get(languageCode)
 
-def setFamilyName(self, familyName, languageCode="en"):
-    self.localisedFamilyName[self._defaultLanguageCode] = familyName
-def getFamilyName(self, languageCode="en"):
-    return self.localisedFamilyName.get(self._defaultLanguageCode)
+    def setFamilyName(self, familyName, languageCode="en"):
+        self.localisedFamilyName[languageCode] = familyName
+    def getFamilyName(self, languageCode="en"):
+        return self.localisedFamilyName.get(languageCode)
 
-def setStyleMapStyleName(self, styleMapStyleName, languageCode="en"):
-    self.localisedStyleMapStyleName[self._defaultLanguageCode] = styleMapStyleName
-def getStyleMapStyleName(self, languageCode="en"):
-    return self.localisedStyleMapStyleName.get(self._defaultLanguageCode)
+    def setStyleMapStyleName(self, styleMapStyleName, languageCode="en"):
+        self.localisedStyleMapStyleName[languageCode] = styleMapStyleName
+    def getStyleMapStyleName(self, languageCode="en"):
+        return self.localisedStyleMapStyleName.get(languageCode)
 
-def setStyleMapFamilyName(self, styleMapFamilyName, languageCode="en"):
-    self.localisedStyleMapFamilyName[self._defaultLanguageCode] = styleMapFamilyName
-def getStyleMapFamilyName(self, languageCode="en"):
-    return self.localisedStyleMapFamilyName.get(self._defaultLanguageCode)
+    def setStyleMapFamilyName(self, styleMapFamilyName, languageCode="en"):
+        self.localisedStyleMapFamilyName[languageCode] = styleMapFamilyName
+    def getStyleMapFamilyName(self, languageCode="en"):
+        return self.localisedStyleMapFamilyName.get(languageCode)
 
 def tagForAxisName(name):
     # try to find or make a tag name for this axis name
@@ -385,10 +389,9 @@ class BaseDocWriter(object):
         if instanceObject.name is not None:
             instanceElement.attrib['name'] = instanceObject.name
         if instanceObject.familyName is not None:
-            print("xxx", instanceObject)
-            instanceElement.attrib['familyname'] = instanceObject.getFamilyName()
+            instanceElement.attrib['familyname'] = instanceObject.familyName
         if instanceObject.styleName is not None:
-            instanceElement.attrib['stylename'] = instanceObject.getStyleName()
+            instanceElement.attrib['stylename'] = instanceObject.styleName
         # add localisations
         if instanceObject.localisedStyleName:
             languageCodes = instanceObject.localisedStyleName.keys()
@@ -398,7 +401,34 @@ class BaseDocWriter(object):
                 localisedStyleNameElement = ET.Element('stylename')
                 localisedStyleNameElement.attrib["xml:lang"] = code
                 localisedStyleNameElement.text = instanceObject.getStyleName(code)
-                instanceObject.append(localisedStyleNameElement)
+                instanceElement.append(localisedStyleNameElement)
+        if instanceObject.localisedFamilyName:
+            languageCodes = instanceObject.localisedFamilyName.keys()
+            languageCodes.sort()
+            for code in languageCodes:
+                if code == "en": continue
+                localisedFamilyNameElement = ET.Element('familyname')
+                localisedFamilyNameElement.attrib["xml:lang"] = code
+                localisedFamilyNameElement.text = instanceObject.getFamilyName(code)
+                instanceElement.append(localisedFamilyNameElement)
+        if instanceObject.localisedStyleMapStyleName:
+            languageCodes = instanceObject.localisedStyleMapStyleName.keys()
+            languageCodes.sort()
+            for code in languageCodes:
+                if code == "en": continue
+                localisedStyleMapStyleNameElement = ET.Element('stylemapstylename')
+                localisedStyleMapStyleNameElement.attrib["xml:lang"] = code
+                localisedStyleMapStyleNameElement.text = instanceObject.getStyleMapStyleName(code)
+                instanceElement.append(localisedStyleMapStyleNameElement)
+        if instanceObject.localisedStyleMapFamilyName:
+            languageCodes = instanceObject.localisedStyleMapFamilyName.keys()
+            languageCodes.sort()
+            for code in languageCodes:
+                if code == "en": continue
+                localisedStyleMapFamilyNameElement = ET.Element('stylemapfamilyname')
+                localisedStyleMapFamilyNameElement.attrib["xml:lang"] = code
+                localisedStyleMapFamilyNameElement.text = instanceObject.getStyleMapFamilyName(code)
+                instanceElement.append(localisedStyleMapFamilyNameElement)
 
         if instanceObject.location is not None:
             locationElement, instanceObject.location = self._makeLocationElement(instanceObject.location)
@@ -1256,7 +1286,7 @@ if __name__ == "__main__":
         f.close()
 
     def test():
-        """
+        u"""
         >>> import os
         >>> testDocPath = os.path.join(os.getcwd(), "test.designspace")
         >>> masterPath1 = os.path.join(os.getcwd(), "masters", "masterTest1.ufo")
@@ -1325,6 +1355,121 @@ if __name__ == "__main__":
         >>> doc.check()
         >>> doc.getAxisOrder()
         ['spooky', 'weight', 'width']
+        >>> doc.axes = []   # clear the axes
+        >>> # write some axes
+        >>> a1 = AxisDescriptor()
+        >>> a1.minimum = 0
+        >>> a1.maximum = 1000
+        >>> a1.default = 0
+        >>> a1.name = "weight"
+        >>> a1.tag = "wght"
+        >>> # note: just to test the element language, not an actual label name recommendations.
+        >>> a1.labelNames[u'fa-IR'] = u"قطر"
+        >>> a1.labelNames[u'en'] = u"Wéíght"
+        >>> doc.addAxis(a1)
+        >>> a2 = AxisDescriptor()
+        >>> a2.minimum = 0
+        >>> a2.maximum = 1000
+        >>> a2.default = 0
+        >>> a2.name = "width"
+        >>> a2.tag = "wdth"
+        >>> a2.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
+        >>> a2.labelNames[u'fr'] = u"Poids"
+        >>> doc.addAxis(a2)
+        >>> # add an axis that is not part of any location to see if that works
+        >>> a3 = AxisDescriptor()
+        >>> a3.minimum = 333
+        >>> a3.maximum = 666
+        >>> a3.default = 444
+        >>> a3.name = "spooky"
+        >>> a3.tag = "spok"
+        >>> a3.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
+        >>> #doc.addAxis(a3)    # uncomment this line to test the effects of default axes values
+        >>> # write some rules
+        >>> r1 = RuleDescriptor()
+        >>> r1.name = "named.rule.1"
+        >>> r1.conditions.append(dict(name='aaaa', minimum=0, maximum=1))
+        >>> r1.conditions.append(dict(name='bbbb', minimum=2, maximum=3))
+        >>> r1.subs.append(("a", "a.alt"))
+        >>> doc.addRule(r1)
+        >>> # write the document
+        >>> doc.write(testDocPath)
+        >>> assert os.path.exists(testDocPath)
+        >>> # import it again
+        >>> new = DesignSpaceDocument()
+        >>> new.read(testDocPath)
+        
+        # >>> for a, b in zip(doc.instances, new.instances):
+        # ...     a.compare(b)
+        # >>> for a, b in zip(doc.sources, new.sources):
+        # ...     a.compare(b)
+        # >>> for a, b in zip(doc.axes, new.axes):
+        # ...     a.compare(b)
+        # >>> [n.mutedGlyphNames for n in new.sources]
+        # [['A', 'Z'], []]
+        # >>> doc.getFonts()
+        # []
+        
+        >>> # test roundtrip for the axis attributes and data
+        >>> axes = {}
+        >>> for axis in doc.axes:
+        ...     if not axis.tag in axes:
+        ...         axes[axis.tag] = []
+        ...     axes[axis.tag].append(axis.serialize())
+        >>> for axis in new.axes:
+        ...     if axis.tag[0] == "_": continue
+        ...     if not axis.tag in axes:
+        ...         axes[axis.tag] = []
+        ...     axes[axis.tag].append(axis.serialize())
+        >>> for v in axes.values():
+        ...     a, b = v
+        ...     assert a == b
+
+        """
+
+    def testLocalisedNames():
+        u"""
+        >>> import os
+        >>> testDocPath = os.path.join(os.getcwd(), "testLocalisedNames.designspace")
+        >>> masterPath1 = os.path.join(os.getcwd(), "masters", "masterTest1.ufo")
+        >>> masterPath2 = os.path.join(os.getcwd(), "masters", "masterTest2.ufo")
+        >>> instancePath1 = os.path.join(os.getcwd(), "instances", "instanceTest1.ufo")
+        >>> instancePath2 = os.path.join(os.getcwd(), "instances", "instanceTest2.ufo")
+        >>> doc = DesignSpaceDocument()
+        >>> # add master 1
+        >>> s1 = SourceDescriptor()
+        >>> s1.filename = os.path.relpath(masterPath1, os.path.dirname(testDocPath))
+        >>> s1.name = "master.ufo1"
+        >>> s1.copyInfo = True
+        >>> s1.location = dict(weight=0)
+        >>> doc.addSource(s1)
+        >>> # add master 2
+        >>> s2 = SourceDescriptor()
+        >>> s2.filename = os.path.relpath(masterPath2, os.path.dirname(testDocPath))
+        >>> s2.name = "master.ufo2"
+        >>> s2.location = dict(weight=1000)
+        >>> doc.addSource(s2)
+        >>> # add instance 1
+        >>> i1 = InstanceDescriptor()
+        >>> i1.filename = os.path.relpath(instancePath1, os.path.dirname(testDocPath))
+        >>> i1.familyName = "Montserrat"
+        >>> i1.styleName = "SemiBold"
+        >>> i1.styleMapFamilyName = "Montserrat SemiBold"
+        >>> i1.styleMapStyleName = "Regular"
+        >>> i1.setFamilyName("Montserrat", "fr")
+        >>> i1.setFamilyName(u"モンセラート", "ja")
+        >>> i1.setStyleName("Demigras", "fr")
+        >>> i1.setStyleName(u"半ば", "ja")
+        >>> i1.setStyleMapStyleName(u"Standard", "de")
+        >>> i1.setStyleMapFamilyName("Montserrat Halbfett", "de")
+        >>> i1.setStyleMapFamilyName(u"モンセラート SemiBold", "ja")
+        >>> i1.name = "instance.ufo1"
+        >>> i1.location = dict(weight=500, spooky=666)  # this adds a dimension that is not defined.
+        >>> i1.postScriptFontName = "InstancePostscriptName"
+        >>> glyphData = dict(name="arrow", mute=True, unicode="0x123")
+        >>> i1.glyphs['arrow'] = glyphData
+        >>> doc.addInstance(i1)
+        >>> # now we have sources and instances, but no axes yet. 
         >>> doc.axes = []   # clear the axes
         >>> # write some axes
         >>> a1 = AxisDescriptor()
