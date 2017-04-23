@@ -151,6 +151,7 @@ def processRules(rules, location, glyphNames):
 class InstanceDescriptor(SimpleDescriptor):
     """Simple container for data related to the instance"""
     flavor = "instance"
+    _defaultLanguageCode = "en"
     _attrs = ['path', 'name',
               'location', 'familyName',
               'styleName', 'postScriptFontName',
@@ -172,6 +173,25 @@ class InstanceDescriptor(SimpleDescriptor):
         self.kerning = True
         self.info = True
 
+def setStyleName(self, styleName, languageCode="en"):
+    self.localisedStyleName[self._defaultLanguageCode] = styleName
+def getStyleName(self, languageCode="en"):
+    return self.localisedStyleName.get(self._defaultLanguageCode)
+
+def setFamilyName(self, familyName, languageCode="en"):
+    self.localisedFamilyName[self._defaultLanguageCode] = familyName
+def getFamilyName(self, languageCode="en"):
+    return self.localisedFamilyName.get(self._defaultLanguageCode)
+
+def setStyleMapStyleName(self, styleMapStyleName, languageCode="en"):
+    self.localisedStyleMapStyleName[self._defaultLanguageCode] = styleMapStyleName
+def getStyleMapStyleName(self, languageCode="en"):
+    return self.localisedStyleMapStyleName.get(self._defaultLanguageCode)
+
+def setStyleMapFamilyName(self, styleMapFamilyName, languageCode="en"):
+    self.localisedStyleMapFamilyName[self._defaultLanguageCode] = styleMapFamilyName
+def getStyleMapFamilyName(self, languageCode="en"):
+    return self.localisedStyleMapFamilyName.get(self._defaultLanguageCode)
 
 def tagForAxisName(name):
     # try to find or make a tag name for this axis name
@@ -192,7 +212,9 @@ def tagForAxisName(name):
 
 
 class AxisDescriptor(SimpleDescriptor):
-    """Simple container for the axis data"""
+    """ Simple container for the axis data
+        Add more localisations?
+    """
     flavor = "axis"
     _attrs = ['tag', 'name', 'maximum', 'minimum', 'default', 'map']
 
@@ -363,9 +385,21 @@ class BaseDocWriter(object):
         if instanceObject.name is not None:
             instanceElement.attrib['name'] = instanceObject.name
         if instanceObject.familyName is not None:
-            instanceElement.attrib['familyname'] = instanceObject.familyName
+            print("xxx", instanceObject)
+            instanceElement.attrib['familyname'] = instanceObject.getFamilyName()
         if instanceObject.styleName is not None:
-            instanceElement.attrib['stylename'] = instanceObject.styleName
+            instanceElement.attrib['stylename'] = instanceObject.getStyleName()
+        # add localisations
+        if instanceObject.localisedStyleName:
+            languageCodes = instanceObject.localisedStyleName.keys()
+            languageCodes.sort()
+            for code in languageCodes:
+                if code == "en": continue
+                localisedStyleNameElement = ET.Element('stylename')
+                localisedStyleNameElement.attrib["xml:lang"] = code
+                localisedStyleNameElement.text = instanceObject.getStyleName(code)
+                instanceObject.append(localisedStyleNameElement)
+
         if instanceObject.location is not None:
             locationElement, instanceObject.location = self._makeLocationElement(instanceObject.location)
             instanceElement.append(locationElement)
