@@ -397,7 +397,7 @@ class BaseDocWriter(object):
             languageCodes = instanceObject.localisedStyleName.keys()
             languageCodes.sort()
             for code in languageCodes:
-                if code == "en": continue
+                if code == "en": continue # already stored in the element attribute
                 localisedStyleNameElement = ET.Element('stylename')
                 localisedStyleNameElement.attrib["xml:lang"] = code
                 localisedStyleNameElement.text = instanceObject.getStyleName(code)
@@ -406,7 +406,7 @@ class BaseDocWriter(object):
             languageCodes = instanceObject.localisedFamilyName.keys()
             languageCodes.sort()
             for code in languageCodes:
-                if code == "en": continue
+                if code == "en": continue # already stored in the element attribute
                 localisedFamilyNameElement = ET.Element('familyname')
                 localisedFamilyNameElement.attrib["xml:lang"] = code
                 localisedFamilyNameElement.text = instanceObject.getFamilyName(code)
@@ -810,6 +810,25 @@ class BaseDocReader(object):
         styleMapStyleName = instanceElement.attrib.get('stylemapstylename')
         if styleMapStyleName is not None:
             instanceObject.styleMapStyleName = styleMapStyleName
+        # read localised names
+        for styleNameElement in instanceElement.findall('stylename'):
+            for key, lang in styleNameElement.items():
+                styleName = styleNameElement.text
+                instanceObject.setStyleName(styleName, lang)
+        for familyNameElement in instanceElement.findall('familyname'):
+            for key, lang in familyNameElement.items():
+                familyName = familyNameElement.text
+                instanceObject.setFamilyName(familyName, lang)
+        for styleMapStyleNameElement in instanceElement.findall('stylemapstylename'):
+            for key, lang in styleMapStyleNameElement.items():
+                styleMapStyleName = styleMapStyleNameElement.text
+                instanceObject.setStyleMapStyleName(styleMapStyleName, lang)
+        for styleMapFamilyNameElement in instanceElement.findall('stylemapfamilyname'):
+            for key, lang in styleMapFamilyNameElement.items():
+                styleMapFamilyName = styleMapFamilyNameElement.text
+                instanceObject.setStyleMapFamilyName(styleMapFamilyName, lang)
+        #print("instanceObject", instanceObject.localisedStyleName)
+
         instanceLocation = self.locationFromElement(instanceElement)
         if instanceLocation is not None:
             instanceObject.location = instanceLocation
@@ -1431,6 +1450,7 @@ if __name__ == "__main__":
         u"""
         >>> import os
         >>> testDocPath = os.path.join(os.getcwd(), "testLocalisedNames.designspace")
+        >>> testDocPath2 = os.path.join(os.getcwd(), "testLocalisedNames_roundtrip.designspace")
         >>> masterPath1 = os.path.join(os.getcwd(), "masters", "masterTest1.ufo")
         >>> masterPath2 = os.path.join(os.getcwd(), "masters", "masterTest2.ufo")
         >>> instancePath1 = os.path.join(os.getcwd(), "instances", "instanceTest1.ufo")
@@ -1513,33 +1533,7 @@ if __name__ == "__main__":
         >>> # import it again
         >>> new = DesignSpaceDocument()
         >>> new.read(testDocPath)
-        
-        # >>> for a, b in zip(doc.instances, new.instances):
-        # ...     a.compare(b)
-        # >>> for a, b in zip(doc.sources, new.sources):
-        # ...     a.compare(b)
-        # >>> for a, b in zip(doc.axes, new.axes):
-        # ...     a.compare(b)
-        # >>> [n.mutedGlyphNames for n in new.sources]
-        # [['A', 'Z'], []]
-        # >>> doc.getFonts()
-        # []
-        
-        >>> # test roundtrip for the axis attributes and data
-        >>> axes = {}
-        >>> for axis in doc.axes:
-        ...     if not axis.tag in axes:
-        ...         axes[axis.tag] = []
-        ...     axes[axis.tag].append(axis.serialize())
-        >>> for axis in new.axes:
-        ...     if axis.tag[0] == "_": continue
-        ...     if not axis.tag in axes:
-        ...         axes[axis.tag] = []
-        ...     axes[axis.tag].append(axis.serialize())
-        >>> for v in axes.values():
-        ...     a, b = v
-        ...     assert a == b
-
+        >>> new.write(testDocPath2)
         """
 
     def testHandleNoAxes():
