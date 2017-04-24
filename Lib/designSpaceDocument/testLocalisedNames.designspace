@@ -7,9 +7,9 @@
         </axis>
         <axis default="0" maximum="1000" minimum="0" name="width" tag="wdth">
             <labelname xml:lang="fr">Poids</labelname>
-            <map input="0.0" output="10.0" />
-            <map input="401.0" output="66.0" />
-            <map input="1000.0" output="990.0" />
+            <map input="0" output="10" />
+            <map input="401" output="66" />
+            <map input="1000" output="990" />
         </axis>
     </axes>
     <rules>
