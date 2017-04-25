@@ -192,7 +192,7 @@ class PointToSegmentPen(BasePointToSegmentPen):
 		else:
 			pen.endPath()
 
-	def addComponent(self, glyphName, transform):
+	def addComponent(self, glyphName, transform, **kwargs):
 		self.pen.addComponent(glyphName, transform)
 
 
