@@ -18,7 +18,10 @@ include .coveragerc
 include .travis.yml
 recursive-include .travis *.sh
 
+include Doc/Makefile
+include Doc/make.bat
 recursive-include Doc/man/man1 *.1
+recursive-include Doc/source *.py *.rst
 
 recursive-include Tests *.py *.ttx *.otx *.fea *.feax
 recursive-include Tests *.otf *.ttx.*
