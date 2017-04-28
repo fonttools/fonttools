@@ -113,7 +113,12 @@ class T2CharStringPen(RelativeCoordinatePen):
     def _relativeMoveTo(self, pt):
         pt = self.roundPoint(pt)
         x, y = pt
-        self._heldMove = [x, y, "rmoveto"]
+        if x == 0:
+            self._heldMove = [y, "vmoveto"]
+        elif y == 0:
+            self._heldMove = [x, "hmoveto"]
+        else:
+            self._heldMove = [x, y, "rmoveto"]
 
     def _storeHeldMove(self):
         if self._heldMove is not None:
@@ -127,7 +132,12 @@ class T2CharStringPen(RelativeCoordinatePen):
         self._storeHeldMove()
         pt = self.roundPoint(pt)
         x, y = pt
-        self._program.extend([x, y, "rlineto"])
+        if x == 0:
+            self._program.extend([y, "vlineto"])
+        elif y == 0:
+            self._program.extend([x, "hlineto"])
+        else:
+            self._program.extend([x, y, "rlineto"])
 
     def _curveToOne(self, pt1, pt2, pt3):
         RelativeCoordinatePen._curveToOne(self,
@@ -143,7 +153,26 @@ class T2CharStringPen(RelativeCoordinatePen):
         x1, y1 = pt1
         x2, y2 = pt2
         x3, y3 = pt3
-        self._program.extend([x1, y1, x2, y2, x3, y3, "rrcurveto"])
+        if x1 == 0:
+            if x3 == 0:
+                self._program.extend([y1, x2, y2, y3, "vvcurveto"])
+            elif y3 == 0:
+                self._program.extend([y1, x2, y2, x3, "vhcurveto"])
+            else:
+                self._program.extend([y1, x2, y2, x3, y3, "vhcurveto"])
+        elif y1 == 0:
+            if y3 == 0:
+                self._program.extend([x1, x2, y2, x3, "hhcurveto"])
+            elif x3 == 0:
+                self._program.extend([x1, x2, y2, y3, "hvcurveto"])
+            else:
+                self._program.extend([x1, x2, y2, y3, x3, "hvcurveto"])
+        elif x3 == 0:
+            self._program.extend([x1, y1, x2, y2, y3, "vvcurveto"])
+        elif y3 == 0:
+            self._program.extend([y1, x1, x2, y2, x3, "hhcurveto"])
+        else:
+            self._program.extend([x1, y1, x2, y2, x3, y3, "rrcurveto"])
 
     def _closePath(self):
         pass
