@@ -29,6 +29,11 @@ class T2CharStringPenTest(unittest.TestCase):
         pen.lineTo((10, 10))
         pen.lineTo((0, 10))
         pen.closePath()  # no-op
+        pen.moveTo((10, 10))
+        pen.lineTo((10, 20))
+        pen.lineTo((0, 20))
+        pen.lineTo((0, 10))
+        pen.closePath()
         charstring = pen.getCharString(None, None)
 
         self.assertEqual(
@@ -37,6 +42,10 @@ class T2CharStringPenTest(unittest.TestCase):
              10, 'hlineto',
              10, 'vlineto',
              -10, 'hlineto',
+             10, 'hmoveto',
+             10, 'vlineto',
+             -10, 'hlineto',
+             -10, 'vlineto',
              'endchar'],
             charstring.program)
 
