@@ -112,8 +112,13 @@ class T2CharStringPen(RelativeCoordinatePen):
 
     def _relativeMoveTo(self, pt):
         pt = self.roundPoint(pt)
-        x, y = pt
-        self._heldMove = [x, y, "rmoveto"]
+        dx, dy = pt
+        if dx == 0:
+            self._heldMove = [dy, "vmoveto"]
+        elif dy == 0:
+            self._heldMove = [dx, "hmoveto"]
+        else:
+            self._heldMove = [dx, dy, "rmoveto"]
 
     def _storeHeldMove(self):
         if self._heldMove is not None:
@@ -126,8 +131,13 @@ class T2CharStringPen(RelativeCoordinatePen):
     def _relativeLineTo(self, pt):
         self._storeHeldMove()
         pt = self.roundPoint(pt)
-        x, y = pt
-        self._program.extend([x, y, "rlineto"])
+        dx, dy = pt
+        if dx == 0:
+            self._program.extend([dy, "vlineto"])
+        elif dy == 0:
+            self._program.extend([dx, "hlineto"])
+        else:
+            self._program.extend([dx, dy, "rlineto"])
 
     def _curveToOne(self, pt1, pt2, pt3):
         RelativeCoordinatePen._curveToOne(self,
@@ -140,10 +150,29 @@ class T2CharStringPen(RelativeCoordinatePen):
         pt1 = self.roundPoint(pt1)
         pt2 = self.roundPoint(pt2)
         pt3 = self.roundPoint(pt3)
-        x1, y1 = pt1
-        x2, y2 = pt2
-        x3, y3 = pt3
-        self._program.extend([x1, y1, x2, y2, x3, y3, "rrcurveto"])
+        dx1, dy1 = pt1
+        dx2, dy2 = pt2
+        dx3, dy3 = pt3
+        if dx1 == 0:
+            if dx3 == 0:
+                self._program.extend([dy1, dx2, dy2, dy3, "vvcurveto"])
+            elif dy3 == 0:
+                self._program.extend([dy1, dx2, dy2, dx3, "vhcurveto"])
+            else:
+                self._program.extend([dy1, dx2, dy2, dx3, dy3, "vhcurveto"])
+        elif dy1 == 0:
+            if dy3 == 0:
+                self._program.extend([dx1, dx2, dy2, dx3, "hhcurveto"])
+            elif dx3 == 0:
+                self._program.extend([dx1, dx2, dy2, dy3, "hvcurveto"])
+            else:
+                self._program.extend([dx1, dx2, dy2, dy3, dx3, "hvcurveto"])
+        elif dx3 == 0:
+            self._program.extend([dx1, dy1, dx2, dy2, dy3, "vvcurveto"])
+        elif dy3 == 0:
+            self._program.extend([dy1, dx1, dx2, dy2, dx3, "hhcurveto"])
+        else:
+            self._program.extend([dx1, dy1, dx2, dy2, dx3, dy3, "rrcurveto"])
 
     def _closePath(self):
         pass
