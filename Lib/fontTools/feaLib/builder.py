@@ -887,6 +887,13 @@ class Builder(object):
                         otMarkAnchor = makeOpenTypeAnchor(markClassDef.anchor)
                         lookupBuilder.marks[mark] = (
                             markClass.name, otMarkAnchor)
+                    else:
+                        existingMarkClass = lookupBuilder.marks[mark][0]
+                        if markClass.name != existingMarkClass:
+                            raise FeatureLibError(
+                                "Glyph %s cannot be in both @%s and @%s" % (
+                                    mark, existingMarkClass, markClass.name),
+                                location)
 
     def add_mark_base_pos(self, location, bases, marks):
         builder = self.get_lookup_(location, MarkBasePosBuilder)
