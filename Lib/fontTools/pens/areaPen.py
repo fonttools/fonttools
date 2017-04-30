@@ -14,6 +14,13 @@ class AreaPen(BasePen):
 		BasePen.__init__(self, glyphset)
 		self.value = 0
 
+	def unload(self):
+		"""Return and reset the calculated area."""
+
+		area = self.value
+		self.value = 0
+		return area
+
 	def _moveTo(self, p0):
 		self._p0 = self._startPoint = p0
 
