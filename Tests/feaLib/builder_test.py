@@ -457,6 +457,18 @@ class BuilderTest(unittest.TestCase):
             self.build,
             "markClass [acute] <anchor 350 0> @TOP_MARKS;"*2)
 
+    def test_markClass_same_glyph_multiple_classes(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'Glyph uni0327 cannot be in both @ogonek and @cedilla',
+            self.build,
+            "feature mark {"
+            "    markClass [uni0327 uni0328] <anchor 0 0> @ogonek;"
+            "    pos base [a] <anchor 399 0> mark @ogonek;"
+            "    markClass [uni0327] <anchor 0 0> @cedilla;"
+            "    pos base [a] <anchor 244 0> mark @cedilla;"
+            "} mark;")
+
 
 def generate_feature_file_test(name):
     return lambda self: self.check_feature_file(name)
