@@ -1,3 +1,4 @@
+- [fvar] Expose flags in XML (#932)
 - [name] Add helper function for building multi-lingual names (#921)
 
 3.10.0 (released 2017-04-14)

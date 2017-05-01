@@ -74,6 +74,7 @@
     <!-- Weight -->
     <Axis>
       <AxisTag>wght</AxisTag>
+      <Flags>0x0</Flags>
       <MinValue>0.0</MinValue>
       <DefaultValue>0.0</DefaultValue>
       <MaxValue>1000.0</MaxValue>
@@ -82,37 +83,37 @@
 
     <!-- ExtraLight -->
     <!-- PostScript: TestFamily2-ExtraLight -->
-    <NamedInstance postscriptNameID="259" subfamilyNameID="258">
+    <NamedInstance flags="0x0" postscriptNameID="259" subfamilyNameID="258">
       <coord axis="wght" value="0.0"/>
     </NamedInstance>
 
     <!-- Light -->
     <!-- PostScript: TestFamily2-Light -->
-    <NamedInstance postscriptNameID="261" subfamilyNameID="260">
+    <NamedInstance flags="0x0" postscriptNameID="261" subfamilyNameID="260">
       <coord axis="wght" value="100.0"/>
     </NamedInstance>
 
     <!-- Regular -->
     <!-- PostScript: TestFamily2-Regular -->
-    <NamedInstance postscriptNameID="263" subfamilyNameID="262">
+    <NamedInstance flags="0x0" postscriptNameID="263" subfamilyNameID="262">
       <coord axis="wght" value="368.0"/>
     </NamedInstance>
 
     <!-- Semibold -->
     <!-- PostScript: TestFamily2-Semibold -->
-    <NamedInstance postscriptNameID="265" subfamilyNameID="264">
+    <NamedInstance flags="0x0" postscriptNameID="265" subfamilyNameID="264">
       <coord axis="wght" value="600.0"/>
     </NamedInstance>
 
     <!-- Bold -->
     <!-- PostScript: TestFamily2-Bold -->
-    <NamedInstance postscriptNameID="267" subfamilyNameID="266">
+    <NamedInstance flags="0x0" postscriptNameID="267" subfamilyNameID="266">
       <coord axis="wght" value="824.0"/>
     </NamedInstance>
 
     <!-- Black -->
     <!-- PostScript: TestFamily2-Black -->
-    <NamedInstance postscriptNameID="269" subfamilyNameID="268">
+    <NamedInstance flags="0x0" postscriptNameID="269" subfamilyNameID="268">
       <coord axis="wght" value="1000.0"/>
     </NamedInstance>
   </fvar>
