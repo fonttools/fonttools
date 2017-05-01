@@ -21,6 +21,7 @@
     <!-- Weight -->
     <Axis>
       <AxisTag>wght</AxisTag>
+      <Flags>0x0</Flags>
       <MinValue>100.0</MinValue>
       <DefaultValue>400.0</DefaultValue>
       <MaxValue>900.0</MaxValue>
@@ -28,27 +29,27 @@
     </Axis>
 
     <!-- Thin -->
-    <NamedInstance subfamilyNameID="258">
+    <NamedInstance flags="0x0" subfamilyNameID="258">
       <coord axis="wght" value="100.0"/>
     </NamedInstance>
 
     <!-- Light -->
-    <NamedInstance subfamilyNameID="259">
+    <NamedInstance flags="0x0" subfamilyNameID="259">
       <coord axis="wght" value="300.0"/>
     </NamedInstance>
 
     <!-- Regular -->
-    <NamedInstance subfamilyNameID="260">
+    <NamedInstance flags="0x0" subfamilyNameID="260">
       <coord axis="wght" value="400.0"/>
     </NamedInstance>
 
     <!-- Bold -->
-    <NamedInstance subfamilyNameID="261">
+    <NamedInstance flags="0x0" subfamilyNameID="261">
       <coord axis="wght" value="700.0"/>
     </NamedInstance>
 
     <!-- Black -->
-    <NamedInstance subfamilyNameID="262">
+    <NamedInstance flags="0x0" subfamilyNameID="262">
       <coord axis="wght" value="900.0"/>
     </NamedInstance>
   </fvar>

@@ -109,7 +109,7 @@ class Axis(object):
     def __init__(self):
         self.axisTag = None
         self.axisNameID = 0
-        self.flags = 0  # not exposed in XML because spec defines no values
+        self.flags = 0
         self.minValue = -1.0
         self.defaultValue = 0.0
         self.maxValue = 1.0
@@ -129,6 +129,7 @@ class Axis(object):
         writer.begintag("Axis")
         writer.newline()
         for tag, value in [("AxisTag", self.axisTag),
+                           ("Flags", "0x%X" % self.flags),
                            ("MinValue", str(self.minValue)),
                            ("DefaultValue", str(self.defaultValue)),
                            ("MaxValue", str(self.maxValue)),
@@ -146,14 +147,16 @@ class Axis(object):
             value = ''.join(value)
             if tag == "AxisTag":
                 self.axisTag = Tag(value)
-            elif tag in ["MinValue", "DefaultValue", "MaxValue", "AxisNameID"]:
+            elif tag in {"Flags", "MinValue", "DefaultValue", "MaxValue",
+                         "AxisNameID"}:
                 setattr(self, tag[0].lower() + tag[1:], safeEval(value))
+
 
 class NamedInstance(object):
     def __init__(self):
         self.subfamilyNameID = 0
         self.postscriptNameID = 0xFFFF
-        self.flags = 0  # not exposed in XML because spec defines no values
+        self.flags = 0
         self.coordinates = {}
 
     def compile(self, axisTags, includePostScriptName):
@@ -188,9 +191,11 @@ class NamedInstance(object):
             writer.comment(u"PostScript: " + psname)
             writer.newline()
         if self.postscriptNameID  == 0xFFFF:
-           writer.begintag("NamedInstance", subfamilyNameID=self.subfamilyNameID)
+           writer.begintag("NamedInstance", flags=("0x%X" % self.flags),
+                           subfamilyNameID=self.subfamilyNameID)
         else:
-            writer.begintag("NamedInstance", subfamilyNameID=self.subfamilyNameID,
+            writer.begintag("NamedInstance", flags=("0x%X" % self.flags),
+                            subfamilyNameID=self.subfamilyNameID,
                             postscriptNameID=self.postscriptNameID, )
         writer.newline()
         for axis in ttFont["fvar"].axes:
@@ -203,6 +208,7 @@ class NamedInstance(object):
     def fromXML(self, name, attrs, content, ttFont):
         assert(name == "NamedInstance")
         self.subfamilyNameID = safeEval(attrs["subfamilyNameID"])
+        self.flags = safeEval(attrs.get("flags", "0"))
         if "postscriptNameID" in attrs:
             self.postscriptNameID = safeEval(attrs["postscriptNameID"])
         else:
