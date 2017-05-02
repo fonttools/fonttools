@@ -1294,12 +1294,10 @@ class GlyphCoordinates(object):
 	def applyDeltas(self, deltas, controls):
 		if not hasattr(deltas, "_iup"):
 			# Other deltas does not have information about which points to interpolate.
-			# Fall back to __add__.
-			#print("    Fallback to __add__")
-			self.__add__(deltas)
+			# Fall back to __iadd__.
+			self += deltas
 			return self
 		else:
-			print("    Interpolating ...")
 			# Add explicit deltas, interpolate points that should be interpolated
 			if deltas.isFloat(): self._ensureFloat()
 			other = deltas._a
@@ -1308,31 +1306,41 @@ class GlyphCoordinates(object):
 			if deltas._iup.count(1) == 0:
 				# All deltas are explicit. In this case we can just add them.
 				# This takes care of composite glyphs, too.
-				#print("    Fallback to __add__ (2)")
-				self.__add__(deltas)
+				self += deltas
 				return self
 			else:
 				# If the first element of controls is a string, we have a composite
 				# glyph. Component positions are defined as single points, which can't
 				# be interpolated.
-				assert type(controls[0]) != str
+				if type(controls[0]) == str:
+					for i in range(len(deltas)):
+						delta = deltas[i]
+						if delta is None:
+							delta = (0, 0)
+						self[i] = (
+							self[i][0] + deltas[i][0],
+							self[i][1] + deltas[i][1]
+						)
+					return self
+				# Modify a copy of the point coordinates first, so we don't mix up already modified points.
 				self._applied_deltas = self.copy()
 				index = 0
 				contour_start = 0
 				for end_index in controls[0]:
-					#print("Contour")
+					# TODO: Checking at this point if a contour has only one delta could save execution
+					# of the loop through all contour points below.
+					# In addition, we could check if there is no point between two deltas. In that case we 
+					# wouldn't need to call self.interpolateRange, but just move the point.
 					first_delta = -1
 					delta0 = -1
 					delta1 = -1
 					while index <= end_index:
-						#print("   ", index, deltas._iup[index * 2], deltas._iup[index * 2 + 1], deltas[index])
 						if deltas._iup[index * 2] == 0:
 							if first_delta == -1:
 								first_delta = index
 								delta1 = index
 							if delta0 > -1:
 								delta1 = index
-								print("Interpolate between indices %i and %i ..." % (delta0, delta1))
 								self.interpolateRange(
 									delta0,
 									delta1,
@@ -1343,15 +1351,15 @@ class GlyphCoordinates(object):
 								delta0 = delta1
 							else:
 								delta0 = index
-								#delta1 = -1
 						index += 1
-					#print("After contour.")
-					#print("Remaining deltas:", first_delta, delta1)
+					# We are at the last point of the contour.
+					# Now check if we have only one delta, in which case the whole contour must be shifted.
 					if first_delta > -1 and delta1 > -1:
 						if first_delta == delta1:
 							# There is only one delta, shift the whole contour.
 							self.shiftRange(contour_start, end_index + 1, deltas[first_delta])
 						else:
+							# Interpolate points between the last and first delta of the contour.
 							self.interpolateRange(
 								delta1,
 								first_delta,
@@ -1361,11 +1369,18 @@ class GlyphCoordinates(object):
 							)
 					contour_start = end_index + 1
 
+				# Last point of last contour done. Handle phantom points.
+				for i in range(-4,0):
+					self._applied_deltas[i] = (
+						self._applied_deltas[i][0] + deltas[i][0],
+						self._applied_deltas[i][1] + deltas[i][1]
+					)
+
 			self._a = self._applied_deltas.array
 			return self
 
-	def shiftRange(self, ip0, ip1, delta):
-		#print("shiftRange(%s, %s, %s)" % (ip0, ip1, delta))
+	def shiftRange(self, ip0, ip1, delta=(0, 0)):
+		# Shift all points with an index between ip0 and ip0 by delta.
 		for i in range(ip0, ip1):
 			self._applied_deltas[i] = (
 				self._applied_deltas[i][0] + delta[0],
@@ -1373,18 +1388,17 @@ class GlyphCoordinates(object):
 			)
 
 	def interpolateRange(self, ip0, ip1, d0, d1, target_indices):
-		#print("interpolateRange(%s, %s, %s, %s, %s)" % (ip0, ip1, d0, d1, target_indices))
-
+		# Interpolate points with target_indices by using ip0 and ip1 as reference point indices.
+		# d0 and d1 are the delta shifts of the reference points.
 		# Unshifted reference points
 		orig_ref0 = self[ip0]
 		orig_ref1 = self[ip1]
 		
-		# Reference points with delta shift
+		# Reference points with applied delta shift
 		ref0 = (orig_ref0[0] + d0[0], orig_ref0[1] + d0[1])
 		ref1 = (orig_ref1[0] + d1[0], orig_ref1[1] + d1[1])
 
 		# Reorder the points so ref1 > ref0 and orig_ref1 > orig_ref0
-
 		xref = sorted([(orig_ref0[0], ref0[0]), (orig_ref1[0], ref1[0])])
 		yref = sorted([(orig_ref0[1], ref0[1]), (orig_ref1[1], ref1[1])])
 
@@ -1394,16 +1408,11 @@ class GlyphCoordinates(object):
 		ref0 = (xref[0][1], yref[0][1])
 		ref1 = (xref[1][1], yref[1][1])
 
-		#print("    Reference points:")
-		#print("    Original:", orig_ref0, orig_ref1)
-		#print("    Deltaed: ", ref0, ref1)
-		
 		for i in target_indices:
 			x = self[i][0]
 			y = self[i][1]
 			xi = self.interpolateValue(orig_ref0[0], orig_ref1[0], ref0[0], ref1[0], x)
 			yi = self.interpolateValue(orig_ref0[1], orig_ref1[1], ref0[1], ref1[1], y)
-			#print("       ", x, y, "->", xi, yi)
 			self._applied_deltas[i] = (xi, yi)
 
 	def interpolateValue(self, orig_ref0, orig_ref1, ref0, ref1, value):
