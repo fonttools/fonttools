@@ -1,3 +1,6 @@
+3.11.0 (released 2017-05-03)
+----------------------------
+
 - [t2CharStringPen] Initial support for specialized Type2 path operators:
   vmoveto, hmoveto, vlineto, hlineto, vvcurveto, hhcurveto, vhcurveto and
   hvcurveto. This should produce more compact charstrings (#940, #403).
