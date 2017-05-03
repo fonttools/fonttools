@@ -1425,8 +1425,8 @@ class GlyphCoordinates(object):
 					return following_delta
 			else:
 				# interpolate
-				c0, c1 = tuple(sorted([preceding_coord, following_coord]))
-				return (preceding_delta + following_delta) * (target_coord - c0) / (c1 - c0)
+				proportion = (target_coord - preceding_coord) / (following_coord - preceding_coord)
+				return (1 - proportion) * preceding_delta + proportion * following_delta
 
 	def __eq__(self, other):
 		"""
