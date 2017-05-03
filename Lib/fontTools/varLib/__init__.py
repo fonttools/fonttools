@@ -247,7 +247,7 @@ def _compressedDelta(delta, control):
 			# TODO: Check for point deltas that have the same explicit coordinates
 			# as if they were simply interpolated ("IUP" feature). These could be omitted.
 			# For now, just add all delta values of this contour verbatim.
-			compressed_delta.extend([d for d in contour_delta])
+			compressed_delta.extend(contour_delta)
 	return compressed_delta
 
 

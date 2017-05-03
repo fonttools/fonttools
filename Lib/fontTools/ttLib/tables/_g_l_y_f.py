@@ -1296,18 +1296,14 @@ class GlyphCoordinates(object):
 			# Other deltas does not have information about which points to interpolate.
 			# Fall back to __iadd__.
 			self += deltas
-			return self
 		else:
 			# Add explicit deltas, interpolate points that should be interpolated
 			if deltas.isFloat(): self._ensureFloat()
-			other = deltas._a
-			a = self._a
-			assert len(a) == len(other)
+			assert len(self._a) == len(deltas._a)
 			if deltas._iup.count(1) == 0:
 				# All deltas are explicit. In this case we can just add them.
 				# This takes care of composite glyphs, too.
 				self += deltas
-				return self
 			else:
 				# If the first element of controls is a string, we have a composite
 				# glyph. Component positions are defined as single points, which can't
@@ -1315,125 +1311,122 @@ class GlyphCoordinates(object):
 				if type(controls[0]) == str:
 					for i in range(len(deltas)):
 						delta = deltas[i]
-						if delta is None:
-							delta = (0, 0)
-						self[i] = (
+						if delta is not None:
+							self[i] = (
+								self[i][0] + delta[0],
+								self[i][1] + delta[1]
+							)
+				else:
+					# Modify a copy of the point coordinates first, so we don't mix up already modified points.
+					self._applied_deltas = self.copy()
+					index = 0
+					contour_start = 0
+					for end_index in controls[0]:
+						# TODO: Checking at this point if a contour has only one delta could save execution
+						# of the loop through all contour points below.
+						# In addition, we could check if there is no point between two deltas. In that case we 
+						# wouldn't need to call self.interpolateRange, but just move the point.
+						first_delta = -1
+						delta0 = -1
+						delta1 = -1
+						while index <= end_index:
+							if deltas._iup[index * 2] == 0:
+								if first_delta == -1:
+									first_delta = index
+									delta1 = index
+								if delta0 > -1:
+									delta1 = index
+									self.interpolateRange(
+										delta0,
+										delta1,
+										deltas[delta0],
+										deltas[delta1],
+										range(delta0 + 1, delta1)
+									)
+									self._applied_deltas[delta0] = (
+										self[delta0][0] + deltas[delta0][0],
+										self[delta0][1] + deltas[delta0][1]
+									)
+									self._applied_deltas[delta1] = (
+										self[delta1][0] + deltas[delta1][0],
+										self[delta1][1] + deltas[delta1][1]
+									)
+									delta0 = delta1
+								else:
+									delta0 = index
+							index += 1
+						# We are at the last point of the contour.
+						# Now check if we have only one delta, in which case the whole contour must be shifted.
+						if first_delta > -1 and delta1 > -1:
+							if first_delta == delta1:
+								# There is only one delta, shift the whole contour.
+								self.shiftRange(contour_start, end_index + 1, deltas[first_delta])
+							else:
+								# Interpolate points between the last and first delta of the contour.
+								self.interpolateRange(
+									delta1,
+									first_delta,
+									deltas[delta1],
+									deltas[first_delta],
+									[i for i in range(delta1 + 1, end_index + 1)] + [i for i in range(contour_start, first_delta)]
+								)
+						contour_start = end_index + 1
+
+					# Last point of last contour done. Handle phantom points.
+					for i in range(-4,0):
+						self._applied_deltas[i] = (
 							self[i][0] + deltas[i][0],
 							self[i][1] + deltas[i][1]
 						)
-					return self
-				# Modify a copy of the point coordinates first, so we don't mix up already modified points.
-				self._applied_deltas = self.copy()
-				index = 0
-				contour_start = 0
-				for end_index in controls[0]:
-					# TODO: Checking at this point if a contour has only one delta could save execution
-					# of the loop through all contour points below.
-					# In addition, we could check if there is no point between two deltas. In that case we 
-					# wouldn't need to call self.interpolateRange, but just move the point.
-					first_delta = -1
-					delta0 = -1
-					delta1 = -1
-					while index <= end_index:
-						if deltas._iup[index * 2] == 0:
-							if first_delta == -1:
-								first_delta = index
-								delta1 = index
-							if delta0 > -1:
-								delta1 = index
-								self.interpolateRange(
-									delta0,
-									delta1,
-									deltas[delta0],
-									deltas[delta1],
-									range(delta0, delta1 + 1)
-								)
-								delta0 = delta1
-							else:
-								delta0 = index
-						index += 1
-					# We are at the last point of the contour.
-					# Now check if we have only one delta, in which case the whole contour must be shifted.
-					if first_delta > -1 and delta1 > -1:
-						if first_delta == delta1:
-							# There is only one delta, shift the whole contour.
-							self.shiftRange(contour_start, end_index + 1, deltas[first_delta])
-						else:
-							# Interpolate points between the last and first delta of the contour.
-							self.interpolateRange(
-								delta1,
-								first_delta,
-								deltas[delta1],
-								deltas[first_delta],
-								[i for i in range(delta1 + 1, end_index + 1)] + [i for i in range(contour_start, first_delta)]
-							)
-					contour_start = end_index + 1
 
-				# Last point of last contour done. Handle phantom points.
-				for i in range(-4,0):
-					self._applied_deltas[i] = (
-						self._applied_deltas[i][0] + deltas[i][0],
-						self._applied_deltas[i][1] + deltas[i][1]
-					)
-
-			self._a = self._applied_deltas.array
-			return self
+					self._a = self._applied_deltas.array
 
 	def shiftRange(self, ip0, ip1, delta=(0, 0)):
 		# Shift all points with an index between ip0 and ip0 by delta.
 		for i in range(ip0, ip1):
 			self._applied_deltas[i] = (
-				self._applied_deltas[i][0] + delta[0],
-				self._applied_deltas[i][1] + delta[1]
+				self[i][0] + delta[0],
+				self[i][1] + delta[1]
 			)
 
 	def interpolateRange(self, ip0, ip1, d0, d1, target_indices):
 		# Interpolate points with target_indices by using ip0 and ip1 as reference point indices.
 		# d0 and d1 are the delta shifts of the reference points.
 		# Unshifted reference points
-		orig_ref0 = self[ip0]
-		orig_ref1 = self[ip1]
-		
-		# Reference points with applied delta shift
-		ref0 = (orig_ref0[0] + d0[0], orig_ref0[1] + d0[1])
-		ref1 = (orig_ref1[0] + d1[0], orig_ref1[1] + d1[1])
-
-		# Reorder the points so ref1 > ref0 and orig_ref1 > orig_ref0
-		xref = sorted([(orig_ref0[0], ref0[0]), (orig_ref1[0], ref1[0])])
-		yref = sorted([(orig_ref0[1], ref0[1]), (orig_ref1[1], ref1[1])])
-
-		orig_ref0 = (xref[0][0], yref[0][0])
-		orig_ref1 = (xref[1][0], yref[1][0])
-
-		ref0 = (xref[0][1], yref[0][1])
-		ref1 = (xref[1][1], yref[1][1])
+		preceding_point = self[ip0]
+		following_point = self[ip1]
 
 		for i in target_indices:
 			x = self[i][0]
 			y = self[i][1]
-			xi = self.interpolateValue(orig_ref0[0], orig_ref1[0], ref0[0], ref1[0], x)
-			yi = self.interpolateValue(orig_ref0[1], orig_ref1[1], ref0[1], ref1[1], y)
-			self._applied_deltas[i] = (xi, yi)
+			dx = self.interpolateDelta(preceding_point[0], following_point[0], d0[0], d1[0], x)
+			dy = self.interpolateDelta(preceding_point[1], following_point[1], d0[1], d1[1], y)
+			self._applied_deltas[i] = (
+				self[i][0] + dx,
+				self[i][1] + dy
+			)
 
-	def interpolateValue(self, orig_ref0, orig_ref1, ref0, ref1, value):
-
-		d0 = ref0 - orig_ref0
-		d1 = ref1 - orig_ref1
-
-		if orig_ref0 == orig_ref1 or ref0 == ref1:
-			if value <= orig_ref0:
-				return value + d0
-			elif value >= orig_ref1:
-				return value + d1
+	def interpolateDelta(self, preceding_coord, following_coord, preceding_delta, following_delta, target_coord):
+		if preceding_coord == following_coord:
+			if preceding_delta == following_delta:
+				return preceding_delta
 			else:
-				return orig_ref0
+				return 0
 		else:
-			if value <= orig_ref0:
-				return value + d0
-			elif value >= orig_ref1:
-				return value + d1
+			if target_coord <= min(preceding_coord, following_coord):
+				if preceding_coord < following_coord:
+					return preceding_delta
+				else:
+					return following_delta
+			elif target_coord >= max(preceding_coord, following_coord):
+				if preceding_coord > following_coord:
+					return preceding_delta
+				else:
+					return following_delta
 			else:
-				return ref0 + (value - orig_ref0) / (orig_ref1 - orig_ref0) * (ref1 - ref0)
+				# interpolate
+				c0, c1 = tuple(sorted([preceding_coord, following_coord]))
+				return (preceding_delta + following_delta) * (target_coord - c0) / (c1 - c0)
 
 	def __eq__(self, other):
 		"""
