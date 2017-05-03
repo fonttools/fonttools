@@ -1,5 +1,14 @@
+- [t2CharStringPen] Initial support for specialized Type2 path operators:
+  vmoveto, hmoveto, vlineto, hlineto, vvcurveto, hhcurveto, vhcurveto and
+  hvcurveto. This should produce more compact charstrings (#940, #403).
+- [Doc] Added Sphinx sources for the documentation. Thanks @gferreira (#935).
 - [fvar] Expose flags in XML (#932)
 - [name] Add helper function for building multi-lingual names (#921)
+- [varLib] Fixed kern merging when a PairPosFormat2 has ClassDef1 with glyphs
+  that are NOT present in the Coverage (1b5e1c4, #939).
+- [varLib] Fixed non-deterministic ClassDef order with PY3 (f056c12, #927).
+- [feLib] Throw an error when the same glyph is defined in multiple mark
+  classes within the same lookup (3e3ff00, #453).
 
 3.10.0 (released 2017-04-14)
 ----------------------------
