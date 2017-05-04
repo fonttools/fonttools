@@ -44,7 +44,7 @@ def main(args=None):
 	glyphnames = sorted(
 		gvar.variations.keys(),
 		key=lambda name: (
-			glyf[name].getCompositeMaxpValues(glyf)[2]
+			glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
 			if glyf[name].isComposite() else 0,
 			name))
 	for glyphname in glyphnames:
