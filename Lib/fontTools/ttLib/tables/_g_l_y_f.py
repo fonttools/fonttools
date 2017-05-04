@@ -298,7 +298,7 @@ SCALED_COMPONENT_OFFSET		= 0x0800  # composite designed to have the component of
 UNSCALED_COMPONENT_OFFSET	= 0x1000  # composite designed not to have the component offset scaled (designed for MS)
 
 
-MaxpValues = namedtuple('MaxpValues', ['nPoints', 'nContours', 'maxComponentDepth'])
+CompositeMaxpValues = namedtuple('CompositeMaxpValues', ['nPoints', 'nContours', 'maxComponentDepth'])
 
 
 class Glyph(object):
@@ -440,7 +440,7 @@ class Glyph(object):
 						glyfTable, maxComponentDepth + 1)
 			nPoints = nPoints + nP
 			nContours = nContours + nC
-		return MaxpValues(nPoints, nContours, maxComponentDepth)
+		return CompositeMaxpValues(nPoints, nContours, maxComponentDepth)
 
 	def getMaxpValues(self):
 		assert self.numberOfContours > 0
