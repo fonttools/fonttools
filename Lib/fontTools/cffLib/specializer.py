@@ -9,8 +9,8 @@ def programToCommands(program):
 	"""Takes a T2CharString program list and returns list of commands.
 	Each command is a two-tuple of commandname,arg-list.  The commandname might
 	be None if no commandname shall be emitted (used for glyph width (TODO),
-	hintmask/cntrmask argument, as well as stray arguments at the end of
-	program (¯\_(ツ)_/¯)."""
+	hintmask/cntrmask argument, as well as operators with wrong number of arguments
+	or stray arguments at the end of the program (¯\_(ツ)_/¯)."""
 
 	commands = []
 	stack = []
