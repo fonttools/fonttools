@@ -38,21 +38,15 @@ def main(args=None):
 	# Location is normalized now
 	print("Normalized location:", loc)
 
-	# Sort glyphs from simple to complex (regarding components), so they can be
-	# processed in the correct order
-	sort_tuples = []
-	for name, glyph in varfont['glyf'].glyphs.items():
-		if glyph.isComposite():
-			glyph.expand(varfont['glyf'])
-			_, _, component_depth = glyph.getCompositeMaxpValues(varfont['glyf'])
-			sort_tuples.append((component_depth, name))
-		else:
-			sort_tuples.append((0, name))
-	print("Glyph processing order:", sorted(sort_tuples))
-
 	gvar = varfont['gvar']
-	glyphnames = [t[1] for t in sorted(sort_tuples) if t[1] in gvar.variations]
-
+	glyf = varfont['glyf']
+	# get list of glyph names in gvar sorted by component depth
+	glyphnames = sorted(
+		gvar.variations.keys(),
+		key=lambda name: (
+			glyf[name].getCompositeMaxpValues(glyf)[2]
+			if glyf[name].isComposite() else 0,
+			name))
 	for glyphname in glyphnames:
 		variations = gvar.variations[glyphname]
 		coordinates,_ = _GetCoordinates(varfont, glyphname)
