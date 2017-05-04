@@ -163,7 +163,7 @@ class _GeneralizerDecombinerCommandsMap(object):
 		yield ('rrcurveto', last_args)
 
 
-def generalizeCommands(commands, ignoreErrors=False):
+def generalizeCommands(commands, ignoreErrors=True):
 	result = []
 	mapping = _GeneralizerDecombinerCommandsMap
 	for op,args in commands:
@@ -176,13 +176,24 @@ def generalizeCommands(commands, ignoreErrors=False):
 				result.append(command)
 		except ValueError:
 			if ignoreErrors:
-				result.append((op,args))
+				# Store op as data, such that consumers of commands do not have to
+				# deal with incorrect number of arguments.
+				result.append((None,args))
+				result.append((None, [op]))
 			else:
 				raise
 	return result
 
 def generalizeProgram(program, **kwargs):
 	return commandsToProgram(generalizeCommands(programToCommands(program), **kwargs))
+
+
+def specializeCommands(commands, ignoreErrors=False):
+	# TODO
+	return commands
+
+def specializeProgram(program, **kwargs):
+	return commandsToProgram(specializeCommands(programToCommands(program), **kwargs))
 
 
 if __name__ == '__main__':
