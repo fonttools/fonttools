@@ -1,6 +1,7 @@
 """_g_l_y_f.py -- Converter classes for the 'glyf' table."""
 
 from __future__ import print_function, division, absolute_import
+from collections import namedtuple
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools import ttLib
@@ -297,6 +298,9 @@ SCALED_COMPONENT_OFFSET		= 0x0800  # composite designed to have the component of
 UNSCALED_COMPONENT_OFFSET	= 0x1000  # composite designed not to have the component offset scaled (designed for MS)
 
 
+CompositeMaxpValues = namedtuple('CompositeMaxpValues', ['nPoints', 'nContours', 'maxComponentDepth'])
+
+
 class Glyph(object):
 
 	def __init__(self, data=""):
@@ -436,7 +440,7 @@ class Glyph(object):
 						glyfTable, maxComponentDepth + 1)
 			nPoints = nPoints + nP
 			nContours = nContours + nC
-		return nPoints, nContours, maxComponentDepth
+		return CompositeMaxpValues(nPoints, nContours, maxComponentDepth)
 
 	def getMaxpValues(self):
 		assert self.numberOfContours > 0

@@ -39,7 +39,16 @@ def main(args=None):
 	print("Normalized location:", loc)
 
 	gvar = varfont['gvar']
-	for glyphname,variations in gvar.variations.items():
+	glyf = varfont['glyf']
+	# get list of glyph names in gvar sorted by component depth
+	glyphnames = sorted(
+		gvar.variations.keys(),
+		key=lambda name: (
+			glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
+			if glyf[name].isComposite() else 0,
+			name))
+	for glyphname in glyphnames:
+		variations = gvar.variations[glyphname]
 		coordinates,_ = _GetCoordinates(varfont, glyphname)
 		for var in variations:
 			scalar = supportScalar(loc, var.axes)
