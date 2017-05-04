@@ -50,7 +50,7 @@ def _everyN(el, n):
 		yield el[i:i+n]
 
 
-class _GeneralizeCommandsMap(object):
+class _GeneralizerDecombinerCommandsMap(object):
 
 	@staticmethod
 	def rmoveto(args):
@@ -165,7 +165,7 @@ class _GeneralizeCommandsMap(object):
 
 def generalizeCommands(commands, ignoreErrors=False):
 	result = []
-	mapping = _GeneralizeCommandsMap
+	mapping = _GeneralizerDecombinerCommandsMap
 	for op,args in commands:
 		func = getattr(mapping, op if op else '', None)
 		if not func:
