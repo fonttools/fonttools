@@ -9,8 +9,8 @@ def programToCommands(program):
 	"""Takes a T2CharString program list and returns list of commands.
 	Each command is a two-tuple of commandname,arg-list.  The commandname might
 	be None if no commandname shall be emitted (used for glyph width (TODO),
-	hintmask/cntrmask argument, as well as operators with wrong number of arguments
-	or stray arguments at the end of the program (¯\_(ツ)_/¯)."""
+	hintmask/cntrmask argument, as well as stray arguments at the end of the
+	program (¯\_(ツ)_/¯)."""
 
 	commands = []
 	stack = []
@@ -19,7 +19,7 @@ def programToCommands(program):
 		if not isinstance(token, basestring):
 			stack.append(token)
 			continue
-		if token in ('hintmask', 'cntrmask'):
+		if token in {'hintmask', 'cntrmask'}:
 			if stack:
 				commands.append((None, stack))
 			commands.append((token, []))
@@ -104,7 +104,7 @@ class _GeneralizerDecombinerCommandsMap(object):
 			yield ('rrcurveto', [0, args[0], args[1], args[2], 0, args[3]])
 	@staticmethod
 	def hvcurveto(args):
-		if len(args) < 4 or len(args) % 8 not in (0,1,4,5): raise ValueError(args)
+		if len(args) < 4 or len(args) % 8 not in {0,1,4,5}: raise ValueError(args)
 		last_args = None
 		if len(args) % 2 == 1:
 			lastStraight = len(args) % 8 == 5
@@ -126,7 +126,7 @@ class _GeneralizerDecombinerCommandsMap(object):
 				yield ('rrcurveto', [0, args[0], args[1], args[2], args[3], args[4]])
 	@staticmethod
 	def vhcurveto(args):
-		if len(args) < 4 or len(args) % 8 not in (0,1,4,5): raise ValueError(args)
+		if len(args) < 4 or len(args) % 8 not in {0,1,4,5}: raise ValueError(args)
 		last_args = None
 		if len(args) % 2 == 1:
 			lastStraight = len(args) % 8 == 5
@@ -188,8 +188,107 @@ def generalizeProgram(program, **kwargs):
 	return commandsToProgram(generalizeCommands(programToCommands(program), **kwargs))
 
 
-def specializeCommands(commands, ignoreErrors=False):
-	# TODO
+def _categorizeVector(v):
+	"""
+	Takes X,Y vector v and returns one of r, h, v, or 0 depending on which
+	of X and/or Y are zero.
+
+	>>> _categorizeVector((0,0))
+	'0'
+	>>> _categorizeVector((1,0))
+	'h'
+	>>> _categorizeVector((0,2))
+	'v'
+	>>> _categorizeVector((1,2))
+	'r'
+	"""
+	return "rvh0"[(v[1]==0) * 2 + (v[0]==0)]
+
+def specializeCommands(commands,
+		       ignoreErrors=False,
+		       generalizeFirst=True,
+		       preserveTopology=False,
+		       maxstack=48):
+
+	# We perform several rounds of optimizations.  They are carefully ordered and are:
+	#
+	# 0. Generalize commands.
+	#    This ensures that they are in our expected simple form, with each line/curve only
+	#    having arguments for one segment, and using the generic form (rlineto/rrcurveto).
+	#    If caller is sure the input is in this form, they can turn off generalization to
+	#    save time.
+	#
+	# 1. Combine successive rmoveto operations.
+	#
+	# 2. Specialize rmoveto/rlineto/rrcurveto operators into horizontal/vertical variants.
+	#    We specialize into some, made-up, varianats as well, which simplifies following
+	#    passes.
+	#
+	# 3. Merge or delete redundant operations, if changing topology is allowed.  OpenType
+	#    spec declares point numbers in CFF undefined, so by default we happily change
+	#    topology.  If client relies on point numbers (in GPOS anchors, or for hinting
+	#    purposes(what?)) they can turn this off.
+	#
+	# 4. Peephole optimization to revert back some of the h/v variants back into their
+	#    original "relative" operator (rline/rrcurveto) if that saves a byte.
+	#
+	# 5. Resolve choices, ie. when same curve can be encoded in multiple ways using the
+	#    same number of bytes, to maximize combining.
+	#
+	# 6. Combine adjacent operators when possible, minding not to go over max stack
+	#    size.
+	#
+	# 7. Resolve any remaining made-up operators into real operators.
+	#
+	# I have convinced myself that this produces optimal bytecode (except for, possibly
+	# one byte each time maxstack size prohibits combining.)  YMMV, but you'd be wrong. :-)
+
+	# 0. Generalize commands.
+	if generalizeFirst:
+		commands = generalizeCommands(commands, ignoreErrors=ignoreErrors)
+	else:
+		commands = commands[:] # Make copy since we modify in-place later.
+
+	# 1. Combine successive rmoveto operations.
+	for i in range(len(commands)-1, 0, -1):
+		if 'rmoveto' == commands[i][0] == commands[i-1][0]:
+			v1, v2 = commands[i-1][1], commands[i][1]
+			commands[i-1] = ('rmoveto', [v1[0]+v2[0], v1[1]+v2[1]])
+			del commands[i]
+
+	# 2. Specialize rmoveto/rlineto/rrcurveto operators into horizontal/vertical variants.
+	#
+	#    We, in fact, specialize into more, made-up, variants that special-case when both
+	#    X and Y components are zero.  This simplifies the following optimization passes.
+	#    This case is rare, but OCD does not let me skip it.
+	#
+	#    After this round, we will have four variants that use the following mnemonics:
+	#
+	#    - 'r' for relative,   ie. non-zero X and non-zero Y,
+	#    - 'h' for horizontal, ie. zero X and non-zero Y,
+	#    - 'v' for vertical,   ie. non-zero X and zero Y,
+	#    - '0' for zeros,      ie. zero X and zero Y.
+	#
+	#    The zero pseudo-operators are not part of the spec, but help simplify the following
+	#    optimization rounds.  We resolve them at the end.  So, after this, we will have four
+	#    moveto and four lineto variants, and sixteen curveto variants.  For example, a
+	#    '0hcurveto' operator means a curve dx0,dy0,dx1,dy1,dx2,dy2,dx3,dy3 where dx0, dx1,
+	#    and dy3 are zero but not dx3.  An 'rvcurveto' means dx3 is zero but not dx0,dy0,dy3.
+	for i in range(len(commands)):
+		op,args = commands[i]
+		if op not in {'rmoveto', 'rlineto'}:
+			#c = _categorizeVector(args)
+			continue
+		if op != 'rrcurveto':
+			continue
+
+		# rrcurveto is the fun!
+
+	#new_commands, commands = commands[:1], commands[1:]
+	#for command in commands:
+	#	new_commands.append(command)
+	#commands, new_commands = new_commands, None
+
 	return commands
 
 def specializeProgram(program, **kwargs):
@@ -198,6 +297,9 @@ def specializeProgram(program, **kwargs):
 
 if __name__ == '__main__':
 	import sys
+	if len(sys.argv) == 1:
+		import doctest
+		sys.exit(doctest.testmod().failed)
 	program = []
 	for token in sys.argv[1:]:
 		try:
@@ -215,3 +317,5 @@ if __name__ == '__main__':
 	print("Program from commands:"); print(program2)
 	assert program == program2
 	print("Generalized program:"); print(generalizeProgram(program))
+	print("Specialized program:"); print(specializeProgram(program))
+
