@@ -368,8 +368,14 @@ def specializeCommands(commands,
 		new_op = None
 
 		# Merge logic...
-		if op1 in {'rlineto', 'rrcurveto'} and op1 == op2:
-			new_op = op1
+		if {op1, op2} <= {'rlineto', 'rrcurveto'}:
+			if op1 == op2:
+				new_op = op1
+			else:
+				if op2 == 'rrcurveto' and len(args2) == 6:
+					new_op = 'rlinecurve'
+				elif len(args2) == 2:
+					new_op = 'rcurveline'
 		elif {op1, op2} == {'vlineto', 'hlineto'}:
 			new_op = op1
 		# TODO curves
