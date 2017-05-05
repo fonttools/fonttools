@@ -191,24 +191,38 @@ def generalizeProgram(program, **kwargs):
 def _categorizeVector(v):
 	"""
 	Takes X,Y vector v and returns one of r, h, v, or 0 depending on which
-	of X and/or Y are zero.
+	of X and/or Y are zero, plus tuple of nonzero ones.  If both are zero,
+	it returns a single zero still.
 
 	>>> _categorizeVector((0,0))
-	'0'
+	('0', (0,))
 	>>> _categorizeVector((1,0))
-	'h'
+	('h', (1,))
 	>>> _categorizeVector((0,2))
-	'v'
+	('v', (2,))
 	>>> _categorizeVector((1,2))
-	'r'
+	('r', (1, 2))
 	"""
+	if v[0] == 0:
+		if v[1] == 0:
+			return '0', type(v)((0,))
+		else:
+			return 'v', v[1:]
+	else:
+		if v[1] == 0:
+			return 'h', v[:1]
+		else:
+			return 'r', v
 	return "rvh0"[(v[1]==0) * 2 + (v[0]==0)]
+
 
 def specializeCommands(commands,
 		       ignoreErrors=False,
 		       generalizeFirst=True,
 		       preserveTopology=False,
 		       maxstack=48):
+
+	maxstack -= 3 # AFDKO code uses effective 45 maxstack while the spec says 48.
 
 	# We perform several rounds of optimizations.  They are carefully ordered and are:
 	#
@@ -224,10 +238,10 @@ def specializeCommands(commands,
 	#    We specialize into some, made-up, varianats as well, which simplifies following
 	#    passes.
 	#
-	# 3. Merge or delete redundant operations, if changing topology is allowed.  OpenType
-	#    spec declares point numbers in CFF undefined, so by default we happily change
-	#    topology.  If client relies on point numbers (in GPOS anchors, or for hinting
-	#    purposes(what?)) they can turn this off.
+	# 3. Merge or delete redundant operations, if changing topology is allowed.
+	#    OpenType spec declares point numbers in CFF undefined.  As such, we happily
+	#    change topology.  If client relies on point numbers (in GPOS anchors, or for
+	#    hinting purposes(what?)) they can turn this off.
 	#
 	# 4. Peephole optimization to revert back some of the h/v variants back into their
 	#    original "relative" operator (rline/rrcurveto) if that saves a byte.
@@ -235,13 +249,14 @@ def specializeCommands(commands,
 	# 5. Resolve choices, ie. when same curve can be encoded in multiple ways using the
 	#    same number of bytes, to maximize combining.
 	#
-	# 6. Combine adjacent operators when possible, minding not to go over max stack
-	#    size.
+	# 6. Combine adjacent operators when possible, minding not to go over max stack size.
 	#
 	# 7. Resolve any remaining made-up operators into real operators.
 	#
 	# I have convinced myself that this produces optimal bytecode (except for, possibly
 	# one byte each time maxstack size prohibits combining.)  YMMV, but you'd be wrong. :-)
+	# A dynamic-programming approach can do the same but would be significantly slower.
+
 
 	# 0. Generalize commands.
 	if generalizeFirst:
@@ -258,36 +273,122 @@ def specializeCommands(commands,
 
 	# 2. Specialize rmoveto/rlineto/rrcurveto operators into horizontal/vertical variants.
 	#
-	#    We, in fact, specialize into more, made-up, variants that special-case when both
-	#    X and Y components are zero.  This simplifies the following optimization passes.
-	#    This case is rare, but OCD does not let me skip it.
+	# We, in fact, specialize into more, made-up, variants that special-case when both
+	# X and Y components are zero.  This simplifies the following optimization passes.
+	# This case is rare, but OCD does not let me skip it.
 	#
-	#    After this round, we will have four variants that use the following mnemonics:
+	# After this round, we will have four variants that use the following mnemonics:
 	#
-	#    - 'r' for relative,   ie. non-zero X and non-zero Y,
-	#    - 'h' for horizontal, ie. zero X and non-zero Y,
-	#    - 'v' for vertical,   ie. non-zero X and zero Y,
-	#    - '0' for zeros,      ie. zero X and zero Y.
+	# - 'r' for relative,   ie. non-zero X and non-zero Y,
+	# - 'h' for horizontal, ie. zero X and non-zero Y,
+	# - 'v' for vertical,   ie. non-zero X and zero Y,
+	# - '0' for zeros,      ie. zero X and zero Y.
 	#
-	#    The zero pseudo-operators are not part of the spec, but help simplify the following
-	#    optimization rounds.  We resolve them at the end.  So, after this, we will have four
-	#    moveto and four lineto variants, and sixteen curveto variants.  For example, a
-	#    '0hcurveto' operator means a curve dx0,dy0,dx1,dy1,dx2,dy2,dx3,dy3 where dx0, dx1,
-	#    and dy3 are zero but not dx3.  An 'rvcurveto' means dx3 is zero but not dx0,dy0,dy3.
+	# The zero pseudo-operators are not part of the spec, but help simplify the following
+	# optimization rounds.  We resolve them at the end.  So, after this, we will have four
+	# moveto and four lineto variants, and sixteen curveto variants.  For example, a
+	# '0hcurveto' operator means a curve dx0,dy0,dx1,dy1,dx2,dy2,dx3,dy3 where dx0, dx1,
+	# and dy3 are zero but not dx3.  An 'rvcurveto' means dx3 is zero but not dx0,dy0,dy3.
+	#
+	# TODO curves
+	#
 	for i in range(len(commands)):
 		op,args = commands[i]
-		if op not in {'rmoveto', 'rlineto'}:
-			#c = _categorizeVector(args)
+		if op in {'rmoveto', 'rlineto'}:
+			c, args = _categorizeVector(args)
+			commands[i] = c+op[1:], args
 			continue
 		if op != 'rrcurveto':
 			continue
 
 		# rrcurveto is the fun!
+		# TODO curves
 
-	#new_commands, commands = commands[:1], commands[1:]
-	#for command in commands:
-	#	new_commands.append(command)
-	#commands, new_commands = new_commands, None
+	# 3. Merge or delete redundant operations, if changing topology is allowed.
+	if not preserveTopology:
+		for i in range(len(commands)-1, -1, -1):
+			op, args = commands[i]
+
+			# A 0x0curveto is demoted to a (specialized) lineto.
+			if op == '0x0curveto':
+				assert len(args) == 4
+				c, args = _categorizeVector(args[1:3])
+				op = c+'lineto'
+				commands[i] = op, args
+				# and then...
+
+			# A 0lineto can be deleted.
+			if op == '0lineto':
+				del commands[i]
+				continue
+
+			# Merge adjacent hlineto's and vlineto's.
+			if i and op in {'hlineto', 'vlineto'} and op == commands[i-1][0]:
+				_, other_args = commands[i-1]
+				assert len(args) == 1 and len(other_args) == 1
+				commands[i-1] = (op, [other_args[0]+args[0]])
+				del commands[i]
+				continue
+
+	# 4. Peephole optimization to revert back some of the h/v variants back into their
+	#    original "relative" operator (rline/rrcurveto) if that saves a byte.
+	for i in range(1, len(commands)-1):
+		op,args = commands[i]
+		prv,nxt = commands[i-1][0], commands[i+1][0]
+
+		if op in {'0lineto', 'hlineto', 'vlineto'} and prv == nxt == 'rlineto':
+			assert len(args) == 1
+			args = [0, args[0]] if op[0] == 'v' else [args[0], 0]
+			commands[i] = ('rlineto', args)
+			continue
+
+		if op[3:] == 'curveto' and len(args) == 5 and prv == nxt == 'rrcurveto':
+			assert (op[0] == 'r') ^ (op[2] == 'r')
+			args = args[:]
+			if op[0] == 'v':
+				pos = 0
+			elif op[0] != 'r':
+				pos = 1
+			elif op[1] == 'v':
+				pos = 4
+			else:
+				pos = 5
+			args.insert(pos, 0)
+			commands[i] = ('rrcurveto', args)
+			continue
+
+	# 5. Resolve choices, ie. when same curve can be encoded in multiple ways using the
+	#    same number of bytes, to maximize combining.
+	# TODO curves
+
+	# 6. Combine adjacent operators when possible, minding not to go over max stack size.
+	for i in range(len(commands)-1, 0, -1):
+		op1,args1 = commands[i-1]
+		op2,args2 = commands[i]
+		new_op = None
+
+		# Merge logic...
+		if op1 in {'rlineto', 'rrcurveto'} and op1 == op2:
+			new_op = op1
+		elif {op1, op2} == {'vlineto', 'hlineto'}:
+			new_op = op1
+		# TODO curves
+
+		if new_op and len(args1) + len(args2) <= maxstack:
+			commands[i-1] = (new_op, args1+args2)
+			del commands[i]
+
+	# 7. Resolve any remaining made-up operators into real operators.
+	for i in range(len(commands)):
+		op,args = commands[i]
+
+		if op in {'0moveto', '0lineto'}:
+			commands[i] = 'h'+op[1:], args
+			continue
+
+		if op[3:] == 'curveto':
+			# TODO curves
+			continue
 
 	return commands
 
