@@ -477,9 +477,9 @@ def specializeCommands(commands,
 					j = '=' # XXX arbitrary
 
 				# Propagate...
-				d0,d = _applyJoint(d0, d, j)
-				d,d3 = _applyJoint(d, d3, j)
-				d0,d = _applyJoint(d0, d, j)
+				d0,d = _applyJoint(d0, d, j) # WRONG?
+				d,d3 = _applyJoint(d, d3, j) # WRONG?
+				d0,d = _applyJoint(d0, d, j) # WRONG?
 
 				new_op = d0+j+d3+'curveto'
 
@@ -499,7 +499,13 @@ def specializeCommands(commands,
 			if op[0] == 'r' or op[2] == 'r':
 				assert len(args) % 2 == 1
 			if op[1] == '+':
-				op = 'vhcurveto' if op[0] == 'v' or op[2] == 'h' else 'hvcurveto'
+				if (op[0] == 'v' or
+				    (op[2] == 'h' and len(args) % 8 >= 4) or
+				    (op[2] == 'v' and len(args) % 8 <  4)):
+					op = 'vhcurveto'
+				else:
+					op = 'hvcurveto'
+
 				if len(args) % 2 == 1 and ((op[0] == 'h') ^ (len(args) % 8 == 5)):
 					# Swap last two args order
 					args = args[:-2]+args[-1:]+args[-2:-1]
