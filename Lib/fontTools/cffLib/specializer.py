@@ -250,7 +250,7 @@ def specializeCommands(commands,
 	# 1. Combine successive rmoveto operations.
 	#
 	# 2. Specialize rmoveto/rlineto/rrcurveto operators into horizontal/vertical variants.
-	#    We specialize into some, made-up, varianats as well, which simplifies following
+	#    We specialize into some, made-up, variants as well, which simplifies following
 	#    passes.
 	#
 	# 3. Merge or delete redundant operations, if changing topology is allowed.
