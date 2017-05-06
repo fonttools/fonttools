@@ -5,64 +5,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.psCharStrings import T2CharString
 from fontTools.pens.basePen import BasePen
-from fontTools.cffLib.specializer import specializeProgram
-
-
-class RelativeCoordinatePen(BasePen):
-
-    def __init__(self, glyphSet):
-        BasePen.__init__(self, glyphSet)
-        self._lastX = None
-        self._lastY = None
-        self._heldAbsoluteMove = None
-
-    def _makePointRelative(self, pt):
-        absX, absY = pt
-        absX = absX
-        absY = absY
-        # no points have been added
-        # so no conversion is needed
-        if self._lastX is None:
-            relX, relY = absX, absY
-        # otherwise calculate the relative coordinates
-        else:
-            relX = absX - self._lastX
-            relY = absY - self._lastY
-        # store the absolute coordinates
-        self._lastX = absX
-        self._lastY = absY
-        # now return the relative coordinates
-        return relX, relY
-
-    def _moveTo(self, pt):
-        self._heldAbsoluteMove = pt
-
-    def _releaseHeldMove(self):
-        if self._heldAbsoluteMove is not None:
-            pt = self._makePointRelative(self._heldAbsoluteMove)
-            self._relativeMoveTo(pt)
-            self._heldAbsoluteMove = None
-
-    def _relativeMoveTo(self, pt):
-        raise NotImplementedError
-
-    def _lineTo(self, pt):
-        self._releaseHeldMove()
-        pt = self._makePointRelative(pt)
-        self._relativeLineTo(pt)
-
-    def _relativeLineTo(self, pt):
-        raise NotImplementedError
-
-    def _curveToOne(self, pt1, pt2, pt3):
-        self._releaseHeldMove()
-        pt1 = self._makePointRelative(pt1)
-        pt2 = self._makePointRelative(pt2)
-        pt3 = self._makePointRelative(pt3)
-        self._relativeCurveToOne(pt1, pt2, pt3)
-
-    def _relativeCurveToOne(self, pt1, pt2, pt3):
-        raise NotImplementedError
+from fontTools.cffLib.specializer import specializeCommands, commandsToProgram
 
 
 def makeRoundFunc(tolerance):
@@ -89,7 +32,7 @@ def makeRoundFunc(tolerance):
     return roundPoint
 
 
-class T2CharStringPen(RelativeCoordinatePen):
+class T2CharStringPen(BasePen):
     """Pen to draw Type 2 CharStrings.
 
     The 'roundTolerance' argument controls the rounding of point coordinates.
@@ -101,49 +44,25 @@ class T2CharStringPen(RelativeCoordinatePen):
     """
 
     def __init__(self, width, glyphSet, roundTolerance=0.5):
-        RelativeCoordinatePen.__init__(self, glyphSet)
         self.roundPoint = makeRoundFunc(roundTolerance)
-        self._heldMove = None
-        self._program = []
         self._width = width
+        self._commands = []
+        self._p0 = (0,0)
+
+    def _p(self, pt):
+        p0 = self._p0
+        pt = self._p0 = self.roundPoint(pt)
+        return (pt[0]-p0[0], pt[1]-p0[1])
 
     def _moveTo(self, pt):
-        RelativeCoordinatePen._moveTo(self, self.roundPoint(pt))
-
-    def _relativeMoveTo(self, pt):
-        pt = self.roundPoint(pt)
-        dx, dy = pt
-        self._heldMove = [dx, dy, "rmoveto"]
-
-    def _storeHeldMove(self):
-        if self._heldMove is not None:
-            self._program.extend(self._heldMove)
-            self._heldMove = None
+        self._commands.append(('rmoveto', self._p(pt)))
 
     def _lineTo(self, pt):
-        RelativeCoordinatePen._lineTo(self, self.roundPoint(pt))
-
-    def _relativeLineTo(self, pt):
-        self._storeHeldMove()
-        pt = self.roundPoint(pt)
-        dx, dy = pt
-        self._program.extend([dx, dy, "rlineto"])
+        self._commands.append(('rlineto', self._p(pt)))
 
     def _curveToOne(self, pt1, pt2, pt3):
-        RelativeCoordinatePen._curveToOne(self,
-                                          self.roundPoint(pt1),
-                                          self.roundPoint(pt2),
-                                          self.roundPoint(pt3))
-
-    def _relativeCurveToOne(self, pt1, pt2, pt3):
-        self._storeHeldMove()
-        pt1 = self.roundPoint(pt1)
-        pt2 = self.roundPoint(pt2)
-        pt3 = self.roundPoint(pt3)
-        dx1, dy1 = pt1
-        dx2, dy2 = pt2
-        dx3, dy3 = pt3
-        self._program.extend([dx1, dy1, dx2, dy2, dx3, dy3, "rrcurveto"])
+        _p = self._p
+        self._commands.append(('rrcurveto', _p(pt1)+_p(pt2)+_p(pt3)))
 
     def _closePath(self):
         pass
@@ -152,11 +71,13 @@ class T2CharStringPen(RelativeCoordinatePen):
         pass
 
     def getCharString(self, private=None, globalSubrs=None, optimize=True):
-        program = self._program + ["endchar"]
+        commands = self._commands
         if optimize:
-            program = specializeProgram(program)
+            commands = specializeCommands(commands, generalizeFirst=False)
+        program = commandsToProgram(commands)
         if self._width is not None:
             program.insert(0, round(self._width))
+        program.append('endchar')
         charString = T2CharString(
             program=program, private=private, globalSubrs=globalSubrs)
         return charString
