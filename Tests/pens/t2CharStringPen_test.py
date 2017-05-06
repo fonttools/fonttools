@@ -38,14 +38,10 @@ class T2CharStringPenTest(unittest.TestCase):
 
         self.assertEqual(
             [100,
-             0, 'vmoveto',
-             10, 'hlineto',
-             10, 'vlineto',
-             -10, 'hlineto',
+             0, 'hmoveto',
+             10, 10, -10, 'hlineto',
              10, 'hmoveto',
-             10, 'vlineto',
-             -10, 'hlineto',
-             -10, 'vlineto',
+             10, -10, -10, 'vlineto',
              'endchar'],
             charstring.program)
 
@@ -61,9 +57,7 @@ class T2CharStringPenTest(unittest.TestCase):
         self.assertEqual(
             [100,
              5, 5, 'rmoveto',
-             20, 10, 'rlineto',
-             10, 20, 'rlineto',
-             -20, -10, 'rlineto',
+             20, 10, 10, 20, -20, -10, 'rlineto',
              'endchar'],
             charstring.program)
 
@@ -77,9 +71,8 @@ class T2CharStringPenTest(unittest.TestCase):
 
         self.assertEqual(
             [100,
-             0, 'vmoveto',
-             10, 10, 10, 10, 'hvcurveto',
-             10, -10, 10, -10, 'vhcurveto',
+             0, 'hmoveto',
+             10, 10, 10, 10, 10, -10, 10, -10, 'hvcurveto',
              'endchar'],
             charstring.program)
 
@@ -94,8 +87,7 @@ class T2CharStringPenTest(unittest.TestCase):
         self.assertEqual(
             [100,
              95, 25, 'rmoveto',
-             20, 19, 0, 32, -20, 19, 'rrcurveto',
-             -19, 19, -32, 1, -19, -20, 'rrcurveto',
+             20, 19, 0, 32, -20, 19, -19, 19, -32, 1, -19, -20, 'rrcurveto',
              'endchar'],
             charstring.program)
 
@@ -140,7 +132,7 @@ class T2CharStringPenTest(unittest.TestCase):
 
         self.assertAlmostEqualProgram(
             [100,  # we always round the advance width
-             0, 'vmoveto',
+             0, 'hmoveto',
              10.1, 0.1, 9.8, 9.8, 0.59, 10.59, 'rrcurveto',
              10, -10.59, 9.41, -9.8, 0.2, 'vhcurveto',
              'endchar'],
@@ -156,9 +148,8 @@ class T2CharStringPenTest(unittest.TestCase):
 
         self.assertEqual(
             [100,
-             0, 'vmoveto',
-             10, 10, 10, 10, 'hvcurveto',
-             10, -10, 10, -10, 'vhcurveto',
+             0, 'hmoveto',
+             10, 10, 10, 10, 10, -10, 10, -10, 'hvcurveto',
              'endchar'],
             charstring.program)
 
@@ -175,10 +166,9 @@ class T2CharStringPenTest(unittest.TestCase):
 
         self.assertAlmostEqualProgram(
             [100,
-             0, 'vmoveto',
+             0, 'hmoveto',
              10, 'hlineto',
-             10, 10, 'rlineto',
-             0.49, 10.49, 'rlineto',
+             10, 10, 0.49, 10.49, 'rlineto',
              'endchar'],
             charstring.program)
 
