@@ -417,7 +417,7 @@ def specializeCommands(commands,
 				pos = 0
 			elif op[0] != 'r':
 				pos = 1
-			elif op[1] == 'v':
+			elif op[2] == 'v':
 				pos = 4
 			else:
 				pos = 5
