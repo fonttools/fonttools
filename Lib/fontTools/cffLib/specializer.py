@@ -45,7 +45,7 @@ def commandsToProgram(commands):
 
 def _everyN(el, n):
 	"""Group the list el into groups of size n"""
-	if len(el) % n != 0: raise ValueError(args)
+	if len(el) % n != 0: raise ValueError(el)
 	for i in range(0, len(el), n):
 		yield el[i:i+n]
 
@@ -215,6 +215,21 @@ def _categorizeVector(v):
 			return 'r', v
 	return "rvh0"[(v[1]==0) * 2 + (v[0]==0)]
 
+def _mergeCategories(a, b, dontCare):
+	if a == dontCare: return b
+	if b == dontCare: return a
+	if a == b: return a
+	return None
+
+def _applyJoint(a, b, j):
+	if j == '.' or a == 'r' or b == 'r': return a, b
+	if a != '0':
+		c = 'hv'[(a == 'v') ^ (j == '+')]
+		assert b == '0' or b == c
+		b = c
+	else:
+		a = 'hv'[(b == 'v') ^ (j == '+')]
+	return a, b
 
 def specializeCommands(commands,
 		       ignoreErrors=False,
@@ -246,12 +261,9 @@ def specializeCommands(commands,
 	# 4. Peephole optimization to revert back some of the h/v variants back into their
 	#    original "relative" operator (rline/rrcurveto) if that saves a byte.
 	#
-	# 5. Resolve choices, ie. when same curve can be encoded in multiple ways using the
-	#    same number of bytes, to maximize combining.
+	# 5. Combine adjacent operators when possible, minding not to go over max stack size.
 	#
-	# 6. Combine adjacent operators when possible, minding not to go over max stack size.
-	#
-	# 7. Resolve any remaining made-up operators into real operators.
+	# 6. Resolve any remaining made-up operators into real operators.
 	#
 	# I have convinced myself that this produces optimal bytecode (except for, possibly
 	# one byte each time maxstack size prohibits combining.)  YMMV, but you'd be wrong. :-)
@@ -279,30 +291,85 @@ def specializeCommands(commands,
 	#
 	# After this round, we will have four variants that use the following mnemonics:
 	#
-	# - 'r' for relative,   ie. non-zero X and non-zero Y,
-	# - 'h' for horizontal, ie. zero X and non-zero Y,
-	# - 'v' for vertical,   ie. non-zero X and zero Y,
-	# - '0' for zeros,      ie. zero X and zero Y.
+	#  - 'r' for relative,   ie. non-zero X and non-zero Y,
+	#  - 'h' for horizontal, ie. zero X and non-zero Y,
+	#  - 'v' for vertical,   ie. non-zero X and zero Y,
+	#  - '0' for zeros,      ie. zero X and zero Y.
 	#
-	# The zero pseudo-operators are not part of the spec, but help simplify the following
+	# The '0' pseudo-operators are not part of the spec, but help simplify the following
 	# optimization rounds.  We resolve them at the end.  So, after this, we will have four
-	# moveto and four lineto variants, and sixteen curveto variants.  For example, a
-	# '0hcurveto' operator means a curve dx0,dy0,dx1,dy1,dx2,dy2,dx3,dy3 where dx0, dx1,
-	# and dy3 are zero but not dx3.  An 'rvcurveto' means dx3 is zero but not dx0,dy0,dy3.
+	# moveto and four lineto variants:
 	#
-	# TODO curves
+	#  - 0moveto, 0lineto
+	#  - hmoveto, hlineto
+	#  - vmoveto, vlineto
+	#  - rmoveto, rlineto
+	#
+	# and sixteen curveto variants.  For example, a '0hcurveto' operator means a curve
+	# dx0,dy0,dx1,dy1,dx2,dy2,dx3,dy3 where dx0, dx1, and dy3 are zero but not dx3.
+	# An 'rvcurveto' means dx3 is zero but not dx0,dy0,dy3.
+	#
+	# There are nine different variants of curves without the '0'.  Those nine map exactly
+	# to the existing curve variants in the spec: rrcurveto, and the four variants hhcurveto,
+	# vvcurveto, hvcurveto, and vhcurveto each cover two cases, one with an odd number of
+	# arguments and one without.  Eg. an hhcurveto with an extra argument (odd number of
+	# arguments) is in fact an rhcurveto.  The operators in the spec are designed such that
+	# all four of rhcurveto, rvcurveto, hrcurveto, and vrcurveto are encodable.
+	#
+	# Of the curve types with '0', the 00curveto is equivalent to a lineto variant.  The rest
+	# of the curve types with a 0 need to be encoded as a h or v variant.  Ie. a '0' can be
+	# thought of a "don't care" and can be used as either an 'h' or a 'v'.  As such, we always
+	# encode a number 0 as argument when we use a '0' variant.  Later on, we can just substitute
+	# the '0' with either 'h' or 'v' and it works.
+	#
+	# When we get to curve splines however, things become more complicated. When we have a
+	# curve spline that starts and ends horizontally, there are two different cases, one
+	# where all curves start and end horizontally, another when curves alternate between
+	# horizontal-vertical and vertical-horizontal.  To distinguish these cases, we use an
+	# extra character in the pseudo-operator names that signifies the spline type:
+	#
+	#  - '+' means a spline where curves alternate between horizontal and vertical orientations,
+	#        and is called a "pizza-slice" spline.
+	#  - '=' means a spline where all curves start and end in the same orientation (h or v),
+	#        and is called a "french-fries" spline.
+	#  - '.' means "don't care", ie. the spline can be encoded / treated as either a pizzal-slice
+	#        or french-fries.  This happens where 0s are involved in curves, because those can
+	#        be encoded as both h and v.
+	#
+	# So, from here one, we use rrcurveto as is, but for other variants of curves we use three
+	# mnemonic signifiers.  For example, 'h+vcurveto', or 'r.0curveto'.  Rules for combining
+	# these will be defined later.
+	#
+	# There's one more complexity with splines.  If one side of the spline is not horizontal or
+	# vertical (or zero), ie. if it's 'r', then it limits which spline types we can encode.
+	# Only spline type '=' can start with an 'r' (hhcurveto and vvcurveto operators), and
+	# only spline type '+' can end in an 'r' (hvcurveto and vhcurveto operators).
 	#
 	for i in range(len(commands)):
 		op,args = commands[i]
+
 		if op in {'rmoveto', 'rlineto'}:
 			c, args = _categorizeVector(args)
 			commands[i] = c+op[1:], args
 			continue
-		if op != 'rrcurveto':
-			continue
 
-		# rrcurveto is the fun!
-		# TODO curves
+		if op == 'rrcurveto':
+			c1, args1 = _categorizeVector(args[:2])
+			c2, args2 = _categorizeVector(args[-2:])
+			if c1 == c2 == 'r':
+				continue
+
+			join = '.'
+			if c1 == 'r':
+				join = '='
+			elif c2 == 'r':
+				join = '+'
+			elif c1 != '0' and c2 != '0':
+				# Both sides are h and/or v
+				join = '=' if c1 == c2 else '+'
+
+			commands[i] = c1+join+c2+'curveto', args1+args[2:4]+args2
+			continue
 
 	# 3. Merge or delete redundant operations, if changing topology is allowed.
 	if not preserveTopology:
@@ -357,11 +424,7 @@ def specializeCommands(commands,
 			commands[i] = ('rrcurveto', args)
 			continue
 
-	# 5. Resolve choices, ie. when same curve can be encoded in multiple ways using the
-	#    same number of bytes, to maximize combining.
-	# TODO curves
-
-	# 6. Combine adjacent operators when possible, minding not to go over max stack size.
+	# 5. Combine adjacent operators when possible, minding not to go over max stack size.
 	for i in range(len(commands)-1, 0, -1):
 		op1,args1 = commands[i-1]
 		op2,args2 = commands[i]
@@ -378,13 +441,53 @@ def specializeCommands(commands,
 					new_op = 'rcurveline'
 		elif {op1, op2} == {'vlineto', 'hlineto'}:
 			new_op = op1
-		# TODO curves
+		elif 'curveto' == op1[3:] == op2[3:]:
+			# Two curves can merge if their spline types are compatible, ie.
+			# at least one is a wildcard spline ('.') or otherwise the two are
+			# both pizza ('+') or both fries ('='), and
+			#
+			# The joining orientations are NOT 'r', and are compatible, ie.
+			# at least one is a '0', or otherwise they are both 'h' or both
+			# 'v'.
+			#
+			# The _mergeCategories() function does such compatibility matching.
+
+			d0, j1, d1 = op1[:3]
+			d2, j2, d3 = op2[:3]
+
+			j = _mergeCategories(j1, j2, '.')
+			d = _mergeCategories(d1, d2, '0')
+			if j and d and d != 'r':
+
+				if j == '.' and d != '0':
+					# Need to resolve join, if middle is oriented but
+					# join type is free...  Happens for example for:
+					#
+					# 0 0 1 2 3 0 rrcurveto 4 0 5 6 0 0 rrcurveto
+					#
+					# which can be combined both into a h=hcurveto, or
+					# a v+vcurveto.  But would be wrong to combine into
+					# 0.0curveto.  That would lose the orientation of the
+					# middle segments!!
+					#
+					# Ok, this is one place that now I'm convinced my model
+					# is not powerful enough... and maybe dynamic-programming
+					# is needed after all.  I'll keep thinking about how
+					# to fix this without too much work...
+					j = '=' # XXX arbitrary
+
+				# Propagate...
+				d0,d = _applyJoint(d0, d, j)
+				d,d3 = _applyJoint(d, d3, j)
+				d0,d = _applyJoint(d0, d, j)
+
+				new_op = d0+j+d3+'curveto'
 
 		if new_op and len(args1) + len(args2) <= maxstack:
 			commands[i-1] = (new_op, args1+args2)
 			del commands[i]
 
-	# 7. Resolve any remaining made-up operators into real operators.
+	# 6. Resolve any remaining made-up operators into real operators.
 	for i in range(len(commands)):
 		op,args = commands[i]
 
@@ -393,7 +496,19 @@ def specializeCommands(commands,
 			continue
 
 		if op[3:] == 'curveto':
-			# TODO curves
+			if op[0] == 'r' or op[2] == 'r':
+				assert len(args) % 2 == 1
+			if op[1] == '+':
+				op = 'vhcurveto' if op[0] == 'v' or op[2] == 'h' else 'hvcurveto'
+				if len(args) % 2 == 1 and ((op[0] == 'h') ^ (len(args) % 8 == 5)):
+					# Swap last two args order
+					args = args[:-2]+args[-1:]+args[-2:-1]
+			else:
+				op = 'vvcurveto' if op[0] == 'v' or op[2] == 'v' else 'hhcurveto'
+				if len(args) % 2 == 1 and op[0] == 'h':
+					# Swap first two args order
+					args = args[1:2]+args[:1]+args[2:]
+			commands[i] = op, args
 			continue
 
 	return commands
