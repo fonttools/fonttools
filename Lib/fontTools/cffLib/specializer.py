@@ -374,6 +374,7 @@ def specializeCommands(commands,
 				commands[i-1] = (op, [other_args[0]+args[0]])
 				del commands[i]
 				continue
+	# TODO A 0moveto that comes before all other path operations can be removed.
 
 	# 4. Peephole optimization to revert back some of the h/v variants back into their
 	#    original "relative" operator (rline/rrcurveto) if that saves a byte.
