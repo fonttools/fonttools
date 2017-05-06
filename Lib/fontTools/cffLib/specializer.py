@@ -203,13 +203,13 @@ def _categorizeVector(v):
 	>>> _categorizeVector((1,2))
 	('r', (1, 2))
 	"""
-	if v[0] == 0:
-		if v[1] == 0:
+	if not v[0]:
+		if not v[1]:
 			return '0', v[:1]
 		else:
 			return 'v', v[1:]
 	else:
-		if v[1] == 0:
+		if not v[1]:
 			return 'h', v[:1]
 		else:
 			return 'r', v
