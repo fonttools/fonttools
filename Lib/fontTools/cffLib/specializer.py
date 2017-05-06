@@ -215,22 +215,17 @@ def _categorizeVector(v):
 			return 'r', v
 	return "rvh0"[(v[1]==0) * 2 + (v[0]==0)]
 
-def _mergeCategories(a, b, dontCare):
-	if a == dontCare: return b
-	if b == dontCare: return a
+def _mergeCategories(a, b):
+	if a == '0': return b
+	if b == '0': return a
 	if a == b: return a
 	return None
 
-def _applyJoint(a, b, j, parity=False):
-	if j == '.' or a == 'r' or b == 'r': return a, b
-	if a != '0':
-		c = a if j == '=' else 'hv'[(a == 'h') ^ parity]
-		# XXX The following assertion sometimes fires.  Will fix soon...
-		assert b == '0' or b == c, (a, b, c, j, parity)
-		b = c
-	else:
-		a = b if j == '=' else 'hv'[(b == 'h') ^ parity]
-	return a, b
+def _negateCategory(a):
+	if a == 'h': return 'v'
+	if a == 'v': return 'h'
+	assert a in '0r'
+	return a
 
 def specializeCommands(commands,
 		       ignoreErrors=False,
@@ -315,7 +310,7 @@ def specializeCommands(commands,
 	# vvcurveto, hvcurveto, and vhcurveto each cover two cases, one with an odd number of
 	# arguments and one without.  Eg. an hhcurveto with an extra argument (odd number of
 	# arguments) is in fact an rhcurveto.  The operators in the spec are designed such that
-	# all four of rhcurveto, rvcurveto, hrcurveto, and vrcurveto are encodable.
+	# all four of rhcurveto, rvcurveto, hrcurveto, and vrcurveto are encodable for one curve.
 	#
 	# Of the curve types with '0', the 00curveto is equivalent to a lineto variant.  The rest
 	# of the curve types with a 0 need to be encoded as a h or v variant.  Ie. a '0' can be
@@ -323,28 +318,12 @@ def specializeCommands(commands,
 	# encode a number 0 as argument when we use a '0' variant.  Later on, we can just substitute
 	# the '0' with either 'h' or 'v' and it works.
 	#
-	# When we get to curve splines however, things become more complicated. When we have a
-	# curve spline that starts and ends horizontally, there are two different cases, one
-	# where all curves start and end horizontally, another when curves alternate between
-	# horizontal-vertical and vertical-horizontal.  To distinguish these cases, we use an
-	# extra character in the pseudo-operator names that signifies the spline type:
-	#
-	#  - '+' means a spline where curves alternate between horizontal and vertical orientations,
-	#        and is called a "pizza-slice" spline.
-	#  - '=' means a spline where all curves start and end in the same orientation (h or v),
-	#        and is called a "french-fries" spline.
-	#  - '.' means "don't care", ie. the spline can be encoded / treated as either a pizzal-slice
-	#        or french-fries.  This happens where 0s are involved in curves, because those can
-	#        be encoded as both h and v.
-	#
-	# So, from here one, we use rrcurveto as is, but for other variants of curves we use three
-	# mnemonic signifiers.  For example, 'h+vcurveto', or 'r.0curveto'.  Rules for combining
-	# these will be defined later.
-	#
+	# When we get to curve splines however, things become more complicated...  XXX finish this.
 	# There's one more complexity with splines.  If one side of the spline is not horizontal or
 	# vertical (or zero), ie. if it's 'r', then it limits which spline types we can encode.
-	# Only spline type '=' can start with an 'r' (hhcurveto and vvcurveto operators), and
-	# only spline type '+' can end in an 'r' (hvcurveto and vhcurveto operators).
+	# Only hhcurveto and vvcurveto operators can encode a spline starting with 'r', and
+	# only hvcurveto and vhcurveto operators can encode a spline ending with 'r'.
+	# This limits our merge opportunities later.
 	#
 	for i in range(len(commands)):
 		op,args = commands[i]
@@ -357,19 +336,7 @@ def specializeCommands(commands,
 		if op == 'rrcurveto':
 			c1, args1 = _categorizeVector(args[:2])
 			c2, args2 = _categorizeVector(args[-2:])
-			if c1 == c2 == 'r':
-				continue
-
-			join = '.'
-			if c1 == 'r':
-				join = '='
-			elif c2 == 'r':
-				join = '+'
-			elif c1 != '0' and c2 != '0':
-				# Both sides are h and/or v
-				join = '=' if c1 == c2 else '+'
-
-			commands[i] = c1+join+c2+'curveto', args1+args[2:4]+args2
+			commands[i] = c1+c2+'curveto', args1+args[2:4]+args2
 			continue
 
 	# 3. Merge or delete redundant operations, if changing topology is allowed.
@@ -377,8 +344,8 @@ def specializeCommands(commands,
 		for i in range(len(commands)-1, -1, -1):
 			op, args = commands[i]
 
-			# A 0x0curveto is demoted to a (specialized) lineto.
-			if op == '0x0curveto':
+			# A 00curveto is demoted to a (specialized) lineto.
+			if op == '00curveto':
 				assert len(args) == 4
 				c, args = _categorizeVector(args[1:3])
 				op = c+'lineto'
@@ -410,14 +377,14 @@ def specializeCommands(commands,
 			commands[i] = ('rlineto', args)
 			continue
 
-		if op[3:] == 'curveto' and len(args) == 5 and prv == nxt == 'rrcurveto':
-			assert (op[0] == 'r') ^ (op[2] == 'r')
+		if op[2:] == 'curveto' and len(args) == 5 and prv == nxt == 'rrcurveto':
+			assert (op[0] == 'r') ^ (op[1] == 'r')
 			args = args[:]
 			if op[0] == 'v':
 				pos = 0
 			elif op[0] != 'r':
 				pos = 1
-			elif op[2] == 'v':
+			elif op[1] == 'v':
 				pos = 4
 			else:
 				pos = 5
@@ -440,50 +407,31 @@ def specializeCommands(commands,
 					new_op = 'rlinecurve'
 				elif len(args2) == 2:
 					new_op = 'rcurveline'
+
 		elif {op1, op2} == {'vlineto', 'hlineto'}:
 			new_op = op1
-		elif 'curveto' == op1[3:] == op2[3:]:
-			# Two curves can merge if their spline types are compatible, ie.
-			# at least one is a wildcard spline ('.') or otherwise the two are
-			# both pizza ('+') or both fries ('='), and
-			#
-			# The joining orientations are NOT 'r', and are compatible, ie.
-			# at least one is a '0', or otherwise they are both 'h' or both
-			# 'v'.
-			#
-			# The _mergeCategories() function does such compatibility matching.
 
-			d0, j1, d1 = op1[:3]
-			d2, j2, d3 = op2[:3]
+		elif 'curveto' == op1[2:] == op2[2:]:
+			d0, d1 = op1[:2]
+			d2, d3 = op2[:2]
 
-			j = _mergeCategories(j1, j2, '.')
-			d = _mergeCategories(d1, d2, '0')
-			if j and d and d != 'r':
+			if d1 == 'r' or d2 == 'r' or d0 == d3 == 'r':
+				continue
 
-				if j == '.' and d != '0':
-					# Need to resolve join, if middle is oriented but
-					# join type is free...  Happens for example for:
-					#
-					# 0 0 1 2 3 0 rrcurveto 4 0 5 6 0 0 rrcurveto
-					#
-					# which can be combined both into a h=hcurveto, or
-					# a v+vcurveto.  But would be wrong to combine into
-					# 0.0curveto.  That would lose the orientation of the
-					# middle segments!!
-					#
-					# Ok, this is one place that now I'm convinced my model
-					# is not powerful enough... and maybe dynamic-programming
-					# is needed after all.  I'll keep thinking about how
-					# to fix this without too much work...
-					j = '=' # XXX arbitrary
-
-				#print (op1, op2)
-				# Propagate...
-				d0,d = _applyJoint(d0, d, j, len(args1) % 8 < 4)
-				d,d3 = _applyJoint(d, d3, j, len(args2) % 8 < 4)
-				d0,d = _applyJoint(d0, d, j, len(args1) % 8 < 4)
-
-				new_op = d0+j+d3+'curveto'
+			d = _mergeCategories(d1, d2)
+			if d is None: continue
+			if d0 == 'r':
+				d = _mergeCategories(d, d3)
+				if d is None: continue
+				new_op = 'r'+d+'curveto'
+			elif d3 == 'r':
+				d0 = _mergeCategories(_negateCategory(d), d0)
+				if d0 is None: continue
+				new_op = d0+'r'+'curveto'
+			else:
+				d0 = _mergeCategories(d0, d3)
+				if d0 is None: continue
+				new_op = d0+d+'curveto'
 
 		if new_op and len(args1) + len(args2) <= maxstack:
 			commands[i-1] = (new_op, args1+args2)
@@ -497,26 +445,27 @@ def specializeCommands(commands,
 			commands[i] = 'h'+op[1:], args
 			continue
 
-		if op[3:] == 'curveto':
-			if op[0] == 'r' or op[2] == 'r':
+		if op[2:] == 'curveto':
+			op0, op1 = op[:2]
+			if (op0 == 'r') ^ (op1 == 'r'):
 				assert len(args) % 2 == 1
-			if op[1] == '+':
-				if (op[0] == 'v' or
-				    (op[2] == 'h' and len(args) % 8 >= 4) or
-				    (op[2] == 'v' and len(args) % 8 <  4)):
-					op = 'vhcurveto'
-				else:
-					op = 'hvcurveto'
+			if op0 == '0': op0 = 'h'
+			if op1 == '0': op1 = 'h'
+			if op0 == 'r': op0 = op1
+			if op1 == 'r': op1 = _negateCategory(op0)
+			assert op0 == op1 or {op0,op1} == {'h','v'}, (op0, op1)
 
-				if len(args) % 2 == 1 and ((op[0] == 'h') ^ (len(args) % 8 == 1)):
-					# Swap last two args order
-					args = args[:-2]+args[-1:]+args[-2:-1]
-			else:
-				op = 'vvcurveto' if op[0] == 'v' or op[2] == 'v' else 'hhcurveto'
-				if len(args) % 2 == 1 and op[0] == 'h':
-					# Swap first two args order
-					args = args[1:2]+args[:1]+args[2:]
-			commands[i] = op, args
+			if len(args) % 2:
+				if op0 != op1:
+					if (op0 == 'h') ^ (len(args) % 8 == 1):
+						# Swap last two args order
+						args = args[:-2]+args[-1:]+args[-2:-1]
+				else:
+					if op[0] == 'h':
+						# Swap first two args order
+						args = args[1:2]+args[:1]+args[2:]
+
+			commands[i] = op0+op1+'curveto', args
 			continue
 
 	return commands
