@@ -221,14 +221,15 @@ def _mergeCategories(a, b, dontCare):
 	if a == b: return a
 	return None
 
-def _applyJoint(a, b, j):
+def _applyJoint(a, b, j, parity=False):
 	if j == '.' or a == 'r' or b == 'r': return a, b
 	if a != '0':
-		c = 'hv'[(a == 'v') ^ (j == '+')]
-		assert b == '0' or b == c
+		c = a if j == '=' else 'hv'[(a == 'h') ^ parity]
+		# XXX The following assertion sometimes fires.  Will fix soon...
+		assert b == '0' or b == c, (a, b, c, j, parity)
 		b = c
 	else:
-		a = 'hv'[(b == 'v') ^ (j == '+')]
+		a = b if j == '=' else 'hv'[(b == 'h') ^ parity]
 	return a, b
 
 def specializeCommands(commands,
@@ -476,10 +477,11 @@ def specializeCommands(commands,
 					# to fix this without too much work...
 					j = '=' # XXX arbitrary
 
+				#print (op1, op2)
 				# Propagate...
-				d0,d = _applyJoint(d0, d, j) # WRONG?
-				d,d3 = _applyJoint(d, d3, j) # WRONG?
-				d0,d = _applyJoint(d0, d, j) # WRONG?
+				d0,d = _applyJoint(d0, d, j, len(args1) % 8 < 4)
+				d,d3 = _applyJoint(d, d3, j, len(args2) % 8 < 4)
+				d0,d = _applyJoint(d0, d, j, len(args1) % 8 < 4)
 
 				new_op = d0+j+d3+'curveto'
 
