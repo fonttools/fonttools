@@ -205,7 +205,7 @@ def _categorizeVector(v):
 	"""
 	if v[0] == 0:
 		if v[1] == 0:
-			return '0', type(v)((0,))
+			return '0', v[:1]
 		else:
 			return 'v', v[1:]
 	else:
@@ -213,7 +213,6 @@ def _categorizeVector(v):
 			return 'h', v[:1]
 		else:
 			return 'r', v
-	return "rvh0"[(v[1]==0) * 2 + (v[0]==0)]
 
 def _mergeCategories(a, b):
 	if a == '0': return b
