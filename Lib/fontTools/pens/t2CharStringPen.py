@@ -5,6 +5,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.psCharStrings import T2CharString
 from fontTools.pens.basePen import BasePen
+from fontTools.cffLib.specializer import specializeProgram
 
 
 class RelativeCoordinatePen(BasePen):
@@ -104,8 +105,7 @@ class T2CharStringPen(RelativeCoordinatePen):
         self.roundPoint = makeRoundFunc(roundTolerance)
         self._heldMove = None
         self._program = []
-        if width is not None:
-            self._program.append(round(width))
+        self._width = width
 
     def _moveTo(self, pt):
         RelativeCoordinatePen._moveTo(self, self.roundPoint(pt))
@@ -113,12 +113,7 @@ class T2CharStringPen(RelativeCoordinatePen):
     def _relativeMoveTo(self, pt):
         pt = self.roundPoint(pt)
         dx, dy = pt
-        if dx == 0:
-            self._heldMove = [dy, "vmoveto"]
-        elif dy == 0:
-            self._heldMove = [dx, "hmoveto"]
-        else:
-            self._heldMove = [dx, dy, "rmoveto"]
+        self._heldMove = [dx, dy, "rmoveto"]
 
     def _storeHeldMove(self):
         if self._heldMove is not None:
@@ -132,12 +127,7 @@ class T2CharStringPen(RelativeCoordinatePen):
         self._storeHeldMove()
         pt = self.roundPoint(pt)
         dx, dy = pt
-        if dx == 0:
-            self._program.extend([dy, "vlineto"])
-        elif dy == 0:
-            self._program.extend([dx, "hlineto"])
-        else:
-            self._program.extend([dx, dy, "rlineto"])
+        self._program.extend([dx, dy, "rlineto"])
 
     def _curveToOne(self, pt1, pt2, pt3):
         RelativeCoordinatePen._curveToOne(self,
@@ -153,26 +143,7 @@ class T2CharStringPen(RelativeCoordinatePen):
         dx1, dy1 = pt1
         dx2, dy2 = pt2
         dx3, dy3 = pt3
-        if dx1 == 0:
-            if dx3 == 0:
-                self._program.extend([dy1, dx2, dy2, dy3, "vvcurveto"])
-            elif dy3 == 0:
-                self._program.extend([dy1, dx2, dy2, dx3, "vhcurveto"])
-            else:
-                self._program.extend([dy1, dx2, dy2, dx3, dy3, "vhcurveto"])
-        elif dy1 == 0:
-            if dy3 == 0:
-                self._program.extend([dx1, dx2, dy2, dx3, "hhcurveto"])
-            elif dx3 == 0:
-                self._program.extend([dx1, dx2, dy2, dy3, "hvcurveto"])
-            else:
-                self._program.extend([dx1, dx2, dy2, dy3, dx3, "hvcurveto"])
-        elif dx3 == 0:
-            self._program.extend([dx1, dy1, dx2, dy2, dy3, "vvcurveto"])
-        elif dy3 == 0:
-            self._program.extend([dy1, dx1, dx2, dy2, dx3, "hhcurveto"])
-        else:
-            self._program.extend([dx1, dy1, dx2, dy2, dx3, dy3, "rrcurveto"])
+        self._program.extend([dx1, dy1, dx2, dy2, dx3, dy3, "rrcurveto"])
 
     def _closePath(self):
         pass
@@ -180,8 +151,12 @@ class T2CharStringPen(RelativeCoordinatePen):
     def _endPath(self):
         pass
 
-    def getCharString(self, private=None, globalSubrs=None):
+    def getCharString(self, private=None, globalSubrs=None, optimize=True):
         program = self._program + ["endchar"]
+        if optimize:
+            program = specializeProgram(program)
+        if self._width is not None:
+            program.insert(0, round(self._width))
         charString = T2CharString(
             program=program, private=private, globalSubrs=globalSubrs)
         return charString
