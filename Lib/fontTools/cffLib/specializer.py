@@ -461,7 +461,7 @@ def specializeCommands(commands,
 						# Swap last two args order
 						args = args[:-2]+args[-1:]+args[-2:-1]
 				else: # hhcurveto / vvcurveto
-					if op[0] == 'h': # hhcurveto
+					if op0 == 'h': # hhcurveto
 						# Swap first two args order
 						args = args[1:2]+args[:1]+args[2:]
 
