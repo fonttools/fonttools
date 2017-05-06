@@ -74,7 +74,7 @@ class T2CharStringPen(BasePen):
     def getCharString(self, private=None, globalSubrs=None, optimize=True):
         commands = self._commands
         if optimize:
-            maxstack = 48 if not self._CFF2 else 193
+            maxstack = 48 if not self._CFF2 else 513
             commands = specializeCommands(commands,
                                           generalizeFirst=False,
                                           maxstack=maxstack)
