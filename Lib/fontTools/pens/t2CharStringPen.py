@@ -43,8 +43,9 @@ class T2CharStringPen(BasePen):
     which are close to their integral part within the tolerated range.
     """
 
-    def __init__(self, width, glyphSet, roundTolerance=0.5):
+    def __init__(self, width, glyphSet, roundTolerance=0.5, CFF2=False):
         self.roundPoint = makeRoundFunc(roundTolerance)
+        self._CFF2 = CFF2
         self._width = width
         self._commands = []
         self._p0 = (0,0)
@@ -73,11 +74,15 @@ class T2CharStringPen(BasePen):
     def getCharString(self, private=None, globalSubrs=None, optimize=True):
         commands = self._commands
         if optimize:
-            commands = specializeCommands(commands, generalizeFirst=False)
+            maxstack = 48 if not self._CFF2 else 193
+            commands = specializeCommands(commands,
+                                          generalizeFirst=False,
+                                          maxstack=maxstack)
         program = commandsToProgram(commands)
         if self._width is not None:
             program.insert(0, round(self._width))
-        program.append('endchar')
+        if not self._CFF2:
+            program.append('endchar')
         charString = T2CharString(
             program=program, private=private, globalSubrs=globalSubrs)
         return charString
