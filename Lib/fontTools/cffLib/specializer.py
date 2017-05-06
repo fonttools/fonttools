@@ -8,10 +8,11 @@ from fontTools.misc.py23 import *
 def programToCommands(program):
 	"""Takes a T2CharString program list and returns list of commands.
 	Each command is a two-tuple of commandname,arg-list.  The commandname might
-	be None if no commandname shall be emitted (used for glyph width (TODO),
+	be empty string if no commandname shall be emitted (used for glyph width,
 	hintmask/cntrmask argument, as well as stray arguments at the end of the
 	program (¯\_(ツ)_/¯)."""
 
+	width = None
 	commands = []
 	stack = []
 	it = iter(program)
@@ -19,16 +20,26 @@ def programToCommands(program):
 		if not isinstance(token, basestring):
 			stack.append(token)
 			continue
+
+		if width is None and token in {'hstem', 'hstemhm', 'vstem', 'vstemhm',
+					       'cntrmask', 'hintmask',
+					       'hmoveto', 'vmoveto', 'rmoveto',
+					       'endchar'}:
+			parity = token in {'hmoveto', 'vmoveto'}
+			if (len(stack) % 2) ^ parity:
+				width = stack.pop(0)
+				commands.append(('', [width]))
+
 		if token in {'hintmask', 'cntrmask'}:
 			if stack:
-				commands.append((None, stack))
+				commands.append(('', stack))
 			commands.append((token, []))
-			commands.append((None, [next(it)]))
+			commands.append(('', [next(it)]))
 		else:
 			commands.append((token,stack))
 		stack = []
 	if stack:
-		commands.append((None, stack))
+		commands.append(('', stack))
 	return commands
 
 def commandsToProgram(commands):
@@ -167,7 +178,7 @@ def generalizeCommands(commands, ignoreErrors=True):
 	result = []
 	mapping = _GeneralizerDecombinerCommandsMap
 	for op,args in commands:
-		func = getattr(mapping, op if op else '', None)
+		func = getattr(mapping, op, None)
 		if not func:
 			result.append((op,args))
 			continue
@@ -178,8 +189,8 @@ def generalizeCommands(commands, ignoreErrors=True):
 			if ignoreErrors:
 				# Store op as data, such that consumers of commands do not have to
 				# deal with incorrect number of arguments.
-				result.append((None,args))
-				result.append((None, [op]))
+				result.append(('', args))
+				result.append(('', [op]))
 			else:
 				raise
 	return result
