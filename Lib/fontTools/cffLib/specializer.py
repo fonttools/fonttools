@@ -425,7 +425,7 @@ def specializeCommands(commands,
 				if d is None: continue
 				new_op = 'r'+d+'curveto'
 			elif d3 == 'r':
-				d0 = _mergeCategories(_negateCategory(d), d0)
+				d0 = _mergeCategories(d0, _negateCategory(d))
 				if d0 is None: continue
 				new_op = d0+'r'+'curveto'
 			else:
@@ -445,7 +445,7 @@ def specializeCommands(commands,
 			commands[i] = 'h'+op[1:], args
 			continue
 
-		if op[2:] == 'curveto':
+		if op[2:] == 'curveto' and op[:2] not in {'rr', 'hh', 'vv', 'vh', 'hv'}:
 			op0, op1 = op[:2]
 			if (op0 == 'r') ^ (op1 == 'r'):
 				assert len(args) % 2 == 1
@@ -453,15 +453,15 @@ def specializeCommands(commands,
 			if op1 == '0': op1 = 'h'
 			if op0 == 'r': op0 = op1
 			if op1 == 'r': op1 = _negateCategory(op0)
-			assert op0 == op1 or {op0,op1} == {'h','v'}, (op0, op1)
+			assert {op0,op1} <= {'h','v'}, (op0, op1)
 
 			if len(args) % 2:
-				if op0 != op1:
+				if op0 != op1: # vhcurveto / hvcurveto
 					if (op0 == 'h') ^ (len(args) % 8 == 1):
 						# Swap last two args order
 						args = args[:-2]+args[-1:]+args[-2:-1]
-				else:
-					if op[0] == 'h':
+				else: # hhcurveto / vvcurveto
+					if op[0] == 'h': # hhcurveto
 						# Swap first two args order
 						args = args[1:2]+args[:1]+args[2:]
 
