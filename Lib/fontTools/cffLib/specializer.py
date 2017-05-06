@@ -243,8 +243,6 @@ def specializeCommands(commands,
 		       preserveTopology=False,
 		       maxstack=48):
 
-	maxstack -= 3 # AFDKO code uses effective 45 maxstack while the spec says 48.
-
 	# We perform several rounds of optimizations.  They are carefully ordered and are:
 	#
 	# 0. Generalize commands.
