@@ -506,7 +506,7 @@ def specializeCommands(commands,
 				else:
 					op = 'hvcurveto'
 
-				if len(args) % 2 == 1 and ((op[0] == 'h') ^ (len(args) % 8 == 5)):
+				if len(args) % 2 == 1 and ((op[0] == 'h') ^ (len(args) % 8 == 1)):
 					# Swap last two args order
 					args = args[:-2]+args[-1:]+args[-2:-1]
 			else:
