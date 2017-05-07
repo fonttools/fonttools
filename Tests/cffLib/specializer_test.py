@@ -503,6 +503,21 @@ class CFFSpecializeProgramTest(unittest.TestCase):
         xpct_charstr = '-0.24 50 30 -4 vlineto'
         self.assertEqual(get_specialized_charstr(test_charstr), xpct_charstr)
 
+    def test_0lineto_peephole(self):
+        test_charstr = '1 2 0 0 3 4 rlineto'
+        xpct_charstr = '1 2 3 4 rlineto'
+        self.assertEqual(get_specialized_charstr(test_charstr), xpct_charstr)
+
+    def test_hlineto_peephole(self):
+        test_charstr = '1 2 5 0 3 4 rlineto'
+        xpct_charstr = test_charstr
+        self.assertEqual(get_specialized_charstr(test_charstr), xpct_charstr)
+
+    def test_vlineto_peephole(self):
+        test_charstr = '1 2 0 5 3 4 rlineto'
+        xpct_charstr = test_charstr
+        self.assertEqual(get_specialized_charstr(test_charstr), xpct_charstr)
+
 # rrcurveto
     def test_rrcurveto(self):
         test_charstr = '-1 56 -2 57 -1 57 rrcurveto'
@@ -647,6 +662,26 @@ class CFFSpecializeProgramTest(unittest.TestCase):
     def test_vhcurveto_4_4_4_5(self):
         test_charstr = '0 60 -26 37 -43 0 rrcurveto -33 0 -28 -22 0 -36 rrcurveto 0 -37 27 -20 32 0 rrcurveto 3 0 4 0 3 1 rrcurveto'
         xpct_charstr = '60 -26 37 -43 -33 -28 -22 -36 -37 27 -20 32 3 4 0 1 3 vhcurveto'
+        self.assertEqual(get_specialized_charstr(test_charstr), xpct_charstr)
+
+    def test_hhcurveto_peephole(self):
+        test_charstr = '1 2 3 4 5 6 1 2 3 4 5 0 1 2 3 4 5 6 rrcurveto'
+        xpct_charstr = test_charstr
+        self.assertEqual(get_specialized_charstr(test_charstr), xpct_charstr)
+
+    def test_vvcurveto_peephole(self):
+        test_charstr = '1 2 3 4 5 6 1 2 3 4 0 6 1 2 3 4 5 6 rrcurveto'
+        xpct_charstr = test_charstr
+        self.assertEqual(get_specialized_charstr(test_charstr), xpct_charstr)
+
+    def test_hvcurveto_peephole(self):
+        test_charstr = '1 2 3 4 5 6 1 0 3 4 5 6 1 2 3 4 5 6 rrcurveto'
+        xpct_charstr = test_charstr
+        self.assertEqual(get_specialized_charstr(test_charstr), xpct_charstr)
+
+    def test_vhcurveto_peephole(self):
+        test_charstr = '1 2 3 4 5 6 0 2 3 4 5 6 1 2 3 4 5 6 rrcurveto'
+        xpct_charstr = test_charstr
         self.assertEqual(get_specialized_charstr(test_charstr), xpct_charstr)
 
     def test_rcurveline_6_2(self):
