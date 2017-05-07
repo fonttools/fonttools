@@ -422,6 +422,9 @@ def specializeCommands(commands,
 				elif len(args2) == 2:
 					new_op = 'rcurveline'
 
+		elif (op1, op2) in {('rlineto', 'rlinecurve'), ('rrcurveto', 'rcurveline')}:
+			new_op = op2
+
 		elif {op1, op2} == {'vlineto', 'hlineto'}:
 			new_op = op1
 
