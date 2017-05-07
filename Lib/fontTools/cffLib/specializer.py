@@ -281,7 +281,7 @@ def specializeCommands(commands,
 	#    We specialize into some, made-up, variants as well, which simplifies following
 	#    passes.
 	#
-	# 3. Merge or delete redundant operations, if changing topology is allowed.
+	# 3. Merge or delete redundant operations, to the extent requested.
 	#    OpenType spec declares point numbers in CFF undefined.  As such, we happily
 	#    change topology.  If client relies on point numbers (in GPOS anchors, or for
 	#    hinting purposes(what?)) they can turn this off.
@@ -371,7 +371,28 @@ def specializeCommands(commands,
 			commands[i] = c1+c2+'curveto', args1+args[2:4]+args2
 			continue
 
-	# 3. Merge or delete redundant operations, if changing topology is allowed.
+	# 3. Merge or delete redundant operations, to the extent requested.
+	#
+	# TODO
+	# A 0moveto that comes before all other path operations can be removed.
+	# though I find conflicting evidence for this.
+	#
+	# TODO
+	# "If hstem and vstem hints are both declared at the beginning of a
+	# CharString, and this sequence is followed directly by the hintmask or
+	# cntrmask operators, then the vstem hint operator (or, if applicable,
+	# the vstemhm operator) need not be included."
+	#
+	# "The sequence and form of a CFF2 CharString program may be represented as:
+	# {hs* vs* cm* hm* mt subpath}? {mt subpath}*"
+	#
+	# https://www.microsoft.com/typography/otspec/cff2charstr.htm#section3.1
+	#
+	# For Type2 CharStrings the sequence is:
+	# w? {hs* vs* cm* hm* mt subpath}? {mt subpath}* endchar"
+
+
+	# Some other redundancies change topology (point numbers).
 	if not preserveTopology:
 		for i in range(len(commands)-1, -1, -1):
 			op, args = commands[i]
@@ -396,7 +417,6 @@ def specializeCommands(commands,
 				commands[i-1] = (op, [other_args[0]+args[0]])
 				del commands[i]
 				continue
-	# TODO A 0moveto that comes before all other path operations can be removed.
 
 	# 4. Peephole optimization to revert back some of the h/v variants back into their
 	#    original "relative" operator (rline/rrcurveto) if that saves a byte.
