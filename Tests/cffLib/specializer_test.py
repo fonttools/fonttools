@@ -360,6 +360,36 @@ class CFFGeneralizeProgramTest(unittest.TestCase):
         xpct_charstr = '1 64 rlineto 10 51 rlineto 29 39 rlineto 15 21 rlineto 15 20 15 18 46 -88 rrcurveto'
         self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
 
+# hstem/vstem
+    def test_hstem_vstem(self):
+        test_charstr = '95 0 58 542 60 hstem 89 65 344 67 vstem 89 45 rmoveto'
+        xpct_charstr = test_charstr
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+# hstemhm/vstemhm
+    def test_hstemhm_vstemhm(self):
+        test_charstr = '-16 577 60 24 60 hstemhm 98 55 236 55 vstemhm 343 577 rmoveto'
+        xpct_charstr = test_charstr
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+# hintmask/cntrmask
+    def test_hintmask_cntrmask(self):
+        test_charstr = '52 80 153 61 4 83 -71.5 71.5 hintmask 11011100 94 119 216 119 216 119 cntrmask 1110000 154 -12 rmoveto'
+        xpct_charstr = test_charstr
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+# endchar
+    def test_endchar(self):
+        test_charstr = '-255 319 rmoveto 266 57 rlineto endchar'
+        xpct_charstr = test_charstr
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+# xtra
+    def test_xtra(self):
+        test_charstr = '-255 319 rmoveto 266 57 rlineto xtra 90 34'
+        xpct_charstr = test_charstr
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
 
 if __name__ == "__main__":
     import sys
