@@ -83,16 +83,21 @@ class _GeneralizerDecombinerCommandsMap(object):
 	@staticmethod
 	def hlineto(args):
 		it = iter(args)
-		while True:
-			yield ('rlineto', [next(it), 0])
-			yield ('rlineto', [0, next(it)])
+		try:
+			while True:
+				yield ('rlineto', [next(it), 0])
+				yield ('rlineto', [0, next(it)])
+		except StopIteration:
+			pass
 	@staticmethod
 	def vlineto(args):
 		it = iter(args)
-		while True:
-			yield ('rlineto', [0, next(it)])
-			yield ('rlineto', [next(it), 0])
-
+		try:
+			while True:
+				yield ('rlineto', [0, next(it)])
+				yield ('rlineto', [next(it), 0])
+		except StopIteration:
+			pass
 	@staticmethod
 	def rrcurveto(args):
 		for args in _everyN(args, 6):
