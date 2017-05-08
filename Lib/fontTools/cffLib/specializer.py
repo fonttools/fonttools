@@ -198,7 +198,7 @@ class _GeneralizerDecombinerCommandsMap(object):
 		yield ('rrcurveto', last_args)
 
 
-def generalizeCommands(commands, ignoreErrors=True):
+def generalizeCommands(commands, ignoreErrors=False):
 	result = []
 	mapping = _GeneralizerDecombinerCommandsMap
 	for op,args in commands:
