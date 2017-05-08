@@ -97,10 +97,12 @@ class _GeneralizerDecombinerCommandsMap(object):
 
 	@staticmethod
 	def rlineto(args):
+		if not args: raise ValueError(args)
 		for args in _everyN(args, 2):
 			yield ('rlineto', args)
 	@staticmethod
 	def hlineto(args):
+		if not args: raise ValueError(args)
 		it = iter(args)
 		try:
 			while True:
@@ -110,6 +112,7 @@ class _GeneralizerDecombinerCommandsMap(object):
 			pass
 	@staticmethod
 	def vlineto(args):
+		if not args: raise ValueError(args)
 		it = iter(args)
 		try:
 			while True:
@@ -119,6 +122,7 @@ class _GeneralizerDecombinerCommandsMap(object):
 			pass
 	@staticmethod
 	def rrcurveto(args):
+		if not args: raise ValueError(args)
 		for args in _everyN(args, 6):
 			yield ('rrcurveto', args)
 	@staticmethod
