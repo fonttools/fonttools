@@ -5,6 +5,26 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
+
+def stringToProgram(string):
+	if isinstance(string, basestring):
+		string = string.split()
+	program = []
+	for token in string:
+		try:
+			token = int(token)
+		except ValueError:
+			try:
+				token = float(token)
+			except ValueError:
+				pass
+		program.append(token)
+	return program
+
+def programToString(program):
+	return ' '.join(str(x) for x in program)
+
+
 def programToCommands(program):
 	"""Takes a T2CharString program list and returns list of commands.
 	Each command is a two-tuple of commandname,arg-list.  The commandname might
@@ -51,7 +71,6 @@ def commandsToProgram(commands):
 		if op:
 			program.append(op)
 	return program
-
 
 
 def _everyN(el, n):
@@ -496,22 +515,13 @@ if __name__ == '__main__':
 	if len(sys.argv) == 1:
 		import doctest
 		sys.exit(doctest.testmod().failed)
-	program = []
-	for token in sys.argv[1:]:
-		try:
-			token = int(token)
-		except ValueError:
-			try:
-				token = float(token)
-			except ValueError:
-				pass
-		program.append(token)
-	print("Program:"); print(program)
+	program = stringToProgram(sys.argv[1:])
+	print("Program:"); print(programToString(program))
 	commands = programToCommands(program)
 	print("Commands:"); print(commands)
 	program2 = commandsToProgram(commands)
-	print("Program from commands:"); print(program2)
+	print("Program from commands:"); print(programToString(program2))
 	assert program == program2
-	print("Generalized program:"); print(generalizeProgram(program))
-	print("Specialized program:"); print(specializeProgram(program))
+	print("Generalized program:"); print(programToString(generalizeProgram(program)))
+	print("Specialized program:"); print(programToString(specializeProgram(program)))
 

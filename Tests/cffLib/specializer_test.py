@@ -1,32 +1,15 @@
 from __future__ import print_function, division, absolute_import
-from fontTools.cffLib.specializer import generalizeProgram, specializeProgram
+from fontTools.cffLib.specializer import programToString, stringToProgram, generalizeProgram, specializeProgram
 import unittest
 
 
-def charstr2program(string):
-    program = []
-    for token in string.split():
-        try:
-            token = int(token)
-        except ValueError:
-            try:
-                token = float(token)
-            except ValueError:
-                pass
-        program.append(token)
-    return program
-
-
-def program2charstr(lst):
-    return ' '.join(str(x) for x in lst)
-
 
 def get_generalized_charstr(charstr):
-    return program2charstr(generalizeProgram(charstr2program(charstr)))
+    return programToString(generalizeProgram(stringToProgram(charstr)))
 
 
 def get_specialized_charstr(charstr, **kwargs):
-    return program2charstr(specializeProgram(charstr2program(charstr), **kwargs))
+    return programToString(specializeProgram(stringToProgram(charstr), **kwargs))
 
 
 class CFFGeneralizeProgramTest(unittest.TestCase):
