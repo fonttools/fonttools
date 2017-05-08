@@ -46,7 +46,7 @@ def programToCommands(program):
 					       'hmoveto', 'vmoveto', 'rmoveto',
 					       'endchar'}:
 			parity = token in {'hmoveto', 'vmoveto'}
-			if (len(stack) % 2) ^ parity:
+			if stack and (len(stack) % 2) ^ parity:
 				width = stack.pop(0)
 				commands.append(('', [width]))
 
