@@ -53,7 +53,7 @@ class T2CharStringPen(BasePen):
     def _p(self, pt):
         p0 = self._p0
         pt = self._p0 = self.roundPoint(pt)
-        return (pt[0]-p0[0], pt[1]-p0[1])
+        return [pt[0]-p0[0], pt[1]-p0[1]]
 
     def _moveTo(self, pt):
         self._commands.append(('rmoveto', self._p(pt)))
