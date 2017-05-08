@@ -271,6 +271,51 @@ class CFFGeneralizeProgramTest(unittest.TestCase):
         xpct_charstr = '-30 8 -36 15 -37 22 rrcurveto 44 54 31 61 22 68 rrcurveto'
         self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
 
+    def test_rrcurveto_d3947b8(self):
+        test_charstr = '1 2 3 4 5 0 rrcurveto'
+        xpct_charstr = test_charstr
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+    def test_rrcurveto_v0_0h_h0(self):
+        test_charstr = '0 10 1 2 0 0 0 0 1 2 0 1 0 1 3 4 0 0 rrcurveto'
+        xpct_charstr = '0 10 1 2 0 0 rrcurveto 0 0 1 2 0 1 rrcurveto 0 1 3 4 0 0 rrcurveto'
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+    def test_rrcurveto_h0_0h_h0(self):
+        test_charstr = '10 0 1 2 0 0 0 0 1 2 0 1 0 1 3 4 0 0 rrcurveto'
+        xpct_charstr = '10 0 1 2 0 0 rrcurveto 0 0 1 2 0 1 rrcurveto 0 1 3 4 0 0 rrcurveto'
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+    def test_rrcurveto_00_0h_h0(self):
+        test_charstr = '0 0 1 2 0 0 0 0 1 2 0 1 0 1 3 4 0 0 rrcurveto'
+        xpct_charstr = '0 0 1 2 0 0 rrcurveto 0 0 1 2 0 1 rrcurveto 0 1 3 4 0 0 rrcurveto'
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+    def test_rrcurveto_r0_0h_h0(self):
+        test_charstr = '10 10 1 2 0 0 0 0 1 2 0 1 0 1 3 4 0 0 rrcurveto'
+        xpct_charstr = '10 10 1 2 0 0 rrcurveto 0 0 1 2 0 1 rrcurveto 0 1 3 4 0 0 rrcurveto'
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+    def test_rrcurveto_v0_0v_v0(self):
+        test_charstr = '0 10 1 2 0 0 0 0 1 2 1 0 1 0 3 4 0 0 rrcurveto'
+        xpct_charstr = '0 10 1 2 0 0 rrcurveto 0 0 1 2 1 0 rrcurveto 1 0 3 4 0 0 rrcurveto'
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+    def test_rrcurveto_h0_0v_v0(self):
+        test_charstr = '10 0 1 2 0 0 0 0 1 2 1 0 1 0 3 4 0 0 rrcurveto'
+        xpct_charstr = '10 0 1 2 0 0 rrcurveto 0 0 1 2 1 0 rrcurveto 1 0 3 4 0 0 rrcurveto'
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+    def test_rrcurveto_00_0v_v0(self):
+        test_charstr = '0 0 1 2 0 0 0 0 1 2 1 0 1 0 3 4 0 0 rrcurveto'
+        xpct_charstr = '0 0 1 2 0 0 rrcurveto 0 0 1 2 1 0 rrcurveto 1 0 3 4 0 0 rrcurveto'
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+    def test_rrcurveto_r0_0v_v0(self):
+        test_charstr = '10 10 1 2 0 0 0 0 1 2 1 0 1 0 3 4 0 0 rrcurveto'
+        xpct_charstr = '10 10 1 2 0 0 rrcurveto 0 0 1 2 1 0 rrcurveto 1 0 3 4 0 0 rrcurveto'
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
 # hhcurveto
     def test_hhcurveto_4(self):
         test_charstr = '10 30 0 10 hhcurveto'
@@ -666,6 +711,11 @@ class CFFSpecializeProgramTest(unittest.TestCase):
     def test_rrcurveto_mult(self):
         test_charstr = '-30 8 -36 15 -37 22 rrcurveto 44 54 31 61 22 68 rrcurveto'
         xpct_charstr = '-30 8 -36 15 -37 22 44 54 31 61 22 68 rrcurveto'
+        self.assertEqual(get_specialized_charstr(test_charstr), xpct_charstr)
+
+    def test_rrcurveto_d3947b8(self):
+        test_charstr = '1 2 3 4 5 0 rrcurveto'
+        xpct_charstr = '2 1 3 4 5 hhcurveto'
         self.assertEqual(get_specialized_charstr(test_charstr), xpct_charstr)
 
     def test_hhcurveto_4(self):
