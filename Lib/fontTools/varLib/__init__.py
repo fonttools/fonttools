@@ -25,7 +25,7 @@ from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._n_a_m_e import NameRecord
 from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
-from fontTools.ttLib.tables._g_v_a_r import TupleVariation
+from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib import builder, designspace, models
 from fontTools.varLib.merger import VariationMerger, _all_equal
@@ -143,11 +143,11 @@ def _GetCoordinates(font, glyphName):
 	glyph = glyf[glyphName]
 	if glyph.isComposite():
 		coord = GlyphCoordinates([(getattr(c, 'x', 0),getattr(c, 'y', 0)) for c in glyph.components])
-		control = [c.glyphName for c in glyph.components]
+		control = (glyph.numberOfContours,[c.glyphName for c in glyph.components])
 	else:
 		allData = glyph.getCoordinates(glyf)
 		coord = allData[0]
-		control = allData[1:]
+		control = (glyph.numberOfContours,)+allData[1:]
 
 	# Add phantom points for (left, right, top, bottom) positions.
 	horizontalAdvanceWidth, leftSideBearing = font["hmtx"].metrics[glyphName]
@@ -203,7 +203,29 @@ def _SetCoordinates(font, glyphName, coord):
 	font["hmtx"].metrics[glyphName] = horizontalAdvanceWidth, leftSideBearing
 
 
-def _add_gvar(font, model, master_ttfs, tolerance=.5):
+def _optimize_contour(delta, coords):
+	n = len(delta)
+	if not delta: return [None] * n
+	d0 = delta[0]
+	if all(d0 == d for d in delta):
+		return [d0] + [None] * (n-1)
+
+	return delta
+
+def _optimize_delta(delta, coords, ends):
+	assert sorted(ends) == ends and len(coords) == ends[-1]+1 + 4
+	n = len(coords)
+	ends = ends + [n-4, n-3, n-2, n-1]
+	out = []
+	start = 0
+	for end in ends:
+		contour = _optimize_contour(delta[start:end+1], coords[start:end+1])
+		out.extend(contour)
+		start = end+1
+
+	return out # TODO return whichever is cheaper to encode
+
+def _add_gvar(font, model, master_ttfs, tolerance=.5, optimize=True):
 
 	log.info("Generating gvar")
 	assert "gvar" not in font
@@ -228,11 +250,18 @@ def _add_gvar(font, model, master_ttfs, tolerance=.5):
 		deltas = model.getDeltas(allCoords)
 		supports = model.supports
 		assert len(deltas) == len(supports)
+
+		# Prepare for IUP optimization
+		origCoords = deltas[0]
+		endPts = control[1] if control[0] >= 1 else list(range(len(control[1])))
+
 		for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
 			if not delta:
 				continue
 			if tolerance and max(abs(delta).array) <= tolerance:
 				continue
+			if optimize:
+				delta = _optimize_delta(delta, origCoords, endPts)
 			var = TupleVariation(support, delta)
 			gvar.variations[glyph].append(var)
 
