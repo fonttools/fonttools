@@ -1,7 +1,15 @@
 from __future__ import print_function, division, absolute_import
-from fontTools.cffLib.specializer import programToString, stringToProgram, generalizeProgram, specializeProgram
+from fontTools.cffLib.specializer import (programToString, stringToProgram,
+                                          generalizeProgram, specializeProgram)
 import unittest
 
+# TODO
+# https://github.com/fonttools/fonttools/pull/959#commitcomment-22059841
+# Maybe we should make these data driven. Each entry will have an input string,
+# and a generalized and specialized. For the latter two, if they are None, they
+# are considered equal to the input. Then we can do roundtripping tests as well...
+# There are a few other places (aosp tests for example) where we generate tests
+# from data.
 
 
 def get_generalized_charstr(charstr):
