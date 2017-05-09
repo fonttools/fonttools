@@ -44,4 +44,4 @@ class table_C_F_F_(DefaultTable.DefaultTable):
 	def fromXML(self, name, attrs, content, otFont):
 		if not hasattr(self, "cff"):
 			self.cff = cffLib.CFFFontSet()
-		self.cff.fromXML(name, attrs, content)
+		self.cff.fromXML(name, attrs, content, otFont)
