@@ -124,7 +124,7 @@ t2Operators = [
 	(10,		'callsubr'),
 	(11,		'return'),
 	(14,		'endchar'),
-
+	(15,		'vsindex'),
 	(16,		'blend'),
 	(18,		'hstemhm'),
 	(19,		'hintmask'),
@@ -169,22 +169,6 @@ t2Operators = [
 	((12, 36),	'hflex1'),
 	((12, 37),	'flex1'),
 ]
-
-CFF2Operators = [entry for entry in t2Operators if ((isinstance(entry[0], int) or
-											(entry[0][1] < 34)) and (not entry[0] in [11,14])) ]
-CFF2Operators.extend(
-[
-	(15,		'vsindex'),
-	(16,		'blend'),
-])
-
-def sortOps(entry):
-	opCode = entry[0]
-	if isinstance(opCode, int):
-		opCode = (opCode,)
-	return opCode
-
-CFF2Operators.sort(key=sortOps)
 
 def getIntEncoder(format):
 	if format == "cff":
@@ -1044,6 +1028,7 @@ class T2CharString(ByteCodeBase):
 		self.setBytecode(bytecode)
 
 		if self.isCFF2:
+			# If present, remove endchar operator.
 			if self.bytecode and (byteord(self.bytecode[-1]) in (11, 14)):
 				self.bytecode = self.bytecode[:-1]
 
@@ -1153,8 +1138,6 @@ class T2CharString(ByteCodeBase):
 
 class CFF2CharString(T2CharString):
 
-	operandEncoding = t2OperandEncoding
-	operators, opcodes = buildOperatorDict(CFF2Operators)
 	decompilerClass = SimpleCFF2Decompiler
 
 	def __init__(self, bytecode=None, program=None, private=None, globalSubrs=None, isCFF2 = True):
