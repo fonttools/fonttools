@@ -58,7 +58,7 @@ class CFFFontSet(object):
 			cff2GetGlyphOrder = otFont.getGlyphOrder
 			self.topDictIndex = TopDictData(self.topDictSize, cff2GetGlyphOrder, file) # in CFF2, offsetSize is the size of the TopDict data.
 			self.strings = None
-			self.GlobalSubrs = GlobalSubrsIndex2(file)
+			self.GlobalSubrs = GlobalSubrsIndex(file)
 			self.topDictIndex.strings = self.strings
 			self.topDictIndex.GlobalSubrs = self.GlobalSubrs
 		else:
@@ -177,7 +177,7 @@ class CFFFontSet(object):
 			elif self.major == 2:
 				isCFF2 = True
 				if not hasattr(self, "GlobalSubrs"):
-					self.GlobalSubrs = GlobalSubrsIndex2()
+					self.GlobalSubrs = GlobalSubrsIndex()
 				if not hasattr(self, "fontNames"):
 					self.fontNames = []
 				fontName = "CFF2Font"
@@ -192,16 +192,9 @@ class CFFFontSet(object):
 				name, attrs, content = element
 				topDict.fromXML(name, attrs, content)
 		elif name == "GlobalSubrs":
-			if not isCFF2:
-				subrCharStringClass = psCharStrings.T2CharString
-				if not hasattr(self, "GlobalSubrs"):
-					self.GlobalSubrs = GlobalSubrsIndex()
-			elif isCFF2:
-				subrCharStringClass = psCharStrings.CFF2SubrCharString
-				if not hasattr(self, "GlobalSubrs"):
-					self.GlobalSubrs = GlobalSubrsIndex2()
-			else:
-				assert False, "Unsupported CFF format"
+			subrCharStringClass = psCharStrings.T2CharString
+			if not hasattr(self, "GlobalSubrs"):
+				self.GlobalSubrs = GlobalSubrsIndex()
 			for element in content:
 				if isinstance(element, basestring):
 					continue
@@ -631,32 +624,8 @@ class GlobalSubrsIndex(Index):
 			sel = self.fdSelect[index]
 		return self[index], sel
 
-class GlobalSubrsIndex2(GlobalSubrsIndex):
-	subrClass = psCharStrings.CFF2SubrCharString
-
 class SubrsIndex(GlobalSubrsIndex):
 	compilerClass = SubrsCompiler
-
-class SubrsIndex2(GlobalSubrsIndex2):
-	compilerClass = SubrsCompiler
-	charStringClass = psCharStrings.CFF2SubrCharString
-
-class CharStringIndex2(GlobalSubrsIndex2):
-	compilerClass = SubrsCompiler
-	charStringClass = psCharStrings.CFF2CharString
-
-	def produceItem(self, index, data, file, offset, size):
-		if self.private is not None:
-			private = self.private
-		elif hasattr(self, 'fdArray') and self.fdArray is not None:
-			if hasattr(self, 'fdSelect') and self.fdSelect is not None:
-				fdIndex = self.fdSelect[index]
-			else:
-				fdIndex = 0
-			private = self.fdArray[fdIndex].Private
-		else:
-			private = None
-		return self.charStringClass(data, private=private, globalSubrs=self.globalSubrs)
 
 class TopDictIndex(Index):
 
@@ -833,10 +802,7 @@ class CharStrings(object):
 	def __init__(self, file, charset, globalSubrs, private, fdSelect, fdArray):
 		self.globalSubrs = globalSubrs
 		if file is not None:
-			if isCFF2:
-				self.charStringsIndex = CharStringIndex2(file, globalSubrs, private, fdSelect, fdArray)
-			else:
-				self.charStringsIndex = SubrsIndex(file, globalSubrs, private, fdSelect, fdArray)
+			self.charStringsIndex = SubrsIndex(file, globalSubrs, private, fdSelect, fdArray)
 			self.charStrings = charStrings = {}
 			for i in range(len(charset)):
 				charStrings[charset[i]] = i
@@ -939,10 +905,7 @@ class CharStrings(object):
 				private = self.private
 
 			glyphName = attrs["name"]
-			if isCFF2:
-				charStringClass = psCharStrings.CFF2CharString
-			else:
-				charStringClass = psCharStrings.T2CharString
+			charStringClass = psCharStrings.T2CharString
 			charString = charStringClass(
 					private=private,
 					globalSubrs=self.globalSubrs)
@@ -1164,10 +1127,7 @@ class PrivateDictConverter(TableConverter):
 
 class SubrsConverter(TableConverter):
 	def getClass(self):
-		if isCFF2:
-			return SubrsIndex2
-		else:
-			return SubrsIndex
+		return SubrsIndex
 
 	def read(self, parent, value):
 		file = parent.file
@@ -2279,7 +2239,6 @@ class FontDict(TopDict):
 		super(FontDict, self).__init__(strings, file, offset, GlobalSubrs, None)
 		self.topDict = topDict
 
-
 class PrivateDict(BaseDict):
 	defaults = buildDefaults(privateDictOperators)
 	converters = buildConverters(privateDictOperators)
@@ -2290,7 +2249,7 @@ class PrivateDict(BaseDict):
 	def __init__(self, strings=None, file=None, offset=None, parent= None):
 		super(PrivateDict, self).__init__(strings, file, offset)
 		self.fontDict = parent
-
+		self.isCFF2 = False
 
 class PrivateDict2(PrivateDict):
 	defaults = buildDefaults(privateDictOperators2)
@@ -2302,6 +2261,7 @@ class PrivateDict2(PrivateDict):
 	def __init__(self, strings=None, file=None, offset=None, parent= None):
 		super(PrivateDict2, self).__init__(strings, file, offset, parent)
 		self.vstore = None
+		self.isCFF2 = True
 
 	def getNumRegions(self, vi = None):
 		# if getNumRegions is being called, we can assume that VarStore exists.
