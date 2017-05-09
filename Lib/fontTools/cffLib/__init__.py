@@ -2188,16 +2188,6 @@ class TopDict(BaseDict):
 				progress.increment(0)  # update
 			i = i + 1
 
-class TopDict2(BaseDict):
-	defaults = buildDefaults(topDictOperators2)
-	order = buildOrder(topDictOperators2)
-
-	def __init__(self, strings=None, file=None, offset=None, GlobalSubrs=None, cff2GetGlyphOrder = None):
-		BaseDict.__init__(self, strings, file, offset)
-		self.cff2GetGlyphOrder = cff2GetGlyphOrder
-		self.charset = cff2GetGlyphOrder()
-		self.GlobalSubrs = GlobalSubrs
-
 class FontDict(BaseDict):
 	#
 	# Since fonttools used to pass a lot of fields that are not relevant in the FDArray
