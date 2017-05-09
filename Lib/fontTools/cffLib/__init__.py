@@ -183,7 +183,7 @@ class CFFFontSet(object):
 				fontName = "CFF2Font"
 				self.fontNames.append(fontName)
 				cff2GetGlyphOrder = self.otFont.getGlyphOrder
-				topDict = TopDict2(GlobalSubrs=self.GlobalSubrs, cff2GetGlyphOrder=cff2GetGlyphOrder)
+				topDict = TopDict(GlobalSubrs=self.GlobalSubrs, cff2GetGlyphOrder=cff2GetGlyphOrder)
 				self.topDictIndex = TopDictData(None, cff2GetGlyphOrder, None)
 			self.topDictIndex.append(topDict)
 			for element in content:
@@ -673,7 +673,7 @@ class TopDictData(TopDictIndex):
 		return dataLength
 
 	def produceItem(self, index, data, file, offset, size):
-		top = TopDict2(self.strings, file, offset, self.GlobalSubrs, self.cff2GetGlyphOrder)
+		top = TopDict(self.strings, file, offset, self.GlobalSubrs, self.cff2GetGlyphOrder)
 		top.decompile(data)
 		return top
 
@@ -2000,7 +2000,8 @@ class TopDictCompiler(DictCompiler):
 		return children
 
 
-class FontDictCompiler(TopDictCompiler):
+class FontDictCompiler(DictCompiler):
+	opcodes = buildOpcodeDict(topDictOperators)
 
 	def __init__(self, dictObj, strings, parent):
 		super(FontDictCompiler, self).__init__(dictObj, strings, parent)
@@ -2032,6 +2033,13 @@ class FontDictCompiler(TopDictCompiler):
 			log.warning("Some CFF FDArray/FontDict keys were ignored upon compile: " +
 				" ".join(sorted(ignoredNames)))
 
+	def getChildren(self, strings):
+		children = []
+		if hasattr(self.dictObj, "Private"):
+			privComp = self.dictObj.Private.getCompiler(strings, self)
+			children.append(privComp)
+			children.extend(privComp.getChildren(strings))
+		return children
 
 
 class PrivateDictCompiler(DictCompiler):
@@ -2128,9 +2136,17 @@ class TopDict(BaseDict):
 	decompilerClass = TopDictDecompiler
 
 	def __init__(self, strings=None, file=None, offset=None, GlobalSubrs=None, cff2GetGlyphOrder = None):
-		BaseDict.__init__(self, strings, file, offset)
+		super(TopDict, self).__init__(strings, file, offset)
 		self.cff2GetGlyphOrder = cff2GetGlyphOrder
 		self.GlobalSubrs = GlobalSubrs
+		if isCFF2:
+			self.defaults = buildDefaults(topDictOperators2)
+			self.charset = cff2GetGlyphOrder()
+			self.order = buildOrder(topDictOperators2)
+		else:
+			self.defaults = buildDefaults(topDictOperators)
+			self.order = buildOrder(topDictOperators)
+		
 
 	def getGlyphOrder(self):
 		return self.charset
@@ -2172,7 +2188,7 @@ class TopDict(BaseDict):
 				progress.increment(0)  # update
 			i = i + 1
 
-class TopDict2(TopDict):
+class TopDict2(BaseDict):
 	defaults = buildDefaults(topDictOperators2)
 	order = buildOrder(topDictOperators2)
 
@@ -2182,7 +2198,7 @@ class TopDict2(TopDict):
 		self.charset = cff2GetGlyphOrder()
 		self.GlobalSubrs = GlobalSubrs
 
-class FontDict(TopDict):
+class FontDict(BaseDict):
 	#
 	# Since fonttools used to pass a lot of fields that are not relevant in the FDArray
 	# FontDict, there are 'ttx' files in the wild that contain all these. These got in
@@ -2210,11 +2226,14 @@ class FontDict(TopDict):
 	# - https://github.com/fonttools/fonttools/issues/601
 	# - https://github.com/adobe-type-tools/afdko/issues/137
 	#
-	order = ['FontName', 'FontMatrix', 'Weight', 'Private']
+	defaults = {}
+	converters = buildConverters(topDictOperators)
 	compilerClass = FontDictCompiler
+	order = ['FontName', 'FontMatrix', 'Weight', 'Private']
+	decompilerClass = TopDictDecompiler
 
 	def __init__(self, strings=None, file=None, offset=None, GlobalSubrs=None, topDict = None):
-		super(FontDict, self).__init__(strings, file, offset, GlobalSubrs, None)
+		super(FontDict, self).__init__(strings, file, offset)
 		self.topDict = topDict
 
 class PrivateDict(BaseDict):
