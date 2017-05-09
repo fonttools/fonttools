@@ -183,7 +183,7 @@ class CFFFontSet(object):
 				fontName = "CFF2Font"
 				self.fontNames.append(fontName)
 				cff2GetGlyphOrder = self.otFont.getGlyphOrder
-				topDict = TopDict(GlobalSubrs=self.GlobalSubrs, cff2GetGlyphOrder=cff2GetGlyphOrder)
+				topDict = TopDict2(GlobalSubrs=self.GlobalSubrs, cff2GetGlyphOrder=cff2GetGlyphOrder)
 				self.topDictIndex = TopDictData(None, cff2GetGlyphOrder, None)
 			self.topDictIndex.append(topDict)
 			for element in content:
@@ -673,7 +673,7 @@ class TopDictData(TopDictIndex):
 		return dataLength
 
 	def produceItem(self, index, data, file, offset, size):
-		top = TopDict(self.strings, file, offset, self.GlobalSubrs, self.cff2GetGlyphOrder)
+		top = TopDict2(self.strings, file, offset, self.GlobalSubrs, self.cff2GetGlyphOrder)
 		top.decompile(data)
 		return top
 
@@ -1105,18 +1105,23 @@ class TableConverter(SimpleConverter):
 
 class PrivateDictConverter(TableConverter):
 	def getClass(self):
-		return PrivateDict
+		if isCFF2:
+			return PrivateDict2
+		else:
+			return PrivateDict
 
 	def read(self, parent, value):
 		size, offset = value
 		file = parent.file
-		priv = PrivateDict(parent.strings, file, offset, parent)
+		if isCFF2:
+			priv = PrivateDict2(parent.strings, file, offset, parent)
+		else:
+			priv = PrivateDict(parent.strings, file, offset, parent)
 		file.seek(offset)
 		data = file.read(size)
 		assert len(data) == size
 		priv.decompile(data)
 		return priv
-
 	def write(self, parent, value):
 		return (0, 0)  # dummy value
 
@@ -2124,6 +2129,7 @@ class BaseDict(object):
 
 class TopDict(BaseDict):
 
+	defaults = buildDefaults(topDictOperators)
 	converters = buildConverters(topDictOperators)
 	compilerClass = TopDictCompiler
 	order = buildOrder(topDictOperators)
@@ -2133,14 +2139,6 @@ class TopDict(BaseDict):
 		BaseDict.__init__(self, strings, file, offset)
 		self.cff2GetGlyphOrder = cff2GetGlyphOrder
 		self.GlobalSubrs = GlobalSubrs
-		if isCFF2:
-			if cff2GetGlyphOrder == None:
-				import pdb
-				pdb.set_trace()
-			self.defaults = buildDefaults(topDictOperators2)
-			self.charset = cff2GetGlyphOrder()
-		else:
-			self.defaults = buildDefaults(topDictOperators)
 
 	def getGlyphOrder(self):
 		return self.charset
@@ -2182,7 +2180,16 @@ class TopDict(BaseDict):
 				progress.increment(0)  # update
 			i = i + 1
 
-class FontDict(BaseDict):
+class TopDict2(TopDict):
+	defaults = buildDefaults(topDictOperators2)
+
+	def __init__(self, strings=None, file=None, offset=None, GlobalSubrs=None, cff2GetGlyphOrder = None):
+		BaseDict.__init__(self, strings, file, offset)
+		self.cff2GetGlyphOrder = cff2GetGlyphOrder
+		self.charset = cff2GetGlyphOrder()
+		self.GlobalSubrs = GlobalSubrs
+
+class FontDict(TopDict):
 	#
 	# Since fonttools used to pass a lot of fields that are not relevant in the FDArray
 	# FontDict, there are 'ttx' files in the wild that contain all these. These got in
@@ -2210,17 +2217,15 @@ class FontDict(BaseDict):
 	# - https://github.com/fonttools/fonttools/issues/601
 	# - https://github.com/adobe-type-tools/afdko/issues/137
 	#
-	converters = buildConverters(topDictOperators)
-	compilerClass = FontDictCompiler
 	order = ['FontName', 'FontMatrix', 'Weight', 'Private']
-	decompilerClass = TopDictDecompiler
+	compilerClass = FontDictCompiler
 
 	def __init__(self, strings=None, file=None, offset=None, GlobalSubrs=None, topDict = None):
-		super(FontDict, self).__init__(strings, file, offset)
+		super(FontDict, self).__init__(strings, file, offset, GlobalSubrs, None)
 		self.topDict = topDict
-		self.defaults = {}
 
 class PrivateDict(BaseDict):
+	defaults = buildDefaults(privateDictOperators)
 	converters = buildConverters(privateDictOperators)
 	order = buildOrder(privateDictOperators)
 	decompilerClass = PrivateDictDecompiler
@@ -2229,13 +2234,15 @@ class PrivateDict(BaseDict):
 	def __init__(self, strings=None, file=None, offset=None, parent= None):
 		super(PrivateDict, self).__init__(strings, file, offset)
 		self.fontDict = parent
-		self.isCFF2 = isCFF2
+		self.isCFF2 = False
+
+class PrivateDict2(PrivateDict):
+	defaults = buildDefaults(privateDictOperators2)
+
+	def __init__(self, strings=None, file=None, offset=None, parent= None):
+		super(PrivateDict2, self).__init__(strings, file, offset, parent)
 		self.vstore = None
 		self.isCFF2 = True
-		if self.isCFF2:
-			self.defaults = buildDefaults(privateDictOperators2)
-		else:
-			self.defaults = buildDefaults(privateDictOperators)
 
 	def getNumRegions(self, vi = None):
 		# if getNumRegions is being called, we can assume that VarStore exists.
@@ -2248,6 +2255,13 @@ class PrivateDict(BaseDict):
 				vi = 0
 		numRegions = self.vstore.getNumRegions(vi)
 		return numRegions
+
+	def decompile(self, data):
+		log.log(DEBUG, "    length %s is %d", self.__class__.__name__, len(data))
+		dec = self.decompilerClass(self.strings, self)
+		dec.decompile(data)
+		self.rawDict = dec.getDict()
+		self.postDecompile()
 
 class IndexedStrings(object):
 
