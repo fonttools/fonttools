@@ -2182,6 +2182,7 @@ class TopDict(BaseDict):
 
 class TopDict2(TopDict):
 	defaults = buildDefaults(topDictOperators2)
+	order = buildOrder(topDictOperators2)
 
 	def __init__(self, strings=None, file=None, offset=None, GlobalSubrs=None, cff2GetGlyphOrder = None):
 		BaseDict.__init__(self, strings, file, offset)
