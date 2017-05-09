@@ -251,11 +251,12 @@ class CharStringCompileError(Exception): pass
 
 class SimpleT2Decompiler(object):
 
-	def __init__(self, localSubrs, globalSubrs):
+	def __init__(self, localSubrs, globalSubrs, private):
 		self.localSubrs = localSubrs
 		self.localBias = calcSubrBias(localSubrs)
 		self.globalSubrs = globalSubrs
 		self.globalBias = calcSubrBias(globalSubrs)
+		self.private = private
 		self.reset()
 
 	def reset(self):
@@ -263,11 +264,16 @@ class SimpleT2Decompiler(object):
 		self.operandStack = []
 		self.hintCount = 0
 		self.hintMaskBytes = 0
+		self.numRegions = 0
 
 	def check_program(self, program):
-		assert program, "illegal CharString: decompiled to empty program"
-		assert program[-1] in ("endchar", "return", "callsubr", "callgsubr",
-				"seac"), "illegal CharString"
+		if self.private and self.private.isCFF2:
+			if program:
+				assert program[-1] not in ("seac"), "illegal CharString Terminator"
+		else:
+			assert program, "illegal CharString: decompiled to empty program"
+			assert program[-1] in ("endchar", "return", "callsubr", "callgsubr",
+					"seac"), "illegal CharString"
 
 	def execute(self, charString):
 		self.callingStack.append(charString)
@@ -402,20 +408,6 @@ class SimpleT2Decompiler(object):
 	def op_roll(self, index):
 		raise NotImplementedError
 
-
-class SimpleCFF2Decompiler(SimpleT2Decompiler):
-	def __init__(self, localSubrs, globalSubrs, private = None):
-		super(SimpleCFF2Decompiler, self).__init__(localSubrs, globalSubrs)
-		self.private = private
-
-	def reset(self):
-		super(SimpleCFF2Decompiler, self).reset()
-		self.numRegions = 0
-
-	def check_program(self, program):
-		if program:
-			assert program[-1] not in ("seac"), "illegal CharString Terminator"
-
 	def op_blend(self, index):
 		if self.numRegions == 0:
 			self.numRegions = self.private.getNumRegions()
@@ -424,11 +416,9 @@ class SimpleCFF2Decompiler(SimpleT2Decompiler):
 		blendArgs = self.operandStack[-numOps:]
 		del self.operandStack[:-(numOps-numBlends)] # Leave the default operands on the stack.
 
-
 	def op_vsindex(self, index):
 		vi = self.pop()
 		self.numRegions = self.private.getNumRegions(vi)
-
 
 
 t1Operators = [
@@ -948,14 +938,13 @@ class T2CharString(ByteCodeBase):
 	decompilerClass = SimpleT2Decompiler
 	outlineExtractor = T2OutlineExtractor
 
-	def __init__(self, bytecode=None, program=None, private=None, globalSubrs=None, isCFF2 = False):
+	def __init__(self, bytecode=None, program=None, private = None, globalSubrs=None):
 		if program is None:
 			program = []
 		self.bytecode = bytecode
 		self.program = program
 		self.private = private
 		self.globalSubrs = globalSubrs if globalSubrs is not None else []
-		self.isCFF2 = isCFF2
 
 	def __repr__(self):
 		if self.bytecode is None:
@@ -984,7 +973,7 @@ class T2CharString(ByteCodeBase):
 		self.width = extractor.width
 
 	def check_program(self, program):
-		if self.isCFF2:
+		if self.private and self.private.isCFF2:
 			if self.program:
 				assert self.program[-1] not in ("seac",), "illegal CFF2 CharString Termination"
 		else:
@@ -1027,8 +1016,8 @@ class T2CharString(ByteCodeBase):
 			raise
 		self.setBytecode(bytecode)
 
-		if self.isCFF2:
-			# If present, remove endchar operator.
+		if self.private and self.private.isCFF2:
+			# If present, remove return and endchar operators.
 			if self.bytecode and (byteord(self.bytecode[-1]) in (11, 14)):
 				self.bytecode = self.bytecode[:-1]
 
@@ -1135,16 +1124,6 @@ class T2CharString(ByteCodeBase):
 			else:
 				program.append(token)
 		self.setProgram(program)
-
-class CFF2CharString(T2CharString):
-
-	decompilerClass = SimpleCFF2Decompiler
-
-	def __init__(self, bytecode=None, program=None, private=None, globalSubrs=None, isCFF2 = True):
-		super(CFF2CharString, self).__init__(bytecode, program, private, globalSubrs, isCFF2)
-
-class CFF2SubrCharString(CFF2CharString):
-	pass
 
 
 class T1CharString(T2CharString):
