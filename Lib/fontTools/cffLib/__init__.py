@@ -1105,18 +1105,12 @@ class TableConverter(SimpleConverter):
 
 class PrivateDictConverter(TableConverter):
 	def getClass(self):
-		if isCFF2:
-			return PrivateDict2
-		else:
-			return PrivateDict
+		return PrivateDict
 
 	def read(self, parent, value):
 		size, offset = value
 		file = parent.file
-		if isCFF2:
-			priv = PrivateDict2(parent.strings, file, offset, parent)
-		else:
-			priv = PrivateDict(parent.strings, file, offset, parent)
+		priv = PrivateDict(parent.strings, file, offset, parent)
 		file.seek(offset)
 		data = file.read(size)
 		assert len(data) == size
@@ -1705,7 +1699,6 @@ topDictOperators = [
 	(24,		'VarStore',		'number',	None,	VarStoreConverter()),
 ]
 
-# We use topDictOperators2 only for deleting CFF operators that are removed in CFF2, and for default values
 topDictOperators2 = [
 #	opcode		name			argument type	default	converter
 	(25,		'maxstack',		'number',	None,	None),
@@ -1748,7 +1741,6 @@ privateDictOperators = [
 	(19,		'Subrs',		'number',	None,	SubrsConverter()),
 ]
 
-# We use privateDictOperators2 only for deleting CFF operators that are removed in CFF2, and for default values
 privateDictOperators2 = [
 #	opcode		name			argument type	default	converter
 	(22,	"vsindex",		'number',	None,	None),
@@ -2235,16 +2227,16 @@ class PrivateDict(BaseDict):
 	def __init__(self, strings=None, file=None, offset=None, parent= None):
 		super(PrivateDict, self).__init__(strings, file, offset)
 		self.fontDict = parent
-		self.isCFF2 = False
-
-class PrivateDict2(PrivateDict):
-	defaults = buildDefaults(privateDictOperators2)
-
-	def __init__(self, strings=None, file=None, offset=None, parent= None):
-		super(PrivateDict2, self).__init__(strings, file, offset, parent)
+		self.isCFF2 = isCFF2
 		self.vstore = None
-		self.isCFF2 = True
-
+		self.numRegions = True
+		if self.isCFF2:
+			self.defaults = buildDefaults(privateDictOperators2)
+			self.order = buildOrder(privateDictOperators2)
+		else:
+			self.defaults = buildDefaults(privateDictOperators)
+			self.order = buildOrder(privateDictOperators)
+			
 	def getNumRegions(self, vi = None):
 		# if getNumRegions is being called, we can assume that VarStore exists.
 		if not self.vstore:
@@ -2256,13 +2248,6 @@ class PrivateDict2(PrivateDict):
 				vi = 0
 		numRegions = self.vstore.getNumRegions(vi)
 		return numRegions
-
-	def decompile(self, data):
-		log.log(DEBUG, "    length %s is %d", self.__class__.__name__, len(data))
-		dec = self.decompilerClass(self.strings, self)
-		dec.decompile(data)
-		self.rawDict = dec.getDict()
-		self.postDecompile()
 
 class IndexedStrings(object):
 
