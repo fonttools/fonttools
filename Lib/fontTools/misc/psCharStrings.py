@@ -1167,10 +1167,11 @@ class DictDecompiler(ByteCodeBase):
 
 	operandEncoding = cffDictOperandEncoding
 
-	def __init__(self, strings):
+	def __init__(self, strings, parent = None):
 		self.stack = []
 		self.strings = strings
 		self.dict = {}
+		self.parent = parent
 
 	def getDict(self):
 		assert len(self.stack) == 0, "non-empty stack"

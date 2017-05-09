@@ -1705,6 +1705,7 @@ topDictOperators = [
 	(24,		'VarStore',		'number',	None,	VarStoreConverter()),
 ]
 
+# We use topDictOperators2 only for deleting CFF operators that are removed in CFF2, and for default values
 topDictOperators2 = [
 #	opcode		name			argument type	default	converter
 	(25,		'maxstack',		'number',	None,	None),
@@ -1723,6 +1724,8 @@ blendOp = 23
 
 privateDictOperators = [
 #	opcode		name			argument type	default	converter
+	(22,	"vsindex",		'number',	None,	None),
+	(blendOp,	kBlendDictOpName,		'blendList',	None,	None), # This is for reading to/from XML: it not written to CFF.
 	(6,		'BlueValues',		'delta',	None,	None),
 	(7,		'OtherBlues',		'delta',	None,	None),
 	(8,		'FamilyBlues',		'delta',	None,	None),
@@ -1745,6 +1748,7 @@ privateDictOperators = [
 	(19,		'Subrs',		'number',	None,	SubrsConverter()),
 ]
 
+# We use privateDictOperators2 only for deleting CFF operators that are removed in CFF2, and for default values
 privateDictOperators2 = [
 #	opcode		name			argument type	default	converter
 	(22,	"vsindex",		'number',	None,	None),
@@ -1781,26 +1785,14 @@ def addConverters(table):
 		table[i] = op, name, arg, default, conv
 
 addConverters(privateDictOperators)
-addConverters(privateDictOperators2)
 addConverters(topDictOperators)
-addConverters(topDictOperators2)
 
 
 class TopDictDecompiler(psCharStrings.DictDecompiler):
 	operators = buildOperatorDict(topDictOperators)
 
-class TopDict2Decompiler(psCharStrings.DictDecompiler):
-	operators = buildOperatorDict(topDictOperators2)
-
 class PrivateDictDecompiler(psCharStrings.DictDecompiler):
 	operators = buildOperatorDict(privateDictOperators)
-
-class PrivateDict2Decompiler(psCharStrings.DictDecompiler):
-	operators = buildOperatorDict(privateDictOperators2)
-
-	def __init__(self, strings, parent):
-		self.parent = parent
-		super(PrivateDict2Decompiler, self).__init__(strings)
 
 class DictCompiler(object):
 	maxBlendStack = 0
@@ -2071,9 +2063,6 @@ class PrivateDictCompiler(DictCompiler):
 		topDict.maxstack = numStack
 		topDict.rawDict['maxstack'] = numStack
 
-class PrivateDict2Compiler(PrivateDictCompiler):
-	opcodes = buildOpcodeDict(privateDictOperators2)
-
 class BaseDict(object):
 
 	def __init__(self, strings=None, file=None, offset=None):
@@ -2087,7 +2076,7 @@ class BaseDict(object):
 
 	def decompile(self, data):
 		log.log(DEBUG, "    length %s is %d", self.__class__.__name__, len(data))
-		dec = self.decompilerClass(self.strings)
+		dec = self.decompilerClass(self.strings, self)
 		dec.decompile(data)
 		self.rawDict = dec.getDict()
 		self.postDecompile()
@@ -2193,10 +2182,6 @@ class TopDict(BaseDict):
 
 class TopDict2(TopDict):
 	defaults = buildDefaults(topDictOperators2)
-	converters = buildConverters(topDictOperators2)
-	compilerClass = TopDictCompiler
-	order = buildOrder(topDictOperators2)
-	decompilerClass = TopDict2Decompiler
 
 	def __init__(self, strings=None, file=None, offset=None, GlobalSubrs=None, cff2GetGlyphOrder = None):
 		BaseDict.__init__(self, strings, file, offset)
@@ -2253,10 +2238,6 @@ class PrivateDict(BaseDict):
 
 class PrivateDict2(PrivateDict):
 	defaults = buildDefaults(privateDictOperators2)
-	converters = buildConverters(privateDictOperators2)
-	order = buildOrder(privateDictOperators2)
-	decompilerClass = PrivateDict2Decompiler
-	compilerClass = PrivateDict2Compiler
 
 	def __init__(self, strings=None, file=None, offset=None, parent= None):
 		super(PrivateDict2, self).__init__(strings, file, offset, parent)
