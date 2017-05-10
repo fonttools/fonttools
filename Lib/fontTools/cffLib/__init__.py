@@ -99,7 +99,7 @@ class CFFFontSet(object):
 			self.hdrSize = 5
 			writer.add(sstruct.pack(cffHeaderFormat, self))
 			# Note: topDictSize will most likely change in CFFWriter.toFile().
-			self.topDictSize  = topCompiler.getTopDictLen()
+			self.topDictSize  = topCompiler.getDataLength()
 			writer.add(struct.pack(">H", self.topDictSize))
 		else:
 			self.hdrSize = 4
@@ -426,10 +426,6 @@ class TopDictIndexCompiler(IndexCompiler):
 
 class TopDictDataCompiler(TopDictIndexCompiler):
 
-	def getTopDictLen(self):
-		topDictLen = self.items[0].getDataLength()
-		return topDictLen
-
 	def getOffsets(self):
 		offsets = [0, self.items[0].getDataLength()]
 		return offsets
@@ -663,10 +659,6 @@ class TopDictIndex(Index):
 		else:
 			dataLength = len(self)
 		return dataLength
-
-	def toFile(self, file):
-		topDict = self.items[0]
-		topDict.toFile(file)
 
 	def toXML(self, xmlWriter, progress):
 		for i in range(len(self)):
