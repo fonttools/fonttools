@@ -56,7 +56,7 @@ class CFFFontSet(object):
 			isCFF2 = True
 			self.fontNames = ["CFF2Font"]
 			cff2GetGlyphOrder = otFont.getGlyphOrder
-			self.topDictIndex = TopDictData(self.topDictSize, cff2GetGlyphOrder, file) # in CFF2, offsetSize is the size of the TopDict data.
+			self.topDictIndex = TopDictIndex(file, cff2GetGlyphOrder, self.topDictSize) # in CFF2, offsetSize is the size of the TopDict data.
 			self.strings = None
 			self.GlobalSubrs = GlobalSubrsIndex(file)
 			self.topDictIndex.strings = self.strings
@@ -184,7 +184,7 @@ class CFFFontSet(object):
 				self.fontNames.append(fontName)
 				cff2GetGlyphOrder = self.otFont.getGlyphOrder
 				topDict = TopDict(GlobalSubrs=self.GlobalSubrs, cff2GetGlyphOrder=cff2GetGlyphOrder)
-				self.topDictIndex = TopDictData(None, cff2GetGlyphOrder, None)
+				self.topDictIndex = TopDictIndex(None, cff2GetGlyphOrder, None)
 			self.topDictIndex.append(topDict)
 			for element in content:
 				if isinstance(element, basestring):
@@ -211,7 +211,7 @@ class CFFFontSet(object):
 		# This assumes a decompiled CFF table.
 		self.major = 2
 		cff2GetGlyphOrder = self.otFont.getGlyphOrder
-		topDictData = TopDictData(None, cff2GetGlyphOrder, None)
+		topDictData = TopDictIndex(None, cff2GetGlyphOrder, None)
 		topDictData.items = self.topDictIndex.items
 		self.topDictIndex = topDictData
 		topDict =  topDictData[0]
@@ -629,15 +629,44 @@ class SubrsIndex(GlobalSubrsIndex):
 
 class TopDictIndex(Index):
 
-	compilerClass = TopDictIndexCompiler
-	def __init__(self, file=None, cff2GetGlyphOrder = None):
+	def __init__(self, file=None, cff2GetGlyphOrder = None, topSize = 0):
 		self.cff2GetGlyphOrder = cff2GetGlyphOrder
-		super(TopDictIndex, self).__init__(file)
+		if isCFF2:
+			self.items = []
+			name = self.__class__.__name__
+			self.compilerClass = TopDictDataCompiler
+			if file is None:
+				return
+			log.log(DEBUG, "loading %s at %s", name, file.tell())
+			self.file = file
+			count = 1
+			self.items = [None] * count
+			offSize = 0
+			self.offsets = offsets = [0, topSize]
+			self.offsetBase = file.tell()
+			file.seek(self.offsetBase + topSize)  # pretend we've read the whole lot
+			log.log(DEBUG, "    end of %s at %s", name, file.tell())
+		else:
+			super(TopDictIndex, self).__init__(file)
+			self.compilerClass = TopDictIndexCompiler
+		
 
 	def produceItem(self, index, data, file, offset, size):
 		top = TopDict(self.strings, file, offset, self.GlobalSubrs, self.cff2GetGlyphOrder)
 		top.decompile(data)
 		return top
+
+	def getDataLength(self):
+		if isCFF2:
+			topDict = self.items[0]
+			dataLength = self.offsets[-1] = topDict.getDataLength()
+		else:
+			dataLength = len(self)
+		return dataLength
+
+	def toFile(self, file):
+		topDict = self.items[0]
+		topDict.toFile(file)
 
 	def toXML(self, xmlWriter, progress):
 		for i in range(len(self)):
@@ -647,43 +676,21 @@ class TopDictIndex(Index):
 			xmlWriter.endtag("FontDict")
 			xmlWriter.newline()
 
-class TopDictData(TopDictIndex):
-	""" Index-like wrapper for CFF2 TopDict. The TopDict is written as is in the file, but we provide the wrapper so as to miniimize code changes for the logic that supports CFF. """
-	compilerClass = TopDictDataCompiler
-
-	def __init__(self, topSize, cff2GetGlyphOrder, file=None):
-		self.cff2GetGlyphOrder = cff2GetGlyphOrder
-		self.items = []
-		name = self.__class__.__name__
-		if file is None:
-			return
-		log.log(DEBUG, "loading %s at %s", name, file.tell())
-		self.file = file
-		count = 1
-		self.items = [None] * count
-		offSize = 0
-		self.offsets = offsets = [0, topSize]
-		self.offsetBase = file.tell()
-		file.seek(self.offsetBase + topSize)  # pretend we've read the whole lot
-		log.log(DEBUG, "    end of %s at %s", name, file.tell())
-
-	def getDataLength(self):
-		topDict = self.items[0]
-		dataLength = self.offsets[-1] = topDict.getDataLength()
-		return dataLength
-
-	def produceItem(self, index, data, file, offset, size):
-		top = TopDict(self.strings, file, offset, self.GlobalSubrs, self.cff2GetGlyphOrder)
-		top.decompile(data)
-		return top
-
-	def toFile(self, file):
-		topDict = self.items[0]
-		topDict.toFile(file)
-
-class FDArrayIndex(TopDictIndex):
+class FDArrayIndex(Index):
 
 	compilerClass = FDArrayIndexCompiler
+
+	def __init__(self, file=None, cff2GetGlyphOrder = None):
+		self.cff2GetGlyphOrder = cff2GetGlyphOrder
+		super(FDArrayIndex, self).__init__(file)
+
+	def toXML(self, xmlWriter, progress):
+		for i in range(len(self)):
+			xmlWriter.begintag("FontDict", index=i)
+			xmlWriter.newline()
+			self[i].toXML(xmlWriter, progress)
+			xmlWriter.endtag("FontDict")
+			xmlWriter.newline()
 
 	def produceItem(self, index, data, file, offset, size):
 		fontDict = FontDict(self.strings, file, offset, self.GlobalSubrs, self.topDict)
