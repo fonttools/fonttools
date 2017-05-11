@@ -7,6 +7,11 @@ from fontTools.ttLib.tables import ttProgram
 from fontTools.ttLib.tables._g_l_y_f import Glyph
 from fontTools.ttLib.tables._g_l_y_f import GlyphComponent
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
+from fontTools.pens.basePen import decomposeSuperBezierSegment
+try:
+    from cu2qu import curve_to_quadratic
+except ImportError:
+    curve_to_quadratic = None
 
 
 __all__ = ["TTGlyphPen"]
@@ -15,8 +20,9 @@ __all__ = ["TTGlyphPen"]
 class TTGlyphPen(AbstractPen):
     """Pen used for drawing to a TrueType glyph."""
 
-    def __init__(self, glyphSet):
+    def __init__(self, glyphSet, maxError=1.0):
         self.glyphSet = glyphSet
+        self.maxError = maxError
         self.init()
 
     def init(self):
@@ -53,6 +59,29 @@ class TTGlyphPen(AbstractPen):
         # last point is None if there are no on-curve points
         if points[-1] is not None:
             self._addPoint(points[-1], 1)
+
+    def _curveToQuadratic(self, pt1, pt2, pt3):
+        assert not self._isClosed()
+        if curve_to_quadratic is None:
+            raise ImportError("No module named 'cu2qu'")
+        curve = (self.points[-1], pt1, pt2, pt3)
+        quadratic, err = curve_to_quadratic(curve, self.maxError)
+        self.qCurveTo(*quadratic[1:])
+
+    def curveTo(self, *points):
+        # 'n' is the number of control points
+        n = len(points) - 1
+        assert n >= 0
+        if n == 2:
+            # this is the most common case, so we special-case it
+            self._curveToQuadratic(*points)
+        elif n > 2:
+            for segment in decomposeSuperBezierSegment(points):
+                self._curveToQuadratic(*segment)
+        elif n == 1:
+            self.qCurveTo(*points)
+        elif n == 0:
+            self.lineTo(points[0])
 
     def closePath(self):
         endPt = len(self.points) - 1
