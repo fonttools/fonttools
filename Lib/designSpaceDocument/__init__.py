@@ -1534,6 +1534,14 @@ if __name__ == "__main__":
         >>> new = DesignSpaceDocument()
         >>> new.read(testDocPath)
         >>> new.write(testDocPath2)
+        >>> f1 = open(testDocPath, 'r')
+        >>> t1 = f1.read()
+        >>> f1.close()
+        >>> f2 = open(testDocPath2, 'r')
+        >>> t2 = f2.read()
+        >>> f2.close()
+        >>> assert t1 == t2
+
         """
 
     def testHandleNoAxes():
