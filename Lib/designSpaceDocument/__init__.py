@@ -345,9 +345,9 @@ class BaseDocWriter(object):
         axisElement = ET.Element('axis')
         axisElement.attrib['tag'] = axisObject.tag
         axisElement.attrib['name'] = axisObject.name
-        axisElement.attrib['minimum'] = str(axisObject.minimum)
-        axisElement.attrib['maximum'] = str(axisObject.maximum)
-        axisElement.attrib['default'] = str(axisObject.default)
+        axisElement.attrib['minimum'] = self.intOrFloat(axisObject.minimum)
+        axisElement.attrib['maximum'] = self.intOrFloat(axisObject.maximum)
+        axisElement.attrib['default'] = self.intOrFloat(axisObject.default)
         for languageCode, labelName in axisObject.labelNames.items():
             languageElement = ET.Element('labelname')
             languageElement.attrib[u'xml:lang'] = languageCode
@@ -356,8 +356,8 @@ class BaseDocWriter(object):
         if axisObject.map:
             for inputValue, outputValue in axisObject.map:
                 mapElement = ET.Element('map')
-                mapElement.attrib['input'] = str(inputValue)
-                mapElement.attrib['output'] = str(outputValue)
+                mapElement.attrib['input'] = self.intOrFloat(inputValue)
+                mapElement.attrib['output'] = self.intOrFloat(outputValue)
                 axisElement.append(mapElement)
         self.root.findall('.axes')[0].append(axisElement)
 
