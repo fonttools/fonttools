@@ -238,6 +238,15 @@ class DesignSpaceProcessor(DesignSpaceDocument):
                 font.info.postScriptFontName = instanceDescriptor.postScriptFontName
                 font.info.styleMapFamilyName = instanceDescriptor.styleMapFamilyName
                 font.info.styleMapStyleName = instanceDescriptor.styleMapStyleName
+                # localised names need to go to the right openTypeNameRecords
+                #print("xxx", font.info.openTypeNameRecords)
+                # records = []
+                # nameID = 1
+                # platformID = 
+                # for languageCode, name in instanceDescriptor.localisedStyleMapFamilyName.items():
+                #    # Name ID 1 (font family name) is found at the generic styleMapFamily attribute.
+                #    records.append((nameID, ))
+
             except:
                 self.problems.append("Could not make fontinfo for %s"%loc)
         # copied info

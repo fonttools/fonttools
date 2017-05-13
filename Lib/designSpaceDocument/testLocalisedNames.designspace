@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='utf-8'?>
+<designspace format="3">
+    <axes>
+        <axis default="0" maximum="1000" minimum="0" name="weight" tag="wght">
+            <labelname xml:lang="fa-IR">قطر</labelname>
+            <labelname xml:lang="en">Wéíght</labelname>
+        </axis>
+        <axis default="0" maximum="1000" minimum="0" name="width" tag="wdth">
+            <labelname xml:lang="fr">Poids</labelname>
+            <map input="0" output="10" />
+            <map input="401" output="66" />
+            <map input="1000" output="990" />
+        </axis>
+    </axes>
+    <rules>
+        <rule name="named.rule.1">
+            <condition maximum="1" minimum="0" name="aaaa" />
+            <condition maximum="3" minimum="2" name="bbbb" />
+            <sub name="a" with="a.alt" />
+        </rule>
+    </rules>
+    <sources>
+        <source filename="masters/masterTest1.ufo" name="master.ufo1">
+            <info copy="1" />
+            <location>
+                <dimension name="width" xvalue="0" />
+                <dimension name="weight" xvalue="0" />
+            </location>
+        </source>
+        <source filename="masters/masterTest2.ufo" name="master.ufo2">
+            <location>
+                <dimension name="width" xvalue="0" />
+                <dimension name="weight" xvalue="1000" />
+            </location>
+        </source>
+    </sources>
+    <instances>
+        <instance familyname="Montserrat" filename="instances/instanceTest1.ufo" name="instance.ufo1" postscriptfontname="InstancePostscriptName" stylemapfamilyname="Montserrat SemiBold" stylemapstylename="Regular" stylename="SemiBold">
+            <stylename xml:lang="fr">Demigras</stylename>
+            <stylename xml:lang="ja">半ば</stylename>
+            <familyname xml:lang="fr">Montserrat</familyname>
+            <familyname xml:lang="ja">モンセラート</familyname>
+            <stylemapstylename xml:lang="de">Standard</stylemapstylename>
+            <stylemapfamilyname xml:lang="de">Montserrat Halbfett</stylemapfamilyname>
+            <stylemapfamilyname xml:lang="ja">モンセラート SemiBold</stylemapfamilyname>
+            <location>
+                <dimension name="width" xvalue="0" />
+                <dimension name="weight" xvalue="500" />
+            </location>
+            <glyphs>
+                <glyph mute="1" name="arrow" />
+            </glyphs>
+            <kerning />
+            <info />
+        </instance>
+    </instances>
+</designspace>
