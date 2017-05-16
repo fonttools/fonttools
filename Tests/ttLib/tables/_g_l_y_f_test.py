@@ -143,3 +143,13 @@ class GlyphCoordinatesTest(object):
         assert bool(g) == True
         g = GlyphCoordinates([(0,.5), (0,0)])
         assert bool(g) == True
+
+    def test_double_precision_float(self):
+        # https://github.com/fonttools/fonttools/issues/963
+        afloat = 242.50000000000003
+        g = GlyphCoordinates([(afloat, 0)])
+        g.toInt()
+        # this would return 242 if the internal array.array typecode is 'f',
+        # since the Python float is truncated to a C float.
+        # when using typecode 'd' it should return the correct value 243
+        assert g[0][0] == round(afloat)
