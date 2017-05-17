@@ -1,3 +1,6 @@
+3.12.0 (released 2017-05-17)
+----------------------------
+
 - [cffLib.specializer] Added new ``specializer`` module to optimize CFF
   charstrings, used by the T2CharStringPen (#948).
 - [varLib.mutator] Sort glyphs by component depth before calculating composite
