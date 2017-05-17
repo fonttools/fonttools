@@ -251,7 +251,7 @@ class CharStringCompileError(Exception): pass
 
 class SimpleT2Decompiler(object):
 
-	def __init__(self, localSubrs, globalSubrs, private):
+	def __init__(self, localSubrs, globalSubrs, private=None):
 		self.localSubrs = localSubrs
 		self.localBias = calcSubrBias(localSubrs)
 		self.globalSubrs = globalSubrs
