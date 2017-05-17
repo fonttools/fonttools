@@ -1,3 +1,10 @@
+- [cffLib.specializer] Added new ``specializer`` module to optimize CFF
+  charstrings, used by the T2CharStringPen (#948).
+- [varLib.mutator] Sort glyphs by component depth before calculating composite
+  glyphs' bounding boxes to ensure deltas are correctly caclulated (#945).
+- [_g_l_y_f] Fixed loss of precision in GlyphCoordinates by using 'd' (double)
+  instead of 'f' (float) as ``array.array`` typecode (#963, #964).
+
 3.11.0 (released 2017-05-03)
 ----------------------------
 
