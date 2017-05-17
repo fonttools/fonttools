@@ -267,7 +267,7 @@ class SimpleT2Decompiler(object):
 		self.numRegions = 0
 
 	def check_program(self, program):
-		if self.private and self.private.isCFF2:
+		if self.private and self.private.isCFF2():
 			if program:
 				assert program[-1] not in ("seac"), "illegal CharString Terminator"
 		else:
@@ -973,7 +973,7 @@ class T2CharString(ByteCodeBase):
 		self.width = extractor.width
 
 	def check_program(self, program):
-		if self.private and self.private.isCFF2:
+		if self.private and self.private.isCFF2():
 			if self.program:
 				assert self.program[-1] not in ("seac",), "illegal CFF2 CharString Termination"
 		else:
@@ -1016,7 +1016,7 @@ class T2CharString(ByteCodeBase):
 			raise
 		self.setBytecode(bytecode)
 
-		if self.private and self.private.isCFF2:
+		if self.private and self.private.isCFF2():
 			# If present, remove return and endchar operators.
 			if self.bytecode and (byteord(self.bytecode[-1]) in (11, 14)):
 				self.bytecode = self.bytecode[:-1]
