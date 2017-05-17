@@ -1116,7 +1116,7 @@ class TableConverter(SimpleConverter):
 		xmlWriter.endtag(name)
 		xmlWriter.newline()
 	def xmlRead(self, name, attrs, content, parent):
-		ob = self.getClass()()
+		ob = self.getClass()(parent.cffCtx)
 		for element in content:
 			if isinstance(element, basestring):
 				continue
@@ -1140,7 +1140,7 @@ class PrivateDictConverter(TableConverter):
 	def write(self, parent, value):
 		return (0, 0)  # dummy value
 	def xmlRead(self, name, attrs, content, parent):
-		ob = self.getClass()(parent.cffCtx, None, None, None)
+		ob = self.getClass()(parent.cffCtx)
 		for element in content:
 			if isinstance(element, basestring):
 				continue
