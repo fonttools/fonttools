@@ -267,7 +267,13 @@ class SimpleT2Decompiler(object):
 		self.numRegions = 0
 
 	def check_program(self, program):
-		if self.private and self.private.isCFF2():
+		try:
+			isCFF2 = self.private.isCFF2()
+			# Type 1 charstrings don't have self.private.
+			# Type2 CFF chrstrings may have self.private == None.
+		except AttributeError:
+			isCFF2 = False
+		if isCFF2:
 			if program:
 				assert program[-1] not in ("seac"), "illegal CharString Terminator"
 		else:
@@ -973,7 +979,13 @@ class T2CharString(ByteCodeBase):
 		self.width = extractor.width
 
 	def check_program(self, program):
-		if self.private and self.private.isCFF2():
+		try:
+			isCFF2 = self.private.isCFF2()
+			# Type 1 charstrings don't have self.private.
+			# Type 2 CFF chrstrings may have self.private == None.
+		except AttributeError:
+			isCFF2 = False
+		if isCFF2:
 			if self.program:
 				assert self.program[-1] not in ("seac",), "illegal CFF2 CharString Termination"
 		else:
