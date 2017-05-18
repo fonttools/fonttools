@@ -205,7 +205,10 @@ def _SetCoordinates(font, glyphName, coord):
 
 def _optimize_contour(delta, coords):
 	n = len(delta)
-	if not delta: return [None] * n
+	if all(x == y == 0 for x,y in delta): # XXX
+		return [None] * n
+	if n == 1:
+		return delta
 	d0 = delta[0]
 	if all(d0 == d for d in delta):
 		return [d0] + [None] * (n-1)
