@@ -50,11 +50,6 @@ class GlyphCoordinatesTest(object):
         g2 = -g
         assert g2 == GlyphCoordinates([(-1, -2)])
 
-    def test__abs__(self):
-        g = GlyphCoordinates([(-1.5,2)])
-        g2 = abs(g)
-        assert g2 == GlyphCoordinates([(1.5,2)])
-
     @pytest.mark.skipif(sys.version_info[0] < 3,
                         reason="__round___ requires Python 3")
     def test__round__(self):
@@ -137,8 +132,10 @@ class GlyphCoordinatesTest(object):
         assert g == GlyphCoordinates([(1.0, 1.0)])
 
     def test__bool__(self):
-        g = GlyphCoordinates([(0,0), (0.,0)])
+        g = GlyphCoordinates([])
         assert bool(g) == False
+        g = GlyphCoordinates([(0,0), (0.,0)])
+        assert bool(g) == True
         g = GlyphCoordinates([(0,0), (1,0)])
         assert bool(g) == True
         g = GlyphCoordinates([(0,.5), (0,0)])
