@@ -203,9 +203,9 @@ def _SetCoordinates(font, glyphName, coord):
 	font["hmtx"].metrics[glyphName] = horizontalAdvanceWidth, leftSideBearing
 
 
-def _optimize_contour(delta, coords):
+def _optimize_contour(delta, coords, tolerance=0.):
 	n = len(delta)
-	if all(x == y == 0 for x,y in delta): # XXX
+	if all(abs(x) <= tolerance >= abs(y) for x,y in delta):
 		return [None] * n
 	if n == 1:
 		return delta
@@ -217,14 +217,14 @@ def _optimize_contour(delta, coords):
 
 	return delta
 
-def _optimize_delta(delta, coords, ends):
+def _optimize_delta(delta, coords, ends, tolerance=0.):
 	assert sorted(ends) == ends and len(coords) == (ends[-1]+1 if ends else 0) + 4
 	n = len(coords)
 	ends = ends + [n-4, n-3, n-2, n-1]
 	out = []
 	start = 0
 	for end in ends:
-		contour = _optimize_contour(delta[start:end+1], coords[start:end+1])
+		contour = _optimize_contour(delta[start:end+1], coords[start:end+1], tolerance)
 		out.extend(contour)
 		start = end+1
 
@@ -267,7 +267,7 @@ def _add_gvar(font, model, master_ttfs, tolerance=.5, optimize=True):
 				continue
 			var = TupleVariation(support, delta)
 			if optimize:
-				delta_opt = _optimize_delta(delta, origCoords, endPts)
+				delta_opt = _optimize_delta(delta, origCoords, endPts, tolerance=tolerance)
 
 				if None in delta_opt:
 					# Use "optimized" version only if smaller...
