@@ -213,6 +213,8 @@ def _optimize_contour(delta, coords):
 	if all(d0 == d for d in delta):
 		return [d0] + [None] * (n-1)
 
+	# TODO
+
 	return delta
 
 def _optimize_delta(delta, coords, ends):
@@ -226,7 +228,7 @@ def _optimize_delta(delta, coords, ends):
 		out.extend(contour)
 		start = end+1
 
-	return out # TODO return whichever is cheaper to encode
+	return out
 
 def _add_gvar(font, model, master_ttfs, tolerance=.5, optimize=True):
 
@@ -259,13 +261,26 @@ def _add_gvar(font, model, master_ttfs, tolerance=.5, optimize=True):
 		endPts = control[1] if control[0] >= 1 else list(range(len(control[1])))
 
 		for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
-			if not delta:
+			if not delta: # XXX
 				continue
-			if tolerance and max(abs(delta).array) <= tolerance:
+			if tolerance and max(abs(delta).array) <= tolerance: # XXX
 				continue
-			if optimize:
-				delta = _optimize_delta(delta, origCoords, endPts)
 			var = TupleVariation(support, delta)
+			if optimize:
+				delta = delta[:] # XXX Remove?
+				delta_opt = _optimize_delta(delta, origCoords, endPts)
+
+				if delta_opt != delta:
+					# Use "optimized" version only if smaller...
+					var_opt = TupleVariation(support, delta_opt)
+					axis_tags = sorted(support.keys()) # Shouldn't matter that this is different from fvar...?
+					tupleData, auxData = var.compile(axis_tags, [], None)
+					unoptimized_len = len(tupleData) + len(auxData)
+					tupleData, auxData = var_opt.compile(axis_tags, [], None)
+					optimized_len = len(tupleData) + len(auxData)
+					if optimized_len < unoptimized_len:
+						var = var_opt
+
 			gvar.variations[glyph].append(var)
 
 def _add_HVAR(font, model, master_ttfs, axisTags):
