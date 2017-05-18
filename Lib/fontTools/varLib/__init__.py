@@ -267,17 +267,18 @@ def _add_gvar(font, model, master_ttfs, tolerance=.5, optimize=True):
 				continue
 			var = TupleVariation(support, delta)
 			if optimize:
-				delta = delta[:] # XXX Remove?
 				delta_opt = _optimize_delta(delta, origCoords, endPts)
 
-				if delta_opt != delta:
+				if None in delta_opt:
 					# Use "optimized" version only if smaller...
 					var_opt = TupleVariation(support, delta_opt)
+
 					axis_tags = sorted(support.keys()) # Shouldn't matter that this is different from fvar...?
 					tupleData, auxData = var.compile(axis_tags, [], None)
 					unoptimized_len = len(tupleData) + len(auxData)
 					tupleData, auxData = var_opt.compile(axis_tags, [], None)
 					optimized_len = len(tupleData) + len(auxData)
+
 					if optimized_len < unoptimized_len:
 						var = var_opt
 
