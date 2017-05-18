@@ -1481,9 +1481,12 @@ class GlyphCoordinates(object):
 
 	def __bool__(self):
 		"""
-		>>> g = GlyphCoordinates([(0,0), (0.,0)])
+		>>> g = GlyphCoordinates([])
 		>>> bool(g)
 		False
+		>>> g = GlyphCoordinates([(0,0), (0.,0)])
+		>>> bool(g)
+		True
 		>>> g = GlyphCoordinates([(0,0), (1,0)])
 		>>> bool(g)
 		True
@@ -1491,7 +1494,7 @@ class GlyphCoordinates(object):
 		>>> bool(g)
 		True
 		"""
-		return any(v for v in self._a)
+		return bool(self._a)
 
 	__nonzero__ = __bool__
 
