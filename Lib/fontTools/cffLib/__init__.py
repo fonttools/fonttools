@@ -4,6 +4,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc import psCharStrings
+from fontTools.misc.arrayTools import unionRect
 from fontTools.misc.textTools import safeEval
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.otBase import OTTableWriter
@@ -101,6 +102,11 @@ class CFFFontSet(object):
 			# use current 'major' value to determine output format
 			assert self.major in (1, 2), "Unknown CFF format"
 			isCFF2 = self.major == 2
+
+		if otFont.recalcBBoxes and not isCFF2:
+			for topDict in self.topDictIndex:
+				topDict.recalcFontBBox()
+
 		if not isCFF2:
 			strings = IndexedStrings()
 		else:
@@ -2312,6 +2318,20 @@ class TopDict(BaseDict):
 			if not i % 30 and progress:
 				progress.increment(0)  # update
 			i = i + 1
+
+	def recalcFontBBox(self):
+		initialBounds = (float('inf'), float('inf'), float('-inf'), float('-inf'))
+		bounds = initialBounds
+		for charString in self.CharStrings.values():
+			if not hasattr(charString, 'bounds'):
+				charString.recalcBounds()
+			if charString.bounds is not None:
+				bounds = unionRect(bounds, charString.bounds)
+
+		if bounds == initialBounds:
+			self.FontBBox = self.defaults['FontBBox'][:]
+		else:
+			self.FontBBox = [round(v) for v in bounds]
 
 
 class FontDict(BaseDict):
