@@ -216,7 +216,7 @@ def _optimize_contour(delta, coords):
 	return delta
 
 def _optimize_delta(delta, coords, ends):
-	assert sorted(ends) == ends and len(coords) == ends[-1]+1 + 4
+	assert sorted(ends) == ends and len(coords) == (ends[-1]+1 if ends else 0) + 4
 	n = len(coords)
 	ends = ends + [n-4, n-3, n-2, n-1]
 	out = []
