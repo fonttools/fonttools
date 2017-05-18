@@ -232,6 +232,8 @@ def _optimize_delta(delta, coords, ends):
 
 def _add_gvar(font, model, master_ttfs, tolerance=.5, optimize=True):
 
+	assert tolerance >= 0
+
 	log.info("Generating gvar")
 	assert "gvar" not in font
 	gvar = font["gvar"] = newTable('gvar')
@@ -261,9 +263,7 @@ def _add_gvar(font, model, master_ttfs, tolerance=.5, optimize=True):
 		endPts = control[1] if control[0] >= 1 else list(range(len(control[1])))
 
 		for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
-			if all(0 == v for v in delta.array):
-				continue
-			if tolerance and max(abs(delta).array) <= tolerance: # XXX
+			if all(abs(v) <= tolerance for v in delta.array):
 				continue
 			var = TupleVariation(support, delta)
 			if optimize:

@@ -1355,22 +1355,6 @@ class GlyphCoordinates(object):
 		for i in range(len(a)):
 			a[i] = -a[i]
 		return r
-	def __abs__(self):
-		"""
-		>>> g = GlyphCoordinates([(-1.5,2)])
-		>>> g
-		GlyphCoordinates([(-1.5, 2.0)])
-		>>> g2 = abs(g)
-		>>> g
-		GlyphCoordinates([(-1.5, 2.0)])
-		>>> g2
-		GlyphCoordinates([(1.5, 2.0)])
-		"""
-		r = self.copy()
-		a = r._a
-		for i in range(len(a)):
-			a[i] = abs(a[i])
-		return r
 	def __round__(self):
 		"""
 		Note: This is Python 3 only.  Python 2 does not call __round__.
