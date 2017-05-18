@@ -1,3 +1,9 @@
+3.12.1 (released 2017-05-18)
+----------------------------
+
+- [pens.t2CharStringPen] Fixed AttributeError when calling addComponent in
+  T2CharStringPen (#965).
+
 3.12.0 (released 2017-05-17)
 ----------------------------
 
