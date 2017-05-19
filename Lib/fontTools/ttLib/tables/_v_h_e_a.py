@@ -43,17 +43,10 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 		return sstruct.pack(vheaFormat, self)
 
 	def recalc(self, ttFont):
-		vtmxTable = ttFont['vmtx']
+		boundsHeightDict = {}
 		if 'glyf' in ttFont:
 			glyfTable = ttFont['glyf']
-			advanceHeightMax = 0
-			minTopSideBearing = float('inf')
-			minBottomSideBearing = float('inf')
-			yMaxExtent = -float('inf')
-
 			for name in ttFont.getGlyphOrder():
-				height, tsb = vtmxTable[name]
-				advanceHeightMax = max(advanceHeightMax, height)
 				g = glyfTable[name]
 				if g.numberOfContours == 0:
 					continue
@@ -61,25 +54,36 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 					# Composite glyph without extents set.
 					# Calculate those.
 					g.recalcBounds(glyfTable)
-				minTopSideBearing = min(minTopSideBearing, tsb)
-				bsb = height - tsb - (g.yMax - g.yMin)
-				minBottomSideBearing = min(minBottomSideBearing, bsb)
-				extent = tsb + (g.yMax - g.yMin)
-				yMaxExtent = max(yMaxExtent, extent)
-
-			if yMaxExtent == -float('inf'):
-				# No glyph has outlines.
-				minTopSideBearing = 0
-				minBottomSideBearing = 0
-				yMaxExtent = 0
-
-			self.advanceHeightMax = advanceHeightMax
-			self.minTopSideBearing = minTopSideBearing
-			self.minBottomSideBearing = minBottomSideBearing
-			self.yMaxExtent = yMaxExtent
+				boundsHeightDict[name] = g.yMax - g.yMin
 		else:
 			# XXX CFF recalc...
 			pass
+
+		advanceHeightMax = 0
+		minTopSideBearing = float('inf')
+		minBottomSideBearing = float('inf')
+		yMaxExtent = -float('inf')
+
+		vmtxTable = ttFont['vmtx']
+		for name, boundsHeight in boundsHeightDict.items():
+			advanceHeight, tsb = vmtxTable[name]
+			advanceHeightMax = max(advanceHeightMax, advanceHeight)
+			minTopSideBearing = min(minTopSideBearing, tsb)
+			bsb = advanceHeight - tsb - boundsHeight
+			minBottomSideBearing = min(minBottomSideBearing, bsb)
+			extent = tsb + boundsHeight
+			yMaxExtent = max(yMaxExtent, extent)
+
+		if yMaxExtent == -float('inf'):
+			# No glyph has outlines.
+			minTopSideBearing = 0
+			minBottomSideBearing = 0
+			yMaxExtent = 0
+
+		self.advanceHeightMax = advanceHeightMax
+		self.minTopSideBearing = minTopSideBearing
+		self.minBottomSideBearing = minBottomSideBearing
+		self.yMaxExtent = yMaxExtent
 
 	def toXML(self, writer, ttFont):
 		formatstring, names, fixes = sstruct.getformat(vheaFormat)

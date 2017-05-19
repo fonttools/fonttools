@@ -44,17 +44,10 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 		return sstruct.pack(hheaFormat, self)
 
 	def recalc(self, ttFont):
-		hmtxTable = ttFont['hmtx']
+		boundsWidthDict = {}
 		if 'glyf' in ttFont:
 			glyfTable = ttFont['glyf']
-			advanceWidthMax = 0
-			minLeftSideBearing = float('inf')
-			minRightSideBearing = float('inf')
-			xMaxExtent = -float('inf')
-
 			for name in ttFont.getGlyphOrder():
-				width, lsb = hmtxTable[name]
-				advanceWidthMax = max(advanceWidthMax, width)
 				g = glyfTable[name]
 				if g.numberOfContours == 0:
 					continue
@@ -62,25 +55,36 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 					# Composite glyph without extents set.
 					# Calculate those.
 					g.recalcBounds(glyfTable)
-				minLeftSideBearing = min(minLeftSideBearing, lsb)
-				rsb = width - lsb - (g.xMax - g.xMin)
-				minRightSideBearing = min(minRightSideBearing, rsb)
-				extent = lsb + (g.xMax - g.xMin)
-				xMaxExtent = max(xMaxExtent, extent)
-
-			if xMaxExtent == -float('inf'):
-				# No glyph has outlines.
-				minLeftSideBearing = 0
-				minRightSideBearing = 0
-				xMaxExtent = 0
-
-			self.advanceWidthMax = advanceWidthMax
-			self.minLeftSideBearing = minLeftSideBearing
-			self.minRightSideBearing = minRightSideBearing
-			self.xMaxExtent = xMaxExtent
+				boundsWidthDict[name] = g.xMax - g.xMin
 		else:
 			# XXX CFF recalc...
 			pass
+
+		advanceWidthMax = 0
+		minLeftSideBearing = float('inf')
+		minRightSideBearing = float('inf')
+		xMaxExtent = -float('inf')
+
+		hmtxTable = ttFont['hmtx']
+		for name, boundsWidth in boundsWidthDict.items():
+			advanceWidth, lsb = hmtxTable[name]
+			advanceWidthMax = max(advanceWidthMax, advanceWidth)
+			minLeftSideBearing = min(minLeftSideBearing, lsb)
+			rsb = advanceWidth - lsb - boundsWidth
+			minRightSideBearing = min(minRightSideBearing, rsb)
+			extent = lsb + boundsWidth
+			xMaxExtent = max(xMaxExtent, extent)
+
+		if xMaxExtent == -float('inf'):
+			# No glyph has outlines.
+			minLeftSideBearing = 0
+			minRightSideBearing = 0
+			xMaxExtent = 0
+
+		self.advanceWidthMax = advanceWidthMax
+		self.minLeftSideBearing = minLeftSideBearing
+		self.minRightSideBearing = minRightSideBearing
+		self.xMaxExtent = xMaxExtent
 
 	def toXML(self, writer, ttFont):
 		formatstring, names, fixes = sstruct.getformat(hheaFormat)
