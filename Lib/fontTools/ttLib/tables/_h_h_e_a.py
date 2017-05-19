@@ -5,6 +5,8 @@ from fontTools.misc.textTools import safeEval
 from fontTools.misc.fixedTools import (
 	ensureVersionIsLong as fi2ve, versionToFixed as ve2fi)
 from . import DefaultTable
+import math
+
 
 hheaFormat = """
 		>  # big endian
@@ -32,13 +34,13 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 
 	# Note: Keep in sync with table__v_h_e_a
 
-	dependencies = ['hmtx', 'glyf']
+	dependencies = ['hmtx', 'glyf', 'CFF ']
 
 	def decompile(self, data, ttFont):
 		sstruct.unpack(hheaFormat, data, self)
 
 	def compile(self, ttFont):
-		if ttFont.isLoaded('glyf') and ttFont.recalcBBoxes:
+		if ttFont.recalcBBoxes and (ttFont.isLoaded('glyf') or ttFont.isLoaded('CFF ')):
 			self.recalc(ttFont)
 		self.tableVersion = fi2ve(self.tableVersion)
 		return sstruct.pack(hheaFormat, self)
@@ -56,9 +58,13 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 					# Calculate those.
 					g.recalcBounds(glyfTable)
 				boundsWidthDict[name] = g.xMax - g.xMin
-		else:
-			# XXX CFF recalc...
-			pass
+		elif 'CFF ' in ttFont:
+			topDict = ttFont['CFF '].cff.topDictIndex[0]
+			for name in ttFont.getGlyphOrder():
+				cs = topDict.CharStrings[name]
+				if cs.bounds is None:
+					continue
+				boundsWidthDict[name] = math.ceil(cs.bounds[2]) - math.floor(cs.bounds[0])
 
 		advanceWidthMax = 0
 		minLeftSideBearing = float('inf')
