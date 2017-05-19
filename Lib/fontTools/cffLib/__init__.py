@@ -4,7 +4,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc import psCharStrings
-from fontTools.misc.arrayTools import unionRect
+from fontTools.misc.arrayTools import unionRect, intRect
 from fontTools.misc.textTools import safeEval
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.otBase import OTTableWriter
@@ -2331,7 +2331,7 @@ class TopDict(BaseDict):
 		if bounds == initialBounds:
 			self.FontBBox = self.defaults['FontBBox'][:]
 		else:
-			self.FontBBox = [round(v) for v in bounds]
+			self.FontBBox = list(intRect(bounds))
 
 
 class FontDict(BaseDict):

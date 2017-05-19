@@ -19,8 +19,8 @@ class TopDictTest(unittest.TestCase):
             <CharString name="bar"><!-- [0, 0, 200, 200] -->
               0 0 rmoveto 200 hlineto 200 vlineto -200 hlineto endchar
             </CharString>
-            <CharString name="baz"><!-- [-55.5, -55.5, 55.5, 55.5] -->
-              -55.5 -55.5 rmoveto 111 hlineto 111 vlineto -111 hlineto endchar
+            <CharString name="baz"><!-- [-55.1, -55.1, 55.1, 55.1] -->
+              -55.1 -55.1 rmoveto 110.2 hlineto 110.2 vlineto -110.2 hlineto endchar
             </CharString>
         """))
 
