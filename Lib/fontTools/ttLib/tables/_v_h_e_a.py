@@ -46,11 +46,10 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 		vtmxTable = ttFont['vmtx']
 		if 'glyf' in ttFont:
 			glyfTable = ttFont['glyf']
-			INFINITY = 100000
 			advanceHeightMax = 0
-			minTopSideBearing = +INFINITY    # arbitrary big number
-			minBottomSideBearing = +INFINITY # arbitrary big number
-			yMaxExtent = -INFINITY           # arbitrary big negative number
+			minTopSideBearing = float('inf')
+			minBottomSideBearing = float('inf')
+			yMaxExtent = -float('inf')
 
 			for name in ttFont.getGlyphOrder():
 				height, tsb = vtmxTable[name]
@@ -68,7 +67,7 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 				extent = tsb + (g.yMax - g.yMin)
 				yMaxExtent = max(yMaxExtent, extent)
 
-			if yMaxExtent == -INFINITY:
+			if yMaxExtent == -float('inf'):
 				# No glyph has outlines.
 				minTopSideBearing = 0
 				minBottomSideBearing = 0

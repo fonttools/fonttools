@@ -47,11 +47,10 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 		hmtxTable = ttFont['hmtx']
 		if 'glyf' in ttFont:
 			glyfTable = ttFont['glyf']
-			INFINITY = 100000
 			advanceWidthMax = 0
-			minLeftSideBearing = +INFINITY  # arbitrary big number
-			minRightSideBearing = +INFINITY # arbitrary big number
-			xMaxExtent = -INFINITY          # arbitrary big negative number
+			minLeftSideBearing = float('inf')
+			minRightSideBearing = float('inf')
+			xMaxExtent = -float('inf')
 
 			for name in ttFont.getGlyphOrder():
 				width, lsb = hmtxTable[name]
@@ -69,7 +68,7 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 				extent = lsb + (g.xMax - g.xMin)
 				xMaxExtent = max(xMaxExtent, extent)
 
-			if xMaxExtent == -INFINITY:
+			if xMaxExtent == -float('inf'):
 				# No glyph has outlines.
 				minLeftSideBearing = 0
 				minRightSideBearing = 0
