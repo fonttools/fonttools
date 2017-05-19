@@ -90,9 +90,11 @@ class TTFont(object):
 
 		If the recalcBBoxes argument is false, a number of things will *not*
 		be recalculated upon save/compile:
-			1) glyph bounding boxes
-			2) maxp font bounding box
-			3) hhea min/max values
+			1) 'glyf' glyph bounding boxes
+			2) 'CFF ' font bounding box
+			3) 'head' font bounding box
+			4) 'hhea' min/max values
+			5) 'vhea' min/max values
 		(1) is needed for certain kinds of CJK fonts (ask Werner Lemberg ;-).
 		Additionally, upon importing an TTX file, this option cause glyphs
 		to be compiled right away. This should reduce memory consumption
