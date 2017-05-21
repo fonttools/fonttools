@@ -581,13 +581,13 @@ def _Lookup_PairPos_subtables_canonicalize(lst, font):
 
 	for subtable in it:
 		oldtable = tail[-1]
-		if oldtable.Format == 2 and subtable.Format == 2:
-			if (oldtable.Class2Count == subtable.Class2Count and
-			    oldtable.ClassDef2.classDefs == subtable.ClassDef2.classDefs and
-			    oldtable.ValueFormat1 == subtable.ValueFormat1 and
-			    oldtable.ValueFormat2 == subtable.ValueFormat2):
-				newtable = _Lookup_PairPosFormat2_subtables_recombine(oldtable, subtable, font)
-				tail[-1] = newtable
+		if (oldtable.Format == 2 and subtable.Format == 2 and
+		    oldtable.Class2Count == subtable.Class2Count and
+		    oldtable.ClassDef2.classDefs == subtable.ClassDef2.classDefs and
+		    oldtable.ValueFormat1 == subtable.ValueFormat1 and
+		    oldtable.ValueFormat2 == subtable.ValueFormat2):
+			newtable = _Lookup_PairPosFormat2_subtables_recombine(oldtable, subtable, font)
+			tail[-1] = newtable
 			continue
 		tail.append(subtable)
 
