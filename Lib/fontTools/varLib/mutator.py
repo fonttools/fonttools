@@ -50,11 +50,17 @@ def main(args=None):
 	for glyphname in glyphnames:
 		variations = gvar.variations[glyphname]
 		coordinates,_ = _GetCoordinates(varfont, glyphname)
+		origCoords, endPts = None, None
 		for var in variations:
 			scalar = supportScalar(loc, var.axes)
 			if not scalar: continue
-			# TODO Do IUP / handle None items
-			coordinates += GlyphCoordinates(var.coordinates) * scalar
+			delta = var.coordinates
+			if None in delta:
+				if origCoords is None:
+					origCoords,control = _GetCoordinates(varfont, glyphname)
+					endPts = control[1] if control[0] >= 1 else list(range(len(control[1])))
+				# TODO Do IUP / handle None items
+			coordinates += GlyphCoordinates(delta) * scalar
 		_SetCoordinates(varfont, glyphname, coordinates)
 
 	print("Removing variable tables")
