@@ -306,7 +306,7 @@ def specializeCommands(commands,
 	if generalizeFirst:
 		commands = generalizeCommands(commands, ignoreErrors=ignoreErrors)
 	else:
-		commands = commands[:] # Make copy since we modify in-place later.
+		commands = list(commands) # Make copy since we modify in-place later.
 
 	# 1. Combine successive rmoveto operations.
 	for i in range(len(commands)-1, 0, -1):
@@ -436,7 +436,7 @@ def specializeCommands(commands,
 
 		if op[2:] == 'curveto' and len(args) == 5 and prv == nxt == 'rrcurveto':
 			assert (op[0] == 'r') ^ (op[1] == 'r')
-			args = args[:]
+			args = list(args)
 			if op[0] == 'v':
 				pos = 0
 			elif op[0] != 'r':
