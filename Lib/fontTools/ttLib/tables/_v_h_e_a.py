@@ -64,6 +64,8 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 			topDict = ttFont['CFF '].cff.topDictIndex[0]
 			for name in ttFont.getGlyphOrder():
 				cs = topDict.CharStrings[name]
+				if not hasattr(cs, 'bounds'):
+					cs.recalcBounds()
 				if cs.bounds is None:
 					continue
 				boundsHeightDict[name] = math.ceil(cs.bounds[3]) - math.floor(cs.bounds[1])
