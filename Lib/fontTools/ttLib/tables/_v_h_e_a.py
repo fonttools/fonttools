@@ -45,6 +45,9 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 		return sstruct.pack(vheaFormat, self)
 
 	def recalc(self, ttFont):
+		vmtxTable = ttFont['vmtx']
+		self.advanceHeightMax = max(adv for adv, _ in vmtxTable.metrics.values())
+
 		boundsHeightDict = {}
 		if 'glyf' in ttFont:
 			glyfTable = ttFont['glyf']
@@ -65,15 +68,12 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 					continue
 				boundsHeightDict[name] = math.ceil(cs.bounds[3]) - math.floor(cs.bounds[1])
 
-		advanceHeightMax = 0
 		minTopSideBearing = float('inf')
 		minBottomSideBearing = float('inf')
 		yMaxExtent = -float('inf')
 
-		vmtxTable = ttFont['vmtx']
 		for name, boundsHeight in boundsHeightDict.items():
 			advanceHeight, tsb = vmtxTable[name]
-			advanceHeightMax = max(advanceHeightMax, advanceHeight)
 			minTopSideBearing = min(minTopSideBearing, tsb)
 			bsb = advanceHeight - tsb - boundsHeight
 			minBottomSideBearing = min(minBottomSideBearing, bsb)
@@ -86,7 +86,6 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 			minBottomSideBearing = 0
 			yMaxExtent = 0
 
-		self.advanceHeightMax = advanceHeightMax
 		self.minTopSideBearing = minTopSideBearing
 		self.minBottomSideBearing = minBottomSideBearing
 		self.yMaxExtent = yMaxExtent

@@ -46,6 +46,9 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 		return sstruct.pack(hheaFormat, self)
 
 	def recalc(self, ttFont):
+		hmtxTable = ttFont['hmtx']
+		self.advanceWidthMax = max(adv for adv, _ in hmtxTable.metrics.values())
+
 		boundsWidthDict = {}
 		if 'glyf' in ttFont:
 			glyfTable = ttFont['glyf']
@@ -66,15 +69,12 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 					continue
 				boundsWidthDict[name] = math.ceil(cs.bounds[2]) - math.floor(cs.bounds[0])
 
-		advanceWidthMax = 0
 		minLeftSideBearing = float('inf')
 		minRightSideBearing = float('inf')
 		xMaxExtent = -float('inf')
 
-		hmtxTable = ttFont['hmtx']
 		for name, boundsWidth in boundsWidthDict.items():
 			advanceWidth, lsb = hmtxTable[name]
-			advanceWidthMax = max(advanceWidthMax, advanceWidth)
 			minLeftSideBearing = min(minLeftSideBearing, lsb)
 			rsb = advanceWidth - lsb - boundsWidth
 			minRightSideBearing = min(minRightSideBearing, rsb)
@@ -87,7 +87,6 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 			minRightSideBearing = 0
 			xMaxExtent = 0
 
-		self.advanceWidthMax = advanceWidthMax
 		self.minLeftSideBearing = minLeftSideBearing
 		self.minRightSideBearing = minRightSideBearing
 		self.xMaxExtent = xMaxExtent
