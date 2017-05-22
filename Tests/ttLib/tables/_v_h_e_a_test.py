@@ -5,7 +5,12 @@ from fontTools.misc.testTools import parseXML, getXML
 from fontTools.misc.textTools import deHexStr
 from fontTools.ttLib import TTFont, newTable
 from fontTools.misc.fixedTools import log
+import os
 import unittest
+
+
+CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
+DATA_DIR = os.path.join(CURR_DIR, 'data')
 
 VHEA_DATA_VERSION_11 = deHexStr(
     '0001 1000 '  # 1.1   version
@@ -230,6 +235,39 @@ class VheaDecompileOrFromXMLTest(unittest.TestCase):
                  if "Table version value is a float" in r.msg]) == 1)
         for key in vhea.__dict__:
             self.assertEqual(getattr(vhea, key), VHEA_VERSION_11_AS_DICT[key])
+
+
+class VheaRecalcTest(unittest.TestCase):
+
+    def test_recalc_TTF(self):
+        font = TTFont()
+        font.importXML(os.path.join(DATA_DIR, '_v_h_e_a_recalc_TTF.ttx'))
+        vhea = font['vhea']
+        vhea.recalc(font)
+        self.assertEqual(vhea.advanceHeightMax, 900)
+        self.assertEqual(vhea.minTopSideBearing, 200)
+        self.assertEqual(vhea.minBottomSideBearing, 377)
+        self.assertEqual(vhea.yMaxExtent, 312)
+
+    def test_recalc_OTF(self):
+        font = TTFont()
+        font.importXML(os.path.join(DATA_DIR, '_v_h_e_a_recalc_OTF.ttx'))
+        vhea = font['vhea']
+        vhea.recalc(font)
+        self.assertEqual(vhea.advanceHeightMax, 900)
+        self.assertEqual(vhea.minTopSideBearing, 200)
+        self.assertEqual(vhea.minBottomSideBearing, 377)
+        self.assertEqual(vhea.yMaxExtent, 312)
+
+    def test_recalc_empty(self):
+        font = TTFont()
+        font.importXML(os.path.join(DATA_DIR, '_v_h_e_a_recalc_empty.ttx'))
+        vhea = font['vhea']
+        vhea.recalc(font)
+        self.assertEqual(vhea.advanceHeightMax, 900)
+        self.assertEqual(vhea.minTopSideBearing, 0)
+        self.assertEqual(vhea.minBottomSideBearing, 0)
+        self.assertEqual(vhea.yMaxExtent, 0)
 
 
 if __name__ == "__main__":
