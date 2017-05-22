@@ -2320,15 +2320,17 @@ class TopDict(BaseDict):
 			i = i + 1
 
 	def recalcFontBBox(self):
-		initialBounds = (float('inf'), float('inf'), float('-inf'), float('-inf'))
-		bounds = initialBounds
+		bounds = None
 		for charString in self.CharStrings.values():
 			if not hasattr(charString, 'bounds'):
 				charString.recalcBounds()
 			if charString.bounds is not None:
-				bounds = unionRect(bounds, charString.bounds)
+				if bounds is not None:
+					bounds = unionRect(bounds, charString.bounds)
+				else:
+					bounds = charString.bounds
 
-		if bounds == initialBounds:
+		if bounds is None:
 			self.FontBBox = self.defaults['FontBBox'][:]
 		else:
 			self.FontBBox = list(intRect(bounds))
