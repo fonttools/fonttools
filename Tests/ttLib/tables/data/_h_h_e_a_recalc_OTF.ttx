@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.12">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="A"/>
+    <GlyphID id="2" name="B"/>
+    <GlyphID id="3" name="C"/>
+  </GlyphOrder>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="800"/>
+    <descent value="-200"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="999"/>
+    <minLeftSideBearing value="99"/>
+    <minRightSideBearing value="99"/>
+    <xMaxExtent value="99"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="4"/>
+  </hhea>
+
+  <CFF>
+    <major value="1"/>
+    <minor value="0"/>
+    <CFFFont name="Test">
+      <Private>
+      </Private>
+      <CharStrings>
+        <CharString name=".notdef">
+          300
+          0 0 rmoveto
+          1 1 rlineto
+          endchar
+        </CharString>
+        <CharString name="A">
+          400
+          -55.2 -55.2 rmoveto
+          110.4 110.4 rlineto
+          endchar
+        </CharString>
+        <CharString name="B">
+          500
+          100 0 rmoveto
+          300 0 rlineto
+          endchar
+        </CharString>
+        <CharString name="C">
+          600
+          endchar
+        </CharString>
+      </CharStrings>
+    </CFFFont>
+  </CFF>
+
+  <hmtx>
+    <mtx name=".notdef" width="300" lsb="0"/>
+    <mtx name="A" width="400" lsb="-56"/>
+    <mtx name="B" width="500" lsb="100"/>
+    <mtx name="C" width="600" lsb="0"/>
+  </hmtx>
+
+</ttFont>

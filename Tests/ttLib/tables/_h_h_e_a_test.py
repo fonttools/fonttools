@@ -5,7 +5,12 @@ from fontTools.misc.testTools import parseXML, getXML
 from fontTools.misc.textTools import deHexStr
 from fontTools.ttLib import TTFont, newTable
 from fontTools.misc.fixedTools import log
+import os
 import unittest
+
+
+CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
+DATA_DIR = os.path.join(CURR_DIR, 'data')
 
 HHEA_DATA = deHexStr(
     '0001 0000 '  # 1.0   version
@@ -153,6 +158,39 @@ class HheaDecompileOrFromXMLTest(unittest.TestCase):
                  if "Table version value is a float" in r.msg]) == 1)
         for key in hhea.__dict__:
             self.assertEqual(getattr(hhea, key), HHEA_AS_DICT[key])
+
+
+class HheaRecalcTest(unittest.TestCase):
+
+    def test_recalc_TTF(self):
+        font = TTFont()
+        font.importXML(os.path.join(DATA_DIR, '_h_h_e_a_recalc_TTF.ttx'))
+        hhea = font['hhea']
+        hhea.recalc(font)
+        self.assertEqual(hhea.advanceWidthMax, 600)
+        self.assertEqual(hhea.minLeftSideBearing, -56)
+        self.assertEqual(hhea.minRightSideBearing, 100)
+        self.assertEqual(hhea.xMaxExtent, 400)
+
+    def test_recalc_OTF(self):
+        font = TTFont()
+        font.importXML(os.path.join(DATA_DIR, '_h_h_e_a_recalc_OTF.ttx'))
+        hhea = font['hhea']
+        hhea.recalc(font)
+        self.assertEqual(hhea.advanceWidthMax, 600)
+        self.assertEqual(hhea.minLeftSideBearing, -56)
+        self.assertEqual(hhea.minRightSideBearing, 100)
+        self.assertEqual(hhea.xMaxExtent, 400)
+
+    def test_recalc_empty(self):
+        font = TTFont()
+        font.importXML(os.path.join(DATA_DIR, '_h_h_e_a_recalc_empty.ttx'))
+        hhea = font['hhea']
+        hhea.recalc(font)
+        self.assertEqual(hhea.advanceWidthMax, 600)
+        self.assertEqual(hhea.minLeftSideBearing, 0)
+        self.assertEqual(hhea.minRightSideBearing, 0)
+        self.assertEqual(hhea.xMaxExtent, 0)
 
 
 if __name__ == "__main__":
