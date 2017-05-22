@@ -70,27 +70,25 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 					continue
 				boundsHeightDict[name] = math.ceil(cs.bounds[3]) - math.floor(cs.bounds[1])
 
-		minTopSideBearing = float('inf')
-		minBottomSideBearing = float('inf')
-		yMaxExtent = -float('inf')
+		if boundsHeightDict:
+			minTopSideBearing = float('inf')
+			minBottomSideBearing = float('inf')
+			yMaxExtent = -float('inf')
+			for name, boundsHeight in boundsHeightDict.items():
+				advanceHeight, tsb = vmtxTable[name]
+				bsb = advanceHeight - tsb - boundsHeight
+				extent = tsb + boundsHeight
+				minTopSideBearing = min(minTopSideBearing, tsb)
+				minBottomSideBearing = min(minBottomSideBearing, bsb)
+				yMaxExtent = max(yMaxExtent, extent)
+			self.minTopSideBearing = minTopSideBearing
+			self.minBottomSideBearing = minBottomSideBearing
+			self.yMaxExtent = yMaxExtent
 
-		for name, boundsHeight in boundsHeightDict.items():
-			advanceHeight, tsb = vmtxTable[name]
-			minTopSideBearing = min(minTopSideBearing, tsb)
-			bsb = advanceHeight - tsb - boundsHeight
-			minBottomSideBearing = min(minBottomSideBearing, bsb)
-			extent = tsb + boundsHeight
-			yMaxExtent = max(yMaxExtent, extent)
-
-		if yMaxExtent == -float('inf'):
-			# No glyph has outlines.
-			minTopSideBearing = 0
-			minBottomSideBearing = 0
-			yMaxExtent = 0
-
-		self.minTopSideBearing = minTopSideBearing
-		self.minBottomSideBearing = minBottomSideBearing
-		self.yMaxExtent = yMaxExtent
+		else:  # No glyph has outlines.
+			self.minTopSideBearing = 0
+			self.minBottomSideBearing = 0
+			self.yMaxExtent = 0
 
 	def toXML(self, writer, ttFont):
 		formatstring, names, fixes = sstruct.getformat(vheaFormat)

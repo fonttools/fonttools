@@ -71,27 +71,25 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 					continue
 				boundsWidthDict[name] = math.ceil(cs.bounds[2]) - math.floor(cs.bounds[0])
 
-		minLeftSideBearing = float('inf')
-		minRightSideBearing = float('inf')
-		xMaxExtent = -float('inf')
+		if boundsWidthDict:
+			minLeftSideBearing = float('inf')
+			minRightSideBearing = float('inf')
+			xMaxExtent = -float('inf')
+			for name, boundsWidth in boundsWidthDict.items():
+				advanceWidth, lsb = hmtxTable[name]
+				rsb = advanceWidth - lsb - boundsWidth
+				extent = lsb + boundsWidth
+				minLeftSideBearing = min(minLeftSideBearing, lsb)
+				minRightSideBearing = min(minRightSideBearing, rsb)
+				xMaxExtent = max(xMaxExtent, extent)
+			self.minLeftSideBearing = minLeftSideBearing
+			self.minRightSideBearing = minRightSideBearing
+			self.xMaxExtent = xMaxExtent
 
-		for name, boundsWidth in boundsWidthDict.items():
-			advanceWidth, lsb = hmtxTable[name]
-			minLeftSideBearing = min(minLeftSideBearing, lsb)
-			rsb = advanceWidth - lsb - boundsWidth
-			minRightSideBearing = min(minRightSideBearing, rsb)
-			extent = lsb + boundsWidth
-			xMaxExtent = max(xMaxExtent, extent)
-
-		if xMaxExtent == -float('inf'):
-			# No glyph has outlines.
-			minLeftSideBearing = 0
-			minRightSideBearing = 0
-			xMaxExtent = 0
-
-		self.minLeftSideBearing = minLeftSideBearing
-		self.minRightSideBearing = minRightSideBearing
-		self.xMaxExtent = xMaxExtent
+		else:  # No glyph has outlines.
+			self.minLeftSideBearing = 0
+			self.minRightSideBearing = 0
+			self.xMaxExtent = 0
 
 	def toXML(self, writer, ttFont):
 		formatstring, names, fixes = sstruct.getformat(hheaFormat)
