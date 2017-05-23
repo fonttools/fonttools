@@ -34,7 +34,7 @@ from cu2qu.pens import ReverseContourPen
 
 __all__ = ['fonts_to_quadratic', 'font_to_quadratic']
 
-DEFAULT_MAX_ERR = 0.0025
+DEFAULT_MAX_ERR = 0.001
 
 logger = logging.getLogger(__name__)
 
