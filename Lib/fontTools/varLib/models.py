@@ -287,6 +287,10 @@ class VariationModel(object):
 		deltas = self.getDeltas(masterValues)
 		return self.interpolateFromDeltas(loc, deltas)
 
+	def interpolateFromMastersAndScalars(self, masterValues, scalars):
+		deltas = self.getDeltas(masterValues)
+		return self.interpolateFromDeltasAndScalars(deltas, scalars)
+
 
 if __name__ == "__main__":
 	import doctest, sys
