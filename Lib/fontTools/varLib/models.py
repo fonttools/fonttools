@@ -273,7 +273,7 @@ class VariationModel(object):
 			scalar = supportScalar(loc, support)
 			if not scalar: continue
 			contribution = delta * scalar
-			if v is None:
+			if i == 0:
 				v = contribution
 			else:
 				v += contribution
