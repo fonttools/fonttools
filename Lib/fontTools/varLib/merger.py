@@ -630,20 +630,21 @@ class InstancerMerger(AligningMerger):
 		Merger.__init__(self, font)
 		self.model = model
 		self.location = location
+		self.scalars = model.getScalars(location)
 
 @InstancerMerger.merger(ot.Anchor)
 def merge(merger, self, lst):
 	XCoords = [a.XCoordinate for a in lst]
 	YCoords = [a.YCoordinate for a in lst]
 	model = merger.model
-	location = merger.location
-	self.XCoordinate = round(model.interpolateFromMasters(location, XCoords))
-	self.YCoordinate = round(model.interpolateFromMasters(location, YCoords))
+	scalars = merger.scalars
+	self.XCoordinate = round(model.interpolateFromMastersAndScalars(XCoords, scalars))
+	self.YCoordinate = round(model.interpolateFromMastersAndScalars(YCoords, scalars))
 
 @InstancerMerger.merger(otBase.ValueRecord)
 def merge(merger, self, lst):
 	model = merger.model
-	location = merger.location
+	scalars = merger.scalars
 	# TODO Handle differing valueformats
 	for name, tableName in [('XAdvance','XAdvDevice'),
 				('YAdvance','YAdvDevice'),
@@ -654,7 +655,7 @@ def merge(merger, self, lst):
 
 		if hasattr(self, name):
 			values = [getattr(a, name, 0) for a in lst]
-			value = round(model.interpolateFromMasters(location, values))
+			value = round(model.interpolateFromMastersAndScalars(values, scalars))
 			setattr(self, name, value)
 
 
