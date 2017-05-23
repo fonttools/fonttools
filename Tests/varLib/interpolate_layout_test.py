@@ -876,7 +876,7 @@ class InterpolateLayoutTest(unittest.TestCase):
 
         ds_copy = os.path.splitext(varfont_path)[0] + '.designspace'
         shutil.copy2(ds_path, ds_copy)
-        args = [ds_copy, 'wght=500', 'cntr=50']
+        args = [ds_copy, 'weight=500', 'contrast=50']
         interpolate_layout_main(args)
 
         instfont_path = os.path.splitext(varfont_path)[0] + '-instance' + suffix
