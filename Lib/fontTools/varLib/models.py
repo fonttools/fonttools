@@ -254,7 +254,6 @@ class VariationModel(object):
 		self.deltaWeights = deltaWeights
 
 	def getDeltas(self, masterValues):
-		count = len(self.locations)
 		assert len(masterValues) == len(self.deltaWeights)
 		mapping = self.reverseMapping
 		out = []
