@@ -267,8 +267,7 @@ class VariationModel(object):
 	def getScalars(self, loc):
 		return [supportScalar(loc, support) for support in self.supports]
 
-	def interpolateFromDeltas(self, loc, deltas):
-		scalars = self.getScalars(loc)
+	def interpolateFromDeltasAndScalars(self, deltas, scalars):
 		v = None
 		assert len(deltas) == len(scalars)
 		for i,(delta,scalar) in enumerate(zip(deltas, scalars)):
@@ -279,6 +278,10 @@ class VariationModel(object):
 			else:
 				v += contribution
 		return v
+
+	def interpolateFromDeltas(self, loc, deltas):
+		scalars = self.getScalars(loc)
+		return self.interpolateFromDeltasAndScalars(deltas, scalars)
 
 	def interpolateFromMasters(self, loc, masterValues):
 		deltas = self.getDeltas(masterValues)
