@@ -273,7 +273,7 @@ class VariationModel(object):
 		for i,(delta,scalar) in enumerate(zip(deltas, scalars)):
 			if not scalar: continue
 			contribution = delta * scalar
-			if i == 0:
+			if v is None:
 				v = contribution
 			else:
 				v += contribution
