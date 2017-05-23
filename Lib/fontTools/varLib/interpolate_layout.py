@@ -10,7 +10,14 @@ import os.path
 
 
 
-def interpolate_layout(designspace_filename, loc, finder):
+def interpolate_layout(designspace_filename, loc, master_finder=lambda s:s):
+	"""
+	Interpolate GPOS from a designspace file and location.
+
+	If master_finder is set, it should be a callable that takes master
+	filename as found in designspace file and map it to master font
+	binary as to be opened (eg. .ttf or .otf).
+	"""
 
 	ds = designspace.load(designspace_filename)
 	axes = ds['axes'] if 'axes' in ds else []
@@ -31,7 +38,7 @@ def interpolate_layout(designspace_filename, loc, finder):
 	print("Building variable font")
 	print("Loading master fonts")
 	basedir = os.path.dirname(designspace_filename)
-	master_ttfs = [finder(os.path.join(basedir, m['filename'])) for m in masters]
+	master_ttfs = [master_finder(os.path.join(basedir, m['filename'])) for m in masters]
 	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
 
 	#font = master_fonts[base_idx]
