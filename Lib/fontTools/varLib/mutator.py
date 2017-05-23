@@ -33,6 +33,7 @@ def main(args=None):
 
 	fvar = varfont['fvar']
 	axes = {a.axisTag:(a.minValue,a.defaultValue,a.maxValue) for a in fvar.axes}
+	# TODO Apply avar
 	# TODO Round to F2Dot14?
 	loc = normalizeLocation(loc, axes)
 	# Location is normalized now

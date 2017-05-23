@@ -99,7 +99,7 @@ class Merger(object):
 			e.args = e.args + (clazz.__name__,)
 			raise
 
-	def mergeTables(self, font, master_ttfs, axes, base_idx, tables):
+	def mergeTables(self, font, master_ttfs, tables):
 
 		for tag in tables:
 			if tag not in font: continue

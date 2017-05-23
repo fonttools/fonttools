@@ -4,10 +4,13 @@ Interpolate OpenType Layout tables (GDEF / GPOS / GSUB).
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
-from fontTools.varLib import designspace, models, VarLibError
+from fontTools.varLib import models, VarLibError, load_designspace
 from fontTools.varLib.merger import InstancerMerger
 import os.path
+import logging
+from pprint import pformat
 
+log = logging.getLogger("fontTools.varLib.interpolate_layout")
 
 
 def interpolate_layout(designspace_filename, loc, master_finder=lambda s:s):
@@ -19,24 +22,11 @@ def interpolate_layout(designspace_filename, loc, master_finder=lambda s:s):
 	binary as to be opened (eg. .ttf or .otf).
 	"""
 
-	ds = designspace.load(designspace_filename)
-	axes = ds['axes'] if 'axes' in ds else []
-	if 'sources' not in ds or not ds['sources']:
-		raise VarLibError("no 'sources' defined in .designspace")
-	masters = ds['sources']
+	axes, internal_axis_supports, base_idx, normalized_master_locs, masters, instances = load_designspace(designspace_filename)
 
-	base_idx = None
-	for i,m in enumerate(masters):
-		if 'info' in m and m['info']['copy']:
-			assert base_idx is None
-			base_idx = i
-	assert base_idx is not None, "Cannot find 'base' master; Add <info> element to one of the masters in the .designspace document."
 
-	from pprint import pprint
-	print("Index of base master:", base_idx)
-
-	print("Building variable font")
-	print("Loading master fonts")
+	log.info("Building interpolated font")
+	log.info("Loading master fonts")
 	basedir = os.path.dirname(designspace_filename)
 	master_ttfs = [master_finder(os.path.join(basedir, m['filename'])) for m in masters]
 	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
@@ -44,56 +34,25 @@ def interpolate_layout(designspace_filename, loc, master_finder=lambda s:s):
 	#font = master_fonts[base_idx]
 	font = TTFont(master_ttfs[base_idx])
 
-	master_locs = [o['location'] for o in masters]
-
-	axis_names = set(master_locs[0].keys())
-	assert all(axis_names == set(m.keys()) for m in master_locs)
-
-	# Set up axes
-	axes_dict = {}
-	if axes:
-		# the designspace file loaded had an <axes> element
-		for axis in axes:
-			default = axis['default']
-			lower = axis['minimum']
-			upper = axis['maximum']
-			name = axis['name']
-			axes_dict[name] = (lower, default, upper)
-	else:
-		for tag in axis_names:
-			default = master_locs[base_idx][tag]
-			lower = min(m[tag] for m in master_locs)
-			upper = max(m[tag] for m in master_locs)
-			if default == lower == upper:
-				continue
-			axes_dict[tag] = (lower, default, upper)
-	print("Axes:")
-	pprint(axes_dict)
-
-	print("Location:", loc)
-	print("Master locations:")
-	pprint(master_locs)
-
-	# Normalize locations
-	loc = models.normalizeLocation(loc, axes_dict)
-	master_locs = [models.normalizeLocation(m, axes_dict) for m in master_locs]
-
-	print("Normalized location:", loc)
-	print("Normalized master locations:")
-	pprint(master_locs)
+	log.info("Location: %s", pformat(loc))
+	loc = {name:axes[name].map_forward(v) for name,v in loc.items()}
+	log.info("Internal location: %s", pformat(loc))
+	loc = models.normalizeLocation(loc, internal_axis_supports)
+	log.info("Normalized location: %s", pformat(loc))
 
 	# Assume single-model for now.
-	model = models.VariationModel(master_locs)
+	model = models.VariationModel(normalized_master_locs)
 	assert 0 == model.mapping[base_idx]
 
 	merger = InstancerMerger(font, model, loc)
 
-	print("Building variations tables")
-	merger.mergeTables(font, master_fonts, axes_dict, base_idx, ['GPOS'])
+	log.info("Building interpolated tables")
+	merger.mergeTables(font, master_fonts, ['GPOS'])
 	return font
 
 
 def main(args=None):
+	from fontTools import configLogger
 
 	import sys
 	if args is None:
@@ -103,6 +62,9 @@ def main(args=None):
 	locargs = args[1:]
 	outfile = os.path.splitext(designspace_filename)[0] + '-instance.ttf'
 
+	# TODO: allow user to configure logging via command-line options
+	configLogger(level="INFO")
+
 	finder = lambda s: s.replace('master_ufo', 'master_ttf_interpolatable').replace('.ufo', '.ttf')
 
 	loc = {}
@@ -111,7 +73,7 @@ def main(args=None):
 		loc[tag] = float(val)
 
 	font = interpolate_layout(designspace_filename, loc, finder)
-	print("Saving font", outfile)
+	log.info("Saving font %s", outfile)
 	font.save(outfile)
 
 

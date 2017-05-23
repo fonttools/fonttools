@@ -376,12 +376,12 @@ def _add_MVAR(font, model, master_ttfs, axisTags):
 	mvar.ValueRecord = sorted(records, key=lambda r: r.ValueTag)
 
 
-def _merge_OTL(font, model, master_fonts, axisTags, base_idx):
+def _merge_OTL(font, model, master_fonts, axisTags):
 
 	log.info("Merging OpenType Layout tables")
 	merger = VariationMerger(model, axisTags, font)
 
-	merger.mergeTables(font, master_fonts, axisTags, base_idx, ['GPOS'])
+	merger.mergeTables(font, master_fonts, ['GPOS'])
 	store = merger.store_builder.finish()
 	try:
 		GDEF = font['GDEF'].table
@@ -394,14 +394,7 @@ def _merge_OTL(font, model, master_fonts, axisTags, base_idx):
 	GDEF.VarStore = store
 
 
-def build(designspace_filename, master_finder=lambda s:s):
-	"""
-	Build variation font from a designspace file.
-
-	If master_finder is set, it should be a callable that takes master
-	filename as found in designspace file and map it to master font
-	binary as to be opened (eg. .ttf or .otf).
-	"""
+def load_designspace(designspace_filename):
 
 	ds = designspace.load(designspace_filename)
 	axes = ds.get('axes')
@@ -420,6 +413,9 @@ def build(designspace_filename, master_finder=lambda s:s):
 
 	# Setup axes
 	class DesignspaceAxis(object):
+
+		def __repr__(self):
+			return repr(self.__dict__)
 
 		@staticmethod
 		def _map(v, map):
@@ -503,6 +499,7 @@ def build(designspace_filename, master_finder=lambda s:s):
 		del base_idx, base_loc, axis_names, master_locs
 	axes = axis_objects
 	del axis_objects
+	log.info("Axes:\n%s", pformat(axes))
 
 
 	# Check all master and instance locations are valid and fill in defaults
@@ -521,30 +518,42 @@ def build(designspace_filename, master_finder=lambda s:s):
 
 	# Normalize master locations
 
-	master_locs = [o['location'] for o in masters]
-	log.info("Internal master locations:\n%s", pformat(master_locs))
+	normalized_master_locs = [o['location'] for o in masters]
+	log.info("Internal master locations:\n%s", pformat(normalized_master_locs))
 
 	# TODO This mapping should ideally be moved closer to logic in _add_fvar_avar
-	axis_supports = {}
+	internal_axis_supports = {}
 	for axis in axes.values():
 		triple = (axis.minimum, axis.default, axis.maximum)
-		axis_supports[axis.name] = [axis.map_forward(v) for v in triple]
-	log.info("Internal axis supports:\n%s", pformat(axis_supports))
+		internal_axis_supports[axis.name] = [axis.map_forward(v) for v in triple]
+	log.info("Internal axis supports:\n%s", pformat(internal_axis_supports))
 
-	master_locs = [models.normalizeLocation(m, axis_supports) for m in master_locs]
-	log.info("Normalized master locations:\n%s", pformat(master_locs))
-	del axis_supports
+	normalized_master_locs = [models.normalizeLocation(m, internal_axis_supports) for m in normalized_master_locs]
+	log.info("Normalized master locations:\n%s", pformat(normalized_master_locs))
 
 
 	# Find base master
 	base_idx = None
-	for i,m in enumerate(master_locs):
+	for i,m in enumerate(normalized_master_locs):
 		if all(v == 0 for v in m.values()):
 			assert base_idx is None
 			base_idx = i
 	assert base_idx is not None, "Base master not found; no master at default location?"
 	log.info("Index of base master: %s", base_idx)
 
+	return axes, internal_axis_supports, base_idx, normalized_master_locs, masters, instances
+
+
+def build(designspace_filename, master_finder=lambda s:s):
+	"""
+	Build variation font from a designspace file.
+
+	If master_finder is set, it should be a callable that takes master
+	filename as found in designspace file and map it to master font
+	binary as to be opened (eg. .ttf or .otf).
+	"""
+
+	axes, internal_axis_supports, base_idx, normalized_master_locs, masters, instances = load_designspace(designspace_filename)
 
 	log.info("Building variable font")
 	log.info("Loading master fonts")
@@ -559,13 +568,13 @@ def build(designspace_filename, master_finder=lambda s:s):
 	del instances
 
 	# Map from axis names to axis tags...
-	master_locs = [{axes[k].tag:v for k,v in loc.items()} for loc in master_locs]
+	normalized_master_locs = [{axes[k].tag:v for k,v in loc.items()} for loc in normalized_master_locs]
 	#del axes
 	# From here on, we use fvar axes only
 	axisTags = [axis.axisTag for axis in fvar.axes]
 
 	# Assume single-model for now.
-	model = models.VariationModel(master_locs)
+	model = models.VariationModel(normalized_master_locs)
 	assert 0 == model.mapping[base_idx]
 
 	log.info("Building variations tables")
@@ -573,7 +582,7 @@ def build(designspace_filename, master_finder=lambda s:s):
 	if 'glyf' in vf:
 		_add_gvar(vf, model, master_fonts)
 	_add_HVAR(vf, model, master_fonts, axisTags)
-	_merge_OTL(vf, model, master_fonts, axisTags, base_idx)
+	_merge_OTL(vf, model, master_fonts, axisTags)
 
 	return vf, model, master_ttfs
 
@@ -603,5 +612,5 @@ if __name__ == "__main__":
 	import sys
 	if len(sys.argv) > 1:
 		sys.exit(main())
-	import doctest, sys
+	import doctest
 	sys.exit(doctest.testmod().failed)
