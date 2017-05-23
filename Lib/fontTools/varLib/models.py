@@ -264,10 +264,12 @@ class VariationModel(object):
 			out.append(delta)
 		return out
 
+	def getScalars(self, loc):
+		return [supportScalar(loc, support) for support in self.supports]
+
 	def interpolateFromDeltas(self, loc, deltas):
+		scalars = self.getScalars(loc)
 		v = None
-		supports = self.supports
-		scalars = [supportScalar(loc, support) for support in supports]
 		assert len(deltas) == len(scalars)
 		for i,(delta,scalar) in enumerate(zip(deltas, scalars)):
 			if not scalar: continue
