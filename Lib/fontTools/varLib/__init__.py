@@ -202,6 +202,54 @@ def _SetCoordinates(font, glyphName, coord):
 	font["hmtx"].metrics[glyphName] = horizontalAdvanceWidth, leftSideBearing
 
 
+def _compressedDelta(delta, control):
+	# Try to optimize the deltas for each contour.
+	# E.g. if a whole contour is moved, only one delta needs to be stored.
+	# The result is not always smaller than storing the deltas verbatim,
+	# because it requires that the point index for each of the remaining
+	# deltas is stored.
+	contour_deltas = []
+	i = 0
+	if type(control[0]) == str:
+		# Composite glyph: control contains the component names
+		# Apparently, probably depending on the component flags, the delta
+		# record already contains the sidebearing points in some cases, but
+		# not in others.
+		contour_deltas.extend([[d] for d in delta[:len(control)]])
+		if len(delta) > len(control):
+			# Phantom points are included in the delta record, add them to the contour deltas.
+			# Phantom points are not interpolated, they can each be optimized separately.
+			contour_deltas.extend([[d] for d in delta[-4:]])
+		assert len(contour_deltas) == len(delta)
+	else:
+		# Simple glyph: control contains the list of contour end points and flags
+		for j in control[0]:
+			# Store each contour in a sublist of contour_deltas
+			contour_deltas.append(delta[i:j + 1])
+			i = j + 1
+		# Phantom points are not interpolated, they can each be optimized separately.
+		contour_deltas.extend([[d] for d in delta[-4:]])
+	compressed_delta = []
+	for contour_delta in contour_deltas:
+		delta_set = set(contour_delta)
+		if len(delta_set) == 1:
+			# The whole contour is moved, just store one delta value for the start point.
+			first_delta = list(delta_set)[0]
+			if first_delta == (0, 0):
+				# The contour is not actually moved, store None for all points
+				compressed_delta.extend([None for _ in range(len(contour_delta))])
+			else:
+				# Store a delta for the first point, and None for all others.
+				compressed_delta.append(first_delta)
+				compressed_delta.extend([None for _ in range(len(contour_delta) - 1)])
+		else:
+			# TODO: Check for point deltas that have the same explicit coordinates
+			# as if they were simply interpolated ("IUP" feature). These could be omitted.
+			# For now, just add all delta values of this contour verbatim.
+			compressed_delta.extend(contour_delta)
+	return compressed_delta
+
+
 def _add_gvar(font, model, master_ttfs, tolerance=.5):
 
 	log.info("Generating gvar")
@@ -232,8 +280,22 @@ def _add_gvar(font, model, master_ttfs, tolerance=.5):
 				continue
 			if tolerance and max(abs(delta).array) <= tolerance:
 				continue
+
+			# Try to compress the deltas and compare with the uncompressed size
 			var = TupleVariation(support, delta)
-			gvar.variations[glyph].append(var)
+			var_c = TupleVariation(support, _compressedDelta(delta, control))
+
+			tupleData, auxData = var.compile(var.axes.keys(), [], None)
+			uncompressed_length = len(tupleData) + len(auxData)
+			
+			tupleData, auxData = var_c.compile(var_c.axes.keys(), [], None)
+			compressed_length = len(tupleData) + len(auxData)
+			
+			if compressed_length < uncompressed_length:
+				gvar.variations[glyph].append(var_c)
+			else:
+				gvar.variations[glyph].append(var)
+
 
 def _add_HVAR(font, model, master_ttfs, axisTags):
 

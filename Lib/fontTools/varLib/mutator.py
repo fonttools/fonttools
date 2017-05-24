@@ -6,7 +6,7 @@ $ python mutator.py ./NotoSansArabic-VF.ttf wght=140 wdth=85
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
-from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
+from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinatesDelta
 from fontTools.varLib import _GetCoordinates, _SetCoordinates
 from fontTools.varLib.models import VariationModel, supportScalar, normalizeLocation
 import os.path
@@ -50,12 +50,13 @@ def main(args=None):
 			name))
 	for glyphname in glyphnames:
 		variations = gvar.variations[glyphname]
-		coordinates,_ = _GetCoordinates(varfont, glyphname)
+		coordinates,control = _GetCoordinates(varfont, glyphname)
 		for var in variations:
 			scalar = supportScalar(loc, var.axes)
 			if not scalar: continue
-			# TODO Do IUP / handle None items
-			coordinates += GlyphCoordinates(var.coordinates) * scalar
+			delta_coords = GlyphCoordinatesDelta(var.coordinates)
+			delta_coords *= scalar
+			coordinates.applyDeltas(delta_coords, control)
 		_SetCoordinates(varfont, glyphname, coordinates)
 
 	print("Removing variable tables")
