@@ -23,7 +23,7 @@ needed, converting one font at a time may yield more optimized results:
     for font in [thin_font, bold_font]:
         fonts_to_quadratic([font])
 
-Some fonts may need a different error threshold than the default (0.0025
+Some fonts may need a different error threshold than the default (0.001
 em). This can also be provided by the caller:
 
 .. code:: python
