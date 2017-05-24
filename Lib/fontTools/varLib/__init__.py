@@ -25,7 +25,7 @@ from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._n_a_m_e import NameRecord
 from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
-from fontTools.ttLib.tables._g_v_a_r import TupleVariation
+from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib import builder, designspace, models
 from fontTools.varLib.merger import VariationMerger, _all_equal
@@ -142,11 +142,11 @@ def _GetCoordinates(font, glyphName):
 	glyph = glyf[glyphName]
 	if glyph.isComposite():
 		coord = GlyphCoordinates([(getattr(c, 'x', 0),getattr(c, 'y', 0)) for c in glyph.components])
-		control = [c.glyphName for c in glyph.components]
+		control = (glyph.numberOfContours,[c.glyphName for c in glyph.components])
 	else:
 		allData = glyph.getCoordinates(glyf)
 		coord = allData[0]
-		control = allData[1:]
+		control = (glyph.numberOfContours,)+allData[1:]
 
 	# Add phantom points for (left, right, top, bottom) positions.
 	horizontalAdvanceWidth, leftSideBearing = font["hmtx"].metrics[glyphName]
@@ -202,7 +202,36 @@ def _SetCoordinates(font, glyphName, coord):
 	font["hmtx"].metrics[glyphName] = horizontalAdvanceWidth, leftSideBearing
 
 
-def _add_gvar(font, model, master_ttfs, tolerance=.5):
+def _optimize_contour(delta, coords, tolerance=0.):
+	n = len(delta)
+	if all(abs(x) <= tolerance >= abs(y) for x,y in delta):
+		return [None] * n
+	if n == 1:
+		return delta
+	d0 = delta[0]
+	if all(d0 == d for d in delta):
+		return [d0] + [None] * (n-1)
+
+	# TODO
+
+	return delta
+
+def _optimize_delta(delta, coords, ends, tolerance=0.):
+	assert sorted(ends) == ends and len(coords) == (ends[-1]+1 if ends else 0) + 4
+	n = len(coords)
+	ends = ends + [n-4, n-3, n-2, n-1]
+	out = []
+	start = 0
+	for end in ends:
+		contour = _optimize_contour(delta[start:end+1], coords[start:end+1], tolerance)
+		out.extend(contour)
+		start = end+1
+
+	return out
+
+def _add_gvar(font, model, master_ttfs, tolerance=.5, optimize=True):
+
+	assert tolerance >= 0
 
 	log.info("Generating gvar")
 	assert "gvar" not in font
@@ -227,12 +256,31 @@ def _add_gvar(font, model, master_ttfs, tolerance=.5):
 		deltas = model.getDeltas(allCoords)
 		supports = model.supports
 		assert len(deltas) == len(supports)
+
+		# Prepare for IUP optimization
+		origCoords = deltas[0]
+		endPts = control[1] if control[0] >= 1 else list(range(len(control[1])))
+
 		for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
-			if not delta:
-				continue
-			if tolerance and max(abs(delta).array) <= tolerance:
+			if all(abs(v) <= tolerance for v in delta.array):
 				continue
 			var = TupleVariation(support, delta)
+			if optimize:
+				delta_opt = _optimize_delta(delta, origCoords, endPts, tolerance=tolerance)
+
+				if None in delta_opt:
+					# Use "optimized" version only if smaller...
+					var_opt = TupleVariation(support, delta_opt)
+
+					axis_tags = sorted(support.keys()) # Shouldn't matter that this is different from fvar...?
+					tupleData, auxData = var.compile(axis_tags, [], None)
+					unoptimized_len = len(tupleData) + len(auxData)
+					tupleData, auxData = var_opt.compile(axis_tags, [], None)
+					optimized_len = len(tupleData) + len(auxData)
+
+					if optimized_len < unoptimized_len:
+						var = var_opt
+
 			gvar.variations[glyph].append(var)
 
 def _add_HVAR(font, model, master_ttfs, axisTags):
@@ -505,14 +553,14 @@ def load_designspace(designspace_filename):
 	for obj in masters+instances:
 		obj_name = obj.get('name', obj.get('stylename', ''))
 		loc = obj['location']
-		for name in loc.keys():
-			assert name in axes, "Location axis '%s' unknown for '%s'." % (name, obj_name)
+		for axis_name in loc.keys():
+			assert axis_name in axes, "Location axis '%s' unknown for '%s'." % (axis_name, obj_name)
 		for axis_name,axis in axes.items():
 			if axis_name not in loc:
 				loc[axis_name] = axis.default
 			else:
 				v = axis.map_backward(loc[axis_name])
-				assert axis.minimum <= v <= axis.maximum, "Location for axis '%s' (mapped to %s) out of range for '%s' [%s..%s]" % (name, v, obj_name, axis.minimum, axis.maximum)
+				assert axis.minimum <= v <= axis.maximum, "Location for axis '%s' (mapped to %s) out of range for '%s' [%s..%s]" % (axis_name, v, obj_name, axis.minimum, axis.maximum)
 
 
 	# Normalize master locations
