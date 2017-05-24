@@ -1,3 +1,6 @@
+3.13.0 (released 2017-05-24)
+----------------------------
+
 - [varLib.mutator] Implement IUP optimization (#969).
 - [_g_l_y_f.GlyphCoordinates] Changed ``__bool__()`` semantics to match those
   of other iterables (e46f949). Removed ``__abs__()`` (3db5be2).
