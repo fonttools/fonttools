@@ -13,13 +13,18 @@ from pprint import pformat
 log = logging.getLogger("fontTools.varLib.interpolate_layout")
 
 
-def interpolate_layout(designspace_filename, loc, master_finder=lambda s:s):
+def interpolate_layout(designspace_filename, loc, master_finder=lambda s:s, mapped=False):
 	"""
 	Interpolate GPOS from a designspace file and location.
 
 	If master_finder is set, it should be a callable that takes master
 	filename as found in designspace file and map it to master font
 	binary as to be opened (eg. .ttf or .otf).
+
+	If mapped is False (default), then location is mapped using the
+	map element of the axes in designspace file.  If mapped is True,
+	it is assumed that location is in designspace's internal space and
+	no mapping is performed.
 	"""
 
 	axes, internal_axis_supports, base_idx, normalized_master_locs, masters, instances = load_designspace(designspace_filename)
@@ -35,7 +40,8 @@ def interpolate_layout(designspace_filename, loc, master_finder=lambda s:s):
 	font = TTFont(master_ttfs[base_idx])
 
 	log.info("Location: %s", pformat(loc))
-	loc = {name:axes[name].map_forward(v) for name,v in loc.items()}
+	if not mapped:
+		loc = {name:axes[name].map_forward(v) for name,v in loc.items()}
 	log.info("Internal location: %s", pformat(loc))
 	loc = models.normalizeLocation(loc, internal_axis_supports)
 	log.info("Normalized location: %s", pformat(loc))
