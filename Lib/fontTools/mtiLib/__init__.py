@@ -1073,7 +1073,7 @@ class Tokenizer(object):
 		if len(line) == 1 and not line[0]:
 			del line[0]
 		if line and not line[-1]:
-			log.warn('trailing tab found on line %d: %s' % (self.lineno, self.line))
+			log.warning('trailing tab found on line %d: %s' % (self.lineno, self.line))
 			while line and not line[-1]:
 				del line[-1]
 		return line

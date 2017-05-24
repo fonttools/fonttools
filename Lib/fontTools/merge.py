@@ -388,7 +388,7 @@ def merge(self, m, tables):
 					# char previously mapped to oldgid but already remapped to a different gid,
 					# save new gid as an alternate
 					# TODO: try harder to save these
-					log.warn("Dropped mapping from codepoint %#06X to glyphId '%s'", uni, gid)
+					log.warning("Dropped mapping from codepoint %#06X to glyphId '%s'", uni, gid)
 
 	cmapBmpOnly = {uni: gid for uni,gid in cmap.items() if uni <= 0xFFFF}
 	self.tables = []

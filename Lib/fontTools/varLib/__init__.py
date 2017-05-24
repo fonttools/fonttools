@@ -218,7 +218,7 @@ def _add_gvar(font, model, master_ttfs, tolerance=.5):
 		allControls = [d[1] for d in allData]
 		control = allControls[0]
 		if (any(c != control for c in allControls)):
-			log.warn("glyph %s has incompatible masters; skipping" % glyph)
+			log.warning("glyph %s has incompatible masters; skipping" % glyph)
 			continue
 		del allControls
 
