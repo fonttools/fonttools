@@ -1,3 +1,15 @@
+- [varLib.mutator] Implement IUP optimization (#969).
+- [_g_l_y_f.GlyphCoordinates] Changed ``__bool__()`` semantics to match those
+  of other iterables (e46f949). Removed ``__abs__()`` (3db5be2).
+- [varLib.interpolate_layout] Added ``mapped`` keyword argument to
+  ``interpolate_layout`` to allow disabling avar mapping: if False (default),
+  the location is mapped using the map element of the axes in designspace file;
+  if True, it is assumed that location is in designspace's internal space and
+  no mapping is performed (#950, #975).
+- [varLib.interpolate_layout] Import designspace-loading logic from varLib.
+- [varLib] Fixed bug with recombining PairPosClass2 subtables (81498e5, #914).
+- [cffLib.specializer] When copying iterables, cast to list (462b7f86).
+
 3.12.1 (released 2017-05-18)
 ----------------------------
 
