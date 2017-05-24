@@ -17,8 +17,8 @@ class BaseDummyPen(object):
         """Return the pen commands as a string of python code."""
         return _repr_pen_commands(self.commands)
 
-    def addComponent(self, glyphName, transformation):
-        self.commands.append(('addComponent', (glyphName, transformation), {}))
+    def addComponent(self, glyphName, transformation, **kwargs):
+        self.commands.append(('addComponent', (glyphName, transformation), kwargs))
 
 
 class DummyPen(BaseDummyPen):
@@ -46,8 +46,8 @@ class DummyPen(BaseDummyPen):
 class DummyPointPen(BaseDummyPen):
     """A PointPen that records the commands it's called with."""
 
-    def beginPath(self):
-        self.commands.append(('beginPath', tuple(), {}))
+    def beginPath(self, **kwargs):
+        self.commands.append(('beginPath', tuple(), kwargs))
 
     def endPath(self):
         self.commands.append(('endPath', tuple(), {}))
