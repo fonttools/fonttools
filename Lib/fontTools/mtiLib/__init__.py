@@ -17,7 +17,6 @@ from fontTools.otlLib import builder as otl
 from contextlib import contextmanager
 from operator import setitem
 import logging
-import warnings
 
 class MtiLibError(Exception): pass
 class ReferenceNotFoundError(MtiLibError): pass
@@ -1074,7 +1073,7 @@ class Tokenizer(object):
 		if len(line) == 1 and not line[0]:
 			del line[0]
 		if line and not line[-1]:
-			warnings.warn('trailing tab found on line %d: %s' % (self.lineno, self.line))
+			log.warn('trailing tab found on line %d: %s' % (self.lineno, self.line))
 			while line and not line[-1]:
 				del line[-1]
 		return line

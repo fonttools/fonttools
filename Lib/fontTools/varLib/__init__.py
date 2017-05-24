@@ -30,7 +30,6 @@ from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib import builder, designspace, models
 from fontTools.varLib.merger import VariationMerger, _all_equal
 from collections import OrderedDict
-import warnings
 import os.path
 import logging
 from pprint import pformat
@@ -219,7 +218,7 @@ def _add_gvar(font, model, master_ttfs, tolerance=.5):
 		allControls = [d[1] for d in allData]
 		control = allControls[0]
 		if (any(c != control for c in allControls)):
-			warnings.warn("glyph %s has incompatible masters; skipping" % glyph)
+			log.warn("glyph %s has incompatible masters; skipping" % glyph)
 			continue
 		del allControls
 
