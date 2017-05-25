@@ -276,6 +276,28 @@ def ttCompile(input, output, options):
 		mtime = os.path.getmtime(input)
 		ttf['head'].modified = timestampSinceEpoch(mtime)
 
+	if output == "-":
+		# reopen stdout in binary mode for output
+		if sys.version_info[0] < 3:
+			output = sys.stdout
+			if sys.platform == "win32":
+				# set binary flag on python2.x (Windows)
+				import platform
+				runtime = platform.python_implementation()
+				if runtime == "PyPy":
+					# the msvcrt trick doesn't work in pypy, so I use fdopen
+					output = os.fdopen(output.fileno(), "wb", 0)
+				else:
+					# this works with CPython -- untested on other implementations
+					import msvcrt
+					msvcrt.setmode(output.fileno(), os.O_BINARY)
+		else:
+			# get 'buffer' attribute to write binary data on python3.x
+			if hasattr(sys.stdout, "buffer"):
+				output = sys.stdout.buffer
+			else:
+				output = sys.__stdout__.buffer
+
 	ttf.save(output)
 
 
@@ -347,6 +369,9 @@ def parseOptions(args):
 
 		if options.outputFile:
 			output = options.outputFile
+			if output == "-":
+				options.quiet = True
+				options.verbose = False
 		else:
 			output = makeOutputFileName(input, options.outputDir, extension, options.overWrite)
 			# 'touch' output file to avoid race condition in choosing file names
