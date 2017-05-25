@@ -1179,7 +1179,7 @@ class DictDecompiler(ByteCodeBase):
 
 	operandEncoding = cffDictOperandEncoding
 
-	def __init__(self, strings, parent = None):
+	def __init__(self, strings, parent=None):
 		self.stack = []
 		self.strings = strings
 		self.dict = {}
