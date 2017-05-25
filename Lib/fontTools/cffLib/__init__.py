@@ -62,7 +62,6 @@ class CFFFontSet(object):
 		if self.major == 1:
 			self.offSize = struct.unpack("B", file.read(1))[0]
 			file.seek(self.hdrSize)
-			self.cffCtx.isCFF2 = False
 			self.fontNames = list(Index(self.cffCtx, file))
 			self.topDictIndex = TopDictIndex(self.cffCtx, file)
 			self.strings = IndexedStrings(self.cffCtx, file)
@@ -72,7 +71,6 @@ class CFFFontSet(object):
 		elif self.major == 2:
 			self.topDictSize = struct.unpack(">H", file.read(2))[0]
 			file.seek(self.hdrSize)
-			self.cffCtx.isCFF2 = True
 			self.fontNames = ["CFF2Font"]
 			cff2GetGlyphOrder = otFont.getGlyphOrder
 			self.topDictIndex = TopDictIndex(self.cffCtx, file, cff2GetGlyphOrder, self.topDictSize) # in CFF2, offsetSize is the size of the TopDict data.
