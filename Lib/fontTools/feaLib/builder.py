@@ -1387,7 +1387,6 @@ class ClassPairPosSubtableBuilder(object):
     def __init__(self, builder, valueFormat1, valueFormat2):
         self.builder_ = builder
         self.classDef1_, self.classDef2_ = None, None
-        self.coverage_ = set()
         self.values_ = {}  # (glyphclass1, glyphclass2) --> (value1, value2)
         self.valueFormat1_, self.valueFormat2_ = valueFormat1, valueFormat2
         self.forceSubtableBreak_ = False
@@ -1403,11 +1402,9 @@ class ClassPairPosSubtableBuilder(object):
             self.flush_()
             self.classDef1_ = otl.ClassDefBuilder(useClass0=True)
             self.classDef2_ = otl.ClassDefBuilder(useClass0=False)
-            self.coverage_ = set()
             self.values_ = {}
         self.classDef1_.add(gc1)
         self.classDef2_.add(gc2)
-        self.coverage_.update(gc1)
         self.values_[(gc1, gc2)] = (value1, value2)
 
     def addSubtableBreak(self):
