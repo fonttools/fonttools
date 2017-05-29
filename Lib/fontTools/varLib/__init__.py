@@ -210,11 +210,11 @@ def _all_interpolatable_in_between(deltas, coords, j, i, tolerance):
 
 	assert len(deltas) == len(interp)
 
-	return all(abs(x-p) <= tolerance >= abs(y-q) for (x,y),(p,q) in zip(deltas, interp))
+	return all(abs(complex(x-p, y-q)) <= tolerance for (x,y),(p,q) in zip(deltas, interp))
 
 def _optimize_contour(delta, coords, tolerance=0.):
 	n = len(delta)
-	if all(abs(x) <= tolerance >= abs(y) for x,y in delta):
+	if all(abs(complex(*p)) <= tolerance for p in delta):
 		return [None] * n
 	if n == 1:
 		return delta
