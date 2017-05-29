@@ -214,40 +214,65 @@ def _all_interpolatable_in_between(deltas, coords, j, i, tolerance):
 
 def _optimize_contour(delta, coords, tolerance=0.):
 	n = len(delta)
+
+	# Get the easy cases out of the way:
+
+	# If all are within tolerance distance of 0, encode nothing:
 	if all(abs(complex(*p)) <= tolerance for p in delta):
 		return [None] * n
+
+	# If there's exactly one point, return it:
 	if n == 1:
 		return delta
+
+	# If all deltas are exactly the same, return just one (the first one):
 	d0 = delta[0]
 	if all(d0 == d for d in delta):
 		return [d0] + [None] * (n-1)
 
+	# Else, solve the general problem using Dynamic Programming.
+
 	# TODO Handle circularity in Dynamic-Programming.
+
+	forced = set()
+	nd, nc = delta[0], coords[0]
+	ld, lc = delta[-1], coords[-1]
+	for i in range(n-1, -1, -1):
+		d, c = ld, lc
+		ld, lc = delta[i-1], coords[i-1]
+
+		for j in (0,1):
+			c1, c2 = sorted((lc[j], nc[j]))
+			d1, d2 = sorted((ld[j], nd[j]))
+			if c1 <= c[j] <= c2 and not (d1-tolerance <= d[j] <= d2+tolerance):
+				forced.add(i)
+				break
+
+		nd, nc = d, c
 
 	dp = [(1, None)]
 	for i in range(1, len(delta)):
 		best_cost, best_i = dp[i-1][0]+1, i-1
 		for j in range(i-2, -1, -1):
+
+			if j+1 in forced:
+				break
+
 			cost, _ = dp[j]
 			cost += 1
-			if cost >= best_cost:
-				continue
 
-			valid = _all_interpolatable_in_between(delta, coords, j, i, tolerance)
-
-			if not valid:
-				continue
-
-			best_cost, best_i = cost, j
+			if cost < best_cost and _all_interpolatable_in_between(delta, coords, j, i, tolerance):
+				best_cost, best_i = cost, j
 
 		dp.append((best_cost, best_i))
 
-	i = n - 1
 	sol = set()
+	i = n - 1
 	while i is not None:
 		sol.add(i)
 		_, i = dp[i]
 	assert len(sol) > 1
+	assert forced <= sol, (forced, sol)
 
 	return [delta[i] if i in sol else None for i in range(n)]
 
