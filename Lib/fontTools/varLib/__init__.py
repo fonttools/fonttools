@@ -250,27 +250,33 @@ def _optimize_contour(delta, coords, tolerance=0.):
 
 		nd, nc = d, c
 
-	dp = [(1, None)]
+	costs = [1]
+	chain = [None]
 	for i in range(1, len(delta)):
-		best_cost, best_i = dp[i-1][0]+1, i-1
+		best_cost = costs[i-1] + 1
+
+		costs.append(best_cost)
+		chain.append(i - 1)
+
+		if i - 1 in forced:
+			continue
+
 		for j in range(i-2, -1, -1):
 
-			if j+1 in forced:
-				break
-
-			cost, _ = dp[j]
-			cost += 1
+			cost = costs[j] + 1
 
 			if cost < best_cost and _all_interpolatable_in_between(delta, coords, j, i, tolerance):
-				best_cost, best_i = cost, j
+				costs[-1] = best_cost = cost
+				chain[-1] = j
 
-		dp.append((best_cost, best_i))
+			if j in forced:
+				break
 
 	sol = set()
 	i = n - 1
 	while i is not None:
 		sol.add(i)
-		_, i = dp[i]
+		i = chain[i]
 	assert len(sol) > 1
 	assert forced <= sol, (forced, sol)
 
