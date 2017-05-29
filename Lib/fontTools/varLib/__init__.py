@@ -202,6 +202,16 @@ def _SetCoordinates(font, glyphName, coord):
 	font["hmtx"].metrics[glyphName] = horizontalAdvanceWidth, leftSideBearing
 
 
+def _all_interpolatable_in_between(deltas, coords, j, i, tolerance):
+	assert i - j >= 2
+	from fontTools.varLib.mutator import _iup_segment
+	interp = _iup_segment(coords[j+1:i], coords[j], deltas[j], coords[i], deltas[i])
+	deltas = deltas[j+1:i]
+
+	assert len(deltas) == len(interp)
+
+	return all(abs(x-p) <= tolerance >= abs(y-q) for (x,y),(p,q) in zip(deltas, interp))
+
 def _optimize_contour(delta, coords, tolerance=0.):
 	n = len(delta)
 	if all(abs(x) <= tolerance >= abs(y) for x,y in delta):
@@ -212,9 +222,34 @@ def _optimize_contour(delta, coords, tolerance=0.):
 	if all(d0 == d for d in delta):
 		return [d0] + [None] * (n-1)
 
-	# TODO
+	# TODO Handle circularity in Dynamic-Programming.
 
-	return delta
+	dp = [(1, None)]
+	for i in range(1, len(delta)):
+		best_cost, best_i = dp[i-1][0]+1, i-1
+		for j in range(i-2, -1, -1):
+			cost, _ = dp[j]
+			cost += 1
+			if cost >= best_cost:
+				continue
+
+			valid = _all_interpolatable_in_between(delta, coords, j, i, tolerance)
+
+			if not valid:
+				continue
+
+			best_cost, best_i = cost, j
+
+		dp.append((best_cost, best_i))
+
+	i = n - 1
+	sol = set()
+	while i is not None:
+		sol.add(i)
+		_, i = dp[i]
+	assert len(sol) > 1
+
+	return [delta[i] if i in sol else None for i in range(n)]
 
 def _optimize_delta(delta, coords, ends, tolerance=0.):
 	assert sorted(ends) == ends and len(coords) == (ends[-1]+1 if ends else 0) + 4
@@ -224,12 +259,13 @@ def _optimize_delta(delta, coords, ends, tolerance=0.):
 	start = 0
 	for end in ends:
 		contour = _optimize_contour(delta[start:end+1], coords[start:end+1], tolerance)
+		assert len(contour) == end - start + 1
 		out.extend(contour)
 		start = end+1
 
 	return out
 
-def _add_gvar(font, model, master_ttfs, tolerance=.5, optimize=True):
+def _add_gvar(font, model, master_ttfs, tolerance=0.5, optimize=True):
 
 	assert tolerance >= 0
 
