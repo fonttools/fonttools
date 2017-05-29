@@ -232,24 +232,37 @@ def _optimize_contour(delta, coords, tolerance=0.):
 
 	# Else, solve the general problem using Dynamic Programming.
 
-	# TODO Handle circularity in Dynamic-Programming.
-
+	# The forced set is a conservative set of points on the contour that must be encoded
+	# explicitly (ie. cannot be interpolated).  Calculating this set allows for significantly
+	# speeding up the DP, as well as resolve circularity faster.
 	forced = set()
+	# Track "last" and "next" points on the contour as we sweep.
 	nd, nc = delta[0], coords[0]
 	ld, lc = delta[-1], coords[-1]
 	for i in range(n-1, -1, -1):
 		d, c = ld, lc
 		ld, lc = delta[i-1], coords[i-1]
 
-		for j in (0,1):
+		for j in (0,1): # For X and for Y
 			c1, c2 = sorted((lc[j], nc[j]))
 			d1, d2 = sorted((ld[j], nd[j]))
+			# If coordinate for current point is between coordinate of adjacent
+			# points on the two sides, but the delta for current point is NOT
+			# between delta for those adjacent points (considering tolerance
+			# allowance), then there is no way that current point can be IUP-ed.
+			# Mark it forced.
 			if c1 <= c[j] <= c2 and not (d1-tolerance <= d[j] <= d2+tolerance):
 				forced.add(i)
 				break
 
 		nd, nc = d, c
 
+	# Straightforward DP.  For each index i, find least-costly encoding of points i to
+	# n-1 where i is explicitly encoded.  We find this by considering all next explicit points
+	# j and check whether interpolation can fill points between i and j.  As major speedup,
+	# we stop looking further whenever we see a "forced" point.
+	#
+	# TODO Handle circularity in Dynamic-Programming.
 	costs = {n-1:1}
 	chain = {n-1:None}
 	for i in range(n-2, -1, -1):
@@ -272,6 +285,7 @@ def _optimize_contour(delta, coords, tolerance=0.):
 			if j in forced:
 				break
 
+	# Assemble solution.
 	sol = set()
 	i = 0
 	while i is not None:
