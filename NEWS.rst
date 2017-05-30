@@ -1,3 +1,9 @@
+3.13.1 (released 2017-05-30)
+----------------------------
+
+- [feaLib.builder] Removed duplicate lookups optimization. The original
+  lookup order and semantics of the feature file are preserved (#976).
+
 3.13.0 (released 2017-05-24)
 ----------------------------
 
