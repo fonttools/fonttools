@@ -21,6 +21,3 @@ feature F2 {
   sub one fraction two.oldstyle by onehalf;
   sub one.oldstyle fraction two.oldstyle by onehalf;
 } F2;
-
-# In the resulting OpenType GSUB table (spec5d1.ttx),
-# we expect to see only one single lookup.

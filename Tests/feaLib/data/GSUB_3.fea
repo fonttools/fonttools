@@ -5,7 +5,8 @@ feature f1 {
 } f1;
 
 
-# Exact same content as feature f1; lookup should be shared.
+# Even if it has exactly the same content as feature f1,
+# the lookup should not be shared.
 feature f2 {
     sub A from [A.alt1 A.alt2];
     sub B from [B.alt1 B.alt2 B.alt3];

@@ -20,6 +20,3 @@ feature F2 {
     sub f f by f_f;
     sub f i by f_i;
 } F2;
-
-# In the resulting OpenType GSUB table (spec5d2.ttx),
-# we expect to see only one single lookup.
