@@ -31,13 +31,23 @@
         <FeatureTag value="f2  "/>
         <Feature>
           <!-- LookupCount=1 -->
-          <LookupListIndex index="0" value="0"/>
+          <LookupListIndex index="0" value="1"/>
         </Feature>
       </FeatureRecord>
     </FeatureList>
     <LookupList>
-      <!-- LookupCount=1 -->
+      <!-- LookupCount=2 -->
       <Lookup index="0">
+        <LookupType value="2"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <MultipleSubst index="0">
+          <Substitution in="c_t" out="c,t"/>
+          <Substitution in="f_f_i" out="f,f,i"/>
+          <Substitution in="f_i" out="f,i"/>
+        </MultipleSubst>
+      </Lookup>
+      <Lookup index="1">
         <LookupType value="2"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->

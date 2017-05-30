@@ -31,13 +31,32 @@
         <FeatureTag value="f2  "/>
         <Feature>
           <!-- LookupCount=1 -->
-          <LookupListIndex index="0" value="0"/>
+          <LookupListIndex index="0" value="1"/>
         </Feature>
       </FeatureRecord>
     </FeatureList>
     <LookupList>
-      <!-- LookupCount=1 -->
+      <!-- LookupCount=2 -->
       <Lookup index="0">
+        <LookupType value="3"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <AlternateSubst index="0">
+          <AlternateSet glyph="A">
+            <Alternate glyph="A.alt1"/>
+            <Alternate glyph="A.alt2"/>
+          </AlternateSet>
+          <AlternateSet glyph="B">
+            <Alternate glyph="B.alt1"/>
+            <Alternate glyph="B.alt2"/>
+            <Alternate glyph="B.alt3"/>
+          </AlternateSet>
+          <AlternateSet glyph="C">
+            <Alternate glyph="C.alt1"/>
+          </AlternateSet>
+        </AlternateSubst>
+      </Lookup>
+      <Lookup index="1">
         <LookupType value="3"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
