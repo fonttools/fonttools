@@ -31,13 +31,32 @@
         <FeatureTag value="F2  "/>
         <Feature>
           <!-- LookupCount=1 -->
-          <LookupListIndex index="0" value="0"/>
+          <LookupListIndex index="0" value="1"/>
         </Feature>
       </FeatureRecord>
     </FeatureList>
     <LookupList>
-      <!-- LookupCount=1 -->
+      <!-- LookupCount=2 -->
       <Lookup index="0">
+        <LookupType value="4"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <LigatureSubst index="0">
+          <LigatureSet glyph="one">
+            <Ligature components="fraction,two" glyph="onehalf"/>
+            <Ligature components="fraction,two.oldstyle" glyph="onehalf"/>
+            <Ligature components="slash,two" glyph="onehalf"/>
+            <Ligature components="slash,two.oldstyle" glyph="onehalf"/>
+          </LigatureSet>
+          <LigatureSet glyph="one.oldstyle">
+            <Ligature components="fraction,two" glyph="onehalf"/>
+            <Ligature components="fraction,two.oldstyle" glyph="onehalf"/>
+            <Ligature components="slash,two" glyph="onehalf"/>
+            <Ligature components="slash,two.oldstyle" glyph="onehalf"/>
+          </LigatureSet>
+        </LigatureSubst>
+      </Lookup>
+      <Lookup index="1">
         <LookupType value="4"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->

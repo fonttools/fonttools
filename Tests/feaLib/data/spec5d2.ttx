@@ -31,13 +31,28 @@
         <FeatureTag value="F2  "/>
         <Feature>
           <!-- LookupCount=1 -->
-          <LookupListIndex index="0" value="0"/>
+          <LookupListIndex index="0" value="1"/>
         </Feature>
       </FeatureRecord>
     </FeatureList>
     <LookupList>
-      <!-- LookupCount=1 -->
+      <!-- LookupCount=2 -->
       <Lookup index="0">
+        <LookupType value="4"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <LigatureSubst index="0">
+          <LigatureSet glyph="f">
+            <Ligature components="f,i" glyph="f_f_i"/>
+            <Ligature components="f" glyph="f_f"/>
+            <Ligature components="i" glyph="f_i"/>
+          </LigatureSet>
+          <LigatureSet glyph="o">
+            <Ligature components="f,f,i" glyph="o_f_f_i"/>
+          </LigatureSet>
+        </LigatureSubst>
+      </Lookup>
+      <Lookup index="1">
         <LookupType value="4"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->

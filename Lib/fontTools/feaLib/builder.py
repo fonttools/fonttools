@@ -451,21 +451,8 @@ class Builder(object):
         for lookup in self.lookups_:
             lookup.lookup_index = None
         lookups = []
-        for i, lookup in enumerate(self.lookups_):
+        for lookup in self.lookups_:
             if lookup.table != tag:
-                continue
-            # TODO: https://github.com/behdad/fonttools/issues/448
-            # If multiple lookup builders would build equivalent lookups,
-            # emit them only once. This is quadratic in the number of lookups,
-            # but the checks are cheap. If performance ever becomes an issue,
-            # we could hash the lookup content and only compare those with
-            # the same hash value.
-            equivalent = None
-            for other in self.lookups_[:i]:
-                if lookup.equals(other):
-                    equivalent = other
-            if equivalent is not None:
-                lookup.lookup_index = equivalent.lookup_index
                 continue
             lookup.lookup_index = len(lookups)
             lookups.append(lookup)
