@@ -287,7 +287,19 @@ def _iup_contour_optimize_dp(delta, coords, forced={}, tolerance=0):
 		i = chain[i]
 	assert forced <= sol, (forced, sol)
 
-	return [delta[i] if i in sol else None for i in range(n)]
+	delta = [delta[i] if i in sol else None for i in range(n)]
+
+	return delta, costs[n - 1]
+
+def _rot_list(l, k):
+	"""Rotate list by k items forward.  Ie. item at position 0 will be
+	at position k in returned list.  Negative k is allowed."""
+	n = len(l)
+	k %= n
+	return l[n-k:] + l[:n-k]
+
+def _rot_set(s, k, n):
+	return {(v + k) % n for v in s}
 
 def _iup_contour_optimize(delta, coords, tolerance=0.):
 	n = len(delta)
@@ -309,9 +321,26 @@ def _iup_contour_optimize(delta, coords, tolerance=0.):
 
 	# Else, solve the general problem using Dynamic Programming.
 
-	# TODO Handle circularity
 	forced = _iup_contour_bound_forced_set(delta, coords, tolerance)
-	delta = _iup_contour_optimize_dp(delta, coords, forced, tolerance)
+	# The _iup_contour_optimize_dp() routine returns the optimal encoding
+	# solution given the constraint that the last point is always encoded.
+	# To remove this constraint, we do two different things, depending on
+	# whether forced set is non-empty or not:
+
+	if forced:
+		# Forced set is non-empty: rotate the contour start point
+		# such that the last point in the list is a forced point.
+		k = (n-1) - max(forced)
+		assert k >= 0
+		delta, coords, forced = _rot_list(delta, k), _rot_list(coords, k), _rot_set(forced, k, n)
+		delta, _ = _iup_contour_optimize_dp(delta, coords, forced, tolerance)
+		delta = _rot_list(delta, -k)
+	else:
+		# Brute-force: rotate and retry until all points on the contour are part
+		# of at least one solution. The best of those solutions is the optimal
+		# solution.
+		# TODO
+		delta, cost = _iup_contour_optimize_dp(delta, coords, forced, tolerance)
 
 	return delta
 
