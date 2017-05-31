@@ -274,22 +274,22 @@ def _iup_contour_optimize(delta, coords, tolerance=0.):
 	# we stop looking further whenever we see a "forced" point.
 	#
 	# TODO Handle circularity in Dynamic-Programming.
-	costs = {n-1:1}
-	chain = {n-1:None}
-	for i in range(n-2, -1, -1):
-		best_cost = costs[i + 1] + 1
+	costs = {0:1}
+	chain = {0:None}
+	for i in range(1, len(delta)):
+		best_cost = costs[i-1] + 1
 
 		costs[i] = best_cost
-		chain[i] = i + 1
+		chain[i] = i - 1
 
-		if i + 1 in forced:
+		if i - 1 in forced:
 			continue
 
-		for j in range(i + 2, n):
+		for j in range(i-2, -1, -1):
 
 			cost = costs[j] + 1
 
-			if cost < best_cost and _all_interpolatable_in_between(delta, coords, i, j, tolerance):
+			if cost < best_cost and _all_interpolatable_in_between(delta, coords, j, i, tolerance):
 				costs[i] = best_cost = cost
 				chain[i] = j
 
@@ -298,7 +298,7 @@ def _iup_contour_optimize(delta, coords, tolerance=0.):
 
 	# Assemble solution.
 	sol = set()
-	i = 0
+	i = n - 1
 	while i is not None:
 		sol.add(i)
 		i = chain[i]
