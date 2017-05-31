@@ -274,9 +274,9 @@ def _iup_contour_optimize(delta, coords, tolerance=0.):
 	# we stop looking further whenever we see a "forced" point.
 	#
 	# TODO Handle circularity in Dynamic-Programming.
-	costs = {0:1}
-	chain = {0:None}
-	for i in range(1, len(delta)):
+	costs = {-1:0}
+	chain = {-1:None}
+	for i in range(0, len(delta)):
 		best_cost = costs[i-1] + 1
 
 		costs[i] = best_cost
@@ -285,7 +285,7 @@ def _iup_contour_optimize(delta, coords, tolerance=0.):
 		if i - 1 in forced:
 			continue
 
-		for j in range(i-2, -1, -1):
+		for j in range(i-2, -2, -1):
 
 			cost = costs[j] + 1
 
