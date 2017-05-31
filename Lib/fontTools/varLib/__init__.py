@@ -212,7 +212,41 @@ def _all_interpolatable_in_between(deltas, coords, i, j, tolerance):
 
 	return all(abs(complex(x-p, y-q)) <= tolerance for (x,y),(p,q) in zip(deltas, interp))
 
-def _optimize_contour(delta, coords, tolerance=0.):
+def _iup_contour_bound_forced_set(delta, coords, tolerance=0):
+	"""The forced set is a conservative set of points on the contour that must be encoded
+	explicitly (ie. cannot be interpolated).  Calculating this set allows for significantly
+	speeding up the dynamic-programming, as well as resolve circularity in DP.
+
+	The set is precise; that is, if an index is in the returned set, then there is no way
+	that IUP can generate delta for that point, given coords and delta.
+	"""
+	assert len(delta) == len(coords)
+
+	forced = set()
+	# Track "last" and "next" points on the contour as we sweep.
+	nd, nc = delta[0], coords[0]
+	ld, lc = delta[-1], coords[-1]
+	for i in range(len(delta)-1, -1, -1):
+		d, c = ld, lc
+		ld, lc = delta[i-1], coords[i-1]
+
+		for j in (0,1): # For X and for Y
+			c1, c2 = sorted((lc[j], nc[j]))
+			d1, d2 = sorted((ld[j], nd[j]))
+			# If coordinate for current point is between coordinate of adjacent
+			# points on the two sides, but the delta for current point is NOT
+			# between delta for those adjacent points (considering tolerance
+			# allowance), then there is no way that current point can be IUP-ed.
+			# Mark it forced.
+			if c1 <= c[j] <= c2 and not (d1-tolerance <= d[j] <= d2+tolerance):
+				forced.add(i)
+				break
+
+		nd, nc = d, c
+
+	return forced
+
+def _iup_contour_optimize(delta, coords, tolerance=0.):
 	n = len(delta)
 
 	# Get the easy cases out of the way:
@@ -232,30 +266,7 @@ def _optimize_contour(delta, coords, tolerance=0.):
 
 	# Else, solve the general problem using Dynamic Programming.
 
-	# The forced set is a conservative set of points on the contour that must be encoded
-	# explicitly (ie. cannot be interpolated).  Calculating this set allows for significantly
-	# speeding up the DP, as well as resolve circularity faster.
-	forced = set()
-	# Track "last" and "next" points on the contour as we sweep.
-	nd, nc = delta[0], coords[0]
-	ld, lc = delta[-1], coords[-1]
-	for i in range(n-1, -1, -1):
-		d, c = ld, lc
-		ld, lc = delta[i-1], coords[i-1]
-
-		for j in (0,1): # For X and for Y
-			c1, c2 = sorted((lc[j], nc[j]))
-			d1, d2 = sorted((ld[j], nd[j]))
-			# If coordinate for current point is between coordinate of adjacent
-			# points on the two sides, but the delta for current point is NOT
-			# between delta for those adjacent points (considering tolerance
-			# allowance), then there is no way that current point can be IUP-ed.
-			# Mark it forced.
-			if c1 <= c[j] <= c2 and not (d1-tolerance <= d[j] <= d2+tolerance):
-				forced.add(i)
-				break
-
-		nd, nc = d, c
+	forced = _iup_contour_bound_forced_set(delta, coords, tolerance)
 
 	# Straightforward DP.  For each index i, find least-costly encoding of points i to
 	# n-1 where i is explicitly encoded.  We find this by considering all next explicit points
@@ -296,14 +307,14 @@ def _optimize_contour(delta, coords, tolerance=0.):
 
 	return [delta[i] if i in sol else None for i in range(n)]
 
-def _optimize_delta(delta, coords, ends, tolerance=0.):
+def _iup_delta_optimize(delta, coords, ends, tolerance=0.):
 	assert sorted(ends) == ends and len(coords) == (ends[-1]+1 if ends else 0) + 4
 	n = len(coords)
 	ends = ends + [n-4, n-3, n-2, n-1]
 	out = []
 	start = 0
 	for end in ends:
-		contour = _optimize_contour(delta[start:end+1], coords[start:end+1], tolerance)
+		contour = _iup_contour_optimize(delta[start:end+1], coords[start:end+1], tolerance)
 		assert len(contour) == end - start + 1
 		out.extend(contour)
 		start = end+1
@@ -347,7 +358,7 @@ def _add_gvar(font, model, master_ttfs, tolerance=0.5, optimize=True):
 				continue
 			var = TupleVariation(support, delta)
 			if optimize:
-				delta_opt = _optimize_delta(delta, origCoords, endPts, tolerance=tolerance)
+				delta_opt = _iup_delta_optimize(delta, origCoords, endPts, tolerance=tolerance)
 
 				if None in delta_opt:
 					# Use "optimized" version only if smaller...
