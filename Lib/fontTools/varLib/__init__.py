@@ -246,37 +246,20 @@ def _iup_contour_bound_forced_set(delta, coords, tolerance=0):
 
 	return forced
 
-def _iup_contour_optimize(delta, coords, tolerance=0.):
+def _iup_contour_optimize_dp(delta, coords, forced={}, tolerance=0):
+	"""Straightforward Dynamic-Programming.  For each index i, find least-costly encoding of
+	points i to n-1 where i is explicitly encoded.  We find this by considering all next
+	explicit points j and check whether interpolation can fill points between i and j.
+
+	Note that solution always encodes last point explicitly.  Higher-level is responsible
+	for removing that restriction.
+
+	As major speedup, we stop looking further whenever we see a "forced" point."""
+
 	n = len(delta)
-
-	# Get the easy cases out of the way:
-
-	# If all are within tolerance distance of 0, encode nothing:
-	if all(abs(complex(*p)) <= tolerance for p in delta):
-		return [None] * n
-
-	# If there's exactly one point, return it:
-	if n == 1:
-		return delta
-
-	# If all deltas are exactly the same, return just one (the first one):
-	d0 = delta[0]
-	if all(d0 == d for d in delta):
-		return [d0] + [None] * (n-1)
-
-	# Else, solve the general problem using Dynamic Programming.
-
-	forced = _iup_contour_bound_forced_set(delta, coords, tolerance)
-
-	# Straightforward DP.  For each index i, find least-costly encoding of points i to
-	# n-1 where i is explicitly encoded.  We find this by considering all next explicit points
-	# j and check whether interpolation can fill points between i and j.  As major speedup,
-	# we stop looking further whenever we see a "forced" point.
-	#
-	# TODO Handle circularity in Dynamic-Programming.
 	costs = {-1:0}
 	chain = {-1:None}
-	for i in range(0, len(delta)):
+	for i in range(0, n):
 		best_cost = costs[i-1] + 1
 
 		costs[i] = best_cost
@@ -302,10 +285,35 @@ def _iup_contour_optimize(delta, coords, tolerance=0.):
 	while i is not None:
 		sol.add(i)
 		i = chain[i]
-	assert len(sol) > 1
 	assert forced <= sol, (forced, sol)
 
 	return [delta[i] if i in sol else None for i in range(n)]
+
+def _iup_contour_optimize(delta, coords, tolerance=0.):
+	n = len(delta)
+
+	# Get the easy cases out of the way:
+
+	# If all are within tolerance distance of 0, encode nothing:
+	if all(abs(complex(*p)) <= tolerance for p in delta):
+		return [None] * n
+
+	# If there's exactly one point, return it:
+	if n == 1:
+		return delta
+
+	# If all deltas are exactly the same, return just one (the first one):
+	d0 = delta[0]
+	if all(d0 == d for d in delta):
+		return [d0] + [None] * (n-1)
+
+	# Else, solve the general problem using Dynamic Programming.
+
+	# TODO Handle circularity
+	forced = _iup_contour_bound_forced_set(delta, coords, tolerance)
+	delta = _iup_contour_optimize_dp(delta, coords, forced, tolerance)
+
+	return delta
 
 def _iup_delta_optimize(delta, coords, ends, tolerance=0.):
 	assert sorted(ends) == ends and len(coords) == (ends[-1]+1 if ends else 0) + 4
