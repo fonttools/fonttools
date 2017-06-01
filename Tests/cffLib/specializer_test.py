@@ -32,107 +32,68 @@ class CFFGeneralizeProgramTest(unittest.TestCase):
 # no arguments/operands
     def test_rmoveto_none(self):
         test_charstr = 'rmoveto'
-        xpct_charstr = ''
         with self.assertRaisesRegex(ValueError, r'\[\]'):
             get_generalized_charstr(test_charstr)
-        self.assertEqual(get_generalized_charstr(
-                                test_charstr, ignoreErrors=True), xpct_charstr)
 
     def test_hmoveto_none(self):
         test_charstr = 'hmoveto'
-        xpct_charstr = ''
         with self.assertRaisesRegex(ValueError, r'\[\]'):
             get_generalized_charstr(test_charstr)
-        self.assertEqual(get_generalized_charstr(
-                                test_charstr, ignoreErrors=True), xpct_charstr)
 
     def test_vmoveto_none(self):
         test_charstr = 'vmoveto'
-        xpct_charstr = ''
         with self.assertRaisesRegex(ValueError, r'\[\]'):
             get_generalized_charstr(test_charstr)
-        self.assertEqual(get_generalized_charstr(
-                                test_charstr, ignoreErrors=True), xpct_charstr)
 
     def test_rlineto_none(self):
         test_charstr = 'rlineto'
-        xpct_charstr = ''
         with self.assertRaisesRegex(ValueError, r'\[\]'):
             get_generalized_charstr(test_charstr)
-        self.assertEqual(get_generalized_charstr(
-                                test_charstr, ignoreErrors=True), xpct_charstr)
 
     def test_hlineto_none(self):
         test_charstr = 'hlineto'
-        xpct_charstr = ''
         with self.assertRaisesRegex(ValueError, r'\[\]'):
             get_generalized_charstr(test_charstr)
-        self.assertEqual(get_generalized_charstr(
-                                test_charstr, ignoreErrors=True), xpct_charstr)
 
     def test_vlineto_none(self):
         test_charstr = 'vlineto'
-        xpct_charstr = ''
         with self.assertRaisesRegex(ValueError, r'\[\]'):
             get_generalized_charstr(test_charstr)
-        self.assertEqual(get_generalized_charstr(
-                                test_charstr, ignoreErrors=True), xpct_charstr)
 
     def test_rrcurveto_none(self):
         test_charstr = 'rrcurveto'
-        xpct_charstr = ''
         with self.assertRaisesRegex(ValueError, r'\[\]'):
             get_generalized_charstr(test_charstr)
-        self.assertEqual(get_generalized_charstr(
-                                test_charstr, ignoreErrors=True), xpct_charstr)
 
     def test_hhcurveto_none(self):
         test_charstr = 'hhcurveto'
-        xpct_charstr = ''
         with self.assertRaisesRegex(ValueError, r'\[\]'):
             get_generalized_charstr(test_charstr)
-        self.assertEqual(get_generalized_charstr(
-                                test_charstr, ignoreErrors=True), xpct_charstr)
 
     def test_vvcurveto_none(self):
         test_charstr = 'vvcurveto'
-        xpct_charstr = ''
         with self.assertRaisesRegex(ValueError, r'\[\]'):
             get_generalized_charstr(test_charstr)
-        self.assertEqual(get_generalized_charstr(
-                                test_charstr, ignoreErrors=True), xpct_charstr)
 
     def test_hvcurveto_none(self):
         test_charstr = 'hvcurveto'
-        xpct_charstr = ''
         with self.assertRaisesRegex(ValueError, r'\[\]'):
             get_generalized_charstr(test_charstr)
-        self.assertEqual(get_generalized_charstr(
-                                test_charstr, ignoreErrors=True), xpct_charstr)
 
     def test_vhcurveto_none(self):
         test_charstr = 'vhcurveto'
-        xpct_charstr = ''
         with self.assertRaisesRegex(ValueError, r'\[\]'):
             get_generalized_charstr(test_charstr)
-        self.assertEqual(get_generalized_charstr(
-                                test_charstr, ignoreErrors=True), xpct_charstr)
 
     def test_rcurveline_none(self):
         test_charstr = 'rcurveline'
-        xpct_charstr = ''
         with self.assertRaisesRegex(ValueError, r'\[\]'):
             get_generalized_charstr(test_charstr)
-        self.assertEqual(get_generalized_charstr(
-                                test_charstr, ignoreErrors=True), xpct_charstr)
 
     def test_rlinecurve_none(self):
         test_charstr = 'rlinecurve'
-        xpct_charstr = ''
         with self.assertRaisesRegex(ValueError, r'\[\]'):
             get_generalized_charstr(test_charstr)
-        self.assertEqual(get_generalized_charstr(
-                                test_charstr, ignoreErrors=True), xpct_charstr)
 
 # rmoveto
     def test_rmoveto_zero(self):
