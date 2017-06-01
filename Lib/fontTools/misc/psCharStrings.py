@@ -124,7 +124,7 @@ t2Operators = [
 	(10,		'callsubr'),
 	(11,		'return'),
 	(14,		'endchar'),
-
+	(15,		'vsindex'),
 	(16,		'blend'),
 	(18,		'hstemhm'),
 	(19,		'hintmask'),
@@ -169,22 +169,6 @@ t2Operators = [
 	((12, 36),	'hflex1'),
 	((12, 37),	'flex1'),
 ]
-
-CFF2Operators = [entry for entry in t2Operators if ((isinstance(entry[0], int) or
-											(entry[0][1] < 34)) and (not entry[0] in [11,14])) ]
-CFF2Operators.extend(
-[
-	(15,		'vsindex'),
-	(16,		'blend'),
-])
-
-def sortOps(entry):
-	opCode = entry[0]
-	if isinstance(opCode, int):
-		opCode = (opCode,)
-	return opCode
-
-CFF2Operators.sort(key=sortOps)
 
 def getIntEncoder(format):
 	if format == "cff":
@@ -267,11 +251,12 @@ class CharStringCompileError(Exception): pass
 
 class SimpleT2Decompiler(object):
 
-	def __init__(self, localSubrs, globalSubrs):
+	def __init__(self, localSubrs, globalSubrs, private=None):
 		self.localSubrs = localSubrs
 		self.localBias = calcSubrBias(localSubrs)
 		self.globalSubrs = globalSubrs
 		self.globalBias = calcSubrBias(globalSubrs)
+		self.private = private
 		self.reset()
 
 	def reset(self):
@@ -279,11 +264,22 @@ class SimpleT2Decompiler(object):
 		self.operandStack = []
 		self.hintCount = 0
 		self.hintMaskBytes = 0
+		self.numRegions = 0
 
 	def check_program(self, program):
-		assert program, "illegal CharString: decompiled to empty program"
-		assert program[-1] in ("endchar", "return", "callsubr", "callgsubr",
-				"seac"), "illegal CharString"
+		try:
+			isCFF2 = self.private.isCFF2()
+			# Type 1 charstrings don't have self.private.
+			# Type2 CFF chrstrings may have self.private == None.
+		except AttributeError:
+			isCFF2 = False
+		if isCFF2:
+			if program:
+				assert program[-1] not in ("seac"), "illegal CharString Terminator"
+		else:
+			assert program, "illegal CharString: decompiled to empty program"
+			assert program[-1] in ("endchar", "return", "callsubr", "callgsubr",
+					"seac"), "illegal CharString"
 
 	def execute(self, charString):
 		self.callingStack.append(charString)
@@ -418,20 +414,6 @@ class SimpleT2Decompiler(object):
 	def op_roll(self, index):
 		raise NotImplementedError
 
-
-class SimpleCFF2Decompiler(SimpleT2Decompiler):
-	def __init__(self, localSubrs, globalSubrs, private = None):
-		super(SimpleCFF2Decompiler, self).__init__(localSubrs, globalSubrs)
-		self.private = private
-
-	def reset(self):
-		super(SimpleCFF2Decompiler, self).reset()
-		self.numRegions = 0
-
-	def check_program(self, program):
-		if program:
-			assert program[-1] not in ("seac"), "illegal CharString Terminator"
-
 	def op_blend(self, index):
 		if self.numRegions == 0:
 			self.numRegions = self.private.getNumRegions()
@@ -440,11 +422,9 @@ class SimpleCFF2Decompiler(SimpleT2Decompiler):
 		blendArgs = self.operandStack[-numOps:]
 		del self.operandStack[:-(numOps-numBlends)] # Leave the default operands on the stack.
 
-
 	def op_vsindex(self, index):
 		vi = self.pop()
 		self.numRegions = self.private.getNumRegions(vi)
-
 
 
 t1Operators = [
@@ -815,9 +795,6 @@ class T2OutlineExtractor(T2WidthExtractor):
 		self.rCurveTo((dxa, 0), (dxb, dyb), (dxc, dyc))
 		return args
 
-class CFF2OutlineExtractor(T2OutlineExtractor):
-	pass
-
 class T1OutlineExtractor(T2OutlineExtractor):
 
 	def __init__(self, pen, subrs):
@@ -967,7 +944,7 @@ class T2CharString(ByteCodeBase):
 	decompilerClass = SimpleT2Decompiler
 	outlineExtractor = T2OutlineExtractor
 
-	def __init__(self, bytecode=None, program=None, private=None, globalSubrs=None):
+	def __init__(self, bytecode=None, program=None, private = None, globalSubrs=None):
 		if program is None:
 			program = []
 		self.bytecode = bytecode
@@ -991,7 +968,7 @@ class T2CharString(ByteCodeBase):
 		if not self.needsDecompilation():
 			return
 		subrs = getattr(self.private, "Subrs", [])
-		decompiler = self.decompilerClass(subrs, self.globalSubrs)
+		decompiler = self.decompilerClass(subrs, self.globalSubrs, self.private)
 		decompiler.execute(self)
 
 	def draw(self, pen):
@@ -1002,9 +979,18 @@ class T2CharString(ByteCodeBase):
 		self.width = extractor.width
 
 	def check_program(self, program):
-		assert self.program, "illegal CharString: decompiled to empty program"
-		assert self.program[-1] in ("endchar", "return", "callsubr", "callgsubr",
-				"seac"), "illegal CharString"
+		try:
+			isCFF2 = self.private.isCFF2()
+			# Type 1 charstrings don't have self.private.
+			# Type 2 CFF chrstrings may have self.private == None.
+		except AttributeError:
+			isCFF2 = False
+		if isCFF2:
+			if self.program:
+				assert self.program[-1] not in ("seac",), "illegal CFF2 CharString Termination"
+		else:
+			assert self.program, "illegal CharString: decompiled to empty program"
+			assert self.program[-1] in ("endchar", "return", "callsubr", "callgsubr", "seac"), "illegal CharString"
 
 	def compile(self):
 		if self.bytecode is not None:
@@ -1041,6 +1027,11 @@ class T2CharString(ByteCodeBase):
 			log.error(bytecode)
 			raise
 		self.setBytecode(bytecode)
+
+		if self.private and self.private.isCFF2():
+			# If present, remove return and endchar operators.
+			if self.bytecode and (byteord(self.bytecode[-1]) in (11, 14)):
+				self.bytecode = self.bytecode[:-1]
 
 	def needsDecompilation(self):
 		return self.bytecode is not None
@@ -1146,36 +1137,6 @@ class T2CharString(ByteCodeBase):
 				program.append(token)
 		self.setProgram(program)
 
-class CFF2CharString(T2CharString):
-
-	operandEncoding = t2OperandEncoding
-	operators, opcodes = buildOperatorDict(CFF2Operators)
-	decompilerClass = SimpleCFF2Decompiler
-	outlineExtractor = CFF2OutlineExtractor
-
-	def check_program(self, program):
-		#assert self.program, "illegal CharString: decompiled to empty program"
-		# Empty program is OK for CFF2 Charstring - same a T2 with only an endchar.
-		if self.program:
-			assert self.program[-1] not in ("seac"), "illegal CFF2 CharString Termination"
-
-	def compile(self):
-		# Remove endchar, if there is one.
-		super(CFF2CharString, self).compile()
-		if self.bytecode and (byteord(self.bytecode[-1]) in (11, 14)):
-			self.bytecode = self.bytecode[:-1]
-
-	def decompile(self):
-		# Remove endchar, if there is one.
-		if not self.needsDecompilation():
-			return
-		subrs = getattr(self.private, "Subrs", [])
-		decompiler = self.decompilerClass(subrs, self.globalSubrs, self.private)
-		decompiler.execute(self)
-
-class CFF2SubrCharString(CFF2CharString):
-	pass
-
 
 class T1CharString(T2CharString):
 
@@ -1218,10 +1179,11 @@ class DictDecompiler(ByteCodeBase):
 
 	operandEncoding = cffDictOperandEncoding
 
-	def __init__(self, strings):
+	def __init__(self, strings, parent = None):
 		self.stack = []
 		self.strings = strings
 		self.dict = {}
+		self.parent = parent
 
 	def getDict(self):
 		assert len(self.stack) == 0, "non-empty stack"
