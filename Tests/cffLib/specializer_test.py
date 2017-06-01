@@ -1,11 +1,19 @@
 from __future__ import print_function, division, absolute_import
-from fontTools.cffLib.specializer import programToString, stringToProgram, generalizeProgram, specializeProgram
+from fontTools.cffLib.specializer import (programToString, stringToProgram,
+                                          generalizeProgram, specializeProgram)
 import unittest
 
+# TODO
+# https://github.com/fonttools/fonttools/pull/959#commitcomment-22059841
+# Maybe we should make these data driven. Each entry will have an input string,
+# and a generalized and specialized. For the latter two, if they are None, they
+# are considered equal to the input. Then we can do roundtripping tests as well...
+# There are a few other places (aosp tests for example) where we generate tests
+# from data.
 
 
-def get_generalized_charstr(charstr):
-    return programToString(generalizeProgram(stringToProgram(charstr)))
+def get_generalized_charstr(charstr, **kwargs):
+    return programToString(generalizeProgram(stringToProgram(charstr), **kwargs))
 
 
 def get_specialized_charstr(charstr, **kwargs):
@@ -13,6 +21,79 @@ def get_specialized_charstr(charstr, **kwargs):
 
 
 class CFFGeneralizeProgramTest(unittest.TestCase):
+
+    def __init__(self, methodName):
+        unittest.TestCase.__init__(self, methodName)
+        # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
+        # and fires deprecation warnings if a program uses the old name.
+        if not hasattr(self, "assertRaisesRegex"):
+            self.assertRaisesRegex = self.assertRaisesRegexp
+
+# no arguments/operands
+    def test_rmoveto_none(self):
+        test_charstr = 'rmoveto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_generalized_charstr(test_charstr)
+
+    def test_hmoveto_none(self):
+        test_charstr = 'hmoveto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_generalized_charstr(test_charstr)
+
+    def test_vmoveto_none(self):
+        test_charstr = 'vmoveto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_generalized_charstr(test_charstr)
+
+    def test_rlineto_none(self):
+        test_charstr = 'rlineto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_generalized_charstr(test_charstr)
+
+    def test_hlineto_none(self):
+        test_charstr = 'hlineto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_generalized_charstr(test_charstr)
+
+    def test_vlineto_none(self):
+        test_charstr = 'vlineto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_generalized_charstr(test_charstr)
+
+    def test_rrcurveto_none(self):
+        test_charstr = 'rrcurveto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_generalized_charstr(test_charstr)
+
+    def test_hhcurveto_none(self):
+        test_charstr = 'hhcurveto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_generalized_charstr(test_charstr)
+
+    def test_vvcurveto_none(self):
+        test_charstr = 'vvcurveto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_generalized_charstr(test_charstr)
+
+    def test_hvcurveto_none(self):
+        test_charstr = 'hvcurveto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_generalized_charstr(test_charstr)
+
+    def test_vhcurveto_none(self):
+        test_charstr = 'vhcurveto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_generalized_charstr(test_charstr)
+
+    def test_rcurveline_none(self):
+        test_charstr = 'rcurveline'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_generalized_charstr(test_charstr)
+
+    def test_rlinecurve_none(self):
+        test_charstr = 'rlinecurve'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_generalized_charstr(test_charstr)
 
 # rmoveto
     def test_rmoveto_zero(self):
@@ -149,6 +230,51 @@ class CFFGeneralizeProgramTest(unittest.TestCase):
     def test_rrcurveto_mult(self):
         test_charstr = '-30 8 -36 15 -37 22 44 54 31 61 22 68 rrcurveto'
         xpct_charstr = '-30 8 -36 15 -37 22 rrcurveto 44 54 31 61 22 68 rrcurveto'
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+    def test_rrcurveto_d3947b8(self):
+        test_charstr = '1 2 3 4 5 0 rrcurveto'
+        xpct_charstr = test_charstr
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+    def test_rrcurveto_v0_0h_h0(self):
+        test_charstr = '0 10 1 2 0 0 0 0 1 2 0 1 0 1 3 4 0 0 rrcurveto'
+        xpct_charstr = '0 10 1 2 0 0 rrcurveto 0 0 1 2 0 1 rrcurveto 0 1 3 4 0 0 rrcurveto'
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+    def test_rrcurveto_h0_0h_h0(self):
+        test_charstr = '10 0 1 2 0 0 0 0 1 2 0 1 0 1 3 4 0 0 rrcurveto'
+        xpct_charstr = '10 0 1 2 0 0 rrcurveto 0 0 1 2 0 1 rrcurveto 0 1 3 4 0 0 rrcurveto'
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+    def test_rrcurveto_00_0h_h0(self):
+        test_charstr = '0 0 1 2 0 0 0 0 1 2 0 1 0 1 3 4 0 0 rrcurveto'
+        xpct_charstr = '0 0 1 2 0 0 rrcurveto 0 0 1 2 0 1 rrcurveto 0 1 3 4 0 0 rrcurveto'
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+    def test_rrcurveto_r0_0h_h0(self):
+        test_charstr = '10 10 1 2 0 0 0 0 1 2 0 1 0 1 3 4 0 0 rrcurveto'
+        xpct_charstr = '10 10 1 2 0 0 rrcurveto 0 0 1 2 0 1 rrcurveto 0 1 3 4 0 0 rrcurveto'
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+    def test_rrcurveto_v0_0v_v0(self):
+        test_charstr = '0 10 1 2 0 0 0 0 1 2 1 0 1 0 3 4 0 0 rrcurveto'
+        xpct_charstr = '0 10 1 2 0 0 rrcurveto 0 0 1 2 1 0 rrcurveto 1 0 3 4 0 0 rrcurveto'
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+    def test_rrcurveto_h0_0v_v0(self):
+        test_charstr = '10 0 1 2 0 0 0 0 1 2 1 0 1 0 3 4 0 0 rrcurveto'
+        xpct_charstr = '10 0 1 2 0 0 rrcurveto 0 0 1 2 1 0 rrcurveto 1 0 3 4 0 0 rrcurveto'
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+    def test_rrcurveto_00_0v_v0(self):
+        test_charstr = '0 0 1 2 0 0 0 0 1 2 1 0 1 0 3 4 0 0 rrcurveto'
+        xpct_charstr = '0 0 1 2 0 0 rrcurveto 0 0 1 2 1 0 rrcurveto 1 0 3 4 0 0 rrcurveto'
+        self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
+
+    def test_rrcurveto_r0_0v_v0(self):
+        test_charstr = '10 10 1 2 0 0 0 0 1 2 1 0 1 0 3 4 0 0 rrcurveto'
+        xpct_charstr = '10 10 1 2 0 0 rrcurveto 0 0 1 2 1 0 rrcurveto 1 0 3 4 0 0 rrcurveto'
         self.assertEqual(get_generalized_charstr(test_charstr), xpct_charstr)
 
 # hhcurveto
@@ -372,6 +498,72 @@ class CFFSpecializeProgramTest(unittest.TestCase):
         if not hasattr(self, "assertRaisesRegex"):
             self.assertRaisesRegex = self.assertRaisesRegexp
 
+# no arguments/operands
+    def test_rmoveto_none(self):
+        test_charstr = 'rmoveto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_specialized_charstr(test_charstr)
+
+    def test_hmoveto_none(self):
+        test_charstr = 'hmoveto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_specialized_charstr(test_charstr)
+
+    def test_vmoveto_none(self):
+        test_charstr = 'vmoveto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_specialized_charstr(test_charstr)
+
+    def test_rlineto_none(self):
+        test_charstr = 'rlineto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_specialized_charstr(test_charstr)
+
+    def test_hlineto_none(self):
+        test_charstr = 'hlineto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_specialized_charstr(test_charstr)
+
+    def test_vlineto_none(self):
+        test_charstr = 'vlineto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_specialized_charstr(test_charstr)
+
+    def test_rrcurveto_none(self):
+        test_charstr = 'rrcurveto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_specialized_charstr(test_charstr)
+
+    def test_hhcurveto_none(self):
+        test_charstr = 'hhcurveto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_specialized_charstr(test_charstr)
+
+    def test_vvcurveto_none(self):
+        test_charstr = 'vvcurveto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_specialized_charstr(test_charstr)
+
+    def test_hvcurveto_none(self):
+        test_charstr = 'hvcurveto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_specialized_charstr(test_charstr)
+
+    def test_vhcurveto_none(self):
+        test_charstr = 'vhcurveto'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_specialized_charstr(test_charstr)
+
+    def test_rcurveline_none(self):
+        test_charstr = 'rcurveline'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_specialized_charstr(test_charstr)
+
+    def test_rlinecurve_none(self):
+        test_charstr = 'rlinecurve'
+        with self.assertRaisesRegex(ValueError, r'\[\]'):
+            get_specialized_charstr(test_charstr)
+
 # rmoveto
     def test_rmoveto_zero(self):
         test_charstr = '0 0 rmoveto'
@@ -480,6 +672,11 @@ class CFFSpecializeProgramTest(unittest.TestCase):
     def test_rrcurveto_mult(self):
         test_charstr = '-30 8 -36 15 -37 22 rrcurveto 44 54 31 61 22 68 rrcurveto'
         xpct_charstr = '-30 8 -36 15 -37 22 44 54 31 61 22 68 rrcurveto'
+        self.assertEqual(get_specialized_charstr(test_charstr), xpct_charstr)
+
+    def test_rrcurveto_d3947b8(self):
+        test_charstr = '1 2 3 4 5 0 rrcurveto'
+        xpct_charstr = '2 1 3 4 5 hhcurveto'
         self.assertEqual(get_specialized_charstr(test_charstr), xpct_charstr)
 
     def test_hhcurveto_4(self):
