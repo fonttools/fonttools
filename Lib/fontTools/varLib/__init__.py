@@ -280,14 +280,14 @@ def _iup_contour_optimize_dp(delta, coords, forced={}, tolerance=0):
 				break
 
 	# Assemble solution.
-	sol = set()
+	solution = set()
 	i = n - 1
 	while i is not None:
-		sol.add(i)
+		solution.add(i)
 		i = chain[i]
-	assert forced <= sol, (forced, sol)
+	assert forced <= solution, (forced, solution)
 
-	delta = [delta[i] if i in sol else None for i in range(n)]
+	delta = [delta[i] if i in solution else None for i in range(n)]
 
 	return delta, costs[n - 1]
 
@@ -296,10 +296,26 @@ def _rot_list(l, k):
 	at position k in returned list.  Negative k is allowed."""
 	n = len(l)
 	k %= n
+	if not k: return l
 	return l[n-k:] + l[:n-k]
 
 def _rot_set(s, k, n):
+	k %= n
+	if not k: return s
 	return {(v + k) % n for v in s}
+
+def _iup_contour_optimize_dp_with_offset(delta, coords, offset, forced, tolerance):
+	n = len(delta)
+
+	delta  = _rot_list(delta, offset)
+	coords = _rot_list(coords, offset)
+	forced = _rot_set(forced, offset, n)
+
+	delta, cost = _iup_contour_optimize_dp(delta, coords, forced, tolerance)
+
+	delta = _rot_list(delta, -offset)
+
+	return delta, cost
 
 def _iup_contour_optimize(delta, coords, tolerance=0.):
 	n = len(delta)
@@ -332,15 +348,13 @@ def _iup_contour_optimize(delta, coords, tolerance=0.):
 		# such that the last point in the list is a forced point.
 		k = (n-1) - max(forced)
 		assert k >= 0
-		delta, coords, forced = _rot_list(delta, k), _rot_list(coords, k), _rot_set(forced, k, n)
-		delta, _ = _iup_contour_optimize_dp(delta, coords, forced, tolerance)
-		delta = _rot_list(delta, -k)
+		delta, _ = _iup_contour_optimize_dp_with_offset(delta, coords, k, forced, tolerance)
 	else:
 		# Brute-force: rotate and retry until all points on the contour are part
 		# of at least one solution. The best of those solutions is the optimal
 		# solution.
-		# TODO
-		delta, cost = _iup_contour_optimize_dp(delta, coords, forced, tolerance)
+		k = 0
+		delta, cost = _iup_contour_optimize_dp_with_offset(delta, coords, k, forced, tolerance)
 
 	return delta
 
