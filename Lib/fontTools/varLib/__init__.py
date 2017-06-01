@@ -353,8 +353,16 @@ def _iup_contour_optimize(delta, coords, tolerance=0.):
 		# Brute-force: rotate and retry until all points on the contour are part
 		# of at least one solution. The best of those solutions is the optimal
 		# solution.
-		k = 0
-		delta, cost = _iup_contour_optimize_dp_with_offset(delta, coords, k, forced, tolerance)
+		best_delta, best_cost = None, n + 1
+		tocover = set(range(n))
+		while tocover:
+			k = (n-1) - max(tocover)
+			assert k >= 0
+			this_delta, this_cost = _iup_contour_optimize_dp_with_offset(delta, coords, k, forced, tolerance)
+			if this_cost < best_cost:
+				best_delta, best_cost = this_delta, this_cost
+			tocover -= {i for i,v in enumerate(this_delta) if v is not None}
+		delta = best_delta
 
 	return delta
 
