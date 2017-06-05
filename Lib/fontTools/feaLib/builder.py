@@ -74,6 +74,29 @@ class Builder(object):
         # for table 'vhea'
         self.vhea_ = {}
 
+    def _copy_empty_script_records(self, src, dst):
+        """Copies emptied Script records from one src OT table
+           to another dst OT table if they are not in the dst OT table.
+        """
+        dst_script_tags = set(srec.ScriptTag for srec in
+                              dst.ScriptList.ScriptRecord)
+        for src_srec in src.ScriptList.ScriptRecord:
+            if src_srec.ScriptTag not in dst_script_tags:
+                dst_srec = otTables.ScriptRecord()
+                dst_srec.ScriptTag = src_srec.ScriptTag
+                dst_srec.Script = otTables.Script()
+                dst_srec.Script.DefaultLangSys = otTables.LangSys()
+                dst_srec.Script.DefaultLangSys.ReqFeatureIndex = 0xFFFF
+                dst_srec.Script.DefaultLangSys.FeatureCount = 0
+                dst_srec.Script.DefaultLangSys.FeatureIndex = []
+                dst_srec.Script.LangSysRecord = []
+                dst.ScriptList.ScriptRecord.append(dst_srec)
+            else:
+                dst_srec = [srec for srec in dst.ScriptList.ScriptRecord if
+                            srec.ScriptTag == src_srec.ScriptTag][0]
+            dst_srec.Script.LangSysCount = len(dst_srec.Script.LangSysRecord)
+            dst.ScriptList.ScriptCount = len(dst.ScriptList.ScriptRecord)
+
     def build(self):
         self.parseTree = Parser(self.file, self.glyphMap).parse()
         self.parseTree.build(self)
@@ -91,14 +114,19 @@ class Builder(object):
         # See https://github.com/googlei18n/fontmake/issues/258
         gpos_table = self.font['GPOS'].table
         gsub_table = self.font['GSUB'].table
-        if (not (gpos_table.ScriptList.ScriptCount > 0 or
-                 gpos_table.FeatureList.FeatureCount > 0 or
-                 gpos_table.LookupList.LookupCount > 0) and
-            not (gsub_table.ScriptList.ScriptCount > 0 or
-                 gsub_table.FeatureList.FeatureCount > 0 or
-                 gsub_table.LookupList.LookupCount > 0)):
+        gpos_is_empty = not (gpos_table.ScriptList.ScriptCount > 0 or
+                             gpos_table.FeatureList.FeatureCount > 0 or
+                             gpos_table.LookupList.LookupCount > 0)
+        gsub_is_empty = not (gsub_table.ScriptList.ScriptCount > 0 or
+                             gsub_table.FeatureList.FeatureCount > 0 or
+                             gsub_table.LookupList.LookupCount > 0)
+        if (gpos_is_empty and gsub_is_empty):
             del self.font['GPOS']
             del self.font['GSUB']
+        else:
+            self._copy_empty_script_records(gsub_table, gpos_table)
+            self._copy_empty_script_records(gpos_table, gsub_table)
+
         gdef = self.buildGDEF()
         if gdef:
             self.font["GDEF"] = gdef
