@@ -85,13 +85,20 @@ class Builder(object):
         self.build_OS_2()
         for tag in ('GPOS', 'GSUB'):
             table = self.makeTable(tag)
-            if (table.ScriptList.ScriptCount > 0 or
-                    table.FeatureList.FeatureCount > 0 or
-                    table.LookupList.LookupCount > 0):
-                fontTable = self.font[tag] = newTable(tag)
-                fontTable.table = table
-            elif tag in self.font:
-                del self.font[tag]
+            fontTable = self.font[tag] = newTable(tag)
+            fontTable.table = table
+        # Only remove empty GPOS and GSUB tables if both are empty
+        # See https://github.com/googlei18n/fontmake/issues/258
+        gpos_table = self.font['GPOS'].table
+        gsub_table = self.font['GSUB'].table
+        if (not (gpos_table.ScriptList.ScriptCount > 0 or
+                 gpos_table.FeatureList.FeatureCount > 0 or
+                 gpos_table.LookupList.LookupCount > 0) and
+            not (gsub_table.ScriptList.ScriptCount > 0 or
+                 gsub_table.FeatureList.FeatureCount > 0 or
+                 gsub_table.LookupList.LookupCount > 0)):
+            del self.font['GPOS']
+            del self.font['GSUB']
         gdef = self.buildGDEF()
         if gdef:
             self.font["GDEF"] = gdef
