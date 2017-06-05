@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ttFont sfntVersion="true" ttLibVersion="3.0">
 
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=0 -->
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=0 -->
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=0 -->
+    </LookupList>
+  </GSUB>
+
   <GPOS>
     <Version value="0x00010000"/>
     <ScriptList>
