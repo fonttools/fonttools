@@ -566,6 +566,36 @@ class AATLookup(BaseConverter):
 		return {font.getGlyphName(k):font.getGlyphName(v)
 		        for k, v in mapping.items() if k != v}
 
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		glyphMap = font.getReverseGlyphMap()
+		binSrchHeaderSize = 10
+		formatSizes = {6: binSrchHeaderSize + len(value) * 4}
+		if glyphMap.keys() == value.keys():
+			formatSizes[0] = len(value) * 2
+		# TODO: Also implement format 2, 4, and 8.
+		bestFormat = min(formatSizes, key=formatSizes.get)
+		writeMethod = getattr(self, 'writeFormat%d' % bestFormat)
+		writer.writeUShort(bestFormat)
+		writeMethod(writer, font, value)
+
+	def writeFormat0(self, writer, font, value):
+		for glyph in font.getGlyphOrder():
+			writer.writeUShort(font.getGlyphID(value[glyph]))
+
+	def writeFormat6(self, writer, font, value):
+		writer.writeUShort(2)  # unit size
+		writer.writeUShort(len(value))  # nUnits
+		# TODO: The following three are not correct yet.
+		writer.writeUShort(int.bit_length(len(value)))  # searchRange
+		writer.writeUShort(int.bit_length(len(value)))  # entrySelector
+		writer.writeUShort(int.bit_length(len(value)))  # rangeShift
+		table = [(font.getGlyphID(key), font.getGlyphID(value))
+		         for key, value in value.items()]
+		table.sort()
+		for key, value in table:
+			writer.writeUShort(key)
+			writer.writeUShort(value)
+
 	def readFormat0(self, reader, numGlyphs):
 		data = reader.readUShortArray(numGlyphs)
 		return {k:v for (k,v) in enumerate(data)}
