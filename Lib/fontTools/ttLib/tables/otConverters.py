@@ -23,7 +23,7 @@ def buildConverters(tableSpec, tableNamespace):
 		if name.startswith("ValueFormat"):
 			assert tp == "uint16"
 			converterClass = ValueFormat
-		elif name.endswith("Count") or name == "MorphType":
+		elif name.endswith("Count") or name == "MorphType" or name == "StructLength":
 			converterClass = {
 				"uint8": ComputedUInt8,
 				"uint16": ComputedUShort,
@@ -98,9 +98,9 @@ class BaseConverter(object):
 		self.repeat = repeat
 		self.aux = aux
 		self.tableClass = tableClass
-		self.isCount = name.endswith("Count") or name in ['DesignAxisRecordSize', 'ValueRecordSize']
+		self.isCount = name.endswith("Count") or name in ['DesignAxisRecordSize', 'ValueRecordSize', 'StructLength']
 		self.isLookupType = name.endswith("LookupType") or name == "MorphType"
-		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount", "VarRegionCount", "MappingCount", "RegionAxisCount", 'DesignAxisCount', 'DesignAxisRecordSize', 'AxisValueCount', 'ValueRecordSize']
+		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount", "VarRegionCount", "MappingCount", "RegionAxisCount", 'DesignAxisCount', 'DesignAxisRecordSize', 'AxisValueCount', 'ValueRecordSize', 'StructLength']
 
 	def readArray(self, reader, font, tableDict, count):
 		"""Read an array of values from the reader."""
@@ -427,11 +427,12 @@ class StructWithLength(Struct):
 		table = self.tableClass()
 		table.decompile(reader, font)
 		reader.seek(pos + table.StructLength)
+		del table.StructLength
 		return table
 
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		value.compile(writer, font)
-		assert 0, "Fix length"
+		writer['StructLength'].setValue(writer.getDataLength())
 
 
 class Table(Struct):

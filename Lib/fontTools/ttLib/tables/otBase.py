@@ -239,11 +239,10 @@ class OTTableWriter(object):
 		"""Return the length of this table in bytes, without subtables."""
 		l = 0
 		for item in self.items:
-			if hasattr(item, "getData") or hasattr(item, "getCountData"):
-				if item.longOffset:
-					l = l + 4  # sizeof(ULong)
-				else:
-					l = l + 2  # sizeof(UShort)
+			if hasattr(item, "getCountData"):
+				l += item.size
+			elif hasattr(item, "getData"):
+				l += 4 if item.longOffset else 2
 			else:
 				l = l + len(item)
 		return l
