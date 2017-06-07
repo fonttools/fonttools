@@ -605,7 +605,7 @@ class BaseTable(object):
 			if conv.name == "FeatureParams":
 				conv = conv.getConverter(reader["FeatureTag"])
 			if conv.name == "SubStruct":
-				conv = conv.getConverter(reader.globalState.tableType,
+				conv = conv.getConverter(reader.tableTag,
 				                         table["MorphType"])
 			if conv.repeat:
 				if conv.repeat in table:

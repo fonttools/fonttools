@@ -1179,6 +1179,12 @@ otData = [
 	## Apple Advanced Typography (AAT) tables
 	##
 
+	('AATLookupSegment', [
+		('uint16', 'lastGlyph', None, None, 'Last glyph index in this segment.'),
+		('uint16', 'firstGlyph', None, None, 'First glyph index in this segment.'),
+		('uint16', 'value', None, None, 'A 16-bit offset from the start of the table to the data.'),
+	]),
+
 	#
 	# feat
 	#
@@ -1211,5 +1217,84 @@ otData = [
 		('uint16', 'SettingValue', None, None, 'The setting.'),
 		('NameID', 'SettingNameID', None, None, 'The name table index for the setting name.'),
 	]),
+
+	#
+	# morx
+	#
+
+	# TODO: use 'struct' when field.type == field.name
+
+	('morx', [
+		('uint16', 'Version', None, None, 'Version of the morx table.'),
+		('uint16', 'Reserved', None, None, 'Reserved (set to zero).'),
+		('uint32', 'ChainCount', None, None, 'Number of MorphChains.'),
+		('MorphChain', 'MorphChain', 'ChainCount', 0, 'Array of MorphChains.'),
+	]),
+
+	('MorphChain', [
+		('Flags32', 'DefaultFlags', None, None, 'The default specification for subtables.'),
+		('uint32', 'StructLength', None, None, 'Total byte count, including this header; must be a multiple of 4.'),
+		('uint32', 'MorphFeatureCount', None, None, 'Number of feature subtable entries.'),
+		('uint32', 'MorphSubtableCount', None, None, 'The number of subtables in the chain.'),
+		('MorphFeature', 'MorphFeature', 'MorphFeatureCount', 0, 'Array of MorphFeatures.'),
+		('MorphSubtable', 'MorphSubtable', 'MorphSubtableCount', 0, 'Array of MorphSubtables.'),
+	]),
+
+	('MorphFeature', [
+		('uint16', 'FeatureType', None, None, 'The type of feature.'),
+		('uint16', 'FeatureSetting', None, None, "The feature's setting (aka selector)."),
+		('Flags32', 'EnableFlags', None, None, 'Flags for the settings that this feature and setting enables.'),
+		('Flags32', 'DisableFlags', None, None, 'Complement of flags for the settings that this feature and setting disable.'),
+	]),
+
+	('MorphSubtable', [
+		('uint32', 'StructLength', None, None, 'Total subtable length, including this header.'),
+		('uint8', 'CoverageFlags', None, None, 'Most significant byte of coverage flags.'),
+		('uint8', 'Reserved', None, None, 'Unused.'),
+		('uint16', 'MorphType', None, None, 'Subtable type.'),
+		('Flags32', 'SubFeatureFlags', None, None, 'The 32-bit mask identifying which subtable this is (the subtable being executed if the AND of this value and the processed defaultFlags is nonzero).'),
+		('SubStruct', 'SubStruct', None, None, 'SubTable.'),
+        ]),
+
+	('StateHeader', [
+		('uint32', 'ClassCount', None, None, 'Number of classes, which is the number of 16-bit entry indices in a single line in the state array.'),
+		('uint32', 'MorphClass', None, None, 'Offset from the start of this state table header to the start of the class table.'),
+		('uint32', 'StateArrayOffset', None, None, 'Offset from the start of this state table header to the start of the state array.'),
+		('uint32', 'EntryTableOffset', None, None, 'Offset from the start of this state table header to the start of the entry table.'),
+	]),
+
+	('RearrangementMorph', [
+		('struct', 'StateHeader', None, None, 'Header.'),
+	]),
+
+	('ContextualMorph', [
+		('struct', 'StateHeader', None, None, 'Header.'),
+		# TODO: Add missing parts.
+	]),
+
+	('LigatureMorph', [
+		('struct', 'StateHeader', None, None, 'Header.'),
+		('uint32', 'LigActionOffset', None, None, 'Byte offset from stateHeader to the start of the ligature action table.'),
+		('uint32', 'ComponentOffset', None, None, 'Byte offset from stateHeader to the start of the component table.'),
+		('uint32', 'LigatureOffset', None, None, 'Byte offset from stateHeader to the start of the actual ligature lists.'),
+	]),
+
+	('NoncontextualMorph', [
+		('AATLookup', 'mapping', None, None, 'The noncontextual glyph substitution table.'),
+        ]),
+
+	('InsertionMorph', [
+		('struct', 'StateHeader', None, None, 'Header.'),
+		# TODO: Add missing parts.
+	]),
+
+	('MorphClass', [
+		('uint16', 'FirstGlyph', None, None, 'Glyph index of the first glyph in the class table.'),
+		#('uint16', 'GlyphCount', None, None, 'Number of glyphs in class table.'),
+		#('uint8', 'GlyphClass', 'GlyphCount', 0, 'The class codes (indexed by glyph index minus firstGlyph). Class codes range from 0 to the value of stateSize minus 1.'),
+	]),
+
+	# If the 'morx' table version is 3 or greater, then the last subtable in the chain is followed by a subtableGlyphCoverageArray, as described below.
+	#		('Offset', 'MarkGlyphSetsDef', None, 'int(round(Version*0x10000)) >= 0x00010002', 'Offset to the table of mark set definitions-from beginning of GDEF header (may be NULL)'),
 
 ]
