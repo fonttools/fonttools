@@ -250,6 +250,29 @@ class AATLookupTest(unittest.TestCase):
             "unsupported lookup format: 9",
             self.converter.read, reader, self.font, None)
 
+    def test_writeFormat0(self):
+        writer = OTTableWriter()
+        font = FakeFont(".notdef A B C".split())
+        self.converter.write(writer, font, {}, {
+            ".notdef": ".notdef",
+            "A": "C",
+            "B": "C",
+            "C": "A"
+        })
+        self.assertEqual(writer.getData(), deHexStr("0000 0000 0003 0003 0001"))
+
+    def test_writeFormat6(self):
+        writer = OTTableWriter()
+        font = FakeFont(".notdef A B C".split())
+        self.converter.write(writer, font, {}, {
+            "A": "C",
+            "C": "B"
+        })
+        # TODO: The binSrchHeader entries have the wrong values.
+        self.assertEqual(writer.getData(),
+                         deHexStr("0006 0002 0002 0002 0002 0002 "
+                                  "0001 0003 0003 0002"))
+
     def test_xmlRead(self):
         value = self.converter.xmlRead({}, [
             ("Substitution", {"in": "A", "out": "A.alt"}, []),

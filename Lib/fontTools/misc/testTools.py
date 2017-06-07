@@ -37,6 +37,7 @@ def parseXML(xmlSnippet):
 class FakeFont:
     def __init__(self, glyphs):
         self.glyphOrder_ = glyphs
+        self.reverseGlyphOrderDict_ = {g:i for i,g in enumerate(glyphs)}
         self.lazy = False
         self.tables = {}
 
@@ -50,7 +51,7 @@ class FakeFont:
         return self.tables.get(tag, default)
 
     def getGlyphID(self, name):
-        return self.glyphOrder_.index(name)
+        return self.reverseGlyphOrderDict_[name]
 
     def getGlyphName(self, glyphID):
         if glyphID < len(self.glyphOrder_):
@@ -60,6 +61,9 @@ class FakeFont:
 
     def getGlyphOrder(self):
         return self.glyphOrder_
+
+    def getReverseGlyphMap(self):
+        return self.reverseGlyphOrderDict_
 
 
 class TestXMLReader_(object):
