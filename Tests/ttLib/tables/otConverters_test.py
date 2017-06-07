@@ -175,7 +175,7 @@ class UInt8Test(unittest.TestCase):
 
 
 class AATLookupTest(unittest.TestCase):
-    font = FakeFont(".notdef A B C D E F G H".split())
+    font = FakeFont(".notdef A B C D E F G H A.alt B.alt".split())
     converter = otConverters.AATLookup("AATLookup", 0, None, None)
 
     def __init__(self, methodName):
@@ -250,15 +250,23 @@ class AATLookupTest(unittest.TestCase):
             "unsupported lookup format: 9",
             self.converter.read, reader, self.font, None)
 
+    def test_xmlRead(self):
+        value = self.converter.xmlRead({}, [
+            ("Substitution", {"in": "A", "out": "A.alt"}, []),
+            ("Substitution", {"in": "B", "out": "B.alt"}, []),
+        ], self.font)
+        self.assertEqual(value, {"A": "A.alt", "B": "B.alt"})
+
     def test_xmlWrite(self):
         writer = makeXMLWriter()
-        self.converter.xmlWrite(writer, self.font, value={"A": "B", "C": "D"},
+        self.converter.xmlWrite(writer, self.font,
+                                value={"A": "A.alt", "B": "B.alt"},
                                 name="Foo", attrs=[("attr", "val")])
         xml = writer.file.getvalue().decode("utf-8").splitlines()
         self.assertEqual(xml, [
             '<Foo attr="val">',
-            '  <Substitution in="A" out="B"/>',
-            '  <Substitution in="C" out="D"/>',
+            '  <Substitution in="A" out="A.alt"/>',
+            '  <Substitution in="B" out="B.alt"/>',
             '</Foo>',
         ])
 
