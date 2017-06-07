@@ -96,7 +96,7 @@ class BaseConverter(object):
 		self.aux = aux
 		self.tableClass = tableClass
 		self.isCount = name.endswith("Count") or name in ['DesignAxisRecordSize', 'ValueRecordSize']
-		self.isLookupType = name.endswith("LookupType")
+		self.isLookupType = name.endswith("LookupType") or name == "MorphType"
 		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount", "VarRegionCount", "MappingCount", "RegionAxisCount", 'DesignAxisCount', 'DesignAxisRecordSize', 'AxisValueCount', 'ValueRecordSize']
 
 	def readArray(self, reader, font, tableDict, count):
