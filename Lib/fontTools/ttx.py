@@ -155,6 +155,8 @@ class Options(object):
 				value = value.ljust(4)
 				self.onlyTables.append(value)
 			elif option == "-x":
+				# pad with space if table tag length is less than 4
+				value = value.ljust(4)
 				self.skipTables.append(value)
 			elif option == "-s":
 				self.splitTables = True
