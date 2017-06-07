@@ -1,3 +1,4 @@
+# coding: utf-8
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
@@ -1247,11 +1248,14 @@ otData = [
 		('Flags32', 'DisableFlags', None, None, 'Complement of flags for the settings that this feature and setting disable.'),
 	]),
 
+	# Apple TrueType Reference Manual, chapter “The ‘morx’ table”,
+	# section “Metamorphosis Subtables”.
+	# https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6morx.html
 	('MorphSubtable', [
 		('uint32', 'StructLength', None, None, 'Total subtable length, including this header.'),
 		('uint8', 'CoverageFlags', None, None, 'Most significant byte of coverage flags.'),
-		('uint8', 'Reserved', None, None, 'Unused.'),
-		('uint16', 'MorphType', None, None, 'Subtable type.'),
+		('uint16', 'Reserved', None, None, 'Unused.'),
+		('uint8', 'MorphType', None, None, 'Subtable type.'),
 		('Flags32', 'SubFeatureFlags', None, None, 'The 32-bit mask identifying which subtable this is (the subtable being executed if the AND of this value and the processed defaultFlags is nonzero).'),
 		('SubStruct', 'SubStruct', None, None, 'SubTable.'),
         ]),
