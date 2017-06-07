@@ -233,6 +233,9 @@ class OTTableWriter(object):
 	def __getitem__(self, name):
 		return self.localState[name]
 
+	def __delitem__(self, name):
+		del self.localState[name]
+
 	# assembler interface
 
 	def getDataLength(self):

@@ -434,6 +434,7 @@ class StructWithLength(Struct):
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		value.compile(writer, font)
 		writer['StructLength'].setValue(writer.getDataLength())
+		del writer['StructLength']
 
 
 class Table(Struct):
