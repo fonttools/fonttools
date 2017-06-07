@@ -621,11 +621,15 @@ class AATLookup(BaseConverter):
 		return {(first + k):v for (k, v) in enumerate(data)}
 
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		xmlWriter.begintag(name, attrs)
+		xmlWriter.newline()
 		items = sorted(value.items())
 		for inGlyph, outGlyph in items:
 			xmlWriter.simpletag("Substitution",
 					[("in", inGlyph), ("out", outGlyph)])
 			xmlWriter.newline()
+		xmlWriter.endtag(name)
+		xmlWriter.newline()
 
 
 class DeltaValue(BaseConverter):

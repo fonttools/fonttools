@@ -250,6 +250,18 @@ class AATLookupTest(unittest.TestCase):
             "unsupported lookup format: 9",
             self.converter.read, reader, self.font, None)
 
+    def test_xmlWrite(self):
+        writer = makeXMLWriter()
+        self.converter.xmlWrite(writer, self.font, value={"A": "B", "C": "D"},
+                                name="Foo", attrs=[("attr", "val")])
+        xml = writer.file.getvalue().decode("utf-8").splitlines()
+        self.assertEqual(xml, [
+            '<Foo attr="val">',
+            '  <Substitution in="A" out="B"/>',
+            '  <Substitution in="C" out="D"/>',
+            '</Foo>',
+        ])
+
 
 if __name__ == "__main__":
     import sys
