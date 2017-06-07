@@ -434,12 +434,6 @@ class StructWithLength(Struct):
 		assert 0, "Fix length"
 
 
-class SubStruct(Struct):
-	def getConverter(self, tableType, lookupType):
-		tableClass = self.lookupTypes[tableType][lookupType]
-		return self.__class__(self.name, self.repeat, self.aux, tableClass)
-
-
 class Table(Struct):
 
 	longOffset = False
@@ -488,20 +482,30 @@ class LTable(Table):
 		return reader.readULong()
 
 
+# TODO Clean / merge the SubTable and SubStruct
+
+class SubStruct(Struct):
+	def getConverter(self, tableType, lookupType):
+		tableClass = self.lookupTypes[tableType][lookupType]
+		return self.__class__(self.name, self.repeat, self.aux, tableClass)
+
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		super(SubStruct, self).xmlWrite(xmlWriter, font, value, None, attrs)
+
 class SubTable(Table):
 	def getConverter(self, tableType, lookupType):
 		tableClass = self.lookupTypes[tableType][lookupType]
 		return self.__class__(self.name, self.repeat, self.aux, tableClass)
 
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
-		Table.xmlWrite(self, xmlWriter, font, value, None, attrs)
-
+		super(SubTable, self).xmlWrite(xmlWriter, font, value, None, attrs)
 
 class ExtSubTable(LTable, SubTable):
 
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.Extension = True # actually, mere presence of the field flags it as an Ext Subtable writer.
 		Table.write(self, writer, font, tableDict, value, repeatIndex)
+
 
 class FeatureParams(Table):
 	def getConverter(self, featureTag):
