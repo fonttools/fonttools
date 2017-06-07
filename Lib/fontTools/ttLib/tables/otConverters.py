@@ -620,6 +620,15 @@ class AATLookup(BaseConverter):
 		data = reader.readUShortArray(count)
 		return {(first + k):v for (k, v) in enumerate(data)}
 
+	def xmlRead(self, attrs, content, font):
+		value = {}
+		for element in content:
+			if isinstance(element, tuple):
+				name, a, eltContent = element
+				if name == "Substitution":
+					value[a["in"]] = a["out"]
+		return value
+
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		xmlWriter.begintag(name, attrs)
 		xmlWriter.newline()
