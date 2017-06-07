@@ -604,6 +604,9 @@ class BaseTable(object):
 						table["ExtensionLookupType"])
 			if conv.name == "FeatureParams":
 				conv = conv.getConverter(reader["FeatureTag"])
+			if conv.name == "SubStruct":
+				conv = conv.getConverter(reader.globalState.tableType,
+				                         table["MorphType"])
 			if conv.repeat:
 				if conv.repeat in table:
 					countValue = table[conv.repeat]
