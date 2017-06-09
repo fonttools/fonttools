@@ -1719,7 +1719,7 @@ topDictOperators = [
 	(4,		'Weight',		'SID',		None,	None),
 	((12, 1),	'isFixedPitch',		'number',	0,	None),
 	((12, 2),	'ItalicAngle',		'number',	0,	None),
-	((12, 3),	'UnderlinePosition',	'number',	None,	None),
+	((12, 3),	'UnderlinePosition',	'number',	-100,	None),
 	((12, 4),	'UnderlineThickness',	'number',	50,	None),
 	((12, 5),	'PaintType',		'number',	0,	None),
 	((12, 6),	'CharstringType',	'number',	2,	None),
