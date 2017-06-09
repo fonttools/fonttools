@@ -13,6 +13,7 @@
       <Weight value="Regular"/>
       <isFixedPitch value="0"/>
       <ItalicAngle value="0"/>
+      <UnderlinePosition value="-100"/>
       <UnderlineThickness value="50"/>
       <PaintType value="0"/>
       <CharstringType value="2"/>
