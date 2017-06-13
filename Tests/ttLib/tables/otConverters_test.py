@@ -307,6 +307,24 @@ class AATLookupTest(unittest.TestCase):
             "FFFF FFFF "    # entries[4]=<END>
         ))
 
+    def test_writeFormat8(self):
+        writer = OTTableWriter()
+        font = FakeFont(".notdef A B C D E F G H".split())
+        self.converter.write(writer, font, {}, {
+            "B": "B",
+            "C": "A",
+            "D": "B",
+            "E": "C",
+            "F": "B",
+            "G": "A",
+        })
+        self.assertEqual(writer.getData(), deHexStr(
+            "0008 "                          # format=8
+            "0002 "                          # firstGlyph=B
+            "0006 "                          # glyphCount=6
+            "0002 0001 0002 0003 0002 0001"  # valueArray=[B, A, B, C, B, A]
+        ))
+
     def test_xmlRead(self):
         value = self.converter.xmlRead({}, [
             ("Substitution", {"in": "A", "out": "A.alt"}, []),
