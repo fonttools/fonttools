@@ -687,20 +687,22 @@ class AATLookup(BaseConverter):
 
 	def readFormat0(self, reader, font):
 		numGlyphs = len(font.getGlyphOrder())
-		data = reader.readUShortArray(numGlyphs)
-		return {font.getGlyphName(k): font.getGlyphName(v)
-		        for (k,v) in enumerate(data)}
+		data = self.valueConverter.readArray(
+			reader, font, tableDict=None, count=numGlyphs)
+		return {font.getGlyphName(k): value
+		        for k, value in enumerate(data)}
 
 	def readFormat2(self, reader, font):
 		mapping = {}
 		pos = reader.pos - 2  # start of table is at UShort for format
-		size = reader.readUShort()
-		assert size == 6, size
-		for i in range(reader.readUShort()):
-			reader.seek(pos + i * size + 12)
+		unitSize, numUnits = reader.readUShort(), reader.readUShort()
+		assert unitSize >= 4 + self.valueConverter.staticSize, unitSize
+		for i in range(numUnits):
+			reader.seek(pos + i * unitSize + 12)
 			last = reader.readUShort()
 			first = reader.readUShort()
-			value = font.getGlyphName(reader.readUShort())
+			value = self.valueConverter.read(
+				reader, font, tableDict=None)
 			if last != 0xFFFF:
 				for k in range(first, last + 1):
 					mapping[font.getGlyphName(k)] = value
@@ -709,40 +711,43 @@ class AATLookup(BaseConverter):
 	def readFormat4(self, reader, font):
 		mapping = {}
 		pos = reader.pos - 2  # start of table is at UShort for format
-		size = reader.readUShort()
-		assert size == 6, size
+		unitSize = reader.readUShort()
+		assert unitSize >= 6, unitSize
 		for i in range(reader.readUShort()):
-			reader.seek(pos + i * size + 12)
+			reader.seek(pos + i * unitSize + 12)
 			last = reader.readUShort()
 			first = reader.readUShort()
 			offset = reader.readUShort()
 			if last != 0xFFFF:
 				dataReader = reader.getSubReader(pos + offset)
-				data = dataReader.readUShortArray(last - first + 1)
+				data = self.valueConverter.readArray(
+					dataReader, font, tableDict=None,
+					count=last - first + 1)
 				for k, v in enumerate(data):
-					value = font.getGlyphName(v)
-					mapping[font.getGlyphName(first + k)] = value
+					mapping[font.getGlyphName(first + k)] = v
 		return mapping
 
 	def readFormat6(self, reader, font):
 		mapping = {}
 		pos = reader.pos - 2  # start of table is at UShort for format
-		size = reader.readUShort()
-		assert size == 4, size
+		unitSize = reader.readUShort()
+		assert unitSize >= 2 + self.valueConverter.staticSize, unitSize
 		for i in range(reader.readUShort()):
-			reader.seek(pos + i * size + 12)
-			glyph = reader.readUShort()
-			value = reader.readUShort()
-			if glyph != 0xFFFF:
-				mapping[font.getGlyphName(glyph)] = font.getGlyphName(value)
+			reader.seek(pos + i * unitSize + 12)
+			glyphID = reader.readUShort()
+			value = self.valueConverter.read(
+				reader, font, tableDict=None)
+			if glyphID != 0xFFFF:
+				mapping[font.getGlyphName(glyphID)] = value
 		return mapping
 
 	def readFormat8(self, reader, font):
 		first = reader.readUShort()
 		count = reader.readUShort()
-		data = reader.readUShortArray(count)
-		return {font.getGlyphName(first + k): font.getGlyphName(v)
-		        for (k, v) in enumerate(data)}
+		data = self.valueConverter.readArray(
+			reader, font, tableDict=None, count=count)
+		return {font.getGlyphName(first + k): value
+		        for (k, value) in enumerate(data)}
 
 	def xmlRead(self, attrs, content, font):
 		value = {}
