@@ -1,9 +1,10 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.misc.textTools import safeEval
 from fontTools.misc.fixedTools import (
 	fixedToFloat as fi2fl, floatToFixed as fl2fi, ensureVersionIsLong as fi2ve,
 	versionToFixed as ve2fi)
+from fontTools.misc.textTools import safeEval
+from fontTools.ttLib import getSearchRange
 from .otBase import ValueRecordFactory, CountReference
 from functools import partial
 import logging
@@ -569,7 +570,7 @@ class AATLookup(BaseConverter):
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		glyphMap = font.getReverseGlyphMap()
 		binSrchHeaderSize = 10
-		formatSizes = {6: binSrchHeaderSize + len(value) * 4}
+		formatSizes = {6: binSrchHeaderSize + len(value) * 4 + 4}
 		if glyphMap.keys() == value.keys():
 			formatSizes[0] = len(value) * 2
 		# TODO: Also implement format 2, 4, and 8.
@@ -578,20 +579,26 @@ class AATLookup(BaseConverter):
 		writer.writeUShort(bestFormat)
 		writeMethod(writer, font, value)
 
+	@staticmethod
+	def writeBinSearchHeader(writer, numUnits, unitSize):
+		writer.writeUShort(unitSize)
+		writer.writeUShort(numUnits)
+		searchRange, entrySelector, rangeShift = \
+			getSearchRange(n=numUnits, itemSize=unitSize)
+		writer.writeUShort(searchRange)
+		writer.writeUShort(entrySelector)
+		writer.writeUShort(rangeShift)
+
 	def writeFormat0(self, writer, font, value):
 		for glyph in font.getGlyphOrder():
 			writer.writeUShort(font.getGlyphID(value[glyph]))
 
 	def writeFormat6(self, writer, font, value):
-		writer.writeUShort(2)  # unit size
-		writer.writeUShort(len(value))  # nUnits
-		# TODO: The following three are not correct yet.
-		writer.writeUShort(int.bit_length(len(value)))  # searchRange
-		writer.writeUShort(int.bit_length(len(value)))  # entrySelector
-		writer.writeUShort(int.bit_length(len(value)))  # rangeShift
 		table = [(font.getGlyphID(key), font.getGlyphID(value))
-		         for key, value in value.items()]
+		         for key, value in value.items()] + [(0xFFFF, 0xFFFF)]
 		table.sort()
+		self.writeBinSearchHeader(writer,
+		                          numUnits=len(table), unitSize=4)
 		for key, value in table:
 			writer.writeUShort(key)
 			writer.writeUShort(value)

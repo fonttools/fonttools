@@ -268,10 +268,17 @@ class AATLookupTest(unittest.TestCase):
             "A": "C",
             "C": "B"
         })
-        # TODO: The binSrchHeader entries have the wrong values.
-        self.assertEqual(writer.getData(),
-                         deHexStr("0006 0002 0002 0002 0002 0002 "
-                                  "0001 0003 0003 0002"))
+        self.assertEqual(writer.getData(), deHexStr(
+            "0006 "         # format=6
+            "0004 "         # binSrchHeader.unitSize=4
+            "0003 "         # binSrchHeader.nUnits=3
+            "0008 "         # binSrchHeader.searchRange=8
+            "0001 "         # binSrchHeader.entrySelector=1
+            "0004 "         # binSrchHeader.rangeShift=4
+            "0001 0003 "    # entries[0].glyph=A, .value=C
+            "0003 0002 "    # entries[1].glyph=C, .value=B
+            "FFFF FFFF "    # entries[2]=<END>
+        ))
 
     def test_xmlRead(self):
         value = self.converter.xmlRead({}, [
