@@ -549,6 +549,8 @@ class ValueRecord(ValueFormat):
 
 
 class AATLookup(BaseConverter):
+	BIN_SEARCH_HEADER_SIZE = 10
+
 	def read(self, reader, font, tableDict):
 		format = reader.readUShort()
 		if format == 0:
@@ -557,11 +559,11 @@ class AATLookup(BaseConverter):
 		elif format == 2:
 			mapping = self.readFormat2(reader)
 		elif format == 4:
-                        mapping = self.readFormat4(reader)
+			mapping = self.readFormat4(reader)
 		elif format == 6:
-                        mapping = self.readFormat6(reader)
+			mapping = self.readFormat6(reader)
 		elif format == 8:
-                        mapping = self.readFormat8(reader)
+			mapping = self.readFormat8(reader)
 		else:
 			assert False, "unsupported lookup format: %d" % format
 		return {font.getGlyphName(k):font.getGlyphName(v)
@@ -570,14 +572,15 @@ class AATLookup(BaseConverter):
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		glyphMap = font.getReverseGlyphMap()
 		binSrchHeaderSize = 10
-		formatSizes = {6: binSrchHeaderSize + len(value) * 4 + 4}
-		if glyphMap.keys() == value.keys():
-			formatSizes[0] = len(value) * 2
 		# TODO: Also implement format 2, 4, and 8.
-		bestFormat = min(formatSizes, key=formatSizes.get)
-		writeMethod = getattr(self, 'writeFormat%d' % bestFormat)
-		writer.writeUShort(bestFormat)
-		writeMethod(writer, font, value)
+		formats = list(sorted(filter(None, [
+			self.buildFormat0(font, value),
+			self.buildFormat6(font, value),
+		])))
+		# We use the format ID as secondary sort key to make the output
+		# deterministic when multiple formats have same encoded size.
+		_size, _format, writeMethod = formats[0]
+		writeMethod(writer)
 
 	@staticmethod
 	def writeBinSearchHeader(writer, numUnits, unitSize):
@@ -589,17 +592,32 @@ class AATLookup(BaseConverter):
 		writer.writeUShort(entrySelector)
 		writer.writeUShort(rangeShift)
 
+	def buildFormat0(self, font, value):
+		if font.getReverseGlyphMap().keys() != value.keys():
+			return None
+		return (len(value) * 2, 0,
+		        lambda writer: self.writeFormat0(writer, font, value))
+
 	def writeFormat0(self, writer, font, value):
+		writer.writeUShort(0)
 		for glyph in font.getGlyphOrder():
 			writer.writeUShort(font.getGlyphID(value[glyph]))
 
-	def writeFormat6(self, writer, font, value):
-		table = [(font.getGlyphID(key), font.getGlyphID(value))
-		         for key, value in value.items()] + [(0xFFFF, 0xFFFF)]
-		table.sort()
+	def buildFormat6(self, font, value):
+		entries = [(font.getGlyphID(key), font.getGlyphID(value))
+		          for key, value in value.items()]
+		entries.sort()
+		if entries[-1][0] != 0xFFFF:
+			entries.append((0xFFFF, 0xFFFF))
+		return (self.BIN_SEARCH_HEADER_SIZE + len(entries) * 4, 6,
+			lambda writer:
+				self.writeFormat6(writer, font, value, entries))
+
+	def writeFormat6(self, writer, font, value, entries):
+		writer.writeUShort(6)
 		self.writeBinSearchHeader(writer,
-		                          numUnits=len(table), unitSize=4)
-		for key, value in table:
+		                          numUnits=len(entries), unitSize=4)
+		for key, value in entries:
 			writer.writeUShort(key)
 			writer.writeUShort(value)
 
