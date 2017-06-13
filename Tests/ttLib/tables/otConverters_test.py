@@ -261,23 +261,50 @@ class AATLookupTest(unittest.TestCase):
         })
         self.assertEqual(writer.getData(), deHexStr("0000 0000 0003 0003 0001"))
 
+    def test_writeFormat2(self):
+        writer = OTTableWriter()
+        font = FakeFont(".notdef A B C D E F G H".split())
+        self.converter.write(writer, font, {}, {
+            "B": "C",
+            "C": "C",
+            "D": "C",
+            "E": "C",
+            "G": "A",
+            "H": "A",
+        })
+        self.assertEqual(writer.getData(), deHexStr(
+            "0002 "            # format=2
+            "0006 "            # binSrchHeader.unitSize=6
+            "0003 "            # binSrchHeader.nUnits=3
+            "000C "            # binSrchHeader.searchRange=12
+            "0001 "            # binSrchHeader.entrySelector=1
+            "0006 "            # binSrchHeader.rangeShift=6
+            "0005 0002 0003 "  # segments[0].lastGlyph=E, firstGlyph=B, value=C
+            "0008 0007 0001 "  # segments[1].lastGlyph=H, firstGlyph=G, value=A
+            "FFFF FFFF 0001 "  # segments[2]=<END>
+        ))
+
     def test_writeFormat6(self):
         writer = OTTableWriter()
-        font = FakeFont(".notdef A B C".split())
+        font = FakeFont(".notdef A B C D E".split())
         self.converter.write(writer, font, {}, {
             "A": "C",
-            "C": "B"
+            "C": "B",
+            "D": "D",
+            "E": "E",
         })
         self.assertEqual(writer.getData(), deHexStr(
             "0006 "         # format=6
             "0004 "         # binSrchHeader.unitSize=4
-            "0003 "         # binSrchHeader.nUnits=3
-            "0008 "         # binSrchHeader.searchRange=8
-            "0001 "         # binSrchHeader.entrySelector=1
+            "0005 "         # binSrchHeader.nUnits=5
+            "0010 "         # binSrchHeader.searchRange=16
+            "0002 "         # binSrchHeader.entrySelector=2
             "0004 "         # binSrchHeader.rangeShift=4
             "0001 0003 "    # entries[0].glyph=A, .value=C
             "0003 0002 "    # entries[1].glyph=C, .value=B
-            "FFFF FFFF "    # entries[2]=<END>
+            "0004 0004 "    # entries[2].glyph=D, .value=D
+            "0005 0005 "    # entries[3].glyph=E, .value=E
+            "FFFF FFFF "    # entries[4]=<END>
         ))
 
     def test_xmlRead(self):

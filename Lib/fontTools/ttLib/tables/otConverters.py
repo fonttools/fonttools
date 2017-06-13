@@ -571,10 +571,10 @@ class AATLookup(BaseConverter):
 
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		glyphMap = font.getReverseGlyphMap()
-		binSrchHeaderSize = 10
-		# TODO: Also implement format 2, 4, and 8.
+		# TODO: Also implement format 4 and 8.
 		formats = list(sorted(filter(None, [
 			self.buildFormat0(font, value),
+			self.buildFormat2(font, value),
 			self.buildFormat6(font, value),
 		])))
 		# We use the format ID as secondary sort key to make the output
@@ -602,6 +602,36 @@ class AATLookup(BaseConverter):
 		writer.writeUShort(0)
 		for glyph in font.getGlyphOrder():
 			writer.writeUShort(font.getGlyphID(value[glyph]))
+
+	def buildFormat2(self, font, value):
+		glyphs = [(font.getGlyphID(g), g) for g in value.keys()]
+		glyphs.sort()
+		segStart, glyphName = glyphs[0]
+		segEnd = segStart
+		segValue = value[glyphName]
+		segments = []
+		for glyphID, glyphName in glyphs[1:]:
+			curValue = value[glyphName]
+			if glyphID != segEnd + 1 or curValue != segValue:
+				segments.append((segStart, segEnd, segValue))
+				segStart = segEnd = glyphID
+				segValue = curValue
+			else:
+				segEnd = glyphID
+		segments.append((segStart, segEnd, segValue))
+		segments.append((0xFFFF, 0xFFFF, segValue))
+		return (self.BIN_SEARCH_HEADER_SIZE + len(segments) * 6, 2,
+		        lambda writer:
+		            self.writeFormat2(writer, font, segments))
+
+	def writeFormat2(self, writer, font, segments):
+		writer.writeUShort(2)
+		self.writeBinSearchHeader(writer,
+		                          numUnits=len(segments), unitSize=6)
+		for firstGlyph, lastGlyph, value in segments:
+			writer.writeUShort(lastGlyph)
+			writer.writeUShort(firstGlyph)
+			writer.writeUShort(font.getGlyphID(value))
 
 	def buildFormat6(self, font, value):
 		entries = [(font.getGlyphID(key), font.getGlyphID(value))
