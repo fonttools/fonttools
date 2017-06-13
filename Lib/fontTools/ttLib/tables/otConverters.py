@@ -556,21 +556,20 @@ class AATLookup(BaseConverter):
 	# TODO: Use self.valueConverter for reading values.
 	def read(self, reader, font, tableDict):
 		format = reader.readUShort()
+		# TODO: Do not prune the results.
+		prune = lambda x: {k:v for k,v in x.items() if k != v}
 		if format == 0:
-			glyphs = font.getGlyphOrder()
-			mapping = self.readFormat0(reader, len(glyphs))
+			return prune(self.readFormat0(reader, font))
 		elif format == 2:
-			mapping = self.readFormat2(reader)
+			return prune(self.readFormat2(reader, font))
 		elif format == 4:
-			mapping = self.readFormat4(reader)
+			return prune(self.readFormat4(reader, font))
 		elif format == 6:
-			mapping = self.readFormat6(reader)
+			return prune(self.readFormat6(reader, font))
 		elif format == 8:
-			mapping = self.readFormat8(reader)
+			return prune(self.readFormat8(reader, font))
 		else:
 			assert False, "unsupported lookup format: %d" % format
-		return {font.getGlyphName(k):font.getGlyphName(v)
-		        for k, v in mapping.items() if k != v}
 
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		values = list(sorted([(font.getGlyphID(glyph), val)
@@ -686,11 +685,13 @@ class AATLookup(BaseConverter):
 				writer, font, tableDict=None,
 				value=value, repeatIndex=None)
 
-	def readFormat0(self, reader, numGlyphs):
+	def readFormat0(self, reader, font):
+		numGlyphs = len(font.getGlyphOrder())
 		data = reader.readUShortArray(numGlyphs)
-		return {k:v for (k,v) in enumerate(data)}
+		return {font.getGlyphName(k): font.getGlyphName(v)
+		        for (k,v) in enumerate(data)}
 
-	def readFormat2(self, reader):
+	def readFormat2(self, reader, font):
 		mapping = {}
 		pos = reader.pos - 2  # start of table is at UShort for format
 		size = reader.readUShort()
@@ -699,13 +700,13 @@ class AATLookup(BaseConverter):
 			reader.seek(pos + i * size + 12)
 			last = reader.readUShort()
 			first = reader.readUShort()
-			value = reader.readUShort()
+			value = font.getGlyphName(reader.readUShort())
 			if last != 0xFFFF:
 				for k in range(first, last + 1):
-					mapping[k] = value
+					mapping[font.getGlyphName(k)] = value
 		return mapping
 
-	def readFormat4(self, reader):
+	def readFormat4(self, reader, font):
 		mapping = {}
 		pos = reader.pos - 2  # start of table is at UShort for format
 		size = reader.readUShort()
@@ -719,10 +720,11 @@ class AATLookup(BaseConverter):
 				dataReader = reader.getSubReader(pos + offset)
 				data = dataReader.readUShortArray(last - first + 1)
 				for k, v in enumerate(data):
-					mapping[first + k] = v
+					value = font.getGlyphName(v)
+					mapping[font.getGlyphName(first + k)] = value
 		return mapping
 
-	def readFormat6(self, reader):
+	def readFormat6(self, reader, font):
 		mapping = {}
 		pos = reader.pos - 2  # start of table is at UShort for format
 		size = reader.readUShort()
@@ -732,14 +734,15 @@ class AATLookup(BaseConverter):
 			glyph = reader.readUShort()
 			value = reader.readUShort()
 			if glyph != 0xFFFF:
-				mapping[glyph] = value
+				mapping[font.getGlyphName(glyph)] = font.getGlyphName(value)
 		return mapping
 
-	def readFormat8(self, reader):
+	def readFormat8(self, reader, font):
 		first = reader.readUShort()
 		count = reader.readUShort()
 		data = reader.readUShortArray(count)
-		return {(first + k):v for (k, v) in enumerate(data)}
+		return {font.getGlyphName(first + k): font.getGlyphName(v)
+		        for (k, v) in enumerate(data)}
 
 	def xmlRead(self, attrs, content, font):
 		value = {}
