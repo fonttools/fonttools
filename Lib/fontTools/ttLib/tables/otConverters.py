@@ -551,6 +551,9 @@ class ValueRecord(ValueFormat):
 class AATLookup(BaseConverter):
 	BIN_SEARCH_HEADER_SIZE = 10
 
+	valueConverter = GlyphID(name='Glyph', repeat=None, aux=None)
+
+	# TODO: Use self.valueConverter for reading values.
 	def read(self, reader, font, tableDict):
 		format = reader.readUShort()
 		if format == 0:
@@ -572,15 +575,12 @@ class AATLookup(BaseConverter):
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		values = list(sorted([(font.getGlyphID(glyph), val)
 		                      for glyph, val in value.items()]))
-		valueSize = 2
-		valueWriter = lambda glyph: (
-			writer.writeUShort(font.getGlyphID(glyph)))
 		# TODO: Also implement format 4.
 		formats = list(sorted(filter(None, [
-			self.buildFormat0(font, values, writer, valueSize, valueWriter),
-			self.buildFormat2(values, writer, valueSize, valueWriter),
-			self.buildFormat6(values, writer, valueSize, valueWriter),
-			self.buildFormat8(values, writer, valueSize, valueWriter),
+			self.buildFormat0(writer, font, values),
+			self.buildFormat2(writer, font, values),
+			self.buildFormat6(writer, font, values),
+			self.buildFormat8(writer, font, values),
 		])))
 		# We use the format ID as secondary sort key to make the output
 		# deterministic when multiple formats have same encoded size.
@@ -602,19 +602,22 @@ class AATLookup(BaseConverter):
 		writer.writeUShort(entrySelector)
 		writer.writeUShort(rangeShift)
 
-	def buildFormat0(self, font, values, writer, valueSize, valueWriter):
+	def buildFormat0(self, writer, font, values):
 		numGlyphs = len(font.getGlyphOrder())
 		if len(values) != numGlyphs:
 			return None
+		valueSize = self.valueConverter.staticSize
 		return (2 + numGlyphs * valueSize, 0,
-		        lambda: self.writeFormat0(values, writer, valueWriter))
+		        lambda: self.writeFormat0(writer, font, values))
 
-	def writeFormat0(self, values, writer, valueWriter):
+	def writeFormat0(self, writer, font, values):
 		writer.writeUShort(0)
 		for glyphID_, value in values:
-			valueWriter(value)
+			self.valueConverter.write(
+				writer, font, tableDict=None,
+				value=value, repeatIndex=None)
 
-	def buildFormat2(self, values, writer, valueSize, valueWriter):
+	def buildFormat2(self, writer, font, values):
 		segStart, segValue = values[0]
 		segEnd = segStart
 		segments = []
@@ -626,51 +629,62 @@ class AATLookup(BaseConverter):
 			else:
 				segEnd = glyphID
 		segments.append((segStart, segEnd, segValue))
+		valueSize = self.valueConverter.staticSize
 		numUnits, unitSize = len(segments) + 1, valueSize + 4
 		return (2 + self.BIN_SEARCH_HEADER_SIZE + numUnits * unitSize, 2,
-		        lambda: self.writeFormat2(segments, writer, valueSize, valueWriter))
+		        lambda: self.writeFormat2(writer, font, segments))
 
-	def writeFormat2(self, segments, writer, valueSize, valueWriter):
+	def writeFormat2(self, writer, font, segments):
 		writer.writeUShort(2)
+		valueSize = self.valueConverter.staticSize
 		numUnits, unitSize = len(segments) + 1, valueSize + 4
 		self.writeBinSearchHeader(writer, numUnits, unitSize)
 		for firstGlyph, lastGlyph, value in segments:
 			writer.writeUShort(lastGlyph)
 			writer.writeUShort(firstGlyph)
-			valueWriter(value)
+			self.valueConverter.write(
+				writer, font, tableDict=None,
+				value=value, repeatIndex=None)
 		writer.writeUShort(0xFFFF)
 		writer.writeUShort(0xFFFF)
 		writer.writeData(b'\xFF' * valueSize)
 
-	def buildFormat6(self, values, writer, valueSize, valueWriter):
+	def buildFormat6(self, writer, font, values):
+		valueSize = self.valueConverter.staticSize
 		numUnits, unitSize = len(values) + 1, valueSize + 2
 		return (2 + self.BIN_SEARCH_HEADER_SIZE + numUnits * unitSize, 6,
-			lambda: self.writeFormat6(values, writer, valueSize, valueWriter))
+			lambda: self.writeFormat6(writer, font, values))
 
-	def writeFormat6(self, values, writer, valueSize, valueWriter):
+	def writeFormat6(self, writer, font, values):
 		writer.writeUShort(6)
+		valueSize = self.valueConverter.staticSize
 		numUnits, unitSize = len(values) + 1, valueSize + 2
 		self.writeBinSearchHeader(writer, numUnits, unitSize)
 		for glyphID, value in values:
 			writer.writeUShort(glyphID)
-			valueWriter(value)
+			self.valueConverter.write(
+				writer, font, tableDict=None,
+				value=value, repeatIndex=None)
 		writer.writeUShort(0xFFFF)
 		writer.writeData(b'\xFF' * valueSize)
 
-	def buildFormat8(self, values, writer, valueSize, valueWriter):
+	def buildFormat8(self, writer, font, values):
 		minGlyphID, maxGlyphID = values[0][0], values[-1][0]
 		if len(values) != maxGlyphID - minGlyphID + 1:
 			return None
+		valueSize = self.valueConverter.staticSize
 		return (6 + len(values) * valueSize, 8,
-		        lambda: self.writeFormat8(values, writer, valueWriter))
+		        lambda: self.writeFormat8(writer, font, values))
 
-	def writeFormat8(self, values, writer, valueWriter):
+	def writeFormat8(self, writer, font, values):
 		firstGlyphID = values[0][0]
 		writer.writeUShort(8)
 		writer.writeUShort(firstGlyphID)
 		writer.writeUShort(len(values))
 		for _, value in values:
-			valueWriter(value)
+			self.valueConverter.write(
+				writer, font, tableDict=None,
+				value=value, repeatIndex=None)
 
 	def readFormat0(self, reader, numGlyphs):
 		data = reader.readUShortArray(numGlyphs)
