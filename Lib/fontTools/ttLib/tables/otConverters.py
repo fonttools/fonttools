@@ -571,11 +571,12 @@ class AATLookup(BaseConverter):
 
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		glyphMap = font.getReverseGlyphMap()
-		# TODO: Also implement format 4 and 8.
+		# TODO: Also implement format 4.
 		formats = list(sorted(filter(None, [
 			self.buildFormat0(font, value),
 			self.buildFormat2(font, value),
 			self.buildFormat6(font, value),
+			self.buildFormat8(font, value),
 		])))
 		# We use the format ID as secondary sort key to make the output
 		# deterministic when multiple formats have same encoded size.
@@ -650,6 +651,24 @@ class AATLookup(BaseConverter):
 		for key, value in entries:
 			writer.writeUShort(key)
 			writer.writeUShort(value)
+
+	def buildFormat8(self, font, values):
+		mapping = list(sorted([(font.getGlyphID(glyph), val)
+		                       for glyph, val in values.items()]))
+		minGlyphID, maxGlyphID = mapping[0][0], mapping[-1][0]
+		if len(mapping) != maxGlyphID - minGlyphID + 1:
+			return None
+		encodedValueSize = 2
+		return (4 + len(mapping) * (2 + encodedValueSize), 8,
+		        lambda writer: self.writeFormat8(writer, font, mapping))
+
+	def writeFormat8(self, writer, font, mapping):
+		firstGlyphID = mapping[0][0]
+		writer.writeUShort(8)
+		writer.writeUShort(firstGlyphID)
+		writer.writeUShort(len(mapping))
+		for _, value in mapping:
+			writer.writeUShort(font.getGlyphID(value))
 
 	def readFormat0(self, reader, numGlyphs):
 		data = reader.readUShortArray(numGlyphs)
