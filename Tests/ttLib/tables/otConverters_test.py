@@ -281,7 +281,7 @@ class AATLookupTest(unittest.TestCase):
             "0006 "            # binSrchHeader.rangeShift=6
             "0005 0002 0003 "  # segments[0].lastGlyph=E, firstGlyph=B, value=C
             "0008 0007 0001 "  # segments[1].lastGlyph=H, firstGlyph=G, value=A
-            "FFFF FFFF 0001 "  # segments[2]=<END>
+            "FFFF FFFF FFFF "  # segments[2]=<END>
         ))
 
     def test_writeFormat6(self):
