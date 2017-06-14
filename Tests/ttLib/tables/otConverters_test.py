@@ -176,7 +176,8 @@ class UInt8Test(unittest.TestCase):
 
 class AATLookupTest(unittest.TestCase):
     font = FakeFont(".notdef A B C D E F G H A.alt B.alt".split())
-    converter = otConverters.AATLookup("AATLookup", 0, None, None)
+    converter = otConverters.AATLookup("AATLookup", 0, None,
+                                       tableClass=otConverters.GlyphID)
 
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
