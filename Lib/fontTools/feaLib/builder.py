@@ -74,8 +74,8 @@ class Builder(object):
         # for table 'vhea'
         self.vhea_ = {}
 
-    def _copy_empty_script_records(self, src, dst):
-        """Copies emptied Script records from one src OT table
+    def _copy_empty_script_langsys_records(self, src, dst):
+        """Copies emptied Script and LangSys records from one src OT table
            to another dst OT table if they are not in the dst OT table.
         """
         dst_script_tags = set(srec.ScriptTag for srec in
@@ -94,6 +94,17 @@ class Builder(object):
             else:
                 dst_srec = [srec for srec in dst.ScriptList.ScriptRecord if
                             srec.ScriptTag == src_srec.ScriptTag][0]
+            dst_langsys_tags = set(lsrec.LangSysTag for lsrec in
+                                   dst_srec.Script.LangSysRecord)
+            for src_lsrec in src_srec.Script.LangSysRecord:
+                if src_lsrec.LangSysTag not in dst_langsys_tags:
+                    dst_lsrec = otTables.LangSysRecord()
+                    dst_lsrec.LangSysTag = src_lsrec.LangSysTag
+                    dst_lsrec.LangSys = otTables.LangSys()
+                    dst_lsrec.LangSys.ReqFeatureIndex = 0xFFFF
+                    dst_lsrec.LangSys.FeatureCount = 0
+                    dst_lsrec.LangSys.FeatureIndex = []
+                    dst_srec.Script.LangSysRecord.append(dst_lsrec)
             dst_srec.Script.LangSysCount = len(dst_srec.Script.LangSysRecord)
             dst.ScriptList.ScriptCount = len(dst.ScriptList.ScriptRecord)
 
@@ -124,8 +135,8 @@ class Builder(object):
             del self.font['GPOS']
             del self.font['GSUB']
         else:
-            self._copy_empty_script_records(gsub_table, gpos_table)
-            self._copy_empty_script_records(gpos_table, gsub_table)
+            self._copy_empty_script_langsys_records(gsub_table, gpos_table)
+            self._copy_empty_script_langsys_records(gpos_table, gsub_table)
 
         gdef = self.buildGDEF()
         if gdef:
