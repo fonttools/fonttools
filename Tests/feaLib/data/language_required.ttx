@@ -147,7 +147,28 @@
             <ReqFeatureIndex value="65535"/>
             <!-- FeatureCount=0 -->
           </DefaultLangSys>
-          <!-- LangSysCount=0 -->
+          <!-- LangSysCount=3 -->
+          <LangSysRecord index="0">
+            <LangSysTag value="DEU "/>
+            <LangSys>
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=0 -->
+            </LangSys>
+          </LangSysRecord>
+          <LangSysRecord index="1">
+            <LangSysTag value="FRA "/>
+            <LangSys>
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=0 -->
+            </LangSys>
+          </LangSysRecord>
+          <LangSysRecord index="2">
+            <LangSysTag value="ITA "/>
+            <LangSys>
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=0 -->
+            </LangSys>
+          </LangSysRecord>
         </Script>
       </ScriptRecord>
     </ScriptList>

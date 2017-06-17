@@ -100,7 +100,14 @@
             <ReqFeatureIndex value="65535"/>
             <!-- FeatureCount=0 -->
           </DefaultLangSys>
-          <!-- LangSysCount=0 -->
+          <!-- LangSysCount=1 -->
+          <LangSysRecord index="0">
+            <LangSysTag value="TRK "/>
+            <LangSys>
+              <ReqFeatureIndex value="65535"/>
+              <!-- FeatureCount=0 -->
+            </LangSys>
+          </LangSysRecord>
         </Script>
       </ScriptRecord>
     </ScriptList>
