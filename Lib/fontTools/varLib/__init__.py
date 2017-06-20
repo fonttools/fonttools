@@ -414,13 +414,14 @@ def _add_MVAR(font, model, master_ttfs, axisTags):
 		rec.VarIdx = varIdx
 		records.append(rec)
 
-	assert "MVAR" not in font
-	MVAR = font["MVAR"] = newTable('MVAR')
-	mvar = MVAR.table = ot.MVAR()
-	mvar.Version = 0x00010000
-	mvar.Reserved = 0
-	mvar.VarStore = store_builder.finish()
-	mvar.ValueRecord = sorted(records, key=lambda r: r.ValueTag)
+	if len(records) > 0 :
+		assert "MVAR" not in font
+		MVAR = font["MVAR"] = newTable('MVAR')
+		mvar = MVAR.table = ot.MVAR()
+		mvar.Version = 0x00010000
+		mvar.Reserved = 0
+		mvar.VarStore = store_builder.finish()
+		mvar.ValueRecord = sorted(records, key=lambda r: r.ValueTag)
 
 
 def _merge_OTL(font, model, master_fonts, axisTags):
