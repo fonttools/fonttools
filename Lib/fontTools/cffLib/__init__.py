@@ -32,23 +32,17 @@ class CFFContext(object):
 	def __init__(self, fontSet):
 		self.fontSet = fontSet
 		self.varStore = None
-		
-	def __getattr__(self, name):
-		if name == 'isCFF2':
-			value = self.fontSet.major == 2
-		else:
-			value = super(CFFContext, self).__getattr__(name)
-		return value
 
-	def __setattr__(self, name, value):
-		if name == 'isCFF2':
-			if value:
-				self.fontSet.major = 2
-			else:
-				self.fontSet.major = 1
+	@property
+	def isCFF2(self):
+		return self.fontSet.major == 2
+
+	@isCFF2.setter
+	def isCFF2(self, value):
+		if value:
+			self.fontSet.major = 2
 		else:
-			super(CFFContext, self).__setattr__(name, value)
-		return
+			self.fontSet.major = 1
 
 class CFFFontSet(object):
 
