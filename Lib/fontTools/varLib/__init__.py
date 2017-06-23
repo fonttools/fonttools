@@ -414,8 +414,8 @@ def _add_MVAR(font, model, master_ttfs, axisTags):
 		rec.VarIdx = varIdx
 		records.append(rec)
 
+	assert "MVAR" not in font
 	if records:
-		assert "MVAR" not in font
 		MVAR = font["MVAR"] = newTable('MVAR')
 		mvar = MVAR.table = ot.MVAR()
 		mvar.Version = 0x00010000
