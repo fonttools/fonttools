@@ -202,6 +202,7 @@ def merge(merger, self, lst):
 	if all(v.Format == 1 for v in lst) and all(self.Coverage.glyphs == v.Coverage.glyphs for v in lst):
 		self.Value = otBase.ValueRecord(valueFormat)
 		merger.mergeThings(self.Value, [v.Value for v in lst])
+		self.ValueFormat = self.Value.getFormat()
 		return
 
 	# Upgrade everything to Format=2
@@ -231,6 +232,7 @@ def merge(merger, self, lst):
 	# Merge everything else; though, there shouldn't be anything else. :)
 	merger.mergeObjects(self, lst,
 			    exclude=('Format', 'Coverage', 'ValueRecord', 'Value', 'ValueCount'))
+	self.ValueFormat = self.Value.getFormat()
 
 @AligningMerger.merger(ot.PairSet)
 def merge(merger, self, lst):
