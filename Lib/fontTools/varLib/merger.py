@@ -232,7 +232,7 @@ def merge(merger, self, lst):
 	# Merge everything else; though, there shouldn't be anything else. :)
 	merger.mergeObjects(self, lst,
 			    exclude=('Format', 'Coverage', 'ValueRecord', 'Value', 'ValueCount'))
-	self.ValueFormat = self.Value.getFormat()
+	self.ValueFormat = reduce(int.__or__, [v.getFormat() for v in self.Value], 0)
 
 @AligningMerger.merger(ot.PairSet)
 def merge(merger, self, lst):
