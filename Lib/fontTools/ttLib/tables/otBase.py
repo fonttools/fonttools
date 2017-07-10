@@ -510,15 +510,16 @@ class CountReference(object):
 		else:
 			assert table[name] == value, (name, table[name], value)
 	def getCountData(self):
-		assert self.size in (2, 4)
 		v = self.table[self.name]
 		if v is None: v = 0
-		return packUShort(v) if self.size == 2 else packULong(v)
+		return {1:packUInt8, 2:packUShort, 4:packULong}[self.size](v)
 
+
+def packUInt8 (value):
+	return struct.pack(">B", value)
 
 def packUShort(value):
 	return struct.pack(">H", value)
-
 
 def packULong(value):
 	assert 0 <= value < 0x100000000, value

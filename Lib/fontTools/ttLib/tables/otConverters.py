@@ -7,6 +7,7 @@ from fontTools.misc.textTools import safeEval
 from fontTools.ttLib import getSearchRange
 from .otBase import ValueRecordFactory, CountReference
 from functools import partial
+import struct
 import logging
 
 
@@ -24,7 +25,7 @@ def buildConverters(tableSpec, tableNamespace):
 		if name.startswith("ValueFormat"):
 			assert tp == "uint16"
 			converterClass = ValueFormat
-		elif name.endswith("Count") or name == "MorphType" or name == "StructLength":
+		elif name.endswith("Count") or name == "MorphType":
 			converterClass = {
 				"uint8": ComputedUInt8,
 				"uint16": ComputedUShort,
@@ -99,9 +100,9 @@ class BaseConverter(object):
 		self.repeat = repeat
 		self.aux = aux
 		self.tableClass = tableClass
-		self.isCount = name.endswith("Count") or name in ['DesignAxisRecordSize', 'ValueRecordSize', 'StructLength']
+		self.isCount = name.endswith("Count") or name in ['DesignAxisRecordSize', 'ValueRecordSize']
 		self.isLookupType = name.endswith("LookupType") or name == "MorphType"
-		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount", "VarRegionCount", "MappingCount", "RegionAxisCount", 'DesignAxisCount', 'DesignAxisRecordSize', 'AxisValueCount', 'ValueRecordSize', 'StructLength']
+		self.isPropagated = name in ["ClassCount", "Class2Count", "FeatureTag", "SettingsCount", "VarRegionCount", "MappingCount", "RegionAxisCount", 'DesignAxisCount', 'DesignAxisRecordSize', 'AxisValueCount', 'ValueRecordSize']
 
 	def readArray(self, reader, font, tableDict, count):
 		"""Read an array of values from the reader."""
@@ -394,7 +395,7 @@ class Struct(BaseConverter):
 					if not hasattr(font, '_propagator'):
 						font._propagator = {}
 					propagator = font._propagator
-					assert conv.name not in propagator
+					assert conv.name not in propagator, (conv.name, propagator)
 					setattr(table, conv.name, None)
 					propagator[conv.name] = CountReference(table.__dict__, conv.name)
 
@@ -432,9 +433,18 @@ class StructWithLength(Struct):
 		return table
 
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		value.StructLength = 0xdeadbeef
+		before = writer.getDataLength()
+		i = len(writer.items)
 		value.compile(writer, font)
-		writer['StructLength'].setValue(writer.getDataLength())
-		del writer['StructLength']
+		length = writer.getDataLength() - before
+		for j,conv in enumerate(value.getConverters()):
+			if conv.name != 'StructLength':
+				continue
+			assert writer.items[i+j] == b"\xde\xad\xbe\xef"
+			writer.items[i+j] = struct.pack(">L", length)
+			break
+		del value.StructLength
 
 
 class Table(Struct):
