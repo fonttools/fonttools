@@ -275,7 +275,7 @@ class SimpleT2Decompiler(object):
 			isCFF2 = False
 		if isCFF2:
 			if program:
-				assert program[-1] not in ("seac"), "illegal CharString Terminator"
+				assert program[-1] not in ("seac",), "illegal CharString Terminator"
 		else:
 			assert program, "illegal CharString: decompiled to empty program"
 			assert program[-1] in ("endchar", "return", "callsubr", "callgsubr",
