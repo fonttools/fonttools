@@ -679,14 +679,18 @@ class TTFont(object):
 		have a .draw() method that supports the Pen protocol, and will
 		have an attribute named 'width'.
 
-		If the font is CFF-based, the outlines will be taken from the 'CFF '
-		table. Otherwise the outlines will be taken from the 'glyf' table.
-		If the font contains both a 'CFF ' and a 'glyf' table, you can use
-		the 'preferCFF' argument to specify which one should be taken.
+		If the font is CFF-based, the outlines will be taken from the 'CFF ' or
+		'CFF2' tables. Otherwise the outlines will be taken from the 'glyf' table.
+		If the font contains both a 'CFF '/'CFF2' and a 'glyf' table, you can use
+		the 'preferCFF' argument to specify which one should be taken. If the
+		font contains both a 'CFF ' and a 'CFF2' table, the latter is taken.
 		"""
 		glyphs = None
-		if (preferCFF and "CFF " in self) or ("glyf" not in self and "CFF " in self):
-			glyphs = _TTGlyphSet(self, list(self["CFF "].cff.values())[0].CharStrings, _TTGlyphCFF)
+		if (preferCFF and any(tb in self for tb in ["CFF ", "CFF2"]) or
+		   ("glyf" not in self and any(tb in self for tb in ["CFF ", "CFF2"]))):
+			table_tag = "CFF2" if "CFF2" in self else "CFF "
+			glyphs = _TTGlyphSet(self,
+			    list(self[table_tag].cff.values())[0].CharStrings, _TTGlyphCFF)
 
 		if glyphs is None and "glyf" in self:
 			glyphs = _TTGlyphSet(self, self["glyf"], _TTGlyphGlyf)
