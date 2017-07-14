@@ -859,7 +859,7 @@ otData = [
 
 	('AxisRecord', [
 		('Tag', 'AxisTag', None, None, 'A tag identifying the axis of design variation'),
-		('uint16', 'AxisNameID', None, None, 'The name ID for entries in the "name" table that provide a display string for this axis'),
+		('NameID', 'AxisNameID', None, None, 'The name ID for entries in the "name" table that provide a display string for this axis'),
 		('uint16', 'AxisOrdering', None, None, 'A value that applications can use to determine primary sorting of face names, or for ordering of descriptors when composing family or face names'),
 		('uint8', 'MoreBytes', 'DesignAxisRecordSize', -8, 'Extra bytes.  Set to empty array.'),
 	]),
