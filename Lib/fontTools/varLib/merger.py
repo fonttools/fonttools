@@ -231,7 +231,7 @@ def merge(merger, self, lst):
 
 	# Merge everything else; though, there shouldn't be anything else. :)
 	merger.mergeObjects(self, lst,
-			    exclude=('Format', 'Coverage', 'ValueRecord', 'Value', 'ValueCount'))
+			    exclude=('Format', 'Coverage', 'Value', 'ValueCount'))
 	self.ValueFormat = reduce(int.__or__, [v.getFormat() for v in self.Value], 0)
 
 @AligningMerger.merger(ot.PairSet)
