@@ -915,9 +915,6 @@ class Parser(object):
     def parse_nameid_(self):
         assert self.cur_token_ == "nameid", self.cur_token_
         location, nameID = self.cur_token_location_, self.expect_number_()
-        if nameID > 255:
-            raise FeatureLibError("Expected name id < 255",
-                                  self.cur_token_location_)
         if 1 <= nameID <= 6:
             log.warning("Name id %d cannot be set from the feature file. "
                         "Ignoring record" % nameID)
