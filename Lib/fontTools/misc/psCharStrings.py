@@ -93,10 +93,6 @@ realNibblesDict = {v:i for i,v in enumerate(realNibbles)}
 maxOpStack = 193
 
 
-class ByteCodeBase(object):
-	pass
-
-
 def buildOperatorDict(operatorList):
 	oper = {}
 	opc = {}
@@ -267,12 +263,13 @@ class SimpleT2Decompiler(object):
 		self.numRegions = 0
 
 	def check_program(self, program):
-		try:
-			isCFF2 = self.private.isCFF2()
+		if not hasattr(self, 'private') or self.private is None:
 			# Type 1 charstrings don't have self.private.
-			# Type2 CFF chrstrings may have self.private == None.
-		except AttributeError:
+			# Type2 CFF charstrings may have self.private == None.
+			# In both cases, they are not CFF2 charstrings
 			isCFF2 = False
+		else:
+			isCFF2 = self.private._isCFF2
 		if isCFF2:
 			if program:
 				assert program[-1] not in ("seac",), "illegal CharString Terminator"
@@ -414,6 +411,8 @@ class SimpleT2Decompiler(object):
 	def op_roll(self, index):
 		raise NotImplementedError
 
+	# TODO(behdad): move to T2OutlineExtractor and add a 'setVariation'
+	# method that takes VarStoreData and a location
 	def op_blend(self, index):
 		if self.numRegions == 0:
 			self.numRegions = self.private.getNumRegions()
@@ -937,14 +936,14 @@ class T1OutlineExtractor(T2OutlineExtractor):
 	def op_vstem3(self, index):
 		self.popall()  # XXX
 
-class T2CharString(ByteCodeBase):
+class T2CharString(object):
 
 	operandEncoding = t2OperandEncoding
 	operators, opcodes = buildOperatorDict(t2Operators)
 	decompilerClass = SimpleT2Decompiler
 	outlineExtractor = T2OutlineExtractor
 
-	def __init__(self, bytecode=None, program=None, private = None, globalSubrs=None):
+	def __init__(self, bytecode=None, program=None, private=None, globalSubrs=None):
 		if program is None:
 			program = []
 		self.bytecode = bytecode
@@ -978,13 +977,7 @@ class T2CharString(ByteCodeBase):
 		extractor.execute(self)
 		self.width = extractor.width
 
-	def check_program(self, program):
-		try:
-			isCFF2 = self.private.isCFF2()
-			# Type 1 charstrings don't have self.private.
-			# Type 2 CFF chrstrings may have self.private == None.
-		except AttributeError:
-			isCFF2 = False
+	def check_program(self, program, isCFF2=False):
 		if isCFF2:
 			if self.program:
 				assert self.program[-1] not in ("seac",), "illegal CFF2 CharString Termination"
@@ -992,12 +985,12 @@ class T2CharString(ByteCodeBase):
 			assert self.program, "illegal CharString: decompiled to empty program"
 			assert self.program[-1] in ("endchar", "return", "callsubr", "callgsubr", "seac"), "illegal CharString"
 
-	def compile(self):
+	def compile(self, isCFF2=False):
 		if self.bytecode is not None:
 			return
 		opcodes = self.opcodes
 		program = self.program
-		self.check_program(program)
+		self.check_program(program, isCFF2=isCFF2)
 		bytecode = []
 		encodeInt = self.getIntEncoder()
 		encodeFixed = self.getFixedEncoder()
@@ -1028,7 +1021,7 @@ class T2CharString(ByteCodeBase):
 			raise
 		self.setBytecode(bytecode)
 
-		if self.private and self.private.isCFF2():
+		if isCFF2:
 			# If present, remove return and endchar operators.
 			if self.bytecode and (byteord(self.bytecode[-1]) in (11, 14)):
 				self.bytecode = self.bytecode[:-1]
@@ -1175,7 +1168,7 @@ class T1CharString(T2CharString):
 		self.width = extractor.width
 
 
-class DictDecompiler(ByteCodeBase):
+class DictDecompiler(object):
 
 	operandEncoding = cffDictOperandEncoding
 
