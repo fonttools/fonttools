@@ -1,3 +1,13 @@
+- [cffLib] Removed global ``isCFF2`` state; use one set of classes for
+  both CFF and CFF2, maintaining backward compatibility existing code.
+- [cffLib] Deprecated maxstack operator, per OpenType spec update 1.8.1.
+- [cffLib] Added missing default (-100) for UnderlinePosition (#983).
+- [feaLib] Enable setting nameIDs greater than 255 (#1003).
+- [varLib] Recalculate ValueFormat when merging SinglePos (#996).
+- [varLib] Do not emit MVAR if there are no entries in the variation
+  store (#987).
+- [ttx] For ``-x`` option, pad with space if table tag length is < 4.
+
 3.13.1 (released 2017-05-30)
 ----------------------------
 
