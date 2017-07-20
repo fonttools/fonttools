@@ -138,13 +138,15 @@ class TupleVariation(object):
 		if sharedPoints == points:
 			# Only use the shared points if they are identical to the actually used points
 			auxData = self.compileDeltas(sharedPoints)
+			usesSharedPoints = True
 		else:
 			flags |= PRIVATE_POINT_NUMBERS
 			numPointsInGlyph = len(self.coordinates)
 			auxData = self.compilePoints(points, numPointsInGlyph) + self.compileDeltas(points)
+			usesSharedPoints = False
 
 		tupleData = struct.pack('>HH', len(auxData), flags) + bytesjoin(tupleData)
-		return (tupleData, auxData)
+		return (tupleData, auxData, usesSharedPoints)
 
 	def compileCoord(self, axisTags):
 		result = []
@@ -506,9 +508,9 @@ def compileTupleVariationStore(variations, pointCount,
 	data = []
 	someTuplesSharePoints = False
 	for v in variations:
-		privateTuple, privateData = v.compile(
+		privateTuple, privateData, usesSharedPoints = v.compile(
 			axisTags, sharedTupleIndices, sharedPoints=None)
-		sharedTuple, sharedData = v.compile(
+		sharedTuple, sharedData, usesSharedPoints = v.compile(
 			axisTags, sharedTupleIndices, sharedPoints=allPoints)
 		# TODO: Apple macOS 10.9.5 (maybe also earlier) up to 10.12 had a bug
 		# that broke variations if the `gvar` table contains shared tuples.
@@ -518,7 +520,7 @@ def compileTupleVariationStore(variations, pointCount,
 		if (len(sharedTuple) + len(sharedData)) < (len(privateTuple) + len(privateData)):
 			tuples.append(sharedTuple)
 			data.append(sharedData)
-			someTuplesSharePoints = True
+			someTuplesSharePoints |= usesSharedPoints
 		else:
 			tuples.append(privateTuple)
 			data.append(privateData)
