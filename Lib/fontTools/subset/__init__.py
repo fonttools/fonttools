@@ -2041,11 +2041,13 @@ class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
         psCharStrings.T2WidthExtractor.op_vstemhm(self, index)
         self.processHint(index)
     def op_hintmask(self, index):
-        psCharStrings.T2WidthExtractor.op_hintmask(self, index)
+        rv = psCharStrings.T2WidthExtractor.op_hintmask(self, index)
         self.processHintmask(index)
+        return rv
     def op_cntrmask(self, index):
-        psCharStrings.T2WidthExtractor.op_cntrmask(self, index)
+        rv = psCharStrings.T2WidthExtractor.op_cntrmask(self, index)
         self.processHintmask(index)
+        return rv
 
     def processHintmask(self, index):
         cs = self.callingStack[-1]
