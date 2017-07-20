@@ -134,11 +134,12 @@ class TupleVariation(object):
 			flags |= INTERMEDIATE_REGION
 			tupleData.append(intermediateCoord)
 
-		if sharedPoints is not None:
+		points = self.getUsedPoints()
+		if sharedPoints == points:
+			# Only use the shared points if they are identical to the actually used points
 			auxData = self.compileDeltas(sharedPoints)
 		else:
 			flags |= PRIVATE_POINT_NUMBERS
-			points = self.getUsedPoints()
 			numPointsInGlyph = len(self.coordinates)
 			auxData = self.compilePoints(points, numPointsInGlyph) + self.compileDeltas(points)
 
@@ -514,8 +515,7 @@ def compileTupleVariationStore(variations, pointCount,
 		# Apple will likely fix this in macOS 10.13. But for the time being,
 		# we never emit shared points although the result would be more compact.
 		# https://rawgit.com/unicode-org/text-rendering-tests/master/reports/CoreText.html#GVAR-1
-		#if (len(sharedTuple) + len(sharedData)) < (len(privateTuple) + len(privateData)):
-		if False:
+		if (len(sharedTuple) + len(sharedData)) < (len(privateTuple) + len(privateData)):
 			tuples.append(sharedTuple)
 			data.append(sharedData)
 			someTuplesSharePoints = True
