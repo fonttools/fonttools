@@ -12,11 +12,11 @@ import unittest
 CVAR_DATA = deHexStr(
     "0001 0000 "      #  0: majorVersion=1 minorVersion=0
     "8002 0018 "      #  4: tupleVariationCount=2|TUPLES_SHARE_POINT_NUMBERS offsetToData=24
-    "0004 "           #  8: tvHeader[0].variationDataSize=5
-    "8000 "           # 10: tvHeader[0].tupleIndex=EMBEDDED_PEAK|PRIVATE_POINTS
+    "0004 "           #  8: tvHeader[0].variationDataSize=4
+    "8000 "           # 10: tvHeader[0].tupleIndex=EMBEDDED_PEAK
     "4000 0000 "      # 12: tvHeader[0].peakTuple=[1.0, 0.0]
-    "0004 "           # 16: tvHeader[1].variationDataSize=5
-    "8000 "           # 18: tvHeader[1].tupleIndex=EMBEDDED_PEAK|PRIVATE_POINTS
+    "0004 "           # 16: tvHeader[1].variationDataSize=4
+    "8000 "           # 18: tvHeader[1].tupleIndex=EMBEDDED_PEAK
     "C000 3333 "      # 20: tvHeader[1].peakTuple=[-1.0, 0.8]
     "00 "             # 24: shared values = 00, all values
     "02 03 01 04 "    # 25: deltas=[3, 1, 4]
