@@ -204,8 +204,9 @@ class FileSystem(object):
 		return self._listDirectory(path, recurse=recurse, relativeTo=path)
 
 	def _listDirectory(self, path, recurse=False, relativeTo=None, depth=0, maxDepth=100):
-		if not relativeTo.endswith("/"):
-			relativeTo += "/"
+		sep = os.sep
+		if not relativeTo.endswith(sep):
+			relativeTo += sep
 		if depth > maxDepth:
 			raise UFOLibError("Maximum recusion depth reached.")
 		result = []
@@ -215,6 +216,9 @@ class FileSystem(object):
 				result += self._listDirectory(p, recurse=True, relativeTo=relativeTo, depth=depth+1, maxDepth=maxDepth)
 			else:
 				p = p[len(relativeTo):]
+				if sep != "/":
+					# replace '\\' with '/'
+					path = path.replace(sep, "/")
 				result.append(p)
 		return result
 

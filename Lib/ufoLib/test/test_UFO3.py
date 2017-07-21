@@ -4147,8 +4147,8 @@ class UFO3ReadDataTestCase(unittest.TestCase):
 		reader = UFOReader(self.getFontPath())
 		found = reader.getDataDirectoryListing()
 		expected = [
-			'org.unifiedfontobject.directory%(s)sbar%(s)slol.txt' % {'s': os.sep},
-			'org.unifiedfontobject.directory%(s)sfoo.txt' % {'s': os.sep},
+			'org.unifiedfontobject.directory/bar/lol.txt',
+			'org.unifiedfontobject.directory/foo.txt',
 			'org.unifiedfontobject.file.txt'
 		]
 		self.assertEqual(set(found), set(expected))
