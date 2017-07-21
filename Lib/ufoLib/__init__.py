@@ -1028,8 +1028,8 @@ class UFOWriter(object):
 		"""
 		if self._formatVersion < 3:
 			raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
-		sourcePath = reader.joinPath(IMAGES_DIRNAME, sourceFileName)
-		destPath = self.joinPath(IMAGES_DIRNAME, destFileName)
+		sourcePath = self.fileSystem.joinPath(IMAGES_DIRNAME, sourceFileName)
+		destPath = self.fileSystem.joinPath(IMAGES_DIRNAME, destFileName)
 		self.copyFromReader(reader, sourcePath, destPath)
 
 
