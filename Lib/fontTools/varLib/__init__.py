@@ -92,10 +92,9 @@ def _add_fvar_avar(font, axes, instances):
 	for axis in axes.values():
 		curve = avar.segments[axis.tag] = {}
 		if not axis.map or all(k==v for k,v in axis.map.items()):
-			continue
-		interesting = True
-
-		items = sorted(axis.map.items())
+			interesting |= False
+		else:
+			interesting = True
 		if not axis.map:
 			# Deduce a default segment map for the axis
 			items = [(axis.minimum, axis.minimum), (axis.default, axis.default), (axis.maximum, axis.maximum)]
