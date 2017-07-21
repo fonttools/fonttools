@@ -165,7 +165,7 @@ setup_params = dict(
 		'pytest>=3.0.2',
 	],
 	install_requires=[
-		"fonttools>=3.1.2",
+		"fonttools>=3.10.0",
 	],
 	cmdclass={
 		"release": release,

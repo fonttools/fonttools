@@ -158,7 +158,7 @@ class FileSystem(object):
 	def _fsGetFileModificationTime(self, path):
 		path = self._fsRootPath(path)
 		info = self._fs.getinfo(path)
-		return info["modified_time"]
+		return info.modified
 
 	# -----------------
 	# Path Manipulation
@@ -474,10 +474,11 @@ class _NOFS(object):
 		return os.listdir(path)
 
 	def getinfo(self, path):
+		from fontTools.misc.py23 import SimpleNamespace
 		path = self._absPath(path)
 		stat = os.stat(path)
-		info = dict(
-			modified_time=stat.st_mtime
+		info = SimpleNamespace(
+			modified=stat.st_mtime
 		)
 		return info
 
