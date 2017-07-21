@@ -1,13 +1,15 @@
 import os
+import sys
 import shutil
 from io import StringIO, BytesIO, open
 import zipfile
+from fontTools.misc.py23 import tounicode
 
 haveFS = False
 try:
 	import fs
 	from fs.osfs import OSFS
-	from fs.zipfs import ZipFS, ZipOpenError
+	from fs.zipfs import ZipFS
 	haveFS = True
 except ImportError:
 	pass
@@ -19,6 +21,9 @@ try:
 	basestring
 except NameError:
 	basestring = str
+
+_SYS_FS_ENCODING = sys.getfilesystemencoding()
+
 
 def sniffFileStructure(path):
 	if zipfile.is_zipfile(path):
@@ -32,7 +37,7 @@ class FileSystem(object):
 
 	def __init__(self, path, mode="r", structure=None):
 		"""
-		path can be a path or a fs file system object.
+		path can be a path or another FileSystem object.
 
 		mode can be r or w.
 
@@ -41,12 +46,12 @@ class FileSystem(object):
 		package: package structure
 		zip: zipped package
 
-		mode and structure are both ignored if a
-		fs file system object is given for path.
+		mode and structure are both ignored if a FileSystem
+		object is given for path.
 		"""
 		self._root = None
-		self._path = "<data stream>"
 		if isinstance(path, basestring):
+			path = tounicode(path, encoding=_SYS_FS_ENCODING)
 			self._path = path
 			if mode == "w":
 				if os.path.exists(path):
@@ -58,7 +63,7 @@ class FileSystem(object):
 						structure = existingStructure
 			elif mode == "r":
 				if not os.path.exists(path):
-					raise UFOLibError("The specified UFO doesn't exist.")
+					raise UFOLibError("The specified UFO doesn't exist: %r" % path)
 				structure = sniffFileStructure(path)
 			if structure == "package":
 				if mode == "w" and not os.path.exists(path):
@@ -67,14 +72,22 @@ class FileSystem(object):
 			elif structure == "zip":
 				if not haveFS:
 					raise UFOLibError("The fs module is required for reading and writing UFO ZIP.")
-				path = ZipFS(path, mode=mode, allow_zip_64=True, encoding="utf8")
+				path = ZipFS(
+					path, write=True if mode == 'w' else False, encoding="utf8")
 				roots = path.listdir("")
 				if not roots:
-					self._root = "contents"
+					self._root = u"contents"
+					path.makedir(self._root)
 				elif len(roots) > 1:
 					raise UFOLibError("The UFO contains more than one root.")
 				else:
 					self._root = roots[0]
+		elif isinstance(path, self.__class__):
+			self._root = path._root
+			self._path = path._path
+			path = path._fs
+		else:
+			raise TypeError(path)
 		self._fs = path
 
 	def close(self):
@@ -94,6 +107,7 @@ class FileSystem(object):
 	"""
 
 	def _fsRootPath(self, path):
+		path = tounicode(path, encoding=_SYS_FS_ENCODING)
 		if self._root is None:
 			return path
 		return self.joinPath(self._root, path)
@@ -119,18 +133,17 @@ class FileSystem(object):
 		path = self._fsRootPath(path)
 		self._fs.makedir(path)
 
-	def _fsRemoveDirectory(self, path):
+	def _fsRemoveTree(self, path):
 		path = self._fsRootPath(path)
-		self._fs.removedir(path, force=True)
+		self._fs.removetree(path)
 
 	def _fsMove(self, path1, path2):
-		if self.isDirectory(path1):
-			meth = self._fs.movedir
-		else:
-			meth = self._fs.move
 		path1 = self._fsRootPath(path1)
 		path2 = self._fsRootPath(path2)
-		meth(path1, path2)
+		if self.isDirectory(path1):
+			self._fs.movedir(path1, path2, create=True)
+		else:
+			self._fs.move(path1, path2)
 
 	def _fsExists(self, path):
 		path = self._fsRootPath(path)
@@ -147,23 +160,35 @@ class FileSystem(object):
 	def _fsGetFileModificationTime(self, path):
 		path = self._fsRootPath(path)
 		info = self._fs.getinfo(path)
-		return info["modified_time"]
+		return info.modified
 
 	# -----------------
 	# Path Manipulation
 	# -----------------
 
 	def joinPath(self, *parts):
-		return fs.path.join(*parts)
+		if haveFS:
+			return fs.path.join(*parts)
+		else:
+			return os.path.join(*parts)
 
 	def splitPath(self, path):
-		return fs.path.split(path)
+		if haveFS:
+			return fs.path.split(path)
+		else:
+			return os.path.split(path)
 
 	def directoryName(self, path):
-		return fs.path.dirname(path)
+		if haveFS:
+			return fs.path.dirname(path)
+		else:
+			return os.path.dirname(path)
 
 	def relativePath(self, path, start):
-		return fs.relativefrom(path, start)
+		if haveFS:
+			return fs.relativefrom(path, start)
+		else:
+			return os.path.relpath(path, start)
 
 	# ---------
 	# Existence
@@ -179,8 +204,9 @@ class FileSystem(object):
 		return self._listDirectory(path, recurse=recurse, relativeTo=path)
 
 	def _listDirectory(self, path, recurse=False, relativeTo=None, depth=0, maxDepth=100):
-		if not relativeTo.endswith("/"):
-			relativeTo += "/"
+		sep = os.sep
+		if not relativeTo.endswith(sep):
+			relativeTo += sep
 		if depth > maxDepth:
 			raise UFOLibError("Maximum recusion depth reached.")
 		result = []
@@ -190,6 +216,9 @@ class FileSystem(object):
 				result += self._listDirectory(p, recurse=True, relativeTo=relativeTo, depth=depth+1, maxDepth=maxDepth)
 			else:
 				p = p[len(relativeTo):]
+				if sep != "/":
+					# replace '\\' with '/'
+					p = p.replace(sep, "/")
 				result.append(p)
 		return result
 
@@ -319,7 +348,7 @@ class FileSystem(object):
 				raise UFOLibError("The file %s does not exist." % path)
 		else:
 			if self.isDirectory(path):
-				self._fsRemoveDirectory(path)
+				self._fsRemoveTree(path)
 			else:
 				self._fsRemove(path)
 		directory = self.directoryName(path)
@@ -330,7 +359,7 @@ class FileSystem(object):
 		if not self.exists(directory):
 			return
 		if not len(self._fsListDirectory(directory)):
-			self._fsRemoveDirectory(directory)
+			self._fsRemoveTree(directory)
 		else:
 			return
 		directory = self.directoryName(directory)
@@ -372,8 +401,8 @@ class FileSystem(object):
 		try:
 			with self.open(path, "rb") as f:
 				return readPlist(f)
-		except:
-			raise UFOLibError("The file %s could not be read." % path)
+		except Exception as e:
+			raise UFOLibError("The file %s could not be read: %s" % (path, str(e)))
 
 	def writePlist(self, path, obj):
 		"""
@@ -409,18 +438,6 @@ class _NOFS(object):
 	def _absPath(self, path):
 		return os.path.join(self._path, path)
 
-	def joinPath(self, *parts):
-		return os.path.join(*parts)
-
-	def splitPath(self, path):
-		return os.path.split(path)
-
-	def directoryName(self, path):
-		return os.path.split(path)[0]
-
-	def relativePath(self, path, start):
-		return os.path.relpath(path, start)
-
 	def close(self):
 		pass
 
@@ -436,7 +453,7 @@ class _NOFS(object):
 		path = self._absPath(path)
 		os.mkdir(path)
 
-	def removedir(self, path):
+	def removetree(self, path):
 		path = self._absPath(path)
 		shutil.rmtree(path)
 
@@ -445,10 +462,35 @@ class _NOFS(object):
 		path2 = self._absPath(path2)
 		os.move(path1, path2)
 
-	def movedir(self, path1, path2):
+	def movedir(self, path1, path2, create=False):
 		path1 = self._absPath(path1)
 		path2 = self._absPath(path2)
-		shutil.move(path1, path2)
+		exists = False
+		if not create:
+			if not os.path.exists(path2):
+				raise UFOLibError("%r not found" % path2)
+			elif not os.path.isdir(path2):
+				raise UFOLibError("%r should be a directory" % path2)
+			else:
+				exists = True
+		else:
+			if os.path.exists(path2):
+				if not os.path.isdir(path2):
+					raise UFOLibError("%r should be a directory" % path2)
+				else:
+					exists = True
+		if exists:
+			# if destination is an existing directory, shutil.move then moves
+			# the source directory inside that directory; in pyfilesytem2,
+			# movedir only moves the content between the src and dst folders.
+			# Here we use distutils' copy_tree instead of shutil.copytree, as
+			# the latter does not work if destination exists
+			from distutils.dir_util import copy_tree
+			copy_tree(path1, path2)
+			shutil.rmtree(path1)
+		else:
+			# shutil.move creates destination if not exists yet
+			shutil.move(path1, path2)
 
 	def exists(self, path):
 		path = self._absPath(path)
@@ -463,10 +505,11 @@ class _NOFS(object):
 		return os.listdir(path)
 
 	def getinfo(self, path):
+		from fontTools.misc.py23 import SimpleNamespace
 		path = self._absPath(path)
 		stat = os.stat(path)
-		info = dict(
-			modified_time=stat.st_mtime
+		info = SimpleNamespace(
+			modified=stat.st_mtime
 		)
 		return info
 

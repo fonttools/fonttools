@@ -3,6 +3,7 @@ import shutil
 from io import StringIO, BytesIO, open
 import codecs
 from copy import deepcopy
+from fontTools.misc.py23 import basestring, unicode
 from ufoLib.filesystem import FileSystem
 from ufoLib.glifLib import GlyphSet
 from ufoLib.validators import *
@@ -41,11 +42,6 @@ fontinfo.plist values between the possible format versions.
 	convertFontInfoValueForAttributeFromVersion3ToVersion2
 """
 
-try:
-	basestring
-except NameError:
-	basestring = str
-
 __all__ = [
 	"makeUFOPath"
 	"UFOLibError",
@@ -60,6 +56,8 @@ __all__ = [
 	"convertFontInfoValueForAttributeFromVersion1ToVersion2",
 	"convertFontInfoValueForAttributeFromVersion2ToVersion1"
 ]
+
+__version__ = "2.1.1.dev0"
 
 
 
@@ -172,6 +170,11 @@ class UFOReader(object):
 			self._upConvertedKerningData["kerning"] = kerning
 			self._upConvertedKerningData["groups"] = groups
 			self._upConvertedKerningData["groupRenameMaps"] = conversionMaps
+
+	# support methods
+
+	def getFileModificationTime(self, path):
+		return self.fileSystem.getFileModificationTime(path)
 
 	# metainfo.plist
 
@@ -431,13 +434,14 @@ class UFOReader(object):
 		if not self.fileSystem.isDirectory(IMAGES_DIRNAME):
 			raise UFOLibError("The UFO contains an \"images\" file instead of a directory.")
 		result = []
-		for fileName in self.fileSystem.listDirectory(path):
-			if self.fileSystem.isDirectory(fileName):
+		for fileName in self.fileSystem.listDirectory(IMAGES_DIRNAME):
+			path = self.fileSystem.joinPath(IMAGES_DIRNAME, fileName)
+			if self.fileSystem.isDirectory(path):
 				# silently skip this as version control
 				# systems often have hidden directories
 				continue
-			# XXX this is sending a path to the validator. that won't work in the abstracted filesystem.
-			valid, error = pngValidator(path=p)
+			with self.fileSystem.open(path, mode='rb') as fp:
+				valid, error = pngValidator(fileObj=fp)
 			if valid:
 				result.append(fileName)
 		return result
@@ -927,9 +931,9 @@ class UFOWriter(object):
 				# not caching this could be slightly expensive,
 				# but caching it will be cumbersome
 				existing = [d.lower() for d in list(self.layerContents.values())]
-				if not isinstance(layerName, basestring):
+				if not isinstance(layerName, unicode):
 					try:
-						layerName = str(layerName)
+						layerName = unicode(layerName)
 					except UnicodeDecodeError:
 						raise UFOLibError("The specified layer name is not a Unicode string.")
 				directory = userNameToFileName(layerName, existing=existing, prefix="glyphs.")
@@ -1024,8 +1028,8 @@ class UFOWriter(object):
 		"""
 		if self._formatVersion < 3:
 			raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
-		sourcePath = reader.joinPath(IMAGES_DIRNAME, sourceFileName)
-		destPath = self.joinPath(IMAGES_DIRNAME, destFileName)
+		sourcePath = self.fileSystem.joinPath(IMAGES_DIRNAME, sourceFileName)
+		destPath = self.fileSystem.joinPath(IMAGES_DIRNAME, destFileName)
 		self.copyFromReader(reader, sourcePath, destPath)
 
 
@@ -1037,10 +1041,12 @@ def makeUFOPath(path):
 	"""
 	Return a .ufo pathname.
 
-	>>> makeUFOPath("/directory/something.ext")
-	'/directory/something.ufo'
-	>>> makeUFOPath("/directory/something.another.thing.ext")
-	'/directory/something.another.thing.ufo'
+	>>> makeUFOPath("directory/something.ext") == (
+	... 	os.path.join('directory', 'something.ufo'))
+	True
+	>>> makeUFOPath("directory/something.another.thing.ext") == (
+	... 	os.path.join('directory', 'something.another.thing.ufo'))
+	True
 	"""
 	dir, name = os.path.split(path)
 	name = ".".join([".".join(name.split(".")[:-1]), "ufo"])

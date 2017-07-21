@@ -4,26 +4,74 @@ environment:
     - PYTHON: "C:\\Python27"
       PYTHON_VERSION: "2.7.x"
       PYTHON_ARCH: "32"
+      TOXENV: "py27-fs"
+      TOXPYTHON: "C:\\Python27\\python.exe"
 
-    - PYTHON: "C:\\Python34"
-      PYTHON_VERSION: "3.4.0"
+    - PYTHON: "C:\\Python27"
+      PYTHON_VERSION: "2.7.x"
       PYTHON_ARCH: "32"
+      TOXENV: "py27-nofs"
+      TOXPYTHON: "C:\\Python27\\python.exe"
 
     - PYTHON: "C:\\Python35"
-      PYTHON_VERSION: "3.5.0"
+      PYTHON_VERSION: "3.5.x"
       PYTHON_ARCH: "32"
+      TOXENV: "py35-fs"
+      TOXPYTHON: "C:\\Python35\\python.exe"
+
+    - PYTHON: "C:\\Python35"
+      PYTHON_VERSION: "3.5.x"
+      PYTHON_ARCH: "32"
+      TOXENV: "py35-nofs"
+      TOXPYTHON: "C:\\Python35\\python.exe"
+
+    - PYTHON: "C:\\Python36"
+      PYTHON_VERSION: "3.6.x"
+      PYTHON_ARCH: "32"
+      TOXENV: "py36-fs"
+      TOXPYTHON: "C:\\Python36\\python.exe"
+
+    - PYTHON: "C:\\Python36"
+      PYTHON_VERSION: "3.6.x"
+      PYTHON_ARCH: "32"
+      TOXENV: "py36-nofs"
+      TOXPYTHON: "C:\\Python36\\python.exe"
 
     - PYTHON: "C:\\Python27-x64"
       PYTHON_VERSION: "2.7.x"
       PYTHON_ARCH: "64"
+      TOXENV: "py27-fs"
+      TOXPYTHON: "C:\\Python27-x64\\python.exe"
 
-    - PYTHON: "C:\\Python34-x64"
-      PYTHON_VERSION: "3.4.x"
+    - PYTHON: "C:\\Python27-x64"
+      PYTHON_VERSION: "2.7.x"
       PYTHON_ARCH: "64"
+      TOXENV: "py27-nofs"
+      TOXPYTHON: "C:\\Python27-x64\\python.exe"
 
     - PYTHON: "C:\\Python35-x64"
       PYTHON_VERSION: "3.5.x"
       PYTHON_ARCH: "64"
+      TOXENV: "py35-fs"
+      TOXPYTHON: "C:\\Python35-x64\\python.exe"
+
+    - PYTHON: "C:\\Python35-x64"
+      PYTHON_VERSION: "3.5.x"
+      PYTHON_ARCH: "64"
+      TOXENV: "py35-nofs"
+      TOXPYTHON: "C:\\Python35-x64\\python.exe"
+
+    - PYTHON: "C:\\Python36-x64"
+      PYTHON_VERSION: "3.6.x"
+      PYTHON_ARCH: "64"
+      TOXENV: "py36-fs"
+      TOXPYTHON: "C:\\Python36-x64\\python.exe"
+
+    - PYTHON: "C:\\Python36-x64"
+      PYTHON_VERSION: "3.6.x"
+      PYTHON_ARCH: "64"
+      TOXENV: "py36-nofs"
+      TOXPYTHON: "C:\\Python36-x64\\python.exe"
 
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
@@ -43,24 +91,13 @@ install:
   # upgrade pip to avoid out-of-date warnings
   - "pip install --disable-pip-version-check --user --upgrade pip"
 
-  # install wheel to build compiled packages
-  # - "pip install --upgrade wheel"
+  # install/upgrade setuptools and wheel to build packages
+  - "pip install --upgrade setuptools wheel"
 
-  # install requirements
-  - "pip install git+https://github.com/behdad/fonttools.git"
-
-  # install
-  - "python setup.py install"
+  # install tox to run test suite in a virtual environment
+  - "pip install -U tox"
 
 build: false
 
 test_script:
-  - "python setup.py test"
-
-# after_test:
-#   # if tests are successful, create binary packages for the project
-#   - "pip wheel -w dist ."
-
-# artifacts:
-#   # archive the generated packages in the ci.appveyor.com build report
-#   - path: dist\*
+  - "tox"

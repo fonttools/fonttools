@@ -253,15 +253,10 @@ def test():
     ... }
     >>> groups == expected
     True
-    
-    >>> kerningDict = {}
-    >>> for first, seconds in kerning.items():
-    ...     for s, value in seconds.items():
-    ...         key = (first, s)
-    ...         kerningDict[key] = value
-    >>> from validators import kerningValidator
-    >>> kerningValidator(kerningDict, groups)
-    (True, [])
+
+    >>> from .validators import kerningValidator
+    >>> kerningValidator(kerning)
+    (True, None)
 
     Mixture of known prefixes and groups without prefixes.
 
