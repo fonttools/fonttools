@@ -100,7 +100,7 @@ def _add_fvar_avar(font, axes, instances):
 			items = [(v, v) for v in sorted(list(set((axis.minimum, axis.default, axis.maximum))))]
 		else:
 			items = sorted(axis.map.items())
-		keys   = [item[0] for item in items]
+		keys = [item[0] for item in items]
 		vals = [item[1] for item in items]
 
 		# Current avar requirements.  We don't have to enforce
