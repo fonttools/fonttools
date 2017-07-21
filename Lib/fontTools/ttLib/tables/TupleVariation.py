@@ -524,7 +524,7 @@ def compileTupleVariationStore(variations, pointCount,
 			data.append(privateData)
 	if someTuplesSharePoints:
 		data = bytechr(0) + bytesjoin(data)  # 0x00 = "all points in glyph"
-		tupleVariationCount = tv.TUPLES_SHARE_POINT_NUMBERS | len(tuples)
+		tupleVariationCount = TUPLES_SHARE_POINT_NUMBERS | len(tuples)
 	else:
 		data = bytesjoin(data)
 		tupleVariationCount = len(tuples)

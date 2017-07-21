@@ -92,11 +92,15 @@ def _add_fvar_avar(font, axes, instances):
 	for axis in axes.values():
 		curve = avar.segments[axis.tag] = {}
 		if not axis.map or all(k==v for k,v in axis.map.items()):
-			continue
-		interesting = True
-
-		items = sorted(axis.map.items())
-		keys   = [item[0] for item in items]
+			interesting |= False
+		else:
+			interesting = True
+		if not axis.map:
+			# Deduce a default segment map for the axis
+			items = [(v, v) for v in sorted(set((axis.minimum, axis.default, axis.maximum)))]
+		else:
+			items = sorted(axis.map.items())
+		keys = [item[0] for item in items]
 		vals = [item[1] for item in items]
 
 		# Current avar requirements.  We don't have to enforce
@@ -116,6 +120,17 @@ def _add_fvar_avar(font, axes, instances):
 
 		keys = [models.normalizeValue(v, keys_triple) for v in keys]
 		vals = [models.normalizeValue(v, vals_triple) for v in vals]
+
+		# If a SegmentMaps entry is present, it must at least contain records
+		# for all fromCoordinate values -1, 0, 1.
+		# Check if -1 and 1 are present, add a "flat" mapping otherwise.
+		if -1.0 not in keys:
+			keys.insert(0, -1.0)
+			vals.insert(0, min(vals))
+		if 1.0 not in keys:
+			keys.append(1.0)
+			vals.append(max(vals))
+
 		curve.update(zip(keys, vals))
 
 	if not interesting:
