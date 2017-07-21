@@ -1,7 +1,9 @@
 import os
+import sys
 import shutil
 from io import StringIO, BytesIO, open
 import zipfile
+from fontTools.misc.py23 import tounicode
 
 haveFS = False
 try:
@@ -19,6 +21,9 @@ try:
 	basestring
 except NameError:
 	basestring = str
+
+_SYS_FS_ENCODING = sys.getfilesystemencoding()
+
 
 def sniffFileStructure(path):
 	if zipfile.is_zipfile(path):
@@ -46,6 +51,7 @@ class FileSystem(object):
 		"""
 		self._root = None
 		if isinstance(path, basestring):
+			path = tounicode(path, encoding=_SYS_FS_ENCODING)
 			self._path = path
 			if mode == "w":
 				if os.path.exists(path):
@@ -99,6 +105,7 @@ class FileSystem(object):
 	"""
 
 	def _fsRootPath(self, path):
+		path = tounicode(path, encoding=_SYS_FS_ENCODING)
 		if self._root is None:
 			return path
 		return self.joinPath(self._root, path)
