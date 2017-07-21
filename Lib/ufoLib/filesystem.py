@@ -218,7 +218,7 @@ class FileSystem(object):
 				p = p[len(relativeTo):]
 				if sep != "/":
 					# replace '\\' with '/'
-					path = path.replace(sep, "/")
+					p = p.replace(sep, "/")
 				result.append(p)
 		return result
 
