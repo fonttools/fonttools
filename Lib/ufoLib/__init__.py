@@ -434,13 +434,14 @@ class UFOReader(object):
 		if not self.fileSystem.isDirectory(IMAGES_DIRNAME):
 			raise UFOLibError("The UFO contains an \"images\" file instead of a directory.")
 		result = []
-		for fileName in self.fileSystem.listDirectory(path):
-			if self.fileSystem.isDirectory(fileName):
+		for fileName in self.fileSystem.listDirectory(IMAGES_DIRNAME):
+			path = self.fileSystem.joinPath(IMAGES_DIRNAME, fileName)
+			if self.fileSystem.isDirectory(path):
 				# silently skip this as version control
 				# systems often have hidden directories
 				continue
-			# XXX this is sending a path to the validator. that won't work in the abstracted filesystem.
-			valid, error = pngValidator(path=p)
+			with self.fileSystem.open(path, mode='rb') as fp:
+				valid, error = pngValidator(fileObj=fp)
 			if valid:
 				result.append(fileName)
 		return result
