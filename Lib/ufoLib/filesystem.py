@@ -74,7 +74,11 @@ class FileSystem(object):
 					raise UFOLibError("The fs module is required for reading and writing UFO ZIP.")
 				path = ZipFS(
 					path, write=True if mode == 'w' else False, encoding="utf8")
-				roots = path.listdir("")
+				roots = [
+					p for p in path.listdir("")
+					# exclude macOS metadata contained in zip file
+					if path.isdir(p) and p != "__MACOSX"
+				]
 				if not roots:
 					self._root = u"contents"
 					path.makedir(self._root)
