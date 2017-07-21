@@ -72,10 +72,12 @@ class FileSystem(object):
 			elif structure == "zip":
 				if not haveFS:
 					raise UFOLibError("The fs module is required for reading and writing UFO ZIP.")
-				path = ZipFS(path, mode=mode, allow_zip_64=True, encoding="utf8")
+				path = ZipFS(
+					path, write=True if mode == 'w' else False, encoding="utf8")
 				roots = path.listdir("")
 				if not roots:
-					self._root = "contents"
+					self._root = u"contents"
+					path.makedir(self._root)
 				elif len(roots) > 1:
 					raise UFOLibError("The UFO contains more than one root.")
 				else:
