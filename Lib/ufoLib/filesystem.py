@@ -154,16 +154,28 @@ class FileSystem(object):
 	# -----------------
 
 	def joinPath(self, *parts):
-		return fs.path.join(*parts)
+		if haveFS:
+			return fs.path.join(*parts)
+		else:
+			return os.path.join(*parts)
 
 	def splitPath(self, path):
-		return fs.path.split(path)
+		if haveFS:
+			return fs.path.split(path)
+		else:
+			return os.path.split(path)
 
 	def directoryName(self, path):
-		return fs.path.dirname(path)
+		if haveFS:
+			return fs.path.dirname(path)
+		else:
+			return os.path.dirname(path)
 
 	def relativePath(self, path, start):
-		return fs.relativefrom(path, start)
+		if haveFS:
+			return fs.relativefrom(path, start)
+		else:
+			return os.path.relpath(path, start)
 
 	# ---------
 	# Existence
@@ -408,18 +420,6 @@ class _NOFS(object):
 
 	def _absPath(self, path):
 		return os.path.join(self._path, path)
-
-	def joinPath(self, *parts):
-		return os.path.join(*parts)
-
-	def splitPath(self, path):
-		return os.path.split(path)
-
-	def directoryName(self, path):
-		return os.path.split(path)[0]
-
-	def relativePath(self, path, start):
-		return os.path.relpath(path, start)
 
 	def close(self):
 		pass
