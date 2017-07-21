@@ -7,7 +7,7 @@ haveFS = False
 try:
 	import fs
 	from fs.osfs import OSFS
-	from fs.zipfs import ZipFS, ZipOpenError
+	from fs.zipfs import ZipFS
 	haveFS = True
 except ImportError:
 	pass
