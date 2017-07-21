@@ -136,13 +136,12 @@ class FileSystem(object):
 		self._fs.removetree(path)
 
 	def _fsMove(self, path1, path2):
-		if self.isDirectory(path1):
-			meth = self._fs.movedir
-		else:
-			meth = self._fs.move
 		path1 = self._fsRootPath(path1)
 		path2 = self._fsRootPath(path2)
-		meth(path1, path2)
+		if self.isDirectory(path1):
+			self._fs.movedir(path1, path2, create=True)
+		else:
+			self._fs.move(path1, path2)
 
 	def _fsExists(self, path):
 		path = self._fsRootPath(path)
