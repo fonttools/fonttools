@@ -1,12 +1,24 @@
 language: python
 sudo: false
-python:
-  - "2.7"
-  - "3.4"
-  - "3.5"
+matrix:
+  include:
+    - python: 2.7
+      env: TOXENV=py27-fs
+    - python: 2.7
+      env: TOXENV=py27-nofs
+    - python: 3.5
+      env: TOXENV=py35-fs
+    - python: 3.5
+      env: TOXENV=py35-nofs
+    - python: 3.6
+      env: TOXENV=py36-fs
+    - python: 3.6
+      env:
+        - TOXENV=py36-nofs
+        - BUILD_DIST=true
+
 install:
-  - pip install --upgrade pip setuptools wheel
-  - pip install tox-travis
+  - pip install --upgrade pip setuptools wheel tox
 script: tox
 before_deploy:
   - pip wheel --no-deps -w dist .
@@ -26,7 +38,7 @@ deploy:
       repo: unified-font-object/ufoLib
       tags: true
       all_branches: true
-      python: 3.5
+      condition: "$BUILD_DIST == true"
   # deploy to PyPI on tags
   - provider: pypi
     server: https://upload.pypi.org/legacy/
@@ -34,7 +46,7 @@ deploy:
       repo: unified-font-object/ufoLib
       tags: true
       all_branches: true
-      python: 3.5
+      condition: "$BUILD_DIST == true"
     user: anthrotype
     password:
       secure: m0tl6kKKOE/V1WsTkdn1yCYdI6dEnZZbz0SChVm9XNuloTti++I25oJvfcDFDtq5K+gHZ8hPmym/sFH+dozjf39fCrURiFnL9tIumCJvehubDXYGw2ZLN8SLayG6QsdBqyjQB8mS9L+Ag0vaC10Nj6zgmXPQQERckqDiLfmT1A1IPDodu18hHH7FM4eNhhB1Ksaem9rurgpNHtORHJxab1aGVIe0kz6UR/e+ldtenyxWcHVX+04kTJkR7mz9c2lTq0DrVZ7uc9slURi5Mw4VgGHG6J/sCsqUFoqtESciN0+2OblacVbvu7avBsnFbSVOFdqurRNpHf1gCPt5cx0nIORpps9VE2TZEj0J4wmTamhUGelIuyqu6jGYExc94Ca6OYLQxqr+YhiPSl0uiWzVA0D7dmKx9EIl/RKtB3nAg9+BX7il2Xt/fPU0qJtMbYwSTtS/KDuNFys6z4wFcvAykdBbilX2ZCjbSP36uVI6HmwWJX+/kAFiGiuW0qQQ3Q64LgBu2t8Ho0HE+J5TmpE59eaOqir1yMd9wo89t0QJNO2zf1/0FO0lakol4+VX+btyt8QfCnBGGk7ZjK46h9oOMhZ5kjdVRqDwrsgy6InLbirQvDbhGI2NZInY5/Y8w8lCdExyfsELSOBwm86ovzIKAG4bPU3cEIjAHuJGBXBjqKk=
