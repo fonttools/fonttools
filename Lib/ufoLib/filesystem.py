@@ -119,9 +119,9 @@ class FileSystem(object):
 		path = self._fsRootPath(path)
 		self._fs.makedir(path)
 
-	def _fsRemoveDirectory(self, path):
+	def _fsRemoveTree(self, path):
 		path = self._fsRootPath(path)
-		self._fs.removedir(path, force=True)
+		self._fs.removetree(path)
 
 	def _fsMove(self, path1, path2):
 		if self.isDirectory(path1):
@@ -319,7 +319,7 @@ class FileSystem(object):
 				raise UFOLibError("The file %s does not exist." % path)
 		else:
 			if self.isDirectory(path):
-				self._fsRemoveDirectory(path)
+				self._fsRemoveTree(path)
 			else:
 				self._fsRemove(path)
 		directory = self.directoryName(path)
@@ -330,7 +330,7 @@ class FileSystem(object):
 		if not self.exists(directory):
 			return
 		if not len(self._fsListDirectory(directory)):
-			self._fsRemoveDirectory(directory)
+			self._fsRemoveTree(directory)
 		else:
 			return
 		directory = self.directoryName(directory)
@@ -436,7 +436,7 @@ class _NOFS(object):
 		path = self._absPath(path)
 		os.mkdir(path)
 
-	def removedir(self, path):
+	def removetree(self, path):
 		path = self._absPath(path)
 		shutil.rmtree(path)
 
