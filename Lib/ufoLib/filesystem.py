@@ -32,7 +32,7 @@ class FileSystem(object):
 
 	def __init__(self, path, mode="r", structure=None):
 		"""
-		path can be a path or a fs file system object.
+		path can be a path or another FileSystem object.
 
 		mode can be r or w.
 
@@ -41,11 +41,10 @@ class FileSystem(object):
 		package: package structure
 		zip: zipped package
 
-		mode and structure are both ignored if a
-		fs file system object is given for path.
+		mode and structure are both ignored if a FileSystem
+		object is given for path.
 		"""
 		self._root = None
-		self._path = "<data stream>"
 		if isinstance(path, basestring):
 			self._path = path
 			if mode == "w":
@@ -58,7 +57,7 @@ class FileSystem(object):
 						structure = existingStructure
 			elif mode == "r":
 				if not os.path.exists(path):
-					raise UFOLibError("The specified UFO doesn't exist.")
+					raise UFOLibError("The specified UFO doesn't exist: %r" % path)
 				structure = sniffFileStructure(path)
 			if structure == "package":
 				if mode == "w" and not os.path.exists(path):
@@ -75,6 +74,12 @@ class FileSystem(object):
 					raise UFOLibError("The UFO contains more than one root.")
 				else:
 					self._root = roots[0]
+		elif isinstance(path, self.__class__):
+			self._root = path._root
+			self._path = path._path
+			path = path._fs
+		else:
+			raise TypeError(path)
 		self._fs = path
 
 	def close(self):
