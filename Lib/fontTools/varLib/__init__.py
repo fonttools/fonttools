@@ -97,7 +97,7 @@ def _add_fvar_avar(font, axes, instances):
 			interesting = True
 		if not axis.map:
 			# Deduce a default segment map for the axis
-			items = [(v, v) for v in sorted(list(set((axis.minimum, axis.default, axis.maximum))))]
+			items = [(v, v) for v in sorted(set((axis.minimum, axis.default, axis.maximum)))]
 		else:
 			items = sorted(axis.map.items())
 		keys = [item[0] for item in items]
