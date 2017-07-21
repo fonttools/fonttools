@@ -1,14 +1,41 @@
 language: python
-sudo: required
+sudo: false
 python:
   - "2.7"
   - "3.4"
   - "3.5"
-before_install:
-  - git clone --depth=1 https://github.com/behdad/fonttools.git
 install:
-  - cd fonttools; python setup.py install; cd ..
-  - python setup.py install
-script:
-  - python -c "import fontTools"
-  - python setup.py test
+  - pip install --upgrade pip setuptools wheel
+  - pip install tox-travis
+script: tox
+before_deploy:
+  - pip wheel --no-deps -w dist .
+  - python setup.py sdist
+  - export WHL=$(ls dist/ufoLib*.whl)
+  - export ZIP=$(ls dist/ufoLib*.zip)
+deploy:
+  # deploy to Github Releases on tags
+  - provider: releases
+    api_key:
+      secure: ZwNCLnAvI2ftcH35Hk+jJ4cNWBRKqgjzyO3hdQT8Kbh2RyhKkpe7Dv+e3/ac2iaCkYPoGXGmrMVjNm6ny1HM5xuyXbIQuh34nmY1de4mdU4aTyWzGZ+E1SoajjDZVi5OhkqIm/FD/o5czIY8tv7YzwhVME/d5PHrBJ9vq91wu++Vx9hy/pocuS1YdBa53iFXDtF66zA8Jyw/qdallHEmN7ZMwasozW2X20Ry5rhFzgmx9oQ7R2v3jIUU0AMVJIY60Q2UwhI0XJIeTXQY4pxKgNU+0k4UQCRCCNbQgqcRvoVy8o5m9ofWtkVMmQM1c5UB+wD8IGJccVM608+/pbB3fHLk5TZOHKWRP1WyAWtQA29yDktPFdjLCYnfCt3oj10cTIs+Iphu7F9vAWt8g7fuyBYlqaqdjC2J2WcOesJzLAkalAPa/vat2T30xKNUmx6eV1Nu3X2BtuBy1gn6IcDZ+szySpls6ZM1oaOMmu2cRbwAQtszeKqIsJyx6atogeIeWTKsnC9QV1A/TR9Ku9L6YPF6bxmreW7DbKX0hoNmJL+VUiW8DealIgP/4tloI7VqRvbfL8AZp78RfWGK7ZzCK+QLI7Xt8cSu33HvRBWgWlsjIdA7Qw+vb8UtqVQPKOpPw+jraybSUBQ3bSjb4Zhi8sOpDhYnw1EXIZ4RdRqqVvE=
+    file:
+      - "${ZIP}"
+      - "${WHL}"
+    skip_cleanup: true
+    on:
+      repo: unified-font-object/ufoLib
+      tags: true
+      all_branches: true
+      python: 3.5
+  # deploy to PyPI on tags
+  - provider: pypi
+    server: https://upload.pypi.org/legacy/
+    on:
+      repo: unified-font-object/ufoLib
+      tags: true
+      all_branches: true
+      python: 3.5
+    user: anthrotype
+    password:
+      secure: m0tl6kKKOE/V1WsTkdn1yCYdI6dEnZZbz0SChVm9XNuloTti++I25oJvfcDFDtq5K+gHZ8hPmym/sFH+dozjf39fCrURiFnL9tIumCJvehubDXYGw2ZLN8SLayG6QsdBqyjQB8mS9L+Ag0vaC10Nj6zgmXPQQERckqDiLfmT1A1IPDodu18hHH7FM4eNhhB1Ksaem9rurgpNHtORHJxab1aGVIe0kz6UR/e+ldtenyxWcHVX+04kTJkR7mz9c2lTq0DrVZ7uc9slURi5Mw4VgGHG6J/sCsqUFoqtESciN0+2OblacVbvu7avBsnFbSVOFdqurRNpHf1gCPt5cx0nIORpps9VE2TZEj0J4wmTamhUGelIuyqu6jGYExc94Ca6OYLQxqr+YhiPSl0uiWzVA0D7dmKx9EIl/RKtB3nAg9+BX7il2Xt/fPU0qJtMbYwSTtS/KDuNFys6z4wFcvAykdBbilX2ZCjbSP36uVI6HmwWJX+/kAFiGiuW0qQQ3Q64LgBu2t8Ho0HE+J5TmpE59eaOqir1yMd9wo89t0QJNO2zf1/0FO0lakol4+VX+btyt8QfCnBGGk7ZjK46h9oOMhZ5kjdVRqDwrsgy6InLbirQvDbhGI2NZInY5/Y8w8lCdExyfsELSOBwm86ovzIKAG4bPU3cEIjAHuJGBXBjqKk=
+    distributions: sdist bdist_wheel

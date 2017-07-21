@@ -1,6 +1,7 @@
 [![Build Status](https://api.travis-ci.org/unified-font-object/ufoLib.svg)](https://travis-ci.org/unified-font-object/ufoLib)
 [![AppVeyor Status](https://ci.appveyor.com/api/projects/status/github/unified-font-object/ufoLib?svg=true)](https://ci.appveyor.com/project/adrientetar/ufolib)
 ![Python Versions](https://img.shields.io/badge/python-2.7%2C%203.4%2C%203.5-blue.svg)
+[![PyPI](https://img.shields.io/pypi/v/ufoLib.svg)](https://pypi.org/project/ufoLib/)
 
 ufoLib
 ------

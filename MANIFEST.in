@@ -1,0 +1,8 @@
+include README.md notes.txt LICENSE.txt
+
+include Documentation/Makefile
+recursive-include Documentation *.py *.rst
+
+recursive-include Lib/ufoLib/test/testdata *.plist *.glif *.fea *.txt
+
+include requirements.txt tox.ini

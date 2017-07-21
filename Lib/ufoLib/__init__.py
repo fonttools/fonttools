@@ -3,6 +3,7 @@ import shutil
 from io import StringIO, BytesIO, open
 import codecs
 from copy import deepcopy
+from fontTools.misc.py23 import basestring, unicode
 from ufoLib.filesystem import FileSystem
 from ufoLib.glifLib import GlyphSet
 from ufoLib.validators import *
@@ -41,11 +42,6 @@ fontinfo.plist values between the possible format versions.
 	convertFontInfoValueForAttributeFromVersion3ToVersion2
 """
 
-try:
-	basestring
-except NameError:
-	basestring = str
-
 __all__ = [
 	"makeUFOPath"
 	"UFOLibError",
@@ -60,6 +56,8 @@ __all__ = [
 	"convertFontInfoValueForAttributeFromVersion1ToVersion2",
 	"convertFontInfoValueForAttributeFromVersion2ToVersion1"
 ]
+
+__version__ = "2.1.1.dev0"
 
 
 
@@ -927,9 +925,9 @@ class UFOWriter(object):
 				# not caching this could be slightly expensive,
 				# but caching it will be cumbersome
 				existing = [d.lower() for d in list(self.layerContents.values())]
-				if not isinstance(layerName, basestring):
+				if not isinstance(layerName, unicode):
 					try:
-						layerName = str(layerName)
+						layerName = unicode(layerName)
 					except UnicodeDecodeError:
 						raise UFOLibError("The specified layer name is not a Unicode string.")
 				directory = userNameToFileName(layerName, existing=existing, prefix="glyphs.")
@@ -1037,10 +1035,12 @@ def makeUFOPath(path):
 	"""
 	Return a .ufo pathname.
 
-	>>> makeUFOPath("/directory/something.ext")
-	'/directory/something.ufo'
-	>>> makeUFOPath("/directory/something.another.thing.ext")
-	'/directory/something.another.thing.ufo'
+	>>> makeUFOPath("directory/something.ext") == (
+	... 	os.path.join('directory', 'something.ufo'))
+	True
+	>>> makeUFOPath("directory/something.another.thing.ext") == (
+	... 	os.path.join('directory', 'something.another.thing.ufo'))
+	True
 	"""
 	dir, name = os.path.split(path)
 	name = ".".join([".".join(name.split(".")[:-1]), "ufo"])

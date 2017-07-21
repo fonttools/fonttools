@@ -4,6 +4,11 @@ import os
 import calendar
 from io import open
 
+try:
+    from collections.abc import Mapping  # python >= 3.3
+except ImportError:
+    from collections import Mapping
+
 # -------
 # Python 2 or 3
 # -------
@@ -21,7 +26,7 @@ def isDictEnough(value):
     Some objects will likely come in that aren't
     dicts but are dict-ish enough.
     """
-    if isinstance(value, dict):
+    if isinstance(value, Mapping):
         return True
     attrs = ("keys", "values", "items")
     for attr in attrs:
@@ -75,7 +80,7 @@ def genericDictValidator(value, prototype):
 	Generic. (Added at version 3.)
 	"""
 	# not a dict
-	if not isinstance(value, dict):
+	if not isinstance(value, Mapping):
 		return False
 	# missing required keys
 	for key, (typ, required) in list(prototype.items()):
@@ -907,12 +912,12 @@ def kerningValidator(data):
 	(False, 'The kerning data is not in the correct format.')
 	"""
 	bogusFormatMessage = "The kerning data is not in the correct format."
-	if not isinstance(data, dict):
+	if not isinstance(data, Mapping):
 		return False, bogusFormatMessage
 	for first, secondDict in list(data.items()):
 		if not isinstance(first, basestring):
 			return False, bogusFormatMessage
-		elif not isinstance(secondDict, dict):
+		elif not isinstance(secondDict, Mapping):
 			return False, bogusFormatMessage
 		for second, value in list(secondDict.items()):
 			if not isinstance(second, basestring):

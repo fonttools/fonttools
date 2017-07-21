@@ -4140,12 +4140,8 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 class UFO3ReadDataTestCase(unittest.TestCase):
 
 	def getFontPath(self):
-		import ufoLib
-		path = os.path.dirname(ufoLib.__file__)
-		path = os.path.dirname(path)
-		path = os.path.dirname(path)
-		path = os.path.join(path, "TestData", "UFO3-Read Data.ufo")
-		return path
+		testdata = os.path.join(os.path.dirname(__file__), "testdata")
+		return os.path.join(testdata, "UFO3-Read Data.ufo")
 
 	def testUFOReaderDataDirectoryListing(self):
 		reader = UFOReader(self.getFontPath())

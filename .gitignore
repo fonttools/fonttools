@@ -7,3 +7,5 @@ dist/
 .DS_Store
 *.egg-info
 *.py[cod]
+.eggs/
+.tox/
