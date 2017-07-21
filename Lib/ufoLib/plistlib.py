@@ -5,8 +5,22 @@ from __future__ import absolute_import
 import sys
 try:
 	from plistlib import (
-		load as readPlist, dump as writePlist,
-		loads as readPlistFromString, dumps as writePlistToString)
+		load as _readPlist, dump as _writePlist,
+		loads as _readPlistFromString, dumps as _writePlistToString,
+		PlistFormat)
+
+	def readPlist(*args, **kwargs):
+		return _readPlist(fmt=PlistFormat.FMT_XML, *args, **kwargs)
+
+	def writePlist(*args, **kwargs):
+		return _writePlist(fmt=PlistFormat.FMT_XML, *args, **kwargs)
+
+	def readPlistFromString(*args, **kwargs):
+		return _readPlistFromString(fmt=PlistFormat.FMT_XML, *args, **kwargs)
+
+	def writePlistToString(*args, **kwargs):
+		return _writePlistToString(fmt=PlistFormat.FMT_XML, *args, **kwargs)
+
 	from plistlib import _PlistParser, _PlistWriter
 	# Public API changed in Python 3.4
 	if sys.version_info >= (3, 4):
