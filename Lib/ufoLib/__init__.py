@@ -171,6 +171,11 @@ class UFOReader(object):
 			self._upConvertedKerningData["groups"] = groups
 			self._upConvertedKerningData["groupRenameMaps"] = conversionMaps
 
+	# support methods
+
+	def getFileModificationTime(self, path):
+		return self.fileSystem.getFileModificationTime(path)
+
 	# metainfo.plist
 
 	def readMetaInfo(self):
