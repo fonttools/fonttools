@@ -458,10 +458,35 @@ class _NOFS(object):
 		path2 = self._absPath(path2)
 		os.move(path1, path2)
 
-	def movedir(self, path1, path2):
+	def movedir(self, path1, path2, create=False):
 		path1 = self._absPath(path1)
 		path2 = self._absPath(path2)
-		shutil.move(path1, path2)
+		exists = False
+		if not create:
+			if not os.path.exists(path2):
+				raise UFOLibError("%r not found" % path2)
+			elif not os.path.isdir(path2):
+				raise UFOLibError("%r should be a directory" % path2)
+			else:
+				exists = True
+		else:
+			if os.path.exists(path2):
+				if not os.path.isdir(path2):
+					raise UFOLibError("%r should be a directory" % path2)
+				else:
+					exists = True
+		if exists:
+			# if destination is an existing directory, shutil.move then moves
+			# the source directory inside that directory; in pyfilesytem2,
+			# movedir only moves the content between the src and dst folders.
+			# Here we use distutils' copy_tree instead of shutil.copytree, as
+			# the latter does not work if destination exists
+			from distutils.dir_util import copy_tree
+			copy_tree(path1, path2)
+			shutil.rmtree(path1)
+		else:
+			# shutil.move creates destination if not exists yet
+			shutil.move(path1, path2)
 
 	def exists(self, path):
 		path = self._absPath(path)
