@@ -345,6 +345,9 @@ def _iup_contour_optimize(delta, coords, tolerance=0.):
 
 		delta = _rot_list(delta, -k)
 	else:
+		# Repeat the contour an extra time, solve the 2*n case, then look for solutions of the
+		# circular n-length problem in the solution for 2*n linear case.  I cannot prove that
+		# this always produces the optimal solution...
 		chain, costs = _iup_contour_optimize_dp(delta+delta, coords+coords, forced, tolerance, n)
 		best_sol, best_cost = None, n+1
 
