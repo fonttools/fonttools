@@ -279,17 +279,7 @@ def _iup_contour_optimize_dp(delta, coords, forced={}, tolerance=0):
 			if j in forced:
 				break
 
-	# Assemble solution.
-	solution = set()
-	i = n - 1
-	while i is not None:
-		solution.add(i)
-		i = chain[i]
-	assert forced <= solution, (forced, solution)
-
-	delta = [delta[i] if i in solution else None for i in range(n)]
-
-	return delta, costs[n - 1]
+	return chain, costs
 
 def _rot_list(l, k):
 	"""Rotate list by k items forward.  Ie. item at position 0 will be
@@ -303,19 +293,6 @@ def _rot_set(s, k, n):
 	k %= n
 	if not k: return s
 	return {(v + k) % n for v in s}
-
-def _iup_contour_optimize_dp_with_offset(delta, coords, offset, forced, tolerance):
-	n = len(delta)
-
-	delta  = _rot_list(delta, offset)
-	coords = _rot_list(coords, offset)
-	forced = _rot_set(forced, offset, n)
-
-	delta, cost = _iup_contour_optimize_dp(delta, coords, forced, tolerance)
-
-	delta = _rot_list(delta, -offset)
-
-	return delta, cost
 
 def _iup_contour_optimize(delta, coords, tolerance=0.):
 	n = len(delta)
@@ -340,7 +317,7 @@ def _iup_contour_optimize(delta, coords, tolerance=0.):
 	forced = _iup_contour_bound_forced_set(delta, coords, tolerance)
 	# The _iup_contour_optimize_dp() routine returns the optimal encoding
 	# solution given the constraint that the last point is always encoded.
-	# To remove this constraint, we do two different things, depending on
+	# To remove this constraint, we use two different methods, depending on
 	# whether forced set is non-empty or not:
 
 	if forced:
@@ -348,21 +325,42 @@ def _iup_contour_optimize(delta, coords, tolerance=0.):
 		# such that the last point in the list is a forced point.
 		k = (n-1) - max(forced)
 		assert k >= 0
-		delta, _ = _iup_contour_optimize_dp_with_offset(delta, coords, k, forced, tolerance)
+
+		delta  = _rot_list(delta, k)
+		coords = _rot_list(coords, k)
+		forced = _rot_set(forced, k, n)
+
+		chain, costs = _iup_contour_optimize_dp(delta, coords, forced, tolerance)
+
+		# Assemble solution.
+		solution = set()
+		i = n - 1
+		while i is not None:
+			solution.add(i)
+			i = chain[i]
+		assert forced <= solution, (forced, solution)
+		delta = [delta[i] if i in solution else None for i in range(n)]
+
+		delta = _rot_list(delta, -k)
 	else:
-		# Brute-force: rotate and retry until all points on the contour are part
-		# of at least one solution. The best of those solutions is the optimal
-		# solution.
-		best_delta, best_cost = None, n + 1
-		tocover = set(range(n))
-		while tocover:
-			k = (n-1) - max(tocover)
-			assert k >= 0
-			this_delta, this_cost = _iup_contour_optimize_dp_with_offset(delta, coords, k, forced, tolerance)
-			if this_cost < best_cost:
-				best_delta, best_cost = this_delta, this_cost
-			tocover -= {i for i,v in enumerate(this_delta) if v is not None}
-		delta = best_delta
+		chain, costs = _iup_contour_optimize_dp(delta+delta, coords+coords, forced, tolerance)
+		# TODO add lookback=n to DP
+		best_sol, best_cost = None, n+1
+
+		for start in range(n-1, 2*n-1):
+			# Assemble solution.
+			solution = set()
+			i = start
+			while i > start - n:
+				solution.add(i % n)
+				i = chain[i]
+			if i == start - n:
+				cost = costs[start] - costs[start - n]
+				if cost <= best_cost:
+					best_sol, best_cost = solution, cost
+
+		delta = [delta[i] if i in best_sol else None for i in range(n)]
+
 
 	return delta
 
