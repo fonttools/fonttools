@@ -246,7 +246,7 @@ def _iup_contour_bound_forced_set(delta, coords, tolerance=0):
 
 	return forced
 
-def _iup_contour_optimize_dp(delta, coords, forced={}, tolerance=0):
+def _iup_contour_optimize_dp(delta, coords, forced={}, tolerance=0, lookback=None):
 	"""Straightforward Dynamic-Programming.  For each index i, find least-costly encoding of
 	points i to n-1 where i is explicitly encoded.  We find this by considering all next
 	explicit points j and check whether interpolation can fill points between i and j.
@@ -257,6 +257,8 @@ def _iup_contour_optimize_dp(delta, coords, forced={}, tolerance=0):
 	As major speedup, we stop looking further whenever we see a "forced" point."""
 
 	n = len(delta)
+	if lookback is None:
+		lookback = n
 	costs = {-1:0}
 	chain = {-1:None}
 	for i in range(0, n):
@@ -268,7 +270,7 @@ def _iup_contour_optimize_dp(delta, coords, forced={}, tolerance=0):
 		if i - 1 in forced:
 			continue
 
-		for j in range(i-2, -2, -1):
+		for j in range(i-2, max(i-lookback, -2), -1):
 
 			cost = costs[j] + 1
 
@@ -343,8 +345,7 @@ def _iup_contour_optimize(delta, coords, tolerance=0.):
 
 		delta = _rot_list(delta, -k)
 	else:
-		chain, costs = _iup_contour_optimize_dp(delta+delta, coords+coords, forced, tolerance)
-		# TODO add lookback=n to DP
+		chain, costs = _iup_contour_optimize_dp(delta+delta, coords+coords, forced, tolerance, n)
 		best_sol, best_cost = None, n+1
 
 		for start in range(n-1, 2*n-1):
