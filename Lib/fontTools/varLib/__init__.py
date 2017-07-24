@@ -94,7 +94,7 @@ def _add_fvar_avar(font, axes, instances):
 		if not axis.map or all(k==v for k,v in axis.map.items()):
 			continue
 		interesting = True
-		curve.update((-1.0, -1.0), (0.0, 0.0), (1.0, 1.0))
+		curve.update({-1.0: -1.0, 0.0: 0.0, 1.0: 1.0})
 
 		items = sorted(axis.map.items())
 		keys   = [item[0] for item in items]
