@@ -14,7 +14,7 @@ matrix:
         - BUILD_DIST=true
     - python: 3.6
       env: TOXENV=py36-cov
-    - python: pypy-5.3.1
+    - python: pypy2.7-5.8.0
       # disable coverage.py on pypy because of performance problems
       env: TOXENV=pypy-nocov
     - language: generic
