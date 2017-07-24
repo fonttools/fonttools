@@ -90,7 +90,7 @@ def _add_fvar_avar(font, axes, instances):
 	avar = newTable('avar')
 	interesting = False
 	for axis in axes.values():
-		curve = avar.segments[axis.tag] = {}
+		curve = avar.segments[axis.tag] = {-1.0: -1.0, 0.0: 0.0, 1.0: 1.0}
 		if not axis.map or all(k==v for k,v in axis.map.items()):
 			continue
 		interesting = True
