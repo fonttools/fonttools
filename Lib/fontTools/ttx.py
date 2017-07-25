@@ -4,9 +4,11 @@ usage: ttx [options] inputfile1 [... inputfileN]
     TTX -- From OpenType To XML And Back
 
     If an input file is a TrueType or OpenType font file, it will be
-       dumped to an TTX file (an XML-based text format).
-    If an input file is a TTX file, it will be compiled to a TrueType
-       or OpenType font file.
+       decompiled to an TTX file (an XML-based text format).
+    If an input file is a TTX file, it will be compiled to whatever 
+       format the data is in, a TrueType or OpenType/CFF font file.
+       (Snippets/otf2ttf.py can be used to convert CFF to TTF, but
+       requires cu2qu to be installed.)
 
     Output files are created so they are unique: an existing file is
        never overwritten.
