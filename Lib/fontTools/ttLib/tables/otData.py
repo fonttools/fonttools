@@ -844,7 +844,7 @@ otData = [
 	# STAT
 	#
 	('STAT', [
-		('Version', 'Version', None, None, 'Version of the table-initially set to 0x00010000, currently 0x00010001.'),
+		('Version', 'Version', None, None, 'Version of the table-initially set to 0x00010000, currently 0x00010002.'),
 		('uint16', 'DesignAxisRecordSize', None, None, 'Size in bytes of each design axis record'),
 		('uint16', 'DesignAxisCount', None, None, 'Number of design axis records'),
 		('LOffsetTo(AxisRecordArray)', 'DesignAxisRecord', None, None, 'Offset in bytes from the beginning of the STAT table to the start of the design axes array'),
@@ -894,6 +894,20 @@ otData = [
 		('Fixed', 'Value', None, None, ''),
 		('Fixed', 'LinkedValue', None, None, ''),
 	]),
+
+	('AxisValueFormat4', [
+		('uint16', 'Format', None, None, 'Format, = 4'),
+		('uint16', 'AxisCount', None, None, 'The total number of axes contributing to this axis-values combination.'),
+		('uint16', 'Flags', None, None, 'Flags.'),
+		('NameID', 'ValueNameID', None, None, ''),
+		('struct', 'AxisValueRecord', 'AxisCount', 0, 'Array of AxisValue records that provide the combination of axis values, one for each contributing axis. '),
+	]),
+
+	('AxisValueRecord', [
+			('uint16', 'AxisIndex', None, None, 'Index into the axis record array identifying the axis of design variation to which the axis value record applies.'),
+			('Fixed', 'Value', None, None, 'A numeric value for this attribute value.'),
+	]),
+
 
 	#
 	# Variation fonts
