@@ -72,11 +72,20 @@ class CFFFontSet(object):
 	def values(self):
 		return self.topDictIndex
 
-	def __getitem__(self, name):
-		try:
-			index = self.fontNames.index(name)
-		except ValueError:
-			raise KeyError(name)
+	def __getitem__(self, nameOrIndex):
+		""" Return TopDict instance identified by name (str) or index (int
+		or any object that implements `__index__`).
+		"""
+		if hasattr(nameOrIndex, "__index__"):
+			index = nameOrIndex.__index__()
+		elif isinstance(nameOrIndex, basestring):
+			name = nameOrIndex
+			try:
+				index = self.fontNames.index(name)
+			except ValueError:
+				raise KeyError(nameOrIndex)
+		else:
+			raise TypeError(nameOrIndex)
 		return self.topDictIndex[index]
 
 	def compile(self, file, otFont, isCFF2=None):
