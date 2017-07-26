@@ -231,14 +231,48 @@ def _iup_contour_bound_forced_set(delta, coords, tolerance=0):
 		ld, lc = delta[i-1], coords[i-1]
 
 		for j in (0,1): # For X and for Y
-			c1, c2 = sorted((lc[j], nc[j]))
-			d1, d2 = sorted((ld[j], nd[j]))
+			cj = c[j]
+			dj = d[j]
+			lcj = lc[j]
+			ldj = ld[j]
+			ncj = nc[j]
+			ndj = nd[j]
+
+			if lcj <= ncj:
+				c1, c2 = lcj, ncj
+				d1, d2 = ldj, ndj
+			else:
+				c1, c2 = ncj, lcj
+				d1, d2 = ndj, ldj
+
 			# If coordinate for current point is between coordinate of adjacent
 			# points on the two sides, but the delta for current point is NOT
 			# between delta for those adjacent points (considering tolerance
 			# allowance), then there is no way that current point can be IUP-ed.
 			# Mark it forced.
-			if c1 <= c[j] <= c2 and not (d1-tolerance <= d[j] <= d2+tolerance):
+			force = False
+			if c1 <= cj <= c2:
+				if not (min(d1,d2)-tolerance <= dj <= max(d1,d2)+tolerance):
+					force = True
+			else: # cj < c1 or c2 < cj
+				if c1 == c2:
+					if d1 == d2:
+						if abs(dj - d1) > tolerance:
+							force = True
+					else:
+						if abs(dj) > tolerance:
+							# Disabled the following because the "d1 == d2" does
+							# check does not take tolerance into consideration...
+							pass # force = True
+				elif d1 != d2:
+					if cj < c1:
+						if dj != d1 and ((dj-tolerance < d1) != (d1 < d2)):
+							force = True
+					else: # c2 < cj
+						if d2 != dj and ((d2 < dj+tolerance) != (d1 < d2)):
+							force = True
+
+			if force:
 				forced.add(i)
 				break
 
