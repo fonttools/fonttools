@@ -149,7 +149,6 @@ def main(args=None):
 					origCoords,control = _GetCoordinates(varfont, glyphname)
 					endPts = control[1] if control[0] >= 1 else list(range(len(control[1])))
 				delta = _iup_delta(delta, origCoords, endPts)
-				# TODO Do IUP / handle None items
 			coordinates += GlyphCoordinates(delta) * scalar
 		_SetCoordinates(varfont, glyphname, coordinates)
 
