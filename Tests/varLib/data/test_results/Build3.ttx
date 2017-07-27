@@ -561,41 +561,26 @@
         <delta pt="4" x="-20" y="18"/>
         <delta pt="5" x="-10" y="26"/>
         <delta pt="6" x="-6" y="26"/>
-        <delta pt="7" x="8" y="26"/>
-        <delta pt="8" x="8" y="12"/>
         <delta pt="9" x="8" y="-1"/>
         <delta pt="10" x="-6" y="-3"/>
-        <delta pt="11" x="-12" y="-3"/>
         <delta pt="12" x="-22" y="4"/>
         <delta pt="13" x="-22" y="12"/>
         <delta pt="14" x="-22" y="17"/>
-        <delta pt="15" x="-12" y="25"/>
         <delta pt="16" x="-6" y="25"/>
-        <delta pt="17" x="8" y="25"/>
         <delta pt="18" x="8" y="12"/>
-        <delta pt="19" x="8" y="-3"/>
         <delta pt="20" x="-6" y="-5"/>
         <delta pt="21" x="-10" y="-5"/>
         <delta pt="22" x="-20" y="3"/>
         <delta pt="23" x="-20" y="9"/>
-        <delta pt="24" x="-20" y="16"/>
         <delta pt="25" x="-10" y="23"/>
         <delta pt="26" x="-6" y="23"/>
-        <delta pt="27" x="8" y="23"/>
-        <delta pt="28" x="8" y="9"/>
         <delta pt="29" x="8" y="-5"/>
-        <delta pt="30" x="-7" y="-1"/>
         <delta pt="31" x="-13" y="-1"/>
-        <delta pt="32" x="-23" y="6"/>
         <delta pt="33" x="-23" y="12"/>
-        <delta pt="34" x="-23" y="19"/>
         <delta pt="35" x="-13" y="27"/>
         <delta pt="36" x="-7" y="27"/>
         <delta pt="37" x="-2" y="27"/>
-        <delta pt="38" x="8" y="19"/>
         <delta pt="39" x="8" y="12"/>
-        <delta pt="40" x="8" y="-1"/>
-        <delta pt="41" x="-7" y="-5"/>
         <delta pt="42" x="-13" y="-5"/>
         <delta pt="43" x="-23" y="2"/>
         <delta pt="44" x="-23" y="9"/>
@@ -605,49 +590,28 @@
         <delta pt="48" x="-2" y="23"/>
         <delta pt="49" x="8" y="14"/>
         <delta pt="50" x="8" y="9"/>
-        <delta pt="51" x="8" y="-5"/>
-        <delta pt="52" x="-8" y="-1"/>
         <delta pt="53" x="-13" y="-1"/>
         <delta pt="54" x="-22" y="8"/>
-        <delta pt="55" x="-22" y="14"/>
         <delta pt="56" x="-22" y="20"/>
         <delta pt="57" x="-13" y="27"/>
-        <delta pt="58" x="-8" y="27"/>
-        <delta pt="59" x="6" y="27"/>
         <delta pt="60" x="6" y="14"/>
-        <delta pt="61" x="6" y="-1"/>
-        <delta pt="62" x="-8" y="-5"/>
         <delta pt="63" x="-13" y="-5"/>
-        <delta pt="64" x="-22" y="3"/>
         <delta pt="65" x="-22" y="10"/>
-        <delta pt="66" x="-22" y="16"/>
         <delta pt="67" x="-13" y="22"/>
-        <delta pt="68" x="-8" y="22"/>
-        <delta pt="69" x="6" y="22"/>
         <delta pt="70" x="6" y="10"/>
-        <delta pt="71" x="6" y="-5"/>
-        <delta pt="72" x="-9" y="-1"/>
         <delta pt="73" x="-15" y="-1"/>
-        <delta pt="74" x="-25" y="6"/>
         <delta pt="75" x="-25" y="12"/>
-        <delta pt="76" x="-25" y="19"/>
-        <delta pt="77" x="-15" y="27"/>
         <delta pt="78" x="-9" y="27"/>
         <delta pt="79" x="-3" y="27"/>
-        <delta pt="80" x="7" y="19"/>
         <delta pt="81" x="7" y="12"/>
-        <delta pt="82" x="7" y="-1"/>
-        <delta pt="83" x="-9" y="-5"/>
         <delta pt="84" x="-15" y="-5"/>
         <delta pt="85" x="-25" y="1"/>
         <delta pt="86" x="-25" y="9"/>
         <delta pt="87" x="-25" y="15"/>
-        <delta pt="88" x="-15" y="24"/>
         <delta pt="89" x="-9" y="24"/>
         <delta pt="90" x="-3" y="24"/>
         <delta pt="91" x="7" y="15"/>
         <delta pt="92" x="7" y="9"/>
-        <delta pt="93" x="7" y="-5"/>
         <delta pt="94" x="-8" y="-1"/>
         <delta pt="95" x="-16" y="-1"/>
         <delta pt="96" x="-25" y="4"/>
@@ -655,29 +619,19 @@
         <delta pt="98" x="-25" y="18"/>
         <delta pt="99" x="-16" y="26"/>
         <delta pt="100" x="-8" y="26"/>
-        <delta pt="101" x="6" y="26"/>
-        <delta pt="102" x="6" y="12"/>
         <delta pt="103" x="6" y="-1"/>
-        <delta pt="104" x="-10" y="-3"/>
         <delta pt="105" x="-25" y="-3"/>
         <delta pt="106" x="-25" y="12"/>
-        <delta pt="107" x="-25" y="25"/>
         <delta pt="108" x="-10" y="25"/>
         <delta pt="109" x="-3" y="25"/>
         <delta pt="110" x="5" y="17"/>
         <delta pt="111" x="5" y="12"/>
-        <delta pt="112" x="5" y="-3"/>
         <delta pt="113" x="-8" y="-4"/>
         <delta pt="114" x="-16" y="-4"/>
-        <delta pt="115" x="-25" y="3"/>
         <delta pt="116" x="-25" y="10"/>
-        <delta pt="117" x="-25" y="17"/>
         <delta pt="118" x="-16" y="24"/>
         <delta pt="119" x="-8" y="24"/>
-        <delta pt="120" x="6" y="24"/>
-        <delta pt="121" x="6" y="10"/>
         <delta pt="122" x="6" y="-4"/>
-        <delta pt="123" x="0" y="0"/>
         <delta pt="124" x="-18" y="0"/>
         <delta pt="125" x="0" y="22"/>
         <delta pt="126" x="0" y="1"/>
@@ -717,32 +671,18 @@
     <glyphVariations glyph="uni0308">
       <tuple>
         <coord axis="wght" value="1.0"/>
-        <delta pt="0" x="-28" y="-40"/>
         <delta pt="1" x="-49" y="-40"/>
         <delta pt="2" x="-76" y="-12"/>
-        <delta pt="3" x="-76" y="8"/>
         <delta pt="4" x="-76" y="28"/>
-        <delta pt="5" x="-49" y="56"/>
-        <delta pt="6" x="-28" y="56"/>
         <delta pt="7" x="-7" y="56"/>
         <delta pt="8" x="20" y="28"/>
-        <delta pt="9" x="20" y="8"/>
         <delta pt="10" x="20" y="-12"/>
-        <delta pt="11" x="-7" y="-40"/>
-        <delta pt="12" x="28" y="-40"/>
         <delta pt="13" x="7" y="-40"/>
         <delta pt="14" x="-20" y="-12"/>
-        <delta pt="15" x="-20" y="8"/>
         <delta pt="16" x="-20" y="28"/>
-        <delta pt="17" x="7" y="56"/>
-        <delta pt="18" x="28" y="56"/>
         <delta pt="19" x="49" y="56"/>
         <delta pt="20" x="76" y="28"/>
-        <delta pt="21" x="76" y="8"/>
         <delta pt="22" x="76" y="-12"/>
-        <delta pt="23" x="49" y="-40"/>
-        <delta pt="24" x="0" y="0"/>
-        <delta pt="25" x="0" y="0"/>
         <delta pt="26" x="0" y="56"/>
         <delta pt="27" x="0" y="40"/>
       </tuple>
