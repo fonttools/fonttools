@@ -18,7 +18,7 @@ A couple of differences between things that use designspaces:
 * The goals of Varlib and MutatorMath are different, so not all attributes are always needed.
 * Need to expand the description of FDK use of designspace files.
 
-The DesignSpaceDocument object can read and write .designspace data. It imports the axes, sources and instances to very basic **descriptor** objects that store the data in attributes. Data is added to the document by creating such descriptor objects, filling them with data and then adding them to the document. This makes it easy to integrate this object in different contexts.
+The DesignSpaceDocument object can read and write `.designspace` data. It imports the axes, sources and instances to very basic **descriptor** objects that store the data in attributes. Data is added to the document by creating such descriptor objects, filling them with data and then adding them to the document. This makes it easy to integrate this object in different contexts.
 
 The **DesignSpaceDocument** object can be subclassed to work with different objects, as long as they have the same attributes.
 
@@ -44,6 +44,10 @@ Some validation is done when reading.
 * In mutatorMath the default font is selected automatically. A warning is printed if the mutatorMath default selection differs from the one set by `copyInfo`. But the `copyInfo` source will be used.
 * If no source has a `copyInfo` flag, mutatorMath will be used to select one. This source gets its `copyInfo` flag set. If you save the document this flag will be set.
 * Use `doc.checkDefault()` to set the default font.
+
+# Localisation
+
+Some of the descriptors support localised names. The names are stored in dictionaries using the language code as key. That means that there are now two places to store names: the old attribute and the new localised dictionary, `obj.stylename` and `obj.localisedStyleName['en']`. 
 
 # Rules
 **The `rule` element is experimental.** Some ideas behind how rules could work in designspaces come from Superpolator. Such rules can maybe be used to describe some of the conditional GSUB functionality of OpenType 1.8. The definition of a rule is not that complicated. A rule has a name, and it has a number of conditions. The rule also contains a list of glyphname pairs: the glyphs that need to be substituted.
@@ -90,18 +94,40 @@ doc.addSource(s1)
 ```
 
 # `InstanceDescriptor` object
+
+## Attributes ##
 * `filename`: string. Relative path to the instance file, **as it is in the document**. The file may or may not exist. MutatorMath.
 * `path`: string. Absolute path to the source file, calculated from the document path and the string in the filename attr. The file may or may not exist. MutatorMath.
 * `name`: string. Unique identifier name of the instance, used to identify it if it needs to be referenced from elsewhere in the document. 
 * `location`: dict. Axis values for this source. MutatorMath + Varlib.
 * `familyName`: string. Family name of this instance. MutatorMath + Varlib.
+* `localisedFamilyName`: dict. A dictionary of localised family name strings, keyed by language code.
 * `styleName`: string. Style name of this source. MutatorMath + Varlib.
-* `postScriptFontName`: string. Postscript FontName for this instance. MutatorMath.
-* `styleMapFamilyName`: string. StyleMap FamilyName for this instance. MutatorMath.
-* `styleMapStyleName`: string. StyleMap StyleName for this instance. MutatorMath.
+* `localisedStyleName`: dict. A dictionary of localised stylename strings, keyed by language code.
+* `postScriptFontName`: string. Postscript fontname for this instance. MutatorMath.
+* `styleMapFamilyName`: string. StyleMap familyname for this instance. MutatorMath.
+* `localisedStyleMapFamilyName`: A dictionary of localised style map familyname strings, keyed by language code.
+* `localisedStyleMapStyleName`: A dictionary of localised style map stylename strings, keyed by language code.
+* `styleMapStyleName`: string. StyleMap stylename for this instance. MutatorMath.
 * `glyphs`: dict for special master definitions for glyphs. If glyphs need special masters (to record the results of executed rules for example). MutatorMath. 
+* `mutedGlyphNames`: list of glyphnames that should be suppressed in the generation of this instance. 
 * `kerning`: bool. Indicates if this instance needs its kerning calculated. MutatorMath.
 * `info`: bool. Indicated if this instance needs the interpolating font.info calculated.
+
+## Methods ##
+
+These methods give easier access to the localised names.
+
+* `setStyleName(styleName, languageCode="en")`
+* `getStyleName(languageCode="en")`
+* `setFamilyName(familyName, languageCode="en")`
+* `getFamilyName(self, languageCode="en")`
+* `setStyleMapStyleName(styleMapStyleName, languageCode="en")`
+* `getStyleMapStyleName(languageCode="en")`
+* `setStyleMapFamilyName(styleMapFamilyName, languageCode="en")`
+* `getStyleMapFamilyName(languageCode="en")`
+
+## Example ##
 
 ```python
 i2 = InstanceDescriptor()
@@ -314,8 +340,8 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 * MutatorMath only
 
 ### Attributes
+* `mute`: optional attribute, number 1 or 0. Indicate if this glyph should be ignored as a master.
 * `<glyph mute="1" name="A"/>`
-* `mute`: optional, number, andts
 * MutatorMath only
 
 ### Example
@@ -372,6 +398,7 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 ### Attributes
 * `name`: string. The name of the glyph.
 * `unicode`: string. Unicode value for this glyph, in hexadecimal.
+* `mute`: optional attribute, number 1 or 0. Indicate if this glyph should be supressed in the output.
 
 # 4.2.1 `note` element
 * String. The value corresponds to glyph.note in UFO.
