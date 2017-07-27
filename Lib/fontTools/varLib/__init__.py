@@ -205,7 +205,7 @@ def _SetCoordinates(font, glyphName, coord):
 def _all_interpolatable_in_between(deltas, coords, i, j, tolerance):
 	assert j - i >= 2
 	from fontTools.varLib.mutator import _iup_segment
-	interp = _iup_segment(coords[i+1:j], coords[i], deltas[i], coords[j], deltas[j])
+	interp = list(_iup_segment(coords[i+1:j], coords[i], deltas[i], coords[j], deltas[j]))
 	deltas = deltas[i+1:j]
 
 	assert len(deltas) == len(interp)
