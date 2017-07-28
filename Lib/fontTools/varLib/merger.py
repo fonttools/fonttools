@@ -600,7 +600,7 @@ def merge(merger, self, lst):
 	subtables = merger.lookup_subtables = [l.SubTable for l in lst]
 
 	# Remove Extension subtables
-	for l,sts in zip(lst,subtables):
+	for l,sts in list(zip(lst,subtables))+[(self,self.SubTable)]:
 		if not sts:
 			continue
 		if sts[0].__class__.__name__.startswith('Extension'):
