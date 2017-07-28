@@ -94,7 +94,6 @@ def _add_fvar_avar(font, axes, instances):
 		if not axis.map or all(k==v for k,v in axis.map.items()):
 			continue
 		interesting = True
-		curve.update({-1.0: -1.0, 0.0: 0.0, 1.0: 1.0})
 
 		items = sorted(axis.map.items())
 		keys   = [item[0] for item in items]
@@ -118,6 +117,11 @@ def _add_fvar_avar(font, axes, instances):
 		keys = [models.normalizeValue(v, keys_triple) for v in keys]
 		vals = [models.normalizeValue(v, vals_triple) for v in vals]
 		curve.update(zip(keys, vals))
+
+		assert 0.0 in curve and curve[0.0] == 0.0
+		assert -1.0 not in curve or curve[-1.0] == -1.0
+		assert +1.0 not in curve or curve[+1.0] == +1.0
+		curve.update({-1.0: -1.0, 0.0: 0.0, 1.0: 1.0})
 
 	if not interesting:
 		log.info("No need for avar")
