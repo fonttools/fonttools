@@ -597,29 +597,41 @@ def _Lookup_PairPos_subtables_canonicalize(lst, font):
 
 @AligningMerger.merger(ot.Lookup)
 def merge(merger, self, lst):
-	merger.lookup_subtables = [l.SubTable for l in lst]
+	subtables = merger.lookup_subtables = [l.SubTable for l in lst]
 
-	exclude = []
-	if self.SubTable and isinstance(self.SubTable[0], ot.PairPos):
+	# Remove Extension subtables
+	for l,sts in zip(lst,subtables):
+		if not sts:
+			continue
+		if sts[0].__class__.__name__.startswith('Extension'):
+			assert _all_equal([st.__class__ for st in sts])
+			assert _all_equal([st.ExtensionLookupType for st in sts])
+			l.LookupType = sts[0].ExtensionLookupType
+			new_sts = [st.ExtSubTable for st in sts]
+			del sts[:]
+			sts.extend(new_sts)
+
+	isPairPos = self.SubTable and isinstance(self.SubTable[0], ot.PairPos)
+
+	if isPairPos:
 
 		# AFDKO and feaLib sometimes generate two Format1 subtables instead of one.
 		# Merge those before continuing.
 		# https://github.com/fonttools/fonttools/issues/719
 		self.SubTable = _Lookup_PairPos_subtables_canonicalize(self.SubTable, merger.font)
-		subtables = [_Lookup_PairPos_subtables_canonicalize(l.SubTable, merger.font) for l in lst]
+		subtables = merger.lookup_subtables = [_Lookup_PairPos_subtables_canonicalize(st, merger.font) for st in subtables]
 
-		merger.lookup_subtables = subtables
-		merger.mergeLists(self.SubTable, subtables)
+	merger.mergeLists(self.SubTable, subtables)
+	self.SubTableCount = len(self.SubTable)
 
+	if isPairPos:
 		# If format-1 subtable created during canonicalization is empty, remove it.
 		assert len(self.SubTable) >= 1 and self.SubTable[0].Format == 1
 		if not self.SubTable[0].Coverage.glyphs:
 			self.SubTable.pop(0)
+			self.SubTableCount -= 1
 
-		self.SubTableCount = len(self.SubTable)
-		exclude.extend(['SubTable', 'SubTableCount'])
-
-	merger.mergeObjects(self, lst, exclude=exclude)
+	merger.mergeObjects(self, lst, exclude=['SubTable', 'SubTableCount'])
 
 	del merger.lookup_subtables
 
