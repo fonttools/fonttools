@@ -261,7 +261,7 @@ def fonts_to_quadratic(
 
     if modified and dump_stats:
         spline_lengths = sorted(stats.keys())
-        logger.info('New spline lengths:\n%s\n' % ('\n'.join(
+        logger.info('New spline lengths: %s' % (', '.join(
                     '%s: %d' % (l, stats[l]) for l in spline_lengths)))
     return modified
 
