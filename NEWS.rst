@@ -1,3 +1,6 @@
+3.14.0 (released 2017-07-31)
+----------------------------
+
 - [varLib.merger] Remove Extensions subtables before merging (f7c20cf8).
 - [varLib] Initialize the avar segment map with required default entries
   (#1014).
