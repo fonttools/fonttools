@@ -1,11 +1,21 @@
+- [varLib.merger] Remove Extensions subtables before merging (f7c20cf8).
+- [varLib] Initialize the avar segment map with required default entries
+  (#1014).
+- [varLib] Implemented optimal IUP optmiziation (#1019).
+- [otData] Add ``AxisValueFormat4`` for STAT table v1.2 from OT v1.8.2
+  (#1015).
+- [name] Fixed BCP46 language tag for Mac langID=9: 'si' -> 'sl'.
+- [subset] Return value from ``_DehintingT2Decompiler.op_hintmask``
+  (c0d672ba).
+- [cffLib] Allow to get TopDict by index as well as by name (dca96c9c).
 - [cffLib] Removed global ``isCFF2`` state; use one set of classes for
-  both CFF and CFF2, maintaining backward compatibility existing code.
+  both CFF and CFF2, maintaining backward compatibility existing code (#1007).
 - [cffLib] Deprecated maxstack operator, per OpenType spec update 1.8.1.
 - [cffLib] Added missing default (-100) for UnderlinePosition (#983).
 - [feaLib] Enable setting nameIDs greater than 255 (#1003).
 - [varLib] Recalculate ValueFormat when merging SinglePos (#996).
-- [varLib] Do not emit MVAR if there are no entries in the variation
-  store (#987).
+- [varLib] Do not emit MVAR if there are no entries in the variation store
+  (#987).
 - [ttx] For ``-x`` option, pad with space if table tag length is < 4.
 
 3.13.1 (released 2017-05-30)
