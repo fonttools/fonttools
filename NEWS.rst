@@ -1,3 +1,6 @@
+- [ttLib] Added support for recalculating font bounding box in ``CFF`` and
+  ``head`` tables, and min/max values in ``hhea`` and ``vhea`` tables (#970).
+
 3.14.0 (released 2017-07-31)
 ----------------------------
 
