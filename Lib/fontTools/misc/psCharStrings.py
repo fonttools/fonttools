@@ -978,10 +978,10 @@ class T2CharString(object):
 		extractor.execute(self)
 		self.width = extractor.width
 
-	def recalcBounds(self):
+	def calcBounds(self):
 		boundsPen = BoundsPen(None)
 		self.draw(boundsPen)
-		self.bounds = boundsPen.bounds
+		return boundsPen.bounds
 
 	def check_program(self, program, isCFF2=False):
 		if isCFF2:

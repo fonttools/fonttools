@@ -11,20 +11,20 @@ class T2CharStringTest(unittest.TestCase):
     def stringToT2CharString(cls, string):
         return T2CharString(program=stringToProgram(string), private=PrivateDict())
 
-    def test_recalcBounds_empty(self):
+    def test_calcBounds_empty(self):
         cs = self.stringToT2CharString("endchar")
-        cs.recalcBounds()
-        self.assertEqual(cs.bounds, None)
+        bounds = cs.calcBounds()
+        self.assertEqual(bounds, None)
 
-    def test_recalcBounds_line(self):
+    def test_calcBounds_line(self):
         cs = self.stringToT2CharString("100 100 rmoveto 40 10 rlineto -20 50 rlineto endchar")
-        cs.recalcBounds()
-        self.assertEqual(cs.bounds, (100, 100, 140, 160))
+        bounds = cs.calcBounds()
+        self.assertEqual(bounds, (100, 100, 140, 160))
 
-    def test_recalcBounds_curve(self):
+    def test_calcBounds_curve(self):
         cs = self.stringToT2CharString("100 100 rmoveto -50 -150 200 0 -50 150 rrcurveto endchar")
-        cs.recalcBounds()
-        self.assertEqual(cs.bounds, (91.90524980688875, -12.5, 208.09475019311125, 100))
+        bounds = cs.calcBounds()
+        self.assertEqual(bounds, (91.90524980688875, -12.5, 208.09475019311125, 100))
 
 
 if __name__ == "__main__":
