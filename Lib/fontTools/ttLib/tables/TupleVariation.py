@@ -512,11 +512,6 @@ def compileTupleVariationStore(variations, pointCount,
 			axisTags, sharedTupleIndices, sharedPoints=None)
 		sharedTuple, sharedData, usesSharedPoints = v.compile(
 			axisTags, sharedTupleIndices, sharedPoints=allPoints)
-		# TODO: Apple macOS 10.9.5 (maybe also earlier) up to 10.12 had a bug
-		# that broke variations if the `gvar` table contains shared tuples.
-		# Apple will likely fix this in macOS 10.13. But for the time being,
-		# we never emit shared points although the result would be more compact.
-		# https://rawgit.com/unicode-org/text-rendering-tests/master/reports/CoreText.html#GVAR-1
 		if (len(sharedTuple) + len(sharedData)) < (len(privateTuple) + len(privateData)):
 			tuples.append(sharedTuple)
 			data.append(sharedData)
