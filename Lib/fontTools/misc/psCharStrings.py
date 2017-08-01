@@ -5,6 +5,7 @@ CFF dictionary data and Type1/Type2 CharStrings.
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import fixedToFloat
+from fontTools.pens.boundsPen import BoundsPen
 import struct
 import logging
 
@@ -976,6 +977,11 @@ class T2CharString(object):
 				self.private.nominalWidthX, self.private.defaultWidthX)
 		extractor.execute(self)
 		self.width = extractor.width
+
+	def calcBounds(self):
+		boundsPen = BoundsPen(None)
+		self.draw(boundsPen)
+		return boundsPen.bounds
 
 	def check_program(self, program, isCFF2=False):
 		if isCFF2:

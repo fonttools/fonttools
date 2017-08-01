@@ -5,6 +5,8 @@ from fontTools.misc.textTools import safeEval
 from fontTools.misc.fixedTools import (
 	ensureVersionIsLong as fi2ve, versionToFixed as ve2fi)
 from . import DefaultTable
+import math
+
 
 vheaFormat = """
 		>	# big endian
@@ -31,30 +33,25 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 
 	# Note: Keep in sync with table__h_h_e_a
 
-	dependencies = ['vmtx', 'glyf']
+	dependencies = ['vmtx', 'glyf', 'CFF ']
 
 	def decompile(self, data, ttFont):
 		sstruct.unpack(vheaFormat, data, self)
 
 	def compile(self, ttFont):
-		if ttFont.isLoaded('glyf') and ttFont.recalcBBoxes:
+		if ttFont.recalcBBoxes and (ttFont.isLoaded('glyf') or ttFont.isLoaded('CFF ')):
 			self.recalc(ttFont)
 		self.tableVersion = fi2ve(self.tableVersion)
 		return sstruct.pack(vheaFormat, self)
 
 	def recalc(self, ttFont):
-		vtmxTable = ttFont['vmtx']
+		vmtxTable = ttFont['vmtx']
+		self.advanceHeightMax = max(adv for adv, _ in vmtxTable.metrics.values())
+
+		boundsHeightDict = {}
 		if 'glyf' in ttFont:
 			glyfTable = ttFont['glyf']
-			INFINITY = 100000
-			advanceHeightMax = 0
-			minTopSideBearing = +INFINITY    # arbitrary big number
-			minBottomSideBearing = +INFINITY # arbitrary big number
-			yMaxExtent = -INFINITY           # arbitrary big negative number
-
 			for name in ttFont.getGlyphOrder():
-				height, tsb = vtmxTable[name]
-				advanceHeightMax = max(advanceHeightMax, height)
 				g = glyfTable[name]
 				if g.numberOfContours == 0:
 					continue
@@ -62,25 +59,34 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 					# Composite glyph without extents set.
 					# Calculate those.
 					g.recalcBounds(glyfTable)
+				boundsHeightDict[name] = g.yMax - g.yMin
+		elif 'CFF ' in ttFont:
+			topDict = ttFont['CFF '].cff.topDictIndex[0]
+			for name in ttFont.getGlyphOrder():
+				cs = topDict.CharStrings[name]
+				bounds = cs.calcBounds()
+				if bounds is not None:
+					boundsHeightDict[name] = math.ceil(bounds[3]) - math.floor(bounds[1])
+
+		if boundsHeightDict:
+			minTopSideBearing = float('inf')
+			minBottomSideBearing = float('inf')
+			yMaxExtent = -float('inf')
+			for name, boundsHeight in boundsHeightDict.items():
+				advanceHeight, tsb = vmtxTable[name]
+				bsb = advanceHeight - tsb - boundsHeight
+				extent = tsb + boundsHeight
 				minTopSideBearing = min(minTopSideBearing, tsb)
-				bsb = height - tsb - (g.yMax - g.yMin)
 				minBottomSideBearing = min(minBottomSideBearing, bsb)
-				extent = tsb + (g.yMax - g.yMin)
 				yMaxExtent = max(yMaxExtent, extent)
-
-			if yMaxExtent == -INFINITY:
-				# No glyph has outlines.
-				minTopSideBearing = 0
-				minBottomSideBearing = 0
-				yMaxExtent = 0
-
-			self.advanceHeightMax = advanceHeightMax
 			self.minTopSideBearing = minTopSideBearing
 			self.minBottomSideBearing = minBottomSideBearing
 			self.yMaxExtent = yMaxExtent
-		else:
-			# XXX CFF recalc...
-			pass
+
+		else:  # No glyph has outlines.
+			self.minTopSideBearing = 0
+			self.minBottomSideBearing = 0
+			self.yMaxExtent = 0
 
 	def toXML(self, writer, ttFont):
 		formatstring, names, fixes = sstruct.getformat(vheaFormat)

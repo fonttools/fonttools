@@ -33,7 +33,7 @@ headFormat = """
 
 class table__h_e_a_d(DefaultTable.DefaultTable):
 
-	dependencies = ['maxp', 'loca']
+	dependencies = ['maxp', 'loca', 'CFF ']
 
 	def decompile(self, data, ttFont):
 		dummy, rest = sstruct.unpack2(headFormat, data, self)
@@ -59,6 +59,11 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 				setattr(self, stamp, value)
 
 	def compile(self, ttFont):
+		if ttFont.recalcBBoxes:
+			# For TT-flavored fonts, xMin, yMin, xMax and yMax are set in table__m_a_x_p.recalc().
+			if 'CFF ' in ttFont:
+				topDict = ttFont['CFF '].cff.topDictIndex[0]
+				self.xMin, self.yMin, self.xMax, self.yMax = topDict.FontBBox
 		if ttFont.recalcTimestamp:
 			self.modified = timestampNow()
 		data = sstruct.pack(headFormat, self)

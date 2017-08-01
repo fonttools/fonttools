@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.12">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="A"/>
+    <GlyphID id="2" name="B"/>
+    <GlyphID id="3" name="C"/>
+  </GlyphOrder>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="800"/>
+    <descent value="-200"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="999"/>
+    <minLeftSideBearing value="99"/>
+    <minRightSideBearing value="99"/>
+    <xMaxExtent value="99"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="4"/>
+  </hhea>
+
+  <glyf>
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+    <TTGlyph name=".notdef" xMin="0" yMin="0" xMax="1" yMax="1">
+      <contour>
+        <pt x="0" y="0" on="1"/>
+        <pt x="1" y="1" on="1"/>
+      </contour>
+    </TTGlyph>
+    <TTGlyph name="A" xMin="-56" yMin="-56" xMax="56" yMax="56">
+      <contour>
+        <pt x="-56" y="-56" on="1"/>
+        <pt x="56" y="56" on="1"/>
+      </contour>
+    </TTGlyph>
+    <TTGlyph name="B" xMin="100" yMin="0" xMax="400" yMax="0">
+      <contour>
+        <pt x="100" y="0" on="1"/>
+        <pt x="400" y="0" on="1"/>
+      </contour>
+    </TTGlyph>
+    <TTGlyph name="C"/><!-- contains no outline data -->
+  </glyf>
+
+  <hmtx>
+    <mtx name=".notdef" width="300" lsb="0"/>
+    <mtx name="A" width="400" lsb="-56"/>
+    <mtx name="B" width="500" lsb="100"/>
+    <mtx name="C" width="600" lsb="0"/>
+  </hmtx>
+
+</ttFont>
