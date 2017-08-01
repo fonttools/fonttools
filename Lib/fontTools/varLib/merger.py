@@ -357,38 +357,13 @@ def _ClassDef_calculate_Format(self, font):
 			fmt = 1
 	self.Format = fmt
 
-def _PairPosFormat2_merge(self, lst, merger):
-
-	merger.mergeObjects(self, lst,
-			    exclude=('Coverage',
-				     'ClassDef1', 'Class1Count',
-				     'ClassDef2', 'Class2Count',
-				     'Class1Record'))
-
-	# Align coverages
-	glyphs, _ = _merge_GlyphOrders(merger.font,
-				       [v.Coverage.glyphs for v in lst])
-	self.Coverage.glyphs = glyphs
-	glyphSet = set(glyphs)
-
-	# Currently, if the coverage of PairPosFormat2 subtables are different,
-	# we do NOT bother walking down the subtable list when filling in new
-	# rows for alignment.  As such, this is only correct if current subtable
-	# is the last subtable in the lookup.  Ensure that.
-	#
-	# Note that our canonicalization process merges some PairPosFormat2's,
-	# so in reality this might not be common.
-	#
-	# TODO: Remove this requirement
-	for l,subtables in zip(lst,merger.lookup_subtables):
-		if l.Coverage.glyphs != glyphs:
-			assert l == subtables[-1]
+def _PairPosFormat2_align_matrices(self, lst, font):
 
 	matrices = [l.Class1Record for l in lst]
 
 	# Align first classes
-	self.ClassDef1, classes = _ClassDef_merge_classify([l.ClassDef1 for l in lst], allGlyphs=glyphSet)
-	_ClassDef_calculate_Format(self.ClassDef1, merger.font)
+	self.ClassDef1, classes = _ClassDef_merge_classify([l.ClassDef1 for l in lst], allGlyphs=set(self.Coverage.glyphs))
+	_ClassDef_calculate_Format(self.ClassDef1, font)
 	self.Class1Count = len(classes)
 	new_matrices = []
 	for l,matrix in zip(lst, matrices):
@@ -419,7 +394,7 @@ def _PairPosFormat2_merge(self, lst, merger):
 
 	# Align second classes
 	self.ClassDef2, classes = _ClassDef_merge_classify([l.ClassDef2 for l in lst])
-	_ClassDef_calculate_Format(self.ClassDef2, merger.font)
+	_ClassDef_calculate_Format(self.ClassDef2, font)
 	self.Class2Count = len(classes)
 	new_matrices = []
 	for l,matrix in zip(lst, matrices):
@@ -441,6 +416,36 @@ def _PairPosFormat2_merge(self, lst, merger):
 		new_matrices.append(class1Records)
 	matrices = new_matrices
 	del new_matrices
+
+	return matrices
+
+def _PairPosFormat2_merge(self, lst, merger):
+
+	merger.mergeObjects(self, lst,
+			    exclude=('Coverage',
+				     'ClassDef1', 'Class1Count',
+				     'ClassDef2', 'Class2Count',
+				     'Class1Record'))
+
+	# Align coverages
+	glyphs, _ = _merge_GlyphOrders(merger.font,
+				       [v.Coverage.glyphs for v in lst])
+	self.Coverage.glyphs = glyphs
+
+	# Currently, if the coverage of PairPosFormat2 subtables are different,
+	# we do NOT bother walking down the subtable list when filling in new
+	# rows for alignment.  As such, this is only correct if current subtable
+	# is the last subtable in the lookup.  Ensure that.
+	#
+	# Note that our canonicalization process merges some PairPosFormat2's,
+	# so in reality this might not be common.
+	#
+	# TODO: Remove this requirement
+	for l,subtables in zip(lst,merger.lookup_subtables):
+		if l.Coverage.glyphs != glyphs:
+			assert l == subtables[-1]
+
+	matrices = _PairPosFormat2_align_matrices(self, lst, merger.font)
 
 	self.Class1Record = list(matrices[0]) # TODO move merger to be selfless
 	merger.mergeLists(self.Class1Record, matrices)
