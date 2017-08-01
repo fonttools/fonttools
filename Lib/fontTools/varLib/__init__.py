@@ -85,6 +85,7 @@ def _add_fvar_avar(font, axes, instances):
 			psname = tounicode(psname)
 			inst.postscriptNameID = nameTable.addName(psname)
 		inst.coordinates = {axes[k].tag:axes[k].map_backward(v) for k,v in coordinates.items()}
+		#inst.coordinates = {axes[k].tag:v for k,v in coordinates.items()}
 		fvar.instances.append(inst)
 
 	avar = newTable('avar')
