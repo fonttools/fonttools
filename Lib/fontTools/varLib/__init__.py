@@ -91,12 +91,11 @@ def _add_fvar_avar(font, axes, instances):
 	interesting = False
 	for axis in axes.values():
 		curve = avar.segments[axis.tag] = {}
-		if not axis.map or all(k==v for k,v in axis.map.items()):
+		if not axis.map:
 			continue
-		interesting = True
 
 		items = sorted(axis.map.items())
-		keys   = [item[0] for item in items]
+		keys = [item[0] for item in items]
 		vals = [item[1] for item in items]
 
 		# Current avar requirements.  We don't have to enforce
@@ -116,6 +115,11 @@ def _add_fvar_avar(font, axes, instances):
 
 		keys = [models.normalizeValue(v, keys_triple) for v in keys]
 		vals = [models.normalizeValue(v, vals_triple) for v in vals]
+
+		if all(k == v for k, v in zip(keys, vals)):
+			continue
+		interesting = True
+
 		curve.update(zip(keys, vals))
 
 		assert 0.0 in curve and curve[0.0] == 0.0
@@ -133,7 +137,7 @@ def _add_fvar_avar(font, axes, instances):
 	if avar:
 		font['avar'] = avar
 
-	return fvar,avar
+	return fvar, avar
 
 # TODO Move to glyf or gvar table proper
 def _GetCoordinates(font, glyphName):
