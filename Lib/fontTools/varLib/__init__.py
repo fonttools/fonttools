@@ -117,6 +117,16 @@ def _add_fvar_avar(font, axes, instances):
 		keys = [models.normalizeValue(v, keys_triple) for v in keys]
 		vals = [models.normalizeValue(v, vals_triple) for v in vals]
 
+		# Work around rendering issue with CoreText when avar table
+		# contains segment maps with zero axis value maps.
+		# Currently, CoreText requires that the three default value maps
+		# (-1 to -1, 0 to 0, and 1 to 1) be present for all the segment
+		# maps, even when the default normalization mapping for the axis
+		# was not modified.
+		# https://github.com/googlei18n/fontmake/issues/295
+		# TODO(anthrotype) revert this change once CoreText is modified
+		curve.update({-1.0: -1.0, 0.0: 0.0, 1.0: 1.0})
+
 		if all(k == v for k, v in zip(keys, vals)):
 			continue
 		interesting = True
@@ -126,7 +136,7 @@ def _add_fvar_avar(font, axes, instances):
 		assert 0.0 in curve and curve[0.0] == 0.0
 		assert -1.0 not in curve or curve[-1.0] == -1.0
 		assert +1.0 not in curve or curve[+1.0] == +1.0
-		curve.update({-1.0: -1.0, 0.0: 0.0, 1.0: 1.0})
+		# curve.update({-1.0: -1.0, 0.0: 0.0, 1.0: 1.0})
 
 	if not interesting:
 		log.info("No need for avar")
