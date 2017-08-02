@@ -75,7 +75,7 @@ class FileSystem(object):
 				path = ZipFS(
 					path, write=True if mode == 'w' else False, encoding="utf8")
 				roots = [
-					p for p in path.listdir("")
+					p for p in path.listdir(u"")
 					# exclude macOS metadata contained in zip file
 					if path.isdir(p) and p != "__MACOSX"
 				]
