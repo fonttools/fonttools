@@ -643,6 +643,9 @@ def _add_MVAR(font, model, master_ttfs, axisTags):
 		mvar.Version = 0x00010000
 		mvar.Reserved = 0
 		mvar.VarStore = store_builder.finish()
+		# XXX these should not be hard-coded but computed automatically
+		mvar.ValueRecordSize = 8
+		mvar.ValueRecordCount = len(records)
 		mvar.ValueRecord = sorted(records, key=lambda r: r.ValueTag)
 
 
