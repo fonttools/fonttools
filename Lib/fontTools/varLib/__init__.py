@@ -44,7 +44,7 @@ class VarLibError(Exception):
 # Creation routines
 #
 
-def _add_fvar_avar(font, axes, instances):
+def _add_fvar(font, axes, instances):
 	"""
 	Add 'fvar' table to font.
 
@@ -57,7 +57,7 @@ def _add_fvar_avar(font, axes, instances):
 	assert axes
 	assert isinstance(axes, OrderedDict)
 
-	log.info("Generating fvar / avar")
+	log.info("Generating fvar")
 
 	fvar = newTable('fvar')
 	nameTable = font['name']
@@ -88,7 +88,28 @@ def _add_fvar_avar(font, axes, instances):
 		#inst.coordinates = {axes[k].tag:v for k,v in coordinates.items()}
 		fvar.instances.append(inst)
 
+	assert "fvar" not in font
+	font['fvar'] = fvar
+
+	return fvar
+
+def _add_avar(font, axes, instances):
+	"""
+	Add 'avar' table to font.
+
+	axes is an ordered dictionary of DesignspaceAxis objects.
+
+	instances is list of dictionary objects with 'location', 'stylename',
+	and possibly 'postscriptfontname' entries.
+	"""
+
+	assert axes
+	assert isinstance(axes, OrderedDict)
+
+	log.info("Generating avar")
+
 	avar = newTable('avar')
+
 	interesting = False
 	for axis in axes.values():
 		curve = avar.segments[axis.tag] = {}
@@ -138,17 +159,14 @@ def _add_fvar_avar(font, axes, instances):
 		assert +1.0 not in curve or curve[+1.0] == +1.0
 		# curve.update({-1.0: -1.0, 0.0: 0.0, 1.0: 1.0})
 
+	assert "avar" not in font
 	if not interesting:
 		log.info("No need for avar")
 		avar = None
-
-	assert "fvar" not in font
-	font['fvar'] = fvar
-	assert "avar" not in font
-	if avar:
+	else:
 		font['avar'] = avar
 
-	return fvar, avar
+	return avar
 
 # TODO Move to glyf or gvar table proper
 def _GetCoordinates(font, glyphName):
@@ -776,7 +794,7 @@ def load_designspace(designspace_filename):
 	normalized_master_locs = [o['location'] for o in masters]
 	log.info("Internal master locations:\n%s", pformat(normalized_master_locs))
 
-	# TODO This mapping should ideally be moved closer to logic in _add_fvar_avar
+	# TODO This mapping should ideally be moved closer to logic in _add_fvar/avar
 	internal_axis_supports = {}
 	for axis in axes.values():
 		triple = (axis.minimum, axis.default, axis.maximum)
@@ -819,7 +837,8 @@ def build(designspace_filename, master_finder=lambda s:s):
 	vf = TTFont(master_ttfs[base_idx])
 
 	# TODO append masters as named-instances as well; needs .designspace change.
-	fvar,avar = _add_fvar_avar(vf, axes, instances)
+	fvar = _add_fvar(vf, axes, instances)
+	_add_avar(vf, axes, instances)
 	del instances
 
 	# Map from axis names to axis tags...
