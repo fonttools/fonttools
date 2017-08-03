@@ -112,7 +112,7 @@ class BuildTest(unittest.TestCase):
         finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
         varfont, model, _ = build(ds_path, finder)
 
-        tables = ['GDEF', 'HVAR', 'fvar', 'gvar']
+        tables = ['GDEF', 'HVAR', 'MVAR', 'fvar', 'gvar']
         expected_ttx_path = self.get_test_output('Build.ttx')
         self.expect_ttx(varfont, expected_ttx_path, tables)
         self.check_ttx_dump(varfont, expected_ttx_path, tables, suffix)
@@ -133,7 +133,7 @@ class BuildTest(unittest.TestCase):
         finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
         varfont, model, _ = build(ds_path, finder)
 
-        tables = ['GDEF', 'HVAR', 'fvar', 'gvar']
+        tables = ['GDEF', 'HVAR', 'MVAR', 'fvar', 'gvar']
         expected_ttx_path = self.get_test_output('Build3.ttx')
         self.expect_ttx(varfont, expected_ttx_path, tables)
         self.check_ttx_dump(varfont, expected_ttx_path, tables, suffix)
