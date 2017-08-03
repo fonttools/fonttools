@@ -93,14 +93,11 @@ def _add_fvar(font, axes, instances):
 
 	return fvar
 
-def _add_avar(font, axes, instances):
+def _add_avar(font, axes):
 	"""
 	Add 'avar' table to font.
 
 	axes is an ordered dictionary of DesignspaceAxis objects.
-
-	instances is list of dictionary objects with 'location', 'stylename',
-	and possibly 'postscriptfontname' entries.
 	"""
 
 	assert axes
@@ -838,7 +835,7 @@ def build(designspace_filename, master_finder=lambda s:s):
 
 	# TODO append masters as named-instances as well; needs .designspace change.
 	fvar = _add_fvar(vf, axes, instances)
-	_add_avar(vf, axes, instances)
+	_add_avar(vf, axes)
 	del instances
 
 	# Map from axis names to axis tags...
