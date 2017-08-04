@@ -853,10 +853,10 @@ def build(designspace_filename, master_finder=lambda s:s):
 
 	log.info("Building variations tables")
 	_add_MVAR(vf, model, master_fonts, axisTags)
-	if 'glyf' in vf:
-		_add_gvar(vf, model, master_fonts)
 	_add_HVAR(vf, model, master_fonts, axisTags)
 	_merge_OTL(vf, model, master_fonts, axisTags)
+	if 'glyf' in vf:
+		_add_gvar(vf, model, master_fonts)
 
 	return vf, model, master_ttfs
 
