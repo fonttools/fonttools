@@ -492,7 +492,7 @@ def merge(merger, self, lst):
 	self.ValueFormat2 = vf2
 
 
-def _PairSet_merge_overlay(lst, font):
+def _PairSet_flatten(lst, font):
 	self = ot.PairSet()
 	self.Coverage = ot.Coverage()
 	self.Coverage.Format = 1
@@ -515,7 +515,7 @@ def _PairSet_merge_overlay(lst, font):
 
 	return self
 
-def _Lookup_PairPosFormat1_subtables_merge_overlay(lst, font):
+def _Lookup_PairPosFormat1_subtables_flatten(lst, font):
 	self = ot.PairPos()
 	self.Format = 1
 	self.Coverage = ot.Coverage()
@@ -529,12 +529,12 @@ def _Lookup_PairPosFormat1_subtables_merge_overlay(lst, font):
 					    [v.PairSet for v in lst])
 
 	self.Coverage.glyphs = glyphs
-	self.PairSet = [_PairSet_merge_overlay([v for v in values if v is not None], font)
+	self.PairSet = [_PairSet_flatten([v for v in values if v is not None], font)
 		        for values in zip(*padded)]
 	self.PairSetCount = len(self.PairSet)
 	return self
 
-def _Lookup_PairPosFormat2_subtables_merge_overlay(lst, font):
+def _Lookup_PairPosFormat2_subtables_flatten(lst, font):
 	self = ot.PairPos()
 	self.Format = 2
 	self.Coverage = ot.Coverage()
@@ -571,13 +571,13 @@ def _Lookup_PairPos_subtables_canonicalize(lst, font):
 	i = 0
 	while i < l and lst[i].Format == 1:
 		i += 1
-	lst[:i] = [_Lookup_PairPosFormat1_subtables_merge_overlay(lst[:i], font)]
+	lst[:i] = [_Lookup_PairPosFormat1_subtables_flatten(lst[:i], font)]
 
 	l = len(lst)
 	i = l
 	while i > 0 and lst[i - 1].Format == 2:
 		i -= 1
-	lst[i:] = [_Lookup_PairPosFormat2_subtables_merge_overlay(lst[i:], font)]
+	lst[i:] = [_Lookup_PairPosFormat2_subtables_flatten(lst[i:], font)]
 
 	return lst
 
