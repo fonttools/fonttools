@@ -274,6 +274,8 @@ def merge(merger, self, lst):
 	merger.mergeLists(self.PairValueRecord, padded)
 
 def _PairPosFormat1_merge(self, lst, merger):
+	assert _all_equal([l.ValueFormat2 == 0 for l in lst if l.PairSet]), "Report bug against fonttools."
+
 	# Merge everything else; makes sure Format is the same.
 	merger.mergeObjects(self, lst,
 			    exclude=('Coverage',
@@ -426,6 +428,7 @@ def _PairPosFormat2_align_matrices(self, lst, font, transparent=False):
 	return matrices
 
 def _PairPosFormat2_merge(self, lst, merger):
+	assert _all_equal([l.ValueFormat2 == 0 for l in lst if l.Class1Record]), "Report bug against fonttools."
 
 	merger.mergeObjects(self, lst,
 			    exclude=('Coverage',
@@ -465,7 +468,7 @@ def merge(merger, self, lst):
 	elif self.Format == 2:
 		_PairPosFormat2_merge(self, lst, merger)
 	else:
-		assert 0
+		assert False
 
 	del merger.valueFormat1, merger.valueFormat2
 
@@ -519,6 +522,8 @@ def _PairSet_flatten(lst, font):
 	return self
 
 def _Lookup_PairPosFormat1_subtables_flatten(lst, font):
+	assert _all_equal([l.ValueFormat2 == 0 for l in lst if l.PairSet]), "Report bug against fonttools."
+
 	self = ot.PairPos()
 	self.Format = 1
 	self.Coverage = ot.Coverage()
@@ -538,6 +543,8 @@ def _Lookup_PairPosFormat1_subtables_flatten(lst, font):
 	return self
 
 def _Lookup_PairPosFormat2_subtables_flatten(lst, font):
+	assert _all_equal([l.ValueFormat2 == 0 for l in lst if l.Class1Record]), "Report bug against fonttools."
+
 	self = ot.PairPos()
 	self.Format = 2
 	self.Coverage = ot.Coverage()
@@ -681,6 +688,8 @@ class VariationMerger(AligningMerger):
 		self.store_builder.setModel(model)
 
 def _all_equal(lst):
+	if not lst:
+		return True
 	it = iter(lst)
 	v0 = next(it)
 	for v in it:
