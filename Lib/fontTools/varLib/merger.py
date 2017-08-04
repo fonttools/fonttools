@@ -222,6 +222,9 @@ def merge(merger, self, lst):
 		for j,glyph in enumerate(glyphs):
 			if values[j] is not None: continue
 			# Fill in value from other subtables
+			# Note!!! This *might* result in behavior change if ValueFormat2-zeroedness
+			# is different between used subtable and current subtable!
+			# TODO(behdad) Check and warn if that happens?
 			v = _Lookup_SinglePos_get_effective_value(merger.lookup_subtables[i], glyph)
 			if v is None:
 				v = otBase.ValueRecord(valueFormat)
