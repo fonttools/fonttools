@@ -14,7 +14,7 @@ def normalizeValue(v, triple):
 	0.5
 	"""
 	lower, default, upper = triple
-	assert lower <= default <= upper, "invalid axis values"
+	assert lower <= default <= upper, "invalid axis values: %3.3f, %3.3f %3.3f"%(lower, default, upper)
 	v = max(min(v, upper), lower)
 	if v == default:
 		v = 0.
