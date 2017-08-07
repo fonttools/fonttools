@@ -1,6 +1,5 @@
 """Various low level data validators."""
 
-import os
 import calendar
 from io import open
 
@@ -772,11 +771,17 @@ def pngValidator(path=None, data=None, fileObj=None):
 # layercontents.plist
 # -------------------
 
-def layerContentsValidator(value, ufoPath):
+def layerContentsValidator(value, ufoPathOrFileSystem):
 	"""
 	Check the validity of layercontents.plist.
 	Version 3+.
 	"""
+	from ufoLib.filesystem import FileSystem
+	if isinstance(ufoPathOrFileSystem, FileSystem):
+		fileSystem = ufoPathOrFileSystem
+	else:
+		fileSystem = FileSystem(ufoPathOrFileSystem)
+
 	bogusFileMessage = "layercontents.plist in not in the correct format."
 	# file isn't in the right format
 	if not isinstance(value, list):
@@ -802,8 +807,7 @@ def layerContentsValidator(value, ufoPath):
 		if len(layerName) == 0:
 			return False, "Empty layer name in layercontents.plist."
 		# directory doesn't exist
-		p = os.path.join(ufoPath, directoryName)
-		if not os.path.exists(p):
+		if not fileSystem.exists(directoryName):
 			return False, "A glyphset does not exist at %s." % directoryName
 		# default layer name
 		if layerName == "public.default" and directoryName != "glyphs":
