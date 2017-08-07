@@ -346,8 +346,7 @@ class UFOReader(object):
 		if self._formatVersion < 3:
 			return [(DEFAULT_LAYER_NAME, DEFAULT_GLYPHS_DIRNAME)]
 		contents = self.fileSystem.readPlist(LAYERCONTENTS_FILENAME)
-		# XXX this won't work with the abstracted file system
-		valid, error = layerContentsValidator(contents, self._path)
+		valid, error = layerContentsValidator(contents, self.fileSystem)
 		if not valid:
 			raise UFOLibError(error)
 		return contents
@@ -832,7 +831,7 @@ class UFOWriter(object):
 		# read the file on disk
 		raw = self.fileSystem.readPlist(LAYERCONTENTS_FILENAME)
 		contents = {}
-		valid, error = layerContentsValidator(raw, self._path)
+		valid, error = layerContentsValidator(raw, self.fileSystem)
 		if not valid:
 			raise UFOLibError(error)
 		for entry in raw:
