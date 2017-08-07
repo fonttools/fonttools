@@ -85,6 +85,10 @@ def supportScalar(location, support):
 		if axis not in location:
 			scalar = 0.
 			break
+		if peak == 0.0:
+			# Special case: peak is at zero, meaning this axis should not
+			# factor into the scalar calculation
+			continue
 		v = location[axis]
 		if v == peak:
 			continue
