@@ -250,7 +250,7 @@ class UFOReader(object):
 		if not isinstance(data, dict):
 			raise UFOLibError("metainfo.plist is not properly formatted.")
 		formatVersion = data["formatVersion"]
-		if isinstance(formatVersion, int) is False:
+		if not isinstance(formatVersion, int):
 			metaplist_path = os.path.join(self._path, METAINFO_FILENAME)
 			raise UFOLibError("formatVersion must be specified as an integer in " + metaplist_path)
 		if formatVersion not in supportedUFOFormatVersions:
