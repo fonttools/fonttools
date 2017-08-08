@@ -68,9 +68,11 @@ def normalizeLocation(location, axes):
 		out[tag] = normalizeValue(v, triple)
 	return out
 
-def supportScalar(location, support):
+def supportScalar(location, support, ot=False):
 	"""Returns the scalar multiplier at location, for a master
-	with support.
+	with support.  If ot is True, then a peak value of zero
+	for support of an axis means "axis does not participate".  That
+	is how OpenType Variation Font technology works.
 	>>> supportScalar({}, {})
 	1.0
 	>>> supportScalar({'wght':.2}, {})
@@ -79,17 +81,29 @@ def supportScalar(location, support):
 	0.1
 	>>> supportScalar({'wght':2.5}, {'wght':(0,2,4)})
 	0.75
+	>>> supportScalar({'wght':2.5, 'wdth':0}, {'wght':(0,2,4), 'wdth':(-1,0,+1)})
+	0.75
+	>>> supportScalar({'wght':2.5, 'wdth':.5}, {'wght':(0,2,4), 'wdth':(-1,0,+1)})
+	0.375
+	>>> supportScalar({'wght':2.5, 'wdth':0}, {'wght':(0,2,4), 'wdth':(-1,0,+1)}, ot=True)
+	0.75
+	>>> supportScalar({'wght':2.5, 'wdth':.5}, {'wght':(0,2,4), 'wdth':(-1,0,+1)}, ot=True)
+	0.75
 	"""
 	scalar = 1.
 	for axis,(lower,peak,upper) in support.items():
-		if axis not in location:
-			scalar = 0.
-			break
-		if peak == 0.0:
-			# Special case: peak is at zero, meaning this axis should not
-			# factor into the scalar calculation
-			continue
-		v = location[axis]
+		if ot:
+			# OpenType-specific case handling
+			if peak == 0.:
+				continue
+			if lower > peak or peak > upper:
+				continue
+			if lower < 0. and upper > 0.:
+				continue
+			v = location.get(axis, 0.)
+		else:
+			assert axis in location
+			v = location[axis]
 		if v == peak:
 			continue
 		if v <= lower or upper <= v:
@@ -249,7 +263,7 @@ class VariationModel(object):
 			deltaWeight = {}
 			# Walk over previous masters now, populate deltaWeight
 			for j,m in enumerate(locations[:i]):
-				scalar = supportScalar(loc, supports[j])
+				scalar = supportScalar(loc, supports[j], ot=True)
 				if scalar:
 					deltaWeight[j] = scalar
 			deltaWeights.append(deltaWeight)
