@@ -155,7 +155,7 @@ class Lexer(object):
             else:
                 raise FeatureLibError("Expected '\"' to terminate string",
                                       location)
-        raise FeatureLibError("Unexpected character: '%s'" % cur_char,
+        raise FeatureLibError("Unexpected character: %r" % cur_char,
                               location)
 
     def scan_over_(self, valid):
