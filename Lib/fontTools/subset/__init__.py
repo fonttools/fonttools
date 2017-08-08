@@ -147,9 +147,10 @@ Glyph set expansion:
       set of OpenType layout feature tags that will be preserved.
       Glyph variants used by the preserved features are added to the
       specified subset glyph set. By default, 'calt', 'ccmp', 'clig', 'curs',
-      'kern', 'liga', 'locl', 'mark', 'mkmk', 'rclt', 'rlig' and all features
-      required for script shaping are preserved. To see the full list, try
-      '--layout-features=?'. Use '*' to keep all features.
+      'dnom', 'frac', 'kern', 'liga', 'locl', 'mark', 'mkmk', 'numr', 'rclt',
+      'rlig', 'rvrn', and all features required for script shaping are
+      preserved. To see the full list, try '--layout-features=?'.
+      Use '*' to keep all features.
       Multiple --layout-features options can be provided if necessary.
       Examples:
         --layout-features+=onum,pnum,ss01
@@ -2434,7 +2435,8 @@ class Options(object):
     # Based on HarfBuzz shapers
     _layout_features_groups = {
         # Default shaper
-        'common': ['ccmp', 'liga', 'locl', 'mark', 'mkmk', 'rlig'],
+        'common': ['rvrn', 'ccmp', 'liga', 'locl', 'mark', 'mkmk', 'rlig'],
+        'fractions': ['frac', 'numr', 'dnom'],
         'horizontal': ['calt', 'clig', 'curs', 'kern', 'rclt'],
         'vertical': ['valt', 'vert', 'vkrn', 'vpal', 'vrt2'],
         'ltr': ['ltra', 'ltrm'],
