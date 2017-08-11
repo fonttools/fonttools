@@ -1326,9 +1326,10 @@ def collect_features(self):
     return _uniq_sort(feature_indices)
 
 @_add_method(otTables.Script)
-def subset_features(self, feature_indices):
+def subset_features(self, feature_indices, keepEmptyDefaultLangSys=False):
     if(self.DefaultLangSys and
-       not self.DefaultLangSys.subset_features(feature_indices)):
+       not self.DefaultLangSys.subset_features(feature_indices) and
+       not keepEmptyDefaultLangSys):
         self.DefaultLangSys = None
     self.LangSysRecord = [l for l in self.LangSysRecord
                           if l.LangSys.subset_features(feature_indices)]
@@ -1344,8 +1345,10 @@ def collect_features(self):
 
 @_add_method(otTables.ScriptList)
 def subset_features(self, feature_indices, retain_empty):
+    # https://bugzilla.mozilla.org/show_bug.cgi?id=1331737#c32
     self.ScriptRecord = [s for s in self.ScriptRecord
-                         if s.Script.subset_features(feature_indices) or retain_empty]
+                         if s.Script.subset_features(feature_indices, s.ScriptTag=='DFLT') or
+                            retain_empty]
     self.ScriptCount = len(self.ScriptRecord)
     return bool(self.ScriptCount)
 
