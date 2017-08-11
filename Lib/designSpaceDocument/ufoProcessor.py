@@ -354,7 +354,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
                 if oldName != newName:
                     swapGlyphNames(font, oldName, newName)
         # store designspace location in the font.lib
-        font.lib['designspace'] = instanceDescriptor.location.items()
+        font.lib['designspace'] = list(instanceDescriptor.location.items())
         return font
 
     def _instantiateFont(self, path):
