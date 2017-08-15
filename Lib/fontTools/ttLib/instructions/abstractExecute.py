@@ -1204,22 +1204,6 @@ class Executor(object):
                 is_reexecuting = True
                 block = self.if_else_stack[-1].IR
                 block.mode = 'ELSE'
-            elif self.current_instruction.mnemonic == 'EIF':
-                assert len(self.if_else_stack) > 0
-                # check that we've executed all branches
-                alts_count = 2 if self.if_else_stack[-1].IR.mode == 'ELSE' else 1
-                if self.if_else_stack[-1].state-1 == alts_count:
-                    s = self.if_else_stack.pop()
-                    block = s.IR
-                    for inst in block.if_instructions:
-                        block.if_branch.extend(self.bytecode2ir[inst.id])
-                        self.ignored_insts.add(inst)
-                    for inst in block.else_instructions:
-                        block.else_branch.extend(self.bytecode2ir[inst.id])
-                        self.ignored_insts.add(inst)
-                    block.if_instructions = []
-                    block.else_instructions = []
-                    ir = [block]
 
             if store_env:
                 if not is_reexecuting and self.current_instruction.id in self.stored_environments:
@@ -1246,7 +1230,7 @@ class Executor(object):
                         newInst = IR.JmpStatement(None)
 
                     newInst.bytecode_dest = branch_succ
-                    ir = [newInst]
+                    ir.append(newInst)
                     self.environment.current_instruction = self.current_instruction
 
                     if e != None:
@@ -1265,7 +1249,6 @@ class Executor(object):
 
             # normal case: 1 succ
             if len(self.current_instruction.successors) == 1:
-                self.current_instruction = self.current_instruction.successors[0]
                 # do we have if/else succs to explore?
                 if self.current_instruction.mnemonic == 'EIF' or self.current_instruction.mnemonic == 'ELSE':
                     assert len(self.if_else_stack) > 0
@@ -1278,6 +1261,27 @@ class Executor(object):
                         self.if_else_stack[-1].env_on_exit.merge(self.environment)
                     self.environment = copy.deepcopy(self.stored_environments[self.current_instruction.id])
                     logger.info("program pointer back (if) to [%s] %s, stack height %d" % (self.current_instruction.id, self.current_instruction.mnemonic, len(self.environment.program_stack)))
+                else:
+                    self.current_instruction = self.current_instruction.successors[0]
+
+                if self.current_instruction.mnemonic == 'EIF':
+                    assert len(self.if_else_stack) > 0
+                    # check that we've executed all branches
+                    alts_count = 2 if self.if_else_stack[-1].IR.mode == 'ELSE' else 1
+                    logger.info("alts_count %d state %d" % (alts_count, self.if_else_stack[-1].state))
+                    if self.if_else_stack[-1].state-1 == alts_count:
+                        s = self.if_else_stack.pop()
+                        block = s.IR
+                        for inst in block.if_instructions:
+                            block.if_branch.extend(self.bytecode2ir[inst.id])
+                            self.ignored_insts.add(inst)
+                        for inst in block.else_instructions:
+                            block.else_branch.extend(self.bytecode2ir[inst.id])
+                            self.ignored_insts.add(inst)
+                        block.if_instructions = []
+                        block.else_instructions = []
+                        ir = [block]
+
             # multiple succs, store the alternate succ for later
             elif len(self.current_instruction.successors) > 1:
                 if self.current_instruction.mnemonic == 'IF':
