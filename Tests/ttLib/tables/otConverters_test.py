@@ -331,8 +331,8 @@ class AATLookupTest(unittest.TestCase):
 
     def test_xmlRead(self):
         value = self.converter.xmlRead({}, [
-            ("Substitution", {"in": "A", "out": "A.alt"}, []),
-            ("Substitution", {"in": "B", "out": "B.alt"}, []),
+            ("Lookup", {"glyph": "A", "value": "A.alt"}, []),
+            ("Lookup", {"glyph": "B", "value": "B.alt"}, []),
         ], self.font)
         self.assertEqual(value, {"A": "A.alt", "B": "B.alt"})
 
@@ -344,8 +344,8 @@ class AATLookupTest(unittest.TestCase):
         xml = writer.file.getvalue().decode("utf-8").splitlines()
         self.assertEqual(xml, [
             '<Foo attr="val">',
-            '  <Substitution in="A" out="A.alt"/>',
-            '  <Substitution in="B" out="B.alt"/>',
+            '  <Lookup glyph="A" value="A.alt"/>',
+            '  <Lookup glyph="B" value="B.alt"/>',
             '</Foo>',
         ])
 

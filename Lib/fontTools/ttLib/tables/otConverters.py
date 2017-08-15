@@ -762,21 +762,22 @@ class AATLookup(BaseConverter):
 
 	def xmlRead(self, attrs, content, font):
 		value = {}
+		converter = self.tableClass("Lookup", repeat=False, aux=None)
 		for element in content:
 			if isinstance(element, tuple):
 				name, a, eltContent = element
-				if name == "Substitution":
-					value[a["in"]] = a["out"]
+				if name == "Lookup":
+					value[a["glyph"]] = converter.xmlRead(a, eltContent, font)
 		return value
 
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		xmlWriter.begintag(name, attrs)
 		xmlWriter.newline()
-		items = sorted(value.items())
-		for inGlyph, outGlyph in items:
-			xmlWriter.simpletag("Substitution",
-					[("in", inGlyph), ("out", outGlyph)])
-			xmlWriter.newline()
+		converter = self.tableClass(name, repeat=False, aux=None)
+		for glyph, value in sorted(value.items()):
+			converter.xmlWrite(
+				xmlWriter, font, value=value,
+				name="Lookup", attrs=[("glyph", glyph)])
 		xmlWriter.endtag(name)
 		xmlWriter.newline()
 
