@@ -565,18 +565,16 @@ class AATLookup(BaseConverter):
 	def read(self, reader, font, tableDict):
 		format = reader.readUShort()
 		conv = self.tableClass(name='Value', repeat=None, aux=None)
-		# TODO: Do not prune the results.
-		prune = lambda x: {k:v for k,v in x.items() if k != v}
 		if format == 0:
-			return prune(self.readFormat0(reader, font, conv))
+			return self.readFormat0(reader, font, conv)
 		elif format == 2:
-			return prune(self.readFormat2(reader, font, conv))
+			return self.readFormat2(reader, font, conv)
 		elif format == 4:
-			return prune(self.readFormat4(reader, font, conv))
+			return self.readFormat4(reader, font, conv)
 		elif format == 6:
-			return prune(self.readFormat6(reader, font, conv))
+			return self.readFormat6(reader, font, conv)
 		elif format == 8:
-			return prune(self.readFormat8(reader, font, conv))
+			return self.readFormat8(reader, font, conv)
 		else:
 			assert False, "unsupported lookup format: %d" % format
 

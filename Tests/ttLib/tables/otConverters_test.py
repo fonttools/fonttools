@@ -189,6 +189,9 @@ class AATLookupTest(unittest.TestCase):
     def test_readFormat0(self):
         reader = OTTableReader(deHexStr("0000 0000 0001 0002 0000 7D00 0001"))
         self.assertEqual(self.converter.read(reader, self.font, None), {
+            ".notdef": ".notdef",
+            "A": "A",
+            "B": "B",
             "C": ".notdef",
             "D": "glyph32000",
             "E": "A"
