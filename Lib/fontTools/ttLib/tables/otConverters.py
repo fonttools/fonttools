@@ -649,7 +649,7 @@ class AATLookup(BaseConverter):
 	def writeFormat2(self, writer, font, segments):
 		writer.writeUShort(2)
 		valueSize = self.converter.staticSize
-		numUnits, unitSize = len(segments) + 1, valueSize + 4
+		numUnits, unitSize = len(segments), valueSize + 4
 		self.writeBinSearchHeader(writer, numUnits, unitSize)
 		for firstGlyph, lastGlyph, value in segments:
 			writer.writeUShort(lastGlyph)
@@ -659,18 +659,18 @@ class AATLookup(BaseConverter):
 				value=value, repeatIndex=None)
 		writer.writeUShort(0xFFFF)
 		writer.writeUShort(0xFFFF)
-		writer.writeData(b'\xFF' * valueSize)
+		writer.writeData(b'\x00' * valueSize)
 
 	def buildFormat6(self, writer, font, values):
 		valueSize = self.converter.staticSize
-		numUnits, unitSize = len(values) + 1, valueSize + 2
-		return (2 + self.BIN_SEARCH_HEADER_SIZE + numUnits * unitSize, 6,
+		numUnits, unitSize = len(values), valueSize + 2
+		return (2 + self.BIN_SEARCH_HEADER_SIZE + (numUnits + 1) * unitSize, 6,
 			lambda: self.writeFormat6(writer, font, values))
 
 	def writeFormat6(self, writer, font, values):
 		writer.writeUShort(6)
 		valueSize = self.converter.staticSize
-		numUnits, unitSize = len(values) + 1, valueSize + 2
+		numUnits, unitSize = len(values), valueSize + 2
 		self.writeBinSearchHeader(writer, numUnits, unitSize)
 		for glyphID, value in values:
 			writer.writeUShort(glyphID)
@@ -678,7 +678,7 @@ class AATLookup(BaseConverter):
 				writer, font, tableDict=None,
 				value=value, repeatIndex=None)
 		writer.writeUShort(0xFFFF)
-		writer.writeData(b'\xFF' * valueSize)
+		writer.writeData(b'\x00' * valueSize)
 
 	def buildFormat8(self, writer, font, values):
 		minGlyphID, maxGlyphID = values[0][0], values[-1][0]

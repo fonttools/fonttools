@@ -199,7 +199,7 @@ class AATLookupTest(unittest.TestCase):
 
     def test_readFormat2(self):
         reader = OTTableReader(deHexStr(
-            "0002 0006 0003 000C 0001 0006 "
+            "0002 0006 0002 000C 0001 0006 "
             "0002 0001 0003 "   # glyph A..B: map to C
             "0007 0005 0008 "   # glyph E..G: map to H
             "FFFF FFFF FFFF"))  # end of search table
@@ -227,7 +227,7 @@ class AATLookupTest(unittest.TestCase):
 
     def test_readFormat6(self):
         reader = OTTableReader(deHexStr(
-            "0006 0004 0003 0008 0001 0004 "
+            "0006 0004 0002 0008 0001 0004 "
             "0003 0001 "   # C --> A
             "0005 0002 "   # E --> B
             "FFFF FFFF"))  # end of search table
@@ -279,13 +279,13 @@ class AATLookupTest(unittest.TestCase):
         self.assertEqual(writer.getData(), deHexStr(
             "0002 "            # format=2
             "0006 "            # binSrchHeader.unitSize=6
-            "0003 "            # binSrchHeader.nUnits=3
+            "0002 "            # binSrchHeader.nUnits=2
             "000C "            # binSrchHeader.searchRange=12
             "0001 "            # binSrchHeader.entrySelector=1
-            "0006 "            # binSrchHeader.rangeShift=6
+            "0000 "            # binSrchHeader.rangeShift=0
             "0005 0002 0003 "  # segments[0].lastGlyph=E, firstGlyph=B, value=C
             "0008 0007 0001 "  # segments[1].lastGlyph=H, firstGlyph=G, value=A
-            "FFFF FFFF FFFF "  # segments[2]=<END>
+            "FFFF FFFF 0000 "  # segments[2]=<END>
         ))
 
     def test_writeFormat6(self):
@@ -300,15 +300,15 @@ class AATLookupTest(unittest.TestCase):
         self.assertEqual(writer.getData(), deHexStr(
             "0006 "         # format=6
             "0004 "         # binSrchHeader.unitSize=4
-            "0005 "         # binSrchHeader.nUnits=5
+            "0004 "         # binSrchHeader.nUnits=4
             "0010 "         # binSrchHeader.searchRange=16
             "0002 "         # binSrchHeader.entrySelector=2
-            "0004 "         # binSrchHeader.rangeShift=4
+            "0000 "         # binSrchHeader.rangeShift=0
             "0001 0003 "    # entries[0].glyph=A, .value=C
             "0003 0002 "    # entries[1].glyph=C, .value=B
             "0004 0004 "    # entries[2].glyph=D, .value=D
             "0005 0005 "    # entries[3].glyph=E, .value=E
-            "FFFF FFFF "    # entries[4]=<END>
+            "FFFF 0000 "    # entries[4]=<END>
         ))
 
     def test_writeFormat8(self):
