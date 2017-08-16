@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ascender</key>
+	<integer>760</integer>
+	<key>capHeight</key>
+	<integer>714</integer>
+	<key>copyright</key>
+	<string>Copyright 2015 Google Inc. All Rights Reserved.</string>
+	<key>descender</key>
+	<integer>-240</integer>
+	<key>familyName</key>
+	<string>Test Family 3</string>
+	<key>guidelines</key>
+	<array/>
+	<key>openTypeHeadCreated</key>
+	<string>2016/03/15 19:50:39</string>
+	<key>openTypeHheaAscender</key>
+	<integer>1069</integer>
+	<key>openTypeHheaDescender</key>
+	<integer>-293</integer>
+	<key>openTypeHheaLineGap</key>
+	<integer>0</integer>
+	<key>openTypeNameDescription</key>
+	<string>Designed by Monotype design team.</string>
+	<key>openTypeNameDesigner</key>
+	<string>Monotype Design Team</string>
+	<key>openTypeNameDesignerURL</key>
+	<string>http://www.monotype.com/studio</string>
+	<key>openTypeNameLicense</key>
+	<string>This Font Software is licensed under the SIL Open Font License, Version 1.1. This Font Software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the SIL Open Font License for the specific language, permissions and limitations governing your use of this Font Software.</string>
+	<key>openTypeNameLicenseURL</key>
+	<string>http://scripts.sil.org/OFL</string>
+	<key>openTypeNameManufacturer</key>
+	<string>Monotype Imaging Inc.</string>
+	<key>openTypeNameManufacturerURL</key>
+	<string>http://www.google.com/get/noto/</string>
+	<key>openTypeNameVersion</key>
+	<string>Version 1.902</string>
+	<key>openTypeOS2Panose</key>
+	<array>
+		<integer>2</integer>
+		<integer>11</integer>
+		<integer>5</integer>
+		<integer>2</integer>
+		<integer>4</integer>
+		<integer>5</integer>
+		<integer>4</integer>
+		<integer>2</integer>
+		<integer>2</integer>
+		<integer>4</integer>
+	</array>
+	<key>openTypeOS2Selection</key>
+	<array>
+		<integer>8</integer>
+	</array>
+	<key>openTypeOS2Type</key>
+	<array/>
+	<key>openTypeOS2TypoAscender</key>
+	<integer>1069</integer>
+	<key>openTypeOS2TypoDescender</key>
+	<integer>-293</integer>
+	<key>openTypeOS2TypoLineGap</key>
+	<integer>0</integer>
+	<key>openTypeOS2UnicodeRanges</key>
+	<array>
+		<integer>0</integer>
+		<integer>1</integer>
+		<integer>2</integer>
+		<integer>3</integer>
+		<integer>4</integer>
+		<integer>5</integer>
+		<integer>6</integer>
+		<integer>7</integer>
+		<integer>9</integer>
+		<integer>29</integer>
+		<integer>30</integer>
+		<integer>31</integer>
+		<integer>32</integer>
+		<integer>33</integer>
+		<integer>34</integer>
+		<integer>35</integer>
+		<integer>36</integer>
+		<integer>62</integer>
+		<integer>64</integer>
+		<integer>67</integer>
+		<integer>69</integer>
+		<integer>91</integer>
+		<integer>116</integer>
+	</array>
+	<key>openTypeOS2VendorID</key>
+	<string>GOOG</string>
+	<key>openTypeOS2WinAscent</key>
+	<integer>1069</integer>
+	<key>openTypeOS2WinDescent</key>
+	<integer>293</integer>
+	<key>postscriptBlueValues</key>
+	<array>
+		<integer>-15</integer>
+		<integer>0</integer>
+		<integer>536</integer>
+		<integer>547</integer>
+		<integer>572</integer>
+		<integer>582</integer>
+		<integer>714</integer>
+		<integer>726</integer>
+		<integer>760</integer>
+		<integer>766</integer>
+	</array>
+	<key>postscriptFamilyBlues</key>
+	<array/>
+	<key>postscriptFamilyOtherBlues</key>
+	<array/>
+	<key>postscriptOtherBlues</key>
+	<array>
+		<integer>-256</integer>
+		<integer>-240</integer>
+	</array>
+	<key>postscriptStemSnapH</key>
+	<array>
+		<integer>60</integer>
+		<integer>68</integer>
+		<integer>79</integer>
+	</array>
+	<key>postscriptStemSnapV</key>
+	<array>
+		<integer>64</integer>
+		<integer>75</integer>
+		<integer>90</integer>
+	</array>
+	<key>postscriptUnderlinePosition</key>
+	<integer>-100</integer>
+	<key>postscriptUnderlineThickness</key>
+	<integer>50</integer>
+	<key>styleMapFamilyName</key>
+	<string>Test Family 3</string>
+	<key>styleMapStyleName</key>
+	<string>regular</string>
+	<key>styleName</key>
+	<string>Regular</string>
+	<key>trademark</key>
+	<string>Noto is a trademark of Google Inc.</string>
+	<key>unitsPerEm</key>
+	<integer>1000</integer>
+	<key>versionMajor</key>
+	<integer>1</integer>
+	<key>versionMinor</key>
+	<integer>902</integer>
+	<key>xHeight</key>
+	<integer>536</integer>
+</dict>
+</plist>
