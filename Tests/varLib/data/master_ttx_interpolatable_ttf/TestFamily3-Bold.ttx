@@ -1,0 +1,520 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.14">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="F"/>
+    <GlyphID id="2" name="T"/>
+    <GlyphID id="3" name="l"/>
+    <GlyphID id="4" name="n"/>
+    <GlyphID id="5" name="o"/>
+    <GlyphID id="6" name="s"/>
+    <GlyphID id="7" name="t"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="1.902"/>
+    <checkSumAdjustment value="0xad920bcc"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Tue Mar 15 19:50:39 2016"/>
+    <modified value="Wed Aug 16 14:03:23 2017"/>
+    <xMin value="25"/>
+    <yMin value="-240"/>
+    <xMax value="606"/>
+    <yMax value="760"/>
+    <macStyle value="00000000 00000001"/>
+    <lowestRecPPEM value="6"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="1069"/>
+    <descent value="-293"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="670"/>
+    <minLeftSideBearing value="25"/>
+    <minRightSideBearing value="25"/>
+    <xMaxExtent value="606"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="8"/>
+  </hhea>
+
+  <maxp>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="0x10000"/>
+    <numGlyphs value="8"/>
+    <maxPoints value="43"/>
+    <maxContours value="2"/>
+    <maxCompositePoints value="0"/>
+    <maxCompositeContours value="0"/>
+    <maxZones value="1"/>
+    <maxTwilightPoints value="0"/>
+    <maxStorage value="0"/>
+    <maxFunctionDefs value="0"/>
+    <maxInstructionDefs value="0"/>
+    <maxStackElements value="0"/>
+    <maxSizeOfInstructions value="0"/>
+    <maxComponentElements value="0"/>
+    <maxComponentDepth value="0"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="4"/>
+    <xAvgCharWidth value="530"/>
+    <usWeightClass value="400"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000000"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="600"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="75"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="600"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="350"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="332"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="2"/>
+      <bSerifStyle value="11"/>
+      <bWeight value="10"/>
+      <bProportion value="2"/>
+      <bContrast value="4"/>
+      <bStrokeVariation value="5"/>
+      <bArmStyle value="4"/>
+      <bLetterForm value="2"/>
+      <bMidline value="2"/>
+      <bXHeight value="4"/>
+    </panose>
+    <ulUnicodeRange1 value="11100000 00000000 00000010 11111111"/>
+    <ulUnicodeRange2 value="01000000 00000000 00000000 00011111"/>
+    <ulUnicodeRange3 value="00001000 00000000 00000000 00101001"/>
+    <ulUnicodeRange4 value="00000000 00010000 00000000 00000000"/>
+    <achVendID value="GOOG"/>
+    <fsSelection value="00000001 00100000"/>
+    <usFirstCharIndex value="70"/>
+    <usLastCharIndex value="116"/>
+    <sTypoAscender value="1069"/>
+    <sTypoDescender value="-293"/>
+    <sTypoLineGap value="0"/>
+    <usWinAscent value="1069"/>
+    <usWinDescent value="293"/>
+    <ulCodePageRange1 value="00000000 00000000 00000000 00000000"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="553"/>
+    <sCapHeight value="714"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="2"/>
+  </OS_2>
+
+  <hmtx>
+    <mtx name=".notdef" width="500" lsb="50"/>
+    <mtx name="F" width="539" lsb="77"/>
+    <mtx name="T" width="591" lsb="25"/>
+    <mtx name="l" width="323" lsb="66"/>
+    <mtx name="n" width="670" lsb="66"/>
+    <mtx name="o" width="637" lsb="42"/>
+    <mtx name="s" width="517" lsb="42"/>
+    <mtx name="t" width="460" lsb="26"/>
+  </hmtx>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x46" name="F"/><!-- LATIN CAPITAL LETTER F -->
+      <map code="0x54" name="T"/><!-- LATIN CAPITAL LETTER T -->
+      <map code="0x6c" name="l"/><!-- LATIN SMALL LETTER L -->
+      <map code="0x6e" name="n"/><!-- LATIN SMALL LETTER N -->
+      <map code="0x6f" name="o"/><!-- LATIN SMALL LETTER O -->
+      <map code="0x73" name="s"/><!-- LATIN SMALL LETTER S -->
+      <map code="0x74" name="t"/><!-- LATIN SMALL LETTER T -->
+    </cmap_format_4>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x46" name="F"/><!-- LATIN CAPITAL LETTER F -->
+      <map code="0x54" name="T"/><!-- LATIN CAPITAL LETTER T -->
+      <map code="0x6c" name="l"/><!-- LATIN SMALL LETTER L -->
+      <map code="0x6e" name="n"/><!-- LATIN SMALL LETTER N -->
+      <map code="0x6f" name="o"/><!-- LATIN SMALL LETTER O -->
+      <map code="0x73" name="s"/><!-- LATIN SMALL LETTER S -->
+      <map code="0x74" name="t"/><!-- LATIN SMALL LETTER T -->
+    </cmap_format_4>
+  </cmap>
+
+  <loca>
+    <!-- The 'loca' table will be calculated by the compiler -->
+  </loca>
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef" xMin="50" yMin="-240" xMax="450" yMax="760">
+      <contour>
+        <pt x="50" y="-240" on="1"/>
+        <pt x="450" y="-240" on="1"/>
+        <pt x="450" y="760" on="1"/>
+        <pt x="50" y="760" on="1"/>
+      </contour>
+      <contour>
+        <pt x="100" y="-190" on="1"/>
+        <pt x="100" y="710" on="1"/>
+        <pt x="400" y="710" on="1"/>
+        <pt x="400" y="-190" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="F" xMin="77" yMin="0" xMax="499" yMax="714">
+      <contour>
+        <pt x="267" y="0" on="1"/>
+        <pt x="77" y="0" on="1"/>
+        <pt x="77" y="714" on="1"/>
+        <pt x="499" y="714" on="1"/>
+        <pt x="499" y="559" on="1"/>
+        <pt x="267" y="559" on="1"/>
+        <pt x="267" y="423" on="1"/>
+        <pt x="481" y="423" on="1"/>
+        <pt x="481" y="268" on="1"/>
+        <pt x="267" y="268" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="T" xMin="25" yMin="0" xMax="566" yMax="714">
+      <contour>
+        <pt x="392" y="0" on="1"/>
+        <pt x="199" y="0" on="1"/>
+        <pt x="199" y="556" on="1"/>
+        <pt x="25" y="556" on="1"/>
+        <pt x="25" y="714" on="1"/>
+        <pt x="566" y="714" on="1"/>
+        <pt x="566" y="556" on="1"/>
+        <pt x="392" y="556" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="l" xMin="66" yMin="0" xMax="257" yMax="760">
+      <contour>
+        <pt x="257" y="0" on="1"/>
+        <pt x="66" y="0" on="1"/>
+        <pt x="66" y="760" on="1"/>
+        <pt x="257" y="760" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="n" xMin="66" yMin="0" xMax="606" yMax="563">
+      <contour>
+        <pt x="412" y="563" on="1"/>
+        <pt x="498" y="563" on="0"/>
+        <pt x="606" y="466" on="0"/>
+        <pt x="606" y="360" on="1"/>
+        <pt x="606" y="0" on="1"/>
+        <pt x="415" y="0" on="1"/>
+        <pt x="415" y="302" on="1"/>
+        <pt x="415" y="357" on="0"/>
+        <pt x="383" y="413" on="0"/>
+        <pt x="348" y="413" on="1"/>
+        <pt x="294" y="413" on="0"/>
+        <pt x="257" y="324" on="0"/>
+        <pt x="257" y="242" on="1"/>
+        <pt x="257" y="0" on="1"/>
+        <pt x="66" y="0" on="1"/>
+        <pt x="66" y="553" on="1"/>
+        <pt x="210" y="553" on="1"/>
+        <pt x="236" y="480" on="1"/>
+        <pt x="243" y="480" on="1"/>
+        <pt x="260" y="506" on="0"/>
+        <pt x="310" y="543" on="0"/>
+        <pt x="373" y="563" on="0"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="o" xMin="42" yMin="-10" xMax="594" yMax="563">
+      <contour>
+        <pt x="594" y="278" on="1"/>
+        <pt x="594" y="209" on="0"/>
+        <pt x="556" y="101" on="0"/>
+        <pt x="484" y="28" on="0"/>
+        <pt x="382" y="-10" on="0"/>
+        <pt x="317" y="-10" on="1"/>
+        <pt x="257" y="-10" on="0"/>
+        <pt x="156" y="28" on="0"/>
+        <pt x="83" y="101" on="0"/>
+        <pt x="42" y="209" on="0"/>
+        <pt x="42" y="278" on="1"/>
+        <pt x="42" y="370" on="0"/>
+        <pt x="109" y="497" on="0"/>
+        <pt x="233" y="563" on="0"/>
+        <pt x="320" y="563" on="1"/>
+        <pt x="400" y="563" on="0"/>
+        <pt x="523" y="497" on="0"/>
+        <pt x="594" y="370" on="0"/>
+      </contour>
+      <contour>
+        <pt x="236" y="278" on="1"/>
+        <pt x="236" y="230" on="0"/>
+        <pt x="252" y="165" on="0"/>
+        <pt x="289" y="132" on="0"/>
+        <pt x="319" y="132" on="1"/>
+        <pt x="348" y="132" on="0"/>
+        <pt x="384" y="165" on="0"/>
+        <pt x="400" y="230" on="0"/>
+        <pt x="400" y="278" on="1"/>
+        <pt x="400" y="325" on="0"/>
+        <pt x="384" y="389" on="0"/>
+        <pt x="348" y="421" on="0"/>
+        <pt x="318" y="421" on="1"/>
+        <pt x="274" y="421" on="0"/>
+        <pt x="236" y="348" on="0"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="s" xMin="42" yMin="-10" xMax="477" yMax="563">
+      <contour>
+        <pt x="477" y="170" on="1"/>
+        <pt x="477" y="118" on="0"/>
+        <pt x="430" y="36" on="0"/>
+        <pt x="327" y="-10" on="0"/>
+        <pt x="243" y="-10" on="1"/>
+        <pt x="184" y="-10" on="0"/>
+        <pt x="91" y="3" on="0"/>
+        <pt x="43" y="21" on="1"/>
+        <pt x="43" y="174" on="1"/>
+        <pt x="96" y="150" on="0"/>
+        <pt x="204" y="129" on="0"/>
+        <pt x="235" y="129" on="1"/>
+        <pt x="267" y="129" on="0"/>
+        <pt x="297" y="143" on="0"/>
+        <pt x="297" y="157" on="1"/>
+        <pt x="297" y="169" on="0"/>
+        <pt x="277" y="187" on="0"/>
+        <pt x="226" y="209" on="0"/>
+        <pt x="179" y="228" on="1"/>
+        <pt x="133" y="247" on="0"/>
+        <pt x="72" y="292" on="0"/>
+        <pt x="42" y="354" on="0"/>
+        <pt x="42" y="400" on="1"/>
+        <pt x="42" y="481" on="0"/>
+        <pt x="167" y="563" on="0"/>
+        <pt x="270" y="563" on="1"/>
+        <pt x="325" y="563" on="0"/>
+        <pt x="421" y="539" on="0"/>
+        <pt x="473" y="516" on="1"/>
+        <pt x="421" y="393" on="1"/>
+        <pt x="380" y="412" on="0"/>
+        <pt x="296" y="434" on="0"/>
+        <pt x="271" y="434" on="1"/>
+        <pt x="248" y="434" on="0"/>
+        <pt x="224" y="422" on="0"/>
+        <pt x="224" y="411" on="1"/>
+        <pt x="224" y="400" on="0"/>
+        <pt x="241" y="385" on="0"/>
+        <pt x="289" y="364" on="0"/>
+        <pt x="335" y="346" on="1"/>
+        <pt x="383" y="326" on="0"/>
+        <pt x="446" y="282" on="0"/>
+        <pt x="477" y="218" on="0"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="t" xMin="26" yMin="-10" xMax="429" yMax="664">
+      <contour>
+        <pt x="337" y="141" on="1"/>
+        <pt x="362" y="141" on="0"/>
+        <pt x="406" y="152" on="0"/>
+        <pt x="429" y="160" on="1"/>
+        <pt x="429" y="21" on="1"/>
+        <pt x="398" y="8" on="0"/>
+        <pt x="328" y="-10" on="0"/>
+        <pt x="274" y="-10" on="1"/>
+        <pt x="220" y="-10" on="0"/>
+        <pt x="138" y="24" on="0"/>
+        <pt x="93" y="107" on="0"/>
+        <pt x="93" y="182" on="1"/>
+        <pt x="93" y="410" on="1"/>
+        <pt x="26" y="410" on="1"/>
+        <pt x="26" y="488" on="1"/>
+        <pt x="111" y="548" on="1"/>
+        <pt x="160" y="664" on="1"/>
+        <pt x="285" y="664" on="1"/>
+        <pt x="285" y="553" on="1"/>
+        <pt x="421" y="553" on="1"/>
+        <pt x="421" y="410" on="1"/>
+        <pt x="285" y="410" on="1"/>
+        <pt x="285" y="195" on="1"/>
+        <pt x="285" y="168" on="0"/>
+        <pt x="312" y="141" on="0"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+  </glyf>
+
+  <name>
+    <namerecord nameID="0" platformID="3" platEncID="1" langID="0x409">
+      Copyright 2015 Google Inc. All Rights Reserved.
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      Test Family 3
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Bold
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      1.902;GOOG;TestFamily3-Bold
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      Test Family 3 Bold
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 1.902
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      TestFamily3-Bold
+    </namerecord>
+    <namerecord nameID="7" platformID="3" platEncID="1" langID="0x409">
+      Noto is a trademark of Google Inc.
+    </namerecord>
+    <namerecord nameID="8" platformID="3" platEncID="1" langID="0x409">
+      Monotype Imaging Inc.
+    </namerecord>
+    <namerecord nameID="9" platformID="3" platEncID="1" langID="0x409">
+      Monotype Design Team
+    </namerecord>
+    <namerecord nameID="10" platformID="3" platEncID="1" langID="0x409">
+      Designed by Monotype design team.
+    </namerecord>
+    <namerecord nameID="11" platformID="3" platEncID="1" langID="0x409">
+      http://www.google.com/get/noto/
+    </namerecord>
+    <namerecord nameID="12" platformID="3" platEncID="1" langID="0x409">
+      http://www.monotype.com/studio
+    </namerecord>
+    <namerecord nameID="13" platformID="3" platEncID="1" langID="0x409">
+      This Font Software is licensed under the SIL Open Font License, Version 1.1. This Font Software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the SIL Open Font License for the specific language, permissions and limitations governing your use of this Font Software.
+    </namerecord>
+    <namerecord nameID="14" platformID="3" platEncID="1" langID="0x409">
+      http://scripts.sil.org/OFL
+    </namerecord>
+  </name>
+
+  <post>
+    <formatType value="2.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-100"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+    <psNames>
+      <!-- This file uses unique glyph names based on the information
+           found in the 'post' table. Since these names might not be unique,
+           we have to invent artificial names in case of clashes. In order to
+           be able to retain the original information, we need a name to
+           ps name mapping for those cases where they differ. That's what
+           you see below.
+            -->
+    </psNames>
+    <extraNames>
+      <!-- following are the name that are not taken from the standard Mac glyph order -->
+    </extraNames>
+  </post>
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="kern"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <LookupType value="2"/>
+        <LookupFlag value="8"/>
+        <!-- SubTableCount=1 -->
+        <PairPos index="0" Format="2">
+          <Coverage Format="1">
+            <Glyph value="T"/>
+          </Coverage>
+          <ValueFormat1 value="4"/>
+          <ValueFormat2 value="0"/>
+          <ClassDef1 Format="2">
+          </ClassDef1>
+          <ClassDef2 Format="1">
+            <ClassDef glyph="T" class="4"/>
+            <ClassDef glyph="n" class="3"/>
+            <ClassDef glyph="o" class="2"/>
+            <ClassDef glyph="s" class="1"/>
+          </ClassDef2>
+          <!-- Class1Count=1 -->
+          <!-- Class2Count=5 -->
+          <Class1Record index="0">
+            <Class2Record index="0">
+              <Value1 XAdvance="0"/>
+            </Class2Record>
+            <Class2Record index="1">
+              <Value1 XAdvance="-60"/>
+            </Class2Record>
+            <Class2Record index="2">
+              <Value1 XAdvance="-70"/>
+            </Class2Record>
+            <Class2Record index="3">
+              <Value1 XAdvance="-50"/>
+            </Class2Record>
+            <Class2Record index="4">
+              <Value1 XAdvance="20"/>
+            </Class2Record>
+          </Class1Record>
+        </PairPos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+</ttFont>

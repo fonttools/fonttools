@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='utf-8'?>
+<designspace format="3">
+    <axes>
+        <axis default="400.0" maximum="900.0" minimum="100.0" name="weight" tag="wght">
+            <map input="100.0" output="26" />
+            <map input="400.0" output="90" />
+            <map input="700.0" output="151" />
+            <map input="900.0" output="190" />
+            <labelname xml:lang="en">Weight</labelname>
+        </axis>
+        <axis default="100" maximum="100" minimum="70" name="width" tag="wdth">
+            <labelname xml:lang="en">Width</labelname>
+        </axis>
+    </axes>
+    <sources>
+        <source familyname="Test Family 3" filename="master_ufo/TestFamily3-Light.ufo" name="Test Family 3 Light" stylename="Light">
+            <location>
+                <dimension name="weight" xvalue="26.000000" />
+                <dimension name="width" xvalue="100.000000" />
+            </location>
+        </source>
+        <source familyname="Test Family 3" filename="master_ufo/TestFamily3-Regular.ufo" name="Test Family 3 Regular" stylename="Regular">
+            <lib copy="1" />
+            <groups copy="1" />
+            <features copy="1" />
+            <info copy="1" />
+            <location>
+                <dimension name="weight" xvalue="90.000000" />
+                <dimension name="width" xvalue="100.000000" />
+            </location>
+        </source>
+        <source familyname="Test Family 3" filename="master_ufo/TestFamily3-Bold.ufo" name="Test Family 3 Bold" stylename="Bold">
+            <location>
+                <dimension name="weight" xvalue="190.000000" />
+                <dimension name="width" xvalue="100.000000" />
+            </location>
+        </source>
+        <source familyname="Test Family 3" filename="master_ufo/TestFamily3-CondensedLight.ufo" name="Test Family 3 Condensed Light" stylename="Condensed Light">
+            <location>
+                <dimension name="weight" xvalue="26.000000" />
+                <dimension name="width" xvalue="70.000000" />
+            </location>
+        </source>
+        <source familyname="Test Family 3" filename="master_ufo/TestFamily3-Condensed.ufo" name="Test Family 3 Condensed" stylename="Condensed">
+            <location>
+                <dimension name="weight" xvalue="90.000000" />
+                <dimension name="width" xvalue="70.000000" />
+            </location>
+        </source>
+        <source familyname="Test Family 3" filename="master_ufo/TestFamily3-CondensedBold.ufo" name="Test Family 3 Condensed Bold" stylename="Condensed Bold">
+            <location>
+                <dimension name="weight" xvalue="190.000000" />
+                <dimension name="width" xvalue="70.000000" />
+            </location>
+        </source>
+    </sources>
+    <instances>
+    </instances>
+</designspace>
