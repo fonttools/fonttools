@@ -46,8 +46,9 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 		return sstruct.pack(hheaFormat, self)
 
 	def recalc(self, ttFont):
-		hmtxTable = ttFont['hmtx']
-		self.advanceWidthMax = max(adv for adv, _ in hmtxTable.metrics.values())
+		if 'hmtx' in ttFont:
+			hmtxTable = ttFont['hmtx']
+			self.advanceWidthMax = max(adv for adv, _ in hmtxTable.metrics.values())
 
 		boundsWidthDict = {}
 		if 'glyf' in ttFont:
