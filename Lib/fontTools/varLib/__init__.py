@@ -109,7 +109,14 @@ def _add_avar(font, axes):
 
 	interesting = False
 	for axis in axes.values():
-		curve = avar.segments[axis.tag] = {}
+		# Currently, some rasterizers require that the default value maps
+		# (-1 to -1, 0 to 0, and 1 to 1) be present for all the segment
+		# maps, even when the default normalization mapping for the axis
+		# was not modified.
+		# https://github.com/googlei18n/fontmake/issues/295
+		# https://github.com/fonttools/fonttools/issues/1011
+		# TODO(anthrotype) revert this (and 19c4b37) when issue is fixed
+		curve = avar.segments[axis.tag] = {-1.0: -1.0, 0.0: 0.0, 1.0: 1.0}
 		if not axis.map:
 			continue
 
@@ -134,16 +141,6 @@ def _add_avar(font, axes):
 
 		keys = [models.normalizeValue(v, keys_triple) for v in keys]
 		vals = [models.normalizeValue(v, vals_triple) for v in vals]
-
-		# Work around rendering issue with CoreText when avar table
-		# contains segment maps with zero axis value maps.
-		# Currently, CoreText requires that the three default value maps
-		# (-1 to -1, 0 to 0, and 1 to 1) be present for all the segment
-		# maps, even when the default normalization mapping for the axis
-		# was not modified.
-		# https://github.com/googlei18n/fontmake/issues/295
-		# TODO(anthrotype) revert this change once CoreText is modified
-		curve.update({-1.0: -1.0, 0.0: 0.0, 1.0: 1.0})
 
 		if all(k == v for k, v in zip(keys, vals)):
 			continue
