@@ -1219,6 +1219,23 @@ otData = [
 		('NameID', 'SettingNameID', None, None, 'The name table index for the setting name.'),
 	]),
 
+
+	#
+	# lcar
+	#
+
+	('lcar', [
+		('Version', 'Version', None, None, 'Version number of the ligature caret table (0x00010000 for the initial version).'),
+		('uint16', 'Format', None, None, 'Format of the ligature caret table. Format 0 indicates division points are distances in font units, Format 1 indicates division points are indexes of control points.'),
+		('AATLookup(LigCaretClassEntry)', 'Carets', None, None, 'Lookup table associating glyphs with LigCaretClassEntry records.'),
+	]),
+
+	('LigCaretClassEntry', [
+		('uint16', 'DivsionPointCount', None, None, 'Number of division points.'),
+		('int16', 'DivisionPoint', 'DivsionPointCount', 0, 'Distance in font units (format 0), or the control point number (format 1), through which a subdivision is made orthogonally to the baseline.'),
+	]),
+
+
 	#
 	# morx
 	#

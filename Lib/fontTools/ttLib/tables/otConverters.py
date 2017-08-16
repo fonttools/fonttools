@@ -564,7 +564,10 @@ class AATLookup(BaseConverter):
 
 	def __init__(self, name, repeat, aux, tableClass):
 		BaseConverter.__init__(self, name, repeat, aux, tableClass)
-		self.converter = self.tableClass(name='Value', repeat=None, aux=None)
+		if issubclass(self.tableClass, SimpleValue):
+			self.converter = self.tableClass(name='Value', repeat=None, aux=None)
+		else:
+			self.converter = Table(name='Value', repeat=None, aux=None, tableClass=self.tableClass)
 
 	def read(self, reader, font, tableDict):
 		format = reader.readUShort()
