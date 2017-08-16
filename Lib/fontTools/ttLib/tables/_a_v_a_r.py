@@ -76,6 +76,10 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
             writer.begintag("segment", axis=axis)
             writer.newline()
             for key, value in sorted(self.segments[axis].items()):
+                # roundtrip float -> fixed -> float to normalize TTX output
+                # as dumped after decompiling or straight from varLib
+                key = fixedToFloat(floatToFixed(key, 14), 14)
+                value = fixedToFloat(floatToFixed(value, 14), 14)
                 writer.simpletag("mapping", **{"from": key, "to": value})
                 writer.newline()
             writer.endtag("segment")
