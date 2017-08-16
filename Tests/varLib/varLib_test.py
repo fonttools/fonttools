@@ -149,7 +149,7 @@ class BuildTest(unittest.TestCase):
         """Designspace file contains two 'weight' and 'width' axes both with
         <map> elements.
 
-        The 'width' axis only contains identity mappings, however the resulting
+        The 'width' axis only contains identity mappings, however the resulting
         avar segment will not be empty but will contain the default axis value
         maps: {-1.0: -1.0, 0.0: 0.0, 1.0: 1.0}.
 
@@ -170,7 +170,7 @@ class BuildTest(unittest.TestCase):
         only one axis ('weight') has some <map> elements.
 
         Even if no <map> elements are defined for the 'width' axis, the
-        resulting avar segment still contains the default axis value maps:
+        resulting avar segment still contains the default axis value maps:
         {-1.0: -1.0, 0.0: 0.0, 1.0: 1.0}.
 
         This is again to to work around an issue with some rasterizers:
