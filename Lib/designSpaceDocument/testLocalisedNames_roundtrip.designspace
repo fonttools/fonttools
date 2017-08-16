@@ -23,14 +23,14 @@
         <source filename="masters/masterTest1.ufo" name="master.ufo1">
             <info copy="1" />
             <location>
-                <dimension name="width" xvalue="0" />
                 <dimension name="weight" xvalue="0" />
+                <dimension name="width" xvalue="0" />
             </location>
         </source>
         <source filename="masters/masterTest2.ufo" name="master.ufo2">
             <location>
-                <dimension name="width" xvalue="0" />
                 <dimension name="weight" xvalue="1000" />
+                <dimension name="width" xvalue="0" />
             </location>
         </source>
     </sources>
@@ -44,8 +44,8 @@
             <stylemapfamilyname xml:lang="de">Montserrat Halbfett</stylemapfamilyname>
             <stylemapfamilyname xml:lang="ja">モンセラート SemiBold</stylemapfamilyname>
             <location>
-                <dimension name="width" xvalue="0" />
                 <dimension name="weight" xvalue="500" />
+                <dimension name="width" xvalue="0" />
             </location>
             <glyphs>
                 <glyph mute="1" name="arrow" />

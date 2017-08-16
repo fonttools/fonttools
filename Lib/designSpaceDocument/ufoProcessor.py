@@ -39,6 +39,63 @@ import os
     Parking the glyphs under a swapname is a bit lazy, but at least it guarantees the glyphs have the right parent.
 
 """
+
+
+""" These are some UFO specific tools for use with Mutator.
+
+
+    build() is a convenience function for reading and executing a designspace file.
+        documentPath:               filepath to the .designspace document
+        outputUFOFormatVersion:     ufo format for output
+        verbose:                    True / False for lots or no feedback
+        logPath:                    filepath to a log file
+        progressFunc:               an optional callback to report progress.
+                                    see mutatorMath.ufo.tokenProgressFunc
+
+"""
+
+def build(
+        documentPath,
+        outputUFOFormatVersion=2,
+        roundGeometry=True,
+        verbose=True,           # not supported
+        logPath=None,           # not supported
+        progressFunc=None,      # not supported
+        processRules=True
+        ):
+    """
+
+        Simple builder for UFO designspaces.
+
+    """
+    import os, glob
+    if os.path.isdir(documentPath):
+        # process all *.designspace documents in this folder
+        todo = glob.glob(os.path.join(documentPath, "*.designspace"))
+    else:
+        # process the 
+        todo = [documentPath]
+    results = []
+    for path in todo:
+        reader = DesignSpaceProcessor(ufoVersion=outputUFOFormatVersion)
+        reader.roundGeometry = roundGeometry
+        reader.read(path)
+        reader.generateUFO(processRules=processRules)
+
+        # reader = DesignSpaceDocumentReader(
+        #         path,
+        #         ufoVersion=outputUFOFormatVersion,
+        #         roundGeometry=roundGeometry,
+        #         verbose=verbose,
+        #         logPath=logPath,
+        #         progressFunc=progressFunc
+        #         )
+
+        reader = None
+    return results
+
+
+
 def swapGlyphNames(font, oldName, newName, swapNameExtension = "_______________swap"):
     if not oldName in font or not newName in font:
         return None
@@ -51,6 +108,7 @@ def swapGlyphNames(font, oldName, newName, swapNameExtension = "_______________s
     p = font[swapName].getPointPen()
     font[oldName].drawPoints(p)
     font[swapName].width = font[oldName].width
+    # lib?
     
     font[oldName].clear()
     p = font[oldName].getPointPen()
@@ -255,7 +313,9 @@ class DesignSpaceProcessor(DesignSpaceDocument):
                 # this is the source
                 self._copyFontInfo(self.fonts[sourceDescriptor.name].info, font.info)
             if sourceDescriptor.copyLib:
-                font.lib.update(self.fonts[sourceDescriptor.name].lib)
+                # excplicitly copy the font.lib items
+                for key, value in self.fonts[sourceDescriptor.name].lib.items():
+                    font.lib[key] = value
             if sourceDescriptor.copyFeatures:
                 featuresText = self.fonts[sourceDescriptor.name].features.text
                 if isinstance(featuresText, str):
@@ -353,6 +413,11 @@ class DesignSpaceProcessor(DesignSpaceDocument):
             for oldName, newName in zip(self.glyphNames, resultNames):
                 if oldName != newName:
                     swapGlyphNames(font, oldName, newName)
+        # copy the glyph lib?
+        #for sourceDescriptor in self.sources:
+        #    if sourceDescriptor.copyLib:
+        #        pass
+        #    pass
         # store designspace location in the font.lib
         font.lib['designspace'] = list(instanceDescriptor.location.items())
         return font
@@ -505,6 +570,8 @@ if __name__ == "__main__":
         f2.info.descender = -100
         f1.info.copyright = u"This is the copyright notice from master 1"
         f2.info.copyright = u"This is the copyright notice from master 2"
+        f1.lib['ufoProcessor.test.lib.entry'] = "Lib entry for master 1"
+        f2.lib['ufoProcessor.test.lib.entry'] = "Lib entry for master 2"
         f1.save(path1, 2)
         f2.save(path2, 2)
         return path1, path2, path3, path4, path5
@@ -542,6 +609,7 @@ if __name__ == "__main__":
         s1.name = "test.master.1"
         s1.copyInfo = True
         s1.copyFeatures = True
+        s1.copyLib = True
         d.addSource(s1)
         s2 = SourceDescriptor()
         s2.path = m2
@@ -563,6 +631,7 @@ if __name__ == "__main__":
             i.kerning = True
             if counter == 2:
                 i.glyphs['glyphTwo'] = dict(name="glyphTwo", mute=True)
+                i.copyLib = True
             d.addInstance(i)
         d.write(docPath)
 
