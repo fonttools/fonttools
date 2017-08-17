@@ -1318,4 +1318,25 @@ otData = [
 	# If the 'morx' table version is 3 or greater, then the last subtable in the chain is followed by a subtableGlyphCoverageArray, as described below.
 	#		('Offset', 'MarkGlyphSetsDef', None, 'int(round(Version*0x10000)) >= 0x00010002', 'Offset to the table of mark set definitions-from beginning of GDEF header (may be NULL)'),
 
+
+	#
+	# prop
+	#
+
+	('prop', [
+		('Fixed', 'Version', None, None, 'Version number of the AAT glyphs property table. Version 1.0 is the initial table version. Version 2.0, which is recognized by macOS 8.5 and later, adds support for the “attaches on right” bit. Version 3.0, which gets recognized by macOS X and iOS, adds support for the additional directional properties defined in Unicode 3.0.'),
+		('struct', 'GlyphProperties', None, None, 'Glyph properties.'),
+	]),
+
+	('GlyphPropertiesFormat0', [
+		('uint16', 'Format', None, None, 'Format, = 0.'),
+		('uint16', 'DefaultProperties', None, None, 'Default properties applied to a glyph. Since there is no lookup table in prop format 0, the default properties get applied to every glyph in the font.'),
+        ]),
+
+	('GlyphPropertiesFormat1', [
+		('uint16', 'Format', None, None, 'Format, = 1.'),
+		('uint16', 'DefaultProperties', None, None, 'Default properties applied to a glyph if that glyph is not present in the Properties lookup table.'),
+		('AATLookup(uint16)', 'Properties', None, None, 'Lookup data associating glyphs with their properties.'),
+	]),
+
 ]
