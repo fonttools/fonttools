@@ -1,3 +1,6 @@
+3.15.0 (released 2017-08-17)
+----------------------------
+
 - [AAT] Added support for AAT lookups. The ``lcar`` table can be decompiled
   and recompiled; futher work needed to handle ``morx`` table (#1025).
 - [subset] Keep (empty) DefaultLangSys for Script 'DFLT' (6eb807b5).
