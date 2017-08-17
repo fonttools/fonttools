@@ -182,7 +182,7 @@ class VariationModel(object):
 			axis = next(iter(loc))
 			value = loc[axis]
 			if axis not in axisPoints:
-				axisPoints[axis] = {0}
+				axisPoints[axis] = {0.}
 			assert value not in axisPoints[axis]
 			axisPoints[axis].add(value)
 

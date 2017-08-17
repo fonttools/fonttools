@@ -93,51 +93,97 @@ class BuildTest(unittest.TestCase):
         font.save(savepath, reorderTables=None)
         return font, savepath
 
+    def _run_varlib_build_test(self, designspace_name, font_name, tables,
+                               expected_ttx_name):
+        suffix = '.ttf'
+        ds_path = self.get_test_input(designspace_name + '.designspace')
+        ufo_dir = self.get_test_input('master_ufo')
+        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', font_name + '-')
+        for path in ttx_paths:
+            self.compile_font(path, suffix, self.tempdir)
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
+        varfont, model, _ = build(ds_path, finder)
+
+        expected_ttx_path = self.get_test_output(expected_ttx_name + '.ttx')
+        self.expect_ttx(varfont, expected_ttx_path, tables)
+        self.check_ttx_dump(varfont, expected_ttx_path, tables, suffix)
 # -----
 # Tests
 # -----
 
     def test_varlib_build_ttf(self):
         """Designspace file contains <axes> element."""
-        suffix = '.ttf'
-        ds_path = self.get_test_input('Build.designspace')
-        ufo_dir = self.get_test_input('master_ufo')
-        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+        self._run_varlib_build_test(
+            designspace_name='Build',
+            font_name='TestFamily',
+            tables=['GDEF', 'HVAR', 'MVAR', 'fvar', 'gvar'],
+            expected_ttx_name='Build'
+        )
 
-        self.temp_dir()
-        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily-')
-        for path in ttx_paths:
-            self.compile_font(path, suffix, self.tempdir)
-
-        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
-        varfont, model, _ = build(ds_path, finder)
-
-        tables = ['GDEF', 'HVAR', 'MVAR', 'fvar', 'gvar']
-        expected_ttx_path = self.get_test_output('Build.ttx')
-        self.expect_ttx(varfont, expected_ttx_path, tables)
-        self.check_ttx_dump(varfont, expected_ttx_path, tables, suffix)
-
-
-    def test_varlib_build3_ttf(self):
+    def test_varlib_build_no_axes_ttf(self):
         """Designspace file does not contain an <axes> element."""
-        suffix = '.ttf'
-        ds_path = self.get_test_input('InterpolateLayout3.designspace')
-        ufo_dir = self.get_test_input('master_ufo')
-        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+        self._run_varlib_build_test(
+            designspace_name='InterpolateLayout3',
+            font_name='TestFamily2',
+            tables=['GDEF', 'HVAR', 'MVAR', 'fvar', 'gvar'],
+            expected_ttx_name='Build3'
+        )
 
-        self.temp_dir()
-        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily2-')
-        for path in ttx_paths:
-            self.compile_font(path, suffix, self.tempdir)
+    def test_varlib_avar_single_axis(self):
+        """Designspace file contains a 'weight' axis with <map> elements
+        modifying the normalization mapping. An 'avar' table is generated.
+        """
+        test_name = 'BuildAvarSingleAxis'
+        self._run_varlib_build_test(
+            designspace_name=test_name,
+            font_name='TestFamily3',
+            tables=['avar'],
+            expected_ttx_name=test_name
+        )
 
-        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
-        varfont, model, _ = build(ds_path, finder)
+    def test_varlib_avar_with_identity_maps(self):
+        """Designspace file contains two 'weight' and 'width' axes both with
+        <map> elements.
 
-        tables = ['GDEF', 'HVAR', 'MVAR', 'fvar', 'gvar']
-        expected_ttx_path = self.get_test_output('Build3.ttx')
-        self.expect_ttx(varfont, expected_ttx_path, tables)
-        self.check_ttx_dump(varfont, expected_ttx_path, tables, suffix)
+        The 'width' axis only contains identity mappings, however the resulting
+        avar segment will not be empty but will contain the default axis value
+        maps: {-1.0: -1.0, 0.0: 0.0, 1.0: 1.0}.
 
+        This is to to work around an issue with some rasterizers:
+        https://github.com/googlei18n/fontmake/issues/295
+        https://github.com/fonttools/fonttools/issues/1011
+        """
+        test_name = 'BuildAvarIdentityMaps'
+        self._run_varlib_build_test(
+            designspace_name=test_name,
+            font_name='TestFamily3',
+            tables=['avar'],
+            expected_ttx_name=test_name
+        )
+
+    def test_varlib_avar_empty_axis(self):
+        """Designspace file contains two 'weight' and 'width' axes, but
+        only one axis ('weight') has some <map> elements.
+
+        Even if no <map> elements are defined for the 'width' axis, the
+        resulting avar segment still contains the default axis value maps:
+        {-1.0: -1.0, 0.0: 0.0, 1.0: 1.0}.
+
+        This is again to to work around an issue with some rasterizers:
+        https://github.com/googlei18n/fontmake/issues/295
+        https://github.com/fonttools/fonttools/issues/1011
+        """
+        test_name = 'BuildAvarEmptyAxis'
+        self._run_varlib_build_test(
+            designspace_name=test_name,
+            font_name='TestFamily3',
+            tables=['avar'],
+            expected_ttx_name=test_name
+        )
 
     def test_varlib_main_ttf(self):
         """Mostly for testing varLib.main()
