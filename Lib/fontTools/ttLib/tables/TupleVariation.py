@@ -65,7 +65,7 @@ class TupleVariation(object):
 		for axis in axisTags:
 			value = self.axes.get(axis)
 			if value is not None:
-				minValue, value, maxValue = value
+				minValue, value, maxValue = (float(v) for v in value)
 				defaultMinValue = min(value, 0.0)  # -0.3 --> -0.3; 0.7 --> 0.0
 				defaultMaxValue = max(value, 0.0)  # -0.3 -->  0.0; 0.7 --> 0.7
 				if minValue == defaultMinValue and maxValue == defaultMaxValue:
