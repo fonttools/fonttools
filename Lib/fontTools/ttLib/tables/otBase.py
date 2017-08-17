@@ -782,7 +782,6 @@ class FormatSwitchingBaseTable(BaseTable):
 
 	def readFormat(self, reader):
 		self.Format = reader.readUShort()
-		assert self.Format != 0, (self, reader.pos, len(reader.data))
 
 	def writeFormat(self, writer):
 		writer.writeUShort(self.Format)
