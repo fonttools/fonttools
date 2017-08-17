@@ -1337,6 +1337,40 @@ otData = [
 		('uint16', 'Format', None, None, 'Format, = 1.'),
 		('uint16', 'DefaultProperties', None, None, 'Default properties applied to a glyph if that glyph is not present in the Properties lookup table.'),
 		('AATLookup(uint16)', 'Properties', None, None, 'Lookup data associating glyphs with their properties.'),
+        ]),
+
+
+	#
+	# opbd
+	#
+
+	('opbd', [
+		('Version', 'Version', None, None, 'Version number of the optical bounds table (0x00010000 for the initial version).'),
+		('struct', 'OpticalBounds', None, None, 'Optical bounds table.'),
+	]),
+
+	('OpticalBoundsFormat0', [
+		('uint16', 'Format', None, None, 'Format of the optical bounds table, = 0.'),
+		('AATLookup(OpticalBoundsDeltas)', 'OpticalBoundsDeltas', None, None, 'Lookup table associating glyphs with their optical bounds, given as deltas in font units.'),
+	]),
+
+	('OpticalBoundsFormat1', [
+		('uint16', 'Format', None, None, 'Format of the optical bounds table, = 1.'),
+		('AATLookup(OpticalBoundsPoints)', 'OpticalBoundsPoints', None, None, 'Lookup table associating glyphs with their optical bounds, given as references to control points.'),
+	]),
+
+	('OpticalBoundsDeltas', [
+		('int16', 'Left', None, None, 'Delta value for the left-side optical edge.'),
+		('int16', 'Top', None, None, 'Delta value for the top-side optical edge.'),
+		('int16', 'Right', None, None, 'Delta value for the right-side optical edge.'),
+		('int16', 'Bottom', None, None, 'Delta value for the bottom-side optical edge.'),
+	]),
+
+	('OpticalBoundsPoints', [
+		('int16', 'Left', None, None, 'Control point index for the left-side optical edge, or -1 if this glyph has none.'),
+		('int16', 'Top', None, None, 'Control point index for the top-side optical edge, or -1 if this glyph has none.'),
+		('int16', 'Right', None, None, 'Control point index for the right-side optical edge, or -1 if this glyph has none.'),
+		('int16', 'Bottom', None, None, 'Control point index for the bottom-side optical edge, or -1 if this glyph has none.'),
 	]),
 
 ]
