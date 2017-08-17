@@ -1,3 +1,13 @@
+- [AAT] Added support for AAT lookups. The ``lcar`` table can be decompiled
+  and recompiled; futher work needed to handle ``morx`` table (#1025).
+- [subset] Keep (empty) DefaultLangSys for Script 'DFLT' (6eb807b5).
+- [subset] Support GSUB/GPOS.FeatureVariations (fe01d87b).
+- [varLib] In ``models.supportScalars``, ignore an axis when its peak value
+  is 0 (fixes #1020).
+- [varLib] Add default mappings to all axes in avar to fix rendering issue
+  in some rasterizers (19c4b377, 04eacf13).
+- [varLib] Flatten multiple tail PairPosFormat2 subtables before merging
+  (c55ef525).
 - [ttLib] Added support for recalculating font bounding box in ``CFF`` and
   ``head`` tables, and min/max values in ``hhea`` and ``vhea`` tables (#970).
 
