@@ -89,6 +89,13 @@ class _LazyList(UserList):
 			item = self.conv.read(self.reader, self.font, {})
 			self.data[k] = item
 		return item
+	def __add__(self, other):
+		if isinstance(other, UserList):
+			other = other[:]
+		return self[:] + other
+	# Not needed currently
+	__radd__ = NotImplemented
+	__iadd__ = NotImplemented
 
 class BaseConverter(object):
 
