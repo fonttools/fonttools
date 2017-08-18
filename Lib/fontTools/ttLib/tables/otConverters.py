@@ -70,15 +70,18 @@ def buildConverters(tableSpec, tableNamespace):
 class _MissingItem(tuple):
 	__slots__ = ()
 
+
 try:
 	from collections import UserList
-except:
+except ImportError:
 	from UserList import UserList
+
 
 class _LazyList(UserList):
 
 	def __getslice__(self, i, j):
 		return self.__getitem__(slice(i, j))
+
 	def __getitem__(self, k):
 		if isinstance(k, slice):
 			indices = range(*k.indices(len(self)))
@@ -89,13 +92,21 @@ class _LazyList(UserList):
 			item = self.conv.read(self.reader, self.font, {})
 			self.data[k] = item
 		return item
+
 	def __add__(self, other):
-		if isinstance(other, UserList):
-			other = other[:]
-		return self[:] + other
-	# Not needed currently
-	__radd__ = NotImplemented
-	__iadd__ = NotImplemented
+		if isinstance(other, _LazyList):
+			other = list(other)
+		elif isinstance(other, list):
+			pass
+		else:
+			return NotImplemented
+		return list(self) + other
+
+	def __radd__(self, other):
+		if not isinstance(other, list):
+			return NotImplemented
+		return other + list(self)
+
 
 class BaseConverter(object):
 
