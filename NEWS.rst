@@ -1,3 +1,12 @@
+- [otConverters] Implemented ``__add__`` and ``__radd__`` methods on
+  ``otConverters._LazyList`` that decompile a lazy list before adding
+  it to another list or ``_LazyList`` instance. Fixes an ``AttributeError``
+  in the ``subset`` module when attempting to sum ``_LazyList`` objects
+  (6ef48bd2, 1aef1683).
+- [AAT] Support the `opbd` table with optical bounds (a47f6588).
+- [AAT] Support `prop` table with glyph properties (d05617b4).
+
+
 3.15.0 (released 2017-08-17)
 ----------------------------
 
