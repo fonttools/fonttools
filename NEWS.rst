@@ -1,3 +1,6 @@
+3.15.1 (released 2017-08-18)
+----------------------------
+
 - [otConverters] Implemented ``__add__`` and ``__radd__`` methods on
   ``otConverters._LazyList`` that decompile a lazy list before adding
   it to another list or ``_LazyList`` instance. Fixes an ``AttributeError``
