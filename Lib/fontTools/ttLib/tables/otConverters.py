@@ -749,7 +749,9 @@ class AATLookup(BaseConverter):
 			first = reader.readUShort()
 			offset = reader.readUShort()
 			if last != 0xFFFF:
-				dataReader = reader.getSubReader(pos + offset)
+				# https://github.com/fonttools/fonttools/issues/1031
+				dataReader = reader.getSubReader(0)
+				dataReader.seek(pos + offset)
 				data = self.converter.readArray(
 					dataReader, font, tableDict=None,
 					count=last - first + 1)
