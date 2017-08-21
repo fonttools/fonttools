@@ -13,6 +13,7 @@ import sys
 import struct
 import array
 import logging
+from collections import Counter
 from types import MethodType
 
 __usage__ = "pyftsubset font-file [glyph...] [--option=value]..."
@@ -1703,6 +1704,26 @@ def prune_pre_subset(self, font, options):
 def subset_glyphs(self, s):
     self.extraNames = []    # This seems to do it
     return True # Required table
+
+@_add_method(ttLib.getTableClass('prop'))
+def subset_glyphs(self, s):
+    prop = self.table.GlyphProperties
+    if prop.Format == 0:
+        return prop.DefaultProperties != 0
+    elif prop.Format == 1:
+        prop.Properties = {g: prop.Properties.get(g, prop.DefaultProperties)
+                           for g in s.glyphs}
+        mostCommon, _cnt = Counter(prop.Properties.values()).most_common(1)[0]
+        prop.DefaultProperties = mostCommon
+        prop.Properties = {g: prop for g, prop in prop.Properties.items()
+                           if prop != mostCommon}
+        if len(prop.Properties) == 0:
+            del prop.Properties
+            prop.Format = 0
+            return prop.DefaultProperties != 0
+        return True
+    else:
+        assert False, "unknown 'prop' format %s" % prop.Format
 
 @_add_method(ttLib.getTableClass('COLR'))
 def closure_glyphs(self, s):
