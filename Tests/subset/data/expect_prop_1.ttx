@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <prop>
+    <Version value="3.0"/>
+    <GlyphProperties Format="1">
+      <DefaultProperties value="3"/>
+      <Properties>
+        <Lookup glyph=".notdef" value="0"/>
+      </Properties>
+    </GlyphProperties>
+  </prop>
+  
+</ttFont>

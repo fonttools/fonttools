@@ -123,6 +123,41 @@ class SubsetTest(unittest.TestCase):
         subsetfont = TTFont(subsetpath)
         self.expect_ttx(subsetfont, self.getpath("expect_keep_math.ttx"), ["GlyphOrder", "CFF ", "MATH", "hmtx"])
 
+    def test_subset_prop_remove_default_zero(self):
+        # If all glyphs have an AAT glyph property with value 0,
+        # the "prop" table should be removed from the subsetted font.
+        _, fontpath = self.compile_font(self.getpath("TestPROP.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--unicodes=U+0041",
+                     "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.assertNotIn("prop", subsetfont)
+
+    def test_subset_prop_0(self):
+        # If all glyphs share the same AAT glyph properties, the "prop" table
+        # in the subsetted font should use format 0.
+        #
+        # Unless the shared value is zero, in which case the subsetted font
+        # should have no "prop" table at all. But that case has already been
+        # tested above in test_subset_prop_remove_default_zero().
+        _, fontpath = self.compile_font(self.getpath("TestPROP.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--unicodes=U+0030-0032", "--no-notdef-glyph",
+                     "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_prop_0.ttx"), ["prop"])
+
+    def test_subset_prop_1(self):
+        # If not all glyphs share the same AAT glyph properties, the subsetted
+        # font should contain a "prop" table in format 1. To save space, the
+        # DefaultProperties should be set to the most frequent value.
+        _, fontpath = self.compile_font(self.getpath("TestPROP.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--unicodes=U+0030-0032", "--notdef-outline",
+                     "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_prop_1.ttx"), ["prop"])
+
     def test_options(self):
         # https://github.com/behdad/fonttools/issues/413
         opt1 = subset.Options()
