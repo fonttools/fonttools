@@ -1694,6 +1694,22 @@ def subset_glyphs(self, s):
     self.numVertOriginYMetrics = len(self.VOriginRecords)
     return True    # Never drop; has default metrics
 
+@_add_method(ttLib.getTableClass('opbd'))
+def subset_glyphs(self, s):
+    table = self.table.OpticalBounds
+    if table.Format == 0:
+        table.OpticalBoundsDeltas = {glyph: table.OpticalBoundsDeltas[glyph]
+                                     for glyph in s.glyphs
+                                     if glyph in table.OpticalBoundsDeltas}
+        return len(table.OpticalBoundsDeltas) > 0
+    elif table.Format == 1:
+        table.OpticalBoundsPoints = {glyph: table.OpticalBoundsPoints[glyph]
+                                     for glyph in s.glyphs
+                                     if glyph in table.OpticalBoundsPoints}
+        return len(table.OpticalBoundsPoints) > 0
+    else:
+        assert False, "unknown 'opbd' format %s" % table.Format
+
 @_add_method(ttLib.getTableClass('post'))
 def prune_pre_subset(self, font, options):
     if not options.glyph_names:

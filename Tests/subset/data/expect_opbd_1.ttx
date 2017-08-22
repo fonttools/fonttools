@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <opbd>
+    <Version value="0x00010000"/>
+    <OpticalBounds Format="1">
+      <OpticalBoundsPoints>
+        <Lookup glyph="A">
+          <Left value="3"/>
+          <Top value="4"/>
+          <Right value="5"/>
+          <Bottom value="6"/>
+        </Lookup>
+      </OpticalBoundsPoints>
+    </OpticalBounds>
+  </opbd>
+  
+</ttFont>
