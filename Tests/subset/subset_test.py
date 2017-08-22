@@ -123,6 +123,31 @@ class SubsetTest(unittest.TestCase):
         subsetfont = TTFont(subsetpath)
         self.expect_ttx(subsetfont, self.getpath("expect_keep_math.ttx"), ["GlyphOrder", "CFF ", "MATH", "hmtx"])
 
+    def test_subset_opbd_remove(self):
+        # In the test font, only the glyphs 'A' and 'zero' have an entry in
+        # the Optical Bounds table. When subsetting, we do not request any
+        # of those glyphs. Therefore, the produced subsetted font should
+        # not contain an 'opbd' table.
+        _, fontpath = self.compile_font(self.getpath("TestOPBD-0.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--glyphs=one", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.assertNotIn("opbd", subsetfont)
+
+    def test_subset_opbd_format_0(self):
+        _, fontpath = self.compile_font(self.getpath("TestOPBD-0.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--glyphs=A", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_opbd_0.ttx"), ["opbd"])
+
+    def test_subset_opbd_format_1(self):
+        _, fontpath = self.compile_font(self.getpath("TestOPBD-1.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--glyphs=A", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_opbd_1.ttx"), ["opbd"])
+
     def test_subset_prop_remove_default_zero(self):
         # If all glyphs have an AAT glyph property with value 0,
         # the "prop" table should be removed from the subsetted font.
