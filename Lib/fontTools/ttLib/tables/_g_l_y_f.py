@@ -16,7 +16,9 @@ import sys
 import struct
 import array
 import logging
-
+import os
+from fontTools.misc import xmlWriter
+from fontTools.ttLib import nameToIdentifier
 
 log = logging.getLogger(__name__)
 
@@ -110,7 +112,9 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			ttFont['maxp'].numGlyphs = len(self.glyphs)
 		return data
 
-	def toXML(self, writer, ttFont, progress=None):
+	def toXML(self, writer, ttFont, progress=None, tablePath=None, 
+            ttLibVersion=None, idlefunc=None, newlinestr=None, splitGlyphs=None):
+  
 		writer.newline()
 		glyphNames = ttFont.getGlyphNames()
 		writer.comment("The xMin, yMin, xMax and yMax values\nwill be recalculated by the compiler.")
@@ -126,17 +130,34 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			counter = counter + 1
 			glyph = self[glyphName]
 			if glyph.numberOfContours:
-				writer.begintag('TTGlyph', [
-						("name", glyphName),
-						("xMin", glyph.xMin),
-						("yMin", glyph.yMin),
-						("xMax", glyph.xMax),
-						("yMax", glyph.yMax),
-						])
-				writer.newline()
-				glyph.toXML(writer, ttFont)
-				writer.endtag('TTGlyph')
-				writer.newline()
+				if splitGlyphs:
+					path, ext = os.path.splitext(tablePath)
+					fileNameTemplate = path + ".%s" + ext
+					glyphPath = fileNameTemplate % nameToIdentifier(glyphName)
+					glyphWriter = xmlWriter.XMLWriter(glyphPath, idlefunc=idlefunc,
+				      newlinestr=newlinestr)
+					glyphWriter.begintag("ttFont", ttLibVersion=ttLibVersion)
+					glyphWriter.newline()
+					glyphWriter.newline()
+					writer.simpletag("TTGlyph", src=os.path.basename(glyphPath))
+					writer.newline()
+				else:
+					glyphWriter = writer
+				glyphWriter.begintag('TTGlyph', [
+							("name", glyphName),
+							("xMin", glyph.xMin),
+							("yMin", glyph.yMin),
+							("xMax", glyph.xMax),
+							("yMax", glyph.yMax),
+							])
+				glyphWriter.newline()
+				glyph.toXML(glyphWriter, ttFont)
+				glyphWriter.endtag('TTGlyph')
+				glyphWriter.newline()
+				if splitGlyphs:
+					glyphWriter.endtag("ttFont")
+					glyphWriter.newline()
+					glyphWriter.close()
 			else:
 				writer.simpletag('TTGlyph', name=glyphName)
 				writer.comment("contains no outline data")

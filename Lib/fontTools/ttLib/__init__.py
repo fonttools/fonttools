@@ -247,7 +247,8 @@ class TTFont(object):
 
 	def saveXML(self, fileOrPath, progress=None, quiet=None,
 			tables=None, skipTables=None, splitTables=False, disassembleInstructions=True,
-			bitmapGlyphDataFormat='raw', newlinestr=None):
+			splitGlyphs=False, bitmapGlyphDataFormat='raw', newlinestr=None):
+
 		"""Export the font as TTX (an XML-based text file), or as a series of text
 		files when splitTables is true. In the latter case, the 'fileOrPath'
 		argument should be a path to a directory.
@@ -290,7 +291,7 @@ class TTFont(object):
 
 		if not splitTables:
 			writer.newline()
-		else:
+		if splitTables or splitGlyphs:
 			# 'fileOrPath' must now be a path
 			path, ext = os.path.splitext(fileOrPath)
 			fileNameTemplate = path + ".%s" + ext
@@ -299,8 +300,11 @@ class TTFont(object):
 			if progress:
 				progress.set(i)
 			tag = tables[i]
-			if splitTables:
+			if splitTables or splitGlyphs:
 				tablePath = fileNameTemplate % tagToIdentifier(tag)
+			else:
+				tablePath = None
+			if splitTables:
 				tableWriter = xmlWriter.XMLWriter(tablePath, idlefunc=idlefunc,
 						newlinestr=newlinestr)
 				tableWriter.begintag("ttFont", ttLibVersion=version)
@@ -310,7 +314,8 @@ class TTFont(object):
 				writer.newline()
 			else:
 				tableWriter = writer
-			self._tableToXML(tableWriter, tag, progress)
+			self._tableToXML(tableWriter, tag, progress, tablePath, ttLibVersion=version,
+			    idlefunc=idlefunc, newlinestr=newlinestr, splitGlyphs=splitGlyphs)
 			if splitTables:
 				tableWriter.endtag("ttFont")
 				tableWriter.newline()
@@ -324,7 +329,8 @@ class TTFont(object):
 		if not hasattr(fileOrPath, "write") and fileOrPath != "-":
 			writer.close()
 
-	def _tableToXML(self, writer, tag, progress, quiet=None):
+	def _tableToXML(self, writer, tag, progress, tablePath, ttLibVersion=None, 
+	                idlefunc=None, newlinestr=None, splitGlyphs=None, quiet=None):
 		if quiet is not None:
 			deprecateArgument("quiet", "configure logging instead")
 		if tag in self:
@@ -346,7 +352,9 @@ class TTFont(object):
 			attrs['raw'] = True
 		writer.begintag(xmlTag, **attrs)
 		writer.newline()
-		if tag in ("glyf", "CFF "):
+		if tag in ("glyf"):
+			table.toXML(writer, self, progress, tablePath, ttLibVersion, idlefunc, newlinestr, splitGlyphs)
+		elif tag in ("CFF "):
 			table.toXML(writer, self, progress)
 		else:
 			table.toXML(writer, self)
@@ -862,6 +870,29 @@ def _escapechar(c):
 		return hex(byteord(c))[2:]
 
 
+def nameToIdentifier(name):
+	"""Convert a name to a valid (but UGLY) python identifier,
+	as well as a filename that's guaranteed to be unique even on a
+	caseless file system. Each character is mapped to two characters.
+	Lowercase letters get an underscore before the letter, uppercase
+	letters get an underscore after the letter. Trailing spaces are
+	trimmed. Illegal characters are escaped as two hex bytes. If the
+	result starts with a number (as the result of a hex escape), an
+	extra underscore is prepended. Examples:
+		'glyf' -> '_g_l_y_f'
+		'cvt ' -> '_c_v_t'
+		'OS/2' -> 'O_S_2f_2'
+	"""
+	import re
+	while len(name) > 1 and name[-1] == ' ':
+		name = name[:-1]
+	ident = ""
+	for c in name:
+		ident = ident + _escapechar(c)
+	if re.match("[0-9]", ident):
+		ident = "_" + ident
+	return ident
+
 def tagToIdentifier(tag):
 	"""Convert a table tag to a valid (but UGLY) python identifier,
 	as well as a filename that's guaranteed to be unique even on a
@@ -875,20 +906,11 @@ def tagToIdentifier(tag):
 		'cvt ' -> '_c_v_t'
 		'OS/2' -> 'O_S_2f_2'
 	"""
-	import re
-	tag = Tag(tag)
 	if tag == "GlyphOrder":
 		return tag
+	ret = nameToIdentifier(tag)
 	assert len(tag) == 4, "tag should be 4 characters long"
-	while len(tag) > 1 and tag[-1] == ' ':
-		tag = tag[:-1]
-	ident = ""
-	for c in tag:
-		ident = ident + _escapechar(c)
-	if re.match("[0-9]", ident):
-		ident = "_" + ident
-	return ident
-
+	return ret
 
 def identifierToTag(ident):
 	"""the opposite of tagToIdentifier()"""
