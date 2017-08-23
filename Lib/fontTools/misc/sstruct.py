@@ -72,7 +72,7 @@ def pack(fmt, obj):
 		elif isinstance(value, basestring):
 			value = tobytes(value)
 		elements.append(value)
-	data = struct.pack(*(formatstring,) + tuple(elements))
+	data = spack(*(formatstring,) + tuple(elements))
 	return data
 
 def unpack(fmt, data, obj=None):
@@ -84,7 +84,7 @@ def unpack(fmt, data, obj=None):
 		d = obj
 	else:
 		d = obj.__dict__
-	elements = struct.unpack(formatstring, data)
+	elements = sunpack(formatstring, data)
 	for i in range(len(names)):
 		name = names[i]
 		value = elements[i]
@@ -105,7 +105,17 @@ def unpack2(fmt, data, obj=None):
 
 def calcsize(fmt):
 	formatstring, names, fixes = getformat(fmt)
-	return struct.calcsize(formatstring)
+	return scalcsize(formatstring)
+
+# decorator
+def scalcsize(fmt):
+    return struct.calcsize(str(fmt))
+
+def sunpack(fmt, data):
+    return struct.unpack(str(fmt), data)
+
+def spack(fmt, *args):
+    return struct.pack(str(fmt), *args)
 
 
 # matches "name:formatchar" (whitespace is allowed)
