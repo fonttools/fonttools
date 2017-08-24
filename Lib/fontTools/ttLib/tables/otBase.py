@@ -611,7 +611,9 @@ class BaseTable(object):
 				conv = conv.getConverter(reader.tableTag,
 				                         table["MorphType"])
 			if conv.repeat:
-				if conv.repeat in table:
+				if isinstance(conv.repeat, int):
+					countValue = conv.repeat
+				elif conv.repeat in table:
 					countValue = table[conv.repeat]
 				else:
 					# conv.repeat is a propagated count
@@ -656,7 +658,9 @@ class BaseTable(object):
 				if value is None:
 					value = []
 				countValue = len(value) - conv.aux
-				if conv.repeat in table:
+				if isinstance(conv.repeat, int):
+					assert len(value) == conv.repeat, 'expected %d values, got %d' % (conv.repeat, len(value))
+				elif conv.repeat in table:
 					CountReference(table, conv.repeat, value=countValue)
 				else:
 					# conv.repeat is a propagated count

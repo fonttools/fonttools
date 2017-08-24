@@ -1187,6 +1187,44 @@ otData = [
 	]),
 
 	#
+	# bsln
+	#
+
+	('bsln', [
+		('Version', 'Version', None, None, 'Version number of the AAT baseline table (0x00010000 for the initial version).'),
+		('struct', 'Baseline', None, None, 'Baseline table.'),
+	]),
+
+	('BaselineFormat0', [
+		('uint16', 'Format', None, None, 'Format of the baseline table, = 0.'),
+		('uint16', 'DefaultBaseline', None, None, 'Default baseline value for all glyphs. This value can be from 0 through 31.'),
+		('uint16', 'Delta', 32, 0, u'These are the FUnit distance deltas from the font’s natural baseline to the other baselines used in the font. A total of 32 deltas must be assigned.'),
+	]),
+
+	('BaselineFormat1', [
+		('uint16', 'Format', None, None, 'Format of the baseline table, = 1.'),
+		('uint16', 'DefaultBaseline', None, None, 'Default baseline value for all glyphs. This value can be from 0 through 31.'),
+		('uint16', 'Delta', 32, 0, u'These are the FUnit distance deltas from the font’s natural baseline to the other baselines used in the font. A total of 32 deltas must be assigned.'),
+		('AATLookup(uint16)', 'BaselineValues', None, None, 'Lookup table that maps glyphs to their baseline values.'),
+	]),
+
+	('BaselineFormat2', [
+		('uint16', 'Format', None, None, 'Format of the baseline table, = 1.'),
+		('uint16', 'DefaultBaseline', None, None, 'Default baseline value for all glyphs. This value can be from 0 through 31.'),
+		('GlyphID', 'StandardGlyph', None, None, 'Glyph index of the glyph in this font to be used to set the baseline values. This glyph must contain a set of control points (whose numbers are contained in the following field) that determines baseline distances.'),
+		('uint16', 'ControlPoint', 32, 0, 'Array of 32 control point numbers, associated with the standard glyph. A value of 0xFFFF means there is no corresponding control point in the standard glyph.'),
+	]),
+
+	('BaselineFormat3', [
+		('uint16', 'Format', None, None, 'Format of the baseline table, = 1.'),
+		('uint16', 'DefaultBaseline', None, None, 'Default baseline value for all glyphs. This value can be from 0 through 31.'),
+		('GlyphID', 'StandardGlyph', None, None, 'Glyph index of the glyph in this font to be used to set the baseline values. This glyph must contain a set of control points (whose numbers are contained in the following field) that determines baseline distances.'),
+		('uint16', 'ControlPoint', 32, 0, 'Array of 32 control point numbers, associated with the standard glyph. A value of 0xFFFF means there is no corresponding control point in the standard glyph.'),
+		('AATLookup(uint16)', 'BaselineValues', None, None, 'Lookup table that maps glyphs to their baseline values.'),
+	]),
+
+
+	#
 	# feat
 	#
 
