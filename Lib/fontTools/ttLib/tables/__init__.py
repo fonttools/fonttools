@@ -51,6 +51,7 @@ def _moduleFinderHint():
 	from . import V_O_R_G_
 	from . import V_V_A_R_
 	from . import _a_v_a_r
+	from . import _b_s_l_n
 	from . import _c_m_a_p
 	from . import _c_v_a_r
 	from . import _c_v_t
