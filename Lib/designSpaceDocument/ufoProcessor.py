@@ -589,7 +589,7 @@ if __name__ == "__main__":
         f1.save(path1, 2)
         return path1, path2
 
-    def test0(docPath):
+    def testDocument(docPath):
         # make the test fonts and a test document
         testFontPath = os.path.join(os.getcwd(), "automatic_testfonts")
         m1, m2, i1, i2, i3 = makeTestFonts(testFontPath)
@@ -616,6 +616,7 @@ if __name__ == "__main__":
         #s2.copyInfo = True
         d.addSource(s2)
 
+
         for counter in range(3):
             factor = counter / 2        
             i = InstanceDescriptor()
@@ -630,10 +631,12 @@ if __name__ == "__main__":
             if counter == 2:
                 i.glyphs['glyphTwo'] = dict(name="glyphTwo", mute=True)
                 i.copyLib = True
+            if counter == 2:
+               i.glyphs['narrow'] = dict(instanceLocation=dict(pop=400), unicodes=[0x123, 0x124, 0x125])
             d.addInstance(i)
         d.write(docPath)
 
-    def test1(docPath):
+    def testGenerateInstances(docPath):
         # execute the test document
         d = DesignSpaceProcessor()
         d.read(docPath)
@@ -662,12 +665,28 @@ if __name__ == "__main__":
         assert new['wide.component'].components[0].baseGlyph == "narrow"
         assert new['narrow.component'].components[0].baseGlyph == "wide"
 
+    def testUnicodes(docPath):
+        # after executing testSwap there should be some test fonts
+        # let's check if the unicode values for glyph "narrow" arrive at the right place.
+        d = DesignSpaceProcessor()
+        d.read(docPath)
+        for instance in d.instances:
+            f = Font(instance.path)
+            if instance.name == "TestFamily-TestStyle_pop1000.000":
+                assert f['narrow'].unicodes == [291, 292, 293]
+            else:
+                assert f['narrow'].unicodes == [207]
+
+
+
     selfTest = True
     if selfTest:
         testRoot = os.path.join(os.getcwd(), "automatic_testfonts")
         if os.path.exists(testRoot):
             shutil.rmtree(testRoot)
         docPath = os.path.join(testRoot, "automatic_test.designspace")
-        test0(docPath)
-        test1(docPath)
+        testDocument(docPath)
+        testGenerateInstances(docPath)
         testSwap(docPath)
+        testUnicodes(docPath)
+
