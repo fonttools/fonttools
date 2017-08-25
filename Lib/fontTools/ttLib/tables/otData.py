@@ -1264,13 +1264,27 @@ otData = [
 
 	('lcar', [
 		('Version', 'Version', None, None, 'Version number of the ligature caret table (0x00010000 for the initial version).'),
+		('struct', 'LigatureCarets', None, None, 'Ligature carets table.'),
+        ]),
+
+	('LigatureCaretsFormat0', [
 		('uint16', 'Format', None, None, 'Format of the ligature caret table. Format 0 indicates division points are distances in font units, Format 1 indicates division points are indexes of control points.'),
-		('AATLookup(LigCaretClassEntry)', 'Carets', None, None, 'Lookup table associating glyphs with LigCaretClassEntry records.'),
+		('AATLookup(LigCaretDistances)', 'Carets', None, None, 'Lookup table associating ligature glyphs with their caret positions, in font unit distances.'),
 	]),
 
-	('LigCaretClassEntry', [
+	('LigatureCaretsFormat1', [
+		('uint16', 'Format', None, None, 'Format of the ligature caret table. Format 0 indicates division points are distances in font units, Format 1 indicates division points are indexes of control points.'),
+		('AATLookup(LigCaretPoints)', 'Carets', None, None, 'Lookup table associating ligature glyphs with their caret positions, as control points.'),
+	]),
+
+	('LigCaretDistances', [
 		('uint16', 'DivsionPointCount', None, None, 'Number of division points.'),
-		('int16', 'DivisionPoint', 'DivsionPointCount', 0, 'Distance in font units (format 0), or the control point number (format 1), through which a subdivision is made orthogonally to the baseline.'),
+		('int16', 'DivisionPoint', 'DivsionPointCount', 0, 'Distance in font units through which a subdivision is made orthogonally to the baseline.'),
+	]),
+
+	('LigCaretPoints', [
+		('uint16', 'DivsionPointCount', None, None, 'Number of division points.'),
+		('int16', 'DivisionPoint', 'DivsionPointCount', 0, 'The number of the control point through which a subdivision is made orthogonally to the baseline.'),
 	]),
 
 
