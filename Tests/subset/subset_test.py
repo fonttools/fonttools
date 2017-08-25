@@ -95,6 +95,84 @@ class SubsetTest(unittest.TestCase):
         subsetfont = TTFont(subsetpath)
         self.expect_ttx(subsetfont, self.getpath("expect_no_notdef_outline_ttf.ttx"), ["glyf", "hmtx"])
 
+    def test_subset_bsln_format_0(self):
+        _, fontpath = self.compile_font(self.getpath("TestBSLN-0.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--glyphs=one", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_bsln_0.ttx"), ["bsln"])
+
+    def test_subset_bsln_format_0_from_format_1(self):
+        # TestBSLN-1 defines the ideographic baseline to be the font's default,
+        # and specifies that glyphs {.notdef, zero, one, two} use the roman
+        # baseline instead of the default ideographic baseline. As we request
+        # a subsetted font with {zero, one} and the implicit .notdef, all
+        # glyphs in the resulting font use the Roman baseline. In this case,
+        # we expect a format 0 'bsln' table because it is the most compact.
+        _, fontpath = self.compile_font(self.getpath("TestBSLN-1.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--unicodes=U+0030-0031",
+                     "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_bsln_0.ttx"), ["bsln"])
+
+    def test_subset_bsln_format_1(self):
+        # TestBSLN-1 defines the ideographic baseline to be the font's default,
+        # and specifies that glyphs {.notdef, zero, one, two} use the roman
+        # baseline instead of the default ideographic baseline. We request
+        # a subset where the majority of glyphs use the roman baseline,
+        # but one single glyph (uni2EA2) is ideographic. In the resulting
+        # subsetted font, we expect a format 1 'bsln' table whose default
+        # is Roman, but with an override that uses the ideographic baseline
+        # for uni2EA2.
+        _, fontpath = self.compile_font(self.getpath("TestBSLN-1.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--unicodes=U+0030-0031,U+2EA2",
+                     "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_bsln_1.ttx"), ["bsln"])
+
+    def test_subset_bsln_format_2(self):
+        # The 'bsln' table in TestBSLN-2 refers to control points in glyph 'P'
+        # for defining its baselines. Therefore, the subsetted font should
+        # include this glyph even though it is not requested explicitly.
+        _, fontpath = self.compile_font(self.getpath("TestBSLN-2.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--glyphs=one", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_bsln_2.ttx"), ["bsln"])
+
+    def test_subset_bsln_format_2_from_format_3(self):
+        # TestBSLN-3 defines the ideographic baseline to be the font's default,
+        # and specifies that glyphs {.notdef, zero, one, two, P} use the roman
+        # baseline instead of the default ideographic baseline. As we request
+        # a subsetted font with zero and the implicit .notdef and P for
+        # baseline measurement, all glyphs in the resulting font use the Roman
+        # baseline. In this case, we expect a format 2 'bsln' table because it
+        # is the most compact encoding.
+        _, fontpath = self.compile_font(self.getpath("TestBSLN-3.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--unicodes=U+0030",
+                     "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_bsln_2.ttx"), ["bsln"])
+
+    def test_subset_bsln_format_3(self):
+        # TestBSLN-3 defines the ideographic baseline to be the font's default,
+        # and specifies that glyphs {.notdef, zero, one, two} use the roman
+        # baseline instead of the default ideographic baseline. We request
+        # a subset where the majority of glyphs use the roman baseline,
+        # but one single glyph (uni2EA2) is ideographic. In the resulting
+        # subsetted font, we expect a format 1 'bsln' table whose default
+        # is Roman, but with an override that uses the ideographic baseline
+        # for uni2EA2.
+        _, fontpath = self.compile_font(self.getpath("TestBSLN-3.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--unicodes=U+0030-0031,U+2EA2",
+                     "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_bsln_3.ttx"), ["bsln"])
+
     def test_subset_clr(self):
         _, fontpath = self.compile_font(self.getpath("TestCLR-Regular.ttx"), ".ttf")
         subsetpath = self.temp_path(".ttf")

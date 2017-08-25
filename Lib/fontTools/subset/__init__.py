@@ -1675,6 +1675,30 @@ def subset_glyphs(self, s):
     self.hdmx = {sz:_dict_subset(l, s.glyphs) for sz,l in self.hdmx.items()}
     return bool(self.hdmx)
 
+@_add_method(ttLib.getTableClass('bsln'))
+def closure_glyphs(self, s):
+    table = self.table.Baseline
+    if table.Format in (2, 3):
+        s.glyphs.add(table.StandardGlyph)
+
+@_add_method(ttLib.getTableClass('bsln'))
+def subset_glyphs(self, s):
+    table = self.table.Baseline
+    if table.Format in (1, 3):
+        baselines = {glyph: table.BaselineValues.get(glyph, table.DefaultBaseline)
+                     for glyph in s.glyphs}
+        if len(baselines) > 0:
+            mostCommon, _cnt = Counter(baselines.values()).most_common(1)[0]
+            table.DefaultBaseline = mostCommon
+            baselines = {glyph: b for glyph, b in baselines.items()
+                         if b != mostCommon}
+        if len(baselines) > 0:
+            table.BaselineValues = baselines
+        else:
+            table.Format = {1: 0, 3: 2}[table.Format]
+            del table.BaselineValues
+    return True
+
 @_add_method(ttLib.getTableClass('lcar'))
 def subset_glyphs(self, s):
     table = self.table.LigatureCarets
@@ -2797,17 +2821,17 @@ class Subsetter(object):
                 log.glyphs(self.glyphs, font=font)
         self.glyphs_mathed = frozenset(self.glyphs)
 
-        if 'COLR' in font:
-            with timer("close glyph list over 'COLR'"):
-                log.info("Closing glyph list over 'COLR': %d glyphs before",
-                         len(self.glyphs))
-                log.glyphs(self.glyphs, font=font)
-                font['COLR'].closure_glyphs(self)
-                self.glyphs.intersection_update(realGlyphs)
-                log.info("Closed glyph list over 'COLR': %d glyphs after",
-                         len(self.glyphs))
-                log.glyphs(self.glyphs, font=font)
-        self.glyphs_colred = frozenset(self.glyphs)
+        for table in ('COLR', 'bsln'):
+            if table in font:
+                with timer("close glyph list over '%s'" % table):
+                    log.info("Closing glyph list over '%s': %d glyphs before",
+                             table, len(self.glyphs))
+                    log.glyphs(self.glyphs, font=font)
+                    font[table].closure_glyphs(self)
+                    self.glyphs.intersection_update(realGlyphs)
+                    log.info("Closed glyph list over '%s': %d glyphs after",
+                             table, len(self.glyphs))
+                    log.glyphs(self.glyphs, font=font)
 
         if 'glyf' in font:
             with timer("close glyph list over 'glyf'"):
