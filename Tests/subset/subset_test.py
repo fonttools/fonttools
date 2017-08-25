@@ -116,6 +116,29 @@ class SubsetTest(unittest.TestCase):
         subsetfont = TTFont(subsetpath)
         self.expect_ttx(subsetfont, self.getpath("expect_keep_gvar_notdef_outline.ttx"), ["GlyphOrder", "avar", "fvar", "gvar", "name"])
 
+    def test_subset_lcar_remove(self):
+        _, fontpath = self.compile_font(self.getpath("TestLCAR-0.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--glyphs=one", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.assertNotIn("lcar", subsetfont)
+
+    def test_subset_lcar_format_0(self):
+        _, fontpath = self.compile_font(self.getpath("TestLCAR-0.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--unicodes=U+FB01",
+                     "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_lcar_0.ttx"), ["lcar"])
+
+    def test_subset_lcar_format_1(self):
+        _, fontpath = self.compile_font(self.getpath("TestLCAR-1.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--unicodes=U+FB01",
+                     "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_lcar_1.ttx"), ["lcar"])
+
     def test_subset_math(self):
         _, fontpath = self.compile_font(self.getpath("TestMATH-Regular.ttx"), ".ttf")
         subsetpath = self.temp_path(".ttf")

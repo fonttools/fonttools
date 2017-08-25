@@ -1675,6 +1675,16 @@ def subset_glyphs(self, s):
     self.hdmx = {sz:_dict_subset(l, s.glyphs) for sz,l in self.hdmx.items()}
     return bool(self.hdmx)
 
+@_add_method(ttLib.getTableClass('lcar'))
+def subset_glyphs(self, s):
+    table = self.table.LigatureCarets
+    if table.Format in (0, 1):
+        table.Carets = {glyph: table.Carets[glyph] for glyph in s.glyphs
+                        if glyph in table.Carets}
+        return len(table.Carets) > 0
+    else:
+        assert False, "unknown 'lcar' format %s" % table.Format
+
 @_add_method(ttLib.getTableClass('gvar'))
 def prune_pre_subset(self, font, options):
     if options.notdef_glyph and not options.notdef_outline:
