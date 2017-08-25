@@ -397,7 +397,7 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 
 ### Attributes
 * `name`: string. The name of the glyph.
-* `unicode`: string. Unicode value for this glyph, in hexadecimal.
+* `unicode`: string. Unicode values for this glyph, in hexadecimal. Multiple values should be separated with a space.
 * `mute`: optional attribute, number 1 or 0. Indicate if this glyph should be supressed in the output.
 
 # 4.2.1 `note` element
@@ -423,7 +423,7 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 </location>
 <glyphs>
 	<glyph name="arrow2" />
-	<glyph name="arrow" unicode="0x4d2">
+	<glyph name="arrow" unicode="0x4d2 0x4d3">
 	<location>
    		<dimension name="width" xvalue="100" />
       		<dimension name="weight" xvalue="120" />
