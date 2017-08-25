@@ -61,7 +61,7 @@ def build(
         verbose=True,           # not supported
         logPath=None,           # not supported
         progressFunc=None,      # not supported
-        processRules=True
+        processRules=True,
         ):
     """
 
@@ -354,7 +354,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
                 #              {'font': 'master.Adobe VF Prototype.Master_4.5',
                 #               'glyphName': 'dollar.nostroke',
                 #               'location': {'custom': 100.0, 'weight': 368.0}}],
-                #  'unicodeValue': 36}
+                #  'unicodes': [36]}
                 glyphData = instanceDescriptor.glyphs[glyphName]
             else:
                 glyphData = {}
@@ -365,10 +365,10 @@ class DesignSpaceProcessor(DesignSpaceDocument):
                 continue
             glyphInstanceLocation = Location(glyphData.get("instanceLocation", instanceDescriptor.location))
             try:
-                uniValue = glyphMutator[()][0].unicodes[0]
+                uniValues = glyphMutator[()][0].unicodes
             except IndexError:
-                uniValue = None
-            glyphInstanceUnicode = glyphData.get("unicodeValue", uniValue)
+                uniValues = []
+            glyphInstanceUnicodes = glyphData.get("unicodes", uniValues)
             note = glyphData.get("note")
             if note:
                 font[glyphName] = note
@@ -407,7 +407,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
                 font[glyphName].clear()
                 glyphInstanceObject.drawPoints(pPen)
             font[glyphName].width = glyphInstanceObject.width
-            font[glyphName].unicode = glyphInstanceUnicode
+            font[glyphName].unicodes = glyphInstanceUnicodes
         if doRules:
             resultNames = processRules(self.rules, loc, self.glyphNames)
             for oldName, newName in zip(self.glyphNames, resultNames):
@@ -512,7 +512,6 @@ if __name__ == "__main__":
             p.closePath()
             g.move((0,s+step))
             g.width = s
-            g.unicode = 200 + step
             step += 50
         for n, w in [('wide', 800), ('narrow', 100)]:
             font.newGlyph(n)
@@ -542,7 +541,6 @@ if __name__ == "__main__":
         for g in font:
             g.unicode = uniValue
             uniValue += 1
-
 
     def fillInfo(font):
         font.info.unitsPerEm = 1000

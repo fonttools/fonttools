@@ -153,12 +153,16 @@ class InstanceDescriptor(SimpleDescriptor):
     """Simple container for data related to the instance"""
     flavor = "instance"
     _defaultLanguageCode = "en"
-    _attrs = ['path', 'name',
-              'location', 'familyName',
-              'styleName', 'postScriptFontName',
-              'styleMapFamilyName',
-              'styleMapStyleName',
-              'kerning', 'info']
+    _attrs = [  'path',
+                'name',
+                'location',
+                'familyName',
+                'styleName',
+                'postScriptFontName',
+                'styleMapFamilyName',
+                'styleMapStyleName',
+                'kerning',
+                'info']
 
     def __init__(self):
         self.filename = None    # the original path as found in the document
@@ -510,8 +514,8 @@ class BaseDocWriter(object):
         glyphElement = ET.Element('glyph')
         if data.get('mute'):
             glyphElement.attrib['mute'] = "1"
-        if data.get('unicodeValue') is not None:
-            glyphElement.attrib['unicode'] = hex(data.get('unicodeValue'))
+        if data.get('unicodes') is not None:
+            glyphElement.attrib['unicode'] = " ".join([hex(u) for u in data.get('unicodes')])
         if data.get('instanceLocation') is not None:
             locationElement, data['instanceLocation'] = self._makeLocationElement(data.get('instanceLocation'))
             glyphElement.append(locationElement)
@@ -831,8 +835,6 @@ class BaseDocReader(object):
             for key, lang in styleMapFamilyNameElement.items():
                 styleMapFamilyName = styleMapFamilyNameElement.text
                 instanceObject.setStyleMapFamilyName(styleMapFamilyName, lang)
-        #print("instanceObject", instanceObject.localisedStyleName)
-
         instanceLocation = self.locationFromElement(instanceElement)
         if instanceLocation is not None:
             instanceObject.location = instanceLocation
@@ -894,10 +896,15 @@ class BaseDocReader(object):
         mute = glyphElement.attrib.get("mute")
         if mute == "1":
             glyphData['mute'] = True
-        unicodeValue = glyphElement.attrib.get('unicode')
-        if unicodeValue is not None:
-            unicodeValue = int(unicodeValue, 16)
-            glyphData['unicodeValue'] = unicodeValue
+        # unicode
+        unicodes = glyphElement.attrib.get('unicode')
+        if unicodes is not None:
+            try:
+                unicodes = [int(u, 16) for u in unicodes.split(" ")]
+                glyphData['unicodes'] = unicodes
+            except ValueError:
+                raise DesignSpaceDocumentError("unicode values %s are not integers" % unicodes)
+
         note = None
         for noteElement in glyphElement.findall('.note'):
             glyphData['note'] = noteElement.text
@@ -1352,7 +1359,7 @@ if __name__ == "__main__":
         >>> i1.postScriptFontName = "InstancePostscriptName"
         >>> i1.styleMapFamilyName = "InstanceStyleMapFamilyName"
         >>> i1.styleMapStyleName = "InstanceStyleMapStyleName"
-        >>> glyphData = dict(name="arrow", mute=True, unicode="0x123")
+        >>> glyphData = dict(name="arrow", mute=True, unicodes=[0x123, 0x124, 0x125])
         >>> i1.glyphs['arrow'] = glyphData
         >>> doc.addInstance(i1)
         >>> # add instance 2
@@ -1367,7 +1374,7 @@ if __name__ == "__main__":
         >>> i2.styleMapFamilyName = "InstanceStyleMapFamilyName"
         >>> i2.styleMapStyleName = "InstanceStyleMapStyleName"
         >>> glyphMasters = [dict(font="master.ufo1", glyphName="BB", location=dict(width=20,weight=20)), dict(font="master.ufo2", glyphName="CC", location=dict(width=900,weight=900))]
-        >>> glyphData = dict(name="arrow", unicodeValue=1234)
+        >>> glyphData = dict(name="arrow", unicodes=[101, 201, 301])
         >>> glyphData['masters'] = glyphMasters
         >>> glyphData['note'] = "A note about this glyph"
         >>> glyphData['instanceLocation'] = dict(width=100, weight=120)
@@ -1450,6 +1457,68 @@ if __name__ == "__main__":
 
         """
 
+    def testUnicodes():
+        u"""
+        >>> import os
+        >>> testDocPath = os.path.join(os.getcwd(), "testUnicodes.designspace")
+        >>> testDocPath2 = os.path.join(os.getcwd(), "testUnicodes_roundtrip.designspace")
+        >>> masterPath1 = os.path.join(os.getcwd(), "masters", "masterTest1.ufo")
+        >>> masterPath2 = os.path.join(os.getcwd(), "masters", "masterTest2.ufo")
+        >>> instancePath1 = os.path.join(os.getcwd(), "instances", "instanceTest1.ufo")
+        >>> instancePath2 = os.path.join(os.getcwd(), "instances", "instanceTest2.ufo")
+        >>> doc = DesignSpaceDocument()
+        >>> # add master 1
+        >>> s1 = SourceDescriptor()
+        >>> s1.filename = os.path.relpath(masterPath1, os.path.dirname(testDocPath))
+        >>> s1.name = "master.ufo1"
+        >>> s1.copyInfo = True
+        >>> s1.location = dict(weight=0)
+        >>> doc.addSource(s1)
+        >>> # add master 2
+        >>> s2 = SourceDescriptor()
+        >>> s2.filename = os.path.relpath(masterPath2, os.path.dirname(testDocPath))
+        >>> s2.name = "master.ufo2"
+        >>> s2.location = dict(weight=1000)
+        >>> doc.addSource(s2)
+        >>> # add instance 1
+        >>> i1 = InstanceDescriptor()
+        >>> i1.filename = os.path.relpath(instancePath1, os.path.dirname(testDocPath))
+        >>> i1.name = "instance.ufo1"
+        >>> i1.location = dict(weight=500)
+        >>> glyphData = dict(name="arrow", mute=True, unicodes=[100, 200, 300])
+        >>> i1.glyphs['arrow'] = glyphData
+        >>> doc.addInstance(i1)
+        >>> # now we have sources and instances, but no axes yet. 
+        >>> doc.axes = []   # clear the axes
+        >>> # write some axes
+        >>> a1 = AxisDescriptor()
+        >>> a1.minimum = 0
+        >>> a1.maximum = 1000
+        >>> a1.default = 0
+        >>> a1.name = "weight"
+        >>> a1.tag = "wght"
+        >>> doc.addAxis(a1)
+        >>> # write the document
+        >>> doc.write(testDocPath)
+        >>> assert os.path.exists(testDocPath)
+        >>> # import it again
+        >>> new = DesignSpaceDocument()
+        >>> new.read(testDocPath)
+        >>> new.write(testDocPath2)
+        >>> # compare the file contents
+        >>> f1 = open(testDocPath, 'r')
+        >>> t1 = f1.read()
+        >>> f1.close()
+        >>> f2 = open(testDocPath2, 'r')
+        >>> t2 = f2.read()
+        >>> f2.close()
+        >>> t1 == t2
+        True
+        >>> # check the unicode values read from the document
+        >>> new.instances[0].glyphs['arrow']['unicodes'] == [100,200,300]
+        True
+        """
+
     def testLocalisedNames():
         u"""
         >>> import os
@@ -1490,7 +1559,7 @@ if __name__ == "__main__":
         >>> i1.name = "instance.ufo1"
         >>> i1.location = dict(weight=500, spooky=666)  # this adds a dimension that is not defined.
         >>> i1.postScriptFontName = "InstancePostscriptName"
-        >>> glyphData = dict(name="arrow", mute=True, unicode="0x123")
+        >>> glyphData = dict(name="arrow", mute=True, unicodes=[0x123])
         >>> i1.glyphs['arrow'] = glyphData
         >>> doc.addInstance(i1)
         >>> # now we have sources and instances, but no axes yet. 

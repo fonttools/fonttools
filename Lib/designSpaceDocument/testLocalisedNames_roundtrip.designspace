@@ -48,7 +48,7 @@
                 <dimension name="width" xvalue="0" />
             </location>
             <glyphs>
-                <glyph mute="1" name="arrow" />
+                <glyph mute="1" name="arrow" unicode="0x123" />
             </glyphs>
             <kerning />
             <info />
