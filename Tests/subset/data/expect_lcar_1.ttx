@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <lcar>
+    <Version value="0x00010000"/>
+    <LigatureCarets Format="1">
+      <Carets>
+        <Lookup glyph="uniFB01">
+          <!-- DivsionPointCount=1 -->
+          <DivisionPoint index="0" value="7"/>
+        </Lookup>
+      </Carets>
+    </LigatureCarets>
+  </lcar>
+  
+</ttFont>
