@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <bsln>
+    <Version value="0x00010000"/>
+    <Baseline Format="1">
+      <DefaultBaseline value="0"/>
+      <Delta index="0" value="0"/>
+      <Delta index="1" value="465"/>
+      <Delta index="2" value="0"/>
+      <Delta index="3" value="1345"/>
+      <Delta index="4" value="507"/>
+      <Delta index="5" value="0"/>
+      <Delta index="6" value="0"/>
+      <Delta index="7" value="0"/>
+      <Delta index="8" value="0"/>
+      <Delta index="9" value="0"/>
+      <Delta index="10" value="0"/>
+      <Delta index="11" value="0"/>
+      <Delta index="12" value="0"/>
+      <Delta index="13" value="0"/>
+      <Delta index="14" value="0"/>
+      <Delta index="15" value="0"/>
+      <Delta index="16" value="0"/>
+      <Delta index="17" value="0"/>
+      <Delta index="18" value="0"/>
+      <Delta index="19" value="0"/>
+      <Delta index="20" value="0"/>
+      <Delta index="21" value="0"/>
+      <Delta index="22" value="0"/>
+      <Delta index="23" value="0"/>
+      <Delta index="24" value="0"/>
+      <Delta index="25" value="0"/>
+      <Delta index="26" value="0"/>
+      <Delta index="27" value="0"/>
+      <Delta index="28" value="0"/>
+      <Delta index="29" value="0"/>
+      <Delta index="30" value="0"/>
+      <Delta index="31" value="0"/>
+      <BaselineValues>
+        <Lookup glyph="uni2EA2" value="1"/>
+      </BaselineValues>
+    </Baseline>
+  </bsln>
+
+</ttFont>
