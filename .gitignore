@@ -14,3 +14,5 @@ Lib/designSpaceDocument/testPathName_case5.designspace
 Lib/designSpaceDocument/testPathNames.designspace
 testNoAxes_recontructed.designspace
 testNoAxes_source.designspace
+testUnicodes.designspace
+testUnicodes_roundtrip.designspace
