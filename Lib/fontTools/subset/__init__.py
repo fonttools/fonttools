@@ -1778,16 +1778,14 @@ def subset_glyphs(self, s):
 @_add_method(ttLib.getTableClass('COLR'))
 def closure_glyphs(self, s):
     decompose = s.glyphs
-    while True:
+    while decompose:
         layers = set()
         for g in decompose:
             for l in self.ColorLayers.get(g, []):
                 layers.add(l.name)
         layers -= s.glyphs
-        if not layers:
-            break
-        decompose = layers
         s.glyphs.update(layers)
+        decompose = layers
 
 @_add_method(ttLib.getTableClass('COLR'))
 def subset_glyphs(self, s):
@@ -1913,7 +1911,7 @@ def remapComponentsFast(self, indices):
 @_add_method(ttLib.getTableClass('glyf'))
 def closure_glyphs(self, s):
     decompose = s.glyphs
-    while True:
+    while decompose:
         components = set()
         for g in decompose:
             if g not in self.glyphs:
@@ -1922,10 +1920,8 @@ def closure_glyphs(self, s):
             for c in gl.getComponentNames(self):
                 components.add(c)
         components -= s.glyphs
-        if not components:
-            break
-        decompose = components
         s.glyphs.update(components)
+        decompose = components
 
 @_add_method(ttLib.getTableClass('glyf'))
 def prune_pre_subset(self, font, options):
