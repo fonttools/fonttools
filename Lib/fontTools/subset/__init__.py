@@ -1920,9 +1920,8 @@ def closure_glyphs(self, s):
                 continue
             gl = self.glyphs[g]
             for c in gl.getComponentNames(self):
-                if c not in s.glyphs:
-                    components.add(c)
-        components = set(c for c in components if c not in s.glyphs)
+                components.add(c)
+        components -= s.glyphs
         if not components:
             break
         decompose = components
