@@ -1781,12 +1781,9 @@ def closure_glyphs(self, s):
     while True:
         layers = set()
         for g in decompose:
-            if g not in self.ColorLayers:
-                continue
-            for l in self.ColorLayers[g]:
-                if l.name not in s.glyphs:
-                    layers.add(l.name)
-        layers = set(l for l in layers if l not in s.glyphs)
+            for l in self.ColorLayers.get(g, []):
+                layers.add(l.name)
+        layers -= s.glyphs
         if not layers:
             break
         decompose = layers
