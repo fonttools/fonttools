@@ -1,3 +1,4 @@
+# coding: utf-8
 from __future__ import print_function, division, absolute_import
 
 from ufoLib import fontInfoAttributesVersion1, fontInfoAttributesVersion2, fontInfoAttributesVersion3
@@ -21,6 +22,7 @@ from fontMath.mathInfo import MathInfo
 from fontMath.mathKerning import MathKerning
 from mutatorMath.objects.mutator import buildMutator
 from mutatorMath.objects.location import biasFromLocations, Location
+import plistlib
 import os
 
 """
@@ -56,7 +58,7 @@ import os
 
 def build(
         documentPath,
-        outputUFOFormatVersion=2,
+        outputUFOFormatVersion=3,
         roundGeometry=True,
         verbose=True,           # not supported
         logPath=None,           # not supported
@@ -64,9 +66,7 @@ def build(
         processRules=True,
         ):
     """
-
         Simple builder for UFO designspaces.
-
     """
     import os, glob
     if os.path.isdir(documentPath):
@@ -80,21 +80,24 @@ def build(
         reader = DesignSpaceProcessor(ufoVersion=outputUFOFormatVersion)
         reader.roundGeometry = roundGeometry
         reader.read(path)
-        reader.generateUFO(processRules=processRules)
-
-        # reader = DesignSpaceDocumentReader(
-        #         path,
-        #         ufoVersion=outputUFOFormatVersion,
-        #         roundGeometry=roundGeometry,
-        #         verbose=verbose,
-        #         logPath=logPath,
-        #         progressFunc=progressFunc
-        #         )
-
+        results += reader.generateUFO(processRules=processRules)
         reader = None
     return results
 
-
+def getUFOVersion(ufoPath):
+    # <?xml version="1.0" encoding="UTF-8"?>
+    # <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    # <plist version="1.0">
+    # <dict>
+    #   <key>creator</key>
+    #   <string>org.robofab.ufoLib</string>
+    #   <key>formatVersion</key>
+    #   <integer>2</integer>
+    # </dict>
+    # </plist>
+    metaInfoPath = os.path.join(ufoPath, u"metainfo.plist")
+    p = plistlib.readPlist(metaInfoPath)
+    return p.get('formatVersion')
 
 def swapGlyphNames(font, oldName, newName, swapNameExtension = "_______________swap"):
     if not oldName in font or not newName in font:
@@ -196,7 +199,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
     mathGlyphClass = MathGlyph
     mathKerningClass = MathKerning
 
-    def __init__(self, readerClass=None, writerClass=None, fontClass=None, ufoVersion=2):
+    def __init__(self, readerClass=None, writerClass=None, fontClass=None, ufoVersion=3):
         super(DesignSpaceProcessor, self).__init__(readerClass=readerClass, writerClass=writerClass, fontClass=fontClass)
         self.ufoVersion = ufoVersion         # target UFO version
         self.roundGeometry = False
@@ -212,16 +215,29 @@ class DesignSpaceProcessor(DesignSpaceDocument):
     def generateUFO(self, processRules=True):
         # makes the instances
         # option to execute the rules
-        #self.checkAxes()
+        # make sure we're not trying to overwrite a newer UFO format
         self.loadFonts()
         self.checkDefault()
+        messages = []
+        v = 0
         for instanceDescriptor in self.instances:
             if instanceDescriptor.path is None:
                 continue
             font = self.makeInstance(instanceDescriptor, processRules)
-            if not os.path.exists(os.path.dirname(instanceDescriptor.path)):
-                os.makedirs(os.path.dirname(instanceDescriptor.path))
-            font.save(instanceDescriptor.path, self.ufoVersion)
+            folder = os.path.dirname(instanceDescriptor.path)
+            path = instanceDescriptor.path
+            if not os.path.exists(folder):
+                os.makedirs(folder)
+            if os.path.exists(path):
+                existingUFOFormatVersion = getUFOVersion(path)
+                if existingUFOFormatVersion > self.ufoVersion:
+                    print(existingUFOFormatVersion, self.ufoVersion)
+                    messages.append(u"Can’t overwrite existing UFO%d with UFO%d."%(existingUFOFormatVersion, self.ufoVersion))
+                    continue
+            else:
+                font.save(path, self.ufoVersion)
+                messages.append("Generated %s as UFO%d"%(os.path.basename(path), self.ufoVersion))
+        return messages
 
     def getInfoMutator(self):
         """ Returns a info mutator """
@@ -297,7 +313,6 @@ class DesignSpaceProcessor(DesignSpaceDocument):
                 font.info.styleMapFamilyName = instanceDescriptor.styleMapFamilyName
                 font.info.styleMapStyleName = instanceDescriptor.styleMapStyleName
                 # localised names need to go to the right openTypeNameRecords
-                #print("xxx", font.info.openTypeNameRecords)
                 # records = []
                 # nameID = 1
                 # platformID = 
@@ -615,8 +630,6 @@ if __name__ == "__main__":
         s2.name = "test.master.2"
         #s2.copyInfo = True
         d.addSource(s2)
-
-
         for counter in range(3):
             factor = counter / 2        
             i = InstanceDescriptor()
@@ -640,7 +653,9 @@ if __name__ == "__main__":
         # execute the test document
         d = DesignSpaceProcessor()
         d.read(docPath)
-        d.generateUFO()
+        messages = d.generateUFO()
+        if messages:
+            print(messages)
 
     def testSwap(docPath):
         srcPath, dstPath = makeSwapFonts(os.path.dirname(docPath))
@@ -671,13 +686,14 @@ if __name__ == "__main__":
         d = DesignSpaceProcessor()
         d.read(docPath)
         for instance in d.instances:
-            f = Font(instance.path)
-            if instance.name == "TestFamily-TestStyle_pop1000.000":
-                assert f['narrow'].unicodes == [291, 292, 293]
+            if os.path.exists(instance.path):
+                f = Font(instance.path)
+                if instance.name == "TestFamily-TestStyle_pop1000.000":
+                    assert f['narrow'].unicodes == [291, 292, 293]
+                else:
+                    assert f['narrow'].unicodes == [207]
             else:
-                assert f['narrow'].unicodes == [207]
-
-
+                print("Missing test font at %s"%instance.path)
 
     selfTest = True
     if selfTest:
@@ -689,4 +705,3 @@ if __name__ == "__main__":
         testGenerateInstances(docPath)
         testSwap(docPath)
         testUnicodes(docPath)
-
