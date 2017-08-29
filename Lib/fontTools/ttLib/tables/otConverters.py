@@ -25,7 +25,7 @@ def buildConverters(tableSpec, tableNamespace):
 		if name.startswith("ValueFormat"):
 			assert tp == "uint16"
 			converterClass = ValueFormat
-		elif name.endswith("Count") or name == "MorphType":
+		elif name.endswith("Count") or name in ("StructLength", "MorphType"):
 			converterClass = {
 				"uint8": ComputedUInt8,
 				"uint16": ComputedUShort,
