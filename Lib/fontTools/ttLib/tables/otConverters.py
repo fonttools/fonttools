@@ -45,7 +45,11 @@ def buildConverters(tableSpec, tableNamespace):
 				converterClass = Struct
 			else:
 				converterClass = eval(tp, tableNamespace, converterMapping)
-		tableClass = tableNamespace.get(tableName)
+		if tp in ('MortChain', 'MortSubtable',
+		          'MorxChain', 'MorxSubtable'):
+			tableClass = tableNamespace.get(tp)
+		else:
+			tableClass = tableNamespace.get(tableName)
 		if tableClass is not None:
 			conv = converterClass(name, repeat, aux, tableClass=tableClass)
 		else:
@@ -967,8 +971,10 @@ converterMapping = {
 	"VarIdxMapValue":	VarIdxMapValue,
 	"VarDataValue":	VarDataValue,
 	# AAT
-	"MorphChain":	StructWithLength,
-	"MorphSubtable":StructWithLength,
+	"MortChain":	StructWithLength,
+	"MortSubtable": StructWithLength,
+	"MorxChain":	StructWithLength,
+	"MorxSubtable": StructWithLength,
 	# "Template" types
 	"AATLookup":	lambda C: partial(AATLookup, tableClass=C),
 	"OffsetTo":	lambda C: partial(Table, tableClass=C),
