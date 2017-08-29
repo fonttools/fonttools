@@ -102,8 +102,8 @@ The following tables are currently supported:
     OS/2, SING, STAT, SVG, TSI0, TSI1, TSI2, TSI3, TSI5, TSIB, TSID,
     TSIJ, TSIP, TSIS, TSIV, TTFA, VDMX, VORG, VVAR, avar, bsln, cmap,
     cvar, cvt, feat, fpgm, fvar, gasp, glyf, gvar, hdmx, head, hhea,
-    hmtx, kern, lcar, loca, ltag, maxp, meta, name, opbd, post, prep,
-    prop, sbix, trak, vhea and vmtx
+    hmtx, kern, lcar, loca, ltag, maxp, meta, mort, morx, name, opbd,
+    post, prep, prop, sbix, trak, vhea and vmtx
 .. end table list
 
 Other tables are dumped as hexadecimal data.

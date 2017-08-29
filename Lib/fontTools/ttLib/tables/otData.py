@@ -1289,25 +1289,50 @@ otData = [
 
 
 	#
-	# morx
+	# mort
 	#
 
-	# TODO: use 'struct' when field.type == field.name
+	('mort', [
+		('Version', 'Version', None, None, 'Version of the mort table.'),
+		('uint32', 'MorphChainCount', None, None, 'Number of metamorphosis chains.'),
+		('MortChain', 'MorphChain', 'MorphChainCount', 0, 'Array of metamorphosis chains.'),
+	]),
+
+	('MortChain', [
+		('Flags32', 'DefaultFlags', None, None, 'The default specification for subtables.'),
+		('uint32', 'StructLength', None, None, 'Total byte count, including this header; must be a multiple of 4.'),
+		('uint16', 'MorphFeatureCount', None, None, 'Number of metamorphosis feature entries.'),
+		('uint16', 'MorphSubtableCount', None, None, 'The number of subtables in the chain.'),
+		('struct', 'MorphFeature', 'MorphFeatureCount', 0, 'Array of metamorphosis features.'),
+		('MortSubtable', 'MorphSubtable', 'MorphSubtableCount', 0, 'Array of metamorphosis subtables.'),
+	]),
+
+	('MortSubtable', [
+		('uint16', 'StructLength', None, None, 'Total subtable length, including this header.'),
+		('uint8', 'CoverageFlags', None, None, 'Most significant byte of coverage flags.'),
+		('uint8', 'MorphType', None, None, 'Subtable type.'),
+		('Flags32', 'SubFeatureFlags', None, None, 'The 32-bit mask identifying which subtable this is (the subtable being executed if the AND of this value and the processed defaultFlags is nonzero).'),
+		('SubStruct', 'SubStruct', None, None, 'SubTable.'),
+	]),
+
+	#
+	# morx
+	#
 
 	('morx', [
 		('uint16', 'Version', None, None, 'Version of the morx table.'),
 		('uint16', 'Reserved', None, None, 'Reserved (set to zero).'),
-		('uint32', 'ChainCount', None, None, 'Number of MorphChains.'),
-		('MorphChain', 'MorphChain', 'ChainCount', 0, 'Array of MorphChains.'),
+		('uint32', 'MorphChainCount', None, None, 'Number of extended metamorphosis chains.'),
+		('MorxChain', 'MorphChain', 'MorphChainCount', 0, 'Array of extended metamorphosis chains.'),
 	]),
 
-	('MorphChain', [
+	('MorxChain', [
 		('Flags32', 'DefaultFlags', None, None, 'The default specification for subtables.'),
 		('uint32', 'StructLength', None, None, 'Total byte count, including this header; must be a multiple of 4.'),
 		('uint32', 'MorphFeatureCount', None, None, 'Number of feature subtable entries.'),
 		('uint32', 'MorphSubtableCount', None, None, 'The number of subtables in the chain.'),
-		('MorphFeature', 'MorphFeature', 'MorphFeatureCount', 0, 'Array of MorphFeatures.'),
-		('MorphSubtable', 'MorphSubtable', 'MorphSubtableCount', 0, 'Array of MorphSubtables.'),
+		('MorphFeature', 'MorphFeature', 'MorphFeatureCount', 0, 'Array of metamorphosis features.'),
+		('MorxSubtable', 'MorphSubtable', 'MorphSubtableCount', 0, 'Array of extended metamorphosis subtables.'),
 	]),
 
 	('MorphFeature', [
@@ -1320,7 +1345,7 @@ otData = [
 	# Apple TrueType Reference Manual, chapter “The ‘morx’ table”,
 	# section “Metamorphosis Subtables”.
 	# https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6morx.html
-	('MorphSubtable', [
+	('MorxSubtable', [
 		('uint32', 'StructLength', None, None, 'Total subtable length, including this header.'),
 		('uint8', 'CoverageFlags', None, None, 'Most significant byte of coverage flags.'),
 		('uint16', 'Reserved', None, None, 'Unused.'),
@@ -1353,7 +1378,7 @@ otData = [
 	]),
 
 	('NoncontextualMorph', [
-		('AATLookup(GlyphID)', 'mapping', None, None, 'The noncontextual glyph substitution table.'),
+		('AATLookup(GlyphID)', 'Substitution', None, None, 'The noncontextual glyph substitution table.'),
         ]),
 
 	('InsertionMorph', [

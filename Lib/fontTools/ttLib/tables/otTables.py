@@ -991,13 +991,16 @@ def _buildClasses():
 			8: ChainContextPos,
 			9: ExtensionPos,
 		},
+		'mort': {
+			4: NoncontextualMorph,
+		},
 		'morx': {
-			0: RearrangementMorph,
-			1: ContextualMorph,
-			2: LigatureMorph,
+			# 0: RearrangementMorph,
+			# 1: ContextualMorph,
+			# 2: LigatureMorph,
 			# 3: Reserved,
 			4: NoncontextualMorph,
-			5: InsertionMorph,
+			# 5: InsertionMorph,
 		},
 	}
 	lookupTypes['JSTF'] = lookupTypes['GPOS']  # JSTF contains GPOS
