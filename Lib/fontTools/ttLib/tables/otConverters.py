@@ -447,22 +447,24 @@ class StructWithLength(Struct):
 		table = self.tableClass()
 		table.decompile(reader, font)
 		reader.seek(pos + table.StructLength)
-		del table.StructLength
 		return table
 
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
-		value.StructLength = 0xdeadbeef
+		for convIndex, conv in enumerate(value.getConverters()):
+			if conv.name == "StructLength":
+				break
+		lengthIndex = len(writer.items) + convIndex
+		deadbeef = {1:0xDE, 2:0xDEAD, 4:0xDEADBEEF}[conv.staticSize]
+
 		before = writer.getDataLength()
-		i = len(writer.items)
+		value.StructLength = deadbeef
 		value.compile(writer, font)
 		length = writer.getDataLength() - before
-		for j,conv in enumerate(value.getConverters()):
-			if conv.name != 'StructLength':
-				continue
-			assert writer.items[i+j] == b"\xde\xad\xbe\xef"
-			writer.items[i+j] = struct.pack(">L", length)
-			break
-		del value.StructLength
+		lengthWriter = writer.getSubWriter()
+		conv.write(lengthWriter, font, tableDict, length)
+		assert(writer.items[lengthIndex] ==
+		       b"\xde\xad\xbe\xef"[:conv.staticSize])
+		writer.items[lengthIndex] = lengthWriter.getAllData()
 
 
 class Table(Struct):
