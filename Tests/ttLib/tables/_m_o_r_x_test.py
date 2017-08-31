@@ -98,7 +98,7 @@ class MORXNoncontextualGlyphSubstitutionTest(unittest.TestCase):
     def test_decompile_toXML(self):
         table = newTable('morx')
         table.decompile(MORX_NONCONTEXTUAL_DATA, self.font)
-        self.assertEqual(getXML(table.toXML), MORX_NONCONTEXTUAL_XML)
+        self.assertEqual(getXML(table.toXML, self.font), MORX_NONCONTEXTUAL_XML)
 
     def test_compile_fromXML(self):
         table = newTable('morx')
