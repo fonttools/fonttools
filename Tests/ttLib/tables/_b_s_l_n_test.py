@@ -281,7 +281,7 @@ class BSLNTest(unittest.TestCase):
     def decompileToXML(self, data, xml):
         table = newTable('bsln')
         table.decompile(data, self.font)
-        self.assertEqual(getXML(table.toXML), xml)
+        self.assertEqual(getXML(table.toXML, self.font), xml)
 
     def compileFromXML(self, xml, data):
         table = newTable('bsln')
