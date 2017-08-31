@@ -1186,6 +1186,31 @@ otData = [
 		('uint16', 'value', None, None, 'A 16-bit offset from the start of the table to the data.'),
 	]),
 
+
+	#
+	# ankr
+	#
+
+	('ankr', [
+		('struct', 'AnchorPoints', None, None, 'Anchor points table.'),
+        ]),
+
+	('AnchorPointsFormat0', [
+		('uint16', 'Format', None, None, 'Format of the anchor points table, = 0.'),
+		('uint16', 'Flags', None, None, 'Flags. Currenty unused, set to zero.'),
+		('AATLookupWithDataOffset(AnchorGlyphData)', 'Anchors', None, None, 'Table of with anchor overrides for each glyph.'),
+	]),
+
+	('AnchorGlyphData', [
+		('uint32', 'AnchorPointCount', None, None, 'Number of anchor points for this glyph.'),
+		('struct', 'AnchorPoint', 'AnchorPointCount', 0, 'Individual anchor points.'),
+	]),
+
+	('AnchorPoint', [
+		('int16', 'XCoordinate', None, None, 'X coordinate of this anchor point.'),
+		('int16', 'YCoordinate', None, None, 'Y coordinate of this anchor point.'),
+	]),
+
 	#
 	# bsln
 	#
