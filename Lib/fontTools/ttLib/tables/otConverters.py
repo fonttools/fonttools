@@ -5,7 +5,7 @@ from fontTools.misc.fixedTools import (
 	versionToFixed as ve2fi)
 from fontTools.misc.textTools import safeEval
 from fontTools.ttLib import getSearchRange
-from .otBase import ValueRecordFactory, CountReference
+from .otBase import ValueRecordFactory, CountReference, OTTableWriter
 from functools import partial
 import struct
 import logging
@@ -806,6 +806,74 @@ class AATLookup(BaseConverter):
 		xmlWriter.newline()
 
 
+# The AAT 'ankr' table has an unusual structure: An offset to an AATLookup
+# followed by an offset to a glyph data table. Other than usual, the
+# offsets in the AATLookup are not relative to the beginning of
+# the beginning of the 'ankr' table, but relative to the glyph data table.
+# So, to find the anchor data for a glyph, one needs to add the offset
+# to the data table to the offset found in the AATLookup, and then use
+# the sum of these two offsets to find the actual data.
+class AATLookupWithDataOffset(BaseConverter):
+	def read(self, reader, font, tableDict):
+		lookupOffset = reader.readULong()
+		dataOffset = reader.readULong()
+		lookupReader = reader.getSubReader(lookupOffset)
+		lookup = AATLookup('DataOffsets', None, None, UShort)
+		offsets = lookup.read(lookupReader, font, tableDict)
+		result = {}
+		for glyph, offset in offsets.items():
+			dataReader = reader.getSubReader(offset + dataOffset)
+			item = self.tableClass()
+			item.decompile(dataReader, font)
+			result[glyph] = item
+		return result
+
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		# We do not work with OTTableWriter sub-writers because
+		# the offsets in our AATLookup are relative to our data
+		# table, for which we need to provide an offset value itself.
+		# It might have been possible to somehow make a kludge for
+		# performing this indirect offset computation directly inside
+		# OTTableWriter. But this would have made the internal logic
+		# of OTTableWriter even more complex than it already is,
+		# so we decided to roll our own offset computation for the
+		# contents of the AATLookup and associated data table.
+		offsetByGlyph, offsetByData, dataLen = {}, {}, 0
+		compiledData = []
+		for glyph in sorted(value, key=font.getGlyphID):
+			subWriter = OTTableWriter()
+			value[glyph].compile(subWriter, font)
+			data = subWriter.getAllData()
+			offset = offsetByData.get(data, None)
+			if offset == None:
+				offset = dataLen
+				dataLen = dataLen + len(data)
+				offsetByData[data] = offset
+				compiledData.append(data)
+			offsetByGlyph[glyph] = offset
+		# For calculating the offsets to our AATLookup and data table,
+		# we can use the regular OTTableWriter infrastructure.
+		lookupWriter = writer.getSubWriter()
+		lookupWriter.longOffset = True
+		lookup = AATLookup('DataOffsets', None, None, UShort)
+		lookup.write(lookupWriter, font, tableDict, offsetByGlyph, None)
+
+		dataWriter = writer.getSubWriter()
+		dataWriter.longOffset = True
+		writer.writeSubTable(lookupWriter)
+		writer.writeSubTable(dataWriter)
+		for d in compiledData:
+			dataWriter.writeData(d)
+
+	def xmlRead(self, attrs, content, font):
+		lookup = AATLookup('DataOffsets', None, None, self.tableClass)
+		return lookup.xmlRead(attrs, content, font)
+
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		lookup = AATLookup('DataOffsets', None, None, self.tableClass)
+		lookup.xmlWrite(xmlWriter, font, value, name, attrs)
+
+
 class DeltaValue(BaseConverter):
 
 	def read(self, reader, font, tableDict):
@@ -970,13 +1038,16 @@ converterMapping = {
 	"DeltaValue":	DeltaValue,
 	"VarIdxMapValue":	VarIdxMapValue,
 	"VarDataValue":	VarDataValue,
+
 	# AAT
 	"MortChain":	StructWithLength,
 	"MortSubtable": StructWithLength,
 	"MorxChain":	StructWithLength,
 	"MorxSubtable": StructWithLength,
+
 	# "Template" types
 	"AATLookup":	lambda C: partial(AATLookup, tableClass=C),
+	"AATLookupWithDataOffset":	lambda C: partial(AATLookupWithDataOffset, tableClass=C),
 	"OffsetTo":	lambda C: partial(Table, tableClass=C),
 	"LOffsetTo":	lambda C: partial(LTable, tableClass=C),
 }
