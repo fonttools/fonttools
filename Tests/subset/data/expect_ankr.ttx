@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <ankr>
+    <AnchorPoints Format="0">
+      <Flags value="0"/>
+      <Anchors>
+        <Lookup glyph="one">
+          <!-- AnchorPointCount=1 -->
+          <AnchorPoint index="0">
+            <XCoordinate value="565"/>
+            <YCoordinate value="1118"/>
+          </AnchorPoint>
+        </Lookup>
+      </Anchors>
+    </AnchorPoints>
+  </ankr>
+
+</ttFont>

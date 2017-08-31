@@ -95,6 +95,19 @@ class SubsetTest(unittest.TestCase):
         subsetfont = TTFont(subsetpath)
         self.expect_ttx(subsetfont, self.getpath("expect_no_notdef_outline_ttf.ttx"), ["glyf", "hmtx"])
 
+    def test_subset_ankr(self):
+        _, fontpath = self.compile_font(self.getpath("TestANKR.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--glyphs=one", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_ankr.ttx"), ["ankr"])
+
+    def test_subset_ankr_remove(self):
+        _, fontpath = self.compile_font(self.getpath("TestANKR.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--glyphs=two", "--output-file=%s" % subsetpath])
+        self.assertNotIn("ankr", TTFont(subsetpath))
+
     def test_subset_bsln_format_0(self):
         _, fontpath = self.compile_font(self.getpath("TestBSLN-0.ttx"), ".ttf")
         subsetpath = self.temp_path(".ttf")

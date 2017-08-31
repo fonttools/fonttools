@@ -1675,6 +1675,14 @@ def subset_glyphs(self, s):
     self.hdmx = {sz:_dict_subset(l, s.glyphs) for sz,l in self.hdmx.items()}
     return bool(self.hdmx)
 
+@_add_method(ttLib.getTableClass('ankr'))
+def subset_glyphs(self, s):
+    table = self.table.AnchorPoints
+    assert table.Format == 0, "unknown 'ankr' format %s" % table.Format
+    table.Anchors = {glyph: table.Anchors[glyph] for glyph in s.glyphs
+                     if glyph in table.Anchors}
+    return len(table.Anchors) > 0
+
 @_add_method(ttLib.getTableClass('bsln'))
 def closure_glyphs(self, s):
     table = self.table.Baseline
