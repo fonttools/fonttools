@@ -25,17 +25,17 @@ OPBD_FORMAT_0_XML = [
     '<Version value="0x00010000"/>',
     '<OpticalBounds Format="0">',
     '  <OpticalBoundsDeltas>',
-    '    <Lookup glyph="C">',  # GlyphID 10
-    '      <Left value="-50"/>',
-    '      <Top value="5"/>',
-    '      <Right value="55"/>',
-    '      <Bottom value="-5"/>',
-    '    </Lookup>',
-    '    <Lookup glyph="A">',  # GlyphID 43
+    '    <Lookup glyph="A">',
     '      <Left value="-10"/>',
     '      <Top value="15"/>',
     '      <Right value="0"/>',
     '      <Bottom value="0"/>',
+    '    </Lookup>',
+    '    <Lookup glyph="C">',
+    '      <Left value="-50"/>',
+    '      <Top value="5"/>',
+    '      <Right value="55"/>',
+    '      <Bottom value="-5"/>',
     '    </Lookup>',
     '  </OpticalBoundsDeltas>',
     '</OpticalBounds>',
@@ -61,17 +61,17 @@ OPBD_FORMAT_1_XML = [
     '<Version value="0x00010000"/>',
     '<OpticalBounds Format="1">',
     '  <OpticalBoundsPoints>',
-    '    <Lookup glyph="C">',  # GlyphID 10
-    '      <Left value="36"/>',
-    '      <Top value="37"/>',
-    '      <Right value="38"/>',
-    '      <Bottom value="39"/>',
-    '    </Lookup>',
-    '    <Lookup glyph="A">',  # GlyphID 43
+    '    <Lookup glyph="A">',
     '      <Left value="32"/>',
     '      <Top value="41"/>',
     '      <Right value="-1"/>',
     '      <Bottom value="-1"/>',
+    '    </Lookup>',
+    '    <Lookup glyph="C">',
+    '      <Left value="36"/>',
+    '      <Top value="37"/>',
+    '      <Right value="38"/>',
+    '      <Bottom value="39"/>',
     '    </Lookup>',
     '  </OpticalBoundsPoints>',
     '</OpticalBounds>',
@@ -149,7 +149,7 @@ class OPBDTest(unittest.TestCase):
     def test_decompile_toXML_format0(self):
         table = newTable('opbd')
         table.decompile(OPBD_FORMAT_0_DATA, self.font)
-        self.assertEqual(getXML(table.toXML, self.font), OPBD_FORMAT_0_XML)
+        self.assertEqual(getXML(table.toXML), OPBD_FORMAT_0_XML)
 
     def test_compile_fromXML_format0(self):
         table = newTable('opbd')
@@ -161,7 +161,7 @@ class OPBDTest(unittest.TestCase):
     def test_decompile_toXML_format1(self):
         table = newTable('opbd')
         table.decompile(OPBD_FORMAT_1_DATA, self.font)
-        self.assertEqual(getXML(table.toXML, self.font), OPBD_FORMAT_1_XML)
+        self.assertEqual(getXML(table.toXML), OPBD_FORMAT_1_XML)
 
     def test_compile_fromXML_format1(self):
         table = newTable('opbd')
@@ -174,9 +174,8 @@ class OPBDTest(unittest.TestCase):
         # Make sure we do not crash when decompiling the 'opbd' table of
         # AppleChancery.ttf. https://github.com/fonttools/fonttools/issues/1031
         table = newTable('opbd')
-        font = FakeFont([".notdef"] + ['G.alt%d' % i for i in range(1, 600)])
-        table.decompile(OPBD_APPLE_CHANCERY_DATA, font)
-        self.assertIn('<OpticalBounds Format="0">', getXML(table.toXML, font))
+        table.decompile(OPBD_APPLE_CHANCERY_DATA, self.font)
+        self.assertIn('<OpticalBounds Format="0">', getXML(table.toXML))
 
 
 if __name__ == '__main__':

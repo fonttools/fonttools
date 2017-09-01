@@ -798,9 +798,9 @@ class AATLookup(BaseConverter):
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		xmlWriter.begintag(name, attrs)
 		xmlWriter.newline()
-		for glyph in sorted(value, key=font.getGlyphID):
+		for glyph, value in sorted(value.items()):
 			self.converter.xmlWrite(
-				xmlWriter, font, value=value[glyph],
+				xmlWriter, font, value=value,
 				name="Lookup", attrs=[("glyph", glyph)])
 		xmlWriter.endtag(name)
 		xmlWriter.newline()

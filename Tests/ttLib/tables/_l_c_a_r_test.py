@@ -25,14 +25,14 @@ LCAR_FORMAT_0_XML = [
     '<Version value="0x00010000"/>',
     '<LigatureCarets Format="0">',
     '  <Carets>',
-    '    <Lookup glyph="f_r">',
-    '      <!-- DivsionPointCount=1 -->',
-    '      <DivisionPoint index="0" value="220"/>',
-    '    </Lookup>',
     '    <Lookup glyph="f_f_l">',
     '      <!-- DivsionPointCount=2 -->',
     '      <DivisionPoint index="0" value="239"/>',
     '      <DivisionPoint index="1" value="472"/>',
+    '    </Lookup>',
+    '    <Lookup glyph="f_r">',
+    '      <!-- DivsionPointCount=1 -->',
+    '      <DivisionPoint index="0" value="220"/>',
     '    </Lookup>',
     '  </Carets>',
     '</LigatureCarets>',
@@ -58,14 +58,14 @@ LCAR_FORMAT_1_XML = [
     '<Version value="0x00010000"/>',
     '<LigatureCarets Format="1">',
     '  <Carets>',
-    '    <Lookup glyph="f_r">',
-    '      <!-- DivsionPointCount=1 -->',
-    '      <DivisionPoint index="0" value="50"/>',
-    '    </Lookup>',
     '    <Lookup glyph="f_f_l">',
     '      <!-- DivsionPointCount=2 -->',
     '      <DivisionPoint index="0" value="55"/>',
     '      <DivisionPoint index="1" value="75"/>',
+    '    </Lookup>',
+    '    <Lookup glyph="f_r">',
+    '      <!-- DivsionPointCount=1 -->',
+    '      <DivisionPoint index="0" value="50"/>',
     '    </Lookup>',
     '  </Carets>',
     '</LigatureCarets>',
@@ -82,7 +82,7 @@ class LCARTest(unittest.TestCase):
     def test_decompile_toXML_format0(self):
         table = newTable('lcar')
         table.decompile(LCAR_FORMAT_0_DATA, self.font)
-        self.assertEqual(getXML(table.toXML, self.font), LCAR_FORMAT_0_XML)
+        self.assertEqual(getXML(table.toXML), LCAR_FORMAT_0_XML)
 
     def test_compile_fromXML_format0(self):
         table = newTable('lcar')
@@ -94,7 +94,7 @@ class LCARTest(unittest.TestCase):
     def test_decompile_toXML_format1(self):
         table = newTable('lcar')
         table.decompile(LCAR_FORMAT_1_DATA, self.font)
-        self.assertEqual(getXML(table.toXML, self.font), LCAR_FORMAT_1_XML)
+        self.assertEqual(getXML(table.toXML), LCAR_FORMAT_1_XML)
 
     def test_compile_fromXML_format1(self):
         table = newTable('lcar')

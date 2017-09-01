@@ -100,7 +100,7 @@ class MORTNoncontextualGlyphSubstitutionTest(unittest.TestCase):
     def test_decompile_toXML(self):
         table = newTable('mort')
         table.decompile(MORT_NONCONTEXTUAL_DATA, self.font)
-        self.assertEqual(getXML(table.toXML, self.font), MORT_NONCONTEXTUAL_XML)
+        self.assertEqual(getXML(table.toXML), MORT_NONCONTEXTUAL_XML)
 
     def test_compile_fromXML(self):
         table = newTable('mort')

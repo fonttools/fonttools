@@ -57,7 +57,7 @@ class PROPTest(unittest.TestCase):
     def test_decompile_toXML_format0(self):
         table = newTable('prop')
         table.decompile(PROP_FORMAT_0_DATA, self.font)
-        self.assertEqual(getXML(table.toXML, self.font), PROP_FORMAT_0_XML)
+        self.assertEqual(getXML(table.toXML), PROP_FORMAT_0_XML)
 
     def test_compile_fromXML_format0(self):
         table = newTable('prop')
@@ -69,7 +69,7 @@ class PROPTest(unittest.TestCase):
     def test_decompile_toXML_format1(self):
         table = newTable('prop')
         table.decompile(PROP_FORMAT_1_DATA, self.font)
-        self.assertEqual(getXML(table.toXML, self.font), PROP_FORMAT_1_XML)
+        self.assertEqual(getXML(table.toXML), PROP_FORMAT_1_XML)
 
     def test_compile_fromXML_format1(self):
         table = newTable('prop')

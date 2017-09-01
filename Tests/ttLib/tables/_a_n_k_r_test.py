@@ -140,7 +140,7 @@ class ANKRTest(unittest.TestCase):
     def decompileToXML(self, data, xml):
         table = newTable('ankr')
         table.decompile(data, self.font)
-        self.assertEqual(getXML(table.toXML, self.font), xml)
+        self.assertEqual(getXML(table.toXML), xml)
 
     def compileFromXML(self, xml, data):
         table = newTable('ankr')
