@@ -25,6 +25,8 @@ def _moduleFinderHint():
 	from . import G_P_K_G_
 	from . import G_P_O_S_
 	from . import G_S_U_B_
+	from . import G__l_a_t
+	from . import G__l_o_c
 	from . import H_V_A_R_
 	from . import J_S_T_F_
 	from . import L_T_S_H_
