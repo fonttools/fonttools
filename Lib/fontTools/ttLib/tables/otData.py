@@ -1387,7 +1387,7 @@ otData = [
 	]),
 
 	('RearrangementMorph', [
-		('struct', 'StateHeader', None, None, 'Header.'),
+		('STXHeader(AATRearrangement)', 'StateTable', None, None, 'Finite-state transducer table.'),
 	]),
 
 	('ContextualMorph', [

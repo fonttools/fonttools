@@ -1,7 +1,10 @@
-from __future__ import print_function, division, absolute_import
+# coding: utf-8
+from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
-from fontTools.misc.testTools import parseXML, FakeFont
+from fontTools.misc.testTools import getXML, parseXML, FakeFont
+from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
+from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
 import fontTools.ttLib.tables.otTables as otTables
 import unittest
 
@@ -365,6 +368,33 @@ class AlternateSubstTest(unittest.TestCase):
             "G": ["G.alt2", "G.alt1"],
             "Z": ["Z.fina"]
         })
+
+
+class AATRearrangementTest(unittest.TestCase):
+    def setUp(self):
+        self.font = FakeFont(['.notdef', 'A', 'B', 'C'])
+
+    def testCompile(self):
+        r = otTables.AATRearrangement()
+        r.NewState = 0x1234
+        r.MarkFirst = r.DontAdvance = r.MarkLast = True
+        r.ReservedFlags, r.Verb = 0x1FF0, 0xD
+        writer = OTTableWriter()
+        r.compile(writer, self.font)
+        self.assertEqual(hexStr(writer.getAllData()), "1234fffd")
+
+    def testDecompileToXML(self):
+        r = otTables.AATRearrangement()
+        r.decompile(OTTableReader(deHexStr("1234fffd")), self.font)
+        toXML = lambda w, f: r.toXML(w, f, {"Test": "Foo"}, "Transition")
+        self.assertEqual(getXML(toXML, self.font), [
+                '<Transition Test="Foo">',
+                '  <NewState value="4660"/>',  # 0x1234 = 4660
+                '  <Flags value="MarkFirst,DontAdvance,MarkLast"/>',
+                '  <ReservedFlags value="0x1FF0"/>',
+                '  <Verb value="13"/><!-- ABxCD ⇒ CDxBA -->',
+                '</Transition>',
+        ])
 
 
 if __name__ == "__main__":
