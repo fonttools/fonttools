@@ -1,10 +1,11 @@
+# coding: utf-8
 """fontTools.ttLib.tables.otTables -- A collection of classes representing the various
 OpenType subtables.
 
 Most are constructed upon import from data in otData.py, all are populated with
 converter objects from otConverters.py.
 """
-from __future__ import print_function, division, absolute_import
+from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval
 from .otBase import BaseTable, FormatSwitchingBaseTable
@@ -13,6 +14,107 @@ import logging
 
 
 log = logging.getLogger(__name__)
+
+
+class AATStateTable(object):
+	def __init__(self):
+		self.GlyphClasses = {}  # GlyphName --> GlyphClass
+		self.States = []  # List of AATState, indexed by state number
+
+class AATState(object):
+	def __init__(self):
+		self.Transitions = {}  # GlyphClass --> {AATRearrangement, ...}
+
+
+class AATRearrangement(object):
+	staticSize = 4
+
+	_VERBS = {
+		0: "no change",
+		1: "Ax ⇒ xA",
+		2: "xD ⇒ Dx",
+		3: "AxD ⇒ DxA",
+		4: "ABx ⇒ xAB",
+		5: "ABx ⇒ xBA",
+		6: "xCD ⇒ CDx",
+		7: "xCD ⇒ DCx",
+		8: "AxCD ⇒ CDxA",
+		9: "AxCD ⇒ DCxA",
+		10: "ABxD ⇒ DxAB",
+		11: "ABxD ⇒ DxBA",
+		12: "ABxCD ⇒ CDxAB",
+		13: "ABxCD ⇒ CDxBA",
+		14: "ABxCD ⇒ DCxAB",
+		15: "ABxCD ⇒ DCxBA",
+        }
+
+	def __init__(self):
+		self.NewState = 0
+		self.Verb = 0
+		self.MarkFirst = False
+		self.DontAdvance = False
+		self.MarkLast = False
+		self.ReservedFlags = 0
+
+	def compile(self, writer, font):
+		writer.writeUShort(self.NewState)
+		assert self.Verb >= 0 and self.Verb <= 15, self.Verb
+		flags = self.Verb | self.ReservedFlags
+		if self.MarkFirst: flags |= 0x8000
+		if self.DontAdvance: flags |= 0x4000
+		if self.MarkLast: flags |= 0x2000
+		writer.writeUShort(flags)
+
+	def decompile(self, reader, font):
+		self.NewState = reader.readUShort()
+		flags = reader.readUShort()
+		self.Verb = flags & 0xF
+		self.MarkFirst = bool(flags & 0x8000)
+		self.DontAdvance = bool(flags & 0x4000)
+		self.MarkLast = bool(flags & 0x2000)
+		self.ReservedFlags = flags & 0x1FF0
+
+	def toXML(self, xmlWriter, font, attrs, name):
+		xmlWriter.begintag(name, **attrs)
+		xmlWriter.newline()
+		xmlWriter.simpletag("NewState", value=self.NewState)
+		xmlWriter.newline()
+		flags = [f for f in ("MarkFirst", "DontAdvance", "MarkLast")
+		         if self.__dict__[f]]
+		if flags:
+			xmlWriter.simpletag("Flags", value=",".join(flags))
+			xmlWriter.newline()
+		if self.ReservedFlags != 0:
+			xmlWriter.simpletag("ReservedFlags",
+			                    value='0x%04X' % self.ReservedFlags)
+			xmlWriter.newline()
+		xmlWriter.simpletag("Verb", value=self.Verb)
+		verbComment = self._VERBS.get(self.Verb)
+		if verbComment is not None:
+			xmlWriter.comment(verbComment)
+		xmlWriter.newline()
+		xmlWriter.endtag(name)
+		xmlWriter.newline()
+
+	def fromXML(self, name, attrs, content, font):
+		self.NewState = self.Verb = self.ReservedFlags = 0
+		self.MarkFirst = self.DontAdvance = self.MarkLast = False
+		content = [t for t in content if isinstance(t, tuple)]
+		for eltName, eltAttrs, eltContent in content:
+			if eltName == "NewState":
+				self.NewState = safeEval(eltAttrs["value"])
+			elif eltName == "Verb":
+				self.Verb = safeEval(eltAttrs["value"])
+			elif eltName == "ReservedFlags":
+				self.ReservedFlags = safeEval(eltAttrs["value"])
+			elif eltName == "Flags":
+				for flag in eltAttrs["value"].split(","):
+					self._setFlag(flag.strip())
+
+	def _setFlag(self, flag):
+		assert flag in {"MarkFirst", "DontAdvance", "MarkLast"}, \
+			"unsupported flag %s" % flag
+		self.__dict__[flag] = True
 
 
 class FeatureParams(BaseTable):
@@ -649,7 +751,6 @@ class LigatureSubst(FormatSwitchingBaseTable):
 			ligs.append(lig)
 
 
-#
 # For each subtable format there is a class. However, we don't really distinguish
 # between "field name" and "format name": often these are the same. Yet there's
 # a whole bunch of fields with different names. The following dict is a mapping
@@ -995,7 +1096,7 @@ def _buildClasses():
 			4: NoncontextualMorph,
 		},
 		'morx': {
-			# 0: RearrangementMorph,
+			0: RearrangementMorph,
 			# 1: ContextualMorph,
 			# 2: LigatureMorph,
 			# 3: Reserved,

@@ -3,15 +3,17 @@ from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import (
 	fixedToFloat as fi2fl, floatToFixed as fl2fi, ensureVersionIsLong as fi2ve,
 	versionToFixed as ve2fi)
-from fontTools.misc.textTools import safeEval
+from fontTools.misc.textTools import pad, safeEval
 from fontTools.ttLib import getSearchRange
 from .otBase import ValueRecordFactory, CountReference, OTTableWriter
+from .otTables import AATStateTable, AATState
 from functools import partial
 import struct
 import logging
 
 
 log = logging.getLogger(__name__)
+istuple = lambda t: isinstance(t, tuple)
 
 
 def buildConverters(tableSpec, tableNamespace):
@@ -874,6 +876,128 @@ class AATLookupWithDataOffset(BaseConverter):
 		lookup.xmlWrite(xmlWriter, font, value, name, attrs)
 
 
+# https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6Tables.html#ExtendedStateHeader
+class STXHeader(BaseConverter):
+	def __init__(self, name, repeat, aux, tableClass):
+		BaseConverter.__init__(self, name, repeat, aux, tableClass)
+		assert tableClass is not None
+		self.classLookup = AATLookup("GlyphClasses", None, None, UShort)
+
+	def read(self, reader, font, tableDict):
+		table = AATStateTable()
+		pos = reader.pos
+		classTableReader = reader.getSubReader(0)
+		stateArrayReader = reader.getSubReader(0)
+		entryTableReader = reader.getSubReader(0)
+		table.GlyphClassCount = reader.readULong()
+		classTableReader.seek(pos + reader.readULong())
+		stateArrayReader.seek(pos + reader.readULong())
+		entryTableReader.seek(pos + reader.readULong())
+		table.GlyphClasses = self.classLookup.read(classTableReader,
+		                                           font, tableDict)
+		numStates = int((entryTableReader.pos - stateArrayReader.pos)
+		                 / (table.GlyphClassCount * 2))
+		for stateIndex in range(numStates):
+			state = AATState()
+			table.States.append(state)
+			for glyphClass in range(table.GlyphClassCount):
+				entryIndex = stateArrayReader.readUShort()
+				state.Transitions[glyphClass] = \
+					self._readTransition(entryTableReader,
+					                     entryIndex, font)
+		return table
+
+	def _readTransition(self, reader, entryIndex, font):
+		transition = self.tableClass()
+		entryReader = reader.getSubReader(
+			reader.pos + entryIndex * transition.staticSize)
+		transition.decompile(entryReader, font)
+		return transition
+
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		glyphClassWriter = OTTableWriter()
+		self.classLookup.write(glyphClassWriter, font, tableDict,
+		                       value.GlyphClasses, repeatIndex=None)
+		glyphClassData = pad(glyphClassWriter.getAllData(), 4)
+		glyphClassCount = max(value.GlyphClasses.values()) + 1
+		glyphClassTableOffset = 16  # size of STXHeader
+		stateArrayWriter = OTTableWriter()
+		entries, entryIDs = [], {}
+		for state in value.States:
+			for glyphClass in range(glyphClassCount):
+				transition = state.Transitions[glyphClass]
+				entryWriter = OTTableWriter()
+				transition.compile(entryWriter, font)
+				entryData = entryWriter.getAllData()
+				assert len(entryData)  == transition.staticSize, ( \
+					"%s has staticSize %d, "
+					"but actually wrote %d bytes" % (
+						repr(transition),
+						transition.staticSize,
+						len(entryData)))
+				entryIndex = entryIDs.get(entryData)
+				if entryIndex is None:
+					entryIndex = len(entries)
+					entryIDs[entryData] = entryIndex
+					entries.append(entryData)
+				stateArrayWriter.writeUShort(entryIndex)
+		stateArrayOffset = glyphClassTableOffset + len(glyphClassData)
+		stateArrayData = stateArrayWriter.getAllData()
+		entryTableOffset = stateArrayOffset + len(stateArrayData)
+		writer.writeULong(glyphClassCount)
+		writer.writeULong(glyphClassTableOffset)
+		writer.writeULong(stateArrayOffset)
+		writer.writeULong(entryTableOffset)
+		writer.writeData(glyphClassData)
+		writer.writeData(stateArrayData)
+		for entry in entries:
+			writer.writeData(entry)
+
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		xmlWriter.begintag(name, attrs)
+		xmlWriter.newline()
+		xmlWriter.comment("GlyphClassCount=%s" %value.GlyphClassCount)
+		xmlWriter.newline()
+		for g, klass in sorted(value.GlyphClasses.items()):
+			xmlWriter.simpletag("GlyphClass", glyph=g, value=klass)
+			xmlWriter.newline()
+		for stateIndex, state in enumerate(value.States):
+			xmlWriter.begintag("State", index=stateIndex)
+			xmlWriter.newline()
+			for glyphClass, trans in sorted(state.Transitions.items()):
+				trans.toXML(xmlWriter, font=font,
+				            attrs={"onGlyphClass": glyphClass},
+				            name="Transition")
+			xmlWriter.endtag("State")
+			xmlWriter.newline()
+		xmlWriter.endtag(name)
+		xmlWriter.newline()
+
+	def xmlRead(self, attrs, content, font):
+		table = AATStateTable()
+		for eltName, eltAttrs, eltContent in filter(istuple, content):
+			if eltName == "GlyphClass":
+				glyph = eltAttrs["glyph"]
+				value = eltAttrs["value"]
+				table.GlyphClasses[glyph] = safeEval(value)
+			elif eltName == "State":
+				state = self._xmlReadState(eltAttrs, eltContent, font)
+				table.States.append(state)
+		table.GlyphClassCount = max(table.GlyphClasses.values()) + 1
+		return table
+
+	def _xmlReadState(self, attrs, content, font):
+		state = AATState()
+		for eltName, eltAttrs, eltContent in filter(istuple, content):
+			if eltName == "Transition":
+				glyphClass = safeEval(eltAttrs["onGlyphClass"])
+				transition = self.tableClass()
+				transition.fromXML(eltName, eltAttrs,
+				                   eltContent, font)
+				state.Transitions[glyphClass] = transition
+		return state
+
+
 class DeltaValue(BaseConverter):
 
 	def read(self, reader, font, tableDict):
@@ -1048,6 +1172,7 @@ converterMapping = {
 	# "Template" types
 	"AATLookup":	lambda C: partial(AATLookup, tableClass=C),
 	"AATLookupWithDataOffset":	lambda C: partial(AATLookupWithDataOffset, tableClass=C),
+	"STXHeader":	lambda C: partial(STXHeader, tableClass=C),
 	"OffsetTo":	lambda C: partial(Table, tableClass=C),
 	"LOffsetTo":	lambda C: partial(LTable, tableClass=C),
 }
