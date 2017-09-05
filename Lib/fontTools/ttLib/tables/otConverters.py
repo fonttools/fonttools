@@ -5,7 +5,8 @@ from fontTools.misc.fixedTools import (
 	versionToFixed as ve2fi)
 from fontTools.misc.textTools import pad, safeEval
 from fontTools.ttLib import getSearchRange
-from .otBase import ValueRecordFactory, CountReference, OTTableWriter
+from .otBase import (CountReference, FormatSwitchingBaseTable,
+                     OTTableWriter, ValueRecordFactory)
 from .otTables import (AATStateTable, AATState, AATAction,
                        ContextualMorphAction)
 from functools import partial
@@ -42,6 +43,8 @@ def buildConverters(tableSpec, tableNamespace):
 			converterClass = SubStruct
 		elif name == "FeatureParams":
 			converterClass = FeatureParams
+		elif name == "GlyphCIDMapping":
+			converterClass = StructWithLength
 		else:
 			if not tp in converterMapping and '(' not in tp:
 				tableName = tp
@@ -461,6 +464,8 @@ class StructWithLength(Struct):
 			if conv.name == "StructLength":
 				break
 		lengthIndex = len(writer.items) + convIndex
+		if isinstance(value, FormatSwitchingBaseTable):
+			lengthIndex += 1  # implicit Format field
 		deadbeef = {1:0xDE, 2:0xDEAD, 4:0xDEADBEEF}[conv.staticSize]
 
 		before = writer.getDataLength()
@@ -1077,6 +1082,52 @@ class STXHeader(BaseConverter):
 		return state
 
 
+class GlyphCIDMap(BaseConverter):
+	def read(self, reader, font, tableDict):
+		glyphOrder = font.getGlyphOrder()
+		count = reader.readUShort()
+		cids = reader.readUShortArray(count)
+		if count > len(glyphOrder):
+			log.warning("GlyphCIDMap has %d elements, "
+			            "but the font has only %d glyphs; "
+			            "ignoring the rest" %
+			             (count, len(glyphOrder)))
+		result = {}
+		for glyphID in range(min(len(cids), len(glyphOrder))):
+			cid = cids[glyphID]
+			if cid != 0xFFFF:
+				result[glyphOrder[glyphID]] = cids[glyphID]
+		return result
+
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		items = {font.getGlyphID(g): cid
+		         for g, cid in value.items()
+		         if cid is not None and cid != 0xFFFF}
+		count = max(items) + 1 if items else 0
+		writer.writeUShort(count)
+		for glyphID in range(count):
+			writer.writeUShort(items.get(glyphID, 0xFFFF))
+
+	def xmlRead(self, attrs, content, font):
+		result = {}
+		for eName, eAttrs, _eContent in filter(istuple, content):
+			if eName == "CID":
+				result[eAttrs["glyph"]] = \
+					safeEval(eAttrs["value"])
+		return result
+
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		xmlWriter.begintag(name, attrs)
+		xmlWriter.newline()
+		for glyph, cid in sorted(value.items()):
+			if cid is not None and cid != 0xFFFF:
+				xmlWriter.simpletag(
+					"CID", glyph=glyph, value=cid)
+				xmlWriter.newline()
+		xmlWriter.endtag(name)
+		xmlWriter.newline()
+
+
 class DeltaValue(BaseConverter):
 
 	def read(self, reader, font, tableDict):
@@ -1243,6 +1294,7 @@ converterMapping = {
 	"VarDataValue":	VarDataValue,
 
 	# AAT
+	"GlyphCIDMap":	GlyphCIDMap,
 	"MortChain":	StructWithLength,
 	"MortSubtable": StructWithLength,
 	"MorxChain":	StructWithLength,
