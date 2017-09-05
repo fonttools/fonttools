@@ -18,16 +18,38 @@ log = logging.getLogger(__name__)
 
 class AATStateTable(object):
 	def __init__(self):
-		self.GlyphClasses = {}  # GlyphName --> GlyphClass
+		self.GlyphClasses = {}  # GlyphID --> GlyphClass
 		self.States = []  # List of AATState, indexed by state number
+		self.PerGlyphLookups = []  # [{GlyphID:GlyphID}, ...]
+
 
 class AATState(object):
 	def __init__(self):
-		self.Transitions = {}  # GlyphClass --> {AATRearrangement, ...}
+		self.Transitions = {}  # GlyphClass --> AATAction
 
 
-class AATRearrangement(object):
+class AATAction(object):
+	_FLAGS = None
+
+	def _writeFlagsToXML(self, xmlWriter):
+		flags = [f for f in self._FLAGS if self.__dict__[f]]
+		if flags:
+			xmlWriter.simpletag("Flags", value=",".join(flags))
+			xmlWriter.newline()
+		if self.ReservedFlags != 0:
+			xmlWriter.simpletag(
+				"ReservedFlags",
+				value='0x%04X' % self.ReservedFlags)
+			xmlWriter.newline()
+
+	def _setFlag(self, flag):
+		assert flag in self._FLAGS, "unsupported flag %s" % flag
+		self.__dict__[flag] = True
+
+
+class RearrangementMorphAction(AATAction):
 	staticSize = 4
+	_FLAGS = ["MarkFirst", "DontAdvance", "MarkLast"]
 
 	_VERBS = {
 		0: "no change",
@@ -79,15 +101,7 @@ class AATRearrangement(object):
 		xmlWriter.newline()
 		xmlWriter.simpletag("NewState", value=self.NewState)
 		xmlWriter.newline()
-		flags = [f for f in ("MarkFirst", "DontAdvance", "MarkLast")
-		         if self.__dict__[f]]
-		if flags:
-			xmlWriter.simpletag("Flags", value=",".join(flags))
-			xmlWriter.newline()
-		if self.ReservedFlags != 0:
-			xmlWriter.simpletag("ReservedFlags",
-			                    value='0x%04X' % self.ReservedFlags)
-			xmlWriter.newline()
+		self._writeFlagsToXML(xmlWriter)
 		xmlWriter.simpletag("Verb", value=self.Verb)
 		verbComment = self._VERBS.get(self.Verb)
 		if verbComment is not None:
@@ -111,11 +125,66 @@ class AATRearrangement(object):
 				for flag in eltAttrs["value"].split(","):
 					self._setFlag(flag.strip())
 
-	def _setFlag(self, flag):
-		assert flag in {"MarkFirst", "DontAdvance", "MarkLast"}, \
-			"unsupported flag %s" % flag
-		self.__dict__[flag] = True
 
+class ContextualMorphAction(AATAction):
+	staticSize = 8
+	_FLAGS = ["SetMark", "DontAdvance"]
+
+	def __init__(self):
+		self.NewState = 0
+		self.SetMark, self.DontAdvance = False, False
+		self.ReservedFlags = 0
+		self.MarkIndex, self.CurrentIndex = 0xFFFF, 0xFFFF
+
+	def compile(self, writer, font):
+		writer.writeUShort(self.NewState)
+		flags = self.ReservedFlags
+		if self.SetMark: flags |= 0x8000
+		if self.DontAdvance: flags |= 0x4000
+		writer.writeUShort(flags)
+		writer.writeUShort(self.MarkIndex)
+		writer.writeUShort(self.CurrentIndex)
+
+	def decompile(self, reader, font):
+		self.NewState = reader.readUShort()
+		flags = reader.readUShort()
+		self.SetMark = bool(flags & 0x8000)
+		self.DontAdvance = bool(flags & 0x4000)
+		self.ReservedFlags = flags & 0x3FFF
+		self.MarkIndex = reader.readUShort()
+		self.CurrentIndex = reader.readUShort()
+
+	def toXML(self, xmlWriter, font, attrs, name):
+		xmlWriter.begintag(name, **attrs)
+		xmlWriter.newline()
+		xmlWriter.simpletag("NewState", value=self.NewState)
+		xmlWriter.newline()
+		self._writeFlagsToXML(xmlWriter)
+		xmlWriter.simpletag("MarkIndex", value=self.MarkIndex)
+		xmlWriter.newline()
+		xmlWriter.simpletag("CurrentIndex",
+		                    value=self.CurrentIndex)
+		xmlWriter.newline()
+		xmlWriter.endtag(name)
+		xmlWriter.newline()
+
+	def fromXML(self, name, attrs, content, font):
+		self.NewState = self.ReservedFlags = 0
+		self.SetMark = self.DontAdvance = False
+		self.MarkIndex, self.CurrentIndex = 0xFFFF, 0xFFFF
+		content = [t for t in content if isinstance(t, tuple)]
+		for eltName, eltAttrs, eltContent in content:
+			if eltName == "NewState":
+				self.NewState = safeEval(eltAttrs["value"])
+			elif eltName == "Flags":
+				for flag in eltAttrs["value"].split(","):
+					self._setFlag(flag.strip())
+			elif eltName == "ReservedFlags":
+				self.ReservedFlags = safeEval(eltAttrs["value"])
+			elif eltName == "MarkIndex":
+				self.MarkIndex = safeEval(eltAttrs["value"])
+			elif eltName == "CurrentIndex":
+				self.CurrentIndex = safeEval(eltAttrs["value"])
 
 class FeatureParams(BaseTable):
 
@@ -1097,7 +1166,7 @@ def _buildClasses():
 		},
 		'morx': {
 			0: RearrangementMorph,
-			# 1: ContextualMorph,
+			1: ContextualMorph,
 			# 2: LigatureMorph,
 			# 3: Reserved,
 			4: NoncontextualMorph,

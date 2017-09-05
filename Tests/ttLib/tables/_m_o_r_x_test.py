@@ -90,7 +90,7 @@ MORX_REARRANGEMENT_DATA = deHexStr(
     '0002 0000 '  #  0: Version=2, Reserved=0
     '0000 0001 '  #  4: MorphChainCount=1
     '0000 0001 '  #  8: DefaultFlags=1
-    '0000 0078 '  # 12: StructLength=120
+    '0000 0078 '  # 12: StructLength=120 (+8=128)
     '0000 0000 '  # 16: MorphFeatureCount=0
     '0000 0001 '  # 20: MorphSubtableCount=1
     '0000 0068 '  # 24: Subtable[0].StructLength=104 (+24=128)
@@ -233,6 +233,233 @@ MORX_REARRANGEMENT_XML = [
 ]
 
 
+# Taken from “Example 1: A contextal substituation table” in
+# https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6morx.html
+# as retrieved on 2017-09-05.
+#
+# Compared to the example table in Apple’s specification, we’ve
+# made the following changes:
+#
+# * at offsets 0..35, we’ve prepended 36 bytes of boilerplate
+#   to make the data a structurally valid ‘morx’ table;
+#
+# * at offset 36 (offset 0 in Apple’s document), we’ve changed
+#   the number of glyph classes from 5 to 6 because the encoded
+#   finite-state machine has transitions for six different glyph
+#   classes (0..5);
+#
+# * at offset 52 (offset 16 in Apple’s document), we’ve replaced
+#   the presumably leftover ‘XXX’ mark by an actual data offset;
+#
+# * at offset 72 (offset 36 in Apple’s document), we’ve changed
+#   the input GlyphID from 51 to 52. With the original value of 51,
+#   the glyph class lookup table can be encoded with equally many
+#   bytes in either format 2 or 6; after changing the GlyphID to 52,
+#   the most compact encoding is lookup format 6, as used in Apple’s
+#   example;
+#
+# * at offset 90 (offset 54 in Apple’s document), we’ve changed
+#   the value for the lookup end-of-table marker from 1 to 0.
+#   Fonttools always uses zero for this value, whereas Apple’s
+#   spec examples are inconsistently using one of {0, 1, 0xFFFF}
+#   for this filler value;
+#
+# * at offset 172 (offset 136 in Apple’s document), we’ve again changed
+#   the input GlyphID from 51 to 52, for the same reason as above.
+#
+# TODO: Ask Apple to fix “Example 1” in the ‘morx’ specification.
+MORX_CONTEXTUAL_DATA = deHexStr(
+    '0002 0000 '  #  0: Version=2, Reserved=0
+    '0000 0001 '  #  4: MorphChainCount=1
+    '0000 0001 '  #  8: DefaultFlags=1
+    '0000 00B4 '  # 12: StructLength=180 (+8=188)
+    '0000 0000 '  # 16: MorphFeatureCount=0
+    '0000 0001 '  # 20: MorphSubtableCount=1
+    '0000 00A4 '  # 24: Subtable[0].StructLength=164 (+24=188)
+    '80 '         # 28: Subtable[0].CoverageFlags=0x80
+    '00 00 '      # 29: Subtable[0].Reserved=0
+    '01 '         # 31: Subtable[0].MorphType=1/ContextualMorph
+    '0000 0001 '  # 32: Subtable[0].SubFeatureFlags=0x1
+    '0000 0006 '  # 36: STXHeader.ClassCount=6
+    '0000 0014 '  # 40: STXHeader.ClassTableOffset=20 (+36=56)
+    '0000 0038 '  # 44: STXHeader.StateArrayOffset=56 (+36=92)
+    '0000 005C '  # 48: STXHeader.EntryTableOffset=92 (+36=128)
+    '0000 0074 '  # 52: STXHeader.PerGlyphTableOffset=116 (+36=152)
+
+    # Glyph class table.
+    '0006 0004 '  # 56: ClassTable.LookupFormat=6, .UnitSize=4
+    '0005 0010 '  # 60:   .NUnits=5, .SearchRange=16
+    '0002 0004 '  # 64:   .EntrySelector=2, .RangeShift=4
+    '0032 0004 '  # 68:   Glyph=50; Class=4
+    '0034 0004 '  # 72:   Glyph=52; Class=4
+    '0050 0005 '  # 76:   Glyph=80; Class=5
+    '00C9 0004 '  # 80:   Glyph=201; Class=4
+    '00CA 0004 '  # 84:   Glyph=202; Class=4
+    'FFFF 0000 '  # 88:   Glyph=<end>; Value=<filler>
+
+    # State array.
+    '0000 0000 0000 0000 0000 0001 '  #  92: State[0][0..5]
+    '0000 0000 0000 0000 0000 0001 '  # 104: State[1][0..5]
+    '0000 0000 0000 0000 0002 0001 '  # 116: State[2][0..5]
+
+    # Entry table.
+    '0000 0000 '  # 128: Entries[0].NewState=0, .Flags=0
+    'FFFF FFFF '  # 132: Entries[0].MarkSubst=None, .CurSubst=None
+    '0002 0000 '  # 136: Entries[1].NewState=2, .Flags=0
+    'FFFF FFFF '  # 140: Entries[1].MarkSubst=None, .CurSubst=None
+    '0000 0000 '  # 144: Entries[2].NewState=0, .Flags=0
+    'FFFF 0000 '  # 148: Entries[2].MarkSubst=None, .CurSubst=PerGlyph #0
+                  # 152: <no padding needed for 4-byte alignment>
+
+    # Per-glyph lookup tables.
+    '0000 0004 '  # 152: Offset from this point to per-glyph lookup #0.
+
+    # Per-glyph lookup #0.
+    '0006 0004 '  # 156: ClassTable.LookupFormat=6, .UnitSize=4
+    '0004 0010 '  # 160:   .NUnits=4, .SearchRange=16
+    '0002 0000 '  # 164:   .EntrySelector=2, .RangeShift=0
+    '0032 0258 '  # 168:   Glyph=50; ReplacementGlyph=600
+    '0034 0259 '  # 172:   Glyph=52; ReplacementGlyph=601
+    '00C9 025A '  # 176:   Glyph=201; ReplacementGlyph=602
+    '00CA 0384 '  # 180:   Glyph=202; ReplacementGlyph=900
+    'FFFF 0000 '  # 184:   Glyph=<end>; Value=<filler>
+
+)                 # 188: <end>
+assert len(MORX_CONTEXTUAL_DATA) == 188, len(MORX_CONTEXTUAL_DATA)
+
+
+MORX_CONTEXTUAL_XML = [
+    '<Version value="2"/>',
+    '<Reserved value="0"/>',
+    '<!-- MorphChainCount=1 -->',
+    '<MorphChain index="0">',
+    '  <DefaultFlags value="0x00000001"/>',
+    '  <!-- StructLength=180 -->',
+    '  <!-- MorphFeatureCount=0 -->',
+    '  <!-- MorphSubtableCount=1 -->',
+    '  <MorphSubtable index="0">',
+    '    <!-- StructLength=164 -->',
+    '    <CoverageFlags value="128"/>',
+    '    <Reserved value="0"/>',
+    '    <!-- MorphType=1 -->',
+    '    <SubFeatureFlags value="0x00000001"/>',
+    '    <ContextualMorph>',
+    '      <StateTable>',
+    '        <!-- GlyphClassCount=6 -->',
+    '        <GlyphClass glyph="A" value="4"/>',
+    '        <GlyphClass glyph="B" value="4"/>',
+    '        <GlyphClass glyph="C" value="5"/>',
+    '        <GlyphClass glyph="X" value="4"/>',
+    '        <GlyphClass glyph="Y" value="4"/>',
+    '        <State index="0">',
+    '          <Transition onGlyphClass="0">',
+    '            <NewState value="0"/>',
+    '            <MarkIndex value="65535"/>',
+    '            <CurrentIndex value="65535"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="1">',
+    '            <NewState value="0"/>',
+    '            <MarkIndex value="65535"/>',
+    '            <CurrentIndex value="65535"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="2">',
+    '            <NewState value="0"/>',
+    '            <MarkIndex value="65535"/>',
+    '            <CurrentIndex value="65535"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="3">',
+    '            <NewState value="0"/>',
+    '            <MarkIndex value="65535"/>',
+    '            <CurrentIndex value="65535"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="4">',
+    '            <NewState value="0"/>',
+    '            <MarkIndex value="65535"/>',
+    '            <CurrentIndex value="65535"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="5">',
+    '            <NewState value="2"/>',
+    '            <MarkIndex value="65535"/>',
+    '            <CurrentIndex value="65535"/>',
+    '          </Transition>',
+    '        </State>',
+    '        <State index="1">',
+    '          <Transition onGlyphClass="0">',
+    '            <NewState value="0"/>',
+    '            <MarkIndex value="65535"/>',
+    '            <CurrentIndex value="65535"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="1">',
+    '            <NewState value="0"/>',
+    '            <MarkIndex value="65535"/>',
+    '            <CurrentIndex value="65535"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="2">',
+    '            <NewState value="0"/>',
+    '            <MarkIndex value="65535"/>',
+    '            <CurrentIndex value="65535"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="3">',
+    '            <NewState value="0"/>',
+    '            <MarkIndex value="65535"/>',
+    '            <CurrentIndex value="65535"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="4">',
+    '            <NewState value="0"/>',
+    '            <MarkIndex value="65535"/>',
+    '            <CurrentIndex value="65535"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="5">',
+    '            <NewState value="2"/>',
+    '            <MarkIndex value="65535"/>',
+    '            <CurrentIndex value="65535"/>',
+    '          </Transition>',
+    '        </State>',
+    '        <State index="2">',
+    '          <Transition onGlyphClass="0">',
+    '            <NewState value="0"/>',
+    '            <MarkIndex value="65535"/>',
+    '            <CurrentIndex value="65535"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="1">',
+    '            <NewState value="0"/>',
+    '            <MarkIndex value="65535"/>',
+    '            <CurrentIndex value="65535"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="2">',
+    '            <NewState value="0"/>',
+    '            <MarkIndex value="65535"/>',
+    '            <CurrentIndex value="65535"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="3">',
+    '            <NewState value="0"/>',
+    '            <MarkIndex value="65535"/>',
+    '            <CurrentIndex value="65535"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="4">',
+    '            <NewState value="0"/>',
+    '            <MarkIndex value="65535"/>',
+    '            <CurrentIndex value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="5">',
+    '            <NewState value="2"/>',
+    '            <MarkIndex value="65535"/>',
+    '            <CurrentIndex value="65535"/>',
+    '          </Transition>',
+    '        </State>',
+    '        <PerGlyphLookup index="0">',
+    '          <Lookup glyph="A" value="A.swash"/>',
+    '          <Lookup glyph="B" value="B.swash"/>',
+    '          <Lookup glyph="X" value="X.swash"/>',
+    '          <Lookup glyph="Y" value="Y.swash"/>',
+    '        </PerGlyphLookup>',
+    '      </StateTable>',
+    '    </ContextualMorph>',
+    '  </MorphSubtable>',
+    '</MorphChain>',
+]
+
+
 class MORXNoncontextualGlyphSubstitutionTest(unittest.TestCase):
 
     @classmethod
@@ -274,6 +501,31 @@ class MORXRearrangementTest(unittest.TestCase):
             table.fromXML(name, attrs, content, font=self.font)
         self.assertEqual(hexStr(table.compile(self.font)),
                          hexStr(MORX_REARRANGEMENT_DATA))
+
+
+class MORXContextualSubstitutionTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.maxDiff = None
+        g = ['.notdef'] + ['g.%d' % i for i in range (1, 910)]
+        g[80] = 'C'
+        g[50], g[52], g[201], g[202] = 'A', 'B', 'X', 'Y'
+        g[600], g[601], g[602], g[900] = (
+            'A.swash', 'B.swash', 'X.swash', 'Y.swash')
+        cls.font = FakeFont(g)
+
+    def test_decompile_toXML(self):
+        table = newTable('morx')
+        table.decompile(MORX_CONTEXTUAL_DATA, self.font)
+        self.assertEqual(getXML(table.toXML), MORX_CONTEXTUAL_XML)
+
+    def test_compile_fromXML(self):
+        table = newTable('morx')
+        for name, attrs, content in parseXML(MORX_CONTEXTUAL_XML):
+            table.fromXML(name, attrs, content, font=self.font)
+        self.assertEqual(hexStr(table.compile(self.font)),
+                         hexStr(MORX_CONTEXTUAL_DATA))
 
 
 if __name__ == '__main__':

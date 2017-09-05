@@ -1387,12 +1387,11 @@ otData = [
 	]),
 
 	('RearrangementMorph', [
-		('STXHeader(AATRearrangement)', 'StateTable', None, None, 'Finite-state transducer table.'),
+		('STXHeader(RearrangementMorphAction)', 'StateTable', None, None, 'Finite-state transducer table for indic rearrangement.'),
 	]),
 
 	('ContextualMorph', [
-		('struct', 'StateHeader', None, None, 'Header.'),
-		# TODO: Add missing parts.
+		('STXHeader(ContextualMorphAction)', 'StateTable', None, None, 'Finite-state transducer for contextual glyph substitution.'),
 	]),
 
 	('LigatureMorph', [
