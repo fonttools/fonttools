@@ -6,7 +6,8 @@ from fontTools.misc.fixedTools import (
 from fontTools.misc.textTools import pad, safeEval
 from fontTools.ttLib import getSearchRange
 from .otBase import ValueRecordFactory, CountReference, OTTableWriter
-from .otTables import AATStateTable, AATState
+from .otTables import (AATStateTable, AATState, AATAction,
+                       ContextualMorphAction)
 from functools import partial
 import struct
 import logging
@@ -880,8 +881,13 @@ class AATLookupWithDataOffset(BaseConverter):
 class STXHeader(BaseConverter):
 	def __init__(self, name, repeat, aux, tableClass):
 		BaseConverter.__init__(self, name, repeat, aux, tableClass)
-		assert tableClass is not None
+		assert issubclass(self.tableClass, AATAction)
 		self.classLookup = AATLookup("GlyphClasses", None, None, UShort)
+		if issubclass(self.tableClass, ContextualMorphAction):
+			self.perGlyphLookup = AATLookup("PerGlyphLookup",
+			                                None, None, GlyphID)
+		else:
+			self.perGlyphLookup = None
 
 	def read(self, reader, font, tableDict):
 		table = AATStateTable()
@@ -893,6 +899,9 @@ class STXHeader(BaseConverter):
 		classTableReader.seek(pos + reader.readULong())
 		stateArrayReader.seek(pos + reader.readULong())
 		entryTableReader.seek(pos + reader.readULong())
+		if self.perGlyphLookup is not None:
+			perGlyphTableReader = reader.getSubReader(0)
+			perGlyphTableReader.seek(pos + reader.readULong())
 		table.GlyphClasses = self.classLookup.read(classTableReader,
 		                                           font, tableDict)
 		numStates = int((entryTableReader.pos - stateArrayReader.pos)
@@ -905,6 +914,9 @@ class STXHeader(BaseConverter):
 				state.Transitions[glyphClass] = \
 					self._readTransition(entryTableReader,
 					                     entryIndex, font)
+		if self.perGlyphLookup is not None:
+			table.PerGlyphLookups = self._readPerGlyphLookups(
+				table, perGlyphTableReader, font)
 		return table
 
 	def _readTransition(self, reader, entryIndex, font):
@@ -914,6 +926,35 @@ class STXHeader(BaseConverter):
 		transition.decompile(entryReader, font)
 		return transition
 
+	def _countPerGlyphLookups(self, table):
+		# Somewhat annoyingly, the morx table does not encode
+		# the size of the per-glyph table. So we need to find
+		# the maximum value that MorphActions use as index
+		# into this table.
+		numLookups = 0
+		for state in table.States:
+			for t in state.Transitions.values():
+				if isinstance(t, ContextualMorphAction):
+					if t.MarkIndex != 0xFFFF:
+						numLookups = max(
+							numLookups,
+							t.MarkIndex + 1)
+					if t.CurrentIndex != 0xFFFF:
+						numLookups = max(
+							numLookups,
+							t.CurrentIndex + 1)
+		return numLookups
+
+	def _readPerGlyphLookups(self, table, reader, font):
+		pos = reader.pos
+		lookups = []
+		for _ in range(self._countPerGlyphLookups(table)):
+			lookupReader = reader.getSubReader(0)
+			lookupReader.seek(pos + reader.readULong())
+			lookups.append(
+				self.perGlyphLookup.read(lookupReader, font, {}))
+		return lookups
+
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		glyphClassWriter = OTTableWriter()
 		self.classLookup.write(glyphClassWriter, font, tableDict,
@@ -921,6 +962,8 @@ class STXHeader(BaseConverter):
 		glyphClassData = pad(glyphClassWriter.getAllData(), 4)
 		glyphClassCount = max(value.GlyphClasses.values()) + 1
 		glyphClassTableOffset = 16  # size of STXHeader
+		if self.perGlyphLookup is not None:
+			glyphClassTableOffset += 4
 		stateArrayWriter = OTTableWriter()
 		entries, entryIDs = [], {}
 		for state in value.States:
@@ -942,16 +985,39 @@ class STXHeader(BaseConverter):
 					entries.append(entryData)
 				stateArrayWriter.writeUShort(entryIndex)
 		stateArrayOffset = glyphClassTableOffset + len(glyphClassData)
-		stateArrayData = stateArrayWriter.getAllData()
+		stateArrayData = pad(stateArrayWriter.getAllData(), 4)
 		entryTableOffset = stateArrayOffset + len(stateArrayData)
+		entryTableData = pad(bytesjoin(entries), 4)
+		perGlyphOffset = entryTableOffset + len(entryTableData)
+		perGlyphData = \
+			pad(self._compilePerGlyphLookups(value, font), 4)
 		writer.writeULong(glyphClassCount)
 		writer.writeULong(glyphClassTableOffset)
 		writer.writeULong(stateArrayOffset)
 		writer.writeULong(entryTableOffset)
+		if self.perGlyphLookup is not None:
+			writer.writeULong(perGlyphOffset)
 		writer.writeData(glyphClassData)
 		writer.writeData(stateArrayData)
-		for entry in entries:
-			writer.writeData(entry)
+		writer.writeData(entryTableData)
+		writer.writeData(perGlyphData)
+
+	def _compilePerGlyphLookups(self, table, font):
+		if self.perGlyphLookup is None:
+			return b""
+		numLookups = self._countPerGlyphLookups(table)
+		assert len(table.PerGlyphLookups) == numLookups, (
+			"len(AATStateTable.PerGlyphLookups) is %d, "
+			"but the actions inside the table refer to %d" %
+				(len(table.PerGlyphLookups), numLookups))
+		writer = OTTableWriter()
+		for lookup in table.PerGlyphLookups:
+			lookupWriter = writer.getSubWriter()
+			lookupWriter.longOffset = True
+			self.perGlyphLookup.write(lookupWriter, font,
+			                          {}, lookup, None)
+			writer.writeSubTable(lookupWriter)
+		return writer.getAllData()
 
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		xmlWriter.begintag(name, attrs)
@@ -970,6 +1036,15 @@ class STXHeader(BaseConverter):
 				            name="Transition")
 			xmlWriter.endtag("State")
 			xmlWriter.newline()
+		for i, lookup in enumerate(value.PerGlyphLookups):
+			xmlWriter.begintag("PerGlyphLookup", index=i)
+			xmlWriter.newline()
+			for glyph, val in sorted(lookup.items()):
+				xmlWriter.simpletag("Lookup", glyph=glyph,
+				                    value=val)
+				xmlWriter.newline()
+			xmlWriter.endtag("PerGlyphLookup")
+			xmlWriter.newline()
 		xmlWriter.endtag(name)
 		xmlWriter.newline()
 
@@ -983,6 +1058,10 @@ class STXHeader(BaseConverter):
 			elif eltName == "State":
 				state = self._xmlReadState(eltAttrs, eltContent, font)
 				table.States.append(state)
+			elif eltName == "PerGlyphLookup":
+				lookup = self.perGlyphLookup.xmlRead(
+					eltAttrs, eltContent, font)
+				table.PerGlyphLookups.append(lookup)
 		table.GlyphClassCount = max(table.GlyphClasses.values()) + 1
 		return table
 
