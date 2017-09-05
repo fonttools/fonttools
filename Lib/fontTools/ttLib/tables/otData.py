@@ -1284,6 +1284,27 @@ otData = [
 
 
 	#
+	# gcid
+	#
+
+	('gcid', [
+		('struct', 'GlyphCIDMapping', None, None, 'Glyph to CID mapping table.'),
+        ]),
+
+	('GlyphCIDMappingFormat0', [
+		('uint16', 'Format', None, None, 'Format of the glyph-to-CID mapping table, = 0.'),
+		('uint16', 'DataFormat', None, None, 'Currenty unused, set to zero.'),
+		('uint32', 'StructLength', None, None, 'Size of the table in bytes.'),
+		('uint16', 'Registry', None, None, 'The registry ID.'),
+		('char64', 'RegistryName', None, None, 'The registry name in ASCII; unused bytes should be set to 0.'),
+		('uint16', 'Order', None, None, 'The order ID.'),
+		('char64', 'OrderName', None, None, 'The order name in ASCII; unused bytes should be set to 0.'),
+		('uint16', 'SupplementVersion', None, None, 'The supplement version.'),
+		('GlyphCIDMap', 'CIDs', None, None, 'The CIDs for the glyphs in the font, starting with glyph 0. If a glyph does not correspond to a CID in the identified collection, 0xFFFF is used'),
+	]),
+
+
+	#
 	# lcar
 	#
 

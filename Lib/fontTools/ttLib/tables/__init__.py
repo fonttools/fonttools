@@ -60,6 +60,7 @@ def _moduleFinderHint():
 	from . import _f_p_g_m
 	from . import _f_v_a_r
 	from . import _g_a_s_p
+	from . import _g_c_i_d
 	from . import _g_l_y_f
 	from . import _g_v_a_r
 	from . import _h_d_m_x
