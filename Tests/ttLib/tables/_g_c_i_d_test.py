@@ -37,11 +37,11 @@ GCID_XML = [
    '  <Order value="3"/>',
    '  <OrderName value="Korea1"/>',
    '  <SupplementVersion value="1"/>',
-   '  <CIDs>',
+   '  <Mapping>',
    '    <CID glyph=".notdef" value="4660"/>',
    '    <CID glyph="B" value="7"/>',
    '    <CID glyph="C" value="57072"/>',
-   '  </CIDs>',
+   '  </Mapping>',
    '</GlyphCIDMapping>',
 ]
 
