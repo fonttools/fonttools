@@ -1250,6 +1250,27 @@ otData = [
 
 
 	#
+	# cidg
+	#
+
+	('cidg', [
+		('struct', 'CIDGlyphMapping', None, None, 'CID-to-glyph mapping table.'),
+        ]),
+
+	('CIDGlyphMappingFormat0', [
+		('uint16', 'Format', None, None, 'Format of the CID-to-glyph mapping table, = 0.'),
+		('uint16', 'DataFormat', None, None, 'Currenty unused, set to zero.'),
+		('uint32', 'StructLength', None, None, 'Size of the table in bytes.'),
+		('uint16', 'Registry', None, None, 'The registry ID.'),
+		('char64', 'RegistryName', None, None, 'The registry name in ASCII; unused bytes should be set to 0.'),
+		('uint16', 'Order', None, None, 'The order ID.'),
+		('char64', 'OrderName', None, None, 'The order name in ASCII; unused bytes should be set to 0.'),
+		('uint16', 'SupplementVersion', None, None, 'The supplement version.'),
+		('CIDGlyphMap', 'Mapping', None, None, 'A mapping from CIDs to the glyphs in the font, starting with CID 0. If a CID from the identified collection has no glyph in the font, 0xFFFF is used'),
+	]),
+
+
+	#
 	# feat
 	#
 
@@ -1300,7 +1321,7 @@ otData = [
 		('uint16', 'Order', None, None, 'The order ID.'),
 		('char64', 'OrderName', None, None, 'The order name in ASCII; unused bytes should be set to 0.'),
 		('uint16', 'SupplementVersion', None, None, 'The supplement version.'),
-		('GlyphCIDMap', 'CIDs', None, None, 'The CIDs for the glyphs in the font, starting with glyph 0. If a glyph does not correspond to a CID in the identified collection, 0xFFFF is used'),
+		('GlyphCIDMap', 'Mapping', None, None, 'The CIDs for the glyphs in the font, starting with glyph 0. If a glyph does not correspond to a CID in the identified collection, 0xFFFF is used'),
 	]),
 
 

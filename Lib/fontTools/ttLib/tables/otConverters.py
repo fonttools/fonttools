@@ -43,7 +43,7 @@ def buildConverters(tableSpec, tableNamespace):
 			converterClass = SubStruct
 		elif name == "FeatureParams":
 			converterClass = FeatureParams
-		elif name == "GlyphCIDMapping":
+		elif name in ("CIDGlyphMapping", "GlyphCIDMapping"):
 			converterClass = StructWithLength
 		else:
 			if not tp in converterMapping and '(' not in tp:
@@ -1082,6 +1082,43 @@ class STXHeader(BaseConverter):
 		return state
 
 
+class CIDGlyphMap(BaseConverter):
+	def read(self, reader, font, tableDict):
+		numCIDs = reader.readUShort()
+		result = {}
+		for cid, glyphID in enumerate(reader.readUShortArray(numCIDs)):
+			if glyphID != 0xFFFF:
+				result[cid] = font.getGlyphName(glyphID)
+		return result
+
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		items = {cid: font.getGlyphID(glyph)
+		         for cid, glyph in value.items()}
+		count = max(items) + 1 if items else 0
+		writer.writeUShort(count)
+		for cid in range(count):
+			writer.writeUShort(items.get(cid, 0xFFFF))
+
+	def xmlRead(self, attrs, content, font):
+		result = {}
+		for eName, eAttrs, _eContent in filter(istuple, content):
+			if eName == "CID":
+				result[safeEval(eAttrs["cid"])] = \
+					eAttrs["glyph"].strip()
+		return result
+
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		xmlWriter.begintag(name, attrs)
+		xmlWriter.newline()
+		for cid, glyph in sorted(value.items()):
+			if glyph is not None and glyph != 0xFFFF:
+				xmlWriter.simpletag(
+					"CID", cid=cid, glyph=glyph)
+				xmlWriter.newline()
+		xmlWriter.endtag(name)
+		xmlWriter.newline()
+
+
 class GlyphCIDMap(BaseConverter):
 	def read(self, reader, font, tableDict):
 		glyphOrder = font.getGlyphOrder()
@@ -1096,7 +1133,7 @@ class GlyphCIDMap(BaseConverter):
 		for glyphID in range(min(len(cids), len(glyphOrder))):
 			cid = cids[glyphID]
 			if cid != 0xFFFF:
-				result[glyphOrder[glyphID]] = cids[glyphID]
+				result[glyphOrder[glyphID]] = cid
 		return result
 
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
@@ -1294,6 +1331,7 @@ converterMapping = {
 	"VarDataValue":	VarDataValue,
 
 	# AAT
+	"CIDGlyphMap":	CIDGlyphMap,
 	"GlyphCIDMap":	GlyphCIDMap,
 	"MortChain":	StructWithLength,
 	"MortSubtable": StructWithLength,
