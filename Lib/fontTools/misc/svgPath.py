@@ -24,11 +24,23 @@ def _tokenize_path(pathdef):
             yield token
 
 
-def parse_path(pathdef, pen, current_pos=0j):
+def parse_path(pathdef, pen, current_pos=(0, 0)):
+    """ Parse SVG path definition (i.e. "d" attribute of <path> elements)
+    and call a 'pen' object's moveTo, lineTo, curveTo, qCurveTo and closePath
+    methods.
+
+    If 'current_pos' (2-float tuple) is provided, the initial moveTo will
+    be relative to that instead being absolute.
+
+    Arc segments (commands "A" or "a") are not currently supported, and raise
+    NotImplementedError.
+    """
     # In the SVG specs, initial movetos are absolute, even if
     # specified as 'm'. This is the default behavior here as well.
     # But if you pass in a current_pos variable, the initial moveto
     # will be relative to that current_pos. This is useful.
+    current_pos = complex(*current_pos)
+
     elements = list(_tokenize_path(pathdef))
     # Reverse for easy use of .pop()
     elements.reverse()
