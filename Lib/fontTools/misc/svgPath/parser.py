@@ -7,6 +7,9 @@
 # Copyright (c) 2013-2014 Lennart Regebro
 # License: MIT
 
+from __future__ import (
+    print_function, division, absolute_import, unicode_literals)
+from fontTools.misc.py23 import *
 import re
 
 COMMANDS = set('MmZzLlHhVvCcSsQqTtAa')
