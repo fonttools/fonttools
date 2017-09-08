@@ -1,12 +1,13 @@
 # SVG Path specification parser.
-# Source:
+# This is an adaptation from 'svg.path' by Lennart Regebro (@regebro),
+# modified so that the parser takes a FontTools Pen object instead of
+# returning a list of svg.path Path objects.
+# The original code can be found at:
 # https://github.com/regebro/svg.path/blob/4f9b6e3/src/svg/path/parser.py
 # Copyright (c) 2013-2014 Lennart Regebro
 # License: MIT
 
-
 import re
-from . import path
 
 COMMANDS = set('MmZzLlHhVvCcSsQqTtAa')
 UPPERCASE = set('MZLHVCSQTA')
@@ -23,7 +24,7 @@ def _tokenize_path(pathdef):
             yield token
 
 
-def parse_path(pathdef, current_pos=0j):
+def parse_path(pathdef, pen, current_pos=0j):
     # In the SVG specs, initial movetos are absolute, even if
     # specified as 'm'. This is the default behavior here as well.
     # But if you pass in a current_pos variable, the initial moveto
@@ -32,9 +33,9 @@ def parse_path(pathdef, current_pos=0j):
     # Reverse for easy use of .pop()
     elements.reverse()
 
-    segments = path.Path()
     start_pos = None
     command = None
+    last_control = None
 
     while elements:
 
@@ -61,6 +62,7 @@ def parse_path(pathdef, current_pos=0j):
                 current_pos = pos
             else:
                 current_pos += pos
+            pen.moveTo((current_pos.real, current_pos.imag))
 
             # when M is called, reset start_pos
             # This behavior of Z is defined in svg spec:
@@ -75,8 +77,8 @@ def parse_path(pathdef, current_pos=0j):
         elif command == 'Z':
             # Close path
             if current_pos != start_pos:
-                segments.append(path.Line(current_pos, start_pos))
-            segments.closed = True
+                pen.lineTo((start_pos.real, start_pos.imag))
+            pen.closePath()
             current_pos = start_pos
             start_pos = None
             command = None  # You can't have implicit commands after closing.
@@ -87,7 +89,7 @@ def parse_path(pathdef, current_pos=0j):
             pos = float(x) + float(y) * 1j
             if not absolute:
                 pos += current_pos
-            segments.append(path.Line(current_pos, pos))
+            pen.lineTo((pos.real, pos.imag))
             current_pos = pos
 
         elif command == 'H':
@@ -95,7 +97,7 @@ def parse_path(pathdef, current_pos=0j):
             pos = float(x) + current_pos.imag * 1j
             if not absolute:
                 pos += current_pos.real
-            segments.append(path.Line(current_pos, pos))
+            pen.lineTo((pos.real, pos.imag))
             current_pos = pos
 
         elif command == 'V':
@@ -103,7 +105,7 @@ def parse_path(pathdef, current_pos=0j):
             pos = current_pos.real + float(y) * 1j
             if not absolute:
                 pos += current_pos.imag * 1j
-            segments.append(path.Line(current_pos, pos))
+            pen.lineTo((pos.real, pos.imag))
             current_pos = pos
 
         elif command == 'C':
@@ -116,8 +118,11 @@ def parse_path(pathdef, current_pos=0j):
                 control2 += current_pos
                 end += current_pos
 
-            segments.append(path.CubicBezier(current_pos, control1, control2, end))
+            pen.curveTo((control1.real, control1.imag),
+                        (control2.real, control2.imag),
+                        (end.real, end.imag))
             current_pos = end
+            last_control = control2
 
         elif command == 'S':
             # Smooth curve. First control point is the "reflection" of
@@ -132,7 +137,7 @@ def parse_path(pathdef, current_pos=0j):
                 # The first control point is assumed to be the reflection of
                 # the second control point on the previous command relative
                 # to the current point.
-                control1 = current_pos + current_pos - segments[-1].control2
+                control1 = current_pos + current_pos - last_control
 
             control2 = float(elements.pop()) + float(elements.pop()) * 1j
             end = float(elements.pop()) + float(elements.pop()) * 1j
@@ -141,8 +146,11 @@ def parse_path(pathdef, current_pos=0j):
                 control2 += current_pos
                 end += current_pos
 
-            segments.append(path.CubicBezier(current_pos, control1, control2, end))
+            pen.curveTo((control1.real, control1.imag),
+                        (control2.real, control2.imag),
+                        (end.real, end.imag))
             current_pos = end
+            last_control = control2
 
         elif command == 'Q':
             control = float(elements.pop()) + float(elements.pop()) * 1j
@@ -152,8 +160,9 @@ def parse_path(pathdef, current_pos=0j):
                 control += current_pos
                 end += current_pos
 
-            segments.append(path.QuadraticBezier(current_pos, control, end))
+            pen.qCurveTo((control.real, control.imag), (end.real, end.imag))
             current_pos = end
+            last_control = control
 
         elif command == 'T':
             # Smooth curve. Control point is the "reflection" of
@@ -168,27 +177,16 @@ def parse_path(pathdef, current_pos=0j):
                 # The control point is assumed to be the reflection of
                 # the control point on the previous command relative
                 # to the current point.
-                control = current_pos + current_pos - segments[-1].control
+                control = current_pos + current_pos - last_control
 
             end = float(elements.pop()) + float(elements.pop()) * 1j
 
             if not absolute:
                 end += current_pos
 
-            segments.append(path.QuadraticBezier(current_pos, control, end))
+            pen.qCurveTo((control.real, control.imag), (end.real, end.imag))
             current_pos = end
+            last_control = control2
 
         elif command == 'A':
-            radius = float(elements.pop()) + float(elements.pop()) * 1j
-            rotation = float(elements.pop())
-            arc = float(elements.pop())
-            sweep = float(elements.pop())
-            end = float(elements.pop()) + float(elements.pop()) * 1j
-
-            if not absolute:
-                end += current_pos
-
-            segments.append(path.Arc(current_pos, radius, rotation, arc, sweep, end))
-            current_pos = end
-
-    return segments
+            raise NotImplementedError('arcs are not supported')
