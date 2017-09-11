@@ -7,7 +7,7 @@ from .parser import parse_path
 
 try:
     from xml.etree import cElementTree as ElementTree  # python 2
-except ImportError:
+except ImportError:  # pragma nocover
     from xml.etree import ElementTree  # python 3
 
 
