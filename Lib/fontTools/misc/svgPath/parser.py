@@ -77,6 +77,11 @@ def parse_path(pathdef, pen, current_pos=(0, 0)):
                 current_pos = pos
             else:
                 current_pos += pos
+
+            # M is not preceded by Z; it's an open subpath
+            if start_pos is not None:
+                pen.endPath()
+
             pen.moveTo((current_pos.real, current_pos.imag))
 
             # when M is called, reset start_pos
@@ -205,3 +210,7 @@ def parse_path(pathdef, pen, current_pos=(0, 0)):
 
         elif command == 'A':
             raise NotImplementedError('arcs are not supported')
+
+    # no final Z command, it's an open path
+    if start_pos is not None:
+        pen.endPath()
