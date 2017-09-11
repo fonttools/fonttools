@@ -206,7 +206,7 @@ def parse_path(pathdef, pen, current_pos=(0, 0)):
 
             pen.qCurveTo((control.real, control.imag), (end.real, end.imag))
             current_pos = end
-            last_control = control2
+            last_control = control
 
         elif command == 'A':
             raise NotImplementedError('arcs are not supported')
