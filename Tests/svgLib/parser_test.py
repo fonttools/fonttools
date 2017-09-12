@@ -2,7 +2,7 @@ from __future__ import print_function, absolute_import, division
 
 from fontTools.misc.py23 import *
 from fontTools.pens.recordingPen import RecordingPen
-from fontTools.misc.svgPath import parse_path
+from fontTools.svgLib import parse_path
 
 import pytest
 
