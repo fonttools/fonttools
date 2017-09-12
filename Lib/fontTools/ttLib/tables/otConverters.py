@@ -883,6 +883,7 @@ class AATLookupWithDataOffset(BaseConverter):
 
 
 # https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6Tables.html#ExtendedStateHeader
+# TODO: Untangle the implementation of the various lookup-specific formats.
 class STXHeader(BaseConverter):
 	def __init__(self, name, repeat, aux, tableClass):
 		BaseConverter.__init__(self, name, repeat, aux, tableClass)

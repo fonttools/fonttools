@@ -460,6 +460,231 @@ MORX_CONTEXTUAL_XML = [
 ]
 
 
+# Taken from “Example 2: A ligature table” in
+# https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6morx.html
+# as retrieved on 2017-09-11.
+#
+# Compared to the example table in Apple’s specification, we’ve
+# made the following changes:
+#
+# * at offsets 0..35, we’ve prepended 36 bytes of boilerplate
+#   to make the data a structurally valid ‘morx’ table;
+#
+# * at offsets 88..91 (offsets 52..55 in Apple’s document), we’ve
+#   changed the range of the third segment from 23..24 to 25..28,
+#   matching the comments (but not the values) in Apple’s document;
+#
+# * at offsets 92..93 (offsets 56..57 in Apple’s document), we’ve
+#   changed the glphclass of the third segment from 5 to 4. Without
+#   this change, the second and third glyph class have the same glyph
+#   class, so an encoder may merge them into a single segment beause
+#   the adjacent GlyphID ranges.  Without changing the glyph class of
+#   the third segment from 5 to 4, our round-trip compilation tests
+#   would be broken.
+#
+# TODO: Ask Apple to fix “Example 2” in the ‘morx’ specification.
+MORX_LIGATURE_DATA = deHexStr(
+    '0002 0000 '  #  0: Version=2, Reserved=0
+    '0000 0001 '  #  4: MorphChainCount=1
+    '0000 0001 '  #  8: DefaultFlags=1
+    '0000 00DA '  # 12: StructLength=218 (+8=226)
+    '0000 0000 '  # 16: MorphFeatureCount=0
+    '0000 0001 '  # 20: MorphSubtableCount=1
+    '0000 00CA '  # 24: Subtable[0].StructLength=202 (+24=226)
+    '80 '         # 28: Subtable[0].CoverageFlags=0x80
+    '00 00 '      # 29: Subtable[0].Reserved=0
+    '02 '         # 31: Subtable[0].MorphType=2/LigatureMorph
+    '0000 0001 '  # 32: Subtable[0].SubFeatureFlags=0x1
+
+    # State table header.
+    '0000 0007 '  # 36: STXHeader.ClassCount=7
+    '0000 001C '  # 40: STXHeader.ClassTableOffset=28 (+36=64)
+    '0000 0040 '  # 44: STXHeader.StateArrayOffset=64 (+36=100)
+    '0000 0078 '  # 48: STXHeader.EntryTableOffset=120 (+36=156)
+    '0000 0090 '  # 52: STXHeader.LigatureActionsOffset=144 (+36=180)
+    '0000 009C '  # 56: STXHeader.ComponentBaseOffset=156 (+36=192)
+    '0000 00AE '  # 60: STXHeader.LigatureListOffset=174 (+36=210)
+
+    # Glyph class table.
+    '0002 0006 '       # 64: ClassTable.LookupFormat=2, .UnitSize=6
+    '0003 000C '       # 68:   .NUnits=3, .SearchRange=12
+    '0001 0006 '       # 72:   .EntrySelector=1, .RangeShift=6
+    '0016 0014 0004 '  # 76: GlyphID 20..22 [a..c] -> GlyphClass 4
+    '0018 0017 0005 '  # 82: GlyphID 23..24 [d..e] -> GlyphClass 5
+    '001C 0019 0004 '  # 88: GlyphID 25..26 [f..i] -> GlyphClass 4
+    'FFFF FFFF 0000 '  # 94: <end of lookup>
+
+    # State array.
+    '0000 0000 0000 0000 0001 0000 0000 '  # 100: State[0][0..6]
+    '0000 0000 0000 0000 0001 0000 0000 '  # 114: State[1][0..6]
+    '0000 0000 0000 0000 0001 0002 0000 '  # 128: State[2][0..6]
+    '0000 0000 0000 0000 0001 0002 0003 '  # 142: State[3][0..6]
+
+    # Entry table.
+    '0000 0000 '  # 156: Entries[0].NewState=0, .Flags=0
+    '0000 '       # 160: Entries[0].ActionIndex=<n/a> because no 0x2000 flag
+    '0002 8000 '  # 162: Entries[1].NewState=2, .Flags=0x8000 (SetComponent)
+    '0000 '       # 166: Entries[1].ActionIndex=<n/a> because no 0x2000 flag
+    '0003 8000 '  # 168: Entries[2].NewState=3, .Flags=0x8000 (SetComponent)
+    '0000 '       # 172: Entries[2].ActionIndex=<n/a> because no 0x2000 flag
+    '0000 A000 '  # 174: Entries[3].NewState=0, .Flags=0xA000 (SetComponent,Act)
+    '0000 '       # 178: Entries[3].ActionIndex=0 (start at LigAction[0])
+
+    # Ligature actions table.
+    '3FFF FFE7 '  # 180: Action 0, part 1
+    '3FFF FFED '  # 184: Action 0, part 2
+    'BFFF FFF2 '  # 188: Action 0, part 3
+
+    # Ligature component table.
+    '0000 0001 '  # 192: LigComponent[0]=0, LigComponent[1]=1
+    '0002 0003 '  # 196: LigComponent[2]=2, LigComponent[3]=3
+    '0000 0004 '  # 200: LigComponent[4]=0, LigComponent[5]=4
+    '0000 0008 '  # 204: LigComponent[6]=0, LigComponent[7]=8
+    '0010      '  # 208: LigComponent[8]=16
+
+    # Ligature list.
+    '03E8 03E9 '  # 210: LigList[0]=1000, LigList[1]=1001
+    '03EA 03EB '  # 214: LigList[2]=1002, LigList[3]=1003
+    '03EC 03ED '  # 218: LigList[4]=1004, LigList[3]=1005
+    '03EE 03EF '  # 222: LigList[5]=1006, LigList[6]=1007
+)   # 226: <end>
+assert len(MORX_LIGATURE_DATA) == 226, len(MORX_LIGATURE_DATA)
+
+
+MORX_LIGATURE_XML = [
+    '<Version value="2"/>',
+    '<Reserved value="0"/>',
+    '<!-- MorphChainCount=1 -->',
+    '<MorphChain index="0">',
+    '  <DefaultFlags value="0x00000001"/>',
+    '  <!-- StructLength=218 -->',
+    '  <!-- MorphFeatureCount=0 -->',
+    '  <!-- MorphSubtableCount=1 -->',
+    '  <MorphSubtable index="0">',
+    '    <!-- StructLength=202 -->',
+    '    <CoverageFlags value="128"/>',
+    '    <Reserved value="0"/>',
+    '    <!-- MorphType=2 -->',
+    '    <SubFeatureFlags value="0x00000001"/>',
+    '    <LigatureMorph>',
+    '      <StateTable>',
+    '        <!-- GlyphClassCount=7 -->',
+    '        <GlyphClass glyph="a" value="4"/>',
+    '        <GlyphClass glyph="b" value="4"/>',
+    '        <GlyphClass glyph="c" value="4"/>',
+    '        <GlyphClass glyph="d" value="5"/>',
+    '        <GlyphClass glyph="e" value="5"/>',
+    '        <GlyphClass glyph="f" value="4"/>',
+    '        <GlyphClass glyph="g" value="4"/>',
+    '        <GlyphClass glyph="h" value="4"/>',
+    '        <GlyphClass glyph="i" value="4"/>',
+    '        <State index="0">',
+    '          <Transition onGlyphClass="0">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="1">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="2">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="3">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="4">',
+    '            <NewState value="2"/>',
+    '            <Flags value="SetComponent"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="5">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="6">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '        </State>',
+    '        <State index="1">',
+    '          <Transition onGlyphClass="0">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="1">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="2">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="3">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="4">',
+    '            <NewState value="2"/>',
+    '            <Flags value="SetComponent"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="5">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="6">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '        </State>',
+    '        <State index="2">',
+    '          <Transition onGlyphClass="0">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="1">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="2">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="3">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="4">',
+    '            <NewState value="2"/>',
+    '            <Flags value="SetComponent"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="5">',
+    '            <NewState value="3"/>',
+    '            <Flags value="SetComponent"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="6">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '        </State>',
+    '        <State index="3">',
+    '          <Transition onGlyphClass="0">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="1">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="2">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="3">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="4">',
+    '            <NewState value="2"/>',
+    '            <Flags value="SetComponent"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="5">',
+    '            <NewState value="3"/>',
+    '            <Flags value="SetComponent"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="6">',
+    '            <NewState value="0"/>',
+    '            <Flags value="SetComponent,PerformAction"/>',
+    '            <LigActionIndex value="0"/>',
+    '          </Transition>',
+    '        </State>',
+    '      </StateTable>',
+    '    </LigatureMorph>',
+    '  </MorphSubtable>',
+    '</MorphChain>',
+]
+
+
 class MORXNoncontextualGlyphSubstitutionTest(unittest.TestCase):
 
     @classmethod
@@ -526,6 +751,25 @@ class MORXContextualSubstitutionTest(unittest.TestCase):
             table.fromXML(name, attrs, content, font=self.font)
         self.assertEqual(hexStr(table.compile(self.font)),
                          hexStr(MORX_CONTEXTUAL_DATA))
+
+
+class MORXLigatureSubstitutionTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.maxDiff = None
+        g = ['.notdef'] + ['g.%d' % i for i in range (1, 1515)]
+        g[20:29] = 'a b c d e f g h i'.split()
+        g[1000:1008] = 'adf adg adh adi aef aeg aeh aei'.split()
+        g[1008:1016] = 'bdf bdg bdh bdi bef beg beh bei'.split()
+        g[1500:1507] = 'cdf cdg cdh cdi cef ceg ceh'.split()
+        g[1511] = 'cei'
+        cls.font = FakeFont(g)
+
+    def test_decompile_toXML(self):
+        table = newTable('morx')
+        table.decompile(MORX_LIGATURE_DATA, self.font)
+        self.assertEqual(getXML(table.toXML), MORX_LIGATURE_XML)
 
 
 if __name__ == '__main__':
