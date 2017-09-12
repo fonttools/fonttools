@@ -1437,10 +1437,7 @@ otData = [
 	]),
 
 	('LigatureMorph', [
-		('struct', 'StateHeader', None, None, 'Header.'),
-		('uint32', 'LigActionOffset', None, None, 'Byte offset from stateHeader to the start of the ligature action table.'),
-		('uint32', 'ComponentOffset', None, None, 'Byte offset from stateHeader to the start of the component table.'),
-		('uint32', 'LigatureOffset', None, None, 'Byte offset from stateHeader to the start of the actual ligature lists.'),
+		('STXHeader(LigatureMorphAction)', 'StateTable', None, None, 'Finite-state transducer for ligature substitution.'),
 	]),
 
 	('NoncontextualMorph', [

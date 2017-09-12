@@ -186,6 +186,46 @@ class ContextualMorphAction(AATAction):
 			elif eltName == "CurrentIndex":
 				self.CurrentIndex = safeEval(eltAttrs["value"])
 
+
+class LigatureMorphAction(AATAction):
+	staticSize = 6
+	_FLAGS = ["SetComponent", "DontAdvance", "PerformAction"]
+
+	def __init__(self):
+		self.NewState = 0
+		self.SetComponent, self.DontAdvance = False, False
+		self.PerformAction = False
+		self.ReservedFlags = 0
+		self.LigActionIndex = 0
+
+	def decompile(self, reader, font):
+		self.NewState = reader.readUShort()
+		flags = reader.readUShort()
+		self.SetComponent = bool(flags & 0x8000)
+		self.DontAdvance = bool(flags & 0x4000)
+		self.PerformAction = bool(flags & 0x2000)
+		# As of 2017-09-12, the 'morx' specification says that
+		# the reserved bitmask in ligature subtables is 0x3FFF.
+		# However, the specification also defines a flag 0x2000,
+		# so the reserved value should actually be 0x1FFF.
+		# TODO: Report this specification bug to Apple.
+		self.ReservedFlags = flags & 0x1FFF
+		self.LigActionIndex = reader.readUShort()
+
+	def toXML(self, xmlWriter, font, attrs, name):
+		xmlWriter.begintag(name, **attrs)
+		xmlWriter.newline()
+		xmlWriter.simpletag("NewState", value=self.NewState)
+		xmlWriter.newline()
+		self._writeFlagsToXML(xmlWriter)
+		if self.PerformAction:
+			xmlWriter.simpletag("LigActionIndex",
+			                    value=self.LigActionIndex)
+			xmlWriter.newline()
+		xmlWriter.endtag(name)
+		xmlWriter.newline()
+
+
 class FeatureParams(BaseTable):
 
 	def compile(self, writer, font):
@@ -1167,7 +1207,7 @@ def _buildClasses():
 		'morx': {
 			0: RearrangementMorph,
 			1: ContextualMorph,
-			# 2: LigatureMorph,
+			2: LigatureMorph,
 			# 3: Reserved,
 			4: NoncontextualMorph,
 			# 5: InsertionMorph,
