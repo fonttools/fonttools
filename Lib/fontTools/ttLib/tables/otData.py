@@ -1325,6 +1325,16 @@ otData = [
 	]),
 
 
+    #
+    # Feat
+    #
+
+	('Feat', [
+		('Version', 'Version', None, None, 'Version of the feat table-initially set to 0x00010000.'),
+		('FeatureNames', 'FeatureNames', None, None, 'The feature names.'),
+	]),
+
+
 	#
 	# lcar
 	#
