@@ -5,6 +5,7 @@ from fontTools.misc.textTools import safeEval
 from itertools import *
 from functools import partial
 from . import DefaultTable
+from . import grUtils
 import struct, operator, warnings
 try:
     import lz4
@@ -17,8 +18,9 @@ Glat_format_0 = """
     version: 16.16F
 """
 
-Glat_format_3_addition = """
+Glat_format_3 = """
     >
+    version: 16.16F
     compression:L    # compression scheme or reserved 
 """
 
@@ -69,42 +71,16 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
         DefaultTable.DefaultTable.__init__(self, tag)
         self.scheme = 0
 
-    def decompress(self, size, data):
-        if self.scheme == 0:
-            pass
-        elif self.scheme == 1 and lz4:
-            res = lz4.decompress(struct.pack("<L", size) + data)
-            if (not res 
-              or len(res) != size 
-              or sstruct.unpack2(Glat_format_0, res)['version'] != self.version 
-              or sstruct.unpack2(Glat_format_3_addition, res[4:]) >> 27 != 0):
-                warnings.warn("Glat table decompression failed.")
-            else:
-                data = res
-        else:
-            warnings.warn("Glat table is compressed with an unsupported compression scheme.")
-        return data
-    
-    def compress(self, data):
-        hdr = {'compression' : (self.scheme << 27) + (len(data) & 0x07ffffff)}
-        hdrdat = sstruct.pack(Glat_format_0, self) + sstruct.pack(Glat_format_3_addition, hdr)
-        if self.scheme == 0 :
-            res = data
-        if self.scheme == 1 and lz4:
-            res = lz4.compress(hdrdat + data, 16, content_size_header=False)
-        return hdrdat + res
-
     def decompile(self, data, ttFont):
         sstruct.unpack2(Glat_format_0, data, self)
-        if self.version == 1.0:
+        if self.version <= 1.9:
             decoder = partial(self.decompileAttributes12,fmt=Glat_format_1_entry)
-        elif self.version == 2.0:   
+        elif self.version <= 2.9:   
             decoder = partial(self.decompileAttributes12,fmt=Glat_format_23_entry)
-        elif self.version == 3.0:
-            hdr, _ = sstruct.unpack2(Glat_format_3_addition, data[4:])
-            self.scheme = hdr['compression'] >> 27
-            if self.scheme :
-                data = self.decompress(hdr['compression'] & 0x07ffffff, data[8:])
+        elif self.version >= 3.0:
+            (data, self.scheme) = grUtils.decompress(data)
+            sstruct.unpack2(Glat_format_3, data, self)
+            self.hasOctaboxes = (self.compression & 1) == 1
             decoder = self.decompileAttributes3
         
         gloc = ttFont['Gloc']
@@ -130,26 +106,28 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
         return attributes
 
     def decompileAttributes3(self, data):
-        o, data = sstruct.unpack2(Glat_format_3_octabox_metrics, data, _Object())
-        numsub = bin(o.subboxBitmap).count("1")
-        o.subboxes = []
-        for b in range(numsub):
-            if len(data) >= 8 :
-                subbox, data = sstruct.unpack2(Glat_format_3_subbox_entry, data, _Object())
-                o.subboxes.append(subbox)
+        if self.hasOctaboxes:
+            o, data = sstruct.unpack2(Glat_format_3_octabox_metrics, data, _Object())
+            numsub = bin(o.subboxBitmap).count("1")
+            o.subboxes = []
+            for b in range(numsub):
+                if len(data) >= 8 :
+                    subbox, data = sstruct.unpack2(Glat_format_3_subbox_entry, data, _Object())
+                    o.subboxes.append(subbox)
         attrs = self.decompileAttributes12(data, Glat_format_23_entry)
-        attrs.octabox = o
+        if self.hasOctaboxes:
+            attrs.octabox = o
         return attrs
 
     def compile(self, ttFont):
         data = sstruct.pack(Glat_format_0, self)
-        if self.version == 1.0:
+        if self.version <= 1.9:
             encoder = partial(self.compileAttributes12, fmt=Glat_format_1_entry)
-        elif self.version == 2.0:
+        elif self.version <= 2.9:
             encoder = partial(self.compileAttributes12, fmt=Glat_format_1_entry)
-        elif self.version == 3.0:
-            compression = self.scheme << 27
-            data += sstruct.pack(Glat_format_3_addition, {'compression': compression})
+        elif self.version >= 3.0:
+            self.compression = (self.scheme << 27) + (1 if self.hasOctaboxes else 0)
+            data = sstruct.pack(Glat_format_3, self)
             encoder = self.compileAttributes3
 
         glocs = []
@@ -166,27 +144,30 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
         glocs.append(len(data))
         ttFont['Gloc'].set(glocs)
 
-        if self.version == 3.0:
-            data = self.compress(data[8:])
+        if self.version >= 3.0:
+            data = grUtils.compress(self.scheme, data)
         return data
 
     def compileAttributes12(self, attrs, fmt):
         data = []
-        for e in entries(attrs):
-            data.extend(sstruct.pack(fmt, e))
-            data.extend(struct.pack(('>%dh' % len(e['values'])), *e['values']))
+        for e in grUtils.entries(attrs):
+            data.extend(sstruct.pack(fmt, {'attNum' : e[0], 'num' : e[1]}))
+            data.extend(struct.pack(('>%dh' % len(e[2])), *e[2]))
         return "".join(data)
     
     def compileAttributes3(self, attrs):
-        o = attrs.octabox
-        data = sstruct.pack(Glat_format_3_octabox_metrics, o)
-        numsub = bin(o.subboxBitmap).count("1")
-        for b in range(numsub) :
-            data += sstruct.pack(Glat_format_3_subbox_entry, o.subboxes[b])
+        if self.hasOctaboxes:
+            o = attrs.octabox
+            data = sstruct.pack(Glat_format_3_octabox_metrics, o)
+            numsub = bin(o.subboxBitmap).count("1")
+            for b in range(numsub) :
+                data += sstruct.pack(Glat_format_3_subbox_entry, o.subboxes[b])
+        else:
+            data = ""
         return data + self.compileAttributes12(attrs, Glat_format_23_entry)
 
     def toXML(self, writer, ttFont):
-        writer.simpletag('version', version=self.version)
+        writer.simpletag('version', version=self.version, compressionScheme=self.scheme)
         writer.newline()
         for n, a in sorted(self.attributes.items()):
             writer.begintag('glyph', name=n)
@@ -232,6 +213,7 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
                 v = int(safeEval(attrs['value']))
                 attributes[k]=v
             elif tag == 'octaboxes':
+                self.hasOctaboxes = True
                 o = _Object()
                 o.subboxBitmap = int(attrs['bitmap'], 16)
                 o.subboxes = []
@@ -247,18 +229,3 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
                     o.subboxes.append(so)
                 attributes.octabox = o
         self.attributes[gname] = attributes
-    
-def _entries(attrs):
-    ak = 0
-    vals = []
-    for k,v in attrs:
-        if len(vals) and k != ak + 1 :
-            yield {'attNum': ak - len(vals) + 1, 'num':len(vals), 'values':vals}
-            vals = []
-        ak = k
-        vals.append(v)
-    yield {'attNum': ak - len(vals) + 1, 'num':len(vals), 'values':vals}
-
-def entries(attributes):
-    g = _entries(sorted(attributes.iteritems(), key=lambda x:int(x[0])))
-    return g
