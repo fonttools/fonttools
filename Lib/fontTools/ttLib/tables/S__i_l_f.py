@@ -278,20 +278,6 @@ def content_string(contents):
         res += element
     return res.strip()
 
-def bininfo(num, size=1):
-    if num == 0:
-        return struct.pack(">4H", 0, 0, 0, 0)
-    srange = 1;
-    select = 0
-    while srange <= num:
-        srange *= 2
-        select += 1
-    select -= 1
-    srange /= 2
-    srange *= size
-    shift = num * size - srange
-    return struct.pack(">4H", num, srange, select, shift)
-
 class _Object() :
     pass
 
@@ -423,7 +409,7 @@ class Silf(object):
         data += struct.pack(">H", self.lbGID)
         self.passOffset = len(data)
 
-        data1 = bininfo(numPseudo, 6)
+        data1 = grUtils.bininfo(numPseudo, 6)
         currpos = hdroffset + len(data) + 4 * (self.numPasses + 1)
         self.pseudosOffset = currpos + len(data1)
         for u, p in sorted(self.pMap.items()):
@@ -582,7 +568,7 @@ class Classes(object):
             data += struct.pack((">%dH" % len(l)), *l)
         for l in self.nonLinear:
             oClasses.append(len(data) + offset)
-            data += bininfo(len(l.lookups))
+            data += grUtils.bininfo(len(l.lookups))
             data += "".join([struct.pack(">HH", *x) for x in l.lookups])
         oClasses.append(len(data) + offset)
         self.numClass = len(oClasses) - 1
@@ -731,7 +717,7 @@ class Pass(object):
         self.oDebug = 0
         # now generate output
         data = sstruct.pack(Silf_pass_format, self)
-        data += bininfo(len(passRanges), 6)
+        data += grUtils.bininfo(len(passRanges), 6)
         data += "".join(struct.pack(">3H", *p) for p in passRanges)
         data += struct.pack((">%dH" % len(oRuleMap)), *oRuleMap)
         flatrules = reduce(lambda a,x: a+x, self.rules, [])

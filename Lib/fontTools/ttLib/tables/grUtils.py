@@ -50,3 +50,29 @@ def entries(attributes, sameval = False):
     g = _entries(sorted(attributes.iteritems(), key=lambda x:int(x[0])), sameval)
     return g
 
+def bininfo(num, size=1):
+    if num == 0:
+        return struct.pack(">4H", 0, 0, 0, 0)
+    srange = 1;
+    select = 0
+    while srange <= num:
+        srange *= 2
+        select += 1
+    select -= 1
+    srange /= 2
+    srange *= size
+    shift = num * size - srange
+    return struct.pack(">4H", num, srange, select, shift)
+
+def num2tag(n):
+    if n < 0x200000:
+        return str(n)
+    else:
+        return struct.unpack('4s', struct.pack('>L', n))[0]
+
+def tag2num(n):
+    try:
+        return int(n)
+    except ValueError:
+        return struct.unpack('>L', n)[0]
+
