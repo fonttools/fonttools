@@ -12,6 +12,11 @@ import struct, operator, warnings, re
 Silf_hdr_format = '''
     >
     version:            16.16F
+'''
+
+Silf_hdr_format_3 = '''
+    >
+    version:            16.16F
     compilerVersion:    L
     numSilf:            H
                         x
@@ -304,12 +309,19 @@ class table_S__i_l_f(DefaultTable.DefaultTable):
         sstruct.unpack2(Silf_hdr_format, data, self)
         if self.version >= 5.0:
             (data, self.scheme) = grUtils.decompress(data)
-            sstruct.unpack2(Silf_hdr_format, data, self)
+            sstruct.unpack2(Silf_hdr_format_3, data, self)
+            base = sstruct.calcsize(Silf_hdr_format_3)
+        elif self.version < 3.0:
+            self.numSilf = struct.unpack('>H', data[4:6])
+            self.scheme = 0
+            self.compilerVersion = 0
+            base = 8
         else:
             self.scheme = 0
+            sstruct.unpack2(Silf_hdr_format_3, data, self)
+            base = sstruct.calcsize(Silf_hdr_format_3)
 
-        silfoffsets = struct.unpack_from(('>%dL' % self.numSilf),
-                            data[sstruct.calcsize(Silf_hdr_format):])
+        silfoffsets = struct.unpack_from(('>%dL' % self.numSilf), data[base:])
         for offset in silfoffsets:
             s = Silf()
             self.silfs.append(s)
@@ -317,7 +329,11 @@ class table_S__i_l_f(DefaultTable.DefaultTable):
 
     def compile(self, ttFont):
         self.numSilf = len(self.silfs)
-        hdr = sstruct.pack(Silf_hdr_format, self)
+        if self.version < 3.0:
+            hdr = sstruct.pack(Silf_hdr_format, self)
+            hdr += struct.pack(">HH", self.numSilf, 0)
+        else:
+            hdr = sstruct.pack(Silf_hdr_format_3, self)
         offset = len(hdr) + 4 * self.numSilf
         data = ""
         for s in self.silfs:
@@ -330,6 +346,8 @@ class table_S__i_l_f(DefaultTable.DefaultTable):
         return hdr+data
 
     def toXML(self, writer, ttFont):
+        writer.comment('Attributes starting with _ are informative only')
+        writer.newline()
         writer.simpletag('version', version=self.version,
             compilerVersion=self.compilerVersion, compressionScheme=self.scheme)
         writer.newline()
@@ -385,7 +403,10 @@ class Silf(object):
         data = data[6 + 4 * self.numPasses:]
         (numPseudo,) = struct.unpack(">H", data[:2])
         for i in range(numPseudo):
-            pseudo = sstruct.unpack(Silf_pseudomap_format, data[8+6*i:14+6*i], _Object())
+            if version >= 3.0:
+                pseudo = sstruct.unpack(Silf_pseudomap_format, data[8+6*i:14+6*i], _Object())
+            else:
+                pseudo = struct.unpack('>HH', data[8+4*i:12+4*i], _Object())
             self.pMap[pseudo.unicode] = ttFont.getGlyphName(pseudo.nPseudo)
         data = data[8 + 6 * numPseudo:]
         currpos = (sstruct.calcsize(Silf_part1_format)
@@ -429,7 +450,8 @@ class Silf(object):
         currpos = hdroffset + len(data) + 4 * (self.numPasses + 1)
         self.pseudosOffset = currpos + len(data1)
         for u, p in sorted(self.pMap.items()):
-            data1 += struct.pack(">LH", u, ttFont.getGlyphID(p))
+            data1 += struct.pack((">LH" if version >= 3.0 else ">HH"),
+                                u, ttFont.getGlyphID(p))
         data1 += self.classes.compile(ttFont, version)
         currpos += len(data1)
         data2 = ""
@@ -492,7 +514,7 @@ class Silf(object):
             writer.begintag('passes')
             writer.newline()
             for i, p in enumerate(self.passes):
-                writer.begintag('pass', index=i)
+                writer.begintag('pass', _index=i)
                 writer.newline()
                 p.toXML(writer, ttFont, version)
                 writer.endtag('pass')
@@ -582,7 +604,10 @@ class Classes(object):
     def compile(self, ttFont, version=2.0):
         data = ""
         oClasses = []
-        offset = 8 + 4 * (len(self.linear) + len(self.nonLinear))
+        if version >= 4.0:
+            offset = 8 + 4 * (len(self.linear) + len(self.nonLinear))
+        else:
+            offset = 6 + 2 * (len(self.linear) + len(self.nonLinear))
         for l in self.linear:
             oClasses.append(len(data) + offset)
             gs = map(ttFont.getGlyphID, l)
@@ -596,8 +621,8 @@ class Classes(object):
         self.numClass = len(oClasses) - 1
         self.numLinear = len(self.linear)
         return sstruct.pack(Silf_classmap_format, self) + \
-               struct.pack((">%dL" % len(oClasses)), *oClasses) + \
-               data
+               struct.pack(((">%dL" if version >= 4.0 else ">%dH") % len(oClasses)),
+                            *oClasses) + data
 
     def toXML(self, writer, ttFont, version=2.0):
         writer.begintag('classes')
@@ -605,7 +630,7 @@ class Classes(object):
         writer.begintag('linearClasses')
         writer.newline()
         for i,l in enumerate(self.linear):
-            writer.begintag('linear', index=i)
+            writer.begintag('linear', _index=i)
             writer.newline()
             wrapline(writer, l)
             writer.endtag('linear')
@@ -615,7 +640,7 @@ class Classes(object):
         writer.begintag('nonLinearClasses')
         writer.newline()
         for i, l in enumerate(self.nonLinear):
-            writer.begintag('nonLinear', index=i + self.numLinear)
+            writer.begintag('nonLinear', _index=i + self.numLinear)
             writer.newline()
             for inp, ind in l.items():
                 writer.simpletag('map', glyph=inp, index=ind)
@@ -794,7 +819,7 @@ class Pass(object):
             writer.endtag('starts')
             writer.newline()
             for i, s in enumerate(self.stateTrans):
-                writer.begintag('row', i=i)
+                writer.begintag('row', _i=i)
                 # no newlines here
                 writer.write(" ".join(map(str, s)))
                 writer.endtag('row')
