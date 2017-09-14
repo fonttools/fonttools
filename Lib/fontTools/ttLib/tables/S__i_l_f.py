@@ -372,7 +372,7 @@ class Silf(object):
         (numPseudo,) = struct.unpack(">H", data[:2])
         for i in range(numPseudo):
             pseudo = sstruct.unpack(Silf_pseudomap_format, data[8+6*i:14+6*i], _Object())
-            self.pMap[pseudo.unicode] = pseudo.nPseudo
+            self.pMap[pseudo.unicode] = ttFont.getGlyphName(pseudo.nPseudo)
         data = data[8 + 6 * numPseudo:]
         currpos = sstruct.calcsize(Silf_part1_format) + sstruct.calcsize(Silf_justify_format) * self.numJLevels + \
                     sstruct.calcsize(Silf_part2_format) + 2 * self.numCritFeatures + 1 + 1 + 4 * numScriptTag + \
@@ -413,7 +413,7 @@ class Silf(object):
         currpos = hdroffset + len(data) + 4 * (self.numPasses + 1)
         self.pseudosOffset = currpos + len(data1)
         for u, p in sorted(self.pMap.items()):
-            data1 += struct.pack(">LH", u, p)
+            data1 += struct.pack(">LH", u, ttFont.getGlyphID(p))
         data1 += self.classes.compile(ttFont, version)
         currpos += len(data1)
         data2 = ""
@@ -520,7 +520,7 @@ class Silf(object):
                 (tag, attrs, subcontent) = element
                 if tag == 'pseudo':
                     k = int(attrs['unicode'], 16)
-                    v = int(safeEval(attrs['pseudo']))
+                    v = attrs['pseudo']
                 self.pMap[k] = v
         elif name == 'classes':
             self.classes = Classes()
@@ -553,10 +553,9 @@ class Classes(object):
         else:
             oClasses = struct.unpack((">%dH" % (self.numClass+1)), data[4:6+2*self.numClass])
         for s,e in zip(oClasses[:self.numLinear], oClasses[1:self.numLinear+1]):
-            self.linear.append(struct.unpack((">%dH" % ((e-s)/2)), data[s:e]))
+            self.linear.append(map(ttFont.getGlyphName, struct.unpack((">%dH" % ((e-s)/2)), data[s:e])))
         for s,e in zip(oClasses[self.numLinear:self.numClass], oClasses[self.numLinear+1:self.numClass+1]):
-            nonLin = sstruct.unpack(Silf_lookupclass_format, data[s:s+8], _Object())
-            nonLin.lookups = [struct.unpack(">HH", data[x:x+4]) for x in range(s+8, e, 4)]
+            nonLin = dict([map(ttFont.getGlyphName, struct.unpack(">HH", data[x:x+4])) for x in range(s+8, e, 4)])
             self.nonLinear.append(nonLin)
 
     def compile(self, ttFont, version=2.0):
@@ -565,11 +564,13 @@ class Classes(object):
         offset = 8 + 4 * (len(self.linear) + len(self.nonLinear))
         for l in self.linear:
             oClasses.append(len(data) + offset)
-            data += struct.pack((">%dH" % len(l)), *l)
+            gs = map(ttFont.getGlyphID, l)
+            data += struct.pack((">%dH" % len(l)), *gs)
         for l in self.nonLinear:
             oClasses.append(len(data) + offset)
-            data += grUtils.bininfo(len(l.lookups))
-            data += "".join([struct.pack(">HH", *x) for x in l.lookups])
+            gs = [map(ttFont.getGlyphID, x) for x in l.items()]
+            data += grUtils.bininfo(len(gs))
+            data += "".join([struct.pack(">HH", *x) for x in sorted(gs)])
         oClasses.append(len(data) + offset)
         self.numClass = len(oClasses) - 1
         self.numLinear = len(self.linear)
@@ -585,7 +586,7 @@ class Classes(object):
         for i,l in enumerate(self.linear):
             writer.begintag('linear', index=i)
             writer.newline()
-            writer.write(" ".join(map(str, l)))
+            writer.write(" ".join(l))
             writer.newline()
             writer.endtag('linear')
             writer.newline()
@@ -593,11 +594,11 @@ class Classes(object):
         writer.newline()
         writer.begintag('nonLinearClasses')
         writer.newline()
-        for i,l in enumerate(self.nonLinear):
+        for i, l in enumerate(self.nonLinear):
             writer.begintag('nonLinear', index=i + self.numLinear)
             writer.newline()
-            for o in l.lookups:
-                writer.simpletag('map', gid=o[0], index=o[1])
+            for inp, outp in l.items():
+                writer.simpletag('map', match=inp, result=outp)
                 writer.newline()
             writer.endtag('nonLinear')
             writer.newline()
@@ -612,22 +613,19 @@ class Classes(object):
                 if not isinstance(element, tuple): continue
                 tag, attrs, subcontent = element
                 if tag == 'linear':
-                    e = content_string(subcontent)
-                    l = [int(x) for x in e.split() if x]
+                    l = content_string(subcontent).split()
                     self.linear.append(l)
         elif name == 'nonLinearClasses':
             for element in content:
                 if not isinstance(element, tuple): continue
                 tag, attrs, subcontent = element
                 if tag =='nonLinear':
-                    l = _Object()
-                    l.lookups = []
+                    l = {}
                     for e in subcontent:
                         if not isinstance(e, tuple): continue
                         tag, attrs, subsubcontent = e
                         if tag == 'map':
-                            l.lookups.append((int(safeEval(attrs['gid'])), int(safeEval(attrs['index']))))
-                    l.lookups.sort(key=lambda x: x[0])
+                            l[attrs['match']] = attrs['result']
                     self.nonLinear.append(l)
 
 class Pass(object):
@@ -650,7 +648,7 @@ class Pass(object):
         for i in range(numRange):
             (first, last, col) = struct.unpack(">3H", data[6*i:6*i+6])
             for g in range(first, last+1):
-                self.colMap[g] = col
+                self.colMap[ttFont.getGlyphName(g)] = col
         data = data[6*numRange:]
         oRuleMap = struct.unpack_from((">%dH" % (self.numSuccess + 1)), data)
         data = data[2+2*self.numSuccess:]
@@ -703,7 +701,8 @@ class Pass(object):
             self.startStates = [0]
         oRuleMap = reduce(lambda (a,b), x: (a+len(x), b+[a]), self.rules+[[]], (0, []))[1]
         passRanges = []
-        for e in grUtils.entries(self.colMap, sameval = True):
+        gidcolmap = dict([(ttFont.getGlyphID(x[0]), x[1]) for x in self.colMap.items()])
+        for e in grUtils.entries(gidcolmap, sameval = True):
             if e[1]:
                 passRanges.append((e[0], e[0]+e[1]-1, e[2][0]))
         self.numRules = len(self.actions)
@@ -737,7 +736,7 @@ class Pass(object):
         writer.begintag('colmap')
         writer.newline()
         currline = ""
-        for (g, c) in sorted(self.colMap.items()):
+        for (g, c) in sorted(self.colMap.items(), key=lambda x:ttFont.getGlyphID(x[0])):
             s = "{}={} ".format(g, c)
             if len(s) + len(currline) > 80:
                 writer.write(currline)
@@ -796,7 +795,7 @@ class Pass(object):
             for w in e.split():
                 x = w.split('=')
                 if len(x) != 2 or x[0] == '' or x[1] == '': continue
-                self.colMap[int(x[0])] = int(x[1])
+                self.colMap[x[0]] = int(x[1])
         elif name == 'staterulemap':
             for e in content:
                 if not isinstance(e, tuple): continue
