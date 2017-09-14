@@ -165,7 +165,7 @@ aCode_info = (
     ("PUSH_GLYPH_ATTR_OBS", "Bb"),
     ("PUSH_GLYPH_METRIC", "Bbb"),
     ("PUSH_FEAT", "Bb"),
-    ("PUSH_ATT_TO_GATTR_OBS", "Bbb"),
+    ("PUSH_ATT_TO_GATTR_OBS", "Bb"),
     ("PUSH_ATT_TO_GLYPH_METRIC", "Bbb"),
     ("PUSH_ISLOT_ATTR", "Bbb"),
     ("PUSH_IGLYPH_ATTR", "Bbb"),
@@ -726,12 +726,12 @@ class Pass(object):
         for i in range(len(oConstraints)-1,0,-1):
             if oConstraints[i] == 0 :
                 oConstraints[i] = oConstraints[i+1]
-        self.ruleConstraints = [data[s:e] for (s,e) in izip(oConstraints, oConstraints[1:])]
+        self.ruleConstraints = [(data[s:e] if (e-s > 1) else "") for (s,e) in izip(oConstraints, oConstraints[1:])]
         data = data[oConstraints[-1]:]
         for i in range(len(oActions)-1,0,-1):
             if oActions[i] == 0:
                 oActions[i] = oActions[i+1]
-        self.actions = [data[s:e] for (s,e) in izip(oActions, oActions[1:])]
+        self.actions = [(data[s:e] if (e-s > 1) else "") for (s,e) in izip(oActions, oActions[1:])]
         data = data[oActions[-1]:]
         # not using debug
 

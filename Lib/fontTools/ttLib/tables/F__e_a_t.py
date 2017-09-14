@@ -25,9 +25,14 @@ class table_F__e_a_t(DefaultTable.DefaultTable):
         allfeats = []
         maxsetting = 0
         for i in range(numFeats):
-            (fid, nums, _, offset, flags, lid) = struct.unpack(">LHHLHH",
+            if self.version >= 2.0:
+                (fid, nums, _, offset, flags, lid) = struct.unpack(">LHHLHH",
                                                             data[16*i:16*(i+1)])
-            offset = int((offset - 12 - 16 * numFeats) / 4)
+                offset = int((offset - 12 - 16 * numFeats) / 4)
+            else:
+                (fid, nums, offset, flags, lid) = struct.unpack(">HHLHH",
+                                                            data[12*i:12*(i+1)])
+                offset = int((offset - 12 - 12 * numFeats) / 4)
             allfeats.append((fid, nums, offset, flags, lid))
             maxsetting = max(maxsetting, offset + nums)
         data = data[16*numFeats:]
@@ -53,8 +58,12 @@ class table_F__e_a_t(DefaultTable.DefaultTable):
         vdat = ""
         offset = 0
         for f, v in sorted(self.features.items()):
-            fdat += struct.pack(">LHHLHH", grUtils.tag2num(f), len(v.settings),
-                0, offset * 4 + 12 + 16 * len(self.features), v.flags, v.label)
+            if self.version >= 2.0:
+                fdat += struct.pack(">LHHLHH", grUtils.tag2num(f), len(v.settings),
+                    0, offset * 4 + 12 + 16 * len(self.features), v.flags, v.label)
+            else:
+                fdat += struct.pack(">HHLHH", grUtils.tag2num(f), len(v.settings),
+                    offset * 4 + 12 + 12 * len(self.features), v.flags, v.label)
             for s, l in sorted(v.settings.items()):
                 vdat += struct.pack(">HH", s, l)
             offset += len(v.settings)
