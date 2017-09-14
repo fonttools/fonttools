@@ -278,6 +278,18 @@ def content_string(contents):
         res += element
     return res.strip()
 
+def wrapline(writer, dat, length=80):
+    currline = ""
+    for d in dat:
+        if len(currline) > length:
+            writer.write(currline[:-1])
+            writer.newline()
+            currline = ""
+        currline += d + " "
+    if len(currline):
+        writer.write(currline[:-1])
+        writer.newline()
+
 class _Object() :
     pass
 
@@ -555,7 +567,8 @@ class Classes(object):
         for s,e in zip(oClasses[:self.numLinear], oClasses[1:self.numLinear+1]):
             self.linear.append(map(ttFont.getGlyphName, struct.unpack((">%dH" % ((e-s)/2)), data[s:e])))
         for s,e in zip(oClasses[self.numLinear:self.numClass], oClasses[self.numLinear+1:self.numClass+1]):
-            nonLin = dict([map(ttFont.getGlyphName, struct.unpack(">HH", data[x:x+4])) for x in range(s+8, e, 4)])
+            nonLinids = [struct.unpack(">HH", data[x:x+4]) for x in range(s+8, e, 4)]
+            nonLin = dict([(ttFont.getGlyphName(x[0]), x[1]) for x in nonLinids])
             self.nonLinear.append(nonLin)
 
     def compile(self, ttFont, version=2.0):
@@ -568,7 +581,7 @@ class Classes(object):
             data += struct.pack((">%dH" % len(l)), *gs)
         for l in self.nonLinear:
             oClasses.append(len(data) + offset)
-            gs = [map(ttFont.getGlyphID, x) for x in l.items()]
+            gs = [(ttFont.getGlyphID(x[0]), x[1]) for x in l.items()]
             data += grUtils.bininfo(len(gs))
             data += "".join([struct.pack(">HH", *x) for x in sorted(gs)])
         oClasses.append(len(data) + offset)
@@ -586,8 +599,7 @@ class Classes(object):
         for i,l in enumerate(self.linear):
             writer.begintag('linear', index=i)
             writer.newline()
-            writer.write(" ".join(l))
-            writer.newline()
+            wrapline(writer, l)
             writer.endtag('linear')
             writer.newline()
         writer.endtag('linearClasses')
@@ -597,8 +609,8 @@ class Classes(object):
         for i, l in enumerate(self.nonLinear):
             writer.begintag('nonLinear', index=i + self.numLinear)
             writer.newline()
-            for inp, outp in l.items():
-                writer.simpletag('map', match=inp, result=outp)
+            for inp, ind in l.items():
+                writer.simpletag('map', glyph=inp, index=ind)
                 writer.newline()
             writer.endtag('nonLinear')
             writer.newline()
@@ -625,7 +637,7 @@ class Classes(object):
                         if not isinstance(e, tuple): continue
                         tag, attrs, subsubcontent = e
                         if tag == 'map':
-                            l[attrs['match']] = attrs['result']
+                            l[attrs['glyph']] = int(safeEval(attrs['index']))
                     self.nonLinear.append(l)
 
 class Pass(object):
@@ -735,17 +747,7 @@ class Pass(object):
         writesimple('fsminfo', self, writer, *pass_attrs_fsm)
         writer.begintag('colmap')
         writer.newline()
-        currline = ""
-        for (g, c) in sorted(self.colMap.items(), key=lambda x:ttFont.getGlyphID(x[0])):
-            s = "{}={} ".format(g, c)
-            if len(s) + len(currline) > 80:
-                writer.write(currline)
-                writer.newline()
-                currline = ""
-            currline += s
-        if len(currline):
-            writer.write(currline)
-            writer.newline()
+        wrapline(writer, ["{}={}".format(*x) for x in sorted(self.colMap.items(), key=lambda x:ttFont.getGlyphID(x[0]))])
         writer.endtag('colmap')
         writer.newline()
         writer.begintag('staterulemap')
