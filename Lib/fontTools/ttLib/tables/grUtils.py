@@ -68,11 +68,12 @@ def num2tag(n):
     if n < 0x200000:
         return str(n)
     else:
-        return struct.unpack('4s', struct.pack('>L', n))[0]
+        return struct.unpack('4s', struct.pack('>L', n))[0].replace('\000', '')
 
 def tag2num(n):
     try:
         return int(n)
     except ValueError:
+        n = (n+"    ")[:4]
         return struct.unpack('>L', n)[0]
 

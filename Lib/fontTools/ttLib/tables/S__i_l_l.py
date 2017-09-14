@@ -24,12 +24,13 @@ class table_S__i_l_l(DefaultTable.DefaultTable):
         maxsetting = 0
         langinfo = []
         for i in range(numLangs):
-            (langcode, numSettings, offset) = struct.unpack(">4sHH",
+            (langcode, numsettings, offset) = struct.unpack(">4sHH",
                                                         data[i * 8:(i+1) * 8])
             offset = int(offset / 8) - (numLangs + 1)
+            langcode = langcode.replace('\000', '')
             langinfo.append((langcode, numsettings, offset))
             maxsetting = max(maxsetting, offset + numsettings)
-        data[numLangs * 8:]
+        data = data[numLangs * 8:]
         finfo = []
         for i in range(maxsetting):
             (fid, val, _) = struct.unpack(">LHH", data[i * 8:(i+1) * 8])
@@ -45,7 +46,7 @@ class table_S__i_l_l(DefaultTable.DefaultTable):
         fdat = ""
         offset = 0
         for c, inf in sorted(self.langs.items()):
-            ldat += struct.pack(">4sHH", c, len(inf), 8 * (offset + len(self.langs) + 1))
+            ldat += struct.pack(">4sHH", c.encode('utf8'), len(inf), 8 * (offset + len(self.langs) + 1))
             for fid, val in inf:
                 fdat += struct.pack(">LHH", fid, val, 0)
             offset += len(inf)
@@ -74,5 +75,5 @@ class table_S__i_l_l(DefaultTable.DefaultTable):
                 if not isinstance(element, tuple): continue
                 tag, a, subcontent = element
                 if tag == 'feature':
-                    self.langs[c].append((grUtils.tag2num(attrs['fid']),
-                                            int(safeEval(attrs['val']))))
+                    self.langs[c].append((grUtils.tag2num(a['fid']),
+                                            int(safeEval(a['val']))))
