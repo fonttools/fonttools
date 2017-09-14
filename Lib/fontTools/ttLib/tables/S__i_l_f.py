@@ -737,8 +737,8 @@ class Pass(object):
 
     def compile(self, ttFont, base, version=2.0):
         # build it all up backwards
-        oActions = reduce(lambda (a,b), x: (a+len(x), b+[a]), self.actions + [""], (0, []))[1]
-        oConstraints = reduce(lambda (a,b), x: (a+len(x), b+[a]), self.ruleConstraints + [""], (0, []))[1]
+        oActions = reduce(lambda a, x: (a[0]+len(x), a[1]+[a[0]]), self.actions + [""], (0, []))[1]
+        oConstraints = reduce(lambda a, x: (a[0]+len(x), a[1]+[a[0]]), self.ruleConstraints + [""], (0, []))[1]
         constraintCode = "".join(self.ruleConstraints)
         transes = []
         for t in self.stateTrans:
@@ -747,7 +747,7 @@ class Pass(object):
             t.byteswap()
         if not len(transes):
             self.startStates = [0]
-        oRuleMap = reduce(lambda (a,b), x: (a+len(x), b+[a]), self.rules+[[]], (0, []))[1]
+        oRuleMap = reduce(lambda a, x: (a[0]+len(x), a[1]+[a[0]]), self.rules+[[]], (0, []))[1]
         passRanges = []
         gidcolmap = dict([(ttFont.getGlyphID(x[0]), x[1]) for x in self.colMap.items()])
         for e in grUtils.entries(gidcolmap, sameval = True):
