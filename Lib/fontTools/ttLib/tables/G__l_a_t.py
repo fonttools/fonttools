@@ -85,13 +85,9 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
         
         gloc = ttFont['Gloc']
         self.attributes = {}
-        glyphorder = ttFont.getGlyphOrder()
         count = 0
-        numg = len(glyphorder)
         for s,e in zip(gloc,gloc[1:]):
-            if count >= len(glyphorder):
-                glyphorder.append('pseudo_{}'.format(count - numg + 1))
-            self.attributes[glyphorder[count]] = decoder(data[s:e])
+            self.attributes[ttFont.getGlyphName(count)] = decoder(data[s:e])
             count += 1
     
     def decompileAttributes12(self, data, fmt):
@@ -131,16 +127,9 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
             encoder = self.compileAttributes3
 
         glocs = []
-        glyphorder = ttFont.getGlyphOrder()
-        count = 1
-        gname = "pseudo_{}".format(count)
-        while gname in self.attributes :
-            glyphorder.append(gname)
-            count += 1
-            gname = "pseudo_{}".format(count)
-        for n in glyphorder :
+        for n in range(len(self.attributes)):
             glocs.append(len(data))
-            data += encoder(self.attributes[n])
+            data += encoder(self.attributes[ttFont.getGlyphName(n)])
         glocs.append(len(data))
         ttFont['Gloc'].set(glocs)
 
@@ -169,7 +158,7 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
     def toXML(self, writer, ttFont):
         writer.simpletag('version', version=self.version, compressionScheme=self.scheme)
         writer.newline()
-        for n, a in sorted(self.attributes.items()):
+        for n, a in sorted(self.attributes.items(), key=lambda x:ttFont.getGlyphID(x[0])):
             writer.begintag('glyph', name=n)
             writer.newline()
             if hasattr(a, 'octabox'):
