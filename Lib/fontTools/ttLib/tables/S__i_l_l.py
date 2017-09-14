@@ -24,7 +24,8 @@ class table_S__i_l_l(DefaultTable.DefaultTable):
         maxsetting = 0
         langinfo = []
         for i in range(numLangs):
-            (langcode, numSettings, offset) = struct.unpack(">4sHH", data[i * 8:(i+1) * 8])
+            (langcode, numSettings, offset) = struct.unpack(">4sHH",
+                                                        data[i * 8:(i+1) * 8])
             offset = int(offset / 8) - (numLangs + 1)
             langinfo.append((langcode, numsettings, offset))
             maxsetting = max(maxsetting, offset + numsettings)
@@ -48,7 +49,8 @@ class table_S__i_l_l(DefaultTable.DefaultTable):
             for fid, val in inf:
                 fdat += struct.pack(">LHH", fid, val, 0)
             offset += len(inf)
-        return sstruct.pack(Sill_hdr, self) + grUtils.bininfo(len(self.langs)) + ldat + fdat
+        return sstruct.pack(Sill_hdr, self) + grUtils.bininfo(len(self.langs)) + \
+                ldat + fdat
 
     def toXML(self, writer, ttFont):
         writer.simpletag('version', version=self.version)
@@ -72,4 +74,5 @@ class table_S__i_l_l(DefaultTable.DefaultTable):
                 if not isinstance(element, tuple): continue
                 tag, a, subcontent = element
                 if tag == 'feature':
-                    self.langs[c].append((grUtils.tag2num(attrs['fid']), int(safeEval(attrs['val']))))
+                    self.langs[c].append((grUtils.tag2num(attrs['fid']),
+                                            int(safeEval(attrs['val']))))

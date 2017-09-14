@@ -1,9 +1,3 @@
-# uncompyle6 version 2.11.5
-# Python bytecode 2.7 (62211)
-# Decompiled from: Python 2.7.13 (default, Jan 19 2017, 14:48:08)
-# [GCC 6.3.0 20170118]
-# Embedded file name: /home/tim/workspace/fonttools/Lib/fontTools/ttLib/tables/G__l_o_c.py
-# Compiled at: 2015-09-29 18:27:41
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
@@ -49,7 +43,9 @@ class table_G__l_o_c(DefaultTable.DefaultTable):
             self.attribIds.byteswap()
 
     def compile(self, ttFont):
-        data = sstruct.pack(Gloc_header, dict(version=1.0, flags=(bool(self.attribIds) << 1) + (self.locations.typecode == 'I'), numAttribs=self.numAttribs))
+        data = sstruct.pack(Gloc_header, dict(version=1.0,
+                flags=(bool(self.attribIds) << 1) + (self.locations.typecode == 'I'),
+                numAttribs=self.numAttribs))
         self.locations.byteswap()
         data += self.locations.tostring()
         self.locations.byteswap()
