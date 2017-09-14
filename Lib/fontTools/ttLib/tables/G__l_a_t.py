@@ -108,7 +108,8 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
             o.subboxes = []
             for b in range(numsub):
                 if len(data) >= 8 :
-                    subbox, data = sstruct.unpack2(Glat_format_3_subbox_entry, data, _Object())
+                    subbox, data = sstruct.unpack2(Glat_format_3_subbox_entry,
+                                                    data, _Object())
                     o.subboxes.append(subbox)
         attrs = self.decompileAttributes12(data, Glat_format_23_entry)
         if self.hasOctaboxes:

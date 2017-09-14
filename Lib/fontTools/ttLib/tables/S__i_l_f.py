@@ -255,10 +255,10 @@ attrs_info=('flags', 'extraAscent', 'extraDescent', 'maxGlyphID',
             'numLigComp', 'numUserDefn', 'maxCompPerLig', 'direction', 'lbGID')
 attrs_passindexes = ('iSubst', 'iPos', 'iJust', 'iBidi')
 attrs_contexts = ('maxPreContext', 'maxPostContext')
-attrs_attributes = ('attrPseudo', 'attrBreakWeight',
-            'attrDirectionality', 'attrMirroring', 'attrSkipPasses', 'attCollisions')
-pass_attrs_info = ('flags', 'maxRuleLoop', 'maxRuleContext', 'maxBackup', 'minRulePreContext',
-            'maxRulePreContext', 'collisionThreshold')
+attrs_attributes = ('attrPseudo', 'attrBreakWeight', 'attrDirectionality',
+                    'attrMirroring', 'attrSkipPasses', 'attCollisions')
+pass_attrs_info = ('flags', 'maxRuleLoop', 'maxRuleContext', 'maxBackup',
+            'minRulePreContext', 'maxRulePreContext', 'collisionThreshold')
 pass_attrs_fsm = ('numRows', 'numTransitional', 'numSuccess', 'numColumns')
 
 def writesimple(tag, self, writer, *attrkeys):
@@ -308,7 +308,8 @@ class table_S__i_l_f(DefaultTable.DefaultTable):
         else:
             self.scheme = 0
 
-        silfoffsets = struct.unpack_from(('>%dL' % self.numSilf), data[sstruct.calcsize(Silf_hdr_format):])
+        silfoffsets = struct.unpack_from(('>%dL' % self.numSilf),
+                            data[sstruct.calcsize(Silf_hdr_format):])
         for offset in silfoffsets:
             s = Silf()
             self.silfs.append(s)
@@ -329,7 +330,8 @@ class table_S__i_l_f(DefaultTable.DefaultTable):
         return hdr+data
 
     def toXML(self, writer, ttFont):
-        writer.simpletag('version', version=self.version, compilerVersion=self.compilerVersion, compressionScheme=self.scheme)
+        writer.simpletag('version', version=self.version,
+            compilerVersion=self.compilerVersion, compressionScheme=self.scheme)
         writer.newline()
         for s in self.silfs:
             writer.begintag('silf')
@@ -386,9 +388,10 @@ class Silf(object):
             pseudo = sstruct.unpack(Silf_pseudomap_format, data[8+6*i:14+6*i], _Object())
             self.pMap[pseudo.unicode] = ttFont.getGlyphName(pseudo.nPseudo)
         data = data[8 + 6 * numPseudo:]
-        currpos = sstruct.calcsize(Silf_part1_format) + sstruct.calcsize(Silf_justify_format) * self.numJLevels + \
-                    sstruct.calcsize(Silf_part2_format) + 2 * self.numCritFeatures + 1 + 1 + 4 * numScriptTag + \
-                    6 + 4 * self.numPasses + 8 + 6 * numPseudo
+        currpos = (sstruct.calcsize(Silf_part1_format)
+                    + sstruct.calcsize(Silf_justify_format) * self.numJLevels
+                    + sstruct.calcsize(Silf_part2_format) + 2 * self.numCritFeatures
+                    + 1 + 1 + 4 * numScriptTag + 6 + 4 * self.numPasses + 8 + 6 * numPseudo)
         if version >= 3.0:
             currpos += sstruct.calcsize(Silf_part1_format_v3)
         self.classes = Classes()
@@ -396,7 +399,8 @@ class Silf(object):
         for i in range(self.numPasses):
             p = Pass()
             self.passes.append(p)
-            p.decompile(data[self.oPasses[i]-currpos:self.oPasses[i+1]-currpos], ttFont, version)
+            p.decompile(data[self.oPasses[i]-currpos:self.oPasses[i+1]-currpos],
+                        ttFont, version)
 
     def compile(self, ttFont, version=2.0):
         self.numPasses = len(self.passes)
@@ -561,12 +565,16 @@ class Classes(object):
     def decompile(self, data, ttFont, version=2.0):
         sstruct.unpack2(Silf_classmap_format, data, self)
         if version >= 4.0 :
-            oClasses = struct.unpack((">%dL" % (self.numClass+1)), data[4:8+4*self.numClass])
+            oClasses = struct.unpack((">%dL" % (self.numClass+1)),
+                                        data[4:8+4*self.numClass])
         else:
-            oClasses = struct.unpack((">%dH" % (self.numClass+1)), data[4:6+2*self.numClass])
+            oClasses = struct.unpack((">%dH" % (self.numClass+1)),
+                                        data[4:6+2*self.numClass])
         for s,e in zip(oClasses[:self.numLinear], oClasses[1:self.numLinear+1]):
-            self.linear.append(map(ttFont.getGlyphName, struct.unpack((">%dH" % ((e-s)/2)), data[s:e])))
-        for s,e in zip(oClasses[self.numLinear:self.numClass], oClasses[self.numLinear+1:self.numClass+1]):
+            self.linear.append(map(ttFont.getGlyphName,
+                                   struct.unpack((">%dH" % ((e-s)/2)), data[s:e])))
+        for s,e in zip(oClasses[self.numLinear:self.numClass],
+                        oClasses[self.numLinear+1:self.numClass+1]):
             nonLinids = [struct.unpack(">HH", data[x:x+4]) for x in range(s+8, e, 4)]
             nonLin = dict([(ttFont.getGlyphName(x[0]), x[1]) for x in nonLinids])
             self.nonLinear.append(nonLin)
@@ -669,16 +677,19 @@ class Pass(object):
         data = data[2*oRuleMap[-1]:]
         (self.minRulePreContext, self.maxRulePreContext) = struct.unpack('BB', data[:2])
         numStartStates = self.maxRulePreContext - self.minRulePreContext + 1
-        self.startStates = struct.unpack((">%dH" % numStartStates), data[2:2 + numStartStates * 2])
+        self.startStates = struct.unpack((">%dH" % numStartStates),
+                                        data[2:2 + numStartStates * 2])
         data = data[2+numStartStates*2:]
         self.ruleSortKeys = struct.unpack((">%dH" % self.numRules), data[:2 * self.numRules])
         data = data[2*self.numRules:]
         self.rulePreContexts = struct.unpack(("%dB" % self.numRules), data[:self.numRules])
         data = data[self.numRules:]
         (self.collisionThreshold, pConstraint) = struct.unpack(">BH", data[:3])
-        oConstraints = list(struct.unpack((">%dH" % (self.numRules + 1)), data[3:5 + self.numRules * 2]))
+        oConstraints = list(struct.unpack((">%dH" % (self.numRules + 1)),
+                                        data[3:5 + self.numRules * 2]))
         data = data[5 + self.numRules * 2:]
-        oActions = list(struct.unpack((">%dH" % (self.numRules + 1)), data[:2 + self.numRules * 2]))
+        oActions = list(struct.unpack((">%dH" % (self.numRules + 1)),
+                                        data[:2 + self.numRules * 2]))
         data = data[2 * self.numRules + 2:]
         for i in range(self.numTransitional):
             a = array("H", data[i*self.numColumns*2:(i+1)*self.numColumns*2])
@@ -718,11 +729,11 @@ class Pass(object):
             if e[1]:
                 passRanges.append((e[0], e[0]+e[1]-1, e[2][0]))
         self.numRules = len(self.actions)
-        self.fsmOffset = sstruct.calcsize(Silf_pass_format) + 8 + len(passRanges) * 6 \
-                    + len(oRuleMap) * 2 + 2 * oRuleMap[-1] + 2 \
-                    + 2 * len(self.startStates) \
-                    + 3 * self.numRules + 3 + 4 * self.numRules + 4
-        self.pcCode = self.fsmOffset + 2 * self.numTransitional * self.numColumns + 1 + base
+        self.fsmOffset = (sstruct.calcsize(Silf_pass_format) + 8 + len(passRanges) * 6
+                    + len(oRuleMap) * 2 + 2 * oRuleMap[-1] + 2
+                    + 2 * len(self.startStates) + 3 * self.numRules + 3
+                    + 4 * self.numRules + 4)
+        self.pcCode = self.fsmOffset + 2*self.numTransitional*self.numColumns + 1 + base
         self.rcCode = self.pcCode + len(self.passConstraints)
         self.aCode = self.rcCode + len(constraintCode)
         self.oDebug = 0
@@ -740,27 +751,31 @@ class Pass(object):
         data += struct.pack(">BH", self.collisionThreshold, len(self.passConstraints))
         data += struct.pack((">%dH" % (self.numRules+1)), *oConstraints)
         data += struct.pack((">%dH" % (self.numRules+1)), *oActions)
-        return data + "".join(transes) + struct.pack("B", 0) + self.passConstraints + constraintCode + "".join(self.actions)
+        return data + "".join(transes) + struct.pack("B", 0) + \
+                self.passConstraints + constraintCode + "".join(self.actions)
 
     def toXML(self, writer, ttFont, version=2.0):
         writesimple('info', self, writer, *pass_attrs_info)
         writesimple('fsminfo', self, writer, *pass_attrs_fsm)
         writer.begintag('colmap')
         writer.newline()
-        wrapline(writer, ["{}={}".format(*x) for x in sorted(self.colMap.items(), key=lambda x:ttFont.getGlyphID(x[0]))])
+        wrapline(writer, ["{}={}".format(*x) for x in sorted(self.colMap.items(),
+                                        key=lambda x:ttFont.getGlyphID(x[0]))])
         writer.endtag('colmap')
         writer.newline()
         writer.begintag('staterulemap')
         writer.newline()
         for i, r in enumerate(self.rules):
-            writer.simpletag('state', number = self.numRows - self.numSuccess + i, rules = " ".join(map(str, r)))
+            writer.simpletag('state', number = self.numRows - self.numSuccess + i,
+                                rules = " ".join(map(str, r)))
             writer.newline()
         writer.endtag('staterulemap')
         writer.newline()
         writer.begintag('rules')
         writer.newline()
         for i in range(self.numRules):
-            writer.begintag('rule', index=i, precontext=self.rulePreContexts[i], sortkey=self.ruleSortKeys[i])
+            writer.begintag('rule', index=i, precontext=self.rulePreContexts[i],
+                            sortkey=self.ruleSortKeys[i])
             writer.newline()
             if len(self.ruleConstraints[i]):
                 writecode('constraint', writer, self.ruleConstraints[i])
