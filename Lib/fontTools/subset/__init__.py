@@ -2623,7 +2623,7 @@ class Options(object):
                 raise self.UnknownOptionError("Unknown option '%s'" % k)
             setattr(self, k, v)
 
-    def parse_opts(self, argv, ignore_unknown=False):
+    def parse_opts(self, argv, ignore_unknown=[]):
         posargs = []
         passthru_options = []
         for a in argv:
