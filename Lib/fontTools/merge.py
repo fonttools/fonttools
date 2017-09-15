@@ -825,21 +825,40 @@ class Options(object):
 
 		return ret
 
-class _GregariousDict(dict):
-	"""A very custom dictionary-like object that:
-	1. Allows keys to be unhashable objects, so far as they don't change underneath, and
-	2. Welcomes guests without reservations and adds them to the end of the list.
-	"""
+class _AttendanceRecordingIdentityDict(dict):
+	"""A dictionary-like object that records indices of items actually accessed
+	from a list."""
 
 	def __init__(self, lst):
 		self.l = lst
 		self.d = {id(v):i for i,v in enumerate(lst)}
+		self.s = set()
 
 	def __getitem__(self, v):
-		assert type(v) != int
-		if id(v) not in self.d:
-			self.d[id(v)] = len(self.l)
+		self.s.add(self.d[id(v)])
+		return v
+
+class _GregariousDict(dict):
+	"""A dictionary-like object that welcomes guests without reservations and
+	adds them to the end of the guest list."""
+
+	def __init__(self, lst):
+		self.l = lst
+		self.s = set(id(v) for v in lst)
+
+	def __getitem__(self, v):
+		if id(v) not in self.s:
+			self.s.add(id(v))
 			self.l.append(v)
+		return v
+
+class _NonhashableDict(dict):
+	"""A dictionary-like object mapping objects to their index within a list."""
+
+	def __init__(self, lst):
+		self.d = {id(v):i for i,v in enumerate(lst)}
+
+	def __getitem__(self, v):
 		return self.d[id(v)]
 
 class Merger(object):
@@ -956,9 +975,7 @@ class Merger(object):
 			if t.table.LookupList:
 				lookupMap = {i:v for i,v in enumerate(t.table.LookupList.Lookup)}
 				t.table.LookupList.mapLookups(lookupMap)
-				if t.table.FeatureList:
-					# XXX Handle present FeatureList but absent LookupList
-					t.table.FeatureList.mapLookups(lookupMap)
+				t.table.FeatureList.mapLookups(lookupMap)
 
 			if t.table.FeatureList and t.table.ScriptList:
 				featureMap = {i:v for i,v in enumerate(t.table.FeatureList.FeatureRecord)}
@@ -981,19 +998,48 @@ class Merger(object):
 			l = t.table.FeatureList.FeatureRecord
 			assert len(l) == len(set(x.Feature for x in l))
 			if t.table.FeatureList and t.table.ScriptList:
-				# XXX Handle present ScriptList but absent FeatureList
+
+				# Collect unregistered (new) features.
 				featureMap = _GregariousDict(t.table.FeatureList.FeatureRecord)
 				t.table.ScriptList.mapFeatures(featureMap)
+
+				# Record used features.
+				featureMap = _AttendanceRecordingIdentityDict(t.table.FeatureList.FeatureRecord)
+				t.table.ScriptList.mapFeatures(featureMap)
+				usedIndices = featureMap.s
+
+				# Remove unused features
+				t.table.FeatureList.FeatureRecord = [f for i,f in enumerate(t.table.FeatureList.FeatureRecord) if i in usedIndices]
+
+				# Map back to indices.
+				featureMap = _NonhashableDict(t.table.FeatureList.FeatureRecord)
+				t.table.ScriptList.mapFeatures(featureMap)
+
 				t.table.FeatureList.FeatureCount = len(t.table.FeatureList.FeatureRecord)
 
 			assert len(l) == len(set(l))
 			assert len(l) == len(set(x.Feature for x in l))
 			if t.table.LookupList:
+
+				# Collect unregistered (new) lookups.
 				lookupMap = _GregariousDict(t.table.LookupList.Lookup)
-				if t.table.FeatureList:
-					# XXX Handle present FeatureList but absent LookupList
-					t.table.FeatureList.mapLookups(lookupMap)
+				t.table.FeatureList.mapLookups(lookupMap)
 				t.table.LookupList.mapLookups(lookupMap)
+
+				# Record used lookups.
+				lookupMap = _AttendanceRecordingIdentityDict(t.table.LookupList.Lookup)
+				t.table.FeatureList.mapLookups(lookupMap)
+				t.table.LookupList.mapLookups(lookupMap)
+				usedIndices = lookupMap.s
+
+				# Remove unused lookups
+				t.table.LookupList.Lookup = [l for i,l in enumerate(t.table.LookupList.Lookup) if i in usedIndices]
+
+				# Map back to indices.
+				lookupMap = _NonhashableDict(t.table.LookupList.Lookup)
+				t.table.FeatureList.mapLookups(lookupMap)
+				t.table.LookupList.mapLookups(lookupMap)
+
 				t.table.LookupList.LookupCount = len(t.table.LookupList.Lookup)
 
 		# TODO GDEF/Lookup MarkFilteringSets
