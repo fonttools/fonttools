@@ -97,7 +97,7 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
             keys = range(e.attNum, e.attNum+e.num)
             if len(data) >= 2 * e.num :
                 vals = struct.unpack_from(('>%dh' % e.num), data)
-                attributes.update(izip(keys,vals))
+                attributes.update(zip(keys,vals))
                 data = data[2*e.num:]
         return attributes
 
