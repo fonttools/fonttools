@@ -496,6 +496,9 @@ ttLib.getTableClass('MATH').mergeMap = \
 	'table': mergeObjects,
 }
 
+lookup_id = id
+feature_id = id
+
 @_add_method(ttLib.getTableClass('GSUB'))
 def merge(self, m, tables):
 
@@ -503,8 +506,8 @@ def merge(self, m, tables):
 	for i,(table,dups) in enumerate(zip(tables, m.duplicateGlyphsPerFont)):
 		if not dups: continue
 		assert (table is not None and table is not NotImplemented), "Have duplicates to resolve for font %d but no GSUB" % (i + 1)
-		lookupMap = {id(v):v for v in table.table.LookupList.Lookup}
-		featureMap = {id(v):v for v in table.table.FeatureList.FeatureRecord}
+		lookupMap = {lookup_id(v):v for v in table.table.LookupList.Lookup}
+		featureMap = {feature_id(v):v for v in table.table.FeatureList.FeatureRecord}
 		synthFeature = None
 		synthLookup = None
 		for script in table.table.ScriptList.ScriptRecord:
@@ -523,8 +526,8 @@ def merge(self, m, tables):
 						f.FeatureParams = None
 						f.LookupCount = 0
 						f.LookupListIndex = []
-						langsys.FeatureIndex.append(id(synthFeature))
-						featureMap[id(synthFeature)] = synthFeature
+						langsys.FeatureIndex.append(feature_id(synthFeature))
+						featureMap[feature_id(synthFeature)] = synthFeature
 						langsys.FeatureIndex.sort(key=lambda v: featureMap[v].FeatureTag)
 						table.table.FeatureList.FeatureRecord.append(synthFeature)
 						table.table.FeatureList.FeatureCount += 1
@@ -541,7 +544,7 @@ def merge(self, m, tables):
 					table.table.LookupList.Lookup.append(synthLookup)
 					table.table.LookupList.LookupCount += 1
 
-				feature.Feature.LookupListIndex[:0] = [id(synthLookup)]
+				feature.Feature.LookupListIndex[:0] = [lookup_id(synthLookup)]
 				feature.Feature.LookupCount += 1
 
 	DefaultTable.merge(self, m, tables)
@@ -871,14 +874,14 @@ class Merger(object):
 			if not t: continue
 
 			if t.table.LookupList:
-				lookupMap = {i:id(v) for i,v in enumerate(t.table.LookupList.Lookup)}
+				lookupMap = {i:lookup_id(v) for i,v in enumerate(t.table.LookupList.Lookup)}
 				t.table.LookupList.mapLookups(lookupMap)
 				if t.table.FeatureList:
 					# XXX Handle present FeatureList but absent LookupList
 					t.table.FeatureList.mapLookups(lookupMap)
 
 			if t.table.FeatureList and t.table.ScriptList:
-				featureMap = {i:id(v) for i,v in enumerate(t.table.FeatureList.FeatureRecord)}
+				featureMap = {i:feature_id(v) for i,v in enumerate(t.table.FeatureList.FeatureRecord)}
 				t.table.ScriptList.mapFeatures(featureMap)
 
 		# TODO GDEF/Lookup MarkFilteringSets
@@ -896,7 +899,7 @@ class Merger(object):
 			if not t: continue
 
 			if t.table.LookupList:
-				lookupMap = {id(v):i for i,v in enumerate(t.table.LookupList.Lookup)}
+				lookupMap = {lookup_id(v):i for i,v in enumerate(t.table.LookupList.Lookup)}
 				t.table.LookupList.mapLookups(lookupMap)
 				if t.table.FeatureList:
 					# XXX Handle present FeatureList but absent LookupList
@@ -904,7 +907,7 @@ class Merger(object):
 
 			if t.table.FeatureList and t.table.ScriptList:
 				# XXX Handle present ScriptList but absent FeatureList
-				featureMap = {id(v):i for i,v in enumerate(t.table.FeatureList.FeatureRecord)}
+				featureMap = {feature_id(v):i for i,v in enumerate(t.table.FeatureList.FeatureRecord)}
 				t.table.ScriptList.mapFeatures(featureMap)
 
 		# TODO GDEF/Lookup MarkFilteringSets
