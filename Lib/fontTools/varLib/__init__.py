@@ -734,8 +734,10 @@ def load_designspace(designspace_filename):
 					axis_dict['labelname'] = standard_axis_map[axis_name][1].copy()
 
 			axis = DesignspaceAxis()
-			for item in ['name', 'tag', 'labelname', 'minimum', 'default', 'maximum', 'map']:
+			for item in ['name', 'tag', 'minimum', 'default', 'maximum', 'map']:
 				assert item in axis_dict, 'Axis does not have "%s"' % item
+			if 'labelname' not in axis_dict:
+				axis_dict['labelname'] = {'en': axis_name}
 			axis.__dict__ = axis_dict
 			axis_objects[axis_name] = axis
 	else:
