@@ -229,6 +229,7 @@ TESTS = {
     "aots/lookupflag_ignore_combination_f1.otf":    ('GDEF', 'GSUB'),
     "aots/lookupflag_ignore_ligatures_f1.otf":      ('GDEF', 'GSUB'),
     "aots/lookupflag_ignore_marks_f1.otf":          ('GDEF', 'GSUB'),
+    "graphite/graphite_tests.ttf":                  ('Silf', 'Glat', 'Feat', 'Sill'),
 }
 
 
@@ -303,6 +304,11 @@ def test_xml_from_xml(testfile, tableTag):
     xml_expected = read_expected_ttx(testfile, tableTag)
 
     font = load_ttx(xml_expected)
+    name = os.path.splitext(testfile)[0]
+    setupfile = getpath("%s.ttx.%s.setup" % (name, tagToXML(tableTag)))
+    if os.path.exists(setupfile):
+#        import pdb; pdb.set_trace()
+        font.importXML(setupfile)
     xml_from_xml = dump_ttx(font, tableTag)
 
     assert xml_expected == xml_from_xml

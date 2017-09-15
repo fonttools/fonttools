@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00">
+
+  <Sill>
+    <version version="1.0"/>
+    <lang name="fred">
+      <feature fid="yesm" val="1"/>
+      <feature fid="nom " val="0"/>
+    </lang>
+  </Sill>
+
+</ttFont>
