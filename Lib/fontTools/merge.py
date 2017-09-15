@@ -414,13 +414,83 @@ def merge(self, m, tables):
 	return self
 
 
+def mergeLookupLists(lst):
+	# TODO Do smarter merge.
+	return sumLists(lst)
+
+def mergeFeatures(lst):
+	assert lst
+	self = otTables.Feature()
+	self.FeatureParams = None
+	self.LookupListIndex = mergeLookupLists([l.LookupListIndex for l in lst if l.LookupListIndex])
+	self.LookupCount = len(self.LookupListIndex)
+	return self
+
+def mergeFeatureLists(lst):
+	d = {}
+	for l in lst:
+		for f in l:
+			tag = f.FeatureTag
+			if tag not in d:
+				d[tag] = []
+			d[tag].append(f.Feature)
+	ret = []
+	for tag in sorted(d.keys()):
+		rec = otTables.FeatureRecord()
+		rec.FeatureTag = tag
+		rec.Feature = mergeFeatures(d[tag])
+		ret.append(rec)
+	return ret
+
+def mergeLangSyses(lst):
+	assert lst
+
+	# TODO Support merging ReqFeatureIndex
+	assert all(l.ReqFeatureIndex == 0xFFFF for l in lst)
+
+	self = otTables.LangSys()
+	self.LookupOrder = None
+	self.ReqFeatureIndex = 0xFFFF
+	self.FeatureIndex = mergeFeatureLists([l.FeatureIndex for l in lst if l.FeatureIndex])
+	self.FeatureCount = len(self.FeatureIndex)
+	return self
+
+def mergeScripts(lst):
+	assert lst
+
+	if len(lst) == 1:
+		return lst[0]
+	# TODO Support merging LangSysRecords
+	assert all(not s.LangSysRecord for s in lst)
+
+	self = otTables.Script()
+	self.LangSysRecord = []
+	self.LangSysCount = 0
+	self.DefaultLangSys = mergeLangSyses([s.DefaultLangSys for s in lst if s.DefaultLangSys])
+	return self
+
+def mergeScriptRecords(lst):
+	d = {}
+	for l in lst:
+		for s in l:
+			tag = s.ScriptTag
+			if tag not in d:
+				d[tag] = []
+			d[tag].append(s.Script)
+	ret = []
+	for tag in sorted(d.keys()):
+		rec = otTables.ScriptRecord()
+		rec.ScriptTag = tag
+		rec.Script = mergeScripts(d[tag])
+		ret.append(rec)
+	return ret
+
 otTables.ScriptList.mergeMap = {
-	'ScriptCount': sum,
-	# TODO: Merge duplicate entries
-	'ScriptRecord': lambda lst: sorted(sumLists(lst), key=lambda s: s.ScriptTag),
+	'ScriptCount': lambda lst: None, # TODO
+	'ScriptRecord': mergeScriptRecords,
 }
 otTables.BaseScriptList.mergeMap = {
-	'BaseScriptCount': sum,
+	'BaseScriptCount': lambda lst: None, # TODO
 	# TODO: Merge duplicate entries
 	'BaseScriptRecord': lambda lst: sorted(sumLists(lst), key=lambda s: s.BaseScriptTag),
 }
@@ -756,7 +826,7 @@ class Options(object):
 		return ret
 
 class _GregariousDict(dict):
-	"""A dictionary-like object that:
+	"""A very custom dictionary-like object that:
 	1. Allows keys to be unhashable objects, so far as they don't change underneath, and
 	2. Welcomes guests without reservations and adds them to the end of the list.
 	"""
@@ -766,6 +836,7 @@ class _GregariousDict(dict):
 		self.d = {id(v):i for i,v in enumerate(lst)}
 
 	def __getitem__(self, v):
+		assert type(v) != int
 		if id(v) not in self.d:
 			self.d[id(v)] = len(self.l)
 			self.l.append(v)
@@ -907,19 +978,23 @@ class Merger(object):
 		for t in [GSUB, GPOS]:
 			if not t: continue
 
-			if t.table.LookupList:
-				lookupMap = _GregariousDict(t.table.LookupList.Lookup)
-				t.table.LookupList.mapLookups(lookupMap)
-				if t.table.FeatureList:
-					# XXX Handle present FeatureList but absent LookupList
-					t.table.FeatureList.mapLookups(lookupMap)
-				t.table.LookupList.LookupCount = len(t.table.LookupList.Lookup)
-
+			l = t.table.FeatureList.FeatureRecord
+			assert len(l) == len(set(x.Feature for x in l))
 			if t.table.FeatureList and t.table.ScriptList:
 				# XXX Handle present ScriptList but absent FeatureList
 				featureMap = _GregariousDict(t.table.FeatureList.FeatureRecord)
 				t.table.ScriptList.mapFeatures(featureMap)
 				t.table.FeatureList.FeatureCount = len(t.table.FeatureList.FeatureRecord)
+
+			assert len(l) == len(set(l))
+			assert len(l) == len(set(x.Feature for x in l))
+			if t.table.LookupList:
+				lookupMap = _GregariousDict(t.table.LookupList.Lookup)
+				if t.table.FeatureList:
+					# XXX Handle present FeatureList but absent LookupList
+					t.table.FeatureList.mapLookups(lookupMap)
+				t.table.LookupList.mapLookups(lookupMap)
+				t.table.LookupList.LookupCount = len(t.table.LookupList.Lookup)
 
 		# TODO GDEF/Lookup MarkFilteringSets
 		# TODO FeatureParams nameIDs
