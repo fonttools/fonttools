@@ -3,7 +3,6 @@ from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval
 from itertools import *
-from functools import partial
 from . import DefaultTable
 from . import grUtils
 from array import array
@@ -487,7 +486,7 @@ class Silf(object):
                 writer.newline()
             writer.endtag('justifications')
             writer.newline()
-        if self.numCritFeatures:
+        if len(self.critFeatures):
             writer.begintag('critFeatures')
             writer.newline()
             writer.write(" ".join(map(str, self.critFeatures)))
@@ -510,7 +509,7 @@ class Silf(object):
             writer.endtag('pseudoMap')
             writer.newline()
         self.classes.toXML(writer, ttFont, version)
-        if self.numPasses:
+        if len(self.passes):
             writer.begintag('passes')
             writer.newline()
             for i, p in enumerate(self.passes):
@@ -723,12 +722,12 @@ class Pass(object):
         data = data[self.numTransitional * self.numColumns * 2 + 1:]
         self.passConstraints = data[:pConstraint]
         data = data[pConstraint:]
-        for i in range(len(oConstraints)-1,0,-1):
+        for i in range(len(oConstraints)-2,-1,-1):
             if oConstraints[i] == 0 :
                 oConstraints[i] = oConstraints[i+1]
         self.ruleConstraints = [(data[s:e] if (e-s > 1) else "") for (s,e) in izip(oConstraints, oConstraints[1:])]
         data = data[oConstraints[-1]:]
-        for i in range(len(oActions)-1,0,-1):
+        for i in range(len(oActions)-2,-1,-1):
             if oActions[i] == 0:
                 oActions[i] = oActions[i+1]
         self.actions = [(data[s:e] if (e-s > 1) else "") for (s,e) in izip(oActions, oActions[1:])]
@@ -798,7 +797,7 @@ class Pass(object):
         writer.newline()
         writer.begintag('rules')
         writer.newline()
-        for i in range(self.numRules):
+        for i in range(len(self.actions)):
             writer.begintag('rule', index=i, precontext=self.rulePreContexts[i],
                             sortkey=self.ruleSortKeys[i])
             writer.newline()

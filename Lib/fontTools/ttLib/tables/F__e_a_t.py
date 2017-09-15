@@ -58,9 +58,13 @@ class table_F__e_a_t(DefaultTable.DefaultTable):
         vdat = ""
         offset = 0
         for f, v in sorted(self.features.items()):
+            fnum = grUtils.tag2num(f)
             if self.version >= 2.0:
                 fdat += struct.pack(">LHHLHH", grUtils.tag2num(f), len(v.settings),
                     0, offset * 4 + 12 + 16 * len(self.features), v.flags, v.label)
+            elif fnum > 65535:      # self healing for alphabetic ids
+                self.version = 2.0
+                return self.compile(ttFont)
             else:
                 fdat += struct.pack(">HHLHH", grUtils.tag2num(f), len(v.settings),
                     offset * 4 + 12 + 12 * len(self.features), v.flags, v.label)
