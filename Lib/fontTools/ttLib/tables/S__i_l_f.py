@@ -6,7 +6,7 @@ from itertools import *
 from . import DefaultTable
 from . import grUtils
 from array import array
-import struct, operator, warnings, re
+import struct, operator, warnings, re, sys
 
 Silf_hdr_format = '''
     >
@@ -195,7 +195,7 @@ def disassemble(aCode):
     pc = 0
     res = []
     while pc < codelen:
-        opcode = ord(aCode[pc])
+        opcode = ord(aCode[pc:pc+1])
         if opcode > len(aCode_info):
             instr = aCode_info[0]
         else:
@@ -226,17 +226,17 @@ def assemble(instrs):
         if not m or not m.group(1) in aCode_map:
             continue
         opcode, parmfmt = aCode_map[m.group(1)]
-        res.append(chr(opcode))
+        res.append(struct.pack("B", opcode))
         if m.group(2):
             if parmfmt == 0:
                 continue
             parms = map(int, re.split(",\s*", m.group(2)))
             if parmfmt == -1:
-                res.append(chr(len(parms)))
-                res.append("".join(map(chr, parms)))
+                l = len(parms)
+                res.append(struct.pack(("%dB" % (l+1)), l, *parms))
             else:
                 res.append(struct.pack(parmfmt, *parms))
-    return "".join(res)
+    return b"".join(res)
 
 def writecode(tag, writer, instrs):
     writer.begintag(tag)
@@ -697,7 +697,7 @@ class Pass(object):
         oRuleMap = struct.unpack_from((">%dH" % (self.numSuccess + 1)), data)
         data = data[2+2*self.numSuccess:]
         rules = struct.unpack_from((">%dH" % oRuleMap[-1]), data)
-        self.rules = [rules[s:e] for (s,e) in izip(oRuleMap, oRuleMap[1:])]
+        self.rules = [rules[s:e] for (s,e) in zip(oRuleMap, oRuleMap[1:])]
         data = data[2*oRuleMap[-1]:]
         (self.minRulePreContext, self.maxRulePreContext) = struct.unpack('BB', data[:2])
         numStartStates = self.maxRulePreContext - self.minRulePreContext + 1
@@ -725,12 +725,12 @@ class Pass(object):
         for i in range(len(oConstraints)-2,-1,-1):
             if oConstraints[i] == 0 :
                 oConstraints[i] = oConstraints[i+1]
-        self.ruleConstraints = [(data[s:e] if (e-s > 1) else "") for (s,e) in izip(oConstraints, oConstraints[1:])]
+        self.ruleConstraints = [(data[s:e] if (e-s > 1) else "") for (s,e) in zip(oConstraints, oConstraints[1:])]
         data = data[oConstraints[-1]:]
         for i in range(len(oActions)-2,-1,-1):
             if oActions[i] == 0:
                 oActions[i] = oActions[i+1]
-        self.actions = [(data[s:e] if (e-s > 1) else "") for (s,e) in izip(oActions, oActions[1:])]
+        self.actions = [(data[s:e] if (e-s > 1) else "") for (s,e) in zip(oActions, oActions[1:])]
         data = data[oActions[-1]:]
         # not using debug
 
