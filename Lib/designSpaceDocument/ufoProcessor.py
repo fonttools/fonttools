@@ -218,7 +218,6 @@ class DesignSpaceProcessor(DesignSpaceDocument):
         # make sure we're not trying to overwrite a newer UFO format
         self.loadFonts()
         self.checkDefault()
-        messages = []
         v = 0
         for instanceDescriptor in self.instances:
             if instanceDescriptor.path is None:
@@ -231,13 +230,11 @@ class DesignSpaceProcessor(DesignSpaceDocument):
             if os.path.exists(path):
                 existingUFOFormatVersion = getUFOVersion(path)
                 if existingUFOFormatVersion > self.ufoVersion:
-                    print(existingUFOFormatVersion, self.ufoVersion)
-                    messages.append(u"Can’t overwrite existing UFO%d with UFO%d."%(existingUFOFormatVersion, self.ufoVersion))
+                    self.problems.append(u"Can’t overwrite existing UFO%d with UFO%d."%(existingUFOFormatVersion, self.ufoVersion))
                     continue
             else:
                 font.save(path, self.ufoVersion)
-                messages.append("Generated %s as UFO%d"%(os.path.basename(path), self.ufoVersion))
-        return messages
+                self.problems.append("Generated %s as UFO%d"%(os.path.basename(path), self.ufoVersion))
 
     def getInfoMutator(self):
         """ Returns a info mutator """
@@ -653,9 +650,9 @@ if __name__ == "__main__":
         # execute the test document
         d = DesignSpaceProcessor()
         d.read(docPath)
-        messages = d.generateUFO()
-        if messages:
-            print(messages)
+        d.generateUFO()
+        if d.problems:
+            print(d.problems)
 
     def testSwap(docPath):
         srcPath, dstPath = makeSwapFonts(os.path.dirname(docPath))
