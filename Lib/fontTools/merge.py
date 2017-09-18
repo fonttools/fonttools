@@ -995,8 +995,6 @@ class Merger(object):
 		for t in [GSUB, GPOS]:
 			if not t: continue
 
-			l = t.table.FeatureList.FeatureRecord
-			assert len(l) == len(set(x.Feature for x in l))
 			if t.table.FeatureList and t.table.ScriptList:
 
 				# Collect unregistered (new) features.
@@ -1017,8 +1015,6 @@ class Merger(object):
 
 				t.table.FeatureList.FeatureCount = len(t.table.FeatureList.FeatureRecord)
 
-			assert len(l) == len(set(l))
-			assert len(l) == len(set(x.Feature for x in l))
 			if t.table.LookupList:
 
 				# Collect unregistered (new) lookups.
