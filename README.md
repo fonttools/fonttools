@@ -410,6 +410,26 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 # 4.2.2.1 `master` element
 * Defines a single alternative master for this glyph.
 
+#4.3 `localised names for intances`
+Localised names for instances can be included with these simple elements with an xml:lang attribute: [XML language definition](https://www.w3.org/International/questions/qa-when-xmllang.en)
+
+
+* stylename
+* familyname
+* stylemapstylename
+* stylemapfamilyname
+
+### Example
+```xml
+<stylename xml:lang="fr">Demigras</stylename>
+<stylename xml:lang="ja">半ば</stylename>
+<familyname xml:lang="fr">Montserrat</familyname>
+<familyname xml:lang="ja">モンセラート</familyname>
+<stylemapstylename xml:lang="de">Standard</stylemapstylename>
+<stylemapfamilyname xml:lang="de">Montserrat Halbfett</stylemapfamilyname>
+<stylemapfamilyname xml:lang="ja">モンセラート SemiBold</stylemapfamilyname>
+```
+
 ### Attributes
 * `glyphname`: the name of the alternate master glyph.
 * `source`: the identifier name of the source this master glyph needs to be loaded from

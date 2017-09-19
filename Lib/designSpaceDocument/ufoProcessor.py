@@ -256,6 +256,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
         for sourceDescriptor in self.sources:
             loc = Location(sourceDescriptor.location)
             sourceFont = self.fonts[sourceDescriptor.name]
+            # this makes assumptions about the groups of all sources being the same. 
             kerningItems.append((loc, self.mathKerningClass(sourceFont.kerning, sourceFont.groups)))
         bias, self._kerningMutator = buildMutator(kerningItems, axes=self._preppedAxes, bias=self.defaultLoc)
         return self._kerningMutator
@@ -283,6 +284,7 @@ class DesignSpaceProcessor(DesignSpaceDocument):
         for sourceDescriptor in self.sources:
             if not sourceDescriptor.name in self.fonts:
                 self.fonts[sourceDescriptor.name] = self._instantiateFont(sourceDescriptor.path)
+                self.problems.append("loaded master from %s, format %d"%(sourceDescriptor.path, getUFOVersion(sourceDescriptor.path)))
             names = names | set(self.fonts[sourceDescriptor.name].keys())
         self.glyphNames = list(names)
 
@@ -292,6 +294,13 @@ class DesignSpaceProcessor(DesignSpaceDocument):
         self._preppedAxes = self._prepAxesForBender()
         # make fonty things here
         loc = Location(instanceDescriptor.location)
+        # groups, 
+        if hasattr(self.fonts[self.default.name], "kerningGroupConversionRenameMaps"):
+            renameMap = self.fonts[self.default.name].kerningGroupConversionRenameMaps
+            self.problems.append("renameMap %s"%renameMap)
+        else:
+            renameMap = {}
+        font.kerningGroupConversionRenameMaps = renameMap
         # make the kerning
         if instanceDescriptor.kerning:
             try:
@@ -339,6 +348,9 @@ class DesignSpaceProcessor(DesignSpaceDocument):
             selectedGlyphNames = glyphNames
         else:
             selectedGlyphNames = self.glyphNames
+        # add the glyphnames to the font.lib['public.glyphOrder']
+        if not 'public.glyphOrder' in font.lib.keys():
+            font.lib['public.glyphOrder'] = selectedGlyphNames
         for glyphName in selectedGlyphNames:
             try:
                 glyphMutator = self.getGlyphMutator(glyphName)
