@@ -87,7 +87,8 @@ class RearrangementMorphAction(AATAction):
 		if self.MarkLast: flags |= 0x2000
 		writer.writeUShort(flags)
 
-	def decompile(self, reader, font):
+	def decompile(self, reader, font, ligActionReader):
+		assert ligActionReader is None
 		self.NewState = reader.readUShort()
 		flags = reader.readUShort()
 		self.Verb = flags & 0xF
@@ -145,7 +146,8 @@ class ContextualMorphAction(AATAction):
 		writer.writeUShort(self.MarkIndex)
 		writer.writeUShort(self.CurrentIndex)
 
-	def decompile(self, reader, font):
+	def decompile(self, reader, font, ligActionReader):
+		assert ligActionReader is None
 		self.NewState = reader.readUShort()
 		flags = reader.readUShort()
 		self.SetMark = bool(flags & 0x8000)
@@ -187,30 +189,67 @@ class ContextualMorphAction(AATAction):
 				self.CurrentIndex = safeEval(eltAttrs["value"])
 
 
+class LigAction(object):
+	def __init__(self):
+		self.Store = False
+		# GlyphIndexDelta is a (possibly negative) delta that gets
+		# added to the glyph ID at the top of the AAT runtime
+		# execution stack. It is *not* a byte offset into the
+		# morx table. The result of the addition, which is performed
+		# at run time by the shaping engine, is an index into
+		# the ligature components table. See 'morx' specification.
+		# In the AAT specification, this field is called Offset;
+		# but its meaning is quite different from other offsets
+		# in either AAT or OpenType, so we use a different name.
+		self.GlyphIndexDelta = 0
+
+
 class LigatureMorphAction(AATAction):
 	staticSize = 6
-	_FLAGS = ["SetComponent", "DontAdvance", "PerformAction"]
+	_FLAGS = ["SetComponent", "DontAdvance"]
 
 	def __init__(self):
 		self.NewState = 0
 		self.SetComponent, self.DontAdvance = False, False
-		self.PerformAction = False
 		self.ReservedFlags = 0
-		self.LigActionIndex = 0
+		self.Actions = []
 
-	def decompile(self, reader, font):
+	def decompile(self, reader, font, ligActionReader):
+		assert ligActionReader is not None
 		self.NewState = reader.readUShort()
 		flags = reader.readUShort()
 		self.SetComponent = bool(flags & 0x8000)
 		self.DontAdvance = bool(flags & 0x4000)
-		self.PerformAction = bool(flags & 0x2000)
+		performAction = bool(flags & 0x2000)
 		# As of 2017-09-12, the 'morx' specification says that
 		# the reserved bitmask in ligature subtables is 0x3FFF.
 		# However, the specification also defines a flag 0x2000,
 		# so the reserved value should actually be 0x1FFF.
 		# TODO: Report this specification bug to Apple.
 		self.ReservedFlags = flags & 0x1FFF
-		self.LigActionIndex = reader.readUShort()
+		ligActionIndex = reader.readUShort()
+		if performAction:
+			self.Actions = self._decompileLigActions(
+				ligActionReader, ligActionIndex)
+		else:
+			self.Actions = []
+
+	def _decompileLigActions(self, ligActionReader, ligActionIndex):
+		actions = []
+		last = False
+		reader = ligActionReader.getSubReader(
+			ligActionReader.pos + ligActionIndex * 4)
+		while not last:
+			value = reader.readULong()
+			last = bool(value & 0x80000000)
+			action = LigAction()
+			actions.append(action)
+			action.Store = bool(value & 0x40000000)
+			delta = value & 0x3FFFFFFF
+			if delta >= 0x20000000: # sign-extend 30-bit value
+				delta = -0x40000000 + delta
+			action.GlyphIndexDelta = delta
+		return actions
 
 	def toXML(self, xmlWriter, font, attrs, name):
 		xmlWriter.begintag(name, **attrs)
@@ -218,9 +257,11 @@ class LigatureMorphAction(AATAction):
 		xmlWriter.simpletag("NewState", value=self.NewState)
 		xmlWriter.newline()
 		self._writeFlagsToXML(xmlWriter)
-		if self.PerformAction:
-			xmlWriter.simpletag("LigActionIndex",
-			                    value=self.LigActionIndex)
+		for action in self.Actions:
+			attribs = [("GlyphIndexDelta", action.GlyphIndexDelta)]
+			if action.Store:
+				attribs.append(("Flags", "Store"))
+			xmlWriter.simpletag("Action", attribs)
 			xmlWriter.newline()
 		xmlWriter.endtag(name)
 		xmlWriter.newline()

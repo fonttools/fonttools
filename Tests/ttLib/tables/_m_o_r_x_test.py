@@ -528,12 +528,12 @@ MORX_LIGATURE_DATA = deHexStr(
     '0003 8000 '  # 168: Entries[2].NewState=3, .Flags=0x8000 (SetComponent)
     '0000 '       # 172: Entries[2].ActionIndex=<n/a> because no 0x2000 flag
     '0000 A000 '  # 174: Entries[3].NewState=0, .Flags=0xA000 (SetComponent,Act)
-    '0000 '       # 178: Entries[3].ActionIndex=0 (start at LigAction[0])
+    '0000 '       # 178: Entries[3].ActionIndex=0 (start at Action[0])
 
     # Ligature actions table.
-    '3FFF FFE7 '  # 180: Action 0, part 1
-    '3FFF FFED '  # 184: Action 0, part 2
-    'BFFF FFF2 '  # 188: Action 0, part 3
+    '3FFF FFE7 '  # 180: Action[0].Flags=0, .GlyphIndexDelta=-25
+    '3FFF FFED '  # 184: Action[1].Flags=0, .GlyphIndexDelta=-19
+    'BFFF FFF2 '  # 188: Action[2].Flags=<end of list>, .GlyphIndexDelta=-14
 
     # Ligature component table.
     '0000 0001 '  # 192: LigComponent[0]=0, LigComponent[1]=1
@@ -674,8 +674,10 @@ MORX_LIGATURE_XML = [
     '          </Transition>',
     '          <Transition onGlyphClass="6">',
     '            <NewState value="0"/>',
-    '            <Flags value="SetComponent,PerformAction"/>',
-    '            <LigActionIndex value="0"/>',
+    '            <Flags value="SetComponent"/>',
+    '            <Action GlyphIndexDelta="-25"/>',
+    '            <Action GlyphIndexDelta="-19"/>',
+    '            <Action GlyphIndexDelta="-14"/>',
     '          </Transition>',
     '        </State>',
     '      </StateTable>',

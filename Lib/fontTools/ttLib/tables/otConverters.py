@@ -8,7 +8,7 @@ from fontTools.ttLib import getSearchRange
 from .otBase import (CountReference, FormatSwitchingBaseTable,
                      OTTableWriter, ValueRecordFactory)
 from .otTables import (AATStateTable, AATState, AATAction,
-                       ContextualMorphAction)
+                       ContextualMorphAction, LigatureMorphAction)
 from functools import partial
 import struct
 import logging
@@ -901,6 +901,7 @@ class STXHeader(BaseConverter):
 		classTableReader = reader.getSubReader(0)
 		stateArrayReader = reader.getSubReader(0)
 		entryTableReader = reader.getSubReader(0)
+		ligActionReader = None
 		table.GlyphClassCount = reader.readULong()
 		classTableReader.seek(pos + reader.readULong())
 		stateArrayReader.seek(pos + reader.readULong())
@@ -908,6 +909,9 @@ class STXHeader(BaseConverter):
 		if self.perGlyphLookup is not None:
 			perGlyphTableReader = reader.getSubReader(0)
 			perGlyphTableReader.seek(pos + reader.readULong())
+		if issubclass(self.tableClass, LigatureMorphAction):
+			ligActionReader = reader.getSubReader(0)
+			ligActionReader.seek(pos + reader.readULong())
 		table.GlyphClasses = self.classLookup.read(classTableReader,
 		                                           font, tableDict)
 		numStates = int((entryTableReader.pos - stateArrayReader.pos)
@@ -919,17 +923,18 @@ class STXHeader(BaseConverter):
 				entryIndex = stateArrayReader.readUShort()
 				state.Transitions[glyphClass] = \
 					self._readTransition(entryTableReader,
-					                     entryIndex, font)
+					                     entryIndex, font,
+					                     ligActionReader)
 		if self.perGlyphLookup is not None:
 			table.PerGlyphLookups = self._readPerGlyphLookups(
 				table, perGlyphTableReader, font)
 		return table
 
-	def _readTransition(self, reader, entryIndex, font):
+	def _readTransition(self, reader, entryIndex, font, ligActionReader):
 		transition = self.tableClass()
 		entryReader = reader.getSubReader(
 			reader.pos + entryIndex * transition.staticSize)
-		transition.decompile(entryReader, font)
+		transition.decompile(entryReader, font, ligActionReader)
 		return transition
 
 	def _countPerGlyphLookups(self, table):
