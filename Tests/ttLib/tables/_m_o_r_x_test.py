@@ -475,12 +475,12 @@ MORX_CONTEXTUAL_XML = [
 #   matching the comments (but not the values) in Apple’s document;
 #
 # * at offsets 92..93 (offsets 56..57 in Apple’s document), we’ve
-#   changed the glphclass of the third segment from 5 to 4. Without
+#   changed the glyphclass of the third segment from 5 to 6. Without
 #   this change, the second and third glyph class have the same glyph
 #   class, so an encoder may merge them into a single segment beause
 #   the adjacent GlyphID ranges.  Without changing the glyph class of
-#   the third segment from 5 to 4, our round-trip compilation tests
-#   would be broken.
+#   the third segment from 5 to 6, our round-trip compilation tests
+#   would be broken.  This also matches Apple’s comments in the spec.
 #
 # TODO: Ask Apple to fix “Example 2” in the ‘morx’ specification.
 MORX_LIGATURE_DATA = deHexStr(
@@ -511,7 +511,7 @@ MORX_LIGATURE_DATA = deHexStr(
     '0001 0006 '       # 72:   .EntrySelector=1, .RangeShift=6
     '0016 0014 0004 '  # 76: GlyphID 20..22 [a..c] -> GlyphClass 4
     '0018 0017 0005 '  # 82: GlyphID 23..24 [d..e] -> GlyphClass 5
-    '001C 0019 0004 '  # 88: GlyphID 25..26 [f..i] -> GlyphClass 4
+    '001C 0019 0006 '  # 88: GlyphID 25..26 [f..i] -> GlyphClass 6
     'FFFF FFFF 0000 '  # 94: <end of lookup>
 
     # State array.
@@ -574,10 +574,10 @@ MORX_LIGATURE_XML = [
     '        <GlyphClass glyph="c" value="4"/>',
     '        <GlyphClass glyph="d" value="5"/>',
     '        <GlyphClass glyph="e" value="5"/>',
-    '        <GlyphClass glyph="f" value="4"/>',
-    '        <GlyphClass glyph="g" value="4"/>',
-    '        <GlyphClass glyph="h" value="4"/>',
-    '        <GlyphClass glyph="i" value="4"/>',
+    '        <GlyphClass glyph="f" value="6"/>',
+    '        <GlyphClass glyph="g" value="6"/>',
+    '        <GlyphClass glyph="h" value="6"/>',
+    '        <GlyphClass glyph="i" value="6"/>',
     '        <State index="0">',
     '          <Transition onGlyphClass="0">',
     '            <NewState value="0"/>',
