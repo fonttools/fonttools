@@ -385,7 +385,8 @@ class RearrangementMorphActionTest(unittest.TestCase):
 
     def testDecompileToXML(self):
         r = otTables.RearrangementMorphAction()
-        r.decompile(OTTableReader(deHexStr("1234fffd")), self.font)
+        r.decompile(OTTableReader(deHexStr("1234fffd")),
+                    self.font, ligActionReader=None)
         toXML = lambda w, f: r.toXML(w, f, {"Test": "Foo"}, "Transition")
         self.assertEqual(getXML(toXML, self.font), [
                 '<Transition Test="Foo">',
@@ -412,7 +413,8 @@ class ContextualMorphActionTest(unittest.TestCase):
 
     def testDecompileToXML(self):
         a = otTables.ContextualMorphAction()
-        a.decompile(OTTableReader(deHexStr("1234f117deadbeef")), self.font)
+        a.decompile(OTTableReader(deHexStr("1234f117deadbeef")),
+                    self.font, ligActionReader=None)
         toXML = lambda w, f: a.toXML(w, f, {"Test": "Foo"}, "Transition")
         self.assertEqual(getXML(toXML, self.font), [
                 '<Transition Test="Foo">',
@@ -421,6 +423,27 @@ class ContextualMorphActionTest(unittest.TestCase):
                 '  <ReservedFlags value="0x3117"/>',
                 '  <MarkIndex value="57005"/>',  # 0xDEAD = 57005
                 '  <CurrentIndex value="48879"/>',  # 0xBEEF = 48879
+                '</Transition>',
+        ])
+
+
+class LigatureMorphActionTest(unittest.TestCase):
+    def setUp(self):
+        self.font = FakeFont(['.notdef', 'A', 'B', 'C'])
+
+    def testDecompileToXML(self):
+        a = otTables.LigatureMorphAction()
+        ligActionReader = OTTableReader(deHexStr("DEADBEEF 7FFFFFFE 80000003"))
+        a.decompile(OTTableReader(deHexStr("1234FAB30001")),
+                    self.font, ligActionReader)
+        toXML = lambda w, f: a.toXML(w, f, {"Test": "Foo"}, "Transition")
+        self.assertEqual(getXML(toXML, self.font), [
+                '<Transition Test="Foo">',
+                '  <NewState value="4660"/>',  # 0x1234 = 4660
+                '  <Flags value="SetComponent,DontAdvance"/>',
+                '  <ReservedFlags value="0x1AB3"/>',
+                '  <Action GlyphIndexDelta="-2" Flags="Store"/>',
+                '  <Action GlyphIndexDelta="3"/>',
                 '</Transition>',
         ])
 
