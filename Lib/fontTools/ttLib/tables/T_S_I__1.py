@@ -69,6 +69,7 @@ class table_T_S_I__1(LogMixin, DefaultTable.DefaultTable):
 						"%r textLength (%d) must not be > 32768" % (name, textLength))
 				text = data[textOffset:textOffset+textLength]
 				assert len(text) == textLength
+				text = tounicode(text, encoding='utf-8')
 				if text:
 					programs[name] = text
 			if isExtra:
@@ -90,7 +91,7 @@ class table_T_S_I__1(LogMixin, DefaultTable.DefaultTable):
 				data = data + b"\015"  # align on 2-byte boundaries, fill with return chars. Yum.
 			name = glyphNames[i]
 			if name in self.glyphPrograms:
-				text = tobytes(self.glyphPrograms[name])
+				text = tobytes(self.glyphPrograms[name], encoding="utf-8")
 			else:
 				text = b""
 			textLength = len(text)
@@ -126,7 +127,7 @@ class table_T_S_I__1(LogMixin, DefaultTable.DefaultTable):
 				continue
 			writer.begintag("glyphProgram", name=name)
 			writer.newline()
-			writer.write_noindent(text.replace(b"\r", b"\n"))
+			writer.write_noindent(text.replace("\r", "\n"))
 			writer.newline()
 			writer.endtag("glyphProgram")
 			writer.newline()
@@ -138,7 +139,7 @@ class table_T_S_I__1(LogMixin, DefaultTable.DefaultTable):
 				continue
 			writer.begintag("extraProgram", name=name)
 			writer.newline()
-			writer.write_noindent(text.replace(b"\r", b"\n"))
+			writer.write_noindent(text.replace("\r", "\n"))
 			writer.newline()
 			writer.endtag("extraProgram")
 			writer.newline()
