@@ -1,5 +1,7 @@
-from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import unichr
+from __future__ import (
+    print_function, division, absolute_import, unicode_literals
+)
+from fontTools.misc.py23 import unichr, tobytes
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.ttLib import TTFont, TTLibError
 from fontTools.ttLib.tables.T_S_I__0 import table_T_S_I__0
@@ -8,6 +10,7 @@ import pytest
 
 
 TSI1_DATA = b"""abcdefghijklmnopqrstuvxywz0123456789"""
+TSI1_UTF8_DATA = b"""abcd\xc3\xa9ghijklmnopqrstuvxywz0123456789"""
 
 
 @pytest.fixture
@@ -56,16 +59,33 @@ def test_decompile(font):
     table.decompile(TSI1_DATA, font)
 
     assert table.glyphPrograms == {
-        'a': b'a',
-        'b': b'bcdef',
-        # 'c': b'',  # zero-length entries are skipped
-        # 'd': b'',
-        'e': b'ghijklmn'}
+        'a': 'a',
+        'b': 'bcdef',
+        # 'c': '',  # zero-length entries are skipped
+        # 'd': '',
+        'e': 'ghijklmn'}
     assert table.extraPrograms == {
-        'ppgm': b'op',
-        'cvt': b'qrst',
-        'reserved': b'uvxywz',
-        'fpgm': b'0123456789'}
+        'ppgm': 'op',
+        'cvt': 'qrst',
+        'reserved': 'uvxywz',
+        'fpgm': '0123456789'}
+
+
+def test_decompile_utf8(font):
+    table = table_T_S_I__1()
+    table.decompile(TSI1_UTF8_DATA, font)
+
+    assert table.glyphPrograms == {
+        'a': 'a',
+        'b': 'bcd\u00e9',
+        # 'c': '',  # zero-length entries are skipped
+        # 'd': '',
+        'e': 'ghijklmn'}
+    assert table.extraPrograms == {
+        'ppgm': 'op',
+        'cvt': 'qrst',
+        'reserved': 'uvxywz',
+        'fpgm': '0123456789'}
 
 
 def test_decompile_empty(empty_font):
@@ -88,7 +108,8 @@ def test_decompile_invalid_length(empty_font):
 
 def test_decompile_offset_past_end(empty_font):
     empty_font.glyphOrder = ['foo', 'bar']
-    data = b'baz'
+    content = 'baz'
+    data = tobytes(content)
     empty_font['TSI0'].indices = [(0, len(data), 0), (1, 1, len(data)+1)]
 
     table = table_T_S_I__1()
@@ -96,19 +117,20 @@ def test_decompile_offset_past_end(empty_font):
         table.decompile(data, empty_font)
 
     # the 'bar' program is skipped because its offset > len(data)
-    assert table.glyphPrograms == {'foo': b'baz'}
+    assert table.glyphPrograms == {'foo': 'baz'}
     assert any("textOffset > totalLength" in r.msg for r in captor.records)
 
 
 def test_decompile_magic_length_last_extra(empty_font):
     indextable = empty_font['TSI0']
     indextable.extra_indices[-1] = (0xFFFD, 0x8000, 0)
-    data = b"0" * (0x8000 + 1)
+    content = "0" * (0x8000 + 1)
+    data = tobytes(content)
 
     table = table_T_S_I__1()
     table.decompile(data, empty_font)
 
-    assert table.extraPrograms['fpgm'] == data
+    assert table.extraPrograms['fpgm'] == content
 
 
 def test_decompile_magic_length_last_glyph(empty_font):
@@ -122,15 +144,15 @@ def test_decompile_magic_length_last_glyph(empty_font):
         (0xFFFB, 0, 0x8004),
         (0xFFFC, 0, 0x8004),
         (0xFFFD, 0, 0x8004)]
-    foo_data = b"0" * 3
-    bar_data = b"1" * (0x8000 + 1)
-    data = foo_data + bar_data
+    foo_content = "0" * 3
+    bar_content = "1" * (0x8000 + 1)
+    data = tobytes(foo_content + bar_content)
 
     table = table_T_S_I__1()
     table.decompile(data, empty_font)
 
-    assert table.glyphPrograms['foo'] == foo_data
-    assert table.glyphPrograms['bar'] == bar_data
+    assert table.glyphPrograms['foo'] == foo_content
+    assert table.glyphPrograms['bar'] == bar_content
 
 
 def test_decompile_magic_length_non_last(empty_font):
@@ -140,21 +162,21 @@ def test_decompile_magic_length_non_last(empty_font):
         (0xFFFB, 0x8000, 3),  # the actual length of 'cvt' program is:
         (0xFFFC, 0, 0x8004),  # nextTextOffset - textOffset: 0x8004 - 3
         (0xFFFD, 0, 0x8004)]
-    ppgm_data = b"0" * 3
-    cvt_data = b"1" * (0x8000 + 1)
-    data = ppgm_data + cvt_data
+    ppgm_content = "0" * 3
+    cvt_content = "1" * (0x8000 + 1)
+    data = tobytes(ppgm_content + cvt_content)
 
     table = table_T_S_I__1()
     table.decompile(data, empty_font)
 
-    assert table.extraPrograms['ppgm'] == ppgm_data
-    assert table.extraPrograms['cvt'] == cvt_data
+    assert table.extraPrograms['ppgm'] == ppgm_content
+    assert table.extraPrograms['cvt'] == cvt_content
 
     table = table_T_S_I__1()
     with CapturingLogHandler(table.log, "WARNING") as captor:
         table.decompile(data[:-1], empty_font)  # last entry is truncated
     captor.assertRegex("nextTextOffset > totalLength")
-    assert table.extraPrograms['cvt'] == cvt_data[:-1]
+    assert table.extraPrograms['cvt'] == cvt_content[:-1]
 
 
 if __name__ == "__main__":
