@@ -975,13 +975,21 @@ class STXHeader(BaseConverter):
 		glyphClassTableOffset = 16  # size of STXHeader
 		if self.perGlyphLookup is not None:
 			glyphClassTableOffset += 4
+
+		ligActionData, ligActionIndex = None, None
+		if issubclass(self.tableClass, LigatureMorphAction):
+			ligActionData, ligActionIndex = \
+				self._compileLigActions(value, font)
+			ligActionData = pad(ligActionData, 4)
+
 		stateArrayWriter = OTTableWriter()
 		entries, entryIDs = [], {}
 		for state in value.States:
 			for glyphClass in range(glyphClassCount):
 				transition = state.Transitions[glyphClass]
 				entryWriter = OTTableWriter()
-				transition.compile(entryWriter, font)
+				transition.compile(entryWriter, font,
+				                   ligActionIndex)
 				entryData = entryWriter.getAllData()
 				assert len(entryData)  == transition.staticSize, ( \
 					"%s has staticSize %d, "
@@ -1002,16 +1010,29 @@ class STXHeader(BaseConverter):
 		perGlyphOffset = entryTableOffset + len(entryTableData)
 		perGlyphData = \
 			pad(self._compilePerGlyphLookups(value, font), 4)
+		if ligActionData is None:
+			ligActionOffset = None
+		else:
+			assert len(perGlyphData) == 0
+			ligActionOffset = entryTableOffset + len(entryTableData)
+			componentBaseOffset = ligActionOffset + len(ligActionData)
+			ligListOffset = 0xCAFEBABE
 		writer.writeULong(glyphClassCount)
 		writer.writeULong(glyphClassTableOffset)
 		writer.writeULong(stateArrayOffset)
 		writer.writeULong(entryTableOffset)
 		if self.perGlyphLookup is not None:
 			writer.writeULong(perGlyphOffset)
+		if ligActionOffset is not None:
+			writer.writeULong(ligActionOffset)
+			writer.writeULong(componentBaseOffset)
+			writer.writeULong(ligListOffset)
 		writer.writeData(glyphClassData)
 		writer.writeData(stateArrayData)
 		writer.writeData(entryTableData)
 		writer.writeData(perGlyphData)
+		if ligActionData is not None:
+			writer.writeData(ligActionData)
 
 	def _compilePerGlyphLookups(self, table, font):
 		if self.perGlyphLookup is None:
@@ -1029,6 +1050,35 @@ class STXHeader(BaseConverter):
 			                          {}, lookup, None)
 			writer.writeSubTable(lookupWriter)
 		return writer.getAllData()
+
+	def _compileLigActions(self, table, font):
+		assert issubclass(self.tableClass, LigatureMorphAction)
+		ligActions = set()
+		for state in table.States:
+			for _glyphClass, trans in state.Transitions.items():
+				ligActions.add(trans.compileLigActions())
+		result, ligActionIndex = b"", {}
+		# Sort the compiled actions in decreasing order of
+		# length, so that the longer sequence come before the
+		# shorter ones.  For each compiled action ABCD, its
+		# suffixes BCD, CD, and D do not be encoded separately
+		# (in case they occur); instead, we can just store an
+		# index that points into the middle of the longer
+		# sequence. Every compiled AAT ligature sequence is
+		# terminated with an end-of-sequence flag, which can
+		# only be set on the last element of the sequence.
+		# Therefore, it is sufficient to consider just the
+		# suffixes.
+		for a in sorted(ligActions, key=lambda x:(-len(x), x)):
+			if a not in ligActionIndex:
+				for i in range(0, len(a), 4):
+					suffix = a[i:]
+					suffixIndex = (len(result) + i) // 4
+					ligActionIndex.setdefault(
+						suffix, suffixIndex)
+				result += a
+		assert len(result) % self.tableClass.staticSize == 0
+		return (result, ligActionIndex)
 
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		xmlWriter.begintag(name, attrs)

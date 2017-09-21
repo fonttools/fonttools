@@ -11,6 +11,7 @@ from fontTools.misc.textTools import safeEval
 from .otBase import BaseTable, FormatSwitchingBaseTable
 import operator
 import logging
+import struct
 
 
 log = logging.getLogger(__name__)
@@ -78,7 +79,8 @@ class RearrangementMorphAction(AATAction):
 		self.MarkLast = False
 		self.ReservedFlags = 0
 
-	def compile(self, writer, font):
+	def compile(self, writer, font, ligActionIndex):
+		assert ligActionIndex is None
 		writer.writeUShort(self.NewState)
 		assert self.Verb >= 0 and self.Verb <= 15, self.Verb
 		flags = self.Verb | self.ReservedFlags
@@ -137,7 +139,8 @@ class ContextualMorphAction(AATAction):
 		self.ReservedFlags = 0
 		self.MarkIndex, self.CurrentIndex = 0xFFFF, 0xFFFF
 
-	def compile(self, writer, font):
+	def compile(self, writer, font, ligActionIndex):
+		assert ligActionIndex is None
 		writer.writeUShort(self.NewState)
 		flags = self.ReservedFlags
 		if self.SetMark: flags |= 0x8000
@@ -214,6 +217,20 @@ class LigatureMorphAction(AATAction):
 		self.ReservedFlags = 0
 		self.Actions = []
 
+	def compile(self, writer, font, ligActionIndex):
+		assert ligActionIndex is not None
+		writer.writeUShort(self.NewState)
+		flags = self.ReservedFlags
+		if self.SetComponent: flags |= 0x8000
+		if self.DontAdvance: flags |= 0x4000
+		if len(self.Actions) > 0: flags |= 0x2000
+		writer.writeUShort(flags)
+		if len(self.Actions) > 0:
+			actions = self.compileLigActions()
+			writer.writeUShort(ligActionIndex[actions])
+		else:
+			writer.writeUShort(0)
+
 	def decompile(self, reader, font, ligActionReader):
 		assert ligActionReader is not None
 		self.NewState = reader.readUShort()
@@ -234,6 +251,16 @@ class LigatureMorphAction(AATAction):
 		else:
 			self.Actions = []
 
+	def compileLigActions(self):
+		result = []
+		for i, action in enumerate(self.Actions):
+			last = (i == len(self.Actions) - 1)
+			value = action.GlyphIndexDelta & 0x3FFFFFFF
+			value |= 0x80000000 if last else 0
+			value |= 0x40000000 if action.Store else 0
+			result.append(struct.pack(">L", value))
+		return bytesjoin(result)
+
 	def _decompileLigActions(self, ligActionReader, ligActionIndex):
 		actions = []
 		last = False
@@ -250,6 +277,29 @@ class LigatureMorphAction(AATAction):
 				delta = -0x40000000 + delta
 			action.GlyphIndexDelta = delta
 		return actions
+
+	def fromXML(self, name, attrs, content, font):
+		self.NewState = self.ReservedFlags = 0
+		self.SetComponent = self.DontAdvance = False
+		self.ReservedFlags = 0
+		self.Actions = []
+		content = [t for t in content if isinstance(t, tuple)]
+		for eltName, eltAttrs, eltContent in content:
+			if eltName == "NewState":
+				self.NewState = safeEval(eltAttrs["value"])
+			elif eltName == "Flags":
+				for flag in eltAttrs["value"].split(","):
+					self._setFlag(flag.strip())
+			elif eltName == "ReservedFlags":
+				self.ReservedFlags = safeEval(eltAttrs["value"])
+			elif eltName == "Action":
+				action = LigAction()
+				flags = eltAttrs.get("Flags", "").split(",")
+				flags = [f.strip() for f in flags]
+				action.Store = "Store" in flags
+				action.GlyphIndexDelta = safeEval(
+					eltAttrs["GlyphIndexDelta"])
+				self.Actions.append(action)
 
 	def toXML(self, xmlWriter, font, attrs, name):
 		xmlWriter.begintag(name, **attrs)

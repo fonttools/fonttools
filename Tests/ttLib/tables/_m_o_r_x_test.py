@@ -471,16 +471,17 @@ MORX_CONTEXTUAL_XML = [
 #   to make the data a structurally valid ‘morx’ table;
 #
 # * at offsets 88..91 (offsets 52..55 in Apple’s document), we’ve
-#   changed the range of the third segment from 23..24 to 25..28,
-#   matching the comments (but not the values) in Apple’s document;
+#   changed the range of the third segment from 23..24 to 26..28.
+#   The hexdump values in Apple’s specification are completely wrong;
+#   the values from the comments would work, but they can be encoded
+#   more compactly than in the specification example. For round-trip
+#   testing, we omit the ‘f’ glyph, which makes AAT lookup format 2
+#   the most compact encoding;
 #
 # * at offsets 92..93 (offsets 56..57 in Apple’s document), we’ve
-#   changed the glyphclass of the third segment from 5 to 6. Without
-#   this change, the second and third glyph class have the same glyph
-#   class, so an encoder may merge them into a single segment beause
-#   the adjacent GlyphID ranges.  Without changing the glyph class of
-#   the third segment from 5 to 6, our round-trip compilation tests
-#   would be broken.  This also matches Apple’s comments in the spec.
+#   changed the glyph class of the third segment from 5 to 6, which
+#   matches the values from the comments to the spec (but not the
+#   Apple’s hexdump).
 #
 # TODO: Ask Apple to fix “Example 2” in the ‘morx’ specification.
 MORX_LIGATURE_DATA = deHexStr(
@@ -511,7 +512,7 @@ MORX_LIGATURE_DATA = deHexStr(
     '0001 0006 '       # 72:   .EntrySelector=1, .RangeShift=6
     '0016 0014 0004 '  # 76: GlyphID 20..22 [a..c] -> GlyphClass 4
     '0018 0017 0005 '  # 82: GlyphID 23..24 [d..e] -> GlyphClass 5
-    '001C 0019 0006 '  # 88: GlyphID 25..26 [f..i] -> GlyphClass 6
+    '001C 001A 0006 '  # 88: GlyphID 26..28 [g..i] -> GlyphClass 6
     'FFFF FFFF 0000 '  # 94: <end of lookup>
 
     # State array.
@@ -574,7 +575,6 @@ MORX_LIGATURE_XML = [
     '        <GlyphClass glyph="c" value="4"/>',
     '        <GlyphClass glyph="d" value="5"/>',
     '        <GlyphClass glyph="e" value="5"/>',
-    '        <GlyphClass glyph="f" value="6"/>',
     '        <GlyphClass glyph="g" value="6"/>',
     '        <GlyphClass glyph="h" value="6"/>',
     '        <GlyphClass glyph="i" value="6"/>',
@@ -773,6 +773,12 @@ class MORXLigatureSubstitutionTest(unittest.TestCase):
         table.decompile(MORX_LIGATURE_DATA, self.font)
         self.assertEqual(getXML(table.toXML), MORX_LIGATURE_XML)
 
+    def test_compile_fromXML(self):
+        table = newTable('morx')
+        for name, attrs, content in parseXML(MORX_LIGATURE_XML):
+            table.fromXML(name, attrs, content, font=self.font)
+        self.assertEqual(hexStr(table.compile(self.font)),
+                         hexStr(MORX_LIGATURE_DATA))
 
 if __name__ == '__main__':
     import sys
