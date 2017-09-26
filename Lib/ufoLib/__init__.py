@@ -1091,7 +1091,9 @@ class UFOWriter(object):
 		the directory it represents has changed.
 		"""
 		if self._formatVersion < 3:
-			raise UFOLibError("Renaming a glyph set is not allowed in UFO %d." % self._formatVersion)
+			# ignore renaming glyph sets for UFO1 UFO2
+			# just write the data from the default layer
+			return
 		# the new and old names can be the same
 		# as long as the default is being switched
 		if layerName == newLayerName:
@@ -1130,7 +1132,9 @@ class UFOWriter(object):
 		Remove the glyph set matching layerName.
 		"""
 		if self._formatVersion < 3:
-			raise UFOLibError("Deleting a glyph set is not allowed in UFO %d." % self._formatVersion)
+			# ignore deleting glyph sets for UFO1 UFO2 as there are no layers
+			# just write the data from the default layer
+			return
 		foundDirectory = self._findDirectoryForLayerName(layerName)
 		self._removeFileForPath(foundDirectory)
 		del self.layerContents[layerName]
