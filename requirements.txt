@@ -2,5 +2,5 @@
 # extension 'brotlipy' on PyPy
 brotli==0.6.0; platform_python_implementation != "PyPy"
 brotlipy==0.7.0; platform_python_implementation == "PyPy"
-unicodedata2==9.0.0.post4; python_version < '3.6' and platform_python_implementation != "PyPy"
+unicodedata2==10.0.0; python_version < '3.7' and platform_python_implementation != "PyPy"
 munkres==1.0.10
