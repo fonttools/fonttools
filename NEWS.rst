@@ -1,3 +1,20 @@
+- [head] Try using ``SOURCE_DATE_EPOCH`` environment variable when setting
+  the ``head`` modified timestamp to ensure reproducible builds (#1063).
+  See https://reproducible-builds.org/specs/source-date-epoch/
+- [VTT] Decode VTT's ``TSI*`` tables text as UTF-8 (#1060).
+- Added support for Graphite font tables: Feat, Glat, Gloc, Silf and Sill.
+  Thanks @mhosken! (#1054).
+- [varLib] Default to using axis "name" attribute if "labelname" element
+  is missing (588f524).
+- [merge] Added support for merging Script records. Remove unused features
+  and lookups after merge (d802580, 556508b).
+- Added ``fontTools.svgLib`` package. Includes a parser for SVG Paths that
+  supports the Pen protocol (#1051). Also, added a snippet to convert SVG
+  outlines to UFO GLIF (#1053).
+- [AAT] Added support for ``ankr``, ``bsln``, ``mort``, ``morx``, ``gcid``,
+  and ``cidg``.
+- [subset] Implemented subsetting of ``prop``, ``opbd``, ``bsln``, ``lcar``.
+
 3.15.1 (released 2017-08-18)
 ----------------------------
 
