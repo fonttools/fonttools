@@ -1,3 +1,6 @@
+3.16.0 (released 2017-10-03)
+----------------------------
+
 - [head] Try using ``SOURCE_DATE_EPOCH`` environment variable when setting
   the ``head`` modified timestamp to ensure reproducible builds (#1063).
   See https://reproducible-builds.org/specs/source-date-epoch/
