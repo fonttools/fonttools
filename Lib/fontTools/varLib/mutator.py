@@ -152,6 +152,21 @@ def main(args=None):
 			coordinates += GlyphCoordinates(delta) * scalar
 		_SetCoordinates(varfont, glyphname, coordinates)
 
+	# Interpolate cvt
+
+	if 'cvar' in varfont:
+		cvar = varfont['cvar']
+		cvt = varfont['cvt ']
+		deltas = {}
+		for var in cvar.variations:
+			scalar = supportScalar(loc, var.axes)
+			if not scalar: continue
+			for i, c in enumerate(var.coordinates):
+				if c is not None:
+					deltas[i] = deltas.get(i, 0) + scalar * c
+		for i, delta in deltas.items():
+			cvt[i] += int(round(delta))
+
 	print("Removing variable tables")
 	for tag in ('avar','cvar','fvar','gvar','HVAR','MVAR','VVAR','STAT'):
 		if tag in varfont:
