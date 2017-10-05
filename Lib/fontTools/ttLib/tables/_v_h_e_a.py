@@ -67,7 +67,8 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 				cs = topDict.CharStrings[name]
 				bounds = cs.calcBounds()
 				if bounds is not None:
-					boundsHeightDict[name] = math.ceil(bounds[3]) - math.floor(bounds[1])
+					boundsHeightDict[name] = int(
+						math.ceil(bounds[3]) - math.floor(bounds[1]))
 
 		if boundsHeightDict:
 			minTopSideBearing = float('inf')

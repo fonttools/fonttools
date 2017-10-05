@@ -68,7 +68,8 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 				cs = topDict.CharStrings[name]
 				bounds = cs.calcBounds()
 				if bounds is not None:
-					boundsWidthDict[name] = math.ceil(bounds[2]) - math.floor(bounds[0])
+					boundsWidthDict[name] = int(
+						math.ceil(bounds[2]) - math.floor(bounds[0]))
 
 		if boundsWidthDict:
 			minLeftSideBearing = float('inf')
