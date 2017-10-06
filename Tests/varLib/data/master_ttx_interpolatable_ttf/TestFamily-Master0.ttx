@@ -149,6 +149,11 @@
     </cmap_format_4>
   </cmap>
 
+  <cvt>
+    <cv index="0" value="470"/>
+    <cv index="1" value="677"/>
+  </cvt>
+
   <loca>
     <!-- The 'loca' table will be calculated by the compiler -->
   </loca>
