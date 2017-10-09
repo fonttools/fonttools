@@ -31,7 +31,7 @@ matrix:
   # let python3.6 osx build fail, until issue with homebrew on
   # Travis CI is resolved:
   # https://github.com/travis-ci/travis-ci/issues/8552
-  - allow_failures:
+  allow_failures:
     - env: TOXENV=py36-cov
 
 install:
