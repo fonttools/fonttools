@@ -2,15 +2,8 @@ sudo: false
 
 language: python
 
-# we add an empty 'env' because all keys in 'allow_failures' must
-# exist in the top level of the build matrix for it to work
-env:
-
 matrix:
   fast_finish: true
-  exclude:
-    # exclude the default build
-    - language: python
   include:
     - python: 2.7
       env: TOXENV=py27-cov
@@ -31,12 +24,6 @@ matrix:
     - language: generic
       os: osx
       env: TOXENV=py36-cov
-  # let python3.6 osx build fail, until issue with homebrew on
-  # Travis CI is resolved:
-  # https://github.com/travis-ci/travis-ci/issues/8552
-  allow_failures:
-    - language: generic
-    - env: TOXENV=py36-cov
 
 install:
   - ./.travis/install.sh
