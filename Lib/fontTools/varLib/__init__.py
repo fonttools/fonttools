@@ -503,7 +503,7 @@ def _add_gvar(font, model, master_ttfs, tolerance=0.5, optimize=True):
 
 			gvar.variations[glyph].append(var)
 
-def _add_cvar(font, model, master_ttfs):
+def _add_cvar(font, model, master_ttfs, tolerance=0.5):
 
 	log.info("Generating cvar")
 	assert "cvar" not in font
@@ -522,6 +522,8 @@ def _add_cvar(font, model, master_ttfs):
 	supports = model.supports
 	for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
 		delta = [int(round(d)) for d in delta]
+		if all(abs(v) <= tolerance for v in delta):
+			continue
 		var = TupleVariation(support, delta)
 		cvar.variations.append(var)
 

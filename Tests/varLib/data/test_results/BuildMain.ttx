@@ -856,11 +856,6 @@
   <cvar>
     <version major="1" minor="0"/>
     <tuple>
-      <coord axis="cntr" value="1.0"/>
-      <delta cvt="0" value="0"/>
-      <delta cvt="1" value="0"/>
-    </tuple>
-    <tuple>
       <coord axis="wght" value="-1.0"/>
       <delta cvt="0" value="-4"/>
       <delta cvt="1" value="0"/>
@@ -868,18 +863,6 @@
     <tuple>
       <coord axis="wght" value="1.0"/>
       <delta cvt="0" value="13"/>
-      <delta cvt="1" value="0"/>
-    </tuple>
-    <tuple>
-      <coord axis="wght" value="-1.0"/>
-      <coord axis="cntr" value="1.0"/>
-      <delta cvt="0" value="0"/>
-      <delta cvt="1" value="0"/>
-    </tuple>
-    <tuple>
-      <coord axis="wght" value="1.0"/>
-      <coord axis="cntr" value="1.0"/>
-      <delta cvt="0" value="0"/>
       <delta cvt="1" value="0"/>
     </tuple>
   </cvar>
