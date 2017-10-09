@@ -23,6 +23,7 @@ from __future__ import unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._n_a_m_e import NameRecord
+from fontTools.ttLib.tables._c_v_t import CVTValues
 from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
@@ -502,6 +503,34 @@ def _add_gvar(font, model, master_ttfs, tolerance=0.5, optimize=True):
 
 			gvar.variations[glyph].append(var)
 
+def _add_cvar(font, model, master_ttfs):
+
+	log.info("Generating cvar")
+	assert "cvar" not in font
+	cvar = font["cvar"] = newTable('cvar')
+	cvar.version = 1
+	cvar.variations = []
+
+	allCVTs = [CVTValues(m["cvt "].values) for m in master_ttfs]
+	num_cvts0 = len(allCVTs[0])
+
+	if (any(len(c) != num_cvts0 for c in allCVTs)):
+		log.warning("Master has incompatible cvt table, not building cvar table.")
+		del font["cvar"]
+		return
+	print("    allCVTs:", allCVTs)
+	deltas = model.getDeltas(allCVTs)
+	supports = model.supports
+	print("    Deltas: ", deltas)
+	#print("    Supports:", supports)
+	for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
+		print("       ", i)
+		print("        Delta:  ", delta)
+		print("        Support:", support)
+		delta = [int(round(d)) for d in delta]
+		var = TupleVariation(support, delta)
+		cvar.variations.append(var)
+
 def _add_HVAR(font, model, master_ttfs, axisTags):
 
 	log.info("Generating HVAR")
@@ -856,6 +885,8 @@ def build(designspace_filename, master_finder=lambda s:s):
 	_merge_OTL(vf, model, master_fonts, axisTags)
 	if 'glyf' in vf:
 		_add_gvar(vf, model, master_fonts)
+	if 'cvt ' in vf:
+		_add_cvar(vf, model, master_fonts)
 
 	return vf, model, master_ttfs
 
