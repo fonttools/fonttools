@@ -518,15 +518,9 @@ def _add_cvar(font, model, master_ttfs):
 		log.warning("Master has incompatible cvt table, not building cvar table.")
 		del font["cvar"]
 		return
-	print("    allCVTs:", allCVTs)
 	deltas = model.getDeltas(allCVTs)
 	supports = model.supports
-	print("    Deltas: ", deltas)
-	#print("    Supports:", supports)
 	for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
-		print("       ", i)
-		print("        Delta:  ", delta)
-		print("        Support:", support)
 		delta = [int(round(d)) for d in delta]
 		var = TupleVariation(support, delta)
 		cvar.variations.append(var)
