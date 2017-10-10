@@ -508,8 +508,9 @@ def _remove_TTHinting(font):
 	for tag in ("cvar", "cvt ", "fpgm", "prep"):
 		if tag in font:
 			del font[tag]
-	for attr in ("maxZones", "maxTwilightPoints", "maxStorage", "maxFunctionDefs", "maxInstructionDefs", "maxStackElements", "maxSizeOfInstructions"):
+	for attr in ("maxTwilightPoints", "maxStorage", "maxFunctionDefs", "maxInstructionDefs", "maxStackElements", "maxSizeOfInstructions"):
 		setattr(font["maxp"], attr, 0)
+	font["maxp"].maxZones = 1
 	glyf = font["glyf"]
 	for name in glyf.keys():
 		glyph = glyf[name]
