@@ -26,6 +26,7 @@ from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._n_a_m_e import NameRecord
 from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
+from fontTools.ttLib.tables.ttProgram import Program
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib import builder, designspace, models
@@ -503,22 +504,88 @@ def _add_gvar(font, model, master_ttfs, tolerance=0.5, optimize=True):
 
 			gvar.variations[glyph].append(var)
 
-def _add_cvar(font, model, master_ttfs, tolerance=0.5):
+def _remove_TTHinting(font):
+	for tag in ("cvar", "cvt ", "fpgm", "prep"):
+		if tag in font:
+			del font[tag]
+	for attr in ("maxZones", "maxTwilightPoints", "maxStorage", "maxFunctionDefs", "maxInstructionDefs", "maxStackElements", "maxSizeOfInstructions"):
+		setattr(font["maxp"], attr, 0)
+	glyf = font["glyf"]
+	for name in glyf.keys():
+		glyph = glyf[name]
+		if hasattr(glyph, "program"):
+			glyph.program = Program()
+	# TODO: Modify gasp table to deactivate gridfitting for all ranges?
 
-	log.info("Generating cvar")
+def _merge_TTHinting(font, model, master_ttfs, tolerance=0.5):
+
+	log.info("Merging TT hinting")
 	assert "cvar" not in font
+
+	# Check that the existing hinting is compatible
+
+	# fpgm and prep table
+
+	for tag in ("fpgm", "prep"):
+		all_pgms = [m[tag].program.getBytecode() for m in master_ttfs if tag in m]
+		if len(all_pgms) == 0:
+			continue
+		if tag in font:
+			font_pgm = font[tag].program.getBytecode()
+		else:
+			font_pgm = b""
+		if any(pgm != font_pgm for pgm in all_pgms):
+			log.warning("Masters have incompatible %s tables, hinting is discarded." % tag)
+			_remove_TTHinting(font)
+			return
+
+	# glyf table
+
+	#glyf = font["glyf"]
+	#for name in glyf.keys():
+	#	all_pgms = [
+	#		m["glyf"][name].program.getBytecode()
+	#		for m in master_ttfs
+	#		if hasattr(m["glyf"][name], "program")
+	#	]
+	#	print("Programs for '%s': %s" % (name, all_pgms))
+	#	if len(all_pgms) == 0:
+	#		continue
+	#	if hasattr(glyf[name], "program"):
+	#		font_pgm = glyf[name].program.getBytecode()
+	#	else:
+	#		font_pgm = b""
+	#	if any(pgm != font_pgm for pgm in all_pgms):
+	#		log.warning("Masters have incompatible glyph programs in glyph '%s', hinting is discarded." % name)
+	#		_remove_TTHinting(font)
+	#		return
+
+	# cvt table
+
+	all_cvs = [Vector(m["cvt "].values) for m in master_ttfs if "cvt " in m]
+	
+	if len(all_cvs) == 0:
+		# There is no cvt table to make a cvar table from, we're done here.
+		return
+
+	if len(all_cvs) != len(master_ttfs):
+		log.warning("Some masters have no cvt table, hinting is discarded.")
+		_remove_TTHinting(font)
+		return
+
+	num_cvt0 = len(all_cvs[0])
+	if (any(len(c) != num_cvt0 for c in all_cvs)):
+		log.warning("Masters have incompatible cvt tables, hinting is discarded.")
+		_remove_TTHinting(font)
+		return
+
+	# We can build the cvar table now.
+
 	cvar = font["cvar"] = newTable('cvar')
 	cvar.version = 1
 	cvar.variations = []
 
-	allCVTs = [Vector(m["cvt "].values) for m in master_ttfs]
-	num_cvts0 = len(allCVTs[0])
-
-	if (any(len(c) != num_cvts0 for c in allCVTs)):
-		log.warning("Master has incompatible cvt table, not building cvar table.")
-		del font["cvar"]
-		return
-	deltas = model.getDeltas(allCVTs)
+	deltas = model.getDeltas(all_cvs)
 	supports = model.supports
 	for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
 		delta = [int(round(d)) for d in delta]
@@ -881,8 +948,7 @@ def build(designspace_filename, master_finder=lambda s:s):
 	_merge_OTL(vf, model, master_fonts, axisTags)
 	if 'glyf' in vf:
 		_add_gvar(vf, model, master_fonts)
-	if 'cvt ' in vf:
-		_add_cvar(vf, model, master_fonts)
+		_merge_TTHinting(vf, model, master_fonts)
 
 	return vf, model, master_ttfs
 
