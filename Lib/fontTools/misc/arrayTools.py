@@ -6,6 +6,7 @@
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from numbers import Number
 import math
 
 def calcBounds(array):
@@ -118,6 +119,38 @@ def intRect(rect1):
     xMax = int(math.ceil(xMax))
     yMax = int(math.ceil(yMax))
     return (xMin, yMin, xMax, yMax)
+
+class Vector(object):
+	"""A math-like vector."""
+
+	def __init__(self, values, keep=False):
+		self.values = values if keep else list(values)
+
+	def __getitem__(self, index):
+		return self.values[index]
+
+	def __len__(self):
+		return len(self.values)
+
+	def __repr__(self):
+		return "Vector(%s)" % self.values
+
+	def __isub__(self, other):
+		if isinstance(other, Vector):
+			assert len(self.values) == len(other.values)
+			a = self.values
+			b = other.values
+			self.values = [a[i] - b[i] for i in range(len(self.values))]
+			return self
+		if isinstance(other, Number):
+			self.values = [v - other for v in self.values]
+			return self
+		return NotImplemented
+
+	def __mul__(self, other):
+		if isinstance(other, Number):
+			return Vector([v * other for v in self.values], keep=True)
+		return NotImplemented
 
 
 def _test():

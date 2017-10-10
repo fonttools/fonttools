@@ -21,9 +21,9 @@ API *will* change in near future.
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.misc.py23 import *
+from fontTools.misc.arrayTools import Vector
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._n_a_m_e import NameRecord
-from fontTools.ttLib.tables._c_v_t import CVTValues
 from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
@@ -511,7 +511,7 @@ def _add_cvar(font, model, master_ttfs, tolerance=0.5):
 	cvar.version = 1
 	cvar.variations = []
 
-	allCVTs = [CVTValues(m["cvt "].values) for m in master_ttfs]
+	allCVTs = [Vector(m["cvt "].values) for m in master_ttfs]
 	num_cvts0 = len(allCVTs[0])
 
 	if (any(len(c) != num_cvts0 for c in allCVTs)):
