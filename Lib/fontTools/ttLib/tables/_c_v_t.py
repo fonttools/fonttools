@@ -1,4 +1,5 @@
 from __future__ import print_function, division, absolute_import
+from numbers import Number
 from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
@@ -47,3 +48,34 @@ class table__c_v_t(DefaultTable.DefaultTable):
 
 	def __delitem__(self, index):
 		del self.values[index]
+
+
+class CVTValues(object):
+	""" This is used in varLib for calculating control value deltas"""
+
+	def __init__(self, values):
+		self.values = list(values)
+
+	def __getitem__(self, index):
+		return self.values[index]
+
+	def __len__(self):
+		return len(self.values)
+
+	def __repr__(self):
+		return u"CVTValues(%s)" % self.values
+
+	def __isub__(self, other):
+		if isinstance(other, CVTValues):
+			assert len(self.values) == len(other)
+			self.values = [self.values[i] - other.values[i] for i in range(len(self.values))]
+			return self
+		if isinstance(other, Number):
+			self.values = [v - other for v in self.values]
+			return self
+		return NotImplemented
+
+	def __mul__(self, other):
+		if isinstance(other, Number):
+			return CVTValues([v * other for v in self.values])
+		return NotImplemented

@@ -128,6 +128,11 @@
     </cmap_format_4>
   </cmap>
 
+  <cvt>
+    <cv index="0" value="474"/>
+    <cv index="1" value="677"/>
+  </cvt>
+
   <loca>
     <!-- The 'loca' table will be calculated by the compiler -->
   </loca>
@@ -847,6 +852,20 @@
       <VarIdx value="0"/>
     </ValueRecord>
   </MVAR>
+
+  <cvar>
+    <version major="1" minor="0"/>
+    <tuple>
+      <coord axis="wght" value="-1.0"/>
+      <delta cvt="0" value="-4"/>
+      <delta cvt="1" value="0"/>
+    </tuple>
+    <tuple>
+      <coord axis="wght" value="1.0"/>
+      <delta cvt="0" value="13"/>
+      <delta cvt="1" value="0"/>
+    </tuple>
+  </cvar>
 
   <fvar>
 
