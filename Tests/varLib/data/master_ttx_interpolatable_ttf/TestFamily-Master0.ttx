@@ -63,10 +63,10 @@
     <maxZones value="1"/>
     <maxTwilightPoints value="0"/>
     <maxStorage value="0"/>
-    <maxFunctionDefs value="0"/>
+    <maxFunctionDefs value="1"/>
     <maxInstructionDefs value="0"/>
-    <maxStackElements value="0"/>
-    <maxSizeOfInstructions value="0"/>
+    <maxStackElements value="1"/>
+    <maxSizeOfInstructions value="5"/>
     <maxComponentElements value="0"/>
     <maxComponentDepth value="0"/>
   </maxp>
