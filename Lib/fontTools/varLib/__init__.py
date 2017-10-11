@@ -524,13 +524,13 @@ def _merge_TTHinting(font, model, master_ttfs, tolerance=0.5):
 	# fpgm and prep table
 
 	for tag in ("fpgm", "prep"):
-		all_pgms = [m[tag].program.getBytecode() for m in master_ttfs if tag in m]
+		all_pgms = [m[tag].program for m in master_ttfs if tag in m]
 		if len(all_pgms) == 0:
 			continue
 		if tag in font:
-			font_pgm = font[tag].program.getBytecode()
+			font_pgm = font[tag].program
 		else:
-			font_pgm = b""
+			font_pgm = Program()
 		if any(pgm != font_pgm for pgm in all_pgms):
 			log.warning("Masters have incompatible %s tables, hinting is discarded." % tag)
 			_remove_TTHinting(font)
