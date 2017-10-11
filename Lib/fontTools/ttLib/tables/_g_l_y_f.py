@@ -174,6 +174,10 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		# XXX optimize with reverse dict!!!
 		return self.glyphOrder.index(glyphName)
 
+	def removeHinting(self):
+		for glyph in self.glyphs.values():
+			glyph.removeHinting()
+
 	def keys(self):
 		return self.glyphs.keys()
 

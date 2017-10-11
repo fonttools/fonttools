@@ -511,11 +511,7 @@ def _remove_TTHinting(font):
 	for attr in ("maxTwilightPoints", "maxStorage", "maxFunctionDefs", "maxInstructionDefs", "maxStackElements", "maxSizeOfInstructions"):
 		setattr(font["maxp"], attr, 0)
 	font["maxp"].maxZones = 1
-	glyf = font["glyf"]
-	for name in glyf.keys():
-		glyph = glyf[name]
-		if hasattr(glyph, "program"):
-			glyph.program = Program()
+	font["glyf"].removeHinting()
 	# TODO: Modify gasp table to deactivate gridfitting for all ranges?
 
 def _merge_TTHinting(font, model, master_ttfs, tolerance=0.5):
