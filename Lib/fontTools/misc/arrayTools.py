@@ -213,6 +213,46 @@ class Vector(object):
 		assert len(a) == len(b)
 		return sum([a[i] * b[i] for i in range(len(a))])
 
+
+def pairwise(iterable, reverse=False):
+    """Iterate over current and next items in iterable, optionally in
+    reverse order.
+
+    >>> tuple(pairwise([]))
+    ()
+    >>> tuple(pairwise([], reverse=True))
+    ()
+    >>> tuple(pairwise([0]))
+    ((0, 0),)
+    >>> tuple(pairwise([0], reverse=True))
+    ((0, 0),)
+    >>> tuple(pairwise([0, 1]))
+    ((0, 1), (1, 0))
+    >>> tuple(pairwise([0, 1], reverse=True))
+    ((1, 0), (0, 1))
+    >>> tuple(pairwise([0, 1, 2]))
+    ((0, 1), (1, 2), (2, 0))
+    >>> tuple(pairwise([0, 1, 2], reverse=True))
+    ((2, 1), (1, 0), (0, 2))
+    >>> tuple(pairwise(['a', 'b', 'c', 'd']))
+    (('a', 'b'), ('b', 'c'), ('c', 'd'), ('d', 'a'))
+    >>> tuple(pairwise(['a', 'b', 'c', 'd'], reverse=True))
+    (('d', 'c'), ('c', 'b'), ('b', 'a'), ('a', 'd'))
+    """
+    if not iterable:
+        return
+    if reverse:
+        it = reversed(iterable)
+    else:
+        it = iter(iterable)
+    first = next(it, None)
+    a = first
+    for b in it:
+        yield (a, b)
+        a = b
+    yield (a, first)
+
+
 def _test():
     """
     >>> import math
