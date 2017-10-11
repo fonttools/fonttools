@@ -538,24 +538,23 @@ def _merge_TTHinting(font, model, master_ttfs, tolerance=0.5):
 
 	# glyf table
 
-	#glyf = font["glyf"]
-	#for name in glyf.keys():
-	#	all_pgms = [
-	#		m["glyf"][name].program.getBytecode()
-	#		for m in master_ttfs
-	#		if hasattr(m["glyf"][name], "program")
-	#	]
-	#	print("Programs for '%s': %s" % (name, all_pgms))
-	#	if len(all_pgms) == 0:
-	#		continue
-	#	if hasattr(glyf[name], "program"):
-	#		font_pgm = glyf[name].program.getBytecode()
-	#	else:
-	#		font_pgm = b""
-	#	if any(pgm != font_pgm for pgm in all_pgms):
-	#		log.warning("Masters have incompatible glyph programs in glyph '%s', hinting is discarded." % name)
-	#		_remove_TTHinting(font)
-	#		return
+	for name, glyph in font["glyf"].glyphs.items():
+		all_pgms = [
+			m["glyf"][name].program
+			for m in master_ttfs
+			if hasattr(m["glyf"][name], "program")
+		]
+		if not any(all_pgms):
+			continue
+		glyph.expand(font["glyf"])
+		if hasattr(glyph, "program"):
+			font_pgm = glyph.program
+		else:
+			font_pgm = Program()
+		if any(pgm != font_pgm for pgm in all_pgms if pgm):
+			log.warning("Masters have incompatible glyph programs in glyph '%s', hinting is discarded." % name)
+			_remove_TTHinting(font)
+			return
 
 	# cvt table
 

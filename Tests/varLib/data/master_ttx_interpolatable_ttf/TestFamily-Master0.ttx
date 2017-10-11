@@ -133,6 +133,16 @@
     <mtx name="uni0061" width="505" lsb="57"/>
   </hmtx>
 
+  <fpgm>
+    <assembly>
+      PUSHB[ ]  /* 1 value pushed */
+      0
+      FDEF[ ]   /* FunctionDefinition */
+        POP[ ]  /* PopTopStack */
+      ENDF[ ]   /* EndFunctionDefinition */
+    </assembly>
+  </fpgm>
+
   <cmap>
     <tableVersion version="0"/>
     <cmap_format_4 platformID="0" platEncID="3" language="0">
@@ -188,7 +198,13 @@
         <pt x="560" y="677" on="1"/>
         <pt x="560" y="0" on="1"/>
       </contour>
-      <instructions/>
+      <instructions>
+        <assembly>
+          PUSHB[ ]  /* 1 value pushed */
+          0
+          MDAP[0]   /* MoveDirectAbsPt */
+        </assembly>
+      </instructions>
     </TTGlyph>
 
     <TTGlyph name="uni0020"/><!-- contains no outline data -->
