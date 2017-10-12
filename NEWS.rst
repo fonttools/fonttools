@@ -1,4 +1,13 @@
-- [varLib] Added support for building and interpolation of ``cvar`` table (f874cf6, a25a401).
+- [reverseContourPen] Added ``ReverseContourPen``, a filter pen that draws
+  contours with the winding direction reversed, while keeping the starting
+  point (#1071).
+- [filterPen] Added ``ContourFilterPen`` to manipulate contours as a whole
+  rather than segment by segment.
+- [arrayTools] Added ``Vector`` class to apply math operations on an array
+  of numbers, and ``pairwise`` function to loop over pairs of items in an
+  iterable.
+- [varLib] Added support for building and interpolation of ``cvar`` table
+  (f874cf6, a25a401).
 
 3.16.0 (released 2017-10-03)
 ----------------------------
