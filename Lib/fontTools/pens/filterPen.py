@@ -82,6 +82,8 @@ class ContourFilterPen(_PassThruComponentsMixin, RecordingPen):
     """A "buffered" filter pen that accumulates contour data, passes
     it through a ``filterContour`` method when the contour is closed or ended,
     and finally draws the result with the output pen.
+
+    Components are passed through unchanged.
     """
 
     def __init__(self, outPen):
@@ -108,9 +110,9 @@ class ContourFilterPen(_PassThruComponentsMixin, RecordingPen):
 
         The contour is a list of pen (operator, operands) tuples.
         Operators are strings corresponding to the AbstractPen methods:
-        "moveTo", "lineTo", "curveTo", "qCurveTo", "closePath",
-        "endPath", and "addComponent". The operands are the positional
-        arguments that are passed to each method.
+        "moveTo", "lineTo", "curveTo", "qCurveTo", "closePath" and
+        "endPath". The operands are the positional arguments that are
+        passed to each method.
 
         If the method doesn't return a value (i.e. returns None), it's
         assumed that the argument was modified in-place.
