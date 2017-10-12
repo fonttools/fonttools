@@ -1,4 +1,4 @@
-- [varLib] Added support for building and interpolation of ``cvar`` table (f874cf6).
+- [varLib] Added support for building and interpolation of ``cvar`` table (f874cf6, a25a401).
 
 3.16.0 (released 2017-10-03)
 ----------------------------
