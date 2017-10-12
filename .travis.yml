@@ -21,11 +21,9 @@ matrix:
     - language: generic
       os: osx
       env: TOXENV=py27-cov
-    # re-enable once issue with Homebrew on Travis CI is fixed
-    # https://github.com/travis-ci/travis-ci/issues/8552
-    # - language: generic
-    #   os: osx
-    #   env: TOXENV=py36-cov
+    - language: generic
+      os: osx
+      env: TOXENV=py36-cov
 
 install:
   - ./.travis/install.sh
