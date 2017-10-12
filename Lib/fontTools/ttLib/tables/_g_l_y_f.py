@@ -1057,7 +1057,7 @@ class GlyphComponent(object):
 		haveInstructions = self.flags & WE_HAVE_INSTRUCTIONS
 		self.flags = self.flags & (ROUND_XY_TO_GRID | USE_MY_METRICS |
 				SCALED_COMPONENT_OFFSET | UNSCALED_COMPONENT_OFFSET |
-				NON_OVERLAPPING)
+				NON_OVERLAPPING | OVERLAP_COMPOUND)
 		return more, haveInstructions, data
 
 	def compile(self, more, haveInstructions, glyfTable):
@@ -1066,7 +1066,7 @@ class GlyphComponent(object):
 		# reset all flags we will calculate ourselves
 		flags = self.flags & (ROUND_XY_TO_GRID | USE_MY_METRICS |
 				SCALED_COMPONENT_OFFSET | UNSCALED_COMPONENT_OFFSET |
-				NON_OVERLAPPING)
+				NON_OVERLAPPING | OVERLAP_COMPOUND)
 		if more:
 			flags = flags | MORE_COMPONENTS
 		if haveInstructions:
