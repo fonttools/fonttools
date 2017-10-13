@@ -25,8 +25,11 @@ class ControlBoundsPen(BasePen):
 	def __init__(self, glyphSet, ignoreSinglePoints=False):
 		BasePen.__init__(self, glyphSet)
 		self.ignoreSinglePoints = ignoreSinglePoints
-		self.bounds = None
-		self._start = None
+		self.init()
+
+	def init(self):
+	    self.bounds = None
+	    self._start = None
 
 	def _moveTo(self, pt):
 		self._start = pt
