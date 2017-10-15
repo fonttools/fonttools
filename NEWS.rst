@@ -1,3 +1,6 @@
+- [svgPathPen] Added an ``SVGPathPen`` that translates segment pen commands
+  into SVG path descriptions. Copied from Tal Leming's ``ufo2svg.svgPathPen``
+  https://github.com/typesupply/ufo2svg/blob/d69f992/Lib/ufo2svg/svgPathPen.py
 - [reverseContourPen] Added ``ReverseContourPen``, a filter pen that draws
   contours with the winding direction reversed, while keeping the starting
   point (#1071).
