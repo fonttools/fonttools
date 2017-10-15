@@ -2,10 +2,12 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.pens.basePen import BasePen
 
+
 def pointToString(pt):
     return " ".join([str(i) for i in pt])
 
-class SVGPen(BasePen):
+
+class SVGPathPen(BasePen):
 
     def __init__(self, glyphSet):
         BasePen.__init__(self, glyphSet)
@@ -16,7 +18,7 @@ class SVGPen(BasePen):
 
     def _handleAnchor(self):
         """
-        >>> pen = SVGPen(None)
+        >>> pen = SVGPathPen(None)
         >>> pen.moveTo((0, 0))
         >>> pen.moveTo((10, 10))
         >>> pen._commands
@@ -27,17 +29,17 @@ class SVGPen(BasePen):
 
     def _moveTo(self, pt):
         """
-        >>> pen = SVGPen(None)
+        >>> pen = SVGPathPen(None)
         >>> pen.moveTo((0, 0))
         >>> pen._commands
         ['M0 0']
 
-        >>> pen = SVGPen(None)
+        >>> pen = SVGPathPen(None)
         >>> pen.moveTo((10, 0))
         >>> pen._commands
         ['M10 0']
 
-        >>> pen = SVGPen(None)
+        >>> pen = SVGPathPen(None)
         >>> pen.moveTo((0, 10))
         >>> pen._commands
         ['M0 10']
@@ -51,34 +53,34 @@ class SVGPen(BasePen):
     def _lineTo(self, pt):
         """
         # duplicate point
-        >>> pen = SVGPen(None)
+        >>> pen = SVGPathPen(None)
         >>> pen.moveTo((10, 10))
         >>> pen.lineTo((10, 10))
         >>> pen._commands
         ['M10 10']
 
         # vertical line
-        >>> pen = SVGPen(None)
+        >>> pen = SVGPathPen(None)
         >>> pen.moveTo((10, 10))
         >>> pen.lineTo((10, 0))
         >>> pen._commands
         ['M10 10', 'V0']
 
         # horizontal line
-        >>> pen = SVGPen(None)
+        >>> pen = SVGPathPen(None)
         >>> pen.moveTo((10, 10))
         >>> pen.lineTo((0, 10))
         >>> pen._commands
         ['M10 10', 'H0']
 
         # basic
-        >>> pen = SVGPen(None)
+        >>> pen = SVGPathPen(None)
         >>> pen.lineTo((70, 80))
         >>> pen._commands
         ['L70 80']
 
         # basic following a moveto
-        >>> pen = SVGPen(None)
+        >>> pen = SVGPathPen(None)
         >>> pen.moveTo((0, 0))
         >>> pen.lineTo((10, 10))
         >>> pen._commands
@@ -116,7 +118,7 @@ class SVGPen(BasePen):
 
     def _curveToOne(self, pt1, pt2, pt3):
         """
-        >>> pen = SVGPen(None)
+        >>> pen = SVGPathPen(None)
         >>> pen.curveTo((10, 20), (30, 40), (50, 60))
         >>> pen._commands
         ['C10 20 30 40 50 60']
@@ -131,7 +133,7 @@ class SVGPen(BasePen):
 
     def _qCurveToOne(self, pt1, pt2):
         """
-        >>> pen = SVGPen(None)
+        >>> pen = SVGPathPen(None)
         >>> pen.qCurveTo((10, 20), (30, 40))
         >>> pen._commands
         ['Q10 20 30 40']
@@ -146,7 +148,7 @@ class SVGPen(BasePen):
 
     def _closePath(self):
         """
-        >>> pen = SVGPen(None)
+        >>> pen = SVGPathPen(None)
         >>> pen.closePath()
         >>> pen._commands
         ['Z']
@@ -157,7 +159,7 @@ class SVGPen(BasePen):
 
     def _endPath(self):
         """
-        >>> pen = SVGPen(None)
+        >>> pen = SVGPathPen(None)
         >>> pen.endPath()
         >>> pen._commands
         ['Z']
