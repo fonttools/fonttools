@@ -750,6 +750,10 @@ class _TTGlyph(object):
 		self._glyphset = glyphset
 		self._glyph = glyph
 		self.width, self.lsb = horizontalMetrics
+		if hasattr(self._glyph, "xMax"):
+			self.rsb = self.width - self._glyph.xMax 
+		else:
+			self.rsb = 0
 		if verticalMetrics:
 			self.height, self.tsb = verticalMetrics
 		else:
