@@ -15,7 +15,6 @@ if [ "$TRAVIS_OS_NAME" == "osx" ]; then
         python -m virtualenv .venv/
     elif [[ ${TOXENV} == *"py3"* ]]; then
         # install/upgrade current python3 with homebrew
-        brew update
         if brew list --versions python3 > /dev/null; then
             brew upgrade python3
         else

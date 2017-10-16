@@ -23,7 +23,9 @@ matrix:
       env: TOXENV=py27-cov
     - language: generic
       os: osx
-      env: TOXENV=py36-cov
+      env:
+        - TOXENV=py36-cov
+        - HOMEBREW_NO_AUTO_UPDATE=1
 
 install:
   - ./.travis/install.sh
