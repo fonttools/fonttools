@@ -24,7 +24,7 @@ matrix:
     - language: generic
       os: osx
       env:
-        - TOXENV=py36-cov
+        - TOXENV=py35-cov
         - HOMEBREW_NO_AUTO_UPDATE=1
 
 install:
