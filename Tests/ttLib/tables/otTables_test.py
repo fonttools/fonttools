@@ -380,7 +380,7 @@ class RearrangementMorphActionTest(unittest.TestCase):
         r.MarkFirst = r.DontAdvance = r.MarkLast = True
         r.ReservedFlags, r.Verb = 0x1FF0, 0xD
         writer = OTTableWriter()
-        r.compile(writer, self.font)
+        r.compile(writer, self.font, ligActionIndex=None)
         self.assertEqual(hexStr(writer.getAllData()), "1234fffd")
 
     def testDecompileToXML(self):
@@ -408,7 +408,7 @@ class ContextualMorphActionTest(unittest.TestCase):
         a.SetMark, a.DontAdvance, a.ReservedFlags = True, True, 0x3117
         a.MarkIndex, a.CurrentIndex = 0xDEAD, 0xBEEF
         writer = OTTableWriter()
-        a.compile(writer, self.font)
+        a.compile(writer, self.font, ligActionIndex=None)
         self.assertEqual(hexStr(writer.getAllData()), "1234f117deadbeef")
 
     def testDecompileToXML(self):
