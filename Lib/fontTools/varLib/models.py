@@ -68,7 +68,7 @@ def normalizeLocation(location, axes):
 		out[tag] = normalizeValue(v, triple)
 	return out
 
-def supportScalar(location, support, ot=False):
+def supportScalar(location, support, ot=True):
 	"""Returns the scalar multiplier at location, for a master
 	with support.  If ot is True, then a peak value of zero
 	for support of an axis means "axis does not participate".  That
