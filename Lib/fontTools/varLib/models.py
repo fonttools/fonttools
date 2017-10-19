@@ -263,7 +263,7 @@ class VariationModel(object):
 			deltaWeight = {}
 			# Walk over previous masters now, populate deltaWeight
 			for j,m in enumerate(locations[:i]):
-				scalar = supportScalar(loc, supports[j], ot=True)
+				scalar = supportScalar(loc, supports[j])
 				if scalar:
 					deltaWeight[j] = scalar
 			deltaWeights.append(deltaWeight)

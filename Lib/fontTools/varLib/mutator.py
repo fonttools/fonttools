@@ -58,7 +58,7 @@ def instantiateVariableFont(varfont, location, inplace=False):
 		coordinates,_ = _GetCoordinates(varfont, glyphname)
 		origCoords, endPts = None, None
 		for var in variations:
-			scalar = supportScalar(loc, var.axes, ot=True)
+			scalar = supportScalar(loc, var.axes)
 			if not scalar: continue
 			delta = var.coordinates
 			if None in delta:
