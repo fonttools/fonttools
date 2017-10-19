@@ -30,7 +30,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 	dependencies = ["ltag"]
 
 	def decompile(self, data, ttFont):
-		format, n, stringOffset = struct.unpack(">HHH", data[:6])
+		format, n, stringOffset = struct.unpack(b">HHH", data[:6])
 		expectedStringOffset = 6 + n * nameRecordSize
 		if stringOffset != expectedStringOffset:
 			log.error(
@@ -67,7 +67,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		format = 0
 		n = len(names)
 		stringOffset = 6 + n * sstruct.calcsize(nameRecordFormat)
-		data = struct.pack(">HHH", format, n, stringOffset)
+		data = struct.pack(b">HHH", format, n, stringOffset)
 		lastoffset = 0
 		done = {}  # remember the data so we can reuse the "pointers"
 		for name in names:
