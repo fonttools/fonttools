@@ -497,6 +497,44 @@ def _merge_OTL(font, model, master_fonts, axisTags):
 	GDEF.VarStore = store
 
 
+
+# Pretty much all of this file should be redesigned and moved inot submodules...
+# Such a mess right now, but kludging along...
+class _DesignspaceAxis(object):
+
+	def __repr__(self):
+		return repr(self.__dict__)
+
+	@staticmethod
+	def _map(v, map):
+		keys = map.keys()
+		if not keys:
+			return v
+		if v in keys:
+			return map[v]
+		k = min(keys)
+		if v < k:
+			return v + map[k] - k
+		k = max(keys)
+		if v > k:
+			return v + map[k] - k
+		# Interpolate
+		a = max(k for k in keys if k < v)
+		b = min(k for k in keys if k > v)
+		va = map[a]
+		vb = map[b]
+		return va + (vb - va) * (v - a) / (b - a)
+
+	def map_forward(self, v):
+		if self.map is None: return v
+		return self._map(v, self.map)
+
+	def map_backward(self, v):
+		if self.map is None: return v
+		map = {v:k for k,v in self.map.items()}
+		return self._map(v, map)
+
+
 def load_designspace(designspace_filename):
 
 	ds = designspace.load(designspace_filename)
@@ -515,40 +553,6 @@ def load_designspace(designspace_filename):
 
 
 	# Setup axes
-	class DesignspaceAxis(object):
-
-		def __repr__(self):
-			return repr(self.__dict__)
-
-		@staticmethod
-		def _map(v, map):
-			keys = map.keys()
-			if not keys:
-				return v
-			if v in keys:
-				return map[v]
-			k = min(keys)
-			if v < k:
-				return v + map[k] - k
-			k = max(keys)
-			if v > k:
-				return v + map[k] - k
-			# Interpolate
-			a = max(k for k in keys if k < v)
-			b = min(k for k in keys if k > v)
-			va = map[a]
-			vb = map[b]
-			return va + (vb - va) * (v - a) / (b - a)
-
-		def map_forward(self, v):
-			if self.map is None: return v
-			return self._map(v, self.map)
-
-		def map_backward(self, v):
-			if self.map is None: return v
-			map = {v:k for k,v in self.map.items()}
-			return self._map(v, map)
-
 	axis_objects = OrderedDict()
 	if axes is not None:
 		for axis_dict in axes:
@@ -566,7 +570,7 @@ def load_designspace(designspace_filename):
 				if 'labelname' not in axis_dict:
 					axis_dict['labelname'] = standard_axis_map[axis_name][1].copy()
 
-			axis = DesignspaceAxis()
+			axis = _DesignspaceAxis()
 			for item in ['name', 'tag', 'minimum', 'default', 'maximum', 'map']:
 				assert item in axis_dict, 'Axis does not have "%s"' % item
 			if 'labelname' not in axis_dict:
@@ -591,7 +595,7 @@ def load_designspace(designspace_filename):
 			if name not in axis_names:
 				continue
 
-			axis = DesignspaceAxis()
+			axis = _DesignspaceAxis()
 			axis.name = name
 			axis.tag = tag
 			axis.labelname = labelname.copy()
