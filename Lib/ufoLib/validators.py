@@ -943,36 +943,49 @@ def fontLibValidator(value):
 	>>> fontLibValidator(lib)
 	(True, None)
 
-	>>> lib = {"public.glyphOrder" : [b"A", b"C", b"B"]}
+	>>> lib = {"public.glyphOrder" : ["A", "C", "B"]}
 	>>> fontLibValidator(lib)
 	(True, None)
 
-        >>> lib = {"public.glyphOrder" : [u"A", u"C", u"B"]}
+	>>> lib = {"public.glyphOrder" : [u"A", u"C", u"B"]}
 	>>> fontLibValidator(lib)
 	(True, None)
+
+	>>> lib = "hello"
+	>>> fontLibValidator(lib)
+	(False, 'The lib data is not in the correct format: expected a dictionary, found str')
+
+	>>> lib = {1: "hello"}
+	>>> fontLibValidator(lib)
+	(False, 'The lib key is not properly formatted: expected basestring, found int: 1')
 
 	>>> lib = {"public.glyphOrder" : "hello"}
 	>>> fontLibValidator(lib)
-	(False, 'public.glyphOrder is not properly formatted.')
+	(False, 'public.glyphOrder is not properly formatted: expected list or tuple, found str')
 
 	>>> lib = {"public.glyphOrder" : ["A", 1, "B"]}
 	>>> fontLibValidator(lib)
-	(False, 'public.glyphOrder is not properly formatted.')
+	(False, 'public.glyphOrder is not properly formatted: expected basestring, found int')
 	"""
-	bogusFormatMessage = "The lib data is not in the correct format."
+	bogusFormatMessage = "The lib data is not in the correct format: %s"
 	if not isDictEnough(value):
-		return False, bogusFormatMessage
+		reason = "expected a dictionary, found %s" % type(value).__name__
+		return False, bogusFormatMessage % reason
 	for key, value in list(value.items()):
 		if not isinstance(key, basestring):
-			return False, bogusFormatMessage
+			return False, (
+				"The lib key is not properly formatted: expected basestring, found %s: %r" %
+				(type(key).__name__, key))
 		# public.glyphOrder
 		if key == "public.glyphOrder":
-			bogusGlyphOrderMessage = "public.glyphOrder is not properly formatted."
+			bogusGlyphOrderMessage = "public.glyphOrder is not properly formatted: %s"
 			if not isinstance(value, (list, tuple)):
-				return False, bogusGlyphOrderMessage
+				reason = "expected list or tuple, found %s" % type(value).__name__
+				return False, bogusGlyphOrderMessage % reason
 			for glyphName in value:
 				if not isinstance(glyphName, basestring):
-					return False, bogusGlyphOrderMessage
+					reason = "expected basestring, found %s" % type(glyphName).__name__
+					return False, bogusGlyphOrderMessage % reason
 	return True, None
 
 # --------
