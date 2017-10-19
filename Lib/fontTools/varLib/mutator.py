@@ -7,7 +7,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
-from fontTools.varLib import _GetCoordinates, _SetCoordinates
+from fontTools.varLib import _GetCoordinates, _SetCoordinates, _DesignspaceAxis
 from fontTools.varLib.models import supportScalar, normalizeLocation
 from fontTools.varLib.mvar import MVAR_entries
 from fontTools.varLib.iup import iup_delta
@@ -37,9 +37,11 @@ def instantiateVariableFont(varfont, location, inplace=False):
 
 	fvar = varfont['fvar']
 	axes = {a.axisTag:(a.minValue,a.defaultValue,a.maxValue) for a in fvar.axes}
-	# TODO Apply avar
-	# TODO Round to F2Dot14?
 	loc = normalizeLocation(location, axes)
+	if 'avar' in varfont:
+		maps = varfont['avar'].segments
+		loc = {k:_DesignspaceAxis._map(v, maps[k]) for k,v in loc.items()}
+	# TODO Round to F2Dot14?
 	# Location is normalized now
 	log.info("Normalized location: %s", loc)
 
