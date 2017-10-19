@@ -943,7 +943,11 @@ def fontLibValidator(value):
 	>>> fontLibValidator(lib)
 	(True, None)
 
-	>>> lib = {"public.glyphOrder" : ["A", "C", "B"]}
+	>>> lib = {"public.glyphOrder" : [b"A", b"C", b"B"]}
+	>>> fontLibValidator(lib)
+	(True, None)
+
+        >>> lib = {"public.glyphOrder" : [u"A", u"C", u"B"]}
 	>>> fontLibValidator(lib)
 	(True, None)
 
