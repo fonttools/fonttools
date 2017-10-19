@@ -827,7 +827,7 @@ class Options(object):
 
 class _AttendanceRecordingIdentityDict(dict):
 	"""A dictionary-like object that records indices of items actually accessed
-	from a list."""
+		from a list."""
 
 	def __init__(self, lst):
 		self.l = lst
