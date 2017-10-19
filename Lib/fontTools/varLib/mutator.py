@@ -5,6 +5,7 @@ $ python mutator.py ./NotoSansArabic-VF.ttf wght=140 wdth=85
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.fixedTools import floatToFixedToFloat
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.varLib import _GetCoordinates, _SetCoordinates, _DesignspaceAxis
@@ -41,7 +42,8 @@ def instantiateVariableFont(varfont, location, inplace=False):
 	if 'avar' in varfont:
 		maps = varfont['avar'].segments
 		loc = {k:_DesignspaceAxis._map(v, maps[k]) for k,v in loc.items()}
-	# TODO Round to F2Dot14?
+	# Quantize to F2Dot14, to avoid surprise interpolations.
+	loc = {k:floatToFixedToFloat(v, 14) for k,v in loc.items()}
 	# Location is normalized now
 	log.info("Normalized location: %s", loc)
 
