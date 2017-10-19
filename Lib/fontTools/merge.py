@@ -385,9 +385,8 @@ def merge(self, m, tables):
 				if m.duplicateGlyphsPerFont[fontIdx].get(oldgid, gid) == gid:
 					m.duplicateGlyphsPerFont[fontIdx][oldgid] = gid
 				else:
-					# char previously mapped to oldgid but already remapped to a different gid,
-					# save new gid as an alternate
-					# TODO: try harder to save these
+					# Char previously mapped to oldgid but already remapped to a different gid.
+					# TODO: Try harder to do something about these.
 					log.warning("Dropped mapping from codepoint %#06X to glyphId '%s'", uni, gid)
 
 	cmapBmpOnly = {uni: gid for uni,gid in cmap.items() if uni <= 0xFFFF}
