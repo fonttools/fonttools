@@ -10,6 +10,7 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.varLib import _GetCoordinates, _SetCoordinates, _DesignspaceAxis
 from fontTools.varLib.models import supportScalar, normalizeLocation
+from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.varLib.mvar import MVAR_entries
 from fontTools.varLib.iup import iup_delta
 import os.path
@@ -87,34 +88,18 @@ def instantiateVariableFont(varfont, location, inplace=False):
 
 	if 'MVAR' in varfont:
 		mvar = varfont['MVAR'].table
-		varstore = mvar.VarStore
+		varStoreInstancer = VarStoreInstancer(mvar.VarStore, fvar.axes, loc)
 		records = mvar.ValueRecord
 		for rec in records:
 			mvarTag = rec.ValueTag
 			if mvarTag not in MVAR_entries:
 				continue
 			tableTag, itemName = MVAR_entries[mvarTag]
-
-			varIdx = rec.VarIdx
-			major,minor = varIdx >> 16, varIdx & 0xFFFF
-
-			assert varstore.Format == 1
-			deltas = varstore.VarData[major].Item[minor]
-			def VarRegion_get_support(self, fvar):
-				axes = fvar.axes
-				return {axes[i].axisTag: (reg.StartCoord,reg.PeakCoord,reg.EndCoord)
-					for i,reg in enumerate(self.VarRegionAxis)}
-			supports = [VarRegion_get_support(varstore.VarRegionList.Region[ri], fvar)
-				    for ri in varstore.VarData[major].VarRegionIndex]
-			delta = 0.
-			for d,s in zip(deltas, supports):
-				if not d: continue
-				scalar = supportScalar(loc, s)
-				delta += d * scalar
-			delta = int(round(delta))
+			delta = int(round(varStoreInstancer[rec.VarIdx]))
 			if not delta:
 				continue
-			setattr(varfont[tableTag], itemName, getattr(varfont[tableTag], itemName) + delta)
+			setattr(varfont[tableTag], itemName,
+				getattr(varfont[tableTag], itemName) + delta)
 
 	log.info("Removing variable tables")
 	for tag in ('avar','cvar','fvar','gvar','HVAR','MVAR','VVAR','STAT'):

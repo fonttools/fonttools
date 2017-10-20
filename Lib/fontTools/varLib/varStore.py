@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.misc.py23 import *
+from fontTools.varLib.models import supportScalar
 from fontTools.varLib.builder import (buildVarRegionList, buildVarStore,
 				      buildVarRegion, buildVarData,
 				      varDataCalculateNumShorts)
@@ -55,4 +56,42 @@ class OnlineVarStoreBuilder(object):
 		# TODO Check for full data array?
 		return base, (self._outer << 16) + inner
 
+
+def VarRegion_get_support(self, fvar_axes):
+	return {fvar_axes[i].axisTag: (reg.StartCoord,reg.PeakCoord,reg.EndCoord)
+		for i,reg in enumerate(self.VarRegionAxis)}
+
+class VarStoreInstancer(object):
+
+	def __init__(self, varstore, fvar_axes, location={}):
+		assert varstore.Format == 1
+		self.varstore = varstore
+		self.fvar_axes = fvar_axes
+		self._varData = varstore.VarData
+		self._regions = varstore.VarRegionList.Region
+		self.setLocation(location)
+
+	def setLocation(self, location):
+		self.location = dict(location)
+		self._clearCaches()
+
+	def _clearCaches(self):
+		pass
+		#self._scalars = {}
+
+	def __getitem__(self, varidx):
+
+		major, minor = varidx >> 16, varidx & 0xFFFF
+
+		varData = self._varData
+		supports = [VarRegion_get_support(self._regions[ri], self.fvar_axes)
+			    for ri in varData[major].VarRegionIndex]
+
+		deltas = varData[major].Item[minor]
+		delta = 0.
+		for d,s in zip(deltas, supports):
+			if not d: continue
+			scalar = supportScalar(self.location, s)
+			delta += d * scalar
+		return delta
 
