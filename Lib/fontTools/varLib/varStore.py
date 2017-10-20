@@ -76,22 +76,26 @@ class VarStoreInstancer(object):
 		self._clearCaches()
 
 	def _clearCaches(self):
-		pass
-		#self._scalars = {}
+		self._scalars = {}
+
+	def _getScalar(self, regionIdx):
+		scalar = self._scalars.get(regionIdx)
+		if scalar is None:
+			support = VarRegion_get_support(self._regions[regionIdx], self.fvar_axes)
+			scalar = supportScalar(self.location, support)
+			self._scalars[regionIdx] = scalar
+		return scalar
 
 	def __getitem__(self, varidx):
 
 		major, minor = varidx >> 16, varidx & 0xFFFF
 
 		varData = self._varData
-		supports = [VarRegion_get_support(self._regions[ri], self.fvar_axes)
-			    for ri in varData[major].VarRegionIndex]
+		scalars = [self._getScalar(ri) for ri in varData[major].VarRegionIndex]
 
 		deltas = varData[major].Item[minor]
 		delta = 0.
-		for d,s in zip(deltas, supports):
-			if not d: continue
-			scalar = supportScalar(self.location, s)
-			delta += d * scalar
+		for d,s in zip(deltas, scalars):
+			delta += d * s
 		return delta
 
