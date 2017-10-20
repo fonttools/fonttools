@@ -30,6 +30,7 @@ matrix:
         - TOXENV=py27-cov
         - PYENV_VERSION='2.7.6'
         - PYENV_VERSION_STRING='Python 2.7.6'
+        - PYENV_ROOT=$HOME/.travis-pyenv
         - TRAVIS_PYENV_VERSION='0.4.0'
 
 cache:
