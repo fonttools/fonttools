@@ -64,11 +64,10 @@ def VarRegion_get_support(self, fvar_axes):
 class VarStoreInstancer(object):
 
 	def __init__(self, varstore, fvar_axes, location={}):
-		assert varstore.Format == 1
-		self.varstore = varstore
 		self.fvar_axes = fvar_axes
-		self._varData = varstore.VarData
-		self._regions = varstore.VarRegionList.Region
+		assert varstore is None or varstore.Format == 1
+		self._varData = varstore.VarData if varstore else []
+		self._regions = varstore.VarRegionList.Region if varstore else []
 		self.setLocation(location)
 
 	def setLocation(self, location):

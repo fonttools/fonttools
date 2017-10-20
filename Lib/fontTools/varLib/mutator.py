@@ -10,6 +10,7 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.varLib import _GetCoordinates, _SetCoordinates, _DesignspaceAxis
 from fontTools.varLib.models import supportScalar, normalizeLocation
+from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.varLib.mvar import MVAR_entries
 from fontTools.varLib.iup import iup_delta
@@ -48,6 +49,7 @@ def instantiateVariableFont(varfont, location, inplace=False):
 	# Location is normalized now
 	log.info("Normalized location: %s", loc)
 
+	log.info("Mutating glyf/gvar tables")
 	gvar = varfont['gvar']
 	glyf = varfont['glyf']
 	# get list of glyph names in gvar sorted by component depth
@@ -74,6 +76,7 @@ def instantiateVariableFont(varfont, location, inplace=False):
 		_SetCoordinates(varfont, glyphname, coordinates)
 
 	if 'cvar' in varfont:
+		log.info("Mutating cvt/cvar tables")
 		cvar = varfont['cvar']
 		cvt = varfont['cvt ']
 		deltas = {}
@@ -87,6 +90,7 @@ def instantiateVariableFont(varfont, location, inplace=False):
 			cvt[i] += int(round(delta))
 
 	if 'MVAR' in varfont:
+		log.info("Mutating MVAR table")
 		mvar = varfont['MVAR'].table
 		varStoreInstancer = VarStoreInstancer(mvar.VarStore, fvar.axes, loc)
 		records = mvar.ValueRecord
@@ -100,6 +104,13 @@ def instantiateVariableFont(varfont, location, inplace=False):
 				continue
 			setattr(varfont[tableTag], itemName,
 				getattr(varfont[tableTag], itemName) + delta)
+
+	if 'GDEF' in varfont:
+		log.info("Mutating GDEF/GPOS/GSUB tables")
+		merger = MutatorMerger(varfont, loc)
+
+		log.info("Building interpolated tables")
+		merger.instantiate()
 
 	log.info("Removing variable tables")
 	for tag in ('avar','cvar','fvar','gvar','HVAR','MVAR','VVAR','STAT'):
