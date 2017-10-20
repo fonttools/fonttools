@@ -133,6 +133,7 @@ _fixedpointmappings = {
 _formatcache = {}
 
 def getformat(fmt):
+	fmt = tostr(fmt, encoding="ascii")
 	try:
 		formatstring, names, fixes = _formatcache[fmt]
 	except KeyError:
