@@ -29,7 +29,7 @@ from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.ttLib.tables.ttProgram import Program
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import otTables as ot
-from fontTools.varLib import builder, designspace, models
+from fontTools.varLib import builder, designspace, models, varStore
 from fontTools.varLib.merger import VariationMerger, _all_equal
 from fontTools.varLib.mvar import MVAR_entries
 from fontTools.varLib.iup import iup_delta_optimize
@@ -417,13 +417,13 @@ def _add_HVAR(font, model, master_ttfs, axisTags):
 	del uniq
 
 	varData = builder.buildVarData(varTupleIndexes, items)
-	varStore = builder.buildVarStore(varTupleList, [varData])
+	varstore = builder.buildVarStore(varTupleList, [varData])
 
 	assert "HVAR" not in font
 	HVAR = font["HVAR"] = newTable('HVAR')
 	hvar = HVAR.table = ot.HVAR()
 	hvar.Version = 0x00010000
-	hvar.VarStore = varStore
+	hvar.VarStore = varstore
 	hvar.AdvWidthMap = advanceMapping
 	hvar.LsbMap = hvar.RsbMap = None
 
@@ -431,7 +431,7 @@ def _add_MVAR(font, model, master_ttfs, axisTags):
 
 	log.info("Generating MVAR")
 
-	store_builder = builder.OnlineVarStoreBuilder(axisTags)
+	store_builder = varStore.OnlineVarStoreBuilder(axisTags)
 	store_builder.setModel(model)
 
 	records = []
