@@ -26,6 +26,20 @@ matrix:
       env:
         - TOXENV=py35-cov
         - HOMEBREW_NO_AUTO_UPDATE=1
+    - env:
+        - TOXENV=py27-nocov
+        - PYENV_VERSION='2.7.6'
+        - PYENV_VERSION_STRING='Python 2.7.6'
+        - PYENV_ROOT=$HOME/.travis-pyenv
+        - TRAVIS_PYENV_VERSION='0.4.0'
+
+cache:
+  - pip
+  - directories:
+    - $HOME/.pyenv_cache
+
+before_install:
+  - source ./.travis/before_install.sh
 
 install:
   - ./.travis/install.sh
