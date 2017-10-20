@@ -67,7 +67,7 @@
     <ySuperscriptXOffset value="0"/>
     <ySuperscriptYOffset value="350"/>
     <yStrikeoutSize value="50"/>
-    <yStrikeoutPosition value="284"/>
+    <yStrikeoutPosition value="286"/>
     <sFamilyClass value="0"/>
     <panose>
       <bFamilyType value="2"/>
@@ -96,7 +96,7 @@
     <usWinDescent value="335"/>
     <ulCodePageRange1 value="00100000 00000000 00000000 00000011"/>
     <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
-    <sxHeight value="474"/>
+    <sxHeight value="477"/>
     <sCapHeight value="677"/>
     <usDefaultChar value="0"/>
     <usBreakChar value="32"/>
