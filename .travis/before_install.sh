@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -e
 set -x
 
 if [[ -n "$PYENV_VERSION" ]]; then
