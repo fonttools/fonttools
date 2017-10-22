@@ -902,6 +902,7 @@ class STXHeader(BaseConverter):
 		stateArrayReader = reader.getSubReader(0)
 		entryTableReader = reader.getSubReader(0)
 		ligActionReader = None
+		ligListReader = None
 		table.GlyphClassCount = reader.readULong()
 		classTableReader.seek(pos + reader.readULong())
 		stateArrayReader.seek(pos + reader.readULong())
@@ -912,6 +913,15 @@ class STXHeader(BaseConverter):
 		if issubclass(self.tableClass, LigatureMorphAction):
 			ligActionReader = reader.getSubReader(0)
 			ligActionReader.seek(pos + reader.readULong())
+			ligComponentReader = reader.getSubReader(0)
+			ligComponentReader.seek(pos + reader.readULong())
+			ligListReader = reader.getSubReader(0)
+			ligListReader.seek(pos + reader.readULong())
+			numLigComponents = (ligListReader.pos
+			                    - ligComponentReader.pos) // 2
+			assert numLigComponents >= 0
+			table.LigComponents = \
+				ligComponentReader.readUShortArray(numLigComponents)
 		table.GlyphClasses = self.classLookup.read(classTableReader,
 		                                           font, tableDict)
 		numStates = int((entryTableReader.pos - stateArrayReader.pos)
@@ -978,6 +988,7 @@ class STXHeader(BaseConverter):
 
 		ligActionData, ligActionIndex = None, None
 		if issubclass(self.tableClass, LigatureMorphAction):
+			glyphClassTableOffset += 12
 			ligActionData, ligActionIndex = \
 				self._compileLigActions(value, font)
 			ligActionData = pad(ligActionData, 4)
@@ -1010,13 +1021,21 @@ class STXHeader(BaseConverter):
 		perGlyphOffset = entryTableOffset + len(entryTableData)
 		perGlyphData = \
 			pad(self._compilePerGlyphLookups(value, font), 4)
+		ligComponentsData = self._compileLigComponents(value, font)
+		if ligActionData is not None:
+			# TODO: Actually compile ligList, instead of this hack.
+			from fontTools.misc.textTools import deHexStr, hexStr
+			ligListData = deHexStr('03e803e903ea03eb03ec03ed03ee03ef')
+		else:
+			ligListData = None
+
 		if ligActionData is None:
 			ligActionOffset = None
 		else:
 			assert len(perGlyphData) == 0
 			ligActionOffset = entryTableOffset + len(entryTableData)
-			componentBaseOffset = ligActionOffset + len(ligActionData)
-			ligListOffset = 0xCAFEBABE
+			ligComponentsOffset = ligActionOffset + len(ligActionData)
+			ligListOffset = ligComponentsOffset + len(ligComponentsData)
 		writer.writeULong(glyphClassCount)
 		writer.writeULong(glyphClassTableOffset)
 		writer.writeULong(stateArrayOffset)
@@ -1025,7 +1044,7 @@ class STXHeader(BaseConverter):
 			writer.writeULong(perGlyphOffset)
 		if ligActionOffset is not None:
 			writer.writeULong(ligActionOffset)
-			writer.writeULong(componentBaseOffset)
+			writer.writeULong(ligComponentsOffset)
 			writer.writeULong(ligListOffset)
 		writer.writeData(glyphClassData)
 		writer.writeData(stateArrayData)
@@ -1033,6 +1052,10 @@ class STXHeader(BaseConverter):
 		writer.writeData(perGlyphData)
 		if ligActionData is not None:
 			writer.writeData(ligActionData)
+		if ligComponentsData is not None:
+			writer.writeData(ligComponentsData)
+		if ligListData is not None:
+			writer.writeData(ligListData)
 
 	def _compilePerGlyphLookups(self, table, font):
 		if self.perGlyphLookup is None:
@@ -1080,6 +1103,14 @@ class STXHeader(BaseConverter):
 		assert len(result) % self.tableClass.staticSize == 0
 		return (result, ligActionIndex)
 
+	def _compileLigComponents(self, table, font):
+		if not hasattr(table, "LigComponents"):
+			return None
+		writer = OTTableWriter()
+		for component in table.LigComponents:
+			writer.writeUShort(component)
+		return writer.getAllData()
+
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		xmlWriter.begintag(name, attrs)
 		xmlWriter.newline()
@@ -1106,6 +1137,15 @@ class STXHeader(BaseConverter):
 				xmlWriter.newline()
 			xmlWriter.endtag("PerGlyphLookup")
 			xmlWriter.newline()
+		if hasattr(value, "LigComponents"):
+			xmlWriter.begintag("LigComponents")
+			xmlWriter.newline()
+			for i, val in enumerate(getattr(value, "LigComponents")):
+				xmlWriter.simpletag("LigComponent", index=i,
+				                    value=val)
+				xmlWriter.newline()
+			xmlWriter.endtag("LigComponents")
+			xmlWriter.newline()
 		xmlWriter.endtag(name)
 		xmlWriter.newline()
 
@@ -1123,6 +1163,10 @@ class STXHeader(BaseConverter):
 				lookup = self.perGlyphLookup.xmlRead(
 					eltAttrs, eltContent, font)
 				table.PerGlyphLookups.append(lookup)
+			elif eltName == "LigComponents":
+				table.LigComponents = \
+					self._xmlReadLigComponents(
+						eltAttrs, eltContent, font)
 		table.GlyphClassCount = max(table.GlyphClasses.values()) + 1
 		return table
 
@@ -1136,6 +1180,14 @@ class STXHeader(BaseConverter):
 				                   eltContent, font)
 				state.Transitions[glyphClass] = transition
 		return state
+
+	def _xmlReadLigComponents(self, attrs, content, font):
+		ligComponents = []
+		for eltName, eltAttrs, _eltContent in filter(istuple, content):
+			if eltName == "LigComponent":
+				ligComponents.append(
+					safeEval(eltAttrs["value"]))
+		return ligComponents
 
 
 class CIDGlyphMap(BaseConverter):
