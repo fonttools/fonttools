@@ -1079,8 +1079,8 @@ class GlyphComponent(object):
 				data = data + struct.pack(">HH", self.firstPt, self.secondPt)
 				flags = flags | ARG_1_AND_2_ARE_WORDS
 		else:
-			x = int(round(self.x))
-			y = int(round(self.y))
+			x = round(self.x)
+			y = round(self.y)
 			flags = flags | ARGS_ARE_XY_VALUES
 			if (-128 <= x <= 127) and (-128 <= y <= 127):
 				data = data + struct.pack(">bb", x, y)
@@ -1242,7 +1242,7 @@ class GlyphCoordinates(object):
 			return
 		a = array.array("h")
 		for n in self._a:
-			a.append(int(round(n)))
+			a.append(round(n))
 		self._a = a
 
 	def relativeToAbsolute(self):

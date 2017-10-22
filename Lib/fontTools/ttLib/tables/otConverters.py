@@ -307,7 +307,7 @@ class DeciPoints(FloatValue):
 		return reader.readUShort() / 10
 
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
-		writer.writeUShort(int(round(value * 10)))
+		writer.writeUShort(round(value * 10))
 
 class Fixed(FloatValue):
 	staticSize = 4

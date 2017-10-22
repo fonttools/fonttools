@@ -87,7 +87,7 @@ def instantiateVariableFont(varfont, location, inplace=False):
 				if c is not None:
 					deltas[i] = deltas.get(i, 0) + scalar * c
 		for i, delta in deltas.items():
-			cvt[i] += int(round(delta))
+			cvt[i] += round(delta)
 
 	if 'MVAR' in varfont:
 		log.info("Mutating MVAR table")
@@ -99,7 +99,7 @@ def instantiateVariableFont(varfont, location, inplace=False):
 			if mvarTag not in MVAR_entries:
 				continue
 			tableTag, itemName = MVAR_entries[mvarTag]
-			delta = int(round(varStoreInstancer[rec.VarIdx]))
+			delta = round(varStoreInstancer[rec.VarIdx])
 			if not delta:
 				continue
 			setattr(varfont[tableTag], itemName,

@@ -146,7 +146,7 @@ def test(glyphsets, glyphs=None, names=None):
 					print('%s: %s+%s: Glyph has wrong contour/component order: %s' % (glyph_name, names[i], names[i+1], matching)) #, m0, m1)
 					break
 				upem = 2048
-				item_cost = int(round((matching_cost / len(m0) / len(m0[0])) ** .5 / upem * 100))
+				item_cost = round((matching_cost / len(m0) / len(m0[0])) ** .5 / upem * 100)
 				hist.append(item_cost)
 				threshold = 7
 				if item_cost >= threshold:

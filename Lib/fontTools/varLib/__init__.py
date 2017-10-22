@@ -371,7 +371,7 @@ def _merge_TTHinting(font, model, master_ttfs, tolerance=0.5):
 	deltas = model.getDeltas(all_cvs)
 	supports = model.supports
 	for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
-		delta = [int(round(d)) for d in delta]
+		delta = [round(d) for d in delta]
 		if all(abs(v) <= tolerance for v in delta):
 			continue
 		var = TupleVariation(support, delta)

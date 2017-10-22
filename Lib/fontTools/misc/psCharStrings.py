@@ -217,7 +217,7 @@ encodeIntT2 = getIntEncoder("t2")
 
 def encodeFixed(f, pack=struct.pack):
 	# For T2 only
-	return b"\xff" + pack(">l", int(round(f * 65536)))
+	return b"\xff" + pack(">l", round(f * 65536))
 
 def encodeFloat(f):
 	# For CFF only, used in cffLib

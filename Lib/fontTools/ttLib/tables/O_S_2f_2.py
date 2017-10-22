@@ -149,8 +149,8 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			data = sstruct.pack(OS2_format_2, self)
 		elif self.version == 5:
 			d = self.__dict__.copy()
-			d['usLowerOpticalPointSize'] = int(round(self.usLowerOpticalPointSize * 20))
-			d['usUpperOpticalPointSize'] = int(round(self.usUpperOpticalPointSize * 20))
+			d['usLowerOpticalPointSize'] = round(self.usLowerOpticalPointSize * 20)
+			d['usUpperOpticalPointSize'] = round(self.usUpperOpticalPointSize * 20)
 			data = sstruct.pack(OS2_format_5, d)
 		else:
 			from fontTools import ttLib

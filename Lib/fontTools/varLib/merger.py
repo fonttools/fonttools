@@ -727,7 +727,7 @@ def merge(merger, self, lst):
 
 		assert dev.DeltaFormat == 0x8000
 		varidx = (dev.StartSize << 16) + dev.EndSize
-		delta = int(round(instancer[varidx]))
+		delta = round(instancer[varidx])
 
 		attr = v+'Coordinate'
 		setattr(self, attr, getattr(self, attr) + delta)
@@ -750,7 +750,7 @@ def merge(merger, self, lst):
 
 		assert dev.DeltaFormat == 0x8000
 		varidx = (dev.StartSize << 16) + dev.EndSize
-		delta = int(round(instancer[varidx]))
+		delta = round(instancer[varidx])
 
 		setattr(self, name, getattr(self, name) + delta)
 

@@ -2890,7 +2890,7 @@ class Subsetter(object):
                     log.info("%s Unicode ranges pruned: %s", tag, sorted(new_uniranges))
                 if self.options.recalc_average_width:
                     widths = [m[0] for m in font["hmtx"].metrics.values() if m[0] > 0]
-                    avg_width = int(round(sum(widths) / len(widths)))
+                    avg_width = round(sum(widths) / len(widths))
                     if avg_width != font[tag].xAvgCharWidth:
                         font[tag].xAvgCharWidth = avg_width
                         log.info("%s xAvgCharWidth updated: %d", tag, avg_width)
