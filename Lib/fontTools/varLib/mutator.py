@@ -12,7 +12,7 @@ from fontTools.varLib import _GetCoordinates, _SetCoordinates, _DesignspaceAxis
 from fontTools.varLib.models import supportScalar, normalizeLocation
 from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.varStore import VarStoreInstancer
-from fontTools.varLib.mvar import MVAR_entries
+from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.iup import iup_delta
 import os.path
 import logging
@@ -96,9 +96,9 @@ def instantiateVariableFont(varfont, location, inplace=False):
 		records = mvar.ValueRecord
 		for rec in records:
 			mvarTag = rec.ValueTag
-			if mvarTag not in MVAR_entries:
+			if mvarTag not in MVAR_ENTRIES:
 				continue
-			tableTag, itemName = MVAR_entries[mvarTag]
+			tableTag, itemName = MVAR_ENTRIES[mvarTag]
 			delta = round(varStoreInstancer[rec.VarIdx])
 			if not delta:
 				continue

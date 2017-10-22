@@ -31,7 +31,7 @@ from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib import builder, designspace, models, varStore
 from fontTools.varLib.merger import VariationMerger, _all_equal
-from fontTools.varLib.mvar import MVAR_entries
+from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.iup import iup_delta_optimize
 from collections import OrderedDict
 import os.path
@@ -438,7 +438,7 @@ def _add_MVAR(font, model, master_ttfs, axisTags):
 	lastTableTag = None
 	fontTable = None
 	tables = None
-	for tag, (tableTag, itemName) in sorted(MVAR_entries.items(), key=lambda kv: kv[1]):
+	for tag, (tableTag, itemName) in sorted(MVAR_ENTRIES.items(), key=lambda kv: kv[1]):
 		if tableTag != lastTableTag:
 			tables = fontTable = None
 			if tableTag in font:
