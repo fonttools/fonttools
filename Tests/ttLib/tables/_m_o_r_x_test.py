@@ -502,9 +502,9 @@ MORX_LIGATURE_DATA = deHexStr(
     '0000 001C '  # 40: STXHeader.ClassTableOffset=28 (+36=64)
     '0000 0040 '  # 44: STXHeader.StateArrayOffset=64 (+36=100)
     '0000 0078 '  # 48: STXHeader.EntryTableOffset=120 (+36=156)
-    '0000 0090 '  # 52: STXHeader.LigatureActionsOffset=144 (+36=180)
-    '0000 009C '  # 56: STXHeader.ComponentBaseOffset=156 (+36=192)
-    '0000 00AE '  # 60: STXHeader.LigatureListOffset=174 (+36=210)
+    '0000 0090 '  # 52: STXHeader.LigActionsOffset=144 (+36=180)
+    '0000 009C '  # 56: STXHeader.LigComponentsOffset=156 (+36=192)
+    '0000 00AE '  # 60: STXHeader.LigListOffset=174 (+36=210)
 
     # Glyph class table.
     '0002 0006 '       # 64: ClassTable.LookupFormat=2, .UnitSize=6
@@ -680,6 +680,17 @@ MORX_LIGATURE_XML = [
     '            <Action GlyphIndexDelta="-14"/>',
     '          </Transition>',
     '        </State>',
+    '        <LigComponents>',
+    '          <LigComponent index="0" value="0"/>',
+    '          <LigComponent index="1" value="1"/>',
+    '          <LigComponent index="2" value="2"/>',
+    '          <LigComponent index="3" value="3"/>',
+    '          <LigComponent index="4" value="0"/>',
+    '          <LigComponent index="5" value="4"/>',
+    '          <LigComponent index="6" value="0"/>',
+    '          <LigComponent index="7" value="8"/>',
+    '          <LigComponent index="8" value="16"/>',
+    '        </LigComponents>',
     '      </StateTable>',
     '    </LigatureMorph>',
     '  </MorphSubtable>',
