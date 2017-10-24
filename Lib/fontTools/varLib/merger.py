@@ -740,6 +740,12 @@ def merge(merger, self, lst):
 
 @MutatorMerger.merger(otBase.ValueRecord)
 def merge(merger, self, lst):
+
+	# All other structs are merged with self pointing to a copy of base font,
+	# except for ValueRecords which are sometimes created later and initialized
+	# to have 0/None members.  Hence the copy.
+	self.__dict__ = lst[0].__dict__.copy()
+
 	instancer = merger.instancer
 	# TODO Handle differing valueformats
 	for name, tableName in [('XAdvance','XAdvDevice'),
