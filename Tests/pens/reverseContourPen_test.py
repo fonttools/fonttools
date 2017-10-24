@@ -254,6 +254,30 @@ TEST_DATA = [
             ('qCurveTo', ((0, 0), (2, 2), (1, 1), None)),
             ('closePath', ())  # this is always "closed"
         ]
+    ),
+    # Test case from:
+    # https://github.com/googlei18n/cu2qu/issues/51#issue-179370514
+    (
+        [
+            ('moveTo', ((848, 348),)),
+            ('lineTo', ((848, 348),)),  # duplicate lineTo point after moveTo
+            ('qCurveTo', ((848, 526), (649, 704), (449, 704))),
+            ('qCurveTo', ((449, 704), (248, 704), (50, 526), (50, 348))),
+            ('lineTo', ((50, 348),)),
+            ('qCurveTo', ((50, 348), (50, 171), (248, -3), (449, -3))),
+            ('qCurveTo', ((449, -3), (649, -3), (848, 171), (848, 348))),
+            ('closePath', ())
+        ],
+        [
+            ('moveTo', ((848, 348),)),
+            ('qCurveTo', ((848, 171), (649, -3), (449, -3), (449, -3))),
+            ('qCurveTo', ((248, -3), (50, 171), (50, 348), (50, 348))),
+            ('lineTo', ((50, 348),)),
+            ('qCurveTo', ((50, 526), (248, 704), (449, 704), (449, 704))),
+            ('qCurveTo', ((649, 704), (848, 526), (848, 348))),
+            ('lineTo', ((848, 348),)),  # the duplicate point is kept
+            ('closePath', ())
+        ]
     )
 ]
 
