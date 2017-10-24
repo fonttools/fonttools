@@ -297,8 +297,4 @@
     </extraNames>
   </post>
 
-  <GDEF>
-    <Version value="0x00010000"/>
-  </GDEF>
-
 </ttFont>

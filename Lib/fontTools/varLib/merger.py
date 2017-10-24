@@ -713,6 +713,12 @@ class MutatorMerger(AligningMerger):
 				if gdef.MarkGlyphSetsDef is None:
 					del gdef.MarkGlyphSetsDef
 					gdef.Version = 0x00010000
+			if not (gdef.LigCaretList or
+				gdef.MarkAttachClassDef or
+				gdef.GlyphClassDef or
+				gdef.AttachList or
+				(gdef.Version >= 0x00010002 and gdef.MarkGlyphSetsDef)):
+				del font['GDEF']
 
 @MutatorMerger.merger(ot.Anchor)
 def merge(merger, self, lst):
