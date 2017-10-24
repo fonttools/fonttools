@@ -6,9 +6,10 @@ from fontTools.misc.fixedTools import (
 from fontTools.misc.textTools import pad, safeEval
 from fontTools.ttLib import getSearchRange
 from .otBase import (CountReference, FormatSwitchingBaseTable,
-                     OTTableWriter, ValueRecordFactory)
-from .otTables import (AATStateTable, AATState, AATAction,
-                       ContextualMorphAction, LigatureMorphAction)
+                     OTTableReader, OTTableWriter, ValueRecordFactory)
+from .otTables import (lookupTypes, AATStateTable, AATState, AATAction,
+                       ContextualMorphAction, LigatureMorphAction,
+                       MorxSubtable)
 from functools import partial
 import struct
 import logging
@@ -51,8 +52,7 @@ def buildConverters(tableSpec, tableNamespace):
 				converterClass = Struct
 			else:
 				converterClass = eval(tp, tableNamespace, converterMapping)
-		if tp in ('MortChain', 'MortSubtable',
-		          'MorxChain', 'MorxSubtable'):
+		if tp in ('MortChain', 'MortSubtable', 'MorxChain'):
 			tableClass = tableNamespace.get(tp)
 		else:
 			tableClass = tableNamespace.get(tableName)
@@ -882,6 +882,83 @@ class AATLookupWithDataOffset(BaseConverter):
 		lookup.xmlWrite(xmlWriter, font, value, name, attrs)
 
 
+class MorxSubtableConverter(BaseConverter):
+	def __init__(self, name, repeat, aux):
+		BaseConverter.__init__(self, name, repeat, aux)
+
+	def read(self, reader, font, tableDict):
+		pos = reader.pos
+		m = MorxSubtable()
+		m.StructLength = reader.readULong()
+		m.CoverageFlags = reader.readUInt8()
+		m.Reserved = reader.readUShort()
+		m.MorphType = reader.readUInt8()
+		m.SubFeatureFlags = reader.readULong()
+		tableClass = lookupTypes["morx"].get(m.MorphType)
+		if tableClass is None:
+			assert False, ("unsupported 'morx' lookup type %s" %
+			               morphType)
+		# To decode AAT ligatures, we need to know the subtable size.
+		# The easiest way to pass this along is to create a new reader
+		# that works on just the subtable as its data.
+		headerLength = reader.pos - pos
+		subReader = OTTableReader(
+			data=reader.data[reader.pos : reader.pos + m.StructLength - headerLength],
+			tableTag=reader.tableTag)
+		m.SubStruct = tableClass()
+		m.SubStruct.decompile(subReader, font)
+		reader.seek(pos + m.StructLength)
+		return m
+
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		xmlWriter.begintag(name, attrs)
+		xmlWriter.newline()
+		xmlWriter.comment("StructLength=%d" % value.StructLength)
+		xmlWriter.newline()
+		# TODO: Emit flags in meaningful form, similar to what we
+		# already do for the individual morph types.
+		xmlWriter.simpletag("CoverageFlags",
+		                    value="%d" % value.CoverageFlags)
+		xmlWriter.newline()
+		xmlWriter.simpletag("Reserved",
+		                      value="%d" % value.Reserved)
+		xmlWriter.newline()
+		xmlWriter.comment("MorphType=%d" % value.MorphType)
+		xmlWriter.newline()
+		xmlWriter.simpletag("SubFeatureFlags",
+		                    value="0x%08x" % value.SubFeatureFlags)
+		xmlWriter.newline()
+		value.SubStruct.toXML(xmlWriter, font)
+		xmlWriter.endtag(name)
+		xmlWriter.newline()
+
+	def xmlRead(self, attrs, content, font):
+		m = MorxSubtable()
+		for eltName, eltAttrs, eltContent in filter(istuple, content):
+			# TODO: Parse meaningful flags, similar to what we
+			# already do for the individual morph types.
+			if eltName == "CoverageFlags":
+				m.CoverageFlags = safeEval(eltAttrs["value"])
+			elif eltName == "Reserved":
+				m.Reserved = safeEval(eltAttrs["value"])
+			elif eltName == "SubFeatureFlags":
+				m.SubFeatureFlags = safeEval(eltAttrs["value"])
+			elif eltName.endswith("Morph"):
+				m.fromXML(eltName, eltAttrs, eltContent, font)
+			else:
+				assert False, eltName
+		return m
+
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		lengthIndex = len(writer.items)
+		before = writer.getDataLength()
+		value.StructLength = 0xdeadbeef
+		value.compile(writer, font)
+		assert writer.items[lengthIndex] == b"\xde\xad\xbe\xef"
+		length = writer.getDataLength() - before
+		writer.items[lengthIndex] = struct.pack(">L", length)
+
+
 # https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6Tables.html#ExtendedStateHeader
 # TODO: Untangle the implementation of the various lookup-specific formats.
 class STXHeader(BaseConverter):
@@ -949,8 +1026,6 @@ class STXHeader(BaseConverter):
 		return transition
 
 	def _readLigatures(self, reader, font):
-		# TODO: Take limit from StructLength of enclosing MorxSubtable.
-		# The following only works for the very last subtable in morx.
 		limit = len(reader.data)
 		numLigatureGlyphs = (limit - reader.pos) // 2
 		return [font.getGlyphName(g)
@@ -1480,7 +1555,7 @@ converterMapping = {
 	"MortChain":	StructWithLength,
 	"MortSubtable": StructWithLength,
 	"MorxChain":	StructWithLength,
-	"MorxSubtable": StructWithLength,
+	"MorxSubtable": MorxSubtableConverter,
 
 	# "Template" types
 	"AATLookup":	lambda C: partial(AATLookup, tableClass=C),
