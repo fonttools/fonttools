@@ -300,7 +300,7 @@ def test_reverse_point_pen(contour, expected):
         pytest.skip("ufoLib not installed")
 
     recpen = RecordingPen()
-    pt2seg = PointToSegmentPen(recpen)
+    pt2seg = PointToSegmentPen(recpen, outputImpliedClosingLine=True)
     revpen = ReverseContourPointPen(pt2seg)
     seg2pt = SegmentToPointPen(revpen)
     for operator, operands in contour:
