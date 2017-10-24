@@ -721,7 +721,11 @@ def merge(merger, self, lst):
 
 	instancer = merger.instancer
 	for v in "XY":
-		dev = getattr(self, v+'DeviceTable')
+		tableName = v+'DeviceTable'
+		if not hasattr(self, tableName):
+			continue
+		dev = getattr(self, tableName)
+		delattr(self, tableName)
 		if dev is None:
 			continue
 
@@ -732,7 +736,6 @@ def merge(merger, self, lst):
 		attr = v+'Coordinate'
 		setattr(self, attr, getattr(self, attr) + delta)
 
-	del self.XDeviceTable, self.YDeviceTable
 	self.Format = 1
 
 @MutatorMerger.merger(otBase.ValueRecord)
@@ -744,7 +747,10 @@ def merge(merger, self, lst):
 				('XPlacement','XPlaDevice'),
 				('YPlacement','YPlaDevice')]:
 
-		dev = getattr(self, tableName, None)
+		if not hasattr(self, tableName):
+			continue
+		dev = getattr(self, tableName)
+		delattr(self, tableName)
 		if dev is None:
 			continue
 
@@ -753,8 +759,6 @@ def merge(merger, self, lst):
 		delta = round(instancer[varidx])
 
 		setattr(self, name, getattr(self, name) + delta)
-
-		delattr(self, tableName)
 
 
 #
