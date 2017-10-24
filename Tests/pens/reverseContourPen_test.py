@@ -48,6 +48,7 @@ TEST_DATA = [
             ('lineTo', ((2, 2),)),
             ('lineTo', ((1, 1),)),
             ('lineTo', ((0, 0),)),
+            ('lineTo', ((0, 0),)),
             ('closePath', ()),
         ]
     ),
