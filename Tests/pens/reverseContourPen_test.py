@@ -305,4 +305,15 @@ def test_reverse_point_pen(contour, expected):
     seg2pt = SegmentToPointPen(revpen)
     for operator, operands in contour:
         getattr(seg2pt, operator)(*operands)
+
+    # for closed contours that have a lineTo following the moveTo,
+    # and whose points don't overlap, our current implementation diverges
+    # from the ReverseContourPointPen as wrapped by ufoLib's pen converters.
+    # In the latter case, an extra lineTo is added because of
+    # outputImpliedClosingLine=True. This is redundant but not incorrect,
+    # as the number of points is the same in both.
+    if (contour and contour[-1][0] == "closePath" and
+            contour[1][0] == "lineTo" and contour[1][1] != contour[0][1]):
+        expected = expected[:-1] + [("lineTo", contour[0][1])] + expected[-1:]
+
     assert recpen.value == expected
