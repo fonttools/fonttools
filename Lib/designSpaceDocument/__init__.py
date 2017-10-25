@@ -4,6 +4,7 @@ from __future__ import print_function, division, absolute_import
 import collections
 import logging
 import os
+import posixpath
 import xml.etree.ElementTree as ET
 from mutatorMath.objects.location import biasFromLocations, Location
 
@@ -969,6 +970,10 @@ class DesignSpaceDocument(object):
         writer = self.writerClass(path, self)
         writer.write()
 
+    def _posixRelativePath(self, otherPath):
+        relative = os.path.relpath(otherPath, os.path.dirname(self.path))
+        return posixpath.join(*relative.split(os.path.sep))
+
     def updatePaths(self):
         """ 
             Right before we save we need to identify and respond to the following situations:
@@ -1015,11 +1020,11 @@ class DesignSpaceDocument(object):
             # check what the relative path really should be?
             expectedFilename = None
             if descriptor.path is not None and self.path is not None:
-                expectedFilename = os.path.relpath(descriptor.path, os.path.dirname(self.path))
+                expectedFilename = self._posixRelativePath(descriptor.path)
 
             # 3
             if descriptor.filename is None and descriptor.path is not None and self.path is not None:
-                descriptor.filename = os.path.relpath(descriptor.path, os.path.dirname(self.path))
+                descriptor.filename = self._posixRelativePath(descriptor.path)
                 continue
 
             # 4
@@ -1053,13 +1058,13 @@ class DesignSpaceDocument(object):
                 if descriptor.filename is not None and not force:
                     continue
                 if self.path is not None:
-                    descriptor.filename = os.path.relpath(descriptor.path, os.path.dirname(self.path))
+                    descriptor.filename = self._posixRelativePath(descriptor.path)
         if instances:
            for descriptor in self.instances:
                 if descriptor.filename is not None and not force:
                     continue
                 if self.path is not None:
-                    descriptor.filename = os.path.relpath(descriptor.path, os.path.dirname(self.path))
+                    descriptor.filename = self._posixRelativePath(descriptor.path)
 
     def getFonts(self):
         # convenience method that delivers the masters and their locations

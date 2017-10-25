@@ -518,6 +518,7 @@ A designspace file needs to store many references to UFO files.
 * The **filename** attribute in the `SourceDescriptor` and `InstanceDescriptor` classes stores the preferred relative path.
 * The **path** attribute in these objects stores the absolute path. It is calculated from the document path and the relative path in the filename attribute when the object is created.
 * Only the **filename** attribute is written to file. 
+* Both **filename** and **path** must use forward slashes (`/`) as path separators, even on Windows.
 
 Right before we save we need to identify and respond to the following situations: 
 
