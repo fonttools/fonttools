@@ -902,9 +902,11 @@ class MorxSubtableConverter(BaseConverter):
 		# The easiest way to pass this along is to create a new reader
 		# that works on just the subtable as its data.
 		headerLength = reader.pos - pos
-		subReader = OTTableReader(
-			data=reader.data[reader.pos : reader.pos + m.StructLength - headerLength],
-			tableTag=reader.tableTag)
+		data = reader.data[
+			reader.pos
+			: reader.pos + m.StructLength - headerLength]
+		assert len(data) == m.StructLength - headerLength
+		subReader = OTTableReader(data=data, tableTag=reader.tableTag)
 		m.SubStruct = tableClass()
 		m.SubStruct.decompile(subReader, font)
 		reader.seek(pos + m.StructLength)
