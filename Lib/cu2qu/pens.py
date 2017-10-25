@@ -76,7 +76,7 @@ class Cu2QuPen(AbstractPen):
         curve = (self.current_pt, pt1, pt2, pt3)
         quadratic = curve_to_quadratic(curve, self.max_err)
         if self.stats is not None:
-            n = str(len(quadratic))
+            n = str(len(quadratic) - 2)
             self.stats[n] = self.stats.get(n, 0) + 1
         self.qCurveTo(*quadratic[1:])
 
@@ -148,7 +148,7 @@ class Cu2QuPointPen(BasePointToSegmentPen):
                     cubic = [prev_on_curve, bcp1, bcp2, on_curve]
                     quad = curve_to_quadratic(cubic, self.max_err)
                     if self.stats is not None:
-                        n = str(len(quad))
+                        n = str(len(quad) - 2)
                         self.stats[n] = self.stats.get(n, 0) + 1
                     new_points = [(pt, False, None, {}) for pt in quad[1:-1]]
                     new_points.append((on_curve, smooth, name, kwargs))
