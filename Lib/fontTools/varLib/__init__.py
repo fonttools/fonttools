@@ -684,7 +684,7 @@ def build(designspace_filename, master_finder=lambda s:s):
 	axisTags = [axis.axisTag for axis in fvar.axes]
 
 	# Assume single-model for now.
-	model = models.VariationModel(normalized_master_locs)
+	model = models.VariationModel(normalized_master_locs, axisOrder=axisTags)
 	assert 0 == model.mapping[base_idx]
 
 	log.info("Building variations tables")
