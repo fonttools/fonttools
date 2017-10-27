@@ -1167,6 +1167,13 @@ class DesignSpaceDocument(object):
                     # yes we can fix this
                     axisObj.default = neutralAxisValue
                     self.logger.info("Note: updating the default value of axis %s to neutral master at %3.3f"%(axisObj.name, neutralAxisValue))
+                # always fit the axis dimensions to the location of the designated neutral
+                elif neutralAxisValue < axisObj.minimum:
+                    axisObj.default = neutralAxisValue
+                    axisObj.minimum = neutralAxisValue
+                elif neutralAxisValue > axisObj.maximum:
+                    axisObj.maximum = neutralAxisValue
+                    axisObj.default = neutralAxisValue
                 else:
                     # now we're in trouble, can't solve this, alert. 
                     self.logger.info("Warning: mismatched default value for axis %s and neutral master. Master value outside of axis bounds"%(axisObj.name))
@@ -1506,7 +1513,7 @@ if __name__ == "__main__":
         >>> s1.name = "master.ufo1"
         >>> s1.copyInfo = True
         >>> s1.copyFeatures = True
-        >>> s1.location = dict(weight=55)
+        >>> s1.location = dict(weight=55, width=1000)
         >>> doc.addSource(s1)
         >>> # write some axes
         >>> a1 = AxisDescriptor()
@@ -1516,6 +1523,13 @@ if __name__ == "__main__":
         >>> a1.name = "weight"
         >>> a1.tag = "wght"
         >>> doc.addAxis(a1)
+        >>> a2 = AxisDescriptor()
+        >>> a2.minimum = -10
+        >>> a2.maximum = 10
+        >>> a2.default = 0      # the wrong value
+        >>> a2.name = "width"
+        >>> a2.tag = "wdth"
+        >>> doc.addAxis(a2)
         >>> # write the document
         >>> doc.write(testDocPath)
         >>> assert os.path.exists(testDocPath)
@@ -1523,8 +1537,10 @@ if __name__ == "__main__":
         >>> new = DesignSpaceDocument()
         >>> new.read(testDocPath)
         >>> new.check()
-        >>> new.default.location
-        {'weight': 55.0}
+        >>> loc = new.default.location
+        >>> for axisObj in new.axes:
+        ...     n = axisObj.name
+        ...     assert axisObj.default == loc.get(n)
         """
 
     def testUnicodes():
