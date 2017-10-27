@@ -3,6 +3,7 @@ from __future__ import print_function, division, absolute_import
 
 from ufoLib import fontInfoAttributesVersion1, fontInfoAttributesVersion2, fontInfoAttributesVersion3
 from pprint import pprint
+import logging
 
 """
     
@@ -64,6 +65,7 @@ def build(
         logPath=None,           # not supported
         progressFunc=None,      # not supported
         processRules=True,
+        logger=None
         ):
     """
         Simple builder for UFO designspaces.
@@ -80,7 +82,13 @@ def build(
         reader = DesignSpaceProcessor(ufoVersion=outputUFOFormatVersion)
         reader.roundGeometry = roundGeometry
         reader.read(path)
-        results += reader.generateUFO(processRules=processRules)
+        try:
+            r = reader.generateUFO(processRules=processRules)
+            results.append(r)
+        except:
+            if logger:
+                logger.exception("ufoProcessor error")
+        #results += reader.generateUFO(processRules=processRules)
         reader = None
     return results
 
