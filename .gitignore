@@ -16,3 +16,4 @@ testNoAxes_recontructed.designspace
 testNoAxes_source.designspace
 testUnicodes.designspace
 testUnicodes_roundtrip.designspace
+testAdjustAxisDefaultToNeutral.designspace

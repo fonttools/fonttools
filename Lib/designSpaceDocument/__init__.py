@@ -1152,6 +1152,25 @@ class DesignSpaceDocument(object):
                 self.default = mutatorDefaultCandidate
                 self.defaultLoc = self.default.location
         self.default.copyInfo = True
+        # now that we have a default, let's check if the axes are ok
+        for axisObj in self.axes:
+            if axisObj.name not in self.default.location:
+                # extend the location of the neutral master with missing default value for this axis
+                self.default.location[axisObj.name] = axisObj.default
+            else:
+                if axisObj.default == self.default.location.get(axisObj.name):
+                    continue
+                # proposed remedy: change default value in the axisdescriptor to the value of the neutral
+                neutralAxisValue = self.default.location.get(axisObj.name)
+                # make sure this value is between the min and max
+                if axisObj.minimum <= neutralAxisValue <= axisObj.maximum:
+                    # yes we can fix this
+                    axisObj.default = neutralAxisValue
+                    self.logger.info("Note: updating the default value of axis %s to neutral master at %3.3f"%(axisObj.name, neutralAxisValue))
+                else:
+                    # now we're in trouble, can't solve this, alert. 
+                    self.logger.info("Warning: mismatched default value for axis %s and neutral master. Master value outside of axis bounds"%(axisObj.name))
+
 
     def _prepAxesForBender(self):
         """
@@ -1411,7 +1430,7 @@ if __name__ == "__main__":
         >>> a2 = AxisDescriptor()
         >>> a2.minimum = 0
         >>> a2.maximum = 1000
-        >>> a2.default = 0
+        >>> a2.default = 20
         >>> a2.name = "width"
         >>> a2.tag = "wdth"
         >>> a2.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
@@ -1440,7 +1459,10 @@ if __name__ == "__main__":
         >>> # import it again
         >>> new = DesignSpaceDocument()
         >>> new.read(testDocPath)
-        
+        >>> new.check()
+        >>> new.default.location
+        {'width': 20.0, 'weight': 0.0}
+
         # >>> for a, b in zip(doc.instances, new.instances):
         # ...     a.compare(b)
         # >>> for a, b in zip(doc.sources, new.sources):
@@ -1467,6 +1489,42 @@ if __name__ == "__main__":
         ...     a, b = v
         ...     assert a == b
 
+        """
+
+    def testAdjustAxisDefaultToNeutral():
+        u"""
+        >>> import os
+        >>> testDocPath = os.path.join(os.getcwd(), "testAdjustAxisDefaultToNeutral.designspace")
+        >>> masterPath1 = os.path.join(os.getcwd(), "masters", "masterTest1.ufo")
+        >>> masterPath2 = os.path.join(os.getcwd(), "masters", "masterTest2.ufo")
+        >>> instancePath1 = os.path.join(os.getcwd(), "instances", "instanceTest1.ufo")
+        >>> instancePath2 = os.path.join(os.getcwd(), "instances", "instanceTest2.ufo")
+        >>> doc = DesignSpaceDocument()
+        >>> # add master 1
+        >>> s1 = SourceDescriptor()
+        >>> s1.filename = os.path.relpath(masterPath1, os.path.dirname(testDocPath))
+        >>> s1.name = "master.ufo1"
+        >>> s1.copyInfo = True
+        >>> s1.copyFeatures = True
+        >>> s1.location = dict(weight=55)
+        >>> doc.addSource(s1)
+        >>> # write some axes
+        >>> a1 = AxisDescriptor()
+        >>> a1.minimum = 0
+        >>> a1.maximum = 1000
+        >>> a1.default = 0      # the wrong value
+        >>> a1.name = "weight"
+        >>> a1.tag = "wght"
+        >>> doc.addAxis(a1)
+        >>> # write the document
+        >>> doc.write(testDocPath)
+        >>> assert os.path.exists(testDocPath)
+        >>> # import it again
+        >>> new = DesignSpaceDocument()
+        >>> new.read(testDocPath)
+        >>> new.check()
+        >>> new.default.location
+        {'weight': 55.0}
         """
 
     def testUnicodes():
