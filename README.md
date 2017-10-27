@@ -61,7 +61,7 @@ Some of the descriptors support localised names. The names are stored in diction
 * But that can lead to unexpected results. So, if there are no rules for `adieresis` (assuming it references `a`) then that glyph **should not change appearance**. That means that when the rule swaps `a` and `a.alt` it also swaps all components that reference these glyphs so they keep their appearance.
 * The swap function also needs to take care of swapping the names in kerning data.
 
-# `SourceDescriptor` object
+## SourceDescriptor object
 ### Attributes
 * `filename`: string. A relative path to the source file, **as it is in the document**. MutatorMath + Varlib.
 * `path`: string. Absolute path to the source file, calculated from the document path and the string in the filename attr. MutatorMath + Varlib.
@@ -93,9 +93,9 @@ s1.mutedGlyphNames.append("Z")
 doc.addSource(s1)
 ```
 
-# `InstanceDescriptor` object
+## InstanceDescriptor object
 
-## Attributes ##
+### Attributes
 * `filename`: string. Relative path to the instance file, **as it is in the document**. The file may or may not exist. MutatorMath.
 * `path`: string. Absolute path to the source file, calculated from the document path and the string in the filename attr. The file may or may not exist. MutatorMath.
 * `name`: string. Unique identifier name of the instance, used to identify it if it needs to be referenced from elsewhere in the document. 
@@ -114,7 +114,7 @@ doc.addSource(s1)
 * `kerning`: bool. Indicates if this instance needs its kerning calculated. MutatorMath.
 * `info`: bool. Indicated if this instance needs the interpolating font.info calculated.
 
-## Methods ##
+### Methods
 
 These methods give easier access to the localised names.
 
@@ -127,7 +127,7 @@ These methods give easier access to the localised names.
 * `setStyleMapFamilyName(styleMapFamilyName, languageCode="en")`
 * `getStyleMapFamilyName(languageCode="en")`
 
-## Example ##
+### Example
 
 ```python
 i2 = InstanceDescriptor()
@@ -149,7 +149,7 @@ i2.glyphs['arrow'] = glyphData
 i2.glyphs['arrow2'] = dict(mute=False)
 doc.addInstance(i2)
 ```
-# `AxisDescriptor` object
+## AxisDescriptor object
 * `tag`: string. Four letter tag for this axis. Some might be registered at the [OpenType specification](https://www.microsoft.com/typography/otspec/fvar.htm#VAT). Privately-defined axis tags must begin with an uppercase letter and use only uppercase letters or digits.
 * `name`: string. Name of the axis as it is used in the location dicts. MutatorMath + Varlib.
 * `labelNames`: dict. When defining a non-registered axis, it will be necessary to define user-facing readable names for the axis. Keyed by xml:lang code. Varlib. 
@@ -169,7 +169,7 @@ a1.labelNames[u'fa-IR'] = u"قطر"
 a1.labelNames[u'en'] = u"Wéíght"
 a1.map = [(1.0, 10.0), (400.0, 66.0), (1000.0, 990.0)]
 ```
-# `RuleDescriptor` object
+## RuleDescriptor object
 * `name`: string. Unique name for this rule. Will be used to reference this rule data.
 * `conditions`: list of dicts with condition data.
 * Each condition specifies the axis name it is active on and the values between which the condition is true.
@@ -224,7 +224,7 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 	</instances>
 </designspace>
 ```
-# 1. `axis` element
+# 1. axis element
 * Define a single axis
 * Child element of `axes`
 
@@ -234,12 +234,13 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 * `minimum`: required, number. The minimum value for this axis.
 * `maximum`: required, number. The maximum value for this axis.
 * `default`: required, number. The default value for this axis.
+* `hidden`: optional, 0 or 1. Records whether this axis needs to be hidden in interfaces.
 
 ```xml
 <axis name="weight" tag="wght" minimum="1" maximum="1000" default="400">
 ```
 
-# 1.1 `labelname` element
+# 1.1 labelname element
 * Defines a human readable name for UI use.
 * Optional for non-registered axis names.
 * Can be localised with `xml:lang`
@@ -257,7 +258,7 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 <labelname xml:lang="en">Wéíght</labelname>
 ```
 
-# 1.2 `map` element
+# 1.2 map element
 * Defines a single node in a series of input value / output value pairs.
 * Together these values transform the designspace.
 * Child of `axis` element.
@@ -284,12 +285,12 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
     </axes>
 ```
 
-# 2. `location` element
+# 2. location element
 * Defines a coordinate in the design space.
 * Dictionary of axisname: axisvalue
 * Used in `source`, `instance` and `glyph` elements.
 
-# 2.1`dimension` element
+# 2.1 dimension element
 * Child element of `location`
 
 ### Attributes
@@ -305,7 +306,7 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 </location>
 ```
 
-# 3. `source` element
+# 3. source element
 * Defines a single font that contributes to the designspace.
 * Child element of `sources`
 
@@ -315,26 +316,26 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 * `name`: required, string. A unique name that can be used to identify this font if it needs to be referenced elsewhere.
 * `filename`: required, string. A path to the source file, relative to the root path of this document. The path can be at the same level as the document or lower.
 
-# 3.1 `lib` element
+# 3.1 lib element
 * `<lib copy="1" />`
 * Child element of `source`
 * Defines if the instances can inherit the data in the lib of this source.
 * MutatorMath only
 
-# 3.2 `info` element
+# 3.2 info element
 * `<info copy="1" />`
 * Child element of `source`
 * Defines if the instances can inherit the non-interpolating font info from this source.
 * MutatorMath + Varlib
-* This presence of this element indicates this source is to be the default font.
+* NOTE: **This presence of this element indicates this source is to be the default font.**
 
-# 3.3 `features` element
+# 3.3 features element
 * `<features copy="1" />`
 * Defines if the instances can inherit opentype feature text from this source.
 * Child element of `source`
 * MutatorMath only
 
-# 3.4 `glyph` element
+# 3.4 glyph element
 * Can appear in `source` as well as in `instance` elements.
 * In a `source` element this states if a glyph is to be excluded from the calculation.
 * MutatorMath only
@@ -343,6 +344,16 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 * `mute`: optional attribute, number 1 or 0. Indicate if this glyph should be ignored as a master.
 * `<glyph mute="1" name="A"/>`
 * MutatorMath only
+
+# 3.5 kerning element
+* `<kerning mute="1" />`
+* Can appear in `source` as well as in `instance` elements.
+
+### Attributes
+* `mute`: required attribute, number 1 or 0. Indicate if the kerning data from this source is to be excluded from the calculation.
+* If the kerning element is not present, assume `mute=0`, yes, include the kerning of this source in the calculation.
+* MutatorMath only
+
 
 ### Example
 ```xml
@@ -358,7 +369,7 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
    </location>
 </source>
 ```
-# 4. `instance` element
+# 4. instance element
 
 * Defines a single font that can be calculated with the designspace.
 * Child element of `instances`
@@ -386,12 +397,12 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 </instance>
 ```
 
-# 4.1 `glyphs` element
+# 4.1 glyphs element
 * Container for `glyph` elements.
 * Optional
 * MutatorMath only.
 
-# 4.2 `glyph` element
+# 4.2 glyph element
 * Child element of `glyphs`
 * May contain a `location` element.
 
@@ -400,17 +411,17 @@ myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 * `unicode`: string. Unicode values for this glyph, in hexadecimal. Multiple values should be separated with a space.
 * `mute`: optional attribute, number 1 or 0. Indicate if this glyph should be supressed in the output.
 
-# 4.2.1 `note` element
+# 4.2.1 note element
 * String. The value corresponds to glyph.note in UFO.
 
-# 4.2.2 `masters` element
+# 4.2.2 masters element
 * Container for `master` elements
 * These `master` elements define an alternative set of glyph masters for this glyph.
 
-# 4.2.2.1 `master` element
+# 4.2.2.1 master element
 * Defines a single alternative master for this glyph.
 
-#4.3 `localised names for intances`
+#4.3 Localised names for intances
 Localised names for instances can be included with these simple elements with an xml:lang attribute: [XML language definition](https://www.w3.org/International/questions/qa-when-xmllang.en)
 
 
@@ -464,10 +475,10 @@ Localised names for instances can be included with these simple elements with an
 </instance>
 ```
 
-# 5.0 `rules` element
+# 5.0 rules element
  * Container for `rule` elements
 
-# 5.1 `rule` element
+# 5.1 rule element
  * Defines a named rule with a set of conditions.
 * The conditional substitutions specifed in the OpenType specification can be much more elaborate than what it recorded in this element.
 * So while authoring tools are welcome to use the `sub` element, they're intended as preview / example / test substitutions for the rule.
@@ -475,7 +486,7 @@ Localised names for instances can be included with these simple elements with an
 ### Attributes
 * `name`: required, string. A unique name that can be used to identify this rule if it needs to be referenced elsewhere.
 
-# 5.1.1 `condition` element
+# 5.1.1 condition element
 * Child element of `rule`
 * Between the `minimum` and `maximum` this rule is `true`.
 * If `minimum` is not available, assume it is `axis.minimum`.
@@ -487,7 +498,7 @@ Localised names for instances can be included with these simple elements with an
 * `minimum`: number, required*. The low value.
 * `maximum`: number, required*. The high value.
 
-# 5.1.2 `sub` element
+# 5.1.2 sub element
 * Child element of `rule`.
 * Defines which glyphs to replace when the rule is true.
 * This element is optional. It may be useful for editors to know which glyphs can be used to preview the axis.

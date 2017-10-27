@@ -236,6 +236,7 @@ class AxisDescriptor(SimpleDescriptor):
         self.minimum = None
         self.maximum = None
         self.default = None
+        self.hidden = False
         self.map = []
 
     def serialize(self):
@@ -246,6 +247,7 @@ class AxisDescriptor(SimpleDescriptor):
                 maximum = self.maximum,
                 minimum = self.minimum,
                 default = self.default,
+                hidden = self.hidden,
                 map = self.map,
             )
         return d
@@ -380,6 +382,8 @@ class BaseDocWriter(object):
         axisElement.attrib['minimum'] = self.intOrFloat(axisObject.minimum)
         axisElement.attrib['maximum'] = self.intOrFloat(axisObject.maximum)
         axisElement.attrib['default'] = self.intOrFloat(axisObject.default)
+        if axisObject.hidden:
+            axisElement.attrib['hidden'] = "1"
         for languageCode, labelName in axisObject.labelNames.items():
             languageElement = ET.Element('labelname')
             languageElement.attrib[u'xml:lang'] = languageCode
@@ -621,6 +625,8 @@ class BaseDocReader(object):
             axisObject.name = axisElement.attrib.get("name")
             axisObject.minimum = float(axisElement.attrib.get("minimum"))
             axisObject.maximum = float(axisElement.attrib.get("maximum"))
+            if axisElement.attrib.get('hidden', False):
+                axisObject.hidden = True
             # we need to check if there is an attribute named "initial"
             if axisElement.attrib.get("default") is None:
                 if axisElement.attrib.get("initial") is not None:
@@ -1409,6 +1415,7 @@ if __name__ == "__main__":
         >>> a2.name = "width"
         >>> a2.tag = "wdth"
         >>> a2.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
+        >>> a2.hidden = True
         >>> a2.labelNames[u'fr'] = u"Poids"
         >>> doc.addAxis(a2)
         >>> # add an axis that is not part of any location to see if that works
