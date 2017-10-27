@@ -293,6 +293,10 @@ class Parser(object):
                     raise FeatureLibError(
                         "Unknown glyph class @%s" % self.cur_token_,
                         self.cur_token_location_)
+                if isinstance(gc, self.ast.MarkClass):
+                    gc = self.ast.MarkClassName(self.cur_token_location_, gc)
+                else:
+                    gc = self.ast.GlyphClassName(self.cur_token_location_, gc)
                 glyphs.add_class(gc)
             else:
                 raise FeatureLibError(

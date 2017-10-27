@@ -363,6 +363,8 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(vowels_lc.glyphSet(), tuple("aeiou"))
         self.assertEqual(vowels_uc.glyphSet(), tuple("AEIOU"))
         self.assertEqual(vowels.glyphSet(), tuple("aeiouAEIOUyY"))
+        self.assertEqual(vowels.asFea(),
+            "@Vowels = [@Vowels.lc @Vowels.uc y Y];")
         self.assertRaisesRegex(
             FeatureLibError, "Unknown glyph class @unknown",
             self.parse, "@bad = [@unknown];")
