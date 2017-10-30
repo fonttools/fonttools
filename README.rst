@@ -1,4 +1,4 @@
-|Build Status| |PyPI Version|
+|Build Status| |PyPI Version| |Coverage|
 
 cu2qu
 =====
@@ -62,3 +62,5 @@ statistics between calls by providing your own report dictionary:
    :target: https://travis-ci.org/googlei18n/cu2qu
 .. |PyPI Version| image:: https://img.shields.io/pypi/v/cu2qu.svg
    :target: https://pypi.org/project/cu2qu/
+.. |Coverage| image:: https://codecov.io/gh/googlei18n/cu2qu/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/googlei18n/cu2qu
