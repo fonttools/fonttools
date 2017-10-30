@@ -1,3 +1,12 @@
+- [feaLib] Fixed writing back nested glyph classes (#1086).
+- [TupleVariation] Reactivated shared points logic, bugfixes (#1009).
+- [AAT] Implemented ``morx`` ligature subtables (#1082).
+- [reverseContourPen] Keep duplicate lineTo following a moveTo (#1080,
+  https://github.com/googlei18n/cu2qu/issues/51).
+- [varLib.mutator] Suport instantiation of GPOS, GDEF and MVAR (#1079).
+- [sstruct] Fixed issue with ``unicode_literals`` and ``struct`` module in
+  old versions of python 2.7 (#993).
+
 3.17.0 (released 2017-10-16)
 ----------------------------
 
