@@ -71,8 +71,8 @@ MORX_NONCONTEXTUAL_XML = [
     '  </MorphFeature>',
     '  <MorphSubtable index="0">',
     '    <!-- StructLength=36 -->',
-    '    <CoverageFlags value="128"/>',
-    '    <Reserved value="0"/>',
+    '    <TextDirection value="Vertical"/>',
+    '    <ProcessingOrder value="LayoutOrder"/>',
     '    <!-- MorphType=4 -->',
     '    <SubFeatureFlags value="0x00000001"/>',
     '    <NoncontextualMorph>',
@@ -130,8 +130,8 @@ MORX_REARRANGEMENT_XML = [
     '  <!-- MorphSubtableCount=1 -->',
     '  <MorphSubtable index="0">',
     '    <!-- StructLength=104 -->',
-    '    <CoverageFlags value="128"/>',
-    '    <Reserved value="0"/>',
+    '    <TextDirection value="Vertical"/>',
+    '    <ProcessingOrder value="LayoutOrder"/>',
     '    <!-- MorphType=0 -->',
     '    <SubFeatureFlags value="0x00000001"/>',
     '    <RearrangementMorph>',
@@ -339,8 +339,8 @@ MORX_CONTEXTUAL_XML = [
     '  <!-- MorphSubtableCount=1 -->',
     '  <MorphSubtable index="0">',
     '    <!-- StructLength=164 -->',
-    '    <CoverageFlags value="128"/>',
-    '    <Reserved value="0"/>',
+    '    <TextDirection value="Vertical"/>',
+    '    <ProcessingOrder value="LayoutOrder"/>',
     '    <!-- MorphType=1 -->',
     '    <SubFeatureFlags value="0x00000001"/>',
     '    <ContextualMorph>',
@@ -563,8 +563,8 @@ MORX_LIGATURE_XML = [
     '  <!-- MorphSubtableCount=1 -->',
     '  <MorphSubtable index="0">',
     '    <!-- StructLength=202 -->',
-    '    <CoverageFlags value="128"/>',
-    '    <Reserved value="0"/>',
+    '    <TextDirection value="Vertical"/>',
+    '    <ProcessingOrder value="LayoutOrder"/>',
     '    <!-- MorphType=2 -->',
     '    <SubFeatureFlags value="0x00000001"/>',
     '    <LigatureMorph>',
@@ -800,6 +800,84 @@ class MORXLigatureSubstitutionTest(unittest.TestCase):
             table.fromXML(name, attrs, content, font=self.font)
         self.assertEqual(hexStr(table.compile(self.font)),
                          hexStr(MORX_LIGATURE_DATA))
+
+
+class MORXCoverageFlagsTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.maxDiff = None
+        cls.font = FakeFont(['.notdef', 'A', 'B', 'C'])
+
+    def checkFlags(self, flags, textDirection, processingOrder,
+                   checkCompile=True):
+        data = bytesjoin([
+            MORX_REARRANGEMENT_DATA[:28],
+            bytechr(flags << 4),
+            MORX_REARRANGEMENT_DATA[29:]])
+        xml = []
+        for line in MORX_REARRANGEMENT_XML:
+            if line.startswith('    <TextDirection '):
+                line = '    <TextDirection value="%s"/>' % textDirection
+            elif line.startswith('    <ProcessingOrder '):
+                line = '    <ProcessingOrder value="%s"/>' % processingOrder
+            xml.append(line)
+        table1 = newTable('morx')
+        table1.decompile(data, self.font)
+        self.assertEqual(getXML(table1.toXML), xml)
+        if checkCompile:
+            table2 = newTable('morx')
+            for name, attrs, content in parseXML(xml):
+                table2.fromXML(name, attrs, content, font=self.font)
+            self.assertEqual(hexStr(table2.compile(self.font)), hexStr(data))
+
+    def test_CoverageFlags(self):
+        self.checkFlags(0x0, "Horizontal", "LayoutOrder")
+        self.checkFlags(0x1, "Horizontal", "LogicalOrder")
+        self.checkFlags(0x2, "Any", "LayoutOrder")
+        self.checkFlags(0x3, "Any", "LogicalOrder")
+        self.checkFlags(0x4, "Horizontal", "ReversedLayoutOrder")
+        self.checkFlags(0x5, "Horizontal", "ReversedLogicalOrder")
+        self.checkFlags(0x6, "Any", "ReversedLayoutOrder")
+        self.checkFlags(0x7, "Any", "ReversedLogicalOrder")
+        self.checkFlags(0x8, "Vertical", "LayoutOrder")
+        self.checkFlags(0x9, "Vertical", "LogicalOrder")
+        # We do not always check the compilation to binary data:
+        # some flag combinations do not make sense to emit in binary.
+        # Specifically, if bit 28 (TextDirection=Any) is set in
+        # CoverageFlags, bit 30 (TextDirection=Vertical) is to be
+        # ignored according to the 'morx' specification. We still want
+        # to test the _decoding_ of 'morx' subtables whose CoverageFlags
+        # have both bits 28 and 30 set, since this is a valid flag
+        # combination with defined semantics.  However, our encoder
+        # does not set TextDirection=Vertical when TextDirection=Any.
+        self.checkFlags(0xA, "Any", "LayoutOrder", checkCompile=False)
+        self.checkFlags(0xB, "Any", "LogicalOrder", checkCompile=False)
+        self.checkFlags(0xC, "Vertical", "ReversedLayoutOrder")
+        self.checkFlags(0xD, "Vertical", "ReversedLogicalOrder")
+        self.checkFlags(0xE, "Any", "ReversedLayoutOrder", checkCompile=False)
+        self.checkFlags(0xF, "Any", "ReversedLogicalOrder", checkCompile=False)
+
+    def test_ReservedCoverageFlags(self):
+        # 8A BC DE = TextDirection=Vertical, Reserved=0xABCDE
+        # Note that the lower 4 bits of the first byte are already
+        # part of the Reserved value. We test the full round-trip
+        # to encoding and decoding is quite hairy.
+        data = bytesjoin([
+            MORX_REARRANGEMENT_DATA[:28],
+            bytechr(0x8A), bytechr(0xBC), bytechr(0xDE),
+            MORX_REARRANGEMENT_DATA[31:]])
+        table = newTable('morx')
+        table.decompile(data, self.font)
+        subtable = table.table.MorphChain[0].MorphSubtable[0]
+        self.assertEqual(subtable.Reserved, 0xABCDE)
+        xml = getXML(table.toXML)
+        self.assertIn('    <Reserved value="0xabcde"/>', xml)
+        table2 = newTable('morx')
+        for name, attrs, content in parseXML(xml):
+            table2.fromXML(name, attrs, content, font=self.font)
+        self.assertEqual(hexStr(table2.compile(self.font)[28:31]), "8abcde")
+
 
 if __name__ == '__main__':
     import sys
