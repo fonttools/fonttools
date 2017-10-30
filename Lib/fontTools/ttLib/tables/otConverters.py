@@ -883,21 +883,45 @@ class AATLookupWithDataOffset(BaseConverter):
 
 
 class MorxSubtableConverter(BaseConverter):
+	_PROCESSING_ORDERS = {
+		# bits 30 and 28 of morx.CoverageFlags; see morx spec
+		(False, False): "LayoutOrder",
+		(True, False): "ReversedLayoutOrder",
+		(False, True): "LogicalOrder",
+		(True, True): "ReversedLogicalOrder",
+	}
+
+	_PROCESSING_ORDERS_REVERSED = {
+		val: key for key, val in _PROCESSING_ORDERS.items()
+	}
+
 	def __init__(self, name, repeat, aux):
 		BaseConverter.__init__(self, name, repeat, aux)
+
+	def _setTextDirectionFromCoverageFlags(self, flags, subtable):
+		if (flags & 0x20) != 0:
+			subtable.TextDirection = "Any"
+		elif (flags & 0x80) != 0:
+			subtable.TextDirection = "Vertical"
+		else:
+			subtable.TextDirection = "Horizontal"
 
 	def read(self, reader, font, tableDict):
 		pos = reader.pos
 		m = MorxSubtable()
 		m.StructLength = reader.readULong()
-		m.CoverageFlags = reader.readUInt8()
+		flags = reader.readUInt8()
+		orderKey = ((flags & 0x40) != 0, (flags & 0x10) != 0)
+		m.ProcessingOrder = self._PROCESSING_ORDERS[orderKey]
+		self._setTextDirectionFromCoverageFlags(flags, m)
 		m.Reserved = reader.readUShort()
+		m.Reserved |= (flags & 0xF) << 16
 		m.MorphType = reader.readUInt8()
 		m.SubFeatureFlags = reader.readULong()
 		tableClass = lookupTypes["morx"].get(m.MorphType)
 		if tableClass is None:
 			assert False, ("unsupported 'morx' lookup type %s" %
-			               morphType)
+			               m.MorphType)
 		# To decode AAT ligatures, we need to know the subtable size.
 		# The easiest way to pass this along is to create a new reader
 		# that works on just the subtable as its data.
@@ -917,14 +941,15 @@ class MorxSubtableConverter(BaseConverter):
 		xmlWriter.newline()
 		xmlWriter.comment("StructLength=%d" % value.StructLength)
 		xmlWriter.newline()
-		# TODO: Emit flags in meaningful form, similar to what we
-		# already do for the individual morph types.
-		xmlWriter.simpletag("CoverageFlags",
-		                    value="%d" % value.CoverageFlags)
+		xmlWriter.simpletag("TextDirection", value=value.TextDirection)
 		xmlWriter.newline()
-		xmlWriter.simpletag("Reserved",
-		                      value="%d" % value.Reserved)
+		xmlWriter.simpletag("ProcessingOrder",
+		                    value=value.ProcessingOrder)
 		xmlWriter.newline()
+		if value.Reserved != 0:
+			xmlWriter.simpletag("Reserved",
+			                    value="0x%04x" % value.Reserved)
+			xmlWriter.newline()
 		xmlWriter.comment("MorphType=%d" % value.MorphType)
 		xmlWriter.newline()
 		xmlWriter.simpletag("SubFeatureFlags",
@@ -936,11 +961,24 @@ class MorxSubtableConverter(BaseConverter):
 
 	def xmlRead(self, attrs, content, font):
 		m = MorxSubtable()
+		covFlags = 0
+		m.Reserved = 0
 		for eltName, eltAttrs, eltContent in filter(istuple, content):
-			# TODO: Parse meaningful flags, similar to what we
-			# already do for the individual morph types.
 			if eltName == "CoverageFlags":
-				m.CoverageFlags = safeEval(eltAttrs["value"])
+				# Only in XML from old versions of fonttools.
+				covFlags = safeEval(eltAttrs["value"])
+				orderKey = ((covFlags & 0x40) != 0,
+				            (covFlags & 0x10) != 0)
+				m.ProcessingOrder = self._PROCESSING_ORDERS[
+					orderKey]
+				self._setTextDirectionFromCoverageFlags(
+					covFlags, m)
+			elif eltName == "ProcessingOrder":
+				m.ProcessingOrder = eltAttrs["value"]
+				assert m.ProcessingOrder in self._PROCESSING_ORDERS_REVERSED, "unknown ProcessingOrder: %s" % m.ProcessingOrder
+			elif eltName == "TextDirection":
+				m.TextDirection = eltAttrs["value"]
+				assert m.TextDirection in {"Horizontal", "Vertical", "Any"}, "unknown TextDirection %s" % m.TextDirection
 			elif eltName == "Reserved":
 				m.Reserved = safeEval(eltAttrs["value"])
 			elif eltName == "SubFeatureFlags":
@@ -949,13 +987,27 @@ class MorxSubtableConverter(BaseConverter):
 				m.fromXML(eltName, eltAttrs, eltContent, font)
 			else:
 				assert False, eltName
+		m.Reserved = (covFlags & 0xF) << 16 | m.Reserved
 		return m
 
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		covFlags = (value.Reserved & 0x000F0000) >> 16
+		reverseOrder, logicalOrder = self._PROCESSING_ORDERS_REVERSED[
+			value.ProcessingOrder]
+		covFlags |= 0x80 if value.TextDirection == "Vertical" else 0
+		covFlags |= 0x40 if reverseOrder else 0
+		covFlags |= 0x20 if value.TextDirection == "Any" else 0
+		covFlags |= 0x10 if logicalOrder else 0
+		value.CoverageFlags = covFlags
 		lengthIndex = len(writer.items)
 		before = writer.getDataLength()
 		value.StructLength = 0xdeadbeef
+		# The high nibble of value.Reserved is actuallly encoded
+		# into coverageFlags, so we need to clear it here.
+		origReserved = value.Reserved # including high nibble
+		value.Reserved = value.Reserved & 0xFFFF # without high nibble
 		value.compile(writer, font)
+		value.Reserved = origReserved  # restore original value
 		assert writer.items[lengthIndex] == b"\xde\xad\xbe\xef"
 		length = writer.getDataLength() - before
 		writer.items[lengthIndex] = struct.pack(">L", length)
