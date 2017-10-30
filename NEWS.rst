@@ -1,3 +1,6 @@
+3.18.0 (released 2017-10-30)
+----------------------------
+
 - [feaLib] Fixed writing back nested glyph classes (#1086).
 - [TupleVariation] Reactivated shared points logic, bugfixes (#1009).
 - [AAT] Implemented ``morx`` ligature subtables (#1082).
