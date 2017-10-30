@@ -172,8 +172,8 @@ setup(
         'pytest>=2.8',
     ],
     install_requires=[
-        "fonttools>=3.1.2",
-        "ufoLib>=2.1.0",
+        "fonttools>=3.18.0",
+        "ufoLib>=2.1.1",
     ],
     cmdclass={
         "release": release,

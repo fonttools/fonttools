@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from cu2qu import curve_to_quadratic
 from fontTools.pens.basePen import AbstractPen, decomposeSuperBezierSegment
+from fontTools.pens.reverseContourPen import ReverseContourPen
 
 try:
     from ufoLib.pointPen import AbstractPointPen, BasePointToSegmentPen
@@ -227,12 +228,3 @@ class Cu2QuPointPen(BasePointToSegmentPen):
     def addComponent(self, baseGlyphName, transformation):
         assert self.currentPath is None
         self.pen.addComponent(baseGlyphName, transformation)
-
-
-class ReverseContourPen(SegmentToPointPen):
-    """ Same as 'ReverseContourPointPen' but using the SegmentPen protocol. """
-
-    def __init__(self, other_pen):
-        adapter_point_pen = PointToSegmentPen(other_pen)
-        reverse_point_pen = ReverseContourPointPen(adapter_point_pen)
-        SegmentToPointPen.__init__(self, reverse_point_pen)
