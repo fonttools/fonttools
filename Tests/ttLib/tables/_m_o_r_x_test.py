@@ -879,6 +879,25 @@ class MORXCoverageFlagsTest(unittest.TestCase):
         self.assertEqual(hexStr(table2.compile(self.font)[28:31]), "8abcde")
 
 
+class UnsupportedMorxLookupTest(unittest.TestCase):
+    def __init__(self, methodName):
+        unittest.TestCase.__init__(self, methodName)
+        # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
+        # and fires deprecation warnings if a program uses the old name.
+        if not hasattr(self, "assertRaisesRegex"):
+            self.assertRaisesRegex = self.assertRaisesRegexp
+
+    def test_unsupportedLookupType(self):
+        data = bytesjoin([
+            MORX_NONCONTEXTUAL_DATA[:67],
+            bytechr(66),
+            MORX_NONCONTEXTUAL_DATA[69:]])
+        with self.assertRaisesRegex(AssertionError,
+                                    r"unsupported 'morx' lookup type 66"):
+            morx = newTable('morx')
+            morx.decompile(data, FakeFont(['.notdef']))
+
+
 if __name__ == '__main__':
     import sys
     sys.exit(unittest.main())
