@@ -7,3 +7,4 @@ include .coveragerc
 recursive-include Lib/cu2qu/test/data *.json
 recursive-include Lib/cu2qu/test/data */*.glif
 recursive-include Lib/cu2qu/test/data */*.plist */*/*.glif */*/*.plist
+recursive-include tools *.py

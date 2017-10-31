@@ -63,8 +63,8 @@ def run_benchmark(
 
 
 def main():
-    run_benchmark('cu2qu.benchmark', 'cu2qu', 'curve_to_quadratic')
-    run_benchmark('cu2qu.benchmark', 'cu2qu', 'curves_to_quadratic')
+    run_benchmark('benchmark', 'cu2qu', 'curve_to_quadratic')
+    run_benchmark('benchmark', 'cu2qu', 'curves_to_quadratic')
 
 
 if __name__ == '__main__':

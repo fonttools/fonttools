@@ -18,7 +18,7 @@ from __future__ import print_function, division, absolute_import
 import os
 import random
 
-from cu2qu.benchmark import run_benchmark
+from benchmark import run_benchmark
 from cu2qu.test import DATADIR
 
 MAX_ERR_EM = 0.002
@@ -38,10 +38,10 @@ def setup_fonts_to_quadratic_robofab():
 
 def main():
     run_benchmark(
-        'cu2qu.ufo_benchmark', 'cu2qu.ufo', 'fonts_to_quadratic',
+        'ufo_benchmark', 'cu2qu.ufo', 'fonts_to_quadratic',
         setup_suffix='defcon', repeat=10)
     run_benchmark(
-        'cu2qu.ufo_benchmark', 'cu2qu.ufo', 'fonts_to_quadratic',
+        'ufo_benchmark', 'cu2qu.ufo', 'fonts_to_quadratic',
         setup_suffix='robofab', repeat=10)
 
 
