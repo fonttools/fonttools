@@ -1,8 +1,5 @@
 import os
-try:
-    from ufoLib.glifLib import GlyphSet
-except ImportError:
-    from robofab.glifLib import GlyphSet
+from ufoLib.glifLib import GlyphSet
 import pkg_resources
 
 DATADIR = pkg_resources.resource_filename('cu2qu.test', 'data')

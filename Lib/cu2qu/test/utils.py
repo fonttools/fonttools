@@ -1,9 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from cu2qu.test import CUBIC_GLYPHS
-try:
-    from ufoLib.pointPen import PointToSegmentPen, SegmentToPointPen
-except ImportError:
-    from robofab.pens.adapterPens import PointToSegmentPen, SegmentToPointPen
+from ufoLib.pointPen import PointToSegmentPen, SegmentToPointPen
 import unittest
 
 
