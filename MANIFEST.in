@@ -4,7 +4,8 @@ include CONTRIBUTING.md
 include requirements.txt
 include tox.ini
 include .coveragerc
-recursive-include Lib/cu2qu/test/data *.json
-recursive-include Lib/cu2qu/test/data */*.glif
-recursive-include Lib/cu2qu/test/data */*.plist */*/*.glif */*/*.plist
+recursive-include tests *.py
+recursive-include tests/data *.json
+recursive-include tests/data */*.glif
+recursive-include tests/data */*.plist */*/*.glif */*/*.plist
 recursive-include tools *.py
