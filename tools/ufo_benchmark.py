@@ -31,19 +31,10 @@ def setup_fonts_to_quadratic_defcon():
             MAX_ERR_EM]
 
 
-def setup_fonts_to_quadratic_robofab():
-    from robofab.world import OpenFont
-    return [[OpenFont(os.path.join(DATADIR, 'RobotoSubset-Regular.ufo'))],
-            MAX_ERR_EM]
-
-
 def main():
     run_benchmark(
         'ufo_benchmark', 'cu2qu.ufo', 'fonts_to_quadratic',
         setup_suffix='defcon', repeat=10)
-    run_benchmark(
-        'ufo_benchmark', 'cu2qu.ufo', 'fonts_to_quadratic',
-        setup_suffix='robofab', repeat=10)
 
 
 if __name__ == '__main__':

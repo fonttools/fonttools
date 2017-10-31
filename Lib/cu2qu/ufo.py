@@ -46,10 +46,7 @@ class IncompatibleGlyphsError(ValueError):
 
 
 class UnequalZipLengthsError(ValueError):
-
-    def __str__(self):
-        return ('Args to zip in cu2qu should have equal lengths: ' +
-                ' '.join(repr(a) for a in self.args))
+    pass
 
 
 _zip = zip
@@ -77,12 +74,7 @@ class GetSegmentsPen(AbstractPen):
     def _add_segment(self, tag, *args):
         if tag in ['move', 'line', 'qcurve', 'curve']:
             self._last_pt = args[-1]
-
-        # don't collect ufo2-style anchors
-        if tag in ['close', 'end'] and self.segments[-1][0] == 'move':
-            self.segments.pop()
-        else:
-            self.segments.append((tag, args))
+        self.segments.append((tag, args))
 
     def moveTo(self, pt):
         self._add_segment('move', pt)
@@ -146,8 +138,7 @@ def _segments_to_quadratic(segments, max_err, stats):
     assert all(len(s) == n for s in new_points[1:]), 'Converted incompatibly'
 
     spline_length = str(n - 2)
-    if stats is not None:
-        stats[spline_length] = stats.get(spline_length, 0) + 1
+    stats[spline_length] = stats.get(spline_length, 0) + 1
 
     return [('qcurve', p) for p in new_points]
 
@@ -239,14 +230,17 @@ def fonts_to_quadratic(
         max_err_em = DEFAULT_MAX_ERR
 
     if isinstance(max_err, (list, tuple)):
+        assert len(max_err) == len(fonts)
         max_errors = max_err
-    elif isinstance(max_err_em, (list, tuple)):
-        max_errors = max_err_em
     elif max_err:
         max_errors = [max_err] * len(fonts)
-    else:
+
+    if isinstance(max_err_em, (list, tuple)):
+        assert len(fonts) == len(max_err_em)
+        max_errors = [f.info.unitsPerEm * e
+                      for f, e in zip(fonts, max_err_em)]
+    elif max_err_em:
         max_errors = [f.info.unitsPerEm * max_err_em for f in fonts]
-    assert len(max_errors) == len(fonts)
 
     modified = False
     for name in set().union(*(f.keys() for f in fonts)):

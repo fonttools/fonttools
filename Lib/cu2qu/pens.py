@@ -14,7 +14,13 @@ class Cu2QuPen(AbstractPen):
     max_err: maximum approximation error in font units.
     reverse_direction: flip the contours' direction but keep starting point.
     stats: a dictionary counting the point numbers of quadratic segments.
-    ignore_single_points: don't emit contours containing only a single point.
+    ignore_single_points: don't emit contours containing only a single point
+
+    NOTE: The "ignore_single_points" argument is deprecated since v1.3.0,
+    which dropped Robofab subpport. It's no longer needed to special-case
+    UFO2-style anchors (aka "named points") when using ufoLib >= 2.0,
+    as these are no longer drawn onto pens as single-point contours,
+    but are handled separately as anchors.
     """
 
     def __init__(self, other_pen, max_err, reverse_direction=False,
@@ -25,6 +31,11 @@ class Cu2QuPen(AbstractPen):
             self.pen = other_pen
         self.max_err = max_err
         self.stats = stats
+        if ignore_single_points:
+            import warnings
+            warnings.warn("ignore_single_points is deprecated and "
+                          "will be removed in future versions",
+                          UserWarning, stacklevel=2)
         self.ignore_single_points = ignore_single_points
         self.start_pt = None
         self.current_pt = None

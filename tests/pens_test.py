@@ -5,6 +5,9 @@ from cu2qu.pens import Cu2QuPen, Cu2QuPointPen
 from . import CUBIC_GLYPHS, QUAD_GLYPHS
 from .utils import DummyGlyph, DummyPointGlyph
 from .utils import DummyPen, DummyPointPen
+from fontTools.misc.loggingTools import CapturingLogHandler
+import logging
+
 
 MAX_ERR = 1.0
 
@@ -226,11 +229,20 @@ class TestCu2QuPen(unittest.TestCase, _TestPenMixin):
 
     def test_ignore_single_points(self):
         pen = DummyPen()
-        quadpen = Cu2QuPen(pen, MAX_ERR, ignore_single_points=True)
+        try:
+            logging.captureWarnings(True)
+            with CapturingLogHandler("py.warnings", level="WARNING") as log:
+                quadpen = Cu2QuPen(pen, MAX_ERR, ignore_single_points=True)
+        finally:
+            logging.captureWarnings(False)
         quadpen.moveTo((0, 0))
         quadpen.endPath()
         quadpen.moveTo((1, 1))
         quadpen.closePath()
+
+        self.assertGreaterEqual(len(log.records), 1)
+        self.assertIn("ignore_single_points is deprecated",
+                      log.records[0].args[0])
 
         # single-point contours were ignored, so the pen commands are empty
         self.assertFalse(pen.commands)
