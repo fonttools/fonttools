@@ -1131,31 +1131,10 @@ class STXHeader(BaseConverter):
 				self._compileLigActions(value, font)
 			actionData = pad(actionData, 4)
 
-		stateArrayWriter = OTTableWriter()
-		entries, entryIDs = [], {}
-		for state in value.States:
-			for glyphClass in range(glyphClassCount):
-				transition = state.Transitions[glyphClass]
-				entryWriter = OTTableWriter()
-				transition.compile(entryWriter, font,
-				                   actionIndex)
-				entryData = entryWriter.getAllData()
-				assert len(entryData)  == transition.staticSize, ( \
-					"%s has staticSize %d, "
-					"but actually wrote %d bytes" % (
-						repr(transition),
-						transition.staticSize,
-						len(entryData)))
-				entryIndex = entryIDs.get(entryData)
-				if entryIndex is None:
-					entryIndex = len(entries)
-					entryIDs[entryData] = entryIndex
-					entries.append(entryData)
-				stateArrayWriter.writeUShort(entryIndex)
+		stateArrayData, entryTableData = self._compileStates(
+			font, value.States, glyphClassCount, actionIndex)
 		stateArrayOffset = glyphClassTableOffset + len(glyphClassData)
-		stateArrayData = pad(stateArrayWriter.getAllData(), 4)
 		entryTableOffset = stateArrayOffset + len(stateArrayData)
-		entryTableData = pad(bytesjoin(entries), 4)
 		perGlyphOffset = entryTableOffset + len(entryTableData)
 		perGlyphData = \
 			pad(self._compilePerGlyphLookups(value, font), 4)
@@ -1190,6 +1169,32 @@ class STXHeader(BaseConverter):
 			writer.writeData(ligComponentsData)
 		if ligaturesData is not None:
 			writer.writeData(ligaturesData)
+
+	def _compileStates(self, font, states, glyphClassCount, actionIndex):
+		stateArrayWriter = OTTableWriter()
+		entries, entryIDs = [], {}
+		for state in states:
+			for glyphClass in range(glyphClassCount):
+				transition = state.Transitions[glyphClass]
+				entryWriter = OTTableWriter()
+				transition.compile(entryWriter, font,
+				                   actionIndex)
+				entryData = entryWriter.getAllData()
+				assert len(entryData)  == transition.staticSize, ( \
+					"%s has staticSize %d, "
+					"but actually wrote %d bytes" % (
+						repr(transition),
+						transition.staticSize,
+						len(entryData)))
+				entryIndex = entryIDs.get(entryData)
+				if entryIndex is None:
+					entryIndex = len(entries)
+					entryIDs[entryData] = entryIndex
+					entries.append(entryData)
+				stateArrayWriter.writeUShort(entryIndex)
+		stateArrayData = pad(stateArrayWriter.getAllData(), 4)
+		entryTableData = pad(bytesjoin(entries), 4)
+		return stateArrayData, entryTableData
 
 	def _compilePerGlyphLookups(self, table, font):
 		if self.perGlyphLookup is None:
