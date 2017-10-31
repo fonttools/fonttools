@@ -2,6 +2,7 @@ include LICENSE
 include README.rst
 include CONTRIBUTING.md
 include requirements.txt
+include test-requirements.txt
 include tox.ini
 include .coveragerc
 recursive-include tests *.py
