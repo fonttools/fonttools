@@ -46,10 +46,7 @@ class IncompatibleGlyphsError(ValueError):
 
 
 class UnequalZipLengthsError(ValueError):
-
-    def __str__(self):
-        return ('Args to zip in cu2qu should have equal lengths: ' +
-                ' '.join(repr(a) for a in self.args))
+    pass
 
 
 _zip = zip
