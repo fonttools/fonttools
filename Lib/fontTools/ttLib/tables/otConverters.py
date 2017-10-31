@@ -9,7 +9,7 @@ from .otBase import (CountReference, FormatSwitchingBaseTable,
                      OTTableReader, OTTableWriter, ValueRecordFactory)
 from .otTables import (lookupTypes, AATStateTable, AATState, AATAction,
                        ContextualMorphAction, LigatureMorphAction,
-                       MorxSubtable)
+                       InsertionMorphAction, MorxSubtable)
 from functools import partial
 import struct
 import logging
@@ -1054,6 +1054,9 @@ class STXHeader(BaseConverter):
 			table.LigComponents = \
 				ligComponentReader.readUShortArray(numLigComponents)
 			table.Ligatures = self._readLigatures(ligaturesReader, font)
+		elif issubclass(self.tableClass, InsertionMorphAction):
+			actionReader = reader.getSubReader(0)
+			actionReader.seek(pos + reader.readULong())
 		table.GlyphClasses = self.classLookup.read(classTableReader,
 		                                           font, tableDict)
 		numStates = int((entryTableReader.pos - stateArrayReader.pos)
@@ -1130,6 +1133,11 @@ class STXHeader(BaseConverter):
 			actionData, actionIndex = \
 				self._compileLigActions(value, font)
 			actionData = pad(actionData, 4)
+		elif issubclass(self.tableClass, InsertionMorphAction):
+			glyphClassTableOffset += 4
+			actionData, actionIndex = \
+				self._compileInsertionActions(value, font)
+			actionData = pad(actionData, 4)
 
 		stateArrayWriter = OTTableWriter()
 		entries, entryIDs = [], {}
@@ -1159,17 +1167,19 @@ class STXHeader(BaseConverter):
 		perGlyphOffset = entryTableOffset + len(entryTableData)
 		perGlyphData = \
 			pad(self._compilePerGlyphLookups(value, font), 4)
+		if actionData is not None:
+			actionOffset = entryTableOffset + len(entryTableData)
+		else:
+			actionOffset = None
+
 		ligComponentsData = self._compileLigComponents(value, font)
 		ligaturesData = self._compileLigatures(value, font)
-		if actionData is None:
-			actionOffset = None
-			ligComponentsOffset = None
-			ligaturesOffset = None
-		else:
+		ligComponentsOffset, ligaturesOffset = None, None
+		if ligComponentsData is not None:
 			assert len(perGlyphData) == 0
-			actionOffset = entryTableOffset + len(entryTableData)
 			ligComponentsOffset = actionOffset + len(actionData)
 			ligaturesOffset = ligComponentsOffset + len(ligComponentsData)
+
 		writer.writeULong(glyphClassCount)
 		writer.writeULong(glyphClassTableOffset)
 		writer.writeULong(stateArrayOffset)
@@ -1178,6 +1188,7 @@ class STXHeader(BaseConverter):
 			writer.writeULong(perGlyphOffset)
 		if actionOffset is not None:
 			writer.writeULong(actionOffset)
+		if ligComponentsOffset is not None:
 			writer.writeULong(ligComponentsOffset)
 			writer.writeULong(ligaturesOffset)
 		writer.writeData(glyphClassData)
@@ -1252,6 +1263,26 @@ class STXHeader(BaseConverter):
 		for glyphName in table.Ligatures:
 			writer.writeUShort(font.getGlyphID(glyphName))
 		return writer.getAllData()
+
+	def _compileInsertionActions(self, table, font):
+		assert issubclass(self.tableClass, InsertionMorphAction)
+		actions, actionIndex, result = set(), {}, []
+		for state in table.States:
+			for _glyphClass, trans in state.Transitions.items():
+				actions.add(tuple(trans.CurrentInsertionAction))
+				actions.add(tuple(trans.MarkedInsertionAction))
+		actions.remove(tuple())
+		result = b""
+		# Sort the compiled actions in decreasing order of
+		# length, so that the longer sequence come before the
+		# shorter ones.
+		for a in sorted(actions, key=lambda x:(-len(x), x)):
+			# TODO: Also insert sub-sequences into actionIndex.
+			actionIndex.setdefault(a, len(result) // 2)
+			for glyph in a:
+				glyphID = font.getGlyphID(glyph)
+				result += struct.pack(">H", glyphID)
+		return result, actionIndex
 
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		xmlWriter.begintag(name, attrs)

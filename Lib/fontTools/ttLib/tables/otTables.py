@@ -1402,7 +1402,7 @@ def _buildClasses():
 			2: LigatureMorph,
 			# 3: Reserved,
 			4: NoncontextualMorph,
-			# 5: InsertionMorph,
+			5: InsertionMorph,
 		},
 	}
 	lookupTypes['JSTF'] = lookupTypes['GPOS']  # JSTF contains GPOS

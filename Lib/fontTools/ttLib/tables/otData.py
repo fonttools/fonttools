@@ -1445,8 +1445,7 @@ otData = [
         ]),
 
 	('InsertionMorph', [
-		('struct', 'StateHeader', None, None, 'Header.'),
-		# TODO: Add missing parts.
+		('STXHeader(InsertionMorphAction)', 'StateTable', None, None, 'Finite-state transducer for glyph insertion.'),
 	]),
 
 	('MorphClass', [
