@@ -77,12 +77,7 @@ class GetSegmentsPen(AbstractPen):
     def _add_segment(self, tag, *args):
         if tag in ['move', 'line', 'qcurve', 'curve']:
             self._last_pt = args[-1]
-
-        # don't collect ufo2-style anchors
-        if tag in ['close', 'end'] and self.segments[-1][0] == 'move':
-            self.segments.pop()
-        else:
-            self.segments.append((tag, args))
+        self.segments.append((tag, args))
 
     def moveTo(self, pt):
         self._add_segment('move', pt)
