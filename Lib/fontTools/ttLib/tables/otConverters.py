@@ -1032,7 +1032,7 @@ class STXHeader(BaseConverter):
 		classTableReader = reader.getSubReader(0)
 		stateArrayReader = reader.getSubReader(0)
 		entryTableReader = reader.getSubReader(0)
-		ligActionReader = None
+		actionReader = None
 		ligaturesReader = None
 		table.GlyphClassCount = reader.readULong()
 		classTableReader.seek(pos + reader.readULong())
@@ -1042,8 +1042,8 @@ class STXHeader(BaseConverter):
 			perGlyphTableReader = reader.getSubReader(0)
 			perGlyphTableReader.seek(pos + reader.readULong())
 		if issubclass(self.tableClass, LigatureMorphAction):
-			ligActionReader = reader.getSubReader(0)
-			ligActionReader.seek(pos + reader.readULong())
+			actionReader = reader.getSubReader(0)
+			actionReader.seek(pos + reader.readULong())
 			ligComponentReader = reader.getSubReader(0)
 			ligComponentReader.seek(pos + reader.readULong())
 			ligaturesReader = reader.getSubReader(0)
@@ -1066,17 +1066,17 @@ class STXHeader(BaseConverter):
 				state.Transitions[glyphClass] = \
 					self._readTransition(entryTableReader,
 					                     entryIndex, font,
-					                     ligActionReader)
+					                     actionReader)
 		if self.perGlyphLookup is not None:
 			table.PerGlyphLookups = self._readPerGlyphLookups(
 				table, perGlyphTableReader, font)
 		return table
 
-	def _readTransition(self, reader, entryIndex, font, ligActionReader):
+	def _readTransition(self, reader, entryIndex, font, actionReader):
 		transition = self.tableClass()
 		entryReader = reader.getSubReader(
 			reader.pos + entryIndex * transition.staticSize)
-		transition.decompile(entryReader, font, ligActionReader)
+		transition.decompile(entryReader, font, actionReader)
 		return transition
 
 	def _readLigatures(self, reader, font):
@@ -1124,12 +1124,12 @@ class STXHeader(BaseConverter):
 		if self.perGlyphLookup is not None:
 			glyphClassTableOffset += 4
 
-		ligActionData, ligActionIndex = None, None
+		actionData, actionIndex = None, None
 		if issubclass(self.tableClass, LigatureMorphAction):
 			glyphClassTableOffset += 12
-			ligActionData, ligActionIndex = \
+			actionData, actionIndex = \
 				self._compileLigActions(value, font)
-			ligActionData = pad(ligActionData, 4)
+			actionData = pad(actionData, 4)
 
 		stateArrayWriter = OTTableWriter()
 		entries, entryIDs = [], {}
@@ -1138,7 +1138,7 @@ class STXHeader(BaseConverter):
 				transition = state.Transitions[glyphClass]
 				entryWriter = OTTableWriter()
 				transition.compile(entryWriter, font,
-				                   ligActionIndex)
+				                   actionIndex)
 				entryData = entryWriter.getAllData()
 				assert len(entryData)  == transition.staticSize, ( \
 					"%s has staticSize %d, "
@@ -1161,14 +1161,14 @@ class STXHeader(BaseConverter):
 			pad(self._compilePerGlyphLookups(value, font), 4)
 		ligComponentsData = self._compileLigComponents(value, font)
 		ligaturesData = self._compileLigatures(value, font)
-		if ligActionData is None:
-			ligActionOffset = None
+		if actionData is None:
+			actionOffset = None
 			ligComponentsOffset = None
 			ligaturesOffset = None
 		else:
 			assert len(perGlyphData) == 0
-			ligActionOffset = entryTableOffset + len(entryTableData)
-			ligComponentsOffset = ligActionOffset + len(ligActionData)
+			actionOffset = entryTableOffset + len(entryTableData)
+			ligComponentsOffset = actionOffset + len(actionData)
 			ligaturesOffset = ligComponentsOffset + len(ligComponentsData)
 		writer.writeULong(glyphClassCount)
 		writer.writeULong(glyphClassTableOffset)
@@ -1176,16 +1176,16 @@ class STXHeader(BaseConverter):
 		writer.writeULong(entryTableOffset)
 		if self.perGlyphLookup is not None:
 			writer.writeULong(perGlyphOffset)
-		if ligActionOffset is not None:
-			writer.writeULong(ligActionOffset)
+		if actionOffset is not None:
+			writer.writeULong(actionOffset)
 			writer.writeULong(ligComponentsOffset)
 			writer.writeULong(ligaturesOffset)
 		writer.writeData(glyphClassData)
 		writer.writeData(stateArrayData)
 		writer.writeData(entryTableData)
 		writer.writeData(perGlyphData)
-		if ligActionData is not None:
-			writer.writeData(ligActionData)
+		if actionData is not None:
+			writer.writeData(actionData)
 		if ligComponentsData is not None:
 			writer.writeData(ligComponentsData)
 		if ligaturesData is not None:
@@ -1210,11 +1210,11 @@ class STXHeader(BaseConverter):
 
 	def _compileLigActions(self, table, font):
 		assert issubclass(self.tableClass, LigatureMorphAction)
-		ligActions = set()
+		actions = set()
 		for state in table.States:
 			for _glyphClass, trans in state.Transitions.items():
-				ligActions.add(trans.compileLigActions())
-		result, ligActionIndex = b"", {}
+				actions.add(trans.compileLigActions())
+		result, actionIndex = b"", {}
 		# Sort the compiled actions in decreasing order of
 		# length, so that the longer sequence come before the
 		# shorter ones.  For each compiled action ABCD, its
@@ -1226,16 +1226,16 @@ class STXHeader(BaseConverter):
 		# only be set on the last element of the sequence.
 		# Therefore, it is sufficient to consider just the
 		# suffixes.
-		for a in sorted(ligActions, key=lambda x:(-len(x), x)):
-			if a not in ligActionIndex:
+		for a in sorted(actions, key=lambda x:(-len(x), x)):
+			if a not in actionIndex:
 				for i in range(0, len(a), 4):
 					suffix = a[i:]
 					suffixIndex = (len(result) + i) // 4
-					ligActionIndex.setdefault(
+					actionIndex.setdefault(
 						suffix, suffixIndex)
 				result += a
 		assert len(result) % self.tableClass.staticSize == 0
-		return (result, ligActionIndex)
+		return (result, actionIndex)
 
 	def _compileLigComponents(self, table, font):
 		if not hasattr(table, "LigComponents"):

@@ -380,13 +380,13 @@ class RearrangementMorphActionTest(unittest.TestCase):
         r.MarkFirst = r.DontAdvance = r.MarkLast = True
         r.ReservedFlags, r.Verb = 0x1FF0, 0xD
         writer = OTTableWriter()
-        r.compile(writer, self.font, ligActionIndex=None)
+        r.compile(writer, self.font, actionIndex=None)
         self.assertEqual(hexStr(writer.getAllData()), "1234fffd")
 
     def testDecompileToXML(self):
         r = otTables.RearrangementMorphAction()
         r.decompile(OTTableReader(deHexStr("1234fffd")),
-                    self.font, ligActionReader=None)
+                    self.font, actionReader=None)
         toXML = lambda w, f: r.toXML(w, f, {"Test": "Foo"}, "Transition")
         self.assertEqual(getXML(toXML, self.font), [
                 '<Transition Test="Foo">',
@@ -408,13 +408,13 @@ class ContextualMorphActionTest(unittest.TestCase):
         a.SetMark, a.DontAdvance, a.ReservedFlags = True, True, 0x3117
         a.MarkIndex, a.CurrentIndex = 0xDEAD, 0xBEEF
         writer = OTTableWriter()
-        a.compile(writer, self.font, ligActionIndex=None)
+        a.compile(writer, self.font, actionIndex=None)
         self.assertEqual(hexStr(writer.getAllData()), "1234f117deadbeef")
 
     def testDecompileToXML(self):
         a = otTables.ContextualMorphAction()
         a.decompile(OTTableReader(deHexStr("1234f117deadbeef")),
-                    self.font, ligActionReader=None)
+                    self.font, actionReader=None)
         toXML = lambda w, f: a.toXML(w, f, {"Test": "Foo"}, "Transition")
         self.assertEqual(getXML(toXML, self.font), [
                 '<Transition Test="Foo">',
@@ -433,9 +433,9 @@ class LigatureMorphActionTest(unittest.TestCase):
 
     def testDecompileToXML(self):
         a = otTables.LigatureMorphAction()
-        ligActionReader = OTTableReader(deHexStr("DEADBEEF 7FFFFFFE 80000003"))
+        actionReader = OTTableReader(deHexStr("DEADBEEF 7FFFFFFE 80000003"))
         a.decompile(OTTableReader(deHexStr("1234FAB30001")),
-                    self.font, ligActionReader)
+                    self.font, actionReader)
         toXML = lambda w, f: a.toXML(w, f, {"Test": "Foo"}, "Transition")
         self.assertEqual(getXML(toXML, self.font), [
                 '<Transition Test="Foo">',

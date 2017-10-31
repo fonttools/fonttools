@@ -79,8 +79,8 @@ class RearrangementMorphAction(AATAction):
 		self.MarkLast = False
 		self.ReservedFlags = 0
 
-	def compile(self, writer, font, ligActionIndex):
-		assert ligActionIndex is None
+	def compile(self, writer, font, actionIndex):
+		assert actionIndex is None
 		writer.writeUShort(self.NewState)
 		assert self.Verb >= 0 and self.Verb <= 15, self.Verb
 		flags = self.Verb | self.ReservedFlags
@@ -89,8 +89,8 @@ class RearrangementMorphAction(AATAction):
 		if self.MarkLast: flags |= 0x2000
 		writer.writeUShort(flags)
 
-	def decompile(self, reader, font, ligActionReader):
-		assert ligActionReader is None
+	def decompile(self, reader, font, actionReader):
+		assert actionReader is None
 		self.NewState = reader.readUShort()
 		flags = reader.readUShort()
 		self.Verb = flags & 0xF
@@ -139,8 +139,8 @@ class ContextualMorphAction(AATAction):
 		self.ReservedFlags = 0
 		self.MarkIndex, self.CurrentIndex = 0xFFFF, 0xFFFF
 
-	def compile(self, writer, font, ligActionIndex):
-		assert ligActionIndex is None
+	def compile(self, writer, font, actionIndex):
+		assert actionIndex is None
 		writer.writeUShort(self.NewState)
 		flags = self.ReservedFlags
 		if self.SetMark: flags |= 0x8000
@@ -149,8 +149,8 @@ class ContextualMorphAction(AATAction):
 		writer.writeUShort(self.MarkIndex)
 		writer.writeUShort(self.CurrentIndex)
 
-	def decompile(self, reader, font, ligActionReader):
-		assert ligActionReader is None
+	def decompile(self, reader, font, actionReader):
+		assert actionReader is None
 		self.NewState = reader.readUShort()
 		flags = reader.readUShort()
 		self.SetMark = bool(flags & 0x8000)
@@ -217,8 +217,8 @@ class LigatureMorphAction(AATAction):
 		self.ReservedFlags = 0
 		self.Actions = []
 
-	def compile(self, writer, font, ligActionIndex):
-		assert ligActionIndex is not None
+	def compile(self, writer, font, actionIndex):
+		assert actionIndex is not None
 		writer.writeUShort(self.NewState)
 		flags = self.ReservedFlags
 		if self.SetComponent: flags |= 0x8000
@@ -227,12 +227,12 @@ class LigatureMorphAction(AATAction):
 		writer.writeUShort(flags)
 		if len(self.Actions) > 0:
 			actions = self.compileLigActions()
-			writer.writeUShort(ligActionIndex[actions])
+			writer.writeUShort(actionIndex[actions])
 		else:
 			writer.writeUShort(0)
 
-	def decompile(self, reader, font, ligActionReader):
-		assert ligActionReader is not None
+	def decompile(self, reader, font, actionReader):
+		assert actionReader is not None
 		self.NewState = reader.readUShort()
 		flags = reader.readUShort()
 		self.SetComponent = bool(flags & 0x8000)
@@ -244,10 +244,10 @@ class LigatureMorphAction(AATAction):
 		# so the reserved value should actually be 0x1FFF.
 		# TODO: Report this specification bug to Apple.
 		self.ReservedFlags = flags & 0x1FFF
-		ligActionIndex = reader.readUShort()
+		actionIndex = reader.readUShort()
 		if performAction:
 			self.Actions = self._decompileLigActions(
-				ligActionReader, ligActionIndex)
+				actionReader, actionIndex)
 		else:
 			self.Actions = []
 
@@ -261,11 +261,11 @@ class LigatureMorphAction(AATAction):
 			result.append(struct.pack(">L", value))
 		return bytesjoin(result)
 
-	def _decompileLigActions(self, ligActionReader, ligActionIndex):
+	def _decompileLigActions(self, actionReader, actionIndex):
 		actions = []
 		last = False
-		reader = ligActionReader.getSubReader(
-			ligActionReader.pos + ligActionIndex * 4)
+		reader = actionReader.getSubReader(
+			actionReader.pos + actionIndex * 4)
 		while not last:
 			value = reader.readULong()
 			last = bool(value & 0x80000000)
