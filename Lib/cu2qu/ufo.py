@@ -141,8 +141,7 @@ def _segments_to_quadratic(segments, max_err, stats):
     assert all(len(s) == n for s in new_points[1:]), 'Converted incompatibly'
 
     spline_length = str(n - 2)
-    if stats is not None:
-        stats[spline_length] = stats.get(spline_length, 0) + 1
+    stats[spline_length] = stats.get(spline_length, 0) + 1
 
     return [('qcurve', p) for p in new_points]
 
