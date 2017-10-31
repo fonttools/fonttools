@@ -2,9 +2,9 @@ from __future__ import print_function, division, absolute_import
 import unittest
 
 from cu2qu.pens import Cu2QuPen, Cu2QuPointPen
-from cu2qu.test import CUBIC_GLYPHS, QUAD_GLYPHS
-from cu2qu.test.utils import DummyGlyph, DummyPointGlyph
-from cu2qu.test.utils import DummyPen, DummyPointPen
+from . import CUBIC_GLYPHS, QUAD_GLYPHS
+from .utils import DummyGlyph, DummyPointGlyph
+from .utils import DummyPen, DummyPointPen
 
 MAX_ERR = 1.0
 

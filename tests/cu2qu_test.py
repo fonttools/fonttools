@@ -22,7 +22,7 @@ import os
 import json
 
 from cu2qu import curve_to_quadratic, curves_to_quadratic
-from cu2qu.test import DATADIR
+from . import DATADIR
 
 
 MAX_ERR = 5

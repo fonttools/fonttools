@@ -19,9 +19,10 @@ import os
 import random
 
 from benchmark import run_benchmark
-from cu2qu.test import DATADIR
 
 MAX_ERR_EM = 0.002
+DATADIR = os.path.join(
+    os.path.dirname(__file__), os.path.pardir, 'tests', 'data')
 
 
 def setup_fonts_to_quadratic_defcon():

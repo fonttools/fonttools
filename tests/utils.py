@@ -1,5 +1,5 @@
 from __future__ import print_function, division, absolute_import
-from cu2qu.test import CUBIC_GLYPHS
+from . import CUBIC_GLYPHS
 from ufoLib.pointPen import PointToSegmentPen, SegmentToPointPen
 import unittest
 

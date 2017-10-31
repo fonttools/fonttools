@@ -2,7 +2,7 @@ import os
 from ufoLib.glifLib import GlyphSet
 import pkg_resources
 
-DATADIR = pkg_resources.resource_filename('cu2qu.test', 'data')
+DATADIR = os.path.join(os.path.dirname(__file__), 'data')
 CUBIC_GLYPHS = GlyphSet(os.path.join(DATADIR, 'cubic'))
 QUAD_GLYPHS = GlyphSet(os.path.join(DATADIR, 'quadratic'))
 
