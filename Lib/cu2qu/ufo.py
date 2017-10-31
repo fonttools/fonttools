@@ -233,14 +233,17 @@ def fonts_to_quadratic(
         max_err_em = DEFAULT_MAX_ERR
 
     if isinstance(max_err, (list, tuple)):
+        assert len(max_err) == len(fonts)
         max_errors = max_err
-    elif isinstance(max_err_em, (list, tuple)):
-        max_errors = max_err_em
     elif max_err:
         max_errors = [max_err] * len(fonts)
-    else:
+
+    if isinstance(max_err_em, (list, tuple)):
+        assert len(fonts) == len(max_err_em)
+        max_errors = [f.info.unitsPerEm * e
+                      for f, e in zip(fonts, max_err_em)]
+    elif max_err_em:
         max_errors = [f.info.unitsPerEm * max_err_em for f in fonts]
-    assert len(max_errors) == len(fonts)
 
     modified = False
     for name in set().union(*(f.keys() for f in fonts)):
