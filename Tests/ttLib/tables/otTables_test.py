@@ -448,6 +448,43 @@ class LigatureMorphActionTest(unittest.TestCase):
         ])
 
 
+class InsertionMorphActionTest(unittest.TestCase):
+    MORPH_ACTION_XML = [
+        '<Transition Test="Foo">',
+        '  <NewState value="4660"/>',  # 0x1234 = 4660
+        '  <Flags value="SetMark,DontAdvance,CurrentIsKashidaLike,'
+              'MarkedIsKashidaLike,CurrentInsertBefore,MarkedInsertBefore"/>',
+        '  <CurrentInsertionAction glyph="B"/>',
+        '  <CurrentInsertionAction glyph="C"/>',
+        '  <MarkedInsertionAction glyph="B"/>',
+        '  <MarkedInsertionAction glyph="A"/>',
+        '  <MarkedInsertionAction glyph="D"/>',
+        '</Transition>'
+    ]
+
+    def setUp(self):
+        self.font = FakeFont(['.notdef', 'A', 'B', 'C', 'D'])
+        self.maxDiff = None
+
+    def testDecompileToXML(self):
+        a = otTables.InsertionMorphAction()
+        actionReader = OTTableReader(
+            deHexStr("DEAD BEEF 0002 0001 0004 0002 0003 DEAD BEEF"))
+        a.decompile(OTTableReader(deHexStr("1234 FC43 0005 0002")),
+                    self.font, actionReader)
+        toXML = lambda w, f: a.toXML(w, f, {"Test": "Foo"}, "Transition")
+        self.assertEqual(getXML(toXML, self.font), self.MORPH_ACTION_XML)
+
+    def testCompileFromXML(self):
+        a = otTables.InsertionMorphAction()
+        for name, attrs, content in parseXML(self.MORPH_ACTION_XML):
+            a.fromXML(name, attrs, content, self.font)
+        writer = OTTableWriter()
+        a.compile(writer, self.font,
+	          actionIndex={('B', 'C'): 9, ('B', 'A', 'D'): 7})
+        self.assertEqual(hexStr(writer.getAllData()), "1234fc4300090007")
+
+
 if __name__ == "__main__":
     import sys
     sys.exit(unittest.main())
