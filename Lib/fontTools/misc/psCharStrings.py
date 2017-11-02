@@ -1102,6 +1102,15 @@ class T2CharString(object):
 					args = []
 				else:
 					args.append(token)
+			if args:
+				if not isinstance(self, CFF2Subr):
+					assert 0, "T2Charstring or Subr has items on the stack after last operator."
+				else:
+					# CFF2Subr's can have numeric arguments on the stack after the last operator.
+					args = [str(arg) for arg in args]
+					line = ' '.join(args)
+					xmlWriter.write(line)
+			
 
 	def fromXML(self, name, attrs, content):
 		from fontTools.misc.textTools import binary2num, readHex
@@ -1136,6 +1145,8 @@ class T2CharString(object):
 				program.append(token)
 		self.setProgram(program)
 
+class CFF2Subr(T2CharString):
+	pass
 
 class T1CharString(T2CharString):
 
@@ -1172,7 +1183,6 @@ class T1CharString(T2CharString):
 		extractor = T1OutlineExtractor(pen, self.subrs)
 		extractor.execute(self)
 		self.width = extractor.width
-
 
 class DictDecompiler(object):
 
@@ -1286,7 +1296,13 @@ class DictDecompiler(object):
 		else:
 			current = 0
 			for v in valueList:
-				current = current + v
+				try:
+					current = current + v
+				except:
+					print(valueList)
+					import pdb
+					pdb.set_trace()
+					print("Hello")
 				out.append(current)
 		return out
 

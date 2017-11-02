@@ -614,6 +614,11 @@ class GlobalSubrsIndex(Index):
 			self.fdSelect = fdSelect
 		if fdArray:
 			self.fdArray = fdArray
+		if isCFF2:
+			# CFF2Subr's can have numeric arguments on the stack after the last operator.
+			self.subrClass = psCharStrings.CFF2Subr
+			self.charStringClass = psCharStrings.CFF2Subr
+			
 
 	def produceItem(self, index, data, file, offset):
 		if self.private is not None:
