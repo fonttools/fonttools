@@ -68,6 +68,18 @@ class CmapSubtableTest(unittest.TestCase):
 		self.assertEqual(cmap.getBestCmap(), {0x10314: 'u10314'})
 		self.assertEqual(cmap.getBestCmap(cmapPreferences=[(3, 1)]), {0x0041:'A', 0x0391:'A'})
 
+	def test_font_getBestCmap(self):
+		c4 = self.makeSubtable(4, 3, 1, 0)
+		c4.cmap = {0x0041:'A', 0x0391:'A'}
+		c12 = self.makeSubtable(12, 3, 10, 0)
+		c12.cmap = {0x10314: 'u10314'}
+		cmap = table__c_m_a_p()
+		cmap.tables = [c4, c12]
+		font = ttLib.TTFont()
+		font["cmap"] = cmap
+		self.assertEqual(font.getBestCmap(), {0x10314: 'u10314'})
+		self.assertEqual(font.getBestCmap(cmapPreferences=[(3, 1)]), {0x0041:'A', 0x0391:'A'})
+
 
 if __name__ == "__main__":
 	import sys

@@ -38,12 +38,12 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 				return subtable
 		return None # not found
 
-	def getBestCmap(self, cmapPreferences=((3, 10), (3, 1), (0, 3))):
+	def getBestCmap(self, cmapPreferences=((3, 10), (0, 4), (3, 1), (0, 3))):
 		"""Return the 'best' unicode cmap dictionary available in the font.
 
 		By default it will search for the following (platformID, platEncID)
 		pairs:
-			(3, 10), (3, 1), (0, 3)
+			(3, 10), (0, 4), (3, 1), (0, 3)
 		But this can be customized via the cmapPreferences argument.
 		"""
 		for platformID, platEncID in cmapPreferences:
