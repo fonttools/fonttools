@@ -252,7 +252,7 @@ class KernTableTest(object):
         data = kern.compile(font)
         assert data == expected
 
-    def test_getkern(self, table):
+    def test_getkern(self):
         table = newTable("kern")
         table.version = 0
         table.kernTables = []
