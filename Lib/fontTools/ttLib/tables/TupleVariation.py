@@ -502,8 +502,7 @@ def compileTupleVariationStore(variations, pointCount,
 	# For the time being, we try two variants and then pick the better one:
 	# (a) each tuple supplies its own private set of points;
 	# (b) all tuples refer to a shared set of points, which consists of
-	#     "every control point in the glyph".
-	allPoints = set(range(pointCount))
+	#     "every control point in the glyph that has explicit deltas".
 	usedPoints = set()
 	for v in variations:
 		usedPoints |= v.getUsedPoints()
