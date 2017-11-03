@@ -727,9 +727,9 @@ class Pass(object):
                 oConstraints[i] = oConstraints[i+1]
         self.ruleConstraints = [(data[s:e] if (e-s > 1) else "") for (s,e) in zip(oConstraints, oConstraints[1:])]
         data = data[oConstraints[-1]:]
-        for i in range(len(oActions)-2,-1,-1):
-            if oActions[i] == 0:
-                oActions[i] = oActions[i+1]
+#        for i in range(len(oActions)-2,-1,-1):
+#            if oActions[i] == 0:
+#                oActions[i] = oActions[i+1]
         self.actions = [(data[s:e] if (e-s > 1) else "") for (s,e) in zip(oActions, oActions[1:])]
         data = data[oActions[-1]:]
         # not using debug
@@ -737,8 +737,8 @@ class Pass(object):
     def compile(self, ttFont, base, version=2.0):
         # build it all up backwards
         oActions = reduce(lambda a, x: (a[0]+len(x), a[1]+[a[0]]), self.actions + [""], (0, []))[1]
-        oConstraints = reduce(lambda a, x: (a[0]+len(x), a[1]+[a[0]]), self.ruleConstraints + [""], (0, []))[1]
-        constraintCode = "".join(self.ruleConstraints)
+        oConstraints = reduce(lambda a, x: (a[0]+len(x), a[1]+[a[0]]), self.ruleConstraints + [""], (1, []))[1]
+        constraintCode = "\000" + "".join(self.ruleConstraints)
         transes = []
         for t in self.stateTrans:
             t.byteswap()
