@@ -1,8 +1,9 @@
 from __future__ import print_function, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import newTable
-from fontTools.ttLib.tables._k_e_r_n import KernTable_format_0
-from fontTools.misc.textTools import deHexStr, hexStr
+from fontTools.ttLib.tables._k_e_r_n import (
+    KernTable_format_0, KernTable_format_unkown)
+from fontTools.misc.textTools import deHexStr
 from fontTools.misc.testTools import FakeFont, getXML, parseXML
 import pytest
 
@@ -56,6 +57,34 @@ KERN_VER_1_FMT_0_XML = [
     '  <pair l="F" r="o" v="-50"/>',
     '</kernsubtable>',
 ]
+
+KERN_VER_0_FMT_UNKNOWN_DATA = deHexStr(
+    '0000 '            #  0: version=0
+    '0002 '            #  2: nTables=2
+    '0000 '            #  4: version=0
+    '000A '            #  6: length=10
+    '0004 '            #  8: coverage=4  (format 4 doesn't exist)
+    '1234 5678 '       # 10: garbage...
+    '0000 '            # 14: version=0
+    '000A '            # 16: length=10
+    '0005 '            # 18: coverage=5  (format 5 doesn't exist)
+    '9ABC DEF0 '       # 20: garbage...
+)
+assert len(KERN_VER_0_FMT_UNKNOWN_DATA) == 24
+
+KERN_VER_1_FMT_UNKNOWN_DATA = deHexStr(
+    '0001 0000 '       #  0: version=1
+    '0000 0002 '       #  4: nTables=2
+    '0000 000C '       #  8: length=12
+    '0004 '            # 12: coverage=4  (format 4 doesn't exist)
+    '0000 '            # 14: tupleIndex=0
+    '1234 5678'        # 16: garbage...
+    '0000 000C '       # 20: length=12
+    '0005 '            # 18: coverage=5  (format 5 doesn't exist)
+    '0000 '            # 20: tupleIndex=0
+    '9ABC DEF0 '       # 22: garbage...
+)
+assert len(KERN_VER_1_FMT_UNKNOWN_DATA) == 32
 
 
 @pytest.fixture
@@ -168,6 +197,76 @@ class KernTableTest(object):
         }
         xml = getXML(kern.toXML, font)
         assert xml == expected
+
+    @pytest.mark.parametrize(
+        "data, version, header_length, st_length",
+        [
+            (KERN_VER_0_FMT_UNKNOWN_DATA, 0, 4, 10),
+            (KERN_VER_1_FMT_UNKNOWN_DATA, 1.0, 8, 12),
+        ],
+        ids=["version_0", "version_1"]
+    )
+    def test_decompile_format_unknown(
+            self, data, font, version, header_length, st_length):
+        kern = newTable("kern")
+        kern.decompile(data, font)
+
+        assert kern.version == version
+        assert len(kern.kernTables) == 2
+
+        st_data = data[header_length:]
+        st0 = kern.kernTables[0]
+        assert st0.format == 4
+        assert st0.data == st_data[:st_length]
+        st_data = st_data[st_length:]
+
+        st1 = kern.kernTables[1]
+        assert st1.format == 5
+        assert st1.data == st_data[:st_length]
+
+    @pytest.mark.parametrize(
+        "version, st_length, expected",
+        [
+            (0, 10, KERN_VER_0_FMT_UNKNOWN_DATA),
+            (1.0, 12, KERN_VER_1_FMT_UNKNOWN_DATA),
+        ],
+        ids=["version_0", "version_1"]
+    )
+    def test_compile_format_unknown(self, version, st_length, expected):
+        kern = newTable("kern")
+        kern.version = version
+        kern.kernTables = []
+
+        for unknown_fmt, kern_data in zip((4, 5), ("1234 5678", "9ABC DEF0")):
+            coverage = unknown_fmt
+            if version > 0:
+                header_fmt = deHexStr(
+                    "%08X %04X %04X" % (st_length, coverage, 0))
+            else:
+                header_fmt = deHexStr(
+                    "%04X %04X %04X" % (0, st_length, coverage))
+            st = KernTable_format_unkown(unknown_fmt)
+            st.data = header_fmt + deHexStr(kern_data)
+            kern.kernTables.append(st)
+
+        data = kern.compile(font)
+        assert data == expected
+
+    def test_getkern(self, table):
+        table = newTable("kern")
+        table.version = 0
+        table.kernTables = []
+
+        assert table.getkern(0) is None
+
+        st0 = KernTable_format_0()
+        table.kernTables.append(st0)
+
+        assert table.getkern(0) is st0
+        assert table.getkern(4) is None
+
+        st1 = KernTable_format_unkown(4)
+        table.kernTables.append(st1)
 
 
 class KernTable_format_0_Test(object):
