@@ -38,6 +38,18 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 				return subtable
 		return None # not found
 
+	def getBestCmap(self, cmapPreferences=((3, 10), (3, 1), (0, 3))):
+		"""Return the 'best' unicode cmap dictionary available in the font.
+		By default it will search for the following (platformID, platEncID) pairs:
+			(3, 10), (3, 1), (0, 3)
+		But this can be customized via the cmapPreferences argument.
+		"""
+		for platformID, platEncID in cmapPreferences:
+			cmapSubtable = self.getcmap(platformID, platEncID)
+			if cmapSubtable is not None:
+				return cmapSubtable.cmap
+		raise ValueError("None of the requested cmap subtables were found")
+
 	def buildReversed(self):
 		"""Returns a reverse cmap such as {'one':{0x31}, 'A':{0x41,0x391}}.
 
