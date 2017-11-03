@@ -67,6 +67,7 @@ class CmapSubtableTest(unittest.TestCase):
 		cmap.tables = [c4, c12]
 		self.assertEqual(cmap.getBestCmap(), {0x10314: 'u10314'})
 		self.assertEqual(cmap.getBestCmap(cmapPreferences=[(3, 1)]), {0x0041:'A', 0x0391:'A'})
+		self.assertEqual(cmap.getBestCmap(cmapPreferences=[(0, 4)]), None)
 
 	def test_font_getBestCmap(self):
 		c4 = self.makeSubtable(4, 3, 1, 0)
@@ -79,6 +80,7 @@ class CmapSubtableTest(unittest.TestCase):
 		font["cmap"] = cmap
 		self.assertEqual(font.getBestCmap(), {0x10314: 'u10314'})
 		self.assertEqual(font.getBestCmap(cmapPreferences=[(3, 1)]), {0x0041:'A', 0x0391:'A'})
+		self.assertEqual(font.getBestCmap(cmapPreferences=[(0, 4)]), None)
 
 
 if __name__ == "__main__":
