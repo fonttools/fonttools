@@ -32,6 +32,12 @@
           <rules>
             <rule index="0" precontext="0" sortkey="2">
               <action>
+                PUT_GLYPH_8BIT_OBS(0)
+                ASSOC(0, 1)
+                NEXT
+                DELETE
+                NEXT
+                RET_ZERO
               </action>
             </rule>
             <rule index="1" precontext="1" sortkey="2">
@@ -63,6 +69,22 @@
           <rules>
             <rule index="0" precontext="0" sortkey="2">
               <action>
+                COPY_NEXT
+                PUT_COPY(0)
+                PUSH_BYTE(-1)
+                ATTR_SET_SLOT(2)
+                PUSH_BYTE(0)
+                ATTR_SET(17)
+                PUSH_GLYPH_ATTR_OBS(6, 0)
+                ATTR_SET(8)
+                PUSH_GLYPH_ATTR_OBS(7, 0)
+                ATTR_SET(9)
+                PUSH_ATT_TO_GATTR_OBS(6, 0)
+                ATTR_SET(3)
+                PUSH_ATT_TO_GATTR_OBS(7, 0)
+                ATTR_SET(4)
+                NEXT
+                RET_ZERO
               </action>
             </rule>
           </rules>

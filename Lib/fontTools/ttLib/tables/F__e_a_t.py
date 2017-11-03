@@ -99,7 +99,7 @@ class table_F__e_a_t(DefaultTable.DefaultTable):
             fobj = Feature()
             fobj.flags = int(safeEval(attrs['flags']))
             fobj.label = int(safeEval(attrs['label']))
-            fobj.default = int(safeEval(attrs['default']))
+            fobj.default = int(safeEval(attrs.get('default','0')))
             fobj.index = len(self.features)
             self.features[fid] = fobj
             fobj.settings = {}

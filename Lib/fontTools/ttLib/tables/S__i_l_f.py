@@ -727,9 +727,6 @@ class Pass(object):
                 oConstraints[i] = oConstraints[i+1]
         self.ruleConstraints = [(data[s:e] if (e-s > 1) else "") for (s,e) in zip(oConstraints, oConstraints[1:])]
         data = data[oConstraints[-1]:]
-#        for i in range(len(oActions)-2,-1,-1):
-#            if oActions[i] == 0:
-#                oActions[i] = oActions[i+1]
         self.actions = [(data[s:e] if (e-s > 1) else "") for (s,e) in zip(oActions, oActions[1:])]
         data = data[oActions[-1]:]
         # not using debug
