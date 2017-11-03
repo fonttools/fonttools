@@ -126,7 +126,7 @@ class KernTable_format_0(object):
 
 		nPairs = min(nPairs, len(data) // 6)
 		datas = array.array("H", data[:6 * nPairs])
-		if sys.byteorder != "big":
+		if sys.byteorder != "big":  # pragma: no cover
 			datas.byteswap()
 		it = iter(datas)
 		glyphOrder = ttFont.getGlyphOrder()
