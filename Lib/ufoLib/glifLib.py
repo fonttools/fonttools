@@ -128,17 +128,17 @@ class GlyphSet(object):
 		Rebuild the contents dict by loading contents.plist.
 		"""
 		contentsPath = os.path.join(self.dirName, "contents.plist")
-		if not os.path.exists(contentsPath):
+		try:
+			contents = self._readPlist(contentsPath)
+		except KeyError:
 			# missing, consider the glyphset empty.
 			contents = {}
-		else:
-			contents = self._readPlist(contentsPath)
 		# validate the contents
 		invalidFormat = False
 		if not isinstance(contents, dict):
 			invalidFormat = True
 		else:
-			for name, fileName in list(contents.items()):
+			for name, fileName in contents.items():
 				if not isinstance(name, basestring):
 					invalidFormat = True
 				if not isinstance(fileName, basestring):
@@ -179,14 +179,16 @@ class GlyphSet(object):
 
 	def readLayerInfo(self, info):
 		path = os.path.join(self.dirName, LAYERINFO_FILENAME)
-		if not os.path.exists(path):
+		try:
+			infoDict = self._readPlist(path)
+		except KeyError:
+			# no info file, abort
 			return
-		infoDict = self._readPlist(path)
 		if not isinstance(infoDict, dict):
 			raise GlifLibError("layerinfo.plist is not properly formatted.")
 		infoDict = validateLayerInfoVersion3Data(infoDict)
 		# populate the object
-		for attr, value in list(infoDict.items()):
+		for attr, value in infoDict.items():
 			try:
 				setattr(info, attr, value)
 			except AttributeError:
@@ -197,7 +199,7 @@ class GlyphSet(object):
 			raise GlifLibError("layerinfo.plist is not allowed in UFO %d." % self.ufoFormatVersion)
 		# gather data
 		infoData = {}
-		for attr in list(layerInfoVersion3ValueData.keys()):
+		for attr in layerInfoVersion3ValueData.keys():
 			if hasattr(info, attr):
 				try:
 					value = getattr(info, attr)
@@ -242,10 +244,14 @@ class GlyphSet(object):
 			needRead = True
 		if needRead:
 			fileName = self.contents[glyphName]
-			if not os.path.exists(path):
-				raise KeyError(glyphName)
-			with open(path, "rb") as f:
-				text = f.read()
+			try:
+				with open(path, "rb") as f:
+					text = f.read()
+			except IOError as e:
+				# FileNotFoundError
+				if e.errno == 2:
+					raise KeyError(glyphName)
+				raise
 			self._glifCache[glyphName] = (text, os.path.getmtime(path))
 		return self._glifCache[glyphName][0]
 
@@ -413,7 +419,7 @@ class GlyphSet(object):
 		"""
 		components = {}
 		if glyphNames is None:
-			glyphNames = list(self.contents.keys())
+			glyphNames = self.contents.keys()
 		for glyphName in glyphNames:
 			text = self.getGLIF(glyphName)
 			components[glyphName] = _fetchComponentBases(text)
@@ -428,7 +434,7 @@ class GlyphSet(object):
 		"""
 		images = {}
 		if glyphNames is None:
-			glyphNames = list(self.contents.keys())
+			glyphNames = self.contents.keys()
 		for glyphName in glyphNames:
 			text = self.getGLIF(glyphName)
 			images[glyphName] = _fetchImageFileName(text)
@@ -441,7 +447,10 @@ class GlyphSet(object):
 			with open(path, "rb") as f:
 				data = readPlist(f)
 			return data
-		except:
+		except Exception as e:
+			# FileNotFoundError
+			if isinstance(e, IOError) and e.errno == 2:
+				raise KeyError()
 			raise GlifLibError("The file %s could not be read." % path)
 
 
@@ -454,9 +463,9 @@ def glyphNameToFileName(glyphName, glyphSet):
 	Wrapper around the userNameToFileName function in filenames.py
 	"""
 	if glyphSet:
-		existing = [name.lower() for name in list(glyphSet.contents.values())]
+		existing = frozenset(name.lower() for name in glyphSet.contents.values())
 	else:
-		existing = []
+		existing = frozenset()
 	if not isinstance(glyphName, unicode):
 		try:
 			new = unicode(glyphName)
@@ -595,13 +604,13 @@ def _writeAdvance(glyphObject, writer):
 		if not isinstance(width, (int, float)):
 			raise GlifLibError("width attribute must be int or float")
 		if width == 0:
-		    width = None
+			width = None
 	height = getattr(glyphObject, "height", None)
 	if height is not None:
 		if not isinstance(height, (int, float)):
 			raise GlifLibError("height attribute must be int or float")
 		if height == 0:
-		    height = None
+			height = None
 	if width is not None and height is not None:
 		writer.simpletag("advance", width=repr(width), height=repr(height))
 		writer.newline()
@@ -789,16 +798,13 @@ def validateLayerInfoVersion3Data(infoData):
 	a set range of possible values for an attribute, that the
 	value is in the accepted range.
 	"""
-	validInfoData = {}
-	for attr, value in list(infoData.items()):
+	for attr, value in infoData.items():
 		if attr not in layerInfoVersion3ValueData:
 			raise GlifLibError("Unknown attribute %s." % attr)
 		isValidValue = validateLayerInfoVersion3ValueForAttribute(attr, value)
 		if not isValidValue:
 			raise GlifLibError("Invalid value for attribute %s (%s)." % (attr, repr(value)))
-		else:
-			validInfoData[attr] = value
-	return validInfoData
+	return infoData
 
 # -----------------
 # GLIF Tree Support
@@ -1067,7 +1073,7 @@ def _buildOutlineContourFormat1(pen, contour):
 	pen.endPath()
 
 def _buildOutlinePointsFormat1(pen, contour):
-	for index, element in enumerate(contour):
+	for element in contour:
 		x = element.attrib["x"]
 		y = element.attrib["y"]
 		segmentType = element.attrib["segmentType"]
@@ -1078,8 +1084,9 @@ def _buildOutlinePointsFormat1(pen, contour):
 def _buildOutlineComponentFormat1(pen, component):
 	if len(component):
 		raise GlifLibError("Unknown child elements of component element.")
-	if set(component.attrib.keys()) - componentAttributesFormat1:
-		raise GlifLibError("Unknown attributes in component element.")
+	for attr in component.attrib.keys():
+		if attr not in componentAttributesFormat1:
+			raise GlifLibError("Unknown attributes in component element.")
 	baseGlyphName = component.get("base")
 	if baseGlyphName is None:
 		raise GlifLibError("The base attribute is not defined in the component.")
@@ -1125,7 +1132,7 @@ def _buildOutlineContourFormat2(pen, contour, identifiers):
 	pen.endPath()
 
 def _buildOutlinePointsFormat2(pen, contour, identifiers):
-	for index, element in enumerate(contour):
+	for element in contour:
 		x = element.attrib["x"]
 		y = element.attrib["y"]
 		segmentType = element.attrib["segmentType"]
@@ -1147,8 +1154,9 @@ def _buildOutlinePointsFormat2(pen, contour, identifiers):
 def _buildOutlineComponentFormat2(pen, component, identifiers):
 	if len(component):
 		raise GlifLibError("Unknown child elements of component element.")
-	if set(component.attrib.keys()) - componentAttributesFormat2:
-		raise GlifLibError("Unknown attributes in component element.")
+	for attr in component.attrib.keys():
+		if attr not in componentAttributesFormat2:
+			raise GlifLibError("Unknown attributes in component element.")
 	baseGlyphName = component.get("base")
 	if baseGlyphName is None:
 		raise GlifLibError("The base attribute is not defined in the component.")
@@ -1187,21 +1195,25 @@ def _validateAndMassagePointStructures(contour, pointAttributes, openContourOffC
 		if element.tag != "point":
 			raise GlifLibError("Unknown child element (%s) of contour element." % element.tag)
 		# unknown attributes
-		unknownAttributes = [attr for attr in list(element.attrib.keys()) if attr not in pointAttributes]
-		if unknownAttributes:
-			raise GlifLibError("Unknown attributes in point element.")
+		for attr in element.attrib.keys():
+			if attr not in pointAttributes:
+				raise GlifLibError("Unknown attribute in point element: %s" % attr)
 		# search for unknown children
 		if len(element):
 			raise GlifLibError("Unknown child elements in point element.")
 		# x and y are required
-		x = element.get("x")
-		y = element.get("y")
-		if x is None:
-			raise GlifLibError("Required x attribute is missing in point element.")
-		if y is None:
-			raise GlifLibError("Required y attribute is missing in point element.")
-		element.attrib["x"] = _number(x)
-		element.attrib["y"] = _number(y)
+		for attr in ("x", "y"):
+			value = element.get(attr)
+			if value is None:
+				raise GlifLibError("Required %s attribute is missing in point element." % attr)
+			try:
+				value = int(value)
+			except ValueError:
+				try:
+					value = float(value)
+				except ValueError:
+					raise GlifLibError("Invalid %s value in point element: %s" % (attr, value))
+			element.attrib[attr] = value
 		# segment type
 		pointType = element.attrib.pop("type", "offcurve")
 		if pointType not in pointTypeOptions:
@@ -1243,8 +1255,7 @@ def _validateAndMassagePointStructures(contour, pointAttributes, openContourOffC
 		# we only care about how many offCurves there are before an onCurve
 		# filter out the trailing offCurves
 		offCurvesCount = len(contour) - 1 - lastOnCurvePoint
-		stripedContour = contour[:-offCurvesCount] if offCurvesCount else contour
-		for element in stripedContour:
+		for element in contour:
 			segmentType = element.attrib["segmentType"]
 			if segmentType is None:
 				offCurvesCount += 1
