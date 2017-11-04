@@ -71,10 +71,24 @@ KERN_VER_0_FMT_UNKNOWN_DATA = deHexStr(
     '0000 '            # 14: version=0
     '000A '            # 16: length=10
     '05 '              # 18: format=5  (format 5 doesn't exist)
-    '01 '              # 18: coverage=1
+    '01 '              # 19: coverage=1
     '9ABC DEF0 '       # 20: garbage...
 )
 assert len(KERN_VER_0_FMT_UNKNOWN_DATA) == 24
+
+KERN_VER_0_FMT_UNKNOWN_XML = [
+    '<version value="0"/>',
+    '<kernsubtable format="4">',
+    "  <!-- unknown 'kern' subtable format -->",
+    '  0000000A 04011234',
+    '  5678             ',
+    '</kernsubtable>',
+    '<kernsubtable format="5">',
+    "<!-- unknown 'kern' subtable format -->",
+    '  0000000A 05019ABC',
+    '  DEF0             ',
+    '</kernsubtable>',
+]
 
 KERN_VER_1_FMT_UNKNOWN_DATA = deHexStr(
     '0001 0000 '       #  0: version=1
@@ -85,12 +99,26 @@ KERN_VER_1_FMT_UNKNOWN_DATA = deHexStr(
     '0000 '            # 14: tupleIndex=0
     '1234 5678'        # 16: garbage...
     '0000 000C '       # 20: length=12
-    '00 '              # 18: coverage=0
-    '05 '              # 19: format=5  (format 5 doesn't exist)
-    '0000 '            # 20: tupleIndex=0
-    '9ABC DEF0 '       # 22: garbage...
+    '00 '              # 24: coverage=0
+    '05 '              # 25: format=5  (format 5 doesn't exist)
+    '0000 '            # 26: tupleIndex=0
+    '9ABC DEF0 '       # 28: garbage...
 )
 assert len(KERN_VER_1_FMT_UNKNOWN_DATA) == 32
+
+KERN_VER_1_FMT_UNKNOWN_XML = [
+    '<version value="1"/>',
+    '<kernsubtable format="4">',
+    "  <!-- unknown 'kern' subtable format -->",
+    '  0000000C 00040000',
+    '  12345678         ',
+    '</kernsubtable>',
+    '<kernsubtable format="5">',
+    "  <!-- unknown 'kern' subtable format -->",
+    '  0000000C 00050000',
+    '  9ABCDEF0         ',
+    '</kernsubtable>',
+]
 
 
 @pytest.fixture
@@ -254,13 +282,57 @@ class KernTableTest(object):
             else:
                 coverage = 1
                 header_fmt = deHexStr(
-                    "%04X %04X %02X %02X" % (0, st_length, unknown_fmt, coverage))
+                    "%04X %04X %02X %02X" % (
+                        0, st_length, unknown_fmt, coverage))
             st = KernTable_format_unkown(unknown_fmt)
             st.data = header_fmt + deHexStr(kern_data)
             kern.kernTables.append(st)
 
         data = kern.compile(font)
         assert data == expected
+
+    @pytest.mark.parametrize(
+        "xml, version, st_length",
+        [
+            (KERN_VER_0_FMT_UNKNOWN_XML, 0, 10),
+            (KERN_VER_1_FMT_UNKNOWN_XML, 1.0, 12),
+        ],
+        ids=["version_0", "version_1"]
+    )
+    def test_fromXML_format_unknown(self, xml, font, version, st_length):
+        kern = newTable("kern")
+        for name, attrs, content in parseXML(xml):
+            kern.fromXML(name, attrs, content, ttFont=font)
+
+        assert kern.version == version
+        assert len(kern.kernTables) == 2
+
+        st0 = kern.kernTables[0]
+        assert st0.format == 4
+        assert len(st0.data) == st_length
+
+        st1 = kern.kernTables[1]
+        assert st1.format == 5
+        assert len(st1.data) == st_length
+
+    @pytest.mark.parametrize(
+        "version", [0, 1.0], ids=["version_0", "version_1"])
+    def test_toXML_format_unknown(self, font, version):
+        kern = newTable("kern")
+        kern.version = version
+        st = KernTable_format_unkown(4)
+        st.data = b"ABCD"
+        kern.kernTables = [st]
+
+        xml = getXML(kern.toXML, font)
+
+        assert xml == [
+            '<version value="%s"/>' % version,
+            '<kernsubtable format="4">',
+            '  <!-- unknown \'kern\' subtable format -->',
+            '  41424344   ',
+            '</kernsubtable>',
+        ]
 
     def test_getkern(self):
         table = newTable("kern")
