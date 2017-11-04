@@ -2,7 +2,9 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import getSearchRange
 from fontTools.misc.textTools import safeEval, readHex
-from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
+from fontTools.misc.fixedTools import (
+	fixedToFloat as fi2fl,
+	floatToFixed as fl2fi)
 from . import DefaultTable
 import struct
 import sys
@@ -37,14 +39,15 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 		for i in range(nTables):
 			if self.version == 1.0:
 				# Apple
-				length, coverage, subtableFormat = struct.unpack(">LBB", data[:6])
+				length, coverage, subtableFormat = struct.unpack(
+					">LBB", data[:6])
 			else:
 				# in OpenType spec the "version" field refers to the common
 				# subtable header; the actual subtable format is stored in
-				# the last 8 mask bits of "coverage" field.
-				# Since this "version" is always 0 (and is not present in the
-				# later AAT extensions), we simply ignore it here
-				_, length, subtableFormat, coverage = struct.unpack(">HHBB", data[:6])
+				# the 8-15 mask bits of "coverage" field.
+				# This "version" is always 0 so we ignore it here
+				_, length, subtableFormat, coverage = struct.unpack(
+					">HHBB", data[:6])
 			if subtableFormat not in kern_classes:
 				subtable = KernTable_format_unkown(subtableFormat)
 			else:
