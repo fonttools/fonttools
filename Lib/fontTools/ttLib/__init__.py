@@ -702,14 +702,14 @@ class TTFont(object):
 
 		return glyphs
 
-	def getBestCmap(self, cmapPreferences=((3, 10), (0, 4), (3, 1), (0, 3))):
+	def getBestCmap(self, cmapPreferences=((3, 10), (0, 6), (0, 4), (3, 1), (0, 3), (0, 2), (0, 1), (0, 0))):
 		"""Return the 'best' unicode cmap dictionary available in the font,
 		or None, if no unicode cmap subtable is available.
 
 		By default it will search for the following (platformID, platEncID)
 		pairs:
-			(3, 10), (0, 4), (3, 1), (0, 3)
-		But this can be customized via the cmapPreferences argument.
+			(3, 10), (0, 6), (0, 4), (3, 1), (0, 3), (0, 2), (0, 1), (0, 0)
+		This can be customized via the cmapPreferences argument.
 		"""
 		return self["cmap"].getBestCmap(cmapPreferences=cmapPreferences)
 
