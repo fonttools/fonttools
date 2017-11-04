@@ -43,6 +43,8 @@ __all__ = [
 
 class GlifLibError(Exception): pass
 
+class MissingPlistError(GlifLibError): pass
+
 # ---------
 # Constants
 # ---------
@@ -130,7 +132,7 @@ class GlyphSet(object):
 		contentsPath = os.path.join(self.dirName, "contents.plist")
 		try:
 			contents = self._readPlist(contentsPath)
-		except KeyError:
+		except MissingPlistError:
 			# missing, consider the glyphset empty.
 			contents = {}
 		# validate the contents
@@ -181,8 +183,7 @@ class GlyphSet(object):
 		path = os.path.join(self.dirName, LAYERINFO_FILENAME)
 		try:
 			infoDict = self._readPlist(path)
-		except KeyError:
-			# no info file, abort
+		except MissingPlistError:
 			return
 		if not isinstance(infoDict, dict):
 			raise GlifLibError("layerinfo.plist is not properly formatted.")
@@ -248,7 +249,7 @@ class GlyphSet(object):
 				with open(path, "rb") as f:
 					text = f.read()
 			except IOError as e:
-				# FileNotFoundError
+				# MissingPlistError
 				if e.errno == 2:
 					raise KeyError(glyphName)
 				raise
@@ -448,9 +449,8 @@ class GlyphSet(object):
 				data = readPlist(f)
 			return data
 		except Exception as e:
-			# FileNotFoundError
 			if isinstance(e, IOError) and e.errno == 2:
-				raise KeyError()
+				raise MissingPlistError()
 			raise GlifLibError("The file %s could not be read." % path)
 
 
