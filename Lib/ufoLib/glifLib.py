@@ -249,8 +249,7 @@ class GlyphSet(object):
 				with open(path, "rb") as f:
 					text = f.read()
 			except IOError as e:
-				# MissingPlistError
-				if e.errno == 2:
+				if e.errno == 2:  # aka. FileNotFoundError
 					raise KeyError(glyphName)
 				raise
 			self._glifCache[glyphName] = (text, os.path.getmtime(path))
