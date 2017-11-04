@@ -37,15 +37,14 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 		for i in range(nTables):
 			if self.version == 1.0:
 				# Apple
-				length, coverage = struct.unpack(">LH", data[:6])
+				length, coverage, subtableFormat = struct.unpack(">LBB", data[:6])
 			else:
 				# in OpenType spec the "version" field refers to the common
 				# subtable header; the actual subtable format is stored in
 				# the last 8 mask bits of "coverage" field.
 				# Since this "version" is always 0 (and is not present in the
 				# later AAT extensions), we simply ignore it here
-				_, length, coverage = struct.unpack(">HHH", data[:6])
-			subtableFormat = coverage & 0xff
+				_, length, subtableFormat, coverage = struct.unpack(">HHBB", data[:6])
 			if subtableFormat not in kern_classes:
 				subtable = KernTable_format_unkown(subtableFormat)
 			else:
@@ -103,7 +102,8 @@ class KernTable_format_0(object):
 
 	def decompile(self, data, ttFont):
 		if not self.apple:
-			version, length, coverage = struct.unpack(">HHH", data[:6])
+			version, length, subtableFormat, coverage = struct.unpack(
+				">HHBB", data[:6])
 			if version != 0:
 				from fontTools.ttLib import TTLibError
 				raise TTLibError(
@@ -112,9 +112,10 @@ class KernTable_format_0(object):
 			# Should we also assert length == len(data)?
 			data = data[6:]
 		else:
-			length, coverage, tupleIndex = struct.unpack(">LHH", data[:8])
+			length, coverage, subtableFormat, tupleIndex = struct.unpack(
+				">LBBH", data[:8])
 			data = data[8:]
-		assert self.format == coverage & 0xFF, "unsupported format"
+		assert self.format == subtableFormat, "unsupported format"
 		self.coverage = coverage
 		self.tupleIndex = tupleIndex
 
@@ -168,13 +169,12 @@ class KernTable_format_0(object):
 
 		for left, right, value in kernTable:
 			data = data + struct.pack(">HHh", left, right, value)
-		# ensure mask bits 8-15 (subtable format) are set to 0
-		self.coverage &= ~0xFF
 
 		if not self.apple:
 			version = 0
 			length = len(data) + 6
-			header = struct.pack(">HHH", version, length, self.coverage)
+			header = struct.pack(
+				">HHBB", version, length, self.format, self.coverage)
 		else:
 			if self.tupleIndex is None:
 				# sensible default when compiling a TTX from an old fonttools
@@ -183,7 +183,8 @@ class KernTable_format_0(object):
 				log.warning("'tupleIndex' is None; default to 0")
 				self.tupleIndex = 0
 			length = len(data) + 8
-			header = struct.pack(">LHH", length, self.coverage, self.tupleIndex)
+			header = struct.pack(
+				">LBBH", length, self.coverage, self.format, self.tupleIndex)
 		return header + data
 
 	def toXML(self, writer, ttFont):

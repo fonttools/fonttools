@@ -13,7 +13,8 @@ KERN_VER_0_FMT_0_DATA = deHexStr(
     '0001 '            #  2: nTables=1
     '0000 '            #  4: version=0 (bogus field, unused)
     '0020 '            #  6: length=32
-    '0000 '            #  8: coverage=0
+    '00 '              #  8: format=0
+    '01 '              #  9: coverage=1
     '0003 '            # 10: nPairs=3
     '000C '            # 12: searchRange=12
     '0001 '            # 14: entrySelector=1
@@ -26,7 +27,7 @@ assert len(KERN_VER_0_FMT_0_DATA) == 36
 
 KERN_VER_0_FMT_0_XML = [
     '<version value="0"/>',
-    '<kernsubtable coverage="0" format="0">',
+    '<kernsubtable coverage="1" format="0">',
     '  <pair l="E" r="M" v="-40"/>',
     '  <pair l="E" r="c" v="40"/>',
     '  <pair l="F" r="o" v="-50"/>',
@@ -37,7 +38,8 @@ KERN_VER_1_FMT_0_DATA = deHexStr(
     '0001 0000 '       #  0: version=1
     '0000 0001 '       #  4: nTables=1
     '0000 0022 '       #  8: length=34
-    '0000 '            # 12: coverage=0
+    '00 '              # 12: coverage=0
+    '00 '              # 13: format=0
     '0000 '            # 14: tupleIndex=0
     '0003 '            # 16: nPairs=3
     '000C '            # 18: searchRange=12
@@ -63,11 +65,13 @@ KERN_VER_0_FMT_UNKNOWN_DATA = deHexStr(
     '0002 '            #  2: nTables=2
     '0000 '            #  4: version=0
     '000A '            #  6: length=10
-    '0004 '            #  8: coverage=4  (format 4 doesn't exist)
+    '04 '              #  8: format=4  (format 4 doesn't exist)
+    '01 '              #  9: coverage=1
     '1234 5678 '       # 10: garbage...
     '0000 '            # 14: version=0
     '000A '            # 16: length=10
-    '0005 '            # 18: coverage=5  (format 5 doesn't exist)
+    '05 '              # 18: format=5  (format 5 doesn't exist)
+    '01 '              # 18: coverage=1
     '9ABC DEF0 '       # 20: garbage...
 )
 assert len(KERN_VER_0_FMT_UNKNOWN_DATA) == 24
@@ -76,11 +80,13 @@ KERN_VER_1_FMT_UNKNOWN_DATA = deHexStr(
     '0001 0000 '       #  0: version=1
     '0000 0002 '       #  4: nTables=2
     '0000 000C '       #  8: length=12
-    '0004 '            # 12: coverage=4  (format 4 doesn't exist)
+    '00 '              # 12: coverage=0
+    '04 '              # 13: format=4  (format 4 doesn't exist)
     '0000 '            # 14: tupleIndex=0
     '1234 5678'        # 16: garbage...
     '0000 000C '       # 20: length=12
-    '0005 '            # 18: coverage=5  (format 5 doesn't exist)
+    '00 '              # 18: coverage=0
+    '05 '              # 19: format=5  (format 5 doesn't exist)
     '0000 '            # 20: tupleIndex=0
     '9ABC DEF0 '       # 22: garbage...
 )
@@ -113,7 +119,9 @@ class KernTableTest(object):
         st = kern.kernTables[0]
         assert st.apple is (version == 1.0)
         assert st.format == 0
-        assert st.coverage == 0
+        # horizontal kerning in OT kern is coverage 0x01, while in
+        # AAT kern it's the default (0)
+        assert st.coverage == (0 if st.apple else 1)
         assert st.tupleIndex == (0 if st.apple else None)
         assert len(st.kernTable) == 3
         assert st.kernTable == {
@@ -136,7 +144,7 @@ class KernTableTest(object):
         apple = version == 1.0
         st = KernTable_format_0(apple)
         kern.kernTables = [st]
-        st.coverage = 0
+        st.coverage = (0 if apple else 1)
         st.tupleIndex = 0 if apple else None
         st.kernTable = {
             ('E', 'M'): -40,
@@ -165,7 +173,7 @@ class KernTableTest(object):
         st = kern.kernTables[0]
         assert st.apple is (version == 1.0)
         assert st.format == 0
-        assert st.coverage == 0
+        assert st.coverage == (0 if st.apple else 1)
         assert st.tupleIndex == (0 if st.apple else None)
         assert len(st.kernTable) == 3
         assert st.kernTable == {
@@ -188,7 +196,7 @@ class KernTableTest(object):
         apple = version == 1.0
         st = KernTable_format_0(apple)
         kern.kernTables = [st]
-        st.coverage = 0
+        st.coverage = 0 if apple else 1
         st.tupleIndex = 0 if apple else None
         st.kernTable = {
             ('E', 'M'): -40,
@@ -238,13 +246,15 @@ class KernTableTest(object):
         kern.kernTables = []
 
         for unknown_fmt, kern_data in zip((4, 5), ("1234 5678", "9ABC DEF0")):
-            coverage = unknown_fmt
             if version > 0:
+                coverage = 0
                 header_fmt = deHexStr(
-                    "%08X %04X %04X" % (st_length, coverage, 0))
+                    "%08X %02X %02X %04X" % (
+                        st_length, coverage, unknown_fmt, 0))
             else:
+                coverage = 1
                 header_fmt = deHexStr(
-                    "%04X %04X %04X" % (0, st_length, coverage))
+                    "%04X %04X %02X %02X" % (0, st_length, unknown_fmt, coverage))
             st = KernTable_format_unkown(unknown_fmt)
             st.data = header_fmt + deHexStr(kern_data)
             kern.kernTables.append(st)
