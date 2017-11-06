@@ -195,7 +195,7 @@ def disassemble(aCode):
     pc = 0
     res = []
     while pc < codelen:
-        opcode = ord(aCode[pc:pc+1])
+        opcode = byteord(aCode[pc:pc+1])
         if opcode > len(aCode_info):
             instr = aCode_info[0]
         else:
@@ -203,7 +203,7 @@ def disassemble(aCode):
         pc += 1
         if instr[1] != 0 and pc >= codelen : return res
         if instr[1] == -1:
-            count = ord(aCode[pc])
+            count = byteord(aCode[pc])
             fmt = "%dB" % count
             pc += 1
         elif instr[1] == 0:
@@ -230,7 +230,7 @@ def assemble(instrs):
         if m.group(2):
             if parmfmt == 0:
                 continue
-            parms = map(int, re.split(",\s*", m.group(2)))
+            parms = [int(x) for x in re.split(",\s*", m.group(2))]
             if parmfmt == -1:
                 l = len(parms)
                 res.append(struct.pack(("%dB" % (l+1)), l, *parms))
