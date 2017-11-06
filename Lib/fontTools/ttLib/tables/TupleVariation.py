@@ -502,25 +502,30 @@ def compileTupleVariationStore(variations, pointCount,
 	# For the time being, we try two variants and then pick the better one:
 	# (a) each tuple supplies its own private set of points;
 	# (b) all tuples refer to a shared set of points, which consists of
-	#     "every control point in the glyph".
-	allPoints = set(range(pointCount))
+	#     "every control point in the glyph that has explicit deltas".
+	usedPoints = set()
+	for v in variations:
+		usedPoints |= v.getUsedPoints()
 	tuples = []
 	data = []
 	someTuplesSharePoints = False
+	sharedPointVariation = None # To keep track of a variation that uses shared points
 	for v in variations:
-		privateTuple, privateData, usesSharedPoints = v.compile(
+		privateTuple, privateData, _ = v.compile(
 			axisTags, sharedTupleIndices, sharedPoints=None)
 		sharedTuple, sharedData, usesSharedPoints = v.compile(
-			axisTags, sharedTupleIndices, sharedPoints=allPoints)
+			axisTags, sharedTupleIndices, sharedPoints=usedPoints)
 		if (len(sharedTuple) + len(sharedData)) < (len(privateTuple) + len(privateData)):
 			tuples.append(sharedTuple)
 			data.append(sharedData)
 			someTuplesSharePoints |= usesSharedPoints
+			sharedPointVariation = v
 		else:
 			tuples.append(privateTuple)
 			data.append(privateData)
 	if someTuplesSharePoints:
-		data = bytechr(0) + bytesjoin(data)  # 0x00 = "all points in glyph"
+		# Use the last of the variations that share points for compiling the packed point data
+		data = sharedPointVariation.compilePoints(usedPoints, len(sharedPointVariation.coordinates)) + bytesjoin(data)
 		tupleVariationCount = TUPLES_SHARE_POINT_NUMBERS | len(tuples)
 	else:
 		data = bytesjoin(data)
