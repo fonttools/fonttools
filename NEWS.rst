@@ -1,3 +1,6 @@
+3.19.0 (released 2017-11-06)
+----------------------------
+
 - [varLib] Try set of used points instead of all points when testing whether to
   share points between tuples (#1090).
 - [CFF2] Fixed issue with reading/writing PrivateDict BlueValues to TTX file.
