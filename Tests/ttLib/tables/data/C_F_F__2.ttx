@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="OTTO" ttLibVersion="3.5">
+<ttFont sfntVersion="OTTO" ttLibVersion="3.18">
 
   <GlyphOrder>
     <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
@@ -12,12 +12,12 @@
     <!-- Most of this table will be recalculated by the compiler -->
     <tableVersion value="1.0"/>
     <fontRevision value="1.00099"/>
-    <checkSumAdjustment value="0x5f8802c6"/>
+    <checkSumAdjustment value="0x3e077bd3"/>
     <magicNumber value="0x5f0f3cf5"/>
     <flags value="00000000 00000011"/>
     <unitsPerEm value="1000"/>
     <created value="Fri Jan  6 11:41:20 2017"/>
-    <modified value="Fri Jan  6 09:34:43 2017"/>
+    <modified value="Thu Jan 12 22:37:13 2017"/>
     <xMin value="51"/>
     <yMin value="-115"/>
     <xMax value="560"/>
@@ -68,24 +68,24 @@
         <FontDict index="0">
           <Private>
             <BlueValues>
-                <blend value="-20 -15 -13 -20 -15 -13"/>
-                <blend value="0 0 0 0 0 0"/>
-                <blend value="487 474 470 487 474 470"/>
-                <blend value="503 487 483 503 487 483"/>
-                <blend value="515 527 534 515 527 534"/>
-                <blend value="531 540 547 531 540 547"/>
-                <blend value="536 550 556 536 550 556"/>
-                <blend value="552 563 569 552 563 569"/>
-                <blend value="624 647 654 624 647 654"/>
-                <blend value="640 660 667 640 660 667"/>
-                <blend value="652 670 677 652 670 677"/>
-                <blend value="672 685 690 672 685 690"/>
-                <blend value="711 730 738 711 730 738"/>
-                <blend value="731 750 758 731 750 758"/>
+                <blend value="-20 5 7 0 5 7"/>
+                <blend value="0 -5 -7 0 -5 -7"/>
+                <blend value="487 -13 -17 0 -13 -17"/>
+                <blend value="503 -3 -3 0 -3 -3"/>
+                <blend value="515 28 39 0 28 39"/>
+                <blend value="531 -3 -3 0 -3 -3"/>
+                <blend value="536 5 4 0 5 4"/>
+                <blend value="552 -3 -3 0 -3 -3"/>
+                <blend value="624 12 13 0 12 13"/>
+                <blend value="640 -3 -3 0 -3 -3"/>
+                <blend value="652 -2 -2 0 -2 -2"/>
+                <blend value="672 -5 -7 0 -5 -7"/>
+                <blend value="711 6 9 0 6 9"/>
+                <blend value="731 0 0 0 0 0"/>
             </BlueValues>
             <OtherBlues>
-                <blend value="-232 -250 -255 -232 -250 -255"/>
-                <blend value="-222 -240 -245 -222 -240 -245"/>
+                <blend value="-232 -18 -23 0 -18 -23"/>
+                <blend value="-222 0 0 0 0 0"/>
             </OtherBlues>
             <FamilyBlues value="-20 0 473 491 525 540 549 562 644 659 669 689 729 749"/>
             <FamilyOtherBlues value="-249 -239"/>
@@ -93,18 +93,18 @@
             <BlueShift value="7"/>
             <BlueFuzz value="0"/>
             <StdHW>
-                <blend value="74 55 26 50 46 26"/>
+                <blend value="74 -19 -48 -24 -28 -48"/>
             </StdHW>
             <StdVW>
-                <blend value="190 80 28 190 80 28"/>
+                <blend value="190 -110 -162 0 -110 -162"/>
             </StdVW>
             <StemSnapH>
-                <blend value="60 40 20 38 32 20"/>
-                <blend value="74 55 26 50 46 26"/>
+                <blend value="60 -20 -40 -22 -28 -40"/>
+                <blend value="74 1 -8 -2 0 -8"/>
             </StemSnapH>
             <StemSnapV>
-                <blend value="190 80 28 190 80 28"/>
-                <blend value="200 90 32 200 90 32"/>
+                <blend value="190 -110 -162 0 -110 -162"/>
+                <blend value="200 0 -6 0 0 -6"/>
             </StemSnapV>
           </Private>
         </FontDict>

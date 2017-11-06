@@ -943,7 +943,8 @@ class T2CharString(object):
 	operators, opcodes = buildOperatorDict(t2Operators)
 	decompilerClass = SimpleT2Decompiler
 	outlineExtractor = T2OutlineExtractor
-
+	isCFF2 = False
+	
 	def __init__(self, bytecode=None, program=None, private=None, globalSubrs=None):
 		if program is None:
 			program = []
@@ -1102,6 +1103,14 @@ class T2CharString(object):
 					args = []
 				else:
 					args.append(token)
+			if args:
+				if self.isCFF2:
+					# CFF2Subr's can have numeric arguments on the stack after the last operator.
+					args = [str(arg) for arg in args]
+					line = ' '.join(args)
+					xmlWriter.write(line)
+				else:
+					assert 0, "T2Charstring or Subr has items on the stack after last operator."
 
 	def fromXML(self, name, attrs, content):
 		from fontTools.misc.textTools import binary2num, readHex
@@ -1136,6 +1145,8 @@ class T2CharString(object):
 				program.append(token)
 		self.setProgram(program)
 
+class CFF2Subr(T2CharString):
+	isCFF2 = True
 
 class T1CharString(T2CharString):
 
@@ -1172,7 +1183,6 @@ class T1CharString(T2CharString):
 		extractor = T1OutlineExtractor(pen, self.subrs)
 		extractor.execute(self)
 		self.width = extractor.width
-
 
 class DictDecompiler(object):
 
@@ -1246,36 +1256,34 @@ class DictDecompiler(object):
 	def arg_array(self, name):
 		return self.popall()
 	def arg_blendList(self, name):
-		# The last item on the stack is the number of return values, aka numValues.
-		# before that we have [numValues: args from first master]
-		# then numValues blend lists, where each blend list is numMasters -1
-		# Total number of values is numValues + (numValues * (numMasters -1)), == numValues * numMasters.
-		# reformat list to be numReturnValues tuples, each tuple with nMaster values
+		"""
+		There may be non-blend args at the top of the stack. We first calculate
+		where the blend args start in the stack. These are the last
+		numMasters*numBlends) +1 args. 
+		The blend args starts with numMasters relative coordinate values, the  BlueValues in the list from the default master font. This is followed by
+		numBlends list of values. Each of  value in one of these lists is the
+		Variable Font delta for the matching region.
+		
+		We re-arrange this to be a list of numMaster entries. Each entry starts with the corresponding default font relative value, and is followed by 
+		the delta values. We then convert the default values, the first item in each entry, to an absolute value.
+		"""
 		vsindex = self.dict.get('vsindex', 0)
 		numMasters = self.parent.getNumRegions(vsindex) + 1 # only a PrivateDict has blended ops.
-		numReturnValues = self.pop()
-		stackIndex = -numMasters * numReturnValues
-		args = self.stack[stackIndex:]
-		del self.stack[stackIndex:]
+		numBlends = self.pop()
+		args = self.popall()
 		numArgs = len(args)
-		value = [None]*numReturnValues
+		# The spec says that there should be no non-blended Blue Values,.
+		assert(numArgs == numMasters * numBlends)
+		value = [None]*numBlends
 		numDeltas = numMasters-1
 		i = 0
 		prevVal = 0
-		prevValueList = [0]*numMasters
-		while i < numReturnValues:
+		while i < numBlends:
 			newVal = args[i] + prevVal
-			blendList = [newVal]*numMasters
 			prevVal = newVal
+			masterOffset = numBlends + (i* numDeltas)
+			blendList = [newVal] + args[masterOffset:masterOffset+numDeltas]
 			value[i] = blendList
-			j = 1
-			while j < numMasters:
-				masterOffset = numReturnValues + (i* numDeltas)
-				mi = masterOffset +(j-1)
-				delta = args[i] + args[mi]
-				blendList[j]= delta + prevValueList[j]
-				j += 1
-			prevValueList = blendList
 			i += 1
 		return value
 

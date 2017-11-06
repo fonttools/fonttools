@@ -614,6 +614,11 @@ class GlobalSubrsIndex(Index):
 			self.fdSelect = fdSelect
 		if fdArray:
 			self.fdArray = fdArray
+		if isCFF2:
+			# CFF2Subr's can have numeric arguments on the stack after the last operator.
+			self.subrClass = psCharStrings.CFF2Subr
+			self.charStringClass = psCharStrings.CFF2Subr
+			
 
 	def produceItem(self, index, data, file, offset):
 		if self.private is not None:
@@ -1972,12 +1977,7 @@ class DictCompiler(object):
 
 	def arg_number(self, num):
 		if isinstance(num, list):
-			blendList = num
-			firstNum = blendList[0]
-			data = [firstNum]
-			for blendNum in blendList[1:]:
-				data.append(blendNum - firstNum)
-			data = [encodeNumber(val) for val in data]
+			data = [encodeNumber(val) for val in num]
 			data.append(encodeNumber(1))
 			data.append(bytechr(blendOp))
 			datum = bytesjoin(data)
@@ -2011,15 +2011,33 @@ class DictCompiler(object):
 				data.append(encodeNumber(num))
 		return bytesjoin(data)
 
+
 	def arg_delta_blend(self, value):
-		# A delta list with blend lists has to be *all* blend lists.
-		# We have a list of master value lists, where the nth master value list
-		# contains the absolute values from each master for the nth entry in the
-		# current array.
-		# We first convert these to relative values from the previous entry.
+		""" A delta list with blend lists has to be *all* blend lists.
+		The value is a list is arranged as follows.
+		[
+		   [V0, d0..dn] 
+		   [V1, d0..dn]
+		   ...
+		   [Vm, d0..dn]
+		]
+		V is the absolute coordinate value from the default font, and d0-dn are
+		the delta values from the n regions. Each V is an absolute coordinate
+		from the default font.
+		We want to return a list:
+		[
+		   [v0, v1..vm] 
+		   [d0..dn]
+		   ...
+		   [d0..dn]
+		   numBlends
+		   blendOp
+		]
+		where each v is relative to the previous default font value.
+		"""
 		numMasters = len(value[0])
-		numValues = len(value)
-		numStack = (numValues * numMasters) + 1
+		numBlends = len(value)
+		numStack = (numBlends * numMasters) + 1
 		if numStack > self.maxBlendStack:
 			# Figure out the max number of value we can blend
 			# and divide this list up into chunks of that size.
@@ -2035,28 +2053,26 @@ class DictCompiler(object):
 				out.extend(out1)
 				value = value[numVal:]
 		else:
-			firstList = [0] * numValues
-			deltaList = [None] * (numValues)
+			firstList = [0] * numBlends
+			deltaList = [None] * numBlends
 			i = 0
-			prevValList = numMasters * [0]
-			while i < numValues:
-				masterValList = value[i]
-				firstVal = firstList[i] = masterValList[0] - prevValList[0]
-				j = 1
-				deltaEntry = (numMasters - 1) * [0]
-				while j < numMasters:
-					masterValDelta = masterValList[j] - prevValList[j]
-					deltaEntry[j - 1] = masterValDelta - firstVal
-					j += 1
-				deltaList[i] = deltaEntry
+			prevVal = 0
+			while i < numBlends:
+				# For PrivateDict BlueValues, the default font
+				# values are absolute, not relative.
+				# Must convert these back to relative coordinates
+				# befor writing to CFF2.
+				defaultValue = value[i][0]
+				firstList[i] = defaultValue - prevVal
+				prevVal = defaultValue
+				deltaList[i] = value[i][1:]
 				i += 1
-				prevValList = masterValList
 
 			relValueList = firstList
 			for blendList in deltaList:
 				relValueList.extend(blendList)
 			out = [encodeNumber(val) for val in relValueList]
-			out.append(encodeNumber(numValues))
+			out.append(encodeNumber(numBlends))
 			out.append(bytechr(blendOp))
 		return out
 
