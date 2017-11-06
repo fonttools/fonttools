@@ -1296,13 +1296,7 @@ class DictDecompiler(object):
 		else:
 			current = 0
 			for v in valueList:
-				try:
-					current = current + v
-				except:
-					print(valueList)
-					import pdb
-					pdb.set_trace()
-					print("Hello")
+				current = current + v
 				out.append(current)
 		return out
 
