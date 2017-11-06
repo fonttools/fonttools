@@ -943,7 +943,8 @@ class T2CharString(object):
 	operators, opcodes = buildOperatorDict(t2Operators)
 	decompilerClass = SimpleT2Decompiler
 	outlineExtractor = T2OutlineExtractor
-
+	isCFF2 = False
+	
 	def __init__(self, bytecode=None, program=None, private=None, globalSubrs=None):
 		if program is None:
 			program = []
@@ -1103,14 +1104,13 @@ class T2CharString(object):
 				else:
 					args.append(token)
 			if args:
-				if not isinstance(self, CFF2Subr):
-					assert 0, "T2Charstring or Subr has items on the stack after last operator."
-				else:
+				if self.isCFF2:
 					# CFF2Subr's can have numeric arguments on the stack after the last operator.
 					args = [str(arg) for arg in args]
 					line = ' '.join(args)
 					xmlWriter.write(line)
-			
+				else:
+					assert 0, "T2Charstring or Subr has items on the stack after last operator."
 
 	def fromXML(self, name, attrs, content):
 		from fontTools.misc.textTools import binary2num, readHex
@@ -1146,7 +1146,7 @@ class T2CharString(object):
 		self.setProgram(program)
 
 class CFF2Subr(T2CharString):
-	pass
+	isCFF2 = True
 
 class T1CharString(T2CharString):
 
