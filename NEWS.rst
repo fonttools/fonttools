@@ -1,3 +1,17 @@
+- [varLib] Try set of used points instead of all points when testing whether to
+  share points between tuples (#1090).
+- [CFF2] Fixed issue with reading/writing PrivateDict BlueValues to TTX file.
+  Read the commit message 8b02b5a and issue #1030 for more details.
+  NOTE: this change invalidates all the TTX files containing CFF2 tables
+  that where dumped with previous verisons of fonttools.
+  CFF2 Subr items can have values on the stack after the last operator, thus
+  a ``CFF2Subr`` class was added to accommodate this (#1091).
+- [_k_e_r_n] Fixed compilation of AAT kern version=1.0 tables (#1089, #1094)
+- [ttLib] Added getBestCmap() convenience method to TTFont class and cmap table
+  class that returns a preferred Unicode cmap subtable given a list of options
+  (#1092).
+- [morx] Emit more meaningful subtable flags. Implement InsertionMorphAction
+
 3.18.0 (released 2017-10-30)
 ----------------------------
 
