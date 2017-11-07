@@ -496,10 +496,12 @@ except ImportError:
 			return self.__dict__ == other.__dict__
 
 
-if PY3:
+if sys.version_info[:2] > (3, 4):
 	from contextlib import redirect_stdout, redirect_stderr
 else:
-	# These convenience helpers were added to contextlib module with python3.4
+	# `redirect_stdout` was added with python3.4, while `redirect_stderr`
+	# with python3.5. For simplicity, I redefine both for any versions
+	# less than or equal to 3.4.
 	# The code below is copied from:
 	# https://github.com/python/cpython/blob/57161aa/Lib/contextlib.py
 
