@@ -41,23 +41,27 @@ class table_F__e_a_t(DefaultTable.DefaultTable):
             if len(data) >= 4 * (i + 1):
                 (val, lid) = struct.unpack(">HH", data[4*i:4*(i+1)])
                 allsettings.append((val, lid))
-        for f in allfeats:
+        for i,f in enumerate(allfeats):
             (fid, nums, offset, flags, lid) = f
             fobj = Feature()
             fobj.flags = flags
             fobj.label = lid
             self.features[grUtils.num2tag(fid)] = fobj
             fobj.settings = {}
+            fobj.default = None
+            fobj.index = i
             for i in range(offset, offset + nums):
                 if i >= len(allsettings): continue
                 (vid, vlid) = allsettings[i]
                 fobj.settings[vid] = vlid
+                if fobj.default is None:
+                    fobj.default = vid
 
     def compile(self, ttFont):
         fdat = ""
         vdat = ""
         offset = 0
-        for f, v in sorted(self.features.items()):
+        for f, v in sorted(self.features.items(), key=lambda x:x[1].index):
             fnum = grUtils.tag2num(f)
             if self.version >= 2.0:
                 fdat += struct.pack(">LHHLHH", grUtils.tag2num(f), len(v.settings),
@@ -68,7 +72,7 @@ class table_F__e_a_t(DefaultTable.DefaultTable):
             else:
                 fdat += struct.pack(">HHLHH", grUtils.tag2num(f), len(v.settings),
                     offset * 4 + 12 + 12 * len(self.features), v.flags, v.label)
-            for s, l in sorted(v.settings.items()):
+            for s, l in sorted(v.settings.items(), key=lambda x:(-1, x[1]) if x[0] == v.default else x):
                 vdat += struct.pack(">HH", s, l)
             offset += len(v.settings)
         hdr = sstruct.pack(Feat_hdr_format, self)
@@ -77,8 +81,9 @@ class table_F__e_a_t(DefaultTable.DefaultTable):
     def toXML(self, writer, ttFont):
         writer.simpletag('version', version=self.version)
         writer.newline()
-        for f, v in sorted(self.features.items()):
-            writer.begintag('feature', fid=f, label=v.label, flags=v.flags)
+        for f, v in sorted(self.features.items(), key=lambda x:x[1].index):
+            writer.begintag('feature', fid=f, label=v.label, flags=v.flags,
+                            default=(v.default if v.default else 0))
             writer.newline()
             for s, l in sorted(v.settings.items()):
                 writer.simpletag('setting', value=s, label=l)
@@ -94,6 +99,8 @@ class table_F__e_a_t(DefaultTable.DefaultTable):
             fobj = Feature()
             fobj.flags = int(safeEval(attrs['flags']))
             fobj.label = int(safeEval(attrs['label']))
+            fobj.default = int(safeEval(attrs.get('default','0')))
+            fobj.index = len(self.features)
             self.features[fid] = fobj
             fobj.settings = {}
             for element in content:
