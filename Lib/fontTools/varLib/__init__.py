@@ -167,6 +167,31 @@ def _add_avar(font, axes):
 
 	return avar
 
+def _add_stat(font, axes):
+
+	nameTable = font['name']
+
+	assert "STAT" not in font
+	STAT = font["STAT"] = newTable('STAT')
+	stat = STAT.table = ot.STAT()
+	stat.Version = 0x00010000
+
+	axisRecords = []
+	for i,a in enumerate(axes.values()):
+		axis = ot.AxisRecord()
+		axis.AxisTag = Tag(a.tag)
+		# Meh. Reuse fvar nameID!
+		axis.AxisNameID = nameTable.addName(tounicode(a.labelname['en']))
+		axis.AxisOrdering = i
+		axisRecords.append(axis)
+
+	axisRecordArray = ot.AxisRecordArray()
+	axisRecordArray.Axis = axisRecords
+	# XXX these should not be hard-coded but computed automatically
+	stat.DesignAxisRecordSize = 8
+	stat.DesignAxisCount = len(axisRecords)
+	stat.DesignAxisRecord = axisRecordArray
+
 # TODO Move to glyf or gvar table proper
 def _GetCoordinates(font, glyphName):
 	"""font, glyphName --> glyph coordinates as expected by "gvar" table
@@ -675,6 +700,7 @@ def build(designspace_filename, master_finder=lambda s:s):
 
 	# TODO append masters as named-instances as well; needs .designspace change.
 	fvar = _add_fvar(vf, axes, instances)
+	_add_stat(vf, axes)
 	_add_avar(vf, axes)
 	del instances
 
