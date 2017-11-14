@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.7">
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.19">
 
   <GlyphOrder>
     <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
@@ -494,6 +494,12 @@
     <namerecord nameID="273" platformID="1" platEncID="0" langID="0x0" unicode="True">
       TestFamily-BlackHighContrast
     </namerecord>
+    <namerecord nameID="274" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Weight
+    </namerecord>
+    <namerecord nameID="275" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Contrast
+    </namerecord>
     <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
       Test Family
     </namerecord>
@@ -571,6 +577,12 @@
     </namerecord>
     <namerecord nameID="273" platformID="3" platEncID="1" langID="0x409">
       TestFamily-BlackHighContrast
+    </namerecord>
+    <namerecord nameID="274" platformID="3" platEncID="1" langID="0x409">
+      Weight
+    </namerecord>
+    <namerecord nameID="275" platformID="3" platEncID="1" langID="0x409">
+      Contrast
     </namerecord>
   </name>
 
