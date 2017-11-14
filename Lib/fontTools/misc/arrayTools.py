@@ -153,9 +153,7 @@ class Vector(object):
         raise NotImplementedError
 
     def _unaryOp(self, op):
-        if isinstance(other, Number):
-            return [op(v) for v in self.values]
-        raise NotImplementedError
+        return [op(v) for v in self.values]
 
     def __add__(self, other):
         return Vector(self._vectorOp(other, operator.add), keep=True)
@@ -186,11 +184,11 @@ class Vector(object):
         return self
 
     def __pos__(self):
-        return Vector(self._unaryOp(other, operator.pos), keep=True)
+        return Vector(self._unaryOp(operator.pos), keep=True)
     def __neg__(self):
-        return Vector(self._unaryOp(other, operator.neg), keep=True)
+        return Vector(self._unaryOp(operator.neg), keep=True)
     def __round__(self):
-        return Vector(self._unaryOp(other, round), keep=True)
+        return Vector(self._unaryOp(round), keep=True)
     def toInt(self):
         return self.__round__()
 
