@@ -1,10 +1,20 @@
+# -*- coding: utf-8 -*-
 """fontTools.misc.bezierTools.py -- tools for working with bezier path segments.
 """
 
 from __future__ import print_function, division, absolute_import
+from fontTools.misc.arrayTools import calcBounds
 from fontTools.misc.py23 import *
+import math
+
 
 __all__ = [
+    "approximateCubicArcLength",
+    "approximateCubicArcLengthC",
+    "approximateQuadraticArcLength",
+    "approximateQuadraticArcLengthC",
+    "calcQuadraticArcLength",
+    "calcQuadraticArcLengthC",
     "calcQuadraticBounds",
     "calcCubicBounds",
     "splitLine",
@@ -16,10 +26,96 @@ __all__ = [
     "solveCubic",
 ]
 
-from fontTools.misc.arrayTools import calcBounds
 
 epsilonDigits = 6
 epsilon = 1e-10
+
+
+def _dot(v1, v2):
+    return (v1 * v2.conjugate()).real
+
+
+def _intSecAtan(x):
+    # In : sympy.integrate(sp.sec(sp.atan(x)))
+    # Out: x*sqrt(x**2 + 1)/2 + asinh(x)/2
+    return x * math.sqrt(x**2 + 1)/2 + math.asinh(x)/2
+
+
+def calcQuadraticArcLength(pt1, pt2, pt3, approximate_fallback=False):
+    """Return the arc length for a qudratic bezier segment.
+    pt1 and pt3 are the "anchor" points, pt2 is the "handle".
+
+        >>> calcQuadraticArcLength((0, 0), (0, 0), (0, 0)) # empty segment
+        0.0
+        >>> calcQuadraticArcLength((0, 0), (50, 0), (80, 0)) # collinear points
+        80.0
+        >>> calcQuadraticArcLength((0, 0), (0, 50), (0, 80)) # collinear points vertical
+        80.0
+        >>> calcQuadraticArcLength((0, 0), (50, 20), (100, 40)) # collinear points
+        107.70329614269008
+        >>> calcQuadraticArcLength((0, 0), (0, 100), (100, 0))
+        154.02976155645263
+        >>> calcQuadraticArcLength((0, 0), (0, 50), (100, 0))
+        120.21581243984076
+        >>> calcQuadraticArcLength((0, 0), (50, -10), (80, 50))
+        102.53273816445825
+        >>> calcQuadraticArcLength((0, 0), (40, 0), (-40, 0), True) # collinear points, control point outside, exact result should be 66.6666666666667
+        69.41755572720999
+        >>> calcQuadraticArcLength((0, 0), (40, 0), (0, 0), True) # collinear points, looping back, exact result should be 40
+        34.4265186329548
+    """
+    return calcQuadraticArcLengthC(complex(*pt1), complex(*pt2), complex(*pt3), approximate_fallback)
+
+
+def calcQuadraticArcLengthC(pt1, pt2, pt3, approximate_fallback=False):
+    """Return the arc length for a qudratic bezier segment using complex points.
+    pt1 and pt3 are the "anchor" points, pt2 is the "handle"."""
+    
+    # Analytical solution to the length of a quadratic bezier.
+    # I'll explain how I arrived at this later.
+    d0 = pt2 - pt1
+    d1 = pt3 - pt2
+    d = d1 - d0
+    n = d * 1j
+    scale = abs(n)
+    if scale == 0.:
+        return abs(pt3-pt1)
+    origDist = _dot(n,d0)
+    if origDist == 0.:
+        if _dot(d0,d1) >= 0:
+            return abs(pt3-pt1)
+        if approximate_fallback:
+            return approximateQuadraticArcLengthC(pt1, pt2, pt3)
+        assert 0 # TODO handle cusps
+    x0 = _dot(d,d0) / origDist
+    x1 = _dot(d,d1) / origDist
+    Len = abs(2 * (_intSecAtan(x1) - _intSecAtan(x0)) * origDist / (scale * (x1 - x0)))
+    return Len
+
+
+def approximateQuadraticArcLength(pt1, pt2, pt3):
+    # Approximate length of quadratic Bezier curve using Gauss-Legendre quadrature
+    # with n=3 points.
+    return approximateQuadraticArcLengthC(complex(*pt1), complex(*pt2), complex(*pt3))
+
+
+def approximateQuadraticArcLengthC(pt1, pt2, pt3):
+    # Approximate length of quadratic Bezier curve using Gauss-Legendre quadrature
+    # with n=3 points for complex points.
+    #
+    # This, essentially, approximates the length-of-derivative function
+    # to be integrated with the best-matching fifth-degree polynomial
+    # approximation of it.
+    #
+    #https://en.wikipedia.org/wiki/Gaussian_quadrature#Gauss.E2.80.93Legendre_quadrature
+
+    # abs(BezierCurveC[2].diff(t).subs({t:T})) for T in sorted(.5, .5±sqrt(3/5)/2),
+    # weighted 5/18, 8/18, 5/18 respectively.
+    v0 = abs(-0.492943519233745*pt1 + 0.430331482911935*pt2 + 0.0626120363218102*pt3)
+    v1 = abs(pt3-pt1)*0.4444444444444444
+    v2 = abs(-0.0626120363218102*pt1 - 0.430331482911935*pt2 + 0.492943519233745*pt3)
+
+    return v0 + v1 + v2
 
 
 def calcQuadraticBounds(pt1, pt2, pt3):
@@ -41,6 +137,50 @@ def calcQuadraticBounds(pt1, pt2, pt3):
         roots.append(-by/ay2)
     points = [(ax*t*t + bx*t + cx, ay*t*t + by*t + cy) for t in roots if 0 <= t < 1] + [pt1, pt3]
     return calcBounds(points)
+
+
+def approximateCubicArcLength(pt1, pt2, pt3, pt4):
+    """Return the approximate arc length for a cubic bezier segment.
+    pt1 and pt4 are the "anchor" points, pt2 and pt3 are the "handles".
+
+        >>> approximateCubicArcLength((0, 0), (25, 100), (75, 100), (100, 0))
+        190.04332968932817
+        >>> approximateCubicArcLength((0, 0), (50, 0), (100, 50), (100, 100))
+        154.8852074945903
+        >>> approximateCubicArcLength((0, 0), (50, 0), (100, 0), (150, 0)) # line; exact result should be 150.
+        149.99999999999991
+        >>> approximateCubicArcLength((0, 0), (50, 0), (100, 0), (-50, 0)) # cusp; exact result should be 150.
+        136.9267662156362
+        >>> approximateCubicArcLength((0, 0), (50, 0), (100, -50), (-50, 0)) # cusp
+        154.80848416537057
+    """
+    # Approximate length of cubic Bezier curve using Gauss-Lobatto quadrature
+    # with n=5 points.
+    return approximateCubicArcLengthC(complex(*pt1), complex(*pt2), complex(*pt3), complex(*pt4))
+
+
+def approximateCubicArcLengthC(pt1, pt2, pt3, pt4):
+    """Return the approximate arc length for a cubic bezier segment of complex points.
+    pt1 and pt4 are the "anchor" points, pt2 and pt3 are the "handles"."""
+
+    # Approximate length of cubic Bezier curve using Gauss-Lobatto quadrature
+    # with n=5 points for complex points.
+    #
+    # This, essentially, approximates the length-of-derivative function
+    # to be integrated with the best-matching seventh-degree polynomial
+    # approximation of it.
+    #
+    # https://en.wikipedia.org/wiki/Gaussian_quadrature#Gauss.E2.80.93Lobatto_rules
+
+    # abs(BezierCurveC[3].diff(t).subs({t:T})) for T in sorted(0, .5±(3/7)**.5/2, .5, 1),
+    # weighted 1/20, 49/180, 32/90, 49/180, 1/20 respectively.
+    v0 = abs(pt2-pt1)*.15
+    v1 = abs(-0.558983582205757*pt1 + 0.325650248872424*pt2 + 0.208983582205757*pt3 + 0.024349751127576*pt4)
+    v2 = abs(pt4-pt1+pt3-pt2)*0.26666666666666666
+    v3 = abs(-0.024349751127576*pt1 - 0.208983582205757*pt2 - 0.325650248872424*pt3 + 0.558983582205757*pt4)
+    v4 = abs(pt4-pt3)*.15
+
+    return v0 + v1 + v2 + v3 + v4
 
 
 def calcCubicBounds(pt1, pt2, pt3, pt4):
