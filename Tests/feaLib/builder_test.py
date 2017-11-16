@@ -138,7 +138,7 @@ class BuilderTest(unittest.TestCase):
     def check_fea2fea_file(self, name, base=None, parser=Parser):
         font = makeTTFont()
         fname = (name + ".fea") if '.' not in name else name
-        p = parser(self.getpath(fname), glyphMap=font.getReverseGlyphMap())
+        p = parser(self.getpath(fname), glyphNames=font.getGlyphOrder())
         doc = p.parse()
         actual = self.normal_fea(doc.asFea().split("\n"))
         with open(self.getpath(base or fname), "r", encoding="utf-8") as ofile:

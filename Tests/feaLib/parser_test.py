@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser, SymbolTable
 from fontTools.misc.py23 import *
+import warnings
 import fontTools.feaLib.ast as ast
 import os
 import unittest
@@ -30,11 +31,7 @@ def mapping(s):
     return dict(zip(b, c))
 
 
-def makeGlyphMap(glyphs):
-    return {g: i for i, g in enumerate(glyphs)}
-
-
-GLYPHMAP = makeGlyphMap(("""
+GLYPHNAMES = ("""
     .notdef space A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
     A.sc B.sc C.sc D.sc E.sc F.sc G.sc H.sc I.sc J.sc K.sc L.sc M.sc
     N.sc O.sc P.sc Q.sc R.sc S.sc T.sc U.sc V.sc W.sc X.sc Y.sc Z.sc
@@ -44,7 +41,7 @@ GLYPHMAP = makeGlyphMap(("""
     n.sc o.sc p.sc q.sc r.sc s.sc t.sc u.sc v.sc w.sc x.sc y.sc z.sc
     a.swash b.swash x.swash y.swash z.swash
     foobar foo.09 foo.1234 foo.9876
-""").split() + ["foo.%d" % i for i in range(1, 200)])
+""").split() + ["foo.%d" % i for i in range(1, 200)]
 
 
 class ParserTest(unittest.TestCase):
@@ -54,6 +51,25 @@ class ParserTest(unittest.TestCase):
         # and fires deprecation warnings if a program uses the old name.
         if not hasattr(self, "assertRaisesRegex"):
             self.assertRaisesRegex = self.assertRaisesRegexp
+
+    def test_glyphMap_deprecated(self):
+        glyphMap = {'a': 0, 'b': 1, 'c': 2}
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            parser = Parser(UnicodeIO(), glyphMap=glyphMap)
+
+            self.assertEqual(len(w), 1)
+            self.assertEqual(w[-1].category, UserWarning)
+            self.assertIn("deprecated", str(w[-1].message))
+            self.assertEqual(parser.glyphNames_, {'a', 'b', 'c'})
+
+            self.assertRaisesRegex(
+                TypeError, "mutually exclusive",
+                Parser, UnicodeIO(), ("a",), glyphMap={"a": 0})
+
+            self.assertRaisesRegex(
+                TypeError, "unsupported keyword argument",
+                Parser, UnicodeIO(), foo="bar")
 
     def test_comments(self):
         doc = self.parse(
@@ -297,31 +313,31 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(gc.glyphSet(), ("d.sc", "e.sc", "f.sc", "g.sc"))
 
     def test_glyphclass_range_dash(self):
-        glyphMap = makeGlyphMap("A-foo.sc B-foo.sc C-foo.sc".split())
-        [gc] = self.parse("@range = [A-foo.sc-C-foo.sc];", glyphMap).statements
+        glyphNames = "A-foo.sc B-foo.sc C-foo.sc".split()
+        [gc] = self.parse("@range = [A-foo.sc-C-foo.sc];", glyphNames).statements
         self.assertEqual(gc.glyphSet(), ("A-foo.sc", "B-foo.sc", "C-foo.sc"))
 
     def test_glyphclass_range_dash_with_space(self):
-        g = makeGlyphMap("A-foo.sc B-foo.sc C-foo.sc".split())
-        [gc] = self.parse("@range = [A-foo.sc - C-foo.sc];", g).statements
+        gn = "A-foo.sc B-foo.sc C-foo.sc".split()
+        [gc] = self.parse("@range = [A-foo.sc - C-foo.sc];", gn).statements
         self.assertEqual(gc.glyphSet(), ("A-foo.sc", "B-foo.sc", "C-foo.sc"))
 
     def test_glyphclass_glyph_name_should_win_over_range(self):
         # The OpenType Feature File Specification v1.20 makes it clear
         # that if a dashed name could be interpreted either as a glyph name
         # or as a range, then the semantics should be the single dashed name.
-        glyphMap = makeGlyphMap(
+        glyphNames = (
             "A-foo.sc-C-foo.sc A-foo.sc B-foo.sc C-foo.sc".split())
-        [gc] = self.parse("@range = [A-foo.sc-C-foo.sc];", glyphMap).statements
+        [gc] = self.parse("@range = [A-foo.sc-C-foo.sc];", glyphNames).statements
         self.assertEqual(gc.glyphSet(), ("A-foo.sc-C-foo.sc",))
 
     def test_glyphclass_range_dash_ambiguous(self):
-        glyphMap = makeGlyphMap("A B C A-B B-C".split())
+        glyphNames = "A B C A-B B-C".split()
         self.assertRaisesRegex(
             FeatureLibError,
             'Ambiguous glyph range "A-B-C"; '
             'please use "A - B-C" or "A-B - C" to clarify what you mean',
-            self.parse, r"@bad = [A-B-C];", glyphMap)
+            self.parse, r"@bad = [A-B-C];", glyphNames)
 
     def test_glyphclass_range_digit1(self):
         [gc] = self.parse("@range = [foo.2-foo.5];").statements
@@ -1268,7 +1284,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(glyphstr(sub.suffix), "Z")
 
     def test_substitute_lookups(self):  # GSUB LookupType 6
-        doc = Parser(self.getpath("spec5fi1.fea"), GLYPHMAP).parse()
+        doc = Parser(self.getpath("spec5fi1.fea"), GLYPHNAMES).parse()
         [_, _, _, langsys, ligs, sub, feature] = doc.statements
         self.assertEqual(feature.statements[0].lookups, [ligs, None, sub])
         self.assertEqual(feature.statements[1].lookups, [ligs, None, sub])
@@ -1483,9 +1499,9 @@ class ParserTest(unittest.TestCase):
             doc = self.parse("table %s { ;;; } %s;" % (table, table))
             self.assertEqual(doc.statements[0].statements, [])
 
-    def parse(self, text, glyphMap=GLYPHMAP):
+    def parse(self, text, glyphNames=GLYPHNAMES):
         featurefile = UnicodeIO(text)
-        p = Parser(featurefile, glyphMap)
+        p = Parser(featurefile, glyphNames)
         return p.parse()
 
     @staticmethod

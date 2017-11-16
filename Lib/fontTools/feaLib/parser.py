@@ -17,8 +17,20 @@ class Parser(object):
     extensions = {}
     ast = ast
 
-    def __init__(self, featurefile, glyphMap):
-        self.glyphMap_ = glyphMap
+    def __init__(self, featurefile, glyphNames=(), **kwargs):
+        if "glyphMap" in kwargs:
+            from fontTools.misc.loggingTools import deprecateArgument
+            deprecateArgument("glyphMap", "use 'glyphNames' (iterable) instead")
+            if glyphNames:
+                raise TypeError("'glyphNames' and (deprecated) 'glyphMap' are "
+                                "mutually exclusive")
+            glyphNames = kwargs.pop("glyphMap")
+        if kwargs:
+            raise TypeError("unsupported keyword argument%s: %s"
+                            % ("" if len(kwargs) == 1 else "s",
+                               ", ".join(repr(k) for k in kwargs)))
+
+        self.glyphNames_ = set(glyphNames)
         self.doc_ = self.ast.FeatureFile()
         self.anchors_ = SymbolTable()
         self.glyphclasses_ = SymbolTable()
@@ -220,7 +232,7 @@ class Parser(object):
         solutions = []
         for i in range(len(parts)):
             start, limit = "-".join(parts[0:i]), "-".join(parts[i:])
-            if start in self.glyphMap_ and limit in self.glyphMap_:
+            if start in self.glyphNames_ and limit in self.glyphNames_:
                 solutions.append((start, limit))
         if len(solutions) == 1:
             start, limit = solutions[0]
@@ -260,7 +272,7 @@ class Parser(object):
             if self.next_token_type_ is Lexer.NAME:
                 glyph = self.expect_glyph_()
                 location = self.cur_token_location_
-                if '-' in glyph and glyph not in self.glyphMap_:
+                if '-' in glyph and glyph not in self.glyphNames_:
                     start, limit = self.split_glyph_range_(glyph, location)
                     glyphs.add_range(
                         start, limit,
