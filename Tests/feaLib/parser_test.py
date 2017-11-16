@@ -81,6 +81,7 @@ class ParserTest(unittest.TestCase):
         c2 = doc.statements[1].statements[1]
         self.assertEqual(type(c1), ast.Comment)
         self.assertEqual(c1.text, "# Initial")
+        self.assertEqual(str(c1), "# Initial")
         self.assertEqual(type(c2), ast.Comment)
         self.assertEqual(c2.text, "# simple")
         self.assertEqual(doc.statements[1].name, "test")

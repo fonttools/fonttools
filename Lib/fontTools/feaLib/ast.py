@@ -47,7 +47,8 @@ def asFea(g):
         return g
 
 
-class Statement(object):
+class Element(object):
+
     def __init__(self, location):
         self.location = location
 
@@ -55,27 +56,24 @@ class Statement(object):
         pass
 
     def asFea(self, indent=""):
-        pass
+        raise NotImplementedError
+
+    def __str__(self):
+        return self.asFea()
 
 
-class Expression(object):
-    def __init__(self, location):
-        self.location = location
-
-    def build(self, builder):
-        pass
-
-    def asFea(self, indent=""):
-        pass
+class Statement(Element):
+    pass
 
 
-class Comment(object):
+class Expression(Element):
+    pass
+
+
+class Comment(Element):
     def __init__(self, location, text):
-        self.location = location
+        super(Comment, self).__init__(location)
         self.text = text
-
-    def build(self, builder):
-        pass
 
     def asFea(self, indent=""):
         return self.text
