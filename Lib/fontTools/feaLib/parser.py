@@ -17,7 +17,19 @@ class Parser(object):
     extensions = {}
     ast = ast
 
-    def __init__(self, featurefile, glyphNames):
+    def __init__(self, featurefile, glyphNames=(), **kwargs):
+        if "glyphMap" in kwargs:
+            from fontTools.misc.loggingTools import deprecateArgument
+            deprecateArgument("glyphMap", "use 'glyphNames' (iterable) instead")
+            if glyphNames:
+                raise TypeError("'glyphNames' and (deprecated) 'glyphMap' are "
+                                "mutually exclusive")
+            glyphNames = kwargs.pop("glyphMap")
+        if kwargs:
+            raise TypeError("unsupported keyword argument%s: %s"
+                            % ("" if len(kwargs) == 1 else "s",
+                               ", ".join(repr(k) for k in kwargs)))
+
         self.glyphNames_ = set(glyphNames)
         self.doc_ = self.ast.FeatureFile()
         self.anchors_ = SymbolTable()

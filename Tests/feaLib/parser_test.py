@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser, SymbolTable
 from fontTools.misc.py23 import *
+import warnings
 import fontTools.feaLib.ast as ast
 import os
 import unittest
@@ -50,6 +51,25 @@ class ParserTest(unittest.TestCase):
         # and fires deprecation warnings if a program uses the old name.
         if not hasattr(self, "assertRaisesRegex"):
             self.assertRaisesRegex = self.assertRaisesRegexp
+
+    def test_glyphMap_deprecated(self):
+        glyphMap = {'a': 0, 'b': 1, 'c': 2}
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            parser = Parser(UnicodeIO(), glyphMap=glyphMap)
+
+            self.assertEqual(len(w), 1)
+            self.assertEqual(w[-1].category, UserWarning)
+            self.assertIn("deprecated", str(w[-1].message))
+            self.assertEqual(parser.glyphNames_, {'a', 'b', 'c'})
+
+            self.assertRaisesRegex(
+                TypeError, "mutually exclusive",
+                Parser, UnicodeIO(), ("a",), glyphMap={"a": 0})
+
+            self.assertRaisesRegex(
+                TypeError, "unsupported keyword argument",
+                Parser, UnicodeIO(), foo="bar")
 
     def test_comments(self):
         doc = self.parse(
