@@ -449,7 +449,7 @@ class GlyphSet(object):
 			return data
 		except Exception as e:
 			if isinstance(e, IOError) and e.errno == 2:
-				raise MissingPlistError()
+				raise MissingPlistError(path)
 			raise GlifLibError("The file %s could not be read." % path)
 
 
@@ -1085,7 +1085,7 @@ def _buildOutlineComponentFormat1(pen, component):
 		raise GlifLibError("Unknown child elements of component element.")
 	for attr in component.attrib.keys():
 		if attr not in componentAttributesFormat1:
-			raise GlifLibError("Unknown attributes in component element.")
+			raise GlifLibError("Unknown attribute in component element: %s" % attr)
 	baseGlyphName = component.get("base")
 	if baseGlyphName is None:
 		raise GlifLibError("The base attribute is not defined in the component.")
@@ -1111,8 +1111,9 @@ def buildOutlineFormat2(glyphObject, pen, outline, identifiers):
 			raise GlifLibError("Unknown element in outline element: %s" % element.tag)
 
 def _buildOutlineContourFormat2(pen, contour, identifiers):
-	if set(contour.attrib.keys()) - contourAttributesFormat2:
-		raise GlifLibError("Unknown attributes in contour element.")
+	for attr in contour.attrib.keys():
+		if attr not in contourAttributesFormat2:
+			raise GlifLibError("Unknown attribute in contour element: %s" % attr)
 	identifier = contour.get("identifier")
 	if identifier is not None:
 		if identifier in identifiers:
@@ -1155,7 +1156,7 @@ def _buildOutlineComponentFormat2(pen, component, identifiers):
 		raise GlifLibError("Unknown child elements of component element.")
 	for attr in component.attrib.keys():
 		if attr not in componentAttributesFormat2:
-			raise GlifLibError("Unknown attributes in component element.")
+			raise GlifLibError("Unknown attribute in component element: %s" % attr)
 	baseGlyphName = component.get("base")
 	if baseGlyphName is None:
 		raise GlifLibError("The base attribute is not defined in the component.")
@@ -1205,14 +1206,7 @@ def _validateAndMassagePointStructures(contour, pointAttributes, openContourOffC
 			value = element.get(attr)
 			if value is None:
 				raise GlifLibError("Required %s attribute is missing in point element." % attr)
-			try:
-				value = int(value)
-			except ValueError:
-				try:
-					value = float(value)
-				except ValueError:
-					raise GlifLibError("Invalid %s value in point element: %s" % (attr, value))
-			element.attrib[attr] = value
+			element.attrib[attr] = _number(value)
 		# segment type
 		pointType = element.attrib.pop("type", "offcurve")
 		if pointType not in pointTypeOptions:

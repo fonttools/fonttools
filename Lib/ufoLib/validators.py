@@ -54,19 +54,6 @@ def genericIntListValidator(values, validValues):
 			return False
 	return True
 
-def genericIntSetValidator(values, validValues):
-	"""
-	Generic. (Added at version 3.)
-	"""
-	if not isinstance(values, (list, tuple)):
-		return False
-	for value in values:
-		if value not in validValues:
-			return False
-		if not isinstance(value, int):
-			return False
-	return True
-
 def genericNonNegativeIntValidator(value):
 	"""
 	Generic. (Added at version 3.)
@@ -134,7 +121,7 @@ def fontInfoOpenTypeGaspRangeRecordsValidator(value):
 		return False
 	if len(value) == 0:
 		return True
-	validBehaviors = {0, 1, 2, 3}
+	validBehaviors = [0, 1, 2, 3]
 	dictPrototype = dict(rangeMaxPPEM=(int, True), rangeGaspBehavior=(list, True))
 	ppemOrder = []
 	for rangeRecord in value:
@@ -145,7 +132,7 @@ def fontInfoOpenTypeGaspRangeRecordsValidator(value):
 		ppemValidity = genericNonNegativeIntValidator(ppem)
 		if not ppemValidity:
 			return False
-		behaviorValidity = genericIntSetValidator(behavior, validBehaviors)
+		behaviorValidity = genericIntListValidator(behavior, validBehaviors)
 		if not behaviorValidity:
 			return False
 		ppemOrder.append(ppem)
