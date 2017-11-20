@@ -20,7 +20,7 @@
 #
 
 
-SCRIPT_RANGES = [
+RANGES = [
     0x0000,  # .. 0x0040 ; Common
     0x0041,  # .. 0x005A ; Latin
     0x005B,  # .. 0x0060 ; Common
@@ -1537,7 +1537,7 @@ SCRIPT_RANGES = [
     0xE01F0,  # .. 0x10FFFF ; Unknown
 ]
 
-SCRIPT_NAMES = [
+VALUES = [
     'Common',                  # 0000..0040
     'Latin',                   # 0041..005A
     'Common',                  # 005B..0060
