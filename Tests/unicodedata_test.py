@@ -153,3 +153,22 @@ def test_script():
     assert unicodedata.script(unichr(0x118CF)) == 'Warang_Citi'
     assert unicodedata.script(unichr(0xA066)) == 'Yi'
     assert unicodedata.script(unichr(0x11A31)) == 'Zanabazar_Square'
+
+
+def test_script_extension():
+    assert unicodedata.script_extension("a") == {"Latin"}
+    assert unicodedata.script_extension(unichr(0)) == {"Common"}
+    assert unicodedata.script_extension(unichr(0x0378)) == {"Unknown"}
+    assert unicodedata.script_extension(unichr(0x10FFFF)) == {"Unknown"}
+
+    assert unicodedata.script_extension("\u0660") == {'Arab', 'Thaa'}
+    assert unicodedata.script_extension("\u0964") == {
+        'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Mahj', 'Mlym',
+        'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'}
+
+
+def test_block():
+    assert unicodedata.block("\x00") == "Basic Latin"
+    assert unicodedata.block("\x7F") == "Basic Latin"
+    assert unicodedata.block("\x80") == "Latin-1 Supplement"
+    assert unicodedata.block("\u1c90") == "No_Block"
