@@ -2,38 +2,11 @@ from __future__ import (
     print_function, division, absolute_import, unicode_literals)
 from fontTools.misc.py23 import *
 
-
 from fontTools import unicodedata
-
-
-def test__binary_search_range():
-    ranges = [
-        (0, 10, "foo"),
-        (11, 11, "bar"),
-        (12, 20, "baz"),
-        (21, 22, "bum"),
-    ]
-    search = unicodedata._binary_search_range
-
-    for i in range(11):
-        assert search(1, ranges) == "foo"
-
-    assert search(11, ranges) == "bar"
-
-    for i in range(12, 21):
-        assert search(i, ranges) == "baz"
-
-    for i in range(21, 23):
-        assert search(i, ranges) == "bum"
-
-    assert search(23, ranges) is None
 
 
 def test_script():
     assert unicodedata.script("a") == "Latin"
-
-    assert hasattr(unicodedata.script, "cache")
-    assert unicodedata.script("a") == unicodedata.script.cache["a"]
 
     # these were randomly sampled, one character per script
     assert unicodedata.script(unichr(0x1E918)) == 'Adlam'
