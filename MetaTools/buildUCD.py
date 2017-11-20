@@ -124,8 +124,8 @@ def parse_range_properties(infile, default="Unknown"):
 
 def build_scripts(local_ucd=None, output_path=None):
     """Fetch "Scripts.txt" data file from Unicode official website, parse
-    the script ranges and write them as a list of Python tuples to
-    'fontTools.unicodedata.scripts'.
+    the script ranges and names and write them as two Python lists
+    to 'fontTools.unicodedata.scripts'.
 
     To load "Scripts.txt" from a local directory, you can use the
     'local_ucd' argument.
