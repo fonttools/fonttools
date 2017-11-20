@@ -20,6 +20,7 @@ from os.path import abspath, dirname, join as pjoin, pardir, sep
 
 
 UNIDATA_URL = "https://unicode.org/Public/UNIDATA/"
+UNIDATA_LICENSE_URL = "http://unicode.org/copyright.html#License"
 
 # by default save output files to ../Lib/fontTools/unicodedata/
 UNIDATA_PATH = pjoin(abspath(dirname(__file__)), pardir,
@@ -151,6 +152,7 @@ def build_scripts(local_ucd=None, output_path=None):
         f.write("#\n")
         f.write(NOTICE)
         f.write("# Source: {}{}\n".format(UNIDATA_URL, filename))
+        f.write("# License: {}\n".format(UNIDATA_LICENSE_URL))
         f.write("#\n")
         f.write(header+"\n\n")
 
