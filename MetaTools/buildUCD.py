@@ -55,7 +55,7 @@ def parse_unidata_header(infile):
     return "".join(header)
 
 
-def parse_range_properties(infile, default="Unknown"):
+def parse_range_properties(infile, default=None, is_set=False):
     """Parse a Unicode data file containing a column with one character or
     a range of characters, and another column containing a property value
     separated by a semicolon. Comments after '#' are ignored.
@@ -83,69 +83,80 @@ def parse_range_properties(infile, default="Unknown"):
 
         first = int(first, 16)
         last = int(last, 16)
-        data = data.rstrip()
+        data = tostr(data.rstrip(), encoding="ascii")
 
         ranges.append((first, last, data))
 
     ranges.sort()
 
+    if isinstance(default, unicode):
+        default = tostr(default, encoding="ascii")
+
     # fill the gaps between explicitly defined ranges
     last_start, last_end = -1, -1
     full_ranges = []
-    for start, end, name in ranges:
+    for start, end, value in ranges:
         assert last_end < start
         assert start <= end
         if start - last_end > 1:
             full_ranges.append((last_end+1, start-1, default))
-        full_ranges.append((start, end, name))
+        if is_set:
+            value = set(value.split())
+        full_ranges.append((start, end, value))
         last_start, last_end = start, end
     if last_end != MAX_UNICODE:
         full_ranges.append((last_end+1, MAX_UNICODE, default))
 
     # reduce total number of ranges by combining continuous ones
-    last_start, last_end, last_name = full_ranges.pop(0)
+    last_start, last_end, last_value = full_ranges.pop(0)
     merged_ranges = []
-    for start, end, name in full_ranges:
-        if name == last_name:
+    for start, end, value in full_ranges:
+        if value == last_value:
             continue
         else:
-            merged_ranges.append((last_start, start-1, last_name))
-            last_start, line_end, last_name = start, end, name
-    merged_ranges.append((last_start, MAX_UNICODE, last_name))
+            merged_ranges.append((last_start, start-1, last_value))
+            last_start, line_end, last_value = start, end, value
+    merged_ranges.append((last_start, MAX_UNICODE, last_value))
 
     # make sure that the ranges cover the full unicode repertoire
     assert merged_ranges[0][0] == 0
-    for (cs, ce, cn), (ns, ne, nn) in zip(merged_ranges, merged_ranges[1:]):
+    for (cs, ce, cv), (ns, ne, nv) in zip(merged_ranges, merged_ranges[1:]):
         assert ce+1 == ns
     assert merged_ranges[-1][1] == MAX_UNICODE
 
     return merged_ranges
 
 
-def build_scripts(local_ucd=None, output_path=None):
-    """Fetch "Scripts.txt" data file from Unicode official website, parse
-    the script ranges and names and write them as two Python lists
-    to 'fontTools.unicodedata.scripts'.
+def _set_repr(value):
+    return 'None' if value is None else "{{{}}}".format(
+        ", ".join(repr(v) for v in sorted(value)))
 
-    To load "Scripts.txt" from a local directory, you can use the
+
+def build_ranges(filename, local_ucd=None, output_path=None,
+                 default=None, is_set=False):
+    """Fetch 'filename' UCD data file from Unicode official website, parse
+    the ranges and properties and write them as two Python lists
+    to 'fontTools.unicodedata.<filename>.py'.
+
+    To load the data file from a local directory, you can use the
     'local_ucd' argument.
     """
+    modname = os.path.splitext(filename)[0] + ".py"
     if not output_path:
-        output_path = UNIDATA_PATH + "scripts.py"
+        output_path = UNIDATA_PATH + modname
 
-    filename = "Scripts.txt"
     if local_ucd:
-        log.info("loading %r from local directory %r", filename, local_ucd)
+        log.info("loading '%s' from local directory '%s'", filename, local_ucd)
         cm = open(pjoin(local_ucd, filename), "r", encoding="utf-8")
     else:
-        log.info("downloading %r from %r", filename, UNIDATA_URL)
+        log.info("downloading '%s' from '%s'", filename, UNIDATA_URL)
         cm = open_unidata_file(filename)
 
     with cm as f:
         header = parse_unidata_header(f)
-        ranges = parse_range_properties(f)
+        ranges = parse_range_properties(f, default=default, is_set=is_set)
 
-    max_name_length = max(len(n) for _, _, n in ranges)
+    max_value_length = min(56, max(len(repr(v)) for _, _, v in ranges))
 
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(SRC_ENCODING)
@@ -156,21 +167,24 @@ def build_scripts(local_ucd=None, output_path=None):
         f.write("#\n")
         f.write(header+"\n\n")
 
-        f.write("SCRIPT_RANGES = [\n")
-        for first, last, script_name in ranges:
+        f.write("RANGES = [\n")
+        for first, last, value in ranges:
             f.write("    0x{:0>4X},  # .. 0x{:0>4X} ; {}\n".format(
-                first, last, tostr(script_name)))
+                first, last, _set_repr(value) if is_set else value))
         f.write("]\n")
 
         f.write("\n")
-        f.write("SCRIPT_NAMES = [\n")
-        for first, last, script_name in ranges:
-            script_name = "'{}',".format(script_name)
+        f.write("VALUES = [\n")
+        for first, last, value in ranges:
+            if is_set:
+                value_repr = "{},".format(_set_repr(value))
+            else:
+                value_repr = "{!r},".format(value)
             f.write("    {}  # {:0>4X}..{:0>4X}\n".format(
-                script_name.ljust(max_name_length+3), first, last))
+                value_repr.ljust(max_value_length+1), first, last))
         f.write("]\n")
 
-    log.info("saved new file: %r", os.path.normpath(output_path))
+    log.info("saved new file: '%s'", os.path.normpath(output_path))
 
 
 def main():
@@ -186,7 +200,10 @@ def main():
     level = "WARNING" if options.quiet else "INFO"
     logging.basicConfig(level=level, format="%(message)s")
 
-    build_scripts(local_ucd=options.ucd_path)
+    build_ranges("Blocks.txt", local_ucd=options.ucd_path, default="No_Block")
+    build_ranges("Scripts.txt", local_ucd=options.ucd_path, default="Unknown")
+    build_ranges("ScriptExtensions.txt", local_ucd=options.ucd_path,
+                 is_set=True)
 
 
 if __name__ == "__main__":
