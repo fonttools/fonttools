@@ -7,6 +7,9 @@ from fontTools import unicodedata
 
 def test_script():
     assert unicodedata.script("a") == "Latin"
+    assert unicodedata.script(unichr(0)) == "Common"
+    assert unicodedata.script(unichr(0x0378)) == "Unknown"
+    assert unicodedata.script(unichr(0x10FFFF)) == "Unknown"
 
     # these were randomly sampled, one character per script
     assert unicodedata.script(unichr(0x1E918)) == 'Adlam'
