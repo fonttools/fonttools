@@ -2,7 +2,7 @@ from __future__ import (
     print_function, division, absolute_import, unicode_literals)
 from fontTools.misc.py23 import *
 
-import functools
+from bisect import bisect_right
 
 try:
     # use unicodedata backport compatible with python2:
@@ -12,7 +12,7 @@ except ImportError:
     # fall back to built-in unicodedata (possibly outdated)
     from unicodedata import *
 
-from .scripts import SCRIPT_RANGES
+from .scripts import SCRIPT_RANGES, SCRIPT_NAMES
 
 
 __all__ = [
@@ -36,36 +36,16 @@ __all__ = [
 ]
 
 
-def _memoize(func):
-    # Decorator that caches a function's return value each time it is
-    # called, and returns the cached value if called later with the same
-    # argument.
-    cache = func.cache = {}
-
-    @functools.wraps(func)
-    def wrapper(arg):
-        if arg not in cache:
-            cache[arg] = func(arg)
-        return cache[arg]
-    return wrapper
-
-
-@_memoize
 def script(char):
-    """For the unicode character 'char' return the script name."""
     code = byteord(char)
-    return _binary_search_range(code, SCRIPT_RANGES, default="Unknown")
-
-
-def _binary_search_range(code, ranges, default=None):
-    left = 0
-    right = len(ranges) - 1
-    while right >= left:
-        mid = (left + right) >> 1
-        if code < ranges[mid][0]:
-            right = mid - 1
-        elif code > ranges[mid][1]:
-            left = mid + 1
-        else:
-            return ranges[mid][2]
-    return default
+    # 'bisect_right(a, x, lo=0, hi=len(a))' returns an insertion point which
+    # comes after (to the right of) any existing entries of x in a, and it
+    # partitions array a into two halves so that, for the left side
+    # all(val <= x for val in a[lo:i]), and for the right side
+    # all(val > x for val in a[i:hi]).
+    # Our 'SCRIPT_RANGES' is a sorted list of ranges (only their starting
+    # breakpoints); we want to use `bisect_right` to look up the range that
+    # contains the given codepoint: i.e. whose start is less than or equal
+    # to the codepoint. Thus, we subtract -1 from the index returned.
+    i = bisect_right(SCRIPT_RANGES, code)
+    return SCRIPT_NAMES[i-1]
