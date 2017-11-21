@@ -340,6 +340,14 @@ class Parser(object):
                 self.expect_symbol_("'")
                 hasMarks = marked = True
             if marked:
+                if suffix:
+                    # makeotf also reports this as an error, while FontForge
+                    # silently inserts ' in all the intervening glyphs.
+                    # https://github.com/fonttools/fonttools/pull/1096
+                    raise FeatureLibError(
+                        "Unsupported contextual target sequence: at most "
+                        "one run of marked (') glyph/class names allowed",
+                        self.cur_token_location_)
                 glyphs.append(gc)
             elif glyphs:
                 suffix.append(gc)

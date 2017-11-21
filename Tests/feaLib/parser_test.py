@@ -1220,6 +1220,42 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(sub.glyph, "f_f_i")
         self.assertEqual(sub.replacement, ("f", "f", "i"))
 
+    def test_split_marked_glyphs_runs(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Unsupported contextual target sequence",
+            self.parse, "feature test{"
+                        "    ignore pos a' x x A';"
+                        "} test;")
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Unsupported contextual target sequence",
+            self.parse, "lookup shift {"
+                        "    pos a <0 -10 0 0>;"
+                        "    pos A <0 10 0 0>;"
+                        "} shift;"
+                        "feature test {"
+                        "    sub a' lookup shift x x A' lookup shift;"
+                        "} test;")
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Unsupported contextual target sequence",
+            self.parse, "feature test {"
+                        "    ignore sub a' x x A';"
+                        "} test;")
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Unsupported contextual target sequence",
+            self.parse, "lookup upper {"
+                        "    sub a by A;"
+                        "} upper;"
+                        "lookup lower {"
+                        "    sub A by a;"
+                        "} lower;"
+                        "feature test {"
+                        "    sub a' lookup upper x x A' lookup lower;"
+                        "} test;")
+
     def test_substitute_from(self):  # GSUB LookupType 3
         doc = self.parse("feature test {"
                          "  substitute a from [a.1 a.2 a.3];"
