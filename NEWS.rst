@@ -1,3 +1,6 @@
+3.20.0 (released 2017-11-21)
+----------------------------
+
 - [unicodedata] Addded new module ``fontTools.unicodedata`` which exports the
   same interface as the built-in ``unicodedata`` module, with the addition of
   a few functions that are missing from the latter, such as ``script``,
