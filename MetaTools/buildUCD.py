@@ -5,7 +5,6 @@ Tools to parse data files from the Unicode Character Database.
 
 from __future__ import print_function, absolute_import, division
 from __future__ import unicode_literals
-from fontTools.misc.py23 import *
 
 try:
     from urllib.request import urlopen
@@ -16,7 +15,14 @@ import re
 from codecs import iterdecode
 import logging
 import os
+from io import open
 from os.path import abspath, dirname, join as pjoin, pardir, sep
+
+
+try:  # pragma: no cover
+    unicode
+except NameError:
+    unicode = str
 
 
 UNIDATA_URL = "https://unicode.org/Public/UNIDATA/"
@@ -83,14 +89,14 @@ def parse_range_properties(infile, default=None, is_set=False):
 
         first = int(first, 16)
         last = int(last, 16)
-        data = tostr(data.rstrip(), encoding="ascii")
+        data = str(data.rstrip())
 
         ranges.append((first, last, data))
 
     ranges.sort()
 
     if isinstance(default, unicode):
-        default = tostr(default, encoding="ascii")
+        default = str(default)
 
     # fill the gaps between explicitly defined ranges
     last_start, last_end = -1, -1
