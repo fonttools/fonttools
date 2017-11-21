@@ -16,8 +16,8 @@
   ``pens.perimeterPen`` module (#1101).
 - [varLib] Started generating STAT table (8af4309). Right now it just reflects
   the axes, and even that with certain limitations:
-    * AxisOrdering is set to the order axes are defined,
-    * Name-table entries are not shared with fvar.
+  * AxisOrdering is set to the order axes are defined,
+  * Name-table entries are not shared with fvar.
 - [py23] Added backports for ``redirect_stdout`` and ``redirect_stderr``
   context managers (#1097).
 - [Graphite] Fixed some round-trip bugs (#1093).

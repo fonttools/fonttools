@@ -10,11 +10,11 @@ matrix:
     - python: 3.4
       env: TOXENV=py34-cov
     - python: 3.5
-      env:
-        - TOXENV=py35-cov
-        - BUILD_DIST=true
+      env: TOXENV=py35-cov
     - python: 3.6
-      env: TOXENV=py36-cov
+      env:
+        - TOXENV=py36-cov
+        - BUILD_DIST=true
     - python: pypy2.7-5.8.0
       # disable coverage.py on pypy because of performance problems
       env: TOXENV=pypy-nocov
