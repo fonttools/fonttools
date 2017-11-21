@@ -1,0 +1,12 @@
+lookup upper {
+    sub a by A;
+} upper;
+
+lookup lower {
+    sub A by a;
+} lower;
+
+feature test {
+#test-fea2fea: sub a' lookup upper x' x' A' lookup lower;
+    sub a'lookup upper x x A'lookup lower;
+} test;

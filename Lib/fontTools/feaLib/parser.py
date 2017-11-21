@@ -340,6 +340,9 @@ class Parser(object):
                 self.expect_symbol_("'")
                 hasMarks = marked = True
             if marked:
+                glyphs.extend(suffix)
+                lookups.extend([None] * len(suffix))
+                suffix = []
                 glyphs.append(gc)
             elif glyphs:
                 suffix.append(gc)
