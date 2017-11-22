@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='utf-8'?>
+<designspace format="3">
+    <axes>
+        <axis default="0" maximum="1" minimum="0" name="aaaa" tag="taga" />
+        <axis default="0" maximum="1" minimum="0" name="bbbb" tag="tagb" />
+        <axis default="0" maximum="1" minimum="0" name="aaaa" tag="aaaa" />
+        <axis default="0" maximum="1" minimum="0" name="bbbb" tag="bbbb" />
+    </axes>
+    <rules>
+        <rule name="named.rule.1">
+            <condition maximum="1" minimum="0" name="aaaa" />
+            <condition maximum="1" minimum="0" name="bbbb" />
+            <sub name="a" with="a.alt" />
+        </rule>
+    </rules>
+</designspace>
