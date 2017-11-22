@@ -1,3 +1,9 @@
+- [unicodedata] Fixed issue with ``script`` and ``script_extension`` functions
+  returning inconsistent short vs long names. They both return the short four-
+  letter script codes now. Added ``script_name`` and ``script_code`` functions
+  to look up the long human-readable script name from the script code, and
+  viceversa (#1109, #1111).
+
 3.20.0 (released 2017-11-21)
 ----------------------------
 
