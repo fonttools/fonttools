@@ -84,6 +84,15 @@ def script_extension(char):
     return value
 
 
+def script_name(code):
+    """ Return the long, human-readable script name given a four-letter
+    Unicode script code.
+
+    Raises KeyError if no matching name is found.
+    """
+    return Scripts.NAMES[code].replace("_", " ")
+
+
 def block(char):
     """ Return the block property assigned to the Unicode character 'char'
     as a string.

@@ -4,6 +4,8 @@ from fontTools.misc.py23 import *
 
 from fontTools import unicodedata
 
+import pytest
+
 
 def test_script():
     assert unicodedata.script("a") == "Latn"
@@ -167,8 +169,23 @@ def test_script_extension():
         'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'}
 
 
+def test_script_name():
+    assert unicodedata.script_name("Latn") == "Latin"
+    assert unicodedata.script_name("Zyyy") == "Common"
+    assert unicodedata.script_name("Zzzz") == "Unknown"
+    # underscores in long names are replaced by spaces
+    assert unicodedata.script_name("Egyp") == "Egyptian Hieroglyphs"
+    with pytest.raises(KeyError):
+        unicodedata.script_name("QQQQ")
+
+
 def test_block():
     assert unicodedata.block("\x00") == "Basic Latin"
     assert unicodedata.block("\x7F") == "Basic Latin"
     assert unicodedata.block("\x80") == "Latin-1 Supplement"
     assert unicodedata.block("\u1c90") == "No_Block"
+
+
+if __name__ == "__main__":
+    import sys
+    sys.exit(pytest.main(sys.argv))
