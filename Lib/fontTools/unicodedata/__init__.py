@@ -39,15 +39,15 @@ __all__ = [
 
 
 def script(char):
-    """ Return the script property assigned to the Unicode character 'char'
-    as string.
+    """ Return the four-letter script code assigned to the Unicode character
+    'char' as string.
 
     >>> script("a")
-    'Latin'
+    'Latn'
     >>> script(",")
-    'Common'
+    'Zyyy'
     >>> script(unichr(0x10FFFF))
-    'Unknown'
+    'Zzzz'
     """
     code = byteord(char)
     # 'bisect_right(a, x, lo=0, hi=len(a))' returns an insertion point which
@@ -67,11 +67,11 @@ def script_extension(char):
     """ Return the script extension property assigned to the Unicode character
     'char' as a set of string.
 
-    >>> script_extension("a") == {'Latin'}
+    >>> script_extension("a") == {'Latn'}
     True
     >>> script_extension(unichr(0x060C)) == {'Arab', 'Syrc', 'Thaa'}
     True
-    >>> script_extension(unichr(0x10FFFF)) == {'Unknown'}
+    >>> script_extension(unichr(0x10FFFF)) == {'Zzzz'}
     True
     """
     code = byteord(char)
