@@ -16,7 +16,7 @@ except ImportError:  # pragma: no cover
 from . import Blocks, Scripts, ScriptExtensions
 
 
-__all__ = [
+__all__ = [tostr(s) for s in (
     # names from built-in unicodedata module
     "lookup",
     "name",
@@ -36,7 +36,9 @@ __all__ = [
     "block",
     "script",
     "script_extension",
-]
+    "script_name",
+    "script_code",
+)]
 
 
 def script(char):
