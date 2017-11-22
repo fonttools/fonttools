@@ -1,3 +1,6 @@
+3.20.1 (released 2017-11-22)
+----------------------------
+
 - [unicodedata] Fixed issue with ``script`` and ``script_extension`` functions
   returning inconsistent short vs long names. They both return the short four-
   letter script codes now. Added ``script_name`` and ``script_code`` functions
