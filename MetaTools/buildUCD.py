@@ -133,16 +133,39 @@ def parse_range_properties(infile, default=None, is_set=False):
     return merged_ranges
 
 
+def parse_semicolon_separated_data(infile):
+    """Parse a Unicode data file where each line contains a lists of values
+    separated by a semicolon (e.g. "PropertyValueAliases.txt").
+    The number of the values on different lines may be different.
+
+    Returns a list of lists each containing the values as strings.
+    """
+    data = []
+    for line in infile:
+        line = line.split('#', 1)[0].strip()  # remove the comment
+        if not line:
+            continue
+        fields = [str(field.strip()) for field in line.split(';')]
+        data.append(fields)
+    return data
+
+
 def _set_repr(value):
     return 'None' if value is None else "{{{}}}".format(
         ", ".join(repr(v) for v in sorted(value)))
 
 
 def build_ranges(filename, local_ucd=None, output_path=None,
-                 default=None, is_set=False):
+                 default=None, is_set=False, aliases=None):
     """Fetch 'filename' UCD data file from Unicode official website, parse
-    the ranges and properties and write them as two Python lists
+    the property ranges and values and write them as two Python lists
     to 'fontTools.unicodedata.<filename>.py'.
+
+    'aliases' is an optional mapping of property codes (short names) to long
+    name aliases (list of strings, with the first item being the preferred
+    alias). When this is provided, the property values are written using the
+    short notation, and an additional 'NAMES' dict with the aliases is
+    written to the output module.
 
     To load the data file from a local directory, you can use the
     'local_ucd' argument.
@@ -162,7 +185,11 @@ def build_ranges(filename, local_ucd=None, output_path=None,
         header = parse_unidata_header(f)
         ranges = parse_range_properties(f, default=default, is_set=is_set)
 
-    max_value_length = min(56, max(len(repr(v)) for _, _, v in ranges))
+    if aliases:
+        reversed_aliases = {normalize(v[0]): k for k, v in aliases.items()}
+        max_value_length = 6  # 4-letter tags plus two quotes for repr
+    else:
+        max_value_length = min(56, max(len(repr(v)) for _, _, v in ranges))
 
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(SRC_ENCODING)
@@ -182,15 +209,61 @@ def build_ranges(filename, local_ucd=None, output_path=None,
         f.write("\n")
         f.write("VALUES = [\n")
         for first, last, value in ranges:
+            comment = "# {:0>4X}..{:0>4X}".format(first, last)
             if is_set:
                 value_repr = "{},".format(_set_repr(value))
             else:
+                if aliases:
+                    # append long name to comment and use the short code
+                    comment += " ; {}".format(value)
+                    value = reversed_aliases[normalize(value)]
                 value_repr = "{!r},".format(value)
-            f.write("    {}  # {:0>4X}..{:0>4X}\n".format(
-                value_repr.ljust(max_value_length+1), first, last))
+            f.write("    {}  {}\n".format(
+                value_repr.ljust(max_value_length+1), comment))
         f.write("]\n")
 
+        if aliases:
+            f.write("\n")
+            f.write("NAMES = {\n")
+            for value, names in sorted(aliases.items()):
+                # we only write the first preferred alias
+                f.write("    {!r}: {!r},\n".format(value, names[0]))
+            f.write("}\n")
+
     log.info("saved new file: '%s'", os.path.normpath(output_path))
+
+
+_normalize_re = re.compile(r"[-_ ]+")
+
+def normalize(string):
+    """Remove case, strip space, '-' and '_' for loose matching."""
+    return _normalize_re.sub("", string).lower()
+
+
+def parse_property_value_aliases(property_tag, local_ucd=None):
+    """Fetch the current 'PropertyValueAliases.txt' from the Unicode website,
+    parse the values for the specified 'property_tag' and return a dictionary
+    of name aliases (list of strings) keyed by short value codes (strings).
+
+    To load the data file from a local directory, you can use the
+    'local_ucd' argument.
+    """
+    filename = "PropertyValueAliases.txt"
+    if local_ucd:
+        log.info("loading '%s' from local directory '%s'", filename, local_ucd)
+        cm = open(pjoin(local_ucd, filename), "r", encoding="utf-8")
+    else:
+        log.info("downloading '%s' from '%s'", filename, UNIDATA_URL)
+        cm = open_unidata_file(filename)
+
+    with cm as f:
+        header = parse_unidata_header(f)
+        data = parse_semicolon_separated_data(f)
+
+    aliases = {item[1]: item[2:] for item in data
+               if item[0] == property_tag}
+
+    return aliases
 
 
 def main():
@@ -207,7 +280,10 @@ def main():
     logging.basicConfig(level=level, format="%(message)s")
 
     build_ranges("Blocks.txt", local_ucd=options.ucd_path, default="No_Block")
-    build_ranges("Scripts.txt", local_ucd=options.ucd_path, default="Unknown")
+
+    script_aliases = parse_property_value_aliases("sc", options.ucd_path)
+    build_ranges("Scripts.txt", local_ucd=options.ucd_path, default="Unknown",
+                 aliases=script_aliases)
     build_ranges("ScriptExtensions.txt", local_ucd=options.ucd_path,
                  is_set=True)
 
