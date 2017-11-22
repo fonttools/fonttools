@@ -2,6 +2,7 @@ from __future__ import (
     print_function, division, absolute_import, unicode_literals)
 from fontTools.misc.py23 import *
 
+import re
 from bisect import bisect_right
 
 try:
@@ -84,13 +85,50 @@ def script_extension(char):
     return value
 
 
-def script_name(code):
+def script_name(code, default=KeyError):
     """ Return the long, human-readable script name given a four-letter
     Unicode script code.
 
-    Raises KeyError if no matching name is found.
+    If no matching name is found, a KeyError is raised by default.
+
+    You can use the 'default' argument to return a fallback value (e.g.
+    'Unknown' or None) instead of throwing an error.
     """
-    return Scripts.NAMES[code].replace("_", " ")
+    try:
+        return str(Scripts.NAMES[code].replace("_", " "))
+    except KeyError:
+        if isinstance(default, type) and issubclass(default, KeyError):
+            raise
+        return default
+
+
+_normalize_re = re.compile(r"[-_ ]+")
+
+
+def _normalize_property_name(string):
+    """Remove case, strip space, '-' and '_' for loose matching."""
+    return _normalize_re.sub("", string).lower()
+
+
+_SCRIPT_CODES = {_normalize_property_name(v): k
+                 for k, v in Scripts.NAMES.items()}
+
+
+def script_code(script_name, default=KeyError):
+    """Returns the four-letter Unicode script code from its long name
+
+    If no matching script code is found, a KeyError is raised by default.
+
+    You can use the 'default' argument to return a fallback string (e.g.
+    'Zzzz' or None) instead of throwing an error.
+    """
+    normalized_name = _normalize_property_name(script_name)
+    try:
+        return _SCRIPT_CODES[normalized_name]
+    except KeyError:
+        if isinstance(default, type) and issubclass(default, KeyError):
+            raise
+        return default
 
 
 def block(char):

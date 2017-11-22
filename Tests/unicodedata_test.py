@@ -175,8 +175,25 @@ def test_script_name():
     assert unicodedata.script_name("Zzzz") == "Unknown"
     # underscores in long names are replaced by spaces
     assert unicodedata.script_name("Egyp") == "Egyptian Hieroglyphs"
+
     with pytest.raises(KeyError):
         unicodedata.script_name("QQQQ")
+    assert unicodedata.script_name("QQQQ", default="Unknown")
+
+
+def test_script_code():
+    assert unicodedata.script_code("Latin") == "Latn"
+    assert unicodedata.script_code("Common") == "Zyyy"
+    assert unicodedata.script_code("Unknown") == "Zzzz"
+    # case, whitespace, underscores and hyphens are ignored
+    assert unicodedata.script_code("Egyptian Hieroglyphs") == "Egyp"
+    assert unicodedata.script_code("Egyptian_Hieroglyphs") == "Egyp"
+    assert unicodedata.script_code("egyptianhieroglyphs") == "Egyp"
+    assert unicodedata.script_code("Egyptian-Hieroglyphs") == "Egyp"
+
+    with pytest.raises(KeyError):
+        unicodedata.script_code("Does not exist")
+    assert unicodedata.script_code("Does not exist", default="Zzzz") == "Zzzz"
 
 
 def test_block():
