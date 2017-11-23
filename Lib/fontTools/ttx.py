@@ -39,8 +39,8 @@ usage: ttx [options] inputfile1 [... inputfileN]
        input to ttx, as long as the table files are in the
        same directory.
     -g Split glyf table: Save the glyf data into separate TTX files
-        per glyph and write a small TTX for the glyf table which
-        contains references to the individual TTGlyph elements.
+       per glyph and write a small TTX for the glyf table which
+       contains references to the individual TTGlyph elements.
     -i Do NOT disassemble TT instructions: when this option is given,
        all TrueType programs (glyph programs, the font program and the
        pre-program) will be written to the TTX file as hex data

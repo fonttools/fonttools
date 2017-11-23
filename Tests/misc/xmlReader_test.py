@@ -143,7 +143,7 @@ class TestXMLReader(unittest.TestCase):
 		os.remove(tmp.name)
 
 	def test_read_sub_file(self):
-    # Verifies that sub-file content is able to be read to a table.
+		# Verifies that sub-file content is able to be read to a table.
 		expectedContent = u'testContent'
 		expectedNameID = '1'
 		expectedPlatform = '3'
