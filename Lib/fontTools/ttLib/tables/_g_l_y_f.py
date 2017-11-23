@@ -119,12 +119,15 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		return data
 
 	def toXML(self, writer, ttFont, progress=None, splitGlyphs=False):
-
-		writer.newline()
+		notice = (
+			"The xMin, yMin, xMax and yMax values\n"
+			"will be recalculated by the compiler.")
 		glyphNames = ttFont.getGlyphNames()
-		writer.comment("The xMin, yMin, xMax and yMax values\nwill be recalculated by the compiler.")
-		writer.newline()
-		writer.newline()
+		if not splitGlyphs:
+			writer.newline()
+			writer.comment(notice)
+			writer.newline()
+			writer.newline()
 		counter = 0
 		progressStep = 10
 		numGlyphs = len(glyphNames)
@@ -139,16 +142,16 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 					path, ext = os.path.splitext(writer.file.name)
 					fileNameTemplate = path + ".%s" + ext
 					glyphPath = fileNameTemplate % nameToIdentifier(glyphName)
-					glyphWriter = xmlWriter.XMLWriter(glyphPath, idlefunc=writer.idlefunc,
-				      newlinestr=writer.newlinestr)
+					glyphWriter = xmlWriter.XMLWriter(
+						glyphPath, idlefunc=writer.idlefunc,
+						newlinestr=writer.newlinestr)
 					glyphWriter.begintag("ttFont", ttLibVersion=version)
-					glyphWriter.newline()
 					glyphWriter.newline()
 					glyphWriter.begintag("glyf")
 					glyphWriter.newline()
+					glyphWriter.comment(notice)
 					glyphWriter.newline()
 					writer.simpletag("TTGlyph", src=os.path.basename(glyphPath))
-					writer.newline()
 				else:
 					glyphWriter = writer
 				glyphWriter.begintag('TTGlyph', [
@@ -171,7 +174,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			else:
 				writer.simpletag('TTGlyph', name=glyphName)
 				writer.comment("contains no outline data")
-				writer.newline()
+				if not splitGlyphs:
+					writer.newline()
 			writer.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
