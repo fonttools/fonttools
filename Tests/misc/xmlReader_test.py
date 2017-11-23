@@ -150,25 +150,25 @@ class TestXMLReader(unittest.TestCase):
 		expectedLangId = '0x409'
 
 		with tempfile.NamedTemporaryFile(delete=False) as tmp:
-
 			subFileData = (
-			  '<ttFont ttLibVersion="3.15">'
-						'<name>'
-							'<namerecord nameID="%s" platformID="%s" platEncID="1" langID="%s">'
-									'%s'
-							'</namerecord>'
-						'</name>'
+				'<ttFont ttLibVersion="3.15">'
+					'<name>'
+						'<namerecord nameID="%s" platformID="%s" platEncID="1" langID="%s">'
+							'%s'
+						'</namerecord>'
+					'</name>'
 				'</ttFont>'
-			)%(expectedNameID, expectedPlatform, expectedLangId, expectedContent)
+			) % (expectedNameID, expectedPlatform, expectedLangId, expectedContent)
 			tmp.write(subFileData.encode("utf-8"))
+
 		with tempfile.NamedTemporaryFile(delete=False) as tmp2:
 			fileData = (
 				'<ttFont ttLibVersion="3.15">'
-						'<name>'
-							'<namerecord src="%s"/>'
-						'</name>'
-			  '</ttFont>'
-			)%(tmp.name)
+					'<name>'
+						'<namerecord src="%s"/>'
+					'</name>'
+				'</ttFont>'
+			) % tmp.name
 			tmp2.write(fileData.encode('utf-8'))
 
 		ttf = TTFont()
