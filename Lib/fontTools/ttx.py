@@ -165,7 +165,7 @@ class Options(object):
 			elif option == "-s":
 				self.splitTables = True
 			elif option == "-g":
-					self.splitGlyphs = True
+				self.splitGlyphs = True
 			elif option == "-i":
 				self.disassembleInstructions = False
 			elif option == "-z":
