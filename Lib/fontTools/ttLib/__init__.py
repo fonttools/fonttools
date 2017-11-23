@@ -300,7 +300,7 @@ class TTFont(object):
 			if progress:
 				progress.set(i)
 			tag = tables[i]
-			if splitTables or (splitGlyphs and (tag == 'glyf')):
+			if splitTables or (splitGlyphs and tag == 'glyf'):
 				tablePath = fileNameTemplate % tagToIdentifier(tag)
 			else:
 				tablePath = None

@@ -39,7 +39,7 @@ usage: ttx [options] inputfile1 [... inputfileN]
        input to ttx, as long as the table files are in the
        same directory.
     -g Split glyf table: Save the glyf data into separate TTX files
-        per glyph and write a small TTX for the glyph table which
+        per glyph and write a small TTX for the glyf table which
         contains references to the individual TTGlyph elements.
     -i Do NOT disassemble TT instructions: when this option is given,
        all TrueType programs (glyph programs, the font program and the
@@ -165,7 +165,7 @@ class Options(object):
 			elif option == "-s":
 				self.splitTables = True
 			elif option == "-g":
-  				self.splitGlyphs = True
+					self.splitGlyphs = True
 			elif option == "-i":
 				self.disassembleInstructions = False
 			elif option == "-z":
@@ -261,7 +261,7 @@ def ttDump(input, output, options):
 			tables=options.onlyTables,
 			skipTables=options.skipTables,
 			splitTables=options.splitTables,
-      splitGlyphs=options.splitGlyphs,
+			splitGlyphs=options.splitGlyphs,
 			disassembleInstructions=options.disassembleInstructions,
 			bitmapGlyphDataFormat=options.bitmapGlyphDataFormat,
 			newlinestr=options.newlinestr)
