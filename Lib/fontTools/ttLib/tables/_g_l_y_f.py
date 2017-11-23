@@ -5,6 +5,7 @@ from collections import namedtuple
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools import ttLib
+from fontTools import version
 from fontTools.misc.textTools import safeEval, pad
 from fontTools.misc.arrayTools import calcBounds, calcIntBounds, pointInRect
 from fontTools.misc.bezierTools import calcQuadraticBounds
@@ -21,6 +22,11 @@ from fontTools.misc import xmlWriter
 from fontTools.ttLib import nameToIdentifier
 
 log = logging.getLogger(__name__)
+
+# We compute the version the same as is computed in ttlib/__init__
+# so that we can write 'ttLibVersion' attribute of the glyf TTX files
+# when glyf is written to separate files.
+version = ".".join(version.split('.')[:2])
 
 #
 # The Apple and MS rasterizers behave differently for
@@ -112,9 +118,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			ttFont['maxp'].numGlyphs = len(self.glyphs)
 		return data
 
-	def toXML(self, writer, ttFont, progress=None, tablePath=None, 
-            ttLibVersion=None, idlefunc=None, newlinestr=None, splitGlyphs=None):
-  
+	def toXML(self, writer, ttFont, progress=None, splitGlyphs=False):
+
 		writer.newline()
 		glyphNames = ttFont.getGlyphNames()
 		writer.comment("The xMin, yMin, xMax and yMax values\nwill be recalculated by the compiler.")
@@ -131,12 +136,15 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			glyph = self[glyphName]
 			if glyph.numberOfContours:
 				if splitGlyphs:
-					path, ext = os.path.splitext(tablePath)
+					path, ext = os.path.splitext(writer.file.name)
 					fileNameTemplate = path + ".%s" + ext
 					glyphPath = fileNameTemplate % nameToIdentifier(glyphName)
-					glyphWriter = xmlWriter.XMLWriter(glyphPath, idlefunc=idlefunc,
-				      newlinestr=newlinestr)
-					glyphWriter.begintag("ttFont", ttLibVersion=ttLibVersion)
+					glyphWriter = xmlWriter.XMLWriter(glyphPath, idlefunc=writer.idlefunc,
+				      newlinestr=writer.newlinestr)
+					glyphWriter.begintag("ttFont", ttLibVersion=version)
+					glyphWriter.newline()
+					glyphWriter.newline()
+					glyphWriter.begintag("glyf")
 					glyphWriter.newline()
 					glyphWriter.newline()
 					writer.simpletag("TTGlyph", src=os.path.basename(glyphPath))
@@ -155,6 +163,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 				glyphWriter.endtag('TTGlyph')
 				glyphWriter.newline()
 				if splitGlyphs:
+					glyphWriter.endtag("glyf")
+					glyphWriter.newline()
 					glyphWriter.endtag("ttFont")
 					glyphWriter.newline()
 					glyphWriter.close()

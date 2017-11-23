@@ -153,9 +153,11 @@ class TestXMLReader(unittest.TestCase):
 
 			subFileData = (
 			  '<ttFont ttLibVersion="3.15">'
-						'<namerecord nameID="%s" platformID="%s" platEncID="1" langID="%s">'
-								'%s'
-						'</namerecord>'
+						'<name>'
+							'<namerecord nameID="%s" platformID="%s" platEncID="1" langID="%s">'
+									'%s'
+							'</namerecord>'
+						'</name>'
 				'</ttFont>'
 			)%(expectedNameID, expectedPlatform, expectedLangId, expectedContent)
 			tmp.write(subFileData.encode("utf-8"))

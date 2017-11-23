@@ -76,10 +76,12 @@ class XMLReader(object):
 
 	def _startElementHandler(self, name, attrs):
 		if self.stackSize == 1 and self.contentOnly:
-			# We already know the table we're parsing, move to 
+			# We already know the table we're parsing, skip
+			# parsing the table tag and continue to
 			# stack '2' which begins parsing content
 			self.contentStack.append([])
 			self.stackSize = 2
+			return
 		stackSize = self.stackSize
 		self.stackSize = stackSize + 1
 		subFile = attrs.get("src")

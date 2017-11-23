@@ -300,7 +300,7 @@ class TTFont(object):
 			if progress:
 				progress.set(i)
 			tag = tables[i]
-			if splitTables or splitGlyphs:
+			if splitTables or (splitGlyphs and (tag == 'glyf')):
 				tablePath = fileNameTemplate % tagToIdentifier(tag)
 			else:
 				tablePath = None
@@ -314,8 +314,7 @@ class TTFont(object):
 				writer.newline()
 			else:
 				tableWriter = writer
-			self._tableToXML(tableWriter, tag, progress, tablePath, ttLibVersion=version,
-			    idlefunc=idlefunc, newlinestr=newlinestr, splitGlyphs=splitGlyphs)
+			self._tableToXML(tableWriter, tag, progress, splitGlyphs=splitGlyphs)
 			if splitTables:
 				tableWriter.endtag("ttFont")
 				tableWriter.newline()
@@ -329,8 +328,7 @@ class TTFont(object):
 		if not hasattr(fileOrPath, "write") and fileOrPath != "-":
 			writer.close()
 
-	def _tableToXML(self, writer, tag, progress, tablePath, ttLibVersion=None, 
-	                idlefunc=None, newlinestr=None, splitGlyphs=None, quiet=None):
+	def _tableToXML(self, writer, tag, progress, splitGlyphs=False, quiet=None):
 		if quiet is not None:
 			deprecateArgument("quiet", "configure logging instead")
 		if tag in self:
@@ -352,9 +350,9 @@ class TTFont(object):
 			attrs['raw'] = True
 		writer.begintag(xmlTag, **attrs)
 		writer.newline()
-		if tag in ("glyf"):
-			table.toXML(writer, self, progress, tablePath, ttLibVersion, idlefunc, newlinestr, splitGlyphs)
-		elif tag in ("CFF "):
+		if tag == "glyf":
+			table.toXML(writer, self, progress, splitGlyphs)
+		elif tag == "CFF ":
 			table.toXML(writer, self, progress)
 		else:
 			table.toXML(writer, self)
@@ -894,17 +892,9 @@ def nameToIdentifier(name):
 	return ident
 
 def tagToIdentifier(tag):
-	"""Convert a table tag to a valid (but UGLY) python identifier,
-	as well as a filename that's guaranteed to be unique even on a
-	caseless file system. Each character is mapped to two characters.
-	Lowercase letters get an underscore before the letter, uppercase
-	letters get an underscore after the letter. Trailing spaces are
-	trimmed. Illegal characters are escaped as two hex bytes. If the
-	result starts with a number (as the result of a hex escape), an
-	extra underscore is prepended. Examples:
-		'glyf' -> '_g_l_y_f'
-		'cvt ' -> '_c_v_t'
-		'OS/2' -> 'O_S_2f_2'
+	"""This performs the same conversion which nameToIdentifiier does
+	with the additional assertion that the source tag is 4 characters
+	long which is criteria for a valid tag name.
 	"""
 	if tag == "GlyphOrder":
 		return tag
