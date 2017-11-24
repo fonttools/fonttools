@@ -337,22 +337,13 @@ class AFM(object):
 
 
 def readlines(path):
-	f = open(path, 'rb')
-	data = f.read().decode("ascii")
-	f.close()
-	# read any text file, regardless whether it's formatted for Mac, Unix or Dos
-	sep = ""
-	if '\r' in data:
-		sep = sep + '\r'	# mac or dos
-	if '\n' in data:
-		sep = sep + '\n'	# unix or dos
-	return data.split(sep)
+	with open(path, "r", encoding="ascii") as f:
+		data = f.read()
+	return data.splitlines()
 
 def writelines(path, lines, sep='\r'):
-	f = open(path, 'wb')
-	for line in lines:
-		f.write((line + sep).encode("ascii"))
-	f.close()
+	with open(path, "w", encoding="ascii", newline=sep) as f:
+		f.write("\n".join(lines) + "\n")
 
 
 if __name__ == "__main__":
