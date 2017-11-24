@@ -465,7 +465,8 @@ def compileSharedTuples(axisTags, variations):
 
 
 def compileTupleVariationStore(variations, pointCount,
-                               axisTags, sharedTupleIndices):
+                               axisTags, sharedTupleIndices,
+                               useSharedPoints=True):
 	variations = [v for v in variations if v.hasImpact()]
 	if len(variations) == 0:
 		return (0, b"", b"")
@@ -515,7 +516,7 @@ def compileTupleVariationStore(variations, pointCount,
 			axisTags, sharedTupleIndices, sharedPoints=None)
 		sharedTuple, sharedData, usesSharedPoints = v.compile(
 			axisTags, sharedTupleIndices, sharedPoints=usedPoints)
-		if (len(sharedTuple) + len(sharedData)) < (len(privateTuple) + len(privateData)):
+		if useSharedPoints and (len(sharedTuple) + len(sharedData)) < (len(privateTuple) + len(privateData)):
 			tuples.append(sharedTuple)
 			data.append(sharedData)
 			someTuplesSharePoints |= usesSharedPoints
