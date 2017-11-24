@@ -338,7 +338,7 @@ class AFM(object):
 
 def readlines(path):
 	f = open(path, 'rb')
-	data = f.read()
+	data = f.read().decode("ascii")
 	f.close()
 	# read any text file, regardless whether it's formatted for Mac, Unix or Dos
 	sep = ""
@@ -351,7 +351,7 @@ def readlines(path):
 def writelines(path, lines, sep='\r'):
 	f = open(path, 'wb')
 	for line in lines:
-		f.write(line + sep)
+		f.write((line + sep).encode("ascii"))
 	f.close()
 
 
