@@ -2407,11 +2407,26 @@ def prune_post_subset(self, options):
             for subr in subrs.items:
                 subr.subset_subroutines (local_subrs, font.GlobalSubrs)
 
+        # Delete local SubrsIndex if empty
+        if hasattr(font, 'FDSelect'):
+            for fd in font.FDArray:
+                _delete_empty_subrs(fd)
+        else:
+            _delete_empty_subrs(font)
+
         # Cleanup
         for subrs in all_subrs:
             del subrs._used, subrs._old_bias, subrs._new_bias
 
     return True
+
+
+def _delete_empty_subrs(font):
+    if hasattr(font.Private, 'Subrs') and not font.Private.Subrs:
+        if 'Subrs' in font.Private.rawDict:
+            del font.Private.rawDict['Subrs']
+        delattr(font.Private, 'Subrs')
+
 
 @_add_method(ttLib.getTableClass('cmap'))
 def closure_glyphs(self, s):
