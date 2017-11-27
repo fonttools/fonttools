@@ -2425,7 +2425,7 @@ def _delete_empty_subrs(font):
     if hasattr(font.Private, 'Subrs') and not font.Private.Subrs:
         if 'Subrs' in font.Private.rawDict:
             del font.Private.rawDict['Subrs']
-        delattr(font.Private, 'Subrs')
+        del font.Private.Subrs
 
 
 @_add_method(ttLib.getTableClass('cmap'))
