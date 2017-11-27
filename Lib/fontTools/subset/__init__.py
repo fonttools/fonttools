@@ -2410,9 +2410,9 @@ def prune_post_subset(self, options):
         # Delete local SubrsIndex if empty
         if hasattr(font, 'FDSelect'):
             for fd in font.FDArray:
-                _delete_empty_subrs(fd)
+                _delete_empty_subrs(fd.Private)
         else:
-            _delete_empty_subrs(font)
+            _delete_empty_subrs(font.Private)
 
         # Cleanup
         for subrs in all_subrs:
@@ -2421,11 +2421,11 @@ def prune_post_subset(self, options):
     return True
 
 
-def _delete_empty_subrs(font):
-    if hasattr(font.Private, 'Subrs') and not font.Private.Subrs:
-        if 'Subrs' in font.Private.rawDict:
-            del font.Private.rawDict['Subrs']
-        del font.Private.Subrs
+def _delete_empty_subrs(private_dict):
+    if hasattr(private_dict, 'Subrs') and not private_dict.Subrs:
+        if 'Subrs' in private_dict.rawDict:
+            del private_dict.rawDict['Subrs']
+        del private_dict.Subrs
 
 
 @_add_method(ttLib.getTableClass('cmap'))
