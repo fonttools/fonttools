@@ -1,5 +1,6 @@
 include README.rst
 include LICENSE
+include LICENSE.external
 include NEWS.rst
 include Makefile
 include fonttools
