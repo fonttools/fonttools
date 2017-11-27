@@ -43,9 +43,6 @@
             <initialRandomSeed value="0"/>
             <defaultWidthX value="1000"/>
             <nominalWidthX value="107"/>
-            <Subrs>
-              <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
-            </Subrs>
           </Private>
         </FontDict>
       </FDArray>

@@ -33,9 +33,6 @@
         <initialRandomSeed value="0"/>
         <defaultWidthX value="500"/>
         <nominalWidthX value="300"/>
-        <Subrs>
-          <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
-        </Subrs>
       </Private>
       <CharStrings>
         <CharString name=".notdef">
