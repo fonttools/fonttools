@@ -30,12 +30,13 @@ class table__c_v_a_r(DefaultTable.DefaultTable):
         self.majorVersion, self.minorVersion = 1, 0
         self.variations = []
 
-    def compile(self, ttFont):
+    def compile(self, ttFont, useSharedPoints=False):
         tupleVariationCount, tuples, data = compileTupleVariationStore(
             variations=[v for v in self.variations if v.hasImpact()],
             pointCount=len(ttFont["cvt "].values),
             axisTags=[axis.axisTag for axis in ttFont["fvar"].axes],
-            sharedTupleIndices={})
+            sharedTupleIndices={},
+            useSharedPoints=useSharedPoints)
         header = {
             "majorVersion": self.majorVersion,
             "minorVersion": self.minorVersion,
