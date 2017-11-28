@@ -56,7 +56,7 @@ Initial glyph set specification:
   --glyphs=<glyphname>[,<glyphname>...]
       Specify comma/whitespace-separated PS glyph names to add to the subset.
       Note that only PS glyph names are accepted, not gidNNN, U+XXXX, etc
-      that are accepted on the command line.  The special string '*' wil keep
+      that are accepted on the command line.  The special string '*' will keep
       the entire glyph set.
   --glyphs-file=<path>
       Like --glyphs but reads from a file. Anything after a '#' on any line
