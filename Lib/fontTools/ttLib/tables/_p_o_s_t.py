@@ -154,7 +154,8 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		assert len(glyphOrder) == numGlyphs
 		indices = array.array("H")
 		extraDict = {}
-		extraNames = self.extraNames
+		extraNames = self.extraNames = [
+			n for n in self.extraNames if n not in standardGlyphOrder]
 		for i in range(len(extraNames)):
 			extraDict[extraNames[i]] = i
 		for glyphID in range(numGlyphs):
