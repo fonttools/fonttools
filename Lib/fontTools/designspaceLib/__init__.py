@@ -6,7 +6,7 @@ import logging
 import os
 import posixpath
 import xml.etree.ElementTree as ET
-from mutatorMath.objects.location import biasFromLocations, Location
+# from mutatorMath.objects.location import biasFromLocations, Location
 
 """
     designSpaceDocument
@@ -17,6 +17,25 @@ from mutatorMath.objects.location import biasFromLocations, Location
 """
 
 __all__ = [ 'DesignSpaceDocumentError', 'DesignSpaceDocument', 'SourceDescriptor', 'InstanceDescriptor', 'AxisDescriptor', 'RuleDescriptor', 'BaseDocReader', 'BaseDocWriter']
+
+
+def posix(path):
+    """Normalize paths using forward slash to work also on Windows."""
+    return posixpath.join(*path.split(os.path.sep))
+
+
+def posixpath_property(private_name):
+    def getter(self):
+        # Normal getter
+        return getattr(self, private_name)
+
+    def setter(self, value):
+        # The setter rewrites paths using forward slashes
+        if value is not None:
+            value = posix(value)
+        setattr(self, private_name, value)
+
+    return property(getter, setter)
 
 
 class DesignSpaceDocumentError(Exception):
@@ -80,6 +99,9 @@ class SourceDescriptor(SimpleDescriptor):
         self.mutedGlyphNames = []
         self.familyName = None
         self.styleName = None
+
+    path = posixpath_property("_path")
+    filename = posixpath_property("_filename")
 
 
 class RuleDescriptor(SimpleDescriptor):
@@ -148,8 +170,6 @@ def processRules(rules, location, glyphNames):
     return glyphNames
 
 
-
-
 class InstanceDescriptor(SimpleDescriptor):
     """Simple container for data related to the instance"""
     flavor = "instance"
@@ -183,6 +203,9 @@ class InstanceDescriptor(SimpleDescriptor):
         self.mutedGlyphNames = []
         self.kerning = True
         self.info = True
+
+    path = posixpath_property("_path")
+    filename = posixpath_property("_filename")
 
     def setStyleName(self, styleName, languageCode="en"):
         self.localisedStyleName[languageCode] = styleName
@@ -407,7 +430,7 @@ class BaseDocWriter(object):
             instanceElement.attrib['stylename'] = instanceObject.styleName
         # add localisations
         if instanceObject.localisedStyleName:
-            languageCodes = instanceObject.localisedStyleName.keys()
+            languageCodes = list(instanceObject.localisedStyleName.keys())
             languageCodes.sort()
             for code in languageCodes:
                 if code == "en": continue # already stored in the element attribute
@@ -416,7 +439,7 @@ class BaseDocWriter(object):
                 localisedStyleNameElement.text = instanceObject.getStyleName(code)
                 instanceElement.append(localisedStyleNameElement)
         if instanceObject.localisedFamilyName:
-            languageCodes = instanceObject.localisedFamilyName.keys()
+            languageCodes = list(instanceObject.localisedFamilyName.keys())
             languageCodes.sort()
             for code in languageCodes:
                 if code == "en": continue # already stored in the element attribute
@@ -425,7 +448,7 @@ class BaseDocWriter(object):
                 localisedFamilyNameElement.text = instanceObject.getFamilyName(code)
                 instanceElement.append(localisedFamilyNameElement)
         if instanceObject.localisedStyleMapStyleName:
-            languageCodes = instanceObject.localisedStyleMapStyleName.keys()
+            languageCodes = list(instanceObject.localisedStyleMapStyleName.keys())
             languageCodes.sort()
             for code in languageCodes:
                 if code == "en": continue
@@ -434,7 +457,7 @@ class BaseDocWriter(object):
                 localisedStyleMapStyleNameElement.text = instanceObject.getStyleMapStyleName(code)
                 instanceElement.append(localisedStyleMapStyleNameElement)
         if instanceObject.localisedStyleMapFamilyName:
-            languageCodes = instanceObject.localisedStyleMapFamilyName.keys()
+            languageCodes = list(instanceObject.localisedStyleMapFamilyName.keys())
             languageCodes.sort()
             for code in languageCodes:
                 if code == "en": continue
@@ -630,7 +653,7 @@ class BaseDocReader(object):
             # we need to check if there is an attribute named "initial"
             if axisElement.attrib.get("default") is None:
                 if axisElement.attrib.get("initial") is not None:
-                    # stop doing this, 
+                    # stop doing this,
                     axisObject.default = float(axisElement.attrib.get("initial"))
                 else:
                     axisObject.default = axisObject.minimum
@@ -770,7 +793,7 @@ class BaseDocReader(object):
             dimName = dimensionElement.attrib.get("name")
             if self._strictAxisNames and dimName not in self.axisDefaults:
                 # In case the document contains axis definitions,
-                # then we should only read the axes we know about. 
+                # then we should only read the axes we know about.
                 # However, if the document does not contain axes,
                 # then we need to create them after reading.
                 continue
@@ -959,11 +982,15 @@ class DesignSpaceDocument(object):
             self.writerClass = writerClass
         else:
             self.writerClass = BaseDocWriter
-        if fontClass is not None:
-            self.fontClass = fontClass
-        else:
-            from defcon.objects.font import Font
-            self.fontClass = Font
+        self._fontClass = fontClass
+
+    @property
+    def fontClass(self):
+        if self._fontClass is not None:
+            return self._fontClass
+
+        from defcon.objects.font import Font
+        return Font
 
     def read(self, path):
         self.path = path
@@ -978,14 +1005,14 @@ class DesignSpaceDocument(object):
 
     def _posixRelativePath(self, otherPath):
         relative = os.path.relpath(otherPath, os.path.dirname(self.path))
-        return posixpath.join(*relative.split(os.path.sep))
+        return posix(relative)
 
     def updatePaths(self):
-        """ 
+        """
             Right before we save we need to identify and respond to the following situations:
             In each descriptor, we have to do the right thing for the filename attribute.
 
-            case 1. 
+            case 1.
             descriptor.filename == None
             descriptor.path == None
 
@@ -994,7 +1021,7 @@ class DesignSpaceDocument(object):
             useless, but no reason to interfere.
 
 
-            case 2. 
+            case 2.
             descriptor.filename == "../something"
             descriptor.path == None
 
@@ -1002,7 +1029,7 @@ class DesignSpaceDocument(object):
             write as is. The filename attr should not be touched.
 
 
-            case 3. 
+            case 3.
             descriptor.filename == None
             descriptor.path == "~/absolute/path/there"
 
@@ -1011,12 +1038,12 @@ class DesignSpaceDocument(object):
             We're not overwriting some other value for filename, it should be fine
 
 
-            case 4. 
+            case 4.
             descriptor.filename == '../somewhere'
             descriptor.path == "~/absolute/path/there"
 
             -- action:
-            there is a conflict between the given filename, and the path. 
+            there is a conflict between the given filename, and the path.
             So we know where the file is relative to the document.
             Can't guess why they're different, we just choose for path to be correct and update filename.
 
@@ -1109,11 +1136,11 @@ class DesignSpaceDocument(object):
 
     def check(self):
         """
-            After reading we need to make sure we have a valid designspace. 
+            After reading we need to make sure we have a valid designspace.
             This means making repairs if things are missing
                 - check if we have axes and deduce them from the masters if they're missing
-                - that can include axes referenced in masters, instances, glyphs. 
-                - if no default is assigned, use mutatormath to find out. 
+                - that can include axes referenced in masters, instances, glyphs.
+                - if no default is assigned, use mutatormath to find out.
                 - record the default in the designspace
                 - report all the changes in a log
                 - save a "repaired" version of the doc
@@ -1129,13 +1156,7 @@ class DesignSpaceDocument(object):
             if sourceDescriptor.copyInfo:
                 # we choose you!
                 flaggedDefaultCandidate = sourceDescriptor
-        masterLocations = [src.location for src in self.sources]
-        mutatorBias = biasFromLocations(masterLocations, preferOrigin=False)
-        c = [src for src in self.sources if src.location==mutatorBias]
-        if c:
-            mutatorDefaultCandidate = c[0]
-        else:
-            mutatorDefaultCandidate = None
+        mutatorDefaultCandidate = self.getMutatorDefaultCandidate()
         # what are we going to do?
         if flaggedDefaultCandidate is not None:
             if mutatorDefaultCandidate is not None:
@@ -1175,9 +1196,17 @@ class DesignSpaceDocument(object):
                     axisObj.maximum = neutralAxisValue
                     axisObj.default = neutralAxisValue
                 else:
-                    # now we're in trouble, can't solve this, alert. 
+                    # now we're in trouble, can't solve this, alert.
                     self.logger.info("Warning: mismatched default value for axis %s and neutral master. Master value outside of axis bounds"%(axisObj.name))
 
+    def getMutatorDefaultCandidate(self):
+        # FIXME: original implementation using MutatorMath
+        # masterLocations = [src.location for src in self.sources]
+        # mutatorBias = biasFromLocations(masterLocations, preferOrigin=False)
+        # for src in self.sources:
+        #     if src.location == mutatorBias:
+        #         return src
+        return None
 
     def _prepAxesForBender(self):
         """
@@ -1228,7 +1257,7 @@ class DesignSpaceDocument(object):
             a = None
             if name in have:
                 if overwrite:
-                    # we have the axis, 
+                    # we have the axis,
                     a = self.getAxis(name)
                 else:
                     continue
@@ -1336,929 +1365,3 @@ def rulesToFeature(doc, whiteSpace="\t", newLine="\n"):
             text.append("%s%s %f %f;"%(whiteSpace, axisTag, axisMinimum, axisMaximum))
         text.append("} %s;"%rule.name)
     return newLine.join(text)
-
-if __name__ == "__main__":
-
-    def __removeAxesFromDesignSpace(path):
-        # only for testing, so we can make an invalid designspace file
-        # without making the designSpaceDocument also support it.
-        f = open(path, 'r')
-        d = f.read()
-        f.close()
-        start = d.find("<axes>")
-        end = d.find("</axes>")+len("</axes>")
-        n = d[0:start] + d[end:]
-        f = open(path, 'w')
-        f.write(n)
-        f.close()
-
-    def test():
-        u"""
-        >>> import os
-        >>> testDocPath = os.path.join(os.getcwd(), "test.designspace")
-        >>> masterPath1 = os.path.join(os.getcwd(), "masters", "masterTest1.ufo")
-        >>> masterPath2 = os.path.join(os.getcwd(), "masters", "masterTest2.ufo")
-        >>> instancePath1 = os.path.join(os.getcwd(), "instances", "instanceTest1.ufo")
-        >>> instancePath2 = os.path.join(os.getcwd(), "instances", "instanceTest2.ufo")
-        >>> doc = DesignSpaceDocument()
-        >>> # add master 1
-        >>> s1 = SourceDescriptor()
-        >>> s1.filename = os.path.relpath(masterPath1, os.path.dirname(testDocPath))
-        >>> s1.name = "master.ufo1"
-        >>> s1.copyLib = True
-        >>> s1.copyInfo = True
-        >>> s1.copyFeatures = True
-        >>> s1.location = dict(weight=0)
-        >>> s1.familyName = "MasterFamilyName"
-        >>> s1.styleName = "MasterStyleNameOne"
-        >>> s1.mutedGlyphNames.append("A")
-        >>> s1.mutedGlyphNames.append("Z")
-        >>> doc.addSource(s1)
-        >>> # add master 2
-        >>> s2 = SourceDescriptor()
-        >>> s2.filename = os.path.relpath(masterPath2, os.path.dirname(testDocPath))
-        >>> s2.name = "master.ufo2"
-        >>> s2.copyLib = False
-        >>> s2.copyInfo = False
-        >>> s2.copyFeatures = False
-        >>> s2.muteKerning = True
-        >>> s2.location = dict(weight=1000)
-        >>> s2.familyName = "MasterFamilyName"
-        >>> s2.styleName = "MasterStyleNameTwo"
-        >>> doc.addSource(s2)
-        >>> # add instance 1
-        >>> i1 = InstanceDescriptor()
-        >>> i1.filename = os.path.relpath(instancePath1, os.path.dirname(testDocPath))
-        >>> i1.familyName = "InstanceFamilyName"
-        >>> i1.styleName = "InstanceStyleName"
-        >>> i1.name = "instance.ufo1"
-        >>> i1.location = dict(weight=500, spooky=666)  # this adds a dimension that is not defined.
-        >>> i1.postScriptFontName = "InstancePostscriptName"
-        >>> i1.styleMapFamilyName = "InstanceStyleMapFamilyName"
-        >>> i1.styleMapStyleName = "InstanceStyleMapStyleName"
-        >>> glyphData = dict(name="arrow", mute=True, unicodes=[0x123, 0x124, 0x125])
-        >>> i1.glyphs['arrow'] = glyphData
-        >>> doc.addInstance(i1)
-        >>> # add instance 2
-        >>> i2 = InstanceDescriptor()
-        >>> i2.filename = os.path.relpath(instancePath2, os.path.dirname(testDocPath))
-        >>> i2.familyName = "InstanceFamilyName"
-        >>> i2.styleName = "InstanceStyleName"
-        >>> i2.name = "instance.ufo2"
-        >>> # anisotropic location
-        >>> i2.location = dict(weight=500, width=(400,300))
-        >>> i2.postScriptFontName = "InstancePostscriptName"
-        >>> i2.styleMapFamilyName = "InstanceStyleMapFamilyName"
-        >>> i2.styleMapStyleName = "InstanceStyleMapStyleName"
-        >>> glyphMasters = [dict(font="master.ufo1", glyphName="BB", location=dict(width=20,weight=20)), dict(font="master.ufo2", glyphName="CC", location=dict(width=900,weight=900))]
-        >>> glyphData = dict(name="arrow", unicodes=[101, 201, 301])
-        >>> glyphData['masters'] = glyphMasters
-        >>> glyphData['note'] = "A note about this glyph"
-        >>> glyphData['instanceLocation'] = dict(width=100, weight=120)
-        >>> i2.glyphs['arrow'] = glyphData
-        >>> i2.glyphs['arrow2'] = dict(mute=False)
-        >>> doc.addInstance(i2)
-        >>> # now we have sources and instances, but no axes yet. 
-        >>> doc.check()
-        >>> doc.getAxisOrder()
-        ['spooky', 'weight', 'width']
-        >>> doc.axes = []   # clear the axes
-        >>> # write some axes
-        >>> a1 = AxisDescriptor()
-        >>> a1.minimum = 0
-        >>> a1.maximum = 1000
-        >>> a1.default = 0
-        >>> a1.name = "weight"
-        >>> a1.tag = "wght"
-        >>> # note: just to test the element language, not an actual label name recommendations.
-        >>> a1.labelNames[u'fa-IR'] = u"قطر"
-        >>> a1.labelNames[u'en'] = u"Wéíght"
-        >>> doc.addAxis(a1)
-        >>> a2 = AxisDescriptor()
-        >>> a2.minimum = 0
-        >>> a2.maximum = 1000
-        >>> a2.default = 20
-        >>> a2.name = "width"
-        >>> a2.tag = "wdth"
-        >>> a2.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
-        >>> a2.hidden = True
-        >>> a2.labelNames[u'fr'] = u"Poids"
-        >>> doc.addAxis(a2)
-        >>> # add an axis that is not part of any location to see if that works
-        >>> a3 = AxisDescriptor()
-        >>> a3.minimum = 333
-        >>> a3.maximum = 666
-        >>> a3.default = 444
-        >>> a3.name = "spooky"
-        >>> a3.tag = "spok"
-        >>> a3.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
-        >>> #doc.addAxis(a3)    # uncomment this line to test the effects of default axes values
-        >>> # write some rules
-        >>> r1 = RuleDescriptor()
-        >>> r1.name = "named.rule.1"
-        >>> r1.conditions.append(dict(name='aaaa', minimum=0, maximum=1))
-        >>> r1.conditions.append(dict(name='bbbb', minimum=2, maximum=3))
-        >>> r1.subs.append(("a", "a.alt"))
-        >>> doc.addRule(r1)
-        >>> # write the document
-        >>> doc.write(testDocPath)
-        >>> assert os.path.exists(testDocPath)
-        >>> # import it again
-        >>> new = DesignSpaceDocument()
-        >>> new.read(testDocPath)
-        >>> new.check()
-        >>> new.default.location
-        {'width': 20.0, 'weight': 0.0}
-
-        # >>> for a, b in zip(doc.instances, new.instances):
-        # ...     a.compare(b)
-        # >>> for a, b in zip(doc.sources, new.sources):
-        # ...     a.compare(b)
-        # >>> for a, b in zip(doc.axes, new.axes):
-        # ...     a.compare(b)
-        # >>> [n.mutedGlyphNames for n in new.sources]
-        # [['A', 'Z'], []]
-        # >>> doc.getFonts()
-        # []
-        
-        >>> # test roundtrip for the axis attributes and data
-        >>> axes = {}
-        >>> for axis in doc.axes:
-        ...     if not axis.tag in axes:
-        ...         axes[axis.tag] = []
-        ...     axes[axis.tag].append(axis.serialize())
-        >>> for axis in new.axes:
-        ...     if axis.tag[0] == "_": continue
-        ...     if not axis.tag in axes:
-        ...         axes[axis.tag] = []
-        ...     axes[axis.tag].append(axis.serialize())
-        >>> for v in axes.values():
-        ...     a, b = v
-        ...     assert a == b
-
-        """
-
-    def testAdjustAxisDefaultToNeutral():
-        u"""
-        >>> import os
-        >>> testDocPath = os.path.join(os.getcwd(), "testAdjustAxisDefaultToNeutral.designspace")
-        >>> masterPath1 = os.path.join(os.getcwd(), "masters", "masterTest1.ufo")
-        >>> masterPath2 = os.path.join(os.getcwd(), "masters", "masterTest2.ufo")
-        >>> instancePath1 = os.path.join(os.getcwd(), "instances", "instanceTest1.ufo")
-        >>> instancePath2 = os.path.join(os.getcwd(), "instances", "instanceTest2.ufo")
-        >>> doc = DesignSpaceDocument()
-        >>> # add master 1
-        >>> s1 = SourceDescriptor()
-        >>> s1.filename = os.path.relpath(masterPath1, os.path.dirname(testDocPath))
-        >>> s1.name = "master.ufo1"
-        >>> s1.copyInfo = True
-        >>> s1.copyFeatures = True
-        >>> s1.location = dict(weight=55, width=1000)
-        >>> doc.addSource(s1)
-        >>> # write some axes
-        >>> a1 = AxisDescriptor()
-        >>> a1.minimum = 0
-        >>> a1.maximum = 1000
-        >>> a1.default = 0      # the wrong value
-        >>> a1.name = "weight"
-        >>> a1.tag = "wght"
-        >>> doc.addAxis(a1)
-        >>> a2 = AxisDescriptor()
-        >>> a2.minimum = -10
-        >>> a2.maximum = 10
-        >>> a2.default = 0      # the wrong value
-        >>> a2.name = "width"
-        >>> a2.tag = "wdth"
-        >>> doc.addAxis(a2)
-        >>> # write the document
-        >>> doc.write(testDocPath)
-        >>> assert os.path.exists(testDocPath)
-        >>> # import it again
-        >>> new = DesignSpaceDocument()
-        >>> new.read(testDocPath)
-        >>> new.check()
-        >>> loc = new.default.location
-        >>> for axisObj in new.axes:
-        ...     n = axisObj.name
-        ...     assert axisObj.default == loc.get(n)
-        """
-
-    def testUnicodes():
-        u"""
-        >>> import os
-        >>> testDocPath = os.path.join(os.getcwd(), "testUnicodes.designspace")
-        >>> testDocPath2 = os.path.join(os.getcwd(), "testUnicodes_roundtrip.designspace")
-        >>> masterPath1 = os.path.join(os.getcwd(), "masters", "masterTest1.ufo")
-        >>> masterPath2 = os.path.join(os.getcwd(), "masters", "masterTest2.ufo")
-        >>> instancePath1 = os.path.join(os.getcwd(), "instances", "instanceTest1.ufo")
-        >>> instancePath2 = os.path.join(os.getcwd(), "instances", "instanceTest2.ufo")
-        >>> doc = DesignSpaceDocument()
-        >>> # add master 1
-        >>> s1 = SourceDescriptor()
-        >>> s1.filename = os.path.relpath(masterPath1, os.path.dirname(testDocPath))
-        >>> s1.name = "master.ufo1"
-        >>> s1.copyInfo = True
-        >>> s1.location = dict(weight=0)
-        >>> doc.addSource(s1)
-        >>> # add master 2
-        >>> s2 = SourceDescriptor()
-        >>> s2.filename = os.path.relpath(masterPath2, os.path.dirname(testDocPath))
-        >>> s2.name = "master.ufo2"
-        >>> s2.location = dict(weight=1000)
-        >>> doc.addSource(s2)
-        >>> # add instance 1
-        >>> i1 = InstanceDescriptor()
-        >>> i1.filename = os.path.relpath(instancePath1, os.path.dirname(testDocPath))
-        >>> i1.name = "instance.ufo1"
-        >>> i1.location = dict(weight=500)
-        >>> glyphData = dict(name="arrow", mute=True, unicodes=[100, 200, 300])
-        >>> i1.glyphs['arrow'] = glyphData
-        >>> doc.addInstance(i1)
-        >>> # now we have sources and instances, but no axes yet. 
-        >>> doc.axes = []   # clear the axes
-        >>> # write some axes
-        >>> a1 = AxisDescriptor()
-        >>> a1.minimum = 0
-        >>> a1.maximum = 1000
-        >>> a1.default = 0
-        >>> a1.name = "weight"
-        >>> a1.tag = "wght"
-        >>> doc.addAxis(a1)
-        >>> # write the document
-        >>> doc.write(testDocPath)
-        >>> assert os.path.exists(testDocPath)
-        >>> # import it again
-        >>> new = DesignSpaceDocument()
-        >>> new.read(testDocPath)
-        >>> new.write(testDocPath2)
-        >>> # compare the file contents
-        >>> f1 = open(testDocPath, 'r')
-        >>> t1 = f1.read()
-        >>> f1.close()
-        >>> f2 = open(testDocPath2, 'r')
-        >>> t2 = f2.read()
-        >>> f2.close()
-        >>> t1 == t2
-        True
-        >>> # check the unicode values read from the document
-        >>> new.instances[0].glyphs['arrow']['unicodes'] == [100,200,300]
-        True
-        """
-
-    def testLocalisedNames():
-        u"""
-        >>> import os
-        >>> testDocPath = os.path.join(os.getcwd(), "testLocalisedNames.designspace")
-        >>> testDocPath2 = os.path.join(os.getcwd(), "testLocalisedNames_roundtrip.designspace")
-        >>> masterPath1 = os.path.join(os.getcwd(), "masters", "masterTest1.ufo")
-        >>> masterPath2 = os.path.join(os.getcwd(), "masters", "masterTest2.ufo")
-        >>> instancePath1 = os.path.join(os.getcwd(), "instances", "instanceTest1.ufo")
-        >>> instancePath2 = os.path.join(os.getcwd(), "instances", "instanceTest2.ufo")
-        >>> doc = DesignSpaceDocument()
-        >>> # add master 1
-        >>> s1 = SourceDescriptor()
-        >>> s1.filename = os.path.relpath(masterPath1, os.path.dirname(testDocPath))
-        >>> s1.name = "master.ufo1"
-        >>> s1.copyInfo = True
-        >>> s1.location = dict(weight=0)
-        >>> doc.addSource(s1)
-        >>> # add master 2
-        >>> s2 = SourceDescriptor()
-        >>> s2.filename = os.path.relpath(masterPath2, os.path.dirname(testDocPath))
-        >>> s2.name = "master.ufo2"
-        >>> s2.location = dict(weight=1000)
-        >>> doc.addSource(s2)
-        >>> # add instance 1
-        >>> i1 = InstanceDescriptor()
-        >>> i1.filename = os.path.relpath(instancePath1, os.path.dirname(testDocPath))
-        >>> i1.familyName = "Montserrat"
-        >>> i1.styleName = "SemiBold"
-        >>> i1.styleMapFamilyName = "Montserrat SemiBold"
-        >>> i1.styleMapStyleName = "Regular"
-        >>> i1.setFamilyName("Montserrat", "fr")
-        >>> i1.setFamilyName(u"モンセラート", "ja")
-        >>> i1.setStyleName("Demigras", "fr")
-        >>> i1.setStyleName(u"半ば", "ja")
-        >>> i1.setStyleMapStyleName(u"Standard", "de")
-        >>> i1.setStyleMapFamilyName("Montserrat Halbfett", "de")
-        >>> i1.setStyleMapFamilyName(u"モンセラート SemiBold", "ja")
-        >>> i1.name = "instance.ufo1"
-        >>> i1.location = dict(weight=500, spooky=666)  # this adds a dimension that is not defined.
-        >>> i1.postScriptFontName = "InstancePostscriptName"
-        >>> glyphData = dict(name="arrow", mute=True, unicodes=[0x123])
-        >>> i1.glyphs['arrow'] = glyphData
-        >>> doc.addInstance(i1)
-        >>> # now we have sources and instances, but no axes yet. 
-        >>> doc.axes = []   # clear the axes
-        >>> # write some axes
-        >>> a1 = AxisDescriptor()
-        >>> a1.minimum = 0
-        >>> a1.maximum = 1000
-        >>> a1.default = 0
-        >>> a1.name = "weight"
-        >>> a1.tag = "wght"
-        >>> # note: just to test the element language, not an actual label name recommendations.
-        >>> a1.labelNames[u'fa-IR'] = u"قطر"
-        >>> a1.labelNames[u'en'] = u"Wéíght"
-        >>> doc.addAxis(a1)
-        >>> a2 = AxisDescriptor()
-        >>> a2.minimum = 0
-        >>> a2.maximum = 1000
-        >>> a2.default = 0
-        >>> a2.name = "width"
-        >>> a2.tag = "wdth"
-        >>> a2.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
-        >>> a2.labelNames[u'fr'] = u"Poids"
-        >>> doc.addAxis(a2)
-        >>> # add an axis that is not part of any location to see if that works
-        >>> a3 = AxisDescriptor()
-        >>> a3.minimum = 333
-        >>> a3.maximum = 666
-        >>> a3.default = 444
-        >>> a3.name = "spooky"
-        >>> a3.tag = "spok"
-        >>> a3.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
-        >>> #doc.addAxis(a3)    # uncomment this line to test the effects of default axes values
-        >>> # write some rules
-        >>> r1 = RuleDescriptor()
-        >>> r1.name = "named.rule.1"
-        >>> r1.conditions.append(dict(name='aaaa', minimum=0, maximum=1))
-        >>> r1.conditions.append(dict(name='bbbb', minimum=2, maximum=3))
-        >>> r1.subs.append(("a", "a.alt"))
-        >>> doc.addRule(r1)
-        >>> # write the document
-        >>> doc.write(testDocPath)
-        >>> assert os.path.exists(testDocPath)
-        >>> # import it again
-        >>> new = DesignSpaceDocument()
-        >>> new.read(testDocPath)
-        >>> new.write(testDocPath2)
-        >>> f1 = open(testDocPath, 'r')
-        >>> t1 = f1.read()
-        >>> f1.close()
-        >>> f2 = open(testDocPath2, 'r')
-        >>> t2 = f2.read()
-        >>> f2.close()
-        >>> assert t1 == t2
-
-        """
-
-    def testHandleNoAxes():
-        # test what happens if the designspacedocument has no axes element.
-        """
-        >>> import os
-        >>> testDocPath = os.path.join(os.getcwd(), "testNoAxes_source.designspace")
-        >>> testDocPath2 = os.path.join(os.getcwd(), "testNoAxes_recontructed.designspace")
-        >>> masterPath1 = os.path.join(os.getcwd(), "masters", "masterTest1.ufo")
-        >>> masterPath2 = os.path.join(os.getcwd(), "masters", "masterTest2.ufo")
-        >>> instancePath1 = os.path.join(os.getcwd(), "instances", "instanceTest1.ufo")
-        >>> instancePath2 = os.path.join(os.getcwd(), "instances", "instanceTest2.ufo")
-        
-        # Case 1: No axes element in the document, but there are sources and instances
-        >>> doc = DesignSpaceDocument()
-
-        >>> for name, value in [('One', 1),('Two', 2),('Three', 3)]:
-        ...     a = AxisDescriptor()
-        ...     a.minimum = 0
-        ...     a.maximum = 1000
-        ...     a.default = 0
-        ...     a.name = "axisName%s"%(name)
-        ...     a.tag = "ax_%d"%(value)
-        ...     doc.addAxis(a)
-
-        >>> # add master 1
-        >>> s1 = SourceDescriptor()
-        >>> s1.filename = os.path.relpath(masterPath1, os.path.dirname(testDocPath))
-        >>> s1.name = "master.ufo1"
-        >>> s1.copyLib = True
-        >>> s1.copyInfo = True
-        >>> s1.copyFeatures = True
-        >>> s1.location = dict(axisNameOne=-1000, axisNameTwo=0, axisNameThree=1000)
-        >>> s1.familyName = "MasterFamilyName"
-        >>> s1.styleName = "MasterStyleNameOne"
-        >>> doc.addSource(s1)
-
-        >>> # add master 2
-        >>> s2 = SourceDescriptor()
-        >>> s2.filename = os.path.relpath(masterPath2, os.path.dirname(testDocPath))
-        >>> s2.name = "master.ufo1"
-        >>> s2.copyLib = False
-        >>> s2.copyInfo = False
-        >>> s2.copyFeatures = False
-        >>> s2.location = dict(axisNameOne=1000, axisNameTwo=1000, axisNameThree=0)
-        >>> s2.familyName = "MasterFamilyName"
-        >>> s2.styleName = "MasterStyleNameTwo"
-        >>> doc.addSource(s2)
-
-        >>> # add instance 1
-        >>> i1 = InstanceDescriptor()
-        >>> i1.filename = os.path.relpath(instancePath1, os.path.dirname(testDocPath))
-        >>> i1.familyName = "InstanceFamilyName"
-        >>> i1.styleName = "InstanceStyleName"
-        >>> i1.name = "instance.ufo1"
-        >>> i1.location = dict(axisNameOne=(-1000,500), axisNameTwo=100)
-        >>> i1.postScriptFontName = "InstancePostscriptName"
-        >>> i1.styleMapFamilyName = "InstanceStyleMapFamilyName"
-        >>> i1.styleMapStyleName = "InstanceStyleMapStyleName"
-        >>> doc.addInstance(i1)
-
-        >>> doc.write(testDocPath)
-        >>> __removeAxesFromDesignSpace(testDocPath)
-        >>> verify = DesignSpaceDocument()
-        >>> verify.read(testDocPath)
-        >>> verify.write(testDocPath2)
-        """
-
-    def testPathNameResolve():
-        # test how descriptor.path and descriptor.filename are resolved
-        """
-        >>> import os
-        >>> testDocPath1 = os.path.join(os.getcwd(), "testPathName_case1.designspace")
-        >>> testDocPath2 = os.path.join(os.getcwd(), "testPathName_case2.designspace")
-        >>> testDocPath3 = os.path.join(os.getcwd(), "testPathName_case3.designspace")
-        >>> testDocPath4 = os.path.join(os.getcwd(), "testPathName_case4.designspace")
-        >>> testDocPath5 = os.path.join(os.getcwd(), "testPathName_case5.designspace")
-        >>> testDocPath6 = os.path.join(os.getcwd(), "testPathName_case6.designspace")
-        >>> masterPath1 = os.path.join(os.getcwd(), "masters", "masterTest1.ufo")
-        >>> masterPath2 = os.path.join(os.getcwd(), "masters", "masterTest2.ufo")
-        >>> instancePath1 = os.path.join(os.getcwd(), "instances", "instanceTest1.ufo")
-        >>> instancePath2 = os.path.join(os.getcwd(), "instances", "instanceTest2.ufo")
-        
-        # Case 1: filename and path are both empty. Nothing to calculate, nothing to put in the file.
-        >>> doc = DesignSpaceDocument()
-        >>> s = SourceDescriptor()
-        >>> s.filename = None
-        >>> s.path = None
-        >>> s.copyInfo = True
-        >>> s.location = dict(weight=0)
-        >>> s.familyName = "MasterFamilyName"
-        >>> s.styleName = "MasterStyleNameOne"
-        >>> doc.addSource(s)
-        >>> doc.write(testDocPath1)
-        >>> verify = DesignSpaceDocument()
-        >>> verify.read(testDocPath1)
-        >>> assert verify.sources[0].filename == None
-        >>> assert verify.sources[0].path == None
-        
-        # Case 2: filename is empty, path points somewhere: calculate a new filename.
-        >>> doc = DesignSpaceDocument()
-        >>> s = SourceDescriptor()
-        >>> s.filename = None
-        >>> s.path = masterPath1
-        >>> s.copyInfo = True
-        >>> s.location = dict(weight=0)
-        >>> s.familyName = "MasterFamilyName"
-        >>> s.styleName = "MasterStyleNameOne"
-        >>> doc.addSource(s)
-        >>> doc.write(testDocPath2)
-        >>> verify = DesignSpaceDocument()
-        >>> verify.read(testDocPath2)
-        >>> assert verify.sources[0].filename == "masters/masterTest1.ufo"
-        >>> assert verify.sources[0].path == masterPath1
-        
-        # Case 3: the filename is set, the path is None. 
-        >>> doc = DesignSpaceDocument()
-        >>> s = SourceDescriptor()
-        >>> s.filename = "../somewhere/over/the/rainbow.ufo"
-        >>> s.path = None
-        >>> s.copyInfo = True
-        >>> s.location = dict(weight=0)
-        >>> s.familyName = "MasterFamilyName"
-        >>> s.styleName = "MasterStyleNameOne"
-        >>> doc.addSource(s)
-        >>> doc.write(testDocPath3)
-        >>> verify = DesignSpaceDocument()
-        >>> verify.read(testDocPath3)
-        >>> assert verify.sources[0].filename == "../somewhere/over/the/rainbow.ufo"
-        >>> # make the absolute path for filename so we can see if it matches the path
-        >>> p = os.path.abspath(os.path.join(os.path.dirname(testDocPath3), verify.sources[0].filename))
-        >>> assert verify.sources[0].path == p
-        
-        # Case 4: the filename points to one file, the path points to another. The path takes precedence.
-        >>> doc = DesignSpaceDocument()
-        >>> s = SourceDescriptor()
-        >>> s.filename = "../somewhere/over/the/rainbow.ufo"
-        >>> s.path = masterPath1
-        >>> s.copyInfo = True
-        >>> s.location = dict(weight=0)
-        >>> s.familyName = "MasterFamilyName"
-        >>> s.styleName = "MasterStyleNameOne"
-        >>> doc.addSource(s)
-        >>> doc.write(testDocPath4)
-        >>> verify = DesignSpaceDocument()
-        >>> verify.read(testDocPath4)
-        >>> assert verify.sources[0].filename == "masters/masterTest1.ufo"
-
-        # Case 5: the filename is None, path has a value, update the filename
-        >>> doc = DesignSpaceDocument()
-        >>> s = SourceDescriptor()
-        >>> s.filename = None
-        >>> s.path = masterPath1
-        >>> s.copyInfo = True
-        >>> s.location = dict(weight=0)
-        >>> s.familyName = "MasterFamilyName"
-        >>> s.styleName = "MasterStyleNameOne"
-        >>> doc.addSource(s)
-        >>> doc.write(testDocPath5) # so that the document has a path
-        >>> doc.updateFilenameFromPath()
-        >>> assert doc.sources[0].filename == "masters/masterTest1.ufo"
-        
-        # Case 6: the filename has a value, path has a value, update the filenames with force
-        >>> doc = DesignSpaceDocument()
-        >>> s = SourceDescriptor()
-        >>> s.filename = "../somewhere/over/the/rainbow.ufo"
-        >>> s.path = masterPath1
-        >>> s.copyInfo = True
-        >>> s.location = dict(weight=0)
-        >>> s.familyName = "MasterFamilyName"
-        >>> s.styleName = "MasterStyleNameOne"
-        >>> doc.write(testDocPath5) # so that the document has a path
-        >>> doc.addSource(s)
-        >>> assert doc.sources[0].filename == "../somewhere/over/the/rainbow.ufo"
-        >>> doc.updateFilenameFromPath(force=True)
-        >>> assert doc.sources[0].filename == "masters/masterTest1.ufo"
-
-        """
-
-    def testNormalise():
-        """
-        >>> doc = DesignSpaceDocument()
-        >>> # write some axes
-        >>> a1 = AxisDescriptor()
-        >>> a1.minimum = -1000
-        >>> a1.maximum = 1000
-        >>> a1.default = 0
-        >>> a1.name = "aaa"
-        >>> a1.tag = "aaaa"
-        >>> doc.addAxis(a1)
-
-        >>> doc.normalizeLocation(dict(aaa=0))
-        {'aaa': 0.0}
-        >>> doc.normalizeLocation(dict(aaa=1000))
-        {'aaa': 1.0}
-        >>> # clipping beyond max values:
-        >>> doc.normalizeLocation(dict(aaa=1001))
-        {'aaa': 1.0}
-        >>> doc.normalizeLocation(dict(aaa=500))
-        {'aaa': 0.5}
-        >>> doc.normalizeLocation(dict(aaa=-1000))
-        {'aaa': -1.0}
-        >>> doc.normalizeLocation(dict(aaa=-1001))
-        {'aaa': -1.0}
-        >>> # anisotropic coordinates normalise to isotropic
-        >>> doc.normalizeLocation(dict(aaa=(1000,-1000)))
-        {'aaa': 1.0}
-        >>> doc.normalize()
-        >>> r = []
-        >>> for axis in doc.axes:
-        ...     r.append((axis.name, axis.minimum, axis.default, axis.maximum))
-        >>> r.sort()
-        >>> r
-        [('aaa', -1.0, 0.0, 1.0)]
-
-        >>> doc = DesignSpaceDocument()
-        >>> # write some axes
-        >>> a2 = AxisDescriptor()
-        >>> a2.minimum = 100
-        >>> a2.maximum = 1000
-        >>> a2.default = 100
-        >>> a2.name = "bbb"
-        >>> doc.addAxis(a2)
-        >>> doc.normalizeLocation(dict(bbb=0))
-        {'bbb': 0.0}
-        >>> doc.normalizeLocation(dict(bbb=1000))
-        {'bbb': 1.0}
-        >>> # clipping beyond max values:
-        >>> doc.normalizeLocation(dict(bbb=1001))
-        {'bbb': 1.0}
-        >>> doc.normalizeLocation(dict(bbb=500))
-        {'bbb': 0.4444444444444444}
-        >>> doc.normalizeLocation(dict(bbb=-1000))
-        {'bbb': 0.0}
-        >>> doc.normalizeLocation(dict(bbb=-1001))
-        {'bbb': 0.0}
-        >>> # anisotropic coordinates normalise to isotropic
-        >>> doc.normalizeLocation(dict(bbb=(1000,-1000)))
-        {'bbb': 1.0}
-        >>> doc.normalizeLocation(dict(bbb=1001))
-        {'bbb': 1.0}
-        >>> doc.normalize()
-        >>> r = []
-        >>> for axis in doc.axes:
-        ...     r.append((axis.name, axis.minimum, axis.default, axis.maximum))
-        >>> r.sort()
-        >>> r
-        [('bbb', 0.0, 0.0, 1.0)]
-
-        >>> doc = DesignSpaceDocument()
-        >>> # write some axes
-        >>> a3 = AxisDescriptor()
-        >>> a3.minimum = -1000
-        >>> a3.maximum = 0
-        >>> a3.default = 0
-        >>> a3.name = "ccc"
-        >>> doc.addAxis(a3)
-        >>> doc.normalizeLocation(dict(ccc=0))
-        {'ccc': 0.0}
-        >>> doc.normalizeLocation(dict(ccc=1))
-        {'ccc': 0.0}
-        >>> doc.normalizeLocation(dict(ccc=-1000))
-        {'ccc': -1.0}
-        >>> doc.normalizeLocation(dict(ccc=-1001))
-        {'ccc': -1.0}
-
-        >>> doc.normalize()
-        >>> r = []
-        >>> for axis in doc.axes:
-        ...     r.append((axis.name, axis.minimum, axis.default, axis.maximum))
-        >>> r.sort()
-        >>> r
-        [('ccc', -1.0, 0.0, 0.0)]
-
-
-        >>> doc = DesignSpaceDocument()
-        >>> # write some axes
-        >>> a3 = AxisDescriptor()
-        >>> a3.minimum = 2000
-        >>> a3.maximum = 3000
-        >>> a3.default = 2000
-        >>> a3.name = "ccc"
-        >>> doc.addAxis(a3)
-        >>> doc.normalizeLocation(dict(ccc=0))
-        {'ccc': 0.0}
-        >>> doc.normalizeLocation(dict(ccc=1))
-        {'ccc': 0.0}
-        >>> doc.normalizeLocation(dict(ccc=-1000))
-        {'ccc': 0.0}
-        >>> doc.normalizeLocation(dict(ccc=-1001))
-        {'ccc': 0.0}
-
-        >>> doc.normalize()
-        >>> r = []
-        >>> for axis in doc.axes:
-        ...     r.append((axis.name, axis.minimum, axis.default, axis.maximum))
-        >>> r.sort()
-        >>> r
-        [('ccc', 0.0, 0.0, 1.0)]
-
-
-        >>> doc = DesignSpaceDocument()
-        >>> # write some axes
-        >>> a4 = AxisDescriptor()
-        >>> a4.minimum = 0
-        >>> a4.maximum = 1000
-        >>> a4.default = 0
-        >>> a4.name = "ddd"
-        >>> a4.map = [(0,100), (300, 500), (600, 500), (1000,900)]
-        >>> doc.addAxis(a4)
-        >>> doc.normalize()
-        >>> r = []
-        >>> for axis in doc.axes:
-        ...     r.append((axis.name, axis.map))
-        >>> r.sort()
-        >>> r
-        [('ddd', [(0, 0.1), (300, 0.5), (600, 0.5), (1000, 0.9)])]
-
-
-        """
-
-    def testCheck():
-        """
-        >>> # check if the checks are checking
-        >>> testDocPath = os.path.join(os.getcwd(), "testCheck.designspace")
-        >>> masterPath1 = os.path.join(os.getcwd(), "masters", "masterTest1.ufo")
-        >>> masterPath2 = os.path.join(os.getcwd(), "masters", "masterTest2.ufo")
-        >>> instancePath1 = os.path.join(os.getcwd(), "instances", "instanceTest1.ufo")
-        >>> instancePath2 = os.path.join(os.getcwd(), "instances", "instanceTest2.ufo")
-        
-        >>> # no default selected
-        >>> doc = DesignSpaceDocument()
-        >>> # add master 1
-        >>> s1 = SourceDescriptor()
-        >>> s1.path = masterPath1
-        >>> s1.name = "master.ufo1"
-        >>> s1.location = dict(snap=0, pop=10)
-        >>> s1.familyName = "MasterFamilyName"
-        >>> s1.styleName = "MasterStyleNameOne"
-        >>> doc.addSource(s1)
-        >>> # add master 2
-        >>> s2 = SourceDescriptor()
-        >>> s2.path = masterPath2
-        >>> s2.name = "master.ufo2"
-        >>> s2.location = dict(snap=1000, pop=20)
-        >>> s2.familyName = "MasterFamilyName"
-        >>> s2.styleName = "MasterStyleNameTwo"
-        >>> doc.addSource(s2)
-        >>> doc.checkAxes()
-        >>> doc.getAxisOrder()
-        ['snap', 'pop']
-        >>> assert doc.default == None
-        >>> doc.checkDefault()
-        >>> doc.default.name
-        'master.ufo1'
-
-        >>> # default selected
-        >>> doc = DesignSpaceDocument()
-        >>> # add master 1
-        >>> s1 = SourceDescriptor()
-        >>> s1.path = masterPath1
-        >>> s1.name = "master.ufo1"
-        >>> s1.location = dict(snap=0, pop=10)
-        >>> s1.familyName = "MasterFamilyName"
-        >>> s1.styleName = "MasterStyleNameOne"
-        >>> doc.addSource(s1)
-        >>> # add master 2
-        >>> s2 = SourceDescriptor()
-        >>> s2.path = masterPath2
-        >>> s2.name = "master.ufo2"
-        >>> s2.copyInfo = True
-        >>> s2.location = dict(snap=1000, pop=20)
-        >>> s2.familyName = "MasterFamilyName"
-        >>> s2.styleName = "MasterStyleNameTwo"
-        >>> doc.addSource(s2)
-        >>> doc.checkAxes()
-        >>> doc.getAxisOrder()
-        ['snap', 'pop']
-        >>> assert doc.default == None
-        >>> doc.checkDefault()
-        >>> doc.default.name
-        'master.ufo2'
-
-        >>> # generate a doc without axes, save and read again
-        >>> doc = DesignSpaceDocument()
-        >>> # add master 1
-        >>> s1 = SourceDescriptor()
-        >>> s1.path = masterPath1
-        >>> s1.name = "master.ufo1"
-        >>> s1.location = dict(snap=0, pop=10)
-        >>> s1.familyName = "MasterFamilyName"
-        >>> s1.styleName = "MasterStyleNameOne"
-        >>> doc.addSource(s1)
-        >>> # add master 2
-        >>> s2 = SourceDescriptor()
-        >>> s2.path = masterPath2
-        >>> s2.name = "master.ufo2"
-        >>> s2.location = dict(snap=1000, pop=20)
-        >>> s2.familyName = "MasterFamilyName"
-        >>> s2.styleName = "MasterStyleNameTwo"
-        >>> doc.addSource(s2)
-        >>> doc.checkAxes()
-        >>> doc.write(testDocPath)
-        >>> __removeAxesFromDesignSpace(testDocPath)
-
-        >>> new = DesignSpaceDocument()
-        >>> new.read(testDocPath)
-        >>> len(new.axes)
-        2
-        >>> new.checkAxes()
-        >>> len(new.axes)
-        2
-        >>> print([a.name for a in new.axes])
-        ['snap', 'pop']
-        >>> new.write(testDocPath)
-
-        """
-
-    def testRules():
-        """
-        >>> import os
-        >>> testDocPath = os.path.join(os.getcwd(), "testRules.designspace")
-        >>> testDocPath2 = os.path.join(os.getcwd(), "testRules_roundtrip.designspace")
-        >>> doc = DesignSpaceDocument()
-        >>> # write some axes
-        >>> a1 = AxisDescriptor()
-        >>> a1.tag = "taga"
-        >>> a1.name = "aaaa"
-        >>> a1.minimum = 0
-        >>> a1.maximum = 1000
-        >>> a1.default = 0
-        >>> doc.addAxis(a1)
-        >>> a2 = AxisDescriptor()
-        >>> a2.tag = "tagb"
-        >>> a2.name = "bbbb"
-        >>> a2.minimum = 0
-        >>> a2.maximum = 3000
-        >>> a2.default = 0
-        >>> doc.addAxis(a2)
-
-        >>> r1 = RuleDescriptor()
-        >>> r1.name = "named.rule.1"
-        >>> r1.conditions.append(dict(name='aaaa', minimum=0, maximum=1000))
-        >>> r1.conditions.append(dict(name='bbbb', minimum=0, maximum=3000))
-        >>> r1.subs.append(("a", "a.alt"))
-        >>>
-        >>> # rule with minium and maximum
-        >>> doc.addRule(r1)
-        >>> assert len(doc.rules) == 1
-        >>> assert len(doc.rules[0].conditions) == 2
-        >>> evaluateRule(r1, dict(aaaa = 500, bbbb = 0))
-        True
-        >>> evaluateRule(r1, dict(aaaa = 0, bbbb = 0))
-        True
-        >>> evaluateRule(r1, dict(aaaa = 1000, bbbb = 0))
-        True
-        >>> evaluateRule(r1, dict(aaaa = 1000, bbbb = -100))
-        False
-        >>> evaluateRule(r1, dict(aaaa = 1000.0001, bbbb = 0))
-        False
-        >>> evaluateRule(r1, dict(aaaa = -0.0001, bbbb = 0))
-        False
-        >>> evaluateRule(r1, dict(aaaa = -100, bbbb = 0))
-        False
-        >>> processRules([r1], dict(aaaa = 500), ["a", "b", "c"])
-        ['a.alt', 'b', 'c']
-        >>> processRules([r1], dict(aaaa = 500), ["a.alt", "b", "c"])
-        ['a.alt', 'b', 'c']
-        >>> processRules([r1], dict(aaaa = 2000), ["a", "b", "c"])
-        ['a', 'b', 'c']
-
-        >>> # rule with only a maximum
-        >>> r2 = RuleDescriptor()
-        >>> r2.name = "named.rule.2"
-        >>> r2.conditions.append(dict(name='aaaa', maximum=500))
-        >>> r2.subs.append(("b", "b.alt"))
-        >>>
-        >>> evaluateRule(r2, dict(aaaa = 0))
-        True
-        >>> evaluateRule(r2, dict(aaaa = -500))
-        True
-        >>> evaluateRule(r2, dict(aaaa = 1000))
-        False
-
-        >>> # rule with only a minimum
-        >>> r3 = RuleDescriptor()
-        >>> r3.name = "named.rule.3"
-        >>> r3.conditions.append(dict(name='aaaa', minimum=500))
-        >>> r3.subs.append(("c", "c.alt"))
-        >>>
-        >>> evaluateRule(r3, dict(aaaa = 0))
-        False
-        >>> evaluateRule(r3, dict(aaaa = 1000))
-        True
-        >>> evaluateRule(r3, dict(bbbb = 1000))
-        True
-
-        >>> # rule with only a minimum, maximum in separate conditions
-        >>> r4 = RuleDescriptor()
-        >>> r4.name = "named.rule.4"
-        >>> r4.conditions.append(dict(name='aaaa', minimum=500))
-        >>> r4.conditions.append(dict(name='bbbb', maximum=500))
-        >>> r4.subs.append(("c", "c.alt"))
-        >>>
-        >>> evaluateRule(r4, dict())    # is this what we expect though?
-        True
-        >>> evaluateRule(r4, dict(aaaa = 1000, bbbb = 0))
-        True
-        >>> evaluateRule(r4, dict(aaaa = 0, bbbb = 0))
-        False
-        >>> evaluateRule(r4, dict(aaaa = 1000, bbbb = 1000))
-        False
-
-        >>> a1 = AxisDescriptor()
-        >>> a1.minimum = 0
-        >>> a1.maximum = 1000
-        >>> a1.default = 0
-        >>> a1.name = "aaaa"
-        >>> a1.tag = "aaaa"
-        >>> b1 = AxisDescriptor()
-        >>> b1.minimum = 2000
-        >>> b1.maximum = 3000
-        >>> b1.default = 2000
-        >>> b1.name = "bbbb"
-        >>> b1.tag = "bbbb"
-        >>> doc.addAxis(a1)
-        >>> doc.addAxis(b1)
-        >>> doc._prepAxesForBender()
-        {'aaaa': {'map': [], 'name': 'aaaa', 'default': 0, 'minimum': 0, 'maximum': 1000, 'tag': 'aaaa'}, 'bbbb': {'map': [], 'name': 'bbbb', 'default': 2000, 'minimum': 2000, 'maximum': 3000, 'tag': 'bbbb'}}
-
-
-        >>> doc.rules[0].conditions
-        [{'minimum': 0, 'maximum': 1000, 'name': 'aaaa'}, {'minimum': 0, 'maximum': 3000, 'name': 'bbbb'}]
-
-        >>> doc.rules[0].subs
-        [('a', 'a.alt')]
-
-        >>> doc.normalize()
-        >>> doc.rules[0].name
-        'named.rule.1'
-        >>> doc.rules[0].conditions
-        [{'minimum': 0.0, 'maximum': 1.0, 'name': 'aaaa'}, {'minimum': 0.0, 'maximum': 1.0, 'name': 'bbbb'}]
-
-        >>> doc.write(testDocPath)
-        >>> new = DesignSpaceDocument()
-
-        >>> new.read(testDocPath)
-        >>> len(new.axes)
-        4
-        >>> len(new.rules)
-        1
-        >>> new.write(testDocPath2)
-
-        """
-
-    p = "testCheck.designspace"
-    __removeAxesFromDesignSpace(p)
-    def _test():
-        import doctest
-        doctest.testmod()
-    _test()

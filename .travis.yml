@@ -24,7 +24,7 @@ matrix:
     - language: generic
       os: osx
       env:
-        - TOXENV=py35-cov
+        - TOXENV=py36-cov
         - HOMEBREW_NO_AUTO_UPDATE=1
     - env:
         - TOXENV=py27-nocov

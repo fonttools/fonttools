@@ -18,6 +18,9 @@ dist
 .coverage.*
 htmlcov/
 
+# FIXME: the designspaceLib tests write .designspace files everywhere
+*.designspace
+
 # emacs backup files
 *~
 
