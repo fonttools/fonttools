@@ -21,7 +21,11 @@ __all__ = [ 'DesignSpaceDocumentError', 'DesignSpaceDocument', 'SourceDescriptor
 
 def posix(path):
     """Normalize paths using forward slash to work also on Windows."""
-    return posixpath.join(*path.split(os.path.sep))
+    new_path = posixpath.join(*path.split(os.path.sep))
+    if path.startswith('/'):
+        # The above transformation loses absolute paths
+        new_path = '/' + new_path
+    return new_path
 
 
 def posixpath_property(private_name):
