@@ -967,7 +967,7 @@ class BaseDocReader(object):
 
 class DesignSpaceDocument(object):
     """ Read, write data from the designspace file"""
-    def __init__(self, readerClass=None, writerClass=None, fontClass=None):
+    def __init__(self, readerClass=None, writerClass=None):
         self.logger = logging.getLogger("DesignSpaceDocumentLog")
         self.path = None
         self.formatVersion = None
@@ -986,15 +986,6 @@ class DesignSpaceDocument(object):
             self.writerClass = writerClass
         else:
             self.writerClass = BaseDocWriter
-        self._fontClass = fontClass
-
-    @property
-    def fontClass(self):
-        if self._fontClass is not None:
-            return self._fontClass
-
-        from defcon.objects.font import Font
-        return Font
 
     def read(self, path):
         self.path = path
@@ -1102,17 +1093,6 @@ class DesignSpaceDocument(object):
                     continue
                 if self.path is not None:
                     descriptor.filename = self._posixRelativePath(descriptor.path)
-
-    def getFonts(self):
-        # convenience method that delivers the masters and their locations
-        # so someone can build a thing for a thing.
-        fonts = []
-        for sourceDescriptor in self.sources:
-            if sourceDescriptor.path is not None:
-                if os.path.exists(sourceDescriptor.path):
-                    f = self.fontClass(sourceDescriptor.path)
-                    fonts.append((f, sourceDescriptor.location))
-        return fonts
 
     def newAxisDescriptor(self):
         # Ask the writer class to make us a new axisDescriptor
