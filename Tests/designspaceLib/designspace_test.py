@@ -4,7 +4,6 @@ from __future__ import (print_function, division, absolute_import,
                         unicode_literals)
 
 import os
-import posixpath
 import pytest
 
 from fontTools.misc.py23 import open
@@ -82,14 +81,10 @@ def test_fill_document(tmpdir):
     # now we have sources and instances, but no axes yet.
     doc.check()
 
-    # FIXME: this test fails, but I don't know why (I don't understand the
-    # importance of the ordering)
-    # E       AssertionError: assert ['width', 'weight', 'spooky'] == ['spooky', 'weight', 'width']
-    # E         At index 0 diff: 'width' != u'spooky'
-    # E         Full diff:
-    # E         - ['width', 'weight', 'spooky']
-    # E         + [u'spooky', u'weight', u'width']
-    # assert doc.getAxisOrder() == ['spooky', 'weight', 'width']
+    # Here, since the axes are not defined in the document, but instead are
+    # infered from the locations of the instances, we cannot guarantee the
+    # order in which they will be created by the `check()` method.
+    assert set(doc.getAxisOrder()) == set(['spooky', 'weight', 'width'])
     doc.axes = []   # clear the axes
 
     # write some axes
