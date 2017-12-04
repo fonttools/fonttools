@@ -339,28 +339,9 @@ class OTTableWriter(object):
 			assert extTables is not None, "Program or XML editing error. Extension subtables cannot contain extensions subtables"
 			tables, extTables, done = extTables, None, {}
 
-		# add Coverage table if it is sorted last.
-		sortCoverageLast = 0
-		if hasattr(self, "sortCoverageLast"):
-			# Find coverage table
-			for i in range(numItems):
-				item = self.items[i]
-				if hasattr(item, "name") and (item.name == "Coverage"):
-					sortCoverageLast = 1
-					break
-			if id(item) not in done:
-				item._gatherTables(tables, extTables, done)
-			else:
-				# We're a new parent of item
-				pass
-
 		for i in iRange:
 			item = self.items[i]
 			if not hasattr(item, "getData"):
-				continue
-
-			if sortCoverageLast and (i==1) and item.name == 'Coverage':
-				# we've already 'gathered' it above
 				continue
 
 			if id(item) not in done:
@@ -640,10 +621,6 @@ class BaseTable(object):
 			table = self.preWrite(font)
 		else:
 			table = self.__dict__.copy()
-
-
-		if hasattr(self, 'sortCoverageLast'):
-			writer.sortCoverageLast = 1
 
 		if hasattr(self, 'DontShare'):
 			writer.DontShare = True

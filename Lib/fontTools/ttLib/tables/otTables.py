@@ -927,12 +927,6 @@ class AlternateSubst(FormatSwitchingBaseTable):
 			alts = AlternateSet()
 			alts.Alternate = set
 			alternates.append(alts)
-		# a special case to deal with the fact that several hundred Adobe Japan1-5
-		# CJK fonts will overflow an offset if the coverage table isn't pushed to the end.
-		# Also useful in that when splitting a sub-table because of an offset overflow
-		# I don't need to calculate the change in the subtable offset due to the change in the coverage table size.
-		# Allows packing more rules in subtable.
-		self.sortCoverageLast = 1
 		return {"Coverage": cov, "AlternateSet": alternates}
 
 	def toXML2(self, xmlWriter, font):
@@ -1015,10 +1009,6 @@ class LigatureSubst(FormatSwitchingBaseTable):
 			for lig in set:
 				ligs.append(lig)
 			ligSets.append(ligSet)
-		# Useful in that when splitting a sub-table because of an offset overflow
-		# I don't need to calculate the change in subtabl offset due to the coverage table size.
-		# Allows packing more rules in subtable.
-		self.sortCoverageLast = 1
 		return {"Coverage": cov, "LigatureSet": ligSets}
 
 	def toXML2(self, xmlWriter, font):
@@ -1148,8 +1138,6 @@ def fixLookupOverFlows(ttf, overflowRecord):
 def splitAlternateSubst(oldSubTable, newSubTable, overflowRecord):
 	ok = 1
 	newSubTable.Format = oldSubTable.Format
-	if hasattr(oldSubTable, 'sortCoverageLast'):
-		newSubTable.sortCoverageLast = oldSubTable.sortCoverageLast
 
 	oldAlts = sorted(oldSubTable.alternates.items())
 	oldLen = len(oldAlts)
