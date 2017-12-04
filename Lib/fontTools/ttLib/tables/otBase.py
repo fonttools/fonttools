@@ -254,9 +254,7 @@ class OTTableWriter(object):
 		"""Assemble the data for this writer/table, without subtables."""
 		items = list(self.items)  # make a shallow copy
 		pos = self.pos
-		numItems = len(items)
-		for i in range(numItems):
-			item = items[i]
+		for i,item in enumerate(items):
 
 			if hasattr(item, "getData"):
 				if item.longOffset:
@@ -326,12 +324,7 @@ class OTTableWriter(object):
 
 		done[id(self)] = True
 
-		numItems = len(self.items)
-		iRange = list(range(numItems))
-		iRange.reverse()
-
 		isExtension = hasattr(self, "Extension")
-		dontShare = hasattr(self, 'DontShare')
 
 		selfTables = tables
 
@@ -339,8 +332,8 @@ class OTTableWriter(object):
 			assert extTables is not None, "Program or XML editing error. Extension subtables cannot contain extensions subtables"
 			tables, extTables, done = extTables, None, {}
 
-		for i in iRange:
-			item = self.items[i]
+		for i,item in reversed(list(enumerate(self.items))):
+
 			if not hasattr(item, "getData"):
 				continue
 
