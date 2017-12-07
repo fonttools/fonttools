@@ -223,7 +223,7 @@ class OTTableWriter(object):
 		self.localState = localState
 		self.tableTag = tableTag
 		self.longOffset = False
-		self.parent = None
+		self.parents = []
 
 	def __setitem__(self, name, value):
 		state = self.localState.copy() if self.localState else dict()
@@ -315,7 +315,13 @@ class OTTableWriter(object):
 			elif hasattr(item, "getData"):
 				item._doneWriting(internedTables)
 				if not dontShare:
-					items[i] = item = internedTables.setdefault(item, item)
+					internedItem = internedTables.get(item)
+					if internedItem:
+						internedItem.parents.extend(item.parents)
+						item = items[i] = internedItem
+
+					else:
+						internedTables[item] = item
 		self.items = tuple(items)
 
 	def _gatherTables(self, tables, extTables, done):
@@ -386,10 +392,7 @@ class OTTableWriter(object):
 
 	def getSubWriter(self):
 		subwriter = self.__class__(self.localState, self.tableTag)
-		subwriter.parent = self # because some subtables have idential values, we discard
-					# the duplicates under the getAllData method. Hence some
-					# subtable writers can have more than one parent writer.
-					# But we just care about first one right now.
+		subwriter.parents = [self]
 		return subwriter
 
 	def writeUShort(self, value):
@@ -451,23 +454,23 @@ class OTTableWriter(object):
 			if hasattr(item, 'repeatIndex'):
 				itemIndex = item.repeatIndex
 			if self.name == 'SubTable':
-				LookupListIndex = self.parent.repeatIndex
+				LookupListIndex = self.parents[0].repeatIndex
 				SubTableIndex = self.repeatIndex
 			elif self.name == 'ExtSubTable':
-				LookupListIndex = self.parent.parent.repeatIndex
-				SubTableIndex = self.parent.repeatIndex
+				LookupListIndex = self.parents[0].parents[0].repeatIndex
+				SubTableIndex = self.parents[0].repeatIndex
 			else: # who knows how far below the SubTable level we are! Climb back up to the nearest subtable.
 				itemName = ".".join([self.name, itemName])
-				p1 = self.parent
+				p1 = self.parents[0]
 				while p1 and p1.name not in ['ExtSubTable', 'SubTable']:
 					itemName = ".".join([p1.name, itemName])
-					p1 = p1.parent
+					p1 = p1.parents[0]
 				if p1:
 					if p1.name == 'ExtSubTable':
-						LookupListIndex = p1.parent.parent.repeatIndex
-						SubTableIndex = p1.parent.repeatIndex
+						LookupListIndex = p1.parents[0].parents[0].repeatIndex
+						SubTableIndex = p1.parents[0].repeatIndex
 					else:
-						LookupListIndex = p1.parent.repeatIndex
+						LookupListIndex = p1.parents[0].repeatIndex
 						SubTableIndex = p1.repeatIndex
 
 		return OverflowErrorRecord( (self.tableTag, LookupListIndex, SubTableIndex, itemName, itemIndex) )
