@@ -272,7 +272,10 @@ class OTTableWriter(object):
 
 	def __hash__(self):
 		# only works after self._doneWriting() has been called
-		return hash(self.items)
+		if not hasattr(self, '_hash'):
+			items = tuple(id(x) if hasattr(x, 'getData') else x for x in self.items)
+			self._hash = hash(items)
+		return self._hash
 
 	def __ne__(self, other):
 		result = self.__eq__(other)
@@ -281,7 +284,9 @@ class OTTableWriter(object):
 	def __eq__(self, other):
 		if type(self) != type(other):
 			return NotImplemented
-		return self.items == other.items
+		if len(self.items) != len(other.items):
+			return False
+		return all(x is y if hasattr(x, 'getData') else x == y for x,y in zip(self.items, other.items))
 
 	def _doneWriting(self, internedTables):
 		# Convert CountData references to data string items
