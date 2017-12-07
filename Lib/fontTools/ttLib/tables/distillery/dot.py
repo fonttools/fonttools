@@ -43,7 +43,6 @@ def graph(font, tableTags, stream=sys.stdout):
 		queue.append (writer)
 		names[id(writer)] = tableTag
 		f.write('graph [root=%s];\n' % tableTag)
-		f.write('%s [color=red];\n' % tableTag)
 		f.write('node [margin=0,width=0,height=0];\n')
 		while queue:
 			writer = queue.popleft()
@@ -51,7 +50,8 @@ def graph(font, tableTags, stream=sys.stdout):
 			label = writerLabel(writer)
 			size = writer.getDataLength()
 			fontsize = 5+math.log(size) * 4
-			f.write('%s [fontsize=%s,label="%s"]\n' % (lhs, fontsize, label))
+			color = "green" if len(writer.parents) > 1 else "black"
+			f.write('%s [fontsize=%s,label="%s",color=%s]\n' % (lhs, fontsize, label, color))
 
 			for item in writer.items:
 				if not hasattr(item, "getData"):
