@@ -9,6 +9,7 @@ from fontTools.otlLib import builder as otl
 from fontTools.ttLib import newTable, getTableModule
 from fontTools.ttLib.tables import otBase, otTables
 import itertools
+from collections import defaultdict
 
 
 def addOpenTypeFeatures(font, featurefile):
@@ -1309,24 +1310,39 @@ class MarkMarkPosBuilder(LookupBuilder):
         return result
 
     def build(self):
-        markClasses = self.buildMarkClasses_(self.marks)
-        markClassList = sorted(markClasses.keys(), key=markClasses.get)
-        marks = {mark: (markClasses[mc], anchor)
-                 for mark, (mc, anchor) in self.marks.items()}
+        # Group everything by mark class and output 1 subtable / class
 
-        st = otTables.MarkMarkPos()
-        st.Format = 1
-        st.ClassCount = len(markClasses)
-        st.Mark1Coverage = otl.buildCoverage(marks, self.glyphMap)
-        st.Mark2Coverage = otl.buildCoverage(self.baseMarks, self.glyphMap)
-        st.Mark1Array = otl.buildMarkArray(marks, self.glyphMap)
-        st.Mark2Array = otTables.Mark2Array()
-        st.Mark2Array.Mark2Count = len(st.Mark2Coverage.glyphs)
-        st.Mark2Array.Mark2Record = []
-        for base in st.Mark2Coverage.glyphs:
-            anchors = [self.baseMarks[base].get(mc) for mc in markClassList]
-            st.Mark2Array.Mark2Record.append(otl.buildMark2Record(anchors))
-        return self.buildLookup_([st])
+        # markClassName -> { glyphName -> (0, anchor) }
+        marksByClass = defaultdict(dict)
+        for glyphName, (markClassName, anchor) in self.marks.items():
+            # 0 because each will be in a different subtable with only 1 class
+            marksByClass[markClassName][glyphName] = (0, anchor)
+
+        # markClassName -> { glyphName -> {markClassName -> anchor} }
+        baseMarksByClass = defaultdict(lambda: defaultdict(dict))
+        for glyphName, markClassNameToAnchor in self.baseMarks.items():
+            for markClassName, anchor in markClassNameToAnchor.items():
+                baseMarksByClass[markClassName][glyphName][markClassName] = \
+                    anchor
+
+        subtables = []
+        for markClassName, baseMarks in baseMarksByClass.items():
+            marks = marksByClass[markClassName]
+            st = otTables.MarkMarkPos()
+            st.Format = 1
+            st.ClassCount = 1
+            st.Mark1Coverage = otl.buildCoverage(marks, self.glyphMap)
+            st.Mark2Coverage = otl.buildCoverage(baseMarks, self.glyphMap)
+            st.Mark1Array = otl.buildMarkArray(marks, self.glyphMap)
+            st.Mark2Array = otTables.Mark2Array()
+            st.Mark2Array.Mark2Count = len(st.Mark2Coverage.glyphs)
+            st.Mark2Array.Mark2Record = []
+            for base in st.Mark2Coverage.glyphs:
+                anchors = [baseMarks[base].get(markClassName)]
+                st.Mark2Array.Mark2Record.append(otl.buildMark2Record(anchors))
+            subtables.append(st)
+
+        return self.buildLookup_(subtables)
 
 
 class ReverseChainSingleSubstBuilder(LookupBuilder):
