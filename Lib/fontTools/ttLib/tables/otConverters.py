@@ -510,8 +510,7 @@ class Table(Struct):
 		if value is None:
 			self.writeNullOffset(writer)
 		else:
-			subWriter = writer.getSubWriter()
-			subWriter.longOffset = self.longOffset
+			subWriter = writer.getSubWriter(self.longOffset)
 			subWriter.name = self.name
 			if repeatIndex is not None:
 				subWriter.repeatIndex = repeatIndex
@@ -861,13 +860,11 @@ class AATLookupWithDataOffset(BaseConverter):
 			offsetByGlyph[glyph] = offset
 		# For calculating the offsets to our AATLookup and data table,
 		# we can use the regular OTTableWriter infrastructure.
-		lookupWriter = writer.getSubWriter()
-		lookupWriter.longOffset = True
+		lookupWriter = writer.getSubWriter(True)
 		lookup = AATLookup('DataOffsets', None, None, UShort)
 		lookup.write(lookupWriter, font, tableDict, offsetByGlyph, None)
 
-		dataWriter = writer.getSubWriter()
-		dataWriter.longOffset = True
+		dataWriter = writer.getSubWriter(True)
 		writer.writeSubTable(lookupWriter)
 		writer.writeSubTable(dataWriter)
 		for d in compiledData:
@@ -1206,8 +1203,7 @@ class STXHeader(BaseConverter):
 				(len(table.PerGlyphLookups), numLookups))
 		writer = OTTableWriter()
 		for lookup in table.PerGlyphLookups:
-			lookupWriter = writer.getSubWriter()
-			lookupWriter.longOffset = True
+			lookupWriter = writer.getSubWriter(True)
 			self.perGlyphLookup.write(lookupWriter, font,
 			                          {}, lookup, None)
 			writer.writeSubTable(lookupWriter)

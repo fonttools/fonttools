@@ -393,8 +393,9 @@ class OTTableWriter(object):
 
 	# interface for gathering data, as used by table.compile()
 
-	def getSubWriter(self):
+	def getSubWriter(self, longOffset=False):
 		subwriter = self.__class__(self.localState, self.tableTag)
+		subwriter.longOffset = longOffset
 		subwriter.parents = [self]
 		return subwriter
 
