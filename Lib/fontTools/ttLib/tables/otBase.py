@@ -240,6 +240,8 @@ class OTTableWriter(object):
 
 	def getDataLength(self):
 		"""Return the length of this table in bytes, without subtables."""
+		if hasattr(self, '_length'):
+			return self._length
 		l = 0
 		for item in self.items:
 			if hasattr(item, "getCountData"):
@@ -248,6 +250,7 @@ class OTTableWriter(object):
 				l += 4 if item.longOffset else 2
 			else:
 				l = l + len(item)
+		self._length = l
 		return l
 
 	def getData(self):
