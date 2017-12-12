@@ -510,8 +510,7 @@ class Table(Struct):
 		if value is None:
 			self.writeNullOffset(writer)
 		else:
-			subWriter = writer.getSubWriter(self.longOffset)
-			subWriter.name = self.name
+			subWriter = writer.getSubWriter(self.longOffset, self.name)
 			if repeatIndex is not None:
 				subWriter.repeatIndex = repeatIndex
 			writer.writeSubTable(subWriter)

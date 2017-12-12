@@ -217,13 +217,14 @@ class OTTableWriter(object):
 
 	"""Helper class to gather and assemble data for OpenType tables."""
 
-	def __init__(self, localState=None, tableTag=None):
-		self.items = []
-		self.pos = None
+	def __init__(self, localState=None, tableTag=None, name=''):
 		self.localState = localState
 		self.tableTag = tableTag
+		self.name = name
 		self.longOffset = False
 		self.parents = []
+		self.items = []
+		self.pos = None
 
 	def __setitem__(self, name, value):
 		state = self.localState.copy() if self.localState else dict()
@@ -393,8 +394,8 @@ class OTTableWriter(object):
 
 	# interface for gathering data, as used by table.compile()
 
-	def getSubWriter(self, longOffset=False):
-		subwriter = self.__class__(self.localState, self.tableTag)
+	def getSubWriter(self, longOffset=False, name=''):
+		subwriter = self.__class__(self.localState, self.tableTag, name)
 		subwriter.longOffset = longOffset
 		subwriter.parents = [self]
 		return subwriter
@@ -854,7 +855,7 @@ class ValueRecordFactory(object):
 			value = getattr(valueRecord, name, 0)
 			if isDevice:
 				if value:
-					subWriter = writer.getSubWriter()
+					subWriter = writer.getSubWriter(name=name)
 					writer.writeSubTable(subWriter)
 					value.compile(subWriter, font)
 				else:
