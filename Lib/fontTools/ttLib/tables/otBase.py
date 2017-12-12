@@ -5,6 +5,7 @@ import sys
 import array
 import struct
 import logging
+from . import distillery
 
 log = logging.getLogger(__name__)
 
@@ -67,6 +68,7 @@ class BaseTTXConverter(DefaultTable):
 		while True:
 			try:
 				writer = OTTableWriter(tableTag=self.tableTag)
+				writer.name = self.tableTag
 				self.table.compile(writer, font)
 				return writer.getAllData()
 
@@ -222,7 +224,6 @@ class OTTableWriter(object):
 		self.tableTag = tableTag
 		self.name = name
 		self.longOffset = False
-		self.parents = []
 		self.items = []
 		self.pos = None
 
@@ -277,7 +278,6 @@ class OTTableWriter(object):
 		return bytesjoin(items)
 
 	def __hash__(self):
-		# only works after self._doneWriting() has been called
 		if not hasattr(self, '_hash'):
 			items = tuple(id(x) if hasattr(x, 'getData') else x for x in self.items)
 			self._hash = hash(items)
@@ -290,19 +290,23 @@ class OTTableWriter(object):
 	def __eq__(self, other):
 		if type(self) != type(other):
 			return NotImplemented
-		if len(self.items) != len(other.items):
+		if len(self.items) != len(other.items) or self.longOffset != other.longOffset:
 			return False
 		return all(x is y if hasattr(x, 'getData') else x == y for x,y in zip(self.items, other.items))
 
-	def _doneWriting(self, internedTables):
-		# Convert CountData references to data string items
-		# collapse duplicate table references to a unique entry
-		# "tables" are OTTableWriter objects.
+	def _writeCountData(self):
+		# Convert CountData references to data string items.
+		items = self.items
+		for i in range(len(items)):
+			item = items[i]
+			if hasattr(item, "getCountData"):
+				items[i] = item.getCountData()
+			elif hasattr(item, "getData"):
+				item._writeCountData()
 
-		# For Extension Lookup types, we can
-		# eliminate duplicates only within the tree under the Extension Lookup,
-		# as offsets may exceed 64K even between Extension LookupTable subtables.
-		isExtension = hasattr(self, "Extension")
+	def _doneWriting(self, internedTables):
+		# Collapse duplicate table references to a unique entry
+		# "tables" are OTTableWriter objects.
 
 		# Certain versions of Uniscribe reject the font if the GSUB/GPOS top-level
 		# arrays (ScriptList, FeatureList, LookupList) point to the same, possibly
@@ -310,96 +314,35 @@ class OTTableWriter(object):
 		# See: https://github.com/behdad/fonttools/issues/518
 		dontShare = hasattr(self, 'DontShare')
 
-		if isExtension:
-			internedTables = {}
-
 		items = self.items
 		for i in range(len(items)):
 			item = items[i]
-			if hasattr(item, "getCountData"):
-				items[i] = item.getCountData()
-			elif hasattr(item, "getData"):
-				item._doneWriting(internedTables)
-				if not dontShare:
-					internedItem = internedTables.get(item)
-					if internedItem:
-						internedItem.parents.extend(item.parents)
-						item = items[i] = internedItem
-
-					else:
-						internedTables[item] = item
-		self.items = tuple(items)
-
-	def _gatherTables(self, tables, extTables, done):
-		# Convert table references in self.items tree to a flat
-		# list of tables in depth-first traversal order.
-		# "tables" are OTTableWriter objects.
-		# We do the traversal in reverse order at each level, in order to
-		# resolve duplicate references to be the last reference in the list of tables.
-		# For extension lookups, duplicate references can be merged only within the
-		# writer tree under the  extension lookup.
-
-		done[id(self)] = True
-
-		isExtension = hasattr(self, "Extension")
-
-		selfTables = tables
-
-		if isExtension:
-			assert extTables is not None, "Program or XML editing error. Extension subtables cannot contain extensions subtables"
-			tables, extTables, done = extTables, None, {}
-
-		for i,item in reversed(list(enumerate(self.items))):
-
 			if not hasattr(item, "getData"):
 				continue
 
-			if id(item) not in done:
-				item._gatherTables(tables, extTables, done)
-			else:
-				# Item is already written out by other parent
-				pass
+			item._doneWriting(internedTables)
+			if not dontShare:
+				internedItem = internedTables.get(item)
+				if internedItem:
+					item = items[i] = internedItem
+				else:
+					internedTables[item] = item
 
-		selfTables.append(self)
+		self.items = tuple(items)
 
 	def getAllData(self):
 		"""Assemble all data, including all subtables."""
+		self._writeCountData()
 		internedTables = {}
 		self._doneWriting(internedTables)
-		tables = []
-		extTables = []
-		done = {}
-		self._gatherTables(tables, extTables, done)
-		tables.reverse()
-		extTables.reverse()
-		# Gather all data in two passes: the absolute positions of all
-		# subtable are needed before the actual data can be assembled.
-		pos = 0
-		for table in tables:
-			table.pos = pos
-			pos = pos + table.getDataLength()
-
-		for table in extTables:
-			table.pos = pos
-			pos = pos + table.getDataLength()
-
-		data = []
-		for table in tables:
-			tableData = table.getData()
-			data.append(tableData)
-
-		for table in extTables:
-			tableData = table.getData()
-			data.append(tableData)
-
-		return bytesjoin(data)
+		tables = distillery.sortMeOut(self)
+		return bytesjoin(table.getData() for table in tables)
 
 	# interface for gathering data, as used by table.compile()
 
 	def getSubWriter(self, longOffset=False, name=''):
 		subwriter = self.__class__(self.localState, self.tableTag, name)
 		subwriter.longOffset = longOffset
-		subwriter.parents = [self]
 		return subwriter
 
 	def writeUShort(self, value):
