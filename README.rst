@@ -8,7 +8,7 @@ What is this?
   project includes the TTX tool, that can convert TrueType and OpenType
   fonts to and from an XML text format, which is also called TTX. It
   supports TrueType, OpenType, AFM and to an extent Type 1 and some
-  Mac-specific formats. The project has a `BSD-style open-source
+  Mac-specific formats. The project has a `MIT open-source
   licence <LICENSE>`__.
 | Among other things this means you can use it free of charge.
 
