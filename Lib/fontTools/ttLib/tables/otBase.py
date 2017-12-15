@@ -779,7 +779,7 @@ class FormatSwitchingBaseTable(BaseTable):
 		return NotImplemented
 
 	def getConverters(self):
-		return self.converters[self.Format]
+		return self.converters.get(self.Format, [])
 
 	def getConverterByName(self, name):
 		return self.convertersByName[self.Format][name]

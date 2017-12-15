@@ -481,7 +481,8 @@ class Coverage(FormatSwitchingBaseTable):
 					endID = len(glyphOrder)
 				glyphs.extend(glyphOrder[glyphID] for glyphID in range(startID, endID))
 		else:
-			assert 0, "unknown format: %s" % self.Format
+			self.glyphs = []
+			log.warning("Unknown Coverage format: %s" % self.Format)
 
 	def preWrite(self, font):
 		glyphs = getattr(self, "glyphs", None)
