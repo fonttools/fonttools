@@ -1,3 +1,6 @@
+3.21.0 (released 2017-12-18)
+----------------------------
+
 - [cmap] when compiling format6 subtable, don't assume gid0 is always called
   '.notdef' (1e42224).
 - [ot] Allow decompiling fonts with bad Coverage format number (1aafae8).
