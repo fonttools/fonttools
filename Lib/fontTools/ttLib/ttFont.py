@@ -224,8 +224,8 @@ class TTFont(object):
 	def _saveXML(self, writer,
 		     writeVersion=True,
 		     quiet=None, tables=None, skipTables=None, splitTables=False,
-		     disassembleInstructions=True, bitmapGlyphDataFormat='raw'):
-
+		     splitGlyphs=False, disassembleInstructions=True,
+			  bitmapGlyphDataFormat='raw'):
 
 		if quiet is not None:
 			deprecateArgument("quiet", "configure logging instead")
@@ -251,6 +251,9 @@ class TTFont(object):
 			writer.begintag("ttFont", sfntVersion=repr(tostr(self.sfntVersion))[1:-1])
 		writer.newline()
 
+		# always splitTables if splitGlyphs is enabled
+		splitTables = splitTables or splitGlyphs
+
 		if not splitTables:
 			writer.newline()
 		else:
@@ -270,7 +273,7 @@ class TTFont(object):
 				writer.newline()
 			else:
 				tableWriter = writer
-			self._tableToXML(tableWriter, tag)
+			self._tableToXML(tableWriter, tag, splitGlyphs=splitGlyphs)
 			if splitTables:
 				tableWriter.endtag("ttFont")
 				tableWriter.newline()
@@ -278,7 +281,7 @@ class TTFont(object):
 		writer.endtag("ttFont")
 		writer.newline()
 
-	def _tableToXML(self, writer, tag, quiet=None):
+	def _tableToXML(self, writer, tag, quiet=None, splitGlyphs=False):
 		if quiet is not None:
 			deprecateArgument("quiet", "configure logging instead")
 		if tag in self:
@@ -298,8 +301,8 @@ class TTFont(object):
 			attrs['raw'] = True
 		writer.begintag(xmlTag, **attrs)
 		writer.newline()
-		if tag in ("glyf", "CFF "):
-			table.toXML(writer, self)
+		if tag == "glyf":
+			table.toXML(writer, self, splitGlyphs=splitGlyphs)
 		else:
 			table.toXML(writer, self)
 		writer.endtag(xmlTag)

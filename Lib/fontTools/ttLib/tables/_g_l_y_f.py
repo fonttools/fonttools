@@ -5,6 +5,7 @@ from collections import namedtuple
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools import ttLib
+from fontTools import version
 from fontTools.misc.textTools import safeEval, pad
 from fontTools.misc.arrayTools import calcBounds, calcIntBounds, pointInRect
 from fontTools.misc.bezierTools import calcQuadraticBounds
@@ -16,9 +17,16 @@ import sys
 import struct
 import array
 import logging
-
+import os
+from fontTools.misc import xmlWriter
+from fontTools.misc.filenames import userNameToFileName
 
 log = logging.getLogger(__name__)
+
+# We compute the version the same as is computed in ttlib/__init__
+# so that we can write 'ttLibVersion' attribute of the glyf TTX files
+# when glyf is written to separate files.
+version = ".".join(version.split('.')[:2])
 
 #
 # The Apple and MS rasterizers behave differently for
@@ -110,31 +118,64 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			ttFont['maxp'].numGlyphs = len(self.glyphs)
 		return data
 
-	def toXML(self, writer, ttFont):
-		writer.newline()
+	def toXML(self, writer, ttFont, splitGlyphs=False):
+		notice = (
+			"The xMin, yMin, xMax and yMax values\n"
+			"will be recalculated by the compiler.")
 		glyphNames = ttFont.getGlyphNames()
-		writer.comment("The xMin, yMin, xMax and yMax values\nwill be recalculated by the compiler.")
-		writer.newline()
-		writer.newline()
+		if not splitGlyphs:
+			writer.newline()
+			writer.comment(notice)
+			writer.newline()
+			writer.newline()
 		numGlyphs = len(glyphNames)
+		if splitGlyphs:
+			path, ext = os.path.splitext(writer.file.name)
+			existingGlyphFiles = set()
 		for glyphName in glyphNames:
 			glyph = self[glyphName]
 			if glyph.numberOfContours:
-				writer.begintag('TTGlyph', [
-						("name", glyphName),
-						("xMin", glyph.xMin),
-						("yMin", glyph.yMin),
-						("xMax", glyph.xMax),
-						("yMax", glyph.yMax),
-						])
-				writer.newline()
-				glyph.toXML(writer, ttFont)
-				writer.endtag('TTGlyph')
-				writer.newline()
+				if splitGlyphs:
+					glyphPath = userNameToFileName(
+						tounicode(glyphName, 'utf-8'),
+						existingGlyphFiles,
+						prefix=("%s%s"%(path, "_")),
+						suffix=ext)
+					existingGlyphFiles.add(glyphPath.lower())
+					glyphWriter = xmlWriter.XMLWriter(
+						glyphPath, idlefunc=writer.idlefunc,
+						newlinestr=writer.newlinestr)
+					glyphWriter.begintag("ttFont", ttLibVersion=version)
+					glyphWriter.newline()
+					glyphWriter.begintag("glyf")
+					glyphWriter.newline()
+					glyphWriter.comment(notice)
+					glyphWriter.newline()
+					writer.simpletag("TTGlyph", src=os.path.basename(glyphPath))
+				else:
+					glyphWriter = writer
+				glyphWriter.begintag('TTGlyph', [
+							("name", glyphName),
+							("xMin", glyph.xMin),
+							("yMin", glyph.yMin),
+							("xMax", glyph.xMax),
+							("yMax", glyph.yMax),
+							])
+				glyphWriter.newline()
+				glyph.toXML(glyphWriter, ttFont)
+				glyphWriter.endtag('TTGlyph')
+				glyphWriter.newline()
+				if splitGlyphs:
+					glyphWriter.endtag("glyf")
+					glyphWriter.newline()
+					glyphWriter.endtag("ttFont")
+					glyphWriter.newline()
+					glyphWriter.close()
 			else:
 				writer.simpletag('TTGlyph', name=glyphName)
 				writer.comment("contains no outline data")
-				writer.newline()
+				if not splitGlyphs:
+					writer.newline()
 			writer.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
