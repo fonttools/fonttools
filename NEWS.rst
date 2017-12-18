@@ -1,3 +1,13 @@
+- [cmap] when compiling format6 subtable, don't assume gid0 is always called
+  '.notdef' (1e42224).
+- [ot] Allow decompiling fonts with bad Coverage format number (1aafae8).
+- Change FontTools licence to MIT (#1127).
+- [post] Prune extra names already in standard Mac set (df1e8c7).
+- [subset] Delete empty SubrsIndex after subsetting (#994, #1118).
+- [varLib] Don't share points in cvar by default, as it currently fails on
+  some browsers (#1113).
+- [afmLib] Make poor old afmLib work on python3.
+
 3.20.1 (released 2017-11-22)
 ----------------------------
 
