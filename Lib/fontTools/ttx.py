@@ -41,6 +41,7 @@ usage: ttx [options] inputfile1 [... inputfileN]
     -g Split glyf table: Save the glyf data into separate TTX files
        per glyph and write a small TTX for the glyf table which
        contains references to the individual TTGlyph elements.
+       NOTE: specifying -g implies -s (no need for -s together with -g)
     -i Do NOT disassemble TT instructions: when this option is given,
        all TrueType programs (glyph programs, the font program and the
        pre-program) will be written to the TTX file as hex data
@@ -165,7 +166,9 @@ class Options(object):
 			elif option == "-s":
 				self.splitTables = True
 			elif option == "-g":
+				# -g implies (and forces) splitTables
 				self.splitGlyphs = True
+				self.splitTables = True
 			elif option == "-i":
 				self.disassembleInstructions = False
 			elif option == "-z":

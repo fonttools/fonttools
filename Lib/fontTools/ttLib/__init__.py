@@ -879,8 +879,8 @@ def _escapechar(c):
 		return hex(byteord(c))[2:]
 
 
-def nameToIdentifier(name):
-	"""Convert a name to a valid (but UGLY) python identifier,
+def tagToIdentifier(tag):
+	"""Convert a table tag to a valid (but UGLY) python identifier,
 	as well as a filename that's guaranteed to be unique even on a
 	caseless file system. Each character is mapped to two characters.
 	Lowercase letters get an underscore before the letter, uppercase
@@ -893,25 +893,18 @@ def nameToIdentifier(name):
 		'OS/2' -> 'O_S_2f_2'
 	"""
 	import re
-	while len(name) > 1 and name[-1] == ' ':
-		name = name[:-1]
+	tag = Tag(tag)
+	if tag == "GlyphOrder":
+		return tag
+	assert len(tag) == 4, "tag should be 4 characters long"
+	while len(tag) > 1 and tag[-1] == ' ':
+		tag = tag[:-1]
 	ident = ""
-	for c in name:
+	for c in tag:
 		ident = ident + _escapechar(c)
 	if re.match("[0-9]", ident):
 		ident = "_" + ident
 	return ident
-
-def tagToIdentifier(tag):
-	"""This performs the same conversion which nameToIdentifiier does
-	with the additional assertion that the source tag is 4 characters
-	long which is criteria for a valid tag name.
-	"""
-	if tag == "GlyphOrder":
-		return tag
-	ret = nameToIdentifier(tag)
-	assert len(tag) == 4, "tag should be 4 characters long"
-	return ret
 
 def identifierToTag(ident):
 	"""the opposite of tagToIdentifier()"""
@@ -1033,3 +1026,123 @@ def getSearchRange(n, itemSize=16):
 	entrySelector = exponent
 	rangeShift = max(0, n * itemSize - searchRange)
 	return searchRange, entrySelector, rangeShift
+
+
+
+
+# ----------------------
+# User Name to File Name
+# ----------------------
+# This code was taken directly from the ufoNormalizer script in the unified-font-object repositry
+# (https://github.com/unified-font-object/)
+# ...which algorithm was taken directly from the UFO 3 specification
+
+illegalCharacters = "\" * + / : < > ? [ \ ] | \0".split(" ")
+illegalCharacters += [chr(i) for i in range(1, 32)]
+illegalCharacters += [chr(0x7F)]
+reservedFileNames = "CON PRN AUX CLOCK$ NUL A:-Z: COM1".lower().split(" ")
+reservedFileNames += "LPT1 LPT2 LPT3 COM2 COM3 COM4".lower().split(" ")
+maxFileNameLength = 255
+
+class NameTranslationError(Exception):
+    pass
+
+def userNameToFileName(userName, existing=[], prefix="", suffix=""):
+    """
+    existing should be a case-insensitive list
+    of all existing file names.
+    """
+    # the incoming name must be a unicode string
+    assert isinstance(userName, unicode), "The value for userName must be a unicode string."
+    # establish the prefix and suffix lengths
+    prefixLength = len(prefix)
+    suffixLength = len(suffix)
+    # replace an initial period with an _
+    # if no prefix is to be added
+    if not prefix and userName[0] == ".":
+        userName = "_" + userName[1:]
+    # filter the user name
+    filteredUserName = []
+    for character in userName:
+        # replace illegal characters with _
+        if character in illegalCharacters:
+            character = "_"
+        # add _ to all non-lower characters
+        elif character != character.lower():
+            character += "_"
+        filteredUserName.append(character)
+    userName = "".join(filteredUserName)
+    # clip to 255
+    sliceLength = maxFileNameLength - prefixLength - suffixLength
+    userName = userName[:sliceLength]
+    # test for illegal files names
+    parts = []
+    for part in userName.split("."):
+        if part.lower() in reservedFileNames:
+            part = "_" + part
+        parts.append(part)
+    userName = ".".join(parts)
+    # test for clash
+    fullName = prefix + userName + suffix
+    if fullName.lower() in existing:
+        fullName = handleClash1(userName, existing, prefix, suffix)
+    # finished
+    return fullName
+
+def handleClash1(userName, existing=[], prefix="", suffix=""):
+    """
+    existing must be a case-insensitive list
+    of all existing file names.
+    """
+    # if the prefix length + user name length + suffix length + 15 is at
+    # or past the maximum length, slice 15 characters off of the user name
+    prefixLength = len(prefix)
+    suffixLength = len(suffix)
+    if prefixLength + len(userName) + suffixLength + 15 > maxFileNameLength:
+        length = (prefixLength + len(userName) + suffixLength + 15)
+        sliceLength = maxFileNameLength - length
+        userName = userName[:sliceLength]
+    finalName = None
+    # try to add numbers to create a unique name
+    counter = 1
+    while finalName is None:
+        name = userName + str(counter).zfill(15)
+        fullName = prefix + name + suffix
+        if fullName.lower() not in existing:
+            finalName = fullName
+            break
+        else:
+            counter += 1
+        if counter >= 999999999999999:
+            break
+    # if there is a clash, go to the next fallback
+    if finalName is None:
+        finalName = handleClash2(existing, prefix, suffix)
+    # finished
+    return finalName
+
+def handleClash2(existing=[], prefix="", suffix=""):
+    """
+    existing must be a case-insensitive list
+    of all existing file names.
+    """
+    # calculate the longest possible string
+    maxLength = maxFileNameLength - len(prefix) - len(suffix)
+    maxValue = int("9" * maxLength)
+    # try to find a number
+    finalName = None
+    counter = 1
+    while finalName is None:
+        fullName = prefix + str(counter) + suffix
+        if fullName.lower() not in existing:
+            finalName = fullName
+            break
+        else:
+            counter += 1
+        if counter >= maxValue:
+            break
+    # raise an error if nothing has been found
+    if finalName is None:
+        raise NameTranslationError("No unique name could be found.")
+    # finished
+    return finalName

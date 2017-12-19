@@ -19,7 +19,7 @@ import array
 import logging
 import os
 from fontTools.misc import xmlWriter
-from fontTools.ttLib import nameToIdentifier
+from fontTools.ttLib import userNameToFileName
 
 log = logging.getLogger(__name__)
 
@@ -131,6 +131,9 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		counter = 0
 		progressStep = 10
 		numGlyphs = len(glyphNames)
+		if splitGlyphs:
+			path, ext = os.path.splitext(writer.file.name)
+			existingGlyphFiles = set()
 		for glyphName in glyphNames:
 			if not counter % progressStep and progress is not None:
 				progress.setLabel("Dumping 'glyf' table... (%s)" % glyphName)
@@ -139,9 +142,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			glyph = self[glyphName]
 			if glyph.numberOfContours:
 				if splitGlyphs:
-					path, ext = os.path.splitext(writer.file.name)
-					fileNameTemplate = path + ".%s" + ext
-					glyphPath = fileNameTemplate % nameToIdentifier(glyphName)
+					glyphPath = userNameToFileName(unicode(glyphName, 'utf-8'), prefix=("%s%s"%(path, "_")), suffix=ext)
+					existingGlyphFiles.add(glyphPath.lower())
 					glyphWriter = xmlWriter.XMLWriter(
 						glyphPath, idlefunc=writer.idlefunc,
 						newlinestr=writer.newlinestr)
@@ -1539,3 +1541,4 @@ def reprflag(flag):
 if __name__ == "__main__":
 	import doctest, sys
 	sys.exit(doctest.testmod().failed)
+
