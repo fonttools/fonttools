@@ -1276,6 +1276,28 @@ class Parser(object):
                                   self.cur_token_location_)
         self.expect_symbol_(";")
 
+        # A multiple substitution may have a single destination, in which case
+        # it will look just like a single substitution. So if there are both
+        # multiple and single substitutions, upgrade all the single ones to
+        # multiple substitutions.
+
+        # Check if we have a mix of non-contextual singles and multiples.
+        has_single = False
+        has_multiple = False
+        for s in statements:
+            if isinstance(s, self.ast.SingleSubstStatement):
+                has_single = not any([s.prefix, s.suffix, s.forceChain])
+            elif isinstance(s, self.ast.MultipleSubstStatement):
+                has_multiple = not any([s.prefix, s.suffix])
+
+        # Upgrade all single substitutions to multiple substitutions.
+        if has_single and has_multiple:
+            for i, s in enumerate(statements):
+                if isinstance(s, self.ast.SingleSubstStatement):
+                    statements[i] = self.ast.MultipleSubstStatement(s.location,
+                        s.prefix, tuple(s.glyphs[0].glyphSet())[0], s.suffix,
+                        tuple([list(r.glyphSet())[0] for r in s.replacements]))
+
     def is_cur_keyword_(self, k):
         if self.cur_token_type_ is Lexer.NAME:
             if isinstance(k, type("")):  # basestring is gone in Python3
