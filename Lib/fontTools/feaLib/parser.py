@@ -1295,8 +1295,8 @@ class Parser(object):
             for i, s in enumerate(statements):
                 if isinstance(s, self.ast.SingleSubstStatement):
                     statements[i] = self.ast.MultipleSubstStatement(s.location,
-                        s.prefix, tuple(s.glyphs[0].glyphSet())[0], s.suffix,
-                        tuple([list(r.glyphSet())[0] for r in s.replacements]))
+                        s.prefix, s.glyphs[0].glyphSet()[0], s.suffix,
+                        [r.glyphSet()[0] for r in s.replacements])
 
     def is_cur_keyword_(self, k):
         if self.cur_token_type_ is Lexer.NAME:
