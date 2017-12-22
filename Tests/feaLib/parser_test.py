@@ -1256,6 +1256,18 @@ class ParserTest(unittest.TestCase):
                         "    sub a' lookup upper x x A' lookup lower;"
                         "} test;")
 
+    def test_substitute_mix_single_multiple(self):
+        doc = self.parse("lookup Look {"
+                         "  sub f_f   by f f;"
+                         "  sub f     by f;"
+                         "  sub f_f_i by f f i;"
+                         "} Look;")
+        statements = doc.statements[0].statements
+        for sub in statements:
+            self.assertIsInstance(sub, ast.MultipleSubstStatement)
+        self.assertEqual(statements[1].glyph, "f")
+        self.assertEqual(statements[1].replacement, ["f"])
+
     def test_substitute_from(self):  # GSUB LookupType 3
         doc = self.parse("feature test {"
                          "  substitute a from [a.1 a.2 a.3];"
