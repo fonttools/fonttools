@@ -19,7 +19,7 @@ import array
 import logging
 import os
 from fontTools.misc import xmlWriter
-from fontTools.ttLib import userNameToFileName
+from fontTools.misc.filenames import userNameToFileName
 
 log = logging.getLogger(__name__)
 
@@ -142,7 +142,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			glyph = self[glyphName]
 			if glyph.numberOfContours:
 				if splitGlyphs:
-					glyphPath = userNameToFileName(unicode(glyphName, 'utf-8'), prefix=("%s%s"%(path, "_")), suffix=ext)
+					glyphPath = userNameToFileName(unicode(glyphName, 'utf-8'), existingGlyphFiles, prefix=("%s%s"%(path, "_")), suffix=ext)
 					existingGlyphFiles.add(glyphPath.lower())
 					glyphWriter = xmlWriter.XMLWriter(
 						glyphPath, idlefunc=writer.idlefunc,
