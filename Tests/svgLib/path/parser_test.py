@@ -226,6 +226,21 @@ import pytest
                 ("closePath", ()),
             ]
         ),
+        # absolute A command
+        (
+            "M 100 100 A 150 150 0 1 0 150 -150 z",
+            [
+                ('moveTo', ((100.0, 100.0),)),
+                ('qCurveTo', ((100.0, 100.0),
+                    (217.1758387643403, 139.78681395054122),
+                    (324.3782932812971, 77.97418174642395),
+                    (348.6469560082834, -43.36913188850798),
+                    (273.464933455753, -141.65865950652255),
+                    (150.0, -150.0))),
+                ('lineTo', ((100.0, 100.0),)),
+                ('closePath', ()),
+            ]
+        ),
     ]
 )
 def test_parse_path(pathdef, expected):
@@ -288,10 +303,3 @@ def test_invalid_implicit_command():
     with pytest.raises(ValueError) as exc_info:
         parse_path("M 100 100 L 200 200 Z 100 200", RecordingPen())
     assert exc_info.match("Unallowed implicit command")
-
-
-def test_arc_not_implemented():
-    pathdef = "M300,200 h-150 a150,150 0 1,0 150,-150 z"
-    with pytest.raises(NotImplementedError) as exc_info:
-        parse_path(pathdef, RecordingPen())
-    assert exc_info.match("arcs are not supported")
