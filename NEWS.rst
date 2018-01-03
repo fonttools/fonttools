@@ -1,3 +1,6 @@
+3.21.1 (released 2018-01-03)
+----------------------------
+
 - [feaLib] Allow mixed single/multiple substitutions (#612)
 - Added missing ``*.afm`` test assets to MAINFEST.in (#1137).
 - Fixed dumping ``SVG`` tables containing color palettes (#1124).
