@@ -23,7 +23,7 @@ class Arc(object):
 
     def __init__(self, start, radius, rotation, arc, sweep, end):
         """radius is complex, rotation is in degrees,
-           large and sweep are 1 or 0 (True/False also work)"""
+           arc and sweep are 1 or 0 (True/False also work)"""
 
         self.start = start
         self.radius = radius
@@ -317,17 +317,15 @@ def parse_path(pathdef, pen, current_pos=(0, 0)):
                 end += current_pos
 
             svg_arc = Arc(current_pos, radius, rotation, arc, sweep, end)
-            arc_points = []
+            arc_points = [(current_pos.real, current_pos.imag)]
             for x in range(1, 5):
                 # There are infinite points in an arc, but for our context,
                 # define the arc using 5 points(0.2, 0.4, 0.6...)
                 arc_point = svg_arc.point(x*0.2)
                 arc_points.append((arc_point.real, arc_point.imag))
-            pen.qCurveTo(
-                (current_pos.real, current_pos.imag),
-                *arc_points,
-                (end.real, end.imag)
-            )
+            arc_points.append((end.real, end.imag))
+
+            pen.qCurveTo(*arc_points)
             current_pos = end
 
     # no final Z command, it's an open path
