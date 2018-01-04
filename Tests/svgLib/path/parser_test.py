@@ -232,10 +232,10 @@ import pytest
             [
                 ('moveTo', ((100.0, 100.0),)),
                 ('qCurveTo', ((100.0, 100.0),
-                    (217.1758387643403, 139.78681395054122),
-                    (324.3782932812971, 77.97418174642395),
-                    (348.6469560082834, -43.36913188850798),
-                    (273.464933455753, -141.65865950652255),
+                    (217.17583, 139.78681),
+                    (324.37829, 77.97418),
+                    (348.64695, -43.36913),
+                    (273.46493, -141.65865),
                     (150.0, -150.0))),
                 ('lineTo', ((100.0, 100.0),)),
                 ('closePath', ()),
@@ -243,12 +243,17 @@ import pytest
         ),
     ]
 )
+
 def test_parse_path(pathdef, expected):
     pen = RecordingPen()
     parse_path(pathdef, pen)
 
-    assert pen.value == expected
-
+    assert len(pen.value) == len(expected)
+    for i, (instr, coords) in enumerate(pen.value):
+        # instr are 'moveTo', 'qCurveTo', 'closePath' etc.
+        assert instr == expected[i][0]
+        for j, (real, imag) in enumerate(coords):
+            assert pytest.approx((real, imag)) == expected[i][1][j]
 
 @pytest.mark.parametrize(
     "pathdef1, pathdef2",
