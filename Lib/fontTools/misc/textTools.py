@@ -7,14 +7,14 @@ import ast
 import string
 
 
-def safeEval(data):
-	"""A (kindof) safe replacement for eval."""
-	return ast.literal_eval(data)
+# alias kept for backward compatibility
+safeEval = ast.literal_eval
 
 
 def readHex(content):
 	"""Convert a list of hex strings to binary data."""
 	return deHexStr(strjoin(chunk for chunk in content if isinstance(chunk, basestring)))
+
 
 def deHexStr(hexdata):
 	"""Convert a hex string to binary data."""
