@@ -3,12 +3,13 @@
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+import ast
 import string
 
 
-def safeEval(data, eval=eval):
+def safeEval(data):
 	"""A (kindof) safe replacement for eval."""
-	return eval(data, {"__builtins__":{"True":True,"False":False}})
+	return ast.literal_eval(data)
 
 
 def readHex(content):
