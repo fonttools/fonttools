@@ -10,6 +10,7 @@
 from __future__ import (
     print_function, division, absolute_import, unicode_literals)
 from fontTools.misc.py23 import *
+from math import sqrt, cos, sin, acos, degrees, radians
 import re
 
 COMMANDS = set('MmZzLlHhVvCcSsQqTtAa')
@@ -18,6 +19,98 @@ UPPERCASE = set('MZLHVCSQTA')
 COMMAND_RE = re.compile("([MmZzLlHhVvCcSsQqTtAa])")
 FLOAT_RE = re.compile("[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?")
 
+class Arc(object):
+
+    def __init__(self, start, radius, rotation, arc, sweep, end):
+        """radius is complex, rotation is in degrees,
+           arc and sweep are 1 or 0 (True/False also work)"""
+
+        self.start = start
+        self.radius = radius
+        self.rotation = rotation
+        self.arc = bool(arc)
+        self.sweep = bool(sweep)
+        self.end = end
+
+        self._parameterize()
+
+    def _parameterize(self):
+        # Conversion from endpoint to center parameterization
+        # http://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes
+
+        cosr = cos(radians(self.rotation))
+        sinr = sin(radians(self.rotation))
+        dx = (self.start.real - self.end.real) / 2
+        dy = (self.start.imag - self.end.imag) / 2
+        x1prim = cosr * dx + sinr * dy
+        x1prim_sq = x1prim * x1prim
+        y1prim = -sinr * dx + cosr * dy
+        y1prim_sq = y1prim * y1prim
+
+        rx = self.radius.real
+        rx_sq = rx * rx
+        ry = self.radius.imag
+        ry_sq = ry * ry
+
+        # Correct out of range radii
+        radius_check = (x1prim_sq / rx_sq) + (y1prim_sq / ry_sq)
+        if radius_check > 1:
+            rx *= sqrt(radius_check)
+            ry *= sqrt(radius_check)
+            rx_sq = rx * rx
+            ry_sq = ry * ry
+
+        t1 = rx_sq * y1prim_sq
+        t2 = ry_sq * x1prim_sq
+        c = sqrt(abs((rx_sq * ry_sq - t1 - t2) / (t1 + t2)))
+
+        if self.arc == self.sweep:
+            c = -c
+        cxprim = c * rx * y1prim / ry
+        cyprim = -c * ry * x1prim / rx
+
+        self.center = complex((cosr * cxprim - sinr * cyprim) +
+                              ((self.start.real + self.end.real) / 2),
+                              (sinr * cxprim + cosr * cyprim) +
+                              ((self.start.imag + self.end.imag) / 2))
+
+        ux = (x1prim - cxprim) / rx
+        uy = (y1prim - cyprim) / ry
+        vx = (-x1prim - cxprim) / rx
+        vy = (-y1prim - cyprim) / ry
+        n = sqrt(ux * ux + uy * uy)
+        p = ux
+        theta = degrees(acos(p / n))
+        if uy < 0:
+            theta = -theta
+        self.theta = theta % 360
+
+        n = sqrt((ux * ux + uy * uy) * (vx * vx + vy * vy))
+        p = ux * vx + uy * vy
+        d = p/n
+        # In certain cases the above calculation can through inaccuracies
+        # become just slightly out of range, f ex -1.0000000000000002.
+        if d > 1.0:
+            d = 1.0
+        elif d < -1.0:
+            d = -1.0
+        delta = degrees(acos(d))
+        if (ux * vy - uy * vx) < 0:
+            delta = -delta
+        self.delta = delta % 360
+        if not self.sweep:
+            self.delta -= 360
+
+    def point(self, pos):
+        angle = radians(self.theta + (self.delta * pos))
+        cosr = cos(radians(self.rotation))
+        sinr = sin(radians(self.rotation))
+
+        x = (cosr * cos(angle) * self.radius.real - sinr * sin(angle) *
+             self.radius.imag + self.center.real)
+        y = (sinr * cos(angle) * self.radius.real + cosr * sin(angle) *
+             self.radius.imag + self.center.imag)
+        return complex(x, y)
 
 def _tokenize_path(pathdef):
     for x in COMMAND_RE.split(pathdef):
@@ -34,9 +127,6 @@ def parse_path(pathdef, pen, current_pos=(0, 0)):
 
     If 'current_pos' (2-float tuple) is provided, the initial moveTo will
     be relative to that instead being absolute.
-
-    Arc segments (commands "A" or "a") are not currently supported, and raise
-    NotImplementedError.
     """
     # In the SVG specs, initial movetos are absolute, even if
     # specified as 'm'. This is the default behavior here as well.
@@ -209,7 +299,29 @@ def parse_path(pathdef, pen, current_pos=(0, 0)):
             last_control = control
 
         elif command == 'A':
-            raise NotImplementedError('arcs are not supported')
+            # Arc
+            radius = float(elements.pop()) + float(elements.pop()) * 1j
+            rotation = float(elements.pop())
+            arc = float(elements.pop())
+            sweep = float(elements.pop())
+            end = float(elements.pop()) + float(elements.pop()) * 1j
+
+            if not absolute:
+                end += current_pos
+
+            if end == current_pos:
+                # Guard against a situation where arc start and end being same.
+                # That results division by zero issues in Arc parameterization.
+                end += 0.00009
+            svg_arc = Arc(current_pos, radius, rotation, arc, sweep, end)
+            arc_points = []
+            for point in [0.2, 0.4, 0.6, 0.8, 1]:
+                # There are infinite points in an arc, but for our context,
+                # define the arc using 5 points.
+                arc_point = svg_arc.point(point)
+                arc_points.append((arc_point.real, arc_point.imag))
+            pen.qCurveTo(*arc_points)
+            current_pos = end
 
     # no final Z command, it's an open path
     if start_pos is not None:
