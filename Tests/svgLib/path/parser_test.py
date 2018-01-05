@@ -226,74 +226,14 @@ import pytest
                 ("closePath", ()),
             ]
         ),
-        # absolute A command, arc 1
-        (
-            "M 100 100 A 150 150 0 1 0 150 -150 z",
-            [
-                ('moveTo', ((100.0, 100.0),)),
-                ('qCurveTo', ((217.17583, 139.78681),
-                              (324.37829, 77.97418),
-                              (348.64695, -43.36913),
-                              (273.46493, -141.65865),
-                              (150.0, -150.0))),
-                ('lineTo', ((100.0, 100.0),)),
-                ('closePath', ()),
-            ]
-        ),
-        # relative A command
-        (
-            "M 100 100 a 150 150 0 1 0 150 -150",
-            [
-                ('moveTo', ((100.0, 100.0),)),
-                ('qCurveTo', ((161.832212, 221.352549),
-                              (296.3525491, 242.6584774),
-                              (392.6584774, 146.35254915),
-                              (371.3525491, 11.83221215),
-                              (250.0, -50.0))),
-                ('endPath', ())
-            ]
-        ),
-        # absolute A command, arc 1, sweap 1, rotation 30
-        (
-            "M 100 100 A 150 150 30 1 1 150 -150 z",
-            [
-                ('moveTo', ((100.0, 100.0),)),
-                ('qCurveTo', ((-23.46493, 91.65865),
-                              (-98.6469560, -6.63086811),
-                              (-74.3782932, -127.97418174),
-                              (32.8241612, -189.786813),
-                              (150.0, -150.0))),
-                ('lineTo', ((100.0, 100.0),)),
-                ('closePath', ()),
-            ]
-        ),
-        # absolute A command, arc 1, sweap 1, rotation 30, end == start
-        (
-            "M 100 100 A 150 150 30 1 1 100 100 z",
-            [
-                ('moveTo', ((100.0, 100.0),)),
-                ('qCurveTo', ((-42.6584408, -3.64747653),
-                              (11.832264448, -171.3525544),
-                              (188.16782558, -171.352554),
-                              (242.65853078, -3.647476),
-                              (100.0, 100.0))),
-                ('lineTo', ((100.0, 100.0),)),
-                ('closePath', ()),
-            ]
-        ),
     ]
 )
-
 def test_parse_path(pathdef, expected):
     pen = RecordingPen()
     parse_path(pathdef, pen)
 
-    assert len(pen.value) == len(expected)
-    for (instr, coords), (exp_instr, exp_coords) in zip(pen.value, expected):
-        assert instr == exp_instr
-        assert len(coords) == len(exp_coords)
-        for c, e in zip(coords, exp_coords):
-            assert c == pytest.approx(e)
+    assert pen.value == expected
+
 
 @pytest.mark.parametrize(
     "pathdef1, pathdef2",
@@ -348,3 +288,10 @@ def test_invalid_implicit_command():
     with pytest.raises(ValueError) as exc_info:
         parse_path("M 100 100 L 200 200 Z 100 200", RecordingPen())
     assert exc_info.match("Unallowed implicit command")
+
+
+def test_arc_not_implemented():
+    pathdef = "M300,200 h-150 a150,150 0 1,0 150,-150 z"
+    with pytest.raises(NotImplementedError) as exc_info:
+        parse_path(pathdef, RecordingPen())
+    assert exc_info.match("arcs are not supported")
