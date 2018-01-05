@@ -127,9 +127,6 @@ def parse_path(pathdef, pen, current_pos=(0, 0)):
 
     If 'current_pos' (2-float tuple) is provided, the initial moveTo will
     be relative to that instead being absolute.
-
-    Arc segments (commands "A" or "a") are not currently supported, and raise
-    NotImplementedError.
     """
     # In the SVG specs, initial movetos are absolute, even if
     # specified as 'm'. This is the default behavior here as well.
@@ -310,21 +307,19 @@ def parse_path(pathdef, pen, current_pos=(0, 0)):
             end = float(elements.pop()) + float(elements.pop()) * 1j
 
             if not absolute:
-                if end == 0:
-                    # Guard against a situation where arc start and end being same.
-                    # That results division by zero issues in Arc parameterization.
-                    end = 0.00009
                 end += current_pos
 
+            if end == current_pos:
+                # Guard against a situation where arc start and end being same.
+                # That results division by zero issues in Arc parameterization.
+                end += 0.00009
             svg_arc = Arc(current_pos, radius, rotation, arc, sweep, end)
-            arc_points = [(current_pos.real, current_pos.imag)]
-            for x in range(1, 5):
+            arc_points = []
+            for point in [0.2, 0.4, 0.6, 0.8, 1]:
                 # There are infinite points in an arc, but for our context,
-                # define the arc using 5 points(0.2, 0.4, 0.6...)
-                arc_point = svg_arc.point(x*0.2)
+                # define the arc using 5 points.
+                arc_point = svg_arc.point(point)
                 arc_points.append((arc_point.real, arc_point.imag))
-            arc_points.append((end.real, end.imag))
-
             pen.qCurveTo(*arc_points)
             current_pos = end
 
