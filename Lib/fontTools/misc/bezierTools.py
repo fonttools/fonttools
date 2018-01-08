@@ -41,7 +41,7 @@ def _intSecAtan(x):
     return x * math.sqrt(x**2 + 1)/2 + math.asinh(x)/2
 
 
-def calcQuadraticArcLength(pt1, pt2, pt3, approximate_fallback=False):
+def calcQuadraticArcLength(pt1, pt2, pt3):
     """Return the arc length for a qudratic bezier segment.
     pt1 and pt3 are the "anchor" points, pt2 is the "handle".
 
@@ -64,10 +64,10 @@ def calcQuadraticArcLength(pt1, pt2, pt3, approximate_fallback=False):
         >>> calcQuadraticArcLength((0, 0), (40, 0), (0, 0), True) # collinear points, looping back, exact result should be 40
         34.4265186329548
     """
-    return calcQuadraticArcLengthC(complex(*pt1), complex(*pt2), complex(*pt3), approximate_fallback)
+    return calcQuadraticArcLengthC(complex(*pt1), complex(*pt2), complex(*pt3))
 
 
-def calcQuadraticArcLengthC(pt1, pt2, pt3, approximate_fallback=False):
+def calcQuadraticArcLengthC(pt1, pt2, pt3):
     """Return the arc length for a qudratic bezier segment using complex points.
     pt1 and pt3 are the "anchor" points, pt2 is the "handle"."""
     
@@ -84,8 +84,6 @@ def calcQuadraticArcLengthC(pt1, pt2, pt3, approximate_fallback=False):
     if origDist == 0.:
         if _dot(d0,d1) >= 0:
             return abs(pt3-pt1)
-        if approximate_fallback:
-            return approximateQuadraticArcLengthC(pt1, pt2, pt3)
         assert 0 # TODO handle cusps
     x0 = _dot(d,d0) / origDist
     x1 = _dot(d,d1) / origDist
