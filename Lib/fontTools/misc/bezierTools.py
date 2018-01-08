@@ -59,10 +59,10 @@ def calcQuadraticArcLength(pt1, pt2, pt3):
         120.21581243984076
         >>> calcQuadraticArcLength((0, 0), (50, -10), (80, 50))
         102.53273816445825
-        >>> calcQuadraticArcLength((0, 0), (40, 0), (-40, 0), True) # collinear points, control point outside, exact result should be 66.6666666666667
-        69.41755572720999
-        >>> calcQuadraticArcLength((0, 0), (40, 0), (0, 0), True) # collinear points, looping back, exact result should be 40
-        34.4265186329548
+        >>> calcQuadraticArcLength((0, 0), (40, 0), (-40, 0)) # collinear points, control point outside
+        66.66666666666666
+        >>> calcQuadraticArcLength((0, 0), (40, 0), (0, 0)) # collinear points, looping back
+        40.0
     """
     return calcQuadraticArcLengthC(complex(*pt1), complex(*pt2), complex(*pt3))
 
@@ -70,7 +70,7 @@ def calcQuadraticArcLength(pt1, pt2, pt3):
 def calcQuadraticArcLengthC(pt1, pt2, pt3):
     """Return the arc length for a qudratic bezier segment using complex points.
     pt1 and pt3 are the "anchor" points, pt2 is the "handle"."""
-    
+
     # Analytical solution to the length of a quadratic bezier.
     # I'll explain how I arrived at this later.
     d0 = pt2 - pt1
@@ -81,10 +81,11 @@ def calcQuadraticArcLengthC(pt1, pt2, pt3):
     if scale == 0.:
         return abs(pt3-pt1)
     origDist = _dot(n,d0)
-    if origDist == 0.:
+    if abs(origDist) < epsilon:
         if _dot(d0,d1) >= 0:
             return abs(pt3-pt1)
-        assert 0 # TODO handle cusps
+        a, b = abs(d0), abs(d1)
+        return a + b - 2 * (a*b) / (a+b)
     x0 = _dot(d,d0) / origDist
     x1 = _dot(d,d1) / origDist
     Len = abs(2 * (_intSecAtan(x1) - _intSecAtan(x0)) * origDist / (scale * (x1 - x0)))
