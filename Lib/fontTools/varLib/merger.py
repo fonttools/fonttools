@@ -280,7 +280,11 @@ def _PairPosFormat1_merge(self, lst, merger):
 	# Merge everything else; makes sure Format is the same.
 	merger.mergeObjects(self, lst,
 			    exclude=('Coverage',
-				     'PairSet', 'PairSetCount'))
+				     'PairSet', 'PairSetCount',
+				     'ValueFormat1', 'ValueFormat2'))
+
+	self.ValueFormat1 = reduce(int.__or__, [l.ValueFormat1 for l in lst], 0)
+	self.ValueFormat2 = reduce(int.__or__, [l.ValueFormat2 for l in lst], 0)
 
 	empty = ot.PairSet()
 	empty.PairValueRecord = []
@@ -435,7 +439,11 @@ def _PairPosFormat2_merge(self, lst, merger):
 			    exclude=('Coverage',
 				     'ClassDef1', 'Class1Count',
 				     'ClassDef2', 'Class2Count',
-				     'Class1Record'))
+				     'Class1Record',
+				     'ValueFormat1', 'ValueFormat2'))
+
+	self.ValueFormat1 = reduce(int.__or__, [l.ValueFormat1 for l in lst], 0)
+	self.ValueFormat2 = reduce(int.__or__, [l.ValueFormat2 for l in lst], 0)
 
 	# Align coverages
 	glyphs, _ = _merge_GlyphOrders(merger.font,
