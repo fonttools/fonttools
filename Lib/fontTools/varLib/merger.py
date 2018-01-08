@@ -390,8 +390,8 @@ def _PairPosFormat2_align_matrices(self, lst, font, transparent=False):
 							rec2 = None
 						else:
 							rec2 = ot.Class2Record()
-							rec2.Value1 = otBase.ValueRecord(l.ValueFormat1) if l.ValueFormat1 else None
-							rec2.Value2 = otBase.ValueRecord(l.ValueFormat2) if l.ValueFormat2 else None
+							rec2.Value1 = otBase.ValueRecord(self.ValueFormat1) if self.ValueFormat1 else None
+							rec2.Value2 = otBase.ValueRecord(self.ValueFormat2) if self.ValueFormat2 else None
 						class2records.append(rec2)
 				rec1 = nullRow
 			else:
