@@ -60,7 +60,7 @@ def calcQuadraticArcLength(pt1, pt2, pt3):
         >>> calcQuadraticArcLength((0, 0), (50, -10), (80, 50))
         102.53273816445825
         >>> calcQuadraticArcLength((0, 0), (40, 0), (-40, 0)) # collinear points, control point outside
-        66.66666666666666
+        66.66666666666667
         >>> calcQuadraticArcLength((0, 0), (40, 0), (0, 0)) # collinear points, looping back
         40.0
     """
@@ -85,7 +85,7 @@ def calcQuadraticArcLengthC(pt1, pt2, pt3):
         if _dot(d0,d1) >= 0:
             return abs(pt3-pt1)
         a, b = abs(d0), abs(d1)
-        return a + b - 2 * (a*b) / (a+b)
+        return (a*a + b*b) / (a+b)
     x0 = _dot(d,d0) / origDist
     x1 = _dot(d,d1) / origDist
     Len = abs(2 * (_intSecAtan(x1) - _intSecAtan(x0)) * origDist / (scale * (x1 - x0)))
