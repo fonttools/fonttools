@@ -283,9 +283,6 @@ def _PairPosFormat1_merge(self, lst, merger):
 				     'PairSet', 'PairSetCount',
 				     'ValueFormat1', 'ValueFormat2'))
 
-	self.ValueFormat1 = reduce(int.__or__, [l.ValueFormat1 for l in lst], 0)
-	self.ValueFormat2 = reduce(int.__or__, [l.ValueFormat2 for l in lst], 0)
-
 	empty = ot.PairSet()
 	empty.PairValueRecord = []
 	empty.PairValueCount = 0
@@ -442,9 +439,6 @@ def _PairPosFormat2_merge(self, lst, merger):
 				     'Class1Record',
 				     'ValueFormat1', 'ValueFormat2'))
 
-	self.ValueFormat1 = reduce(int.__or__, [l.ValueFormat1 for l in lst], 0)
-	self.ValueFormat2 = reduce(int.__or__, [l.ValueFormat2 for l in lst], 0)
-
 	# Align coverages
 	glyphs, _ = _merge_GlyphOrders(merger.font,
 				       [v.Coverage.glyphs for v in lst])
@@ -468,9 +462,8 @@ def _PairPosFormat2_merge(self, lst, merger):
 
 @AligningMerger.merger(ot.PairPos)
 def merge(merger, self, lst):
-	# TODO Support differing ValueFormats.
-	merger.valueFormat1 = self.ValueFormat1
-	merger.valueFormat2 = self.ValueFormat2
+	merger.valueFormat1 = self.ValueFormat1 = reduce(int.__or__, [l.ValueFormat1 for l in lst], 0)
+	merger.valueFormat2 = self.ValueFormat2 = reduce(int.__or__, [l.ValueFormat2 for l in lst], 0)
 
 	if self.Format == 1:
 		_PairPosFormat1_merge(self, lst, merger)
