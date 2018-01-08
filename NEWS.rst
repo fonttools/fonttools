@@ -1,3 +1,6 @@
+3.21.2 (released 2018-01-08)
+----------------------------
+
 - [varLib] Fixed merging PairPos Format1/2 with missing subtables (#1125).
 
 3.21.1 (released 2018-01-03)
