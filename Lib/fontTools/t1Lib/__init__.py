@@ -101,14 +101,14 @@ class T1Font(object):
 
 def read(path, onlyHeader=False):
 	"""reads any Type 1 font file, returns raw data"""
-	normpath = path.lower()
-	creator, typ = getMacCreatorAndType(path)
-	if typ == 'LWFN':
+	stat = os.stat(path)
+	# LWFN has no size
+	if stat.st_size == 0:
 		return readLWFN(path, onlyHeader), 'LWFN'
-	if normpath[-4:] == '.pfb':
+	_, ext = os.path.splitext(path)
+	if ext.lower() == ".pfb":
 		return readPFB(path, onlyHeader), 'PFB'
-	else:
-		return readOther(path), 'OTHER'
+	return readOther(path), 'OTHER'
 
 def write(path, data, kind='OTHER', dohex=False):
 	assertType1(data)
