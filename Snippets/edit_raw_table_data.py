@@ -16,7 +16,7 @@ raw_data = font.getTableData(table_tag)
 # Do something with the raw table data
 # This example just sets an empty DSIG table.
 
-raw_data = "\0\0\0\1\0\0\0\0"
+raw_data = b"\0\0\0\1\0\0\0\0"
 
 
 # Write the data back to the font
