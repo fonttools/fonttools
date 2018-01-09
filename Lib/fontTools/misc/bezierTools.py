@@ -13,10 +13,12 @@ __all__ = [
     "approximateCubicArcLengthC",
     "approximateQuadraticArcLength",
     "approximateQuadraticArcLengthC",
+    "calcCubicArcLength",
+    "calcCubicArcLengthC",
     "calcQuadraticArcLength",
     "calcQuadraticArcLengthC",
-    "calcQuadraticBounds",
     "calcCubicBounds",
+    "calcQuadraticBounds",
     "splitLine",
     "splitQuadratic",
     "splitCubic",
@@ -25,6 +27,32 @@ __all__ = [
     "solveQuadratic",
     "solveCubic",
 ]
+
+
+def calcCubicArcLength(pt1, pt2, pt3, pt4, tolerance=0.005):
+    """Return the arc length for a cubic bezier segment."""
+    return calcCubicArcLengthC(complex(*pt1), complex(*pt2), complex(*pt3), complex(*pt4), tolerance)
+
+
+def _split_cubic_into_two(p0, p1, p2, p3):
+    mid = (p0 + 3 * (p1 + p2) + p3) * .125
+    deriv3 = (p3 + p2 - p1 - p0) * .125
+    return ((p0, (p0 + p1) * .5, mid - deriv3, mid),
+            (mid, mid + deriv3, (p2 + p3) * .5, p3))
+
+def _calcCubicArcLengthCRecurse(mult, p0, p1, p2, p3):
+	arch = abs(p0-p3)
+	box = abs(p0-p1) + abs(p1-p2) + abs(p2-p3)
+	if arch * mult >= box:
+		return (arch + box) * .5
+	else:
+		one,two = _split_cubic_into_two(p0,p1,p2,p3)
+		return _calcCubicArcLengthCRecurse(mult, *one) + _calcCubicArcLengthCRecurse(mult, *two)
+
+def calcCubicArcLengthC(pt1, pt2, pt3, pt4, tolerance=0.005):
+    """Return the arc length for a cubic bezier segment using complex points."""
+    mult = 1. + 1.5 * tolerance # The 1.5 is a empirical hack; no math
+    return _calcCubicArcLengthCRecurse(mult, pt1, pt2, pt3, pt4)
 
 
 epsilonDigits = 6
