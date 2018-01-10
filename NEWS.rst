@@ -1,3 +1,6 @@
+- [bezierTools] Implemented cusp support and removed ``approximate_fallback``
+  arg in ``calcQuadraticArcLength``. Added ``calcCubicArcLength`` (#1142).
+
 3.21.2 (released 2018-01-08)
 ----------------------------
 
