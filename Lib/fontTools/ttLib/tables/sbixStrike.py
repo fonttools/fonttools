@@ -65,8 +65,8 @@ class Strike(object):
 		del self.data
 
 	def compile(self, ttFont):
-		self.glyphDataOffsets = ""
-		self.bitmapData = ""
+		self.glyphDataOffsets = b""
+		self.bitmapData = b""
 
 		glyphOrder = ttFont.getGlyphOrder()
 

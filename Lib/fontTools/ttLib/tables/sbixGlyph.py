@@ -75,7 +75,7 @@ class Glyph(object):
 			# (needed if you just want to compile the sbix table on its own)
 		self.gid = struct.pack(">H", ttFont.getGlyphID(self.glyphName))
 		if self.graphicType is None:
-			self.rawdata = ""
+			self.rawdata = b""
 		else:
 			self.rawdata = sstruct.pack(sbixGlyphHeaderFormat, self) + self.imageData
 
