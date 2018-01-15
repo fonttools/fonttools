@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.misc.py23 import *
+from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.feaLib.builder import Builder, addOpenTypeFeatures, \
         addOpenTypeFeaturesFromString
 from fontTools.feaLib.error import FeatureLibError
@@ -13,6 +14,7 @@ import os
 import shutil
 import sys
 import tempfile
+import logging
 import unittest
 
 
@@ -196,16 +198,29 @@ class BuilderTest(unittest.TestCase):
             "    sub f_f_i by f f i;"
             "} test;")
 
-    def test_pairPos_redefinition(self):
-        self.assertRaisesRegex(
-            FeatureLibError,
-            r"Already defined position for pair A B "
-            "at .*:2:[0-9]+",  # :2: = line 2
-            self.build,
-            "feature test {\n"
-            "    pos A B 123;\n"  # line 2
-            "    pos A B 456;\n"
-            "} test;\n")
+    def test_pairPos_redefinition_warning(self):
+        # https://github.com/fonttools/fonttools/issues/1147
+        logger = logging.getLogger("fontTools.feaLib.builder")
+        with CapturingLogHandler(logger, "WARNING") as captor:
+            # the pair "yacute semicolon" is redefined in the enum pos
+            font = self.build(
+                "@Y_LC = [y yacute ydieresis];"
+                "@SMALL_PUNC = [comma semicolon period];"
+                "feature kern {"
+                "  pos yacute semicolon -70;"
+                "  enum pos @Y_LC semicolon -80;"
+                "  pos @Y_LC @SMALL_PUNC -100;"
+                "} kern;")
+
+        captor.assertRegex("Already defined position for pair yacute semicolon")
+
+        # the first definition prevails: yacute semicolon -70
+        st = font["GPOS"].table.LookupList.Lookup[0].SubTable[0]
+        self.assertEqual(st.Coverage.glyphs[2], "yacute")
+        self.assertEqual(st.PairSet[2].PairValueRecord[0].SecondGlyph,
+                         "semicolon")
+        self.assertEqual(vars(st.PairSet[2].PairValueRecord[0].Value1),
+                         {"XAdvance": -70})
 
     def test_singleSubst_multipleSubstitutionsForSameGlyph(self):
         self.assertRaisesRegex(
