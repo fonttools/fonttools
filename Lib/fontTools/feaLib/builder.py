@@ -1436,7 +1436,6 @@ class PairPosBuilder(LookupBuilder):
                 'Already defined position for pair %s %s at %s:%d:%d; '
                 'choosing the first value',
                 glyph1, glyph2, otherLoc[0], otherLoc[1], otherLoc[2])
-            val1, val2 = oldValue
         else:
             val1, _ = makeOpenTypeValueRecord(value1, pairPosContext=True)
             val2, _ = makeOpenTypeValueRecord(value2, pairPosContext=True)
