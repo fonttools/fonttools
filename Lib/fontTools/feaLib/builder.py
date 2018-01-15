@@ -9,6 +9,10 @@ from fontTools.otlLib import builder as otl
 from fontTools.ttLib import newTable, getTableModule
 from fontTools.ttLib.tables import otBase, otTables
 import itertools
+import logging
+
+
+log = logging.getLogger(__name__)
 
 
 def addOpenTypeFeatures(font, featurefile):
@@ -1424,15 +1428,20 @@ class PairPosBuilder(LookupBuilder):
         key = (glyph1, glyph2)
         oldValue = self.glyphPairs.get(key, None)
         if oldValue is not None:
+            # the Feature File spec explicitly allows specific pairs generated
+            # by an 'enum' rule to be overridden by preceding single pairs;
+            # we emit a warning and use the previously defined value
             otherLoc = self.locations[key]
-            raise FeatureLibError(
-                'Already defined position for pair %s %s at %s:%d:%d'
-                % (glyph1, glyph2, otherLoc[0], otherLoc[1], otherLoc[2]),
-                location)
-        val1, _ = makeOpenTypeValueRecord(value1, pairPosContext=True)
-        val2, _ = makeOpenTypeValueRecord(value2, pairPosContext=True)
-        self.glyphPairs[key] = (val1, val2)
-        self.locations[key] = location
+            log.warning(
+                'Already defined position for pair %s %s at %s:%d:%d; '
+                'choosing the first value',
+                glyph1, glyph2, otherLoc[0], otherLoc[1], otherLoc[2])
+            val1, val2 = oldValue
+        else:
+            val1, _ = makeOpenTypeValueRecord(value1, pairPosContext=True)
+            val2, _ = makeOpenTypeValueRecord(value2, pairPosContext=True)
+            self.glyphPairs[key] = (val1, val2)
+            self.locations[key] = location
 
     def add_subtable_break(self, location):
         self.pairs.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
