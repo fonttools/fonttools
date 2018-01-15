@@ -467,7 +467,7 @@ class CapturingLogHandler(logging.Handler):
 		import re
 		pattern = re.compile(regexp)
 		for r in self.records:
-			if pattern.search(r.msg):
+			if pattern.search(r.getMessage()):
 				return True
 		assert 0, "Pattern '%s' not found in logger records" % regexp
 
