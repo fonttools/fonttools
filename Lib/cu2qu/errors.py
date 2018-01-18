@@ -34,9 +34,13 @@ class IncompatibleSegmentTypesError(IncompatibleGlyphsError):
         self.segments = segments
 
     def __str__(self):
-        from pprint import pformat
-        return "Glyphs named %s have incompatible segment types:\n%s" % (
-            self.combined_name, pformat(self.segments))
+        lines = []
+        ndigits = len(str(max(self.segments)))
+        for i, tags in sorted(self.segments.items()):
+            lines.append("%s: (%s)" % (
+                str(i).rjust(ndigits), ", ".join(repr(t) for t in tags)))
+        return "Glyphs named %s have incompatible segment types:\n  %s" % (
+            self.combined_name, "\n  ".join(lines))
 
 
 class IncompatibleFontsError(ValueError):
