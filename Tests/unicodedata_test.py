@@ -214,7 +214,7 @@ def test_ot_tags_from_script():
     assert unicodedata.ot_tags_from_script("Zinh") == ["DFLT"]
     assert unicodedata.ot_tags_from_script("Zyyy") == ["DFLT"]
     assert unicodedata.ot_tags_from_script("Zzzz") == ["DFLT"]
-    # this in invalid or unknown
+    # this is invalid or unknown
     assert unicodedata.ot_tags_from_script("Aaaa") == ["DFLT"]
 
 
