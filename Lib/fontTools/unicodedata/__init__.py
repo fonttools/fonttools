@@ -38,6 +38,7 @@ __all__ = [tostr(s) for s in (
     "script_extension",
     "script_name",
     "script_code",
+    "ot_tags_from_script",
 )]
 
 
