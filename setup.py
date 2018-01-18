@@ -80,10 +80,12 @@ class release(bump_version):
 
     user_options = [
         ("message=", 'm', "message containing the release notes"),
+        ("sign", "s", "make a GPG-signed tag, using the default key"),
     ]
 
     def initialize_options(self):
         self.message = None
+        self.sign = False
 
     def finalize_options(self):
         import re
@@ -110,6 +112,7 @@ class release(bump_version):
             raise DistutilsSetupError("release notes message is empty")
 
         self.message = "v{new_version}\n\n%s" % message
+        self.sign = bool(self.sign)
 
     @staticmethod
     def edit_release_notes():
@@ -142,7 +145,8 @@ class release(bump_version):
         self.bumpversion("release",
                          tag=True,
                          message="Release {new_version}",
-                         tag_message=self.message)
+                         tag_message=self.message,
+                         sign_tags=self.sign)
 
 
 needs_pytest = {'pytest', 'test'}.intersection(sys.argv)
@@ -150,7 +154,7 @@ pytest_runner = ['pytest_runner'] if needs_pytest else []
 needs_wheel = {'bdist_wheel'}.intersection(sys.argv)
 wheel = ['wheel'] if needs_wheel else []
 needs_bump2version = {'release', 'bump_version'}.intersection(sys.argv)
-bump2version = ['bump2version'] if needs_bump2version else []
+bump2version = ['bump2version >= 0.5.7'] if needs_bump2version else []
 
 with open('README.rst', 'r') as f:
     long_description = f.read()
