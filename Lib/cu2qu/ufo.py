@@ -31,22 +31,17 @@ from fontTools.pens.basePen import AbstractPen
 
 from cu2qu import curves_to_quadratic
 from cu2qu.pens import ReverseContourPen
+from cu2qu.errors import (
+    UnequalZipLengthsError, IncompatibleSegmentNumberError,
+    IncompatibleSegmentTypesError, IncompatibleGlyphsError,
+    IncompatibleFontsError)
+
 
 __all__ = ['fonts_to_quadratic', 'font_to_quadratic']
 
 DEFAULT_MAX_ERR = 0.001
 
 logger = logging.getLogger(__name__)
-
-
-class IncompatibleGlyphsError(ValueError):
-
-    def __str__(self):
-        return ", ".join(set(repr(glyph.name) for glyph in self.args))
-
-
-class UnequalZipLengthsError(ValueError):
-    pass
 
 
 _zip = zip
@@ -153,7 +148,7 @@ def _glyphs_to_quadratic(glyphs, max_err, reverse_direction, stats):
     try:
         segments_by_location = zip(*[_get_segments(g) for g in glyphs])
     except UnequalZipLengthsError:
-        raise IncompatibleGlyphsError(*glyphs)
+        raise IncompatibleSegmentNumberError(glyphs)
     if not any(segments_by_location):
         return False
 
@@ -161,11 +156,12 @@ def _glyphs_to_quadratic(glyphs, max_err, reverse_direction, stats):
     glyphs_modified = reverse_direction
 
     new_segments_by_location = []
-    for segments in segments_by_location:
+    incompatible = {}
+    for i, segments in enumerate(segments_by_location):
         tag = segments[0][0]
         if not all(s[0] == tag for s in segments[1:]):
-            raise IncompatibleGlyphsError(*glyphs)
-        if tag == 'curve':
+            incompatible[i] = [s[0] for s in segments]
+        elif tag == 'curve':
             segments = _segments_to_quadratic(segments, max_err, stats)
             glyphs_modified = True
         new_segments_by_location.append(segments)
@@ -175,6 +171,8 @@ def _glyphs_to_quadratic(glyphs, max_err, reverse_direction, stats):
         for glyph, new_segments in zip(glyphs, new_segments_by_glyph):
             _set_segments(glyph, new_segments, reverse_direction)
 
+    if incompatible:
+        raise IncompatibleSegmentTypesError(glyphs, segments=incompatible)
     return glyphs_modified
 
 
@@ -217,7 +215,7 @@ def fonts_to_quadratic(
 
     Return True if fonts were modified, else return False.
 
-    Raises IncompatibleGlyphsError if same-named glyphs from different fonts
+    Raises IncompatibleFontsError if same-named glyphs from different fonts
     have non-interpolatable outlines.
     """
 
@@ -243,6 +241,7 @@ def fonts_to_quadratic(
         max_errors = [f.info.unitsPerEm * max_err_em for f in fonts]
 
     modified = False
+    glyph_errors = {}
     for name in set().union(*(f.keys() for f in fonts)):
         glyphs = []
         cur_max_errors = []
@@ -250,8 +249,15 @@ def fonts_to_quadratic(
             if name in font:
                 glyphs.append(font[name])
                 cur_max_errors.append(error)
-        modified |= _glyphs_to_quadratic(
-            glyphs, cur_max_errors, reverse_direction, stats)
+        try:
+            modified |= _glyphs_to_quadratic(
+                glyphs, cur_max_errors, reverse_direction, stats)
+        except IncompatibleGlyphsError as exc:
+            logger.error(exc)
+            glyph_errors[name] = exc
+
+    if glyph_errors:
+        raise IncompatibleFontsError(glyph_errors)
 
     if modified and dump_stats:
         spline_lengths = sorted(stats.keys())

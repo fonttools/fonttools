@@ -9,7 +9,11 @@ from cu2qu.ufo import (
     glyphs_to_quadratic,
     glyph_to_quadratic,
     logger,
-    IncompatibleGlyphsError
+)
+from cu2qu.errors import (
+    IncompatibleSegmentNumberError,
+    IncompatibleSegmentTypesError,
+    IncompatibleFontsError,
 )
 
 from . import DATADIR
@@ -116,40 +120,49 @@ class GlyphsToQuadraticTest(object):
                                   reverse_direction=True)
 
     @pytest.mark.parametrize(
-        "outlines",
+        ["outlines", "exception", "message"],
         [
             [
                 [
-                    ('moveTo', ((0, 0),)),
-                    ('curveTo', ((1, 1), (2, 2), (3, 3))),
-                    ('curveTo', ((4, 4), (5, 5), (6, 6))),
-                    ('closePath', ()),
+                    [
+                        ('moveTo', ((0, 0),)),
+                        ('curveTo', ((1, 1), (2, 2), (3, 3))),
+                        ('curveTo', ((4, 4), (5, 5), (6, 6))),
+                        ('closePath', ()),
+                    ],
+                    [
+                        ('moveTo', ((7, 7),)),
+                        ('curveTo', ((8, 8), (9, 9), (10, 10))),
+                        ('closePath', ()),
+                    ]
                 ],
-                [
-                    ('moveTo', ((7, 7),)),
-                    ('curveTo', ((8, 8), (9, 9), (10, 10))),
-                    ('closePath', ()),
-                ]
+                IncompatibleSegmentNumberError,
+                "have different number of segments",
             ],
             [
                 [
-                    ('moveTo', ((0, 0),)),
-                    ('curveTo', ((1, 1), (2, 2), (3, 3))),
-                    ('closePath', ()),
+
+                    [
+                        ('moveTo', ((0, 0),)),
+                        ('curveTo', ((1, 1), (2, 2), (3, 3))),
+                        ('closePath', ()),
+                    ],
+                    [
+                        ('moveTo', ((4, 4),)),
+                        ('lineTo', ((5, 5),)),
+                        ('closePath', ()),
+                    ],
                 ],
-                [
-                    ('moveTo', ((4, 4),)),
-                    ('lineTo', ((5, 5),)),
-                    ('closePath', ()),
-                ],
-            ]
+                IncompatibleSegmentTypesError,
+                "have incompatible segment types",
+            ],
         ],
         ids=[
             "unequal-length",
             "different-segment-types",
         ]
     )
-    def test_incompatible(self, outlines):
+    def test_incompatible_glyphs(self, outlines, exception, message):
         glyphs = []
         for i, outline in enumerate(outlines):
             glyph = Glyph()
@@ -158,9 +171,37 @@ class GlyphsToQuadraticTest(object):
             for operator, args in outline:
                 getattr(pen, operator)(*args)
             glyphs.append(glyph)
-        with pytest.raises(IncompatibleGlyphsError) as excinfo:
+        with pytest.raises(exception) as excinfo:
             glyphs_to_quadratic(glyphs)
-        assert excinfo.match("^'glyph[0-9]+'(, 'glyph[0-9]+')*$")
+        assert excinfo.match(message)
+
+    def test_incompatible_fonts(self):
+        font1 = Font()
+        font1.info.unitsPerEm = 1000
+        glyph1 = font1.newGlyph("a")
+        pen1 = glyph1.getPen()
+        for operator, args in [("moveTo", ((0, 0),)),
+                               ("lineTo", ((1, 1),)),
+                               ("endPath", ())]:
+            getattr(pen1, operator)(*args)
+
+        font2 = Font()
+        font2.info.unitsPerEm = 1000
+        glyph2 = font2.newGlyph("a")
+        pen2 = glyph2.getPen()
+        for operator, args in [("moveTo", ((0, 0),)),
+                               ("curveTo", ((1, 1), (2, 2), (3, 3))),
+                               ("endPath", ())]:
+            getattr(pen2, operator)(*args)
+
+        with pytest.raises(IncompatibleFontsError) as excinfo:
+            fonts_to_quadratic([font1, font2])
+        assert excinfo.match("fonts contains incompatible glyphs: 'a'")
+
+        assert hasattr(excinfo.value, "glyph_errors")
+        error = excinfo.value.glyph_errors['a']
+        assert isinstance(error, IncompatibleSegmentTypesError)
+        assert error.segments == {1: ["line", "curve"]}
 
     def test_already_quadratic(self):
         glyph = Glyph()
