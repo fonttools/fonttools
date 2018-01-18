@@ -203,6 +203,21 @@ def test_block():
     assert unicodedata.block("\u1c90") == "No_Block"
 
 
+def test_ot_tags_from_script():
+    # simple
+    assert unicodedata.ot_tags_from_script("Latn") == ["latn"]
+    # script mapped to multiple new and old script tags
+    assert unicodedata.ot_tags_from_script("Deva") == ["dev2", "deva"]
+    # exceptions
+    assert unicodedata.ot_tags_from_script("Hira") == ["kana"]
+    # special script codes map to DFLT
+    assert unicodedata.ot_tags_from_script("Zinh") == ["DFLT"]
+    assert unicodedata.ot_tags_from_script("Zyyy") == ["DFLT"]
+    assert unicodedata.ot_tags_from_script("Zzzz") == ["DFLT"]
+    # this in invalid or unknown
+    assert unicodedata.ot_tags_from_script("Aaaa") == ["DFLT"]
+
+
 if __name__ == "__main__":
     import sys
     sys.exit(pytest.main(sys.argv))
