@@ -113,6 +113,8 @@ def _set_segments(glyph, segments, reverse_direction):
             pen.moveTo(*args)
         elif tag == 'line':
             pen.lineTo(*args)
+        elif tag == 'curve':
+            pen.curveTo(*args[1:])
         elif tag == 'qcurve':
             pen.qCurveTo(*args[1:])
         elif tag == 'close':
