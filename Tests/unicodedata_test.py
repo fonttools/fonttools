@@ -218,6 +218,17 @@ def test_ot_tags_from_script():
     assert unicodedata.ot_tags_from_script("Aaaa") == ["DFLT"]
 
 
+def test_script_horizontal_direction():
+    assert unicodedata.script_horizontal_direction("Latn") == "LTR"
+    assert unicodedata.script_horizontal_direction("Arab") == "RTL"
+    assert unicodedata.script_horizontal_direction("Thaa") == "RTL"
+
+    with pytest.raises(KeyError):
+        unicodedata.script_horizontal_direction("Azzz")
+    assert unicodedata.script_horizontal_direction("Azzz",
+                                                   default="LTR") == "LTR"
+
+
 if __name__ == "__main__":
     import sys
     sys.exit(pytest.main(sys.argv))

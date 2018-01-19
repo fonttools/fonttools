@@ -38,6 +38,7 @@ __all__ = [tostr(s) for s in (
     "script_extension",
     "script_name",
     "script_code",
+    "script_horizontal_direction",
     "ot_tags_from_script",
 )]
 
@@ -132,6 +133,75 @@ def script_code(script_name, default=KeyError):
         if isinstance(default, type) and issubclass(default, KeyError):
             raise
         return default
+
+
+# The data on script direction is taken from harfbuzz's "hb-common.cc":
+# https://goo.gl/X5FDXC
+# It matches the CLDR "scriptMetadata.txt as of January 2018:
+# http://unicode.org/repos/cldr/trunk/common/properties/scriptMetadata.txt
+RTL_SCRIPTS = {
+    # Unicode-1.1 additions
+    'Arab',  # Arabic
+    'Hebr',  # Hebrew
+
+    # Unicode-3.0 additions
+    'Syrc',  # Syriac
+    'Thaa',  # Thaana
+
+    # Unicode-4.0 additions
+    'Cprt',  # Cypriot
+
+    # Unicode-4.1 additions
+    'Khar',  # Kharoshthi
+
+    # Unicode-5.0 additions
+    'Phnx',  # Phoenician
+    'Nkoo',  # Nko
+
+    # Unicode-5.1 additions
+    'Lydi',  # Lydian
+
+    # Unicode-5.2 additions
+    'Avst',  # Avestan
+    'Armi',  # Imperial Aramaic
+    'Phli',  # Inscriptional Pahlavi
+    'Prti',  # Inscriptional Parthian
+    'Sarb',  # Old South Arabian
+    'Orkh',  # Old Turkic
+    'Samr',  # Samaritan
+
+    # Unicode-6.0 additions
+    'Mand',  # Mandaic
+
+    # Unicode-6.1 additions
+    'Merc',  # Meroitic Cursive
+    'Mero',  # Meroitic Hieroglyphs
+
+    # Unicode-7.0 additions
+    'Mani',  # Manichaean
+    'Mend',  # Mende Kikakui
+    'Nbat',  # Nabataean
+    'Narb',  # Old North Arabian
+    'Palm',  # Palmyrene
+    'Phlp',  # Psalter Pahlavi
+
+    # Unicode-8.0 additions
+    'Hatr',  # Hatran
+    'Hung',  # Old Hungarian
+
+    # Unicode-9.0 additions
+    'Adlm',  # Adlam
+}
+
+def script_horizontal_direction(script_code, default=KeyError):
+    """ Return "RTL" for scripts that contain right-to-left characters
+    according to the Bidi_Class property. Otherwise return "LTR".
+    """
+    if script_code not in Scripts.NAMES:
+        if isinstance(default, type) and issubclass(default, KeyError):
+            raise default(script_code)
+        return default
+    return str("RTL") if script_code in RTL_SCRIPTS else str("LTR")
 
 
 def block(char):
