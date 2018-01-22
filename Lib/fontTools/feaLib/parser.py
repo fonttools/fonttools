@@ -47,7 +47,7 @@ class Parser(object):
 
     def parse(self):
         statements = self.doc_.statements
-        while self.next_token_type_ is not None:
+        while self.next_token_type_ is not None or self.cur_comments_:
             self.advance_lexer_(comments=True)
             if self.cur_token_type_ is Lexer.COMMENT:
                 statements.append(self.ast.Comment(self.cur_token_location_, self.cur_token_))

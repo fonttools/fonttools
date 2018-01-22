@@ -86,6 +86,15 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(c2.text, "# simple")
         self.assertEqual(doc.statements[1].name, "test")
 
+    def test_only_comments(self):
+        doc = self.parse("""\
+            # Initial
+        """)
+        c1 = doc.statements[0]
+        self.assertEqual(type(c1), ast.Comment)
+        self.assertEqual(c1.text, "# Initial")
+        self.assertEqual(str(c1), "# Initial")
+
     def test_anchor_format_a(self):
         doc = self.parse(
             "feature test {"

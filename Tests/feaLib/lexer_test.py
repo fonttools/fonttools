@@ -9,6 +9,7 @@ import unittest
 def lex(s):
     return [(typ, tok) for (typ, tok, _) in Lexer(s, "test.fea")]
 
+
 class LexerTest(unittest.TestCase):
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
