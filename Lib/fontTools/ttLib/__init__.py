@@ -152,7 +152,6 @@ class TTFont(object):
 			self.flavorData = None
 			return
 		if not hasattr(file, "read"):
-			closeStream = True
 			# assume file is a string
 			if res_name_or_index is not None:
 				# see if it contains 'sfnt' resources in the resource or data fork
@@ -168,18 +167,13 @@ class TTFont(object):
 			else:
 				file = open(file, "rb")
 
-		else:
-			# assume "file" is a readable file object
-			closeStream = False
-			file.seek(0)
 		if not self.lazy:
 			# read input file in memory and wrap a stream around it to allow overwriting
+			file.seek(0)
 			tmp = BytesIO(file.read())
 			if hasattr(file, 'name'):
 				# save reference to input file name
 				tmp.name = file.name
-			if closeStream:
-				file.close()
 			file = tmp
 		self.tableCache = _tableCache
 		self.reader = SFNTReader(file, checkChecksums, fontNumber=fontNumber)
@@ -201,11 +195,7 @@ class TTFont(object):
 			if self.lazy and self.reader.file.name == file:
 				raise TTLibError(
 					"Can't overwrite TTFont when 'lazy' attribute is True")
-			closeStream = True
 			file = open(file, "wb")
-		else:
-			# assume "file" is a writable file object
-			closeStream = False
 
 		if self.recalcTimestamp and 'head' in self:
 			self['head']  # make sure 'head' is loaded so the recalculation is actually done
@@ -243,9 +233,6 @@ class TTFont(object):
 			file.write(tmp2.getvalue())
 			tmp.close()
 			tmp2.close()
-
-		if closeStream:
-			file.close()
 
 	def saveXML(self, fileOrPath, progress=None, quiet=None,
 			tables=None, skipTables=None, splitTables=False, disassembleInstructions=True,
@@ -1046,11 +1033,7 @@ class TTCollection(object):
 		assert 'fontNumber' not in kwargs, kwargs
 
 		if not hasattr(file, "read"):
-			closeStream = True
 			file = open(file, "rb")
-		else:
-			# assume "file" is a readable file object
-			closeStream = False
 
 		tableCache = {} if shareTables else None
 
@@ -1058,9 +1041,6 @@ class TTCollection(object):
 		for i in range(header.numFonts):
 			font = TTFont(file, fontNumber=i, _tableCache=tableCache, **kwargs)
 			fonts.append(font)
-
-		if (not kwargs.get('lazy')) and closeStream:
-			file.close()
 
 	def __getitem__(self, item):
 		return self.fonts[item]
