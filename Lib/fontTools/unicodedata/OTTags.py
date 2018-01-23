@@ -35,3 +35,7 @@ NEW_SCRIPT_TAGS = {
     "Telu": ("tel2",),
     "Mymr": ("mym2",),
 }
+
+NEW_SCRIPT_TAGS_REVERSED = {
+    value: key for key, values in NEW_SCRIPT_TAGS.items() for value in values
+}
