@@ -15,7 +15,6 @@ a table's length chages you need to rewrite the whole file anyway.
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
-from fontTools.ttLib import getSearchRange
 import struct
 from collections import OrderedDict
 import logging
@@ -32,6 +31,7 @@ class SFNTReader(object):
 		"""
 		if args and cls is SFNTReader:
 			infile = args[0]
+			infile.seek(0)
 			sfntVersion = Tag(infile.read(4))
 			infile.seek(0)
 			if sfntVersion == "wOF2":
@@ -48,6 +48,7 @@ class SFNTReader(object):
 		self.flavor = None
 		self.flavorData = None
 		self.DirectoryEntry = SFNTDirectoryEntry
+		self.file.seek(0)
 		self.sfntVersion = self.file.read(4)
 		self.file.seek(0)
 		if self.sfntVersion == b"ttcf":
@@ -207,6 +208,7 @@ class SFNTWriter(object):
 			self.directorySize = sfntDirectorySize
 			self.DirectoryEntry = SFNTDirectoryEntry
 
+			from fontTools.ttLib import getSearchRange
 			self.searchRange, self.entrySelector, self.rangeShift = getSearchRange(numTables, 16)
 
 		self.nextTableOffset = self.directorySize + numTables * self.DirectoryEntry.formatSize
@@ -323,6 +325,7 @@ class SFNTWriter(object):
 
 		if self.DirectoryEntry != SFNTDirectoryEntry:
 			# Create a SFNT directory for checksum calculation purposes
+			from fontTools.ttLib import getSearchRange
 			self.searchRange, self.entrySelector, self.rangeShift = getSearchRange(self.numTables, 16)
 			directory = sstruct.pack(sfntDirectoryFormat, self)
 			tables = sorted(self.tables.items())

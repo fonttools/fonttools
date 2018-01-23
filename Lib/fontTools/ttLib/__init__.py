@@ -44,9 +44,11 @@ Dumping 'prep' table...
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import deprecateArgument, deprecateFunction
+from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter, readTTCHeader
 import os
 import sys
 import logging
+import itertools
 
 
 log = logging.getLogger(__name__)
@@ -170,6 +172,7 @@ class TTFont(object):
 		else:
 			# assume "file" is a readable file object
 			closeStream = False
+			file.seek(0)
 		if not self.lazy:
 			# read input file in memory and wrap a stream around it to allow overwriting
 			tmp = BytesIO(file.read())
@@ -991,7 +994,6 @@ def reorderFontTables(inFile, outFile, tableOrder=None, checkChecksums=False):
 	"""Rewrite a font file, ordering the tables as recommended by the
 	OpenType specification 1.4.
 	"""
-	from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
 	reader = SFNTReader(inFile, checkChecksums=checkChecksums)
 	writer = SFNTWriter(outFile, len(reader.tables), reader.sfntVersion, reader.flavor, reader.flavorData)
 	tables = list(reader.keys())
@@ -1021,3 +1023,34 @@ def getSearchRange(n, itemSize=16):
 	entrySelector = exponent
 	rangeShift = max(0, n * itemSize - searchRange)
 	return searchRange, entrySelector, rangeShift
+
+
+class TTCollection(object):
+
+	"""The main font object. It manages file input and output, and offers
+	a convenient way of accessing tables.
+	Tables will be only decompiled when necessary, ie. when they're actually
+	accessed. This means that simple operations can be extremely fast.
+	"""
+
+	def __init__(self, file=None, **kwargs):
+		fonts = self.fonts = []
+		if file is None:
+			return
+
+		assert 'fontNumber' not in kwargs, kwargs
+
+		if not hasattr(file, "read"):
+			closeStream = True
+			file = open(file, "rb")
+		else:
+			# assume "file" is a readable file object
+			closeStream = False
+
+		header = readTTCHeader(file)
+		for i in range(header.numFonts):
+			font = TTFont(file, fontNumber=i, **kwargs)
+			fonts.append(font)
+
+		if closeStream:
+			file.close()
