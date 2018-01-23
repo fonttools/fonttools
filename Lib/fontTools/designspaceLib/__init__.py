@@ -411,7 +411,7 @@ class BaseDocWriter(object):
         axisElement.attrib['default'] = self.intOrFloat(axisObject.default)
         if axisObject.hidden:
             axisElement.attrib['hidden'] = "1"
-        for languageCode, labelName in axisObject.labelNames.items():
+        for languageCode, labelName in sorted(axisObject.labelNames.items()):
             languageElement = ET.Element('labelname')
             languageElement.attrib[u'xml:lang'] = languageCode
             languageElement.text = labelName
@@ -486,7 +486,7 @@ class BaseDocWriter(object):
                 glyphsElement = ET.Element('glyphs')
                 instanceElement.append(glyphsElement)
             glyphsElement = instanceElement.findall('.glyphs')[0]
-            for glyphName, data in instanceObject.glyphs.items():
+            for glyphName, data in sorted(instanceObject.glyphs.items()):
                 glyphElement = self._writeGlyphElement(instanceElement, instanceObject, glyphName, data)
                 glyphsElement.append(glyphElement)
         if instanceObject.kerning:
