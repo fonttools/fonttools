@@ -67,7 +67,8 @@ class TTFont(object):
 	def __init__(self, file=None, res_name_or_index=None,
 			sfntVersion="\000\001\000\000", flavor=None, checkChecksums=False,
 			verbose=None, recalcBBoxes=True, allowVID=False, ignoreDecompileErrors=False,
-			recalcTimestamp=True, fontNumber=-1, lazy=None, quiet=None):
+			recalcTimestamp=True, fontNumber=-1, lazy=None, quiet=None,
+			_tableCache=None):
 
 		"""The constructor can be called with a few different arguments.
 		When reading a font from disk, 'file' should be either a pathname
@@ -182,7 +183,8 @@ class TTFont(object):
 			if closeStream:
 				file.close()
 			file = tmp
-		self.reader = sfnt.SFNTReader(file, checkChecksums, fontNumber=fontNumber)
+		self.tableCache = _tableCache
+		self.reader = sfnt.SFNTReader(file, checkChecksums, fontNumber=fontNumber, tableCache=_tableCache)
 		self.sfntVersion = self.reader.sfntVersion
 		self.flavor = self.reader.flavor
 		self.flavorData = self.reader.flavorData
@@ -421,6 +423,11 @@ class TTFont(object):
 				import traceback
 				log.debug("Reading '%s' table from disk", tag)
 				data = self.reader[tag]
+				dataHash = hash(data) # Oops, sorry if collides!
+				if self.tableCache is not None:
+					table = self.tableCache.get((Tag(tag), dataHash))
+					if table is not None:
+						return table
 				tableClass = getTableClass(tag)
 				table = tableClass(tag)
 				self.tables[tag] = table
@@ -440,6 +447,8 @@ class TTFont(object):
 					table.ERROR = file.getvalue()
 					self.tables[tag] = table
 					table.decompile(data, self)
+				if self.tableCache is not None:
+					self.tableCache[(Tag(tag), dataHash)] = table
 				return table
 			else:
 				raise KeyError("'%s' table not found" % tag)
@@ -1033,7 +1042,7 @@ class TTCollection(object):
 	accessed. This means that simple operations can be extremely fast.
 	"""
 
-	def __init__(self, file=None, **kwargs):
+	def __init__(self, file=None, shareTables=False, **kwargs):
 		fonts = self.fonts = []
 		if file is None:
 			return
@@ -1047,10 +1056,12 @@ class TTCollection(object):
 			# assume "file" is a readable file object
 			closeStream = False
 
+		tableCache = {} if shareTables else None
+
 		header = readTTCHeader(file)
 		for i in range(header.numFonts):
-			font = TTFont(file, fontNumber=i, **kwargs)
+			font = TTFont(file, fontNumber=i, _tableCache=tableCache, **kwargs)
 			fonts.append(font)
 
-		if closeStream:
+		if (not kwargs.get('lazy')) and closeStream:
 			file.close()

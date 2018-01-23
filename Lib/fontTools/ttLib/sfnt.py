@@ -41,9 +41,10 @@ class SFNTReader(object):
 		# return default object
 		return object.__new__(cls)
 
-	def __init__(self, file, checkChecksums=1, fontNumber=-1):
+	def __init__(self, file, checkChecksums=1, fontNumber=-1, tableCache=None):
 		self.file = file
 		self.checkChecksums = checkChecksums
+		self.tableCache = tableCache
 
 		self.flavor = None
 		self.flavorData = None
@@ -104,7 +105,13 @@ class SFNTReader(object):
 	def __getitem__(self, tag):
 		"""Fetch the raw table data."""
 		entry = self.tables[Tag(tag)]
+		if self.tableCache is not None:
+			data = self.tableCache.get((Tag(tag), entry.offset))
+			if data is not None:
+				return data
 		data = entry.loadData (self.file)
+		if self.tableCache is not None:
+			self.tableCache[(Tag(tag), entry.offset)] = data
 		if self.checkChecksums:
 			if tag == 'head':
 				# Beh: we have to special-case the 'head' table.
