@@ -184,7 +184,7 @@ class TTFont(object):
 				file.close()
 			file = tmp
 		self.tableCache = _tableCache
-		self.reader = sfnt.SFNTReader(file, checkChecksums, fontNumber=fontNumber, tableCache=_tableCache)
+		self.reader = sfnt.SFNTReader(file, checkChecksums, fontNumber=fontNumber)
 		self.sfntVersion = self.reader.sfntVersion
 		self.flavor = self.reader.flavor
 		self.flavorData = self.reader.flavorData
