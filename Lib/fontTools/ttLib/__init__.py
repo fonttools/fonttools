@@ -423,9 +423,8 @@ class TTFont(object):
 				import traceback
 				log.debug("Reading '%s' table from disk", tag)
 				data = self.reader[tag]
-				dataHash = hash(data) # Oops, sorry if collides!
 				if self.tableCache is not None:
-					table = self.tableCache.get((Tag(tag), dataHash))
+					table = self.tableCache.get((Tag(tag), data))
 					if table is not None:
 						return table
 				tableClass = getTableClass(tag)
@@ -448,7 +447,7 @@ class TTFont(object):
 					self.tables[tag] = table
 					table.decompile(data, self)
 				if self.tableCache is not None:
-					self.tableCache[(Tag(tag), dataHash)] = table
+					self.tableCache[(Tag(tag), data)] = table
 				return table
 			else:
 				raise KeyError("'%s' table not found" % tag)
