@@ -6,7 +6,8 @@ import sys
 
 __all__ = ['basestring', 'unicode', 'unichr', 'byteord', 'bytechr', 'BytesIO',
 		'StringIO', 'UnicodeIO', 'strjoin', 'bytesjoin', 'tobytes', 'tostr',
-		'tounicode', 'Tag', 'open', 'range', 'xrange', 'round', 'Py23Error']
+		'tounicode', 'Tag', 'open', 'range', 'xrange', 'round', 'Py23Error',
+		'SimpleNamespace']
 
 
 class Py23Error(NotImplementedError):

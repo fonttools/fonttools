@@ -51,19 +51,11 @@ class SFNTReader(object):
 		self.sfntVersion = self.file.read(4)
 		self.file.seek(0)
 		if self.sfntVersion == b"ttcf":
-			data = self.file.read(ttcHeaderSize)
-			if len(data) != ttcHeaderSize:
+			header = readTTCHeader(self.file)
+			if not 0 <= fontNumber < header.numFonts:
 				from fontTools import ttLib
-				raise ttLib.TTLibError("Not a Font Collection (not enough data)")
-			sstruct.unpack(ttcHeaderFormat, data, self)
-			assert self.Version == 0x00010000 or self.Version == 0x00020000, "unrecognized TTC version 0x%08x" % self.Version
-			if not 0 <= fontNumber < self.numFonts:
-				from fontTools import ttLib
-				raise ttLib.TTLibError("specify a font number between 0 and %d (inclusive)" % (self.numFonts - 1))
-			offsetTable = struct.unpack(">%dL" % self.numFonts, self.file.read(self.numFonts * 4))
-			if self.Version == 0x00020000:
-				pass # ignoring version 2.0 signatures
-			self.file.seek(offsetTable[fontNumber])
+				raise ttLib.TTLibError("specify a font number between 0 and %d (inclusive)" % (header.numFonts - 1))
+			self.file.seek(header.offsetTable[fontNumber])
 			data = self.file.read(sfntDirectorySize)
 			if len(data) != sfntDirectorySize:
 				from fontTools import ttLib
@@ -566,6 +558,18 @@ def calcChecksum(data):
 		value = (value + sum(longs)) & 0xffffffff
 	return value
 
+def readTTCHeader(file):
+	self = SimpleNamespace()
+	data = file.read(ttcHeaderSize)
+	if len(data) != ttcHeaderSize:
+		from fontTools import ttLib
+		raise ttLib.TTLibError("Not a Font Collection (not enough data)")
+	sstruct.unpack(ttcHeaderFormat, data, self)
+	assert self.Version == 0x00010000 or self.Version == 0x00020000, "unrecognized TTC version 0x%08x" % self.Version
+	self.offsetTable = struct.unpack(">%dL" % self.numFonts, file.read(self.numFonts * 4))
+	if self.Version == 0x00020000:
+		pass # ignoring version 2.0 signatures
+	return self
 
 if __name__ == "__main__":
 	import sys
