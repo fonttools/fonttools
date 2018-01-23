@@ -44,7 +44,7 @@ Dumping 'prep' table...
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import deprecateArgument, deprecateFunction
-from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter, readTTCHeader
+from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
 import os
 import sys
 import logging
@@ -1016,43 +1016,4 @@ def getSearchRange(n, itemSize=16):
 	rangeShift = max(0, n * itemSize - searchRange)
 	return searchRange, entrySelector, rangeShift
 
-
-class TTCollection(object):
-
-	"""The main font object. It manages file input and output, and offers
-	a convenient way of accessing tables.
-	Tables will be only decompiled when necessary, ie. when they're actually
-	accessed. This means that simple operations can be extremely fast.
-	"""
-
-	def __init__(self, file=None, shareTables=False, **kwargs):
-		fonts = self.fonts = []
-		if file is None:
-			return
-
-		assert 'fontNumber' not in kwargs, kwargs
-
-		if not hasattr(file, "read"):
-			file = open(file, "rb")
-
-		tableCache = {} if shareTables else None
-
-		header = readTTCHeader(file)
-		for i in range(header.numFonts):
-			font = TTFont(file, fontNumber=i, _tableCache=tableCache, **kwargs)
-			fonts.append(font)
-
-	def __getitem__(self, item):
-		return self.fonts[item]
-
-	def __setitem__(self, item, value):
-		self.fonts[item] = values
-
-	def __delitem__(self, item):
-		return self.fonts[item]
-
-	def __len__(self):
-		return len(self.fonts)
-
-	def __iter__(self):
-		return iter(self.fonts)
+from fontTools.ttLib.ttCollection import TTCollection
