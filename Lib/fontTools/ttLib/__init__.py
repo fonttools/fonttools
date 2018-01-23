@@ -1065,3 +1065,18 @@ class TTCollection(object):
 
 		if (not kwargs.get('lazy')) and closeStream:
 			file.close()
+
+	def __getitem__(self, item):
+		return self.fonts[item]
+
+	def __setitem__(self, item, value):
+		self.fonts[item] = values
+
+	def __delitem__(self, item):
+		return self.fonts[item]
+
+	def __len__(self):
+		return len(self.fonts)
+
+	def __iter__(self):
+		return iter(self.fonts)
