@@ -127,8 +127,6 @@ class TTFont(object):
 		immediately.  The default is lazy=None which is somewhere in between.
 		"""
 
-		from fontTools.ttLib import sfnt
-
 		for name in ("verbose", "quiet"):
 			val = locals().get(name)
 			if val is not None:
@@ -184,7 +182,7 @@ class TTFont(object):
 				file.close()
 			file = tmp
 		self.tableCache = _tableCache
-		self.reader = sfnt.SFNTReader(file, checkChecksums, fontNumber=fontNumber)
+		self.reader = SFNTReader(file, checkChecksums, fontNumber=fontNumber)
 		self.sfntVersion = self.reader.sfntVersion
 		self.flavor = self.reader.flavor
 		self.flavorData = self.reader.flavorData
@@ -199,7 +197,6 @@ class TTFont(object):
 		the 'file' argument can be either a pathname or a writable
 		file object.
 		"""
-		from fontTools.ttLib import sfnt
 		if not hasattr(file, "write"):
 			if self.lazy and self.reader.file.name == file:
 				raise TTLibError(
@@ -219,7 +216,7 @@ class TTFont(object):
 		numTables = len(tags)
 		# write to a temporary stream to allow saving to unseekable streams
 		tmp = BytesIO()
-		writer = sfnt.SFNTWriter(tmp, numTables, self.sfntVersion, self.flavor, self.flavorData)
+		writer = SFNTWriter(tmp, numTables, self.sfntVersion, self.flavor, self.flavorData)
 
 		done = []
 		for tag in tags:
