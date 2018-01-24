@@ -3,17 +3,18 @@
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+import ast
 import string
 
 
-def safeEval(data, eval=eval):
-	"""A (kindof) safe replacement for eval."""
-	return eval(data, {"__builtins__":{"True":True,"False":False}})
+# alias kept for backward compatibility
+safeEval = ast.literal_eval
 
 
 def readHex(content):
 	"""Convert a list of hex strings to binary data."""
 	return deHexStr(strjoin(chunk for chunk in content if isinstance(chunk, basestring)))
+
 
 def deHexStr(hexdata):
 	"""Convert a hex string to binary data."""
