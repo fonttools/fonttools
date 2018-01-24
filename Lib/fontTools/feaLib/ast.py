@@ -591,6 +591,22 @@ class IgnoreSubstStatement(Statement):
         return "ignore sub " + ", ".join(contexts) + ";"
 
 
+class IncludeStatement(Statement):
+    def __init__(self, location, filename):
+        super(IncludeStatement, self).__init__(location)
+        self.filename = filename
+
+    def build(self):
+        # TODO: consider lazy-loading the including parser/lexer?
+        raise FeatureLibError(
+            "Building an include statement is not implemented yet. "
+            "Instead, use Parser(..., followIncludes=True) for building.",
+            self.location)
+
+    def asFea(self, indent=""):
+        return indent + "include(%s);" % self.filename
+
+
 class LanguageStatement(Statement):
     def __init__(self, location, language, include_default, required):
         Statement.__init__(self, location)

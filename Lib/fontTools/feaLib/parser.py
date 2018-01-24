@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.feaLib.error import FeatureLibError
-from fontTools.feaLib.lexer import Lexer, IncludingLexer
+from fontTools.feaLib.lexer import Lexer, IncludingLexer, NonIncludingLexer
 from fontTools.misc.encodingTools import getEncoding
 from fontTools.misc.py23 import *
 import fontTools.feaLib.ast as ast
@@ -17,7 +17,8 @@ class Parser(object):
     extensions = {}
     ast = ast
 
-    def __init__(self, featurefile, glyphNames=(), **kwargs):
+    def __init__(self, featurefile, glyphNames=(), followIncludes=True,
+                 **kwargs):
         if "glyphMap" in kwargs:
             from fontTools.misc.loggingTools import deprecateArgument
             deprecateArgument("glyphMap", "use 'glyphNames' (iterable) instead")
@@ -42,15 +43,18 @@ class Parser(object):
         self.next_token_type_, self.next_token_ = (None, None)
         self.cur_comments_ = []
         self.next_token_location_ = None
-        self.lexer_ = IncludingLexer(featurefile)
+        lexerClass = IncludingLexer if followIncludes else NonIncludingLexer
+        self.lexer_ = lexerClass(featurefile)
         self.advance_lexer_(comments=True)
 
     def parse(self):
         statements = self.doc_.statements
-        while self.next_token_type_ is not None:
+        while self.next_token_type_ is not None or self.cur_comments_:
             self.advance_lexer_(comments=True)
             if self.cur_token_type_ is Lexer.COMMENT:
                 statements.append(self.ast.Comment(self.cur_token_location_, self.cur_token_))
+            elif self.is_cur_keyword_("include"):
+                statements.append(self.parse_include_())
             elif self.cur_token_type_ is Lexer.GLYPHCLASS:
                 statements.append(self.parse_glyphclass_definition_())
             elif self.is_cur_keyword_(("anon", "anonymous")):
@@ -419,6 +423,13 @@ class Parser(object):
         raise FeatureLibError(
             "Expected \"substitute\" or \"position\"",
             self.cur_token_location_)
+
+    def parse_include_(self):
+        assert self.cur_token_ == "include"
+        location = self.cur_token_location_
+        filename = self.expect_filename_()
+        # self.expect_symbol_(";")
+        return ast.IncludeStatement(location, filename)
 
     def parse_language_(self):
         assert self.is_cur_keyword_("language")
@@ -1318,6 +1329,13 @@ class Parser(object):
             return self.cur_token_
         raise FeatureLibError("Expected a CID", self.cur_token_location_)
 
+    def expect_filename_(self):
+        self.advance_lexer_()
+        if self.cur_token_type_ is not Lexer.FILENAME:
+            raise FeatureLibError("Expected file name",
+                                  self.cur_token_location_)
+        return self.cur_token_
+
     def expect_glyph_(self):
         self.advance_lexer_()
         if self.cur_token_type_ is Lexer.NAME:
@@ -1424,7 +1442,6 @@ class Parser(object):
         else:
             self.cur_token_type_, self.cur_token_, self.cur_token_location_ = (
                 self.next_token_type_, self.next_token_, self.next_token_location_)
-            self.cur_comments_ = []
         while True:
             try:
                 (self.next_token_type_, self.next_token_,

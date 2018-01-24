@@ -86,6 +86,15 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(c2.text, "# simple")
         self.assertEqual(doc.statements[1].name, "test")
 
+    def test_only_comments(self):
+        doc = self.parse("""\
+            # Initial
+        """)
+        c1 = doc.statements[0]
+        self.assertEqual(type(c1), ast.Comment)
+        self.assertEqual(c1.text, "# Initial")
+        self.assertEqual(str(c1), "# Initial")
+
     def test_anchor_format_a(self):
         doc = self.parse(
             "feature test {"
@@ -485,6 +494,32 @@ class ParserTest(unittest.TestCase):
             self.parse,
             "lookup L { sub [A A.sc] by a; } L;"
             "feature test { ignore sub f' i', A' lookup L; } test;")
+
+    def test_include_statement(self):
+        doc = self.parse("""\
+            include(../family.fea);
+            include # Comment
+                (foo)
+                  ;
+            """, followIncludes=False)
+        s1, s2, s3 = doc.statements
+        self.assertEqual(type(s1), ast.IncludeStatement)
+        self.assertEqual(s1.filename, "../family.fea")
+        self.assertEqual(s1.asFea(), "include(../family.fea);")
+        self.assertEqual(type(s2), ast.IncludeStatement)
+        self.assertEqual(s2.filename, "foo")
+        self.assertEqual(s2.asFea(), "include(foo);")
+        self.assertEqual(type(s3), ast.Comment)
+        self.assertEqual(s3.text, "# Comment")
+
+    def test_include_statement_no_semicolon(self):
+        doc = self.parse("""\
+            include(../family.fea)
+            """, followIncludes=False)
+        s1 = doc.statements[0]
+        self.assertEqual(type(s1), ast.IncludeStatement)
+        self.assertEqual(s1.filename, "../family.fea")
+        self.assertEqual(s1.asFea(), "include(../family.fea);")
 
     def test_language(self):
         doc = self.parse("feature test {language DEU;} test;")
@@ -1548,9 +1583,9 @@ class ParserTest(unittest.TestCase):
             doc = self.parse("table %s { ;;; } %s;" % (table, table))
             self.assertEqual(doc.statements[0].statements, [])
 
-    def parse(self, text, glyphNames=GLYPHNAMES):
+    def parse(self, text, glyphNames=GLYPHNAMES, followIncludes=True):
         featurefile = UnicodeIO(text)
-        p = Parser(featurefile, glyphNames)
+        p = Parser(featurefile, glyphNames, followIncludes=followIncludes)
         return p.parse()
 
     @staticmethod

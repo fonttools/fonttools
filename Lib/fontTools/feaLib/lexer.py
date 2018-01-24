@@ -240,3 +240,9 @@ class IncludingLexer(object):
 
     def scan_anonymous_block(self, tag):
         return self.lexers_[-1].scan_anonymous_block(tag)
+
+
+class NonIncludingLexer(IncludingLexer):
+    """Lexer that does not follow `include` statements, emits them as-is."""
+    def __next__(self):  # Python 3
+        return next(self.lexers_[0])
