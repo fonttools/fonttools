@@ -15,6 +15,7 @@ a table's length chages you need to rewrite the whole file anyway.
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
+from fontTools.ttLib import TTLibError
 import struct
 from collections import OrderedDict
 import logging
@@ -54,33 +55,28 @@ class SFNTReader(object):
 		if self.sfntVersion == b"ttcf":
 			header = readTTCHeader(self.file)
 			if not 0 <= fontNumber < header.numFonts:
-				from fontTools import ttLib
-				raise ttLib.TTLibError("specify a font number between 0 and %d (inclusive)" % (header.numFonts - 1))
+				raise TTLibError("specify a font number between 0 and %d (inclusive)" % (header.numFonts - 1))
 			self.file.seek(header.offsetTable[fontNumber])
 			data = self.file.read(sfntDirectorySize)
 			if len(data) != sfntDirectorySize:
-				from fontTools import ttLib
-				raise ttLib.TTLibError("Not a Font Collection (not enough data)")
+				raise TTLibError("Not a Font Collection (not enough data)")
 			sstruct.unpack(sfntDirectoryFormat, data, self)
 		elif self.sfntVersion == b"wOFF":
 			self.flavor = "woff"
 			self.DirectoryEntry = WOFFDirectoryEntry
 			data = self.file.read(woffDirectorySize)
 			if len(data) != woffDirectorySize:
-				from fontTools import ttLib
-				raise ttLib.TTLibError("Not a WOFF font (not enough data)")
+				raise TTLibError("Not a WOFF font (not enough data)")
 			sstruct.unpack(woffDirectoryFormat, data, self)
 		else:
 			data = self.file.read(sfntDirectorySize)
 			if len(data) != sfntDirectorySize:
-				from fontTools import ttLib
-				raise ttLib.TTLibError("Not a TrueType or OpenType font (not enough data)")
+				raise TTLibError("Not a TrueType or OpenType font (not enough data)")
 			sstruct.unpack(sfntDirectoryFormat, data, self)
 		self.sfntVersion = Tag(self.sfntVersion)
 
 		if self.sfntVersion not in ("\x00\x01\x00\x00", "OTTO", "true"):
-			from fontTools import ttLib
-			raise ttLib.TTLibError("Not a TrueType or OpenType font (bad sfntVersion)")
+			raise TTLibError("Not a TrueType or OpenType font (bad sfntVersion)")
 		tables = {}
 		for i in range(self.numTables):
 			entry = self.DirectoryEntry()
@@ -221,8 +217,7 @@ class SFNTWriter(object):
 	def __setitem__(self, tag, data):
 		"""Write raw table data to disk."""
 		if tag in self.tables:
-			from fontTools import ttLib
-			raise ttLib.TTLibError("cannot rewrite '%s' table" % tag)
+			raise TTLibError("cannot rewrite '%s' table" % tag)
 
 		entry = self.DirectoryEntry()
 		entry.tag = tag
@@ -255,8 +250,7 @@ class SFNTWriter(object):
 		"""
 		tables = sorted(self.tables.items())
 		if len(tables) != self.numTables:
-			from fontTools import ttLib
-			raise ttLib.TTLibError("wrong number of tables; expected %d, found %d" % (self.numTables, len(tables)))
+			raise TTLibError("wrong number of tables; expected %d, found %d" % (self.numTables, len(tables)))
 
 		if self.flavor == "woff":
 			self.signature = b"wOFF"
@@ -565,8 +559,7 @@ def readTTCHeader(file):
 	self = SimpleNamespace()
 	data = file.read(ttcHeaderSize)
 	if len(data) != ttcHeaderSize:
-		from fontTools import ttLib
-		raise ttLib.TTLibError("Not a Font Collection (not enough data)")
+		raise TTLibError("Not a Font Collection (not enough data)")
 	sstruct.unpack(ttcHeaderFormat, data, self)
 	assert self.Version == 0x00010000 or self.Version == 0x00020000, "unrecognized TTC version 0x%08x" % self.Version
 	self.offsetTable = struct.unpack(">%dL" % self.numFonts, file.read(self.numFonts * 4))

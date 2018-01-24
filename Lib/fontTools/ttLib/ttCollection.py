@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.ttLib.ttFont import TTFont
 from fontTools.ttLib.sfnt import readTTCHeader
 import logging
 
@@ -36,7 +37,6 @@ class TTCollection(object):
 		if sfntVersion != b"ttcf":
 			raise TTLibError("Not a Font Collection")
 
-		from fontTools.ttLib import TTFont
 		header = readTTCHeader(file)
 		for i in range(header.numFonts):
 			font = TTFont(file, fontNumber=i, _tableCache=tableCache, **kwargs)
