@@ -1255,6 +1255,14 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(sub.glyph, "f_f_i")
         self.assertEqual(sub.replacement, ("f", "f", "i"))
 
+    def test_substitute_multiple_by_mutliple(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Direct substitution of multiple glyphs by multiple glyphs "
+            "is not supported",
+            self.parse,
+            "lookup MxM {sub a b c by d e f;} MxM;")
+
     def test_split_marked_glyphs_runs(self):
         self.assertRaisesRegex(
             FeatureLibError,

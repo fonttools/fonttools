@@ -760,6 +760,12 @@ class Parser(object):
             return self.ast.ReverseChainSingleSubstStatement(
                 location, old_prefix, old_suffix, old, new)
 
+        if len(old) > 1 and len(new) > 1:
+            raise FeatureLibError(
+                'Direct substitution of multiple glyphs by multiple glyphs '
+                'is not supported',
+                location)
+
         # GSUB lookup type 6: Chaining contextual substitution.
         assert len(new) == 0, new
         rule = self.ast.ChainContextSubstStatement(
