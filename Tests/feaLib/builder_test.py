@@ -492,10 +492,8 @@ class BuilderTest(unittest.TestCase):
         font2 = self.build(features, tables=set())
         assert "GSUB" not in font2
 
-        logger = logging.getLogger("fontTools.feaLib.builder")
-        with CapturingLogHandler(logger, "WARNING") as captor:
-            font = self.build(features, tables=["FOOO", "BAAR"])
-        captor.assertRegex("skipped unsupported tables: 'BAAR', 'FOOO'")
+    def test_build_unsupported_tables(self):
+        self.assertRaises(AssertionError, self.build, "", tables={"FOO"})
 
 
 def generate_feature_file_test(name):

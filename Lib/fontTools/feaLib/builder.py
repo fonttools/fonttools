@@ -100,11 +100,7 @@ class Builder(object):
         else:
             tables = frozenset(tables)
             unsupported = tables - self.supportedTables
-            if unsupported:
-                log.warning(
-                    "skipped unsupported table%s: %s" % (
-                        "s" if len(unsupported) > 1 else "",
-                        ", ".join(sorted(repr(tag) for tag in unsupported))))
+            assert not unsupported, unsupported
         if "GSUB" in tables:
             self.build_feature_aalt_()
         if "head" in tables:
