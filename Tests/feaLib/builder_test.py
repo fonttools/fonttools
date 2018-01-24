@@ -123,9 +123,9 @@ class BuilderTest(unittest.TestCase):
                 sys.stderr.write(line)
             self.fail("TTX output is different from expected")
 
-    def build(self, featureFile):
+    def build(self, featureFile, tables=None):
         font = makeTTFont()
-        addOpenTypeFeaturesFromString(font, featureFile)
+        addOpenTypeFeaturesFromString(font, featureFile, tables=tables)
         return font
 
     def check_feature_file(self, name):
@@ -483,6 +483,17 @@ class BuilderTest(unittest.TestCase):
             "    markClass [uni0327] <anchor 0 0> @cedilla;"
             "    pos base [a] <anchor 244 0> mark @cedilla;"
             "} mark;")
+
+    def test_build_specific_tables(self):
+        features = "feature liga {sub f i by f_i;} liga;"
+        font = self.build(features)
+        assert "GSUB" in font
+
+        font2 = self.build(features, tables=set())
+        assert "GSUB" not in font2
+
+    def test_build_unsupported_tables(self):
+        self.assertRaises(AssertionError, self.build, "", tables={"FOO"})
 
 
 def generate_feature_file_test(name):

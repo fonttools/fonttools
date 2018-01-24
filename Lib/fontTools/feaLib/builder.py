@@ -15,21 +15,34 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def addOpenTypeFeatures(font, featurefile):
+def addOpenTypeFeatures(font, featurefile, tables=None):
     builder = Builder(font, featurefile)
-    builder.build()
+    builder.build(tables=tables)
 
 
-def addOpenTypeFeaturesFromString(font, features, filename=None):
+def addOpenTypeFeaturesFromString(font, features, filename=None, tables=None):
     featurefile = UnicodeIO(tounicode(features))
     if filename:
         # the directory containing 'filename' is used as the root of relative
         # include paths; if None is provided, the current directory is assumed
         featurefile.name = filename
-    addOpenTypeFeatures(font, featurefile)
+    addOpenTypeFeatures(font, featurefile, tables=tables)
 
 
 class Builder(object):
+
+    supportedTables = frozenset(Tag(tag) for tag in [
+        "BASE",
+        "GDEF",
+        "GPOS",
+        "GSUB",
+        "OS/2",
+        "head",
+        "hhea",
+        "name",
+        "vhea",
+    ])
+
     def __init__(self, font, featurefile):
         self.font = font
         self.file = featurefile
@@ -78,16 +91,31 @@ class Builder(object):
         # for table 'vhea'
         self.vhea_ = {}
 
-    def build(self):
+    def build(self, tables=None):
         self.parseTree = Parser(self.file, self.glyphMap).parse()
         self.parseTree.build(self)
-        self.build_feature_aalt_()
-        self.build_head()
-        self.build_hhea()
-        self.build_vhea()
-        self.build_name()
-        self.build_OS_2()
+        # by default, build all the supported tables
+        if tables is None:
+            tables = self.supportedTables
+        else:
+            tables = frozenset(tables)
+            unsupported = tables - self.supportedTables
+            assert not unsupported, unsupported
+        if "GSUB" in tables:
+            self.build_feature_aalt_()
+        if "head" in tables:
+            self.build_head()
+        if "hhea" in tables:
+            self.build_hhea()
+        if "vhea" in tables:
+            self.build_vhea()
+        if "name" in tables:
+            self.build_name()
+        if "OS/2" in tables:
+            self.build_OS_2()
         for tag in ('GPOS', 'GSUB'):
+            if tag not in tables:
+                continue
             table = self.makeTable(tag)
             if (table.ScriptList.ScriptCount > 0 or
                     table.FeatureList.FeatureCount > 0 or
@@ -96,16 +124,18 @@ class Builder(object):
                 fontTable.table = table
             elif tag in self.font:
                 del self.font[tag]
-        gdef = self.buildGDEF()
-        if gdef:
-            self.font["GDEF"] = gdef
-        elif "GDEF" in self.font:
-            del self.font["GDEF"]
-        base = self.buildBASE()
-        if base:
-            self.font["BASE"] = base
-        elif "BASE" in self.font:
-            del self.font["BASE"]
+        if "GDEF" in tables:
+            gdef = self.buildGDEF()
+            if gdef:
+                self.font["GDEF"] = gdef
+            elif "GDEF" in self.font:
+                del self.font["GDEF"]
+        if "BASE" in tables:
+            base = self.buildBASE()
+            if base:
+                self.font["BASE"] = base
+            elif "BASE" in self.font:
+                del self.font["BASE"]
 
     def get_chained_lookup_(self, location, builder_class):
         result = builder_class(self.font, location)
