@@ -207,7 +207,8 @@ class SFNTWriter(object):
 			from fontTools.ttLib import getSearchRange
 			self.searchRange, self.entrySelector, self.rangeShift = getSearchRange(numTables, 16)
 
-		self.nextTableOffset = self.directorySize + numTables * self.DirectoryEntry.formatSize
+		self.directoryOffset = self.file.tell()
+		self.nextTableOffset = self.directoryOffset + self.directorySize + numTables * self.DirectoryEntry.formatSize
 		# clear out directory area
 		self.file.seek(self.nextTableOffset)
 		# make sure we're actually where we want to be. (old cStringIO bug)
@@ -299,7 +300,7 @@ class SFNTWriter(object):
 
 		directory = sstruct.pack(self.directoryFormat, self)
 
-		self.file.seek(self.directorySize)
+		self.file.seek(self.directoryOffset + self.directorySize)
 		seenHead = 0
 		for tag, entry in tables:
 			if tag == "head":
@@ -307,7 +308,7 @@ class SFNTWriter(object):
 			directory = directory + entry.toString()
 		if seenHead:
 			self.writeMasterChecksum(directory)
-		self.file.seek(0)
+		self.file.seek(self.directoryOffset)
 		self.file.write(directory)
 
 	def _calcMasterChecksum(self, directory):
@@ -569,6 +570,14 @@ def readTTCHeader(file):
 	if self.Version == 0x00020000:
 		pass # ignoring version 2.0 signatures
 	return self
+
+def writeTTCHeader(file, numFonts):
+	self = SimpleNamespace()
+	self.TTCTag = b'ttcf'
+	self.Version = 0x00010000
+	self.numFonts = numFonts
+	file.write(sstruct.pack(ttcHeaderFormat, self))
+	file.write(struct.pack(">%dL" % self.numFonts, [0] * self.numFonts))
 
 if __name__ == "__main__":
 	import sys

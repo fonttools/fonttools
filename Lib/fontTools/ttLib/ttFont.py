@@ -190,7 +190,6 @@ class TTFont(object):
 				# use the recommended order from the OpenType specification
 				tableOrder = None
 			tmp.flush()
-			tmp.seek(0)
 			tmp2 = BytesIO()
 			reorderFontTables(tmp, tmp2, tableOrder)
 			file.write(tmp2.getvalue())
@@ -947,6 +946,8 @@ def reorderFontTables(inFile, outFile, tableOrder=None, checkChecksums=False):
 	"""Rewrite a font file, ordering the tables as recommended by the
 	OpenType specification 1.4.
 	"""
+	inFile.seek(0)
+	outFile.seek(0)
 	reader = SFNTReader(inFile, checkChecksums=checkChecksums)
 	writer = SFNTWriter(outFile, len(reader.tables), reader.sfntVersion, reader.flavor, reader.flavorData)
 	tables = list(reader.keys())
