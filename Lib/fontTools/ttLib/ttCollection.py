@@ -35,12 +35,6 @@ class TTCollection(object):
 
 		tableCache = {} if shareTables else None
 
-		file.seek(0)
-		sfntVersion = file.read(4)
-		file.seek(0)
-		if sfntVersion != b"ttcf":
-			raise TTLibError("Not a Font Collection")
-
 		header = readTTCHeader(file)
 		for i in range(header.numFonts):
 			font = TTFont(file, fontNumber=i, _tableCache=tableCache, **kwargs)
