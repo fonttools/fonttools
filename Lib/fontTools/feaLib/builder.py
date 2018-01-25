@@ -5,6 +5,7 @@ from fontTools.misc import sstruct
 from fontTools.misc.textTools import binary2num, safeEval
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser
+from fontTools.feaLib.ast import FeatureFile
 from fontTools.otlLib import builder as otl
 from fontTools.ttLib import newTable, getTableModule
 from fontTools.ttLib.tables import otBase, otTables
@@ -45,7 +46,12 @@ class Builder(object):
 
     def __init__(self, font, featurefile):
         self.font = font
-        self.file = featurefile
+        # 'featurefile' can be either a path or file object (in which case we
+        # parse it into an AST), or a pre-parsed AST instance
+        if isinstance(featurefile, FeatureFile):
+            self.parseTree, self.file = featurefile, None
+        else:
+            self.parseTree, self.file = None, featurefile
         self.glyphMap = font.getReverseGlyphMap()
         self.default_language_systems_ = set()
         self.script_ = None
@@ -58,7 +64,6 @@ class Builder(object):
         self.cur_feature_name_ = None
         self.lookups_ = []
         self.features_ = {}  # ('latn', 'DEU ', 'smcp') --> [LookupBuilder*]
-        self.parseTree = None
         self.required_features_ = {}  # ('latn', 'DEU ') --> 'scmp'
         # for feature 'aalt'
         self.aalt_features_ = []  # [(location, featureName)*], for 'aalt'
@@ -92,7 +97,8 @@ class Builder(object):
         self.vhea_ = {}
 
     def build(self, tables=None):
-        self.parseTree = Parser(self.file, self.glyphMap).parse()
+        if self.parseTree is None:
+            self.parseTree = Parser(self.file, self.glyphMap).parse()
         self.parseTree.build(self)
         # by default, build all the supported tables
         if tables is None:
