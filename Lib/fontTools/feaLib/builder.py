@@ -536,7 +536,7 @@ class Builder(object):
                 frec.Feature = otTables.Feature()
                 frec.Feature.FeatureParams = self.buildFeatureParams(
                                                 feature_tag)
-                frec.Feature.LookupListIndex = lookup_indices
+                frec.Feature.LookupListIndex = list(lookup_indices)
                 frec.Feature.LookupCount = len(lookup_indices)
                 table.FeatureList.FeatureRecord.append(frec)
                 feature_indices[feature_key] = feature_index
