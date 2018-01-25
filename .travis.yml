@@ -1,9 +1,17 @@
 sudo: false
 
 language: python
+python: 3.5
+
+# empty "env:" is needed for 'allow_failures'
+# https://docs.travis-ci.com/user/customizing-the-build/#Rows-that-are-Allowed-to-Fail
+env:
 
 matrix:
   fast_finish: true
+  exclude:
+    # Exclude the default Python 3.5 build
+    - python: 3.5
   include:
     - python: 2.7
       env: TOXENV=py27-cov
@@ -32,6 +40,17 @@ matrix:
         - PYENV_VERSION_STRING='Python 2.7.6'
         - PYENV_ROOT=$HOME/.travis-pyenv
         - TRAVIS_PYENV_VERSION='0.4.0'
+  allow_failures:
+    # We use fast_finish + allow_failures because OSX builds take forever
+    # https://blog.travis-ci.com/2013-11-27-fast-finishing-builds
+    - language: generic
+      os: osx
+      env: TOXENV=py27-cov
+    - language: generic
+      os: osx
+      env:
+        - TOXENV=py36-cov
+        - HOMEBREW_NO_AUTO_UPDATE=1
 
 cache:
   - pip
