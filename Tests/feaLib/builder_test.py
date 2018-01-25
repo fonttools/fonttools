@@ -495,6 +495,13 @@ class BuilderTest(unittest.TestCase):
     def test_build_unsupported_tables(self):
         self.assertRaises(AssertionError, self.build, "", tables={"FOO"})
 
+    def test_build_pre_parsed_ast_featurefile(self):
+        f = UnicodeIO("feature liga {sub f i by f_i;} liga;")
+        tree = Parser(f).parse()
+        font = makeTTFont()
+        addOpenTypeFeatures(font, tree)
+        assert "GSUB" in font
+
 
 def generate_feature_file_test(name):
     return lambda self: self.check_feature_file(name)
