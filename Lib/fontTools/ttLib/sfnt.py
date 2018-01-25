@@ -557,11 +557,11 @@ def calcChecksum(data):
 	return value
 
 def readTTCHeader(file):
-	self = SimpleNamespace()
 	file.seek(0)
 	data = file.read(ttcHeaderSize)
 	if len(data) != ttcHeaderSize:
 		raise TTLibError("Not a Font Collection (not enough data)")
+	self = SimpleNamespace()
 	sstruct.unpack(ttcHeaderFormat, data, self)
 	if self.TTCTag != b"ttcf":
 		raise TTLibError("Not a Font Collection")
@@ -576,8 +576,11 @@ def writeTTCHeader(file, numFonts):
 	self.TTCTag = b'ttcf'
 	self.Version = 0x00010000
 	self.numFonts = numFonts
+	file.seek(0)
 	file.write(sstruct.pack(ttcHeaderFormat, self))
-	file.write(struct.pack(">%dL" % self.numFonts, [0] * self.numFonts))
+	offset = file.tell()
+	file.write(struct.pack(">%dL" % self.numFonts, *([0] * self.numFonts)))
+	return offset
 
 if __name__ == "__main__":
 	import sys

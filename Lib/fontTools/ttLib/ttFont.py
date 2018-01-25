@@ -160,24 +160,11 @@ class TTFont(object):
 			# assume "file" is a writable file object
 			closeStream = False
 
-		if self.recalcTimestamp and 'head' in self:
-			self['head']  # make sure 'head' is loaded so the recalculation is actually done
-
-		tags = list(self.keys())
-		if "GlyphOrder" in tags:
-			tags.remove("GlyphOrder")
-		numTables = len(tags)
-		# write to a temporary stream to allow saving to unseekable streams
 		tmp = BytesIO()
-		writer = SFNTWriter(tmp, numTables, self.sfntVersion, self.flavor, self.flavorData)
 
-		done = []
-		for tag in tags:
-			self._writeTable(tag, writer, done)
+		writer_reordersTables = self._save(tmp)
 
-		writer.close()
-
-		if (reorderTables is None or writer.reordersTables() or
+		if (reorderTables is None or writer_reordersTables or
 				(reorderTables is False and self.reader is None)):
 			# don't reorder tables and save as is
 			file.write(tmp.getvalue())
@@ -198,6 +185,27 @@ class TTFont(object):
 
 		if closeStream:
 			file.close()
+
+	def _save(self, file):
+		"""Internal function, to be shared by save() and TTCollection.save()"""
+
+		if self.recalcTimestamp and 'head' in self:
+			self['head']  # make sure 'head' is loaded so the recalculation is actually done
+
+		tags = list(self.keys())
+		if "GlyphOrder" in tags:
+			tags.remove("GlyphOrder")
+		numTables = len(tags)
+		# write to a temporary stream to allow saving to unseekable streams
+		writer = SFNTWriter(file, numTables, self.sfntVersion, self.flavor, self.flavorData)
+
+		done = []
+		for tag in tags:
+			self._writeTable(tag, writer, done)
+
+		writer.close()
+
+		return writer.reordersTables()
 
 	def saveXML(self, fileOrPath, progress=None, quiet=None,
 			tables=None, skipTables=None, splitTables=False, disassembleInstructions=True,

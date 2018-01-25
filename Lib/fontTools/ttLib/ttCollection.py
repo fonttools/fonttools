@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib.ttFont import TTFont
 from fontTools.ttLib.sfnt import readTTCHeader, writeTTCHeader
+import struct
 import logging
 
 log = logging.getLogger(__name__)
@@ -42,6 +43,35 @@ class TTCollection(object):
 
 		if closeStream:
 			file.close()
+
+	def save(self, file):
+		"""Save the font to disk. Similarly to the constructor,
+		the 'file' argument can be either a pathname or a writable
+		file object.
+		"""
+		if not hasattr(file, "write"):
+			final = None
+			file = open(file, "wb")
+		else:
+			# assume "file" is a writable file object
+			# write to a temporary stream to allow saving to unseekable streams
+			final = file
+			file = BytesIO()
+
+		offsets_offset = writeTTCHeader(file, len(self.fonts))
+
+		offsets = []
+		for font in self.fonts:
+			offsets.append(file.tell())
+			font._save(file)
+
+		file.seek(offsets_offset)
+		file.write(struct.pack(">%dL" % len(self.fonts), *offsets))
+
+		if final:
+			final.seek(0)
+			final.write(file.getvalue())
+		file.close()
 
 	def __getitem__(self, item):
 		return self.fonts[item]
