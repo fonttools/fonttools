@@ -1,6 +1,7 @@
 sudo: false
 
 language: python
+python: 3.5
 
 # empty "env:" is needed for 'allow_failures'
 # https://docs.travis-ci.com/user/customizing-the-build/#Rows-that-are-Allowed-to-Fail
@@ -8,6 +9,9 @@ env:
 
 matrix:
   fast_finish: true
+  exclude:
+    # Exclude the default Python 3.5 build
+    - python: 3.5
   include:
     - python: 2.7
       env: TOXENV=py27-cov
