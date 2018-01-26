@@ -134,7 +134,7 @@ class TTFont(object):
 			if closeStream:
 				file.close()
 			file = tmp
-		self.tableCache = _tableCache
+		self._tableCache = _tableCache
 		self.reader = SFNTReader(file, checkChecksums, fontNumber=fontNumber)
 		self.sfntVersion = self.reader.sfntVersion
 		self.flavor = self.reader.flavor
@@ -186,7 +186,7 @@ class TTFont(object):
 		if closeStream:
 			file.close()
 
-	def _save(self, file):
+	def _save(self, file, tableCache=None):
 		"""Internal function, to be shared by save() and TTCollection.save()"""
 
 		if self.recalcTimestamp and 'head' in self:
@@ -201,7 +201,7 @@ class TTFont(object):
 
 		done = []
 		for tag in tags:
-			self._writeTable(tag, writer, done)
+			self._writeTable(tag, writer, done, tableCache)
 
 		writer.close()
 
@@ -380,8 +380,8 @@ class TTFont(object):
 				import traceback
 				log.debug("Reading '%s' table from disk", tag)
 				data = self.reader[tag]
-				if self.tableCache is not None:
-					table = self.tableCache.get((Tag(tag), data))
+				if self._tableCache is not None:
+					table = self._tableCache.get((Tag(tag), data))
 					if table is not None:
 						return table
 				tableClass = getTableClass(tag)
@@ -403,8 +403,8 @@ class TTFont(object):
 					table.ERROR = file.getvalue()
 					self.tables[tag] = table
 					table.decompile(data, self)
-				if self.tableCache is not None:
-					self.tableCache[(Tag(tag), data)] = table
+				if self._tableCache is not None:
+					self._tableCache[(Tag(tag), data)] = table
 				return table
 			else:
 				raise KeyError("'%s' table not found" % tag)
@@ -612,7 +612,7 @@ class TTFont(object):
 		for glyphID in range(len(glyphOrder)):
 			d[glyphOrder[glyphID]] = glyphID
 
-	def _writeTable(self, tag, writer, done):
+	def _writeTable(self, tag, writer, done, tableCache=None):
 		"""Internal helper function for self.save(). Keeps track of
 		inter-table dependencies.
 		"""
@@ -622,13 +622,21 @@ class TTFont(object):
 		for masterTable in tableClass.dependencies:
 			if masterTable not in done:
 				if masterTable in self:
-					self._writeTable(masterTable, writer, done)
+					self._writeTable(masterTable, writer, done, tableCache)
 				else:
 					done.append(masterTable)
+		done.append(tag)
 		tabledata = self.getTableData(tag)
+		if tableCache is not None:
+			entry = tableCache.get((Tag(tag), tabledata))
+			if entry is not None:
+				log.debug("reusing '%s' table", tag)
+				writer.setEntry(tag, entry)
+				return
 		log.debug("writing '%s' table to disk", tag)
 		writer[tag] = tabledata
-		done.append(tag)
+		if tableCache is not None:
+			tableCache[(Tag(tag), tabledata)] = writer[tag]
 
 	def getTableData(self, tag):
 		"""Returns raw table data, whether compiled or directly read from disk.

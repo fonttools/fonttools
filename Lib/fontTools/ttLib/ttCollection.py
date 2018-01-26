@@ -37,7 +37,7 @@ class TTCollection(object):
 			font = TTFont(file, fontNumber=i, _tableCache=tableCache, **kwargs)
 			fonts.append(font)
 
-	def save(self, file):
+	def save(self, file, shareTables=True):
 		"""Save the font to disk. Similarly to the constructor,
 		the 'file' argument can be either a pathname or a writable
 		file object.
@@ -51,12 +51,13 @@ class TTCollection(object):
 			final = file
 			file = BytesIO()
 
-		offsets_offset = writeTTCHeader(file, len(self.fonts))
+		tableCache = {} if shareTables else None
 
+		offsets_offset = writeTTCHeader(file, len(self.fonts))
 		offsets = []
 		for font in self.fonts:
 			offsets.append(file.tell())
-			font._save(file)
+			font._save(file, tableCache=tableCache)
 			file.seek(0,2)
 
 		file.seek(offsets_offset)

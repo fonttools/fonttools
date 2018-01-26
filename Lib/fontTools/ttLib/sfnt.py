@@ -215,6 +215,12 @@ class SFNTWriter(object):
 		self.file.write(b'\0' * (self.nextTableOffset - self.file.tell()))
 		self.tables = OrderedDict()
 
+	def setEntry(self, tag, entry):
+		if tag in self.tables:
+			raise TTLibError("cannot rewrite '%s' table" % tag)
+
+		self.tables[tag] = entry
+
 	def __setitem__(self, tag, data):
 		"""Write raw table data to disk."""
 		if tag in self.tables:
@@ -243,7 +249,10 @@ class SFNTWriter(object):
 		self.file.write(b'\0' * (self.nextTableOffset - self.file.tell()))
 		assert self.nextTableOffset == self.file.tell()
 
-		self.tables[tag] = entry
+		self.setEntry(tag, entry)
+
+	def __getitem__(self, tag):
+		return self.tables[tag]
 
 	def close(self):
 		"""All tables must have been written to disk. Now write the
