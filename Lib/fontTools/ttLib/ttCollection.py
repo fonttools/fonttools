@@ -28,11 +28,7 @@ class TTCollection(object):
 		assert 'fontNumber' not in kwargs, kwargs
 
 		if not hasattr(file, "read"):
-			closeStream = True
 			file = open(file, "rb")
-		else:
-			# assume "file" is a readable file object
-			closeStream = False
 
 		tableCache = {} if shareTables else None
 
@@ -40,9 +36,6 @@ class TTCollection(object):
 		for i in range(header.numFonts):
 			font = TTFont(file, fontNumber=i, _tableCache=tableCache, **kwargs)
 			fonts.append(font)
-
-		if closeStream:
-			file.close()
 
 	def save(self, file):
 		"""Save the font to disk. Similarly to the constructor,
