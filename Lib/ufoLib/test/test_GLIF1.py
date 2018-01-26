@@ -1252,8 +1252,9 @@ class TestGLIF1(unittest.TestCase):
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
 
-	def testAnchor_legal_without_name(self):
+	def testSinglePoint_legal_without_name(self):
 		# legal
+		# glif format 1 single point without a name was not an anchor
 		glif = """
 		<glyph name="a" format="1">
 			<outline>
@@ -1265,7 +1266,9 @@ class TestGLIF1(unittest.TestCase):
 		"""
 		py = """
 		glyph.name = "a"
-		glyph.anchors = [{"x" : 1, "y" : 2}]
+		pointPen.beginPath()
+		pointPen.addPoint(*[(1, 2)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.endPath()
 		"""
 		resultGlif = self.pyToGLIF(py)
 		resultPy = self.glifToPy(glif)
