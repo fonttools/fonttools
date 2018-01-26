@@ -70,7 +70,7 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
                 segments[fixedToFloat(fromValue, 14)] = fixedToFloat(toValue, 14)
                 pos = pos + 4
 
-    def toXML(self, writer, ttFont, progress=None):
+    def toXML(self, writer, ttFont):
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         for axis in axisTags:
             writer.begintag("segment", axis=axis)

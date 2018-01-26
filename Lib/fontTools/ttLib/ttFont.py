@@ -207,7 +207,7 @@ class TTFont(object):
 
 		return writer.reordersTables()
 
-	def saveXML(self, fileOrPath, progress=None, quiet=None,
+	def saveXML(self, fileOrPath, quiet=None,
 			tables=None, skipTables=None, splitTables=False, disassembleInstructions=True,
 			bitmapGlyphDataFormat='raw', newlinestr=None):
 		"""Export the font as TTX (an XML-based text file), or as a series of text
@@ -238,13 +238,8 @@ class TTFont(object):
 					if tag in tables:
 						tables.remove(tag)
 		numTables = len(tables)
-		if progress:
-			progress.set(0, numTables)
-			idlefunc = getattr(progress, "idle", None)
-		else:
-			idlefunc = None
 
-		writer = xmlWriter.XMLWriter(fileOrPath, idlefunc=idlefunc,
+		writer = xmlWriter.XMLWriter(fileOrPath,
 				newlinestr=newlinestr)
 		writer.begintag("ttFont", sfntVersion=repr(tostr(self.sfntVersion))[1:-1],
 				ttLibVersion=version)
@@ -258,12 +253,10 @@ class TTFont(object):
 			fileNameTemplate = path + ".%s" + ext
 
 		for i in range(numTables):
-			if progress:
-				progress.set(i)
 			tag = tables[i]
 			if splitTables:
 				tablePath = fileNameTemplate % tagToIdentifier(tag)
-				tableWriter = xmlWriter.XMLWriter(tablePath, idlefunc=idlefunc,
+				tableWriter = xmlWriter.XMLWriter(tablePath,
 						newlinestr=newlinestr)
 				tableWriter.begintag("ttFont", ttLibVersion=version)
 				tableWriter.newline()
@@ -272,13 +265,11 @@ class TTFont(object):
 				writer.newline()
 			else:
 				tableWriter = writer
-			self._tableToXML(tableWriter, tag, progress)
+			self._tableToXML(tableWriter, tag)
 			if splitTables:
 				tableWriter.endtag("ttFont")
 				tableWriter.newline()
 				tableWriter.close()
-		if progress:
-			progress.set((i + 1))
 		writer.endtag("ttFont")
 		writer.newline()
 		# close if 'fileOrPath' is a path; leave it open if it's a file.
@@ -286,7 +277,7 @@ class TTFont(object):
 		if not hasattr(fileOrPath, "write") and fileOrPath != "-":
 			writer.close()
 
-	def _tableToXML(self, writer, tag, progress, quiet=None):
+	def _tableToXML(self, writer, tag, quiet=None):
 		if quiet is not None:
 			deprecateArgument("quiet", "configure logging instead")
 		if tag in self:
@@ -294,8 +285,6 @@ class TTFont(object):
 			report = "Dumping '%s' table..." % tag
 		else:
 			report = "No '%s' table found." % tag
-		if progress:
-			progress.setLabel(report)
 		log.info(report)
 		if tag not in self:
 			return
@@ -309,14 +298,14 @@ class TTFont(object):
 		writer.begintag(xmlTag, **attrs)
 		writer.newline()
 		if tag in ("glyf", "CFF "):
-			table.toXML(writer, self, progress)
+			table.toXML(writer, self)
 		else:
 			table.toXML(writer, self)
 		writer.endtag(xmlTag)
 		writer.newline()
 		writer.newline()
 
-	def importXML(self, fileOrPath, progress=None, quiet=None):
+	def importXML(self, fileOrPath, quiet=None):
 		"""Import a TTX file (an XML-based text format), so as to recreate
 		a font object.
 		"""
@@ -332,7 +321,7 @@ class TTFont(object):
 
 		from fontTools.misc import xmlReader
 
-		reader = xmlReader.XMLReader(fileOrPath, self, progress)
+		reader = xmlReader.XMLReader(fileOrPath, self)
 		reader.read()
 
 	def isLoaded(self, tag):

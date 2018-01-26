@@ -75,7 +75,7 @@ class table__c_v_a_r(DefaultTable.DefaultTable):
                     tupleName, tupleAttrs, tupleContent = tupleElement
                     var.fromXML(tupleName, tupleAttrs, tupleContent)
 
-    def toXML(self, writer, ttFont, progress=None):
+    def toXML(self, writer, ttFont):
         axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
         writer.simpletag("version",
                          major=self.majorVersion, minor=self.minorVersion)

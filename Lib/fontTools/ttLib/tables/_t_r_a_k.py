@@ -92,7 +92,7 @@ class table__t_r_a_k(DefaultTable.DefaultTable):
 				trackData.decompile(data, offset)
 			setattr(self, direction + 'Data', trackData)
 
-	def toXML(self, writer, ttFont, progress=None):
+	def toXML(self, writer, ttFont):
 		writer.simpletag('version', value=self.version)
 		writer.newline()
 		writer.simpletag('format', value=self.format)
@@ -194,7 +194,7 @@ class TrackData(MutableMapping):
 			self[entry.track] = entry
 			offset += TRACK_TABLE_ENTRY_FORMAT_SIZE
 
-	def toXML(self, writer, ttFont, progress=None):
+	def toXML(self, writer, ttFont):
 		nTracks = len(self)
 		nSizes = len(self.sizes())
 		writer.comment("nTracks=%d, nSizes=%d" % (nTracks, nSizes))
@@ -254,7 +254,7 @@ class TrackTableEntry(MutableMapping):
 		self.nameIndex = nameIndex
 		self._map = dict(values)
 
-	def toXML(self, writer, ttFont, progress=None):
+	def toXML(self, writer, ttFont):
 		name = ttFont["name"].getDebugName(self.nameIndex)
 		writer.begintag(
 			"trackEntry",

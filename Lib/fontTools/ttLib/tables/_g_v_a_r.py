@@ -156,7 +156,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			packed.byteswap()
 		return (packed.tostring(), tableFormat)
 
-	def toXML(self, writer, ttFont, progress=None):
+	def toXML(self, writer, ttFont):
 		writer.simpletag("version", value=self.version)
 		writer.newline()
 		writer.simpletag("reserved", value=self.reserved)

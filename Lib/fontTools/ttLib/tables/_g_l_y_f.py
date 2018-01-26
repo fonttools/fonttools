@@ -110,20 +110,14 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			ttFont['maxp'].numGlyphs = len(self.glyphs)
 		return data
 
-	def toXML(self, writer, ttFont, progress=None):
+	def toXML(self, writer, ttFont):
 		writer.newline()
 		glyphNames = ttFont.getGlyphNames()
 		writer.comment("The xMin, yMin, xMax and yMax values\nwill be recalculated by the compiler.")
 		writer.newline()
 		writer.newline()
-		counter = 0
-		progressStep = 10
 		numGlyphs = len(glyphNames)
 		for glyphName in glyphNames:
-			if not counter % progressStep and progress is not None:
-				progress.setLabel("Dumping 'glyf' table... (%s)" % glyphName)
-				progress.increment(progressStep / numGlyphs)
-			counter = counter + 1
 			glyph = self[glyphName]
 			if glyph.numberOfContours:
 				writer.begintag('TTGlyph', [

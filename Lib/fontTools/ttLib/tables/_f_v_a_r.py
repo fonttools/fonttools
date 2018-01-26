@@ -89,7 +89,7 @@ class table__f_v_a_r(DefaultTable.DefaultTable):
             self.instances.append(instance)
             pos += instanceSize
 
-    def toXML(self, writer, ttFont, progress=None):
+    def toXML(self, writer, ttFont):
         for axis in self.axes:
             axis.toXML(writer, ttFont)
         for instance in self.instances:

@@ -38,8 +38,8 @@ class table_C_F_F_(DefaultTable.DefaultTable):
 		# XXX
 		#self.cff[self.cff.fontNames[0]].setGlyphOrder(glyphOrder)
 
-	def toXML(self, writer, otFont, progress=None):
-		self.cff.toXML(writer, progress)
+	def toXML(self, writer, otFont):
+		self.cff.toXML(writer)
 
 	def fromXML(self, name, attrs, content, otFont):
 		if not hasattr(self, "cff"):

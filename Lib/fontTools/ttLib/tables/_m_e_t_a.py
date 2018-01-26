@@ -74,7 +74,7 @@ class table__m_e_t_a(DefaultTable.DefaultTable):
             dataOffset += len(data)
         return bytesjoin([header] + dataMaps + dataBlocks)
 
-    def toXML(self, writer, ttFont, progress=None):
+    def toXML(self, writer, ttFont):
         for tag in sorted(self.data.keys()):
             if tag in ["dlng", "slng"]:
                 writer.begintag("text", tag=tag)
