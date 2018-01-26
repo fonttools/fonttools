@@ -68,6 +68,30 @@ class TTCollection(object):
 			final.write(file.getvalue())
 		file.close()
 
+	def saveXML(self, fileOrPath, newlinestr=None, writeVersion=True, **kwargs):
+
+		from fontTools.misc import xmlWriter
+		writer = xmlWriter.XMLWriter(fileOrPath, newlinestr=newlinestr)
+
+		if writeVersion:
+			from fontTools import version
+			version = ".".join(version.split('.')[:2])
+			writer.begintag("ttCollection", ttLibVersion=version)
+		else:
+			writer.begintag("ttCollection")
+		writer.newline()
+		writer.newline()
+
+		for font in self.fonts:
+			font._saveXML(writer, writeVersion=False, **kwargs)
+			writer.newline()
+
+		writer.endtag("ttCollection")
+		writer.newline()
+
+		writer.close()
+
+
 	def __getitem__(self, item):
 		return self.fonts[item]
 

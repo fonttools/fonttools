@@ -207,9 +207,7 @@ class TTFont(object):
 
 		return writer.reordersTables()
 
-	def saveXML(self, fileOrPath, quiet=None,
-			tables=None, skipTables=None, splitTables=False, disassembleInstructions=True,
-			bitmapGlyphDataFormat='raw', newlinestr=None):
+	def saveXML(self, fileOrPath, newlinestr=None, **kwargs):
 		"""Export the font as TTX (an XML-based text file), or as a series of text
 		files when splitTables is true. In the latter case, the 'fileOrPath'
 		argument should be a path to a directory.
@@ -217,12 +215,17 @@ class TTFont(object):
 		list of tables to dump. The 'skipTables' argument may be a list of tables
 		to skip, but only when the 'tables' argument is false.
 		"""
-		from fontTools import version
-		from fontTools.misc import xmlWriter
 
-		# only write the MAJOR.MINOR version in the 'ttLibVersion' attribute of
-		# TTX files' root element (without PATCH or .dev suffixes)
-		version = ".".join(version.split('.')[:2])
+		from fontTools.misc import xmlWriter
+		writer = xmlWriter.XMLWriter(fileOrPath, newlinestr=newlinestr)
+		self._saveXML(writer, **kwargs)
+		writer.close()
+
+	def _saveXML(self, writer,
+		     writeVersion=True,
+		     quiet=None, tables=None, skipTables=None, splitTables=False,
+		     disassembleInstructions=True, bitmapGlyphDataFormat='raw'):
+
 
 		if quiet is not None:
 			deprecateArgument("quiet", "configure logging instead")
@@ -239,17 +242,19 @@ class TTFont(object):
 						tables.remove(tag)
 		numTables = len(tables)
 
-		writer = xmlWriter.XMLWriter(fileOrPath,
-				newlinestr=newlinestr)
-		writer.begintag("ttFont", sfntVersion=repr(tostr(self.sfntVersion))[1:-1],
-				ttLibVersion=version)
+		if writeVersion:
+			from fontTools import version
+			version = ".".join(version.split('.')[:2])
+			writer.begintag("ttFont", sfntVersion=repr(tostr(self.sfntVersion))[1:-1],
+					ttLibVersion=version)
+		else:
+			writer.begintag("ttFont", sfntVersion=repr(tostr(self.sfntVersion))[1:-1])
 		writer.newline()
 
 		if not splitTables:
 			writer.newline()
 		else:
-			# 'fileOrPath' must now be a path
-			path, ext = os.path.splitext(fileOrPath)
+			path, ext = os.path.splitext(writer.filename)
 			fileNameTemplate = path + ".%s" + ext
 
 		for i in range(numTables):
@@ -257,7 +262,7 @@ class TTFont(object):
 			if splitTables:
 				tablePath = fileNameTemplate % tagToIdentifier(tag)
 				tableWriter = xmlWriter.XMLWriter(tablePath,
-						newlinestr=newlinestr)
+						newlinestr=writer.newlinestr)
 				tableWriter.begintag("ttFont", ttLibVersion=version)
 				tableWriter.newline()
 				tableWriter.newline()
@@ -272,10 +277,6 @@ class TTFont(object):
 				tableWriter.close()
 		writer.endtag("ttFont")
 		writer.newline()
-		# close if 'fileOrPath' is a path; leave it open if it's a file.
-		# The special string "-" means standard output so leave that open too
-		if not hasattr(fileOrPath, "write") and fileOrPath != "-":
-			writer.close()
 
 	def _tableToXML(self, writer, tag, quiet=None):
 		if quiet is not None:

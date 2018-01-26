@@ -18,10 +18,14 @@ class XMLWriter(object):
 		if fileOrPath == '-':
 			fileOrPath = sys.stdout
 		if not hasattr(fileOrPath, "write"):
+			self.filename = fileOrPath
 			self.file = open(fileOrPath, "wb")
+			self._closeStream = True
 		else:
+			self.filename = None
 			# assume writable file object
 			self.file = fileOrPath
+			self._closeStream = False
 
 		# Figure out if writer expects bytes or unicodes
 		try:
@@ -47,7 +51,8 @@ class XMLWriter(object):
 		self.newline()
 
 	def close(self):
-		self.file.close()
+		if self._closeStream:
+			self.file.close()
 
 	def write(self, string, indent=True):
 		"""Writes text."""
