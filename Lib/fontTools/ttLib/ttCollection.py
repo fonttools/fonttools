@@ -64,6 +64,7 @@ class TTCollection(object):
 		for font in self.fonts:
 			offsets.append(file.tell())
 			font._save(file)
+			file.seek(0,2)
 
 		file.seek(offsets_offset)
 		file.write(struct.pack(">%dL" % len(self.fonts), *offsets))
