@@ -1918,13 +1918,14 @@ def remapComponentsFast(self, indices):
 
 @_add_method(ttLib.getTableClass('glyf'))
 def closure_glyphs(self, s):
+    glyphSet = self.glyphs
     decompose = s.glyphs
     while decompose:
         components = set()
         for g in decompose:
-            if g not in self.glyphs:
+            if g not in glyphSet:
                 continue
-            gl = self.glyphs[g]
+            gl = glyphSet[g]
             for c in gl.getComponentNames(self):
                 components.add(c)
         components -= s.glyphs
@@ -1959,6 +1960,49 @@ def prune_post_subset(self, options):
     for v in self.glyphs.values():
         v.trim(remove_hinting=remove_hinting)
     return True
+
+
+class _ClosureGlyphsT2Decompiler(psCharStrings.SimpleT2Decompiler):
+
+    def __init__(self, components, localSubrs, globalSubrs):
+        psCharStrings.SimpleT2Decompiler.__init__(self,
+                                                  localSubrs,
+                                                  globalSubrs)
+        self.components = components
+
+    def op_endchar(self, index):
+        args = self.popall()
+        if len(args) >= 4:
+            from fontTools.encodings.StandardEncoding import StandardEncoding
+            # endchar can do seac accent bulding; The T2 spec says it's deprecated,
+            # but recent software that shall remain nameless does output it.
+            adx, ady, bchar, achar = args[-4:]
+            baseGlyph = StandardEncoding[bchar]
+            accentGlyph = StandardEncoding[achar]
+            self.components.add(baseGlyph)
+            self.components.add(accentGlyph)
+
+@_add_method(ttLib.getTableClass('CFF '))
+def closure_glyphs(self, s):
+    cff = self.cff
+    assert len(cff) == 1
+    font = cff[cff.keys()[0]]
+    glyphSet = font.CharStrings
+
+    decompose = s.glyphs
+    while decompose:
+        components = set()
+        for g in decompose:
+            if g not in glyphSet:
+                continue
+            gl = glyphSet[g]
+
+            subrs = getattr(gl.private, "Subrs", [])
+            decompiler = _ClosureGlyphsT2Decompiler(components, subrs, gl.globalSubrs)
+            decompiler.execute(gl)
+        components -= s.glyphs
+        s.glyphs.update(components)
+        decompose = components
 
 @_add_method(ttLib.getTableClass('CFF '))
 def prune_pre_subset(self, font, options):
@@ -2859,6 +2903,18 @@ class Subsetter(object):
                          len(self.glyphs))
                 log.glyphs(self.glyphs, font=font)
         self.glyphs_glyfed = frozenset(self.glyphs)
+
+        if 'CFF ' in font:
+            with timer("close glyph list over 'CFF '"):
+                log.info("Closing glyph list over 'CFF ': %d glyphs before",
+                         len(self.glyphs))
+                log.glyphs(self.glyphs, font=font)
+                font['CFF '].closure_glyphs(self)
+                self.glyphs.intersection_update(realGlyphs)
+                log.info("Closed glyph list over 'CFF ': %d glyphs after",
+                         len(self.glyphs))
+                log.glyphs(self.glyphs, font=font)
+        self.glyphs_cffed = frozenset(self.glyphs)
 
         self.glyphs_all = frozenset(self.glyphs)
 
