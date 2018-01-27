@@ -2327,7 +2327,7 @@ class TopDict(BaseDict):
 	def recalcFontBBox(self):
 		fontBBox = None
 		for charString in self.CharStrings.values():
-			bounds = charString.calcBounds()
+			bounds = charString.calcBounds(self.CharStrings)
 			if bounds is not None:
 				if fontBBox is not None:
 					fontBBox = unionRect(fontBBox, bounds)

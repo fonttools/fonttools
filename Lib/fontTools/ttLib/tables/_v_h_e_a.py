@@ -63,9 +63,10 @@ class table__v_h_e_a(DefaultTable.DefaultTable):
 				boundsHeightDict[name] = g.yMax - g.yMin
 		elif 'CFF ' in ttFont:
 			topDict = ttFont['CFF '].cff.topDictIndex[0]
+			charStrings = topDict.CharStrings
 			for name in ttFont.getGlyphOrder():
-				cs = topDict.CharStrings[name]
-				bounds = cs.calcBounds()
+				cs = charStrings[name]
+				bounds = cs.calcBounds(charStrings)
 				if bounds is not None:
 					boundsHeightDict[name] = int(
 						math.ceil(bounds[3]) - math.floor(bounds[1]))

@@ -979,8 +979,8 @@ class T2CharString(object):
 		extractor.execute(self)
 		self.width = extractor.width
 
-	def calcBounds(self):
-		boundsPen = BoundsPen(None)
+	def calcBounds(self, glyphSet):
+		boundsPen = BoundsPen(glyphSet)
 		self.draw(boundsPen)
 		return boundsPen.bounds
 

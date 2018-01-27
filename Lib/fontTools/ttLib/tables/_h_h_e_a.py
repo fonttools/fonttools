@@ -64,9 +64,10 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 				boundsWidthDict[name] = g.xMax - g.xMin
 		elif 'CFF ' in ttFont:
 			topDict = ttFont['CFF '].cff.topDictIndex[0]
+			charStrings = topDict.CharStrings
 			for name in ttFont.getGlyphOrder():
-				cs = topDict.CharStrings[name]
-				bounds = cs.calcBounds()
+				cs = charStrings[name]
+				bounds = cs.calcBounds(charStrings)
 				if bounds is not None:
 					boundsWidthDict[name] = int(
 						math.ceil(bounds[2]) - math.floor(bounds[0]))
