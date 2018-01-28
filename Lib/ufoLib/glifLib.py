@@ -1050,6 +1050,9 @@ def buildOutlineFormat1(glyphObject, pen, outline):
 def _buildAnchorFormat1(point):
 	if point.get("type") != "move":
 		return None
+	name = point.get("name")
+	if name is None:
+		return None
 	x = point.get("x")
 	y = point.get("y")
 	if x is None:
@@ -1058,7 +1061,6 @@ def _buildAnchorFormat1(point):
 		raise GlifLibError("Required y attribute is missing in point element.")
 	x = _number(x)
 	y = _number(y)
-	name = point.get("name")
 	anchor = dict(x=x, y=y, name=name)
 	return anchor
 
