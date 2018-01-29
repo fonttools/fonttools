@@ -21,8 +21,10 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups):
     for first in firstReferencedGroups:
         # Make a list of existing group names.
         existingGroupNames = list(groups.keys()) + list(firstRenamedGroups.keys())
-        # Add the prefix to the name.
-        newName = "public.kern1." + first
+        # Remove the old prefix from the name
+        newName = first.replace("@MMK_L_", "")
+        # Add the new prefix to the name.
+        newName = "public.kern1." + newName
         # Make a unique group name.
         newName = makeUniqueGroupName(newName, existingGroupNames)
         # Store for use later.
@@ -31,8 +33,10 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups):
     for second in secondReferencedGroups:
         # Make a list of existing group names.
         existingGroupNames = list(groups.keys()) + list(secondRenamedGroups.keys())
-        # Add the prefix to the name.
-        newName = "public.kern2." + second
+        # Remove the old prefix from the name
+        newName = second.replace("@MMK_R_", "")
+        # Add the new prefix to the name.
+        newName = "public.kern2." + newName
         # Make a unique group name.
         newName = makeUniqueGroupName(newName, existingGroupNames)
         # Store for use later.
