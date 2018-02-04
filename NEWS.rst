@@ -1,3 +1,34 @@
+- [subset] Support subsetting ``endchar`` acting as ``seac``-like components
+  in ``CFF`` (fixes #1162).
+- [feaLib] Allow to build from pre-parsed ``ast.FeatureFile`` object.
+  Added ``tables`` argument to only build some tables instead of all (#1159,
+  #1163).
+- [textTools] Replaced ``safeEval`` with ``ast.literal_eval`` (#1139).
+- [feaLib] Added option to the parser to not resolve ``include`` statements
+  (#1154).
+- [ttLib] Added new ``ttCollection`` module to read/write TrueType and
+  OpenType Collections. Exports a ``TTCollection`` class with a ``fonts``
+  attribute containing a list of ``TTFont`` instances, the methods ``save``
+  and ``saveXML``, plus some list-like methods. The ``importXML`` method is
+  not implemented yet (#17).
+- [unicodeadata] Added ``ot_tag_to_script`` function that converts from
+  OpenType script tag to Unicode script code.
+- Added new ``designspaceLib`` subpackage, originally from Erik Van Blokland's
+  ``designSpaceDocument``: https://github.com/LettError/designSpaceDocument
+  NOTE: this is not yet used internally by varLib, and the API may be subject
+  to changes (#911, #1110, LettError/designSpaceDocument#28).
+- Added new FontTools icon images (8ee7c32).
+- [unicodedata] Added ``script_horizontal_direction`` function that returns
+  either "LTR" or "RTL" given a unicode script code.
+- [otConverters] Don't write descriptive name string as XML comment if the
+  NameID value is 0 (== NULL) (#1151, #1152).
+- [unicodedata] Add ``ot_tags_from_script`` function to get the list of
+  OpenType script tags associated with unicode script code (#1150).
+- [feaLib] Don't error when "enumerated" kern pairs conflict with preceding
+  single pairs; emit warning and chose the first value (#1147, #1148).
+- [loggingTools] In ``CapturingLogHandler.assertRegex`` method, match the
+  fully formatted log message.
+- [sbix] Fixed TypeError when concatenating str and bytes (#1154).
 - [bezierTools] Implemented cusp support and removed ``approximate_fallback``
   arg in ``calcQuadraticArcLength``. Added ``calcCubicArcLength`` (#1142).
 
