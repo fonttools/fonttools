@@ -1,3 +1,6 @@
+3.22.0 (released 2018-02-04)
+----------------------------
+
 - [subset] Support subsetting ``endchar`` acting as ``seac``-like components
   in ``CFF`` (fixes #1162).
 - [feaLib] Allow to build from pre-parsed ``ast.FeatureFile`` object.
