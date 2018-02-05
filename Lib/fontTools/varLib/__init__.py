@@ -169,9 +169,11 @@ def _add_avar(font, axes):
 
 def _add_stat(font, axes):
 
+	if "STAT" in font:
+            return
+
 	nameTable = font['name']
 
-	assert "STAT" not in font
 	STAT = font["STAT"] = newTable('STAT')
 	stat = STAT.table = ot.STAT()
 	stat.Version = 0x00010000
