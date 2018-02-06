@@ -1249,7 +1249,8 @@ class Parser(object):
 
     def parse_featureNames_(self, tag):
         assert self.cur_token_ == "featureNames", self.cur_token_
-        block = self.ast.NestedBlock(self.cur_token_location_, self.cur_token_)
+        block = self.ast.NestedBlock(self.cur_token_location_, tag,
+                                     self.cur_token_)
         self.expect_symbol_("{")
         for symtab in self.symbol_tables_:
             symtab.enter_scope()
@@ -1278,7 +1279,8 @@ class Parser(object):
 
     def parse_cvParameters_(self, tag):
         assert self.cur_token_ == "cvParameters", self.cur_token_
-        block = self.ast.NestedBlock(self.cur_token_location_, self.cur_token_)
+        block = self.ast.NestedBlock(self.cur_token_location_, tag,
+                                     self.cur_token_)
         self.expect_symbol_("{")
         for symtab in self.symbol_tables_:
             symtab.enter_scope()
@@ -1312,7 +1314,7 @@ class Parser(object):
 
     def parse_cvNameIDs_(self, tag, block_name):
         assert self.cur_token_ == block_name, self.cur_token_
-        block = self.ast.NestedBlock(self.cur_token_location_, block_name)
+        block = self.ast.NestedBlock(self.cur_token_location_, tag, block_name)
         self.expect_symbol_("{")
         for symtab in self.symbol_tables_:
             symtab.enter_scope()

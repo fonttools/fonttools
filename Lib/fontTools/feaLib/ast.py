@@ -230,9 +230,15 @@ class FeatureBlock(Block):
 
 
 class NestedBlock(Block):
-    def __init__(self, block_name, location=None):
+    def __init__(self, tag, block_name, location=None):
         Block.__init__(self, location)
+        self.tag = tag
         self.block_name = block_name
+
+    def build(self, builder):
+        Block.build(self, builder)
+        if self.block_name == "ParamUILabelNameID":
+            builder.add_to_cv_num_named_params(self.tag)
 
     def asFea(self, indent=""):
         res = "{}{} {{\n".format(indent, self.block_name)
@@ -1160,6 +1166,14 @@ class CVParametersNameStatement(NameRecord):
                             platEncID, langID, string)
         self.block_name = block_name
 
+    def build(self, builder):
+        item = ""
+        if self.block_name == "ParamUILabelNameID":
+            item = "_{}".format(builder.cv_num_named_params_.get(self.nameID, 0))
+        builder.add_cv_parameter(self.nameID)
+        self.nameID = '{}.{}{}'.format(self.nameID, self.block_name, item)
+        NameRecord.build(self, builder)
+
 
 class CharacterStatement(Statement):
     """
@@ -1172,6 +1186,9 @@ class CharacterStatement(Statement):
         Statement.__init__(self, location)
         self.character = character
         self.tag = tag
+
+    def build(self, builder):
+        builder.add_cv_character(self.character, self.tag)
 
 
 class BaseAxis(Statement):

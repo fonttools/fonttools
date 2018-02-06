@@ -9,6 +9,7 @@ from fontTools.feaLib.ast import FeatureFile
 from fontTools.otlLib import builder as otl
 from fontTools.ttLib import newTable, getTableModule
 from fontTools.ttLib.tables import otBase, otTables
+from collections import defaultdict
 import itertools
 import logging
 
@@ -72,6 +73,11 @@ class Builder(object):
         # for 'featureNames'
         self.featureNames_ = set()
         self.featureNames_ids_ = {}
+        # for 'cvParameters'
+        self.cv_parameters_ = set()
+        self.cv_parameters_ids_ = {}
+        self.cv_num_named_params_ = {}
+        self.cv_characters_ = defaultdict(list)
         # for feature 'size'
         self.size_parameters_ = None
         # for table 'head'
@@ -287,6 +293,20 @@ class Builder(object):
             params = otTables.FeatureParamsStylisticSet()
             params.Version = 0
             params.UINameID = self.featureNames_ids_[tag]
+        elif tag in self.cv_parameters_:
+            params = otTables.FeatureParamsCharacterVariants()
+            params.Format = 0
+            params.FeatUILabelNameID = self.cv_parameters_ids_.get(
+                '{}.{}'.format(tag, 'FeatUILabelNameID'), 0)
+            params.FeatUITooltipTextNameID = self.cv_parameters_ids_.get(
+                '{}.{}'.format(tag, 'FeatUITooltipTextNameID'), 0)
+            params.SampleTextNameID = self.cv_parameters_ids_.get(
+                '{}.{}'.format(tag, 'SampleTextNameID'), 0)
+            params.NumNamedParameters = self.cv_num_named_params_.get(tag, 0)
+            params.FirstParamUILabelNameID = self.cv_parameters_ids_.get(
+                '{}.{}'.format(tag, 'ParamUILabelNameID_0'), 0)
+            params.CharCount = len(self.cv_characters_[tag])
+            params.Character = self.cv_characters_[tag]
         return params
 
     def build_name(self):
@@ -298,13 +318,20 @@ class Builder(object):
             table.names = []
         for name in self.names_:
             nameID, platformID, platEncID, langID, string = name
+            # For featureNames block, nameID is 'feature tag'
+            # For cvParameters blocks, nameID is 'feature tag.block name'
             if not isinstance(nameID, int):
-                # A featureNames name and nameID is actually the tag
                 tag = nameID
-                if tag not in self.featureNames_ids_:
-                    self.featureNames_ids_[tag] = self.get_user_name_id(table)
-                    assert self.featureNames_ids_[tag] is not None
-                nameID = self.featureNames_ids_[tag]
+                if tag in self.featureNames_:
+                    if tag not in self.featureNames_ids_:
+                        self.featureNames_ids_[tag] = self.get_user_name_id(table)
+                        assert self.featureNames_ids_[tag] is not None
+                    nameID = self.featureNames_ids_[tag]
+                elif tag.split('.')[0] in self.cv_parameters_:
+                    if tag not in self.cv_parameters_ids_:
+                        self.cv_parameters_ids_[tag] = self.get_user_name_id(table)
+                        assert self.cv_parameters_ids_[tag] is not None
+                    nameID = self.cv_parameters_ids_[tag]
             table.setName(string, nameID, platformID, platEncID, langID)
 
     def build_OS_2(self):
@@ -806,6 +833,20 @@ class Builder(object):
 
     def add_featureName(self, tag):
         self.featureNames_.add(tag)
+
+    def add_cv_parameter(self, tag):
+        self.cv_parameters_.add(tag)
+
+    def add_to_cv_num_named_params(self, tag):
+        """Adds new items to self.cv_num_named_params_
+        or increments the count of existing items."""
+        if tag in self.cv_num_named_params_:
+            self.cv_num_named_params_[tag] += 1
+        else:
+            self.cv_num_named_params_[tag] = 1
+
+    def add_cv_character(self, character, tag):
+        self.cv_characters_[tag].append(character)
 
     def set_base_axis(self, bases, scripts, vertical):
         if vertical:
