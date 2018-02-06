@@ -1243,7 +1243,7 @@ class Parser(object):
 
     def parse_featureNames_(self, tag):
         assert self.cur_token_ == "featureNames", self.cur_token_
-        block = self.ast.FeatureNamesBlock(self.cur_token_location_)
+        block = self.ast.NestedBlock(self.cur_token_location_, self.cur_token_)
         self.expect_symbol_("{")
         for symtab in self.symbol_tables_:
             symtab.enter_scope()

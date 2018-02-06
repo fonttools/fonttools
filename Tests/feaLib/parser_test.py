@@ -237,7 +237,7 @@ class ParserTest(unittest.TestCase):
         [feature] = self.parse(
             "feature ss01 { featureNames { # Comment\n }; } ss01;").statements
         [featureNames] = feature.statements
-        self.assertIsInstance(featureNames, ast.FeatureNamesBlock)
+        self.assertIsInstance(featureNames, ast.NestedBlock)
         [comment] = featureNames.statements
         self.assertIsInstance(comment, ast.Comment)
         self.assertEqual(comment.text, "# Comment")
@@ -246,7 +246,7 @@ class ParserTest(unittest.TestCase):
         [feature] = self.parse(
             "feature ss01 { featureNames { ;;; }; } ss01;").statements
         [featureNames] = feature.statements
-        self.assertIsInstance(featureNames, ast.FeatureNamesBlock)
+        self.assertIsInstance(featureNames, ast.NestedBlock)
         self.assertEqual(featureNames.statements, [])
 
     def test_FontRevision(self):

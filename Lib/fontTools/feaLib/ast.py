@@ -229,14 +229,15 @@ class FeatureBlock(Block):
         return res
 
 
-class FeatureNamesBlock(Block):
-    def __init__(self, location=None):
+class NestedBlock(Block):
+    def __init__(self, block_name, location=None):
         Block.__init__(self, location)
+        self.block_name = block_name
 
     def asFea(self, indent=""):
-        res = indent + "featureNames {\n"
+        res = "{}{} {{\n".format(indent, self.block_name)
         res += Block.asFea(self, indent=indent)
-        res += indent + "};\n"
+        res += "{}}};\n".format(indent)
         return res
 
 
