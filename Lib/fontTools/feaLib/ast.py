@@ -1153,6 +1153,19 @@ class SizeParameters(Statement):
         return res + ";"
 
 
+class CharacterStatement(Statement):
+    """
+    Statement used in cvParameters blocks of Character Variant features (cvXX).
+    The Unicode value may be written with either decimal or hexadecimal
+    notation. The value must be preceded by '0x' if it is a hexadecimal value.
+    The largest Unicode value allowed is 0xFFFFFF.
+    """
+    def __init__(self, location, character, tag):
+        Statement.__init__(self, location)
+        self.character = character
+        self.tag = tag
+
+
 class BaseAxis(Statement):
     def __init__(self, bases, scripts, vertical, location=None):
         Statement.__init__(self, location)

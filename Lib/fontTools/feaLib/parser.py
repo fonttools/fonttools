@@ -1310,6 +1310,16 @@ class Parser(object):
         self.expect_symbol_(";")
         return block
 
+    def parse_cvCharacter_(self, tag):
+        assert self.cur_token_ == "Character", self.cur_token_
+        location, character = self.cur_token_location_, self.expect_decimal_or_hexadecimal_()
+        self.expect_symbol_(";")
+        if not (0xFFFFFF >= character >= 0):
+            raise FeatureLibError("Character value must be between "
+                                  "{:#x} and {:#x}".format(0, 0xFFFFFF),
+                                  location)
+        return self.ast.CharacterStatement(location, character, tag)
+
     def parse_FontRevision_(self):
         assert self.cur_token_ == "FontRevision", self.cur_token_
         location, version = self.cur_token_location_, self.expect_float_()
@@ -1529,6 +1539,13 @@ class Parser(object):
         else:
             raise FeatureLibError("Expected an integer or floating-point number",
                                   self.cur_token_location_)
+
+    def expect_decimal_or_hexadecimal_(self):
+        self.advance_lexer_()
+        if self.cur_token_type_ is Lexer.NUMBER:
+            return self.cur_token_
+        raise FeatureLibError("Expected a decimal or hexadecimal number",
+                              self.cur_token_location_)
 
     def expect_string_(self):
         self.advance_lexer_()
