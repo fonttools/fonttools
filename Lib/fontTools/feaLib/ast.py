@@ -1153,6 +1153,14 @@ class SizeParameters(Statement):
         return res + ";"
 
 
+class CVParametersNameStatement(NameRecord):
+    def __init__(self, location, nameID, platformID,
+                 platEncID, langID, string, block_name):
+        NameRecord.__init__(self, location, nameID, platformID,
+                            platEncID, langID, string)
+        self.block_name = block_name
+
+
 class CharacterStatement(Statement):
     """
     Statement used in cvParameters blocks of Character Variant features (cvXX).

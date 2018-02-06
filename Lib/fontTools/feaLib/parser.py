@@ -1310,6 +1310,35 @@ class Parser(object):
         self.expect_symbol_(";")
         return block
 
+    def parse_cvNameIDs_(self, tag, block_name):
+        assert self.cur_token_ == block_name, self.cur_token_
+        block = self.ast.NestedBlock(self.cur_token_location_, block_name)
+        self.expect_symbol_("{")
+        for symtab in self.symbol_tables_:
+            symtab.enter_scope()
+        while self.next_token_ != "}" or self.cur_comments_:
+            self.advance_lexer_(comments=True)
+            if self.cur_token_type_ is Lexer.COMMENT:
+                block.statements.append(self.ast.Comment(
+                    self.cur_token_location_, self.cur_token_))
+            elif self.is_cur_keyword_("name"):
+                location = self.cur_token_location_
+                platformID, platEncID, langID, string = self.parse_name_()
+                block.statements.append(
+                    self.ast.CVParametersNameStatement(
+                        location, tag, platformID, platEncID, langID, string,
+                        block_name))
+            elif self.cur_token_ == ";":
+                continue
+            else:
+                raise FeatureLibError('Expected "name"',
+                                      self.cur_token_location_)
+        self.expect_symbol_("}")
+        for symtab in self.symbol_tables_:
+            symtab.exit_scope()
+        self.expect_symbol_(";")
+        return block
+
     def parse_cvCharacter_(self, tag):
         assert self.cur_token_ == "Character", self.cur_token_
         location, character = self.cur_token_location_, self.expect_decimal_or_hexadecimal_()
