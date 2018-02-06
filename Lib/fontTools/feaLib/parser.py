@@ -1276,6 +1276,40 @@ class Parser(object):
         self.expect_symbol_(";")
         return block
 
+    def parse_cvParameters_(self, tag):
+        assert self.cur_token_ == "cvParameters", self.cur_token_
+        block = self.ast.NestedBlock(self.cur_token_location_, self.cur_token_)
+        self.expect_symbol_("{")
+        for symtab in self.symbol_tables_:
+            symtab.enter_scope()
+
+        statements = block.statements
+        while self.next_token_ != "}" or self.cur_comments_:
+            self.advance_lexer_(comments=True)
+            if self.cur_token_type_ is Lexer.COMMENT:
+                statements.append(self.ast.Comment(self.cur_token_location_,
+                                                   self.cur_token_))
+            elif self.is_cur_keyword_({"FeatUILabelNameID",
+                                       "FeatUITooltipTextNameID",
+                                       "SampleTextNameID",
+                                       "ParamUILabelNameID"}):
+                statements.append(self.parse_cvNameIDs_(tag, self.cur_token_))
+            elif self.is_cur_keyword_("Character"):
+                statements.append(self.parse_cvCharacter_(tag))
+            elif self.cur_token_ == ";":
+                continue
+            else:
+                raise FeatureLibError(
+                    "Expected statement: got {} {}".format(
+                        self.cur_token_type_, self.cur_token_),
+                    self.cur_token_location_)
+
+        self.expect_symbol_("}")
+        for symtab in self.symbol_tables_:
+            symtab.exit_scope()
+        self.expect_symbol_(";")
+        return block
+
     def parse_FontRevision_(self):
         assert self.cur_token_ == "FontRevision", self.cur_token_
         location, version = self.cur_token_location_, self.expect_float_()
