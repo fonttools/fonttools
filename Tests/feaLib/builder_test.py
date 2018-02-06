@@ -61,7 +61,7 @@ class BuilderTest(unittest.TestCase):
         spec4h1 spec4h2 spec5d1 spec5d2 spec5fi1 spec5fi2 spec5fi3 spec5fi4
         spec5f_ii_1 spec5f_ii_2 spec5f_ii_3 spec5f_ii_4
         spec5h1 spec6b_ii spec6d2 spec6e spec6f
-        spec6h_ii spec6h_iii_1 spec6h_iii_3d spec8a spec8b spec8c
+        spec6h_ii spec6h_iii_1 spec6h_iii_3d spec8a spec8b spec8c spec8d
         spec9a spec9b spec9c1 spec9c2 spec9c3 spec9d spec9e spec9f spec9g
         spec10
         bug453 bug457 bug463 bug501 bug502 bug504 bug505 bug506 bug509
