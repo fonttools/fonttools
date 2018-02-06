@@ -1120,7 +1120,7 @@ class NameRecord(Statement):
 class FeatureNameStatement(NameRecord):
     def build(self, builder):
         NameRecord.build(self, builder)
-        builder.add_featureName(self.location, self.nameID)
+        builder.add_featureName(self.nameID)
 
     def asFea(self, indent=""):
         if self.nameID == "size":

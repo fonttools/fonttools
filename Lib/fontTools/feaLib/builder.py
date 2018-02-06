@@ -70,7 +70,7 @@ class Builder(object):
         self.aalt_location_ = None
         self.aalt_alternates_ = {}
         # for 'featureNames'
-        self.featureNames_ = []
+        self.featureNames_ = set()
         self.featureNames_ids_ = {}
         # for feature 'size'
         self.size_parameters_ = None
@@ -804,8 +804,8 @@ class Builder(object):
                 location)
         self.aalt_features_.append((location, featureName))
 
-    def add_featureName(self, location, tag):
-        self.featureNames_.append(tag)
+    def add_featureName(self, tag):
+        self.featureNames_.add(tag)
 
     def set_base_axis(self, bases, scripts, vertical):
         if vertical:
