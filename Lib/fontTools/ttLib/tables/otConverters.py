@@ -1240,7 +1240,6 @@ class STXHeader(BaseConverter):
 					actionIndex.setdefault(
 						suffix, suffixIndex)
 				result += a
-		assert len(result) % self.tableClass.staticSize == 0
 		return (result, actionIndex)
 
 	def _compileLigComponents(self, table, font):
