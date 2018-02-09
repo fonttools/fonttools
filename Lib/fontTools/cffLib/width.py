@@ -90,8 +90,10 @@ def optimizeWidthsBruteforce(widths):
 
 
 def optimizeWidths(widths):
-	"""Given a list of glyph widths, or dictionary mapping glyph width to number of glyphs having that,
-	returns a tuple of best CFF default and nominal glyph widths."""
+	"""Given a list of glyph widths, or dictionary mapping glyph width to number of
+	glyphs having that, returns a tuple of best CFF default and nominal glyph widths.
+
+	This algorithm is linear in UPEM+numGlyphs."""
 
 	if not hasattr(widths, 'items'):
 		d = defaultdict(int)
@@ -110,13 +112,13 @@ def optimizeWidths(widths):
 	cumMaxD = cumSum(widths, op=max, decreasing=True)
 
 	# Cost per nominal choice, without default consideration.
-	nomnCostU = missingdict(lambda x: cumFrqU[x] + cumFrqU[x-108] + cumFrqU[x-1131]*3)
-	nomnCostD = missingdict(lambda x: cumFrqD[x] + cumFrqD[x+108] + cumFrqD[x+1131]*3)
-	nomnCost  = missingdict(lambda x: nomnCostU[x] + nomnCostD[x])
+	nomnCostU = missingdict(lambda x: cumFrqU[x] + cumFrqU[x-108] + cumFrqU[x-1132]*3)
+	nomnCostD = missingdict(lambda x: cumFrqD[x] + cumFrqD[x+108] + cumFrqD[x+1132]*3)
+	nomnCost  = missingdict(lambda x: nomnCostU[x] + nomnCostD[x] - widths[x])
 
 	# Cost-saving per nominal choice, by best default choice.
-	dfltCostU = missingdict(lambda x: max(cumMaxU[x], cumMaxU[x-108]*2, cumMaxU[x-1131]*5))
-	dfltCostD = missingdict(lambda x: max(cumMaxD[x], cumMaxD[x+108]*2, cumMaxD[x+1131]*5))
+	dfltCostU = missingdict(lambda x: max(cumMaxU[x], cumMaxU[x-108]*2, cumMaxU[x-1132]*5))
+	dfltCostD = missingdict(lambda x: max(cumMaxD[x], cumMaxD[x+108]*2, cumMaxD[x+1132]*5))
 	dfltCost  = missingdict(lambda x: max(dfltCostU[x], dfltCostD[x]))
 
 	# Combined cost per nominal choice.
