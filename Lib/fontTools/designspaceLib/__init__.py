@@ -124,8 +124,6 @@ class RuleDescriptor(SimpleDescriptor):
     use axis names rather than tags - then we can evaluate the rule without having to look up the axes.
     remove the subs from the rule.
     remove 'enabled' attr form rule
-
-
     """
     _attrs = ['name', 'conditions', 'subs']   # what do we need here
     def __init__(self):
