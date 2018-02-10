@@ -7,7 +7,7 @@ from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, getTableClass
 from collections import defaultdict
 from operator import add
-from functools import partial
+from functools import partial, reduce
 
 
 class missingdict(dict):
