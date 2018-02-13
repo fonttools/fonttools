@@ -223,9 +223,9 @@ def ttList(input, output, options):
 	reader = ttf.reader
 	tags = sorted(reader.keys())
 	print('Listing table info for "%s":' % input)
-	format = "    %4s  %10s  %7s  %7s"
-	print(format % ("tag ", "  checksum", " length", " offset"))
-	print(format % ("----", "----------", "-------", "-------"))
+	format = "    %4s  %10s  %8s  %8s"
+	print(format % ("tag ", "  checksum", "  length", "  offset"))
+	print(format % ("----", "----------", "--------", "--------"))
 	for tag in tags:
 		entry = reader.tables[tag]
 		if ttf.flavor == "woff2":
