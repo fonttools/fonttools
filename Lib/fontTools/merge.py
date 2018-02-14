@@ -459,12 +459,22 @@ def mergeScripts(lst):
 
 	if len(lst) == 1:
 		return lst[0]
-	# TODO Support merging LangSysRecords
-	assert all(not s.LangSysRecord for s in lst)
+	langSyses = {}
+	for sr in lst:
+		for lsr in sr.LangSysRecord:
+			if lsr.LangSysTag not in langSyses:
+				langSyses[lsr.LangSysTag] = []
+			langSyses[lsr.LangSysTag].append(lsr.LangSys)
+	lsrecords = []
+	for tag, langSys_list in sorted(langSyses.items()):
+		lsr = otTables.LangSysRecord()
+		lsr.LangSys = mergeLangSyses(langSys_list)
+		lsr.LangSysTag = tag
+		lsrecords.append(lsr)
 
 	self = otTables.Script()
-	self.LangSysRecord = []
-	self.LangSysCount = 0
+	self.LangSysRecord = lsrecords
+	self.LangSysCount = len(lsrecords)
 	self.DefaultLangSys = mergeLangSyses([s.DefaultLangSys for s in lst if s.DefaultLangSys])
 	return self
 
