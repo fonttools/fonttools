@@ -118,8 +118,6 @@ UFO instances
 Python API
 **********
 
-.. _source-descriptor-object:
-
 SourceDescriptor object
 =======================
 
@@ -131,6 +129,14 @@ Attributes
 -  ``path``: string. Absolute path to the source file, calculated from
    the document path and the string in the filename attr. MutatorMath +
    Varlib.
+-  ``font``: Any Python object. Optional. Points to a representation of
+   this source font that is loaded in memory, as a Python object
+   (e.g. a ``defcon.Font`` or a ``fontTools.ttFont.TTFont``). The default
+   document reader will not fill-in this attribute, and the default
+   writer will not use this attribute. It is up to the user of
+   ``designspaceLib`` to either load the resource identified by ``filename``
+   and store it in this field, or write the contents of this field to the
+   disk and make ```filename`` point to that.
 -  ``name``: string. Optional. Unique identifier name for this source,
    if there is one or more ``instance.glyph`` elements in the document.
    MutatorMath.
@@ -164,6 +170,7 @@ Attributes
     s1 = SourceDescriptor()
     s1.path = masterPath1
     s1.name = "master.ufo1"
+    s1.font = defcon.Font("master.ufo1")
     s1.copyLib = True
     s1.copyInfo = True
     s1.copyFeatures = True
@@ -221,6 +228,7 @@ Attributes
    calculated. MutatorMath.
 -  ``info``: bool. Indicated if this instance needs the interpolating
    font.info calculated.
+-  ``lib``: dict. Custom data associated with this instance.
 
 Methods
 -------
@@ -258,6 +266,7 @@ Example
     glyphData['instanceLocation'] = dict(width=100, weight=120)
     i2.glyphs['arrow'] = glyphData
     i2.glyphs['arrow2'] = dict(mute=False)
+    i2.lib['com.coolDesignspaceApp.specimenText'] = 'Hamburgerwhatever'
     doc.addInstance(i2)
 
 .. _axis-descriptor-object:
@@ -364,6 +373,11 @@ Document xml structure
             <!-- define instances here -->
             <instance../>
         </instances>
+        <lib>
+            <dict>
+                <!-- store custom data here -->
+            </dict>
+        </lib>
     </designspace>
 
 .. 1-axis-element:
@@ -530,11 +544,30 @@ Attributes
 3.1 lib element
 ===============
 
--  ``<lib copy="1" />``
--  Child element of ``source``
--  Defines if the instances can inherit the data in the lib of this
-   source.
--  MutatorMath only
+There are two meanings for the ``lib`` element:
+
+1. Source lib
+    -  Example: ``<lib copy="1" />``
+    -  Child element of ``source``
+    -  Defines if the instances can inherit the data in the lib of this
+       source.
+    -  MutatorMath only
+
+2. Document and instance lib
+    - Example:
+
+      .. code:: python
+
+        <lib>
+            <dict>
+                <key>...</key>
+                <string>The contents use the PLIST format.</string>
+            </dict>
+        </lib>
+
+    - Child element of ``designspace`` and ``instance``
+    - Contains arbitrary data about the whole document or about a specific
+      instance.
 
 .. 32-info-element:
 
@@ -660,10 +693,16 @@ Example for varlib
     <instance familyname="InstanceFamilyName" filename="instances/instanceTest2.ufo" name="instance.ufo2" postscriptfontname="InstancePostscriptName" stylemapfamilyname="InstanceStyleMapFamilyName" stylemapstylename="InstanceStyleMapStyleName" stylename="InstanceStyleName">
     <location>
         <dimension name="width" xvalue="400" yvalue="300" />
-       <dimension name="weight" xvalue="66" />
+        <dimension name="weight" xvalue="66" />
     </location>
     <kerning />
     <info />
+    <lib>
+        <dict>
+            <key>com.coolDesignspaceApp.specimenText</key>
+            <string>Hamburgerwhatever</string>
+        </dict>
+    </lib>
     </instance>
 
 .. 41-glyphs-element:
@@ -783,6 +822,12 @@ Example
     </glyphs>
     <kerning />
     <info />
+    <lib>
+        <dict>
+            <key>com.coolDesignspaceApp.specimenText</key>
+            <string>Hamburgerwhatever</string>
+        </dict>
+    </lib>
     </instance>
 
 .. 50-rules-element:

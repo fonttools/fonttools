@@ -119,9 +119,24 @@ class SourceDescriptor(SimpleDescriptor):
               'familyName', 'styleName']
 
     def __init__(self):
-        self.filename = None    # the original path as found in the document
-        self.path = None        # the absolute path, calculated from filename
-        self.font = None        # optional: an instance of defcon.Font
+        self.filename = None
+        """The original path as found in the document."""
+
+        self.path = None
+        """The absolute path, calculated from filename."""
+
+        self.font = None
+        """Any Python object. Optional. Points to a representation of this
+        source font that is loaded in memory, as a Python object (e.g. a
+        ``defcon.Font`` or a ``fontTools.ttFont.TTFont``).
+
+        The default document reader will not fill-in this attribute, and the
+        default writer will not use this attribute. It is up to the user of
+        ``designspaceLib`` to either load the resource identified by
+        ``filename`` and store it in this field, or write the contents of
+        this field to the disk and make ```filename`` point to that.
+        """
+
         self.name = None
         self.location = None
         self.copyLib = False
@@ -236,7 +251,9 @@ class InstanceDescriptor(SimpleDescriptor):
         self.mutedGlyphNames = []
         self.kerning = True
         self.info = True
+
         self.lib = {}
+        """Custom data associated with this instance."""
 
     path = posixpath_property("_path")
     filename = posixpath_property("_filename")
@@ -1026,6 +1043,14 @@ class DesignSpaceDocument(object):
         self.logger = logging.getLogger("DesignSpaceDocumentLog")
         self.path = None
         self.filename = None
+        """String, optional. When the document is read from the disk, this is
+        its original file name, i.e. the last part of its path.
+
+        When the document is produced by a Python script and still only exists
+        in memory, the producing script can write here an indication of a
+        possible "good" filename, in case one wants to save the file somewhere.
+        """
+
         self.formatVersion = None
         self.sources = []
         self.instances = []
@@ -1033,7 +1058,10 @@ class DesignSpaceDocument(object):
         self.rules = []
         self.default = None         # name of the default master
         self.defaultLoc = None
+
         self.lib = {}
+        """Custom data associated with the whole document."""
+
         #
         if readerClass is not None:
             self.readerClass = readerClass
