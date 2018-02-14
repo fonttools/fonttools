@@ -1074,11 +1074,13 @@ class DesignSpaceDocument(object):
 
     def read(self, path):
         self.path = path
+        self.filename = os.path.basename(path)
         reader = self.readerClass(path, self)
         reader.read()
 
     def write(self, path):
         self.path = path
+        self.filename = os.path.basename(path)
         self.updatePaths()
         writer = self.writerClass(path, self)
         writer.write()
