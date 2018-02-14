@@ -824,9 +824,9 @@ class Options(object):
 
 		return ret
 
-class _AttendanceRecordingIdentityDict(dict):
+class _AttendanceRecordingIdentityDict(object):
 	"""A dictionary-like object that records indices of items actually accessed
-		from a list."""
+	from a list."""
 
 	def __init__(self, lst):
 		self.l = lst
@@ -837,7 +837,7 @@ class _AttendanceRecordingIdentityDict(dict):
 		self.s.add(self.d[id(v)])
 		return v
 
-class _GregariousDict(dict):
+class _GregariousIdentityDict(object):
 	"""A dictionary-like object that welcomes guests without reservations and
 	adds them to the end of the guest list."""
 
@@ -851,14 +851,23 @@ class _GregariousDict(dict):
 			self.l.append(v)
 		return v
 
-class _NonhashableDict(dict):
-	"""A dictionary-like object mapping objects to their index within a list."""
+class _NonhashableDict(object):
+	"""A dictionary-like object mapping objects to values."""
 
-	def __init__(self, lst):
-		self.d = {id(v):i for i,v in enumerate(lst)}
+	def __init__(self, keys, values=None):
+		if values is None:
+			self.d = {id(v):i for i,v in enumerate(keys)}
+		else:
+			self.d = {id(k):v for k,v in zip(keys, values)}
 
-	def __getitem__(self, v):
-		return self.d[id(v)]
+	def __getitem__(self, k):
+		return self.d[id(k)]
+
+	def __setitem__(self, k, v):
+		self.d[id(k)] = v
+
+	def __delitem__(self, k):
+		del self.d[id(k)]
 
 class Merger(object):
 
@@ -997,7 +1006,7 @@ class Merger(object):
 			if t.table.FeatureList and t.table.ScriptList:
 
 				# Collect unregistered (new) features.
-				featureMap = _GregariousDict(t.table.FeatureList.FeatureRecord)
+				featureMap = _GregariousIdentityDict(t.table.FeatureList.FeatureRecord)
 				t.table.ScriptList.mapFeatures(featureMap)
 
 				# Record used features.
@@ -1017,7 +1026,7 @@ class Merger(object):
 			if t.table.LookupList:
 
 				# Collect unregistered (new) lookups.
-				lookupMap = _GregariousDict(t.table.LookupList.Lookup)
+				lookupMap = _GregariousIdentityDict(t.table.LookupList.Lookup)
 				t.table.FeatureList.mapLookups(lookupMap)
 				t.table.LookupList.mapLookups(lookupMap)
 
