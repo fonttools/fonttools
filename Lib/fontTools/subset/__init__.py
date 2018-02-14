@@ -1633,8 +1633,12 @@ def prune_post_subset(self, options):
         table.GlyphClassDef = None
     if table.AttachList and not table.AttachList.GlyphCount:
         table.AttachList = None
-    if (hasattr(table, "MarkGlyphSetsDef") and
-        table.MarkGlyphSetsDef and
+    if hasattr(table, "VarStore"):
+        if table.VarStore.VarDataCount == 0:
+            if table.Version == 0x00010003:
+                table.Version = 0x00010002
+    if (not hasattr(table, "MarkGlyphSetsDef") or
+        not table.MarkGlyphSetsDef or
         not table.MarkGlyphSetsDef.Coverage):
         table.MarkGlyphSetsDef = None
         if table.Version == 0x00010002:
