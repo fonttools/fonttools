@@ -2466,6 +2466,21 @@ def prune_post_subset(self, options):
 		for subrs in all_subrs:
 			del subrs._used, subrs._old_bias, subrs._new_bias
 
+	if not options.glyph_names:
+		# Drop PostScript names, promote the font to being CID-keyed.
+		topDict0 = cff.topDictIndex[0]
+		topDict0.ROS = ('Adobe', 'Identity', 0)
+		mapping = {
+			name: ("cid" + str(n) if n else ".notdef")
+			for n, name in enumerate(topDict0.charset)}
+		charstrings = topDict0.CharStrings
+		charstrings.charStrings = {
+			mapping[name]: v
+			for name, v in charstrings.charStrings.items()}
+		topDict0.charset = [
+			"cid" + str(n) if n else ".notdef"
+			for n in range(len(topDict0.charset))]
+
 	return True
 
 
