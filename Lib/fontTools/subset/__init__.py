@@ -242,11 +242,11 @@ Font naming options:
   codes, see: http://www.microsoft.com/typography/otspec/name.htm
   --name-IDs[+|-]=<nameID>[,<nameID>...]
       Specify (=), add to (+=) or exclude from (-=) the set of 'name' table
-      entry nameIDs that will be preserved. By default only nameID 1 (Family)
-      and nameID 2 (Style) are preserved. Use '*' to keep all entries.
+      entry nameIDs that will be preserved. By default, only nameIDs between 0
+      and 6 are preserved, the rest are dropped. Use '*' to keep all entries.
       Examples:
-        --name-IDs+=0,4,6
-            * Also keep Copyright, Full name and PostScript name entry.
+        --name-IDs+=7,8,9
+            * Also keep Trademark, Manufacturer and Designer name entries.
         --name-IDs=''
             * Drop all 'name' table entries.
         --name-IDs='*'
