@@ -2659,7 +2659,7 @@ class Options(object):
 		self.glyph_names = False
 		self.legacy_cmap = False
 		self.symbol_cmap = False
-		self.name_IDs = [1, 2, 3, 4, 6] # https://github.com/fonttools/fonttools/issues/1170#issuecomment-364631225
+		self.name_IDs = [0, 1, 2, 3, 4, 5, 6] # https://github.com/fonttools/fonttools/issues/1170#issuecomment-364631225
 		self.name_legacy = False
 		self.name_languages = [0x0409] # English
 		self.obfuscate_names = False # to make webfont unusable as a system font
