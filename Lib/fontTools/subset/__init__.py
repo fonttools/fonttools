@@ -2466,7 +2466,8 @@ def prune_post_subset(self, options):
 		for subrs in all_subrs:
 			del subrs._used, subrs._old_bias, subrs._new_bias
 
-	if not options.glyph_names:
+	is_name_keyed = not hasattr(cff.topDictIndex[0], 'ROS')
+	if is_name_keyed and not options.glyph_names:
 		# Drop PostScript names, promote the font to being CID-keyed.
 		topDict0 = cff.topDictIndex[0]
 		topDict0.ROS = ('Adobe', 'Identity', 0)
