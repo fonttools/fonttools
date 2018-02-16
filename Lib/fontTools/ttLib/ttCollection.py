@@ -64,7 +64,6 @@ class TTCollection(object):
 		file.write(struct.pack(">%dL" % len(self.fonts), *offsets))
 
 		if final:
-			final.seek(0)
 			final.write(file.getvalue())
 		file.close()
 
