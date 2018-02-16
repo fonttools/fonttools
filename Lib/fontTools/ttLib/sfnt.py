@@ -54,8 +54,10 @@ class SFNTReader(object):
 		self.file.seek(0)
 		if self.sfntVersion == b"ttcf":
 			header = readTTCHeader(self.file)
-			if not 0 <= fontNumber < header.numFonts:
-				raise TTLibError("specify a font number between 0 and %d (inclusive)" % (header.numFonts - 1))
+			numFonts = header.numFonts
+			if not 0 <= fontNumber < numFonts:
+				raise TTLibError("specify a font number between 0 and %d (inclusive)" % (numFonts - 1))
+			self.numFonts = numFonts
 			self.file.seek(header.offsetTable[fontNumber])
 			data = self.file.read(sfntDirectorySize)
 			if len(data) != sfntDirectorySize:
