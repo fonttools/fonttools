@@ -436,7 +436,6 @@ def specializeCommands(commands,
 
 		if op[2:] == 'curveto' and len(args) == 5 and prv == nxt == 'rrcurveto':
 			assert (op[0] == 'r') ^ (op[1] == 'r')
-			args = list(args)
 			if op[0] == 'v':
 				pos = 0
 			elif op[0] != 'r':
@@ -445,7 +444,8 @@ def specializeCommands(commands,
 				pos = 4
 			else:
 				pos = 5
-			args.insert(pos, 0)
+			# Insert, while maintaining the type of args (can be tuple or list).
+			args = args[:pos] + type(args)((0,)) + args[pos:]
 			commands[i] = ('rrcurveto', args)
 			continue
 
