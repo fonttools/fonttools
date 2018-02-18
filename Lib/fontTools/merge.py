@@ -386,7 +386,7 @@ def merge(self, m, tables):
 	# Build a unicode mapping, then decide which format is needed to store it.
 	cmap = {}
 	fontIndexForGlyph = {}
-	glyphSets = [None for f in m.fonts]
+	glyphSets = [None for f in m.fonts] if hasattr(m, 'fonts') else None
 	for table,fontIdx in cmapTables:
 		# handle duplicates
 		for uni,gid in table.cmap.items():
@@ -398,12 +398,14 @@ def merge(self, m, tables):
 				# Char previously mapped to oldgid, now to gid.
 				# Record, to fix up in GSUB 'locl' later.
 				if m.duplicateGlyphsPerFont[fontIdx].get(oldgid) is None:
-					oldFontIdx = fontIndexForGlyph[oldgid]
-					for idx in (fontIdx, oldFontIdx):
-						if glyphSets[idx] is None:
-							glyphSets[idx] = m.fonts[idx].getGlyphSet()
-					if not _glyphsAreSame(glyphSets[oldFontIdx], glyphSets[fontIdx], oldgid, gid):
-						m.duplicateGlyphsPerFont[fontIdx][oldgid] = gid
+					if glyphSets is not None:
+						oldFontIdx = fontIndexForGlyph[oldgid]
+						for idx in (fontIdx, oldFontIdx):
+							if glyphSets[idx] is None:
+								glyphSets[idx] = m.fonts[idx].getGlyphSet()
+						if _glyphsAreSame(glyphSets[oldFontIdx], glyphSets[fontIdx], oldgid, gid):
+							continue
+					m.duplicateGlyphsPerFont[fontIdx][oldgid] = gid
 				elif m.duplicateGlyphsPerFont[fontIdx][oldgid] != gid:
 					# Char previously mapped to oldgid but oldgid is already remapped to a different
 					# gid, because of another Unicode character.
