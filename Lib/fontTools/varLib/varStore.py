@@ -4,7 +4,9 @@ from fontTools.misc.py23 import *
 from fontTools.varLib.models import supportScalar
 from fontTools.varLib.builder import (buildVarRegionList, buildVarStore,
 				      buildVarRegion, buildVarData,
-				      varDataCalculateNumShorts)
+				      VarData_CalculateNumShorts)
+from fontTools.ttLib.tables import otTables
+from functools import partial
 
 
 def _getLocationKey(loc):
@@ -45,7 +47,7 @@ class OnlineVarStoreBuilder(object):
 		self._store.VarDataCount = len(self._store.VarData)
 		for data in self._store.VarData:
 			data.ItemCount = len(data.Item)
-			varDataCalculateNumShorts(data, optimize)
+			VarData_CalculateNumShorts(data, optimize)
 		return self._store
 
 	def storeMasters(self, master_values):
@@ -98,3 +100,116 @@ class VarStoreInstancer(object):
 			delta += d * s
 		return delta
 
+
+#
+# Optimizations
+#
+
+def VarStore_subset_varidxes(self, varIdxes, optimize=True):
+
+	# Sort out used varIdxes by major/minor.
+	used = {}
+	for varIdx in varIdxes:
+		major = varIdx >> 16
+		minor = varIdx & 0xFFFF
+		d = used.get(major)
+		if d is None:
+			d = used[major] = set()
+		d.add(minor)
+	del varIdxes
+
+	varData = self.VarData
+	newVarData = []
+	varDataMap = {}
+	for major,data in enumerate(varData):
+		usedMinors = used.get(major)
+		if usedMinors is None:
+			continue
+		newMajor = varDataMap[major] = len(newVarData)
+		newVarData.append(data)
+
+		items = data.Item
+		newItems = []
+		for minor in sorted(usedMinors):
+			newMinor = len(newItems)
+			newItems.append(items[minor])
+			varDataMap[(major<<16)+minor] = (newMajor<<16)+newMinor
+
+		data.Item = newItems
+		data.ItemCount = len(data.Item)
+
+		if optimize:
+			VarData_CalculateNumShorts(data)
+
+	self.VarData = newVarData
+	self.VarDataCount = len(self.VarData)
+
+	return varDataMap
+
+
+def Device_recordVarIdx(self, s):
+	"""Add VarIdx in this Device table (if any) to the set s."""
+	if self.DeltaFormat == 0x8000:
+		s.add((self.StartSize<<16)+self.EndSize)
+
+def Device_mapVarIdx(self, mapping):
+	"""Add VarIdx in this Device table (if any) to the set s."""
+	if self.DeltaFormat == 0x8000:
+		varIdx = mapping[(self.StartSize<<16)+self.EndSize]
+		self.StartSize = varIdx >> 16
+		self.EndSize = varIdx & 0xFFFF
+
+
+def visit(self, objType, func):
+	"""Recurse down from self, if type of an object is objType,
+	call func() on it.  Only works for otData-style classes."""
+
+	if type(self) == objType:
+		func(self)
+		return # We don't recurse down; don't need to.
+
+	if isinstance(self, list):
+		for that in self:
+			visit(that, objType, func)
+
+	if hasattr(self, 'getConverters'):
+		for conv in self.getConverters():
+			that = getattr(self, conv.name, None)
+			visit(that, objType, func)
+
+
+def pruneGDEF(font):
+	if 'GDEF' not in font: return
+	gdef = font['GDEF']
+	table = gdef.table
+	if not hasattr(table, 'VarStore'): return
+
+	store = table.VarStore
+	table.VarStore = None # Disable while we work on it.
+
+	usedVarIdxes = set()
+
+	# Collect used items.
+	adder = partial(Device_recordVarIdx, s=usedVarIdxes)
+	visit(table, otTables.Device, adder)
+	if 'GSUB' in font:
+		visit(font['GSUB'].table, otTables.Device, adder)
+	if 'GPOS' in font:
+		visit(font['GPOS'].table, otTables.Device, adder)
+
+	# Subset.
+	varidx_map = VarStore_subset_varidxes(store, usedVarIdxes)
+
+	# Map.
+	mapper = partial(Device_mapVarIdx, mapping=varidx_map)
+	visit(table, otTables.Device, mapper)
+	if 'GSUB' in font:
+		visit(font['GSUB'].table, otTables.Device, mapper)
+	if 'GPOS' in font:
+		visit(font['GPOS'].table, otTables.Device, mapper)
+
+	table.VarStore = store
+	if table.VarStore.VarDataCount == 0:
+		table.VarStore = None
+		if table.Version == 0x00010003:
+			table.Version = 0x00010002

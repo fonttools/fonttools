@@ -39,7 +39,7 @@ def _reorderItem(lst, narrows):
 			out.append(lst[i])
 	return out
 
-def varDataCalculateNumShorts(self, optimize=True):
+def VarData_CalculateNumShorts(self, optimize=True):
 	count = self.VarRegionCount
 	items = self.Item
 	narrows = set(range(count))
@@ -69,7 +69,7 @@ def buildVarData(varRegionIndices, items, optimize=True):
 			assert len(item) == regionCount
 			records.append(list(item))
 	self.ItemCount = len(self.Item)
-	varDataCalculateNumShorts(self, optimize=optimize)
+	VarData_CalculateNumShorts(self, optimize=optimize)
 	return self
 
 

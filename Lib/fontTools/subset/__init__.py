@@ -9,6 +9,7 @@ from fontTools.ttLib.tables import otTables
 from fontTools.misc import psCharStrings
 from fontTools.pens.basePen import NullPen
 from fontTools.misc.loggingTools import Timer
+from fontTools.varLib import varStore
 import sys
 import struct
 import array
@@ -528,7 +529,7 @@ def subset_glyphs(self, s):
 		assert 0, "unknown format: %s" % self.Format
 
 @_add_method(otTables.SinglePos)
-def prune_post_subset(self, options):
+def prune_post_subset(self, font, options):
 	if not options.hinting:
 		# Drop device tables
 		self.ValueFormat &= ~0x00F0
@@ -565,7 +566,7 @@ def subset_glyphs(self, s):
 		assert 0, "unknown format: %s" % self.Format
 
 @_add_method(otTables.PairPos)
-def prune_post_subset(self, options):
+def prune_post_subset(self, font, options):
 	if not options.hinting:
 		# Drop device tables
 		self.ValueFormat1 &= ~0x00F0
@@ -591,7 +592,7 @@ def prune_hints(self):
 	self.Format = 1
 
 @_add_method(otTables.CursivePos)
-def prune_post_subset(self, options):
+def prune_post_subset(self, font, options):
 	if not options.hinting:
 		for rec in self.EntryExitRecord:
 			if rec.EntryAnchor: rec.EntryAnchor.prune_hints()
@@ -621,7 +622,7 @@ def subset_glyphs(self, s):
 		assert 0, "unknown format: %s" % self.Format
 
 @_add_method(otTables.MarkBasePos)
-def prune_post_subset(self, options):
+def prune_post_subset(self, font, options):
 		if not options.hinting:
 			for m in self.MarkArray.MarkRecord:
 				if m.MarkAnchor:
@@ -656,7 +657,7 @@ def subset_glyphs(self, s):
 		assert 0, "unknown format: %s" % self.Format
 
 @_add_method(otTables.MarkLigPos)
-def prune_post_subset(self, options):
+def prune_post_subset(self, font, options):
 		if not options.hinting:
 			for m in self.MarkArray.MarkRecord:
 				if m.MarkAnchor:
@@ -691,7 +692,7 @@ def subset_glyphs(self, s):
 		assert 0, "unknown format: %s" % self.Format
 
 @_add_method(otTables.MarkMarkPos)
-def prune_post_subset(self, options):
+def prune_post_subset(self, font, options):
 		if not options.hinting:
 			# Drop device tables or contour anchor point
 			for m in self.Mark1Array.MarkRecord:
@@ -740,7 +741,7 @@ def collect_lookups(self):
 			 otTables.ChainContextSubst,
 			 otTables.ContextPos,
 			 otTables.ChainContextPos)
-def prune_post_subset(self, options):
+def prune_post_subset(self, font, options):
 	return True
 
 @_add_method(otTables.SingleSubst,
@@ -1122,9 +1123,9 @@ def subset_glyphs(self, s):
 
 @_add_method(otTables.ExtensionSubst,
 			 otTables.ExtensionPos)
-def prune_post_subset(self, options):
+def prune_post_subset(self, font, options):
 	if self.Format == 1:
-		return self.ExtSubTable.prune_post_subset(options)
+		return self.ExtSubTable.prune_post_subset(font, options)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -1170,11 +1171,11 @@ def subset_glyphs(self, s):
 	return bool(self.SubTableCount)
 
 @_add_method(otTables.Lookup)
-def prune_post_subset(self, options):
+def prune_post_subset(self, font, options):
 	ret = False
 	for st in self.SubTable:
 		if not st: continue
-		if st.prune_post_subset(options): ret = True
+		if st.prune_post_subset(font, options): ret = True
 	return ret
 
 @_add_method(otTables.Lookup)
@@ -1196,11 +1197,11 @@ def subset_glyphs(self, s):
 	return [i for i,l in enumerate(self.Lookup) if l and l.subset_glyphs(s)]
 
 @_add_method(otTables.LookupList)
-def prune_post_subset(self, options):
+def prune_post_subset(self, font, options):
 	ret = False
 	for l in self.Lookup:
 		if not l: continue
-		if l.prune_post_subset(options): ret = True
+		if l.prune_post_subset(font, options): ret = True
 	return ret
 
 @_add_method(otTables.LookupList)
@@ -1547,14 +1548,14 @@ def remove_redundant_langsys(self):
 				s.Script.LangSysRecord.remove(lr)
 
 @_add_method(ttLib.getTableClass('GSUB'),
-			 ttLib.getTableClass('GPOS'))
-def prune_post_subset(self, options):
+	     ttLib.getTableClass('GPOS'))
+def prune_post_subset(self, font, options):
 	table = self.table
 
 	self.prune_lookups() # XXX Is this actually needed?!
 
 	if table.LookupList:
-		table.LookupList.prune_post_subset(options)
+		table.LookupList.prune_post_subset(font, options)
 		# XXX Next two lines disabled because OTS is stupid and
 		# doesn't like NULL offsets here.
 		#if not table.LookupList.Lookup:
@@ -1622,7 +1623,7 @@ def subset_glyphs(self, s):
 	return True
 
 @_add_method(ttLib.getTableClass('GDEF'))
-def prune_post_subset(self, options):
+def prune_post_subset(self, font, options):
 	table = self.table
 	# XXX check these against OTS
 	if table.LigCaretList and not table.LigCaretList.LigGlyphCount:
@@ -1634,6 +1635,7 @@ def prune_post_subset(self, options):
 	if table.AttachList and not table.AttachList.GlyphCount:
 		table.AttachList = None
 	if hasattr(table, "VarStore"):
+		varStore.pruneGDEF(font)
 		if table.VarStore.VarDataCount == 0:
 			if table.Version == 0x00010003:
 				table.Version = 0x00010002
@@ -1644,10 +1646,10 @@ def prune_post_subset(self, options):
 		if table.Version == 0x00010002:
 			table.Version = 0x00010000
 	return bool(table.LigCaretList or
-				table.MarkAttachClassDef or
-				table.GlyphClassDef or
-				table.AttachList or
-				(table.Version >= 0x00010002 and table.MarkGlyphSetsDef))
+		    table.MarkAttachClassDef or
+		    table.GlyphClassDef or
+		    table.AttachList or
+		    (table.Version >= 0x00010002 and table.MarkGlyphSetsDef))
 
 @_add_method(ttLib.getTableClass('kern'))
 def prune_pre_subset(self, font, options):
@@ -1806,7 +1808,7 @@ def subset_glyphs(self, s):
 
 # TODO: prune unused palettes
 @_add_method(ttLib.getTableClass('CPAL'))
-def prune_post_subset(self, options):
+def prune_post_subset(self, font, options):
 	return True
 
 @_add_method(otTables.MathGlyphConstruction)
@@ -1959,7 +1961,7 @@ def subset_glyphs(self, s):
 	return True
 
 @_add_method(ttLib.getTableClass('glyf'))
-def prune_post_subset(self, options):
+def prune_post_subset(self, font, options):
 	remove_hinting = not options.hinting
 	for v in self.glyphs.values():
 		v.trim(remove_hinting=remove_hinting)
@@ -2334,7 +2336,7 @@ class _DesubroutinizingT2Decompiler(psCharStrings.SimpleT2Decompiler):
 
 
 @_add_method(ttLib.getTableClass('CFF '))
-def prune_post_subset(self, options):
+def prune_post_subset(self, font, options):
 	cff = self.cff
 	for fontname in cff.keys():
 		font = cff[fontname]
@@ -2973,7 +2975,7 @@ class Subsetter(object):
 			if hasattr(clazz, 'prune_post_subset'):
 				with timer("prune '%s'" % tag):
 					table = font[tag]
-					retain = table.prune_post_subset(self.options)
+					retain = table.prune_post_subset(font, self.options)
 				if not retain:
 					log.info("%s pruned to empty; dropped", tag)
 					del font[tag]

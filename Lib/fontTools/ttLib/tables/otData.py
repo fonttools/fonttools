@@ -970,7 +970,7 @@ otData = [
 
 	('VarData', [
 		('uint16', 'ItemCount', None, None, ''),
-		('uint16', 'NumShorts', None, None, ''), # Automatically computed
+		('uint16', 'NumShorts', None, None, ''),
 		('uint16', 'VarRegionCount', None, None, ''),
 		('uint16', 'VarRegionIndex', 'VarRegionCount', 0, ''),
 		('VarDataValue', 'Item', 'ItemCount', 0, ''),
