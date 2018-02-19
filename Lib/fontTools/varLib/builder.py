@@ -84,10 +84,9 @@ def buildVarStore(varRegionList, varDataList):
 
 # Variation helpers
 
-def buildVarIdxMap(varIdxes):
-	# TODO Change VarIdxMap mapping to hold separate outer,inner indices
+def buildVarIdxMap(varIdxes, glyphOrder):
 	self = ot.VarIdxMap()
-	self.mapping = list(varIdxes)
+	self.mapping = {g:v for g,v in zip(glyphOrder, varIdxes)}
 	return self
 
 def buildVarDevTable(varIdx):

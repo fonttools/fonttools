@@ -546,20 +546,25 @@ class VarIdxMap(BaseTable):
 
 	def populateDefaults(self, propagator=None):
 		if not hasattr(self, 'mapping'):
-			self.mapping = []
+			self.mapping = {}
 
 	def postRead(self, rawTable, font):
 		assert (rawTable['EntryFormat'] & 0xFFC0) == 0
-		self.mapping = rawTable['mapping']
+		glyphOrder = font.getGlyphOrder()
+		mapList = rawTable['mapping']
+		mapList.extend([mapList[-1]] * (len(glyphOrder) - len(mapList)))
+		self.mapping = dict(zip(glyphOrder, mapList))
 
 	def preWrite(self, font):
 		mapping = getattr(self, "mapping", None)
 		if mapping is None:
-			mapping = self.mapping = []
+			mapping = self.mapping = {}
+
+		glyphOrder = font.getGlyphOrder()
+		mapping = [mapping[g] for g in glyphOrder]
+
 		rawTable = { 'mapping': mapping }
 		rawTable['MappingCount'] = len(mapping)
-
-		# TODO Remove this abstraction/optimization and move it varLib.builder?
 
 		ored = 0
 		for idx in mapping:
@@ -589,9 +594,9 @@ class VarIdxMap(BaseTable):
 		return rawTable
 
 	def toXML2(self, xmlWriter, font):
-		for i, value in enumerate(getattr(self, "mapping", [])):
+		for glyph, value in sorted(getattr(self, "mapping", {}).items()):
 			attrs = (
-				('index', i),
+				('glyph', glyph),
 				('outer', value >> 16),
 				('inner', value & 0xFFFF),
 			)
@@ -601,12 +606,13 @@ class VarIdxMap(BaseTable):
 	def fromXML(self, name, attrs, content, font):
 		mapping = getattr(self, "mapping", None)
 		if mapping is None:
-			mapping = []
+			mapping = {}
 			self.mapping = mapping
+		glyph = attrs['glyph']
 		outer = safeEval(attrs['outer'])
 		inner = safeEval(attrs['inner'])
 		assert inner <= 0xFFFF
-		mapping.append((outer << 16) | inner)
+		mapping[glyph] = (outer << 16) | inner
 
 
 class SingleSubst(FormatSwitchingBaseTable):
