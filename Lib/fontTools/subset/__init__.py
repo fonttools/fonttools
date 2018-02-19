@@ -1739,14 +1739,15 @@ def subset_glyphs(self, s):
 def subset_glyphs(self, s):
 	table = self.table
 
+	# TODO Handle direct mapping
+	assert table.AdvWidthMap, "File a bug."
+
 	if table.AdvWidthMap:
 		table.AdvWidthMap.mapping = _dict_subset(table.AdvWidthMap.mapping, s.glyphs)
 	if table.LsbMap:
 		table.LsbMap.mapping = _dict_subset(table.LsbMap.mapping, s.glyphs)
 	if table.RsbMap:
 		table.RsbMap.mapping = _dict_subset(table.RsbMap.mapping, s.glyphs)
-
-	# TODO Handle direct mapping
 
 	return True
 
@@ -1779,6 +1780,9 @@ def prune_post_subset(self, font, options):
 def subset_glyphs(self, s):
 	table = self.table
 
+	# TODO Handle direct mapping
+	assert table.AdvHeightMap, "File a bug."
+
 	if table.AdvHeightMap:
 		table.AdvHeightMap.mapping = _dict_subset(table.AdvHeightMap.mapping, s.glyphs)
 	if table.TsbMap:
@@ -1787,8 +1791,6 @@ def subset_glyphs(self, s):
 		table.BsbMap.mapping = _dict_subset(table.BsbMap.mapping, s.glyphs)
 	if table.VOrgMap:
 		table.VOrgMap.mapping = _dict_subset(table.VOrgMap.mapping, s.glyphs)
-
-	# TODO Handle direct mapping
 
 	return True
 
