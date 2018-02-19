@@ -2948,7 +2948,7 @@ class Subsetter(object):
 			elif self.options.passthrough_tables:
 				log.info("%s NOT subset; don't know how to subset", tag)
 			else:
-				log.info("%s NOT subset; don't know how to subset; dropped", tag)
+				log.warning("%s NOT subset; don't know how to subset; dropped", tag)
 				del font[tag]
 
 		with timer("subset GlyphOrder"):
