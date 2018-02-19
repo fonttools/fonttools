@@ -16,6 +16,7 @@ import array
 import logging
 from collections import Counter
 from types import MethodType
+from functools import partial
 
 __usage__ = "pyftsubset font-file [glyph...] [--option=value]..."
 
@@ -1622,6 +1623,68 @@ def subset_glyphs(self, s):
 		#   [c for c in table.MarkGlyphSetsDef.Coverage if c.glyphs]
 	return True
 
+
+def _Device_recordVarIdx(self, s):
+	"""Add VarIdx in this Device table (if any) to the set s."""
+	if self.DeltaFormat == 0x8000:
+		s.add((self.StartSize<<16)+self.EndSize)
+
+def _Device_mapVarIdx(self, mapping):
+	"""Add VarIdx in this Device table (if any) to the set s."""
+	if self.DeltaFormat == 0x8000:
+		varIdx = mapping[(self.StartSize<<16)+self.EndSize]
+		self.StartSize = varIdx >> 16
+		self.EndSize = varIdx & 0xFFFF
+
+
+def _visit(self, objType, func):
+	"""Recurse down from self, if type of an object is objType,
+	call func() on it.  Only works for otData-style classes."""
+
+	if type(self) == objType:
+		func(self)
+		return # We don't recurse down; don't need to.
+
+	if isinstance(self, list):
+		for that in self:
+			_visit(that, objType, func)
+
+	if hasattr(self, 'getConverters'):
+		for conv in self.getConverters():
+			that = getattr(self, conv.name, None)
+			_visit(that, objType, func)
+
+def _pruneGDEF(font):
+	if 'GDEF' not in font: return
+	gdef = font['GDEF']
+	table = gdef.table
+	if not hasattr(table, 'VarStore'): return
+
+	store = table.VarStore
+	table.VarStore = None # Disable while we work on it.
+
+	usedVarIdxes = set()
+
+	# Collect.
+	adder = partial(_Device_recordVarIdx, s=usedVarIdxes)
+	_visit(table, otTables.Device, adder)
+	if 'GSUB' in font:
+		_visit(font['GSUB'].table, otTables.Device, adder)
+	if 'GPOS' in font:
+		_visit(font['GPOS'].table, otTables.Device, adder)
+
+	# Subset.
+	varidx_map = varStore.VarStore_subset_varidxes(store, usedVarIdxes)
+
+	# Map.
+	mapper = partial(_Device_mapVarIdx, mapping=varidx_map)
+	_visit(table, otTables.Device, mapper)
+	if 'GSUB' in font:
+		_visit(font['GSUB'].table, otTables.Device, mapper)
+	if 'GPOS' in font:
+		_visit(font['GPOS'].table, otTables.Device, mapper)
+
+	table.VarStore = store
 @_add_method(ttLib.getTableClass('GDEF'))
 def prune_post_subset(self, font, options):
 	table = self.table
@@ -1635,7 +1698,7 @@ def prune_post_subset(self, font, options):
 	if table.AttachList and not table.AttachList.GlyphCount:
 		table.AttachList = None
 	if hasattr(table, "VarStore"):
-		varStore.pruneGDEF(font)
+		_pruneGDEF(font)
 		if table.VarStore.VarDataCount == 0:
 			if table.Version == 0x00010003:
 				table.Version = 0x00010002
