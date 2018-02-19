@@ -416,8 +416,7 @@ def _add_HVAR(font, model, master_ttfs, axisTags):
 		# TODO move round somewhere else?
 		hAdvanceDeltas[glyph] = tuple(round(d) for d in model.getDeltas(hAdvances)[1:])
 
-	# We only support the direct mapping right now.
-
+	# Direct mapping
 	supports = model.supports[1:]
 	varTupleList = builder.buildVarRegionList(supports, axisTags)
 	varTupleIndexes = list(range(len(supports)))
