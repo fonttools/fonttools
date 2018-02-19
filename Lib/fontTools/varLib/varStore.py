@@ -118,6 +118,10 @@ def VarStore_subset_varidxes(self, varIdxes, optimize=True):
 		d.add(minor)
 	del varIdxes
 
+	#
+	# Subset VarData
+	#
+
 	varData = self.VarData
 	newVarData = []
 	varDataMap = {}
@@ -143,6 +147,28 @@ def VarStore_subset_varidxes(self, varIdxes, optimize=True):
 
 	self.VarData = newVarData
 	self.VarDataCount = len(self.VarData)
+
+	#
+	# Subset VarRegionList
+	#
+
+	# Collect.
+	usedRegions = set()
+	for data in self.VarData:
+		usedRegions.update(data.VarRegionIndex)
+	# Subset.
+	regionList = self.VarRegionList
+	regions = regionList.Region
+	newRegions = []
+	regionMap = {}
+	for i in sorted(usedRegions):
+		regionMap[i] = len(newRegions)
+		newRegions.append(regions[i])
+	regionList.Region = newRegions
+	regionList.RegionCount = len(regionList.Region)
+	# Map.
+	for data in self.VarData:
+		data.VarRegionIndex = [regionMap[i] for i in data.VarRegionIndex]
 
 	return varDataMap
 
@@ -189,7 +215,7 @@ def pruneGDEF(font):
 
 	usedVarIdxes = set()
 
-	# Collect used items.
+	# Collect.
 	adder = partial(Device_recordVarIdx, s=usedVarIdxes)
 	visit(table, otTables.Device, adder)
 	if 'GSUB' in font:
