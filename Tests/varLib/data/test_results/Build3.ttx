@@ -43,7 +43,7 @@
       </VarRegionList>
       <!-- VarDataCount=1 -->
       <VarData index="0">
-        <!-- ItemCount=18 -->
+        <!-- ItemCount=14 -->
         <NumShorts value="1"/>
         <!-- VarRegionCount=1 -->
         <VarRegionIndex index="0" value="0"/>
@@ -61,10 +61,6 @@
         <Item index="11" value="[50]"/>
         <Item index="12" value="[128]"/>
         <Item index="13" value="[-18]"/>
-        <Item index="14" value="[0]"/>
-        <Item index="15" value="[0]"/>
-        <Item index="16" value="[0]"/>
-        <Item index="17" value="[0]"/>
       </VarData>
     </VarStore>
   </HVAR>

@@ -425,7 +425,7 @@ def _add_HVAR(font, model, master_ttfs, axisTags):
 	zeroes = [0]*n
 	for glyphName in font.getGlyphOrder():
 		items.append(hAdvanceDeltas.get(glyphName, zeroes))
-	while items and items[-1] is zeroes:
+	while items and not any(items[-1]):
 		del items[-1]
 
 	advanceMapping = None
