@@ -1735,6 +1735,40 @@ def subset_glyphs(self, s):
 	self.glyphCount = len(self.variations)
 	return bool(self.variations)
 
+@_add_method(ttLib.getTableClass('HVAR'))
+def subset_glyphs(self, s):
+	table = self.table
+
+	if table.AdvWidthMap:
+		table.AdvWidthMap.mapping = _dict_subset(table.AdvWidthMap.mapping, s.glyphs)
+	if table.LsbMap:
+		table.LsbMap.mapping = _dict_subset(table.LsbMap.mapping, s.glyphs)
+	if table.RsbMap:
+		table.RsbMap.mapping = _dict_subset(table.RsbMap.mapping, s.glyphs)
+
+	# TODO Handle direct mapping
+	# TODO Prune VarStore
+
+	return True
+
+@_add_method(ttLib.getTableClass('VVAR'))
+def subset_glyphs(self, s):
+	table = self.table
+
+	if table.AdvHeightMap:
+		table.AdvHeightMap.mapping = _dict_subset(table.AdvHeightMap.mapping, s.glyphs)
+	if table.TsbMap:
+		table.TsbMap.mapping = _dict_subset(table.TsbMap.mapping, s.glyphs)
+	if table.BsbMap:
+		table.BsbMap.mapping = _dict_subset(table.BsbMap.mapping, s.glyphs)
+	if table.VOrgMap:
+		table.VOrgMap.mapping = _dict_subset(table.VOrgMap.mapping, s.glyphs)
+
+	# TODO Handle direct mapping
+	# TODO Prune VarStore
+
+	return True
+
 @_add_method(ttLib.getTableClass('VORG'))
 def subset_glyphs(self, s):
 	self.VOriginRecords = {g:v for g,v in self.VOriginRecords.items()
