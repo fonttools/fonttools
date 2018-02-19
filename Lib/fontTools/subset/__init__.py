@@ -1810,6 +1810,10 @@ def subset_glyphs(self, s):
 	if table.AdvWidthMap:
 		table.AdvWidthMap.mapping = _dict_subset(table.AdvWidthMap.mapping, s.glyphs)
 		used.update(table.AdvWidthMap.mapping.values())
+	else:
+		assert table.LsbMap is None and table.RsbMap is None, "File a bug."
+		used.update(s.reverseOrigGlyphMap.values())
+
 	if table.LsbMap:
 		table.LsbMap.mapping = _dict_subset(table.LsbMap.mapping, s.glyphs)
 		used.update(table.LsbMap.mapping.values())
@@ -1833,14 +1837,14 @@ def subset_glyphs(self, s):
 def subset_glyphs(self, s):
 	table = self.table
 
-	# TODO Handle direct mapping
-	assert table.AdvHeightMap, "File a bug."
-
 	used = set()
 
 	if table.AdvHeightMap:
 		table.AdvHeightMap.mapping = _dict_subset(table.AdvHeightMap.mapping, s.glyphs)
 		used.update(table.AdvHeightMap.mapping.values())
+	else:
+		assert table.TsbMap is None and table.BsbMap is None and table.VOrgMap is None, "File a bug."
+		used.update(s.reverseOrigGlyphMap.values())
 	if table.TsbMap:
 		table.TsbMap.mapping = _dict_subset(table.TsbMap.mapping, s.glyphs)
 		used.update(table.TsbMap.mapping.values())
@@ -3053,6 +3057,9 @@ class Subsetter(object):
 		self.glyphs_cffed = frozenset(self.glyphs)
 
 		self.glyphs_all = frozenset(self.glyphs)
+
+		order = font.getReverseGlyphMap()
+		self.reverseOrigGlyphMap = {g:order[g] for g in self.glyphs_all}
 
 		log.info("Retaining %d glyphs", len(self.glyphs_all))
 
