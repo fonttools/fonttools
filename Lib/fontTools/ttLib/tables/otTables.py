@@ -562,6 +562,8 @@ class VarIdxMap(BaseTable):
 
 		glyphOrder = font.getGlyphOrder()
 		mapping = [mapping[g] for g in glyphOrder]
+		while mapping and mapping[-2] == mapping[-1]:
+			del mapping[-1]
 
 		rawTable = { 'mapping': mapping }
 		rawTable['MappingCount'] = len(mapping)
