@@ -235,7 +235,3 @@ def pruneGDEF(font):
 		visit(font['GPOS'].table, otTables.Device, mapper)
 
 	table.VarStore = store
-	if table.VarStore.VarDataCount == 0:
-		table.VarStore = None
-		if table.Version == 0x00010003:
-			table.Version = 0x00010002
