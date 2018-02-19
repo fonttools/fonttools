@@ -1747,8 +1747,32 @@ def subset_glyphs(self, s):
 		table.RsbMap.mapping = _dict_subset(table.RsbMap.mapping, s.glyphs)
 
 	# TODO Handle direct mapping
-	# TODO Prune VarStore
 
+	return True
+
+@_add_method(ttLib.getTableClass('HVAR'))
+def prune_post_subset(self, font, options):
+	table = self.table
+
+	used = set()
+
+	if table.AdvWidthMap:
+		used.update(table.AdvWidthMap.mapping.values())
+	if table.LsbMap:
+		used.update(table.LsbMap.mapping.values())
+	if table.RsbMap:
+		used.update(table.RsbMap.mapping.values())
+
+	varidx_map = varStore.VarStore_subset_varidxes(table.VarStore, used)
+
+	if table.AdvWidthMap:
+		table.AdvWidthMap.mapping = {k:varidx_map[v] for k,v in table.AdvWidthMap.mapping.items()}
+	if table.LsbMap:
+		table.LsbMap.mapping = {k:varidx_map[v] for k,v in table.LsbMap.mapping.items()}
+	if table.RsbMap:
+		table.RsbMap.mapping = {k:varidx_map[v] for k,v in table.RsbMap.mapping.items()}
+
+	# TODO Return emptiness...
 	return True
 
 @_add_method(ttLib.getTableClass('VVAR'))
@@ -1765,8 +1789,36 @@ def subset_glyphs(self, s):
 		table.VOrgMap.mapping = _dict_subset(table.VOrgMap.mapping, s.glyphs)
 
 	# TODO Handle direct mapping
-	# TODO Prune VarStore
 
+	return True
+
+@_add_method(ttLib.getTableClass('VVAR'))
+def prune_post_subset(self, font, options):
+	table = self.table
+
+	used = set()
+
+	if table.AdvHeightMap:
+		used.update(table.AdvHeightMap.mapping.values())
+	if table.TsbMap:
+		used.update(table.TsbMap.mapping.values())
+	if table.BsbMap:
+		used.update(table.BsbMap.mapping.values())
+	if table.VOrgMap:
+		used.update(table.VOrgMap.mapping.values())
+
+	varidx_map = varStore.VarStore_subset_varidxes(table.VarStore, used)
+
+	if table.AdvHeightMap:
+		table.AdvHeightMap.mapping = {k:varidx_map[v] for k,v in table.AdvHeightMap.mapping.items()}
+	if table.TsbMap:
+		table.TsbMap.mapping = {k:varidx_map[v] for k,v in table.TsbMap.mapping.items()}
+	if table.BsbMap:
+		table.RsbMap.mapping = {k:varidx_map[v] for k,v in table.RsbMap.mapping.items()}
+	if table.VOrgMap:
+		table.RsbMap.mapping = {k:varidx_map[v] for k,v in table.RsbMap.mapping.items()}
+
+	# TODO Return emptiness...
 	return True
 
 @_add_method(ttLib.getTableClass('VORG'))
