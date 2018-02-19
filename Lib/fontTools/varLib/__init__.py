@@ -422,11 +422,8 @@ def _add_HVAR(font, model, master_ttfs, axisTags):
 	varTupleIndexes = list(range(len(supports)))
 	n = len(supports)
 	items = []
-	zeroes = [0]*n
 	for glyphName in font.getGlyphOrder():
-		items.append(hAdvanceDeltas.get(glyphName, zeroes))
-	while items and not any(items[-1]):
-		del items[-1]
+		items.append(hAdvanceDeltas[glyphName])
 
 	advanceMapping = None
 	# Add indirect mapping to save on duplicates
