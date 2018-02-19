@@ -1805,26 +1805,16 @@ def subset_glyphs(self, s):
 	# TODO Handle direct mapping
 	assert table.AdvWidthMap, "File a bug."
 
-	if table.AdvWidthMap:
-		table.AdvWidthMap.mapping = _dict_subset(table.AdvWidthMap.mapping, s.glyphs)
-	if table.LsbMap:
-		table.LsbMap.mapping = _dict_subset(table.LsbMap.mapping, s.glyphs)
-	if table.RsbMap:
-		table.RsbMap.mapping = _dict_subset(table.RsbMap.mapping, s.glyphs)
-
-	return True
-
-@_add_method(ttLib.getTableClass('HVAR'))
-def prune_post_subset(self, font, options):
-	table = self.table
-
 	used = set()
 
 	if table.AdvWidthMap:
+		table.AdvWidthMap.mapping = _dict_subset(table.AdvWidthMap.mapping, s.glyphs)
 		used.update(table.AdvWidthMap.mapping.values())
 	if table.LsbMap:
+		table.LsbMap.mapping = _dict_subset(table.LsbMap.mapping, s.glyphs)
 		used.update(table.LsbMap.mapping.values())
 	if table.RsbMap:
+		table.RsbMap.mapping = _dict_subset(table.RsbMap.mapping, s.glyphs)
 		used.update(table.RsbMap.mapping.values())
 
 	varidx_map = varStore.VarStore_subset_varidxes(table.VarStore, used)
@@ -1846,30 +1836,19 @@ def subset_glyphs(self, s):
 	# TODO Handle direct mapping
 	assert table.AdvHeightMap, "File a bug."
 
-	if table.AdvHeightMap:
-		table.AdvHeightMap.mapping = _dict_subset(table.AdvHeightMap.mapping, s.glyphs)
-	if table.TsbMap:
-		table.TsbMap.mapping = _dict_subset(table.TsbMap.mapping, s.glyphs)
-	if table.BsbMap:
-		table.BsbMap.mapping = _dict_subset(table.BsbMap.mapping, s.glyphs)
-	if table.VOrgMap:
-		table.VOrgMap.mapping = _dict_subset(table.VOrgMap.mapping, s.glyphs)
-
-	return True
-
-@_add_method(ttLib.getTableClass('VVAR'))
-def prune_post_subset(self, font, options):
-	table = self.table
-
 	used = set()
 
 	if table.AdvHeightMap:
+		table.AdvHeightMap.mapping = _dict_subset(table.AdvHeightMap.mapping, s.glyphs)
 		used.update(table.AdvHeightMap.mapping.values())
 	if table.TsbMap:
+		table.TsbMap.mapping = _dict_subset(table.TsbMap.mapping, s.glyphs)
 		used.update(table.TsbMap.mapping.values())
 	if table.BsbMap:
+		table.BsbMap.mapping = _dict_subset(table.BsbMap.mapping, s.glyphs)
 		used.update(table.BsbMap.mapping.values())
 	if table.VOrgMap:
+		table.VOrgMap.mapping = _dict_subset(table.VOrgMap.mapping, s.glyphs)
 		used.update(table.VOrgMap.mapping.values())
 
 	varidx_map = varStore.VarStore_subset_varidxes(table.VarStore, used)
