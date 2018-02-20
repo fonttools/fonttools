@@ -16,7 +16,6 @@ import array
 import logging
 from collections import Counter
 from types import MethodType
-from functools import partial
 
 __usage__ = "pyftsubset font-file [glyph...] [--option=value]..."
 
@@ -1624,36 +1623,6 @@ def subset_glyphs(self, s):
 	return True
 
 
-def _Device_recordVarIdx(self, s):
-	"""Add VarIdx in this Device table (if any) to the set s."""
-	if self.DeltaFormat == 0x8000:
-		s.add((self.StartSize<<16)+self.EndSize)
-
-def _Device_mapVarIdx(self, mapping):
-	"""Add VarIdx in this Device table (if any) to the set s."""
-	if self.DeltaFormat == 0x8000:
-		varIdx = mapping[(self.StartSize<<16)+self.EndSize]
-		self.StartSize = varIdx >> 16
-		self.EndSize = varIdx & 0xFFFF
-
-
-def _visit(self, objType, func):
-	"""Recurse down from self, if type of an object is objType,
-	call func() on it.  Only works for otData-style classes."""
-
-	if type(self) == objType:
-		func(self)
-		return # We don't recurse down; don't need to.
-
-	if isinstance(self, list):
-		for that in self:
-			_visit(that, objType, func)
-
-	if hasattr(self, 'getConverters'):
-		for conv in self.getConverters():
-			that = getattr(self, conv.name, None)
-			_visit(that, objType, func)
-
 def _pruneGDEF(font):
 	if 'GDEF' not in font: return
 	gdef = font['GDEF']
@@ -1665,23 +1634,21 @@ def _pruneGDEF(font):
 	usedVarIdxes = set()
 
 	# Collect.
-	adder = partial(_Device_recordVarIdx, s=usedVarIdxes)
-	_visit(table, otTables.Device, adder)
+	table.collect_device_varidxes(usedVarIdxes)
 	if 'GSUB' in font:
-		_visit(font['GSUB'].table, otTables.Device, adder)
+		font['GSUB'].table.collect_device_varidxes(usedVarIdxes)
 	if 'GPOS' in font:
-		_visit(font['GPOS'].table, otTables.Device, adder)
+		font['GPOS'].table.collect_device_varidxes(usedVarIdxes)
 
 	# Subset.
 	varidx_map = store.subset_varidxes(usedVarIdxes)
 
 	# Map.
-	mapper = partial(_Device_mapVarIdx, mapping=varidx_map)
-	_visit(table, otTables.Device, mapper)
+	table.remap_device_varidxes(varidx_map)
 	if 'GSUB' in font:
-		_visit(font['GSUB'].table, otTables.Device, mapper)
+		font['GSUB'].table.remap_device_varidxes(varidx_map)
 	if 'GPOS' in font:
-		_visit(font['GPOS'].table, otTables.Device, mapper)
+		font['GPOS'].table.remap_device_varidxes(varidx_map)
 
 @_add_method(ttLib.getTableClass('GDEF'))
 def prune_post_subset(self, font, options):

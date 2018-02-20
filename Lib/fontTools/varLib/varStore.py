@@ -6,6 +6,7 @@ from fontTools.varLib.models import supportScalar
 from fontTools.varLib.builder import (buildVarRegionList, buildVarStore,
 				      buildVarRegion, buildVarData,
 				      VarData_CalculateNumShorts)
+from functools import partial
 
 
 def _getLocationKey(loc):
@@ -175,3 +176,49 @@ def VarStore_subset_varidxes(self, varIdxes, optimize=True):
 	return varDataMap
 
 ot.VarStore.subset_varidxes = VarStore_subset_varidxes
+
+
+def _visit(self, objType, func):
+	"""Recurse down from self, if type of an object is objType,
+	call func() on it.  Only works for otData-style classes."""
+
+	if type(self) == objType:
+		func(self)
+		return # We don't recurse down; don't need to.
+
+	if isinstance(self, list):
+		for that in self:
+			_visit(that, objType, func)
+
+	if hasattr(self, 'getConverters'):
+		for conv in self.getConverters():
+			that = getattr(self, conv.name, None)
+			_visit(that, objType, func)
+
+def _Device_recordVarIdx(self, s):
+	"""Add VarIdx in this Device table (if any) to the set s."""
+	if self.DeltaFormat == 0x8000:
+		s.add((self.StartSize<<16)+self.EndSize)
+
+def Object_collect_device_varidxes(self, varidxes):
+	adder = partial(_Device_recordVarIdx, s=varidxes)
+	_visit(self, ot.Device, adder)
+
+ot.GDEF.collect_device_varidxes = Object_collect_device_varidxes
+ot.GSUB.collect_device_varidxes = Object_collect_device_varidxes
+ot.GPOS.collect_device_varidxes = Object_collect_device_varidxes
+
+def _Device_mapVarIdx(self, mapping):
+	"""Add VarIdx in this Device table (if any) to the set s."""
+	if self.DeltaFormat == 0x8000:
+		varIdx = mapping[(self.StartSize<<16)+self.EndSize]
+		self.StartSize = varIdx >> 16
+		self.EndSize = varIdx & 0xFFFF
+
+def Object_remap_device_varidxes(self, varidxes_map):
+	mapper = partial(_Device_mapVarIdx, mapping=varidxes_map)
+	_visit(self, ot.Device, mapper)
+
+ot.GDEF.remap_device_varidxes = Object_remap_device_varidxes
+ot.GSUB.remap_device_varidxes = Object_remap_device_varidxes
+ot.GPOS.remap_device_varidxes = Object_remap_device_varidxes
