@@ -724,6 +724,10 @@ def build(designspace_filename, master_finder=lambda s:s, exclude=[]):
 	if 'cvar' not in exclude:
 		_merge_TTHinting(vf, model, master_fonts)
 
+	for tag in exclude:
+		if tag in vf:
+			del vf[tag]
+
 	return vf, model, master_ttfs
 
 
