@@ -1674,7 +1674,7 @@ def _pruneGDEF(font):
 		_visit(font['GPOS'].table, otTables.Device, adder)
 
 	# Subset.
-	varidx_map = varStore.VarStore_subset_varidxes(store, usedVarIdxes)
+	varidx_map = store.subset_varidxes(usedVarIdxes)
 
 	# Map.
 	mapper = partial(_Device_mapVarIdx, mapping=varidx_map)

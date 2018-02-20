@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.misc.py23 import *
+from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib.models import supportScalar
 from fontTools.varLib.builder import (buildVarRegionList, buildVarStore,
 				      buildVarRegion, buildVarData,
@@ -172,3 +173,5 @@ def VarStore_subset_varidxes(self, varIdxes, optimize=True):
 		data.VarRegionIndex = [regionMap[i] for i in data.VarRegionIndex]
 
 	return varDataMap
+
+ot.VarStore.subset_varidxes = VarStore_subset_varidxes
