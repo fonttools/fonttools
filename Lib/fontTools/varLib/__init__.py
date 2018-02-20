@@ -675,7 +675,7 @@ def load_designspace(designspace_filename):
 	return axes, internal_axis_supports, base_idx, normalized_master_locs, masters, instances
 
 
-def build(designspace_filename, master_finder=lambda s:s):
+def build(designspace_filename, master_finder=lambda s:s, exclude=[]):
 	"""
 	Build variation font from a designspace file.
 
@@ -696,8 +696,10 @@ def build(designspace_filename, master_finder=lambda s:s):
 
 	# TODO append masters as named-instances as well; needs .designspace change.
 	fvar = _add_fvar(vf, axes, instances)
-	_add_stat(vf, axes)
-	_add_avar(vf, axes)
+	if 'STAT' not in exclude:
+		_add_stat(vf, axes)
+	if 'avar' not in exclude:
+		_add_avar(vf, axes)
 	del instances
 
 	# Map from axis names to axis tags...
@@ -711,11 +713,15 @@ def build(designspace_filename, master_finder=lambda s:s):
 	assert 0 == model.mapping[base_idx]
 
 	log.info("Building variations tables")
-	_add_MVAR(vf, model, master_fonts, axisTags)
-	_add_HVAR(vf, model, master_fonts, axisTags)
-	_merge_OTL(vf, model, master_fonts, axisTags)
-	if 'glyf' in vf:
+	if 'MVAR' not in exclude:
+		_add_MVAR(vf, model, master_fonts, axisTags)
+	if 'HVAR' not in exclude:
+		_add_HVAR(vf, model, master_fonts, axisTags)
+	if 'GDEF' not in exclude or 'GPOS' not in exclude:
+		_merge_OTL(vf, model, master_fonts, axisTags)
+	if 'gvar' not in exclude and 'glyf' in vf:
 		_add_gvar(vf, model, master_fonts)
+	if 'cvar' not in exclude:
 		_merge_TTHinting(vf, model, master_fonts)
 
 	return vf, model, master_ttfs
@@ -727,6 +733,8 @@ def main(args=None):
 
 	parser = ArgumentParser(prog='varLib')
 	parser.add_argument('designspace')
+	parser.add_argument('-o', metavar='OUTPUTFILE', dest='outfile', default=None, help='output file')
+	parser.add_argument('-x', metavar='TAG', dest='exclude', action='append', default=[], help='exclude table')
 	options = parser.parse_args(args)
 
 	# TODO: allow user to configure logging via command-line options
@@ -734,9 +742,11 @@ def main(args=None):
 
 	designspace_filename = options.designspace
 	finder = lambda s: s.replace('master_ufo', 'master_ttf_interpolatable').replace('.ufo', '.ttf')
-	outfile = os.path.splitext(designspace_filename)[0] + '-VF.ttf'
+	outfile = options.outfile
+	if outfile is None:
+		outfile = os.path.splitext(designspace_filename)[0] + '-VF.ttf'
 
-	vf, model, master_ttfs = build(designspace_filename, finder)
+	vf, model, master_ttfs = build(designspace_filename, finder, exclude=options.exclude)
 
 	log.info("Saving variation font %s", outfile)
 	vf.save(outfile)
