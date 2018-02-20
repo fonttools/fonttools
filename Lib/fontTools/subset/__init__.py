@@ -1661,7 +1661,6 @@ def _pruneGDEF(font):
 	if not hasattr(table, 'VarStore'): return
 
 	store = table.VarStore
-	table.VarStore = None # Disable while we work on it.
 
 	usedVarIdxes = set()
 
@@ -1684,7 +1683,6 @@ def _pruneGDEF(font):
 	if 'GPOS' in font:
 		_visit(font['GPOS'].table, otTables.Device, mapper)
 
-	table.VarStore = store
 @_add_method(ttLib.getTableClass('GDEF'))
 def prune_post_subset(self, font, options):
 	table = self.table
