@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
-from fontTools.feaLib.error import FeatureLibError
+from fontTools.feaLib.error import FeatureLibError, IncludedFeaNotFound
 from fontTools.feaLib.lexer import IncludingLexer, Lexer
 import os
 import unittest
@@ -174,7 +174,7 @@ class IncludingLexerTest(unittest.TestCase):
 
     def test_include_missing_file(self):
         lexer = IncludingLexer(self.getpath("include/includemissingfile.fea"))
-        self.assertRaises(FeatureLibError, lambda: list(lexer))
+        self.assertRaises(IncludedFeaNotFound, lambda: list(lexer))
 
 
 if __name__ == "__main__":
