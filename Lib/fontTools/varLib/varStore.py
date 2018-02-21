@@ -241,13 +241,13 @@ class _Encoding(object):
 		self.chars = chars
 		self.width = self._popcount(chars)
 		self.overhead = self._characteristic_overhead(chars)
-		self.items = []
+		self.items = set()
 
 	def append(self, row):
-		self.items.append(row)
+		self.items.add(row)
 
 	def extend(self, lst):
-		self.items.extend(lst)
+		self.items.update(lst)
 
 	def get_room(self):
 		"""Maximum number of bytes that can be added to characteristic
