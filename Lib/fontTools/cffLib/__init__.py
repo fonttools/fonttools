@@ -1267,10 +1267,11 @@ class CharsetConverter(object):
 			file.seek(value)
 			log.log(DEBUG, "loading charset at %s", value)
 			format = readCard8(file)
+			pos = file.tell()
 			if format == 0:
-				charset = parseCharset0(numGlyphs, file, parent.strings, isCID)
+				charset = parseCharset0(numGlyphs, file, parent.strings, isCID, pos)
 			elif format == 1 or format == 2:
-				charset = parseCharset(numGlyphs, file, parent.strings, isCID, format)
+				charset = parseCharset(numGlyphs, file, parent.strings, isCID, format, pos)
 			else:
 				raise NotImplementedError
 			assert len(charset) == numGlyphs
@@ -1407,7 +1408,8 @@ def packCharset(charset, isCID, strings):
 	return bytesjoin(data)
 
 
-def parseCharset0(numGlyphs, file, strings, isCID):
+def parseCharset0(numGlyphs, file, strings, isCID, pos):
+	file.seek(pos)
 	charset = [".notdef"]
 	if isCID:
 		for i in range(numGlyphs - 1):
@@ -1420,7 +1422,8 @@ def parseCharset0(numGlyphs, file, strings, isCID):
 	return charset
 
 
-def parseCharset(numGlyphs, file, strings, isCID, fmt):
+def parseCharset(numGlyphs, file, strings, isCID, fmt, pos):
+	file.seek(pos)
 	charset = ['.notdef']
 	count = 1
 	if fmt == 1:
@@ -1479,12 +1482,14 @@ class EncodingConverter(SimpleConverter):
 			if haveSupplement:
 				raise NotImplementedError("Encoding supplements are not yet supported")
 			fmt = fmt & 0x7f
+			# save file position against lazy-load of charset
+			pos = file.tell()
 			if fmt == 0:
 				encoding = parseEncoding0(parent.charset, file, haveSupplement,
-						parent.strings)
+						parent.strings, pos)
 			elif fmt == 1:
 				encoding = parseEncoding1(parent.charset, file, haveSupplement,
-						parent.strings)
+						parent.strings, pos)
 			return encoding
 
 	def write(self, parent, value):
@@ -1523,7 +1528,8 @@ class EncodingConverter(SimpleConverter):
 		return encoding
 
 
-def parseEncoding0(charset, file, haveSupplement, strings):
+def parseEncoding0(charset, file, haveSupplement, strings, pos):
+	file.seek(pos)
 	nCodes = readCard8(file)
 	encoding = [".notdef"] * 256
 	for glyphID in range(1, nCodes + 1):
@@ -1533,7 +1539,8 @@ def parseEncoding0(charset, file, haveSupplement, strings):
 	return encoding
 
 
-def parseEncoding1(charset, file, haveSupplement, strings):
+def parseEncoding1(charset, file, haveSupplement, strings, pos):
+	file.seek(pos)
 	nRanges = readCard8(file)
 	encoding = [".notdef"] * 256
 	glyphID = 1
