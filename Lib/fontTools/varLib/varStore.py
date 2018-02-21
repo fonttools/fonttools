@@ -22,9 +22,12 @@ class OnlineVarStoreBuilder(object):
 		self._regionList = buildVarRegionList([], axisTags)
 		self._store = buildVarStore(self._regionList, [])
 		self._data = None
+		self._model = None
+		self._cache = {}
 
 	def setModel(self, model):
 		self._model = model
+		self._cache = {} # Empty cached items
 
 	def finish(self, optimize=True):
 		self._regionList.RegionCount = len(self._regionList.Region)
@@ -54,17 +57,25 @@ class OnlineVarStoreBuilder(object):
 		self._store.VarData.append(data)
 
 	def storeMasters(self, master_values):
-		if not self._data:
-			self._add_VarData()
 		deltas = [round(d) for d in self._model.getDeltas(master_values)]
 		base = deltas.pop(0)
+		deltas = tuple(deltas)
+		varIdx = self._cache.get(deltas)
+		if varIdx is not None:
+			return base, varIdx
+
+		if not self._data:
+			self._add_VarData()
 		inner = len(self._data.Item)
 		if inner == 0xFFFF:
 			# Full array. Start new one.
 			self._add_VarData()
 			return self.storeMasters(master_values)
 		self._data.Item.append(deltas)
-		return base, (self._outer << 16) + inner
+
+		varIdx = (self._outer << 16) + inner
+		self._cache[deltas] = varIdx
+		return base, varIdx
 
 
 def VarRegion_get_support(self, fvar_axes):
