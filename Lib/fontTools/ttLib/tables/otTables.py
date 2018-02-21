@@ -610,7 +610,10 @@ class VarIdxMap(BaseTable):
 		if mapping is None:
 			mapping = {}
 			self.mapping = mapping
-		glyph = attrs['glyph']
+		try:
+			glyph = attrs['glyph']
+		except: # https://github.com/fonttools/fonttools/commit/21cbab8ce9ded3356fef3745122da64dcaf314e9#commitcomment-27649836
+			glyph = font.getGlyphOrder()[attrs['index']]
 		outer = safeEval(attrs['outer'])
 		inner = safeEval(attrs['inner'])
 		assert inner <= 0xFFFF
