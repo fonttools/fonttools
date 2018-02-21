@@ -14,3 +14,7 @@ class FeatureLibError(Exception):
             return "%s:%d:%d: %s" % (path, line, column, message)
         else:
             return message
+
+
+class IncludedFeaNotFound(FeatureLibError):
+    pass

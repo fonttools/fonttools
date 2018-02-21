@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.misc.py23 import *
-from fontTools.feaLib.error import FeatureLibError
+from fontTools.feaLib.error import FeatureLibError, IncludedFeaNotFound
 import re
 import os
 
@@ -231,7 +231,11 @@ class IncludingLexer(object):
             try:
                 fileobj = open(filename, "r", encoding="utf-8")
             except IOError as err:
-                raise FeatureLibError(str(err), location)
+                # FileNotFoundError does not exist on Python < 3.3
+                import errno
+                if err.errno == errno.ENOENT:
+                    raise IncludedFeaNotFound(str(err), location)
+                raise  # pragma: no cover
         data = fileobj.read()
         filename = fileobj.name if hasattr(fileobj, "name") else "<features>"
         if closing:
