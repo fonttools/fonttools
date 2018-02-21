@@ -513,7 +513,11 @@ def _merge_OTL(font, model, master_fonts, axisTags):
 	merger = VariationMerger(model, axisTags, font)
 
 	merger.mergeTables(font, master_fonts, ['GPOS'])
+	# TODO Merge GSUB
+	# TODO Merge GDEF itself!
 	store = merger.store_builder.finish()
+	if not store.VarData:
+		return
 	try:
 		GDEF = font['GDEF'].table
 		assert GDEF.Version <= 0x00010002
@@ -527,7 +531,8 @@ def _merge_OTL(font, model, master_fonts, axisTags):
 	# Optimize
 	varidx_map = store.optimize()
 	GDEF.remap_device_varidxes(varidx_map)
-	font['GPOS'].table.remap_device_varidxes(varidx_map)
+	if 'GPOS' in font:
+		font['GPOS'].table.remap_device_varidxes(varidx_map)
 
 
 

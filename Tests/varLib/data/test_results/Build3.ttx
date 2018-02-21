@@ -1,30 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.14">
 
-  <GDEF>
-    <Version value="0x00010003"/>
-    <VarStore Format="1">
-      <Format value="1"/>
-      <VarRegionList>
-        <!-- RegionAxisCount=1 -->
-        <!-- RegionCount=1 -->
-        <Region index="0">
-          <VarRegionAxis index="0">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="1.0"/>
-            <EndCoord value="1.0"/>
-          </VarRegionAxis>
-        </Region>
-      </VarRegionList>
-      <!-- VarDataCount=1 -->
-      <VarData index="0">
-        <!-- ItemCount=0 -->
-        <NumShorts value="0"/>
-        <!-- VarRegionCount=0 -->
-      </VarData>
-    </VarStore>
-  </GDEF>
-
   <HVAR>
     <Version value="0x00010000"/>
     <VarStore Format="1">
@@ -92,17 +68,17 @@
         <NumShorts value="0"/>
         <!-- VarRegionCount=1 -->
         <VarRegionIndex index="0" value="0"/>
-        <Item index="0" value="[22]"/>
-        <Item index="1" value="[13]"/>
+        <Item index="0" value="[13]"/>
+        <Item index="1" value="[22]"/>
       </VarData>
     </VarStore>
     <ValueRecord index="0">
       <ValueTag value="stro"/>
-      <VarIdx value="1"/>
+      <VarIdx value="0"/>
     </ValueRecord>
     <ValueRecord index="1">
       <ValueTag value="xhgt"/>
-      <VarIdx value="0"/>
+      <VarIdx value="1"/>
     </ValueRecord>
   </MVAR>
 

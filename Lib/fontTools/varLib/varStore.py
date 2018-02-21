@@ -22,14 +22,24 @@ class OnlineVarStoreBuilder(object):
 		self._regionMap = {}
 		self._regionList = buildVarRegionList([], axisTags)
 		self._store = buildVarStore(self._regionList, [])
+		self._data = None
 
 	def setModel(self, model):
 		self._model = model
 
+	def finish(self, optimize=True):
+		self._regionList.RegionCount = len(self._regionList.Region)
+		self._store.VarDataCount = len(self._store.VarData)
+		for data in self._store.VarData:
+			data.ItemCount = len(data.Item)
+			VarData_CalculateNumShorts(data, optimize)
+		return self._store
+
+	def _add_VarData(self):
 		regionMap = self._regionMap
 		regionList = self._regionList
 
-		regions = model.supports[1:]
+		regions = self._model.supports[1:]
 		regionIndices = []
 		for region in regions:
 			key = _getLocationKey(region)
@@ -44,21 +54,15 @@ class OnlineVarStoreBuilder(object):
 		self._outer = len(self._store.VarData)
 		self._store.VarData.append(data)
 
-	def finish(self, optimize=True):
-		self._regionList.RegionCount = len(self._regionList.Region)
-		self._store.VarDataCount = len(self._store.VarData)
-		for data in self._store.VarData:
-			data.ItemCount = len(data.Item)
-			VarData_CalculateNumShorts(data, optimize)
-		return self._store
-
 	def storeMasters(self, master_values):
+		if not self._data:
+			self._add_VarData()
 		deltas = [round(d) for d in self._model.getDeltas(master_values)]
 		base = deltas.pop(0)
 		inner = len(self._data.Item)
 		if inner == 0xFFFF:
 			# Full array. Start new one.
-			self.setModel(self._model)
+			self._add_VarData()
 			return self.storeMasters(master_values)
 		self._data.Item.append(deltas)
 		return base, (self._outer << 16) + inner
