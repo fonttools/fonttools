@@ -1,7 +1,7 @@
 """
 Instantiate a variation font.  Run, eg:
 
-$ python mutator.py ./NotoSansArabic-VF.ttf wght=140 wdth=85
+$ fonttools varLib.mutator ./NotoSansArabic-VF.ttf wght=140 wdth=85
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
