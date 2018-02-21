@@ -228,7 +228,6 @@ def Object_remap_device_varidxes(self, varidxes_map):
 	_visit(self, ot.Device, mapper)
 
 ot.GDEF.remap_device_varidxes = Object_remap_device_varidxes
-ot.GSUB.remap_device_varidxes = Object_remap_device_varidxes
 ot.GPOS.remap_device_varidxes = Object_remap_device_varidxes
 
 
@@ -479,8 +478,6 @@ def main(args=None):
 	varidx_map = store.optimize()
 
 	gdef.table.remap_device_varidxes(varidx_map)
-	if 'GSUB' in font:
-		font['GSUB'].table.remap_device_varidxes(varidx_map)
 	if 'GPOS' in font:
 		font['GPOS'].table.remap_device_varidxes(varidx_map)
 

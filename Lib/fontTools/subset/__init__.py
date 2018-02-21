@@ -1645,8 +1645,6 @@ def _pruneGDEF(font):
 
 	# Map.
 	table.remap_device_varidxes(varidx_map)
-	if 'GSUB' in font:
-		font['GSUB'].table.remap_device_varidxes(varidx_map)
 	if 'GPOS' in font:
 		font['GPOS'].table.remap_device_varidxes(varidx_map)
 
