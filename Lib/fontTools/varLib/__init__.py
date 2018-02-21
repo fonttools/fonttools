@@ -518,6 +518,11 @@ def _merge_OTL(font, model, master_fonts, axisTags):
 	GDEF.Version = 0x00010003
 	GDEF.VarStore = store
 
+	# Optimize
+	varidx_map = store.optimize()
+	GDEF.remap_device_varidxes(varidx_map)
+	font['GPOS'].table.remap_device_varidxes(varidx_map)
+
 
 
 # Pretty much all of this file should be redesigned and moved inot submodules...
