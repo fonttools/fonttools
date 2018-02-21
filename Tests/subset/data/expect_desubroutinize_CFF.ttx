@@ -5,6 +5,7 @@
     <major value="1"/>
     <minor value="0"/>
     <CFFFont name="Lobster1.4">
+      <ROS Registry="Adobe" Order="Identity" Supplement="0"/>
       <version value="001.001"/>
       <Notice value="Copyright (c) 2010 by Pablo Impallari. www.impallari.com. All rights reserved."/>
       <Copyright value="Copyright (c) 2010 by Pablo Impallari. All rights reserved."/>
@@ -20,8 +21,11 @@
       <FontMatrix value="0.001 0 0 0.001 0 0"/>
       <FontBBox value="-209 -250 1186 1000"/>
       <StrokeWidth value="0"/>
+      <CIDFontVersion value="0"/>
+      <CIDFontRevision value="0"/>
+      <CIDFontType value="0"/>
+      <CIDCount value="8720"/>
       <!-- charset is dumped separately as the 'GlyphOrder' element -->
-      <Encoding name="StandardEncoding"/>
       <Private>
         <BlueValues value="0 0"/>
         <BlueScale value="0.039625"/>
@@ -38,7 +42,7 @@
         <CharString name=".notdef">
           -63 endchar
         </CharString>
-        <CharString name="A">
+        <CharString name="cid00001">
           220 -93 -21 114 -20 297 181 -59 59 292 -20 hstemhm
           9 118 -43 120 hintmask 11101100
           535 hmoveto
@@ -58,7 +62,7 @@
           -39 16 -43 11 -40 8 56 112 64 93 60 32 rrcurveto
           endchar
         </CharString>
-        <CharString name="A.salt">
+        <CharString name="cid00002">
           142 -92 -21 113 -20 386 52 333 -20 hstem
           8 120 vstem
           459 hmoveto
@@ -73,7 +77,7 @@
           58 126 72 106 73 32 -56 -264 rcurveline
           endchar
         </CharString>
-        <CharString name="B">
+        <CharString name="cid00003">
           187 -17 96 -79 -20 406 48 270 46 hstemhm
           6 93 362 139 -119 101 -101 119 hintmask 01111100
           230 636 rmoveto
@@ -95,7 +99,7 @@
           47 222 rlineto
           endchar
         </CharString>
-        <CharString name="B.salt">
+        <CharString name="cid00004">
           185 -28 92 -64 -20 413 41 270 46 hstemhm
           6 93 350 149 -119 105 -105 119 hintmask 01111100
           230 636 rmoveto
@@ -120,7 +124,7 @@
           63 21 -49 -57 -96 -58 -120 -72 hvcurveto
           endchar
         </CharString>
-        <CharString name="I">
+        <CharString name="cid00005">
           -73 21 -21 750 -20 hstem
           6 93 vstem
           397 748 rmoveto
@@ -132,7 +136,7 @@
           144 hlineto
           endchar
         </CharString>
-        <CharString name="IJ">
+        <CharString name="cid00006">
           215 -207 50 157 -20 770 -20 hstemhm
           6 93 13 84 -84 205 hintmask 11111000
           397 748 rmoveto
@@ -152,7 +156,7 @@
           34 -26 24 -41 6 vhcurveto
           endchar
         </CharString>
-        <CharString name="J">
+        <CharString name="cid00007">
           88 -207 50 144 81 682 -20 hstemhm
           17 84 -84 220 -50 93 hintmask 11110100
           538 750 rmoveto
@@ -168,7 +172,7 @@
           150 710 rlineto
           endchar
         </CharString>
-        <CharString name="one">
+        <CharString name="cid00008">
           -131 21 -21 624 46 78 -20 hstem
           324 748 rmoveto
           -72 -121 -78 -6 -55 hhcurveto
@@ -178,7 +182,7 @@
           144 hlineto
           endchar
         </CharString>
-        <CharString name="three">
+        <CharString name="cid00009">
           66 -5 65 197 51 204 237 -54 54 hstemhm
           6 111 -12 110 117 155 -117 117 hintmask 11101001
           205 257 rmoveto
@@ -196,7 +200,7 @@
           -87 -53 -82 -86 -37 -39 13 76 40 10 62 78 6 vhcurveto
           endchar
         </CharString>
-        <CharString name="two">
+        <CharString name="cid00010">
           44 -11 125 -89 89 -89 107 380 237 -54 54 hstemhm
           66 110 142 119 -119 144 hintmask 00110101
           111 132 rmoveto
@@ -217,7 +221,7 @@
           -75 -57 18 -59 hhcurveto
           endchar
         </CharString>
-        <CharString name="zero">
+        <CharString name="cid00011">
           98 -9 84 623 52 hstem
           30 158 236 131 vstem
           377 750 rmoveto

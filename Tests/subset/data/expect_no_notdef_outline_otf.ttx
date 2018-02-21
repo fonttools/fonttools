@@ -5,6 +5,7 @@
     <major value="1"/>
     <minor value="0"/>
     <CFFFont name="TestOTF-Regular">
+      <ROS Registry="Adobe" Order="Identity" Supplement="0"/>
       <version value="1.0"/>
       <FamilyName value="Test OTF"/>
       <isFixedPitch value="0"/>
@@ -16,8 +17,11 @@
       <FontMatrix value="0.001 0 0 0.001 0 0"/>
       <FontBBox value="0 0 486 660"/>
       <StrokeWidth value="0"/>
+      <CIDFontVersion value="0"/>
+      <CIDFontRevision value="0"/>
+      <CIDFontType value="0"/>
+      <CIDCount value="8720"/>
       <!-- charset is dumped separately as the 'GlyphOrder' element -->
-      <Encoding name="StandardEncoding"/>
       <Private>
         <BlueValues value="-10 0 500 510"/>
         <BlueScale value="0.039625"/>
