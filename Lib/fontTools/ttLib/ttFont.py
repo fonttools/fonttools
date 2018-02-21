@@ -1,4 +1,5 @@
 from __future__ import print_function, division, absolute_import
+from fontTools.misc import xmlWriter
 from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import deprecateArgument
 from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
@@ -216,7 +217,6 @@ class TTFont(object):
 		to skip, but only when the 'tables' argument is false.
 		"""
 
-		from fontTools.misc import xmlWriter
 		writer = xmlWriter.XMLWriter(fileOrPath, newlinestr=newlinestr)
 		self._saveXML(writer, **kwargs)
 		writer.close()
