@@ -40,12 +40,15 @@ def test_buildVarData_no_optimize(region_indices, items, expected_num_shorts):
      [0, 2, 1], [[128, -129, 1], [3, 5, 4], [6, 8, 7]]),
     ([0, 1, 2], [[0, 1, 128], [3, -129, 5], [256, 7, 8]], 3,
      [0, 1, 2], [[0, 1, 128], [3, -129, 5], [256, 7, 8]]),
+    ([0, 1, 2], [[0, 128, 2], [0, 4, 5], [0, 7, 8]], 1,
+     [1, 2], [[128, 2], [4, 5], [7, 8]]),
 ], ids=[
     "0/3_shorts_no_reorder",
     "1/3_shorts_reorder",
     "2/3_shorts_reorder",
     "2/3_shorts_same_row_reorder",
     "3/3_shorts_no_reorder",
+    "1/3_shorts_1/3_zeroes",
 ])
 def test_buildVarData_optimize(
         region_indices, items, expected_num_shorts, expected_regions,
@@ -54,7 +57,7 @@ def test_buildVarData_optimize(
 
     assert data.ItemCount == len(items)
     assert data.NumShorts == expected_num_shorts
-    assert data.VarRegionCount == len(region_indices)
+    assert data.VarRegionCount == len(expected_regions)
     assert data.VarRegionIndex == expected_regions
     assert data.Item == expected_items
 

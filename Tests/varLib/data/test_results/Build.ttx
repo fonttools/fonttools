@@ -73,12 +73,7 @@
       <VarData index="0">
         <!-- ItemCount=0 -->
         <NumShorts value="0"/>
-        <!-- VarRegionCount=5 -->
-        <VarRegionIndex index="0" value="0"/>
-        <VarRegionIndex index="1" value="1"/>
-        <VarRegionIndex index="2" value="2"/>
-        <VarRegionIndex index="3" value="3"/>
-        <VarRegionIndex index="4" value="4"/>
+        <!-- VarRegionCount=0 -->
       </VarData>
     </VarStore>
   </GDEF>
@@ -155,18 +150,15 @@
       <VarData index="0">
         <!-- ItemCount=6 -->
         <NumShorts value="0"/>
-        <!-- VarRegionCount=5 -->
+        <!-- VarRegionCount=2 -->
         <VarRegionIndex index="0" value="0"/>
         <VarRegionIndex index="1" value="1"/>
-        <VarRegionIndex index="2" value="2"/>
-        <VarRegionIndex index="3" value="3"/>
-        <VarRegionIndex index="4" value="4"/>
-        <Item index="0" value="[0, 0, 0, 0, 0]"/>
-        <Item index="1" value="[14, -28, 0, 0, 0]"/>
-        <Item index="2" value="[-10, 17, 0, 0, 0]"/>
-        <Item index="3" value="[-3, 32, 0, 0, 0]"/>
-        <Item index="4" value="[-7, 63, 0, 0, 0]"/>
-        <Item index="5" value="[-7, 63, 0, 0, 0]"/>
+        <Item index="0" value="[0, 0]"/>
+        <Item index="1" value="[14, -28]"/>
+        <Item index="2" value="[-10, 17]"/>
+        <Item index="3" value="[-3, 32]"/>
+        <Item index="4" value="[-7, 63]"/>
+        <Item index="5" value="[-7, 63]"/>
       </VarData>
     </VarStore>
   </HVAR>
@@ -246,14 +238,11 @@
       <VarData index="0">
         <!-- ItemCount=2 -->
         <NumShorts value="0"/>
-        <!-- VarRegionCount=5 -->
+        <!-- VarRegionCount=2 -->
         <VarRegionIndex index="0" value="0"/>
         <VarRegionIndex index="1" value="1"/>
-        <VarRegionIndex index="2" value="2"/>
-        <VarRegionIndex index="3" value="3"/>
-        <VarRegionIndex index="4" value="4"/>
-        <Item index="0" value="[-4, 13, 0, 0, 0]"/>
-        <Item index="1" value="[-2, 8, 0, 0, 0]"/>
+        <Item index="0" value="[-4, 13]"/>
+        <Item index="1" value="[-2, 8]"/>
       </VarData>
     </VarStore>
     <ValueRecord index="0">

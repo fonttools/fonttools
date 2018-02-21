@@ -28,14 +28,14 @@ def buildVarRegionList(supports, axisTags):
 	return self
 
 
-def _reorderItem(lst, narrows):
+def _reorderItem(lst, narrows, zeroes):
 	out = []
 	count = len(lst)
 	for i in range(count):
 		if i not in narrows:
 			out.append(lst[i])
 	for i in range(count):
-		if i in narrows:
+		if i in narrows  and i not in zeroes:
 			out.append(lst[i])
 	return out
 
@@ -43,16 +43,20 @@ def VarData_CalculateNumShorts(self, optimize=True):
 	count = self.VarRegionCount
 	items = self.Item
 	narrows = set(range(count))
+	zeroes = set(range(count))
 	for item in items:
 		wides = [i for i in narrows if not (-128 <= item[i] <= 127)]
 		narrows.difference_update(wides)
-		if not narrows:
+		nonzeroes = [i for i in zeroes if item[i]]
+		zeroes.difference_update(nonzeroes)
+		if not narrows and not zeroes:
 			break
 	if optimize:
 		# Reorder columns such that all SHORT columns come before UINT8
-		self.VarRegionIndex = _reorderItem(self.VarRegionIndex, narrows)
+		self.VarRegionIndex = _reorderItem(self.VarRegionIndex, narrows, zeroes)
+		self.VarRegionCount = len(self.VarRegionIndex)
 		for i in range(self.ItemCount):
-			items[i] = _reorderItem(items[i], narrows)
+			items[i] = _reorderItem(items[i], narrows, zeroes)
 		self.NumShorts = count - len(narrows)
 	else:
 		wides = set(range(count)) - narrows

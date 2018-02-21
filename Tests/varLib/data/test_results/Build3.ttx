@@ -20,8 +20,7 @@
       <VarData index="0">
         <!-- ItemCount=0 -->
         <NumShorts value="0"/>
-        <!-- VarRegionCount=1 -->
-        <VarRegionIndex index="0" value="0"/>
+        <!-- VarRegionCount=0 -->
       </VarData>
     </VarStore>
   </GDEF>
