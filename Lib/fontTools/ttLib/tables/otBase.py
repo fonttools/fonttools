@@ -42,7 +42,7 @@ class BaseTTXConverter(DefaultTable):
 		self.table.decompile(reader, font)
 
 	def compile(self, font):
-		""" Create a top-level OTFWriter for the GPOS/GSUB table.
+		""" Create a top-level OTTableWriter for the GPOS/GSUB table.
 			Call the compile method for the the table
 				for each 'converter' record in the table converter list
 					call converter's write method for each item in the value.

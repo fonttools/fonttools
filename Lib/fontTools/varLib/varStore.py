@@ -151,6 +151,14 @@ def VarStore_subset_varidxes(self, varIdxes, optimize=True):
 	self.VarData = newVarData
 	self.VarDataCount = len(self.VarData)
 
+	self.prune_regions()
+
+	return varDataMap
+
+ot.VarStore.subset_varidxes = VarStore_subset_varidxes
+
+def VarStore_prune_regions(self):
+	"""Remove unused VarRegions."""
 	#
 	# Subset VarRegionList
 	#
@@ -173,9 +181,7 @@ def VarStore_subset_varidxes(self, varIdxes, optimize=True):
 	for data in self.VarData:
 		data.VarRegionIndex = [regionMap[i] for i in data.VarRegionIndex]
 
-	return varDataMap
-
-ot.VarStore.subset_varidxes = VarStore_subset_varidxes
+ot.VarStore.prune_regions = VarStore_prune_regions
 
 
 def _visit(self, objType, func):
@@ -222,3 +228,75 @@ def Object_remap_device_varidxes(self, varidxes_map):
 ot.GDEF.remap_device_varidxes = Object_remap_device_varidxes
 ot.GSUB.remap_device_varidxes = Object_remap_device_varidxes
 ot.GPOS.remap_device_varidxes = Object_remap_device_varidxes
+
+
+def VarStore_optimize(self):
+	"""Optimize storage. Returns mapping from old VarIdxes to new ones."""
+
+	# TODO
+	# Check that no two VarRegions are the same; if they are, fold them.
+	# Also that same VarData does not reference same VarRegion more than once...
+
+	mapping = {}
+
+	for major,data in enumerate(self.VarData):
+		for minor,row in enumerate(data.Item):
+			mapping[(major<<16)+minor] = (major<<16)+minor
+
+	self.prune_regions()
+
+	# Recalculate things and go home.
+	self.VarRegionList.RegionCount = len(self.VarRegionList.Region)
+	self.VarDataCount = len(self.VarData)
+	for data in self.VarData:
+		data.ItemCount = len(data.Item)
+		VarData_CalculateNumShorts(data)
+
+	return mapping
+
+ot.VarStore.optimize = VarStore_optimize
+
+
+def main(args=None):
+	from argparse import ArgumentParser
+	from fontTools import configLogger
+	from fontTools.ttLib import TTFont
+	from fontTools.ttLib.tables.otBase import OTTableWriter
+
+	parser = ArgumentParser(prog='varLib.varStore')
+	parser.add_argument('fontfile')
+	parser.add_argument('outfile', nargs='?')
+	options = parser.parse_args(args)
+
+	# TODO: allow user to configure logging via command-line options
+	configLogger(level="INFO")
+
+	fontfile = options.fontfile
+	outfile = options.outfile
+
+	font = TTFont(fontfile)
+	gdef = font['GDEF']
+	store = gdef.table.VarStore
+
+	#writer = OTTableWriter()
+	#store.compile(writer, font)
+	#size = len(writer.getAllData())
+	#print("Before: %7d bytes" % size)
+
+	store.optimize()
+
+	writer = OTTableWriter()
+	store.compile(writer, font)
+	size = len(writer.getAllData())
+	print("After:  %7d bytes" % size)
+
+	if outfile is not None:
+		font.save(outfile)
+
+
+if __name__ == "__main__":
+	import sys
+	if len(sys.argv) > 1:
+		sys.exit(main())
+	import doctest
+	sys.exit(doctest.testmod().failed)
