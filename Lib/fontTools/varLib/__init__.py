@@ -490,11 +490,17 @@ def _add_MVAR(font, model, master_ttfs, axisTags):
 
 	assert "MVAR" not in font
 	if records:
+		store = store_builder.finish()
+		# Optimize
+		mapping = store.optimize()
+		for rec in records:
+			rec.VarIdx = mapping[rec.VarIdx]
+
 		MVAR = font["MVAR"] = newTable('MVAR')
 		mvar = MVAR.table = ot.MVAR()
 		mvar.Version = 0x00010000
 		mvar.Reserved = 0
-		mvar.VarStore = store_builder.finish()
+		mvar.VarStore = store
 		# XXX these should not be hard-coded but computed automatically
 		mvar.ValueRecordSize = 8
 		mvar.ValueRecordCount = len(records)
