@@ -29,6 +29,7 @@ from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.ttLib.tables.ttProgram import Program
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import otTables as ot
+from fontTools.ttLib.tables.otBase import OTTableWriter
 from fontTools.varLib import builder, designspace, models, varStore
 from fontTools.varLib.merger import VariationMerger, _all_equal
 from fontTools.varLib.mvar import MVAR_ENTRIES
@@ -425,29 +426,47 @@ def _add_HVAR(font, model, master_ttfs, axisTags):
 	for glyphName in font.getGlyphOrder():
 		items.append(hAdvanceDeltas[glyphName])
 
-	advanceMapping = None
-	# Add indirect mapping to save on duplicates
-	uniq = set(items)
-	# TODO Improve heuristic
-	if (len(items) - len(uniq)) * len(varTupleIndexes) > len(items):
-		newItems = sorted(uniq)
-		mapper = {v:i for i,v in enumerate(newItems)}
-		mapping = [mapper[item] for item in items]
-		advanceMapping = builder.buildVarIdxMap(mapping, font.getGlyphOrder())
-		items = newItems
-		del mapper, mapping, newItems
-	del uniq
+	# Build indirect mapping to save on duplicates, compare both sizes
+	uniq = list(set(items))
+	mapper = {v:i for i,v in enumerate(uniq)}
+	mapping = [mapper[item] for item in items]
+	advanceMapping = builder.buildVarIdxMap(mapping, font.getGlyphOrder())
 
+	# Direct
 	varData = builder.buildVarData(varTupleIndexes, items)
-	varstore = builder.buildVarStore(varTupleList, [varData])
+	directStore = builder.buildVarStore(varTupleList, [varData])
 
+	# Indirect
+	varData = builder.buildVarData(varTupleIndexes, uniq)
+	indirectStore = builder.buildVarStore(varTupleList, [varData])
+	mapping = indirectStore.optimize()
+	advanceMapping.mapping = {k:mapping[v] for k,v in advanceMapping.mapping.items()}
+
+	# Compile both, see which is more compact
+
+	writer = OTTableWriter()
+	directStore.compile(writer, font)
+	directSize = len(writer.getAllData())
+
+	writer = OTTableWriter()
+	indirectStore.compile(writer, font)
+	advanceMapping.compile(writer, font)
+	indirectSize = len(writer.getAllData())
+
+	use_direct = directSize < indirectSize
+
+	# Done; put it all together.
 	assert "HVAR" not in font
 	HVAR = font["HVAR"] = newTable('HVAR')
 	hvar = HVAR.table = ot.HVAR()
 	hvar.Version = 0x00010000
-	hvar.VarStore = varstore
-	hvar.AdvWidthMap = advanceMapping
 	hvar.LsbMap = hvar.RsbMap = None
+	if use_direct:
+		hvar.VarStore = directStore
+		hvar.AdvWidthMap = None
+	else:
+		hvar.VarStore = indirectStore
+		hvar.AdvWidthMap = advanceMapping
 
 def _add_MVAR(font, model, master_ttfs, axisTags):
 

@@ -474,10 +474,10 @@ def main(args=None):
 	gdef = font['GDEF']
 	store = gdef.table.VarStore
 
-	#writer = OTTableWriter()
-	#store.compile(writer, font)
-	#size = len(writer.getAllData())
-	#print("Before: %7d bytes" % size)
+	writer = OTTableWriter()
+	store.compile(writer, font)
+	size = len(writer.getAllData())
+	print("Before: %7d bytes" % size)
 
 	varidx_map = store.optimize()
 
