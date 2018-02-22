@@ -114,29 +114,30 @@ def getXML(func, ttFont=None):
 
 
 class MockFont(object):
-	"""A font-like object that automatically adds any looked up glyphname
-	to its glyphOrder."""
+    """A font-like object that automatically adds any looked up glyphname
+    to its glyphOrder."""
 
-	def __init__(self):
-		self._glyphOrder = ['.notdef']
-		class AllocatingDict(dict):
-			def __missing__(reverseDict, key):
-				self._glyphOrder.append(key)
-				gid = len(reverseDict)
-				reverseDict[key] = gid
-				return gid
-		self._reverseGlyphOrder = AllocatingDict({'.notdef': 0})
-		self.lazy = False
+    def __init__(self):
+        self._glyphOrder = ['.notdef']
 
-	def getGlyphID(self, glyph, requireReal=None):
-		gid = self._reverseGlyphOrder[glyph]
-		return gid
+        class AllocatingDict(dict):
+            def __missing__(reverseDict, key):
+                self._glyphOrder.append(key)
+                gid = len(reverseDict)
+                reverseDict[key] = gid
+                return gid
+        self._reverseGlyphOrder = AllocatingDict({'.notdef': 0})
+        self.lazy = False
 
-	def getReverseGlyphMap(self):
-		return self._reverseGlyphOrder
+    def getGlyphID(self, glyph, requireReal=None):
+        gid = self._reverseGlyphOrder[glyph]
+        return gid
 
-	def getGlyphName(self, gid):
-		return self._glyphOrder[gid]
+    def getReverseGlyphMap(self):
+        return self._reverseGlyphOrder
 
-	def getGlyphOrder(self):
-		return self._glyphOrder
+    def getGlyphName(self, gid):
+        return self._glyphOrder[gid]
+
+    def getGlyphOrder(self):
+        return self._glyphOrder
