@@ -1,12 +1,13 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.cffLib import TopDict, PrivateDict, CharStrings
-from fontTools.misc.testTools import parseXML
+from fontTools.misc.testTools import parseXML, DataFilesHandler
+import sys
 import unittest
 
 
-class TopDictTest(unittest.TestCase):
+class CffLibTest(DataFilesHandler):
 
-    def test_recalcFontBBox(self):
+    def test_topDict_recalcFontBBox(self):
         topDict = TopDict()
         topDict.CharStrings = CharStrings(None, None, None, PrivateDict(), None, None)
         topDict.CharStrings.fromXML(None, None, parseXML("""
@@ -27,7 +28,7 @@ class TopDictTest(unittest.TestCase):
         topDict.recalcFontBBox()
         self.assertEqual(topDict.FontBBox, [-56, -100, 300, 200])
 
-    def test_recalcFontBBox_empty(self):
+    def test_topDict_recalcFontBBox_empty(self):
         topDict = TopDict()
         topDict.CharStrings = CharStrings(None, None, None, PrivateDict(), None, None)
         topDict.CharStrings.fromXML(None, None, parseXML("""
@@ -44,5 +45,4 @@ class TopDictTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    import sys
     sys.exit(unittest.main())
