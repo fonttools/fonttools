@@ -1027,20 +1027,16 @@ def buildConverters(table):
 	return d
 
 
-class BaseConverter(object):
+class SimpleConverter(object):
 
 	def read(self, parent, value):
+		if not hasattr(parent, "file"):
+			return self._read(parent, value)
 		file = parent.file
 		pos = file.tell()
-		try:
-			return self._read(parent, value)
-		finally:
-			file.seek(pos)
-
-	def _read(self, parent, value):
-		raise NotImplementedError
-
-class SimpleConverter(BaseConverter):
+		value = self._read(parent, value)
+		file.seek(pos)
+		return value
 
 	def _read(self, parent, value):
 		return value
@@ -1271,7 +1267,7 @@ class CharStringsConverter(TableConverter):
 		return charStrings
 
 
-class CharsetConverter(BaseConverter):
+class CharsetConverter(SimpleConverter):
 	def _read(self, parent, value):
 		isCID = hasattr(parent, "ROS")
 		if value > 2:
@@ -1646,7 +1642,7 @@ class FDArrayConverter(TableConverter):
 		return fdArray
 
 
-class FDSelectConverter(BaseConverter):
+class FDSelectConverter(SimpleConverter):
 
 	def _read(self, parent, value):
 		file = parent.file
