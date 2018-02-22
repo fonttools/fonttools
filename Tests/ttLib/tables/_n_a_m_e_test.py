@@ -182,7 +182,7 @@ class NameTableTest(unittest.TestCase):
 			"offset": 8765  # out of range
 		}
 		data = bytesjoin([
-                        struct.pack(">HHH", 1, 1, 6 + nameRecordSize),
+                        struct.pack(tostr(">HHH"), 1, 1, 6 + nameRecordSize),
                         sstruct.pack(nameRecordFormat, badRecord)])
 		table.decompile(data, ttFont=None)
 		self.assertEqual(table.names, [])
