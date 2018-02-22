@@ -1034,9 +1034,10 @@ class SimpleConverter(object):
 			return self._read(parent, value)
 		file = parent.file
 		pos = file.tell()
-		value = self._read(parent, value)
-		file.seek(pos)
-		return value
+		try:
+			return self._read(parent, value)
+		finally:
+			file.seek(pos)
 
 	def _read(self, parent, value):
 		return value
