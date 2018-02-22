@@ -1180,6 +1180,7 @@ class PrivateDictConverter(TableConverter):
 	def read(self, parent, value):
 		size, offset = value
 		file = parent.file
+		pos = file.tell()
 		isCFF2 = parent._isCFF2
 		try:
 			vstore = parent.vstore
@@ -1191,6 +1192,7 @@ class PrivateDictConverter(TableConverter):
 		data = file.read(size)
 		assert len(data) == size
 		priv.decompile(data)
+		file.seek(pos)
 		return priv
 
 	def write(self, parent, value):
@@ -1204,9 +1206,12 @@ class SubrsConverter(TableConverter):
 
 	def read(self, parent, value):
 		file = parent.file
+		pos = file.tell()
 		isCFF2 = parent._isCFF2
 		file.seek(parent.offset + value)  # Offset(self)
-		return SubrsIndex(file, isCFF2=isCFF2)
+		subrIndex =  SubrsIndex(file, isCFF2=isCFF2)
+		file.seek(pos)
+		return subrIndex
 
 	def write(self, parent, value):
 		return 0  # dummy value
@@ -1216,6 +1221,7 @@ class CharStringsConverter(TableConverter):
 
 	def read(self, parent, value):
 		file = parent.file
+		pos = file.tell()
 		isCFF2 = parent._isCFF2
 		charset = parent.charset
 		globalSubrs = parent.GlobalSubrs
@@ -1232,6 +1238,7 @@ class CharStringsConverter(TableConverter):
 		file.seek(value)  # Offset(0)
 		charStrings = CharStrings(
 			file, charset, globalSubrs, private, fdSelect, fdArray, isCFF2=isCFF2)
+		file.seek(pos)
 		return charStrings
 
 	def write(self, parent, value):
@@ -1264,18 +1271,19 @@ class CharsetConverter(object):
 		if value > 2:
 			numGlyphs = parent.numGlyphs
 			file = parent.file
+			pos = file.tell()
 			file.seek(value)
 			log.log(DEBUG, "loading charset at %s", value)
 			format = readCard8(file)
-			pos = file.tell()
 			if format == 0:
-				charset = parseCharset0(numGlyphs, file, parent.strings, isCID, pos)
+				charset = parseCharset0(numGlyphs, file, parent.strings, isCID)
 			elif format == 1 or format == 2:
-				charset = parseCharset(numGlyphs, file, parent.strings, isCID, format, pos)
+				charset = parseCharset(numGlyphs, file, parent.strings, isCID, format)
 			else:
 				raise NotImplementedError
 			assert len(charset) == numGlyphs
 			log.log(DEBUG, "    charset end at %s", file.tell())
+			file.seek(pos)
 		else:  # offset == 0 -> no charset data.
 			if isCID or "CharStrings" not in parent.rawDict:
 				# We get here only when processing fontDicts from the FDArray of
@@ -1408,8 +1416,7 @@ def packCharset(charset, isCID, strings):
 	return bytesjoin(data)
 
 
-def parseCharset0(numGlyphs, file, strings, isCID, pos):
-	file.seek(pos)
+def parseCharset0(numGlyphs, file, strings, isCID):
 	charset = [".notdef"]
 	if isCID:
 		for i in range(numGlyphs - 1):
@@ -1422,8 +1429,7 @@ def parseCharset0(numGlyphs, file, strings, isCID, pos):
 	return charset
 
 
-def parseCharset(numGlyphs, file, strings, isCID, fmt, pos):
-	file.seek(pos)
+def parseCharset(numGlyphs, file, strings, isCID, fmt):
 	charset = ['.notdef']
 	count = 1
 	if fmt == 1:
@@ -1475,6 +1481,7 @@ class EncodingConverter(SimpleConverter):
 		else:
 			assert value > 1
 			file = parent.file
+			pos = file.tell()
 			file.seek(value)
 			log.log(DEBUG, "loading Encoding at %s", value)
 			fmt = readCard8(file)
@@ -1483,13 +1490,13 @@ class EncodingConverter(SimpleConverter):
 				raise NotImplementedError("Encoding supplements are not yet supported")
 			fmt = fmt & 0x7f
 			# save file position against lazy-load of charset
-			pos = file.tell()
 			if fmt == 0:
 				encoding = parseEncoding0(parent.charset, file, haveSupplement,
-						parent.strings, pos)
+						parent.strings)
 			elif fmt == 1:
 				encoding = parseEncoding1(parent.charset, file, haveSupplement,
-						parent.strings, pos)
+						parent.strings)
+			file.seek(pos)
 			return encoding
 
 	def write(self, parent, value):
@@ -1528,8 +1535,7 @@ class EncodingConverter(SimpleConverter):
 		return encoding
 
 
-def parseEncoding0(charset, file, haveSupplement, strings, pos):
-	file.seek(pos)
+def parseEncoding0(charset, file, haveSupplement, strings):
 	nCodes = readCard8(file)
 	encoding = [".notdef"] * 256
 	for glyphID in range(1, nCodes + 1):
@@ -1539,8 +1545,7 @@ def parseEncoding0(charset, file, haveSupplement, strings, pos):
 	return encoding
 
 
-def parseEncoding1(charset, file, haveSupplement, strings, pos):
-	file.seek(pos)
+def parseEncoding1(charset, file, haveSupplement, strings):
 	nRanges = readCard8(file)
 	encoding = [".notdef"] * 256
 	glyphID = 1
@@ -1619,12 +1624,14 @@ class FDArrayConverter(TableConverter):
 		except AttributeError:
 			vstore = None
 		file = parent.file
+		pos = file.tell()
 		isCFF2 = parent._isCFF2
 		file.seek(value)
 		fdArray = FDArrayIndex(file, isCFF2=isCFF2)
 		fdArray.vstore = vstore
 		fdArray.strings = parent.strings
 		fdArray.GlobalSubrs = parent.GlobalSubrs
+		file.seek(pos)
 		return fdArray
 
 	def write(self, parent, value):
@@ -1644,8 +1651,10 @@ class FDSelectConverter(object):
 
 	def read(self, parent, value):
 		file = parent.file
+		pos = file.tell()
 		file.seek(value)
 		fdSelect = FDSelect(file, parent.numGlyphs)
+		file.seek(pos)
 		return fdSelect
 
 	def write(self, parent, value):
@@ -1669,9 +1678,11 @@ class VarStoreConverter(SimpleConverter):
 
 	def read(self, parent, value):
 		file = parent.file
+		pos = file.tell()
 		file.seek(value)
 		varStore = VarStoreData(file)
 		varStore.decompile()
+		file.seek(pos)
 		return varStore
 
 	def write(self, parent, value):
