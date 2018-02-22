@@ -3,6 +3,11 @@
 from __future__ import (print_function, division, absolute_import,
                         unicode_literals)
 import collections
+import os
+import shutil
+import sys
+import tempfile
+from unittest import TestCase as _TestCase
 from fontTools.misc.py23 import *
 from fontTools.misc.xmlWriter import XMLWriter
 
@@ -141,3 +146,38 @@ class MockFont(object):
 
     def getGlyphOrder(self):
         return self._glyphOrder
+
+
+class TestCase(_TestCase):
+
+    def __init__(self, methodName):
+        _TestCase.__init__(self, methodName)
+        # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
+        # and fires deprecation warnings if a program uses the old name.
+        if not hasattr(self, "assertRaisesRegex"):
+            self.assertRaisesRegex = self.assertRaisesRegexp
+
+
+class DataFilesHandler(TestCase):
+
+    def setUp(self):
+        self.tempdir = None
+        self.num_tempfiles = 0
+
+    def tearDown(self):
+        if self.tempdir:
+            shutil.rmtree(self.tempdir)
+
+    def getpath(self, testfile):
+        folder = os.path.dirname(sys.modules[self.__module__].__file__)
+        return os.path.join(folder, "data", testfile)
+
+    def temp_dir(self):
+        if not self.tempdir:
+            self.tempdir = tempfile.mkdtemp()
+
+    def temp_font(self, font_path, file_name):
+        self.temp_dir()
+        temppath = os.path.join(self.tempdir, file_name)
+        shutil.copy2(font_path, temppath)
+        return temppath
