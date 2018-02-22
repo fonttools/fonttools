@@ -1,7 +1,7 @@
 """Helpers for writing unit tests."""
 
-from __future__ import print_function, division, absolute_import
-from __future__ import unicode_literals
+from __future__ import (print_function, division, absolute_import,
+                        unicode_literals)
 import collections
 from fontTools.misc.py23 import *
 from fontTools.misc.xmlWriter import XMLWriter
@@ -37,7 +37,7 @@ def parseXML(xmlSnippet):
 class FakeFont:
     def __init__(self, glyphs):
         self.glyphOrder_ = glyphs
-        self.reverseGlyphOrderDict_ = {g:i for i,g in enumerate(glyphs)}
+        self.reverseGlyphOrderDict_ = {g: i for i, g in enumerate(glyphs)}
         self.lazy = False
         self.tables = {}
 
