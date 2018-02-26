@@ -114,12 +114,13 @@ def _read_binary(filepath):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(prog="checksum.py")
+    parser = argparse.ArgumentParser(prog="checksum.py", description="A SHA1 hash checksum list generator and checksum testing script")
     parser.add_argument("-t", "--ttx", help="Calculate from ttx file", action="store_true")
     parser.add_argument("-s", "--stdout", help="Write output to stdout stream", action="store_true")
     parser.add_argument("-n", "--noclean", help="Do not discard *.ttx files used to calculate SHA1 hashes", action="store_true")
     parser.add_argument("-c", "--check", help="Verify checksum values vs. files", action="store_true")
-    parser.add_argument("filepaths", nargs="+", help="One or more file paths to font binary files")
+    parser.add_argument("filepaths", nargs="+", help="One or more file paths.  Use checksum file path for -c/--check.  Use paths\
+        to font files for all other commands.")
 
     parser.add_argument("-i", "--include", action="append", help="Included OpenType tables for ttx data dump")
     parser.add_argument("-e", "--exclude", action="append", help="Excluded OpenType tables for ttx data dump")
