@@ -1,3 +1,23 @@
+- [cffLib] Fixed issue with lazy-loading of attributes when attempting to
+  set the CFF TopDict.Encoding (#1177, #1187).
+- [ttx] Fixed regression introduced in 3.22.0 that affected the split tables
+  ``-s`` option (#1188).
+- [feaLib] Added ``IncludedFeaNotFound`` custom exception subclass, raised
+  when an included feature file cannot be found (#1186).
+- [otTables] Changed ``VarIdxMap`` to use glyph names internally instead of
+  glyph indexes. The old ttx dumps of HVAR/VVAR tables that contain indexes
+  can still be imported (21cbab8, 38a0ffb).
+- [varLib] Implemented VarStore optimizer (#1184).
+- [subset] Implemented pruning of GDEF VarStore, HVAR and MVAR (#1179).
+- [sfnt] Restore backward compatiblity with ``numFonts`` attribute of
+  ``SFNTReader`` object (#1181).
+- [merge] Initial support for merging ``LangSysRecords`` (#1180).
+- [ttCollection] don't seek(0) when writing to possibly unseekable strems.
+- [subset] Keep all ``--name-IDs`` from 0 to 6 by default (#1170, #605, #114).
+- [cffLib] Added ``width`` module to calculate optimal CFF default and
+  nominal glyph widths.
+- [varLib] Don’t fail if STAT already in the master fonts (#1166).
+
 3.22.0 (released 2018-02-04)
 ----------------------------
 
