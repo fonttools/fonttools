@@ -1,3 +1,6 @@
+3.23.0 (released 2018-02-26)
+----------------------------
+
 - [designspaceLib] Added an optional ``lib`` element to the designspace as a
   whole, as well as to the instance elements, to store arbitrary data in a
   property list dictionary, similar to the UFO's ``lib``. Added an optional
