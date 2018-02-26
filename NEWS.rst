@@ -1,3 +1,8 @@
+- [designspaceLib] Added an optional ``lib`` element to the designspace as a
+  whole, as well as to the instance elements, to store arbitrary data in a
+  property list dictionary, similar to the UFO's ``lib``. Added an optional
+  ``font`` attribute to the ``SourceDescriptor``, to allow operating on
+  in-memory font objects (#1175).
 - [cffLib] Fixed issue with lazy-loading of attributes when attempting to
   set the CFF TopDict.Encoding (#1177, #1187).
 - [ttx] Fixed regression introduced in 3.22.0 that affected the split tables
