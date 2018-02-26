@@ -12,6 +12,17 @@ from fontTools.designspaceLib import (
     InstanceDescriptor, evaluateRule, processRules, posix)
 
 
+def assert_equals_test_file(path, test_filename):
+    with open(path) as fp:
+        actual = fp.read()
+
+    test_path = os.path.join(os.path.dirname(__file__), test_filename)
+    with open(test_path) as fp:
+        expected = fp.read()
+
+    assert actual == expected
+
+
 def test_fill_document(tmpdir):
     tmpdir = str(tmpdir)
     testDocPath = os.path.join(tmpdir, "test.designspace")
@@ -23,6 +34,7 @@ def test_fill_document(tmpdir):
     # add master 1
     s1 = SourceDescriptor()
     s1.filename = os.path.relpath(masterPath1, os.path.dirname(testDocPath))
+    assert s1.font is None
     s1.name = "master.ufo1"
     s1.copyLib = True
     s1.copyInfo = True
@@ -57,6 +69,7 @@ def test_fill_document(tmpdir):
     i1.styleMapStyleName = "InstanceStyleMapStyleName"
     glyphData = dict(name="arrow", mute=True, unicodes=[0x123, 0x124, 0x125])
     i1.glyphs['arrow'] = glyphData
+    i1.lib['com.coolDesignspaceApp.specimenText'] = "Hamburgerwhatever"
     doc.addInstance(i1)
     # add instance 2
     i2 = InstanceDescriptor()
@@ -77,6 +90,9 @@ def test_fill_document(tmpdir):
     i2.glyphs['arrow'] = glyphData
     i2.glyphs['arrow2'] = dict(mute=False)
     doc.addInstance(i2)
+
+    doc.filename = "suggestedFileName.designspace"
+    doc.lib['com.coolDesignspaceApp.previewSize'] = 30
 
     # now we have sources and instances, but no axes yet.
     doc.check()
@@ -106,7 +122,7 @@ def test_fill_document(tmpdir):
     a2.tag = "wdth"
     a2.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
     a2.hidden = True
-    a2.labelNames[u'fr'] = u"Poids"
+    a2.labelNames[u'fr'] = u"Chasse"
     doc.addAxis(a2)
     # add an axis that is not part of any location to see if that works
     a3 = AxisDescriptor()
@@ -127,12 +143,16 @@ def test_fill_document(tmpdir):
     # write the document
     doc.write(testDocPath)
     assert os.path.exists(testDocPath)
+    assert_equals_test_file(testDocPath, 'data/test.designspace')
     # import it again
     new = DesignSpaceDocument()
     new.read(testDocPath)
 
     new.check()
     assert new.default.location == {'width': 20.0, 'weight': 0.0}
+    assert new.filename == 'test.designspace'
+    assert new.lib == doc.lib
+    assert new.instances[0].lib == doc.instances[0].lib
 
     # >>> for a, b in zip(doc.instances, new.instances):
     # ...     a.compare(b)

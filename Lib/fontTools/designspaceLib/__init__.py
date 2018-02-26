@@ -5,6 +5,7 @@ import collections
 import logging
 import os
 import posixpath
+import plistlib
 import xml.etree.ElementTree as ET
 # from mutatorMath.objects.location import biasFromLocations, Location
 
@@ -16,7 +17,35 @@ import xml.etree.ElementTree as ET
     - warpmap is stored in its axis element
 """
 
-__all__ = [ 'DesignSpaceDocumentError', 'DesignSpaceDocument', 'SourceDescriptor', 'InstanceDescriptor', 'AxisDescriptor', 'RuleDescriptor', 'BaseDocReader', 'BaseDocWriter']
+__all__ = [
+    'DesignSpaceDocumentError', 'DesignSpaceDocument', 'SourceDescriptor',
+    'InstanceDescriptor', 'AxisDescriptor', 'RuleDescriptor', 'BaseDocReader',
+    'BaseDocWriter'
+]
+
+
+def to_plist(value):
+    try:
+        # Python 2
+        string = plistlib.writePlistToString(value)
+    except AttributeError:
+        # Python 3
+        string = plistlib.dumps(value).decode()
+    return ET.fromstring(string).getchildren()[0]
+
+
+def from_plist(element):
+    if element is None:
+        return {}
+    plist = ET.Element('plist')
+    plist.append(element)
+    string = ET.tostring(plist)
+    try:
+        # Python 2
+        return plistlib.readPlistFromString(string)
+    except AttributeError:
+        # Python 3
+        return plistlib.loads(string, fmt=plistlib.FMT_XML)
 
 
 def posix(path):
@@ -90,8 +119,24 @@ class SourceDescriptor(SimpleDescriptor):
               'familyName', 'styleName']
 
     def __init__(self):
-        self.filename = None    # the original path as found in the document
-        self.path = None        # the absolute path, calculated from filename
+        self.filename = None
+        """The original path as found in the document."""
+
+        self.path = None
+        """The absolute path, calculated from filename."""
+
+        self.font = None
+        """Any Python object. Optional. Points to a representation of this
+        source font that is loaded in memory, as a Python object (e.g. a
+        ``defcon.Font`` or a ``fontTools.ttFont.TTFont``).
+
+        The default document reader will not fill-in this attribute, and the
+        default writer will not use this attribute. It is up to the user of
+        ``designspaceLib`` to either load the resource identified by
+        ``filename`` and store it in this field, or write the contents of
+        this field to the disk and make ```filename`` point to that.
+        """
+
         self.name = None
         self.location = None
         self.copyLib = False
@@ -185,7 +230,8 @@ class InstanceDescriptor(SimpleDescriptor):
                 'styleMapFamilyName',
                 'styleMapStyleName',
                 'kerning',
-                'info']
+                'info',
+                'lib']
 
     def __init__(self):
         self.filename = None    # the original path as found in the document
@@ -205,6 +251,9 @@ class InstanceDescriptor(SimpleDescriptor):
         self.mutedGlyphNames = []
         self.kerning = True
         self.info = True
+
+        self.lib = {}
+        """Custom data associated with this instance."""
 
     path = posixpath_property("_path")
     filename = posixpath_property("_filename")
@@ -340,6 +389,10 @@ class BaseDocWriter(object):
             self.root.append(ET.Element("instances"))
         for instanceObject in self.documentObject.instances:
             self._addInstance(instanceObject)
+
+        if self.documentObject.lib:
+            self._addLib(self.documentObject.lib)
+
         if pretty:
             _indent(self.root, whitespace=self._whiteSpace)
         tree = ET.ElementTree(self.root)
@@ -493,6 +546,10 @@ class BaseDocWriter(object):
         if instanceObject.info:
             infoElement = ET.Element('info')
             instanceElement.append(infoElement)
+        if instanceObject.lib:
+            libElement = ET.Element('lib')
+            libElement.append(to_plist(instanceObject.lib))
+            instanceElement.append(libElement)
         self.root.findall('.instances')[0].append(instanceElement)
 
     def _addSource(self, sourceObject):
@@ -539,6 +596,11 @@ class BaseDocWriter(object):
         locationElement, sourceObject.location = self._makeLocationElement(sourceObject.location)
         sourceElement.append(locationElement)
         self.root.findall('.sources')[0].append(sourceElement)
+
+    def _addLib(self, dict):
+        libElement = ET.Element('lib')
+        libElement.append(to_plist(dict))
+        self.root.append(libElement)
 
     def _writeGlyphElement(self, instanceElement, instanceObject, glyphName, data):
         glyphElement = ET.Element('glyph')
@@ -596,6 +658,7 @@ class BaseDocReader(object):
         self.readRules()
         self.readSources()
         self.readInstances()
+        self.readLib()
 
     def getSourcePaths(self, makeGlyphs=True, makeKerning=True, makeInfo=True):
         paths = []
@@ -874,7 +937,13 @@ class BaseDocReader(object):
             self.readGlyphElement(glyphElement, instanceObject)
         for infoElement in instanceElement.findall("info"):
             self.readInfoElement(infoElement, instanceObject)
+        for libElement in instanceElement.findall('lib'):
+            self.readLibElement(libElement, instanceObject)
         self.documentObject.instances.append(instanceObject)
+
+    def readLibElement(self, libElement, instanceObject):
+        """Read the lib element for the given instance."""
+        instanceObject.lib = from_plist(libElement.getchildren()[0])
 
     def readInfoElement(self, infoElement, instanceObject):
         """ Read the info element.
@@ -962,12 +1031,26 @@ class BaseDocReader(object):
             glyphData['masters'] = glyphSources
         instanceObject.glyphs[glyphName] = glyphData
 
+    def readLib(self):
+        """Read the lib element for the whole document."""
+        for libElement in self.root.findall(".lib"):
+            self.documentObject.lib = from_plist(libElement.getchildren()[0])
+
 
 class DesignSpaceDocument(object):
     """ Read, write data from the designspace file"""
     def __init__(self, readerClass=None, writerClass=None):
         self.logger = logging.getLogger("DesignSpaceDocumentLog")
         self.path = None
+        self.filename = None
+        """String, optional. When the document is read from the disk, this is
+        its original file name, i.e. the last part of its path.
+
+        When the document is produced by a Python script and still only exists
+        in memory, the producing script can write here an indication of a
+        possible "good" filename, in case one wants to save the file somewhere.
+        """
+
         self.formatVersion = None
         self.sources = []
         self.instances = []
@@ -975,6 +1058,10 @@ class DesignSpaceDocument(object):
         self.rules = []
         self.default = None         # name of the default master
         self.defaultLoc = None
+
+        self.lib = {}
+        """Custom data associated with the whole document."""
+
         #
         if readerClass is not None:
             self.readerClass = readerClass
@@ -987,11 +1074,13 @@ class DesignSpaceDocument(object):
 
     def read(self, path):
         self.path = path
+        self.filename = os.path.basename(path)
         reader = self.readerClass(path, self)
         reader.read()
 
     def write(self, path):
         self.path = path
+        self.filename = os.path.basename(path)
         self.updatePaths()
         writer = self.writerClass(path, self)
         writer.write()
@@ -1086,7 +1175,7 @@ class DesignSpaceDocument(object):
                 if self.path is not None:
                     descriptor.filename = self._posixRelativePath(descriptor.path)
         if instances:
-           for descriptor in self.instances:
+            for descriptor in self.instances:
                 if descriptor.filename is not None and not force:
                     continue
                 if self.path is not None:

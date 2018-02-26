@@ -1,5 +1,6 @@
-DesignSpaceDocument
-===================
+#################################
+DesignSpaceDocument Specification
+#################################
 
 An object to read, write and edit interpolation systems for typefaces.
 
@@ -38,13 +39,14 @@ different objects, as long as they have the same attributes.
     doc.sources
     doc.instances
 
+**********
 Validation
-==========
+**********
 
 Some validation is done when reading.
 
 Axes
-~~~~
+====
 
 -  If the ``axes`` element is available in the document then all
    locations will check their dimensions against the defined axes. If a
@@ -56,7 +58,7 @@ Axes
    there.
 
 Default font
-~~~~~~~~~~~~
+============
 
 -  The source with the ``copyInfo`` flag indicates this is the default
    font.
@@ -68,16 +70,18 @@ Default font
    the document this flag will be set.
 -  Use ``doc.checkDefault()`` to set the default font.
 
+************
 Localisation
-============
+************
 
 Some of the descriptors support localised names. The names are stored in
 dictionaries using the language code as key. That means that there are
 now two places to store names: the old attribute and the new localised
 dictionary, ``obj.stylename`` and ``obj.localisedStyleName['en']``.
 
+*****
 Rules
-=====
+*****
 
 **The ``rule`` element is experimental.** Some ideas behind how rules
 could work in designspaces come from Superpolator. Such rules can maybe
@@ -87,7 +91,7 @@ has a name, and it has a number of conditions. The rule also contains a
 list of glyphname pairs: the glyphs that need to be substituted.
 
 Variable font instances
-~~~~~~~~~~~~~~~~~~~~~~~
+=======================
 
 -  In an variable font the substitution happens at run time: there are
    no changes in the font, only in the sequence of glyphnames that is
@@ -96,7 +100,7 @@ Variable font instances
    be built.
 
 UFO instances
-~~~~~~~~~~~~~
+=============
 
 -  When making instances as UFOs however, we need to swap the glyphs so
    that the original shape is still available. For instance, if a rule
@@ -110,17 +114,29 @@ UFO instances
 -  The swap function also needs to take care of swapping the names in
    kerning data.
 
+**********
+Python API
+**********
+
 SourceDescriptor object
------------------------
+=======================
 
 Attributes
-~~~~~~~~~~
+----------
 
 -  ``filename``: string. A relative path to the source file, **as it is
    in the document**. MutatorMath + Varlib.
 -  ``path``: string. Absolute path to the source file, calculated from
    the document path and the string in the filename attr. MutatorMath +
    Varlib.
+-  ``font``: Any Python object. Optional. Points to a representation of
+   this source font that is loaded in memory, as a Python object
+   (e.g. a ``defcon.Font`` or a ``fontTools.ttFont.TTFont``). The default
+   document reader will not fill-in this attribute, and the default
+   writer will not use this attribute. It is up to the user of
+   ``designspaceLib`` to either load the resource identified by ``filename``
+   and store it in this field, or write the contents of this field to the
+   disk and make ```filename`` point to that.
 -  ``name``: string. Optional. Unique identifier name for this source,
    if there is one or more ``instance.glyph`` elements in the document.
    MutatorMath.
@@ -154,6 +170,7 @@ Attributes
     s1 = SourceDescriptor()
     s1.path = masterPath1
     s1.name = "master.ufo1"
+    s1.font = defcon.Font("master.ufo1")
     s1.copyLib = True
     s1.copyInfo = True
     s1.copyFeatures = True
@@ -164,13 +181,15 @@ Attributes
     s1.mutedGlyphNames.append("Z")
     doc.addSource(s1)
 
+.. _instance-descriptor-object:
+
 InstanceDescriptor object
--------------------------
+=========================
 
 .. attributes-1:
 
 Attributes
-~~~~~~~~~~
+----------
 
 -  ``filename``: string. Relative path to the instance file, **as it is
    in the document**. The file may or may not exist. MutatorMath.
@@ -209,9 +228,10 @@ Attributes
    calculated. MutatorMath.
 -  ``info``: bool. Indicated if this instance needs the interpolating
    font.info calculated.
+-  ``lib``: dict. Custom data associated with this instance.
 
 Methods
-~~~~~~~
+-------
 
 These methods give easier access to the localised names.
 
@@ -225,7 +245,7 @@ These methods give easier access to the localised names.
 -  ``getStyleMapFamilyName(languageCode="en")``
 
 Example
-~~~~~~~
+-------
 
 .. code:: python
 
@@ -246,10 +266,13 @@ Example
     glyphData['instanceLocation'] = dict(width=100, weight=120)
     i2.glyphs['arrow'] = glyphData
     i2.glyphs['arrow2'] = dict(mute=False)
+    i2.lib['com.coolDesignspaceApp.specimenText'] = 'Hamburgerwhatever'
     doc.addInstance(i2)
 
+.. _axis-descriptor-object:
+
 AxisDescriptor object
----------------------
+=====================
 
 -  ``tag``: string. Four letter tag for this axis. Some might be
    registered at the `OpenType
@@ -285,7 +308,7 @@ AxisDescriptor object
     a1.map = [(1.0, 10.0), (400.0, 66.0), (1000.0, 990.0)]
 
 RuleDescriptor object
----------------------
+=====================
 
 -  ``name``: string. Unique name for this rule. Will be used to
    reference this rule data.
@@ -299,6 +322,8 @@ RuleDescriptor object
     r1.name = "unique.rule.name"
     r1.conditions.append(dict(name="weight", minimum=-10, maximum=10))
     r1.conditions.append(dict(name="width", minimum=-10, maximum=10))
+
+.. _subclassing-descriptors:
 
 Subclassing descriptors
 =======================
@@ -324,8 +349,9 @@ descriptor does not need to be a subclass.
 
     myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 
+**********************
 Document xml structure
-======================
+**********************
 
 -  The ``axes`` element contains one or more ``axis`` elements.
 -  The ``sources`` element contains one or more ``source`` elements.
@@ -347,6 +373,11 @@ Document xml structure
             <!-- define instances here -->
             <instance../>
         </instances>
+        <lib>
+            <dict>
+                <!-- store custom data here -->
+            </dict>
+        </lib>
     </designspace>
 
 .. 1-axis-element:
@@ -360,7 +391,7 @@ Document xml structure
 .. attributes-2:
 
 Attributes
-~~~~~~~~~~
+----------
 
 -  ``name``: required, string. Name of the axis that is used in the
    location elements.
@@ -389,20 +420,20 @@ Attributes
 .. attributes-3:
 
 Attributes
-~~~~~~~~~~
+----------
 
 -  ``xml:lang``: required, string. `XML language
    definition <https://www.w3.org/International/questions/qa-when-xmllang.en>`__
 
 Value
-~~~~~
+-----
 
 -  The natural language name of this axis.
 
 .. example-1:
 
 Example
-~~~~~~~
+-------
 
 .. code:: xml
 
@@ -422,7 +453,7 @@ Example
 .. example-2:
 
 Example
-~~~~~~~
+-------
 
 .. code:: xml
 
@@ -431,7 +462,7 @@ Example
     <map input="1000.0" output="990.0" />
 
 Example of all axis elements together:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------------
 
 .. code:: xml
 
@@ -466,7 +497,7 @@ Example of all axis elements together:
 .. attributes-4:
 
 Attributes
-~~~~~~~~~~
+----------
 
 -  ``name``: required, string. Name of the axis.
 -  ``xvalue``: required, number. The value on this axis.
@@ -476,7 +507,7 @@ Attributes
 .. example-3:
 
 Example
-~~~~~~~
+-------
 
 .. code:: xml
 
@@ -496,7 +527,7 @@ Example
 .. attributes-5:
 
 Attributes
-~~~~~~~~~~
+----------
 
 -  ``familyname``: optional, string. The family name of the source font.
    While this could be extracted from the font data itself, it can be
@@ -513,11 +544,30 @@ Attributes
 3.1 lib element
 ===============
 
--  ``<lib copy="1" />``
--  Child element of ``source``
--  Defines if the instances can inherit the data in the lib of this
-   source.
--  MutatorMath only
+There are two meanings for the ``lib`` element:
+
+1. Source lib
+    -  Example: ``<lib copy="1" />``
+    -  Child element of ``source``
+    -  Defines if the instances can inherit the data in the lib of this
+       source.
+    -  MutatorMath only
+
+2. Document and instance lib
+    - Example:
+
+      .. code:: python
+
+        <lib>
+            <dict>
+                <key>...</key>
+                <string>The contents use the PLIST format.</string>
+            </dict>
+        </lib>
+
+    - Child element of ``designspace`` and ``instance``
+    - Contains arbitrary data about the whole document or about a specific
+      instance.
 
 .. 32-info-element:
 
@@ -556,7 +606,7 @@ Attributes
 .. attributes-6:
 
 Attributes
-~~~~~~~~~~
+----------
 
 -  ``mute``: optional attribute, number 1 or 0. Indicate if this glyph
    should be ignored as a master.
@@ -574,7 +624,7 @@ Attributes
 .. attributes-7:
 
 Attributes
-~~~~~~~~~~
+----------
 
 -  ``mute``: required attribute, number 1 or 0. Indicate if the kerning
    data from this source is to be excluded from the calculation.
@@ -585,7 +635,7 @@ Attributes
 .. example-4:
 
 Example
-~~~~~~~
+-------
 
 .. code:: xml
 
@@ -617,7 +667,7 @@ Example
 .. attributes-8:
 
 Attributes
-~~~~~~~~~~
+----------
 
 -  ``familyname``: required, string. The family name of the instance
    font. Corresponds with ``font.info.familyName``
@@ -636,17 +686,23 @@ Attributes
    with ``styleMapStyleName``
 
 Example for varlib
-~~~~~~~~~~~~~~~~~~
+------------------
 
 .. code:: xml
 
     <instance familyname="InstanceFamilyName" filename="instances/instanceTest2.ufo" name="instance.ufo2" postscriptfontname="InstancePostscriptName" stylemapfamilyname="InstanceStyleMapFamilyName" stylemapstylename="InstanceStyleMapStyleName" stylename="InstanceStyleName">
     <location>
         <dimension name="width" xvalue="400" yvalue="300" />
-       <dimension name="weight" xvalue="66" />
+        <dimension name="weight" xvalue="66" />
     </location>
     <kerning />
     <info />
+    <lib>
+        <dict>
+            <key>com.coolDesignspaceApp.specimenText</key>
+            <string>Hamburgerwhatever</string>
+        </dict>
+    </lib>
     </instance>
 
 .. 41-glyphs-element:
@@ -669,7 +725,7 @@ Example for varlib
 .. attributes-9:
 
 Attributes
-~~~~~~~~~~
+----------
 
 -  ``name``: string. The name of the glyph.
 -  ``unicode``: string. Unicode values for this glyph, in hexadecimal.
@@ -713,7 +769,7 @@ definition <https://www.w3.org/International/questions/qa-when-xmllang.en>`__
 .. example-5:
 
 Example
-~~~~~~~
+-------
 
 .. code:: xml
 
@@ -728,7 +784,7 @@ Example
 .. attributes-10:
 
 Attributes
-~~~~~~~~~~
+----------
 
 -  ``glyphname``: the name of the alternate master glyph.
 -  ``source``: the identifier name of the source this master glyph needs
@@ -737,7 +793,7 @@ Attributes
 .. example-6:
 
 Example
-~~~~~~~
+-------
 
 .. code:: xml
 
@@ -766,6 +822,12 @@ Example
     </glyphs>
     <kerning />
     <info />
+    <lib>
+        <dict>
+            <key>com.coolDesignspaceApp.specimenText</key>
+            <string>Hamburgerwhatever</string>
+        </dict>
+    </lib>
     </instance>
 
 .. 50-rules-element:
@@ -790,7 +852,7 @@ Example
 .. attributes-11:
 
 Attributes
-~~~~~~~~~~
+----------
 
 -  ``name``: required, string. A unique name that can be used to
    identify this rule if it needs to be referenced elsewhere.
@@ -809,7 +871,7 @@ Attributes
 .. attributes-12:
 
 Attributes
-~~~~~~~~~~
+----------
 
 -  ``name``: string, required. Must match one of the defined ``axis``
    name attributes.
@@ -829,7 +891,7 @@ Attributes
 .. attributes-13:
 
 Attributes
-~~~~~~~~~~
+----------
 
 -  ``name``: string, required. The name of the glyph this rule looks
    for.
@@ -839,7 +901,7 @@ Attributes
 .. example-7:
 
 Example
-~~~~~~~
+-------
 
 .. code:: xml
 

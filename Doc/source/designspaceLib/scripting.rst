@@ -1,25 +1,29 @@
+#######################
 Scripting a designspace
-=======================
+#######################
 
 It can be useful to build a designspace with a script rather than
 construct one with an interface like
 `Superpolator <http://superpolator.com>`__ or
 `DesignSpaceEditor <https://github.com/LettError/designSpaceRoboFontExtension>`__.
-The
-`designSpaceDocument <https://github.com/LettError/designSpaceDocument>`__
-offers a some tools for building designspaces in Python. This document
-shows an example.
 
-So, suppose you installed the
-`designSpaceDocument <https://github.com/LettError/designSpaceDocument>`__
-package through your favorite ``git`` client.
+`fontTools.designspaceLib` offers a some tools for building designspaces in
+Python. This document shows an example.
+
+********************************
+Filling-in a DesignSpaceDocument
+********************************
+
+So, suppose you installed the `fontTools` package through your favorite
+``git`` client.
 
 The ``DesignSpaceDocument`` object represents the document, whether it
 already exists or not. Make a new one:
 
 .. code:: python
 
-    from designSpaceDocument import DesignSpaceDocument, AxisDescriptor, SourceDescriptor, InstanceDescriptor
+    from fontTools.designspaceLib import (DesignSpaceDocument, AxisDescriptor,
+                                          SourceDescriptor, InstanceDescriptor)
     doc = DesignSpaceDocument()
 
 We want to create definitions for axes, sources and instances. That
@@ -28,17 +32,13 @@ object** uses objects to describe the axes, sources and instances. These
 are relatively simple objects, think of these as collections of
 attributes.
 
--  `Attributes of the Source
-   descriptor <https://github.com/LettError/designSpaceDocument#source-descriptor-object-attributes>`__
--  `Attributes of the Instance
-   descriptor <https://github.com/LettError/designSpaceDocument#instance-descriptor-object>`__
--  `Attributes of the Axis
-   descriptor <https://github.com/LettError/designSpaceDocument#axis-descriptor-object>`__
--  Read about `subclassing
-   descriptors <https://github.com/LettError/designSpaceDocument#subclassing-descriptors>`__
+-  Attributes of the :ref:`source-descriptor-object`
+-  Attributes of the :ref:`instance-descriptor-object`
+-  Attributes of the :ref:`axis-descriptor-object`
+-  Read about :ref:`subclassing-descriptors`
 
 Make an axis object
--------------------
+===================
 
 Make a descriptor object and add it to the document.
 
@@ -61,7 +61,7 @@ Make a descriptor object and add it to the document.
    Tags <https://www.microsoft.com/typography/otspec/fvar.htm#VAT>`__
 
 Option: add label names
-~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------
 
 The **labelnames** attribute is intended to store localisable, human
 readable names for this axis if this is not an axis that is registered
@@ -78,7 +78,7 @@ authoring software. This, at least, is the place to record it.
     a1.labelNames['en'] = u"Wéíght"
 
 Option: add a map
-~~~~~~~~~~~~~~~~~
+-----------------
 
 The **map** attribute is a list of (input, output) mapping values
 intended for `axis variations table of
@@ -89,7 +89,7 @@ OpenType <https://www.microsoft.com/typography/otspec/avar.htm>`__.
     a1.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
 
 Make a source object
---------------------
+====================
 
 A **source** is an object that points to a UFO file. It provides the
 outline geometry, kerning and font.info that we want to work with.
@@ -123,7 +123,7 @@ So go ahead and add another master:
     doc.addSource(s1)
 
 Option: exclude glyphs
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 By default all glyphs in a source will be processed. If you want to
 exclude certain glyphs, add their names to the ``mutedGlyphNames`` list.
@@ -133,7 +133,7 @@ exclude certain glyphs, add their names to the ``mutedGlyphNames`` list.
     s1.mutedGlyphNames = ["A.test", "A.old"]
 
 Make an instance object
------------------------
+=======================
 
 An **instance** is description of a UFO that you want to generate with
 the designspace. For an instance you can define more things. If you want
@@ -161,7 +161,7 @@ and so on. You can also set a path where to generate the instance.
 -  Instances for variable fonts become **named instances**.
 
 Option: add more names
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 If you want you can add a PostScript font name, a stylemap familyName
 and a stylemap styleName.
@@ -173,7 +173,7 @@ and a stylemap styleName.
     i0.styleMapStyleName = "regular"
 
 Option: add glyph specific masters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------
 
 This bit is not supported by OpenType variable fonts, but it is needed
 for some designspaces intended for generating instances with
@@ -207,16 +207,18 @@ this into something clever.
     # With all of that set up, store it in the instance.
     i4.glyphs['dollar'] = glyphData
 
+******
 Saving
-======
+******
 
 .. code:: python
 
     path = "myprototype.designspace"
     doc.write(path)
 
+************************
 Reading old designspaces
-========================
+************************
 
 Old designspace files might not contain ``axes`` definitions. This is
 how you reconstruct the axes from the extremes of the source locations
@@ -231,8 +233,9 @@ This is how you check the default font.
 
     doc.checkDefault()
 
+***********
 Generating?
-===========
+***********
 
 You can generate the UFO's with MutatorMath:
 
