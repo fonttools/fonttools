@@ -6,7 +6,10 @@ import logging
 import os
 import posixpath
 import plistlib
-import xml.etree.ElementTree as ET
+try:
+    import xml.etree.cElementTree as ET
+except ImportError:
+    import xml.etree.ElementTree as ET
 # from mutatorMath.objects.location import biasFromLocations, Location
 
 """
