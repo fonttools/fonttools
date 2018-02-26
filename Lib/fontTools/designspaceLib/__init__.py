@@ -34,7 +34,7 @@ def to_plist(value):
     except AttributeError:
         # Python 3
         string = plistlib.dumps(value).decode()
-    return ET.fromstring(string).getchildren()[0]
+    return ET.fromstring(string)[0]
 
 
 def from_plist(element):
@@ -946,7 +946,7 @@ class BaseDocReader(object):
 
     def readLibElement(self, libElement, instanceObject):
         """Read the lib element for the given instance."""
-        instanceObject.lib = from_plist(libElement.getchildren()[0])
+        instanceObject.lib = from_plist(libElement[0])
 
     def readInfoElement(self, infoElement, instanceObject):
         """ Read the info element.
@@ -1037,7 +1037,7 @@ class BaseDocReader(object):
     def readLib(self):
         """Read the lib element for the whole document."""
         for libElement in self.root.findall(".lib"):
-            self.documentObject.lib = from_plist(libElement.getchildren()[0])
+            self.documentObject.lib = from_plist(libElement[0])
 
 
 class DesignSpaceDocument(object):
