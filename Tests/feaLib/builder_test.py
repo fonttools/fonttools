@@ -438,7 +438,8 @@ class BuilderTest(unittest.TestCase):
                         m = self.expect_markClass_reference_()
                         marks.append(m)
                 self.expect_symbol_(";")
-                return self.ast.MarkBasePosStatement(location, base, marks)
+                return self.ast.MarkBasePosStatement(base, marks,
+                                                     location=location)
 
             def parseBaseClass(self):
                 if not hasattr(self.doc_, 'baseClasses'):
@@ -453,7 +454,8 @@ class BuilderTest(unittest.TestCase):
                     baseClass = ast_BaseClass(name)
                     self.doc_.baseClasses[name] = baseClass
                     self.glyphclasses_.define(name, baseClass)
-                bcdef = ast_BaseClassDefinition(location, baseClass, anchor, glyphs)
+                bcdef = ast_BaseClassDefinition(baseClass, anchor, glyphs,
+                                                location=location)
                 baseClass.addDefinition(bcdef)
                 return bcdef
 
