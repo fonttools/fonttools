@@ -87,8 +87,9 @@ class Parser(object):
                 'Glyph "%s" (gid %i) already defined' % (name, gid),
                 location
             )
-        def_glyph = ast.GlyphDefinition(location, name, gid,
-                                        gunicode, gtype, components)
+        def_glyph = ast.GlyphDefinition(name, gid,
+                                        gunicode, gtype, components,
+                                        location=location)
         self.glyphs_.define(name, def_glyph)
         return def_glyph
 
@@ -107,7 +108,8 @@ class Parser(object):
                 'group names are case insensitive' % name,
                 location
             )
-        def_group = ast.GroupDefinition(location, name, enum)
+        def_group = ast.GroupDefinition(name, enum,
+                                        location=location)
         self.groups_.define(name, def_group)
         return def_group
 
@@ -142,7 +144,7 @@ class Parser(object):
             langs.append(lang)
         self.expect_keyword_("END_SCRIPT")
         self.langs_.exit_scope()
-        def_script = ast.ScriptDefinition(location, name, tag, langs)
+        def_script = ast.ScriptDefinition(name, tag, langs, location=location)
         self.scripts_.define(tag, def_script)
         return def_script
 
@@ -161,7 +163,8 @@ class Parser(object):
             feature = self.parse_feature_()
             self.expect_keyword_("END_FEATURE")
             features.append(feature)
-        def_langsys = ast.LangSysDefinition(location, name, tag, features)
+        def_langsys = ast.LangSysDefinition(name, tag, features,
+                                            location=location)
         return def_langsys
 
     def parse_feature_(self):
@@ -177,7 +180,8 @@ class Parser(object):
             self.expect_keyword_("LOOKUP")
             lookup = self.expect_string_()
             lookups.append(lookup)
-        feature = ast.FeatureDefinition(location, name, tag, lookups)
+        feature = ast.FeatureDefinition(name, tag, lookups,
+                                        location=location)
         return feature
 
     def parse_def_lookup_(self):
@@ -248,8 +252,8 @@ class Parser(object):
                 "Got %s" % (as_pos_or_sub),
                 location)
         def_lookup = ast.LookupDefinition(
-            location, name, process_base, process_marks, direction, reversal,
-            comments, context, sub, pos)
+            name, process_base, process_marks, direction, reversal,
+            comments, context, sub, pos, location=location)
         self.lookups_.define(name, def_lookup)
         return def_lookup
 
@@ -272,8 +276,8 @@ class Parser(object):
                     else:
                         right.append(coverage)
                 self.expect_keyword_("END_CONTEXT")
-                context = ast.ContextDefinition(location, ex_or_in, left,
-                                                right)
+                context = ast.ContextDefinition(ex_or_in, left,
+                                                right, location=location)
                 contexts.append(context)
             else:
                 self.expect_keyword_("END_CONTEXT")
@@ -305,13 +309,16 @@ class Parser(object):
         if max_src == 1 and max_dest == 1:
             if reversal:
                 sub = ast.SubstitutionReverseChainingSingleDefinition(
-                    location, mapping)
+                    mapping, location=location)
             else:
-                sub = ast.SubstitutionSingleDefinition(location, mapping)
+                sub = ast.SubstitutionSingleDefinition(mapping,
+                                                       location=location)
         elif max_src == 1 and max_dest > 1:
-            sub = ast.SubstitutionMultipleDefinition(location, mapping)
+            sub = ast.SubstitutionMultipleDefinition(mapping,
+                                                     location=location)
         elif max_src > 1 and max_dest == 1:
-            sub = ast.SubstitutionLigatureDefinition(location, mapping)
+            sub = ast.SubstitutionLigatureDefinition(mapping,
+                                                     location=location)
         return sub
 
     def parse_position_(self):
@@ -348,7 +355,7 @@ class Parser(object):
             coverage_to.append((cov, anchor_name))
         self.expect_keyword_("END_ATTACH")
         position = ast.PositionAttachDefinition(
-            location, coverage, coverage_to)
+            coverage, coverage_to, location=location)
         return position
 
     def parse_attach_cursive_(self):
@@ -364,7 +371,7 @@ class Parser(object):
             coverages_enter.append(self.parse_coverage_())
         self.expect_keyword_("END_ATTACH")
         position = ast.PositionAttachCursiveDefinition(
-            location, coverages_exit, coverages_enter)
+            coverages_exit, coverages_enter, location=location)
         return position
 
     def parse_adjust_pair_(self):
@@ -390,7 +397,7 @@ class Parser(object):
             adjust_pair[(id_1, id_2)] = (pos_1, pos_2)
         self.expect_keyword_("END_ADJUST")
         position = ast.PositionAdjustPairDefinition(
-            location, coverages_1, coverages_2, adjust_pair)
+            coverages_1, coverages_2, adjust_pair, location=location)
         return position
 
     def parse_adjust_single_(self):
@@ -404,7 +411,7 @@ class Parser(object):
             adjust_single.append((coverages, pos))
         self.expect_keyword_("END_ADJUST")
         position = ast.PositionAdjustSingleDefinition(
-            location, adjust_single)
+            adjust_single, location=location)
         return position
 
     def parse_def_anchor_(self):
@@ -433,8 +440,9 @@ class Parser(object):
         self.expect_keyword_("AT")
         pos = self.parse_pos_()
         self.expect_keyword_("END_ANCHOR")
-        anchor = ast.AnchorDefinition(location, name, gid, glyph_name,
-                                      component, locked, pos)
+        anchor = ast.AnchorDefinition(name, gid, glyph_name,
+                                      component, locked, pos,
+                                      location=location)
         if glyph_name not in self.anchors_:
             self.anchors_[glyph_name] = SymbolTable()
         self.anchors_[glyph_name].define(name, anchor)
@@ -493,7 +501,6 @@ class Parser(object):
 
     def parse_enum_(self):
         assert self.is_cur_keyword_("ENUM")
-        location = self.cur_token_location_
         enum = self.parse_coverage_()
         self.expect_keyword_("END_ENUM")
         return enum
@@ -544,14 +551,14 @@ class Parser(object):
         location = self.cur_token_location_
         ppem_name = self.cur_token_
         value = self.expect_number_()
-        setting = ast.SettingDefinition(location, ppem_name, value)
+        setting = ast.SettingDefinition(ppem_name, value, location=location)
         return setting
 
     def parse_compiler_flag_(self):
         location = self.cur_token_location_
         flag_name = self.cur_token_
         value = True
-        setting = ast.SettingDefinition(location, flag_name, value)
+        setting = ast.SettingDefinition(flag_name, value, location=location)
         return setting
 
     def parse_cmap_format(self):
@@ -559,7 +566,7 @@ class Parser(object):
         name = self.cur_token_
         value = (self.expect_number_(), self.expect_number_(),
                  self.expect_number_())
-        setting = ast.SettingDefinition(location, name, value)
+        setting = ast.SettingDefinition(name, value, location=location)
         return setting
 
     def is_cur_keyword_(self, k):
