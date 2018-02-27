@@ -600,8 +600,8 @@ class Parser(object):
             if values[0] is None:  # Format B: "pos V A -20;"
                 values.reverse()
             return self.ast.PairPosStatement(
-                enumerated,
                 glyphs[0], values[0], glyphs[1], values[1],
+                enumerated=enumerated,
                 location=location)
 
         if enumerated:

@@ -849,9 +849,8 @@ class MultipleSubstStatement(Statement):
 
 
 class PairPosStatement(Statement):
-    def __init__(self, enumerated,
-                 glyphs1, valuerecord1, glyphs2, valuerecord2,
-                 location=None):
+    def __init__(self, glyphs1, valuerecord1, glyphs2, valuerecord2,
+                 enumerated=False, location=None):
         Statement.__init__(self, location)
         self.enumerated = enumerated
         self.glyphs1, self.valuerecord1 = glyphs1, valuerecord1
