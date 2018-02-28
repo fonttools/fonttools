@@ -1,3 +1,11 @@
+- [varLib/subset] Fixed issue with subsetting GPOS variation data not
+  picking up ``ValueRecord`` ``Device`` objects (54fd71f).
+- [feaLib/voltLib] In all AST elements, the ``location`` is no longer a
+  required positional argument, but an optional kewyord argument (defaults
+  to ``None``). This will make it easier to construct feature AST from
+  code (#1201).
+
+
 3.23.0 (released 2018-02-26)
 ----------------------------
 
