@@ -18,7 +18,6 @@ BUFSIZE = 0x4000
 class XMLReader(object):
 
 	def __init__(self, fileOrPath, ttFont, progress=None, quiet=None, contentOnly=False):
-
 		if fileOrPath == '-':
 			fileOrPath = sys.stdin
 		if not hasattr(fileOrPath, "read"):

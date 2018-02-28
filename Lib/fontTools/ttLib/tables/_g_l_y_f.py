@@ -139,7 +139,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 					glyphPath = userNameToFileName(
 						tounicode(glyphName, 'utf-8'),
 						existingGlyphFiles,
-						prefix=("%s%s"%(path, "_")),
+						prefix=path + "_",
 						suffix=ext)
 					existingGlyphFiles.add(glyphPath.lower())
 					glyphWriter = xmlWriter.XMLWriter(

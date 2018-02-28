@@ -225,7 +225,7 @@ class TTFont(object):
 		     writeVersion=True,
 		     quiet=None, tables=None, skipTables=None, splitTables=False,
 		     splitGlyphs=False, disassembleInstructions=True,
-			  bitmapGlyphDataFormat='raw'):
+		     bitmapGlyphDataFormat='raw'):
 
 		if quiet is not None:
 			deprecateArgument("quiet", "configure logging instead")
