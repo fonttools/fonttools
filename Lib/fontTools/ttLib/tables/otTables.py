@@ -8,7 +8,7 @@ converter objects from otConverters.py.
 from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval
-from .otBase import BaseTable, FormatSwitchingBaseTable
+from .otBase import BaseTable, FormatSwitchingBaseTable, ValueRecord
 import operator
 import logging
 import struct

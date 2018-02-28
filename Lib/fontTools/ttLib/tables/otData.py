@@ -397,16 +397,16 @@ otData = [
 		('LOffset', 'ExtSubTable', None, None, 'Offset to SubTable'),
 	]),
 
-	('ValueRecord', [
-		('int16', 'XPlacement', None, None, 'Horizontal adjustment for placement-in design units'),
-		('int16', 'YPlacement', None, None, 'Vertical adjustment for placement-in design units'),
-		('int16', 'XAdvance', None, None, 'Horizontal adjustment for advance-in design units (only used for horizontal writing)'),
-		('int16', 'YAdvance', None, None, 'Vertical adjustment for advance-in design units (only used for vertical writing)'),
-		('Offset', 'XPlaDevice', None, None, 'Offset to Device table for horizontal placement-measured from beginning of PosTable (may be NULL)'),
-		('Offset', 'YPlaDevice', None, None, 'Offset to Device table for vertical placement-measured from beginning of PosTable (may be NULL)'),
-		('Offset', 'XAdvDevice', None, None, 'Offset to Device table for horizontal advance-measured from beginning of PosTable (may be NULL)'),
-		('Offset', 'YAdvDevice', None, None, 'Offset to Device table for vertical advance-measured from beginning of PosTable (may be NULL)'),
-	]),
+#	('ValueRecord', [
+#		('int16', 'XPlacement', None, None, 'Horizontal adjustment for placement-in design units'),
+#		('int16', 'YPlacement', None, None, 'Vertical adjustment for placement-in design units'),
+#		('int16', 'XAdvance', None, None, 'Horizontal adjustment for advance-in design units (only used for horizontal writing)'),
+#		('int16', 'YAdvance', None, None, 'Vertical adjustment for advance-in design units (only used for vertical writing)'),
+#		('Offset', 'XPlaDevice', None, None, 'Offset to Device table for horizontal placement-measured from beginning of PosTable (may be NULL)'),
+#		('Offset', 'YPlaDevice', None, None, 'Offset to Device table for vertical placement-measured from beginning of PosTable (may be NULL)'),
+#		('Offset', 'XAdvDevice', None, None, 'Offset to Device table for horizontal advance-measured from beginning of PosTable (may be NULL)'),
+#		('Offset', 'YAdvDevice', None, None, 'Offset to Device table for vertical advance-measured from beginning of PosTable (may be NULL)'),
+#	]),
 
 	('AnchorFormat1', [
 		('uint16', 'AnchorFormat', None, None, 'Format identifier-format = 1'),

@@ -215,6 +215,11 @@ def _visit(self, objType, func):
 	if hasattr(self, 'getConverters'):
 		for conv in self.getConverters():
 			that = getattr(self, conv.name, None)
+			if that is not None:
+				_visit(that, objType, func)
+
+	if isinstance(self, ot.ValueRecord):
+		for that in self.__dict__.values():
 			_visit(that, objType, func)
 
 def _Device_recordVarIdx(self, s):
