@@ -1,6 +1,15 @@
 """
-User name to file name conversion.
-This was taken form the UFO 3 spec.
+User name to file name conversion based on the UFO 3 spec:
+http://unifiedfontobject.org/versions/ufo3/conventions/
+
+The code was copied from:
+https://github.com/unified-font-object/ufoLib/blob/8747da7/Lib/ufoLib/filenames.py
+
+Author: Tal Leming
+Copyright (c) 2005-2016, The RoboFab Developers:
+	Erik van Blokland
+	Tal Leming
+	Just van Rossum
 """
 from __future__ import unicode_literals
 from fontTools.misc.py23 import basestring, unicode
@@ -17,17 +26,12 @@ maxFileNameLength = 255
 class NameTranslationError(Exception):
 	pass
 
-# ----------------------
-# User Name to File Name
-# ----------------------
-# This code was taken directly from the ufoNormalizer script in the unified-font-object repositry
-# (https://github.com/unified-font-object/)
-# ...which algorithm was taken directly from the UFO 3 specification
 
 def userNameToFileName(userName, existing=[], prefix="", suffix=""):
 	"""
 	existing should be a case-insensitive list
 	of all existing file names.
+
 	>>> userNameToFileName("a") == "a"
 	True
 	>>> userNameToFileName("A") == "A_"
@@ -115,20 +119,24 @@ def handleClash1(userName, existing=[], prefix="", suffix=""):
 	"""
 	existing should be a case-insensitive list
 	of all existing file names.
+
 	>>> prefix = ("0" * 5) + "."
 	>>> suffix = "." + ("0" * 10)
 	>>> existing = ["a" * 5]
+
 	>>> e = list(existing)
 	>>> handleClash1(userName="A" * 5, existing=e,
 	...		prefix=prefix, suffix=suffix) == (
 	... 	'00000.AAAAA000000000000001.0000000000')
 	True
+
 	>>> e = list(existing)
 	>>> e.append(prefix + "aaaaa" + "1".zfill(15) + suffix)
 	>>> handleClash1(userName="A" * 5, existing=e,
 	...		prefix=prefix, suffix=suffix) == (
 	... 	'00000.AAAAA000000000000002.0000000000')
 	True
+
 	>>> e = list(existing)
 	>>> e.append(prefix + "AAAAA" + "2".zfill(15) + suffix)
 	>>> handleClash1(userName="A" * 5, existing=e,
@@ -167,18 +175,22 @@ def handleClash2(existing=[], prefix="", suffix=""):
 	"""
 	existing should be a case-insensitive list
 	of all existing file names.
+
 	>>> prefix = ("0" * 5) + "."
 	>>> suffix = "." + ("0" * 10)
 	>>> existing = [prefix + str(i) + suffix for i in range(100)]
+
 	>>> e = list(existing)
 	>>> handleClash2(existing=e, prefix=prefix, suffix=suffix) == (
 	... 	'00000.100.0000000000')
 	True
+
 	>>> e = list(existing)
 	>>> e.remove(prefix + "1" + suffix)
 	>>> handleClash2(existing=e, prefix=prefix, suffix=suffix) == (
 	... 	'00000.1.0000000000')
 	True
+
 	>>> e = list(existing)
 	>>> e.remove(prefix + "2" + suffix)
 	>>> handleClash2(existing=e, prefix=prefix, suffix=suffix) == (
@@ -205,3 +217,8 @@ def handleClash2(existing=[], prefix="", suffix=""):
 		raise NameTranslationError("No unique name could be found.")
 	# finished
 	return finalName
+
+if __name__ == "__main__":
+	import doctest
+	import sys
+	sys.exit(doctest.testmod().failed)
