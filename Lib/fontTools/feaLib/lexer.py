@@ -56,7 +56,7 @@ class Lexer(object):
 
     def location_(self):
         column = self.pos_ - self.line_start_ + 1
-        return (self.filename_, self.line_, column)
+        return (self.filename_ or "<features>", self.line_, column)
 
     def next_(self):
         self.scan_over_(Lexer.CHAR_WHITESPACE_)
@@ -211,33 +211,42 @@ class IncludingLexer(object):
                 #semi_type, semi_token, semi_location = lexer.next()
                 #if semi_type is not Lexer.SYMBOL or semi_token != ";":
                 #    raise FeatureLibError("Expected ';'", semi_location)
-                curpath = os.path.dirname(self.featurefilepath)
-                path = os.path.join(curpath, fname_token)
+                if os.path.isabs(fname_token):
+                    path = fname_token
+                else:
+                    if self.featurefilepath is not None:
+                        curpath = os.path.dirname(self.featurefilepath)
+                    else:
+                        # if the IncludingLexer was initialized from an in-memory
+                        # file-like stream, it doesn't have a 'name' pointing to
+                        # its filesystem path, therefore we fall back to using the
+                        # current working directory to resolve relative includes
+                        curpath = os.getcwd()
+                    path = os.path.join(curpath, fname_token)
                 if len(self.lexers_) >= 5:
                     raise FeatureLibError("Too many recursive includes",
                                           fname_location)
-                self.lexers_.append(self.make_lexer_(path, fname_location))
-                continue
+                try:
+                    self.lexers_.append(self.make_lexer_(path))
+                except IOError as err:
+                    # FileNotFoundError does not exist on Python < 3.3
+                    import errno
+                    if err.errno == errno.ENOENT:
+                        raise IncludedFeaNotFound(fname_token, fname_location)
+                    raise  # pragma: no cover
             else:
                 return (token_type, token, location)
         raise StopIteration()
 
     @staticmethod
-    def make_lexer_(file_or_path, location=None):
+    def make_lexer_(file_or_path):
         if hasattr(file_or_path, "read"):
             fileobj, closing = file_or_path, False
         else:
             filename, closing = file_or_path, True
-            try:
-                fileobj = open(filename, "r", encoding="utf-8")
-            except IOError as err:
-                # FileNotFoundError does not exist on Python < 3.3
-                import errno
-                if err.errno == errno.ENOENT:
-                    raise IncludedFeaNotFound(str(err), location)
-                raise  # pragma: no cover
+            fileobj = open(filename, "r", encoding="utf-8")
         data = fileobj.read()
-        filename = fileobj.name if hasattr(fileobj, "name") else "<features>"
+        filename = getattr(fileobj, "name", None)
         if closing:
             fileobj.close()
         return Lexer(data, filename)
