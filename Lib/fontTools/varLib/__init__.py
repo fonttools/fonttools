@@ -262,6 +262,10 @@ def _SetCoordinates(font, glyphName, coord):
 	glyph.recalcBounds(glyf)
 
 	horizontalAdvanceWidth = round(rightSideX - leftSideX)
+	if horizontalAdvanceWidth < 0:
+		# unlikely, but it can happen, see:
+		# https://github.com/fonttools/fonttools/pull/1198
+		horizontalAdvanceWidth = 0
 	leftSideBearing = round(glyph.xMin - leftSideX)
 	# XXX Handle vertical
 	font["hmtx"].metrics[glyphName] = horizontalAdvanceWidth, leftSideBearing
