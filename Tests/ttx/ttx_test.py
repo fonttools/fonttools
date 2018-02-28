@@ -129,17 +129,21 @@ class TTXTest(unittest.TestCase):
                 (os.path.join(self.tempdir, file_names[i]),
                  os.path.join(self.tempdir, file_names[i].split('.')[0] + extensions[i])))
 
-    def test_parseOptions_split_tables(self):
+    def test_parseOptions_splitTables(self):
         file_name = 'TestTTF.ttf'
         font_path = self.getpath(file_name)
         temp_path = self.temp_font(font_path, file_name)
         args = ['-s', temp_path]
+
         jobs, options = ttx.parseOptions(args)
+
         ttx_file_path = jobs[0][2]
         temp_folder = os.path.dirname(ttx_file_path)
         self.assertTrue(options.splitTables)
         self.assertTrue(os.path.exists(ttx_file_path))
+
         ttx.process(jobs, options)
+
         # Read the TTX file but strip the first two and the last lines:
         # <?xml version="1.0" encoding="UTF-8"?>
         # <ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.22">
@@ -147,12 +151,57 @@ class TTXTest(unittest.TestCase):
         # </ttFont>
         parsed_xml = parseXML(self.read_file(ttx_file_path)[2:-1])
         for item in parsed_xml:
-            if isinstance(item, tuple):
-                # the tuple looks like this:
-                # (u'head', {u'src': u'TestTTF._h_e_a_d.ttx'}, [])
-                table_file_name = item[1].get('src')
-                table_file_path = os.path.join(temp_folder, table_file_name)
-                self.assertTrue(os.path.exists(table_file_path))
+            if not isinstance(item, tuple):
+                continue
+            # the tuple looks like this:
+            # (u'head', {u'src': u'TestTTF._h_e_a_d.ttx'}, [])
+            table_file_name = item[1].get('src')
+            table_file_path = os.path.join(temp_folder, table_file_name)
+            self.assertTrue(os.path.exists(table_file_path))
+
+    def test_parseOptions_splitGlyphs(self):
+        file_name = 'TestTTF.ttf'
+        font_path = self.getpath(file_name)
+        temp_path = self.temp_font(font_path, file_name)
+        args = ['-g', temp_path]
+
+        jobs, options = ttx.parseOptions(args)
+
+        ttx_file_path = jobs[0][2]
+        temp_folder = os.path.dirname(ttx_file_path)
+        self.assertTrue(options.splitGlyphs)
+        # splitGlyphs also forces splitTables
+        self.assertTrue(options.splitTables)
+        self.assertTrue(os.path.exists(ttx_file_path))
+
+        ttx.process(jobs, options)
+
+        # Read the TTX file but strip the first two and the last lines:
+        # <?xml version="1.0" encoding="UTF-8"?>
+        # <ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.22">
+        # ...
+        # </ttFont>
+        for item in parseXML(self.read_file(ttx_file_path)[2:-1]):
+            if not isinstance(item, tuple):
+                continue
+            # the tuple looks like this:
+            # (u'head', {u'src': u'TestTTF._h_e_a_d.ttx'}, [])
+            table_tag = item[0]
+            table_file_name = item[1].get('src')
+            table_file_path = os.path.join(temp_folder, table_file_name)
+            self.assertTrue(os.path.exists(table_file_path))
+            if table_tag != "glyf":
+                continue
+            # also strip the enclosing 'glyf' element
+            for item in parseXML(self.read_file(table_file_path)[4:-3]):
+                if not isinstance(item, tuple):
+                    continue
+                # glyphs without outline data only have 'name' attribute
+                glyph_file_name = item[1].get('src')
+                if glyph_file_name is not None:
+                    glyph_file_path = os.path.join(temp_folder,
+                                                   glyph_file_name)
+                    self.assertTrue(os.path.exists(glyph_file_path))
 
     def test_guessFileType_ttf(self):
         file_name = 'TestTTF.ttf'
