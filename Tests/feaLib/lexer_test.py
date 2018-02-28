@@ -1,8 +1,11 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
+from fontTools.misc.py23 import *
 from fontTools.feaLib.error import FeatureLibError, IncludedFeaNotFound
 from fontTools.feaLib.lexer import IncludingLexer, Lexer
 import os
+import shutil
+import tempfile
 import unittest
 
 
@@ -174,7 +177,58 @@ class IncludingLexerTest(unittest.TestCase):
 
     def test_include_missing_file(self):
         lexer = IncludingLexer(self.getpath("include/includemissingfile.fea"))
-        self.assertRaises(IncludedFeaNotFound, lambda: list(lexer))
+        self.assertRaisesRegex(IncludedFeaNotFound,
+                               "includemissingfile.fea:1:8: missingfile.fea",
+                               lambda: list(lexer))
+
+    def test_featurefilepath_None(self):
+        lexer = IncludingLexer(UnicodeIO("# foobar"))
+        self.assertIsNone(lexer.featurefilepath)
+        files = set(loc[0] for _, _, loc in lexer)
+        self.assertIn("<features>", files)
+
+    def test_include_absolute_path(self):
+        with tempfile.NamedTemporaryFile(delete=False) as included:
+            included.write(tobytes("""
+                feature kern {
+                    pos A B -40;
+                } kern;
+                """, encoding="utf-8"))
+        including = UnicodeIO("include(%s);" % included.name)
+        try:
+            lexer = IncludingLexer(including)
+            files = set(loc[0] for _, _, loc in lexer)
+            self.assertIn(included.name, files)
+        finally:
+            os.remove(included.name)
+
+    def test_include_relative_to_cwd(self):
+        # save current working directory, to be restored later
+        cwd = os.getcwd()
+        tmpdir = tempfile.mkdtemp()
+        try:
+            # create new feature file in a temporary directory
+            with open(os.path.join(tmpdir, "included.fea"), "w",
+                      encoding="utf-8") as included:
+                included.write("""
+                    feature kern {
+                        pos A B -40;
+                    } kern;
+                    """)
+            # change current folder to the temporary dir
+            os.chdir(tmpdir)
+            # instantiate a new lexer that includes the above file
+            # using a relative path; the IncludingLexer does not
+            # itself have a path, because it was initialized from
+            # an in-memory stream, so it will use the current working
+            # directory to resolve relative include statements
+            lexer = IncludingLexer(UnicodeIO("include(included.fea);"))
+            files = set(loc[0] for _, _, loc in lexer)
+            self.assertIn(included.name, files)
+        finally:
+            # remove temporary folder and restore previous working directory
+            os.chdir(cwd)
+            shutil.rmtree(tmpdir)
 
 
 if __name__ == "__main__":
