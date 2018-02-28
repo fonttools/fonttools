@@ -233,6 +233,7 @@ def _GetCoordinates(font, glyphName):
 # TODO Move to glyf or gvar table proper
 def _SetCoordinates(font, glyphName, coord):
 	glyf = font["glyf"]
+	horizontalAdvanceWidth = font["hmtx"].metrics[glyphName][0]
 	assert glyphName in glyf.glyphs
 	glyph = glyf[glyphName]
 
@@ -261,7 +262,8 @@ def _SetCoordinates(font, glyphName, coord):
 
 	glyph.recalcBounds(glyf)
 
-	horizontalAdvanceWidth = round(rightSideX - leftSideX)
+	if horizontalAdvanceWidth != 0:
+		horizontalAdvanceWidth = round(rightSideX - leftSideX)
 	leftSideBearing = round(glyph.xMin - leftSideX)
 	# XXX Handle vertical
 	font["hmtx"].metrics[glyphName] = horizontalAdvanceWidth, leftSideBearing
