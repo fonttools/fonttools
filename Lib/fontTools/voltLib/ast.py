@@ -4,7 +4,7 @@ from fontTools.voltLib.error import VoltLibError
 
 
 class Statement(object):
-    def __init__(self, location):
+    def __init__(self, location=None):
         self.location = location
 
     def build(self, builder):
@@ -12,7 +12,7 @@ class Statement(object):
 
 
 class Expression(object):
-    def __init__(self, location):
+    def __init__(self, location=None):
         self.location = location
 
     def build(self, builder):
@@ -20,7 +20,7 @@ class Expression(object):
 
 
 class Block(Statement):
-    def __init__(self, location):
+    def __init__(self, location=None):
         Statement.__init__(self, location)
         self.statements = []
 
@@ -35,7 +35,7 @@ class VoltFile(Block):
 
 
 class LookupBlock(Block):
-    def __init__(self, location, name):
+    def __init__(self, name, location=None):
         Block.__init__(self, location)
         self.name = name
 
@@ -46,7 +46,7 @@ class LookupBlock(Block):
 
 
 class GlyphDefinition(Statement):
-    def __init__(self, location, name, gid, gunicode, gtype, components):
+    def __init__(self, name, gid, gunicode, gtype, components, location=None):
         Statement.__init__(self, location)
         self.name = name
         self.id = gid
@@ -56,7 +56,7 @@ class GlyphDefinition(Statement):
 
 
 class GroupDefinition(Statement):
-    def __init__(self, location, name, enum):
+    def __init__(self, name, enum, location=None):
         Statement.__init__(self, location)
         self.name = name
         self.enum = enum
@@ -78,7 +78,7 @@ class GroupDefinition(Statement):
 
 class GlyphName(Expression):
     """A single glyph name, such as cedilla."""
-    def __init__(self, location, glyph):
+    def __init__(self, glyph, location=None):
         Expression.__init__(self, location)
         self.glyph = glyph
 
@@ -88,7 +88,7 @@ class GlyphName(Expression):
 
 class Enum(Expression):
     """An enum"""
-    def __init__(self, location, enum):
+    def __init__(self, enum, location=None):
         Expression.__init__(self, location)
         self.enum = enum
 
@@ -108,7 +108,7 @@ class Enum(Expression):
 
 class GroupName(Expression):
     """A glyph group"""
-    def __init__(self, location, group, parser):
+    def __init__(self, group, parser, location=None):
         Expression.__init__(self, location)
         self.group = group
         self.parser_ = parser
@@ -126,7 +126,7 @@ class GroupName(Expression):
 
 class Range(Expression):
     """A glyph range"""
-    def __init__(self, location, start, end, parser):
+    def __init__(self, start, end, parser, location=None):
         Expression.__init__(self, location)
         self.start = start
         self.end = end
@@ -138,7 +138,7 @@ class Range(Expression):
 
 
 class ScriptDefinition(Statement):
-    def __init__(self, location, name, tag, langs):
+    def __init__(self, name, tag, langs, location=None):
         Statement.__init__(self, location)
         self.name = name
         self.tag = tag
@@ -146,7 +146,7 @@ class ScriptDefinition(Statement):
 
 
 class LangSysDefinition(Statement):
-    def __init__(self, location, name, tag, features):
+    def __init__(self, name, tag, features, location=None):
         Statement.__init__(self, location)
         self.name = name
         self.tag = tag
@@ -154,7 +154,7 @@ class LangSysDefinition(Statement):
 
 
 class FeatureDefinition(Statement):
-    def __init__(self, location, name, tag, lookups):
+    def __init__(self, name, tag, lookups, location=None):
         Statement.__init__(self, location)
         self.name = name
         self.tag = tag
@@ -162,8 +162,8 @@ class FeatureDefinition(Statement):
 
 
 class LookupDefinition(Statement):
-    def __init__(self, location, name, process_base, process_marks, direction,
-                 reversal, comments, context, sub, pos):
+    def __init__(self, name, process_base, process_marks, direction,
+                 reversal, comments, context, sub, pos, location=None):
         Statement.__init__(self, location)
         self.name = name
         self.process_base = process_base
@@ -177,47 +177,43 @@ class LookupDefinition(Statement):
 
 
 class SubstitutionDefinition(Statement):
-    def __init__(self, location, mapping):
+    def __init__(self, mapping, location=None):
         Statement.__init__(self, location)
         self.mapping = mapping
 
 
 class SubstitutionSingleDefinition(SubstitutionDefinition):
-    def __init__(self, location, mapping):
-        SubstitutionDefinition.__init__(self, location, mapping)
+    pass
 
 
 class SubstitutionMultipleDefinition(SubstitutionDefinition):
-    def __init__(self, location, mapping):
-        SubstitutionDefinition.__init__(self, location, mapping)
+    pass
 
 
 class SubstitutionLigatureDefinition(SubstitutionDefinition):
-    def __init__(self, location, mapping):
-        SubstitutionDefinition.__init__(self, location, mapping)
+    pass
 
 
 class SubstitutionReverseChainingSingleDefinition(SubstitutionDefinition):
-    def __init__(self, location, mapping):
-        SubstitutionDefinition.__init__(self, location, mapping)
+    pass
 
 
 class PositionAttachDefinition(Statement):
-    def __init__(self, location, coverage, coverage_to):
+    def __init__(self, coverage, coverage_to, location=None):
         Statement.__init__(self, location)
         self.coverage = coverage
         self.coverage_to = coverage_to
 
 
 class PositionAttachCursiveDefinition(Statement):
-    def __init__(self, location, coverages_exit, coverages_enter):
+    def __init__(self, coverages_exit, coverages_enter, location=None):
         Statement.__init__(self, location)
         self.coverages_exit = coverages_exit
         self.coverages_enter = coverages_enter
 
 
 class PositionAdjustPairDefinition(Statement):
-    def __init__(self, location, coverages_1, coverages_2, adjust_pair):
+    def __init__(self, coverages_1, coverages_2, adjust_pair, location=None):
         Statement.__init__(self, location)
         self.coverages_1 = coverages_1
         self.coverages_2 = coverages_2
@@ -225,22 +221,22 @@ class PositionAdjustPairDefinition(Statement):
 
 
 class PositionAdjustSingleDefinition(Statement):
-    def __init__(self, location, adjust_single):
+    def __init__(self, adjust_single, location=None):
         Statement.__init__(self, location)
         self.adjust_single = adjust_single
 
 
 class ContextDefinition(Statement):
-    def __init__(self, location, ex_or_in, left=[], right=[]):
+    def __init__(self, ex_or_in, left=None, right=None, location=None):
         Statement.__init__(self, location)
         self.ex_or_in = ex_or_in
-        self.left = left
-        self.right = right
+        self.left = left if left is not None else []
+        self.right = right if right is not None else []
 
 
 class AnchorDefinition(Statement):
-    def __init__(self, location, name, gid, glyph_name, component, locked,
-                 pos):
+    def __init__(self, name, gid, glyph_name, component, locked,
+                 pos, location=None):
         Statement.__init__(self, location)
         self.name = name
         self.gid = gid
@@ -251,7 +247,7 @@ class AnchorDefinition(Statement):
 
 
 class SettingDefinition(Statement):
-    def __init__(self, location, name, value):
+    def __init__(self, name, value, location=None):
         Statement.__init__(self, location)
         self.name = name
         self.value = value
