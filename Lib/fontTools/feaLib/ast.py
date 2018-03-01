@@ -1171,7 +1171,7 @@ class CVParametersNameStatement(NameRecord):
         if self.block_name == "ParamUILabelNameID":
             item = "_{}".format(builder.cv_num_named_params_.get(self.nameID, 0))
         builder.add_cv_parameter(self.nameID)
-        self.nameID = '{}.{}{}'.format(self.nameID, self.block_name, item)
+        self.nameID = (self.nameID, self.block_name + item)
         NameRecord.build(self, builder)
 
     def asFea(self, indent=""):

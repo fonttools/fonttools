@@ -297,14 +297,14 @@ class Builder(object):
             params = otTables.FeatureParamsCharacterVariants()
             params.Format = 0
             params.FeatUILabelNameID = self.cv_parameters_ids_.get(
-                '{}.{}'.format(tag, 'FeatUILabelNameID'), 0)
+                (tag, 'FeatUILabelNameID'), 0)
             params.FeatUITooltipTextNameID = self.cv_parameters_ids_.get(
-                '{}.{}'.format(tag, 'FeatUITooltipTextNameID'), 0)
+                (tag, 'FeatUITooltipTextNameID'), 0)
             params.SampleTextNameID = self.cv_parameters_ids_.get(
-                '{}.{}'.format(tag, 'SampleTextNameID'), 0)
+                (tag, 'SampleTextNameID'), 0)
             params.NumNamedParameters = self.cv_num_named_params_.get(tag, 0)
             params.FirstParamUILabelNameID = self.cv_parameters_ids_.get(
-                '{}.{}'.format(tag, 'ParamUILabelNameID_0'), 0)
+                (tag, 'ParamUILabelNameID_0'), 0)
             params.CharCount = len(self.cv_characters_[tag])
             params.Character = self.cv_characters_[tag]
         return params
@@ -319,7 +319,7 @@ class Builder(object):
         for name in self.names_:
             nameID, platformID, platEncID, langID, string = name
             # For featureNames block, nameID is 'feature tag'
-            # For cvParameters blocks, nameID is 'feature tag.block name'
+            # For cvParameters blocks, nameID is ('feature tag', 'block name')
             if not isinstance(nameID, int):
                 tag = nameID
                 if tag in self.featureNames_:
@@ -327,7 +327,7 @@ class Builder(object):
                         self.featureNames_ids_[tag] = self.get_user_name_id(table)
                         assert self.featureNames_ids_[tag] is not None
                     nameID = self.featureNames_ids_[tag]
-                elif tag.split('.')[0] in self.cv_parameters_:
+                elif tag[0] in self.cv_parameters_:
                     if tag not in self.cv_parameters_ids_:
                         self.cv_parameters_ids_[tag] = self.get_user_name_id(table)
                         assert self.cv_parameters_ids_[tag] is not None
