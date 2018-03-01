@@ -46,6 +46,8 @@ class Parser(object):
         lexerClass = IncludingLexer if followIncludes else NonIncludingLexer
         self.lexer_ = lexerClass(featurefile)
         self.advance_lexer_(comments=True)
+        self.SS_FEATURE_TAGS = ["ss%02d" % i for i in range(1, 20+1)]
+        self.CV_FEATURE_TAGS = ["cv%02d" % i for i in range(1, 99+1)]
 
     def parse(self):
         statements = self.doc_.statements
@@ -1219,14 +1221,14 @@ class Parser(object):
         vertical = (tag in {"vkrn", "vpal", "vhal", "valt"})
 
         stylisticset = None
-        if tag in ["ss%02d" % i for i in range(1, 20+1)]:
-            stylisticset = tag
-
         cv_feature = None
-        if tag in ["cv%02d" % i for i in range(1, 99+1)]:
+        size_feature = False
+        if tag in self.SS_FEATURE_TAGS:
+            stylisticset = tag
+        elif tag in self.CV_FEATURE_TAGS:
             cv_feature = tag
-
-        size_feature = (tag == "size")
+        elif tag == "size":
+            size_feature = True
 
         use_extension = False
         if self.next_token_ == "useExtension":
