@@ -83,21 +83,24 @@ class TTGlyphPen(AbstractPen):
         assert self._isClosed(), "Didn't close last contour."
 
         almost2 = 1.99993896484375  # F2Dot14 0b1.11111111111111
+        eps = .5 / (1 << 14)
+
+        def closeTo2(value):
+            return True if abs(value - 2) <= eps else False
+
         for i, (glyphName, transformation) in enumerate(self.components):
-            if any(s > 2 or s < -2 for s in transformation[0::3]):
+            if any(s > 2 or s < -2 for s in transformation[:3]):
                 # can't have scale >= 2 or scale < -2:
                 tpen = TransformPen(self, transformation)
                 self.glyphSet[glyphName].draw(tpen)
                 self.components.remove((glyphName, transformation))
-            elif any(almost2 < s <= 2 for s in transformation[0::3]):
+            elif any(closeTo2(s) for s in transformation[:3]):
                 # use closest F2Dot14 value to 2 when possible
                 transformation = (
-                    (almost2 if almost2 < transformation[0] <= 2 else
-                     transformation[0]),
-                    transformation[1],
-                    transformation[2],
-                    (almost2 if almost2 < transformation[3] <= 2 else
-                     transformation[3]),
+                    almost2 if closeTo2(transformation[0]) else transformation[0],
+                    almost2 if closeTo2(transformation[1]) else transformation[1],
+                    almost2 if closeTo2(transformation[2]) else transformation[2],
+                    almost2 if closeTo2(transformation[3]) else transformation[3],
                     transformation[4],
                     transformation[5]
                 )
