@@ -1,3 +1,7 @@
+- [ttGlyphPen] Decompose composite glyphs if any components' transform is too
+  large to fit a ``F2Dot14`` value, or clamp transform values that are
+  (almost) equal to +2.0 to make them fit and avoid decomposing (#1200,
+  #1204, #1205).
 - [ttx] Added new ``-g`` option to dump glyphs from the ``glyf`` table
   splitted as individual ttx files (#153, #1035, #1132, #1202).
 - Copied ``ufoLib.filenames`` module to ``fontTools.misc.filenames``, used
