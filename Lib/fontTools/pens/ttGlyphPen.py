@@ -87,13 +87,13 @@ class TTGlyphPen(AbstractPen):
     def glyph(self, componentFlags=0x4):
         assert self._isClosed(), "Didn't close last contour."
 
+        overflowing = False
         for i, (glyphName, transformation) in enumerate(self.components):
             if any(s > 2 or s < -2 for s in transformation[:4]):
-                # can't encode transform values > 2 or scale < -2 in F2Dot14,
+                # can't encode transform values > 2 or < -2 in F2Dot14,
                 # so we must decompose the component
-                tpen = TransformPen(self, transformation)
-                self.glyphSet[glyphName].draw(tpen)
-                self.components.remove((glyphName, transformation))
+                overflowing = True
+                break
             elif any(MAX_F2DOT14 < s <= 2 for s in transformation[:4]):
                 # clamp values ~= +2.0 so we can keep the component
                 clamped = [MAX_F2DOT14 if MAX_F2DOT14 < s <= 2 else s
@@ -103,8 +103,8 @@ class TTGlyphPen(AbstractPen):
 
         components = []
         for glyphName, transformation in self.components:
-            if self.points:
-                # can't have both, so decompose the glyph
+            if self.points or overflowing:
+                # can't have both coordinates and components, so decompose
                 tpen = TransformPen(self, transformation)
                 self.glyphSet[glyphName].draw(tpen)
                 continue
