@@ -18,26 +18,38 @@
 feature cv01 {
 	cvParameters {
 		FeatUILabelNameID {
+#test-fea2fea: name "uilabel simple a";
 			name 3 1 0x0409 "uilabel simple a"; # English US
+#test-fea2fea: name 1 "uilabel simple a";
 			name 1 0 0 "uilabel simple a"; # Mac English
 		};
 		FeatUITooltipTextNameID {
+#test-fea2fea: name "tool tip simple a";
 			name 3 1 0x0409 "tool tip simple a"; # English US
+#test-fea2fea: name 1 "tool tip simple a";
 			name 1 0 0 "tool tip simple a"; # Mac English
 		};
 		SampleTextNameID {
+#test-fea2fea: name "sample text simple a";
 			name 3 1 0x0409 "sample text simple a"; # English US
+#test-fea2fea: name 1 "sample text simple a";
 			name 1 0 0 "sample text simple a"; # Mac English
 		};
 		ParamUILabelNameID {
+#test-fea2fea: name "param1 text simple a";
 			name 3 1 0x0409 "param1 text simple a"; # English US
+#test-fea2fea: name 1 "param1 text simple a";
 			name 1 0 0 "param1 text simple a"; # Mac English
 		};
 		ParamUILabelNameID {
+#test-fea2fea: name "param2 text simple a";
 			name 3 1 0x0409 "param2 text simple a"; # English US
+#test-fea2fea: name 1 "param2 text simple a";
 			name 1 0 0 "param2 text simple a"; # Mac English
 		};
+#test-fea2fea: Character 0xa;
 		Character 10;
+#test-fea2fea: Character 0x5dde;
 		Character 0x5DDE;
 	};
 # --- rules for this feature ---
