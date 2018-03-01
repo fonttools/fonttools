@@ -87,19 +87,11 @@ class TTGlyphPen(AbstractPen):
     def glyph(self, componentFlags=0x4):
         assert self._isClosed(), "Didn't close last contour."
 
-        overflowing = False
-        for i, (glyphName, transformation) in enumerate(self.components):
-            if any(s > 2 or s < -2 for s in transformation[:4]):
-                # can't encode transform values > 2 or < -2 in F2Dot14,
-                # so we must decompose the component
-                overflowing = True
-                break
-            elif any(MAX_F2DOT14 < s <= 2 for s in transformation[:4]):
-                # clamp values ~= +2.0 so we can keep the component
-                clamped = [MAX_F2DOT14 if MAX_F2DOT14 < s <= 2 else s
-                           for s in transformation[:4]]
-                clamped.extend(transformation[4:])
-                self.components[i] = (glyphName, tuple(clamped))
+        # we can't encode transform values > 2 or < -2 in F2Dot14,
+        # so we must decompose the glyph if any transform exceeds these
+        overflowing = any(s > 2 or s < -2
+                          for (glyphName, transformation) in self.components
+                          for s in transformation[:4])
 
         components = []
         for glyphName, transformation in self.components:
@@ -111,9 +103,14 @@ class TTGlyphPen(AbstractPen):
 
             component = GlyphComponent()
             component.glyphName = glyphName
-            if transformation[:4] != (1, 0, 0, 1):
-                component.transform = (transformation[:2], transformation[2:4])
             component.x, component.y = transformation[4:]
+            transformation = transformation[:4]
+            if transformation != (1, 0, 0, 1):
+                if any(MAX_F2DOT14 < s <= 2 for s in transformation):
+                    # clamp values ~= +2.0 so we can keep the component
+                    transformation = tuple(MAX_F2DOT14 if MAX_F2DOT14 < s <= 2
+                                           else s for s in transformation)
+                component.transform = (transformation[:2], transformation[2:])
             component.flags = componentFlags
             components.append(component)
 
