@@ -1,3 +1,14 @@
+- [ttx] Added new `-g` option to dump glyphs from the `glyf` table splitted
+  as individual ttx files (#153, #1035, #1132, #1202).
+- Copied `ufoLib.filenames` module to `fontTools.misc.filenames`, used for
+  the ttx split-glyphs option (#1202).
+- [feaLib] Added support for `cvParameters` blocks in Character Variant
+  feautures `cv01-cv99` (#860, #1169).
+- [Snippets] Added ``checksum.py`` script to generate/check SHA1 hash of
+  ttx files (#1197).
+- [varLib.mutator] Fixed issue while instantiating some variable fonts
+  whereby the horizontal advance width computed from `gvar` phantom points
+  could turn up to be negative (#1198).
 - [varLib/subset] Fixed issue with subsetting GPOS variation data not
   picking up ``ValueRecord`` ``Device`` objects (54fd71f).
 - [feaLib/voltLib] In all AST elements, the ``location`` is no longer a
