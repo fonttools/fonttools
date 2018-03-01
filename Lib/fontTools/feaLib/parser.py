@@ -16,6 +16,8 @@ log = logging.getLogger(__name__)
 class Parser(object):
     extensions = {}
     ast = ast
+    SS_FEATURE_TAGS = ["ss%02d" % i for i in range(1, 20+1)]
+    CV_FEATURE_TAGS = ["cv%02d" % i for i in range(1, 99+1)]
 
     def __init__(self, featurefile, glyphNames=(), followIncludes=True,
                  **kwargs):
@@ -46,8 +48,6 @@ class Parser(object):
         lexerClass = IncludingLexer if followIncludes else NonIncludingLexer
         self.lexer_ = lexerClass(featurefile)
         self.advance_lexer_(comments=True)
-        self.SS_FEATURE_TAGS = ["ss%02d" % i for i in range(1, 20+1)]
-        self.CV_FEATURE_TAGS = ["cv%02d" % i for i in range(1, 99+1)]
 
     def parse(self):
         statements = self.doc_.statements
@@ -1576,8 +1576,12 @@ class Parser(object):
             raise FeatureLibError("Expected an integer or floating-point number",
                                   self.cur_token_location_)
 
-    # TODO: Don't allow this method to accept negative numbers
     def expect_decimal_or_hexadecimal_(self):
+        # the lexer returns the same token type 'NUMBER' for either decimal or
+        # hexadecimal integers, and casts them both to a `int` type, so it's
+        # impossible to distinguish the two here. This method is implemented
+        # the same as `expect_number_`, only it gives a more informative
+        # error message
         self.advance_lexer_()
         if self.cur_token_type_ is Lexer.NUMBER:
             return self.cur_token_
