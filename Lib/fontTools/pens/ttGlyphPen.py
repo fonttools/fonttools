@@ -20,8 +20,9 @@ MAX_F2DOT14 = 0x7FFF / (1 << 14)
 class TTGlyphPen(AbstractPen):
     """Pen used for drawing to a TrueType glyph."""
 
-    def __init__(self, glyphSet):
+    def __init__(self, glyphSet, decomposeOverflowingTransform=True):
         self.glyphSet = glyphSet
+        self.decomposeOverflowingTransform = decomposeOverflowingTransform
         self.init()
 
     def init(self):
@@ -92,6 +93,9 @@ class TTGlyphPen(AbstractPen):
         overflowing = any(s > 2 or s < -2
                           for (glyphName, transformation) in self.components
                           for s in transformation[:4])
+        if not self.decomposeOverflowingTransform and overflowing:
+            raise OverflowError("transform value too large to fit F2Dot14; "
+                                "valid range is -2.0 <= x <= +2.0")
 
         components = []
         for glyphName, transformation in self.components:
