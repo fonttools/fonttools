@@ -89,12 +89,7 @@ class TTGlyphPen(AbstractPen):
             return abs(value - 2) <= eps
 
         for i, (glyphName, transformation) in enumerate(self.components):
-            if any(s > 2 or s < -2 for s in transformation[:3]):
-                # can't have scale >= 2 or scale < -2:
-                tpen = TransformPen(self, transformation)
-                self.glyphSet[glyphName].draw(tpen)
-                self.components.remove((glyphName, transformation))
-            elif any(closeTo2(s) for s in transformation[:3]):
+            if any(closeTo2(s) for s in transformation[:3]):
                 # use closest F2Dot14 value to 2 when possible
                 transformation = (
                     almost2 if closeTo2(transformation[0]) else transformation[0],
@@ -105,6 +100,11 @@ class TTGlyphPen(AbstractPen):
                     transformation[5]
                 )
                 self.components[i] = (glyphName, transformation)
+            elif any(s > 2 or s < -2 for s in transformation[:3]):
+                # can't have scale >= 2 or scale < -2:
+                tpen = TransformPen(self, transformation)
+                self.glyphSet[glyphName].draw(tpen)
+                self.components.remove((glyphName, transformation))
 
         components = []
         for glyphName, transformation in self.components:
