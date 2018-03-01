@@ -195,17 +195,17 @@ class TTGlyphPenTest(unittest.TestCase):
         pen.closePath()
         glyphSet[componentName] = _TestGlyph(pen.glyph())
 
-        pen.addComponent(componentName, (3, 0, 0, 1, 0, 0))
-        pen.addComponent(componentName, (1, 0, 0, -3, 0, 0))
+        pen.addComponent(componentName, (3, 0, 0, 2, 0, 0))
+        pen.addComponent(componentName, (2, 0, 0, -3, 0, 0))
         compositeGlyph = pen.glyph()
 
         pen.moveTo((0, 0))
-        pen.lineTo((0, 1))
+        pen.lineTo((0, 2))
         pen.lineTo((3, 0))
         pen.closePath()
         pen.moveTo((0, 0))
         pen.lineTo((0, -3))
-        pen.lineTo((1, 0))
+        pen.lineTo((2, 0))
         pen.closePath()
         expectedGlyph = pen.glyph()
 
