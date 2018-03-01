@@ -1,3 +1,6 @@
+3.24.0 (released 2018-03-01)
+----------------------------
+
 - [ttGlyphPen] Decompose composite glyphs if any components' transform is too
   large to fit a ``F2Dot14`` value, or clamp transform values that are
   (almost) equal to +2.0 to make them fit and avoid decomposing (#1200,
