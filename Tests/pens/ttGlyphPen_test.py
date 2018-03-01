@@ -5,10 +5,11 @@ import os
 import unittest
 
 from fontTools import ttLib
+from fontTools.misc.testTools import TestCase
 from fontTools.pens.ttGlyphPen import TTGlyphPen, MAX_F2DOT14
 
 
-class TTGlyphPenTest(unittest.TestCase):
+class TTGlyphPenTest(TestCase):
 
     def runEndToEnd(self, filename):
         font = ttLib.TTFont()
@@ -184,7 +185,7 @@ class TTGlyphPenTest(unittest.TestCase):
 
         self.assertEqual(expectedGlyph, compositeGlyph)
 
-    def test_out_of_range_component_transform(self):
+    def test_out_of_range_transform_decomposed(self):
         componentName = 'a'
         glyphSet = {}
         pen = TTGlyphPen(glyphSet)
@@ -215,6 +216,21 @@ class TTGlyphPenTest(unittest.TestCase):
         expectedGlyph = pen.glyph()
 
         self.assertEqual(expectedGlyph, compositeGlyph)
+
+    def test_transform_overflow_error(self):
+        componentName = 'a'
+        glyphSet = {}
+        pen = TTGlyphPen(glyphSet, decomposeOverflowingTransform=False)
+
+        pen.moveTo((0, 0))
+        pen.lineTo((0, 1))
+        pen.lineTo((1, 0))
+        pen.closePath()
+        glyphSet[componentName] = _TestGlyph(pen.glyph())
+
+        pen.addComponent(componentName, (2.00001, 0, 0, 1, 0, 0))
+        with self.assertRaisesRegex(OverflowError, "too large"):
+            pen.glyph()
 
 
 class _TestGlyph(object):
