@@ -167,12 +167,18 @@ class TTGlyphPenTest(unittest.TestCase):
         pen.closePath()
         glyphSet[componentName] = _TestGlyph(pen.glyph())
 
-        pen.addComponent(componentName, (1.999999, 0, 0, 2, 0, 0))
+        pen.addComponent(componentName, (1.99999, 0, 0, 1, 0, 0))
+        pen.addComponent(componentName, (1, 2, 0, 1, 0, 0))
+        pen.addComponent(componentName, (1, 0, 2, 1, 0, 0))
+        pen.addComponent(componentName, (1, 0, 0, 2, 0, 0))
         pen.addComponent(componentName, (-2, 0, 0, -2, 0, 0))
         compositeGlyph = pen.glyph()
 
         almost2 = 1.99993896484375  # 0b1.11111111111111
-        pen.addComponent(componentName, (almost2, 0, 0, almost2, 0, 0))
+        pen.addComponent(componentName, (almost2, 0, 0, 1, 0, 0))
+        pen.addComponent(componentName, (1, almost2, 0, 1, 0, 0))
+        pen.addComponent(componentName, (1, 0, almost2, 1, 0, 0))
+        pen.addComponent(componentName, (1, 0, 0, almost2, 0, 0))
         pen.addComponent(componentName, (-2, 0, 0, -2, 0, 0))
         expectedGlyph = pen.glyph()
 
