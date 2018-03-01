@@ -135,6 +135,82 @@ class TTGlyphPenTest(unittest.TestCase):
         self.assertEqual(len(pen.points), 5)
         self.assertEqual(pen.points[0], (0, 0))
 
+    def test_within_range_of_scale_component(self):
+        componentName = 'a'
+        glyphSet = {}
+        pen = TTGlyphPen(glyphSet)
+
+        pen.moveTo((0, 0))
+        pen.lineTo((0, 1))
+        pen.lineTo((1, 0))
+        pen.closePath()
+        glyphSet[componentName] = _TestGlyph(pen.glyph())
+
+        pen.addComponent(componentName, (1.5, 0, 0, 1, 0, 0))
+        pen.addComponent(componentName, (1, 0, 0, -1.5, 0, 0))
+        compositeGlyph = pen.glyph()
+
+        pen.addComponent(componentName, (1.5, 0, 0, 1, 0, 0))
+        pen.addComponent(componentName, (1, 0, 0, -1.5, 0, 0))
+        expectedGlyph = pen.glyph()
+
+        self.assertEqual(expectedGlyph, compositeGlyph)
+
+    def test_limit_of_scale_component(self):
+        componentName = 'a'
+        glyphSet = {}
+        pen = TTGlyphPen(glyphSet)
+
+        pen.moveTo((0, 0))
+        pen.lineTo((0, 1))
+        pen.lineTo((1, 0))
+        pen.closePath()
+        glyphSet[componentName] = _TestGlyph(pen.glyph())
+
+        pen.addComponent(componentName, (1.99999, 0, 0, 1, 0, 0))
+        pen.addComponent(componentName, (1, 2, 0, 1, 0, 0))
+        pen.addComponent(componentName, (1, 0, 2, 1, 0, 0))
+        pen.addComponent(componentName, (1, 0, 0, 2, 0, 0))
+        pen.addComponent(componentName, (-2, 0, 0, -2, 0, 0))
+        compositeGlyph = pen.glyph()
+
+        almost2 = 1.99993896484375  # 0b1.11111111111111
+        pen.addComponent(componentName, (almost2, 0, 0, 1, 0, 0))
+        pen.addComponent(componentName, (1, almost2, 0, 1, 0, 0))
+        pen.addComponent(componentName, (1, 0, almost2, 1, 0, 0))
+        pen.addComponent(componentName, (1, 0, 0, almost2, 0, 0))
+        pen.addComponent(componentName, (-2, 0, 0, -2, 0, 0))
+        expectedGlyph = pen.glyph()
+
+        self.assertEqual(expectedGlyph, compositeGlyph)
+
+    def test_out_of_range_scale_component(self):
+        componentName = 'a'
+        glyphSet = {}
+        pen = TTGlyphPen(glyphSet)
+
+        pen.moveTo((0, 0))
+        pen.lineTo((0, 1))
+        pen.lineTo((1, 0))
+        pen.closePath()
+        glyphSet[componentName] = _TestGlyph(pen.glyph())
+
+        pen.addComponent(componentName, (3, 0, 0, 1, 0, 0))
+        pen.addComponent(componentName, (1, 0, 0, -3, 0, 0))
+        compositeGlyph = pen.glyph()
+
+        pen.moveTo((0, 0))
+        pen.lineTo((0, 1))
+        pen.lineTo((3, 0))
+        pen.closePath()
+        pen.moveTo((0, 0))
+        pen.lineTo((0, -3))
+        pen.lineTo((1, 0))
+        pen.closePath()
+        expectedGlyph = pen.glyph()
+
+        self.assertEqual(expectedGlyph, compositeGlyph)
+
 
 class _TestGlyph(object):
     def __init__(self, glyph):
