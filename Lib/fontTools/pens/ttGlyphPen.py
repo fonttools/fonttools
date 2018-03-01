@@ -18,7 +18,22 @@ MAX_F2DOT14 = 0x7FFF / (1 << 14)
 
 
 class TTGlyphPen(AbstractPen):
-    """Pen used for drawing to a TrueType glyph."""
+    """Pen used for drawing to a TrueType glyph.
+
+    If `handleOverflowingTransforms` is True, the components' transform values
+    are checked that they don't overflow the limits of a F2Dot14 number:
+    -2.0 <= v < +2.0. If any transform value exceeds these, the composite
+    glyph is decomposed.
+    An exception to this rule is done for values that are very close to +2.0
+    (both for consistency with the -2.0 case, and for the relative frequency
+    these occur in real fonts). When almost +2.0 values occur (and all other
+    values are within the range -2.0 <= x <= +2.0), they are clamped to the
+    maximum positive value that can still be encoded as an F2Dot14: i.e.
+    1.99993896484375.
+    If False, no check is done and all components are translated unmodified
+    into the glyf table, followed by an inevitable `struct.error` once an
+    attempt is made to compile them.
+    """
 
     def __init__(self, glyphSet, handleOverflowingTransforms=True):
         self.glyphSet = glyphSet
