@@ -229,14 +229,21 @@ class FeatureBlock(Block):
         return res
 
 
-class FeatureNamesBlock(Block):
-    def __init__(self, location=None):
+class NestedBlock(Block):
+    def __init__(self, tag, block_name, location=None):
         Block.__init__(self, location)
+        self.tag = tag
+        self.block_name = block_name
+
+    def build(self, builder):
+        Block.build(self, builder)
+        if self.block_name == "ParamUILabelNameID":
+            builder.add_to_cv_num_named_params(self.tag)
 
     def asFea(self, indent=""):
-        res = indent + "featureNames {\n"
+        res = "{}{} {{\n".format(indent, self.block_name)
         res += Block.asFea(self, indent=indent)
-        res += indent + "};\n"
+        res += "{}}};\n".format(indent)
         return res
 
 
@@ -1119,7 +1126,7 @@ class NameRecord(Statement):
 class FeatureNameStatement(NameRecord):
     def build(self, builder):
         NameRecord.build(self, builder)
-        builder.add_featureName(self.location, self.nameID)
+        builder.add_featureName(self.nameID)
 
     def asFea(self, indent=""):
         if self.nameID == "size":
@@ -1150,6 +1157,48 @@ class SizeParameters(Statement):
         if self.RangeStart != 0 or self.RangeEnd != 0:
             res += " {} {}".format(int(self.RangeStart * 10), int(self.RangeEnd * 10))
         return res + ";"
+
+
+class CVParametersNameStatement(NameRecord):
+    def __init__(self, nameID, platformID, platEncID, langID, string,
+                 block_name, location=None):
+        NameRecord.__init__(self, nameID, platformID, platEncID, langID,
+                            string, location=location)
+        self.block_name = block_name
+
+    def build(self, builder):
+        item = ""
+        if self.block_name == "ParamUILabelNameID":
+            item = "_{}".format(builder.cv_num_named_params_.get(self.nameID, 0))
+        builder.add_cv_parameter(self.nameID)
+        self.nameID = (self.nameID, self.block_name + item)
+        NameRecord.build(self, builder)
+
+    def asFea(self, indent=""):
+        plat = simplify_name_attributes(self.platformID, self.platEncID,
+                                        self.langID)
+        if plat != "":
+            plat += " "
+        return "name {}\"{}\";".format(plat, self.string)
+
+
+class CharacterStatement(Statement):
+    """
+    Statement used in cvParameters blocks of Character Variant features (cvXX).
+    The Unicode value may be written with either decimal or hexadecimal
+    notation. The value must be preceded by '0x' if it is a hexadecimal value.
+    The largest Unicode value allowed is 0xFFFFFF.
+    """
+    def __init__(self, character, tag, location=None):
+        Statement.__init__(self, location)
+        self.character = character
+        self.tag = tag
+
+    def build(self, builder):
+        builder.add_cv_character(self.character, self.tag)
+
+    def asFea(self, indent=""):
+        return "Character {:#x};".format(self.character)
 
 
 class BaseAxis(Statement):

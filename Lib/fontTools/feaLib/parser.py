@@ -16,6 +16,8 @@ log = logging.getLogger(__name__)
 class Parser(object):
     extensions = {}
     ast = ast
+    SS_FEATURE_TAGS = ["ss%02d" % i for i in range(1, 20+1)]
+    CV_FEATURE_TAGS = ["cv%02d" % i for i in range(1, 99+1)]
 
     def __init__(self, featurefile, glyphNames=(), followIncludes=True,
                  **kwargs):
@@ -1217,11 +1219,16 @@ class Parser(object):
         location = self.cur_token_location_
         tag = self.expect_tag_()
         vertical = (tag in {"vkrn", "vpal", "vhal", "valt"})
-        stylisticset = None
-        if tag in ["ss%02d" % i for i in range(1, 20+1)]:
-            stylisticset = tag
 
-        size_feature = (tag == "size")
+        stylisticset = None
+        cv_feature = None
+        size_feature = False
+        if tag in self.SS_FEATURE_TAGS:
+            stylisticset = tag
+        elif tag in self.CV_FEATURE_TAGS:
+            cv_feature = tag
+        elif tag == "size":
+            size_feature = True
 
         use_extension = False
         if self.next_token_ == "useExtension":
@@ -1230,7 +1237,8 @@ class Parser(object):
 
         block = self.ast.FeatureBlock(tag, use_extension=use_extension,
                                       location=location)
-        self.parse_block_(block, vertical, stylisticset, size_feature)
+        self.parse_block_(block, vertical, stylisticset, size_feature,
+                          cv_feature)
         return block
 
     def parse_feature_reference_(self):
@@ -1243,7 +1251,8 @@ class Parser(object):
 
     def parse_featureNames_(self, tag):
         assert self.cur_token_ == "featureNames", self.cur_token_
-        block = self.ast.FeatureNamesBlock(self.cur_token_location_)
+        block = self.ast.NestedBlock(tag, self.cur_token_,
+                                     location=self.cur_token_location_)
         self.expect_symbol_("{")
         for symtab in self.symbol_tables_:
             symtab.enter_scope()
@@ -1270,6 +1279,81 @@ class Parser(object):
         self.expect_symbol_(";")
         return block
 
+    def parse_cvParameters_(self, tag):
+        assert self.cur_token_ == "cvParameters", self.cur_token_
+        block = self.ast.NestedBlock(tag, self.cur_token_,
+                                     location=self.cur_token_location_)
+        self.expect_symbol_("{")
+        for symtab in self.symbol_tables_:
+            symtab.enter_scope()
+
+        statements = block.statements
+        while self.next_token_ != "}" or self.cur_comments_:
+            self.advance_lexer_(comments=True)
+            if self.cur_token_type_ is Lexer.COMMENT:
+                statements.append(self.ast.Comment(
+                    self.cur_token_, location=self.cur_token_location_))
+            elif self.is_cur_keyword_({"FeatUILabelNameID",
+                                       "FeatUITooltipTextNameID",
+                                       "SampleTextNameID",
+                                       "ParamUILabelNameID"}):
+                statements.append(self.parse_cvNameIDs_(tag, self.cur_token_))
+            elif self.is_cur_keyword_("Character"):
+                statements.append(self.parse_cvCharacter_(tag))
+            elif self.cur_token_ == ";":
+                continue
+            else:
+                raise FeatureLibError(
+                    "Expected statement: got {} {}".format(
+                        self.cur_token_type_, self.cur_token_),
+                    self.cur_token_location_)
+
+        self.expect_symbol_("}")
+        for symtab in self.symbol_tables_:
+            symtab.exit_scope()
+        self.expect_symbol_(";")
+        return block
+
+    def parse_cvNameIDs_(self, tag, block_name):
+        assert self.cur_token_ == block_name, self.cur_token_
+        block = self.ast.NestedBlock(tag, block_name,
+                                     location=self.cur_token_location_)
+        self.expect_symbol_("{")
+        for symtab in self.symbol_tables_:
+            symtab.enter_scope()
+        while self.next_token_ != "}" or self.cur_comments_:
+            self.advance_lexer_(comments=True)
+            if self.cur_token_type_ is Lexer.COMMENT:
+                block.statements.append(self.ast.Comment(
+                    self.cur_token_, location=self.cur_token_location_))
+            elif self.is_cur_keyword_("name"):
+                location = self.cur_token_location_
+                platformID, platEncID, langID, string = self.parse_name_()
+                block.statements.append(
+                    self.ast.CVParametersNameStatement(
+                        tag, platformID, platEncID, langID, string,
+                        block_name, location=location))
+            elif self.cur_token_ == ";":
+                continue
+            else:
+                raise FeatureLibError('Expected "name"',
+                                      self.cur_token_location_)
+        self.expect_symbol_("}")
+        for symtab in self.symbol_tables_:
+            symtab.exit_scope()
+        self.expect_symbol_(";")
+        return block
+
+    def parse_cvCharacter_(self, tag):
+        assert self.cur_token_ == "Character", self.cur_token_
+        location, character = self.cur_token_location_, self.expect_decimal_or_hexadecimal_()
+        self.expect_symbol_(";")
+        if not (0xFFFFFF >= character >= 0):
+            raise FeatureLibError("Character value must be between "
+                                  "{:#x} and {:#x}".format(0, 0xFFFFFF),
+                                  location)
+        return self.ast.CharacterStatement(character, tag, location=location)
+
     def parse_FontRevision_(self):
         assert self.cur_token_ == "FontRevision", self.cur_token_
         location, version = self.cur_token_location_, self.expect_float_()
@@ -1280,7 +1364,7 @@ class Parser(object):
         return self.ast.FontRevisionStatement(version, location=location)
 
     def parse_block_(self, block, vertical, stylisticset=None,
-                     size_feature=False):
+                     size_feature=False, cv_feature=None):
         self.expect_symbol_("{")
         for symtab in self.symbol_tables_:
             symtab.enter_scope()
@@ -1323,6 +1407,8 @@ class Parser(object):
                 statements.append(self.parse_valuerecord_definition_(vertical))
             elif stylisticset and self.is_cur_keyword_("featureNames"):
                 statements.append(self.parse_featureNames_(stylisticset))
+            elif cv_feature and self.is_cur_keyword_("cvParameters"):
+                statements.append(self.parse_cvParameters_(cv_feature))
             elif size_feature and self.is_cur_keyword_("parameters"):
                 statements.append(self.parse_size_parameters_())
             elif size_feature and self.is_cur_keyword_("sizemenuname"):
@@ -1466,6 +1552,7 @@ class Parser(object):
             return self.cur_token_
         raise FeatureLibError("Expected a name", self.cur_token_location_)
 
+    # TODO: Don't allow this method to accept hexadecimal values
     def expect_number_(self):
         self.advance_lexer_()
         if self.cur_token_type_ is Lexer.NUMBER:
@@ -1479,6 +1566,7 @@ class Parser(object):
         raise FeatureLibError("Expected a floating-point number",
                               self.cur_token_location_)
 
+    # TODO: Don't allow this method to accept hexadecimal values
     def expect_decipoint_(self):
         if self.next_token_type_ == Lexer.FLOAT:
             return self.expect_float_()
@@ -1487,6 +1575,18 @@ class Parser(object):
         else:
             raise FeatureLibError("Expected an integer or floating-point number",
                                   self.cur_token_location_)
+
+    def expect_decimal_or_hexadecimal_(self):
+        # the lexer returns the same token type 'NUMBER' for either decimal or
+        # hexadecimal integers, and casts them both to a `int` type, so it's
+        # impossible to distinguish the two here. This method is implemented
+        # the same as `expect_number_`, only it gives a more informative
+        # error message
+        self.advance_lexer_()
+        if self.cur_token_type_ is Lexer.NUMBER:
+            return self.cur_token_
+        raise FeatureLibError("Expected a decimal or hexadecimal number",
+                              self.cur_token_location_)
 
     def expect_string_(self):
         self.advance_lexer_()
