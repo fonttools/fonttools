@@ -3,6 +3,7 @@ from fontTools.misc.py23 import *
 
 import os
 import unittest
+import struct
 
 from fontTools import ttLib
 from fontTools.misc.testTools import TestCase
@@ -216,6 +217,27 @@ class TTGlyphPenTest(TestCase):
         expectedGlyph = pen.glyph()
 
         self.assertEqual(expectedGlyph, compositeGlyph)
+
+    def test_no_decompose_overflowing_transform(self):
+        componentName = 'a'
+        glyphSet = {}
+        pen = TTGlyphPen(glyphSet, decomposeOverflowingTransform=False)
+
+        pen.moveTo((0, 0))
+        pen.lineTo((0, 1))
+        pen.lineTo((1, 0))
+        pen.closePath()
+        baseGlyph = pen.glyph()
+        glyphSet[componentName] = _TestGlyph(baseGlyph)
+
+        pen.addComponent(componentName, (3, 0, 0, 1, 0, 0))
+        compositeGlyph = pen.glyph()
+
+        self.assertEqual(compositeGlyph.components[0].transform,
+                         ((3, 0), (0, 1)))
+
+        with self.assertRaises(struct.error):
+            compositeGlyph.compile({'a': baseGlyph})
 
 
 class _TestGlyph(object):
