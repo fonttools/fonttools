@@ -217,21 +217,6 @@ class TTGlyphPenTest(TestCase):
 
         self.assertEqual(expectedGlyph, compositeGlyph)
 
-    def test_transform_overflow_error(self):
-        componentName = 'a'
-        glyphSet = {}
-        pen = TTGlyphPen(glyphSet, decomposeOverflowingTransform=False)
-
-        pen.moveTo((0, 0))
-        pen.lineTo((0, 1))
-        pen.lineTo((1, 0))
-        pen.closePath()
-        glyphSet[componentName] = _TestGlyph(pen.glyph())
-
-        pen.addComponent(componentName, (2.00001, 0, 0, 1, 0, 0))
-        with self.assertRaisesRegex(OverflowError, "too large"):
-            pen.glyph()
-
 
 class _TestGlyph(object):
     def __init__(self, glyph):
