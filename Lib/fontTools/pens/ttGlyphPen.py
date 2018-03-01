@@ -88,11 +88,12 @@ class TTGlyphPen(AbstractPen):
     def glyph(self, componentFlags=0x4):
         assert self._isClosed(), "Didn't close last contour."
 
-        # we can't encode transform values > 2 or < -2 in F2Dot14,
-        # so we must decompose the glyph if any transform exceeds these
-        overflowing = any(s > 2 or s < -2
-                          for (glyphName, transformation) in self.components
-                          for s in transformation[:4])
+        if self.decomposeOverflowingTransform:
+            # we can't encode transform values > 2 or < -2 in F2Dot14,
+            # so we must decompose the glyph if any transform exceeds these
+            overflowing = any(s > 2 or s < -2
+                              for (glyphName, transformation) in self.components
+                              for s in transformation[:4])
 
         components = []
         for glyphName, transformation in self.components:
