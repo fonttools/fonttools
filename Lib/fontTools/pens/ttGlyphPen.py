@@ -86,7 +86,7 @@ class TTGlyphPen(AbstractPen):
         eps = .5 / (1 << 14)
 
         def closeTo2(value):
-            return True if abs(value - 2) <= eps else False
+            return abs(value - 2) <= eps
 
         for i, (glyphName, transformation) in enumerate(self.components):
             if any(s > 2 or s < -2 for s in transformation[:3]):
