@@ -1160,10 +1160,10 @@ class SizeParameters(Statement):
 
 
 class CVParametersNameStatement(NameRecord):
-    def __init__(self, location, nameID, platformID,
-                 platEncID, langID, string, block_name):
-        NameRecord.__init__(self, location, nameID, platformID,
-                            platEncID, langID, string)
+    def __init__(self, nameID, platformID, platEncID, langID, string,
+                 block_name, location=None):
+        NameRecord.__init__(self, nameID, platformID, platEncID, langID,
+                            string, location=location)
         self.block_name = block_name
 
     def build(self, builder):
@@ -1189,7 +1189,7 @@ class CharacterStatement(Statement):
     notation. The value must be preceded by '0x' if it is a hexadecimal value.
     The largest Unicode value allowed is 0xFFFFFF.
     """
-    def __init__(self, location, character, tag):
+    def __init__(self, character, tag, location=None):
         Statement.__init__(self, location)
         self.character = character
         self.tag = tag

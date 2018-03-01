@@ -1237,7 +1237,7 @@ class Parser(object):
 
         block = self.ast.FeatureBlock(tag, use_extension=use_extension,
                                       location=location)
-        self.parse_block_(block, vertical, stylisticset, size_feature
+        self.parse_block_(block, vertical, stylisticset, size_feature,
                           cv_feature)
         return block
 
@@ -1251,8 +1251,8 @@ class Parser(object):
 
     def parse_featureNames_(self, tag):
         assert self.cur_token_ == "featureNames", self.cur_token_
-        block = self.ast.NestedBlock(self.cur_token_location_, tag,
-                                     self.cur_token_)
+        block = self.ast.NestedBlock(tag, self.cur_token_,
+                                     location=self.cur_token_location_)
         self.expect_symbol_("{")
         for symtab in self.symbol_tables_:
             symtab.enter_scope()
@@ -1281,8 +1281,8 @@ class Parser(object):
 
     def parse_cvParameters_(self, tag):
         assert self.cur_token_ == "cvParameters", self.cur_token_
-        block = self.ast.NestedBlock(self.cur_token_location_, tag,
-                                     self.cur_token_)
+        block = self.ast.NestedBlock(tag, self.cur_token_,
+                                     location=self.cur_token_location_)
         self.expect_symbol_("{")
         for symtab in self.symbol_tables_:
             symtab.enter_scope()
@@ -1291,8 +1291,8 @@ class Parser(object):
         while self.next_token_ != "}" or self.cur_comments_:
             self.advance_lexer_(comments=True)
             if self.cur_token_type_ is Lexer.COMMENT:
-                statements.append(self.ast.Comment(self.cur_token_location_,
-                                                   self.cur_token_))
+                statements.append(self.ast.Comment(
+                    self.cur_token_, location=self.cur_token_location_))
             elif self.is_cur_keyword_({"FeatUILabelNameID",
                                        "FeatUITooltipTextNameID",
                                        "SampleTextNameID",
@@ -1316,7 +1316,8 @@ class Parser(object):
 
     def parse_cvNameIDs_(self, tag, block_name):
         assert self.cur_token_ == block_name, self.cur_token_
-        block = self.ast.NestedBlock(self.cur_token_location_, tag, block_name)
+        block = self.ast.NestedBlock(tag, block_name,
+                                     location=self.cur_token_location_)
         self.expect_symbol_("{")
         for symtab in self.symbol_tables_:
             symtab.enter_scope()
@@ -1324,14 +1325,14 @@ class Parser(object):
             self.advance_lexer_(comments=True)
             if self.cur_token_type_ is Lexer.COMMENT:
                 block.statements.append(self.ast.Comment(
-                    self.cur_token_location_, self.cur_token_))
+                    self.cur_token_, location=self.cur_token_location_))
             elif self.is_cur_keyword_("name"):
                 location = self.cur_token_location_
                 platformID, platEncID, langID, string = self.parse_name_()
                 block.statements.append(
                     self.ast.CVParametersNameStatement(
-                        location, tag, platformID, platEncID, langID, string,
-                        block_name))
+                        tag, platformID, platEncID, langID, string,
+                        block_name, location=location))
             elif self.cur_token_ == ";":
                 continue
             else:
@@ -1351,7 +1352,7 @@ class Parser(object):
             raise FeatureLibError("Character value must be between "
                                   "{:#x} and {:#x}".format(0, 0xFFFFFF),
                                   location)
-        return self.ast.CharacterStatement(location, character, tag)
+        return self.ast.CharacterStatement(character, tag, location=location)
 
     def parse_FontRevision_(self):
         assert self.cur_token_ == "FontRevision", self.cur_token_
