@@ -12,6 +12,14 @@ from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 __all__ = ["TTGlyphPen"]
 
 
+ALMOST2 = 1.99993896484375  # F2Dot14 0b1.11111111111111
+EPSILON= .5 / (1 << 14)
+
+
+def _closeTo2(value):
+    return abs(value - 2) <= EPSILON
+
+
 class TTGlyphPen(AbstractPen):
     """Pen used for drawing to a TrueType glyph."""
 
@@ -82,20 +90,14 @@ class TTGlyphPen(AbstractPen):
     def glyph(self, componentFlags=0x4):
         assert self._isClosed(), "Didn't close last contour."
 
-        almost2 = 1.99993896484375  # F2Dot14 0b1.11111111111111
-        eps = .5 / (1 << 14)
-
-        def closeTo2(value):
-            return abs(value - 2) <= eps
-
         for i, (glyphName, transformation) in enumerate(self.components):
-            if any(closeTo2(s) for s in transformation[:4]):
+            if any(_closeTo2(s) for s in transformation[:4]):
                 # use closest F2Dot14 value to 2 when possible
                 transformation = (
-                    almost2 if closeTo2(transformation[0]) else transformation[0],
-                    almost2 if closeTo2(transformation[1]) else transformation[1],
-                    almost2 if closeTo2(transformation[2]) else transformation[2],
-                    almost2 if closeTo2(transformation[3]) else transformation[3],
+                    ALMOST2 if _closeTo2(transformation[0]) else transformation[0],
+                    ALMOST2 if _closeTo2(transformation[1]) else transformation[1],
+                    ALMOST2 if _closeTo2(transformation[2]) else transformation[2],
+                    ALMOST2 if _closeTo2(transformation[3]) else transformation[3],
                     transformation[4],
                     transformation[5]
                 )
