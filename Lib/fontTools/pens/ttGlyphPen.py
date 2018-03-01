@@ -20,9 +20,9 @@ MAX_F2DOT14 = 0x7FFF / (1 << 14)
 class TTGlyphPen(AbstractPen):
     """Pen used for drawing to a TrueType glyph."""
 
-    def __init__(self, glyphSet, decomposeOverflowingTransform=True):
+    def __init__(self, glyphSet, handleOverflowingTransforms=True):
         self.glyphSet = glyphSet
-        self.decomposeOverflowingTransform = decomposeOverflowingTransform
+        self.handleOverflowingTransforms = handleOverflowingTransforms
         self.init()
 
     def init(self):
@@ -88,7 +88,7 @@ class TTGlyphPen(AbstractPen):
     def glyph(self, componentFlags=0x4):
         assert self._isClosed(), "Didn't close last contour."
 
-        if self.decomposeOverflowingTransform:
+        if self.handleOverflowingTransforms:
             # we can't encode transform values > 2 or < -2 in F2Dot14,
             # so we must decompose the glyph if any transform exceeds these
             overflowing = any(s > 2 or s < -2
@@ -98,7 +98,7 @@ class TTGlyphPen(AbstractPen):
         components = []
         for glyphName, transformation in self.components:
             if (self.points or
-                    (self.decomposeOverflowingTransform and overflowing)):
+                    (self.handleOverflowingTransforms and overflowing)):
                 # can't have both coordinates and components, so decompose
                 tpen = TransformPen(self, transformation)
                 self.glyphSet[glyphName].draw(tpen)
@@ -109,7 +109,7 @@ class TTGlyphPen(AbstractPen):
             component.x, component.y = transformation[4:]
             transformation = transformation[:4]
             if transformation != (1, 0, 0, 1):
-                if (self.decomposeOverflowingTransform and
+                if (self.handleOverflowingTransforms and
                         any(MAX_F2DOT14 < s <= 2 for s in transformation)):
                     # clamp values ~= +2.0 so we can keep the component
                     transformation = tuple(MAX_F2DOT14 if MAX_F2DOT14 < s <= 2

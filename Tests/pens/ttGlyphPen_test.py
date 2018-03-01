@@ -218,10 +218,10 @@ class TTGlyphPenTest(TestCase):
 
         self.assertEqual(expectedGlyph, compositeGlyph)
 
-    def test_no_decompose_overflowing_transform(self):
+    def test_no_handle_overflowing_transform(self):
         componentName = 'a'
         glyphSet = {}
-        pen = TTGlyphPen(glyphSet, decomposeOverflowingTransform=False)
+        pen = TTGlyphPen(glyphSet, handleOverflowingTransforms=False)
 
         pen.moveTo((0, 0))
         pen.lineTo((0, 1))
