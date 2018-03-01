@@ -1549,6 +1549,7 @@ class Parser(object):
             return self.cur_token_
         raise FeatureLibError("Expected a name", self.cur_token_location_)
 
+    # TODO: Don't allow this method to accept hexadecimal values
     def expect_number_(self):
         self.advance_lexer_()
         if self.cur_token_type_ is Lexer.NUMBER:
@@ -1562,6 +1563,7 @@ class Parser(object):
         raise FeatureLibError("Expected a floating-point number",
                               self.cur_token_location_)
 
+    # TODO: Don't allow this method to accept hexadecimal values
     def expect_decipoint_(self):
         if self.next_token_type_ == Lexer.FLOAT:
             return self.expect_float_()
@@ -1571,6 +1573,7 @@ class Parser(object):
             raise FeatureLibError("Expected an integer or floating-point number",
                                   self.cur_token_location_)
 
+    # TODO: Don't allow this method to accept negative numbers
     def expect_decimal_or_hexadecimal_(self):
         self.advance_lexer_()
         if self.cur_token_type_ is Lexer.NUMBER:
