@@ -224,7 +224,8 @@ class IncludingLexerTest(unittest.TestCase):
             # directory to resolve relative include statements
             lexer = IncludingLexer(UnicodeIO("include(included.fea);"))
             files = set(loc[0] for _, _, loc in lexer)
-            self.assertIn(included.name, files)
+            expected = os.path.realpath(included.name)
+            self.assertIn(expected, files)
         finally:
             # remove temporary folder and restore previous working directory
             os.chdir(cwd)
