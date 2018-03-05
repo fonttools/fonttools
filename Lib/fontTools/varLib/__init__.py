@@ -714,7 +714,7 @@ def load_designspace(designspace_filename):
 	return axes, internal_axis_supports, base_idx, normalized_master_locs, masters, instances
 
 
-def build(designspace_filename, master_finder=lambda s:s, exclude=[]):
+def build(designspace_filename, master_finder=lambda s:s, exclude=[], optimize=True):
 	"""
 	Build variation font from a designspace file.
 
@@ -759,7 +759,7 @@ def build(designspace_filename, master_finder=lambda s:s, exclude=[]):
 	if 'GDEF' not in exclude or 'GPOS' not in exclude:
 		_merge_OTL(vf, model, master_fonts, axisTags)
 	if 'gvar' not in exclude and 'glyf' in vf:
-		_add_gvar(vf, model, master_fonts)
+		_add_gvar(vf, model, master_fonts, optimize=optimize)
 	if 'cvar' not in exclude:
 		_merge_TTHinting(vf, model, master_fonts)
 
@@ -778,6 +778,7 @@ def main(args=None):
 	parser.add_argument('designspace')
 	parser.add_argument('-o', metavar='OUTPUTFILE', dest='outfile', default=None, help='output file')
 	parser.add_argument('-x', metavar='TAG', dest='exclude', action='append', default=[], help='exclude table')
+	parser.add_argument('--disableIUP', dest='optimize', action='store_false', default=True, help='do not perform IUP optimization')
 	options = parser.parse_args(args)
 
 	# TODO: allow user to configure logging via command-line options
@@ -789,7 +790,7 @@ def main(args=None):
 	if outfile is None:
 		outfile = os.path.splitext(designspace_filename)[0] + '-VF.ttf'
 
-	vf, model, master_ttfs = build(designspace_filename, finder, exclude=options.exclude)
+	vf, model, master_ttfs = build(designspace_filename, finder, exclude=options.exclude, optimize=options.optimize)
 
 	log.info("Saving variation font %s", outfile)
 	vf.save(outfile)
