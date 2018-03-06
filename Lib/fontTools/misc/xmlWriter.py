@@ -102,12 +102,12 @@ class XMLWriter(object):
 
 	def simpletag(self, _TAG_, *args, **kwargs):
 		attrdata = self.stringifyattrs(*args, **kwargs)
-		data = "<%s%s/>" % (_TAG_, attrdata)
+		data = "<%s%s/>" % (str(_TAG_), attrdata)
 		self._writeraw(data)
 
 	def begintag(self, _TAG_, *args, **kwargs):
 		attrdata = self.stringifyattrs(*args, **kwargs)
-		data = "<%s%s>" % (_TAG_, attrdata)
+		data = "<%s%s>" % (str(_TAG_), attrdata)
 		self._writeraw(data)
 		self.stack.append(_TAG_)
 		self.indent()
@@ -153,12 +153,12 @@ class XMLWriter(object):
 		for attr, value in attributes:
 			if not isinstance(value, (bytes, unicode)):
 				value = str(value)
-			data = data + ' %s="%s"' % (attr, escapeattr(value))
+			data = data + ' %s="%s"' % (str(attr), escapeattr(value))
 		return data
 
 
 def escape(data):
-	data = tostr(data, 'utf_8')
+	data = tostr(data, 'utf_8', errors='xmlcharrefreplace')
 	data = data.replace("&", "&amp;")
 	data = data.replace("<", "&lt;")
 	data = data.replace(">", "&gt;")
