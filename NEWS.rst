@@ -1,3 +1,6 @@
+3.24.1 (released 2018-03-06)
+----------------------------
+
 - [varLib] Don't remap the same ``DeviceTable`` twice in VarStore optimizer
   (#1206).
 - [varLib] Add ``--disable-iup`` option to ``fonttools varLib`` script,
