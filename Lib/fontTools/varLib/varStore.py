@@ -235,15 +235,18 @@ ot.GDEF.collect_device_varidxes = Object_collect_device_varidxes
 ot.GSUB.collect_device_varidxes = Object_collect_device_varidxes
 ot.GPOS.collect_device_varidxes = Object_collect_device_varidxes
 
-def _Device_mapVarIdx(self, mapping):
+def _Device_mapVarIdx(self, mapping, done):
 	"""Add VarIdx in this Device table (if any) to the set s."""
+	if id(self) in done:
+		return
+	done.add(id(self))
 	if self.DeltaFormat == 0x8000:
 		varIdx = mapping[(self.StartSize<<16)+self.EndSize]
 		self.StartSize = varIdx >> 16
 		self.EndSize = varIdx & 0xFFFF
 
 def Object_remap_device_varidxes(self, varidxes_map):
-	mapper = partial(_Device_mapVarIdx, mapping=varidxes_map)
+	mapper = partial(_Device_mapVarIdx, mapping=varidxes_map, done=set())
 	_visit(self, ot.Device, mapper)
 
 ot.GDEF.remap_device_varidxes = Object_remap_device_varidxes
