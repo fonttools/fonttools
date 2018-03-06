@@ -1,3 +1,10 @@
+- [varLib] Don't remap the same ``DeviceTable`` twice in VarStore optimizer
+  (#1206).
+- [varLib] Add ``--disable-iup`` option to ``fonttools varLib`` script,
+  and a ``optimize=True`` keyword argument to ``varLib.build`` function,
+  to optionally disable IUP optimization while building varfonts.
+- [ttCollection] Fixed issue while decompiling ttc with python3 (#1207).
+
 3.24.0 (released 2018-03-01)
 ----------------------------
 
