@@ -778,7 +778,7 @@ def main(args=None):
 	parser.add_argument('designspace')
 	parser.add_argument('-o', metavar='OUTPUTFILE', dest='outfile', default=None, help='output file')
 	parser.add_argument('-x', metavar='TAG', dest='exclude', action='append', default=[], help='exclude table')
-	parser.add_argument('--disableIUP', dest='optimize', action='store_false', default=True, help='do not perform IUP optimization')
+	parser.add_argument('--disable-iup', dest='optimize', action='store_false', help='do not perform IUP optimization')
 	options = parser.parse_args(args)
 
 	# TODO: allow user to configure logging via command-line options
