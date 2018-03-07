@@ -2382,12 +2382,15 @@ class FontDict(BaseDict):
 	converters = buildConverters(topDictOperators)
 	compilerClass = FontDictCompiler
 	order = ['FontName', 'FontMatrix', 'Weight', 'Private']
+	orderCFF2 = ['Private']
 	decompilerClass = TopDictDecompiler
 
 	def __init__(self, strings=None, file=None, offset=None,
 			GlobalSubrs=None, isCFF2=None, vstore=None):
 		super(FontDict, self).__init__(strings, file, offset, isCFF2=isCFF2)
 		self.vstore = vstore
+		if isCFF2:
+			self.order = self.orderCFF2
 
 
 class PrivateDict(BaseDict):
