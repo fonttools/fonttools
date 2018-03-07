@@ -256,7 +256,7 @@ class CFFFontSet(object):
 				charStrings.charStringsIndex.fdArray = fdArray
 			else:
 				charStrings.fdArray = fdArray
-			fontDict = FontDict()
+			fontDict = FontDict(isCFF2=True)
 			fdArray.append(fontDict)
 			fontDict.Private = privateDict
 			privateOpOrder = buildOrder(privateDictOperators2)
@@ -271,8 +271,17 @@ class CFFFontSet(object):
 						# print "Removing privateDict attr", key
 		else:
 			# clean up the PrivateDicts in the fdArray
+			fdArray = topDict.FDArray
 			privateOpOrder = buildOrder(privateDictOperators2)
 			for fontDict in fdArray:
+				fontDict.order = fontDict.orderCFF2
+				fontDict._isCFF2 = True
+				for key in fontDict.rawDict.keys():
+					if key not in fontDict.order:
+						del fontDict.rawDict[key]
+						if hasattr(fontDict, key):
+							exec("del fontDict.%s" % (key))
+
 				privateDict = fontDict.Private
 				for entry in privateDictOperators:
 					key = entry[1]
