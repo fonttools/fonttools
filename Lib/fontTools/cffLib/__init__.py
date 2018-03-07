@@ -244,7 +244,7 @@ class CFFFontSet(object):
 				if key in topDict.rawDict:
 					del topDict.rawDict[key]
 				if hasattr(topDict, key):
-					exec("del topDict.%s" % (key))
+					delattr(topDict, key)
 
 		if not hasattr(topDict, "FDArray"):
 			fdArray = topDict.FDArray = FDArrayIndex()
@@ -267,7 +267,7 @@ class CFFFontSet(object):
 						# print "Removing private dict", key
 						del privateDict.rawDict[key]
 					if hasattr(privateDict, key):
-						exec("del privateDict.%s" % (key))
+						delattr(privateDict, key)
 						# print "Removing privateDict attr", key
 		else:
 			# clean up the PrivateDicts in the fdArray
@@ -280,7 +280,7 @@ class CFFFontSet(object):
 					if key not in fontDict.order:
 						del fontDict.rawDict[key]
 						if hasattr(fontDict, key):
-							exec("del fontDict.%s" % (key))
+							delattr(fontDict, key)
 
 				privateDict = fontDict.Private
 				for entry in privateDictOperators:
@@ -290,7 +290,7 @@ class CFFFontSet(object):
 							# print "Removing private dict", key
 							del privateDict.rawDict[key]
 						if hasattr(privateDict, key):
-							exec("del privateDict.%s" % (key))
+							delattr(privateDict, key)
 							# print "Removing privateDict attr", key
 		# At this point, the Subrs and Charstrings are all still T2Charstring class
 		# easiest to fix this by compiling, then decompiling again
