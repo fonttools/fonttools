@@ -256,7 +256,8 @@ class CFFFontSet(object):
 				charStrings.charStringsIndex.fdArray = fdArray
 			else:
 				charStrings.fdArray = fdArray
-			fontDict = FontDict(isCFF2=True)
+			fontDict = FontDict()
+			fontDict.setCFF2(True)
 			fdArray.append(fontDict)
 			fontDict.Private = privateDict
 			privateOpOrder = buildOrder(privateDictOperators2)
@@ -274,8 +275,7 @@ class CFFFontSet(object):
 			fdArray = topDict.FDArray
 			privateOpOrder = buildOrder(privateDictOperators2)
 			for fontDict in fdArray:
-				fontDict.order = fontDict.orderCFF2
-				fontDict._isCFF2 = True
+				fontDict.setCFF2(True)
 				for key in fontDict.rawDict.keys():
 					if key not in fontDict.order:
 						del fontDict.rawDict[key]
@@ -2390,7 +2390,7 @@ class FontDict(BaseDict):
 	defaults = {}
 	converters = buildConverters(topDictOperators)
 	compilerClass = FontDictCompiler
-	order = ['FontName', 'FontMatrix', 'Weight', 'Private']
+	orderCFF = ['FontName', 'FontMatrix', 'Weight', 'Private']
 	orderCFF2 = ['Private']
 	decompilerClass = TopDictDecompiler
 
@@ -2398,8 +2398,16 @@ class FontDict(BaseDict):
 			GlobalSubrs=None, isCFF2=None, vstore=None):
 		super(FontDict, self).__init__(strings, file, offset, isCFF2=isCFF2)
 		self.vstore = vstore
+		self.setCFF2(isCFF2)
+
+	def setCFF2(self, isCFF2):
+		# isCFF2 may be None.
 		if isCFF2:
 			self.order = self.orderCFF2
+			self._isCFF2 = True
+		else:
+			self.order = self.orderCFF
+			self._isCFF2 = False
 
 
 class PrivateDict(BaseDict):
