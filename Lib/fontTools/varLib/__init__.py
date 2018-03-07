@@ -767,7 +767,7 @@ def build(designspace_filename, master_finder=lambda s:s, exclude=[], optimize=T
 		_merge_OTL(vf, model, master_fonts, axisTags)
 	if 'gvar' not in exclude and 'glyf' in vf:
 		_add_gvar(vf, model, master_fonts, optimize=optimize)
-	if 'cvar' not in exclude:
+	if 'cvar' not in exclude and 'glyf' in vf:
 		_merge_TTHinting(vf, model, master_fonts)
 
 	for tag in exclude:
