@@ -273,7 +273,26 @@ class TTFont(object):
 				writer.newline()
 			else:
 				tableWriter = writer
-			self._tableToXML(tableWriter, tag, splitGlyphs=splitGlyphs)
+			try:
+				self._tableToXML(tableWriter, tag, splitGlyphs=splitGlyphs)
+			except:
+				if not self.ignoreDecompileErrors:
+					raise
+				import traceback
+				# fall back to DefaultTable, retaining the binary table data
+				log.exception(
+					"An exception occurred during the exporting of the '%s' table", tag)
+				while tableWriter.stack[-2] != "ttFont":
+					tableWriter.newline()
+					tableWriter.endtag(tableWriter.stack[-1])
+				tableWriter.begintag("traceback")
+				tableWriter.newline()
+				traceback.print_exc(file=tableWriter.file)
+				tableWriter.newline()
+				tableWriter.endtag("traceback")
+				tableWriter.newline()
+				tableWriter.endtag(tableWriter.stack[-1])
+				tableWriter.newline()
 			if splitTables:
 				tableWriter.endtag("ttFont")
 				tableWriter.newline()

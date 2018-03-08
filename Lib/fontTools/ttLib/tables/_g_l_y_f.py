@@ -569,6 +569,7 @@ class Glyph(object):
 		xFormat = ">" # big endian
 		yFormat = ">" # big endian
 		i = j = 0
+		assert len(data), "bad glyph flags data"
 		while True:
 			flag = byteord(data[i])
 			i = i + 1
