@@ -379,7 +379,7 @@ def _merge_TTHinting(font, model, master_ttfs, tolerance=0.5):
 	# cvt table
 
 	all_cvs = [Vector(m["cvt "].values) for m in master_ttfs if "cvt " in m]
-	
+
 	if len(all_cvs) == 0:
 		# There is no cvt table to make a cvar table from, we're done here.
 		return
@@ -432,9 +432,6 @@ def _add_HVAR(font, model, master_ttfs, axisTags):
 
 	# Build indirect mapping to save on duplicates, compare both sizes
 	uniq = list(set(items))
-	# If all the differences are 0, do not build an HVAR table.
-	if len(uniq) == 1 and list(set(uniq[0])) == 0:
-	    return
 	mapper = {v:i for i,v in enumerate(uniq)}
 	mapping = [mapper[item] for item in items]
 	advanceMapping = builder.buildVarIdxMap(mapping, font.getGlyphOrder())
