@@ -432,6 +432,9 @@ def _add_HVAR(font, model, master_ttfs, axisTags):
 
 	# Build indirect mapping to save on duplicates, compare both sizes
 	uniq = list(set(items))
+	# If all the differences are 0, do not build an HVAR table.
+	if len(uniq) == 1 and list(set(uniq[0])) == 0:
+	    return
 	mapper = {v:i for i,v in enumerate(uniq)}
 	mapping = [mapper[item] for item in items]
 	advanceMapping = builder.buildVarIdxMap(mapping, font.getGlyphOrder())
