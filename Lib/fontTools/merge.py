@@ -640,6 +640,13 @@ def merge(self, m, tables):
 					synthLookup.LookupType = 1
 					synthLookup.SubTableCount = 1
 					synthLookup.SubTable = [subtable]
+					if table.table.LookupList is None:
+						# mtiLib uses None as default value for LookupList,
+						# while feaLib points to an empty array with count 0
+						# TODO: make them do the same
+						table.table.LookupList = otTables.LookupList()
+						table.table.LookupList.Lookup = []
+						table.table.LookupList.LookupCount = 0
 					table.table.LookupList.Lookup.append(synthLookup)
 					table.table.LookupList.LookupCount += 1
 
