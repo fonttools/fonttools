@@ -16,8 +16,8 @@ log = logging.getLogger(__name__)
 class Parser(object):
     extensions = {}
     ast = ast
-    SS_FEATURE_TAGS = ["ss%02d" % i for i in range(1, 20+1)]
-    CV_FEATURE_TAGS = ["cv%02d" % i for i in range(1, 99+1)]
+    SS_FEATURE_TAGS = {"ss%02d" % i for i in range(1, 20+1)}
+    CV_FEATURE_TAGS = {"cv%02d" % i for i in range(1, 99+1)}
 
     def __init__(self, featurefile, glyphNames=(), followIncludes=True,
                  **kwargs):
