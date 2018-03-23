@@ -7,17 +7,17 @@ environment:
       TOXENV: "py27"
       TOXPYTHON: "C:\\Python27\\python.exe"
 
-    - PYTHON: "C:\\Python34"
-      PYTHON_VERSION: "3.4.x"
-      PYTHON_ARCH: "32"
-      TOXENV: "py34"
-      TOXPYTHON: "C:\\Python34\\python.exe"
-
     - PYTHON: "C:\\Python35"
       PYTHON_VERSION: "3.5.x"
       PYTHON_ARCH: "32"
       TOXENV: "py35"
       TOXPYTHON: "C:\\Python35\\python.exe"
+
+    - PYTHON: "C:\\Python36"
+      PYTHON_VERSION: "3.6.x"
+      PYTHON_ARCH: "32"
+      TOXENV: "py36"
+      TOXPYTHON: "C:\\Python36\\python.exe"
 
     - PYTHON: "C:\\Python27-x64"
       PYTHON_VERSION: "2.7.x"
@@ -25,17 +25,17 @@ environment:
       TOXENV: "py27"
       TOXPYTHON: "C:\\Python27-x64\\python.exe"
 
-    - PYTHON: "C:\\Python34-x64"
-      PYTHON_VERSION: "3.4.x"
-      PYTHON_ARCH: "64"
-      TOXENV: "py34"
-      TOXPYTHON: "C:\\Python34-x64\\python.exe"
-
     - PYTHON: "C:\\Python35-x64"
       PYTHON_VERSION: "3.5.x"
       PYTHON_ARCH: "64"
       TOXENV: "py35"
       TOXPYTHON: "C:\\Python35-x64\\python.exe"
+
+    - PYTHON: "C:\\Python36-x64"
+      PYTHON_VERSION: "3.6.x"
+      PYTHON_ARCH: "64"
+      TOXENV: "py36"
+      TOXPYTHON: "C:\\Python36-x64\\python.exe"
 
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
