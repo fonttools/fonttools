@@ -894,7 +894,8 @@ class ValueRecord(object):
 					setattr(self, name, None if isDevice else 0)
 			if src is not None:
 				for key,val in src.__dict__.items():
-					assert hasattr(self, key)
+					if not hasattr(self, key):
+						continue
 					setattr(self, key, val)
 		elif src is not None:
 			self.__dict__ = src.__dict__.copy()
