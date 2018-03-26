@@ -1,3 +1,9 @@
+- [otBase] Don't fail during ``ValueRecord`` copy if src has more items.
+  We drop hinting in the subsetter by simply changing ValueFormat, without
+  cleaning up the actual ValueRecords. This was causing assertion error if
+  a variable font was subsetted without hinting and then passed directly to
+  the mutator for instantiation without first it saving to disk.
+
 3.24.1 (released 2018-03-06)
 ----------------------------
 
