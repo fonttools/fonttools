@@ -1,3 +1,6 @@
+3.24.2 (released 2018-03-26)
+----------------------------
+
 - [otBase] Don't fail during ``ValueRecord`` copy if src has more items.
   We drop hinting in the subsetter by simply changing ValueFormat, without
   cleaning up the actual ValueRecords. This was causing assertion error if
