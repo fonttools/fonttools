@@ -379,7 +379,7 @@ def _merge_TTHinting(font, model, master_ttfs, tolerance=0.5):
 	# cvt table
 
 	all_cvs = [Vector(m["cvt "].values) for m in master_ttfs if "cvt " in m]
-	
+
 	if len(all_cvs) == 0:
 		# There is no cvt table to make a cvar table from, we're done here.
 		return
@@ -505,7 +505,7 @@ def _add_MVAR(font, model, master_ttfs, axisTags):
 
 		if varIdx is None:
 			continue
-		log.info('	%s: %s.%s	%s', tag, tableTag, itemName, master_values)
+		log.info('	%s: %s.%s	%s' % (tag, tableTag, itemName, master_values))
 		rec = ot.MetricsValueRecord()
 		rec.ValueTag = tag
 		rec.VarIdx = varIdx
@@ -669,7 +669,7 @@ def load_designspace(designspace_filename):
 		del base_idx, base_loc, axis_names, master_locs
 	axes = axis_objects
 	del axis_objects
-	log.info("Axes:\n%s", pformat(axes))
+	log.info("Axes:\n%s" % pformat(axes))
 
 
 	# Check all master and instance locations are valid and fill in defaults
@@ -689,17 +689,17 @@ def load_designspace(designspace_filename):
 	# Normalize master locations
 
 	normalized_master_locs = [o['location'] for o in masters]
-	log.info("Internal master locations:\n%s", pformat(normalized_master_locs))
+	log.info("Internal master locations:\n%s" % pformat(normalized_master_locs))
 
 	# TODO This mapping should ideally be moved closer to logic in _add_fvar/avar
 	internal_axis_supports = {}
 	for axis in axes.values():
 		triple = (axis.minimum, axis.default, axis.maximum)
 		internal_axis_supports[axis.name] = [axis.map_forward(v) for v in triple]
-	log.info("Internal axis supports:\n%s", pformat(internal_axis_supports))
+	log.info("Internal axis supports:\n%s" % pformat(internal_axis_supports))
 
 	normalized_master_locs = [models.normalizeLocation(m, internal_axis_supports) for m in normalized_master_locs]
-	log.info("Normalized master locations:\n%s", pformat(normalized_master_locs))
+	log.info("Normalized master locations:\n%s" % pformat(normalized_master_locs))
 
 
 	# Find base master
@@ -709,7 +709,7 @@ def load_designspace(designspace_filename):
 			assert base_idx is None
 			base_idx = i
 	assert base_idx is not None, "Base master not found; no master at default location?"
-	log.info("Index of base master: %s", base_idx)
+	log.info("Index of base master: %s" % base_idx)
 
 	return axes, internal_axis_supports, base_idx, normalized_master_locs, masters, instances
 
@@ -792,7 +792,7 @@ def main(args=None):
 
 	vf, model, master_ttfs = build(designspace_filename, finder, exclude=options.exclude, optimize=options.optimize)
 
-	log.info("Saving variation font %s", outfile)
+	log.info("Saving variation font %s" % outfile)
 	vf.save(outfile)
 
 
