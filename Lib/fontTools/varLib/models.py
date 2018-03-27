@@ -152,12 +152,12 @@ class VariationModel(object):
 	 {0: 1.0},
 	 {0: 1.0},
 	 {0: 1.0, 4: 1.0, 5: 1.0},
-	 {0: 1.0, 3: 0.75, 4: 0.25, 5: 1.0, 6: 0.25},
+	 {0: 1.0, 3: 0.75, 4: 0.25, 5: 1.0, 6: 0.6666666666666666},
 	 {0: 1.0,
 	  3: 0.75,
 	  4: 0.25,
 	  5: 0.6666666666666667,
-	  6: 0.16666666666666669,
+	  6: 0.4444444444444445,
 	  7: 0.6666666666666667}]
 	"""
 
@@ -233,7 +233,10 @@ class VariationModel(object):
 				if not axis in loc:
 					continue
 				locV = loc[axis]
-				box[axis] = (self.lowerBound(locV, values), locV, self.upperBound(locV, values))
+				if locV > 0:
+					box[axis] = (0, locV, max({locV}|values))
+				else:
+					box[axis] = (min({locV}|values), locV, 0)
 
 			locAxes = set(loc.keys())
 			# Walk over previous masters now
@@ -244,7 +247,7 @@ class VariationModel(object):
 				# If it's NOT in the current box, it does not participate
 				relevant = True
 				for axis, (lower,_,upper) in box.items():
-					if axis in m and not (lower < m[axis] < upper):
+					if axis not in m or not (lower < m[axis] < upper):
 						relevant = False
 						break
 				if not relevant:
