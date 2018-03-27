@@ -122,23 +122,44 @@ def instantiateVariableFont(varfont, location, inplace=False):
 
 def main(args=None):
 	from fontTools import configLogger
+	import argparse
 
-	if args is None:
-		import sys
-		args = sys.argv[1:]
+	parser = argparse.ArgumentParser(
+		"fonttools varLib.mutator", description="Instantiate a variable font")
+	parser.add_argument(
+		"input", metavar="INPUT.ttf", help="Input variable TTF file.")
+	parser.add_argument(
+		"locargs", metavar="AXIS=LOC", nargs="*",
+		help="List of space separated locations. A location consist in "
+		"the name of a variation axis, followed by '=' and a number. E.g.: "
+		" wght=700 wdth=80. The default is the location of the base master.")
+	parser.add_argument(
+		"-o", "--output", metavar="OUTPUT.ttf", default=None,
+		help="Output instance TTF file (default: INPUT-instance.ttf).")
+	logging_group = parser.add_mutually_exclusive_group(required=False)
+	logging_group.add_argument(
+		"-v", "--verbose", action="store_true", help="Run more verbosely.")
+	logging_group.add_argument(
+		"-q", "--quiet", action="store_true", help="Turn verbosity off.")
+	options = parser.parse_args(args)
 
-	varfilename = args[0]
-	locargs = args[1:]
-	outfile = os.path.splitext(varfilename)[0] + '-instance.ttf'
-
-	# TODO Allow to specify logging verbosity as command line option
-	configLogger(level=logging.INFO)
+	varfilename = options.input
+	outfile = (
+		os.path.splitext(varfilename)[0] + '-instance.ttf'
+		if not options.output else options.output)
+	configLogger(level=(
+		"DEBUG" if options.verbose else
+		"ERROR" if options.quiet else
+		"INFO"))
 
 	loc = {}
-	for arg in locargs:
-		tag,val = arg.split('=')
-		assert len(tag) <= 4
-		loc[tag.ljust(4)] = float(val)
+	for arg in options.locargs:
+		try:
+			tag, val = arg.split('=')
+			assert len(tag) <= 4
+			loc[tag.ljust(4)] = float(val)
+		except (ValueError, AssertionError):
+			parser.error("invalid location argument format: %r" % arg)
 	log.info("Location: %s", loc)
 
 	log.info("Loading variable font")
