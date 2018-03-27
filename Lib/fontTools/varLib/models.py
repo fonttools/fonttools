@@ -311,6 +311,28 @@ class VariationModel(object):
 		return self.interpolateFromDeltasAndScalars(deltas, scalars)
 
 
+def main(args):
+	from fontTools import configLogger
+
+	args = args[1:]
+
+	# TODO: allow user to configure logging via command-line options
+	configLogger(level="INFO")
+
+	axes = [chr(c) for c in range(ord('A'), ord('Z')+1)]
+
+	locs = [dict(zip(axes, (float(v) for v in s.split(',')))) for s in args]
+	model = VariationModel(locs)
+	from pprint import pprint
+	print("Sorted locations:")
+	pprint(model.locations)
+	print("Supports:")
+	pprint(model.supports)
+
 if __name__ == "__main__":
 	import doctest, sys
+
+	if len(sys.argv) > 1:
+		sys.exit(main(sys.argv))
+
 	sys.exit(doctest.testmod().failed)
