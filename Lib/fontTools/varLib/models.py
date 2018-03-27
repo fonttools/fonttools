@@ -4,6 +4,7 @@ from fontTools.misc.py23 import *
 
 __all__ = ['normalizeValue', 'normalizeLocation', 'supportScalar', 'VariationModel']
 
+
 def normalizeValue(v, triple):
 	"""Normalizes value based on a min/default/max triple.
 	>>> normalizeValue(400, (100, 400, 900))
