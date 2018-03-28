@@ -36,6 +36,8 @@ def plotLocations(locations, fig, **kwargs):
 	for i, (support,color) in enumerate(zip(model.supports, cycle(pyplot.cm.Set1.colors))):
 
 		axis3D = fig.add_subplot(rows, cols, i + 1, projection='3d')
+		axis3D.set_xlabel(ax1)
+		axis3D.set_ylabel(ax2)
 
 		Xs = support.get(ax1, (-1.,0.,+1.))
 		Ys = support.get(ax2, (-1.,0.,+1.))
@@ -82,7 +84,7 @@ def main(args=None):
 
 	fig = pyplot.figure()
 
-	if len(args) == 1 and args[1].endswith('.designspace'):
+	if len(args) == 1 and args[0].endswith('.designspace'):
 		doc = DesignSpaceDocument()
 		doc.read(args[0])
 		plotDocument(doc, fig)
