@@ -171,7 +171,7 @@ class VariationModel(object):
 		self.mapping = [self.locations.index(l) for l in locations] # Mapping from user's master order to our master order
 		self.reverseMapping = [locations.index(l) for l in self.locations] # Reverse of above
 
-		self._computeMasterSupports(axisPoints)
+		self._computeMasterSupports(axisPoints, axisOrder)
 
 	@staticmethod
 	def getMasterLocationsSortKeyFunc(locations, axisOrder=[]):
@@ -222,7 +222,7 @@ class VariationModel(object):
 		else:
 			return value
 
-	def _computeMasterSupports(self, axisPoints):
+	def _computeMasterSupports(self, axisPoints, axisOrder):
 		supports = []
 		deltaWeights = []
 		locations = self.locations
@@ -253,15 +253,32 @@ class VariationModel(object):
 						break
 				if not relevant:
 					continue
-				# Split the box for new master
-				for axis,val in m.items():
+				# Split the box for new master; split in whatever direction
+				# that results in less area-ratio lost.
+
+				orderedAxes = [axis for axis in axisOrder if axis in m.keys()]
+				orderedAxes.extend([axis for axis in sorted(m.keys()) if axis not in axisOrder])
+				bestAxis = None
+				bestPercentage = -1
+				for axis in reversed(orderedAxes):
+					val = m[axis]
 					assert axis in box
 					lower,locV,upper = box[axis]
+					newLower, newUpper = lower, upper
 					if val < locV:
-						lower = val
+						newLower = val
 					elif locV < val:
-						upper = val
-					box[axis] = (lower,locV,upper)
+						newUpper = val
+					percentage = (newUpper - newLower) / (upper - lower)
+					if percentage > bestPercentage:
+						bestPercentage = percentage
+						bestAxis = axis
+						bestLower = newLower
+						bestUpper = newUpper
+						bestLocV = locV
+
+				if bestAxis:
+					box[bestAxis] = (bestLower,bestLocV,bestUpper)
 			supports.append(box)
 
 			deltaWeight = {}
