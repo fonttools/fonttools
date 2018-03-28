@@ -22,20 +22,25 @@ def stops(support, count=20):
 	       [c]
 
 
-def plotLocations(locations, fig, **kwargs):
+def plotLocations(locations, fig, names=None, **kwargs):
 
 	assert len(locations[0].keys()) == 2
+
+	if names is None:
+		names = ['']
 
 	n = len(locations)
 	cols = math.ceil(n**.5)
 	rows = math.ceil(n / cols)
 
 	model = VariationModel(locations)
+	names = [names[model.reverseMapping[i]] for i in range(len(names))]
 
 	ax1, ax2 = sorted(locations[0].keys())
-	for i, (support,color) in enumerate(zip(model.supports, cycle(pyplot.cm.Set1.colors))):
+	for i, (support,color, name) in enumerate(zip(model.supports, cycle(pyplot.cm.Set1.colors), cycle(names))):
 
 		axis3D = fig.add_subplot(rows, cols, i + 1, projection='3d')
+		axis3D.set_title(name)
 		axis3D.set_xlabel(ax1)
 		axis3D.set_ylabel(ax2)
 
@@ -62,7 +67,8 @@ def plotLocations(locations, fig, **kwargs):
 def plotDocument(doc, fig, **kwargs):
 	doc.normalize()
 	locations = [s.location for s in doc.sources]
-	plotLocations(locations, fig, **kwargs)
+	names = [s.name for s in doc.sources]
+	plotLocations(locations, fig, names, **kwargs)
 
 
 def main(args=None):
