@@ -7,6 +7,7 @@ from fontTools.designspaceLib import DesignSpaceDocument
 from mpl_toolkits.mplot3d import axes3d
 from matplotlib import pyplot
 from itertools import cycle
+import math
 import logging
 import sys
 
@@ -20,8 +21,12 @@ def stops(support, count=20):
 	       [b + (c - b) * i / count for i in range(count)] + \
 	       [c]
 
-def plotDocument(doc, axis3D, **kwargs):
+def plotDocument(doc, fig, **kwargs):
 	assert len(doc.axes) == 2
+
+	n = len(doc.sources)
+	cols = math.ceil(n**.5)
+	rows = math.ceil(n / cols)
 
 	doc.normalize()
 
@@ -29,10 +34,9 @@ def plotDocument(doc, axis3D, **kwargs):
 
 	ax1 = doc.axes[0].name
 	ax2 = doc.axes[1].name
-	for support,color in zip(model.supports, cycle(pyplot.cm.Set1.colors)):
+	for i, (support,color) in enumerate(zip(model.supports, cycle(pyplot.cm.Set1.colors))):
 
-		if not support:
-			continue
+		axis3D = fig.add_subplot(rows, cols, i + 1, projection='3d')
 
 		Xs = support.get(ax1, (-1.,0.,+1.))
 		Ys = support.get(ax2, (-1.,0.,+1.))
@@ -73,9 +77,8 @@ def main(args=None):
 	doc.read(args[0])
 
 	fig = pyplot.figure()
-	axis3D = fig.add_subplot(111, projection='3d')
 
-	plotDocument(doc, axis3D)
+	plotDocument(doc, fig)
 
 	pyplot.show()
 
