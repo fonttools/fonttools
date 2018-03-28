@@ -21,19 +21,18 @@ def stops(support, count=20):
 	       [b + (c - b) * i / count for i in range(count)] + \
 	       [c]
 
-def plotDocument(doc, fig, **kwargs):
-	assert len(doc.axes) == 2
 
-	n = len(doc.sources)
+def plotLocations(locations, fig, **kwargs):
+
+	assert len(locations[0].keys()) == 2
+
+	n = len(locations)
 	cols = math.ceil(n**.5)
 	rows = math.ceil(n / cols)
 
-	doc.normalize()
+	model = VariationModel(locations)
 
-	model = VariationModel([s.location for s in doc.sources])
-
-	ax1 = doc.axes[0].name
-	ax2 = doc.axes[1].name
+	ax1, ax2 = sorted(locations[0].keys())
 	for i, (support,color) in enumerate(zip(model.supports, cycle(pyplot.cm.Set1.colors))):
 
 		axis3D = fig.add_subplot(rows, cols, i + 1, projection='3d')
@@ -58,6 +57,12 @@ def plotDocument(doc, fig, **kwargs):
 			axis3D.plot_wireframe(X, Y, Z, color=color, **kwargs)
 
 
+def plotDocument(doc, fig, **kwargs):
+	doc.normalize()
+	locations = [s.location for s in doc.sources]
+	plotLocations(locations, fig, **kwargs)
+
+
 def main(args=None):
 	from fontTools import configLogger
 
@@ -70,15 +75,21 @@ def main(args=None):
 	# log.setLevel(logging.DEBUG)
 
 	if len(args) < 1:
-		print("usage: fonttools varLib.plot soure.designspace", file=sys.stderr)
+		print("usage: fonttools varLib.plot source.designspace", file=sys.stderr)
+		print("  or")
+		print("usage: fonttools varLib.plot location1 location2 ...", file=sys.stderr)
 		sys.exit(1)
-
-	doc = DesignSpaceDocument()
-	doc.read(args[0])
 
 	fig = pyplot.figure()
 
-	plotDocument(doc, fig)
+	if len(args) == 1 and args[1].endswith('.designspace'):
+		doc = DesignSpaceDocument()
+		doc.read(args[0])
+		plotDocument(doc, fig)
+	else:
+		axes = [chr(c) for c in range(ord('A'), ord('Z')+1)]
+		locs = [dict(zip(axes, (float(v) for v in s.split(',')))) for s in args]
+		plotLocations(locs, fig)
 
 	pyplot.show()
 
