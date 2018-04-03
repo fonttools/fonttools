@@ -157,7 +157,7 @@ else:
 		def __ne__(self, other):
 			return not self.__eq__(other)
 		def __eq__(self, other):
-			return str.__eq__(self, self.transcode(other))
+			return str.__eq__(self, other)
 
 		def __hash__(self):
 			return str.__hash__(self)
