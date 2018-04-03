@@ -299,7 +299,12 @@ class VariationModel(object):
 		for i,weights in enumerate(self.deltaWeights):
 			delta = masterValues[mapping[i]]
 			for j,weight in weights.items():
-				delta -= out[j] * weight
+				try:
+					delta -= out[j] * weight
+				except OverflowError:
+					# if it doesn't fit signed shorts, retry with doubles
+					delta._ensureFloat()
+					delta -= out[j] * weight
 			out.append(delta)
 		return out
 
