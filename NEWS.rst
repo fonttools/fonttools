@@ -1,3 +1,18 @@
+- [varLib] Improved support-resolution algorithm. Previously, the on-axis
+  masters would always cut the space. They don't anymore. That's more
+  consistent, and fixes the main issue Erik showed at TYPO Labs 2017.
+  Any varfont built that had an unusual master configuration will change
+  when rebuilt (42bef17, a523a697,
+  https://github.com/googlei18n/fontmake/issues/264).
+- [varLib.models] Added a ``main()`` entry point, that takes positions and
+  prints model results.
+- [varLib.plot] Added new module to plot a designspace's
+  VariationModel. Requires ``matplotlib``.
+- [varLib.mutator] Added -o option to specify output file path (2ef60fa).
+- [otTables] Fixed IndexError while pruning of HVAR pre-write (6b6c34a).
+- [varLib.models] Convert delta array to floats if values overflows signed
+  short integer (0055f94).
+
 3.24.2 (released 2018-03-26)
 ----------------------------
 
