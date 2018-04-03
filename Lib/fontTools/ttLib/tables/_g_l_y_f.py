@@ -1220,6 +1220,9 @@ class GlyphCoordinates(object):
 	def _checkFloat(self, p):
 		if self.isFloat():
 			return p
+		if any(v > 0x7FFF or v < -0x8000 for v in p):
+			self._ensureFloat()
+			return p
 		if any(isinstance(v, float) for v in p):
 			p = [int(v) if int(v) == v else v for v in p]
 			if any(isinstance(v, float) for v in p):
@@ -1259,7 +1262,6 @@ class GlyphCoordinates(object):
 		del self._a[i]
 		del self._a[i]
 
-
 	def __repr__(self):
 		return 'GlyphCoordinates(['+','.join(str(c) for c in self)+'])'
 
@@ -1284,8 +1286,9 @@ class GlyphCoordinates(object):
 		a = self._a
 		x,y = 0,0
 		for i in range(len(a) // 2):
-			a[2*i  ] = x = a[2*i  ] + x
-			a[2*i+1] = y = a[2*i+1] + y
+			x = a[2*i  ] + x
+			y = a[2*i+1] + y
+			self[i] = (x, y)
 
 	def absoluteToRelative(self):
 		a = self._a
@@ -1295,8 +1298,7 @@ class GlyphCoordinates(object):
 			dy = a[2*i+1] - y
 			x = a[2*i  ]
 			y = a[2*i+1]
-			a[2*i  ] = dx
-			a[2*i+1] = dy
+			self[i] = (dx, dy)
 
 	def translate(self, p):
 		"""
@@ -1305,8 +1307,7 @@ class GlyphCoordinates(object):
 		(x,y) = self._checkFloat(p)
 		a = self._a
 		for i in range(len(a) // 2):
-			a[2*i  ] += x
-			a[2*i+1] += y
+			self[i] = (a[2*i] + x, a[2*i+1] + y)
 
 	def scale(self, p):
 		"""
@@ -1315,8 +1316,7 @@ class GlyphCoordinates(object):
 		(x,y) = self._checkFloat(p)
 		a = self._a
 		for i in range(len(a) // 2):
-			a[2*i  ] *= x
-			a[2*i+1] *= y
+			self[i] = (a[2*i] * x, a[2*i+1] * y)
 
 	def transform(self, t):
 		"""
@@ -1432,8 +1432,8 @@ class GlyphCoordinates(object):
 			other = other._a
 			a = self._a
 			assert len(a) == len(other)
-			for i in range(len(a)):
-				a[i] += other[i]
+			for i in range(len(a) // 2):
+				self[i] = (a[2*i] + other[2*i], a[2*i+1] + other[2*i+1])
 			return self
 		return NotImplemented
 
@@ -1457,8 +1457,8 @@ class GlyphCoordinates(object):
 			other = other._a
 			a = self._a
 			assert len(a) == len(other)
-			for i in range(len(a)):
-				a[i] -= other[i]
+			for i in range(len(a) // 2):
+				self[i] = (a[2*i] - other[2*i], a[2*i+1] - other[2*i+1])
 			return self
 		return NotImplemented
 
