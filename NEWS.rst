@@ -1,3 +1,6 @@
+3.25.0 (released 2018-04-03)
+----------------------------
+
 - [varLib] Improved support-resolution algorithm. Previously, the on-axis
   masters would always cut the space. They don't anymore. That's more
   consistent, and fixes the main issue Erik showed at TYPO Labs 2017.

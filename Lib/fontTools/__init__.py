@@ -5,6 +5,6 @@ from fontTools.misc.loggingTools import configLogger
 
 log = logging.getLogger(__name__)
 
-version = __version__ = "3.24.3.dev0"
+version = __version__ = "3.25.0"
 
 __all__ = ["version", "log", "configLogger"]
