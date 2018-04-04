@@ -1,7 +1,6 @@
 import os
 import shutil
 from io import StringIO, BytesIO, open
-import codecs
 from copy import deepcopy
 from fontTools.misc.py23 import basestring, unicode
 from ufoLib.glifLib import GlyphSet
@@ -40,7 +39,7 @@ fontinfo.plist values between the possible format versions.
 """
 
 __all__ = [
-	"makeUFOPath"
+	"makeUFOPath",
 	"UFOLibError",
 	"UFOReader",
 	"UFOWriter",
@@ -51,9 +50,9 @@ __all__ = [
 	"validateFontInfoVersion2ValueForAttribute",
 	"validateFontInfoVersion3ValueForAttribute",
 	"convertFontInfoValueForAttributeFromVersion1ToVersion2",
-	"convertFontInfoValueForAttributeFromVersion2ToVersion1"
+	"convertFontInfoValueForAttributeFromVersion2ToVersion1",
 	# deprecated
-	"convertUFOFormatVersion1ToFormatVersion2"
+	"convertUFOFormatVersion1ToFormatVersion2",
 ]
 
 __version__ = "2.1.2.dev0"
@@ -918,7 +917,7 @@ class UFOWriter(object):
 		kerningDict = {}
 		for left, right in list(kerning.keys()):
 			value = kerning[left, right]
-			if not left in kerningDict:
+			if left not in kerningDict:
 				kerningDict[left] = {}
 			kerningDict[left][right] = value
 		if kerningDict:
