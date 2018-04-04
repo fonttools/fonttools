@@ -141,6 +141,12 @@ class TTFont(object):
 		self.flavor = self.reader.flavor
 		self.flavorData = self.reader.flavorData
 
+	def __enter__(self):
+		return self
+
+	def __exit__(self, type, value, traceback):
+		self.close()
+
 	def close(self):
 		"""If we still have a reader object, close it."""
 		if self.reader is not None:
