@@ -148,7 +148,7 @@ else:
 
 		@staticmethod
 		def transcode(blob):
-			if not isinstance(blob, str):
+			if isinstance(blob, bytes):
 				blob = blob.decode('latin-1')
 			return blob
 
