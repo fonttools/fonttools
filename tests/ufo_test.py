@@ -9,6 +9,7 @@ from cu2qu.ufo import (
     glyphs_to_quadratic,
     glyph_to_quadratic,
     logger,
+    CURVE_TYPE_LIB_KEY,
 )
 from cu2qu.errors import (
     IncompatibleSegmentNumberError,
@@ -46,6 +47,18 @@ class FontsToQuadraticTest(object):
         with CapturingLogHandler(logger, "INFO") as captor:
             fonts_to_quadratic(fonts, dump_stats=True)
         assert captor.assertRegex("New spline lengths:")
+
+    def test_remember_curve_type(self, fonts):
+        fonts_to_quadratic(fonts, remember_curve_type=True)
+        assert fonts[0].lib[CURVE_TYPE_LIB_KEY] == "quadratic"
+        with CapturingLogHandler(logger, "INFO") as captor:
+            fonts_to_quadratic(fonts, remember_curve_type=True)
+        assert captor.assertRegex("already converted")
+
+    def test_no_remember_curve_type(self, fonts):
+        assert CURVE_TYPE_LIB_KEY not in fonts[0].lib
+        fonts_to_quadratic(fonts, remember_curve_type=False)
+        assert CURVE_TYPE_LIB_KEY not in fonts[0].lib
 
     def test_different_glyphsets(self, fonts):
         del fonts[0]['a']
