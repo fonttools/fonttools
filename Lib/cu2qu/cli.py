@@ -17,7 +17,7 @@ logger = logging.getLogger("cu2qu")
 def _cpu_count():
     try:
         return mp.cpu_count()
-    except NotImplementedError:
+    except NotImplementedError:  # pragma: no cover
         return 1
 
 
@@ -73,7 +73,8 @@ def main(args=None):
         nargs="?",
         default=1,
         const=_cpu_count(),
-        help="Convert using multiple processes (default: %(default)s)")
+        metavar="N",
+        help="Convert using N multiple processes (default: %(default)s)")
 
     output_parser = parser.add_mutually_exclusive_group()
     output_parser.add_argument(
