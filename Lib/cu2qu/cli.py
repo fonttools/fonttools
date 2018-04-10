@@ -58,6 +58,18 @@ def main(args=None):
         metavar="INPUT",
         help="one or more input UFO source file(s).")
     parser.add_argument("-v", "--verbose", action="count", default=0)
+    parser.add_argument(
+        "-e",
+        "--conversion-error",
+        type=float,
+        metavar="ERROR",
+        default=None,
+        help="maxiumum approximation error measured in EM (default: 0.001)")
+    parser.add_argument(
+        "--keep-direction",
+        dest="reverse_direction",
+        action="store_false",
+        help="do not reverse the contour direction")
 
     mode_parser = parser.add_mutually_exclusive_group()
     mode_parser.add_argument(
@@ -115,10 +127,14 @@ def main(args=None):
         # save in-place
         output_paths = list(options.infiles)
 
+    kwargs = dict(dump_stats=options.verbose > 0,
+                  max_err_em=options.conversion_error,
+                  reverse_direction=options.reverse_direction)
+
     if options.interpolatable:
         logger.info('Converting curves compatibly')
         ufos = [defcon.Font(infile) for infile in options.infiles]
-        if fonts_to_quadratic(ufos, dump_stats=True):
+        if fonts_to_quadratic(ufos, **kwargs):
             for ufo, output_path in zip(ufos, output_paths):
                 logger.info("Saving %s", output_path)
                 ufo.save(output_path)
@@ -129,11 +145,11 @@ def main(args=None):
         jobs = min(len(options.infiles),
                    options.jobs) if options.jobs > 1 else 1
         if jobs > 1:
-            func = partial(_font_to_quadratic, dump_stats=False)
+            func = partial(_font_to_quadratic, **kwargs)
             logger.info('Running %d parallel processes', jobs)
             with closing(mp.Pool(jobs)) as pool:
                 # can't use Pool.starmap as it's 3.3+ only
                 pool.map(func, zip(options.infiles, output_paths))
         else:
             for paths in zip(options.infiles, output_paths):
-                _font_to_quadratic(paths, dump_stats=True)
+                _font_to_quadratic(paths, **kwargs)
