@@ -40,6 +40,7 @@ from cu2qu.errors import (
 __all__ = ['fonts_to_quadratic', 'font_to_quadratic']
 
 DEFAULT_MAX_ERR = 0.001
+CURVE_TYPE_LIB_KEY = "com.github.googlei18n.cu2qu.curve_type"
 
 logger = logging.getLogger(__name__)
 
@@ -208,7 +209,7 @@ def glyphs_to_quadratic(
 
 def fonts_to_quadratic(
         fonts, max_err_em=None, max_err=None, reverse_direction=False,
-        stats=None, dump_stats=False):
+        stats=None, dump_stats=False, remember_curve_type=True):
     """Convert the curves of a collection of fonts to quadratic.
 
     All curves will be converted to quadratic at once, ensuring interpolation
@@ -217,9 +218,29 @@ def fonts_to_quadratic(
 
     Return True if fonts were modified, else return False.
 
+    By default, cu2qu stores the curve type in the fonts' lib, under a private
+    key "com.github.googlei18n.cu2qu.curve_type", and will not try to convert
+    them again if the curve type is already set to "quadratic".
+    Setting 'remember_curve_type' to False disables this optimization.
+
     Raises IncompatibleFontsError if same-named glyphs from different fonts
     have non-interpolatable outlines.
     """
+
+    if remember_curve_type:
+        curve_types = {f.lib.get(CURVE_TYPE_LIB_KEY, "cubic") for f in fonts}
+        if len(curve_types) == 1:
+            curve_type = next(iter(curve_types))
+            if curve_type == "quadratic":
+                logger.info("Curves already converted to quadratic")
+                return False
+            elif curve_type == "cubic":
+                pass  # keep converting
+            else:
+                raise NotImplementedError(curve_type)
+        elif len(curve_types) > 1:
+            # going to crash later if they do differ
+            logger.warning("fonts may contain different curve types")
 
     if stats is None:
         stats = {}
@@ -265,6 +286,13 @@ def fonts_to_quadratic(
         spline_lengths = sorted(stats.keys())
         logger.info('New spline lengths: %s' % (', '.join(
                     '%s: %d' % (l, stats[l]) for l in spline_lengths)))
+
+    if remember_curve_type:
+        for font in fonts:
+            curve_type = font.lib.get(CURVE_TYPE_LIB_KEY, "cubic")
+            if curve_type != "quadratic":
+                font.lib[CURVE_TYPE_LIB_KEY] = "quadratic"
+                modified = True
     return modified
 
 
