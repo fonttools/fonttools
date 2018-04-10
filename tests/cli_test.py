@@ -74,3 +74,12 @@ class MainTest(object):
 
     def test_multiprocessing(self, tmpdir, test_paths):
         self.run_main(*(test_paths + ["-j"]))
+
+    def test_keep_direction(self, test_paths):
+        self.run_main('--keep-direction', *test_paths)
+
+    def test_conversion_error(self, test_paths):
+        self.run_main('--conversion-error', 0.002, *test_paths)
+
+    def test_conversion_error_short(self, test_paths):
+        self.run_main('-e', 0.003, test_paths[0])
