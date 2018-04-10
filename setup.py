@@ -179,6 +179,8 @@ setup(
         "fonttools>=3.18.0",
         "ufoLib>=2.1.1",
     ],
+    extras_require={"cli": ["defcon>=0.4.0"]},
+    entry_points={"console_scripts": ["cu2qu = cu2qu.cli:main [cli]"]},
     cmdclass={
         "release": release,
         "bump_version": bump_version,
