@@ -52,9 +52,13 @@ class bump_version(Command):
 
         args = ['--verbose'] if self.verbose > 1 else []
         for k, v in kwargs.items():
-            k = "--{}".format(k.replace("_", "-"))
-            is_bool = isinstance(v, bool) and v is True
-            args.extend([k] if is_bool else [k, str(v)])
+            arg = "--{}".format(k.replace("_", "-"))
+            if isinstance(v, bool):
+                if v is False:
+                    continue
+                args.append(arg)
+            else:
+                args.extend([arg, str(v)])
         args.append(part)
 
         log.debug(
