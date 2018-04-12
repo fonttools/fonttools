@@ -43,13 +43,14 @@ class PSError(Exception): pass
 
 class PSTokenizer(object):
 
-	def __init__(self, buf=b''):
+	def __init__(self, buf=b'', encoding="ascii"):
 		# Force self.buf to be a byte string
 		buf = tobytes(buf)
 		self.buf = buf
 		self.len = len(buf)
 		self.pos = 0
 		self.closed = False
+		self.encoding = encoding
 
 	def read(self, n=-1):
 		"""Read at most 'n' bytes from the buffer, or less if the read
@@ -122,7 +123,7 @@ class PSTokenizer(object):
 			_, nextpos = m.span()
 			token = buf[pos:nextpos]
 		self.pos = pos + len(token)
-		token = tostr(token, encoding='ascii')
+		token = tostr(token, encoding=self.encoding)
 		return tokentype, token
 
 	def skipwhite(self, whitematch=skipwhiteRE.match):
@@ -145,9 +146,10 @@ class PSTokenizer(object):
 
 class PSInterpreter(PSOperators):
 
-	def __init__(self):
+	def __init__(self, encoding="ascii"):
 		systemdict = {}
 		userdict = {}
+		self.encoding = encoding
 		self.dictstack = [systemdict, userdict]
 		self.stack = []
 		self.proclevel = 0
@@ -174,7 +176,7 @@ class PSInterpreter(PSOperators):
 			self.suckoperators(systemdict, baseclass)
 
 	def interpret(self, data, getattr=getattr):
-		tokenizer = self.tokenizer = PSTokenizer(data)
+		tokenizer = self.tokenizer = PSTokenizer(data, self.encoding)
 		getnexttoken = tokenizer.getnexttoken
 		do_token = self.do_token
 		handle_object = self.handle_object
@@ -345,13 +347,13 @@ def unpack_item(item):
 		newitem = item.value
 	return newitem
 
-def suckfont(data):
+def suckfont(data, encoding="ascii"):
 	m = re.search(br"/FontName\s+/([^ \t\n\r]+)\s+def", data)
 	if m:
 		fontName = m.group(1)
 	else:
 		fontName = None
-	interpreter = PSInterpreter()
+	interpreter = PSInterpreter(encoding=encoding)
 	interpreter.interpret(b"/Helvetica 4 dict dup /Encoding StandardEncoding put definefont pop")
 	interpreter.interpret(data)
 	fontdir = interpreter.dictstack[0]['FontDirectory'].value
