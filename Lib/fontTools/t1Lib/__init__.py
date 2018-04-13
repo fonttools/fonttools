@@ -49,8 +49,17 @@ class T1Font(object):
 	Type 1 fonts.
 	"""
 
-	def __init__(self, path, encoding="ascii"):
-		self.data, _ = read(path)
+	def __init__(self, path, encoding="ascii", kind=None):
+		if kind is None:
+			self.data, _ = read(path)
+		elif kind == "LWFN":
+			self.data = readLWFN(path)
+		elif kind == "PFB":
+			self.data = readPFB(path)
+		elif kind == "OTHER":
+			self.data = readOther(path)
+		else:
+			raise ValueError(kind)
 		self.encoding = encoding
 
 	def saveAs(self, path, type, dohex=False):

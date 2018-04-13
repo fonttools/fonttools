@@ -67,8 +67,7 @@ class T1FontTest(unittest.TestCase):
 
 	def test_parse_lwfn(self):
 		# the extended attrs are lost on git so we can't auto-detect 'LWFN'
-		font = t1Lib.T1Font()
-		font.data = t1Lib.readLWFN(LWFN)
+		font = t1Lib.T1Font(LWFN, kind="LWFN")
 		font.parse()
 		self.assertEqual(font['FontName'], 'TestT1-Regular')
 		self.assertTrue('Subrs' in font['Private'])
