@@ -2718,7 +2718,7 @@ class Options(object):
 				     'vhea', 'OS/2', 'loca', 'name', 'cvt',
 				     'fpgm', 'prep', 'VDMX', 'DSIG', 'CPAL',
 				     'MVAR', 'cvar', 'STAT']
-	_hinting_tables_default = ['cvar', 'cvt', 'cvar', 'fpgm', 'prep', 'hdmx', 'VDMX']
+	_hinting_tables_default = ['cvt', 'cvar', 'fpgm', 'prep', 'hdmx', 'VDMX']
 
 	# Based on HarfBuzz shapers
 	_layout_features_groups = {
