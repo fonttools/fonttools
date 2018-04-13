@@ -43,6 +43,8 @@ def plotLocations(locations, fig, names=None, **kwargs):
 		axis3D.set_title(name)
 		axis3D.set_xlabel(ax1)
 		axis3D.set_ylabel(ax2)
+		pyplot.xlim(-1.,+1.)
+		pyplot.ylim(-1.,+1.)
 
 		Xs = support.get(ax1, (-1.,0.,+1.))
 		Ys = support.get(ax2, (-1.,0.,+1.))
