@@ -1765,9 +1765,6 @@ def subset_glyphs(self, s):
 def subset_glyphs(self, s):
 	table = self.table
 
-	# TODO Handle direct mapping
-	assert table.AdvWidthMap, "File a bug."
-
 	used = set()
 
 	if table.AdvWidthMap:
