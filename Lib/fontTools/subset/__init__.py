@@ -212,8 +212,8 @@ Font table options:
       Add to the set of tables that will not be subsetted.
       By default, the following tables are included in this list, as
       they do not need subsetting (ignore the fact that 'loca' is listed
-      here): 'gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca',
-      'name', 'cvt ', 'fpgm', 'prep', 'VMDX', 'DSIG', 'CPAL', 'MVAR', 'STAT'.
+      here): 'gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca', 'name',
+      'cvt ', 'fpgm', 'prep', 'VMDX', 'DSIG', 'CPAL', 'MVAR', 'cvar', 'STAT'.
       By default, tables that the tool does not know how to subset and are not
       specified here will be dropped from the font, unless --passthrough-tables
       option is passed.
@@ -2717,8 +2717,8 @@ class Options(object):
 				     'gasp', 'head', 'hhea', 'maxp',
 				     'vhea', 'OS/2', 'loca', 'name', 'cvt',
 				     'fpgm', 'prep', 'VDMX', 'DSIG', 'CPAL',
-				     'MVAR', 'STAT']
-	_hinting_tables_default = ['cvar', 'cvt', 'fpgm', 'prep', 'hdmx', 'VDMX']
+				     'MVAR', 'cvar', 'STAT']
+	_hinting_tables_default = ['cvar', 'cvt', 'cvar', 'fpgm', 'prep', 'hdmx', 'VDMX']
 
 	# Based on HarfBuzz shapers
 	_layout_features_groups = {
