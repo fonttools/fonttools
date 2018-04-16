@@ -494,12 +494,6 @@
     <namerecord nameID="273" platformID="1" platEncID="0" langID="0x0" unicode="True">
       TestFamily-BlackHighContrast
     </namerecord>
-    <namerecord nameID="274" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Weight
-    </namerecord>
-    <namerecord nameID="275" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Contrast
-    </namerecord>
     <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
       Test Family
     </namerecord>
@@ -577,12 +571,6 @@
     </namerecord>
     <namerecord nameID="273" platformID="3" platEncID="1" langID="0x409">
       TestFamily-BlackHighContrast
-    </namerecord>
-    <namerecord nameID="274" platformID="3" platEncID="1" langID="0x409">
-      Weight
-    </namerecord>
-    <namerecord nameID="275" platformID="3" platEncID="1" langID="0x409">
-      Contrast
     </namerecord>
   </name>
 
@@ -794,22 +782,23 @@
   </MVAR>
 
   <STAT>
-    <Version value="0x00010000"/>
+    <Version value="0x00010002"/>
     <DesignAxisRecordSize value="8"/>
     <!-- DesignAxisCount=2 -->
     <DesignAxisRecord>
       <Axis index="0">
         <AxisTag value="wght"/>
-        <AxisNameID value="274"/>  <!-- Weight -->
+        <AxisNameID value="256"/>  <!-- Weight -->
         <AxisOrdering value="0"/>
       </Axis>
       <Axis index="1">
         <AxisTag value="cntr"/>
-        <AxisNameID value="275"/>  <!-- Contrast -->
+        <AxisNameID value="257"/>  <!-- Contrast -->
         <AxisOrdering value="1"/>
       </Axis>
     </DesignAxisRecord>
     <!-- AxisValueCount=0 -->
+    <ElidedFallbackNameID value="2"/>  <!-- Regular -->
   </STAT>
 
   <cvar>
