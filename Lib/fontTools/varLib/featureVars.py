@@ -4,6 +4,7 @@ from fontTools.ttLib import newTable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.otlLib.builder import buildLookup, buildSingleSubstSubtable
 from fontTools.varLib.models import normalizeValue
+from fontTools.varLib import _DesignspaceAxis
 
 
 def addFeatureVariations(font, conditionalSubstitutions):
@@ -21,7 +22,8 @@ def addFeatureVariations(font, conditionalSubstitutions):
     functionality is not compromised if they do.
 
     The minimum and maximum values are expressed in raw user coordinates, and
-    are internally normalized without going through the `avar` mapping.
+    are internally normalized using the `avar` mapping, if present, else using
+    the default mapping.
 
     A Substitution is a dict mapping source glyph names to substitute glyph names.
     """
@@ -38,10 +40,12 @@ def addFeatureVariations(font, conditionalSubstitutions):
     #     >>> f.save(dstPath)
 
     defaultSpace = {}
-    axisMap = {}
+    axes = {}
     for axis in font["fvar"].axes:
         defaultSpace[axis.axisTag] = (axis.minValue, axis.maxValue)
-        axisMap[axis.axisTag] = (axis.minValue, axis.defaultValue, axis.maxValue)
+        axes[axis.axisTag] = (axis.minValue, axis.defaultValue, axis.maxValue)
+
+    maps = font['avar'].segments if 'avar' in font else None
 
     # Since the FeatureVariations table will only ever match one rule at a time,
     # we will make new rules for all possible combinations of our input, so we
@@ -62,7 +66,9 @@ def addFeatureVariations(font, conditionalSubstitutions):
             # Remove default values, so we don't generate redundant ConditionSets
             space = cleanupSpace(space, defaultSpace)
             if space:
-                space = normalizeSpace(space, axisMap)
+                space = normalizeSpace(space, axes)
+                if maps is not None:
+                    space = mapSpace(space, maps)
                 explodedConditionalSubstitutions.append((space, lookups))
 
     addFeatureVariationsRaw(font, explodedConditionalSubstitutions)
@@ -180,12 +186,28 @@ def cleanupSpace(space, defaultSpace):
     return {tag: limit for tag, limit in space.items() if limit != defaultSpace[tag]}
 
 
-def normalizeSpace(space, axisMap):
+def normalizeSpace(space, axes):
     """Convert the min/max values in the `space` dict to normalized
-    design space values."""
-    space = {tag: (normalizeValue(minValue, axisMap[tag]), normalizeValue(maxValue, axisMap[tag]))
-                for tag, (minValue, maxValue) in space.items()}
+    design space values.
+    The `axes` argument is a dictionary keyed by axis tags, containing
+    (minimum, default, maximum) tuples from the fvar table.
+    """
+    space = {tag: (normalizeValue(minValue, axes[tag]),
+                   normalizeValue(maxValue, axes[tag]))
+             for tag, (minValue, maxValue) in space.items()}
     return space
+
+
+def mapSpace(space, maps):
+    """Modify normalized min/max values in the `space` dict using axis maps
+    from avar table.
+    """
+    return {
+        tag: (
+            _DesignspaceAxis._map(minValue, maps[tag]),
+            _DesignspaceAxis._map(maxValue, maps[tag])
+        ) for tag, (minValue, maxValue) in space.items()
+    }
 
 
 #
