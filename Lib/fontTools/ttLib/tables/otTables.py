@@ -482,7 +482,7 @@ class Coverage(FormatSwitchingBaseTable):
 				glyphs.extend(glyphOrder[glyphID] for glyphID in range(startID, endID))
 		else:
 			self.glyphs = []
-			log.warning("Unknown Coverage format: %s" % self.Format)
+			log.warning("Unknown Coverage format: %s", self.Format)
 
 	def preWrite(self, font):
 		glyphs = getattr(self, "glyphs", None)
@@ -830,7 +830,7 @@ class ClassDef(FormatSwitchingBaseTable):
 					if cls:
 						classDefs[glyphOrder[glyphID]] = cls
 		else:
-			assert 0, "unknown format: %s" % self.Format
+			log.warning("Unknown ClassDef format: %s", self.Format)
 		self.classDefs = classDefs
 
 	def _getClassRanges(self, font):
