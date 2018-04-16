@@ -169,22 +169,26 @@ def _add_avar(font, axes):
 	return avar
 
 def _add_stat(font, axes):
+	# for now we just get the axis tags and nameIDs from the fvar,
+	# so we can reuse the same nameIDs which were defined in there.
+	# TODO make use of 'axes' once it adds style attributes info:
+	# https://github.com/LettError/designSpaceDocument/issues/8
 
 	if "STAT" in font:
             return
 
 	nameTable = font['name']
+	fvarTable = font['fvar']
 
 	STAT = font["STAT"] = newTable('STAT')
 	stat = STAT.table = ot.STAT()
-	stat.Version = 0x00010000
+	stat.Version = 0x00010002
 
 	axisRecords = []
-	for i,a in enumerate(axes.values()):
+	for i, a in enumerate(fvarTable.axes):
 		axis = ot.AxisRecord()
-		axis.AxisTag = Tag(a.tag)
-		# Meh. Reuse fvar nameID!
-		axis.AxisNameID = nameTable.addName(tounicode(a.labelname['en']))
+		axis.AxisTag = Tag(a.axisTag)
+		axis.AxisNameID = a.axisNameID
 		axis.AxisOrdering = i
 		axisRecords.append(axis)
 
@@ -194,6 +198,10 @@ def _add_stat(font, axes):
 	stat.DesignAxisRecordSize = 8
 	stat.DesignAxisCount = len(axisRecords)
 	stat.DesignAxisRecord = axisRecordArray
+
+	# for the elided fallback name, we default to the base style name.
+	# TODO make this user-configurable via designspace document
+	stat.ElidedFallbackNameID = 2
 
 # TODO Move to glyf or gvar table proper
 def _GetCoordinates(font, glyphName):
