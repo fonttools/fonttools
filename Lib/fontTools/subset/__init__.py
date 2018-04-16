@@ -311,6 +311,8 @@ Other font-specific options:
       Update the 'OS/2 xAvgCharWidth' field after subsetting.
   --no-recalc-average-width
       Don't change the 'OS/2 xAvgCharWidth' field. [default]
+  --font-number=<number>
+      Select font number for TrueType Collection (.ttc/.otc), starting from 0.
 
 Application options:
   --verbose
@@ -2773,6 +2775,7 @@ class Options(object):
 		self.verbose = False
 		self.timing = False
 		self.xml = False
+		self.font_number = -1
 
 		self.set(**kwargs)
 
@@ -3105,7 +3108,8 @@ def load_font(fontFile,
 			    checkChecksums=checkChecksums,
 			    recalcBBoxes=options.recalc_bounds,
 			    recalcTimestamp=options.recalc_timestamp,
-			    lazy=lazy)
+			    lazy=lazy,
+			    fontNumber=options.font_number)
 
 	# Hack:
 	#
