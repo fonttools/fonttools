@@ -177,7 +177,6 @@ def _add_stat(font, axes):
 	if "STAT" in font:
             return
 
-	nameTable = font['name']
 	fvarTable = font['fvar']
 
 	STAT = font["STAT"] = newTable('STAT')
