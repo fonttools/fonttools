@@ -117,10 +117,12 @@ def intersectRegions(region1, region2):
         []
         >>> intersectRegions([{'wdth': (0.0, 1.0)}], [])
         []
-        >>> intersectRegions([{'wdth': (0.0, 1.0)}], [{'wght': (-1.0, 0.0)}])
-        [{'wdth': (0.0, 1.0), 'wght': (-1.0, 0.0)}]
-        >>> intersectRegions([{'wdth': (0.0, 1.0), 'wght': (-0.5, 0.5)}], [{'wght': (-1.0, 0.0)}])
-        [{'wdth': (0.0, 1.0), 'wght': (-0.5, 0.0)}]
+        >>> expected = [{'wdth': (0.0, 1.0), 'wght': (-1.0, 0.0)}]
+        >>> expected == intersectRegions([{'wdth': (0.0, 1.0)}], [{'wght': (-1.0, 0.0)}])
+        True
+        >>> expected = [{'wdth': (0.0, 1.0), 'wght': (-0.5, 0.0)}]
+        >>> expected == intersectRegions([{'wdth': (0.0, 1.0), 'wght': (-0.5, 0.5)}], [{'wght': (-1.0, 0.0)}])
+        True
 
     """
     region = []
@@ -142,10 +144,12 @@ def intersectSpaces(space1, space2):
         {'wdth': (-0.5, 0.5)}
         >>> intersectSpaces({'wdth': (-0.5, 0.5)}, {'wdth': (0.0, 1.0)})
         {'wdth': (0.0, 0.5)}
-        >>> intersectSpaces({'wdth': (-0.5, 0.5), 'wght': (0.0, 0.5)}, {'wdth': (0.0, 1.0), 'wght': (0.25, 0.75)})
-        {'wdth': (0.0, 0.5), 'wght': (0.25, 0.5)}
-        >>> intersectSpaces({'wdth': (-0.5, 0.5)}, {'wght': (0.0, 1.0)})
-        {'wdth': (-0.5, 0.5), 'wght': (0.0, 1.0)}
+        >>> expected = {'wdth': (0.0, 0.5), 'wght': (0.25, 0.5)}
+        >>> expected == intersectSpaces({'wdth': (-0.5, 0.5), 'wght': (0.0, 0.5)}, {'wdth': (0.0, 1.0), 'wght': (0.25, 0.75)})
+        True
+        >>> expected = {'wdth': (-0.5, 0.5), 'wght': (0.0, 1.0)}
+        >>> expected == intersectSpaces({'wdth': (-0.5, 0.5)}, {'wght': (0.0, 1.0)})
+        True
 
     """
     space = {}
