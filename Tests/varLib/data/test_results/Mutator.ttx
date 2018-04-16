@@ -494,12 +494,6 @@
     <namerecord nameID="273" platformID="1" platEncID="0" langID="0x0" unicode="True">
       TestFamily-BlackHighContrast
     </namerecord>
-    <namerecord nameID="274" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Weight
-    </namerecord>
-    <namerecord nameID="275" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Contrast
-    </namerecord>
     <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
       Test Family
     </namerecord>
@@ -577,12 +571,6 @@
     </namerecord>
     <namerecord nameID="273" platformID="3" platEncID="1" langID="0x409">
       TestFamily-BlackHighContrast
-    </namerecord>
-    <namerecord nameID="274" platformID="3" platEncID="1" langID="0x409">
-      Weight
-    </namerecord>
-    <namerecord nameID="275" platformID="3" platEncID="1" langID="0x409">
-      Contrast
     </namerecord>
   </name>
 
