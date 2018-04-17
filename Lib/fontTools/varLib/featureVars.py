@@ -4,6 +4,7 @@ from fontTools.ttLib import newTable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.otlLib.builder import buildLookup, buildSingleSubstSubtable
 from fontTools.varLib.models import normalizeValue
+import itertools
 
 
 def addFeatureVariations(font, conditionalSubstitutions):
@@ -47,10 +48,10 @@ def addFeatureVariations(font, conditionalSubstitutions):
     # we will make new rules for all possible combinations of our input, so we
     # can indirectly support overlapping rules.
     explodedConditionalSubstitutions = []
-    for permutation in getPermutations(len(conditionalSubstitutions)):
+    for combination in iterAllCombinations(len(conditionalSubstitutions)):
         regions = []
         lookups = []
-        for index in permutation:
+        for index in combination:
             regions.append(conditionalSubstitutions[index][0])
             lookups.append(conditionalSubstitutions[index][1])
         if not regions:
@@ -68,32 +69,23 @@ def addFeatureVariations(font, conditionalSubstitutions):
     addFeatureVariationsRaw(font, explodedConditionalSubstitutions)
 
 
-def getPermutations(numRules):
-    """Given a number of rules, return a list of all combinations by index.
-    The list is reverse-sorted by the number of indices, so we get the most
-    specialized rules first.
+def iterAllCombinations(numRules):
+    """Given a number of rules, yield all the combinations of indices, sorted
+    by decreasing length, so we get the most specialized rules first.
 
-        >>> getPermutations(0)
-        [[]]
-        >>> getPermutations(1)
-        [[0], []]
-        >>> getPermutations(2)
-        [[0, 1], [0], [1], []]
-        >>> getPermutations(3)
-        [[0, 1, 2], [0, 1], [0, 2], [1, 2], [0], [1], [2], []]
-
+        >>> list(iterAllCombinations(0))
+        []
+        >>> list(iterAllCombinations(1))
+        [(0,)]
+        >>> list(iterAllCombinations(2))
+        [(0, 1), (0,), (1,)]
+        >>> list(iterAllCombinations(3))
+        [(0, 1, 2), (0, 1), (0, 2), (1, 2), (0,), (1,), (2,)]
     """
-    bitNumbers = range(numRules)
-    permutations = []
-    for num in range(2 ** numRules):
-        permutation = []
-        for bitNum in bitNumbers:
-            if num & (1 << bitNum):
-                permutation.append(bitNum)
-        permutations.append(permutation)
-    # reverse sort by the number of indices
-    permutations.sort(key=lambda x: len(x), reverse=True)
-    return permutations
+    indices = range(numRules)
+    for length in range(numRules, 0, -1):
+        for combinations in itertools.combinations(indices, length):
+            yield combinations
 
 
 #
