@@ -20,7 +20,7 @@ def addFeatureVariations(font, conditionalSubstitutions):
     For efficiency, Spaces within a Region should ideally not overlap, but
     functionality is not compromised if they do.
 
-    The minimum and maximum values are expressed in raw user coordinates, and
+    The minimum and maximum values are expressed in raw design coordinates, and
     are internally normalized without going through the `avar` mapping.
 
     A Substitution is a dict mapping source glyph names to substitute glyph names.
