@@ -3,7 +3,6 @@ from __future__ import print_function, absolute_import, division
 from fontTools.ttLib import newTable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.otlLib.builder import buildLookup, buildSingleSubstSubtable
-from fontTools.varLib.models import normalizeValue
 import itertools
 
 
@@ -21,8 +20,7 @@ def addFeatureVariations(font, conditionalSubstitutions):
     For efficiency, Spaces within a Region should ideally not overlap, but
     functionality is not compromised if they do.
 
-    The minimum and maximum values are expressed in raw design coordinates, and
-    are internally normalized without going through the `avar` mapping.
+    The minimum and maximum values are expressed in normalized coordinates.
 
     A Substitution is a dict mapping source glyph names to substitute glyph names.
     """
@@ -63,7 +61,6 @@ def addFeatureVariations(font, conditionalSubstitutions):
             # Remove default values, so we don't generate redundant ConditionSets
             space = cleanupSpace(space, defaultSpace)
             if space:
-                space = normalizeSpace(space, axisMap)
                 explodedConditionalSubstitutions.append((space, lookups))
 
     addFeatureVariationsRaw(font, explodedConditionalSubstitutions)
@@ -175,14 +172,6 @@ def cleanupSpace(space, defaultSpace):
 
     """
     return {tag: limit for tag, limit in space.items() if limit != defaultSpace[tag]}
-
-
-def normalizeSpace(space, axisMap):
-    """Convert the min/max values in the `space` dict to normalized
-    design space values."""
-    space = {tag: (normalizeValue(minValue, axisMap[tag]), normalizeValue(maxValue, axisMap[tag]))
-                for tag, (minValue, maxValue) in space.items()}
-    return space
 
 
 #
