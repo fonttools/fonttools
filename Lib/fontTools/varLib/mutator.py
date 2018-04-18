@@ -112,6 +112,17 @@ def instantiateVariableFont(varfont, location, inplace=False):
 		log.info("Building interpolated tables")
 		merger.instantiate()
 
+	if 'name' in varfont:
+		log.info("Pruning name table")
+		exclude = {a.axisNameID for a in fvar.axes}
+		for i in fvar.instances:
+			exclude.add(i.subfamilyNameID)
+			exclude.add(i.postscriptNameID)
+		varfont['name'].names[:] = [
+			n for n in varfont['name'].names
+			if n.nameID not in exclude
+		]
+
 	log.info("Removing variable tables")
 	for tag in ('avar','cvar','fvar','gvar','HVAR','MVAR','VVAR','STAT'):
 		if tag in varfont:
