@@ -36,12 +36,6 @@ def addFeatureVariations(font, conditionalSubstitutions):
     #     >>> addFeatureVariations(f, condSubst)
     #     >>> f.save(dstPath)
 
-    defaultSpace = {}
-    axisMap = {}
-    for axis in font["fvar"].axes:
-        defaultSpace[axis.axisTag] = (axis.minValue, axis.maxValue)
-        axisMap[axis.axisTag] = (axis.minValue, axis.defaultValue, axis.maxValue)
-
     # Since the FeatureVariations table will only ever match one rule at a time,
     # we will make new rules for all possible combinations of our input, so we
     # can indirectly support overlapping rules.
@@ -59,7 +53,7 @@ def addFeatureVariations(font, conditionalSubstitutions):
             intersection = intersectRegions(intersection, region)
         for space in intersection:
             # Remove default values, so we don't generate redundant ConditionSets
-            space = cleanupSpace(space, defaultSpace)
+            space = cleanupSpace(space)
             if space:
                 explodedConditionalSubstitutions.append((space, lookups))
 
@@ -160,18 +154,18 @@ def intersectSpaces(space1, space2):
     return space
 
 
-def cleanupSpace(space, defaultSpace):
+def cleanupSpace(space):
     """Return a sparse copy of `space`, without redundant (default) values.
 
-        >>> cleanupSpace({}, {'wdth': (-1.0, 1.0), 'wght': (-1.0, 1.0)})
+        >>> cleanupSpace({})
         {}
-        >>> cleanupSpace({'wdth': (0.0, 1.0)}, {'wdth': (-1.0, 1.0), 'wght': (-1.0, 1.0)})
+        >>> cleanupSpace({'wdth': (0.0, 1.0)})
         {'wdth': (0.0, 1.0)}
-        >>> cleanupSpace({'wdth': (-1.0, 1.0)}, {'wdth': (-1.0, 1.0), 'wght': (-1.0, 1.0)})
+        >>> cleanupSpace({'wdth': (-1.0, 1.0)})
         {}
 
     """
-    return {tag: limit for tag, limit in space.items() if limit != defaultSpace[tag]}
+    return {tag: limit for tag, limit in space.items() if limit != (-1.0, 1.0)}
 
 
 #
@@ -311,6 +305,7 @@ def buildFeatureVariations(featureVariationRecords):
     fv.Version = 0x00010000
     fv.FeatureVariationRecord = featureVariationRecords
     return fv
+
 
 def buildFeatureRecord(featureTag, lookupListIndices):
     """Build a FeatureRecord."""
