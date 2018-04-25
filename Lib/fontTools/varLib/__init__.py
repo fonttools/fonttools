@@ -777,27 +777,84 @@ def build(designspace_filename, master_finder=lambda s:s, exclude=[], optimize=T
 	return vf, model, master_ttfs
 
 
+class MasterFinder(object):
+
+	def __init__(self, template):
+		self.template = template
+
+	def __call__(self, src_path):
+		fullname = os.path.abspath(src_path)
+		dirname, basename = os.path.split(fullname)
+		stem, ext = os.path.splitext(basename)
+		path = self.template.format(
+			fullname=fullname,
+			dirname=dirname,
+			basename=basename,
+			stem=stem,
+			ext=ext,
+		)
+		return os.path.normpath(path)
+
+
 def main(args=None):
 	from argparse import ArgumentParser
 	from fontTools import configLogger
 
 	parser = ArgumentParser(prog='varLib')
 	parser.add_argument('designspace')
-	parser.add_argument('-o', metavar='OUTPUTFILE', dest='outfile', default=None, help='output file')
-	parser.add_argument('-x', metavar='TAG', dest='exclude', action='append', default=[], help='exclude table')
-	parser.add_argument('--disable-iup', dest='optimize', action='store_false', help='do not perform IUP optimization')
+	parser.add_argument(
+		'-o',
+		metavar='OUTPUTFILE',
+		dest='outfile',
+		default=None,
+		help='output file'
+	)
+	parser.add_argument(
+		'-x',
+		metavar='TAG',
+		dest='exclude',
+		action='append',
+		default=[],
+		help='exclude table'
+	)
+	parser.add_argument(
+		'--disable-iup',
+		dest='optimize',
+		action='store_false',
+		help='do not perform IUP optimization'
+	)
+	parser.add_argument(
+		'--master-finder',
+		default='master_ttf_interpolatable/{stem}.ttf',
+		help=(
+			'templated string used for finding binary font '
+			'files given the source file names defined in the '
+			'designspace document. The following special strings '
+			'are defined: {fullname} is the absolute source file '
+			'name; {basename} is the file name without its '
+			'directory; {stem} is the basename without the file '
+			'extension; {ext} is the source file extension; '
+			'{dirname} is the directory of the absolute file '
+			'name. The default value is "%(default)s".'
+		)
+	)
 	options = parser.parse_args(args)
 
 	# TODO: allow user to configure logging via command-line options
 	configLogger(level="INFO")
 
 	designspace_filename = options.designspace
-	finder = lambda s: s.replace('master_ufo', 'master_ttf_interpolatable').replace('.ufo', '.ttf')
+	finder = MasterFinder(options.master_finder)
 	outfile = options.outfile
 	if outfile is None:
 		outfile = os.path.splitext(designspace_filename)[0] + '-VF.ttf'
 
-	vf, model, master_ttfs = build(designspace_filename, finder, exclude=options.exclude, optimize=options.optimize)
+	vf, model, master_ttfs = build(
+		designspace_filename,
+		finder,
+		exclude=options.exclude,
+		optimize=options.optimize
+	)
 
 	log.info("Saving variation font %s", outfile)
 	vf.save(outfile)
