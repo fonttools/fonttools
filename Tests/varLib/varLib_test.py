@@ -190,7 +190,6 @@ class BuildTest(unittest.TestCase):
         """
         suffix = '.ttf'
         ds_path = self.get_test_input('Build.designspace')
-        ufo_dir = self.get_test_input('master_ufo')
         ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
 
         self.temp_dir()
@@ -202,9 +201,31 @@ class BuildTest(unittest.TestCase):
 
         ds_copy = os.path.join(self.tempdir, 'BuildMain.designspace')
         shutil.copy2(ds_path, ds_copy)
-        varLib_main([ds_copy])
+
+        # by default, varLib.main finds master TTFs inside a
+        # 'master_ttf_interpolatable' subfolder in current working dir
+        cwd = os.getcwd()
+        os.chdir(self.tempdir)
+        try:
+            varLib_main([ds_copy])
+        finally:
+            os.chdir(cwd)
 
         varfont_path = os.path.splitext(ds_copy)[0] + '-VF' + suffix
+        self.assertTrue(os.path.exists(varfont_path))
+
+        # try again passing an explicit --master-finder
+        os.remove(varfont_path)
+        finder = "%s/master_ttf_interpolatable/{stem}.ttf" % self.tempdir
+        varLib_main([ds_copy, "--master-finder", finder])
+        self.assertTrue(os.path.exists(varfont_path))
+
+        # and also with explicit -o output option
+        os.remove(varfont_path)
+        varfont_path = os.path.splitext(varfont_path)[0] + "-o" + suffix
+        varLib_main([ds_copy, "-o", varfont_path, "--master-finder", finder])
+        self.assertTrue(os.path.exists(varfont_path))
+
         varfont = TTFont(varfont_path)
         tables = [table_tag for table_tag in varfont.keys() if table_tag != 'head']
         expected_ttx_path = self.get_test_output('BuildMain.ttx')
