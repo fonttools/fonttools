@@ -1675,7 +1675,8 @@ def prune_post_subset(self, font, options):
 		    table.MarkAttachClassDef or
 		    table.GlyphClassDef or
 		    table.AttachList or
-		    (table.Version >= 0x00010002 and table.MarkGlyphSetsDef))
+		    (table.Version >= 0x00010002 and table.MarkGlyphSetsDef) or
+		    (table.Version >= 0x00010003 and table.VarStore))
 
 @_add_method(ttLib.getTableClass('kern'))
 def prune_pre_subset(self, font, options):
