@@ -232,7 +232,6 @@ def Object_collect_device_varidxes(self, varidxes):
 	_visit(self, ot.Device, adder)
 
 ot.GDEF.collect_device_varidxes = Object_collect_device_varidxes
-ot.GSUB.collect_device_varidxes = Object_collect_device_varidxes
 ot.GPOS.collect_device_varidxes = Object_collect_device_varidxes
 
 def _Device_mapVarIdx(self, mapping, done):

@@ -1637,8 +1637,6 @@ def _pruneGDEF(font):
 
 	# Collect.
 	table.collect_device_varidxes(usedVarIdxes)
-	if 'GSUB' in font:
-		font['GSUB'].table.collect_device_varidxes(usedVarIdxes)
 	if 'GPOS' in font:
 		font['GPOS'].table.collect_device_varidxes(usedVarIdxes)
 
