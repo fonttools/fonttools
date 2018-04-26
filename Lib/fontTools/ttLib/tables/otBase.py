@@ -283,7 +283,7 @@ class OTTableWriter(object):
 	def __eq__(self, other):
 		if type(self) != type(other):
 			return NotImplemented
-		return self.items == other.items
+		return self.longOffset == other.longOffset and self.items == other.items
 
 	def _doneWriting(self, internedTables):
 		# Convert CountData references to data string items
