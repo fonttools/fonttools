@@ -253,23 +253,24 @@ class VariationModel(object):
 						break
 				if not relevant:
 					continue
-				# Split the box for new master; split in whatever direction
-				# that results in less area-ratio lost.
 
+				# Split the box for new master; split in whatever direction
+				# that has largest range ratio.  See commit for details.
 				orderedAxes = [axis for axis in axisOrder if axis in m.keys()]
 				orderedAxes.extend([axis for axis in sorted(m.keys()) if axis not in axisOrder])
 				bestAxis = None
 				bestPercentage = -1
-				for axis in reversed(orderedAxes):
+				for axis in orderedAxes:
 					val = m[axis]
 					assert axis in box
 					lower,locV,upper = box[axis]
 					newLower, newUpper = lower, upper
 					if val < locV:
 						newLower = val
+						percentage = (val - locV) / (lower - locV)
 					elif locV < val:
 						newUpper = val
-					percentage = (newUpper - newLower) / (upper - lower)
+						percentage = (val - locV) / (upper - locV)
 					if percentage > bestPercentage:
 						bestPercentage = percentage
 						bestAxis = axis
