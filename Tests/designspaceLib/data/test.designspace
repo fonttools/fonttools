@@ -38,6 +38,12 @@
                 <dimension name="width" xvalue="20" />
             </location>
         </source>
+        <source familyname="MasterFamilyName" filename="masters/masterTest2.ufo" layer="supports" name="master.ufo2" stylename="Supports">
+            <location>
+                <dimension name="weight" xvalue="1000" />
+                <dimension name="width" xvalue="20" />
+            </location>
+        </source>
     </sources>
     <instances>
         <instance familyname="InstanceFamilyName" filename="instances/instanceTest1.ufo" name="instance.ufo1" postscriptfontname="InstancePostscriptName" stylemapfamilyname="InstanceStyleMapFamilyName" stylemapstylename="InstanceStyleMapStyleName" stylename="InstanceStyleName">
