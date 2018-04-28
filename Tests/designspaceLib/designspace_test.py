@@ -143,7 +143,7 @@ def test_fill_document(tmpdir):
     a3.maximum = 666
     a3.default = 444
     a3.name = "spooky"
-    a3.tag = "spok"
+    a3.tag = "SPOK"
     a3.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
     #doc.addAxis(a3)    # uncomment this line to test the effects of default axes values
     # write some rules

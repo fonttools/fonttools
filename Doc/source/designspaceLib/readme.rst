@@ -13,7 +13,7 @@ A couple of differences between things that use designspaces:
 
 -  Varlib does not support anisotropic interpolations.
 -  MutatorMath and Superpolator will extrapolate over the boundaries of
-   the axes. Varlib can not.
+   the axes. Varlib can not (at the moment).
 -  Varlib requires much less data to define an instance than
    MutatorMath.
 -  The goals of Varlib and MutatorMath are different, so not all
@@ -129,8 +129,8 @@ Attributes
 -  ``path``: string. Absolute path to the source file, calculated from
    the document path and the string in the filename attr. MutatorMath +
    Varlib.
-   ``layer``: string. The name of the layer in the source to look for
-   outline data. Defaults to ``None`` which means the foreground layer.
+   ``layerName``: string. The name of the layer in the source to look for
+   outline data. Default ``None`` which means ``foreground``.
 -  ``font``: Any Python object. Optional. Points to a representation of
    this source font that is loaded in memory, as a Python object
    (e.g. a ``defcon.Font`` or a ``fontTools.ttFont.TTFont``). The default
@@ -541,8 +541,7 @@ Attributes
    to the root path of this document. The path can be at the same level
    as the document or lower.
 -  ``layer``: optional, string. The name of the layer in the source file.
-   If no layer is given assume it is the foreground layer. The layer names
-   should follow the conventions layed out in the .. _http://unifiedfontobject.org/versions/ufo3/layercontents.plist/
+   If no layer attribute is given assume it is the foreground layer.
 
 .. 31-lib-element:
 

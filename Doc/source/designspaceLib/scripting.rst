@@ -111,6 +111,7 @@ outline geometry, kerning and font.info that we want to work with.
 -  The **path** attribute is the absolute path to an existing UFO.
 -  The **name** attribute is a unique name for this source used to keep
    track it.
+-  The **layerName** attribute is the name of the UFO3 layer. Default None for ``foreground``.
 
 So go ahead and add another master:
 
