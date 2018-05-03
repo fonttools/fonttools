@@ -14,9 +14,11 @@
     </axes>
     <rules>
         <rule name="named.rule.1">
-            <condition maximum="1" minimum="0" name="aaaa" />
-            <condition maximum="3" minimum="2" name="bbbb" />
-            <sub name="a" with="a.alt" />
+            <conditionset>
+                <condition maximum="1" minimum="0" name="aaaa" />
+                <condition maximum="3" minimum="2" name="bbbb" />
+            </conditionset>
+            <sub byname="a.alt" name="a" />
         </rule>
     </rules>
     <sources>
