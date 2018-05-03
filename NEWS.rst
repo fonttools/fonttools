@@ -1,3 +1,26 @@
+- [designspace] Added a new optional ``layer`` attribute to the source element,
+  and a corresponding ``layerName`` attribute to the ``SourceDescriptor``
+  object (#1253).
+  Added ``conditionset`` element to the ``rule`` element to the spec, but not
+  implemented in designspace reader/writer yet (#1254).
+- [varLib.models] Refine modeling one last time (0ecf5c5).
+- [otBase] Fixed sharing of tables referred to by different offset sizes
+  (795f2f9).
+- [subset] Don't drop a GDEF that only has VarStore (fc819d6). Set to None
+  empty Coverage tables in MarkGlyphSets (02616ab).
+- [varLib]: Added ``--master-finder`` command-line option (#1249).
+- [varLib.mutator] Prune fvar nameIDs from instance's name table (#1245).
+- [otTables] Allow decompiling bad ClassDef tables with invalid format, with
+  warning (#1236).
+- [varLib] Make STAT v1.2 and reuse nameIDs from fvar table (#1242).
+- [varLib.plot] Show master locations. Set axis limits to -1, +1.
+- [subset] Handle HVAR direct mapping. Passthrough 'cvar'.
+  Added ``--font-number`` command-line option for collections.
+- [t1Lib] Allow a text encoding to be specified when parsing a Type 1 font
+  (#1234). Added ``kind`` argument to T1Font constructor (c5c161c).
+- [ttLib] Added context manager API to ``TTFont`` class, so it can be used in
+  ``with`` statements to auto-close the file when exiting the context (#1232).
+
 3.25.0 (released 2018-04-03)
 ----------------------------
 
