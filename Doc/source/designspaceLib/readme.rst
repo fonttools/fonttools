@@ -83,10 +83,10 @@ dictionary, ``obj.stylename`` and ``obj.localisedStyleName['en']``.
 Rules
 *****
 
-Rules describe designspace areas in which one glyph should be replaced by another. 
+Rules describe designspace areas in which one glyph should be replaced by another.
 A rule has a name and a number of conditionsets. The rule also contains a list of glyphname
 pairs: the glyphs that need to be substituted. For a rule to be triggered
-only one of the conditionsets needs to be true, ``OR``. Within a conditionset all 
+only one of the conditionsets needs to be true, ``OR``. Within a conditionset all
 conditions need to be true, ``AND``.
 
 Variable fonts
@@ -309,9 +309,9 @@ AxisDescriptor object
 RuleDescriptor object
 =====================
 
--  ``name``: string. Unique name for this rule. Will be used to
+-  ``name``: string. Unique name for this rule. Can be used to
    reference this rule data.
--  ``conditionSets``: a list conditionsets
+-  ``conditionSets``: a list of conditionsets
 -  Each conditionset is a list of conditions.
 -  Each condition is a dict with ``name``, ``minimum`` and ``maximum`` keys.
 
@@ -861,7 +861,7 @@ Example
 Attributes
 ----------
 
--  ``name``: required, string. A unique name that can be used to
+-  ``name``: optional, string. A unique name that can be used to
    identify this rule if it needs to be referenced elsewhere.
 
 5.1.1 conditionset element
