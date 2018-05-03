@@ -149,8 +149,10 @@ def test_fill_document(tmpdir):
     # write some rules
     r1 = RuleDescriptor()
     r1.name = "named.rule.1"
-    r1.conditions.append(dict(name='aaaa', minimum=0, maximum=1))
-    r1.conditions.append(dict(name='bbbb', minimum=2, maximum=3))
+    r1.conditionSets.append([
+        dict(name='aaaa', minimum=0, maximum=1),
+        dict(name='bbbb', minimum=2, maximum=3)
+    ])
     r1.subs.append(("a", "a.alt"))
     doc.addRule(r1)
     # write the document
@@ -374,8 +376,10 @@ def test_localisedNames(tmpdir):
     # write some rules
     r1 = RuleDescriptor()
     r1.name = "named.rule.1"
-    r1.conditions.append(dict(name='aaaa', minimum=0, maximum=1))
-    r1.conditions.append(dict(name='bbbb', minimum=2, maximum=3))
+    r1.conditionSets.append([
+        dict(name='aaaa', minimum=0, maximum=1),
+        dict(name='bbbb', minimum=2, maximum=3)
+    ])
     r1.subs.append(("a", "a.alt"))
     doc.addRule(r1)
     # write the document
@@ -703,14 +707,17 @@ def test_rules(tmpdir):
 
     r1 = RuleDescriptor()
     r1.name = "named.rule.1"
-    r1.conditions.append(dict(name='aaaa', minimum=0, maximum=1000))
-    r1.conditions.append(dict(name='bbbb', minimum=0, maximum=3000))
+    r1.conditionSets.append([
+        dict(name='aaaa', minimum=0, maximum=1000),
+        dict(name='bbbb', minimum=0, maximum=3000)
+    ])
     r1.subs.append(("a", "a.alt"))
 
     # rule with minium and maximum
     doc.addRule(r1)
     assert len(doc.rules) == 1
-    assert len(doc.rules[0].conditions) == 2
+    assert len(doc.rules[0].conditionSets) == 1
+    assert len(doc.rules[0].conditionSets[0]) == 2
     assert evaluateRule(r1, dict(aaaa = 500, bbbb = 0)) == True
     assert evaluateRule(r1, dict(aaaa = 0, bbbb = 0)) == True
     assert evaluateRule(r1, dict(aaaa = 1000, bbbb = 0)) == True
@@ -725,7 +732,7 @@ def test_rules(tmpdir):
     # rule with only a maximum
     r2 = RuleDescriptor()
     r2.name = "named.rule.2"
-    r2.conditions.append(dict(name='aaaa', maximum=500))
+    r2.conditionSets.append([dict(name='aaaa', maximum=500)])
     r2.subs.append(("b", "b.alt"))
 
     assert evaluateRule(r2, dict(aaaa = 0)) == True
@@ -735,7 +742,7 @@ def test_rules(tmpdir):
     # rule with only a minimum
     r3 = RuleDescriptor()
     r3.name = "named.rule.3"
-    r3.conditions.append(dict(name='aaaa', minimum=500))
+    r3.conditionSets.append([dict(name='aaaa', minimum=500)])
     r3.subs.append(("c", "c.alt"))
 
     assert evaluateRule(r3, dict(aaaa = 0)) == False
@@ -745,8 +752,10 @@ def test_rules(tmpdir):
     # rule with only a minimum, maximum in separate conditions
     r4 = RuleDescriptor()
     r4.name = "named.rule.4"
-    r4.conditions.append(dict(name='aaaa', minimum=500))
-    r4.conditions.append(dict(name='bbbb', maximum=500))
+    r4.conditionSets.append([
+        dict(name='aaaa', minimum=500),
+        dict(name='bbbb', maximum=500)
+    ])
     r4.subs.append(("c", "c.alt"))
 
     assert evaluateRule(r4, dict()) == True  # is this what we expect though?
@@ -770,13 +779,17 @@ def test_rules(tmpdir):
     doc.addAxis(b1)
     assert doc._prepAxesForBender() == {'aaaa': {'map': [], 'name': 'aaaa', 'default': 0, 'minimum': 0, 'maximum': 1000, 'tag': 'aaaa'}, 'bbbb': {'map': [], 'name': 'bbbb', 'default': 2000, 'minimum': 2000, 'maximum': 3000, 'tag': 'bbbb'}}
 
-    assert doc.rules[0].conditions == [{'minimum': 0, 'maximum': 1000, 'name': 'aaaa'}, {'minimum': 0, 'maximum': 3000, 'name': 'bbbb'}]
+    assert doc.rules[0].conditionSets == [[
+        {'minimum': 0, 'maximum': 1000, 'name': 'aaaa'},
+        {'minimum': 0, 'maximum': 3000, 'name': 'bbbb'}]]
 
     assert doc.rules[0].subs == [('a', 'a.alt')]
 
     doc.normalize()
     assert doc.rules[0].name == 'named.rule.1'
-    assert doc.rules[0].conditions == [{'minimum': 0.0, 'maximum': 1.0, 'name': 'aaaa'}, {'minimum': 0.0, 'maximum': 1.0, 'name': 'bbbb'}]
+    assert doc.rules[0].conditionSets == [[
+        {'minimum': 0.0, 'maximum': 1.0, 'name': 'aaaa'},
+        {'minimum': 0.0, 'maximum': 1.0, 'name': 'bbbb'}]]
 
     doc.write(testDocPath)
     new = DesignSpaceDocument()
