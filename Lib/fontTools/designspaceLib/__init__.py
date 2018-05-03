@@ -114,7 +114,7 @@ class SimpleDescriptor(object):
 class SourceDescriptor(SimpleDescriptor):
     """Simple container for data related to the source"""
     flavor = "source"
-    _attrs = ['filename', 'path', 'name',
+    _attrs = ['filename', 'path', 'name', 'layerName',
               'location', 'copyLib',
               'copyGroups', 'copyFeatures',
               'muteKerning', 'muteInfo',
@@ -142,6 +142,7 @@ class SourceDescriptor(SimpleDescriptor):
 
         self.name = None
         self.location = None
+        self.layerName = None
         self.copyLib = False
         self.copyInfo = False
         self.copyGroups = False
@@ -567,6 +568,8 @@ class BaseDocWriter(object):
             sourceElement.attrib['familyname'] = sourceObject.familyName
         if sourceObject.styleName is not None:
             sourceElement.attrib['stylename'] = sourceObject.styleName
+        if sourceObject.layerName is not None:
+            sourceElement.attrib['layer'] = sourceObject.layerName
         if sourceObject.copyLib:
             libElement = ET.Element('lib')
             libElement.attrib['copy'] = "1"
@@ -769,6 +772,7 @@ class BaseDocReader(object):
         # Look at all locations and collect the axis names and values
         # assumptions:
         # look for the default value on an axis from a master location
+        # Needs deprecation warning
         allLocations = []
         minima = {}
         maxima = {}
@@ -822,6 +826,9 @@ class BaseDocReader(object):
             if styleName is not None:
                 sourceObject.styleName = styleName
             sourceObject.location = self.locationFromElement(sourceElement)
+            layerName = sourceElement.attrib.get('layer')
+            if layerName is not None:
+                sourceObject.layerName = layerName
             for libElement in sourceElement.findall('.lib'):
                 if libElement.attrib.get('copy') == '1':
                     sourceObject.copyLib = True

@@ -57,6 +57,19 @@ def test_fill_document(tmpdir):
     s2.familyName = "MasterFamilyName"
     s2.styleName = "MasterStyleNameTwo"
     doc.addSource(s2)
+    # add master 3 from a different layer
+    s3 = SourceDescriptor()
+    s3.filename = os.path.relpath(masterPath2, os.path.dirname(testDocPath))
+    s3.name = "master.ufo2"
+    s3.copyLib = False
+    s3.copyInfo = False
+    s3.copyFeatures = False
+    s3.muteKerning = False
+    s3.layerName = "supports"
+    s3.location = dict(weight=1000)
+    s3.familyName = "MasterFamilyName"
+    s3.styleName = "Supports"
+    doc.addSource(s3)
     # add instance 1
     i1 = InstanceDescriptor()
     i1.filename = os.path.relpath(instancePath1, os.path.dirname(testDocPath))
@@ -130,7 +143,7 @@ def test_fill_document(tmpdir):
     a3.maximum = 666
     a3.default = 444
     a3.name = "spooky"
-    a3.tag = "spok"
+    a3.tag = "SPOK"
     a3.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
     #doc.addAxis(a3)    # uncomment this line to test the effects of default axes values
     # write some rules
@@ -787,99 +800,3 @@ def __removeAxesFromDesignSpace(path):
     f.write(n)
     f.close()
 
-
-@pytest.fixture
-def invalid_designspace():
-    p = "testCheck.designspace"
-    __removeAxesFromDesignSpace(p)
-    yield p
-
-
-@pytest.mark.xfail(reason="The check method requires MutatorMath")
-def test_check(invalid_designspace, tmpdir):
-    tmpdir = str(tmpdir)
-    # check if the checks are checking
-    testDocPath = os.path.join(tmpdir, invalid_designspace)
-    masterPath1 = os.path.join(tmpdir, "masters", "masterTest1.ufo")
-    masterPath2 = os.path.join(tmpdir, "masters", "masterTest2.ufo")
-    instancePath1 = os.path.join(tmpdir, "instances", "instanceTest1.ufo")
-    instancePath2 = os.path.join(tmpdir, "instances", "instanceTest2.ufo")
-
-    # no default selected
-    doc = DesignSpaceDocument()
-    # add master 1
-    s1 = SourceDescriptor()
-    s1.path = masterPath1
-    s1.name = "master.ufo1"
-    s1.location = dict(snap=0, pop=10)
-    s1.familyName = "MasterFamilyName"
-    s1.styleName = "MasterStyleNameOne"
-    doc.addSource(s1)
-    # add master 2
-    s2 = SourceDescriptor()
-    s2.path = masterPath2
-    s2.name = "master.ufo2"
-    s2.location = dict(snap=1000, pop=20)
-    s2.familyName = "MasterFamilyName"
-    s2.styleName = "MasterStyleNameTwo"
-    doc.addSource(s2)
-    doc.checkAxes()
-    doc.getAxisOrder() == ['snap', 'pop']
-    assert doc.default == None
-    doc.checkDefault()
-    assert doc.default.name == 'master.ufo1'
-
-    # default selected
-    doc = DesignSpaceDocument()
-    # add master 1
-    s1 = SourceDescriptor()
-    s1.path = masterPath1
-    s1.name = "master.ufo1"
-    s1.location = dict(snap=0, pop=10)
-    s1.familyName = "MasterFamilyName"
-    s1.styleName = "MasterStyleNameOne"
-    doc.addSource(s1)
-    # add master 2
-    s2 = SourceDescriptor()
-    s2.path = masterPath2
-    s2.name = "master.ufo2"
-    s2.copyInfo = True
-    s2.location = dict(snap=1000, pop=20)
-    s2.familyName = "MasterFamilyName"
-    s2.styleName = "MasterStyleNameTwo"
-    doc.addSource(s2)
-    doc.checkAxes()
-    assert doc.getAxisOrder() == ['snap', 'pop']
-    assert doc.default == None
-    doc.checkDefault()
-    assert doc.default.name == 'master.ufo2'
-
-    # generate a doc without axes, save and read again
-    doc = DesignSpaceDocument()
-    # add master 1
-    s1 = SourceDescriptor()
-    s1.path = masterPath1
-    s1.name = "master.ufo1"
-    s1.location = dict(snap=0, pop=10)
-    s1.familyName = "MasterFamilyName"
-    s1.styleName = "MasterStyleNameOne"
-    doc.addSource(s1)
-    # add master 2
-    s2 = SourceDescriptor()
-    s2.path = masterPath2
-    s2.name = "master.ufo2"
-    s2.location = dict(snap=1000, pop=20)
-    s2.familyName = "MasterFamilyName"
-    s2.styleName = "MasterStyleNameTwo"
-    doc.addSource(s2)
-    doc.checkAxes()
-    doc.write(testDocPath)
-    __removeAxesFromDesignSpace(testDocPath)
-
-    new = DesignSpaceDocument()
-    new.read(testDocPath)
-    assert len(new.axes) == 2
-    new.checkAxes()
-    assert len(new.axes) == 2
-    assert print([a.name for a in new.axes]) == ['snap', 'pop']
-    new.write(testDocPath)
