@@ -360,3 +360,8 @@ Have fun!
    :target: https://codecov.io/gh/fonttools/fonttools
 .. |PyPI| image:: https://img.shields.io/pypi/v/fonttools.svg
    :target: https://pypi.org/project/FontTools
+
+
+.. image:: https://badges.gitter.im/fonttools-dev/Lobby.svg
+   :alt: Join the chat at https://gitter.im/fonttools-dev/Lobby
+   :target: https://gitter.im/fonttools-dev/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
