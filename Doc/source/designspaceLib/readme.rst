@@ -83,21 +83,18 @@ dictionary, ``obj.stylename`` and ``obj.localisedStyleName['en']``.
 Rules
 *****
 
-**The ``rule`` element is experimental.** Some ideas behind how rules
-could work in designspaces come from Superpolator. Such rules can maybe
-be used to describe some of the conditional GSUB functionality of
-OpenType 1.8. The definition of a rule is not that complicated. A rule
-has a name, and it has a number of conditions. The rule also contains a
-list of glyphname pairs: the glyphs that need to be substituted.
+Rules describe designspace areas in which one glyph should be replaced by another. 
+A rule has a name and a number of conditionsets. The rule also contains a list of glyphname
+pairs: the glyphs that need to be substituted. For a rule to be triggered
+only one of the conditionsets needs to be true, ``OR``. Within a conditionset all 
+conditions need to be true, ``AND``.
 
-Variable font instances
+Variable fonts
 =======================
 
 -  In an variable font the substitution happens at run time: there are
    no changes in the font, only in the sequence of glyphnames that is
    rendered.
--  The infrastructure to get this rule data in a variable font needs to
-   be built.
 
 UFO instances
 =============
@@ -314,16 +311,16 @@ RuleDescriptor object
 
 -  ``name``: string. Unique name for this rule. Will be used to
    reference this rule data.
--  ``conditions``: list of dicts with condition data.
--  Each condition specifies the axis name it is active on and the values
-   between which the condition is true.
+-  ``conditionSets``: a list conditionsets
+-  Each conditionset is a list of conditions.
+-  Each condition is a dict with ``name``, ``minimum`` and ``maximum`` keys.
 
 .. code:: python
 
     r1 = RuleDescriptor()
     r1.name = "unique.rule.name"
-    r1.conditions.append(dict(name="weight", minimum=-10, maximum=10))
-    r1.conditions.append(dict(name="width", minimum=-10, maximum=10))
+    r1.conditionsSets.append([dict(name="weight", minimum=-10, maximum=10), dict(...)])
+    r1.conditionsSets.append([dict(...), dict(...)])
 
 .. _subclassing-descriptors:
 
@@ -358,6 +355,8 @@ Document xml structure
 -  The ``axes`` element contains one or more ``axis`` elements.
 -  The ``sources`` element contains one or more ``source`` elements.
 -  The ``instances`` element contains one or more ``instance`` elements.
+-  The ``rules`` element contains one or more ``rule`` elements.
+-  The ``lib`` element contains arbitrary data.
 
 .. code:: xml
 
@@ -375,6 +374,10 @@ Document xml structure
             <!-- define instances here -->
             <instance../>
         </instances>
+        <rules>
+            <!-- define rules here -->
+            <rule../>
+        </rules>
         <lib>
             <dict>
                 <!-- store custom data here -->
@@ -840,18 +843,18 @@ Example
 =================
 
 -  Container for ``rule`` elements
+-  The rules are evaluated in this order.
 
 .. 51-rule-element:
 
 5.1 rule element
 ================
 
--  Defines a named rule with a set of conditions.
--  The conditional substitutions specifed in the OpenType specification
-   can be much more elaborate than what it recorded in this element.
--  So while authoring tools are welcome to use the ``sub`` element,
-   they're intended as preview / example / test substitutions for the
-   rule.
+-  Defines a named rule.
+-  Each ``rule`` element contains one or more ``conditionset`` elements.
+-  Only one ``conditionset`` needs to be true to trigger the rule.
+-  All conditions must be true to make the ``conditionset`` true.
+-  For backwards compatibility a ``rule`` can contain ``condition`` elements outside of a conditionset. These are then understood to be part of a single, implied, ``conditionset``.
 
 .. attributes-11:
 
@@ -861,16 +864,22 @@ Attributes
 -  ``name``: required, string. A unique name that can be used to
    identify this rule if it needs to be referenced elsewhere.
 
-.. 511-condition-element:
-
-5.1.1 condition element
+5.1.1 conditionset element
 =======================
 
 -  Child element of ``rule``
+-  Contains one or more ``condition`` elements.
+
+.. 512-condition-element:
+
+5.1.2 condition element
+=======================
+
+-  Child element of ``conditionset``
 -  Between the ``minimum`` and ``maximum`` this rule is ``true``.
 -  If ``minimum`` is not available, assume it is ``axis.minimum``.
 -  If ``maximum`` is not available, assume it is ``axis.maximum``.
--  One or the other or both need to be present.
+-  The condition must contain at least a minimum or maximum or both.
 
 .. attributes-12:
 
@@ -882,9 +891,9 @@ Attributes
 -  ``minimum``: number, required*. The low value.
 -  ``maximum``: number, required*. The high value.
 
-.. 512-sub-element:
+.. 513-sub-element:
 
-5.1.2 sub element
+5.1.3 sub element
 =================
 
 -  Child element of ``rule``.
@@ -907,12 +916,33 @@ Attributes
 Example
 -------
 
+Example with an implied ``conditionset``. Here the conditions are not
+contained in a conditionset. 
+
 .. code:: xml
 
     <rules>
         <rule name="named.rule.1">
             <condition minimum="250" maximum="750" name="weight" />
             <condition minimum="50" maximum="100" name="width" />
+            <sub name="dollar" byname="dollar.alt"/>
+        </rule>
+    </rules>
+
+Example with ``conditionsets``. All conditions in a conditionset must be true.
+
+.. code:: xml
+
+    <rules>
+        <rule name="named.rule.2">
+            <conditionset>
+              <condition minimum="250" maximum="750" name="weight" />
+              <condition minimum="50" maximum="100" name="width" />
+            </conditionset>
+            <conditionset>
+              <condition ... />
+              <condition ... />
+            </conditionset>
             <sub name="dollar" byname="dollar.alt"/>
         </rule>
     </rules>
