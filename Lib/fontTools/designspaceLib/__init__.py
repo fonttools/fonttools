@@ -160,44 +160,50 @@ class SourceDescriptor(SimpleDescriptor):
 class RuleDescriptor(SimpleDescriptor):
     """<!-- optional: list of substitution rules -->
     <rules>
-        <rule name="vertical.bars" enabled="true">
+        <rule name="vertical.bars">
+            <conditionset>
+                <condition minimum="250.000000" maximum="750.000000" name="weight"/>
+                <condition minimum="100" name="width"/>
+                <condition minimum="10" maximum="40" name="optical"/>
+            </conditionset>
             <sub name="cent" byname="cent.alt"/>
             <sub name="dollar" byname="dollar.alt"/>
-            <condition tag="wght" minimum ="250.000000" maximum ="750.000000"/>
-            <condition tag="wdth" minimum ="100"/>
-            <condition tag="opsz" minimum="10" maximum="40"/>
         </rule>
     </rules>
-
-    Discussion:
-    use axis names rather than tags - then we can evaluate the rule without having to look up the axes.
-    remove the subs from the rule.
-    remove 'enabled' attr form rule
     """
-    _attrs = ['name', 'conditions', 'subs']   # what do we need here
+    _attrs = ['name', 'conditionSets', 'subs']   # what do we need here
     def __init__(self):
         self.name = None
-        self.conditions = []    # list of dict(tag='aaaa', minimum=0, maximum=1000)
-        self.subs = []          # list of substitutions stored as tuples of glyphnames ("a", "a.alt")
+        self.conditionSets = []  # list of list of dict(name='aaaa', minimum=0, maximum=1000)
+        self.subs = []  # list of substitutions stored as tuples of glyphnames ("a", "a.alt")
+
 
 def evaluateRule(rule, location):
-    """ Test if rule is True at location.maximum
-        If a condition has no minimum, check for < maximum.
-        If a condition has no maximum, check for > minimum.
-     """
-    for cd in rule.conditions:
-        if not cd['name'] in location:
+    """ Return True if any of the rule's conditionsets matches the
+    given location.
+    """
+    return any(evaluateConditions(c, location) for c in rule.conditionSets)
+
+
+def evaluateConditions(conditions, location):
+    """ Return True if all the conditions matches the given location.
+    If a condition has no minimum, check for < maximum.
+    If a condition has no maximum, check for > minimum.
+    """
+    for cd in conditions:
+        if cd['name'] not in location:
             continue
+        value = location[cd['name']]
         if cd.get('minimum') is None:
-            if not location[cd['name']] <= cd['maximum']:
+            if value > cd['maximum']:
                 return False
         elif cd.get('maximum') is None:
-            if not cd['minimum'] <= location[cd['name']]:
+            if cd['minimum'] > value:
                 return False
-        else:
-            if not cd['minimum'] <= location[cd['name']] <= cd['maximum']:
-                return False
+        elif not cd['minimum'] <= value <= cd['maximum']:
+            return False
     return True
+
 
 def processRules(rules, location, glyphNames):
     """ Apply these rules at this location to these glyphnames.minimum
@@ -434,27 +440,37 @@ class BaseDocWriter(object):
         # if none of the conditions have minimum or maximum values, do not add the rule.
         self.rules.append(ruleObject)
         ruleElement  = ET.Element('rule')
-        ruleElement.attrib['name'] = ruleObject.name
-        for cond in ruleObject.conditions:
-            if cond.get('minimum') is None and cond.get('maximum') is None:
-                # neither is defined, don't add this condition
-                continue
-            conditionElement = ET.Element('condition')
-            conditionElement.attrib['name'] = cond.get('name')
-            if cond.get('minimum') is not None:
-                conditionElement.attrib['minimum'] = self.intOrFloat(cond.get('minimum'))
-            if cond.get('maximum') is not None:
-                conditionElement.attrib['maximum'] = self.intOrFloat(cond.get('maximum'))
-            ruleElement.append(conditionElement)
+        if ruleObject.name is not None:
+            ruleElement.attrib['name'] = ruleObject.name
+        for conditions in ruleObject.conditionSets:
+            conditionsetElement = ET.Element('conditionset')
+            for cond in conditions:
+                if cond.get('minimum') is None and cond.get('maximum') is None:
+                    # neither is defined, don't add this condition
+                    continue
+                conditionElement = ET.Element('condition')
+                conditionElement.attrib['name'] = cond.get('name')
+                if cond.get('minimum') is not None:
+                    conditionElement.attrib['minimum'] = self.intOrFloat(cond.get('minimum'))
+                if cond.get('maximum') is not None:
+                    conditionElement.attrib['maximum'] = self.intOrFloat(cond.get('maximum'))
+                conditionsetElement.append(conditionElement)
+            if len(conditionsetElement):
+                ruleElement.append(conditionsetElement)
+        # XXX shouldn't we require at least one sub element?
+        # if not ruleObject.subs:
+        #     raise DesignSpaceDocument('Invalid empty rule with no "sub" elements')
         for sub in ruleObject.subs:
             # skip empty subs
+            # XXX Hm. What does an empty glyphname string even mean?
             if sub[0] == '' and sub[1] == '':
                 continue
             subElement = ET.Element('sub')
             subElement.attrib['name'] = sub[0]
-            subElement.attrib['with'] = sub[1]
+            subElement.attrib['byname'] = sub[1]
             ruleElement.append(subElement)
-        self.root.findall('.rules')[0].append(ruleElement)
+        if len(ruleElement):
+            self.root.findall('.rules')[0].append(ruleElement)
 
     def _addAxis(self, axisObject):
         self.axes.append(axisObject)
@@ -702,7 +718,7 @@ class BaseDocReader(object):
                 ruleObject.conditions.append(cd)
             for subElement in ruleElement.findall('.sub'):
                 a = subElement.attrib['name']
-                b = subElement.attrib['with']
+                b = subElement.attrib['byname']
                 ruleObject.subs.append((a,b))
             rules.append(ruleObject)
         self.documentObject.rules = rules
@@ -1416,18 +1432,21 @@ class DesignSpaceDocument(object):
             axis.default = default
         # now the rules
         for rule in self.rules:
-            newConditions = []
-            for cond in rule.conditions:
-                if cond.get('minimum') is not None:
-                    minimum = self.normalizeLocation({cond['name']:cond['minimum']}).get(cond['name'])
-                else:
-                    minimum = None
-                if cond.get('maximum') is not None:
-                    maximum = self.normalizeLocation({cond['name']:cond['maximum']}).get(cond['name'])
-                else:
-                    maximum = None
-                newConditions.append(dict(name=cond['name'], minimum=minimum, maximum=maximum))
-            rule.conditions = newConditions
+            newConditionSets = []
+            for conditions in rule.conditionSets:
+                newConditions = []
+                for cond in conditions:
+                    if cond.get('minimum') is not None:
+                        minimum = self.normalizeLocation({cond['name']:cond['minimum']}).get(cond['name'])
+                    else:
+                        minimum = None
+                    if cond.get('maximum') is not None:
+                        maximum = self.normalizeLocation({cond['name']:cond['maximum']}).get(cond['name'])
+                    else:
+                        maximum = None
+                    newConditions.append(dict(name=cond['name'], minimum=minimum, maximum=maximum))
+                newConditionSets.append(newConditions)
+            rule.conditionSets = newConditionSets
 
 
 def rulesToFeature(doc, whiteSpace="\t", newLine="\n"):
