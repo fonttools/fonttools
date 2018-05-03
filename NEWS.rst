@@ -1,3 +1,6 @@
+3.26.0 (released 2018-05-03)
+----------------------------
+
 - [designspace] Added a new optional ``layer`` attribute to the source element,
   and a corresponding ``layerName`` attribute to the ``SourceDescriptor``
   object (#1253).
