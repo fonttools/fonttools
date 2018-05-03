@@ -314,6 +314,8 @@ RuleDescriptor object
 -  ``conditionSets``: a list of conditionsets
 -  Each conditionset is a list of conditions.
 -  Each condition is a dict with ``name``, ``minimum`` and ``maximum`` keys.
+-  ``subs``: list of substitutions
+-  Each substitution is stored as tuples of glyphnames, e.g. ("a", "a.alt").
 
 .. code:: python
 
@@ -321,6 +323,7 @@ RuleDescriptor object
     r1.name = "unique.rule.name"
     r1.conditionsSets.append([dict(name="weight", minimum=-10, maximum=10), dict(...)])
     r1.conditionsSets.append([dict(...), dict(...)])
+    r1.subs.append(("a", "a.alt"))
 
 .. _subclassing-descriptors:
 
