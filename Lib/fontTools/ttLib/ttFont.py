@@ -715,6 +715,9 @@ class _TTGlyphSet(object):
 		return self._glyphType(
 			self, self._glyphs[glyphName], horizontalMetrics, verticalMetrics)
 
+	def __len__(self):
+		return len(self._glyphs.keys())
+
 	def get(self, glyphName, default=None):
 		try:
 			return self[glyphName]
