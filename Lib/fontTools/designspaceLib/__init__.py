@@ -363,13 +363,9 @@ class BaseDocWriter(object):
     def __init__(self, documentPath, documentObject):
         self.path = documentPath
         self.documentObject = documentObject
-        self.toolVersion = 3
+        self.toolVersion = 4.0
         self.root = ET.Element("designspace")
         self.root.attrib['format'] = "%d" % self.toolVersion
-        #self.root.append(ET.Element("axes"))
-        #self.root.append(ET.Element("rules"))
-        #self.root.append(ET.Element("sources"))
-        #self.root.append(ET.Element("instances"))
         self.axes = []
         self.rules = []
 
@@ -467,7 +463,10 @@ class BaseDocWriter(object):
                 continue
             subElement = ET.Element('sub')
             subElement.attrib['name'] = sub[0]
-            subElement.attrib['byname'] = sub[1]
+            if self.toolVersion < 4:
+                subElement.attrib['byname'] = sub[1]
+            else:
+                subElement.attrib['with'] = sub[1]
             ruleElement.append(subElement)
         if len(ruleElement):
             self.root.findall('.rules')[0].append(ruleElement)
@@ -718,7 +717,10 @@ class BaseDocReader(object):
                 ruleObject.conditions.append(cd)
             for subElement in ruleElement.findall('.sub'):
                 a = subElement.attrib['name']
-                b = subElement.attrib['byname']
+                if self.toolVersion < 4:
+                    b = subElement.attrib['byname']
+                else:
+                    b = subElement.attrib['with']
                 ruleObject.subs.append((a,b))
             rules.append(ruleObject)
         self.documentObject.rules = rules
@@ -737,15 +739,7 @@ class BaseDocReader(object):
             axisObject.maximum = float(axisElement.attrib.get("maximum"))
             if axisElement.attrib.get('hidden', False):
                 axisObject.hidden = True
-            # we need to check if there is an attribute named "initial"
-            if axisElement.attrib.get("default") is None:
-                if axisElement.attrib.get("initial") is not None:
-                    # stop doing this,
-                    axisObject.default = float(axisElement.attrib.get("initial"))
-                else:
-                    axisObject.default = axisObject.minimum
-            else:
-                axisObject.default = float(axisElement.attrib.get("default"))
+            axisObject.default = float(axisElement.attrib.get("default"))
             axisObject.tag = axisElement.attrib.get("tag")
             for mapElement in axisElement.findall('map'):
                 a = float(mapElement.attrib['input'])
