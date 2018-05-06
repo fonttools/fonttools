@@ -166,8 +166,8 @@ class RuleDescriptor(SimpleDescriptor):
                 <condition minimum="100" name="width"/>
                 <condition minimum="10" maximum="40" name="optical"/>
             </conditionset>
-            <sub name="cent" byname="cent.alt"/>
-            <sub name="dollar" byname="dollar.alt"/>
+            <sub name="cent" with="cent.alt"/>
+            <sub name="dollar" with="dollar.alt"/>
         </rule>
     </rules>
     """
@@ -363,9 +363,9 @@ class BaseDocWriter(object):
     def __init__(self, documentPath, documentObject):
         self.path = documentPath
         self.documentObject = documentObject
-        self.toolVersion = 4.0
+        self.documentVersion = "4.0"
         self.root = ET.Element("designspace")
-        self.root.attrib['format'] = "%d" % self.toolVersion
+        self.root.attrib['format'] = self.documentVersion
         self.axes = []
         self.rules = []
 
@@ -463,10 +463,7 @@ class BaseDocWriter(object):
                 continue
             subElement = ET.Element('sub')
             subElement.attrib['name'] = sub[0]
-            if self.toolVersion < 4:
-                subElement.attrib['byname'] = sub[1]
-            else:
-                subElement.attrib['with'] = sub[1]
+            subElement.attrib['with'] = sub[1]
             ruleElement.append(subElement)
         if len(ruleElement):
             self.root.findall('.rules')[0].append(ruleElement)
@@ -663,10 +660,9 @@ class BaseDocReader(object):
     def __init__(self, documentPath, documentObject):
         self.path = documentPath
         self.documentObject = documentObject
-        self.documentObject.formatVersion = 0
         tree = ET.parse(self.path)
         self.root = tree.getroot()
-        self.documentObject.formatVersion = int(self.root.attrib.get("format", 0))
+        self.documentObject.formatVersion = self.root.attrib.get("format", "0")
         self.axes = []
         self.rules = []
         self.sources = []
@@ -717,10 +713,7 @@ class BaseDocReader(object):
                 ruleObject.conditions.append(cd)
             for subElement in ruleElement.findall('.sub'):
                 a = subElement.attrib['name']
-                if self.toolVersion < 4:
-                    b = subElement.attrib['byname']
-                else:
-                    b = subElement.attrib['with']
+                b = subElement.attrib['with']
                 ruleObject.subs.append((a,b))
             rules.append(ruleObject)
         self.documentObject.rules = rules

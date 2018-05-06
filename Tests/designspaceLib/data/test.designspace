@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<designspace format="3">
+<designspace format="4.0">
     <axes>
         <axis default="0" maximum="1000" minimum="0" name="weight" tag="wght">
             <labelname xml:lang="en">Wéíght</labelname>
@@ -18,7 +18,7 @@
                 <condition maximum="1" minimum="0" name="aaaa" />
                 <condition maximum="3" minimum="2" name="bbbb" />
             </conditionset>
-            <sub byname="a.alt" name="a" />
+            <sub name="a" with="a.alt" />
         </rule>
     </rules>
     <sources>
