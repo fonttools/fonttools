@@ -493,7 +493,10 @@ class TTFont(object):
 		# glyphs (eg. ligatures or alternates) may not be reachable via cmap,
 		# this naming table will usually not cover all glyphs in the font.
 		# If the font has no Unicode cmap table, reversecmap will be empty.
-		reversecmap = self['cmap'].buildReversed()
+		if 'cmap' in self:
+			reversecmap = self['cmap'].buildReversed()
+		else:
+			reversecmap = {}
 		useCount = {}
 		for i in range(numGlyphs):
 			tempName = glyphOrder[i]
@@ -507,14 +510,15 @@ class TTFont(object):
 					glyphName = "%s.alt%d" % (glyphName, numUses - 1)
 				glyphOrder[i] = glyphName
 
-		# Delete the temporary cmap table from the cache, so it can
-		# be parsed again with the right names.
-		del self.tables['cmap']
-		self.glyphOrder = glyphOrder
-		if cmapLoading:
-			# restore partially loaded cmap, so it can continue loading
-			# using the proper names.
-			self.tables['cmap'] = cmapLoading
+		if 'cmap' in self:
+			# Delete the temporary cmap table from the cache, so it can
+			# be parsed again with the right names.
+			del self.tables['cmap']
+			self.glyphOrder = glyphOrder
+			if cmapLoading:
+				# restore partially loaded cmap, so it can continue loading
+				# using the proper names.
+				self.tables['cmap'] = cmapLoading
 
 	@staticmethod
 	def _makeGlyphName(codepoint):
