@@ -662,7 +662,7 @@ class BaseDocReader(object):
         self.documentObject = documentObject
         tree = ET.parse(self.path)
         self.root = tree.getroot()
-        self.documentObject.formatVersion = self.root.attrib.get("format", "0")
+        self.documentObject.formatVersion = self.root.attrib.get("format", "3.0")
         self.axes = []
         self.rules = []
         self.sources = []

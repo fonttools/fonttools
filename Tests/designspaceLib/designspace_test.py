@@ -25,6 +25,7 @@ def assert_equals_test_file(path, test_filename):
 
 def test_fill_document(tmpdir):
     tmpdir = str(tmpdir)
+    #tmpdir = "./data"
     testDocPath = os.path.join(tmpdir, "test.designspace")
     masterPath1 = os.path.join(tmpdir, "masters", "masterTest1.ufo")
     masterPath2 = os.path.join(tmpdir, "masters", "masterTest2.ufo")
@@ -199,6 +200,7 @@ def test_fill_document(tmpdir):
 
 def test_adjustAxisDefaultToNeutral(tmpdir):
     tmpdir = str(tmpdir)
+    #tmpdir = "./data"
     testDocPath = os.path.join(tmpdir, "testAdjustAxisDefaultToNeutral.designspace")
     masterPath1 = os.path.join(tmpdir, "masters", "masterTest1.ufo")
     masterPath2 = os.path.join(tmpdir, "masters", "masterTest2.ufo")
@@ -243,6 +245,7 @@ def test_adjustAxisDefaultToNeutral(tmpdir):
 
 def test_unicodes(tmpdir):
     tmpdir = str(tmpdir)
+    #tmpdir = "./data"
     testDocPath = os.path.join(tmpdir, "testUnicodes.designspace")
     testDocPath2 = os.path.join(tmpdir, "testUnicodes_roundtrip.designspace")
     masterPath1 = os.path.join(tmpdir, "masters", "masterTest1.ufo")
@@ -302,6 +305,7 @@ def test_unicodes(tmpdir):
 
 def test_localisedNames(tmpdir):
     tmpdir = str(tmpdir)
+    #tmpdir = "./data"
     testDocPath = os.path.join(tmpdir, "testLocalisedNames.designspace")
     testDocPath2 = os.path.join(tmpdir, "testLocalisedNames_roundtrip.designspace")
     masterPath1 = os.path.join(tmpdir, "masters", "masterTest1.ufo")
@@ -400,6 +404,7 @@ def test_localisedNames(tmpdir):
 
 def test_handleNoAxes(tmpdir):
     tmpdir = str(tmpdir)
+    #tmpdir = "./data"
     # test what happens if the designspacedocument has no axes element.
     testDocPath = os.path.join(tmpdir, "testNoAxes_source.designspace")
     testDocPath2 = os.path.join(tmpdir, "testNoAxes_recontructed.designspace")
@@ -465,6 +470,7 @@ def test_handleNoAxes(tmpdir):
 
 def test_pathNameResolve(tmpdir):
     tmpdir = str(tmpdir)
+    #tmpdir = "./data"
     # test how descriptor.path and descriptor.filename are resolved
     testDocPath1 = os.path.join(tmpdir, "testPathName_case1.designspace")
     testDocPath2 = os.path.join(tmpdir, "testPathName_case2.designspace")
@@ -686,6 +692,7 @@ def test_normalise():
 
 def test_rules(tmpdir):
     tmpdir = str(tmpdir)
+    #tmpdir = "./data"
     testDocPath = os.path.join(tmpdir, "testRules.designspace")
     testDocPath2 = os.path.join(tmpdir, "testRules_roundtrip.designspace")
     doc = DesignSpaceDocument()
