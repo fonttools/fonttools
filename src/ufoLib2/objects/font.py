@@ -143,8 +143,16 @@ class Font(object):
         return self._lib
 
     @property
+    def data(self):
+        return self._data
+
+    @property
     def path(self):
         return self._path
+
+    @property
+    def images(self):
+        return self._images
 
     def addGlyph(self, glyph):
         self._layers.defaultLayer.addGlyph(glyph)
@@ -165,7 +173,7 @@ class Font(object):
         saveAs = path is not None
         if saveAs:
             if os.path.exists(path):
-                raise FileExistsError("path %r already exists" % path)
+                raise OSError(errno.EEXIST, "path %r already exists" % path)
         else:
             path = self._path
         if self.layers.defaultLayer.name != DEFAULT_LAYER_NAME:
