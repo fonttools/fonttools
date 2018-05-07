@@ -1,7 +1,7 @@
 import attr
 from fontTools.misc.filenames import userNameToFileName
 import os
-import plistlib
+from ufoLib2 import plistlib
 
 # use faster lxml if available, else use built-in ElementTree
 try:

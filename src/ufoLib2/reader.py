@@ -1,6 +1,6 @@
 import attr
 import os
-import plistlib
+from ufoLib2 import plistlib
 from ufoLib2.constants import (
     DATA_DIRNAME, DEFAULT_GLYPHS_DIRNAME, FEATURES_FILENAME, FONTINFO_FILENAME,
     GROUPS_FILENAME, IMAGES_DIRNAME, KERNING_FILENAME, LAYERCONTENTS_FILENAME,
@@ -63,7 +63,6 @@ class UFOReader(object):
             pass
         path = os.path.join(self._path, LAYERCONTENTS_FILENAME)
         with open(path, "rb") as file:
-            # TODO: rewrite plistlib
             self._layerContents = plistlib.load(file)
         if self._layerContents:
             assert self._layerContents[0][1] == DEFAULT_GLYPHS_DIRNAME

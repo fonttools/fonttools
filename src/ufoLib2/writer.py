@@ -1,7 +1,7 @@
 import attr
 from fontTools.misc.filenames import userNameToFileName
 import os
-import plistlib
+from ufoLib2 import plistlib
 import shutil
 from ufoLib2.constants import (
     DATA_DIRNAME, DEFAULT_GLYPHS_DIRNAME, FEATURES_FILENAME, FONTINFO_FILENAME,
