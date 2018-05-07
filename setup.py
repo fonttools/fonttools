@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from setuptools import setup, find_packages
+from io import open
 
 
 with open('README.rst', 'r', encoding="utf-8") as f:
