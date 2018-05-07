@@ -457,10 +457,6 @@ class BaseDocWriter(object):
         # if not ruleObject.subs:
         #     raise DesignSpaceDocument('Invalid empty rule with no "sub" elements')
         for sub in ruleObject.subs:
-            # skip empty subs
-            # XXX Hm. What does an empty glyphname string even mean?
-            if sub[0] == '' and sub[1] == '':
-                continue
             subElement = ET.Element('sub')
             subElement.attrib['name'] = sub[0]
             subElement.attrib['with'] = sub[1]
