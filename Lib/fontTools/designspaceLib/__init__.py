@@ -695,22 +695,25 @@ class BaseDocReader(object):
         for ruleElement in self.root.findall(".rules/rule"):
             ruleObject = self.ruleDescriptorClass()
             ruleObject.name = ruleElement.attrib.get("name")
-            for conditionElement in ruleElement.findall('.condition'):
-                cd = {}
-                cdMin = conditionElement.attrib.get("minimum")
-                if cdMin is not None:
-                    cd['minimum'] = float(cdMin)
-                else:
-                    # will allow these to be None, assume axis.minimum
-                    cd['minimum'] = None
-                cdMax = conditionElement.attrib.get("maximum")
-                if cdMax is not None:
-                    cd['maximum'] = float(cdMax)
-                else:
-                    # will allow these to be None, assume axis.maximum
-                    cd['maximum'] = None
-                cd['name'] = conditionElement.attrib.get("name")
-                ruleObject.conditions.append(cd)
+            for conditionSetElement in ruleElement.findall('.conditionset'):
+                cds = []
+                for conditionElement in conditionSetElement.findall('.condition'):
+                    cd = {}
+                    cdMin = conditionElement.attrib.get("minimum")
+                    if cdMin is not None:
+                        cd['minimum'] = float(cdMin)
+                    else:
+                        # will allow these to be None, assume axis.minimum
+                        cd['minimum'] = None
+                    cdMax = conditionElement.attrib.get("maximum")
+                    if cdMax is not None:
+                        cd['maximum'] = float(cdMax)
+                    else:
+                        # will allow these to be None, assume axis.maximum
+                        cd['maximum'] = None
+                    cd['name'] = conditionElement.attrib.get("name")
+                    cds.append(cd)
+                ruleObject.conditionSets.append(cds)
             for subElement in ruleElement.findall('.sub'):
                 a = subElement.attrib['name']
                 b = subElement.attrib['with']
