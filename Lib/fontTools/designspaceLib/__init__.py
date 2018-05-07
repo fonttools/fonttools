@@ -191,8 +191,6 @@ def evaluateConditions(conditions, location):
     If a condition has no maximum, check for > minimum.
     """
     for cd in conditions:
-        if cd['name'] not in location:
-            continue
         value = location[cd['name']]
         if cd.get('minimum') is None:
             if value > cd['maximum']:
