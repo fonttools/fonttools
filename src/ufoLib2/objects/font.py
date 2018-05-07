@@ -68,6 +68,10 @@ class Font(object):
         return self._layers.defaultLayer.keys()
 
     @property
+    def data(self):
+        return self._data
+
+    @property
     def features(self):
         if self._features is None:
             if self._path is not None:
@@ -96,6 +100,10 @@ class Font(object):
             else:
                 self._groups = {}
         return self._groups
+
+    @property
+    def images(self):
+        return self._images
 
     @property
     def info(self):
@@ -143,16 +151,8 @@ class Font(object):
         return self._lib
 
     @property
-    def data(self):
-        return self._data
-
-    @property
     def path(self):
         return self._path
-
-    @property
-    def images(self):
-        return self._images
 
     def addGlyph(self, glyph):
         self._layers.defaultLayer.addGlyph(glyph)
