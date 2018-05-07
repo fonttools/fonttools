@@ -1,5 +1,7 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python
 from setuptools import setup, find_packages
+from io import open
 
 
 with open('README.rst', 'r', encoding="utf-8") as f:
@@ -19,6 +21,8 @@ setup(
     install_requires=[
         "fonttools>=3.24.0",
         "attrs>=17.3.0",
+        "lxml",
+        "typing ; python_version<'3.5'",
     ],
     classifiers=[
         "Development Status :: 5 - Production/Stable",

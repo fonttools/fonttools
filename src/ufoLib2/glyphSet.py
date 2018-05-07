@@ -1,8 +1,11 @@
+from __future__ import absolute_import, unicode_literals
 import attr
 from fontTools.misc.filenames import userNameToFileName
-from lxml import etree
+from fontTools.misc.py23 import tounicode
 import os
-import plistlib
+import errno
+from lxml import etree
+from ufoLib2 import plistlib
 from ufoLib2.constants import CONTENTS_FILENAME, LAYERINFO_FILENAME
 
 # Note: we can implement reporting with logging, and lxml Elements
@@ -28,7 +31,9 @@ class GlyphSet(object):
         try:
             with open(path, "rb") as file:
                 contents = plistlib.load(file)
-        except FileNotFoundError:
+        except (IOError, OSError) as e:
+            if e.errno != errno.ENOENT:
+                raise
             contents = {}
         self._contents = contents
 
@@ -38,8 +43,10 @@ class GlyphSet(object):
         try:
             with open(path, "rb") as file:
                 tree = etree.parse(file)
-        except FileNotFoundError:
-            raise KeyError(name)
+        except (IOError, OSError) as e:
+            if e.errno == errno.ENOENT:
+                raise KeyError(name)
+            raise
         return glyphFromTree(tree.getroot(), classes)
 
     def readLayerInfo(self, layer):
@@ -47,7 +54,9 @@ class GlyphSet(object):
         try:
             with open(path, "rb") as file:
                 layerDict = plistlib.load(file)
-        except FileNotFoundError:
+        except (IOError, OSError) as e:
+            if e.errno != errno.ENOENT:
+                raise
             return
         for key, value in layerDict.items():
             setattr(layer, key, value)
@@ -73,7 +82,7 @@ class GlyphSet(object):
             # TODO: we could cache this to avoid recreating it for every glyph
             existing = set(name.lower() for name in self._contents.values())
             self._contents[glyph.name] = fileName = userNameToFileName(
-                glyph.name, existing=existing, suffix=".glif")
+                tounicode(glyph.name, "utf-8"), existing=existing, suffix=".glif")
         root = treeFromGlyph(glyph)
         tree = etree.ElementTree(root)
         path = os.path.join(self._path, fileName)
@@ -183,8 +192,7 @@ def glyphFromTree(root, classes):
         elif element.tag == "outline":
             outlineFromTree(element, glyph, classes)
         elif element.tag == "lib":
-            glyph.lib = plistlib.loads(
-                etree.tostring(element), fmt=plistlib.FMT_XML)
+            glyph.lib = plistlib.loads(etree.tostring(element))
     glyph.unicodes = unicodes
     return glyph
 
@@ -273,7 +281,11 @@ def treeFromGlyph(glyph):
     treeFromOutline(glyph, etree.SubElement(root, "outline"))
     # lib
     if glyph.lib:
-        lib = etree.fromstring(plistlib.dumps(glyph.lib))
+        # we need to strip whitespace when parsing the plist, else we get
+        # mixed tabs vs spaces in the .glif XML (plistlib uses tabs by default
+        # and can't be configured otherwise, lxml pretty_print uses spaces)
+        parser = etree.XMLParser(remove_blank_text=True)
+        lib = etree.fromstring(plistlib.dumps(glyph.lib), parser)
         lib.tag = "lib"
         lib.attrib.clear()
         root.append(lib)

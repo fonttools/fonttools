@@ -1,6 +1,9 @@
+from __future__ import absolute_import, unicode_literals
 import attr
 import os
-import plistlib
+import errno
+from io import open
+from ufoLib2 import plistlib
 from ufoLib2.constants import (
     DATA_DIRNAME, DEFAULT_GLYPHS_DIRNAME, FEATURES_FILENAME, FONTINFO_FILENAME,
     GROUPS_FILENAME, IMAGES_DIRNAME, KERNING_FILENAME, LAYERCONTENTS_FILENAME,
@@ -29,8 +32,10 @@ class UFOReader(object):
             raise RuntimeError("maximum recursion depth %r exceeded" % maxDepth)
         try:
             listdir = os.listdir(path)
-        except FileNotFoundError:
-            return
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                return
+            raise
         for fileName in listdir:
             f = os.path.join(path, fileName)
             if os.path.isdir(f):
@@ -45,8 +50,10 @@ class UFOReader(object):
         files = set()
         try:
             listdir = os.listdir(path)
-        except FileNotFoundError:
-            return files
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                return files
+            raise
         for fileName in listdir:
             f = os.path.join(path, fileName)
             if os.path.isdir(f):
@@ -63,7 +70,6 @@ class UFOReader(object):
             pass
         path = os.path.join(self._path, LAYERCONTENTS_FILENAME)
         with open(path, "rb") as file:
-            # TODO: rewrite plistlib
             self._layerContents = plistlib.load(file)
         if self._layerContents:
             assert self._layerContents[0][1] == DEFAULT_GLYPHS_DIRNAME
@@ -77,65 +83,62 @@ class UFOReader(object):
 
     def readData(self, fileName):
         path = os.path.join(self._path, DATA_DIRNAME, fileName)
-        try:
-            with open(path, "rb") as file:
-                data = file.read()
-        except FileNotFoundError:
-            data = None
-        return data
+        return self._readBin(path)
 
     def readImage(self, fileName):
         path = os.path.join(self._path, IMAGES_DIRNAME, fileName)
-        try:
-            with open(path, "rb") as file:
-                data = file.read()
-        except FileNotFoundError:
-            data = None
-        return data
+        return self._readBin(path)
 
     # single reads
 
     def readFeatures(self):
         path = os.path.join(self._path, FEATURES_FILENAME)
-        try:
-            with open(path, "r") as file:
-                text = file.read()
-        except FileNotFoundError:
-            text = ""
-        return text
+        return self._readText(path)
 
     def readGroups(self):
         path = os.path.join(self._path, GROUPS_FILENAME)
-        try:
-            with open(path, "rb") as file:
-                data = plistlib.load(file)
-        except FileNotFoundError:
-            data = {}
-        return data
+        return self._readPlist(path)
 
     def readInfo(self):
         path = os.path.join(self._path, FONTINFO_FILENAME)
-        try:
-            with open(path, "rb") as file:
-                data = plistlib.load(file)
-        except FileNotFoundError:
-            data = {}
-        return data
+        return self._readPlist(path)
 
     def readKerning(self):
         path = os.path.join(self._path, KERNING_FILENAME)
-        try:
-            with open(path, "rb") as file:
-                data = plistlib.load(file)
-        except FileNotFoundError:
-            data = {}
-        return data
+        return self._readPlist(path)
 
     def readLib(self):
         path = os.path.join(self._path, LIB_FILENAME)
+        return self._readPlist(path)
+
+    # helpers
+
+    @staticmethod
+    def _readBin(path):
         try:
             with open(path, "rb") as file:
-                data = plistlib.load(file)
-        except FileNotFoundError:
-            data = {}
-        return data
+                return file.read()
+        except (IOError, OSError) as e:
+            if e.errno != errno.ENOENT:
+                raise
+            return None
+
+    @staticmethod
+    def _readText(path, encoding="utf-8"):
+        try:
+            with open(path, "r", encoding=encoding) as file:
+                return file.read()
+        except (IOError, OSError) as e:
+            if e.errno != errno.ENOENT:
+                raise
+            return ""
+
+    @staticmethod
+    def _readPlist(path):
+        try:
+            with open(path, "rb") as file:
+                return plistlib.load(file)
+        except (IOError, OSError) as e:
+            if e.errno != errno.ENOENT:
+                raise
+            return {}

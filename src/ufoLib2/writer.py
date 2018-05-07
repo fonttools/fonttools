@@ -1,7 +1,10 @@
+from __future__ import absolute_import, unicode_literals
 import attr
 from fontTools.misc.filenames import userNameToFileName
+from fontTools.misc.py23 import open, tounicode
 import os
-import plistlib
+import errno
+from ufoLib2 import plistlib
 import shutil
 from ufoLib2.constants import (
     DATA_DIRNAME, DEFAULT_GLYPHS_DIRNAME, FEATURES_FILENAME, FONTINFO_FILENAME,
@@ -17,10 +20,7 @@ class UFOWriter(object):
     _layerContents = attr.ib(default=attr.Factory(dict), init=False, repr=False, type=list)
 
     def __attrs_post_init__(self):
-        try:
-            os.mkdir(self._path)
-        except FileExistsError:
-            pass
+        _ensure_dir(self._path)
         self._writeMetaInfo()
 
     @property
@@ -53,12 +53,9 @@ class UFOWriter(object):
             # TODO: cache this
             existing = set(d.lower() for d in self._layerContents.values())
             dirName = self._layerContents[layerName] = userNameToFileName(
-                layerName, existing=existing, prefix="glyphs.")
+                tounicode(layerName, "utf-8"), existing=existing, prefix="glyphs.")
         path = os.path.join(self._path, dirName)
-        try:
-            os.mkdir(path)
-        except FileExistsError:
-            pass
+        _ensure_dir(path)
         return GlyphSet(path)
 
     def writeLayerContents(self, layerOrder):
@@ -102,54 +99,48 @@ class UFOWriter(object):
     def writeFeatures(self, text):
         path = os.path.join(self._path, FEATURES_FILENAME)
         if text:
-            with open(path, "w") as file:
+            text = tounicode(text, encoding="utf-8")
+            with open(path, "w", encoding="utf-8") as file:
                 file.write(text)
         else:
-            try:
-                os.remove(path)
-            except FileNotFoundError:
-                pass
+            _ensure_removed(path)
 
     def writeGroups(self, data):
         path = os.path.join(self._path, GROUPS_FILENAME)
-        if data:
-            with open(path, "wb") as file:
-                plistlib.dump(data, file)
-        else:
-            try:
-                os.remove(path)
-            except FileNotFoundError:
-                pass
+        self._writePlist(path, data)
 
     def writeInfo(self, data):
         path = os.path.join(self._path, FONTINFO_FILENAME)
-        if data:
-            with open(path, "wb") as file:
-                plistlib.dump(data, file)
-        else:
-            try:
-                os.remove(path)
-            except FileNotFoundError:
-                pass
+        self._writePlist(path, data)
 
     def writeKerning(self, data):
         path = os.path.join(self._path, KERNING_FILENAME)
-        if data:
-            with open(path, "wb") as file:
-                plistlib.dump(data, file)
-        else:
-            try:
-                os.remove(path)
-            except FileNotFoundError:
-                pass
+        self._writePlist(path, data)
 
     def writeLib(self, data):
         path = os.path.join(self._path, LIB_FILENAME)
+        self._writePlist(path, data)
+
+    @staticmethod
+    def _writePlist(path, data):
         if data:
             with open(path, "wb") as file:
                 plistlib.dump(data, file)
         else:
-            try:
-                os.remove(path)
-            except FileNotFoundError:
-                pass
+            _ensure_removed(path)
+
+
+def _ensure_dir(path):
+    try:
+        os.mkdir(path)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
+
+
+def _ensure_removed(path):
+    try:
+        os.remove(path)
+    except OSError as e:
+        if e.errno != errno.ENOENT:
+            raise

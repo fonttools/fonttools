@@ -68,6 +68,10 @@ class Font(object):
         return self._layers.defaultLayer.keys()
 
     @property
+    def data(self):
+        return self._data
+
+    @property
     def features(self):
         if self._features is None:
             if self._path is not None:
@@ -96,6 +100,10 @@ class Font(object):
             else:
                 self._groups = {}
         return self._groups
+
+    @property
+    def images(self):
+        return self._images
 
     @property
     def info(self):
@@ -165,7 +173,8 @@ class Font(object):
         saveAs = path is not None
         if saveAs:
             if os.path.exists(path):
-                raise FileExistsError("path %r already exists" % path)
+                import errno
+                raise OSError(errno.EEXIST, "path %r already exists" % path)
         else:
             path = self._path
         if self.layers.defaultLayer.name != DEFAULT_LAYER_NAME:
