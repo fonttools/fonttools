@@ -1,8 +1,17 @@
 import attr
 from fontTools.misc.filenames import userNameToFileName
-from lxml import etree
 import os
 import plistlib
+
+# use faster lxml if available, else use built-in ElementTree
+try:
+    from lxml import etree
+except ImportError:
+    try:
+        import xml.etree.cElementTree as etree
+    except ImportError:
+        import xml.etree.ElementTree as etree
+
 from ufoLib2.constants import CONTENTS_FILENAME, LAYERINFO_FILENAME
 
 # Note: we can implement reporting with logging, and lxml Elements
