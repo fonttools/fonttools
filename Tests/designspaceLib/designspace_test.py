@@ -724,9 +724,9 @@ def test_rules(tmpdir):
     assert evaluateRule(r1, dict(axisName_a = 1000.0001, axisName_b = 0)) == False
     assert evaluateRule(r1, dict(axisName_a = -0.0001, axisName_b = 0)) == False
     assert evaluateRule(r1, dict(axisName_a = -100, axisName_b = 0)) == False
-    assert processRules([r1], dict(axisName_a = 500), ["a", "b", "c"]) == ['a.alt', 'b', 'c']
-    assert processRules([r1], dict(axisName_a = 500), ["a.alt", "b", "c"]) == ['a.alt', 'b', 'c']
-    assert processRules([r1], dict(axisName_a = 2000), ["a", "b", "c"]) == ['a', 'b', 'c']
+    assert processRules([r1], dict(axisName_a = 500, axisName_b = 0), ["a", "b", "c"]) == ['a.alt', 'b', 'c']
+    assert processRules([r1], dict(axisName_a = 500, axisName_b = 0), ["a.alt", "b", "c"]) == ['a.alt', 'b', 'c']
+    assert processRules([r1], dict(axisName_a = 2000, axisName_b = 0), ["a", "b", "c"]) == ['a', 'b', 'c']
 
     # rule with only a maximum
     r2 = RuleDescriptor()
@@ -746,7 +746,7 @@ def test_rules(tmpdir):
 
     assert evaluateRule(r3, dict(axisName_a = 0)) == False
     assert evaluateRule(r3, dict(axisName_a = 1000)) == True
-    assert evaluateRule(r3, dict(axisName_b = 1000)) == True
+    assert evaluateRule(r3, dict(axisName_a = 1000)) == True
 
     # rule with only a minimum, maximum in separate conditions
     r4 = RuleDescriptor()
@@ -757,7 +757,6 @@ def test_rules(tmpdir):
     ])
     r4.subs.append(("c", "c.alt"))
 
-    assert evaluateRule(r4, dict()) == True  # is this what we expect though?
     assert evaluateRule(r4, dict(axisName_a = 1000, axisName_b = 0)) == True
     assert evaluateRule(r4, dict(axisName_a = 0, axisName_b = 0)) == False
     assert evaluateRule(r4, dict(axisName_a = 1000, axisName_b = 1000)) == False
@@ -800,6 +799,7 @@ def test_rules(tmpdir):
 
 
 def test_incompleteRule(tmpdir):
+    tmpdir = str(tmpdir)
     testDocPath1 = os.path.join(tmpdir, "testIncompleteRule.designspace")
     doc = DesignSpaceDocument()
     r1 = RuleDescriptor()
