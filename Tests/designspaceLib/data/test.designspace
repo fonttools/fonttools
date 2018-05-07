@@ -15,8 +15,8 @@
     <rules>
         <rule name="named.rule.1">
             <conditionset>
-                <condition maximum="1" minimum="0" name="aaaa" />
-                <condition maximum="3" minimum="2" name="bbbb" />
+                <condition maximum="1" minimum="0" name="axisName_a" />
+                <condition maximum="3" minimum="2" name="axisName_b" />
             </conditionset>
             <sub name="a" with="a.alt" />
         </rule>
