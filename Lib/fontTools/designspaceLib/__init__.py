@@ -712,6 +712,13 @@ class BaseDocReader(object):
                         # will allow these to be None, assume axis.maximum
                         cd['maximum'] = None
                     cd['name'] = conditionElement.attrib.get("name")
+                    # test for things
+                    if cd.get('minimum') is None and cd.get('maximum') is None:
+                        if ruleObject.name is not None:
+                            n = ruleObject.name
+                        else:
+                            n = "%d"%len(rules)
+                        raise DesignSpaceDocumentError("No minimum or maximum defined in rule \"%s\"."%n)
                     cds.append(cd)
                 ruleObject.conditionSets.append(cds)
             for subElement in ruleElement.findall('.sub'):
