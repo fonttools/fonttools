@@ -717,7 +717,7 @@ class BaseDocReader(object):
                         if ruleObject.name is not None:
                             n = ruleObject.name
                         else:
-                            n = "%d"%len(rules)
+                            n = "%d" % len(rules)
                         raise DesignSpaceDocumentError("No minimum or maximum defined in rule \"%s\"." % n)
                     cds.append(cd)
                 ruleObject.conditionSets.append(cds)
@@ -827,7 +827,7 @@ class BaseDocReader(object):
             sourceName = sourceElement.attrib.get('name')
             if sourceName is None:
                 # add a temporary source name
-                sourceName = "temp_master.%d"%(sourceCount)
+                sourceName = "temp_master.%d" % (sourceCount)
             sourceObject = self.sourceDescriptorClass()
             sourceObject.path = sourcePath        # absolute path to the ufo source
             sourceObject.filename = filename      # path as it is stored in the document
@@ -1256,7 +1256,7 @@ class DesignSpaceDocument(object):
             if mutatorDefaultCandidate is not None:
                 if mutatorDefaultCandidate.name != flaggedDefaultCandidate.name:
                     # warn if we have a conflict
-                    self.logger.info("Note: conflicting default masters:\n\tUsing %s as default\n\tMutator found %s"%(flaggedDefaultCandidate.name, mutatorDefaultCandidate.name))
+                    self.logger.info("Note: conflicting default masters:\n\tUsing %s as default\n\tMutator found %s" % (flaggedDefaultCandidate.name, mutatorDefaultCandidate.name))
             self.default = flaggedDefaultCandidate
             self.defaultLoc = self.default.location
         else:
@@ -1281,7 +1281,7 @@ class DesignSpaceDocument(object):
                 if axisObj.minimum <= neutralAxisValue <= axisObj.maximum:
                     # yes we can fix this
                     axisObj.default = neutralAxisValue
-                    self.logger.info("Note: updating the default value of axis %s to neutral master at %3.3f"%(axisObj.name, neutralAxisValue))
+                    self.logger.info("Note: updating the default value of axis %s to neutral master at %3.3f" % (axisObj.name, neutralAxisValue))
                 # always fit the axis dimensions to the location of the designated neutral
                 elif neutralAxisValue < axisObj.minimum:
                     axisObj.default = neutralAxisValue
@@ -1291,7 +1291,7 @@ class DesignSpaceDocument(object):
                     axisObj.default = neutralAxisValue
                 else:
                     # now we're in trouble, can't solve this, alert.
-                    self.logger.info("Warning: mismatched default value for axis %s and neutral master. Master value outside of axis bounds"%(axisObj.name))
+                    self.logger.info("Warning: mismatched default value for axis %s and neutral master. Master value outside of axis bounds" % (axisObj.name))
 
     def getMutatorDefaultCandidate(self):
         # FIXME: original implementation using MutatorMath
@@ -1454,11 +1454,11 @@ def rulesToFeature(doc, whiteSpace="\t", newLine="\n"):
     axisDims = {axis.tag: (axis.minimum, axis.maximum) for axis in doc.axes}
     text = []
     for rule in doc.rules:
-        text.append("rule %s{"%rule.name)
+        text.append("rule %s{" % rule.name)
         for cd in rule.conditions:
             axisTag = axisNames.get(cd.get('name'), "****")
             axisMinimum = cd.get('minimum', axisDims.get(axisTag, [0,0])[0])
             axisMaximum = cd.get('maximum', axisDims.get(axisTag, [0,0])[1])
-            text.append("%s%s %f %f;"%(whiteSpace, axisTag, axisMinimum, axisMaximum))
-        text.append("} %s;"%rule.name)
+            text.append("%s%s %f %f;" % (whiteSpace, axisTag, axisMinimum, axisMaximum))
+        text.append("} %s;" % rule.name)
     return newLine.join(text)

@@ -416,8 +416,8 @@ def test_handleNoAxes(tmpdir):
         a.minimum = 0
         a.maximum = 1000
         a.default = 0
-        a.name = "axisName%s"%(name)
-        a.tag = "ax_%d"%(value)
+        a.name = "axisName%s" % (name)
+        a.tag = "ax_%d" % (value)
         doc.addAxis(a)
 
     # add master 1
