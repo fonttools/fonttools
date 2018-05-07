@@ -21,6 +21,7 @@ setup(
     install_requires=[
         "fonttools>=3.24.0",
         "attrs>=17.3.0",
+        "typing ; python_version<'3.5'",
     ],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
