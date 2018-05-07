@@ -173,6 +173,7 @@ class Font(object):
         saveAs = path is not None
         if saveAs:
             if os.path.exists(path):
+                import errno
                 raise OSError(errno.EEXIST, "path %r already exists" % path)
         else:
             path = self._path
