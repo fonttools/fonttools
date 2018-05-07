@@ -151,8 +151,8 @@ def test_fill_document(tmpdir):
     r1 = RuleDescriptor()
     r1.name = "named.rule.1"
     r1.conditionSets.append([
-        dict(name='aaaa', minimum=0, maximum=1),
-        dict(name='bbbb', minimum=2, maximum=3)
+        dict(name='axisName_a', minimum=0, maximum=1),
+        dict(name='axisName_b', minimum=2, maximum=3)
     ])
     r1.subs.append(("a", "a.alt"))
     doc.addRule(r1)
@@ -381,8 +381,8 @@ def test_localisedNames(tmpdir):
     r1 = RuleDescriptor()
     r1.name = "named.rule.1"
     r1.conditionSets.append([
-        dict(name='aaaa', minimum=0, maximum=1),
-        dict(name='bbbb', minimum=2, maximum=3)
+        dict(name='weight', minimum=200, maximum=500),
+        dict(name='width', minimum=0, maximum=150)
     ])
     r1.subs.append(("a", "a.alt"))
     doc.addRule(r1)
@@ -585,26 +585,26 @@ def test_normalise():
     a1.minimum = -1000
     a1.maximum = 1000
     a1.default = 0
-    a1.name = "aaa"
-    a1.tag = "aaaa"
+    a1.name = "axisName_a"
+    a1.tag = "TAGA"
     doc.addAxis(a1)
 
-    assert doc.normalizeLocation(dict(aaa=0)) == {'aaa': 0.0}
-    assert doc.normalizeLocation(dict(aaa=1000)) == {'aaa': 1.0}
+    assert doc.normalizeLocation(dict(axisName_a=0)) == {'axisName_a': 0.0}
+    assert doc.normalizeLocation(dict(axisName_a=1000)) == {'axisName_a': 1.0}
 
     # clipping beyond max values:
-    assert doc.normalizeLocation(dict(aaa=1001)) == {'aaa': 1.0}
-    assert doc.normalizeLocation(dict(aaa=500)) == {'aaa': 0.5}
-    assert doc.normalizeLocation(dict(aaa=-1000)) == {'aaa': -1.0}
-    assert doc.normalizeLocation(dict(aaa=-1001)) == {'aaa': -1.0}
+    assert doc.normalizeLocation(dict(axisName_a=1001)) == {'axisName_a': 1.0}
+    assert doc.normalizeLocation(dict(axisName_a=500)) == {'axisName_a': 0.5}
+    assert doc.normalizeLocation(dict(axisName_a=-1000)) == {'axisName_a': -1.0}
+    assert doc.normalizeLocation(dict(axisName_a=-1001)) == {'axisName_a': -1.0}
     # anisotropic coordinates normalise to isotropic
-    assert doc.normalizeLocation(dict(aaa=(1000, -1000))) == {'aaa': 1.0}
+    assert doc.normalizeLocation(dict(axisName_a=(1000, -1000))) == {'axisName_a': 1.0}
     doc.normalize()
     r = []
     for axis in doc.axes:
         r.append((axis.name, axis.minimum, axis.default, axis.maximum))
     r.sort()
-    assert r == [('aaa', -1.0, 0.0, 1.0)]
+    assert r == [('axisName_a', -1.0, 0.0, 1.0)]
 
     doc = DesignSpaceDocument()
     # write some axes
@@ -612,24 +612,24 @@ def test_normalise():
     a2.minimum = 100
     a2.maximum = 1000
     a2.default = 100
-    a2.name = "bbb"
+    a2.name = "axisName_b"
     doc.addAxis(a2)
-    assert doc.normalizeLocation(dict(bbb=0)) == {'bbb': 0.0}
-    assert doc.normalizeLocation(dict(bbb=1000)) == {'bbb': 1.0}
+    assert doc.normalizeLocation(dict(axisName_b=0)) == {'axisName_b': 0.0}
+    assert doc.normalizeLocation(dict(axisName_b=1000)) == {'axisName_b': 1.0}
     # clipping beyond max values:
-    assert doc.normalizeLocation(dict(bbb=1001)) == {'bbb': 1.0}
-    assert doc.normalizeLocation(dict(bbb=500)) == {'bbb': 0.4444444444444444}
-    assert doc.normalizeLocation(dict(bbb=-1000)) == {'bbb': 0.0}
-    assert doc.normalizeLocation(dict(bbb=-1001)) == {'bbb': 0.0}
+    assert doc.normalizeLocation(dict(axisName_b=1001)) == {'axisName_b': 1.0}
+    assert doc.normalizeLocation(dict(axisName_b=500)) == {'axisName_b': 0.4444444444444444}
+    assert doc.normalizeLocation(dict(axisName_b=-1000)) == {'axisName_b': 0.0}
+    assert doc.normalizeLocation(dict(axisName_b=-1001)) == {'axisName_b': 0.0}
     # anisotropic coordinates normalise to isotropic
-    assert doc.normalizeLocation(dict(bbb=(1000,-1000))) == {'bbb': 1.0}
-    assert doc.normalizeLocation(dict(bbb=1001)) == {'bbb': 1.0}
+    assert doc.normalizeLocation(dict(axisName_b=(1000,-1000))) == {'axisName_b': 1.0}
+    assert doc.normalizeLocation(dict(axisName_b=1001)) == {'axisName_b': 1.0}
     doc.normalize()
     r = []
     for axis in doc.axes:
         r.append((axis.name, axis.minimum, axis.default, axis.maximum))
     r.sort()
-    assert r == [('bbb', 0.0, 0.0, 1.0)]
+    assert r == [('axisName_b', 0.0, 0.0, 1.0)]
 
     doc = DesignSpaceDocument()
     # write some axes
@@ -698,15 +698,15 @@ def test_rules(tmpdir):
     doc = DesignSpaceDocument()
     # write some axes
     a1 = AxisDescriptor()
-    a1.tag = "taga"
-    a1.name = "aaaa"
+    a1.tag = "TAGA"
+    a1.name = "axisName_a"
     a1.minimum = 0
     a1.maximum = 1000
     a1.default = 0
     doc.addAxis(a1)
     a2 = AxisDescriptor()
-    a2.tag = "tagb"
-    a2.name = "bbbb"
+    a2.tag = "TAGB"
+    a2.name = "axisName_b"
     a2.minimum = 0
     a2.maximum = 3000
     a2.default = 0
@@ -715,8 +715,8 @@ def test_rules(tmpdir):
     r1 = RuleDescriptor()
     r1.name = "named.rule.1"
     r1.conditionSets.append([
-        dict(name='aaaa', minimum=0, maximum=1000),
-        dict(name='bbbb', minimum=0, maximum=3000)
+        dict(name='axisName_a', minimum=0, maximum=1000),
+        dict(name='axisName_b', minimum=0, maximum=3000)
     ])
     r1.subs.append(("a", "a.alt"))
 
@@ -725,78 +725,78 @@ def test_rules(tmpdir):
     assert len(doc.rules) == 1
     assert len(doc.rules[0].conditionSets) == 1
     assert len(doc.rules[0].conditionSets[0]) == 2
-    assert evaluateRule(r1, dict(aaaa = 500, bbbb = 0)) == True
-    assert evaluateRule(r1, dict(aaaa = 0, bbbb = 0)) == True
-    assert evaluateRule(r1, dict(aaaa = 1000, bbbb = 0)) == True
-    assert evaluateRule(r1, dict(aaaa = 1000, bbbb = -100)) == False
-    assert evaluateRule(r1, dict(aaaa = 1000.0001, bbbb = 0)) == False
-    assert evaluateRule(r1, dict(aaaa = -0.0001, bbbb = 0)) == False
-    assert evaluateRule(r1, dict(aaaa = -100, bbbb = 0)) == False
-    assert processRules([r1], dict(aaaa = 500), ["a", "b", "c"]) == ['a.alt', 'b', 'c']
-    assert processRules([r1], dict(aaaa = 500), ["a.alt", "b", "c"]) == ['a.alt', 'b', 'c']
-    assert processRules([r1], dict(aaaa = 2000), ["a", "b", "c"]) == ['a', 'b', 'c']
+    assert evaluateRule(r1, dict(axisName_a = 500, axisName_b = 0)) == True
+    assert evaluateRule(r1, dict(axisName_a = 0, axisName_b = 0)) == True
+    assert evaluateRule(r1, dict(axisName_a = 1000, axisName_b = 0)) == True
+    assert evaluateRule(r1, dict(axisName_a = 1000, axisName_b = -100)) == False
+    assert evaluateRule(r1, dict(axisName_a = 1000.0001, axisName_b = 0)) == False
+    assert evaluateRule(r1, dict(axisName_a = -0.0001, axisName_b = 0)) == False
+    assert evaluateRule(r1, dict(axisName_a = -100, axisName_b = 0)) == False
+    assert processRules([r1], dict(axisName_a = 500), ["a", "b", "c"]) == ['a.alt', 'b', 'c']
+    assert processRules([r1], dict(axisName_a = 500), ["a.alt", "b", "c"]) == ['a.alt', 'b', 'c']
+    assert processRules([r1], dict(axisName_a = 2000), ["a", "b", "c"]) == ['a', 'b', 'c']
 
     # rule with only a maximum
     r2 = RuleDescriptor()
     r2.name = "named.rule.2"
-    r2.conditionSets.append([dict(name='aaaa', maximum=500)])
+    r2.conditionSets.append([dict(name='axisName_a', maximum=500)])
     r2.subs.append(("b", "b.alt"))
 
-    assert evaluateRule(r2, dict(aaaa = 0)) == True
-    assert evaluateRule(r2, dict(aaaa = -500)) == True
-    assert evaluateRule(r2, dict(aaaa = 1000)) == False
+    assert evaluateRule(r2, dict(axisName_a = 0)) == True
+    assert evaluateRule(r2, dict(axisName_a = -500)) == True
+    assert evaluateRule(r2, dict(axisName_a = 1000)) == False
 
     # rule with only a minimum
     r3 = RuleDescriptor()
     r3.name = "named.rule.3"
-    r3.conditionSets.append([dict(name='aaaa', minimum=500)])
+    r3.conditionSets.append([dict(name='axisName_a', minimum=500)])
     r3.subs.append(("c", "c.alt"))
 
-    assert evaluateRule(r3, dict(aaaa = 0)) == False
-    assert evaluateRule(r3, dict(aaaa = 1000)) == True
-    assert evaluateRule(r3, dict(bbbb = 1000)) == True
+    assert evaluateRule(r3, dict(axisName_a = 0)) == False
+    assert evaluateRule(r3, dict(axisName_a = 1000)) == True
+    assert evaluateRule(r3, dict(axisName_b = 1000)) == True
 
     # rule with only a minimum, maximum in separate conditions
     r4 = RuleDescriptor()
     r4.name = "named.rule.4"
     r4.conditionSets.append([
-        dict(name='aaaa', minimum=500),
-        dict(name='bbbb', maximum=500)
+        dict(name='axisName_a', minimum=500),
+        dict(name='axisName_b', maximum=500)
     ])
     r4.subs.append(("c", "c.alt"))
 
     assert evaluateRule(r4, dict()) == True  # is this what we expect though?
-    assert evaluateRule(r4, dict(aaaa = 1000, bbbb = 0)) == True
-    assert evaluateRule(r4, dict(aaaa = 0, bbbb = 0)) == False
-    assert evaluateRule(r4, dict(aaaa = 1000, bbbb = 1000)) == False
+    assert evaluateRule(r4, dict(axisName_a = 1000, axisName_b = 0)) == True
+    assert evaluateRule(r4, dict(axisName_a = 0, axisName_b = 0)) == False
+    assert evaluateRule(r4, dict(axisName_a = 1000, axisName_b = 1000)) == False
 
     a1 = AxisDescriptor()
     a1.minimum = 0
     a1.maximum = 1000
     a1.default = 0
-    a1.name = "aaaa"
-    a1.tag = "aaaa"
+    a1.name = "axisName_a"
+    a1.tag = "TAGA"
     b1 = AxisDescriptor()
     b1.minimum = 2000
     b1.maximum = 3000
     b1.default = 2000
-    b1.name = "bbbb"
-    b1.tag = "bbbb"
+    b1.name = "axisName_b"
+    b1.tag = "TAGB"
     doc.addAxis(a1)
     doc.addAxis(b1)
-    assert doc._prepAxesForBender() == {'aaaa': {'map': [], 'name': 'aaaa', 'default': 0, 'minimum': 0, 'maximum': 1000, 'tag': 'aaaa'}, 'bbbb': {'map': [], 'name': 'bbbb', 'default': 2000, 'minimum': 2000, 'maximum': 3000, 'tag': 'bbbb'}}
+    assert doc._prepAxesForBender() == {'axisName_a': {'map': [], 'name': 'axisName_a', 'default': 0, 'minimum': 0, 'maximum': 1000, 'tag': 'TAGA'}, 'axisName_b': {'map': [], 'name': 'axisName_b', 'default': 2000, 'minimum': 2000, 'maximum': 3000, 'tag': 'TAGB'}}
 
     assert doc.rules[0].conditionSets == [[
-        {'minimum': 0, 'maximum': 1000, 'name': 'aaaa'},
-        {'minimum': 0, 'maximum': 3000, 'name': 'bbbb'}]]
+        {'minimum': 0, 'maximum': 1000, 'name': 'axisName_a'},
+        {'minimum': 0, 'maximum': 3000, 'name': 'axisName_b'}]]
 
     assert doc.rules[0].subs == [('a', 'a.alt')]
 
     doc.normalize()
     assert doc.rules[0].name == 'named.rule.1'
     assert doc.rules[0].conditionSets == [[
-        {'minimum': 0.0, 'maximum': 1.0, 'name': 'aaaa'},
-        {'minimum': 0.0, 'maximum': 1.0, 'name': 'bbbb'}]]
+        {'minimum': 0.0, 'maximum': 1.0, 'name': 'axisName_a'},
+        {'minimum': 0.0, 'maximum': 1.0, 'name': 'axisName_b'}]]
 
     doc.write(testDocPath)
     new = DesignSpaceDocument()
