@@ -718,7 +718,7 @@ class BaseDocReader(object):
                             n = ruleObject.name
                         else:
                             n = "%d"%len(rules)
-                        raise DesignSpaceDocumentError("No minimum or maximum defined in rule \"%s\"."%n)
+                        raise DesignSpaceDocumentError("No minimum or maximum defined in rule \"%s\"." % n)
                     cds.append(cd)
                 ruleObject.conditionSets.append(cds)
             for subElement in ruleElement.findall('.sub'):
