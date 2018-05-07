@@ -9,7 +9,7 @@ import pytest
 from fontTools.misc.py23 import open
 from fontTools.designspaceLib import (
     DesignSpaceDocument, SourceDescriptor, AxisDescriptor, RuleDescriptor,
-    InstanceDescriptor, evaluateRule, processRules, posix)
+    InstanceDescriptor, evaluateRule, processRules, posix, DesignSpaceDocumentError)
 
 
 def assert_equals_test_file(path, test_filename):
@@ -803,7 +803,7 @@ def test_incompleteRule(tmpdir):
     testDocPath1 = os.path.join(tmpdir, "testIncompleteRule.designspace")
     doc = DesignSpaceDocument()
     r1 = RuleDescriptor()
-    r1.name = "imcomplete.rule.1"
+    r1.name = "incomplete.rule.1"
     r1.conditionSets.append([
         dict(name='axisName_a', minimum=100),
         dict(name='axisName_b', maximum=200)
@@ -813,7 +813,9 @@ def test_incompleteRule(tmpdir):
     doc.write(testDocPath1)
     __removeConditionMinimumMaximumDesignSpace(testDocPath1)
     new = DesignSpaceDocument()
-    new.read(testDocPath1)
+    with pytest.raises(DesignSpaceDocumentError) as excinfo:
+        new.read(testDocPath1)
+    assert "No minimum or maximum defined in rule" in str(excinfo.value)
 
 def __removeConditionMinimumMaximumDesignSpace(path):
     # only for testing, so we can make an invalid designspace file
