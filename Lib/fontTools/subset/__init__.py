@@ -1617,7 +1617,8 @@ def subset_glyphs(self, s):
 		table.AttachList.GlyphCount = len(table.AttachList.AttachPoint)
 	if hasattr(table, "MarkGlyphSetsDef") and table.MarkGlyphSetsDef:
 		for coverage in table.MarkGlyphSetsDef.Coverage:
-			coverage.subset(glyphs)
+			if coverage:
+				coverage.subset(glyphs)
 
 		# TODO: The following is disabled. If enabling, we need to go fixup all
 		# lookups that use MarkFilteringSet and map their set.
