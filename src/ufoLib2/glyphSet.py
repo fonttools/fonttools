@@ -192,7 +192,7 @@ def glyphFromTree(root, classes):
         elif element.tag == "outline":
             outlineFromTree(element, glyph, classes)
         elif element.tag == "lib":
-            glyph.lib = plistlib.loads(etree.tostring(element))
+            glyph.lib = plistlib.fromtree(element)
     glyph.unicodes = unicodes
     return glyph
 
@@ -281,14 +281,8 @@ def treeFromGlyph(glyph):
     treeFromOutline(glyph, etree.SubElement(root, "outline"))
     # lib
     if glyph.lib:
-        # we need to strip whitespace when parsing the plist, else we get
-        # mixed tabs vs spaces in the .glif XML (plistlib uses tabs by default
-        # and can't be configured otherwise, lxml pretty_print uses spaces)
-        parser = etree.XMLParser(remove_blank_text=True)
-        lib = etree.fromstring(plistlib.dumps(glyph.lib), parser)
-        lib.tag = "lib"
-        lib.attrib.clear()
-        root.append(lib)
+        lib = etree.SubElement(root, "lib")
+        lib.append(plistlib.totree(glyph.lib))
     return root
 
 
