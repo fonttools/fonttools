@@ -1624,8 +1624,9 @@ def subset_glyphs(self, s):
 		# lookups that use MarkFilteringSet and map their set.
 		# indices = table.MarkGlyphSetsDef.Coverage = \
 		#   [c for c in table.MarkGlyphSetsDef.Coverage if c.glyphs]
-		# Instead:
-		table.MarkGlyphSetsDef.Coverage = [c if c.glyphs else None for c in table.MarkGlyphSetsDef.Coverage]
+		# TODO: The following is disabled, as ots doesn't like it. Phew...
+		# https://github.com/khaledhosny/ots/issues/172
+		# table.MarkGlyphSetsDef.Coverage = [c if c.glyphs else None for c in table.MarkGlyphSetsDef.Coverage]
 	return True
 
 
