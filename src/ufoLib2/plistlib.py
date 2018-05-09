@@ -161,6 +161,11 @@ class PlistTreeBuilder(object):
     def build(self, value):
         if isinstance(value, unicode):
             return self.simple_element("string", value)
+        elif isinstance(value, bool):
+            if value:
+                return etree.Element("true")
+            else:
+                return etree.Element("false")
         elif isinstance(value, Integral):
             if -1 << 63 <= value < 1 << 64:
                 return self.simple_element("integer", "%d" % value)
@@ -168,11 +173,6 @@ class PlistTreeBuilder(object):
                 raise OverflowError(value)
         elif isinstance(value, float):
             return self.simple_element("real", repr(value))
-        elif isinstance(value, bool):
-            if value:
-                return etree.Element("true")
-            else:
-                return etree.Element("false")
         elif isinstance(value, dict):
             return self.dict_element(value)
         elif isinstance(value, (tuple, list)):
