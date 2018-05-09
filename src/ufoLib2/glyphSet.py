@@ -16,6 +16,7 @@ from ufoLib2.constants import CONTENTS_FILENAME, LAYERINFO_FILENAME
 class GlyphSet(object):
     _path = attr.ib(type=str)
     _contents = attr.ib(init=False, type=dict)
+    _filenames = attr.ib(init=False, type=set)
 
     def __attrs_post_init__(self):
         self.rebuildContents()
@@ -36,6 +37,7 @@ class GlyphSet(object):
                 raise
             contents = {}
         self._contents = contents
+        self._filenames = set(fn.lower() for fn in self._contents.values())
 
     def readGlyph(self, name, classes):
         fileName = self._contents[name]
@@ -68,6 +70,7 @@ class GlyphSet(object):
         path = os.path.join(self._path, fileName)
         os.remove(path)
         del self._contents[name]
+        del self._contents[fileName.lower()]
 
     def writeContents(self):
         path = os.path.join(self._path, CONTENTS_FILENAME)
@@ -79,10 +82,12 @@ class GlyphSet(object):
             raise KeyError("name %r is not a string" % glyph.name)
         fileName = self._contents.get(glyph.name)
         if fileName is None:
-            # TODO: we could cache this to avoid recreating it for every glyph
-            existing = set(name.lower() for name in self._contents.values())
-            self._contents[glyph.name] = fileName = userNameToFileName(
-                tounicode(glyph.name, "utf-8"), existing=existing, suffix=".glif")
+            fileName = userNameToFileName(
+                tounicode(glyph.name, "utf-8"),
+                existing=self._filenames,
+                suffix=".glif")
+            self._contents[glyph.name] = fileName
+            self._filenames.add(fileName.lower())
         root = treeFromGlyph(glyph)
         tree = etree.ElementTree(root)
         path = os.path.join(self._path, fileName)
@@ -118,20 +123,34 @@ class GlyphSet(object):
 
 
 def _number(s):
+    # converts string to float or int
+    if "." in s:
+        # fast path for decimal notation
+        return float(s)
     try:
         return int(s)
     except ValueError:
+        # maybe a float in scientific notation?
         return float(s)
+
+
+def _getNumber(element, attr, default):
+    # gets an element's optional attributes and converts it to a number
+    s = element.get(attr)
+    if not s:
+        return default
+    # inline to avoid extra call?
+    return _number(s)
 
 
 def _transformation(element, classes):
     return classes.Transformation(
-        xScale=_number(element.get("xScale", 1)),
-        xyScale=_number(element.get("xyScale", 0)),
-        yxScale=_number(element.get("yxScale", 0)),
-        yScale=_number(element.get("yScale", 1)),
-        xOffset=_number(element.get("xOffset", 0)),
-        yOffset=_number(element.get("yOffset", 0)),
+        xScale=_getNumber(element, "xScale", 1),
+        xyScale=_getNumber(element, "xyScale", 0),
+        yxScale=_getNumber(element, "yxScale", 0),
+        yScale=_getNumber(element, "yScale", 1),
+        xOffset=_getNumber(element, "xOffset", 0),
+        yOffset=_getNumber(element, "yOffset", 0),
     )
 
 
@@ -172,9 +191,9 @@ def glyphFromTree(root, classes):
             glyph.image = image
         elif element.tag == "guideline":
             guideline = classes.Guideline(
-                x=_number(element.get("x", 0)),
-                y=_number(element.get("y", 0)),
-                angle=_number(element.get("angle", 0)),
+                x=_getNumber(element, "x", 0),
+                y=_getNumber(element, "y", 0),
+                angle=_getNumber(element, "angle", 0),
                 name=element.get("name"),
                 color=element.get("color"),
                 identifier=element.get("identifier"),
@@ -311,5 +330,5 @@ def treeFromOutline(glyph, outline):
         }
         _transformation_back(component.transformation, attrs)
         if component.identifier is not None:
-                attrs["identifier"] = component.identifier
+            attrs["identifier"] = component.identifier
         etree.SubElement(outline, "component", attrs)
