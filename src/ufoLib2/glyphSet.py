@@ -16,6 +16,7 @@ from ufoLib2.constants import CONTENTS_FILENAME, LAYERINFO_FILENAME
 class GlyphSet(object):
     _path = attr.ib(type=str)
     _contents = attr.ib(init=False, type=dict)
+    _filenames = attr.ib(init=False, type=set)
 
     def __attrs_post_init__(self):
         self.rebuildContents()
@@ -36,6 +37,7 @@ class GlyphSet(object):
                 raise
             contents = {}
         self._contents = contents
+        self._filenames = set(fn.lower() for fn in self._contents.values())
 
     def readGlyph(self, name, classes):
         fileName = self._contents[name]
@@ -68,6 +70,7 @@ class GlyphSet(object):
         path = os.path.join(self._path, fileName)
         os.remove(path)
         del self._contents[name]
+        del self._contents[fileName.lower()]
 
     def writeContents(self):
         path = os.path.join(self._path, CONTENTS_FILENAME)
@@ -79,10 +82,12 @@ class GlyphSet(object):
             raise KeyError("name %r is not a string" % glyph.name)
         fileName = self._contents.get(glyph.name)
         if fileName is None:
-            # TODO: we could cache this to avoid recreating it for every glyph
-            existing = set(name.lower() for name in self._contents.values())
-            self._contents[glyph.name] = fileName = userNameToFileName(
-                tounicode(glyph.name, "utf-8"), existing=existing, suffix=".glif")
+            fileName = userNameToFileName(
+                tounicode(glyph.name, "utf-8"),
+                existing=self._filenames,
+                suffix=".glif")
+            self._contents[glyph.name] = fileName
+            self._filenames.add(fileName.lower())
         root = treeFromGlyph(glyph)
         tree = etree.ElementTree(root)
         path = os.path.join(self._path, fileName)
@@ -325,5 +330,5 @@ def treeFromOutline(glyph, outline):
         }
         _transformation_back(component.transformation, attrs)
         if component.identifier is not None:
-                attrs["identifier"] = component.identifier
+            attrs["identifier"] = component.identifier
         etree.SubElement(outline, "component", attrs)
