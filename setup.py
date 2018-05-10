@@ -4,14 +4,15 @@ from setuptools import setup, find_packages
 from io import open
 
 
-with open('README.rst', 'r', encoding="utf-8") as f:
+with open('README.md', 'r', encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
     name="ufoLib2",
-    version="0.1.0.dev0",
+    use_scm_version=True,
     description="ufoLib2 is a UFO font library.",
     long_description=long_description,
+    long_description_content_type='text/markdown',
     author="Adrien Tétar",
     author_email="adri-from-59@hotmail.fr",
     url="https://github.com/adrientetar/ufoLib2",
@@ -23,6 +24,9 @@ setup(
         "attrs>=17.3.0",
         "lxml",
         "typing ; python_version<'3.5'",
+    ],
+    setup_requires=[
+        "setuptools_scm",
     ],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
