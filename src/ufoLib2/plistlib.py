@@ -207,7 +207,7 @@ class PlistTreeBuilder(object):
             if not isinstance(key, basestring):
                 if self._skipkeys:
                     continue
-                TypeError("keys must be strings")
+                raise TypeError("keys must be strings")
             k = etree.SubElement(el, "key")
             k.text = tounicode(key, "utf-8")
             el.append(self.build(value))
@@ -237,6 +237,9 @@ def totree(value, sort_keys=True, skipkeys=False):
 
 
 def load(fp, dict_type=dict):
+    if not hasattr(fp, "read"):
+        raise AttributeError("'%s' object has no attribute 'read'" %
+                             type(fp).__name__)
     target = PlistTarget(dict_type=dict_type)
     parser = etree.XMLParser(target=target)
     return etree.parse(fp, parser=parser)
@@ -248,6 +251,9 @@ def loads(value, dict_type=dict):
 
 
 def dump(value, fp, sort_keys=True, skipkeys=False, _pretty_print=True):
+    if not hasattr(fp, "write"):
+        raise AttributeError("'%s' object has no attribute 'write'" %
+                             type(fp).__name__)
     root = etree.Element("plist", version="1.0")
     root.append(totree(value, sort_keys=sort_keys, skipkeys=skipkeys))
     tree = etree.ElementTree(root)
