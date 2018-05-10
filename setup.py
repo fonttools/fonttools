@@ -19,6 +19,8 @@ setup(
     license="Apache 2.0",
     package_dir={"": "src"},
     packages=find_packages("src"),
+    include_package_data=True,
+    python_requires='>=2.7',
     install_requires=[
         "fonttools>=3.24.0",
         "attrs>=17.3.0",
