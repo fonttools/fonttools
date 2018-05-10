@@ -11,8 +11,9 @@ import re
 import pytest
 
 
-# The testdata is generated using Mac/Tools/plistlib_generate_testdata.py
-# (which using PyObjC to control the Cocoa classes for generating plists)
+# The testdata is generated using https://github.com/python/cpython/...
+# Mac/Tools/plistlib_generate_testdata.py
+# which uses PyObjC to control the Cocoa classes for generating plists
 datadir = os.path.join(os.path.dirname(__file__), "data")
 with open(os.path.join(datadir, "test.plist"), "rb") as fp:
     TESTDATA = fp.read()
