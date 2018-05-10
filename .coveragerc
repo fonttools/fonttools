@@ -1,0 +1,34 @@
+[run]
+# measure 'branch' coverage in addition to 'statement' coverage
+# See: http://coverage.readthedocs.org/en/coverage-4.0.3/branch.html#branch
+branch = True
+
+# list of directories or packages to measure
+source = ufoLib2
+
+# these are treated as equivalent when combining data
+[paths]
+source =
+    src/ufoLib2
+    .tox/*/lib/python*/site-packages/ufoLib2
+    .tox/pypy*/site-packages/ufoLib2
+
+[report]
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # keywords to use in inline comments to skip coverage
+    pragma: no cover
+
+    # don't complain if tests don't hit defensive assertion code
+    raise AssertionError
+    raise NotImplementedError
+
+    # don't complain if non-runnable code isn't run
+    if 0:
+    if __name__ == .__main__.:
+
+# ignore source code that can’t be found
+ignore_errors = True
+
+# when running a summary report, show missing lines
+show_missing = True
