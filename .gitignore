@@ -16,6 +16,7 @@ _skbuild/
 
 # Unit test / coverage files
 .tox/*
+.pytest_cache/
 .cache/
 .coverage
 .coverage.*
