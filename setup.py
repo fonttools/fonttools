@@ -9,7 +9,9 @@ with open('README.md', 'r', encoding="utf-8") as f:
 
 setup(
     name="ufoLib2",
-    use_scm_version=True,
+    use_scm_version={
+        "write_to": "src/ufoLib2/_version.py",
+    },
     description="ufoLib2 is a UFO font library.",
     long_description=long_description,
     long_description_content_type='text/markdown',
