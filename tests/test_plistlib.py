@@ -6,6 +6,7 @@ import codecs
 import binascii
 import collections
 from io import BytesIO
+from numbers import Integral
 import re
 import pytest
 
@@ -15,12 +16,6 @@ import pytest
 datadir = os.path.join(os.path.dirname(__file__), "data")
 with open(os.path.join(datadir, "test.plist"), "rb") as fp:
     TESTDATA = fp.read()
-
-
-try:
-    long
-except NameError:
-    long = int
 
 
 @pytest.fixture
@@ -95,7 +90,7 @@ class TestPlistlib(object):
     def test_int(self, pl):
         data = plistlib.dumps(pl)
         pl2 = plistlib.loads(data)
-        assert isinstance(pl2, (int, long))
+        assert isinstance(pl2, Integral)
         assert pl == pl2
         data2 = plistlib.dumps(pl2)
         assert data == data2
