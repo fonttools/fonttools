@@ -3,11 +3,9 @@ from ufoLib2 import plistlib
 import os
 import datetime
 import codecs
-import binascii
 import collections
 from io import BytesIO
 from numbers import Integral
-import re
 import pytest
 
 
@@ -24,12 +22,12 @@ def pl():
     data = dict(
         aString="Doodah",
         aList=["A", "B", 12, 32.5, [1, 2, 3]],
-        aFloat = 0.5,
-        anInt = 728,
-        aBigInt = 2 ** 63 - 44,
-        aBigInt2 = 2 ** 63 + 44,
-        aNegativeInt = -5,
-        aNegativeBigInt = -80000000000,
+        aFloat=0.5,
+        anInt=728,
+        aBigInt=2**63 - 44,
+        aBigInt2=2**63 + 44,
+        aNegativeInt=-5,
+        aNegativeBigInt=-80000000000,
         aDict=dict(
             anotherString="<hello & 'hi' there!>",
             aUnicodeValue='M\xe4ssig, Ma\xdf',
@@ -37,13 +35,12 @@ def pl():
             aFalseValue=False,
             deeperDict=dict(a=17, b=32.5, c=[1, 2, "text"]),
         ),
-        someData = b"<binary gunk>",
-        someMoreData = b"<lots of binary gunk>\0\1\2\3" * 10,
-        nestedData = [b"<lots of binary gunk>\0\1\2\3" * 10],
-        aDate = datetime.datetime(2004, 10, 26, 10, 33, 33),
-        anEmptyDict = dict(),
-        anEmptyList = list()
-    )
+        someData=b"<binary gunk>",
+        someMoreData=b"<lots of binary gunk>\0\1\2\3" * 10,
+        nestedData=[b"<lots of binary gunk>\0\1\2\3" * 10],
+        aDate=datetime.datetime(2004, 10, 26, 10, 33, 33),
+        anEmptyDict=dict(),
+        anEmptyList=list())
     data['\xc5benraa'] = "That was a unicode key."
     return data
 
@@ -72,22 +69,19 @@ class TestPlistlib(object):
         with pytest.raises(TypeError):
             plistlib.dumps(pl)
 
-    @pytest.mark.parametrize(
-        "pl",
-        [
-            0,
-            2**8-1,
-            2**8,
-            2**16-1,
-            2**16,
-            2**32-1,
-            2**32,
-            2**63-1,
-            2**64-1,
-            1,
-            -2**63,
-        ]
-    )
+    @pytest.mark.parametrize("pl", [
+        0,
+        2**8 - 1,
+        2**8,
+        2**16 - 1,
+        2**16,
+        2**32 - 1,
+        2**32,
+        2**63 - 1,
+        2**64 - 1,
+        1,
+        -2**63,
+    ])
     def test_int(self, pl):
         data = plistlib.dumps(pl)
         pl2 = plistlib.loads(data)
@@ -96,15 +90,12 @@ class TestPlistlib(object):
         data2 = plistlib.dumps(pl2)
         assert data == data2
 
-    @pytest.mark.parametrize(
-        "pl",
-        [
-            2 ** 64 + 1,
-            2 ** 127-1,
-            -2**64,
-            -2 ** 127,
-        ]
-    )
+    @pytest.mark.parametrize("pl", [
+        2**64 + 1,
+        2**127 - 1,
+        -2**64,
+        -2**127,
+    ])
     def test_int_overflow(self, pl):
         with pytest.raises(OverflowError):
             plistlib.dumps(pl)
@@ -267,7 +258,7 @@ class TestPlistlib(object):
         pl = {
             'first': {'a': 1},
             'second': {'a': 1},
-            'third': {'b': 2 },
+            'third': {'b': 2},
         }
 
         data = plistlib.dumps(pl)
@@ -275,7 +266,7 @@ class TestPlistlib(object):
         assert pl2 == {
             'first': {'a': 1},
             'second': {'a': 1},
-            'third': {'b': 2 },
+            'third': {'b': 2},
         }
         assert pl2['first'] is not pl2['second']
 
