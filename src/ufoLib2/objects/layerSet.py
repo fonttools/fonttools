@@ -1,15 +1,19 @@
 import attr
 from collections import OrderedDict
 from ufoLib2.objects.layer import Layer
+from ufoLib2.constants import DEFAULT_GLYPHS_DIRNAME
 
 
 @attr.s(slots=True)
 class LayerSet(object):
-    _layers = attr.ib(init=False, type=OrderedDict)
-    _scheduledForDeletion = attr.ib(default=attr.Factory(set), init=False, repr=False, type=set)
-
-    def __attrs_post_init__(self):
-        self._layers = OrderedDict()
+    _layers = attr.ib(
+        default=attr.Factory(OrderedDict),
+        init=False,
+        repr=False,
+        type=OrderedDict)
+    _defaultLayerName = attr.ib(default=None, init=False, repr=False, type=str)
+    _scheduledForDeletion = attr.ib(
+        default=attr.Factory(set), init=False, repr=False, type=set)
 
     def __contains__(self, name):
         return name in self._layers
@@ -36,26 +40,29 @@ class LayerSet(object):
         return self._layers.keys()
 
     @property
+    def defaultLayerName(self):
+        return self._defaultLayerName  # XXX can be None!
+
+    @defaultLayerName.setter
+    def defaultLayerName(self, name):
+        if name not in self._layers:
+            raise KeyError('layer name "%s" not in layer set')
+        self._defaultLayerName = name
+
+    @property
     def defaultLayer(self):
-        try:
-            return next(iter(self))
-        except StopIteration:
-            pass
-        return None
+        if self.defaultLayerName is None:
+            return
+        return self._layers[self.defaultLayerName]
 
     @defaultLayer.setter
     def defaultLayer(self, layer):
-        hasLayer = False
-        layers = OrderedDict()
-        layers[layer.name] = layer
-        for layer_ in self:
-            if layer_ == layer:
-                hasLayer = True
-                continue
-            layers[layer_.name] = layer_
-        if not hasLayer:
+        for this in self:
+            if this is layer:
+                break
+        else:
             raise KeyError("layer %r is not in layer set" % layer)
-        self._layers = layers
+        self._defaultLayerName = layer.name
 
     @property
     def layerOrder(self):

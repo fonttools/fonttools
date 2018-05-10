@@ -30,9 +30,11 @@ class Font(object):
         if self._path is not None:
             reader = UFOReader(self._path)
             # load the layers
-            for name, dirName in reader.getLayerContents():
-                glyphSet = reader.getGlyphSet(dirName)
+            # XXX initialize LayerSet with a 'glyphSets' OrderedDict and
+            # an optional 'defaultLayerName'?
+            for name, glyphSet in reader.getGlyphSets().items():
                 self._layers.newLayer(name, glyphSet=glyphSet)
+            self._layers.defaultLayerName = reader.getDefaultLayerName()
             # load data directory list
             data = reader.getDataDirectoryListing()
             self._data = DataSet(path=self._path, fileNames=data)

@@ -3,6 +3,7 @@ import attr
 import os
 import errno
 from io import open
+from collections import OrderedDict
 from ufoLib2 import plistlib
 from ufoLib2.constants import (
     DATA_DIRNAME, DEFAULT_GLYPHS_DIRNAME, FEATURES_FILENAME, FONTINFO_FILENAME,
@@ -71,13 +72,45 @@ class UFOReader(object):
         path = os.path.join(self._path, LAYERCONTENTS_FILENAME)
         with open(path, "rb") as file:
             self._layerContents = plistlib.load(file)
-        if self._layerContents:
-            assert self._layerContents[0][1] == DEFAULT_GLYPHS_DIRNAME
+        for layerName, dirName in self._layerContents:
+            if dirName == DEFAULT_GLYPHS_DIRNAME:
+                break
+        else:
+            raise ValueError(
+                "The default layer is not defined in layercontents.plist")
         return self._layerContents
 
-    def getGlyphSet(self, dirName):
+    def getDefaultLayerName(self):
+        for layerName, layerDirectory in self.getLayerContents():
+            if layerDirectory == DEFAULT_GLYPHS_DIRNAME:
+                return layerName
+        else:
+            # we checked it already
+            assert 0, "default layer not found!"
+
+    def getLayerNames(self):
+        # for backward-compat with ufoLib API
+        return [ln for ln, dn in self.getLayerContents()]
+
+    def getGlyphSet(self, layerName=None):
+        # for backward-compat with ufoLib API
+        if layerName is None:
+            dirName = DEFAULT_GLYPHS_DIRNAME
+        else:
+            for name, dirName in self.getLayerContents():
+                if layerName == name:
+                    break
+            else:
+                raise ValueError(
+                    'No glyphs directory is mapped to "%s".' % layerName)
         path = os.path.join(self._path, dirName)
         return GlyphSet(path)
+
+    def getGlyphSets(self):
+        """Return an OrderedDict of GlyphSet objects keyed by layer name."""
+        return OrderedDict((layerName,
+                            GlyphSet(os.path.join(self._path, dirName)))
+                           for layerName, dirName in self.getLayerContents())
 
     # bin
 
