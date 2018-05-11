@@ -4,16 +4,15 @@ from ufoLib2.objects.layer import Layer
 from ufoLib2.constants import DEFAULT_GLYPHS_DIRNAME
 
 
-@attr.s(slots=True)
+@attr.s(slots=True, repr=False)
 class LayerSet(object):
     _layers = attr.ib(
         default=attr.Factory(OrderedDict),
         init=False,
-        repr=False,
         type=OrderedDict)
-    _defaultLayerName = attr.ib(default=None, init=False, repr=False, type=str)
+    _defaultLayerName = attr.ib(default=None, init=False, type=str)
     _scheduledForDeletion = attr.ib(
-        default=attr.Factory(set), init=False, repr=False, type=set)
+        default=attr.Factory(set), init=False, type=set)
 
     def __contains__(self, name):
         return name in self._layers
@@ -39,6 +38,10 @@ class LayerSet(object):
     def keys(self):
         return self._layers.keys()
 
+    def __repr__(self):
+        return "%s(%s)" % (self.__class__.__name__,
+                           repr(list(self)) if self._layers else "")
+
     @property
     def defaultLayerName(self):
         return self._defaultLayerName  # XXX can be None!
@@ -46,7 +49,7 @@ class LayerSet(object):
     @defaultLayerName.setter
     def defaultLayerName(self, name):
         if name not in self._layers:
-            raise KeyError('layer name "%s" not in layer set')
+            raise KeyError('layer name "%s" not in layer set' % name)
         self._defaultLayerName = name
 
     @property
@@ -118,6 +121,8 @@ class LayerSet(object):
         if newName in self._scheduledForDeletion:
             self._scheduledForDeletion.remove(newName)
         layer._name = newName
+        if name == self._defaultLayerName:
+            self._defaultLayerName = newName
 
     def save(self, writer, saveAs=False):
         # if in-place, remove deleted layers
