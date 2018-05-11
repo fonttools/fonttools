@@ -106,11 +106,10 @@ class UFOReader(object):
         path = os.path.join(self._path, dirName)
         return GlyphSet(path)
 
-    def getGlyphSets(self):
-        """Return an OrderedDict of GlyphSet objects keyed by layer name."""
-        return OrderedDict((layerName,
-                            GlyphSet(os.path.join(self._path, dirName)))
-                           for layerName, dirName in self.getLayerContents())
+    def iterGlyphSets(self):
+        """Return an iterator over (layerName, GlyphSet) tuples."""
+        for layerName, dirName in self.getLayerContents():
+            yield layerName, GlyphSet(os.path.join(self._path, dirName))
 
     # bin
 
