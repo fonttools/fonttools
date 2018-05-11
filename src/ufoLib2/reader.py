@@ -8,7 +8,7 @@ from ufoLib2 import plistlib
 from ufoLib2.constants import (
     DATA_DIRNAME, DEFAULT_GLYPHS_DIRNAME, FEATURES_FILENAME, FONTINFO_FILENAME,
     GROUPS_FILENAME, IMAGES_DIRNAME, KERNING_FILENAME, LAYERCONTENTS_FILENAME,
-    LIB_FILENAME)
+    LIB_FILENAME, DEFAULT_LAYER_NAME)
 from ufoLib2.glyphSet import GlyphSet
 
 
@@ -81,12 +81,21 @@ class UFOReader(object):
         return self._layerContents
 
     def getDefaultLayerName(self):
+        defaultLayerName = None
+        publicDefaultDir = None
         for layerName, layerDirectory in self.getLayerContents():
             if layerDirectory == DEFAULT_GLYPHS_DIRNAME:
-                return layerName
-        else:
-            # we checked it already
-            assert 0, "default layer not found!"
+                defaultLayerName = layerName
+            if layerName == DEFAULT_LAYER_NAME:
+                publicDefaultDir = layerDirectory
+        if (publicDefaultDir is not None
+                and publicDefaultDir != DEFAULT_GLYPHS_DIRNAME):
+            raise ValueError(
+                "'public.default' assigned to non-default directory: '%s'"
+                % publicDefaultDir)
+        # we checked it already
+        assert defaultLayerName is not None, "default layer not found!"
+        return defaultLayerName
 
     def getLayerNames(self):
         # for backward-compat with ufoLib API
