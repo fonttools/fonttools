@@ -863,7 +863,7 @@ Attributes
 ----------
 
 -  ``name``: optional, string. A unique name that can be used to
-   identify this rule if it needs to be referenced elsewhere.The name
+   identify this rule if it needs to be referenced elsewhere. bThe name
    is not important for compiling variable fonts.
 
 5.1.1 conditionset element
@@ -909,7 +909,7 @@ Attributes
 -  ``name``: string, required. The name of the glyph this rule looks
    for.
 -  ``with``: string, required. The name of the glyph it is replaced
-   with. Older versions of designspaceLib used the ``byname`` attribute. 
+   with.
 
 .. example-7:
 
