@@ -191,9 +191,9 @@ def glyphFromTree(root, classes):
             glyph.image = image
         elif element.tag == "guideline":
             guideline = classes.Guideline(
-                x=_getNumber(element, "x", 0),
-                y=_getNumber(element, "y", 0),
-                angle=_getNumber(element, "angle", 0),
+                x=_getNumber(element, "x", None),
+                y=_getNumber(element, "y", None),
+                angle=_getNumber(element, "angle", None),
                 name=element.get("name"),
                 color=element.get("color"),
                 identifier=element.get("identifier"),
@@ -271,11 +271,11 @@ def treeFromGlyph(glyph):
         etree.SubElement(root, "image", attrs)
     # guidelines
     for guideline in glyph.guidelines:
-        attrs = {
-            "x": repr(guideline.x),
-            "y": repr(guideline.y),
-            "angle": repr(guideline.angle),
-        }
+        attrs = {}
+        for a in ("x", "y", "angle"):
+            v = getattr(guideline, a)
+            if v is not None:
+                attrs[a] = repr(v)
         if guideline.name is not None:
             attrs["name"] = guideline.name
         if guideline.color is not None:

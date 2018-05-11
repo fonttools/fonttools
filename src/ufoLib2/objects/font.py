@@ -112,9 +112,6 @@ class Font(object):
                 self._info = Info(**data)
                 for i in range(len(guidelines)):
                     data = guidelines[i]
-                    for key in ("x", "y", "angle"):
-                        if key not in data:
-                            data[key] = 0
                     guidelines[i] = Guideline(**data)
                 self._guidelines = guidelines
             else:
