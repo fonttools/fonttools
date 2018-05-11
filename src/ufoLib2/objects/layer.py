@@ -2,11 +2,12 @@ import attr
 from typing import Optional
 from ufoLib2.objects.glyph import Glyph, GlyphClasses
 from ufoLib2.reader import GlyphSet
+from ufoLib2.constants import DEFAULT_LAYER_NAME
 
 
 @attr.s(slots=True)
 class Layer(object):
-    _name = attr.ib(type=str)
+    _name = attr.ib(default=DEFAULT_LAYER_NAME, type=str)
     _glyphSet = attr.ib(default=None, repr=False, type=GlyphSet)
     _glyphs = attr.ib(default=attr.Factory(dict), init=False, repr=False, type=dict)
     _keys = attr.ib(init=False, repr=False, type=set)

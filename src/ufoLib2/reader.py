@@ -7,7 +7,7 @@ from ufoLib2 import plistlib
 from ufoLib2.constants import (
     DATA_DIRNAME, DEFAULT_GLYPHS_DIRNAME, FEATURES_FILENAME, FONTINFO_FILENAME,
     GROUPS_FILENAME, IMAGES_DIRNAME, KERNING_FILENAME, LAYERCONTENTS_FILENAME,
-    LIB_FILENAME)
+    LIB_FILENAME, DEFAULT_LAYER_NAME)
 from ufoLib2.glyphSet import GlyphSet
 
 
@@ -71,13 +71,53 @@ class UFOReader(object):
         path = os.path.join(self._path, LAYERCONTENTS_FILENAME)
         with open(path, "rb") as file:
             self._layerContents = plistlib.load(file)
-        if self._layerContents:
-            assert self._layerContents[0][1] == DEFAULT_GLYPHS_DIRNAME
+        for layerName, dirName in self._layerContents:
+            if dirName == DEFAULT_GLYPHS_DIRNAME:
+                break
+        else:
+            raise ValueError(
+                "The default layer is not defined in layercontents.plist")
         return self._layerContents
 
-    def getGlyphSet(self, dirName):
+    def getDefaultLayerName(self):
+        defaultLayerName = None
+        publicDefaultDir = None
+        for layerName, layerDirectory in self.getLayerContents():
+            if layerDirectory == DEFAULT_GLYPHS_DIRNAME:
+                defaultLayerName = layerName
+            if layerName == DEFAULT_LAYER_NAME:
+                publicDefaultDir = layerDirectory
+        if (publicDefaultDir is not None
+                and publicDefaultDir != DEFAULT_GLYPHS_DIRNAME):
+            raise ValueError(
+                "'public.default' assigned to non-default directory: '%s'"
+                % publicDefaultDir)
+        # we checked it already
+        assert defaultLayerName is not None, "default layer not found!"
+        return defaultLayerName
+
+    def getLayerNames(self):
+        # for backward-compat with ufoLib API
+        return [ln for ln, dn in self.getLayerContents()]
+
+    def getGlyphSet(self, layerName=None):
+        # for backward-compat with ufoLib API
+        if layerName is None:
+            dirName = DEFAULT_GLYPHS_DIRNAME
+        else:
+            for name, dirName in self.getLayerContents():
+                if layerName == name:
+                    break
+            else:
+                raise ValueError(
+                    'No glyphs directory is mapped to "%s".' % layerName)
         path = os.path.join(self._path, dirName)
         return GlyphSet(path)
+
+    def iterGlyphSets(self):
+        """Return an iterator over (layerName, GlyphSet) tuples."""
+        for layerName, dirName in self.getLayerContents():
+            yield layerName, GlyphSet(os.path.join(self._path, dirName))
 
     # bin
 

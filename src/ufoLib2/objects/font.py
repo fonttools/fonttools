@@ -20,7 +20,7 @@ class Font(object):
     _guidelines = attr.ib(default=None, init=False, repr=False, type=list)
     _info = attr.ib(default=None, init=False, repr=False, type=Info)
     _kerning = attr.ib(default=None, init=False, repr=False, type=dict)
-    _layers = attr.ib(default=attr.Factory(LayerSet), init=False, repr=False, type=LayerSet)
+    _layers = attr.ib(default=None, init=False, repr=False, type=LayerSet)
     _lib = attr.ib(default=None, init=False, repr=False, type=dict)
 
     _data = attr.ib(init=False, repr=False, type=DataSet)
@@ -30,9 +30,7 @@ class Font(object):
         if self._path is not None:
             reader = UFOReader(self._path)
             # load the layers
-            for name, dirName in reader.getLayerContents():
-                glyphSet = reader.getGlyphSet(dirName)
-                self._layers.newLayer(name, glyphSet=glyphSet)
+            self._layers = LayerSet.load(reader)
             # load data directory list
             data = reader.getDataDirectoryListing()
             self._data = DataSet(path=self._path, fileNames=data)
@@ -40,32 +38,30 @@ class Font(object):
             images = reader.getImageDirectoryListing()
             self._images = ImageSet(path=self._path, fileNames=images)
         else:
+            self._layers = LayerSet()
             self._data = DataSet()
             self._images = ImageSet()
 
-        if not self._layers:
-            self._layers.newLayer(DEFAULT_LAYER_NAME)
-
     def __contains__(self, name):
-        return name in self._layers.defaultLayer
+        return name in self._layers._defaultLayer
 
     def __delitem__(self, name):
-        del self._layers.defaultLayer[name]
+        del self._layers._defaultLayer[name]
 
     def __getitem__(self, name):
-        return self._layers.defaultLayer[name]
+        return self._layers._defaultLayer[name]
 
     def __iter__(self):
-        return iter(self._layers.defaultLayer)
+        return iter(self._layers._defaultLayer)
 
     def __len__(self):
-        return len(self._layers.defaultLayer)
+        return len(self._layers._defaultLayer)
 
     def get(self, name, default=None):
-        return self._layers.defaultLayer.get(name, default)
+        return self._layers._defaultLayer.get(name, default)
 
     def keys(self):
-        return self._layers.defaultLayer.keys()
+        return self._layers._defaultLayer.keys()
 
     @property
     def data(self):
@@ -155,16 +151,16 @@ class Font(object):
         return self._path
 
     def addGlyph(self, glyph):
-        self._layers.defaultLayer.addGlyph(glyph)
+        self._layers._defaultLayer.addGlyph(glyph)
 
     def newGlyph(self, name):
-        return self._layers.defaultLayer.newGlyph(name)
+        return self._layers._defaultLayer.newGlyph(name)
 
     def newLayer(self, name):
         return self._layers.newLayer(name)
 
     def renameGlyph(self, name, newName, overwrite=False):
-        self._layers.defaultLayer.renameGlyph(name, newName, overwrite)
+        self._layers._defaultLayer.renameGlyph(name, newName, overwrite)
 
     def renameLayer(self, name, newName, overwrite=False):
         self._layers.renameLayer(name, newName, overwrite)
