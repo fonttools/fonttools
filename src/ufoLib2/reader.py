@@ -3,7 +3,6 @@ import attr
 import os
 import errno
 from io import open
-from collections import OrderedDict
 from ufoLib2 import plistlib
 from ufoLib2.constants import (
     DATA_DIRNAME, DEFAULT_GLYPHS_DIRNAME, FEATURES_FILENAME, FONTINFO_FILENAME,
