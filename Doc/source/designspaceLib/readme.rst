@@ -863,7 +863,7 @@ Attributes
 ----------
 
 -  ``name``: optional, string. A unique name that can be used to
-   identify this rule if it needs to be referenced elsewhere. bThe name
+   identify this rule if it needs to be referenced elsewhere. The name
    is not important for compiling variable fonts.
 
 5.1.1 conditionset element
