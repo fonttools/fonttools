@@ -6,6 +6,8 @@ import codecs
 import collections
 from io import BytesIO
 from numbers import Integral
+from lxml import etree
+import re
 import pytest
 
 
@@ -370,6 +372,30 @@ def test_xml_encodings(pl, xml_encoding, encoding, bom):
     data = bom + data.decode('utf-8').encode(encoding)
     pl2 = plistlib.loads(data)
     assert pl == pl2
+
+
+def test_fromtree(pl):
+    tree = etree.fromstring(TESTDATA)
+    pl2 = plistlib.fromtree(tree)
+    assert pl == pl2
+
+
+def test_totree(pl):
+    tree = etree.fromstring(TESTDATA)[0]  # ignore root 'plist' element
+    tree2 = plistlib.totree(pl)
+    assert tree.tag == tree2.tag == "dict"
+    for (_, e1), (_, e2) in zip(etree.iterwalk(tree), etree.iterwalk(tree2)):
+        assert e1.tag == e2.tag
+        assert e1.attrib == e2.attrib
+        assert len(e1) == len(e2)
+        # ignore indentation
+        text1 = "".join(
+            l.strip()
+            for l in e1.text.splitlines()) if e1.text is not None else ""
+        text2 = "".join(
+            l.strip()
+            for l in e2.text.splitlines()) if e2.text is not None else ""
+        assert text1 == text2
 
 
 if __name__ == "__main__":
