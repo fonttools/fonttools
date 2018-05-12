@@ -28,6 +28,7 @@ setup(
         "attrs>=17.3.0",
         "lxml",
         "typing ; python_version<'3.5'",
+        "singledispatch ; python_version<'3.4'"
     ],
     setup_requires=[
         "setuptools_scm",

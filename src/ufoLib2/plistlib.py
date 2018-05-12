@@ -4,6 +4,10 @@ from io import BytesIO
 from datetime import datetime
 from base64 import b64encode, b64decode
 from numbers import Integral
+try:
+    from functools import singledispatch
+except ImportError:
+    from singledispatch import singledispatch
 from lxml import etree
 from fontTools.misc.py23 import unicode, basestring, tounicode
 
@@ -152,66 +156,96 @@ class PlistTarget(object):
         self.add_object(_date_from_string(self.get_data()))
 
 
-class PlistTreeBuilder(object):
+# single-dispatch generic function and overloaded implementations based
+# on the type of argument, to build an element tree from a plist data
 
-    def __init__(self, sort_keys=True, skipkeys=False):
-        self._sort_keys = sort_keys
-        self._skipkeys = skipkeys
 
-    def build(self, value):
-        if isinstance(value, unicode):
-            return self.simple_element("string", value)
-        elif isinstance(value, bool):
-            if value:
-                return etree.Element("true")
-            else:
-                return etree.Element("false")
-        elif isinstance(value, Integral):
-            if -1 << 63 <= value < 1 << 64:
-                return self.simple_element("integer", "%d" % value)
-            else:
-                raise OverflowError(value)
-        elif isinstance(value, float):
-            return self.simple_element("real", repr(value))
-        elif isinstance(value, dict):
-            return self.dict_element(value)
-        elif isinstance(value, (tuple, list)):
-            return self.array_element(value)
-        elif isinstance(value, datetime):
-            return self.simple_element("date", _date_to_string(value))
-        elif isinstance(value, (bytes, bytearray)):
-            return self.simple_element("data", b64encode(value))
-        else:
-            raise TypeError("unsupported type: %s" % type(value))
+@singledispatch
+def _make_element(value, **options):
+    raise TypeError("unsupported type: %s" % type(value))
 
-    @staticmethod
-    def simple_element(tag, value):
-        el = etree.Element(tag)
-        el.text = tounicode(value, "utf-8")
+
+@_make_element.register(unicode)
+def _unicode_element(value, **options):
+    el = etree.Element("string")
+    el.text = value
+    return el
+
+
+@_make_element.register(bool)
+def _bool_element(value, **options):
+    if value:
+        return etree.Element("true")
+    else:
+        return etree.Element("false")
+
+
+@_make_element.register(Integral)
+def _integer_element(value, **options):
+    if -1 << 63 <= value < 1 << 64:
+        el = etree.Element("integer")
+        el.text = "%d" % value
         return el
+    else:
+        raise OverflowError(value)
 
-    def array_element(self, array):
-        el = etree.Element("array")
-        if len(array) == 0:
-            return el
-        for value in array:
-            el.append(self.build(value))
-        return el
 
-    def dict_element(self, d):
-        el = etree.Element("dict")
-        items = d.items()
-        if self._sort_keys:
-            items = sorted(items)
-        for key, value in items:
-            if not isinstance(key, basestring):
-                if self._skipkeys:
-                    continue
-                raise TypeError("keys must be strings")
-            k = etree.SubElement(el, "key")
-            k.text = tounicode(key, "utf-8")
-            el.append(self.build(value))
+@_make_element.register(float)
+def _float_element(value, **options):
+    el = etree.Element("real")
+    el.text = repr(value)
+    return el
+
+
+@_make_element.register(dict)
+def _dict_element(d, **options):
+    el = etree.Element("dict")
+    items = d.items()
+    if options.get("sort_keys", True):
+        items = sorted(items)
+    for key, value in items:
+        if not isinstance(key, basestring):
+            if options.get("skipkeys", False):
+                continue
+            raise TypeError("keys must be strings")
+        k = etree.SubElement(el, "key")
+        k.text = tounicode(key, "utf-8")
+        el.append(totree(value, **options))
+    return el
+
+
+@_make_element.register(list)
+@_make_element.register(tuple)
+def _array_element(array, **options):
+    el = etree.Element("array")
+    if len(array) == 0:
         return el
+    for value in array:
+        el.append(totree(value, **options))
+    return el
+
+
+@_make_element.register(datetime)
+def _date_element(date, **options):
+    el = etree.Element("date")
+    el.text = _date_to_string(date)
+    return el
+
+
+@_make_element.register(bytes)
+@_make_element.register(bytearray)
+def _data_element(data, **options):
+    el = etree.Element("data")
+    el.text = b64encode(data)
+    return el
+
+
+# Public functions to create element tree from plist-compatible python
+# data structures and viceversa, for use when (de)serializing GLIF xml.
+
+
+def totree(value, sort_keys=True, skipkeys=False):
+    return _make_element(value, sort_keys=sort_keys, skipkeys=skipkeys)
 
 
 def fromtree(tree, dict_type=dict):
@@ -226,11 +260,6 @@ def fromtree(tree, dict_type=dict):
                 target.data(element.text or "")
             target.end(element.tag)
     return target.close()
-
-
-def totree(value, sort_keys=True, skipkeys=False):
-    builder = PlistTreeBuilder(sort_keys=sort_keys, skipkeys=skipkeys)
-    return builder.build(value)
 
 
 # python3 plistlib API
