@@ -73,14 +73,14 @@ class PlistTarget(object):
 
     def start(self, tag, attrib):
         self._data = []
-        handler = getattr(self, "start_" + tag, None)
+        handler = _TARGET_START_HANDLERS.get(tag)
         if handler is not None:
-            handler(attrib)
+            handler(self)
 
     def end(self, tag):
-        handler = getattr(self, "end_" + tag, None)
+        handler = _TARGET_END_HANDLERS.get(tag)
         if handler is not None:
-            handler()
+            handler(self)
 
     def data(self, data):
         self._data.append(data)
@@ -109,52 +109,71 @@ class PlistTarget(object):
         self._data = []
         return data
 
-    # event handlers
 
-    def start_dict(self, attrs):
-        d = self._dict_type()
-        self.add_object(d)
-        self.stack.append(d)
+# event handlers
 
-    def end_dict(self):
-        if self.current_key:
-            raise ValueError("missing value for key '%s'" % self.current_key)
-        self.stack.pop()
+def start_dict(self):
+    d = self._dict_type()
+    self.add_object(d)
+    self.stack.append(d)
 
-    def end_key(self):
-        if self.current_key or not isinstance(self.stack[-1], type({})):
-            raise ValueError("unexpected key")
-        self.current_key = self.get_data()
+def end_dict(self):
+    if self.current_key:
+        raise ValueError("missing value for key '%s'" % self.current_key)
+    self.stack.pop()
 
-    def start_array(self, attrs):
-        a = []
-        self.add_object(a)
-        self.stack.append(a)
+def end_key(self):
+    if self.current_key or not isinstance(self.stack[-1], type({})):
+        raise ValueError("unexpected key")
+    self.current_key = self.get_data()
 
-    def end_array(self):
-        self.stack.pop()
+def start_array(self):
+    a = []
+    self.add_object(a)
+    self.stack.append(a)
 
-    def end_true(self):
-        self.add_object(True)
+def end_array(self):
+    self.stack.pop()
 
-    def end_false(self):
-        self.add_object(False)
+def end_true(self):
+    self.add_object(True)
 
-    def end_integer(self):
-        self.add_object(int(self.get_data()))
+def end_false(self):
+    self.add_object(False)
 
-    def end_real(self):
-        self.add_object(float(self.get_data()))
+def end_integer(self):
+    self.add_object(int(self.get_data()))
 
-    def end_string(self):
-        self.add_object(self.get_data())
+def end_real(self):
+    self.add_object(float(self.get_data()))
 
-    def end_data(self):
-        self.add_object(b64decode(self.get_data()))
+def end_string(self):
+    self.add_object(self.get_data())
 
-    def end_date(self):
-        self.add_object(_date_from_string(self.get_data()))
+def end_data(self):
+    self.add_object(b64decode(self.get_data()))
 
+def end_date(self):
+    self.add_object(_date_from_string(self.get_data()))
+
+
+_TARGET_START_HANDLERS = {
+    "dict": start_dict,
+    "array": start_array,
+}
+
+_TARGET_END_HANDLERS = {
+    "dict": end_dict,
+    "array": end_array,
+    "key": end_key,
+    "true": end_true,
+    "false": end_false,
+    "integer": end_integer,
+    "real": end_real,
+    "string": end_string,
+    "data": end_data,
+    "date": end_date,
+}
 
 # single-dispatch generic function and overloaded implementations based
 # on the type of argument, to build an element tree from a plist data
