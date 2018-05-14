@@ -10,3 +10,8 @@ class Point(object):
     smooth = attr.ib(default=False, type=bool)
     name = attr.ib(default=None, type=Optional[str])
     identifier = attr.ib(default=None, type=Optional[str])
+
+    @property
+    def segmentType(self):
+        # alias for backward compatibility with defcon API
+        return self.type
