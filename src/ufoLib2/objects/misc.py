@@ -1,6 +1,10 @@
 import attr
 from collections import namedtuple
 from ufoLib2.reader import UFOReader
+try:
+    from collections.abc import Mapping
+except ImportError:
+    from collections import Mapping
 
 
 @attr.s(slots=True)
@@ -74,3 +78,23 @@ class Transformation(
 
 
 Transformation.__new__.__defaults__ = (1, 0, 0, 1, 0, 0)
+
+
+class AttrDictMixin(Mapping):
+    """ Read attribute values using mapping interface. For use with Anchors and
+    Guidelines classes, where client code expects them to behave as dict.
+    """
+
+    def __getitem__(self, key):
+        try:
+            return getattr(self, key)
+        except AttributeError:
+            raise KeyError(key)
+
+    def __iter__(self):
+        for key in attr.fields_dict(self.__class__):
+            if getattr(self, key) is not None:
+                yield key
+
+    def __len__(self):
+        return sum(1 for _ in self)

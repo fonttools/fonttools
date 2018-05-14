@@ -24,3 +24,8 @@ class Image(object):
     @transformation.setter
     def transformation(self, value):
         self._transformation = _to_optional_transformation(value)
+
+    def clear(self):
+        self.fileName = None
+        self._transformation = None
+        self.color = None
