@@ -700,7 +700,7 @@ def test_ttx_ttlist_ttf(capsys, tmpdir):
 
 
 def test_ttx_ttlist_otf(capsys, tmpdir):
-    inpath = os.path.join("Tests", "ttx", "data", "TestOTF.Otf")
+    inpath = os.path.join("Tests", "ttx", "data", "TestOTF.otf")
     fakeoutpath = os.path.join(str(tmpdir), "TestOTF.ttx")
     options = ttx.Options([("", "")], 1)
     options.listTables = True
