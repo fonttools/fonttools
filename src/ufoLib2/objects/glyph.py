@@ -18,14 +18,35 @@ class Glyph(object):
     height = attr.ib(default=0, init=False, type=Union[int, float])
     unicodes = attr.ib(default=attr.Factory(list), init=False, type=list)
 
-    image = attr.ib(default=None, init=False, repr=False, type=Optional[Image])
+    image = attr.ib(default=attr.Factory(Image), init=False, repr=False, type=Image)
     lib = attr.ib(default=attr.Factory(dict), init=False, repr=False, type=dict)
     note = attr.ib(default=None, init=False, repr=False, type=Optional[str])
 
     anchors = attr.ib(default=attr.Factory(list), init=False, repr=False, type=list)
     components = attr.ib(default=attr.Factory(list), init=False, repr=False, type=list)
     contours = attr.ib(default=attr.Factory(list), init=False, repr=False, type=list)
-    guidelines = attr.ib(default=attr.Factory(list), init=False, repr=False, type=list)
+    _guidelines = attr.ib(default=attr.Factory(list), init=False, repr=False, type=list)
+
+    def __len__(self):
+        return len(self.contours)
+
+    def __getitem__(self, index):
+        return self.contours[index]
+
+    def __contains__(self, contour):
+        return contour in self.contours
+
+    def __iter__(self):
+        return iter(self.contours)
+
+    @property
+    def guidelines(self):
+        return self._guidelines
+
+    @guidelines.setter
+    def guidelines(self, value):
+        for guideline in value:
+            self.appendGuideline(guideline)
 
     @property
     def name(self):
@@ -42,13 +63,16 @@ class Glyph(object):
         if value is None:
             self.unicodes = []
         else:
-            if self.unicodes[0] == value:
-                return
-            try:
-                self.unicodes.remove(value)
-            except ValueError:
-                pass
-            self.unicodes.insert(0, value)
+            if self.unicodes:
+                if self.unicodes[0] == value:
+                    return
+                try:
+                    self.unicodes.remove(value)
+                except ValueError:
+                    pass
+                self.unicodes.insert(0, value)
+            else:
+                self.unicodes.append(value)
 
     def clear(self):
         self.anchors = []
@@ -56,6 +80,27 @@ class Glyph(object):
         self.contours = []
         self.guidelines = []
         self.image = None
+
+    def clearContours(self):
+        for contour in list(self):
+            self.contours.remove(contour)
+
+    def clearComponents(self):
+        for component in list(self.components):
+            self.components.remove(component)
+
+    def removeComponent(self, component):
+        self.components.remove(component)
+
+    def appendAnchor(self, anchor):
+        if isinstance(anchor, Anchor):
+            anchor = Anchor.asdict()
+        self.anchors.append(Anchor(**anchor))
+
+    def appendGuideline(self, guideline):
+        if not isinstance(guideline, Guideline):
+            guideline = Guideline(**guideline)
+        self._guidelines.append(guideline)
 
     # -----------
     # Pen methods
@@ -78,6 +123,19 @@ class Glyph(object):
     def getPointPen(self):
         pointPen = GlyphPointPen(self)
         return pointPen
+
+    # lib wrapped attributes
+
+    @property
+    def markColor(self):
+        return self.lib.get("public.markColor")
+
+    @markColor.setter
+    def markColor(self, value):
+        if value is not None:
+            self.lib["public.markColor"] = value
+        elif "public.markColor" in self.lib:
+            del self.lib["public.markColor"]
 
 
 class GlyphClasses(object):
