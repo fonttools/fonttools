@@ -7,6 +7,7 @@ from ufoLib2.objects.guideline import Guideline
 from ufoLib2.objects.imageSet import ImageSet
 from ufoLib2.objects.info import Info
 from ufoLib2.objects.layerSet import LayerSet
+from ufoLib2.objects.features import Features
 from ufoLib2.reader import UFOReader
 from ufoLib2.writer import UFOWriter
 
@@ -15,7 +16,7 @@ from ufoLib2.writer import UFOWriter
 class Font(object):
     _path = attr.ib(default=None, type=Optional[str])
 
-    _features = attr.ib(default=None, init=False, repr=False, type=Optional[str])
+    _features = attr.ib(default=None, init=False, repr=False, type=Features)
     _groups = attr.ib(default=None, init=False, repr=False, type=dict)
     _guidelines = attr.ib(default=None, init=False, repr=False, type=list)
     _info = attr.ib(default=None, init=False, repr=False, type=Info)
@@ -72,9 +73,9 @@ class Font(object):
         if self._features is None:
             if self._path is not None:
                 reader = UFOReader(self._path)
-                self._features = reader.readFeatures()
+                self._features = Features(reader.readFeatures())
             else:
-                self._features = ""
+                self._features = Features()
         return self._features
 
     @features.setter
@@ -82,10 +83,28 @@ class Font(object):
         self._features = text
 
     @property
+    def glyphOrder(self):
+        return list(self.lib.get("public.glyphOrder", []))
+
+    @glyphOrder.setter
+    def glyphOrder(self, value):
+        if value is None or len(value) == 0:
+            value = 0
+            if "public.glyphOrder" in self.lib:
+                del self.lib["public.glyphOrder"]
+        else:
+            self.lib["public.glyphOrder"] = value
+
+    @property
     def guidelines(self):
         if self._guidelines is None:
             self.info
         return self._guidelines
+
+    @guidelines.setter
+    def guidelines(self, value):
+        for guideline in value:
+            self.appendGuideline(guideline)
 
     @property
     def groups(self):
@@ -162,7 +181,15 @@ class Font(object):
     def renameLayer(self, name, newName, overwrite=False):
         self._layers.renameLayer(name, newName, overwrite)
 
-    def save(self, path=None):
+    def appendGuideline(self, guideline):
+        if not isinstance(guideline, Guideline):
+            guideline = Guideline(**guideline)
+        self.guidelines.append(guideline)
+
+    def save(self, path=None, formatVersion=3):
+        if formatVersion != 3:
+            raise NotImplementedError("unsupported format version: %s" %
+                                      formatVersion)
         saveAs = path is not None
         if saveAs:
             if os.path.exists(path):
@@ -176,7 +203,7 @@ class Font(object):
         writer = UFOWriter(path)
         # save font attrs
         if self._features is not None or saveAs:
-            writer.writeFeatures(self.features)
+            writer.writeFeatures(self.features.text)
         if self._groups is not None or saveAs:
             writer.writeGroups(self.groups)
         if self._info is not None or saveAs:
