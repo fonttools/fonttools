@@ -1,5 +1,5 @@
 import attr
-from typing import Union
+from collections import namedtuple
 from ufoLib2.reader import UFOReader
 
 
@@ -25,7 +25,7 @@ class DataStore(object):
             if fileName not in self._fileNames:
                 raise KeyError("%r is not in data store" % fileName)
             reader = UFOReader(self._path)
-            self._data[fileName] = self.readf(reader, fileName)
+            self._data[fileName] = self.__class__.readf(reader, fileName)
         return self._data[fileName]
 
     def __setitem__(self, fileName, data):
@@ -47,30 +47,30 @@ class DataStore(object):
         # if in-place, remove deleted data
         if not saveAs:
             for fileName in self._scheduledForDeletion:
-                self.deletef(writer, fileName)
+                self.__class__.deletef(writer, fileName)
         # write data
         for fileName in self._fileNames:
             data = self[fileName]
-            self.writef(writer, fileName, data)
+            self.__class__.writef(writer, fileName, data)
         self._scheduledForDeletion = set()
 
+    @property
+    def fileNames(self):
+        return self._fileNames
 
-@attr.s(repr=False, slots=True)
-class Transformation(object):
-    xScale = attr.ib(default=1, type=Union[int, float])
-    xyScale = attr.ib(default=0, type=Union[int, float])
-    yxScale = attr.ib(default=0, type=Union[int, float])
-    yScale = attr.ib(default=1, type=Union[int, float])
-    xOffset = attr.ib(default=0, type=Union[int, float])
-    yOffset = attr.ib(default=0, type=Union[int, float])
 
-    def __iter__(self):
-        yield self.xScale
-        yield self.xyScale
-        yield self.yxScale
-        yield self.yScale
-        yield self.xOffset
-        yield self.yOffset
+class Transformation(
+        namedtuple("Transformation", [
+            "xScale",
+            "xyScale",
+            "yxScale",
+            "yScale",
+            "xOffset",
+            "yOffset",
+        ])):
 
     def __repr__(self):
-        return "<%r %r %r %r %r %r>" % tuple(self)
+        return "<%s [%r %r %r %r %r %r]>" % ((self.__class__.__name__,) + self)
+
+
+Transformation.__new__.__defaults__ = (1, 0, 0, 1, 0, 0)
