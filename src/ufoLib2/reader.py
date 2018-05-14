@@ -24,10 +24,10 @@ class UFOReader(object):
     def getDataDirectoryListing(self, maxDepth=24):
         path = os.path.join(self._path, DATA_DIRNAME)
         files = set()
-        self._getDirectoryListing(path, files, maxDepth=maxDepth)
+        self._getDirectoryListing(path, files, DATA_DIRNAME, maxDepth=maxDepth)
         return files
 
-    def _getDirectoryListing(self, path, files, depth=0, maxDepth=24):
+    def _getDirectoryListing(self, path, files, base, depth=0, maxDepth=24):
         if depth > maxDepth:
             raise RuntimeError("maximum recursion depth %r exceeded" % maxDepth)
         try:
@@ -40,9 +40,9 @@ class UFOReader(object):
             f = os.path.join(path, fileName)
             if os.path.isdir(f):
                 self._getDirectoryListing(
-                    f, files, depth=depth+1, maxDepth=maxDepth)
+                    f, files, base, depth=depth+1, maxDepth=maxDepth)
             else:
-                relPath = os.path.relpath(f, self._path)
+                relPath = os.path.relpath(f, os.path.join(self._path, base))
                 files.add(relPath)
 
     def getImageDirectoryListing(self):
@@ -145,7 +145,13 @@ class UFOReader(object):
 
     def readKerning(self):
         path = os.path.join(self._path, KERNING_FILENAME)
-        return self._readPlist(path)
+        kerningNested = self._readPlist(path)
+        # flatten
+        kerning = {}
+        for left in kerningNested:
+            for right in kerningNested[left]:
+                kerning[left, right] = kerningNested[left][right]
+        return kerning
 
     def readLib(self):
         path = os.path.join(self._path, LIB_FILENAME)
