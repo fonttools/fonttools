@@ -22,7 +22,7 @@ class Glyph(object):
     lib = attr.ib(default=attr.Factory(dict), init=False, repr=False, type=dict)
     note = attr.ib(default=None, init=False, repr=False, type=Optional[str])
 
-    anchors = attr.ib(default=attr.Factory(list), init=False, repr=False, type=list)
+    _anchors = attr.ib(default=attr.Factory(list), init=False, repr=False, type=list)
     components = attr.ib(default=attr.Factory(list), init=False, repr=False, type=list)
     contours = attr.ib(default=attr.Factory(list), init=False, repr=False, type=list)
     _guidelines = attr.ib(default=attr.Factory(list), init=False, repr=False, type=list)
@@ -40,11 +40,22 @@ class Glyph(object):
         return iter(self.contours)
 
     @property
+    def anchors(self):
+        return self._anchors
+
+    @anchors.setter
+    def anchors(self, value):
+        self.clearAnchors()
+        for anchor in value:
+            self.appendAnchor(anchor)
+
+    @property
     def guidelines(self):
         return self._guidelines
 
     @guidelines.setter
     def guidelines(self, value):
+        self.clearGuidelines()
         for guideline in value:
             self.appendGuideline(guideline)
 
@@ -75,27 +86,31 @@ class Glyph(object):
                 self.unicodes.append(value)
 
     def clear(self):
-        self.anchors = []
-        self.components = []
-        self.contours = []
-        self.guidelines = []
-        self.image = None
+        del self._anchors[:]
+        del self.components[:]
+        del self.contours[:]
+        del self._guidelines[:]
+        self.image.clear()
+
+    def clearAnchors(self):
+        del self._anchors[:]
 
     def clearContours(self):
-        for contour in list(self):
-            self.contours.remove(contour)
+        del self.contours[:]
 
     def clearComponents(self):
-        for component in list(self.components):
-            self.components.remove(component)
+        del self.components[:]
+
+    def clearGuidelines(self):
+        del self._guidelines[:]
 
     def removeComponent(self, component):
         self.components.remove(component)
 
     def appendAnchor(self, anchor):
-        if isinstance(anchor, Anchor):
-            anchor = Anchor.asdict()
-        self.anchors.append(Anchor(**anchor))
+        if not isinstance(anchor, Anchor):
+            anchor = Anchor(**anchor)
+        self.anchors.append(anchor)
 
     def appendGuideline(self, guideline):
         if not isinstance(guideline, Guideline):
