@@ -1,6 +1,5 @@
 from ufoLib2.objects.component import Component
 from ufoLib2.objects.contour import Contour
-from ufoLib2.objects.misc import Transformation
 from ufoLib2.objects.point import Point
 from ufoLib2.pointPens.basePen import AbstractPointPen
 
@@ -19,11 +18,18 @@ class GlyphPointPen(AbstractPointPen):
         self._glyph.contours.append(self._contour)
         self._contour = None
 
-    def addPoint(self, pt, **kwargs):
-        kwargs["x"], kwargs["y"] = pt
-        self._contour.append(Point(**kwargs))
+    def addPoint(self, pt, segmentType=None, smooth=False, name=None,
+                 identifier=None, **kwargs):
+        x, y = pt
+        self._contour.append(
+            Point(
+                x,
+                y,
+                type=segmentType,
+                smooth=smooth,
+                name=name,
+                identifier=identifier))
 
     def addComponent(self, baseGlyph, transformation, **kwargs):
-        transformation = Transformation(transformation)
         component = Component(baseGlyph, transformation, **kwargs)
         self._glyph.components.append(component)
