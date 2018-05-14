@@ -85,12 +85,14 @@ class UFOWriter(object):
         os.remove(path)
 
     def writeData(self, fileName, data):
-        path = os.path.join(self._path, DATA_DIRNAME, fileName)
+        datadir = _ensure_dir(os.path.join(self._path, DATA_DIRNAME))
+        path = os.path.join(datadir, fileName)
         with open(path, "wb") as file:
             plistlib.dump(data, file)
 
     def writeImage(self, fileName, data):
-        path = os.path.join(self._path, IMAGES_DIRNAME, fileName)
+        imagesdir = _ensure_dir(os.path.join(self._path, IMAGES_DIRNAME))
+        path = os.path.join(imagesdir, fileName)
         with open(path, "wb") as file:
             plistlib.dump(data, file)
 
@@ -114,8 +116,12 @@ class UFOWriter(object):
         self._writePlist(path, data)
 
     def writeKerning(self, data):
+        # create nested kerning left/right dicts
+        kerning = {}
+        for (left, right), value in data.items():
+            kerning.setdefault(left, {})[right] = value
         path = os.path.join(self._path, KERNING_FILENAME)
-        self._writePlist(path, data)
+        self._writePlist(path, kerning)
 
     def writeLib(self, data):
         path = os.path.join(self._path, LIB_FILENAME)
@@ -136,6 +142,7 @@ def _ensure_dir(path):
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
+    return path
 
 
 def _ensure_removed(path):
