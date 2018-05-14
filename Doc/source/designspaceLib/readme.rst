@@ -84,17 +84,12 @@ Rules
 *****
 
 Rules describe designspace areas in which one glyph should be replaced by another.
-A rule has a name and a number of conditionsets. The rule also contains a list of glyphname
-pairs: the glyphs that need to be substituted. For a rule to be triggered
-only one of the conditionsets needs to be true, ``OR``. Within a conditionset all
-conditions need to be true, ``AND``.
+A rule has a name and a number of conditionsets. The rule also contains a list of
+glyphname pairs: the glyphs that need to be substituted. For a rule to be triggered
+**only one** of the conditionsets needs to be true, ``OR``. Within a conditionset 
+**all** conditions need to be true, ``AND``.
 
-Variable fonts
-=======================
-
--  In an variable font the substitution happens at run time: there are
-   no changes in the font, only in the sequence of glyphnames that is
-   rendered.
+The ``sub`` element contains a pair of glyphnames. The ``name`` attribute is the glyph that should be visible when the rule evaluates to **False**. The ``with`` attribute is the glyph that should be visible when the rule evaluates to **True**.
 
 UFO instances
 =============
@@ -547,7 +542,7 @@ Attributes
    to the root path of this document. The path can be at the same level
    as the document or lower.
 -  ``layer``: optional, string. The name of the layer in the source file.
-   If no layer attribute is given assume it is the foreground layer.
+   If no layer attribute is given assume the foreground layer should be used.
 
 .. 31-lib-element:
 
@@ -856,8 +851,11 @@ Example
 -  Defines a named rule.
 -  Each ``rule`` element contains one or more ``conditionset`` elements.
 -  Only one ``conditionset`` needs to be true to trigger the rule.
--  All conditions must be true to make the ``conditionset`` true.
--  For backwards compatibility a ``rule`` can contain ``condition`` elements outside of a conditionset. These are then understood to be part of a single, implied, ``conditionset``.
+-  All conditions in a ``conditionset`` must be true to make the ``conditionset`` true.
+-  For backwards compatibility a ``rule`` can contain ``condition`` elements outside of a conditionset. These are then understood to be part of a single, implied, ``conditionset``. Note: these conditions should be written wrapped in a conditionset.
+-  A rule element needs to contain one or more ``sub`` elements in order to be compiled to a variable font.
+-  Rules without sub elements should be ignored when compiling a font.
+-  For authoring tools it might be necessary to save designspace files without ``sub`` elements just because the work is incomplete.
 
 .. attributes-11:
 
@@ -865,7 +863,8 @@ Attributes
 ----------
 
 -  ``name``: optional, string. A unique name that can be used to
-   identify this rule if it needs to be referenced elsewhere.
+   identify this rule if it needs to be referenced elsewhere. The name
+   is not important for compiling variable fonts.
 
 5.1.1 conditionset element
 =======================
@@ -879,7 +878,7 @@ Attributes
 =======================
 
 -  Child element of ``conditionset``
--  Between the ``minimum`` and ``maximum`` this rule is ``true``.
+-  Between the ``minimum`` and ``maximum`` this rule is ``True``.
 -  If ``minimum`` is not available, assume it is ``axis.minimum``.
 -  If ``maximum`` is not available, assume it is ``axis.maximum``.
 -  The condition must contain at least a minimum or maximum or both.
@@ -900,9 +899,7 @@ Attributes
 =================
 
 -  Child element of ``rule``.
--  Defines which glyphs to replace when the rule is true.
--  This element is optional. It may be useful for editors to know which
-   glyphs can be used to preview the axis.
+-  Defines which glyph to replace when the rule evaluates to **True**.
 
 .. attributes-13:
 
@@ -911,7 +908,7 @@ Attributes
 
 -  ``name``: string, required. The name of the glyph this rule looks
    for.
--  ``byname``: string, required. The name of the glyph it is replaced
+-  ``with``: string, required. The name of the glyph it is replaced
    with.
 
 .. example-7:
@@ -928,7 +925,7 @@ contained in a conditionset.
         <rule name="named.rule.1">
             <condition minimum="250" maximum="750" name="weight" />
             <condition minimum="50" maximum="100" name="width" />
-            <sub name="dollar" byname="dollar.alt"/>
+            <sub name="dollar" with="dollar.alt"/>
         </rule>
     </rules>
 
@@ -946,7 +943,7 @@ Example with ``conditionsets``. All conditions in a conditionset must be true.
               <condition ... />
               <condition ... />
             </conditionset>
-            <sub name="dollar" byname="dollar.alt"/>
+            <sub name="dollar" with="dollar.alt"/>
         </rule>
     </rules>
 
