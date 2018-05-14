@@ -143,30 +143,14 @@ def _getNumber(element, attr, default):
     return _number(s)
 
 
-def _transformation(element, classes):
-    return classes.Transformation(
-        xScale=_getNumber(element, "xScale", 1),
-        xyScale=_getNumber(element, "xyScale", 0),
-        yxScale=_getNumber(element, "yxScale", 0),
-        yScale=_getNumber(element, "yScale", 1),
-        xOffset=_getNumber(element, "xOffset", 0),
-        yOffset=_getNumber(element, "yOffset", 0),
-    )
-
-
-def _transformation_back(transformation, d):
-    if transformation.xScale != 1:
-        d["xScale"] = repr(transformation.xScale)
-    if transformation.xyScale != 0:
-        d["xyScale"] = repr(transformation.xyScale)
-    if transformation.yxScale != 0:
-        d["yxScale"] = repr(transformation.yxScale)
-    if transformation.yScale != 1:
-        d["yScale"] = repr(transformation.yScale)
-    if transformation.xOffset != 0:
-        d["xOffset"] = repr(transformation.xOffset)
-    if transformation.yOffset != 0:
-        d["yOffset"] = repr(transformation.yOffset)
+def _setTransformationAttributes(transformation, d):
+    for attrib, value, default in zip(
+        ("xScale", "xyScale", "yxScale", "yScale", "xOffset", "yOffset"),
+        transformation,
+        (1, 0, 0, 1, 0, 0)
+    ):
+        if value != default:
+            d[attrib] = repr(value)
 
 
 def glyphFromTree(root, classes):
@@ -185,7 +169,14 @@ def glyphFromTree(root, classes):
         elif element.tag == "image":
             image = classes.Image(
                 fileName=element.attrib["fileName"],
-                transformation=_transformation(element, classes),
+                transformation=classes.Transformation(
+                    _getNumber(element, "xScale", 1),
+                    _getNumber(element, "xyScale", 0),
+                    _getNumber(element, "yxScale", 0),
+                    _getNumber(element, "yScale", 1),
+                    _getNumber(element, "xOffset", 0),
+                    _getNumber(element, "yOffset", 0),
+                ),
                 color=element.get("color"),
             )
             glyph.image = image
@@ -237,7 +228,14 @@ def outlineFromTree(outline, glyph, classes):
         elif element.tag == "component":
             component = classes.Component(
                 baseGlyph=element.attrib["base"],
-                transformation=_transformation(element, classes),
+                transformation=classes.Transformation(
+                    _getNumber(element, "xScale", 1),
+                    _getNumber(element, "xyScale", 0),
+                    _getNumber(element, "yxScale", 0),
+                    _getNumber(element, "yScale", 1),
+                    _getNumber(element, "xOffset", 0),
+                    _getNumber(element, "yOffset", 0),
+                ),
                 identifier=element.get("identifier"),
             )
             glyph.components.append(component)
@@ -261,11 +259,12 @@ def treeFromGlyph(glyph):
         # TODO: indent etc.?
         etree.SubElement(root, "note", text=glyph.note)
     # image
-    if glyph.image is not None:
+    if glyph.image.fileName is not None:
         attrs = {
             "fileName": glyph.image.fileName,
         }
-        _transformation_back(glyph.image.transformation, attrs)
+        if glyph.image.transformation is not None:
+            _setTransformationAttributes(glyph.image.transformation, attrs)
         if glyph.image.color is not None:
             attrs["color"] = glyph.image.color
         etree.SubElement(root, "image", attrs)
@@ -328,7 +327,7 @@ def treeFromOutline(glyph, outline):
         attrs = {
             "base": component.baseGlyph,
         }
-        _transformation_back(component.transformation, attrs)
+        _setTransformationAttributes(component.transformation, attrs)
         if component.identifier is not None:
             attrs["identifier"] = component.identifier
         etree.SubElement(outline, "component", attrs)
