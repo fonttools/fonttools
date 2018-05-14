@@ -1,9 +1,10 @@
 import attr
 from typing import Optional, Union
+from ufoLib2.objects.misc import AttrDictMixin
 
 
 @attr.s(slots=True)
-class Guideline(object):
+class Guideline(AttrDictMixin):
     x = attr.ib(default=None, type=Optional[Union[int, float]])
     y = attr.ib(default=None, type=Optional[Union[int, float]])
     angle = attr.ib(default=None, type=Optional[Union[int, float]])
