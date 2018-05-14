@@ -46,6 +46,12 @@ class Contour(object):
 
     # TODO: rotate method?
 
+    @property
+    def open(self):
+        if not self._points:
+            return True
+        return self._points[0].type == 'move'
+
     # -----------
     # Pen methods
     # -----------
