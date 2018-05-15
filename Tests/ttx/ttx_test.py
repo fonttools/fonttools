@@ -8,6 +8,7 @@ import getopt
 import logging
 import os
 import shutil
+import sys
 import tempfile
 import unittest
 
@@ -787,12 +788,14 @@ def test_ttx_main_keyboard_interrupt(tmpdir, monkeypatch, capsys):
 
 
 def test_ttx_main_system_exit(tmpdir, monkeypatch):
-    with pytest.raises(SystemExit):
-        inpath = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
-        outpath = os.path.join(str(tmpdir), "TestTTF.ttf")
-        args = ["-o", outpath, inpath]
-        monkeypatch.setattr(ttx, 'process', (lambda x, y: raise_exception(SystemExit)))
-        ttx.main(args)
+    # Exclude Windows testing.  The exception handling here causes Windows platform tests to hang
+    if sys.platform != "win32":
+        with pytest.raises(SystemExit):
+            inpath = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
+            outpath = os.path.join(str(tmpdir), "TestTTF.ttf")
+            args = ["-o", outpath, inpath]
+            monkeypatch.setattr(ttx, 'process', (lambda x, y: raise_exception(SystemExit)))
+            ttx.main(args)
 
 
 def test_ttx_main_ttlib_error(tmpdir, monkeypatch, capsys):
@@ -808,15 +811,17 @@ def test_ttx_main_ttlib_error(tmpdir, monkeypatch, capsys):
 
 
 def test_ttx_main_base_exception(tmpdir, monkeypatch, capsys):
-    with pytest.raises(SystemExit):
-        inpath = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
-        outpath = os.path.join(str(tmpdir), "TestTTF.ttf")
-        args = ["-o", outpath, inpath]
-        monkeypatch.setattr(ttx, 'process', (lambda x, y: raise_exception(Exception("Test error"))))
-        ttx.main(args)
+    # Exclude Windows testing.  The exception handling here causes Windows platform tests to hang
+    if sys.platform != "win32":
+        with pytest.raises(SystemExit):
+            inpath = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
+            outpath = os.path.join(str(tmpdir), "TestTTF.ttf")
+            args = ["-o", outpath, inpath]
+            monkeypatch.setattr(ttx, 'process', (lambda x, y: raise_exception(Exception("Test error"))))
+            ttx.main(args)
 
-    out, err = capsys.readouterr()
-    assert "Unhandled exception has occurred" in err
+        out, err = capsys.readouterr()
+        assert "Unhandled exception has occurred" in err
 
 # ---------------------------
 # support functions for tests
