@@ -86,23 +86,23 @@ class Glyph(object):
                 self.unicodes.append(value)
 
     def clear(self):
-        del self._anchors[:]
-        del self.components[:]
-        del self.contours[:]
-        del self._guidelines[:]
+        self._anchors.clear()
+        self.components.clear()
+        self.contours.clear()
+        self._guidelines.clear()
         self.image.clear()
 
     def clearAnchors(self):
-        del self._anchors[:]
+        self._anchors.clear()
 
     def clearContours(self):
-        del self.contours[:]
+        self.contours.clear()
 
     def clearComponents(self):
-        del self.components[:]
+        self.components.clear()
 
     def clearGuidelines(self):
-        del self._guidelines[:]
+        self._guidelines.clear()
 
     def removeComponent(self, component):
         self.components.remove(component)
