@@ -260,7 +260,7 @@ def treeFromGlyph(glyph):
     # note
     if glyph.note:
         # TODO: indent etc.?
-        etree.SubElement(root, "note", text=glyph.note)
+        etree.SubElement(root, "note").text = glyph.note
     # image
     if glyph.image.fileName is not None:
         attrs = {"fileName": glyph.image.fileName}
