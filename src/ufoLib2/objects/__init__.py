@@ -9,3 +9,18 @@ from ufoLib2.objects.info import Info
 from ufoLib2.objects.layer import Layer
 from ufoLib2.objects.layerSet import LayerSet
 from ufoLib2.objects.point import Point
+
+
+__all__ = [
+    "Anchor",
+    "Component",
+    "Contour",
+    "Font",
+    "Glyph",
+    "Guideline",
+    "Image",
+    "Info",
+    "Layer",
+    "LayerSet",
+    "Point",
+]

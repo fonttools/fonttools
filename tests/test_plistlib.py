@@ -7,7 +7,6 @@ import collections
 from io import BytesIO
 from numbers import Integral
 from lxml import etree
-import re
 import pytest
 
 
