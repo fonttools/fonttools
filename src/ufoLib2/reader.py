@@ -82,7 +82,7 @@ class UFOReader(object):
         path = os.path.join(self._path, LAYERCONTENTS_FILENAME)
         with open(path, "rb") as file:
             self._layerContents = plistlib.load(file)
-        for layerName, dirName in self._layerContents:
+        for _, dirName in self._layerContents:
             if dirName == DEFAULT_GLYPHS_DIRNAME:
                 break
         else:
@@ -120,7 +120,7 @@ class UFOReader(object):
         if layerName is None:
             dirName = DEFAULT_GLYPHS_DIRNAME
         else:
-            for name, dirName in self.getLayerContents():
+            for name, _ in self.getLayerContents():
                 if layerName == name:
                     break
             else:

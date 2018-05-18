@@ -81,7 +81,8 @@ class Contour(object):
                     name=p.name,
                 )
             warnings.warn(
-                "The pointPen needs an identifier kwarg. Identifiers have been discarded.",
+                "The pointPen needs an identifier kwarg. "
+                "Identifiers have been discarded.",
                 UserWarning,
             )
         pointPen.endPath()
