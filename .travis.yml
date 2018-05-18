@@ -1,11 +1,15 @@
 sudo: false
 language: python
-python:
-  - "2.7"
-  - "3.6"
 
-install: pip install tox-travis
+matrix:
+    include:
+    -   env: TOXENV=py27-cov
+        python: 2.7
+    -   env: TOXENV=py36-cov,fix-lint
+        python: 3.6
+
+install: pip install tox
 
 script: tox
 
-# after_success: tox -e codecov
+after_success: tox -e codecov
