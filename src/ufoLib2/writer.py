@@ -58,7 +58,7 @@ class UFOWriter(object):
             dirName = DEFAULT_GLYPHS_DIRNAME
         else:
             # TODO: cache this
-            existing = set(d.lower() for d in self._layerContents.values())
+            existing = {d.lower() for d in self._layerContents.values()}
             dirName = self._layerContents[layerName] = userNameToFileName(
                 tounicode(layerName, "utf-8"),
                 existing=existing,

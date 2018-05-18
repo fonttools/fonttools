@@ -37,7 +37,7 @@ class GlyphSet(object):
                 raise
             contents = {}
         self._contents = contents
-        self._filenames = set(fn.lower() for fn in self._contents.values())
+        self._filenames = {fn.lower() for fn in self._contents.values()}
 
     def readGlyph(self, name, classes):
         fileName = self._contents[name]
