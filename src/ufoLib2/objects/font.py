@@ -188,12 +188,14 @@ class Font(object):
 
     def save(self, path=None, formatVersion=3):
         if formatVersion != 3:
-            raise NotImplementedError("unsupported format version: %s" %
-                                      formatVersion)
+            raise NotImplementedError(
+                "unsupported format version: %s" % formatVersion
+            )
         saveAs = path is not None
         if saveAs:
             if os.path.exists(path):
                 import errno
+
                 raise OSError(errno.EEXIST, "path %r already exists" % path)
         else:
             path = self._path
@@ -208,11 +210,13 @@ class Font(object):
             writer.writeGroups(self.groups)
         if self._info is not None or saveAs:
             info = attr.asdict(
-                self.info, filter=attr.filters.exclude(type(None)))
+                self.info, filter=attr.filters.exclude(type(None))
+            )
             if self.guidelines:
                 info["guidelines"] = [
-                    attr.asdict(g, filter=attr.filters.exclude(
-                        type(None))) for g in self.guidelines]
+                    attr.asdict(g, filter=attr.filters.exclude(type(None)))
+                    for g in self.guidelines
+                ]
             writer.writeInfo(info)
         if self._kerning is not None or saveAs:
             writer.writeKerning(self.kerning)

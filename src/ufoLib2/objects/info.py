@@ -49,7 +49,9 @@ class Info(object):
     openTypeNameUniqueID = attr.ib(default=None, type=Optional[str])
     openTypeNameDescription = attr.ib(default=None, type=Optional[str])
     openTypeNamePreferredFamilyName = attr.ib(default=None, type=Optional[str])
-    openTypeNamePreferredSubfamilyName = attr.ib(default=None, type=Optional[str])
+    openTypeNamePreferredSubfamilyName = attr.ib(
+        default=None, type=Optional[str]
+    )
     openTypeNameCompatibleFullName = attr.ib(default=None, type=Optional[str])
     openTypeNameSampleText = attr.ib(default=None, type=Optional[str])
     openTypeNameWWSFamilyName = attr.ib(default=None, type=Optional[str])
@@ -94,7 +96,9 @@ class Info(object):
     postscriptFullName = attr.ib(default=None, type=Optional[str])
     postscriptSlantAngle = attr.ib(default=None, type=Union[int, float])
     postscriptUniqueID = attr.ib(default=None, type=int)
-    postscriptUnderlineThickness = attr.ib(default=None, type=Union[int, float])
+    postscriptUnderlineThickness = attr.ib(
+        default=None, type=Union[int, float]
+    )
     postscriptUnderlinePosition = attr.ib(default=None, type=Union[int, float])
     postscriptIsFixedPitch = attr.ib(default=None, type=bool)
     postscriptBlueValues = attr.ib(default=attr.Factory(list), type=list)

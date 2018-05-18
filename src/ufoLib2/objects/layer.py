@@ -9,12 +9,18 @@ from ufoLib2.constants import DEFAULT_LAYER_NAME
 class Layer(object):
     _name = attr.ib(default=DEFAULT_LAYER_NAME, type=str)
     _glyphSet = attr.ib(default=None, repr=False, type=GlyphSet)
-    _glyphs = attr.ib(default=attr.Factory(dict), init=False, repr=False, type=dict)
+    _glyphs = attr.ib(
+        default=attr.Factory(dict), init=False, repr=False, type=dict
+    )
     _keys = attr.ib(init=False, repr=False, type=set)
-    _scheduledForDeletion = attr.ib(default=attr.Factory(set), init=False, repr=False, type=set)
+    _scheduledForDeletion = attr.ib(
+        default=attr.Factory(set), init=False, repr=False, type=set
+    )
 
     color = attr.ib(default=None, init=False, repr=False, type=Optional[str])
-    lib = attr.ib(default=attr.Factory(dict), init=False, repr=False, type=dict)
+    lib = attr.ib(
+        default=attr.Factory(dict), init=False, repr=False, type=dict
+    )
 
     def __attrs_post_init__(self):
         # TODO: this could be done lazily
@@ -76,7 +82,11 @@ class Layer(object):
             self._scheduledForDeletion.remove(glyph.name)
 
     def loadGlyph(self, name):
-        if self._glyphSet is None or name not in self._glyphSet or name in self._scheduledForDeletion:
+        if (
+            self._glyphSet is None
+            or name not in self._glyphSet
+            or name in self._scheduledForDeletion
+        ):
             raise KeyError("name %r not in layer" % name)
         glyph = self._glyphSet.readGlyph(name, GlyphClasses)
         self._glyphs[name] = glyph

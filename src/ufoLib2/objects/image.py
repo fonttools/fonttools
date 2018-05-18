@@ -14,7 +14,8 @@ class Image(object):
     _transformation = attr.ib(
         default=None,
         convert=_to_optional_transformation,
-        type=Optional[Transformation])
+        type=Optional[Transformation],
+    )
     color = attr.ib(default=None, type=Optional[str])
 
     @property

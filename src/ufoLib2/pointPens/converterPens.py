@@ -13,7 +13,7 @@ class BasePointToSegmentPen(AbstractPointPen):
     as points, do use this base implementation as it properly takes
     care of all the edge cases.
     """
-    __slots__ = "currentPath",
+    __slots__ = ("currentPath",)
 
     def __init__(self):
         self.currentPath = None
@@ -79,7 +79,9 @@ class BasePointToSegmentPen(AbstractPointPen):
                 # qCurveTo() method and fontTools.pens.basePen.py.)
                 points.append((None, "qcurve", None, None, None))
             else:
-                points = points[firstOnCurve+1:] + points[:firstOnCurve+1]
+                points = (
+                    points[firstOnCurve + 1 :] + points[: firstOnCurve + 1]
+                )
 
         currentSegment = []
         for pt, segmentType, smooth, name, kwargs in points:
@@ -91,7 +93,9 @@ class BasePointToSegmentPen(AbstractPointPen):
 
         self._flushContour(segments)
 
-    def addPoint(self, pt, segmentType=None, smooth=False, name=None, **kwargs):
+    def addPoint(
+        self, pt, segmentType=None, smooth=False, name=None, **kwargs
+    ):
         self.currentPath.append((pt, segmentType, smooth, name, kwargs))
 
 
@@ -114,7 +118,9 @@ class PointToSegmentPen(BasePointToSegmentPen):
             # It's an open path.
             closed = False
             points = segments[0][1]
-            assert len(points) == 1, "illegal move segment point count: %d" % len(points)
+            assert (
+                len(points) == 1
+            ), "illegal move segment point count: %d" % len(points)
             movePt, smooth, name, kwargs = points[0]
             del segments[0]
         else:
@@ -136,9 +142,15 @@ class PointToSegmentPen(BasePointToSegmentPen):
             segmentType, points = segments[i]
             points = [pt for pt, smooth, name, kwargs in points]
             if segmentType == "line":
-                assert len(points) == 1, "illegal line segment point count: %d" % len(points)
+                assert (
+                    len(points) == 1
+                ), "illegal line segment point count: %d" % len(points)
                 pt = points[0]
-                if i + 1 != nSegments or outputImpliedClosingLine or not closed:
+                if (
+                    i + 1 != nSegments
+                    or outputImpliedClosingLine
+                    or not closed
+                ):
                     pen.lineTo(pt)
             elif segmentType == "curve":
                 pen.curveTo(*points)
@@ -277,7 +289,9 @@ class GuessSmoothPointPen(AbstractPointPen):
         self._outPen.endPath()
         self._points = None
 
-    def addPoint(self, pt, segmentType=None, smooth=False, name=None, **kwargs):
+    def addPoint(
+        self, pt, segmentType=None, smooth=False, name=None, **kwargs
+    ):
         self._points.append((pt, segmentType, False, name, kwargs))
 
     def addComponent(self, glyphName, transformation):

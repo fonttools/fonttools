@@ -50,7 +50,7 @@ class Contour(object):
     def open(self):
         if not self._points:
             return True
-        return self._points[0].type == 'move'
+        return self._points[0].type == "move"
 
     # -----------
     # Pen methods
@@ -64,10 +64,24 @@ class Contour(object):
         try:
             pointPen.beginPath(identifier=self.identifier)
             for p in self._points:
-                pointPen.addPoint((p.x, p.y), segmentType=p.type, smooth=p.smooth, name=p.name, identifier=p.identifier)
+                pointPen.addPoint(
+                    (p.x, p.y),
+                    segmentType=p.type,
+                    smooth=p.smooth,
+                    name=p.name,
+                    identifier=p.identifier,
+                )
         except TypeError:
             pointPen.beginPath()
             for p in self._points:
-                pointPen.addPoint((p.x, p.y), segmentType=p.type, smooth=p.smooth, name=p.name)
-            warnings.warn("The pointPen needs an identifier kwarg. Identifiers have been discarded.", UserWarning)
+                pointPen.addPoint(
+                    (p.x, p.y),
+                    segmentType=p.type,
+                    smooth=p.smooth,
+                    name=p.name,
+                )
+            warnings.warn(
+                "The pointPen needs an identifier kwarg. Identifiers have been discarded.",
+                UserWarning,
+            )
         pointPen.endPath()

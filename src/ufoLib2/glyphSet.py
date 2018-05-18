@@ -85,14 +85,17 @@ class GlyphSet(object):
             fileName = userNameToFileName(
                 tounicode(glyph.name, "utf-8"),
                 existing=self._filenames,
-                suffix=".glif")
+                suffix=".glif",
+            )
             self._contents[glyph.name] = fileName
             self._filenames.add(fileName.lower())
         root = treeFromGlyph(glyph)
         tree = etree.ElementTree(root)
         path = os.path.join(self._path, fileName)
         with open(path, "wb") as file:
-            tree.write(file, encoding="utf-8", pretty_print=True, xml_declaration=True)
+            tree.write(
+                file, encoding="utf-8", pretty_print=True, xml_declaration=True
+            )
 
     def writeLayerInfo(self, layer):
         layerDict = {}
@@ -147,7 +150,7 @@ def _setTransformationAttributes(transformation, d):
     for attrib, value, default in zip(
         ("xScale", "xyScale", "yxScale", "yScale", "xOffset", "yOffset"),
         transformation,
-        (1, 0, 0, 1, 0, 0)
+        (1, 0, 0, 1, 0, 0),
     ):
         if value != default:
             d[attrib] = repr(value)
@@ -260,9 +263,7 @@ def treeFromGlyph(glyph):
         etree.SubElement(root, "note", text=glyph.note)
     # image
     if glyph.image.fileName is not None:
-        attrs = {
-            "fileName": glyph.image.fileName,
-        }
+        attrs = {"fileName": glyph.image.fileName}
         if glyph.image.transformation is not None:
             _setTransformationAttributes(glyph.image.transformation, attrs)
         if glyph.image.color is not None:
@@ -284,10 +285,7 @@ def treeFromGlyph(glyph):
         etree.SubElement(root, "guideline", attrs)
     # anchors
     for anchor in glyph.anchors:
-        attrs = {
-            "x": repr(anchor.x),
-            "y": repr(anchor.y),
-        }
+        attrs = {"x": repr(anchor.x), "y": repr(anchor.y)}
         if anchor.name is not None:
             attrs["name"] = anchor.name
         if anchor.color is not None:
@@ -310,10 +308,7 @@ def treeFromOutline(glyph, outline):
         if contour.identifier is not None:
             element.attrib["identifier"] = contour.identifier
         for point in contour:
-            attrs = {
-                "x": repr(point.x),
-                "y": repr(point.y),
-            }
+            attrs = {"x": repr(point.x), "y": repr(point.y)}
             if point.type is not None:
                 attrs["type"] = point.type
             if point.smooth:
@@ -324,9 +319,7 @@ def treeFromOutline(glyph, outline):
                 attrs["identifier"] = point.identifier
             etree.SubElement(element, "point", attrs)
     for component in glyph.components:
-        attrs = {
-            "base": component.baseGlyph,
-        }
+        attrs = {"base": component.baseGlyph}
         _setTransformationAttributes(component.transformation, attrs)
         if component.identifier is not None:
             attrs["identifier"] = component.identifier

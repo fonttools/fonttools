@@ -26,13 +26,13 @@ def pl():
         aList=["A", "B", 12, 32.5, [1, 2, 3]],
         aFloat=0.5,
         anInt=728,
-        aBigInt=2**63 - 44,
-        aBigInt2=2**63 + 44,
+        aBigInt=2 ** 63 - 44,
+        aBigInt2=2 ** 63 + 44,
         aNegativeInt=-5,
         aNegativeBigInt=-80000000000,
         aDict=dict(
             anotherString="<hello & 'hi' there!>",
-            aUnicodeValue='M\xe4ssig, Ma\xdf',
+            aUnicodeValue="M\xe4ssig, Ma\xdf",
             aTrueValue=True,
             aFalseValue=False,
             deeperDict=dict(a=17, b=32.5, c=[1, 2, "text"]),
@@ -42,8 +42,9 @@ def pl():
         nestedData=[b"<lots of binary gunk>\0\1\2\3" * 10],
         aDate=datetime.datetime(2004, 10, 26, 10, 33, 33),
         anEmptyDict=dict(),
-        anEmptyList=list())
-    data['\xc5benraa'] = "That was a unicode key."
+        anEmptyList=list(),
+    )
+    data["\xc5benraa"] = "That was a unicode key."
     return data
 
 
@@ -58,10 +59,10 @@ def test_io(tmpdir, pl):
     assert pl == pl2
 
     with pytest.raises(AttributeError):
-        plistlib.dump(pl, 'filename')
+        plistlib.dump(pl, "filename")
 
     with pytest.raises(AttributeError):
-        plistlib.load('filename')
+        plistlib.load("filename")
 
 
 def test_invalid_type():
@@ -71,19 +72,22 @@ def test_invalid_type():
         plistlib.dumps(pl)
 
 
-@pytest.mark.parametrize("pl", [
-    0,
-    2**8 - 1,
-    2**8,
-    2**16 - 1,
-    2**16,
-    2**32 - 1,
-    2**32,
-    2**63 - 1,
-    2**64 - 1,
-    1,
-    -2**63,
-])
+@pytest.mark.parametrize(
+    "pl",
+    [
+        0,
+        2 ** 8 - 1,
+        2 ** 8,
+        2 ** 16 - 1,
+        2 ** 16,
+        2 ** 32 - 1,
+        2 ** 32,
+        2 ** 63 - 1,
+        2 ** 64 - 1,
+        1,
+        -2 ** 63,
+    ],
+)
 def test_int(pl):
     data = plistlib.dumps(pl)
     pl2 = plistlib.loads(data)
@@ -93,19 +97,16 @@ def test_int(pl):
     assert data == data2
 
 
-@pytest.mark.parametrize("pl", [
-    2**64 + 1,
-    2**127 - 1,
-    -2**64,
-    -2**127,
-])
+@pytest.mark.parametrize(
+    "pl", [2 ** 64 + 1, 2 ** 127 - 1, -2 ** 64, -2 ** 127]
+)
 def test_int_overflow(pl):
     with pytest.raises(OverflowError):
         plistlib.dumps(pl)
 
 
 def test_bytearray(pl):
-    pl = b'<binary gunk\0\1\2\3>'
+    pl = b"<binary gunk\0\1\2\3>"
     data = plistlib.dumps(bytearray(pl))
     pl2 = plistlib.loads(data)
     assert isinstance(pl2, bytes)
@@ -115,7 +116,7 @@ def test_bytearray(pl):
 
 
 def test_bytes(pl):
-    pl = b'<binary gunk\0\1\2\3>'
+    pl = b"<binary gunk\0\1\2\3>"
     data = plistlib.dumps(pl)
     pl2 = plistlib.loads(data)
     assert isinstance(pl2, bytes)
@@ -125,17 +126,19 @@ def test_bytes(pl):
 
 
 def test_indentation_array():
-    data = [[[[[[[[{'test': b'aaaaaa'}]]]]]]]]
+    data = [[[[[[[[{"test": b"aaaaaa"}]]]]]]]]
     assert plistlib.loads(plistlib.dumps(data)) == data
 
 
 def test_indentation_dict():
-    data = {'1': {'2': {'3': {'4': {'5': {'6': {'7': {'8': {'9': b'aaaaaa'}}}}}}}}}
+    data = {
+        "1": {"2": {"3": {"4": {"5": {"6": {"7": {"8": {"9": b"aaaaaa"}}}}}}}}
+    }
     assert plistlib.loads(plistlib.dumps(data)) == data
 
 
 def test_indentation_dict_mix():
-    data = {'1': {'2': [{'3': [[[[[{'test': b'aaaaaa'}]]]]]}]}}
+    data = {"1": {"2": [{"3": [[[[[{"test": b"aaaaaa"}]]]]]}]}}
     assert plistlib.loads(plistlib.dumps(data)) == data
 
 
@@ -174,42 +177,43 @@ def test_bytesio(pl):
 @pytest.mark.parametrize("sort_keys", [False, True])
 def test_keysort_bytesio(sort_keys):
     pl = collections.OrderedDict()
-    pl['b'] = 1
-    pl['a'] = 2
-    pl['c'] = 3
+    pl["b"] = 1
+    pl["a"] = 2
+    pl["c"] = 3
 
     b = BytesIO()
 
     plistlib.dump(pl, b, sort_keys=sort_keys)
     pl2 = plistlib.load(
-        BytesIO(b.getvalue()), dict_type=collections.OrderedDict)
+        BytesIO(b.getvalue()), dict_type=collections.OrderedDict
+    )
 
     assert dict(pl) == dict(pl2)
     if sort_keys:
-        assert list(pl2.keys()) == ['a', 'b', 'c']
+        assert list(pl2.keys()) == ["a", "b", "c"]
     else:
-        assert list(pl2.keys()) == ['b', 'a', 'c']
+        assert list(pl2.keys()) == ["b", "a", "c"]
 
 
 @pytest.mark.parametrize("sort_keys", [False, True])
 def test_keysort(sort_keys):
     pl = collections.OrderedDict()
-    pl['b'] = 1
-    pl['a'] = 2
-    pl['c'] = 3
+    pl["b"] = 1
+    pl["a"] = 2
+    pl["c"] = 3
 
     data = plistlib.dumps(pl, sort_keys=sort_keys)
     pl2 = plistlib.loads(data, dict_type=collections.OrderedDict)
 
     assert dict(pl) == dict(pl2)
     if sort_keys:
-        assert list(pl2.keys()) == ['a', 'b', 'c']
+        assert list(pl2.keys()) == ["a", "b", "c"]
     else:
-        assert list(pl2.keys()) == ['b', 'a', 'c']
+        assert list(pl2.keys()) == ["b", "a", "c"]
 
 
 def test_keys_no_string():
-    pl = {42: 'aNumber'}
+    pl = {42: "aNumber"}
 
     with pytest.raises(TypeError):
         plistlib.dumps(pl)
@@ -220,74 +224,45 @@ def test_keys_no_string():
 
 
 def test_skipkeys():
-    pl = {
-        42: 'aNumber',
-        'snake': 'aWord',
-    }
+    pl = {42: "aNumber", "snake": "aWord"}
 
-    data = plistlib.dumps(
-        pl, skipkeys=True, sort_keys=False)
+    data = plistlib.dumps(pl, skipkeys=True, sort_keys=False)
 
     pl2 = plistlib.loads(data)
-    assert pl2 == {'snake': 'aWord'}
+    assert pl2 == {"snake": "aWord"}
 
     fp = BytesIO()
-    plistlib.dump(
-        pl, fp, skipkeys=True, sort_keys=False)
+    plistlib.dump(pl, fp, skipkeys=True, sort_keys=False)
     data = fp.getvalue()
     pl2 = plistlib.loads(fp.getvalue())
-    assert pl2 == {'snake': 'aWord'}
+    assert pl2 == {"snake": "aWord"}
 
 
 def test_tuple_members():
-    pl = {
-        'first': (1, 2),
-        'second': (1, 2),
-        'third': (3, 4),
-    }
+    pl = {"first": (1, 2), "second": (1, 2), "third": (3, 4)}
 
     data = plistlib.dumps(pl)
     pl2 = plistlib.loads(data)
-    assert pl2 == {
-        'first': [1, 2],
-        'second': [1, 2],
-        'third': [3, 4],
-    }
-    assert pl2['first'] is not pl2['second']
+    assert pl2 == {"first": [1, 2], "second": [1, 2], "third": [3, 4]}
+    assert pl2["first"] is not pl2["second"]
 
 
 def test_list_members():
-    pl = {
-        'first': [1, 2],
-        'second': [1, 2],
-        'third': [3, 4],
-    }
+    pl = {"first": [1, 2], "second": [1, 2], "third": [3, 4]}
 
     data = plistlib.dumps(pl)
     pl2 = plistlib.loads(data)
-    assert pl2 == {
-        'first': [1, 2],
-        'second': [1, 2],
-        'third': [3, 4],
-    }
-    assert pl2['first'] is not pl2['second']
+    assert pl2 == {"first": [1, 2], "second": [1, 2], "third": [3, 4]}
+    assert pl2["first"] is not pl2["second"]
 
 
 def test_dict_members():
-    pl = {
-        'first': {'a': 1},
-        'second': {'a': 1},
-        'third': {'b': 2},
-    }
+    pl = {"first": {"a": 1}, "second": {"a": 1}, "third": {"b": 2}}
 
     data = plistlib.dumps(pl)
     pl2 = plistlib.loads(data)
-    assert pl2 == {
-        'first': {'a': 1},
-        'second': {'a': 1},
-        'third': {'b': 2},
-    }
-    assert pl2['first'] is not pl2['second']
+    assert pl2 == {"first": {"a": 1}, "second": {"a": 1}, "third": {"b": 2}}
+    assert pl2["first"] is not pl2["second"]
 
 
 def test_controlcharacters():
@@ -308,7 +283,7 @@ def test_controlcharacters():
 
 
 def test_non_bmp_characters():
-    pl = {'python': '\U0001f40d'}
+    pl = {"python": "\U0001f40d"}
     data = plistlib.dumps(pl)
     assert plistlib.loads(data) == pl
 
@@ -324,27 +299,30 @@ def test_nondictroot():
 
 def test_invalidarray():
     for i in [
-            "<key>key inside an array</key>",
-            "<key>key inside an array2</key><real>3</real>",
-            "<true/><key>key inside an array3</key>"
+        "<key>key inside an array</key>",
+        "<key>key inside an array2</key><real>3</real>",
+        "<true/><key>key inside an array3</key>",
     ]:
         with pytest.raises(ValueError):
             plistlib.loads(
-                ("<plist><array>%s</array></plist>" % i).encode("utf-8"))
+                ("<plist><array>%s</array></plist>" % i).encode("utf-8")
+            )
 
 
 def test_invaliddict():
     for i in [
-            "<key><true/>k</key><string>compound key</string>",
-            "<key>single key</key>", "<string>missing key</string>",
-            "<key>k1</key><string>v1</string><real>5.3</real>"
-            "<key>k1</key><key>k2</key><string>double key</string>"
+        "<key><true/>k</key><string>compound key</string>",
+        "<key>single key</key>",
+        "<string>missing key</string>",
+        "<key>k1</key><string>v1</string><real>5.3</real>"
+        "<key>k1</key><key>k2</key><string>double key</string>",
     ]:
         with pytest.raises(ValueError):
             plistlib.loads(("<plist><dict>%s</dict></plist>" % i).encode())
         with pytest.raises(ValueError):
-            plistlib.loads(("<plist><array><dict>%s</dict></array></plist>"
-                            % i).encode())
+            plistlib.loads(
+                ("<plist><array><dict>%s</dict></array></plist>" % i).encode()
+            )
 
 
 def test_invalidinteger():
@@ -360,16 +338,16 @@ def test_invalidreal():
 @pytest.mark.parametrize(
     "xml_encoding, encoding, bom",
     [
-        (b'utf-8', 'utf-8', codecs.BOM_UTF8),
-        (b'utf-16', 'utf-16-le', codecs.BOM_UTF16_LE),
-        (b'utf-16', 'utf-16-be', codecs.BOM_UTF16_BE),
-        (b'utf-32', 'utf-32-le', codecs.BOM_UTF32_LE),
-        (b'utf-32', 'utf-32-be', codecs.BOM_UTF32_BE),
-    ]
+        (b"utf-8", "utf-8", codecs.BOM_UTF8),
+        (b"utf-16", "utf-16-le", codecs.BOM_UTF16_LE),
+        (b"utf-16", "utf-16-be", codecs.BOM_UTF16_BE),
+        (b"utf-32", "utf-32-le", codecs.BOM_UTF32_LE),
+        (b"utf-32", "utf-32-be", codecs.BOM_UTF32_BE),
+    ],
 )
 def test_xml_encodings(pl, xml_encoding, encoding, bom):
-    data = TESTDATA.replace(b'UTF-8', xml_encoding)
-    data = bom + data.decode('utf-8').encode(encoding)
+    data = TESTDATA.replace(b"UTF-8", xml_encoding)
+    data = bom + data.decode("utf-8").encode(encoding)
     pl2 = plistlib.loads(data)
     assert pl == pl2
 
@@ -389,15 +367,20 @@ def test_totree(pl):
         assert e1.attrib == e2.attrib
         assert len(e1) == len(e2)
         # ignore indentation
-        text1 = "".join(
-            l.strip()
-            for l in e1.text.splitlines()) if e1.text is not None else ""
-        text2 = "".join(
-            l.strip()
-            for l in e2.text.splitlines()) if e2.text is not None else ""
+        text1 = (
+            "".join(l.strip() for l in e1.text.splitlines())
+            if e1.text is not None
+            else ""
+        )
+        text2 = (
+            "".join(l.strip() for l in e2.text.splitlines())
+            if e2.text is not None
+            else ""
+        )
         assert text1 == text2
 
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(pytest.main(sys.argv))

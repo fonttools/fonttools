@@ -4,6 +4,7 @@ from io import BytesIO
 from datetime import datetime
 from base64 import b64encode, b64decode
 from numbers import Integral
+
 try:
     from functools import singledispatch
 except ImportError:
@@ -12,22 +13,27 @@ from lxml import etree
 from fontTools.misc.py23 import unicode, basestring, tounicode
 
 
-PLIST_DOCTYPE = ('<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" '
-                 '"http://www.apple.com/DTDs/PropertyList-1.0.dtd">')
+PLIST_DOCTYPE = (
+    '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" '
+    '"http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
+)
 
 # Date should conform to a subset of ISO 8601:
 # YYYY '-' MM '-' DD 'T' HH ':' MM ':' SS 'Z'
-_date_parser = re.compile(r"(?P<year>\d\d\d\d)"
-                          r"(?:-(?P<month>\d\d)"
-                          r"(?:-(?P<day>\d\d)"
-                          r"(?:T(?P<hour>\d\d)"
-                          r"(?::(?P<minute>\d\d)"
-                          r"(?::(?P<second>\d\d))"
-                          r"?)?)?)?)?Z", getattr(re, "ASCII", 0))  # py3-only
+_date_parser = re.compile(
+    r"(?P<year>\d\d\d\d)"
+    r"(?:-(?P<month>\d\d)"
+    r"(?:-(?P<day>\d\d)"
+    r"(?:T(?P<hour>\d\d)"
+    r"(?::(?P<minute>\d\d)"
+    r"(?::(?P<second>\d\d))"
+    r"?)?)?)?)?Z",
+    getattr(re, "ASCII", 0),
+)  # py3-only
 
 
 def _date_from_string(s):
-    order = ('year', 'month', 'day', 'hour', 'minute', 'second')
+    order = ("year", "month", "day", "hour", "minute", "second")
     gd = _date_parser.match(s).groupdict()
     lst = []
     for key in order:
@@ -39,8 +45,14 @@ def _date_from_string(s):
 
 
 def _date_to_string(d):
-    return '%04d-%02d-%02dT%02d:%02d:%02dZ' % (d.year, d.month, d.day, d.hour,
-                                               d.minute, d.second)
+    return "%04d-%02d-%02dT%02d:%02d:%02dZ" % (
+        d.year,
+        d.month,
+        d.day,
+        d.hour,
+        d.minute,
+        d.second,
+    )
 
 
 class PlistTarget(object):
@@ -105,62 +117,71 @@ class PlistTarget(object):
             self.stack[-1].append(value)
 
     def get_data(self):
-        data = ''.join(self._data)
+        data = "".join(self._data)
         self._data = []
         return data
 
 
 # event handlers
 
+
 def start_dict(self):
     d = self._dict_type()
     self.add_object(d)
     self.stack.append(d)
+
 
 def end_dict(self):
     if self.current_key:
         raise ValueError("missing value for key '%s'" % self.current_key)
     self.stack.pop()
 
+
 def end_key(self):
     if self.current_key or not isinstance(self.stack[-1], type({})):
         raise ValueError("unexpected key")
     self.current_key = self.get_data()
+
 
 def start_array(self):
     a = []
     self.add_object(a)
     self.stack.append(a)
 
+
 def end_array(self):
     self.stack.pop()
+
 
 def end_true(self):
     self.add_object(True)
 
+
 def end_false(self):
     self.add_object(False)
+
 
 def end_integer(self):
     self.add_object(int(self.get_data()))
 
+
 def end_real(self):
     self.add_object(float(self.get_data()))
+
 
 def end_string(self):
     self.add_object(self.get_data())
 
+
 def end_data(self):
     self.add_object(b64decode(self.get_data()))
+
 
 def end_date(self):
     self.add_object(_date_from_string(self.get_data()))
 
 
-_TARGET_START_HANDLERS = {
-    "dict": start_dict,
-    "array": start_array,
-}
+_TARGET_START_HANDLERS = {"dict": start_dict, "array": start_array}
 
 _TARGET_END_HANDLERS = {
     "dict": end_dict,
@@ -286,8 +307,9 @@ def fromtree(tree, dict_type=dict):
 
 def load(fp, dict_type=dict):
     if not hasattr(fp, "read"):
-        raise AttributeError("'%s' object has no attribute 'read'" %
-                             type(fp).__name__)
+        raise AttributeError(
+            "'%s' object has no attribute 'read'" % type(fp).__name__
+        )
     target = PlistTarget(dict_type=dict_type)
     parser = etree.XMLParser(target=target)
     return etree.parse(fp, parser=parser)
@@ -300,8 +322,9 @@ def loads(value, dict_type=dict):
 
 def dump(value, fp, sort_keys=True, skipkeys=False, _pretty_print=True):
     if not hasattr(fp, "write"):
-        raise AttributeError("'%s' object has no attribute 'write'" %
-                             type(fp).__name__)
+        raise AttributeError(
+            "'%s' object has no attribute 'write'" % type(fp).__name__
+        )
     root = etree.Element("plist", version="1.0")
     root.append(totree(value, sort_keys=sort_keys, skipkeys=skipkeys))
     tree = etree.ElementTree(root)
@@ -310,7 +333,8 @@ def dump(value, fp, sort_keys=True, skipkeys=False, _pretty_print=True):
         encoding="utf-8",
         pretty_print=_pretty_print,
         xml_declaration=True,
-        doctype=PLIST_DOCTYPE)
+        doctype=PLIST_DOCTYPE,
+    )
 
 
 def dumps(value, sort_keys=True, skipkeys=False, _pretty_print=True):
@@ -320,5 +344,6 @@ def dumps(value, sort_keys=True, skipkeys=False, _pretty_print=True):
         fp,
         sort_keys=sort_keys,
         skipkeys=skipkeys,
-        _pretty_print=_pretty_print)
+        _pretty_print=_pretty_print,
+    )
     return fp.getvalue()

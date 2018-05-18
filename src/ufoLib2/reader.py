@@ -5,9 +5,17 @@ import errno
 from io import open
 from ufoLib2 import plistlib
 from ufoLib2.constants import (
-    DATA_DIRNAME, DEFAULT_GLYPHS_DIRNAME, FEATURES_FILENAME, FONTINFO_FILENAME,
-    GROUPS_FILENAME, IMAGES_DIRNAME, KERNING_FILENAME, LAYERCONTENTS_FILENAME,
-    LIB_FILENAME, DEFAULT_LAYER_NAME)
+    DATA_DIRNAME,
+    DEFAULT_GLYPHS_DIRNAME,
+    FEATURES_FILENAME,
+    FONTINFO_FILENAME,
+    GROUPS_FILENAME,
+    IMAGES_DIRNAME,
+    KERNING_FILENAME,
+    LAYERCONTENTS_FILENAME,
+    LIB_FILENAME,
+    DEFAULT_LAYER_NAME,
+)
 from ufoLib2.glyphSet import GlyphSet
 
 
@@ -29,7 +37,9 @@ class UFOReader(object):
 
     def _getDirectoryListing(self, path, files, base, depth=0, maxDepth=24):
         if depth > maxDepth:
-            raise RuntimeError("maximum recursion depth %r exceeded" % maxDepth)
+            raise RuntimeError(
+                "maximum recursion depth %r exceeded" % maxDepth
+            )
         try:
             listdir = os.listdir(path)
         except OSError as e:
@@ -40,7 +50,8 @@ class UFOReader(object):
             f = os.path.join(path, fileName)
             if os.path.isdir(f):
                 self._getDirectoryListing(
-                    f, files, base, depth=depth+1, maxDepth=maxDepth)
+                    f, files, base, depth=depth + 1, maxDepth=maxDepth
+                )
             else:
                 relPath = os.path.relpath(f, os.path.join(self._path, base))
                 files.add(relPath)
@@ -76,7 +87,8 @@ class UFOReader(object):
                 break
         else:
             raise ValueError(
-                "The default layer is not defined in layercontents.plist")
+                "The default layer is not defined in layercontents.plist"
+            )
         return self._layerContents
 
     def getDefaultLayerName(self):
@@ -87,11 +99,14 @@ class UFOReader(object):
                 defaultLayerName = layerName
             if layerName == DEFAULT_LAYER_NAME:
                 publicDefaultDir = layerDirectory
-        if (publicDefaultDir is not None
-                and publicDefaultDir != DEFAULT_GLYPHS_DIRNAME):
+        if (
+            publicDefaultDir is not None
+            and publicDefaultDir != DEFAULT_GLYPHS_DIRNAME
+        ):
             raise ValueError(
                 "'public.default' assigned to non-default directory: '%s'"
-                % publicDefaultDir)
+                % publicDefaultDir
+            )
         # we checked it already
         assert defaultLayerName is not None, "default layer not found!"
         return defaultLayerName
@@ -110,7 +125,8 @@ class UFOReader(object):
                     break
             else:
                 raise ValueError(
-                    'No glyphs directory is mapped to "%s".' % layerName)
+                    'No glyphs directory is mapped to "%s".' % layerName
+                )
         path = os.path.join(self._path, dirName)
         return GlyphSet(path)
 

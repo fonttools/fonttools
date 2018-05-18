@@ -7,9 +7,17 @@ import errno
 from ufoLib2 import plistlib
 import shutil
 from ufoLib2.constants import (
-    DATA_DIRNAME, DEFAULT_GLYPHS_DIRNAME, FEATURES_FILENAME, FONTINFO_FILENAME,
-    GROUPS_FILENAME, KERNING_FILENAME, IMAGES_DIRNAME, LAYERCONTENTS_FILENAME,
-    LIB_FILENAME, METAINFO_FILENAME)
+    DATA_DIRNAME,
+    DEFAULT_GLYPHS_DIRNAME,
+    FEATURES_FILENAME,
+    FONTINFO_FILENAME,
+    GROUPS_FILENAME,
+    KERNING_FILENAME,
+    IMAGES_DIRNAME,
+    LAYERCONTENTS_FILENAME,
+    LIB_FILENAME,
+    METAINFO_FILENAME,
+)
 from ufoLib2.glyphSet import GlyphSet
 
 
@@ -17,7 +25,9 @@ from ufoLib2.glyphSet import GlyphSet
 class UFOWriter(object):
     # TODO: we should probably take path-like objects, for zip etc. support.
     _path = attr.ib(type=str)
-    _layerContents = attr.ib(default=attr.Factory(dict), init=False, repr=False, type=list)
+    _layerContents = attr.ib(
+        default=attr.Factory(dict), init=False, repr=False, type=list
+    )
 
     def __attrs_post_init__(self):
         _ensure_dir(self._path)
@@ -28,10 +38,7 @@ class UFOWriter(object):
         return self._path
 
     def _writeMetaInfo(self):
-        data = {
-            "creator": "io.github.adrientetar.ufoLib2",
-            "formatVersion": 3,
-        }
+        data = {"creator": "io.github.adrientetar.ufoLib2", "formatVersion": 3}
         path = os.path.join(self._path, METAINFO_FILENAME)
         with open(path, "wb") as file:
             plistlib.dump(data, file)
@@ -53,7 +60,10 @@ class UFOWriter(object):
             # TODO: cache this
             existing = set(d.lower() for d in self._layerContents.values())
             dirName = self._layerContents[layerName] = userNameToFileName(
-                tounicode(layerName, "utf-8"), existing=existing, prefix="glyphs.")
+                tounicode(layerName, "utf-8"),
+                existing=existing,
+                prefix="glyphs.",
+            )
         path = os.path.join(self._path, dirName)
         _ensure_dir(path)
         return GlyphSet(path)

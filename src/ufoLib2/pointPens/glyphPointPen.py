@@ -18,8 +18,15 @@ class GlyphPointPen(AbstractPointPen):
         self._glyph.contours.append(self._contour)
         self._contour = None
 
-    def addPoint(self, pt, segmentType=None, smooth=False, name=None,
-                 identifier=None, **kwargs):
+    def addPoint(
+        self,
+        pt,
+        segmentType=None,
+        smooth=False,
+        name=None,
+        identifier=None,
+        **kwargs
+    ):
         x, y = pt
         self._contour.append(
             Point(
@@ -28,7 +35,9 @@ class GlyphPointPen(AbstractPointPen):
                 type=segmentType,
                 smooth=smooth,
                 name=name,
-                identifier=identifier))
+                identifier=identifier,
+            )
+        )
 
     def addComponent(self, baseGlyph, transformation, **kwargs):
         component = Component(baseGlyph, transformation, **kwargs)

@@ -14,8 +14,7 @@ def _to_transformation(v):
 @attr.s(slots=True)
 class Component(object):
     baseGlyph = attr.ib(type=str)
-    _transformation = attr.ib(
-        convert=_to_transformation, type=Transformation)
+    _transformation = attr.ib(convert=_to_transformation, type=Transformation)
     identifier = attr.ib(default=None, type=Optional[str])
 
     @property
@@ -39,10 +38,12 @@ class Component(object):
             pointPen.addComponent(
                 self.baseGlyph,
                 self._transformation,
-                identifier=self.identifier)
+                identifier=self.identifier,
+            )
         except TypeError:
             pointPen.addComponent(self.baseGlyph, self._transformation)
             warnings.warn(
                 "The addComponent method needs an identifier kwarg. "
                 "The component's identifier value has been discarded.",
-                UserWarning)
+                UserWarning,
+            )

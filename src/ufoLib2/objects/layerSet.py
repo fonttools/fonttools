@@ -12,7 +12,8 @@ def _layersConverter(value):
     for layer in value:
         if not isinstance(layer, Layer):
             raise TypeError(
-                "expected 'Layer', found '%s'" % type(layer).__name__)
+                "expected 'Layer', found '%s'" % type(layer).__name__
+            )
         if layer.name in layers:
             raise KeyError("duplicate layer name: '%s'" % layer.name)
         layers[layer.name] = layer
@@ -21,20 +22,19 @@ def _layersConverter(value):
 
 @attr.s(slots=True, repr=False)
 class LayerSet(object):
-    _layers = attr.ib(
-        default=(),
-        converter=_layersConverter,
-        type=OrderedDict)
+    _layers = attr.ib(default=(), converter=_layersConverter, type=OrderedDict)
     _defaultLayer = attr.ib(default=None, type=Layer)
     _scheduledForDeletion = attr.ib(
-        default=attr.Factory(set), init=False, type=set)
+        default=attr.Factory(set), init=False, type=set
+    )
 
     def __attrs_post_init__(self):
         if not self._layers:
             # LayerSet is never empty; always contains at least the default
             if self._defaultLayer is not None:
                 raise TypeError(
-                    "'defaultLayer' argument is invalid with empty LayerSet")
+                    "'defaultLayer' argument is invalid with empty LayerSet"
+                )
             self._defaultLayer = self.newLayer(DEFAULT_LAYER_NAME)
         elif self._defaultLayer is not None:
             # check that the specified default layer is in the layer set;
@@ -48,7 +48,8 @@ class LayerSet(object):
             else:
                 raise TypeError(
                     "'defaultLayer': expected string, found '%s'"
-                    % type(default).__name__)
+                    % type(default).__name__
+                )
         else:
             if DEFAULT_LAYER_NAME not in self._layers:
                 raise ValueError("default layer not specified")
@@ -57,9 +58,12 @@ class LayerSet(object):
     @classmethod
     def load(cls, reader):
         return cls(
-            (Layer(name=name, glyphSet=glyphSet)
-             for name, glyphSet in reader.iterGlyphSets()),
-            defaultLayer=reader.getDefaultLayerName())
+            (
+                Layer(name=name, glyphSet=glyphSet)
+                for name, glyphSet in reader.iterGlyphSets()
+            ),
+            defaultLayer=reader.getDefaultLayerName(),
+        )
 
     def __contains__(self, name):
         return name in self._layers
@@ -86,8 +90,10 @@ class LayerSet(object):
         return self._layers.keys()
 
     def __repr__(self):
-        return "%s(%s)" % (self.__class__.__name__,
-                           repr(list(self)) if self._layers else "")
+        return "%s(%s)" % (
+            self.__class__.__name__,
+            repr(list(self)) if self._layers else "",
+        )
 
     @property
     def defaultLayer(self):
@@ -97,7 +103,8 @@ class LayerSet(object):
     def defaultLayer(self, layer):
         if not isinstance(layer, Layer):
             raise TypeError(
-                "expected 'Layer', found '%s'" % type(layer).__name__)
+                "expected 'Layer', found '%s'" % type(layer).__name__
+            )
         for this in self._layers.values():
             if this is layer:
                 break
@@ -141,8 +148,7 @@ class LayerSet(object):
                 if overwrite:
                     del layer[newName]
                 else:
-                    raise KeyError(
-                        "target name %r already exists" % newName)
+                    raise KeyError("target name %r already exists" % newName)
         # now do the move
         for layer in self:
             if name in layer:

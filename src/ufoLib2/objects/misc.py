@@ -1,6 +1,7 @@
 import attr
 from collections import namedtuple
 from ufoLib2.reader import UFOReader
+
 try:
     from collections.abc import Mapping
 except ImportError:
@@ -16,7 +17,9 @@ class DataStore(object):
     _path = attr.ib(default=None, type=str)
     _fileNames = attr.ib(default=attr.Factory(set), repr=False, type=set)
     _data = attr.ib(default=attr.Factory(dict), init=False, type=dict)
-    _scheduledForDeletion = attr.ib(default=attr.Factory(set), init=False, repr=False, type=set)
+    _scheduledForDeletion = attr.ib(
+        default=attr.Factory(set), init=False, repr=False, type=set
+    )
 
     def __contains__(self, fileName):
         return fileName in self._fileNames
@@ -64,14 +67,11 @@ class DataStore(object):
 
 
 class Transformation(
-        namedtuple("Transformation", [
-            "xScale",
-            "xyScale",
-            "yxScale",
-            "yScale",
-            "xOffset",
-            "yOffset",
-        ])):
+    namedtuple(
+        "Transformation",
+        ["xScale", "xyScale", "yxScale", "yScale", "xOffset", "yOffset"],
+    )
+):
 
     def __repr__(self):
         return "<%s [%r %r %r %r %r %r]>" % ((self.__class__.__name__,) + self)

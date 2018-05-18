@@ -7,7 +7,10 @@ from ufoLib2.objects.guideline import Guideline
 from ufoLib2.objects.image import Image
 from ufoLib2.objects.misc import Transformation
 from ufoLib2.objects.point import Point
-from ufoLib2.pointPens.converterPens import PointToSegmentPen, SegmentToPointPen
+from ufoLib2.pointPens.converterPens import (
+    PointToSegmentPen,
+    SegmentToPointPen,
+)
 from ufoLib2.pointPens.glyphPointPen import GlyphPointPen
 
 
@@ -18,14 +21,26 @@ class Glyph(object):
     height = attr.ib(default=0, init=False, type=Union[int, float])
     unicodes = attr.ib(default=attr.Factory(list), init=False, type=list)
 
-    image = attr.ib(default=attr.Factory(Image), init=False, repr=False, type=Image)
-    lib = attr.ib(default=attr.Factory(dict), init=False, repr=False, type=dict)
+    image = attr.ib(
+        default=attr.Factory(Image), init=False, repr=False, type=Image
+    )
+    lib = attr.ib(
+        default=attr.Factory(dict), init=False, repr=False, type=dict
+    )
     note = attr.ib(default=None, init=False, repr=False, type=Optional[str])
 
-    _anchors = attr.ib(default=attr.Factory(list), init=False, repr=False, type=list)
-    components = attr.ib(default=attr.Factory(list), init=False, repr=False, type=list)
-    contours = attr.ib(default=attr.Factory(list), init=False, repr=False, type=list)
-    _guidelines = attr.ib(default=attr.Factory(list), init=False, repr=False, type=list)
+    _anchors = attr.ib(
+        default=attr.Factory(list), init=False, repr=False, type=list
+    )
+    components = attr.ib(
+        default=attr.Factory(list), init=False, repr=False, type=list
+    )
+    contours = attr.ib(
+        default=attr.Factory(list), init=False, repr=False, type=list
+    )
+    _guidelines = attr.ib(
+        default=attr.Factory(list), init=False, repr=False, type=list
+    )
 
     def __len__(self):
         return len(self.contours)

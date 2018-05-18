@@ -19,9 +19,11 @@ class Guideline(AttrDictMixin):
         if x is None or y is None:
             if angle is not None:
                 raise ValueError(
-                    "if 'x' or 'y' are None, 'angle' must not be present")
+                    "if 'x' or 'y' are None, 'angle' must not be present"
+                )
         if x is not None and y is not None and angle is None:
             raise ValueError(
-                "if 'x' and 'y' are defined, 'angle' must be defined")
+                "if 'x' and 'y' are defined, 'angle' must be defined"
+            )
         if angle is not None and not (0 <= angle <= 360):
             raise ValueError("angle must be between 0 and 360")
