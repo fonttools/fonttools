@@ -121,7 +121,7 @@ Attributes
 -  ``path``: string. Absolute path to the source file, calculated from
    the document path and the string in the filename attr. MutatorMath +
    Varlib.
-   ``layerName``: string. The name of the layer in the source to look for
+-  ``layerName``: string. The name of the layer in the source to look for
    outline data. Default ``None`` which means ``foreground``.
 -  ``font``: Any Python object. Optional. Points to a representation of
    this source font that is loaded in memory, as a Python object
@@ -130,7 +130,7 @@ Attributes
    writer will not use this attribute. It is up to the user of
    ``designspaceLib`` to either load the resource identified by ``filename``
    and store it in this field, or write the contents of this field to the
-   disk and make ```filename`` point to that.
+   disk and make ``filename`` point to that.
 -  ``name``: string. Optional. Unique identifier name for this source,
    if there is one or more ``instance.glyph`` elements in the document.
    MutatorMath.
@@ -363,7 +363,7 @@ Document xml structure
         <axes>
             <!-- define axes here -->
             <axis../>
-            </axes>
+        </axes>
         <sources>
             <!-- define masters here -->
             <source../>
@@ -515,8 +515,8 @@ Example
 .. code:: xml
 
     <location>
-      <dimension name="width" xvalue="0.000000" />
-      <dimension name="weight" xvalue="0.000000" yvalue="0.003" />
+        <dimension name="width" xvalue="0.000000" />
+        <dimension name="weight" xvalue="0.000000" yvalue="0.003" />
     </location>
 
 .. 3-source-element:
@@ -561,7 +561,7 @@ There are two meanings for the ``lib`` element:
 2. Document and instance lib
     - Example:
 
-      .. code:: python
+      .. code:: xml
 
         <lib>
             <dict>
@@ -646,14 +646,14 @@ Example
 
     <source familyname="MasterFamilyName" filename="masters/masterTest1.ufo" name="master.ufo1" stylename="MasterStyleNameOne">
         <lib copy="1" />
-       <features copy="1" />
+        <features copy="1" />
         <info copy="1" />
         <glyph mute="1" name="A" />
-       <glyph mute="1" name="Z" />
-       <location>
-          <dimension name="width" xvalue="0.000000" />
-          <dimension name="weight" xvalue="0.000000" />
-       </location>
+        <glyph mute="1" name="Z" />
+        <location>
+            <dimension name="width" xvalue="0.000000" />
+            <dimension name="weight" xvalue="0.000000" />
+        </location>
     </source>
 
 .. 4-instance-element:
@@ -805,14 +805,14 @@ Example
     <instance familyname="InstanceFamilyName" filename="instances/instanceTest2.ufo" name="instance.ufo2" postscriptfontname="InstancePostscriptName" stylemapfamilyname="InstanceStyleMapFamilyName" stylemapstylename="InstanceStyleMapStyleName" stylename="InstanceStyleName">
     <location>
         <dimension name="width" xvalue="400" yvalue="300" />
-       <dimension name="weight" xvalue="66" />
+        <dimension name="weight" xvalue="66" />
     </location>
     <glyphs>
         <glyph name="arrow2" />
         <glyph name="arrow" unicode="0x4d2 0x4d3">
         <location>
             <dimension name="width" xvalue="100" />
-                <dimension name="weight" xvalue="120" />
+            <dimension name="weight" xvalue="120" />
         </location>
         <note>A note about this glyph</note>
         <masters>
@@ -936,12 +936,12 @@ Example with ``conditionsets``. All conditions in a conditionset must be true.
     <rules>
         <rule name="named.rule.2">
             <conditionset>
-              <condition minimum="250" maximum="750" name="weight" />
-              <condition minimum="50" maximum="100" name="width" />
+                <condition minimum="250" maximum="750" name="weight" />
+                <condition minimum="50" maximum="100" name="width" />
             </conditionset>
             <conditionset>
-              <condition ... />
-              <condition ... />
+                <condition ... />
+                <condition ... />
             </conditionset>
             <sub name="dollar" with="dollar.alt"/>
         </rule>
