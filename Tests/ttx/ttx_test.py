@@ -742,11 +742,14 @@ def test_ttcompile_ttf_to_woff2(tmpdir):
         assert table in ttf
 
 
-# TODO: convert to pytest parametrize for this and the next test
-def test_ttcompile_ttf_timestamp_calcs(tmpdir):
-    inttx = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
-    outttf1 = os.path.join(str(tmpdir), "TestTTF1.ttf")
-    outttf2 = os.path.join(str(tmpdir), "TestTTF2.ttf")
+@pytest.mark.parametrize("inpath, outpath1, outpath2",
+                       [("TestTTF.ttx", "TestTTF1.ttf", "TestTTF2.ttf"),
+                        ("TestOTF.ttx", "TestOTF1.otf", "TestOTF2.otf")
+                       ])
+def test_ttcompile_timestamp_calcs(inpath, outpath1, outpath2, tmpdir):
+    inttx = os.path.join("Tests", "ttx", "data", inpath)
+    outttf1 = os.path.join(str(tmpdir), outpath1)
+    outttf2 = os.path.join(str(tmpdir), outpath2)
     options = ttx.Options([], 1)
     # build with default options = do not recalculate timestamp
     ttx.ttCompile(inttx, outttf1, options)
@@ -767,33 +770,6 @@ def test_ttcompile_ttf_timestamp_calcs(tmpdir):
     mtime = os.path.getmtime(inttx)
     epochtime = timestampSinceEpoch(mtime)
     ttf = TTFont(outttf2)
-    assert ttf["head"].modified > epochtime
-
-
-def test_ttcompile_otf_timestamp_calcs(tmpdir):
-    inttx = os.path.join("Tests", "ttx", "data", "TestOTF.ttx")
-    outotf1 = os.path.join(str(tmpdir), "TestOTF1.ttf")
-    outotf2 = os.path.join(str(tmpdir), "TestOTF2.ttf")
-    options = ttx.Options([], 1)
-    # build with default options = do not recalculate timestamp
-    ttx.ttCompile(inttx, outotf1, options)
-    # confirm that font was built
-    assert os.path.isfile(outotf1)
-    # confirm that timestamp is same as modified time on ttx file
-    mtime = os.path.getmtime(inttx)
-    epochtime = timestampSinceEpoch(mtime)
-    ttf = TTFont(outotf1)
-    assert ttf["head"].modified == epochtime
-
-    # reset options to recalculate the timestamp and compile new font
-    options.recalcTimestamp = True
-    ttx.ttCompile(inttx, outotf2, options)
-    # confirm that font was built
-    assert os.path.isfile(outotf2) is True
-    # confirm that timestamp is more recent than modified time on ttx file
-    mtime = os.path.getmtime(inttx)
-    epochtime = timestampSinceEpoch(mtime)
-    ttf = TTFont(outotf2)
     assert ttf["head"].modified > epochtime
 
 
