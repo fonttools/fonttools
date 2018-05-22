@@ -218,7 +218,6 @@ class Options(object):
 			self.logLevel = logging.INFO
 		if self.mergeFile and self.flavor:
 			raise getopt.GetoptError("-m and --flavor options are mutually exclusive")
-			sys.exit(2)
 		if self.onlyTables and self.skipTables:
 			raise getopt.GetoptError("-t and -x options are mutually exclusive")
 		if self.mergeFile and numFiles > 1:
