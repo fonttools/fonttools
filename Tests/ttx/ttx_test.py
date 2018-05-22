@@ -514,13 +514,14 @@ def test_options_woff2_and_zopfli_shouldfail():
 
 def test_ttcompile_otf_compile_default(tmpdir):
     inttx = os.path.join("Tests", "ttx", "data", "TestOTF.ttx")
-    outotf = os.path.join(str(tmpdir), "TestOTF.otf")
+    # outotf = os.path.join(str(tmpdir), "TestOTF.otf")
+    outotf = tmpdir.join("TestOTF.ttx")
     default_options = ttx.Options([], 1)
-    ttx.ttCompile(inttx, outotf, default_options)
+    ttx.ttCompile(inttx, str(outotf), default_options)
     # confirm that font was built
-    assert os.path.isfile(outotf)
+    assert outotf.check(file=True)
     # confirm that it is valid OTF file, can instantiate a TTFont, has expected OpenType tables
-    ttf = TTFont(outotf)
+    ttf = TTFont(str(outotf))
     expected_tables = (
         "head",
         "hhea",
@@ -539,14 +540,14 @@ def test_ttcompile_otf_compile_default(tmpdir):
 
 def test_ttcompile_otf_to_woff_without_zopfli(tmpdir):
     inttx = os.path.join("Tests", "ttx", "data", "TestOTF.ttx")
-    outwoff = os.path.join(str(tmpdir), "TestOTF.woff")
+    outwoff = tmpdir.join("TestOTF.woff")
     options = ttx.Options([], 1)
     options.flavor = "woff"
-    ttx.ttCompile(inttx, outwoff, options)
+    ttx.ttCompile(inttx, str(outwoff), options)
     # confirm that font was built
-    assert os.path.isfile(outwoff)
+    assert outwoff.check(file=True)
     # confirm that it is valid TTF file, can instantiate a TTFont, has expected OpenType tables
-    ttf = TTFont(outwoff)
+    ttf = TTFont(str(outwoff))
     expected_tables = (
         "head",
         "hhea",
@@ -565,15 +566,15 @@ def test_ttcompile_otf_to_woff_without_zopfli(tmpdir):
 
 def test_ttcompile_otf_to_woff_with_zopfli(tmpdir):
     inttx = os.path.join("Tests", "ttx", "data", "TestOTF.ttx")
-    outwoff = os.path.join(str(tmpdir), "TestOTF.woff")
+    outwoff = tmpdir.join("TestOTF.woff")
     options = ttx.Options([], 1)
     options.flavor = "woff"
     options.useZopfli = True
-    ttx.ttCompile(inttx, outwoff, options)
+    ttx.ttCompile(inttx, str(outwoff), options)
     # confirm that font was built
-    assert os.path.isfile(outwoff)
+    assert outwoff.check(file=True)
     # confirm that it is valid TTF file, can instantiate a TTFont, has expected OpenType tables
-    ttf = TTFont(outwoff)
+    ttf = TTFont(str(outwoff))
     expected_tables = (
         "head",
         "hhea",
@@ -592,14 +593,14 @@ def test_ttcompile_otf_to_woff_with_zopfli(tmpdir):
 
 def test_ttcompile_otf_to_woff2(tmpdir):
     inttx = os.path.join("Tests", "ttx", "data", "TestOTF.ttx")
-    outwoff2 = os.path.join(str(tmpdir), "TestTTF.woff2")
+    outwoff2 = tmpdir.join("TestTTF.woff2")
     options = ttx.Options([], 1)
     options.flavor = "woff2"
-    ttx.ttCompile(inttx, outwoff2, options)
+    ttx.ttCompile(inttx, str(outwoff2), options)
     # confirm that font was built
-    assert os.path.isfile(outwoff2)
+    assert outwoff2.check(file=True)
     # confirm that it is valid TTF file, can instantiate a TTFont, has expected OpenType tables
-    ttf = TTFont(outwoff2)
+    ttf = TTFont(str(outwoff2))
     # DSIG should not be included from original ttx as per woff2 spec (https://dev.w3.org/webfonts/WOFF2/spec/)
     assert "DSIG" not in ttf
     expected_tables = (
@@ -619,13 +620,13 @@ def test_ttcompile_otf_to_woff2(tmpdir):
 
 def test_ttcompile_ttf_compile_default(tmpdir):
     inttx = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
-    outttf = os.path.join(str(tmpdir), "TestTTF.ttf")
+    outttf = tmpdir.join("TestTTF.ttf")
     default_options = ttx.Options([], 1)
-    ttx.ttCompile(inttx, outttf, default_options)
+    ttx.ttCompile(inttx, str(outttf), default_options)
     # confirm that font was built
-    assert os.path.isfile(outttf)
+    assert outttf.check(file=True)
     # confirm that it is valid TTF file, can instantiate a TTFont, has expected OpenType tables
-    ttf = TTFont(outttf)
+    ttf = TTFont(str(outttf))
     expected_tables = (
         "head",
         "hhea",
@@ -649,14 +650,14 @@ def test_ttcompile_ttf_compile_default(tmpdir):
 
 def test_ttcompile_ttf_to_woff_without_zopfli(tmpdir):
     inttx = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
-    outwoff = os.path.join(str(tmpdir), "TestTTF.woff")
+    outwoff = tmpdir.join("TestTTF.woff")
     options = ttx.Options([], 1)
     options.flavor = "woff"
-    ttx.ttCompile(inttx, outwoff, options)
+    ttx.ttCompile(inttx, str(outwoff), options)
     # confirm that font was built
-    assert os.path.isfile(outwoff)
+    assert outwoff.check(file=True)
     # confirm that it is valid TTF file, can instantiate a TTFont, has expected OpenType tables
-    ttf = TTFont(outwoff)
+    ttf = TTFont(str(outwoff))
     expected_tables = (
         "head",
         "hhea",
@@ -680,15 +681,15 @@ def test_ttcompile_ttf_to_woff_without_zopfli(tmpdir):
 
 def test_ttcompile_ttf_to_woff_with_zopfli(tmpdir):
     inttx = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
-    outwoff = os.path.join(str(tmpdir), "TestTTF.woff")
+    outwoff = tmpdir.join("TestTTF.woff")
     options = ttx.Options([], 1)
     options.flavor = "woff"
     options.useZopfli = True
-    ttx.ttCompile(inttx, outwoff, options)
+    ttx.ttCompile(inttx, str(outwoff), options)
     # confirm that font was built
-    assert os.path.isfile(outwoff)
+    assert outwoff.check(file=True)
     # confirm that it is valid TTF file, can instantiate a TTFont, has expected OpenType tables
-    ttf = TTFont(outwoff)
+    ttf = TTFont(str(outwoff))
     expected_tables = (
         "head",
         "hhea",
@@ -712,14 +713,14 @@ def test_ttcompile_ttf_to_woff_with_zopfli(tmpdir):
 
 def test_ttcompile_ttf_to_woff2(tmpdir):
     inttx = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
-    outwoff2 = os.path.join(str(tmpdir), "TestTTF.woff2")
+    outwoff2 = tmpdir.join("TestTTF.woff2")
     options = ttx.Options([], 1)
     options.flavor = "woff2"
-    ttx.ttCompile(inttx, outwoff2, options)
+    ttx.ttCompile(inttx, str(outwoff2), options)
     # confirm that font was built
-    assert os.path.isfile(outwoff2)
+    assert outwoff2.check(file=True)
     # confirm that it is valid TTF file, can instantiate a TTFont, has expected OpenType tables
-    ttf = TTFont(outwoff2)
+    ttf = TTFont(str(outwoff2))
     # DSIG should not be included from original ttx as per woff2 spec (https://dev.w3.org/webfonts/WOFF2/spec/)
     assert "DSIG" not in ttf
     expected_tables = (
@@ -742,34 +743,37 @@ def test_ttcompile_ttf_to_woff2(tmpdir):
         assert table in ttf
 
 
-@pytest.mark.parametrize("inpath, outpath1, outpath2",
-                       [("TestTTF.ttx", "TestTTF1.ttf", "TestTTF2.ttf"),
-                        ("TestOTF.ttx", "TestOTF1.otf", "TestOTF2.otf")
-                       ])
+@pytest.mark.parametrize(
+    "inpath, outpath1, outpath2",
+    [
+        ("TestTTF.ttx", "TestTTF1.ttf", "TestTTF2.ttf"),
+        ("TestOTF.ttx", "TestOTF1.otf", "TestOTF2.otf"),
+    ],
+)
 def test_ttcompile_timestamp_calcs(inpath, outpath1, outpath2, tmpdir):
     inttx = os.path.join("Tests", "ttx", "data", inpath)
-    outttf1 = os.path.join(str(tmpdir), outpath1)
-    outttf2 = os.path.join(str(tmpdir), outpath2)
+    outttf1 = tmpdir.join(outpath1)
+    outttf2 = tmpdir.join(outpath2)
     options = ttx.Options([], 1)
     # build with default options = do not recalculate timestamp
-    ttx.ttCompile(inttx, outttf1, options)
+    ttx.ttCompile(inttx, str(outttf1), options)
     # confirm that font was built
-    assert os.path.isfile(outttf1)
+    assert outttf1.check(file=True)
     # confirm that timestamp is same as modified time on ttx file
     mtime = os.path.getmtime(inttx)
     epochtime = timestampSinceEpoch(mtime)
-    ttf = TTFont(outttf1)
+    ttf = TTFont(str(outttf1))
     assert ttf["head"].modified == epochtime
 
     # reset options to recalculate the timestamp and compile new font
     options.recalcTimestamp = True
-    ttx.ttCompile(inttx, outttf2, options)
+    ttx.ttCompile(inttx, str(outttf2), options)
     # confirm that font was built
-    assert os.path.isfile(outttf2) is True
+    assert outttf2.check(file=True)
     # confirm that timestamp is more recent than modified time on ttx file
     mtime = os.path.getmtime(inttx)
     epochtime = timestampSinceEpoch(mtime)
-    ttf = TTFont(outttf2)
+    ttf = TTFont(str(outttf2))
     assert ttf["head"].modified > epochtime
 
 
@@ -780,10 +784,10 @@ def test_ttcompile_timestamp_calcs(inpath, outpath1, outpath2, tmpdir):
 
 def test_ttlist_ttf(capsys, tmpdir):
     inpath = os.path.join("Tests", "ttx", "data", "TestTTF.ttf")
-    fakeoutpath = os.path.join(str(tmpdir), "TestTTF.ttx")
+    fakeoutpath = tmpdir.join("TestTTF.ttx")
     options = ttx.Options([], 1)
     options.listTables = True
-    ttx.ttList(inpath, fakeoutpath, options)
+    ttx.ttList(inpath, str(fakeoutpath), options)
     out, err = capsys.readouterr()
     expected_tables = (
         "head",
@@ -811,10 +815,10 @@ def test_ttlist_ttf(capsys, tmpdir):
 
 def test_ttlist_otf(capsys, tmpdir):
     inpath = os.path.join("Tests", "ttx", "data", "TestOTF.otf")
-    fakeoutpath = os.path.join(str(tmpdir), "TestOTF.ttx")
+    fakeoutpath = tmpdir.join("TestOTF.ttx")
     options = ttx.Options([], 1)
     options.listTables = True
-    ttx.ttList(inpath, fakeoutpath, options)
+    ttx.ttList(inpath, str(fakeoutpath), options)
     out, err = capsys.readouterr()
     expected_tables = (
         "head",
@@ -837,11 +841,11 @@ def test_ttlist_otf(capsys, tmpdir):
 
 def test_ttlist_woff(capsys, tmpdir):
     inpath = os.path.join("Tests", "ttx", "data", "TestWOFF.woff")
-    fakeoutpath = os.path.join(str(tmpdir), "TestWOFF.ttx")
+    fakeoutpath = tmpdir.join("TestWOFF.ttx")
     options = ttx.Options([], 1)
     options.listTables = True
     options.flavor = "woff"
-    ttx.ttList(inpath, fakeoutpath, options)
+    ttx.ttList(inpath, str(fakeoutpath), options)
     out, err = capsys.readouterr()
     expected_tables = (
         "head",
@@ -864,11 +868,11 @@ def test_ttlist_woff(capsys, tmpdir):
 
 def test_ttlist_woff2(capsys, tmpdir):
     inpath = os.path.join("Tests", "ttx", "data", "TestWOFF2.woff2")
-    fakeoutpath = os.path.join(str(tmpdir), "TestWOFF2.ttx")
+    fakeoutpath = tmpdir.join("TestWOFF2.ttx")
     options = ttx.Options([], 1)
     options.listTables = True
     options.flavor = "woff2"
-    ttx.ttList(inpath, fakeoutpath, options)
+    ttx.ttList(inpath, str(fakeoutpath), options)
     out, err = capsys.readouterr()
     expected_tables = (
         "head",
@@ -900,18 +904,18 @@ def test_ttlist_woff2(capsys, tmpdir):
 
 def test_main_default_ttf_dump_to_ttx(tmpdir):
     inpath = os.path.join("Tests", "ttx", "data", "TestTTF.ttf")
-    outpath = os.path.join(str(tmpdir), "TestTTF.ttx")
-    args = ["-o", outpath, inpath]
+    outpath = tmpdir.join("TestTTF.ttx")
+    args = ["-o", str(outpath), inpath]
     ttx.main(args)
-    assert os.path.isfile(outpath)
+    assert outpath.check(file=True)
 
 
 def test_main_default_ttx_compile_to_ttf(tmpdir):
     inpath = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
-    outpath = os.path.join(str(tmpdir), "TestTTF.ttf")
-    args = ["-o", outpath, inpath]
+    outpath = tmpdir.join("TestTTF.ttf")
+    args = ["-o", str(outpath), inpath]
     ttx.main(args)
-    assert os.path.isfile(outpath)
+    assert outpath.check(file=True)
 
 
 def test_main_getopterror_missing_directory():
@@ -925,8 +929,8 @@ def test_main_getopterror_missing_directory():
 def test_main_keyboard_interrupt(tmpdir, monkeypatch, capsys):
     with pytest.raises(SystemExit):
         inpath = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
-        outpath = os.path.join(str(tmpdir), "TestTTF.ttf")
-        args = ["-o", outpath, inpath]
+        outpath = tmpdir.join("TestTTF.ttf")
+        args = ["-o", str(outpath), inpath]
         monkeypatch.setattr(
             ttx, "process", (lambda x, y: raise_exception(KeyboardInterrupt))
         )
@@ -943,8 +947,8 @@ def test_main_keyboard_interrupt(tmpdir, monkeypatch, capsys):
 def test_main_system_exit(tmpdir, monkeypatch):
     with pytest.raises(SystemExit):
         inpath = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
-        outpath = os.path.join(str(tmpdir), "TestTTF.ttf")
-        args = ["-o", outpath, inpath]
+        outpath = tmpdir.join("TestTTF.ttf")
+        args = ["-o", str(outpath), inpath]
         monkeypatch.setattr(
             ttx, "process", (lambda x, y: raise_exception(SystemExit))
         )
@@ -954,8 +958,8 @@ def test_main_system_exit(tmpdir, monkeypatch):
 def test_main_ttlib_error(tmpdir, monkeypatch, capsys):
     with pytest.raises(SystemExit):
         inpath = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
-        outpath = os.path.join(str(tmpdir), "TestTTF.ttf")
-        args = ["-o", outpath, inpath]
+        outpath = tmpdir.join("TestTTF.ttf")
+        args = ["-o", str(outpath), inpath]
         monkeypatch.setattr(
             ttx,
             "process",
@@ -974,8 +978,8 @@ def test_main_ttlib_error(tmpdir, monkeypatch, capsys):
 def test_main_base_exception(tmpdir, monkeypatch, capsys):
     with pytest.raises(SystemExit):
         inpath = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
-        outpath = os.path.join(str(tmpdir), "TestTTF.ttf")
-        args = ["-o", outpath, inpath]
+        outpath = tmpdir.join("TestTTF.ttf")
+        args = ["-o", str(outpath), inpath]
         monkeypatch.setattr(
             ttx,
             "process",
