@@ -167,6 +167,17 @@ class Glyph(object):
         elif "public.markColor" in self.lib:
             del self.lib["public.markColor"]
 
+    @property
+    def verticalOrigin(self):
+        return self.lib.get("public.verticalOrigin")
+
+    @verticalOrigin.setter
+    def verticalOrigin(self, value):
+        if value is not None:
+            self.lib["public.verticalOrigin"] = value
+        elif "public.verticalOrigin" in self.lib:
+            del self.lib["public.verticalOrigin"]
+
 
 class GlyphClasses(object):
     Anchor = Anchor
