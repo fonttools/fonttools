@@ -775,43 +775,6 @@ class BaseDocReader(object):
                 loc[dimName] = xValue
         return loc
 
-    # def guessAxes(self):
-    #     # Called when we have no axes element in the file.
-    #     # Look at all locations and collect the axis names and values
-    #     # assumptions:
-    #     # look for the default value on an axis from a master location
-    #     # Needs deprecation warning
-    #     allLocations = []
-    #     minima = {}
-    #     maxima = {}
-    #     for locationElement in self.root.findall(".sources/source/location"):
-    #         allLocations.append(self._locationFromElement(locationElement))
-    #     for locationElement in self.root.findall(".instances/instance/location"):
-    #         allLocations.append(self._locationFromElement(locationElement))
-    #     for loc in allLocations:
-    #         for dimName, value in loc.items():
-    #             if not isinstance(value, tuple):
-    #                 value = [value]
-    #             for v in value:
-    #                 if dimName not in minima:
-    #                     minima[dimName] = v
-    #                     continue
-    #                 if minima[dimName] > v:
-    #                     minima[dimName] = v
-    #                 if dimName not in maxima:
-    #                     maxima[dimName] = v
-    #                     continue
-    #                 if maxima[dimName] < v:
-    #                     maxima[dimName] = v
-    #     newAxes = []
-    #     for axisName in maxima.keys():
-    #         a = self.axisDescriptorClass()
-    #         a.default = a.minimum = minima[axisName]
-    #         a.maximum = maxima[axisName]
-    #         a.name = axisName
-    #         a.tag, a.labelNames = tagForAxisName(axisName)
-    #         self.documentObject.axes.append(a)
-
     def readSources(self):
         for sourceCount, sourceElement in enumerate(self.root.findall(".sources/source")):
             filename = sourceElement.attrib.get('filename')
