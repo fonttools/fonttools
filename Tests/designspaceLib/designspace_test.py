@@ -31,6 +31,29 @@ def test_fill_document(tmpdir):
     instancePath1 = os.path.join(tmpdir, "instances", "instanceTest1.ufo")
     instancePath2 = os.path.join(tmpdir, "instances", "instanceTest2.ufo")
     doc = DesignSpaceDocument()
+
+    # write some axes
+    a1 = AxisDescriptor()
+    a1.minimum = 0
+    a1.maximum = 1000
+    a1.default = 0
+    a1.name = "weight"
+    a1.tag = "wght"
+    # note: just to test the element language, not an actual label name recommendations.
+    a1.labelNames[u'fa-IR'] = u"قطر"
+    a1.labelNames[u'en'] = u"Wéíght"
+    doc.addAxis(a1)
+    a2 = AxisDescriptor()
+    a2.minimum = 0
+    a2.maximum = 1000
+    a2.default = 20
+    a2.name = "width"
+    a2.tag = "wdth"
+    a2.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
+    a2.hidden = True
+    a2.labelNames[u'fr'] = u"Chasse"
+    doc.addAxis(a2)
+
     # add master 1
     s1 = SourceDescriptor()
     s1.filename = os.path.relpath(masterPath1, os.path.dirname(testDocPath))
@@ -107,45 +130,6 @@ def test_fill_document(tmpdir):
     doc.filename = "suggestedFileName.designspace"
     doc.lib['com.coolDesignspaceApp.previewSize'] = 30
 
-    # now we have sources and instances, but no axes yet.
-    doc.check()
-
-    # Here, since the axes are not defined in the document, but instead are
-    # infered from the locations of the instances, we cannot guarantee the
-    # order in which they will be created by the `check()` method.
-    assert set(doc.getAxisOrder()) == set(['spooky', 'weight', 'width'])
-    doc.axes = []   # clear the axes
-
-    # write some axes
-    a1 = AxisDescriptor()
-    a1.minimum = 0
-    a1.maximum = 1000
-    a1.default = 0
-    a1.name = "weight"
-    a1.tag = "wght"
-    # note: just to test the element language, not an actual label name recommendations.
-    a1.labelNames[u'fa-IR'] = u"قطر"
-    a1.labelNames[u'en'] = u"Wéíght"
-    doc.addAxis(a1)
-    a2 = AxisDescriptor()
-    a2.minimum = 0
-    a2.maximum = 1000
-    a2.default = 20
-    a2.name = "width"
-    a2.tag = "wdth"
-    a2.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
-    a2.hidden = True
-    a2.labelNames[u'fr'] = u"Chasse"
-    doc.addAxis(a2)
-    # add an axis that is not part of any location to see if that works
-    a3 = AxisDescriptor()
-    a3.minimum = 333
-    a3.maximum = 666
-    a3.default = 444
-    a3.name = "spooky"
-    a3.tag = "SPOK"
-    a3.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
-    #doc.addAxis(a3)    # uncomment this line to test the effects of default axes values
     # write some rules
     r1 = RuleDescriptor()
     r1.name = "named.rule.1"
@@ -163,22 +147,10 @@ def test_fill_document(tmpdir):
     new = DesignSpaceDocument()
     new.read(testDocPath)
 
-    new.check()
     assert new.default.location == {'width': 20.0, 'weight': 0.0}
     assert new.filename == 'test.designspace'
     assert new.lib == doc.lib
     assert new.instances[0].lib == doc.instances[0].lib
-
-    # >>> for a, b in zip(doc.instances, new.instances):
-    # ...     a.compare(b)
-    # >>> for a, b in zip(doc.sources, new.sources):
-    # ...     a.compare(b)
-    # >>> for a, b in zip(doc.axes, new.axes):
-    # ...     a.compare(b)
-    # >>> [n.mutedGlyphNames for n in new.sources]
-    # [['A', 'Z'], []]
-    # >>> doc.getFonts()
-    # []
 
     # test roundtrip for the axis attributes and data
     axes = {}
@@ -195,50 +167,6 @@ def test_fill_document(tmpdir):
     for v in axes.values():
         a, b = v
         assert a == b
-
-
-def test_adjustAxisDefaultToNeutral(tmpdir):
-    tmpdir = str(tmpdir)
-    testDocPath = os.path.join(tmpdir, "testAdjustAxisDefaultToNeutral.designspace")
-    masterPath1 = os.path.join(tmpdir, "masters", "masterTest1.ufo")
-    masterPath2 = os.path.join(tmpdir, "masters", "masterTest2.ufo")
-    instancePath1 = os.path.join(tmpdir, "instances", "instanceTest1.ufo")
-    instancePath2 = os.path.join(tmpdir, "instances", "instanceTest2.ufo")
-    doc = DesignSpaceDocument()
-    # add master 1
-    s1 = SourceDescriptor()
-    s1.filename = os.path.relpath(masterPath1, os.path.dirname(testDocPath))
-    s1.name = "master.ufo1"
-    s1.copyInfo = True
-    s1.copyFeatures = True
-    s1.location = dict(weight=55, width=1000)
-    doc.addSource(s1)
-    # write some axes
-    a1 = AxisDescriptor()
-    a1.minimum = 0
-    a1.maximum = 1000
-    a1.default = 0      # the wrong value
-    a1.name = "weight"
-    a1.tag = "wght"
-    doc.addAxis(a1)
-    a2 = AxisDescriptor()
-    a2.minimum = -10
-    a2.maximum = 10
-    a2.default = 0      # the wrong value
-    a2.name = "width"
-    a2.tag = "wdth"
-    doc.addAxis(a2)
-    # write the document
-    doc.write(testDocPath)
-    assert os.path.exists(testDocPath)
-    # import it again
-    new = DesignSpaceDocument()
-    new.read(testDocPath)
-    new.check()
-    loc = new.default.location
-    for axisObj in new.axes:
-        n = axisObj.name
-        assert axisObj.default == loc.get(n)
 
 
 def test_unicodes(tmpdir):
@@ -457,7 +385,7 @@ def test_handleNoAxes(tmpdir):
     doc.addInstance(i1)
 
     doc.write(testDocPath)
-    __removeAxesFromDesignSpace(testDocPath)
+    #__removeAxesFromDesignSpace(testDocPath)
     verify = DesignSpaceDocument()
     verify.read(testDocPath)
     verify.write(testDocPath2)
@@ -476,8 +404,16 @@ def test_pathNameResolve(tmpdir):
     instancePath1 = os.path.join(tmpdir, "instances", "instanceTest1.ufo")
     instancePath2 = os.path.join(tmpdir, "instances", "instanceTest2.ufo")
 
+    a1 = AxisDescriptor()
+    a1.tag = "TAGA"
+    a1.name = "axisName_a"
+    a1.minimum = 0
+    a1.maximum = 1000
+    a1.default = 0
+
     # Case 1: filename and path are both empty. Nothing to calculate, nothing to put in the file.
     doc = DesignSpaceDocument()
+    doc.addAxis(a1)
     s = SourceDescriptor()
     s.filename = None
     s.path = None
@@ -494,6 +430,7 @@ def test_pathNameResolve(tmpdir):
 
     # Case 2: filename is empty, path points somewhere: calculate a new filename.
     doc = DesignSpaceDocument()
+    doc.addAxis(a1)
     s = SourceDescriptor()
     s.filename = None
     s.path = masterPath1
@@ -510,6 +447,7 @@ def test_pathNameResolve(tmpdir):
 
     # Case 3: the filename is set, the path is None.
     doc = DesignSpaceDocument()
+    doc.addAxis(a1)
     s = SourceDescriptor()
     s.filename = "../somewhere/over/the/rainbow.ufo"
     s.path = None
@@ -528,6 +466,7 @@ def test_pathNameResolve(tmpdir):
 
     # Case 4: the filename points to one file, the path points to another. The path takes precedence.
     doc = DesignSpaceDocument()
+    doc.addAxis(a1)
     s = SourceDescriptor()
     s.filename = "../somewhere/over/the/rainbow.ufo"
     s.path = masterPath1
@@ -543,6 +482,7 @@ def test_pathNameResolve(tmpdir):
 
     # Case 5: the filename is None, path has a value, update the filename
     doc = DesignSpaceDocument()
+    doc.addAxis(a1)
     s = SourceDescriptor()
     s.filename = None
     s.path = masterPath1
@@ -557,6 +497,7 @@ def test_pathNameResolve(tmpdir):
 
     # Case 6: the filename has a value, path has a value, update the filenames with force
     doc = DesignSpaceDocument()
+    doc.addAxis(a1)
     s = SourceDescriptor()
     s.filename = "../somewhere/over/the/rainbow.ufo"
     s.path = masterPath1
@@ -802,6 +743,22 @@ def test_incompleteRule(tmpdir):
     tmpdir = str(tmpdir)
     testDocPath1 = os.path.join(tmpdir, "testIncompleteRule.designspace")
     doc = DesignSpaceDocument()
+    # write some axes
+    a1 = AxisDescriptor()
+    a1.tag = "TAGA"
+    a1.name = "axisName_a"
+    a1.minimum = 0
+    a1.maximum = 1000
+    a1.default = 0
+    doc.addAxis(a1)
+    a2 = AxisDescriptor()
+    a2.tag = "TAGB"
+    a2.name = "axisName_b"
+    a2.minimum = 0
+    a2.maximum = 3000
+    a2.default = 0
+    doc.addAxis(a2)
+
     r1 = RuleDescriptor()
     r1.name = "incomplete.rule.1"
     r1.conditionSets.append([

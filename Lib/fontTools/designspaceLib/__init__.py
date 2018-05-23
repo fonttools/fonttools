@@ -6,18 +6,17 @@ import logging
 import os
 import posixpath
 import plistlib
+import warnings
+
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
     import xml.etree.ElementTree as ET
-# from mutatorMath.objects.location import biasFromLocations, Location
 
 """
     designSpaceDocument
 
     - read and write designspace files
-    - axes must be defined.
-    - warpmap is stored in its axis element
 """
 
 __all__ = [
@@ -726,8 +725,7 @@ class BaseDocReader(object):
         # read the axes elements, including the warp map.
         axes = []
         if len(self.root.findall(".axes/axis"))==0:
-            self.guessAxes()
-            self._strictAxisNames = False
+            raise DesignSpaceDocumentError("No axes defined.")
             return
         for axisElement in self.root.findall(".axes/axis"):
             axisObject = self.axisDescriptorClass()
@@ -750,10 +748,13 @@ class BaseDocReader(object):
                     axisObject.labelNames[lang] = labelName
             self.documentObject.axes.append(axisObject)
             self.axisDefaults[axisObject.name] = axisObject.default
+        self.documentObject.defaultLoc = self.axisDefaults
 
     def _locationFromElement(self, locationElement):
         # mostly duplicated from readLocationElement, Needs Resolve.
         loc = {}
+        # make sure all locations start with the defaults
+        loc.update(self.axisDefaults)
         for dimensionElement in locationElement.findall(".dimension"):
             dimName = dimensionElement.attrib.get("name")
             xValue = yValue = None
@@ -774,42 +775,42 @@ class BaseDocReader(object):
                 loc[dimName] = xValue
         return loc
 
-    def guessAxes(self):
-        # Called when we have no axes element in the file.
-        # Look at all locations and collect the axis names and values
-        # assumptions:
-        # look for the default value on an axis from a master location
-        # Needs deprecation warning
-        allLocations = []
-        minima = {}
-        maxima = {}
-        for locationElement in self.root.findall(".sources/source/location"):
-            allLocations.append(self._locationFromElement(locationElement))
-        for locationElement in self.root.findall(".instances/instance/location"):
-            allLocations.append(self._locationFromElement(locationElement))
-        for loc in allLocations:
-            for dimName, value in loc.items():
-                if not isinstance(value, tuple):
-                    value = [value]
-                for v in value:
-                    if dimName not in minima:
-                        minima[dimName] = v
-                        continue
-                    if minima[dimName] > v:
-                        minima[dimName] = v
-                    if dimName not in maxima:
-                        maxima[dimName] = v
-                        continue
-                    if maxima[dimName] < v:
-                        maxima[dimName] = v
-        newAxes = []
-        for axisName in maxima.keys():
-            a = self.axisDescriptorClass()
-            a.default = a.minimum = minima[axisName]
-            a.maximum = maxima[axisName]
-            a.name = axisName
-            a.tag, a.labelNames = tagForAxisName(axisName)
-            self.documentObject.axes.append(a)
+    # def guessAxes(self):
+    #     # Called when we have no axes element in the file.
+    #     # Look at all locations and collect the axis names and values
+    #     # assumptions:
+    #     # look for the default value on an axis from a master location
+    #     # Needs deprecation warning
+    #     allLocations = []
+    #     minima = {}
+    #     maxima = {}
+    #     for locationElement in self.root.findall(".sources/source/location"):
+    #         allLocations.append(self._locationFromElement(locationElement))
+    #     for locationElement in self.root.findall(".instances/instance/location"):
+    #         allLocations.append(self._locationFromElement(locationElement))
+    #     for loc in allLocations:
+    #         for dimName, value in loc.items():
+    #             if not isinstance(value, tuple):
+    #                 value = [value]
+    #             for v in value:
+    #                 if dimName not in minima:
+    #                     minima[dimName] = v
+    #                     continue
+    #                 if minima[dimName] > v:
+    #                     minima[dimName] = v
+    #                 if dimName not in maxima:
+    #                     maxima[dimName] = v
+    #                     continue
+    #                 if maxima[dimName] < v:
+    #                     maxima[dimName] = v
+    #     newAxes = []
+    #     for axisName in maxima.keys():
+    #         a = self.axisDescriptorClass()
+    #         a.default = a.minimum = minima[axisName]
+    #         a.maximum = maxima[axisName]
+    #         a.name = axisName
+    #         a.tag, a.labelNames = tagForAxisName(axisName)
+    #         self.documentObject.axes.append(a)
 
     def readSources(self):
         for sourceCount, sourceElement in enumerate(self.root.findall(".sources/source")):
@@ -874,10 +875,8 @@ class BaseDocReader(object):
         for dimensionElement in locationElement.findall(".dimension"):
             dimName = dimensionElement.attrib.get("name")
             if self._strictAxisNames and dimName not in self.axisDefaults:
-                # In case the document contains axis definitions,
-                # then we should only read the axes we know about.
-                # However, if the document does not contain axes,
-                # then we need to create them after reading.
+                # In case the document contains no axis definitions,
+                warnings.warn("Location with undefined axis: \"%s\"." % dimName)
                 continue
             xValue = yValue = None
             try:
@@ -1094,6 +1093,7 @@ class DesignSpaceDocument(object):
         self.filename = os.path.basename(path)
         reader = self.readerClass(path, self)
         reader.read()
+        self.findDefault()
 
     def write(self, path):
         self.path = path
@@ -1222,78 +1222,23 @@ class DesignSpaceDocument(object):
                 return axisDescriptor
         return None
 
-    def check(self):
-        """
-            After reading we need to make sure we have a valid designspace.
-            This means making repairs if things are missing
-                - check if we have axes and deduce them from the masters if they're missing
-                - that can include axes referenced in masters, instances, glyphs.
-                - if no default is assigned, use mutatormath to find out.
-                - record the default in the designspace
-                - report all the changes in a log
-                - save a "repaired" version of the doc
-        """
-        self.checkAxes()
-        self.checkDefault()
-
-    def checkDefault(self):
-        """ Check the sources for a copyInfo flag."""
-        flaggedDefaultCandidate = None
+    def findDefault(self):
+        # new default finder
+        # take the master with the location at all the defaults
+        self.default = None
+        for sourceDescriptor in self.sources:
+            if sourceDescriptor.location == self.defaultLoc:
+                # we choose you!
+                self.default = sourceDescriptor
+                return sourceDescriptor
+        # failing that, tkae the master with the copyInfo flag
         for sourceDescriptor in self.sources:
             names = set()
             if sourceDescriptor.copyInfo:
                 # we choose you!
-                flaggedDefaultCandidate = sourceDescriptor
-        mutatorDefaultCandidate = self.getMutatorDefaultCandidate()
-        # what are we going to do?
-        if flaggedDefaultCandidate is not None:
-            if mutatorDefaultCandidate is not None:
-                if mutatorDefaultCandidate.name != flaggedDefaultCandidate.name:
-                    # warn if we have a conflict
-                    self.logger.info("Note: conflicting default masters:\n\tUsing %s as default\n\tMutator found %s" % (flaggedDefaultCandidate.name, mutatorDefaultCandidate.name))
-            self.default = flaggedDefaultCandidate
-            self.defaultLoc = self.default.location
-        else:
-            # we have no flagged default candidate
-            # let's use the one from mutator
-            if flaggedDefaultCandidate is None and mutatorDefaultCandidate is not None:
-                # we didn't have a flag, use the one selected by mutator
-                self.default = mutatorDefaultCandidate
-                self.defaultLoc = self.default.location
-        self.default.copyInfo = True
-        # now that we have a default, let's check if the axes are ok
-        for axisObj in self.axes:
-            if axisObj.name not in self.default.location:
-                # extend the location of the neutral master with missing default value for this axis
-                self.default.location[axisObj.name] = axisObj.default
-            else:
-                if axisObj.default == self.default.location.get(axisObj.name):
-                    continue
-                # proposed remedy: change default value in the axisdescriptor to the value of the neutral
-                neutralAxisValue = self.default.location.get(axisObj.name)
-                # make sure this value is between the min and max
-                if axisObj.minimum <= neutralAxisValue <= axisObj.maximum:
-                    # yes we can fix this
-                    axisObj.default = neutralAxisValue
-                    self.logger.info("Note: updating the default value of axis %s to neutral master at %3.3f" % (axisObj.name, neutralAxisValue))
-                # always fit the axis dimensions to the location of the designated neutral
-                elif neutralAxisValue < axisObj.minimum:
-                    axisObj.default = neutralAxisValue
-                    axisObj.minimum = neutralAxisValue
-                elif neutralAxisValue > axisObj.maximum:
-                    axisObj.maximum = neutralAxisValue
-                    axisObj.default = neutralAxisValue
-                else:
-                    # now we're in trouble, can't solve this, alert.
-                    self.logger.info("Warning: mismatched default value for axis %s and neutral master. Master value outside of axis bounds" % (axisObj.name))
-
-    def getMutatorDefaultCandidate(self):
-        # FIXME: original implementation using MutatorMath
-        # masterLocations = [src.location for src in self.sources]
-        # mutatorBias = biasFromLocations(masterLocations, preferOrigin=False)
-        # for src in self.sources:
-        #     if src.location == mutatorBias:
-        #         return src
+                self.default = sourceDescriptor
+                return sourceDescriptor
+        # failing that, well, fail. We don't want to guess any more. 
         return None
 
     def _prepAxesForBender(self):
@@ -1359,7 +1304,6 @@ class DesignSpaceDocument(object):
             a.default = a.minimum
             a.tag, a.labelNames = tagForAxisName(a.name)
             self.logger.info("CheckAxes: added a missing axis %s, %3.3f %3.3f", a.name, a.minimum, a.maximum)
-
 
     def normalizeLocation(self, location):
         # scale this location based on the axes
@@ -1439,20 +1383,3 @@ class DesignSpaceDocument(object):
                 newConditionSets.append(newConditions)
             rule.conditionSets = newConditionSets
 
-
-def rulesToFeature(doc, whiteSpace="\t", newLine="\n"):
-    """ Showing how rules could be expressed as FDK feature text.
-        Speculative. Experimental.
-    """
-    axisNames = {axis.name: axis.tag for axis in doc.axes}
-    axisDims = {axis.tag: (axis.minimum, axis.maximum) for axis in doc.axes}
-    text = []
-    for rule in doc.rules:
-        text.append("rule %s{" % rule.name)
-        for cd in rule.conditions:
-            axisTag = axisNames.get(cd.get('name'), "****")
-            axisMinimum = cd.get('minimum', axisDims.get(axisTag, [0,0])[0])
-            axisMaximum = cd.get('maximum', axisDims.get(axisTag, [0,0])[1])
-            text.append("%s%s %f %f;" % (whiteSpace, axisTag, axisMinimum, axisMaximum))
-        text.append("} %s;" % rule.name)
-    return newLine.join(text)
