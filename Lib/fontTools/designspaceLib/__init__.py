@@ -1202,7 +1202,9 @@ class DesignSpaceDocument(object):
                 self.default = sourceDescriptor
                 return sourceDescriptor
         # failing that, well, fail. We don't want to guess any more. 
+        warnings.warn("Can't find a suitable default location in this document")
         return None
+
 
     def _prepAxesForBender(self):
         """

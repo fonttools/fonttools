@@ -774,6 +774,27 @@ def test_incompleteRule(tmpdir):
         new.read(testDocPath1)
     assert "No minimum or maximum defined in rule" in str(excinfo.value)
 
+def test_documentLib(tmpdir):
+    # roundtrip test of the document lib with some nested data
+    tmpdir = str(tmpdir)
+    testDocPath1 = os.path.join(tmpdir, "testDocumentLibTest.designspace")
+    doc = DesignSpaceDocument()
+    a1 = AxisDescriptor()
+    a1.tag = "TAGA"
+    a1.name = "axisName_a"
+    a1.minimum = 0
+    a1.maximum = 1000
+    a1.default = 0
+    doc.addAxis(a1)
+    dummyData = dict(a=123, b=u"äbc"+chr(127921), c=[1,2,3], d={'a':123})
+    dummyKey = "org.fontTools.designspaceLib"
+    doc.lib = {dummyKey: dummyData}
+    doc.write(testDocPath1)
+    new = DesignSpaceDocument()
+    new.read(testDocPath1)
+    assert dummyKey in new.lib
+    assert new.lib[dummyKey] == dummyData
+
 def __removeConditionMinimumMaximumDesignSpace(path):
     # only for testing, so we can make an invalid designspace file
     # without making the designSpaceDocument also support it.
