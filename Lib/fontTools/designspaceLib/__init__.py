@@ -363,12 +363,12 @@ class BaseDocWriter(object):
         self.documentVersion = "4.0"
         self.root = ET.Element("designspace")
         self.root.attrib['format'] = self.documentVersion
-        self.axes = []
-        self.rules = []
+        self._axes = []     # for use by the writer only
+        self._rules = []    # for use by the writer only
 
     def newDefaultLocation(self):
         loc = collections.OrderedDict()
-        for axisDescriptor in self.axes:
+        for axisDescriptor in self._axes:
             loc[axisDescriptor.name] = axisDescriptor.default
         return loc
 
@@ -431,7 +431,7 @@ class BaseDocWriter(object):
 
     def _addRule(self, ruleObject):
         # if none of the conditions have minimum or maximum values, do not add the rule.
-        self.rules.append(ruleObject)
+        self._rules.append(ruleObject)
         ruleElement  = ET.Element('rule')
         if ruleObject.name is not None:
             ruleElement.attrib['name'] = ruleObject.name
@@ -462,7 +462,7 @@ class BaseDocWriter(object):
             self.root.findall('.rules')[0].append(ruleElement)
 
     def _addAxis(self, axisObject):
-        self.axes.append(axisObject)
+        self._axes.append(axisObject)
         axisElement = ET.Element('axis')
         axisElement.attrib['tag'] = axisObject.tag
         axisElement.attrib['name'] = axisObject.name
@@ -656,7 +656,7 @@ class BaseDocReader(object):
         tree = ET.parse(self.path)
         self.root = tree.getroot()
         self.documentObject.formatVersion = self.root.attrib.get("format", "3.0")
-        self.axes = []
+        self._axes = []
         self.rules = []
         self.sources = []
         self.instances = []
@@ -678,7 +678,7 @@ class BaseDocReader(object):
 
     def newDefaultLocation(self):
         loc = {}
-        for axisDescriptor in self.axes:
+        for axisDescriptor in self._axes:
             loc[axisDescriptor.name] = axisDescriptor.default
         return loc
 
@@ -725,7 +725,7 @@ class BaseDocReader(object):
         # read the axes elements, including the warp map.
         axes = []
         if len(self.root.findall(".axes/axis"))==0:
-            raise DesignSpaceDocumentError("No axes defined.")
+            self._strictAxisNames = False
             return
         for axisElement in self.root.findall(".axes/axis"):
             axisObject = self.axisDescriptorClass()
@@ -750,30 +750,30 @@ class BaseDocReader(object):
             self.axisDefaults[axisObject.name] = axisObject.default
         self.documentObject.defaultLoc = self.axisDefaults
 
-    def _locationFromElement(self, locationElement):
-        # mostly duplicated from readLocationElement, Needs Resolve.
-        loc = {}
-        # make sure all locations start with the defaults
-        loc.update(self.axisDefaults)
-        for dimensionElement in locationElement.findall(".dimension"):
-            dimName = dimensionElement.attrib.get("name")
-            xValue = yValue = None
-            try:
-                xValue = dimensionElement.attrib.get('xvalue')
-                xValue = float(xValue)
-            except ValueError:
-                self.logger.info("KeyError in readLocation xValue %3.3f", xValue)
-            try:
-                yValue = dimensionElement.attrib.get('yvalue')
-                if yValue is not None:
-                    yValue = float(yValue)
-            except ValueError:
-                pass
-            if yValue is not None:
-                loc[dimName] = (xValue, yValue)
-            else:
-                loc[dimName] = xValue
-        return loc
+    # def _locationFromElement(self, locationElement):
+    #     # mostly duplicated from readLocationElement, Needs Resolve.
+    #     loc = {}
+    #     # make sure all locations start with the defaults
+    #     loc.update(self.axisDefaults)
+    #     for dimensionElement in locationElement.findall(".dimension"):
+    #         dimName = dimensionElement.attrib.get("name")
+    #         xValue = yValue = None
+    #         try:
+    #             xValue = dimensionElement.attrib.get('xvalue')
+    #             xValue = float(xValue)
+    #         except ValueError:
+    #             self.logger.info("KeyError in readLocation xValue %3.3f", xValue)
+    #         try:
+    #             yValue = dimensionElement.attrib.get('yvalue')
+    #             if yValue is not None:
+    #                 yValue = float(yValue)
+    #         except ValueError:
+    #             pass
+    #         if yValue is not None:
+    #             loc[dimName] = (xValue, yValue)
+    #         else:
+    #             loc[dimName] = xValue
+    #     return loc
 
     def readSources(self):
         for sourceCount, sourceElement in enumerate(self.root.findall(".sources/source")):
@@ -834,6 +834,8 @@ class BaseDocReader(object):
 
     def readLocationElement(self, locationElement):
         """ Format 0 location reader """
+        if not self.documentObject.axes:
+           raise DesignSpaceDocumentError("No axes defined.")
         loc = {}
         for dimensionElement in locationElement.findall(".dimension"):
             dimName = dimensionElement.attrib.get("name")
@@ -1056,7 +1058,8 @@ class DesignSpaceDocument(object):
         self.filename = os.path.basename(path)
         reader = self.readerClass(path, self)
         reader.read()
-        self.findDefault()
+        if self.sources:
+            self.findDefault()
 
     def write(self, path):
         self.path = path
@@ -1141,7 +1144,7 @@ class DesignSpaceDocument(object):
 
     def newDefaultLocation(self):
         loc = {}
-        for axisDescriptor in self.axes:
+        for axisDescriptor in self._axes:
             loc[axisDescriptor.name] = axisDescriptor.default
         return loc
 
