@@ -178,16 +178,14 @@ class RuleDescriptor(SimpleDescriptor):
 
 
 def evaluateRule(rule, location):
-    """ Return True if any of the rule's conditionsets matches the
-    given location.
-    """
+    """ Return True if any of the rule's conditionsets matches the given location."""
     return any(evaluateConditions(c, location) for c in rule.conditionSets)
 
 
 def evaluateConditions(conditions, location):
     """ Return True if all the conditions matches the given location.
-    If a condition has no minimum, check for < maximum.
-    If a condition has no maximum, check for > minimum.
+        If a condition has no minimum, check for < maximum.
+        If a condition has no maximum, check for > minimum.
     """
     for cd in conditions:
         value = location[cd['name']]
@@ -885,49 +883,27 @@ class BaseDocReader(object):
         instanceObject.lib = from_plist(libElement[0])
 
     def readInfoElement(self, infoElement, instanceObject):
-        """ Read the info element.
-
-            ::
-
-                <info/>
-
-                Let's drop support for a different location for the info. Never needed it.
-
-            """
+        """ Read the info element."""
         infoLocation = self.locationFromElement(infoElement)
         instanceObject.info = True
 
     def readKerningElement(self, kerningElement, instanceObject):
-        """ Read the kerning element.
-
-        ::
-
-                Make kerning at the location and with the masters specified at the instance level.
-                <kerning/>
-
-        """
+        """ Read the kerning element."""
         kerningLocation = self.locationFromElement(kerningElement)
         instanceObject.addKerning(kerningLocation)
 
     def readGlyphElement(self, glyphElement, instanceObject):
         """
         Read the glyph element.
-
-        ::
-
             <glyph name="b" unicode="0x62"/>
-
             <glyph name="b"/>
-
             <glyph name="b">
                 <master location="location-token-bbb" source="master-token-aaa2"/>
                 <master glyphname="b.alt1" location="location-token-ccc" source="master-token-aaa3"/>
-
                 <note>
                     This is an instance from an anisotropic interpolation.
                 </note>
             </glyph>
-
         """
         glyphData = {}
         glyphName = glyphElement.attrib.get('name')
