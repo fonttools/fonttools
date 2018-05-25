@@ -8,8 +8,6 @@ import posixpath
 import plistlib
 import warnings
 
-import fontTools.varLib
-
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
