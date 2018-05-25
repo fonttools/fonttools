@@ -8,6 +8,8 @@ import posixpath
 import plistlib
 import warnings
 
+import fontTools.varLib
+
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
@@ -366,12 +368,6 @@ class BaseDocWriter(object):
         self._axes = []     # for use by the writer only
         self._rules = []    # for use by the writer only
 
-    def newDefaultLocation(self):
-        loc = collections.OrderedDict()
-        for axisDescriptor in self._axes:
-            loc[axisDescriptor.name] = axisDescriptor.default
-        return loc
-
     def write(self, pretty=True):
         if self.documentObject.axes:
             self.root.append(ET.Element("axes"))
@@ -406,13 +402,11 @@ class BaseDocWriter(object):
         locElement = ET.Element("location")
         if name is not None:
             locElement.attrib['name'] = name
-        defaultLoc = self.newDefaultLocation()
-        # Without OrderedDict, output XML would be non-deterministic.
-        # https://github.com/LettError/designSpaceDocument/issues/10
-        validatedLocation = collections.OrderedDict()
-        for axisName, axisValue in defaultLoc.items():
-            # update the location dict with missing default axis values
-            validatedLocation[axisName] = locationObject.get(axisName, axisValue)
+        validatedLocation = self.documentObject.newDefaultLocation()
+        for axisName, axisValue in locationObject.items():
+            if axisName in validatedLocation:
+                # only accept values we know
+                validatedLocation[axisName] = axisValue
         for dimensionName, dimensionValue in validatedLocation.items():
             dimElement = ET.Element('dimension')
             dimElement.attrib['name'] = dimensionName
@@ -450,9 +444,6 @@ class BaseDocWriter(object):
                 conditionsetElement.append(conditionElement)
             if len(conditionsetElement):
                 ruleElement.append(conditionsetElement)
-        # XXX shouldn't we require at least one sub element?
-        # if not ruleObject.subs:
-        #     raise DesignSpaceDocument('Invalid empty rule with no "sub" elements')
         for sub in ruleObject.subs:
             subElement = ET.Element('sub')
             subElement.attrib['name'] = sub[0]
@@ -676,12 +667,6 @@ class BaseDocReader(object):
             paths.append(self.documentObject.sources[name][0].path)
         return paths
 
-    def newDefaultLocation(self):
-        loc = {}
-        for axisDescriptor in self._axes:
-            loc[axisDescriptor.name] = axisDescriptor.default
-        return loc
-
     def readRules(self):
         # read the rules
         rules = []
@@ -749,31 +734,6 @@ class BaseDocReader(object):
             self.documentObject.axes.append(axisObject)
             self.axisDefaults[axisObject.name] = axisObject.default
         self.documentObject.defaultLoc = self.axisDefaults
-
-    # def _locationFromElement(self, locationElement):
-    #     # mostly duplicated from readLocationElement, Needs Resolve.
-    #     loc = {}
-    #     # make sure all locations start with the defaults
-    #     loc.update(self.axisDefaults)
-    #     for dimensionElement in locationElement.findall(".dimension"):
-    #         dimName = dimensionElement.attrib.get("name")
-    #         xValue = yValue = None
-    #         try:
-    #             xValue = dimensionElement.attrib.get('xvalue')
-    #             xValue = float(xValue)
-    #         except ValueError:
-    #             self.logger.info("KeyError in readLocation xValue %3.3f", xValue)
-    #         try:
-    #             yValue = dimensionElement.attrib.get('yvalue')
-    #             if yValue is not None:
-    #                 yValue = float(yValue)
-    #         except ValueError:
-    #             pass
-    #         if yValue is not None:
-    #             loc[dimName] = (xValue, yValue)
-    #         else:
-    #             loc[dimName] = xValue
-    #     return loc
 
     def readSources(self):
         for sourceCount, sourceElement in enumerate(self.root.findall(".sources/source")):
@@ -1143,8 +1103,10 @@ class DesignSpaceDocument(object):
         self.rules.append(ruleDescriptor)
 
     def newDefaultLocation(self):
-        loc = {}
-        for axisDescriptor in self._axes:
+        # Without OrderedDict, output XML would be non-deterministic.
+        # https://github.com/LettError/designSpaceDocument/issues/10
+        loc = collections.OrderedDict()
+        for axisDescriptor in self.axes:
             loc[axisDescriptor.name] = axisDescriptor.default
         return loc
 
@@ -1208,8 +1170,7 @@ class DesignSpaceDocument(object):
         warnings.warn("Can't find a suitable default location in this document")
         return None
 
-
-    def _prepAxesForBender(self):
+    def _axesAsDict(self):
         """
             Make the axis data we have available in
         """
@@ -1274,11 +1235,10 @@ class DesignSpaceDocument(object):
             self.logger.info("CheckAxes: added a missing axis %s, %3.3f %3.3f", a.name, a.minimum, a.maximum)
 
     def normalizeLocation(self, location):
-        # scale this location based on the axes
-        # accept only values for the axes that we have definitions for
-        # only normalise if we're valid?
-        # normalise anisotropic cooordinates to isotropic.
-        # copied from fontTools.varlib.models.normalizeLocation
+        # adapted from fontTools.varlib.models.normalizeLocation because:
+        #   - this needs to work with axis names, not tags
+        #   - this needs to accomodate anisotropic locations
+        #   - the axes are stored differently here, it's just math
         new = {}
         for axis in self.axes:
             if not axis.name in location:
