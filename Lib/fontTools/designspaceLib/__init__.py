@@ -664,43 +664,54 @@ class BaseDocReader(object):
         return paths
 
     def readRules(self):
-        # read the rules
+        # we also need to read any conditions that are outside of a condition set.
         rules = []
         for ruleElement in self.root.findall(".rules/rule"):
             ruleObject = self.ruleDescriptorClass()
             ruleObject.name = ruleElement.attrib.get("name")
+            # read any stray conditions outside a condition set
+            externalConditions = self._readConditionElements(ruleElement)
+            if externalConditions:
+                ruleObject.conditionSets.append(externalConditions)
+                warnings.warn('Found stray rule conditions outside a conditionset. Wrapped them in a new conditionset.')
+            # read the conditionsets
             for conditionSetElement in ruleElement.findall('.conditionset'):
-                cds = []
-                for conditionElement in conditionSetElement.findall('.condition'):
-                    cd = {}
-                    cdMin = conditionElement.attrib.get("minimum")
-                    if cdMin is not None:
-                        cd['minimum'] = float(cdMin)
-                    else:
-                        # will allow these to be None, assume axis.minimum
-                        cd['minimum'] = None
-                    cdMax = conditionElement.attrib.get("maximum")
-                    if cdMax is not None:
-                        cd['maximum'] = float(cdMax)
-                    else:
-                        # will allow these to be None, assume axis.maximum
-                        cd['maximum'] = None
-                    cd['name'] = conditionElement.attrib.get("name")
-                    # test for things
-                    if cd.get('minimum') is None and cd.get('maximum') is None:
-                        if ruleObject.name is not None:
-                            n = ruleObject.name
-                        else:
-                            n = "%d" % len(rules)
-                        raise DesignSpaceDocumentError("No minimum or maximum defined in rule \"%s\"." % n)
-                    cds.append(cd)
-                ruleObject.conditionSets.append(cds)
+                conditionSet = self._readConditionElements(conditionSetElement)
+                if conditionSet is not None:
+                    ruleObject.conditionSets.append(conditionSet)
             for subElement in ruleElement.findall('.sub'):
                 a = subElement.attrib['name']
                 b = subElement.attrib['with']
                 ruleObject.subs.append((a,b))
             rules.append(ruleObject)
         self.documentObject.rules = rules
+
+    def _readConditionElements(self, parentElement):
+        cds = []
+        for conditionElement in parentElement.findall('.condition'):
+            cd = {}
+            cdMin = conditionElement.attrib.get("minimum")
+            if cdMin is not None:
+                cd['minimum'] = float(cdMin)
+            else:
+                # will allow these to be None, assume axis.minimum
+                cd['minimum'] = None
+            cdMax = conditionElement.attrib.get("maximum")
+            if cdMax is not None:
+                cd['maximum'] = float(cdMax)
+            else:
+                # will allow these to be None, assume axis.maximum
+                cd['maximum'] = None
+            cd['name'] = conditionElement.attrib.get("name")
+            # # test for things
+            # if cd.get('minimum') is None and cd.get('maximum') is None:
+            #     if ruleObject.name is not None:
+            #         n = ruleObject.name
+            #     else:
+            #         n = "%d" % len(rules)
+            #     raise DesignSpaceDocumentError("No minimum or maximum defined in rule \"%s\"." % n)
+            cds.append(cd)
+        return cds
 
     def readAxes(self):
         # read the axes elements, including the warp map.

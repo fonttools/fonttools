@@ -5,6 +5,7 @@ from __future__ import (print_function, division, absolute_import,
 
 import os
 import pytest
+import warnings
 
 from fontTools.misc.py23 import open
 from fontTools.designspaceLib import (
@@ -719,48 +720,36 @@ def test_rulesDocument(tmpdir):
     assert doc.rules[0].conditionSets == [[
         {'minimum': 0.0, 'maximum': 1.0, 'name': 'axisName_a'},
         {'minimum': 0.0, 'maximum': 1.0, 'name': 'axisName_b'}]]
+    # still one conditionset
+    assert len(doc.rules[0].conditionSets) == 1
     doc.write(testDocPath)
-    new = DesignSpaceDocument()
-    new.read(testDocPath)
-    assert len(new.axes) == 2
-    assert len(new.rules) == 1
-    new.write(testDocPath2)
-    # verify these results? 
+    # add a stray conditionset
+    _addUnwrappedCondition(testDocPath)
+    doc2 = DesignSpaceDocument()
+    doc2.read(testDocPath)
+    assert len(doc2.axes) == 2
+    assert len(doc2.rules) == 1
+    assert len(doc2.rules[0].conditionSets) == 2
+    doc2.write(testDocPath2)
+    # verify these results
+    # make sure the stray condition is now neatly wrapped in a conditionset.
+    doc3 = DesignSpaceDocument()
+    doc3.read(testDocPath2)
+    assert len(doc3.rules) == 1
+    assert len(doc3.rules[0].conditionSets) == 2
 
-def test_incompleteRule(tmpdir):
-    tmpdir = str(tmpdir)
-    testDocPath1 = os.path.join(tmpdir, "testIncompleteRule.designspace")
-    doc = DesignSpaceDocument()
-    # write some axes
-    a1 = AxisDescriptor()
-    a1.tag = "TAGA"
-    a1.name = "axisName_a"
-    a1.minimum = 0
-    a1.maximum = 1000
-    a1.default = 0
-    doc.addAxis(a1)
-    a2 = AxisDescriptor()
-    a2.tag = "TAGB"
-    a2.name = "axisName_b"
-    a2.minimum = 0
-    a2.maximum = 3000
-    a2.default = 0
-    doc.addAxis(a2)
-
-    r1 = RuleDescriptor()
-    r1.name = "incomplete.rule.1"
-    r1.conditionSets.append([
-        dict(name='axisName_a', minimum=100),
-        dict(name='axisName_b', maximum=200)
-    ])
-    r1.subs.append(("c", "c.alt"))
-    doc.addRule(r1)
-    doc.write(testDocPath1)
-    __removeConditionMinimumMaximumDesignSpace(testDocPath1)
-    new = DesignSpaceDocument()
-    with pytest.raises(DesignSpaceDocumentError) as excinfo:
-        new.read(testDocPath1)
-    assert "No minimum or maximum defined in rule" in str(excinfo.value)
+def _addUnwrappedCondition(path):
+    # only for testing, so we can make an invalid designspace file
+    # older designspace files may have conditions that are not wrapped in a conditionset
+    # These can be read into a new conditionset.
+    f = open(path, 'r', encoding='utf-8')
+    d = f.read()
+    print(d)
+    f.close()
+    d = d.replace('<rule name="named.rule.1">', '<rule name="named.rule.1">\n\t<condition maximum="22" minimum="33" name="axisName_a" />')
+    f = open(path, 'w', encoding='utf-8')
+    f.write(d)
+    f.close()
 
 def test_documentLib(tmpdir):
     # roundtrip test of the document lib with some nested data
@@ -774,7 +763,7 @@ def test_documentLib(tmpdir):
     a1.maximum = 1000
     a1.default = 0
     doc.addAxis(a1)
-    dummyData = dict(a=123, b=u"äbc"+chr(127921), c=[1,2,3], d={'a':123})
+    dummyData = dict(a=123, b=u"äbc", c=[1,2,3], d={'a':123})
     dummyKey = "org.fontTools.designspaceLib"
     doc.lib = {dummyKey: dummyData}
     doc.write(testDocPath1)
@@ -782,16 +771,4 @@ def test_documentLib(tmpdir):
     new.read(testDocPath1)
     assert dummyKey in new.lib
     assert new.lib[dummyKey] == dummyData
-
-def __removeConditionMinimumMaximumDesignSpace(path):
-    # only for testing, so we can make an invalid designspace file
-    # without making the designSpaceDocument also support it.
-    f = open(path, 'r', encoding='utf-8')
-    d = f.read()
-    f.close()
-    d = d.replace(' minimum="100"', '')
-    f = open(path, 'w', encoding='utf-8')
-    f.write(d)
-    f.close()
-
 
