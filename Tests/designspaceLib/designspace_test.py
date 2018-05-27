@@ -604,6 +604,25 @@ def test_normalise4():
     r.sort()
     assert r == [('ddd', [(0, 0.1), (300, 0.5), (600, 0.5), (1000, 0.9)])]
 
+def test_axisMapping():
+    # note: because designspance lib does not do any actual
+    # processing of the mapping data, we can only check if there data is there.
+    doc = DesignSpaceDocument()
+    # write some axes
+    a4 = AxisDescriptor()
+    a4.minimum = 0
+    a4.maximum = 1000
+    a4.default = 0
+    a4.name = "ddd"
+    a4.map = [(0,100), (300, 500), (600, 500), (1000,900)]
+    doc.addAxis(a4)
+    doc.normalize()
+    r = []
+    for axis in doc.axes:
+        r.append((axis.name, axis.map))
+    r.sort()
+    assert r == [('ddd', [(0, 0.1), (300, 0.5), (600, 0.5), (1000, 0.9)])]
+
 def test_rulesConditions(tmpdir):
     # tests of rules, conditionsets and conditions
     r1 = RuleDescriptor()
