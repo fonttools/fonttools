@@ -1126,14 +1126,14 @@ class DesignSpaceDocument(object):
 
     def findDefault(self):
         # new default finder
-        # take the master with the location at all the defaults
+        # take the sourcedescriptor with the location at all the defaults
         self.default = None
         for sourceDescriptor in self.sources:
             if sourceDescriptor.location == self.defaultLoc:
                 # we choose you!
                 self.default = sourceDescriptor
                 return sourceDescriptor
-        # failing that, tkae the master with the copyInfo flag
+        # failing that, find the sourcedescriptor with the copyInfo flag
         for sourceDescriptor in self.sources:
             names = set()
             if sourceDescriptor.copyInfo:
@@ -1141,7 +1141,7 @@ class DesignSpaceDocument(object):
                 self.default = sourceDescriptor
                 return sourceDescriptor
         # failing that, well, fail. We don't want to guess any more. 
-        warnings.warn("Can't find a suitable default location in this document")
+        warnings.warn("Can't find a suitable default location in this document.")
         return None
 
     def _axesAsDict(self):
