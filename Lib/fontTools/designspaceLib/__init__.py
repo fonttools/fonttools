@@ -1161,53 +1161,6 @@ class DesignSpaceDocument(object):
             benderAxes[axisDescriptor.name] = d
         return benderAxes
 
-    def checkAxes(self, overwrite=False):
-        """
-            If we don't have axes in the document, make some, report
-            Should we include the instance locations when determining the axis extrema?
-        """
-        axisValues = {}
-        # find all the axes
-        locations = []
-        for sourceDescriptor in self.sources:
-            locations.append(sourceDescriptor.location)
-        for instanceDescriptor in self.instances:
-            locations.append(instanceDescriptor.location)
-            for name, glyphData in instanceDescriptor.glyphs.items():
-                loc = glyphData.get("instanceLocation")
-                if loc is not None:
-                    locations.append(loc)
-                for m in glyphData.get('masters', []):
-                    locations.append(m['location'])
-        for loc in locations:
-            for name, value in loc.items():
-                if not name in axisValues:
-                    axisValues[name] = []
-                if type(value)==tuple:
-                    for v in value:
-                        axisValues[name].append(v)
-                else:
-                    axisValues[name].append(value)
-        have = self.getAxisOrder()
-        for name, values in axisValues.items():
-            a = None
-            if name in have:
-                if overwrite:
-                    # we have the axis,
-                    a = self.getAxis(name)
-                else:
-                    continue
-            else:
-                # we need to make this axis
-                a = self.newAxisDescriptor()
-                self.addAxis(a)
-            a.name = name
-            a.minimum = min(values)
-            a.maximum = max(values)
-            a.default = a.minimum
-            a.tag, a.labelNames = tagForAxisName(a.name)
-            self.logger.info("CheckAxes: added a missing axis %s, %3.3f %3.3f", a.name, a.minimum, a.maximum)
-
     def normalizeLocation(self, location):
         # adapted from fontTools.varlib.models.normalizeLocation because:
         #   - this needs to work with axis names, not tags
