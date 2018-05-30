@@ -6,7 +6,6 @@ import logging
 import os
 import posixpath
 import plistlib
-import warnings
 
 try:
     import xml.etree.cElementTree as ET
@@ -649,6 +648,7 @@ class BaseDocReader(object):
         self.instances = []
         self.axisDefaults = {}
         self._strictAxisNames = True
+        self.logger = logging.getLogger("DesignSpaceLog")
 
     def read(self):
         self.readAxes()
@@ -673,7 +673,7 @@ class BaseDocReader(object):
             externalConditions = self._readConditionElements(ruleElement)
             if externalConditions:
                 ruleObject.conditionSets.append(externalConditions)
-                warnings.warn('Found stray rule conditions outside a conditionset. Wrapped them in a new conditionset.')
+                self.logger.info('Found stray rule conditions outside a conditionset. Wrapped them in a new conditionset.')
             # read the conditionsets
             for conditionSetElement in ruleElement.findall('.conditionset'):
                 conditionSet = self._readConditionElements(conditionSetElement)
@@ -808,14 +808,14 @@ class BaseDocReader(object):
             dimName = dimensionElement.attrib.get("name")
             if self._strictAxisNames and dimName not in self.axisDefaults:
                 # In case the document contains no axis definitions,
-                warnings.warn("Location with undefined axis: \"%s\"." % dimName)
+                self.logger.warning("Location with undefined axis: \"%s\".", dimName)
                 continue
             xValue = yValue = None
             try:
                 xValue = dimensionElement.attrib.get('xvalue')
                 xValue = float(xValue)
             except ValueError:
-                self.logger.info("KeyError in readLocation xValue %3.3f", xValue)
+                self.logger.warning("KeyError in readLocation xValue %3.3f", xValue)
             try:
                 yValue = dimensionElement.attrib.get('yvalue')
                 if yValue is not None:
@@ -966,7 +966,7 @@ class BaseDocReader(object):
 class DesignSpaceDocument(object):
     """ Read, write data from the designspace file"""
     def __init__(self, readerClass=None, writerClass=None):
-        self.logger = logging.getLogger("DesignSpaceDocumentLog")
+        self.logger = logging.getLogger("DesignSpaceLog")
         self.path = None
         self.filename = None
         """String, optional. When the document is read from the disk, this is
@@ -1138,39 +1138,14 @@ class DesignSpaceDocument(object):
     def findDefault(self):
         # new default finder
         # take the sourcedescriptor with the location at all the defaults
+        # if we can't find it, return None, let someone else figure it out
         self.default = None
         for sourceDescriptor in self.sources:
             if sourceDescriptor.location == self.defaultLoc:
                 # we choose you!
                 self.default = sourceDescriptor
                 return sourceDescriptor
-        # failing that, find the sourcedescriptor with the copyInfo flag
-        for sourceDescriptor in self.sources:
-            names = set()
-            if sourceDescriptor.copyInfo:
-                # we choose you!
-                self.default = sourceDescriptor
-                return sourceDescriptor
-        # failing that, well, fail. We don't want to guess any more. 
-        warnings.warn("Can't find a suitable default location in this document.")
         return None
-
-    def _axesAsDict(self):
-        """
-            Make the axis data we have available in
-        """
-        benderAxes = {}
-        for axisDescriptor in self.axes:
-            d = {
-                'name': axisDescriptor.name,
-                'tag': axisDescriptor.tag,
-                'minimum': axisDescriptor.minimum,
-                'maximum': axisDescriptor.maximum,
-                'default': axisDescriptor.default,
-                'map': axisDescriptor.map,
-            }
-            benderAxes[axisDescriptor.name] = d
-        return benderAxes
 
     def normalizeLocation(self, location):
         # adapted from fontTools.varlib.models.normalizeLocation because:
@@ -1201,8 +1176,9 @@ class DesignSpaceDocument(object):
         return new
 
     def normalize(self):
-        # scale all the locations of all masters and instances to the -1 - 0 - 1 value.
-        # we need the axis data to do the scaling, so we do those last.
+        # Normalise the geometry of this designspace:
+        #   scale all the locations of all masters and instances to the -1 - 0 - 1 value.
+        #   we need the axis data to do the scaling, so we do those last.
         # masters
         for item in self.sources:
             item.location = self.normalizeLocation(item.location)
@@ -1214,7 +1190,7 @@ class DesignSpaceDocument(object):
                 for glyphMaster in glyphData['masters']:
                     glyphMaster['location'] = self.normalizeLocation(glyphMaster['location'])
             item.location = self.normalizeLocation(item.location)
-        # now the axes
+        # the axes
         for axis in self.axes:
             # scale the map first
             newMap = []
