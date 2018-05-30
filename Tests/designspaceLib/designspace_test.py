@@ -12,6 +12,23 @@ from fontTools.designspaceLib import (
     DesignSpaceDocument, SourceDescriptor, AxisDescriptor, RuleDescriptor,
     InstanceDescriptor, evaluateRule, processRules, posix, DesignSpaceDocumentError)
 
+def _axesAsDict(axes):
+    """
+        Make the axis data we have available in
+    """
+    axesDict = {}
+    for axisDescriptor in axes:
+        d = {
+            'name': axisDescriptor.name,
+            'tag': axisDescriptor.tag,
+            'minimum': axisDescriptor.minimum,
+            'maximum': axisDescriptor.maximum,
+            'default': axisDescriptor.default,
+            'map': axisDescriptor.map,
+        }
+        axesDict[axisDescriptor.name] = d
+    return axesDict
+
 
 def assert_equals_test_file(path, test_filename):
     with open(path) as fp:
@@ -710,7 +727,7 @@ def test_rulesDocument(tmpdir):
     assert len(doc.rules) == 1
     assert len(doc.rules[0].conditionSets) == 1
     assert len(doc.rules[0].conditionSets[0]) == 2
-    assert doc._axesAsDict() == {'axisName_a': {'map': [], 'name': 'axisName_a', 'default': 0, 'minimum': 0, 'maximum': 1000, 'tag': 'TAGA'}, 'axisName_b': {'map': [], 'name': 'axisName_b', 'default': 2000, 'minimum': 2000, 'maximum': 3000, 'tag': 'TAGB'}}
+    assert _axesAsDict(doc.axes) == {'axisName_a': {'map': [], 'name': 'axisName_a', 'default': 0, 'minimum': 0, 'maximum': 1000, 'tag': 'TAGA'}, 'axisName_b': {'map': [], 'name': 'axisName_b', 'default': 2000, 'minimum': 2000, 'maximum': 3000, 'tag': 'TAGB'}}
     assert doc.rules[0].conditionSets == [[
         {'minimum': 0, 'maximum': 1000, 'name': 'axisName_a'},
         {'minimum': 0, 'maximum': 3000, 'name': 'axisName_b'}]]

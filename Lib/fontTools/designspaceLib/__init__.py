@@ -704,12 +704,12 @@ class BaseDocReader(object):
                 cd['maximum'] = None
             cd['name'] = conditionElement.attrib.get("name")
             # # test for things
-            # if cd.get('minimum') is None and cd.get('maximum') is None:
-            #     if ruleObject.name is not None:
-            #         n = ruleObject.name
-            #     else:
-            #         n = "%d" % len(rules)
-            #     raise DesignSpaceDocumentError("No minimum or maximum defined in rule \"%s\"." % n)
+            if cd.get('minimum') is None and cd.get('maximum') is None:
+                if ruleObject.name is not None:
+                    n = ruleObject.name
+                else:
+                    n = "%d" % len(rules)
+                raise DesignSpaceDocumentError("No minimum or maximum defined in rule \"%s\"." % n)
             cds.append(cd)
         return cds
 
