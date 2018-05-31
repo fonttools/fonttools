@@ -72,7 +72,6 @@ class Transformation(
         ["xScale", "xyScale", "yxScale", "yScale", "xOffset", "yOffset"],
     )
 ):
-
     def __repr__(self):
         return "<%s [%r %r %r %r %r %r]>" % ((self.__class__.__name__,) + self)
 
