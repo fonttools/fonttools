@@ -63,7 +63,7 @@ def plotLocationsSurfaces(locations, fig, names=None, **kwargs):
 				X.append(x)
 				Y.append(y)
 				Z.append(z)
-			axis3D.plot_wireframe(X, Y, Z, color=color, **kwargs)
+			axis3D.plot(X, Y, Z, color=color, **kwargs)
 		for y in stops(Ys):
 			X, Y, Z = [], [], []
 			for x in Xs:
@@ -71,7 +71,7 @@ def plotLocationsSurfaces(locations, fig, names=None, **kwargs):
 				X.append(x)
 				Y.append(y)
 				Z.append(z)
-			axis3D.plot_wireframe(X, Y, Z, color=color, **kwargs)
+			axis3D.plot(X, Y, Z, color=color, **kwargs)
 
 		plotLocations(model.locations, [ax1, ax2], axis3D)
 
