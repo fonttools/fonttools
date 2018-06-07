@@ -573,6 +573,7 @@ There are two meanings for the ``lib`` element:
     - Child element of ``designspace`` and ``instance``
     - Contains arbitrary data about the whole document or about a specific
       instance.
+    - Items in the dict need to use **reverse domain name notation** <https://en.wikipedia.org/wiki/Reverse_domain_name_notation>__
 
 .. 32-info-element:
 

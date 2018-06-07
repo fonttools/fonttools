@@ -5,11 +5,29 @@ from __future__ import (print_function, division, absolute_import,
 
 import os
 import pytest
+import warnings
 
 from fontTools.misc.py23 import open
 from fontTools.designspaceLib import (
     DesignSpaceDocument, SourceDescriptor, AxisDescriptor, RuleDescriptor,
     InstanceDescriptor, evaluateRule, processRules, posix, DesignSpaceDocumentError)
+
+def _axesAsDict(axes):
+    """
+        Make the axis data we have available in
+    """
+    axesDict = {}
+    for axisDescriptor in axes:
+        d = {
+            'name': axisDescriptor.name,
+            'tag': axisDescriptor.tag,
+            'minimum': axisDescriptor.minimum,
+            'maximum': axisDescriptor.maximum,
+            'default': axisDescriptor.default,
+            'map': axisDescriptor.map,
+        }
+        axesDict[axisDescriptor.name] = d
+    return axesDict
 
 
 def assert_equals_test_file(path, test_filename):
@@ -31,6 +49,29 @@ def test_fill_document(tmpdir):
     instancePath1 = os.path.join(tmpdir, "instances", "instanceTest1.ufo")
     instancePath2 = os.path.join(tmpdir, "instances", "instanceTest2.ufo")
     doc = DesignSpaceDocument()
+
+    # write some axes
+    a1 = AxisDescriptor()
+    a1.minimum = 0
+    a1.maximum = 1000
+    a1.default = 0
+    a1.name = "weight"
+    a1.tag = "wght"
+    # note: just to test the element language, not an actual label name recommendations.
+    a1.labelNames[u'fa-IR'] = u"قطر"
+    a1.labelNames[u'en'] = u"Wéíght"
+    doc.addAxis(a1)
+    a2 = AxisDescriptor()
+    a2.minimum = 0
+    a2.maximum = 1000
+    a2.default = 20
+    a2.name = "width"
+    a2.tag = "wdth"
+    a2.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
+    a2.hidden = True
+    a2.labelNames[u'fr'] = u"Chasse"
+    doc.addAxis(a2)
+
     # add master 1
     s1 = SourceDescriptor()
     s1.filename = os.path.relpath(masterPath1, os.path.dirname(testDocPath))
@@ -107,45 +148,6 @@ def test_fill_document(tmpdir):
     doc.filename = "suggestedFileName.designspace"
     doc.lib['com.coolDesignspaceApp.previewSize'] = 30
 
-    # now we have sources and instances, but no axes yet.
-    doc.check()
-
-    # Here, since the axes are not defined in the document, but instead are
-    # infered from the locations of the instances, we cannot guarantee the
-    # order in which they will be created by the `check()` method.
-    assert set(doc.getAxisOrder()) == set(['spooky', 'weight', 'width'])
-    doc.axes = []   # clear the axes
-
-    # write some axes
-    a1 = AxisDescriptor()
-    a1.minimum = 0
-    a1.maximum = 1000
-    a1.default = 0
-    a1.name = "weight"
-    a1.tag = "wght"
-    # note: just to test the element language, not an actual label name recommendations.
-    a1.labelNames[u'fa-IR'] = u"قطر"
-    a1.labelNames[u'en'] = u"Wéíght"
-    doc.addAxis(a1)
-    a2 = AxisDescriptor()
-    a2.minimum = 0
-    a2.maximum = 1000
-    a2.default = 20
-    a2.name = "width"
-    a2.tag = "wdth"
-    a2.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
-    a2.hidden = True
-    a2.labelNames[u'fr'] = u"Chasse"
-    doc.addAxis(a2)
-    # add an axis that is not part of any location to see if that works
-    a3 = AxisDescriptor()
-    a3.minimum = 333
-    a3.maximum = 666
-    a3.default = 444
-    a3.name = "spooky"
-    a3.tag = "SPOK"
-    a3.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
-    #doc.addAxis(a3)    # uncomment this line to test the effects of default axes values
     # write some rules
     r1 = RuleDescriptor()
     r1.name = "named.rule.1"
@@ -163,22 +165,10 @@ def test_fill_document(tmpdir):
     new = DesignSpaceDocument()
     new.read(testDocPath)
 
-    new.check()
     assert new.default.location == {'width': 20.0, 'weight': 0.0}
     assert new.filename == 'test.designspace'
     assert new.lib == doc.lib
     assert new.instances[0].lib == doc.instances[0].lib
-
-    # >>> for a, b in zip(doc.instances, new.instances):
-    # ...     a.compare(b)
-    # >>> for a, b in zip(doc.sources, new.sources):
-    # ...     a.compare(b)
-    # >>> for a, b in zip(doc.axes, new.axes):
-    # ...     a.compare(b)
-    # >>> [n.mutedGlyphNames for n in new.sources]
-    # [['A', 'Z'], []]
-    # >>> doc.getFonts()
-    # []
 
     # test roundtrip for the axis attributes and data
     axes = {}
@@ -195,50 +185,6 @@ def test_fill_document(tmpdir):
     for v in axes.values():
         a, b = v
         assert a == b
-
-
-def test_adjustAxisDefaultToNeutral(tmpdir):
-    tmpdir = str(tmpdir)
-    testDocPath = os.path.join(tmpdir, "testAdjustAxisDefaultToNeutral.designspace")
-    masterPath1 = os.path.join(tmpdir, "masters", "masterTest1.ufo")
-    masterPath2 = os.path.join(tmpdir, "masters", "masterTest2.ufo")
-    instancePath1 = os.path.join(tmpdir, "instances", "instanceTest1.ufo")
-    instancePath2 = os.path.join(tmpdir, "instances", "instanceTest2.ufo")
-    doc = DesignSpaceDocument()
-    # add master 1
-    s1 = SourceDescriptor()
-    s1.filename = os.path.relpath(masterPath1, os.path.dirname(testDocPath))
-    s1.name = "master.ufo1"
-    s1.copyInfo = True
-    s1.copyFeatures = True
-    s1.location = dict(weight=55, width=1000)
-    doc.addSource(s1)
-    # write some axes
-    a1 = AxisDescriptor()
-    a1.minimum = 0
-    a1.maximum = 1000
-    a1.default = 0      # the wrong value
-    a1.name = "weight"
-    a1.tag = "wght"
-    doc.addAxis(a1)
-    a2 = AxisDescriptor()
-    a2.minimum = -10
-    a2.maximum = 10
-    a2.default = 0      # the wrong value
-    a2.name = "width"
-    a2.tag = "wdth"
-    doc.addAxis(a2)
-    # write the document
-    doc.write(testDocPath)
-    assert os.path.exists(testDocPath)
-    # import it again
-    new = DesignSpaceDocument()
-    new.read(testDocPath)
-    new.check()
-    loc = new.default.location
-    for axisObj in new.axes:
-        n = axisObj.name
-        assert axisObj.default == loc.get(n)
 
 
 def test_unicodes(tmpdir):
@@ -457,7 +403,6 @@ def test_handleNoAxes(tmpdir):
     doc.addInstance(i1)
 
     doc.write(testDocPath)
-    __removeAxesFromDesignSpace(testDocPath)
     verify = DesignSpaceDocument()
     verify.read(testDocPath)
     verify.write(testDocPath2)
@@ -476,8 +421,16 @@ def test_pathNameResolve(tmpdir):
     instancePath1 = os.path.join(tmpdir, "instances", "instanceTest1.ufo")
     instancePath2 = os.path.join(tmpdir, "instances", "instanceTest2.ufo")
 
+    a1 = AxisDescriptor()
+    a1.tag = "TAGA"
+    a1.name = "axisName_a"
+    a1.minimum = 0
+    a1.maximum = 1000
+    a1.default = 0
+
     # Case 1: filename and path are both empty. Nothing to calculate, nothing to put in the file.
     doc = DesignSpaceDocument()
+    doc.addAxis(a1)
     s = SourceDescriptor()
     s.filename = None
     s.path = None
@@ -494,6 +447,7 @@ def test_pathNameResolve(tmpdir):
 
     # Case 2: filename is empty, path points somewhere: calculate a new filename.
     doc = DesignSpaceDocument()
+    doc.addAxis(a1)
     s = SourceDescriptor()
     s.filename = None
     s.path = masterPath1
@@ -510,6 +464,7 @@ def test_pathNameResolve(tmpdir):
 
     # Case 3: the filename is set, the path is None.
     doc = DesignSpaceDocument()
+    doc.addAxis(a1)
     s = SourceDescriptor()
     s.filename = "../somewhere/over/the/rainbow.ufo"
     s.path = None
@@ -528,6 +483,7 @@ def test_pathNameResolve(tmpdir):
 
     # Case 4: the filename points to one file, the path points to another. The path takes precedence.
     doc = DesignSpaceDocument()
+    doc.addAxis(a1)
     s = SourceDescriptor()
     s.filename = "../somewhere/over/the/rainbow.ufo"
     s.path = masterPath1
@@ -543,6 +499,7 @@ def test_pathNameResolve(tmpdir):
 
     # Case 5: the filename is None, path has a value, update the filename
     doc = DesignSpaceDocument()
+    doc.addAxis(a1)
     s = SourceDescriptor()
     s.filename = None
     s.path = masterPath1
@@ -557,6 +514,7 @@ def test_pathNameResolve(tmpdir):
 
     # Case 6: the filename has a value, path has a value, update the filenames with force
     doc = DesignSpaceDocument()
+    doc.addAxis(a1)
     s = SourceDescriptor()
     s.filename = "../somewhere/over/the/rainbow.ufo"
     s.path = masterPath1
@@ -571,7 +529,8 @@ def test_pathNameResolve(tmpdir):
     assert doc.sources[0].filename == "masters/masterTest1.ufo"
 
 
-def test_normalise():
+def test_normalise1():
+    # normalisation of anisotropic locations, clipping
     doc = DesignSpaceDocument()
     # write some axes
     a1 = AxisDescriptor()
@@ -581,10 +540,8 @@ def test_normalise():
     a1.name = "axisName_a"
     a1.tag = "TAGA"
     doc.addAxis(a1)
-
     assert doc.normalizeLocation(dict(axisName_a=0)) == {'axisName_a': 0.0}
     assert doc.normalizeLocation(dict(axisName_a=1000)) == {'axisName_a': 1.0}
-
     # clipping beyond max values:
     assert doc.normalizeLocation(dict(axisName_a=1001)) == {'axisName_a': 1.0}
     assert doc.normalizeLocation(dict(axisName_a=500)) == {'axisName_a': 0.5}
@@ -599,6 +556,8 @@ def test_normalise():
     r.sort()
     assert r == [('axisName_a', -1.0, 0.0, 1.0)]
 
+def test_normalise2():
+    # normalisation with minimum > 0
     doc = DesignSpaceDocument()
     # write some axes
     a2 = AxisDescriptor()
@@ -624,6 +583,8 @@ def test_normalise():
     r.sort()
     assert r == [('axisName_b', 0.0, 0.0, 1.0)]
 
+def test_normalise3():
+    # normalisation of negative values, with default == maximum
     doc = DesignSpaceDocument()
     # write some axes
     a3 = AxisDescriptor()
@@ -636,7 +597,6 @@ def test_normalise():
     assert doc.normalizeLocation(dict(ccc=1)) == {'ccc': 0.0}
     assert doc.normalizeLocation(dict(ccc=-1000)) == {'ccc': -1.0}
     assert doc.normalizeLocation(dict(ccc=-1001)) == {'ccc': -1.0}
-
     doc.normalize()
     r = []
     for axis in doc.axes:
@@ -644,28 +604,8 @@ def test_normalise():
     r.sort()
     assert r == [('ccc', -1.0, 0.0, 0.0)]
 
-
-    doc = DesignSpaceDocument()
-    # write some axes
-    a3 = AxisDescriptor()
-    a3.minimum = 2000
-    a3.maximum = 3000
-    a3.default = 2000
-    a3.name = "ccc"
-    doc.addAxis(a3)
-    assert doc.normalizeLocation(dict(ccc=0)) == {'ccc': 0.0}
-    assert doc.normalizeLocation(dict(ccc=1)) == {'ccc': 0.0}
-    assert doc.normalizeLocation(dict(ccc=-1000)) == {'ccc': 0.0}
-    assert doc.normalizeLocation(dict(ccc=-1001)) == {'ccc': 0.0}
-
-    doc.normalize()
-    r = []
-    for axis in doc.axes:
-        r.append((axis.name, axis.minimum, axis.default, axis.maximum))
-    r.sort()
-    assert r == [('ccc', 0.0, 0.0, 1.0)]
-
-
+def test_normalise4():
+    # normalisation with a map
     doc = DesignSpaceDocument()
     # write some axes
     a4 = AxisDescriptor()
@@ -682,28 +622,27 @@ def test_normalise():
     r.sort()
     assert r == [('ddd', [(0, 0.1), (300, 0.5), (600, 0.5), (1000, 0.9)])]
 
-
-def test_rules(tmpdir):
-    tmpdir = str(tmpdir)
-    testDocPath = os.path.join(tmpdir, "testRules.designspace")
-    testDocPath2 = os.path.join(tmpdir, "testRules_roundtrip.designspace")
+def test_axisMapping():
+    # note: because designspance lib does not do any actual
+    # processing of the mapping data, we can only check if there data is there.
     doc = DesignSpaceDocument()
     # write some axes
-    a1 = AxisDescriptor()
-    a1.tag = "TAGA"
-    a1.name = "axisName_a"
-    a1.minimum = 0
-    a1.maximum = 1000
-    a1.default = 0
-    doc.addAxis(a1)
-    a2 = AxisDescriptor()
-    a2.tag = "TAGB"
-    a2.name = "axisName_b"
-    a2.minimum = 0
-    a2.maximum = 3000
-    a2.default = 0
-    doc.addAxis(a2)
+    a4 = AxisDescriptor()
+    a4.minimum = 0
+    a4.maximum = 1000
+    a4.default = 0
+    a4.name = "ddd"
+    a4.map = [(0,100), (300, 500), (600, 500), (1000,900)]
+    doc.addAxis(a4)
+    doc.normalize()
+    r = []
+    for axis in doc.axes:
+        r.append((axis.name, axis.map))
+    r.sort()
+    assert r == [('ddd', [(0, 0.1), (300, 0.5), (600, 0.5), (1000, 0.9)])]
 
+def test_rulesConditions(tmpdir):
+    # tests of rules, conditionsets and conditions
     r1 = RuleDescriptor()
     r1.name = "named.rule.1"
     r1.conditionSets.append([
@@ -712,11 +651,6 @@ def test_rules(tmpdir):
     ])
     r1.subs.append(("a", "a.alt"))
 
-    # rule with minium and maximum
-    doc.addRule(r1)
-    assert len(doc.rules) == 1
-    assert len(doc.rules[0].conditionSets) == 1
-    assert len(doc.rules[0].conditionSets[0]) == 2
     assert evaluateRule(r1, dict(axisName_a = 500, axisName_b = 0)) == True
     assert evaluateRule(r1, dict(axisName_a = 0, axisName_b = 0)) == True
     assert evaluateRule(r1, dict(axisName_a = 1000, axisName_b = 0)) == True
@@ -761,6 +695,12 @@ def test_rules(tmpdir):
     assert evaluateRule(r4, dict(axisName_a = 0, axisName_b = 0)) == False
     assert evaluateRule(r4, dict(axisName_a = 1000, axisName_b = 1000)) == False
 
+def test_rulesDocument(tmpdir):
+    # tests of rules in a document, roundtripping.
+    tmpdir = str(tmpdir)
+    testDocPath = os.path.join(tmpdir, "testRules.designspace")
+    testDocPath2 = os.path.join(tmpdir, "testRules_roundtrip.designspace")
+    doc = DesignSpaceDocument()
     a1 = AxisDescriptor()
     a1.minimum = 0
     a1.maximum = 1000
@@ -775,69 +715,77 @@ def test_rules(tmpdir):
     b1.tag = "TAGB"
     doc.addAxis(a1)
     doc.addAxis(b1)
-    assert doc._prepAxesForBender() == {'axisName_a': {'map': [], 'name': 'axisName_a', 'default': 0, 'minimum': 0, 'maximum': 1000, 'tag': 'TAGA'}, 'axisName_b': {'map': [], 'name': 'axisName_b', 'default': 2000, 'minimum': 2000, 'maximum': 3000, 'tag': 'TAGB'}}
-
+    r1 = RuleDescriptor()
+    r1.name = "named.rule.1"
+    r1.conditionSets.append([
+        dict(name='axisName_a', minimum=0, maximum=1000),
+        dict(name='axisName_b', minimum=0, maximum=3000)
+    ])
+    r1.subs.append(("a", "a.alt"))
+    # rule with minium and maximum
+    doc.addRule(r1)
+    assert len(doc.rules) == 1
+    assert len(doc.rules[0].conditionSets) == 1
+    assert len(doc.rules[0].conditionSets[0]) == 2
+    assert _axesAsDict(doc.axes) == {'axisName_a': {'map': [], 'name': 'axisName_a', 'default': 0, 'minimum': 0, 'maximum': 1000, 'tag': 'TAGA'}, 'axisName_b': {'map': [], 'name': 'axisName_b', 'default': 2000, 'minimum': 2000, 'maximum': 3000, 'tag': 'TAGB'}}
     assert doc.rules[0].conditionSets == [[
         {'minimum': 0, 'maximum': 1000, 'name': 'axisName_a'},
         {'minimum': 0, 'maximum': 3000, 'name': 'axisName_b'}]]
-
     assert doc.rules[0].subs == [('a', 'a.alt')]
-
     doc.normalize()
     assert doc.rules[0].name == 'named.rule.1'
     assert doc.rules[0].conditionSets == [[
         {'minimum': 0.0, 'maximum': 1.0, 'name': 'axisName_a'},
         {'minimum': 0.0, 'maximum': 1.0, 'name': 'axisName_b'}]]
-
+    # still one conditionset
+    assert len(doc.rules[0].conditionSets) == 1
     doc.write(testDocPath)
-    new = DesignSpaceDocument()
+    # add a stray conditionset
+    _addUnwrappedCondition(testDocPath)
+    doc2 = DesignSpaceDocument()
+    doc2.read(testDocPath)
+    assert len(doc2.axes) == 2
+    assert len(doc2.rules) == 1
+    assert len(doc2.rules[0].conditionSets) == 2
+    doc2.write(testDocPath2)
+    # verify these results
+    # make sure the stray condition is now neatly wrapped in a conditionset.
+    doc3 = DesignSpaceDocument()
+    doc3.read(testDocPath2)
+    assert len(doc3.rules) == 1
+    assert len(doc3.rules[0].conditionSets) == 2
 
-    new.read(testDocPath)
-    assert len(new.axes) == 4
-    assert len(new.rules) == 1
-    new.write(testDocPath2)
-
-
-def test_incompleteRule(tmpdir):
-    tmpdir = str(tmpdir)
-    testDocPath1 = os.path.join(tmpdir, "testIncompleteRule.designspace")
-    doc = DesignSpaceDocument()
-    r1 = RuleDescriptor()
-    r1.name = "incomplete.rule.1"
-    r1.conditionSets.append([
-        dict(name='axisName_a', minimum=100),
-        dict(name='axisName_b', maximum=200)
-    ])
-    r1.subs.append(("c", "c.alt"))
-    doc.addRule(r1)
-    doc.write(testDocPath1)
-    __removeConditionMinimumMaximumDesignSpace(testDocPath1)
-    new = DesignSpaceDocument()
-    with pytest.raises(DesignSpaceDocumentError) as excinfo:
-        new.read(testDocPath1)
-    assert "No minimum or maximum defined in rule" in str(excinfo.value)
-
-def __removeConditionMinimumMaximumDesignSpace(path):
+def _addUnwrappedCondition(path):
     # only for testing, so we can make an invalid designspace file
-    # without making the designSpaceDocument also support it.
+    # older designspace files may have conditions that are not wrapped in a conditionset
+    # These can be read into a new conditionset.
     f = open(path, 'r', encoding='utf-8')
     d = f.read()
+    print(d)
     f.close()
-    d = d.replace(' minimum="100"', '')
+    d = d.replace('<rule name="named.rule.1">', '<rule name="named.rule.1">\n\t<condition maximum="22" minimum="33" name="axisName_a" />')
     f = open(path, 'w', encoding='utf-8')
     f.write(d)
     f.close()
 
-def __removeAxesFromDesignSpace(path):
-    # only for testing, so we can make an invalid designspace file
-    # without making the designSpaceDocument also support it.
-    f = open(path, 'r', encoding='utf-8')
-    d = f.read()
-    f.close()
-    start = d.find("<axes>")
-    end = d.find("</axes>")+len("</axes>")
-    n = d[0:start] + d[end:]
-    f = open(path, 'w', encoding='utf-8')
-    f.write(n)
-    f.close()
+def test_documentLib(tmpdir):
+    # roundtrip test of the document lib with some nested data
+    tmpdir = str(tmpdir)
+    testDocPath1 = os.path.join(tmpdir, "testDocumentLibTest.designspace")
+    doc = DesignSpaceDocument()
+    a1 = AxisDescriptor()
+    a1.tag = "TAGA"
+    a1.name = "axisName_a"
+    a1.minimum = 0
+    a1.maximum = 1000
+    a1.default = 0
+    doc.addAxis(a1)
+    dummyData = dict(a=123, b=u"äbc", c=[1,2,3], d={'a':123})
+    dummyKey = "org.fontTools.designspaceLib"
+    doc.lib = {dummyKey: dummyData}
+    doc.write(testDocPath1)
+    new = DesignSpaceDocument()
+    new.read(testDocPath1)
+    assert dummyKey in new.lib
+    assert new.lib[dummyKey] == dummyData
 
