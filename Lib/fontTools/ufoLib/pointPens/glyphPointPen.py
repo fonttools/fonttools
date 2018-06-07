@@ -1,7 +1,7 @@
-from ufoLib2.objects.component import Component
-from ufoLib2.objects.contour import Contour
-from ufoLib2.objects.point import Point
-from ufoLib2.pointPens.basePen import AbstractPointPen
+from fontTools.ufoLib.objects.component import Component
+from fontTools.ufoLib.objects.contour import Contour
+from fontTools.ufoLib.objects.point import Point
+from fontTools.ufoLib.pointPens.basePen import AbstractPointPen
 
 
 class GlyphPointPen(AbstractPointPen):

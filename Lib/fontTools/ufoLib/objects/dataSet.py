@@ -1,6 +1,6 @@
-from ufoLib2.objects.misc import DataStore
-from ufoLib2.reader import UFOReader
-from ufoLib2.writer import UFOWriter
+from fontTools.ufoLib.objects.misc import DataStore
+from fontTools.ufoLib.reader import UFOReader
+from fontTools.ufoLib.writer import UFOWriter
 
 
 class DataSet(DataStore):

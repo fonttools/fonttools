@@ -1,6 +1,6 @@
 import attr
 from typing import Optional
-from ufoLib2.objects.misc import Transformation
+from fontTools.ufoLib.objects.misc import Transformation
 
 
 def _to_transformation(v):

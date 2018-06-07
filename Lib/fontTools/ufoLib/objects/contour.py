@@ -1,6 +1,6 @@
 import attr
 from typing import Optional
-from ufoLib2.pointPens.converterPens import PointToSegmentPen
+from fontTools.ufoLib.pointPens.converterPens import PointToSegmentPen
 import warnings
 
 

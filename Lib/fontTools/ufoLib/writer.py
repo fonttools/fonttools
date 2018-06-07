@@ -4,9 +4,9 @@ from fontTools.misc.filenames import userNameToFileName
 from fontTools.misc.py23 import open, tounicode
 import os
 import errno
-from ufoLib2 import plistlib
+from fontTools.ufoLib import plistlib
 import shutil
-from ufoLib2.constants import (
+from fontTools.ufoLib.constants import (
     DATA_DIRNAME,
     DEFAULT_GLYPHS_DIRNAME,
     FEATURES_FILENAME,
@@ -18,7 +18,7 @@ from ufoLib2.constants import (
     LIB_FILENAME,
     METAINFO_FILENAME,
 )
-from ufoLib2.glyphSet import GlyphSet
+from fontTools.ufoLib.glyphSet import GlyphSet
 
 
 @attr.s(slots=True)
@@ -38,7 +38,7 @@ class UFOWriter(object):
         return self._path
 
     def _writeMetaInfo(self):
-        data = {"creator": "io.github.adrientetar.ufoLib2", "formatVersion": 3}
+        data = {"creator": "io.github.adrientetar.fontTools.ufoLib", "formatVersion": 3}
         path = os.path.join(self._path, METAINFO_FILENAME)
         with open(path, "wb") as file:
             plistlib.dump(data, file)

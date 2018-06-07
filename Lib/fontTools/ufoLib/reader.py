@@ -3,8 +3,8 @@ import attr
 import os
 import errno
 from io import open
-from ufoLib2 import plistlib
-from ufoLib2.constants import (
+from fontTools.ufoLib import plistlib
+from fontTools.ufoLib.constants import (
     DATA_DIRNAME,
     DEFAULT_GLYPHS_DIRNAME,
     FEATURES_FILENAME,
@@ -16,7 +16,7 @@ from ufoLib2.constants import (
     LIB_FILENAME,
     DEFAULT_LAYER_NAME,
 )
-from ufoLib2.glyphSet import GlyphSet
+from fontTools.ufoLib.glyphSet import GlyphSet
 
 
 @attr.s(slots=True)

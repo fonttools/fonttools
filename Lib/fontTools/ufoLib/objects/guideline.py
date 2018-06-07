@@ -1,6 +1,6 @@
 import attr
 from typing import Optional, Union
-from ufoLib2.objects.misc import AttrDictMixin
+from fontTools.ufoLib.objects.misc import AttrDictMixin
 
 
 @attr.s(slots=True)

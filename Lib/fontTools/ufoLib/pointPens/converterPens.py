@@ -1,6 +1,6 @@
 from fontTools.pens.basePen import AbstractPen
 import math
-from ufoLib2.pointPens.basePen import AbstractPointPen
+from fontTools.ufoLib.pointPens.basePen import AbstractPointPen
 
 __all__ = ["BasePointToSegmentPen", "PointToSegmentPen", "SegmentToPointPen"]
 

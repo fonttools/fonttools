@@ -1,17 +1,17 @@
 import attr
 from typing import Optional, Union
-from ufoLib2.objects.anchor import Anchor
-from ufoLib2.objects.component import Component
-from ufoLib2.objects.contour import Contour
-from ufoLib2.objects.guideline import Guideline
-from ufoLib2.objects.image import Image
-from ufoLib2.objects.misc import Transformation
-from ufoLib2.objects.point import Point
-from ufoLib2.pointPens.converterPens import (
+from fontTools.ufoLib.objects.anchor import Anchor
+from fontTools.ufoLib.objects.component import Component
+from fontTools.ufoLib.objects.contour import Contour
+from fontTools.ufoLib.objects.guideline import Guideline
+from fontTools.ufoLib.objects.image import Image
+from fontTools.ufoLib.objects.misc import Transformation
+from fontTools.ufoLib.objects.point import Point
+from fontTools.ufoLib.pointPens.converterPens import (
     PointToSegmentPen,
     SegmentToPointPen,
 )
-from ufoLib2.pointPens.glyphPointPen import GlyphPointPen
+from fontTools.ufoLib.pointPens.glyphPointPen import GlyphPointPen
 
 
 @attr.s(slots=True)

@@ -1,8 +1,8 @@
 import attr
 from typing import Optional
-from ufoLib2.objects.glyph import Glyph, GlyphClasses
-from ufoLib2.reader import GlyphSet
-from ufoLib2.constants import DEFAULT_LAYER_NAME
+from fontTools.ufoLib.objects.glyph import Glyph, GlyphClasses
+from fontTools.ufoLib.reader import GlyphSet
+from fontTools.ufoLib.constants import DEFAULT_LAYER_NAME
 
 
 @attr.s(slots=True)

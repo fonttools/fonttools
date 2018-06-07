@@ -1,15 +1,15 @@
 import attr
 import os
 from typing import Optional
-from ufoLib2.constants import DEFAULT_LAYER_NAME
-from ufoLib2.objects.dataSet import DataSet
-from ufoLib2.objects.guideline import Guideline
-from ufoLib2.objects.imageSet import ImageSet
-from ufoLib2.objects.info import Info
-from ufoLib2.objects.layerSet import LayerSet
-from ufoLib2.objects.features import Features
-from ufoLib2.reader import UFOReader
-from ufoLib2.writer import UFOWriter
+from fontTools.ufoLib.constants import DEFAULT_LAYER_NAME
+from fontTools.ufoLib.objects.dataSet import DataSet
+from fontTools.ufoLib.objects.guideline import Guideline
+from fontTools.ufoLib.objects.imageSet import ImageSet
+from fontTools.ufoLib.objects.info import Info
+from fontTools.ufoLib.objects.layerSet import LayerSet
+from fontTools.ufoLib.objects.features import Features
+from fontTools.ufoLib.reader import UFOReader
+from fontTools.ufoLib.writer import UFOWriter
 
 
 @attr.s(slots=True)

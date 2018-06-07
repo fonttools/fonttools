@@ -1,7 +1,7 @@
 import attr
 from collections import OrderedDict
-from ufoLib2.objects.layer import Layer
-from ufoLib2.constants import DEFAULT_LAYER_NAME
+from fontTools.ufoLib.objects.layer import Layer
+from fontTools.ufoLib.constants import DEFAULT_LAYER_NAME
 from fontTools.misc.py23 import basestring
 
 

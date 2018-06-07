@@ -5,8 +5,8 @@ from fontTools.misc.py23 import tounicode
 import os
 import errno
 from lxml import etree
-from ufoLib2 import plistlib
-from ufoLib2.constants import CONTENTS_FILENAME, LAYERINFO_FILENAME
+from fontTools.ufoLib import plistlib
+from fontTools.ufoLib.constants import CONTENTS_FILENAME, LAYERINFO_FILENAME
 
 # Note: we can implement reporting with logging, and lxml Elements
 # have a sourceline attr
