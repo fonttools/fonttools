@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, division, absolute_import
+from fontTools.misc.loggingTools import LogMixin
 import collections
-import logging
 import os
 import posixpath
 import plistlib
@@ -630,7 +630,7 @@ class BaseDocWriter(object):
         return glyphElement
 
 
-class BaseDocReader(object):
+class BaseDocReader(LogMixin):
     ruleDescriptorClass = RuleDescriptor
     axisDescriptorClass = AxisDescriptor
     sourceDescriptorClass = SourceDescriptor
@@ -648,7 +648,6 @@ class BaseDocReader(object):
         self.instances = []
         self.axisDefaults = {}
         self._strictAxisNames = True
-        self.logger = logging.getLogger("DesignSpaceLog")
 
     def read(self):
         self.readAxes()
@@ -668,15 +667,24 @@ class BaseDocReader(object):
         rules = []
         for ruleElement in self.root.findall(".rules/rule"):
             ruleObject = self.ruleDescriptorClass()
-            ruleObject.name = ruleElement.attrib.get("name")
+            ruleName = ruleObject.name = ruleElement.attrib.get("name")
             # read any stray conditions outside a condition set
-            externalConditions = self._readConditionElements(ruleElement)
+            externalConditions = self._readConditionElements(
+                ruleElement,
+                ruleName,
+            )
             if externalConditions:
                 ruleObject.conditionSets.append(externalConditions)
-                self.logger.info('Found stray rule conditions outside a conditionset. Wrapped them in a new conditionset.')
+                self.log.info(
+                    "Found stray rule conditions outside a conditionset. "
+                    "Wrapped them in a new conditionset."
+            )
             # read the conditionsets
             for conditionSetElement in ruleElement.findall('.conditionset'):
-                conditionSet = self._readConditionElements(conditionSetElement)
+                conditionSet = self._readConditionElements(
+                    conditionSetElement,
+                    ruleName,
+                )
                 if conditionSet is not None:
                     ruleObject.conditionSets.append(conditionSet)
             for subElement in ruleElement.findall('.sub'):
@@ -686,7 +694,7 @@ class BaseDocReader(object):
             rules.append(ruleObject)
         self.documentObject.rules = rules
 
-    def _readConditionElements(self, parentElement):
+    def _readConditionElements(self, parentElement, ruleName=None):
         cds = []
         for conditionElement in parentElement.findall('.condition'):
             cd = {}
@@ -705,11 +713,10 @@ class BaseDocReader(object):
             cd['name'] = conditionElement.attrib.get("name")
             # # test for things
             if cd.get('minimum') is None and cd.get('maximum') is None:
-                if ruleObject.name is not None:
-                    n = ruleObject.name
-                else:
-                    n = "%d" % len(rules)
-                raise DesignSpaceDocumentError("No minimum or maximum defined in rule \"%s\"." % n)
+                raise DesignSpaceDocumentError(
+                    "condition missing required minimum or maximum in rule%s."
+                    % (" '%s'" % ruleName if ruleName is not None else "")
+                )
             cds.append(cd)
         return cds
 
@@ -808,14 +815,14 @@ class BaseDocReader(object):
             dimName = dimensionElement.attrib.get("name")
             if self._strictAxisNames and dimName not in self.axisDefaults:
                 # In case the document contains no axis definitions,
-                self.logger.warning("Location with undefined axis: \"%s\".", dimName)
+                self.log.warning("Location with undefined axis: \"%s\".", dimName)
                 continue
             xValue = yValue = None
             try:
                 xValue = dimensionElement.attrib.get('xvalue')
                 xValue = float(xValue)
             except ValueError:
-                self.logger.warning("KeyError in readLocation xValue %3.3f", xValue)
+                self.log.warning("KeyError in readLocation xValue %3.3f", xValue)
             try:
                 yValue = dimensionElement.attrib.get('yvalue')
                 if yValue is not None:
@@ -963,10 +970,9 @@ class BaseDocReader(object):
             self.documentObject.lib = from_plist(libElement[0])
 
 
-class DesignSpaceDocument(object):
+class DesignSpaceDocument(LogMixin):
     """ Read, write data from the designspace file"""
     def __init__(self, readerClass=None, writerClass=None):
-        self.logger = logging.getLogger("DesignSpaceLog")
         self.path = None
         self.filename = None
         """String, optional. When the document is read from the disk, this is
