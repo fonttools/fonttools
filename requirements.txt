@@ -5,3 +5,9 @@ brotlipy==0.7.0; platform_python_implementation == "PyPy"
 unicodedata2==10.0.0; python_version < '3.7' and platform_python_implementation != "PyPy"
 munkres==1.0.10
 zopfli==0.1.4
+
+# required for fontTools.ufoLib
+attrs==18.1.0
+lxml==4.2.1
+typing==3.6.4 ; python_version<'3.5'
+singledispatch ; python_version<'3.4'
