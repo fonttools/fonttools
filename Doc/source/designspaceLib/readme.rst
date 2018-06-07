@@ -762,10 +762,12 @@ Attributes
 
 -  Defines a single alternative master for this glyph.
 
-#4.3 Localised names for intances Localised names for instances can be
-included with these simple elements with an xml:lang attribute: `XML
-language
-definition <https://www.w3.org/International/questions/qa-when-xmllang.en>`__
+4.3 Localised names for instances
+=================================
+
+Localised names for instances can be included with these simple elements
+with an ``xml:lang`` attribute:
+`XML language definition <https://www.w3.org/International/questions/qa-when-xmllang.en>`__
 
 -  stylename
 -  familyname
