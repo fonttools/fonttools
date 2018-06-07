@@ -1,0 +1,5 @@
+fonttools==3.26.0
+attrs==18.1.0
+lxml==4.2.1
+typing==3.6.4 ; python_version<'3.5'
+singledispatch ; python_version<'3.4'

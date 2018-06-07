@@ -1,0 +1,28 @@
+sudo: false
+language: python
+
+env:
+  global:
+  - TWINE_USERNAME="anthrotype"
+  - secure: t40rdYMdi/jYDhRb1aQ3s63+9Avfch1quhAEZ6ENjexXc5p9QNeHWEYNm8DuwjR29rgUbZ75rZ8du1a2zeGotseEXEQ8By8u2+HGfTDbC/HsKMWROPcsAVlmkNqwF8SHr16SOjduezaFQWT4PQ11NMnpncLEnKIuvvx/rBRzqGKR1WeGD4PnCMlvKSSSGUMhzuRQRiTH7JzTo7WGdgGK/DblNpXPlThMvIl6+XBd4MipeIpajkqI9aMEfnOYGEzRnNJbFx0k6u8dLsM51ngabiU0yZQWKSwYYzRUVGBbP58q1ufMltrXpTJBG7hsoOtBazSr7A3DwKBqQunffkxhVaED/LZNQLkoMflCPoS3ctB0xvl+vCPjDFon1i3BxzMjefveDygJcQa29rJiaNwrzKf+qp+Dj+lxbPt+uiuphw4efuyUPjbqbU9fXey8hu3IIN6UviXEr7Tsw76/QeFH/dR86A2nioEqpQnlha4EWSJJ9PiDn03GcCf/yaS2Q1A46gA5fYZXgQ8cxzYWbMldhFEPCIO13MW7dK71g1Zps+GHZ8mxlh7IlcjLSKfeySKael5dPqioEXlaI4aH9gqhCsnACzvG80N3SaxYBsGPDE6QZ15pdZjjlKH59RLnsl/mZ3iZt7cGwBp7Sxsvnt24DDtZqF0R1CIJUPGaAsFFqxg=
+
+matrix:
+  include:
+  - env: TOXENV=py27-cov
+    python: 2.7
+  - env: TOXENV=py36-cov,fix-lint
+    python: 3.6
+
+install: pip install tox
+
+script: tox
+
+after_success:
+- tox -e codecov
+- |
+  if [[ $TRAVIS_TAG && $TRAVIS_PYTHON_VERSION == 3.6 ]]; then
+    python -m pip install --upgrade pip setuptools setuptools_scm wheel twine
+    git fetch --unshallow
+    python setup.py sdist bdist_wheel
+    python -m twine upload dist/*.zip dist/*.whl
+  fi
