@@ -38,7 +38,7 @@ class UFOWriter(object):
         return self._path
 
     def _writeMetaInfo(self):
-        data = {"creator": "io.github.adrientetar.fontTools.ufoLib", "formatVersion": 3}
+        data = {"creator": "com.github.fonttools.ufoLib", "formatVersion": 3}
         path = os.path.join(self._path, METAINFO_FILENAME)
         with open(path, "wb") as file:
             plistlib.dump(data, file)
