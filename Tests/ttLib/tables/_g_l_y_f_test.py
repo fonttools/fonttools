@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 import sys
+import array
 import pytest
 
 
@@ -150,3 +151,9 @@ class GlyphCoordinatesTest(object):
         # since the Python float is truncated to a C float.
         # when using typecode 'd' it should return the correct value 243
         assert g[0][0] == round(afloat)
+
+    def test__checkFloat_overflow(self):
+        g = GlyphCoordinates([(1, 1)], typecode="h")
+        g.append((0x8000, 0))
+        assert g.array.typecode == "d"
+        assert g.array == array.array("d", [1.0, 1.0, 32768.0, 0.0])
