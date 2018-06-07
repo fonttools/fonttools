@@ -48,6 +48,34 @@ classifiers = {"classifiers": [
 	"Topic :: Multimedia :: Graphics :: Graphics Conversion",
 ]}
 
+# Extras and optional installation requirements
+extras_require = {
+	# for fontTools.ufoLib module
+	"ufo": [
+		"attrs>=17.3.0",
+		"lxml",
+		"typing ; python_version<'3.5'",
+		"singledispatch ; python_version<'3.4'",
+	],
+	# for compressing/decompressing WOFF and WOFF2 web font formats
+	"web": [
+		"zopfli>=0.1",
+		"brotli>=1.0; platform_python_implementation != 'PyPy'",
+		"brotlipy>=0.7.0; platform_python_implementation == 'PyPy'",
+	],
+	# to get an up-to-date UCD
+	"unicode": [
+		"unicodedata2>=10",
+	],
+	# for fontTools.t1Lib on macOS python3 to read extended fs attributes
+	"t1": [
+		"xattr; sys.platform == 'darwin' and python_version >= '3'"
+	],
+}
+
+# `pip install fonttools[all]` will install all the extras
+extras_require["all"] = list(set(sum(extras_require.values(), [])))
+
 
 # concatenate README.rst and NEWS.rest into long_description so they are
 # displayed on the FontTols project page on PyPI
@@ -327,6 +355,7 @@ setup(
 	tests_require=[
 		'pytest>=3.0',
 	],
+	extras_require=extras_require,
 	entry_points={
 		'console_scripts': [
 			"fonttools = fontTools.__main__:main",
