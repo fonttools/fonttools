@@ -1,5 +1,5 @@
 from __future__ import absolute_import, unicode_literals
-from ufoLib2 import plistlib
+from fontTools.ufoLib import plistlib
 import os
 import datetime
 import codecs
