@@ -325,7 +325,7 @@ def test_options_flag_version(capsys):
     assert len(version_list) >= 3
     assert version_list[0].isdigit()
     assert version_list[1].isdigit()
-    assert version_list[2].isdigit()
+    assert version_list[2].strip().isdigit()
 
 
 def test_options_d_goodpath(tmpdir):
