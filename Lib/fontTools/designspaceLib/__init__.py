@@ -84,7 +84,8 @@ class DesignSpaceDocumentError(Exception):
         self.obj = obj
 
     def __str__(self):
-        return repr(self.msg) + repr(self.obj)
+        return str(self.msg) + (
+            ": %r" % self.obj if self.obj is not None else "")
 
 
 def _indent(elem, whitespace="    ", level=0):
@@ -733,9 +734,8 @@ class BaseDocReader(LogMixin):
             # # test for things
             if cd.get('minimum') is None and cd.get('maximum') is None:
                 raise DesignSpaceDocumentError(
-                    "condition missing required minimum or maximum in rule%s."
-                    % (" '%s'" % ruleName if ruleName is not None else "")
-                )
+                    "condition missing required minimum or maximum in rule" +
+                    (" '%s'" % ruleName if ruleName is not None else ""))
             cds.append(cd)
         return cds
 
@@ -828,7 +828,7 @@ class BaseDocReader(LogMixin):
     def readLocationElement(self, locationElement):
         """ Format 0 location reader """
         if not self.documentObject.axes:
-            raise DesignSpaceDocumentError("No axes defined.")
+            raise DesignSpaceDocumentError("No axes defined")
         loc = {}
         for dimensionElement in locationElement.findall(".dimension"):
             dimName = dimensionElement.attrib.get("name")
@@ -947,7 +947,7 @@ class BaseDocReader(LogMixin):
         glyphData = {}
         glyphName = glyphElement.attrib.get('name')
         if glyphName is None:
-            raise DesignSpaceDocumentError("Glyph object without name attribute.")
+            raise DesignSpaceDocumentError("Glyph object without name attribute")
         mute = glyphElement.attrib.get("mute")
         if mute == "1":
             glyphData['mute'] = True
