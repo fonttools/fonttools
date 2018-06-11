@@ -1,3 +1,6 @@
+3.27.0 (released 2018-06-11)
+----------------------------
+
 - [designspaceLib] Added new ``conditionSet`` element to ``rule`` element in
   designspace document. Bumped ``format`` attribute to ``4.0`` (previously,
   it was formatted as an integer). Removed ``checkDefault``, ``checkAxes``
