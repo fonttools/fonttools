@@ -1,3 +1,25 @@
+- [designspaceLib] Added new ``conditionSet`` element to ``rule`` element in
+  designspace document. Bumped ``format`` attribute to ``4.0`` (previously,
+  it was formatted as an integer). Removed ``checkDefault``, ``checkAxes``
+  methods, and any kind of guessing about the axes when the ``<axes>`` element
+  is missing. The default master is expected at the intersection of all default
+  values for each axis (#1254, #1255, #1267).
+- [cffLib] Fixed issues when compiling CFF2 or converting from CFF when the
+  font has an FDArray (#1211, #1271).
+- [varLib] Avoid attempting to build ``cvar`` table when ``glyf`` table is not
+  present, as is the case for CFF2 fonts.
+- [subset] Handle None coverages in MarkGlyphSets; revert commit 02616ab that
+  sets empty Coverage tables in MarkGlyphSets to None, to make OTS happy.
+- [ttFont] Allow to build glyph order from ``maxp.numGlyphs`` when ``post`` or
+  ``cmap`` are missing.
+- [ttFont] Added ``__len__`` method to ``_TTGlyphSet``.
+- [glyf] Ensure ``GlyphCoordinates`` never overflow signed shorts (#1230).
+- [py23] Added alias for ``itertools.izip`` shadowing the built-in ``zip``.
+- [loggingTools] Memoize ``log`` property of ``LogMixin`` class (fbab12).
+- [ttx] Impoved test coverage (#1261).
+- [Snippets] Addded script to append a suffix to all family names in a font.
+- [varLib.plot] Make it work with matplotlib >= 2.1 (b38e2b).
+
 3.26.0 (released 2018-05-03)
 ----------------------------
 
