@@ -237,15 +237,6 @@
     <namerecord nameID="6" platformID="1" platEncID="0" langID="0x0" unicode="True">
       VarFont-Regular
     </namerecord>
-    <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Width
-    </namerecord>
-    <namerecord nameID="257" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Ascender
-    </namerecord>
-    <namerecord nameID="258" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Regular
-    </namerecord>
     <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
       VarFont
     </namerecord>
@@ -260,15 +251,6 @@
     </namerecord>
     <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
       VarFont-Regular
-    </namerecord>
-    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
-      Width
-    </namerecord>
-    <namerecord nameID="257" platformID="3" platEncID="1" langID="0x409">
-      Ascender
-    </namerecord>
-    <namerecord nameID="258" platformID="3" platEncID="1" langID="0x409">
-      Regular
     </namerecord>
   </name>
 

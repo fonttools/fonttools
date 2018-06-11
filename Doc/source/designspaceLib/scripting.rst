@@ -59,6 +59,8 @@ Make a descriptor object and add it to the document.
 -  The ``tag`` attribute is the one of the registered `OpenType
    Variation Axis
    Tags <https://www.microsoft.com/typography/otspec/fvar.htm#VAT>`__
+-  The default master is expected at the intersection of all
+   default values of all axes. 
 
 Option: add label names
 -----------------------
@@ -111,6 +113,7 @@ outline geometry, kerning and font.info that we want to work with.
 -  The **path** attribute is the absolute path to an existing UFO.
 -  The **name** attribute is a unique name for this source used to keep
    track it.
+-  The **layerName** attribute is the name of the UFO3 layer. Default None for ``foreground``.
 
 So go ahead and add another master:
 
@@ -121,6 +124,7 @@ So go ahead and add another master:
     s1.name = "master.bold"
     s1.location = dict(weight=1000)
     doc.addSource(s1)
+    
 
 Option: exclude glyphs
 ----------------------

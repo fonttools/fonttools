@@ -244,7 +244,7 @@ class CFFFontSet(object):
 				if key in topDict.rawDict:
 					del topDict.rawDict[key]
 				if hasattr(topDict, key):
-					exec("del topDict.%s" % (key))
+					delattr(topDict, key)
 
 		if not hasattr(topDict, "FDArray"):
 			fdArray = topDict.FDArray = FDArrayIndex()
@@ -257,6 +257,7 @@ class CFFFontSet(object):
 			else:
 				charStrings.fdArray = fdArray
 			fontDict = FontDict()
+			fontDict.setCFF2(True)
 			fdArray.append(fontDict)
 			fontDict.Private = privateDict
 			privateOpOrder = buildOrder(privateDictOperators2)
@@ -267,12 +268,20 @@ class CFFFontSet(object):
 						# print "Removing private dict", key
 						del privateDict.rawDict[key]
 					if hasattr(privateDict, key):
-						exec("del privateDict.%s" % (key))
+						delattr(privateDict, key)
 						# print "Removing privateDict attr", key
 		else:
 			# clean up the PrivateDicts in the fdArray
+			fdArray = topDict.FDArray
 			privateOpOrder = buildOrder(privateDictOperators2)
 			for fontDict in fdArray:
+				fontDict.setCFF2(True)
+				for key in fontDict.rawDict.keys():
+					if key not in fontDict.order:
+						del fontDict.rawDict[key]
+						if hasattr(fontDict, key):
+							delattr(fontDict, key)
+
 				privateDict = fontDict.Private
 				for entry in privateDictOperators:
 					key = entry[1]
@@ -281,7 +290,7 @@ class CFFFontSet(object):
 							# print "Removing private dict", key
 							del privateDict.rawDict[key]
 						if hasattr(privateDict, key):
-							exec("del privateDict.%s" % (key))
+							delattr(privateDict, key)
 							# print "Removing privateDict attr", key
 		# At this point, the Subrs and Charstrings are all still T2Charstring class
 		# easiest to fix this by compiling, then decompiling again
@@ -2381,13 +2390,24 @@ class FontDict(BaseDict):
 	defaults = {}
 	converters = buildConverters(topDictOperators)
 	compilerClass = FontDictCompiler
-	order = ['FontName', 'FontMatrix', 'Weight', 'Private']
+	orderCFF = ['FontName', 'FontMatrix', 'Weight', 'Private']
+	orderCFF2 = ['Private']
 	decompilerClass = TopDictDecompiler
 
 	def __init__(self, strings=None, file=None, offset=None,
 			GlobalSubrs=None, isCFF2=None, vstore=None):
 		super(FontDict, self).__init__(strings, file, offset, isCFF2=isCFF2)
 		self.vstore = vstore
+		self.setCFF2(isCFF2)
+
+	def setCFF2(self, isCFF2):
+		# isCFF2 may be None.
+		if isCFF2:
+			self.order = self.orderCFF2
+			self._isCFF2 = True
+		else:
+			self.order = self.orderCFF
+			self._isCFF2 = False
 
 
 class PrivateDict(BaseDict):

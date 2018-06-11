@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<designspace format="3">
+<designspace format="4.0">
     <axes>
         <axis default="0" maximum="1000" minimum="0" name="weight" tag="wght">
             <labelname xml:lang="en">Wéíght</labelname>
@@ -14,8 +14,10 @@
     </axes>
     <rules>
         <rule name="named.rule.1">
-            <condition maximum="1" minimum="0" name="aaaa" />
-            <condition maximum="3" minimum="2" name="bbbb" />
+            <conditionset>
+                <condition maximum="1" minimum="0" name="axisName_a" />
+                <condition maximum="3" minimum="2" name="axisName_b" />
+            </conditionset>
             <sub name="a" with="a.alt" />
         </rule>
     </rules>
@@ -33,6 +35,12 @@
         </source>
         <source familyname="MasterFamilyName" filename="masters/masterTest2.ufo" name="master.ufo2" stylename="MasterStyleNameTwo">
             <kerning mute="1" />
+            <location>
+                <dimension name="weight" xvalue="1000" />
+                <dimension name="width" xvalue="20" />
+            </location>
+        </source>
+        <source familyname="MasterFamilyName" filename="masters/masterTest2.ufo" layer="supports" name="master.ufo2" stylename="Supports">
             <location>
                 <dimension name="weight" xvalue="1000" />
                 <dimension name="width" xvalue="20" />

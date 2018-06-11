@@ -49,11 +49,18 @@ class T1Font(object):
 	Type 1 fonts.
 	"""
 
-	def __init__(self, path=None):
-		if path is not None:
-			self.data, type = read(path)
+	def __init__(self, path, encoding="ascii", kind=None):
+		if kind is None:
+			self.data, _ = read(path)
+		elif kind == "LWFN":
+			self.data = readLWFN(path)
+		elif kind == "PFB":
+			self.data = readPFB(path)
+		elif kind == "OTHER":
+			self.data = readOther(path)
 		else:
-			pass # XXX
+			raise ValueError(kind)
+		self.encoding = encoding
 
 	def saveAs(self, path, type, dohex=False):
 		write(path, self.getData(), type, dohex)
@@ -82,7 +89,7 @@ class T1Font(object):
 	def parse(self):
 		from fontTools.misc import psLib
 		from fontTools.misc import psCharStrings
-		self.font = psLib.suckfont(self.data)
+		self.font = psLib.suckfont(self.data, self.encoding)
 		charStrings = self.font["CharStrings"]
 		lenIV = self.font["Private"].get("lenIV", 4)
 		assert lenIV >= 0

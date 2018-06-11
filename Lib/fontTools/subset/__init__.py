@@ -212,8 +212,8 @@ Font table options:
       Add to the set of tables that will not be subsetted.
       By default, the following tables are included in this list, as
       they do not need subsetting (ignore the fact that 'loca' is listed
-      here): 'gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca',
-      'name', 'cvt ', 'fpgm', 'prep', 'VMDX', 'DSIG', 'CPAL', 'MVAR', 'STAT'.
+      here): 'gasp', 'head', 'hhea', 'maxp', 'vhea', 'OS/2', 'loca', 'name',
+      'cvt ', 'fpgm', 'prep', 'VMDX', 'DSIG', 'CPAL', 'MVAR', 'cvar', 'STAT'.
       By default, tables that the tool does not know how to subset and are not
       specified here will be dropped from the font, unless --passthrough-tables
       option is passed.
@@ -311,6 +311,8 @@ Other font-specific options:
       Update the 'OS/2 xAvgCharWidth' field after subsetting.
   --no-recalc-average-width
       Don't change the 'OS/2 xAvgCharWidth' field. [default]
+  --font-number=<number>
+      Select font number for TrueType Collection (.ttc/.otc), starting from 0.
 
 Application options:
   --verbose
@@ -1615,11 +1617,16 @@ def subset_glyphs(self, s):
 		table.AttachList.GlyphCount = len(table.AttachList.AttachPoint)
 	if hasattr(table, "MarkGlyphSetsDef") and table.MarkGlyphSetsDef:
 		for coverage in table.MarkGlyphSetsDef.Coverage:
-			coverage.subset(glyphs)
+			if coverage:
+				coverage.subset(glyphs)
+
 		# TODO: The following is disabled. If enabling, we need to go fixup all
 		# lookups that use MarkFilteringSet and map their set.
 		# indices = table.MarkGlyphSetsDef.Coverage = \
 		#   [c for c in table.MarkGlyphSetsDef.Coverage if c.glyphs]
+		# TODO: The following is disabled, as ots doesn't like it. Phew...
+		# https://github.com/khaledhosny/ots/issues/172
+		# table.MarkGlyphSetsDef.Coverage = [c if c.glyphs else None for c in table.MarkGlyphSetsDef.Coverage]
 	return True
 
 
@@ -1635,8 +1642,6 @@ def _pruneGDEF(font):
 
 	# Collect.
 	table.collect_device_varidxes(usedVarIdxes)
-	if 'GSUB' in font:
-		font['GSUB'].table.collect_device_varidxes(usedVarIdxes)
 	if 'GPOS' in font:
 		font['GPOS'].table.collect_device_varidxes(usedVarIdxes)
 
@@ -1675,7 +1680,8 @@ def prune_post_subset(self, font, options):
 		    table.MarkAttachClassDef or
 		    table.GlyphClassDef or
 		    table.AttachList or
-		    (table.Version >= 0x00010002 and table.MarkGlyphSetsDef))
+		    (table.Version >= 0x00010002 and table.MarkGlyphSetsDef) or
+		    (table.Version >= 0x00010003 and table.VarStore))
 
 @_add_method(ttLib.getTableClass('kern'))
 def prune_pre_subset(self, font, options):
@@ -1764,9 +1770,6 @@ def subset_glyphs(self, s):
 @_add_method(ttLib.getTableClass('HVAR'))
 def subset_glyphs(self, s):
 	table = self.table
-
-	# TODO Handle direct mapping
-	assert table.AdvWidthMap, "File a bug."
 
 	used = set()
 
@@ -2720,8 +2723,8 @@ class Options(object):
 				     'gasp', 'head', 'hhea', 'maxp',
 				     'vhea', 'OS/2', 'loca', 'name', 'cvt',
 				     'fpgm', 'prep', 'VDMX', 'DSIG', 'CPAL',
-				     'MVAR', 'STAT']
-	_hinting_tables_default = ['cvar', 'cvt', 'fpgm', 'prep', 'hdmx', 'VDMX']
+				     'MVAR', 'cvar', 'STAT']
+	_hinting_tables_default = ['cvt', 'cvar', 'fpgm', 'prep', 'hdmx', 'VDMX']
 
 	# Based on HarfBuzz shapers
 	_layout_features_groups = {
@@ -2776,6 +2779,7 @@ class Options(object):
 		self.verbose = False
 		self.timing = False
 		self.xml = False
+		self.font_number = -1
 
 		self.set(**kwargs)
 
@@ -3108,7 +3112,8 @@ def load_font(fontFile,
 			    checkChecksums=checkChecksums,
 			    recalcBBoxes=options.recalc_bounds,
 			    recalcTimestamp=options.recalc_timestamp,
-			    lazy=lazy)
+			    lazy=lazy,
+			    fontNumber=options.font_number)
 
 	# Hack:
 	#

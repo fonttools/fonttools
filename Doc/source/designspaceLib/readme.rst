@@ -13,7 +13,7 @@ A couple of differences between things that use designspaces:
 
 -  Varlib does not support anisotropic interpolations.
 -  MutatorMath and Superpolator will extrapolate over the boundaries of
-   the axes. Varlib can not.
+   the axes. Varlib can not (at the moment).
 -  Varlib requires much less data to define an instance than
    MutatorMath.
 -  The goals of Varlib and MutatorMath are different, so not all
@@ -83,21 +83,13 @@ dictionary, ``obj.stylename`` and ``obj.localisedStyleName['en']``.
 Rules
 *****
 
-**The ``rule`` element is experimental.** Some ideas behind how rules
-could work in designspaces come from Superpolator. Such rules can maybe
-be used to describe some of the conditional GSUB functionality of
-OpenType 1.8. The definition of a rule is not that complicated. A rule
-has a name, and it has a number of conditions. The rule also contains a
-list of glyphname pairs: the glyphs that need to be substituted.
+Rules describe designspace areas in which one glyph should be replaced by another.
+A rule has a name and a number of conditionsets. The rule also contains a list of
+glyphname pairs: the glyphs that need to be substituted. For a rule to be triggered
+**only one** of the conditionsets needs to be true, ``OR``. Within a conditionset 
+**all** conditions need to be true, ``AND``.
 
-Variable font instances
-=======================
-
--  In an variable font the substitution happens at run time: there are
-   no changes in the font, only in the sequence of glyphnames that is
-   rendered.
--  The infrastructure to get this rule data in a variable font needs to
-   be built.
+The ``sub`` element contains a pair of glyphnames. The ``name`` attribute is the glyph that should be visible when the rule evaluates to **False**. The ``with`` attribute is the glyph that should be visible when the rule evaluates to **True**.
 
 UFO instances
 =============
@@ -129,6 +121,8 @@ Attributes
 -  ``path``: string. Absolute path to the source file, calculated from
    the document path and the string in the filename attr. MutatorMath +
    Varlib.
+-  ``layerName``: string. The name of the layer in the source to look for
+   outline data. Default ``None`` which means ``foreground``.
 -  ``font``: Any Python object. Optional. Points to a representation of
    this source font that is loaded in memory, as a Python object
    (e.g. a ``defcon.Font`` or a ``fontTools.ttFont.TTFont``). The default
@@ -136,7 +130,7 @@ Attributes
    writer will not use this attribute. It is up to the user of
    ``designspaceLib`` to either load the resource identified by ``filename``
    and store it in this field, or write the contents of this field to the
-   disk and make ```filename`` point to that.
+   disk and make ``filename`` point to that.
 -  ``name``: string. Optional. Unique identifier name for this source,
    if there is one or more ``instance.glyph`` elements in the document.
    MutatorMath.
@@ -310,18 +304,21 @@ AxisDescriptor object
 RuleDescriptor object
 =====================
 
--  ``name``: string. Unique name for this rule. Will be used to
+-  ``name``: string. Unique name for this rule. Can be used to
    reference this rule data.
--  ``conditions``: list of dicts with condition data.
--  Each condition specifies the axis name it is active on and the values
-   between which the condition is true.
+-  ``conditionSets``: a list of conditionsets
+-  Each conditionset is a list of conditions.
+-  Each condition is a dict with ``name``, ``minimum`` and ``maximum`` keys.
+-  ``subs``: list of substitutions
+-  Each substitution is stored as tuples of glyphnames, e.g. ("a", "a.alt").
 
 .. code:: python
 
     r1 = RuleDescriptor()
     r1.name = "unique.rule.name"
-    r1.conditions.append(dict(name="weight", minimum=-10, maximum=10))
-    r1.conditions.append(dict(name="width", minimum=-10, maximum=10))
+    r1.conditionsSets.append([dict(name="weight", minimum=-10, maximum=10), dict(...)])
+    r1.conditionsSets.append([dict(...), dict(...)])
+    r1.subs.append(("a", "a.alt"))
 
 .. _subclassing-descriptors:
 
@@ -356,6 +353,8 @@ Document xml structure
 -  The ``axes`` element contains one or more ``axis`` elements.
 -  The ``sources`` element contains one or more ``source`` elements.
 -  The ``instances`` element contains one or more ``instance`` elements.
+-  The ``rules`` element contains one or more ``rule`` elements.
+-  The ``lib`` element contains arbitrary data.
 
 .. code:: xml
 
@@ -364,7 +363,7 @@ Document xml structure
         <axes>
             <!-- define axes here -->
             <axis../>
-            </axes>
+        </axes>
         <sources>
             <!-- define masters here -->
             <source../>
@@ -373,6 +372,10 @@ Document xml structure
             <!-- define instances here -->
             <instance../>
         </instances>
+        <rules>
+            <!-- define rules here -->
+            <rule../>
+        </rules>
         <lib>
             <dict>
                 <!-- store custom data here -->
@@ -512,8 +515,8 @@ Example
 .. code:: xml
 
     <location>
-      <dimension name="width" xvalue="0.000000" />
-      <dimension name="weight" xvalue="0.000000" yvalue="0.003" />
+        <dimension name="width" xvalue="0.000000" />
+        <dimension name="weight" xvalue="0.000000" yvalue="0.003" />
     </location>
 
 .. 3-source-element:
@@ -538,6 +541,8 @@ Attributes
 -  ``filename``: required, string. A path to the source file, relative
    to the root path of this document. The path can be at the same level
    as the document or lower.
+-  ``layer``: optional, string. The name of the layer in the source file.
+   If no layer attribute is given assume the foreground layer should be used.
 
 .. 31-lib-element:
 
@@ -556,7 +561,7 @@ There are two meanings for the ``lib`` element:
 2. Document and instance lib
     - Example:
 
-      .. code:: python
+      .. code:: xml
 
         <lib>
             <dict>
@@ -568,6 +573,7 @@ There are two meanings for the ``lib`` element:
     - Child element of ``designspace`` and ``instance``
     - Contains arbitrary data about the whole document or about a specific
       instance.
+    - Items in the dict need to use **reverse domain name notation** <https://en.wikipedia.org/wiki/Reverse_domain_name_notation>__
 
 .. 32-info-element:
 
@@ -641,14 +647,14 @@ Example
 
     <source familyname="MasterFamilyName" filename="masters/masterTest1.ufo" name="master.ufo1" stylename="MasterStyleNameOne">
         <lib copy="1" />
-       <features copy="1" />
+        <features copy="1" />
         <info copy="1" />
         <glyph mute="1" name="A" />
-       <glyph mute="1" name="Z" />
-       <location>
-          <dimension name="width" xvalue="0.000000" />
-          <dimension name="weight" xvalue="0.000000" />
-       </location>
+        <glyph mute="1" name="Z" />
+        <location>
+            <dimension name="width" xvalue="0.000000" />
+            <dimension name="weight" xvalue="0.000000" />
+        </location>
     </source>
 
 .. 4-instance-element:
@@ -756,10 +762,12 @@ Attributes
 
 -  Defines a single alternative master for this glyph.
 
-#4.3 Localised names for intances Localised names for instances can be
-included with these simple elements with an xml:lang attribute: `XML
-language
-definition <https://www.w3.org/International/questions/qa-when-xmllang.en>`__
+4.3 Localised names for instances
+=================================
+
+Localised names for instances can be included with these simple elements
+with an ``xml:lang`` attribute:
+`XML language definition <https://www.w3.org/International/questions/qa-when-xmllang.en>`__
 
 -  stylename
 -  familyname
@@ -800,14 +808,14 @@ Example
     <instance familyname="InstanceFamilyName" filename="instances/instanceTest2.ufo" name="instance.ufo2" postscriptfontname="InstancePostscriptName" stylemapfamilyname="InstanceStyleMapFamilyName" stylemapstylename="InstanceStyleMapStyleName" stylename="InstanceStyleName">
     <location>
         <dimension name="width" xvalue="400" yvalue="300" />
-       <dimension name="weight" xvalue="66" />
+        <dimension name="weight" xvalue="66" />
     </location>
     <glyphs>
         <glyph name="arrow2" />
         <glyph name="arrow" unicode="0x4d2 0x4d3">
         <location>
             <dimension name="width" xvalue="100" />
-                <dimension name="weight" xvalue="120" />
+            <dimension name="weight" xvalue="120" />
         </location>
         <note>A note about this glyph</note>
         <masters>
@@ -836,37 +844,47 @@ Example
 =================
 
 -  Container for ``rule`` elements
+-  The rules are evaluated in this order.
 
 .. 51-rule-element:
 
 5.1 rule element
 ================
 
--  Defines a named rule with a set of conditions.
--  The conditional substitutions specifed in the OpenType specification
-   can be much more elaborate than what it recorded in this element.
--  So while authoring tools are welcome to use the ``sub`` element,
-   they're intended as preview / example / test substitutions for the
-   rule.
+-  Defines a named rule.
+-  Each ``rule`` element contains one or more ``conditionset`` elements.
+-  Only one ``conditionset`` needs to be true to trigger the rule.
+-  All conditions in a ``conditionset`` must be true to make the ``conditionset`` true.
+-  For backwards compatibility a ``rule`` can contain ``condition`` elements outside of a conditionset. These are then understood to be part of a single, implied, ``conditionset``. Note: these conditions should be written wrapped in a conditionset.
+-  A rule element needs to contain one or more ``sub`` elements in order to be compiled to a variable font.
+-  Rules without sub elements should be ignored when compiling a font.
+-  For authoring tools it might be necessary to save designspace files without ``sub`` elements just because the work is incomplete.
 
 .. attributes-11:
 
 Attributes
 ----------
 
--  ``name``: required, string. A unique name that can be used to
-   identify this rule if it needs to be referenced elsewhere.
+-  ``name``: optional, string. A unique name that can be used to
+   identify this rule if it needs to be referenced elsewhere. The name
+   is not important for compiling variable fonts.
 
-.. 511-condition-element:
-
-5.1.1 condition element
+5.1.1 conditionset element
 =======================
 
 -  Child element of ``rule``
--  Between the ``minimum`` and ``maximum`` this rule is ``true``.
+-  Contains one or more ``condition`` elements.
+
+.. 512-condition-element:
+
+5.1.2 condition element
+=======================
+
+-  Child element of ``conditionset``
+-  Between the ``minimum`` and ``maximum`` this rule is ``True``.
 -  If ``minimum`` is not available, assume it is ``axis.minimum``.
 -  If ``maximum`` is not available, assume it is ``axis.maximum``.
--  One or the other or both need to be present.
+-  The condition must contain at least a minimum or maximum or both.
 
 .. attributes-12:
 
@@ -878,15 +896,13 @@ Attributes
 -  ``minimum``: number, required*. The low value.
 -  ``maximum``: number, required*. The high value.
 
-.. 512-sub-element:
+.. 513-sub-element:
 
-5.1.2 sub element
+5.1.3 sub element
 =================
 
 -  Child element of ``rule``.
--  Defines which glyphs to replace when the rule is true.
--  This element is optional. It may be useful for editors to know which
-   glyphs can be used to preview the axis.
+-  Defines which glyph to replace when the rule evaluates to **True**.
 
 .. attributes-13:
 
@@ -895,7 +911,7 @@ Attributes
 
 -  ``name``: string, required. The name of the glyph this rule looks
    for.
--  ``byname``: string, required. The name of the glyph it is replaced
+-  ``with``: string, required. The name of the glyph it is replaced
    with.
 
 .. example-7:
@@ -903,13 +919,34 @@ Attributes
 Example
 -------
 
+Example with an implied ``conditionset``. Here the conditions are not
+contained in a conditionset. 
+
 .. code:: xml
 
     <rules>
         <rule name="named.rule.1">
             <condition minimum="250" maximum="750" name="weight" />
             <condition minimum="50" maximum="100" name="width" />
-            <sub name="dollar" byname="dollar.alt"/>
+            <sub name="dollar" with="dollar.alt"/>
+        </rule>
+    </rules>
+
+Example with ``conditionsets``. All conditions in a conditionset must be true.
+
+.. code:: xml
+
+    <rules>
+        <rule name="named.rule.2">
+            <conditionset>
+                <condition minimum="250" maximum="750" name="weight" />
+                <condition minimum="50" maximum="100" name="width" />
+            </conditionset>
+            <conditionset>
+                <condition ... />
+                <condition ... />
+            </conditionset>
+            <sub name="dollar" with="dollar.alt"/>
         </rule>
     </rules>
 

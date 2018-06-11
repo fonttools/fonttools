@@ -283,7 +283,7 @@ class OTTableWriter(object):
 	def __eq__(self, other):
 		if type(self) != type(other):
 			return NotImplemented
-		return self.items == other.items
+		return self.longOffset == other.longOffset and self.items == other.items
 
 	def _doneWriting(self, internedTables):
 		# Convert CountData references to data string items
@@ -610,22 +610,27 @@ class BaseTable(object):
 			if conv.name == "SubStruct":
 				conv = conv.getConverter(reader.tableTag,
 				                         table["MorphType"])
-			if conv.repeat:
-				if isinstance(conv.repeat, int):
-					countValue = conv.repeat
-				elif conv.repeat in table:
-					countValue = table[conv.repeat]
+			try:
+				if conv.repeat:
+					if isinstance(conv.repeat, int):
+						countValue = conv.repeat
+					elif conv.repeat in table:
+						countValue = table[conv.repeat]
+					else:
+						# conv.repeat is a propagated count
+						countValue = reader[conv.repeat]
+					countValue += conv.aux
+					table[conv.name] = conv.readArray(reader, font, table, countValue)
 				else:
-					# conv.repeat is a propagated count
-					countValue = reader[conv.repeat]
-				countValue += conv.aux
-				table[conv.name] = conv.readArray(reader, font, table, countValue)
-			else:
-				if conv.aux and not eval(conv.aux, None, table):
-					continue
-				table[conv.name] = conv.read(reader, font, table)
-				if conv.isPropagated:
-					reader[conv.name] = table[conv.name]
+					if conv.aux and not eval(conv.aux, None, table):
+						continue
+					table[conv.name] = conv.read(reader, font, table)
+					if conv.isPropagated:
+						reader[conv.name] = table[conv.name]
+			except Exception as e:
+				name = conv.name
+				e.args = e.args + (name,)
+				raise
 
 		if hasattr(self, 'postRead'):
 			self.postRead(table, font)
