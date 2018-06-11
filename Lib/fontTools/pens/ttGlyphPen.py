@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from array import array
-from fontTools.pens.basePen import AbstractPen
+from fontTools.pens.basePen import LoggingPen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.ttLib.tables import ttProgram
 from fontTools.ttLib.tables._g_l_y_f import Glyph
@@ -17,7 +17,7 @@ __all__ = ["TTGlyphPen"]
 MAX_F2DOT14 = 0x7FFF / (1 << 14)
 
 
-class TTGlyphPen(AbstractPen):
+class TTGlyphPen(LoggingPen):
     """Pen used for drawing to a TrueType glyph.
 
     If `handleOverflowingTransforms` is True, the components' transform values
@@ -115,9 +115,18 @@ class TTGlyphPen(AbstractPen):
             if (self.points or
                     (self.handleOverflowingTransforms and overflowing)):
                 # can't have both coordinates and components, so decompose
-                tpen = TransformPen(self, transformation)
-                self.glyphSet[glyphName].draw(tpen)
-                continue
+                try:
+                    baseGlyph = self.glyphSet[glyphName]
+                except KeyError:
+                    self.log.debug(
+                        "can't decompose non-existing component '%s'; skipped",
+                        glyphName
+                    )
+                    continue
+                else:
+                    tpen = TransformPen(self, transformation)
+                    baseGlyph.draw(tpen)
+                    continue
 
             component = GlyphComponent()
             component.glyphName = glyphName

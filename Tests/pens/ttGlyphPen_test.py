@@ -94,6 +94,7 @@ class TTGlyphPenTest(TestCase):
         pen.lineTo((1, 0))
         pen.closePath()
         pen.addComponent(componentName, (1, 0, 0, 1, 2, 0))
+        pen.addComponent("missing", (1, 0, 0, 1, 0, 0))  # skipped
         compositeGlyph = pen.glyph()
 
         pen.moveTo((0, 0))
