@@ -386,7 +386,7 @@ def _merge_TTHinting(font, model, master_ttfs, tolerance=0.5):
 	# cvt table
 
 	all_cvs = [Vector(m["cvt "].values) for m in master_ttfs if "cvt " in m]
-	
+
 	if len(all_cvs) == 0:
 		# There is no cvt table to make a cvar table from, we're done here.
 		return
