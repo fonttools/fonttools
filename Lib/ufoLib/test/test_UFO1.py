@@ -37,7 +37,7 @@ class ReadFontInfoVersion1TestCase(unittest.TestCase):
 		originalData = dict(fontInfoVersion1)
 		self._writeInfoToPlist(originalData)
 		infoObject = TestInfoObject()
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(infoObject)
 		for attr in dir(infoObject):
 			if attr not in fontInfoVersion2:
@@ -57,7 +57,7 @@ class ReadFontInfoVersion1TestCase(unittest.TestCase):
 			info = dict(fontInfoVersion1)
 			info["fontStyle"] = old
 			self._writeInfoToPlist(info)
-			reader = UFOReader(self.dstDir)
+			reader = UFOReader(self.dstDir, validate=True)
 			infoObject = TestInfoObject()
 			reader.readInfo(infoObject)
 			self.assertEqual(new, infoObject.styleMapStyleName)
@@ -78,7 +78,7 @@ class ReadFontInfoVersion1TestCase(unittest.TestCase):
 			info = dict(fontInfoVersion1)
 			info["widthName"] = old
 			self._writeInfoToPlist(info)
-			reader = UFOReader(self.dstDir)
+			reader = UFOReader(self.dstDir, validate=True)
 			infoObject = TestInfoObject()
 			reader.readInfo(infoObject)
 			self.assertEqual(new, infoObject.openTypeOS2WidthClass)

@@ -224,7 +224,7 @@ class KerningUpConversionTestCase(unittest.TestCase):
 
 	def testUFO1(self):
 		self.makeUFO(formatVersion=2)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		kerning = reader.readKerning()
 		self.assertEqual(self.expectedKerning, kerning)
 		groups = reader.readGroups()
@@ -234,7 +234,7 @@ class KerningUpConversionTestCase(unittest.TestCase):
 
 	def testUFO2(self):
 		self.makeUFO(formatVersion=2)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		kerning = reader.readKerning()
 		self.assertEqual(self.expectedKerning, kerning)
 		groups = reader.readGroups()
