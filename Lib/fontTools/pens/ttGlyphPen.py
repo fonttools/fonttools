@@ -100,33 +100,26 @@ class TTGlyphPen(LoggingPen):
     def addComponent(self, glyphName, transformation):
         self.components.append((glyphName, transformation))
 
-    def glyph(self, componentFlags=0x4):
-        assert self._isClosed(), "Didn't close last contour."
-
+    def _buildComponents(self, componentFlags):
         if self.handleOverflowingTransforms:
             # we can't encode transform values > 2 or < -2 in F2Dot14,
             # so we must decompose the glyph if any transform exceeds these
             overflowing = any(s > 2 or s < -2
                               for (glyphName, transformation) in self.components
                               for s in transformation[:4])
-
         components = []
         for glyphName, transformation in self.components:
+            if glyphName not in self.glyphSet:
+                self.log.warning(
+                    "skipped non-existing component '%s'", glyphName
+                )
+                continue
             if (self.points or
                     (self.handleOverflowingTransforms and overflowing)):
                 # can't have both coordinates and components, so decompose
-                try:
-                    baseGlyph = self.glyphSet[glyphName]
-                except KeyError:
-                    self.log.debug(
-                        "can't decompose non-existing component '%s'; skipped",
-                        glyphName
-                    )
-                    continue
-                else:
-                    tpen = TransformPen(self, transformation)
-                    baseGlyph.draw(tpen)
-                    continue
+                tpen = TransformPen(self, transformation)
+                self.glyphSet[glyphName].draw(tpen)
+                continue
 
             component = GlyphComponent()
             component.glyphName = glyphName
@@ -141,6 +134,12 @@ class TTGlyphPen(LoggingPen):
                 component.transform = (transformation[:2], transformation[2:])
             component.flags = componentFlags
             components.append(component)
+        return components
+
+    def glyph(self, componentFlags=0x4):
+        assert self._isClosed(), "Didn't close last contour."
+
+        components = self._buildComponents(componentFlags)
 
         glyph = Glyph()
         glyph.coordinates = GlyphCoordinates(self.points)
