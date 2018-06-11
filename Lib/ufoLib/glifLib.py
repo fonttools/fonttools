@@ -104,7 +104,7 @@ class GlyphSet(object):
 
 	glyphClass = Glyph
 
-	def __init__(self, dirName, glyphNameToFileNameFunc=None, ufoFormatVersion=3):
+	def __init__(self, dirName, glyphNameToFileNameFunc=None, ufoFormatVersion=3, validate=False):
 		"""
 		'dirName' should be a path to an existing directory.
 
@@ -124,6 +124,7 @@ class GlyphSet(object):
 		self.rebuildContents()
 		self._reverseContents = None
 		self._glifCache = {}
+		self._validate = validate
 
 	def rebuildContents(self):
 		"""
@@ -136,19 +137,20 @@ class GlyphSet(object):
 			# missing, consider the glyphset empty.
 			contents = {}
 		# validate the contents
-		invalidFormat = False
-		if not isinstance(contents, dict):
-			invalidFormat = True
-		else:
-			for name, fileName in contents.items():
-				if not isinstance(name, basestring):
-					invalidFormat = True
-				if not isinstance(fileName, basestring):
-					invalidFormat = True
-				elif not os.path.exists(os.path.join(self.dirName, fileName)):
-					raise GlifLibError("contents.plist references a file that does not exist: %s" % fileName)
-		if invalidFormat:
-			raise GlifLibError("contents.plist is not properly formatted")
+		if validate:
+			invalidFormat = False
+			if not isinstance(contents, dict):
+				invalidFormat = True
+			else:
+				for name, fileName in contents.items():
+					if not isinstance(name, basestring):
+						invalidFormat = True
+					if not isinstance(fileName, basestring):
+						invalidFormat = True
+					elif not os.path.exists(os.path.join(self.dirName, fileName)):
+						raise GlifLibError("contents.plist references a file that does not 	exist: %s" % fileName)
+			if invalidFormat:
+				raise GlifLibError("contents.plist is not properly formatted")
 		self.contents = contents
 		self._reverseContents = None
 

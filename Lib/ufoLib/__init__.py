@@ -502,7 +502,7 @@ class UFOReader(object):
 		if directory is None:
 			raise UFOLibError("No glyphs directory is mapped to \"%s\"." % layerName)
 		glyphsPath = os.path.join(self._path, directory)
-		return GlyphSet(glyphsPath, ufoFormatVersion=self._formatVersion)
+		return GlyphSet(glyphsPath, ufoFormatVersion=self._formatVersion, validate=validate)
 
 	def getCharacterMapping(self, layerName=None, validate=self._validate):
 		"""
@@ -1118,19 +1118,19 @@ class UFOWriter(object):
 			raise UFOLibError("A layer name must be provided for non-default layers.")
 		# move along to format specific writing
 		if self.formatVersion == 1:
-			return self._getGlyphSetFormatVersion1(glyphNameToFileNameFunc=glyphNameToFileNameFunc)
+			return self._getGlyphSetFormatVersion1(glyphNameToFileNameFunc=glyphNameToFileNameFunc, validate)
 		elif self.formatVersion == 2:
-			return self._getGlyphSetFormatVersion2(glyphNameToFileNameFunc=glyphNameToFileNameFunc)
+			return self._getGlyphSetFormatVersion2(glyphNameToFileNameFunc=glyphNameToFileNameFunc, validate)
 		elif self.formatVersion == 3:
-			return self._getGlyphSetFormatVersion3(layerName=layerName, defaultLayer=defaultLayer, glyphNameToFileNameFunc=glyphNameToFileNameFunc, validate=validate)
+			return self._getGlyphSetFormatVersion3(layerName=layerName, defaultLayer=defaultLayer, glyphNameToFileNameFunc=glyphNameToFileNameFunc, validate)
 
-	def _getGlyphSetFormatVersion1(self, glyphNameToFileNameFunc=None):
+	def _getGlyphSetFormatVersion1(self, glyphNameToFileNameFunc=None, validate):
 		glyphDir = self._makeDirectory(DEFAULT_GLYPHS_DIRNAME)
-		return GlyphSet(glyphDir, glyphNameToFileNameFunc, ufoFormatVersion=1)
+		return GlyphSet(glyphDir, glyphNameToFileNameFunc, ufoFormatVersion=1, validate=validate)
 
-	def _getGlyphSetFormatVersion2(self, glyphNameToFileNameFunc=None):
+	def _getGlyphSetFormatVersion2(self, glyphNameToFileNameFunc=None, validate):
 		glyphDir = self._makeDirectory(DEFAULT_GLYPHS_DIRNAME)
-		return GlyphSet(glyphDir, glyphNameToFileNameFunc, ufoFormatVersion=2)
+		return GlyphSet(glyphDir, glyphNameToFileNameFunc, ufoFormatVersion=2, validate=validate)
 
 	def _getGlyphSetFormatVersion3(self, layerName=None, defaultLayer=True, glyphNameToFileNameFunc=None, validate):
 		# if the default flag is on, make sure that the default in the file
