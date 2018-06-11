@@ -117,14 +117,19 @@ def _getPlist(self, fileName, default=None):
 
 class UFOReader(object):
 
-	"""Read the various components of the .ufo."""
+	"""
+	Read the various components of the .ufo.
+	By default it will not validate the read data. Set ``validate`` to
+	``True`` to validate data.
+	"""
 
-	def __init__(self, path):
+	def __init__(self, path, validate=False):
 		if not os.path.exists(path):
 			raise UFOLibError("The specified UFO doesn't exist.")
 		self._path = path
 		self.readMetaInfo()
 		self._upConvertedKerningData = None
+		self._validate = validate
 
 	# properties
 
@@ -135,13 +140,15 @@ class UFOReader(object):
 
 	# up conversion
 
-	def _upConvertKerning(self):
+	def _upConvertKerning(self, validate):
 		"""
 		Up convert kerning and groups in UFO 1 and 2.
 		The data will be held internally until each bit of data
 		has been retrieved. The conversion of both must be done
 		at once, so the raw data is cached and an error is raised
 		if one bit of data becomes obsolete before it is called.
+
+		``validate`` will validate the data.
 		"""
 		if self._upConvertedKerningData:
 			testKerning = self._readKerning()
@@ -152,17 +159,18 @@ class UFOReader(object):
 				raise UFOLibError("The data in groups.plist has been modified since it was converted to UFO 3 format.")
 		else:
 			groups = self._readGroups()
-			invalidFormatMessage = "groups.plist is not properly formatted."
-			if not isinstance(groups, dict):
-				raise UFOLibError(invalidFormatMessage)
-			for groupName, glyphList in list(groups.items()):
-				if not isinstance(groupName, basestring):
+			if validate:
+				invalidFormatMessage = "groups.plist is not properly formatted."
+				if not isinstance(groups, dict):
 					raise UFOLibError(invalidFormatMessage)
-				elif not isinstance(glyphList, list):
-					raise UFOLibError(invalidFormatMessage)
-				for glyphName in glyphList:
-					if not isinstance(glyphName, basestring):
+				for groupName, glyphList in list(groups.items()):
+					if not isinstance(groupName, basestring):
 						raise UFOLibError(invalidFormatMessage)
+					elif not isinstance(glyphList, list):
+						raise UFOLibError(invalidFormatMessage)
+					for glyphName in glyphList:
+						if not isinstance(glyphName, basestring):
+							raise UFOLibError(invalidFormatMessage)
 			self._upConvertedKerningData = dict(
 				kerning={},
 				originalKerning=self._readKerning(),
@@ -238,22 +246,28 @@ class UFOReader(object):
 
 	# metainfo.plist
 
-	def readMetaInfo(self):
+	def readMetaInfo(self, validate=self._validate):
 		"""
 		Read metainfo.plist. Only used for internal operations.
+
+		``validate`` will validate the read data, by default it is set
+		to the class's validate value, can be overridden.
 		"""
+
 		# should there be a blind try/except with a UFOLibError
 		# raised in except here (and elsewhere)? It would be nice to
 		# provide external callers with a single exception to catch.
 		data = self._getPlist(METAINFO_FILENAME)
-		if not isinstance(data, dict):
-			raise UFOLibError("metainfo.plist is not properly formatted.")
+		if validate:
+			if not isinstance(data, dict):
+				raise UFOLibError("metainfo.plist is not properly formatted.")
 		formatVersion = data["formatVersion"]
-		if not isinstance(formatVersion, int):
-			metaplist_path = os.path.join(self._path, METAINFO_FILENAME)
-			raise UFOLibError("formatVersion must be specified as an integer in " + metaplist_path)
-		if formatVersion not in supportedUFOFormatVersions:
-			raise UFOLibError("Unsupported UFO format (%d) in %s." % (formatVersion, self._path))
+		if validate:
+			if not isinstance(formatVersion, int):
+				metaplist_path = os.path.join(self._path, METAINFO_FILENAME)
+				raise UFOLibError("formatVersion must be specified as an integer in " + 	metaplist_path)
+			if formatVersion not in supportedUFOFormatVersions:
+				raise UFOLibError("Unsupported UFO format (%d) in %s." % (formatVersion, self._path))
 		self._formatVersion = formatVersion
 
 	# groups.plist
@@ -261,23 +275,26 @@ class UFOReader(object):
 	def _readGroups(self):
 		return self._getPlist(GROUPS_FILENAME, {})
 
-	def readGroups(self):
+	def readGroups(self, validate=self._validate):
 		"""
 		Read groups.plist. Returns a dict.
+		``validate`` will validate the read data, by default it is set to the
+		class's validate value, can be overridden.
 		"""
 		# handle up conversion
 		if self._formatVersion < 3:
-			self._upConvertKerning()
+			self._upConvertKerning(validate)
 			groups = self._upConvertedKerningData["groups"]
 		# normal
 		else:
 			groups = self._readGroups()
-		valid, message = groupsValidator(groups)
-		if not valid:
-			raise UFOLibError(message)
+		if validate:
+			valid, message = groupsValidator(groups)
+			if not valid:
+				raise UFOLibError(message)
 		return groups
 
-	def getKerningGroupConversionRenameMaps(self):
+	def getKerningGroupConversionRenameMaps(self, validate=self._validate):
 		"""
 		Get maps defining the renaming that was done during any
 		needed kerning group conversion. This method returns a
@@ -290,12 +307,15 @@ class UFOReader(object):
 
 		When no conversion has been performed, the side1 and side2
 		dictionaries will be empty.
+
+		``validate`` will validate the groups, by default it is set to the
+		class's validate value, can be overridden.
 		"""
 		if self._formatVersion >= 3:
 			return dict(side1={}, side2={})
 		# use the public group reader to force the load and
 		# conversion of the data if it hasn't happened yet.
-		self.readGroups()
+		self.readGroups(validate=validate)
 		return self._upConvertedKerningData["groupRenameMaps"]
 
 	# fontinfo.plist
@@ -306,12 +326,15 @@ class UFOReader(object):
 			raise UFOLibError("fontinfo.plist is not properly formatted.")
 		return data
 
-	def readInfo(self, info):
+	def readInfo(self, info, validate=self._validate):
 		"""
 		Read fontinfo.plist. It requires an object that allows
 		setting attributes with names that follow the fontinfo.plist
 		version 3 specification. This will write the attributes
 		defined in the file into the object.
+
+		``validate`` will validate the read data, by default it is set to the
+		class's validate value, can be overridden.
 		"""
 		infoDict = self._readInfo()
 		infoDataToSet = {}
@@ -342,7 +365,8 @@ class UFOReader(object):
 		else:
 			raise NotImplementedError
 		# validate data
-		infoDataToSet = validateInfoVersion3Data(infoDataToSet)
+		if validate:
+			infoDataToSet = validateInfoVersion3Data(infoDataToSet)
 		# populate the object
 		for attr, value in list(infoDataToSet.items()):
 			try:
@@ -356,20 +380,24 @@ class UFOReader(object):
 		data = self._getPlist(KERNING_FILENAME, {})
 		return data
 
-	def readKerning(self):
+	def readKerning(self, validate=self._validate):
 		"""
 		Read kerning.plist. Returns a dict.
+
+		``validate`` will validate the kerning data, by default it is set to the
+		class's validate value, can be overridden.
 		"""
 		# handle up conversion
 		if self._formatVersion < 3:
-			self._upConvertKerning()
+			self._upConvertKerning(validate)
 			kerningNested = self._upConvertedKerningData["kerning"]
 		# normal
 		else:
 			kerningNested = self._readKerning()
-		valid, message = kerningValidator(kerningNested)
-		if not valid:
-			raise UFOLibError(message)
+		if validate:
+			valid, message = kerningValidator(kerningNested)
+			if not valid:
+				raise UFOLibError(message)
 		# flatten
 		kerning = {}
 		for left in kerningNested:
@@ -380,14 +408,18 @@ class UFOReader(object):
 
 	# lib.plist
 
-	def readLib(self):
+	def readLib(self, validate=self._validate):
 		"""
 		Read lib.plist. Returns a dict.
+
+		``validate`` will validate the data, by default it is set to the
+		class's validate value, can be overridden.
 		"""
 		data = self._getPlist(LIB_FILENAME, {})
-		valid, message = fontLibValidator(data)
-		if not valid:
-			raise UFOLibError(message)
+		if validate:
+			valid, message = fontLibValidator(data)
+			if not valid:
+				raise UFOLibError(message)
 		return data
 
 	# features.fea
@@ -405,51 +437,63 @@ class UFOReader(object):
 
 	# glyph sets & layers
 
-	def _readLayerContents(self):
+	def _readLayerContents(self, validate):
 		"""
 		Rebuild the layer contents list by checking what glyphsets
 		are available on disk.
+
+		``validate`` will validate the layer contents.
 		"""
 		if self._formatVersion < 3:
 			return [(DEFAULT_LAYER_NAME, DEFAULT_GLYPHS_DIRNAME)]
 		# read the file on disk
 		contents = self._getPlist(LAYERCONTENTS_FILENAME)
-		valid, error = layerContentsValidator(contents, self._path)
-		if not valid:
-			raise UFOLibError(error)
+		if validate:
+			valid, error = layerContentsValidator(contents, self._path)
+			if not valid:
+				raise UFOLibError(error)
 		return contents
 
-	def getLayerNames(self):
+	def getLayerNames(self, validate=self._validate):
 		"""
 		Get the ordered layer names from layercontents.plist.
+
+		``validate`` will validate the data, by default it is set to the
+		class's validate value, can be overridden.
 		"""
-		layerContents = self._readLayerContents()
+		layerContents = self._readLayerContents(validate)
 		layerNames = [layerName for layerName, directoryName in layerContents]
 		return layerNames
 
-	def getDefaultLayerName(self):
+	def getDefaultLayerName(self, validate=self._validate):
 		"""
 		Get the default layer name from layercontents.plist.
+
+		``validate`` will validate the data, by default it is set to the
+		class's validate value, can be overridden.
 		"""
-		layerContents = self._readLayerContents()
+		layerContents = self._readLayerContents(validate)
 		for layerName, layerDirectory in layerContents:
 			if layerDirectory == DEFAULT_GLYPHS_DIRNAME:
 				return layerName
 		# this will already have been raised during __init__
 		raise UFOLibError("The default layer is not defined in layercontents.plist.")
 
-	def getGlyphSet(self, layerName=None):
+	def getGlyphSet(self, layerName=None, validate=self._validate):
 		"""
 		Return the GlyphSet associated with the
 		glyphs directory mapped to layerName
 		in the UFO. If layerName is not provided,
 		the name retrieved with getDefaultLayerName
 		will be used.
+
+		``validate`` will validate the data, by default it is set to the
+		class's validate value, can be overridden.
 		"""
 		if layerName is None:
-			layerName = self.getDefaultLayerName()
+			layerName = self.getDefaultLayerName(validate=validate)
 		directory = None
-		layerContents = self._readLayerContents()
+		layerContents = self._readLayerContents(validate)
 		for storedLayerName, storedLayerDirectory in layerContents:
 			if layerName == storedLayerName:
 				directory = storedLayerDirectory
@@ -507,11 +551,14 @@ class UFOReader(object):
 				result.append(p)
 		return result
 
-	def getImageDirectoryListing(self):
+	def getImageDirectoryListing(self, validate=self._validate):
 		"""
 		Returns a list of all image file names in
 		the images directory. Each of the images will
 		have been verified to have the PNG signature.
+
+		``validate`` will validate the data, by default it is set to the
+		class's validate value, can be overridden.
 		"""
 		if self._formatVersion < 3:
 			return []
@@ -527,23 +574,28 @@ class UFOReader(object):
 				# silently skip this as version control
 				# systems often have hidden directories
 				continue
-			valid, error = pngValidator(path=p)
-			if valid:
-				result.append(fileName)
+			if validate:
+				valid, error = pngValidator(path=p)
+				if valid:
+					result.append(fileName)
 		return result
 
-	def readImage(self, fileName):
+	def readImage(self, fileName, validate=self._validate):
 		"""
 		Return image data for the file named fileName.
+
+		``validate`` will validate the data, by default it is set to the
+		class's validate value, can be overridden.
 		"""
 		if self._formatVersion < 3:
 			raise UFOLibError("Reading images is not allowed in UFO %d." % self._formatVersion)
 		data = self.readBytesFromPath(os.path.join(IMAGES_DIRNAME, fileName))
 		if data is None:
 			raise UFOLibError("No image file named %s." % fileName)
-		valid, error = pngValidator(data=data)
-		if not valid:
-			raise UFOLibError(error)
+		if validate:
+			valid, error = pngValidator(data=data)
+			if not valid:
+				raise UFOLibError(error)
 		return data
 
 # ----------
@@ -555,7 +607,7 @@ class UFOWriter(object):
 
 	"""Write the various components of the .ufo."""
 
-	def __init__(self, path, formatVersion=3, fileCreator="org.robofab.ufoLib"):
+	def __init__(self, path, formatVersion=3, fileCreator="org.robofab.ufoLib", validate=True):
 		if formatVersion not in supportedUFOFormatVersions:
 			raise UFOLibError("Unsupported UFO format (%d)." % formatVersion)
 		# establish some basic stuff
@@ -563,6 +615,7 @@ class UFOWriter(object):
 		self._formatVersion = formatVersion
 		self._fileCreator = fileCreator
 		self._downConversionKerningData = None
+		self._validate = validate
 		# if the file already exists, get the format version.
 		# this will be needed for up and down conversion.
 		previousFormatVersion = None
@@ -799,15 +852,16 @@ class UFOWriter(object):
 				remap[dataName] = writeName
 		self._downConversionKerningData = dict(groupRenameMap=remap)
 
-	def writeGroups(self, groups):
+	def writeGroups(self, groups, validate=self._validate):
 		"""
 		Write groups.plist. This method requires a
 		dict of glyph groups as an argument.
 		"""
 		# validate the data structure
-		valid, message = groupsValidator(groups)
-		if not valid:
-			raise UFOLibError(message)
+		if validate:
+			valid, message = groupsValidator(groups)
+			if not valid:
+				raise UFOLibError(message)
 		# down convert
 		if self._formatVersion < 3 and self._downConversionKerningData is not None:
 			remap = self._downConversionKerningData["groupRenameMap"]
@@ -845,7 +899,7 @@ class UFOWriter(object):
 
 	# fontinfo.plist
 
-	def writeInfo(self, info):
+	def writeInfo(self, info, validate=self._validate):
 		"""
 		Write info.plist. This method requires an object
 		that supports getting attributes that follow the
@@ -866,20 +920,23 @@ class UFOWriter(object):
 				infoData[attr] = value
 		# down convert data if necessary and validate
 		if self._formatVersion == 3:
-			infoData = validateInfoVersion3Data(infoData)
+			if validate:
+				infoData = validateInfoVersion3Data(infoData)
 		elif self._formatVersion == 2:
 			infoData = _convertFontInfoDataVersion3ToVersion2(infoData)
-			infoData = validateInfoVersion2Data(infoData)
+			if validate:
+				infoData = validateInfoVersion2Data(infoData)
 		elif self._formatVersion == 1:
 			infoData = _convertFontInfoDataVersion3ToVersion2(infoData)
-			infoData = validateInfoVersion2Data(infoData)
+			if validate:
+				infoData = validateInfoVersion2Data(infoData)
 			infoData = _convertFontInfoDataVersion2ToVersion1(infoData)
 		# write file
 		self._writePlist(FONTINFO_FILENAME, infoData)
 
 	# kerning.plist
 
-	def writeKerning(self, kerning):
+	def writeKerning(self, kerning, validate=self._validate):
 		"""
 		Write kerning.plist. This method requires a
 		dict of kerning pairs as an argument.
@@ -890,20 +947,21 @@ class UFOWriter(object):
 		kerning data being passed is standards compliant.
 		"""
 		# validate the data structure
-		invalidFormatMessage = "The kerning is not properly formatted."
-		if not isDictEnough(kerning):
-			raise UFOLibError(invalidFormatMessage)
-		for pair, value in list(kerning.items()):
-			if not isinstance(pair, (list, tuple)):
+		if validate:
+			invalidFormatMessage = "The kerning is not properly formatted."
+			if not isDictEnough(kerning):
 				raise UFOLibError(invalidFormatMessage)
-			if not len(pair) == 2:
-				raise UFOLibError(invalidFormatMessage)
-			if not isinstance(pair[0], basestring):
-				raise UFOLibError(invalidFormatMessage)
-			if not isinstance(pair[1], basestring):
-				raise UFOLibError(invalidFormatMessage)
-			if not isinstance(value, (int, float)):
-				raise UFOLibError(invalidFormatMessage)
+			for pair, value in list(kerning.items()):
+				if not isinstance(pair, (list, tuple)):
+					raise UFOLibError(invalidFormatMessage)
+				if not len(pair) == 2:
+					raise UFOLibError(invalidFormatMessage)
+				if not isinstance(pair[0], basestring):
+					raise UFOLibError(invalidFormatMessage)
+				if not isinstance(pair[1], basestring):
+					raise UFOLibError(invalidFormatMessage)
+				if not isinstance(value, (int, float)):
+					raise UFOLibError(invalidFormatMessage)
 		# down convert
 		if self._formatVersion < 3 and self._downConversionKerningData is not None:
 			remap = self._downConversionKerningData["groupRenameMap"]
