@@ -119,6 +119,7 @@ class UFOReader(object):
 
 	"""
 	Read the various components of the .ufo.
+
 	By default it will not validate the read data. Set ``validate`` to
 	``True`` to validate data.
 	"""
@@ -127,7 +128,7 @@ class UFOReader(object):
 		if not os.path.exists(path):
 			raise UFOLibError("The specified UFO doesn't exist.")
 		self._path = path
-		self.readMetaInfo()
+		self.readMetaInfo(validate=validate)
 		self._upConvertedKerningData = None
 		self._validate = validate
 
@@ -503,12 +504,12 @@ class UFOReader(object):
 		glyphsPath = os.path.join(self._path, directory)
 		return GlyphSet(glyphsPath, ufoFormatVersion=self._formatVersion)
 
-	def getCharacterMapping(self, layerName=None):
+	def getCharacterMapping(self, layerName=None, validate=self._validate):
 		"""
 		Return a dictionary that maps unicode values (ints) to
 		lists of glyph names.
 		"""
-		glyphSet = self.getGlyphSet(layerName)
+		glyphSet = self.getGlyphSet(layerName, validate=validate)
 		allUnicodes = glyphSet.getUnicodes()
 		cmap = {}
 		for glyphName, unicodes in allUnicodes.items():
@@ -605,7 +606,13 @@ class UFOReader(object):
 
 class UFOWriter(object):
 
-	"""Write the various components of the .ufo."""
+	"""
+	Write the various components of the .ufo.
+
+	By default, the written data will be validated before writing. Set ``validate`` to
+	``False`` if you do not want to validate the data. Validation can also be overriden
+	on a per method level if desired.
+	"""
 
 	def __init__(self, path, formatVersion=3, fileCreator="org.robofab.ufoLib", validate=True):
 		if formatVersion not in supportedUFOFormatVersions:
@@ -616,6 +623,7 @@ class UFOWriter(object):
 		self._fileCreator = fileCreator
 		self._downConversionKerningData = None
 		self._validate = validate
+
 		# if the file already exists, get the format version.
 		# this will be needed for up and down conversion.
 		previousFormatVersion = None
@@ -635,7 +643,7 @@ class UFOWriter(object):
 		self.layerContents = {}
 		if previousFormatVersion is not None and previousFormatVersion >= 3:
 			# already exists
-			self._readLayerContents()
+			self._readLayerContents(validate=validate)
 		else:
 			# previous < 3
 			# imply the layer contents
@@ -856,6 +864,9 @@ class UFOWriter(object):
 		"""
 		Write groups.plist. This method requires a
 		dict of glyph groups as an argument.
+
+		``validate`` will validate the data, by default it is set to the
+		class's validate value, can be overridden.
 		"""
 		# validate the data structure
 		if validate:
@@ -906,6 +917,9 @@ class UFOWriter(object):
 		fontinfo.plist version 2 specification. Attributes
 		will be taken from the given object and written
 		into the file.
+
+		``validate`` will validate the data, by default it is set to the
+		class's validate value, can be overridden.
 		"""
 		# gather version 3 data
 		infoData = {}
@@ -945,6 +959,9 @@ class UFOWriter(object):
 		but it does not check for compliance with the spec in
 		regards to conflicting pairs. The assumption is that the
 		kerning data being passed is standards compliant.
+
+		``validate`` will validate the data, by default it is set to the
+		class's validate value, can be overridden.
 		"""
 		# validate the data structure
 		if validate:
@@ -985,14 +1002,18 @@ class UFOWriter(object):
 
 	# lib.plist
 
-	def writeLib(self, libDict):
+	def writeLib(self, libDict, validate=self._validate):
 		"""
 		Write lib.plist. This method requires a
 		lib dict as an argument.
+
+		``validate`` will validate the data, by default it is set to the
+		class's validate value, can be overridden.
 		"""
-		valid, message = fontLibValidator(libDict)
-		if not valid:
-			raise UFOLibError(message)
+		if validate:
+			valid, message = fontLibValidator(libDict)
+			if not valid:
+				raise UFOLibError(message)
 		if libDict:
 			self._writePlist(LIB_FILENAME, libDict)
 		else:
@@ -1015,17 +1036,20 @@ class UFOWriter(object):
 
 	# glyph sets & layers
 
-	def _readLayerContents(self):
+	def _readLayerContents(self, validate):
 		"""
 		Rebuild the layer contents list by checking what glyph sets
 		are available on disk.
+
+		``validate`` will validate the data.
 		"""
 		# read the file on disk
 		raw = self._getPlist(LAYERCONTENTS_FILENAME)
 		contents = {}
-		valid, error = layerContentsValidator(raw, self._path)
-		if not valid:
-			raise UFOLibError(error)
+		if validate:
+			valid, error = layerContentsValidator(raw, self._path)
+			if not valid:
+				raise UFOLibError(error)
 		for entry in raw:
 			layerName, directoryName = entry
 			contents[layerName] = directoryName
@@ -1035,6 +1059,9 @@ class UFOWriter(object):
 		"""
 		Write the layercontents.plist file. This method  *must* be called
 		after all glyph sets have been written.
+
+		``validate`` will validate the data, by default it is set to the
+		class's validate value, can be overridden.
 		"""
 		if self.formatVersion < 3:
 			return
@@ -1065,7 +1092,7 @@ class UFOWriter(object):
 			raise UFOLibError("Could not locate a glyph set directory for the layer named %s." % layerName)
 		return foundDirectory
 
-	def getGlyphSet(self, layerName=None, defaultLayer=True, glyphNameToFileNameFunc=None):
+	def getGlyphSet(self, layerName=None, defaultLayer=True, glyphNameToFileNameFunc=None, validate=self._validate):
 		"""
 		Return the GlyphSet object associated with the
 		appropriate glyph directory in the .ufo.
@@ -1073,6 +1100,9 @@ class UFOWriter(object):
 		will be used. The defaultLayer flag indictes
 		that the layer should be saved into the default
 		glyphs directory.
+
+		``validate`` will validate the data, by default it is set to the
+		class's validate value, can be overridden.
 		"""
 		# only default can be written in < 3
 		if self._formatVersion < 3 and (not defaultLayer or layerName is not None):
@@ -1092,7 +1122,7 @@ class UFOWriter(object):
 		elif self.formatVersion == 2:
 			return self._getGlyphSetFormatVersion2(glyphNameToFileNameFunc=glyphNameToFileNameFunc)
 		elif self.formatVersion == 3:
-			return self._getGlyphSetFormatVersion3(layerName=layerName, defaultLayer=defaultLayer, glyphNameToFileNameFunc=glyphNameToFileNameFunc)
+			return self._getGlyphSetFormatVersion3(layerName=layerName, defaultLayer=defaultLayer, glyphNameToFileNameFunc=glyphNameToFileNameFunc, validate=validate)
 
 	def _getGlyphSetFormatVersion1(self, glyphNameToFileNameFunc=None):
 		glyphDir = self._makeDirectory(DEFAULT_GLYPHS_DIRNAME)
@@ -1102,7 +1132,7 @@ class UFOWriter(object):
 		glyphDir = self._makeDirectory(DEFAULT_GLYPHS_DIRNAME)
 		return GlyphSet(glyphDir, glyphNameToFileNameFunc, ufoFormatVersion=2)
 
-	def _getGlyphSetFormatVersion3(self, layerName=None, defaultLayer=True, glyphNameToFileNameFunc=None):
+	def _getGlyphSetFormatVersion3(self, layerName=None, defaultLayer=True, glyphNameToFileNameFunc=None, validate):
 		# if the default flag is on, make sure that the default in the file
 		# matches the default being written. also make sure that this layer
 		# name is not already linked to a non-default layer.
@@ -1137,7 +1167,7 @@ class UFOWriter(object):
 		# store the mapping
 		self.layerContents[layerName] = directory
 		# load the glyph set
-		return GlyphSet(path, glyphNameToFileNameFunc=glyphNameToFileNameFunc, ufoFormatVersion=3)
+		return GlyphSet(path, glyphNameToFileNameFunc=glyphNameToFileNameFunc, ufoFormatVersion=3, validate=validate)
 
 	def renameGlyphSet(self, layerName, newLayerName, defaultLayer=False):
 		"""
@@ -1198,16 +1228,17 @@ class UFOWriter(object):
 
 	# /images
 
-	def writeImage(self, fileName, data):
+	def writeImage(self, fileName, data, validate=self._validate):
 		"""
 		Write data to fileName in the images directory.
 		The data must be a valid PNG.
 		"""
 		if self._formatVersion < 3:
 			raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
-		valid, error = pngValidator(data=data)
-		if not valid:
-			raise UFOLibError(error)
+		if validate:
+			valid, error = pngValidator(data=data)
+			if not valid:
+				raise UFOLibError(error)
 		path = os.path.join(IMAGES_DIRNAME, fileName)
 		self.writeBytesToPath(path, data)
 
@@ -1314,7 +1345,7 @@ def writeDataFileAtomically(data, path):
 # Format Conversion Functions
 # ---------------------------
 
-def convertUFOFormatVersion1ToFormatVersion2(inPath, outPath=None):
+def convertUFOFormatVersion1ToFormatVersion2(inPath, outPath=None, validateRead=False. validateWrite=True):
 	"""
 	Function for converting a version format 1 UFO
 	to version format 2. inPath should be a path
@@ -1323,6 +1354,9 @@ def convertUFOFormatVersion1ToFormatVersion2(inPath, outPath=None):
 	inPath will be used and, therefore, the UFO will
 	be converted in place. Otherwise, if outPath is
 	specified, nothing must exist at that path.
+
+	``validateRead`` will validate the read data.
+	``validateWrite`` will validate the written data.
 	"""
 	from warnings import warn
 	warn("convertUFOFormatVersion1ToFormatVersion2 is deprecated.", DeprecationWarning)
@@ -1331,7 +1365,7 @@ def convertUFOFormatVersion1ToFormatVersion2(inPath, outPath=None):
 	if inPath != outPath and os.path.exists(outPath):
 		raise UFOLibError("A file already exists at %s." % outPath)
 	# use a reader for loading most of the data
-	reader = UFOReader(inPath)
+	reader = UFOReader(inPath, validate=validateRead)
 	if reader.formatVersion == 2:
 		raise UFOLibError("The UFO at %s is already format version 2." % inPath)
 	groups = reader.readGroups()
@@ -1358,7 +1392,7 @@ def convertUFOFormatVersion1ToFormatVersion2(inPath, outPath=None):
 		writePlistAtomically(infoData, infoPath)
 	# otherwise write everything.
 	else:
-		writer = UFOWriter(outPath, formatVersion=2)
+		writer = UFOWriter(outPath, formatVersion=2, validate=validateWrite)
 		writer.writeGroups(groups)
 		writer.writeKerning(kerning)
 		writer.writeLib(libData)
