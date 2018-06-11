@@ -1,3 +1,6 @@
+3.27.1 (released 2018-06-11)
+----------------------------
+
 - [ttGlyphPen] Issue a warning and skip building non-existing components
   (https://github.com/googlei18n/fontmake/issues/411).
 - [tests] Fixed issue running ttx_test.py from a tagged commit.
