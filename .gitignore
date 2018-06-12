@@ -15,6 +15,7 @@ dist
 .coverage.*
 .tox
 htmlcov
+.pytest_cache/
 
 # OS X Finder
 .DS_Store
