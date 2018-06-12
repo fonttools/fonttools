@@ -151,7 +151,7 @@ class UFOReader(object):
 
 		``validate`` will validate the data.
 		"""
-		if self._upConvertedKerningData:
+		if validate and self._upConvertedKerningData:
 			testKerning = self._readKerning()
 			if testKerning != self._upConvertedKerningData["originalKerning"]:
 				raise UFOLibError("The data in kerning.plist has been modified since it was converted to UFO 3 format.")
@@ -326,9 +326,9 @@ class UFOReader(object):
 
 	# fontinfo.plist
 
-	def _readInfo(self):
+	def _readInfo(self, validate):
 		data = self._getPlist(FONTINFO_FILENAME, {})
-		if not isinstance(data, dict):
+		if validate and not isinstance(data, dict):
 			raise UFOLibError("fontinfo.plist is not properly formatted.")
 		return data
 
@@ -344,7 +344,7 @@ class UFOReader(object):
 		"""
 		if validate is None:
 			validate = self._validate
-		infoDict = self._readInfo()
+		infoDict = self._readInfo(validate)
 		infoDataToSet = {}
 		# version 1
 		if self._formatVersion == 1:
@@ -493,7 +493,8 @@ class UFOReader(object):
 			if layerDirectory == DEFAULT_GLYPHS_DIRNAME:
 				return layerName
 		# this will already have been raised during __init__
-		raise UFOLibError("The default layer is not defined in layercontents.plist.")
+		if validate:
+			raise UFOLibError("The default layer is not defined in layercontents.plist.")
 
 	def getGlyphSet(self, layerName=None, validateRead=None, validateWrite=None):
 		"""
@@ -615,10 +616,10 @@ class UFOReader(object):
 		"""
 		if validate is None:
 			validate = self._validate
-		if self._formatVersion < 3:
+		if validate and self._formatVersion < 3:
 			raise UFOLibError("Reading images is not allowed in UFO %d." % self._formatVersion)
 		data = self.readBytesFromPath(os.path.join(IMAGES_DIRNAME, fileName))
-		if data is None:
+		if validate and data is None:
 			raise UFOLibError("No image file named %s." % fileName)
 		if validate:
 			valid, error = pngValidator(data=data)
@@ -661,10 +662,10 @@ class UFOWriter(object):
 				previousFormatVersion = int(previousFormatVersion)
 			except:
 				raise UFOLibError("The existing metainfo.plist is not properly formatted.")
-			if previousFormatVersion not in supportedUFOFormatVersions:
+			if validate and previousFormatVersion not in supportedUFOFormatVersions:
 				raise UFOLibError("Unsupported UFO format (%d)." % formatVersion)
 		# catch down conversion
-		if previousFormatVersion is not None and previousFormatVersion > formatVersion:
+		if validate and previousFormatVersion is not None and previousFormatVersion > formatVersion:
 			raise UFOLibError("The UFO located at this path is a higher version (%d) than the version (%d) that is trying to be written. This is not supported." % (previousFormatVersion, formatVersion))
 		# handle the layer contents
 		self.layerContents = {}
@@ -1056,15 +1057,18 @@ class UFOWriter(object):
 
 	# features.fea
 
-	def writeFeatures(self, features):
+	def writeFeatures(self, features, validate=None):
 		"""
 		Write features.fea. This method requires a
 		features string as an argument.
 		"""
-		if self._formatVersion == 1:
-			raise UFOLibError("features.fea is not allowed in UFO Format Version 1.")
-		if not isinstance(features, basestring):
-			raise UFOLibError("The features are not text.")
+		if validate is None:
+			validate = self._validate
+		if validate:
+			if self._formatVersion == 1:
+				raise UFOLibError("features.fea is not allowed in UFO Format Version 1.")
+			if not isinstance(features, basestring):
+				raise UFOLibError("The features are not text.")
 		self._makeDirectory()
 		path = os.path.join(self._path, FEATURES_FILENAME)
 		writeFileAtomically(features, path)
@@ -1090,11 +1094,13 @@ class UFOWriter(object):
 			contents[layerName] = directoryName
 		self.layerContents = contents
 
-	def writeLayerContents(self, layerOrder=None):
+	def writeLayerContents(self, layerOrder=None, validate=None):
 		"""
 		Write the layercontents.plist file. This method  *must* be called
 		after all glyph sets have been written.
 		"""
+		if validate is None:
+			validate = self._validate
 		if self.formatVersion < 3:
 			return
 		if layerOrder is not None:
@@ -1106,7 +1112,7 @@ class UFOWriter(object):
 			layerOrder = newOrder
 		else:
 			layerOrder = list(self.layerContents.keys())
-		if set(layerOrder) != set(self.layerContents.keys()):
+		if validate and set(layerOrder) != set(self.layerContents.keys()):
 			raise UFOLibError("The layer order contents does not match the glyph sets that have been created.")
 		layerContents = [(layerName, self.layerContents[layerName]) for layerName in layerOrder]
 		self._writePlist(LAYERCONTENTS_FILENAME, layerContents)
@@ -1143,7 +1149,7 @@ class UFOWriter(object):
 		if validateWrite is None:
 			validateWrite = self._validate
 		# only default can be written in < 3
-		if self._formatVersion < 3 and (not defaultLayer or layerName is not None):
+		if validateWrite and self._formatVersion < 3 and (not defaultLayer or layerName is not None):
 			raise UFOLibError("Only the default layer can be writen in UFO %d." % self.formatVersion)
 		# locate a layer name when None has been given
 		if layerName is None and defaultLayer:
@@ -1152,7 +1158,7 @@ class UFOWriter(object):
 					layerName = existingLayerName
 			if layerName is None:
 				layerName = DEFAULT_LAYER_NAME
-		elif layerName is None and not defaultLayer:
+		elif validateWrite and layerName is None and not defaultLayer:
 			raise UFOLibError("A layer name must be provided for non-default layers.")
 		# move along to format specific writing
 		if self.formatVersion == 1:
@@ -1175,12 +1181,13 @@ class UFOWriter(object):
 		# matches the default being written. also make sure that this layer
 		# name is not already linked to a non-default layer.
 		if defaultLayer:
-			for existingLayerName, directory in list(self.layerContents.items()):
-				if directory == DEFAULT_GLYPHS_DIRNAME:
-					if existingLayerName != layerName:
-						raise UFOLibError("Another layer is already mapped to the default directory.")
-				elif existingLayerName == layerName:
-					raise UFOLibError("The layer name is already mapped to a non-default layer.")
+			if validateRead:
+				for existingLayerName, directory in list(self.layerContents.items()):
+					if directory == DEFAULT_GLYPHS_DIRNAME:
+						if existingLayerName != layerName:
+							raise UFOLibError("Another layer is already mapped to the default directory.")
+					elif existingLayerName == layerName:
+						raise UFOLibError("The layer name is already mapped to a non-default layer.")
 		# get an existing directory name
 		if layerName in self.layerContents:
 			directory = self.layerContents[layerName]
@@ -1282,24 +1289,30 @@ class UFOWriter(object):
 		path = os.path.join(IMAGES_DIRNAME, fileName)
 		self.writeBytesToPath(path, data)
 
-	def removeImage(self, fileName):
+	def removeImage(self, fileName, validate=None):
 		"""
 		Remove the file named fileName from the
 		images directory.
 		"""
-		if self._formatVersion < 3:
-			raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
+		if validate is None:
+			validate = self._validate
+		if validate:
+			if self._formatVersion < 3:
+				raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
 		path = os.path.join(IMAGES_DIRNAME, fileName)
 		self.removeFileForPath(path)
 
-	def copyImageFromReader(self, reader, sourceFileName, destFileName):
+	def copyImageFromReader(self, reader, sourceFileName, destFileName, validate=None):
 		"""
 		Copy the sourceFileName in the provided UFOReader to destFileName
 		in this writer. This uses the most memory efficient method possible
 		for copying the data possible.
 		"""
-		if self._formatVersion < 3:
-			raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
+		if validate is None:
+			validate = self._validate
+		if validate:
+			if self._formatVersion < 3:
+				raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
 		sourcePath = os.path.join("images", sourceFileName)
 		destPath = os.path.join("images", destFileName)
 		self.copyFromReader(reader, sourcePath, destPath)

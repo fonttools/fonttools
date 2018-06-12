@@ -24,7 +24,7 @@ class TestGLIF2(unittest.TestCase):
 		py = stripText(py)
 		glyph = Glyph()
 		exec(py, {"glyph" : glyph, "pointPen" : glyph})
-		glif = writeGlyphToString(glyph.name, glyphObject=glyph, drawPointsFunc=glyph.drawPoints, formatVersion=2)
+		glif = writeGlyphToString(glyph.name, glyphObject=glyph, drawPointsFunc=glyph.drawPoints, formatVersion=2, validate=True)
 		glif = "\n".join(glif.splitlines()[1:])
 		return glif
 
