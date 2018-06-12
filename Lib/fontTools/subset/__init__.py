@@ -1155,11 +1155,12 @@ def closure_glyphs(self, s, cur_glyphs=None):
 	# Memoize
 	key = id(self)
 	doneLookups = s._doneLookups
-	if cur_glyphs.issubset(doneLookups.get(key, {})):
+	count,covered = doneLookups.get(key, (0, None))
+	if count != len(s.glyphs):
+		count,covered = doneLookups[key] = (len(s.glyphs), set())
+	if cur_glyphs.issubset(covered):
 		return
-	if key not in doneLookups:
-		doneLookups[key] = set()
-	doneLookups[key].update(cur_glyphs)
+	covered.update(cur_glyphs)
 
 	if self in s._activeLookups:
 		raise Exception("Circular loop in lookup recursion")
@@ -1398,17 +1399,17 @@ def closure_glyphs(self, s):
 		lookup_indices += self.table.FeatureVariations.collect_lookups(feature_indices)
 	lookup_indices = _uniq_sort(lookup_indices)
 	if self.table.LookupList:
+		s._doneLookups = {}
 		while True:
 			orig_glyphs = frozenset(s.glyphs)
 			s._activeLookups = []
-			s._doneLookups = {}
 			for i in lookup_indices:
 				if i >= self.table.LookupList.LookupCount: continue
 				if not self.table.LookupList.Lookup[i]: continue
 				self.table.LookupList.Lookup[i].closure_glyphs(s)
-			del s._activeLookups, s._doneLookups
 			if orig_glyphs == s.glyphs:
 				break
+		del s._activeLookups, s._doneLookups
 	del s.table
 
 @_add_method(ttLib.getTableClass('GSUB'),
