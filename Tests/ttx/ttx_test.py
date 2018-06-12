@@ -14,6 +14,15 @@ import unittest
 
 import pytest
 
+try:
+    import zopfli
+except ImportError:
+    zopfli = None
+try:
+    import brotli
+except ImportError:
+    brotli = None
+
 
 class TTXTest(unittest.TestCase):
 
@@ -564,6 +573,7 @@ def test_ttcompile_otf_to_woff_without_zopfli(tmpdir):
         assert table in ttf
 
 
+@pytest.mark.skipif(zopfli is None, reason="zopfli not installed")
 def test_ttcompile_otf_to_woff_with_zopfli(tmpdir):
     inttx = os.path.join("Tests", "ttx", "data", "TestOTF.ttx")
     outwoff = tmpdir.join("TestOTF.woff")
@@ -591,6 +601,7 @@ def test_ttcompile_otf_to_woff_with_zopfli(tmpdir):
         assert table in ttf
 
 
+@pytest.mark.skipif(brotli is None, reason="brotli not installed")
 def test_ttcompile_otf_to_woff2(tmpdir):
     inttx = os.path.join("Tests", "ttx", "data", "TestOTF.ttx")
     outwoff2 = tmpdir.join("TestTTF.woff2")
@@ -679,6 +690,7 @@ def test_ttcompile_ttf_to_woff_without_zopfli(tmpdir):
         assert table in ttf
 
 
+@pytest.mark.skipif(zopfli is None, reason="zopfli not installed")
 def test_ttcompile_ttf_to_woff_with_zopfli(tmpdir):
     inttx = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
     outwoff = tmpdir.join("TestTTF.woff")
@@ -711,6 +723,7 @@ def test_ttcompile_ttf_to_woff_with_zopfli(tmpdir):
         assert table in ttf
 
 
+@pytest.mark.skipif(brotli is None, reason="brotli not installed")
 def test_ttcompile_ttf_to_woff2(tmpdir):
     inttx = os.path.join("Tests", "ttx", "data", "TestTTF.ttx")
     outwoff2 = tmpdir.join("TestTTF.woff2")
@@ -866,6 +879,7 @@ def test_ttlist_woff(capsys, tmpdir):
     assert "OS/2  0x67230FF8        84       340" in out
 
 
+@pytest.mark.skipif(brotli is None, reason="brotli not installed")
 def test_ttlist_woff2(capsys, tmpdir):
     inpath = os.path.join("Tests", "ttx", "data", "TestWOFF2.woff2")
     fakeoutpath = tmpdir.join("TestWOFF2.ttx")
