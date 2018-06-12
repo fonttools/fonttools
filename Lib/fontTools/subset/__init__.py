@@ -1162,14 +1162,9 @@ def closure_glyphs(self, s, cur_glyphs=None):
 		return
 	covered.update(cur_glyphs)
 
-	if self in s._activeLookups:
-		raise Exception("Circular loop in lookup recursion")
-	s._activeLookups.append(self)
 	for st in self.SubTable:
 		if not st: continue
 		st.closure_glyphs(s, cur_glyphs)
-	assert(s._activeLookups[-1] == self)
-	del s._activeLookups[-1]
 
 @_add_method(otTables.Lookup)
 def subset_glyphs(self, s):
@@ -1402,14 +1397,13 @@ def closure_glyphs(self, s):
 		s._doneLookups = {}
 		while True:
 			orig_glyphs = frozenset(s.glyphs)
-			s._activeLookups = []
 			for i in lookup_indices:
 				if i >= self.table.LookupList.LookupCount: continue
 				if not self.table.LookupList.Lookup[i]: continue
 				self.table.LookupList.Lookup[i].closure_glyphs(s)
 			if orig_glyphs == s.glyphs:
 				break
-		del s._activeLookups, s._doneLookups
+		del s._doneLookups
 	del s.table
 
 @_add_method(ttLib.getTableClass('GSUB'),
