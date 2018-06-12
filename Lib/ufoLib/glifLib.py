@@ -1110,7 +1110,7 @@ def _buildOutlineContourFormat1(pen, contour, validate):
 		raise GlifLibError("Unknown attributes in contour element.")
 	pen.beginPath()
 	if len(contour):
-		_validateAndMassagePointStructures(contour, pointAttributesFormat1, openContourOffCurveLeniency=True)
+		_validateAndMassagePointStructures(contour, pointAttributesFormat1, openContourOffCurveLeniency=True, validate=validate)
 		_buildOutlinePointsFormat1(pen, contour)
 	pen.endPath()
 
@@ -1170,7 +1170,7 @@ def _buildOutlineContourFormat2(pen, contour, identifiers, validate):
 		pen.beginPath()
 		warn("The beginPath method needs an identifier kwarg. The contour's identifier value has been discarded.", DeprecationWarning)
 	if len(contour):
-		_validateAndMassagePointStructures(contour, pointAttributesFormat2)
+		_validateAndMassagePointStructures(contour, pointAttributesFormat2, validate)
 		_buildOutlinePointsFormat2(pen, contour, identifiers, validate)
 	pen.endPath()
 
@@ -1226,7 +1226,7 @@ def _buildOutlineComponentFormat2(pen, component, identifiers, validate):
 
 # all formats
 
-def _validateAndMassagePointStructures(contour, pointAttributes, openContourOffCurveLeniency=False):
+def _validateAndMassagePointStructures(contour, pointAttributes, openContourOffCurveLeniency=False, validate=False):
 	if not len(contour):
 		return
 	# store some data for later validation
@@ -1237,22 +1237,23 @@ def _validateAndMassagePointStructures(contour, pointAttributes, openContourOffC
 		# not <point>
 		if element.tag != "point":
 			raise GlifLibError("Unknown child element (%s) of contour element." % element.tag)
-		# unknown attributes
-		for attr in element.attrib.keys():
-			if attr not in pointAttributes:
-				raise GlifLibError("Unknown attribute in point element: %s" % attr)
-		# search for unknown children
-		if len(element):
-			raise GlifLibError("Unknown child elements in point element.")
+		if validate:
+			# unknown attributes
+			for attr in element.attrib.keys():
+				if attr not in pointAttributes:
+					raise GlifLibError("Unknown attribute in point element: %s" % attr)
+			# search for unknown children
+			if len(element):
+				raise GlifLibError("Unknown child elements in point element.")
 		# x and y are required
 		for attr in ("x", "y"):
 			value = element.get(attr)
-			if value is None:
+			if validate and value is None:
 				raise GlifLibError("Required %s attribute is missing in point element." % attr)
 			element.attrib[attr] = _number(value)
 		# segment type
 		pointType = element.attrib.pop("type", "offcurve")
-		if pointType not in pointTypeOptions:
+		if validate and pointType not in pointTypeOptions:
 			raise GlifLibError("Unknown point type: %s" % pointType)
 		if pointType == "offcurve":
 			pointType = None
@@ -1262,17 +1263,17 @@ def _validateAndMassagePointStructures(contour, pointAttributes, openContourOffC
 		else:
 			lastOnCurvePoint = index
 		# move can only occur as the first point
-		if pointType == "move" and index != 0:
+		if validate and pointType == "move" and index != 0:
 			raise GlifLibError("A move point occurs after the first point in the contour.")
 		# smooth is optional
 		smooth = element.get("smooth", "no")
-		if smooth is not None:
+		if validate and smooth is not None:
 			if smooth not in pointSmoothOptions:
 				raise GlifLibError("Unknown point smooth value: %s" % smooth)
 		smooth = smooth == "yes"
 		element.attrib["smooth"] = smooth
 		# smooth can only be applied to curve and qcurve
-		if smooth and pointType is None:
+		if validate and smooth and pointType is None:
 			raise GlifLibError("smooth attribute set in an offcurve point.")
 		# name is optional
 		if "name" not in element.attrib:
@@ -1287,7 +1288,7 @@ def _validateAndMassagePointStructures(contour, pointAttributes, openContourOffC
 				else:
 					break
 	# validate the off-curves in the segments
-	if haveOffCurvePoint and lastOnCurvePoint is not None:
+	if validate and haveOffCurvePoint and lastOnCurvePoint is not None:
 		# we only care about how many offCurves there are before an onCurve
 		# filter out the trailing offCurves
 		offCurvesCount = len(contour) - 1 - lastOnCurvePoint
