@@ -1153,9 +1153,13 @@ def closure_glyphs(self, s, cur_glyphs=None):
 		cur_glyphs = frozenset(s.glyphs)
 
 	# Memoize
-	if (id(self), cur_glyphs) in s._doneLookups:
+	key = id(self)
+	doneLookups = s._doneLookups
+	if cur_glyphs.issubset(doneLookups.get(key, {})):
 		return
-	s._doneLookups.add((id(self), cur_glyphs))
+	if key not in doneLookups:
+		doneLookups[key] = set()
+	doneLookups[key].update(cur_glyphs)
 
 	if self in s._activeLookups:
 		raise Exception("Circular loop in lookup recursion")
@@ -1397,7 +1401,7 @@ def closure_glyphs(self, s):
 		while True:
 			orig_glyphs = frozenset(s.glyphs)
 			s._activeLookups = []
-			s._doneLookups = set()
+			s._doneLookups = {}
 			for i in lookup_indices:
 				if i >= self.table.LookupList.LookupCount: continue
 				if not self.table.LookupList.Lookup[i]: continue
