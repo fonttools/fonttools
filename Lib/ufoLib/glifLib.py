@@ -1176,7 +1176,7 @@ def _buildOutlineContourFormat2(pen, contour, identifiers, validate):
 		pen.beginPath()
 		warn("The beginPath method needs an identifier kwarg. The contour's identifier value has been discarded.", DeprecationWarning)
 	if len(contour):
-		_validateAndMassagePointStructures(contour, pointAttributesFormat2, validate)
+		_validateAndMassagePointStructures(contour, pointAttributesFormat2, validate=validate)
 		_buildOutlinePointsFormat2(pen, contour, identifiers, validate)
 	pen.endPath()
 
