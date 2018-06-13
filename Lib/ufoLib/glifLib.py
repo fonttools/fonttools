@@ -157,7 +157,7 @@ class GlyphSet(object):
 					if not isinstance(fileName, basestring):
 						invalidFormat = True
 					elif not os.path.exists(os.path.join(self.dirName, fileName)):
-						raise GlifLibError("contents.plist references a file that does not 	exist: %s" % fileName)
+						raise GlifLibError("contents.plist references a file that does not exist: %s" % fileName)
 			if invalidFormat:
 				raise GlifLibError("contents.plist is not properly formatted")
 		self.contents = contents
@@ -220,7 +220,7 @@ class GlyphSet(object):
 		"""
 		if validateWrite is None:
 			validateWrite = self._validateWrite
-		if validateWrite and self.ufoFormatVersion < 3:
+		if self.ufoFormatVersion < 3:
 			raise GlifLibError("layerinfo.plist is not allowed in UFO %d." % self.ufoFormatVersion)
 		# gather data
 		infoData = {}
@@ -375,11 +375,10 @@ class GlyphSet(object):
 				formatVersion = 2
 			else:
 				formatVersion = 1
-		elif validate:
-			if formatVersion not in supportedGLIFFormatVersions:
-				raise GlifLibError("Unsupported GLIF format version: %s" % formatVersion)
-			if formatVersion == 2 and self.ufoFormatVersion < 3:
-				raise GlifLibError("Unsupported GLIF format version (%d) for UFO format version %d." % (formatVersion, self.ufoFormatVersion))
+		if formatVersion not in supportedGLIFFormatVersions:
+			raise GlifLibError("Unsupported GLIF format version: %s" % formatVersion)
+		if formatVersion == 2 and self.ufoFormatVersion < 3:
+			raise GlifLibError("Unsupported GLIF format version (%d) for UFO format version %d." % (formatVersion, self.ufoFormatVersion))
 		if validate is None:
 			validate = self._validateWrite
 		self._purgeCachedGLIF(glyphName)
