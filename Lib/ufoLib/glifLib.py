@@ -33,6 +33,9 @@ try:
 except ImportError:
 	from xml.etree import ElementTree
 
+from lxml import etree
+
+
 __all__ = [
 	"GlyphSet",
 	"GlifLibError",
@@ -556,7 +559,7 @@ def readGlyphFromString(aString, glyphObject=None, pointPen=None, formatVersions
 	_readGlyphFromTree(tree, glyphObject, pointPen, formatVersions=formatVersions, validate=validate)
 
 
-def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=None, formatVersion=2, validate=True):
+def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, formatVersion=2, validate=True):
 	"""
 	Return .glif data for a glyph as a UTF-8 encoded string.
 	The 'glyphObject' argument can be any kind of object (even None);
@@ -584,65 +587,48 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, writer=
 
 	``validate`` will validate the written data. It is set to ``True`` by default.
 	"""
-	if writer is None:
-		try:
-			from fontTools.misc.xmlWriter import XMLWriter
-		except ImportError:
-			# try the other location
-			from xmlWriter import XMLWriter
-		aFile = BytesIO()
-		writer = XMLWriter(aFile, encoding="UTF-8")
-	else:
-		aFile = None
-	identifiers = set()
 	# start
 	if validate and not isinstance(glyphName, basestring):
 		raise GlifLibError("The glyph name is not properly formatted.")
 	if validate and len(glyphName) == 0:
 		raise GlifLibError("The glyph name is empty.")
-	writer.begintag("glyph", [("name", glyphName), ("format", formatVersion)])
-	writer.newline()
+	root = etree.Element("glyph", dict(name=glyphName, format=repr(formatVersion)))
+	identifiers = set()
 	# advance
-	_writeAdvance(glyphObject, writer, validate)
+	_writeAdvance(glyphObject, root, validate)
 	# unicodes
 	if getattr(glyphObject, "unicodes", None):
-		_writeUnicodes(glyphObject, writer, validate)
+		_writeUnicodes(glyphObject, root, validate)
 	# note
 	if getattr(glyphObject, "note", None):
-		_writeNote(glyphObject, writer, validate)
+		_writeNote(glyphObject, root, validate)
 	# image
 	if formatVersion >= 2 and getattr(glyphObject, "image", None):
-		_writeImage(glyphObject, writer, validate)
+		_writeImage(glyphObject, element, validate)
 	# guidelines
 	if formatVersion >= 2 and getattr(glyphObject, "guidelines", None):
 		_writeGuidelines(glyphObject, writer, identifiers, validate)
 	# anchors
 	anchors = getattr(glyphObject, "anchors", None)
 	if formatVersion >= 2 and anchors:
-		_writeAnchors(glyphObject, writer, identifiers, validate)
+		_writeAnchors(glyphObject, root, identifiers, validate)
 	# outline
 	if drawPointsFunc is not None:
-		writer.begintag("outline")
-		writer.newline()
-		pen = GLIFPointPen(writer, identifiers=identifiers, validate=validate)
+		outline = etree.SubElement(root, "outline")
+		pen = GLIFPointPen(outline, identifiers=identifiers, validate=validate)
 		drawPointsFunc(pen)
 		if formatVersion == 1 and anchors:
 			_writeAnchorsFormat1(pen, anchors, validate)
-		writer.endtag("outline")
-		writer.newline()
 	# lib
 	if getattr(glyphObject, "lib", None):
-		_writeLib(glyphObject, writer, validate)
-	# end
-	writer.endtag("glyph")
-	writer.newline()
-	# return the appropriate value
-	if aFile is not None:
-		return aFile.getvalue().decode("utf-8")
-	else:
-		return None
+		_writeLib(glyphObject, root, validate)
+	# return the text
+	tree = etree.ElementTree(root)
+	text = etree.tostring(root, encoding="UTF-8", pretty_print=True)
+	return text
 
-def _writeAdvance(glyphObject, writer, validate):
+
+def _writeAdvance(glyphObject, element, validate):
 	width = getattr(glyphObject, "width", None)
 	if width is not None:
 		if validate and not isinstance(width, (int, float)):
@@ -656,16 +642,13 @@ def _writeAdvance(glyphObject, writer, validate):
 		if height == 0:
 			height = None
 	if width is not None and height is not None:
-		writer.simpletag("advance", width=repr(width), height=repr(height))
-		writer.newline()
+		etree.SubElement(element, "advance", dict(width=repr(width), height=repr(height)))
 	elif width is not None:
-		writer.simpletag("advance", width=repr(width))
-		writer.newline()
+		etree.SubElement(element, "advance", dict(width=repr(width)))
 	elif height is not None:
-		writer.simpletag("advance", height=repr(height))
-		writer.newline()
+		etree.SubElement(element, "advance", dict(height=repr(height)))
 
-def _writeUnicodes(glyphObject, writer, validate):
+def _writeUnicodes(glyphObject, element, validate):
 	unicodes = getattr(glyphObject, "unicodes", None)
 	if validate and isinstance(unicodes, int):
 		unicodes = [unicodes]
@@ -677,23 +660,16 @@ def _writeUnicodes(glyphObject, writer, validate):
 			continue
 		seen.add(code)
 		hexCode = "%04X" % code
-		writer.simpletag("unicode", hex=hexCode)
-		writer.newline()
+		etree.SubElement(element, "unicode", dict(hex=hexCode))
 
-def _writeNote(glyphObject, writer, validate):
+def _writeNote(glyphObject, element, validate):
 	note = getattr(glyphObject, "note", None)
 	if validate and not isinstance(note, basestring):
 		raise GlifLibError("note attribute must be str or unicode")
 	note = note.encode("utf-8")
-	writer.begintag("note")
-	writer.newline()
-	for line in note.splitlines():
-		writer.write(line.strip())
-		writer.newline()
-	writer.endtag("note")
-	writer.newline()
+	etree.SubElement(element, "note").text = note
 
-def _writeImage(glyphObject, writer, validate):
+def _writeImage(glyphObject, element, validate):
 	image = getattr(glyphObject, "image", None)
 	if validate and not imageValidator(image):
 		raise GlifLibError("image attribute must be a dict or dict-like object with the proper structure.")
@@ -707,10 +683,9 @@ def _writeImage(glyphObject, writer, validate):
 	color = image.get("color")
 	if color is not None:
 		attrs.append(("color", color))
-	writer.simpletag("image", attrs)
-	writer.newline()
+	etree.SubElement(element, "image", attrs)
 
-def _writeGuidelines(glyphObject, writer, identifiers, validate):
+def _writeGuidelines(glyphObject, element, identifiers, validate):
 	guidelines = getattr(glyphObject, "guidelines", [])
 	if validate and not guidelinesValidator(guidelines):
 		raise GlifLibError("guidelines attribute does not have the proper structure.")
@@ -737,8 +712,7 @@ def _writeGuidelines(glyphObject, writer, identifiers, validate):
 				raise GlifLibError("identifier used more than once: %s" % identifier)
 			attrs.append(("identifier", identifier))
 			identifiers.add(identifier)
-		writer.simpletag("guideline", attrs)
-		writer.newline()
+		etree.SubElement(element, "guideline", attrs)
 
 def _writeAnchorsFormat1(pen, anchors, validate):
 	if validate and not anchorsValidator(anchors):
@@ -756,32 +730,31 @@ def _writeAnchorsFormat1(pen, anchors, validate):
 		pen.addPoint((x, y), segmentType="move", name=name)
 		pen.endPath()
 
-def _writeAnchors(glyphObject, writer, identifiers, validate):
+def _writeAnchors(glyphObject, element, identifiers, validate):
 	anchors = getattr(glyphObject, "anchors", [])
 	if validate and not anchorsValidator(anchors):
 		raise GlifLibError("anchors attribute does not have the proper structure.")
 	for anchor in anchors:
-		attrs = []
+		attrs = {}
 		x = anchor["x"]
-		attrs.append(("x", repr(x)))
+		attrs["x"] = repr(x)
 		y = anchor["y"]
-		attrs.append(("y", repr(y)))
+		attrs["y"] = repr(y)
 		name = anchor.get("name")
 		if name is not None:
-			attrs.append(("name", name))
+			attrs["name"] = name
 		color = anchor.get("color")
 		if color is not None:
-			attrs.append(("color", color))
+			attrs["color"] = color
 		identifier = anchor.get("identifier")
 		if identifier is not None:
 			if validate and identifier in identifiers:
 				raise GlifLibError("identifier used more than once: %s" % identifier)
-			attrs.append(("identifier", identifier))
+			attrs["identifier"] = identifier
 			identifiers.add(identifier)
-		writer.simpletag("anchor", attrs)
-		writer.newline()
+		etree.SubElement(element, "anchor", attrs)
 
-def _writeLib(glyphObject, writer, validate):
+def _writeLib(glyphObject, element, validate):
 	lib = getattr(glyphObject, "lib", None)
 	if validate:
 		valid, message = glyphLibValidator(lib)
@@ -789,13 +762,13 @@ def _writeLib(glyphObject, writer, validate):
 			raise GlifLibError(message)
 	if not isinstance(lib, dict):
 		lib = dict(lib)
-	writer.begintag("lib")
-	writer.newline()
-	plistWriter = PlistWriter(writer.file, indentLevel=writer.indentlevel,
-			indent=writer.indentwhite, writeHeader=False)
+	f = BytesIO()
+	plistWriter = PlistWriter(f, writeHeader=False) # TODO: fix indent
 	plistWriter.writeValue(lib)
-	writer.endtag("lib")
-	writer.newline()
+	text = f.getvalue()
+	text = basestring(text) # TODO: this returns bytes
+	if text:
+		etree.SubElement(element, "lib").text = text
 
 # -----------------------
 # layerinfo.plist Support
@@ -1498,50 +1471,49 @@ class GLIFPointPen(AbstractPointPen):
 	part of .glif files.
 	"""
 
-	def __init__(self, xmlWriter, formatVersion=2, identifiers=None, validate=True):
+	def __init__(self, element, formatVersion=2, identifiers=None, validate=True):
 		if identifiers is None:
 			identifiers = set()
 		self.formatVersion = formatVersion
 		self.identifiers = identifiers
-		self.writer = xmlWriter
+		self.outline = element
+		self.contour = None
 		self.prevOffCurveCount = 0
 		self.prevPointTypes = []
 		self.validate = validate
 
 	def beginPath(self, identifier=None, **kwargs):
-		attrs = []
+		attrs = {}
 		if identifier is not None and self.formatVersion >= 2:
 			if self.validate:
 				if identifier in self.identifiers:
 					raise GlifLibError("identifier used more than once: %s" % identifier)
 				if not identifierValidator(identifier):
 					raise GlifLibError("identifier not formatted properly: %s" % identifier)
-			attrs.append(("identifier", identifier))
+			attrs["identifier"] = identifier
 			self.identifiers.add(identifier)
-		self.writer.begintag("contour", attrs)
-		self.writer.newline()
+		self.contour = etree.SubElement(self.outline, "contour", attrs)
 		self.prevOffCurveCount = 0
 
 	def endPath(self):
 		if self.prevPointTypes and self.prevPointTypes[0] == "move":
 			if self.validate and self.prevPointTypes[-1] == "offcurve":
 				raise GlifLibError("open contour has loose offcurve point")
-		self.writer.endtag("contour")
-		self.writer.newline()
+		self.contour = None
 		self.prevPointType = None
 		self.prevOffCurveCount = 0
 		self.prevPointTypes = []
 
 	def addPoint(self, pt, segmentType=None, smooth=None, name=None, identifier=None, **kwargs):
-		attrs = []
+		attrs = {}
 		# coordinates
 		if pt is not None:
 			if self.validate:
 				for coord in pt:
 					if not isinstance(coord, (int, float)):
 						raise GlifLibError("coordinates must be int or float")
-			attrs.append(("x", repr(pt[0])))
-			attrs.append(("y", repr(pt[1])))
+			attrs["x"] = repr(pt[0])
+			attrs["y"] = repr(pt[1])
 		# segment type
 		if segmentType == "offcurve":
 			segmentType = None
@@ -1553,7 +1525,7 @@ class GLIFPointPen(AbstractPointPen):
 			if segmentType == "curve" and self.prevOffCurveCount > 2:
 				raise GlifLibError("too many offcurve points before curve point.")
 		if segmentType is not None:
-			attrs.append(("type", segmentType))
+			attrs["type"] = segmentType
 		else:
 			segmentType = "offcurve"
 		if segmentType == "offcurve":
@@ -1565,10 +1537,10 @@ class GLIFPointPen(AbstractPointPen):
 		if smooth:
 			if self.validate and segmentType == "offcurve":
 				raise GlifLibError("can't set smooth in an offcurve point.")
-			attrs.append(("smooth", "yes"))
+			attrs["smooth"] = "yes"
 		# name
 		if name is not None:
-			attrs.append(("name", name))
+			attrs["name"] = name
 		# identifier
 		if identifier is not None and self.formatVersion >= 2:
 			if self.validate:
@@ -1576,28 +1548,26 @@ class GLIFPointPen(AbstractPointPen):
 					raise GlifLibError("identifier used more than once: %s" % identifier)
 				if not identifierValidator(identifier):
 					raise GlifLibError("identifier not formatted properly: %s" % identifier)
-			attrs.append(("identifier", identifier))
+			attrs["identifier"] = identifier
 			self.identifiers.add(identifier)
-		self.writer.simpletag("point", attrs)
-		self.writer.newline()
+		etree.SubElement(self.contour, "point", attrs)
 
 	def addComponent(self, glyphName, transformation, identifier=None, **kwargs):
-		attrs = [("base", glyphName)]
+		attrs = dict(base=glyphName)
 		for (attr, default), value in zip(_transformationInfo, transformation):
 			if self.validate and not isinstance(value, (int, float)):
 				raise GlifLibError("transformation values must be int or float")
 			if value != default:
-				attrs.append((attr, repr(value)))
+				attrs[attr] = repr(value)
 		if identifier is not None and self.formatVersion >= 2:
 			if self.validate:
 				if identifier in self.identifiers:
 					raise GlifLibError("identifier used more than once: %s" % identifier)
 				if self.validate and not identifierValidator(identifier):
 					raise GlifLibError("identifier not formatted properly: %s" % identifier)
-			attrs.append(("identifier", identifier))
+			attrs["identifier"] = identifier
 			self.identifiers.add(identifier)
-		self.writer.simpletag("component", attrs)
-		self.writer.newline()
+		etree.SubElement(self.outline, "component", attrs)
 
 if __name__ == "__main__":
 	import doctest
