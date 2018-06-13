@@ -624,7 +624,7 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, formatV
 		_writeLib(glyphObject, root, validate)
 	# return the text
 	tree = etree.ElementTree(root)
-	text = etree.tostring(root, encoding="UTF-8", pretty_print=True)
+	text = str(etree.tostring(root, encoding="UTF-8", pretty_print=True))
 	return text
 
 
