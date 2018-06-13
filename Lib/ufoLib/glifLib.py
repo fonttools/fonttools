@@ -109,10 +109,10 @@ class GlyphSet(object):
 		'dirName' should be a path to an existing directory.
 
 		The optional 'glyphNameToFileNameFunc' argument must be a callback
-		function that takes two arguments: a glyph name and the GlyphSet
-		instance. It should return a file name (including the .glif
-		extension). The glyphNameToFileName function is called whenever
-		a file name is created for a given glyph name.
+		function that takes two arguments: a glyph name and a list of all
+		existing filenames (if any exist). It should return a file name
+		(including the .glif extension). The glyphNameToFileName function
+		is called whenever a file name is created for a given glyph name.
 
 		``validateRead`` will validate read operations. It's default is ``False``.
 		``validateWrite`` will validate write operations. It's default is ``True``.
@@ -127,6 +127,7 @@ class GlyphSet(object):
 		self._validateRead = validateRead
 		self._validateWrite = validateWrite
 		self.rebuildContents()
+		self._existingFileNames = None
 		self._reverseContents = None
 		self._glifCache = {}
 
@@ -161,6 +162,7 @@ class GlyphSet(object):
 			if invalidFormat:
 				raise GlifLibError("contents.plist is not properly formatted")
 		self.contents = contents
+		self._existingFileNames = None
 		self._reverseContents = None
 
 	def getReverseContents(self):
@@ -385,8 +387,13 @@ class GlyphSet(object):
 		data = writeGlyphToString(glyphName, glyphObject, drawPointsFunc, formatVersion=formatVersion, validate=validate)
 		fileName = self.contents.get(glyphName)
 		if fileName is None:
-			fileName = self.glyphNameToFileName(glyphName, self)
+			if self._existingFileNames is None:
+				self._existingFileNames = {}
+				for fileName in self.contents.values():
+					self._existingFileNames[fileName] = fileName.lower()
+			fileName = self.glyphNameToFileName(glyphName, self._existingFileNames)
 			self.contents[glyphName] = fileName
+			self._existingFileNames[fileName] = fileName.lower()
 			if self._reverseContents is not None:
 				self._reverseContents[fileName.lower()] = glyphName
 		path = os.path.join(self.dirName, fileName)
@@ -405,6 +412,8 @@ class GlyphSet(object):
 		self._purgeCachedGLIF(glyphName)
 		fileName = self.contents[glyphName]
 		os.remove(os.path.join(self.dirName, fileName))
+		if self._existingFileNams is not None:
+			del self._existingFileNames[fileName]
 		if self._reverseContents is not None:
 			del self._reverseContents[self.contents[glyphName].lower()]
 		del self.contents[glyphName]
@@ -491,21 +500,17 @@ class GlyphSet(object):
 # Glyph Name to File Name
 # -----------------------
 
-def glyphNameToFileName(glyphName, glyphSet):
+def glyphNameToFileName(glyphName, existingFileNames):
 	"""
 	Wrapper around the userNameToFileName function in filenames.py
 	"""
-	if glyphSet:
-		existing = frozenset(name.lower() for name in glyphSet.contents.values())
-	else:
-		existing = frozenset()
 	if not isinstance(glyphName, unicode):
 		try:
 			new = unicode(glyphName)
 			glyphName = new
 		except UnicodeDecodeError:
 			pass
-	return userNameToFileName(glyphName, existing=existing, suffix=".glif")
+	return userNameToFileName(glyphName, existing=existingFileNames, suffix=".glif")
 
 # -----------------------
 # GLIF To and From String
