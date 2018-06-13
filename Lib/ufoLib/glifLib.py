@@ -412,7 +412,7 @@ class GlyphSet(object):
 		self._purgeCachedGLIF(glyphName)
 		fileName = self.contents[glyphName]
 		os.remove(os.path.join(self.dirName, fileName))
-		if self._existingFileNams is not None:
+		if self._existingFileNames is not None:
 			del self._existingFileNames[fileName]
 		if self._reverseContents is not None:
 			del self._reverseContents[self.contents[glyphName].lower()]
@@ -504,6 +504,8 @@ def glyphNameToFileName(glyphName, existingFileNames):
 	"""
 	Wrapper around the userNameToFileName function in filenames.py
 	"""
+	if existingFileNames is None:
+		existingFileNames = []
 	if not isinstance(glyphName, unicode):
 		try:
 			new = unicode(glyphName)
