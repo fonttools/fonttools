@@ -15,6 +15,7 @@ from __future__ import unicode_literals
 import os
 from io import BytesIO, open
 from warnings import warn
+from collections import OrderedDict
 from fontTools.misc.py23 import tobytes, unicode
 from ufoLib.plistlib import PlistWriter, readPlist, writePlist
 from ufoLib.plistFromETree import readPlistFromTree
@@ -592,7 +593,7 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, formatV
 		raise GlifLibError("The glyph name is not properly formatted.")
 	if validate and len(glyphName) == 0:
 		raise GlifLibError("The glyph name is empty.")
-	root = etree.Element("glyph", dict(name=glyphName, format=repr(formatVersion)))
+	root = etree.Element("glyph", OrderedDict([("name", glyphName), ("format", repr(formatVersion))]))
 	identifiers = set()
 	# advance
 	_writeAdvance(glyphObject, root, validate)
