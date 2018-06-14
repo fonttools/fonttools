@@ -34,11 +34,6 @@ try:
 except NameError:
 	unicode = str
 
-try:
-	from xml.etree import cElementTree as ElementTree
-except ImportError:
-	from xml.etree import ElementTree
-
 from lxml import etree
 
 
