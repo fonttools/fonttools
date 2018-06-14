@@ -30,6 +30,11 @@ except NameError:
 	basestring = str
 
 try:
+	unicode
+except NameError:
+	unicode = str
+
+try:
 	from xml.etree import cElementTree as ElementTree
 except ImportError:
 	from xml.etree import ElementTree
@@ -625,7 +630,7 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, formatV
 		_writeLib(glyphObject, root, validate)
 	# return the text
 	tree = etree.ElementTree(root)
-	text = str(etree.tostring(root, encoding="UTF-8", pretty_print=True))
+	text = etree.tostring(root, encoding=unicode, pretty_print=True)
 	return text
 
 
@@ -643,7 +648,7 @@ def _writeAdvance(glyphObject, element, validate):
 		if height == 0:
 			height = None
 	if width is not None and height is not None:
-		etree.SubElement(element, "advance", dict(width=repr(width), height=repr(height)))
+		etree.SubElement(element, "advance", OrderedDict([("width", repr(width)), ("height", repr(height))]))
 	elif width is not None:
 		etree.SubElement(element, "advance", dict(width=repr(width)))
 	elif height is not None:
@@ -674,7 +679,7 @@ def _writeImage(glyphObject, element, validate):
 	image = getattr(glyphObject, "image", None)
 	if validate and not imageValidator(image):
 		raise GlifLibError("image attribute must be a dict or dict-like object with the proper structure.")
-	attrs = dict(fileName=image["fileName"])
+	attrs = OrderedDict([("fileName", image["fileName"])])
 	for attr, default in _transformationInfo:
 		value = image.get(attr, default)
 		if value != default:
@@ -689,7 +694,7 @@ def _writeGuidelines(glyphObject, element, identifiers, validate):
 	if validate and not guidelinesValidator(guidelines):
 		raise GlifLibError("guidelines attribute does not have the proper structure.")
 	for guideline in guidelines:
-		attrs = {}
+		attrs = OrderedDict()
 		x = guideline.get("x")
 		if x is not None:
 			attrs["x"] = repr(x)
@@ -734,7 +739,7 @@ def _writeAnchors(glyphObject, element, identifiers, validate):
 	if validate and not anchorsValidator(anchors):
 		raise GlifLibError("anchors attribute does not have the proper structure.")
 	for anchor in anchors:
-		attrs = {}
+		attrs = OrderedDict()
 		x = anchor["x"]
 		attrs["x"] = repr(x)
 		y = anchor["y"]
@@ -1482,7 +1487,7 @@ class GLIFPointPen(AbstractPointPen):
 		self.validate = validate
 
 	def beginPath(self, identifier=None, **kwargs):
-		attrs = {}
+		attrs = OrderedDict()
 		if identifier is not None and self.formatVersion >= 2:
 			if self.validate:
 				if identifier in self.identifiers:
@@ -1504,7 +1509,7 @@ class GLIFPointPen(AbstractPointPen):
 		self.prevPointTypes = []
 
 	def addPoint(self, pt, segmentType=None, smooth=None, name=None, identifier=None, **kwargs):
-		attrs = {}
+		attrs = OrderedDict()
 		# coordinates
 		if pt is not None:
 			if self.validate:
@@ -1552,7 +1557,7 @@ class GLIFPointPen(AbstractPointPen):
 		etree.SubElement(self.contour, "point", attrs)
 
 	def addComponent(self, glyphName, transformation, identifier=None, **kwargs):
-		attrs = dict(base=glyphName)
+		attrs = OrderedDict([("base", glyphName)])
 		for (attr, default), value in zip(_transformationInfo, transformation):
 			if self.validate and not isinstance(value, (int, float)):
 				raise GlifLibError("transformation values must be int or float")
