@@ -675,6 +675,8 @@ def _writeNote(glyphObject, element, validate):
 	note = getattr(glyphObject, "note", None)
 	if validate and not isinstance(note, basestring):
 		raise GlifLibError("note attribute must be str or unicode")
+	note = note.strip()
+	note = "\n" + note + "\n"
 	note = note.encode("utf-8")
 	etree.SubElement(element, "note").text = note
 
