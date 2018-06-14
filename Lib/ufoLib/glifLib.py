@@ -625,6 +625,9 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, formatV
 		drawPointsFunc(pen)
 		if formatVersion == 1 and anchors:
 			_writeAnchorsFormat1(pen, anchors, validate)
+		# prevent lxml from writing self-closing tags
+		if not len(outline):
+			outline.text = "\n"
 	# lib
 	if getattr(glyphObject, "lib", None):
 		_writeLib(glyphObject, root, validate)
@@ -1503,6 +1506,9 @@ class GLIFPointPen(AbstractPointPen):
 		if self.prevPointTypes and self.prevPointTypes[0] == "move":
 			if self.validate and self.prevPointTypes[-1] == "offcurve":
 				raise GlifLibError("open contour has loose offcurve point")
+		# prevent lxml from writing self-closing tags
+		if not len(self.contour):
+			self.contour.text = "\n"
 		self.contour = None
 		self.prevPointType = None
 		self.prevOffCurveCount = 0
