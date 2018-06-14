@@ -775,9 +775,9 @@ def _writeLib(glyphObject, element, validate):
 	plistWriter = PlistWriter(f, writeHeader=False) # TODO: fix indent
 	plistWriter.writeValue(lib)
 	text = f.getvalue()
-	text = basestring(text) # TODO: this returns bytes
+	text = etree.fromstring(text)
 	if text:
-		etree.SubElement(element, "lib").text = text
+		etree.SubElement(element, "lib").append(text)
 
 # -----------------------
 # layerinfo.plist Support
