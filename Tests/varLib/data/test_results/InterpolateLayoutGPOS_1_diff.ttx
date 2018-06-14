@@ -38,7 +38,7 @@
             <Glyph value="A"/>
           </Coverage>
           <ValueFormat value="5"/>
-          <Value XPlacement="-88" XAdvance="-178"/>
+          <Value XPlacement="-88" XAdvance="-177"/>
         </SinglePos>
       </Lookup>
     </LookupList>

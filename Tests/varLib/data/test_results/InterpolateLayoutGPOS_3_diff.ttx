@@ -41,11 +41,11 @@
           <EntryExitRecord index="0">
             <EntryAnchor Format="1">
               <XCoordinate value="49"/>
-              <YCoordinate value="28"/>
+              <YCoordinate value="29"/>
             </EntryAnchor>
             <ExitAnchor Format="1">
               <XCoordinate value="444"/>
-              <YCoordinate value="294"/>
+              <YCoordinate value="295"/>
             </ExitAnchor>
           </EntryExitRecord>
         </CursivePos>

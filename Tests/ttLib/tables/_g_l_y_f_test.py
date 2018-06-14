@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.fixedTools import otRound
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 import sys
 import array
@@ -56,7 +57,7 @@ class GlyphCoordinatesTest(object):
     def test__round__(self):
         g = GlyphCoordinates([(-1.5,2)])
         g2 = round(g)
-        assert g2 == GlyphCoordinates([(-2,2)])
+        assert g2 == GlyphCoordinates([(-1,2)])
 
     def test__add__(self):
         g1 = GlyphCoordinates([(1,2)])
@@ -150,7 +151,7 @@ class GlyphCoordinatesTest(object):
         # this would return 242 if the internal array.array typecode is 'f',
         # since the Python float is truncated to a C float.
         # when using typecode 'd' it should return the correct value 243
-        assert g[0][0] == round(afloat)
+        assert g[0][0] == otRound(afloat)
 
     def test__checkFloat_overflow(self):
         g = GlyphCoordinates([(1, 1)], typecode="h")

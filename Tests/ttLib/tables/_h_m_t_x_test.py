@@ -164,14 +164,14 @@ class HmtxTableTest(unittest.TestCase):
         font = self.makeFont(numGlyphs=3, numberOfMetrics=2)
         mtxTable = font[self.tag] = newTable(self.tag)
         mtxTable.metrics = {
-            'A': (0.5, 0.5),  # round -> (0, 0)
+            'A': (0.5, 0.5),  # round -> (1, 1)
             'B': (0.1, 0.9),  # round -> (0, 1)
             'C': (0.1, 0.1),  # round -> (0, 0)
         }
 
         data = mtxTable.compile(font)
 
-        self.assertEqual(data, deHexStr("0000 0000 0000 0001 0000"))
+        self.assertEqual(data, deHexStr("0001 0001 0000 0001 0000"))
 
     def test_toXML(self):
         font = self.makeFont(numGlyphs=2, numberOfMetrics=2)
