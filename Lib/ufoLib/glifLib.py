@@ -776,7 +776,7 @@ def _writeLib(glyphObject, element, validate):
 	plistWriter.writeValue(lib)
 	text = f.getvalue()
 	text = etree.fromstring(text)
-	if text:
+	if len(text):
 		etree.SubElement(element, "lib").append(text)
 
 # -----------------------
