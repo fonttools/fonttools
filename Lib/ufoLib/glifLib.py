@@ -605,10 +605,10 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, formatV
 		_writeNote(glyphObject, root, validate)
 	# image
 	if formatVersion >= 2 and getattr(glyphObject, "image", None):
-		_writeImage(glyphObject, element, validate)
+		_writeImage(glyphObject, root, validate)
 	# guidelines
 	if formatVersion >= 2 and getattr(glyphObject, "guidelines", None):
-		_writeGuidelines(glyphObject, writer, identifiers, validate)
+		_writeGuidelines(glyphObject, root, identifiers, validate)
 	# anchors
 	anchors = getattr(glyphObject, "anchors", None)
 	if formatVersion >= 2 and anchors:
@@ -674,16 +674,14 @@ def _writeImage(glyphObject, element, validate):
 	image = getattr(glyphObject, "image", None)
 	if validate and not imageValidator(image):
 		raise GlifLibError("image attribute must be a dict or dict-like object with the proper structure.")
-	attrs = [
-		("fileName", image["fileName"])
-	]
+	attrs = dict(fileName=image["fileName"])
 	for attr, default in _transformationInfo:
 		value = image.get(attr, default)
 		if value != default:
-			attrs.append((attr, repr(value)))
+			attrs[attr] = repr(value)
 	color = image.get("color")
 	if color is not None:
-		attrs.append(("color", color))
+		attrs["color"] = color
 	etree.SubElement(element, "image", attrs)
 
 def _writeGuidelines(glyphObject, element, identifiers, validate):
@@ -691,27 +689,27 @@ def _writeGuidelines(glyphObject, element, identifiers, validate):
 	if validate and not guidelinesValidator(guidelines):
 		raise GlifLibError("guidelines attribute does not have the proper structure.")
 	for guideline in guidelines:
-		attrs = []
+		attrs = {}
 		x = guideline.get("x")
 		if x is not None:
-			attrs.append(("x", repr(x)))
+			attrs["x"] = repr(x)
 		y = guideline.get("y")
 		if y is not None:
-			attrs.append(("y", repr(y)))
+			attrs["y"] = repr(y)
 		angle = guideline.get("angle")
 		if angle is not None:
-			attrs.append(("angle", repr(angle)))
+			attrs["angle"] = repr(angle)
 		name = guideline.get("name")
 		if name is not None:
-			attrs.append(("name", name))
+			attrs["name"] = name
 		color = guideline.get("color")
 		if color is not None:
-			attrs.append(("color", color))
+			attrs["color"] = color
 		identifier = guideline.get("identifier")
 		if identifier is not None:
 			if validate and identifier in identifiers:
 				raise GlifLibError("identifier used more than once: %s" % identifier)
-			attrs.append(("identifier", identifier))
+			attrs["identifier"] = identifier
 			identifiers.add(identifier)
 		etree.SubElement(element, "guideline", attrs)
 
@@ -719,14 +717,14 @@ def _writeAnchorsFormat1(pen, anchors, validate):
 	if validate and not anchorsValidator(anchors):
 		raise GlifLibError("anchors attribute does not have the proper structure.")
 	for anchor in anchors:
-		attrs = []
+		attrs = {}
 		x = anchor["x"]
-		attrs.append(("x", repr(x)))
+		attrs["x"] = repr(x)
 		y = anchor["y"]
-		attrs.append(("y", repr(y)))
+		attrs["y"] = repr(y)
 		name = anchor.get("name")
 		if name is not None:
-			attrs.append(("name", name))
+			attrs["name"] = name
 		pen.beginPath()
 		pen.addPoint((x, y), segmentType="move", name=name)
 		pen.endPath()
