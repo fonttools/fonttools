@@ -651,7 +651,7 @@ def _writeAdvance(glyphObject, element, validate):
 		if height == 0:
 			height = None
 	if width is not None and height is not None:
-		etree.SubElement(element, "advance", OrderedDict([("width", repr(width)), ("height", repr(height))]))
+		etree.SubElement(element, "advance", OrderedDict([("height", repr(height)), ("width", repr(width))]))
 	elif width is not None:
 		etree.SubElement(element, "advance", dict(width=repr(width)))
 	elif height is not None:
