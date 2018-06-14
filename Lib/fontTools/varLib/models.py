@@ -184,7 +184,9 @@ class VariationModel(object):
 			value = loc[axis]
 			if axis not in axisPoints:
 				axisPoints[axis] = {0.}
-			assert value not in axisPoints[axis]
+			assert value not in axisPoints[axis], (
+				'Value "%s" in axisPoints["%s"] -->  %s' % (value, axis, axisPoints)
+			)
 			axisPoints[axis].add(value)
 
 		def getKey(axisPoints, axisOrder):
