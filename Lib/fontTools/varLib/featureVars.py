@@ -1,3 +1,8 @@
+"""Module to build FeatureVariation tables:
+https://docs.microsoft.com/en-us/typography/opentype/spec/chapter2#featurevariations-table
+
+NOTE: The API is experimental and subject to change.
+"""
 from __future__ import print_function, absolute_import, division
 
 from fontTools.ttLib import newTable
@@ -26,7 +31,7 @@ def addFeatureVariations(font, conditionalSubstitutions):
     """
 
     # Example:
-    # 
+    #
     #     >>> f = TTFont(srcPath)
     #     >>> condSubst = [
     #     ...     # A list of (Region, Substitution) tuples.
