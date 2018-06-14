@@ -30,7 +30,7 @@ class TestGLIF1(unittest.TestCase):
 
 	def glifToPy(self, glif):
 		glif = stripText(glif)
-		glif = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + glif
+		glif = "<?xml version=\"1.0\"?>\n" + glif
 		glyph = Glyph()
 		readGlyphFromString(glif, glyphObject=glyph, pointPen=glyph, validate=True)
 		return glyph.py()

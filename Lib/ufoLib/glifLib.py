@@ -838,7 +838,7 @@ def validateLayerInfoVersion3Data(infoData):
 # -----------------
 
 def _glifTreeFromFile(aFile):
-	root = ElementTree.parse(aFile).getroot()
+	root = etree.parse(aFile).getroot()
 	if root.tag != "glyph":
 		raise GlifLibError("The GLIF is not properly formatted.")
 	if root.text and root.text.strip() != '':
@@ -846,7 +846,7 @@ def _glifTreeFromFile(aFile):
 	return root
 
 def _glifTreeFromString(aString):
-	root = ElementTree.fromstring(aString)
+	root = etree.fromstring(aString)
 	if root.tag != "glyph":
 		raise GlifLibError("The GLIF is not properly formatted.")
 	if root.text and root.text.strip() != '':
@@ -960,17 +960,19 @@ def _readGlyphFromTreeFormat2(tree, glyphObject=None, pointPen=None, validate=No
 		elif element.tag == "guideline":
 			if validate and len(element):
 				raise GlifLibError("Unknown children in guideline element.")
+			attrib = dict(element.attrib)
 			for attr in ("x", "y", "angle"):
-				if attr in element.attrib:
-					element.attrib[attr] = _number(element.attrib[attr])
-			guidelines.append(element.attrib)
+				if attr in attrib:
+					attrib[attr] = _number(attrib[attr])
+			guidelines.append(attrib)
 		elif element.tag == "anchor":
 			if validate and len(element):
 				raise GlifLibError("Unknown children in anchor element.")
+			attrib = dict(element.attrib)
 			for attr in ("x", "y"):
 				if attr in element.attrib:
-					element.attrib[attr] = _number(element.attrib[attr])
-			anchors.append(element.attrib)
+					attrib[attr] = _number(attrib[attr])
+			anchors.append(attrib)
 		elif element.tag == "image":
 			if validate:
 				if haveSeenImage:
@@ -1034,7 +1036,7 @@ def _readLib(glyphObject, lib, validate):
 	_relaxedSetattr(glyphObject, "lib", plist)
 
 def _readImage(glyphObject, image, validate):
-	imageData = image.attrib
+	imageData = dict(image.attrib)
 	for attr, default in _transformationInfo:
 		value = imageData.get(attr, default)
 		imageData[attr] = _number(value)
@@ -1101,17 +1103,17 @@ def _buildOutlineContourFormat1(pen, contour, validate):
 		raise GlifLibError("Unknown attributes in contour element.")
 	pen.beginPath()
 	if len(contour):
-		_validateAndMassagePointStructures(contour, pointAttributesFormat1, openContourOffCurveLeniency=True, validate=validate)
-		_buildOutlinePointsFormat1(pen, contour)
+		massaged = _validateAndMassagePointStructures(contour, pointAttributesFormat1, openContourOffCurveLeniency=True, validate=validate)
+		_buildOutlinePointsFormat1(pen, massaged)
 	pen.endPath()
 
 def _buildOutlinePointsFormat1(pen, contour):
-	for element in contour:
-		x = element.attrib["x"]
-		y = element.attrib["y"]
-		segmentType = element.attrib["segmentType"]
-		smooth = element.attrib["smooth"]
-		name = element.attrib["name"]
+	for point in contour:
+		x = point["x"]
+		y = point["y"]
+		segmentType = point["segmentType"]
+		smooth = point["smooth"]
+		name = point["name"]
 		pen.addPoint((x, y), segmentType=segmentType, smooth=smooth, name=name)
 
 def _buildOutlineComponentFormat1(pen, component, validate):
@@ -1164,18 +1166,18 @@ def _buildOutlineContourFormat2(pen, contour, identifiers, validate):
 		pen.beginPath()
 		warn("The beginPath method needs an identifier kwarg. The contour's identifier value has been discarded.", DeprecationWarning)
 	if len(contour):
-		_validateAndMassagePointStructures(contour, pointAttributesFormat2, validate=validate)
-		_buildOutlinePointsFormat2(pen, contour, identifiers, validate)
+		massaged = _validateAndMassagePointStructures(contour, pointAttributesFormat2, validate=validate)
+		_buildOutlinePointsFormat2(pen, massaged, identifiers, validate)
 	pen.endPath()
 
 def _buildOutlinePointsFormat2(pen, contour, identifiers, validate):
-	for element in contour:
-		x = element.attrib["x"]
-		y = element.attrib["y"]
-		segmentType = element.attrib["segmentType"]
-		smooth = element.attrib["smooth"]
-		name = element.attrib["name"]
-		identifier = element.get("identifier")
+	for point in contour:
+		x = point["x"]
+		y = point["y"]
+		segmentType = point["segmentType"]
+		smooth = point["smooth"]
+		name = point["name"]
+		identifier = point.get("identifier")
 		if identifier is not None:
 			if validate:
 				if identifier in identifiers:
@@ -1230,13 +1232,16 @@ def _validateAndMassagePointStructures(contour, pointAttributes, openContourOffC
 	lastOnCurvePoint = None
 	haveOffCurvePoint = False
 	# validate and massage the individual point elements
+	massaged = []
 	for index, element in enumerate(contour):
 		# not <point>
 		if element.tag != "point":
 			raise GlifLibError("Unknown child element (%s) of contour element." % element.tag)
+		point = dict(element.attrib)
+		massaged.append(point)
 		if validate:
 			# unknown attributes
-			for attr in element.attrib.keys():
+			for attr in point.keys():
 				if attr not in pointAttributes:
 					raise GlifLibError("Unknown attribute in point element: %s" % attr)
 			# search for unknown children
@@ -1247,14 +1252,14 @@ def _validateAndMassagePointStructures(contour, pointAttributes, openContourOffC
 			value = element.get(attr)
 			if validate and value is None:
 				raise GlifLibError("Required %s attribute is missing in point element." % attr)
-			element.attrib[attr] = _number(value)
+			point[attr] = _number(value)
 		# segment type
-		pointType = element.attrib.pop("type", "offcurve")
+		pointType = point.pop("type", "offcurve")
 		if validate and pointType not in pointTypeOptions:
 			raise GlifLibError("Unknown point type: %s" % pointType)
 		if pointType == "offcurve":
 			pointType = None
-		element.attrib["segmentType"] = pointType
+		point["segmentType"] = pointType
 		if pointType is None:
 			haveOffCurvePoint = True
 		else:
@@ -1263,34 +1268,37 @@ def _validateAndMassagePointStructures(contour, pointAttributes, openContourOffC
 		if validate and pointType == "move" and index != 0:
 			raise GlifLibError("A move point occurs after the first point in the contour.")
 		# smooth is optional
-		smooth = element.get("smooth", "no")
+		smooth = point.get("smooth", "no")
 		if validate and smooth is not None:
 			if smooth not in pointSmoothOptions:
 				raise GlifLibError("Unknown point smooth value: %s" % smooth)
 		smooth = smooth == "yes"
-		element.attrib["smooth"] = smooth
+		point["smooth"] = smooth
 		# smooth can only be applied to curve and qcurve
 		if validate and smooth and pointType is None:
 			raise GlifLibError("smooth attribute set in an offcurve point.")
 		# name is optional
 		if "name" not in element.attrib:
-			element.attrib["name"] = None
+			point["name"] = None
 	if openContourOffCurveLeniency:
 		# remove offcurves that precede a move. this is technically illegal,
 		# but we let it slide because there are fonts out there in the wild like this.
-		if contour[0].attrib["segmentType"] == "move":
-			for element in reversed(contour):
-				if element.attrib["segmentType"] is None:
-					contour.remove(element)
+		if massaged[0]["segmentType"] == "move":
+			count = 0
+			for point in reversed(massaged):
+				if point["segmentType"] is None:
+					count += 1
 				else:
 					break
+			if count:
+				massaged = massaged[:-count]
 	# validate the off-curves in the segments
 	if validate and haveOffCurvePoint and lastOnCurvePoint is not None:
 		# we only care about how many offCurves there are before an onCurve
 		# filter out the trailing offCurves
-		offCurvesCount = len(contour) - 1 - lastOnCurvePoint
-		for element in contour:
-			segmentType = element.attrib["segmentType"]
+		offCurvesCount = len(massaged) - 1 - lastOnCurvePoint
+		for point in massaged:
+			segmentType = point["segmentType"]
 			if segmentType is None:
 				offCurvesCount += 1
 			else:
@@ -1310,6 +1318,7 @@ def _validateAndMassagePointStructures(contour, pointAttributes, openContourOffC
 						# unknown segment type. it'll be caught later.
 						pass
 				offCurvesCount = 0
+	return massaged
 
 # ---------------------
 # Misc Helper Functions
