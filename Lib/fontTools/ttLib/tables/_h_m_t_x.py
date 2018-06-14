@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.fixedTools import otRound
 from fontTools import ttLib
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
@@ -78,14 +79,14 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 				lastIndex = 1
 				break
 		additionalMetrics = metrics[lastIndex:]
-		additionalMetrics = [round(sb) for _, sb in additionalMetrics]
+		additionalMetrics = [otRound(sb) for _, sb in additionalMetrics]
 		metrics = metrics[:lastIndex]
 		numberOfMetrics = len(metrics)
 		setattr(ttFont[self.headerTag], self.numberOfMetricsName, numberOfMetrics)
 
 		allMetrics = []
 		for advance, sb in metrics:
-			allMetrics.extend([round(advance), round(sb)])
+			allMetrics.extend([otRound(advance), otRound(sb)])
 		metricsFmt = ">" + self.longMetricFormat * numberOfMetrics
 		try:
 			data = struct.pack(metricsFmt, *allMetrics)

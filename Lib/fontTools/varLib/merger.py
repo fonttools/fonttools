@@ -3,6 +3,7 @@ Merge OpenType Layout tables (GDEF / GPOS / GSUB).
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.fixedTools import otRound
 from fontTools.misc import classifyTools
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables import otBase as otBase
@@ -660,8 +661,8 @@ def merge(merger, self, lst):
 	YCoords = [a.YCoordinate for a in lst]
 	model = merger.model
 	scalars = merger.scalars
-	self.XCoordinate = round(model.interpolateFromMastersAndScalars(XCoords, scalars))
-	self.YCoordinate = round(model.interpolateFromMastersAndScalars(YCoords, scalars))
+	self.XCoordinate = otRound(model.interpolateFromMastersAndScalars(XCoords, scalars))
+	self.YCoordinate = otRound(model.interpolateFromMastersAndScalars(YCoords, scalars))
 
 @InstancerMerger.merger(otBase.ValueRecord)
 def merge(merger, self, lst):
@@ -677,7 +678,7 @@ def merge(merger, self, lst):
 
 		if hasattr(self, name):
 			values = [getattr(a, name, 0) for a in lst]
-			value = round(model.interpolateFromMastersAndScalars(values, scalars))
+			value = otRound(model.interpolateFromMastersAndScalars(values, scalars))
 			setattr(self, name, value)
 
 
@@ -738,7 +739,7 @@ def merge(merger, self, lst):
 
 		assert dev.DeltaFormat == 0x8000
 		varidx = (dev.StartSize << 16) + dev.EndSize
-		delta = round(instancer[varidx])
+		delta = otRound(instancer[varidx])
 
 		attr = v+'Coordinate'
 		setattr(self, attr, getattr(self, attr) + delta)
@@ -769,7 +770,7 @@ def merge(merger, self, lst):
 
 		assert dev.DeltaFormat == 0x8000
 		varidx = (dev.StartSize << 16) + dev.EndSize
-		delta = round(instancer[varidx])
+		delta = otRound(instancer[varidx])
 
 		setattr(self, name, getattr(self, name) + delta)
 

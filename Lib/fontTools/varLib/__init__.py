@@ -21,6 +21,7 @@ API *will* change in near future.
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.misc.py23 import *
+from fontTools.misc.fixedTools import otRound
 from fontTools.misc.arrayTools import Vector
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._n_a_m_e import NameRecord
@@ -268,12 +269,12 @@ def _SetCoordinates(font, glyphName, coord):
 
 	glyph.recalcBounds(glyf)
 
-	horizontalAdvanceWidth = round(rightSideX - leftSideX)
+	horizontalAdvanceWidth = otRound(rightSideX - leftSideX)
 	if horizontalAdvanceWidth < 0:
 		# unlikely, but it can happen, see:
 		# https://github.com/fonttools/fonttools/pull/1198
 		horizontalAdvanceWidth = 0
-	leftSideBearing = round(glyph.xMin - leftSideX)
+	leftSideBearing = otRound(glyph.xMin - leftSideX)
 	# XXX Handle vertical
 	font["hmtx"].metrics[glyphName] = horizontalAdvanceWidth, leftSideBearing
 
@@ -411,7 +412,7 @@ def _merge_TTHinting(font, model, master_ttfs, tolerance=0.5):
 	deltas = model.getDeltas(all_cvs)
 	supports = model.supports
 	for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
-		delta = [round(d) for d in delta]
+		delta = [otRound(d) for d in delta]
 		if all(abs(v) <= tolerance for v in delta):
 			continue
 		var = TupleVariation(support, delta)
@@ -426,7 +427,7 @@ def _add_HVAR(font, model, master_ttfs, axisTags):
 	for glyph in font.getGlyphOrder():
 		hAdvances = [metrics[glyph][0] for metrics in metricses]
 		# TODO move round somewhere else?
-		hAdvanceDeltas[glyph] = tuple(round(d) for d in model.getDeltas(hAdvances)[1:])
+		hAdvanceDeltas[glyph] = tuple(otRound(d) for d in model.getDeltas(hAdvances)[1:])
 
 	# Direct mapping
 	supports = model.supports[1:]

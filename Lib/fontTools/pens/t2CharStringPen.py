@@ -3,6 +3,7 @@
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.fixedTools import otRound
 from fontTools.misc.psCharStrings import T2CharString
 from fontTools.pens.basePen import BasePen
 from fontTools.cffLib.specializer import specializeCommands, commandsToProgram
@@ -15,7 +16,7 @@ def makeRoundFunc(tolerance):
     def _round(number):
         if tolerance == 0:
             return number  # no-op
-        rounded = round(number)
+        rounded = otRound(number)
         # return rounded integer if the tolerance >= 0.5, or if the absolute
         # difference between the original float and the rounded integer is
         # within the tolerance
@@ -82,7 +83,7 @@ class T2CharStringPen(BasePen):
         program = commandsToProgram(commands)
         if self._width is not None:
             assert not self._CFF2, "CFF2 does not allow encoding glyph width in CharString."
-            program.insert(0, round(self._width))
+            program.insert(0, otRound(self._width))
         if not self._CFF2:
             program.append('endchar')
         charString = T2CharString(

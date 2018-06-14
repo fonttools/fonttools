@@ -64,7 +64,7 @@ def floatToFixed(value, precisionBits):
 	"""Converts a float to a fixed-point number given the number of
 	precisionBits.  Ie. round(value * (1<<precisionBits)).
 	"""
-	return round(value * (1<<precisionBits))
+	return otRound(value * (1<<precisionBits))
 
 def floatToFixedToFloat(value, precisionBits):
 	"""Converts a float to a fixed-point number given the number of
@@ -74,7 +74,7 @@ def floatToFixedToFloat(value, precisionBits):
 	which would return the shortest representation of the rounded value.
 	"""
 	scale = 1<<precisionBits
-	return round(value * scale) / scale
+	return otRound(value * scale) / scale
 
 def ensureVersionIsLong(value):
 	"""Ensure a table version is an unsigned long (unsigned short major,

@@ -4,7 +4,7 @@ CFF dictionary data and Type1/Type2 CharStrings.
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.misc.fixedTools import fixedToFloat
+from fontTools.misc.fixedTools import fixedToFloat, otRound
 from fontTools.pens.boundsPen import BoundsPen
 import struct
 import logging
@@ -217,7 +217,7 @@ encodeIntT2 = getIntEncoder("t2")
 
 def encodeFixed(f, pack=struct.pack):
 	# For T2 only
-	return b"\xff" + pack(">l", round(f * 65536))
+	return b"\xff" + pack(">l", otRound(f * 65536))
 
 def encodeFloat(f):
 	# For CFF only, used in cffLib
