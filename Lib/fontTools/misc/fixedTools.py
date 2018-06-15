@@ -3,17 +3,31 @@
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+import math
 import logging
 
 log = logging.getLogger(__name__)
 
 __all__ = [
+	"otRound",
 	"fixedToFloat",
 	"floatToFixed",
     "floatToFixedToFloat",
 	"ensureVersionIsLong",
 	"versionToFixed",
 ]
+
+
+def otRound(value):
+	"""Round float value to nearest integer towards +Infinity.
+	For fractional values of 0.5 and higher, take the next higher integer;
+	for other fractional values, truncate.
+
+	https://docs.microsoft.com/en-us/typography/opentype/spec/otvaroverview
+	https://github.com/fonttools/fonttools/issues/1248#issuecomment-383198166
+	"""
+	return int(math.floor(value + 0.5))
+
 
 def fixedToFloat(value, precisionBits):
 	"""Converts a fixed-point number to a float, choosing the float
@@ -50,7 +64,7 @@ def floatToFixed(value, precisionBits):
 	"""Converts a float to a fixed-point number given the number of
 	precisionBits.  Ie. round(value * (1<<precisionBits)).
 	"""
-	return round(value * (1<<precisionBits))
+	return otRound(value * (1<<precisionBits))
 
 def floatToFixedToFloat(value, precisionBits):
 	"""Converts a float to a fixed-point number given the number of
@@ -60,7 +74,7 @@ def floatToFixedToFloat(value, precisionBits):
 	which would return the shortest representation of the rounded value.
 	"""
 	scale = 1<<precisionBits
-	return round(value * scale) / scale
+	return otRound(value * scale) / scale
 
 def ensureVersionIsLong(value):
 	"""Ensure a table version is an unsigned long (unsigned short major,

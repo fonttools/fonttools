@@ -5,7 +5,7 @@ $ fonttools varLib.mutator ./NotoSansArabic-VF.ttf wght=140 wdth=85
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.misc.fixedTools import floatToFixedToFloat
+from fontTools.misc.fixedTools import floatToFixedToFloat, otRound
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.varLib import _GetCoordinates, _SetCoordinates, _DesignspaceAxis
@@ -87,7 +87,7 @@ def instantiateVariableFont(varfont, location, inplace=False):
 				if c is not None:
 					deltas[i] = deltas.get(i, 0) + scalar * c
 		for i, delta in deltas.items():
-			cvt[i] += round(delta)
+			cvt[i] += otRound(delta)
 
 	if 'MVAR' in varfont:
 		log.info("Mutating MVAR table")
@@ -99,7 +99,7 @@ def instantiateVariableFont(varfont, location, inplace=False):
 			if mvarTag not in MVAR_ENTRIES:
 				continue
 			tableTag, itemName = MVAR_ENTRIES[mvarTag]
-			delta = round(varStoreInstancer[rec.VarIdx])
+			delta = otRound(varStoreInstancer[rec.VarIdx])
 			if not delta:
 				continue
 			setattr(varfont[tableTag], itemName,

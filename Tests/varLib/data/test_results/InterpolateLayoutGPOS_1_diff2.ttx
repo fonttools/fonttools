@@ -40,8 +40,8 @@
           </Coverage>
           <ValueFormat value="5"/>
           <!-- ValueCount=2 -->
-          <Value index="0" XPlacement="-88" XAdvance="-178"/>
-          <Value index="1" XPlacement="-28" XAdvance="-52"/>
+          <Value index="0" XPlacement="-88" XAdvance="-177"/>
+          <Value index="1" XPlacement="-27" XAdvance="-52"/>
         </SinglePos>
       </Lookup>
     </LookupList>

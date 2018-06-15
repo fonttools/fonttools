@@ -4,6 +4,7 @@
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.fixedTools import otRound
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
 from fontTools.misc import psCharStrings
@@ -3070,7 +3071,7 @@ class Subsetter(object):
 					log.info("%s Unicode ranges pruned: %s", tag, sorted(new_uniranges))
 				if self.options.recalc_average_width:
 					widths = [m[0] for m in font["hmtx"].metrics.values() if m[0] > 0]
-					avg_width = round(sum(widths) / len(widths))
+					avg_width = otRound(sum(widths) / len(widths))
 					if avg_width != font[tag].xAvgCharWidth:
 						font[tag].xAvgCharWidth = avg_width
 						log.info("%s xAvgCharWidth updated: %d", tag, avg_width)

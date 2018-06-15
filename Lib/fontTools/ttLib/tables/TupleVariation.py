@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.misc.fixedTools import fixedToFloat, floatToFixed
+from fontTools.misc.fixedTools import fixedToFloat, floatToFixed, otRound
 from fontTools.misc.textTools import safeEval
 import array
 import io
@@ -369,7 +369,7 @@ class TupleVariation(object):
 		assert runLength >= 1 and runLength <= 64
 		stream.write(bytechr(runLength - 1))
 		for i in range(offset, pos):
-			stream.write(struct.pack('b', round(deltas[i])))
+			stream.write(struct.pack('b', otRound(deltas[i])))
 		return pos
 
 	@staticmethod
@@ -403,7 +403,7 @@ class TupleVariation(object):
 		assert runLength >= 1 and runLength <= 64
 		stream.write(bytechr(DELTAS_ARE_WORDS | (runLength - 1)))
 		for i in range(offset, pos):
-			stream.write(struct.pack('>h', round(deltas[i])))
+			stream.write(struct.pack('>h', otRound(deltas[i])))
 		return pos
 
 	@staticmethod

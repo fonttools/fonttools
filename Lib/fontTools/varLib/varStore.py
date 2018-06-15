@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.fixedTools import otRound
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib.models import supportScalar
 from fontTools.varLib.builder import (buildVarRegionList, buildVarStore,
@@ -57,7 +58,7 @@ class OnlineVarStoreBuilder(object):
 		self._store.VarData.append(data)
 
 	def storeMasters(self, master_values):
-		deltas = [round(d) for d in self._model.getDeltas(master_values)]
+		deltas = [otRound(d) for d in self._model.getDeltas(master_values)]
 		base = deltas.pop(0)
 		deltas = tuple(deltas)
 		varIdx = self._cache.get(deltas)
