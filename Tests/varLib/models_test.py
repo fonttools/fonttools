@@ -75,3 +75,25 @@ def test_VariationModel():
          5: 0.6666666666666667,
          6: 0.4444444444444445,
          7: 0.6666666666666667}]
+
+def test_VariationModel():
+    locations = [
+        {},
+        {'bar': 0.5},
+        {'bar': 1.0},
+        {'foo': 1.0},
+        {'bar': 0.5, 'foo': 1.0},
+        {'bar': 1.0, 'foo': 1.0},
+    ]
+    model = VariationModel(locations)
+
+    assert model.locations == locations
+
+    assert model.supports == [
+        {},
+        {'bar': (0, 0.5, 1.0)},
+        {'bar': (0.5, 1.0, 1.0)},
+        {'foo': (0, 1.0, 1.0)},
+        {'bar': (0, 0.5, 1.0), 'foo': (0, 1.0, 1.0)},
+        {'bar': (0.5, 1.0, 1.0), 'foo': (0, 1.0, 1.0)},
+    ]

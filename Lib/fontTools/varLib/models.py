@@ -232,6 +232,7 @@ class VariationModel(object):
 			box = {}
 
 			# Account for axisPoints first
+			# TODO Use axis min/max instead? Isn't that always -1/+1?
 			for axis,values in axisPoints.items():
 				if not axis in loc:
 					continue
@@ -249,8 +250,8 @@ class VariationModel(object):
 					continue
 				# If it's NOT in the current box, it does not participate
 				relevant = True
-				for axis, (lower,_,upper) in box.items():
-					if axis not in m or not (lower < m[axis] < upper):
+				for axis, (lower,peak,upper) in box.items():
+					if axis not in m or not (m[axis] == peak or lower < m[axis] < upper):
 						relevant = False
 						break
 				if not relevant:
