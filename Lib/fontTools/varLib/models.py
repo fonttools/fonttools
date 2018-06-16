@@ -343,11 +343,29 @@ def main(args):
 	# TODO: allow user to configure logging via command-line options
 	configLogger(level="INFO")
 
-	axes = [chr(c) for c in range(ord('A'), ord('Z')+1)]
+	if len(args) < 1:
+		print("usage: fonttools varLib.models source.designspace", file=sys.stderr)
+		print("  or")
+		print("usage: fonttools varLib.models location1 location2 ...", file=sys.stderr)
+		sys.exit(1)
 
-	locs = [dict(zip(axes, (float(v) for v in s.split(',')))) for s in args]
-	model = VariationModel(locs)
 	from pprint import pprint
+
+	if len(args) == 1 and args[0].endswith('.designspace'):
+		from fontTools.designspaceLib import DesignSpaceDocument
+		doc = DesignSpaceDocument()
+		doc.read(args[0])
+		locs = [s.location for s in doc.sources]
+		print("Original locations:")
+		pprint(locs)
+		doc.normalize()
+		print("Normalized locations:")
+		pprint(locs)
+	else:
+		axes = [chr(c) for c in range(ord('A'), ord('Z')+1)]
+		locs = [dict(zip(axes, (float(v) for v in s.split(',')))) for s in args]
+
+	model = VariationModel(locs)
 	print("Sorted locations:")
 	pprint(model.locations)
 	print("Supports:")
