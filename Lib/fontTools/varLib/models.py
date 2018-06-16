@@ -274,6 +274,9 @@ class VariationModel(object):
 					elif locV < val:
 						newUpper = val
 						percentage = (val - locV) / (upper - locV)
+					else: # val == locV
+						# Can't split box in this direction.
+						continue
 					if percentage > bestPercentage:
 						bestPercentage = percentage
 						bestAxis = axis
