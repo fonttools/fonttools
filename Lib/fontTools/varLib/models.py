@@ -262,7 +262,7 @@ class VariationModel(object):
 				orderedAxes = [axis for axis in axisOrder if axis in m.keys()]
 				orderedAxes.extend([axis for axis in sorted(m.keys()) if axis not in axisOrder])
 				bestAxis = None
-				bestPercentage = -1
+				bestRatio = -1
 				for axis in orderedAxes:
 					val = m[axis]
 					assert axis in box
@@ -270,15 +270,15 @@ class VariationModel(object):
 					newLower, newUpper = lower, upper
 					if val < locV:
 						newLower = val
-						percentage = (val - locV) / (lower - locV)
+						ratio = (val - locV) / (lower - locV)
 					elif locV < val:
 						newUpper = val
-						percentage = (val - locV) / (upper - locV)
+						ratio = (val - locV) / (upper - locV)
 					else: # val == locV
 						# Can't split box in this direction.
 						continue
-					if percentage > bestPercentage:
-						bestPercentage = percentage
+					if ratio > bestRatio:
+						bestRatio = ratio
 						bestAxis = axis
 						bestLower = newLower
 						bestUpper = newUpper
