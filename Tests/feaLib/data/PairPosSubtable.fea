@@ -1,0 +1,20 @@
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+lookup kernlookup {
+    pos A V -34;
+    subtable;
+    @group1 = [b o];
+    @group2 = [c d];
+    pos @group1 @group2 -12;
+} kernlookup;
+
+feature kern {
+ script DFLT;
+ language dflt;
+ lookup kernlookup;
+
+ script latn;
+ language dflt;
+ lookup kernlookup;
+} kern;
