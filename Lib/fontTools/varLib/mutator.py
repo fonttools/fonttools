@@ -21,6 +21,19 @@ import logging
 log = logging.getLogger("fontTools.varlib.mutator")
 
 
+OS2_WIDTH_CLASS_VALUES = {
+    50.0: 1,  # Ultra-condensed
+    62.5: 2,  # Extra-condensed
+    75.0: 3,  # Condensed
+    87.5: 4,  # Semi-condensed
+    100.0: 5,  # Medium (normal)
+    112.5: 6,  # Semi-expanded
+    125.0: 7,  # Expanded
+    150.0: 8,  # Extra-expanded
+    200.0: 9,  # Ultra-expanded
+}
+
+
 def instantiateVariableFont(varfont, location, inplace=False):
 	""" Generate a static instance from a variable TTFont and a dictionary
 	defining the desired location along the variable font's axes.
@@ -122,6 +135,19 @@ def instantiateVariableFont(varfont, location, inplace=False):
 			n for n in varfont['name'].names
 			if n.nameID not in exclude
 		]
+
+	if "wght" in location and "OS/2" in varfont:
+		varfont["OS/2"].usWeightClass = otRound(location["wght"])
+	if "wdth" in location:
+		wdth = location["wdth"]
+		for percent, widthClass in sorted(OS2_WIDTH_CLASS_VALUES.items()):
+			if wdth <= percent:
+				varfont["OS/2"].usWidthClass = widthClass
+				break
+		else:
+			varfont["OS/2"].usWidthClass = 9
+	if "slnt" in location and "post" in varfont:
+		varfont["post"].italicAngle = max(-90, min(location["slnt"], 90))
 
 	log.info("Removing variable tables")
 	for tag in ('avar','cvar','fvar','gvar','HVAR','MVAR','VVAR','STAT'):
