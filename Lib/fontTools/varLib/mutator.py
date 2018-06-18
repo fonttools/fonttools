@@ -137,7 +137,9 @@ def instantiateVariableFont(varfont, location, inplace=False):
 		]
 
 	if "wght" in location and "OS/2" in varfont:
-		varfont["OS/2"].usWeightClass = otRound(location["wght"])
+		varfont["OS/2"].usWeightClass = otRound(
+			max(1, min(location["wght"], 1000))
+		)
 	if "wdth" in location:
 		wdth = location["wdth"]
 		for percent, widthClass in sorted(OS2_WIDTH_CLASS_VALUES.items()):
