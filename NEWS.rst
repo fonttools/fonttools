@@ -6,6 +6,8 @@
   #1248).
 - [subset] Improved GSUB closure memoize algorithm.
 - [varLib.models] Fixed regression in model resolution (180124, #1269).
+- [feaLib.ast] Fixed error when converting ``SubtableStatement`` to string
+  (#1275).
 
 3.27.1 (released 2018-06-11)
 ----------------------------
