@@ -1,3 +1,12 @@
+- [featureVars] Added experimental module to build ``FeatureVariations``
+  tables. Still needs to be hooked up to ``varLib.build`` (#1240).
+- [fixedTools] Added ``otRound`` to round floats to nearest integer towards
+  positive Infinity. This is now used where we deal with visual data like X/Y
+  coordinates, advance widths/heights, variation deltas, and similar (#1274,
+  #1248).
+- [subset] Improved GSUB closure memoize algorithm.
+- [varLib.models] Fixed regression in model resolution (180124, #1269).
+
 3.27.1 (released 2018-06-11)
 ----------------------------
 
