@@ -8,6 +8,11 @@
 - [varLib.models] Fixed regression in model resolution (180124, #1269).
 - [feaLib.ast] Fixed error when converting ``SubtableStatement`` to string
   (#1275).
+- [varLib.mutator] Set ``OS/2.usWeightClass`` and ``usWidthClass``, and
+  ``post.italicAngle`` based on the 'wght', 'wdth' and 'slnt' axis values
+  (#1276, #1264).
+- [py23/loggingTools] Don't automatically set ``logging.lastResort`` handler
+  on py27. Moved ``LastResortLogger`` to the ``loggingTools`` module (#1277).
 
 3.27.1 (released 2018-06-11)
 ----------------------------
