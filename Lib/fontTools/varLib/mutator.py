@@ -20,18 +20,12 @@ import logging
 
 log = logging.getLogger("fontTools.varlib.mutator")
 
-
-OS2_WIDTH_CLASS_VALUES = {
-    50.0: 1,  # Ultra-condensed
-    62.5: 2,  # Extra-condensed
-    75.0: 3,  # Condensed
-    87.5: 4,  # Semi-condensed
-    100.0: 5,  # Medium (normal)
-    112.5: 6,  # Semi-expanded
-    125.0: 7,  # Expanded
-    150.0: 8,  # Extra-expanded
-    200.0: 9,  # Ultra-expanded
-}
+# map 'wdth' axis (1..200) to OS/2.usWidthClass (1..9), rounding to closest
+OS2_WIDTH_CLASS_VALUES = {}
+percents = [50.0, 62.5, 75.0, 87.5, 100.0, 112.5, 125.0, 150.0, 200.0]
+for i, (prev, curr) in enumerate(zip(percents[:-1], percents[1:]), start=1):
+	half = (prev + curr) / 2
+	OS2_WIDTH_CLASS_VALUES[half] = i
 
 
 def instantiateVariableFont(varfont, location, inplace=False):
@@ -143,7 +137,7 @@ def instantiateVariableFont(varfont, location, inplace=False):
 	if "wdth" in location:
 		wdth = location["wdth"]
 		for percent, widthClass in sorted(OS2_WIDTH_CLASS_VALUES.items()):
-			if wdth <= percent:
+			if wdth < percent:
 				varfont["OS/2"].usWidthClass = widthClass
 				break
 		else:
