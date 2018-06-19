@@ -1,3 +1,6 @@
+3.28.0 (released 2018-06-19)
+----------------------------
+
 - [featureVars] Added experimental module to build ``FeatureVariations``
   tables. Still needs to be hooked up to ``varLib.build`` (#1240).
 - [fixedTools] Added ``otRound`` to round floats to nearest integer towards
