@@ -469,20 +469,6 @@ class _StderrHandler(logging.StreamHandler):
 			return __import__('sys').stderr
 
 
-if not hasattr(logging, 'lastResort'):
-	# for Python pre-3.2, we need to define the "last resort" handler used when
-	# clients don't explicitly configure logging (in Python 3.2 and above this is
-	# already defined). The handler prints the bare message to sys.stderr, only
-	# for events of severity WARNING or greater.
-	# To obtain the pre-3.2 behaviour, you can set logging.lastResort to None.
-	# https://docs.python.org/3.5/howto/logging.html#what-happens-if-no-configuration-is-provided
-	logging.lastResort = _StderrHandler(logging.WARNING)
-	# Also, we need to set the Logger class to one which supports the last resort
-	# handler. All new loggers instantiated after this call will use the custom
-	# logger class (the already existing ones, like the 'root' logger, will not)
-	logging.setLoggerClass(_Logger)
-
-
 try:
 	from types import SimpleNamespace
 except ImportError:
