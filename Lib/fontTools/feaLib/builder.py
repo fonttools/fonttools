@@ -688,9 +688,6 @@ class Builder(object):
             raise FeatureLibError(
                 "Language statements are not allowed "
                 "within \"feature %s\"" % self.cur_feature_name_, location)
-        if language != 'dflt' and self.script_ == 'DFLT':
-            raise FeatureLibError("Need non-DFLT script when using non-dflt "
-                                  "language (was: \"%s\")" % language, location)
         self.cur_lookup_ = None
 
         key = (self.script_, language, self.cur_feature_name_)
