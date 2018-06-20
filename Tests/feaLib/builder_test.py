@@ -316,11 +316,7 @@ class BuilderTest(unittest.TestCase):
         self.assertEqual(builder.language_systems,
                          {('cyrl', 'BGR ')})
         builder.start_feature(location=None, name='test2')
-        self.assertRaisesRegex(
-            FeatureLibError,
-            "Need non-DFLT script when using non-dflt language "
-            "\(was: \"FRA \"\)",
-            builder.set_language, None, 'FRA ', True, False)
+        self.assertEqual(builder.language_systems, {('latn', 'FRA ')})
 
     def test_language_in_aalt_feature(self):
         self.assertRaisesRegex(
