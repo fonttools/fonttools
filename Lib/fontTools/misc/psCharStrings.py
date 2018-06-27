@@ -216,8 +216,12 @@ encodeIntT1 = getIntEncoder("t1")
 encodeIntT2 = getIntEncoder("t2")
 
 def encodeFixed(f, pack=struct.pack):
-	# For T2 only
-	return b"\xff" + pack(">l", otRound(f * 65536))
+	"""For T2 only"""
+	value = otRound(f * 65536)  # convert the float to fixed point
+	if value & 0xFFFF == 0:  # check if the fractional part is zero
+		return encodeIntT2(value >> 16)  # encode only the integer part
+	else:
+		return b"\xff" + pack(">l", value)  # encode the entire fixed point value
 
 def encodeFloat(f):
 	# For CFF only, used in cffLib
@@ -944,7 +948,7 @@ class T2CharString(object):
 	decompilerClass = SimpleT2Decompiler
 	outlineExtractor = T2OutlineExtractor
 	isCFF2 = False
-	
+
 	def __init__(self, bytecode=None, program=None, private=None, globalSubrs=None):
 		if program is None:
 			program = []
@@ -1006,8 +1010,7 @@ class T2CharString(object):
 		while i < end:
 			token = program[i]
 			i = i + 1
-			tp = type(token)
-			if issubclass(tp, basestring):
+			if isinstance(token, basestring):
 				try:
 					bytecode.extend(bytechr(b) for b in opcodes[token])
 				except KeyError:
@@ -1015,12 +1018,12 @@ class T2CharString(object):
 				if token in ('hintmask', 'cntrmask'):
 					bytecode.append(program[i])  # hint mask
 					i = i + 1
-			elif tp == int:
+			elif isinstance(token, int):
 				bytecode.append(encodeInt(token))
-			elif tp == float:
+			elif isinstance(token, float):
 				bytecode.append(encodeFixed(token))
 			else:
-				assert 0, "unsupported type: %s" % tp
+				assert 0, "unsupported type: %s" % type(token)
 		try:
 			bytecode = bytesjoin(bytecode)
 		except TypeError:
@@ -1259,12 +1262,12 @@ class DictDecompiler(object):
 		"""
 		There may be non-blend args at the top of the stack. We first calculate
 		where the blend args start in the stack. These are the last
-		numMasters*numBlends) +1 args. 
+		numMasters*numBlends) +1 args.
 		The blend args starts with numMasters relative coordinate values, the  BlueValues in the list from the default master font. This is followed by
 		numBlends list of values. Each of  value in one of these lists is the
 		Variable Font delta for the matching region.
-		
-		We re-arrange this to be a list of numMaster entries. Each entry starts with the corresponding default font relative value, and is followed by 
+
+		We re-arrange this to be a list of numMaster entries. Each entry starts with the corresponding default font relative value, and is followed by
 		the delta values. We then convert the default values, the first item in each entry, to an absolute value.
 		"""
 		vsindex = self.dict.get('vsindex', 0)
