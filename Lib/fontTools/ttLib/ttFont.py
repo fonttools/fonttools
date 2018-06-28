@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc import xmlWriter
 from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import deprecateArgument
+from fontTools.ttLib import TTLibError
 from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
 import os
 import logging
