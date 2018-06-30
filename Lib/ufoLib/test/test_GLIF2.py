@@ -24,15 +24,15 @@ class TestGLIF2(unittest.TestCase):
 		py = stripText(py)
 		glyph = Glyph()
 		exec(py, {"glyph" : glyph, "pointPen" : glyph})
-		glif = writeGlyphToString(glyph.name, glyphObject=glyph, drawPointsFunc=glyph.drawPoints, formatVersion=2)
-		glif = "\n".join(glif.splitlines()[1:])
+		glif = writeGlyphToString(glyph.name, glyphObject=glyph, drawPointsFunc=glyph.drawPoints, formatVersion=2, validate=True)
+		glif = "\n".join(glif.splitlines())
 		return glif
 
 	def glifToPy(self, glif):
 		glif = stripText(glif)
-		glif = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + glif
+		glif = "<?xml version=\"1.0\"?>\n" + glif
 		glyph = Glyph()
-		readGlyphFromString(glif, glyphObject=glyph, pointPen=glyph)
+		readGlyphFromString(glif, glyphObject=glyph, pointPen=glyph, validate=True)
 		return glyph.py()
 
 	def testTopElement(self):

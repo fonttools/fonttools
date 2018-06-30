@@ -43,7 +43,7 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		originalData = dict(fontInfoVersion3)
 		self._writeInfoToPlist(originalData)
 		infoObject = TestInfoObject()
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(infoObject)
 		readData = {}
 		for attr in list(fontInfoVersion3.keys()):
@@ -55,107 +55,107 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		info = dict(fontInfoVersion3)
 		info["familyName"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# styleName
 		info = dict(fontInfoVersion3)
 		info["styleName"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# styleMapFamilyName
 		info = dict(fontInfoVersion3)
 		info["styleMapFamilyName"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# styleMapStyleName
 		## not a string
 		info = dict(fontInfoVersion3)
 		info["styleMapStyleName"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		## out of range
 		info = dict(fontInfoVersion3)
 		info["styleMapStyleName"] = "REGULAR"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# versionMajor
 		info = dict(fontInfoVersion3)
 		info["versionMajor"] = "1"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# versionMinor
 		info = dict(fontInfoVersion3)
 		info["versionMinor"] = "0"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["versionMinor"] = -1
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# copyright
 		info = dict(fontInfoVersion3)
 		info["copyright"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# trademark
 		info = dict(fontInfoVersion3)
 		info["trademark"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# unitsPerEm
 		info = dict(fontInfoVersion3)
 		info["unitsPerEm"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["unitsPerEm"] = -1
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["unitsPerEm"] = -1.0
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# descender
 		info = dict(fontInfoVersion3)
 		info["descender"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# xHeight
 		info = dict(fontInfoVersion3)
 		info["xHeight"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# capHeight
 		info = dict(fontInfoVersion3)
 		info["capHeight"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# ascender
 		info = dict(fontInfoVersion3)
 		info["ascender"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# italicAngle
 		info = dict(fontInfoVersion3)
 		info["italicAngle"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 
 	def testGaspRead(self):
@@ -163,60 +163,60 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		info = dict(fontInfoVersion3)
 		info["openTypeGaspRangeRecords"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# empty list
 		info = dict(fontInfoVersion3)
 		info["openTypeGaspRangeRecords"] = []
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(TestInfoObject())
 		# not a dict
 		info = dict(fontInfoVersion3)
 		info["openTypeGaspRangeRecords"] = ["abc"]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# dict not properly formatted
 		info = dict(fontInfoVersion3)
 		info["openTypeGaspRangeRecords"] = [dict(rangeMaxPPEM=0xFFFF, notTheRightKey=1)]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["openTypeGaspRangeRecords"] = [dict(notTheRightKey=1, rangeGaspBehavior=[0])]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# not an int for ppem
 		info = dict(fontInfoVersion3)
 		info["openTypeGaspRangeRecords"] = [dict(rangeMaxPPEM="abc", rangeGaspBehavior=[0]), dict(rangeMaxPPEM=0xFFFF, rangeGaspBehavior=[0])]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# not a list for behavior
 		info = dict(fontInfoVersion3)
 		info["openTypeGaspRangeRecords"] = [dict(rangeMaxPPEM=10, rangeGaspBehavior="abc"), dict(rangeMaxPPEM=0xFFFF, rangeGaspBehavior=[0])]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# invalid behavior value
 		info = dict(fontInfoVersion3)
 		info["openTypeGaspRangeRecords"] = [dict(rangeMaxPPEM=10, rangeGaspBehavior=[-1]), dict(rangeMaxPPEM=0xFFFF, rangeGaspBehavior=[0])]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# not sorted
 		info = dict(fontInfoVersion3)
 		info["openTypeGaspRangeRecords"] = [dict(rangeMaxPPEM=0xFFFF, rangeGaspBehavior=[0]), dict(rangeMaxPPEM=10, rangeGaspBehavior=[0])]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# no 0xFFFF
 		info = dict(fontInfoVersion3)
 		info["openTypeGaspRangeRecords"] = [dict(rangeMaxPPEM=10, rangeGaspBehavior=[0]), dict(rangeMaxPPEM=20, rangeGaspBehavior=[0])]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(TestInfoObject())
 
 	def testHeadRead(self):
@@ -225,30 +225,30 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		info = dict(fontInfoVersion3)
 		info["openTypeHeadCreated"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		## invalid format
 		info = dict(fontInfoVersion3)
 		info["openTypeHeadCreated"] = "2000-Jan-01 00:00:00"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeHeadLowestRecPPEM
 		info = dict(fontInfoVersion3)
 		info["openTypeHeadLowestRecPPEM"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["openTypeHeadLowestRecPPEM"] = -1
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeHeadFlags
 		info = dict(fontInfoVersion3)
 		info["openTypeHeadFlags"] = [-1]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 
 	def testHheaRead(self):
@@ -256,37 +256,37 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		info = dict(fontInfoVersion3)
 		info["openTypeHheaAscender"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeHheaDescender
 		info = dict(fontInfoVersion3)
 		info["openTypeHheaDescender"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeHheaLineGap
 		info = dict(fontInfoVersion3)
 		info["openTypeHheaLineGap"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeHheaCaretSlopeRise
 		info = dict(fontInfoVersion3)
 		info["openTypeHheaCaretSlopeRise"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeHheaCaretSlopeRun
 		info = dict(fontInfoVersion3)
 		info["openTypeHheaCaretSlopeRun"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeHheaCaretOffset
 		info = dict(fontInfoVersion3)
 		info["openTypeHheaCaretOffset"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 
 	def testNameRead(self):
@@ -294,110 +294,110 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		info = dict(fontInfoVersion3)
 		info["openTypeNameDesigner"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeNameDesignerURL
 		info = dict(fontInfoVersion3)
 		info["openTypeNameDesignerURL"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeNameManufacturer
 		info = dict(fontInfoVersion3)
 		info["openTypeNameManufacturer"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeNameManufacturerURL
 		info = dict(fontInfoVersion3)
 		info["openTypeNameManufacturerURL"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeNameLicense
 		info = dict(fontInfoVersion3)
 		info["openTypeNameLicense"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeNameLicenseURL
 		info = dict(fontInfoVersion3)
 		info["openTypeNameLicenseURL"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeNameVersion
 		info = dict(fontInfoVersion3)
 		info["openTypeNameVersion"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeNameUniqueID
 		info = dict(fontInfoVersion3)
 		info["openTypeNameUniqueID"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeNameDescription
 		info = dict(fontInfoVersion3)
 		info["openTypeNameDescription"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeNamePreferredFamilyName
 		info = dict(fontInfoVersion3)
 		info["openTypeNamePreferredFamilyName"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeNamePreferredSubfamilyName
 		info = dict(fontInfoVersion3)
 		info["openTypeNamePreferredSubfamilyName"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeNameCompatibleFullName
 		info = dict(fontInfoVersion3)
 		info["openTypeNameCompatibleFullName"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeNameSampleText
 		info = dict(fontInfoVersion3)
 		info["openTypeNameSampleText"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeNameWWSFamilyName
 		info = dict(fontInfoVersion3)
 		info["openTypeNameWWSFamilyName"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeNameWWSSubfamilyName
 		info = dict(fontInfoVersion3)
 		info["openTypeNameWWSSubfamilyName"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeNameRecords
 		## not a list
 		info = dict(fontInfoVersion3)
 		info["openTypeNameRecords"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		## not a dict
 		info = dict(fontInfoVersion3)
 		info["openTypeNameRecords"] = ["abc"]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		## invalid dict structure
 		info = dict(fontInfoVersion3)
 		info["openTypeNameRecords"] = [dict(foo="bar")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		## incorrect keys
 		info = dict(fontInfoVersion3)
@@ -405,42 +405,42 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 			dict(nameID=1, platformID=1, encodingID=1, languageID=1, string="Name Record.", foo="bar")
 		]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["openTypeNameRecords"] = [
 			dict(platformID=1, encodingID=1, languageID=1, string="Name Record.")
 		]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["openTypeNameRecords"] = [
 			dict(nameID=1, encodingID=1, languageID=1, string="Name Record.")
 		]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["openTypeNameRecords"] = [
 			dict(nameID=1, platformID=1, languageID=1, string="Name Record.")
 		]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["openTypeNameRecords"] = [
 			dict(nameID=1, platformID=1, encodingID=1, string="Name Record.")
 		]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["openTypeNameRecords"] = [
 			dict(nameID=1, platformID=1, encodingID=1, languageID=1)
 		]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		## invalid values
 		info = dict(fontInfoVersion3)
@@ -448,35 +448,35 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 			dict(nameID="1", platformID=1, encodingID=1, languageID=1, string="Name Record.")
 		]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["openTypeNameRecords"] = [
 			dict(nameID=1, platformID="1", encodingID=1, languageID=1, string="Name Record.")
 		]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["openTypeNameRecords"] = [
 			dict(nameID=1, platformID=1, encodingID="1", languageID=1, string="Name Record.")
 		]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["openTypeNameRecords"] = [
 			dict(nameID=1, platformID=1, encodingID=1, languageID="1", string="Name Record.")
 		]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["openTypeNameRecords"] = [
 			dict(nameID=1, platformID=1, encodingID=1, languageID=1, string=1)
 		]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		## duplicate
 		info = dict(fontInfoVersion3)
@@ -485,7 +485,7 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 			dict(nameID=1, platformID=1, encodingID=1, languageID=1, string="Name Record.")
 		]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(TestInfoObject())
 
 	def testOS2Read(self):
@@ -494,226 +494,226 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2WidthClass"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		## out or range
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2WidthClass"] = 15
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2WeightClass
 		info = dict(fontInfoVersion3)
 		## not an int
 		info["openTypeOS2WeightClass"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		## out of range
 		info["openTypeOS2WeightClass"] = -50
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2Selection
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2Selection"] = [-1]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2VendorID
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2VendorID"] = 1234
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2Panose
 		## not an int
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2Panose"] = [0, 1, 2, 3, 4, 5, 6, 7, 8, str(9)]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		## negative
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2Panose"] = [0, 1, 2, 3, 4, 5, 6, 7, 8, -9]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		## too few values
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2Panose"] = [0, 1, 2, 3]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		## too many values
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2Panose"] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2FamilyClass
 		## not an int
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2FamilyClass"] = [1, str(1)]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		## too few values
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2FamilyClass"] = [1]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		## too many values
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2FamilyClass"] = [1, 1, 1]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		## out of range
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2FamilyClass"] = [1, 201]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2UnicodeRanges
 		## not an int
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2UnicodeRanges"] = ["0"]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		## out of range
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2UnicodeRanges"] = [-1]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2CodePageRanges
 		## not an int
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2CodePageRanges"] = ["0"]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		## out of range
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2CodePageRanges"] = [-1]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2TypoAscender
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2TypoAscender"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2TypoDescender
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2TypoDescender"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2TypoLineGap
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2TypoLineGap"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2WinAscent
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2WinAscent"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2WinAscent"] = -1
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2WinDescent
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2WinDescent"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2WinDescent"] = -1
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2Type
 		## not an int
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2Type"] = ["1"]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		## out of range
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2Type"] = [-1]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2SubscriptXSize
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2SubscriptXSize"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2SubscriptYSize
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2SubscriptYSize"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2SubscriptXOffset
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2SubscriptXOffset"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2SubscriptYOffset
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2SubscriptYOffset"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2SuperscriptXSize
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2SuperscriptXSize"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2SuperscriptYSize
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2SuperscriptYSize"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2SuperscriptXOffset
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2SuperscriptXOffset"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2SuperscriptYOffset
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2SuperscriptYOffset"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2StrikeoutSize
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2StrikeoutSize"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeOS2StrikeoutPosition
 		info = dict(fontInfoVersion3)
 		info["openTypeOS2StrikeoutPosition"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 
 	def testVheaRead(self):
@@ -721,37 +721,37 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		info = dict(fontInfoVersion3)
 		info["openTypeVheaVertTypoAscender"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeVheaVertTypoDescender
 		info = dict(fontInfoVersion3)
 		info["openTypeVheaVertTypoDescender"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeVheaVertTypoLineGap
 		info = dict(fontInfoVersion3)
 		info["openTypeVheaVertTypoLineGap"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeVheaCaretSlopeRise
 		info = dict(fontInfoVersion3)
 		info["openTypeVheaCaretSlopeRise"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeVheaCaretSlopeRun
 		info = dict(fontInfoVersion3)
 		info["openTypeVheaCaretSlopeRun"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# openTypeVheaCaretOffset
 		info = dict(fontInfoVersion3)
 		info["openTypeVheaCaretOffset"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 
 	def testFONDRead(self):
@@ -759,13 +759,13 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		info = dict(fontInfoVersion3)
 		info["macintoshFONDFamilyID"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# macintoshFONDName
 		info = dict(fontInfoVersion3)
 		info["macintoshFONDName"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 
 	def testPostscriptRead(self):
@@ -773,211 +773,211 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		info = dict(fontInfoVersion3)
 		info["postscriptFontName"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# postscriptFullName
 		info = dict(fontInfoVersion3)
 		info["postscriptFullName"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# postscriptSlantAngle
 		info = dict(fontInfoVersion3)
 		info["postscriptSlantAngle"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, info=TestInfoObject())
 		# postscriptUniqueID
 		info = dict(fontInfoVersion3)
 		info["postscriptUniqueID"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# postscriptUnderlineThickness
 		info = dict(fontInfoVersion3)
 		info["postscriptUnderlineThickness"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# postscriptUnderlinePosition
 		info = dict(fontInfoVersion3)
 		info["postscriptUnderlinePosition"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# postscriptIsFixedPitch
 		info = dict(fontInfoVersion3)
 		info["postscriptIsFixedPitch"] = 2
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# postscriptBlueValues
 		## not a list
 		info = dict(fontInfoVersion3)
 		info["postscriptBlueValues"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## uneven value count
 		info = dict(fontInfoVersion3)
 		info["postscriptBlueValues"] = [500]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## too many values
 		info = dict(fontInfoVersion3)
 		info["postscriptBlueValues"] = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# postscriptOtherBlues
 		## not a list
 		info = dict(fontInfoVersion3)
 		info["postscriptOtherBlues"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## uneven value count
 		info = dict(fontInfoVersion3)
 		info["postscriptOtherBlues"] = [500]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## too many values
 		info = dict(fontInfoVersion3)
 		info["postscriptOtherBlues"] = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# postscriptFamilyBlues
 		## not a list
 		info = dict(fontInfoVersion3)
 		info["postscriptFamilyBlues"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## uneven value count
 		info = dict(fontInfoVersion3)
 		info["postscriptFamilyBlues"] = [500]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## too many values
 		info = dict(fontInfoVersion3)
 		info["postscriptFamilyBlues"] = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# postscriptFamilyOtherBlues
 		## not a list
 		info = dict(fontInfoVersion3)
 		info["postscriptFamilyOtherBlues"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## uneven value count
 		info = dict(fontInfoVersion3)
 		info["postscriptFamilyOtherBlues"] = [500]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## too many values
 		info = dict(fontInfoVersion3)
 		info["postscriptFamilyOtherBlues"] = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# postscriptStemSnapH
 		## not list
 		info = dict(fontInfoVersion3)
 		info["postscriptStemSnapH"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## too many values
 		info = dict(fontInfoVersion3)
 		info["postscriptStemSnapH"] = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# postscriptStemSnapV
 		## not list
 		info = dict(fontInfoVersion3)
 		info["postscriptStemSnapV"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## too many values
 		info = dict(fontInfoVersion3)
 		info["postscriptStemSnapV"] = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# postscriptBlueFuzz
 		info = dict(fontInfoVersion3)
 		info["postscriptBlueFuzz"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# postscriptBlueShift
 		info = dict(fontInfoVersion3)
 		info["postscriptBlueShift"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# postscriptBlueScale
 		info = dict(fontInfoVersion3)
 		info["postscriptBlueScale"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# postscriptForceBold
 		info = dict(fontInfoVersion3)
 		info["postscriptForceBold"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# postscriptDefaultWidthX
 		info = dict(fontInfoVersion3)
 		info["postscriptDefaultWidthX"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# postscriptNominalWidthX
 		info = dict(fontInfoVersion3)
 		info["postscriptNominalWidthX"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# postscriptWeightName
 		info = dict(fontInfoVersion3)
 		info["postscriptWeightName"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# postscriptDefaultCharacter
 		info = dict(fontInfoVersion3)
 		info["postscriptDefaultCharacter"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# postscriptWindowsCharacterSet
 		info = dict(fontInfoVersion3)
 		info["postscriptWindowsCharacterSet"] = -1
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# macintoshFONDFamilyID
 		info = dict(fontInfoVersion3)
 		info["macintoshFONDFamilyID"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# macintoshFONDName
 		info = dict(fontInfoVersion3)
 		info["macintoshFONDName"] = 123
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 
 	def testWOFFRead(self):
@@ -985,551 +985,551 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		info = dict(fontInfoVersion3)
 		info["woffMajorVersion"] = 1.0
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["woffMajorVersion"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# woffMinorVersion
 		info = dict(fontInfoVersion3)
 		info["woffMinorVersion"] = 1.0
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["woffMinorVersion"] = "abc"
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# woffMetadataUniqueID
 		## none
 		info = dict(fontInfoVersion3)
 		del info["woffMetadataUniqueID"]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(TestInfoObject())
 		## not a dict
 		info = dict(fontInfoVersion3)
 		info["woffMetadataUniqueID"] = 1
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## unknown key
 		info = dict(fontInfoVersion3)
 		info["woffMetadataUniqueID"] = dict(id="foo", notTheRightKey=1)
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## no id
 		info = dict(fontInfoVersion3)
 		info["woffMetadataUniqueID"] = dict()
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## not a string for id
 		info = dict(fontInfoVersion3)
 		info["woffMetadataUniqueID"] = dict(id=1)
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## empty string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataUniqueID"] = dict(id="")
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(TestInfoObject())
 		# woffMetadataVendor
 		## no name
 		info = dict(fontInfoVersion3)
 		info["woffMetadataVendor"] = dict(url="foo")
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## name not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataVendor"] = dict(name=1, url="foo")
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## name an empty string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataVendor"] = dict(name="", url="foo")
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(TestInfoObject())
 		## no URL
 		info = dict(fontInfoVersion3)
 		info["woffMetadataVendor"] = dict(name="foo")
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(TestInfoObject())
 		## url not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataVendor"] = dict(name="foo", url=1)
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## url empty string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataVendor"] = dict(name="foo", url="")
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(TestInfoObject())
 		## have dir
 		info = dict(fontInfoVersion3)
 		info["woffMetadataVendor"] = dict(name="foo", url="bar", dir="ltr")
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["woffMetadataVendor"] = dict(name="foo", url="bar", dir="rtl")
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(TestInfoObject())
 		## dir not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataVendor"] = dict(name="foo", url="bar", dir=1)
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## dir not ltr or rtl
 		info = dict(fontInfoVersion3)
 		info["woffMetadataVendor"] = dict(name="foo", url="bar", dir="utd")
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## have class
 		info = dict(fontInfoVersion3)
 		info["woffMetadataVendor"] = {"name"  : "foo", "url" : "bar", "class" : "hello"}
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(TestInfoObject())
 		## class not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataVendor"] = {"name"  : "foo", "url" : "bar", "class" : 1}
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## class empty string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataVendor"] = {"name"  : "foo", "url" : "bar", "class" : ""}
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(TestInfoObject())
 		# woffMetadataCredits
 		## no credits attribute
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCredits"] = {}
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## unknown attribute
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCredits"] = dict(credits=[dict(name="foo")], notTheRightKey=1)
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## not a list
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCredits"] = dict(credits="abc")
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## no elements in credits
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCredits"] = dict(credits=[])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## credit not a dict
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCredits"] = dict(credits=["abc"])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## unknown key
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCredits"] = dict(credits=[dict(name="foo", notTheRightKey=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## no name
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCredits"] = dict(credits=[dict(url="foo")])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## name not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCredits"] = dict(credits=[dict(name=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## url not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCredits"] = dict(credits=[dict(name="foo", url=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## role not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCredits"] = dict(credits=[dict(name="foo", role=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## dir not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCredits"] = dict(credits=[dict(name="foo", dir=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## dir not ltr or rtl
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCredits"] = dict(credits=[dict(name="foo", dir="utd")])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## class not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCredits"] = dict(credits=[{"name"  : "foo", "class" : 1}])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# woffMetadataDescription
 		## no url
 		info = dict(fontInfoVersion3)
 		info["woffMetadataDescription"] = dict(text=[dict(text="foo")])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(TestInfoObject())
 		## url not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataDescription"] = dict(text=[dict(text="foo")], url=1)
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## no text
 		info = dict(fontInfoVersion3)
 		info["woffMetadataDescription"] = dict(url="foo")
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## text not a list
 		info = dict(fontInfoVersion3)
 		info["woffMetadataDescription"] = dict(text="abc")
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## text item not a dict
 		info = dict(fontInfoVersion3)
 		info["woffMetadataDescription"] = dict(text=["abc"])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## text item unknown key
 		info = dict(fontInfoVersion3)
 		info["woffMetadataDescription"] = dict(text=[dict(text="foo", notTheRightKey=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## text item missing text
 		info = dict(fontInfoVersion3)
 		info["woffMetadataDescription"] = dict(text=[dict(language="foo")])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## text not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataDescription"] = dict(text=[dict(text=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## url not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataDescription"] = dict(text=[dict(text="foo", url=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## language not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataDescription"] = dict(text=[dict(text="foo", language=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## dir not ltr or rtl
 		info = dict(fontInfoVersion3)
 		info["woffMetadataDescription"] = dict(text=[dict(text="foo", dir="utd")])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## class not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataDescription"] = dict(text=[{"text"  : "foo", "class" : 1}])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# woffMetadataLicense
 		## no url
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicense"] = dict(text=[dict(text="foo")])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(TestInfoObject())
 		## url not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicense"] = dict(text=[dict(text="foo")], url=1)
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## id not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicense"] = dict(text=[dict(text="foo")], id=1)
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## no text
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicense"] = dict(url="foo")
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(TestInfoObject())
 		## text not a list
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicense"] = dict(text="abc")
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## text item not a dict
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicense"] = dict(text=["abc"])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## text item unknown key
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicense"] = dict(text=[dict(text="foo", notTheRightKey=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## text item missing text
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicense"] = dict(text=[dict(language="foo")])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## text not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicense"] = dict(text=[dict(text=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## url not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicense"] = dict(text=[dict(text="foo", url=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## language not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicense"] = dict(text=[dict(text="foo", language=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## dir not ltr or rtl
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicense"] = dict(text=[dict(text="foo", dir="utd")])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## class not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicense"] = dict(text=[{"text"  : "foo", "class" : 1}])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# woffMetadataCopyright
 		## unknown attribute
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCopyright"] = dict(text=[dict(text="foo")], notTheRightKey=1)
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## no text
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCopyright"] = dict()
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## text not a list
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCopyright"] = dict(text="abc")
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## text item not a dict
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCopyright"] = dict(text=["abc"])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## text item unknown key
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCopyright"] = dict(text=[dict(text="foo", notTheRightKey=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## text item missing text
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCopyright"] = dict(text=[dict(language="foo")])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## text not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCopyright"] = dict(text=[dict(text=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## url not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCopyright"] = dict(text=[dict(text="foo", url=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## language not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCopyright"] = dict(text=[dict(text="foo", language=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## dir not ltr or rtl
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCopyright"] = dict(text=[dict(text="foo", dir="utd")])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## class not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataCopyright"] = dict(text=[{"text"  : "foo", "class" : 1}])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# woffMetadataTrademark
 		## unknown attribute
 		info = dict(fontInfoVersion3)
 		info["woffMetadataTrademark"] = dict(text=[dict(text="foo")], notTheRightKey=1)
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## no text
 		info = dict(fontInfoVersion3)
 		info["woffMetadataTrademark"] = dict()
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## text not a list
 		info = dict(fontInfoVersion3)
 		info["woffMetadataTrademark"] = dict(text="abc")
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## text item not a dict
 		info = dict(fontInfoVersion3)
 		info["woffMetadataTrademark"] = dict(text=["abc"])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## text item unknown key
 		info = dict(fontInfoVersion3)
 		info["woffMetadataTrademark"] = dict(text=[dict(text="foo", notTheRightKey=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## text item missing text
 		info = dict(fontInfoVersion3)
 		info["woffMetadataTrademark"] = dict(text=[dict(language="foo")])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## text not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataTrademark"] = dict(text=[dict(text=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## url not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataTrademark"] = dict(text=[dict(text="foo", url=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## language not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataTrademark"] = dict(text=[dict(text="foo", language=1)])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## dir not ltr or rtl
 		info = dict(fontInfoVersion3)
 		info["woffMetadataTrademark"] = dict(text=[dict(text="foo", dir="utd")])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## class not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataTrademark"] = dict(text=[{"text"  : "foo", "class" : 1}])
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# woffMetadataLicensee
 		## no name
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicensee"] = dict()
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## unknown attribute
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicensee"] = dict(name="foo", notTheRightKey=1)
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## name not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicensee"] = dict(name=1)
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## dir options
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicensee"] = dict(name="foo", dir="ltr")
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicensee"] = dict(name="foo", dir="rtl")
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(TestInfoObject())
 		## dir not ltr or rtl
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicensee"] = dict(name="foo", dir="utd")
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## have class
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicensee"] = {"name" : "foo", "class" : "hello"}
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(TestInfoObject())
 		## class not a string
 		info = dict(fontInfoVersion3)
 		info["woffMetadataLicensee"] = {"name" : "foo", "class" : 1}
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 
 	def testGuidelinesRead(self):
@@ -1538,159 +1538,159 @@ class ReadFontInfoVersion3TestCase(unittest.TestCase):
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x="1")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# y
 		## not an int or float
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(y="1")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# angle
 		## < 0
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, y=0, angle=-1)]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## > 360
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, y=0, angle=361)]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# name
 		## not a string
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, name=1)]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# color
 		## not a string
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color=1)]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## not enough commas
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color="1 0, 0, 0")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color="1 0 0, 0")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color="1 0 0 0")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## not enough parts
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color=", 0, 0, 0")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color="1, , 0, 0")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color="1, 0, , 0")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color="1, 0, 0, ")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color=", , , ")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## not a number in all positions
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color="r, 1, 1, 1")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color="1, g, 1, 1")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color="1, 1, b, 1")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color="1, 1, 1, a")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## too many parts
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color="1, 0, 0, 0, 0")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## < 0 in each position
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color="-1, 0, 0, 0")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color="0, -1, 0, 0")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color="0, 0, -1, 0")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color="0, 0, 0, -1")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		## > 1 in each position
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color="2, 0, 0, 0")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color="0, 2, 0, 0")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color="0, 0, 2, 0")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, color="0, 0, 0, 2")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 		# identifier
 		## duplicate
 		info = dict(fontInfoVersion3)
 		info["guidelines"] = [dict(x=0, identifier="guide1"), dict(y=0, identifier="guide1")]
 		self._writeInfoToPlist(info)
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		self.assertRaises(UFOLibError, reader.readInfo, TestInfoObject())
 
 
@@ -3418,18 +3418,18 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 			metaInfo=dict(creator="test", formatVersion=1),
 			layerContents=dict()
 		)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		reader.getGlyphSet()
 		# UFO 2
 		self.makeUFO(
 			metaInfo=dict(creator="test", formatVersion=2),
 			layerContents=dict()
 		)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		reader.getGlyphSet()
 		# UFO 3
 		self.makeUFO()
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		reader.getGlyphSet()
 
 	# missing layer contents
@@ -3438,7 +3438,7 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		self.makeUFO()
 		path = os.path.join(self.ufoPath, "layercontents.plist")
 		os.remove(path)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		self.assertRaises(UFOLibError, reader.getGlyphSet)
 
 	# layer contents invalid format
@@ -3450,7 +3450,7 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		os.remove(path)
 		with open(path, "w") as f:
 			f.write("test")
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		self.assertRaises(UFOLibError, reader.getGlyphSet)
 		# dict
 		self.makeUFO()
@@ -3463,7 +3463,7 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		}
 		with open(path, "wb") as f:
 			writePlist(layerContents, f)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		self.assertRaises(UFOLibError, reader.getGlyphSet)
 
 	# layer contents invalid name format
@@ -3479,7 +3479,7 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		]
 		with open(path, "wb") as f:
 			writePlist(layerContents, f)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		self.assertRaises(UFOLibError, reader.getGlyphSet)
 
 	# layer contents invalid directory format
@@ -3495,7 +3495,7 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		]
 		with open(path, "wb") as f:
 			writePlist(layerContents, f)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		self.assertRaises(UFOLibError, reader.getGlyphSet)
 
 	# directory listed in contents not on disk
@@ -3511,7 +3511,7 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		]
 		with open(path, "wb") as f:
 			writePlist(layerContents, f)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		self.assertRaises(UFOLibError, reader.getGlyphSet)
 
 	# # directory on disk not listed in contents
@@ -3527,7 +3527,7 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 	# 	]
 	# 	with open(path, "wb") as f:
 	# 		writePlist(layerContents, f)
-	# 	reader = UFOReader(self.ufoPath)
+	# 	reader = UFOReader(self.ufoPath, validate=True)
 	# 	with self.assertRaises(UFOLibError):
 	# 		reader.getGlyphSet()
 
@@ -3543,7 +3543,7 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		]
 		with open(path, "wb") as f:
 			writePlist(layerContents, f)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		self.assertRaises(UFOLibError, reader.getGlyphSet)
 
 	# duplicate layer name
@@ -3559,7 +3559,7 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		]
 		with open(path, "wb") as f:
 			writePlist(layerContents, f)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		self.assertRaises(UFOLibError, reader.getGlyphSet)
 
 	# directory referenced by two layer names
@@ -3575,7 +3575,7 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		]
 		with open(path, "wb") as f:
 			writePlist(layerContents, f)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		self.assertRaises(UFOLibError, reader.getGlyphSet)
 
 	# default without a name
@@ -3592,7 +3592,7 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		]
 		with open(path, "wb") as f:
 			writePlist(layerContents, f)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		reader.getGlyphSet()
 
 	# default with a name
@@ -3610,7 +3610,7 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		expected = layerContents[0][0]
 		with open(path, "wb") as f:
 			writePlist(layerContents, f)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		result = reader.getDefaultLayerName()
 		self.assertEqual(expected, result)
 		# get the glyph set
@@ -3624,7 +3624,7 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		]
 		with open(path, "wb") as f:
 			writePlist(layerContents, f)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		reader.getGlyphSet(expected)
 
 	# layer order
@@ -3641,7 +3641,7 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		expected = [name for (name, directory) in layerContents]
 		with open(path, "wb") as f:
 			writePlist(layerContents, f)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		result = reader.getLayerNames()
 		self.assertEqual(expected, result)
 		self.makeUFO()
@@ -3655,7 +3655,7 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		expected = [name for (name, directory) in layerContents]
 		with open(path, "wb") as f:
 			writePlist(layerContents, f)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		result = reader.getLayerNames()
 		self.assertEqual(expected, result)
 		self.makeUFO()
@@ -3669,7 +3669,7 @@ class UFO3ReadLayersTestCase(unittest.TestCase):
 		expected = [name for (name, directory) in layerContents]
 		with open(path, "wb") as f:
 			writePlist(layerContents, f)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		result = reader.getLayerNames()
 		self.assertEqual(expected, result)
 
@@ -4071,7 +4071,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 
 	# rename unknown layer
 
-	def testRenameLayerDuplicateName(self):
+	def testRenameLayerUnknownName(self):
 		self.makeUFO()
 		writer = UFOWriter(self.ufoPath)
 		self.assertRaises(UFOLibError, writer.renameGlyphSet, "does not exist", "layer 2")
@@ -4343,7 +4343,7 @@ class UFO3ReadLayerInfoTestCase(unittest.TestCase):
 
 	def testValidLayerInfo(self):
 		self.makeUFO()
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		info = TestLayerInfoObject()
 		glyphSet.readLayerInfo(info)
@@ -4357,7 +4357,7 @@ class UFO3ReadLayerInfoTestCase(unittest.TestCase):
 		path = os.path.join(self.ufoPath, "glyphs", "layerinfo.plist")
 		os.remove(path)
 		# read
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		info = TestLayerInfoObject()
 		glyphSet.readLayerInfo(info)
@@ -4372,7 +4372,7 @@ class UFO3ReadLayerInfoTestCase(unittest.TestCase):
 		with open(path, "w") as f:
 			f.write("test")
 		# read
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		info = TestLayerInfoObject()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, info)
@@ -4384,7 +4384,7 @@ class UFO3ReadLayerInfoTestCase(unittest.TestCase):
 		with open(path, "wb") as f:
 			writePlist(info, f)
 		# read
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		info = TestLayerInfoObject()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, info)
@@ -4394,139 +4394,139 @@ class UFO3ReadLayerInfoTestCase(unittest.TestCase):
 		info = {}
 		info["color"] = 1
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		## not enough commas
 		info = {}
 		info["color"] = "1 0, 0, 0"
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		info = {}
 		info["color"] = "1 0 0, 0"
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		info = {}
 		info["color"] = "1 0 0 0"
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		## not enough parts
 		info = {}
 		info["color"] = ", 0, 0, 0"
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		info = {}
 		info["color"] = "1, , 0, 0"
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		info = {}
 		info["color"] = "1, 0, , 0"
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		info = {}
 		info["color"] = "1, 0, 0, "
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		info = {}
 		info["color"] = ", , , "
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		## not a number in all positions
 		info = {}
 		info["color"] = "r, 1, 1, 1"
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		info = {}
 		info["color"] = "1, g, 1, 1"
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		info = {}
 		info["color"] = "1, 1, b, 1"
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		info = {}
 		info["color"] = "1, 1, 1, a"
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		## too many parts
 		info = {}
 		info["color"] = "1, 0, 0, 0, 0"
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		## < 0 in each position
 		info = {}
 		info["color"] = "-1, 0, 0, 0"
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		info = {}
 		info["color"] = "0, -1, 0, 0"
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		info = {}
 		info["color"] = "0, 0, -1, 0"
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		info = {}
 		info["color"] = "0, 0, 0, -1"
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		## > 1 in each position
 		info = {}
 		info["color"] = "2, 0, 0, 0"
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		info = {}
 		info["color"] = "0, 2, 0, 0"
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		info = {}
 		info["color"] = "0, 0, 2, 0"
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 		info = {}
 		info["color"] = "0, 0, 0, 2"
 		self.makeUFO(layerInfo=info)
-		reader = UFOReader(self.ufoPath)
+		reader = UFOReader(self.ufoPath, validate=True)
 		glyphSet = reader.getGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.readLayerInfo, TestLayerInfoObject())
 
