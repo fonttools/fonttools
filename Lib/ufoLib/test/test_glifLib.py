@@ -23,8 +23,8 @@ class GlyphSetTests(unittest.TestCase):
 		import difflib
 		srcDir = GLYPHSETDIR
 		dstDir = self.dstDir
-		src = GlyphSet(srcDir, ufoFormatVersion=2)
-		dst = GlyphSet(dstDir, ufoFormatVersion=2)
+		src = GlyphSet(srcDir, ufoFormatVersion=2, validateRead=True, validateWrite=True)
+		dst = GlyphSet(dstDir, ufoFormatVersion=2, validateRead=True, validateWrite=True)
 		for glyphName in src.keys():
 			g = src[glyphName]
 			g.drawPoints(None)  # load attrs
@@ -49,13 +49,13 @@ class GlyphSetTests(unittest.TestCase):
 				"%s.glif file differs after round tripping" % glyphName)
 
 	def testRebuildContents(self):
-		gset = GlyphSet(GLYPHSETDIR)
+		gset = GlyphSet(GLYPHSETDIR, validateRead=True, validateWrite=True)
 		contents = gset.contents
 		gset.rebuildContents()
 		self.assertEqual(contents, gset.contents)
 
 	def testReverseContents(self):
-		gset = GlyphSet(GLYPHSETDIR)
+		gset = GlyphSet(GLYPHSETDIR, validateRead=True, validateWrite=True)
 		d = {}
 		for k, v in gset.getReverseContents().items():
 			d[v] = k
@@ -65,8 +65,8 @@ class GlyphSetTests(unittest.TestCase):
 		self.assertEqual(d, org)
 
 	def testReverseContents2(self):
-		src = GlyphSet(GLYPHSETDIR)
-		dst = GlyphSet(self.dstDir)
+		src = GlyphSet(GLYPHSETDIR, validateRead=True, validateWrite=True)
+		dst = GlyphSet(self.dstDir, validateRead=True, validateWrite=True)
 		dstMap = dst.getReverseContents()
 		self.assertEqual(dstMap, {})
 		for glyphName in src.keys():
@@ -83,8 +83,8 @@ class GlyphSetTests(unittest.TestCase):
 	def testCustomFileNamingScheme(self):
 		def myGlyphNameToFileName(glyphName, glyphSet):
 			return "prefix" + glyphNameToFileName(glyphName, glyphSet)
-		src = GlyphSet(GLYPHSETDIR)
-		dst = GlyphSet(self.dstDir, myGlyphNameToFileName)
+		src = GlyphSet(GLYPHSETDIR, validateRead=True, validateWrite=True)
+		dst = GlyphSet(self.dstDir, myGlyphNameToFileName, validateRead=True, validateWrite=True)
 		for glyphName in src.keys():
 			g = src[glyphName]
 			g.drawPoints(None)  # load attrs
@@ -95,7 +95,7 @@ class GlyphSetTests(unittest.TestCase):
 		self.assertEqual(d, dst.contents)
 
 	def testGetUnicodes(self):
-		src = GlyphSet(GLYPHSETDIR)
+		src = GlyphSet(GLYPHSETDIR, validateRead=True, validateWrite=True)
 		unicodes = src.getUnicodes()
 		for glyphName in src.keys():
 			g = src[glyphName]
