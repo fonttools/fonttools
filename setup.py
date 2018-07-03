@@ -166,6 +166,7 @@ setup_params = dict(
 	],
 	install_requires=[
 		"fonttools>=3.1.2",
+		"lxml>=4.0",
 	],
 	cmdclass={
 		"release": release,
