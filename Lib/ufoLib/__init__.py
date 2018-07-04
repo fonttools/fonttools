@@ -128,9 +128,9 @@ class UFOReader(object):
 		if not os.path.exists(path):
 			raise UFOLibError("The specified UFO doesn't exist.")
 		self._path = path
+		self._validate = validate
 		self.readMetaInfo(validate=validate)
 		self._upConvertedKerningData = None
-		self._validate = validate
 
 	# properties
 
