@@ -108,7 +108,7 @@ class GlyphSet(object):
 
 	glyphClass = Glyph
 
-	def __init__(self, dirName, glyphNameToFileNameFunc=None, ufoFormatVersion=3, validateRead=False, validateWrite=True):
+	def __init__(self, dirName, glyphNameToFileNameFunc=None, ufoFormatVersion=3, validateRead=True, validateWrite=True):
 		"""
 		'dirName' should be a path to an existing directory.
 
@@ -118,7 +118,7 @@ class GlyphSet(object):
 		(including the .glif extension). The glyphNameToFileName function
 		is called whenever a file name is created for a given glyph name.
 
-		``validateRead`` will validate read operations. It's default is ``False``.
+		``validateRead`` will validate read operations. It's default is ``True``.
 		``validateWrite`` will validate write operations. It's default is ``True``.
 		"""
 		self.dirName = dirName
@@ -522,7 +522,7 @@ def glyphNameToFileName(glyphName, existingFileNames):
 # GLIF To and From String
 # -----------------------
 
-def readGlyphFromString(aString, glyphObject=None, pointPen=None, formatVersions=(1, 2), validate=False):
+def readGlyphFromString(aString, glyphObject=None, pointPen=None, formatVersions=(1, 2), validate=True):
 	"""
 	Read .glif data from a string into a glyph object.
 
@@ -554,7 +554,7 @@ def readGlyphFromString(aString, glyphObject=None, pointPen=None, formatVersions
 	The formatVersions argument defined the GLIF format versions
 	that are allowed to be read.
 
-	``validate`` will validate the read data. It is set to ``False`` by default.
+	``validate`` will validate the read data. It is set to ``True`` by default.
 	"""
 	tree = _glifTreeFromString(aString)
 	_readGlyphFromTree(tree, glyphObject, pointPen, formatVersions=formatVersions, validate=validate)
@@ -848,7 +848,7 @@ def _glifTreeFromString(aString):
 		raise GlifLibError("Invalid GLIF structure.")
 	return root
 
-def _readGlyphFromTree(tree, glyphObject=None, pointPen=None, formatVersions=(1, 2), validate=False):
+def _readGlyphFromTree(tree, glyphObject=None, pointPen=None, formatVersions=(1, 2), validate=True):
 	# check the format version
 	formatVersion = tree.get("format")
 	if validate and formatVersion is None:
@@ -1220,7 +1220,7 @@ def _buildOutlineComponentFormat2(pen, component, identifiers, validate):
 
 # all formats
 
-def _validateAndMassagePointStructures(contour, pointAttributes, openContourOffCurveLeniency=False, validate=False):
+def _validateAndMassagePointStructures(contour, pointAttributes, openContourOffCurveLeniency=False, validate=True):
 	if not len(contour):
 		return
 	# store some data for later validation
