@@ -118,8 +118,8 @@ class GlyphSet(object):
 		(including the .glif extension). The glyphNameToFileName function
 		is called whenever a file name is created for a given glyph name.
 
-		``validateRead`` will validate read operations. It's default is ``True``.
-		``validateWrite`` will validate write operations. It's default is ``True``.
+		``validateRead`` will validate read operations. Its default is ``True``.
+		``validateWrite`` will validate write operations. Its default is ``True``.
 		"""
 		self.dirName = dirName
 		if ufoFormatVersion not in supportedUFOFormatVersions:
