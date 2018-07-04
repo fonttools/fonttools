@@ -603,6 +603,8 @@ class UFOReader(object):
 				valid, error = pngValidator(path=p)
 				if valid:
 					result.append(fileName)
+			else:
+				result.append(fileName)
 		return result
 
 	def readImage(self, fileName, validate=None):
