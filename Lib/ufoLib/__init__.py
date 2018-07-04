@@ -120,11 +120,11 @@ class UFOReader(object):
 	"""
 	Read the various components of the .ufo.
 
-	By default it will not validate the read data. Set ``validate`` to
-	``True`` to validate data.
+	By default read data is validated. Set ``validate`` to
+	``False`` to not validate the data.
 	"""
 
-	def __init__(self, path, validate=False):
+	def __init__(self, path, validate=True):
 		if not os.path.exists(path):
 			raise UFOLibError("The specified UFO doesn't exist.")
 		self._path = path
