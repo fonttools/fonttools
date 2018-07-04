@@ -128,9 +128,9 @@ class UFOReader(object):
 		if not os.path.exists(path):
 			raise UFOLibError("The specified UFO doesn't exist.")
 		self._path = path
+		self._validate = validate
 		self.readMetaInfo(validate=validate)
 		self._upConvertedKerningData = None
-		self._validate = validate
 
 	# properties
 
@@ -603,6 +603,8 @@ class UFOReader(object):
 				valid, error = pngValidator(path=p)
 				if valid:
 					result.append(fileName)
+			else:
+				result.append(fileName)
 		return result
 
 	def readImage(self, fileName, validate=None):
