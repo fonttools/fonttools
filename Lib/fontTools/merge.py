@@ -19,9 +19,7 @@ import sys
 import time
 import operator
 import logging
-import compreffor
 import os
-import tempfile
 
 
 log = logging.getLogger("fontTools.merge")
@@ -1009,23 +1007,22 @@ class Merger(object):
 		cffTables = []
 		if allOTFs:
 			for font in fonts:
-				compreffor.decompress(font)
-				cffTables.append(font.get('CFF '))
-		# 	cffTables = [font.get('CFF ') for font in fonts]
-		# 	desubr_cffTables = []
-		# 	for cff in cffTables:
-		# 		# Desubroutinize
-		# 		cs = cff.cff[0].CharStrings
-		# 		for g in cff.cff[0].charset:
-		# 			c, _ = cs.getItemAndSelector(g)
-		# 			c.decompile()
-		# 			subrs = getattr(c.private, "Subrs", [])
-		# 			decompiler = _DesubroutinizingT2Decompiler(subrs, c.globalSubrs)
-		# 			decompiler.execute(c)
-		# 			c.program = c._desubroutinized
-		# 		desubr_cffTables.append(cff)
-		# else:
-		# 	desubr_cffTables = []
+				cffTable = font.get('CFF ')
+				# Desubroutinize
+				cs = cffTable.cff[0].CharStrings
+				for g in cffTable.cff[0].charset:
+					c, _ = cs.getItemAndSelector(g)
+					c.decompile()
+					subrs = getattr(c.private, "Subrs", [])
+					decompiler = _DesubroutinizingT2Decompiler(subrs, c.globalSubrs)
+					decompiler.execute(c)
+					c.program = c._desubroutinized
+
+		
+				cffTable.cff[0].Private.Subrs = cffLib.SubrsIndex()
+				cffTable.cff.GlobalSubrs = cffLib.GlobalSubrsIndex()
+
+				cffTables.append(cffTable)
 
 		glyphOrders = [font.getGlyphOrder() for font in fonts]
 
@@ -1088,23 +1085,23 @@ class Merger(object):
 		self._postMerge(mega)
 
 		# Compress CFF table
-		if mega.get('CFF '):
-			tempFile = tempfile.NamedTemporaryFile(suffix='.otf', delete=False)
-			mega.save(tempFile.name)
-			f = ttLib.TTFont(tempFile.name)
-			compreffor.compress(f)
-			mega = f
-			os.remove(tempFile.name)
-			log.info("FINAL final global subrs: %s." % len(mega.get('CFF ').cff.GlobalSubrs))
-			ls = None
-			try:
-				ls = mega.get('CFF ').cff[0].Private.Subrs
-			except:
-				pass
-			if ls is not None:
-				log.info("FINAL font local subrs: %s." % len(ls))
-			else:
-				log.info("FINAL font has no local subrs.")
+		# if mega.get('CFF '):
+		# 	tempFile = tempfile.NamedTemporaryFile(suffix='.otf', delete=False)
+		# 	mega.save(tempFile.name)
+		# 	f = ttLib.TTFont(tempFile.name)
+		# 	compreffor.compress(f)
+		# 	mega = f
+		# 	os.remove(tempFile.name)
+		# 	log.info("FINAL final global subrs: %s." % len(mega.get('CFF ').cff.GlobalSubrs))
+		# 	ls = None
+		# 	try:
+		# 		ls = mega.get('CFF ').cff[0].Private.Subrs
+		# 	except:
+		# 		pass
+		# 	if ls is not None:
+		# 		log.info("FINAL font local subrs: %s." % len(ls))
+		# 	else:
+		# 		log.info("FINAL font has no local subrs.")
 
 		return mega
 
