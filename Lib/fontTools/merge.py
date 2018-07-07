@@ -13,11 +13,15 @@ from fontTools.ttLib.tables import otTables, _h_e_a_d
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.misc.loggingTools import Timer
 from fontTools.pens.recordingPen import DecomposingRecordingPen
+from fontTools.subset import _DesubroutinizingT2Decompiler
 from functools import reduce
 import sys
 import time
 import operator
 import logging
+import compreffor
+import os
+import tempfile
 
 
 log = logging.getLogger("fontTools.merge")
@@ -205,7 +209,7 @@ ttLib.getTableClass('head').mergeMap = {
 	'macStyle': first,
 	'lowestRecPPEM': max,
 	'fontDirectionHint': lambda lst: 2,
-	'indexToLocFormat': recalculate,
+	'indexToLocFormat': equal,
 	'glyphDataFormat': equal,
 }
 
@@ -362,6 +366,76 @@ def _glyphsAreSame(glyphSet1, glyphSet2, glyph1, glyph2):
 	return (pen1.value == pen2.value and
 		g1.width == g2.width and
 		(not hasattr(g1, 'height') or g1.height == g2.height))
+
+@_add_method(ttLib.getTableClass('CFF '))
+def merge(self, m, tables):
+	newcff = tables[0]
+	newfont = newcff.cff[0]
+	private = newfont.Private
+	storedNamesStrings = []
+	glyphOrderStrings = []
+	for name in newfont.strings.strings:
+		if name not in newfont.getGlyphOrder():
+			storedNamesStrings.append(name)
+		else:
+			glyphOrderStrings.append(name)    
+	chrset = list(newfont.charset)
+	newcs = newfont.CharStrings
+	newcsi = newcs.charStringsIndex
+	log.info("Font 0 global subrs: %s." % len(newcff.cff.GlobalSubrs))
+	ls = None
+	try:
+		ls = newfont.Private.Subrs
+	except:
+		pass
+	if ls is not None:
+		log.info("Font 0 local subrs: %s." % str(len(ls)))
+	else:
+		log.info("Font 0 has no local subrs.")
+	log.info("FONT 0 CharStrings: %s, %s." % (str(len(newcs)), str(len(newcsi))))
+	baseIndex = len(newcsi)
+	for i, table in enumerate(tables[1:]):
+		font = table.cff[0] 
+		font.Private = private
+		for name in font.strings.strings:
+			if name in font.getGlyphOrder():
+				glyphOrderStrings.append(name)
+		cs = font.CharStrings
+		gs = table.cff.GlobalSubrs
+		log.info("Font %s global subrs: %s." % (str(i+1), str(len(gs))))
+		ls = None
+		try:
+			ls = font.Private.Subrs
+		except:
+			pass
+		if ls is not None:
+			log.info("Font %s global subrs: %s." % (str(i+1), str(len(ls))))
+		else:
+			log.info("Font %s has no local subrs." % str(i+1))
+		log.info("Font %s CharStrings: %s, %s." % (str(i+1), str(len(cs)), str(len(cs.charStringsIndex))))
+		if hasattr(font, "FDSelect"):
+			sel = font.FDSelect
+			log.info("HAS FDSelect %s." % str(sel))
+		else:
+			log.info("HAS NO FDSelect.")
+		numCharsExcludingNotDef = len(cs.charStringsIndex)-1
+		newcsi.items.extend([None] * numCharsExcludingNotDef)
+		j = baseIndex
+		for name,i in cs.charStrings.items():
+			if name in ['.notdef']:
+				continue
+			chrset.append(name)
+			newcs.charStrings[name] = j
+			ch = cs.charStringsIndex[i]
+			newcsi[j] = ch
+			j += 1
+		baseIndex = j
+
+	newfont.charset = chrset
+	newfont.numGlyphs = len(chrset)
+	newfont.strings.strings = glyphOrderStrings + storedNamesStrings
+
+	return newcff
 
 @_add_method(ttLib.getTableClass('cmap'))
 def merge(self, m, tables):
@@ -919,21 +993,58 @@ class Merger(object):
 		self.options = options
 
 	def merge(self, fontfiles):
-
-		mega = ttLib.TTFont()
+		# Take first input file sfntVersion
+		sfntVersion = ttLib.TTFont(fontfiles[0]).sfntVersion
+		mega = ttLib.TTFont(sfntVersion=sfntVersion)
 
 		#
 		# Settle on a mega glyph order.
 		#
 		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
+
+		
+		# Check if all fonts have CFF
+		allOTFs = all(cff is not None for cff in [font.get('CFF ') for font in fonts])
+
+		cffTables = []
+		if allOTFs:
+			for font in fonts:
+				compreffor.decompress(font)
+				cffTables.append(font.get('CFF '))
+		# 	cffTables = [font.get('CFF ') for font in fonts]
+		# 	desubr_cffTables = []
+		# 	for cff in cffTables:
+		# 		# Desubroutinize
+		# 		cs = cff.cff[0].CharStrings
+		# 		for g in cff.cff[0].charset:
+		# 			c, _ = cs.getItemAndSelector(g)
+		# 			c.decompile()
+		# 			subrs = getattr(c.private, "Subrs", [])
+		# 			decompiler = _DesubroutinizingT2Decompiler(subrs, c.globalSubrs)
+		# 			decompiler.execute(c)
+		# 			c.program = c._desubroutinized
+		# 		desubr_cffTables.append(cff)
+		# else:
+		# 	desubr_cffTables = []
+
 		glyphOrders = [font.getGlyphOrder() for font in fonts]
-		megaGlyphOrder = self._mergeGlyphOrders(glyphOrders)
+
+		# Handle glyphOrder merging and cff glyphs renaming together
+		megaGlyphOrder, newcffTables = self._mergeGlyphOrders(glyphOrders, cffTables)
+
 		# Reload fonts and set new glyph names on them.
 		# TODO Is it necessary to reload font?  I think it is.  At least
 		# it's safer, in case tables were loaded to provide glyph names.
 		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
-		for font,glyphOrder in zip(fonts, glyphOrders):
-			font.setGlyphOrder(glyphOrder)
+
+		if len(newcffTables) > 0:
+			for font, glyphOrder, cffTable in zip(fonts, glyphOrders, newcffTables):
+				font.setGlyphOrder(glyphOrder)
+				font['CFF '] = cffTable
+		else:
+			for font, glyphOrder in zip(fonts, glyphOrders):
+				font.setGlyphOrder(glyphOrder)
+
 		mega.setGlyphOrder(megaGlyphOrder)
 
 		for font in fonts:
@@ -945,13 +1056,16 @@ class Merger(object):
 		allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
 		allTags.remove('GlyphOrder')
 
-		# Make sure we process cmap before GSUB as we have a dependency there.
+		# Make sure we process CFF before cmap before GSUB as we have a dependency there.
 		if 'GSUB' in allTags:
 			allTags.remove('GSUB')
 			allTags = ['GSUB'] + list(allTags)
 		if 'cmap' in allTags:
 			allTags.remove('cmap')
 			allTags = ['cmap'] + list(allTags)
+		if 'CFF ' in allTags:
+			allTags.remove('CFF ')
+			allTags = ['CFF '] + list(allTags)
 
 		for tag in allTags:
 			with timer("merge '%s'" % tag):
@@ -973,21 +1087,74 @@ class Merger(object):
 
 		self._postMerge(mega)
 
+		# Compress CFF table
+		if mega.get('CFF '):
+			tempFile = tempfile.NamedTemporaryFile(suffix='.otf', delete=False)
+			mega.save(tempFile.name)
+			f = ttLib.TTFont(tempFile.name)
+			compreffor.compress(f)
+			mega = f
+			os.remove(tempFile.name)
+			log.info("FINAL final global subrs: %s." % len(mega.get('CFF ').cff.GlobalSubrs))
+			ls = None
+			try:
+				ls = mega.get('CFF ').cff[0].Private.Subrs
+			except:
+				pass
+			if ls is not None:
+				log.info("FINAL font local subrs: %s." % len(ls))
+			else:
+				log.info("FINAL font has no local subrs.")
+
 		return mega
 
-	def _mergeGlyphOrders(self, glyphOrders):
+	def _mergeGlyphOrders(self, glyphOrders, cffTables):
 		"""Modifies passed-in glyphOrders to reflect new glyph names.
 		Returns glyphOrder for the merged font."""
 		# Simply append font index to the glyph name for now.
 		# TODO Even this simplistic numbering can result in conflicts.
 		# But then again, we have to improve this soon anyway.
+		
+		newcffTables = []
+		# If we deal with CFF tables,
+		# rename topDictIndex glyph names
+		for n,cffTable in enumerate(cffTables):
+			td = cffTable.cff.topDictIndex[0]
+			d = {}
+			for i, (glyphName, v) in enumerate(td.CharStrings.charStrings.items()):
+				if glyphName not in ['.notdef']:
+					glyphName += "#" + repr(n)
+				elif n > 0:
+					continue
+				d[glyphName] = v
+			cffTable.cff.topDictIndex[0].CharStrings.charStrings = d
+			newcffTables.append(cffTable)
+
 		mega = []
-		for n,glyphOrder in enumerate(glyphOrders):
-			for i,glyphName in enumerate(glyphOrder):
-				glyphName += "#" + repr(n)
-				glyphOrder[i] = glyphName
-				mega.append(glyphName)
-		return mega
+
+		# If we deal with CFF tables,
+		# make sure to keep .notdef as first glyph,
+		# we don't rename it, and we skip any additional .notdef
+		if len(cffTables) > 0:
+			for n,glyphOrder in enumerate(glyphOrders):
+				for i,glyphName in enumerate(glyphOrder):
+					if glyphName not in ['.notdef']:
+						glyphName += "#" + repr(n)
+					elif n > 0:
+						continue
+					glyphOrder[i] = glyphName
+					mega.append(glyphName)
+
+		# TTF fonts
+		else:
+			for n,glyphOrder in enumerate(glyphOrders):
+				for i,glyphName in enumerate(glyphOrder):
+					glyphName += "#" + repr(n)
+					glyphOrder[i] = glyphName
+					mega.append(glyphName)
+
+		return mega, newcffTables
+
 
 	def mergeObjects(self, returnTable, logic, tables):
 		# Right now we don't use self at all.  Will use in the future
