@@ -25,8 +25,9 @@ class TestGLIF2(unittest.TestCase):
 		glyph = Glyph()
 		exec(py, {"glyph" : glyph, "pointPen" : glyph})
 		glif = writeGlyphToString(glyph.name, glyphObject=glyph, drawPointsFunc=glyph.drawPoints, formatVersion=2, validate=True)
-		glif = "\n".join(glif.splitlines())
-		return glif
+		lines = iter(glif.splitlines())
+		next(lines) # discard the first line containing the xml declaration
+		return "\n".join(lines)
 
 	def glifToPy(self, glif):
 		glif = stripText(glif)
