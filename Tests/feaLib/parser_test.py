@@ -1562,10 +1562,6 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(langsys.language, "DEU ")
         self.assertRaisesRegex(
             FeatureLibError,
-            'For script "DFLT", the language must be "dflt"',
-            self.parse, "languagesystem DFLT DEU;")
-        self.assertRaisesRegex(
-            FeatureLibError,
             '"dflt" is not a valid script tag; use "DFLT" instead',
             self.parse, "languagesystem dflt dflt;")
         self.assertRaisesRegex(
