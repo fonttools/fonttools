@@ -50,6 +50,12 @@ class XMLWriter(object):
 		self._writeraw('<?xml version="1.0" encoding="UTF-8"?>')
 		self.newline()
 
+	def __enter__(self):
+		return self
+
+	def __exit__(self, exception_type, exception_value, traceback):
+		self.close()
+
 	def close(self):
 		if self._closeStream:
 			self.file.close()
