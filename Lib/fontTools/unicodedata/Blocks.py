@@ -4,8 +4,8 @@
 # Source: https://unicode.org/Public/UNIDATA/Blocks.txt
 # License: http://unicode.org/copyright.html#License
 #
-# Blocks-10.0.0.txt
-# Date: 2017-04-12, 17:30:00 GMT [KW]
+# Blocks-11.0.0.txt
+# Date: 2017-10-16, 24:39:00 GMT [KW]
 # © 2017 Unicode®, Inc.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
 #
@@ -81,7 +81,7 @@ RANGES = [
     0x1C00,  # .. 0x1C4F ; Lepcha
     0x1C50,  # .. 0x1C7F ; Ol Chiki
     0x1C80,  # .. 0x1C8F ; Cyrillic Extended-C
-    0x1C90,  # .. 0x1CBF ; No_Block
+    0x1C90,  # .. 0x1CBF ; Georgian Extended
     0x1CC0,  # .. 0x1CCF ; Sundanese Supplement
     0x1CD0,  # .. 0x1CFF ; Vedic Extensions
     0x1D00,  # .. 0x1D7F ; Phonetic Extensions
@@ -231,9 +231,13 @@ RANGES = [
     0x10C00,  # .. 0x10C4F ; Old Turkic
     0x10C50,  # .. 0x10C7F ; No_Block
     0x10C80,  # .. 0x10CFF ; Old Hungarian
-    0x10D00,  # .. 0x10E5F ; No_Block
+    0x10D00,  # .. 0x10D3F ; Hanifi Rohingya
+    0x10D40,  # .. 0x10E5F ; No_Block
     0x10E60,  # .. 0x10E7F ; Rumi Numeral Symbols
-    0x10E80,  # .. 0x10FFF ; No_Block
+    0x10E80,  # .. 0x10EFF ; No_Block
+    0x10F00,  # .. 0x10F2F ; Old Sogdian
+    0x10F30,  # .. 0x10F6F ; Sogdian
+    0x10F70,  # .. 0x10FFF ; No_Block
     0x11000,  # .. 0x1107F ; Brahmi
     0x11080,  # .. 0x110CF ; Kaithi
     0x110D0,  # .. 0x110FF ; Sora Sompeng
@@ -256,7 +260,9 @@ RANGES = [
     0x11680,  # .. 0x116CF ; Takri
     0x116D0,  # .. 0x116FF ; No_Block
     0x11700,  # .. 0x1173F ; Ahom
-    0x11740,  # .. 0x1189F ; No_Block
+    0x11740,  # .. 0x117FF ; No_Block
+    0x11800,  # .. 0x1184F ; Dogra
+    0x11850,  # .. 0x1189F ; No_Block
     0x118A0,  # .. 0x118FF ; Warang Citi
     0x11900,  # .. 0x119FF ; No_Block
     0x11A00,  # .. 0x11A4F ; Zanabazar Square
@@ -268,7 +274,10 @@ RANGES = [
     0x11C70,  # .. 0x11CBF ; Marchen
     0x11CC0,  # .. 0x11CFF ; No_Block
     0x11D00,  # .. 0x11D5F ; Masaram Gondi
-    0x11D60,  # .. 0x11FFF ; No_Block
+    0x11D60,  # .. 0x11DAF ; Gunjala Gondi
+    0x11DB0,  # .. 0x11EDF ; No_Block
+    0x11EE0,  # .. 0x11EFF ; Makasar
+    0x11F00,  # .. 0x11FFF ; No_Block
     0x12000,  # .. 0x123FF ; Cuneiform
     0x12400,  # .. 0x1247F ; Cuneiform Numbers and Punctuation
     0x12480,  # .. 0x1254F ; Early Dynastic Cuneiform
@@ -282,7 +291,9 @@ RANGES = [
     0x16A70,  # .. 0x16ACF ; No_Block
     0x16AD0,  # .. 0x16AFF ; Bassa Vah
     0x16B00,  # .. 0x16B8F ; Pahawh Hmong
-    0x16B90,  # .. 0x16EFF ; No_Block
+    0x16B90,  # .. 0x16E3F ; No_Block
+    0x16E40,  # .. 0x16E9F ; Medefaidrin
+    0x16EA0,  # .. 0x16EFF ; No_Block
     0x16F00,  # .. 0x16F9F ; Miao
     0x16FA0,  # .. 0x16FDF ; No_Block
     0x16FE0,  # .. 0x16FFF ; Ideographic Symbols and Punctuation
@@ -300,7 +311,8 @@ RANGES = [
     0x1D000,  # .. 0x1D0FF ; Byzantine Musical Symbols
     0x1D100,  # .. 0x1D1FF ; Musical Symbols
     0x1D200,  # .. 0x1D24F ; Ancient Greek Musical Notation
-    0x1D250,  # .. 0x1D2FF ; No_Block
+    0x1D250,  # .. 0x1D2DF ; No_Block
+    0x1D2E0,  # .. 0x1D2FF ; Mayan Numerals
     0x1D300,  # .. 0x1D35F ; Tai Xuan Jing Symbols
     0x1D360,  # .. 0x1D37F ; Counting Rod Numerals
     0x1D380,  # .. 0x1D3FF ; No_Block
@@ -312,7 +324,9 @@ RANGES = [
     0x1E800,  # .. 0x1E8DF ; Mende Kikakui
     0x1E8E0,  # .. 0x1E8FF ; No_Block
     0x1E900,  # .. 0x1E95F ; Adlam
-    0x1E960,  # .. 0x1EDFF ; No_Block
+    0x1E960,  # .. 0x1EC6F ; No_Block
+    0x1EC70,  # .. 0x1ECBF ; Indic Siyaq Numbers
+    0x1ECC0,  # .. 0x1EDFF ; No_Block
     0x1EE00,  # .. 0x1EEFF ; Arabic Mathematical Alphabetic Symbols
     0x1EF00,  # .. 0x1EFFF ; No_Block
     0x1F000,  # .. 0x1F02F ; Mahjong Tiles
@@ -328,7 +342,8 @@ RANGES = [
     0x1F780,  # .. 0x1F7FF ; Geometric Shapes Extended
     0x1F800,  # .. 0x1F8FF ; Supplemental Arrows-C
     0x1F900,  # .. 0x1F9FF ; Supplemental Symbols and Pictographs
-    0x1FA00,  # .. 0x1FFFF ; No_Block
+    0x1FA00,  # .. 0x1FA6F ; Chess Symbols
+    0x1FA70,  # .. 0x1FFFF ; No_Block
     0x20000,  # .. 0x2A6DF ; CJK Unified Ideographs Extension B
     0x2A6E0,  # .. 0x2A6FF ; No_Block
     0x2A700,  # .. 0x2B73F ; CJK Unified Ideographs Extension C
@@ -411,7 +426,7 @@ VALUES = [
     'Lepcha',                                          # 1C00..1C4F
     'Ol Chiki',                                        # 1C50..1C7F
     'Cyrillic Extended-C',                             # 1C80..1C8F
-    'No_Block',                                        # 1C90..1CBF
+    'Georgian Extended',                               # 1C90..1CBF
     'Sundanese Supplement',                            # 1CC0..1CCF
     'Vedic Extensions',                                # 1CD0..1CFF
     'Phonetic Extensions',                             # 1D00..1D7F
@@ -561,9 +576,13 @@ VALUES = [
     'Old Turkic',                                      # 10C00..10C4F
     'No_Block',                                        # 10C50..10C7F
     'Old Hungarian',                                   # 10C80..10CFF
-    'No_Block',                                        # 10D00..10E5F
+    'Hanifi Rohingya',                                 # 10D00..10D3F
+    'No_Block',                                        # 10D40..10E5F
     'Rumi Numeral Symbols',                            # 10E60..10E7F
-    'No_Block',                                        # 10E80..10FFF
+    'No_Block',                                        # 10E80..10EFF
+    'Old Sogdian',                                     # 10F00..10F2F
+    'Sogdian',                                         # 10F30..10F6F
+    'No_Block',                                        # 10F70..10FFF
     'Brahmi',                                          # 11000..1107F
     'Kaithi',                                          # 11080..110CF
     'Sora Sompeng',                                    # 110D0..110FF
@@ -586,7 +605,9 @@ VALUES = [
     'Takri',                                           # 11680..116CF
     'No_Block',                                        # 116D0..116FF
     'Ahom',                                            # 11700..1173F
-    'No_Block',                                        # 11740..1189F
+    'No_Block',                                        # 11740..117FF
+    'Dogra',                                           # 11800..1184F
+    'No_Block',                                        # 11850..1189F
     'Warang Citi',                                     # 118A0..118FF
     'No_Block',                                        # 11900..119FF
     'Zanabazar Square',                                # 11A00..11A4F
@@ -598,7 +619,10 @@ VALUES = [
     'Marchen',                                         # 11C70..11CBF
     'No_Block',                                        # 11CC0..11CFF
     'Masaram Gondi',                                   # 11D00..11D5F
-    'No_Block',                                        # 11D60..11FFF
+    'Gunjala Gondi',                                   # 11D60..11DAF
+    'No_Block',                                        # 11DB0..11EDF
+    'Makasar',                                         # 11EE0..11EFF
+    'No_Block',                                        # 11F00..11FFF
     'Cuneiform',                                       # 12000..123FF
     'Cuneiform Numbers and Punctuation',               # 12400..1247F
     'Early Dynastic Cuneiform',                        # 12480..1254F
@@ -612,7 +636,9 @@ VALUES = [
     'No_Block',                                        # 16A70..16ACF
     'Bassa Vah',                                       # 16AD0..16AFF
     'Pahawh Hmong',                                    # 16B00..16B8F
-    'No_Block',                                        # 16B90..16EFF
+    'No_Block',                                        # 16B90..16E3F
+    'Medefaidrin',                                     # 16E40..16E9F
+    'No_Block',                                        # 16EA0..16EFF
     'Miao',                                            # 16F00..16F9F
     'No_Block',                                        # 16FA0..16FDF
     'Ideographic Symbols and Punctuation',             # 16FE0..16FFF
@@ -630,7 +656,8 @@ VALUES = [
     'Byzantine Musical Symbols',                       # 1D000..1D0FF
     'Musical Symbols',                                 # 1D100..1D1FF
     'Ancient Greek Musical Notation',                  # 1D200..1D24F
-    'No_Block',                                        # 1D250..1D2FF
+    'No_Block',                                        # 1D250..1D2DF
+    'Mayan Numerals',                                  # 1D2E0..1D2FF
     'Tai Xuan Jing Symbols',                           # 1D300..1D35F
     'Counting Rod Numerals',                           # 1D360..1D37F
     'No_Block',                                        # 1D380..1D3FF
@@ -642,7 +669,9 @@ VALUES = [
     'Mende Kikakui',                                   # 1E800..1E8DF
     'No_Block',                                        # 1E8E0..1E8FF
     'Adlam',                                           # 1E900..1E95F
-    'No_Block',                                        # 1E960..1EDFF
+    'No_Block',                                        # 1E960..1EC6F
+    'Indic Siyaq Numbers',                             # 1EC70..1ECBF
+    'No_Block',                                        # 1ECC0..1EDFF
     'Arabic Mathematical Alphabetic Symbols',          # 1EE00..1EEFF
     'No_Block',                                        # 1EF00..1EFFF
     'Mahjong Tiles',                                   # 1F000..1F02F
@@ -658,7 +687,8 @@ VALUES = [
     'Geometric Shapes Extended',                       # 1F780..1F7FF
     'Supplemental Arrows-C',                           # 1F800..1F8FF
     'Supplemental Symbols and Pictographs',            # 1F900..1F9FF
-    'No_Block',                                        # 1FA00..1FFFF
+    'Chess Symbols',                                   # 1FA00..1FA6F
+    'No_Block',                                        # 1FA70..1FFFF
     'CJK Unified Ideographs Extension B',              # 20000..2A6DF
     'No_Block',                                        # 2A6E0..2A6FF
     'CJK Unified Ideographs Extension C',              # 2A700..2B73F
