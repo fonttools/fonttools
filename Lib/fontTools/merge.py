@@ -227,7 +227,7 @@ ttLib.getTableClass('head').mergeMap = {
 	'macStyle': first,
 	'lowestRecPPEM': max,
 	'fontDirectionHint': lambda lst: 2,
-	'indexToLocFormat': equal,
+	'indexToLocFormat': first,
 	'glyphDataFormat': equal,
 }
 
