@@ -403,9 +403,8 @@ def merge(self, m, tables):
 	newcsi = newcs.charStringsIndex
 	log.info("Font 0 global subrs: %s.", len(newcff.cff.GlobalSubrs))
 	ls = None
-	if hasattr(newfont, 'Private'):
-		if hasattr(newfont.Private, 'Subr'):
-			ls = newfont.Private.Subrs
+	if hasattr(newfont, 'Private') and hasattr(newfont.Private, 'Subr'):
+		ls = newfont.Private.Subrs
 	lenls = len(ls) if ls is not None else 0
 	log.info("Font 0 local subrs: %s.", lenls)
 	log.info("FONT 0 CharStrings: %s, %s.",(len(newcs), len(newcsi)))
@@ -421,9 +420,8 @@ def merge(self, m, tables):
 		gs = table.cff.GlobalSubrs
 		log.info("Font %s global subrs: %s." % (str(i+1), str(len(gs))))
 		ls = None
-		if hasattr(font, 'Private'):
-			if hasattr(font.Private, 'Subr'):
-				ls = font.Private.Subrs
+		if hasattr(font, 'Private') and hasattr(font.Private, 'Subr'):
+			ls = font.Private.Subrs
 		lenls = len(ls) if ls is not None else 0
 		log.info("Font %s global subrs: %s.", (i+1, lenls))
 		log.info("Font %s CharStrings: %s, %s.", (i+1, len(cs), len(cs.charStringsIndex)))
