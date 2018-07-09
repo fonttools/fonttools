@@ -24,6 +24,27 @@ from fontTools import subset
 log = logging.getLogger("fontTools.merge")
 timer = Timer(logger=logging.getLogger(__name__+".timer"), level=logging.INFO)
 
+def _desubtoutinize(otf):
+	# Desubroutinize with Subsetter (like compreffor does)
+	from io import BytesIO
+
+	stream = BytesIO()
+	otf.save(stream, reorderTables=False)
+	stream.flush()
+	stream.seek(0)
+	tmpfont = ttLib.TTFont(stream)
+
+	options = subset.Options()
+	options.desubroutinize = True
+	options.notdef_outline = True
+	subsetter = subset.Subsetter(options=options)
+	subsetter.populate(glyphs=tmpfont.getGlyphOrder())
+	subsetter.subset(tmpfont)
+	data = tmpfont['CFF '].compile(tmpfont)
+	table = ttLib.newTable('CFF ')
+	table.decompile(data, otf)
+	otf['CFF '] = table
+	tmpfont.close()
 
 def _add_method(*clazzes, **kwargs):
 	"""Returns a decorator function that adds a new method to one or
@@ -371,48 +392,44 @@ def merge(self, m, tables):
 	private = newfont.Private
 	storedNamesStrings = []
 	glyphOrderStrings = []
+	glyphOrder = set(newfont.getGlyphOrder())
 	for name in newfont.strings.strings:
-		if name not in newfont.getGlyphOrder():
+		if name not in glyphOrder:
 			storedNamesStrings.append(name)
 		else:
-			glyphOrderStrings.append(name)    
+			glyphOrderStrings.append(name)
 	chrset = list(newfont.charset)
 	newcs = newfont.CharStrings
 	newcsi = newcs.charStringsIndex
-	log.info("Font 0 global subrs: %s." % len(newcff.cff.GlobalSubrs))
+	log.info("Font 0 global subrs: %s.", len(newcff.cff.GlobalSubrs))
 	ls = None
-	try:
-		ls = newfont.Private.Subrs
-	except:
-		pass
-	if ls is not None:
-		log.info("Font 0 local subrs: %s." % str(len(ls)))
-	else:
-		log.info("Font 0 has no local subrs.")
-	log.info("FONT 0 CharStrings: %s, %s." % (str(len(newcs)), str(len(newcsi))))
+	if hasattr(newfont, 'Private'):
+		if hasattr(newfont.Private, 'Subr'):
+			ls = newfont.Private.Subrs
+	lenls = len(ls) if ls is not None else 0
+	log.info("Font 0 local subrs: %s.", lenls)
+	log.info("FONT 0 CharStrings: %s, %s.",(len(newcs), len(newcsi)))
 	baseIndex = len(newcsi)
 	for i, table in enumerate(tables[1:]):
 		font = table.cff[0] 
 		font.Private = private
+		fontGlyphOrder = set(font.getGlyphOrder())
 		for name in font.strings.strings:
-			if name in font.getGlyphOrder():
+			if name in fontGlyphOrder:
 				glyphOrderStrings.append(name)
 		cs = font.CharStrings
 		gs = table.cff.GlobalSubrs
 		log.info("Font %s global subrs: %s." % (str(i+1), str(len(gs))))
 		ls = None
-		try:
-			ls = font.Private.Subrs
-		except:
-			pass
-		if ls is not None:
-			log.info("Font %s global subrs: %s." % (str(i+1), str(len(ls))))
-		else:
-			log.info("Font %s has no local subrs." % str(i+1))
-		log.info("Font %s CharStrings: %s, %s." % (str(i+1), str(len(cs)), str(len(cs.charStringsIndex))))
+		if hasattr(font, 'Private'):
+			if hasattr(font.Private, 'Subr'):
+				ls = font.Private.Subrs
+		lenls = len(ls) if ls is not None else 0
+		log.info("Font %s global subrs: %s.", (i+1, lenls))
+		log.info("Font %s CharStrings: %s, %s.", (i+1, len(cs), len(cs.charStringsIndex)))
 		if hasattr(font, "FDSelect"):
 			sel = font.FDSelect
-			log.info("HAS FDSelect %s." % str(sel))
+			log.info("HAS FDSelect %s.", sel)
 		else:
 			log.info("HAS NO FDSelect.")
 		numCharsExcludingNotDef = len(cs.charStringsIndex)
@@ -999,33 +1016,13 @@ class Merger(object):
 
 		
 		# Check if all fonts have CFF
-		allOTFs = all(cff is not None for cff in [font.get('CFF ') for font in fonts])
+		allOTFs = all("CFF " in font for font in fonts)
 
 		cffTables = []
 		if allOTFs:
 			for font in fonts:
-				# Desubroutinize with Subsetter (like compreffor does)
-				from io import BytesIO
-
-				stream = BytesIO()
-				font.save(stream, reorderTables=False)
-				stream.flush()
-				stream.seek(0)
-				tmpfont = ttLib.TTFont(stream)
-
-				options = subset.Options()
-				options.desubroutinize = True
-				options.notdef_outline = True
-				subsetter = subset.Subsetter(options=options)
-				subsetter.populate(glyphs=tmpfont.getGlyphOrder())
-				subsetter.subset(tmpfont)
-				data = tmpfont['CFF '].compile(tmpfont)
-				table = ttLib.newTable('CFF ')
-				table.decompile(data, font)
-				font['CFF '] = table
-				cffTables.append(font.get('CFF '))
-				tmpfont.close()
-
+				_desubtoutinize(font)
+				cffTables.append(font['CFF '])
 
 		glyphOrders = [font.getGlyphOrder() for font in fonts]
 		
@@ -1035,7 +1032,7 @@ class Merger(object):
 		# Reload fonts and set new glyph names on them.
 		# TODO Is it necessary to reload font?  I think it is.  At least
 		# it's safer, in case tables were loaded to provide glyph names.
-		# fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
+		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
 
 		if len(cffTables):
 			for font, glyphOrder, cffTable in zip(fonts, glyphOrders, cffTables):
@@ -1056,7 +1053,7 @@ class Merger(object):
 		allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
 		allTags.remove('GlyphOrder')
 
-		# Make sure we process CFF before cmap before GSUB as we have a dependency there.
+		# Make sure we process CFF before cmap, and cmap before GSUB as we have a dependency there.
 		if 'GSUB' in allTags:
 			allTags.remove('GSUB')
 			allTags = ['GSUB'] + list(allTags)
@@ -1102,7 +1099,7 @@ class Merger(object):
 			td = cffTable.cff.topDictIndex[0]
 			d = {}
 			for i, (glyphName, v) in enumerate(td.CharStrings.charStrings.items()):
-				if glyphName not in ['.notdef']:
+				if glyphName != '.notdef':
 					glyphName += "#" + repr(n)
 				elif n > 0:
 					glyphName += "#" + repr(n)
@@ -1114,23 +1111,14 @@ class Merger(object):
 		# If we have CFF tables,
 		# make sure to keep .notdef as first glyph,
 		# don't rename it, and skip any additional .notdef
-		if len(cffTables):
-			for n,glyphOrder in enumerate(glyphOrders):
-				for i,glyphName in enumerate(glyphOrder):
-					if glyphName not in ['.notdef']:
-						glyphName += "#" + repr(n)
-					elif n > 0:
-						glyphName += "#" + repr(n)
-					glyphOrder[i] = glyphName
-					mega.append(glyphName)
-
-		# TTF fonts
-		else:
-			for n,glyphOrder in enumerate(glyphOrders):
-				for i,glyphName in enumerate(glyphOrder):
+		for n,glyphOrder in enumerate(glyphOrders):
+			for i,glyphName in enumerate(glyphOrder):
+				if glyphName != '.notdef':
 					glyphName += "#" + repr(n)
-					glyphOrder[i] = glyphName
-					mega.append(glyphName)
+				elif n > 0:
+					glyphName += "#" + repr(n)
+				glyphOrder[i] = glyphName
+				mega.append(glyphName)
 
 		return mega
 
