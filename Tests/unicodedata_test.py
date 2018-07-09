@@ -165,8 +165,9 @@ def test_script_extension():
 
     assert unicodedata.script_extension("\u0660") == {'Arab', 'Thaa'}
     assert unicodedata.script_extension("\u0964") == {
-        'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Mahj', 'Mlym',
-        'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'}
+        'Beng', 'Deva', 'Dogr', 'Gong', 'Gran', 'Gujr', 'Guru', 'Knda',
+        'Mahj', 'Mlym', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml',
+        'Telu', 'Tirh'}
 
 
 def test_script_name():
@@ -200,7 +201,8 @@ def test_block():
     assert unicodedata.block("\x00") == "Basic Latin"
     assert unicodedata.block("\x7F") == "Basic Latin"
     assert unicodedata.block("\x80") == "Latin-1 Supplement"
-    assert unicodedata.block("\u1c90") == "No_Block"
+    assert unicodedata.block("\u1c90") == "Georgian Extended"
+    assert unicodedata.block("\u0870") == "No_Block"
 
 
 def test_ot_tags_from_script():
