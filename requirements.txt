@@ -1,2 +1,2 @@
 fonttools==3.28.0
-lxml==4.2.1
+lxml==4.2.3
