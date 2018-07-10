@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import unittest
 from ufoLib.glifLib import GlifLibError, readGlyphFromString, writeGlyphToString
 from ufoLib.test.testSupport import Glyph, stripText
+from itertools import islice
 
 try:
 	basestring
@@ -25,8 +26,8 @@ class TestGLIF2(unittest.TestCase):
 		glyph = Glyph()
 		exec(py, {"glyph" : glyph, "pointPen" : glyph})
 		glif = writeGlyphToString(glyph.name, glyphObject=glyph, drawPointsFunc=glyph.drawPoints, formatVersion=2, validate=True)
-		glif = "\n".join(glif.splitlines())
-		return glif
+		# discard the first line containing the xml declaration
+		return "\n".join(islice(glif.splitlines(), 1, None))
 
 	def glifToPy(self, glif):
 		glif = stripText(glif)

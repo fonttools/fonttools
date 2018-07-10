@@ -16,23 +16,13 @@ import os
 from io import BytesIO, open
 from warnings import warn
 from collections import OrderedDict
-from fontTools.misc.py23 import tobytes, unicode
+from fontTools.misc.py23 import basestring, unicode
 from ufoLib.plistlib import PlistWriter, readPlist, writePlist
 from ufoLib.plistFromETree import readPlistFromTree
 from ufoLib.pointPen import AbstractPointPen, PointToSegmentPen
 from ufoLib.filenames import userNameToFileName
 from ufoLib.validators import isDictEnough, genericTypeValidator, colorValidator,\
 	guidelinesValidator, anchorsValidator, identifierValidator, imageValidator, glyphLibValidator
-
-try:
-	basestring
-except NameError:
-	basestring = str
-
-try:
-	unicode
-except NameError:
-	unicode = str
 
 from lxml import etree
 
@@ -388,7 +378,7 @@ class GlyphSet(object):
 		if validate is None:
 			validate = self._validateWrite
 		self._purgeCachedGLIF(glyphName)
-		data = writeGlyphToString(glyphName, glyphObject, drawPointsFunc, formatVersion=formatVersion, validate=validate)
+		data = _writeGlyphToBytes(glyphName, glyphObject, drawPointsFunc, formatVersion=formatVersion, validate=validate)
 		fileName = self.contents.get(glyphName)
 		if fileName is None:
 			if self._existingFileNames is None:
@@ -407,7 +397,7 @@ class GlyphSet(object):
 			if data == oldData:
 				return
 		with open(path, "wb") as f:
-			f.write(tobytes(data, encoding="utf-8"))
+			f.write(data)
 
 	def deleteGlyph(self, glyphName):
 		"""Permanently delete the glyph from the glyph set on disk. Will
@@ -560,34 +550,10 @@ def readGlyphFromString(aString, glyphObject=None, pointPen=None, formatVersions
 	_readGlyphFromTree(tree, glyphObject, pointPen, formatVersions=formatVersions, validate=validate)
 
 
-def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, formatVersion=2, validate=True):
-	"""
-	Return .glif data for a glyph as a UTF-8 encoded string.
-	The 'glyphObject' argument can be any kind of object (even None);
-	the writeGlyphToString() method will attempt to get the following
-	attributes from it:
-		"width"      the advance width of the glyph
-		"height"     the advance height of the glyph
-		"unicodes"   a list of unicode values for this glyph
-		"note"       a string
-		"lib"        a dictionary containing custom data
-		"image"      a dictionary containing image data
-		"guidelines" a list of guideline data dictionaries
-		"anchors"    a list of anchor data dictionaries
-
-	All attributes are optional: if 'glyphObject' doesn't
-	have the attribute, it will simply be skipped.
-
-	To write outline data to the .glif file, writeGlyphToString() needs
-	a function (any callable object actually) that will take one
-	argument: an object that conforms to the PointPen protocol.
-	The function will be called by writeGlyphToString(); it has to call the
-	proper PointPen methods to transfer the outline to the .glif file.
-
-	The GLIF format version can be specified with the formatVersion argument.
-
-	``validate`` will validate the written data. It is set to ``True`` by default.
-	"""
+def _writeGlyphToBytes(
+		glyphName, glyphObject=None, drawPointsFunc=None, writer=None,
+		formatVersion=2, validate=True):
+	"""Return .glif data for a glyph as a UTF-8 encoded bytes string."""
 	# start
 	if validate and not isinstance(glyphName, basestring):
 		raise GlifLibError("The glyph name is not properly formatted.")
@@ -627,9 +593,49 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, formatV
 	if getattr(glyphObject, "lib", None):
 		_writeLib(glyphObject, root, validate)
 	# return the text
-	tree = etree.ElementTree(root)
-	text = etree.tostring(root, encoding=unicode, pretty_print=True)
-	return text
+	data = etree.tostring(
+		root, encoding="utf-8", xml_declaration=True, pretty_print=True
+	)
+	return data
+
+
+def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, formatVersion=2, validate=True):
+	"""
+	Return .glif data for a glyph as a Unicode string (`unicode` in py2, `str`
+	in py3). The XML declaration's encoding is always set to "UTF-8".
+	The 'glyphObject' argument can be any kind of object (even None);
+	the writeGlyphToString() method will attempt to get the following
+	attributes from it:
+		"width"      the advance width of the glyph
+		"height"     the advance height of the glyph
+		"unicodes"   a list of unicode values for this glyph
+		"note"       a string
+		"lib"        a dictionary containing custom data
+		"image"      a dictionary containing image data
+		"guidelines" a list of guideline data dictionaries
+		"anchors"    a list of anchor data dictionaries
+
+	All attributes are optional: if 'glyphObject' doesn't
+	have the attribute, it will simply be skipped.
+
+	To write outline data to the .glif file, writeGlyphToString() needs
+	a function (any callable object actually) that will take one
+	argument: an object that conforms to the PointPen protocol.
+	The function will be called by writeGlyphToString(); it has to call the
+	proper PointPen methods to transfer the outline to the .glif file.
+
+	The GLIF format version can be specified with the formatVersion argument.
+
+	``validate`` will validate the written data. It is set to ``True`` by default.
+	"""
+	data = _writeGlyphToBytes(
+		glyphName,
+		glyphObject=glyphObject,
+		drawPointsFunc=drawPointsFunc,
+		formatVersion=formatVersion,
+		validate=validate,
+	)
+	return data.decode("utf-8")
 
 
 def _writeAdvance(glyphObject, element, validate):
