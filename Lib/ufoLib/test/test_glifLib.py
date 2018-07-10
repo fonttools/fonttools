@@ -4,8 +4,9 @@ import shutil
 import unittest
 from io import open
 from ufoLib.test.testSupport import getDemoFontGlyphSetPath
-from ufoLib.glifLib import GlyphSet, glyphNameToFileName
-
+from ufoLib.glifLib import (
+	GlyphSet, glyphNameToFileName, readGlyphFromString, writeGlyphToString
+)
 
 GLYPHSETDIR = getDemoFontGlyphSetPath()
 
@@ -134,6 +135,26 @@ class FileNameTests(unittest.TestCase):
 		self.assertEqual(glyphNameToFileName("CON", None), "C_O_N_.glif")
 		self.assertEqual(glyphNameToFileName("con.alt", None), "_con.alt.glif")
 		self.assertEqual(glyphNameToFileName("alt.con", None), "alt._con.glif")
+
+
+class ReadWriteFuncTest(unittest.TestCase):
+
+	def testRoundTrip(self):
+		class _Glyph(object):
+			pass
+
+		glyph = _Glyph()
+		glyph.name = "a"
+		glyph.unicodes = [0x0061]
+
+		s1 = writeGlyphToString(glyph.name, glyph)
+
+		glyph2 = _Glyph()
+		readGlyphFromString(s1, glyph2)
+		self.assertEqual(glyph.__dict__, glyph2.__dict__)
+
+		s2 = writeGlyphToString(glyph2.name, glyph2)
+		self.assertEqual(s1, s2)
 
 
 if __name__ == "__main__":
