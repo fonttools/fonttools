@@ -16,7 +16,7 @@ import os
 from io import BytesIO, open
 from warnings import warn
 from collections import OrderedDict
-from fontTools.misc.py23 import basestring, unicode
+from fontTools.misc.py23 import basestring, unicode, tobytes
 from ufoLib.plistlib import PlistWriter, readPlist, writePlist
 from ufoLib.plistFromETree import readPlistFromTree
 from ufoLib.pointPen import AbstractPointPen, PointToSegmentPen
@@ -25,7 +25,6 @@ from ufoLib.validators import isDictEnough, genericTypeValidator, colorValidator
 	guidelinesValidator, anchorsValidator, identifierValidator, imageValidator, glyphLibValidator
 
 from lxml import etree
-
 
 __all__ = [
 	"GlyphSet",
@@ -846,8 +845,10 @@ def _glifTreeFromFile(aFile):
 		raise GlifLibError("Invalid GLIF structure.")
 	return root
 
+
 def _glifTreeFromString(aString):
-	root = etree.fromstring(aString)
+	data = tobytes(aString, encoding="utf-8")
+	root = etree.fromstring(data)
 	if root.tag != "glyph":
 		raise GlifLibError("The GLIF is not properly formatted.")
 	if root.text and root.text.strip() != '':
