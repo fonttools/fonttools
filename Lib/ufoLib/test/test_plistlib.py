@@ -143,9 +143,9 @@ def test_indentation_dict_mix():
 
 @pytest.mark.xfail(reason="we use two spaces, Apple uses tabs")
 def test_apple_formatting():
-    # and we also don't split base64 data in multiple chunks
-    # per line, since we don't know the indentation level.
-    # maybe we could guess it, but don't know if worth it.
+    # we also split base64 data into multiple lines differently:
+    # both right-justify data to 76 chars, but Apple's treats tabs
+    # as 8 spaces, whereas we use 2 spaces
     pl = plistlib.loads(TESTDATA)
     data = plistlib.dumps(pl)
     assert data == TESTDATA
@@ -357,6 +357,14 @@ def test_fromtree(pl):
     assert pl == pl2
 
 
+def _strip(txt):
+    return (
+        "".join(l.strip() for l in txt.splitlines())
+        if txt is not None
+        else ""
+    )
+
+
 def test_totree(pl):
     tree = etree.fromstring(TESTDATA)[0]  # ignore root 'plist' element
     tree2 = plistlib.totree(pl)
@@ -365,18 +373,22 @@ def test_totree(pl):
         assert e1.tag == e2.tag
         assert e1.attrib == e2.attrib
         assert len(e1) == len(e2)
-        # ignore indentation
-        text1 = (
-            "".join(l.strip() for l in e1.text.splitlines())
-            if e1.text is not None
-            else ""
-        )
-        text2 = (
-            "".join(l.strip() for l in e2.text.splitlines())
-            if e2.text is not None
-            else ""
-        )
-        assert text1 == text2
+        # ignore whitespace
+        assert _strip(e1.text) == _strip(e2.text)
+
+
+def test_no_pretty_print():
+    data = plistlib.dumps({"data": b"hello"}, pretty_print=False)
+    assert data == (
+        plistlib.XML_DECLARATION +
+        plistlib.PLIST_DOCTYPE +
+        b'<plist version="1.0">'
+        b"<dict>"
+        b"<key>data</key>"
+        b"<data>aGVsbG8=</data>"
+        b"</dict>"
+        b"</plist>"
+    )
 
 
 if __name__ == "__main__":
