@@ -17,8 +17,7 @@ from io import BytesIO, open
 from warnings import warn
 from collections import OrderedDict
 from fontTools.misc.py23 import basestring, unicode, tobytes
-from ufoLib.plistlib import PlistWriter, readPlist, writePlist
-from ufoLib.plistFromETree import readPlistFromTree
+from ufoLib import plistlib
 from ufoLib.pointPen import AbstractPointPen, PointToSegmentPen
 from ufoLib.filenames import userNameToFileName
 from ufoLib.validators import isDictEnough, genericTypeValidator, colorValidator,\
@@ -181,7 +180,7 @@ class GlyphSet(object):
 		"""
 		contentsPath = os.path.join(self.dirName, "contents.plist")
 		with open(contentsPath, "wb") as f:
-			writePlist(self.contents, f)
+			plistlib.dump(self.contents, f)
 
 	# layer info
 
@@ -234,7 +233,7 @@ class GlyphSet(object):
 		# write file
 		path = os.path.join(self.dirName, LAYERINFO_FILENAME)
 		with open(path, "wb") as f:
-			writePlist(infoData, f)
+			plistlib.dump(infoData, f)
 
 	# read caching
 
@@ -481,7 +480,7 @@ class GlyphSet(object):
 	def _readPlist(self, path):
 		try:
 			with open(path, "rb") as f:
-				data = readPlist(f)
+				data = plistlib.load(f)
 			return data
 		except Exception as e:
 			if isinstance(e, IOError) and e.errno == 2:
@@ -771,19 +770,16 @@ def _writeAnchors(glyphObject, element, identifiers, validate):
 
 def _writeLib(glyphObject, element, validate):
 	lib = getattr(glyphObject, "lib", None)
+	if not lib:
+		# don't write empty lib
+		return
 	if validate:
 		valid, message = glyphLibValidator(lib)
 		if not valid:
 			raise GlifLibError(message)
 	if not isinstance(lib, dict):
 		lib = dict(lib)
-	f = BytesIO()
-	plistWriter = PlistWriter(f, writeHeader=False) # TODO: fix indent
-	plistWriter.writeValue(lib)
-	text = f.getvalue()
-	text = etree.fromstring(text)
-	if len(text):
-		etree.SubElement(element, "lib").append(text)
+	etree.SubElement(element, "lib").append(plistlib.totree(lib))
 
 # -----------------------
 # layerinfo.plist Support
@@ -1036,7 +1032,7 @@ def _readNote(glyphObject, note):
 def _readLib(glyphObject, lib, validate):
 	assert len(lib) == 1
 	child = lib[0]
-	plist = readPlistFromTree(child)
+	plist = plistlib.fromtree(child)
 	if validate:
 		valid, message = glyphLibValidator(plist)
 		if not valid:
