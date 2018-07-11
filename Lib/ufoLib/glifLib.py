@@ -776,7 +776,9 @@ def _writeLib(glyphObject, element, validate):
 			raise GlifLibError(message)
 	if not isinstance(lib, dict):
 		lib = dict(lib)
-	etree.SubElement(element, "lib").append(plistlib.totree(lib))
+	# plist inside GLIF begins with 2 levels of indentation
+	e = plistlib.totree(lib, indent_level=2)
+	etree.SubElement(element, "lib").append(e)
 
 # -----------------------
 # layerinfo.plist Support
