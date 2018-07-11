@@ -10,7 +10,13 @@ try:
 except ImportError:
     from singledispatch import singledispatch
 from lxml import etree
-from fontTools.misc.py23 import unicode, basestring, tounicode
+from fontTools.misc.py23 import (
+    unicode,
+    basestring,
+    tounicode,
+    SimpleNamespace,
+    range,
+)
 
 
 # we use a custom XML declaration for backward compatibility with older
@@ -19,8 +25,8 @@ from fontTools.misc.py23 import unicode, basestring, tounicode
 XML_DECLARATION = b"""<?xml version="1.0" encoding="UTF-8"?>"""
 
 PLIST_DOCTYPE = (
-    '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" '
-    '"http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
+    b'<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" '
+    b'"http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
 )
 
 # Date should conform to a subset of ISO 8601:
@@ -206,19 +212,19 @@ _TARGET_END_HANDLERS = {
 
 
 @singledispatch
-def _make_element(value, **options):
+def _make_element(value, ctx):
     raise TypeError("unsupported type: %s" % type(value))
 
 
 @_make_element.register(unicode)
-def _unicode_element(value, **options):
+def _unicode_element(value, ctx):
     el = etree.Element("string")
     el.text = value
     return el
 
 
 @_make_element.register(bool)
-def _bool_element(value, **options):
+def _bool_element(value, ctx):
     if value:
         return etree.Element("true")
     else:
@@ -226,7 +232,7 @@ def _bool_element(value, **options):
 
 
 @_make_element.register(Integral)
-def _integer_element(value, **options):
+def _integer_element(value, ctx):
     if -1 << 63 <= value < 1 << 64:
         el = etree.Element("integer")
         el.text = "%d" % value
@@ -236,42 +242,46 @@ def _integer_element(value, **options):
 
 
 @_make_element.register(float)
-def _float_element(value, **options):
+def _float_element(value, ctx):
     el = etree.Element("real")
     el.text = repr(value)
     return el
 
 
 @_make_element.register(dict)
-def _dict_element(d, **options):
+def _dict_element(d, ctx):
     el = etree.Element("dict")
     items = d.items()
-    if options.get("sort_keys", True):
+    if ctx.sort_keys:
         items = sorted(items)
+    ctx.indent_level += 1
     for key, value in items:
         if not isinstance(key, basestring):
-            if options.get("skipkeys", False):
+            if ctx.skipkeys:
                 continue
             raise TypeError("keys must be strings")
         k = etree.SubElement(el, "key")
         k.text = tounicode(key, "utf-8")
-        el.append(totree(value, **options))
+        el.append(_make_element(value, ctx))
+    ctx.indent_level -= 1
     return el
 
 
 @_make_element.register(list)
 @_make_element.register(tuple)
-def _array_element(array, **options):
+def _array_element(array, ctx):
     el = etree.Element("array")
     if len(array) == 0:
         return el
+    ctx.indent_level += 1
     for value in array:
-        el.append(totree(value, **options))
+        el.append(_make_element(value, ctx))
+    ctx.indent_level -= 1
     return el
 
 
 @_make_element.register(datetime)
-def _date_element(date, **options):
+def _date_element(date, ctx):
     el = etree.Element("date")
     el.text = _date_to_string(date)
     return el
@@ -279,9 +289,20 @@ def _date_element(date, **options):
 
 @_make_element.register(bytes)
 @_make_element.register(bytearray)
-def _data_element(data, **options):
+def _data_element(data, ctx):
+    data = b64encode(data)
+    if data and ctx.pretty_print:
+        # split into multiple lines right-justified to max 76 chars
+        indent = b"\n" + b"  " * ctx.indent_level
+        max_length = max(16, 76 - len(indent))
+        chunks = []
+        for i in range(0, len(data), max_length):
+            chunks.append(indent)
+            chunks.append(data[i : i + max_length])
+        chunks.append(indent)
+        data = b"".join(chunks)
     el = etree.Element("data")
-    el.text = b64encode(data)
+    el.text = data
     return el
 
 
@@ -289,8 +310,16 @@ def _data_element(data, **options):
 # data structures and viceversa, for use when (de)serializing GLIF xml.
 
 
-def totree(value, sort_keys=True, skipkeys=False):
-    return _make_element(value, sort_keys=sort_keys, skipkeys=skipkeys)
+def totree(
+    value, sort_keys=True, skipkeys=False, pretty_print=True, indent_level=1
+):
+    context = SimpleNamespace(
+        sort_keys=sort_keys,
+        skipkeys=skipkeys,
+        pretty_print=pretty_print,
+        indent_level=indent_level,
+    )
+    return _make_element(value, context)
 
 
 def fromtree(tree, dict_type=dict):
@@ -325,33 +354,37 @@ def loads(value, dict_type=dict):
     return load(fp, dict_type=dict_type)
 
 
-def dump(value, fp, sort_keys=True, skipkeys=False, _pretty_print=True):
+def dump(value, fp, sort_keys=True, skipkeys=False, pretty_print=True):
     if not hasattr(fp, "write"):
         raise AttributeError(
             "'%s' object has no attribute 'write'" % type(fp).__name__
         )
     root = etree.Element("plist", version="1.0")
-    root.append(totree(value, sort_keys=sort_keys, skipkeys=skipkeys))
+    el = totree(
+        value,
+        sort_keys=sort_keys,
+        skipkeys=skipkeys,
+        pretty_print=pretty_print,
+    )
+    root.append(el)
     tree = etree.ElementTree(root)
-    fp.write(XML_DECLARATION)
-    if _pretty_print:
-        fp.write(b"\n")
+    if pretty_print:
+        header = b"\n".join((XML_DECLARATION, PLIST_DOCTYPE, b""))
+    else:
+        header = XML_DECLARATION + PLIST_DOCTYPE
+    fp.write(header)
     tree.write(
-        fp,
-        encoding="utf-8",
-        pretty_print=_pretty_print,
-        xml_declaration=False,
-        doctype=PLIST_DOCTYPE,
+        fp, encoding="utf-8", pretty_print=pretty_print, xml_declaration=False
     )
 
 
-def dumps(value, sort_keys=True, skipkeys=False, _pretty_print=True):
+def dumps(value, sort_keys=True, skipkeys=False, pretty_print=True):
     fp = BytesIO()
     dump(
         value,
         fp,
         sort_keys=sort_keys,
         skipkeys=skipkeys,
-        _pretty_print=_pretty_print,
+        pretty_print=pretty_print,
     )
     return fp.getvalue()
