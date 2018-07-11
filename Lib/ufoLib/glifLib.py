@@ -548,10 +548,7 @@ def readGlyphFromString(aString, glyphObject=None, pointPen=None, formatVersions
 	_readGlyphFromTree(tree, glyphObject, pointPen, formatVersions=formatVersions, validate=validate)
 
 
-# we use a custom XML declaration for backward compatibility with older
-# ufoLib versions which would write it using double quotes.
-# https://github.com/unified-font-object/ufoLib/issues/158
-XML_DECLARATION = b"""<?xml version="1.0" encoding="UTF-8"?>\n"""
+_XML_DECLARATION = plistlib.XML_DECLARATION + b"\n"
 
 
 def _writeGlyphToBytes(
@@ -597,7 +594,7 @@ def _writeGlyphToBytes(
 	if getattr(glyphObject, "lib", None):
 		_writeLib(glyphObject, root, validate)
 	# return the text
-	data = XML_DECLARATION + etree.tostring(
+	data = _XML_DECLARATION + etree.tostring(
 		root, encoding="utf-8", xml_declaration=False, pretty_print=True
 	)
 	return data

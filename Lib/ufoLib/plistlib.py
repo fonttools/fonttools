@@ -13,6 +13,11 @@ from lxml import etree
 from fontTools.misc.py23 import unicode, basestring, tounicode
 
 
+# we use a custom XML declaration for backward compatibility with older
+# ufoLib versions which would write it using double quotes.
+# https://github.com/unified-font-object/ufoLib/issues/158
+XML_DECLARATION = b"""<?xml version="1.0" encoding="UTF-8"?>"""
+
 PLIST_DOCTYPE = (
     '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" '
     '"http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
@@ -328,11 +333,14 @@ def dump(value, fp, sort_keys=True, skipkeys=False, _pretty_print=True):
     root = etree.Element("plist", version="1.0")
     root.append(totree(value, sort_keys=sort_keys, skipkeys=skipkeys))
     tree = etree.ElementTree(root)
+    fp.write(XML_DECLARATION)
+    if _pretty_print:
+        fp.write(b"\n")
     tree.write(
         fp,
         encoding="utf-8",
         pretty_print=_pretty_print,
-        xml_declaration=True,
+        xml_declaration=False,
         doctype=PLIST_DOCTYPE,
     )
 
