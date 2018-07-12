@@ -14,6 +14,7 @@ from fontTools.misc.py23 import (
     unicode,
     basestring,
     tounicode,
+    tobytes,
     SimpleNamespace,
     range,
 )
@@ -388,3 +389,44 @@ def dumps(value, sort_keys=True, skipkeys=False, pretty_print=True):
         pretty_print=pretty_print,
     )
     return fp.getvalue()
+
+
+# The following functions were part of the old py2-like ufoLib.plistlib API.
+# They are kept only for backward compatiblity.
+from .utils import deprecated
+
+
+@deprecated("Use 'load' instead")
+def readPlist(path_or_file):
+    did_open = False
+    if isinstance(path_or_file, basestring):
+        path_or_file = open(path_or_file, "rb")
+        did_open = True
+    try:
+        return load(path_or_file)
+    finally:
+        if did_open:
+            path_or_file.close()
+
+
+@deprecated("Use 'dump' instead")
+def writePlist(value, path_or_file):
+    did_open = False
+    if isinstance(path_or_file, basestring):
+        path_or_file = open(path_or_file, "wb")
+        did_open = True
+    try:
+        dump(value, path_or_file)
+    finally:
+        if did_open:
+            path_or_file.close()
+
+
+@deprecated("Use 'loads' instead")
+def readPlistFromString(data):
+    return loads(tobytes(data, encoding="utf-8"))
+
+
+@deprecated("Use 'dumps' instead")
+def writePlistToString(value):
+    return dumps(value)
