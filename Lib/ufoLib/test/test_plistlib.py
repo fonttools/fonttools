@@ -391,6 +391,48 @@ def test_no_pretty_print():
     )
 
 
+def test_readPlist_from_path(pl):
+    path = os.path.join(datadir, "test.plist")
+    pl2 = plistlib.readPlist(path)
+    assert pl2 == pl
+
+
+def test_readPlist_from_file(pl):
+    f = open(os.path.join(datadir, "test.plist"))
+    pl2 = plistlib.readPlist(f)
+    assert pl2 == pl
+    assert not f.closed
+    f.close()
+
+
+def test_readPlistFromString(pl):
+    pl2 = plistlib.readPlistFromString(TESTDATA)
+    assert pl2 == pl
+
+
+def test_writePlist_to_path(tmpdir, pl):
+    testpath = tmpdir / "test.plist"
+    plistlib.writePlist(pl, str(testpath))
+    with testpath.open("rb") as fp:
+        pl2 = plistlib.load(fp)
+    assert pl2 == pl
+
+
+def test_writePlist_to_file(tmpdir, pl):
+    testpath = tmpdir / "test.plist"
+    with testpath.open("wb") as fp:
+        plistlib.writePlist(pl, fp)
+    with testpath.open("rb") as fp:
+        pl2 = plistlib.load(fp)
+    assert pl2 == pl
+
+
+def test_writePlistToString(pl):
+    data = plistlib.writePlistToString(pl)
+    pl2 = plistlib.loads(data)
+    assert pl2 == pl
+
+
 if __name__ == "__main__":
     import sys
 
