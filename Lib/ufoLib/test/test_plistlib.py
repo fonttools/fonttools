@@ -398,7 +398,7 @@ def test_readPlist_from_path(pl):
 
 
 def test_readPlist_from_file(pl):
-    f = open(os.path.join(datadir, "test.plist"))
+    f = open(os.path.join(datadir, "test.plist"), "rb")
     pl2 = plistlib.readPlist(f)
     assert pl2 == pl
     assert not f.closed
