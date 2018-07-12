@@ -17,8 +17,7 @@ from io import BytesIO, open
 from warnings import warn
 from collections import OrderedDict
 from fontTools.misc.py23 import basestring, unicode, tobytes
-from ufoLib.plistlib import PlistWriter, readPlist, writePlist
-from ufoLib.plistFromETree import readPlistFromTree
+from ufoLib import plistlib
 from ufoLib.pointPen import AbstractPointPen, PointToSegmentPen
 from ufoLib.filenames import userNameToFileName
 from ufoLib.validators import isDictEnough, genericTypeValidator, colorValidator,\
@@ -181,7 +180,7 @@ class GlyphSet(object):
 		"""
 		contentsPath = os.path.join(self.dirName, "contents.plist")
 		with open(contentsPath, "wb") as f:
-			writePlist(self.contents, f)
+			plistlib.dump(self.contents, f)
 
 	# layer info
 
@@ -234,7 +233,7 @@ class GlyphSet(object):
 		# write file
 		path = os.path.join(self.dirName, LAYERINFO_FILENAME)
 		with open(path, "wb") as f:
-			writePlist(infoData, f)
+			plistlib.dump(infoData, f)
 
 	# read caching
 
@@ -481,7 +480,7 @@ class GlyphSet(object):
 	def _readPlist(self, path):
 		try:
 			with open(path, "rb") as f:
-				data = readPlist(f)
+				data = plistlib.load(f)
 			return data
 		except Exception as e:
 			if isinstance(e, IOError) and e.errno == 2:
@@ -549,10 +548,7 @@ def readGlyphFromString(aString, glyphObject=None, pointPen=None, formatVersions
 	_readGlyphFromTree(tree, glyphObject, pointPen, formatVersions=formatVersions, validate=validate)
 
 
-# we use a custom XML declaration for backward compatibility with older
-# ufoLib versions which would write it using double quotes.
-# https://github.com/unified-font-object/ufoLib/issues/158
-XML_DECLARATION = b"""<?xml version="1.0" encoding="UTF-8"?>\n"""
+_XML_DECLARATION = plistlib.XML_DECLARATION + b"\n"
 
 
 def _writeGlyphToBytes(
@@ -598,7 +594,7 @@ def _writeGlyphToBytes(
 	if getattr(glyphObject, "lib", None):
 		_writeLib(glyphObject, root, validate)
 	# return the text
-	data = XML_DECLARATION + etree.tostring(
+	data = _XML_DECLARATION + etree.tostring(
 		root, encoding="utf-8", xml_declaration=False, pretty_print=True
 	)
 	return data
@@ -771,19 +767,18 @@ def _writeAnchors(glyphObject, element, identifiers, validate):
 
 def _writeLib(glyphObject, element, validate):
 	lib = getattr(glyphObject, "lib", None)
+	if not lib:
+		# don't write empty lib
+		return
 	if validate:
 		valid, message = glyphLibValidator(lib)
 		if not valid:
 			raise GlifLibError(message)
 	if not isinstance(lib, dict):
 		lib = dict(lib)
-	f = BytesIO()
-	plistWriter = PlistWriter(f, writeHeader=False) # TODO: fix indent
-	plistWriter.writeValue(lib)
-	text = f.getvalue()
-	text = etree.fromstring(text)
-	if len(text):
-		etree.SubElement(element, "lib").append(text)
+	# plist inside GLIF begins with 2 levels of indentation
+	e = plistlib.totree(lib, indent_level=2)
+	etree.SubElement(element, "lib").append(e)
 
 # -----------------------
 # layerinfo.plist Support
@@ -1036,7 +1031,7 @@ def _readNote(glyphObject, note):
 def _readLib(glyphObject, lib, validate):
 	assert len(lib) == 1
 	child = lib[0]
-	plist = readPlistFromTree(child)
+	plist = plistlib.fromtree(child)
 	if validate:
 		valid, message = glyphLibValidator(plist)
 		if not valid:

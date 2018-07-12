@@ -165,8 +165,9 @@ setup_params = dict(
 		'pytest>=3.0.2',
 	],
 	install_requires=[
-		"fonttools>=3.1.2",
-		"lxml>=4.0",
+		"fonttools >= 3.1.2, < 4",
+		"lxml >= 4.0, < 5",
+		"singledispatch >= 3.4.0.3, < 4; python_version < '3.4'",
 	],
 	cmdclass={
 		"release": release,

@@ -6,7 +6,7 @@ from io import open
 from ufoLib.test.testSupport import getDemoFontGlyphSetPath
 from ufoLib.glifLib import (
 	GlyphSet, glyphNameToFileName, readGlyphFromString, writeGlyphToString,
-	XML_DECLARATION,
+	_XML_DECLARATION,
 )
 
 GLYPHSETDIR = getDemoFontGlyphSetPath()
@@ -160,7 +160,7 @@ class ReadWriteFuncTest(unittest.TestCase):
 
 	def testXmlDeclaration(self):
 		s = writeGlyphToString("a", _Glyph())
-		self.assertTrue(s.startswith(XML_DECLARATION.decode("utf-8")))
+		self.assertTrue(s.startswith(_XML_DECLARATION.decode("utf-8")))
 
 
 if __name__ == "__main__":
