@@ -14,11 +14,6 @@ def deprecated(msg=""):
     ...    print("hello world")
     >>> some_function()
     hello world
-    >>> warnings.simplefilter("error", DeprecationWarning)
-    >>> some_function()
-    Traceback (most recent call last):
-      ...
-    DeprecationWarning: some_function function is a deprecated. Enough!
     >>> some_function.__doc__
     "I just print 'hello world'."
     """
