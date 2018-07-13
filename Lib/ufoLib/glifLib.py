@@ -22,8 +22,8 @@ from ufoLib.pointPen import AbstractPointPen, PointToSegmentPen
 from ufoLib.filenames import userNameToFileName
 from ufoLib.validators import isDictEnough, genericTypeValidator, colorValidator,\
 	guidelinesValidator, anchorsValidator, identifierValidator, imageValidator, glyphLibValidator
+from ufoLib import etree
 
-from lxml import etree
 
 __all__ = [
 	"GlyphSet",
