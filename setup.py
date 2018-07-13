@@ -166,9 +166,13 @@ setup_params = dict(
 	],
 	install_requires=[
 		"fonttools >= 3.1.2, < 4",
-		"lxml >= 4.0, < 5",
-		"singledispatch >= 3.4.0.3, < 4; python_version < '3.4'",
 	],
+	extras_require={
+		"lxml": [
+			"lxml >= 4.0, < 5",
+			"singledispatch >= 3.4.0.3, < 4; python_version < '3.4'",
+		],
+	},
 	cmdclass={
 		"release": release,
 		"bump_version": bump_version,
