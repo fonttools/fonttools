@@ -223,20 +223,13 @@ except ImportError:
 
     import re
 
-    # any Unicode character, excluding the surrogate blocks, FFFE, and FFFF.
+    # Valid XML strings can include any Unicode character, excluding control
+    # characters, the surrogate blocks, FFFE, and FFFF.
     # Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
-    UCS2 = sys.maxunicode < 0x10FFFF
-    if UCS2:
-        # For 'narrow' python builds we need to match the UTF-16 surrogate pairs
-        # for the characters beyond the BMP (0x10000..0x10FFFF).
-        _valid_xml_string = re.compile(
-            "^(?:[\u0009\u000a\u000d\u0020-\uD7FF\uE000-\uFFFD]|"
-            "(?:[\uD800-\uDBFF][\uDC00-\uDFFF]))+$"
-        )
-    else:
-        _valid_xml_string = re.compile(
-            "^[\u0009\u000a\u000d\u0020-\uD7FF\uE000-\uFFFD\U00010000-\U0010FFFF]+$"
-        )
+    # This is the inverted regular expression matchin any invalid character
+    _invalid_xml_string = re.compile(
+        "[\u0000-\u0008\u000B-\u000C\u000E-\u001F\uD800-\uDFFF\uFFFE-\uFFFF]"
+    )
 
     def _tounicode(s):
         """Test if a string is valid user input and decode it to unicode string
@@ -248,7 +241,7 @@ except ImportError:
             s = tounicode(s)
         except AttributeError:
             _raise_serialization_error(s)
-        if s and not _valid_xml_string.match(s):
+        if s and _invalid_xml_string.search(s):
             raise ValueError(
                 "All strings must be XML compatible: Unicode or ASCII, "
                 "no NULL bytes or control characters"
