@@ -1382,9 +1382,9 @@ def writeDataFileAtomically(data, path):
 		f.close()
 		if data == oldData:
 			return
-			# if the data is empty, remove the existing file
-			if not data:
-				os.remove(path)
+		# if the data is empty, remove the existing file
+		if not data:
+			os.remove(path)
 	if data:
 		f = open(path, "wb")
 		f.write(data)
