@@ -33,6 +33,3 @@ skip_covered = True
 
 # ignore source code that can’t be found
 ignore_errors = True
-
-# when running a summary report, show missing lines
-show_missing = True
