@@ -225,9 +225,18 @@ except ImportError:
 
     # any Unicode character, excluding the surrogate blocks, FFFE, and FFFF.
     # Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
-    _valid_xml_string = re.compile(
-        "^[\u0009\u000a\u000d\u0020-\uD7FF\uE000-\uFFFD\U00010000-\U0010FFFF]+$"
-    )
+    UCS2 = sys.maxunicode < 0x10FFFF
+    if UCS2:
+        # For 'narrow' python builds we need to match the UTF-16 surrogate pairs
+        # for the characters beyond the BMP (0x10000..0x10FFFF).
+        _valid_xml_string = re.compile(
+            "^(?:[\u0009\u000a\u000d\u0020-\uD7FF\uE000-\uFFFD]|"
+            "(?:[\uD800-\uDBFF][\uDC00-\uDFFF]))+$"
+        )
+    else:
+        _valid_xml_string = re.compile(
+            "^[\u0009\u000a\u000d\u0020-\uD7FF\uE000-\uFFFD\U00010000-\U0010FFFF]+$"
+        )
 
     def _tounicode(s):
         """Test if a string is valid user input and decode it to unicode string
