@@ -4,38 +4,22 @@ environment:
     - PYTHON: "C:\\Python27"
       PYTHON_VERSION: "2.7.x"
       PYTHON_ARCH: "32"
-      TOXENV: "py27"
+      TOXENV: "py27-cov,py27-cov-lxml"
       TOXPYTHON: "C:\\Python27\\python.exe"
-
-    - PYTHON: "C:\\Python35"
-      PYTHON_VERSION: "3.5.x"
-      PYTHON_ARCH: "32"
-      TOXENV: "py35"
-      TOXPYTHON: "C:\\Python35\\python.exe"
-
-    - PYTHON: "C:\\Python36"
-      PYTHON_VERSION: "3.6.x"
-      PYTHON_ARCH: "32"
-      TOXENV: "py36"
-      TOXPYTHON: "C:\\Python36\\python.exe"
-
-    - PYTHON: "C:\\Python27-x64"
-      PYTHON_VERSION: "2.7.x"
-      PYTHON_ARCH: "64"
-      TOXENV: "py27"
-      TOXPYTHON: "C:\\Python27-x64\\python.exe"
-
-    - PYTHON: "C:\\Python35-x64"
-      PYTHON_VERSION: "3.5.x"
-      PYTHON_ARCH: "64"
-      TOXENV: "py35"
-      TOXPYTHON: "C:\\Python35-x64\\python.exe"
 
     - PYTHON: "C:\\Python36-x64"
       PYTHON_VERSION: "3.6.x"
       PYTHON_ARCH: "64"
-      TOXENV: "py36"
+      TOXENV: "py36-cov,py36-cov-lxml"
       TOXPYTHON: "C:\\Python36-x64\\python.exe"
+
+    - PYTHON: "C:\\Python37-x64"
+      PYTHON_VERSION: "3.7.x"
+      PYTHON_ARCH: "64"
+      TOXENV: "py37-cov,py37-cov-lxml"
+      TOXPYTHON: "C:\\Python37-x64\\python.exe"
+
+skip_branch_with_pr: true
 
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
@@ -65,3 +49,7 @@ build: false
 
 test_script:
   - "tox"
+
+on_success:
+  # upload test coverage to codecov.io
+  - tox -e codecov
