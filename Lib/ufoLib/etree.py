@@ -415,7 +415,7 @@ except ImportError:
                         else:
                             v = _escape_attrib(v)
                         write(' %s="%s"' % (qnames[k], v))
-                if text or len(elem):
+                if text is not None or len(elem):
                     write(">")
                     if text:
                         write(_escape_cdata(text))
