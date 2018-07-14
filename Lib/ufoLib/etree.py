@@ -247,7 +247,11 @@ except ImportError:
         Reject all bytes input that contains non-ASCII characters.
         """
         try:
-            s = tounicode(s)
+            s = tounicode(s, encoding="ascii", errors="strict")
+        except UnicodeDecodeError:
+            raise ValueError(
+                "Bytes strings can only contain ASCII characters. "
+                "Use unicode strings for non-ASCII characters.")
         except AttributeError:
             _raise_serialization_error(s)
         if s and _invalid_xml_string.search(s):
