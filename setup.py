@@ -172,6 +172,11 @@ setup_params = dict(
 			"lxml >= 4.0, < 5",
 			"singledispatch >= 3.4.0.3, < 4; python_version < '3.4'",
 		],
+		"testing": [
+			"pytest >= 3.0.0, <4",
+			"pytest-cov >= 2.5.1, <3",
+			"pytest-randomly >= 1.2.3, <2",
+		],
 	},
 	cmdclass={
 		"release": release,
