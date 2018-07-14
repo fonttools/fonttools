@@ -1,5 +1,5 @@
 from __future__ import absolute_import, unicode_literals
-from ufoLib import plistlib
+import sys
 import os
 import datetime
 import codecs
@@ -8,7 +8,18 @@ from io import BytesIO
 from numbers import Integral
 from fontTools.misc.py23 import tounicode
 from ufoLib import etree
+from ufoLib import plistlib
 import pytest
+
+
+PY2 = sys.version_info < (3,)
+if PY2:
+    # This is a ResourceWarning that only happens on py27 at interpreter
+    # finalization, and only when coverage is enabled. We can ignore it.
+    # https://github.com/numpy/numpy/issues/3778#issuecomment-24885336
+    pytestmark = pytest.mark.filterwarnings(
+        "ignore:tp_compare didn't return -1 or -2 for exception"
+    )
 
 
 # The testdata is generated using https://github.com/python/cpython/...
@@ -382,9 +393,9 @@ def test_totree(pl):
 def test_no_pretty_print():
     data = plistlib.dumps({"data": b"hello"}, pretty_print=False)
     assert data == (
-        plistlib.XML_DECLARATION +
-        plistlib.PLIST_DOCTYPE +
-        b'<plist version="1.0">'
+        plistlib.XML_DECLARATION
+        + plistlib.PLIST_DOCTYPE
+        + b'<plist version="1.0">'
         b"<dict>"
         b"<key>data</key>"
         b"<data>aGVsbG8=</data>"
