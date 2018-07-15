@@ -3,7 +3,7 @@ import os
 import shutil
 from io import StringIO, BytesIO, open
 from copy import deepcopy
-from fontTools.misc.py23 import basestring, unicode
+from fontTools.misc.py23 import basestring, unicode, tounicode
 from ufoLib.glifLib import GlyphSet
 from ufoLib.validators import *
 from ufoLib.filenames import userNameToFileName
@@ -1109,6 +1109,8 @@ class UFOWriter(object):
 			for layerName in layerOrder:
 				if layerName is None:
 					layerName = DEFAULT_LAYER_NAME
+				else:
+					layerName = tounicode(layerName)
 				newOrder.append(layerName)
 			layerOrder = newOrder
 		else:
