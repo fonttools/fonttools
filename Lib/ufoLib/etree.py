@@ -48,7 +48,6 @@ try:
     from lxml.etree import *
 
     _have_lxml = True
-    _dict_is_ordered = True
 except ImportError:
     try:
         from xml.etree.cElementTree import *
@@ -56,7 +55,7 @@ except ImportError:
         # the cElementTree version of XML function doesn't support
         # the optional 'parser' keyword argument
         from xml.etree.ElementTree import XML
-    except ImportError:
+    except ImportError:  # pragma: no cover
         from xml.etree.ElementTree import *
     _have_lxml = False
 
@@ -143,7 +142,7 @@ except ImportError:
             xml_declaration=False,
             method=None,
             doctype=None,
-            pretty_print=True,
+            pretty_print=False,
         ):
             if method and method != "xml":
                 # delegate to super-class
@@ -203,7 +202,7 @@ except ImportError:
         xml_declaration=None,
         method=None,
         doctype=None,
-        pretty_print=True,
+        pretty_print=False,
     ):
         """Custom 'tostring' function that uses our ElementTree subclass, with
         pretty_print support.
