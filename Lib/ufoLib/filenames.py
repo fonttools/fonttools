@@ -2,7 +2,7 @@
 User name to file name conversion.
 This was taken form the UFO 3 spec.
 """
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 from fontTools.misc.py23 import basestring, unicode
 
 

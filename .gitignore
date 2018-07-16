@@ -10,3 +10,4 @@ dist/
 .eggs/
 .tox/
 /.pytest_cache
+htmlcov/

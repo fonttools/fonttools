@@ -1,8 +1,9 @@
+from __future__ import absolute_import, unicode_literals
 import os
 import shutil
 from io import StringIO, BytesIO, open
 from copy import deepcopy
-from fontTools.misc.py23 import basestring, unicode
+from fontTools.misc.py23 import basestring, unicode, tounicode
 from ufoLib.glifLib import GlyphSet
 from ufoLib.validators import *
 from ufoLib.filenames import userNameToFileName
@@ -1108,6 +1109,8 @@ class UFOWriter(object):
 			for layerName in layerOrder:
 				if layerName is None:
 					layerName = DEFAULT_LAYER_NAME
+				else:
+					layerName = tounicode(layerName)
 				newOrder.append(layerName)
 			layerOrder = newOrder
 		else:
@@ -1381,9 +1384,9 @@ def writeDataFileAtomically(data, path):
 		f.close()
 		if data == oldData:
 			return
-			# if the data is empty, remove the existing file
-			if not data:
-				os.remove(path)
+		# if the data is empty, remove the existing file
+		if not data:
+			os.remove(path)
 	if data:
 		f = open(path, "wb")
 		f.write(data)

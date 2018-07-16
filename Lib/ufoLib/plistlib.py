@@ -8,8 +8,13 @@ from numbers import Integral
 try:
     from functools import singledispatch
 except ImportError:
-    from singledispatch import singledispatch
-from lxml import etree
+    try:
+        from singledispatch import singledispatch
+    except ImportError:
+        singledispatch = None
+
+from ufoLib import etree
+
 from fontTools.misc.py23 import (
     unicode,
     basestring,
@@ -73,7 +78,7 @@ class PlistTarget(object):
     It is based on the CPython plistlib module's _PlistParser class,
     but does not use the expat parser.
 
-    >>> from lxml import etree
+    >>> from ufoLib import etree
     >>> parser = etree.XMLParser(target=PlistTarget())
     >>> result = etree.XML(
     ...     "<dict>"
@@ -208,23 +213,16 @@ _TARGET_END_HANDLERS = {
     "date": end_date,
 }
 
-# single-dispatch generic function and overloaded implementations based
-# on the type of argument, to build an element tree from a plist data
+
+# functions to build element tree from plist data
 
 
-@singledispatch
-def _make_element(value, ctx):
-    raise TypeError("unsupported type: %s" % type(value))
-
-
-@_make_element.register(unicode)
 def _unicode_element(value, ctx):
     el = etree.Element("string")
     el.text = value
     return el
 
 
-@_make_element.register(bool)
 def _bool_element(value, ctx):
     if value:
         return etree.Element("true")
@@ -232,7 +230,6 @@ def _bool_element(value, ctx):
         return etree.Element("false")
 
 
-@_make_element.register(Integral)
 def _integer_element(value, ctx):
     if -1 << 63 <= value < 1 << 64:
         el = etree.Element("integer")
@@ -242,14 +239,12 @@ def _integer_element(value, ctx):
         raise OverflowError(value)
 
 
-@_make_element.register(float)
 def _float_element(value, ctx):
     el = etree.Element("real")
     el.text = repr(value)
     return el
 
 
-@_make_element.register(dict)
 def _dict_element(d, ctx):
     el = etree.Element("dict")
     items = d.items()
@@ -268,8 +263,6 @@ def _dict_element(d, ctx):
     return el
 
 
-@_make_element.register(list)
-@_make_element.register(tuple)
 def _array_element(array, ctx):
     el = etree.Element("array")
     if len(array) == 0:
@@ -281,15 +274,12 @@ def _array_element(array, ctx):
     return el
 
 
-@_make_element.register(datetime)
 def _date_element(date, ctx):
     el = etree.Element("date")
     el.text = _date_to_string(date)
     return el
 
 
-@_make_element.register(bytes)
-@_make_element.register(bytearray)
 def _data_element(data, ctx):
     data = b64encode(data)
     if data and ctx.pretty_print:
@@ -305,6 +295,49 @@ def _data_element(data, ctx):
     el = etree.Element("data")
     el.text = data
     return el
+
+
+# if singledispatch is available, we use a generic '_make_element' function
+# and register overloaded implementations that are run based on the type of
+# the first argument
+
+if singledispatch is not None:
+
+    @singledispatch
+    def _make_element(value, ctx):
+        raise TypeError("unsupported type: %s" % type(value))
+
+    _make_element.register(unicode)(_unicode_element)
+    _make_element.register(bool)(_bool_element)
+    _make_element.register(Integral)(_integer_element)
+    _make_element.register(float)(_float_element)
+    _make_element.register(dict)(_dict_element)
+    _make_element.register(list)(_array_element)
+    _make_element.register(tuple)(_array_element)
+    _make_element.register(datetime)(_date_element)
+    _make_element.register(bytes)(_data_element)
+    _make_element.register(bytearray)(_data_element)
+
+else:
+    # otherwise we use a long switch-like if statement
+
+    def _make_element(value, ctx):
+        if isinstance(value, unicode):
+            return _unicode_element(value, ctx)
+        elif isinstance(value, bool):
+            return _bool_element(value, ctx)
+        elif isinstance(value, Integral):
+            return _integer_element(value, ctx)
+        elif isinstance(value, float):
+            return _float_element(value, ctx)
+        elif isinstance(value, dict):
+            return _dict_element(value, ctx)
+        elif isinstance(value, (list, tuple)):
+            return _array_element(value, ctx)
+        elif isinstance(value, datetime):
+            return _date_element(value, ctx)
+        elif isinstance(value, (bytes, bytearray)):
+            return _data_element(value, ctx)
 
 
 # Public functions to create element tree from plist-compatible python
@@ -347,7 +380,13 @@ def load(fp, dict_type=dict):
         )
     target = PlistTarget(dict_type=dict_type)
     parser = etree.XMLParser(target=target)
-    return etree.parse(fp, parser=parser)
+    result = etree.parse(fp, parser=parser)
+    # lxml returns the target object directly, while ElementTree wraps
+    # it as the root of an ElementTree object
+    try:
+        return result.getroot()
+    except AttributeError:
+        return result
 
 
 def loads(value, dict_type=dict):
@@ -369,6 +408,9 @@ def dump(value, fp, sort_keys=True, skipkeys=False, pretty_print=True):
     )
     root.append(el)
     tree = etree.ElementTree(root)
+    # we write the doctype ourselves instead of using the 'doctype' argument
+    # of 'write' method, becuse lxml will force adding a '\n' even when
+    # pretty_print is False.
     if pretty_print:
         header = b"\n".join((XML_DECLARATION, PLIST_DOCTYPE, b""))
     else:

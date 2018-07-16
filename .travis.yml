@@ -1,16 +1,23 @@
 language: python
 sudo: false
-python:
-  - "2.7"
-  - "3.5"
-  - "3.6"
+matrix:
+  include:
+  - env: TOXENV=py27-cov,py27-cov-lxml
+    python: 2.7
+  - env: TOXENV=py36-cov,py36-cov-lxml
+    python: 3.6
+  - env: TOXENV=py37-cov,py37-cov-lxml
+    python: 3.7
+    dist: xenial
+    sudo: true
 install:
-  - pip install --upgrade pip setuptools wheel
-  - pip install tox-travis
+  - pip install tox
 script: tox
+after_success:
+  # upload code coverage to Codecov.io
+  - tox -e codecov
 before_deploy:
-  - pip wheel --no-deps -w dist .
-  - python setup.py sdist
+  - tox -e wheel
   - export WHL=$(ls dist/ufoLib*.whl)
   - export ZIP=$(ls dist/ufoLib*.zip)
 deploy:

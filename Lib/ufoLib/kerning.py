@@ -1,3 +1,6 @@
+from __future__ import absolute_import, unicode_literals
+
+
 def lookupKerningValue(pair, kerning, groups, fallback=0, glyphToFirstGroup=None, glyphToSecondGroup=None):
 	"""
 	Note: This expects kerning to be a flat dictionary

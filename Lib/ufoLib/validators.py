@@ -1,5 +1,6 @@
 """Various low level data validators."""
 
+from __future__ import absolute_import, unicode_literals
 import os
 import calendar
 from io import open
@@ -951,21 +952,26 @@ def fontLibValidator(value):
 	>>> fontLibValidator(lib)
 	(True, None)
 
-	>>> lib = {"public.glyphOrder" : [u"A", u"C", u"B"]}
-	>>> fontLibValidator(lib)
-	(True, None)
-
 	>>> lib = "hello"
-	>>> fontLibValidator(lib)
-	(False, 'The lib data is not in the correct format: expected a dictionary, found str')
+	>>> valid, msg = fontLibValidator(lib)
+	>>> valid
+	False
+	>>> print(msg)  # doctest: +ELLIPSIS
+	The lib data is not in the correct format: expected a dictionary, ...
 
 	>>> lib = {1: "hello"}
-	>>> fontLibValidator(lib)
-	(False, 'The lib key is not properly formatted: expected basestring, found int: 1')
+	>>> valid, msg = fontLibValidator(lib)
+	>>> valid
+	False
+	>>> print(msg)
+	The lib key is not properly formatted: expected basestring, found int: 1
 
 	>>> lib = {"public.glyphOrder" : "hello"}
-	>>> fontLibValidator(lib)
-	(False, 'public.glyphOrder is not properly formatted: expected list or tuple, found str')
+	>>> valid, msg = fontLibValidator(lib)
+	>>> valid
+	False
+	>>> print(msg)  # doctest: +ELLIPSIS
+	public.glyphOrder is not properly formatted: expected list or tuple,...
 
 	>>> lib = {"public.glyphOrder" : ["A", 1, "B"]}
 	>>> fontLibValidator(lib)

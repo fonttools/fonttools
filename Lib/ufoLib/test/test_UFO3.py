@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 import os
 import shutil
 import unittest
 import tempfile
 from io import open
+from fontTools.misc.py23 import unicode
 from ufoLib import UFOReader, UFOWriter, UFOLibError
 from ufoLib.glifLib import GlifLibError
 from ufoLib import plistlib
@@ -4130,6 +4131,28 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		writer = UFOWriter(self.ufoPath)
 		self.assertRaises(UFOLibError, writer.deleteGlyphSet, "does not exist")
 
+	def testWriteAsciiLayerOrder(self):
+		self.makeUFO(
+			layerContents=[
+				["public.default", "glyphs"],
+				["layer 1", "glyphs.layer 1"],
+				["layer 2", "glyphs.layer 2"],
+			]
+		)
+		writer = UFOWriter(self.ufoPath)
+		# if passed bytes string, it'll be decoded to ASCII unicode string
+		writer.writeLayerContents(["public.default", "layer 2", b"layer 1"])
+		path = os.path.join(self.ufoPath, "layercontents.plist")
+		with open(path, "rb") as f:
+			result = plistlib.load(f)
+		expected = [
+			["public.default", "glyphs"],
+			["layer 2", "glyphs.layer 2"],
+			["layer 1", "glyphs.layer 1"],
+		]
+		self.assertEqual(expected, result)
+		for layerName, directory in result:
+			assert isinstance(layerName, unicode)
 
 # -----
 # /data

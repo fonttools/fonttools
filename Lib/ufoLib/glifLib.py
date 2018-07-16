@@ -11,7 +11,7 @@ in a folder. It offers two ways to read glyph data, and one way to write
 glyph data. See the class doc string for details.
 """
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 import os
 from io import BytesIO, open
 from warnings import warn
@@ -22,8 +22,8 @@ from ufoLib.pointPen import AbstractPointPen, PointToSegmentPen
 from ufoLib.filenames import userNameToFileName
 from ufoLib.validators import isDictEnough, genericTypeValidator, colorValidator,\
 	guidelinesValidator, anchorsValidator, identifierValidator, imageValidator, glyphLibValidator
+from ufoLib import etree
 
-from lxml import etree
 
 __all__ = [
 	"GlyphSet",

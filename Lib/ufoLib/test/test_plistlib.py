@@ -1,13 +1,25 @@
 from __future__ import absolute_import, unicode_literals
-from ufoLib import plistlib
+import sys
 import os
 import datetime
 import codecs
 import collections
 from io import BytesIO
 from numbers import Integral
-from lxml import etree
+from fontTools.misc.py23 import tounicode
+from ufoLib import etree
+from ufoLib import plistlib
 import pytest
+
+
+PY2 = sys.version_info < (3,)
+if PY2:
+    # This is a ResourceWarning that only happens on py27 at interpreter
+    # finalization, and only when coverage is enabled. We can ignore it.
+    # https://github.com/numpy/numpy/issues/3778#issuecomment-24885336
+    pytestmark = pytest.mark.filterwarnings(
+        "ignore:tp_compare didn't return -1 or -2 for exception"
+    )
 
 
 # The testdata is generated using https://github.com/python/cpython/...
@@ -271,11 +283,11 @@ def test_controlcharacters():
         if i >= 32 or c in "\r\n\t":
             # \r, \n and \t are the only legal control chars in XML
             data = plistlib.dumps(testString)
-            # the stdlib's plistlib writer always replaces \r with \n
-            # inside string values; we don't (the ctrl character is
-            # escaped by lxml, so it roundtrips)
-            # if c != "\r":
-            assert plistlib.loads(data) == testString
+            # the stdlib's plistlib writer, as well as the elementtree
+            # parser, always replace \r with \n inside string values;
+            # lxml doesn't (the ctrl character is escaped), so it roundtrips
+            if c != "\r" or etree._have_lxml:
+                assert plistlib.loads(data) == testString
         else:
             with pytest.raises(ValueError):
                 plistlib.dumps(testString)
@@ -340,8 +352,9 @@ def test_invalidreal():
         (b"utf-8", "utf-8", codecs.BOM_UTF8),
         (b"utf-16", "utf-16-le", codecs.BOM_UTF16_LE),
         (b"utf-16", "utf-16-be", codecs.BOM_UTF16_BE),
-        (b"utf-32", "utf-32-le", codecs.BOM_UTF32_LE),
-        (b"utf-32", "utf-32-be", codecs.BOM_UTF32_BE),
+        # expat parser (used by ElementTree) does't support UTF-32
+        # (b"utf-32", "utf-32-le", codecs.BOM_UTF32_LE),
+        # (b"utf-32", "utf-32-be", codecs.BOM_UTF32_BE),
     ],
 )
 def test_xml_encodings(pl, xml_encoding, encoding, bom):
@@ -359,7 +372,7 @@ def test_fromtree(pl):
 
 def _strip(txt):
     return (
-        "".join(l.strip() for l in txt.splitlines())
+        "".join(l.strip() for l in tounicode(txt, "utf-8").splitlines())
         if txt is not None
         else ""
     )
@@ -380,9 +393,9 @@ def test_totree(pl):
 def test_no_pretty_print():
     data = plistlib.dumps({"data": b"hello"}, pretty_print=False)
     assert data == (
-        plistlib.XML_DECLARATION +
-        plistlib.PLIST_DOCTYPE +
-        b'<plist version="1.0">'
+        plistlib.XML_DECLARATION
+        + plistlib.PLIST_DOCTYPE
+        + b'<plist version="1.0">'
         b"<dict>"
         b"<key>data</key>"
         b"<data>aGVsbG8=</data>"

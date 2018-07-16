@@ -2,6 +2,9 @@
 Conversion functions.
 """
 
+from __future__ import absolute_import, unicode_literals
+
+
 # adapted from the UFO spec
 
 def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups):
