@@ -10,6 +10,18 @@ A low-level [UFO] reader and writer.
 
 [UFO] is a human-readable, XML-based file format that stores font source files.
 
+### Installation
+
+```sh
+$ pip install ufoLib
+```
+
+For better speed, you can install with extra dependencies like this:
+
+```sh
+$ pip install ufoLib[lxml]
+```
+
 [UFO]: http://unifiedfontobject.org/
 
 
