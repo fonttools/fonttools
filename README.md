@@ -2,6 +2,7 @@
 [![AppVeyor Status](https://ci.appveyor.com/api/projects/status/github/unified-font-object/ufoLib?svg=true)](https://ci.appveyor.com/project/adrientetar/ufolib)
 ![Python Versions](https://img.shields.io/badge/python-2.7%2C%203.5%2C%203.6-blue.svg)
 [![PyPI](https://img.shields.io/pypi/v/ufoLib.svg)](https://pypi.org/project/ufoLib/)
+[![codecov](https://codecov.io/gh/unified-font-object/ufoLib/branch/master/graph/badge.svg)](https://codecov.io/gh/unified-font-object/ufoLib)
 
 ufoLib
 ------
