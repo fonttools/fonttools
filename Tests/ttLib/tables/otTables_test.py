@@ -485,6 +485,50 @@ class InsertionMorphActionTest(unittest.TestCase):
         self.assertEqual(hexStr(writer.getAllData()), "1234fc4300090007")
 
 
+def test_splitMarkBasePos():
+	from fontTools.otlLib.builder import buildAnchor, buildMarkBasePosSubtable
+
+	marks = {
+		"acutecomb": (0, buildAnchor(0, 600)),
+		"gravecomb": (0, buildAnchor(0, 590)),
+		"cedillacomb": (1, buildAnchor(0, 0)),
+	}
+	bases = {
+		"a": {
+			0: buildAnchor(350, 500),
+			1: None,
+		},
+		"c": {
+			0: buildAnchor(300, 700),
+			1: buildAnchor(300, 0),
+		},
+	}
+	glyphOrder = ["a", "c", "acutecomb", "gravecomb", "cedillacomb"]
+	glyphMap = {g: i for i, g in enumerate(glyphOrder)}
+
+	oldSubTable = buildMarkBasePosSubtable(marks, bases, glyphMap)
+	oldSubTable.MarkCoverage.Format = oldSubTable.BaseCoverage.Format = 1
+	newSubTable = otTables.MarkBasePos()
+
+	ok = otTables.splitMarkBasePos(oldSubTable, newSubTable, overflowRecord=None)
+
+	assert ok
+	assert oldSubTable.Format == newSubTable.Format
+	assert oldSubTable.MarkCoverage.glyphs == [
+		"acutecomb", "gravecomb"
+	]
+	assert newSubTable.MarkCoverage.glyphs == ["cedillacomb"]
+	assert newSubTable.MarkCoverage.Format == 1
+	assert oldSubTable.BaseCoverage.glyphs == newSubTable.BaseCoverage.glyphs
+	assert newSubTable.BaseCoverage.Format == 1
+	assert oldSubTable.ClassCount == newSubTable.ClassCount == 1
+	assert oldSubTable.MarkArray.MarkCount == 2
+	assert newSubTable.MarkArray.MarkCount == 1
+	assert oldSubTable.BaseArray.BaseCount == newSubTable.BaseArray.BaseCount
+	assert newSubTable.BaseArray.BaseRecord[0].BaseAnchor[0] is None
+	assert newSubTable.BaseArray.BaseRecord[1].BaseAnchor[0] == buildAnchor(300, 0)
+
+
 if __name__ == "__main__":
     import sys
     sys.exit(unittest.main())
