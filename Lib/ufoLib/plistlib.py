@@ -1,4 +1,5 @@
 from __future__ import absolute_import, unicode_literals
+import sys
 import re
 from io import BytesIO
 from datetime import datetime
@@ -24,6 +25,21 @@ from fontTools.misc.py23 import (
     range,
 )
 
+# On python3, by default we deserialize <data> elements as bytes, whereas on
+# python2 we deserialize <data> elements as plistlib.Data objects, in order
+# to distinguish them from the built-in str type (which is bytes on python2).
+# Similarly, by default on python3 we serialize bytes as <data> elements;
+# however, on python2 we serialize bytes as <string> elements (they must
+# only contain ASCII characters in this case).
+# You can pass use_builtin_types=[True|False] to load/dump etc. functions to
+# enforce the same treatment of bytes across python 2 and 3.
+# NOTE that unicode type always maps to <string> element, and plistlib.Data
+# always maps to <data> element, regardless of use_builtin_types.
+PY3 = sys.version_info[0] > 2
+if PY3:
+    USE_BUILTIN_TYPES = True
+else:
+    USE_BUILTIN_TYPES = False
 
 # we use a custom XML declaration for backward compatibility with older
 # ufoLib versions which would write it using double quotes.
@@ -72,6 +88,52 @@ def _date_to_string(d):
     )
 
 
+def _encode_base64(data, maxlinelength=76, indent_level=1):
+    data = b64encode(data)
+    if data and maxlinelength:
+        # split into multiple lines right-justified to 'maxlinelength' chars
+        indent = b"\n" + b"  " * indent_level
+        max_length = max(16, maxlinelength - len(indent))
+        chunks = []
+        for i in range(0, len(data), max_length):
+            chunks.append(indent)
+            chunks.append(data[i : i + max_length])
+        chunks.append(indent)
+        data = b"".join(chunks)
+    return data
+
+
+class Data:
+    """Wrapper for binary data returned in place of the built-in bytes type
+    when loading property list data with use_builtin_types=False.
+    """
+
+    def __init__(self, data):
+        if not isinstance(data, bytes):
+            raise TypeError("Expected bytes, found %s" % type(data).__name__)
+        self.data = data
+
+    @classmethod
+    def fromBase64(cls, data):
+        return cls(b64decode(data))
+
+    def asBase64(self, maxlinelength=76, indent_level=1):
+        return _encode_base64(
+            self.data, maxlinelength=maxlinelength, indent_level=indent_level
+        )
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.data == other.data
+        elif isinstance(other, bytes):
+            return self.data == other
+        else:
+            return NotImplemented
+
+    def __repr__(self):
+        return "%s(%s)" % (self.__class__.__name__, repr(self.data))
+
+
 class PlistTarget(object):
     """ Event handler using the ElementTree Target API that can be
     passed to a XMLParser to produce property list objects from XML.
@@ -94,10 +156,14 @@ class PlistTarget(object):
     http://lxml.de/parsing.html#the-target-parser-interface
     """
 
-    def __init__(self, dict_type=dict):
+    def __init__(self, use_builtin_types=None, dict_type=dict):
         self.stack = []
         self.current_key = None
         self.root = None
+        if use_builtin_types is None:
+            self._use_builtin_types = USE_BUILTIN_TYPES
+        else:
+            self._use_builtin_types = use_builtin_types
         self._dict_type = dict_type
 
     def start(self, tag, attrib):
@@ -191,7 +257,10 @@ def end_string(self):
 
 
 def end_data(self):
-    self.add_object(b64decode(self.get_data()))
+    if self._use_builtin_types:
+        self.add_object(b64decode(self.get_data()))
+    else:
+        self.add_object(Data.fromBase64(self.get_data()))
 
 
 def end_date(self):
@@ -281,20 +350,27 @@ def _date_element(date, ctx):
 
 
 def _data_element(data, ctx):
-    data = b64encode(data)
-    if data and ctx.pretty_print:
-        # split into multiple lines right-justified to max 76 chars
-        indent = b"\n" + b"  " * ctx.indent_level
-        max_length = max(16, 76 - len(indent))
-        chunks = []
-        for i in range(0, len(data), max_length):
-            chunks.append(indent)
-            chunks.append(data[i : i + max_length])
-        chunks.append(indent)
-        data = b"".join(chunks)
     el = etree.Element("data")
-    el.text = data
+    el.text = _encode_base64(
+        data,
+        maxlinelength=(76 if ctx.pretty_print else None),
+        indent_level=ctx.indent_level,
+    )
     return el
+
+
+def _unicode_or_data_element(raw_bytes, ctx):
+    if ctx.use_builtin_types:
+        return _data_element(raw_bytes, ctx)
+    else:
+        try:
+            string = raw_bytes.decode(encoding="ascii", errors="strict")
+        except UnicodeDecodeError:
+            raise ValueError(
+                "invalid non-ASCII bytes; use unicode string instead: %r"
+                % raw_bytes
+            )
+        return _unicode_element(string, ctx)
 
 
 # if singledispatch is available, we use a generic '_make_element' function
@@ -315,8 +391,9 @@ if singledispatch is not None:
     _make_element.register(list)(_array_element)
     _make_element.register(tuple)(_array_element)
     _make_element.register(datetime)(_date_element)
-    _make_element.register(bytes)(_data_element)
+    _make_element.register(bytes)(_unicode_or_data_element)
     _make_element.register(bytearray)(_data_element)
+    _make_element.register(Data)(lambda v, ctx: _data_element(v.data, ctx))
 
 else:
     # otherwise we use a long switch-like if statement
@@ -336,8 +413,12 @@ else:
             return _array_element(value, ctx)
         elif isinstance(value, datetime):
             return _date_element(value, ctx)
-        elif isinstance(value, (bytes, bytearray)):
+        elif isinstance(value, bytes):
+            return _unicode_or_data_element(value, ctx)
+        elif isinstance(value, bytearray):
             return _data_element(value, ctx)
+        elif isinstance(value, Data):
+            return _data_element(value.data, ctx)
 
 
 # Public functions to create element tree from plist-compatible python
@@ -345,19 +426,31 @@ else:
 
 
 def totree(
-    value, sort_keys=True, skipkeys=False, pretty_print=True, indent_level=1
+    value,
+    sort_keys=True,
+    skipkeys=False,
+    use_builtin_types=None,
+    pretty_print=True,
+    indent_level=1,
 ):
+    if use_builtin_types is None:
+        use_builtin_types = USE_BUILTIN_TYPES
+    else:
+        use_builtin_types = use_builtin_types
     context = SimpleNamespace(
         sort_keys=sort_keys,
         skipkeys=skipkeys,
+        use_builtin_types=use_builtin_types,
         pretty_print=pretty_print,
         indent_level=indent_level,
     )
     return _make_element(value, context)
 
 
-def fromtree(tree, dict_type=dict):
-    target = PlistTarget(dict_type=dict_type)
+def fromtree(tree, use_builtin_types=None, dict_type=dict):
+    target = PlistTarget(
+        use_builtin_types=use_builtin_types, dict_type=dict_type
+    )
     for action, element in etree.iterwalk(tree, events=("start", "end")):
         if action == "start":
             target.start(element.tag, element.attrib)
@@ -373,12 +466,14 @@ def fromtree(tree, dict_type=dict):
 # python3 plistlib API
 
 
-def load(fp, dict_type=dict):
+def load(fp, use_builtin_types=None, dict_type=dict):
     if not hasattr(fp, "read"):
         raise AttributeError(
             "'%s' object has no attribute 'read'" % type(fp).__name__
         )
-    target = PlistTarget(dict_type=dict_type)
+    target = PlistTarget(
+        use_builtin_types=use_builtin_types, dict_type=dict_type
+    )
     parser = etree.XMLParser(target=target)
     result = etree.parse(fp, parser=parser)
     # lxml returns the target object directly, while ElementTree wraps
@@ -389,12 +484,19 @@ def load(fp, dict_type=dict):
         return result
 
 
-def loads(value, dict_type=dict):
+def loads(value, use_builtin_types=None, dict_type=dict):
     fp = BytesIO(value)
-    return load(fp, dict_type=dict_type)
+    return load(fp, use_builtin_types=use_builtin_types, dict_type=dict_type)
 
 
-def dump(value, fp, sort_keys=True, skipkeys=False, pretty_print=True):
+def dump(
+    value,
+    fp,
+    sort_keys=True,
+    skipkeys=False,
+    use_builtin_types=None,
+    pretty_print=True,
+):
     if not hasattr(fp, "write"):
         raise AttributeError(
             "'%s' object has no attribute 'write'" % type(fp).__name__
@@ -404,6 +506,7 @@ def dump(value, fp, sort_keys=True, skipkeys=False, pretty_print=True):
         value,
         sort_keys=sort_keys,
         skipkeys=skipkeys,
+        use_builtin_types=use_builtin_types,
         pretty_print=pretty_print,
     )
     root.append(el)
@@ -421,13 +524,20 @@ def dump(value, fp, sort_keys=True, skipkeys=False, pretty_print=True):
     )
 
 
-def dumps(value, sort_keys=True, skipkeys=False, pretty_print=True):
+def dumps(
+    value,
+    sort_keys=True,
+    skipkeys=False,
+    use_builtin_types=None,
+    pretty_print=True,
+):
     fp = BytesIO()
     dump(
         value,
         fp,
         sort_keys=sort_keys,
         skipkeys=skipkeys,
+        use_builtin_types=use_builtin_types,
         pretty_print=pretty_print,
     )
     return fp.getvalue()
@@ -445,7 +555,7 @@ def readPlist(path_or_file):
         path_or_file = open(path_or_file, "rb")
         did_open = True
     try:
-        return load(path_or_file)
+        return load(path_or_file, use_builtin_types=False)
     finally:
         if did_open:
             path_or_file.close()
@@ -458,7 +568,7 @@ def writePlist(value, path_or_file):
         path_or_file = open(path_or_file, "wb")
         did_open = True
     try:
-        dump(value, path_or_file)
+        dump(value, path_or_file, use_builtin_types=False)
     finally:
         if did_open:
             path_or_file.close()
@@ -466,9 +576,9 @@ def writePlist(value, path_or_file):
 
 @deprecated("Use 'loads' instead")
 def readPlistFromString(data):
-    return loads(tobytes(data, encoding="utf-8"))
+    return loads(tobytes(data, encoding="utf-8"), use_builtin_types=False)
 
 
 @deprecated("Use 'dumps' instead")
 def writePlistToString(value):
-    return dumps(value)
+    return dumps(value, use_builtin_types=False)
