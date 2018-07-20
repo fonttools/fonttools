@@ -6,7 +6,7 @@ import codecs
 import collections
 from io import BytesIO
 from numbers import Integral
-from fontTools.misc.py23 import tounicode
+from fontTools.misc.py23 import tounicode, unicode
 from ufoLib import etree
 from ufoLib import plistlib
 import pytest
@@ -21,7 +21,6 @@ if PY2:
         "ignore:tp_compare didn't return -1 or -2 for exception"
     )
 
-
 # The testdata is generated using https://github.com/python/cpython/...
 # Mac/Tools/plistlib_generate_testdata.py
 # which uses PyObjC to control the Cocoa classes for generating plists
@@ -30,9 +29,9 @@ with open(os.path.join(datadir, "test.plist"), "rb") as fp:
     TESTDATA = fp.read()
 
 
-@pytest.fixture
-def pl():
-    data = dict(
+def _test_pl(use_builtin_types):
+    DataClass = bytes if use_builtin_types else plistlib.Data
+    pl = dict(
         aString="Doodah",
         aList=["A", "B", 12, 32.5, [1, 2, 3]],
         aFloat=0.5,
@@ -48,24 +47,56 @@ def pl():
             aFalseValue=False,
             deeperDict=dict(a=17, b=32.5, c=[1, 2, "text"]),
         ),
-        someData=b"<binary gunk>",
-        someMoreData=b"<lots of binary gunk>\0\1\2\3" * 10,
-        nestedData=[b"<lots of binary gunk>\0\1\2\3" * 10],
+        someData=DataClass(b"<binary gunk>"),
+        someMoreData=DataClass(b"<lots of binary gunk>\0\1\2\3" * 10),
+        nestedData=[DataClass(b"<lots of binary gunk>\0\1\2\3" * 10)],
         aDate=datetime.datetime(2004, 10, 26, 10, 33, 33),
         anEmptyDict=dict(),
         anEmptyList=list(),
     )
-    data["\xc5benraa"] = "That was a unicode key."
-    return data
+    pl["\xc5benraa"] = "That was a unicode key."
+    return pl
 
 
-def test_io(tmpdir, pl):
+@pytest.fixture
+def pl():
+    return _test_pl(use_builtin_types=True)
+
+
+@pytest.fixture
+def pl_no_builtin_types():
+    return _test_pl(use_builtin_types=False)
+
+
+@pytest.fixture(
+    params=[True, False],
+    ids=["builtin=True", "builtin=False"],
+)
+def use_builtin_types(request):
+    return request.param
+
+
+@pytest.fixture
+def parametrized_pl(use_builtin_types):
+    return _test_pl(use_builtin_types), use_builtin_types
+
+
+def test__test_pl():
+    # sanity test that checks that the two values are equivalent
+    # (plistlib.Data implements __eq__ against bytes values)
+    pl = _test_pl(use_builtin_types=False)
+    pl2 = _test_pl(use_builtin_types=True)
+    assert pl == pl2
+
+
+def test_io(tmpdir, parametrized_pl):
+    pl, use_builtin_types = parametrized_pl
     testpath = tmpdir / "test.plist"
     with testpath.open("wb") as fp:
-        plistlib.dump(pl, fp)
+        plistlib.dump(pl, fp, use_builtin_types=use_builtin_types)
 
     with testpath.open("rb") as fp:
-        pl2 = plistlib.load(fp)
+        pl2 = plistlib.load(fp, use_builtin_types=use_builtin_types)
 
     assert pl == pl2
 
@@ -116,72 +147,94 @@ def test_int_overflow(pl):
         plistlib.dumps(pl)
 
 
-def test_bytearray(pl):
-    pl = b"<binary gunk\0\1\2\3>"
-    data = plistlib.dumps(bytearray(pl))
-    pl2 = plistlib.loads(data)
-    assert isinstance(pl2, bytes)
+def test_bytearray(use_builtin_types):
+    DataClass = bytes if use_builtin_types else plistlib.Data
+    pl = DataClass(b"<binary gunk\0\1\2\3>")
+    array = bytearray(pl) if use_builtin_types else bytearray(pl.data)
+    data = plistlib.dumps(array)
+    pl2 = plistlib.loads(data, use_builtin_types=use_builtin_types)
+    assert isinstance(pl2, DataClass)
     assert pl2 == pl
-    data2 = plistlib.dumps(pl2)
+    data2 = plistlib.dumps(pl2, use_builtin_types=use_builtin_types)
     assert data == data2
 
 
-def test_bytes(pl):
-    pl = b"<binary gunk\0\1\2\3>"
-    data = plistlib.dumps(pl)
-    pl2 = plistlib.loads(data)
-    assert isinstance(pl2, bytes)
+@pytest.mark.parametrize(
+    "DataClass, use_builtin_types",
+    [(bytes, True), (plistlib.Data, True), (plistlib.Data, False)],
+    ids=[
+        "bytes|builtin_types=True",
+        "Data|builtin_types=True",
+        "Data|builtin_types=False",
+    ],
+)
+def test_bytes_data(DataClass, use_builtin_types):
+    pl = DataClass(b"<binary gunk\0\1\2\3>")
+    data = plistlib.dumps(pl, use_builtin_types=use_builtin_types)
+    pl2 = plistlib.loads(data, use_builtin_types=use_builtin_types)
+    assert isinstance(pl2, bytes if use_builtin_types else plistlib.Data)
     assert pl2 == pl
-    data2 = plistlib.dumps(pl2)
+    data2 = plistlib.dumps(pl2, use_builtin_types=use_builtin_types)
     assert data == data2
+
+
+def test_bytes_string(use_builtin_types):
+    pl = b"some ASCII bytes"
+    data = plistlib.dumps(pl, use_builtin_types=False)
+    pl2 = plistlib.loads(data, use_builtin_types=use_builtin_types)
+    assert isinstance(pl2, unicode)  # it's always a <string>
+    assert pl2 == pl.decode()
 
 
 def test_indentation_array():
-    data = [[[[[[[[{"test": b"aaaaaa"}]]]]]]]]
+    data = [[[[[[[[{"test": "aaaaaa"}]]]]]]]]
     assert plistlib.loads(plistlib.dumps(data)) == data
 
 
 def test_indentation_dict():
     data = {
-        "1": {"2": {"3": {"4": {"5": {"6": {"7": {"8": {"9": b"aaaaaa"}}}}}}}}
+        "1": {"2": {"3": {"4": {"5": {"6": {"7": {"8": {"9": "aaaaaa"}}}}}}}}
     }
     assert plistlib.loads(plistlib.dumps(data)) == data
 
 
 def test_indentation_dict_mix():
-    data = {"1": {"2": [{"3": [[[[[{"test": b"aaaaaa"}]]]]]}]}}
+    data = {"1": {"2": [{"3": [[[[[{"test": "aaaaaa"}]]]]]}]}}
     assert plistlib.loads(plistlib.dumps(data)) == data
 
 
 @pytest.mark.xfail(reason="we use two spaces, Apple uses tabs")
-def test_apple_formatting():
+def test_apple_formatting(parametrized_pl):
     # we also split base64 data into multiple lines differently:
     # both right-justify data to 76 chars, but Apple's treats tabs
     # as 8 spaces, whereas we use 2 spaces
-    pl = plistlib.loads(TESTDATA)
-    data = plistlib.dumps(pl)
+    pl, use_builtin_types = parametrized_pl
+    pl = plistlib.loads(TESTDATA, use_builtin_types=use_builtin_types)
+    data = plistlib.dumps(pl, use_builtin_types=use_builtin_types)
     assert data == TESTDATA
 
 
-def test_apple_formatting_fromliteral(pl):
-    pl2 = plistlib.loads(TESTDATA)
+def test_apple_formatting_fromliteral(parametrized_pl):
+    pl, use_builtin_types = parametrized_pl
+    pl2 = plistlib.loads(TESTDATA, use_builtin_types=use_builtin_types)
     assert pl == pl2
 
 
-def test_apple_roundtrips():
-    pl = plistlib.loads(TESTDATA)
-    data = plistlib.dumps(pl)
-    pl2 = plistlib.loads(data)
-    data2 = plistlib.dumps(pl2)
+def test_apple_roundtrips(use_builtin_types):
+    pl = plistlib.loads(TESTDATA, use_builtin_types=use_builtin_types)
+    data = plistlib.dumps(pl, use_builtin_types=use_builtin_types)
+    pl2 = plistlib.loads(data, use_builtin_types=use_builtin_types)
+    data2 = plistlib.dumps(pl2, use_builtin_types=use_builtin_types)
     assert data == data2
 
 
-def test_bytesio(pl):
+def test_bytesio(parametrized_pl):
+    pl, use_builtin_types = parametrized_pl
     b = BytesIO()
-    plistlib.dump(pl, b)
-    pl2 = plistlib.load(BytesIO(b.getvalue()))
-    assert pl == pl2
-    pl2 = plistlib.load(BytesIO(b.getvalue()))
+    plistlib.dump(pl, b, use_builtin_types=use_builtin_types)
+    pl2 = plistlib.load(
+        BytesIO(b.getvalue()), use_builtin_types=use_builtin_types
+    )
     assert pl == pl2
 
 
@@ -357,16 +410,18 @@ def test_invalidreal():
         # (b"utf-32", "utf-32-be", codecs.BOM_UTF32_BE),
     ],
 )
-def test_xml_encodings(pl, xml_encoding, encoding, bom):
+def test_xml_encodings(parametrized_pl, xml_encoding, encoding, bom):
+    pl, use_builtin_types = parametrized_pl
     data = TESTDATA.replace(b"UTF-8", xml_encoding)
     data = bom + data.decode("utf-8").encode(encoding)
-    pl2 = plistlib.loads(data)
+    pl2 = plistlib.loads(data, use_builtin_types=use_builtin_types)
     assert pl == pl2
 
 
-def test_fromtree(pl):
+def test_fromtree(parametrized_pl):
+    pl, use_builtin_types = parametrized_pl
     tree = etree.fromstring(TESTDATA)
-    pl2 = plistlib.fromtree(tree)
+    pl2 = plistlib.fromtree(tree, use_builtin_types=use_builtin_types)
     assert pl == pl2
 
 
@@ -378,9 +433,10 @@ def _strip(txt):
     )
 
 
-def test_totree(pl):
+def test_totree(parametrized_pl):
+    pl, use_builtin_types = parametrized_pl
     tree = etree.fromstring(TESTDATA)[0]  # ignore root 'plist' element
-    tree2 = plistlib.totree(pl)
+    tree2 = plistlib.totree(pl, use_builtin_types=use_builtin_types)
     assert tree.tag == tree2.tag == "dict"
     for (_, e1), (_, e2) in zip(etree.iterwalk(tree), etree.iterwalk(tree2)):
         assert e1.tag == e2.tag
@@ -390,8 +446,12 @@ def test_totree(pl):
         assert _strip(e1.text) == _strip(e2.text)
 
 
-def test_no_pretty_print():
-    data = plistlib.dumps({"data": b"hello"}, pretty_print=False)
+def test_no_pretty_print(use_builtin_types):
+    data = plistlib.dumps(
+        {"data": b"hello" if use_builtin_types else plistlib.Data(b"hello")},
+        pretty_print=False,
+        use_builtin_types=use_builtin_types,
+    )
     assert data == (
         plistlib.XML_DECLARATION
         + plistlib.PLIST_DOCTYPE
@@ -407,43 +467,64 @@ def test_no_pretty_print():
 def test_readPlist_from_path(pl):
     path = os.path.join(datadir, "test.plist")
     pl2 = plistlib.readPlist(path)
+    assert isinstance(pl2["someData"], plistlib.Data)
     assert pl2 == pl
 
 
 def test_readPlist_from_file(pl):
-    f = open(os.path.join(datadir, "test.plist"), "rb")
-    pl2 = plistlib.readPlist(f)
-    assert pl2 == pl
-    assert not f.closed
-    f.close()
+    with open(os.path.join(datadir, "test.plist"), "rb") as f:
+        pl2 = plistlib.readPlist(f)
+        assert isinstance(pl2["someData"], plistlib.Data)
+        assert pl2 == pl
+        assert not f.closed
 
 
 def test_readPlistFromString(pl):
     pl2 = plistlib.readPlistFromString(TESTDATA)
+    assert isinstance(pl2["someData"], plistlib.Data)
     assert pl2 == pl
 
 
-def test_writePlist_to_path(tmpdir, pl):
+def test_writePlist_to_path(tmpdir, pl_no_builtin_types):
     testpath = tmpdir / "test.plist"
-    plistlib.writePlist(pl, str(testpath))
+    plistlib.writePlist(pl_no_builtin_types, str(testpath))
     with testpath.open("rb") as fp:
-        pl2 = plistlib.load(fp)
-    assert pl2 == pl
+        pl2 = plistlib.load(fp, use_builtin_types=False)
+    assert pl2 == pl_no_builtin_types
 
 
-def test_writePlist_to_file(tmpdir, pl):
+def test_writePlist_to_file(tmpdir, pl_no_builtin_types):
     testpath = tmpdir / "test.plist"
     with testpath.open("wb") as fp:
-        plistlib.writePlist(pl, fp)
+        plistlib.writePlist(pl_no_builtin_types, fp)
     with testpath.open("rb") as fp:
-        pl2 = plistlib.load(fp)
-    assert pl2 == pl
+        pl2 = plistlib.load(fp, use_builtin_types=False)
+    assert pl2 == pl_no_builtin_types
 
 
-def test_writePlistToString(pl):
-    data = plistlib.writePlistToString(pl)
+def test_writePlistToString(pl_no_builtin_types):
+    data = plistlib.writePlistToString(pl_no_builtin_types)
     pl2 = plistlib.loads(data)
-    assert pl2 == pl
+    assert pl2 == pl_no_builtin_types
+
+
+def test_load_use_builtin_types_default():
+    pl = plistlib.loads(TESTDATA)
+    expected = plistlib.Data if PY2 else bytes
+    assert isinstance(pl["someData"], expected)
+
+
+def test_dump_use_builtin_types_default(pl_no_builtin_types):
+    data = plistlib.dumps(pl_no_builtin_types)
+    pl2 = plistlib.loads(data)
+    expected = plistlib.Data if PY2 else bytes
+    assert isinstance(pl2["someData"], expected)
+    assert pl2 == pl_no_builtin_types
+
+
+def test_non_ascii_bytes():
+    with pytest.raises(ValueError, match="invalid non-ASCII bytes"):
+        plistlib.dumps("\U0001f40d".encode("utf-8"), use_builtin_types=False)
 
 
 if __name__ == "__main__":
