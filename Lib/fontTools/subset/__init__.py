@@ -3137,8 +3137,6 @@ def load_font(fontFile,
 
 @timer("compile and save font")
 def save_font(font, outfile, options):
-	if options.flavor and not hasattr(font, 'flavor'):
-		raise Exception("fonttools version does not support flavors.")
 	if options.with_zopfli and options.flavor == "woff":
 		from fontTools.ttLib import sfnt
 		sfnt.USE_ZOPFLI = True
@@ -3215,8 +3213,7 @@ def main(args=None):
 	args = args[1:]
 
 	subsetter = Subsetter(options=options)
-	basename, extension = splitext(fontfile)
-	outfile = basename + '.subset' + extension
+	outfile = None
 	glyphs = []
 	gids = []
 	unicodes = []
@@ -3267,6 +3264,14 @@ def main(args=None):
 
 	dontLoadGlyphNames = not options.glyph_names and not glyphs
 	font = load_font(fontfile, options, dontLoadGlyphNames=dontLoadGlyphNames)
+
+	if outfile is None:
+		basename, _ = splitext(fontfile)
+		if options.flavor is not None:
+			ext = "." + options.flavor.lower()
+		else:
+			ext = ".ttf" if font.sfntVersion == "\0\1\0\0" else ".otf"
+		outfile = basename + ".subset" + ext
 
 	with timer("compile glyph list"):
 		if wildcard_glyphs:
