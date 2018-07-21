@@ -56,7 +56,7 @@ __all__ = [
 	"convertUFOFormatVersion1ToFormatVersion2",
 ]
 
-__version__ = "2.3.1"
+__version__ = "2.3.2.dev0"
 
 
 class UFOLibError(Exception): pass
