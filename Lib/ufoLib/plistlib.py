@@ -286,7 +286,7 @@ _TARGET_END_HANDLERS = {
 # functions to build element tree from plist data
 
 
-def _unicode_element(value, ctx):
+def _string_element(value, ctx):
     el = etree.Element("string")
     el.text = value
     return el
@@ -308,7 +308,7 @@ def _integer_element(value, ctx):
         raise OverflowError(value)
 
 
-def _float_element(value, ctx):
+def _real_element(value, ctx):
     el = etree.Element("real")
     el.text = repr(value)
     return el
@@ -359,7 +359,7 @@ def _data_element(data, ctx):
     return el
 
 
-def _unicode_or_data_element(raw_bytes, ctx):
+def _string_or_data_element(raw_bytes, ctx):
     if ctx.use_builtin_types:
         return _data_element(raw_bytes, ctx)
     else:
@@ -370,7 +370,7 @@ def _unicode_or_data_element(raw_bytes, ctx):
                 "invalid non-ASCII bytes; use unicode string instead: %r"
                 % raw_bytes
             )
-        return _unicode_element(string, ctx)
+        return _string_element(string, ctx)
 
 
 # if singledispatch is available, we use a generic '_make_element' function
@@ -383,15 +383,15 @@ if singledispatch is not None:
     def _make_element(value, ctx):
         raise TypeError("unsupported type: %s" % type(value))
 
-    _make_element.register(unicode)(_unicode_element)
+    _make_element.register(unicode)(_string_element)
     _make_element.register(bool)(_bool_element)
     _make_element.register(Integral)(_integer_element)
-    _make_element.register(float)(_float_element)
+    _make_element.register(float)(_real_element)
     _make_element.register(dict)(_dict_element)
     _make_element.register(list)(_array_element)
     _make_element.register(tuple)(_array_element)
     _make_element.register(datetime)(_date_element)
-    _make_element.register(bytes)(_unicode_or_data_element)
+    _make_element.register(bytes)(_string_or_data_element)
     _make_element.register(bytearray)(_data_element)
     _make_element.register(Data)(lambda v, ctx: _data_element(v.data, ctx))
 
@@ -400,13 +400,13 @@ else:
 
     def _make_element(value, ctx):
         if isinstance(value, unicode):
-            return _unicode_element(value, ctx)
+            return _string_element(value, ctx)
         elif isinstance(value, bool):
             return _bool_element(value, ctx)
         elif isinstance(value, Integral):
             return _integer_element(value, ctx)
         elif isinstance(value, float):
-            return _float_element(value, ctx)
+            return _real_element(value, ctx)
         elif isinstance(value, dict):
             return _dict_element(value, ctx)
         elif isinstance(value, (list, tuple)):
@@ -414,7 +414,7 @@ else:
         elif isinstance(value, datetime):
             return _date_element(value, ctx)
         elif isinstance(value, bytes):
-            return _unicode_or_data_element(value, ctx)
+            return _string_or_data_element(value, ctx)
         elif isinstance(value, bytearray):
             return _data_element(value, ctx)
         elif isinstance(value, Data):
