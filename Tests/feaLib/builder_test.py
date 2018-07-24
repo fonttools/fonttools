@@ -285,6 +285,17 @@ class BuilderTest(unittest.TestCase):
             "it must be the first of the languagesystem statements",
             self.build, "languagesystem latn TRK; languagesystem DFLT dflt;")
 
+    def test_languagesystem_DFLT_not_preceding(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "languagesystems using the \"DFLT\" script tag must "
+            "precede all other languagesystems",
+            self.build,
+            "languagesystem DFLT dflt; "
+            "languagesystem latn dflt; "
+            "languagesystem DFLT fooo; "
+        )
+
     def test_script(self):
         builder = Builder(makeTTFont(), (None, None))
         builder.start_feature(location=None, name='test')

@@ -59,6 +59,7 @@ class Builder(object):
         self.lookupflag_ = 0
         self.lookupflag_markFilterSet_ = None
         self.language_systems = set()
+        self.seen_non_DFLT_script_ = False
         self.named_lookups_ = {}
         self.cur_lookup_ = None
         self.cur_lookup_name_ = None
@@ -616,6 +617,15 @@ class Builder(object):
             raise FeatureLibError(
                 'If "languagesystem DFLT dflt" is present, it must be '
                 'the first of the languagesystem statements', location)
+        if script == "DFLT":
+            if self.seen_non_DFLT_script_:
+                raise FeatureLibError(
+                    'languagesystems using the "DFLT" script tag must '
+                    "precede all other languagesystems",
+                    location
+                )
+        else:
+            self.seen_non_DFLT_script_ = True
         if (script, language) in self.default_language_systems_:
             raise FeatureLibError(
                 '"languagesystem %s %s" has already been specified' %
