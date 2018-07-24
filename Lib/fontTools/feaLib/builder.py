@@ -704,12 +704,7 @@ class Builder(object):
                 if key[:2] in self.get_default_language_systems_():
                     lookups = [l for l in lookups if l not in dflt_lookups]
                 self.features_.setdefault(key, []).extend(lookups)
-        if self.script_ == 'DFLT':
-            langsys = set(self.get_default_language_systems_())
-        else:
-            langsys = set()
-        langsys.add((self.script_, language))
-        self.language_systems = frozenset(langsys)
+        self.language_systems = frozenset([(self.script_, language)])
 
         if required:
             key = (self.script_, language)
