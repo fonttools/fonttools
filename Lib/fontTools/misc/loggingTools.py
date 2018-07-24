@@ -431,8 +431,8 @@ class ChannelsFilter(logging.Filter):
 
 class CapturingLogHandler(logging.Handler):
 	def __init__(self, logger, level):
+		super(CapturingLogHandler, self).__init__(level=level)
 		self.records = []
-		self.level = logging._checkLevel(level)
 		if isinstance(logger, basestring):
 			self.logger = logging.getLogger(logger)
 		else:
@@ -441,27 +441,25 @@ class CapturingLogHandler(logging.Handler):
 	def __enter__(self):
 		self.original_disabled = self.logger.disabled
 		self.original_level = self.logger.level
+		self.original_propagate = self.logger.propagate
 
 		self.logger.addHandler(self)
-		self.logger.level = self.level
+		self.logger.setLevel(self.level)
 		self.logger.disabled = False
+		self.logger.propagate = False
 
 		return self
 
 	def __exit__(self, type, value, traceback):
 		self.logger.removeHandler(self)
-		self.logger.level = self.original_level
-		self.logger.disabled = self.logger.disabled
+		self.logger.setLevel(self.original_level)
+		self.logger.disabled = self.original_disabled
+		self.logger.propagate = self.original_propagate
+
 		return self
 
-	def handle(self, record):
-		self.records.append(record)
-
 	def emit(self, record):
-		pass
-
-	def createLock(self):
-		self.lock = None
+		self.records.append(record)
 
 	def assertRegex(self, regexp):
 		import re
