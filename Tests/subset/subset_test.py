@@ -333,10 +333,8 @@ class SubsetTest(unittest.TestCase):
         subsetter.populate(text='ABC')
         font = TTFont(fontpath)
         with CapturingLogHandler('fontTools.subset.timer', logging.DEBUG) as captor:
-            captor.logger.propagate = False
             subsetter.subset(font)
-            logs = captor.records
-        captor.logger.propagate = True
+        logs = captor.records
 
         self.assertTrue(len(logs) > 5)
         self.assertEqual(len(logs), len([l for l in logs if 'msg' in l.args and 'time' in l.args]))
