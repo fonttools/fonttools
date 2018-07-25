@@ -493,7 +493,9 @@ def specializeCommands(commands,
 				if d0 is None: continue
 				new_op = d0+d+'curveto'
 
-		if new_op and len(args1) + len(args2) <= maxstack:
+		# Make sure the stack depth does not exceed (maxstack - 1), so
+		# that subroutinizer can insert subroutine calls at any point.
+		if new_op and len(args1) + len(args2) <= maxstack - 1:
 			commands[i-1] = (new_op, args1+args2)
 			del commands[i]
 
