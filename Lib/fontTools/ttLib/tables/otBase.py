@@ -331,7 +331,6 @@ class OTTableWriter(object):
 		iRange.reverse()
 
 		isExtension = hasattr(self, "Extension")
-		dontShare = hasattr(self, 'DontShare')
 
 		selfTables = tables
 
