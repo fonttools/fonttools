@@ -87,7 +87,13 @@ class BaseTTXConverter(DefaultTable):
 					from .otTables import fixSubTableOverFlows
 					ok = fixSubTableOverFlows(font, overflowRecord)
 				if not ok:
-					raise
+					# Try upgrading lookup to Extension and hope
+					# that cross-lookup sharing not happening would
+					# fix overflow...
+					from .otTables import fixLookupOverFlows
+					ok = fixLookupOverFlows(font, overflowRecord)
+					if not ok:
+						raise
 
 	def toXML(self, writer, font):
 		self.table.toXML2(writer, font)

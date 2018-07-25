@@ -1370,7 +1370,6 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 	"""
 	An offset has overflowed within a sub-table. We need to divide this subtable into smaller parts.
 	"""
-	ok = 0
 	table = ttf[overflowRecord.tableType].table
 	lookup = table.LookupList.Lookup[overflowRecord.LookupListIndex]
 	subIndex = overflowRecord.SubTableIndex
@@ -1391,7 +1390,7 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 		newExtSubTableClass = lookupTypes[overflowRecord.tableType][extSubTable.__class__.LookupType]
 		newExtSubTable = newExtSubTableClass()
 		newExtSubTable.Format = extSubTable.Format
-		lookup.SubTable.insert(subIndex + 1, newExtSubTable)
+		toInsert = newExtSubTable
 
 		newSubTableClass = lookupTypes[overflowRecord.tableType][subTableType]
 		newSubTable = newSubTableClass()
@@ -1400,7 +1399,7 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 		subTableType = subtable.__class__.LookupType
 		newSubTableClass = lookupTypes[overflowRecord.tableType][subTableType]
 		newSubTable = newSubTableClass()
-		lookup.SubTable.insert(subIndex + 1, newSubTable)
+		toInsert = newSubTable
 
 	if hasattr(lookup, 'SubTableCount'): # may not be defined yet.
 		lookup.SubTableCount = lookup.SubTableCount + 1
@@ -1413,9 +1412,11 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 			overflowRecord.tableType,
 			subTableType,
 		)
-		return ok
+		return False
 
 	ok = splitFunc(subtable, newSubTable, overflowRecord)
+	if ok:
+		lookup.SubTable.insert(subIndex + 1, toInsert)
 	return ok
 
 # End of OverFlow logic
