@@ -3,17 +3,14 @@ environment:
     - JOB: "2.7 32-bit"
       PYTHON_HOME: "C:\\Python27"
       TOXENV: "py27-cov"
-      TOXPYTHON: "C:\\Python27\\python.exe"
 
     - JOB: "3.6 64-bit"
       PYTHON_HOME: "C:\\Python36-x64"
       TOXENV: "py36-cov"
-      TOXPYTHON: "C:\\Python36-x64\\python.exe"
 
     - JOB: "3.7 64-bit"
       PYTHON_HOME: "C:\\Python37-x64"
       TOXENV: "py37-cov"
-      TOXPYTHON: "C:\\Python37-x64\\python.exe"
 
 install:
   # If there is a newer build queued for the same PR, cancel this one.
@@ -38,6 +35,12 @@ install:
 
   # install the dependencies to run the tests
   - "python -m pip install tox"
+
+  # Make a 'pythonX.X.bat' file in the current directory so that tox will find
+  # it and 'pythonX.X' will mean what we want it to. E.g. for 'TOXENV=py37',
+  # this will save a 'python3.7.bat' file containing "@C:\Python27\python %*"
+  # Credit: https://nedbatchelder.com/blog/201509/appveyor.html
+  - "python -c \"import os; open('python{0}.{1}.bat'.format(*os.environ['TOXENV'][2:4]), 'w').write('@{0}\\\\python \\x25*\\n'.format(os.environ['PYTHON']))\""
 
 
 build: false
