@@ -904,12 +904,12 @@ class CFFSpecializeProgramTest(unittest.TestCase):
         xpct_charstr = '1 64 10 51 29 39 15 21 15 20 15 18 rlinecurve'
         self.assertEqual(get_specialized_charstr(test_charstr), xpct_charstr)
 
-# maxstack CFF=48
+# maxstack CFF=48, specializer uses up to 47
     def test_maxstack(self):
         operands = '1 2 3 4 5 6 '
         operator = 'rrcurveto '
         test_charstr = (operands + operator)*9
-        xpct_charstr = (operands + operator + operands*8 + operator).rstrip()
+        xpct_charstr = (operands*2 + operator + operands*7 + operator).rstrip()
         self.assertEqual(get_specialized_charstr(test_charstr), xpct_charstr)
 
 
