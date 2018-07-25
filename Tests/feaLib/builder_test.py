@@ -512,6 +512,18 @@ class BuilderTest(unittest.TestCase):
         addOpenTypeFeatures(font, tree)
         assert "GSUB" in font
 
+    def test_unsupported_subtable_break(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'explicit "subtable" statement is intended for .* class kerning',
+            self.build,
+            "feature liga {"
+            "    sub f f by f_f;"
+            "    subtable;"
+            "    sub f i by f_i;"
+            "} liga;"
+        )
+
 
 def generate_feature_file_test(name):
     return lambda self: self.check_feature_file(name)

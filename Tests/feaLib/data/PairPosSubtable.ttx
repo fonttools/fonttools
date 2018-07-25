@@ -43,7 +43,7 @@
       <Lookup index="0">
         <LookupType value="2"/>
         <LookupFlag value="0"/>
-        <!-- SubTableCount=2 -->
+        <!-- SubTableCount=3 -->
         <PairPos index="0" Format="1">
           <Coverage>
             <Glyph value="A"/>
@@ -79,6 +79,29 @@
             </Class2Record>
             <Class2Record index="1">
               <Value1 XAdvance="-12"/>
+            </Class2Record>
+          </Class1Record>
+        </PairPos>
+        <PairPos index="2" Format="2">
+          <Coverage>
+            <Glyph value="v"/>
+            <Glyph value="w"/>
+          </Coverage>
+          <ValueFormat1 value="4"/>
+          <ValueFormat2 value="0"/>
+          <ClassDef1>
+          </ClassDef1>
+          <ClassDef2>
+            <ClassDef glyph="c" class="1"/>
+            <ClassDef glyph="d" class="1"/>
+          </ClassDef2>
+          <!-- Class1Count=1 -->
+          <!-- Class2Count=2 -->
+          <Class1Record index="0">
+            <Class2Record index="0">
+            </Class2Record>
+            <Class2Record index="1">
+              <Value1 XAdvance="-20"/>
             </Class2Record>
           </Class1Record>
         </PairPos>
