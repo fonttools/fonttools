@@ -495,7 +495,7 @@ def specializeCommands(commands,
 
 		# Make sure the stack depth does not exceed (maxstack - 1), so
 		# that subroutinizer can insert subroutine calls at any point.
-		if new_op and len(args1) + len(args2) <= maxstack - 1:
+		if new_op and len(args1) + len(args2) < maxstack:
 			commands[i-1] = (new_op, args1+args2)
 			del commands[i]
 
