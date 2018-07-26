@@ -10,6 +10,7 @@ lookup kernlookup {
     subtable;
     pos @group1 @group2 -12;
     subtable;
+    pos @group1 @group3 -10;
     pos @group3 @group2 -20;
 } kernlookup;
 
