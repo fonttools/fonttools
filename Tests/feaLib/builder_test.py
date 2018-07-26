@@ -524,6 +524,19 @@ class BuilderTest(unittest.TestCase):
             "} liga;"
         )
 
+    def test_skip_featureNames_if_no_name_table(self):
+        features = (
+            "feature ss01 {"
+            "    featureNames {"
+            '        name "ignored as we request to skip name table";'
+            "    };"
+            "    sub A by A.alt1;"
+            "} ss01;"
+        )
+        font = self.build(features, tables=["GSUB"])
+        self.assertIn("GSUB", font)
+        self.assertNotIn("name", font)
+
 
 def generate_feature_file_test(name):
     return lambda self: self.check_feature_file(name)

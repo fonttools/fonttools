@@ -290,10 +290,14 @@ class Builder(object):
             else:
                 params.SubfamilyNameID = 0
         elif tag in self.featureNames_:
-            assert tag in self.featureNames_ids_
-            params = otTables.FeatureParamsStylisticSet()
-            params.Version = 0
-            params.UINameID = self.featureNames_ids_[tag]
+            if not self.featureNames_ids_:
+                # name table wasn't selected among the tables to build; skip
+                pass
+            else:
+                assert tag in self.featureNames_ids_
+                params = otTables.FeatureParamsStylisticSet()
+                params.Version = 0
+                params.UINameID = self.featureNames_ids_[tag]
         elif tag in self.cv_parameters_:
             params = otTables.FeatureParamsCharacterVariants()
             params.Format = 0
