@@ -1,3 +1,27 @@
+- [feaLib] In the OTL table builder, when the ``name`` table is excluded
+  from the list of tables to be build, skip compiling ``featureNames`` blocks,
+  as the records referenced in ``FeatureParams`` table don't exist (05f95f0).
+- [otBase] Try ``ExtensionLookup`` if other offset-overflow methods fail
+  (05f95f0).
+- [feaLib] Added support for explicit ``subtable;`` break statements in
+  PairPos lookups; previously these were ignored (#1279, #1300, #1302).
+- [cffLib.specializer] Make sure the stack depth does not exceed maxstack - 1,
+  so that a subroutinizer can insert subroutine calls (#1301,
+  https://github.com/googlei18n/ufo2ft/issues/266).
+- [otTables] Added support for fixing offset overflow errors occurring inside
+  ``MarkBasePos`` subtables (#1297).
+- [subset] Write the default output file extension based on ``--flavor`` option,
+  or the value of ``TTFont.sfntVersion`` (d7ac0ad).
+- [unicodedata] Updated Blocks, Scripts and ScriptExtensions for Unicode 11
+  (452c85e).
+- [xmlWriter] Added context manager to XMLWriter class to autoclose file
+  descriptor on exit (#1290).
+- [psCharStrings] Optimize the charstring's bytecode by encoding as integers
+  all float values that have no decimal portion (8d7774a).
+- [ttFont] Fixed missing import of ``TTLibError`` exception (#1285).
+- [feaLib] Allow any languages other than ``dflt`` under ``DFLT`` script
+  (#1278, #1292).
+
 3.28.0 (released 2018-06-19)
 ----------------------------
 
