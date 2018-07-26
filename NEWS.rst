@@ -1,3 +1,6 @@
+3.29.0 (released 2018-07-26)
+----------------------------
+
 - [feaLib] In the OTL table builder, when the ``name`` table is excluded
   from the list of tables to be build, skip compiling ``featureNames`` blocks,
   as the records referenced in ``FeatureParams`` table don't exist (68951b7).
