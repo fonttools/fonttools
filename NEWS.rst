@@ -1,6 +1,6 @@
 - [feaLib] In the OTL table builder, when the ``name`` table is excluded
   from the list of tables to be build, skip compiling ``featureNames`` blocks,
-  as the records referenced in ``FeatureParams`` table don't exist (05f95f0).
+  as the records referenced in ``FeatureParams`` table don't exist (68951b7).
 - [otBase] Try ``ExtensionLookup`` if other offset-overflow methods fail
   (05f95f0).
 - [feaLib] Added support for explicit ``subtable;`` break statements in
