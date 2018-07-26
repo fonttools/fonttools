@@ -1503,6 +1503,7 @@ class ClassPairPosSubtableBuilder(object):
         st = otl.buildPairPosClassesSubtable(self.values_,
                                              self.builder_.glyphMap)
         self.subtables_.append(st)
+        self.forceSubtableBreak_ = False
 
 
 class PairPosBuilder(LookupBuilder):
