@@ -168,6 +168,10 @@ Glyph set expansion:
             * Keep all features.
         --layout-features+=aalt --layout-features-=vrt2
             * Keep default set of features plus 'aalt', but drop 'vrt2'.
+  --layout-scripts[+|-]=<script>[,<script>...]
+      Specify (=), add to (+=) or exclude from (-=) the comma-separated
+      set of OpenType layout script tags that will be preserved.  By
+      default all scripts are retained ('*').
 
 Hinting options:
   --hinting
@@ -1408,7 +1412,7 @@ def closure_glyphs(self, s):
 	del s.table
 
 @_add_method(ttLib.getTableClass('GSUB'),
-			 ttLib.getTableClass('GPOS'))
+	     ttLib.getTableClass('GPOS'))
 def subset_glyphs(self, s):
 	s.glyphs = s.glyphs_gsubed
 	if self.table.LookupList:
@@ -1419,14 +1423,14 @@ def subset_glyphs(self, s):
 	return True
 
 @_add_method(ttLib.getTableClass('GSUB'),
-			 ttLib.getTableClass('GPOS'))
+	     ttLib.getTableClass('GPOS'))
 def retain_empty_scripts(self):
 	# https://github.com/behdad/fonttools/issues/518
 	# https://bugzilla.mozilla.org/show_bug.cgi?id=1080739#c15
 	return self.__class__ == ttLib.getTableClass('GSUB')
 
 @_add_method(ttLib.getTableClass('GSUB'),
-			 ttLib.getTableClass('GPOS'))
+	     ttLib.getTableClass('GPOS'))
 def subset_lookups(self, lookup_indices):
 	"""Retains specified lookups, then removes empty features, language
 	systems, and scripts."""
@@ -1447,14 +1451,14 @@ def subset_lookups(self, lookup_indices):
 		self.table.ScriptList.subset_features(feature_indices, self.retain_empty_scripts())
 
 @_add_method(ttLib.getTableClass('GSUB'),
-			 ttLib.getTableClass('GPOS'))
+	     ttLib.getTableClass('GPOS'))
 def neuter_lookups(self, lookup_indices):
 	"""Sets lookups not in lookup_indices to None."""
 	if self.table.LookupList:
 		self.table.LookupList.neuter_lookups(lookup_indices)
 
 @_add_method(ttLib.getTableClass('GSUB'),
-			 ttLib.getTableClass('GPOS'))
+	     ttLib.getTableClass('GPOS'))
 def prune_lookups(self, remap=True):
 	"""Remove (default) or neuter unreferenced lookups"""
 	if self.table.ScriptList:
@@ -1478,7 +1482,7 @@ def prune_lookups(self, remap=True):
 		self.neuter_lookups(lookup_indices)
 
 @_add_method(ttLib.getTableClass('GSUB'),
-			 ttLib.getTableClass('GPOS'))
+	     ttLib.getTableClass('GPOS'))
 def subset_feature_tags(self, feature_tags):
 	if self.table.FeatureList:
 		feature_indices = \
@@ -1491,6 +1495,15 @@ def subset_feature_tags(self, feature_tags):
 		feature_indices = []
 	if self.table.ScriptList:
 		self.table.ScriptList.subset_features(feature_indices, self.retain_empty_scripts())
+
+@_add_method(ttLib.getTableClass('GSUB'),
+	     ttLib.getTableClass('GPOS'))
+def subset_script_tags(self, script_tags):
+	if self.table.ScriptList:
+		self.table.ScriptList.ScriptRecord = \
+			[s for s in self.table.ScriptList.ScriptRecord
+			 if s.ScriptTag in script_tags]
+		self.table.ScriptList.ScriptCount = len(self.table.ScriptList.ScriptRecord)
 
 @_add_method(ttLib.getTableClass('GSUB'),
 			 ttLib.getTableClass('GPOS'))
@@ -1508,9 +1521,11 @@ def prune_features(self):
 		self.table.ScriptList.subset_features(feature_indices, self.retain_empty_scripts())
 
 @_add_method(ttLib.getTableClass('GSUB'),
-			 ttLib.getTableClass('GPOS'))
+	     ttLib.getTableClass('GPOS'))
 def prune_pre_subset(self, font, options):
 	# Drop undesired features
+	if '*' not in options.layout_scripts:
+		self.subset_script_tags(options.layout_scripts)
 	if '*' not in options.layout_features:
 		self.subset_feature_tags(options.layout_features)
 	# Neuter unreferenced lookups
@@ -1518,7 +1533,7 @@ def prune_pre_subset(self, font, options):
 	return True
 
 @_add_method(ttLib.getTableClass('GSUB'),
-			 ttLib.getTableClass('GPOS'))
+	     ttLib.getTableClass('GPOS'))
 def remove_redundant_langsys(self):
 	table = self.table
 	if not table.ScriptList or not table.FeatureList:
@@ -2755,6 +2770,7 @@ class Options(object):
 		self.hinting_tables = self._hinting_tables_default[:]
 		self.legacy_kern = False # drop 'kern' table if GPOS available
 		self.layout_features = self._layout_features_default[:]
+		self.layout_scripts = ['*']
 		self.ignore_missing_glyphs = False
 		self.ignore_missing_unicodes = True
 		self.hinting = True
