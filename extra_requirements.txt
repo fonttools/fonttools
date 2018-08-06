@@ -1,2 +1,2 @@
-lxml==4.2.3
+lxml==4.2.4
 singledispatch==3.4.0.3; python_version < '3.4'
