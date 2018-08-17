@@ -9,7 +9,7 @@ languagesystem cyrl SRB;
 languagesystem grek dflt;
 
 feature liga {
-    # start of default rules that are applied under all language systems.
+    # start of default rules that are applied to unspecified languages below
     lookup HAS_I {
         sub f f i by f_f_i;
         sub f i by f_i;
@@ -20,7 +20,7 @@ feature liga {
         sub f f by f_f;
     } NO_I;
 
-    # end of default rules that are applied under all language systems.
+    # end of default rules that are applied to unspecified languages below
 
     script latn;
     language dflt;

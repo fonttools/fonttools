@@ -33,8 +33,8 @@ feature liga {
     sub c s by c_s;
 
     # The rules above will be placed in a lookup that is registered
-    # for all the specified languages for the script latn, but not any
-    # other scripts.
+    # for only the dflt language for this script, and not any other
+    # languages.
 
     language DEU;
     # script latn;       (stays the same)
@@ -43,16 +43,15 @@ feature liga {
     sub c k by c_k;
 
     # The rules above will be placed in a lookup that is registered
-    # only under the script latn, language DEU.
+    # only under the script latn, language DEU, along with the lookup
+    # registered for the dflt language for this script.
 
     language TRK;
 
-    # This will inherit both the top level default rules - the rules
-    # defined before the first 'script' statement, and the
-    # script-level default rules for 'latn': all the lookups of this
-    # feature defined after the 'script latn' statement, and before
-    # the language DEU statement.  If TRK were not named here, it
-    # would not inherit the default rules for the script latn.
+    # This will inherit only the lookup defined for the dflt language
+    # for this script.
+    # If this statement were not here, the language would only inherit
+    # the lookup at the start of this feature before script latn.
 } liga;
 
 # TODO(sascha): Uncomment once we support 'pos' statements.

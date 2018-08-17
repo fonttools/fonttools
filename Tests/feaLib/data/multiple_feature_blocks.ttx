@@ -22,7 +22,7 @@
           <DefaultLangSys>
             <ReqFeatureIndex value="65535"/>
             <!-- FeatureCount=1 -->
-            <FeatureIndex index="0" value="1"/>
+            <FeatureIndex index="0" value="0"/>
           </DefaultLangSys>
           <!-- LangSysCount=1 -->
           <LangSysRecord index="0">
