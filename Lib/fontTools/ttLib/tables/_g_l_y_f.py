@@ -263,6 +263,9 @@ flagYsame = 0x20
 flagReserved1 = 0x40
 flagReserved2 = 0x80
 
+# These flags are kept for XML output after decompiling the coordinates
+keepFlags = flagOnCurve + flagReserved1
+
 _flagSignBytes = {
 	0: 2,
 	flagXsame: 0,
@@ -408,10 +411,15 @@ class Glyph(object):
 				writer.begintag("contour")
 				writer.newline()
 				for j in range(last, self.endPtsOfContours[i] + 1):
-					writer.simpletag("pt", [
+					attrs = [
 							("x", self.coordinates[j][0]),
 							("y", self.coordinates[j][1]),
-							("on", self.flags[j] & flagOnCurve)])
+							("on", self.flags[j] & flagOnCurve),
+						]
+					if self.flags[j] & flagReserved1:
+						# Apple's AAT uses flagReserved1 in the first contour/first pt to flag glyphs that contain overlapping contours
+						attrs.append(("overlap", 1))
+					writer.simpletag("pt", attrs)
 					writer.newline()
 				last = self.endPtsOfContours[i] + 1
 				writer.endtag("contour")
@@ -441,7 +449,11 @@ class Glyph(object):
 				if name != "pt":
 					continue  # ignore anything but "pt"
 				coordinates.append((safeEval(attrs["x"]), safeEval(attrs["y"])))
-				flags.append(not not safeEval(attrs["on"]))
+				flag = not not safeEval(attrs["on"])
+				if "overlap" in attrs:
+					f = safeEval(attrs["overlap"])
+					flag += f * flagReserved1
+				flags.append(flag)
 			flags = array.array("B", flags)
 			if not hasattr(self, "coordinates"):
 				self.coordinates = coordinates
@@ -561,8 +573,8 @@ class Glyph(object):
 		assert xIndex == len(xCoordinates)
 		assert yIndex == len(yCoordinates)
 		coordinates.relativeToAbsolute()
-		# discard all flags but for "flagOnCurve"
-		self.flags = array.array("B", (f & flagOnCurve for f in flags))
+		# discard all flags except "keepFlags"
+		self.flags = array.array("B", (f & keepFlags for f in flags))
 
 	def decompileCoordinatesRaw(self, nCoordinates, data):
 		# unpack flags and prepare unpacking of coordinates
