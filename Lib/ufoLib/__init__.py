@@ -443,7 +443,7 @@ class UFOReader(object):
 		path = os.path.join(self._path, FEATURES_FILENAME)
 		if not self._checkForFile(path):
 			return ""
-		with open(path, "r") as f:
+		with open(path, "r", encoding="utf-8") as f:
 			text = f.read()
 		return text
 
