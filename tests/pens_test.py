@@ -17,6 +17,8 @@ class _TestPenMixin(object):
     PointPen test cases, plus some helper methods.
     """
 
+    maxDiff = None
+
     def diff(self, expected, actual):
         import difflib
         expected = str(self.Glyph(expected)).splitlines(True)
