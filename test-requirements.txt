@@ -1,3 +1,2 @@
 coverage
 pytest
-defcon==0.5.2
