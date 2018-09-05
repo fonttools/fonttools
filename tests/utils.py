@@ -50,7 +50,7 @@ class DummyPointPen(BaseDummyPen):
         self.commands.append(('endPath', tuple(), {}))
 
     def addPoint(self, pt, segmentType=None, smooth=False, name=None, **kwargs):
-        kwargs['segmentType'] = segmentType
+        kwargs['segmentType'] = str(segmentType) if segmentType else None
         kwargs['smooth'] = smooth
         kwargs['name'] = name
         self.commands.append(('addPoint', (pt,), kwargs))
