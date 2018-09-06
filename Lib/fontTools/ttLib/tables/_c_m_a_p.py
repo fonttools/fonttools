@@ -340,8 +340,7 @@ class cmap_format_2(CmapSubtable):
 		allKeys = array.array("H")
 		allKeys.fromstring(data[:512])
 		data = data[512:]
-		if sys.byteorder != "big":
-			allKeys.byteswap()
+		if sys.byteorder != "big": allKeys.byteswap()
 		subHeaderKeys = [ key//8 for key in allKeys]
 		maxSubHeaderindex = max(subHeaderKeys)
 
@@ -356,8 +355,7 @@ class cmap_format_2(CmapSubtable):
 			giDataPos = pos + subHeader.idRangeOffset-2
 			giList = array.array("H")
 			giList.fromstring(data[giDataPos:giDataPos + subHeader.entryCount*2])
-			if sys.byteorder != "big":
-				giList.byteswap()
+			if sys.byteorder != "big": giList.byteswap()
 			subHeader.glyphIndexArray = giList
 			subHeaderList.append(subHeader)
 		# How this gets processed.
@@ -702,8 +700,7 @@ class cmap_format_4(CmapSubtable):
 		allCodes.fromstring(data)
 		self.data = data = None
 
-		if sys.byteorder != "big":
-			allCodes.byteswap()
+		if sys.byteorder != "big": allCodes.byteswap()
 
 		# divide the data
 		endCode = allCodes[:segCount]
@@ -829,10 +826,9 @@ class cmap_format_4(CmapSubtable):
 		charCodeArray = array.array("H", endCode + [0] + startCode)
 		idDeltaArray = array.array("H", idDelta)
 		restArray = array.array("H", idRangeOffset + glyphIndexArray)
-		if sys.byteorder != "big":
-			charCodeArray.byteswap()
-			idDeltaArray.byteswap()
-			restArray.byteswap()
+		if sys.byteorder != "big": charCodeArray.byteswap()
+		if sys.byteorder != "big": idDeltaArray.byteswap()
+		if sys.byteorder != "big": restArray.byteswap()
 		data = charCodeArray.tostring() + idDeltaArray.tostring() + restArray.tostring()
 
 		length = struct.calcsize(cmap_format_4_format) + len(data)
@@ -872,8 +868,7 @@ class cmap_format_6(CmapSubtable):
 		#assert len(data) == 2 * entryCount  # XXX not true in Apple's Helvetica!!!
 		gids = array.array("H")
 		gids.fromstring(data[:2 * int(entryCount)])
-		if sys.byteorder != "big":
-			gids.byteswap()
+		if sys.byteorder != "big": gids.byteswap()
 		self.data = data = None
 
 		charCodes = list(range(firstCode, firstCode + len(gids)))
@@ -892,8 +887,7 @@ class cmap_format_6(CmapSubtable):
 				for code in codes
 			]
 			gids = array.array("H", valueList)
-			if sys.byteorder != "big":
-				gids.byteswap()
+			if sys.byteorder != "big": gids.byteswap()
 			data = gids.tostring()
 		else:
 			data = b""

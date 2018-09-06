@@ -30,23 +30,23 @@ class table_G__l_o_c(DefaultTable.DefaultTable):
         del self.flags
         self.locations = array.array('I' if flags & 1 else 'H')
         self.locations.fromstring(data[:len(data) - self.numAttribs * (flags & 2)])
-        self.locations.byteswap()
+        if sys.byteorder != "big": self.locations.byteswap()
         self.attribIds = array.array('H')
         if flags & 2:
             self.attribIds.fromstring(data[-self.numAttribs * 2:])
-            self.attribIds.byteswap()
+            if sys.byteorder != "big": self.attribIds.byteswap()
 
     def compile(self, ttFont):
         data = sstruct.pack(Gloc_header, dict(version=1.0,
                 flags=(bool(self.attribIds) << 1) + (self.locations.typecode == 'I'),
                 numAttribs=self.numAttribs))
-        self.locations.byteswap()
+        if sys.byteorder != "big": self.locations.byteswap()
         data += self.locations.tostring()
-        self.locations.byteswap()
+        if sys.byteorder != "big": self.locations.byteswap()
         if self.attribIds:
-            self.attribIds.byteswap()
+            if sys.byteorder != "big": self.attribIds.byteswap()
             data += self.attribIds.tostring()
-            self.attribIds.byteswap()
+            if sys.byteorder != "big": self.attribIds.byteswap()
         return data
 
     def set(self, locations):

@@ -582,8 +582,7 @@ class WOFF2LocaTable(getTableClass('loca')):
 					locations.append(self.locations[i] // 2)
 			else:
 				locations = array.array("I", self.locations)
-			if sys.byteorder != "big":
-				locations.byteswap()
+			if sys.byteorder != "big": locations.byteswap()
 			data = locations.tostring()
 		else:
 			# use the most compact indexFormat given the current glyph offsets
@@ -627,8 +626,7 @@ class WOFF2GlyfTable(getTableClass('glyf')):
 		self.bboxStream = self.bboxStream[bboxBitmapSize:]
 
 		self.nContourStream = array.array("h", self.nContourStream)
-		if sys.byteorder != "big":
-			self.nContourStream.byteswap()
+		if sys.byteorder != "big": self.nContourStream.byteswap()
 		assert len(self.nContourStream) == self.numGlyphs
 
 		if 'head' in ttFont:

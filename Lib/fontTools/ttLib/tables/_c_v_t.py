@@ -10,14 +10,12 @@ class table__c_v_t(DefaultTable.DefaultTable):
 	def decompile(self, data, ttFont):
 		values = array.array("h")
 		values.fromstring(data)
-		if sys.byteorder != "big":
-			values.byteswap()
+		if sys.byteorder != "big": values.byteswap()
 		self.values = values
 
 	def compile(self, ttFont):
 		values = self.values[:]
-		if sys.byteorder != "big":
-			values.byteswap()
+		if sys.byteorder != "big": values.byteswap()
 		return values.tostring()
 
 	def toXML(self, writer, ttFont):

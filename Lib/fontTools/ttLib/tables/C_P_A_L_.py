@@ -56,8 +56,7 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 		if offset == 0:
 			return [0] * numElements
 		result = array.array("H", data[offset : offset + 2 * numElements])
-		if sys.byteorder != "big":
-			result.byteswap()
+		if sys.byteorder != "big": result.byteswap()
 		assert len(result) == numElements, result
 		return result.tolist()
 
@@ -65,8 +64,7 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 		if offset == 0:
 			return [0] * numElements
 		result = array.array("I", data[offset : offset + 4 * numElements])
-		if sys.byteorder != "big":
-			result.byteswap()
+		if sys.byteorder != "big": result.byteswap()
 		assert len(result) == numElements, result
 		return result.tolist()
 

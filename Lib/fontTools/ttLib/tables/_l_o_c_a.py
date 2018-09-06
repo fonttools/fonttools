@@ -21,8 +21,7 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 			format = "H"
 		locations = array.array(format)
 		locations.fromstring(data)
-		if sys.byteorder != "big":
-			locations.byteswap()
+		if sys.byteorder != "big": locations.byteswap()
 		if not longFormat:
 			l = array.array("I")
 			for i in range(len(locations)):
@@ -47,8 +46,7 @@ class table__l_o_c_a(DefaultTable.DefaultTable):
 		else:
 			locations = array.array("I", self.locations)
 			ttFont['head'].indexToLocFormat = 1
-		if sys.byteorder != "big":
-			locations.byteswap()
+		if sys.byteorder != "big": locations.byteswap()
 		return locations.tostring()
 
 	def set(self, locations):

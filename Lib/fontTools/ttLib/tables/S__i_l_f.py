@@ -717,7 +717,7 @@ class Pass(object):
         data = data[2 * self.numRules + 2:]
         for i in range(self.numTransitional):
             a = array("H", data[i*self.numColumns*2:(i+1)*self.numColumns*2])
-            a.byteswap()
+            if sys.byteorder != "big": a.byteswap()
             self.stateTrans.append(a)
         data = data[self.numTransitional * self.numColumns * 2 + 1:]
         self.passConstraints = data[:pConstraint]
@@ -738,9 +738,9 @@ class Pass(object):
         constraintCode = "\000" + "".join(self.ruleConstraints)
         transes = []
         for t in self.stateTrans:
-            t.byteswap()
+            if sys.byteorder != "big": t.byteswap()
             transes.append(t.tostring())
-            t.byteswap()
+            if sys.byteorder != "big": t.byteswap()
         if not len(transes):
             self.startStates = [0]
         oRuleMap = reduce(lambda a, x: (a[0]+len(x), a[1]+[a[0]]), self.rules+[[]], (0, []))[1]

@@ -267,8 +267,7 @@ class TupleVariation(object):
 				points = array.array("B")
 				pointsSize = numPointsInRun
 			points.fromstring(data[pos:pos+pointsSize])
-			if sys.byteorder != "big":
-				points.byteswap()
+			if sys.byteorder != "big": points.byteswap()
 
 			assert len(points) == numPointsInRun
 			pos += pointsSize
@@ -425,8 +424,7 @@ class TupleVariation(object):
 					deltas = array.array("b")
 					deltasSize = numDeltasInRun
 				deltas.fromstring(data[pos:pos+deltasSize])
-				if sys.byteorder != "big":
-					deltas.byteswap()
+				if sys.byteorder != "big": deltas.byteswap()
 				assert len(deltas) == numDeltasInRun
 				pos += deltasSize
 				result.extend(deltas)

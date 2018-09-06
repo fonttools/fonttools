@@ -121,8 +121,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			offsets = array.array("I")
 			offsetsSize = (glyphCount + 1) * 4
 		offsets.fromstring(data[0 : offsetsSize])
-		if sys.byteorder != "big":
-			offsets.byteswap()
+		if sys.byteorder != "big": offsets.byteswap()
 
 		# In the short format, offsets need to be multiplied by 2.
 		# This is not documented in Apple's TrueType specification,
@@ -152,8 +151,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		else:
 			packed = array.array("I", offsets)
 			tableFormat = 1
-		if sys.byteorder != "big":
-			packed.byteswap()
+		if sys.byteorder != "big": packed.byteswap()
 		return (packed.tostring(), tableFormat)
 
 	def toXML(self, writer, ttFont):

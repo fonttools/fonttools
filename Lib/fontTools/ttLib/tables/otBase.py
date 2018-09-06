@@ -145,8 +145,7 @@ class OTTableReader(object):
 		pos = self.pos
 		newpos = pos + count * 2
 		value = array.array("H", self.data[pos:newpos])
-		if sys.byteorder != "big":
-			value.byteswap()
+		if sys.byteorder != "big": value.byteswap()
 		self.pos = newpos
 		return value
 

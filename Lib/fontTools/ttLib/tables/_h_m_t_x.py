@@ -40,8 +40,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 		sideBearings = array.array("h", data[:2 * numberOfSideBearings])
 		data = data[2 * numberOfSideBearings:]
 
-		if sys.byteorder != "big":
-			sideBearings.byteswap()
+		if sys.byteorder != "big": sideBearings.byteswap()
 		if data:
 			log.warning("too much '%s' table data" % self.tableTag)
 		self.metrics = {}
@@ -98,8 +97,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 			else:
 				raise
 		additionalMetrics = array.array("h", additionalMetrics)
-		if sys.byteorder != "big":
-			additionalMetrics.byteswap()
+		if sys.byteorder != "big": additionalMetrics.byteswap()
 		data = data + additionalMetrics.tostring()
 		return data
 
