@@ -705,19 +705,11 @@ class Builder(object):
         self.cur_lookup_ = None
 
         key = (self.script_, language, self.cur_feature_name_)
-        if not include_default:
-            # don't include any lookups added by script DFLT in this feature
+        lookups = self.features_.get((key[0], 'dflt', key[2]))
+        if (language == 'dflt' or include_default) and lookups:
+            self.features_[key] = lookups[:]
+        else:
             self.features_[key] = []
-        elif language != 'dflt':
-            # add rules defined between script statement and its first following
-            # language statement to each of its explicitly specified languages:
-            # http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html#4.b.ii
-            lookups = self.features_.get((key[0], 'dflt', key[2]))
-            dflt_lookups = self.features_.get(('DFLT', 'dflt', key[2]), [])
-            if lookups:
-                if key[:2] in self.get_default_language_systems_():
-                    lookups = [l for l in lookups if l not in dflt_lookups]
-                self.features_.setdefault(key, []).extend(lookups)
         self.language_systems = frozenset([(self.script_, language)])
 
         if required:
