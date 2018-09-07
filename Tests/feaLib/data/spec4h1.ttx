@@ -65,16 +65,18 @@
       <FeatureRecord index="0">
         <FeatureTag value="liga"/>
         <Feature>
-          <!-- LookupCount=2 -->
-          <LookupListIndex index="0" value="2"/>
-          <LookupListIndex index="1" value="3"/>
+          <!-- LookupCount=3 -->
+          <LookupListIndex index="0" value="1"/>
+          <LookupListIndex index="1" value="2"/>
+          <LookupListIndex index="2" value="3"/>
         </Feature>
       </FeatureRecord>
       <FeatureRecord index="1">
         <FeatureTag value="liga"/>
         <Feature>
-          <!-- LookupCount=1 -->
-          <LookupListIndex index="0" value="2"/>
+          <!-- LookupCount=2 -->
+          <LookupListIndex index="0" value="1"/>
+          <LookupListIndex index="1" value="2"/>
         </Feature>
       </FeatureRecord>
       <FeatureRecord index="2">

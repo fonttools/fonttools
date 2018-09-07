@@ -706,7 +706,7 @@ class Builder(object):
 
         key = (self.script_, language, self.cur_feature_name_)
         lookups = self.features_.get((key[0], 'dflt', key[2]))
-        if language != 'dflt' and include_default and lookups:
+        if (language == 'dflt' or include_default) and lookups:
             self.features_[key] = lookups[:]
         else:
             self.features_[key] = []

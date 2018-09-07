@@ -19,6 +19,11 @@
       <ScriptRecord index="1">
         <ScriptTag value="cyrl"/>
         <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="3"/>
+          </DefaultLangSys>
           <!-- LangSysCount=1 -->
           <LangSysRecord index="0">
             <LangSysTag value="SRB "/>
@@ -74,16 +79,20 @@
       <FeatureRecord index="0">
         <FeatureTag value="liga"/>
         <Feature>
-          <!-- LookupCount=2 -->
-          <LookupListIndex index="0" value="2"/>
-          <LookupListIndex index="1" value="3"/>
+          <!-- LookupCount=4 -->
+          <LookupListIndex index="0" value="0"/>
+          <LookupListIndex index="1" value="1"/>
+          <LookupListIndex index="2" value="2"/>
+          <LookupListIndex index="3" value="3"/>
         </Feature>
       </FeatureRecord>
       <FeatureRecord index="1">
         <FeatureTag value="liga"/>
         <Feature>
-          <!-- LookupCount=1 -->
-          <LookupListIndex index="0" value="4"/>
+          <!-- LookupCount=3 -->
+          <LookupListIndex index="0" value="0"/>
+          <LookupListIndex index="1" value="1"/>
+          <LookupListIndex index="2" value="4"/>
         </Feature>
       </FeatureRecord>
       <FeatureRecord index="2">
@@ -104,8 +113,10 @@
       <FeatureRecord index="4">
         <FeatureTag value="liga"/>
         <Feature>
-          <!-- LookupCount=1 -->
-          <LookupListIndex index="0" value="2"/>
+          <!-- LookupCount=3 -->
+          <LookupListIndex index="0" value="0"/>
+          <LookupListIndex index="1" value="1"/>
+          <LookupListIndex index="2" value="2"/>
         </Feature>
       </FeatureRecord>
     </FeatureList>
