@@ -145,6 +145,10 @@ Glyph set expansion:
   --no-recommended-glyphs
       Do not add glyphs 0, 1, 2, and 3 to the subset, unless specified in
       glyph set. [default]
+  --no-layout-closure
+      Do not expand glyph set to add glyphs produced by OpenType layout
+      features.  Instead, OpenType layout features will be subset to only
+      rules that are relevant to the otherwise-specified glyph set.
   --layout-features[+|-]=<feature>[,<feature>...]
       Specify (=), add to (+=) or exclude from (-=) the comma-separated
       set of OpenType layout feature tags that will be preserved.
@@ -2769,6 +2773,7 @@ class Options(object):
 		self.passthrough_tables = False  # keep/drop tables we can't subset
 		self.hinting_tables = self._hinting_tables_default[:]
 		self.legacy_kern = False # drop 'kern' table if GPOS available
+		self.layout_closure = True
 		self.layout_features = self._layout_features_default[:]
 		self.layout_scripts = ['*']
 		self.ignore_missing_glyphs = False
@@ -2979,7 +2984,7 @@ class Subsetter(object):
 					self.glyphs.add(font.getGlyphName(i))
 				log.info("Added first four glyphs to subset")
 
-		if 'GSUB' in font:
+		if self.options.layout_closure and 'GSUB' in font:
 			with timer("close glyph list over 'GSUB'"):
 				log.info("Closing glyph list over 'GSUB': %d glyphs before",
 						 len(self.glyphs))
