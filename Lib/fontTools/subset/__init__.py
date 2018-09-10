@@ -472,10 +472,10 @@ def closure_glyphs(self, s, cur_glyphs):
 
 @_add_method(otTables.AlternateSubst)
 def subset_glyphs(self, s):
-	self.alternates = {g:vlist
+	self.alternates = {g:[v for v in vlist if v in s.glyphs]
 					   for g,vlist in self.alternates.items()
 					   if g in s.glyphs and
-					   all(v in s.glyphs for v in vlist)}
+					   any(v in s.glyphs for v in vlist)}
 	return bool(self.alternates)
 
 @_add_method(otTables.LigatureSubst)
