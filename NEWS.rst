@@ -1,3 +1,10 @@
+- [feaLib] Fixed issue whereby lookups from DFLT/dflt were not included in the
+  DFLT/non-dflt language systems (#1307).
+- [graphite] Fixed issue on big-endian architectures (e.g. ppc64) (#1311).
+- [subset] Added ``--layout-scripts`` option to add/exclude set of OpenType
+  layout scripts that will be preserved. By default all scripts are retained
+  (``'*'``) (#1303).
+
 3.29.0 (released 2018-07-26)
 ----------------------------
 
