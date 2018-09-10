@@ -1,3 +1,6 @@
+3.29.1 (released 2018-09-10)
+----------------------------
+
 - [feaLib] Fixed issue whereby lookups from DFLT/dflt were not included in the
   DFLT/non-dflt language systems (#1307).
 - [graphite] Fixed issue on big-endian architectures (e.g. ppc64) (#1311).
