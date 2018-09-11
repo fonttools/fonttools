@@ -4,6 +4,7 @@ from fontTools.ttLib import TTFont
 from fontTools.varLib import build
 from fontTools.varLib.interpolate_layout import interpolate_layout
 from fontTools.varLib.interpolate_layout import main as interpolate_layout_main
+from fontTools.designspaceLib import DesignSpaceDocumentError
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 import difflib
 import os
@@ -157,24 +158,9 @@ class InterpolateLayoutTest(unittest.TestCase):
         The variable font will inherit the GSUB table from the
         base master.
         """
-        suffix = '.ttf'
         ds_path = self.get_test_input('InterpolateLayout3.designspace')
-        ufo_dir = self.get_test_input('master_ufo')
-        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
-
-        self.temp_dir()
-        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily2-')
-        for path in ttx_paths:
-            self.compile_font(path, suffix, self.tempdir)
-
-        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
-        instfont = interpolate_layout(ds_path, {'weight': 500}, finder)
-
-        tables = ['GSUB']
-        expected_ttx_path = self.get_test_output('InterpolateLayout.ttx')
-        self.expect_ttx(instfont, expected_ttx_path, tables)
-        self.check_ttx_dump(instfont, expected_ttx_path, tables, suffix)
-
+        with self.assertRaisesRegex(DesignSpaceDocumentError, "No axes defined"):
+            instfont = interpolate_layout(ds_path, {'weight': 500})
 
     def test_varlib_interpolate_layout_GPOS_only_size_feat_same_val_ttf(self):
         """Only GPOS; 'size' feature; same values in all masters.
