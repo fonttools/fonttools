@@ -379,7 +379,7 @@ class BaseDocWriter(object):
         self._axes = []     # for use by the writer only
         self._rules = []    # for use by the writer only
 
-    def write(self, pretty=True):
+    def write(self, pretty=True, encoding="utf-8", xml_declaration=True):
         if self.documentObject.axes:
             self.root.append(ET.Element("axes"))
         for axisObject in self.documentObject.axes:
@@ -406,7 +406,12 @@ class BaseDocWriter(object):
         if pretty:
             _indent(self.root, whitespace=self._whiteSpace)
         tree = ET.ElementTree(self.root)
-        tree.write(self.path, encoding="utf-8", method='xml', xml_declaration=True)
+        tree.write(
+            self.path,
+            encoding=encoding,
+            method='xml',
+            xml_declaration=xml_declaration,
+        )
 
     def _makeLocationElement(self, locationObject, name=None):
         """ Convert Location dict to a locationElement."""
@@ -669,6 +674,13 @@ class BaseDocReader(LogMixin):
         self.axisDefaults = {}
         self._strictAxisNames = True
 
+    @classmethod
+    def fromstring(cls, string, documentObject):
+        f = BytesIO(tobytes(string, encoding="utf-8"))
+        self = cls(f, documentObject)
+        self.path = None
+        return self
+
     def read(self):
         self.readAxes()
         self.readRules()
@@ -861,7 +873,7 @@ class BaseDocReader(LogMixin):
 
     def _readSingleInstanceElement(self, instanceElement, makeGlyphs=True, makeKerning=True, makeInfo=True):
         filename = instanceElement.attrib.get('filename')
-        if filename is not None:
+        if filename is not None and self.documentObject.path is not None:
             instancePath = os.path.join(os.path.dirname(self.documentObject.path), filename)
         else:
             instancePath = None
@@ -1023,6 +1035,37 @@ class DesignSpaceDocument(LogMixin):
             self.writerClass = writerClass
         else:
             self.writerClass = BaseDocWriter
+
+    @classmethod
+    def fromfile(cls, path, readerClass=None, writerClass=None):
+        self = cls(readerClass=readerClass, writerClass=writerClass)
+        self.read(path)
+        return self
+
+    @classmethod
+    def fromstring(cls, string, readerClass=None, writerClass=None):
+        self = cls(readerClass=readerClass, writerClass=writerClass)
+        reader = self.readerClass.fromstring(string, self)
+        reader.read()
+        if self.sources:
+            self.findDefault()
+        return self
+
+    def tostring(self, encoding=None):
+        if encoding is unicode or (
+            encoding is not None and encoding.lower() == "unicode"
+        ):
+            f = UnicodeIO()
+            xml_declaration = False
+        elif encoding is None or encoding == "utf-8":
+            f = BytesIO()
+            encoding = "utf-8"
+            xml_declaration = True
+        else:
+            raise ValueError("unsupported encoding: '%s'" % encoding)
+        writer = self.writerClass(f, self)
+        writer.write(encoding=encoding, xml_declaration=xml_declaration)
+        return f.getvalue()
 
     def read(self, path):
         self.path = path
