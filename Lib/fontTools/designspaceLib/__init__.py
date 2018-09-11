@@ -784,10 +784,10 @@ class BaseDocReader(LogMixin):
 
     def readAxes(self):
         # read the axes elements, including the warp map.
-        if len(self.root.findall(".axes/axis")) == 0:
-            self._strictAxisNames = False
+        axisElements = self.root.findall(".axes/axis")
+        if not axisElements:
             return
-        for axisElement in self.root.findall(".axes/axis"):
+        for axisElement in axisElements:
             axisObject = self.axisDescriptorClass()
             axisObject.name = axisElement.attrib.get("name")
             axisObject.minimum = float(axisElement.attrib.get("minimum"))
@@ -870,7 +870,7 @@ class BaseDocReader(LogMixin):
 
     def readLocationElement(self, locationElement):
         """ Format 0 location reader """
-        if not self.documentObject.axes:
+        if self._strictAxisNames and not self.documentObject.axes:
             raise DesignSpaceDocumentError("No axes defined")
         loc = {}
         for dimensionElement in locationElement.findall(".dimension"):
