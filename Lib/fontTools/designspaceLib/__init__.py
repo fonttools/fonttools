@@ -105,7 +105,24 @@ def _indent(elem, whitespace="    ", level=0):
             elem.tail = i
 
 
-class SimpleDescriptor(object):
+class AsDictMixin(object):
+
+    def asdict(self):
+        d = {}
+        for attr, value in self.__dict__.items():
+            if attr.startswith("_"):
+                continue
+            if hasattr(value, "asdict"):
+                value = value.asdict()
+            elif isinstance(value, list):
+                value = [
+                    v.asdict() if hasattr(v, "asdict") else v for v in value
+                ]
+            d[attr] = value
+        return d
+
+
+class SimpleDescriptor(AsDictMixin):
     """ Containers for a bunch of attributes"""
 
     # XXX this is ugly. The 'print' is inappropriate here, and instead of
@@ -1002,7 +1019,7 @@ class BaseDocReader(LogMixin):
             self.documentObject.lib = from_plist(libElement[0])
 
 
-class DesignSpaceDocument(LogMixin):
+class DesignSpaceDocument(LogMixin, AsDictMixin):
     """ Read, write data from the designspace file"""
     def __init__(self, readerClass=None, writerClass=None):
         self.path = None
