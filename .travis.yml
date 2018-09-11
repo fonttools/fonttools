@@ -3,9 +3,10 @@ sudo: false
 language: python
 python: 3.5
 
-# empty "env:" is needed for 'allow_failures'
-# https://docs.travis-ci.com/user/customizing-the-build/#Rows-that-are-Allowed-to-Fail
 env:
+  global:
+    - TWINE_USERNAME="anthrotype"
+    - secure: PJuCmlDuwnojiw3QuDhfNAaU4f/yeJcEcRzJAudA66bwZK7hvxV7Tiy9A17Bm6yO0HbJmmyjsIr8h2e7/PyY6QCaV8RqcMDkQ0UraU16pRsihp0giVXJoWscj2sCP4cNDOBVwSaGAX8yZ2OONc5srESywghzcy8xmgw6O+XFqx4=
 
 matrix:
   fast_finish: true
@@ -73,9 +74,6 @@ script:
 after_success:
   - ./.travis/after_success.sh
 
-before_deploy:
-  - ./.travis/before_deploy.sh
-
 notifications:
   irc: "irc.freenode.org##fonts"
   email: fonttools-dev@googlegroups.com
@@ -88,19 +86,6 @@ deploy:
     skip_cleanup: true
     file_glob: true
     file: "dist/*"
-    on:
-      tags: true
-      repo: fonttools/fonttools
-      all_branches: true
-      condition: "$BUILD_DIST == true"
-  # deploy to PyPI on tags
-  - provider: pypi
-    server: https://upload.pypi.org/legacy/
-    user: anthrotype
-    password:
-      secure: DxAf1E0u4Xxe3+R9flkz69g84pfEQF2knDmKhZVzCJBbz9DUjuQlAWGZoAbn9kZIW0bq3yNIihVP5fjxgs0zKO7M4OCVRisVAgZDAZzsRo7awX9dBsyaTGt9WXvzVKCFPcehKI3lZ/fuPvovY+Dl4c91F5qfkh0pY6OKy9uDj3k=
-    skip_cleanup: true
-    distributions: pass
     on:
       tags: true
       repo: fonttools/fonttools
