@@ -570,7 +570,6 @@ def _merge_OTL(font, model, master_fonts, axisTags):
 def load_designspace(designspace_filename):
 
 	ds = DesignSpaceDocument.fromfile(designspace_filename)
-	axes = ds.axes
 	masters = ds.sources
 	if not masters:
 		raise VarLibError("no sources found in .designspace")
@@ -583,59 +582,26 @@ def load_designspace(designspace_filename):
 		('optical', ('opsz', {'en':'Optical Size'})),
 		])
 
-
 	# Setup axes
-	axis_objects = OrderedDict()
-	if axes:
-		for axis in axes:
-			axis_name = axis.name
-			if not axis_name:
-				assert axis.tag is not None
-				axis_name = axis.name = axis.tag
+	axes = OrderedDict()
+	for axis in ds.axes:
+		axis_name = axis.name
+		if not axis_name:
+			assert axis.tag is not None
+			axis_name = axis.name = axis.tag
 
-			if axis_name in standard_axis_map:
-				if axis.tag is None:
-					axis.tag = standard_axis_map[axis_name][0]
-				if not axis.labelNames:
-					axis.labelNames.update(standard_axis_map[axis_name][1])
-			else:
-				assert axis.tag is not None
-				if not axis.labelNames:
-					axis.labelNames["en"] = axis_name
+		if axis_name in standard_axis_map:
+			if axis.tag is None:
+				axis.tag = standard_axis_map[axis_name][0]
+			if not axis.labelNames:
+				axis.labelNames.update(standard_axis_map[axis_name][1])
+		else:
+			assert axis.tag is not None
+			if not axis.labelNames:
+				axis.labelNames["en"] = axis_name
 
-			axis_objects[axis_name] = axis
-	else:
-		# No <axes> element. Guess things...
-		base_idx = None
-		for i,m in enumerate(masters):
-			if m.copyInfo:
-				assert base_idx is None
-				base_idx = i
-		assert base_idx is not None, "Cannot find 'base' master; Either add <axes> element to .designspace document, or add <info> element to one of the sources in the .designspace document."
-
-		master_locs = [o.location for o in masters]
-		base_loc = master_locs[base_idx]
-		axis_names = set(base_loc.keys())
-		assert all(name in standard_axis_map for name in axis_names), "Non-standard axis found and there exist no <axes> element."
-
-		for name,(tag,labelname) in standard_axis_map.items():
-			if name not in axis_names:
-				continue
-
-			axis = AxisDescriptor()
-			axis.name = name
-			axis.tag = tag
-			axis.labelNames.update(labelname)
-			axis.default = base_loc[name]
-			axis.minimum = min(m[name] for m in master_locs if name in m)
-			axis.maximum = max(m[name] for m in master_locs if name in m)
-			# TODO Fill in weight / width mapping from OS/2 table? Need loading fonts...
-			axis_objects[name] = axis
-		del base_idx, base_loc, axis_names, master_locs
-	axes = axis_objects
-	del axis_objects
+		axes[axis_name] = axis
 	log.info("Axes:\n%s", pformat([axis.asdict() for axis in axes.values()]))
-
 
 	# Check all master and instance locations are valid and fill in defaults
 	for obj in masters+instances:
@@ -649,7 +615,6 @@ def load_designspace(designspace_filename):
 			else:
 				v = axis.map_backward(loc[axis_name])
 				assert axis.minimum <= v <= axis.maximum, "Location for axis '%s' (mapped to %s) out of range for '%s' [%s..%s]" % (axis_name, v, obj_name, axis.minimum, axis.maximum)
-
 
 	# Normalize master locations
 
@@ -665,7 +630,6 @@ def load_designspace(designspace_filename):
 
 	normalized_master_locs = [models.normalizeLocation(m, internal_axis_supports) for m in internal_master_locs]
 	log.info("Normalized master locations:\n%s", pformat(normalized_master_locs))
-
 
 	# Find base master
 	base_idx = None
