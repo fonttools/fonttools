@@ -8,8 +8,10 @@ from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import floatToFixedToFloat, otRound
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
-from fontTools.varLib import _GetCoordinates, _SetCoordinates, _DesignspaceAxis
-from fontTools.varLib.models import supportScalar, normalizeLocation
+from fontTools.varLib import _GetCoordinates, _SetCoordinates
+from fontTools.varLib.models import (
+	supportScalar, normalizeLocation, piecewiseLinearMap
+)
 from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.varLib.mvar import MVAR_ENTRIES
@@ -50,7 +52,7 @@ def instantiateVariableFont(varfont, location, inplace=False):
 	loc = normalizeLocation(location, axes)
 	if 'avar' in varfont:
 		maps = varfont['avar'].segments
-		loc = {k:_DesignspaceAxis._map(v, maps[k]) for k,v in loc.items()}
+		loc = {k: piecewiseLinearMap(v, maps[k]) for k,v in loc.items()}
 	# Quantize to F2Dot14, to avoid surprise interpolations.
 	loc = {k:floatToFixedToFloat(v, 14) for k,v in loc.items()}
 	# Location is normalized now
