@@ -363,6 +363,20 @@ class AxisDescriptor(SimpleDescriptor):
             map=self.map,
         )
 
+    def map_forward(self, v):
+        from fontTools.varLib.models import piecewiseLinearMap
+
+        if not self.map:
+            return v
+        return piecewiseLinearMap(v, {k: v for k, v in self.map})
+
+    def map_backward(self, v):
+        from fontTools.varLib.models import piecewiseLinearMap
+
+        if not self.map:
+            return v
+        return piecewiseLinearMap(v, {v: k for k, v in self.map})
+
 
 class BaseDocWriter(object):
     _whiteSpace = "    "
