@@ -35,6 +35,7 @@ from fontTools.varLib import builder, models, varStore
 from fontTools.varLib.merger import VariationMerger, _all_equal
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.iup import iup_delta_optimize
+from fontTools.varLib.featureVars import addFeatureVariations
 from fontTools.designspaceLib import DesignSpaceDocument, AxisDescriptor
 from collections import OrderedDict, namedtuple
 import os.path
@@ -567,6 +568,38 @@ def _merge_OTL(font, model, master_fonts, axisTags):
 		font['GPOS'].table.remap_device_varidxes(varidx_map)
 
 
+def _add_GSUB_feature_variations(font, axes, internal_axis_supports, rules):
+
+	def normalize(name, value):
+		return models.normalizeLocation(
+			{name: value}, internal_axis_supports
+		)[name]
+
+	log.info("Generating GSUB FeatureVariations")
+
+	axis_tags = {name: axis.tag for name, axis in axes.items()}
+
+	conditional_subs = []
+	for rule in rules:
+
+		region = []
+		for conditions in rule.conditionSets:
+			space = {}
+			for condition in conditions:
+				axis_name = condition["name"]
+				minimum = normalize(axis_name, condition["minimum"])
+				maximum = normalize(axis_name, condition["maximum"])
+				tag = axis_tags[axis_name]
+				space[tag] = (minimum, maximum)
+			region.append(space)
+
+		subs = {k: v for k, v in rule.subs}
+
+		conditional_subs.append((region, subs))
+
+	addFeatureVariations(font, conditional_subs)
+
+
 _DesignSpaceData = namedtuple(
 	"_DesignSpaceData",
 	[
@@ -713,6 +746,8 @@ def build(designspace_filename, master_finder=lambda s:s, exclude=[], optimize=T
 		_add_gvar(vf, model, master_fonts, optimize=optimize)
 	if 'cvar' not in exclude and 'glyf' in vf:
 		_merge_TTHinting(vf, model, master_fonts)
+	if 'GSUB' not in exclude and ds.rules:
+		_add_GSUB_feature_variations(vf, ds.axes, ds.internal_axis_supports, ds.rules)
 
 	for tag in exclude:
 		if tag in vf:
