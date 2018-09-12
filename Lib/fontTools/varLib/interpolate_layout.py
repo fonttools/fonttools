@@ -33,7 +33,7 @@ def interpolate_layout(designspace_filename, loc, master_finder=lambda s:s, mapp
 	log.info("Building interpolated font")
 	log.info("Loading master fonts")
 	basedir = os.path.dirname(designspace_filename)
-	master_ttfs = [master_finder(os.path.join(basedir, m['filename'])) for m in masters]
+	master_ttfs = [master_finder(os.path.join(basedir, m.filename)) for m in masters]
 	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
 
 	#font = master_fonts[base_idx]

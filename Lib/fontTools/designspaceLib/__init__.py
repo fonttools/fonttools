@@ -105,7 +105,24 @@ def _indent(elem, whitespace="    ", level=0):
             elem.tail = i
 
 
-class SimpleDescriptor(object):
+class AsDictMixin(object):
+
+    def asdict(self):
+        d = {}
+        for attr, value in self.__dict__.items():
+            if attr.startswith("_"):
+                continue
+            if hasattr(value, "asdict"):
+                value = value.asdict()
+            elif isinstance(value, list):
+                value = [
+                    v.asdict() if hasattr(v, "asdict") else v for v in value
+                ]
+            d[attr] = value
+        return d
+
+
+class SimpleDescriptor(AsDictMixin):
     """ Containers for a bunch of attributes"""
 
     # XXX this is ugly. The 'print' is inappropriate here, and instead of
@@ -346,6 +363,20 @@ class AxisDescriptor(SimpleDescriptor):
             map=self.map,
         )
 
+    def map_forward(self, v):
+        from fontTools.varLib.models import piecewiseLinearMap
+
+        if not self.map:
+            return v
+        return piecewiseLinearMap(v, {k: v for k, v in self.map})
+
+    def map_backward(self, v):
+        from fontTools.varLib.models import piecewiseLinearMap
+
+        if not self.map:
+            return v
+        return piecewiseLinearMap(v, {v: k for k, v in self.map})
+
 
 class BaseDocWriter(object):
     _whiteSpace = "    "
@@ -379,7 +410,7 @@ class BaseDocWriter(object):
         self._axes = []     # for use by the writer only
         self._rules = []    # for use by the writer only
 
-    def write(self, pretty=True):
+    def write(self, pretty=True, encoding="utf-8", xml_declaration=True):
         if self.documentObject.axes:
             self.root.append(ET.Element("axes"))
         for axisObject in self.documentObject.axes:
@@ -406,7 +437,12 @@ class BaseDocWriter(object):
         if pretty:
             _indent(self.root, whitespace=self._whiteSpace)
         tree = ET.ElementTree(self.root)
-        tree.write(self.path, encoding="utf-8", method='xml', xml_declaration=True)
+        tree.write(
+            self.path,
+            encoding=encoding,
+            method='xml',
+            xml_declaration=xml_declaration,
+        )
 
     def _makeLocationElement(self, locationObject, name=None):
         """ Convert Location dict to a locationElement."""
@@ -669,6 +705,13 @@ class BaseDocReader(LogMixin):
         self.axisDefaults = {}
         self._strictAxisNames = True
 
+    @classmethod
+    def fromstring(cls, string, documentObject):
+        f = BytesIO(tobytes(string, encoding="utf-8"))
+        self = cls(f, documentObject)
+        self.path = None
+        return self
+
     def read(self):
         self.readAxes()
         self.readRules()
@@ -741,10 +784,10 @@ class BaseDocReader(LogMixin):
 
     def readAxes(self):
         # read the axes elements, including the warp map.
-        if len(self.root.findall(".axes/axis")) == 0:
-            self._strictAxisNames = False
+        axisElements = self.root.findall(".axes/axis")
+        if not axisElements:
             return
-        for axisElement in self.root.findall(".axes/axis"):
+        for axisElement in axisElements:
             axisObject = self.axisDescriptorClass()
             axisObject.name = axisElement.attrib.get("name")
             axisObject.minimum = float(axisElement.attrib.get("minimum"))
@@ -827,7 +870,7 @@ class BaseDocReader(LogMixin):
 
     def readLocationElement(self, locationElement):
         """ Format 0 location reader """
-        if not self.documentObject.axes:
+        if self._strictAxisNames and not self.documentObject.axes:
             raise DesignSpaceDocumentError("No axes defined")
         loc = {}
         for dimensionElement in locationElement.findall(".dimension"):
@@ -861,7 +904,7 @@ class BaseDocReader(LogMixin):
 
     def _readSingleInstanceElement(self, instanceElement, makeGlyphs=True, makeKerning=True, makeInfo=True):
         filename = instanceElement.attrib.get('filename')
-        if filename is not None:
+        if filename is not None and self.documentObject.path is not None:
             instancePath = os.path.join(os.path.dirname(self.documentObject.path), filename)
         else:
             instancePath = None
@@ -990,7 +1033,7 @@ class BaseDocReader(LogMixin):
             self.documentObject.lib = from_plist(libElement[0])
 
 
-class DesignSpaceDocument(LogMixin):
+class DesignSpaceDocument(LogMixin, AsDictMixin):
     """ Read, write data from the designspace file"""
     def __init__(self, readerClass=None, writerClass=None):
         self.path = None
@@ -1023,6 +1066,37 @@ class DesignSpaceDocument(LogMixin):
             self.writerClass = writerClass
         else:
             self.writerClass = BaseDocWriter
+
+    @classmethod
+    def fromfile(cls, path, readerClass=None, writerClass=None):
+        self = cls(readerClass=readerClass, writerClass=writerClass)
+        self.read(path)
+        return self
+
+    @classmethod
+    def fromstring(cls, string, readerClass=None, writerClass=None):
+        self = cls(readerClass=readerClass, writerClass=writerClass)
+        reader = self.readerClass.fromstring(string, self)
+        reader.read()
+        if self.sources:
+            self.findDefault()
+        return self
+
+    def tostring(self, encoding=None):
+        if encoding is unicode or (
+            encoding is not None and encoding.lower() == "unicode"
+        ):
+            f = UnicodeIO()
+            xml_declaration = False
+        elif encoding is None or encoding == "utf-8":
+            f = BytesIO()
+            encoding = "utf-8"
+            xml_declaration = True
+        else:
+            raise ValueError("unsupported encoding: '%s'" % encoding)
+        writer = self.writerClass(f, self)
+        writer.write(encoding=encoding, xml_declaration=xml_declaration)
+        return f.getvalue()
 
     def read(self, path):
         self.path = path

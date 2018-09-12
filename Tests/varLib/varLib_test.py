@@ -3,6 +3,7 @@ from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.varLib import build
 from fontTools.varLib import main as varLib_main
+from fontTools.designspaceLib import DesignSpaceDocumentError
 import difflib
 import os
 import shutil
@@ -126,12 +127,9 @@ class BuildTest(unittest.TestCase):
 
     def test_varlib_build_no_axes_ttf(self):
         """Designspace file does not contain an <axes> element."""
-        self._run_varlib_build_test(
-            designspace_name='InterpolateLayout3',
-            font_name='TestFamily2',
-            tables=['GDEF', 'HVAR', 'MVAR', 'fvar', 'gvar'],
-            expected_ttx_name='Build3'
-        )
+        ds_path = self.get_test_input('InterpolateLayout3.designspace')
+        with self.assertRaisesRegex(DesignSpaceDocumentError, "No axes defined"):
+            build(ds_path)
 
     def test_varlib_avar_single_axis(self):
         """Designspace file contains a 'weight' axis with <map> elements

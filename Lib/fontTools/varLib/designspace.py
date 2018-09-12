@@ -1,10 +1,20 @@
-"""Rudimentary support for loading MutatorMath .designspace files."""
+"""Rudimentary support for loading MutatorMath .designspace files.
+
+DEPRECATED. Use ``fonttools.designspaceLib`` instead.
+"""
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 try:
 	import xml.etree.cElementTree as ET
 except ImportError:
 	import xml.etree.ElementTree as ET
+
+import warnings
+warnings.warn(
+	"fontTools.varLib.designspace is deprecated. "
+	"Use fontTools.designspaceLib instead.",
+	DeprecationWarning,
+)
 
 __all__ = ['load', 'loads']
 
