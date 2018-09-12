@@ -26,29 +26,29 @@ def interpolate_layout(designspace_filename, loc, master_finder=lambda s:s, mapp
 	it is assumed that location is in designspace's internal space and
 	no mapping is performed.
 	"""
-
-	axes, internal_axis_supports, base_idx, normalized_master_locs, masters, instances = load_designspace(designspace_filename)
-
+	ds = load_designspace(designspace_filename)
 
 	log.info("Building interpolated font")
 	log.info("Loading master fonts")
 	basedir = os.path.dirname(designspace_filename)
-	master_ttfs = [master_finder(os.path.join(basedir, m.filename)) for m in masters]
+	master_ttfs = [
+		master_finder(os.path.join(basedir, m.filename)) for m in ds.masters
+	]
 	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
 
-	#font = master_fonts[base_idx]
-	font = TTFont(master_ttfs[base_idx])
+	#font = master_fonts[ds.base_idx]
+	font = TTFont(master_ttfs[ds.base_idx])
 
 	log.info("Location: %s", pformat(loc))
 	if not mapped:
-		loc = {name:axes[name].map_forward(v) for name,v in loc.items()}
+		loc = {name: ds.axes[name].map_forward(v) for name,v in loc.items()}
 	log.info("Internal location: %s", pformat(loc))
-	loc = models.normalizeLocation(loc, internal_axis_supports)
+	loc = models.normalizeLocation(loc, ds.internal_axis_supports)
 	log.info("Normalized location: %s", pformat(loc))
 
 	# Assume single-model for now.
-	model = models.VariationModel(normalized_master_locs)
-	assert 0 == model.mapping[base_idx]
+	model = models.VariationModel(ds.normalized_master_locs)
+	assert 0 == model.mapping[ds.base_idx]
 
 	merger = InstancerMerger(font, model, loc)
 
