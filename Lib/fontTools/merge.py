@@ -409,7 +409,7 @@ def merge(self, m, tables):
 	log.info("Font 0 local subrs: %s.", lenls)
 	log.info("FONT 0 CharStrings: %s, %s.",(len(newcs), len(newcsi)))
 	baseIndex = len(newcsi)
-	for i, table in enumerate(tables[1:]):
+	for i, table in enumerate(tables[1:], start=1):
 		font = table.cff[0] 
 		font.Private = private
 		fontGlyphOrder = set(font.getGlyphOrder())
@@ -418,25 +418,25 @@ def merge(self, m, tables):
 				glyphOrderStrings.append(name)
 		cs = font.CharStrings
 		gs = table.cff.GlobalSubrs
-		log.info("Font %s global subrs: %s." % (str(i+1), str(len(gs))))
+		log.info("Font %s global subrs: %s." % (str(i), str(len(gs))))
 		ls = None
 		if hasattr(font, 'Private') and hasattr(font.Private, 'Subr'):
 			ls = font.Private.Subrs
 		lenls = len(ls) if ls is not None else 0
-		log.info("Font %s global subrs: %s.", (i+1, lenls))
-		log.info("Font %s CharStrings: %s, %s.", (i+1, len(cs), len(cs.charStringsIndex)))
+		log.info("Font %s global subrs: %s.", (i, lenls))
+		log.info("Font %s CharStrings: %s, %s.", (i, len(cs), len(cs.charStringsIndex)))
 		if hasattr(font, "FDSelect"):
 			sel = font.FDSelect
-			log.info("HAS FDSelect %s.", sel)
+			log.debug("HAS FDSelect %s.", sel)
 		else:
-			log.info("HAS NO FDSelect.")
+			log.debug("HAS NO FDSelect.")
 		numCharsExcludingNotDef = len(cs.charStringsIndex)
 		newcsi.items.extend([None] * numCharsExcludingNotDef)
-		chrset.extend(list(font.charset))
+		chrset.extend(font.charset)
 		j = baseIndex
-		for name,i in cs.charStrings.items():
+		for name,k in cs.charStrings.items():
 			newcs.charStrings[name] = j
-			ch = cs.charStringsIndex[i]
+			ch = cs.charStringsIndex[k]
 			newcsi[j] = ch
 			j += 1
 		baseIndex = j
