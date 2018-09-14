@@ -1,10 +1,14 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
+from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 import sys
 import array
 import pytest
+import re
+import os
+import unittest
 
 
 class GlyphCoordinatesTest(object):
@@ -158,3 +162,60 @@ class GlyphCoordinatesTest(object):
         g.append((0x8000, 0))
         assert g.array.typecode == "d"
         assert g.array == array.array("d", [1.0, 1.0, 32768.0, 0.0])
+
+
+CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
+DATA_DIR = os.path.join(CURR_DIR, 'data')
+
+GLYF_TTX = os.path.join(DATA_DIR, "_g_l_y_f_outline_flag_bit6.ttx")
+GLYF_BIN = os.path.join(DATA_DIR, "_g_l_y_f_outline_flag_bit6.glyf.bin")
+HEAD_BIN = os.path.join(DATA_DIR, "_g_l_y_f_outline_flag_bit6.head.bin")
+LOCA_BIN = os.path.join(DATA_DIR, "_g_l_y_f_outline_flag_bit6.loca.bin")
+MAXP_BIN = os.path.join(DATA_DIR, "_g_l_y_f_outline_flag_bit6.maxp.bin")
+
+
+def strip_ttLibVersion(string):
+    return re.sub(' ttLibVersion=".*"', '', string)
+
+
+class glyfTableTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        with open(GLYF_BIN, 'rb') as f:
+            cls.glyfData = f.read()
+        with open(HEAD_BIN, 'rb') as f:
+            cls.headData = f.read()
+        with open(LOCA_BIN, 'rb') as f:
+            cls.locaData = f.read()
+        with open(MAXP_BIN, 'rb') as f:
+            cls.maxpData = f.read()
+        with open(GLYF_TTX, 'r') as f:
+            cls.glyfXML = strip_ttLibVersion(f.read()).splitlines()
+
+    def test_toXML(self):
+        font = TTFont(sfntVersion="\x00\x01\x00\x00")
+        glyfTable = font['glyf'] = newTable('glyf')
+        font['head'] = newTable('head')
+        font['loca'] = newTable('loca')
+        font['maxp'] = newTable('maxp')
+        font['maxp'].decompile(self.maxpData, font)
+        font['head'].decompile(self.headData, font)
+        font['loca'].decompile(self.locaData, font)
+        glyfTable.decompile(self.glyfData, font)
+        out = UnicodeIO()
+        font.saveXML(out)
+        glyfXML = strip_ttLibVersion(out.getvalue()).splitlines()
+        self.assertEqual(glyfXML, self.glyfXML)
+
+    def test_fromXML(self):
+        font = TTFont(sfntVersion="\x00\x01\x00\x00")
+        font.importXML(GLYF_TTX)
+        glyfTable = font['glyf']
+        glyfData = glyfTable.compile(font)
+        self.assertEqual(glyfData, self.glyfData)
+
+
+if __name__ == "__main__":
+    import sys
+    sys.exit(unittest.main())
