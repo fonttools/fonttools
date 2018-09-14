@@ -35,8 +35,9 @@ from fontTools.varLib import builder, models, varStore
 from fontTools.varLib.merger import VariationMerger, _all_equal
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.iup import iup_delta_optimize
+from fontTools.varLib.featureVars import addFeatureVariations
 from fontTools.designspaceLib import DesignSpaceDocument, AxisDescriptor
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 import os.path
 import logging
 from pprint import pformat
@@ -567,6 +568,52 @@ def _merge_OTL(font, model, master_fonts, axisTags):
 		font['GPOS'].table.remap_device_varidxes(varidx_map)
 
 
+def _add_GSUB_feature_variations(font, axes, internal_axis_supports, rules):
+
+	def normalize(name, value):
+		return models.normalizeLocation(
+			{name: value}, internal_axis_supports
+		)[name]
+
+	log.info("Generating GSUB FeatureVariations")
+
+	axis_tags = {name: axis.tag for name, axis in axes.items()}
+
+	conditional_subs = []
+	for rule in rules:
+
+		region = []
+		for conditions in rule.conditionSets:
+			space = {}
+			for condition in conditions:
+				axis_name = condition["name"]
+				minimum = normalize(axis_name, condition["minimum"])
+				maximum = normalize(axis_name, condition["maximum"])
+				tag = axis_tags[axis_name]
+				space[tag] = (minimum, maximum)
+			region.append(space)
+
+		subs = {k: v for k, v in rule.subs}
+
+		conditional_subs.append((region, subs))
+
+	addFeatureVariations(font, conditional_subs)
+
+
+_DesignSpaceData = namedtuple(
+	"_DesignSpaceData",
+	[
+		"axes",
+		"internal_axis_supports",
+		"base_idx",
+		"normalized_master_locs",
+		"masters",
+		"instances",
+		"rules",
+	],
+)
+
+
 def load_designspace(designspace_filename):
 
 	ds = DesignSpaceDocument.fromfile(designspace_filename)
@@ -640,7 +687,15 @@ def load_designspace(designspace_filename):
 	assert base_idx is not None, "Base master not found; no master at default location?"
 	log.info("Index of base master: %s", base_idx)
 
-	return axes, internal_axis_supports, base_idx, normalized_master_locs, masters, instances
+	return _DesignSpaceData(
+		axes,
+		internal_axis_supports,
+		base_idx,
+		normalized_master_locs,
+		masters,
+		instances,
+		ds.rules,
+	)
 
 
 def build(designspace_filename, master_finder=lambda s:s, exclude=[], optimize=True):
@@ -652,33 +707,33 @@ def build(designspace_filename, master_finder=lambda s:s, exclude=[], optimize=T
 	binary as to be opened (eg. .ttf or .otf).
 	"""
 
-	axes, internal_axis_supports, base_idx, normalized_master_locs, masters, instances = load_designspace(designspace_filename)
+	ds = load_designspace(designspace_filename)
 
 	log.info("Building variable font")
 	log.info("Loading master fonts")
 	basedir = os.path.dirname(designspace_filename)
-	master_ttfs = [master_finder(os.path.join(basedir, m.filename)) for m in masters]
+	master_ttfs = [master_finder(os.path.join(basedir, m.filename)) for m in ds.masters]
 	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
 	# Reload base font as target font
-	vf = TTFont(master_ttfs[base_idx])
+	vf = TTFont(master_ttfs[ds.base_idx])
 
 	# TODO append masters as named-instances as well; needs .designspace change.
-	fvar = _add_fvar(vf, axes, instances)
+	fvar = _add_fvar(vf, ds.axes, ds.instances)
 	if 'STAT' not in exclude:
-		_add_stat(vf, axes)
+		_add_stat(vf, ds.axes)
 	if 'avar' not in exclude:
-		_add_avar(vf, axes)
-	del instances
+		_add_avar(vf, ds.axes)
 
 	# Map from axis names to axis tags...
-	normalized_master_locs = [{axes[k].tag:v for k,v in loc.items()} for loc in normalized_master_locs]
-	#del axes
+	normalized_master_locs = [
+		{ds.axes[k].tag: v for k,v in loc.items()} for loc in ds.normalized_master_locs
+	]
 	# From here on, we use fvar axes only
 	axisTags = [axis.axisTag for axis in fvar.axes]
 
 	# Assume single-model for now.
 	model = models.VariationModel(normalized_master_locs, axisOrder=axisTags)
-	assert 0 == model.mapping[base_idx]
+	assert 0 == model.mapping[ds.base_idx]
 
 	log.info("Building variations tables")
 	if 'MVAR' not in exclude:
@@ -691,6 +746,8 @@ def build(designspace_filename, master_finder=lambda s:s, exclude=[], optimize=T
 		_add_gvar(vf, model, master_fonts, optimize=optimize)
 	if 'cvar' not in exclude and 'glyf' in vf:
 		_merge_TTHinting(vf, model, master_fonts)
+	if 'GSUB' not in exclude and ds.rules:
+		_add_GSUB_feature_variations(vf, ds.axes, ds.internal_axis_supports, ds.rules)
 
 	for tag in exclude:
 		if tag in vf:
