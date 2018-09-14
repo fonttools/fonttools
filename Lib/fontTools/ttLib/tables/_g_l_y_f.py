@@ -260,11 +260,11 @@ flagYShort = 0x04
 flagRepeat = 0x08
 flagXsame =  0x10
 flagYsame = 0x20
-flagReserved1 = 0x40
-flagReserved2 = 0x80
+flagOverlapSimple = 0x40
+flagReserved = 0x80
 
 # These flags are kept for XML output after decompiling the coordinates
-keepFlags = flagOnCurve + flagReserved1
+keepFlags = flagOnCurve + flagOverlapSimple
 
 _flagSignBytes = {
 	0: 2,
@@ -416,8 +416,8 @@ class Glyph(object):
 							("y", self.coordinates[j][1]),
 							("on", self.flags[j] & flagOnCurve),
 						]
-					if self.flags[j] & flagReserved1:
-						# Apple's AAT uses flagReserved1 in the first contour/first pt to flag glyphs that contain overlapping contours
+					if self.flags[j] & flagOverlapSimple:
+						# Apple's rasterizer uses flagOverlapSimple in the first contour/first pt to flag glyphs that contain overlapping contours
 						attrs.append(("overlap", 1))
 					writer.simpletag("pt", attrs)
 					writer.newline()
@@ -450,9 +450,8 @@ class Glyph(object):
 					continue  # ignore anything but "pt"
 				coordinates.append((safeEval(attrs["x"]), safeEval(attrs["y"])))
 				flag = not not safeEval(attrs["on"])
-				if "overlap" in attrs:
-					f = safeEval(attrs["overlap"])
-					flag += f * flagReserved1
+				if "overlap" in attrs and bool(safeEval(attrs["overlap"])):
+					flag |= flagOverlapSimple
 				flags.append(flag)
 			flags = array.array("B", flags)
 			if not hasattr(self, "coordinates"):
