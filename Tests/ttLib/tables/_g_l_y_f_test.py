@@ -199,11 +199,8 @@ class glyfTableTest(unittest.TestCase):
         font['head'] = newTable('head')
         font['loca'] = newTable('loca')
         font['maxp'] = newTable('maxp')
-        font['maxp'].data = self.maxpData
         font['maxp'].decompile(self.maxpData, font)
-        font['head'].data = self.headData
         font['head'].decompile(self.headData, font)
-        font['loca'].data = self.locaData
         font['loca'].decompile(self.locaData, font)
         glyfTable.decompile(self.glyfData, font)
         out = UnicodeIO()
