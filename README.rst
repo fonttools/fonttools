@@ -8,7 +8,7 @@ What is this?
   project includes the TTX tool, that can convert TrueType and OpenType
   fonts to and from an XML text format, which is also called TTX. It
   supports TrueType, OpenType, AFM and to an extent Type 1 and some
-  Mac-specific formats. The project has a `MIT open-source
+  Mac-specific formats. The project has an `MIT open-source
   licence <LICENSE>`__.
 | Among other things this means you can use it free of charge.
 
@@ -26,7 +26,7 @@ install it with `pip <https://pip.pypa.io>`__:
     pip install fonttools
 
 If you would like to contribute to its development, you can clone the
-repository from Github, install the package in 'editable' mode and
+repository from GitHub, install the package in 'editable' mode and
 modify the source code in place. We recommend creating a virtual
 environment, using `virtualenv <https://virtualenv.pypa.io>`__ or
 Python 3 `venv <https://docs.python.org/3/library/venv.html>`__ module.
@@ -40,7 +40,7 @@ Python 3 `venv <https://docs.python.org/3/library/venv.html>`__ module.
     # create new virtual environment called e.g. 'fonttools-venv', or anything you like
     python -m virtualenv fonttools-venv
 
-    # source the `activate` shell script to enter the environment (Un\*x); to exit, just type `deactivate`
+    # source the `activate` shell script to enter the environment (Un*x); to exit, just type `deactivate`
     . fonttools-venv/bin/activate
 
     # to activate the virtual environment in Windows `cmd.exe`, do
@@ -53,7 +53,7 @@ TTX – From OpenType and TrueType to XML and Back
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Once installed you can use the ``ttx`` command to convert binary font
-files (``.otf``, ``.ttf``, etc) to the TTX xml format, edit them, and
+files (``.otf``, ``.ttf``, etc) to the TTX XML format, edit them, and
 convert them back to binary format. TTX files have a .ttx file
 extension.
 
@@ -62,11 +62,11 @@ extension.
     ttx /path/to/font.otf
     ttx /path/to/font.ttx
 
-The TTX application works can be used in two ways, depending on what
+The TTX application can be used in two ways, depending on what
 platform you run it on:
 
--  As a command line tool (Windows/DOS, Unix, MacOSX)
--  By dropping files onto the application (Windows, MacOS)
+-  As a command line tool (Windows/DOS, Unix, macOS)
+-  By dropping files onto the application (Windows, macOS)
 
 TTX detects what kind of files it is fed: it will output a ``.ttx`` file
 when it sees a ``.ttf`` or ``.otf``, and it will compile a ``.ttf`` or
@@ -77,8 +77,8 @@ same name as the input file but with a different extension. TTX will
 number to the output filename (before the extension) such as
 ``Arial#1.ttf``
 
-When using TTX from the command line there are a bunch of extra options,
-these are explained in the help text, as displayed when typing
+When using TTX from the command line there are a bunch of extra options.
+These are explained in the help text, as displayed when typing
 ``ttx -h`` at the command prompt. These additional options include:
 
 -  specifying the folder where the output files are created
@@ -142,7 +142,7 @@ available:
 fontTools Python Module
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-The fontTools python module provides a convenient way to
+The fontTools Python module provides a convenient way to
 programmatically edit font files.
 
 .. code:: py
@@ -153,7 +153,7 @@ programmatically edit font files.
     <fontTools.ttLib.TTFont object at 0x10c34ed50>
     >>>
 
-A selection of sample python programs is in the
+A selection of sample Python programs is in the
 `Snippets <https://github.com/fonttools/fonttools/blob/master/Snippets/>`__
 directory.
 
