@@ -1515,10 +1515,9 @@ class PairPosBuilder(LookupBuilder):
         oldValue = self.glyphPairs.get(key, None)
         if oldValue is not None:
             # the Feature File spec explicitly allows specific pairs generated
-            # by an 'enum' rule to be overridden by preceding single pairs;
-            # we emit a warning and use the previously defined value
+            # by an 'enum' rule to be overridden by preceding single pairs
             otherLoc = self.locations[key]
-            log.warning(
+            log.debug(
                 'Already defined position for pair %s %s at %s:%d:%d; '
                 'choosing the first value',
                 glyph1, glyph2, otherLoc[0], otherLoc[1], otherLoc[2])

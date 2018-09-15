@@ -202,7 +202,7 @@ class BuilderTest(unittest.TestCase):
     def test_pairPos_redefinition_warning(self):
         # https://github.com/fonttools/fonttools/issues/1147
         logger = logging.getLogger("fontTools.feaLib.builder")
-        with CapturingLogHandler(logger, "WARNING") as captor:
+        with CapturingLogHandler(logger, "DEBUG") as captor:
             # the pair "yacute semicolon" is redefined in the enum pos
             font = self.build(
                 "@Y_LC = [y yacute ydieresis];"
