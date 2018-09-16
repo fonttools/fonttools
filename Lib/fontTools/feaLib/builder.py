@@ -1494,6 +1494,8 @@ class ClassPairPosSubtableBuilder(object):
             return
         st = otl.buildPairPosClassesSubtable(self.values_,
                                              self.builder_.glyphMap)
+        if st.Coverage is None:
+            return
         self.subtables_.append(st)
         self.forceSubtableBreak_ = False
 
