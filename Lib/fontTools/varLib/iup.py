@@ -170,8 +170,8 @@ def _iup_contour_bound_forced_set(delta, coords, tolerance=0):
 
 def _iup_contour_optimize_dp(delta, coords, forced={}, tolerance=0, lookback=None):
 	"""Straightforward Dynamic-Programming.  For each index i, find least-costly encoding of
-	points i to n-1 where i is explicitly encoded.  We find this by considering all next
-	explicit points j and check whether interpolation can fill points between i and j.
+	points 0 to i where i is explicitly encoded.  We find this by considering all previous
+	explicit points j and check whether interpolation can fill points between j and i.
 
 	Note that solution always encodes last point explicitly.  Higher-level is responsible
 	for removing that restriction.
