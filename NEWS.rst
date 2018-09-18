@@ -1,3 +1,21 @@
+- [feaLib] Skip building noop class PairPos subtables when Coverage is NULL
+  (#1318).
+- [ttx] Expose the previously reserved bit flag ``OVERLAP_SIMPLE`` of
+  glyf table's contour points in the TTX dump. This is used in some
+  implementations to specify a non-zero fill with overlapping contours (#1316).
+- [ttLib] Added support for decompiling/compiling ``TS1C`` tables containing
+  VTT sources for ``cvar`` variation table (#1310).
+- [varLib] Use `fontTools.designspaceLib` to read DesignSpaceDocument. The
+  `fontTools.varLib.designspace` module is now deprecated and will be removed
+  in future versions. The presence of an explicit ``axes`` element is now
+  required in order to build a variable font (#1224, #1313).
+- [varLib] Implemented building GSUB FeatureVariations table from the ``rules``
+  element of DesignSpace document (#1240, #713, #1314).
+- [subset] Added ``--no-layout-closure`` option to not expand the subset with
+  the glyphs produced by OpenType layout features. Instead, OpenType features
+  will be subset to only rules that are relevant to the otherwise-specified
+  glyph set (#43, #1121).
+
 3.29.1 (released 2018-09-10)
 ----------------------------
 
