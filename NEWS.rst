@@ -1,3 +1,6 @@
+3.30.0 (released 2018-09-18)
+----------------------------
+
 - [feaLib] Skip building noop class PairPos subtables when Coverage is NULL
   (#1318).
 - [ttx] Expose the previously reserved bit flag ``OVERLAP_SIMPLE`` of
