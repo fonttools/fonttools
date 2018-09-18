@@ -13,11 +13,33 @@ import sys
 import time
 import operator
 import logging
-
+import os
+from fontTools import subset
 
 log = logging.getLogger("fontTools.merge")
 timer = Timer(logger=logging.getLogger(__name__+".timer"), level=logging.INFO)
 
+def _desubtoutinize(otf):
+	# Desubroutinize with Subsetter (like compreffor does)
+	from io import BytesIO
+
+	stream = BytesIO()
+	otf.save(stream, reorderTables=False)
+	stream.flush()
+	stream.seek(0)
+	tmpfont = ttLib.TTFont(stream)
+
+	options = subset.Options()
+	options.desubroutinize = True
+	options.notdef_outline = True
+	subsetter = subset.Subsetter(options=options)
+	subsetter.populate(glyphs=tmpfont.getGlyphOrder())
+	subsetter.subset(tmpfont)
+	data = tmpfont['CFF '].compile(tmpfont)
+	table = ttLib.newTable('CFF ')
+	table.decompile(data, otf)
+	otf['CFF '] = table
+	tmpfont.close()
 
 def _add_method(*clazzes, **kwargs):
 	"""Returns a decorator function that adds a new method to one or
@@ -200,7 +222,7 @@ ttLib.getTableClass('head').mergeMap = {
 	'macStyle': first,
 	'lowestRecPPEM': max,
 	'fontDirectionHint': lambda lst: 2,
-	'indexToLocFormat': recalculate,
+	'indexToLocFormat': first,
 	'glyphDataFormat': equal,
 }
 
@@ -370,6 +392,68 @@ ttLib.getTableClass('prep').mergeMap = lambda self, lst: first(lst)
 ttLib.getTableClass('fpgm').mergeMap = lambda self, lst: first(lst)
 ttLib.getTableClass('cvt ').mergeMap = lambda self, lst: first(lst)
 ttLib.getTableClass('gasp').mergeMap = lambda self, lst: first(lst) # FIXME? Appears irreconcilable
+
+@_add_method(ttLib.getTableClass('CFF '))
+def merge(self, m, tables):
+	newcff = tables[0]
+	newfont = newcff.cff[0]
+	private = newfont.Private
+	storedNamesStrings = []
+	glyphOrderStrings = []
+	glyphOrder = set(newfont.getGlyphOrder())
+	for name in newfont.strings.strings:
+		if name not in glyphOrder:
+			storedNamesStrings.append(name)
+		else:
+			glyphOrderStrings.append(name)
+	chrset = list(newfont.charset)
+	newcs = newfont.CharStrings
+	newcsi = newcs.charStringsIndex
+	log.info("Font 0 global subrs: %s.", len(newcff.cff.GlobalSubrs))
+	ls = None
+	if hasattr(newfont, 'Private') and hasattr(newfont.Private, 'Subr'):
+		ls = newfont.Private.Subrs
+	lenls = len(ls) if ls is not None else 0
+	log.info("Font 0 local subrs: %s.", lenls)
+	log.info("FONT 0 CharStrings: %s, %s.",(len(newcs), len(newcsi)))
+	baseIndex = len(newcsi)
+	for i, table in enumerate(tables[1:], start=1):
+		font = table.cff[0] 
+		font.Private = private
+		fontGlyphOrder = set(font.getGlyphOrder())
+		for name in font.strings.strings:
+			if name in fontGlyphOrder:
+				glyphOrderStrings.append(name)
+		cs = font.CharStrings
+		gs = table.cff.GlobalSubrs
+		log.info("Font %s global subrs: %s." % (str(i), str(len(gs))))
+		ls = None
+		if hasattr(font, 'Private') and hasattr(font.Private, 'Subr'):
+			ls = font.Private.Subrs
+		lenls = len(ls) if ls is not None else 0
+		log.info("Font %s global subrs: %s.", (i, lenls))
+		log.info("Font %s CharStrings: %s, %s.", (i, len(cs), len(cs.charStringsIndex)))
+		if hasattr(font, "FDSelect"):
+			sel = font.FDSelect
+			log.debug("HAS FDSelect %s.", sel)
+		else:
+			log.debug("HAS NO FDSelect.")
+		numCharsExcludingNotDef = len(cs.charStringsIndex)
+		newcsi.items.extend([None] * numCharsExcludingNotDef)
+		chrset.extend(font.charset)
+		j = baseIndex
+		for name,k in cs.charStrings.items():
+			newcs.charStrings[name] = j
+			ch = cs.charStringsIndex[k]
+			newcsi[j] = ch
+			j += 1
+		baseIndex = j
+
+	newfont.charset = chrset
+	newfont.numGlyphs = len(chrset)
+	newfont.strings.strings = glyphOrderStrings + storedNamesStrings
+
+	return newcff
 
 def _glyphsAreSame(glyphSet1, glyphSet2, glyph1, glyph2):
 	pen1 = DecomposingRecordingPen(glyphSet1)
@@ -993,20 +1077,43 @@ class Merger(object):
 			A :class:`fontTools.ttLib.TTFont` object. Call the ``save`` method on
 			this to write it out to an OTF file.
 		"""
-		mega = ttLib.TTFont()
+		# Take first input file sfntVersion
+		sfntVersion = ttLib.TTFont(fontfiles[0]).sfntVersion
+		mega = ttLib.TTFont(sfntVersion=sfntVersion)
 
 		#
 		# Settle on a mega glyph order.
 		#
 		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
+
+		
+		# Check if all fonts have CFF
+		allOTFs = all("CFF " in font for font in fonts)
+
+		cffTables = []
+		if allOTFs:
+			for font in fonts:
+				_desubtoutinize(font)
+				cffTables.append(font['CFF '])
+
 		glyphOrders = [font.getGlyphOrder() for font in fonts]
-		megaGlyphOrder = self._mergeGlyphOrders(glyphOrders)
+		
+		# Handle glyphOrder merging and cff glyphs renaming together
+		megaGlyphOrder = self._mergeGlyphOrders(glyphOrders, cffTables)
+
 		# Reload fonts and set new glyph names on them.
 		# TODO Is it necessary to reload font?  I think it is.  At least
 		# it's safer, in case tables were loaded to provide glyph names.
 		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
-		for font,glyphOrder in zip(fonts, glyphOrders):
-			font.setGlyphOrder(glyphOrder)
+
+		if len(cffTables):
+			for font, glyphOrder, cffTable in zip(fonts, glyphOrders, cffTables):
+				font.setGlyphOrder(glyphOrder)
+				font['CFF '] = cffTable
+		else:
+			for font, glyphOrder in zip(fonts, glyphOrders):
+				font.setGlyphOrder(glyphOrder)
+
 		mega.setGlyphOrder(megaGlyphOrder)
 
 		for font in fonts:
@@ -1018,13 +1125,16 @@ class Merger(object):
 		allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
 		allTags.remove('GlyphOrder')
 
-		# Make sure we process cmap before GSUB as we have a dependency there.
+		# Make sure we process CFF before cmap, and cmap before GSUB as we have a dependency there.
 		if 'GSUB' in allTags:
 			allTags.remove('GSUB')
 			allTags = ['GSUB'] + list(allTags)
 		if 'cmap' in allTags:
 			allTags.remove('cmap')
 			allTags = ['cmap'] + list(allTags)
+		if 'CFF ' in allTags:
+			allTags.remove('CFF ')
+			allTags = ['CFF '] + list(allTags)
 
 		for tag in allTags:
 			with timer("merge '%s'" % tag):
@@ -1048,10 +1158,29 @@ class Merger(object):
 
 		return mega
 
-	def _mergeGlyphOrders(self, glyphOrders):
+	def _mergeGlyphOrders(self, glyphOrders, cffTables):
 		"""Modifies passed-in glyphOrders to reflect new glyph names.
 		Returns glyphOrder for the merged font."""
 		mega = {}
+
+		# If we have CFF tables,
+		# rename topDictIndex charStrings
+		for cffTable in cffTables:
+			td = cffTable.cff.topDictIndex[0]
+			d = {}
+			for i, (glyphName, v) in enumerate(td.CharStrings.charStrings.items()):
+				if glyphName in mega:
+					n = mega[glyphName]
+					while (glyphName + "#" + repr(n)) in mega:
+						n += 1
+					mega[glyphName] = n
+					glyphName += "#" + repr(n)
+				mega[glyphName] = 1
+				d[glyphName] = v
+			cffTable.cff.topDictIndex[0].CharStrings.charStrings = d
+
+		mega = {}
+
 		for glyphOrder in glyphOrders:
 			for i,glyphName in enumerate(glyphOrder):
 				if glyphName in mega:
