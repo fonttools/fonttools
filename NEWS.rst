@@ -8,8 +8,8 @@
   implementations to specify a non-zero fill with overlapping contours (#1316).
 - [ttLib] Added support for decompiling/compiling ``TS1C`` tables containing
   VTT sources for ``cvar`` variation table (#1310).
-- [varLib] Use `fontTools.designspaceLib` to read DesignSpaceDocument. The
-  `fontTools.varLib.designspace` module is now deprecated and will be removed
+- [varLib] Use ``fontTools.designspaceLib`` to read DesignSpaceDocument. The
+  ``fontTools.varLib.designspace`` module is now deprecated and will be removed
   in future versions. The presence of an explicit ``axes`` element is now
   required in order to build a variable font (#1224, #1313).
 - [varLib] Implemented building GSUB FeatureVariations table from the ``rules``
