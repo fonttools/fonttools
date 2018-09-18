@@ -395,6 +395,11 @@ ttLib.getTableClass('gasp').mergeMap = lambda self, lst: first(lst) # FIXME? App
 
 @_add_method(ttLib.getTableClass('CFF '))
 def merge(self, m, tables):
+	if any(hasattr(table, "FDSelect") for table in tables):
+		raise NotImplementedError(
+			"Merging CID-keyed CFF tables is not supported yet"
+		)
+
 	newcff = tables[0]
 	newfont = newcff.cff[0]
 	private = newfont.Private
@@ -408,17 +413,19 @@ def merge(self, m, tables):
 			glyphOrderStrings.append(name)
 	chrset = list(newfont.charset)
 	newcs = newfont.CharStrings
+	# XXX CharStrings object does not have a 'charStringsIndex' attribute
+	# when read from a TTX file
 	newcsi = newcs.charStringsIndex
-	log.info("Font 0 global subrs: %s.", len(newcff.cff.GlobalSubrs))
+	log.debug("Font 0 global subrs: %s.", len(newcff.cff.GlobalSubrs))  # XXX what if not zero?
 	ls = None
 	if hasattr(newfont, 'Private') and hasattr(newfont.Private, 'Subr'):
 		ls = newfont.Private.Subrs
-	lenls = len(ls) if ls is not None else 0
-	log.info("Font 0 local subrs: %s.", lenls)
-	log.info("FONT 0 CharStrings: %s, %s.",(len(newcs), len(newcsi)))
+	lenls = len(ls) if ls is not None else 0  # XXX what if not zero?
+	log.debug("Font 0 local subrs: %d.", lenls)
+	log.debug("FONT 0 CharStrings: %d.", len(newcsi))
 	baseIndex = len(newcsi)
 	for i, table in enumerate(tables[1:], start=1):
-		font = table.cff[0] 
+		font = table.cff[0]
 		font.Private = private
 		fontGlyphOrder = set(font.getGlyphOrder())
 		for name in font.strings.strings:
@@ -426,23 +433,17 @@ def merge(self, m, tables):
 				glyphOrderStrings.append(name)
 		cs = font.CharStrings
 		gs = table.cff.GlobalSubrs
-		log.info("Font %s global subrs: %s." % (str(i), str(len(gs))))
+		log.debug("Font %d global subrs: %d.", i, len(gs))  # XXX what if not zero?
 		ls = None
 		if hasattr(font, 'Private') and hasattr(font.Private, 'Subr'):
 			ls = font.Private.Subrs
-		lenls = len(ls) if ls is not None else 0
-		log.info("Font %s global subrs: %s.", (i, lenls))
-		log.info("Font %s CharStrings: %s, %s.", (i, len(cs), len(cs.charStringsIndex)))
-		if hasattr(font, "FDSelect"):
-			sel = font.FDSelect
-			log.debug("HAS FDSelect %s.", sel)
-		else:
-			log.debug("HAS NO FDSelect.")
-		numCharsExcludingNotDef = len(cs.charStringsIndex)
-		newcsi.items.extend([None] * numCharsExcludingNotDef)
+		lenls = len(ls) if ls is not None else 0  # XXX what if not zero?
+		log.debug("Font %d global subrs: %d.", i, lenls)
+		log.debug("Font %d CharStrings: %d.", i, len(cs.charStringsIndex))
+		newcsi.items.extend([None] * len(cs.charStringsIndex))
 		chrset.extend(font.charset)
 		j = baseIndex
-		for name,k in cs.charStrings.items():
+		for name, k in cs.charStrings.items():
 			newcs.charStrings[name] = j
 			ch = cs.charStringsIndex[k]
 			newcsi[j] = ch
@@ -1086,18 +1087,14 @@ class Merger(object):
 		#
 		fonts = [ttLib.TTFont(fontfile) for fontfile in fontfiles]
 
-		
-		# Check if all fonts have CFF
-		allOTFs = all("CFF " in font for font in fonts)
-
 		cffTables = []
-		if allOTFs:
-			for font in fonts:
+		if sfntVersion == "OTTO":
+			for i, font in enumerate(fonts):
 				_desubtoutinize(font)
 				cffTables.append(font['CFF '])
 
 		glyphOrders = [font.getGlyphOrder() for font in fonts]
-		
+
 		# Handle glyphOrder merging and cff glyphs renaming together
 		megaGlyphOrder = self._mergeGlyphOrders(glyphOrders, cffTables)
 
