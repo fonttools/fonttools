@@ -2522,7 +2522,8 @@ def prune_post_subset(self, font, options):
 				for k in ['BlueValues', 'OtherBlues',
 					  'FamilyBlues', 'FamilyOtherBlues',
 					  'BlueScale', 'BlueShift', 'BlueFuzz',
-					  'StemSnapH', 'StemSnapV', 'StdHW', 'StdVW']:
+					  'StemSnapH', 'StemSnapV', 'StdHW', 'StdVW',
+					  'ForceBold', 'LanguageGroup', 'ExpansionFactor']:
 					if hasattr(priv, k):
 						setattr(priv, k, None)
 
