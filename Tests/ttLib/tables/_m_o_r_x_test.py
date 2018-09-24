@@ -708,6 +708,160 @@ MORX_LIGATURE_XML = [
 ]
 
 
+# Taken from the `morx` table of the second font in DevanagariSangamMN.ttc
+# on macOS X 10.12.6; manually pruned to just contain the insertion lookup.
+MORX_INSERTION_DATA = deHexStr(
+    '0002 0000 '  #  0: Version=2, Reserved=0
+    '0000 0001 '  #  4: MorphChainCount=1
+    '0000 0001 '  #  8: DefaultFlags=1
+    '0000 00A4 '  # 12: StructLength=164 (+8=172)
+    '0000 0000 '  # 16: MorphFeatureCount=0
+    '0000 0001 '  # 20: MorphSubtableCount=1
+    '0000 0094 '  # 24: Subtable[0].StructLength=148 (+24=172)
+    '00 '         # 28: Subtable[0].CoverageFlags=0x00
+    '00 00 '      # 29: Subtable[0].Reserved=0
+    '05 '         # 31: Subtable[0].MorphType=5/InsertionMorph
+    '0000 0001 '  # 32: Subtable[0].SubFeatureFlags=0x1
+    '0000 0006 '  # 36: STXHeader.ClassCount=6
+    '0000 0014 '  # 40: STXHeader.ClassTableOffset=20 (+36=56)
+    '0000 004A '  # 44: STXHeader.StateArrayOffset=74 (+36=110)
+    '0000 006E '  # 48: STXHeader.EntryTableOffset=110 (+36=146)
+    '0000 0086 '  # 52: STXHeader.InsertionActionOffset=134 (+36=170)
+     # Glyph class table.
+    '0002 0006 '       #  56: ClassTable.LookupFormat=2, .UnitSize=6
+    '0006 0018 '       #  60:   .NUnits=6, .SearchRange=24
+    '0002 000C '       #  64:   .EntrySelector=2, .RangeShift=12
+    '00AC 00AC 0005 '  #  68: GlyphID 172..172 -> GlyphClass 5
+    '01EB 01E6 0005 '  #  74: GlyphID 486..491 -> GlyphClass 5
+    '01F0 01F0 0004 '  #  80: GlyphID 496..496 -> GlyphClass 4
+    '01F8 01F6 0004 '  #  88: GlyphID 502..504 -> GlyphClass 4
+    '01FC 01FA 0004 '  #  92: GlyphID 506..508 -> GlyphClass 4
+    '0250 0250 0005 '  #  98: GlyphID 592..592 -> GlyphClass 5
+    'FFFF FFFF 0000 '  # 104: <end of lookup>
+    # State array.
+    '0000 0000 0000 0000 0001 0000 '  # 110: State[0][0..5]
+    '0000 0000 0000 0000 0001 0000 '  # 122: State[1][0..5]
+    '0000 0000 0001 0000 0001 0002 '  # 134: State[2][0..5]
+    # Entry table.
+    '0000 0000 '  # 146: Entries[0].NewState=0, .Flags=0
+    'FFFF '       # 150: Entries[0].CurrentInsertIndex=<None>
+    'FFFF '       # 152: Entries[0].MarkedInsertIndex=<None>
+    '0002 0000 '  # 154: Entries[1].NewState=0, .Flags=0
+    'FFFF '       # 158: Entries[1].CurrentInsertIndex=<None>
+    'FFFF '       # 160: Entries[1].MarkedInsertIndex=<None>
+    '0000 '       # 162: Entries[2].NewState=0
+    '2820 '       # 164:   .Flags=CurrentIsKashidaLike,CurrentInsertBefore
+                  #        .CurrentInsertCount=1, .MarkedInsertCount=0
+    '0000 '       # 166: Entries[1].CurrentInsertIndex=0
+    'FFFF '       # 168: Entries[1].MarkedInsertIndex=<None>
+    # Insertion action table.
+    '022F'        # 170: InsertionActionTable[0]=GlyphID 559
+)   # 172: <end>
+assert len(MORX_INSERTION_DATA) == 172, len(MORX_INSERTION_DATA)
+
+
+MORX_INSERTION_XML = [
+    '<Version value="2"/>',
+    '<Reserved value="0"/>',
+    '<!-- MorphChainCount=1 -->',
+    '<MorphChain index="0">',
+    '  <DefaultFlags value="0x00000001"/>',
+    '  <!-- StructLength=164 -->',
+    '  <!-- MorphFeatureCount=0 -->',
+    '  <!-- MorphSubtableCount=1 -->',
+    '  <MorphSubtable index="0">',
+    '    <!-- StructLength=148 -->',
+    '    <TextDirection value="Horizontal"/>',
+    '    <ProcessingOrder value="LayoutOrder"/>',
+    '    <!-- MorphType=5 -->',
+    '    <SubFeatureFlags value="0x00000001"/>',
+    '    <InsertionMorph>',
+    '      <StateTable>',
+    '        <!-- GlyphClassCount=6 -->',
+    '        <GlyphClass glyph="g.172" value="5"/>',
+    '        <GlyphClass glyph="g.486" value="5"/>',
+    '        <GlyphClass glyph="g.487" value="5"/>',
+    '        <GlyphClass glyph="g.488" value="5"/>',
+    '        <GlyphClass glyph="g.489" value="5"/>',
+    '        <GlyphClass glyph="g.490" value="5"/>',
+    '        <GlyphClass glyph="g.491" value="5"/>',
+    '        <GlyphClass glyph="g.496" value="4"/>',
+    '        <GlyphClass glyph="g.502" value="4"/>',
+    '        <GlyphClass glyph="g.503" value="4"/>',
+    '        <GlyphClass glyph="g.504" value="4"/>',
+    '        <GlyphClass glyph="g.506" value="4"/>',
+    '        <GlyphClass glyph="g.507" value="4"/>',
+    '        <GlyphClass glyph="g.508" value="4"/>',
+    '        <GlyphClass glyph="g.592" value="5"/>',
+    '        <State index="0">',
+    '          <Transition onGlyphClass="0">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="1">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="2">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="3">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="4">',
+    '            <NewState value="2"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="5">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '        </State>',
+    '        <State index="1">',
+    '          <Transition onGlyphClass="0">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="1">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="2">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="3">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="4">',
+    '            <NewState value="2"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="5">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '        </State>',
+    '        <State index="2">',
+    '          <Transition onGlyphClass="0">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="1">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="2">',
+    '            <NewState value="2"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="3">',
+    '            <NewState value="0"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="4">',
+    '            <NewState value="2"/>',
+    '          </Transition>',
+    '          <Transition onGlyphClass="5">',
+    '            <NewState value="0"/>',
+    '            <Flags value="CurrentIsKashidaLike,CurrentInsertBefore"/>',
+    '            <CurrentInsertionAction glyph="g.559"/>',
+    '          </Transition>',
+    '        </State>',
+    '      </StateTable>',
+    '    </InsertionMorph>',
+    '  </MorphSubtable>',
+    '</MorphChain>',
+]
+
+
 class MORXNoncontextualGlyphSubstitutionTest(unittest.TestCase):
 
     @classmethod
@@ -800,6 +954,26 @@ class MORXLigatureSubstitutionTest(unittest.TestCase):
             table.fromXML(name, attrs, content, font=self.font)
         self.assertEqual(hexStr(table.compile(self.font)),
                          hexStr(MORX_LIGATURE_DATA))
+
+
+class MORXGlyphInsertionTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.maxDiff = None
+        cls.font = FakeFont(['.notdef'] + ['g.%d' % i for i in range (1, 910)])
+
+    def test_decompile_toXML(self):
+        table = newTable('morx')
+        table.decompile(MORX_INSERTION_DATA, self.font)
+        self.assertEqual(getXML(table.toXML), MORX_INSERTION_XML)
+
+    def test_compile_fromXML(self):
+        table = newTable('morx')
+        for name, attrs, content in parseXML(MORX_INSERTION_XML):
+            table.fromXML(name, attrs, content, font=self.font)
+        self.assertEqual(hexStr(table.compile(self.font)),
+                         hexStr(MORX_INSERTION_DATA))
 
 
 class MORXCoverageFlagsTest(unittest.TestCase):

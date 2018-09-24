@@ -417,6 +417,37 @@ class InsertionMorphAction(AATAction):
 			else:
 				assert False, eltName
 
+	@staticmethod
+	def compileActions(font, states):
+		actions, actionIndex, result = set(), {}, b""
+		for state in states:
+			for _glyphClass, trans in state.Transitions.items():
+				if trans.CurrentInsertionAction is not None:
+					actions.add(tuple(trans.CurrentInsertionAction))
+				if trans.MarkedInsertionAction is not None:
+					actions.add(tuple(trans.MarkedInsertionAction))
+		# Sort the compiled actions in decreasing order of
+		# length, so that the longer sequence come before the
+		# shorter ones.
+		for action in sorted(actions, key=lambda x:(-len(x), x)):
+			# We insert all sub-sequences of the action glyph sequence
+			# into actionIndex. For example, if one action triggers on
+			# glyph sequence [A, B, C, D, E] and another action triggers
+			# on [C, D], we return result=[A, B, C, D, E] (as list of
+			# encoded glyph IDs), and actionIndex={('A','B','C','D','E'): 0,
+			# ('C','D'): 2}.
+			if action in actionIndex:
+				continue
+			for start in range(0, len(action)):
+				startIndex = (len(result) // 2) + start
+				for limit in range(start, len(action)):
+					glyphs = action[start : limit + 1]
+					actionIndex.setdefault(glyphs, startIndex)
+			for glyph in action:
+				glyphID = font.getGlyphID(glyph)
+				result += struct.pack(">H", glyphID)
+		return result, actionIndex
+
 
 class FeatureParams(BaseTable):
 
@@ -1481,7 +1512,7 @@ def _buildClasses():
 			2: LigatureMorph,
 			# 3: Reserved,
 			4: NoncontextualMorph,
-			# 5: InsertionMorph,
+			5: InsertionMorph,
 		},
 	}
 	lookupTypes['JSTF'] = lookupTypes['GPOS']  # JSTF contains GPOS
