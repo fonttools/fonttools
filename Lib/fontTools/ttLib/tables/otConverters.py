@@ -1128,17 +1128,9 @@ class STXHeader(BaseConverter):
 		if self.perGlyphLookup is not None:
 			glyphClassTableOffset += 4
 
-		actionData, actionIndex, actionOffset = None, None, None
-		if issubclass(self.tableClass, LigatureMorphAction):
-			# 4 bytes each for {action,ligComponents,ligatures}Offset
-			glyphClassTableOffset += 12
-			actionData, actionIndex = \
-				self._compileLigActions(value, font)
-		if issubclass(self.tableClass, InsertionMorphAction):
-			glyphClassTableOffset += 4  # 4 bytes for actionOffset
-			actionData, actionIndex = \
-				self.tableClass.compileActions(font, value.States)
-
+		glyphClassTableOffset += self.tableClass.actionHeaderSize
+		actionData, actionIndex = \
+			self.tableClass.compileActions(font, value.States)
 		stateArrayData, entryTableData = self._compileStates(
 			font, value.States, glyphClassCount, actionIndex)
 		stateArrayOffset = glyphClassTableOffset + len(glyphClassData)
@@ -1148,6 +1140,8 @@ class STXHeader(BaseConverter):
 			pad(self._compilePerGlyphLookups(value, font), 4)
 		if actionData is not None:
 			actionOffset = entryTableOffset + len(entryTableData)
+		else:
+			actionOffset = None
 
 		ligaturesOffset, ligComponentsOffset = None, None
 		ligComponentsData = self._compileLigComponents(value, font)
@@ -1221,35 +1215,6 @@ class STXHeader(BaseConverter):
 			                          {}, lookup, None)
 			writer.writeSubTable(lookupWriter)
 		return writer.getAllData()
-
-	def _compileLigActions(self, table, font):
-		assert issubclass(self.tableClass, LigatureMorphAction)
-		actions = set()
-		for state in table.States:
-			for _glyphClass, trans in state.Transitions.items():
-				actions.add(trans.compileLigActions())
-		result, actionIndex = b"", {}
-		# Sort the compiled actions in decreasing order of
-		# length, so that the longer sequence come before the
-		# shorter ones.  For each compiled action ABCD, its
-		# suffixes BCD, CD, and D do not be encoded separately
-		# (in case they occur); instead, we can just store an
-		# index that points into the middle of the longer
-		# sequence. Every compiled AAT ligature sequence is
-		# terminated with an end-of-sequence flag, which can
-		# only be set on the last element of the sequence.
-		# Therefore, it is sufficient to consider just the
-		# suffixes.
-		for a in sorted(actions, key=lambda x:(-len(x), x)):
-			if a not in actionIndex:
-				for i in range(0, len(a), 4):
-					suffix = a[i:]
-					suffixIndex = (len(result) + i) // 4
-					actionIndex.setdefault(
-						suffix, suffixIndex)
-				result += a
-		result = pad(result, 4)
-		return (result, actionIndex)
 
 	def _compileLigComponents(self, table, font):
 		if not hasattr(table, "LigComponents"):

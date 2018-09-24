@@ -383,6 +383,10 @@ class RearrangementMorphActionTest(unittest.TestCase):
         r.compile(writer, self.font, actionIndex=None)
         self.assertEqual(hexStr(writer.getAllData()), "1234fffd")
 
+    def testCompileActions(self):
+        act = otTables.RearrangementMorphAction()
+        self.assertEqual(act.compileActions(self.font, []), (None, None))
+
     def testDecompileToXML(self):
         r = otTables.RearrangementMorphAction()
         r.decompile(OTTableReader(deHexStr("1234fffd")),
@@ -410,6 +414,10 @@ class ContextualMorphActionTest(unittest.TestCase):
         writer = OTTableWriter()
         a.compile(writer, self.font, actionIndex=None)
         self.assertEqual(hexStr(writer.getAllData()), "1234f117deadbeef")
+
+    def testCompileActions(self):
+        act = otTables.ContextualMorphAction()
+        self.assertEqual(act.compileActions(self.font, []), (None, None))
 
     def testDecompileToXML(self):
         a = otTables.ContextualMorphAction()
@@ -446,6 +454,32 @@ class LigatureMorphActionTest(unittest.TestCase):
                 '  <Action GlyphIndexDelta="3"/>',
                 '</Transition>',
         ])
+
+    def testCompileActions_empty(self):
+        act = otTables.LigatureMorphAction()
+        actions, actionIndex = act.compileActions(self.font, [])
+        self.assertEqual(actions, b'')
+        self.assertEqual(actionIndex, {})
+
+    def testCompileActions_shouldShareSubsequences(self):
+        state = otTables.AATState()
+        t = state.Transitions = {i: otTables.LigatureMorphAction()
+                                 for i in range(3)}
+        ligs = [otTables.LigAction() for _ in range(3)]
+        for i, lig in enumerate(ligs):
+            lig.GlyphIndexDelta = i
+        t[0].Actions = ligs[1:2]
+        t[1].Actions = ligs[0:3]
+        t[2].Actions = ligs[1:3]
+        actions, actionIndex = t[0].compileActions(self.font, [state])
+        self.assertEqual(actions,
+                         deHexStr("00000000 00000001 80000002 80000001"))
+        self.assertEqual(actionIndex, {
+            deHexStr("00000000 00000001 80000002"): 0,
+            deHexStr("00000001 80000002"): 1,
+            deHexStr("80000002"): 2,
+            deHexStr("80000001"): 3,
+        })
 
 
 class InsertionMorphActionTest(unittest.TestCase):
