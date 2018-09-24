@@ -484,6 +484,34 @@ class InsertionMorphActionTest(unittest.TestCase):
 	          actionIndex={('B', 'C'): 9, ('B', 'A', 'D'): 7})
         self.assertEqual(hexStr(writer.getAllData()), "1234fc4300090007")
 
+    def testCompileActions_empty(self):
+        act = otTables.InsertionMorphAction()
+        actions, actionIndex = act.compileActions(self.font, [])
+        self.assertEqual(actions, b'')
+        self.assertEqual(actionIndex, {})
+
+    def testCompileActions_shouldShareSubsequences(self):
+        state = otTables.AATState()
+        t = state.Transitions = {i: otTables.InsertionMorphAction()
+                                 for i in range(3)}
+        t[1].CurrentInsertionAction = []
+        t[0].MarkedInsertionAction = ['A']
+        t[1].CurrentInsertionAction = ['C', 'D']
+        t[1].MarkedInsertionAction = ['B']
+        t[2].CurrentInsertionAction = ['B', 'C', 'D']
+        t[2].MarkedInsertionAction = ['C', 'D']
+        actions, actionIndex = t[0].compileActions(self.font, [state])
+        self.assertEqual(actions, deHexStr('0002 0003 0004 0001'))
+        self.assertEqual(actionIndex, {
+            ('A',): 3,
+            ('B',): 0,
+            ('B', 'C'): 0,
+            ('B', 'C', 'D'): 0,
+            ('C',): 1,
+            ('C', 'D'): 1,
+            ('D',): 2,
+        })
+
 
 def test_splitMarkBasePos():
 	from fontTools.otlLib.builder import buildAnchor, buildMarkBasePosSubtable
