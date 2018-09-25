@@ -14,13 +14,24 @@
 
 
 from __future__ import print_function, division, absolute_import
-import cython
 
 __version__ = "1.5.1.dev0"
 
 __all__ = ['curve_to_quadratic', 'curves_to_quadratic']
 
 MAX_N = 100
+
+
+try:
+    import cython
+except:
+    class Cython:
+        @staticmethod
+        def func(*args, **kwargs):
+            return lambda x: x
+        def __getattr__(self, a):
+            return self.func
+    cython = Cython()
 
 
 class Cu2QuError(Exception):
