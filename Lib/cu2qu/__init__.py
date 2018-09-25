@@ -29,6 +29,8 @@ except:
         @staticmethod
         def func(*args, **kwargs):
             return lambda x: x
+        @staticmethod
+        def cfunc(x): return x
         def __getattr__(self, a):
             return self.func
     cython = Cython()
@@ -44,13 +46,15 @@ class ApproxNotFoundError(Cu2QuError):
         super(Cu2QuError, self).__init__(message)
         self.curve = curve
 
-@cython.returns(cython.complex)
+@cython.cfunc
+@cython.returns(cython.double)
 @cython.locals(v1=cython.complex, v2=cython.complex)
 def dot(v1, v2):
     """Return the dot product of two vectors."""
     return (v1 * v2.conjugate()).real
 
 
+@cython.cfunc
 @cython.locals(a=cython.complex, b=cython.complex, c=cython.complex, d=cython.complex)
 @cython.locals(_1=cython.complex, _2=cython.complex, _3=cython.complex, _4=cython.complex)
 def calc_cubic_points(a, b, c, d):
@@ -61,6 +65,7 @@ def calc_cubic_points(a, b, c, d):
     return _1, _2, _3, _4
 
 
+@cython.cfunc
 @cython.locals(p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex)
 @cython.locals(a=cython.complex, b=cython.complex, c=cython.complex, d=cython.complex)
 def calc_cubic_parameters(p0, p1, p2, p3):
@@ -71,6 +76,7 @@ def calc_cubic_parameters(p0, p1, p2, p3):
     return a, b, c, d
 
 
+@cython.cfunc
 @cython.locals(p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex)
 def split_cubic_into_n_iter(p0, p1, p2, p3, n):
     # Hand-coded special-cases
@@ -160,6 +166,8 @@ def calc_intersect(a, b, c, d):
     return p
 
 
+@cython.cfunc
+@cython.returns(cython.int)
 @cython.locals(tolerance=cython.double, p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex)
 @cython.locals(mid=cython.complex, deriv3=cython.complex)
 def cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance):
@@ -180,6 +188,7 @@ def cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance):
             cubic_farthest_fit_inside(mid, mid+deriv3, (p2+p3)*.5, p3, tolerance))
 
 
+@cython.cfunc
 @cython.locals(q1=cython.complex, c0=cython.complex, c1=cython.complex, c2=cython.complex, c3=cython.complex)
 def cubic_approx_quadratic(cubic, tolerance):
     """Return the uniq quadratic approximating cubic that maintains
@@ -202,6 +211,7 @@ def cubic_approx_quadratic(cubic, tolerance):
     return c0, q1, c3
 
 
+@cython.cfunc
 @cython.locals(n=cython.int, tolerance=cython.double)
 def cubic_approx_spline(cubic, n, tolerance):
     """Approximate a cubic bezier curve with a spline of n quadratics.
