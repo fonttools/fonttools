@@ -235,12 +235,10 @@ def test_unicodes(tmpdir):
     new.read(testDocPath)
     new.write(testDocPath2)
     # compare the file contents
-    f1 = open(testDocPath, 'r', encoding='utf-8')
-    t1 = f1.read()
-    f1.close()
-    f2 = open(testDocPath2, 'r', encoding='utf-8')
-    t2 = f2.read()
-    f2.close()
+    with open(testDocPath, 'r', encoding='utf-8') as f1:
+        t1 = f1.read()
+    with open(testDocPath2, 'r', encoding='utf-8') as f2:
+        t2 = f2.read()
     assert t1 == t2
     # check the unicode values read from the document
     assert new.instances[0].glyphs['arrow']['unicodes'] == [100,200,300]
@@ -335,12 +333,10 @@ def test_localisedNames(tmpdir):
     new = DesignSpaceDocument()
     new.read(testDocPath)
     new.write(testDocPath2)
-    f1 = open(testDocPath, 'r', encoding='utf-8')
-    t1 = f1.read()
-    f1.close()
-    f2 = open(testDocPath2, 'r', encoding='utf-8')
-    t2 = f2.read()
-    f2.close()
+    with open(testDocPath, 'r', encoding='utf-8') as f1:
+        t1 = f1.read()
+    with open(testDocPath2, 'r', encoding='utf-8') as f2:
+        t2 = f2.read()
     assert t1 == t2
 
 
@@ -759,14 +755,12 @@ def _addUnwrappedCondition(path):
     # only for testing, so we can make an invalid designspace file
     # older designspace files may have conditions that are not wrapped in a conditionset
     # These can be read into a new conditionset.
-    f = open(path, 'r', encoding='utf-8')
-    d = f.read()
+    with open(path, 'r', encoding='utf-8') as f:
+        d = f.read()
     print(d)
-    f.close()
     d = d.replace('<rule name="named.rule.1">', '<rule name="named.rule.1">\n\t<condition maximum="22" minimum="33" name="axisName_a" />')
-    f = open(path, 'w', encoding='utf-8')
-    f.write(d)
-    f.close()
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(d)
 
 def test_documentLib(tmpdir):
     # roundtrip test of the document lib with some nested data
