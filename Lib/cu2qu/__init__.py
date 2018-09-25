@@ -160,6 +160,8 @@ def calc_intersect(a, b, c, d):
     return p
 
 
+@cython.locals(tolerance=cython.double, p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex)
+@cython.locals(mid=cython.complex, deriv3=cython.complex)
 def cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance):
     """Returns True if the cubic Bezier p entirely lies within a distance
     tolerance of origin, False otherwise.  Assumes that p0 and p3 do fit
@@ -178,7 +180,8 @@ def cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance):
             cubic_farthest_fit_inside(mid, mid+deriv3, (p2+p3)*.5, p3, tolerance))
 
 
-def cubic_approx_quadratic(cubic, tolerance, _2_3=2/3):
+@cython.locals(q1=cython.complex, c0=cython.complex, c1=cython.complex, c2=cython.complex, c3=cython.complex)
+def cubic_approx_quadratic(cubic, tolerance):
     """Return the uniq quadratic approximating cubic that maintains
     endpoint tangents if that is within tolerance, None otherwise."""
     # we define 2/3 as a keyword argument so that it will be evaluated only
@@ -189,8 +192,8 @@ def cubic_approx_quadratic(cubic, tolerance, _2_3=2/3):
         return None
     c0 = cubic[0]
     c3 = cubic[3]
-    c1 = c0 + (q1 - c0) * _2_3
-    c2 = c3 + (q1 - c3) * _2_3
+    c1 = c0 + (q1 - c0) * 0.6666666666666666
+    c2 = c3 + (q1 - c3) * 0.6666666666666666
     if not cubic_farthest_fit_inside(0,
                                      c1 - cubic[1],
                                      c2 - cubic[2],
@@ -199,7 +202,8 @@ def cubic_approx_quadratic(cubic, tolerance, _2_3=2/3):
     return c0, q1, c3
 
 
-def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
+@cython.locals(n=cython.int, tolerance=cython.double)
+def cubic_approx_spline(cubic, n, tolerance):
     """Approximate a cubic bezier curve with a spline of n quadratics.
 
     Returns None if no quadratic approximation is found which lies entirely
@@ -241,8 +245,8 @@ def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
 
         if (abs(d1) > tolerance or
             not cubic_farthest_fit_inside(d0,
-                                          q0 + (q1 - q0) * _2_3 - c1,
-                                          q2 + (q1 - q2) * _2_3 - c2,
+                                          q0 + (q1 - q0) * 0.6666666666666666 - c1,
+                                          q2 + (q1 - q2) * 0.6666666666666666 - c2,
                                           d1,
                                           tolerance)):
             return None
@@ -251,6 +255,8 @@ def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
     return spline
 
 
+@cython.locals(max_err=cython.double)
+@cython.locals(n=cython.int)
 def curve_to_quadratic(curve, max_err):
     """Return a quadratic spline approximating this cubic bezier.
     Raise 'ApproxNotFoundError' if no suitable approximation can be found
@@ -269,6 +275,7 @@ def curve_to_quadratic(curve, max_err):
 
 
 
+@cython.locals(l=cython.int, last_i=cython.int, i=cython.int)
 def curves_to_quadratic(curves, max_errors):
     """Return quadratic splines approximating these cubic beziers.
     Raise 'ApproxNotFoundError' if no suitable approximation can be found
