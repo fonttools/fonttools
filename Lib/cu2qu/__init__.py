@@ -213,6 +213,9 @@ def cubic_approx_quadratic(cubic, tolerance):
 
 @cython.cfunc
 @cython.locals(n=cython.int, tolerance=cython.double)
+@cython.locals(i=cython.int)
+@cython.locals(c0=cython.complex, c1=cython.complex, c2=cython.complex, c3=cython.complex)
+@cython.locals(q0=cython.complex, q1=cython.complex, next_q1=cython.complex, q2=cython.complex, d1=cython.complex)
 def cubic_approx_spline(cubic, n, tolerance):
     """Approximate a cubic bezier curve with a spline of n quadratics.
 
