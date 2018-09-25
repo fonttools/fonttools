@@ -189,6 +189,7 @@ def cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance):
 
 
 @cython.cfunc
+@cython.locals(tolerance=cython.double)
 @cython.locals(q1=cython.complex, c0=cython.complex, c1=cython.complex, c2=cython.complex, c3=cython.complex)
 def cubic_approx_quadratic(cubic, tolerance):
     """Return the uniq quadratic approximating cubic that maintains
