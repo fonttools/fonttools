@@ -1,6 +1,11 @@
 sudo: false
 language: python
 
+env:
+  global:
+    - TWINE_USERNAME="anthrotype"
+    - secure: uIlWYz63F0Y/pDZawW2mS5DolWghdIodM8VtJtGbyIYB3fL3/edwTG5z+FWKaNeRtNfTAGDMs0y2dF45IJ7ZqTzw4yotgHz0uzLqjGjQ1/MOu99tppoXA6wQocZvmrdZpUcRbvBzJQzpAUcjldPLAP200mV9cG8+LfODn8Di2eJ329Ts3aA140pjUF8791jRLHBhUTpxK5RDPn1Q7OlugjryS7yNVIfT1/DaNDXAu4OZ8oNkygioRcyZ9QiFLjv5yBZ7uHB4UXWxw89RYPyz4NfHwyzDR38X/A6vfP19w2V0kecAK5BVBUE+WI7d26XjQzxDuH6Z0phB3x6MFuCXrX/pdrvNr7hs5kTAdQ7R1YA6MH4lPa+7oXha1/j353StzDMUKByXGVHyLAv7Ct2RSXOHUM6hAB4T+JbyJp/YkPWh968GKpl1lwvziKTi7K1qpngbXCdYIYKJ78IbmDcxzmQ+3j+fsXt9+gArZW7ICLgWrs+Lr1FiJsBOKLmqigOSmqrjHa+ef+wjieFSgzCVIfr9zvibzCEtYeqkuJuDQcSBIS0JG/heOfBGQ6FIxSXzwvICyWpldmfP67nBjVOVzPcyEAT8w+45LOM0HPCm6+Xjn7mKstc7x9TD7dVjWeyKJzZuKSmuAFA4UtGGKDQ93YQlAY2SCW4irYsusj80LHU=
+
 matrix:
   include:
   - env: TOXENV=py27-nocy
@@ -9,7 +14,9 @@ matrix:
     python: 3.6
   - env: TOXENV=py27-cy
     python: 2.7
-  - env: TOXENV=py36-cy
+  - env:
+    - TOXENV=py36-cy
+    - BUILD_DIST=true
     python: 3.6
 
 branches:
@@ -21,18 +28,10 @@ install: pip install tox
 
 script: tox
 
-after_success: tox -e codecov
-
-deploy:
+after_success:
+  - if [ -z "$TRAVIS_TAG" ]; then tox -e codecov; fi
   # deploy to PyPI on tags
-  provider: pypi
-  server: https://upload.pypi.org/legacy/
-  on:
-    repo: googlei18n/cu2qu
-    tags: true
-    all_branches: true
-    python: 3.6
-  user: anthrotype
-  password:
-    secure: LdEsho2OyiHKOsqjdwa1s6LQNuzbiHJGpk7L+Qn6XV8bmzznI15Z5yaC4kO8vE0ZfE0dwTcdA4BrjUBxFZnmWZtGp/la9pcwUF5fX8LnKwRsw8oPHJZNvvi9IEgnIg68VUJ4X787+hJKilQKhyE+J3UKDrJ0on6UJjpTciO8Tsins80EMD5wB000VriCXiZ3wvaCm/yaXDeGKkb8Us3NWT8pshgZ2SpoQyIJ1pik7p4UtjcZM2tPKbCPkim17UCOYQ/0II4KmoT19JGceC0xWbD0cssZDM2rd0vIQ+OMQTD7fkoTE2pY9L3dLDyHamJCECq/ZX0rNgFUBylEJq1+gin+8g81vXsewzBZA5Zc4/D+ER0INdLF8LbLAZOqu40eMa2X6bu3w++Vo8dK0wZibVlrA3EnBKcvTePTFuXnlAPuE252lsq+zn1nO8SO6xfzvB4JF3iB7GO7dajnR+8C+m9ctO/Lx043+FoxH607N1E/WOsFvOCPXQhpeNJZHyPtA4no++O0fp3KcKkvvJrt5nVxs55AT+p5uAXvfOATwwjaZYivayeZj2ICeFhh3A2LciMOvaqqXAJ64zFmjnmgVYyJPc7Xh30cnsvdKOR5QR35gzAZfEAyBeYIckIyIwpF9N+ogtGMQvHSprkbf1Bm6Hpmhq/XTkNzW+SM8+3/cfI=
-  distributions: sdist bdist_wheel
+  - |
+    if [ -n "$TRAVIS_TAG" ] && [ "$TRAVIS_REPO_SLUG" == "googlei18n/cu2qu" ] && [ "$BUILD_DIST" == true ]; then
+      tox -e pypi
+    fi
