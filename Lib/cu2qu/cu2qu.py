@@ -21,10 +21,14 @@ except ImportError:
     # if not installed, use the embedded (no-op) copy of Cython.Shadow
     from . import cython
 
+import math
+
 
 __all__ = ['curve_to_quadratic', 'curves_to_quadratic']
 
 MAX_N = 100
+
+NAN = float("NaN")
 
 
 class Cu2QuError(Exception):
@@ -151,7 +155,7 @@ def calc_intersect(a, b, c, d):
     try:
         h = dot(p, a - c) / dot(p, cd)
     except ZeroDivisionError:
-        return None
+        return complex(NAN, NAN)
     return c + cd * h
 
 
@@ -187,7 +191,7 @@ def cubic_approx_quadratic(cubic, tolerance):
     # once but still in the scope of this function
 
     q1 = calc_intersect(*cubic)
-    if q1 is None:
+    if math.isnan(q1.imag):
         return None
     c0 = cubic[0]
     c3 = cubic[3]
