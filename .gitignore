@@ -19,3 +19,6 @@ htmlcov
 
 # OS X Finder
 .DS_Store
+
+# auto-generated version file
+Lib/cu2qu/_version.py

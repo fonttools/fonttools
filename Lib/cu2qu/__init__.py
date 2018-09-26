@@ -15,18 +15,21 @@
 
 from __future__ import print_function, division, absolute_import
 
-__version__ = "1.5.1.dev0"
-
-__all__ = ['curve_to_quadratic', 'curves_to_quadratic']
-
-MAX_N = 100
-
+try:
+    from ._version import version as __version__
+except ImportError:
+    __version__ = "0.0.0+unknown"
 
 try:
     import cython
 except ImportError:
     # if not installed, use the embedded (no-op) copy of Cython.Shadow
     from cu2qu import cython
+
+
+__all__ = ['curve_to_quadratic', 'curves_to_quadratic']
+
+MAX_N = 100
 
 
 class Cu2QuError(Exception):
