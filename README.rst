@@ -86,7 +86,7 @@ twice as fast* than its pure-Python equivalent.
 When installing cu2qu from PyPI using pip, as long as you have a C compiler
 available, the cu2qu setup script will automatically attempt to build a
 C/Python extension module. If the compilation fails for any reasons, an error
-is printed and cu2qu is be installed as pure-Python, without the optimized
+is printed and cu2qu will be installed as pure-Python, without the optimized
 extension.
 
 If you have cloned the git repository, the C source files are not present and
