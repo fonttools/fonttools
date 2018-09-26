@@ -139,14 +139,13 @@ def split_cubic_into_three(p0, p1, p2, p3, _27=1/27):
 
 @cython.returns(cython.complex)
 @cython.locals(t=cython.double, p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex)
-@cython.locals(_p1=cython.complex, _p2=cython.complex, _p=cython.complex)
+@cython.locals(_p1=cython.complex, _p2=cython.complex)
 def cubic_approx_control(t, p0, p1, p2, p3):
     """Approximate a cubic bezier curve with a quadratic one.
        Returns the candidate control point."""
     _p1 = p0 + (p1 - p0) * 1.5
     _p2 = p3 + (p2 - p3) * 1.5
-    _p = _p1 + (_p2 - _p1) * t
-    return _p
+    return _p1 + (_p2 - _p1) * t
 
 
 @cython.returns(cython.complex)
@@ -162,8 +161,7 @@ def calc_intersect(a, b, c, d):
         h = dot(p, a - c) / dot(p, cd)
     except ZeroDivisionError:
         return None
-    p = c + cd * h
-    return p
+    return c + cd * h
 
 
 @cython.cfunc
