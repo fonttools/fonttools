@@ -24,16 +24,9 @@ MAX_N = 100
 
 try:
     import cython
-except:
-    class Cython:
-        @staticmethod
-        def func(*args, **kwargs):
-            return lambda x: x
-        @staticmethod
-        def cfunc(x): return x
-        def __getattr__(self, a):
-            return self.func
-    cython = Cython()
+except ImportError:
+    # if not installed, use the embedded (no-op) copy of Cython.Shadow
+    from cu2qu import cython
 
 
 class Cu2QuError(Exception):
