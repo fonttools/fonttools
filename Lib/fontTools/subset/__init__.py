@@ -2689,6 +2689,10 @@ def prune_pre_subset(self, font, options):
 		nameIDs.update([inst.subfamilyNameID for inst in fvar.instances])
 		nameIDs.update([inst.postscriptNameID for inst in fvar.instances
 				if inst.postscriptNameID != 0xFFFF])
+	stat = font.get('STAT')
+	if stat:
+		nameIDs.update([val_rec.ValueNameID for val_rec in stat.table.AxisValueArray.AxisValue])
+		nameIDs.update([axis_rec.AxisNameID for axis_rec in stat.table.DesignAxisRecord.Axis])
 	if '*' not in options.name_IDs:
 		self.names = [n for n in self.names if n.nameID in nameIDs]
 	if not options.name_legacy:
