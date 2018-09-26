@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from . import CUBIC_GLYPHS
 from ufoLib.pointPen import PointToSegmentPen, SegmentToPointPen
+from fontTools.misc.py23 import isclose
 import unittest
 
 
@@ -110,6 +111,34 @@ class DummyGlyph(object):
     def __ne__(self, other):
         """Return True if 'other' glyph's outline is different from self."""
         return not (self == other)
+
+    def approx(self, other):
+        if hasattr(other, 'outline'):
+            outline2 == other.outline
+        elif hasattr(other, 'draw'):
+            outline2 = self.__class__(other).outline
+        else:
+            raise TypeError(type(other).__name__)
+        outline1 = self.outline
+        if len(outline1) != len(outline2):
+            return False
+        for (cmd1, arg1, kwd1), (cmd2, arg2, kwd2) in zip(outline1, outline2):
+            if cmd1 != cmd2:
+                return False
+            if kwd1 != kwd2:
+                return False
+            if arg1:
+                if isinstance(arg1[0], tuple):
+                    if not arg2 or not isinstance(arg2[0], tuple):
+                        return False
+                    for (x1, y1), (x2, y2) in zip(arg1, arg2):
+                        if not isclose(x1, x2) or not isclose(y1, y2):
+                            return False
+                elif arg1 != arg2:
+                    return False
+            elif arg2:
+                return False
+        return True
 
     def __str__(self):
         """Return commands making up the glyph's outline as a string."""
