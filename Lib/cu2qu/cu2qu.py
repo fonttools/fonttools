@@ -34,6 +34,14 @@ MAX_N = 100
 NAN = float("NaN")
 
 
+if cython.compiled:
+    # Yep, I'm compiled.
+    COMPILED = True
+else:
+    # Just a lowly interpreted script.
+    COMPILED = False
+
+
 class Cu2QuError(Exception):
     pass
 
