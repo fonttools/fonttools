@@ -22,6 +22,20 @@ __all__ = ['curve_to_quadratic', 'curves_to_quadratic']
 MAX_N = 100
 
 
+try:
+    import cython
+except:
+    class Cython:
+        @staticmethod
+        def func(*args, **kwargs):
+            return lambda x: x
+        @staticmethod
+        def cfunc(x): return x
+        def __getattr__(self, a):
+            return self.func
+    cython = Cython()
+
+
 class Cu2QuError(Exception):
     pass
 
@@ -32,20 +46,28 @@ class ApproxNotFoundError(Cu2QuError):
         super(Cu2QuError, self).__init__(message)
         self.curve = curve
 
-
+@cython.cfunc
+@cython.returns(cython.double)
+@cython.locals(v1=cython.complex, v2=cython.complex)
 def dot(v1, v2):
     """Return the dot product of two vectors."""
     return (v1 * v2.conjugate()).real
 
 
+@cython.cfunc
+@cython.locals(a=cython.complex, b=cython.complex, c=cython.complex, d=cython.complex)
+@cython.locals(_1=cython.complex, _2=cython.complex, _3=cython.complex, _4=cython.complex)
 def calc_cubic_points(a, b, c, d):
     _1 = d
-    _2 = (c / 3.0) + d
-    _3 = (b + c) / 3.0 + _2
+    _2 = (c * 0.3333333333333333) + d
+    _3 = (b + c) * 0.3333333333333333 + _2
     _4 = a + d + c + b
     return _1, _2, _3, _4
 
 
+@cython.cfunc
+@cython.locals(p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex)
+@cython.locals(a=cython.complex, b=cython.complex, c=cython.complex, d=cython.complex)
 def calc_cubic_parameters(p0, p1, p2, p3):
     c = (p1 - p0) * 3.0
     b = (p2 - p1) * 3.0 - c
@@ -54,6 +76,8 @@ def calc_cubic_parameters(p0, p1, p2, p3):
     return a, b, c, d
 
 
+@cython.cfunc
+@cython.locals(p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex)
 def split_cubic_into_n_iter(p0, p1, p2, p3, n):
     # Hand-coded special-cases
     if n == 2:
@@ -70,6 +94,10 @@ def split_cubic_into_n_iter(p0, p1, p2, p3, n):
     return _split_cubic_into_n_gen(p0,p1,p2,p3,n)
 
 
+@cython.locals(p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex, n=cython.int)
+@cython.locals(a=cython.complex, b=cython.complex, c=cython.complex, d=cython.complex)
+@cython.locals(dt=cython.double, delta_2=cython.double, delta_3=cython.double, i=cython.int)
+@cython.locals(a1=cython.complex, b1=cython.complex, c1=cython.complex, d1=cython.complex)
 def _split_cubic_into_n_gen(p0, p1, p2, p3, n):
     a, b, c, d = calc_cubic_parameters(p0, p1, p2, p3)
     dt = 1 / n
@@ -86,6 +114,8 @@ def _split_cubic_into_n_gen(p0, p1, p2, p3, n):
         yield calc_cubic_points(a1, b1, c1, d1)
 
 
+@cython.locals(p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex)
+@cython.locals(mid=cython.complex, deriv3=cython.complex)
 def split_cubic_into_two(p0, p1, p2, p3):
     mid = (p0 + 3 * (p1 + p2) + p3) * .125
     deriv3 = (p3 + p2 - p1 - p0) * .125
@@ -93,6 +123,8 @@ def split_cubic_into_two(p0, p1, p2, p3):
             (mid, mid + deriv3, (p2 + p3) * .5, p3))
 
 
+@cython.locals(p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex, _27=cython.double)
+@cython.locals(mid1=cython.complex, deriv1=cython.complex, mid2=cython.complex, deriv2=cython.complex)
 def split_cubic_into_three(p0, p1, p2, p3, _27=1/27):
     # we define 1/27 as a keyword argument so that it will be evaluated only
     # once but still in the scope of this function
@@ -100,20 +132,26 @@ def split_cubic_into_three(p0, p1, p2, p3, _27=1/27):
     deriv1 = (p3 + 3*p2 - 4*p0) * _27
     mid2 = (p0 + 6*p1 + 12*p2 + 8*p3) * _27
     deriv2 = (4*p3 - 3*p1 - p0) * _27
-    return ((p0, (2*p0 + p1) / 3, mid1 - deriv1, mid1),
+    return ((p0, (2*p0 + p1) * 0.3333333333333333, mid1 - deriv1, mid1),
             (mid1, mid1 + deriv1, mid2 - deriv2, mid2),
-            (mid2, mid2 + deriv2, (p2 + 2*p3) / 3, p3))
+            (mid2, mid2 + deriv2, (p2 + 2*p3) * 0.3333333333333333, p3))
 
 
-def cubic_approx_control(p, t):
+@cython.returns(cython.complex)
+@cython.locals(t=cython.double, p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex)
+@cython.locals(_p1=cython.complex, _p2=cython.complex, _p=cython.complex)
+def cubic_approx_control(t, p0, p1, p2, p3):
     """Approximate a cubic bezier curve with a quadratic one.
        Returns the candidate control point."""
+    _p1 = p0 + (p1 - p0) * 1.5
+    _p2 = p3 + (p2 - p3) * 1.5
+    _p = _p1 + (_p2 - _p1) * t
+    return _p
 
-    p1 = p[0] + (p[1] - p[0]) * 1.5
-    p2 = p[3] + (p[2] - p[3]) * 1.5
-    return p1 + (p2 - p1) * t
 
-
+@cython.returns(cython.complex)
+@cython.locals(a=cython.complex, b=cython.complex, c=cython.complex, d=cython.complex)
+@cython.locals(ab=cython.complex, cd=cython.complex, p=cython.complex, h=cython.double)
 def calc_intersect(a, b, c, d):
     """Calculate the intersection of ab and cd, given a, b, c, d."""
 
@@ -124,9 +162,14 @@ def calc_intersect(a, b, c, d):
         h = dot(p, a - c) / dot(p, cd)
     except ZeroDivisionError:
         return None
-    return c + cd * h
+    p = c + cd * h
+    return p
 
 
+@cython.cfunc
+@cython.returns(cython.int)
+@cython.locals(tolerance=cython.double, p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex)
+@cython.locals(mid=cython.complex, deriv3=cython.complex)
 def cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance):
     """Returns True if the cubic Bezier p entirely lies within a distance
     tolerance of origin, False otherwise.  Assumes that p0 and p3 do fit
@@ -145,7 +188,10 @@ def cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance):
             cubic_farthest_fit_inside(mid, mid+deriv3, (p2+p3)*.5, p3, tolerance))
 
 
-def cubic_approx_quadratic(cubic, tolerance, _2_3=2/3):
+@cython.cfunc
+@cython.locals(tolerance=cython.double)
+@cython.locals(q1=cython.complex, c0=cython.complex, c1=cython.complex, c2=cython.complex, c3=cython.complex)
+def cubic_approx_quadratic(cubic, tolerance):
     """Return the uniq quadratic approximating cubic that maintains
     endpoint tangents if that is within tolerance, None otherwise."""
     # we define 2/3 as a keyword argument so that it will be evaluated only
@@ -156,8 +202,8 @@ def cubic_approx_quadratic(cubic, tolerance, _2_3=2/3):
         return None
     c0 = cubic[0]
     c3 = cubic[3]
-    c1 = c0 + (q1 - c0) * _2_3
-    c2 = c3 + (q1 - c3) * _2_3
+    c1 = c0 + (q1 - c0) * 0.6666666666666666
+    c2 = c3 + (q1 - c3) * 0.6666666666666666
     if not cubic_farthest_fit_inside(0,
                                      c1 - cubic[1],
                                      c2 - cubic[2],
@@ -166,7 +212,12 @@ def cubic_approx_quadratic(cubic, tolerance, _2_3=2/3):
     return c0, q1, c3
 
 
-def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
+@cython.cfunc
+@cython.locals(n=cython.int, tolerance=cython.double)
+@cython.locals(i=cython.int)
+@cython.locals(c0=cython.complex, c1=cython.complex, c2=cython.complex, c3=cython.complex)
+@cython.locals(q0=cython.complex, q1=cython.complex, next_q1=cython.complex, q2=cython.complex, d1=cython.complex)
+def cubic_approx_spline(cubic, n, tolerance):
     """Approximate a cubic bezier curve with a spline of n quadratics.
 
     Returns None if no quadratic approximation is found which lies entirely
@@ -182,7 +233,7 @@ def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
 
     # calculate the spline of quadratics and check errors at the same time.
     next_cubic = next(cubics)
-    next_q1 = cubic_approx_control(next_cubic, 0)
+    next_q1 = cubic_approx_control(0, *next_cubic)
     q2 = cubic[0]
     d1 = 0j
     spline = [cubic[0], next_q1]
@@ -196,7 +247,7 @@ def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
         q1 = next_q1
         if i < n:
             next_cubic = next(cubics)
-            next_q1 = cubic_approx_control(next_cubic, i / (n-1))
+            next_q1 = cubic_approx_control(i / (n-1), *next_cubic)
             spline.append(next_q1)
             q2 = (q1 + next_q1) * .5
         else:
@@ -208,8 +259,8 @@ def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
 
         if (abs(d1) > tolerance or
             not cubic_farthest_fit_inside(d0,
-                                          q0 + (q1 - q0) * _2_3 - c1,
-                                          q2 + (q1 - q2) * _2_3 - c2,
+                                          q0 + (q1 - q0) * 0.6666666666666666 - c1,
+                                          q2 + (q1 - q2) * 0.6666666666666666 - c2,
                                           d1,
                                           tolerance)):
             return None
@@ -218,6 +269,8 @@ def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
     return spline
 
 
+@cython.locals(max_err=cython.double)
+@cython.locals(n=cython.int)
 def curve_to_quadratic(curve, max_err):
     """Return a quadratic spline approximating this cubic bezier.
     Raise 'ApproxNotFoundError' if no suitable approximation can be found
@@ -236,6 +289,7 @@ def curve_to_quadratic(curve, max_err):
 
 
 
+@cython.locals(l=cython.int, last_i=cython.int, i=cython.int)
 def curves_to_quadratic(curves, max_errors):
     """Return quadratic splines approximating these cubic beziers.
     Raise 'ApproxNotFoundError' if no suitable approximation can be found
@@ -265,3 +319,48 @@ def curves_to_quadratic(curves, max_errors):
 
     raise ApproxNotFoundError(curves)
 
+
+if __name__ == '__main__':
+    import random
+    import timeit
+
+    MAX_ERR = 5
+
+    def generate_curve():
+        return [
+            tuple(float(random.randint(0, 2048)) for coord in range(2))
+            for point in range(4)]
+
+    def setup_curve_to_quadratic():
+        return generate_curve(), MAX_ERR
+
+    def setup_curves_to_quadratic():
+        num_curves = 3
+        return (
+            [generate_curve() for curve in range(num_curves)],
+            [MAX_ERR] * num_curves)
+
+    def run_benchmark(
+            benchmark_module, module, function, setup_suffix='', repeat=5, number=1000):
+        setup_func = 'setup_' + function
+        if setup_suffix:
+            print('%s with %s:' % (function, setup_suffix), end='')
+            setup_func += '_' + setup_suffix
+        else:
+            print('%s:' % function, end='')
+
+        def wrapper(function, setup_func):
+            function = globals()[function]
+            setup_func = globals()[setup_func]
+            def wrapped():
+                return function(*setup_func())
+            return wrapped
+        results = timeit.repeat(wrapper(function, setup_func), repeat=repeat, number=number)
+        print('\t%5.1fus' % (min(results) * 1000000. / number))
+
+    def main():
+        run_benchmark('cu2qu.benchmark', 'cu2qu', 'curve_to_quadratic')
+        run_benchmark('cu2qu.benchmark', 'cu2qu', 'curves_to_quadratic')
+
+    random.seed(1)
+    main()
