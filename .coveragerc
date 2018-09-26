@@ -6,6 +6,10 @@ branch = True
 # list of directories or packages to measure
 source = cu2qu
 
+# this is simply vendored, no need to include in coverage report
+omit =
+    */cu2qu/cython.py
+
 # these are treated as equivalent when combining data
 [paths]
 source =
