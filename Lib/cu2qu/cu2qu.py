@@ -1,3 +1,6 @@
+#cython: language_level=3
+#distutils: define_macros=CYTHON_TRACE_NOGIL=1
+
 # Copyright 2015 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
