@@ -461,13 +461,15 @@ class CapturingLogHandler(logging.Handler):
 	def emit(self, record):
 		self.records.append(record)
 
-	def assertRegex(self, regexp):
+	def assertRegex(self, regexp, msg=None):
 		import re
 		pattern = re.compile(regexp)
 		for r in self.records:
 			if pattern.search(r.getMessage()):
 				return True
-		assert 0, "Pattern '%s' not found in logger records" % regexp
+		if msg is None:
+			msg = "Pattern '%s' not found in logger records" % regexp
+		assert 0, msg
 
 
 class LogMixin(object):
