@@ -16,7 +16,7 @@ import os
 from io import BytesIO, open
 from warnings import warn
 from collections import OrderedDict
-from fontTools.misc.py23 import basestring, unicode, tobytes
+from fontTools.misc.py23 import basestring, unicode, tobytes, tounicode
 from ufoLib import plistlib
 from ufoLib.pointPen import AbstractPointPen, PointToSegmentPen
 from ufoLib.filenames import userNameToFileName
@@ -679,8 +679,8 @@ def _writeNote(glyphObject, element, validate):
 		raise GlifLibError("note attribute must be str or unicode")
 	note = note.strip()
 	note = "\n" + note + "\n"
-	note = note.encode("utf-8")
-	etree.SubElement(element, "note").text = note
+	# ensure text is unicode, if it's bytes decode as ASCII
+	etree.SubElement(element, "note").text = tounicode(note)
 
 def _writeImage(glyphObject, element, validate):
 	image = getattr(glyphObject, "image", None)
