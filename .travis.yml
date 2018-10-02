@@ -1,5 +1,9 @@
 language: python
 sudo: false
+env:
+  global:
+  - TWINE_USERNAME="anthrotype"
+  - secure: MgeE4CfZKuKkG9Qzl/OobMprNgsLExuGGKbWNDbYmOj7qyhEcPsKIPgPrOiY5n7ZCdXZ5V/m2ZgA18HwGOsV2VliZIalyzKqYE9tEu3yObhccqoAgrm+HzqaKHZnpuZf0AlGRc3h8jY7GAZITlUEIEYQ6hBKP1GdXOgv4GeaqK0nHwHIE/SzQc/VQR1edzJBpj+IX4tYpyVMEd/PhuL89WgiJdPkpNP6ArY1dDyc6qCp8Y9H9+Bay+A/xJ1MSd3KYVoPYPWuMfuea7YxVoQT7UPJJrWmmafZgPYbdS56HvVtHQBsKXkIzjTxHEta7lKP/EVxjtjTAIdRn1pNAeNaVhVPPBF4JJNuAYv54eVlE2MJeftoYN8CSVq93TM+b3H3osWDWilFRPjsEyZjOKLEkekMp5hPL4+AJOSGde7+cN25CM8/DymU4I0fM458Cibq8CUZmt4VSTYGIa6jS6MJUuTGg1RU6nYHZU8PBRmhBvMxz0oL3lZGM24OBRCOlSgeObQQMtUZnX9gE9+Lfo5KfDW8Tn1OJjeBxboCXcca4MEjn0IiXaP8s+Vk8g1yO2bletfT5apTPfhuqOWfqzAQMI+KJP7pmcR8SuXNd9bjqX6ZHol7s3PiHTjzdV4l3nPr2vFy7UlnTvuirdPXrk4qhcOqL/3KOILE5AG64QO2WRk=
 matrix:
   include:
   - env: TOXENV=py27-cov,py27-cov-lxml
@@ -14,10 +18,18 @@ install:
   - pip install tox
 script: tox
 after_success:
-  # upload code coverage to Codecov.io
-  - tox -e codecov
+  # If it's a tagged commit, upload sdist and wheel packages to PyPI.
+  # Otherwise, upload code coverage to Codecov.io
+  - |
+    if [ -n "$TRAVIS_TAG" ] && [ "$TRAVIS_REPO_SLUG" == "unified-font-object/ufoLib" ] && [ "$TRAVIS_PYTHON_VERSION" == "3.6" ]; then
+        pip install twine
+        tox -e wheel
+        twine upload dist/*.whl dist/*.zip
+    else
+        tox -e codecov
+    fi
+
 before_deploy:
-  - tox -e wheel
   - export WHL=$(ls dist/ufoLib*.whl)
   - export ZIP=$(ls dist/ufoLib*.zip)
 deploy:
@@ -34,16 +46,3 @@ deploy:
       tags: true
       all_branches: true
       python: 3.6
-  # deploy to PyPI on tags
-  - provider: pypi
-    server: https://upload.pypi.org/legacy/
-    on:
-      repo: unified-font-object/ufoLib
-      tags: true
-      all_branches: true
-      python: 3.6
-    user: anthrotype
-    password:
-      secure: m0tl6kKKOE/V1WsTkdn1yCYdI6dEnZZbz0SChVm9XNuloTti++I25oJvfcDFDtq5K+gHZ8hPmym/sFH+dozjf39fCrURiFnL9tIumCJvehubDXYGw2ZLN8SLayG6QsdBqyjQB8mS9L+Ag0vaC10Nj6zgmXPQQERckqDiLfmT1A1IPDodu18hHH7FM4eNhhB1Ksaem9rurgpNHtORHJxab1aGVIe0kz6UR/e+ldtenyxWcHVX+04kTJkR7mz9c2lTq0DrVZ7uc9slURi5Mw4VgGHG6J/sCsqUFoqtESciN0+2OblacVbvu7avBsnFbSVOFdqurRNpHf1gCPt5cx0nIORpps9VE2TZEj0J4wmTamhUGelIuyqu6jGYExc94Ca6OYLQxqr+YhiPSl0uiWzVA0D7dmKx9EIl/RKtB3nAg9+BX7il2Xt/fPU0qJtMbYwSTtS/KDuNFys6z4wFcvAykdBbilX2ZCjbSP36uVI6HmwWJX+/kAFiGiuW0qQQ3Q64LgBu2t8Ho0HE+J5TmpE59eaOqir1yMd9wo89t0QJNO2zf1/0FO0lakol4+VX+btyt8QfCnBGGk7ZjK46h9oOMhZ5kjdVRqDwrsgy6InLbirQvDbhGI2NZInY5/Y8w8lCdExyfsELSOBwm86ovzIKAG4bPU3cEIjAHuJGBXBjqKk=
-    distributions: sdist bdist_wheel
-
