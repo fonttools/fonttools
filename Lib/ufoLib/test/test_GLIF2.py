@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals
 import unittest
 from ufoLib.glifLib import GlifLibError, readGlyphFromString, writeGlyphToString
@@ -299,7 +300,7 @@ class TestGLIF2(unittest.TestCase):
 		glif = """
 		<glyph name="a" format="2">
 			<note>
-				hello
+				hëllö
 			</note>
 			<outline>
 			</outline>
@@ -307,7 +308,7 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		py = """
 		glyph.name = "a"
-		glyph.note = "hello"
+		glyph.note = "hëllö"
 		"""
 		resultGlif = self.pyToGLIF(py)
 		resultPy = self.glifToPy(glif)
