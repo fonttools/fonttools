@@ -1,7 +1,9 @@
-from __future__ import unicode_literals
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, unicode_literals
 import unittest
 from ufoLib.glifLib import GlifLibError, readGlyphFromString, writeGlyphToString
 from ufoLib.test.testSupport import Glyph, stripText
+from itertools import islice
 
 try:
 	basestring
@@ -24,15 +26,15 @@ class TestGLIF2(unittest.TestCase):
 		py = stripText(py)
 		glyph = Glyph()
 		exec(py, {"glyph" : glyph, "pointPen" : glyph})
-		glif = writeGlyphToString(glyph.name, glyphObject=glyph, drawPointsFunc=glyph.drawPoints, formatVersion=2)
-		glif = "\n".join(glif.splitlines()[1:])
-		return glif
+		glif = writeGlyphToString(glyph.name, glyphObject=glyph, drawPointsFunc=glyph.drawPoints, formatVersion=2, validate=True)
+		# discard the first line containing the xml declaration
+		return "\n".join(islice(glif.splitlines(), 1, None))
 
 	def glifToPy(self, glif):
 		glif = stripText(glif)
-		glif = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + glif
+		glif = "<?xml version=\"1.0\"?>\n" + glif
 		glyph = Glyph()
-		readGlyphFromString(glif, glyphObject=glyph, pointPen=glyph)
+		readGlyphFromString(glif, glyphObject=glyph, pointPen=glyph, validate=True)
 		return glyph.py()
 
 	def testTopElement(self):
@@ -298,7 +300,7 @@ class TestGLIF2(unittest.TestCase):
 		glif = """
 		<glyph name="a" format="2">
 			<note>
-				hello
+				hëllö
 			</note>
 			<outline>
 			</outline>
@@ -306,7 +308,7 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		py = """
 		glyph.name = "a"
-		glyph.note = "hello"
+		glyph.note = "hëllö"
 		"""
 		resultGlif = self.pyToGLIF(py)
 		resultPy = self.glifToPy(glif)

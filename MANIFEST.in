@@ -5,4 +5,4 @@ recursive-include Documentation *.py *.rst
 
 recursive-include Lib/ufoLib/test/testdata *.plist *.glif *.fea *.txt
 
-include requirements.txt tox.ini
+include requirements.txt extra_requirements.txt .coveragerc tox.ini

@@ -1,5 +1,6 @@
 """Various low level data validators."""
 
+from __future__ import absolute_import, unicode_literals
 import calendar
 from io import open
 
@@ -27,8 +28,7 @@ def isDictEnough(value):
     """
     if isinstance(value, Mapping):
         return True
-    attrs = ("keys", "values", "items")
-    for attr in attrs:
+    for attr in ("keys", "values", "items"):
         if not hasattr(value, attr):
             return False
     return True
@@ -47,7 +47,7 @@ def genericIntListValidator(values, validValues):
 		return False
 	valuesSet = set(values)
 	validValuesSet = set(validValues)
-	if len(valuesSet - validValuesSet) > 0:
+	if valuesSet - validValuesSet:
 		return False
 	for value in values:
 		if not isinstance(value, int):
@@ -82,17 +82,17 @@ def genericDictValidator(value, prototype):
 	if not isinstance(value, Mapping):
 		return False
 	# missing required keys
-	for key, (typ, required) in list(prototype.items()):
+	for key, (typ, required) in prototype.items():
 		if not required:
 			continue
 		if key not in value:
 			return False
 	# unknown keys
-	for key in list(value.keys()):
+	for key in value.keys():
 		if key not in prototype:
 			return False
 	# incorrect types
-	for key, v in list(value.items()):
+	for key, v in value.items():
 		prototypeType, required = prototype[key]
 		if v is None and not required:
 			continue
@@ -529,15 +529,16 @@ def guidelinesValidator(value, identifiers=None):
 			identifiers.add(identifier)
 	return True
 
+_guidelineDictPrototype = dict(
+	x=((int, float), False), y=((int, float), False), angle=((int, float), False),
+	name=(basestring, False), color=(basestring, False), identifier=(basestring, False)
+)
+
 def guidelineValidator(value):
 	"""
 	Version 3+.
 	"""
-	dictPrototype = dict(
-		x=((int, float), False), y=((int, float), False), angle=((int, float), False),
-		name=(basestring, False), color=(basestring, False), identifier=(basestring, False)
-	)
-	if not genericDictValidator(value, dictPrototype):
+	if not genericDictValidator(value, _guidelineDictPrototype):
 		return False
 	x = value.get("x")
 	y = value.get("y")
@@ -590,16 +591,17 @@ def anchorsValidator(value, identifiers=None):
 			identifiers.add(identifier)
 	return True
 
+_anchorDictPrototype = dict(
+	x=((int, float), False), y=((int, float), False),
+	name=(basestring, False), color=(basestring, False),
+	identifier=(basestring, False)
+)
+
 def anchorValidator(value):
 	"""
 	Version 3+.
 	"""
-	dictPrototype = dict(
-		x=((int, float), False), y=((int, float), False),
-		name=(basestring, False), color=(basestring, False),
-		identifier=(basestring, False)
-	)
-	if not genericDictValidator(value, dictPrototype):
+	if not genericDictValidator(value, _anchorDictPrototype):
 		return False
 	x = value.get("x")
 	y = value.get("y")
@@ -725,18 +727,19 @@ def colorValidator(value):
 
 pngSignature = b"\x89PNG\r\n\x1a\n"
 
+_imageDictPrototype = dict(
+	fileName=(basestring, True),
+	xScale=((int, float), False), xyScale=((int, float), False),
+	yxScale=((int, float), False), yScale=((int, float), False),
+	xOffset=((int, float), False), yOffset=((int, float), False),
+	color=(basestring, False)
+)
+
 def imageValidator(value):
 	"""
 	Version 3+.
 	"""
-	dictPrototype = dict(
-		fileName=(basestring, True),
-		xScale=((int, float), False), xyScale=((int, float), False),
-		yxScale=((int, float), False), yScale=((int, float), False),
-		xOffset=((int, float), False), yOffset=((int, float), False),
-		color=(basestring, False)
-	)
-	if not genericDictValidator(value, dictPrototype):
+	if not genericDictValidator(value, _imageDictPrototype):
 		return False
 	# fileName must be one or more characters
 	if not value["fileName"]:
@@ -822,7 +825,7 @@ def layerContentsValidator(value, ufoPathOrFileSystem):
 		# store
 		contents[layerName] = directoryName
 	# missing default layer
-	foundDefault = "glyphs" in list(contents.values())
+	foundDefault = "glyphs" in contents.values()
 	if not foundDefault:
 		return False, "The required default glyph set is not in the UFO."
 	return True, None
@@ -868,7 +871,7 @@ def groupsValidator(value):
 		return False, bogusFormatMessage
 	firstSideMapping = {}
 	secondSideMapping = {}
-	for groupName, glyphList in list(value.items()):
+	for groupName, glyphList in value.items():
 		if not isinstance(groupName, (basestring)):
 			return False, bogusFormatMessage
 		if not isinstance(glyphList, (list, tuple)):
@@ -918,12 +921,12 @@ def kerningValidator(data):
 	bogusFormatMessage = "The kerning data is not in the correct format."
 	if not isinstance(data, Mapping):
 		return False, bogusFormatMessage
-	for first, secondDict in list(data.items()):
+	for first, secondDict in data.items():
 		if not isinstance(first, basestring):
 			return False, bogusFormatMessage
 		elif not isinstance(secondDict, Mapping):
 			return False, bogusFormatMessage
-		for second, value in list(secondDict.items()):
+		for second, value in secondDict.items():
 			if not isinstance(second, basestring):
 				return False, bogusFormatMessage
 			elif not isinstance(value, (int, float)):
@@ -933,6 +936,8 @@ def kerningValidator(data):
 # -------------
 # lib.plist/lib
 # -------------
+
+_bogusLibFormatMessage = "The lib data is not in the correct format: %s"
 
 def fontLibValidator(value):
 	"""
@@ -951,28 +956,49 @@ def fontLibValidator(value):
 	>>> fontLibValidator(lib)
 	(True, None)
 
+	>>> lib = "hello"
+	>>> valid, msg = fontLibValidator(lib)
+	>>> valid
+	False
+	>>> print(msg)  # doctest: +ELLIPSIS
+	The lib data is not in the correct format: expected a dictionary, ...
+
+	>>> lib = {1: "hello"}
+	>>> valid, msg = fontLibValidator(lib)
+	>>> valid
+	False
+	>>> print(msg)
+	The lib key is not properly formatted: expected basestring, found int: 1
+
 	>>> lib = {"public.glyphOrder" : "hello"}
-	>>> fontLibValidator(lib)
-	(False, 'public.glyphOrder is not properly formatted.')
+	>>> valid, msg = fontLibValidator(lib)
+	>>> valid
+	False
+	>>> print(msg)  # doctest: +ELLIPSIS
+	public.glyphOrder is not properly formatted: expected list or tuple,...
 
 	>>> lib = {"public.glyphOrder" : ["A", 1, "B"]}
 	>>> fontLibValidator(lib)
-	(False, 'public.glyphOrder is not properly formatted.')
+	(False, 'public.glyphOrder is not properly formatted: expected basestring, found int')
 	"""
-	bogusFormatMessage = "The lib data is not in the correct format."
 	if not isDictEnough(value):
-		return False, bogusFormatMessage
-	for key, value in list(value.items()):
+		reason = "expected a dictionary, found %s" % type(value).__name__
+		return False, _bogusLibFormatMessage % reason
+	for key, value in value.items():
 		if not isinstance(key, basestring):
-			return False, bogusFormatMessage
+			return False, (
+				"The lib key is not properly formatted: expected basestring, found %s: %r" %
+				(type(key).__name__, key))
 		# public.glyphOrder
 		if key == "public.glyphOrder":
-			bogusGlyphOrderMessage = "public.glyphOrder is not properly formatted."
+			bogusGlyphOrderMessage = "public.glyphOrder is not properly formatted: %s"
 			if not isinstance(value, (list, tuple)):
-				return False, bogusGlyphOrderMessage
+				reason = "expected list or tuple, found %s" % type(value).__name__
+				return False, bogusGlyphOrderMessage % reason
 			for glyphName in value:
 				if not isinstance(glyphName, basestring):
-					return False, bogusGlyphOrderMessage
+					reason = "expected basestring, found %s" % type(glyphName).__name__
+					return False, bogusGlyphOrderMessage % reason
 	return True, None
 
 # --------
@@ -1000,12 +1026,13 @@ def glyphLibValidator(value):
 	>>> glyphLibValidator(lib)
 	(False, 'public.markColor is not properly formatted.')
 	"""
-	bogusFormatMessage = "The lib data is not in the correct format."
 	if not isDictEnough(value):
-		return False, bogusFormatMessage
-	for key, value in list(value.items()):
+		reason = "expected a dictionary, found %s" % type(value).__name__
+		return False, _bogusLibFormatMessage % reason
+	for key, value in value.items():
 		if not isinstance(key, basestring):
-			return False, bogusFormatMessage
+			reason = "key (%s) should be a string" % key
+			return False, _bogusLibFormatMessage % reason
 		# public.markColor
 		if key == "public.markColor":
 			if not colorValidator(value):

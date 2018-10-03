@@ -14,7 +14,7 @@ try:
 except ImportError:
 	pass
 
-from ufoLib.plistlib import readPlist, writePlist
+from ufoLib import plistlib
 from ufoLib.errors import UFOLibError
 
 try:
@@ -404,7 +404,7 @@ class FileSystem(object):
 				raise UFOLibError("%s is missing. This file is required" % path)
 		try:
 			with self.open(path, "rb") as f:
-				return readPlist(f)
+				return plistlib.load(f)
 		except Exception as e:
 			raise UFOLibError("The file %s could not be read: %s" % (path, str(e)))
 
@@ -426,11 +426,12 @@ class FileSystem(object):
 		a UFOLibError will be raised.
 		"""
 		try:
-			f = BytesIO()
-			writePlist(obj, f)
-			data = f.getvalue()
-		except:
-			raise UFOLibError("The data for the file %s could not be written because it is not properly formatted." % path)
+			data = plistlib.dumps(obj)
+		except Exception as e:
+			raise UFOLibError(
+				"The data for the file %s could not be written because "
+				"it is not properly formatted: %s" % (path, e)
+			)
 		self.writeBytesToPath(path, data)
 
 

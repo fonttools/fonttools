@@ -1,0 +1,39 @@
+[run]
+# measure 'branch' coverage in addition to 'statement' coverage
+# See: http://coverage.readthedocs.io/en/coverage-4.5.1/branch.html
+branch = True
+
+# Don't run codecov on tests
+omit =
+    */test/*
+
+# list of directories or packages to measure
+source = ufoLib
+
+# these are treated as equivalent when combining data
+[paths]
+source =
+    Lib/ufoLib
+    .tox/*/lib/python*/site-packages/ufoLib
+    .tox/*/Lib/site-packages/ufoLib
+    .tox/pypy*/site-packages/ufoLib
+
+[report]
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # keywords to use in inline comments to skip coverage
+    pragma: no cover
+
+    # don't complain if tests don't hit defensive assertion code
+    raise AssertionError
+    raise NotImplementedError
+
+    # don't complain if non-runnable code isn't run
+    if 0:
+    if __name__ == .__main__.:
+
+# Don't include files that are 100% covered
+skip_covered = True
+
+# ignore source code that can’t be found
+ignore_errors = True

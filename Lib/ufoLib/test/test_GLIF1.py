@@ -1,7 +1,9 @@
-from __future__ import unicode_literals
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, unicode_literals
 import unittest
 from ufoLib.glifLib import GlifLibError, readGlyphFromString, writeGlyphToString
 from ufoLib.test.testSupport import Glyph, stripText
+from itertools import islice
 
 try:
 	basestring
@@ -24,15 +26,15 @@ class TestGLIF1(unittest.TestCase):
 		py = stripText(py)
 		glyph = Glyph()
 		exec(py, {"glyph" : glyph, "pointPen" : glyph})
-		glif = writeGlyphToString(glyph.name, glyphObject=glyph, drawPointsFunc=glyph.drawPoints, formatVersion=1)
-		glif = "\n".join(glif.splitlines()[1:])
-		return glif
+		glif = writeGlyphToString(glyph.name, glyphObject=glyph, drawPointsFunc=glyph.drawPoints, formatVersion=1, validate=True)
+		# discard the first line containing the xml declaration
+		return "\n".join(islice(glif.splitlines(), 1, None))
 
 	def glifToPy(self, glif):
 		glif = stripText(glif)
-		glif = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + glif
+		glif = "<?xml version=\"1.0\"?>\n" + glif
 		glyph = Glyph()
-		readGlyphFromString(glif, glyphObject=glyph, pointPen=glyph)
+		readGlyphFromString(glif, glyphObject=glyph, pointPen=glyph, validate=True)
 		return glyph.py()
 
 	def testTopElement(self):
@@ -298,7 +300,7 @@ class TestGLIF1(unittest.TestCase):
 		glif = """
 		<glyph name="a" format="1">
 			<note>
-				hello
+				\U0001F4A9
 			</note>
 			<outline>
 			</outline>
@@ -306,7 +308,7 @@ class TestGLIF1(unittest.TestCase):
 		"""
 		py = """
 		glyph.name = "a"
-		glyph.note = "hello"
+		glyph.note = "💩"
 		"""
 		resultGlif = self.pyToGLIF(py)
 		resultPy = self.glifToPy(glif)
@@ -1252,8 +1254,9 @@ class TestGLIF1(unittest.TestCase):
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
 
-	def testAnchor_legal_without_name(self):
+	def testSinglePoint_legal_without_name(self):
 		# legal
+		# glif format 1 single point without a name was not an anchor
 		glif = """
 		<glyph name="a" format="1">
 			<outline>
@@ -1265,7 +1268,9 @@ class TestGLIF1(unittest.TestCase):
 		"""
 		py = """
 		glyph.name = "a"
-		glyph.anchors = [{"x" : 1, "y" : 2}]
+		pointPen.beginPath()
+		pointPen.addPoint(*[(1, 2)], **{"segmentType" : "move", "smooth" : False})
+		pointPen.endPath()
 		"""
 		resultGlif = self.pyToGLIF(py)
 		resultPy = self.glifToPy(glif)

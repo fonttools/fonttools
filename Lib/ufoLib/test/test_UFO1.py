@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import, unicode_literals
 import os
 import shutil
 import unittest
 import tempfile
 from io import open
 from ufoLib import UFOReader, UFOWriter, UFOLibError
-from ufoLib.plistlib import readPlist, writePlist
+from ufoLib import plistlib
 from ufoLib.test.testSupport import fontInfoVersion1, fontInfoVersion2
 
 
@@ -23,7 +24,7 @@ class ReadFontInfoVersion1TestCase(unittest.TestCase):
 		}
 		path = os.path.join(self.dstDir, "metainfo.plist")
 		with open(path, "wb") as f:
-			writePlist(metaInfo, f)
+			plistlib.dump(metaInfo, f)
 
 	def tearDown(self):
 		shutil.rmtree(self.dstDir)
@@ -31,13 +32,13 @@ class ReadFontInfoVersion1TestCase(unittest.TestCase):
 	def _writeInfoToPlist(self, info):
 		path = os.path.join(self.dstDir, "fontinfo.plist")
 		with open(path, "wb") as f:
-			writePlist(info, f)
+			plistlib.dump(info, f)
 
 	def testRead(self):
 		originalData = dict(fontInfoVersion1)
 		self._writeInfoToPlist(originalData)
 		infoObject = TestInfoObject()
-		reader = UFOReader(self.dstDir)
+		reader = UFOReader(self.dstDir, validate=True)
 		reader.readInfo(infoObject)
 		for attr in dir(infoObject):
 			if attr not in fontInfoVersion2:
@@ -57,7 +58,7 @@ class ReadFontInfoVersion1TestCase(unittest.TestCase):
 			info = dict(fontInfoVersion1)
 			info["fontStyle"] = old
 			self._writeInfoToPlist(info)
-			reader = UFOReader(self.dstDir)
+			reader = UFOReader(self.dstDir, validate=True)
 			infoObject = TestInfoObject()
 			reader.readInfo(infoObject)
 			self.assertEqual(new, infoObject.styleMapStyleName)
@@ -78,7 +79,7 @@ class ReadFontInfoVersion1TestCase(unittest.TestCase):
 			info = dict(fontInfoVersion1)
 			info["widthName"] = old
 			self._writeInfoToPlist(info)
-			reader = UFOReader(self.dstDir)
+			reader = UFOReader(self.dstDir, validate=True)
 			infoObject = TestInfoObject()
 			reader.readInfo(infoObject)
 			self.assertEqual(new, infoObject.openTypeOS2WidthClass)
@@ -103,7 +104,7 @@ class WriteFontInfoVersion1TestCase(unittest.TestCase):
 	def readPlist(self):
 		path = os.path.join(self.dstDir, "fontinfo.plist")
 		with open(path, "rb") as f:
-			plist = readPlist(f)
+			plist = plistlib.load(f)
 		return plist
 
 	def testWrite(self):

@@ -9,3 +9,5 @@ dist/
 *.py[cod]
 .eggs/
 .tox/
+/.pytest_cache
+htmlcov/

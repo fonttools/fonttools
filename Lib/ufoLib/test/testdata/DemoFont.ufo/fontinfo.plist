@@ -7,7 +7,7 @@
 	<key>capHeight</key>
 	<integer>527</integer>
 	<key>copyright</key>
-	<string>2003 LettError Type and Typography (www.letterror.com) All rights reserved.</string>
+	<string>TOKEN COPYRIGHT STRING.  COPYRIGHT SAME AS PACKAGE. </string>
 	<key>defaultWidth</key>
 	<integer>500</integer>
 	<key>descender</key>
@@ -15,45 +15,27 @@
 	<key>designer</key>
 	<string>Various</string>
 	<key>designerURL</key>
-	<string>http://www.letterror.com/foundry</string>
+	<string></string>
 	<key>familyName</key>
-	<string>RoboFabDemo</string>
-	<key>fondID</key>
-	<integer>4919</integer>
-	<key>fondName</key>
-	<string>RoboFab Demo</string>
-	<key>fontName</key>
-	<string>RoboFab-Demo</string>
+	<string>UFODEMOFONT</string>
 	<key>fontStyle</key>
 	<integer>64</integer>
-	<key>fullName</key>
-	<string>RoboFab Demo Font</string>
 	<key>license</key>
-	<string>No license</string>
-	<key>menuName</key>
-	<string>TwinCities</string>
+	<string>LICENSE SAME AS PACKAGE.</string>
 	<key>notice</key>
-	<string>Development release. NOT for distribution.</string>
-	<key>otMacName</key>
-	<string>RoboFabDemo</string>
-	<key>otStyleName</key>
-	<string>Demo</string>
+	<string>TOKEN DESCRIPTION</string>
 	<key>styleName</key>
-	<string>Demo</string>
+	<string>JUSTADEMO</string>
 	<key>trademark</key>
-	<string>Please refer to the Copyright section for the font trademark attribution notices.</string>
-	<key>ttUniqueID</key>
-	<string>FONTLAB30:OTFEXPORT</string>
+	<string>NO TRADEMARKS</string>
 	<key>ttVendor</key>
-	<string>LTTR</string>
+	<string>NONE</string>
 	<key>ttVersion</key>
 	<string>Version 1.000;PS development 5;hotconv 1.0.38</string>
-	<key>uniqueID</key>
-	<integer>4006601</integer>
 	<key>unitsPerEm</key>
 	<integer>1000</integer>
 	<key>vendorURL</key>
-	<string>http://www.letterror.com/foundry</string>
+	<string></string>
 	<key>versionMajor</key>
 	<integer>1</integer>
 	<key>xHeight</key>

@@ -147,7 +147,7 @@ http://unifiedfontobject.org
 
 setup_params = dict(
 	name="ufoLib",
-	version="2.1.1.dev0",
+	version="2.3.2",
 	description="A low-level UFO reader and writer.",
 	author="Just van Rossum, Tal Leming, Erik van Blokland, others",
 	author_email="info@robofab.com",
@@ -165,8 +165,19 @@ setup_params = dict(
 		'pytest>=3.0.2',
 	],
 	install_requires=[
-		"fonttools>=3.10.0",
+		"fonttools >= 3.10.0, < 4",
 	],
+	extras_require={
+		"lxml": [
+			"lxml >= 4.0, < 5",
+			"singledispatch >= 3.4.0.3, < 4; python_version < '3.4'",
+		],
+		"testing": [
+			"pytest >= 3.0.0, <4",
+			"pytest-cov >= 2.5.1, <3",
+			"pytest-randomly >= 1.2.3, <2",
+		],
+	},
 	cmdclass={
 		"release": release,
 		"bump_version": bump_version,

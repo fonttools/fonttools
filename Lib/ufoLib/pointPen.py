@@ -6,11 +6,12 @@ PointPens
 Where **SegmentPens** have an intuitive approach to drawing
 (if you're familiar with postscript anyway), the **PointPen**
 is geared towards accessing all the data in the contours of
-the glyph. A PointsPen has a very simple interface, it just
+the glyph. A PointPen has a very simple interface, it just
 steps through all the points in a call from glyph.drawPoints().
 This allows the caller to provide more data for each point.
 For instance, whether or not a point is smooth, and its name.
 """
+from __future__ import absolute_import, unicode_literals
 from fontTools.pens.basePen import AbstractPen
 import math
 

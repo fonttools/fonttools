@@ -2,6 +2,9 @@
 Conversion functions.
 """
 
+from __future__ import absolute_import, unicode_literals
+
+
 # adapted from the UFO spec
 
 def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups):
@@ -21,8 +24,10 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups):
     for first in firstReferencedGroups:
         # Make a list of existing group names.
         existingGroupNames = list(groups.keys()) + list(firstRenamedGroups.keys())
-        # Add the prefix to the name.
-        newName = "public.kern1." + first
+        # Remove the old prefix from the name
+        newName = first.replace("@MMK_L_", "")
+        # Add the new prefix to the name.
+        newName = "public.kern1." + newName
         # Make a unique group name.
         newName = makeUniqueGroupName(newName, existingGroupNames)
         # Store for use later.
@@ -31,8 +36,10 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups):
     for second in secondReferencedGroups:
         # Make a list of existing group names.
         existingGroupNames = list(groups.keys()) + list(secondRenamedGroups.keys())
-        # Add the prefix to the name.
-        newName = "public.kern2." + second
+        # Remove the old prefix from the name
+        newName = second.replace("@MMK_R_", "")
+        # Add the new prefix to the name.
+        newName = "public.kern2." + newName
         # Make a unique group name.
         newName = makeUniqueGroupName(newName, existingGroupNames)
         # Store for use later.
@@ -219,20 +226,20 @@ def test():
     ...     "A" : {
     ...         "A": 1,
     ...         "B": 2,
-    ...         "public.kern2.@MMK_R_CGroup": 3,
-    ...         "public.kern2.@MMK_R_DGroup": 4
+    ...         "public.kern2.CGroup": 3,
+    ...         "public.kern2.DGroup": 4
     ...     },
-    ...     "public.kern1.@MMK_L_BGroup": {
+    ...     "public.kern1.BGroup": {
     ...         "A": 5,
     ...         "B": 6,
-    ...         "public.kern2.@MMK_R_CGroup": 7,
-    ...         "public.kern2.@MMK_R_DGroup": 8
+    ...         "public.kern2.CGroup": 7,
+    ...         "public.kern2.DGroup": 8
     ...     },
-    ...     "public.kern1.@MMK_L_CGroup": {
+    ...     "public.kern1.CGroup": {
     ...         "A": 9,
     ...         "B": 10,
-    ...         "public.kern2.@MMK_R_CGroup": 11,
-    ...         "public.kern2.@MMK_R_DGroup": 12
+    ...         "public.kern2.CGroup": 11,
+    ...         "public.kern2.DGroup": 12
     ...     }
     ... }
     >>> kerning == expected
@@ -244,12 +251,12 @@ def test():
     ...     "@MMK_R_CGroup": ["C"],
     ...     "@MMK_R_DGroup": ["D"],
     ...     "@MMK_R_XGroup": ["X"],
-    ...     "public.kern1.@MMK_L_BGroup": ["B"],
-    ...     "public.kern1.@MMK_L_CGroup": ["C"],
-    ...     "public.kern1.@MMK_L_XGroup": ["X"],
-    ...     "public.kern2.@MMK_R_CGroup": ["C"],
-    ...     "public.kern2.@MMK_R_DGroup": ["D"],
-    ...     "public.kern2.@MMK_R_XGroup": ["X"],
+    ...     "public.kern1.BGroup": ["B"],
+    ...     "public.kern1.CGroup": ["C"],
+    ...     "public.kern1.XGroup": ["X"],
+    ...     "public.kern2.CGroup": ["C"],
+    ...     "public.kern2.DGroup": ["D"],
+    ...     "public.kern2.XGroup": ["X"],
     ... }
     >>> groups == expected
     True
@@ -292,19 +299,19 @@ def test():
     ...     "A" : {
     ...         "A": 1,
     ...         "B": 2,
-    ...         "public.kern2.@MMK_R_CGroup": 3,
+    ...         "public.kern2.CGroup": 3,
     ...         "public.kern2.DGroup": 4
     ...     },
     ...     "public.kern1.BGroup": {
     ...         "A": 5,
     ...         "B": 6,
-    ...         "public.kern2.@MMK_R_CGroup": 7,
+    ...         "public.kern2.CGroup": 7,
     ...         "public.kern2.DGroup": 8
     ...     },
-    ...     "public.kern1.@MMK_L_CGroup": {
+    ...     "public.kern1.CGroup": {
     ...         "A": 9,
     ...         "B": 10,
-    ...         "public.kern2.@MMK_R_CGroup": 11,
+    ...         "public.kern2.CGroup": 11,
     ...         "public.kern2.DGroup": 12
     ...     }
     ... }
@@ -316,8 +323,8 @@ def test():
     ...     "@MMK_R_CGroup": ["C"],
     ...     "DGroup": ["D"],
     ...     "public.kern1.BGroup": ["B"],
-    ...     "public.kern1.@MMK_L_CGroup": ["C"],
-    ...     "public.kern2.@MMK_R_CGroup": ["C"],
+    ...     "public.kern1.CGroup": ["C"],
+    ...     "public.kern2.CGroup": ["C"],
     ...     "public.kern2.DGroup": ["D"],
     ... }
     >>> groups == expected

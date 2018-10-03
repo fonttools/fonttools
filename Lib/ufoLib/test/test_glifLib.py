@@ -1,11 +1,14 @@
+from __future__ import absolute_import, unicode_literals
 import os
 import tempfile
 import shutil
 import unittest
 from io import open
 from ufoLib.test.testSupport import getDemoFontGlyphSetPath
-from ufoLib.glifLib import GlyphSet, glyphNameToFileName
-
+from ufoLib.glifLib import (
+	GlyphSet, glyphNameToFileName, readGlyphFromString, writeGlyphToString,
+	_XML_DECLARATION,
+)
 
 GLYPHSETDIR = getDemoFontGlyphSetPath()
 
@@ -23,8 +26,8 @@ class GlyphSetTests(unittest.TestCase):
 		import difflib
 		srcDir = GLYPHSETDIR
 		dstDir = self.dstDir
-		src = GlyphSet(srcDir, ufoFormatVersion=2)
-		dst = GlyphSet(dstDir, ufoFormatVersion=2)
+		src = GlyphSet(srcDir, ufoFormatVersion=2, validateRead=True, validateWrite=True)
+		dst = GlyphSet(dstDir, ufoFormatVersion=2, validateRead=True, validateWrite=True)
 		for glyphName in src.keys():
 			g = src[glyphName]
 			g.drawPoints(None)  # load attrs
@@ -49,13 +52,13 @@ class GlyphSetTests(unittest.TestCase):
 				"%s.glif file differs after round tripping" % glyphName)
 
 	def testRebuildContents(self):
-		gset = GlyphSet(GLYPHSETDIR)
+		gset = GlyphSet(GLYPHSETDIR, validateRead=True, validateWrite=True)
 		contents = gset.contents
 		gset.rebuildContents()
 		self.assertEqual(contents, gset.contents)
 
 	def testReverseContents(self):
-		gset = GlyphSet(GLYPHSETDIR)
+		gset = GlyphSet(GLYPHSETDIR, validateRead=True, validateWrite=True)
 		d = {}
 		for k, v in gset.getReverseContents().items():
 			d[v] = k
@@ -65,8 +68,8 @@ class GlyphSetTests(unittest.TestCase):
 		self.assertEqual(d, org)
 
 	def testReverseContents2(self):
-		src = GlyphSet(GLYPHSETDIR)
-		dst = GlyphSet(self.dstDir)
+		src = GlyphSet(GLYPHSETDIR, validateRead=True, validateWrite=True)
+		dst = GlyphSet(self.dstDir, validateRead=True, validateWrite=True)
 		dstMap = dst.getReverseContents()
 		self.assertEqual(dstMap, {})
 		for glyphName in src.keys():
@@ -83,8 +86,13 @@ class GlyphSetTests(unittest.TestCase):
 	def testCustomFileNamingScheme(self):
 		def myGlyphNameToFileName(glyphName, glyphSet):
 			return "prefix" + glyphNameToFileName(glyphName, glyphSet)
-		src = GlyphSet(GLYPHSETDIR)
-		dst = GlyphSet(self.dstDir, glyphNameToFileNameFunc=myGlyphNameToFileName)
+		src = GlyphSet(GLYPHSETDIR, validateRead=True, validateWrite=True)
+		dst = GlyphSet(
+			self.dstDir,
+			glyphNameToFileNameFunc=myGlyphNameToFileName,
+			validateRead=True,
+			validateWrite=True,
+		)
 		for glyphName in src.keys():
 			g = src[glyphName]
 			g.drawPoints(None)  # load attrs
@@ -95,7 +103,7 @@ class GlyphSetTests(unittest.TestCase):
 		self.assertEqual(d, dst.contents)
 
 	def testGetUnicodes(self):
-		src = GlyphSet(GLYPHSETDIR)
+		src = GlyphSet(GLYPHSETDIR, validateRead=True, validateWrite=True)
 		unicodes = src.getUnicodes()
 		for glyphName in src.keys():
 			g = src[glyphName]
@@ -134,6 +142,31 @@ class FileNameTests(unittest.TestCase):
 		self.assertEqual(glyphNameToFileName("CON", None), "C_O_N_.glif")
 		self.assertEqual(glyphNameToFileName("con.alt", None), "_con.alt.glif")
 		self.assertEqual(glyphNameToFileName("alt.con", None), "alt._con.glif")
+
+
+class _Glyph(object):
+	pass
+
+
+class ReadWriteFuncTest(unittest.TestCase):
+
+	def testRoundTrip(self):
+		glyph = _Glyph()
+		glyph.name = "a"
+		glyph.unicodes = [0x0061]
+
+		s1 = writeGlyphToString(glyph.name, glyph)
+
+		glyph2 = _Glyph()
+		readGlyphFromString(s1, glyph2)
+		self.assertEqual(glyph.__dict__, glyph2.__dict__)
+
+		s2 = writeGlyphToString(glyph2.name, glyph2)
+		self.assertEqual(s1, s2)
+
+	def testXmlDeclaration(self):
+		s = writeGlyphToString("a", _Glyph())
+		self.assertTrue(s.startswith(_XML_DECLARATION.decode("utf-8")))
 
 
 if __name__ == "__main__":
