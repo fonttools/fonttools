@@ -53,6 +53,7 @@ class ApproxNotFoundError(Cu2QuError):
         self.curve = curve
 
 @cython.cfunc
+@cython.inline
 @cython.returns(cython.double)
 @cython.locals(v1=cython.complex, v2=cython.complex)
 def dot(v1, v2):
@@ -61,6 +62,7 @@ def dot(v1, v2):
 
 
 @cython.cfunc
+@cython.inline
 @cython.locals(a=cython.complex, b=cython.complex, c=cython.complex, d=cython.complex)
 @cython.locals(_1=cython.complex, _2=cython.complex, _3=cython.complex, _4=cython.complex)
 def calc_cubic_points(a, b, c, d):
@@ -72,6 +74,7 @@ def calc_cubic_points(a, b, c, d):
 
 
 @cython.cfunc
+@cython.inline
 @cython.locals(p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex)
 @cython.locals(a=cython.complex, b=cython.complex, c=cython.complex, d=cython.complex)
 def calc_cubic_parameters(p0, p1, p2, p3):
