@@ -12,16 +12,27 @@ glyph data. See the class doc string for details.
 """
 
 from __future__ import absolute_import, unicode_literals
-from io import BytesIO, open
 from warnings import warn
 from collections import OrderedDict
+import fs
+import fs.base
+import fs.errors
+import fs.osfs
+import fs.path
 from fontTools.misc.py23 import basestring, unicode, tobytes, tounicode
-from ufoLib.filesystem import FileSystem
 from ufoLib import plistlib
+from ufoLib.errors import GlifLibError
 from ufoLib.pointPen import AbstractPointPen, PointToSegmentPen
 from ufoLib.filenames import userNameToFileName
-from ufoLib.validators import isDictEnough, genericTypeValidator, colorValidator,\
-	guidelinesValidator, anchorsValidator, identifierValidator, imageValidator, glyphLibValidator
+from ufoLib.validators import (
+	genericTypeValidator,
+	colorValidator,
+	guidelinesValidator,
+	anchorsValidator,
+	identifierValidator,
+	imageValidator,
+	glyphLibValidator,
+)
 from ufoLib import etree
 
 
@@ -33,12 +44,11 @@ __all__ = [
 ]
 
 
-class GlifLibError(Exception): pass
-
 # ---------
 # Constants
 # ---------
 
+CONTENTS_FILENAME = "contents.plist"
 LAYERINFO_FILENAME = "layerinfo.plist"
 supportedUFOFormatVersions = [1, 2, 3]
 supportedGLIFFormatVersions = [1, 2]
@@ -96,15 +106,15 @@ class GlyphSet(object):
 
 	def __init__(
 		self,
-		dirName,
-		fileSystem=None,
+		path,
 		glyphNameToFileNameFunc=None,
 		ufoFormatVersion=3,
 		validateRead=True,
 		validateWrite=True,
 	):
 		"""
-		'dirName' should be a path to an existing directory.
+		'path' should be a path (string) to an existing local directory, or
+		an instance of fs.base.FS class.
 
 		The optional 'glyphNameToFileNameFunc' argument must be a callback
 		function that takes two arguments: a glyph name and a list of all
@@ -117,21 +127,50 @@ class GlyphSet(object):
 		"""
 		if ufoFormatVersion not in supportedUFOFormatVersions:
 			raise GlifLibError("Unsupported UFO format version: %s" % ufoFormatVersion)
-		if fileSystem is None:
-			fileSystem = FileSystem(dirName)
-			dirName = ""
-		self.dirName = dirName
-		self.fileSystem = fileSystem
+		if isinstance(path, basestring):
+			try:
+				filesystem = fs.osfs.OSFS(path)
+			except fs.errors.CreateFailed:
+				raise GlifLibError("No glyphs directory '%s'" % path)
+			self._shouldClose = True
+		elif isinstance(path, fs.base.FS):
+			filesystem = path
+			try:
+				filesystem.check()
+			except fs.errors.FilesystemClosed:
+				raise GlifLibError("the filesystem '%s' is closed" % filesystem)
+			self._shouldClose = False
+		else:
+			raise TypeError(
+				"Expected a path string or fs object, found %s"
+				% type(path).__name__
+			)
+		try:
+			path = filesystem.getsyspath("/")
+		except fs.errors.NoSysPath:
+			# network or in-memory FS may not map to the local one
+			path = unicode(filesystem)
+		# 'dirName' is kept for backward compatibility only, but it's DEPRECATED
+		# as it's not guaranteed that it maps to an existing OSFS directory.
+		# Client could use the FS api via the `self.fs` attribute instead.
+		self.dirName = fs.path.parts(path)[-1]
+		self.fs = filesystem
+		# if glyphSet contains no 'contents.plist', we consider it empty
+		self._havePreviousFile = filesystem.exists(CONTENTS_FILENAME)
 		self.ufoFormatVersion = ufoFormatVersion
 		if glyphNameToFileNameFunc is None:
 			glyphNameToFileNameFunc = glyphNameToFileName
 		self.glyphNameToFileName = glyphNameToFileNameFunc
 		self._validateRead = validateRead
 		self._validateWrite = validateWrite
-		self.rebuildContents()
 		self._existingFileNames = None
 		self._reverseContents = None
 		self._glifCache = {}
+
+		self.rebuildContents()
+
+	# here we reuse the same methods from UFOReader/UFOWriter
+	from ufoLib._common import _getPlist, _writePlist, getFileModificationTime
 
 	def rebuildContents(self, validateRead=None):
 		"""
@@ -142,12 +181,7 @@ class GlyphSet(object):
 		"""
 		if validateRead is None:
 			validateRead = self._validateRead
-		contentsPath = self.fileSystem.joinPath(self.dirName, "contents.plist")
-		if not self.fileSystem.exists(contentsPath):
-			# missing, consider the glyphset empty.
-			contents = {}
-		else:
-			contents = self.fileSystem.readPlist(contentsPath)
+		contents = self._getPlist(CONTENTS_FILENAME, {})
 		# validate the contents
 		if validateRead:
 			invalidFormat = False
@@ -159,10 +193,13 @@ class GlyphSet(object):
 						invalidFormat = True
 					if not isinstance(fileName, basestring):
 						invalidFormat = True
-					elif not self.fileSystem.exists(self.fileSystem.joinPath(self.dirName, fileName)):
-						raise GlifLibError("contents.plist references a file that does not exist: %s" % fileName)
+					elif not self.fs.exists(fileName):
+						raise GlifLibError(
+							"%s references a file that does not exist: %s"
+							% (CONTENTS_FILENAME, fileName)
+						)
 			if invalidFormat:
-				raise GlifLibError("contents.plist is not properly formatted")
+				raise GlifLibError("%s is not properly formatted" % CONTENTS_FILENAME)
 		self.contents = contents
 		self._existingFileNames = None
 		self._reverseContents = None
@@ -188,8 +225,7 @@ class GlyphSet(object):
 		Write the contents.plist file out to disk. Call this method when
 		you're done writing glyphs.
 		"""
-		path = self.fileSystem.joinPath(self.dirName, "contents.plist")
-		self.fileSystem.writePlist(path, self.contents)
+		self._writePlist(CONTENTS_FILENAME, self.contents)
 
 	# layer info
 
@@ -200,10 +236,7 @@ class GlyphSet(object):
 		"""
 		if validateRead is None:
 			validateRead = self._validateRead
-		path = self.fileSystem.joinPath(self.dirName, LAYERINFO_FILENAME)
-		if not self.fileSystem.exists(path):
-			return
-		infoDict = self.fileSystem.readPlist(path)
+		infoDict = self._getPlist(LAYERINFO_FILENAME, {})
 		if validateRead:
 			if not isinstance(infoDict, dict):
 				raise GlifLibError("layerinfo.plist is not properly formatted.")
@@ -235,12 +268,15 @@ class GlyphSet(object):
 				if value is None or (attr == 'lib' and not value):
 					continue
 				infoData[attr] = value
-		# validate
-		if validateWrite:
-			infoData = validateLayerInfoVersion3Data(infoData)
-		# write file
-		path = self.fileSystem.joinPath(self.dirName, LAYERINFO_FILENAME)
-		self.fileSystem.writePlist(path, infoData)
+		if infoData:
+			# validate
+			if validateWrite:
+				infoData = validateLayerInfoVersion3Data(infoData)
+			# write file
+			self._writePlist(LAYERINFO_FILENAME, infoData)
+		elif self._havePreviousFile and self.fs.exists(LAYERINFO_FILENAME):
+			# data empty, remove existing file
+			self.fs.remove(LAYERINFO_FILENAME)
 
 	# # read caching
 
@@ -260,22 +296,15 @@ class GlyphSet(object):
 		efficiency, the cached GLIF will be purged by various other methods
 		such as readGlyph.
 		"""
-		needRead = False
 		fileName = self.contents.get(glyphName)
-		path = None
-		if fileName is not None:
-			path = self.fileSystem.joinPath(self.dirName, fileName)
-		if glyphName not in self._glifCache:
-			needRead = True
-		elif fileName is not None and self.fileSystem.getFileModificationTime(path) != self._glifCache[glyphName][1]:
-			needRead = True
-		if needRead:
-			fileName = self.contents[glyphName]
-			if not self.fileSystem.exists(path):
+		if glyphName not in self._glifCache or (
+			fileName is not None
+			and self.getFileModificationTime(fileName) != self._glifCache[glyphName][1]
+		):
+			if fileName is None or not self.fs.exists(fileName):
 				raise KeyError(glyphName)
-			with self.fileSystem.open(path, "rb") as f:
-				text = f.read()
-			self._glifCache[glyphName] = (text, self.fileSystem.getFileModificationTime(path))
+			data = self.fs.getbytes(fileName)
+			self._glifCache[glyphName] = (data, self.getFileModificationTime(fileName))
 		return self._glifCache[glyphName][0]
 
 	def getGLIFModificationTime(self, glyphName):
@@ -376,11 +405,13 @@ class GlyphSet(object):
 		if formatVersion not in supportedGLIFFormatVersions:
 			raise GlifLibError("Unsupported GLIF format version: %s" % formatVersion)
 		if formatVersion == 2 and self.ufoFormatVersion < 3:
-			raise GlifLibError("Unsupported GLIF format version (%d) for UFO format version %d." % (formatVersion, self.ufoFormatVersion))
+			raise GlifLibError(
+				"Unsupported GLIF format version (%d) for UFO format version %d."
+				% (formatVersion, self.ufoFormatVersion)
+			)
 		if validate is None:
 			validate = self._validateWrite
 		self._purgeCachedGLIF(glyphName)
-		data = _writeGlyphToBytes(glyphName, glyphObject, drawPointsFunc, formatVersion=formatVersion, validate=validate)
 		fileName = self.contents.get(glyphName)
 		if fileName is None:
 			if self._existingFileNames is None:
@@ -392,15 +423,20 @@ class GlyphSet(object):
 			self._existingFileNames[fileName] = fileName.lower()
 			if self._reverseContents is not None:
 				self._reverseContents[fileName.lower()] = glyphName
-		self.fileSystem.makeDirectory(self.dirName)
-		path = self.fileSystem.joinPath(self.dirName, fileName)
-		if self.fileSystem.exists(path):
-			with self.fileSystem.open(path, "rb") as f:
-				oldData = f.read()
-			if data == oldData:
-				return
-		with self.fileSystem.open(path, "wb") as f:
-			f.write(data)
+		data = _writeGlyphToBytes(
+			glyphName,
+			glyphObject,
+			drawPointsFunc,
+			formatVersion=formatVersion,
+			validate=validate,
+		)
+		if (
+			self._havePreviousFile
+			and self.fs.exists(fileName)
+			and data == self.fs.getbytes(fileName)
+		):
+			return
+		self.fs.setbytes(fileName, data)
 
 	def deleteGlyph(self, glyphName):
 		"""Permanently delete the glyph from the glyph set on disk. Will
@@ -408,8 +444,7 @@ class GlyphSet(object):
 		"""
 		self._purgeCachedGLIF(glyphName)
 		fileName = self.contents[glyphName]
-		path = self.fileSystem.joinPath(self.dirName, fileName)
-		self.fileSystem.remove(path)
+		self.fs.remove(fileName)
 		if self._existingFileNames is not None:
 			del self._existingFileNames[fileName]
 		if self._reverseContents is not None:
@@ -480,6 +515,17 @@ class GlyphSet(object):
 			text = self.getGLIF(glyphName)
 			images[glyphName] = _fetchImageFileName(text)
 		return images
+
+	def close(self):
+		if self._shouldClose:
+			self.fs.close()
+
+	def __enter__(self):
+		return self
+
+	def __exit__(self, exc_type, exc_value, exc_tb):
+		self.close()
+
 
 # -----------------------
 # Glyph Name to File Name

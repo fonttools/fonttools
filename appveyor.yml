@@ -4,17 +4,17 @@ environment:
     - PYTHON: "C:\\Python27"
       PYTHON_VERSION: "2.7.x"
       PYTHON_ARCH: "32"
-      TOXENV: "py27-cov,py27-cov-lxml,py27-cov-lxml-fs"
+      TOXENV: "py27-cov,py27-cov-lxml"
 
     - PYTHON: "C:\\Python36-x64"
       PYTHON_VERSION: "3.6.x"
       PYTHON_ARCH: "64"
-      TOXENV: "py36-cov,py36-cov-lxml,py36-cov-lxml-fs"
+      TOXENV: "py36-cov,py36-cov-lxml"
 
     - PYTHON: "C:\\Python37-x64"
       PYTHON_VERSION: "3.7.x"
       PYTHON_ARCH: "64"
-      TOXENV: "py37-cov,py37-cov-lxml,py37-cov-lxml-fs"
+      TOXENV: "py37-cov,py37-cov-lxml"
 
 skip_branch_with_pr: true
 

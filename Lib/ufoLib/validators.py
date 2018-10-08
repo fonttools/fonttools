@@ -3,6 +3,8 @@
 from __future__ import absolute_import, unicode_literals
 import calendar
 from io import open
+import fs.base
+import fs.osfs
 
 try:
     from collections.abc import Mapping  # python >= 3.3
@@ -779,11 +781,10 @@ def layerContentsValidator(value, ufoPathOrFileSystem):
 	Check the validity of layercontents.plist.
 	Version 3+.
 	"""
-	from ufoLib.filesystem import FileSystem
-	if isinstance(ufoPathOrFileSystem, FileSystem):
+	if isinstance(ufoPathOrFileSystem, fs.base.FS):
 		fileSystem = ufoPathOrFileSystem
 	else:
-		fileSystem = FileSystem(ufoPathOrFileSystem)
+		fileSystem = fs.osfs.OSFS(ufoPathOrFileSystem)
 
 	bogusFileMessage = "layercontents.plist in not in the correct format."
 	# file isn't in the right format

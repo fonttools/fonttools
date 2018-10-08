@@ -166,6 +166,7 @@ setup_params = dict(
 	],
 	install_requires=[
 		"fonttools >= 3.10.0, < 4",
+		"fs >= 2.1.1, < 3",
 	],
 	extras_require={
 		"lxml": [
@@ -177,6 +178,10 @@ setup_params = dict(
 			"pytest-cov >= 2.5.1, <3",
 			"pytest-randomly >= 1.2.3, <2",
 		],
+		# conditional dependency syntax compatible with setuptools >= 18
+		# https://hynek.me/articles/conditional-python-dependencies/
+		# install 'enum34' backport on python < 3.4
+		":python_version < '3.4'": ['enum34 ~= 1.1.6'],
 	},
 	cmdclass={
 		"release": release,

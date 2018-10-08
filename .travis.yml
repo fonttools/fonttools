@@ -6,11 +6,11 @@ env:
   - secure: MgeE4CfZKuKkG9Qzl/OobMprNgsLExuGGKbWNDbYmOj7qyhEcPsKIPgPrOiY5n7ZCdXZ5V/m2ZgA18HwGOsV2VliZIalyzKqYE9tEu3yObhccqoAgrm+HzqaKHZnpuZf0AlGRc3h8jY7GAZITlUEIEYQ6hBKP1GdXOgv4GeaqK0nHwHIE/SzQc/VQR1edzJBpj+IX4tYpyVMEd/PhuL89WgiJdPkpNP6ArY1dDyc6qCp8Y9H9+Bay+A/xJ1MSd3KYVoPYPWuMfuea7YxVoQT7UPJJrWmmafZgPYbdS56HvVtHQBsKXkIzjTxHEta7lKP/EVxjtjTAIdRn1pNAeNaVhVPPBF4JJNuAYv54eVlE2MJeftoYN8CSVq93TM+b3H3osWDWilFRPjsEyZjOKLEkekMp5hPL4+AJOSGde7+cN25CM8/DymU4I0fM458Cibq8CUZmt4VSTYGIa6jS6MJUuTGg1RU6nYHZU8PBRmhBvMxz0oL3lZGM24OBRCOlSgeObQQMtUZnX9gE9+Lfo5KfDW8Tn1OJjeBxboCXcca4MEjn0IiXaP8s+Vk8g1yO2bletfT5apTPfhuqOWfqzAQMI+KJP7pmcR8SuXNd9bjqX6ZHol7s3PiHTjzdV4l3nPr2vFy7UlnTvuirdPXrk4qhcOqL/3KOILE5AG64QO2WRk=
 matrix:
   include:
-  - env: TOXENV=py27-cov,py27-cov-lxml,py27-cov-lxml-fs
+  - env: TOXENV=py27-cov,py27-cov-lxml
     python: 2.7
-  - env: TOXENV=py36-cov,py36-cov-lxml,py36-cov-lxml-fs
+  - env: TOXENV=py36-cov,py36-cov-lxml
     python: 3.6
-  - env: TOXENV=py37-cov,py37-cov-lxml,py37-cov-lxml-fs
+  - env: TOXENV=py37-cov,py37-cov-lxml
     python: 3.7
     dist: xenial
     sudo: true
