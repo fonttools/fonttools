@@ -43,6 +43,7 @@ def otf_to_ttf(ttFont, post_format=POST_FORMAT, **kwargs):
     glyf.glyphOrder = glyphOrder
     glyf.glyphs = glyphs_to_quadratic(ttFont.getGlyphSet(), **kwargs)
     del ttFont["CFF "]
+    glyf.compile(ttFont)
 
     ttFont["maxp"] = maxp = newTable("maxp")
     maxp.tableVersion = 0x00010000
@@ -56,12 +57,19 @@ def otf_to_ttf(ttFont, post_format=POST_FORMAT, **kwargs):
     maxp.maxComponentElements = max(
         len(g.components if hasattr(g, 'components') else [])
         for g in glyf.glyphs.values())
+    maxp.compile(ttFont)
 
     post = ttFont["post"]
     post.formatType = post_format
     post.extraNames = []
     post.mapping = {}
     post.glyphOrder = glyphOrder
+    try:
+        post.compile(ttFont)
+    except OverflowError:
+        post.formatType = 3
+        print("Glyph names do not fit in 'post' table format 2, using format 3 instead.")
+
 
     ttFont.sfntVersion = "\000\001\000\000"
 
