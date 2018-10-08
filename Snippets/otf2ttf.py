@@ -74,12 +74,13 @@ def main(args=None):
     parser.add_argument("--post-format", type=float, default=POST_FORMAT)
     parser.add_argument(
         "--keep-direction", dest='reverse_direction', action='store_false')
+    parser.add_argument("--face-index", type=int, default=0)
     options = parser.parse_args(args)
 
     output = options.output or makeOutputFileName(options.input,
                                                   outputDir=None,
                                                   extension='.ttf')
-    font = TTFont(options.input)
+    font = TTFont(options.input, fontNumber=options.face_index)
     otf_to_ttf(font,
                post_format=options.post_format,
                max_err=options.max_error,
