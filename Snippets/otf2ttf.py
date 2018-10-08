@@ -3,10 +3,14 @@ from __future__ import print_function, division, absolute_import
 import sys
 from fontTools.ttLib import TTFont, newTable
 from cu2qu.pens import Cu2QuPen
+from fontTools import configLogger
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttx import makeOutputFileName
 import argparse
+import logging
 
+
+log = logging.getLogger()
 
 # default approximation error, measured in UPEM
 MAX_ERR = 1.0
@@ -68,13 +72,14 @@ def otf_to_ttf(ttFont, post_format=POST_FORMAT, **kwargs):
         post.compile(ttFont)
     except OverflowError:
         post.formatType = 3
-        print("Glyph names do not fit in 'post' table format 2, using format 3 instead.")
-
+        log.warning("Dropping glyph names, they do not fit in 'post' table.")
 
     ttFont.sfntVersion = "\000\001\000\000"
 
 
 def main(args=None):
+    configLogger(logger=log)
+
     parser = argparse.ArgumentParser()
     parser.add_argument("input", metavar="INPUT")
     parser.add_argument("-o", "--output")
