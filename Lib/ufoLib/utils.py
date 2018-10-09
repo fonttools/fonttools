@@ -4,6 +4,36 @@ It's not considered part of the public ufoLib API.
 from __future__ import absolute_import, unicode_literals
 import warnings
 import functools
+from datetime import datetime
+
+
+if hasattr(datetime, "timestamp"):  # python >= 3.3
+
+    def datetimeAsTimestamp(dt):
+        return dt.timestamp()
+
+else:
+    from datetime import tzinfo, timedelta
+
+    ZERO = timedelta(0)
+
+    class UTC(tzinfo):
+
+        def utcoffset(self, dt):
+            return ZERO
+
+        def tzname(self, dt):
+            return "UTC"
+
+        def dst(self, dt):
+            return ZERO
+
+    utc = UTC()
+
+    EPOCH = datetime.fromtimestamp(0, tz=utc)
+
+    def datetimeAsTimestamp(dt):
+        return (dt - EPOCH).total_seconds()
 
 
 def deprecated(msg=""):
