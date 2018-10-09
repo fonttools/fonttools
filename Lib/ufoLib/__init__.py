@@ -1,4 +1,5 @@
 from __future__ import absolute_import, unicode_literals
+import sys
 import os
 from copy import deepcopy
 import zipfile
@@ -18,7 +19,7 @@ from ufoLib.validators import *
 from ufoLib.filenames import userNameToFileName
 from ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
 from ufoLib.errors import UFOLibError
-from ufoLib.utils import datetimeAsTimestamp
+from ufoLib.utils import datetimeAsTimestamp, fsdecode
 
 """
 A library for importing .ufo files and their descendants.
@@ -107,7 +108,7 @@ def _getFileModificationTime(self, path):
 	Returns None if the file does not exist.
 	"""
 	try:
-		dt = self.fs.getinfo(path, namespaces=["details"]).modified
+		dt = self.fs.getinfo(fsdecode(path), namespaces=["details"]).modified
 	except (fs.errors.MissingInfoNamespace, fs.errors.ResourceNotFound):
 		return None
 	else:
@@ -121,7 +122,7 @@ def _readBytesFromPath(self, path):
 	Returns None if the file does not exist.
 	"""
 	try:
-		return self.fs.getbytes(path)
+		return self.fs.getbytes(fsdecode(path))
 	except fs.errors.ResourceNotFound:
 		return None
 
@@ -375,6 +376,7 @@ class UFOReader(object):
 
 		Note: The caller is responsible for closing the open file.
 		"""
+		path = fsdecode(path)
 		try:
 			if encoding is None:
 				return self.fs.openbin(path)
@@ -760,6 +762,7 @@ class UFOReader(object):
 		except AttributeError:
 			# in case readImage is called before getImageDirectoryListing
 			imagesFS = self.fs.opendir(IMAGES_DIRNAME)
+		fileName = fsdecode(fileName)
 		data = imagesFS.getbytes(fileName)
 		if data is None:
 			raise UFOLibError("No image file named %s." % fileName)
@@ -986,6 +989,8 @@ class UFOWriter(object):
 		"""
 		if not isinstance(reader, UFOReader):
 			raise UFOLibError("The reader must be an instance of UFOReader.")
+		sourcePath = fsdecode(sourcePath)
+		destPath = fsdecode(destPath)
 		if not reader.fs.exists(sourcePath):
 			raise UFOLibError("The reader does not have data located at \"%s\"." % sourcePath)
 		if self.fs.exists(destPath):
@@ -1005,6 +1010,7 @@ class UFOWriter(object):
 		so that the modification date is preserved.
 		If needed, the directory tree for the given path will be built.
 		"""
+		path = fsdecode(path)
 		if self._havePreviousFile:
 			if self.fs.isfile(path) and data == self.fs.getbytes(path):
 				return
@@ -1026,6 +1032,7 @@ class UFOWriter(object):
 
 		Note: The caller is responsible for closing the open file.
 		"""
+		path = fsdecode(path)
 		try:
 			return self.fs.open(path, mode=mode, encoding=encoding)
 		except fs.errors.ResourceNotFound as e:
@@ -1051,6 +1058,7 @@ class UFOWriter(object):
 		If the directory where 'path' is located becomes empty, it will
 		be automatically removed, unless 'removeEmptyParents' is False.
 		"""
+		path = fsdecode(path)
 		try:
 			self.fs.remove(path)
 		except fs.errors.FileExpected:
@@ -1076,7 +1084,7 @@ class UFOWriter(object):
 		This is never called automatically. It is up to the
 		caller to call this when finished working on the UFO.
 		"""
-		path = self.path
+		path = self._path
 		if path is not None:
 			os.utime(path, None)
 
@@ -1534,6 +1542,7 @@ class UFOWriter(object):
 			validate = self._validate
 		if self._formatVersion < 3:
 			raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
+		fileName = fsdecode(fileName)
 		if validate:
 			valid, error = pngValidator(data=data)
 			if not valid:
@@ -1547,7 +1556,7 @@ class UFOWriter(object):
 		"""
 		if self._formatVersion < 3:
 			raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
-		self.removePath("%s/%s" % (IMAGES_DIRNAME, fileName))
+		self.removePath("%s/%s" % (IMAGES_DIRNAME, fsdecode(fileName)))
 
 	def copyImageFromReader(self, reader, sourceFileName, destFileName, validate=None):
 		"""
@@ -1559,8 +1568,8 @@ class UFOWriter(object):
 			validate = self._validate
 		if self._formatVersion < 3:
 			raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
-		sourcePath = "%s/%s" % (IMAGES_DIRNAME, sourceFileName)
-		destPath = "%s/%s" % (IMAGES_DIRNAME, destFileName)
+		sourcePath = "%s/%s" % (IMAGES_DIRNAME, fsdecode(sourceFileName))
+		destPath = "%s/%s" % (IMAGES_DIRNAME, fsdecode(destFileName))
 		self.copyFromReader(reader, sourcePath, destPath)
 
 	def close(self):

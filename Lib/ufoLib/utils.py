@@ -2,9 +2,11 @@
 It's not considered part of the public ufoLib API.
 """
 from __future__ import absolute_import, unicode_literals
+import sys
 import warnings
 import functools
 from datetime import datetime
+from fontTools.misc.py23 import tounicode
 
 
 if hasattr(datetime, "timestamp"):  # python >= 3.3
@@ -62,6 +64,10 @@ def deprecated(msg=""):
         return wrapper
 
     return deprecated_decorator
+
+
+def fsdecode(path, encoding=sys.getfilesystemencoding()):
+    return tounicode(path, encoding=encoding)
 
 
 if __name__ == "__main__":
