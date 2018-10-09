@@ -888,7 +888,7 @@ class UFOWriter(object):
 				path = filesystem.getsyspath("/")
 			except fs.errors.NoSysPath:
 				# network or in-memory FS may not map to the local one
-				path = str(filesystem)
+				path = unicode(filesystem)
 			else:
 				path = path.rstrip("/")
 			# if passed an FS object, always default to 'package' structure
