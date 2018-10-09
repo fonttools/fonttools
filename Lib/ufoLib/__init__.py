@@ -95,7 +95,7 @@ class UFOFileStructure(enum.Enum):
 
 
 # --------------
-# Shared methods
+# Shared Methods
 # --------------
 
 
@@ -1052,6 +1052,8 @@ class UFOWriter(object):
 		must be relative to the UFO.
 		Raises UFOLibError if the path doesn't exist.
 		If force=True, ignore non-existent paths.
+		If the directory where 'path' is located becomes empty, it will
+		be automatically removed, unless 'removeEmptyParents' is False.
 		"""
 		try:
 			self.fs.remove(path)

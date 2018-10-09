@@ -87,12 +87,7 @@ class GlyphSetTests(unittest.TestCase):
 		def myGlyphNameToFileName(glyphName, glyphSet):
 			return "prefix" + glyphNameToFileName(glyphName, glyphSet)
 		src = GlyphSet(GLYPHSETDIR, validateRead=True, validateWrite=True)
-		dst = GlyphSet(
-			self.dstDir,
-			glyphNameToFileNameFunc=myGlyphNameToFileName,
-			validateRead=True,
-			validateWrite=True,
-		)
+		dst = GlyphSet(self.dstDir, myGlyphNameToFileName, validateRead=True, validateWrite=True)
 		for glyphName in src.keys():
 			g = src[glyphName]
 			g.drawPoints(None)  # load attrs
