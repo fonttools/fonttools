@@ -63,7 +63,6 @@ def dot(v1, v2):
 
 @cython.cfunc
 @cython.inline
-@cython.cdivision(True)
 @cython.locals(a=cython.complex, b=cython.complex, c=cython.complex, d=cython.complex)
 @cython.locals(_1=cython.complex, _2=cython.complex, _3=cython.complex, _4=cython.complex)
 def calc_cubic_points(a, b, c, d):
@@ -133,7 +132,6 @@ def split_cubic_into_two(p0, p1, p2, p3):
             (mid, mid + deriv3, (p2 + p3) * .5, p3))
 
 
-@cython.cdivision(True)
 @cython.locals(p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex, _27=cython.double)
 @cython.locals(mid1=cython.complex, deriv1=cython.complex, mid2=cython.complex, deriv2=cython.complex)
 def split_cubic_into_three(p0, p1, p2, p3, _27=1/27):
