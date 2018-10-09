@@ -66,7 +66,7 @@ __all__ = [
 	"convertFontInfoValueForAttributeFromVersion2ToVersion1"
 ]
 
-__version__ = "2.4.0.dev0"
+__version__ = "3.0.0.dev0"
 
 
 # ---------
