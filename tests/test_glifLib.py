@@ -167,11 +167,3 @@ class ReadWriteFuncTest(unittest.TestCase):
 	def testXmlDeclaration(self):
 		s = writeGlyphToString("a", _Glyph())
 		self.assertTrue(s.startswith(_XML_DECLARATION.decode("utf-8")))
-
-
-if __name__ == "__main__":
-	from ufoLib.test.testSupport import runTests
-	import sys
-	if len(sys.argv) > 1 and os.path.isdir(sys.argv[-1]):
-		GLYPHSETDIR = sys.argv.pop()
-	runTests()

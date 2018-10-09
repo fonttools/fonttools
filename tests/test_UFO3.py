@@ -4684,7 +4684,3 @@ class UFO3WriteLayerInfoTestCase(unittest.TestCase):
 		info.color = "0, 0, 0, 2"
 		glyphSet = self.makeGlyphSet()
 		self.assertRaises(GlifLibError, glyphSet.writeLayerInfo, info)
-
-if __name__ == "__main__":
-	from ufoLib.test.testSupport import runTests
-	runTests()

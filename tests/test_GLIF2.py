@@ -2370,8 +2370,3 @@ class TestGLIF2(unittest.TestCase):
 		"""
 		self.assertRaises(GlifLibError, self.pyToGLIF, py)
 		self.assertRaises(GlifLibError, self.glifToPy, glif)
-
-
-if __name__ == "__main__":
-	from ufoLib.test.testSupport import runTests
-	runTests()

@@ -150,8 +150,3 @@ class WriteFontInfoVersion1TestCase(unittest.TestCase):
 			writer.writeInfo(infoObject)
 			writtenData = self.readPlist()
 			self.assertEqual(writtenData["widthName"], old)
-
-
-if __name__ == "__main__":
-	from ufoLib.test.testSupport import runTests
-	runTests()

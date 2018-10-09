@@ -345,9 +345,3 @@ class KerningDownConversionTestCase(unittest.TestCase):
 			writtenKerning = plistlib.load(f)
 		self.assertEqual(writtenKerning, self.expectedWrittenKerning)
 		self.tearDownUFO()
-
-
-
-if __name__ == "__main__":
-	from ufoLib.test.testSupport import runTests
-	runTests()

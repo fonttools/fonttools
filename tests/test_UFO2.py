@@ -1412,8 +1412,3 @@ class WriteFontInfoVersion2TestCase(unittest.TestCase):
 		infoObject.macintoshFONDName = 123
 		writer = UFOWriter(self.dstDir, formatVersion=2)
 		self.assertRaises(UFOLibError, writer.writeInfo, info=infoObject)
-
-
-if __name__ == "__main__":
-	from ufoLib.test.testSupport import runTests
-	runTests()
