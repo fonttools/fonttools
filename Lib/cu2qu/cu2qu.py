@@ -67,8 +67,8 @@ def dot(v1, v2):
 @cython.locals(_1=cython.complex, _2=cython.complex, _3=cython.complex, _4=cython.complex)
 def calc_cubic_points(a, b, c, d):
     _1 = d
-    _2 = (c * 0.3333333333333333) + d
-    _3 = (b + c) * 0.3333333333333333 + _2
+    _2 = (c / 3.0) + d
+    _3 = (b + c) / 3.0 + _2
     _4 = a + d + c + b
     return _1, _2, _3, _4
 
@@ -141,9 +141,9 @@ def split_cubic_into_three(p0, p1, p2, p3, _27=1/27):
     deriv1 = (p3 + 3*p2 - 4*p0) * _27
     mid2 = (p0 + 6*p1 + 12*p2 + 8*p3) * _27
     deriv2 = (4*p3 - 3*p1 - p0) * _27
-    return ((p0, (2*p0 + p1) * 0.3333333333333333, mid1 - deriv1, mid1),
+    return ((p0, (2*p0 + p1) / 3.0, mid1 - deriv1, mid1),
             (mid1, mid1 + deriv1, mid2 - deriv2, mid2),
-            (mid2, mid2 + deriv2, (p2 + 2*p3) * 0.3333333333333333, p3))
+            (mid2, mid2 + deriv2, (p2 + 2*p3) / 3.0, p3))
 
 
 @cython.returns(cython.complex)
@@ -196,9 +196,9 @@ def cubic_farthest_fit_inside(p0, p1, p2, p3, tolerance):
 
 
 @cython.cfunc
-@cython.locals(tolerance=cython.double)
+@cython.locals(tolerance=cython.double, _2_3=cython.double)
 @cython.locals(q1=cython.complex, c0=cython.complex, c1=cython.complex, c2=cython.complex, c3=cython.complex)
-def cubic_approx_quadratic(cubic, tolerance):
+def cubic_approx_quadratic(cubic, tolerance, _2_3=2/3):
     """Return the uniq quadratic approximating cubic that maintains
     endpoint tangents if that is within tolerance, None otherwise."""
     # we define 2/3 as a keyword argument so that it will be evaluated only
@@ -209,8 +209,8 @@ def cubic_approx_quadratic(cubic, tolerance):
         return None
     c0 = cubic[0]
     c3 = cubic[3]
-    c1 = c0 + (q1 - c0) * 0.6666666666666666
-    c2 = c3 + (q1 - c3) * 0.6666666666666666
+    c1 = c0 + (q1 - c0) * _2_3
+    c2 = c3 + (q1 - c3) * _2_3
     if not cubic_farthest_fit_inside(0,
                                      c1 - cubic[1],
                                      c2 - cubic[2],
@@ -220,11 +220,11 @@ def cubic_approx_quadratic(cubic, tolerance):
 
 
 @cython.cfunc
-@cython.locals(n=cython.int, tolerance=cython.double)
+@cython.locals(n=cython.int, tolerance=cython.double, _2_3=cython.double)
 @cython.locals(i=cython.int)
 @cython.locals(c0=cython.complex, c1=cython.complex, c2=cython.complex, c3=cython.complex)
 @cython.locals(q0=cython.complex, q1=cython.complex, next_q1=cython.complex, q2=cython.complex, d1=cython.complex)
-def cubic_approx_spline(cubic, n, tolerance):
+def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
     """Approximate a cubic bezier curve with a spline of n quadratics.
 
     Returns None if no quadratic approximation is found which lies entirely
@@ -266,8 +266,8 @@ def cubic_approx_spline(cubic, n, tolerance):
 
         if (abs(d1) > tolerance or
             not cubic_farthest_fit_inside(d0,
-                                          q0 + (q1 - q0) * 0.6666666666666666 - c1,
-                                          q2 + (q1 - q2) * 0.6666666666666666 - c2,
+                                          q0 + (q1 - q0) * _2_3 - c1,
+                                          q2 + (q1 - q2) * _2_3 - c2,
                                           d1,
                                           tolerance)):
             return None
