@@ -1,13 +1,13 @@
 #!/usr/bin/env python
-from __future__ import print_function, division, absolute_import
+import argparse
+import logging
 import sys
-from fontTools.ttLib import TTFont, newTable
+
 from cu2qu.pens import Cu2QuPen
 from fontTools import configLogger
 from fontTools.pens.ttGlyphPen import TTGlyphPen
+from fontTools.ttLib import TTFont, newTable
 from fontTools.ttx import makeOutputFileName
-import argparse
-import logging
 
 
 log = logging.getLogger()
