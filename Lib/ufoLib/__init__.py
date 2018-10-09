@@ -13,11 +13,12 @@ import fs.zipfs
 import fs.tempfs
 import fs.tools
 from fontTools.misc.py23 import basestring, unicode, tounicode
-from ufoLib.glifLib import GlyphSet
+from ufoLib import plistlib
 from ufoLib.validators import *
 from ufoLib.filenames import userNameToFileName
 from ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
 from ufoLib.errors import UFOLibError
+from ufoLib.utils import datetimeAsTimestamp
 
 """
 A library for importing .ufo files and their descendants.
@@ -67,9 +68,9 @@ __all__ = [
 __version__ = "2.4.0.dev0"
 
 
-# ----------
-# File Names
-# ----------
+# ---------
+# Constants
+# ---------
 
 DEFAULT_GLYPHS_DIRNAME = "glyphs"
 DATA_DIRNAME = "data"
@@ -93,6 +94,104 @@ class UFOFileStructure(enum.Enum):
 	PACKAGE = "package"
 
 
+# --------------
+# Shared methods
+# --------------
+
+
+def _getFileModificationTime(self, path):
+	"""
+	Returns the modification time for the file at the given path, as a
+	floating point number giving the number of seconds since the epoch.
+	The path must be relative to the UFO path.
+	Returns None if the file does not exist.
+	"""
+	try:
+		dt = self.fs.getinfo(path, namespaces=["details"]).modified
+	except (fs.errors.MissingInfoNamespace, fs.errors.ResourceNotFound):
+		return None
+	else:
+		return datetimeAsTimestamp(dt)
+
+
+def _readBytesFromPath(self, path):
+	"""
+	Returns the bytes in the file at the given path.
+	The path must be relative to the UFO's filesystem root.
+	Returns None if the file does not exist.
+	"""
+	try:
+		return self.fs.getbytes(path)
+	except fs.errors.ResourceNotFound:
+		return None
+
+
+def _getPlist(self, fileName, default=None):
+	"""
+	Read a property list relative to the UFO filesystem's root.
+	Raises UFOLibError if the file is missing and default is None,
+	otherwise default is returned.
+
+	The errors that could be raised during the reading of a plist are
+	unpredictable and/or too large to list, so, a blind try: except:
+	is done. If an exception occurs, a UFOLibError will be raised.
+	"""
+	try:
+		with self.fs.open(fileName, "rb") as f:
+			return plistlib.load(f)
+	except fs.errors.ResourceNotFound:
+		if default is None:
+			raise UFOLibError(
+				"'%s' is missing on %s. This file is required"
+				% (fileName, self.fs)
+			)
+		else:
+			return default
+	except Exception as e:
+		# TODO(anthrotype): try to narrow this down a little
+		raise UFOLibError(
+			"'%s' could not be read on %s: %s" % (fileName, self.fs, e)
+		)
+
+
+def _writePlist(self, fileName, obj):
+	"""
+	Write a property list to a file relative to the UFO filesystem's root.
+
+	Do this sort of atomically, making it harder to corrupt existing files,
+	for example when plistlib encounters an error halfway during write.
+	This also checks to see if text matches the text that is already in the
+	file at path. If so, the file is not rewritten so that the modification
+	date is preserved.
+
+	The errors that could be raised during the writing of a plist are
+	unpredictable and/or too large to list, so, a blind try: except: is done.
+	If an exception occurs, a UFOLibError will be raised.
+	"""
+	if self._havePreviousFile:
+		try:
+			data = plistlib.dumps(obj)
+		except Exception as e:
+			raise UFOLibError(
+				"'%s' could not be written on %s because "
+				"the data is not properly formatted: %s"
+				% (fileName, self.fs, e)
+			)
+		if self.fs.exists(fileName) and data == self.fs.getbytes(fileName):
+			return
+		self.fs.setbytes(fileName, data)
+	else:
+		with self.fs.openbin(fileName, mode="w") as fp:
+			try:
+				plistlib.dump(obj, fp)
+			except Exception as e:
+				raise UFOLibError(
+					"'%s' could not be written on %s because "
+					"the data is not properly formatted: %s"
+					% (fileName, self.fs, e)
+				)
+
+
 def _sniffFileStructure(ufo_path):
 	"""Return UFOFileStructure.ZIP if the UFO at path 'ufo_path' (basestring)
 	is a zip file, else return UFOFileStructure.PACKAGE if 'ufo_path' is a
@@ -110,6 +209,7 @@ def _sniffFileStructure(ufo_path):
 		)
 	else:
 		raise UFOLibError("No such file or directory: '%s'" % ufo_path)
+
 
 # ----------
 # UFO Reader
@@ -262,12 +362,9 @@ class UFOReader(object):
 
 	# support methods
 
-	from ufoLib._common import (
-		_getPlist,
-		getFileModificationTime,
-		readBytesFromPath,
-	)
-
+	_getPlist = _getPlist
+	getFileModificationTime = _getFileModificationTime
+	readBytesFromPath = _readBytesFromPath
 	sniffFileStructure = staticmethod(_sniffFileStructure)
 
 	def getReadFileForPath(self, path, encoding=None):
@@ -550,6 +647,8 @@ class UFOReader(object):
 		``validateWrte`` will validate the written data, by default it is set to the
 		class's validate value, can be overridden.
 		"""
+		from ufoLib.glifLib import GlyphSet
+
 		if validateRead is None:
 			validateRead = self._validate
 		if validateWrite is None:
@@ -877,13 +976,10 @@ class UFOWriter(object):
 
 	# support methods for file system interaction
 
-	from ufoLib._common import (
-		_getPlist,
-		_writePlist,
-		readBytesFromPath,
-		getFileModificationTime,
-	)
-
+	_getPlist = _getPlist
+	_writePlist = _writePlist
+	readBytesFromPath = _readBytesFromPath
+	getFileModificationTime = _getFileModificationTime
 	sniffFileStructure = staticmethod(_sniffFileStructure)
 
 	def copyFromReader(self, reader, sourcePath, destPath):
@@ -1308,6 +1404,8 @@ class UFOWriter(object):
 			raise AssertionError(self.formatVersion)
 
 	def _getGlyphSetFormatVersion1(self, validateRead, validateWrite, glyphNameToFileNameFunc=None):
+		from ufoLib.glifLib import GlyphSet
+
 		glyphSubFS = self.fs.makedir(DEFAULT_GLYPHS_DIRNAME, recreate=True),
 		return GlyphSet(
 			glyphSubFS,
@@ -1318,6 +1416,8 @@ class UFOWriter(object):
 		)
 
 	def _getGlyphSetFormatVersion2(self, validateRead, validateWrite, glyphNameToFileNameFunc=None):
+		from ufoLib.glifLib import GlyphSet
+
 		glyphSubFS = self.fs.makedir(DEFAULT_GLYPHS_DIRNAME, recreate=True)
 		return GlyphSet(
 			glyphSubFS,
@@ -1328,6 +1428,8 @@ class UFOWriter(object):
 		)
 
 	def _getGlyphSetFormatVersion3(self, validateRead, validateWrite, layerName=None, defaultLayer=True, glyphNameToFileNameFunc=None):
+		from ufoLib.glifLib import GlyphSet
+
 		# if the default flag is on, make sure that the default in the file
 		# matches the default being written. also make sure that this layer
 		# name is not already linked to a non-default layer.

@@ -170,7 +170,7 @@ class GlyphSet(object):
 		self.rebuildContents()
 
 	# here we reuse the same methods from UFOReader/UFOWriter
-	from ufoLib._common import _getPlist, _writePlist, getFileModificationTime
+	from ufoLib import _getPlist, _writePlist, _getFileModificationTime
 
 	def rebuildContents(self, validateRead=None):
 		"""
@@ -299,12 +299,12 @@ class GlyphSet(object):
 		fileName = self.contents.get(glyphName)
 		if glyphName not in self._glifCache or (
 			fileName is not None
-			and self.getFileModificationTime(fileName) != self._glifCache[glyphName][1]
+			and self._getFileModificationTime(fileName) != self._glifCache[glyphName][1]
 		):
 			if fileName is None or not self.fs.exists(fileName):
 				raise KeyError(glyphName)
 			data = self.fs.getbytes(fileName)
-			self._glifCache[glyphName] = (data, self.getFileModificationTime(fileName))
+			self._glifCache[glyphName] = (data, self._getFileModificationTime(fileName))
 		return self._glifCache[glyphName][0]
 
 	def getGLIFModificationTime(self, glyphName):
