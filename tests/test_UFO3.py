@@ -9,7 +9,7 @@ from fontTools.misc.py23 import unicode
 from ufoLib import UFOReader, UFOWriter, UFOLibError
 from ufoLib.glifLib import GlifLibError
 from ufoLib import plistlib
-from ufoLib.test.testSupport import fontInfoVersion3
+from .testSupport import fontInfoVersion3
 
 
 class TestInfoObject(object): pass

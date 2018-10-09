@@ -3,10 +3,6 @@
 # See: http://coverage.readthedocs.io/en/coverage-4.5.1/branch.html
 branch = True
 
-# Don't run codecov on tests
-omit =
-    */test/*
-
 # list of directories or packages to measure
 source = ufoLib
 

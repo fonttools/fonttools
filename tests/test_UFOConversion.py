@@ -7,7 +7,7 @@ import tempfile
 from io import open
 from ufoLib import UFOReader, UFOWriter
 from ufoLib import plistlib
-from ufoLib.test.testSupport import expectedFontInfo1To2Conversion, expectedFontInfo2To1Conversion
+from .testSupport import expectedFontInfo1To2Conversion, expectedFontInfo2To1Conversion
 
 
 # the format version 1 lib.plist contains some data

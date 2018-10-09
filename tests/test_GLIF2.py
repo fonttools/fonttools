@@ -2,7 +2,7 @@
 from __future__ import absolute_import, unicode_literals
 import unittest
 from ufoLib.glifLib import GlifLibError, readGlyphFromString, writeGlyphToString
-from ufoLib.test.testSupport import Glyph, stripText
+from .testSupport import Glyph, stripText
 from itertools import islice
 
 try:

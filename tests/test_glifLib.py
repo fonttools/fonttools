@@ -4,7 +4,7 @@ import tempfile
 import shutil
 import unittest
 from io import open
-from ufoLib.test.testSupport import getDemoFontGlyphSetPath
+from .testSupport import getDemoFontGlyphSetPath
 from ufoLib.glifLib import (
 	GlyphSet, glyphNameToFileName, readGlyphFromString, writeGlyphToString,
 	_XML_DECLARATION,

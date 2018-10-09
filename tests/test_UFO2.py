@@ -7,7 +7,7 @@ import tempfile
 from io import open
 from ufoLib import UFOReader, UFOWriter, UFOLibError
 from ufoLib import plistlib
-from ufoLib.test.testSupport import fontInfoVersion2
+from .testSupport import fontInfoVersion2
 
 
 class TestInfoObject(object): pass
