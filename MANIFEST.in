@@ -3,6 +3,7 @@ include README.md notes.txt LICENSE.txt
 include Documentation/Makefile
 recursive-include Documentation *.py *.rst
 
-recursive-include Lib/ufoLib/test/testdata *.plist *.glif *.fea *.txt
+recursive-include tests *.py
+recursive-include tests/testdata *.plist *.glif *.fea *.txt
 
 include requirements.txt extra_requirements.txt .coveragerc tox.ini
