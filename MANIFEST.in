@@ -4,6 +4,6 @@ include Documentation/Makefile
 recursive-include Documentation *.py *.rst
 
 recursive-include tests *.py
-recursive-include tests/testdata *.plist *.glif *.fea *.txt *.ttx
+recursive-include tests/testdata *.plist *.glif *.fea *.txt *.ttx *ufoz
 
 include requirements.txt extra_requirements.txt .coveragerc tox.ini
