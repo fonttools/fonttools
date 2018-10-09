@@ -5,9 +5,9 @@ import shutil
 import unittest
 import tempfile
 from io import open
-from ufoLib import convertUFOFormatVersion1ToFormatVersion2, UFOReader, UFOWriter
+from ufoLib import UFOReader, UFOWriter
 from ufoLib import plistlib
-from ufoLib.test.testSupport import expectedFontInfo1To2Conversion, expectedFontInfo2To1Conversion
+from .testSupport import expectedFontInfo1To2Conversion, expectedFontInfo2To1Conversion
 
 
 # the format version 1 lib.plist contains some data
@@ -116,13 +116,6 @@ class ConversionFunctionsTestCase(unittest.TestCase):
 		with open(glyphsPath2_B, "rb") as f:
 			data2 = plistlib.load(f)
 		self.assertEqual(data1, data2)
-
-	def test1To2(self):
-		path1 = self.getFontPath("TestFont1 (UFO1).ufo")
-		path2 = self.getFontPath("TestFont1 (UFO1) converted.ufo")
-		path3 = self.getFontPath("TestFont1 (UFO2).ufo")
-		convertUFOFormatVersion1ToFormatVersion2(path1, path2)
-		self.compareFileStructures(path2, path3, expectedFontInfo1To2Conversion, False)
 
 
 # ---------------------
@@ -352,9 +345,3 @@ class KerningDownConversionTestCase(unittest.TestCase):
 			writtenKerning = plistlib.load(f)
 		self.assertEqual(writtenKerning, self.expectedWrittenKerning)
 		self.tearDownUFO()
-
-
-
-if __name__ == "__main__":
-	from ufoLib.test.testSupport import runTests
-	runTests()

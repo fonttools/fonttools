@@ -1,9 +1,10 @@
 """Various low level data validators."""
 
 from __future__ import absolute_import, unicode_literals
-import os
 import calendar
 from io import open
+import fs.base
+import fs.osfs
 
 try:
     from collections.abc import Mapping  # python >= 3.3
@@ -775,11 +776,16 @@ def pngValidator(path=None, data=None, fileObj=None):
 # layercontents.plist
 # -------------------
 
-def layerContentsValidator(value, ufoPath):
+def layerContentsValidator(value, ufoPathOrFileSystem):
 	"""
 	Check the validity of layercontents.plist.
 	Version 3+.
 	"""
+	if isinstance(ufoPathOrFileSystem, fs.base.FS):
+		fileSystem = ufoPathOrFileSystem
+	else:
+		fileSystem = fs.osfs.OSFS(ufoPathOrFileSystem)
+
 	bogusFileMessage = "layercontents.plist in not in the correct format."
 	# file isn't in the right format
 	if not isinstance(value, list):
@@ -805,8 +811,7 @@ def layerContentsValidator(value, ufoPath):
 		if len(layerName) == 0:
 			return False, "Empty layer name in layercontents.plist."
 		# directory doesn't exist
-		p = os.path.join(ufoPath, directoryName)
-		if not os.path.exists(p):
+		if not fileSystem.exists(directoryName):
 			return False, "A glyphset does not exist at %s." % directoryName
 		# default layer name
 		if layerName == "public.default" and directoryName != "glyphs":

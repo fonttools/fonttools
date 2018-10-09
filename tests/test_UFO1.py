@@ -7,7 +7,7 @@ import tempfile
 from io import open
 from ufoLib import UFOReader, UFOWriter, UFOLibError
 from ufoLib import plistlib
-from ufoLib.test.testSupport import fontInfoVersion1, fontInfoVersion2
+from .testSupport import fontInfoVersion1, fontInfoVersion2
 
 
 class TestInfoObject(object): pass
@@ -150,8 +150,3 @@ class WriteFontInfoVersion1TestCase(unittest.TestCase):
 			writer.writeInfo(infoObject)
 			writtenData = self.readPlist()
 			self.assertEqual(writtenData["widthName"], old)
-
-
-if __name__ == "__main__":
-	from ufoLib.test.testSupport import runTests
-	runTests()

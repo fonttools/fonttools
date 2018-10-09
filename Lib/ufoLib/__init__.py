@@ -1,14 +1,26 @@
 from __future__ import absolute_import, unicode_literals
+import sys
 import os
-import shutil
-from io import StringIO, BytesIO, open
 from copy import deepcopy
+import zipfile
+import enum
+import fs
+import fs.base
+import fs.subfs
+import fs.errors
+import fs.copy
+import fs.osfs
+import fs.zipfs
+import fs.tempfs
+import fs.tools
 from fontTools.misc.py23 import basestring, unicode, tounicode
-from ufoLib.glifLib import GlyphSet
+from ufoLib import plistlib
 from ufoLib.validators import *
 from ufoLib.filenames import userNameToFileName
 from ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
-from ufoLib import plistlib
+from ufoLib.errors import UFOLibError
+from ufoLib.utils import datetimeAsTimestamp, fsdecode
+
 """
 A library for importing .ufo files and their descendants.
 Refer to http://unifiedfontobject.com for the UFO specification.
@@ -51,20 +63,15 @@ __all__ = [
 	"validateFontInfoVersion2ValueForAttribute",
 	"validateFontInfoVersion3ValueForAttribute",
 	"convertFontInfoValueForAttributeFromVersion1ToVersion2",
-	"convertFontInfoValueForAttributeFromVersion2ToVersion1",
-	# deprecated
-	"convertUFOFormatVersion1ToFormatVersion2",
+	"convertFontInfoValueForAttributeFromVersion2ToVersion1"
 ]
 
-__version__ = "2.3.2"
+__version__ = "3.0.0.dev0"
 
 
-class UFOLibError(Exception): pass
-
-
-# ----------
-# File Names
-# ----------
+# ---------
+# Constants
+# ---------
 
 DEFAULT_GLYPHS_DIRNAME = "glyphs"
 DATA_DIRNAME = "data"
@@ -83,34 +90,127 @@ DEFAULT_LAYER_NAME = "public.default"
 supportedUFOFormatVersions = [1, 2, 3]
 
 
+class UFOFileStructure(enum.Enum):
+	ZIP = "zip"
+	PACKAGE = "package"
+
+
 # --------------
 # Shared Methods
 # --------------
 
+
+def _getFileModificationTime(self, path):
+	"""
+	Returns the modification time for the file at the given path, as a
+	floating point number giving the number of seconds since the epoch.
+	The path must be relative to the UFO path.
+	Returns None if the file does not exist.
+	"""
+	try:
+		dt = self.fs.getinfo(fsdecode(path), namespaces=["details"]).modified
+	except (fs.errors.MissingInfoNamespace, fs.errors.ResourceNotFound):
+		return None
+	else:
+		return datetimeAsTimestamp(dt)
+
+
+def _readBytesFromPath(self, path):
+	"""
+	Returns the bytes in the file at the given path.
+	The path must be relative to the UFO's filesystem root.
+	Returns None if the file does not exist.
+	"""
+	try:
+		return self.fs.getbytes(fsdecode(path))
+	except fs.errors.ResourceNotFound:
+		return None
+
+
 def _getPlist(self, fileName, default=None):
 	"""
-	Read a property list relative to the
-	path argument of UFOReader. If the file
-	is missing and default is None a
-	UFOLibError will be raised otherwise
-	default is returned. The errors that
-	could be raised during the reading of
-	a plist are unpredictable and/or too
-	large to list, so, a blind try: except:
-	is done. If an exception occurs, a
-	UFOLibError will be raised.
+	Read a property list relative to the UFO filesystem's root.
+	Raises UFOLibError if the file is missing and default is None,
+	otherwise default is returned.
+
+	The errors that could be raised during the reading of a plist are
+	unpredictable and/or too large to list, so, a blind try: except:
+	is done. If an exception occurs, a UFOLibError will be raised.
 	"""
-	path = os.path.join(self._path, fileName)
-	if not os.path.exists(path):
-		if default is not None:
-			return default
-		else:
-			raise UFOLibError("%s is missing in %s. This file is required" % (fileName, self._path))
 	try:
-		with open(path, "rb") as f:
+		with self.fs.open(fileName, "rb") as f:
 			return plistlib.load(f)
-	except:
-		raise UFOLibError("The file %s could not be read." % fileName)
+	except fs.errors.ResourceNotFound:
+		if default is None:
+			raise UFOLibError(
+				"'%s' is missing on %s. This file is required"
+				% (fileName, self.fs)
+			)
+		else:
+			return default
+	except Exception as e:
+		# TODO(anthrotype): try to narrow this down a little
+		raise UFOLibError(
+			"'%s' could not be read on %s: %s" % (fileName, self.fs, e)
+		)
+
+
+def _writePlist(self, fileName, obj):
+	"""
+	Write a property list to a file relative to the UFO filesystem's root.
+
+	Do this sort of atomically, making it harder to corrupt existing files,
+	for example when plistlib encounters an error halfway during write.
+	This also checks to see if text matches the text that is already in the
+	file at path. If so, the file is not rewritten so that the modification
+	date is preserved.
+
+	The errors that could be raised during the writing of a plist are
+	unpredictable and/or too large to list, so, a blind try: except: is done.
+	If an exception occurs, a UFOLibError will be raised.
+	"""
+	if self._havePreviousFile:
+		try:
+			data = plistlib.dumps(obj)
+		except Exception as e:
+			raise UFOLibError(
+				"'%s' could not be written on %s because "
+				"the data is not properly formatted: %s"
+				% (fileName, self.fs, e)
+			)
+		if self.fs.exists(fileName) and data == self.fs.getbytes(fileName):
+			return
+		self.fs.setbytes(fileName, data)
+	else:
+		with self.fs.openbin(fileName, mode="w") as fp:
+			try:
+				plistlib.dump(obj, fp)
+			except Exception as e:
+				raise UFOLibError(
+					"'%s' could not be written on %s because "
+					"the data is not properly formatted: %s"
+					% (fileName, self.fs, e)
+				)
+
+
+def _sniffFileStructure(ufo_path):
+	"""Return UFOFileStructure.ZIP if the UFO at path 'ufo_path' (basestring)
+	is a zip file, else return UFOFileStructure.PACKAGE if 'ufo_path' is a
+	directory.
+	Raise UFOLibError if it is a file with unknown structure, or if the path
+	does not exist.
+	"""
+	if zipfile.is_zipfile(ufo_path):
+		return UFOFileStructure.ZIP
+	elif os.path.isdir(ufo_path):
+		return UFOFileStructure.PACKAGE
+	elif os.path.isfile(ufo_path):
+		raise UFOLibError(
+			"The specified UFO does not have a known structure: '%s'" % ufo_path
+		)
+	else:
+		raise UFOLibError("No such file or directory: '%s'" % ufo_path)
+
 
 # ----------
 # UFO Reader
@@ -126,8 +226,67 @@ class UFOReader(object):
 	"""
 
 	def __init__(self, path, validate=True):
-		if not os.path.exists(path):
-			raise UFOLibError("The specified UFO doesn't exist.")
+		if hasattr(path, "__fspath__"):  # support os.PathLike objects
+			path = path.__fspath__()
+
+		if isinstance(path, basestring):
+			structure = self.sniffFileStructure(path)
+			try:
+				if structure is UFOFileStructure.ZIP:
+					parentFS = fs.zipfs.ZipFS(path, write=False, encoding="utf-8")
+				else:
+					parentFS = fs.osfs.OSFS(path)
+			except fs.errors.CreateFailed as e:
+				raise UFOLibError("unable to open '%s': %s" % (path, e))
+
+			if structure is UFOFileStructure.ZIP:
+				# .ufoz zip files must contain a single root directory, with arbitrary
+				# name, containing all the UFO files
+				rootDirs = [
+					p.name for p in parentFS.scandir("/")
+					# exclude macOS metadata contained in zip file
+					if p.is_dir and p.name != "__MACOSX"
+				]
+				if len(rootDirs) == 1:
+					# 'ClosingSubFS' ensures that the parent zip file is closed when
+					# its root subdirectory is closed
+					self.fs = parentFS.opendir(
+						rootDirs[0], factory=fs.subfs.ClosingSubFS
+					)
+				else:
+					raise UFOLibError(
+						"Expected exactly 1 root directory, found %d" % len(rootDirs)
+					)
+			else:
+				# normal UFO 'packages' are just a single folder
+				self.fs = parentFS
+			# when passed a path string, we make sure we close the newly opened fs
+			# upon calling UFOReader.close method or context manager's __exit__
+			self._shouldClose = True
+			self._fileStructure = structure
+		elif isinstance(path, fs.base.FS):
+			filesystem = path
+			try:
+				filesystem.check()
+			except fs.errors.FilesystemClosed:
+				raise UFOLibError("the filesystem '%s' is closed" % path)
+			else:
+				self.fs = filesystem
+			try:
+				path = filesystem.getsyspath("/")
+			except fs.errors.NoSysPath:
+				# network or in-memory FS may not map to the local one
+				path = unicode(filesystem)
+			# when user passed an already initialized fs instance, it is her
+			# responsibility to close it, thus UFOReader.close/__exit__ are no-op
+			self._shouldClose = False
+			# default to a 'package' structure
+			self._fileStructure = UFOFileStructure.PACKAGE
+		else:
+			raise TypeError(
+				"Expected a path string or fs.base.FS object, found '%s'"
+				% type(path).__name__
+			)
 		self._path = path
 		self._validate = validate
 		self.readMetaInfo(validate=validate)
@@ -139,6 +298,17 @@ class UFOReader(object):
 		return self._formatVersion
 
 	formatVersion = property(_get_formatVersion, doc="The format version of the UFO. This is determined by reading metainfo.plist during __init__.")
+
+	def _get_fileStructure(self):
+		return self._fileStructure
+
+	fileStructure = property(
+		_get_fileStructure,
+		doc=(
+			"The current file structure of the UFO: "
+			"either UFOFileStructure.ZIP or UFOFileStructure.PACKAGE"
+		)
+	)
 
 	# up conversion
 
@@ -165,7 +335,7 @@ class UFOReader(object):
 				invalidFormatMessage = "groups.plist is not properly formatted."
 				if not isinstance(groups, dict):
 					raise UFOLibError(invalidFormatMessage)
-				for groupName, glyphList in list(groups.items()):
+				for groupName, glyphList in groups.items():
 					if not isinstance(groupName, basestring):
 						raise UFOLibError(invalidFormatMessage)
 					elif not isinstance(glyphList, list):
@@ -191,61 +361,29 @@ class UFOReader(object):
 
 	# support methods
 
-	_checkForFile = staticmethod(os.path.exists)
-
 	_getPlist = _getPlist
-
-	def readBytesFromPath(self, path, encoding=None):
-		"""
-		Returns the bytes in the file at the given path.
-		The path must be relative to the UFO path.
-		Returns None if the file does not exist.
-		An encoding may be passed if needed.
-		"""
-		fullPath = os.path.join(self._path, path)
-		if not self._checkForFile(fullPath):
-			return None
-		if os.path.isdir(fullPath):
-			raise UFOLibError("%s is a directory." % path)
-		if encoding:
-			f = open(fullPath, encoding=encoding)
-		else:
-			f = open(fullPath, "rb", encoding=encoding)
-		data = f.read()
-		f.close()
-		return data
+	getFileModificationTime = _getFileModificationTime
+	readBytesFromPath = _readBytesFromPath
+	sniffFileStructure = staticmethod(_sniffFileStructure)
 
 	def getReadFileForPath(self, path, encoding=None):
 		"""
-		Returns a file (or file-like) object for the
-		file at the given path. The path must be relative
-		to the UFO path. Returns None if the file does not exist.
-		An encoding may be passed if needed.
+		Returns a file (or file-like) object for the file at the given path.
+		The path must be relative to the UFO path.
+		Returns None if the file does not exist.
+		By default the file is opened in binary mode (reads bytes).
+		If encoding is passed, the file is opened in text mode (reads unicode).
 
 		Note: The caller is responsible for closing the open file.
 		"""
-		fullPath = os.path.join(self._path, path)
-		if not self._checkForFile(fullPath):
+		path = fsdecode(path)
+		try:
+			if encoding is None:
+				return self.fs.openbin(path)
+			else:
+				return self.fs.open(path, mode="r", encoding=encoding)
+		except fs.errors.ResourceNotFound:
 			return None
-		if os.path.isdir(fullPath):
-			raise UFOLibError("%s is a directory." % path)
-		if encoding:
-			f = open(fullPath, "rb", encoding=encoding)
-		else:
-			f = open(fullPath, "r")
-		return f
-
-	def getFileModificationTime(self, path):
-		"""
-		Returns the modification time (as reported by os.path.getmtime)
-		for the file at the given path. The path must be relative to
-		the UFO path. Returns None if the file does not exist.
-		"""
-		fullPath = os.path.join(self._path, path)
-		if not self._checkForFile(fullPath):
-			return None
-		return os.path.getmtime(fullPath)
-
 	# metainfo.plist
 
 	def readMetaInfo(self, validate=None):
@@ -257,19 +395,21 @@ class UFOReader(object):
 		"""
 		if validate is None:
 			validate = self._validate
-		# should there be a blind try/except with a UFOLibError
-		# raised in except here (and elsewhere)? It would be nice to
-		# provide external callers with a single exception to catch.
 		data = self._getPlist(METAINFO_FILENAME)
 		if validate and not isinstance(data, dict):
 			raise UFOLibError("metainfo.plist is not properly formatted.")
 		formatVersion = data["formatVersion"]
 		if validate:
 			if not isinstance(formatVersion, int):
-				metaplist_path = os.path.join(self._path, METAINFO_FILENAME)
-				raise UFOLibError("formatVersion must be specified as an integer in " + metaplist_path)
+				raise UFOLibError(
+					"formatVersion must be specified as an integer in '%s' on %s"
+					% (METAINFO_FILENAME, self.fs)
+				)
 			if formatVersion not in supportedUFOFormatVersions:
-				raise UFOLibError("Unsupported UFO format (%d) in %s." % (formatVersion, self._path))
+				raise UFOLibError(
+					"Unsupported UFO format (%d) in '%s' on %s"
+					% (formatVersion, METAINFO_FILENAME, self.fs)
+				)
 		self._formatVersion = formatVersion
 
 	# groups.plist
@@ -438,14 +578,14 @@ class UFOReader(object):
 
 	def readFeatures(self):
 		"""
-		Read features.fea. Returns a string.
+		Read features.fea. Return a unicode string.
+		The returned string is empty if the file is missing.
 		"""
-		path = os.path.join(self._path, FEATURES_FILENAME)
-		if not self._checkForFile(path):
+		try:
+			with self.fs.open(FEATURES_FILENAME, "r", encoding="utf-8") as f:
+				return f.read()
+		except fs.errors.ResourceNotFound:
 			return ""
-		with open(path, "r", encoding="utf-8") as f:
-			text = f.read()
-		return text
 
 	# glyph sets & layers
 
@@ -458,10 +598,9 @@ class UFOReader(object):
 		"""
 		if self._formatVersion < 3:
 			return [(DEFAULT_LAYER_NAME, DEFAULT_GLYPHS_DIRNAME)]
-		# read the file on disk
 		contents = self._getPlist(LAYERCONTENTS_FILENAME)
 		if validate:
-			valid, error = layerContentsValidator(contents, self._path)
+			valid, error = layerContentsValidator(contents, self.fs)
 			if not valid:
 				raise UFOLibError(error)
 		return contents
@@ -508,6 +647,8 @@ class UFOReader(object):
 		``validateWrte`` will validate the written data, by default it is set to the
 		class's validate value, can be overridden.
 		"""
+		from ufoLib.glifLib import GlyphSet
+
 		if validateRead is None:
 			validateRead = self._validate
 		if validateWrite is None:
@@ -522,8 +663,18 @@ class UFOReader(object):
 				break
 		if directory is None:
 			raise UFOLibError("No glyphs directory is mapped to \"%s\"." % layerName)
-		glyphsPath = os.path.join(self._path, directory)
-		return GlyphSet(glyphsPath, ufoFormatVersion=self._formatVersion, validateRead=validateRead, validateWrite=validateWrite)
+		try:
+			glyphSubFS = self.fs.opendir(directory)
+		except fs.errors.ResourceNotFound:
+			raise UFOLibError(
+				"No '%s' directory for layer '%s'" % (directory, layerName)
+			)
+		return GlyphSet(
+			glyphSubFS,
+			ufoFormatVersion=self._formatVersion,
+			validateRead=validateRead,
+			validateWrite=validateWrite,
+		)
 
 	def getCharacterMapping(self, layerName=None, validate=None):
 		"""
@@ -545,35 +696,22 @@ class UFOReader(object):
 
 	# /data
 
-	def getDataDirectoryListing(self, maxDepth=100):
+	def getDataDirectoryListing(self):
 		"""
 		Returns a list of all files in the data directory.
 		The returned paths will be relative to the UFO.
 		This will not list directory names, only file names.
 		Thus, empty directories will be skipped.
-
-		The maxDepth argument sets the maximum number
-		of sub-directories that are allowed.
 		"""
-		path = os.path.join(self._path, DATA_DIRNAME)
-		if not self._checkForFile(path):
+		try:
+			# fs Walker.files method returns "absolute" paths (in terms of the
+			# root of the 'data' SubFS), so we strip the leading '/' to make
+			# them relative
+			return [
+				p.lstrip("/") for p in self.fs.opendir(DATA_DIRNAME).walk.files()
+			]
+		except fs.errors.ResourceError:
 			return []
-		listing = self._getDirectoryListing(path, maxDepth=maxDepth)
-		listing = [os.path.relpath(path, "data") for path in listing]
-		return listing
-
-	def _getDirectoryListing(self, path, depth=0, maxDepth=100):
-		if depth > maxDepth:
-			raise UFOLibError("Maximum recusion depth reached.")
-		result = []
-		for fileName in os.listdir(path):
-			p = os.path.join(path, fileName)
-			if os.path.isdir(p):
-				result += self._getDirectoryListing(p, depth=depth+1, maxDepth=maxDepth)
-			else:
-				p = os.path.relpath(p, self._path)
-				result.append(p)
-		return result
 
 	def getImageDirectoryListing(self, validate=None):
 		"""
@@ -584,28 +722,28 @@ class UFOReader(object):
 		``validate`` will validate the data, by default it is set to the
 		class's validate value, can be overridden.
 		"""
-		if validate is None:
-			validate = self._validate
 		if self._formatVersion < 3:
 			return []
-		path = os.path.join(self._path, IMAGES_DIRNAME)
-		if not os.path.exists(path):
+		if validate is None:
+			validate = self._validate
+		if not self.fs.exists(IMAGES_DIRNAME):
 			return []
-		if not os.path.isdir(path):
+		elif not self.fs.isdir(IMAGES_DIRNAME):
 			raise UFOLibError("The UFO contains an \"images\" file instead of a directory.")
 		result = []
-		for fileName in os.listdir(path):
-			p = os.path.join(path, fileName)
-			if os.path.isdir(p):
+		self._imagesFS = imagesFS = self.fs.opendir(IMAGES_DIRNAME)
+		for path in imagesFS.scandir("/"):
+			if path.is_dir:
 				# silently skip this as version control
 				# systems often have hidden directories
 				continue
 			if validate:
-				valid, error = pngValidator(path=p)
+				with imagesFS.openbin(path.name) as fp:
+					valid, error = pngValidator(fileObj=fp)
 				if valid:
-					result.append(fileName)
+					result.append(path.name)
 			else:
-				result.append(fileName)
+				result.append(path.name)
 		return result
 
 	def readImage(self, fileName, validate=None):
@@ -619,7 +757,13 @@ class UFOReader(object):
 			validate = self._validate
 		if self._formatVersion < 3:
 			raise UFOLibError("Reading images is not allowed in UFO %d." % self._formatVersion)
-		data = self.readBytesFromPath(os.path.join(IMAGES_DIRNAME, fileName))
+		try:
+			imagesFS = self._imagesFS
+		except AttributeError:
+			# in case readImage is called before getImageDirectoryListing
+			imagesFS = self.fs.opendir(IMAGES_DIRNAME)
+		fileName = fsdecode(fileName)
+		data = imagesFS.getbytes(fileName)
 		if data is None:
 			raise UFOLibError("No image file named %s." % fileName)
 		if validate:
@@ -628,10 +772,20 @@ class UFOReader(object):
 				raise UFOLibError(error)
 		return data
 
+	def close(self):
+		if self._shouldClose:
+			self.fs.close()
+
+	def __enter__(self):
+		return self
+
+	def __exit__(self, exc_type, exc_value, exc_tb):
+		self.close()
+
+
 # ----------
 # UFO Writer
 # ----------
-
 
 class UFOWriter(object):
 
@@ -643,27 +797,130 @@ class UFOWriter(object):
 	on a per method level if desired.
 	"""
 
-	def __init__(self, path, formatVersion=3, fileCreator="org.robofab.ufoLib", validate=True):
+	def __init__(
+		self,
+		path,
+		formatVersion=3,
+		fileCreator="org.robofab.ufoLib",
+		structure=None,
+		validate=True,
+	):
 		if formatVersion not in supportedUFOFormatVersions:
 			raise UFOLibError("Unsupported UFO format (%d)." % formatVersion)
+
+		if hasattr(path, "__fspath__"):  # support os.PathLike objects
+			path = path.__fspath__()
+
+		if isinstance(path, basestring):
+			havePreviousFile = os.path.exists(path)
+			if havePreviousFile:
+				# ensure we use the same structure as the destination
+				existingStructure = self.sniffFileStructure(path)
+				if structure is not None:
+					try:
+						structure = UFOFileStructure(structure)
+					except ValueError:
+						raise UFOLibError(
+							"Invalid or unsupported structure: '%s'" % structure
+						)
+					if structure is not existingStructure:
+						raise UFOLibError(
+							"A UFO with a different structure (%s) already exists "
+							"at the given path: '%s'" % (existingStructure, path)
+						)
+				else:
+					structure = existingStructure
+			else:
+				# if not exists, default to 'package' structure
+				if structure is None:
+					structure = UFOFileStructure.PACKAGE
+				dirName = os.path.dirname(path)
+				if dirName and not os.path.isdir(dirName):
+					raise UFOLibError(
+						"Cannot write to '%s': directory does not exist" % path
+					)
+			if structure is UFOFileStructure.ZIP:
+				if havePreviousFile:
+					# we can't write a zip in-place, so we have to copy its
+					# contents to a temporary location and work from there, then
+					# upon closing UFOWriter we create the final zip file
+					parentFS = fs.tempfs.TempFS()
+					with fs.zipfs.ZipFS(path, encoding="utf-8") as origFS:
+						fs.copy.copy_fs(origFS, parentFS)
+					# if output path is an existing zip, we require that it contains
+					# one, and only one, root directory (with arbitrary name), in turn
+					# containing all the existing UFO contents
+					rootDirs = [
+						p.name for p in parentFS.scandir("/")
+						# exclude macOS metadata contained in zip file
+						if p.is_dir and p.name != "__MACOSX"
+					]
+					if len(rootDirs) != 1:
+						raise UFOLibError(
+							"Expected exactly 1 root directory, found %d" % len(rootDirs)
+						)
+					else:
+						# 'ClosingSubFS' ensures that the parent filesystem is closed
+						# when its root subdirectory is closed
+						self.fs = parentFS.opendir(
+							rootDirs[0], factory=fs.subfs.ClosingSubFS
+						)
+				else:
+					# if the output zip file didn't exist, we create the root folder;
+					# we name it the same as input 'path', but with '.ufo' extension
+					rootDir = os.path.splitext(os.path.basename(path))[0] + ".ufo"
+					parentFS = fs.zipfs.ZipFS(path, write=True, encoding="utf-8")
+					parentFS.makedir(rootDir)
+					self.fs = parentFS.opendir(rootDir, factory=fs.subfs.ClosingSubFS)
+			else:
+				self.fs = fs.osfs.OSFS(path, create=True)
+			self._fileStructure = structure
+			self._havePreviousFile = havePreviousFile
+			self._shouldClose = True
+		elif isinstance(path, fs.base.FS):
+			filesystem = path
+			try:
+				filesystem.check()
+			except fs.errors.FilesystemClosed:
+				raise UFOLibError("the filesystem '%s' is closed" % path)
+			else:
+				self.fs = filesystem
+			try:
+				path = filesystem.getsyspath("/")
+			except fs.errors.NoSysPath:
+				# network or in-memory FS may not map to the local one
+				path = unicode(filesystem)
+			# if passed an FS object, always default to 'package' structure
+			self._fileStructure = UFOFileStructure.PACKAGE
+			# if FS contains a "metainfo.plist", we consider it non-empty
+			self._havePreviousFile = filesystem.exists(METAINFO_FILENAME)
+			# the user is responsible for closing the FS object
+			self._shouldClose = False
+		else:
+			raise TypeError(
+				"Expected a path string or fs object, found %s"
+				% type(path).__name__
+			)
+
 		# establish some basic stuff
 		self._path = path
 		self._formatVersion = formatVersion
 		self._fileCreator = fileCreator
 		self._downConversionKerningData = None
 		self._validate = validate
-
 		# if the file already exists, get the format version.
 		# this will be needed for up and down conversion.
 		previousFormatVersion = None
-		if os.path.exists(path):
+		if self._havePreviousFile:
 			metaInfo = self._getPlist(METAINFO_FILENAME)
 			previousFormatVersion = metaInfo.get("formatVersion")
 			try:
 				previousFormatVersion = int(previousFormatVersion)
-			except:
+			except (ValueError, TypeError):
+				self.fs.close()
 				raise UFOLibError("The existing metainfo.plist is not properly formatted.")
 			if previousFormatVersion not in supportedUFOFormatVersions:
+				self.fs.close()
 				raise UFOLibError("Unsupported UFO format (%d)." % formatVersion)
 		# catch down conversion
 		if previousFormatVersion is not None and previousFormatVersion > formatVersion:
@@ -676,8 +933,7 @@ class UFOWriter(object):
 		else:
 			# previous < 3
 			# imply the layer contents
-			p = os.path.join(path, DEFAULT_GLYPHS_DIRNAME)
-			if os.path.exists(p):
+			if self.fs.exists(DEFAULT_GLYPHS_DIRNAME):
 				self.layerContents = {DEFAULT_LAYER_NAME : DEFAULT_GLYPHS_DIRNAME}
 		# write the new metainfo
 		self._writeMetaInfo()
@@ -685,9 +941,16 @@ class UFOWriter(object):
 	# properties
 
 	def _get_path(self):
+		import warnings
+
+		warnings.warn(
+			"The 'path' attribute is deprecated; use the 'fs' attribute instead",
+			DeprecationWarning,
+			stacklevel=2,
+		)
 		return self._path
 
-	path = property(_get_path, doc="The path the UFO is being written to.")
+	path = property(_get_path, doc="The path the UFO is being written to (DEPRECATED).")
 
 	def _get_formatVersion(self):
 		return self._formatVersion
@@ -699,149 +962,119 @@ class UFOWriter(object):
 
 	fileCreator = property(_get_fileCreator, doc="The file creator of the UFO. This is set into metainfo.plist during __init__.")
 
-	# support methods
+	def _get_fileStructure(self):
+		return self._fileStructure
+
+	fileStructure = property(
+		_get_fileStructure,
+		doc=(
+			"The file structure of the destination UFO: "
+			"either UFOFileStrucure.ZIP or UFOFileStructure.PACKAGE"
+		)
+	)
+
+	# support methods for file system interaction
 
 	_getPlist = _getPlist
-
-	def _writePlist(self, fileName, data):
-		"""
-		Write a property list. The errors that
-		could be raised during the writing of
-		a plist are unpredictable and/or too
-		large to list, so, a blind try: except:
-		is done. If an exception occurs, a
-		UFOLibError will be raised.
-		"""
-		self._makeDirectory()
-		path = os.path.join(self._path, fileName)
-		try:
-			data = writePlistAtomically(data, path)
-		except:
-			raise UFOLibError("The data for the file %s could not be written because it is not properly formatted." % fileName)
-
-	def _deleteFile(self, fileName):
-		path = os.path.join(self._path, fileName)
-		if os.path.exists(path):
-			os.remove(path)
-
-	def _makeDirectory(self, subDirectory=None):
-		path = self._path
-		if subDirectory:
-			path = os.path.join(self._path, subDirectory)
-		if not os.path.exists(path):
-			os.makedirs(path)
-		return path
-
-	def _buildDirectoryTree(self, path):
-		directory, fileName = os.path.split(path)
-		directoryTree = []
-		while directory:
-			directory, d = os.path.split(directory)
-			directoryTree.append(d)
-		directoryTree.reverse()
-		built = ""
-		for d in directoryTree:
-			d = os.path.join(built, d)
-			p = os.path.join(self._path, d)
-			if not os.path.exists(p):
-				os.mkdir(p)
-			built = d
-
-	def _removeFileForPath(self, path, raiseErrorIfMissing=False):
-		originalPath = path
-		path = os.path.join(self._path, path)
-		if not os.path.exists(path):
-			if raiseErrorIfMissing:
-				raise UFOLibError("The file %s does not exist." % path)
-		else:
-			if os.path.isdir(path):
-				shutil.rmtree(path)
-			else:
-				os.remove(path)
-		# remove any directories that are now empty
-		self._removeEmptyDirectoriesForPath(os.path.dirname(originalPath))
-
-	def _removeEmptyDirectoriesForPath(self, directory):
-		absoluteDirectory = os.path.join(self._path, directory)
-		if not os.path.exists(absoluteDirectory):
-			return
-		if not len(os.listdir(absoluteDirectory)):
-			shutil.rmtree(absoluteDirectory)
-		else:
-			return
-		directory = os.path.dirname(directory)
-		if directory:
-			self._removeEmptyDirectoriesForPath(directory)
-
-	# file system interaction
-
-	def writeBytesToPath(self, path, data, encoding=None):
-		"""
-		Write bytes to path. If needed, the directory tree
-		for the given path will be built. The path must be
-		relative to the UFO. An encoding may be passed if needed.
-		"""
-		fullPath = os.path.join(self._path, path)
-		if os.path.exists(fullPath) and os.path.isdir(fullPath):
-			raise UFOLibError("A directory exists at %s." % path)
-		self._buildDirectoryTree(path)
-		if encoding:
-			data = StringIO(data).encode(encoding)
-		writeDataFileAtomically(data, fullPath)
-
-	def getFileObjectForPath(self, path, encoding=None):
-		"""
-		Creates a write mode file object at path. If needed,
-		the directory tree for the given path will be built.
-		The path must be relative to the UFO. An encoding may
-		be passed if needed.
-
-		Note: The caller is responsible for closing the open file.
-		"""
-		fullPath = os.path.join(self._path, path)
-		if os.path.exists(fullPath) and os.path.isdir(fullPath):
-			raise UFOLibError("A directory exists at %s." % path)
-		self._buildDirectoryTree(path)
-		return open(fullPath, "w", encoding=encoding)
-
-	def removeFileForPath(self, path):
-		"""
-		Remove the file (or directory) at path. The path
-		must be relative to the UFO. This is only allowed
-		for files in the data and image directories.
-		"""
-		# make sure that only data or images is being changed
-		d = path
-		parts = []
-		while d:
-			d, p = os.path.split(d)
-			if p:
-				parts.append(p)
-		if parts[-1] not in ("images", "data"):
-			raise UFOLibError("Removing \"%s\" is not legal." % path)
-		# remove the file
-		self._removeFileForPath(path, raiseErrorIfMissing=True)
+	_writePlist = _writePlist
+	readBytesFromPath = _readBytesFromPath
+	getFileModificationTime = _getFileModificationTime
+	sniffFileStructure = staticmethod(_sniffFileStructure)
 
 	def copyFromReader(self, reader, sourcePath, destPath):
 		"""
 		Copy the sourcePath in the provided UFOReader to destPath
-		in this writer. The paths must be relative. They may represent
-		directories or paths. This uses the most memory efficient
-		method possible for copying the data possible.
+		in this writer. The paths must be relative. This works with
+		both individual files and directories.
 		"""
 		if not isinstance(reader, UFOReader):
 			raise UFOLibError("The reader must be an instance of UFOReader.")
-		fullSourcePath = os.path.join(reader._path, sourcePath)
-		if not reader._checkForFile(fullSourcePath):
-			raise UFOLibError("No file named \"%s\" to copy from." % sourcePath)
-		fullDestPath = os.path.join(self._path, destPath)
-		if os.path.exists(fullDestPath):
-			raise UFOLibError("A file named \"%s\" already exists." % sourcePath)
-		self._buildDirectoryTree(destPath)
-		if os.path.isdir(fullSourcePath):
-			shutil.copytree(fullSourcePath, fullDestPath)
+		sourcePath = fsdecode(sourcePath)
+		destPath = fsdecode(destPath)
+		if not reader.fs.exists(sourcePath):
+			raise UFOLibError("The reader does not have data located at \"%s\"." % sourcePath)
+		if self.fs.exists(destPath):
+			raise UFOLibError("A file named \"%s\" already exists." % destPath)
+		# create the destination directory if it doesn't exist
+		self.fs.makedirs(fs.path.dirname(destPath), recreate=True)
+		if reader.fs.isdir(sourcePath):
+			fs.copy.copy_dir(reader.fs, sourcePath, self.fs, destPath)
 		else:
-			shutil.copy(fullSourcePath, fullDestPath)
+			fs.copy.copy_file(reader.fs, sourcePath, self.fs, destPath)
+
+	def writeBytesToPath(self, path, data):
+		"""
+		Write bytes to a path relative to the UFO filesystem's root.
+		If writing to an existing UFO, check to see if data matches the data
+		that is already in the file at path; if so, the file is not rewritten
+		so that the modification date is preserved.
+		If needed, the directory tree for the given path will be built.
+		"""
+		path = fsdecode(path)
+		if self._havePreviousFile:
+			if self.fs.isfile(path) and data == self.fs.getbytes(path):
+				return
+		try:
+			self.fs.setbytes(path, data)
+		except fs.errors.FileExpected:
+			raise UFOLibError("A directory exists at '%s'" % path)
+		except fs.errors.ResourceNotFound:
+			self.fs.makedirs(fs.path.dirname(path), recreate=True)
+			self.fs.setbytes(path, data)
+
+	def getFileObjectForPath(self, path, mode="w", encoding=None):
+		"""
+		Returns a file (or file-like) object for the
+		file at the given path. The path must be relative
+		to the UFO path. Returns None if the file does
+		not exist and the mode is "r" or "rb.
+		An encoding may be passed if the file is opened in text mode.
+
+		Note: The caller is responsible for closing the open file.
+		"""
+		path = fsdecode(path)
+		try:
+			return self.fs.open(path, mode=mode, encoding=encoding)
+		except fs.errors.ResourceNotFound as e:
+			m = mode[0]
+			if m == "r":
+				# XXX I think we should just let it raise. The docstring,
+				# however, says that this returns None if mode is 'r'
+				return None
+			elif m == "w" or m == "a" or m == "x":
+				self.fs.makedirs(fs.path.dirname(path), recreate=True)
+				return self.fs.open(path, mode=mode, encoding=encoding)
+		except fs.errors.ResourceError as e:
+			return UFOLibError(
+				"unable to open '%s' on %s: %s" % (path, self.fs, e)
+			)
+
+	def removePath(self, path, force=False, removeEmptyParents=True):
+		"""
+		Remove the file (or directory) at path. The path
+		must be relative to the UFO.
+		Raises UFOLibError if the path doesn't exist.
+		If force=True, ignore non-existent paths.
+		If the directory where 'path' is located becomes empty, it will
+		be automatically removed, unless 'removeEmptyParents' is False.
+		"""
+		path = fsdecode(path)
+		try:
+			self.fs.remove(path)
+		except fs.errors.FileExpected:
+			self.fs.removetree(path)
+		except fs.errors.ResourceNotFound:
+			if not force:
+				raise UFOLibError(
+					"'%s' does not exist on %s" % (path, self.fs)
+				)
+		if removeEmptyParents:
+			parent = fs.path.dirname(path)
+			if parent:
+				fs.tools.remove_empty(self.fs, parent)
+
+	# alias kept for backward compatibility with old API
+	removeFileForPath = removePath
 
 	# UFO mod time
 
@@ -851,7 +1084,9 @@ class UFOWriter(object):
 		This is never called automatically. It is up to the
 		caller to call this when finished working on the UFO.
 		"""
-		os.utime(self._path, None)
+		path = self._path
+		if path is not None:
+			os.utime(path, None)
 
 	# metainfo.plist
 
@@ -932,12 +1167,12 @@ class UFOWriter(object):
 			groups = remappedGroups
 		# pack and write
 		groupsNew = {}
-		for key, value in list(groups.items()):
+		for key, value in groups.items():
 			groupsNew[key] = list(value)
 		if groupsNew:
 			self._writePlist(GROUPS_FILENAME, groupsNew)
-		else:
-			self._deleteFile(GROUPS_FILENAME)
+		elif self._havePreviousFile:
+			self.removePath(GROUPS_FILENAME, force=True, removeEmptyParents=False)
 
 	# fontinfo.plist
 
@@ -1025,15 +1260,15 @@ class UFOWriter(object):
 			kerning = remappedKerning
 		# pack and write
 		kerningDict = {}
-		for left, right in list(kerning.keys()):
+		for left, right in kerning.keys():
 			value = kerning[left, right]
 			if left not in kerningDict:
 				kerningDict[left] = {}
 			kerningDict[left][right] = value
 		if kerningDict:
 			self._writePlist(KERNING_FILENAME, kerningDict)
-		else:
-			self._deleteFile(KERNING_FILENAME)
+		elif self._havePreviousFile:
+			self.removePath(KERNING_FILENAME, force=True, removeEmptyParents=False)
 
 	# lib.plist
 
@@ -1053,8 +1288,8 @@ class UFOWriter(object):
 				raise UFOLibError(message)
 		if libDict:
 			self._writePlist(LIB_FILENAME, libDict)
-		else:
-			self._deleteFile(LIB_FILENAME)
+		elif self._havePreviousFile:
+			self.removePath(LIB_FILENAME, force=True, removeEmptyParents=False)
 
 	# features.fea
 
@@ -1070,9 +1305,10 @@ class UFOWriter(object):
 		if validate:
 			if not isinstance(features, basestring):
 				raise UFOLibError("The features are not text.")
-		self._makeDirectory()
-		path = os.path.join(self._path, FEATURES_FILENAME)
-		writeFileAtomically(features, path)
+		if features:
+			self.writeBytesToPath(FEATURES_FILENAME, features.encode("utf8"))
+		elif self._havePreviousFile:
+			self.removePath(FEATURES_FILENAME, force=True, removeEmptyParents=False)
 
 	# glyph sets & layers
 
@@ -1087,7 +1323,7 @@ class UFOWriter(object):
 		raw = self._getPlist(LAYERCONTENTS_FILENAME)
 		contents = {}
 		if validate:
-			valid, error = layerContentsValidator(raw, self._path)
+			valid, error = layerContentsValidator(raw, self.fs)
 			if not valid:
 				raise UFOLibError(error)
 		for entry in raw:
@@ -1170,16 +1406,36 @@ class UFOWriter(object):
 			return self._getGlyphSetFormatVersion2(validateRead, validateWrite, glyphNameToFileNameFunc=glyphNameToFileNameFunc)
 		elif self.formatVersion == 3:
 			return self._getGlyphSetFormatVersion3(validateRead, validateWrite, layerName=layerName, defaultLayer=defaultLayer, glyphNameToFileNameFunc=glyphNameToFileNameFunc)
+		else:
+			raise AssertionError(self.formatVersion)
 
 	def _getGlyphSetFormatVersion1(self, validateRead, validateWrite, glyphNameToFileNameFunc=None):
-		glyphDir = self._makeDirectory(DEFAULT_GLYPHS_DIRNAME)
-		return GlyphSet(glyphDir, glyphNameToFileNameFunc, ufoFormatVersion=1, validateRead=validateRead, validateWrite=validateWrite)
+		from ufoLib.glifLib import GlyphSet
+
+		glyphSubFS = self.fs.makedir(DEFAULT_GLYPHS_DIRNAME, recreate=True),
+		return GlyphSet(
+			glyphSubFS,
+			glyphNameToFileNameFunc=glyphNameToFileNameFunc,
+			ufoFormatVersion=1,
+			validateRead=validateRead,
+			validateWrite=validateWrite,
+		)
 
 	def _getGlyphSetFormatVersion2(self, validateRead, validateWrite, glyphNameToFileNameFunc=None):
-		glyphDir = self._makeDirectory(DEFAULT_GLYPHS_DIRNAME)
-		return GlyphSet(glyphDir, glyphNameToFileNameFunc, ufoFormatVersion=2, validateRead=validateRead, validateWrite=validateWrite)
+		from ufoLib.glifLib import GlyphSet
+
+		glyphSubFS = self.fs.makedir(DEFAULT_GLYPHS_DIRNAME, recreate=True)
+		return GlyphSet(
+			glyphSubFS,
+			glyphNameToFileNameFunc=glyphNameToFileNameFunc,
+			ufoFormatVersion=2,
+			validateRead=validateRead,
+			validateWrite=validateWrite,
+		)
 
 	def _getGlyphSetFormatVersion3(self, validateRead, validateWrite, layerName=None, defaultLayer=True, glyphNameToFileNameFunc=None):
+		from ufoLib.glifLib import GlyphSet
+
 		# if the default flag is on, make sure that the default in the file
 		# matches the default being written. also make sure that this layer
 		# name is not already linked to a non-default layer.
@@ -1208,13 +1464,17 @@ class UFOWriter(object):
 						raise UFOLibError("The specified layer name is not a Unicode string.")
 				directory = userNameToFileName(layerName, existing=existing, prefix="glyphs.")
 		# make the directory
-		path = os.path.join(self._path, directory)
-		if not os.path.exists(path):
-			self._makeDirectory(subDirectory=directory)
+		glyphSubFS = self.fs.makedir(directory, recreate=True)
 		# store the mapping
 		self.layerContents[layerName] = directory
 		# load the glyph set
-		return GlyphSet(path, glyphNameToFileNameFunc=glyphNameToFileNameFunc, ufoFormatVersion=3, validateRead=validateRead, validateWrite=validateWrite)
+		return GlyphSet(
+			glyphSubFS,
+			glyphNameToFileNameFunc=glyphNameToFileNameFunc,
+			ufoFormatVersion=3,
+			validateRead=validateRead,
+			validateWrite=validateWrite,
+		)
 
 	def renameGlyphSet(self, layerName, newLayerName, defaultLayer=False):
 		"""
@@ -1257,9 +1517,7 @@ class UFOWriter(object):
 		del self.layerContents[layerName]
 		self.layerContents[newLayerName] = newDirectory
 		# do the file system copy
-		oldDirectory = os.path.join(self._path, oldDirectory)
-		newDirectory = os.path.join(self._path, newDirectory)
-		shutil.move(oldDirectory, newDirectory)
+		self.fs.movedir(oldDirectory, newDirectory, create=True)
 
 	def deleteGlyphSet(self, layerName):
 		"""
@@ -1270,7 +1528,7 @@ class UFOWriter(object):
 			# just write the data from the default layer
 			return
 		foundDirectory = self._findDirectoryForLayerName(layerName)
-		self._removeFileForPath(foundDirectory)
+		self.removePath(foundDirectory, removeEmptyParents=False)
 		del self.layerContents[layerName]
 
 	# /images
@@ -1284,24 +1542,21 @@ class UFOWriter(object):
 			validate = self._validate
 		if self._formatVersion < 3:
 			raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
+		fileName = fsdecode(fileName)
 		if validate:
 			valid, error = pngValidator(data=data)
 			if not valid:
 				raise UFOLibError(error)
-		path = os.path.join(IMAGES_DIRNAME, fileName)
-		self.writeBytesToPath(path, data)
+		self.writeBytesToPath("%s/%s" % (IMAGES_DIRNAME, fileName), data)
 
-	def removeImage(self, fileName, validate=None):
+	def removeImage(self, fileName, validate=None):  # XXX remove unused 'validate'?
 		"""
 		Remove the file named fileName from the
 		images directory.
 		"""
-		if validate is None:
-			validate = self._validate
 		if self._formatVersion < 3:
 			raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
-		path = os.path.join(IMAGES_DIRNAME, fileName)
-		self.removeFileForPath(path)
+		self.removePath("%s/%s" % (IMAGES_DIRNAME, fsdecode(fileName)))
 
 	def copyImageFromReader(self, reader, sourceFileName, destFileName, validate=None):
 		"""
@@ -1313,9 +1568,25 @@ class UFOWriter(object):
 			validate = self._validate
 		if self._formatVersion < 3:
 			raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
-		sourcePath = os.path.join("images", sourceFileName)
-		destPath = os.path.join("images", destFileName)
+		sourcePath = "%s/%s" % (IMAGES_DIRNAME, fsdecode(sourceFileName))
+		destPath = "%s/%s" % (IMAGES_DIRNAME, fsdecode(destFileName))
 		self.copyFromReader(reader, sourcePath, destPath)
+
+	def close(self):
+		if self._havePreviousFile and self._fileStructure is UFOFileStructure.ZIP:
+			# if we are updating an existing zip file, we can now compress the
+			# contents of the temporary filesystem in the destination path
+			rootDir = os.path.splitext(os.path.basename(self._path))[0] + ".ufo"
+			with fs.zipfs.ZipFS(self._path, write=True, encoding="utf-8") as destFS:
+				fs.copy.copy_fs(self.fs, destFS.makedir(rootDir))
+		if self._shouldClose:
+			self.fs.close()
+
+	def __enter__(self):
+		return self
+
+	def __exit__(self, exc_type, exc_value, exc_tb):
+		self.close()
 
 
 # ----------------
@@ -1336,124 +1607,6 @@ def makeUFOPath(path):
 	dir, name = os.path.split(path)
 	name = ".".join([".".join(name.split(".")[:-1]), "ufo"])
 	return os.path.join(dir, name)
-
-def writePlistAtomically(obj, path):
-	"""
-	Write a plist for "obj" to "path". Do this sort of atomically,
-	making it harder to cause corrupt files, for example when writePlist
-	encounters an error halfway during write. This also checks to see
-	if text matches the text that is already in the file at path.
-	If so, the file is not rewritten so that the modification date
-	is preserved.
-	"""
-	data = plistlib.dumps(obj)
-	writeDataFileAtomically(data, path)
-
-def writeFileAtomically(text, path, encoding="utf-8"):
-	"""
-	Write text into a file at path. Do this sort of atomically
-	making it harder to cause corrupt files. This also checks to see
-	if text matches the text that is already in the file at path.
-	If so, the file is not rewritten so that the modification date
-	is preserved. An encoding may be passed if needed.
-	"""
-	if os.path.exists(path):
-		with open(path, "r", encoding=encoding) as f:
-			oldText = f.read()
-		if text == oldText:
-			return
-		# if the text is empty, remove the existing file
-		if not text:
-			os.remove(path)
-	if text:
-		with open(path, "w", encoding=encoding) as f:
-			f.write(text)
-
-def writeDataFileAtomically(data, path):
-	"""
-	Write data into a file at path. Do this sort of atomically
-	making it harder to cause corrupt files. This also checks to see
-	if data matches the data that is already in the file at path.
-	If so, the file is not rewritten so that the modification date
-	is preserved.
-	"""
-	assert isinstance(data, bytes)
-	if os.path.exists(path):
-		f = open(path, "rb")
-		oldData = f.read()
-		f.close()
-		if data == oldData:
-			return
-		# if the data is empty, remove the existing file
-		if not data:
-			os.remove(path)
-	if data:
-		f = open(path, "wb")
-		f.write(data)
-		f.close()
-
-# ---------------------------
-# Format Conversion Functions
-# ---------------------------
-
-def convertUFOFormatVersion1ToFormatVersion2(inPath, outPath=None, validateRead=False, validateWrite=True):
-	"""
-	Function for converting a version format 1 UFO
-	to version format 2. inPath should be a path
-	to a UFO. outPath is the path where the new UFO
-	should be written. If outPath is not given, the
-	inPath will be used and, therefore, the UFO will
-	be converted in place. Otherwise, if outPath is
-	specified, nothing must exist at that path.
-
-	``validateRead`` will validate the read data.
-	``validateWrite`` will validate the written data.
-	"""
-	from warnings import warn
-	warn("convertUFOFormatVersion1ToFormatVersion2 is deprecated.", DeprecationWarning)
-	if outPath is None:
-		outPath = inPath
-	if inPath != outPath and os.path.exists(outPath):
-		raise UFOLibError("A file already exists at %s." % outPath)
-	# use a reader for loading most of the data
-	reader = UFOReader(inPath, validate=validateRead)
-	if reader.formatVersion == 2:
-		raise UFOLibError("The UFO at %s is already format version 2." % inPath)
-	groups = reader.readGroups()
-	kerning = reader.readKerning()
-	libData = reader.readLib()
-	# read the info data manually and convert
-	infoPath = os.path.join(inPath, FONTINFO_FILENAME)
-	if not os.path.exists(infoPath):
-		infoData = {}
-	else:
-		with open(infoPath, "rb") as f:
-			infoData = plistlib.load(f)
-	infoData = _convertFontInfoDataVersion1ToVersion2(infoData)
-	# if the paths are the same, only need to change the
-	# fontinfo and meta info files.
-	infoPath = os.path.join(outPath, FONTINFO_FILENAME)
-	if inPath == outPath:
-		metaInfoPath = os.path.join(inPath, METAINFO_FILENAME)
-		metaInfo = dict(
-			creator="org.robofab.ufoLib",
-			formatVersion=2
-		)
-		writePlistAtomically(metaInfo, metaInfoPath)
-		writePlistAtomically(infoData, infoPath)
-	# otherwise write everything.
-	else:
-		writer = UFOWriter(outPath, formatVersion=2, validate=validateWrite)
-		writer.writeGroups(groups)
-		writer.writeKerning(kerning)
-		writer.writeLib(libData)
-		# write the info manually
-		writePlistAtomically(infoData, infoPath)
-		# copy the glyph tree
-		inGlyphs = os.path.join(inPath, DEFAULT_GLYPHS_DIRNAME)
-		outGlyphs = os.path.join(outPath, DEFAULT_GLYPHS_DIRNAME)
-		if os.path.exists(inGlyphs):
-			shutil.copytree(inGlyphs, outGlyphs)
 
 # ----------------------
 # fontinfo.plist Support
