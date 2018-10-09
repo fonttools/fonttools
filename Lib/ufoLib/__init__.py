@@ -276,8 +276,6 @@ class UFOReader(object):
 			except fs.errors.NoSysPath:
 				# network or in-memory FS may not map to the local one
 				path = unicode(filesystem)
-			else:
-				path = path.rstrip("/")
 			# when user passed an already initialized fs instance, it is her
 			# responsibility to close it, thus UFOReader.close/__exit__ are no-op
 			self._shouldClose = False
@@ -889,8 +887,6 @@ class UFOWriter(object):
 			except fs.errors.NoSysPath:
 				# network or in-memory FS may not map to the local one
 				path = unicode(filesystem)
-			else:
-				path = path.rstrip("/")
 			# if passed an FS object, always default to 'package' structure
 			self._fileStructure = UFOFileStructure.PACKAGE
 			# if FS contains a "metainfo.plist", we consider it non-empty
@@ -912,7 +908,7 @@ class UFOWriter(object):
 		# if the file already exists, get the format version.
 		# this will be needed for up and down conversion.
 		previousFormatVersion = None
-		if havePreviousFile:
+		if self._havePreviousFile:
 			metaInfo = self._getPlist(METAINFO_FILENAME)
 			previousFormatVersion = metaInfo.get("formatVersion")
 			try:
@@ -1263,7 +1259,7 @@ class UFOWriter(object):
 			kerningDict[left][right] = value
 		if kerningDict:
 			self._writePlist(KERNING_FILENAME, kerningDict)
-		else:
+		elif self._havePreviousFile:
 			self.removePath(KERNING_FILENAME, force=True, removeEmptyParents=False)
 
 	# lib.plist
@@ -1284,7 +1280,7 @@ class UFOWriter(object):
 				raise UFOLibError(message)
 		if libDict:
 			self._writePlist(LIB_FILENAME, libDict)
-		else:
+		elif self._havePreviousFile:
 			self.removePath(LIB_FILENAME, force=True, removeEmptyParents=False)
 
 	# features.fea
@@ -1303,7 +1299,7 @@ class UFOWriter(object):
 				raise UFOLibError("The features are not text.")
 		if features:
 			self.writeBytesToPath(FEATURES_FILENAME, features.encode("utf8"))
-		else:
+		elif self._havePreviousFile:
 			self.removePath(FEATURES_FILENAME, force=True, removeEmptyParents=False)
 
 	# glyph sets & layers
