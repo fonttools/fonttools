@@ -48,8 +48,8 @@ master_doc = "index"
 
 # General information about the project.
 project = u"fontTools"
-copyright = u"2017, Just van Rossum, Behdad Esfahbod et al."
-author = u"Just van Rossum, Behdad Esfahbod et al."
+copyright = u"2018, Just van Rossum, Behdad Esfahbod, and the fontTools Authors. CC BY-SA 4.0"
+author = u"Just van Rossum, Behdad Esfahbod, and the fontTools Authors"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
