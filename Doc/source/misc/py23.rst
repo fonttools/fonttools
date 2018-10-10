@@ -1,0 +1,7 @@
+####
+py23
+####
+
+.. automodule:: fontTools.misc.py23
+   :members:
+   :undoc-members:
