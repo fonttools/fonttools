@@ -56,6 +56,7 @@ __all__ = [
 	"UFOLibError",
 	"UFOReader",
 	"UFOWriter",
+	"UFOFileStructure",
 	"fontInfoAttributesVersion1",
 	"fontInfoAttributesVersion2",
 	"fontInfoAttributesVersion3",
