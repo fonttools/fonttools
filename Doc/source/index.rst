@@ -6,7 +6,7 @@ fontTools Docs
 
    afmLib
    agl
-   cffLib
+   cffLib/index
    designspaceLib/index
    encodings
    feaLib
