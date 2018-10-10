@@ -38,6 +38,16 @@ else:
         return (dt - EPOCH).total_seconds()
 
 
+# TODO: should import from fontTools.misc.py23
+try:
+	long = long
+except NameError:
+	long = int
+
+integerTypes = (int, long)
+numberTypes = (int, float, long)
+
+
 def deprecated(msg=""):
     """Decorator factory to mark functions as deprecated with given message.
 

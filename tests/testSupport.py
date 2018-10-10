@@ -2,6 +2,7 @@
 
 from __future__ import absolute_import, unicode_literals
 import os
+from ufoLib.utils import numberTypes
 
 try:
 	basestring
@@ -100,7 +101,7 @@ def _dictToString(d):
 			value = _listToString(value)
 		elif isinstance(value, tuple):
 			value = _tupleToString(value)
-		elif isinstance(value, (int, float)):
+		elif isinstance(value, numberTypes):
 			value = repr(value)
 		elif isinstance(value, basestring):
 			value = "\"%s\"" % value
@@ -118,7 +119,7 @@ def _listToString(l):
 			value = _listToString(value)
 		elif isinstance(value, tuple):
 			value = _tupleToString(value)
-		elif isinstance(value, (int, float)):
+		elif isinstance(value, numberTypes):
 			value = repr(value)
 		elif isinstance(value, basestring):
 			value = "\"%s\"" % value
@@ -136,7 +137,7 @@ def _tupleToString(t):
 			value = _listToString(value)
 		elif isinstance(value, tuple):
 			value = _tupleToString(value)
-		elif isinstance(value, (int, float)):
+		elif isinstance(value, numberTypes):
 			value = repr(value)
 		elif isinstance(value, basestring):
 			value = "\"%s\"" % value

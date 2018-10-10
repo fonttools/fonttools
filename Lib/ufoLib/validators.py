@@ -11,13 +11,9 @@ try:
 except ImportError:
     from collections import Mapping
 
-# -------
-# Python 2 or 3
-# -------
-try:
-    basestring
-except NameError:
-    basestring = str
+from fontTools.misc.py23 import basestring
+from ufoLib.utils import integerTypes, numberTypes
+
 
 # -------
 # Generic
@@ -52,7 +48,7 @@ def genericIntListValidator(values, validValues):
 	if valuesSet - validValuesSet:
 		return False
 	for value in values:
-		if not isinstance(value, int):
+		if not isinstance(value, integerTypes):
 			return False
 	return True
 
@@ -60,7 +56,7 @@ def genericNonNegativeIntValidator(value):
 	"""
 	Generic. (Added at version 3.)
 	"""
-	if not isinstance(value, int):
+	if not isinstance(value, integerTypes):
 		return False
 	if value < 0:
 		return False
@@ -70,7 +66,7 @@ def genericNonNegativeNumberValidator(value):
 	"""
 	Generic. (Added at version 3.)
 	"""
-	if not isinstance(value, (int, float)):
+	if not isinstance(value, numberTypes):
 		return False
 	if value < 0:
 		return False
@@ -217,7 +213,7 @@ def fontInfoOpenTypeOS2WeightClassValidator(value):
 	"""
 	Version 2+.
 	"""
-	if not isinstance(value, int):
+	if not isinstance(value, integerTypes):
 		return False
 	if value < 0:
 		return False
@@ -227,7 +223,7 @@ def fontInfoOpenTypeOS2WidthClassValidator(value):
 	"""
 	Version 2+.
 	"""
-	if not isinstance(value, int):
+	if not isinstance(value, integerTypes):
 		return False
 	if value < 1:
 		return False
@@ -244,7 +240,7 @@ def fontInfoVersion2OpenTypeOS2PanoseValidator(values):
 	if len(values) != 10:
 		return False
 	for value in values:
-		if not isinstance(value, int):
+		if not isinstance(value, integerTypes):
 			return False
 	# XXX further validation?
 	return True
@@ -258,7 +254,7 @@ def fontInfoVersion3OpenTypeOS2PanoseValidator(values):
 	if len(values) != 10:
 		return False
 	for value in values:
-		if not isinstance(value, int):
+		if not isinstance(value, integerTypes):
 			return False
 		if value < 0:
 			return False
@@ -274,7 +270,7 @@ def fontInfoOpenTypeOS2FamilyClassValidator(values):
 	if len(values) != 2:
 		return False
 	for value in values:
-		if not isinstance(value, int):
+		if not isinstance(value, integerTypes):
 			return False
 	classID, subclassID = values
 	if classID < 0 or classID > 14:
@@ -294,7 +290,7 @@ def fontInfoPostscriptBluesValidator(values):
 	if len(values) % 2:
 		return False
 	for value in values:
-		if not isinstance(value, (int, float)):
+		if not isinstance(value, numberTypes):
 			return False
 	return True
 
@@ -309,7 +305,7 @@ def fontInfoPostscriptOtherBluesValidator(values):
 	if len(values) % 2:
 		return False
 	for value in values:
-		if not isinstance(value, (int, float)):
+		if not isinstance(value, numberTypes):
 			return False
 	return True
 
@@ -322,7 +318,7 @@ def fontInfoPostscriptStemsValidator(values):
 	if len(values) > 12:
 		return False
 	for value in values:
-		if not isinstance(value, (int, float)):
+		if not isinstance(value, numberTypes):
 			return False
 	return True
 
@@ -930,7 +926,7 @@ def kerningValidator(data):
 		for second, value in secondDict.items():
 			if not isinstance(second, basestring):
 				return False, bogusFormatMessage
-			elif not isinstance(value, (int, float)):
+			elif not isinstance(value, numberTypes):
 				return False, bogusFormatMessage
 	return True, None
 

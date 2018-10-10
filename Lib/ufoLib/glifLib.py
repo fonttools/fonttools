@@ -34,6 +34,7 @@ from ufoLib.validators import (
 	glyphLibValidator,
 )
 from ufoLib import etree
+from ufoLib.utils import integerTypes, numberTypes
 
 
 __all__ = [
@@ -681,13 +682,13 @@ def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, formatV
 def _writeAdvance(glyphObject, element, validate):
 	width = getattr(glyphObject, "width", None)
 	if width is not None:
-		if validate and not isinstance(width, (int, float)):
+		if validate and not isinstance(width, numberTypes):
 			raise GlifLibError("width attribute must be int or float")
 		if width == 0:
 			width = None
 	height = getattr(glyphObject, "height", None)
 	if height is not None:
-		if validate and not isinstance(height, (int, float)):
+		if validate and not isinstance(height, numberTypes):
 			raise GlifLibError("height attribute must be int or float")
 		if height == 0:
 			height = None
@@ -700,11 +701,11 @@ def _writeAdvance(glyphObject, element, validate):
 
 def _writeUnicodes(glyphObject, element, validate):
 	unicodes = getattr(glyphObject, "unicodes", None)
-	if validate and isinstance(unicodes, int):
+	if validate and isinstance(unicodes, integerTypes):
 		unicodes = [unicodes]
 	seen = set()
 	for code in unicodes:
-		if validate and not isinstance(code, int):
+		if validate and not isinstance(code, integerTypes):
 			raise GlifLibError("unicode values must be int")
 		if code in seen:
 			continue
@@ -1573,7 +1574,7 @@ class GLIFPointPen(AbstractPointPen):
 		if pt is not None:
 			if self.validate:
 				for coord in pt:
-					if not isinstance(coord, (int, float)):
+					if not isinstance(coord, numberTypes):
 						raise GlifLibError("coordinates must be int or float")
 			attrs["x"] = repr(pt[0])
 			attrs["y"] = repr(pt[1])
@@ -1618,7 +1619,7 @@ class GLIFPointPen(AbstractPointPen):
 	def addComponent(self, glyphName, transformation, identifier=None, **kwargs):
 		attrs = OrderedDict([("base", glyphName)])
 		for (attr, default), value in zip(_transformationInfo, transformation):
-			if self.validate and not isinstance(value, (int, float)):
+			if self.validate and not isinstance(value, numberTypes):
 				raise GlifLibError("transformation values must be int or float")
 			if value != default:
 				attrs[attr] = repr(value)

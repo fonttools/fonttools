@@ -19,7 +19,7 @@ from ufoLib.validators import *
 from ufoLib.filenames import userNameToFileName
 from ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
 from ufoLib.errors import UFOLibError
-from ufoLib.utils import datetimeAsTimestamp, fsdecode
+from ufoLib.utils import datetimeAsTimestamp, fsdecode, numberTypes
 
 """
 A library for importing .ufo files and their descendants.
@@ -1227,7 +1227,7 @@ class UFOWriter(object):
 					raise UFOLibError(invalidFormatMessage)
 				if not isinstance(pair[1], basestring):
 					raise UFOLibError(invalidFormatMessage)
-				if not isinstance(value, (int, float)):
+				if not isinstance(value, numberTypes):
 					raise UFOLibError(invalidFormatMessage)
 		# down convert
 		if self._formatVersion < 3 and self._downConversionKerningData is not None:
