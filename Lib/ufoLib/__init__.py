@@ -875,7 +875,15 @@ class UFOWriter(object):
 			except fs.errors.NoSysPath:
 				# network or in-memory FS may not map to the local one
 				path = unicode(filesystem)
-			# if passed an FS object, always default to 'package' structure
+			# if passed an FS object, always use 'package' structure
+			if structure and structure is not UFOFileStructure.PACKAGE:
+				import warnings
+
+				warnings.warn(
+					"The 'structure' argument is not used when input is an FS object",
+					UserWarning,
+					stacklevel=2,
+				)
 			self._fileStructure = UFOFileStructure.PACKAGE
 			# if FS contains a "metainfo.plist", we consider it non-empty
 			self._havePreviousFile = filesystem.exists(METAINFO_FILENAME)
