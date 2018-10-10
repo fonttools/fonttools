@@ -166,7 +166,6 @@ class GlyphSet(object):
 		self._validateWrite = validateWrite
 		self._existingFileNames = None
 		self._reverseContents = None
-		self._glifCache = {}
 
 		self.rebuildContents()
 
@@ -279,8 +278,6 @@ class GlyphSet(object):
 			# data empty, remove existing file
 			self.fs.remove(LAYERINFO_FILENAME)
 
-	# # read caching
-
 	def getGLIF(self, glyphName):
 		"""
 		Get the raw GLIF text for a given glyph name. This only works
@@ -290,35 +287,28 @@ class GlyphSet(object):
 		read from a glyph set for a particular glyph before fully parsing
 		it into an object structure via the readGlyph method.
 
-		Internally, this method will load a GLIF the first time it is
-		called and then cache it. The next time this method is called
-		the GLIF will be pulled from the cache if the file's modification
-		time has not changed since the GLIF was cached. For memory
-		efficiency, the cached GLIF will be purged by various other methods
-		such as readGlyph.
+		Raises KeyError if 'glyphName' is not in contents.plist, or
+		GlifLibError if the file associated with can't be found.
 		"""
-		fileName = self.contents.get(glyphName)
-		if glyphName not in self._glifCache or (
-			fileName is not None
-			and self._getFileModificationTime(fileName) != self._glifCache[glyphName][1]
-		):
-			if fileName is None or not self.fs.exists(fileName):
-				raise KeyError(glyphName)
-			data = self.fs.getbytes(fileName)
-			self._glifCache[glyphName] = (data, self._getFileModificationTime(fileName))
-		return self._glifCache[glyphName][0]
+		fileName = self.contents[glyphName]
+		try:
+			return self.fs.getbytes(fileName)
+		except fs.errors.ResourceNotFound:
+			raise GlifLibError(
+				"The file '%s' associated with glyph '%s' in contents.plist "
+				"does not exist on %s" % (fileName, glyphName, self.fs)
+			)
 
 	def getGLIFModificationTime(self, glyphName):
 		"""
-		Get the modification time (as reported by os.path.getmtime)
-		of the GLIF with glyphName.
+		Returns the modification time for the GLIF file with 'glyphName', as
+		a floating point number giving the number of seconds since the epoch.
+		Return None if the associated file does not exist or the underlying
+		filesystem does not support getting modified times.
+		Raises KeyError if the glyphName is not in contents.plist.
 		"""
-		self.getGLIF(glyphName)
-		return self._glifCache[glyphName][1]
-
-	def _purgeCachedGLIF(self, glyphName):
-		if glyphName in self._glifCache:
-			del self._glifCache[glyphName]
+		fileName = self.contents[glyphName]
+		return self._getFileModificationTime(fileName)
 
 	# reading/writing API
 
@@ -359,7 +349,6 @@ class GlyphSet(object):
 		if validate is None:
 			validate = self._validateRead
 		text = self.getGLIF(glyphName)
-		self._purgeCachedGLIF(glyphName)
 		tree = _glifTreeFromString(text)
 		if self.ufoFormatVersion < 3:
 			formatVersions = (1,)
@@ -412,7 +401,6 @@ class GlyphSet(object):
 			)
 		if validate is None:
 			validate = self._validateWrite
-		self._purgeCachedGLIF(glyphName)
 		fileName = self.contents.get(glyphName)
 		if fileName is None:
 			if self._existingFileNames is None:
@@ -443,7 +431,6 @@ class GlyphSet(object):
 		"""Permanently delete the glyph from the glyph set on disk. Will
 		raise KeyError if the glyph is not present in the glyph set.
 		"""
-		self._purgeCachedGLIF(glyphName)
 		fileName = self.contents[glyphName]
 		self.fs.remove(fileName)
 		if self._existingFileNames is not None:
@@ -481,7 +468,7 @@ class GlyphSet(object):
 		"""
 		unicodes = {}
 		if glyphNames is None:
-			glyphNames = list(self.contents.keys())
+			glyphNames = self.contents.keys()
 		for glyphName in glyphNames:
 			text = self.getGLIF(glyphName)
 			unicodes[glyphName] = _fetchUnicodes(text)
