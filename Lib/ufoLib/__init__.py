@@ -273,7 +273,7 @@ class UFOReader(object):
 				"Expected a path string or fs.base.FS object, found '%s'"
 				% type(path).__name__
 			)
-		self._path = path
+		self._path = fsdecode(path)
 		self._validate = validate
 		self.readMetaInfo(validate=validate)
 		self._upConvertedKerningData = None
@@ -896,7 +896,7 @@ class UFOWriter(object):
 			)
 
 		# establish some basic stuff
-		self._path = path
+		self._path = fsdecode(path)
 		self._formatVersion = formatVersion
 		self._fileCreator = fileCreator
 		self._downConversionKerningData = None
