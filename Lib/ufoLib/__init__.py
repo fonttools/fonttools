@@ -2,6 +2,7 @@ from __future__ import absolute_import, unicode_literals
 import sys
 import os
 from copy import deepcopy
+import logging
 import zipfile
 import enum
 import fs
@@ -68,6 +69,9 @@ __all__ = [
 ]
 
 __version__ = "3.0.0.dev0"
+
+
+logger = logging.getLogger(__name__)
 
 
 # ---------
@@ -1066,7 +1070,11 @@ class UFOWriter(object):
 		"""
 		path = self._path
 		if path is not None:
-			os.utime(path, None)
+			try:
+				# this may fail on some filesystems (e.g. SMB servers)
+				os.utime(path, None)
+			except OSError as e:
+				logger.warning("Failed to set modified time: %s", e)
 
 	# metainfo.plist
 
