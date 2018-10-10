@@ -1077,7 +1077,7 @@ class UFOWriter(object):
 		caller to call this when finished working on the UFO.
 		"""
 		path = self._path
-		if path is not None:
+		if path is not None and os.path.exists(path):
 			try:
 				# this may fail on some filesystems (e.g. SMB servers)
 				os.utime(path, None)
