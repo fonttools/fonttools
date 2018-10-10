@@ -10,7 +10,7 @@ fontTools Docs
    designspaceLib/index
    inspect
    encodings/index
-   feaLib
+   feaLib/index
    merge
    misc/index
    pens/index
