@@ -24,12 +24,3 @@ $ pip install ufoLib[lxml]
 ```
 
 [UFO]: http://unifiedfontobject.org/
-
-
-UFO 4
------
-
-This is a branch in which we are **experimenting** with UFO 4 ideas/support.
-
-- Single file structure (99.9% sure this will be zip)
-- Other stuff.
