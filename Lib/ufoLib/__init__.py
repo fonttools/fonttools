@@ -193,25 +193,6 @@ def _writePlist(self, fileName, obj):
 				)
 
 
-def _sniffFileStructure(ufo_path):
-	"""Return UFOFileStructure.ZIP if the UFO at path 'ufo_path' (basestring)
-	is a zip file, else return UFOFileStructure.PACKAGE if 'ufo_path' is a
-	directory.
-	Raise UFOLibError if it is a file with unknown structure, or if the path
-	does not exist.
-	"""
-	if zipfile.is_zipfile(ufo_path):
-		return UFOFileStructure.ZIP
-	elif os.path.isdir(ufo_path):
-		return UFOFileStructure.PACKAGE
-	elif os.path.isfile(ufo_path):
-		raise UFOLibError(
-			"The specified UFO does not have a known structure: '%s'" % ufo_path
-		)
-	else:
-		raise UFOLibError("No such file or directory: '%s'" % ufo_path)
-
-
 # ----------
 # UFO Reader
 # ----------
@@ -230,7 +211,7 @@ class UFOReader(object):
 			path = path.__fspath__()
 
 		if isinstance(path, basestring):
-			structure = self.sniffFileStructure(path)
+			structure = _sniffFileStructure(path)
 			try:
 				if structure is UFOFileStructure.ZIP:
 					parentFS = fs.zipfs.ZipFS(path, write=False, encoding="utf-8")
@@ -364,7 +345,6 @@ class UFOReader(object):
 	_getPlist = _getPlist
 	getFileModificationTime = _getFileModificationTime
 	readBytesFromPath = _readBytesFromPath
-	sniffFileStructure = staticmethod(_sniffFileStructure)
 
 	def getReadFileForPath(self, path, encoding=None):
 		"""
@@ -815,7 +795,7 @@ class UFOWriter(object):
 			havePreviousFile = os.path.exists(path)
 			if havePreviousFile:
 				# ensure we use the same structure as the destination
-				existingStructure = self.sniffFileStructure(path)
+				existingStructure = _sniffFileStructure(path)
 				if structure is not None:
 					try:
 						structure = UFOFileStructure(structure)
@@ -979,7 +959,6 @@ class UFOWriter(object):
 	_writePlist = _writePlist
 	readBytesFromPath = _readBytesFromPath
 	getFileModificationTime = _getFileModificationTime
-	sniffFileStructure = staticmethod(_sniffFileStructure)
 
 	def copyFromReader(self, reader, sourcePath, destPath):
 		"""
@@ -1592,6 +1571,26 @@ class UFOWriter(object):
 # ----------------
 # Helper Functions
 # ----------------
+
+
+def _sniffFileStructure(ufo_path):
+	"""Return UFOFileStructure.ZIP if the UFO at path 'ufo_path' (basestring)
+	is a zip file, else return UFOFileStructure.PACKAGE if 'ufo_path' is a
+	directory.
+	Raise UFOLibError if it is a file with unknown structure, or if the path
+	does not exist.
+	"""
+	if zipfile.is_zipfile(ufo_path):
+		return UFOFileStructure.ZIP
+	elif os.path.isdir(ufo_path):
+		return UFOFileStructure.PACKAGE
+	elif os.path.isfile(ufo_path):
+		raise UFOLibError(
+			"The specified UFO does not have a known structure: '%s'" % ufo_path
+		)
+	else:
+		raise UFOLibError("No such file or directory: '%s'" % ufo_path)
+
 
 def makeUFOPath(path):
 	"""
