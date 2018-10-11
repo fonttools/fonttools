@@ -6,7 +6,7 @@ encodings
    :maxdepth: 1
 
    codecs
-   macRoman
+   MacRoman
    StandardEncoding
 
 
