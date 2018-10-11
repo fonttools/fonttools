@@ -118,8 +118,13 @@ def main(args=None):
         parser.error("-o/--output-file can't be used with multile inputs")
 
     if options.output_dir:
+        output_dir = options.output_dir
+        if not os.path.exists(output_dir):
+            os.mkdir(output_dir)
+        elif not os.path.isdir(output_dir):
+            parser.error("'%s' is not a directory" % output_dir)
         output_paths = [
-            os.path.join(options.output_dir, os.path.basename(p))
+            os.path.join(output_dir, os.path.basename(p))
             for p in options.infiles
         ]
     elif options.output_file:
