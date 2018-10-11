@@ -220,14 +220,13 @@ class Cu2QuPointPen(BasePointToSegmentPen):
                         for (pt, smooth, name, kwargs) in offcurves:
                             pen.addPoint(pt, None, smooth, name, **kwargs)
                 pt, smooth, name, kwargs = points[-1]
-                if kwargs is None:
-                    # ufoLib BasePointToSegmentPen incorrectly sets kwargs to
-                    # None for the special quadratic contour with no on-curves:
-                    # https://github.com/unified-font-object/ufoLib/
-                    # issues/11#issuecomment-429033328
-                    # TODO(anthrotype) remove workaround once fixed upstream
-                    kwargs = {}
-                pen.addPoint(pt, segment_type, smooth, name, **kwargs)
+                if pt is None:
+                    # special quadratic contour with no on-curve points:
+                    # we need to skip the "None" point. See also the Pen
+                    # protocol's qCurveTo() method and fontTools.pens.basePen
+                    pass
+                else:
+                    pen.addPoint(pt, segment_type, smooth, name, **kwargs)
             else:
                 # 'curve' segments must have been converted to 'qcurve' by now
                 raise AssertionError(

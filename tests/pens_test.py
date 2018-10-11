@@ -351,13 +351,10 @@ pen.endPath()""".splitlines())
         Cu2QuPointPen will treat it as a special quadratic contour whose
         first point has 'None' coordinates.
         """
-        # Also see BasePointToSegmentPen bug:
-        # https://github.com/unified-font-object/ufoLib/issues/11
         self.maxDiff = None
         pen = DummyPointPen()
         quadpen = Cu2QuPointPen(pen, MAX_ERR)
         quadpen.beginPath()
-        # quadpen.addPoint(None, segmentType="qcurve")
         quadpen.addPoint((1, 1))
         quadpen.addPoint((2, 2))
         quadpen.addPoint((3, 3))
@@ -368,7 +365,6 @@ pen.endPath()""".splitlines())
             dedent(
                 """\
                 pen.beginPath()
-                pen.addPoint(None, name=None, segmentType='qcurve', smooth=None)
                 pen.addPoint((1, 1), name=None, segmentType=None, smooth=False)
                 pen.addPoint((2, 2), name=None, segmentType=None, smooth=False)
                 pen.addPoint((3, 3), name=None, segmentType=None, smooth=False)
