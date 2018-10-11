@@ -68,7 +68,7 @@ __all__ = [
 	"convertFontInfoValueForAttributeFromVersion2ToVersion1"
 ]
 
-__version__ = "3.0.0.dev0"
+__version__ = "3.0.0"
 
 
 logger = logging.getLogger(__name__)

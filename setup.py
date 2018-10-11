@@ -147,7 +147,7 @@ http://unifiedfontobject.org
 
 setup_params = dict(
 	name="ufoLib",
-	version="3.0.0.dev0",
+	version="3.0.0",
 	description="A low-level UFO reader and writer.",
 	author="Just van Rossum, Tal Leming, Erik van Blokland, others",
 	author_email="info@robofab.com",
