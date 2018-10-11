@@ -6,6 +6,7 @@ from . import CUBIC_GLYPHS, QUAD_GLYPHS
 from .utils import DummyGlyph, DummyPointGlyph
 from .utils import DummyPen, DummyPointPen
 from fontTools.misc.loggingTools import CapturingLogHandler
+from textwrap import dedent
 import logging
 
 
@@ -344,6 +345,36 @@ pen.endPath()""".splitlines())
         # the segment order stays the same before and after _flushContour
         self.assertEqual(new_segments[0][1][-1][0], (0, 0))
         self.assertEqual(new_segments[-1][1][-1][0], (3, 3))
+
+    def test_quad_no_oncurve(self):
+        """When passed a contour which has no on-curve points, the
+        Cu2QuPointPen will treat it as a special quadratic contour whose
+        first point has 'None' coordinates.
+        """
+        # Also see BasePointToSegmentPen bug:
+        # https://github.com/unified-font-object/ufoLib/issues/11
+        self.maxDiff = None
+        pen = DummyPointPen()
+        quadpen = Cu2QuPointPen(pen, MAX_ERR)
+        quadpen.beginPath()
+        # quadpen.addPoint(None, segmentType="qcurve")
+        quadpen.addPoint((1, 1))
+        quadpen.addPoint((2, 2))
+        quadpen.addPoint((3, 3))
+        quadpen.endPath()
+
+        self.assertEqual(
+            str(pen),
+            dedent(
+                """\
+                pen.beginPath()
+                pen.addPoint(None, name=None, segmentType='qcurve', smooth=None)
+                pen.addPoint((1, 1), name=None, segmentType=None, smooth=False)
+                pen.addPoint((2, 2), name=None, segmentType=None, smooth=False)
+                pen.addPoint((3, 3), name=None, segmentType=None, smooth=False)
+                pen.endPath()"""
+            )
+        )
 
 
 if __name__ == "__main__":
