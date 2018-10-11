@@ -2,7 +2,7 @@ fontTools Docs
 ==============
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    afmLib
    agl
@@ -13,11 +13,16 @@ fontTools Docs
    feaLib/index
    merge
    misc/index
+   mtiLib
+   otlLib/index
    pens/index
    subset
+   svgLib/index
    t1Lib
    ttLib/index
    ttx
+   unicode
+   unicodedata/index
    varLib/index
    voltLib
 
