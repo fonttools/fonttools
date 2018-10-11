@@ -1,9 +1,9 @@
 ########
-macRoman
+MacRoman
 ########
 
-.. automodule:: fontTools.encodings.macRoman
+.. automodule:: fontTools.encodings.MacRoman
    :members:
    :undoc-members:
 
-.. data:: fontTools.encodings.macRoman.MacRoman
+.. data:: fontTools.encodings.MacRoman.MacRoman
