@@ -8,9 +8,9 @@ import sys
 
 from cu2qu.pens import Cu2QuPen
 from fontTools import configLogger
+from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont, newTable
-from fontTools.ttx import makeOutputFileName
 
 
 log = logging.getLogger()
@@ -91,6 +91,7 @@ def main(args=None):
     parser.add_argument(
         "--keep-direction", dest='reverse_direction', action='store_false')
     parser.add_argument("--face-index", type=int, default=0)
+    parser.add_argument("--overwrite", action='store_true')
     options = parser.parse_args(args)
 
     if options.output and len(options.input) > 1:
@@ -103,7 +104,8 @@ def main(args=None):
             output = options.output
         else:
             output = makeOutputFileName(path, outputDir=options.output,
-                                        extension='.ttf')
+                                        extension='.ttf',
+                                        overWrite=options.overwrite)
 
         font = TTFont(path, fontNumber=options.face_index)
         otf_to_ttf(font,
