@@ -3,13 +3,14 @@ from __future__ import print_function, division, absolute_import
 
 import argparse
 import logging
+import os
 import sys
 
 from cu2qu.pens import Cu2QuPen
 from fontTools import configLogger
+from fontTools.misc.cliTools import makeOutputFileName
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont, newTable
-from fontTools.ttx import makeOutputFileName
 
 
 log = logging.getLogger()
@@ -83,24 +84,35 @@ def main(args=None):
     configLogger(logger=log)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("input", metavar="INPUT")
+    parser.add_argument("input", nargs='+', metavar="INPUT")
     parser.add_argument("-o", "--output")
     parser.add_argument("-e", "--max-error", type=float, default=MAX_ERR)
     parser.add_argument("--post-format", type=float, default=POST_FORMAT)
     parser.add_argument(
         "--keep-direction", dest='reverse_direction', action='store_false')
     parser.add_argument("--face-index", type=int, default=0)
+    parser.add_argument("--overwrite", action='store_true')
     options = parser.parse_args(args)
 
-    output = options.output or makeOutputFileName(options.input,
-                                                  outputDir=None,
-                                                  extension='.ttf')
-    font = TTFont(options.input, fontNumber=options.face_index)
-    otf_to_ttf(font,
-               post_format=options.post_format,
-               max_err=options.max_error,
-               reverse_direction=options.reverse_direction)
-    font.save(output)
+    if options.output and len(options.input) > 1:
+        if not os.path.isdir(options.output):
+            parser.error("-o/--output option must be a directory when "
+                         "processing multiple fonts")
+
+    for path in options.input:
+        if options.output and not os.path.isdir(options.output):
+            output = options.output
+        else:
+            output = makeOutputFileName(path, outputDir=options.output,
+                                        extension='.ttf',
+                                        overWrite=options.overwrite)
+
+        font = TTFont(path, fontNumber=options.face_index)
+        otf_to_ttf(font,
+                   post_format=options.post_format,
+                   max_err=options.max_error,
+                   reverse_direction=options.reverse_direction)
+        font.save(output)
 
 
 if __name__ == "__main__":
