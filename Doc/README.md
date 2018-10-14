@@ -2,7 +2,7 @@
 
 The fontTools project documentation updates continuously on Read the Docs as the project source changes.  
 
-The documentation can be found at **TODO - RTD URL when pushed and available**.
+The documentation is available at **TODO - RTD URL when pushed and available**.
 
 ## Contents
 
@@ -22,15 +22,9 @@ Use the following command to install the necessary Python build dependencies:
 $ pip3 install sphinx sphinxcontrib-napoleon sphinx-rtd-theme
 ```
 
-### Clone the fontTools repository
-
-Use the following command to clone the fontTools repository with `git`:
-
-```
-$ git clone https://github.com/fonttools/fonttools.git
-```
-
 ### Build Documentation
+
+Pull the fontTools project source files and install the project in editable mode using [the instructions provided on the project README](https://github.com/fonttools/fonttools#installation).
 
 Navigate to the `Doc` directory of the fontTools repository.
 
@@ -52,13 +46,13 @@ Open the `Doc/build/html/index.html` file in your browser to view the home page 
 
 We highly encourage contributions!  Please follow the instructions below to improve the documentation.
 
-### Setup a fontTools Development Environment
+### Create a fontTools Development Environment
 
-Please use the [installation instructions on the fontTools README](https://github.com/fonttools/fonttools/blob/master/README.rst#installation) to setup a development environment.  This will allow you to build and review local builds of documentation files before you submit your changes.
+Please use the [installation instructions on the fontTools README](https://github.com/fonttools/fonttools/blob/master/README.rst#installation) to set up a development environment.  This allows you to build and review local builds of documentation files before you submit your changes.
 
 ### Python Docstring Style
 
-We recommend use of Python docstrings that follow [the Google Style Guide](https://github.com/google/styleguide/blob/gh-pages/pyguide.md#381-docstrings).  Our documentation build approach parses properly formatted docstrings into formatted documentation files.
+We recommend the use of Python docstrings that follow [the Google Style Guide](https://github.com/google/styleguide/blob/gh-pages/pyguide.md#381-docstrings).  Our documentation build approach parses appropriately formatted docstrings into formatted documentation files.
 
 #### Function Documentation Example
 
