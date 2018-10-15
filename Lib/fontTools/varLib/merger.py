@@ -705,6 +705,37 @@ class MutatorMerger(AligningMerger):
 	def instantiate(self):
 		font = self.font
 
+		for tableTag in 'GSUB','GPOS':
+			if not tableTag in font:
+				continue
+			table = font[tableTag].table
+			if not hasattr(table, 'FeatureVariations'):
+				continue
+			variations = table.FeatureVariations
+			for record in variations.FeatureVariationRecord:
+				applies = True
+				for condition in record.ConditionSet.ConditionTable:
+					if condition.Format == 1:
+						axisIdx = condition.AxisIndex
+						axisTag = self.font['fvar'].axes[axisIdx].axisTag
+						Min = condition.FilterRangeMinValue
+						Max = condition.FilterRangeMaxValue
+						loc = self.location[axisTag]
+						if not (Min <= loc <= Max):
+							applies = False
+					else:
+						applies = False
+					if not applies:
+						break
+
+				if applies:
+					assert record.FeatureTableSubstitution.Version == 0x00010000
+					for rec in record.FeatureTableSubstitution.SubstitutionRecord:
+						table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = rec.Feature
+					break
+			del table.FeatureVariations
+
+
 		self.mergeTables(font, [font], ['GPOS'])
 
 		if 'GDEF' in font:
