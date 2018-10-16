@@ -14,41 +14,33 @@ The documentation is available at **TODO - RTD URL when pushed and available**.
 
 ### Install Dependencies
 
-You must have a Python 3 interpreter and the `pip` Python package manager installed on your system to build the fontTools documentation.  
+You must have a Python 3 interpreter and the `pip` Python package manager installed on your system to build the fontTools documentation.
 
-Use the following command to install the necessary Python build dependencies:
+Pull the fontTools project source files, create a Python virtual environment, and then install fontTools and the documentation build dependencies by executing the following command in the root of the fontTools source repository:
 
 ```
-$ pip3 install sphinx sphinxcontrib-napoleon sphinx-rtd-theme
+$ pip install -e . [doc]
 ```
 
 ### Build Documentation
 
-Pull the fontTools project source files and install the project in editable mode using [the instructions provided on the project README](https://github.com/fonttools/fonttools#installation).
-
-Navigate to the `Doc` directory of the fontTools repository.
-
-If `make` is installed on your system, execute the following command in the `Doc` directory:
+**With `make`**: execute the following command in the `Doc` directory:
 
 ```
 $ make html
 ```
 
-If `make` is not installed on your system, use the following command in the `Doc` directory:
+**Without `make`**: execute the following command in the `Doc` directory:
 
 ```
 $ sphinx-build -b html source build
 ```
 
-Open the `Doc/build/html/index.html` file in your browser to view the home page of the documentation.
+Open the `Doc/build/html/index.html` file in your browser to view the documentation home page.
 
 ## Contributing to the Documentation
 
 We highly encourage contributions!  Please follow the instructions below to improve the documentation.
-
-### Create a fontTools Development Environment
-
-Please use the [installation instructions on the fontTools README](https://github.com/fonttools/fonttools/blob/master/README.rst#installation) to set up a development environment.  This allows you to build and review local builds of documentation files before you submit your changes.
 
 ### Python Docstring Style
 
@@ -115,7 +107,7 @@ class SampleClass(object):
 
 ### Build Local Documentation and Review Your Changes
 
-Please use the instructions above to build a local set of HTML documentation files with the Read the Docs theme and review your changes.
+Build a local set of HTML documentation files with the instructions above and review your changes.
 
 ### Submit a Pull Request
 
