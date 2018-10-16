@@ -1,5 +1,3 @@
-sudo: false
-
 language: python
 python: 3.5
 
@@ -27,7 +25,6 @@ matrix:
       # required to run python3.7 on Travis CI
       # https://github.com/travis-ci/travis-ci/issues/9815
       dist: xenial
-      sudo: true
     - python: pypy2.7-5.8.0
       # disable coverage.py on pypy because of performance problems
       env: TOXENV=pypy-nocov
