@@ -12,7 +12,7 @@ except ImportError:
     from collections import Mapping
 
 from fontTools.misc.py23 import basestring
-from ufoLib.utils import integerTypes, numberTypes
+from fontTools.ufoLib.utils import integerTypes, numberTypes
 
 
 # -------

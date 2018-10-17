@@ -15,12 +15,12 @@ import fs.zipfs
 import fs.tempfs
 import fs.tools
 from fontTools.misc.py23 import basestring, unicode, tounicode
-from ufoLib import plistlib
-from ufoLib.validators import *
-from ufoLib.filenames import userNameToFileName
-from ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
-from ufoLib.errors import UFOLibError
-from ufoLib.utils import datetimeAsTimestamp, fsdecode, numberTypes
+from fontTools.misc import plistlib
+from fontTools.ufoLib.validators import *
+from fontTools.ufoLib.filenames import userNameToFileName
+from fontTools.ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
+from fontTools.ufoLib.errors import UFOLibError
+from fontTools.ufoLib.utils import datetimeAsTimestamp, fsdecode, numberTypes
 
 """
 A library for importing .ufo files and their descendants.
@@ -632,7 +632,7 @@ class UFOReader(object):
 		``validateWrte`` will validate the written data, by default it is set to the
 		class's validate value, can be overridden.
 		"""
-		from ufoLib.glifLib import GlyphSet
+		from fontTools.ufoLib.glifLib import GlyphSet
 
 		if validateRead is None:
 			validateRead = self._validate
@@ -1406,7 +1406,7 @@ class UFOWriter(object):
 			raise AssertionError(self.formatVersion)
 
 	def _getGlyphSetFormatVersion1(self, validateRead, validateWrite, glyphNameToFileNameFunc=None):
-		from ufoLib.glifLib import GlyphSet
+		from fontTools.ufoLib.glifLib import GlyphSet
 
 		glyphSubFS = self.fs.makedir(DEFAULT_GLYPHS_DIRNAME, recreate=True),
 		return GlyphSet(
@@ -1418,7 +1418,7 @@ class UFOWriter(object):
 		)
 
 	def _getGlyphSetFormatVersion2(self, validateRead, validateWrite, glyphNameToFileNameFunc=None):
-		from ufoLib.glifLib import GlyphSet
+		from fontTools.ufoLib.glifLib import GlyphSet
 
 		glyphSubFS = self.fs.makedir(DEFAULT_GLYPHS_DIRNAME, recreate=True)
 		return GlyphSet(
@@ -1430,7 +1430,7 @@ class UFOWriter(object):
 		)
 
 	def _getGlyphSetFormatVersion3(self, validateRead, validateWrite, layerName=None, defaultLayer=True, glyphNameToFileNameFunc=None):
-		from ufoLib.glifLib import GlyphSet
+		from fontTools.ufoLib.glifLib import GlyphSet
 
 		# if the default flag is on, make sure that the default in the file
 		# matches the default being written. also make sure that this layer

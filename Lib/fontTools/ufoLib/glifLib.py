@@ -20,11 +20,11 @@ import fs.errors
 import fs.osfs
 import fs.path
 from fontTools.misc.py23 import basestring, unicode, tobytes, tounicode
-from ufoLib import plistlib
-from ufoLib.errors import GlifLibError
-from ufoLib.pointPen import AbstractPointPen, PointToSegmentPen
-from ufoLib.filenames import userNameToFileName
-from ufoLib.validators import (
+from fontTools.misc import plistlib
+from fontTools.ufoLib.errors import GlifLibError
+from fontTools.ufoLib.pointPen import AbstractPointPen, PointToSegmentPen
+from fontTools.ufoLib.filenames import userNameToFileName
+from fontTools.ufoLib.validators import (
 	genericTypeValidator,
 	colorValidator,
 	guidelinesValidator,
@@ -33,8 +33,8 @@ from ufoLib.validators import (
 	imageValidator,
 	glyphLibValidator,
 )
-from ufoLib import etree
-from ufoLib.utils import integerTypes, numberTypes
+from fontTools.misc import etree
+from fontTools.ufoLib.utils import integerTypes, numberTypes
 
 
 __all__ = [
@@ -170,7 +170,7 @@ class GlyphSet(object):
 		self.rebuildContents()
 
 	# here we reuse the same methods from UFOReader/UFOWriter
-	from ufoLib import _getPlist, _writePlist, _getFileModificationTime
+	from fontTools.ufoLib import _getPlist, _writePlist, _getFileModificationTime
 
 	def rebuildContents(self, validateRead=None):
 		"""

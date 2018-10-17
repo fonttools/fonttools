@@ -7,8 +7,8 @@ import collections
 from io import BytesIO
 from numbers import Integral
 from fontTools.misc.py23 import tounicode, unicode
-from ufoLib import etree
-from ufoLib import plistlib
+from fontTools.misc import etree
+from fontTools.misc import plistlib
 import pytest
 
 

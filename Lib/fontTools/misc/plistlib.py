@@ -14,7 +14,7 @@ except ImportError:
     except ImportError:
         singledispatch = None
 
-from ufoLib import etree
+from fontTools.misc import etree
 
 from fontTools.misc.py23 import (
     unicode,
@@ -140,7 +140,7 @@ class PlistTarget(object):
     It is based on the CPython plistlib module's _PlistParser class,
     but does not use the expat parser.
 
-    >>> from ufoLib import etree
+    >>> from fontTools.misc import etree
     >>> parser = etree.XMLParser(target=PlistTarget())
     >>> result = etree.XML(
     ...     "<dict>"
@@ -545,7 +545,7 @@ def dumps(
 
 # The following functions were part of the old py2-like ufoLib.plistlib API.
 # They are kept only for backward compatiblity.
-from .utils import deprecated
+from fontTools.ufoLib.utils import deprecated
 
 
 @deprecated("Use 'load' instead")

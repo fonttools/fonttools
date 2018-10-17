@@ -1,6 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 import unittest
-from ufoLib.filenames import userNameToFileName, handleClash1, handleClash2
+from fontTools.ufoLib.filenames import userNameToFileName, handleClash1, handleClash2
 
 
 class TestFilenames(unittest.TestCase):

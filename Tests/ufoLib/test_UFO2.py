@@ -5,8 +5,8 @@ import shutil
 import unittest
 import tempfile
 from io import open
-from ufoLib import UFOReader, UFOWriter, UFOLibError
-from ufoLib import plistlib
+from fontTools.ufoLib import UFOReader, UFOWriter, UFOLibError
+from fontTools.ufoLib import plistlib
 from .testSupport import fontInfoVersion2
 
 

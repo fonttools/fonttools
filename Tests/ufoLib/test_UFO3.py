@@ -6,9 +6,9 @@ import unittest
 import tempfile
 from io import open
 from fontTools.misc.py23 import unicode
-from ufoLib import UFOReader, UFOWriter, UFOLibError
-from ufoLib.glifLib import GlifLibError
-from ufoLib import plistlib
+from fontTools.ufoLib import UFOReader, UFOWriter, UFOLibError
+from fontTools.ufoLib.glifLib import GlifLibError
+from fontTools.misc import plistlib
 from .testSupport import fontInfoVersion3
 
 

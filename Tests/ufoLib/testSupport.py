@@ -2,7 +2,7 @@
 
 from __future__ import absolute_import, unicode_literals
 import os
-from ufoLib.utils import numberTypes
+from fontTools.ufoLib.utils import numberTypes
 
 try:
 	basestring
