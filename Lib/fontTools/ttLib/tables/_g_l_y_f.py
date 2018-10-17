@@ -1037,6 +1037,39 @@ class Glyph(object):
 					cFlags = cFlags[nextOnCurve:]
 			pen.closePath()
 
+	def drawPoints(self, pen, glyfTable, offset=0):
+		"""Draw the glyph using the supplied pointPen. Opposed to Glyph.draw(),
+		this will not change the point indices.
+		"""
+
+		if self.isComposite():
+			for component in self.components:
+				glyphName, transform = component.getComponentInfo()
+				pen.addComponent(glyphName, transform)
+			return
+
+		coordinates, endPts, flags = self.getCoordinates(glyfTable)
+		if offset:
+			coordinates = coordinates.copy()
+			coordinates.translate((offset, 0))
+		start = 0
+		for end in endPts:
+			end = end + 1
+			contour = coordinates[start:end]
+			cFlags = flags[start:end]
+			start = end
+			pen.beginPath()
+			# Start with the appropriate segment type based on the final segment
+			s = "line" if cFlags[-1] == 1 else "qcurve"
+			for i, pt in enumerate(contour):
+				if cFlags[i] == 1:
+					pen.addPoint(pt, segmentType = s)
+					s = "line"
+				else:
+					pen.addPoint(pt)
+					s = "qcurve"
+			pen.endPath()
+
 	def __eq__(self, other):
 		if type(self) != type(other):
 			return NotImplemented
