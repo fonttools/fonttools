@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<glyph name="testglyph1" format="1">
+  <advance width="500"/>
+  <outline>
+    <contour>
+      <point x="58" y="443" type="move"/>
+      <point x="84" y="667" type="line"/>
+      <point x="313" y="632" type="line"/>
+      <point x="354" y="380" type="line"/>
+    </contour>
+    <contour>
+      <point x="328" y="238" type="line"/>
+      <point x="328" y="32" type="line"/>
+      <point x="90" y="29" type="line"/>
+      <point x="87" y="235" type="line"/>
+    </contour>
+  </outline>
+</glyph>

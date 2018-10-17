@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ascender</key>
+	<integer>750</integer>
+	<key>capHeight</key>
+	<integer>750</integer>
+	<key>copyright</key>
+	<string>Copyright Some Foundry.</string>
+	<key>createdBy</key>
+	<string>Some Foundry</string>
+	<key>defaultWidth</key>
+	<integer>400</integer>
+	<key>descender</key>
+	<integer>-250</integer>
+	<key>designer</key>
+	<string>Some Designer</string>
+	<key>designerURL</key>
+	<string>http://somedesigner.com</string>
+	<key>familyName</key>
+	<string>Some Font (Family Name)</string>
+	<key>fondID</key>
+	<integer>15000</integer>
+	<key>fondName</key>
+	<string>SomeFont Regular (FOND Name)</string>
+	<key>fontName</key>
+	<string>SomeFont-Regular (Postscript Font Name)</string>
+	<key>fontStyle</key>
+	<integer>64</integer>
+	<key>fullName</key>
+	<string>Some Font-Regular (Postscript Full Name)</string>
+	<key>italicAngle</key>
+	<real>-12.5</real>
+	<key>license</key>
+	<string>License info for Some Foundry.</string>
+	<key>licenseURL</key>
+	<string>http://somefoundry.com/license</string>
+	<key>menuName</key>
+	<string>Some Font Regular (Style Map Family Name)</string>
+	<key>msCharSet</key>
+	<integer>0</integer>
+	<key>note</key>
+	<string>A note.</string>
+	<key>notice</key>
+	<string>Some Font by Some Designer for Some Foundry.</string>
+	<key>otFamilyName</key>
+	<string>Some Font (Preferred Family Name)</string>
+	<key>otMacName</key>
+	<string>Some Font Regular (Compatible Full Name)</string>
+	<key>otStyleName</key>
+	<string>Regular (Preferred Subfamily Name)</string>
+	<key>slantAngle</key>
+	<real>-12.5</real>
+	<key>styleName</key>
+	<string>Regular (Style Name)</string>
+	<key>trademark</key>
+	<string>Trademark Some Foundry</string>
+	<key>ttUniqueID</key>
+	<string>OpenType name Table Unique ID</string>
+	<key>ttVendor</key>
+	<string>SOME</string>
+	<key>ttVersion</key>
+	<string>OpenType name Table Version</string>
+	<key>uniqueID</key>
+	<integer>4000000</integer>
+	<key>unitsPerEm</key>
+	<integer>1000</integer>
+	<key>vendorURL</key>
+	<string>http://somefoundry.com</string>
+	<key>versionMajor</key>
+	<integer>1</integer>
+	<key>versionMinor</key>
+	<integer>0</integer>
+	<key>weightName</key>
+	<string>Medium</string>
+	<key>weightValue</key>
+	<integer>500</integer>
+	<key>widthName</key>
+	<string>Medium (normal)</string>
+	<key>xHeight</key>
+	<integer>500</integer>
+	<key>year</key>
+	<integer>2008</integer>
+</dict>
+</plist>
+
