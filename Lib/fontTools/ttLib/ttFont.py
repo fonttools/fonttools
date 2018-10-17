@@ -755,12 +755,6 @@ class _TTGlyph(object):
 		"""
 		self._glyph.draw(pen)
 
-	def drawPoints(self, pen):
-		"""Draw the glyph onto PointPen. See ufoLib.pointPen for details
-		how that works.
-		"""
-		self._glyph.drawPoints(pen)
-
 class _TTGlyphCFF(_TTGlyph):
 	pass
 
