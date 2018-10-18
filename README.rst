@@ -255,14 +255,8 @@ are needed to unlock optional features.
 Testing
 ~~~~~~~
 
-To run the test suite, you can do:
-
-.. code:: sh
-
-    python setup.py test
-
-If you have `pytest <http://docs.pytest.org/en/latest/>`__, you can run
-the ``pytest`` command directly. The tests will run against the
+To run the test suite, you need to install `pytest <http://docs.pytest.org/en/latest/>`__.
+When you run the ``pytest`` command, the tests will run against the
 installed ``fontTools`` package, or the first one found in the
 ``PYTHONPATH``.
 
