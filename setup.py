@@ -134,11 +134,18 @@ class cython_build_ext(_build_ext):
         except Exception as e:
             if with_cython:
                 raise
+            from distutils.errors import DistutilsModuleError
+
             # optional compilation failed: we delete 'ext_modules' and make sure
             # the generated wheel is 'pure'
             del self.distribution.ext_modules[:]
-            bdist_wheel = self.get_finalized_command("bdist_wheel")
-            bdist_wheel.root_is_pure = True
+            try:
+                bdist_wheel = self.get_finalized_command("bdist_wheel")
+            except DistutilsModuleError:
+                # 'bdist_wheel' command not available as wheel is not installed
+                pass
+            else:
+                bdist_wheel.root_is_pure = True
             log.error('error: building extensions failed: %s' % e)
 
     def get_source_files(self):
