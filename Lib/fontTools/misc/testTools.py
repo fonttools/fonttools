@@ -2,7 +2,10 @@
 
 from __future__ import (print_function, division, absolute_import,
                         unicode_literals)
-import collections
+try:
+    from collections.abc import Iterable
+except ImportError:  # python < 3.3
+    from collections import Iterable
 import os
 import shutil
 import sys
@@ -29,7 +32,7 @@ def parseXML(xmlSnippet):
         xml += xmlSnippet
     elif isinstance(xmlSnippet, unicode):
         xml += tobytes(xmlSnippet, 'utf-8')
-    elif isinstance(xmlSnippet, collections.Iterable):
+    elif isinstance(xmlSnippet, Iterable):
         xml += b"".join(tobytes(s, 'utf-8') for s in xmlSnippet)
     else:
         raise TypeError("expected string or sequence of strings; found %r"
