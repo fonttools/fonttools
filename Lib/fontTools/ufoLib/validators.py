@@ -841,27 +841,39 @@ def groupsValidator(value):
 	(True, None)
 
 	>>> groups = {"" : ["A"]}
-	>>> groupsValidator(groups)
-	(False, 'A group has an empty name.')
+	>>> valid, msg = groupsValidator(groups)
+	>>> valid
+	False
+	>>> print(msg)
+	A group has an empty name.
 
 	>>> groups = {"public.awesome" : ["A"]}
 	>>> groupsValidator(groups)
 	(True, None)
 
 	>>> groups = {"public.kern1." : ["A"]}
-	>>> groupsValidator(groups)
-	(False, 'The group data contains a kerning group with an incomplete name.')
+	>>> valid, msg = groupsValidator(groups)
+	>>> valid
+	False
+	>>> print(msg)
+	The group data contains a kerning group with an incomplete name.
 	>>> groups = {"public.kern2." : ["A"]}
-	>>> groupsValidator(groups)
-	(False, 'The group data contains a kerning group with an incomplete name.')
+	>>> valid, msg = groupsValidator(groups)
+	>>> valid
+	False
+	>>> print(msg)
+	The group data contains a kerning group with an incomplete name.
 
 	>>> groups = {"public.kern1.A" : ["A"], "public.kern2.A" : ["A"]}
 	>>> groupsValidator(groups)
 	(True, None)
 
 	>>> groups = {"public.kern1.A1" : ["A"], "public.kern1.A2" : ["A"]}
-	>>> groupsValidator(groups)
-	(False, 'The glyph "A" occurs in too many kerning groups.')
+	>>> valid, msg = groupsValidator(groups)
+	>>> valid
+	False
+	>>> print(msg)
+	The glyph "A" occurs in too many kerning groups.
 	"""
 	bogusFormatMessage = "The group data is not in the correct format."
 	if not isDictEnough(value):
@@ -908,12 +920,18 @@ def kerningValidator(data):
 	(True, None)
 
 	>>> kerning = {"A" : ["B"]}
-	>>> kerningValidator(kerning)
-	(False, 'The kerning data is not in the correct format.')
+	>>> valid, msg = kerningValidator(kerning)
+	>>> valid
+	False
+	>>> print(msg)
+	The kerning data is not in the correct format.
 
 	>>> kerning = {"A" : {"B" : "100"}}
-	>>> kerningValidator(kerning)
-	(False, 'The kerning data is not in the correct format.')
+	>>> valid, msg = kerningValidator(kerning)
+	>>> valid
+	False
+	>>> print(msg)
+	The kerning data is not in the correct format.
 	"""
 	bogusFormatMessage = "The kerning data is not in the correct format."
 	if not isinstance(data, Mapping):
@@ -975,8 +993,11 @@ def fontLibValidator(value):
 	public.glyphOrder is not properly formatted: expected list or tuple,...
 
 	>>> lib = {"public.glyphOrder" : ["A", 1, "B"]}
-	>>> fontLibValidator(lib)
-	(False, 'public.glyphOrder is not properly formatted: expected basestring, found int')
+	>>> valid, msg = fontLibValidator(lib)
+	>>> valid
+	False
+	>>> print(msg)  # doctest: +ELLIPSIS
+	public.glyphOrder is not properly formatted: expected basestring,...
 	"""
 	if not isDictEnough(value):
 		reason = "expected a dictionary, found %s" % type(value).__name__
@@ -1020,8 +1041,11 @@ def glyphLibValidator(value):
 	(True, None)
 
 	>>> lib = {"public.markColor" : 1}
-	>>> glyphLibValidator(lib)
-	(False, 'public.markColor is not properly formatted.')
+	>>> valid, msg = glyphLibValidator(lib)
+	>>> valid
+	False
+	>>> print(msg)
+	public.markColor is not properly formatted.
 	"""
 	if not isDictEnough(value):
 		reason = "expected a dictionary, found %s" % type(value).__name__

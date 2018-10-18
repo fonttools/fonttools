@@ -89,10 +89,10 @@ def findKnownKerningGroups(groups):
     ...     "foo" : None,
     ... }
     >>> first, second = findKnownKerningGroups(testGroups)
-    >>> sorted(first)
-    ['@MMK_L_1', '@MMK_L_2', '@MMK_L_3']
-    >>> sorted(second)
-    ['@MMK_R_1', '@MMK_R_2', '@MMK_R_3']
+    >>> sorted(first) == ['@MMK_L_1', '@MMK_L_2', '@MMK_L_3']
+    True
+    >>> sorted(second) == ['@MMK_R_1', '@MMK_R_2', '@MMK_R_3']
+    True
     """
     knownFirstGroupPrefixes = [
         "@MMK_L_"

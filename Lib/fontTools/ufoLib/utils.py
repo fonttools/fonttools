@@ -57,8 +57,8 @@ def deprecated(msg=""):
     ...    print("hello world")
     >>> some_function()
     hello world
-    >>> some_function.__doc__
-    "I just print 'hello world'."
+    >>> some_function.__doc__ == "I just print 'hello world'."
+    True
     """
 
     def deprecated_decorator(func):
