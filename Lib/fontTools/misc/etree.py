@@ -40,7 +40,6 @@ __all__ = [
     "TreeBuilder",
     "XML",
     "XMLParser",
-    "XMLTreeBuilder",
     "register_namespace",
 ]
 
