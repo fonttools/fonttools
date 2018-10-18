@@ -757,7 +757,7 @@ class _TTGlyph(object):
 
 	def drawPoints(self, pen):
 		# drawPoints is only implemented for _TTGlyphGlyf at this time.
-		raise NotImplementedError
+		raise NotImplementedError()
 
 class _TTGlyphCFF(_TTGlyph):
 	pass
