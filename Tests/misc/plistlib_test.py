@@ -9,6 +9,9 @@ from numbers import Integral
 from fontTools.misc.py23 import tounicode, unicode
 from fontTools.misc import etree
 from fontTools.misc import plistlib
+from fontTools.ufoLib.plistlib import (
+    readPlist, readPlistFromString, writePlist, writePlistToString,
+)
 import pytest
 
 
@@ -466,28 +469,28 @@ def test_no_pretty_print(use_builtin_types):
 
 def test_readPlist_from_path(pl):
     path = os.path.join(datadir, "test.plist")
-    pl2 = plistlib.readPlist(path)
+    pl2 = readPlist(path)
     assert isinstance(pl2["someData"], plistlib.Data)
     assert pl2 == pl
 
 
 def test_readPlist_from_file(pl):
     with open(os.path.join(datadir, "test.plist"), "rb") as f:
-        pl2 = plistlib.readPlist(f)
+        pl2 = readPlist(f)
         assert isinstance(pl2["someData"], plistlib.Data)
         assert pl2 == pl
         assert not f.closed
 
 
 def test_readPlistFromString(pl):
-    pl2 = plistlib.readPlistFromString(TESTDATA)
+    pl2 = readPlistFromString(TESTDATA)
     assert isinstance(pl2["someData"], plistlib.Data)
     assert pl2 == pl
 
 
 def test_writePlist_to_path(tmpdir, pl_no_builtin_types):
     testpath = tmpdir / "test.plist"
-    plistlib.writePlist(pl_no_builtin_types, str(testpath))
+    writePlist(pl_no_builtin_types, str(testpath))
     with testpath.open("rb") as fp:
         pl2 = plistlib.load(fp, use_builtin_types=False)
     assert pl2 == pl_no_builtin_types
@@ -496,14 +499,14 @@ def test_writePlist_to_path(tmpdir, pl_no_builtin_types):
 def test_writePlist_to_file(tmpdir, pl_no_builtin_types):
     testpath = tmpdir / "test.plist"
     with testpath.open("wb") as fp:
-        plistlib.writePlist(pl_no_builtin_types, fp)
+        writePlist(pl_no_builtin_types, fp)
     with testpath.open("rb") as fp:
         pl2 = plistlib.load(fp, use_builtin_types=False)
     assert pl2 == pl_no_builtin_types
 
 
 def test_writePlistToString(pl_no_builtin_types):
-    data = plistlib.writePlistToString(pl_no_builtin_types)
+    data = writePlistToString(pl_no_builtin_types)
     pl2 = plistlib.loads(data)
     assert pl2 == pl_no_builtin_types
 
