@@ -244,26 +244,6 @@ class release(Command):
 		return u"".join(changes)
 
 
-class PassCommand(Command):
-	""" This is used with Travis `dpl` tool so that it skips creating sdist
-	and wheel packages, but simply uploads to PyPI the files found in ./dist
-	folder, that were previously built inside the tox 'bdist' environment.
-	This ensures that the same files are uploaded to Github Releases and PyPI.
-	"""
-
-	description = "do nothing"
-	user_options = []
-
-	def initialize_options(self):
-		pass
-
-	def finalize_options(self):
-		pass
-
-	def run(self):
-		pass
-
-
 def find_data_files(manpath="share/man"):
 	""" Find FontTools's data_files (just man pages at this point).
 
@@ -338,7 +318,6 @@ setup(
 	},
 	cmdclass={
 		"release": release,
-		'pass': PassCommand,
 	},
 	**classifiers
 )
