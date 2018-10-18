@@ -41,10 +41,7 @@ if PY3:
 else:
     USE_BUILTIN_TYPES = False
 
-# we use a custom XML declaration for backward compatibility with older
-# ufoLib versions which would write it using double quotes.
-# https://github.com/unified-font-object/ufoLib/issues/158
-XML_DECLARATION = b"""<?xml version="1.0" encoding="UTF-8"?>"""
+XML_DECLARATION = b"""<?xml version='1.0' encoding='UTF-8'?>"""
 
 PLIST_DOCTYPE = (
     b'<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" '

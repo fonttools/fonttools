@@ -575,9 +575,6 @@ def readGlyphFromString(aString, glyphObject=None, pointPen=None, formatVersions
 	_readGlyphFromTree(tree, glyphObject, pointPen, formatVersions=formatVersions, validate=validate)
 
 
-_XML_DECLARATION = plistlib.XML_DECLARATION + b"\n"
-
-
 def _writeGlyphToBytes(
 		glyphName, glyphObject=None, drawPointsFunc=None, writer=None,
 		formatVersion=2, validate=True):
@@ -621,8 +618,8 @@ def _writeGlyphToBytes(
 	if getattr(glyphObject, "lib", None):
 		_writeLib(glyphObject, root, validate)
 	# return the text
-	data = _XML_DECLARATION + etree.tostring(
-		root, encoding="utf-8", xml_declaration=False, pretty_print=True
+	data = etree.tostring(
+		root, encoding="UTF-8", xml_declaration=True, pretty_print=True
 	)
 	return data
 

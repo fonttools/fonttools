@@ -14,10 +14,8 @@ iterwalk.
 from __future__ import absolute_import, unicode_literals
 from fontTools.misc.py23 import basestring, unicode, tounicode, open
 
-# we use a custom XML declaration for backward compatibility with older
-# ufoLib versions which would write it using double quotes.
-# https://github.com/unified-font-object/ufoLib/issues/158
-XML_DECLARATION = """<?xml version="1.0" encoding="%s"?>"""
+
+XML_DECLARATION = """<?xml version='1.0' encoding='%s'?>"""
 
 __all__ = [
     # public symbols
