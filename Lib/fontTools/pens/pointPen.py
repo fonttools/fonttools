@@ -15,8 +15,14 @@ from __future__ import absolute_import, unicode_literals
 from fontTools.pens.basePen import AbstractPen
 import math
 
-__all__ = ["AbstractPointPen", "BasePointToSegmentPen", "PointToSegmentPen",
-		   "SegmentToPointPen"]
+__all__ = [
+	"AbstractPointPen",
+	"BasePointToSegmentPen",
+	"PointToSegmentPen",
+	"SegmentToPointPen",
+	"GuessSmoothPointPen",
+	"ReverseContourPointPen",
+]
 
 
 class AbstractPointPen(object):
