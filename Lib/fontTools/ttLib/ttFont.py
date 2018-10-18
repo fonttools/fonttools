@@ -732,9 +732,9 @@ class _TTGlyphSet(object):
 class _TTGlyph(object):
 
 	"""Wrapper for a TrueType glyph that supports the Pen protocol, meaning
-	that it has a .draw() method that takes a pen object as its only
-	argument. Additionally there are 'width' and 'lsb' attributes, read from
-	the 'hmtx' table.
+	that it has .draw() and .drawPoints() methods that take a pen object as
+	their only argument. Additionally there are 'width' and 'lsb' attributes,
+	read from the 'hmtx' table.
 
 	If the font contains a 'vmtx' table, there will also be 'height' and 'tsb'
 	attributes.
@@ -755,6 +755,10 @@ class _TTGlyph(object):
 		"""
 		self._glyph.draw(pen)
 
+	def drawPoints(self, pen):
+		# drawPoints is only implemented for _TTGlyphGlyf at this time.
+		raise NotImplementedError()
+
 class _TTGlyphCFF(_TTGlyph):
 	pass
 
@@ -768,6 +772,15 @@ class _TTGlyphGlyf(_TTGlyph):
 		glyph = self._glyph
 		offset = self.lsb - glyph.xMin if hasattr(glyph, "xMin") else 0
 		glyph.draw(pen, glyfTable, offset)
+
+	def drawPoints(self, pen):
+		"""Draw the glyph onto PointPen. See ufoLib.pointPen for details
+		how that works.
+		"""
+		glyfTable = self._glyphset._glyphs
+		glyph = self._glyph
+		offset = self.lsb - glyph.xMin if hasattr(glyph, "xMin") else 0
+		glyph.drawPoints(pen, glyfTable, offset)
 
 
 class GlyphOrder(object):
