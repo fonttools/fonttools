@@ -93,7 +93,7 @@ If you have cloned the git repository, the C source files are not present and
 need to be regenerated. To do that, you need to install the latest Cython
 (as usual, ``pip install -U cython``), and then use the global option
 ``--with-cython`` when invoking the ``setup.py`` script. You can also export
-a ``CU2QU_WITH_CYTYON=1`` environment variable if you prefer.
+a ``CU2QU_WITH_CYTHON=1`` environment variable if you prefer.
 
 For example, to build the cu2qu extension module in-place (i.e. in the same
 source directory):
