@@ -123,6 +123,7 @@ def test_fill_document(tmpdir):
     i1.styleMapStyleName = "InstanceStyleMapStyleName"
     glyphData = dict(name="arrow", mute=True, unicodes=[0x123, 0x124, 0x125])
     i1.glyphs['arrow'] = glyphData
+    i1.lib['com.coolDesignspaceApp.binaryData'] = b'<binary gunk>'
     i1.lib['com.coolDesignspaceApp.specimenText'] = "Hamburgerwhatever"
     doc.addInstance(i1)
     # add instance 2
