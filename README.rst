@@ -279,7 +279,7 @@ or the ``TOXENV`` environment variable:
 
 .. code:: sh
 
-    tox -e py27-nocov
+    tox -e py27
     TOXENV="py36-cov,htmlcov" tox
 
 Development Community
