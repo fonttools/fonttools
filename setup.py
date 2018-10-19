@@ -23,12 +23,60 @@ def doraise_py_compile(file, cfile=None, dfile=None, doraise=False):
 
 py_compile.compile = doraise_py_compile
 
-needs_pytest = {'pytest', 'test'}.intersection(sys.argv)
-pytest_runner = ['pytest_runner'] if needs_pytest else []
 needs_wheel = {'bdist_wheel'}.intersection(sys.argv)
 wheel = ['wheel'] if needs_wheel else []
 needs_bumpversion = {'release'}.intersection(sys.argv)
 bumpversion = ['bump2version'] if needs_bumpversion else []
+
+extras_require = {
+	# for fontTools.ufoLib: to read/write UFO fonts
+	"ufo": [
+		"fs >= 2.1.1, < 3",
+		"enum34 >= 1.1.6; python_version < '3.4'",
+	],
+	# for fontTools.misc.etree and fontTools.misc.plistlib: use lxml to
+	# read/write XML files (faster/safer than built-in ElementTree)
+	"lxml": [
+		"lxml >= 4.0, < 5",
+		"singledispatch >= 3.4.0.3; python_version < '3.4'",
+	],
+	# for fontTools.sfnt and fontTools.woff2: to compress/uncompress
+	# WOFF 1.0 and WOFF 2.0 webfonts.
+	"woff": [
+		"brotli >= 1.0.1; platform_python_implementation != 'PyPy'",
+		"brotlipy >= 0.7.0; platform_python_implementation == 'PyPy'",
+		"zopfli >= 0.1.4",
+	],
+	# for fontTools.unicode and fontTools.unicodedata: to use the latest version
+	# of the Unicode Character Database instead of the built-in unicodedata
+	# which varies between python versions and may be outdated.
+	"unicode": [
+		# the unicodedata2 extension module doesn't work on PyPy.
+		# Python 3.7 already has Unicode 11, so the backport is not needed.
+		(
+			"unicodedata2 >= 11.0.0; "
+			"python_version < '3.7' and platform_python_implementation != 'PyPy'"
+		),
+	],
+	# for fontTools.interpolatable: to solve the "minimum weight perfect
+	# matching problem in bipartite graphs" (aka Assignment problem)
+	"interpolatable": [
+		# use pure-python alternative on pypy
+		"scipy; platform_python_implementation != 'PyPy'",
+		"munkres; platform_python_implementation == 'PyPy'",
+	],
+	# for fontTools.misc.symfont, module for symbolic font statistics analysis
+	"symfont": [
+		"sympy",
+	],
+	# To get file creator and type of Macintosh PostScript Type 1 fonts (macOS only)
+	"type1": [
+		"xattr; sys_platform == 'darwin'",
+	],
+}
+# use a special 'all' key as shorthand to includes all the extra dependencies
+extras_require["all"] = sum(extras_require.values(), [])
+
 
 # Trove classifiers for PyPI
 classifiers = {"classifiers": [
@@ -244,26 +292,6 @@ class release(Command):
 		return u"".join(changes)
 
 
-class PassCommand(Command):
-	""" This is used with Travis `dpl` tool so that it skips creating sdist
-	and wheel packages, but simply uploads to PyPI the files found in ./dist
-	folder, that were previously built inside the tox 'bdist' environment.
-	This ensures that the same files are uploaded to Github Releases and PyPI.
-	"""
-
-	description = "do nothing"
-	user_options = []
-
-	def initialize_options(self):
-		pass
-
-	def finalize_options(self):
-		pass
-
-	def run(self):
-		pass
-
-
 def find_data_files(manpath="share/man"):
 	""" Find FontTools's data_files (just man pages at this point).
 
@@ -323,10 +351,8 @@ setup(
 	packages=find_packages("Lib"),
 	include_package_data=True,
 	data_files=find_data_files(),
-	setup_requires=pytest_runner + wheel + bumpversion,
-	tests_require=[
-		'pytest>=3.0',
-	],
+	setup_requires=wheel + bumpversion,
+	extras_require=extras_require,
 	entry_points={
 		'console_scripts': [
 			"fonttools = fontTools.__main__:main",
@@ -338,7 +364,6 @@ setup(
 	},
 	cmdclass={
 		"release": release,
-		'pass': PassCommand,
 	},
 	**classifiers
 )

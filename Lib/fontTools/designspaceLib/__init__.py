@@ -6,12 +6,8 @@ from fontTools.misc.loggingTools import LogMixin
 import collections
 import os
 import posixpath
-import plistlib
-
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
+from fontTools.misc import etree as ET
+from fontTools.misc import plistlib
 
 """
     designSpaceDocument
@@ -29,30 +25,6 @@ __all__ = [
 # so we have to do it ourselves for 'xml:lang'
 XML_NS = "{http://www.w3.org/XML/1998/namespace}"
 XML_LANG = XML_NS + "lang"
-
-
-def to_plist(value):
-    try:
-        # Python 2
-        string = plistlib.writePlistToString(value)
-    except AttributeError:
-        # Python 3
-        string = plistlib.dumps(value).decode()
-    return ET.fromstring(string)[0]
-
-
-def from_plist(element):
-    if element is None:
-        return {}
-    plist = ET.Element('plist')
-    plist.append(element)
-    string = ET.tostring(plist)
-    try:
-        # Python 2
-        return plistlib.readPlistFromString(string)
-    except AttributeError:
-        # Python 3
-        return plistlib.loads(string, fmt=plistlib.FMT_XML)
 
 
 def posix(path):
@@ -86,23 +58,6 @@ class DesignSpaceDocumentError(Exception):
     def __str__(self):
         return str(self.msg) + (
             ": %r" % self.obj if self.obj is not None else "")
-
-
-def _indent(elem, whitespace="    ", level=0):
-    # taken from http://effbot.org/zone/element-lib.htm#prettyprint
-    i = "\n" + level * whitespace
-    if len(elem):
-        if not elem.text or not elem.text.strip():
-            elem.text = i + whitespace
-        if not elem.tail or not elem.tail.strip():
-            elem.tail = i
-        for elem in elem:
-            _indent(elem, whitespace, level+1)
-        if not elem.tail or not elem.tail.strip():
-            elem.tail = i
-    else:
-        if level and (not elem.tail or not elem.tail.strip()):
-            elem.tail = i
 
 
 class AsDictMixin(object):
@@ -410,7 +365,7 @@ class BaseDocWriter(object):
         self._axes = []     # for use by the writer only
         self._rules = []    # for use by the writer only
 
-    def write(self, pretty=True, encoding="utf-8", xml_declaration=True):
+    def write(self, pretty=True, encoding="UTF-8", xml_declaration=True):
         if self.documentObject.axes:
             self.root.append(ET.Element("axes"))
         for axisObject in self.documentObject.axes:
@@ -434,14 +389,13 @@ class BaseDocWriter(object):
         if self.documentObject.lib:
             self._addLib(self.documentObject.lib)
 
-        if pretty:
-            _indent(self.root, whitespace=self._whiteSpace)
         tree = ET.ElementTree(self.root)
         tree.write(
             self.path,
             encoding=encoding,
             method='xml',
             xml_declaration=xml_declaration,
+            pretty_print=pretty,
         )
 
     def _makeLocationElement(self, locationObject, name=None):
@@ -511,7 +465,7 @@ class BaseDocWriter(object):
             axisElement.attrib['hidden'] = "1"
         for languageCode, labelName in sorted(axisObject.labelNames.items()):
             languageElement = ET.Element('labelname')
-            languageElement.attrib[u'xml:lang'] = languageCode
+            languageElement.attrib[XML_LANG] = languageCode
             languageElement.text = labelName
             axisElement.append(languageElement)
         if axisObject.map:
@@ -538,7 +492,7 @@ class BaseDocWriter(object):
                 if code == "en":
                     continue  # already stored in the element attribute
                 localisedStyleNameElement = ET.Element('stylename')
-                localisedStyleNameElement.attrib["xml:lang"] = code
+                localisedStyleNameElement.attrib[XML_LANG] = code
                 localisedStyleNameElement.text = instanceObject.getStyleName(code)
                 instanceElement.append(localisedStyleNameElement)
         if instanceObject.localisedFamilyName:
@@ -548,7 +502,7 @@ class BaseDocWriter(object):
                 if code == "en":
                     continue  # already stored in the element attribute
                 localisedFamilyNameElement = ET.Element('familyname')
-                localisedFamilyNameElement.attrib["xml:lang"] = code
+                localisedFamilyNameElement.attrib[XML_LANG] = code
                 localisedFamilyNameElement.text = instanceObject.getFamilyName(code)
                 instanceElement.append(localisedFamilyNameElement)
         if instanceObject.localisedStyleMapStyleName:
@@ -558,7 +512,7 @@ class BaseDocWriter(object):
                 if code == "en":
                     continue
                 localisedStyleMapStyleNameElement = ET.Element('stylemapstylename')
-                localisedStyleMapStyleNameElement.attrib["xml:lang"] = code
+                localisedStyleMapStyleNameElement.attrib[XML_LANG] = code
                 localisedStyleMapStyleNameElement.text = instanceObject.getStyleMapStyleName(code)
                 instanceElement.append(localisedStyleMapStyleNameElement)
         if instanceObject.localisedStyleMapFamilyName:
@@ -568,7 +522,7 @@ class BaseDocWriter(object):
                 if code == "en":
                     continue
                 localisedStyleMapFamilyNameElement = ET.Element('stylemapfamilyname')
-                localisedStyleMapFamilyNameElement.attrib["xml:lang"] = code
+                localisedStyleMapFamilyNameElement.attrib[XML_LANG] = code
                 localisedStyleMapFamilyNameElement.text = instanceObject.getStyleMapFamilyName(code)
                 instanceElement.append(localisedStyleMapFamilyNameElement)
 
@@ -599,7 +553,7 @@ class BaseDocWriter(object):
             instanceElement.append(infoElement)
         if instanceObject.lib:
             libElement = ET.Element('lib')
-            libElement.append(to_plist(instanceObject.lib))
+            libElement.append(plistlib.totree(instanceObject.lib, indent_level=4))
             instanceElement.append(libElement)
         self.root.findall('.instances')[0].append(instanceElement)
 
@@ -652,7 +606,7 @@ class BaseDocWriter(object):
 
     def _addLib(self, dict):
         libElement = ET.Element('lib')
-        libElement.append(to_plist(dict))
+        libElement.append(plistlib.totree(dict, indent_level=2))
         self.root.append(libElement)
 
     def _writeGlyphElement(self, instanceElement, instanceObject, glyphName, data):
@@ -801,7 +755,7 @@ class BaseDocReader(LogMixin):
                 b = float(mapElement.attrib['output'])
                 axisObject.map.append((a, b))
             for labelNameElement in axisElement.findall('labelname'):
-                # Note: elementtree reads the xml:lang attribute name as
+                # Note: elementtree reads the "xml:lang" attribute name as
                 # '{http://www.w3.org/XML/1998/namespace}lang'
                 for key, lang in labelNameElement.items():
                     if key == XML_LANG:
@@ -963,7 +917,7 @@ class BaseDocReader(LogMixin):
 
     def readLibElement(self, libElement, instanceObject):
         """Read the lib element for the given instance."""
-        instanceObject.lib = from_plist(libElement[0])
+        instanceObject.lib = plistlib.fromtree(libElement[0])
 
     def readInfoElement(self, infoElement, instanceObject):
         """ Read the info element."""
@@ -1030,7 +984,7 @@ class BaseDocReader(LogMixin):
     def readLib(self):
         """Read the lib element for the whole document."""
         for libElement in self.root.findall(".lib"):
-            self.documentObject.lib = from_plist(libElement[0])
+            self.documentObject.lib = plistlib.fromtree(libElement[0])
 
 
 class DesignSpaceDocument(LogMixin, AsDictMixin):
@@ -1090,7 +1044,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
             xml_declaration = False
         elif encoding is None or encoding == "utf-8":
             f = BytesIO()
-            encoding = "utf-8"
+            encoding = "UTF-8"
             xml_declaration = True
         else:
             raise ValueError("unsupported encoding: '%s'" % encoding)

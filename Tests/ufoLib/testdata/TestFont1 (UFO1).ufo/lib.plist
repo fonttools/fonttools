@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>org.robofab.opentype.classes</key>
+	<string>@myClass = [A B];
+</string>
+	<key>org.robofab.opentype.featureorder</key>
+	<array>
+		<string>liga</string>
+	</array>
+	<key>org.robofab.opentype.features</key>
+	<dict>
+		<key>liga</key>
+		<string>feature liga {
+    sub A A by b;
+} liga;
+</string>
+	</dict>
+	<key>org.robofab.postScriptHintData</key>
+	<dict>
+		<key>blueFuzz</key>
+		<integer>1</integer>
+		<key>blueScale</key>
+		<real>0.039625</real>
+		<key>blueShift</key>
+		<integer>7</integer>
+		<key>blueValues</key>
+		<array>
+			<array>
+				<integer>500</integer>
+				<integer>510</integer>
+			</array>
+		</array>
+		<key>familyBlues</key>
+		<array>
+			<array>
+				<integer>500</integer>
+				<integer>510</integer>
+			</array>
+		</array>
+		<key>familyOtherBlues</key>
+		<array>
+			<array>
+				<integer>-260</integer>
+				<integer>-250</integer>
+			</array>
+		</array>
+		<key>forceBold</key>
+		<true/>
+		<key>hStems</key>
+		<array>
+			<integer>100</integer>
+			<integer>120</integer>
+		</array>
+		<key>otherBlues</key>
+		<array>
+			<array>
+				<integer>-260</integer>
+				<integer>-250</integer>
+			</array>
+		</array>
+		<key>vStems</key>
+		<array>
+			<integer>80</integer>
+			<integer>90</integer>
+		</array>
+	</dict>
+	<key>org.robofab.testFontLibData</key>
+	<string>Foo Bar</string>
+</dict>
+</plist>

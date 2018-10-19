@@ -255,14 +255,8 @@ are needed to unlock optional features.
 Testing
 ~~~~~~~
 
-To run the test suite, you can do:
-
-.. code:: sh
-
-    python setup.py test
-
-If you have `pytest <http://docs.pytest.org/en/latest/>`__, you can run
-the ``pytest`` command directly. The tests will run against the
+To run the test suite, you need to install `pytest <http://docs.pytest.org/en/latest/>`__.
+When you run the ``pytest`` command, the tests will run against the
 installed ``fontTools`` package, or the first one found in the
 ``PYTHONPATH``.
 
@@ -277,15 +271,15 @@ environments.
 
 Note that when you run ``tox`` without arguments, the tests are executed
 for all the environments listed in tox.ini's ``envlist``. In our case,
-this includes Python 2.7 and 3.6, so for this to work the ``python2.7``
-and ``python3.6`` executables must be available in your ``PATH``.
+this includes Python 2.7 and 3.7, so for this to work the ``python2.7``
+and ``python3.7`` executables must be available in your ``PATH``.
 
 You can specify an alternative environment list via the ``-e`` option,
 or the ``TOXENV`` environment variable:
 
 .. code:: sh
 
-    tox -e py27-nocov
+    tox -e py27
     TOXENV="py36-cov,htmlcov" tox
 
 Development Community

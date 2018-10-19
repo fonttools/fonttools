@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ascender</key>
+	<integer>750</integer>
+	<key>capHeight</key>
+	<integer>527</integer>
+	<key>copyright</key>
+	<string>TOKEN COPYRIGHT STRING.  COPYRIGHT SAME AS PACKAGE. </string>
+	<key>defaultWidth</key>
+	<integer>500</integer>
+	<key>descender</key>
+	<integer>-170</integer>
+	<key>designer</key>
+	<string>Various</string>
+	<key>designerURL</key>
+	<string></string>
+	<key>familyName</key>
+	<string>UFODEMOFONT</string>
+	<key>fontStyle</key>
+	<integer>64</integer>
+	<key>license</key>
+	<string>LICENSE SAME AS PACKAGE.</string>
+	<key>notice</key>
+	<string>TOKEN DESCRIPTION</string>
+	<key>styleName</key>
+	<string>JUSTADEMO</string>
+	<key>trademark</key>
+	<string>NO TRADEMARKS</string>
+	<key>ttVendor</key>
+	<string>NONE</string>
+	<key>ttVersion</key>
+	<string>Version 1.000;PS development 5;hotconv 1.0.38</string>
+	<key>unitsPerEm</key>
+	<integer>1000</integer>
+	<key>vendorURL</key>
+	<string></string>
+	<key>versionMajor</key>
+	<integer>1</integer>
+	<key>xHeight</key>
+	<integer>456</integer>
+	<key>year</key>
+	<integer>2003</integer>
+</dict>
+</plist>

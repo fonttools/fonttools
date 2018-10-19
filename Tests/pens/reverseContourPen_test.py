@@ -293,11 +293,8 @@ def test_reverse_pen(contour, expected):
 
 @pytest.mark.parametrize("contour, expected", TEST_DATA)
 def test_reverse_point_pen(contour, expected):
-    try:
-        from ufoLib.pointPen import (
-            ReverseContourPointPen, PointToSegmentPen, SegmentToPointPen)
-    except ImportError:
-        pytest.skip("ufoLib not installed")
+    from fontTools.ufoLib.pointPen import (
+        ReverseContourPointPen, PointToSegmentPen, SegmentToPointPen)
 
     recpen = RecordingPen()
     pt2seg = PointToSegmentPen(recpen, outputImpliedClosingLine=True)

@@ -3,12 +3,8 @@ from __future__ import (
 from fontTools.misc.py23 import *
 
 from fontTools.pens.transformPen import TransformPen
+from fontTools.misc import etree
 from .parser import parse_path
-
-try:
-    from xml.etree import cElementTree as ElementTree  # python 2
-except ImportError:  # pragma nocover
-    from xml.etree import ElementTree  # python 3
 
 
 __all__ = [tostr(s) for s in ("SVGPath", "parse_path")]
@@ -39,16 +35,16 @@ class SVGPath(object):
 
     def __init__(self, filename=None, transform=None):
         if filename is None:
-            self.root = ElementTree.ElementTree()
+            self.root = etree.ElementTree()
         else:
-            tree = ElementTree.parse(filename)
+            tree = etree.parse(filename)
             self.root = tree.getroot()
         self.transform = transform
 
     @classmethod
     def fromstring(cls, data, transform=None):
         self = cls(transform=transform)
-        self.root = ElementTree.fromstring(data)
+        self.root = etree.fromstring(data)
         return self
 
     def draw(self, pen):

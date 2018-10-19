@@ -5,13 +5,13 @@ set -e
 
 # Choose python version
 if test "x$1" = x-3; then
-	PYTHON=py3-nocov
+	PYTHON=py3
 	shift
 elif test "x$1" = x-2; then
-	PYTHON=py2-nocov
+	PYTHON=py2
 	shift
 fi
-test "x$PYTHON" = x && PYTHON=py-nocov
+test "x$PYTHON" = x && PYTHON=py
 
 # Find tests
 FILTERS=

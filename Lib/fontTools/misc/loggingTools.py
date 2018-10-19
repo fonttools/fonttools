@@ -8,7 +8,10 @@ import sys
 import logging
 import timeit
 from functools import wraps
-import collections
+try:
+	from collections.abc import Mapping, Callable
+except ImportError:  # python < 3.3
+	from collections import Mapping, Callable
 import warnings
 
 try:
@@ -64,7 +67,7 @@ class LevelFormatter(logging.Formatter):
 		if isinstance(fmt, basestring):
 			default_format = fmt
 			custom_formats = {}
-		elif isinstance(fmt, collections.Mapping):
+		elif isinstance(fmt, Mapping):
 			custom_formats = dict(fmt)
 			default_format = custom_formats.pop("*", None)
 		else:
@@ -360,7 +363,7 @@ class Timer(object):
 		Timer instance, referencing the same logger.
 		A 'level' keyword can also be passed to override self.level.
 		"""
-		if isinstance(func_or_msg, collections.Callable):
+		if isinstance(func_or_msg, Callable):
 			func = func_or_msg
 			# use the function name when no explicit 'msg' is provided
 			if not self.msg:
