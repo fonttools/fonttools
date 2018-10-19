@@ -786,7 +786,7 @@ class UFOWriter(object):
 		self,
 		path,
 		formatVersion=3,
-		fileCreator="org.robofab.ufoLib",
+		fileCreator="com.github.fonttools.ufoLib",
 		structure=None,
 		validate=True,
 	):
