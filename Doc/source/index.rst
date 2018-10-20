@@ -299,6 +299,7 @@ Table of Contents
    t1Lib
    ttLib/index
    ttx
+   ufoLib/index
    unicode
    unicodedata/index
    varLib/index
