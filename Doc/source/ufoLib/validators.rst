@@ -1,9 +1,9 @@
 
 ##########
-converters
+validators
 ##########
 
-.. automodule:: fontTools.ufoLib.converters
+.. automodule:: fontTools.ufoLib.validators
    :inherited-members:
    :members:
    :undoc-members:

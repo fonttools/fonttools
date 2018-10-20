@@ -1,9 +1,9 @@
 
 #######
-glifLib
+kerning
 #######
 
-.. automodule:: fontTools.ufoLib.glifLib
+.. automodule:: fontTools.ufoLib.kerning
    :inherited-members:
    :members:
    :undoc-members:
