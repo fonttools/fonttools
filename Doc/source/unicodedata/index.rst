@@ -11,5 +11,6 @@ unicodedata
    Scripts
 
 .. automodule:: fontTools.unicodedata
+   :inherited-members:
    :members:
    :undoc-members:

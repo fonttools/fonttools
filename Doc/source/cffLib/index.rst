@@ -9,5 +9,6 @@ cffLib
    width
 
 .. automodule:: fontTools.cffLib
+   :inherited-members:
    :members:
    :undoc-members:

@@ -3,6 +3,7 @@ ScriptExtensions
 ################
 
 .. automodule:: fontTools.unicodedata.ScriptExtensions
+   :inherited-members:
    :members:
    :undoc-members:
 

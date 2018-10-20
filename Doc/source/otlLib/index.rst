@@ -8,5 +8,6 @@ otlLib
    builder
 
 .. automodule:: fontTools.otlLib
+   :inherited-members:
    :members:
    :undoc-members:

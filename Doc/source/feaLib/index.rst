@@ -12,5 +12,6 @@ feaLib
    parser
 
 .. automodule:: fontTools.feaLib
+   :inherited-members:
    :members:
    :undoc-members:

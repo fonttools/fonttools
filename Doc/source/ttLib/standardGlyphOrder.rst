@@ -3,6 +3,7 @@ standardGlyphOrder
 ##################
 
 .. automodule:: fontTools.ttLib.standardGlyphOrder
+   :inherited-members:
    :members:
    :undoc-members:
 

@@ -14,5 +14,6 @@ ttLib
    woff2
 
 .. automodule:: fontTools.ttLib
+   :inherited-members:
    :members:
    :undoc-members:

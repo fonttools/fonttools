@@ -15,7 +15,6 @@ pens
    pointInsidePen
    qtPen
    recordingPen
-   reportLabPen
    reverseContourPen
    statisticsPen
    svgPathPen

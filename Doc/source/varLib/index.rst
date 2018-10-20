@@ -19,5 +19,6 @@ varLib
    varStore
 
 .. automodule:: fontTools.varLib
+   :inherited-members:
    :members:
    :undoc-members:

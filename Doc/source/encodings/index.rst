@@ -11,6 +11,7 @@ encodings
 
 
 .. automodule:: fontTools.encodings
+   :inherited-members:
    :members:
    :undoc-members:
 

@@ -3,6 +3,7 @@ MacRoman
 ########
 
 .. automodule:: fontTools.encodings.MacRoman
+   :inherited-members:
    :members:
    :undoc-members:
 

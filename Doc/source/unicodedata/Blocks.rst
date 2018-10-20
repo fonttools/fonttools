@@ -3,6 +3,7 @@ Blocks
 ######
 
 .. automodule:: fontTools.unicodedata.Blocks
+   :inherited-members:
    :members:
    :undoc-members:
 

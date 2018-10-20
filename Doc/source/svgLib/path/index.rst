@@ -8,5 +8,6 @@ path
    parser
 
 .. automodule:: fontTools.svgLib.path
+   :inherited-members:
    :members:
    :undoc-members:
