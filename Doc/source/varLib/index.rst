@@ -6,7 +6,6 @@ varLib
    :maxdepth: 2
 
    builder
-   designspace
    featureVars
    interpolatable
    interpolate_layout
