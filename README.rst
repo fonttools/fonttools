@@ -189,112 +189,112 @@ are required to unlock the extra features named "ufo", etc.
 
   Package for reading and writing UFO source files; it requires:
 
-  - `fs <https://pypi.org/pypi/fs>`__: (aka ``pyfilesystem2``) filesystem
+  * `fs <https://pypi.org/pypi/fs>`__: (aka ``pyfilesystem2``) filesystem
     abstraction layer.
 
-  - `enum34 <https://pypi.org/pypi/enum34>`__: backport for the built-in ``enum``
+  * `enum34 <https://pypi.org/pypi/enum34>`__: backport for the built-in ``enum``
     module (only required on Python < 3.4).
 
   *Extra:* ``ufo``
 
--  ``Lib/fontTools/ttLib/woff2.py``
+- ``Lib/fontTools/ttLib/woff2.py``
 
-   Module to compress/decompress WOFF 2.0 web fonts; it requires:
+  Module to compress/decompress WOFF 2.0 web fonts; it requires:
 
-   -  `brotli <https://pypi.python.org/pypi/Brotli>`__: Python bindings of
-      the Brotli compression library.
-
-  *Extra:* ``woff``
-
--  ``Lib/fontTools/ttLib/sfnt.py``
-
-   To better compress WOFF 1.0 web fonts, the following module can be used
-   instead of the built-in ``zlib`` library:
-
-   -  `zopfli <https://pypi.python.org/pypi/zopfli>`__: Python bindings of
-      the Zopfli compression library.
+  * `brotli <https://pypi.python.org/pypi/Brotli>`__: Python bindings of
+    the Brotli compression library.
 
   *Extra:* ``woff``
 
--  ``Lib/fontTools/unicode.py``
+- ``Lib/fontTools/ttLib/sfnt.py``
 
-   To display the Unicode character names when dumping the ``cmap`` table
-   with ``ttx`` we use the ``unicodedata`` module in the Standard Library.
-   The version included in there varies between different Python versions.
-   To use the latest available data, you can install:
+  To better compress WOFF 1.0 web fonts, the following module can be used
+  instead of the built-in ``zlib`` library:
 
-   -  `unicodedata2 <https://pypi.python.org/pypi/unicodedata2>`__:
-      ``unicodedata`` backport for Python 2.7 and 3.5 updated to the latest
-      Unicode version 9.0. Note this is not necessary if you use Python 3.6
-      as the latter already comes with an up-to-date ``unicodedata``.
+  * `zopfli <https://pypi.python.org/pypi/zopfli>`__: Python bindings of
+    the Zopfli compression library.
+
+  *Extra:* ``woff``
+
+- ``Lib/fontTools/unicode.py``
+
+  To display the Unicode character names when dumping the ``cmap`` table
+  with ``ttx`` we use the ``unicodedata`` module in the Standard Library.
+  The version included in there varies between different Python versions.
+  To use the latest available data, you can install:
+
+  * `unicodedata2 <https://pypi.python.org/pypi/unicodedata2>`__:
+    ``unicodedata`` backport for Python 2.7 and 3.5 updated to the latest
+    Unicode version 9.0. Note this is not necessary if you use Python 3.6
+    as the latter already comes with an up-to-date ``unicodedata``.
 
   *Extra:* ``unicode``
 
--  ``Lib/fontTools/varLib/interpolatable.py``
+- ``Lib/fontTools/varLib/interpolatable.py``
 
-   Module for finding wrong contour/component order between different masters.
-   It requires one of the following packages in order to solve the so-called
-   "minimum weight perfect matching problem in bipartite graphs", or
-   the Assignment problem:
+  Module for finding wrong contour/component order between different masters.
+  It requires one of the following packages in order to solve the so-called
+  "minimum weight perfect matching problem in bipartite graphs", or
+  the Assignment problem:
 
-   *  `scipy <https://pypi.python.org/pypi/scipy>`__: the Scientific Library
-      for Python, which internally uses `NumPy <https://pypi.python.org/pypi/numpy>`__
-      arrays and hence is very fast;
-   *  `munkres <https://pypi.python.org/pypi/munkres>`__: a pure-Python
-      module that implements the Hungarian or Kuhn-Munkres algorithm.
+  * `scipy <https://pypi.python.org/pypi/scipy>`__: the Scientific Library
+    for Python, which internally uses `NumPy <https://pypi.python.org/pypi/numpy>`__
+    arrays and hence is very fast;
+  * `munkres <https://pypi.python.org/pypi/munkres>`__: a pure-Python
+    module that implements the Hungarian or Kuhn-Munkres algorithm.
 
   *Extra:* ``interpolatable``
 
--  ``Lib/fontTools/misc/symfont.py``
+- ``Lib/fontTools/misc/symfont.py``
 
-   Advanced module for symbolic font statistics analysis; it requires:
+  Advanced module for symbolic font statistics analysis; it requires:
 
-   *  `sympy <https://pypi.python.org/pypi/sympy>`__: the Python library for
-      symbolic mathematics.
+  * `sympy <https://pypi.python.org/pypi/sympy>`__: the Python library for
+    symbolic mathematics.
 
-   *Extra:* ``symfont``
+  *Extra:* ``symfont``
 
--  ``Lib/fontTools/t1Lib.py``
+- ``Lib/fontTools/t1Lib.py``
 
-   To get the file creator and type of Macintosh PostScript Type 1 fonts
-   on Python 3 you need to install the following module, as the old ``MacOS``
-   module is no longer included in Mac Python:
+  To get the file creator and type of Macintosh PostScript Type 1 fonts
+  on Python 3 you need to install the following module, as the old ``MacOS``
+  module is no longer included in Mac Python:
 
-   *  `xattr <https://pypi.python.org/pypi/xattr>`__: Python wrapper for
-      extended filesystem attributes (macOS platform only).
+  * `xattr <https://pypi.python.org/pypi/xattr>`__: Python wrapper for
+    extended filesystem attributes (macOS platform only).
 
-   *Extra:* ``type1``
+  *Extra:* ``type1``
 
--  ``Lib/fontTools/pens/cocoaPen.py``
+- ``Lib/fontTools/pens/cocoaPen.py``
 
-   Pen for drawing glyphs with Cocoa ``NSBezierPath``, requires:
+  Pen for drawing glyphs with Cocoa ``NSBezierPath``, requires:
 
-   *  `PyObjC <https://pypi.python.org/pypi/pyobjc>`__: the bridge between
-      Python and the Objective-C runtime (macOS platform only).
+  * `PyObjC <https://pypi.python.org/pypi/pyobjc>`__: the bridge between
+    Python and the Objective-C runtime (macOS platform only).
 
--  ``Lib/fontTools/pens/qtPen.py``
+- ``Lib/fontTools/pens/qtPen.py``
 
-   Pen for drawing glyphs with Qt's ``QPainterPath``, requires:
+  Pen for drawing glyphs with Qt's ``QPainterPath``, requires:
 
-   *  `PyQt5 <https://pypi.python.org/pypi/PyQt5>`__: Python bindings for
-      the Qt cross platform UI and application toolkit.
+  * `PyQt5 <https://pypi.python.org/pypi/PyQt5>`__: Python bindings for
+    the Qt cross platform UI and application toolkit.
 
--  ``Lib/fontTools/pens/reportLabPen.py``
+- ``Lib/fontTools/pens/reportLabPen.py``
 
-   Pen to drawing glyphs as PNG images, requires:
+  Pen to drawing glyphs as PNG images, requires:
 
-   *  `reportlab <https://pypi.python.org/pypi/reportlab>`__: Python toolkit
-      for generating PDFs and graphics.
+  * `reportlab <https://pypi.python.org/pypi/reportlab>`__: Python toolkit
+    for generating PDFs and graphics.
 
--  ``Lib/fontTools/inspect.py``
+- ``Lib/fontTools/inspect.py``
 
-   A GUI font inspector, requires one of the following packages:
+  A GUI font inspector, requires one of the following packages:
 
-   *  `PyGTK <https://pypi.python.org/pypi/PyGTK>`__: Python bindings for
-      GTK  2.x (only works with Python 2).
-   *  `PyGObject <https://wiki.gnome.org/action/show/Projects/PyGObject>`__ :
-      Python bindings for GTK 3.x and gobject-introspection libraries (also
-      compatible with Python 3).
+  * `PyGTK <https://pypi.python.org/pypi/PyGTK>`__: Python bindings for
+    GTK  2.x (only works with Python 2).
+  * `PyGObject <https://wiki.gnome.org/action/show/Projects/PyGObject>`__ :
+    Python bindings for GTK 3.x and gobject-introspection libraries (also
+    compatible with Python 3).
 
 Testing
 ~~~~~~~
