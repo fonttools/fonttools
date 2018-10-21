@@ -14,7 +14,7 @@
 - [subset] Include nameIDs referenced by STAT table (#1327).
 - [loggingTools] Added ``msg=None`` argument to
   ``CapturingLogHandler.assertRegex`` (0245f2c).
-- [varLib.mutator] Implemented ``FeatureVariations`` instantiatio (#1244).
+- [varLib.mutator] Implemented ``FeatureVariations`` instantiation (#1244).
 - [g_l_y_f] Added PointPen support to ``_TTGlyph`` objects (#1334).
 
 3.30.0 (released 2018-09-18)
