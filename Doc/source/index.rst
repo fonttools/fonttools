@@ -1,3 +1,9 @@
+.. image:: ../../Icons/FontToolsIconGreenCircle.png
+   :width: 200px
+   :height: 200px
+   :alt: Font Tools
+   :align: center
+
 fontTools Docs
 ==============
 
