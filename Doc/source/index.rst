@@ -287,6 +287,7 @@ Table of Contents
 
 .. toctree::
    :maxdepth: 2
+   :caption: Library
 
    afmLib
    agl
