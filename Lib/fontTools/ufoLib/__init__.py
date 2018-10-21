@@ -689,11 +689,17 @@ class UFOReader(object):
 		Thus, empty directories will be skipped.
 		"""
 		try:
+			self._dataFS = self.fs.opendir(DATA_DIRNAME)
+		except fs.errors.ResourceNotFound:
+			return []
+		except fs.errors.DirectoryExpected:
+			raise UFOLibError("The UFO contains a \"data\" file instead of a directory.")
+		try:
 			# fs Walker.files method returns "absolute" paths (in terms of the
 			# root of the 'data' SubFS), so we strip the leading '/' to make
 			# them relative
 			return [
-				p.lstrip("/") for p in self.fs.opendir(DATA_DIRNAME).walk.files()
+				p.lstrip("/") for p in self._dataFS.walk.files()
 			]
 		except fs.errors.ResourceError:
 			return []
@@ -711,12 +717,13 @@ class UFOReader(object):
 			return []
 		if validate is None:
 			validate = self._validate
-		if not self.fs.exists(IMAGES_DIRNAME):
+		try:
+			self._imagesFS = imagesFS = self.fs.opendir(IMAGES_DIRNAME)
+		except fs.errors.ResourceNotFound:
 			return []
-		elif not self.fs.isdir(IMAGES_DIRNAME):
+		except fs.errors.DirectoryExpected:
 			raise UFOLibError("The UFO contains an \"images\" file instead of a directory.")
 		result = []
-		self._imagesFS = imagesFS = self.fs.opendir(IMAGES_DIRNAME)
 		for path in imagesFS.scandir("/"):
 			if path.is_dir:
 				# silently skip this as version control
@@ -731,6 +738,22 @@ class UFOReader(object):
 				result.append(path.name)
 		return result
 
+	def readData(self, fileName):
+		"""
+		Return bytes for the file named 'fileName' inside the 'data/' directory.
+		"""
+		fileName = fsdecode(fileName)
+		try:
+			try:
+				dataFS = self._dataFS
+			except AttributeError:
+				# in case readData is called before getDataDirectoryListing
+				dataFS = self.fs.opendir(DATA_DIRNAME)
+			data = dataFS.getbytes(fileName)
+		except fs.errors.ResourceNotFound:
+			raise UFOLibError("No data file named '%s' on %s" % (fileName, self.fs))
+		return data
+
 	def readImage(self, fileName, validate=None):
 		"""
 		Return image data for the file named fileName.
@@ -742,15 +765,16 @@ class UFOReader(object):
 			validate = self._validate
 		if self._formatVersion < 3:
 			raise UFOLibError("Reading images is not allowed in UFO %d." % self._formatVersion)
-		try:
-			imagesFS = self._imagesFS
-		except AttributeError:
-			# in case readImage is called before getImageDirectoryListing
-			imagesFS = self.fs.opendir(IMAGES_DIRNAME)
 		fileName = fsdecode(fileName)
-		data = imagesFS.getbytes(fileName)
-		if data is None:
-			raise UFOLibError("No image file named %s." % fileName)
+		try:
+			try:
+				imagesFS = self._imagesFS
+			except AttributeError:
+				# in case readImage is called before getImageDirectoryListing
+				imagesFS = self.fs.opendir(IMAGES_DIRNAME)
+			data = imagesFS.getbytes(fileName)
+		except fs.errors.ResourceNotFound:
+			raise UFOLibError("No image file named '%s' on %s" % (fileName, self.fs))
 		if validate:
 			valid, error = pngValidator(data=data)
 			if not valid:
@@ -1526,6 +1550,19 @@ class UFOWriter(object):
 		foundDirectory = self._findDirectoryForLayerName(layerName)
 		self.removePath(foundDirectory, removeEmptyParents=False)
 		del self.layerContents[layerName]
+
+	def writeData(self, fileName, data):
+		"""
+		Write data to fileName in the 'data' directory.
+		The data must be a bytes string.
+		"""
+		self.writeBytesToPath("%s/%s" % (DATA_DIRNAME, fsdecode(fileName)), data)
+
+	def removeData(self, fileName):
+		"""
+		Remove the file named fileName from the data directory.
+		"""
+		self.removePath("%s/%s" % (DATA_DIRNAME, fsdecode(fileName)))
 
 	# /images
 
