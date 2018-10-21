@@ -164,6 +164,38 @@ The ``fontTools`` package currently has no (required) external dependencies
 besides the modules included in the Python Standard Library.
 However, a few extra dependencies are required by some of its modules, which
 are needed to unlock optional features.
+The ``fonttools`` PyPI distribution also supports so-called "extras", i.e. a
+set of keywords that describe a group of additional dependencies, which can be
+used when installing via pip, or when specifying a requirement.
+For example:
+
+.. code:: sh
+
+    pip install fonttools[ufo,lxml,woff,unicode]
+
+This command will install fonttools, as well as the optional dependencies that
+are required to unlock the extra features named "ufo", etc.
+
+- ``Lib/fontTools/misc/etree.py``
+
+  The module exports a ElementTree-like API for reading/writing XML files, and
+  allows to use as the backend either the built-in ``xml.etree`` module or
+  `lxml <https://http://lxml.de>`__. The latter is preferred whenever present,
+  as it is generally faster and more secure.
+
+  *Extra:* ``lxml``
+
+- ``Lib/fontTools/ufoLib``
+
+  Package for reading and writing UFO source files; it requires:
+
+  - `fs <https://pypi.org/pypi/fs`__: (aka ``pyfilesystem2``) filesystem
+    abstraction layer.
+
+  - `enum34 <https://pypi.org/pypi/enum34`__: backport for the built-in ``enum``
+    module (only required on Python < 3.4).
+
+  *Extra:* ``ufo``
 
 -  ``Lib/fontTools/ttLib/woff2.py``
 
@@ -172,6 +204,8 @@ are needed to unlock optional features.
    -  `brotli <https://pypi.python.org/pypi/Brotli>`__: Python bindings of
       the Brotli compression library.
 
+  *Extra:* ``woff``
+
 -  ``Lib/fontTools/ttLib/sfnt.py``
 
    To better compress WOFF 1.0 web fonts, the following module can be used
@@ -179,6 +213,8 @@ are needed to unlock optional features.
 
    -  `zopfli <https://pypi.python.org/pypi/zopfli>`__: Python bindings of
       the Zopfli compression library.
+
+  *Extra:* ``woff``
 
 -  ``Lib/fontTools/unicode.py``
 
@@ -191,6 +227,8 @@ are needed to unlock optional features.
       ``unicodedata`` backport for Python 2.7 and 3.5 updated to the latest
       Unicode version 9.0. Note this is not necessary if you use Python 3.6
       as the latter already comes with an up-to-date ``unicodedata``.
+
+  *Extra:* ``unicode``
 
 -  ``Lib/fontTools/varLib/interpolatable.py``
 
@@ -205,12 +243,16 @@ are needed to unlock optional features.
    *  `munkres <https://pypi.python.org/pypi/munkres>`__: a pure-Python
       module that implements the Hungarian or Kuhn-Munkres algorithm.
 
+  *Extra:* ``interpolatable``
+
 -  ``Lib/fontTools/misc/symfont.py``
 
    Advanced module for symbolic font statistics analysis; it requires:
 
    *  `sympy <https://pypi.python.org/pypi/sympy>`__: the Python library for
       symbolic mathematics.
+
+   *Extra:* ``symfont``
 
 -  ``Lib/fontTools/t1Lib.py``
 
@@ -220,6 +262,8 @@ are needed to unlock optional features.
 
    *  `xattr <https://pypi.python.org/pypi/xattr>`__: Python wrapper for
       extended filesystem attributes (macOS platform only).
+
+   *Extra:* ``type1``
 
 -  ``Lib/fontTools/pens/cocoaPen.py``
 
