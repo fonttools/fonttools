@@ -189,10 +189,10 @@ are required to unlock the extra features named "ufo", etc.
 
   Package for reading and writing UFO source files; it requires:
 
-  - `fs <https://pypi.org/pypi/fs`__: (aka ``pyfilesystem2``) filesystem
+  - `fs <https://pypi.org/pypi/fs>`__: (aka ``pyfilesystem2``) filesystem
     abstraction layer.
 
-  - `enum34 <https://pypi.org/pypi/enum34`__: backport for the built-in ``enum``
+  - `enum34 <https://pypi.org/pypi/enum34>`__: backport for the built-in ``enum``
     module (only required on Python < 3.4).
 
   *Extra:* ``ufo``
