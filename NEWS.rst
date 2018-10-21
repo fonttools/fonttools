@@ -1,3 +1,6 @@
+3.31.0 (released 2018-10-21)
+----------------------------
+
 - [ufoLib] Merged the `ufoLib <https://github.com/unified-font-objects/ufoLib>`__
   master branch into a new ``fontTools.ufoLib`` package (#1335, #1095).
   Moved ``ufoLib.pointPen`` module to ``fontTools.pens.pointPen``.
