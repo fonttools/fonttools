@@ -1,3 +1,22 @@
+- [ufoLib] Merged the `ufoLib <https://github.com/unified-font-objects/ufoLib>`__
+  master branch into a new ``fontTools.ufoLib`` package (#1335, #1095).
+  Moved ``ufoLib.pointPen`` module to ``fontTools.pens.pointPen``.
+  Moved ``ufoLib.etree`` module to ``fontTools.misc.etree``.
+  Moved ``ufoLib.plistlib`` module to ``fontTools.misc.plistlib``.
+  To use the new ``fontTools.ufoLib`` module you need to install fonttools
+  with the ``[ufo]`` extra, or you can manually install the required additional
+  dependencies (cf. README.rst).
+- [morx] Support AAT action type to insert glyphs and clean up compilation
+  of AAT action tables (4a1871f, 2011ccf).
+- [subset] The ``--no-hinting`` on a CFF font now also drops the optional
+  hinting keys in Private dict: ``ForceBold``, ``LanguageGroup``, and
+  ``ExpansionFactor`` (#1322).
+- [subset] Include nameIDs referenced by STAT table (#1327).
+- [loggingTools] Added ``msg=None`` argument to
+  ``CapturingLogHandler.assertRegex`` (0245f2c).
+- [varLib.mutator] Implemented ``FeatureVariations`` instantiatio (#1244).
+- [g_l_y_f] Added PointPen support to ``_TTGlyph`` objects (#1334).
+
 3.30.0 (released 2018-09-18)
 ----------------------------
 
