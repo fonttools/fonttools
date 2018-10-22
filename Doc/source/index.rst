@@ -4,8 +4,11 @@
    :alt: Font Tools
    :align: center
 
+
 fontTools Docs
 ==============
+
+|Travis Build Status| |Appveyor Build status| |Coverage Status| |PyPI| |Gitter Chat|
 
 About
 -----
@@ -324,3 +327,15 @@ Table of Contents
    varLib/index
    voltLib
 
+
+.. |Travis Build Status| image:: https://travis-ci.org/fonttools/fonttools.svg
+   :target: https://travis-ci.org/fonttools/fonttools
+.. |Appveyor Build status| image:: https://ci.appveyor.com/api/projects/status/0f7fmee9as744sl7/branch/master?svg=true
+   :target: https://ci.appveyor.com/project/fonttools/fonttools/branch/master
+.. |Coverage Status| image:: https://codecov.io/gh/fonttools/fonttools/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/fonttools/fonttools
+.. |PyPI| image:: https://img.shields.io/pypi/v/fonttools.svg
+   :target: https://pypi.org/project/FontTools
+.. |Gitter Chat| image:: https://badges.gitter.im/fonttools-dev/Lobby.svg
+   :alt: Join the chat at https://gitter.im/fonttools-dev/Lobby
+   :target: https://gitter.im/fonttools-dev/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
