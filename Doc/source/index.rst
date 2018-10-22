@@ -213,6 +213,18 @@ To better compress WOFF 1.0 web fonts, the following module can be used instead 
 * `zopfli <https://pypi.python.org/pypi/zopfli>`_: Python bindings of the Zopfli compression library
 
 
+ufoLib Module
+^^^^^^^^^^^^^
+
+:py:mod:`fontTools.ufoLib`
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Package for reading and writing UFO source files; it requires:
+
+* `fs <https://pypi.org/pypi/fs>`_: (aka ``pyfilesystem2``) filesystem abstraction layer
+* `enum34 <https://pypi.org/pypi/enum34>`_: backport for the built-in enum module (only required on Python < 3.4)
+
+
 unicode Module
 ^^^^^^^^^^^^^^
 
