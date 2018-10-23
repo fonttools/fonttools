@@ -62,12 +62,57 @@ def programToCommands(program):
 		commands.append(('', stack))
 	return commands
 
-def commandsToProgram(commands):
+
+def commandsToProgram(commands, max_stack, var_model=None, round_func=None):
 	"""Takes a commands list as returned by programToCommands() and converts
-	it back to a T2CharString program list."""
+	it back to a T2CharString or CFF2Charstring program list."""
 	program = []
-	for op,args in commands:
-		program.extend(args)
+	for op, args in commands:
+		num_args = len(args)
+		# some of the args may be blend lists, and some may be
+		# single coordinate values.
+		i = 0
+		stack_use = 0
+		while i < num_args:
+			arg = args[i]
+			if not isinstance(arg, list):
+				program.append(arg)
+				i += 1
+				stack_use += 1
+			else:
+				prev_stack_use = stack_use
+				""" The arg is a tuple of blend values.
+				These are each (master 0,master 1..master n)
+				Combine as many successive tuples as we can,
+				up to the max stack limit.
+				"""
+				num_masters = len(arg)
+				blendlist = [arg]
+				i += 1
+				stack_use += 1 + num_masters  # 1 for the num_blends arg
+				while (i < num_args) and isinstance(args[i], list):
+					blendlist.append(args[i])
+					i += 1
+					stack_use += num_masters
+					if stack_use + num_masters > max_stack:
+						break
+				num_blends = len(blendlist)
+				# append the 'num_blends' default font values
+				for arg in blendlist:
+					if round_func:
+						arg[0] = round_func(arg[0])
+					program.append(arg[0])
+				for arg in blendlist:
+					# for each coordinate tuple, append the region deltas
+					deltas = var_model.getDeltas(arg)
+					if round_func:
+						deltas = [round_func(delta) for delta in deltas]
+					# First item in 'deltas' is the default master value;
+					# for CFF2 data, that has already been written.
+					program.extend(deltas[1:])
+				program.append(num_blends)
+				program.append('blend')
+				stack_use = prev_stack_use + num_blends
 		if op:
 			program.append(op)
 	return program
@@ -415,7 +460,9 @@ def specializeCommands(commands,
 				continue
 
 			# Merge adjacent hlineto's and vlineto's.
-			if i and op in {'hlineto', 'vlineto'} and op == commands[i-1][0]:
+			if (i and op in {'hlineto', 'vlineto'} and
+					(op == commands[i-1][0]) and 
+					(not isinstance(args[0], list))):
 				_, other_args = commands[i-1]
 				assert len(args) == 1 and len(other_args) == 1
 				commands[i-1] = (op, [other_args[0]+args[0]])
