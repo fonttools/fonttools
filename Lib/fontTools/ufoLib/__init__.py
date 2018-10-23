@@ -5,6 +5,7 @@ from copy import deepcopy
 import logging
 import zipfile
 import enum
+from collections import OrderedDict
 import fs
 import fs.base
 import fs.subfs
@@ -961,7 +962,7 @@ class UFOWriter(_PlistWriterMixin, UFOReader):
 		self.layerContents = {}
 		if previousFormatVersion is not None and previousFormatVersion >= 3:
 			# already exists
-			self._readLayerContents(validate=validate)
+			self.layerContents = OrderedDict(self._readLayerContents(validate))
 		else:
 			# previous < 3
 			# imply the layer contents
@@ -1314,25 +1315,6 @@ class UFOWriter(_PlistWriterMixin, UFOReader):
 
 	# glyph sets & layers
 
-	def _readLayerContents(self, validate):
-		"""
-		Rebuild the layer contents list by checking what glyph sets
-		are available on disk.
-
-		``validate`` will validate the data.
-		"""
-		# read the file on disk
-		raw = self._getPlist(LAYERCONTENTS_FILENAME)
-		contents = {}
-		if validate:
-			valid, error = layerContentsValidator(raw, self.fs)
-			if not valid:
-				raise UFOLibError(error)
-		for entry in raw:
-			layerName, directoryName = entry
-			contents[layerName] = directoryName
-		self.layerContents = contents
-
 	def writeLayerContents(self, layerOrder=None, validate=None):
 		"""
 		Write the layercontents.plist file. This method  *must* be called
@@ -1394,7 +1376,7 @@ class UFOWriter(_PlistWriterMixin, UFOReader):
 			raise UFOLibError("Only the default layer can be writen in UFO %d." % self.formatVersion)
 		# locate a layer name when None has been given
 		if layerName is None and defaultLayer:
-			for existingLayerName, directory in list(self.layerContents.items()):
+			for existingLayerName, directory in self.layerContents.items():
 				if directory == DEFAULT_GLYPHS_DIRNAME:
 					layerName = existingLayerName
 			if layerName is None:
@@ -1442,9 +1424,10 @@ class UFOWriter(_PlistWriterMixin, UFOReader):
 		# matches the default being written. also make sure that this layer
 		# name is not already linked to a non-default layer.
 		if defaultLayer:
-			for existingLayerName, directory in list(self.layerContents.items()):
+			for existingLayerName, directory in self.layerContents.items():
 				if directory == DEFAULT_GLYPHS_DIRNAME:
 					if existingLayerName != layerName:
+						print(existingLayerName, layerName)
 						raise UFOLibError("Another layer is already mapped to the default directory.")
 				elif existingLayerName == layerName:
 					raise UFOLibError("The layer name is already mapped to a non-default layer.")
@@ -1458,7 +1441,7 @@ class UFOWriter(_PlistWriterMixin, UFOReader):
 			else:
 				# not caching this could be slightly expensive,
 				# but caching it will be cumbersome
-				existing = [d.lower() for d in list(self.layerContents.values())]
+				existing = {d.lower() for d in self.layerContents.values()}
 				if not isinstance(layerName, unicode):
 					try:
 						layerName = unicode(layerName)
@@ -1506,14 +1489,14 @@ class UFOWriter(_PlistWriterMixin, UFOReader):
 			if newLayerName in self.layerContents:
 				raise UFOLibError("A layer named %s already exists." % newLayerName)
 			# make sure the default layer doesn't already exist
-			if defaultLayer and DEFAULT_GLYPHS_DIRNAME in list(self.layerContents.values()):
+			if defaultLayer and DEFAULT_GLYPHS_DIRNAME in self.layerContents.values():
 				raise UFOLibError("A default layer already exists.")
 		# get the paths
 		oldDirectory = self._findDirectoryForLayerName(layerName)
 		if defaultLayer:
 			newDirectory = DEFAULT_GLYPHS_DIRNAME
 		else:
-			existing = [name.lower() for name in list(self.layerContents.values())]
+			existing = {name.lower() for name in self.layerContents.values()}
 			newDirectory = userNameToFileName(newLayerName, existing=existing, prefix="glyphs.")
 		# update the internal mapping
 		del self.layerContents[layerName]
