@@ -107,7 +107,7 @@ class UFOFileStructure(enum.Enum):
 # --------------
 
 
-class _ModTimeGetterMixin(object):
+class _UFOBaseIO(object):
 
 	def _getFileModificationTime(self, path):
 		"""
@@ -122,9 +122,6 @@ class _ModTimeGetterMixin(object):
 			return None
 		else:
 			return datetimeAsTimestamp(dt)
-
-
-class _PlistReaderMixin(object):
 
 	def _getPlist(self, fileName, default=None):
 		"""
@@ -152,9 +149,6 @@ class _PlistReaderMixin(object):
 			raise UFOLibError(
 				"'%s' could not be read on %s: %s" % (fileName, self.fs, e)
 			)
-
-
-class _PlistWriterMixin(object):
 
 	def _writePlist(self, fileName, obj):
 		"""
@@ -198,7 +192,7 @@ class _PlistWriterMixin(object):
 # UFO Reader
 # ----------
 
-class UFOReader(_PlistReaderMixin, _ModTimeGetterMixin):
+class UFOReader(_UFOBaseIO):
 
 	"""
 	Read the various components of the .ufo.
@@ -811,7 +805,7 @@ class UFOReader(_PlistReaderMixin, _ModTimeGetterMixin):
 # UFO Writer
 # ----------
 
-class UFOWriter(_PlistWriterMixin, UFOReader):
+class UFOWriter(UFOReader):
 
 	"""
 	Write the various components of the .ufo.
