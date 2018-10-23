@@ -63,7 +63,7 @@ def programToCommands(program):
 	return commands
 
 
-def commandsToProgram(commands, max_stack, var_model=None, round_func=None):
+def commandsToProgram(commands, var_model=None, round_func=None):
 	"""Takes a commands list as returned by programToCommands() and converts
 	it back to a T2CharString or CFF2Charstring program list."""
 	program = []
@@ -94,7 +94,8 @@ def commandsToProgram(commands, max_stack, var_model=None, round_func=None):
 					blendlist.append(args[i])
 					i += 1
 					stack_use += num_masters
-					if stack_use + num_masters > max_stack:
+					if stack_use + num_masters > 513: 
+						# if we are here, max stack is is the CFF2 max stack.
 						break
 				num_blends = len(blendlist)
 				# append the 'num_blends' default font values
