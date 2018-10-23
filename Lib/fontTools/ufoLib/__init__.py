@@ -58,6 +58,7 @@ __all__ = [
 	"UFOLibError",
 	"UFOReader",
 	"UFOWriter",
+	"UFOReaderWriter",
 	"UFOFileStructure",
 	"fontInfoAttributesVersion1",
 	"fontInfoAttributesVersion2",
@@ -1585,6 +1586,10 @@ class UFOWriter(_PlistWriterMixin, UFOReader):
 
 	def __exit__(self, exc_type, exc_value, exc_tb):
 		self.close()
+
+
+# just an alias, makes it more explicit
+UFOReaderWriter = UFOWriter
 
 
 # ----------------
