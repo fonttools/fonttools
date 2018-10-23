@@ -821,6 +821,8 @@ class UFOWriter(object):
 			path = path.__fspath__()
 
 		if isinstance(path, basestring):
+			# normalize path by removing trailing or double slashes
+			path = os.path.normpath(path)
 			havePreviousFile = os.path.exists(path)
 			if havePreviousFile:
 				# ensure we use the same structure as the destination
