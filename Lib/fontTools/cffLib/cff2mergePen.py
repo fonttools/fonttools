@@ -295,8 +295,9 @@ class CFF2CharStringMergePen(T2CharStringPen):
 			commands = specializeCommands(commands,
 										  generalizeFirst=False,
 										  maxstack=maxstack)
-		program = commandsToProgram(commands, maxstack,
-									var_model, round_func=self._round)
+		program = commandsToProgram(commands,
+									var_model=var_model,
+									round_func=self._round)
 		charString = CFF2Subr(
 			program=program, private=private, globalSubrs=globalSubrs)
 		return charString
