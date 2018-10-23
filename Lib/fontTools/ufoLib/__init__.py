@@ -105,104 +105,98 @@ class UFOFileStructure(enum.Enum):
 # --------------
 
 
-def _getFileModificationTime(self, path):
-	"""
-	Returns the modification time for the file at the given path, as a
-	floating point number giving the number of seconds since the epoch.
-	The path must be relative to the UFO path.
-	Returns None if the file does not exist.
-	"""
-	try:
-		dt = self.fs.getinfo(fsdecode(path), namespaces=["details"]).modified
-	except (fs.errors.MissingInfoNamespace, fs.errors.ResourceNotFound):
-		return None
-	else:
-		return datetimeAsTimestamp(dt)
+class _ModTimeGetterMixin(object):
 
-
-def _readBytesFromPath(self, path):
-	"""
-	Returns the bytes in the file at the given path.
-	The path must be relative to the UFO's filesystem root.
-	Returns None if the file does not exist.
-	"""
-	try:
-		return self.fs.getbytes(fsdecode(path))
-	except fs.errors.ResourceNotFound:
-		return None
-
-
-def _getPlist(self, fileName, default=None):
-	"""
-	Read a property list relative to the UFO filesystem's root.
-	Raises UFOLibError if the file is missing and default is None,
-	otherwise default is returned.
-
-	The errors that could be raised during the reading of a plist are
-	unpredictable and/or too large to list, so, a blind try: except:
-	is done. If an exception occurs, a UFOLibError will be raised.
-	"""
-	try:
-		with self.fs.open(fileName, "rb") as f:
-			return plistlib.load(f)
-	except fs.errors.ResourceNotFound:
-		if default is None:
-			raise UFOLibError(
-				"'%s' is missing on %s. This file is required"
-				% (fileName, self.fs)
-			)
-		else:
-			return default
-	except Exception as e:
-		# TODO(anthrotype): try to narrow this down a little
-		raise UFOLibError(
-			"'%s' could not be read on %s: %s" % (fileName, self.fs, e)
-		)
-
-
-def _writePlist(self, fileName, obj):
-	"""
-	Write a property list to a file relative to the UFO filesystem's root.
-
-	Do this sort of atomically, making it harder to corrupt existing files,
-	for example when plistlib encounters an error halfway during write.
-	This also checks to see if text matches the text that is already in the
-	file at path. If so, the file is not rewritten so that the modification
-	date is preserved.
-
-	The errors that could be raised during the writing of a plist are
-	unpredictable and/or too large to list, so, a blind try: except: is done.
-	If an exception occurs, a UFOLibError will be raised.
-	"""
-	if self._havePreviousFile:
+	def _getFileModificationTime(self, path):
+		"""
+		Returns the modification time for the file at the given path, as a
+		floating point number giving the number of seconds since the epoch.
+		The path must be relative to the UFO path.
+		Returns None if the file does not exist.
+		"""
 		try:
-			data = plistlib.dumps(obj)
+			dt = self.fs.getinfo(fsdecode(path), namespaces=["details"]).modified
+		except (fs.errors.MissingInfoNamespace, fs.errors.ResourceNotFound):
+			return None
+		else:
+			return datetimeAsTimestamp(dt)
+
+
+class _PlistReaderMixin(object):
+
+	def _getPlist(self, fileName, default=None):
+		"""
+		Read a property list relative to the UFO filesystem's root.
+		Raises UFOLibError if the file is missing and default is None,
+		otherwise default is returned.
+
+		The errors that could be raised during the reading of a plist are
+		unpredictable and/or too large to list, so, a blind try: except:
+		is done. If an exception occurs, a UFOLibError will be raised.
+		"""
+		try:
+			with self.fs.open(fileName, "rb") as f:
+				return plistlib.load(f)
+		except fs.errors.ResourceNotFound:
+			if default is None:
+				raise UFOLibError(
+					"'%s' is missing on %s. This file is required"
+					% (fileName, self.fs)
+				)
+			else:
+				return default
 		except Exception as e:
+			# TODO(anthrotype): try to narrow this down a little
 			raise UFOLibError(
-				"'%s' could not be written on %s because "
-				"the data is not properly formatted: %s"
-				% (fileName, self.fs, e)
+				"'%s' could not be read on %s: %s" % (fileName, self.fs, e)
 			)
-		if self.fs.exists(fileName) and data == self.fs.getbytes(fileName):
-			return
-		self.fs.setbytes(fileName, data)
-	else:
-		with self.fs.openbin(fileName, mode="w") as fp:
+
+
+class _PlistWriterMixin(object):
+
+	def _writePlist(self, fileName, obj):
+		"""
+		Write a property list to a file relative to the UFO filesystem's root.
+
+		Do this sort of atomically, making it harder to corrupt existing files,
+		for example when plistlib encounters an error halfway during write.
+		This also checks to see if text matches the text that is already in the
+		file at path. If so, the file is not rewritten so that the modification
+		date is preserved.
+
+		The errors that could be raised during the writing of a plist are
+		unpredictable and/or too large to list, so, a blind try: except: is done.
+		If an exception occurs, a UFOLibError will be raised.
+		"""
+		if self._havePreviousFile:
 			try:
-				plistlib.dump(obj, fp)
+				data = plistlib.dumps(obj)
 			except Exception as e:
 				raise UFOLibError(
 					"'%s' could not be written on %s because "
 					"the data is not properly formatted: %s"
 					% (fileName, self.fs, e)
 				)
+			if self.fs.exists(fileName) and data == self.fs.getbytes(fileName):
+				return
+			self.fs.setbytes(fileName, data)
+		else:
+			with self.fs.openbin(fileName, mode="w") as fp:
+				try:
+					plistlib.dump(obj, fp)
+				except Exception as e:
+					raise UFOLibError(
+						"'%s' could not be written on %s because "
+						"the data is not properly formatted: %s"
+						% (fileName, self.fs, e)
+					)
 
 
 # ----------
 # UFO Reader
 # ----------
 
-class UFOReader(object):
+class UFOReader(_PlistReaderMixin, _ModTimeGetterMixin):
 
 	"""
 	Read the various components of the .ufo.
@@ -280,6 +274,18 @@ class UFOReader(object):
 
 	# properties
 
+	def _get_path(self):
+		import warnings
+
+		warnings.warn(
+			"The 'path' attribute is deprecated; use the 'fs' attribute instead",
+			DeprecationWarning,
+			stacklevel=2,
+		)
+		return self._path
+
+	path = property(_get_path, doc="The path of the UFO (DEPRECATED).")
+
 	def _get_formatVersion(self):
 		return self._formatVersion
 
@@ -291,7 +297,7 @@ class UFOReader(object):
 	fileStructure = property(
 		_get_fileStructure,
 		doc=(
-			"The current file structure of the UFO: "
+			"The file structure of the UFO: "
 			"either UFOFileStructure.ZIP or UFOFileStructure.PACKAGE"
 		)
 	)
@@ -347,9 +353,16 @@ class UFOReader(object):
 
 	# support methods
 
-	_getPlist = _getPlist
-	getFileModificationTime = _getFileModificationTime
-	readBytesFromPath = _readBytesFromPath
+	def readBytesFromPath(self, path):
+		"""
+		Returns the bytes in the file at the given path.
+		The path must be relative to the UFO's filesystem root.
+		Returns None if the file does not exist.
+		"""
+		try:
+			return self.fs.getbytes(fsdecode(path))
+		except fs.errors.ResourceNotFound:
+			return None
 
 	def getReadFileForPath(self, path, encoding=None):
 		"""
@@ -796,7 +809,7 @@ class UFOReader(object):
 # UFO Writer
 # ----------
 
-class UFOWriter(object):
+class UFOWriter(_PlistWriterMixin, UFOReader):
 
 	"""
 	Write the various components of the .ufo.
@@ -959,45 +972,12 @@ class UFOWriter(object):
 
 	# properties
 
-	def _get_path(self):
-		import warnings
-
-		warnings.warn(
-			"The 'path' attribute is deprecated; use the 'fs' attribute instead",
-			DeprecationWarning,
-			stacklevel=2,
-		)
-		return self._path
-
-	path = property(_get_path, doc="The path the UFO is being written to (DEPRECATED).")
-
-	def _get_formatVersion(self):
-		return self._formatVersion
-
-	formatVersion = property(_get_formatVersion, doc="The format version of the UFO. This is set into metainfo.plist during __init__.")
-
 	def _get_fileCreator(self):
 		return self._fileCreator
 
 	fileCreator = property(_get_fileCreator, doc="The file creator of the UFO. This is set into metainfo.plist during __init__.")
 
-	def _get_fileStructure(self):
-		return self._fileStructure
-
-	fileStructure = property(
-		_get_fileStructure,
-		doc=(
-			"The file structure of the destination UFO: "
-			"either UFOFileStrucure.ZIP or UFOFileStructure.PACKAGE"
-		)
-	)
-
 	# support methods for file system interaction
-
-	_getPlist = _getPlist
-	_writePlist = _writePlist
-	readBytesFromPath = _readBytesFromPath
-	getFileModificationTime = _getFileModificationTime
 
 	def copyFromReader(self, reader, sourcePath, destPath):
 		"""
