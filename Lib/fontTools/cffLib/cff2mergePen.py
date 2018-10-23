@@ -1,33 +1,42 @@
-# Copyright (c) 2009 Type Supply LLC
-
 from __future__ import print_function, division, absolute_import
-from fontTools.misc.fixedTools import otRound
 from fontTools.misc.psCharStrings import CFF2Subr
-from fontTools.pens.t2CharStringPen import T2CharStringPen
+from fontTools.pens.t2CharStringPen import T2CharStringPen, t2c_round
 from fontTools.cffLib.specializer import (commandsToProgram,
-										specializeCommands,
-										)
+										  specializeCommands)
+from fontTools.cffLib import maxStackLimit
 
 
 class MergeTypeError(TypeError):
-	def __init__(self, point_type, pt_index, m_index, default_type):
+	def __init__(self, point_type, pt_index, m_index, default_type, glyphName):
 		self.error_msg = [
+					"In glyph '{gname}' "
 					"'{point_type}' at point index {pt_index} in master "
 					"index {m_index} differs from the default font point "
-					"type '{default_type}'".format(
-						point_type=point_type,
-						pt_index=pt_index,
-						m_index=m_index,
-						default_type=default_type)
+					"type '{default_type}'"
+					"".format(gname=glyphName,
+							  point_type=point_type, pt_index=pt_index,
+							  m_index=m_index, default_type=default_type)
 					][0]
 		super(MergeTypeError, self).__init__(self.error_msg)
+
+
+
+
+def makeRoundNumberFunc(tolerance):
+	if tolerance < 0:
+		raise ValueError("Rounding tolerance must be positive")
+
+	def roundNumber(val):
+		return t2c_round(val, tolerance)
+
+	return roundNumber
 
 
 class CFF2CharStringMergePen(T2CharStringPen):
 	"""Pen to merge Type 2 CharStrings.
 	"""
 	def __init__(self, default_commands,
-				 num_masters, master_idx, roundTolerance=0.5):
+				 glyphName, num_masters, master_idx, roundTolerance=0.5):
 		super(
 			CFF2CharStringMergePen,
 			self).__init__(width=None,
@@ -38,25 +47,12 @@ class CFF2CharStringMergePen(T2CharStringPen):
 		self.m_index = master_idx
 		self.num_masters = num_masters
 		self.prev_move_idx = 0
-		self.roundTolerance = roundTolerance
-
-	def _round(self, number):
-		tolerance = self.roundTolerance
-		if tolerance == 0:
-			return number  # no-op
-		rounded = otRound(number)
-		# return rounded integer if the tolerance >= 0.5, or if the absolute
-		# difference between the original float and the rounded integer is
-		# within the tolerance
-		if tolerance >= .5 or abs(rounded - number) <= tolerance:
-			return rounded
-		else:
-			# else return the value un-rounded
-			return number
+		self.glyphName = glyphName
+		self.roundNumber = makeRoundNumberFunc(roundTolerance)
 
 	def _p(self, pt):
 		""" Unlike T2CharstringPen, this class stores absolute values.
-		This is to allow the logic in check_and_fix_clospath() to work,
+		This is to allow the logic in check_and_fix_closepath() to work,
 		where the current or previous absolute point has to be compared to
 		the path start-point.
 		"""
@@ -65,8 +61,8 @@ class CFF2CharStringMergePen(T2CharStringPen):
 
 	def make_flat_curve(self, prev_coords, cur_coords):
 		# Convert line coords to curve coords.
-		dx = self._round((cur_coords[0] - prev_coords[0])/3.0)
-		dy = self._round((cur_coords[1] - prev_coords[1])/3.0)
+		dx = self.roundNumber((cur_coords[0] - prev_coords[0])/3.0)
+		dy = self.roundNumber((cur_coords[1] - prev_coords[1])/3.0)
 		new_coords = [prev_coords[0] + dx,
 					  prev_coords[1] + dy,
 					  prev_coords[0] + 2*dx,
@@ -81,9 +77,8 @@ class CFF2CharStringMergePen(T2CharStringPen):
 			new_coords = []
 			for i, cur_coords in enumerate(coords):
 				prev_coords = prev_cmd[1][i]
-				master_coords = self.make_flat_curve(
-											prev_coords[:2], cur_coords
-											)
+				master_coords = self.make_flat_curve(prev_coords[:2],
+													 cur_coords)
 				new_coords.append(master_coords)
 		else:
 			cur_coords = coords
@@ -106,7 +101,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 			success = False
 		return success, pt_coords
 
-	def check_and_fix_clospath(self, cmd, point_type, pt_coords):
+	def check_and_fix_closepath(self, cmd, point_type, pt_coords):
 		""" Some workflows drop a lineto which closes a path.
 		Also, if the last segment is a curve in one master,
 		and a flat curve in another, the flat curve can get
@@ -199,7 +194,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 				success, pt_coords = self.check_and_fix_flat_curve(
 							cmd, point_type, pt_coords)
 				if not success:
-					success = self.check_and_fix_clospath(
+					success = self.check_and_fix_closepath(
 							cmd, point_type, pt_coords)
 					if success:
 						# We may have incremented self.pt_index
@@ -207,11 +202,9 @@ class CFF2CharStringMergePen(T2CharStringPen):
 						if cmd[0] != point_type:
 							success = False
 					if not success:
-						raise MergeTypeError(
-										point_type,
-										self.pt_index,
-										len(cmd[1]),
-										cmd[0])
+						raise MergeTypeError(point_type,
+											 self.pt_index, len(cmd[1]),
+											 cmd[0], self.glyphName)
 			cmd[1].append(pt_coords)
 		self.pt_index += 1
 
@@ -265,7 +258,8 @@ class CFF2CharStringMergePen(T2CharStringPen):
 			cmd[1] = m_args
 
 		# Now convert from absolute to relative
-		x0 = y0 = [0]*self.num_masters
+		x0 = [0]*self.num_masters
+		y0 = [0]*self.num_masters
 		for cmd in self._commands:
 			is_x = True
 			coords = cmd[1]
@@ -284,20 +278,15 @@ class CFF2CharStringMergePen(T2CharStringPen):
 				is_x = not is_x
 			cmd[1] = rel_coords
 
-	def getCharString(
-					self, private=None, globalSubrs=None,
-					var_model=None, optimize=True
-				):
+	def getCharString(self, private=None, globalSubrs=None,
+					  var_model=None, optimize=True):
 		self.reorder_blend_args()
 		commands = self._commands
 		if optimize:
-			maxstack = 48 if not self._CFF2 else 513
-			commands = specializeCommands(commands,
-										  generalizeFirst=False,
-										  maxstack=maxstack)
-		program = commandsToProgram(commands,
-									var_model=var_model,
-									round_func=self._round)
-		charString = CFF2Subr(
-			program=program, private=private, globalSubrs=globalSubrs)
+			commands = specializeCommands(commands, generalizeFirst=False,
+										  maxstack=maxStackLimit)
+		program = commandsToProgram(commands, var_model=var_model,
+									round_func=self.roundNumber)
+		charString = CFF2Subr(program=program, private=private,
+							  globalSubrs=globalSubrs)
 		return charString

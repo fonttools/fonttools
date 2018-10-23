@@ -4,6 +4,7 @@
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.cffLib import maxStackLimit
 
 
 def stringToProgram(string):
@@ -94,7 +95,7 @@ def commandsToProgram(commands, var_model=None, round_func=None):
 					blendlist.append(args[i])
 					i += 1
 					stack_use += num_masters
-					if stack_use + num_masters > 513: 
+					if stack_use + num_masters > maxStackLimit: 
 						# if we are here, max stack is is the CFF2 max stack.
 						break
 				num_blends = len(blendlist)

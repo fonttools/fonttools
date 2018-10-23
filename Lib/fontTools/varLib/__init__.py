@@ -615,12 +615,10 @@ _DesignSpaceData = namedtuple(
 
 
 def _add_CFF2(varFont, model, master_fonts):
-	from fontTools.cffLib.cff2_merge_funcs import (addNamesToPost,
-								convertCFFtoCFF2, 
+	from fontTools.cffLib.cff2_merge_funcs import (convertCFFtoCFF2, 
 								addCFFVarStore, 
 								merge_region_fonts)
 	glyphOrder = varFont.getGlyphOrder()
-	addNamesToPost(varFont, glyphOrder)
 	convertCFFtoCFF2(varFont)
 	# I sort the master font in the model order so as to
 	# not have to index through model.mapping when building
