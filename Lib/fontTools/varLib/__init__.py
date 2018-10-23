@@ -620,6 +620,23 @@ _DesignSpaceData = namedtuple(
 )
 
 
+def _add_CFF2(varFont, model, master_fonts):
+	from fontTools.cffLib.cff2_merge_funcs import (addNamesToPost,
+								convertCFFtoCFF2, 
+								addCFFVarStore, 
+								merge_region_fonts)
+	glyphOrder = varFont.getGlyphOrder()
+	addNamesToPost(varFont, glyphOrder)
+	convertCFFtoCFF2(varFont)
+	# I sort the master font in the model order so as to
+	# not have to index through model.mapping when building
+	# a blend vector from the master font data.
+	ordered_fonts_list = [master_fonts[idx] for idx in model.reverseMapping]
+	model.mapping = model.reverseMapping = range(len(master_fonts))
+	addCFFVarStore(varFont, model)  # Add VarStore to the CFF2 font.
+	merge_region_fonts(varFont, model, ordered_fonts_list, glyphOrder)
+
+
 def load_designspace(designspace_filename):
 
 	ds = DesignSpaceDocument.fromfile(designspace_filename)
@@ -754,6 +771,8 @@ def build(designspace_filename, master_finder=lambda s:s, exclude=[], optimize=T
 		_merge_TTHinting(vf, model, master_fonts)
 	if 'GSUB' not in exclude and ds.rules:
 		_add_GSUB_feature_variations(vf, ds.axes, ds.internal_axis_supports, ds.rules)
+	if 'CFF2' not in exclude and 'CFF ' in vf:
+		_add_CFF2(vf, model, master_fonts)
 
 	for tag in exclude:
 		if tag in vf:
