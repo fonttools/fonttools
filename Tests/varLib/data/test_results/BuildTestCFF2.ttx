@@ -194,7 +194,7 @@
           -148 56 148 0 -68 -26 56 0 68 3 blend
           vlineto
         </CharString>
-        <CharString name="dollar.a">
+        <CharString name="glyph00003">
           304 7 -12 1 blend
           34 rmoveto
           125 86 65 96 -22 38 2 -3 -9 15 -2 4 4 blend

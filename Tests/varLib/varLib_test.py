@@ -208,9 +208,7 @@ class BuildTest(unittest.TestCase):
         ds_path = self.get_test_input('TestCFF2.designspace')
         suffix = '.otf'
         expected_ttx_name = 'BuildTestCFF2'
-        tables=["fvar", "CFF2"]
-        self.temp_dir()
-        cff2_dir = self.get_test_input('master_cff2')
+        tables = ["fvar", "CFF2"]
 
         finder = lambda s: s.replace('.ufo', suffix)
         varfont, model, _ = build(ds_path, finder)

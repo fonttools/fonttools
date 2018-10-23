@@ -8,10 +8,10 @@ from fontTools.cffLib import (TopDictIndex,
 							  privateDictOperators2,
 							  FDArrayIndex,
 							  FontDict,
-							  VarStoreData,)
+							  VarStoreData)
+from fontTools.cffLib.cff2mergePen import CFF2CharStringMergePen
 from fontTools.ttLib import newTable
 from fontTools import varLib
-from cff2mergePen import CFF2CharStringMergePen, MergeTypeError
 
 
 def addCFFVarStore(varFont, varModel):
@@ -25,15 +25,6 @@ def addCFFVarStore(varFont, varModel):
 
 	topDict = varFont['CFF2'].cff.topDictIndex[0]
 	topDict.VarStore = VarStoreData(otVarStore=varStoreCFFV)
-
-
-def addNamesToPost(ttFont, fontGlyphList):
-	postTable = ttFont['post']
-	postTable.glyphOrder = ttFont.glyphOrder = fontGlyphList
-	postTable.formatType = 2.0
-	postTable.extraNames = []
-	postTable.mapping = {}
-	postTable.compile(ttFont)
 
 
 def lib_convertCFFToCFF2(cff, otFont):
@@ -115,10 +106,7 @@ def lib_convertCFFToCFF2(cff, otFont):
 
 
 def pointsDiffer(pointList):
-	p0 = max(pointList)
-	p1 = min(pointList)
-	result = False if p1 == p0 else True
-	return result
+	return not (max(pointList) == min(pointList))
 
 
 def convertCFFtoCFF2(varFont):
@@ -133,22 +121,24 @@ def convertCFFtoCFF2(varFont):
 
 class MergeDictError(TypeError):
 	def __init__(self, key, value, values):
-		error_msg = ["For the Private Dict key ()".format(key)]
-		error_msg.append("the default font value list:")
-		error_msg.append("\t{}".format(value))
-		error_msg.append(
-					"had a different number of values than"
-					"a region font:")
-		for value in values:
-			error_msg.append("\t{}".format(value))
+		error_msg = ["For the Private Dict key '{}', ".format(key),
+					 "the default font value list:",
+					 "\t{}".format(value),
+					 "had a different number of values than a region font:"]
+		error_msg += ["\t{}".format(region_value) for region_value in values]
 		error_msg = os.linesep.join(error_msg)
 
 
 def conv_to_int(num):
-	if round(num) == num:
+	if num % 1 == 0:
 		return int(num)
-	else:
-		return num
+	return num
+
+
+pd_blend_fields = ("BlueValues", "OtherBlues", "FamilyBlues",
+				   "FamilyOtherBlues", "BlueScale", "BlueShift",
+				   "BlueFuzz", "StdHW", "StdVW", "StemSnapH",
+				   "StemSnapV")
 
 
 def merge_PrivateDicts(topDict, region_top_dicts, num_masters, var_model):
@@ -162,13 +152,15 @@ def merge_PrivateDicts(topDict, region_top_dicts, num_masters, var_model):
 			regionFDArray[fd_index].Private for regionFDArray in regionFDArrays
 			]
 		for key, value in private_dict.rawDict.items():
+			if key not in pd_blend_fields:
+				continue
 			if isinstance(value, list):
 				try:
 					values = [pd.rawDict[key] for pd in pds]
 				except KeyError:
 					del private_dict.rawDict[key]
 					print(
-						"Warning: {key} in default font Private dict is "
+						b"Warning: {key} in default font Private dict is "
 						b"missing from another font, and was "
 						b"discarded.".format(key=key))
 					continue
@@ -218,14 +210,6 @@ def merge_PrivateDicts(topDict, region_top_dicts, num_masters, var_model):
 			private_dict.rawDict[key] = dataList
 
 
-class MergeCharError(TypeError):
-	def __init__(self, glyph_name, mergeError):
-		self.error_msg = "{mergeError} in glyph {glyph_name}".format(
-				mergeError=mergeError.error_msg,
-				glyph_name=glyph_name)
-		super(MergeCharError, self).__init__(self.error_msg)
-
-
 def merge_region_fonts(varFont, model, ordered_fonts_list, glyphOrder):
 	topDict = varFont['CFF2'].cff.topDictIndex[0]
 	default_charstrings = topDict.CharStrings
@@ -248,22 +232,15 @@ def merge_charstrings(default_charstrings,
 					  var_model):
 	for gname in glyphOrder:
 		default_charstring = default_charstrings[gname]
-		var_pen = CFF2CharStringMergePen([], num_masters, master_idx=0)
+		var_pen = CFF2CharStringMergePen([], gname, num_masters, 0)
 		default_charstring.draw(var_pen)
-		for region_idx, region_td in enumerate(region_top_dicts):
-			region_idx += 1
+		for region_idx, region_td in enumerate(region_top_dicts, start=1):
 			region_charstrings = region_td.CharStrings
 			region_charstring = region_charstrings[gname]
 			var_pen.restart(region_idx)
-			try:
-				region_charstring.draw(var_pen)
-			except MergeTypeError as err:
-				err.gname = gname
-				err.region_idx = region_idx
-				raise MergeCharError(gname, err)
+			region_charstring.draw(var_pen)
 		new_charstring = var_pen.getCharString(
 			private=default_charstring.private,
 			globalSubrs=default_charstring.globalSubrs,
-			var_model=var_model,
-			optimize=True)
+			var_model=var_model, optimize=True)
 		default_charstrings[gname] = new_charstring
