@@ -211,7 +211,7 @@ def addFeatureVariationsRaw(font, conditionalSubstitutions):
 
     for scriptRecord in gsub.ScriptList.ScriptRecord:
         for langSys in [scriptRecord.Script.DefaultLangSys] + scriptRecord.Script.LangSysRecord:
-            if hasattr(langSys, "FeatureIndex"):
+            if hasattr(langSys, "FeatureIndex") and langSys.FeatureIndex is not None:
                 langSys.FeatureIndex.append(rvrnFeatureIndex)
 
     # setup lookups
