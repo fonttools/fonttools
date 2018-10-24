@@ -1574,14 +1574,7 @@ class UFOWriter(UFOReader):
 			rootDir = os.path.splitext(os.path.basename(self._path))[0] + ".ufo"
 			with fs.zipfs.ZipFS(self._path, write=True, encoding="utf-8") as destFS:
 				fs.copy.copy_fs(self.fs, destFS.makedir(rootDir))
-		if self._shouldClose:
-			self.fs.close()
-
-	def __enter__(self):
-		return self
-
-	def __exit__(self, exc_type, exc_value, exc_tb):
-		self.close()
+		super(UFOWriter, self).close()
 
 
 # just an alias, makes it more explicit
