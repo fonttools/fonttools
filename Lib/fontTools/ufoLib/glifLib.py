@@ -306,7 +306,7 @@ class GlyphSet(_UFOBaseIO):
 		Raises KeyError if the glyphName is not in contents.plist.
 		"""
 		fileName = self.contents[glyphName]
-		return self._getFileModificationTime(fileName)
+		return self.getFileModificationTime(fileName)
 
 	# reading/writing API
 

@@ -109,7 +109,7 @@ class UFOFileStructure(enum.Enum):
 
 class _UFOBaseIO(object):
 
-	def _getFileModificationTime(self, path):
+	def getFileModificationTime(self, path):
 		"""
 		Returns the modification time for the file at the given path, as a
 		floating point number giving the number of seconds since the epoch.
