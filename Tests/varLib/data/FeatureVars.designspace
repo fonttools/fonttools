@@ -9,7 +9,7 @@
     <rules>
         <rule name="dollar-stroke">
             <conditionset>
-                <condition name="weight" minimum="500" maximum="1000" />
+                <condition name="weight" minimum="500" /> <!-- intentionally omitted maximum -->
             </conditionset>
             <sub name="uni0024" with="uni0024.nostroke" />
         </rule>

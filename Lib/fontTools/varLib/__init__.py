@@ -389,7 +389,7 @@ def _merge_TTHinting(font, model, master_ttfs, tolerance=0.5):
 	# cvt table
 
 	all_cvs = [Vector(m["cvt "].values) for m in master_ttfs if "cvt " in m]
-	
+
 	if len(all_cvs) == 0:
 		# There is no cvt table to make a cvar table from, we're done here.
 		return
@@ -587,8 +587,14 @@ def _add_GSUB_feature_variations(font, axes, internal_axis_supports, rules):
 			space = {}
 			for condition in conditions:
 				axis_name = condition["name"]
-				minimum = normalize(axis_name, condition["minimum"])
-				maximum = normalize(axis_name, condition["maximum"])
+				if condition["minimum"]:
+					minimum = normalize(axis_name, condition["minimum"])
+				else:
+					minimum = -1.0
+				if condition["maximum"]:
+					maximum = normalize(axis_name, condition["maximum"])
+				else:
+					maximum = 1.0
 				tag = axis_tags[axis_name]
 				space[tag] = (minimum, maximum)
 			region.append(space)
