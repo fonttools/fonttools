@@ -587,11 +587,11 @@ def _add_GSUB_feature_variations(font, axes, internal_axis_supports, rules):
 			space = {}
 			for condition in conditions:
 				axis_name = condition["name"]
-				if condition["minimum"]:
+				if condition["minimum"] is not None:
 					minimum = normalize(axis_name, condition["minimum"])
 				else:
 					minimum = -1.0
-				if condition["maximum"]:
+				if condition["maximum"] is not None:
 					maximum = normalize(axis_name, condition["maximum"])
 				else:
 					maximum = 1.0
