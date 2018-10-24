@@ -1422,8 +1422,10 @@ class UFOWriter(UFOReader):
 			for existingLayerName, directory in self.layerContents.items():
 				if directory == DEFAULT_GLYPHS_DIRNAME:
 					if existingLayerName != layerName:
-						print(existingLayerName, layerName)
-						raise UFOLibError("Another layer is already mapped to the default directory.")
+						raise UFOLibError(
+							"Another layer ('%s') is already mapped to the default directory."
+							% existingLayerName
+						)
 				elif existingLayerName == layerName:
 					raise UFOLibError("The layer name is already mapped to a non-default layer.")
 		# get an existing directory name
