@@ -34,6 +34,7 @@ from fontTools.ufoLib.validators import (
 	glyphLibValidator,
 )
 from fontTools.misc import etree
+from fontTools.ufoLib import _UFOBaseIO
 from fontTools.ufoLib.utils import integerTypes, numberTypes
 
 
@@ -88,7 +89,7 @@ class Glyph(object):
 # Glyph Set
 # ---------
 
-class GlyphSet(object):
+class GlyphSet(_UFOBaseIO):
 
 	"""
 	GlyphSet manages a set of .glif files inside one directory.
@@ -168,9 +169,6 @@ class GlyphSet(object):
 		self._reverseContents = None
 
 		self.rebuildContents()
-
-	# here we reuse the same methods from UFOReader/UFOWriter
-	from fontTools.ufoLib import _getPlist, _writePlist, _getFileModificationTime
 
 	def rebuildContents(self, validateRead=None):
 		"""
@@ -308,7 +306,7 @@ class GlyphSet(object):
 		Raises KeyError if the glyphName is not in contents.plist.
 		"""
 		fileName = self.contents[glyphName]
-		return self._getFileModificationTime(fileName)
+		return self.getFileModificationTime(fileName)
 
 	# reading/writing API
 

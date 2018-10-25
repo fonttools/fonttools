@@ -5,6 +5,7 @@ from copy import deepcopy
 import logging
 import zipfile
 import enum
+from collections import OrderedDict
 import fs
 import fs.base
 import fs.subfs
@@ -57,6 +58,7 @@ __all__ = [
 	"UFOLibError",
 	"UFOReader",
 	"UFOWriter",
+	"UFOReaderWriter",
 	"UFOFileStructure",
 	"fontInfoAttributesVersion1",
 	"fontInfoAttributesVersion2",
@@ -105,104 +107,92 @@ class UFOFileStructure(enum.Enum):
 # --------------
 
 
-def _getFileModificationTime(self, path):
-	"""
-	Returns the modification time for the file at the given path, as a
-	floating point number giving the number of seconds since the epoch.
-	The path must be relative to the UFO path.
-	Returns None if the file does not exist.
-	"""
-	try:
-		dt = self.fs.getinfo(fsdecode(path), namespaces=["details"]).modified
-	except (fs.errors.MissingInfoNamespace, fs.errors.ResourceNotFound):
-		return None
-	else:
-		return datetimeAsTimestamp(dt)
+class _UFOBaseIO(object):
 
-
-def _readBytesFromPath(self, path):
-	"""
-	Returns the bytes in the file at the given path.
-	The path must be relative to the UFO's filesystem root.
-	Returns None if the file does not exist.
-	"""
-	try:
-		return self.fs.getbytes(fsdecode(path))
-	except fs.errors.ResourceNotFound:
-		return None
-
-
-def _getPlist(self, fileName, default=None):
-	"""
-	Read a property list relative to the UFO filesystem's root.
-	Raises UFOLibError if the file is missing and default is None,
-	otherwise default is returned.
-
-	The errors that could be raised during the reading of a plist are
-	unpredictable and/or too large to list, so, a blind try: except:
-	is done. If an exception occurs, a UFOLibError will be raised.
-	"""
-	try:
-		with self.fs.open(fileName, "rb") as f:
-			return plistlib.load(f)
-	except fs.errors.ResourceNotFound:
-		if default is None:
-			raise UFOLibError(
-				"'%s' is missing on %s. This file is required"
-				% (fileName, self.fs)
-			)
-		else:
-			return default
-	except Exception as e:
-		# TODO(anthrotype): try to narrow this down a little
-		raise UFOLibError(
-			"'%s' could not be read on %s: %s" % (fileName, self.fs, e)
-		)
-
-
-def _writePlist(self, fileName, obj):
-	"""
-	Write a property list to a file relative to the UFO filesystem's root.
-
-	Do this sort of atomically, making it harder to corrupt existing files,
-	for example when plistlib encounters an error halfway during write.
-	This also checks to see if text matches the text that is already in the
-	file at path. If so, the file is not rewritten so that the modification
-	date is preserved.
-
-	The errors that could be raised during the writing of a plist are
-	unpredictable and/or too large to list, so, a blind try: except: is done.
-	If an exception occurs, a UFOLibError will be raised.
-	"""
-	if self._havePreviousFile:
+	def getFileModificationTime(self, path):
+		"""
+		Returns the modification time for the file at the given path, as a
+		floating point number giving the number of seconds since the epoch.
+		The path must be relative to the UFO path.
+		Returns None if the file does not exist.
+		"""
 		try:
-			data = plistlib.dumps(obj)
+			dt = self.fs.getinfo(fsdecode(path), namespaces=["details"]).modified
+		except (fs.errors.MissingInfoNamespace, fs.errors.ResourceNotFound):
+			return None
+		else:
+			return datetimeAsTimestamp(dt)
+
+	def _getPlist(self, fileName, default=None):
+		"""
+		Read a property list relative to the UFO filesystem's root.
+		Raises UFOLibError if the file is missing and default is None,
+		otherwise default is returned.
+
+		The errors that could be raised during the reading of a plist are
+		unpredictable and/or too large to list, so, a blind try: except:
+		is done. If an exception occurs, a UFOLibError will be raised.
+		"""
+		try:
+			with self.fs.open(fileName, "rb") as f:
+				return plistlib.load(f)
+		except fs.errors.ResourceNotFound:
+			if default is None:
+				raise UFOLibError(
+					"'%s' is missing on %s. This file is required"
+					% (fileName, self.fs)
+				)
+			else:
+				return default
 		except Exception as e:
+			# TODO(anthrotype): try to narrow this down a little
 			raise UFOLibError(
-				"'%s' could not be written on %s because "
-				"the data is not properly formatted: %s"
-				% (fileName, self.fs, e)
+				"'%s' could not be read on %s: %s" % (fileName, self.fs, e)
 			)
-		if self.fs.exists(fileName) and data == self.fs.getbytes(fileName):
-			return
-		self.fs.setbytes(fileName, data)
-	else:
-		with self.fs.openbin(fileName, mode="w") as fp:
+
+	def _writePlist(self, fileName, obj):
+		"""
+		Write a property list to a file relative to the UFO filesystem's root.
+
+		Do this sort of atomically, making it harder to corrupt existing files,
+		for example when plistlib encounters an error halfway during write.
+		This also checks to see if text matches the text that is already in the
+		file at path. If so, the file is not rewritten so that the modification
+		date is preserved.
+
+		The errors that could be raised during the writing of a plist are
+		unpredictable and/or too large to list, so, a blind try: except: is done.
+		If an exception occurs, a UFOLibError will be raised.
+		"""
+		if self._havePreviousFile:
 			try:
-				plistlib.dump(obj, fp)
+				data = plistlib.dumps(obj)
 			except Exception as e:
 				raise UFOLibError(
 					"'%s' could not be written on %s because "
 					"the data is not properly formatted: %s"
 					% (fileName, self.fs, e)
 				)
+			if self.fs.exists(fileName) and data == self.fs.getbytes(fileName):
+				return
+			self.fs.setbytes(fileName, data)
+		else:
+			with self.fs.openbin(fileName, mode="w") as fp:
+				try:
+					plistlib.dump(obj, fp)
+				except Exception as e:
+					raise UFOLibError(
+						"'%s' could not be written on %s because "
+						"the data is not properly formatted: %s"
+						% (fileName, self.fs, e)
+					)
 
 
 # ----------
 # UFO Reader
 # ----------
 
-class UFOReader(object):
+class UFOReader(_UFOBaseIO):
 
 	"""
 	Read the various components of the .ufo.
@@ -280,6 +270,18 @@ class UFOReader(object):
 
 	# properties
 
+	def _get_path(self):
+		import warnings
+
+		warnings.warn(
+			"The 'path' attribute is deprecated; use the 'fs' attribute instead",
+			DeprecationWarning,
+			stacklevel=2,
+		)
+		return self._path
+
+	path = property(_get_path, doc="The path of the UFO (DEPRECATED).")
+
 	def _get_formatVersion(self):
 		return self._formatVersion
 
@@ -291,7 +293,7 @@ class UFOReader(object):
 	fileStructure = property(
 		_get_fileStructure,
 		doc=(
-			"The current file structure of the UFO: "
+			"The file structure of the UFO: "
 			"either UFOFileStructure.ZIP or UFOFileStructure.PACKAGE"
 		)
 	)
@@ -347,9 +349,16 @@ class UFOReader(object):
 
 	# support methods
 
-	_getPlist = _getPlist
-	getFileModificationTime = _getFileModificationTime
-	readBytesFromPath = _readBytesFromPath
+	def readBytesFromPath(self, path):
+		"""
+		Returns the bytes in the file at the given path.
+		The path must be relative to the UFO's filesystem root.
+		Returns None if the file does not exist.
+		"""
+		try:
+			return self.fs.getbytes(fsdecode(path))
+		except fs.errors.ResourceNotFound:
+			return None
 
 	def getReadFileForPath(self, path, encoding=None):
 		"""
@@ -796,7 +805,7 @@ class UFOReader(object):
 # UFO Writer
 # ----------
 
-class UFOWriter(object):
+class UFOWriter(UFOReader):
 
 	"""
 	Write the various components of the .ufo.
@@ -948,7 +957,7 @@ class UFOWriter(object):
 		self.layerContents = {}
 		if previousFormatVersion is not None and previousFormatVersion >= 3:
 			# already exists
-			self._readLayerContents(validate=validate)
+			self.layerContents = OrderedDict(self._readLayerContents(validate))
 		else:
 			# previous < 3
 			# imply the layer contents
@@ -959,45 +968,12 @@ class UFOWriter(object):
 
 	# properties
 
-	def _get_path(self):
-		import warnings
-
-		warnings.warn(
-			"The 'path' attribute is deprecated; use the 'fs' attribute instead",
-			DeprecationWarning,
-			stacklevel=2,
-		)
-		return self._path
-
-	path = property(_get_path, doc="The path the UFO is being written to (DEPRECATED).")
-
-	def _get_formatVersion(self):
-		return self._formatVersion
-
-	formatVersion = property(_get_formatVersion, doc="The format version of the UFO. This is set into metainfo.plist during __init__.")
-
 	def _get_fileCreator(self):
 		return self._fileCreator
 
 	fileCreator = property(_get_fileCreator, doc="The file creator of the UFO. This is set into metainfo.plist during __init__.")
 
-	def _get_fileStructure(self):
-		return self._fileStructure
-
-	fileStructure = property(
-		_get_fileStructure,
-		doc=(
-			"The file structure of the destination UFO: "
-			"either UFOFileStrucure.ZIP or UFOFileStructure.PACKAGE"
-		)
-	)
-
 	# support methods for file system interaction
-
-	_getPlist = _getPlist
-	_writePlist = _writePlist
-	readBytesFromPath = _readBytesFromPath
-	getFileModificationTime = _getFileModificationTime
 
 	def copyFromReader(self, reader, sourcePath, destPath):
 		"""
@@ -1334,25 +1310,6 @@ class UFOWriter(object):
 
 	# glyph sets & layers
 
-	def _readLayerContents(self, validate):
-		"""
-		Rebuild the layer contents list by checking what glyph sets
-		are available on disk.
-
-		``validate`` will validate the data.
-		"""
-		# read the file on disk
-		raw = self._getPlist(LAYERCONTENTS_FILENAME)
-		contents = {}
-		if validate:
-			valid, error = layerContentsValidator(raw, self.fs)
-			if not valid:
-				raise UFOLibError(error)
-		for entry in raw:
-			layerName, directoryName = entry
-			contents[layerName] = directoryName
-		self.layerContents = contents
-
 	def writeLayerContents(self, layerOrder=None, validate=None):
 		"""
 		Write the layercontents.plist file. This method  *must* be called
@@ -1414,7 +1371,7 @@ class UFOWriter(object):
 			raise UFOLibError("Only the default layer can be writen in UFO %d." % self.formatVersion)
 		# locate a layer name when None has been given
 		if layerName is None and defaultLayer:
-			for existingLayerName, directory in list(self.layerContents.items()):
+			for existingLayerName, directory in self.layerContents.items():
 				if directory == DEFAULT_GLYPHS_DIRNAME:
 					layerName = existingLayerName
 			if layerName is None:
@@ -1462,10 +1419,13 @@ class UFOWriter(object):
 		# matches the default being written. also make sure that this layer
 		# name is not already linked to a non-default layer.
 		if defaultLayer:
-			for existingLayerName, directory in list(self.layerContents.items()):
+			for existingLayerName, directory in self.layerContents.items():
 				if directory == DEFAULT_GLYPHS_DIRNAME:
 					if existingLayerName != layerName:
-						raise UFOLibError("Another layer is already mapped to the default directory.")
+						raise UFOLibError(
+							"Another layer ('%s') is already mapped to the default directory."
+							% existingLayerName
+						)
 				elif existingLayerName == layerName:
 					raise UFOLibError("The layer name is already mapped to a non-default layer.")
 		# get an existing directory name
@@ -1478,7 +1438,7 @@ class UFOWriter(object):
 			else:
 				# not caching this could be slightly expensive,
 				# but caching it will be cumbersome
-				existing = [d.lower() for d in list(self.layerContents.values())]
+				existing = {d.lower() for d in self.layerContents.values()}
 				if not isinstance(layerName, unicode):
 					try:
 						layerName = unicode(layerName)
@@ -1526,14 +1486,14 @@ class UFOWriter(object):
 			if newLayerName in self.layerContents:
 				raise UFOLibError("A layer named %s already exists." % newLayerName)
 			# make sure the default layer doesn't already exist
-			if defaultLayer and DEFAULT_GLYPHS_DIRNAME in list(self.layerContents.values()):
+			if defaultLayer and DEFAULT_GLYPHS_DIRNAME in self.layerContents.values():
 				raise UFOLibError("A default layer already exists.")
 		# get the paths
 		oldDirectory = self._findDirectoryForLayerName(layerName)
 		if defaultLayer:
 			newDirectory = DEFAULT_GLYPHS_DIRNAME
 		else:
-			existing = [name.lower() for name in list(self.layerContents.values())]
+			existing = {name.lower() for name in self.layerContents.values()}
 			newDirectory = userNameToFileName(newLayerName, existing=existing, prefix="glyphs.")
 		# update the internal mapping
 		del self.layerContents[layerName]
@@ -1614,14 +1574,11 @@ class UFOWriter(object):
 			rootDir = os.path.splitext(os.path.basename(self._path))[0] + ".ufo"
 			with fs.zipfs.ZipFS(self._path, write=True, encoding="utf-8") as destFS:
 				fs.copy.copy_fs(self.fs, destFS.makedir(rootDir))
-		if self._shouldClose:
-			self.fs.close()
+		super(UFOWriter, self).close()
 
-	def __enter__(self):
-		return self
 
-	def __exit__(self, exc_type, exc_value, exc_tb):
-		self.close()
+# just an alias, makes it more explicit
+UFOReaderWriter = UFOWriter
 
 
 # ----------------
