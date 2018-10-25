@@ -466,7 +466,7 @@ class UFOReader(_UFOBaseIO):
 			raise UFOLibError("fontinfo.plist is not properly formatted.")
 		return data
 
-	def readInfo(self, info, validate=None):
+	def readInfo(self, info=None, validate=None):
 		"""
 		Read fontinfo.plist. It requires an object that allows
 		setting attributes with names that follow the fontinfo.plist
@@ -509,12 +509,17 @@ class UFOReader(_UFOBaseIO):
 		# validate data
 		if validate:
 			infoDataToSet = validateInfoVersion3Data(infoDataToSet)
-		# populate the object
-		for attr, value in list(infoDataToSet.items()):
-			try:
-				setattr(info, attr, value)
-			except AttributeError:
-				raise UFOLibError("The supplied info object does not support setting a necessary attribute (%s)." % attr)
+		if info is not None:
+			# populate the object
+			for attr, value in infoDataToSet.items():
+				try:
+					setattr(info, attr, value)
+				except AttributeError:
+					raise UFOLibError(
+						"The supplied info object does not support setting a "
+						"necessary attribute (%s)." % attr
+					)
+		return infoDataToSet
 
 	# kerning.plist
 
