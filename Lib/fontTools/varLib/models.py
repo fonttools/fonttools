@@ -228,19 +228,21 @@ class VariationModel(object):
 		supports = []
 		deltaWeights = []
 		locations = self.locations
+		# Compute min/max across each axis, use it as total range.
+		# TODO Take this as input from outside?
+		minV = {}
+		maxV = {}
+		for l in locations:
+			for k,v in l.items():
+				minV[k] = min(v, minV.get(k))
+				maxV[k] = max(v, maxV.get(k))
 		for i,loc in enumerate(locations):
 			box = {}
-
-			# Account for axisPoints first
-			# TODO Use axis min/max instead? Isn't that always -1/+1?
-			for axis,values in axisPoints.items():
-				if not axis in loc:
-					continue
-				locV = loc[axis]
+			for axis,locV in loc.items():
 				if locV > 0:
-					box[axis] = (0, locV, max({locV}|values))
+					box[axis] = (0, locV, maxV[axis])
 				else:
-					box[axis] = (min({locV}|values), locV, 0)
+					box[axis] = (minV[axis], locV, 0)
 
 			locAxes = set(loc.keys())
 			# Walk over previous masters now
