@@ -345,6 +345,60 @@ class Transform(object):
 		return "<%s [%g %g %g %g %g %g]>" % ((self.__class__.__name__,) \
 				+ self.__affine)
 
+	@property
+	def xScale(self):
+		"""
+		>>> t = Transform(1, 2, 3, 4, 5, 6)
+		>>> t.xScale
+		1
+		"""
+		return self.__affine[0]
+
+	@property
+	def xyScale(self):
+		"""
+		>>> t = Transform(1, 2, 3, 4, 5, 6)
+		>>> t.xyScale
+		2
+		"""
+		return self.__affine[1]
+
+	@property
+	def yxScale(self):
+		"""
+		>>> t = Transform(1, 2, 3, 4, 5, 6)
+		>>> t.yxScale
+		3
+		"""
+		return self.__affine[2]
+
+	@property
+	def yScale(self):
+		"""
+		>>> t = Transform(1, 2, 3, 4, 5, 6)
+		>>> t.yScale
+		4
+		"""
+		return self.__affine[3]
+
+	@property
+	def xOffset(self):
+		"""
+		>>> t = Transform(1, 2, 3, 4, 5, 6)
+		>>> t.xOffset
+		5
+		"""
+		return self.__affine[4]
+
+	@property
+	def yOffset(self):
+		"""
+		>>> t = Transform(1, 2, 3, 4, 5, 6)
+		>>> t.yOffset
+		6
+		"""
+		return self.__affine[5]
+
 
 Identity = Transform()
 
