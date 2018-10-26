@@ -234,8 +234,8 @@ class VariationModel(object):
 		maxV = {}
 		for l in locations:
 			for k,v in l.items():
-				minV[k] = min(v, minV.get(k))
-				maxV[k] = max(v, maxV.get(k))
+				minV[k] = min(v, minV.get(k, v))
+				maxV[k] = max(v, maxV.get(k, v))
 		for i,loc in enumerate(locations):
 			box = {}
 			for axis,locV in loc.items():
