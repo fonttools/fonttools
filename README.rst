@@ -245,6 +245,14 @@ are required to unlock the extra features named "ufo", etc.
 
   *Extra:* ``interpolatable``
 
+- ``Lib/fontTools/varLib/plot.py``
+
+  Module for visualizing DesignSpaceDocument and resulting VariationModel.
+
+  * `matplotlib <https://pypi.org/pypi/matplotlib`__: 2D plotting library.
+
+  *Extra:* ``plot``
+
 - ``Lib/fontTools/misc/symfont.py``
 
   Advanced module for symbolic font statistics analysis; it requires:

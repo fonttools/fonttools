@@ -65,6 +65,12 @@ extras_require = {
 		"scipy; platform_python_implementation != 'PyPy'",
 		"munkres; platform_python_implementation == 'PyPy'",
 	],
+	# for fontTools.varLib.plot, to visualize DesignSpaceDocument and resulting
+	# VariationModel
+	"plot": [
+		# TODO: figure out the minimum version of matplotlib that we need
+		"matplotlib",
+	],
 	# for fontTools.misc.symfont, module for symbolic font statistics analysis
 	"symfont": [
 		"sympy",
