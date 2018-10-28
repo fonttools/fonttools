@@ -260,12 +260,15 @@ class VariationModel(object):
 					continue
 
 				# Split the box for new master; split in whatever direction
-				# that has largest range ratio.  See commit for details.
-				orderedAxes = [axis for axis in axisOrder if axis in m.keys()]
-				orderedAxes.extend([axis for axis in sorted(m.keys()) if axis not in axisOrder])
-				bestAxis = None
+				# that has largest range ratio.
+				#
+				# For symmetry, we actually cut across multiple axes
+				# if they have the largest, equal, ratio.
+				# https://github.com/fonttools/fonttools/commit/7ee81c8821671157968b097f3e55309a1faa511e#commitcomment-31054804
+
+				bestAxes = {}
 				bestRatio = -1
-				for axis in orderedAxes:
+				for axis in m.keys():
 					val = m[axis]
 					assert axis in box
 					lower,locV,upper = box[axis]
@@ -280,14 +283,13 @@ class VariationModel(object):
 						# Can't split box in this direction.
 						continue
 					if ratio > bestRatio:
+						bestAxes = {}
 						bestRatio = ratio
-						bestAxis = axis
-						bestLower = newLower
-						bestUpper = newUpper
-						bestLocV = locV
+					if ratio == bestRatio:
+						bestAxes[axis] = (newLower, locV, newUpper)
 
-				if bestAxis:
-					box[bestAxis] = (bestLower,bestLocV,bestUpper)
+				for axis,triple in bestAxes.items ():
+					box[axis] = triple
 			supports.append(box)
 
 			deltaWeight = {}
