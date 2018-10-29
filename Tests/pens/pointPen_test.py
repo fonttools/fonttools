@@ -37,13 +37,17 @@ class _TestSegmentPen(AbstractPen):
         self._commands.append("endpath")
 
     def addComponent(self, glyphName, transformation):
-        self._commands.append("%r %s addcomponent" % (glyphName, transformation))
+        self._commands.append("'%s' %s addcomponent" % (glyphName, transformation))
 
 
 def _reprKwargs(kwargs):
     items = []
     for key in sorted(kwargs):
-        items.append("%s=%r" % (key, kwargs[key]))
+        value = kwargs[key]
+        if isinstance(value, basestring):
+            items.append("%s='%s'" % (key, value))
+        else:
+            items.append("%s=%s" % (key, value))
     return items
 
 
@@ -58,7 +62,7 @@ class _TestPointPen(AbstractPointPen):
     def beginPath(self, identifier=None, **kwargs):
         items = []
         if identifier is not None:
-            items.append("identifier=%r" % identifier)
+            items.append("identifier='%s'" % identifier)
         items.extend(_reprKwargs(kwargs))
         self._commands.append("beginPath(%s)" % ", ".join(items))
 
@@ -66,13 +70,13 @@ class _TestPointPen(AbstractPointPen):
                  identifier=None, **kwargs):
         items = ["%s" % (pt,)]
         if segmentType is not None:
-            items.append("segmentType=%r" % segmentType)
+            items.append("segmentType='%s'" % segmentType)
         if smooth:
             items.append("smooth=True")
         if name is not None:
-            items.append("name=%r" % name)
+            items.append("name='%s'" % name)
         if identifier is not None:
-            items.append("identifier=%r" % identifier)
+            items.append("identifier='%s'" % identifier)
         items.extend(_reprKwargs(kwargs))
         self._commands.append("addPoint(%s)" % ", ".join(items))
 
@@ -80,9 +84,9 @@ class _TestPointPen(AbstractPointPen):
         self._commands.append("endPath()")
 
     def addComponent(self, glyphName, transform, identifier=None, **kwargs):
-        items = ["%r" % glyphName, "%s" % transform]
+        items = ["'%s'" % glyphName, "%s" % transform]
         if identifier is not None:
-            items.append("identifier=%r" % identifier)
+            items.append("identifier='%s'" % identifier)
         items.extend(_reprKwargs(kwargs))
         self._commands.append("addComponent(%s)" % ", ".join(items))
 
@@ -393,16 +397,16 @@ class TestReverseContourPointPen(unittest.TestCase):
         pen = ReverseContourPointPen(tpen)
         pen.beginPath(identifier='bar')
         pen.addPoint((0, 0))
-        pen.addPoint((0, 100), identifier='foo')
-        pen.addPoint((100, 200))
+        pen.addPoint((0, 100), identifier='foo', arbitrary='foo')
+        pen.addPoint((100, 200), arbitrary=123)
         pen.addPoint((200, 200))
         pen.endPath()
         pen.addComponent("base", [1, 0, 0, 1, 0, 0], identifier='foo')
         self.assertEqual("beginPath(identifier='bar') "
                          "addPoint((0, 0)) "
                          "addPoint((200, 200)) "
-                         "addPoint((100, 200)) "
-                         "addPoint((0, 100), identifier='foo') "
+                         "addPoint((100, 200), arbitrary=123) "
+                         "addPoint((0, 100), identifier='foo', arbitrary='foo') "
                          "endPath() "
                          "addComponent('base', [1, 0, 0, 1, 0, 0], identifier='foo')",
                          repr(tpen))
