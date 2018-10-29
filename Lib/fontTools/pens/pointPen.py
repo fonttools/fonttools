@@ -140,7 +140,8 @@ class BasePointToSegmentPen(AbstractPointPen):
 
 		self._flushContour(segments)
 
-	def addPoint(self, pt, segmentType=None, smooth=False, name=None, **kwargs):
+	def addPoint(self, pt, segmentType=None, smooth=False, name=None,
+				 identifier=None, **kwargs):
 		self.currentPath.append((pt, segmentType, smooth, name, kwargs))
 
 
@@ -317,7 +318,7 @@ class GuessSmoothPointPen(AbstractPointPen):
 		assert self._points is None
 		self._points = []
 		if identifier is not None:
-		    kwargs["identifier"] = identifier
+			kwargs["identifier"] = identifier
 		self._outPen.beginPath(**kwargs)
 
 	def endPath(self):
@@ -325,11 +326,16 @@ class GuessSmoothPointPen(AbstractPointPen):
 		self._outPen.endPath()
 		self._points = None
 
-	def addPoint(self, pt, segmentType=None, smooth=False, name=None, **kwargs):
+	def addPoint(self, pt, segmentType=None, smooth=False, name=None,
+				 identifier=None, **kwargs):
+		if identifier is not None:
+			kwargs["identifier"] = identifier
 		self._points.append((pt, segmentType, False, name, kwargs))
 
-	def addComponent(self, glyphName, transformation, **kwargs):
+	def addComponent(self, glyphName, transformation, identifier=None, **kwargs):
 		assert self._points is None
+		if identifier is not None:
+			kwargs["identifier"] = identifier
 		self._outPen.addComponent(glyphName, transformation, **kwargs)
 
 
