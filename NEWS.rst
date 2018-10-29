@@ -1,3 +1,12 @@
+- [ufoLib] Make ``UFOWriter`` a subclass of ``UFOReader``, and use mixins
+  for shared methods (#1344).
+- [featureVars] Fixed normalization error when a condition's minimum/maximum
+  attributes are missing in designspace ``<rule>`` (#1366).
+- [setup.py] Added ``[plot]`` to extras, to optionally install ``matplotlib``,
+  needed to use the ``fonTools.varLib.plot`` module.
+- [varLib] Take total bounding box into account when resolving model (7ee81c8).
+  If multiple axes have the same range ratio, cut across both (62003f4).
+
 3.31.0 (released 2018-10-21)
 ----------------------------
 
