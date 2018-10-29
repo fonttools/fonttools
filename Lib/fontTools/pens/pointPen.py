@@ -11,7 +11,7 @@ steps through all the points in a call from glyph.drawPoints().
 This allows the caller to provide more data for each point.
 For instance, whether or not a point is smooth, and its name.
 """
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import
 from fontTools.pens.basePen import AbstractPen
 import math
 
