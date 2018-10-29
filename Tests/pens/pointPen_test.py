@@ -112,7 +112,7 @@ class PointToSegmentPenTest(unittest.TestCase):
     def test_quad(self):
         pen = _TestSegmentPen()
         ppen = PointToSegmentPen(pen)
-        ppen.beginPath()
+        ppen.beginPath(identifier='foo')
         ppen.addPoint((10, 10), "line")
         ppen.addPoint((10, 40))
         ppen.addPoint((40, 40))
