@@ -36,6 +36,9 @@ class _TestSegmentPen(AbstractPen):
     def endPath(self):
         self._commands.append("endpath")
 
+    def addComponent(self, glyphName, transformation):
+        self._commands.append("%r %s addcomponent" % (glyphName, transformation))
+
 
 def _reprKwargs(kwargs):
     items = []
@@ -75,6 +78,13 @@ class _TestPointPen(AbstractPointPen):
 
     def endPath(self):
         self._commands.append("endPath()")
+
+    def addComponent(self, glyphName, transform, identifier=None, **kwargs):
+        items = ["%r" % glyphName, "%s" % transform]
+        if identifier is not None:
+            items.append("identifier=%r" % identifier)
+        items.extend(_reprKwargs(kwargs))
+        self._commands.append("addComponent(%s)" % ", ".join(items))
 
 
 class PointToSegmentPenTest(unittest.TestCase):
@@ -210,7 +220,10 @@ class TestSegmentToPointPen(unittest.TestCase):
         pen = SegmentToPointPen(PointToSegmentPen(spen))
         pen.qCurveTo((10, 20), (20, 20), (20, 10), (10, 10), None)
         pen.closePath()
-        self.assertEqual("10 20 20 20 20 10 10 10 None qcurveto closepath", repr(spen))
+        pen.addComponent('base', [1, 0, 0, 1, 0, 0])
+        self.assertEqual("10 20 20 20 20 10 10 10 None qcurveto closepath "
+                         "'base' [1, 0, 0, 1, 0, 0] addcomponent",
+                         repr(spen))
 
 
 class TestGuessSmoothPointPen(unittest.TestCase):
@@ -384,10 +397,12 @@ class TestReverseContourPointPen(unittest.TestCase):
         pen.addPoint((100, 200))
         pen.addPoint((200, 200))
         pen.endPath()
+        pen.addComponent("base", [1, 0, 0, 1, 0, 0], identifier='foo')
         self.assertEqual("beginPath(identifier='bar') "
                          "addPoint((0, 0)) "
                          "addPoint((200, 200)) "
                          "addPoint((100, 200)) "
                          "addPoint((0, 100), identifier='foo') "
-                         "endPath()",
+                         "endPath() "
+                         "addComponent('base', [1, 0, 0, 1, 0, 0], identifier='foo')",
                          repr(tpen))
