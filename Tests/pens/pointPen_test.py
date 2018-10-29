@@ -378,16 +378,16 @@ class TestReverseContourPointPen(unittest.TestCase):
     def test_quadNoOnCurve(self):
         tpen = _TestPointPen()
         pen = ReverseContourPointPen(tpen)
-        pen.beginPath()
+        pen.beginPath(identifier='bar')
         pen.addPoint((0, 0))
-        pen.addPoint((0, 100))
+        pen.addPoint((0, 100), identifier='foo')
         pen.addPoint((100, 200))
         pen.addPoint((200, 200))
         pen.endPath()
-        self.assertEqual("beginPath() "
+        self.assertEqual("beginPath(identifier='bar') "
                          "addPoint((0, 0)) "
                          "addPoint((200, 200)) "
                          "addPoint((100, 200)) "
-                         "addPoint((0, 100)) "
+                         "addPoint((0, 100), identifier='foo') "
                          "endPath()",
                          repr(tpen))
