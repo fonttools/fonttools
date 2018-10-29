@@ -6,6 +6,14 @@ env:
     - TWINE_USERNAME="anthrotype"
     - secure: PJuCmlDuwnojiw3QuDhfNAaU4f/yeJcEcRzJAudA66bwZK7hvxV7Tiy9A17Bm6yO0HbJmmyjsIr8h2e7/PyY6QCaV8RqcMDkQ0UraU16pRsihp0giVXJoWscj2sCP4cNDOBVwSaGAX8yZ2OONc5srESywghzcy8xmgw6O+XFqx4=
 
+branches:
+  only:
+    - master
+    # We want to build wip/* branches since these are not usually used for PRs
+    - /^wip\/.*$/
+    # We want to build version tags as well.
+    - /^\d+\.\d+.*$/
+
 matrix:
   fast_finish: true
   exclude:
