@@ -2691,7 +2691,8 @@ def prune_pre_subset(self, font, options):
 				if inst.postscriptNameID != 0xFFFF])
 	stat = font.get('STAT')
 	if stat:
-		nameIDs.update([val_rec.ValueNameID for val_rec in stat.table.AxisValueArray.AxisValue])
+		if stat.table.AxisValueArray:
+			nameIDs.update([val_rec.ValueNameID for val_rec in stat.table.AxisValueArray.AxisValue])
 		nameIDs.update([axis_rec.AxisNameID for axis_rec in stat.table.DesignAxisRecord.Axis])
 	if '*' not in options.name_IDs:
 		self.names = [n for n in self.names if n.nameID in nameIDs]
