@@ -399,9 +399,9 @@ class FontBuilder(object):
         )
         self._initTableWithValues("DSIG", {}, values)
 
-    def addOpenTypeFeatures(self, features):
+    def addOpenTypeFeatures(self, features, filename=None, tables=None):
         from .feaLib.builder import addOpenTypeFeaturesFromString
-        addOpenTypeFeaturesFromString(self.font, features)
+        addOpenTypeFeaturesFromString(self.font, features, filename=filename, tables=tables)
 
 
 def buildCmapSubTable(cmapping, format, platformID, platEncID):
