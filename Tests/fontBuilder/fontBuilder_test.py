@@ -48,7 +48,7 @@ def _setupFontBuilder(isTTF):
 
 
 def test_build_ttf(tmpdir):
-    outPath = os.path.join(tmpdir, "test.ttf")
+    outPath = os.path.join(str(tmpdir), "test.ttf")
 
     fb, advanceWidths, nameStrings = _setupFontBuilder(True)
 
@@ -80,7 +80,7 @@ def test_build_ttf(tmpdir):
 
 
 def test_build_otf(tmpdir):
-    outPath = os.path.join(tmpdir, "test.otf")
+    outPath = os.path.join(str(tmpdir), "test.otf")
 
     fb, advanceWidths, nameStrings = _setupFontBuilder(False)
 
