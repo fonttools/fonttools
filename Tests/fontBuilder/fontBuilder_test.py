@@ -8,6 +8,8 @@ from fontTools.ttLib import TTFont
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.pens.t2CharStringPen import T2CharStringPen
 from fontTools.fontBuilder import FontBuilder
+from fontTools.ttLib.tables.TupleVariation import TupleVariation
+from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 
 
 def getTestData(fileName, mode="r"):
@@ -66,7 +68,7 @@ def test_build_ttf(tmpdir):
         metrics[gn] = (advanceWidth, glyphTable[gn].xMin)
     fb.setupHorizontalMetrics(metrics)
 
-    fb.setupHorizontalHeader()
+    fb.setupHorizontalHeader(ascent=824, descent=200)
     fb.setupNameTable(nameStrings)
     fb.setupOS2()
     fb.setupPost()
@@ -97,7 +99,7 @@ def test_build_otf(tmpdir):
         metrics[gn] = (advanceWidth, 100)  # XXX lsb from glyph
     fb.setupHorizontalMetrics(metrics)
 
-    fb.setupHorizontalHeader()
+    fb.setupHorizontalHeader(ascent=824, descent=200)
     fb.setupNameTable(nameStrings)
     fb.setupOS2()
     fb.setupPost()
@@ -110,4 +112,79 @@ def test_build_otf(tmpdir):
     with open(outPath + ".ttx") as f:
         testData = strip_VariableItems(f.read())
     refData = strip_VariableItems(getTestData("test.otf.ttx"))
+    assert refData == testData
+
+
+def test_build_var(tmpdir):
+    outPath = os.path.join(str(tmpdir), "test_var.ttf")
+
+    fb = FontBuilder(1024, isTTF=True)
+    fb.setupGlyphOrder([".notdef", ".null", "A", "a"])
+    fb.setupCharacterMap({65: "A", 97: "a"})
+
+    advanceWidths = {".notdef": 600, "A": 600, "a": 600, ".null": 600}
+
+    familyName = "HelloTestFont"
+    styleName = "TotallyNormal"
+    nameStrings = dict(familyName=dict(en="HelloTestFont", nl="HalloTestFont"),
+                       styleName=dict(en="TotallyNormal", nl="TotaalNormaal"))
+    nameStrings['psName'] = familyName + "-" + styleName
+
+    pen = TTGlyphPen(None)
+    pen.moveTo((100, 0))
+    pen.lineTo((100, 400))
+    pen.lineTo((500, 400))
+    pen.lineTo((500, 000))
+    pen.closePath()
+
+    glyph = pen.glyph()
+
+    pen = TTGlyphPen(None)
+    emptyGlyph = pen.glyph()
+
+    glyphs = {".notdef": emptyGlyph, "A": glyph, "a": glyph, ".null": emptyGlyph}
+    fb.setupGlyf(glyphs)
+    metrics = {}
+    glyphTable = fb.font["glyf"]
+    for gn, advanceWidth in advanceWidths.items():
+        metrics[gn] = (advanceWidth, glyphTable[gn].xMin)
+    fb.setupHorizontalMetrics(metrics)
+
+    fb.setupHorizontalHeader(ascent=824, descent=200)
+    fb.setupNameTable(nameStrings)
+
+    axes = [
+        ('LEFT', 0, 0, 100, "Left"),
+        ('RGHT', 0, 0, 100, "Right"),
+        ('UPPP', 0, 0, 100, "Up"),
+        ('DOWN', 0, 0, 100, "Down"),
+    ]
+    instances = []
+    fb.setupFvar(axes, instances)
+    variations = {}
+    # Four (x, y) pairs and four phantom points:
+    leftDeltas = [(-200, 0), (-200, 0), (0, 0), (0, 0), None, None, None, None]
+    rightDeltas = [(0, 0), (0, 0), (200, 0), (200, 0), None, None, None, None]
+    upDeltas = [(0, 0), (0, 200), (0, 200), (0, 0), None, None, None, None]
+    downDeltas = [(0, -200), (0, 0), (0, 0), (0, -200), None, None, None, None]
+    variations['a'] = [
+        TupleVariation(dict(RGHT=(0, 1, 1)), rightDeltas),
+        TupleVariation(dict(LEFT=(0, 1, 1)), leftDeltas),
+        TupleVariation(dict(UPPP=(0, 1, 1)), upDeltas),
+        TupleVariation(dict(DOWN=(0, 1, 1)), downDeltas),
+    ]
+    fb.setupGvar(variations)
+
+    fb.setupOS2()
+    fb.setupPost()
+    fb.setupDummyDSIG()
+
+    fb.save(outPath)
+
+    f = TTFont(outPath)
+    f.saveXML(outPath + ".ttx")
+    f.saveXML('test_var.ttf.ttx')  # XXXX
+    with open(outPath + ".ttx") as f:
+        testData = strip_VariableItems(f.read())
+    refData = strip_VariableItems(getTestData("test_var.ttf.ttx"))
     assert refData == testData
