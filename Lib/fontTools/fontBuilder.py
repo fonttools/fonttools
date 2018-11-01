@@ -7,6 +7,10 @@ __all__ = ["FontBuilder"]
 The `FontBuilder` class is a convenient helper to construct working TTF or OTF
 fonts from scratch.
 
+Note that the various setup method calls cannot be done in arbitrary order,
+due to various interdependencies between OpenType tables. See the examples
+below for an order that works.
+
 Here is how to build a minimal TTF:
 
 ```python
