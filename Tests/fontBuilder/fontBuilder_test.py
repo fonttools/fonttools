@@ -64,7 +64,7 @@ def test_build_ttf(tmpdir):
     glyphTable = fb.font["glyf"]
     for gn, advanceWidth in advanceWidths.items():
         metrics[gn] = (advanceWidth, glyphTable[gn].xMin)
-    fb.setupMetrics("hmtx", metrics)
+    fb.setupHorizontalMetrics(metrics)
 
     fb.setupHorizontalHeader()
     fb.setupNameTable(nameStrings)
@@ -95,7 +95,7 @@ def test_build_otf(tmpdir):
     metrics = {}
     for gn, advanceWidth in advanceWidths.items():
         metrics[gn] = (advanceWidth, 100)  # XXX lsb from glyph
-    fb.setupMetrics("hmtx", metrics)
+    fb.setupHorizontalMetrics(metrics)
 
     fb.setupHorizontalHeader()
     fb.setupNameTable(nameStrings)
