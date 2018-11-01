@@ -1,3 +1,6 @@
+3.32.0 (released 2018-11-01)
+----------------------------
+
 - [ufoLib] Make ``UFOWriter`` a subclass of ``UFOReader``, and use mixins
   for shared methods (#1344).
 - [featureVars] Fixed normalization error when a condition's minimum/maximum
