@@ -41,8 +41,10 @@ def _setupFontBuilder(isTTF):
 
     advanceWidths = {".notdef": 600, "A": 600, "a": 600, ".null": 600}
 
-    nameStrings = dict(familyName="HelloTestFont", styleName="TotallyNormal")
-    nameStrings['psName'] = nameStrings["familyName"] + "-" + nameStrings["styleName"]
+    familyName = "HelloTestFont"
+    styleName = "TotallyNormal"
+    nameStrings = dict(familyName=dict(en="HelloTestFont"), styleName=dict(en="TotallyNormal"))
+    nameStrings['psName'] = familyName + "-" + styleName
 
     return fb, advanceWidths, nameStrings
 

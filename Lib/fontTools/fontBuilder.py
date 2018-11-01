@@ -250,11 +250,9 @@ class FontBuilder(object):
                 nameID = nameName
             else:
                 nameID = _nameIDs[nameName]
-            if not isinstance(nameValue, basestring):
-                nameValue, language = nameValue
-            else:
-                language = "en"
-            nameTable.addMultilingualName({language: nameValue}, ttFont=self.font, nameID=nameID)
+            if isinstance(nameValue, basestring):
+                nameValue = dict(en=nameValue)
+            nameTable.addMultilingualName(nameValue, ttFont=self.font, nameID=nameID)
 
     def setupOS2(self, **values):
         if "xAvgCharWidth" not in values:
