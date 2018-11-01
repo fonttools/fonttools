@@ -61,7 +61,7 @@ for gn, advanceWidth in advanceWidths.items():
     metrics[gn] = (advanceWidth, glyphTable[gn].xMin)
 fb.setupHorizontalMetrics(metrics)
 
-fb.setupHorizontalHeader()
+fb.setupHorizontalHeader(ascent=824, descent=200)
 fb.setupNameTable(nameStrings)
 fb.setupOS2()
 fb.setupPost()
@@ -105,7 +105,7 @@ for gn, advanceWidth in advanceWidths.items():
     metrics[gn] = (advanceWidth, 100)  # XXX lsb from glyph
 fb.setupHorizontalMetrics(metrics)
 
-fb.setupHorizontalHeader()
+fb.setupHorizontalHeader(ascent=824, descent=200)
 fb.setupNameTable(nameStrings)
 fb.setupOS2()
 fb.setupPost()
