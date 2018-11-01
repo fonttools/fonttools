@@ -70,6 +70,7 @@ def test_build_ttf(tmpdir):
     fb.setupNameTable(nameStrings)
     fb.setupOS2()
     fb.setupPost()
+    fb.setupDSIG()
 
     fb.save(outPath)
 
@@ -100,6 +101,7 @@ def test_build_otf(tmpdir):
     fb.setupNameTable(nameStrings)
     fb.setupOS2()
     fb.setupPost()
+    fb.setupDSIG()
 
     fb.save(outPath)
 
