@@ -6,6 +6,12 @@
   needed to use the ``fonTools.varLib.plot`` module.
 - [varLib] Take total bounding box into account when resolving model (7ee81c8).
   If multiple axes have the same range ratio, cut across both (62003f4).
+- [subset] Don't error if ``STAT`` has no ``AxisValue`` tables.
+- [fontBuilder] Added a new submodule which contains a ``FontBuilder`` wrapper
+  class around ``TTFont`` that makes it easier to create a working TTF or OTF
+  font from scratch with code. NOTE: the API is still experimental and may
+  change in future versions.
+
 
 3.31.0 (released 2018-10-21)
 ----------------------------
