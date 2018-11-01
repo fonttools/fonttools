@@ -1,6 +1,101 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 
+"""
+The `FontBuilder` class is a convenient helper to construct working TTF or OTF
+fonts from scratch.
+
+Here is how to build a minimal TTF:
+
+```python
+from fontTools.fontBuilder import FontBuilder
+from fontTools.pens.ttGlyphPen import TTGlyphPen
+
+def drawTestGlyph(pen):
+    pen.moveTo((100, 100))
+    pen.lineTo((100, 1000))
+    pen.qCurveTo((200, 900), (400, 900), (500, 1000))
+    pen.lineTo((500, 100))
+    pen.closePath()
+
+fb = FontBuilder(1024, isTTF=True)
+fb.setupGlyphOrder([".notdef", ".null", "A", "a"])
+fb.setupCharacterMap({65: "A", 97: "a"})
+
+advanceWidths = {".notdef": 600, "A": 600, "a": 600, ".null": 600}
+
+familyName = "HelloTestFont"
+styleName = "TotallyNormal"
+nameStrings = dict(familyName=dict(en="HelloTestFont", nl="HalloTestFont"),
+                   styleName=dict(en="TotallyNormal", nl="TotaalNormaal"))
+nameStrings['psName'] = familyName + "-" + styleName
+
+pen = TTGlyphPen(None)
+drawTestGlyph(pen)
+glyph = pen.glyph()
+glyphs = {".notdef": glyph, "A": glyph, "a": glyph, ".null": glyph}
+fb.setupGlyf(glyphs)
+fb.calcGlyphBounds()
+
+metrics = {}
+glyphTable = fb.font["glyf"]
+for gn, advanceWidth in advanceWidths.items():
+    metrics[gn] = (advanceWidth, glyphTable[gn].xMin)
+fb.setupMetrics("hmtx", metrics)
+
+fb.setupHorizontalHeader()
+fb.setupNameTable(nameStrings)
+fb.setupOS2()
+fb.setupPost()
+
+fb.save("test.ttf")
+```
+
+And here's how to build a minimal OTF:
+
+```python
+from fontTools.fontBuilder import FontBuilder
+from fontTools.pens.t2CharStringPen import T2CharStringPen
+
+def drawTestGlyph(pen):
+    pen.moveTo((100, 100))
+    pen.lineTo((100, 1000))
+    pen.curveTo((200, 900), (400, 900), (500, 1000))
+    pen.lineTo((500, 100))
+    pen.closePath()
+
+fb = FontBuilder(1024, isTTF=False)
+fb.setupGlyphOrder([".notdef", ".null", "A", "a"])
+fb.setupCharacterMap({65: "A", 97: "a"})
+
+advanceWidths = {".notdef": 600, "A": 600, "a": 600, ".null": 600}
+
+familyName = "HelloTestFont"
+styleName = "TotallyNormal"
+nameStrings = dict(familyName=dict(en="HelloTestFont", nl="HalloTestFont"),
+                   styleName=dict(en="TotallyNormal", nl="TotaalNormaal"))
+nameStrings['psName'] = familyName + "-" + styleName
+
+pen = T2CharStringPen(600, None)
+drawTestGlyph(pen)
+charString = pen.getCharString()
+charStrings = {".notdef": charString, "A": charString, "a": charString, ".null": charString}
+fb.setupCFF(nameStrings['psName'], {"FullName": nameStrings['psName']}, charStrings, {})
+
+metrics = {}
+for gn, advanceWidth in advanceWidths.items():
+    metrics[gn] = (advanceWidth, 100)  # XXX lsb from glyph
+fb.setupMetrics("hmtx", metrics)
+
+fb.setupHorizontalHeader()
+fb.setupNameTable(nameStrings)
+fb.setupOS2()
+fb.setupPost()
+
+fb.save("test.otf")
+```
+"""
+
 from .misc.py23 import *
 from .ttLib import TTFont, newTable
 from .ttLib.tables._c_m_a_p import cmap_classes
