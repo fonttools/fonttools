@@ -368,7 +368,7 @@ class FontBuilder(object):
         self._initTableWithValues("OS/2", _OS2Defaults, values)
         if not ("ulUnicodeRange1" in values or "ulUnicodeRange2" in values or
                 "ulUnicodeRange3" in values or "ulUnicodeRange3" in values):
-            assert "cmap" in self.font
+            assert "cmap" in self.font, "the 'cmap' table must be setup before the 'OS/2' table"
             self.font["OS/2"].recalcUnicodeRanges(self.font)
 
     def setupCFF(self, psName, fontInfo, charStringsDict, privateDict):
@@ -489,7 +489,7 @@ class FontBuilder(object):
         sig.cbSignature = 12
         sig.usReserved2 = 0
         sig.usReserved1 = 0
-        sig.pkcs7 = '\xd3M4\xd3M5\xd3M4\xd3M4'
+        sig.pkcs7 = b'\xd3M4\xd3M5\xd3M4\xd3M4'
         sig.ulFormat = 1
         sig.ulOffset = 20
 
