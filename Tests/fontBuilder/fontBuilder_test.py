@@ -70,7 +70,7 @@ def test_build_ttf(tmpdir):
     fb.setupHorizontalHeader()
     fb.setupNameTable(nameStrings)
     fb.setupOS2()
-    fb.setupPost(keepGlyphNames=True)
+    fb.setupPost()
 
     fb.save(outPath)
 
@@ -100,7 +100,7 @@ def test_build_otf(tmpdir):
     fb.setupHorizontalHeader()
     fb.setupNameTable(nameStrings)
     fb.setupOS2()
-    fb.setupPost(keepGlyphNames=False)
+    fb.setupPost()
 
     fb.save(outPath)
 
