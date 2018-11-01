@@ -210,6 +210,12 @@
     <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
       HelloTestFont-TotallyNormal
     </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x413">
+      HalloTestFont
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x413">
+      TotaalNormaal
+    </namerecord>
   </name>
 
   <post>

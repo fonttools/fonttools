@@ -43,7 +43,8 @@ def _setupFontBuilder(isTTF):
 
     familyName = "HelloTestFont"
     styleName = "TotallyNormal"
-    nameStrings = dict(familyName=dict(en="HelloTestFont"), styleName=dict(en="TotallyNormal"))
+    nameStrings = dict(familyName=dict(en="HelloTestFont", nl="HalloTestFont"),
+                       styleName=dict(en="TotallyNormal", nl="TotaalNormaal"))
     nameStrings['psName'] = familyName + "-" + styleName
 
     return fb, advanceWidths, nameStrings
