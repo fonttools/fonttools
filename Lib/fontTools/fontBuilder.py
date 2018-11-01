@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from .ttLib import TTFont, newTable
 from .ttLib.tables._c_m_a_p import cmap_classes
-from .ttLib.tables._n_a_m_e import NameRecord
+from .ttLib.tables._n_a_m_e import NameRecord, makeName
 from .misc.timeTools import timestampNow
 import struct
 
@@ -252,12 +252,8 @@ class FontBuilder(object):
             else:
                 nameID = _nameIDs[nameName]
             for platformID, platEncID, langID, encoding in [windows, macintosh]:
-                nameRecord = NameRecord()
-                nameRecord.nameID = nameID
-                nameRecord.platformID = platformID
-                nameRecord.platEncID = platEncID
-                nameRecord.langID = langID
-                nameRecord.string = nameValue.encode(encoding, "replace")
+                nameRecord = makeName(nameValue.encode(encoding, "replace"),
+                                      nameID, platformID, platEncID, langID)
                 nameTable.names.append(nameRecord)
 
     def setupOS2(self, **values):
