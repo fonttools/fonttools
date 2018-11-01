@@ -244,17 +244,12 @@ class FontBuilder(object):
         nameTable = self.font["name"] = newTable("name")
         nameTable.names = []
 
-        windows = (3, 1, 0x409, "utf-16-be")
-        macintosh = (1, 0, 0, "mac-roman")
         for nameName, nameValue in nameStrings.items():
             if isinstance(nameName, int):
                 nameID = nameName
             else:
                 nameID = _nameIDs[nameName]
-            for platformID, platEncID, langID, encoding in [windows, macintosh]:
-                nameRecord = makeName(nameValue.encode(encoding, "replace"),
-                                      nameID, platformID, platEncID, langID)
-                nameTable.names.append(nameRecord)
+            nameTable.addMultilingualName(dict(en=nameValue), ttFont=self.font, nameID=nameID)
 
     def setupOS2(self, **values):
         if "xAvgCharWidth" not in values:
