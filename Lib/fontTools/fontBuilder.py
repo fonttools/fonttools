@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 
+from .misc.py23 import *
 from .ttLib import TTFont, newTable
 from .ttLib.tables._c_m_a_p import cmap_classes
 from .ttLib.tables._n_a_m_e import NameRecord, makeName
@@ -249,7 +250,11 @@ class FontBuilder(object):
                 nameID = nameName
             else:
                 nameID = _nameIDs[nameName]
-            nameTable.addMultilingualName(dict(en=nameValue), ttFont=self.font, nameID=nameID)
+            if not isinstance(nameValue, basestring):
+                nameValue, language = nameValue
+            else:
+                language = "en"
+            nameTable.addMultilingualName({language: nameValue}, ttFont=self.font, nameID=nameID)
 
     def setupOS2(self, **values):
         if "xAvgCharWidth" not in values:
