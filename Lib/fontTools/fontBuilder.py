@@ -498,7 +498,10 @@ class FontBuilder(object):
             defaults = _maxpDefaultsOTF
         self._initTableWithValues("maxp", defaults, {})
 
-    def setupDSIG(self):
+    def setupDummyDSIG(self):
+        """This adds a dummy DSIG table to the font to make some MS applications
+        happy. This does not properly sign the font.
+        """
         from .ttLib.tables.D_S_I_G_ import SignatureRecord
 
         sig = SignatureRecord()
