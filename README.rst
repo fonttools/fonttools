@@ -249,7 +249,7 @@ are required to unlock the extra features named "ufo", etc.
 
   Module for visualizing DesignSpaceDocument and resulting VariationModel.
 
-  * `matplotlib <https://pypi.org/pypi/matplotlib`__: 2D plotting library.
+  * `matplotlib <https://pypi.org/pypi/matplotlib>`__: 2D plotting library.
 
   *Extra:* ``plot``
 
