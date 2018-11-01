@@ -6,12 +6,23 @@ __all__ = ["FontBuilder"]
 """
 This module is *experimental*, meaning it still may evolve and change.
 
-The `FontBuilder` class is a convenient helper to construct working TTF or OTF
-fonts from scratch.
+The `FontBuilder` class is a convenient helper to construct working TTF or
+OTF fonts from scratch.
 
-Note that the various setup method calls cannot be done in arbitrary order,
-due to various interdependencies between OpenType tables. See the examples
-below for an order that works.
+Note that the various setup methods cannot be called in arbitrary order,
+due to various interdependencies between OpenType tables. Here is an order
+that works:
+
+    fb = FontBuilder(...)
+    fb.setupGlyphOrder(...)
+    fb.setupCharacterMap(...)
+    fb.setupGlyf(...) --or-- fb.setupCFF(...)
+    fb.setupMetrics("hmtx", ...)
+    fb.setupHorizontalHeader()
+    fb.setupNameTable(...)
+    fb.setupOS2()
+    fb.setupPost()
+    fb.save(...)
 
 Here is how to build a minimal TTF:
 
