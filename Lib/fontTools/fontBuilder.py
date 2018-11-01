@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 __all__ = ["FontBuilder"]
 
 """
+This module is *experimental*, meaning it still may evolve and change.
+
 The `FontBuilder` class is a convenient helper to construct working TTF or OTF
 fonts from scratch.
 
