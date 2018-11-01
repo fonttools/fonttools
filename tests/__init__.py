@@ -1,5 +1,5 @@
 import os
-from ufoLib.glifLib import GlyphSet
+from fontTools.ufoLib.glifLib import GlyphSet
 import pkg_resources
 
 DATADIR = os.path.join(os.path.dirname(__file__), 'data')
