@@ -220,10 +220,9 @@ setup(
         'pytest>=2.8',
     ],
     install_requires=[
-        "fonttools>=3.18.0",
-        "ufoLib>=2.1.1",
+        "fonttools[ufo] >= 3.32.0",
     ],
-    extras_require={"cli": ["defcon>=0.4.0"]},
+    extras_require={"cli": ["defcon >= 0.6.0"]},
     entry_points={"console_scripts": ["cu2qu = cu2qu.cli:main [cli]"]},
     classifiers=[
         'Development Status :: 4 - Beta',
