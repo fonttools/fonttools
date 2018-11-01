@@ -60,7 +60,6 @@ def test_build_ttf(tmpdir):
     glyph = pen.glyph()
     glyphs = {".notdef": glyph, "A": glyph, "a": glyph, ".null": glyph}
     fb.setupGlyf(glyphs)
-    fb.calcGlyphBounds()
     metrics = {}
     glyphTable = fb.font["glyf"]
     for gn, advanceWidth in advanceWidths.items():

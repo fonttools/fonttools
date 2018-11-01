@@ -177,6 +177,16 @@ _OS2Defaults = dict(
 class FontBuilder(object):
 
     def __init__(self, unitsPerEm=None, font=None, isTTF=True):
+        """Initialize a FontBuilder instance.
+
+        If the `font` argument is not given, a new `TTFont` will be
+        constructed, and `unitsPerEm` must be given. If `isTTF` is True,
+        the font will be a glyf-based TTF; if `isTTF` is False it will be
+        a CFF-based OTF.
+
+        If `font` is given, it must be a `TTFont` instance and `unitsPerEm`
+        must _not_ be given. The `isTTF` argument will be ignored.
+        """
         if font is None:
             self.font = TTFont(recalcTimestamp=False)
             self.isTTF = isTTF
@@ -302,13 +312,15 @@ class FontBuilder(object):
         self.font["CFF "] = newTable("CFF ")
         self.font["CFF "].cff = fontSet
 
-    def setupGlyf(self, glyphs):
+    def setupGlyf(self, glyphs, calcGlyphBounds=True):
         assert self.isTTF
         self.font["loca"] = newTable("loca")
         self.font["glyf"] = newTable("glyf")
         self.font["glyf"].glyphs = glyphs
         if hasattr(self.font, "glyphOrder"):
             self.font["glyf"].glyphOrder = self.font.glyphOrder
+        if calcGlyphBounds:
+            self.calcGlyphBounds()
 
     def setupFvar(self, axes, instances):
         addFvar(self.font, axes, instances)
