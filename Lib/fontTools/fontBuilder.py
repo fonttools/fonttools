@@ -17,7 +17,7 @@ that works:
     fb.setupGlyphOrder(...)
     fb.setupCharacterMap(...)
     fb.setupGlyf(...) --or-- fb.setupCFF(...)
-    fb.setupMetrics("hmtx", ...)
+    fb.setupHorizontalMetrics(...)
     fb.setupHorizontalHeader()
     fb.setupNameTable(...)
     fb.setupOS2()
@@ -59,9 +59,9 @@ metrics = {}
 glyphTable = fb.font["glyf"]
 for gn, advanceWidth in advanceWidths.items():
     metrics[gn] = (advanceWidth, glyphTable[gn].xMin)
-fb.setupMetrics("hmtx", metrics)
+fb.setupHorizontalMetrics(metrics)
 
-fb.setupHorizontalHeader()
+fb.setupHorizontalHeader(ascent=824, descent=200)
 fb.setupNameTable(nameStrings)
 fb.setupOS2()
 fb.setupPost()
@@ -103,9 +103,9 @@ fb.setupCFF(nameStrings['psName'], {"FullName": nameStrings['psName']}, charStri
 metrics = {}
 for gn, advanceWidth in advanceWidths.items():
     metrics[gn] = (advanceWidth, 100)  # XXX lsb from glyph
-fb.setupMetrics("hmtx", metrics)
+fb.setupHorizontalMetrics(metrics)
 
-fb.setupHorizontalHeader()
+fb.setupHorizontalHeader(ascent=824, descent=200)
 fb.setupNameTable(nameStrings)
 fb.setupOS2()
 fb.setupPost()
@@ -217,19 +217,36 @@ _vheaDefaults = dict(
 )
 
 _nameIDs = dict(
-             copyright = 0,
-            familyName = 1,
-             styleName = 2,
-            identifier = 3,
-              fullName = 4,
-               version = 5,
-                psName = 6,
-             trademark = 7,
-          manufacturer = 8,
-     typographicFamily = 16,
-  typographicSubfamily = 17,
-# XXX this needs to be extended with legal things, etc.
+                         copyright = 0,
+                        familyName = 1,
+                         styleName = 2,
+              uniqueFontIdentifier = 3,
+                          fullName = 4,
+                           version = 5,
+                            psName = 6,
+                         trademark = 7,
+                      manufacturer = 8,
+                          designer = 9,
+                       description = 10,
+                         vendorURL = 11,
+                       designerURL = 12,
+                licenseDescription = 13,
+                    licenseInfoURL = 14,
+                        # reserved = 15,
+                 typographicFamily = 16,
+              typographicSubfamily = 17,
+                compatibleFullName = 18,
+                        sampleText = 19,
+         postScriptCIDFindfontName = 20,
+                     wwsFamilyName = 21,
+                  wwsSubfamilyName = 22,
+            lightBackgroundPalette = 23,
+             darkBackgroundPalette = 24,
+    variationsPostScriptNamePrefix = 25,
 )
+
+# to insert in setupNameTable doc string:
+# print("\n".join(("%s (nameID %s)" % (k, v)) for k, v in sorted(_nameIDs.items(), key=lambda x: x[1])))
 
 _panoseDefaults = dict(
     bFamilyType = 0,
@@ -312,8 +329,11 @@ class FontBuilder(object):
             self.font = font
             self.isTTF = "glyf" in font
 
-    def save(self, path):
-        self.font.save(path)
+    def save(self, file):
+        """Save the font. The 'file' argument can be either a pathname or a
+        writable file object.
+        """
+        self.font.save(file)
 
     def _initTableWithValues(self, tableTag, defaults, values):
         table = self.font[tableTag] = newTable(tableTag)
@@ -329,15 +349,25 @@ class FontBuilder(object):
             setattr(table, k, v)
 
     def setupHead(self, **values):
+        """Create a new `head` table and initialize it with default values,
+        which can be overridden by keyword arguments.
+        """
         self._initTableWithValues("head", _headDefaults, values)
 
     def updateHead(self, **values):
+        """Update the head table with the fields and values passed as
+        keyword arguments.
+        """
         self._updateTableWithValues("head", values)
 
     def setupGlyphOrder(self, glyphOrder):
+        """Set the glyph order for the font."""
         self.font.setGlyphOrder(glyphOrder)
 
     def setupCharacterMap(self, cmapping, allowFallback=False):
+        """Build the `cmap` table for the font. The `cmapping` argument should
+        be a dict mapping unicode code points as integers to glyph names.
+        """
         subTables = []
         highestUnicode = max(cmapping)
         if highestUnicode > 0xffff:
@@ -365,6 +395,39 @@ class FontBuilder(object):
         self.font["cmap"].tables = subTables
 
     def setupNameTable(self, nameStrings):
+        """Create the `name` table for the font. The `nameStrings` argument must
+        be a dict, mapping nameIDs or descriptive names for the nameIDs to name
+        record values. A value is either a string, or a dict, mapping language codes
+        to strings, to allow localized name table entries.
+
+        The following descriptive names are available for nameIDs:
+        
+            copyright (nameID 0)
+            familyName (nameID 1)
+            styleName (nameID 2)
+            uniqueFontIdentifier (nameID 3)
+            fullName (nameID 4)
+            version (nameID 5)
+            psName (nameID 6)
+            trademark (nameID 7)
+            manufacturer (nameID 8)
+            designer (nameID 9)
+            description (nameID 10)
+            vendorURL (nameID 11)
+            designerURL (nameID 12)
+            licenseDescription (nameID 13)
+            licenseInfoURL (nameID 14)
+            typographicFamily (nameID 16)
+            typographicSubfamily (nameID 17)
+            compatibleFullName (nameID 18)
+            sampleText (nameID 19)
+            postScriptCIDFindfontName (nameID 20)
+            wwsFamilyName (nameID 21)
+            wwsSubfamilyName (nameID 22)
+            lightBackgroundPalette (nameID 23)
+            darkBackgroundPalette (nameID 24)
+            variationsPostScriptNamePrefix (nameID 25)
+        """
         nameTable = self.font["name"] = newTable("name")
         nameTable.names = []
 
@@ -378,6 +441,9 @@ class FontBuilder(object):
             nameTable.addMultilingualName(nameValue, ttFont=self.font, nameID=nameID)
 
     def setupOS2(self, **values):
+        """Create a new `OS/2` table and initialize it with default values,
+        which can be overridden by keyword arguments.
+        """
         if "xAvgCharWidth" not in values:
             gs = self.font.getGlyphSet()
             widths = [gs[glyphName].width for glyphName in gs.keys() if gs[glyphName].width > 0]
@@ -426,6 +492,14 @@ class FontBuilder(object):
         self.font["CFF "].cff = fontSet
 
     def setupGlyf(self, glyphs, calcGlyphBounds=True):
+        """Create the `glyf` table from a dict, that maps glyph names
+        to `fontTools.ttLib.tables._g_l_y_f.Glyph` objects, for example
+        as made by `fontTools.pens.ttGlyphPen.TTGlyphPen`.
+
+        If `calcGlyphBounds` is True, the bounds of all glyphs will be
+        calculated. Only pass False if your glyph objects already have
+        their bounding box values set.
+        """
         assert self.isTTF
         self.font["loca"] = newTable("loca")
         self.font["glyf"] = newTable("glyf")
@@ -445,11 +519,31 @@ class FontBuilder(object):
         gvar.variations = variations
 
     def calcGlyphBounds(self):
+        """Calculate the bounding boxes of all glyphs in the `glyf` table.
+        This is usually not called explicitly by client code.
+        """
         glyphTable = self.font["glyf"]
         for glyph in glyphTable.glyphs.values():
             glyph.recalcBounds(glyphTable)
 
+    def setupHorizontalMetrics(self, metrics):
+        """Create a new `hmtx` table, for horizontal metrics.
+
+        The `metrics` argument must be a dict, mapping glyph names to
+        `(width, leftSidebearing)` tuples.
+        """
+        self.setupMetrics('hmtx', metrics)
+
+    def setupVerticalMetrics(self, metrics):
+        """Create a new `vmtx` table, for horizontal metrics.
+
+        The `metrics` argument must be a dict, mapping glyph names to
+        `(height, topSidebearing)` tuples.
+        """
+        self.setupMetrics('vmtx', metrics)
+
     def setupMetrics(self, tableTag, metrics):
+        """See `setupHorizontalMetrics()` and `setupVerticalMetrics()`."""
         assert tableTag in ("hmtx", "vmtx")
         mtxTable = self.font[tableTag] = newTable(tableTag)
         roundedMetrics = {}
@@ -459,12 +553,25 @@ class FontBuilder(object):
         mtxTable.metrics = roundedMetrics
 
     def setupHorizontalHeader(self, **values):
+        """Create a new `hhea` table initialize it with default values,
+        which can be overridden by keyword arguments.
+        """
         self._initTableWithValues("hhea", _hheaDefaults, values)
 
     def setupVerticalHeader(self, **values):
+        """Create a new `vhea` table initialize it with default values,
+        which can be overridden by keyword arguments.
+        """
         self._initTableWithValues("vhea", _vheaDefaults, values)
 
     def setupVerticalOrigins(self, verticalOrigins, defaultVerticalOrigin=None):
+        """Create a new `VORG` table. The `verticalOrigins` argument must be
+        a dict, mapping glyph names to vertical origin values.
+
+        The `defaultVerticalOrigin` argument should be the most common vertical
+        origin value. If omitted, this value will be derived from the actual
+        values in the `verticalOrigins` argument.
+        """
         if defaultVerticalOrigin is None:
             # find the most frequent vorg value
             bag = {}
@@ -483,6 +590,9 @@ class FontBuilder(object):
             vorgTable[gn] = verticalOrigins[gn]
 
     def setupPost(self, keepGlyphNames=True, **values):
+        """Create a new `post` table and initialize it with default values,
+        which can be overridden by keyword arguments.
+        """
         postTable = self._initTableWithValues("post", _postDefaults, values)
         if self.isTTF and keepGlyphNames:
             postTable.formatType = 2.0
@@ -492,6 +602,9 @@ class FontBuilder(object):
             postTable.formatType = 3.0
 
     def setupMaxp(self):
+        """Create a new `maxp` table. This is called implicitly by FontBuilder
+        itself and is usually not called by client code.
+        """
         if self.isTTF:
             defaults = _maxpDefaultsTTF
         else:
@@ -522,6 +635,16 @@ class FontBuilder(object):
         self._initTableWithValues("DSIG", {}, values)
 
     def addOpenTypeFeatures(self, features, filename=None, tables=None):
+        """Add OpenType features to the font from a string containing
+        Feature File syntax.
+
+        The `filename` argument is used in error messages and to determine
+        where to look for "include" files.
+
+        The optional `tables` argument can be a list of OTL tables tags to
+        build, allowing the caller to only build selected OTL tables. See
+        `fontTools.feaLib` for details.
+        """
         from .feaLib.builder import addOpenTypeFeaturesFromString
         addOpenTypeFeaturesFromString(self.font, features, filename=filename, tables=tables)
 
