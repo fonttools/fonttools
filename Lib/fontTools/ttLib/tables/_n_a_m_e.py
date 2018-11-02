@@ -161,7 +161,8 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			raise ValueError("nameID must be less than 32768")
 		return nameID
 
-	def addMultilingualName(self, names, ttFont=None, nameID=None):
+	def addMultilingualName(self, names, ttFont=None, nameID=None,
+	                        windows=True, mac=True):
 		"""Add a multilingual name, returning its name ID
 
 		'names' is a dictionary with the name in multiple languages,
@@ -176,6 +177,9 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 
 		'nameID' is the name ID to be used, or None to let the library
 		pick an unused name ID.
+
+		If 'windows' is True, a platformID=3 name record will be added.
+		If 'mac' is True, a platformID=1 name record will be added.
 		"""
 		if not hasattr(self, 'names'):
 			self.names = []
@@ -184,15 +188,16 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		# TODO: Should minimize BCP 47 language codes.
 		# https://github.com/fonttools/fonttools/issues/930
 		for lang, name in sorted(names.items()):
-			# Apple platforms have been recognizing Windows names
-			# since early OSX (~2001), so we only add names
-			# for the Macintosh platform when we cannot not make
-			# a Windows name. This can happen for exotic BCP47
-			# language tags that have no Windows language code.
-			windowsName = _makeWindowsName(name, nameID, lang)
-			if windowsName is not None:
-				self.names.append(windowsName)
-			else:
+			if windows:
+				windowsName = _makeWindowsName(name, nameID, lang)
+				if windowsName is not None:
+					self.names.append(windowsName)
+				else:
+					# We cannot not make a Windows name: make sure we add a
+					# Mac name as a fallback. This can happen for exotic
+					# BCP47 language tags that have no Windows language code.
+					mac = True
+			if mac:
 				macName = _makeMacName(name, nameID, lang, ttFont)
 				if macName is not None:
 					self.names.append(macName)
