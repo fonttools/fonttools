@@ -186,7 +186,6 @@ def test_build_var(tmpdir):
 
     f = TTFont(outPath)
     f.saveXML(outPath + ".ttx")
-    f.saveXML('test_var.ttf.ttx')  # XXXX
     with open(outPath + ".ttx") as f:
         testData = strip_VariableItems(f.read())
     refData = strip_VariableItems(getTestData("test_var.ttf.ttx"))
