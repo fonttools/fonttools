@@ -177,6 +177,15 @@
   </glyf>
 
   <name>
+    <namerecord nameID="1" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      HelloTestFont
+    </namerecord>
+    <namerecord nameID="2" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      TotallyNormal
+    </namerecord>
+    <namerecord nameID="6" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      HelloTestFont-TotallyNormal
+    </namerecord>
     <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
       Left
     </namerecord>
@@ -194,6 +203,12 @@
     </namerecord>
     <namerecord nameID="261" platformID="1" platEncID="0" langID="0x0" unicode="True">
       Right Up
+    </namerecord>
+    <namerecord nameID="1" platformID="1" platEncID="0" langID="0x4" unicode="True">
+      HalloTestFont
+    </namerecord>
+    <namerecord nameID="2" platformID="1" platEncID="0" langID="0x4" unicode="True">
+      TotaalNormaal
     </namerecord>
     <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
       HelloTestFont
