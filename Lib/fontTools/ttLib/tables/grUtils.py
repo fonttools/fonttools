@@ -13,7 +13,7 @@ def decompress(data):
     if scheme == 0:
         pass
     elif scheme == 1 and lz4:
-        res = lz4.decompress(struct.pack("<L", size) + data[8:])
+        res = lz4.block.decompress(struct.pack("<L", size) + data[8:])
         if len(res) != size:
             warnings.warn("Table decompression failed.")
         else:
@@ -27,8 +27,8 @@ def compress(scheme, data):
     if scheme == 0 :
         return data
     elif scheme == 1 and lz4:
-        res = lz4.compress(hdr + data)
-        return res
+        res = lz4.block.compress(data, mode='high_compression', compression=16, store_size=False)
+        return hdr + res
     else:
         warnings.warn("Table failed to compress by unsupported compression scheme")
     return data
@@ -47,7 +47,7 @@ def _entries(attrs, sameval):
     yield (ak - len(vals) + 1, len(vals), vals)
 
 def entries(attributes, sameval = False):
-    g = _entries(sorted(attributes.iteritems(), key=lambda x:int(x[0])), sameval)
+    g = _entries(sorted(attributes.items(), key=lambda x:int(x[0])), sameval)
     return g
 
 def bininfo(num, size=1):
@@ -59,7 +59,7 @@ def bininfo(num, size=1):
         srange *= 2
         select += 1
     select -= 1
-    srange /= 2
+    srange //= 2
     srange *= size
     shift = num * size - srange
     return struct.pack(">4H", num, srange, select, shift)

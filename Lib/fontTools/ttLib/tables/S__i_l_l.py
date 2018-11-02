@@ -42,8 +42,8 @@ class table_S__i_l_l(DefaultTable.DefaultTable):
                 self.langs[c].append(finfo[i])
 
     def compile(self, ttFont):
-        ldat = ""
-        fdat = ""
+        ldat = b""
+        fdat = b""
         offset = 0
         for c, inf in sorted(self.langs.items()):
             ldat += struct.pack(">4sHH", c.encode('utf8'), len(inf), 8 * (offset + len(self.langs) + 1))

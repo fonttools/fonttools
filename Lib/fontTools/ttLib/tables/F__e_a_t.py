@@ -58,8 +58,8 @@ class table_F__e_a_t(DefaultTable.DefaultTable):
                     fobj.default = vid
 
     def compile(self, ttFont):
-        fdat = ""
-        vdat = ""
+        fdat = b""
+        vdat = b""
         offset = 0
         for f, v in sorted(self.features.items(), key=lambda x:x[1].index):
             fnum = grUtils.tag2num(f)
