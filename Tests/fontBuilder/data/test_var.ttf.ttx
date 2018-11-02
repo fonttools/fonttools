@@ -189,6 +189,12 @@
     <namerecord nameID="259" platformID="1" platEncID="0" langID="0x0" unicode="True">
       Down
     </namerecord>
+    <namerecord nameID="260" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      TotallyNormal
+    </namerecord>
+    <namerecord nameID="261" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Right Up
+    </namerecord>
     <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
       HelloTestFont
     </namerecord>
@@ -209,6 +215,12 @@
     </namerecord>
     <namerecord nameID="259" platformID="3" platEncID="1" langID="0x409">
       Down
+    </namerecord>
+    <namerecord nameID="260" platformID="3" platEncID="1" langID="0x409">
+      TotallyNormal
+    </namerecord>
+    <namerecord nameID="261" platformID="3" platEncID="1" langID="0x409">
+      Right Up
     </namerecord>
     <namerecord nameID="1" platformID="3" platEncID="1" langID="0x413">
       HalloTestFont
@@ -283,6 +295,22 @@
       <MaxValue>100.0</MaxValue>
       <AxisNameID>259</AxisNameID>
     </Axis>
+
+    <!-- TotallyNormal -->
+    <NamedInstance flags="0x0" subfamilyNameID="260">
+      <coord axis="LEFT" value="0.0"/>
+      <coord axis="RGHT" value="0.0"/>
+      <coord axis="UPPP" value="0.0"/>
+      <coord axis="DOWN" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Right Up -->
+    <NamedInstance flags="0x0" subfamilyNameID="261">
+      <coord axis="LEFT" value="0.0"/>
+      <coord axis="RGHT" value="100.0"/>
+      <coord axis="UPPP" value="100.0"/>
+      <coord axis="DOWN" value="0.0"/>
+    </NamedInstance>
   </fvar>
 
   <gvar>

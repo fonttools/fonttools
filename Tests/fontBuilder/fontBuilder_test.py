@@ -159,7 +159,10 @@ def test_build_var(tmpdir):
         ('UPPP', 0, 0, 100, "Up"),
         ('DOWN', 0, 0, 100, "Down"),
     ]
-    instances = []
+    instances = [
+        dict(location=dict(LEFT=0, RGHT=0, UPPP=0, DOWN=0), stylename="TotallyNormal"),
+        dict(location=dict(LEFT=0, RGHT=100, UPPP=100, DOWN=0), stylename="Right Up"),
+    ]
     fb.setupFvar(axes, instances)
     variations = {}
     # Four (x, y) pairs and four phantom points:
