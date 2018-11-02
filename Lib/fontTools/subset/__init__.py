@@ -2279,7 +2279,8 @@ class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
 			# The status means:
 			# 0: after dropping hints, this charstring is empty
 			# 1: after dropping hints, there may be more hints
-			#	continuing after this
+			#	continuing after this, or there might be
+			#	other things.  Not clear yet.
 			# 2: no more hints possible after this charstring
 			self.status = 0
 			# Has hintmask instructions; not recursive
@@ -2390,11 +2391,12 @@ class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
 			if subr_hints.has_hint:
 				hints.has_hint = True
 
-			# Decide where to chop off from
-			if subr_hints.status == 0:
-				hints.last_hint = index
-			else:
-				hints.last_hint = index - 2 # Leave the subr call in
+				# Decide where to chop off from
+				if subr_hints.status == 0:
+					hints.last_hint = index
+				else:
+					hints.last_hint = index - 2 # Leave the subr call in
+
 		elif subr_hints.status == 0:
 			hints.deletions.append(index)
 
