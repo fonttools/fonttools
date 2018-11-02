@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.31">
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.32">
 
   <GlyphOrder>
     <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
@@ -13,16 +13,16 @@
     <!-- Most of this table will be recalculated by the compiler -->
     <tableVersion value="1.0"/>
     <fontRevision value="1.0"/>
-    <checkSumAdjustment value="0x7adb7b76"/>
+    <checkSumAdjustment value="0x18e72247"/>
     <magicNumber value="0x5f0f3cf5"/>
     <flags value="00000000 00000011"/>
     <unitsPerEm value="1024"/>
-    <created value="Wed Oct 31 19:40:57 2018"/>
-    <modified value="Wed Oct 31 19:40:57 2018"/>
+    <created value="Thu Nov  1 20:29:01 2018"/>
+    <modified value="Thu Nov  1 20:29:01 2018"/>
     <xMin value="100"/>
-    <yMin value="100"/>
+    <yMin value="0"/>
     <xMax value="500"/>
-    <yMax value="1000"/>
+    <yMax value="400"/>
     <macStyle value="00000000 00000000"/>
     <lowestRecPPEM value="3"/>
     <fontDirectionHint value="2"/>
@@ -54,7 +54,7 @@
     <!-- Most of this table will be recalculated by the compiler -->
     <tableVersion value="0x10000"/>
     <numGlyphs value="4"/>
-    <maxPoints value="6"/>
+    <maxPoints value="4"/>
     <maxContours value="1"/>
     <maxCompositePoints value="0"/>
     <maxCompositeContours value="0"/>
@@ -123,8 +123,8 @@
   </OS_2>
 
   <hmtx>
-    <mtx name=".notdef" width="600" lsb="100"/>
-    <mtx name=".null" width="600" lsb="100"/>
+    <mtx name=".notdef" width="600" lsb="0"/>
+    <mtx name=".null" width="600" lsb="0"/>
     <mtx name="A" width="600" lsb="100"/>
     <mtx name="a" width="600" lsb="100"/>
   </hmtx>
@@ -150,50 +150,26 @@
     <!-- The xMin, yMin, xMax and yMax values
          will be recalculated by the compiler. -->
 
-    <TTGlyph name=".notdef" xMin="100" yMin="100" xMax="500" yMax="1000">
+    <TTGlyph name=".notdef"/><!-- contains no outline data -->
+
+    <TTGlyph name=".null"/><!-- contains no outline data -->
+
+    <TTGlyph name="A" xMin="100" yMin="0" xMax="500" yMax="400">
       <contour>
-        <pt x="100" y="100" on="1"/>
-        <pt x="100" y="1000" on="1"/>
-        <pt x="200" y="900" on="0"/>
-        <pt x="400" y="900" on="0"/>
-        <pt x="500" y="1000" on="1"/>
-        <pt x="500" y="100" on="1"/>
+        <pt x="100" y="0" on="1"/>
+        <pt x="100" y="400" on="1"/>
+        <pt x="500" y="400" on="1"/>
+        <pt x="500" y="0" on="1"/>
       </contour>
       <instructions/>
     </TTGlyph>
 
-    <TTGlyph name=".null" xMin="100" yMin="100" xMax="500" yMax="1000">
+    <TTGlyph name="a" xMin="100" yMin="0" xMax="500" yMax="400">
       <contour>
-        <pt x="100" y="100" on="1"/>
-        <pt x="100" y="1000" on="1"/>
-        <pt x="200" y="900" on="0"/>
-        <pt x="400" y="900" on="0"/>
-        <pt x="500" y="1000" on="1"/>
-        <pt x="500" y="100" on="1"/>
-      </contour>
-      <instructions/>
-    </TTGlyph>
-
-    <TTGlyph name="A" xMin="100" yMin="100" xMax="500" yMax="1000">
-      <contour>
-        <pt x="100" y="100" on="1"/>
-        <pt x="100" y="1000" on="1"/>
-        <pt x="200" y="900" on="0"/>
-        <pt x="400" y="900" on="0"/>
-        <pt x="500" y="1000" on="1"/>
-        <pt x="500" y="100" on="1"/>
-      </contour>
-      <instructions/>
-    </TTGlyph>
-
-    <TTGlyph name="a" xMin="100" yMin="100" xMax="500" yMax="1000">
-      <contour>
-        <pt x="100" y="100" on="1"/>
-        <pt x="100" y="1000" on="1"/>
-        <pt x="200" y="900" on="0"/>
-        <pt x="400" y="900" on="0"/>
-        <pt x="500" y="1000" on="1"/>
-        <pt x="500" y="100" on="1"/>
+        <pt x="100" y="0" on="1"/>
+        <pt x="100" y="400" on="1"/>
+        <pt x="500" y="400" on="1"/>
+        <pt x="500" y="0" on="1"/>
       </contour>
       <instructions/>
     </TTGlyph>
@@ -201,6 +177,24 @@
   </glyf>
 
   <name>
+    <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Left
+    </namerecord>
+    <namerecord nameID="257" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Right
+    </namerecord>
+    <namerecord nameID="258" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Up
+    </namerecord>
+    <namerecord nameID="259" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Down
+    </namerecord>
+    <namerecord nameID="260" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      TotallyNormal
+    </namerecord>
+    <namerecord nameID="261" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Right Up
+    </namerecord>
     <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
       HelloTestFont
     </namerecord>
@@ -209,6 +203,24 @@
     </namerecord>
     <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
       HelloTestFont-TotallyNormal
+    </namerecord>
+    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
+      Left
+    </namerecord>
+    <namerecord nameID="257" platformID="3" platEncID="1" langID="0x409">
+      Right
+    </namerecord>
+    <namerecord nameID="258" platformID="3" platEncID="1" langID="0x409">
+      Up
+    </namerecord>
+    <namerecord nameID="259" platformID="3" platEncID="1" langID="0x409">
+      Down
+    </namerecord>
+    <namerecord nameID="260" platformID="3" platEncID="1" langID="0x409">
+      TotallyNormal
+    </namerecord>
+    <namerecord nameID="261" platformID="3" platEncID="1" langID="0x409">
+      Right Up
     </namerecord>
     <namerecord nameID="1" platformID="3" platEncID="1" langID="0x413">
       HalloTestFont
@@ -241,6 +253,100 @@
       <!-- following are the name that are not taken from the standard Mac glyph order -->
     </extraNames>
   </post>
+
+  <fvar>
+
+    <!-- Left -->
+    <Axis>
+      <AxisTag>LEFT</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>0.0</MinValue>
+      <DefaultValue>0.0</DefaultValue>
+      <MaxValue>100.0</MaxValue>
+      <AxisNameID>256</AxisNameID>
+    </Axis>
+
+    <!-- Right -->
+    <Axis>
+      <AxisTag>RGHT</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>0.0</MinValue>
+      <DefaultValue>0.0</DefaultValue>
+      <MaxValue>100.0</MaxValue>
+      <AxisNameID>257</AxisNameID>
+    </Axis>
+
+    <!-- Up -->
+    <Axis>
+      <AxisTag>UPPP</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>0.0</MinValue>
+      <DefaultValue>0.0</DefaultValue>
+      <MaxValue>100.0</MaxValue>
+      <AxisNameID>258</AxisNameID>
+    </Axis>
+
+    <!-- Down -->
+    <Axis>
+      <AxisTag>DOWN</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>0.0</MinValue>
+      <DefaultValue>0.0</DefaultValue>
+      <MaxValue>100.0</MaxValue>
+      <AxisNameID>259</AxisNameID>
+    </Axis>
+
+    <!-- TotallyNormal -->
+    <NamedInstance flags="0x0" subfamilyNameID="260">
+      <coord axis="LEFT" value="0.0"/>
+      <coord axis="RGHT" value="0.0"/>
+      <coord axis="UPPP" value="0.0"/>
+      <coord axis="DOWN" value="0.0"/>
+    </NamedInstance>
+
+    <!-- Right Up -->
+    <NamedInstance flags="0x0" subfamilyNameID="261">
+      <coord axis="LEFT" value="0.0"/>
+      <coord axis="RGHT" value="100.0"/>
+      <coord axis="UPPP" value="100.0"/>
+      <coord axis="DOWN" value="0.0"/>
+    </NamedInstance>
+  </fvar>
+
+  <gvar>
+    <version value="1"/>
+    <reserved value="0"/>
+    <glyphVariations glyph="a">
+      <tuple>
+        <coord axis="RGHT" value="1.0"/>
+        <delta pt="0" x="0" y="0"/>
+        <delta pt="1" x="0" y="0"/>
+        <delta pt="2" x="200" y="0"/>
+        <delta pt="3" x="200" y="0"/>
+      </tuple>
+      <tuple>
+        <coord axis="LEFT" value="1.0"/>
+        <delta pt="0" x="-200" y="0"/>
+        <delta pt="1" x="-200" y="0"/>
+        <delta pt="2" x="0" y="0"/>
+        <delta pt="3" x="0" y="0"/>
+      </tuple>
+      <tuple>
+        <coord axis="UPPP" value="1.0"/>
+        <delta pt="0" x="0" y="0"/>
+        <delta pt="1" x="0" y="200"/>
+        <delta pt="2" x="0" y="200"/>
+        <delta pt="3" x="0" y="0"/>
+      </tuple>
+      <tuple>
+        <coord axis="DOWN" value="1.0"/>
+        <delta pt="0" x="0" y="-200"/>
+        <delta pt="1" x="0" y="0"/>
+        <delta pt="2" x="0" y="0"/>
+        <delta pt="3" x="0" y="-200"/>
+      </tuple>
+    </glyphVariations>
+  </gvar>
 
   <DSIG>
     <!-- note that the Digital Signature will be invalid after recompilation! -->
