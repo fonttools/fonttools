@@ -556,7 +556,6 @@ def calcChecksum(data):
 		3655064932
 	"""
 	remainder = len(data) % 4
-	data = data[:]          # py3 data is a bytearray so copy it before modifying
 	if remainder:
 		data += b"\0" * (4 - remainder)
 	value = 0

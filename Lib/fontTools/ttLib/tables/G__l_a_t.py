@@ -141,8 +141,8 @@ class table_G__l_a_t(DefaultTable.DefaultTable):
     def compileAttributes12(self, attrs, fmt):
         data = b""
         for e in grUtils.entries(attrs):
-            data += sstruct.pack(fmt, {'attNum' : e[0], 'num' : e[1]})
-            data += struct.pack(('>%dh' % len(e[2])), *e[2])
+            data += sstruct.pack(fmt, {'attNum' : e[0], 'num' : e[1]}) + \
+                    struct.pack(('>%dh' % len(e[2])), *e[2])
         return data
     
     def compileAttributes3(self, attrs):
