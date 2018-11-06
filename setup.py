@@ -58,6 +58,10 @@ extras_require = {
 			"python_version < '3.7' and platform_python_implementation != 'PyPy'"
 		),
 	],
+	# for graphite type tables in ttLib/tables (Silf, Glat, Gloc)
+	"graphite": [
+		"lz4 >= 1.7.4.2"
+	],
 	# for fontTools.interpolatable: to solve the "minimum weight perfect
 	# matching problem in bipartite graphs" (aka Assignment problem)
 	"interpolatable": [
