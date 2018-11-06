@@ -145,7 +145,7 @@ def instantiateVariableFont(varfont, location, inplace=False):
 		else:
 			varfont["OS/2"].usWidthClass = 9
 	if "slnt" in location and "post" in varfont:
-		varfont["post"].italicAngle = max(-90, min(location["slnt"], 90))
+          varfont["post"].italicAngle = -(max(-90, min(location["slnt"], 90)))
 
 	log.info("Removing variable tables")
 	for tag in ('avar','cvar','fvar','gvar','HVAR','MVAR','VVAR','STAT'):
