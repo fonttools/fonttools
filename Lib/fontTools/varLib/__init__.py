@@ -487,12 +487,11 @@ def _add_HVAR(font, masterModel, master_ttfs, axisTags):
 		hvar.VarStore = indirectStore
 		hvar.AdvWidthMap = advanceMapping
 
-def _add_MVAR(font, model, master_ttfs, axisTags):
+def _add_MVAR(font, masterModel, master_ttfs, axisTags):
 
 	log.info("Generating MVAR")
 
 	store_builder = varStore.OnlineVarStoreBuilder(axisTags)
-	store_builder.setModel(model)
 
 	records = []
 	lastTableTag = None
@@ -502,14 +501,17 @@ def _add_MVAR(font, model, master_ttfs, axisTags):
 		if tableTag != lastTableTag:
 			tables = fontTable = None
 			if tableTag in font:
-				# TODO Check all masters have same table set?
 				fontTable = font[tableTag]
-				tables = [master[tableTag] for master in master_ttfs]
+				tables = [master[tableTag] if tableTag in master else None
+					  for master in master_ttfs]
 			lastTableTag = tableTag
 		if tables is None:
 			continue
 
 		# TODO support gasp entries
+
+		model, tables = masterModel.getSubModel(tables)
+		store_builder.setModel(model)
 
 		master_values = [getattr(table, itemName) for table in tables]
 		if models.allSame(master_values):
