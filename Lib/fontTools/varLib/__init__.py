@@ -32,7 +32,7 @@ from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import OTTableWriter
 from fontTools.varLib import builder, models, varStore
-from fontTools.varLib.merger import VariationMerger, _all_equal
+from fontTools.varLib.merger import VariationMerger
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.iup import iup_delta_optimize
 from fontTools.varLib.featureVars import addFeatureVariations
@@ -512,7 +512,7 @@ def _add_MVAR(font, model, master_ttfs, axisTags):
 		# TODO support gasp entries
 
 		master_values = [getattr(table, itemName) for table in tables]
-		if _all_equal(master_values):
+		if models.allSame(master_values):
 			base, varIdx = master_values[0], None
 		else:
 			base, varIdx = store_builder.storeMasters(master_values)

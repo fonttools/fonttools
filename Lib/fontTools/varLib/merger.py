@@ -8,7 +8,7 @@ from fontTools.misc import classifyTools
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables import otBase as otBase
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
-from fontTools.varLib import builder, varStore
+from fontTools.varLib import builder, models, varStore
 from fontTools.varLib.varStore import VarStoreInstancer
 from functools import reduce
 
@@ -820,15 +820,7 @@ class VariationMerger(AligningMerger):
 		self.store_builder = varStore.OnlineVarStoreBuilder(axisTags)
 		self.store_builder.setModel(model)
 
-def _all_equal(lst):
-	if not lst:
-		return True
-	it = iter(lst)
-	v0 = next(it)
-	for v in it:
-		if v0 != v:
-			return False
-	return True
+_all_equal = models.allSame
 
 def buildVarDevTable(store_builder, master_values):
 	if _all_equal(master_values):
