@@ -2,8 +2,14 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
-__all__ = ['normalizeValue', 'normalizeLocation', 'supportScalar', 'VariationModel']
+__all__ = ['nonNone', 'subList',
+	   'normalizeValue', 'normalizeLocation',
+	   'supportScalar',
+	   'VariationModel']
 
+
+def nonNone(lst):
+	return [l for l in lst if l is not None]
 
 def subList(truth, lst):
 	assert len(truth) == len(lst)

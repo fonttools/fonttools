@@ -346,7 +346,7 @@ def _remove_TTHinting(font):
 	font["glyf"].removeHinting()
 	# TODO: Modify gasp table to deactivate gridfitting for all ranges?
 
-def _merge_TTHinting(font, model, master_ttfs, tolerance=0.5):
+def _merge_TTHinting(font, masterModel, master_ttfs, tolerance=0.5):
 
 	log.info("Merging TT hinting")
 	assert "cvar" not in font
@@ -391,19 +391,16 @@ def _merge_TTHinting(font, model, master_ttfs, tolerance=0.5):
 
 	# cvt table
 
-	all_cvs = [Vector(m["cvt "].values) for m in master_ttfs if "cvt " in m]
+	all_cvs = [Vector(m["cvt "].values) if 'cvt ' in m else None
+		   for m in master_ttfs]
 
-	if len(all_cvs) == 0:
+	nonNone_cvs = models.nonNone(all_cvs)
+	if not nonNone_cvs:
 		# There is no cvt table to make a cvar table from, we're done here.
 		return
 
-	if len(all_cvs) != len(master_ttfs):
-		log.warning("Some masters have no cvt table, hinting is discarded.")
-		_remove_TTHinting(font)
-		return
-
-	num_cvt0 = len(all_cvs[0])
-	if (any(len(c) != num_cvt0 for c in all_cvs)):
+	num_cvt0 = len(nonNone_cvs[0])
+	if (any(len(c) != num_cvt0 for c in nonNone_cvs)):
 		log.warning("Masters have incompatible cvt tables, hinting is discarded.")
 		_remove_TTHinting(font)
 		return
@@ -414,6 +411,7 @@ def _merge_TTHinting(font, model, master_ttfs, tolerance=0.5):
 	cvar.version = 1
 	cvar.variations = []
 
+	model, all_cvs = masterModel.modelFor(all_cvs)
 	deltas = model.getDeltas(all_cvs)
 	supports = model.supports
 	for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
