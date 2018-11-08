@@ -24,12 +24,20 @@ class OnlineVarStoreBuilder(object):
 		self._store = buildVarStore(self._regionList, [])
 		self._data = None
 		self._model = None
+		self._supports = None
 		self._varDataIndices = {}
 		self._varDataCaches = {}
 		self._cache = {}
 
 	def setModel(self, model):
+		self.setSupports(model.supports)
 		self._model = model
+
+	def setSupports(self, supports):
+		self._model = None
+		self._supports = list(supports)
+		if not self._supports[0]:
+			del self._supports[0] # Drop base master support
 		self._set_VarData()
 
 	def finish(self, optimize=True):
@@ -44,7 +52,7 @@ class OnlineVarStoreBuilder(object):
 		regionMap = self._regionMap
 		regionList = self._regionList
 
-		regions = self._model.supports[1:]
+		regions = self._supports
 		regionIndices = []
 		for region in regions:
 			key = _getLocationKey(region)
@@ -79,7 +87,15 @@ class OnlineVarStoreBuilder(object):
 	def storeMasters(self, master_values):
 		deltas = [otRound(d) for d in self._model.getDeltas(master_values)]
 		base = deltas.pop(0)
-		deltas = tuple(deltas)
+		return base, self.storeDeltas(deltas)
+
+	def storeDeltas(self, deltas):
+		if len(deltas) == len(self._supports) + 1:
+			deltas = tuple(deltas[1:])
+		else:
+			assert len(deltas) == len(self._supports)
+			deltas = tuple(deltas)
+
 		varIdx = self._cache.get(deltas)
 		if varIdx is not None:
 			return base, varIdx
@@ -88,12 +104,12 @@ class OnlineVarStoreBuilder(object):
 		if inner == 0xFFFF:
 			# Full array. Start new one.
 			self._set_VarData()
-			return self.storeMasters(master_values)
+			return self.storeDeltas(deltas)
 		self._data.Item.append(deltas)
 
 		varIdx = (self._outer << 16) + inner
 		self._cache[deltas] = varIdx
-		return base, varIdx
+		return varIdx
 
 
 def VarRegion_get_support(self, fvar_axes):
