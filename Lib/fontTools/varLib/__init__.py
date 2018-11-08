@@ -280,7 +280,7 @@ def _SetCoordinates(font, glyphName, coord):
 	# XXX Handle vertical
 	font["hmtx"].metrics[glyphName] = horizontalAdvanceWidth, leftSideBearing
 
-def _add_gvar(font, model, master_ttfs, tolerance=0.5, optimize=True):
+def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 
 	assert tolerance >= 0
 
@@ -294,6 +294,8 @@ def _add_gvar(font, model, master_ttfs, tolerance=0.5, optimize=True):
 	for glyph in font.getGlyphOrder():
 
 		allData = [_GetCoordinates(m, glyph) for m in master_ttfs]
+		model, allData = masterModel.modelFor(allData)
+
 		allCoords = [d[0] for d in allData]
 		allControls = [d[1] for d in allData]
 		control = allControls[0]
