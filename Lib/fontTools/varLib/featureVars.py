@@ -210,7 +210,8 @@ def addFeatureVariationsRaw(font, conditionalSubstitutions):
     rvrnFeatureIndex = gsub.FeatureList.FeatureRecord.index(rvrnFeature)
 
     for scriptRecord in gsub.ScriptList.ScriptRecord:
-        for langSys in [scriptRecord.Script.DefaultLangSys] + scriptRecord.Script.LangSysRecord:
+        langSystems = [lsr.LangSys for lsr in scriptRecord.Script.LangSysRecord]
+        for langSys in [scriptRecord.Script.DefaultLangSys] + langSystems:
             langSys.FeatureIndex.append(rvrnFeatureIndex)
 
     # setup lookups
