@@ -430,7 +430,6 @@ def _add_HVAR(font, masterModel, master_ttfs, axisTags):
 	metricses = [m["hmtx"].metrics for m in master_ttfs]
 	for glyph in glyphOrder:
 		hAdvances = [metrics[glyph][0] if glyph in metrics else None for metrics in metricses]
-		# TODO move round somewhere else?
 		hAdvanceDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(hAdvances)
 
 	singleModel = models.allSame(id(v[1]) for v in hAdvanceDeltasAndSupports.values())
