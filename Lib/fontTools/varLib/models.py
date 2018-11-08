@@ -195,7 +195,7 @@ class VariationModel(object):
 		self._subModels = {}
 
 	def getSubModel(self, items):
-		if not None in items:
+		if None not in items:
 			return self, items
 		key = tuple(v is not None for v in items)
 		subModel = self._subModels.get(key)
@@ -346,7 +346,7 @@ class VariationModel(object):
 		return out
 
 	def getDeltasAndSupports(self, items):
-		model, items = getSubModel(items)
+		model, items = self.getSubModel(items)
 		return model.getDeltas(items), model.supports
 
 	def getScalars(self, loc):
