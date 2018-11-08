@@ -294,6 +294,8 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 	for glyph in font.getGlyphOrder():
 
 		allData = [_GetCoordinates(m, glyph) for m in master_ttfs]
+		# Skip empty glyphs as well
+		allData = [None if d is None or not d[0] else d for d in allData]
 		model, allData = masterModel.getSubModel(allData)
 
 		allCoords = [d[0] for d in allData]
