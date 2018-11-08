@@ -374,7 +374,7 @@ def _merge_TTHinting(font, model, master_ttfs, tolerance=0.5):
 		all_pgms = [
 			m["glyf"][name].program
 			for m in master_ttfs
-			if hasattr(m["glyf"][name], "program")
+			if name in m['glyf'] and hasattr(m["glyf"][name], "program")
 		]
 		if not any(all_pgms):
 			continue
@@ -385,6 +385,7 @@ def _merge_TTHinting(font, model, master_ttfs, tolerance=0.5):
 			font_pgm = Program()
 		if any(pgm != font_pgm for pgm in all_pgms if pgm):
 			log.warning("Masters have incompatible glyph programs in glyph '%s', hinting is discarded." % name)
+			# TODO Only drop hinting from this glyph.
 			_remove_TTHinting(font)
 			return
 
