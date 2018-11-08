@@ -411,9 +411,7 @@ def _merge_TTHinting(font, masterModel, master_ttfs, tolerance=0.5):
 	cvar.version = 1
 	cvar.variations = []
 
-	model, all_cvs = masterModel.getSubModel(all_cvs)
-	deltas = model.getDeltas(all_cvs)
-	supports = model.supports
+	deltas, supports = masterModel.getDeltasAndSupports(all_cvs)
 	for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
 		delta = [otRound(d) for d in delta]
 		if all(abs(v) <= tolerance for v in delta):

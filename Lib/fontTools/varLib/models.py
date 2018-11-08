@@ -338,6 +338,10 @@ class VariationModel(object):
 			out.append(delta)
 		return out
 
+	def getDeltasAndSupports(self, items):
+		model, items = getSubModel(items)
+		return model.getDeltas(items), model.supports
+
 	def getScalars(self, loc):
 		return [supportScalar(loc, support) for support in self.supports]
 
