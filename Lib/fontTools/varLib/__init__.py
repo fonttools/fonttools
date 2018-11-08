@@ -294,7 +294,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 	for glyph in font.getGlyphOrder():
 
 		allData = [_GetCoordinates(m, glyph) for m in master_ttfs]
-		model, allData = masterModel.modelFor(allData)
+		model, allData = masterModel.getSubModel(allData)
 
 		allCoords = [d[0] for d in allData]
 		allControls = [d[1] for d in allData]
@@ -411,7 +411,7 @@ def _merge_TTHinting(font, masterModel, master_ttfs, tolerance=0.5):
 	cvar.version = 1
 	cvar.variations = []
 
-	model, all_cvs = masterModel.modelFor(all_cvs)
+	model, all_cvs = masterModel.getSubModel(all_cvs)
 	deltas = model.getDeltas(all_cvs)
 	supports = model.supports
 	for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):

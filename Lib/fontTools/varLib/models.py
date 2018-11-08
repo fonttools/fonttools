@@ -187,7 +187,7 @@ class VariationModel(object):
 		self._computeMasterSupports(axisPoints, axisOrder)
 		self._subModels = {}
 
-	def modelFor(self, items):
+	def getSubModel(self, items):
 		if not None in items:
 			return self, items
 		key = tuple(v is not None for v in items)
