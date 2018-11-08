@@ -24,11 +24,13 @@ class OnlineVarStoreBuilder(object):
 		self._store = buildVarStore(self._regionList, [])
 		self._data = None
 		self._model = None
+		self._varDataIndices = {}
+		self._varDataCaches = {}
 		self._cache = {}
 
 	def setModel(self, model):
 		self._model = model
-		self._cache = {} # Empty cached items
+		self._set_VarData()
 
 	def finish(self, optimize=True):
 		self._regionList.RegionCount = len(self._regionList.Region)
@@ -38,7 +40,7 @@ class OnlineVarStoreBuilder(object):
 			VarData_CalculateNumShorts(data, optimize)
 		return self._store
 
-	def _add_VarData(self):
+	def _set_VarData(self):
 		regionMap = self._regionMap
 		regionList = self._regionList
 
@@ -53,9 +55,26 @@ class OnlineVarStoreBuilder(object):
 				regionList.Region.append(varRegion)
 			regionIndices.append(idx)
 
-		data = self._data = buildVarData(regionIndices, [], optimize=False)
-		self._outer = len(self._store.VarData)
-		self._store.VarData.append(data)
+		# Check if we have one already...
+		key = tuple(regionIndices)
+		varDataIdx = self._varDataIndices.get(key)
+		if varDataIdx is not None:
+			self._outer = varDataIdx
+			self._data = self._store.VarData[varDataIdx]
+			self._cache = self._varDataCaches[key]
+			if len(self._data.Item) == 0xFFF:
+				# This is full.  Need new one.
+				varDataIdx = None
+
+		if varDataIdx is None:
+			self._data = buildVarData(regionIndices, [], optimize=False)
+			self._outer = len(self._store.VarData)
+			self._store.VarData.append(self._data)
+			self._varDataIndices[key] = self._outer
+			if key not in self._varDataCaches:
+				self._varDataCaches[key] = {}
+			self._cache = self._varDataCaches[key]
+
 
 	def storeMasters(self, master_values):
 		deltas = [otRound(d) for d in self._model.getDeltas(master_values)]
@@ -65,12 +84,10 @@ class OnlineVarStoreBuilder(object):
 		if varIdx is not None:
 			return base, varIdx
 
-		if not self._data:
-			self._add_VarData()
 		inner = len(self._data.Item)
 		if inner == 0xFFFF:
 			# Full array. Start new one.
-			self._add_VarData()
+			self._set_VarData()
 			return self.storeMasters(master_values)
 		self._data.Item.append(deltas)
 
