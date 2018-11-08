@@ -109,7 +109,7 @@ class OnlineVarStoreBuilder(object):
 			# Full array. Start new one.
 			self._set_VarData()
 			return self.storeDeltas(deltas)
-		VarData_add_item(self._data, deltas)
+		self._data.add_item(deltas)
 
 		varIdx = (self._outer << 16) + inner
 		self._cache[deltas] = varIdx
@@ -127,9 +127,13 @@ def VarData_add_item(self, deltas):
 		deltas = tuple(deltas)
 	self.Item.append(deltas)
 
+ot.VarData.add_item = VarData_add_item
+
 def VarRegion_get_support(self, fvar_axes):
 	return {fvar_axes[i].axisTag: (reg.StartCoord,reg.PeakCoord,reg.EndCoord)
 		for i,reg in enumerate(self.VarRegionAxis)}
+
+ot.VarRegion.get_support = VarRegion_get_support
 
 class VarStoreInstancer(object):
 
@@ -150,7 +154,7 @@ class VarStoreInstancer(object):
 	def _getScalar(self, regionIdx):
 		scalar = self._scalars.get(regionIdx)
 		if scalar is None:
-			support = VarRegion_get_support(self._regions[regionIdx], self.fvar_axes)
+			support = self._regions[regionIdx].get_support(self.fvar_axes)
 			scalar = supportScalar(self.location, support)
 			self._scalars[regionIdx] = scalar
 		return scalar
