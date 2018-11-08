@@ -11,6 +11,13 @@ __all__ = ['nonNone', 'subList',
 def nonNone(lst):
 	return [l for l in lst if l is not None]
 
+def allSame(lst):
+	if not lst:
+		return True
+	it = iter(lst)
+	first = next(it)
+	return all(first == item for item in it)
+
 def subList(truth, lst):
 	assert len(truth) == len(lst)
 	return [l for l,t in zip(lst,truth) if t]
