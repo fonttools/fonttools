@@ -437,7 +437,7 @@ def _add_HVAR(font, masterModel, master_ttfs, axisTags):
 	directStore = None
 	if singleModel:
 		# Build direct mapping
-		supports = hAdvanceDeltasAndSupports[0][1][1:]
+		supports = next(iter(hAdvanceDeltasAndSupports))[1][1:]
 		varTupleList = builder.buildVarRegionList(supports, axisTags)
 		varTupleIndexes = list(range(len(supports)))
 		varData = builder.buildVarData(varTupleIndexes, [])
