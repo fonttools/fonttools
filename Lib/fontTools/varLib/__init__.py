@@ -420,54 +420,58 @@ def _merge_TTHinting(font, masterModel, master_ttfs, tolerance=0.5):
 		var = TupleVariation(support, delta)
 		cvar.variations.append(var)
 
-def _add_HVAR(font, model, master_ttfs, axisTags):
+def _add_HVAR(font, masterModel, master_ttfs, axisTags):
 
 	log.info("Generating HVAR")
 
-	hAdvanceDeltas = {}
+	glyphOrder = font.getGlyphOrder()
+
+	hAdvanceDeltasAndSupports = {}
 	metricses = [m["hmtx"].metrics for m in master_ttfs]
-	for glyph in font.getGlyphOrder():
-		hAdvances = [metrics[glyph][0] for metrics in metricses]
+	for glyph in glyphOrder:
+		hAdvances = [metrics[glyph][0] if glyph in metrics else None for metrics in metricses]
 		# TODO move round somewhere else?
-		hAdvanceDeltas[glyph] = tuple(otRound(d) for d in model.getDeltas(hAdvances)[1:])
+		hAdvanceDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(hAdvances)
 
-	# Direct mapping
-	supports = model.supports[1:]
-	varTupleList = builder.buildVarRegionList(supports, axisTags)
-	varTupleIndexes = list(range(len(supports)))
-	n = len(supports)
-	items = []
-	for glyphName in font.getGlyphOrder():
-		items.append(hAdvanceDeltas[glyphName])
+	singleModel = models.allSame(id(v[1]) for v in hAdvanceDeltasAndSupports.values())
 
-	# Build indirect mapping to save on duplicates, compare both sizes
-	uniq = list(set(items))
-	mapper = {v:i for i,v in enumerate(uniq)}
-	mapping = [mapper[item] for item in items]
-	advanceMapping = builder.buildVarIdxMap(mapping, font.getGlyphOrder())
+	directStore = None
+	if singleModel:
+		# Build direct mapping
+		supports = hAdvanceDeltasAndSupports[0][1][1:]
+		varTupleList = builder.buildVarRegionList(supports, axisTags)
+		varTupleIndexes = list(range(len(supports)))
+		varData = builder.buildVarData(varTupleIndexes, [])
+		for glyphName in glyphOrder:
+			varData.add_item(hAdvanceDeltasAndSupports[glyphName][0])
+		directStore = builder.buildVarStore(varTupleList, [varData])
 
-	# Direct
-	varData = builder.buildVarData(varTupleIndexes, items)
-	directStore = builder.buildVarStore(varTupleList, [varData])
+	# Build optimized indirect mapping
+	storeBuilder = varStore.OnlineVarStoreBuilder(axisTags)
+	mapping = {}
+	for glyphName in glyphOrder:
+		deltas,supports = hAdvanceDeltasAndSupports[glyphName]
+		storeBuilder.setSupports(supports)
+		mapping[glyphName] = storeBuilder.storeDeltas(deltas)
+	indirectStore = storeBuilder.finish()
+	mapping2 = indirectStore.optimize()
+	mapping = [mapping2[mapping[g]] for g in glyphOrder]
+	advanceMapping = builder.buildVarIdxMap(mapping, glyphOrder)
 
-	# Indirect
-	varData = builder.buildVarData(varTupleIndexes, uniq)
-	indirectStore = builder.buildVarStore(varTupleList, [varData])
-	mapping = indirectStore.optimize()
-	advanceMapping.mapping = {k:mapping[v] for k,v in advanceMapping.mapping.items()}
+	use_direct = False
+	if directStore:
+		# Compile both, see which is more compact
 
-	# Compile both, see which is more compact
+		writer = OTTableWriter()
+		directStore.compile(writer, font)
+		directSize = len(writer.getAllData())
 
-	writer = OTTableWriter()
-	directStore.compile(writer, font)
-	directSize = len(writer.getAllData())
+		writer = OTTableWriter()
+		indirectStore.compile(writer, font)
+		advanceMapping.compile(writer, font)
+		indirectSize = len(writer.getAllData())
 
-	writer = OTTableWriter()
-	indirectStore.compile(writer, font)
-	advanceMapping.compile(writer, font)
-	indirectSize = len(writer.getAllData())
-
-	use_direct = directSize < indirectSize
+		use_direct = directSize < indirectSize
 
 	# Done; put it all together.
 	assert "HVAR" not in font
