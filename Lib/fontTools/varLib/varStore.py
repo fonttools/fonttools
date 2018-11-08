@@ -85,11 +85,15 @@ class OnlineVarStoreBuilder(object):
 
 
 	def storeMasters(self, master_values):
-		deltas = [otRound(d) for d in self._model.getDeltas(master_values)]
-		base = deltas.pop(0)
+		deltas = self._model.getDeltas(master_values)
+		base = otRound(deltas.pop(0))
 		return base, self.storeDeltas(deltas)
 
 	def storeDeltas(self, deltas):
+		# Pity that this exists here, since VarData_add_item
+		# does the same.  But to look into our cache, it's
+		# good to adjust deltas here as well...
+		deltas = [otRound(d) for d in deltas]
 		if len(deltas) == len(self._supports) + 1:
 			deltas = tuple(deltas[1:])
 		else:
@@ -105,12 +109,23 @@ class OnlineVarStoreBuilder(object):
 			# Full array. Start new one.
 			self._set_VarData()
 			return self.storeDeltas(deltas)
-		self._data.Item.append(deltas)
+		VarData_add_item(self._data, deltas)
 
 		varIdx = (self._outer << 16) + inner
 		self._cache[deltas] = varIdx
 		return varIdx
 
+def VarData_add_item(self, deltas):
+	deltas = [otRound(d) for d in deltas]
+
+	countUs = len(self.VarRegionIndex)
+	countThem = len(deltas)
+	if countUs + 1 == countThem:
+		deltas = tuple(deltas[1:])
+	else:
+		assert countUs == countThem
+		deltas = tuple(deltas)
+	self.Item.append(deltas)
 
 def VarRegion_get_support(self, fvar_axes):
 	return {fvar_axes[i].axisTag: (reg.StartCoord,reg.PeakCoord,reg.EndCoord)
