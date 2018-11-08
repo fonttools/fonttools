@@ -101,11 +101,12 @@ class Merger(object):
 			e.args = e.args + (clazz.__name__,)
 			raise
 
-	def mergeTables(self, font, master_ttfs, tables):
+	def mergeTables(self, font, master_ttfs, tableTags):
 
-		for tag in tables:
+		for tag in tableTags:
 			if tag not in font: continue
-			self.mergeThings(font[tag], [m[tag] for m in master_ttfs])
+			self.mergeThings(font[tag], [m[tag] if tag in m else None
+						     for m in master_ttfs])
 
 #
 # Aligning merger
@@ -816,9 +817,28 @@ class VariationMerger(AligningMerger):
 
 	def __init__(self, model, axisTags, font):
 		Merger.__init__(self, font)
-		self.model = model
 		self.store_builder = varStore.OnlineVarStoreBuilder(axisTags)
+		self.setModel(model)
+
+	def setModel(self, model):
+		self.model = model
 		self.store_builder.setModel(model)
+
+	def mergeThings(self, out, lst):
+		masterModel = None
+		if None in lst:
+			if models.allSame(lst):
+				assert out is None
+				return
+			masterModel = self.model
+			model, lst = masterModel.getSubModel(lst)
+			self.setModel(model)
+
+		super(VariationMerger, self).mergeThings(out, lst)
+
+		if masterModel:
+			self.setModel(masterModel)
+
 
 _all_equal = models.allSame
 
