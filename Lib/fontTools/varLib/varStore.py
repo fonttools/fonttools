@@ -102,7 +102,7 @@ class OnlineVarStoreBuilder(object):
 
 		varIdx = self._cache.get(deltas)
 		if varIdx is not None:
-			return base, varIdx
+			return varIdx
 
 		inner = len(self._data.Item)
 		if inner == 0xFFFF:
