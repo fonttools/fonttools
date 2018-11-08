@@ -4,8 +4,7 @@ from fontTools.misc.fixedTools import otRound
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.varLib.models import supportScalar
 from fontTools.varLib.builder import (buildVarRegionList, buildVarStore,
-				      buildVarRegion, buildVarData,
-				      VarData_CalculateNumShorts)
+				      buildVarRegion, buildVarData)
 from functools import partial
 from collections import defaultdict
 from array import array
@@ -38,17 +37,18 @@ class OnlineVarStoreBuilder(object):
 		self._supports = list(supports)
 		if not self._supports[0]:
 			del self._supports[0] # Drop base master support
-		self._set_VarData()
+		self._cache = {}
+		self._data = None
 
 	def finish(self, optimize=True):
 		self._regionList.RegionCount = len(self._regionList.Region)
 		self._store.VarDataCount = len(self._store.VarData)
 		for data in self._store.VarData:
 			data.ItemCount = len(data.Item)
-			VarData_CalculateNumShorts(data, optimize)
+			data.calculateNumShorts(optimize=optimize)
 		return self._store
 
-	def _set_VarData(self):
+	def _add_VarData(self):
 		regionMap = self._regionMap
 		regionList = self._regionList
 
@@ -90,7 +90,7 @@ class OnlineVarStoreBuilder(object):
 		return base, self.storeDeltas(deltas)
 
 	def storeDeltas(self, deltas):
-		# Pity that this exists here, since VarData_add_item
+		# Pity that this exists here, since VarData_addItem
 		# does the same.  But to look into our cache, it's
 		# good to adjust deltas here as well...
 		deltas = [otRound(d) for d in deltas]
@@ -104,30 +104,33 @@ class OnlineVarStoreBuilder(object):
 		if varIdx is not None:
 			return varIdx
 
+		if not self._data:
+			self._add_VarData()
 		inner = len(self._data.Item)
 		if inner == 0xFFFF:
 			# Full array. Start new one.
-			self._set_VarData()
+			self._add_VarData()
 			return self.storeDeltas(deltas)
-		self._data.add_item(deltas)
+		self._data.addItem(deltas)
 
 		varIdx = (self._outer << 16) + inner
 		self._cache[deltas] = varIdx
 		return varIdx
 
-def VarData_add_item(self, deltas):
+def VarData_addItem(self, deltas):
 	deltas = [otRound(d) for d in deltas]
 
-	countUs = len(self.VarRegionIndex)
+	countUs = self.VarRegionCount
 	countThem = len(deltas)
 	if countUs + 1 == countThem:
 		deltas = tuple(deltas[1:])
 	else:
-		assert countUs == countThem
+		assert countUs == countThem, (countUs, countThem)
 		deltas = tuple(deltas)
-	self.Item.append(deltas)
+	self.Item.append(list(deltas))
+	self.ItemCount = len(self.Item)
 
-ot.VarData.add_item = VarData_add_item
+ot.VarData.addItem = VarData_addItem
 
 def VarRegion_get_support(self, fvar_axes):
 	return {fvar_axes[i].axisTag: (reg.StartCoord,reg.PeakCoord,reg.EndCoord)
@@ -214,8 +217,7 @@ def VarStore_subset_varidxes(self, varIdxes, optimize=True):
 		data.Item = newItems
 		data.ItemCount = len(data.Item)
 
-		if optimize:
-			VarData_CalculateNumShorts(data)
+		data.calculateNumShorts(optimize=optimize)
 
 	self.VarData = newVarData
 	self.VarDataCount = len(self.VarData)
@@ -516,7 +518,7 @@ def VarStore_optimize(self):
 	self.VarDataCount = len(self.VarData)
 	for data in self.VarData:
 		data.ItemCount = len(data.Item)
-		VarData_CalculateNumShorts(data)
+		data.optimize()
 
 	return varidx_map
 

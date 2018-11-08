@@ -437,12 +437,14 @@ def _add_HVAR(font, masterModel, master_ttfs, axisTags):
 	directStore = None
 	if singleModel:
 		# Build direct mapping
-		supports = next(iter(hAdvanceDeltasAndSupports))[1][1:]
+
+		supports = next(iter(hAdvanceDeltasAndSupports.values()))[1][1:]
 		varTupleList = builder.buildVarRegionList(supports, axisTags)
 		varTupleIndexes = list(range(len(supports)))
-		varData = builder.buildVarData(varTupleIndexes, [])
+		varData = builder.buildVarData(varTupleIndexes, [], optimize=False)
 		for glyphName in glyphOrder:
-			varData.add_item(hAdvanceDeltasAndSupports[glyphName][0])
+			varData.addItem(hAdvanceDeltasAndSupports[glyphName][0])
+		varData.optimize()
 		directStore = builder.buildVarStore(varTupleList, [varData])
 
 	# Build optimized indirect mapping
