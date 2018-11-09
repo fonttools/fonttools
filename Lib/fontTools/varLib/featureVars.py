@@ -77,9 +77,9 @@ def popCount(v):
         return popCount(v >> 32) + popCount(v & 0xFFFFFFFF)
 
     # HACKMEM 169
-    y = (v >> 1) & 033333333333
-    y = v - y - ((y >> 1) & 033333333333)
-    return (((y + (y >> 3)) & 030707070707) % 077)
+    y = (v >> 1) & 0xDB6DB6DB
+    y = v - y - ((y >> 1) & 0xDB6DB6DB)
+    return (((y + (y >> 3)) & 0xC71C71C7) % 0x3F)
 
 
 def addFeatureVariations(font, conditionalSubstitutions):
