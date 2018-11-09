@@ -9,7 +9,7 @@ from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables import otBase as otBase
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.varLib import builder, models, varStore
-from fontTools.varLib.models import allSame, nonNone
+from fontTools.varLib.models import nonNone, allSame, allSameAs
 from fontTools.varLib.varStore import VarStoreInstancer
 from functools import reduce
 
@@ -519,6 +519,85 @@ def merge(merger, self, lst):
 	self.ValueFormat1 = vf1
 	self.ValueFormat2 = vf2
 
+def _MarkBasePosFormat1_merge(self, lst, merger):
+	self.ClassCount = max(l.ClassCount for l in lst)
+
+	self.MarkCoverage = ot.Coverage()
+	self.MarkCoverage.glyphs, MarkRecords = \
+		_merge_GlyphOrders(merger.font,
+				   [l.MarkCoverage.glyphs for l in lst],
+				   [l.MarkArray.MarkRecord for l in lst])
+
+	self.BaseCoverage = ot.Coverage()
+	self.BaseCoverage.glyphs, BaseRecords = \
+		_merge_GlyphOrders(merger.font,
+				   [l.BaseCoverage.glyphs for l in lst],
+				   [l.BaseArray.BaseRecord for l in lst])
+
+	# MarkArray
+	self.MarkArray = ot.MarkArray()
+	self.MarkArray.MarkRecord = records = []
+	for g,glyphRecords in zip(self.MarkCoverage.glyphs, zip(*MarkRecords)):
+		allClasses = [r.Class for r in glyphRecords if r is not None]
+
+		# TODO Right now we require that all marks have same class in
+		# all masters that cover them.  This is not required.
+		#
+		# We can relax that by just requiring that all marks that have
+		# the same class in a master, have the same class in every other
+		# master.  Indeed, if, say, a sparse master only covers one mark,
+		# that mark probably will get class 0, which would possibly be
+		# different from its class in other masters.
+		#
+		# We can even go further and reclassify marks to support any
+		# input.  But, since, it's unlikely that two marks being both,
+		# say, "top" in one master, and one being "top" and other being
+		# "top-right" in another master, we shouldn't do that, as any
+		# failures in that case will probably signify mistakes in the
+		# input masters.
+
+		assert allSame(allClasses), allClasses
+		if not allClasses:
+			rec = None
+		else:
+			rec = ot.MarkRecord()
+			rec.Class = allClasses[0]
+			rec.MarkAnchor = anchor = ot.Anchor()
+			anchor.Format = 1
+			merger.mergeThings(anchor,
+					   [None if r is None else r.MarkAnchor for r in glyphRecords])
+		records.append(rec)
+
+	# BaseArray
+	self.BaseArray = ot.BaseArray()
+	self.BaseArray.BaseRecord = records = []
+	for g,glyphRecords in zip(self.BaseCoverage.glyphs, zip(*BaseRecords)):
+		if allSameAs(None, glyphRecords):
+			rec = None
+		else:
+			rec = ot.BaseRecord()
+			rec.BaseAnchor = anchors = []
+			glyphAnchors = [[] if r is None else r.BaseAnchor for r in glyphRecords]
+			for l in glyphAnchors:
+				l.extend([None] * (self.ClassCount - len(l)))
+			for allAnchors in zip(*glyphAnchors):
+				if allSameAs(None, allAnchors):
+					anchor = None
+				else:
+					anchor = ot.Anchor()
+					anchor.Format = 1
+					merger.mergeThings(anchor, allAnchors)
+				anchors.append(anchor)
+		records.append(rec)
+
+@AligningMerger.merger(ot.MarkBasePos)
+def merge(merger, self, lst):
+	assert allSameAs(self.Format, (l.Format for l in lst))
+	if self.Format == 1:
+		_MarkBasePosFormat1_merge(self, lst, merger)
+	else:
+		assert False
+
 
 def _PairSet_flatten(lst, font):
 	self = ot.PairSet()
@@ -846,7 +925,7 @@ class VariationMerger(AligningMerger):
 		masterModel = None
 		if None in lst:
 			if allSame(lst):
-				assert out is None
+				assert out is None, (out, lst)
 				return
 			masterModel = self.model
 			model, lst = masterModel.getSubModel(lst)
