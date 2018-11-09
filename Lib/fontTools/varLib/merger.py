@@ -561,11 +561,14 @@ def _MarkBasePosFormat1_merge(self, lst, merger, Mark='Mark', Base='Base'):
 		else:
 			rec = ot.MarkRecord()
 			rec.Class = allClasses[0]
-			anchor = ot.Anchor()
-			anchor.Format = 1
+			allAnchors = [None if r is None else r.MarkAnchor for r in glyphRecords]
+			if allSameAs(None, allAnchors):
+				anchor = None
+			else:
+				anchor = ot.Anchor()
+				anchor.Format = 1
+				merger.mergeThings(anchor, allAnchors)
 			setattr(rec, Mark+'Anchor', anchor)
-			merger.mergeThings(anchor,
-					   [None if r is None else r.MarkAnchor for r in glyphRecords])
 		records.append(rec)
 	array = ot.MarkArray()
 	array.MarkRecord = records
