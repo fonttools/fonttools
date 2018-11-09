@@ -522,13 +522,11 @@ def merge(merger, self, lst):
 def _MarkBasePosFormat1_merge(self, lst, merger):
 	self.ClassCount = max(l.ClassCount for l in lst)
 
-	self.MarkCoverage = ot.Coverage()
 	self.MarkCoverage.glyphs, MarkRecords = \
 		_merge_GlyphOrders(merger.font,
 				   [l.MarkCoverage.glyphs for l in lst],
 				   [l.MarkArray.MarkRecord for l in lst])
 
-	self.BaseCoverage = ot.Coverage()
 	self.BaseCoverage.glyphs, BaseRecords = \
 		_merge_GlyphOrders(merger.font,
 				   [l.BaseCoverage.glyphs for l in lst],
