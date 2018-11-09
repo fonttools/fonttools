@@ -115,6 +115,23 @@ class Merger(object):
 class AligningMerger(Merger):
 	pass
 
+@AligningMerger.merger(ot.GDEF, "GlyphClassDef")
+def merge(merger, self, lst):
+	self.classDefs = {}
+	# We only care about the .classDefs
+	self = self.classDefs
+	lst = [l.classDefs for l in lst]
+
+	allKeys = set()
+	allKeys.update(*[l.keys() for l in lst])
+	for k in allKeys:
+		allValues = nonNone(l.get(k) for l in lst)
+		assert allSame(allValues), allValues
+		if not allValues:
+			self[k] = None
+		else:
+			self[k] = allValues[0]
+
 def _SinglePosUpgradeToFormat2(self):
 	if self.Format == 2: return self
 
@@ -196,23 +213,6 @@ def _Lookup_PairPos_get_effective_value_pair(subtables, firstGlyph, secondGlyph)
 		else:
 			assert 0
 	return None
-
-@AligningMerger.merger(ot.ClassDef)
-def merge(merger, self, lst):
-	self.classDefs = {}
-	# We only care about the .classDefs
-	self = self.classDefs
-	lst = [l.classDefs for l in lst]
-
-	allKeys = set()
-	allKeys.update(*[l.keys() for l in lst])
-	for k in allKeys:
-		allValues = nonNone(l.get(k) for l in lst)
-		assert allSame(allValues), allValues
-		if not allValues:
-			self[k] = None
-		else:
-			self[k] = allValues[0]
 
 @AligningMerger.merger(ot.SinglePos)
 def merge(merger, self, lst):
