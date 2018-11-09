@@ -371,6 +371,9 @@ def _ClassDef_merge_classify(lst, allGlyphs=None):
 
 	return self, classes
 
+# It's stupid that we need to do this here.  Just need to, to match test
+# expecatation results, since ttx prints out format of ClassDef (and Coverage)
+# even though it should not.
 def _ClassDef_calculate_Format(self, font):
 	fmt = 2
 	ranges = self._getClassRanges(font)
