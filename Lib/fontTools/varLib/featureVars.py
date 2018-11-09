@@ -317,6 +317,10 @@ def overlayBox(top, bot):
 
         remainder[axisTag] = minimum,maximum
 
+    if not exactlyOne:
+        # bot is fully within intersection.  Remainder is empty.
+        return intersection, None
+
     return intersection, remainder
 
 def cleanupBox(box):
