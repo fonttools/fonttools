@@ -197,6 +197,23 @@ def _Lookup_PairPos_get_effective_value_pair(subtables, firstGlyph, secondGlyph)
 			assert 0
 	return None
 
+@AligningMerger.merger(ot.ClassDef)
+def merge(merger, self, lst):
+	self.classDefs = {}
+	# We only care about the .classDefs
+	self = self.classDefs
+	lst = [l.classDefs for l in lst]
+
+	allKeys = set()
+	allKeys.update(*[l.keys() for l in lst])
+	for k in allKeys:
+		allValues = nonNone(l.get(k) for l in lst)
+		assert allSame(allValues), allValues
+		if not allValues:
+			self[k] = None
+		else:
+			self[k] = allValues[0]
+
 @AligningMerger.merger(ot.SinglePos)
 def merge(merger, self, lst):
 	self.ValueFormat = valueFormat = reduce(int.__or__, [l.ValueFormat for l in lst], 0)
@@ -870,20 +887,3 @@ def merge(merger, self, lst):
 			setattr(self, name, value)
 			if deviceTable:
 				setattr(self, tableName, deviceTable)
-
-@VariationMerger.merger(ot.ClassDef)
-def merge(merger, self, lst):
-	self.classDefs = {}
-	# We only care about the .classDefs
-	self = self.classDefs
-	lst = [l.classDefs for l in lst]
-
-	allKeys = set()
-	allKeys.update(*[l.keys() for l in lst])
-	for k in allKeys:
-		allValues = nonNone(l.get(k) for l in lst)
-		assert allSame(allValues), allValues
-		if not allValues:
-			self[k] = None
-		else:
-			self[k] = allValues[0]
