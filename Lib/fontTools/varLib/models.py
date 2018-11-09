@@ -14,15 +14,19 @@ def nonNone(lst):
 def allNone(lst):
 	return all(l is None for l in lst)
 
-def allSameAs(ref, lst):
-	return all(ref == item for item in lst)
+def allSameAs(ref, lst, mapper=None):
+	if mapper is None:
+		return all(ref == item for item in lst)
+	else:
+		mapped = mapper(ref)
+		return all(mapped == mapper(item) for item in lst)
 
-def allSame(lst):
+def allSame(lst, mapper=None):
 	if not lst:
 		return True
 	it = iter(lst)
 	first = next(it)
-	return all(first == item for item in it)
+	return allSameAs(first, it, mapper=mapper)
 
 def subList(truth, lst):
 	assert len(truth) == len(lst)

@@ -76,8 +76,7 @@ class Merger(object):
 			raise
 
 	def mergeLists(self, out, lst):
-		count = len(out)
-		assert all(count == len(v) for v in lst), (count, [len(v) for v in lst])
+		assert allSameAs(out, lst, len), (len(out), [len(v) for v in lst])
 		for i,(value,values) in enumerate(zip(out, zip(*lst))):
 			try:
 				self.mergeThings(value, values)
@@ -86,9 +85,8 @@ class Merger(object):
 				raise
 
 	def mergeThings(self, out, lst):
-		clazz = type(out)
 		try:
-			assert all(clazz == type(item) for item in lst), (out, lst)
+			assert allSameAs(out, lst, type), (out, lst)
 			mergerFunc = self.mergersFor(out).get(None, None)
 			if mergerFunc is not None:
 				mergerFunc(self, out, lst)
@@ -99,7 +97,7 @@ class Merger(object):
 			else:
 				assert allSameAs(out, lst), (out, lst)
 		except Exception as e:
-			e.args = e.args + (clazz.__name__,)
+			e.args = e.args + (type(out).__name__,)
 			raise
 
 	def mergeTables(self, font, master_ttfs, tableTags):
