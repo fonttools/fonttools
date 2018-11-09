@@ -9,7 +9,77 @@ from fontTools.ttLib import newTable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.otlLib.builder import buildLookup, buildSingleSubstSubtable
 from collections import OrderedDict
-import itertools
+
+
+# https://stackoverflow.com/questions/1151658/python-hashable-dicts
+class hashdict(dict):
+    """
+    hashable dict implementation, suitable for use as a key into
+    other dicts.
+
+        >>> h1 = hashdict({"apples": 1, "bananas":2})
+        >>> h2 = hashdict({"bananas": 3, "mangoes": 5})
+        >>> h1+h2
+        hashdict(apples=1, bananas=3, mangoes=5)
+        >>> d1 = {}
+        >>> d1[h1] = "salad"
+        >>> d1[h1]
+        'salad'
+        >>> d1[h2]
+        Traceback (most recent call last):
+        ...
+        KeyError: hashdict(bananas=3, mangoes=5)
+
+    based on answers from
+       http://stackoverflow.com/questions/1151658/python-hashable-dicts
+
+    """
+    def __key(self):
+        return tuple(sorted(self.items()))
+    def __repr__(self):
+        return "{0}({1})".format(self.__class__.__name__,
+            ", ".join("{0}={1}".format(
+                    str(i[0]),repr(i[1])) for i in self.__key()))
+
+    def __hash__(self):
+        return hash(self.__key())
+    def __setitem__(self, key, value):
+        raise TypeError("{0} does not support item assignment"
+                         .format(self.__class__.__name__))
+    def __delitem__(self, key):
+        raise TypeError("{0} does not support item assignment"
+                         .format(self.__class__.__name__))
+    def clear(self):
+        raise TypeError("{0} does not support item assignment"
+                         .format(self.__class__.__name__))
+    def pop(self, *args, **kwargs):
+        raise TypeError("{0} does not support item assignment"
+                         .format(self.__class__.__name__))
+    def popitem(self, *args, **kwargs):
+        raise TypeError("{0} does not support item assignment"
+                         .format(self.__class__.__name__))
+    def setdefault(self, *args, **kwargs):
+        raise TypeError("{0} does not support item assignment"
+                         .format(self.__class__.__name__))
+    def update(self, *args, **kwargs):
+        raise TypeError("{0} does not support item assignment"
+                         .format(self.__class__.__name__))
+    # update is not ok because it mutates the object
+    # __add__ is ok because it creates a new object
+    # while the new object is under construction, it's ok to mutate it
+    def __add__(self, right):
+        result = hashdict(self)
+        dict.update(result, right)
+        return result
+
+def popCount(v):
+    # TODO Speed up
+    i = 0
+    while v:
+        if v & 1:
+            i += 1
+        v = v >> 1
+    return i
 
 
 def addFeatureVariations(font, conditionalSubstitutions):
@@ -18,12 +88,13 @@ def addFeatureVariations(font, conditionalSubstitutions):
     The `conditionalSubstitutions` argument is a list of (Region, Substitutions)
     tuples.
 
-    A Region is a list of Spaces. A Space is a dict mapping axisTags to
-    (minValue, maxValue) tuples. Irrelevant axes may be omitted.
-    A Space represents a 'rectangular' subset of an N-dimensional design space.
+    A Region is a list of Boxes. A Box is a dict mapping axisTags to
+    (minValue, maxValue) tuples. Irrelevant axes may be omitted and they are
+    interpretted as extending to end of axis in each direction.  A Box represents
+    an orthogonal 'rectangular' subset of an N-dimensional design space.
     A Region represents a more complex subset of an N-dimensional design space,
-    ie. the union of all the Spaces in the Region.
-    For efficiency, Spaces within a Region should ideally not overlap, but
+    ie. the union of all the Boxes in the Region.
+    For efficiency, Boxes within a Region should ideally not overlap, but
     functionality is not compromised if they do.
 
     The minimum and maximum values are expressed in normalized coordinates.
@@ -35,8 +106,8 @@ def addFeatureVariations(font, conditionalSubstitutions):
     # >>> f = TTFont(srcPath)
     # >>> condSubst = [
     # ...     # A list of (Region, Substitution) tuples.
-    # ...     ([{"wght": (0.5, 1.0)}], {"dollar": "dollar.rvrn"}),
     # ...     ([{"wdth": (0.5, 1.0)}], {"cent": "cent.rvrn"}),
+    # ...     ([{"wght": (0.5, 1.0)}], {"dollar": "dollar.rvrn"}),
     # ... ]
     # >>> addFeatureVariations(f, condSubst)
     # >>> f.save(dstPath)
@@ -45,19 +116,19 @@ def addFeatureVariations(font, conditionalSubstitutions):
     addFeatureVariationsRaw(font,
                             overlayFeatureVariations(conditionalSubstitutions))
 
-
 def overlayFeatureVariations(conditionalSubstitutions):
     """Compute overlaps between all conditional substitutions.
 
     The `conditionalSubstitutions` argument is a list of (Region, Substitutions)
     tuples.
 
-    A Region is a list of Spaces. A Space is a dict mapping axisTags to
-    (minValue, maxValue) tuples. Irrelevant axes may be omitted.
-    A Space represents a 'rectangular' subset of an N-dimensional design space.
+    A Region is a list of Boxes. A Box is a dict mapping axisTags to
+    (minValue, maxValue) tuples. Irrelevant axes may be omitted and they are
+    interpretted as extending to end of axis in each direction.  A Box represents
+    an orthogonal 'rectangular' subset of an N-dimensional design space.
     A Region represents a more complex subset of an N-dimensional design space,
-    ie. the union of all the Spaces in the Region.
-    For efficiency, Spaces within a Region should ideally not overlap, but
+    ie. the union of all the Boxes in the Region.
+    For efficiency, Boxes within a Region should ideally not overlap, but
     functionality is not compromised if they do.
 
     The minimum and maximum values are expressed in normalized coordinates.
@@ -65,8 +136,8 @@ def overlayFeatureVariations(conditionalSubstitutions):
     A Substitution is a dict mapping source glyph names to substitute glyph names.
 
     Returns data is in similar but different format.  Overlaps of distinct
-    substitution spaces (*not* regions) are explicitly listed as distinct rules,
-    and rules with the same space merged.  The more specific rules appear earlier
+    substitution Boxes (*not* Regions) are explicitly listed as distinct rules,
+    and rules with the same Box merged.  The more specific rules appear earlier
     in the resulting list.  Moreover, instead of just a dictionary of substitutions,
     a list of dictionaries is returned for substitutions corresponding to each
     uniq space, with each dictionary being identical to one of the input
@@ -83,147 +154,141 @@ def overlayFeatureVariations(conditionalSubstitutions):
     >>> pprint(overlayFeatureVariations(condSubst))
     [({'wdth': (0.5, 1.0), 'wght': (0.5, 1.0)},
       [{'dollar': 'dollar.rvrn'}, {'cent': 'cent.rvrn'}]),
-     ({'wght': (0.5, 1.0)}, [{'dollar': 'dollar.rvrn'}]),
-     ({'wdth': (0.5, 1.0)}, [{'cent': 'cent.rvrn'}])]
+     ({'wdth': (0.5, 1.0)}, [{'cent': 'cent.rvrn'}]),
+     ({'wght': (0.5, 1.0)}, [{'dollar': 'dollar.rvrn'}])]
     """
 
-    # Merge duplicate region rules before combinatorial explosion.
+    # Merge duplicate region rules before intersecting, as this is much cheaper.
+    # Also convert boxes to hashdict()
+    #
+    # Reversing is such that earlier entries win in case of conflicting substitution
+    # rules for the same region.
     merged = OrderedDict()
-    for key,value in conditionalSubstitutions:
-        key = tuple(sorted(tuple(sorted(k.items())) for k in key))
+    for key,value in reversed(conditionalSubstitutions):
+        key = tuple(sorted(hashdict(cleanupBox(k)) for k in key))
         if key in merged:
             merged[key].update(value)
         else:
-            merged[key] = value
-    conditionalSubstitutions = [([dict(k) for k in key],value) for key,value in merged.items()]
+            merged[key] = dict(value)
+    conditionalSubstitutions = list(reversed(merged.items()))
+    del merged
 
-    explodedConditionalSubstitutions = []
-    for combination in iterAllCombinations(len(conditionalSubstitutions)):
-        regions = []
-        lookups = []
-        for index in combination:
-            regions.append(conditionalSubstitutions[index][0])
-            lookups.append(conditionalSubstitutions[index][1])
-        if not regions:
-            continue
-        intersection = regions[0]
-        for region in regions[1:]:
-            intersection = intersectRegions(intersection, region)
-        for space in intersection:
-            # Remove default values, so we don't generate redundant ConditionSets
-            space = cleanupSpace(space)
-            if space:
-                explodedConditionalSubstitutions.append((space, lookups))
+    # Overlay
+    #
+    # Rank is the bit-set of the index of all contributing layers.
+    initMapInit = ((hashdict(),0),) # Initializer representing the entire space
+    boxMap = OrderedDict(initMapInit) # Map from Box to Rank
+    for i,(currRegion,_) in enumerate(conditionalSubstitutions):
+        newMap = OrderedDict(initMapInit)
+        currRank = 1<<i
+        for box,rank in boxMap.items():
+            for currBox in currRegion:
+                intersection, remainder = overlayBox(currBox, box)
+                if intersection is not None:
+                    intersection = hashdict(intersection)
+                    newMap[intersection] = newMap.get(intersection, 0) | rank|currRank
+                if remainder is not None:
+                    remainder = hashdict(remainder)
+                    newMap[remainder] = newMap.get(remainder, 0) | rank
+        boxMap = newMap
+    del boxMap[hashdict()]
 
-
-    return explodedConditionalSubstitutions
-
-def iterAllCombinations(numRules):
-    """Given a number of rules, yield all the combinations of indices, sorted
-    by decreasing length, so we get the most specialized rules first.
-
-        >>> list(iterAllCombinations(0))
-        []
-        >>> list(iterAllCombinations(1))
-        [(0,)]
-        >>> list(iterAllCombinations(2))
-        [(0, 1), (0,), (1,)]
-        >>> list(iterAllCombinations(3))
-        [(0, 1, 2), (0, 1), (0, 2), (1, 2), (0,), (1,), (2,)]
-    """
-    indices = range(numRules)
-    for length in range(numRules, 0, -1):
-        for combinations in itertools.combinations(indices, length):
-            yield combinations
+    # Generate output
+    items = []
+    for box,rank in sorted(boxMap.items(),
+                           key=(lambda BoxAndRank: -popCount(BoxAndRank[1]))):
+        substsList = []
+        i = 0
+        while rank:
+          if rank & 1:
+              substsList.append(conditionalSubstitutions[i][1])
+          rank >>= 1
+          i += 1
+        items.append((dict(box),substsList))
+    return items
 
 
-#
-# Region and Space support
 #
 # Terminology:
 #
-# A 'Space' is a dict representing a "rectangular" bit of N-dimensional space.
+# A 'Box' is a dict representing an orthogonal "rectangular" bit of N-dimensional space.
 # The keys in the dict are axis tags, the values are (minValue, maxValue) tuples.
 # Missing dimensions (keys) are substituted by the default min and max values
 # from the corresponding axes.
 #
-# A 'Region' is a list of Space dicts, representing the union of the Spaces,
-# therefore representing a more complex subset of design space.
-#
 
-def intersectRegions(region1, region2):
-    """Return the region intersecting `region1` and `region2`.
-
-        >>> intersectRegions([], [])
-        []
-        >>> intersectRegions([{'wdth': (0.0, 1.0)}], [])
-        []
-        >>> expected = [{'wdth': (0.0, 1.0), 'wght': (-1.0, 0.0)}]
-        >>> expected == intersectRegions([{'wdth': (0.0, 1.0)}], [{'wght': (-1.0, 0.0)}])
-        True
-        >>> expected = [{'wdth': (0.0, 1.0), 'wght': (-0.5, 0.0)}]
-        >>> expected == intersectRegions([{'wdth': (0.0, 1.0), 'wght': (-0.5, 0.5)}], [{'wght': (-1.0, 0.0)}])
-        True
-        >>> intersectRegions(
-        ...     [{'wdth': (0.0, 1.0), 'wght': (-0.5, 0.5)}],
-        ...     [{'wdth': (-1.0, 0.0), 'wght': (-1.0, 0.0)}])
-        []
-
-    """
-    region = []
-    for space1 in region1:
-        for space2 in region2:
-            space = intersectSpaces(space1, space2)
-            if space is not None:
-                region.append(space)
-    return region
-
-
-def intersectSpaces(space1, space2):
-    """Return the space intersected by `space1` and `space2`, or None if there
+def intersectBoxes(box1, box2):
+    """Return the box intersected by `box1` and `box2`, or None if there
     is no intersection.
 
-        >>> intersectSpaces({}, {})
+        >>> intersectBoxes({}, {})
         {}
-        >>> intersectSpaces({'wdth': (-0.5, 0.5)}, {})
+        >>> intersectBoxes({'wdth': (-0.5, 0.5)}, {})
         {'wdth': (-0.5, 0.5)}
-        >>> intersectSpaces({'wdth': (-0.5, 0.5)}, {'wdth': (0.0, 1.0)})
+        >>> intersectBoxes({'wdth': (-0.5, 0.5)}, {'wdth': (0.0, 1.0)})
         {'wdth': (0.0, 0.5)}
         >>> expected = {'wdth': (0.0, 0.5), 'wght': (0.25, 0.5)}
-        >>> expected == intersectSpaces({'wdth': (-0.5, 0.5), 'wght': (0.0, 0.5)}, {'wdth': (0.0, 1.0), 'wght': (0.25, 0.75)})
+        >>> expected == intersectBoxes({'wdth': (-0.5, 0.5), 'wght': (0.0, 0.5)}, {'wdth': (0.0, 1.0), 'wght': (0.25, 0.75)})
         True
         >>> expected = {'wdth': (-0.5, 0.5), 'wght': (0.0, 1.0)}
-        >>> expected == intersectSpaces({'wdth': (-0.5, 0.5)}, {'wght': (0.0, 1.0)})
+        >>> expected == intersectBoxes({'wdth': (-0.5, 0.5)}, {'wght': (0.0, 1.0)})
         True
-        >>> intersectSpaces({'wdth': (-0.5, 0)}, {'wdth': (0.1, 0.5)})
+        >>> intersectBoxes({'wdth': (-0.5, 0)}, {'wdth': (0.1, 0.5)})
 
     """
-    space = {}
-    space.update(space1)
-    space.update(space2)
-    for axisTag in set(space1) & set(space2):
-        min1, max1 = space1[axisTag]
-        min2, max2 = space2[axisTag]
+    box = {}
+    box.update(box1)
+    box.update(box2)
+    for axisTag in set(box1) & set(box2):
+        min1, max1 = box1[axisTag]
+        min2, max2 = box2[axisTag]
         minimum = max(min1, min2)
         maximum = min(max1, max2)
         if not minimum < maximum:
             return None
-        space[axisTag] = minimum, maximum
-    return space
+        box[axisTag] = minimum, maximum
+    return box
 
+def overlayBox(top, bot):
+    """Overlays `top` box on top of `bot` box.
 
-def cleanupSpace(space):
-    """Return a sparse copy of `space`, without redundant (default) values.
+    Returns two items:
+    - Box for intersection of `top` and `bot`, or None if they don't intersect.
+    - Box for remainder of `bot`.  Remainder box might not be exact (since the
+      remainder might not be a simple box), but is inclusive of the exact
+      remainder.
+    """
 
-        >>> cleanupSpace({})
+    # Intersection
+    intersection = {}
+    intersection.update(top)
+    intersection.update(bot)
+    for axisTag in set(top) & set(bot):
+        min1, max1 = top[axisTag]
+        min2, max2 = bot[axisTag]
+        minimum = max(min1, min2)
+        maximum = min(max1, max2)
+        if not minimum < maximum:
+            return None, bot # Do not intersect
+        intersection[axisTag] = minimum, maximum
+
+    # Remainder
+    remainder = bot
+
+    return intersection, remainder
+
+def cleanupBox(box):
+    """Return a sparse copy of `box`, without redundant (default) values.
+
+        >>> cleanupBox({})
         {}
-        >>> cleanupSpace({'wdth': (0.0, 1.0)})
+        >>> cleanupBox({'wdth': (0.0, 1.0)})
         {'wdth': (0.0, 1.0)}
-        >>> cleanupSpace({'wdth': (-1.0, 1.0)})
+        >>> cleanupBox({'wdth': (-1.0, 1.0)})
         {}
 
     """
-    return {tag: limit for tag, limit in space.items() if limit != (-1.0, 1.0)}
+    return {tag: limit for tag, limit in box.items() if limit != (-1.0, 1.0)}
 
 
 #
