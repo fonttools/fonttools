@@ -65,12 +65,13 @@ def overlayFeatureVariations(conditionalSubstitutions):
     A Substitution is a dict mapping source glyph names to substitute glyph names.
 
     Returns data is in similar but different format.  Overlaps of distinct
-    substitution regions are explicitly listed as distinct rules, and rules
-    with the same region merged.  The more specific rules appear earlier in the
-    resulting list.  Moreover, instead of just a dictionary of substitutions,
-    a list of dictionaries is returned, with each dictionary being identical
-    to one of the input substitution dictionaries.  These dictionaries are not
-    merged to allow data sharing when they are converted into font tables.
+    substitution spaces (*not* regions) are explicitly listed as distinct rules,
+    and rules with the same space merged.  The more specific rules appear earlier
+    in the resulting list.  Moreover, instead of just a dictionary of substitutions,
+    a list of dictionaries is returned for substitutions corresponding to each
+    uniq space, with each dictionary being identical to one of the input
+    substitution dictionaries.  These dictionaries are not merged to allow data
+    sharing when they are converted into font tables.
 
     Example:
     >>> condSubst = [
