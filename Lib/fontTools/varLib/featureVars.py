@@ -270,10 +270,52 @@ def overlayBox(top, bot):
         maximum = min(max1, max2)
         if not minimum < maximum:
             return None, bot # Do not intersect
-        intersection[axisTag] = minimum, maximum
+        intersection[axisTag] = minimum,maximum
 
     # Remainder
-    remainder = bot
+    #
+    # Remainder is empty if bot's each axis range lies within that of intersection.
+    #
+    # Remainder is shrank if bot's each, except for exactly one, axis range lies
+    # within that of intersection.
+    #
+    # Bot is returned in full as remainder otherwise, as true remainder is not
+    # representable as a single box.
+
+    remainder = dict(bot)
+    exactlyOne = False
+    for axisTag in bot:
+        if axisTag not in intersection:
+            continue # Lies fully within
+        min1, max1 = intersection[axisTag]
+        min2, max2 = bot[axisTag]
+        if min1 <= min2 and max2 <= max1:
+            continue # Lies fully within
+
+        # Bot's range doesn't fully lie within that of top's for this axis.
+        # We know they intersect, so it cannot lie fully without either; so they
+        # overlap.
+
+        # If we have had an overlapping axis before, remainder is not
+        # representable as a box, so return full bottom and go home.
+        if exactlyOne:
+            return intersection, bot
+        exactlyOne = True
+
+        # Otherwise, cut remainder on this axis and continue.
+        if max1 < max2:
+            # Right side survives.
+            minimum = max(max1, min2)
+            maximum = max2
+        elif min2 < min1:
+            # Left side survives.
+            minimum = min2
+            maximum = min(min1, max2)
+        else:
+            # Remainder leaks out from both sides.  Can't cut either.
+            return intersection, bot
+
+        remainder[axisTag] = minimum,maximum
 
     return intersection, remainder
 
