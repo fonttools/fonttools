@@ -519,23 +519,24 @@ def merge(merger, self, lst):
 	self.ValueFormat1 = vf1
 	self.ValueFormat2 = vf2
 
-def _MarkBasePosFormat1_merge(self, lst, merger):
+def _MarkBasePosFormat1_merge(self, lst, merger, Mark='Mark', Base='Base'):
 	self.ClassCount = max(l.ClassCount for l in lst)
 
-	self.MarkCoverage.glyphs, MarkRecords = \
+	MarkCoverageGlyphs, MarkRecords = \
 		_merge_GlyphOrders(merger.font,
-				   [l.MarkCoverage.glyphs for l in lst],
-				   [l.MarkArray.MarkRecord for l in lst])
+				   [getattr(l, Mark+'Coverage').glyphs for l in lst],
+				   [getattr(l, Mark+'Array').MarkRecord for l in lst])
+	getattr(self, Mark+'Coverage').glyphs = MarkCoverageGlyphs
 
-	self.BaseCoverage.glyphs, BaseRecords = \
+	BaseCoverageGlyphs, BaseRecords = \
 		_merge_GlyphOrders(merger.font,
-				   [l.BaseCoverage.glyphs for l in lst],
-				   [l.BaseArray.BaseRecord for l in lst])
+				   [getattr(l, Base+'Coverage').glyphs for l in lst],
+				   [getattr(getattr(l, Base+'Array'), Base+'Record') for l in lst])
+	getattr(self, Base+'Coverage').glyphs = BaseCoverageGlyphs
 
 	# MarkArray
-	self.MarkArray = array = ot.MarkArray()
-	array.MarkRecord = records = []
-	for g,glyphRecords in zip(self.MarkCoverage.glyphs, zip(*MarkRecords)):
+	records = []
+	for g,glyphRecords in zip(MarkCoverageGlyphs, zip(*MarkRecords)):
 		allClasses = [r.Class for r in glyphRecords if r is not None]
 
 		# TODO Right now we require that all marks have same class in
@@ -560,23 +561,28 @@ def _MarkBasePosFormat1_merge(self, lst, merger):
 		else:
 			rec = ot.MarkRecord()
 			rec.Class = allClasses[0]
-			rec.MarkAnchor = anchor = ot.Anchor()
+			anchor = ot.Anchor()
 			anchor.Format = 1
+			setattr(rec, Mark+'Anchor', anchor)
 			merger.mergeThings(anchor,
 					   [None if r is None else r.MarkAnchor for r in glyphRecords])
 		records.append(rec)
+	array = ot.MarkArray()
+	array.MarkRecord = records
 	array.MarkCount = len(array.MarkRecord)
+	self.MarkArray = array
 
 	# BaseArray
-	self.BaseArray = array = ot.BaseArray()
-	array.BaseRecord = records = []
-	for g,glyphRecords in zip(self.BaseCoverage.glyphs, zip(*BaseRecords)):
+	records = []
+	for g,glyphRecords in zip(BaseCoverageGlyphs, zip(*BaseRecords)):
 		if allSameAs(None, glyphRecords):
 			rec = None
 		else:
-			rec = ot.BaseRecord()
-			rec.BaseAnchor = anchors = []
-			glyphAnchors = [[] if r is None else r.BaseAnchor for r in glyphRecords]
+			rec = getattr(ot, Base+'Record')()
+			anchors = []
+			setattr(rec, Base+'Anchor', anchors)
+			glyphAnchors = [[] if r is None else getattr(r, Base+'Anchor')
+					for r in glyphRecords]
 			for l in glyphAnchors:
 				l.extend([None] * (self.ClassCount - len(l)))
 			for allAnchors in zip(*glyphAnchors):
@@ -588,13 +594,24 @@ def _MarkBasePosFormat1_merge(self, lst, merger):
 					merger.mergeThings(anchor, allAnchors)
 				anchors.append(anchor)
 		records.append(rec)
-	array.BaseCount = len(array.BaseRecord)
+	array = getattr(ot, Base+'Array')()
+	setattr(array, Base+'Record', records)
+	setattr(array, Base+'Count', len(records))
+	setattr(self, Base+'Array', array)
 
 @AligningMerger.merger(ot.MarkBasePos)
 def merge(merger, self, lst):
 	assert allSameAs(self.Format, (l.Format for l in lst))
 	if self.Format == 1:
 		_MarkBasePosFormat1_merge(self, lst, merger)
+	else:
+		assert False
+
+@AligningMerger.merger(ot.MarkMarkPos)
+def merge(merger, self, lst):
+	assert allSameAs(self.Format, (l.Format for l in lst))
+	if self.Format == 1:
+		_MarkBasePosFormat1_merge(self, lst, merger, 'Mark1', 'Mark2')
 	else:
 		assert False
 
