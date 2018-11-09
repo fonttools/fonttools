@@ -267,7 +267,7 @@ def _visit(self, objType, func):
 		for that in self:
 			_visit(that, objType, func)
 
-	if hasattr(self, 'getConverters'):
+	if hasattr(self, 'getConverters') and not hasattr(self, 'postRead'):
 		for conv in self.getConverters():
 			that = getattr(self, conv.name, None)
 			if that is not None:
