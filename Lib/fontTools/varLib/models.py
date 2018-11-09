@@ -2,7 +2,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
-__all__ = ['nonNone', 'allSame', 'allSameAs', 'subList', 
+__all__ = ['nonNone', 'allNone', 'allSame', 'allSameAs', 'subList',
 	   'normalizeValue', 'normalizeLocation',
 	   'supportScalar',
 	   'VariationModel']
@@ -10,6 +10,9 @@ __all__ = ['nonNone', 'allSame', 'allSameAs', 'subList',
 
 def nonNone(lst):
 	return [l for l in lst if l is not None]
+
+def allNone(lst):
+	return all(l is None for l in lst)
 
 def allSameAs(ref, lst):
 	return all(ref == item for item in lst)
@@ -19,7 +22,7 @@ def allSame(lst):
 		return True
 	it = iter(lst)
 	first = next(it)
-	return allSameAs(first, it)
+	return all(first == item for item in it)
 
 def subList(truth, lst):
 	assert len(truth) == len(lst)

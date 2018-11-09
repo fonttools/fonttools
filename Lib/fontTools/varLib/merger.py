@@ -9,7 +9,7 @@ from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables import otBase as otBase
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.varLib import builder, models, varStore
-from fontTools.varLib.models import nonNone, allSame, allSameAs
+from fontTools.varLib.models import nonNone, allNone, allSame, allSameAs
 from fontTools.varLib.varStore import VarStoreInstancer
 from functools import reduce
 
@@ -88,7 +88,7 @@ class Merger(object):
 	def mergeThings(self, out, lst):
 		clazz = type(out)
 		try:
-			assert all(type(item) == clazz for item in lst), (out, lst)
+			assert all(clazz == type(item) for item in lst), (out, lst)
 			mergerFunc = self.mergersFor(out).get(None, None)
 			if mergerFunc is not None:
 				mergerFunc(self, out, lst)
@@ -97,7 +97,7 @@ class Merger(object):
 			elif isinstance(out, list):
 				self.mergeLists(out, lst)
 			else:
-				assert all(out == v for v in lst), (out, lst)
+				assert allSameAs(out, lst), (out, lst)
 		except Exception as e:
 			e.args = e.args + (clazz.__name__,)
 			raise
@@ -220,7 +220,8 @@ def merge(merger, self, lst):
 	assert len(lst) == 1 or (valueFormat & ~0xF == 0), valueFormat
 
 	# If all have same coverage table and all are format 1,
-	if all(v.Format == 1 for v in lst) and all(self.Coverage.glyphs == v.Coverage.glyphs for v in lst):
+	coverageGlyphs = self.Coverage.glyphs
+	if all(v.Format == 1 for v in lst) and all(coverageGlyphs == v.Coverage.glyphs for v in lst):
 		self.Value = otBase.ValueRecord(valueFormat)
 		merger.mergeThings(self.Value, [v.Value for v in lst])
 		self.ValueFormat = self.Value.getFormat()
@@ -562,7 +563,7 @@ def _MarkBasePosFormat1_merge(self, lst, merger, Mark='Mark', Base='Base'):
 			rec = ot.MarkRecord()
 			rec.Class = allClasses[0]
 			allAnchors = [None if r is None else r.MarkAnchor for r in glyphRecords]
-			if allSameAs(None, allAnchors):
+			if allNone(allAnchors):
 				anchor = None
 			else:
 				anchor = ot.Anchor()
@@ -578,7 +579,7 @@ def _MarkBasePosFormat1_merge(self, lst, merger, Mark='Mark', Base='Base'):
 	# BaseArray
 	records = []
 	for g,glyphRecords in zip(BaseCoverageGlyphs, zip(*BaseRecords)):
-		if allSameAs(None, glyphRecords):
+		if allNone(glyphRecords):
 			rec = None
 		else:
 			rec = getattr(ot, Base+'Record')()
@@ -589,7 +590,7 @@ def _MarkBasePosFormat1_merge(self, lst, merger, Mark='Mark', Base='Base'):
 			for l in glyphAnchors:
 				l.extend([None] * (self.ClassCount - len(l)))
 			for allAnchors in zip(*glyphAnchors):
-				if allSameAs(None, allAnchors):
+				if allNone(allAnchors):
 					anchor = None
 				else:
 					anchor = ot.Anchor()
