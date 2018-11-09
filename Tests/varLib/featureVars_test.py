@@ -13,8 +13,7 @@ def test_explosion(n = 10):
         subst = {'g%.2g'%start: 'g%.2g'%end}
         conds.append((region, subst))
     overlaps = overlayFeatureVariations(conds)
-    # XXX Currently fails for n > 2!
-    #assert len(overlaps) == 2 * n - 1, overlaps
+    assert len(overlaps) == 2 * n - 1, overlaps
     return conds, overlaps
 
 if __name__ == "__main__":
