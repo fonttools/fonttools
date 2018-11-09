@@ -20,12 +20,19 @@ def test_explosion(n = 10):
 if __name__ == "__main__":
     import sys
     from pprint import pprint
+    quiet = False
     args = {}
     if len(sys.argv) > 1:
+        if sys.argv[1] == '-q':
+            quiet = True
+            del sys.argv[1]
         args['n'] = int(sys.argv[1])
     input, output = test_explosion(**args)
-    print("Input:")
-    pprint(input)
-    print()
-    print("Output:")
-    pprint(output)
+    if quiet:
+        print(len(output))
+    else:
+        print("Input:")
+        pprint(input)
+        print()
+        print("Output:")
+        pprint(output)
