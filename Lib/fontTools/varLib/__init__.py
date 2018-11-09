@@ -552,8 +552,7 @@ def _merge_OTL(font, model, master_fonts, axisTags):
 	log.info("Merging OpenType Layout tables")
 	merger = VariationMerger(model, axisTags, font)
 
-	merger.mergeTables(font, master_fonts, ['GPOS', 'GDEF'])
-	# TODO Merge GSUB
+	merger.mergeTables(font, master_fonts, ['GSUB', 'GDEF', 'GPOS'])
 	store = merger.store_builder.finish()
 	if not store.VarData:
 		return
