@@ -9,7 +9,7 @@ from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables import otBase as otBase
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.varLib import builder, models, varStore
-from fontTools.varLib.models import allSame
+from fontTools.varLib.models import allSame, nonNone
 from fontTools.varLib.varStore import VarStoreInstancer
 from functools import reduce
 
@@ -870,3 +870,20 @@ def merge(merger, self, lst):
 			setattr(self, name, value)
 			if deviceTable:
 				setattr(self, tableName, deviceTable)
+
+@VariationMerger.merger(ot.ClassDef)
+def merge(merger, self, lst):
+	self.classDefs = {}
+	# We only care about the .classDefs
+	self = self.classDefs
+	lst = [l.classDefs for l in lst]
+
+	allKeys = set()
+	allKeys.update(*[l.keys() for l in lst])
+	for k in allKeys:
+		allValues = nonNone(l.get(k) for l in lst)
+		assert allSame(allValues), allValues
+		if not allValues:
+			self[k] = None
+		else:
+			self[k] = allValues[0]
