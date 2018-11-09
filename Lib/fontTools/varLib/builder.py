@@ -55,7 +55,7 @@ def VarData_calculateNumShorts(self, optimize=False):
 		# Reorder columns such that all SHORT columns come before UINT8
 		self.VarRegionIndex = _reorderItem(self.VarRegionIndex, narrows, zeroes)
 		self.VarRegionCount = len(self.VarRegionIndex)
-		for i in range(self.ItemCount):
+		for i in range(len(items)):
 			items[i] = _reorderItem(items[i], narrows, zeroes)
 		self.NumShorts = count - len(narrows)
 	else:
