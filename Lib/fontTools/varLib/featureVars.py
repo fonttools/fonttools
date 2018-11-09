@@ -33,13 +33,13 @@ def addFeatureVariations(font, conditionalSubstitutions):
     Example:
 
     # >>> f = TTFont(srcPath)
-    #>>> condSubst = [
-    #...     # A list of (Region, Substitution) tuples.
-    #...     ([{"wght": (0.5, 1.0)}], {"dollar": "dollar.rvrn"}),
-    #...     ([{"wdth": (0.5, 1.0)}], {"cent": "cent.rvrn"}),
-    #... ]
-    #>>> addFeatureVariations(f, condSubst)
-    #>>> f.save(dstPath)
+    # >>> condSubst = [
+    # ...     # A list of (Region, Substitution) tuples.
+    # ...     ([{"wght": (0.5, 1.0)}], {"dollar": "dollar.rvrn"}),
+    # ...     ([{"wdth": (0.5, 1.0)}], {"cent": "cent.rvrn"}),
+    # ... ]
+    # >>> addFeatureVariations(f, condSubst)
+    # >>> f.save(dstPath)
     """
 
     addFeatureVariationsRaw(font,
