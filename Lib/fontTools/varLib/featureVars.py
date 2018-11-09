@@ -284,8 +284,10 @@ def overlayBox(top, bot):
 
     remainder = dict(bot)
     exactlyOne = False
+    fullyInside = False
     for axisTag in bot:
         if axisTag not in intersection:
+            fullyInside = False
             continue # Lies fully within
         min1, max1 = intersection[axisTag]
         min2, max2 = bot[axisTag]
@@ -301,6 +303,7 @@ def overlayBox(top, bot):
         if exactlyOne:
             return intersection, bot
         exactlyOne = True
+        fullyInside = False
 
         # Otherwise, cut remainder on this axis and continue.
         if max1 < max2:
@@ -316,6 +319,10 @@ def overlayBox(top, bot):
             return intersection, bot
 
         remainder[axisTag] = minimum,maximum
+
+    if fullyInside:
+        # bot is fully within intersection.  Remainder is empty.
+        return intersection, None
 
     return intersection, remainder
 
