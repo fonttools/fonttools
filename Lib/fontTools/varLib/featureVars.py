@@ -8,6 +8,7 @@ from __future__ import print_function, absolute_import, division
 from fontTools.ttLib import newTable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.otlLib.builder import buildLookup, buildSingleSubstSubtable
+from collections import OrderedDict
 import itertools
 
 
@@ -44,6 +45,17 @@ def addFeatureVariations(font, conditionalSubstitutions):
     # Since the FeatureVariations table will only ever match one rule at a time,
     # we will make new rules for all possible combinations of our input, so we
     # can indirectly support overlapping rules.
+
+    # Merge duplicate region rules before combinatorial explosion.
+    merged = OrderedDict()
+    for key,value in conditionalSubstitutions:
+        key = tuple(sorted(tuple(sorted(k.items())) for k in key))
+        if key in merged:
+            merged[key].update(value)
+        else:
+            merged[key] = value
+    conditionalSubstitutions = [([dict(k) for k in key],value) for key,value in merged.items()]
+
     explodedConditionalSubstitutions = []
     for combination in iterAllCombinations(len(conditionalSubstitutions)):
         regions = []
