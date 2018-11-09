@@ -533,8 +533,8 @@ def _MarkBasePosFormat1_merge(self, lst, merger):
 				   [l.BaseArray.BaseRecord for l in lst])
 
 	# MarkArray
-	self.MarkArray = ot.MarkArray()
-	self.MarkArray.MarkRecord = records = []
+	self.MarkArray = array = ot.MarkArray()
+	array.MarkRecord = records = []
 	for g,glyphRecords in zip(self.MarkCoverage.glyphs, zip(*MarkRecords)):
 		allClasses = [r.Class for r in glyphRecords if r is not None]
 
@@ -565,11 +565,11 @@ def _MarkBasePosFormat1_merge(self, lst, merger):
 			merger.mergeThings(anchor,
 					   [None if r is None else r.MarkAnchor for r in glyphRecords])
 		records.append(rec)
-	self.MarkArray.MarkCount = len(self.MarkArray.MarkRecord)
+	array.MarkCount = len(array.MarkRecord)
 
 	# BaseArray
-	self.BaseArray = ot.BaseArray()
-	self.BaseArray.BaseRecord = records = []
+	self.BaseArray = array = ot.BaseArray()
+	array.BaseRecord = records = []
 	for g,glyphRecords in zip(self.BaseCoverage.glyphs, zip(*BaseRecords)):
 		if allSameAs(None, glyphRecords):
 			rec = None
@@ -588,7 +588,7 @@ def _MarkBasePosFormat1_merge(self, lst, merger):
 					merger.mergeThings(anchor, allAnchors)
 				anchors.append(anchor)
 		records.append(rec)
-	self.BaseArray.BaseCount = len(self.BaseArray.BaseRecord)
+	array.BaseCount = len(array.BaseRecord)
 
 @AligningMerger.merger(ot.MarkBasePos)
 def merge(merger, self, lst):
