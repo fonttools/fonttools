@@ -74,7 +74,10 @@ def addFeatureVariations(font, conditionalSubstitutions):
             if space:
                 explodedConditionalSubstitutions.append((space, lookups))
 
-    addFeatureVariationsRaw(font, explodedConditionalSubstitutions)
+    if font is not None:
+        addFeatureVariationsRaw(font, explodedConditionalSubstitutions)
+
+    return explodedConditionalSubstitutions
 
 
 def iterAllCombinations(numRules):
