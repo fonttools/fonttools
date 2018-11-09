@@ -9,6 +9,7 @@ from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables import otBase as otBase
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.varLib import builder, models, varStore
+from fontTools.varLib.models import allSame
 from fontTools.varLib.varStore import VarStoreInstancer
 from functools import reduce
 
@@ -277,7 +278,7 @@ def merge(merger, self, lst):
 	merger.mergeLists(self.PairValueRecord, padded)
 
 def _PairPosFormat1_merge(self, lst, merger):
-	assert _all_equal([l.ValueFormat2 == 0 for l in lst if l.PairSet]), "Report bug against fonttools."
+	assert allSame([l.ValueFormat2 == 0 for l in lst if l.PairSet]), "Report bug against fonttools."
 
 	# Merge everything else; makes sure Format is the same.
 	merger.mergeObjects(self, lst,
@@ -432,7 +433,7 @@ def _PairPosFormat2_align_matrices(self, lst, font, transparent=False):
 	return matrices
 
 def _PairPosFormat2_merge(self, lst, merger):
-	assert _all_equal([l.ValueFormat2 == 0 for l in lst if l.Class1Record]), "Report bug against fonttools."
+	assert allSame([l.ValueFormat2 == 0 for l in lst if l.Class1Record]), "Report bug against fonttools."
 
 	merger.mergeObjects(self, lst,
 			    exclude=('Coverage',
@@ -526,7 +527,7 @@ def _PairSet_flatten(lst, font):
 	return self
 
 def _Lookup_PairPosFormat1_subtables_flatten(lst, font):
-	assert _all_equal([l.ValueFormat2 == 0 for l in lst if l.PairSet]), "Report bug against fonttools."
+	assert allSame([l.ValueFormat2 == 0 for l in lst if l.PairSet]), "Report bug against fonttools."
 
 	self = ot.PairPos()
 	self.Format = 1
@@ -547,7 +548,7 @@ def _Lookup_PairPosFormat1_subtables_flatten(lst, font):
 	return self
 
 def _Lookup_PairPosFormat2_subtables_flatten(lst, font):
-	assert _all_equal([l.ValueFormat2 == 0 for l in lst if l.Class1Record]), "Report bug against fonttools."
+	assert allSame([l.ValueFormat2 == 0 for l in lst if l.Class1Record]), "Report bug against fonttools."
 
 	self = ot.PairPos()
 	self.Format = 2
@@ -604,8 +605,8 @@ def merge(merger, self, lst):
 		if not sts:
 			continue
 		if sts[0].__class__.__name__.startswith('Extension'):
-			assert _all_equal([st.__class__ for st in sts])
-			assert _all_equal([st.ExtensionLookupType for st in sts])
+			assert allSame([st.__class__ for st in sts])
+			assert allSame([st.ExtensionLookupType for st in sts])
 			l.LookupType = sts[0].ExtensionLookupType
 			new_sts = [st.ExtSubTable for st in sts]
 			del sts[:]
@@ -827,7 +828,7 @@ class VariationMerger(AligningMerger):
 	def mergeThings(self, out, lst):
 		masterModel = None
 		if None in lst:
-			if models.allSame(lst):
+			if allSame(lst):
 				assert out is None
 				return
 			masterModel = self.model
@@ -840,10 +841,8 @@ class VariationMerger(AligningMerger):
 			self.setModel(masterModel)
 
 
-_all_equal = models.allSame
-
 def buildVarDevTable(store_builder, master_values):
-	if _all_equal(master_values):
+	if allSame(master_values):
 		return master_values[0], None
 	base, varIdx = store_builder.storeMasters(master_values)
 	return base, builder.buildVarDevTable(varIdx)
