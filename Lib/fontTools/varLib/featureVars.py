@@ -29,22 +29,62 @@ def addFeatureVariations(font, conditionalSubstitutions):
     The minimum and maximum values are expressed in normalized coordinates.
 
     A Substitution is a dict mapping source glyph names to substitute glyph names.
+
+    Example:
+
+    # >>> f = TTFont(srcPath)
+    #>>> condSubst = [
+    #...     # A list of (Region, Substitution) tuples.
+    #...     ([{"wght": (0.5, 1.0)}], {"dollar": "dollar.rvrn"}),
+    #...     ([{"wdth": (0.5, 1.0)}], {"cent": "cent.rvrn"}),
+    #... ]
+    #>>> addFeatureVariations(f, condSubst)
+    #>>> f.save(dstPath)
     """
 
-    # Example:
-    #
-    #     >>> f = TTFont(srcPath)
-    #     >>> condSubst = [
-    #     ...     # A list of (Region, Substitution) tuples.
-    #     ...     ([{"wght": (0.5, 1.0)}], {"dollar": "dollar.rvrn"}),
-    #     ...     ([{"wdth": (0.5, 1.0)}], {"cent": "cent.rvrn"}),
-    #     ... ]
-    #     >>> addFeatureVariations(f, condSubst)
-    #     >>> f.save(dstPath)
+    addFeatureVariationsRaw(font,
+                            overlayFeatureVariations(conditionalSubstitutions))
 
-    # Since the FeatureVariations table will only ever match one rule at a time,
-    # we will make new rules for all possible combinations of our input, so we
-    # can indirectly support overlapping rules.
+
+def overlayFeatureVariations(conditionalSubstitutions):
+    """Compute overlaps between all conditional substitutions.
+
+    The `conditionalSubstitutions` argument is a list of (Region, Substitutions)
+    tuples.
+
+    A Region is a list of Spaces. A Space is a dict mapping axisTags to
+    (minValue, maxValue) tuples. Irrelevant axes may be omitted.
+    A Space represents a 'rectangular' subset of an N-dimensional design space.
+    A Region represents a more complex subset of an N-dimensional design space,
+    ie. the union of all the Spaces in the Region.
+    For efficiency, Spaces within a Region should ideally not overlap, but
+    functionality is not compromised if they do.
+
+    The minimum and maximum values are expressed in normalized coordinates.
+
+    A Substitution is a dict mapping source glyph names to substitute glyph names.
+
+    Returns data is in similar but different format.  Overlaps of distinct
+    substitution regions are explicitly listed as distinct rules, and rules
+    with the same region merged.  The more specific rules appear earlier in the
+    resulting list.  Moreover, instead of just a dictionary of substitutions,
+    a list of dictionaries is returned, with each dictionary being identical
+    to one of the input substitution dictionaries.  These dictionaries are not
+    merged to allow data sharing when they are converted into font tables.
+
+    Example:
+    >>> condSubst = [
+    ...     # A list of (Region, Substitution) tuples.
+    ...     ([{"wght": (0.5, 1.0)}], {"dollar": "dollar.rvrn"}),
+    ...     ([{"wdth": (0.5, 1.0)}], {"cent": "cent.rvrn"}),
+    ... ]
+    >>> from pprint import pprint
+    >>> pprint(overlayFeatureVariations(condSubst))
+    [({'wdth': (0.5, 1.0), 'wght': (0.5, 1.0)},
+      [{'dollar': 'dollar.rvrn'}, {'cent': 'cent.rvrn'}]),
+     ({'wght': (0.5, 1.0)}, [{'dollar': 'dollar.rvrn'}]),
+     ({'wdth': (0.5, 1.0)}, [{'cent': 'cent.rvrn'}])]
+    """
 
     # Merge duplicate region rules before combinatorial explosion.
     merged = OrderedDict()
@@ -74,11 +114,8 @@ def addFeatureVariations(font, conditionalSubstitutions):
             if space:
                 explodedConditionalSubstitutions.append((space, lookups))
 
-    if font is not None:
-        addFeatureVariationsRaw(font, explodedConditionalSubstitutions)
 
     return explodedConditionalSubstitutions
-
 
 def iterAllCombinations(numRules):
     """Given a number of rules, yield all the combinations of indices, sorted
@@ -404,5 +441,5 @@ def _remapLangSys(langSys, featureRemap):
 
 
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+    import doctest, sys
+    sys.exit(doctest.testmod().failed)
