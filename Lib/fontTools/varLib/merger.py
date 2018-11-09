@@ -943,7 +943,7 @@ class VariationMerger(AligningMerger):
 	def mergeThings(self, out, lst):
 		masterModel = None
 		if None in lst:
-			if allSame(lst):
+			if allNone(lst):
 				assert out is None, (out, lst)
 				return
 			masterModel = self.model
