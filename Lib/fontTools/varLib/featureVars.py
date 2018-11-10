@@ -340,7 +340,7 @@ def buildFeatureVariationRecord(conditionTable, substitutionRecords):
     fvr.ConditionSet = ot.ConditionSet()
     fvr.ConditionSet.ConditionTable = conditionTable
     fvr.FeatureTableSubstitution = ot.FeatureTableSubstitution()
-    fvr.FeatureTableSubstitution.Version = 0x00010001
+    fvr.FeatureTableSubstitution.Version = 0x00010000
     fvr.FeatureTableSubstitution.SubstitutionRecord = substitutionRecords
     return fvr
 
