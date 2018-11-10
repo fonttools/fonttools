@@ -159,38 +159,6 @@ def overlayFeatureVariations(conditionalSubstitutions):
 # from the corresponding axes.
 #
 
-def intersectBoxes(box1, box2):
-    """Return the box intersected by `box1` and `box2`, or None if there
-    is no intersection.
-
-        >>> intersectBoxes({}, {})
-        {}
-        >>> intersectBoxes({'wdth': (-0.5, 0.5)}, {})
-        {'wdth': (-0.5, 0.5)}
-        >>> intersectBoxes({'wdth': (-0.5, 0.5)}, {'wdth': (0.0, 1.0)})
-        {'wdth': (0.0, 0.5)}
-        >>> expected = {'wdth': (0.0, 0.5), 'wght': (0.25, 0.5)}
-        >>> expected == intersectBoxes({'wdth': (-0.5, 0.5), 'wght': (0.0, 0.5)}, {'wdth': (0.0, 1.0), 'wght': (0.25, 0.75)})
-        True
-        >>> expected = {'wdth': (-0.5, 0.5), 'wght': (0.0, 1.0)}
-        >>> expected == intersectBoxes({'wdth': (-0.5, 0.5)}, {'wght': (0.0, 1.0)})
-        True
-        >>> intersectBoxes({'wdth': (-0.5, 0)}, {'wdth': (0.1, 0.5)})
-
-    """
-    box = {}
-    box.update(box1)
-    box.update(box2)
-    for axisTag in set(box1) & set(box2):
-        min1, max1 = box1[axisTag]
-        min2, max2 = box2[axisTag]
-        minimum = max(min1, min2)
-        maximum = min(max1, max2)
-        if not minimum < maximum:
-            return None
-        box[axisTag] = minimum, maximum
-    return box
-
 def overlayBox(top, bot):
     """Overlays `top` box on top of `bot` box.
 
