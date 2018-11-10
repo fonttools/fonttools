@@ -11,6 +11,8 @@ from fontTools.otlLib.builder import buildLookup, buildSingleSubstSubtable
 from collections import OrderedDict
 
 
+# TODO Move to fontTools.misc?
+
 # https://stackoverflow.com/questions/1151658/python-hashable-dicts
 class hashdict(dict):
     """
@@ -71,6 +73,8 @@ class hashdict(dict):
         result = hashdict(self)
         dict.update(result, right)
         return result
+
+# TODO Move to fontTools.misc?
 
 def popCount(v):
     if v > 0xFFFFFFFF:
