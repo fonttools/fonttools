@@ -158,7 +158,18 @@ def overlayFeatureVariations(conditionalSubstitutions):
      ({'wght': (0.5, 1.0)}, [{'dollar': 'dollar.rvrn'}])]
     """
 
-    # Merge duplicate region rules before intersecting, as this is much cheaper.
+    # Merge same-substitutions rules, as this creates fewer number oflookups.
+    merged = OrderedDict()
+    for value,key in conditionalSubstitutions:
+        key = hashdict(key)
+        if key in merged:
+            merged[key].extend(value)
+        else:
+            merged[key] = value
+    conditionalSubstitutions = [(v,dict(k)) for k,v in merged.items()]
+    del merged
+
+    # Merge same-region rules, as this is cheaper.
     # Also convert boxes to hashdict()
     #
     # Reversing is such that earlier entries win in case of conflicting substitution
