@@ -729,7 +729,7 @@ class MutatorMerger(AligningMerger):
 						break
 
 				if applies:
-					assert record.FeatureTableSubstitution.Version == 0x00010000
+					assert record.FeatureTableSubstitution.Version in (0x00010000, 0x00010001)
 					for rec in record.FeatureTableSubstitution.SubstitutionRecord:
 						table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = rec.Feature
 					break
