@@ -95,7 +95,7 @@
           </ConditionTable>
         </ConditionSet>
         <FeatureTableSubstitution>
-          <Version value="0x00010001"/>
+          <Version value="0x00010000"/>
           <!-- SubstitutionCount=1 -->
           <SubstitutionRecord index="0">
             <FeatureIndex value="0"/>
@@ -117,7 +117,7 @@
           </ConditionTable>
         </ConditionSet>
         <FeatureTableSubstitution>
-          <Version value="0x00010001"/>
+          <Version value="0x00010000"/>
           <!-- SubstitutionCount=1 -->
           <SubstitutionRecord index="0">
             <FeatureIndex value="0"/>
@@ -138,7 +138,7 @@
           </ConditionTable>
         </ConditionSet>
         <FeatureTableSubstitution>
-          <Version value="0x00010001"/>
+          <Version value="0x00010000"/>
           <!-- SubstitutionCount=1 -->
           <SubstitutionRecord index="0">
             <FeatureIndex value="0"/>
@@ -164,7 +164,7 @@
           </ConditionTable>
         </ConditionSet>
         <FeatureTableSubstitution>
-          <Version value="0x00010001"/>
+          <Version value="0x00010000"/>
           <!-- SubstitutionCount=1 -->
           <SubstitutionRecord index="0">
             <FeatureIndex value="0"/>
