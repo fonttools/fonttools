@@ -9,7 +9,7 @@ from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables import otBase as otBase
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.varLib import builder, models, varStore
-from fontTools.varLib.models import nonNone, allNone, allSame, allSameAs
+from fontTools.varLib.models import nonNone, allNone, allEqual, allEqualTo
 from fontTools.varLib.varStore import VarStoreInstancer
 from functools import reduce
 
@@ -76,7 +76,7 @@ class Merger(object):
 			raise
 
 	def mergeLists(self, out, lst):
-		assert allSameAs(out, lst, len), (len(out), [len(v) for v in lst])
+		assert allEqualTo(out, lst, len), (len(out), [len(v) for v in lst])
 		for i,(value,values) in enumerate(zip(out, zip(*lst))):
 			try:
 				self.mergeThings(value, values)
@@ -86,7 +86,7 @@ class Merger(object):
 
 	def mergeThings(self, out, lst):
 		try:
-			assert allSameAs(out, lst, type), (out, lst)
+			assert allEqualTo(out, lst, type), (out, lst)
 			mergerFunc = self.mergersFor(out).get(None, None)
 			if mergerFunc is not None:
 				mergerFunc(self, out, lst)
@@ -95,7 +95,7 @@ class Merger(object):
 			elif isinstance(out, list):
 				self.mergeLists(out, lst)
 			else:
-				assert allSameAs(out, lst), (out, lst)
+				assert allEqualTo(out, lst), (out, lst)
 		except Exception as e:
 			e.args = e.args + (type(out).__name__,)
 			raise
@@ -124,7 +124,7 @@ def merge(merger, self, lst):
 	allKeys.update(*[l.keys() for l in lst])
 	for k in allKeys:
 		allValues = nonNone(l.get(k) for l in lst)
-		assert allSame(allValues), allValues
+		assert allEqual(allValues), allValues
 		if not allValues:
 			self[k] = None
 		else:
@@ -294,7 +294,7 @@ def merge(merger, self, lst):
 	merger.mergeLists(self.PairValueRecord, padded)
 
 def _PairPosFormat1_merge(self, lst, merger):
-	assert allSame([l.ValueFormat2 == 0 for l in lst if l.PairSet]), "Report bug against fonttools."
+	assert allEqual([l.ValueFormat2 == 0 for l in lst if l.PairSet]), "Report bug against fonttools."
 
 	# Merge everything else; makes sure Format is the same.
 	merger.mergeObjects(self, lst,
@@ -452,7 +452,7 @@ def _PairPosFormat2_align_matrices(self, lst, font, transparent=False):
 	return matrices
 
 def _PairPosFormat2_merge(self, lst, merger):
-	assert allSame([l.ValueFormat2 == 0 for l in lst if l.Class1Record]), "Report bug against fonttools."
+	assert allEqual([l.ValueFormat2 == 0 for l in lst if l.Class1Record]), "Report bug against fonttools."
 
 	merger.mergeObjects(self, lst,
 			    exclude=('Coverage',
@@ -557,7 +557,7 @@ def _MarkBasePosFormat1_merge(self, lst, merger, Mark='Mark', Base='Base'):
 		# failures in that case will probably signify mistakes in the
 		# input masters.
 
-		assert allSame(allClasses), allClasses
+		assert allEqual(allClasses), allClasses
 		if not allClasses:
 			rec = None
 		else:
@@ -606,7 +606,7 @@ def _MarkBasePosFormat1_merge(self, lst, merger, Mark='Mark', Base='Base'):
 
 @AligningMerger.merger(ot.MarkBasePos)
 def merge(merger, self, lst):
-	assert allSameAs(self.Format, (l.Format for l in lst))
+	assert allEqualTo(self.Format, (l.Format for l in lst))
 	if self.Format == 1:
 		_MarkBasePosFormat1_merge(self, lst, merger)
 	else:
@@ -614,7 +614,7 @@ def merge(merger, self, lst):
 
 @AligningMerger.merger(ot.MarkMarkPos)
 def merge(merger, self, lst):
-	assert allSameAs(self.Format, (l.Format for l in lst))
+	assert allEqualTo(self.Format, (l.Format for l in lst))
 	if self.Format == 1:
 		_MarkBasePosFormat1_merge(self, lst, merger, 'Mark1', 'Mark2')
 	else:
@@ -645,7 +645,7 @@ def _PairSet_flatten(lst, font):
 	return self
 
 def _Lookup_PairPosFormat1_subtables_flatten(lst, font):
-	assert allSame([l.ValueFormat2 == 0 for l in lst if l.PairSet]), "Report bug against fonttools."
+	assert allEqual([l.ValueFormat2 == 0 for l in lst if l.PairSet]), "Report bug against fonttools."
 
 	self = ot.PairPos()
 	self.Format = 1
@@ -666,7 +666,7 @@ def _Lookup_PairPosFormat1_subtables_flatten(lst, font):
 	return self
 
 def _Lookup_PairPosFormat2_subtables_flatten(lst, font):
-	assert allSame([l.ValueFormat2 == 0 for l in lst if l.Class1Record]), "Report bug against fonttools."
+	assert allEqual([l.ValueFormat2 == 0 for l in lst if l.Class1Record]), "Report bug against fonttools."
 
 	self = ot.PairPos()
 	self.Format = 2
@@ -723,8 +723,8 @@ def merge(merger, self, lst):
 		if not sts:
 			continue
 		if sts[0].__class__.__name__.startswith('Extension'):
-			assert allSame([st.__class__ for st in sts])
-			assert allSame([st.ExtensionLookupType for st in sts])
+			assert allEqual([st.__class__ for st in sts])
+			assert allEqual([st.ExtensionLookupType for st in sts])
 			l.LookupType = sts[0].ExtensionLookupType
 			new_sts = [st.ExtSubTable for st in sts]
 			del sts[:]
@@ -960,7 +960,7 @@ class VariationMerger(AligningMerger):
 
 
 def buildVarDevTable(store_builder, master_values):
-	if allSame(master_values):
+	if allEqual(master_values):
 		return master_values[0], None
 	base, varIdx = store_builder.storeMasters(master_values)
 	return base, builder.buildVarDevTable(varIdx)

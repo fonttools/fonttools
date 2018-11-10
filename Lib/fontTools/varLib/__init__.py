@@ -301,7 +301,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 		allCoords = [d[0] for d in allData]
 		allControls = [d[1] for d in allData]
 		control = allControls[0]
-		if not models.allSame(allControls):
+		if not models.allEqual(allControls):
 			log.warning("glyph %s has incompatible masters; skipping" % glyph)
 			continue
 		del allControls
@@ -401,7 +401,7 @@ def _merge_TTHinting(font, masterModel, master_ttfs, tolerance=0.5):
 		# There is no cvt table to make a cvar table from, we're done here.
 		return
 
-	if not models.allSame(len(c) for c in nonNone_cvs):
+	if not models.allEqual(len(c) for c in nonNone_cvs):
 		log.warning("Masters have incompatible cvt tables, hinting is discarded.")
 		_remove_TTHinting(font)
 		return
@@ -432,7 +432,7 @@ def _add_HVAR(font, masterModel, master_ttfs, axisTags):
 		hAdvances = [metrics[glyph][0] if glyph in metrics else None for metrics in metricses]
 		hAdvanceDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(hAdvances)
 
-	singleModel = models.allSame(id(v[1]) for v in hAdvanceDeltasAndSupports.values())
+	singleModel = models.allEqual(id(v[1]) for v in hAdvanceDeltasAndSupports.values())
 
 	directStore = None
 	if singleModel:
@@ -514,7 +514,7 @@ def _add_MVAR(font, masterModel, master_ttfs, axisTags):
 		store_builder.setModel(model)
 
 		master_values = [getattr(table, itemName) for table in tables]
-		if models.allSame(master_values):
+		if models.allEqual(master_values):
 			base, varIdx = master_values[0], None
 		else:
 			base, varIdx = store_builder.storeMasters(master_values)
