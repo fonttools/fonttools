@@ -6,22 +6,11 @@ NOTE: The API is experimental and subject to change.
 from __future__ import print_function, absolute_import, division
 from fontTools.misc.py23 import *
 from fontTools.misc.dictTools import hashdict
+from fontTools.misc.intTools import popCount
 from fontTools.ttLib import newTable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.otlLib.builder import buildLookup, buildSingleSubstSubtable
 from collections import OrderedDict
-
-
-# TODO Move to fontTools.misc?
-
-def popCount(v):
-    if v > 0xFFFFFFFF:
-        return popCount(v >> 32) + popCount(v & 0xFFFFFFFF)
-
-    # HACKMEM 169
-    y = (v >> 1) & 0xDB6DB6DB
-    y = v - y - ((y >> 1) & 0xDB6DB6DB)
-    return (((y + (y >> 3)) & 0xC71C71C7) % 0x3F)
 
 
 def addFeatureVariations(font, conditionalSubstitutions):
