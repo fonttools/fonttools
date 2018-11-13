@@ -175,6 +175,15 @@ class VarStoreInstancer(object):
 			delta += d * s
 		return delta
 
+	def applyScalars(self, varDataIndex, deltas):
+		varData = self._varData
+		scalars = [self._getScalar(ri) for ri in
+					varData[varDataIndex].VarRegionIndex]
+		delta = 0.
+		for d,s in zip(deltas, scalars):
+			delta += d * s
+		return delta
+
 
 #
 # Optimizations

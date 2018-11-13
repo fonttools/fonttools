@@ -31,6 +31,69 @@ for i, (prev, curr) in enumerate(zip(percents[:-1], percents[1:]), start=1):
 	OS2_WIDTH_CLASS_VALUES[half] = i
 
 
+def interpolate_cff2_PrivateDict(topDict, applyScalars):
+	pd_blend_lists = ("BlueValues", "OtherBlues", "FamilyBlues",
+						"FamilyOtherBlues", "StemSnapH",
+						"StemSnapV")
+	pd_blend_values = ("BlueScale", "BlueShift",
+						"BlueFuzz", "StdHW", "StdVW")
+	for fontDict in topDict.FDArray:
+		pd = fontDict.Private
+		vsindex = pd.vsindex if (hasattr(pd, 'vsindex')) else 0
+		for key, value in pd.rawDict.items():
+			if (key in pd_blend_values) and isinstance(value, list):
+					deltas = value[1:]
+					pd.rawDict[key] = otRound(value[0] + applyScalars(vsindex, deltas))
+			elif (key in pd_blend_lists) and isinstance(value[0], list):
+				"""If any argument in a BlueValues list is a blend list,
+				then they all are. The first value of each list is an
+				absolute value. The delta tuples are calculated from
+				relative master values, hence we need to append all the
+				deltas to date to each successive absolute value."""
+				delta = 0
+				for i, val_list in enumerate(value):
+					delta += otRound(applyScalars(vsindex, val_list[1:]))
+					value[i] = val_list[0] + delta
+
+
+def interpolate_cff2_charstrings(topDict, applyScalars, glyphOrder):
+	charstrings = topDict.CharStrings
+	for gname in glyphOrder:
+		charstring = charstrings[gname]
+		charstring.decompile()
+		vsindex = charstring.private.vsindex if (
+													hasattr(charstring.private,
+													'vsindex')) else 0
+		num_regions = charstring.private.getNumRegions(vsindex)
+		numMasters = num_regions + 1
+		new_program = []
+		last_i = 0
+		for i, token in enumerate(charstring.program):
+			if token == 'blend':
+				num_args = charstring.program[i - 1]
+				""" The stack is now:
+				..args for following operations
+				num_args values  from the default font
+				num_args tuples, each with numMasters-1 delta values
+				num_blend_args
+				'blend'
+				"""
+				argi = i - (num_args*numMasters + 1)
+				end_args = tuplei = argi + num_args
+				while argi < end_args:
+					next_ti = tuplei + num_regions
+					deltas = charstring.program[tuplei:next_ti]
+					delta = otRound(applyScalars(vsindex, deltas))
+					charstring.program[argi] += delta
+					tuplei = next_ti
+					argi += 1
+				new_program.extend(charstring.program[last_i:end_args])
+				last_i = i + 1
+		if last_i != 0:
+			new_program.extend(charstring.program[last_i:])
+			charstring.program = new_program
+
+
 def instantiateVariableFont(varfont, location, inplace=False):
 	""" Generate a static instance from a variable TTFont and a dictionary
 	defining the desired location along the variable font's axes.
@@ -59,31 +122,32 @@ def instantiateVariableFont(varfont, location, inplace=False):
 	# Location is normalized now
 	log.info("Normalized location: %s", loc)
 
-	log.info("Mutating glyf/gvar tables")
-	gvar = varfont['gvar']
-	glyf = varfont['glyf']
-	# get list of glyph names in gvar sorted by component depth
-	glyphnames = sorted(
-		gvar.variations.keys(),
-		key=lambda name: (
-			glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
-			if glyf[name].isComposite() else 0,
-			name))
-	for glyphname in glyphnames:
-		variations = gvar.variations[glyphname]
-		coordinates,_ = _GetCoordinates(varfont, glyphname)
-		origCoords, endPts = None, None
-		for var in variations:
-			scalar = supportScalar(loc, var.axes)
-			if not scalar: continue
-			delta = var.coordinates
-			if None in delta:
-				if origCoords is None:
-					origCoords,control = _GetCoordinates(varfont, glyphname)
-					endPts = control[1] if control[0] >= 1 else list(range(len(control[1])))
-				delta = iup_delta(delta, origCoords, endPts)
-			coordinates += GlyphCoordinates(delta) * scalar
-		_SetCoordinates(varfont, glyphname, coordinates)
+	if 'gvar' in varfont:
+		log.info("Mutating glyf/gvar tables")
+		gvar = varfont['gvar']
+		glyf = varfont['glyf']
+		# get list of glyph names in gvar sorted by component depth
+		glyphnames = sorted(
+			gvar.variations.keys(),
+			key=lambda name: (
+				glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
+				if glyf[name].isComposite() else 0,
+				name))
+		for glyphname in glyphnames:
+			variations = gvar.variations[glyphname]
+			coordinates,_ = _GetCoordinates(varfont, glyphname)
+			origCoords, endPts = None, None
+			for var in variations:
+				scalar = supportScalar(loc, var.axes)
+				if not scalar: continue
+				delta = var.coordinates
+				if None in delta:
+					if origCoords is None:
+						origCoords,control = _GetCoordinates(varfont, glyphname)
+						endPts = control[1] if control[0] >= 1 else list(range(len(control[1])))
+					delta = iup_delta(delta, origCoords, endPts)
+				coordinates += GlyphCoordinates(delta) * scalar
+			_SetCoordinates(varfont, glyphname, coordinates)
 
 	if 'cvar' in varfont:
 		log.info("Mutating cvt/cvar tables")
@@ -98,6 +162,16 @@ def instantiateVariableFont(varfont, location, inplace=False):
 					deltas[i] = deltas.get(i, 0) + scalar * c
 		for i, delta in deltas.items():
 			cvt[i] += otRound(delta)
+
+	if 'CFF2' in varfont:
+		log.info("Mutating CFF2 table")
+		glyphOrder = varfont.getGlyphOrder()
+		topDict = varfont['CFF2'].cff.topDictIndex[0]
+		vsInstancer = VarStoreInstancer(topDict.VarStore.otVarStore,
+										fvar.axes, loc)
+		applyScalars = vsInstancer.applyScalars
+		interpolate_cff2_PrivateDict(topDict, applyScalars)
+		interpolate_cff2_charstrings(topDict, applyScalars, glyphOrder)
 
 	if 'MVAR' in varfont:
 		log.info("Mutating MVAR table")
