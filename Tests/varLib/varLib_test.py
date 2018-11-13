@@ -1,8 +1,9 @@
 from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
+
 from fontTools.ttLib import TTFont
 from fontTools.varLib import build
 from fontTools.varLib import main as varLib_main
+from fontTools.varLib.mutator import instantiateVariableFont as snapshot
 from fontTools.designspaceLib import DesignSpaceDocumentError
 import difflib
 import os
@@ -203,6 +204,18 @@ class BuildTest(unittest.TestCase):
             expected_ttx_name="FeatureVars",
             save_before_dump=True,
         )
+
+    def test_varlib_interpolate_CFF2(self):
+
+        otf_vf_path = self.get_test_input('TestCFF2VF.otf')
+        expected_ttx_name = 'InterpolateTestCFF2VF'
+        tables = ["fvar", "CFF2"]
+        loc = {'wght':float(200)}
+
+        varfont = TTFont(otf_vf_path)
+        new_font = snapshot(varfont, loc)
+        expected_ttx_path = self.get_test_output(expected_ttx_name + '.ttx')
+        self.expect_ttx(new_font, expected_ttx_path, tables)
 
     def test_varlib_main_ttf(self):
         """Mostly for testing varLib.main()
