@@ -31,7 +31,7 @@ for i, (prev, curr) in enumerate(zip(percents[:-1], percents[1:]), start=1):
 	OS2_WIDTH_CLASS_VALUES[half] = i
 
 
-def interpolate_cff2_PrivateDict(topDict, applyScalars):
+def interpolate_cff2_PrivateDict(topDict, interpolateFromDeltas):
 	pd_blend_lists = ("BlueValues", "OtherBlues", "FamilyBlues",
 						"FamilyOtherBlues", "StemSnapH",
 						"StemSnapV")
@@ -42,8 +42,8 @@ def interpolate_cff2_PrivateDict(topDict, applyScalars):
 		vsindex = pd.vsindex if (hasattr(pd, 'vsindex')) else 0
 		for key, value in pd.rawDict.items():
 			if (key in pd_blend_values) and isinstance(value, list):
-					deltas = value[1:]
-					pd.rawDict[key] = otRound(value[0] + applyScalars(vsindex, deltas))
+					delta = interpolateFromDeltas(vsindex, value[1:])
+					pd.rawDict[key] = otRound(value[0] + delta)
 			elif (key in pd_blend_lists) and isinstance(value[0], list):
 				"""If any argument in a BlueValues list is a blend list,
 				then they all are. The first value of each list is an
@@ -52,11 +52,12 @@ def interpolate_cff2_PrivateDict(topDict, applyScalars):
 				deltas to date to each successive absolute value."""
 				delta = 0
 				for i, val_list in enumerate(value):
-					delta += otRound(applyScalars(vsindex, val_list[1:]))
+					delta += otRound(interpolateFromDeltas(vsindex, 
+										val_list[1:]))
 					value[i] = val_list[0] + delta
 
 
-def interpolate_cff2_charstrings(topDict, applyScalars, glyphOrder):
+def interpolate_cff2_charstrings(topDict, interpolateFromDeltas, glyphOrder):
 	charstrings = topDict.CharStrings
 	for gname in glyphOrder:
 		charstring = charstrings[gname]
@@ -83,8 +84,8 @@ def interpolate_cff2_charstrings(topDict, applyScalars, glyphOrder):
 				while argi < end_args:
 					next_ti = tuplei + num_regions
 					deltas = charstring.program[tuplei:next_ti]
-					delta = otRound(applyScalars(vsindex, deltas))
-					charstring.program[argi] += delta
+					delta = interpolateFromDeltas(vsindex, deltas)
+					charstring.program[argi] += otRound(delta)
 					tuplei = next_ti
 					argi += 1
 				new_program.extend(charstring.program[last_i:end_args])
@@ -169,9 +170,10 @@ def instantiateVariableFont(varfont, location, inplace=False):
 		topDict = varfont['CFF2'].cff.topDictIndex[0]
 		vsInstancer = VarStoreInstancer(topDict.VarStore.otVarStore,
 										fvar.axes, loc)
-		applyScalars = vsInstancer.applyScalars
-		interpolate_cff2_PrivateDict(topDict, applyScalars)
-		interpolate_cff2_charstrings(topDict, applyScalars, glyphOrder)
+		interpolateFromDeltas = vsInstancer.interpolateFromDeltas
+		interpolate_cff2_PrivateDict(topDict, interpolateFromDeltas)
+		interpolate_cff2_charstrings(topDict, interpolateFromDeltas,
+										glyphOrder)
 
 	if 'MVAR' in varfont:
 		log.info("Mutating MVAR table")
