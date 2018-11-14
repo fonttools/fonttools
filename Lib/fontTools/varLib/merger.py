@@ -382,6 +382,12 @@ def _PairPosFormat2_align_matrices(self, lst, font, transparent=False):
 		for classSet in classes:
 			exemplarGlyph = next(iter(classSet))
 			if exemplarGlyph not in coverage:
+				# Follow-up to e6125b353e1f54a0280ded5434b8e40d042de69f,
+				# Fixes https://github.com/googlei18n/fontmake/issues/470
+				# I'm still not exactly sure why these get modified and hence
+				# why reuse is problematic.  But apparently it is.  So, for
+				# now sharing is disabled.
+				nullRow = None
 				if nullRow is None:
 					nullRow = ot.Class1Record()
 					class2records = nullRow.Class2Record = []
