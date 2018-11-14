@@ -461,6 +461,66 @@ t1Operators = [
 ]
 
 
+class T2FlattenSubrsDecompiler(SimpleT2Decompiler):
+
+	def __init__(self, localSubrs, globalSubrs, private=None):
+		SimpleT2Decompiler.__init__(self, localSubrs, globalSubrs, private)
+		self.program = []
+
+	def execute(self, charString):
+		self.callingStack.append(charString)
+		needsDecompilation = charString.needsDecompilation()
+		is_subr = len(self.callingStack) > 1
+		if needsDecompilation:
+			# we only flatten the top level charstring, not the subrs.
+			if is_subr:
+				program = []
+			else:
+				program = self.program
+			pushToProgram = program.append
+
+			# Since this decompiler is meant only for flattening a charstring,
+			# I do not call the code to traverse all the operators even if the
+			# subr has already been decompiled, unlike SimpleT2Decompiler.
+			pushToStack = self.operandStack.append
+			index = 0
+			while True:
+				token, isOperator, index = charString.getToken(index)
+				if token is None:
+					break  # we're done!
+				pushToProgram(token)
+				if isOperator:
+					handlerName = "op_" + token
+					handler = getattr(self, handlerName, None)
+					if handler is not None:
+						rv = handler(index)
+						if rv:
+							hintMaskBytes, index = rv
+							pushToProgram(hintMaskBytes)
+					else:
+						self.popall()
+				else:
+					pushToStack(token)
+
+			self.check_program(program)
+			charString.setProgram(program)
+		del self.callingStack[-1]
+
+	def op_callsubr(self, index):
+		del self.program[-2:]
+		subrIndex = self.pop()
+		subr = self.localSubrs[subrIndex+self.localBias]
+		self.execute(subr)
+		self.program.extend(subr.program)
+
+	def op_callgsubr(self, index):
+		del self.program[-2:]
+		subrIndex = self.pop()
+		subr = self.globalSubrs[subrIndex+self.globalBias]
+		self.execute(subr)
+		self.program.extend(subr.program)
+
+
 class T2WidthExtractor(SimpleT2Decompiler):
 
 	def __init__(self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX):

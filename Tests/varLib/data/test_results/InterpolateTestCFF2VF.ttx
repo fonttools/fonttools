@@ -16,8 +16,6 @@
             <BlueFuzz value="0"/>
             <StdHW value="28"/>
             <StdVW value="34"/>
-            <StemSnapH value="28"/>
-            <StemSnapV value="34"/>
           </Private>
         </FontDict>
       </FDArray>
@@ -26,12 +24,16 @@
           84 hmoveto
           432 660 -432 hlineto
           48 -628 rmoveto
-          102 176 64 106 4 0 62 -106 100 -176 rlineto
+          102 176 64 106 rlineto
+          4 hlineto
+          62 -106 100 -176 rlineto
           -342 42 rmoveto
           536 vlineto
           154 -270 rlineto
           22 26 rmoveto
-          -56 92 -94 168 302 0 -94 -168 -54 -92 rlineto
+          -56 92 -94 168 rlineto
+          302 hlineto
+          -94 -168 -54 -92 rlineto
           22 -26 rmoveto
           152 270 rlineto
           -536 vlineto
@@ -41,8 +43,9 @@
           32 hlineto
           140 396 28 80 24 68 24 82 rlinecurve
           4 hlineto
-          24 -82 24 -68 28 -80 rrcurveto
-          138 -396 34 0 -236 660 rlineto
+          24 -82 24 -68 28 -80 138 -396 rcurveline
+          34 hlineto
+          -236 660 rlineto
           -28 hlineto
           -134 -424 rmoveto
           293 28 -293 hlineto

@@ -175,13 +175,13 @@ class VarStoreInstancer(object):
 		varData = self._varData
 		scalars = [self._getScalar(ri) for ri in varData[major].VarRegionIndex]
 		deltas = varData[major].Item[minor]
-		return interpolateFromDeltasAndScalars(deltas, scalars)
+		return self.interpolateFromDeltasAndScalars(deltas, scalars)
 
 	def interpolateFromDeltas(self, varDataIndex, deltas):
 		varData = self._varData
 		scalars = [self._getScalar(ri) for ri in
 					varData[varDataIndex].VarRegionIndex]
-		return interpolateFromDeltasAndScalars(deltas, scalars)
+		return self.interpolateFromDeltasAndScalars(deltas, scalars)
 
 
 #
