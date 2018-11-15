@@ -2225,6 +2225,9 @@ def drop_hints(self):
 	if hints.has_hint:
 		assert not hints.deletions or hints.last_hint <= hints.deletions[0]
 		self.program = self.program[hints.last_hint:]
+		if not self.program:
+			# TODO CFF2 no need for endchar.
+			self.program.append('endchar')
 		if hasattr(self, 'width'):
 			# Insert width back if needed
 			if self.width != self.private.defaultWidthX:
