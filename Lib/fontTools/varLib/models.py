@@ -2,8 +2,35 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
-__all__ = ['normalizeValue', 'normalizeLocation', 'supportScalar', 'VariationModel']
+__all__ = ['nonNone', 'allNone', 'allEqual', 'allEqualTo', 'subList',
+	   'normalizeValue', 'normalizeLocation',
+	   'supportScalar',
+	   'VariationModel']
 
+
+def nonNone(lst):
+	return [l for l in lst if l is not None]
+
+def allNone(lst):
+	return all(l is None for l in lst)
+
+def allEqualTo(ref, lst, mapper=None):
+	if mapper is None:
+		return all(ref == item for item in lst)
+	else:
+		mapped = mapper(ref)
+		return all(mapped == mapper(item) for item in lst)
+
+def allEqual(lst, mapper=None):
+	if not lst:
+		return True
+	it = iter(lst)
+	first = next(it)
+	return allEqualTo(first, it, mapper=mapper)
+
+def subList(truth, lst):
+	assert len(truth) == len(lst)
+	return [l for l,t in zip(lst,truth) if t]
 
 def normalizeValue(v, triple):
 	"""Normalizes value based on a min/default/max triple.
@@ -163,6 +190,9 @@ class VariationModel(object):
 	"""
 
 	def __init__(self, locations, axisOrder=[]):
+		self.origLocations = locations
+		self.axisOrder = axisOrder
+
 		locations = [{k:v for k,v in loc.items() if v != 0.} for loc in locations]
 		keyFunc = self.getMasterLocationsSortKeyFunc(locations, axisOrder=axisOrder)
 		axisPoints = keyFunc.axisPoints
@@ -172,6 +202,17 @@ class VariationModel(object):
 		self.reverseMapping = [locations.index(l) for l in self.locations] # Reverse of above
 
 		self._computeMasterSupports(axisPoints, axisOrder)
+		self._subModels = {}
+
+	def getSubModel(self, items):
+		if None not in items:
+			return self, items
+		key = tuple(v is not None for v in items)
+		subModel = self._subModels.get(key)
+		if subModel is None:
+			subModel = VariationModel(subList(key, self.origLocations), self.axisOrder)
+			self._subModels[key] = subModel
+		return subModel, subList(key, items)
 
 	@staticmethod
 	def getMasterLocationsSortKeyFunc(locations, axisOrder=[]):
@@ -313,6 +354,10 @@ class VariationModel(object):
 				delta -= out[j] * weight
 			out.append(delta)
 		return out
+
+	def getDeltasAndSupports(self, items):
+		model, items = self.getSubModel(items)
+		return model.getDeltas(items), model.supports
 
 	def getScalars(self, loc):
 		return [supportScalar(loc, support) for support in self.supports]

@@ -378,12 +378,6 @@ def _add_method(*clazzes):
 def _uniq_sort(l):
 	return sorted(set(l))
 
-def _set_update(s, *others):
-	# Jython's set.update only takes one other argument.
-	# Emulate real set.update...
-	for other in others:
-		s.update(other)
-
 def _dict_subset(d, glyphs):
 	return {g:d[g] for g in glyphs}
 
@@ -457,7 +451,7 @@ def subset_glyphs(self, s):
 def closure_glyphs(self, s, cur_glyphs):
 	for glyph, subst in self.mapping.items():
 		if glyph in cur_glyphs:
-			_set_update(s.glyphs, subst)
+			s.glyphs.update(subst)
 
 @_add_method(otTables.MultipleSubst)
 def subset_glyphs(self, s):
@@ -467,8 +461,8 @@ def subset_glyphs(self, s):
 
 @_add_method(otTables.AlternateSubst)
 def closure_glyphs(self, s, cur_glyphs):
-	_set_update(s.glyphs, *(vlist for g,vlist in self.alternates.items()
-				      if g in cur_glyphs))
+	s.glyphs.update(*(vlist for g,vlist in self.alternates.items()
+				if g in cur_glyphs))
 
 @_add_method(otTables.AlternateSubst)
 def subset_glyphs(self, s):
@@ -480,10 +474,10 @@ def subset_glyphs(self, s):
 
 @_add_method(otTables.LigatureSubst)
 def closure_glyphs(self, s, cur_glyphs):
-	_set_update(s.glyphs, *([seq.LigGlyph for seq in seqs
-					      if all(c in s.glyphs for c in seq.Component)]
-				for g,seqs in self.ligatures.items()
-				if g in cur_glyphs))
+	s.glyphs.update(*([seq.LigGlyph for seq in seqs
+				        if all(c in s.glyphs for c in seq.Component)]
+			  for g,seqs in self.ligatures.items()
+			  if g in cur_glyphs))
 
 @_add_method(otTables.LigatureSubst)
 def subset_glyphs(self, s):

@@ -32,7 +32,7 @@ from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import OTTableWriter
 from fontTools.varLib import builder, models, varStore
-from fontTools.varLib.merger import VariationMerger, _all_equal
+from fontTools.varLib.merger import VariationMerger
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.iup import iup_delta_optimize
 from fontTools.varLib.featureVars import addFeatureVariations
@@ -280,7 +280,7 @@ def _SetCoordinates(font, glyphName, coord):
 	# XXX Handle vertical
 	font["hmtx"].metrics[glyphName] = horizontalAdvanceWidth, leftSideBearing
 
-def _add_gvar(font, model, master_ttfs, tolerance=0.5, optimize=True):
+def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 
 	assert tolerance >= 0
 
@@ -294,10 +294,12 @@ def _add_gvar(font, model, master_ttfs, tolerance=0.5, optimize=True):
 	for glyph in font.getGlyphOrder():
 
 		allData = [_GetCoordinates(m, glyph) for m in master_ttfs]
+		model, allData = masterModel.getSubModel(allData)
+
 		allCoords = [d[0] for d in allData]
 		allControls = [d[1] for d in allData]
 		control = allControls[0]
-		if (any(c != control for c in allControls)):
+		if not models.allEqual(allControls):
 			log.warning("glyph %s has incompatible masters; skipping" % glyph)
 			continue
 		del allControls
@@ -344,7 +346,7 @@ def _remove_TTHinting(font):
 	font["glyf"].removeHinting()
 	# TODO: Modify gasp table to deactivate gridfitting for all ranges?
 
-def _merge_TTHinting(font, model, master_ttfs, tolerance=0.5):
+def _merge_TTHinting(font, masterModel, master_ttfs, tolerance=0.5):
 
 	log.info("Merging TT hinting")
 	assert "cvar" not in font
@@ -372,7 +374,7 @@ def _merge_TTHinting(font, model, master_ttfs, tolerance=0.5):
 		all_pgms = [
 			m["glyf"][name].program
 			for m in master_ttfs
-			if hasattr(m["glyf"][name], "program")
+			if name in m['glyf'] and hasattr(m["glyf"][name], "program")
 		]
 		if not any(all_pgms):
 			continue
@@ -383,24 +385,21 @@ def _merge_TTHinting(font, model, master_ttfs, tolerance=0.5):
 			font_pgm = Program()
 		if any(pgm != font_pgm for pgm in all_pgms if pgm):
 			log.warning("Masters have incompatible glyph programs in glyph '%s', hinting is discarded." % name)
+			# TODO Only drop hinting from this glyph.
 			_remove_TTHinting(font)
 			return
 
 	# cvt table
 
-	all_cvs = [Vector(m["cvt "].values) for m in master_ttfs if "cvt " in m]
+	all_cvs = [Vector(m["cvt "].values) if 'cvt ' in m else None
+		   for m in master_ttfs]
 
-	if len(all_cvs) == 0:
+	nonNone_cvs = models.nonNone(all_cvs)
+	if not nonNone_cvs:
 		# There is no cvt table to make a cvar table from, we're done here.
 		return
 
-	if len(all_cvs) != len(master_ttfs):
-		log.warning("Some masters have no cvt table, hinting is discarded.")
-		_remove_TTHinting(font)
-		return
-
-	num_cvt0 = len(all_cvs[0])
-	if (any(len(c) != num_cvt0 for c in all_cvs)):
+	if not models.allEqual(len(c) for c in nonNone_cvs):
 		log.warning("Masters have incompatible cvt tables, hinting is discarded.")
 		_remove_TTHinting(font)
 		return
@@ -411,8 +410,7 @@ def _merge_TTHinting(font, model, master_ttfs, tolerance=0.5):
 	cvar.version = 1
 	cvar.variations = []
 
-	deltas = model.getDeltas(all_cvs)
-	supports = model.supports
+	deltas, supports = masterModel.getDeltasAndSupports(all_cvs)
 	for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
 		delta = [otRound(d) for d in delta]
 		if all(abs(v) <= tolerance for v in delta):
@@ -420,54 +418,59 @@ def _merge_TTHinting(font, model, master_ttfs, tolerance=0.5):
 		var = TupleVariation(support, delta)
 		cvar.variations.append(var)
 
-def _add_HVAR(font, model, master_ttfs, axisTags):
+def _add_HVAR(font, masterModel, master_ttfs, axisTags):
 
 	log.info("Generating HVAR")
 
-	hAdvanceDeltas = {}
+	glyphOrder = font.getGlyphOrder()
+
+	hAdvanceDeltasAndSupports = {}
 	metricses = [m["hmtx"].metrics for m in master_ttfs]
-	for glyph in font.getGlyphOrder():
-		hAdvances = [metrics[glyph][0] for metrics in metricses]
-		# TODO move round somewhere else?
-		hAdvanceDeltas[glyph] = tuple(otRound(d) for d in model.getDeltas(hAdvances)[1:])
+	for glyph in glyphOrder:
+		hAdvances = [metrics[glyph][0] if glyph in metrics else None for metrics in metricses]
+		hAdvanceDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(hAdvances)
 
-	# Direct mapping
-	supports = model.supports[1:]
-	varTupleList = builder.buildVarRegionList(supports, axisTags)
-	varTupleIndexes = list(range(len(supports)))
-	n = len(supports)
-	items = []
-	for glyphName in font.getGlyphOrder():
-		items.append(hAdvanceDeltas[glyphName])
+	singleModel = models.allEqual(id(v[1]) for v in hAdvanceDeltasAndSupports.values())
 
-	# Build indirect mapping to save on duplicates, compare both sizes
-	uniq = list(set(items))
-	mapper = {v:i for i,v in enumerate(uniq)}
-	mapping = [mapper[item] for item in items]
-	advanceMapping = builder.buildVarIdxMap(mapping, font.getGlyphOrder())
+	directStore = None
+	if singleModel:
+		# Build direct mapping
 
-	# Direct
-	varData = builder.buildVarData(varTupleIndexes, items)
-	directStore = builder.buildVarStore(varTupleList, [varData])
+		supports = next(iter(hAdvanceDeltasAndSupports.values()))[1][1:]
+		varTupleList = builder.buildVarRegionList(supports, axisTags)
+		varTupleIndexes = list(range(len(supports)))
+		varData = builder.buildVarData(varTupleIndexes, [], optimize=False)
+		for glyphName in glyphOrder:
+			varData.addItem(hAdvanceDeltasAndSupports[glyphName][0])
+		varData.optimize()
+		directStore = builder.buildVarStore(varTupleList, [varData])
 
-	# Indirect
-	varData = builder.buildVarData(varTupleIndexes, uniq)
-	indirectStore = builder.buildVarStore(varTupleList, [varData])
-	mapping = indirectStore.optimize()
-	advanceMapping.mapping = {k:mapping[v] for k,v in advanceMapping.mapping.items()}
+	# Build optimized indirect mapping
+	storeBuilder = varStore.OnlineVarStoreBuilder(axisTags)
+	mapping = {}
+	for glyphName in glyphOrder:
+		deltas,supports = hAdvanceDeltasAndSupports[glyphName]
+		storeBuilder.setSupports(supports)
+		mapping[glyphName] = storeBuilder.storeDeltas(deltas)
+	indirectStore = storeBuilder.finish()
+	mapping2 = indirectStore.optimize()
+	mapping = [mapping2[mapping[g]] for g in glyphOrder]
+	advanceMapping = builder.buildVarIdxMap(mapping, glyphOrder)
 
-	# Compile both, see which is more compact
+	use_direct = False
+	if directStore:
+		# Compile both, see which is more compact
 
-	writer = OTTableWriter()
-	directStore.compile(writer, font)
-	directSize = len(writer.getAllData())
+		writer = OTTableWriter()
+		directStore.compile(writer, font)
+		directSize = len(writer.getAllData())
 
-	writer = OTTableWriter()
-	indirectStore.compile(writer, font)
-	advanceMapping.compile(writer, font)
-	indirectSize = len(writer.getAllData())
+		writer = OTTableWriter()
+		indirectStore.compile(writer, font)
+		advanceMapping.compile(writer, font)
+		indirectSize = len(writer.getAllData())
 
-	use_direct = directSize < indirectSize
+		use_direct = directSize < indirectSize
 
 	# Done; put it all together.
 	assert "HVAR" not in font
@@ -482,12 +485,11 @@ def _add_HVAR(font, model, master_ttfs, axisTags):
 		hvar.VarStore = indirectStore
 		hvar.AdvWidthMap = advanceMapping
 
-def _add_MVAR(font, model, master_ttfs, axisTags):
+def _add_MVAR(font, masterModel, master_ttfs, axisTags):
 
 	log.info("Generating MVAR")
 
 	store_builder = varStore.OnlineVarStoreBuilder(axisTags)
-	store_builder.setModel(model)
 
 	records = []
 	lastTableTag = None
@@ -497,17 +499,20 @@ def _add_MVAR(font, model, master_ttfs, axisTags):
 		if tableTag != lastTableTag:
 			tables = fontTable = None
 			if tableTag in font:
-				# TODO Check all masters have same table set?
 				fontTable = font[tableTag]
-				tables = [master[tableTag] for master in master_ttfs]
+				tables = [master[tableTag] if tableTag in master else None
+					  for master in master_ttfs]
 			lastTableTag = tableTag
 		if tables is None:
 			continue
 
 		# TODO support gasp entries
 
+		model, tables = masterModel.getSubModel(tables)
+		store_builder.setModel(model)
+
 		master_values = [getattr(table, itemName) for table in tables]
-		if _all_equal(master_values):
+		if models.allEqual(master_values):
 			base, varIdx = master_values[0], None
 		else:
 			base, varIdx = store_builder.storeMasters(master_values)
@@ -545,9 +550,7 @@ def _merge_OTL(font, model, master_fonts, axisTags):
 	log.info("Merging OpenType Layout tables")
 	merger = VariationMerger(model, axisTags, font)
 
-	merger.mergeTables(font, master_fonts, ['GPOS'])
-	# TODO Merge GSUB
-	# TODO Merge GDEF itself!
+	merger.mergeTables(font, master_fonts, ['GSUB', 'GDEF', 'GPOS'])
 	store = merger.store_builder.finish()
 	if not store.VarData:
 		return
