@@ -5,8 +5,9 @@ $ fonttools varLib.mutator ./NotoSansArabic-VF.ttf wght=140 wdth=85
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.misc.fixedTools import floatToFixedToFloat, otRound
-from fontTools.ttLib import TTFont
+from fontTools.misc.fixedTools import floatToFixedToFloat, otRound, floatToFixed
+from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib.tables import ttProgram
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.varLib import _GetCoordinates, _SetCoordinates
 from fontTools.varLib.models import (
@@ -63,11 +64,11 @@ def instantiateVariableFont(varfont, location, inplace=False):
 	glyf = varfont['glyf']
 	# get list of glyph names in gvar sorted by component depth
 	glyphnames = sorted(
-		gvar.variations.keys(),
-		key=lambda name: (
-			glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
-			if glyf[name].isComposite() else 0,
-			name))
+			gvar.variations.keys(),
+			key=lambda name: (
+				glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
+				if glyf[name].isComposite() else 0,
+				name))
 	for glyphname in glyphnames:
 		variations = gvar.variations[glyphname]
 		coordinates,_ = _GetCoordinates(varfont, glyphname)
@@ -112,7 +113,7 @@ def instantiateVariableFont(varfont, location, inplace=False):
 			if not delta:
 				continue
 			setattr(varfont[tableTag], itemName,
-				getattr(varfont[tableTag], itemName) + delta)
+							getattr(varfont[tableTag], itemName) + delta)
 
 	if 'GDEF' in varfont:
 		log.info("Mutating GDEF/GPOS/GSUB tables")
@@ -120,6 +121,35 @@ def instantiateVariableFont(varfont, location, inplace=False):
 
 		log.info("Building interpolated tables")
 		merger.instantiate()
+
+	for glyph in glyf.glyphs.values():
+		if hasattr(glyph, "program"):
+			instructions = glyph.program.getAssembly()
+			# If GETVARIATION opcode is used in bytecode of any glyph add IDEF
+			addidef = False
+			for instruction in instructions:
+				if instruction.startswith("GETVARIATION"):
+					addidef = True
+					break
+			if addidef:
+				asm = []
+				if varfont.has_key('fpgm'):
+					fpgm = varfont['fpgm']
+					asm = fpgm.program.getAssembly()
+				else:
+					fpgm = newTable('fpgm')
+					fpgm.program = ttProgram.Program()
+					varfont['fpgm'] = fpgm
+				log.info("Adding IDEF to fpgm table for GETVARIATION opcode")
+				asm.append("PUSHB[000] 145")
+				asm.append("IDEF[ ]")
+				args = [str(len(loc))]
+				for val in loc.values():
+					args.append(str(floatToFixed(val, 14)))
+				asm.append("NPUSHW[ ] " + ' '.join(args))
+				asm.append("ENDF[ ]")
+				fpgm.program.fromAssembly(asm)
+				break
 
 	if 'name' in varfont:
 		log.info("Pruning name table")
@@ -134,7 +164,7 @@ def instantiateVariableFont(varfont, location, inplace=False):
 
 	if "wght" in location and "OS/2" in varfont:
 		varfont["OS/2"].usWeightClass = otRound(
-			max(1, min(location["wght"], 1000))
+				max(1, min(location["wght"], 1000))
 		)
 	if "wdth" in location:
 		wdth = location["wdth"]
@@ -160,22 +190,22 @@ def main(args=None):
 	import argparse
 
 	parser = argparse.ArgumentParser(
-		"fonttools varLib.mutator", description="Instantiate a variable font")
+			"fonttools varLib.mutator", description="Instantiate a variable font")
 	parser.add_argument(
-		"input", metavar="INPUT.ttf", help="Input variable TTF file.")
+			"input", metavar="INPUT.ttf", help="Input variable TTF file.")
 	parser.add_argument(
-		"locargs", metavar="AXIS=LOC", nargs="*",
-		help="List of space separated locations. A location consist in "
-		"the name of a variation axis, followed by '=' and a number. E.g.: "
-		" wght=700 wdth=80. The default is the location of the base master.")
+			"locargs", metavar="AXIS=LOC", nargs="*",
+			help="List of space separated locations. A location consist in "
+					 "the name of a variation axis, followed by '=' and a number. E.g.: "
+					 " wght=700 wdth=80. The default is the location of the base master.")
 	parser.add_argument(
-		"-o", "--output", metavar="OUTPUT.ttf", default=None,
-		help="Output instance TTF file (default: INPUT-instance.ttf).")
+			"-o", "--output", metavar="OUTPUT.ttf", default=None,
+			help="Output instance TTF file (default: INPUT-instance.ttf).")
 	logging_group = parser.add_mutually_exclusive_group(required=False)
 	logging_group.add_argument(
-		"-v", "--verbose", action="store_true", help="Run more verbosely.")
+			"-v", "--verbose", action="store_true", help="Run more verbosely.")
 	logging_group.add_argument(
-		"-q", "--quiet", action="store_true", help="Turn verbosity off.")
+			"-q", "--quiet", action="store_true", help="Turn verbosity off.")
 	options = parser.parse_args(args)
 
 	varfilename = options.input
