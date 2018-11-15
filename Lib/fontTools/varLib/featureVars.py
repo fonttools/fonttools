@@ -4,12 +4,13 @@ https://docs.microsoft.com/en-us/typography/opentype/spec/chapter2#featurevariat
 NOTE: The API is experimental and subject to change.
 """
 from __future__ import print_function, absolute_import, division
-
+from fontTools.misc.py23 import *
+from fontTools.misc.dictTools import hashdict
+from fontTools.misc.intTools import popCount
 from fontTools.ttLib import newTable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.otlLib.builder import buildLookup, buildSingleSubstSubtable
 from collections import OrderedDict
-import itertools
 
 
 def addFeatureVariations(font, conditionalSubstitutions):
@@ -18,171 +19,235 @@ def addFeatureVariations(font, conditionalSubstitutions):
     The `conditionalSubstitutions` argument is a list of (Region, Substitutions)
     tuples.
 
-    A Region is a list of Spaces. A Space is a dict mapping axisTags to
-    (minValue, maxValue) tuples. Irrelevant axes may be omitted.
-    A Space represents a 'rectangular' subset of an N-dimensional design space.
+    A Region is a list of Boxes. A Box is a dict mapping axisTags to
+    (minValue, maxValue) tuples. Irrelevant axes may be omitted and they are
+    interpretted as extending to end of axis in each direction.  A Box represents
+    an orthogonal 'rectangular' subset of an N-dimensional design space.
     A Region represents a more complex subset of an N-dimensional design space,
-    ie. the union of all the Spaces in the Region.
-    For efficiency, Spaces within a Region should ideally not overlap, but
+    ie. the union of all the Boxes in the Region.
+    For efficiency, Boxes within a Region should ideally not overlap, but
     functionality is not compromised if they do.
 
     The minimum and maximum values are expressed in normalized coordinates.
 
     A Substitution is a dict mapping source glyph names to substitute glyph names.
+
+    Example:
+
+    # >>> f = TTFont(srcPath)
+    # >>> condSubst = [
+    # ...     # A list of (Region, Substitution) tuples.
+    # ...     ([{"wdth": (0.5, 1.0)}], {"cent": "cent.rvrn"}),
+    # ...     ([{"wght": (0.5, 1.0)}], {"dollar": "dollar.rvrn"}),
+    # ... ]
+    # >>> addFeatureVariations(f, condSubst)
+    # >>> f.save(dstPath)
     """
 
-    # Example:
-    #
-    #     >>> f = TTFont(srcPath)
-    #     >>> condSubst = [
-    #     ...     # A list of (Region, Substitution) tuples.
-    #     ...     ([{"wght": (0.5, 1.0)}], {"dollar": "dollar.rvrn"}),
-    #     ...     ([{"wdth": (0.5, 1.0)}], {"cent": "cent.rvrn"}),
-    #     ... ]
-    #     >>> addFeatureVariations(f, condSubst)
-    #     >>> f.save(dstPath)
+    addFeatureVariationsRaw(font,
+                            overlayFeatureVariations(conditionalSubstitutions))
 
-    # Since the FeatureVariations table will only ever match one rule at a time,
-    # we will make new rules for all possible combinations of our input, so we
-    # can indirectly support overlapping rules.
+def overlayFeatureVariations(conditionalSubstitutions):
+    """Compute overlaps between all conditional substitutions.
 
-    # Merge duplicate region rules before combinatorial explosion.
+    The `conditionalSubstitutions` argument is a list of (Region, Substitutions)
+    tuples.
+
+    A Region is a list of Boxes. A Box is a dict mapping axisTags to
+    (minValue, maxValue) tuples. Irrelevant axes may be omitted and they are
+    interpretted as extending to end of axis in each direction.  A Box represents
+    an orthogonal 'rectangular' subset of an N-dimensional design space.
+    A Region represents a more complex subset of an N-dimensional design space,
+    ie. the union of all the Boxes in the Region.
+    For efficiency, Boxes within a Region should ideally not overlap, but
+    functionality is not compromised if they do.
+
+    The minimum and maximum values are expressed in normalized coordinates.
+
+    A Substitution is a dict mapping source glyph names to substitute glyph names.
+
+    Returns data is in similar but different format.  Overlaps of distinct
+    substitution Boxes (*not* Regions) are explicitly listed as distinct rules,
+    and rules with the same Box merged.  The more specific rules appear earlier
+    in the resulting list.  Moreover, instead of just a dictionary of substitutions,
+    a list of dictionaries is returned for substitutions corresponding to each
+    uniq space, with each dictionary being identical to one of the input
+    substitution dictionaries.  These dictionaries are not merged to allow data
+    sharing when they are converted into font tables.
+
+    Example:
+    >>> condSubst = [
+    ...     # A list of (Region, Substitution) tuples.
+    ...     ([{"wght": (0.5, 1.0)}], {"dollar": "dollar.rvrn"}),
+    ...     ([{"wdth": (0.5, 1.0)}], {"cent": "cent.rvrn"}),
+    ... ]
+    >>> from pprint import pprint
+    >>> pprint(overlayFeatureVariations(condSubst))
+    [({'wdth': (0.5, 1.0), 'wght': (0.5, 1.0)},
+      [{'dollar': 'dollar.rvrn'}, {'cent': 'cent.rvrn'}]),
+     ({'wdth': (0.5, 1.0)}, [{'cent': 'cent.rvrn'}]),
+     ({'wght': (0.5, 1.0)}, [{'dollar': 'dollar.rvrn'}])]
+    """
+
+    # Merge same-substitutions rules, as this creates fewer number oflookups.
     merged = OrderedDict()
-    for key,value in conditionalSubstitutions:
-        key = tuple(sorted(tuple(sorted(k.items())) for k in key))
+    for value,key in conditionalSubstitutions:
+        key = hashdict(key)
+        if key in merged:
+            merged[key].extend(value)
+        else:
+            merged[key] = value
+    conditionalSubstitutions = [(v,dict(k)) for k,v in merged.items()]
+    del merged
+
+    # Merge same-region rules, as this is cheaper.
+    # Also convert boxes to hashdict()
+    #
+    # Reversing is such that earlier entries win in case of conflicting substitution
+    # rules for the same region.
+    merged = OrderedDict()
+    for key,value in reversed(conditionalSubstitutions):
+        key = tuple(sorted(hashdict(cleanupBox(k)) for k in key))
         if key in merged:
             merged[key].update(value)
         else:
-            merged[key] = value
-    conditionalSubstitutions = [([dict(k) for k in key],value) for key,value in merged.items()]
+            merged[key] = dict(value)
+    conditionalSubstitutions = list(reversed(merged.items()))
+    del merged
 
-    explodedConditionalSubstitutions = []
-    for combination in iterAllCombinations(len(conditionalSubstitutions)):
-        regions = []
-        lookups = []
-        for index in combination:
-            regions.append(conditionalSubstitutions[index][0])
-            lookups.append(conditionalSubstitutions[index][1])
-        if not regions:
-            continue
-        intersection = regions[0]
-        for region in regions[1:]:
-            intersection = intersectRegions(intersection, region)
-        for space in intersection:
-            # Remove default values, so we don't generate redundant ConditionSets
-            space = cleanupSpace(space)
-            if space:
-                explodedConditionalSubstitutions.append((space, lookups))
+    # Overlay
+    #
+    # Rank is the bit-set of the index of all contributing layers.
+    initMapInit = ((hashdict(),0),) # Initializer representing the entire space
+    boxMap = OrderedDict(initMapInit) # Map from Box to Rank
+    for i,(currRegion,_) in enumerate(conditionalSubstitutions):
+        newMap = OrderedDict(initMapInit)
+        currRank = 1<<i
+        for box,rank in boxMap.items():
+            for currBox in currRegion:
+                intersection, remainder = overlayBox(currBox, box)
+                if intersection is not None:
+                    intersection = hashdict(intersection)
+                    newMap[intersection] = newMap.get(intersection, 0) | rank|currRank
+                if remainder is not None:
+                    remainder = hashdict(remainder)
+                    newMap[remainder] = newMap.get(remainder, 0) | rank
+        boxMap = newMap
+    del boxMap[hashdict()]
 
-    addFeatureVariationsRaw(font, explodedConditionalSubstitutions)
-
-
-def iterAllCombinations(numRules):
-    """Given a number of rules, yield all the combinations of indices, sorted
-    by decreasing length, so we get the most specialized rules first.
-
-        >>> list(iterAllCombinations(0))
-        []
-        >>> list(iterAllCombinations(1))
-        [(0,)]
-        >>> list(iterAllCombinations(2))
-        [(0, 1), (0,), (1,)]
-        >>> list(iterAllCombinations(3))
-        [(0, 1, 2), (0, 1), (0, 2), (1, 2), (0,), (1,), (2,)]
-    """
-    indices = range(numRules)
-    for length in range(numRules, 0, -1):
-        for combinations in itertools.combinations(indices, length):
-            yield combinations
+    # Generate output
+    items = []
+    for box,rank in sorted(boxMap.items(),
+                           key=(lambda BoxAndRank: -popCount(BoxAndRank[1]))):
+        substsList = []
+        i = 0
+        while rank:
+          if rank & 1:
+              substsList.append(conditionalSubstitutions[i][1])
+          rank >>= 1
+          i += 1
+        items.append((dict(box),substsList))
+    return items
 
 
-#
-# Region and Space support
 #
 # Terminology:
 #
-# A 'Space' is a dict representing a "rectangular" bit of N-dimensional space.
+# A 'Box' is a dict representing an orthogonal "rectangular" bit of N-dimensional space.
 # The keys in the dict are axis tags, the values are (minValue, maxValue) tuples.
 # Missing dimensions (keys) are substituted by the default min and max values
 # from the corresponding axes.
 #
-# A 'Region' is a list of Space dicts, representing the union of the Spaces,
-# therefore representing a more complex subset of design space.
-#
 
-def intersectRegions(region1, region2):
-    """Return the region intersecting `region1` and `region2`.
+def overlayBox(top, bot):
+    """Overlays `top` box on top of `bot` box.
 
-        >>> intersectRegions([], [])
-        []
-        >>> intersectRegions([{'wdth': (0.0, 1.0)}], [])
-        []
-        >>> expected = [{'wdth': (0.0, 1.0), 'wght': (-1.0, 0.0)}]
-        >>> expected == intersectRegions([{'wdth': (0.0, 1.0)}], [{'wght': (-1.0, 0.0)}])
-        True
-        >>> expected = [{'wdth': (0.0, 1.0), 'wght': (-0.5, 0.0)}]
-        >>> expected == intersectRegions([{'wdth': (0.0, 1.0), 'wght': (-0.5, 0.5)}], [{'wght': (-1.0, 0.0)}])
-        True
-        >>> intersectRegions(
-        ...     [{'wdth': (0.0, 1.0), 'wght': (-0.5, 0.5)}],
-        ...     [{'wdth': (-1.0, 0.0), 'wght': (-1.0, 0.0)}])
-        []
-
+    Returns two items:
+    - Box for intersection of `top` and `bot`, or None if they don't intersect.
+    - Box for remainder of `bot`.  Remainder box might not be exact (since the
+      remainder might not be a simple box), but is inclusive of the exact
+      remainder.
     """
-    region = []
-    for space1 in region1:
-        for space2 in region2:
-            space = intersectSpaces(space1, space2)
-            if space is not None:
-                region.append(space)
-    return region
 
-
-def intersectSpaces(space1, space2):
-    """Return the space intersected by `space1` and `space2`, or None if there
-    is no intersection.
-
-        >>> intersectSpaces({}, {})
-        {}
-        >>> intersectSpaces({'wdth': (-0.5, 0.5)}, {})
-        {'wdth': (-0.5, 0.5)}
-        >>> intersectSpaces({'wdth': (-0.5, 0.5)}, {'wdth': (0.0, 1.0)})
-        {'wdth': (0.0, 0.5)}
-        >>> expected = {'wdth': (0.0, 0.5), 'wght': (0.25, 0.5)}
-        >>> expected == intersectSpaces({'wdth': (-0.5, 0.5), 'wght': (0.0, 0.5)}, {'wdth': (0.0, 1.0), 'wght': (0.25, 0.75)})
-        True
-        >>> expected = {'wdth': (-0.5, 0.5), 'wght': (0.0, 1.0)}
-        >>> expected == intersectSpaces({'wdth': (-0.5, 0.5)}, {'wght': (0.0, 1.0)})
-        True
-        >>> intersectSpaces({'wdth': (-0.5, 0)}, {'wdth': (0.1, 0.5)})
-
-    """
-    space = {}
-    space.update(space1)
-    space.update(space2)
-    for axisTag in set(space1) & set(space2):
-        min1, max1 = space1[axisTag]
-        min2, max2 = space2[axisTag]
+    # Intersection
+    intersection = {}
+    intersection.update(top)
+    intersection.update(bot)
+    for axisTag in set(top) & set(bot):
+        min1, max1 = top[axisTag]
+        min2, max2 = bot[axisTag]
         minimum = max(min1, min2)
         maximum = min(max1, max2)
         if not minimum < maximum:
-            return None
-        space[axisTag] = minimum, maximum
-    return space
+            return None, bot # Do not intersect
+        intersection[axisTag] = minimum,maximum
 
+    # Remainder
+    #
+    # Remainder is empty if bot's each axis range lies within that of intersection.
+    #
+    # Remainder is shrank if bot's each, except for exactly one, axis range lies
+    # within that of intersection.
+    #
+    # Bot is returned in full as remainder otherwise, as true remainder is not
+    # representable as a single box.
 
-def cleanupSpace(space):
-    """Return a sparse copy of `space`, without redundant (default) values.
+    remainder = dict(bot)
+    exactlyOne = False
+    fullyInside = False
+    for axisTag in bot:
+        if axisTag not in intersection:
+            fullyInside = False
+            continue # Lies fully within
+        min1, max1 = intersection[axisTag]
+        min2, max2 = bot[axisTag]
+        if min1 <= min2 and max2 <= max1:
+            continue # Lies fully within
 
-        >>> cleanupSpace({})
+        # Bot's range doesn't fully lie within that of top's for this axis.
+        # We know they intersect, so it cannot lie fully without either; so they
+        # overlap.
+
+        # If we have had an overlapping axis before, remainder is not
+        # representable as a box, so return full bottom and go home.
+        if exactlyOne:
+            return intersection, bot
+        exactlyOne = True
+        fullyInside = False
+
+        # Otherwise, cut remainder on this axis and continue.
+        if max1 < max2:
+            # Right side survives.
+            minimum = max(max1, min2)
+            maximum = max2
+        elif min2 < min1:
+            # Left side survives.
+            minimum = min2
+            maximum = min(min1, max2)
+        else:
+            # Remainder leaks out from both sides.  Can't cut either.
+            return intersection, bot
+
+        remainder[axisTag] = minimum,maximum
+
+    if fullyInside:
+        # bot is fully within intersection.  Remainder is empty.
+        return intersection, None
+
+    return intersection, remainder
+
+def cleanupBox(box):
+    """Return a sparse copy of `box`, without redundant (default) values.
+
+        >>> cleanupBox({})
         {}
-        >>> cleanupSpace({'wdth': (0.0, 1.0)})
+        >>> cleanupBox({'wdth': (0.0, 1.0)})
         {'wdth': (0.0, 1.0)}
-        >>> cleanupSpace({'wdth': (-1.0, 1.0)})
+        >>> cleanupBox({'wdth': (-1.0, 1.0)})
         {}
 
     """
-    return {tag: limit for tag, limit in space.items() if limit != (-1.0, 1.0)}
+    return {tag: limit for tag, limit in box.items() if limit != (-1.0, 1.0)}
 
 
 #
@@ -401,5 +466,5 @@ def _remapLangSys(langSys, featureRemap):
 
 
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+    import doctest, sys
+    sys.exit(doctest.testmod().failed)
