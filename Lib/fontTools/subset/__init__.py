@@ -2401,19 +2401,15 @@ class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
 
 class _DesubroutinizingT2Decompiler(psCharStrings.SimpleT2Decompiler):
 
-	def __init__(self, localSubrs, globalSubrs):
+	def __init__(self, localSubrs, globalSubrs, private=None):
 		psCharStrings.SimpleT2Decompiler.__init__(self,
 							  localSubrs,
-							  globalSubrs)
+							  globalSubrs, private)
 
 	def execute(self, charString):
-		# Note: Currently we recompute _desubroutinized each time.
-		# This is more robust in some cases, but in other places we assume
-		# that each subroutine always expands to the same code, so
-		# maybe it doesn't matter. To speed up we can just not
-		# recompute _desubroutinized if it's there. For now I just
-		# double-check that it desubroutinized to the same thing.
-		old_desubroutinized = charString._desubroutinized if hasattr(charString, '_desubroutinized') else None
+		if (hasattr(charString, '_desubroutinized') and
+				charString._desubroutinized):
+			return
 
 		charString._patches = []
 		psCharStrings.SimpleT2Decompiler.execute(self, charString)
@@ -2425,18 +2421,16 @@ class _DesubroutinizingT2Decompiler(psCharStrings.SimpleT2Decompiler):
 			if expansion[-1] == 'return':
 				expansion = expansion[:-1]
 			desubroutinized[idx-2:idx] = expansion
-		if 'endchar' in desubroutinized:
-			# Cut off after first endchar
-			desubroutinized = desubroutinized[:desubroutinized.index('endchar') + 1]
-		else:
-			if not len(desubroutinized) or desubroutinized[-1] != 'return':
-				desubroutinized.append('return')
+		if not charString.isCFF2:
+			if 'endchar' in desubroutinized:
+				# Cut off after first endchar
+				desubroutinized = desubroutinized[:desubroutinized.index('endchar') + 1]
+			else:
+				if not len(desubroutinized) or desubroutinized[-1] != 'return':
+					desubroutinized.append('return')
 
 		charString._desubroutinized = desubroutinized
 		del charString._patches
-
-		if old_desubroutinized:
-			assert desubroutinized == old_desubroutinized
 
 	def op_callsubr(self, index):
 		subr = self.localSubrs[self.operandStack[-1]+self.localBias]
@@ -2596,6 +2590,30 @@ def _delete_empty_subrs(private_dict):
 			del private_dict.rawDict['Subrs']
 		del private_dict.Subrs
 
+@_add_method(ttLib.getTableClass('CFF2'))
+def desubroutinize(self, font):
+	cff = self.cff
+	for fontname in cff.keys():
+		font = cff[fontname]
+		cs = font.CharStrings
+		for g in font.charset:
+			c, _ = cs.getItemAndSelector(g)
+			c.decompile()
+			subrs = getattr(c.private, "Subrs", [])
+			decompiler = _DesubroutinizingT2Decompiler(subrs, c.globalSubrs, c.private)
+			decompiler.execute(c)
+			c.program = c._desubroutinized
+		# Since we have flattened all the charstrings,
+		# we need to delete the subrs.
+		if font.GlobalSubrs:
+			del font.GlobalSubrs 
+		if hasattr(font, 'FDArray'):
+			for fd in font.FDArray:
+				pd = fd.Private
+				subrs = getattr(pd, "Subrs", [])
+				if subrs:
+					del pd.Subrs
+					del pd.rawDict['Subrs']
 
 @_add_method(ttLib.getTableClass('cmap'))
 def closure_glyphs(self, s):
