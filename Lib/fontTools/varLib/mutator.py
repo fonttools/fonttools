@@ -64,11 +64,11 @@ def instantiateVariableFont(varfont, location, inplace=False):
 	glyf = varfont['glyf']
 	# get list of glyph names in gvar sorted by component depth
 	glyphnames = sorted(
-			gvar.variations.keys(),
-			key=lambda name: (
-				glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
-				if glyf[name].isComposite() else 0,
-				name))
+		gvar.variations.keys(),
+		key=lambda name: (
+			glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
+			if glyf[name].isComposite() else 0,
+			name))
 	for glyphname in glyphnames:
 		variations = gvar.variations[glyphname]
 		coordinates,_ = _GetCoordinates(varfont, glyphname)
@@ -113,7 +113,7 @@ def instantiateVariableFont(varfont, location, inplace=False):
 			if not delta:
 				continue
 			setattr(varfont[tableTag], itemName,
-							getattr(varfont[tableTag], itemName) + delta)
+				getattr(varfont[tableTag], itemName) + delta)
 
 	if 'GDEF' in varfont:
 		log.info("Mutating GDEF/GPOS/GSUB tables")
@@ -175,7 +175,7 @@ def instantiateVariableFont(varfont, location, inplace=False):
 
 	if "wght" in location and "OS/2" in varfont:
 		varfont["OS/2"].usWeightClass = otRound(
-				max(1, min(location["wght"], 1000))
+			max(1, min(location["wght"], 1000))
 		)
 	if "wdth" in location:
 		wdth = location["wdth"]
@@ -201,22 +201,22 @@ def main(args=None):
 	import argparse
 
 	parser = argparse.ArgumentParser(
-			"fonttools varLib.mutator", description="Instantiate a variable font")
+		"fonttools varLib.mutator", description="Instantiate a variable font")
 	parser.add_argument(
-			"input", metavar="INPUT.ttf", help="Input variable TTF file.")
+		"input", metavar="INPUT.ttf", help="Input variable TTF file.")
 	parser.add_argument(
-			"locargs", metavar="AXIS=LOC", nargs="*",
-			help="List of space separated locations. A location consist in "
-					 "the name of a variation axis, followed by '=' and a number. E.g.: "
-					 " wght=700 wdth=80. The default is the location of the base master.")
+		"locargs", metavar="AXIS=LOC", nargs="*",
+		help="List of space separated locations. A location consist in "
+		"the name of a variation axis, followed by '=' and a number. E.g.: "
+		" wght=700 wdth=80. The default is the location of the base master.")
 	parser.add_argument(
-			"-o", "--output", metavar="OUTPUT.ttf", default=None,
-			help="Output instance TTF file (default: INPUT-instance.ttf).")
+		"-o", "--output", metavar="OUTPUT.ttf", default=None,
+		help="Output instance TTF file (default: INPUT-instance.ttf).")
 	logging_group = parser.add_mutually_exclusive_group(required=False)
 	logging_group.add_argument(
-			"-v", "--verbose", action="store_true", help="Run more verbosely.")
+		"-v", "--verbose", action="store_true", help="Run more verbosely.")
 	logging_group.add_argument(
-			"-q", "--quiet", action="store_true", help="Turn verbosity off.")
+		"-q", "--quiet", action="store_true", help="Turn verbosity off.")
 	options = parser.parse_args(args)
 
 	varfilename = options.input
