@@ -3257,7 +3257,8 @@ def main(args=None):
 			text += g[7:]
 			continue
 		if g.startswith('--text-file='):
-			text += open(g[12:], encoding='utf-8').read().replace('\n', '')
+			with open(g[12:], encoding='utf-8') as f:
+				text += f.read().replace('\n', '')
 			continue
 		if g.startswith('--unicodes='):
 			if g[11:] == '*':
@@ -3266,15 +3267,17 @@ def main(args=None):
 				unicodes.extend(parse_unicodes(g[11:]))
 			continue
 		if g.startswith('--unicodes-file='):
-			for line in open(g[16:]).readlines():
-				unicodes.extend(parse_unicodes(line.split('#')[0]))
+			with open(g[16:]) as f:
+				for line in f.readlines():
+					unicodes.extend(parse_unicodes(line.split('#')[0]))
 			continue
 		if g.startswith('--gids='):
 			gids.extend(parse_gids(g[7:]))
 			continue
 		if g.startswith('--gids-file='):
-			for line in open(g[12:]).readlines():
-				gids.extend(parse_gids(line.split('#')[0]))
+			with open(g[12:]) as f:
+				for line in f.readlines():
+					gids.extend(parse_gids(line.split('#')[0]))
 			continue
 		if g.startswith('--glyphs='):
 			if g[9:] == '*':
@@ -3283,8 +3286,9 @@ def main(args=None):
 				glyphs.extend(parse_glyphs(g[9:]))
 			continue
 		if g.startswith('--glyphs-file='):
-			for line in open(g[14:]).readlines():
-				glyphs.extend(parse_glyphs(line.split('#')[0]))
+			with open(g[14:]) as f:
+				for line in f.readlines():
+					glyphs.extend(parse_glyphs(line.split('#')[0]))
 			continue
 		glyphs.append(g)
 

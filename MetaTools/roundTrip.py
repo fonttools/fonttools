@@ -74,23 +74,22 @@ def main(args):
 	if not files:
 		usage()
 	
-	report = open("report.txt", "a+")
-	options = ttx.Options(rawOptions, len(files))
-	for ttFile in files:
-		try:
-			roundTrip(ttFile, options, report)
-		except KeyboardInterrupt:
-			print("(Cancelled)")
-			break
-		except:
-			print("*** round tripping aborted ***")
-			traceback.print_exc()
-			report.write("=============================================================\n")
-			report.write("  An exception occurred while round tripping")
-			report.write("  \"%s\"\n" % ttFile)
-			traceback.print_exc(file=report)
-			report.write("-------------------------------------------------------------\n")
-	report.close()
+	with open("report.txt", "a+") as report:
+		options = ttx.Options(rawOptions, len(files))
+		for ttFile in files:
+			try:
+				roundTrip(ttFile, options, report)
+			except KeyboardInterrupt:
+				print("(Cancelled)")
+				break
+			except:
+				print("*** round tripping aborted ***")
+				traceback.print_exc()
+				report.write("=============================================================\n")
+				report.write("  An exception occurred while round tripping")
+				report.write("  \"%s\"\n" % ttFile)
+				traceback.print_exc(file=report)
+				report.write("-------------------------------------------------------------\n")
 
 	
 main(sys.argv[1:])
