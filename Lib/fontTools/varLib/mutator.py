@@ -129,10 +129,7 @@ def instantiateVariableFont(varfont, location, inplace=False):
 		if hasattr(glyph, "program"):
 			instructions = glyph.program.getAssembly()
 			# If GETVARIATION opcode is used in bytecode of any glyph add IDEF
-			for instruction in instructions:
-				if instruction.startswith("GETVARIATION"):
-					addidef = True
-					break
+			addidef = any(op.startswith("GETVARIATION") for op in instructions)
 
 	if addidef:
 		log.info("Adding IDEF to fpgm table for GETVARIATION opcode")
@@ -147,8 +144,8 @@ def instantiateVariableFont(varfont, location, inplace=False):
 		asm.append("PUSHB[000] 145")
 		asm.append("IDEF[ ]")
 		args = [str(len(loc))]
-		for val in loc.values():
-			args.append(str(floatToFixed(val, 14)))
+		for a in fvar.axes:
+			args.append(str(floatToFixed(loc[a.axisTag], 14)))
 		asm.append("NPUSHW[ ] " + ' '.join(args))
 		asm.append("ENDF[ ]")
 		fpgm.program.fromAssembly(asm)
@@ -161,7 +158,7 @@ def instantiateVariableFont(varfont, location, inplace=False):
 			else:
 				setattr(maxp, "maxInstructionDefs", 1)
 			if hasattr(maxp, "maxStackElements"):
-				maxp.maxStackElements += len(loc)
+				maxp.maxStackElements = max(len(loc), maxp.maxStackElements)
 			else:
 				setattr(maxp, "maxInstructionDefs", len(loc))
 
