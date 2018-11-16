@@ -124,17 +124,17 @@ def instantiateVariableFont(varfont, location, inplace=False):
 
 	addidef = False
 	for glyph in glyf.glyphs.values():
-		if addidef:
-			break
 		if hasattr(glyph, "program"):
 			instructions = glyph.program.getAssembly()
 			# If GETVARIATION opcode is used in bytecode of any glyph add IDEF
 			addidef = any(op.startswith("GETVARIATION") for op in instructions)
+			if addidef:
+				break
 
 	if addidef:
 		log.info("Adding IDEF to fpgm table for GETVARIATION opcode")
 		asm = []
-		if varfont.has_key('fpgm'):
+		if 'fpgm' in varfont:
 			fpgm = varfont['fpgm']
 			asm = fpgm.program.getAssembly()
 		else:
@@ -151,7 +151,7 @@ def instantiateVariableFont(varfont, location, inplace=False):
 		fpgm.program.fromAssembly(asm)
 
 		# Change maxp attributes as IDEF is added
-		if varfont.has_key('maxp'):
+		if 'maxp' in varfont:
 			maxp = varfont['maxp']
 			if hasattr(maxp, "maxInstructionDefs"):
 				maxp.maxInstructionDefs += 1
