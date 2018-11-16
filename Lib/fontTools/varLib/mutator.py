@@ -122,40 +122,48 @@ def instantiateVariableFont(varfont, location, inplace=False):
 		log.info("Building interpolated tables")
 		merger.instantiate()
 
+	addidef = False
 	for glyph in glyf.glyphs.values():
+		if addidef:
+			break
 		if hasattr(glyph, "program"):
 			instructions = glyph.program.getAssembly()
 			# If GETVARIATION opcode is used in bytecode of any glyph add IDEF
-			addidef = False
 			for instruction in instructions:
 				if instruction.startswith("GETVARIATION"):
 					addidef = True
 					break
-			if addidef:
-				asm = []
-				if varfont.has_key('fpgm'):
-					fpgm = varfont['fpgm']
-					asm = fpgm.program.getAssembly()
-				else:
-					fpgm = newTable('fpgm')
-					fpgm.program = ttProgram.Program()
-					varfont['fpgm'] = fpgm
-				log.info("Adding IDEF to fpgm table for GETVARIATION opcode")
-				asm.append("PUSHB[000] 145")
-				asm.append("IDEF[ ]")
-				args = [str(len(loc))]
-				for val in loc.values():
-					args.append(str(floatToFixed(val, 14)))
-				asm.append("NPUSHW[ ] " + ' '.join(args))
-				asm.append("ENDF[ ]")
-				fpgm.program.fromAssembly(asm)
 
-				if varfont.has_key('maxp'):
-					if hasattr(varfont['maxp'], "maxInstructionDefs"):
-						varfont['maxp'].maxInstructionDefs += 1
-					if hasattr(varfont['maxp'], "maxStackElements"):
-						varfont['maxp'].maxStackElements += len(loc)
-				break
+	if addidef:
+		log.info("Adding IDEF to fpgm table for GETVARIATION opcode")
+		asm = []
+		if varfont.has_key('fpgm'):
+			fpgm = varfont['fpgm']
+			asm = fpgm.program.getAssembly()
+		else:
+			fpgm = newTable('fpgm')
+			fpgm.program = ttProgram.Program()
+			varfont['fpgm'] = fpgm
+		asm.append("PUSHB[000] 145")
+		asm.append("IDEF[ ]")
+		args = [str(len(loc))]
+		for val in loc.values():
+			args.append(str(floatToFixed(val, 14)))
+		asm.append("NPUSHW[ ] " + ' '.join(args))
+		asm.append("ENDF[ ]")
+		fpgm.program.fromAssembly(asm)
+
+		# Change maxp attributes as IDEF is added
+		if varfont.has_key('maxp'):
+			maxp = varfont['maxp']
+			if hasattr(maxp, "maxInstructionDefs"):
+				maxp.maxInstructionDefs += 1
+			else:
+				setattr(maxp, "maxInstructionDefs", 1)
+			if hasattr(maxp, "maxStackElements"):
+				maxp.maxStackElements += len(loc)
+			else:
+				setattr(maxp, "maxInstructionDefs", len(loc))
 
 	if 'name' in varfont:
 		log.info("Pruning name table")
