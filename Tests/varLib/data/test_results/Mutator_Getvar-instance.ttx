@@ -44,8 +44,8 @@
     <maxTwilightPoints value="0"/>
     <maxStorage value="0"/>
     <maxFunctionDefs value="0"/>
-    <maxInstructionDefs value="0"/>
-    <maxStackElements value="0"/>
+    <maxInstructionDefs value="1"/>
+    <maxStackElements value="2"/>
     <maxSizeOfInstructions value="0"/>
     <maxComponentElements value="1"/>
     <maxComponentDepth value="1"/>

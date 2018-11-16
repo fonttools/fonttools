@@ -149,6 +149,12 @@ def instantiateVariableFont(varfont, location, inplace=False):
 				asm.append("NPUSHW[ ] " + ' '.join(args))
 				asm.append("ENDF[ ]")
 				fpgm.program.fromAssembly(asm)
+
+				if varfont.has_key('maxp'):
+					if hasattr(varfont['maxp'], "maxInstructionDefs"):
+						varfont['maxp'].maxInstructionDefs += 1
+					if hasattr(varfont['maxp'], "maxStackElements"):
+						varfont['maxp'].maxStackElements += len(loc)
 				break
 
 	if 'name' in varfont:
