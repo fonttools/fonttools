@@ -784,8 +784,17 @@ class InstancerMerger(AligningMerger):
 		self.location = location
 		self.scalars = model.getScalars(location)
 
+@InstancerMerger.merger(ot.CaretValue)
+def merge(merger, self, lst):
+	assert self.Format == 1
+	Coords = [a.Coordinate for a in lst]
+	model = merger.model
+	scalars = merger.scalars
+	self.Coordinate = otRound(model.interpolateFromMastersAndScalars(Coords, scalars))
+
 @InstancerMerger.merger(ot.Anchor)
 def merge(merger, self, lst):
+	assert self.Format == 1
 	XCoords = [a.XCoordinate for a in lst]
 	YCoords = [a.YCoordinate for a in lst]
 	model = merger.model
@@ -832,6 +841,26 @@ class MutatorMerger(AligningMerger):
 				store = gdef.VarStore
 
 		self.instancer = VarStoreInstancer(store, font['fvar'].axes, location)
+
+@MutatorMerger.merger(ot.CaretValue)
+def merge(merger, self, lst):
+
+	# Hack till we become selfless.
+	self.__dict__ = lst[0].__dict__.copy()
+
+	if self.Format != 3:
+		return
+
+	instancer = merger.instancer
+	dev = self.DeviceTable
+	del self.DeviceTable
+	if dev:
+		assert dev.DeltaFormat == 0x8000
+		varidx = (dev.StartSize << 16) + dev.EndSize
+		delta = otRound(instancer[varidx])
+		self.Coordinate  += delta
+
+	self.Format = 1
 
 @MutatorMerger.merger(ot.Anchor)
 def merge(merger, self, lst):
@@ -926,6 +955,14 @@ def buildVarDevTable(store_builder, master_values):
 		return master_values[0], None
 	base, varIdx = store_builder.storeMasters(master_values)
 	return base, builder.buildVarDevTable(varIdx)
+
+@VariationMerger.merger(ot.CaretValue)
+def merge(merger, self, lst):
+	assert self.Format == 1
+	self.Coordinate, DeviceTable = buildVarDevTable(merger.store_builder, [a.Coordinate for a in lst])
+	if DeviceTable:
+		self.Format = 3
+		self.DeviceTable = DeviceTable
 
 @VariationMerger.merger(ot.Anchor)
 def merge(merger, self, lst):
