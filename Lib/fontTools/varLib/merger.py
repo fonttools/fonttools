@@ -115,6 +115,10 @@ class AligningMerger(Merger):
 
 @AligningMerger.merger(ot.GDEF, "GlyphClassDef")
 def merge(merger, self, lst):
+	if self is None:
+		assert allNone(lst), (lst)
+		return
+
 	self.classDefs = {}
 	# We only care about the .classDefs
 	self = self.classDefs
