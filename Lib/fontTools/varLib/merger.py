@@ -813,7 +813,9 @@ def merge(merger, self, lst):
 
 class MutatorMerger(AligningMerger):
 	"""A merger that takes a variable font, and instantiates
-	an instance."""
+	an instance.  While there's no "merging" to be done per se,
+	the operation can benefit from many operations that the
+	aligning merger does."""
 
 	def __init__(self, font, location):
 		Merger.__init__(self, font)
@@ -827,63 +829,10 @@ class MutatorMerger(AligningMerger):
 
 		self.instancer = VarStoreInstancer(store, font['fvar'].axes, location)
 
-	def instantiate(self):
-		font = self.font
-
-		for tableTag in 'GSUB','GPOS':
-			if not tableTag in font:
-				continue
-			table = font[tableTag].table
-			if not hasattr(table, 'FeatureVariations'):
-				continue
-			variations = table.FeatureVariations
-			for record in variations.FeatureVariationRecord:
-				applies = True
-				for condition in record.ConditionSet.ConditionTable:
-					if condition.Format == 1:
-						axisIdx = condition.AxisIndex
-						axisTag = self.font['fvar'].axes[axisIdx].axisTag
-						Min = condition.FilterRangeMinValue
-						Max = condition.FilterRangeMaxValue
-						loc = self.location[axisTag]
-						if not (Min <= loc <= Max):
-							applies = False
-					else:
-						applies = False
-					if not applies:
-						break
-
-				if applies:
-					assert record.FeatureTableSubstitution.Version == 0x00010000
-					for rec in record.FeatureTableSubstitution.SubstitutionRecord:
-						table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = rec.Feature
-					break
-			del table.FeatureVariations
-
-
-		self.mergeTables(font, [font], ['GPOS'])
-
-		if 'GDEF' in font:
-			gdef = font['GDEF'].table
-			if gdef.Version >= 0x00010003:
-				del gdef.VarStore
-				gdef.Version = 0x00010002
-				if gdef.MarkGlyphSetsDef is None:
-					del gdef.MarkGlyphSetsDef
-					gdef.Version = 0x00010000
-			if not (gdef.LigCaretList or
-				gdef.MarkAttachClassDef or
-				gdef.GlyphClassDef or
-				gdef.AttachList or
-				(gdef.Version >= 0x00010002 and gdef.MarkGlyphSetsDef)):
-				del font['GDEF']
-
 @MutatorMerger.merger(ot.Anchor)
 def merge(merger, self, lst):
 
-	# Most other structs are merged with self pointing to a copy of base font.
-	# Anchors are sometimes created later and initialized to have 0/None members.
-	# Hence the copy.
+	# Hack till we become selfless.
 	self.__dict__ = lst[0].__dict__.copy()
 
 	if self.Format != 3:
@@ -911,9 +860,7 @@ def merge(merger, self, lst):
 @MutatorMerger.merger(otBase.ValueRecord)
 def merge(merger, self, lst):
 
-	# Most other structs are merged with self pointing to a copy of base font.
-	# ValueRecords are sometimes created later and initialized to have 0/None members.
-	# Hence the copy.
+	# Hack till we become selfless.
 	self.__dict__ = lst[0].__dict__.copy()
 
 	instancer = merger.instancer

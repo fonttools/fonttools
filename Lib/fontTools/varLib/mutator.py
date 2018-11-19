@@ -115,12 +115,59 @@ def instantiateVariableFont(varfont, location, inplace=False):
 			setattr(varfont[tableTag], itemName,
 				getattr(varfont[tableTag], itemName) + delta)
 
-	if 'GDEF' in varfont:
-		log.info("Mutating GDEF/GPOS/GSUB tables")
-		merger = MutatorMerger(varfont, loc)
+	log.info("Mutating FeatureVariations")
+	for tableTag in 'GSUB','GPOS':
+		if not tableTag in varfont:
+			continue
+		table = varfont[tableTag].table
+		if not hasattr(table, 'FeatureVariations'):
+			continue
+		variations = table.FeatureVariations
+		for record in variations.FeatureVariationRecord:
+			applies = True
+			for condition in record.ConditionSet.ConditionTable:
+				if condition.Format == 1:
+					axisIdx = condition.AxisIndex
+					axisTag = fvar.axes[axisIdx].axisTag
+					Min = condition.FilterRangeMinValue
+					Max = condition.FilterRangeMaxValue
+					v = loc[axisTag]
+					if not (Min <= v <= Max):
+						applies = False
+				else:
+					applies = False
+				if not applies:
+					break
 
-		log.info("Building interpolated tables")
-		merger.instantiate()
+			if applies:
+				assert record.FeatureTableSubstitution.Version == 0x00010000
+				for rec in record.FeatureTableSubstitution.SubstitutionRecord:
+					table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = rec.Feature
+				break
+		del table.FeatureVariations
+
+	if 'GDEF' in varfont and varfont['GDEF'].table.Version >= 0x00010003:
+		log.info("Mutating GDEF/GPOS/GSUB tables")
+		gdef = varfont['GDEF'].table
+		instancer = VarStoreInstancer(gdef.VarStore, fvar.axes, loc)
+
+		merger = MutatorMerger(varfont, loc)
+		merger.mergeTables(varfont, [varfont], ['GPOS'])
+
+		# Downgrade GDEF.
+		del gdef.VarStore
+		gdef.Version = 0x00010002
+		if gdef.MarkGlyphSetsDef is None:
+			del gdef.MarkGlyphSetsDef
+			gdef.Version = 0x00010000
+
+		if not (gdef.LigCaretList or
+			gdef.MarkAttachClassDef or
+			gdef.GlyphClassDef or
+			gdef.AttachList or
+			(gdef.Version >= 0x00010002 and gdef.MarkGlyphSetsDef)):
+			del varfont['GDEF']
+
 
 	addidef = False
 	for glyph in glyf.glyphs.values():
@@ -130,7 +177,6 @@ def instantiateVariableFont(varfont, location, inplace=False):
 			addidef = any(op.startswith("GETVARIATION") for op in instructions)
 			if addidef:
 				break
-
 	if addidef:
 		log.info("Adding IDEF to fpgm table for GETVARIATION opcode")
 		asm = []
