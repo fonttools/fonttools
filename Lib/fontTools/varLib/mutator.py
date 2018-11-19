@@ -5,8 +5,9 @@ $ fonttools varLib.mutator ./NotoSansArabic-VF.ttf wght=140 wdth=85
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.misc.fixedTools import floatToFixedToFloat, otRound
-from fontTools.ttLib import TTFont
+from fontTools.misc.fixedTools import floatToFixedToFloat, otRound, floatToFixed
+from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib.tables import ttProgram
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.varLib import _GetCoordinates, _SetCoordinates
 from fontTools.varLib.models import (
@@ -120,6 +121,46 @@ def instantiateVariableFont(varfont, location, inplace=False):
 
 		log.info("Building interpolated tables")
 		merger.instantiate()
+
+	addidef = False
+	for glyph in glyf.glyphs.values():
+		if hasattr(glyph, "program"):
+			instructions = glyph.program.getAssembly()
+			# If GETVARIATION opcode is used in bytecode of any glyph add IDEF
+			addidef = any(op.startswith("GETVARIATION") for op in instructions)
+			if addidef:
+				break
+
+	if addidef:
+		log.info("Adding IDEF to fpgm table for GETVARIATION opcode")
+		asm = []
+		if 'fpgm' in varfont:
+			fpgm = varfont['fpgm']
+			asm = fpgm.program.getAssembly()
+		else:
+			fpgm = newTable('fpgm')
+			fpgm.program = ttProgram.Program()
+			varfont['fpgm'] = fpgm
+		asm.append("PUSHB[000] 145")
+		asm.append("IDEF[ ]")
+		args = [str(len(loc))]
+		for a in fvar.axes:
+			args.append(str(floatToFixed(loc[a.axisTag], 14)))
+		asm.append("NPUSHW[ ] " + ' '.join(args))
+		asm.append("ENDF[ ]")
+		fpgm.program.fromAssembly(asm)
+
+		# Change maxp attributes as IDEF is added
+		if 'maxp' in varfont:
+			maxp = varfont['maxp']
+			if hasattr(maxp, "maxInstructionDefs"):
+				maxp.maxInstructionDefs += 1
+			else:
+				setattr(maxp, "maxInstructionDefs", 1)
+			if hasattr(maxp, "maxStackElements"):
+				maxp.maxStackElements = max(len(loc), maxp.maxStackElements)
+			else:
+				setattr(maxp, "maxInstructionDefs", len(loc))
 
 	if 'name' in varfont:
 		log.info("Pruning name table")
