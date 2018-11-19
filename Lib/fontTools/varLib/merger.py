@@ -575,7 +575,7 @@ def _MarkBasePosFormat1_merge(self, lst, merger, Mark='Mark', Base='Base'):
 				anchor = ot.Anchor()
 				anchor.Format = 1
 				merger.mergeThings(anchor, allAnchors)
-			rec. MarkAnchor = anchor
+			rec.MarkAnchor = anchor
 		records.append(rec)
 	array = ot.MarkArray()
 	array.MarkRecord = records
