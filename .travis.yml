@@ -4,7 +4,7 @@ python: 3.5
 env:
   global:
     - TWINE_USERNAME="anthrotype"
-    - secure: PJuCmlDuwnojiw3QuDhfNAaU4f/yeJcEcRzJAudA66bwZK7hvxV7Tiy9A17Bm6yO0HbJmmyjsIr8h2e7/PyY6QCaV8RqcMDkQ0UraU16pRsihp0giVXJoWscj2sCP4cNDOBVwSaGAX8yZ2OONc5srESywghzcy8xmgw6O+XFqx4=
+    # - secure: PJuCmlDuwnojiw3QuDhfNAaU4f/yeJcEcRzJAudA66bwZK7hvxV7Tiy9A17Bm6yO0HbJmmyjsIr8h2e7/PyY6QCaV8RqcMDkQ0UraU16pRsihp0giVXJoWscj2sCP4cNDOBVwSaGAX8yZ2OONc5srESywghzcy8xmgw6O+XFqx4=
 
 branches:
   only:
