@@ -50,6 +50,16 @@ matrix:
         - PYENV_VERSION_STRING='Python 2.7.6'
         - PYENV_ROOT=$HOME/.travis-pyenv
         - TRAVIS_PYENV_VERSION='0.4.0'
+    - language: sh
+      os: windows
+      env:
+        - PYTHON_VERSION=2.7
+        - TOXENV=py-cov
+    - language: sh
+      os: windows
+      env:
+        - PYTHON_VERSION=3.7
+        - TOXENV=py-cov
   allow_failures:
     # We use fast_finish + allow_failures because OSX builds take forever
     # https://blog.travis-ci.com/2013-11-27-fast-finishing-builds
