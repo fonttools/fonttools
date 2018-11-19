@@ -255,27 +255,27 @@ def VarStore_prune_regions(self):
 ot.VarStore.prune_regions = VarStore_prune_regions
 
 
-def _visit(self, objType, func):
-	"""Recurse down from self, if type of an object is objType,
-	call func() on it.  Only works for otData-style classes."""
+def _visit(self, func):
+	"""Recurse down from self, if type of an object is ot.Device,
+	call func() on it.  Works on otData-style classes."""
 
-	if type(self) == objType:
+	if type(self) == ot.Device:
 		func(self)
 		return # We don't recurse down; don't need to.
 
 	if isinstance(self, list):
 		for that in self:
-			_visit(that, objType, func)
+			_visit(that, func)
 
 	if hasattr(self, 'getConverters') and not hasattr(self, 'postRead'):
 		for conv in self.getConverters():
 			that = getattr(self, conv.name, None)
 			if that is not None:
-				_visit(that, objType, func)
+				_visit(that, func)
 
 	if isinstance(self, ot.ValueRecord):
 		for that in self.__dict__.values():
-			_visit(that, objType, func)
+			_visit(that, func)
 
 def _Device_recordVarIdx(self, s):
 	"""Add VarIdx in this Device table (if any) to the set s."""
@@ -284,13 +284,13 @@ def _Device_recordVarIdx(self, s):
 
 def Object_collect_device_varidxes(self, varidxes):
 	adder = partial(_Device_recordVarIdx, s=varidxes)
-	_visit(self, ot.Device, adder)
+	_visit(self, adder)
 
 ot.GDEF.collect_device_varidxes = Object_collect_device_varidxes
 ot.GPOS.collect_device_varidxes = Object_collect_device_varidxes
 
 def _Device_mapVarIdx(self, mapping, done):
-	"""Add VarIdx in this Device table (if any) to the set s."""
+	"""Map VarIdx in this Device table (if any) through mapping."""
 	if id(self) in done:
 		return
 	done.add(id(self))
@@ -301,7 +301,7 @@ def _Device_mapVarIdx(self, mapping, done):
 
 def Object_remap_device_varidxes(self, varidxes_map):
 	mapper = partial(_Device_mapVarIdx, mapping=varidxes_map, done=set())
-	_visit(self, ot.Device, mapper)
+	_visit(self, mapper)
 
 ot.GDEF.remap_device_varidxes = Object_remap_device_varidxes
 ot.GPOS.remap_device_varidxes = Object_remap_device_varidxes
