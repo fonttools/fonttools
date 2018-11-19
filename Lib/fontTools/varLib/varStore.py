@@ -261,19 +261,18 @@ def _visit(self, func):
 
 	if type(self) == ot.Device:
 		func(self)
-		return # We don't recurse down; don't need to.
 
-	if isinstance(self, list):
+	elif isinstance(self, list):
 		for that in self:
 			_visit(that, func)
 
-	if hasattr(self, 'getConverters') and not hasattr(self, 'postRead'):
+	elif hasattr(self, 'getConverters') and not hasattr(self, 'postRead'):
 		for conv in self.getConverters():
 			that = getattr(self, conv.name, None)
 			if that is not None:
 				_visit(that, func)
 
-	if isinstance(self, ot.ValueRecord):
+	elif isinstance(self, ot.ValueRecord):
 		for that in self.__dict__.values():
 			_visit(that, func)
 
