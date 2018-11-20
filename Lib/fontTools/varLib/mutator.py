@@ -149,7 +149,8 @@ def instantiateVariableFont(varfont, location, inplace=False):
 					delta = iup_delta(delta, origCoords, endPts)
 				coordinates += GlyphCoordinates(delta) * scalar
 			_SetCoordinates(varfont, glyphname, coordinates)
-
+	else:
+		glyf = None
 	if 'cvar' in varfont:
 		log.info("Mutating cvt/cvar tables")
 		cvar = varfont['cvar']
@@ -246,13 +247,14 @@ def instantiateVariableFont(varfont, location, inplace=False):
 
 
 	addidef = False
-	for glyph in glyf.glyphs.values():
-		if hasattr(glyph, "program"):
-			instructions = glyph.program.getAssembly()
-			# If GETVARIATION opcode is used in bytecode of any glyph add IDEF
-			addidef = any(op.startswith("GETVARIATION") for op in instructions)
-			if addidef:
-				break
+	if glyf:
+		for glyph in glyf.glyphs.values():
+			if hasattr(glyph, "program"):
+				instructions = glyph.program.getAssembly()
+				# If GETVARIATION opcode is used in bytecode of any glyph add IDEF
+				addidef = any(op.startswith("GETVARIATION") for op in instructions)
+				if addidef:
+					break
 	if addidef:
 		log.info("Adding IDEF to fpgm table for GETVARIATION opcode")
 		asm = []
