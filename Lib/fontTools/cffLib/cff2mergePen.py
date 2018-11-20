@@ -239,8 +239,9 @@ class CFF2CharStringMergePen(T2CharStringPen):
 	def getCommands(self):
 		return self._commands
 
-	def reorder_blend_args(self):
+	def reorder_blend_args(self, commands):
 		"""
+		We first re-order the master coordinate values.
 		For a moveto to lineto, the args are now arranged as:
 			[ [master_0 x,y], [master_1 x,y], [master_2 x,y] ]
 		We re-arrange this to
@@ -248,8 +249,10 @@ class CFF2CharStringMergePen(T2CharStringPen):
 			[master_0 y, master_1 y, master_2 y]
 		]
 		We also make the value relative.
+		If the master values are all the same, we collapse the list to
+		as single value instead of a list.
 		"""
-		for cmd in self._commands:
+		for cmd in commands:
 			# arg[i] is the set of arguments for this operator from master i.
 			args = cmd[1]
 			m_args = zip(*args)
@@ -277,15 +280,90 @@ class CFF2CharStringMergePen(T2CharStringPen):
 					y0 = coord
 				is_x = not is_x
 			cmd[1] = rel_coords
+		return commands
 
+	@staticmethod
+	def mergeCommandsToProgram(commands, var_model, round_func):
+		"""
+		Takes a commands list as returned by programToCommands() and
+		converts it back to a T2CharString or CFF2Charstring program list. I
+		need to use this rather than specialize.commandsToProgram, as the
+		commands produced by CFF2CharStringMergePen initially contains a
+		list of coordinate values, one for each master, wherever a single
+		coordinate value is expected by the regular logic. The problem with
+		doing using the specialize.py functions is that a commands list is
+		expected to be a op name with its associated argument list. For the
+		commands list here, some of the arguments may need to be converted
+		to a new argument list and opcode.
+		This version will convert each list of master arguments to a blend
+		op and its arguments, and will also combine successive blend ops up
+		to the stack limit.
+		"""
+		program = []
+		for op, args in commands:
+			num_args = len(args)
+			# some of the args may be blend lists, and some may be
+			# single coordinate values.
+			i = 0
+			stack_use = 0
+			while i < num_args:
+				arg = args[i]
+				if not isinstance(arg, list):
+					program.append(arg)
+					i += 1
+					stack_use += 1
+				else:
+					prev_stack_use = stack_use
+					""" The arg is a tuple of blend values.
+					These are each (master 0,master 1..master n)
+					Combine as many successive tuples as we can,
+					up to the max stack limit.
+					"""
+					num_masters = len(arg)
+					blendlist = [arg]
+					i += 1
+					stack_use += 1 + num_masters  # 1 for the num_blends arg
+					while (i < num_args) and isinstance(args[i], list):
+						blendlist.append(args[i])
+						i += 1
+						stack_use += num_masters
+						if stack_use + num_masters > maxStackLimit: 
+							# if we are here, max stack is is the CFF2 max stack.
+							break
+					num_blends = len(blendlist)
+					# append the 'num_blends' default font values
+					for arg in blendlist:
+						if round_func:
+							arg[0] = round_func(arg[0])
+						program.append(arg[0])
+					for arg in blendlist:
+						# for each coordinate tuple, append the region deltas
+						if len(arg) != 3:
+							print(arg)
+							import pdb
+							pdb.set_trace()
+						deltas = var_model.getDeltas(arg)
+						if round_func:
+							deltas = [round_func(delta) for delta in deltas]
+						# First item in 'deltas' is the default master value;
+						# for CFF2 data, that has already been written.
+						program.extend(deltas[1:])
+					program.append(num_blends)
+					program.append('blend')
+					stack_use = prev_stack_use + num_blends
+			if op:
+				program.append(op)
+		return program
+	
+		
 	def getCharString(self, private=None, globalSubrs=None,
 					  var_model=None, optimize=True):
-		self.reorder_blend_args()
 		commands = self._commands
+		commands = self.reorder_blend_args(commands)
 		if optimize:
 			commands = specializeCommands(commands, generalizeFirst=False,
 										  maxstack=maxStackLimit)
-		program = commandsToProgram(commands, var_model=var_model,
+		program = self.mergeCommandsToProgram(commands, var_model=var_model,
 									round_func=self.roundNumber)
 		charString = CFF2Subr(program=program, private=private,
 							  globalSubrs=globalSubrs)
