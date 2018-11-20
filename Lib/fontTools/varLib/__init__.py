@@ -324,6 +324,10 @@ def _add_gvar(font, model, master_ttfs, tolerance=0.5, optimize=True):
 				delta_opt = iup_delta_optimize(delta, origCoords, endPts, tolerance=tolerance)
 
 				if None in delta_opt:
+					# In composite glyphs, there should be one 0 entry
+					# to make sure the gvar entry is written to the font.
+					if all(d is None for d in delta_opt):
+						delta_opt = [(0, 0)] + [None] * (len(delta_opt) - 1)
 					# Use "optimized" version only if smaller...
 					var_opt = TupleVariation(support, delta_opt)
 
