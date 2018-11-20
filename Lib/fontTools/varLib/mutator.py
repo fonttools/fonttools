@@ -17,7 +17,9 @@ from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.iup import iup_delta
-from  fontTools.subset.cffLib import interpolate_cff2_PrivateDict, interpolate_cff2_charstrings
+from  fontTools.subset.cffLib import (interpolate_cff2_PrivateDict,
+										interpolate_cff2_charstrings,
+										interpolate_cff2_metrics)
 import os.path
 import logging
 
@@ -106,7 +108,7 @@ def instantiateVariableFont(varfont, location, inplace=False):
 	if 'CFF2' in varfont:
 		log.info("Mutating CFF2 table")
 		glyphOrder = varfont.getGlyphOrder()
-		CFF2= varfont['CFF2']
+		CFF2 = varfont['CFF2']
 		topDict = CFF2.cff.topDictIndex[0]
 		vsInstancer = VarStoreInstancer(topDict.VarStore.otVarStore,
 										fvar.axes, loc)
@@ -115,6 +117,9 @@ def instantiateVariableFont(varfont, location, inplace=False):
 		CFF2.desubroutinize(varfont)
 		interpolate_cff2_charstrings(topDict, interpolateFromDeltas,
 										glyphOrder)
+		interpolate_cff2_metrics(varfont, topDict, glyphOrder, loc)
+		del topDict.rawDict['VarStore']
+		del topDict.VarStore
 
 	if 'MVAR' in varfont:
 		log.info("Mutating MVAR table")

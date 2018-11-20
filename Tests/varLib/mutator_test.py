@@ -165,7 +165,7 @@ class MutatorTest(unittest.TestCase):
 
         otf_vf_path = self.get_test_input('TestCFF2VF.otf')
         expected_ttx_name = 'InterpolateTestCFF2VF'
-        tables = ["fvar", "CFF2"]
+        tables = ["hmtx", "CFF2"]
         loc = {'wght':float(200)}
 
         varfont = TTFont(otf_vf_path)
