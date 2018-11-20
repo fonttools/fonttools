@@ -5,8 +5,9 @@ $ fonttools varLib.mutator ./NotoSansArabic-VF.ttf wght=140 wdth=85
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.misc.fixedTools import floatToFixedToFloat, otRound
-from fontTools.ttLib import TTFont
+from fontTools.misc.fixedTools import floatToFixedToFloat, otRound, floatToFixed
+from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib.tables import ttProgram
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.varLib import _GetCoordinates, _SetCoordinates
 from fontTools.varLib.models import (
@@ -114,12 +115,98 @@ def instantiateVariableFont(varfont, location, inplace=False):
 			setattr(varfont[tableTag], itemName,
 				getattr(varfont[tableTag], itemName) + delta)
 
-	if 'GDEF' in varfont:
-		log.info("Mutating GDEF/GPOS/GSUB tables")
-		merger = MutatorMerger(varfont, loc)
+	log.info("Mutating FeatureVariations")
+	for tableTag in 'GSUB','GPOS':
+		if not tableTag in varfont:
+			continue
+		table = varfont[tableTag].table
+		if not hasattr(table, 'FeatureVariations'):
+			continue
+		variations = table.FeatureVariations
+		for record in variations.FeatureVariationRecord:
+			applies = True
+			for condition in record.ConditionSet.ConditionTable:
+				if condition.Format == 1:
+					axisIdx = condition.AxisIndex
+					axisTag = fvar.axes[axisIdx].axisTag
+					Min = condition.FilterRangeMinValue
+					Max = condition.FilterRangeMaxValue
+					v = loc[axisTag]
+					if not (Min <= v <= Max):
+						applies = False
+				else:
+					applies = False
+				if not applies:
+					break
 
-		log.info("Building interpolated tables")
-		merger.instantiate()
+			if applies:
+				assert record.FeatureTableSubstitution.Version == 0x00010000
+				for rec in record.FeatureTableSubstitution.SubstitutionRecord:
+					table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = rec.Feature
+				break
+		del table.FeatureVariations
+
+	if 'GDEF' in varfont and varfont['GDEF'].table.Version >= 0x00010003:
+		log.info("Mutating GDEF/GPOS/GSUB tables")
+		gdef = varfont['GDEF'].table
+		instancer = VarStoreInstancer(gdef.VarStore, fvar.axes, loc)
+
+		merger = MutatorMerger(varfont, loc)
+		merger.mergeTables(varfont, [varfont], ['GDEF', 'GPOS'])
+
+		# Downgrade GDEF.
+		del gdef.VarStore
+		gdef.Version = 0x00010002
+		if gdef.MarkGlyphSetsDef is None:
+			del gdef.MarkGlyphSetsDef
+			gdef.Version = 0x00010000
+
+		if not (gdef.LigCaretList or
+			gdef.MarkAttachClassDef or
+			gdef.GlyphClassDef or
+			gdef.AttachList or
+			(gdef.Version >= 0x00010002 and gdef.MarkGlyphSetsDef)):
+			del varfont['GDEF']
+
+
+	addidef = False
+	for glyph in glyf.glyphs.values():
+		if hasattr(glyph, "program"):
+			instructions = glyph.program.getAssembly()
+			# If GETVARIATION opcode is used in bytecode of any glyph add IDEF
+			addidef = any(op.startswith("GETVARIATION") for op in instructions)
+			if addidef:
+				break
+	if addidef:
+		log.info("Adding IDEF to fpgm table for GETVARIATION opcode")
+		asm = []
+		if 'fpgm' in varfont:
+			fpgm = varfont['fpgm']
+			asm = fpgm.program.getAssembly()
+		else:
+			fpgm = newTable('fpgm')
+			fpgm.program = ttProgram.Program()
+			varfont['fpgm'] = fpgm
+		asm.append("PUSHB[000] 145")
+		asm.append("IDEF[ ]")
+		args = [str(len(loc))]
+		for a in fvar.axes:
+			args.append(str(floatToFixed(loc[a.axisTag], 14)))
+		asm.append("NPUSHW[ ] " + ' '.join(args))
+		asm.append("ENDF[ ]")
+		fpgm.program.fromAssembly(asm)
+
+		# Change maxp attributes as IDEF is added
+		if 'maxp' in varfont:
+			maxp = varfont['maxp']
+			if hasattr(maxp, "maxInstructionDefs"):
+				maxp.maxInstructionDefs += 1
+			else:
+				setattr(maxp, "maxInstructionDefs", 1)
+			if hasattr(maxp, "maxStackElements"):
+				maxp.maxStackElements = max(len(loc), maxp.maxStackElements)
+			else:
+				setattr(maxp, "maxInstructionDefs", len(loc))
 
 	if 'name' in varfont:
 		log.info("Pruning name table")

@@ -378,12 +378,6 @@ def _add_method(*clazzes):
 def _uniq_sort(l):
 	return sorted(set(l))
 
-def _set_update(s, *others):
-	# Jython's set.update only takes one other argument.
-	# Emulate real set.update...
-	for other in others:
-		s.update(other)
-
 def _dict_subset(d, glyphs):
 	return {g:d[g] for g in glyphs}
 
@@ -457,7 +451,7 @@ def subset_glyphs(self, s):
 def closure_glyphs(self, s, cur_glyphs):
 	for glyph, subst in self.mapping.items():
 		if glyph in cur_glyphs:
-			_set_update(s.glyphs, subst)
+			s.glyphs.update(subst)
 
 @_add_method(otTables.MultipleSubst)
 def subset_glyphs(self, s):
@@ -467,8 +461,8 @@ def subset_glyphs(self, s):
 
 @_add_method(otTables.AlternateSubst)
 def closure_glyphs(self, s, cur_glyphs):
-	_set_update(s.glyphs, *(vlist for g,vlist in self.alternates.items()
-				      if g in cur_glyphs))
+	s.glyphs.update(*(vlist for g,vlist in self.alternates.items()
+				if g in cur_glyphs))
 
 @_add_method(otTables.AlternateSubst)
 def subset_glyphs(self, s):
@@ -480,10 +474,10 @@ def subset_glyphs(self, s):
 
 @_add_method(otTables.LigatureSubst)
 def closure_glyphs(self, s, cur_glyphs):
-	_set_update(s.glyphs, *([seq.LigGlyph for seq in seqs
-					      if all(c in s.glyphs for c in seq.Component)]
-				for g,seqs in self.ligatures.items()
-				if g in cur_glyphs))
+	s.glyphs.update(*([seq.LigGlyph for seq in seqs
+				        if all(c in s.glyphs for c in seq.Component)]
+			  for g,seqs in self.ligatures.items()
+			  if g in cur_glyphs))
 
 @_add_method(otTables.LigatureSubst)
 def subset_glyphs(self, s):
@@ -2225,6 +2219,9 @@ def drop_hints(self):
 	if hints.has_hint:
 		assert not hints.deletions or hints.last_hint <= hints.deletions[0]
 		self.program = self.program[hints.last_hint:]
+		if not self.program:
+			# TODO CFF2 no need for endchar.
+			self.program.append('endchar')
 		if hasattr(self, 'width'):
 			# Insert width back if needed
 			if self.width != self.private.defaultWidthX:
@@ -3260,7 +3257,8 @@ def main(args=None):
 			text += g[7:]
 			continue
 		if g.startswith('--text-file='):
-			text += open(g[12:], encoding='utf-8').read().replace('\n', '')
+			with open(g[12:], encoding='utf-8') as f:
+				text += f.read().replace('\n', '')
 			continue
 		if g.startswith('--unicodes='):
 			if g[11:] == '*':
@@ -3269,15 +3267,17 @@ def main(args=None):
 				unicodes.extend(parse_unicodes(g[11:]))
 			continue
 		if g.startswith('--unicodes-file='):
-			for line in open(g[16:]).readlines():
-				unicodes.extend(parse_unicodes(line.split('#')[0]))
+			with open(g[16:]) as f:
+				for line in f.readlines():
+					unicodes.extend(parse_unicodes(line.split('#')[0]))
 			continue
 		if g.startswith('--gids='):
 			gids.extend(parse_gids(g[7:]))
 			continue
 		if g.startswith('--gids-file='):
-			for line in open(g[12:]).readlines():
-				gids.extend(parse_gids(line.split('#')[0]))
+			with open(g[12:]) as f:
+				for line in f.readlines():
+					gids.extend(parse_gids(line.split('#')[0]))
 			continue
 		if g.startswith('--glyphs='):
 			if g[9:] == '*':
@@ -3286,8 +3286,9 @@ def main(args=None):
 				glyphs.extend(parse_glyphs(g[9:]))
 			continue
 		if g.startswith('--glyphs-file='):
-			for line in open(g[14:]).readlines():
-				glyphs.extend(parse_glyphs(line.split('#')[0]))
+			with open(g[14:]) as f:
+				for line in f.readlines():
+					glyphs.extend(parse_glyphs(line.split('#')[0]))
 			continue
 		glyphs.append(g)
 

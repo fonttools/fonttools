@@ -994,7 +994,7 @@ class T2CharString(object):
 				assert self.program[-1] not in ("seac",), "illegal CFF2 CharString Termination"
 		else:
 			assert self.program, "illegal CharString: decompiled to empty program"
-			assert self.program[-1] in ("endchar", "return", "callsubr", "callgsubr", "seac"), "illegal CharString"
+			assert self.program[-1] in ("endchar", "return", "callsubr", "callgsubr", "seac"), ("illegal CharString ending: %s" % self.program[-1])
 
 	def compile(self, isCFF2=False):
 		if self.bytecode is not None:
