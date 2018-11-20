@@ -12,6 +12,7 @@ from fontTools.cffLib import (TopDictIndex,
 from fontTools.cffLib.cff2mergePen import CFF2CharStringMergePen
 from fontTools.ttLib import newTable
 from fontTools import varLib
+from fontTools.varLib.models import allEqual
 
 
 def addCFFVarStore(varFont, varModel):
@@ -105,10 +106,6 @@ def lib_convertCFFToCFF2(cff, otFont):
 	cff.decompile(file, otFont, isCFF2=True)
 
 
-def pointsDiffer(pointList):
-	return not (max(pointList) == min(pointList))
-
-
 def convertCFFtoCFF2(varFont):
 	# Convert base font to a single master CFF2 font.
 	cffTable = varFont['CFF ']
@@ -187,7 +184,7 @@ def merge_PrivateDicts(topDict, region_top_dicts, num_masters, var_model):
 				for val_list in values:
 					rel_list = [(val - prev_val_list[i]) for (
 							i, val) in enumerate(val_list)]
-					if (not any_points_differ) and pointsDiffer(rel_list):
+					if (not any_points_differ) and not allEqual(rel_list):
 						any_points_differ = True
 					prev_val_list = val_list
 					deltas = var_model.getDeltas(rel_list)
@@ -203,7 +200,7 @@ def merge_PrivateDicts(topDict, region_top_dicts, num_masters, var_model):
 					dataList = [data[0] for data in dataList]
 			else:
 				values = [pd.rawDict[key] for pd in pds]
-				if pointsDiffer(values):
+				if not allEqual(values):
 					dataList = var_model.getDeltas(values)
 				else:
 					dataList = values[0]

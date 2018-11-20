@@ -4,6 +4,7 @@ from fontTools.pens.t2CharStringPen import T2CharStringPen, t2c_round
 from fontTools.cffLib.specializer import (commandsToProgram,
 										  specializeCommands)
 from fontTools.cffLib import maxStackLimit
+from fontTools.varLib.models import allEqual
 
 
 class MergeTypeError(TypeError):
@@ -271,7 +272,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 				prev_coord = x0 if is_x else y0
 				rel_coord = [pt[0] - pt[1] for pt in zip(coord, prev_coord)]
 
-				if max(rel_coord) == min(rel_coord):
+				if allEqual(rel_coord):
 					rel_coord = rel_coord[0]
 				rel_coords.append(rel_coord)
 				if is_x:
