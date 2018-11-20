@@ -204,7 +204,7 @@ def VarStore_subset_varidxes(self, varIdxes, optimize=True):
 		usedMinors = used.get(major)
 		if usedMinors is None:
 			continue
-		newMajor = varDataMap[major] = len(newVarData)
+		newMajor = len(newVarData)
 		newVarData.append(data)
 
 		items = data.Item
