@@ -204,6 +204,16 @@ class BuildTest(unittest.TestCase):
             save_before_dump=True,
         )
 
+    def test_MasterFinder_layerNames(self):
+        from fontTools.varLib import MasterFinder
+
+        master_finder = MasterFinder("{stem}.ttf")
+        self.assertTrue(master_finder("Test-Regular.ufo") == "Test-Regular.ttf")
+        self.assertTrue(
+            master_finder("Test-Regular.ufo", "Medium {450, 100}")
+            == "Test-Regular@M_edium {450, 100}.ttf"
+        )
+
     def test_varlib_main_ttf(self):
         """Mostly for testing varLib.main()
         """

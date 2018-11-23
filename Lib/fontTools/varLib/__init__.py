@@ -23,6 +23,7 @@ from __future__ import unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.arrayTools import Vector
+from fontTools.misc.filenames import userNameToFileName
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._n_a_m_e import NameRecord
 from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
@@ -707,13 +708,24 @@ def load_designspace(designspace_filename):
 	)
 
 
-def build(designspace_filename, master_finder=lambda s:s, exclude=[], optimize=True):
+def build(
+	designspace_filename,
+	master_finder=lambda s: s,
+	exclude=[],
+	optimize=True,
+	master_finder_layer=None,
+):
 	"""
 	Build variation font from a designspace file.
 
-	If master_finder is set, it should be a callable that takes master
-	filename as found in designspace file and map it to master font
-	binary as to be opened (eg. .ttf or .otf).
+	If master_finder is set, it should be a callable that takes a master filename
+	found in designspace file and map it to master font binary as to be opened (eg.
+	.ttf or .otf).
+
+	If master_finder_layer is set, it should be a callable that takes a master
+	filename and layer name as found in designspace file and map it to master font
+	binary to be opened (eg. .ttf or .otf). master_finder_layer takes precedence
+	over master_finder.
 	"""
 
 	ds = load_designspace(designspace_filename)
@@ -721,7 +733,16 @@ def build(designspace_filename, master_finder=lambda s:s, exclude=[], optimize=T
 	log.info("Building variable font")
 	log.info("Loading master fonts")
 	basedir = os.path.dirname(designspace_filename)
-	master_ttfs = [master_finder(os.path.join(basedir, m.filename)) for m in ds.masters]
+
+	if master_finder_layer:
+		master_ttfs = [
+			master_finder_layer(os.path.join(basedir, m.filename), m.layerName)
+			for m in ds.masters
+		]
+	else:
+		master_ttfs = [
+			master_finder(os.path.join(basedir, m.filename)) for m in ds.masters
+		]
 	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
 	# Reload base font as target font
 	vf = TTFont(master_ttfs[ds.base_idx])
@@ -770,10 +791,21 @@ class MasterFinder(object):
 	def __init__(self, template):
 		self.template = template
 
-	def __call__(self, src_path):
+	def __call__(self, src_path, layer_name=None):
+		"""Return a derived path from a source path and an optional layer name.
+
+		By default, the layer name will be filtered through userNameToFileName.
+
+		>>> MasterFinder("{stem}.ttf")("Test-Regular.ufo")
+		'Test-Regular.ttf'
+		>>> MasterFinder("{stem}.ttf")("Test-Regular.ufo", "Medium {450, 100}")
+		'Test-Regular@M_edium {450, 100}.ttf'
+		"""
 		fullname = os.path.abspath(src_path)
 		dirname, basename = os.path.split(fullname)
 		stem, ext = os.path.splitext(basename)
+		if layer_name:
+			stem += "@" + userNameToFileName(unicode(layer_name))
 		path = self.template.format(
 			fullname=fullname,
 			dirname=dirname,
