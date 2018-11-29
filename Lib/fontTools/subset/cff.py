@@ -547,10 +547,9 @@ def desubroutinize(self, font):
 			decompiler = _DesubroutinizingT2Decompiler(subrs, c.globalSubrs, c.private)
 			decompiler.execute(c)
 			c.program = c._desubroutinized
-		# Since we have flattened all the charstrings,
-		# we need to delete the subrs.
+		# Delete All the Subrs!!!
 		if font.GlobalSubrs:
-			del font.GlobalSubrs 
+			del font.GlobalSubrs
 		if hasattr(font, 'FDArray'):
 			for fd in font.FDArray:
 				pd = fd.Private
@@ -668,5 +667,3 @@ def interpolate_cff2_metrics(varfont, topDict, glyphOrder, loc):
 			if lsb_delta:
 				entry[1] = lsb
 			hmtx[gname] = tuple(entry)
-
-
