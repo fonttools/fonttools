@@ -9,6 +9,7 @@ from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
 from fontTools.pens.basePen import NullPen
 from fontTools.misc.loggingTools import Timer
+from fontTools.subset.cffLib import *
 from fontTools.varLib import varStore
 import sys
 import struct
