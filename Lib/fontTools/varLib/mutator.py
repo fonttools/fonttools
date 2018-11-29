@@ -19,7 +19,7 @@ from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.iup import iup_delta
-from fontTools.subset.cffLib import (
+from fontTools.subset.cff import (
 	interpolate_cff2_PrivateDict,
 	interpolate_cff2_charstrings,
 	interpolate_cff2_metrics,
