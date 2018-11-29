@@ -11,15 +11,19 @@ from fontTools.ttLib.tables import ttProgram
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.varLib import _GetCoordinates, _SetCoordinates
 from fontTools.varLib.models import (
-	supportScalar, normalizeLocation, piecewiseLinearMap
+	supportScalar,
+	normalizeLocation,
+	piecewiseLinearMap,
 )
 from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.iup import iup_delta
-from  fontTools.subset.cffLib import (interpolate_cff2_PrivateDict,
-										interpolate_cff2_charstrings,
-										interpolate_cff2_metrics)
+from fontTools.subset.cffLib import (
+	interpolate_cff2_PrivateDict,
+	interpolate_cff2_charstrings,
+	interpolate_cff2_metrics,
+)
 import os.path
 import logging
 
