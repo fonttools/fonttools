@@ -60,129 +60,6 @@ class CFF2CharStringMergePen(T2CharStringPen):
 		self._p0 = pt
 		return list(self._p0)
 
-	def make_flat_curve(self, prev_coords, cur_coords):
-		# Convert line coords to curve coords.
-		dx = self.roundNumber((cur_coords[0] - prev_coords[0])/3.0)
-		dy = self.roundNumber((cur_coords[1] - prev_coords[1])/3.0)
-		new_coords = [prev_coords[0] + dx,
-					  prev_coords[1] + dy,
-					  prev_coords[0] + 2*dx,
-					  prev_coords[1] + 2*dy
-					  ] + cur_coords
-		return new_coords
-
-	def make_curve_coords(self, coords, is_default):
-		# Convert line coords to curve coords.
-		prev_cmd = self._commands[self.pt_index-1]
-		if is_default:
-			new_coords = []
-			for i, cur_coords in enumerate(coords):
-				prev_coords = prev_cmd[1][i]
-				master_coords = self.make_flat_curve(prev_coords[:2],
-													 cur_coords)
-				new_coords.append(master_coords)
-		else:
-			cur_coords = coords
-			prev_coords = prev_cmd[1][-1]
-			new_coords = self.make_flat_curve(prev_coords[:2], cur_coords)
-		return new_coords
-
-	def check_and_fix_flat_curve(self, cmd, point_type, pt_coords):
-		if (point_type == 'rlineto') and (cmd[0] == 'rrcurveto'):
-			is_default = False
-			pt_coords = self.make_curve_coords(pt_coords, is_default)
-			success = True
-		elif (point_type == 'rrcurveto') and (cmd[0] == 'rlineto'):
-			is_default = True
-			expanded_coords = self.make_curve_coords(cmd[1], is_default)
-			cmd[1] = expanded_coords
-			cmd[0] = point_type
-			success = True
-		else:
-			success = False
-		return success, pt_coords
-
-	def check_and_fix_closepath(self, cmd, point_type, pt_coords):
-		""" Some workflows drop a lineto which closes a path.
-		Also, if the last segment is a curve in one master,
-		and a flat curve in another, the flat curve can get
-		converted to a closing lineto, and then dropped.
-		Test if:
-		1) one master op is a moveto,
-		2) the previous op for this master does not close the path
-		3) in the other master the current op is not a moveto
-		4) the current op in the otehr master closes the current path
-
-		If the default font is missing the closing lineto, insert it,
-		then proceed with merging the current op and pt_coords.
-
-		If the current region is missing the closing lineto
-		and therefore the current op is a moveto,
-		then add closing coordinates to self._commands,
-		and increment self.pt_index.
-
-		Note that if this may insert a point in the default font list,
-		so after using it, 'cmd' needs to be reset.
-
-		return True if we can fix this issue.
-		"""
-		if point_type == 'rmoveto':
-			# If this is the case, we know that cmd[0] != 'rmoveto'
-
-			# The previous op must not close the path for this region font.
-			prev_moveto_coords = self._commands[self.prev_move_idx][1][-1]
-			prv_coords = self._commands[self.pt_index-1][1][-1]
-			if prev_moveto_coords == prv_coords[-2:]:
-				return False
-
-			# The current op must close the path for the default font.
-			prev_moveto_coords2 = self._commands[self.prev_move_idx][1][0]
-			prv_coords = self._commands[self.pt_index][1][0]
-			if prev_moveto_coords2 != prv_coords[-2:]:
-				return False
-
-			# Add the closing line coords for this region
-			# so self._commands, then increment self.pt_index
-			# so that the current region op will get merged
-			# with the next default font moveto.
-			if cmd[0] == 'rrcurveto':
-				new_coords = self.make_curve_coords(prev_moveto_coords, False)
-			cmd[1].append(new_coords)
-			self.pt_index += 1
-			return True
-
-		if cmd[0] == 'rmoveto':
-			# The previous op must not close the path for the default font.
-			prev_moveto_coords = self._commands[self.prev_move_idx][1][0]
-			prv_coords = self._commands[self.pt_index-1][1][0]
-			if prev_moveto_coords == prv_coords[-2:]:
-				return False
-
-			# The current op must close the path for this region font.
-			prev_moveto_coords2 = self._commands[self.prev_move_idx][1][-1]
-			if prev_moveto_coords2 != pt_coords[-2:]:
-				return False
-
-			# Insert the close path segment in the default font.
-			# We omit the last coords from the previous moveto
-			# is it will be supplied by the current region point.
-			# after this function returns.
-			new_cmd = [point_type, None]
-			prev_move_coords = self._commands[self.prev_move_idx][1][:-1]
-			# Note that we omit the last region's coord from prev_move_coords,
-			# as that is from the current region, and we will add the
-			# current pts' coords from the current region in its place.
-			if point_type == 'rlineto':
-				new_cmd[1] = prev_move_coords
-			else:
-				# We omit the last set of coords from the
-				# previous moveto, as it will be supplied by the coords
-				# for the current region pt.
-				new_cmd[1] = self.make_curve_coords(prev_move_coords, True)
-			self._commands.insert(self.pt_index, new_cmd)
-			return True
-		return False
-
 	def add_point(self, point_type, pt_coords):
 		if self.m_index == 0:
 			self._commands.append([point_type, [pt_coords]])
@@ -211,7 +88,6 @@ class CFF2CharStringMergePen(T2CharStringPen):
 
 	def _moveTo(self, pt):
 		pt_coords = self._p(pt)
-		self.prev_move_abs_coords = self.roundPoint(self._p0)
 		self.add_point('rmoveto', pt_coords)
 		# I set prev_move_idx here because add_point()
 		# can change self.pt_index.
