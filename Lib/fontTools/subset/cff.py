@@ -553,9 +553,9 @@ def desubroutinize(self, font):
 		if hasattr(font, 'FDArray'):
 			for fd in font.FDArray:
 				pd = fd.Private
-				subrs = getattr(pd, "Subrs", [])
-				if subrs:
+				if hasattr(pd, 'Subrs'):
 					del pd.Subrs
+				if 'Subrs' in pd.rawDict:
 					del pd.rawDict['Subrs']
 
 
