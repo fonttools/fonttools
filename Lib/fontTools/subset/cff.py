@@ -350,8 +350,7 @@ class _DesubroutinizingT2Decompiler(psCharStrings.SimpleT2Decompiler):
 							  globalSubrs, private)
 
 	def execute(self, charString):
-		if (hasattr(charString, '_desubroutinized') and
-				charString._desubroutinized):
+		if hasattr(charString, '_desubroutinized'):
 			return
 
 		charString._patches = []
@@ -415,6 +414,7 @@ def prune_post_subset(self, font, options):
 				decompiler = _DesubroutinizingT2Decompiler(subrs, c.globalSubrs)
 				decompiler.execute(c)
 				c.program = c._desubroutinized
+				del c._desubroutinized
 
 		# Drop hints if not needed
 		if not options.hinting:
@@ -546,6 +546,7 @@ def desubroutinize(self, font):
 			decompiler = _DesubroutinizingT2Decompiler(subrs, c.globalSubrs, c.private)
 			decompiler.execute(c)
 			c.program = c._desubroutinized
+			del c._desubroutinized
 		# Delete All the Subrs!!!
 		if font.GlobalSubrs:
 			del font.GlobalSubrs
