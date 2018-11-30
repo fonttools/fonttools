@@ -629,11 +629,8 @@ def _add_CFF2(varFont, model, master_fonts):
 								merge_region_fonts)
 	glyphOrder = varFont.getGlyphOrder()
 	convertCFFtoCFF2(varFont)
-	# I sort the master font in the model order so as to
-	# not have to index through model.mapping when building
-	# a blend vector from the master font data.
-	ordered_fonts_list = [master_fonts[idx] for idx in model.reverseMapping]
-	model.mapping = model.reverseMapping = range(len(master_fonts))
+	ordered_fonts_list = model.reorderMasters(master_fonts) 
+	# re-ordering the master list simplifies building the CFF2 data item lists.
 	addCFFVarStore(varFont, model)  # Add VarStore to the CFF2 font.
 	merge_region_fonts(varFont, model, ordered_fonts_list, glyphOrder)
 

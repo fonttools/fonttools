@@ -264,7 +264,17 @@ class VariationModel(object):
 			return min(v for v in lst if v > value)
 		else:
 			return value
-
+	def reorderMasters(self, master_list):
+		# Re-order the master item list from the original master font
+		# list order to the sorted location order. This puts the 
+		# default master first, and makes building up the blend data
+		# simpler in some workflows, such as for CFF2 charstrrings.
+		new_list = [master_list[idx] for idx in self.reverseMapping]
+		self.origLocations = [self.origLocations[idx] for idx in self.reverseMapping]
+		self.mapping = self.reverseMapping = range(len(master_list))
+		self._subModels = {}
+		return new_list
+	
 	def _computeMasterSupports(self, axisPoints, axisOrder):
 		supports = []
 		deltaWeights = []
