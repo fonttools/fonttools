@@ -1153,7 +1153,8 @@ class CFF2Subr(T2CharString):
 
 	def draw(self, pen):
 		subrs = getattr(self.private, "Subrs", [])
-		extractor = self.outlineExtractor(pen, subrs, self.globalSubrs, 0, 0)
+		extractor = self.outlineExtractor(pen, subrs, self.globalSubrs,
+				0, 0)
 		extractor.execute(self)
 		self.width = 0
 

@@ -5,6 +5,7 @@ from fontTools.ttLib.tables._k_e_r_n import (
     KernTable_format_0, KernTable_format_unkown)
 from fontTools.misc.textTools import deHexStr
 from fontTools.misc.testTools import FakeFont, getXML, parseXML
+import itertools
 import pytest
 
 
@@ -120,11 +121,31 @@ KERN_VER_1_FMT_UNKNOWN_XML = [
     '</kernsubtable>',
 ]
 
+KERN_VER_0_FMT_0_OVERFLOWING_DATA = deHexStr(
+    '0000 '  #  0: version=0
+    '0001 '  #  2: nTables=1
+    '0000 '  #  4: version=0 (bogus field, unused)
+    '0274 '  #  6: length=628 (bogus value for 66164 % 0x10000)
+    '00 '    #  8: format=0
+    '01 '    #  9: coverage=1
+    '2B11 '  # 10: nPairs=11025
+    'C000 '  # 12: searchRange=49152
+    '000D '  # 14: entrySelector=13
+    '4266 '  # 16: rangeShift=16998
+) + deHexStr(' '.join(
+    '%04X %04X %04X' % (a, b, 0)
+    for (a, b) in itertools.product(range(105), repeat=2)
+))
+
 
 @pytest.fixture
 def font():
     return FakeFont(list("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                          "abcdefghijklmnopqrstuvwxyz"))
+
+@pytest.fixture
+def overflowing_font():
+    return FakeFont(["glyph%i" % i for i in range(105)])
 
 
 class KernTableTest(object):
@@ -363,6 +384,36 @@ class KernTable_format_0_Test(object):
             font)
         assert subtable[("B", "D")] == 1
         assert subtable[("B", "glyph65535")] == 2
+
+    def test_compileOverflowingSubtable(self, overflowing_font):
+        font = overflowing_font
+        kern = newTable("kern")
+        kern.version = 0
+        st = KernTable_format_0(0)
+        kern.kernTables = [st]
+        st.coverage = 1
+        st.tupleIndex = None
+        st.kernTable = {
+            (a, b): 0
+            for (a, b) in itertools.product(
+                font.getGlyphOrder(), repeat=2)
+        }
+        assert len(st.kernTable) == 11025
+        data = kern.compile(font)
+        assert data == KERN_VER_0_FMT_0_OVERFLOWING_DATA
+
+    def test_decompileOverflowingSubtable(self, overflowing_font):
+        font = overflowing_font
+        data = KERN_VER_0_FMT_0_OVERFLOWING_DATA
+        kern = newTable("kern")
+        kern.decompile(data, font)
+
+        st = kern.kernTables[0]
+        assert st.kernTable == {
+            (a, b): 0
+            for (a, b) in itertools.product(
+                font.getGlyphOrder(), repeat=2)
+        }
 
 
 if __name__ == "__main__":

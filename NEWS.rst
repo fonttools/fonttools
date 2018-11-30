@@ -1,3 +1,16 @@
+3.33.0 (released 2018-11-30)
+----------------------------
+
+3.33.0 (released 2018-11-30)
+----------------------------
+- [subset] subsetter bug fix with variable fonts.
+- [varLib.featureVar] Improve FeatureVariations generation with many rules.
+- [varLib] Enable sparse masters when building variable fonts:
+  https://github.com/fonttools/fonttools/pull/1368#issuecomment-437257368
+- [varLib.mutator] Add IDEF for GETVARIATION opcode, for handling hints in an
+  instance.
+- [ttLib] Ignore the length of kern table subtable format 0
+
 3.32.0 (released 2018-11-01)
 ----------------------------
 
@@ -14,7 +27,6 @@
   class around ``TTFont`` that makes it easier to create a working TTF or OTF
   font from scratch with code. NOTE: the API is still experimental and may
   change in future versions.
-
 
 3.31.0 (released 2018-10-21)
 ----------------------------

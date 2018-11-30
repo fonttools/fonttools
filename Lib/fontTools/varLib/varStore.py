@@ -162,18 +162,26 @@ class VarStoreInstancer(object):
 			self._scalars[regionIdx] = scalar
 		return scalar
 
-	def __getitem__(self, varidx):
-
-		major, minor = varidx >> 16, varidx & 0xFFFF
-
-		varData = self._varData
-		scalars = [self._getScalar(ri) for ri in varData[major].VarRegionIndex]
-
-		deltas = varData[major].Item[minor]
+	@staticmethod
+	def interpolateFromDeltasAndScalars(deltas, scalars):
 		delta = 0.
 		for d,s in zip(deltas, scalars):
+			if not s: continue
 			delta += d * s
 		return delta
+
+	def __getitem__(self, varidx):
+		major, minor = varidx >> 16, varidx & 0xFFFF
+		varData = self._varData
+		scalars = [self._getScalar(ri) for ri in varData[major].VarRegionIndex]
+		deltas = varData[major].Item[minor]
+		return self.interpolateFromDeltasAndScalars(deltas, scalars)
+
+	def interpolateFromDeltas(self, varDataIndex, deltas):
+		varData = self._varData
+		scalars = [self._getScalar(ri) for ri in
+					varData[varDataIndex].VarRegionIndex]
+		return self.interpolateFromDeltasAndScalars(deltas, scalars)
 
 
 #
@@ -204,7 +212,7 @@ def VarStore_subset_varidxes(self, varIdxes, optimize=True):
 		usedMinors = used.get(major)
 		if usedMinors is None:
 			continue
-		newMajor = varDataMap[major] = len(newVarData)
+		newMajor = len(newVarData)
 		newVarData.append(data)
 
 		items = data.Item

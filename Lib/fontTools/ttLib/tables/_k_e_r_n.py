@@ -48,6 +48,19 @@ class table__k_e_r_n(DefaultTable.DefaultTable):
 				# This "version" is always 0 so we ignore it here
 				_, length, subtableFormat, coverage = struct.unpack(
 					">HHBB", data[:6])
+				if nTables == 1 and subtableFormat == 0:
+					# The "length" value is ignored since some fonts
+					# (like OpenSans and Calibri) have a subtable larger than
+					# its value.
+					nPairs, = struct.unpack(">H", data[6:8])
+					calculated_length = (nPairs * 6) + 14
+					if length != calculated_length:
+						log.warning(
+							"'kern' subtable longer than defined: "
+							"%d bytes instead of %d bytes" %
+							(calculated_length, length)
+						)
+					length = calculated_length
 			if subtableFormat not in kern_classes:
 				subtable = KernTable_format_unkown(subtableFormat)
 			else:
@@ -128,7 +141,6 @@ class KernTable_format_0(object):
 			">HHHH", data[:8])
 		data = data[8:]
 
-		nPairs = min(nPairs, len(data) // 6)
 		datas = array.array("H", data[:6 * nPairs])
 		if sys.byteorder != "big": datas.byteswap()
 		it = iter(datas)
@@ -153,6 +165,7 @@ class KernTable_format_0(object):
 	def compile(self, ttFont):
 		nPairs = len(self.kernTable)
 		searchRange, entrySelector, rangeShift = getSearchRange(nPairs, 6)
+		searchRange &= 0xFFFF
 		data = struct.pack(
 			">HHHH", nPairs, searchRange, entrySelector, rangeShift)
 
@@ -175,6 +188,10 @@ class KernTable_format_0(object):
 		if not self.apple:
 			version = 0
 			length = len(data) + 6
+			if length >= 0x10000:
+				log.warning('"kern" subtable overflow, '
+							'truncating length value while preserving pairs.')
+				length &= 0xFFFF
 			header = struct.pack(
 				">HHBB", version, length, self.format, self.coverage)
 		else:
