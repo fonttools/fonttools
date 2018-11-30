@@ -1,5 +1,8 @@
 3.33.0 (released 2018-11-30)
 ----------------------------
+
+3.33.0 (released 2018-11-30)
+----------------------------
 - [subset] subsetter bug fix with variable fonts.
 - [varLib.featureVar] Improve FeatureVariations generation with many rules.
 - [varLib] Enable sparse masters when building variable fonts:
