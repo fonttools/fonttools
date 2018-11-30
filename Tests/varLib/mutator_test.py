@@ -3,6 +3,7 @@ from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.varLib import build
 from fontTools.varLib.mutator import main as mutator
+from fontTools.varLib.mutator import instantiateVariableFont as make_instance
 import difflib
 import os
 import shutil
@@ -159,6 +160,18 @@ class MutatorTest(unittest.TestCase):
         tables = [table_tag for table_tag in instfont.keys() if table_tag != 'head']
         expected_ttx_path = self.get_test_output(varfont_name + '-instance.ttx')
         self.expect_ttx(instfont, expected_ttx_path, tables)
+
+    def test_varlib_mutator_CFF2(self):
+
+        otf_vf_path = self.get_test_input('TestCFF2VF.otf')
+        expected_ttx_name = 'InterpolateTestCFF2VF'
+        tables = ["hmtx", "CFF2"]
+        loc = {'wght':float(200)}
+
+        varfont = TTFont(otf_vf_path)
+        new_font = make_instance(varfont, loc)
+        expected_ttx_path = self.get_test_output(expected_ttx_name + '.ttx')
+        self.expect_ttx(new_font, expected_ttx_path, tables)
 
 
 if __name__ == "__main__":
