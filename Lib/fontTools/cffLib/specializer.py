@@ -4,7 +4,6 @@
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.cffLib import maxStackLimit
 
 
 def stringToProgram(string):
@@ -419,7 +418,7 @@ def specializeCommands(commands,
 
 			# Merge adjacent hlineto's and vlineto's.
 			if (i and op in {'hlineto', 'vlineto'} and
-					(op == commands[i-1][0]) and 
+					(op == commands[i-1][0]) and
 					(not isinstance(args[0], list))):
 				_, other_args = commands[i-1]
 				assert len(args) == 1 and len(other_args) == 1

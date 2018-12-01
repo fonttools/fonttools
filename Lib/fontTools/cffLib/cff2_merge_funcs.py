@@ -1,14 +1,16 @@
 import os
 from fontTools.misc.py23 import BytesIO
-from fontTools.cffLib import (TopDictIndex,
-							  buildOrder,
-							  topDictOperators,
-							  topDictOperators2,
-							  privateDictOperators,
-							  privateDictOperators2,
-							  FDArrayIndex,
-							  FontDict,
-							  VarStoreData)
+from fontTools.cffLib import (
+	TopDictIndex,
+	buildOrder,
+	topDictOperators,
+	topDictOperators2,
+	privateDictOperators,
+	privateDictOperators2,
+	FDArrayIndex,
+	FontDict,
+	VarStoreData
+)
 from fontTools.cffLib.cff2mergePen import CFF2CharStringMergePen
 from fontTools.ttLib import newTable
 from fontTools import varLib

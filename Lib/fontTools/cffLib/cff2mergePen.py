@@ -204,7 +204,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 						blendlist.append(args[i])
 						i += 1
 						stack_use += num_masters
-						if stack_use + num_masters > maxStackLimit: 
+						if stack_use + num_masters > maxStackLimit:
 							# if we are here, max stack is is the CFF2 max stack.
 							break
 					num_blends = len(blendlist)
@@ -231,8 +231,8 @@ class CFF2CharStringMergePen(T2CharStringPen):
 			if op:
 				program.append(op)
 		return program
-	
-		
+
+
 	def getCharString(self, private=None, globalSubrs=None,
 					  var_model=None, optimize=True):
 		commands = self._commands
