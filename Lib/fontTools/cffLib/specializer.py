@@ -21,6 +21,7 @@ def stringToProgram(string):
 		program.append(token)
 	return program
 
+
 def programToString(program):
 	return ' '.join(str(x) for x in program)
 
@@ -61,6 +62,7 @@ def programToCommands(program):
 	if stack:
 		commands.append(('', stack))
 	return commands
+
 
 def commandsToProgram(commands):
 	"""Takes a commands list as returned by programToCommands() and converts
@@ -415,7 +417,9 @@ def specializeCommands(commands,
 				continue
 
 			# Merge adjacent hlineto's and vlineto's.
-			if i and op in {'hlineto', 'vlineto'} and op == commands[i-1][0]:
+			if (i and op in {'hlineto', 'vlineto'} and
+					(op == commands[i-1][0]) and
+					(not isinstance(args[0], list))):
 				_, other_args = commands[i-1]
 				assert len(args) == 1 and len(other_args) == 1
 				commands[i-1] = (op, [other_args[0]+args[0]])

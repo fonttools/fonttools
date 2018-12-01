@@ -623,6 +623,18 @@ _DesignSpaceData = namedtuple(
 )
 
 
+def _add_CFF2(varFont, model, master_fonts):
+	from fontTools.cffLib.cff2_merge_funcs import (convertCFFtoCFF2,
+							addCFFVarStore,
+							merge_region_fonts)
+	glyphOrder = varFont.getGlyphOrder()
+	convertCFFtoCFF2(varFont)
+	ordered_fonts_list = model.reorderMasters(master_fonts, model.reverseMapping)
+	# re-ordering the master list simplifies building the CFF2 data item lists.
+	addCFFVarStore(varFont, model)  # Add VarStore to the CFF2 font.
+	merge_region_fonts(varFont, model, ordered_fonts_list, glyphOrder)
+
+
 def load_designspace(designspace_filename):
 
 	ds = DesignSpaceDocument.fromfile(designspace_filename)
@@ -757,6 +769,8 @@ def build(designspace_filename, master_finder=lambda s:s, exclude=[], optimize=T
 		_merge_TTHinting(vf, model, master_fonts)
 	if 'GSUB' not in exclude and ds.rules:
 		_add_GSUB_feature_variations(vf, ds.axes, ds.internal_axis_supports, ds.rules)
+	if 'CFF2' not in exclude and 'CFF ' in vf:
+		_add_CFF2(vf, model, master_fonts)
 
 	for tag in exclude:
 		if tag in vf:
