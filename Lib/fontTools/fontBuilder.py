@@ -484,10 +484,10 @@ class FontBuilder(object):
             topDict.FontMatrix = [scale, 0, 0, scale, 0, 0]
 
         charStrings = CharStrings(None, topDict.charset, globalSubrs, private, fdSelect, fdArray)
-        for glypnName, charString in charStringsDict.items():
+        for glyphName, charString in charStringsDict.items():
             charString.private = private
             charString.globalSubrs = globalSubrs
-            charStrings[glypnName] = charString
+            charStrings[glyphName] = charString
         topDict.CharStrings = charStrings
 
         fontSet.topDictIndex.append(topDict)
@@ -534,10 +534,10 @@ class FontBuilder(object):
 
         private = fdArray[0].Private
         charStrings = CharStrings(None, None, globalSubrs, private, fdSelect, fdArray)
-        for glypnName, charString in charStringsDict.items():
+        for glyphName, charString in charStringsDict.items():
             charString.private = private
             charString.globalSubrs = globalSubrs
-            charStrings[glypnName] = charString
+            charStrings[glyphName] = charString
         topDict.CharStrings = charStrings
 
         fontSet.topDictIndex.append(topDict)
