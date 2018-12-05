@@ -491,6 +491,83 @@ class FontBuilder(object):
         self.font["CFF "] = newTable("CFF ")
         self.font["CFF "].cff = fontSet
 
+    def setupCFF2(self, charStringsDict, fdArrayList=None, regions=None):
+        from .cffLib import CFFFontSet, TopDictIndex, TopDict, CharStrings, \
+                GlobalSubrsIndex, PrivateDict, FDArrayIndex, FontDict
+
+        assert not self.isTTF
+        self.font.sfntVersion = "OTTO"
+        fontSet = CFFFontSet()
+        fontSet.major = 2
+        fontSet.minor = 0
+
+        cff2GetGlyphOrder = self.font.getGlyphOrder
+        fontSet.topDictIndex = TopDictIndex(None, cff2GetGlyphOrder, None)
+
+        globalSubrs = GlobalSubrsIndex()
+        fontSet.GlobalSubrs = globalSubrs
+
+        if fdArrayList is None:
+            fdArrayList = [{}]
+        fdSelect = None
+        fdArray = FDArrayIndex()
+        fdArray.strings = None
+        fdArray.GlobalSubrs = globalSubrs
+        for privateDict in fdArrayList:
+            fontDict = FontDict()
+            fontDict.setCFF2(True)
+            private = PrivateDict()
+            for key, value in privateDict.items():
+                setattr(private, key, value)
+            fontDict.Private = private
+            fdArray.append(fontDict)
+
+        topDict = TopDict()
+        topDict.cff2GetGlyphOrder = cff2GetGlyphOrder
+        topDict.FDArray = fdArray
+        scale = 1 / self.font["head"].unitsPerEm
+        topDict.FontMatrix = [scale, 0, 0, scale, 0, 0]
+
+        private = fdArray[0].Private
+        charStrings = CharStrings(None, None, globalSubrs, private, fdSelect, fdArray)
+        for glypnName, charString in charStringsDict.items():
+            charString.private = private
+            charString.globalSubrs = globalSubrs
+            charStrings[glypnName] = charString
+        topDict.CharStrings = charStrings
+
+        fontSet.topDictIndex.append(topDict)
+
+        self.font["CFF2"] = newTable("CFF2")
+        self.font["CFF2"].cff = fontSet
+
+        if regions:
+            self.setupCFF2Regions(regions)
+
+    def setupCFF2Regions(self, regions):
+        from .ttLib.tables import otTables as ot
+        from .varLib.builder import buildVarStore, buildVarRegionAxis, buildVarData
+        from .cffLib import VarStoreData
+
+        assert "fvar" in self.font, "fvar must to be set up first"
+        assert "CFF2" in self.font, "CFF2 must to be set up first"
+        axisTags = [a.axisTag for a in self.font["fvar"].axes]
+        varRegionList = ot.VarRegionList()
+        varRegionList.RegionAxisCount = len(regions)
+        varRegionList.Region = []
+        for regionDict in regions:
+            region = ot.VarRegion()
+            region.VarRegionAxis = []
+            for tag in axisTags:
+                axisSupport = regionDict.get(tag, (0, 0, 0))
+                region.VarRegionAxis.append(buildVarRegionAxis(axisSupport))
+            region.VarRegionAxisCount = len(region.VarRegionAxis)
+            varRegionList.Region.append(region)
+        varData = buildVarData(list(range(len(regions))), None, optimize=False)
+        varStore = buildVarStore(varRegionList, [varData])
+        vstore = VarStoreData(otVarStore=varStore)
+        self.font["CFF2"].cff.topDictIndex[0].VarStore = vstore
+
     def setupGlyf(self, glyphs, calcGlyphBounds=True):
         """Create the `glyf` table from a dict, that maps glyph names
         to `fontTools.ttLib.tables._g_l_y_f.Glyph` objects, for example
