@@ -455,9 +455,10 @@ class FontBuilder(object):
             self.font["OS/2"].recalcUnicodeRanges(self.font)
 
     def setupCFF(self, psName, fontInfo, charStringsDict, privateDict):
-        assert not self.isTTF
         from .cffLib import CFFFontSet, TopDictIndex, TopDict, CharStrings, \
                 GlobalSubrsIndex, PrivateDict
+
+        assert not self.isTTF
         self.font.sfntVersion = "OTTO"
         fontSet = CFFFontSet()
         fontSet.major = 1
