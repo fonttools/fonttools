@@ -47,7 +47,7 @@
     <reserved2 value="0"/>
     <reserved3 value="0"/>
     <metricDataFormat value="0"/>
-    <numberOfHMetrics value="4"/>
+    <numberOfHMetrics value="1"/>
   </hhea>
 
   <maxp>
@@ -59,7 +59,7 @@
     <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
          will be recalculated by the compiler -->
     <version value="3"/>
-    <xAvgCharWidth value="650"/>
+    <xAvgCharWidth value="600"/>
     <usWeightClass value="400"/>
     <usWidthClass value="5"/>
     <fsType value="00000000 00000100"/>
@@ -111,7 +111,7 @@
   <hmtx>
     <mtx name=".notdef" width="600" lsb="0"/>
     <mtx name="A" width="600" lsb="0"/>
-    <mtx name="a" width="800" lsb="0"/>
+    <mtx name="a" width="600" lsb="0"/>
     <mtx name="glyph00001" width="600" lsb="0"/>
   </hmtx>
 

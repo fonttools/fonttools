@@ -37,8 +37,8 @@ def drawTestGlyph(pen):
     pen.closePath()
 
 
-def _setupFontBuilder(isTTF):
-    fb = FontBuilder(1024, isTTF=isTTF)
+def _setupFontBuilder(isTTF, unitsPerEm=1024):
+    fb = FontBuilder(unitsPerEm, isTTF=isTTF)
     fb.setupGlyphOrder([".notdef", ".null", "A", "a"])
     fb.setupCharacterMap({65: "A", 97: "a"})
 
@@ -190,17 +190,8 @@ def test_build_var(tmpdir):
 def test_build_cff2(tmpdir):
     outPath = os.path.join(str(tmpdir), "test_var.otf")
 
-    fb = FontBuilder(1000, isTTF=False)
-    fb.setupGlyphOrder([".notdef", ".null", "A", "a"])
-    fb.setupCharacterMap({65: "A", 97: "a"})
+    fb, advanceWidths, nameStrings = _setupFontBuilder(False, 1000)
 
-    advanceWidths = {".notdef": 600, "A": 600, "a": 800, ".null": 600}
-
-    familyName = "HelloTestFont"
-    styleName = "TotallyNormal"
-    nameStrings = dict(familyName=dict(en="HelloTestFont", nl="HalloTestFont"),
-                       styleName=dict(en="TotallyNormal", nl="TotaalNormaal"))
-    nameStrings['psName'] = familyName + "-" + styleName
     fb.setupNameTable(nameStrings)
 
     axes = [
