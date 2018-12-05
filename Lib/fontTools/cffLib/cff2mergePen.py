@@ -1,5 +1,5 @@
 from __future__ import print_function, division, absolute_import
-from fontTools.misc.psCharStrings import CFF2Subr
+from fontTools.misc.psCharStrings import T2CharString
 from fontTools.pens.t2CharStringPen import T2CharStringPen, t2c_round
 from fontTools.cffLib.specializer import (commandsToProgram,
 										  specializeCommands)
@@ -242,6 +242,6 @@ class CFF2CharStringMergePen(T2CharStringPen):
 										  maxstack=maxStackLimit)
 		program = self.mergeCommandsToProgram(commands, var_model=var_model,
 									round_func=self.roundNumber)
-		charString = CFF2Subr(program=program, private=private,
+		charString = T2CharString(program=program, private=private,
 							  globalSubrs=globalSubrs)
 		return charString

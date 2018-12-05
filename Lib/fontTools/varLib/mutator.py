@@ -224,7 +224,7 @@ def instantiateVariableFont(varfont, location, inplace=False):
 		vsInstancer = VarStoreInstancer(topDict.VarStore.otVarStore, fvar.axes, loc)
 		interpolateFromDeltas = vsInstancer.interpolateFromDeltas
 		interpolate_cff2_PrivateDict(topDict, interpolateFromDeltas)
-		CFF2.desubroutinize(varfont)
+		CFF2.desubroutinize()
 		interpolate_cff2_charstrings(topDict, interpolateFromDeltas, glyphOrder)
 		interpolate_cff2_metrics(varfont, topDict, glyphOrder, loc)
 		del topDict.rawDict['VarStore']
