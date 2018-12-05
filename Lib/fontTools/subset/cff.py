@@ -186,10 +186,11 @@ def drop_hints(self):
 
 class _MarkingT2Decompiler(psCharStrings.SimpleT2Decompiler):
 
-	def __init__(self, localSubrs, globalSubrs):
+	def __init__(self, localSubrs, globalSubrs, private):
 		psCharStrings.SimpleT2Decompiler.__init__(self,
 							  localSubrs,
-							  globalSubrs)
+							  globalSubrs,
+							  private)
 		for subrs in [localSubrs, globalSubrs]:
 			if subrs and not hasattr(subrs, "_used"):
 				subrs._used = set()
@@ -229,10 +230,11 @@ class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
 			self.deletions = []
 		pass
 
-	def __init__(self, css, localSubrs, globalSubrs, nominalWidthX, defaultWidthX):
+	def __init__(self, css, localSubrs, globalSubrs, nominalWidthX, defaultWidthX, private=None):
 		self._css = css
 		psCharStrings.T2WidthExtractor.__init__(
 			self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX)
+		self.private = private
 
 	def execute(self, charString):
 		old_hints = charString._hints if hasattr(charString, '_hints') else None
@@ -363,7 +365,7 @@ class _DesubroutinizingT2Decompiler(psCharStrings.SimpleT2Decompiler):
 			if expansion[-1] == 'return':
 				expansion = expansion[:-1]
 			desubroutinized[idx-2:idx] = expansion
-		if not charString.isCFF2:
+		if not self.private.in_cff2:
 			if 'endchar' in desubroutinized:
 				# Cut off after first endchar
 				desubroutinized = desubroutinized[:desubroutinized.index('endchar') + 1]
@@ -390,7 +392,7 @@ class _DesubroutinizingT2Decompiler(psCharStrings.SimpleT2Decompiler):
 
 
 @_add_method(ttLib.getTableClass('CFF '))
-def prune_post_subset(self, font, options):
+def prune_post_subset(self, ttfFont, options):
 	cff = self.cff
 	for fontname in cff.keys():
 		font = cff[fontname]
@@ -405,75 +407,125 @@ def prune_post_subset(self, font, options):
 			arr.items = [arr[i] for i in indices]
 			del arr.file, arr.offsets
 
-		# Desubroutinize if asked for
-		if options.desubroutinize:
-			for g in font.charset:
-				c, _ = cs.getItemAndSelector(g)
-				c.decompile()
-				subrs = getattr(c.private, "Subrs", [])
-				decompiler = _DesubroutinizingT2Decompiler(subrs, c.globalSubrs)
-				decompiler.execute(c)
-				c.program = c._desubroutinized
-				del c._desubroutinized
+	# Desubroutinize if asked for
+	if options.desubroutinize:
+		self.desubroutinize()
+	else:
+		for fontname in cff.keys():
+			font = cff[fontname]
+			self.remove_unused_subroutines()
 
-		# Drop hints if not needed
-		if not options.hinting:
+	# Drop hints if not needed
+	if not options.hinting:
+		self.remove_hints()
 
-			# This can be tricky, but doesn't have to. What we do is:
-			#
-			# - Run all used glyph charstrings and recurse into subroutines,
-			# - For each charstring (including subroutines), if it has any
-			#   of the hint stem operators, we mark it as such.
-			#   Upon returning, for each charstring we note all the
-			#   subroutine calls it makes that (recursively) contain a stem,
-			# - Dropping hinting then consists of the following two ops:
-			#   * Drop the piece of the program in each charstring before the
-			#     last call to a stem op or a stem-calling subroutine,
-			#   * Drop all hintmask operations.
-			# - It's trickier... A hintmask right after hints and a few numbers
-			#    will act as an implicit vstemhm. As such, we track whether
-			#    we have seen any non-hint operators so far and do the right
-			#    thing, recursively... Good luck understanding that :(
-			css = set()
-			for g in font.charset:
-				c, _ = cs.getItemAndSelector(g)
-				c.decompile()
-				subrs = getattr(c.private, "Subrs", [])
-				decompiler = _DehintingT2Decompiler(css, subrs, c.globalSubrs,
-								    c.private.nominalWidthX,
-								    c.private.defaultWidthX)
-				decompiler.execute(c)
-				c.width = decompiler.width
-			for charstring in css:
-				charstring.drop_hints()
-			del css
 
-			# Drop font-wide hinting values
-			all_privs = []
-			if hasattr(font, 'FDSelect'):
-				all_privs.extend(fd.Private for fd in font.FDArray)
-			else:
-				all_privs.append(font.Private)
-			for priv in all_privs:
-				for k in ['BlueValues', 'OtherBlues',
-					  'FamilyBlues', 'FamilyOtherBlues',
-					  'BlueScale', 'BlueShift', 'BlueFuzz',
-					  'StemSnapH', 'StemSnapV', 'StdHW', 'StdVW',
-					  'ForceBold', 'LanguageGroup', 'ExpansionFactor']:
-					if hasattr(priv, k):
-						setattr(priv, k, None)
+	return True
 
+
+def _delete_empty_subrs(private_dict):
+	if hasattr(private_dict, 'Subrs') and not private_dict.Subrs:
+		if 'Subrs' in private_dict.rawDict:
+			del private_dict.rawDict['Subrs']
+		del private_dict.Subrs
+
+@_add_method(ttLib.getTableClass('CFF '))
+def desubroutinize(self):
+	cff = self.cff
+	for fontname in cff.keys():
+		font = cff[fontname]
+		cs = font.CharStrings
+		for g in font.charset:
+			c, _ = cs.getItemAndSelector(g)
+			c.decompile()
+			subrs = getattr(c.private, "Subrs", [])
+			decompiler = _DesubroutinizingT2Decompiler(subrs, c.globalSubrs, c.private)
+			decompiler.execute(c)
+			c.program = c._desubroutinized
+			del c._desubroutinized
+		# Delete All the Subrs!!!
+		if font.GlobalSubrs:
+			del font.GlobalSubrs
+		if hasattr(font, 'FDArray'):
+			for fd in font.FDArray:
+				pd = fd.Private
+				if hasattr(pd, 'Subrs'):
+					del pd.Subrs
+				if 'Subrs' in pd.rawDict:
+					del pd.rawDict['Subrs']
+	self.remove_unused_subroutines()
+
+
+@_add_method(ttLib.getTableClass('CFF '))
+def remove_hints(self):
+	cff = self.cff
+	for fontname in cff.keys():
+		font = cff[fontname]
+		cs = font.CharStrings
+		# This can be tricky, but doesn't have to. What we do is:
+		#
+		# - Run all used glyph charstrings and recurse into subroutines,
+		# - For each charstring (including subroutines), if it has any
+		#   of the hint stem operators, we mark it as such.
+		#   Upon returning, for each charstring we note all the
+		#   subroutine calls it makes that (recursively) contain a stem,
+		# - Dropping hinting then consists of the following two ops:
+		#   * Drop the piece of the program in each charstring before the
+		#     last call to a stem op or a stem-calling subroutine,
+		#   * Drop all hintmask operations.
+		# - It's trickier... A hintmask right after hints and a few numbers
+		#    will act as an implicit vstemhm. As such, we track whether
+		#    we have seen any non-hint operators so far and do the right
+		#    thing, recursively... Good luck understanding that :(
+		css = set()
+		for g in font.charset:
+			c, _ = cs.getItemAndSelector(g)
+			c.decompile()
+			subrs = getattr(c.private, "Subrs", [])
+			decompiler = _DehintingT2Decompiler(css, subrs, c.globalSubrs,
+								c.private.nominalWidthX,
+								c.private.defaultWidthX,
+								c.private)
+			decompiler.execute(c)
+			c.width = decompiler.width
+		for charstring in css:
+			charstring.drop_hints()
+		del css
+		
+		# Drop font-wide hinting values
+		all_privs = []
+		if hasattr(font, 'FDArray'):
+			all_privs.extend(fd.Private for fd in font.FDArray)
+		else:
+			all_privs.append(font.Private)
+		for priv in all_privs:
+			for k in ['BlueValues', 'OtherBlues',
+				  'FamilyBlues', 'FamilyOtherBlues',
+				  'BlueScale', 'BlueShift', 'BlueFuzz',
+				  'StemSnapH', 'StemSnapV', 'StdHW', 'StdVW',
+				  'ForceBold', 'LanguageGroup', 'ExpansionFactor']:
+				if hasattr(priv, k):
+					setattr(priv, k, None)
+	self.remove_unused_subroutines()
+
+
+@_add_method(ttLib.getTableClass('CFF '))
+def remove_unused_subroutines(self):
+	cff = self.cff
+	for fontname in cff.keys():
+		font = cff[fontname]
+		cs = font.CharStrings
 		# Renumber subroutines to remove unused ones
 
 		# Mark all used subroutines
 		for g in font.charset:
 			c, _ = cs.getItemAndSelector(g)
 			subrs = getattr(c.private, "Subrs", [])
-			decompiler = _MarkingT2Decompiler(subrs, c.globalSubrs)
+			decompiler = _MarkingT2Decompiler(subrs, c.globalSubrs, c.private)
 			decompiler.execute(c)
 
 		all_subrs = [font.GlobalSubrs]
-		if hasattr(font, 'FDSelect'):
+		if hasattr(font, 'FDArray'):
 			all_subrs.extend(fd.Private.Subrs for fd in font.FDArray if hasattr(fd.Private, 'Subrs') and fd.Private.Subrs)
 		elif hasattr(font.Private, 'Subrs') and font.Private.Subrs:
 			all_subrs.append(font.Private.Subrs)
@@ -497,7 +549,7 @@ def prune_post_subset(self, font, options):
 		# Renumber subroutines themselves
 		for subrs in all_subrs:
 			if subrs == font.GlobalSubrs:
-				if not hasattr(font, 'FDSelect') and hasattr(font.Private, 'Subrs'):
+				if not hasattr(font, 'FDArray') and hasattr(font.Private, 'Subrs'):
 					local_subrs = font.Private.Subrs
 				else:
 					local_subrs = []
@@ -514,7 +566,7 @@ def prune_post_subset(self, font, options):
 				subr.subset_subroutines (local_subrs, font.GlobalSubrs)
 
 		# Delete local SubrsIndex if empty
-		if hasattr(font, 'FDSelect'):
+		if hasattr(font, 'FDArray'):
 			for fd in font.FDArray:
 				_delete_empty_subrs(fd.Private)
 		else:
@@ -524,36 +576,3 @@ def prune_post_subset(self, font, options):
 		for subrs in all_subrs:
 			del subrs._used, subrs._old_bias, subrs._new_bias
 
-	return True
-
-
-def _delete_empty_subrs(private_dict):
-	if hasattr(private_dict, 'Subrs') and not private_dict.Subrs:
-		if 'Subrs' in private_dict.rawDict:
-			del private_dict.rawDict['Subrs']
-		del private_dict.Subrs
-
-@_add_method(ttLib.getTableClass('CFF2'))
-def desubroutinize(self, font):
-	cff = self.cff
-	for fontname in cff.keys():
-		font = cff[fontname]
-		cs = font.CharStrings
-		for g in font.charset:
-			c, _ = cs.getItemAndSelector(g)
-			c.decompile()
-			subrs = getattr(c.private, "Subrs", [])
-			decompiler = _DesubroutinizingT2Decompiler(subrs, c.globalSubrs, c.private)
-			decompiler.execute(c)
-			c.program = c._desubroutinized
-			del c._desubroutinized
-		# Delete All the Subrs!!!
-		if font.GlobalSubrs:
-			del font.GlobalSubrs
-		if hasattr(font, 'FDArray'):
-			for fd in font.FDArray:
-				pd = fd.Private
-				if hasattr(pd, 'Subrs'):
-					del pd.Subrs
-				if 'Subrs' in pd.rawDict:
-					del pd.rawDict['Subrs']

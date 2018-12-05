@@ -267,22 +267,6 @@ class SimpleT2Decompiler(object):
 		self.hintMaskBytes = 0
 		self.numRegions = 0
 
-	def check_program(self, program):
-		if not hasattr(self, 'private') or self.private is None:
-			# Type 1 charstrings don't have self.private.
-			# Type2 CFF charstrings may have self.private == None.
-			# In both cases, they are not CFF2 charstrings
-			isCFF2 = False
-		else:
-			isCFF2 = self.private._isCFF2
-		if isCFF2:
-			if program:
-				assert program[-1] not in ("seac",), "illegal CharString Terminator"
-		else:
-			assert program, "illegal CharString: decompiled to empty program"
-			assert program[-1] in ("endchar", "return", "callsubr", "callgsubr",
-					"seac"), "illegal CharString"
-
 	def execute(self, charString):
 		self.callingStack.append(charString)
 		needsDecompilation = charString.needsDecompilation()
@@ -311,7 +295,6 @@ class SimpleT2Decompiler(object):
 			else:
 				pushToStack(token)
 		if needsDecompilation:
-			self.check_program(program)
 			charString.setProgram(program)
 		del self.callingStack[-1]
 
@@ -947,7 +930,6 @@ class T2CharString(object):
 	operators, opcodes = buildOperatorDict(t2Operators)
 	decompilerClass = SimpleT2Decompiler
 	outlineExtractor = T2OutlineExtractor
-	isCFF2 = False
 
 	def __init__(self, bytecode=None, program=None, private=None, globalSubrs=None):
 		if program is None:
@@ -988,20 +970,11 @@ class T2CharString(object):
 		self.draw(boundsPen)
 		return boundsPen.bounds
 
-	def check_program(self, program, isCFF2=False):
-		if isCFF2:
-			if self.program:
-				assert self.program[-1] not in ("seac",), "illegal CFF2 CharString Termination"
-		else:
-			assert self.program, "illegal CharString: decompiled to empty program"
-			assert self.program[-1] in ("endchar", "return", "callsubr", "callgsubr", "seac"), ("illegal CharString ending: %s" % self.program[-1])
-
 	def compile(self, isCFF2=False):
 		if self.bytecode is not None:
 			return
 		opcodes = self.opcodes
 		program = self.program
-		self.check_program(program, isCFF2=isCFF2)
 		bytecode = []
 		encodeInt = self.getIntEncoder()
 		encodeFixed = self.getFixedEncoder()
@@ -1147,16 +1120,6 @@ class T2CharString(object):
 			else:
 				program.append(token)
 		self.setProgram(program)
-
-class CFF2Subr(T2CharString):
-	isCFF2 = True
-
-	def draw(self, pen):
-		subrs = getattr(self.private, "Subrs", [])
-		extractor = self.outlineExtractor(pen, subrs, self.globalSubrs,
-				0, 0)
-		extractor.execute(self)
-		self.width = 0
 
 class T1CharString(T2CharString):
 
