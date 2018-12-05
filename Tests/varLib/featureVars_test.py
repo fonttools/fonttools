@@ -27,6 +27,70 @@ def test_quadratic(n = 10):
     assert len(overlaps) == n * (n + 1) // 2, overlaps
     return conds, overlaps
 
+def _merge_substitutions(substitutions):
+    merged = {}
+    for subst in substitutions:
+        merged.update(subst)
+    return merged
+
+def _match_condition(location, overlaps):
+    for box, substitutions in overlaps:
+        for tag, coord in location.items():
+            start, end = box[tag]
+            if start <= coord <= end:
+                return _merge_substitutions(substitutions)
+    return {}  # no match
+
+def test_overlaps_1():
+    # https://github.com/fonttools/fonttools/issues/1400
+    conds = [
+        ([{'abcd': (4, 9)}], {0: 0}),
+        ([{'abcd': (5, 10)}], {1: 1}),
+        ([{'abcd': (0, 8)}], {2: 2}),
+        ([{'abcd': (3, 7)}], {3: 3}),
+    ]
+    overlaps = overlayFeatureVariations(conds)
+    subst = _match_condition({'abcd': 0}, overlaps)
+    assert subst == {2: 2}
+    subst = _match_condition({'abcd': 1}, overlaps)
+    assert subst == {2: 2}
+    subst = _match_condition({'abcd': 3}, overlaps)
+    assert subst == {2: 2, 3: 3}
+    subst = _match_condition({'abcd': 4}, overlaps)
+    assert subst == {0: 0, 2: 2, 3: 3}
+    subst = _match_condition({'abcd': 5}, overlaps)
+    assert subst == {0: 0, 1: 1, 2: 2, 3: 3}
+    subst = _match_condition({'abcd': 7}, overlaps)
+    assert subst == {0: 0, 1: 1, 2: 2, 3: 3}
+    subst = _match_condition({'abcd': 8}, overlaps)
+    assert subst == {0: 0, 1: 1, 2: 2}
+    subst = _match_condition({'abcd': 9}, overlaps)
+    assert subst == {0: 0, 1: 1}
+    subst = _match_condition({'abcd': 10}, overlaps)
+    assert subst == {1: 1}
+
+def test_overlaps_2():
+    # https://github.com/fonttools/fonttools/issues/1400
+    conds = [
+        ([{'abcd': (1, 9)}], {0: 0}),
+        ([{'abcd': (8, 10)}], {1: 1}),
+        ([{'abcd': (3, 4)}], {2: 2}),
+        ([{'abcd': (1, 10)}], {3: 3}),
+    ]
+    overlaps = overlayFeatureVariations(conds)
+    subst = _match_condition({'abcd': 0}, overlaps)
+    assert subst == {}
+    subst = _match_condition({'abcd': 1}, overlaps)
+    assert subst == {0: 0, 3: 3}
+    subst = _match_condition({'abcd': 2}, overlaps)
+    assert subst == {0: 0, 3: 3}
+    subst = _match_condition({'abcd': 3}, overlaps)
+    assert subst == {0: 0, 2: 2, 3: 3}
+    subst = _match_condition({'abcd': 5}, overlaps)
+    assert subst == {0: 0, 3: 3}
+    subst = _match_condition({'abcd': 10}, overlaps)
+    assert subst == {1: 1, 3: 3}
+
 
 def run(test, n, quiet):
 
