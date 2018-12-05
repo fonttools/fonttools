@@ -159,7 +159,7 @@ def bitRepr(value, bits):
 	return s
 
 
-_mnemonicPat = re.compile("[A-Z][A-Z0-9]*$")
+_mnemonicPat = re.compile(r"[A-Z][A-Z0-9]*$")
 
 def _makeDict(instructionList):
 	opcodeDict = {}
@@ -195,8 +195,8 @@ _whiteRE = re.compile(r"\s*")
 
 _pushCountPat = re.compile(r"[A-Z][A-Z0-9]*\s*\[.*?\]\s*/\* ([0-9]+).*?\*/")
 
-_indentRE = re.compile("^FDEF|IF|ELSE\[ \]\t.+")
-_unindentRE = re.compile("^ELSE|ENDF|EIF\[ \]\t.+")
+_indentRE = re.compile(r"^FDEF|IF|ELSE\[ \]\t.+")
+_unindentRE = re.compile(r"^ELSE|ENDF|EIF\[ \]\t.+")
 
 def _skipWhite(data, pos):
 	m = _whiteRE.match(data, pos)
