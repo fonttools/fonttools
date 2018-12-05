@@ -478,6 +478,9 @@ class FontBuilder(object):
         topDict.Private = private
         for key, value in fontInfo.items():
             setattr(topDict, key, value)
+        if "FontMatrix" not in fontInfo:
+            scale = 1 / self.font["head"].unitsPerEm
+            topDict.FontMatrix = [scale, 0, 0, scale, 0, 0]
 
         charStrings = CharStrings(None, topDict.charset, globalSubrs, private, fdSelect, fdArray)
         for glypnName, charString in charStringsDict.items():
