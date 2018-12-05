@@ -216,7 +216,7 @@ def test_build_cff2(tmpdir):
     charStringVariable = T2CharString(program=program)
 
     charStrings = {".notdef": charString, "A": charString, "a": charStringVariable, ".null": charString}
-    fb.setupCFF2(charStrings, [{}], regions=[{"TEST": (0, 1, 1)}])
+    fb.setupCFF2(charStrings, regions=[{"TEST": (0, 1, 1)}])
 
     metrics = {gn: (advanceWidth, 0) for gn, advanceWidth in advanceWidths.items()}
     fb.setupHorizontalMetrics(metrics)
