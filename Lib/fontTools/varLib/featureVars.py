@@ -187,7 +187,8 @@ def overlayBox(top, bot):
     # Remainder is empty if bot's each axis range lies within that of intersection.
     #
     # Remainder is shrank if bot's each, except for exactly one, axis range lies
-    # within that of intersection.
+    # within that of intersection, and that one axis, it spills out of the
+    # intersection only on one side.
     #
     # Bot is returned in full as remainder otherwise, as true remainder is not
     # representable as a single box.
@@ -198,11 +199,11 @@ def overlayBox(top, bot):
     for axisTag in bot:
         if axisTag not in intersection:
             fullyInside = False
-            continue # Lies fully within
+            continue # Axis range lies fully within
         min1, max1 = intersection[axisTag]
         min2, max2 = bot[axisTag]
         if min1 <= min2 and max2 <= max1:
-            continue # Lies fully within
+            continue # Axis range lies fully within
 
         # Bot's range doesn't fully lie within that of top's for this axis.
         # We know they intersect, so it cannot lie fully without either; so they
@@ -216,11 +217,11 @@ def overlayBox(top, bot):
         fullyInside = False
 
         # Otherwise, cut remainder on this axis and continue.
-        if max1 < max2:
+        if min1 <= min2:
             # Right side survives.
             minimum = max(max1, min2)
             maximum = max2
-        elif min2 < min1:
+        elif max2 <= max1:
             # Left side survives.
             minimum = min2
             maximum = min(min1, max2)
