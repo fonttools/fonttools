@@ -53,6 +53,15 @@ def _setupFontBuilder(isTTF):
     return fb, advanceWidths, nameStrings
 
 
+def _verifyOutput(outPath):
+    f = TTFont(outPath)
+    f.saveXML(outPath + ".ttx")
+    with open(outPath + ".ttx") as f:
+        testData = strip_VariableItems(f.read())
+    refData = strip_VariableItems(getTestData(os.path.basename(outPath) + ".ttx"))
+    assert refData == testData
+
+
 def test_build_ttf(tmpdir):
     outPath = os.path.join(str(tmpdir), "test.ttf")
 
@@ -77,12 +86,7 @@ def test_build_ttf(tmpdir):
 
     fb.save(outPath)
 
-    f = TTFont(outPath)
-    f.saveXML(outPath + ".ttx")
-    with open(outPath + ".ttx") as f:
-        testData = strip_VariableItems(f.read())
-    refData = strip_VariableItems(getTestData("test.ttf.ttx"))
-    assert refData == testData
+    _verifyOutput(outPath)
 
 
 def test_build_otf(tmpdir):
@@ -108,12 +112,7 @@ def test_build_otf(tmpdir):
 
     fb.save(outPath)
 
-    f = TTFont(outPath)
-    f.saveXML(outPath + ".ttx")
-    with open(outPath + ".ttx") as f:
-        testData = strip_VariableItems(f.read())
-    refData = strip_VariableItems(getTestData("test.otf.ttx"))
-    assert refData == testData
+    _verifyOutput(outPath)
 
 
 def test_build_var(tmpdir):
@@ -185,12 +184,7 @@ def test_build_var(tmpdir):
 
     fb.save(outPath)
 
-    f = TTFont(outPath)
-    f.saveXML(outPath + ".ttx")
-    with open(outPath + ".ttx") as f:
-        testData = strip_VariableItems(f.read())
-    refData = strip_VariableItems(getTestData("test_var.ttf.ttx"))
-    assert refData == testData
+    _verifyOutput(outPath)
 
 
 def test_build_cff2(tmpdir):
@@ -242,9 +236,4 @@ def test_build_cff2(tmpdir):
 
     fb.save(outPath)
 
-    f = TTFont(outPath)
-    f.saveXML(outPath + ".ttx")
-    with open(outPath + ".ttx") as f:
-        testData = strip_VariableItems(f.read())
-    refData = strip_VariableItems(getTestData("test_var.otf.ttx"))
-    assert refData == testData
+    _verifyOutput(outPath)
