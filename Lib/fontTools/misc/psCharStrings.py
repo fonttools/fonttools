@@ -407,7 +407,7 @@ class SimpleT2Decompiler(object):
 		numBlends = self.pop()
 		numOps = numBlends * (self.numRegions + 1)
 		blendArgs = self.operandStack[-numOps:]
-		del self.operandStack[:-(numOps-numBlends)] # Leave the default operands on the stack.
+		del self.operandStack[-(numOps-numBlends):] # Leave the default operands on the stack.
 
 	def op_vsindex(self, index):
 		vi = self.pop()
@@ -446,8 +446,8 @@ t1Operators = [
 
 class T2WidthExtractor(SimpleT2Decompiler):
 
-	def __init__(self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX):
-		SimpleT2Decompiler.__init__(self, localSubrs, globalSubrs)
+	def __init__(self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX, private=None):
+		SimpleT2Decompiler.__init__(self, localSubrs, globalSubrs, private)
 		self.nominalWidthX = nominalWidthX
 		self.defaultWidthX = defaultWidthX
 
@@ -486,9 +486,9 @@ class T2WidthExtractor(SimpleT2Decompiler):
 
 class T2OutlineExtractor(T2WidthExtractor):
 
-	def __init__(self, pen, localSubrs, globalSubrs, nominalWidthX, defaultWidthX):
+	def __init__(self, pen, localSubrs, globalSubrs, nominalWidthX, defaultWidthX, private=None):
 		T2WidthExtractor.__init__(
-			self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX)
+			self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX, private)
 		self.pen = pen
 
 	def reset(self):
@@ -687,12 +687,6 @@ class T2OutlineExtractor(T2WidthExtractor):
 			dy6 = d6
 		self.rCurveTo((dx1, dy1), (dx2, dy2), (dx3, dy3))
 		self.rCurveTo((dx4, dy4), (dx5, dy5), (dx6, dy6))
-
-	#
-	# MultipleMaster. Well...
-	#
-	def op_blend(self, index):
-		self.popall()
 
 	# misc
 	def op_and(self, index):
@@ -961,7 +955,8 @@ class T2CharString(object):
 	def draw(self, pen):
 		subrs = getattr(self.private, "Subrs", [])
 		extractor = self.outlineExtractor(pen, subrs, self.globalSubrs,
-				self.private.nominalWidthX, self.private.defaultWidthX)
+				self.private.nominalWidthX, self.private.defaultWidthX,
+				self.private)
 		extractor.execute(self)
 		self.width = extractor.width
 
