@@ -549,24 +549,13 @@ class FontBuilder(object):
             self.setupCFF2Regions(regions)
 
     def setupCFF2Regions(self, regions):
-        from .ttLib.tables import otTables as ot
-        from .varLib.builder import buildVarStore, buildVarRegionAxis, buildVarData
+        from .varLib.builder import buildVarRegionList, buildVarData, buildVarStore
         from .cffLib import VarStoreData
 
         assert "fvar" in self.font, "fvar must to be set up first"
         assert "CFF2" in self.font, "CFF2 must to be set up first"
         axisTags = [a.axisTag for a in self.font["fvar"].axes]
-        varRegionList = ot.VarRegionList()
-        varRegionList.RegionAxisCount = len(regions)
-        varRegionList.Region = []
-        for regionDict in regions:
-            region = ot.VarRegion()
-            region.VarRegionAxis = []
-            for tag in axisTags:
-                axisSupport = regionDict.get(tag, (0, 0, 0))
-                region.VarRegionAxis.append(buildVarRegionAxis(axisSupport))
-            region.VarRegionAxisCount = len(region.VarRegionAxis)
-            varRegionList.Region.append(region)
+        varRegionList = buildVarRegionList(regions, axisTags)
         varData = buildVarData(list(range(len(regions))), None, optimize=False)
         varStore = buildVarStore(varRegionList, [varData])
         vstore = VarStoreData(otVarStore=varStore)
