@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="OTTO" ttLibVersion="3.31">
+<ttFont sfntVersion="OTTO" ttLibVersion="3.33">
 
   <GlyphOrder>
     <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
     <GlyphID id="0" name=".notdef"/>
-    <GlyphID id="1" name=".null"/>
+    <GlyphID id="1" name="glyph00001"/>
     <GlyphID id="2" name="A"/>
     <GlyphID id="3" name="a"/>
   </GlyphOrder>
@@ -13,16 +13,16 @@
     <!-- Most of this table will be recalculated by the compiler -->
     <tableVersion value="1.0"/>
     <fontRevision value="1.0"/>
-    <checkSumAdjustment value="0x9198bee"/>
+    <checkSumAdjustment value="0xed07360f"/>
     <magicNumber value="0x5f0f3cf5"/>
     <flags value="00000000 00000011"/>
-    <unitsPerEm value="1024"/>
-    <created value="Wed Oct 31 19:40:57 2018"/>
-    <modified value="Wed Oct 31 19:40:57 2018"/>
-    <xMin value="100"/>
-    <yMin value="100"/>
-    <xMax value="500"/>
-    <yMax value="1000"/>
+    <unitsPerEm value="1000"/>
+    <created value="Wed Dec  5 11:55:26 2018"/>
+    <modified value="Wed Dec  5 11:55:26 2018"/>
+    <xMin value="0"/>
+    <yMin value="0"/>
+    <xMax value="0"/>
+    <yMax value="0"/>
     <macStyle value="00000000 00000000"/>
     <lowestRecPPEM value="3"/>
     <fontDirectionHint value="2"/>
@@ -35,10 +35,10 @@
     <ascent value="824"/>
     <descent value="200"/>
     <lineGap value="0"/>
-    <advanceWidthMax value="600"/>
-    <minLeftSideBearing value="100"/>
-    <minRightSideBearing value="100"/>
-    <xMaxExtent value="500"/>
+    <advanceWidthMax value="0"/>
+    <minLeftSideBearing value="0"/>
+    <minRightSideBearing value="0"/>
+    <xMaxExtent value="0"/>
     <caretSlopeRise value="1"/>
     <caretSlopeRun value="0"/>
     <caretOffset value="0"/>
@@ -94,11 +94,11 @@
     <fsSelection value="00000000 00000000"/>
     <usFirstCharIndex value="65"/>
     <usLastCharIndex value="97"/>
-    <sTypoAscender value="0"/>
-    <sTypoDescender value="0"/>
+    <sTypoAscender value="825"/>
+    <sTypoDescender value="200"/>
     <sTypoLineGap value="0"/>
-    <usWinAscent value="0"/>
-    <usWinDescent value="0"/>
+    <usWinAscent value="824"/>
+    <usWinDescent value="200"/>
     <ulCodePageRange1 value="00000000 00000000 00000000 00000000"/>
     <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
     <sxHeight value="0"/>
@@ -108,23 +108,12 @@
     <usMaxContext value="2"/>
   </OS_2>
 
-  <name>
-    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
-      HelloTestFont
-    </namerecord>
-    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
-      TotallyNormal
-    </namerecord>
-    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
-      HelloTestFont-TotallyNormal
-    </namerecord>
-    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x413">
-      HalloTestFont
-    </namerecord>
-    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x413">
-      TotaalNormaal
-    </namerecord>
-  </name>
+  <hmtx>
+    <mtx name=".notdef" width="600" lsb="0"/>
+    <mtx name="A" width="600" lsb="0"/>
+    <mtx name="a" width="600" lsb="0"/>
+    <mtx name="glyph00001" width="600" lsb="0"/>
+  </hmtx>
 
   <cmap>
     <tableVersion version="0"/>
@@ -138,6 +127,42 @@
     </cmap_format_4>
   </cmap>
 
+  <name>
+    <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Test Axis
+    </namerecord>
+    <namerecord nameID="257" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      TotallyNormal
+    </namerecord>
+    <namerecord nameID="258" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      TotallyTested
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      HelloTestFont
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      TotallyNormal
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      HelloTestFont-TotallyNormal
+    </namerecord>
+    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
+      Test Axis
+    </namerecord>
+    <namerecord nameID="257" platformID="3" platEncID="1" langID="0x409">
+      TotallyNormal
+    </namerecord>
+    <namerecord nameID="258" platformID="3" platEncID="1" langID="0x409">
+      TotallyTested
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x413">
+      HalloTestFont
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x413">
+      TotaalNormaal
+    </namerecord>
+  </name>
+
   <post>
     <formatType value="3.0"/>
     <italicAngle value="0.0"/>
@@ -150,89 +175,102 @@
     <maxMemType1 value="0"/>
   </post>
 
-  <CFF>
-    <major value="1"/>
+  <CFF2>
+    <major value="2"/>
     <minor value="0"/>
-    <CFFFont name="HelloTestFont-TotallyNormal">
-      <FullName value="HelloTestFont-TotallyNormal"/>
-      <isFixedPitch value="0"/>
-      <ItalicAngle value="0"/>
-      <UnderlinePosition value="-100"/>
-      <UnderlineThickness value="50"/>
-      <PaintType value="0"/>
-      <CharstringType value="2"/>
-      <FontMatrix value="0.0009765625 0 0 0.0009765625 0 0"/>
-      <FontBBox value="100 100 500 1000"/>
-      <StrokeWidth value="0"/>
-      <!-- charset is dumped separately as the 'GlyphOrder' element -->
-      <Encoding name="StandardEncoding"/>
-      <Private>
-        <BlueScale value="0.039625"/>
-        <BlueShift value="7"/>
-        <BlueFuzz value="1"/>
-        <ForceBold value="0"/>
-        <LanguageGroup value="0"/>
-        <ExpansionFactor value="0.06"/>
-        <initialRandomSeed value="0"/>
-        <defaultWidthX value="0"/>
-        <nominalWidthX value="0"/>
-      </Private>
+    <CFFFont name="CFF2Font">
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FDArray>
+        <FontDict index="0">
+          <Private>
+            <BlueScale value="0.039625"/>
+            <BlueShift value="7"/>
+            <BlueFuzz value="1"/>
+          </Private>
+        </FontDict>
+      </FDArray>
       <CharStrings>
         <CharString name=".notdef">
-          600 100 100 rmoveto
+          100 100 rmoveto
           900 vlineto
           -67 67 66 -33 67 hhcurveto
           67 66 33 67 67 hvcurveto
           -900 vlineto
-          endchar
-        </CharString>
-        <CharString name=".null">
-          600 100 100 rmoveto
-          900 vlineto
-          -67 67 66 -33 67 hhcurveto
-          67 66 33 67 67 hvcurveto
-          -900 vlineto
-          endchar
         </CharString>
         <CharString name="A">
-          600 100 100 rmoveto
+          100 100 rmoveto
           900 vlineto
           -67 67 66 -33 67 hhcurveto
           67 66 33 67 67 hvcurveto
           -900 vlineto
-          endchar
         </CharString>
         <CharString name="a">
-          600 100 100 rmoveto
+          200 200 -200 -200 2 blend
+          rmoveto
+          400 400 1 blend
+          hlineto
+          400 400 1 blend
+          vlineto
+          -400 -400 1 blend
+          hlineto
+        </CharString>
+        <CharString name="glyph00001">
+          100 100 rmoveto
           900 vlineto
           -67 67 66 -33 67 hhcurveto
           67 66 33 67 67 hvcurveto
           -900 vlineto
-          endchar
         </CharString>
       </CharStrings>
+      <VarStore Format="1">
+        <Format value="1"/>
+        <VarRegionList>
+          <!-- RegionAxisCount=1 -->
+          <!-- RegionCount=1 -->
+          <Region index="0">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="1.0"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+        </VarRegionList>
+        <!-- VarDataCount=1 -->
+        <VarData index="0">
+          <!-- ItemCount=0 -->
+          <NumShorts value="0"/>
+          <!-- VarRegionCount=1 -->
+          <VarRegionIndex index="0" value="0"/>
+        </VarData>
+      </VarStore>
     </CFFFont>
 
     <GlobalSubrs>
       <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
     </GlobalSubrs>
-  </CFF>
+  </CFF2>
 
-  <hmtx>
-    <mtx name=".notdef" width="600" lsb="100"/>
-    <mtx name=".null" width="600" lsb="100"/>
-    <mtx name="A" width="600" lsb="100"/>
-    <mtx name="a" width="600" lsb="100"/>
-  </hmtx>
+  <fvar>
 
-  <DSIG>
-    <!-- note that the Digital Signature will be invalid after recompilation! -->
-    <tableHeader flag="0x1" numSigs="1" version="1"/>
-    <SignatureRecord format="1">
------BEGIN PKCS7-----
-0000000100000000
------END PKCS7-----
-    </SignatureRecord>
-  </DSIG>
+    <!-- Test Axis -->
+    <Axis>
+      <AxisTag>TEST</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>0.0</MinValue>
+      <DefaultValue>0.0</DefaultValue>
+      <MaxValue>100.0</MaxValue>
+      <AxisNameID>256</AxisNameID>
+    </Axis>
+
+    <!-- TotallyNormal -->
+    <NamedInstance flags="0x0" subfamilyNameID="257">
+      <coord axis="TEST" value="0.0"/>
+    </NamedInstance>
+
+    <!-- TotallyTested -->
+    <NamedInstance flags="0x0" subfamilyNameID="258">
+      <coord axis="TEST" value="100.0"/>
+    </NamedInstance>
+  </fvar>
 
 </ttFont>
