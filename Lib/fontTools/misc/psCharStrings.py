@@ -460,6 +460,8 @@ class T2WidthExtractor(SimpleT2Decompiler):
 		args = self.popall()
 		if not self.gotWidth:
 			if evenOdd ^ (len(args) % 2):
+				# For CFF2 charstrings, this should never happen
+				assert self.defaultWidthX is not None, "CFF2 CharStrings must not have an initial width value"
 				self.width = self.nominalWidthX + args[0]
 				args = args[1:]
 			else:

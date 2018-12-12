@@ -2421,7 +2421,7 @@ class PrivateDict(BaseDict):
 			self.order = buildOrder(privateDictOperators2)
 			# Provide dummy values. This avoids needing to provide
 			# an isCFF2 state in a lot of places.
-			self.nominalWidthX = self.defaultWidthX = 0
+			self.nominalWidthX = self.defaultWidthX = None
 		else:
 			self.defaults = buildDefaults(privateDictOperators)
 			self.order = buildOrder(privateDictOperators)

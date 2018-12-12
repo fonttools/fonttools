@@ -1,6 +1,6 @@
 import os
 from fontTools.misc.py23 import BytesIO
-from fontTools.misc.psCharStrings import T2CharString
+from fontTools.misc.psCharStrings import T2CharString, T2OutlineExtractor
 from fontTools.pens.t2CharStringPen import T2CharStringPen, t2c_round
 from fontTools.cffLib import (
 	maxStackLimit,
@@ -235,6 +235,7 @@ def merge_charstrings(default_charstrings,
 	for gname in glyphOrder:
 		default_charstring = default_charstrings[gname]
 		var_pen = CFF2CharStringMergePen([], gname, num_masters, 0)
+		default_charstring.outlineExtractor = CFFToCFF2OutlineExtractor
 		default_charstring.draw(var_pen)
 		for region_idx, region_td in enumerate(region_top_dicts, start=1):
 			region_charstrings = region_td.CharStrings
@@ -270,6 +271,21 @@ def makeRoundNumberFunc(tolerance):
 		return t2c_round(val, tolerance)
 
 	return roundNumber
+
+
+class CFFToCFF2OutlineExtractor(T2OutlineExtractor):
+	""" This class is used to remove the initial width
+	from the CFF charstring without adding the width
+	to self.nominalWidthX, which is None.
+	"""
+	def popallWidth(self, evenOdd=0):
+		args = self.popall()
+		if not self.gotWidth:
+			if evenOdd ^ (len(args) % 2):
+				args = args[1:]
+			self.width = self.defaultWidthX
+			self.gotWidth = 1
+		return args
 
 
 class CFF2CharStringMergePen(T2CharStringPen):

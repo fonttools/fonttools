@@ -168,6 +168,8 @@ def drop_hints(self):
 		if hasattr(self, 'width'):
 			# Insert width back if needed
 			if self.width != self.private.defaultWidthX:
+				# For CFF2 charstrings, this should never happen
+				assert self.private.defaultWidthX is not None, "CFF2 CharStrings must not have an initial width value"
 				self.program.insert(0, self.width - self.private.nominalWidthX)
 
 	if hints.has_hintmask:
