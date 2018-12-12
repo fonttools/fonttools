@@ -141,7 +141,6 @@ def subset_glyphs(self, s):
 @_add_method(psCharStrings.T2CharString)
 def subset_subroutines(self, subrs, gsubrs):
 	p = self.program
-	assert len(p)
 	for i in range(1, len(p)):
 		if p[i] == 'callsubr':
 			assert isinstance(p[i-1], int)
