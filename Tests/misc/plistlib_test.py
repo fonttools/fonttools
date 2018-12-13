@@ -14,6 +14,10 @@ from fontTools.ufoLib.plistlib import (
 )
 import pytest
 
+try:
+    from collections.abc import Mapping # python >= 3.3
+except ImportError:
+    from collections import Mapping
 
 PY2 = sys.version_info < (3,)
 if PY2:
@@ -528,6 +532,25 @@ def test_dump_use_builtin_types_default(pl_no_builtin_types):
 def test_non_ascii_bytes():
     with pytest.raises(ValueError, match="invalid non-ASCII bytes"):
         plistlib.dumps("\U0001f40d".encode("utf-8"), use_builtin_types=False)
+
+
+class CustomMapping(Mapping):
+    a = {"a": 1, "b": 2}
+
+    def __getitem__(self, key):
+        return self.a[key]
+
+    def __iter__(self):
+        return iter(self.a)
+
+    def __len__(self):
+        return len(self.a)
+
+
+def test_custom_mapping():
+    test_mapping = CustomMapping()
+    data = plistlib.dumps(test_mapping)
+    assert plistlib.loads(data) == {"a": 1, "b": 2}
 
 
 if __name__ == "__main__":
