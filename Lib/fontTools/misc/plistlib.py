@@ -7,6 +7,11 @@ from base64 import b64encode, b64decode
 from numbers import Integral
 
 try:
+    from collections.abc import Mapping # python >= 3.3
+except ImportError:
+    from collections import Mapping
+
+try:
     from functools import singledispatch
 except ImportError:
     try:
@@ -384,7 +389,7 @@ if singledispatch is not None:
     _make_element.register(bool)(_bool_element)
     _make_element.register(Integral)(_integer_element)
     _make_element.register(float)(_real_element)
-    _make_element.register(dict)(_dict_element)
+    _make_element.register(Mapping)(_dict_element)
     _make_element.register(list)(_array_element)
     _make_element.register(tuple)(_array_element)
     _make_element.register(datetime)(_date_element)
@@ -404,7 +409,7 @@ else:
             return _integer_element(value, ctx)
         elif isinstance(value, float):
             return _real_element(value, ctx)
-        elif isinstance(value, dict):
+        elif isinstance(value, Mapping):
             return _dict_element(value, ctx)
         elif isinstance(value, (list, tuple)):
             return _array_element(value, ctx)
