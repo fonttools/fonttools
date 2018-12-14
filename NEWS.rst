@@ -1,3 +1,6 @@
+3.34.0 (released 2018-12-14)
+----------------------------
+
 - [varLib] Support generation of CFF2 variable fonts. ``model.reorderMasters()``
   now supports arbitrary mapping. Fix handling of overlapping ranges for feature
   variations (#1400).
