@@ -1,3 +1,6 @@
+- [merge] Fixed AssertionError when none of the script tables in GPOS/GSUB have
+  a DefaultLangSys record (#1408, 135a4a1).
+
 3.34.1 (released 2018-12-17)
 ----------------------------
 
