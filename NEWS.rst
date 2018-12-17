@@ -1,3 +1,6 @@
+3.34.1 (released 2018-12-17)
+----------------------------
+
 - [varLib] Work around macOS rendering issue for composites without gvar entry (#1381).
 
 3.34.0 (released 2018-12-14)
