@@ -347,7 +347,7 @@ def find_data_files(manpath="share/man"):
 
 setup(
 	name="fonttools",
-	version="3.34.1",
+	version="3.34.2.dev0",
 	description="Tools to manipulate font files",
 	author="Just van Rossum",
 	author_email="just@letterror.com",
