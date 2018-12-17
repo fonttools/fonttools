@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<glyph name="N" format="2">
+  <advance width="408.0"/>
+  <unicode hex="004E"/>
+  <anchor x="157.0" y="0.0" name="bottom"/>
+  <anchor x="291.0" y="500.0" name="top"/>
+  <outline>
+    <contour>
+      <point x="38.0" y="-4.0" type="curve" smooth="yes"/>
+      <point x="50.0" y="-4.0"/>
+      <point x="59.0" y="4.0"/>
+      <point x="62.0" y="15.0" type="curve" smooth="yes"/>
+      <point x="161.0" y="384.0" type="line"/>
+      <point x="264.0" y="14.0" type="line" smooth="yes"/>
+      <point x="267.0" y="2.0"/>
+      <point x="278.0" y="-4.0"/>
+      <point x="288.0" y="-4.0" type="curve" smooth="yes"/>
+      <point x="299.0" y="-4.0"/>
+      <point x="309.0" y="2.0"/>
+      <point x="312.0" y="14.0" type="curve" smooth="yes"/>
+      <point x="434.0" y="472.0" type="line" smooth="yes"/>
+      <point x="437.0" y="483.0"/>
+      <point x="430.0" y="504.0"/>
+      <point x="410.0" y="504.0" type="curve" smooth="yes"/>
+      <point x="398.0" y="504.0"/>
+      <point x="389.0" y="496.0"/>
+      <point x="386.0" y="485.0" type="curve" smooth="yes"/>
+      <point x="287.0" y="116.0" type="line"/>
+      <point x="184.0" y="486.0" type="line" smooth="yes"/>
+      <point x="181.0" y="498.0"/>
+      <point x="170.0" y="504.0"/>
+      <point x="159.0" y="504.0" type="curve" smooth="yes"/>
+      <point x="149.0" y="504.0"/>
+      <point x="139.0" y="498.0"/>
+      <point x="136.0" y="486.0" type="curve" smooth="yes"/>
+      <point x="14.0" y="28.0" type="line" smooth="yes"/>
+      <point x="10.0" y="12.0"/>
+      <point x="22.0" y="-4.0"/>
+    </contour>
+  </outline>
+  <lib>
+    <dict>
+      <key>com.schriftgestaltung.Glyphs.lastChange</key>
+      <string>2018/11/20 10:52:27</string>
+    </dict>
+  </lib>
+</glyph>

@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<glyph name="dieresiscomb" format="2">
+  <anchor x="197.0" y="350.0" name="_top"/>
+  <anchor x="230.0" y="475.0" name="top"/>
+  <outline>
+    <contour>
+      <point x="155.0" y="475.0" type="move"/>
+      <point x="149.0" y="450.0" type="line"/>
+    </contour>
+    <contour>
+      <point x="305.0" y="475.0" type="move"/>
+      <point x="299.0" y="450.0" type="line"/>
+    </contour>
+  </outline>
+</glyph>

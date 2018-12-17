@@ -160,7 +160,7 @@ class BuildTest(unittest.TestCase):
         avar segment will not be empty but will contain the default axis value
         maps: {-1.0: -1.0, 0.0: 0.0, 1.0: 1.0}.
 
-        This is to to work around an issue with some rasterizers:
+        This is to work around an issue with some rasterizers:
         https://github.com/googlei18n/fontmake/issues/295
         https://github.com/fonttools/fonttools/issues/1011
         """
@@ -180,7 +180,7 @@ class BuildTest(unittest.TestCase):
         resulting avar segment still contains the default axis value maps:
         {-1.0: -1.0, 0.0: 0.0, 1.0: 1.0}.
 
-        This is again to to work around an issue with some rasterizers:
+        This is again to work around an issue with some rasterizers:
         https://github.com/googlei18n/fontmake/issues/295
         https://github.com/fonttools/fonttools/issues/1011
         """
@@ -202,6 +202,21 @@ class BuildTest(unittest.TestCase):
             tables=["fvar", "GSUB"],
             expected_ttx_name="FeatureVars",
             save_before_dump=True,
+        )
+
+    def test_varlib_gvar_explicit_delta(self):
+        """The variable font contains a composite glyph odieresis which does not
+        need a gvar entry, because all its deltas are 0, but it must be added
+        anyway to work around an issue with macOS 10.14.
+
+        https://github.com/fonttools/fonttools/issues/1381
+        """
+        test_name = 'BuildGvarCompositeExplicitDelta'
+        self._run_varlib_build_test(
+            designspace_name=test_name,
+            font_name='TestFamily4',
+            tables=['gvar'],
+            expected_ttx_name=test_name
         )
 
     def test_varlib_build_CFF2(self):

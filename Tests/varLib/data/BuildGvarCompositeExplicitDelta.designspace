@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="4.0">
+  <axes>
+    <axis tag="slnt" name="Slant" minimum="-15" maximum="0" default="0"/>
+  </axes>
+  <sources>
+    <source filename="master_ufo/TestFamily4-Regular.ufo" name="master_0" familyname="Test Family 4" stylename="Regular">
+      <lib copy="1"/>
+      <groups copy="1"/>
+      <features copy="1"/>
+      <info copy="1"/>
+      <location>
+        <dimension name="Slant" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="master_ufo/TestFamily4-Italic15.ufo" name="master_1" familyname="Test Family 4" stylename="Italic">
+      <location>
+        <dimension name="Slant" xvalue="-15"/>
+      </location>
+    </source>
+  </sources>
+</designspace>

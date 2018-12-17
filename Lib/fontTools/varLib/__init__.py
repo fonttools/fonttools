@@ -291,7 +291,11 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 	gvar.reserved = 0
 	gvar.variations = {}
 
+	glyf = font['glyf']
+
 	for glyph in font.getGlyphOrder():
+
+		isComposite = glyf[glyph].isComposite()
 
 		allData = [_GetCoordinates(m, glyph) for m in master_ttfs]
 		model, allData = masterModel.getSubModel(allData)
@@ -315,13 +319,23 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 		endPts = control[1] if control[0] >= 1 else list(range(len(control[1])))
 
 		for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
-			if all(abs(v) <= tolerance for v in delta.array):
+			if all(abs(v) <= tolerance for v in delta.array) and not isComposite:
 				continue
 			var = TupleVariation(support, delta)
 			if optimize:
 				delta_opt = iup_delta_optimize(delta, origCoords, endPts, tolerance=tolerance)
 
 				if None in delta_opt:
+					"""In composite glyphs, there should be one 0 entry
+					to make sure the gvar entry is written to the font.
+
+					This is to work around an issue with macOS 10.14 and can be
+					removed once the behaviour of macOS is changed.
+
+					https://github.com/fonttools/fonttools/issues/1381
+					"""
+					if all(d is None for d in delta_opt):
+						delta_opt = [(0, 0)] + [None] * (len(delta_opt) - 1)
 					# Use "optimized" version only if smaller...
 					var_opt = TupleVariation(support, delta_opt)
 
