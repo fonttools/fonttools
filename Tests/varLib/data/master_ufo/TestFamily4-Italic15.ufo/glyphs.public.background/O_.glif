@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<glyph name="O" format="2">
+  <anchor x="153.0" y="0.0" name="bottom"/>
+  <anchor x="220.0" y="250.0" name="center"/>
+  <anchor x="316.0" y="10.0" name="ogonek"/>
+  <anchor x="287.0" y="500.0" name="top"/>
+  <anchor x="107.0" y="500.0" name="topleft"/>
+  <anchor x="467.0" y="500.0" name="topright"/>
+  <outline>
+    <contour>
+      <point x="66.0" y="140.0" type="curve"/>
+      <point x="125.0" y="360.0" type="line"/>
+      <point x="143.0" y="429.0"/>
+      <point x="214.0" y="485.0"/>
+      <point x="283.0" y="485.0" type="curve"/>
+      <point x="352.0" y="485.0"/>
+      <point x="393.0" y="429.0"/>
+      <point x="375.0" y="360.0" type="curve"/>
+      <point x="316.0" y="140.0" type="line"/>
+      <point x="297.0" y="71.0"/>
+      <point x="226.0" y="15.0"/>
+      <point x="157.0" y="15.0" type="curve"/>
+      <point x="88.0" y="15.0"/>
+      <point x="47.0" y="71.0"/>
+    </contour>
+  </outline>
+</glyph>

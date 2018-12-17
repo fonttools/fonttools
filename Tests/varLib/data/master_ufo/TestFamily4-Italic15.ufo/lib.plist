@@ -1,0 +1,86 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>com.schriftgestaltung.appVersion</key>
+    <string>1179</string>
+    <key>com.schriftgestaltung.customName</key>
+    <string>Italic 15</string>
+    <key>com.schriftgestaltung.customParameter.GSFont.Axes</key>
+    <array>
+      <dict>
+        <key>Name</key>
+        <string>Slant</string>
+        <key>Tag</key>
+        <string>slnt</string>
+      </dict>
+    </array>
+    <key>com.schriftgestaltung.customParameter.GSFont.DisplayStrings</key>
+    <array>
+      <string>o/dieresiscomb ö</string>
+    </array>
+    <key>com.schriftgestaltung.customParameter.GSFont.Variation Font Origin</key>
+    <string>EB3D7718-A203-47FB-ABD4-8B7A501887ED</string>
+    <key>com.schriftgestaltung.customParameter.GSFont.disablesAutomaticAlignment</key>
+    <false/>
+    <key>com.schriftgestaltung.customParameter.GSFont.useNiceNames</key>
+    <integer>1</integer>
+    <key>com.schriftgestaltung.customParameter.GSFontMaster.Link Metrics With Master</key>
+    <string>Regular</string>
+    <key>com.schriftgestaltung.customParameter.GSFontMaster.Master Name</key>
+    <string>Italic 15</string>
+    <key>com.schriftgestaltung.customParameter.GSFontMaster.customValue</key>
+    <real>-15.0</real>
+    <key>com.schriftgestaltung.customParameter.GSFontMaster.customValue1</key>
+    <real>16.0</real>
+    <key>com.schriftgestaltung.customParameter.GSFontMaster.customValue2</key>
+    <real>0.0</real>
+    <key>com.schriftgestaltung.customParameter.GSFontMaster.customValue3</key>
+    <real>0.0</real>
+    <key>com.schriftgestaltung.customParameter.GSFontMaster.iconName</key>
+    <string></string>
+    <key>com.schriftgestaltung.customParameter.GSFontMaster.weightValue</key>
+    <real>-15.0</real>
+    <key>com.schriftgestaltung.customParameter.GSFontMaster.widthValue</key>
+    <real>100.0</real>
+    <key>com.schriftgestaltung.customValue</key>
+    <real>-15.0</real>
+    <key>com.schriftgestaltung.customValue1</key>
+    <real>16.0</real>
+    <key>com.schriftgestaltung.fontMasterOrder</key>
+    <integer>1</integer>
+    <key>com.schriftgestaltung.glyphOrder</key>
+    <false/>
+    <key>com.schriftgestaltung.keyboardIncrement</key>
+    <integer>1</integer>
+    <key>com.schriftgestaltung.weight</key>
+    <string>Regular</string>
+    <key>com.schriftgestaltung.weightValue</key>
+    <real>-15.0</real>
+    <key>com.schriftgestaltung.width</key>
+    <string>Regular</string>
+    <key>com.schriftgestaltung.widthValue</key>
+    <real>100.0</real>
+    <key>noodleExtremesAndInflections</key>
+    <integer>0</integer>
+    <key>noodleRemoveOverlap</key>
+    <integer>1</integer>
+    <key>noodleThickness</key>
+    <string>50.0</string>
+    <key>public.glyphOrder</key>
+    <array>
+      <string>N</string>
+      <string>O</string>
+      <string>Odieresis</string>
+      <string>n</string>
+      <string>o</string>
+      <string>odieresis</string>
+      <string>dieresiscomb</string>
+    </array>
+    <key>public.postscriptNames</key>
+    <dict>
+      <key>dieresiscomb</key>
+      <string>uni0308</string>
+    </dict>
+  </dict>
+</plist>

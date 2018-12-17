@@ -204,6 +204,23 @@ class BuildTest(unittest.TestCase):
             save_before_dump=True,
         )
 
+    def test_varlib_gvar_explicit_delta(self):
+        """The variable font contains a composite glyph n.001 which does not
+        need a gvar entry, because all its deltas are 0, but it must be added
+        anyway to work around an issue with macOS 10.14.
+
+        This is again to to work around an issue with some rasterizers:
+        https://github.com/googlei18n/fontmake/issues/295
+        https://github.com/fonttools/fonttools/issues/1011
+        """
+        test_name = 'BuildGvarCompositeExplicitDelta'
+        self._run_varlib_build_test(
+            designspace_name=test_name,
+            font_name='BuildGvarCompositeExplicitDelta',
+            tables=['gvar'],
+            expected_ttx_name=test_name
+        )
+
     def test_varlib_main_ttf(self):
         """Mostly for testing varLib.main()
         """
