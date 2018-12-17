@@ -184,7 +184,7 @@ def _add_stat(font, axes):
 
 	STAT = font["STAT"] = newTable('STAT')
 	stat = STAT.table = ot.STAT()
-	stat.Version = 0x00010002
+	stat.Version = 0x00010001
 
 	axisRecords = []
 	for i, a in enumerate(fvarTable.axes):
