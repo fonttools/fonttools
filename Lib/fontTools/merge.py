@@ -498,7 +498,11 @@ def mergeScripts(lst):
 	self = otTables.Script()
 	self.LangSysRecord = lsrecords
 	self.LangSysCount = len(lsrecords)
-	self.DefaultLangSys = mergeLangSyses([s.DefaultLangSys for s in lst if s.DefaultLangSys])
+	dfltLangSyses = [s.DefaultLangSys for s in lst if s.DefaultLangSys]
+	if dfltLangSyses:
+		self.DefaultLangSys = mergeLangSyses(dfltLangSyses)
+	else:
+		self.DefaultLangSys = None
 	return self
 
 def mergeScriptRecords(lst):
