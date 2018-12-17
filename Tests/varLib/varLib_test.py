@@ -160,7 +160,7 @@ class BuildTest(unittest.TestCase):
         avar segment will not be empty but will contain the default axis value
         maps: {-1.0: -1.0, 0.0: 0.0, 1.0: 1.0}.
 
-        This is to to work around an issue with some rasterizers:
+        This is to work around an issue with some rasterizers:
         https://github.com/googlei18n/fontmake/issues/295
         https://github.com/fonttools/fonttools/issues/1011
         """
@@ -180,7 +180,7 @@ class BuildTest(unittest.TestCase):
         resulting avar segment still contains the default axis value maps:
         {-1.0: -1.0, 0.0: 0.0, 1.0: 1.0}.
 
-        This is again to to work around an issue with some rasterizers:
+        This is again to work around an issue with some rasterizers:
         https://github.com/googlei18n/fontmake/issues/295
         https://github.com/fonttools/fonttools/issues/1011
         """
