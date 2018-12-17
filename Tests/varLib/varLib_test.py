@@ -214,7 +214,7 @@ class BuildTest(unittest.TestCase):
         test_name = 'BuildGvarCompositeExplicitDelta'
         self._run_varlib_build_test(
             designspace_name=test_name,
-            font_name='BuildGvarCompositeExplicitDelta',
+            font_name='TestFamily4',
             tables=['gvar'],
             expected_ttx_name=test_name
         )
