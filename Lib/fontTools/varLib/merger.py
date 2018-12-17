@@ -698,6 +698,10 @@ def _Lookup_PairPosFormat2_subtables_flatten(lst, font):
 		row.Class2Record = []
 		row = row.Class2Record
 		for cols in zip(*list(r.Class2Record for r in rows)):
+			# 
+			if cols[0] == None:
+				cols = cols[::-1]
+			#
 			col = next(iter(c for c in cols if c is not None))
 			row.append(col)
 
@@ -858,7 +862,7 @@ def merge(merger, self, lst):
 		assert dev.DeltaFormat == 0x8000
 		varidx = (dev.StartSize << 16) + dev.EndSize
 		delta = otRound(instancer[varidx])
-		self.Coordinate  += delta
+		self.Coordinate += delta
 
 	self.Format = 1
 
