@@ -205,7 +205,7 @@ class BuildTest(unittest.TestCase):
         )
 
     def test_varlib_gvar_explicit_delta(self):
-        """The variable font contains a composite glyph n.001 which does not
+        """The variable font contains a composite glyph odieresis which does not
         need a gvar entry, because all its deltas are 0, but it must be added
         anyway to work around an issue with macOS 10.14.
 
