@@ -209,9 +209,7 @@ class BuildTest(unittest.TestCase):
         need a gvar entry, because all its deltas are 0, but it must be added
         anyway to work around an issue with macOS 10.14.
 
-        This is again to to work around an issue with some rasterizers:
-        https://github.com/googlei18n/fontmake/issues/295
-        https://github.com/fonttools/fonttools/issues/1011
+        https://github.com/fonttools/fonttools/issues/1381
         """
         test_name = 'BuildGvarCompositeExplicitDelta'
         self._run_varlib_build_test(
