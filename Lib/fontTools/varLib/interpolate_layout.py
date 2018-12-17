@@ -53,6 +53,7 @@ def interpolate_layout(designspace_filename, loc, master_finder=lambda s:s, mapp
 	merger = InstancerMerger(font, model, loc)
 
 	log.info("Building interpolated tables")
+	# TODO GSUB/GDEF
 	merger.mergeTables(font, master_fonts, ['GPOS'])
 	return font
 

@@ -623,11 +623,6 @@ class GlobalSubrsIndex(Index):
 			self.fdSelect = fdSelect
 		if fdArray:
 			self.fdArray = fdArray
-		if isCFF2:
-			# CFF2Subr's can have numeric arguments on the stack after the last operator.
-			self.subrClass = psCharStrings.CFF2Subr
-			self.charStringClass = psCharStrings.CFF2Subr
-			
 
 	def produceItem(self, index, data, file, offset):
 		if self.private is not None:
@@ -2424,9 +2419,18 @@ class PrivateDict(BaseDict):
 		if isCFF2:
 			self.defaults = buildDefaults(privateDictOperators2)
 			self.order = buildOrder(privateDictOperators2)
+			# Provide dummy values. This avoids needing to provide
+			# an isCFF2 state in a lot of places.
+			self.nominalWidthX = self.defaultWidthX = None
 		else:
 			self.defaults = buildDefaults(privateDictOperators)
 			self.order = buildOrder(privateDictOperators)
+
+	def __getattr__(self, name):
+		if name == "in_cff2":
+			return self._isCFF2
+		value = BaseDict.__getattr__(self, name)
+		return value
 
 	def getNumRegions(self, vi=None):  # called from misc/psCharStrings.py
 		# if getNumRegions is being called, we can assume that VarStore exists.

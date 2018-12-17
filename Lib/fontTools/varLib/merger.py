@@ -8,7 +8,8 @@ from fontTools.misc import classifyTools
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables import otBase as otBase
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
-from fontTools.varLib import builder, varStore
+from fontTools.varLib import builder, models, varStore
+from fontTools.varLib.models import nonNone, allNone, allEqual, allEqualTo
 from fontTools.varLib.varStore import VarStoreInstancer
 from functools import reduce
 
@@ -75,8 +76,7 @@ class Merger(object):
 			raise
 
 	def mergeLists(self, out, lst):
-		count = len(out)
-		assert all(count == len(v) for v in lst), (count, [len(v) for v in lst])
+		assert allEqualTo(out, lst, len), (len(out), [len(v) for v in lst])
 		for i,(value,values) in enumerate(zip(out, zip(*lst))):
 			try:
 				self.mergeThings(value, values)
@@ -85,9 +85,8 @@ class Merger(object):
 				raise
 
 	def mergeThings(self, out, lst):
-		clazz = type(out)
 		try:
-			assert all(type(item) == clazz for item in lst), (out, lst)
+			assert allEqualTo(out, lst, type), (out, lst)
 			mergerFunc = self.mergersFor(out).get(None, None)
 			if mergerFunc is not None:
 				mergerFunc(self, out, lst)
@@ -96,22 +95,44 @@ class Merger(object):
 			elif isinstance(out, list):
 				self.mergeLists(out, lst)
 			else:
-				assert all(out == v for v in lst), (out, lst)
+				assert allEqualTo(out, lst), (out, lst)
 		except Exception as e:
-			e.args = e.args + (clazz.__name__,)
+			e.args = e.args + (type(out).__name__,)
 			raise
 
-	def mergeTables(self, font, master_ttfs, tables):
+	def mergeTables(self, font, master_ttfs, tableTags):
 
-		for tag in tables:
+		for tag in tableTags:
 			if tag not in font: continue
-			self.mergeThings(font[tag], [m[tag] for m in master_ttfs])
+			self.mergeThings(font[tag], [m[tag] if tag in m else None
+						     for m in master_ttfs])
 
 #
 # Aligning merger
 #
 class AligningMerger(Merger):
 	pass
+
+@AligningMerger.merger(ot.GDEF, "GlyphClassDef")
+def merge(merger, self, lst):
+	if self is None:
+		assert allNone(lst), (lst)
+		return
+
+	self.classDefs = {}
+	# We only care about the .classDefs
+	self = self.classDefs
+	lst = [l.classDefs for l in lst]
+
+	allKeys = set()
+	allKeys.update(*[l.keys() for l in lst])
+	for k in allKeys:
+		allValues = nonNone(l.get(k) for l in lst)
+		assert allEqual(allValues), allValues
+		if not allValues:
+			self[k] = None
+		else:
+			self[k] = allValues[0]
 
 def _SinglePosUpgradeToFormat2(self):
 	if self.Format == 2: return self
@@ -201,7 +222,8 @@ def merge(merger, self, lst):
 	assert len(lst) == 1 or (valueFormat & ~0xF == 0), valueFormat
 
 	# If all have same coverage table and all are format 1,
-	if all(v.Format == 1 for v in lst) and all(self.Coverage.glyphs == v.Coverage.glyphs for v in lst):
+	coverageGlyphs = self.Coverage.glyphs
+	if all(v.Format == 1 for v in lst) and all(coverageGlyphs == v.Coverage.glyphs for v in lst):
 		self.Value = otBase.ValueRecord(valueFormat)
 		merger.mergeThings(self.Value, [v.Value for v in lst])
 		self.ValueFormat = self.Value.getFormat()
@@ -276,7 +298,7 @@ def merge(merger, self, lst):
 	merger.mergeLists(self.PairValueRecord, padded)
 
 def _PairPosFormat1_merge(self, lst, merger):
-	assert _all_equal([l.ValueFormat2 == 0 for l in lst if l.PairSet]), "Report bug against fonttools."
+	assert allEqual([l.ValueFormat2 == 0 for l in lst if l.PairSet]), "Report bug against fonttools."
 
 	# Merge everything else; makes sure Format is the same.
 	merger.mergeObjects(self, lst,
@@ -353,6 +375,9 @@ def _ClassDef_merge_classify(lst, allGlyphs=None):
 
 	return self, classes
 
+# It's stupid that we need to do this here.  Just need to, to match test
+# expecatation results, since ttx prints out format of ClassDef (and Coverage)
+# even though it should not.
 def _ClassDef_calculate_Format(self, font):
 	fmt = 2
 	ranges = self._getClassRanges(font)
@@ -436,7 +461,7 @@ def _PairPosFormat2_align_matrices(self, lst, font, transparent=False):
 	return matrices
 
 def _PairPosFormat2_merge(self, lst, merger):
-	assert _all_equal([l.ValueFormat2 == 0 for l in lst if l.Class1Record]), "Report bug against fonttools."
+	assert allEqual([l.ValueFormat2 == 0 for l in lst if l.Class1Record]), "Report bug against fonttools."
 
 	merger.mergeObjects(self, lst,
 			    exclude=('Coverage',
@@ -505,6 +530,105 @@ def merge(merger, self, lst):
 	self.ValueFormat1 = vf1
 	self.ValueFormat2 = vf2
 
+def _MarkBasePosFormat1_merge(self, lst, merger, Mark='Mark', Base='Base'):
+	self.ClassCount = max(l.ClassCount for l in lst)
+
+	MarkCoverageGlyphs, MarkRecords = \
+		_merge_GlyphOrders(merger.font,
+				   [getattr(l, Mark+'Coverage').glyphs for l in lst],
+				   [getattr(l, Mark+'Array').MarkRecord for l in lst])
+	getattr(self, Mark+'Coverage').glyphs = MarkCoverageGlyphs
+
+	BaseCoverageGlyphs, BaseRecords = \
+		_merge_GlyphOrders(merger.font,
+				   [getattr(l, Base+'Coverage').glyphs for l in lst],
+				   [getattr(getattr(l, Base+'Array'), Base+'Record') for l in lst])
+	getattr(self, Base+'Coverage').glyphs = BaseCoverageGlyphs
+
+	# MarkArray
+	records = []
+	for g,glyphRecords in zip(MarkCoverageGlyphs, zip(*MarkRecords)):
+		allClasses = [r.Class for r in glyphRecords if r is not None]
+
+		# TODO Right now we require that all marks have same class in
+		# all masters that cover them.  This is not required.
+		#
+		# We can relax that by just requiring that all marks that have
+		# the same class in a master, have the same class in every other
+		# master.  Indeed, if, say, a sparse master only covers one mark,
+		# that mark probably will get class 0, which would possibly be
+		# different from its class in other masters.
+		#
+		# We can even go further and reclassify marks to support any
+		# input.  But, since, it's unlikely that two marks being both,
+		# say, "top" in one master, and one being "top" and other being
+		# "top-right" in another master, we shouldn't do that, as any
+		# failures in that case will probably signify mistakes in the
+		# input masters.
+
+		assert allEqual(allClasses), allClasses
+		if not allClasses:
+			rec = None
+		else:
+			rec = ot.MarkRecord()
+			rec.Class = allClasses[0]
+			allAnchors = [None if r is None else r.MarkAnchor for r in glyphRecords]
+			if allNone(allAnchors):
+				anchor = None
+			else:
+				anchor = ot.Anchor()
+				anchor.Format = 1
+				merger.mergeThings(anchor, allAnchors)
+			rec.MarkAnchor = anchor
+		records.append(rec)
+	array = ot.MarkArray()
+	array.MarkRecord = records
+	array.MarkCount = len(records)
+	setattr(self, Mark+"Array", array)
+
+	# BaseArray
+	records = []
+	for g,glyphRecords in zip(BaseCoverageGlyphs, zip(*BaseRecords)):
+		if allNone(glyphRecords):
+			rec = None
+		else:
+			rec = getattr(ot, Base+'Record')()
+			anchors = []
+			setattr(rec, Base+'Anchor', anchors)
+			glyphAnchors = [[] if r is None else getattr(r, Base+'Anchor')
+					for r in glyphRecords]
+			for l in glyphAnchors:
+				l.extend([None] * (self.ClassCount - len(l)))
+			for allAnchors in zip(*glyphAnchors):
+				if allNone(allAnchors):
+					anchor = None
+				else:
+					anchor = ot.Anchor()
+					anchor.Format = 1
+					merger.mergeThings(anchor, allAnchors)
+				anchors.append(anchor)
+		records.append(rec)
+	array = getattr(ot, Base+'Array')()
+	setattr(array, Base+'Record', records)
+	setattr(array, Base+'Count', len(records))
+	setattr(self, Base+'Array', array)
+
+@AligningMerger.merger(ot.MarkBasePos)
+def merge(merger, self, lst):
+	assert allEqualTo(self.Format, (l.Format for l in lst))
+	if self.Format == 1:
+		_MarkBasePosFormat1_merge(self, lst, merger)
+	else:
+		assert False
+
+@AligningMerger.merger(ot.MarkMarkPos)
+def merge(merger, self, lst):
+	assert allEqualTo(self.Format, (l.Format for l in lst))
+	if self.Format == 1:
+		_MarkBasePosFormat1_merge(self, lst, merger, 'Mark1', 'Mark2')
+	else:
+		assert False
+
 
 def _PairSet_flatten(lst, font):
 	self = ot.PairSet()
@@ -530,7 +654,7 @@ def _PairSet_flatten(lst, font):
 	return self
 
 def _Lookup_PairPosFormat1_subtables_flatten(lst, font):
-	assert _all_equal([l.ValueFormat2 == 0 for l in lst if l.PairSet]), "Report bug against fonttools."
+	assert allEqual([l.ValueFormat2 == 0 for l in lst if l.PairSet]), "Report bug against fonttools."
 
 	self = ot.PairPos()
 	self.Format = 1
@@ -551,7 +675,7 @@ def _Lookup_PairPosFormat1_subtables_flatten(lst, font):
 	return self
 
 def _Lookup_PairPosFormat2_subtables_flatten(lst, font):
-	assert _all_equal([l.ValueFormat2 == 0 for l in lst if l.Class1Record]), "Report bug against fonttools."
+	assert allEqual([l.ValueFormat2 == 0 for l in lst if l.Class1Record]), "Report bug against fonttools."
 
 	self = ot.PairPos()
 	self.Format = 2
@@ -608,8 +732,8 @@ def merge(merger, self, lst):
 		if not sts:
 			continue
 		if sts[0].__class__.__name__.startswith('Extension'):
-			assert _all_equal([st.__class__ for st in sts])
-			assert _all_equal([st.ExtensionLookupType for st in sts])
+			assert allEqual([st.__class__ for st in sts])
+			assert allEqual([st.ExtensionLookupType for st in sts])
 			l.LookupType = sts[0].ExtensionLookupType
 			new_sts = [st.ExtSubTable for st in sts]
 			del sts[:]
@@ -660,8 +784,17 @@ class InstancerMerger(AligningMerger):
 		self.location = location
 		self.scalars = model.getScalars(location)
 
+@InstancerMerger.merger(ot.CaretValue)
+def merge(merger, self, lst):
+	assert self.Format == 1
+	Coords = [a.Coordinate for a in lst]
+	model = merger.model
+	scalars = merger.scalars
+	self.Coordinate = otRound(model.interpolateFromMastersAndScalars(Coords, scalars))
+
 @InstancerMerger.merger(ot.Anchor)
 def merge(merger, self, lst):
+	assert self.Format == 1
 	XCoords = [a.XCoordinate for a in lst]
 	YCoords = [a.YCoordinate for a in lst]
 	model = merger.model
@@ -693,7 +826,9 @@ def merge(merger, self, lst):
 
 class MutatorMerger(AligningMerger):
 	"""A merger that takes a variable font, and instantiates
-	an instance."""
+	an instance.  While there's no "merging" to be done per se,
+	the operation can benefit from many operations that the
+	aligning merger does."""
 
 	def __init__(self, font, location):
 		Merger.__init__(self, font)
@@ -707,59 +842,32 @@ class MutatorMerger(AligningMerger):
 
 		self.instancer = VarStoreInstancer(store, font['fvar'].axes, location)
 
-	def instantiate(self):
-		font = self.font
+@MutatorMerger.merger(ot.CaretValue)
+def merge(merger, self, lst):
 
-		for tableTag in 'GSUB','GPOS':
-			if not tableTag in font:
-				continue
-			table = font[tableTag].table
-			if not hasattr(table, 'FeatureVariations'):
-				continue
-			variations = table.FeatureVariations
-			for record in variations.FeatureVariationRecord:
-				applies = True
-				for condition in record.ConditionSet.ConditionTable:
-					if condition.Format == 1:
-						axisIdx = condition.AxisIndex
-						axisTag = self.font['fvar'].axes[axisIdx].axisTag
-						Min = condition.FilterRangeMinValue
-						Max = condition.FilterRangeMaxValue
-						loc = self.location[axisTag]
-						if not (Min <= loc <= Max):
-							applies = False
-					else:
-						applies = False
-					if not applies:
-						break
+	# Hack till we become selfless.
+	self.__dict__ = lst[0].__dict__.copy()
 
-				if applies:
-					assert record.FeatureTableSubstitution.Version == 0x00010000
-					for rec in record.FeatureTableSubstitution.SubstitutionRecord:
-						table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = rec.Feature
-					break
-			del table.FeatureVariations
+	if self.Format != 3:
+		return
 
+	instancer = merger.instancer
+	dev = self.DeviceTable
+	del self.DeviceTable
+	if dev:
+		assert dev.DeltaFormat == 0x8000
+		varidx = (dev.StartSize << 16) + dev.EndSize
+		delta = otRound(instancer[varidx])
+		self.Coordinate  += delta
 
-		self.mergeTables(font, [font], ['GPOS'])
-
-		if 'GDEF' in font:
-			gdef = font['GDEF'].table
-			if gdef.Version >= 0x00010003:
-				del gdef.VarStore
-				gdef.Version = 0x00010002
-				if gdef.MarkGlyphSetsDef is None:
-					del gdef.MarkGlyphSetsDef
-					gdef.Version = 0x00010000
-			if not (gdef.LigCaretList or
-				gdef.MarkAttachClassDef or
-				gdef.GlyphClassDef or
-				gdef.AttachList or
-				(gdef.Version >= 0x00010002 and gdef.MarkGlyphSetsDef)):
-				del font['GDEF']
+	self.Format = 1
 
 @MutatorMerger.merger(ot.Anchor)
 def merge(merger, self, lst):
+
+	# Hack till we become selfless.
+	self.__dict__ = lst[0].__dict__.copy()
+
 	if self.Format != 3:
 		return
 
@@ -785,9 +893,7 @@ def merge(merger, self, lst):
 @MutatorMerger.merger(otBase.ValueRecord)
 def merge(merger, self, lst):
 
-	# All other structs are merged with self pointing to a copy of base font,
-	# except for ValueRecords which are sometimes created later and initialized
-	# to have 0/None members.  Hence the copy.
+	# Hack till we become selfless.
 	self.__dict__ = lst[0].__dict__.copy()
 
 	instancer = merger.instancer
@@ -821,25 +927,42 @@ class VariationMerger(AligningMerger):
 
 	def __init__(self, model, axisTags, font):
 		Merger.__init__(self, font)
-		self.model = model
 		self.store_builder = varStore.OnlineVarStoreBuilder(axisTags)
+		self.setModel(model)
+
+	def setModel(self, model):
+		self.model = model
 		self.store_builder.setModel(model)
 
-def _all_equal(lst):
-	if not lst:
-		return True
-	it = iter(lst)
-	v0 = next(it)
-	for v in it:
-		if v0 != v:
-			return False
-	return True
+	def mergeThings(self, out, lst):
+		masterModel = None
+		if None in lst:
+			if allNone(lst):
+				assert out is None, (out, lst)
+				return
+			masterModel = self.model
+			model, lst = masterModel.getSubModel(lst)
+			self.setModel(model)
+
+		super(VariationMerger, self).mergeThings(out, lst)
+
+		if masterModel:
+			self.setModel(masterModel)
+
 
 def buildVarDevTable(store_builder, master_values):
-	if _all_equal(master_values):
+	if allEqual(master_values):
 		return master_values[0], None
 	base, varIdx = store_builder.storeMasters(master_values)
 	return base, builder.buildVarDevTable(varIdx)
+
+@VariationMerger.merger(ot.CaretValue)
+def merge(merger, self, lst):
+	assert self.Format == 1
+	self.Coordinate, DeviceTable = buildVarDevTable(merger.store_builder, [a.Coordinate for a in lst])
+	if DeviceTable:
+		self.Format = 3
+		self.DeviceTable = DeviceTable
 
 @VariationMerger.merger(ot.Anchor)
 def merge(merger, self, lst):

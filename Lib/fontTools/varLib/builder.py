@@ -39,7 +39,7 @@ def _reorderItem(lst, narrows, zeroes):
 			out.append(lst[i])
 	return out
 
-def VarData_CalculateNumShorts(self, optimize=True):
+def VarData_calculateNumShorts(self, optimize=False):
 	count = self.VarRegionCount
 	items = self.Item
 	narrows = set(range(count))
@@ -55,13 +55,28 @@ def VarData_CalculateNumShorts(self, optimize=True):
 		# Reorder columns such that all SHORT columns come before UINT8
 		self.VarRegionIndex = _reorderItem(self.VarRegionIndex, narrows, zeroes)
 		self.VarRegionCount = len(self.VarRegionIndex)
-		for i in range(self.ItemCount):
+		for i in range(len(items)):
 			items[i] = _reorderItem(items[i], narrows, zeroes)
 		self.NumShorts = count - len(narrows)
 	else:
 		wides = set(range(count)) - narrows
 		self.NumShorts = 1+max(wides) if wides else 0
+	self.VarRegionCount = len(self.VarRegionIndex)
 	return self
+
+ot.VarData.calculateNumShorts = VarData_calculateNumShorts
+
+def VarData_CalculateNumShorts(self, optimize=True):
+	"""Deprecated name for VarData_calculateNumShorts() which
+	defaults to optimize=True.  Use varData.calculateNumShorts()
+	or varData.optimize()."""
+	return VarData_calculateNumShorts(self, optimize=optimize)
+
+def VarData_optimize(self):
+	return VarData_calculateNumShorts(self, optimize=True)
+
+ot.VarData.optimize = VarData_optimize
+
 
 def buildVarData(varRegionIndices, items, optimize=True):
 	self = ot.VarData()
@@ -73,7 +88,7 @@ def buildVarData(varRegionIndices, items, optimize=True):
 			assert len(item) == regionCount
 			records.append(list(item))
 	self.ItemCount = len(self.Item)
-	VarData_CalculateNumShorts(self, optimize=optimize)
+	self.calculateNumShorts(optimize=optimize)
 	return self
 
 

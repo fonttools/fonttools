@@ -312,7 +312,7 @@ When you run the ``pytest`` command, the tests will run against the
 installed ``fontTools`` package, or the first one found in the
 ``PYTHONPATH``.
 
-You can also use `tox <https://testrun.org/tox/latest/>`__ to
+You can also use `tox <https://tox.readthedocs.io/en/latest/>`__ to
 automatically run tests on different Python versions in isolated virtual
 environments.
 

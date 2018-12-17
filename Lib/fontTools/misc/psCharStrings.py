@@ -267,22 +267,6 @@ class SimpleT2Decompiler(object):
 		self.hintMaskBytes = 0
 		self.numRegions = 0
 
-	def check_program(self, program):
-		if not hasattr(self, 'private') or self.private is None:
-			# Type 1 charstrings don't have self.private.
-			# Type2 CFF charstrings may have self.private == None.
-			# In both cases, they are not CFF2 charstrings
-			isCFF2 = False
-		else:
-			isCFF2 = self.private._isCFF2
-		if isCFF2:
-			if program:
-				assert program[-1] not in ("seac",), "illegal CharString Terminator"
-		else:
-			assert program, "illegal CharString: decompiled to empty program"
-			assert program[-1] in ("endchar", "return", "callsubr", "callgsubr",
-					"seac"), "illegal CharString"
-
 	def execute(self, charString):
 		self.callingStack.append(charString)
 		needsDecompilation = charString.needsDecompilation()
@@ -311,7 +295,6 @@ class SimpleT2Decompiler(object):
 			else:
 				pushToStack(token)
 		if needsDecompilation:
-			self.check_program(program)
 			charString.setProgram(program)
 		del self.callingStack[-1]
 
@@ -424,7 +407,7 @@ class SimpleT2Decompiler(object):
 		numBlends = self.pop()
 		numOps = numBlends * (self.numRegions + 1)
 		blendArgs = self.operandStack[-numOps:]
-		del self.operandStack[:-(numOps-numBlends)] # Leave the default operands on the stack.
+		del self.operandStack[-(numOps-numBlends):] # Leave the default operands on the stack.
 
 	def op_vsindex(self, index):
 		vi = self.pop()
@@ -463,8 +446,8 @@ t1Operators = [
 
 class T2WidthExtractor(SimpleT2Decompiler):
 
-	def __init__(self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX):
-		SimpleT2Decompiler.__init__(self, localSubrs, globalSubrs)
+	def __init__(self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX, private=None):
+		SimpleT2Decompiler.__init__(self, localSubrs, globalSubrs, private)
 		self.nominalWidthX = nominalWidthX
 		self.defaultWidthX = defaultWidthX
 
@@ -477,6 +460,8 @@ class T2WidthExtractor(SimpleT2Decompiler):
 		args = self.popall()
 		if not self.gotWidth:
 			if evenOdd ^ (len(args) % 2):
+				# For CFF2 charstrings, this should never happen
+				assert self.defaultWidthX is not None, "CFF2 CharStrings must not have an initial width value"
 				self.width = self.nominalWidthX + args[0]
 				args = args[1:]
 			else:
@@ -503,9 +488,9 @@ class T2WidthExtractor(SimpleT2Decompiler):
 
 class T2OutlineExtractor(T2WidthExtractor):
 
-	def __init__(self, pen, localSubrs, globalSubrs, nominalWidthX, defaultWidthX):
+	def __init__(self, pen, localSubrs, globalSubrs, nominalWidthX, defaultWidthX, private=None):
 		T2WidthExtractor.__init__(
-			self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX)
+			self, localSubrs, globalSubrs, nominalWidthX, defaultWidthX, private)
 		self.pen = pen
 
 	def reset(self):
@@ -704,12 +689,6 @@ class T2OutlineExtractor(T2WidthExtractor):
 			dy6 = d6
 		self.rCurveTo((dx1, dy1), (dx2, dy2), (dx3, dy3))
 		self.rCurveTo((dx4, dy4), (dx5, dy5), (dx6, dy6))
-
-	#
-	# MultipleMaster. Well...
-	#
-	def op_blend(self, index):
-		self.popall()
 
 	# misc
 	def op_and(self, index):
@@ -947,7 +926,6 @@ class T2CharString(object):
 	operators, opcodes = buildOperatorDict(t2Operators)
 	decompilerClass = SimpleT2Decompiler
 	outlineExtractor = T2OutlineExtractor
-	isCFF2 = False
 
 	def __init__(self, bytecode=None, program=None, private=None, globalSubrs=None):
 		if program is None:
@@ -979,7 +957,8 @@ class T2CharString(object):
 	def draw(self, pen):
 		subrs = getattr(self.private, "Subrs", [])
 		extractor = self.outlineExtractor(pen, subrs, self.globalSubrs,
-				self.private.nominalWidthX, self.private.defaultWidthX)
+				self.private.nominalWidthX, self.private.defaultWidthX,
+				self.private)
 		extractor.execute(self)
 		self.width = extractor.width
 
@@ -988,20 +967,11 @@ class T2CharString(object):
 		self.draw(boundsPen)
 		return boundsPen.bounds
 
-	def check_program(self, program, isCFF2=False):
-		if isCFF2:
-			if self.program:
-				assert self.program[-1] not in ("seac",), "illegal CFF2 CharString Termination"
-		else:
-			assert self.program, "illegal CharString: decompiled to empty program"
-			assert self.program[-1] in ("endchar", "return", "callsubr", "callgsubr", "seac"), ("illegal CharString ending: %s" % self.program[-1])
-
 	def compile(self, isCFF2=False):
 		if self.bytecode is not None:
 			return
 		opcodes = self.opcodes
 		program = self.program
-		self.check_program(program, isCFF2=isCFF2)
 		bytecode = []
 		encodeInt = self.getIntEncoder()
 		encodeFixed = self.getFixedEncoder()
@@ -1147,9 +1117,6 @@ class T2CharString(object):
 			else:
 				program.append(token)
 		self.setProgram(program)
-
-class CFF2Subr(T2CharString):
-	isCFF2 = True
 
 class T1CharString(T2CharString):
 

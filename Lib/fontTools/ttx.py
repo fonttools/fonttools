@@ -293,11 +293,11 @@ def ttCompile(input, output, options):
 def guessFileType(fileName):
 	base, ext = os.path.splitext(fileName)
 	try:
-		f = open(fileName, "rb")
+		with open(fileName, "rb") as f:
+			header = f.read(256)
 	except IOError:
 		return None
-	header = f.read(256)
-	f.close()
+
 	if header.startswith(b'\xef\xbb\xbf<?xml'):
 		header = header.lstrip(b'\xef\xbb\xbf')
 	cr, tp = getMacCreatorAndType(fileName)

@@ -10,6 +10,7 @@ from fontTools.pens.t2CharStringPen import T2CharStringPen
 from fontTools.fontBuilder import FontBuilder
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
+from fontTools.misc.psCharStrings import T2CharString
 
 
 def getTestData(fileName, mode="r"):
@@ -36,8 +37,8 @@ def drawTestGlyph(pen):
     pen.closePath()
 
 
-def _setupFontBuilder(isTTF):
-    fb = FontBuilder(1024, isTTF=isTTF)
+def _setupFontBuilder(isTTF, unitsPerEm=1024):
+    fb = FontBuilder(unitsPerEm, isTTF=isTTF)
     fb.setupGlyphOrder([".notdef", ".null", "A", "a"])
     fb.setupCharacterMap({65: "A", 97: "a"})
 
@@ -50,6 +51,15 @@ def _setupFontBuilder(isTTF):
     nameStrings['psName'] = familyName + "-" + styleName
 
     return fb, advanceWidths, nameStrings
+
+
+def _verifyOutput(outPath):
+    f = TTFont(outPath)
+    f.saveXML(outPath + ".ttx")
+    with open(outPath + ".ttx") as f:
+        testData = strip_VariableItems(f.read())
+    refData = strip_VariableItems(getTestData(os.path.basename(outPath) + ".ttx"))
+    assert refData == testData
 
 
 def test_build_ttf(tmpdir):
@@ -76,12 +86,7 @@ def test_build_ttf(tmpdir):
 
     fb.save(outPath)
 
-    f = TTFont(outPath)
-    f.saveXML(outPath + ".ttx")
-    with open(outPath + ".ttx") as f:
-        testData = strip_VariableItems(f.read())
-    refData = strip_VariableItems(getTestData("test.ttf.ttx"))
-    assert refData == testData
+    _verifyOutput(outPath)
 
 
 def test_build_otf(tmpdir):
@@ -107,12 +112,7 @@ def test_build_otf(tmpdir):
 
     fb.save(outPath)
 
-    f = TTFont(outPath)
-    f.saveXML(outPath + ".ttx")
-    with open(outPath + ".ttx") as f:
-        testData = strip_VariableItems(f.read())
-    refData = strip_VariableItems(getTestData("test.otf.ttx"))
-    assert refData == testData
+    _verifyOutput(outPath)
 
 
 def test_build_var(tmpdir):
@@ -184,9 +184,47 @@ def test_build_var(tmpdir):
 
     fb.save(outPath)
 
-    f = TTFont(outPath)
-    f.saveXML(outPath + ".ttx")
-    with open(outPath + ".ttx") as f:
-        testData = strip_VariableItems(f.read())
-    refData = strip_VariableItems(getTestData("test_var.ttf.ttx"))
-    assert refData == testData
+    _verifyOutput(outPath)
+
+
+def test_build_cff2(tmpdir):
+    outPath = os.path.join(str(tmpdir), "test_var.otf")
+
+    fb, advanceWidths, nameStrings = _setupFontBuilder(False, 1000)
+
+    fb.setupNameTable(nameStrings)
+
+    axes = [
+        ('TEST', 0, 0, 100, "Test Axis"),
+    ]
+    instances = [
+        dict(location=dict(TEST=0), stylename="TotallyNormal"),
+        dict(location=dict(TEST=100), stylename="TotallyTested"),
+    ]
+    fb.setupFvar(axes, instances)
+
+    pen = T2CharStringPen(None, None, CFF2=True)
+    drawTestGlyph(pen)
+    charString = pen.getCharString()
+
+    program = [
+        200, 200, -200, -200, 2, "blend", "rmoveto",
+        400, 400, 1, "blend", "hlineto",
+        400, 400, 1, "blend", "vlineto",
+        -400, -400, 1, "blend", "hlineto"
+    ]
+    charStringVariable = T2CharString(program=program)
+
+    charStrings = {".notdef": charString, "A": charString, "a": charStringVariable, ".null": charString}
+    fb.setupCFF2(charStrings, regions=[{"TEST": (0, 1, 1)}])
+
+    metrics = {gn: (advanceWidth, 0) for gn, advanceWidth in advanceWidths.items()}
+    fb.setupHorizontalMetrics(metrics)
+
+    fb.setupHorizontalHeader(ascent=824, descent=200)
+    fb.setupOS2(sTypoAscender=825, sTypoDescender=200, usWinAscent=824, usWinDescent=200)
+    fb.setupPost()
+
+    fb.save(outPath)
+
+    _verifyOutput(outPath)
