@@ -77,7 +77,7 @@ def lib_convertCFFToCFF2(cff, otFont):
 		privateOpOrder = buildOrder(privateDictOperators2)
 		for fontDict in fdArray:
 			fontDict.setCFF2(True)
-			for key in fontDict.rawDict.keys():
+			for key in list(fontDict.rawDict.keys()):
 				if key not in fontDict.order:
 					del fontDict.rawDict[key]
 					if hasattr(fontDict, key):

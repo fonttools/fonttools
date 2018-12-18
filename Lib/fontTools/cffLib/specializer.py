@@ -421,10 +421,11 @@ def specializeCommands(commands,
 					(op == commands[i-1][0]) and
 					(not isinstance(args[0], list))):
 				_, other_args = commands[i-1]
-				assert len(args) == 1 and len(other_args) == 1
-				commands[i-1] = (op, [other_args[0]+args[0]])
-				del commands[i]
-				continue
+				if not isinstance(other_args[0], list):
+					assert len(args) == 1 and len(other_args) == 1
+					commands[i-1] = (op, [other_args[0]+args[0]])
+					del commands[i]
+					continue
 
 	# 4. Peephole optimization to revert back some of the h/v variants back into their
 	#    original "relative" operator (rline/rrcurveto) if that saves a byte.
