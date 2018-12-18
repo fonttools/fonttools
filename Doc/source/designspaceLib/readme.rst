@@ -279,12 +279,15 @@ AxisDescriptor object
    necessary to define user-facing readable names for the axis. Keyed by
    xml:lang code. Varlib.
 -  ``minimum``: number. The minimum value for this axis. Implies a user space
-   value when a mapping exists. MutatorMath + Varlib.
+   value when a mapping exists, otherwise user and design space are the same.
+   MutatorMath + Varlib.
 -  ``maximum``: number. The maximum value for this axis. Implies a user space
-   value when a mapping exists. MutatorMath + Varlib.
+   value when a mapping exists, otherwise user and design space are the same.
+   MutatorMath + Varlib.
 -  ``default``: number. The default value for this axis, i.e. when a new
    location is created, this is the value this axis will get. Implies a user
-   space value when a mapping exists. MutatorMath + Varlib.
+   space value when a mapping exists, otherwise user and design space are the
+   same. MutatorMath + Varlib.
 -  ``map``: list of input / output values that can describe a warp of
    user space to designspace coordinates. If no map values are present,
    it is assumed it is [(minimum, minimum), (maximum, maximum)]. Varlib.
