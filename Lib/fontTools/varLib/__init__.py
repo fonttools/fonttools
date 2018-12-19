@@ -749,7 +749,6 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 
 	master_fonts = []
 	master_ttfs = []
-	master_source = ds.masters[ds.base_idx]
 	if hasattr(designspace, "sources"):  # Assume a DesignspaceDocument
 		basedir = getattr(designspace, "path", None)
 	else:  # Assume a path
