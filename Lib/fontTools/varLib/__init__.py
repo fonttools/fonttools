@@ -23,7 +23,7 @@ from __future__ import unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.arrayTools import Vector
-from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib import TTFont, newTable, TTLibError
 from fontTools.ttLib.tables._n_a_m_e import NameRecord
 from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
@@ -747,29 +747,52 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 	ds = load_designspace(designspace)
 	log.info("Building variable font")
 
+	master_fonts = []
+	master_ttfs = []
+	master_source = ds.masters[ds.base_idx]
 	if hasattr(designspace, "sources"):  # Assume a DesignspaceDocument
-		for master in ds.masters:
-			if master.font is None:
+		basedir = getattr(designspace, "path", None)
+	else:  # Assume a path
+		basedir = os.path.dirname(designspace)
+
+	for master in ds.masters:
+		# 1. If a SourceDescriptor has a layer name, demand that the compiled TTFont 
+		# be supplied by the caller. This spares us from modifying MasterFinder.
+		if master.layerName:
+			if not master.font:
 				raise AttributeError(
-					"designspace source '%s' is missing required 'font' attribute"
+					"Designspace source '%s' specified a layer name but lacks the "
+					"then required TTFont object in the 'font' attribute."
 					% getattr(master, "name", "<Unknown>")
 				)
-		master_fonts = [master.font for master in ds.masters]
-		master_ttfs = []
-		# Make a copy of the designated base font that we can then modify in-place.
-		buffer = io.BytesIO()
-		master_fonts[ds.base_idx].save(buffer)
-		buffer.seek(0)
-		vf = TTFont(buffer)
-	else:  # Assume a file path
-		log.info("Loading master fonts")
-		basedir = os.path.dirname(designspace)
-		master_ttfs = [
-			master_finder(os.path.join(basedir, m.filename)) for m in ds.masters
-		]
-		master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
-		# Reload base font as target font
-		vf = TTFont(master_ttfs[ds.base_idx])
+			master_fonts.append(master.font)
+			master_ttfs.append(None)  # No file path for in-memory object.
+		else:
+			# 2. If the caller already supplies a TTFont for a source, just take it.
+			if master.font:
+				font = master.font
+				master_fonts.append(font)
+				master_ttfs.append(None)  # No file path for in-memory object.
+			else:
+				# 3. A SourceDescriptor's filename might point to a UFO or an OpenType
+				# binary. Find out the hard way.
+				master_path = os.path.join(basedir, master.filename)
+				try:
+					font = TTFont(master_path)
+					master_fonts.append(font)
+					master_ttfs.append(master_path)
+				except (IOError, TTLibError):
+					# 4. Probably no OpenType binary, fall back to the master finder.
+					master_path = master_finder(master_path)
+					font = TTFont(master_path)
+					master_fonts.append(font)
+					master_ttfs.append(master_path)
+			# Copy the master source TTFont object to work on it.
+			if master is master_source:
+				buffer = io.BytesIO()
+				font.save(buffer)
+				buffer.seek(0)
+				vf = TTFont(buffer)
 
 	# TODO append masters as named-instances as well; needs .designspace change.
 	fvar = _add_fvar(vf, ds.axes, ds.instances)
