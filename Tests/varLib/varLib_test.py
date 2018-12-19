@@ -3,7 +3,7 @@ from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.varLib import build
 from fontTools.varLib import main as varLib_main
-from fontTools.designspaceLib import DesignSpaceDocumentError
+from fontTools.designspaceLib import DesignSpaceDocumentError, DesignSpaceDocument
 import difflib
 import os
 import shutil
@@ -283,6 +283,33 @@ class BuildTest(unittest.TestCase):
         varfont = TTFont(varfont_path)
         tables = [table_tag for table_tag in varfont.keys() if table_tag != 'head']
         expected_ttx_path = self.get_test_output('BuildMain.ttx')
+        self.expect_ttx(varfont, expected_ttx_path, tables)
+
+    def test_varlib_build_from_ds_object(self):
+        ds_path = self.get_test_input("Build.designspace")
+        ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
+        expected_ttx_path = self.get_test_output("BuildMain.ttx")
+
+        def reload_font(font):
+            """(De)serialize to get final binary layout."""
+            buf = BytesIO()
+            font.save(buf)
+            buf.seek(0)
+            return TTFont(buf)
+
+        ds = DesignSpaceDocument.fromfile(ds_path)
+        for source in ds.sources:
+            filename = os.path.join(
+                ttx_dir, os.path.basename(source.filename).replace(".ufo", ".ttx")
+            )
+            font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
+            font.importXML(filename)
+            source.font = reload_font(font)
+            source.filename = None  # Make sure no file path gets into build()
+
+        varfont, _, _ = build(ds)
+        varfont = reload_font(varfont)
+        tables = [table_tag for table_tag in varfont.keys() if table_tag != "head"]
         self.expect_ttx(varfont, expected_ttx_path, tables)
 
 

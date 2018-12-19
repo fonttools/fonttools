@@ -38,6 +38,7 @@ from fontTools.varLib.iup import iup_delta_optimize
 from fontTools.varLib.featureVars import addFeatureVariations
 from fontTools.designspaceLib import DesignSpaceDocument, AxisDescriptor
 from collections import OrderedDict, namedtuple
+import io
 import os.path
 import logging
 from pprint import pformat
@@ -647,9 +648,12 @@ def _add_CFF2(varFont, model, master_fonts):
 	merge_region_fonts(varFont, model, ordered_fonts_list, glyphOrder)
 
 
-def load_designspace(designspace_filename):
+def load_designspace(designspace):
+	if hasattr(designspace, "sources"):  # Assume a DesignspaceDocument
+		ds = designspace
+	else:  # Assume a file path
+		ds = DesignSpaceDocument.fromfile(designspace)
 
-	ds = DesignSpaceDocument.fromfile(designspace_filename)
 	masters = ds.sources
 	if not masters:
 		raise VarLibError("no sources found in .designspace")
@@ -731,7 +735,7 @@ def load_designspace(designspace_filename):
 	)
 
 
-def build(designspace_filename, master_finder=lambda s:s, exclude=[], optimize=True):
+def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 	"""
 	Build variation font from a designspace file.
 
@@ -740,15 +744,32 @@ def build(designspace_filename, master_finder=lambda s:s, exclude=[], optimize=T
 	binary as to be opened (eg. .ttf or .otf).
 	"""
 
-	ds = load_designspace(designspace_filename)
-
+	ds = load_designspace(designspace)
 	log.info("Building variable font")
-	log.info("Loading master fonts")
-	basedir = os.path.dirname(designspace_filename)
-	master_ttfs = [master_finder(os.path.join(basedir, m.filename)) for m in ds.masters]
-	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
-	# Reload base font as target font
-	vf = TTFont(master_ttfs[ds.base_idx])
+
+	if hasattr(designspace, "sources"):  # Assume a DesignspaceDocument
+		for master in ds.masters:
+			if master.font is None:
+				raise AttributeError(
+					"designspace source '%s' is missing required 'font' attribute"
+					% getattr(master, "name", "<Unknown>")
+				)
+		master_fonts = [master.font for master in ds.masters]
+		master_ttfs = []
+		# Make a copy of the designated base font that we can then modify in-place.
+		buffer = io.BytesIO()
+		master_fonts[ds.base_idx].save(buffer)
+		buffer.seek(0)
+		vf = TTFont(buffer)
+	else:  # Assume a file path
+		log.info("Loading master fonts")
+		basedir = os.path.dirname(designspace)
+		master_ttfs = [
+			master_finder(os.path.join(basedir, m.filename)) for m in ds.masters
+		]
+		master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
+		# Reload base font as target font
+		vf = TTFont(master_ttfs[ds.base_idx])
 
 	# TODO append masters as named-instances as well; needs .designspace change.
 	fvar = _add_fvar(vf, ds.axes, ds.instances)
