@@ -352,19 +352,22 @@ def _ClassDef_invert(self, allGlyphs=None):
 
 	return ret
 
-def _ClassDef_merge_classify(lst, allGlyphs=None):
+def _ClassDef_merge_classify(lst, allGlyphses=None):
 	self = ot.ClassDef()
 	self.classDefs = classDefs = {}
+	allGlyphsesWasNone = allGlyphses is None
+	if allGlyphsesWasNone:
+		allGlyphses = [None] * len(lst)
 
 	classifier = classifyTools.Classifier()
-	for l in lst:
-		sets = _ClassDef_invert(l, allGlyphs=allGlyphs)
+	for classDef,allGlyphs in zip(lst, allGlyphses):
+		sets = _ClassDef_invert(classDef, allGlyphs)
 		if allGlyphs is None:
 			sets = sets[1:]
 		classifier.update(sets)
 	classes = classifier.getClasses()
 
-	if allGlyphs is None:
+	if allGlyphsesWasNone:
 		classes.insert(0, set())
 
 	for i,classSet in enumerate(classes):
@@ -395,7 +398,7 @@ def _PairPosFormat2_align_matrices(self, lst, font, transparent=False):
 	matrices = [l.Class1Record for l in lst]
 
 	# Align first classes
-	self.ClassDef1, classes = _ClassDef_merge_classify([l.ClassDef1 for l in lst], allGlyphs=set(self.Coverage.glyphs))
+	self.ClassDef1, classes = _ClassDef_merge_classify([l.ClassDef1 for l in lst], [l.Coverage.glyphs for l in lst])
 	_ClassDef_calculate_Format(self.ClassDef1, font)
 	self.Class1Count = len(classes)
 	new_matrices = []
