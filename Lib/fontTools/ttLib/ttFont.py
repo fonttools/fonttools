@@ -693,19 +693,6 @@ class TTFont(object):
 		"""
 		return self["cmap"].getBestCmap(cmapPreferences=cmapPreferences)
 
-	def copy(self):
-		"""Return a new TTFont instance containing the same data.
-
-		>>> f1 = TTFont()
-		>>> f2 = f1.copy()
-		>>> f2 is not f1
-		True
-		"""
-		buf = BytesIO()
-		self.save(buf)
-		buf.seek(0)
-		return TTFont(buf)
-
 
 class _TTGlyphSet(object):
 

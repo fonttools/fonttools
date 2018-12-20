@@ -40,6 +40,7 @@ from fontTools.designspaceLib import DesignSpaceDocument, AxisDescriptor
 from collections import OrderedDict, namedtuple
 import os.path
 import logging
+from copy import deepcopy
 from pprint import pformat
 
 log = logging.getLogger("fontTools.varLib")
@@ -764,7 +765,7 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 			master_ttfs.append(None)  # in-memory fonts have no path
 
 	# Copy the base master to work from it
-	vf = master_fonts[ds.base_idx].copy()
+	vf = deepcopy(master_fonts[ds.base_idx])
 
 	# TODO append masters as named-instances as well; needs .designspace change.
 	fvar = _add_fvar(vf, ds.axes, ds.instances)

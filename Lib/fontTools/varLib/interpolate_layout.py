@@ -8,6 +8,7 @@ from fontTools.varLib import models, VarLibError, load_designspace, load_masters
 from fontTools.varLib.merger import InstancerMerger
 import os.path
 import logging
+from copy import deepcopy
 from pprint import pformat
 
 log = logging.getLogger("fontTools.varLib.interpolate_layout")
@@ -37,7 +38,7 @@ def interpolate_layout(designspace, loc, master_finder=lambda s:s, mapped=False)
 
 	log.info("Loading master fonts")
 	master_fonts = load_masters(designspace, master_finder)
-	font = master_fonts[ds.base_idx].copy()
+	font = deepcopy(master_fonts[ds.base_idx])
 
 	log.info("Location: %s", pformat(loc))
 	if not mapped:
