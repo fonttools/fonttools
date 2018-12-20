@@ -745,50 +745,14 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 	"""
 
 	ds = load_designspace(designspace)
+	master_fonts, master_ttfs = _ensure_sources(designspace, ds, master_finder)
 	log.info("Building variable font")
 
-	master_fonts = []
-	master_ttfs = []
-	if hasattr(designspace, "sources"):  # Assume a DesignspaceDocument
-		basedir = getattr(designspace, "path", None)
-	else:  # Assume a path
-		basedir = os.path.dirname(designspace)
-
-	for master_index, master in enumerate(ds.masters):
-		# 1. If the caller already supplies a TTFont for a source, just take it.
-		if master.font:
-			font = master.font
-			master_fonts.append(font)
-			master_ttfs.append(None)  # No file path for in-memory object.
-		else:
-			# If a SourceDescriptor has a layer name, demand that the compiled TTFont
-			# be supplied by the caller. This spares us from modifying MasterFinder.
-			if master.layerName:
-				raise AttributeError(
-					"Designspace source '%s' specified a layer name but lacks the "
-					"then required TTFont object in the 'font' attribute."
-					% getattr(master, "name", "<Unknown>")
-				)
-			else:
-				# 2. A SourceDescriptor's filename might point to a UFO or an OpenType
-				# binary. Find out the hard way.
-				master_path = os.path.join(basedir, master.filename)
-				try:
-					font = TTFont(master_path)
-					master_fonts.append(font)
-					master_ttfs.append(master_path)
-				except (IOError, TTLibError):
-					# 3. Probably no OpenType binary, fall back to the master finder.
-					master_path = master_finder(master_path)
-					font = TTFont(master_path)
-					master_fonts.append(font)
-					master_ttfs.append(master_path)
-		# Copy the master source TTFont object to work on it.
-		if master_index == ds.base_idx:
-			buffer = io.BytesIO()
-			font.save(buffer)
-			buffer.seek(0)
-			vf = TTFont(buffer)
+	# Copy the master source TTFont object to work on it.
+	buffer = io.BytesIO()
+	master_fonts[ds.base_idx].save(buffer)
+	buffer.seek(0)
+	vf = TTFont(buffer)
 
 	# TODO append masters as named-instances as well; needs .designspace change.
 	fvar = _add_fvar(vf, ds.axes, ds.instances)
@@ -830,6 +794,50 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 
 	# TODO: Only return vf for 4.0+, the rest is unused.
 	return vf, model, master_ttfs
+
+
+def _ensure_sources(designspace, designspace_data, master_finder):
+	"""Ensure that all SourceDescriptor.font attributes have an appropriate TTFont
+	object loaded."""
+	master_fonts = []
+	master_ttfs = []
+	if hasattr(designspace, "sources"):  # Assume a DesignspaceDocument
+		basedir = getattr(designspace, "path", None)
+	else:  # Assume a path
+		basedir = os.path.dirname(designspace)
+
+	for master in designspace_data.masters:
+		# 1. If the caller already supplies a TTFont for a source, just take it.
+		if master.font:
+			font = master.font
+			master_fonts.append(font)
+			master_ttfs.append(None)  # No file path for in-memory object.
+		else:
+			# If a SourceDescriptor has a layer name, demand that the compiled TTFont
+			# be supplied by the caller. This spares us from modifying MasterFinder.
+			if master.layerName:
+				raise AttributeError(
+					"Designspace source '%s' specified a layer name but lacks the "
+					"then required TTFont object in the 'font' attribute."
+					% getattr(master, "name", "<Unknown>")
+				)
+			else:
+				# 2. A SourceDescriptor's filename might point to a UFO or an OpenType
+				# binary. Find out the hard way.
+				master_path = os.path.join(basedir, master.filename)
+				try:
+					font = TTFont(master_path)
+					master_fonts.append(font)
+					master_ttfs.append(master_path)
+				except (IOError, TTLibError):
+					# 3. Probably no OpenType binary, fall back to the master finder.
+					master_path = master_finder(master_path)
+					font = TTFont(master_path)
+					master_fonts.append(font)
+					master_ttfs.append(master_path)
+	
+	# TODO: Drop return values for 4.0, master_fonts is just a list comprehension away.
+	return master_fonts, master_ttfs
 
 
 class MasterFinder(object):
