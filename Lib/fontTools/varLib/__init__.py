@@ -38,7 +38,6 @@ from fontTools.varLib.iup import iup_delta_optimize
 from fontTools.varLib.featureVars import addFeatureVariations
 from fontTools.designspaceLib import DesignSpaceDocument, AxisDescriptor
 from collections import OrderedDict, namedtuple
-import io
 import os.path
 import logging
 from pprint import pformat
@@ -737,18 +736,6 @@ def load_designspace(designspace):
 	)
 
 
-def _copy_font(ttFont):
-	try:
-		filename = ttFont.reader.file.name
-	except AttributeError:
-		buf = io.BytesIO()
-		ttFont.save(buf)
-		buf.seek(0)
-		return TTFont(buf)
-	else:
-		return TTFont(filename)
-
-
 def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 	"""
 	Build variation font from a designspace file.
@@ -777,7 +764,7 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 			master_ttfs.append(None)  # in-memory fonts have no path
 
 	# Copy the base master to work from it
-	vf = _copy_font(master_fonts[ds.base_idx])
+	vf = master_fonts[ds.base_idx].copy()
 
 	# TODO append masters as named-instances as well; needs .designspace change.
 	fvar = _add_fvar(vf, ds.axes, ds.instances)
