@@ -135,15 +135,18 @@ class SFNTReader(object):
 		obj = cls.__new__(cls)
 		for k, v in self.__dict__.items():
 			if k == "file":
-				f = self.file
-				start = f.tell()
-				f.seek(0)
-				buf = BytesIO(f.read())
-				f.seek(start)
-				buf.seek(start)
-				if hasattr(f, "name"):
-					buf.name = f.name
-				obj.file = buf
+				try:
+					obj.file = deepcopy(v, memo)
+				except TypeError:
+					f = self.file
+					pos = f.tell()
+					f.seek(0)
+					buf = BytesIO(f.read())
+					f.seek(pos)
+					buf.seek(pos)
+					if hasattr(f, "name"):
+						buf.name = f.name
+					obj.file = buf
 			else:
 				obj.__dict__[k] = deepcopy(v, memo)
 		return obj
