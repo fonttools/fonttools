@@ -1053,6 +1053,8 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         return f.getvalue()
 
     def read(self, path):
+        if hasattr(path, "__fspath__"):  # support os.PathLike objects
+            path = path.__fspath__()
         self.path = path
         self.filename = os.path.basename(path)
         reader = self.readerClass(path, self)
@@ -1061,6 +1063,8 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
             self.findDefault()
 
     def write(self, path):
+        if hasattr(path, "__fspath__"):  # support os.PathLike objects
+            path = path.__fspath__()
         self.path = path
         self.filename = os.path.basename(path)
         self.updatePaths()

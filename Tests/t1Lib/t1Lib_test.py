@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 import unittest
 import os
+import sys
 from fontTools import t1Lib
 from fontTools.pens.basePen import NullPen
 import random
@@ -49,6 +50,11 @@ class ReadWriteTest(unittest.TestCase):
 		# 'OTHER' == 'PFA'
 		data = self.write(font, 'OTHER', dohex=True)
 		self.assertEqual(font.getData(), data)
+
+	@unittest.skipIf(sys.version_info[:2] < (3, 6), "pathlib is only tested on 3.6 and up")
+	def test_read_with_path(self):
+		import pathlib
+		font = t1Lib.T1Font(pathlib.Path(PFB))
 
 	@staticmethod
 	def write(font, outtype, dohex=False):
