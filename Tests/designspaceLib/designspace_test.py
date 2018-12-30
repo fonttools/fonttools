@@ -4,6 +4,7 @@ from __future__ import (print_function, division, absolute_import,
                         unicode_literals)
 
 import os
+import sys
 import pytest
 import warnings
 
@@ -12,12 +13,6 @@ from fontTools.misc import plistlib
 from fontTools.designspaceLib import (
     DesignSpaceDocument, SourceDescriptor, AxisDescriptor, RuleDescriptor,
     InstanceDescriptor, evaluateRule, processRules, posix, DesignSpaceDocumentError)
-
-try:
-    import pathlib
-except:
-    pathlib = None
-
 
 def _axesAsDict(axes):
     """
@@ -791,15 +786,17 @@ def test_documentLib(tmpdir):
     assert dummyKey in new.lib
     assert new.lib[dummyKey] == dummyData
 
-@pytest.mark.skipif(pathlib is None, reason="pathlib not installed")
+@pytest.mark.skipif(sys.version_info[:2] < (3, 6), reason="pathlib is only tested on 3.6 and up")
 def test_read_with_path_object():
+    import pathlib
     source = (pathlib.Path(__file__) / "../data/test.designspace").resolve()
     assert source.exists()
     doc = DesignSpaceDocument()
     doc.read(source)
 
-@pytest.mark.skipif(pathlib is None, reason="pathlib not installed")
+@pytest.mark.skipif(sys.version_info[:2] < (3, 6), reason="pathlib is only tested on 3.6 and up")
 def test_with_with_path_object(tmpdir):
+    import pathlib
     tmpdir = str(tmpdir)
     dest = pathlib.Path(tmpdir) / "test.designspace"
     doc = DesignSpaceDocument()
