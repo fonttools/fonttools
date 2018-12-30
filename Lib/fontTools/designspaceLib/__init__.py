@@ -357,6 +357,9 @@ class BaseDocWriter(object):
         return cls.ruleDescriptorClass()
 
     def __init__(self, documentPath, documentObject):
+        if not isinstance(documentPath, basestring):
+            # ET doesn't like os.PathLike objects
+            documentPath = unicode(documentPath)
         self.path = documentPath
         self.documentObject = documentObject
         self.documentVersion = "4.0"
@@ -647,6 +650,9 @@ class BaseDocReader(LogMixin):
     instanceDescriptorClass = InstanceDescriptor
 
     def __init__(self, documentPath, documentObject):
+        if not isinstance(documentPath, basestring):
+            # ET doesn't like os.PathLike objects
+            documentPath = unicode(documentPath)
         self.path = documentPath
         self.documentObject = documentObject
         tree = ET.parse(self.path)

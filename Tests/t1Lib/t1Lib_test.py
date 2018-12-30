@@ -6,6 +6,11 @@ from fontTools import t1Lib
 from fontTools.pens.basePen import NullPen
 import random
 
+try:
+	import pathlib
+except:
+	pathlib = None
+
 
 CWD = os.path.abspath(os.path.dirname(__file__))
 DATADIR = os.path.join(CWD, 'data')
@@ -49,6 +54,10 @@ class ReadWriteTest(unittest.TestCase):
 		# 'OTHER' == 'PFA'
 		data = self.write(font, 'OTHER', dohex=True)
 		self.assertEqual(font.getData(), data)
+
+	@unittest.skipIf(pathlib is None, "pathlib not installed")
+	def test_read_with_path(self):
+		font = t1Lib.T1Font(pathlib.Path(PFB))
 
 	@staticmethod
 	def write(font, outtype, dohex=False):

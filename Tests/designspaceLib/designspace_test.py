@@ -13,6 +13,12 @@ from fontTools.designspaceLib import (
     DesignSpaceDocument, SourceDescriptor, AxisDescriptor, RuleDescriptor,
     InstanceDescriptor, evaluateRule, processRules, posix, DesignSpaceDocumentError)
 
+try:
+    import pathlib
+except:
+    pathlib = None
+
+
 def _axesAsDict(axes):
     """
         Make the axis data we have available in
@@ -785,3 +791,18 @@ def test_documentLib(tmpdir):
     assert dummyKey in new.lib
     assert new.lib[dummyKey] == dummyData
 
+@pytest.mark.skipif(pathlib is None, reason="pathlib not installed")
+def test_read_with_path_object():
+    import pathlib
+    source = (pathlib.Path(__file__) / "../data/test.designspace").resolve()
+    assert source.exists()
+    doc = DesignSpaceDocument()
+    doc.read(source)
+
+@pytest.mark.skipif(pathlib is None, reason="pathlib not installed")
+def test_with_with_path_object(tmpdir):
+    import pathlib
+    dest = pathlib.Path(tmpdir) / "test.designspace"
+    doc = DesignSpaceDocument()
+    doc.write(dest)
+    assert dest.exists()

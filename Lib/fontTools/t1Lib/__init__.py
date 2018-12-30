@@ -108,11 +108,12 @@ class T1Font(object):
 
 def read(path, onlyHeader=False):
 	"""reads any Type 1 font file, returns raw data"""
-	normpath = path.lower()
+	_, ext = os.path.splitext(path)
+	ext = ext.lower()
 	creator, typ = getMacCreatorAndType(path)
 	if typ == 'LWFN':
 		return readLWFN(path, onlyHeader), 'LWFN'
-	if normpath[-4:] == '.pfb':
+	if ext == '.pfb':
 		return readPFB(path, onlyHeader), 'PFB'
 	else:
 		return readOther(path), 'OTHER'
