@@ -33,6 +33,9 @@ class ResourceReader(MutableMapping):
 
 	@staticmethod
 	def openResourceFork(path):
+		if not isinstance(path, basestring):
+			# the /..namedfork/rsrc addition doesn't work on os.PathLike paths
+			path = unicode(path)
 		with open(path + '/..namedfork/rsrc', 'rb') as resfork:
 			data = resfork.read()
 		infile = BytesIO(data)
