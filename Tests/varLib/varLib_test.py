@@ -12,6 +12,14 @@ import tempfile
 import unittest
 
 
+def reload_font(font):
+    """(De)serialize to get final binary layout."""
+    buf = BytesIO()
+    font.save(buf)
+    buf.seek(0)
+    return TTFont(buf)
+
+
 class BuildTest(unittest.TestCase):
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
@@ -113,10 +121,7 @@ class BuildTest(unittest.TestCase):
             # some data (e.g. counts printed in TTX inline comments) is only
             # calculated at compile time, so before we can compare the TTX
             # dumps we need to save to a temporary stream, and realod the font
-            buf = BytesIO()
-            varfont.save(buf)
-            buf.seek(0)
-            varfont = TTFont(buf)
+            varfont = reload_font(varfont)
 
         expected_ttx_path = self.get_test_output(expected_ttx_name + '.ttx')
         self.expect_ttx(varfont, expected_ttx_path, tables)
@@ -230,10 +235,7 @@ class BuildTest(unittest.TestCase):
         # some data (e.g. counts printed in TTX inline comments) is only
         # calculated at compile time, so before we can compare the TTX
         # dumps we need to save to a temporary stream, and realod the font
-        buf = BytesIO()
-        varfont.save(buf)
-        buf.seek(0)
-        varfont = TTFont(buf)
+        varfont = reload_font(varfont)
 
         expected_ttx_path = self.get_test_output(expected_ttx_name + '.ttx')
         self.expect_ttx(varfont, expected_ttx_path, tables)
@@ -290,13 +292,6 @@ class BuildTest(unittest.TestCase):
         ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
         expected_ttx_path = self.get_test_output("BuildMain.ttx")
 
-        def reload_font(font):
-            """(De)serialize to get final binary layout."""
-            buf = BytesIO()
-            font.save(buf)
-            buf.seek(0)
-            return TTFont(buf)
-
         ds = DesignSpaceDocument.fromfile(ds_path)
         for source in ds.sources:
             filename = os.path.join(
@@ -304,7 +299,7 @@ class BuildTest(unittest.TestCase):
             )
             font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
             font.importXML(filename)
-            source.font = reload_font(font)
+            source.font = font
             source.filename = None  # Make sure no file path gets into build()
 
         varfont, _, _ = build(ds)
