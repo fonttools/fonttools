@@ -787,10 +787,10 @@ def test_documentLib(tmpdir):
     assert new.lib[dummyKey] == dummyData
 
 
-def test_getSourcePath():
+def test_getSourcePath(tmpdir):
     doc = DesignSpaceDocument()
     s1 = SourceDescriptor()
-    s1.path = "/tmp/foo/masters/Source1.ufo"
+    s1.path = str(tmpdir / "foo"/ "masters" / "Source1.ufo")
 
     assert doc.getSourcePath(s1) == s1.path
 
@@ -802,7 +802,7 @@ def test_getSourcePath():
     ):
         doc.getSourcePath(s1)
 
-    doc.path = "/tmp/foo/bar/MyDesignspace.designspace"
+    doc.path = str(tmpdir / "foo" / "bar" / "MyDesignspace.designspace")
 
     with pytest.raises(
         DesignSpaceDocumentError,
@@ -815,7 +815,7 @@ def test_getSourcePath():
 
     s1.filename = "../masters/Source1.ufo"
 
-    assert doc.getSourcePath(s1) == "/tmp/foo/masters/Source1.ufo"
+    assert doc.getSourcePath(s1) == str(tmpdir / "foo" / "masters" / "Source1.ufo")
 
 
 @pytest.mark.skipif(sys.version_info[:2] < (3, 6), reason="pathlib is only tested on 3.6 and up")
