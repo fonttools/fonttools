@@ -15,7 +15,7 @@ from __future__ import absolute_import, unicode_literals
 from fontTools.misc.py23 import basestring, unicode, tounicode, open
 
 
-XML_DECLARATION = """<?xml version='1.0' encoding='%s'?>"""
+XML_DECLARATION = """<?xml version="1.0" encoding="%s"?>"""
 
 __all__ = [
     # public symbols
