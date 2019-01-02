@@ -2331,7 +2331,7 @@ class TopDict(BaseDict):
 
 	def decompileAllCharStrings(self):
 		# Make sure that all the Private Dicts have been instantiated.
-		for charString in self.CharStrings.values():
+		for i, charString in enumerate(self.CharStrings.values()):
 			try:
 				charString.decompile()
 			except:
