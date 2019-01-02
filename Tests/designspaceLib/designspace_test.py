@@ -789,6 +789,11 @@ def test_documentLib(tmpdir):
 def test_getSourcePath():
     doc = DesignSpaceDocument()
     s1 = SourceDescriptor()
+    s1.path = "/tmp/foo/masters/Source1.ufo"
+
+    assert doc.getSourcePath(s1) == s1.path
+
+    s1.path = None
 
     with pytest.raises(
         DesignSpaceDocumentError,
