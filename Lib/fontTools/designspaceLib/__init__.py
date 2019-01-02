@@ -1282,13 +1282,15 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         'path' attribute, or if the latter is not set, the concatenation of
         the source's (relative) 'filename' attribute and the designspace's
         directory.
+        The returned path uses the platform-specific path separator: i.e.
+        forward slash on POSIX, backslash on Windows.
 
         Raises DesignSpaceDocumentError if sourceDescriptor.path is None and
         self.path is None, or sourceDescriptor.filename is None.
         """
         if sourceDescriptor.path:
             # prefer absolute path if present
-            return sourceDescriptor.path
+            return os.path.normpath(sourceDescriptor.path)
         if self.path is None:
             raise DesignSpaceDocumentError(
                 "DesignSpaceDocument 'path' attribute is not defined; cannot "
