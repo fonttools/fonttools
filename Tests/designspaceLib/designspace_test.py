@@ -792,7 +792,7 @@ def test_getSourcePath(tmpdir):
     s1 = SourceDescriptor()
     s1.path = str(tmpdir / "foo"/ "masters" / "Source1.ufo")
 
-    assert doc.getSourcePath(s1) == s1.path
+    assert doc.getSourcePath(s1) == os.path.normpath(s1.path)
 
     s1.path = None
 
