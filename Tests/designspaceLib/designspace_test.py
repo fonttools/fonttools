@@ -785,3 +785,28 @@ def test_documentLib(tmpdir):
     assert dummyKey in new.lib
     assert new.lib[dummyKey] == dummyData
 
+
+def test_getSourcePath():
+    doc = DesignSpaceDocument()
+    s1 = SourceDescriptor()
+
+    with pytest.raises(
+        DesignSpaceDocumentError,
+        match="DesignSpaceDocument 'path' attribute is not defined",
+    ):
+        doc.getSourcePath(s1)
+
+    doc.path = "/tmp/foo/bar/MyDesignspace.designspace"
+
+    with pytest.raises(
+        DesignSpaceDocumentError,
+        match=(
+            "Designspace source '<Unknown>' has neither absolute 'path' nor "
+            "relative 'filename' defined"
+        ),
+    ):
+        doc.getSourcePath(s1)
+
+    s1.filename = "../masters/Source1.ufo"
+
+    assert doc.getSourcePath(s1) == "/tmp/foo/masters/Source1.ufo"

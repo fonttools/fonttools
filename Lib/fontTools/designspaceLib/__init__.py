@@ -673,12 +673,6 @@ class BaseDocReader(LogMixin):
         self.readInstances()
         self.readLib()
 
-    def getSourcePaths(self, makeGlyphs=True, makeKerning=True, makeInfo=True):
-        paths = []
-        for name in self.documentObject.sources.keys():
-            paths.append(self.documentObject.sources[name][0].path)
-        return paths
-
     def readRules(self):
         # we also need to read any conditions that are outside of a condition set.
         rules = []
@@ -1278,3 +1272,30 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
                     newConditions.append(dict(name=cond['name'], minimum=minimum, maximum=maximum))
                 newConditionSets.append(newConditions)
             rule.conditionSets = newConditionSets
+
+    def getSourcePath(self, sourceDescriptor):
+        """Return the absolute path of sourceDescriptor. This is either the
+        'path' attribute, or if the latter is not set, the concatenation of
+        the source's (relative) 'filename' attribute and the designspace's
+        directory.
+
+        Raises DesignSpaceDocumentError if sourceDescriptor.path is None and
+        self.path is None, or sourceDescriptor.filename is None.
+        """
+        if sourceDescriptor.path:
+            # prefer absolute path if present
+            return sourceDescriptor.path
+        if self.path is None:
+            raise DesignSpaceDocumentError(
+                "DesignSpaceDocument 'path' attribute is not defined; cannot "
+                "load source from relative filename"
+            )
+        if sourceDescriptor.filename is None:
+            raise DesignSpaceDocumentError(
+                "Designspace source '%s' has neither absolute 'path' nor "
+                "relative 'filename' defined"
+                % (sourceDescriptor.name or "<Unknown>")
+            )
+        return os.path.abspath(
+            os.path.join(os.path.dirname(self.path), sourceDescriptor.filename)
+        )

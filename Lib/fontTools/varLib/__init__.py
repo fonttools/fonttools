@@ -809,26 +809,6 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 	return vf, model, master_ttfs
 
 
-# TODO: move to designspaceLib?
-def _get_master_path(designspace, master):
-	if master.path:
-		# prefer absolute path if present
-		return master.path
-	if designspace.path is None:
-		raise AttributeError(
-			"DesignSpaceDocument 'path' attribute is not defined; cannot "
-			"load master from relative filename"
-		)
-	if master.filename is None:
-		raise AttributeError(
-			"Designspace source '%s' has neither absolute 'path' nor "
-			"relative 'filename' defined"
-			% (master.name or "<Unknown>")
-		)
-	return os.path.join(os.path.dirname(designspace.path), master.filename)
-
-
-
 def load_masters(designspace, master_finder=lambda s: s):
 	"""Ensure that all SourceDescriptor.font attributes have an appropriate TTFont
 	object loaded.
@@ -855,7 +835,7 @@ def load_masters(designspace, master_finder=lambda s: s):
 			else:
 				# 2. A SourceDescriptor's filename might point to a UFO or an OpenType
 				# binary. Find out the hard way.
-				master_path = _get_master_path(designspace, master)
+				master_path = designspace.getSourcePath(master)
 				try:
 					font = TTFont(master_path)
 				except (IOError, TTLibError):
