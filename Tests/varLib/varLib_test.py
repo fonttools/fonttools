@@ -2,14 +2,17 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.varLib import build
-from fontTools.varLib import main as varLib_main
-from fontTools.designspaceLib import DesignSpaceDocumentError, DesignSpaceDocument
+from fontTools.varLib import main as varLib_main, load_masters
+from fontTools.designspaceLib import (
+    DesignSpaceDocumentError, DesignSpaceDocument, SourceDescriptor,
+)
 import difflib
 import os
 import shutil
 import sys
 import tempfile
 import unittest
+import pytest
 
 
 def reload_font(font):
@@ -306,6 +309,20 @@ class BuildTest(unittest.TestCase):
         varfont = reload_font(varfont)
         tables = [table_tag for table_tag in varfont.keys() if table_tag != "head"]
         self.expect_ttx(varfont, expected_ttx_path, tables)
+
+
+def test_load_masters_layerName_without_required_font():
+    ds = DesignSpaceDocument()
+    s = SourceDescriptor()
+    s.font = None
+    s.layerName = "Medium"
+    ds.addSource(s)
+
+    with pytest.raises(
+        AttributeError,
+        match="specified a layer name but lacks the required TTFont object",
+    ):
+        load_masters(ds)
 
 
 if __name__ == "__main__":
