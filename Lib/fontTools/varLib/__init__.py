@@ -811,7 +811,12 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 
 def load_masters(designspace, master_finder=lambda s: s):
 	"""Ensure that all SourceDescriptor.font attributes have an appropriate TTFont
-	object loaded.
+	object loaded, or else open TTFont objects from the SourceDescriptor.path
+	attributes.
+
+	The paths can point to either an OpenType font or to a UFO. In the latter case,
+	use the provided master_finder callable to map from UFO paths to the respective
+	master font binaries (e.g. .ttf or .otf).
 
 	Return list of master TTFont objects in the same order they are listed in the
 	DesignSpaceDocument.
