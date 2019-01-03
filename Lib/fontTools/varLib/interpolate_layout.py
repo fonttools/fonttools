@@ -4,16 +4,17 @@ Interpolate OpenType Layout tables (GDEF / GPOS / GSUB).
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
-from fontTools.varLib import models, VarLibError, load_designspace
+from fontTools.varLib import models, VarLibError, load_designspace, load_masters
 from fontTools.varLib.merger import InstancerMerger
 import os.path
 import logging
+from copy import deepcopy
 from pprint import pformat
 
 log = logging.getLogger("fontTools.varLib.interpolate_layout")
 
 
-def interpolate_layout(designspace_filename, loc, master_finder=lambda s:s, mapped=False):
+def interpolate_layout(designspace, loc, master_finder=lambda s:s, mapped=False):
 	"""
 	Interpolate GPOS from a designspace file and location.
 
@@ -26,18 +27,18 @@ def interpolate_layout(designspace_filename, loc, master_finder=lambda s:s, mapp
 	it is assumed that location is in designspace's internal space and
 	no mapping is performed.
 	"""
-	ds = load_designspace(designspace_filename)
+	if hasattr(designspace, "sources"):  # Assume a DesignspaceDocument
+		pass
+	else:  # Assume a file path
+		from fontTools.designspaceLib import DesignSpaceDocument
+		designspace = DesignSpaceDocument.fromfile(designspace)
 
+	ds = load_designspace(designspace)
 	log.info("Building interpolated font")
-	log.info("Loading master fonts")
-	basedir = os.path.dirname(designspace_filename)
-	master_ttfs = [
-		master_finder(os.path.join(basedir, m.filename)) for m in ds.masters
-	]
-	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
 
-	#font = master_fonts[ds.base_idx]
-	font = TTFont(master_ttfs[ds.base_idx])
+	log.info("Loading master fonts")
+	master_fonts = load_masters(designspace, master_finder)
+	font = deepcopy(master_fonts[ds.base_idx])
 
 	log.info("Location: %s", pformat(loc))
 	if not mapped:

@@ -23,7 +23,7 @@ from __future__ import unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.arrayTools import Vector
-from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib import TTFont, newTable, TTLibError
 from fontTools.ttLib.tables._n_a_m_e import NameRecord
 from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
@@ -40,6 +40,7 @@ from fontTools.designspaceLib import DesignSpaceDocument, AxisDescriptor
 from collections import OrderedDict, namedtuple
 import os.path
 import logging
+from copy import deepcopy
 from pprint import pformat
 
 log = logging.getLogger("fontTools.varLib")
@@ -647,9 +648,14 @@ def _add_CFF2(varFont, model, master_fonts):
 	merge_region_fonts(varFont, model, ordered_fonts_list, glyphOrder)
 
 
-def load_designspace(designspace_filename):
+def load_designspace(designspace):
+	# TODO: remove this and always assume 'designspace' is a DesignSpaceDocument,
+	# never a file path, as that's already handled by caller
+	if hasattr(designspace, "sources"):  # Assume a DesignspaceDocument
+		ds = designspace
+	else:  # Assume a file path
+		ds = DesignSpaceDocument.fromfile(designspace)
 
-	ds = DesignSpaceDocument.fromfile(designspace_filename)
 	masters = ds.sources
 	if not masters:
 		raise VarLibError("no sources found in .designspace")
@@ -731,7 +737,7 @@ def load_designspace(designspace_filename):
 	)
 
 
-def build(designspace_filename, master_finder=lambda s:s, exclude=[], optimize=True):
+def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 	"""
 	Build variation font from a designspace file.
 
@@ -739,16 +745,27 @@ def build(designspace_filename, master_finder=lambda s:s, exclude=[], optimize=T
 	filename as found in designspace file and map it to master font
 	binary as to be opened (eg. .ttf or .otf).
 	"""
+	if hasattr(designspace, "sources"):  # Assume a DesignspaceDocument
+		pass
+	else:  # Assume a file path
+		designspace = DesignSpaceDocument.fromfile(designspace)
 
-	ds = load_designspace(designspace_filename)
-
+	ds = load_designspace(designspace)
 	log.info("Building variable font")
+
 	log.info("Loading master fonts")
-	basedir = os.path.dirname(designspace_filename)
-	master_ttfs = [master_finder(os.path.join(basedir, m.filename)) for m in ds.masters]
-	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
-	# Reload base font as target font
-	vf = TTFont(master_ttfs[ds.base_idx])
+	master_fonts = load_masters(designspace, master_finder)
+
+	# TODO: 'master_ttfs' is unused except for return value, remove later
+	master_ttfs = []
+	for master in master_fonts:
+		try:
+			master_ttfs.append(master.reader.file.name)
+		except AttributeError:
+			master_ttfs.append(None)  # in-memory fonts have no path
+
+	# Copy the base master to work from it
+	vf = deepcopy(master_fonts[ds.base_idx])
 
 	# TODO append masters as named-instances as well; needs .designspace change.
 	fvar = _add_fvar(vf, ds.axes, ds.instances)
@@ -788,7 +805,56 @@ def build(designspace_filename, master_finder=lambda s:s, exclude=[], optimize=T
 		if tag in vf:
 			del vf[tag]
 
+	# TODO: Only return vf for 4.0+, the rest is unused.
 	return vf, model, master_ttfs
+
+
+def load_masters(designspace, master_finder=lambda s: s):
+	"""Ensure that all SourceDescriptor.font attributes have an appropriate TTFont
+	object loaded, or else open TTFont objects from the SourceDescriptor.path
+	attributes.
+
+	The paths can point to either an OpenType font or to a UFO. In the latter case,
+	use the provided master_finder callable to map from UFO paths to the respective
+	master font binaries (e.g. .ttf or .otf).
+
+	Return list of master TTFont objects in the same order they are listed in the
+	DesignSpaceDocument.
+	"""
+	master_fonts = []
+
+	for master in designspace.sources:
+		# 1. If the caller already supplies a TTFont for a source, just take it.
+		if master.font:
+			font = master.font
+			master_fonts.append(font)
+		else:
+			# If a SourceDescriptor has a layer name, demand that the compiled TTFont
+			# be supplied by the caller. This spares us from modifying MasterFinder.
+			if master.layerName:
+				raise AttributeError(
+					"Designspace source '%s' specified a layer name but lacks the "
+					"required TTFont object in the 'font' attribute."
+					% (master.name or "<Unknown>")
+			)
+			else:
+				if master.path is None:
+					raise AttributeError(
+						"Designspace source '%s' has neither 'font' nor 'path' "
+						"attributes" % (master.name or "<Unknown>")
+					)
+				# 2. A SourceDescriptor's path might point to a UFO or an OpenType
+				# binary. Find out the hard way.
+				master_path = os.path.normpath(master.path)
+				try:
+					font = TTFont(master_path)
+				except (IOError, TTLibError):
+					# 3. Not an OpenType binary, fall back to the master finder.
+					master_path = master_finder(master_path)
+					font = TTFont(master_path)
+				master_fonts.append(font)
+
+	return master_fonts
 
 
 class MasterFinder(object):
@@ -863,7 +929,7 @@ def main(args=None):
 	if outfile is None:
 		outfile = os.path.splitext(designspace_filename)[0] + '-VF.ttf'
 
-	vf, model, master_ttfs = build(
+	vf, _, _ = build(
 		designspace_filename,
 		finder,
 		exclude=options.exclude,

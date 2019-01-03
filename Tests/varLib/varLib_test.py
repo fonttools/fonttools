@@ -2,14 +2,25 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.varLib import build
-from fontTools.varLib import main as varLib_main
-from fontTools.designspaceLib import DesignSpaceDocumentError
+from fontTools.varLib import main as varLib_main, load_masters
+from fontTools.designspaceLib import (
+    DesignSpaceDocumentError, DesignSpaceDocument, SourceDescriptor,
+)
 import difflib
 import os
 import shutil
 import sys
 import tempfile
 import unittest
+import pytest
+
+
+def reload_font(font):
+    """(De)serialize to get final binary layout."""
+    buf = BytesIO()
+    font.save(buf)
+    buf.seek(0)
+    return TTFont(buf)
 
 
 class BuildTest(unittest.TestCase):
@@ -113,10 +124,7 @@ class BuildTest(unittest.TestCase):
             # some data (e.g. counts printed in TTX inline comments) is only
             # calculated at compile time, so before we can compare the TTX
             # dumps we need to save to a temporary stream, and realod the font
-            buf = BytesIO()
-            varfont.save(buf)
-            buf.seek(0)
-            varfont = TTFont(buf)
+            varfont = reload_font(varfont)
 
         expected_ttx_path = self.get_test_output(expected_ttx_name + '.ttx')
         self.expect_ttx(varfont, expected_ttx_path, tables)
@@ -230,10 +238,7 @@ class BuildTest(unittest.TestCase):
         # some data (e.g. counts printed in TTX inline comments) is only
         # calculated at compile time, so before we can compare the TTX
         # dumps we need to save to a temporary stream, and realod the font
-        buf = BytesIO()
-        varfont.save(buf)
-        buf.seek(0)
-        varfont = TTFont(buf)
+        varfont = reload_font(varfont)
 
         expected_ttx_path = self.get_test_output(expected_ttx_name + '.ttx')
         self.expect_ttx(varfont, expected_ttx_path, tables)
@@ -284,6 +289,44 @@ class BuildTest(unittest.TestCase):
         tables = [table_tag for table_tag in varfont.keys() if table_tag != 'head']
         expected_ttx_path = self.get_test_output('BuildMain.ttx')
         self.expect_ttx(varfont, expected_ttx_path, tables)
+
+    def test_varlib_build_from_ds_object(self):
+        ds_path = self.get_test_input("Build.designspace")
+        ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
+        expected_ttx_path = self.get_test_output("BuildMain.ttx")
+
+        self.temp_dir()
+        for path in self.get_file_list(ttx_dir, '.ttx', 'TestFamily-'):
+            self.compile_font(path, ".ttf", self.tempdir)
+
+        ds = DesignSpaceDocument.fromfile(ds_path)
+        for source in ds.sources:
+            filename = os.path.join(
+                self.tempdir, os.path.basename(source.filename).replace(".ufo", ".ttf")
+            )
+            source.font = TTFont(
+                filename, recalcBBoxes=False, recalcTimestamp=False, lazy=True
+            )
+            source.filename = None  # Make sure no file path gets into build()
+
+        varfont, _, _ = build(ds)
+        varfont = reload_font(varfont)
+        tables = [table_tag for table_tag in varfont.keys() if table_tag != "head"]
+        self.expect_ttx(varfont, expected_ttx_path, tables)
+
+
+def test_load_masters_layerName_without_required_font():
+    ds = DesignSpaceDocument()
+    s = SourceDescriptor()
+    s.font = None
+    s.layerName = "Medium"
+    ds.addSource(s)
+
+    with pytest.raises(
+        AttributeError,
+        match="specified a layer name but lacks the required TTFont object",
+    ):
+        load_masters(ds)
 
 
 if __name__ == "__main__":
