@@ -1111,21 +1111,11 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
 
 
         """
+        assert self.path is not None
         for descriptor in self.sources + self.instances:
-            # check what the relative path really should be?
-            expectedFilename = None
-            if descriptor.path is not None and self.path is not None:
-                expectedFilename = self._posixRelativePath(descriptor.path)
-
-            # 3
-            if descriptor.filename is None and descriptor.path is not None and self.path is not None:
+            if descriptor.path is not None:
+                # case 3 and 4: filename gets updated and relativized
                 descriptor.filename = self._posixRelativePath(descriptor.path)
-                continue
-
-            # 4
-            if descriptor.filename is not None and descriptor.path is not None and self.path is not None:
-                if descriptor.filename is not expectedFilename:
-                    descriptor.filename = expectedFilename
 
     def addSource(self, sourceDescriptor):
         self.sources.append(sourceDescriptor)
@@ -1276,32 +1266,3 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
                     newConditions.append(dict(name=cond['name'], minimum=minimum, maximum=maximum))
                 newConditionSets.append(newConditions)
             rule.conditionSets = newConditionSets
-
-    def getSourcePath(self, sourceDescriptor):
-        """Return the absolute path of sourceDescriptor. This is either the
-        'path' attribute, or if the latter is not set, the concatenation of
-        the source's (relative) 'filename' attribute and the designspace's
-        directory.
-        The returned path uses the platform-specific path separator: i.e.
-        forward slash on POSIX, backslash on Windows.
-
-        Raises DesignSpaceDocumentError if sourceDescriptor.path is None and
-        self.path is None, or sourceDescriptor.filename is None.
-        """
-        if sourceDescriptor.path:
-            # prefer absolute path if present
-            return os.path.normpath(sourceDescriptor.path)
-        if self.path is None:
-            raise DesignSpaceDocumentError(
-                "DesignSpaceDocument 'path' attribute is not defined; cannot "
-                "load source from relative filename"
-            )
-        if sourceDescriptor.filename is None:
-            raise DesignSpaceDocumentError(
-                "Designspace source '%s' has neither absolute 'path' nor "
-                "relative 'filename' defined"
-                % (sourceDescriptor.name or "<Unknown>")
-            )
-        return os.path.abspath(
-            os.path.join(os.path.dirname(self.path), sourceDescriptor.filename)
-        )

@@ -787,35 +787,47 @@ def test_documentLib(tmpdir):
     assert new.lib[dummyKey] == dummyData
 
 
-def test_getSourcePath(tmpdir):
+def test_updatePaths(tmpdir):
     doc = DesignSpaceDocument()
-    s1 = SourceDescriptor()
-    s1.path = str(tmpdir / "foo"/ "masters" / "Source1.ufo")
-
-    assert doc.getSourcePath(s1) == os.path.normpath(s1.path)
-
-    s1.path = None
-
-    with pytest.raises(
-        DesignSpaceDocumentError,
-        match="DesignSpaceDocument 'path' attribute is not defined",
-    ):
-        doc.getSourcePath(s1)
-
     doc.path = str(tmpdir / "foo" / "bar" / "MyDesignspace.designspace")
 
-    with pytest.raises(
-        DesignSpaceDocumentError,
-        match=(
-            "Designspace source '<Unknown>' has neither absolute 'path' nor "
-            "relative 'filename' defined"
-        ),
-    ):
-        doc.getSourcePath(s1)
+    s1 = SourceDescriptor()
+    doc.addSource(s1)
 
-    s1.filename = "../masters/Source1.ufo"
+    doc.updatePaths()
 
-    assert doc.getSourcePath(s1) == str(tmpdir / "foo" / "masters" / "Source1.ufo")
+    # expect no changes
+    assert s1.path is None
+    assert s1.filename is None
+
+    name1 = "../masters/Source1.ufo"
+    path1 = posix(str(tmpdir / "foo" / "masters" / "Source1.ufo"))
+
+    s1.path = path1
+    s1.filename = None
+
+    doc.updatePaths()
+
+    assert s1.path == path1
+    assert s1.filename == name1  # empty filename updated
+
+    name2 = "../masters/Source2.ufo"
+    s1.filename = name2
+
+    doc.updatePaths()
+
+    # conflicting filename discarded, path always gets precedence
+    assert s1.path == path1
+    assert s1.filename == "../masters/Source1.ufo"
+
+    s1.path = None
+    s1.filename = name2
+
+    doc.updatePaths()
+
+    # expect no changes
+    assert s1.path is None
+    assert s1.filename == name2
 
 
 @pytest.mark.skipif(sys.version_info[:2] < (3, 6), reason="pathlib is only tested on 3.6 and up")

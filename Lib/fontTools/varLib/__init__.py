@@ -833,9 +833,14 @@ def load_masters(designspace, master_finder=lambda s: s):
 					% (master.name or "<Unknown>")
 			)
 			else:
-				# 2. A SourceDescriptor's filename might point to a UFO or an OpenType
+				if master.path is None:
+					raise AttributeError(
+						"Designspace source '%s' has neither 'font' nor 'path' "
+						"attributes" % (master.name or "<Unknown>")
+					)
+				# 2. A SourceDescriptor's path might point to a UFO or an OpenType
 				# binary. Find out the hard way.
-				master_path = designspace.getSourcePath(master)
+				master_path = os.path.normpath(master.path)
 				try:
 					font = TTFont(master_path)
 				except (IOError, TTLibError):
