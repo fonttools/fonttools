@@ -1,3 +1,15 @@
+- [varLib] Make ``build`` optionally accept a ``DesignSpaceDocument`` object,
+  instead of a designspace file path. The caller can now set the ``font``
+  attribute of designspace's sources to a TTFont object, thus allowing to
+  skip filenames manipulation altogether (#1416, #1425).
+- [sfnt] Allow SFNTReader objects to be deep-copied.
+- Require typing>=3.6.4 on py27 to fix issue with singledispatch (#1423).
+- [designspaceLib/t1Lib/macRes] Fixed some cases where pathlib.Path objects were
+  not accepted (#1421).
+- [varLib] Fixed merging of multiple PairPosFormat2 subtables (#1411).
+- [varLib] The default STAT table version is now set to 1.1, to improve
+  compatibility with legacy applications (#1413).
+
 3.34.2 (released 2018-12-17)
 ----------------------------
 
