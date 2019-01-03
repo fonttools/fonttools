@@ -295,14 +295,18 @@ class BuildTest(unittest.TestCase):
         ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
         expected_ttx_path = self.get_test_output("BuildMain.ttx")
 
+        self.temp_dir()
+        for path in self.get_file_list(ttx_dir, '.ttx', 'TestFamily-'):
+            self.compile_font(path, ".ttf", self.tempdir)
+
         ds = DesignSpaceDocument.fromfile(ds_path)
         for source in ds.sources:
             filename = os.path.join(
-                ttx_dir, os.path.basename(source.filename).replace(".ufo", ".ttx")
+                self.tempdir, os.path.basename(source.filename).replace(".ufo", ".ttf")
             )
-            font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
-            font.importXML(filename)
-            source.font = font
+            source.font = TTFont(
+                filename, recalcBBoxes=False, recalcTimestamp=False, lazy=True
+            )
             source.filename = None  # Make sure no file path gets into build()
 
         varfont, _, _ = build(ds)
