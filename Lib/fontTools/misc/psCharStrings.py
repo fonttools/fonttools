@@ -223,9 +223,14 @@ def encodeFixed(f, pack=struct.pack):
 	else:
 		return b"\xff" + pack(">l", value)  # encode the entire fixed point value
 
+
+realZeroBytes = bytechr(30) + bytechr(0xf)
+
 def encodeFloat(f):
 	# For CFF only, used in cffLib
-	s = str(f).upper()
+	if f == 0.0: # 0.0 == +0.0 == -0.0
+		return realZeroBytes
+	s = "%.14G" % f
 	if s[:2] == "0.":
 		s = s[1:]
 	elif s[:3] == "-0.":
@@ -234,9 +239,15 @@ def encodeFloat(f):
 	while s:
 		c = s[0]
 		s = s[1:]
-		if c == "E" and s[:1] == "-":
-			s = s[1:]
-			c = "E-"
+		if c == "E":
+			c2 = s[:1]
+			if c2 == "-":
+				s = s[2:]
+				c = "E-"
+			elif c2 == "+":
+				s = s[2:]
+			else:
+				s = s[1:]
 		nibbles.append(realNibblesDict[c])
 	nibbles.append(0xf)
 	if len(nibbles) % 2:
