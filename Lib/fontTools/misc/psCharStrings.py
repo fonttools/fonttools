@@ -242,11 +242,9 @@ def encodeFloat(f):
 		if c == "E":
 			c2 = s[:1]
 			if c2 == "-":
-				s = s[2:]
+				s = s[1:]
 				c = "E-"
 			elif c2 == "+":
-				s = s[2:]
-			else:
 				s = s[1:]
 		nibbles.append(realNibblesDict[c])
 	nibbles.append(0xf)
