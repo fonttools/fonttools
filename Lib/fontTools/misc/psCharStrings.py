@@ -231,7 +231,7 @@ def encodeFloat(f):
 	if f == 0.0: # 0.0 == +0.0 == -0.0
 		return realZeroBytes
 	# Note: 14 decimal digits seems to be the limitation for CFF real numbers
-  # in macOS. However, we use 8 here to match the implementation of AFDKO.
+	# in macOS. However, we use 8 here to match the implementation of AFDKO.
 	s = "%.8G" % f
 	if s[:2] == "0.":
 		s = s[1:]
