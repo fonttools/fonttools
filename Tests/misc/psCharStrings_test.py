@@ -61,15 +61,16 @@ class T2CharStringTest(unittest.TestCase):
             (-9.399999999999999,   '1e e9 a4 ff'),  # -9.4
             (9.399999999999999999, '1e 9a 4f'),  # 9.4
             (456.8,                '1e 45 6a 8f'),  # 456.8
-            (0,                    '1e 0f'),  # 0
+            (0.0,                  '1e 0f'),  # 0
             (-0.0,                 '1e 0f'),  # 0
-            (1,                    '1e 1f'),  # 1
-            (-1,                   '1e e1 ff'),  # -1
+            (1.0,                  '1e 1f'),  # 1
+            (-1.0,                 '1e e1 ff'),  # -1
             (98765.37e2,           '1e 98 76 53 7f'),  # 9876537
-            (1234567890,           '1e 12 34 56 78 90 ff'),  # 1234567890
+            (1234567890.0,         '1e 1a 23 45 67 9b 09 ff'),  # 1234567890
             (9.876537e-4,          '1e a0 00 98 76 53 7f'),  # 9.876537e-24
             (9.876537e+4,          '1e 98 76 5a 37 ff'),  # 9.876537e+24
         ]
+
         for sample in testNums:
             encoded_result = encodeFloat(sample[0])
             
@@ -83,9 +84,9 @@ class T2CharStringTest(unittest.TestCase):
                 encoded_result,
                 1,
             )
-            self.assertEqual(decoded_result[0], float('%.14g' % sample[0]))
-            # Note: 14 decimal digits is the limitation for CFF real numbers
-            # as per a limitation in macOS.
+            self.assertEqual(decoded_result[0], float('%.8g' % sample[0]))
+            # We limit to 8 digits of precision to match the implementation
+            # of encodeFloat.
 
 
 if __name__ == "__main__":
