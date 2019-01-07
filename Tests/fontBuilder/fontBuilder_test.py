@@ -228,3 +228,19 @@ def test_build_cff2(tmpdir):
     fb.save(outPath)
 
     _verifyOutput(outPath)
+
+
+def test_setupNameTable_no_mac():
+    fb, _, nameStrings = _setupFontBuilder(True)
+    fb.setupNameTable(nameStrings, mac=False)
+
+    assert all(n for n in fb.font["name"].names if n.platformID == 3)
+    assert not any(n for n in fb.font["name"].names if n.platformID == 1)
+
+
+def test_setupNameTable_no_windows():
+    fb, _, nameStrings = _setupFontBuilder(True)
+    fb.setupNameTable(nameStrings, windows=False)
+
+    assert all(n for n in fb.font["name"].names if n.platformID == 1)
+    assert not any(n for n in fb.font["name"].names if n.platformID == 3)

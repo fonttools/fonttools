@@ -394,14 +394,17 @@ class FontBuilder(object):
         self.font["cmap"].tableVersion = 0
         self.font["cmap"].tables = subTables
 
-    def setupNameTable(self, nameStrings):
+    def setupNameTable(self, nameStrings, windows=True, mac=True):
         """Create the `name` table for the font. The `nameStrings` argument must
         be a dict, mapping nameIDs or descriptive names for the nameIDs to name
         record values. A value is either a string, or a dict, mapping language codes
         to strings, to allow localized name table entries.
 
+        By default, both Windows (platformID=3) and Macintosh (platformID=1) name
+        records are added, unless any of `windows` or `mac` arguments is False.
+
         The following descriptive names are available for nameIDs:
-        
+
             copyright (nameID 0)
             familyName (nameID 1)
             styleName (nameID 2)
@@ -438,7 +441,9 @@ class FontBuilder(object):
                 nameID = _nameIDs[nameName]
             if isinstance(nameValue, basestring):
                 nameValue = dict(en=nameValue)
-            nameTable.addMultilingualName(nameValue, ttFont=self.font, nameID=nameID)
+            nameTable.addMultilingualName(
+                nameValue, ttFont=self.font, nameID=nameID, windows=windows, mac=mac
+            )
 
     def setupOS2(self, **values):
         """Create a new `OS/2` table and initialize it with default values,
