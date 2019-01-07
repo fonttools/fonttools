@@ -1,3 +1,12 @@
+- [psCharStrings] In ``encodeFloat`` function, use float's "general format" with
+  8 digits of precision (i.e. ``%8g``) instead of ``str()``. This works around
+  a macOS rendering issue when real numbers in CFF table are too long, and
+  also makes sure that floats are encoded with the same precision in python 2.7
+  and 3.x (#1430, googlei18n/ufo2ft#306).
+- [_n_a_m_e/fontBuilder] Make ``_n_a_m_e_table.addMultilingualName`` also add
+  Macintosh (platformID=1) names by default. Added options to ``FontBuilder``
+  ``setupNameTable`` method to optionally disable Macintosh or Windows names.
+  (#1359, #1431).
 - [varLib] Make ``build`` optionally accept a ``DesignSpaceDocument`` object,
   instead of a designspace file path. The caller can now set the ``font``
   attribute of designspace's sources to a TTFont object, thus allowing to
