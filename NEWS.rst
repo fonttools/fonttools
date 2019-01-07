@@ -1,3 +1,6 @@
+3.35.0 (released 2019-01-07)
+----------------------------
+
 - [psCharStrings] In ``encodeFloat`` function, use float's "general format" with
   8 digits of precision (i.e. ``%8g``) instead of ``str()``. This works around
   a macOS rendering issue when real numbers in CFF table are too long, and
