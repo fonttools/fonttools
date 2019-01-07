@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.cffLib import PrivateDict
 from fontTools.cffLib.specializer import stringToProgram
-from fontTools.misc.psCharStrings import T2CharString, encodeFloat
+from fontTools.misc.psCharStrings import T2CharString
 import unittest
 
 
@@ -46,27 +46,6 @@ class T2CharStringTest(unittest.TestCase):
         self.assertEqual(
             cs2.program, [100, 'rmoveto', -50, -150, 200.5, 0, -50, 150,
                           'rrcurveto'])
-
-    def test_encodeFloat(self):
-        def hexenc(s):
-            return ' '.join('%02x' % x for x in s)
-        testNums = [
-            # value                expected hex encoded result
-            (-9.399999999999999,   '1e e9 a3 99 99 99 99 99 99 99 ff'),
-            (9.399999999999999999, '1e 9a 4f'),              # 9.4
-            (456.8,                '1e 45 6a 8f'),           # 456.8
-            (0,                    '1e 0f'),                 # 0
-            (-0.0,                 '1e ea 0f'),              # 0
-            (1,                    '1e 1f'),                 # 1
-            (-1,                   '1e e1 ff'),              # -1
-            (98765.37e2,           '1e 98 76 53 7a 0f'),     # 9876537
-            (1234567890,           '1e 12 34 56 78 90 ff'),  # 1234567890
-            (9.876537e-24,         '1e 9a 87 65 37 c2 4f'),  # 9.876537e-24
-            (9.876537e+24,         '1e 9a 87 65 37 b2 4f'),  # 9.876537e+24
-        ]
-        for n in testNums:
-            r = encodeFloat(n[0])
-            self.assertEqual(hexenc(r), n[1])
 
 
 if __name__ == "__main__":
