@@ -93,12 +93,12 @@ class NameTableTest(unittest.TestCase):
 				"en": "Width",
 				"de-CH": "Breite",
 				"gsw-LI": "Bräiti",
-			}, ttFont=font)
+			}, ttFont=font, mac=False)
 			self.assertEqual(widthID, 256)
 			xHeightID = nameTable.addMultilingualName({
 				"en": "X-Height",
 				"gsw-LI": "X-Hööchi"
-			}, ttFont=font)
+			}, ttFont=font, mac=False)
 			self.assertEqual(xHeightID, 257)
 		captor.assertRegex("cannot add Windows name in language gsw-LI")
 		self.assertEqual(names(nameTable), [
