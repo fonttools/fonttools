@@ -402,11 +402,11 @@ class FontBuilder(object):
         if uvs is not None:
             uvsDict = {}
             for unicodeValue, variationSelector, glyphName in uvs:
-                if variationSelector not in uvsDict:
-                    uvsDict[variationSelector] = []
                 if cmapping.get(unicodeValue) == glyphName:
                     # this is a default variation
                     glyphName = None
+                if variationSelector not in uvsDict:
+                    uvsDict[variationSelector] = []
                 uvsDict[variationSelector].append((unicodeValue, glyphName))
             uvsSubTable = buildCmapSubTable({}, 14, 0, 5)
             uvsSubTable.uvsDict = uvsDict
