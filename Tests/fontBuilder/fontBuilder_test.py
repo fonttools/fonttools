@@ -53,9 +53,9 @@ def _setupFontBuilder(isTTF, unitsPerEm=1024):
     return fb, advanceWidths, nameStrings
 
 
-def _verifyOutput(outPath):
+def _verifyOutput(outPath, tables=None):
     f = TTFont(outPath)
-    f.saveXML(outPath + ".ttx")
+    f.saveXML(outPath + ".ttx", tables=tables)
     with open(outPath + ".ttx") as f:
         testData = strip_VariableItems(f.read())
     refData = strip_VariableItems(getTestData(os.path.basename(outPath) + ".ttx"))
@@ -274,4 +274,4 @@ def test_unicodeVariationSequences(tmpdir):
 
     outPath = os.path.join(str(tmpdir), "test_uvs.ttf")
     fb.save(outPath)
-    _verifyOutput(outPath)
+    _verifyOutput(outPath, tables=["cmap"])
