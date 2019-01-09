@@ -53,9 +53,9 @@ def _setupFontBuilder(isTTF, unitsPerEm=1024):
     return fb, advanceWidths, nameStrings
 
 
-def _verifyOutput(outPath):
+def _verifyOutput(outPath, tables=None):
     f = TTFont(outPath)
-    f.saveXML(outPath + ".ttx")
+    f.saveXML(outPath + ".ttx", tables=tables)
     with open(outPath + ".ttx") as f:
         testData = strip_VariableItems(f.read())
     refData = strip_VariableItems(getTestData(os.path.basename(outPath) + ".ttx"))
@@ -244,3 +244,42 @@ def test_setupNameTable_no_windows():
 
     assert all(n for n in fb.font["name"].names if n.platformID == 1)
     assert not any(n for n in fb.font["name"].names if n.platformID == 3)
+
+
+def test_unicodeVariationSequences(tmpdir):
+    familyName = "UVSTestFont"
+    styleName = "Regular"
+    nameStrings = dict(familyName=familyName, styleName=styleName)
+    nameStrings['psName'] = familyName + "-" + styleName
+    glyphOrder = [".notdef", "space", "zero", "zero.slash"]
+    cmap = {ord(" "): "space", ord("0"): "zero"}
+    uvs = [
+        (0x0030, 0xFE00, "zero.slash"),
+        (0x0030, 0xFE01, None),  # not an official sequence, just testing
+    ]
+    metrics = {gn: (600, 0) for gn in glyphOrder}
+    pen = TTGlyphPen(None)
+    glyph = pen.glyph()  # empty placeholder
+    glyphs = {gn: glyph for gn in glyphOrder}
+
+    fb = FontBuilder(1024, isTTF=True)
+    fb.setupGlyphOrder(glyphOrder)
+    fb.setupCharacterMap(cmap, uvs)
+    fb.setupGlyf(glyphs)
+    fb.setupHorizontalMetrics(metrics)
+    fb.setupHorizontalHeader(ascent=824, descent=200)
+    fb.setupNameTable(nameStrings)
+    fb.setupOS2()
+    fb.setupPost()
+
+    outPath = os.path.join(str(tmpdir), "test_uvs.ttf")
+    fb.save(outPath)
+    _verifyOutput(outPath, tables=["cmap"])
+
+    uvs = [
+        (0x0030, 0xFE00, "zero.slash"),
+        (0x0030, 0xFE01, "zero"),  # should result in the exact same subtable data, due to cmap[0x0030] == "zero"
+    ]
+    fb.setupCharacterMap(cmap, uvs)
+    fb.save(outPath)
+    _verifyOutput(outPath, tables=["cmap"])

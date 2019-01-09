@@ -364,9 +364,18 @@ class FontBuilder(object):
         """Set the glyph order for the font."""
         self.font.setGlyphOrder(glyphOrder)
 
-    def setupCharacterMap(self, cmapping, allowFallback=False):
+    def setupCharacterMap(self, cmapping, uvs=None, allowFallback=False):
         """Build the `cmap` table for the font. The `cmapping` argument should
         be a dict mapping unicode code points as integers to glyph names.
+
+        The `uvs` argument, when passed, must be a list of tuples, describing
+        Unicode Variation Sequences. These tuples have three elements:
+            (unicodeValue, variationSelector, glyphName)
+        `unicodeValue` and `variationSelector` are integer code points.
+        `glyphName` may be None, to indicate this is the default variation.
+        Text processors will then use the cmap to find the glyph name.
+        Each Unicode Variation Sequence should be an officially supported
+        sequence, but this is not policed.
         """
         subTables = []
         highestUnicode = max(cmapping)
@@ -389,6 +398,19 @@ class FontBuilder(object):
         subTables.append(subTable_3_1)
         subTable_0_3 = buildCmapSubTable(cmapping_3_1, format, 0, 3)
         subTables.append(subTable_0_3)
+
+        if uvs is not None:
+            uvsDict = {}
+            for unicodeValue, variationSelector, glyphName in uvs:
+                if cmapping.get(unicodeValue) == glyphName:
+                    # this is a default variation
+                    glyphName = None
+                if variationSelector not in uvsDict:
+                    uvsDict[variationSelector] = []
+                uvsDict[variationSelector].append((unicodeValue, glyphName))
+            uvsSubTable = buildCmapSubTable({}, 14, 0, 5)
+            uvsSubTable.uvsDict = uvsDict
+            subTables.append(uvsSubTable)
 
         self.font["cmap"] = newTable("cmap")
         self.font["cmap"].tableVersion = 0
