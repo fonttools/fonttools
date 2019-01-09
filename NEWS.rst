@@ -1,3 +1,5 @@
+- [_m_a_x_p] Include ``maxComponentElements`` in ``maxp`` table's recalculation.
+
 3.35.0 (released 2019-01-07)
 ----------------------------
 
