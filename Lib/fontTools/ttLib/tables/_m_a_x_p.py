@@ -107,6 +107,7 @@ class table__m_a_x_p(DefaultTable.DefaultTable):
 		self.maxContours = maxContours
 		self.maxCompositePoints = maxCompositePoints
 		self.maxCompositeContours = maxCompositeContours
+		self.maxComponentElements = maxComponentElements
 		self.maxComponentDepth = maxComponentDepth
 		if allXMinIsLsb:
 			headTable.flags = headTable.flags | 0x2
