@@ -255,7 +255,7 @@ def test_unicodeVariationSequences(tmpdir):
     cmap = {ord(" "): "space", ord("0"): "zero"}
     uvs = [
         (0x0030, 0xFE00, "zero.slash"),
-        (0x0030, 0xFE01, "zero"),  # not an official sequence, just testing
+        (0x0030, 0xFE01, None),  # not an official sequence, just testing
     ]
     metrics = {gn: (600, 0) for gn in glyphOrder}
     pen = TTGlyphPen(None)
@@ -273,5 +273,13 @@ def test_unicodeVariationSequences(tmpdir):
     fb.setupPost()
 
     outPath = os.path.join(str(tmpdir), "test_uvs.ttf")
+    fb.save(outPath)
+    _verifyOutput(outPath, tables=["cmap"])
+
+    uvs = [
+        (0x0030, 0xFE00, "zero.slash"),
+        (0x0030, 0xFE01, "zero"),  # should result in the exact same subtable data, due to cmap[0x0030] == "zero"
+    ]
+    fb.setupCharacterMap(cmap, uvs)
     fb.save(outPath)
     _verifyOutput(outPath, tables=["cmap"])
