@@ -244,3 +244,34 @@ def test_setupNameTable_no_windows():
 
     assert all(n for n in fb.font["name"].names if n.platformID == 1)
     assert not any(n for n in fb.font["name"].names if n.platformID == 3)
+
+
+def test_unicodeVariationSequences(tmpdir):
+    familyName = "UVSTestFont"
+    styleName = "Regular"
+    nameStrings = dict(familyName=familyName, styleName=styleName)
+    nameStrings['psName'] = familyName + "-" + styleName
+    glyphOrder = [".notdef", "space", "zero", "zero.slash"]
+    cmap = {ord(" "): "space", ord("0"): "zero"}
+    uvs = [
+        (0x0030, 0xFE00, "zero.slash"),
+        (0x0030, 0xFE01, "zero"),  # not an official sequence, just testing
+    ]
+    metrics = {gn: (600, 0) for gn in glyphOrder}
+    pen = TTGlyphPen(None)
+    glyph = pen.glyph()  # empty placeholder
+    glyphs = {gn: glyph for gn in glyphOrder}
+
+    fb = FontBuilder(1024, isTTF=True)
+    fb.setupGlyphOrder(glyphOrder)
+    fb.setupCharacterMap(cmap, uvs)
+    fb.setupGlyf(glyphs)
+    fb.setupHorizontalMetrics(metrics)
+    fb.setupHorizontalHeader(ascent=824, descent=200)
+    fb.setupNameTable(nameStrings)
+    fb.setupOS2()
+    fb.setupPost()
+
+    outPath = os.path.join(str(tmpdir), "test_uvs.ttf")
+    fb.save(outPath)
+    _verifyOutput(outPath)
