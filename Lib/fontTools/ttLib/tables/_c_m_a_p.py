@@ -104,7 +104,7 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 			tables.append(table)
 
 	def compile(self, ttFont):
-		self.tables.sort()    # sort according to the spec; see CmapSubtable.__lt__()
+		self.tables.sort()  # sort according to the spec; see CmapSubtable.__lt__()
 		numSubTables = len(self.tables)
 		totalOffset = 4 + 8 * numSubTables
 		data = struct.pack(">HH", self.tableVersion, numSubTables)
@@ -246,7 +246,7 @@ class cmap_format_0(CmapSubtable):
 
 	def decompile(self, data, ttFont):
 		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
-		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
+		# If not, someone is calling the subtable decompile() directly, and must provide both args.
 		if data is not None and ttFont is not None:
 			self.decompileHeader(data, ttFont)
 		else:
@@ -310,15 +310,15 @@ class cmap_format_2(CmapSubtable):
 		# so that we are more likely to be able to combine glypharray GID subranges.
 		# This means that we have a problem when minGI is > 32K
 		# Since the final gi is reconstructed from the glyphArray GID by:
-		#    (short)finalGID = (gid +  idDelta) % 0x10000),
+		#    (short)finalGID = (gid + idDelta) % 0x10000),
 		# we can get from a glypharray GID of 1 to a final GID of 65K by subtracting 2, and casting the
 		# negative number to an unsigned short.
 
-		if  (minGI > 1):
-			if  minGI > 0x7FFF:
+		if (minGI > 1):
+			if minGI > 0x7FFF:
 				subHeader.idDelta = -(0x10000 - minGI) -1
 			else:
-				subHeader.idDelta =  minGI -1
+				subHeader.idDelta = minGI -1
 			idDelta = subHeader.idDelta
 			for i in range(subHeader.entryCount):
 				gid = subHeader.glyphIndexArray[i]
@@ -327,7 +327,7 @@ class cmap_format_2(CmapSubtable):
 
 	def decompile(self, data, ttFont):
 		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
-		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
+		# If not, someone is calling the subtable decompile() directly, and must provide both args.
 		if data is not None and ttFont is not None:
 			self.decompileHeader(data, ttFont)
 		else:
@@ -360,7 +360,7 @@ class cmap_format_2(CmapSubtable):
 			subHeaderList.append(subHeader)
 		# How this gets processed.
 		# Charcodes may be one or two bytes.
-		# The first byte of a charcode is mapped through the  subHeaderKeys, to select
+		# The first byte of a charcode is mapped through the subHeaderKeys, to select
 		# a subHeader. For any subheader but 0, the next byte is then mapped through the
 		# selected subheader. If subheader Index 0 is selected, then the byte itself is
 		# mapped through the subheader, and there is no second byte.
@@ -466,17 +466,17 @@ class cmap_format_2(CmapSubtable):
 
 					gids.append(gid)
 
-		# Process the (char code to gid) item list  in char code order.
+		# Process the (char code to gid) item list in char code order.
 		# By definition, all one byte char codes map to subheader 0.
 		# For all the two byte char codes, we assume that the first byte maps maps to the empty subhead (with an entry count of 0,
 		# which defines all char codes in its range to map to notdef) unless proven otherwise.
 		# Note that since the char code items are processed in char code order, all the char codes with the
 		# same first byte are in sequential order.
 
-		subHeaderKeys = [ kEmptyTwoCharCodeRange for x in  range(256)] # list of indices into subHeaderList.
+		subHeaderKeys = [kEmptyTwoCharCodeRange for x in range(256)] # list of indices into subHeaderList.
 		subHeaderList = []
 
-		# We force this subheader entry 0  to exist in the subHeaderList in the case where some one comes up
+		# We force this subheader entry 0 to exist in the subHeaderList in the case where some one comes up
 		# with a cmap where all the one byte char codes map to notdef,
 		# with the result that the subhead 0 would not get created just by processing the item list.
 		charCode = charCodes[0]
@@ -549,7 +549,7 @@ class cmap_format_2(CmapSubtable):
 		for index in range(subheadRangeLen):
 			subHeader = subHeaderList[index]
 			subHeader.idRangeOffset = 0
-			for j  in range(index):
+			for j in range(index):
 				prevSubhead = subHeaderList[j]
 				if prevSubhead.glyphIndexArray == subHeader.glyphIndexArray: # use the glyphIndexArray subarray
 					subHeader.idRangeOffset = prevSubhead.idRangeOffset - (index-j)*8
@@ -684,7 +684,7 @@ class cmap_format_4(CmapSubtable):
 
 	def decompile(self, data, ttFont):
 		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
-		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
+		# If not, someone is calling the subtable decompile() directly, and must provide both args.
 		if data is not None and ttFont is not None:
 			self.decompileHeader(data, ttFont)
 		else:
@@ -730,7 +730,7 @@ class cmap_format_4(CmapSubtable):
 			else:
 				for charCode in rangeCharCodes:
 					index = charCode + partial
-					assert (index < lenGIArray), "In format 4 cmap, range (%d), the calculated index (%d) into the glyph index array  is not less than the length of the array (%d) !" % (i, index, lenGIArray)
+					assert (index < lenGIArray), "In format 4 cmap, range (%d), the calculated index (%d) into the glyph index array is not less than the length of the array (%d) !" % (i, index, lenGIArray)
 					if glyphIndexArray[index] != 0:  # if not missing glyph
 						glyphID = glyphIndexArray[index] + delta
 					else:
@@ -807,7 +807,7 @@ class cmap_format_4(CmapSubtable):
 			indices = []
 			for charCode in range(startCode[i], endCode[i] + 1):
 				indices.append(cmap[charCode])
-			if  (indices == list(range(indices[0], indices[0] + len(indices)))):
+			if (indices == list(range(indices[0], indices[0] + len(indices)))):
 				idDelta.append((indices[0] - startCode[i]) % 0x10000)
 				idRangeOffset.append(0)
 			else:
@@ -855,7 +855,7 @@ class cmap_format_6(CmapSubtable):
 
 	def decompile(self, data, ttFont):
 		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
-		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
+		# If not, someone is calling the subtable decompile() directly, and must provide both args.
 		if data is not None and ttFont is not None:
 			self.decompileHeader(data, ttFont)
 		else:
@@ -932,7 +932,7 @@ class cmap_format_12_or_13(CmapSubtable):
 
 	def decompile(self, data, ttFont):
 		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
-		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
+		# If not, someone is calling the subtable decompile() directly, and must provide both args.
 		if data is not None and ttFont is not None:
 			self.decompileHeader(data, ttFont)
 		else:
@@ -991,7 +991,7 @@ class cmap_format_12_or_13(CmapSubtable):
 		lastGlyphID = startGlyphID - self._format_step
 		lastCharCode = startCharCode - 1
 		nGroups = 0
-		dataList =  []
+		dataList = []
 		maxIndex = len(charCodes)
 		for index in range(maxIndex):
 			charCode = charCodes[index]
@@ -1073,12 +1073,12 @@ class cmap_format_13(cmap_format_12_or_13):
 		return (glyphID == lastGlyphID) and (charCode == 1 + lastCharCode)
 
 
-def  cvtToUVS(threeByteString):
+def cvtToUVS(threeByteString):
 	data = b"\0" + threeByteString
 	val, = struct.unpack(">L", data)
 	return val
 
-def  cvtFromUVS(val):
+def cvtFromUVS(val):
 	assert 0 <= val < 0x1000000
 	fourByteString = struct.pack(">L", val)
 	return fourByteString[1:]
@@ -1105,7 +1105,7 @@ class cmap_format_14(CmapSubtable):
 		uvsDict = {}
 		recOffset = 0
 		for n in range(self.numVarSelectorRecords):
-			uvs, defOVSOffset, nonDefUVSOffset =  struct.unpack(">3sLL", data[recOffset:recOffset +11])
+			uvs, defOVSOffset, nonDefUVSOffset = struct.unpack(">3sLL", data[recOffset:recOffset +11])
 			recOffset += 11
 			varUVS = cvtToUVS(uvs)
 			if defOVSOffset:
@@ -1164,7 +1164,7 @@ class cmap_format_14(CmapSubtable):
 		writer.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
-		self.language = 0xFF # provide a value so that  CmapSubtable.__lt__() won't fail
+		self.language = 0xFF # provide a value so that CmapSubtable.__lt__() won't fail
 		if not hasattr(self, "cmap"):
 			self.cmap = {} # so that clients that expect this to exist in a cmap table won't fail.
 		if not hasattr(self, "uvsDict"):
@@ -1283,7 +1283,7 @@ class cmap_format_unknown(CmapSubtable):
 
 	def decompile(self, data, ttFont):
 		# we usually get here indirectly from the subtable __getattr__ function, in which case both args must be None.
-		# If not, someone is calling  the subtable decompile() directly, and must provide both args.
+		# If not, someone is calling the subtable decompile() directly, and must provide both args.
 		if data is not None and ttFont is not None:
 			self.decompileHeader(data, ttFont)
 		else:
