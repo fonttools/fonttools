@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
 import io
 import os
+import re
 from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.fontBuilder import FontBuilder
@@ -10,6 +11,11 @@ from fontTools.ttLib.tables._c_m_a_p import CmapSubtable, table__c_m_a_p
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 DATA_DIR = os.path.join(CURR_DIR, 'data')
 CMAP_FORMAT_14_TTX = os.path.join(DATA_DIR, "_c_m_a_p_format_14.ttx")
+
+def strip_VariableItems(string):
+    # ttlib changes with the fontTools version
+    string = re.sub(' ttLibVersion=".*"', '', string)
+    return string
 
 class CmapSubtableTest(unittest.TestCase):
 
@@ -110,11 +116,11 @@ class CmapSubtableTest(unittest.TestCase):
 		f.seek(0)
 		font = ttLib.TTFont(f)
 		self.assertEqual(font["cmap"].getcmap(0, 5).uvsDict, subtable.uvsDict)
-		f = io.BytesIO()
+		f = io.StringIO(newline=None)
 		font.saveXML(f, tables=["cmap"])
-		ttx = f.getvalue()
-		with open(CMAP_FORMAT_14_TTX, "rb") as f:
-			expected = f.read()
+		ttx = strip_VariableItems(f.getvalue())
+		with open(CMAP_FORMAT_14_TTX) as f:
+			expected = strip_VariableItems(f.read())
 		self.assertEqual(ttx, expected)
 
 
