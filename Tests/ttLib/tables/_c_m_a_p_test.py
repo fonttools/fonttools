@@ -99,7 +99,7 @@ class CmapSubtableTest(unittest.TestCase):
 		subtable = self.makeSubtable(14, 0, 5, 0)
 		subtable.cmap = {}  # dummy
 		subtable.uvsDict = {
-			0xFE00: [[0x0030, "zero.slash"]],
+			0xFE00: [(0x0030, "zero.slash")],
 			0xFE01: [(0x0030, None)],  # yes, tuple here, list above, to match decompile
 		}
 		fb = FontBuilder(1024, isTTF=True)

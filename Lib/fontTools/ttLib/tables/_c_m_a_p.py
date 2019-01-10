@@ -1135,7 +1135,7 @@ class cmap_format_14(CmapSubtable):
 					startOffset += 5
 					uv = cvtToUVS(uv)
 					glyphName = self.ttFont.getGlyphName(gid)
-					localUVList.append( [uv, glyphName] )
+					localUVList.append((uv, glyphName))
 				try:
 					uvsDict[varUVS].extend(localUVList)
 				except KeyError:
