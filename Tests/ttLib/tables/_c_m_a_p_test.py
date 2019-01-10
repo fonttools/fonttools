@@ -110,10 +110,10 @@ class CmapSubtableTest(unittest.TestCase):
 		f.seek(0)
 		font = ttLib.TTFont(f)
 		self.assertEqual(font["cmap"].getcmap(0, 5).uvsDict, subtable.uvsDict)
-		f = io.StringIO()
+		f = io.BytesIO()
 		font.saveXML(f, tables=["cmap"])
 		ttx = f.getvalue()
-		with open(CMAP_FORMAT_14_TTX) as f:
+		with open(CMAP_FORMAT_14_TTX, "rb") as f:
 			expected = f.read()
 		self.assertEqual(ttx, expected)
 
