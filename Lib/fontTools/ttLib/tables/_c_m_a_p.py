@@ -1135,7 +1135,7 @@ class cmap_format_14(CmapSubtable):
 					startOffset += 5
 					uv = cvtToUVS(uv)
 					glyphName = self.ttFont.getGlyphName(gid)
-					localUVList.append( [uv, glyphName] )
+					localUVList.append((uv, glyphName))
 				try:
 					uvsDict[varUVS].extend(localUVList)
 				except KeyError:
@@ -1147,9 +1147,6 @@ class cmap_format_14(CmapSubtable):
 		writer.begintag(self.__class__.__name__, [
 				("platformID", self.platformID),
 				("platEncID", self.platEncID),
-				("format", self.format),
-				("length", self.length),
-				("numVarSelectorRecords", self.numVarSelectorRecords),
 				])
 		writer.newline()
 		uvsDict = self.uvsDict
@@ -1158,24 +1155,26 @@ class cmap_format_14(CmapSubtable):
 			uvList = uvsDict[uvs]
 			uvList.sort(key=lambda item: (item[1] is not None, item[0], item[1]))
 			for uv, gname in uvList:
-				if gname is None:
-					gname = "None"
-				# I use the arg rather than th keyword syntax in order to preserve the attribute order.
-				writer.simpletag("map", [ ("uvs",hex(uvs)), ("uv",hex(uv)), ("name", gname)]  )
+				attrs = [("uv", hex(uv)), ("uvs", hex(uvs))]
+				if gname is not None:
+					attrs.append(("name", gname))
+				writer.simpletag("map", attrs)
 				writer.newline()
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
-		self.format = safeEval(attrs["format"])
-		self.length = safeEval(attrs["length"])
-		self.numVarSelectorRecords = safeEval(attrs["numVarSelectorRecords"])
 		self.language = 0xFF # provide a value so that  CmapSubtable.__lt__() won't fail
 		if not hasattr(self, "cmap"):
 			self.cmap = {} # so that clients that expect this to exist in a cmap table won't fail.
 		if not hasattr(self, "uvsDict"):
 			self.uvsDict = {}
 			uvsDict = self.uvsDict
+
+		# For backwards compatibility reasons we accept "None" as an indicator
+		# for "default mapping", unless the font actually has a glyph named
+		# "None".
+		_hasGlyphNamedNone = None
 
 		for element in content:
 			if not isinstance(element, tuple):
@@ -1185,13 +1184,16 @@ class cmap_format_14(CmapSubtable):
 				continue
 			uvs = safeEval(attrs["uvs"])
 			uv = safeEval(attrs["uv"])
-			gname = attrs["name"]
+			gname = attrs.get("name")
 			if gname == "None":
-				gname = None
+				if _hasGlyphNamedNone is None:
+					_hasGlyphNamedNone = "None" in ttFont.getGlyphOrder()
+				if not _hasGlyphNamedNone:
+					gname = None
 			try:
-				uvsDict[uvs].append( [uv, gname])
+				uvsDict[uvs].append((uv, gname))
 			except KeyError:
-				uvsDict[uvs] = [ [uv, gname] ]
+				uvsDict[uvs] = [(uv, gname)]
 
 	def compile(self, ttFont):
 		if self.data:
