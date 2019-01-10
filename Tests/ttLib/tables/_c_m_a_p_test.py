@@ -100,7 +100,7 @@ class CmapSubtableTest(unittest.TestCase):
 		subtable.cmap = {}  # dummy
 		subtable.uvsDict = {
 			0xFE00: [(0x0030, "zero.slash")],
-			0xFE01: [(0x0030, None)],  # yes, tuple here, list above, to match decompile
+			0xFE01: [(0x0030, None)],
 		}
 		fb = FontBuilder(1024, isTTF=True)
 		font = fb.font
