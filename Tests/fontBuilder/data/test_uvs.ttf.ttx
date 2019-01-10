@@ -9,7 +9,7 @@
     </cmap_format_4>
     <cmap_format_14 platformID="0" platEncID="5">
       <map uvs="0xfe00" uv="0x30" name="zero.slash"/>
-      <map uvs="0xfe01" uv="0x30" name="None"/>
+      <map uvs="0xfe01" uv="0x30" name=""/>
     </cmap_format_14>
     <cmap_format_4 platformID="3" platEncID="1" language="0">
       <map code="0x20" name="space"/><!-- SPACE -->

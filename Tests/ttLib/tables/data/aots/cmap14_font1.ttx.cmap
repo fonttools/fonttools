@@ -4,11 +4,11 @@
   <cmap>
     <tableVersion version="0"/>
     <cmap_format_14 platformID="0" platEncID="5">
-      <map uvs="0xe0100" uv="0x4e00" name="None"/>
-      <map uvs="0xe0100" uv="0x4e03" name="None"/>
-      <map uvs="0xe0100" uv="0x4e04" name="None"/>
-      <map uvs="0xe0100" uv="0x4e05" name="None"/>
-      <map uvs="0xe0100" uv="0x4e06" name="None"/>
+      <map uvs="0xe0100" uv="0x4e00" name=""/>
+      <map uvs="0xe0100" uv="0x4e03" name=""/>
+      <map uvs="0xe0100" uv="0x4e04" name=""/>
+      <map uvs="0xe0100" uv="0x4e05" name=""/>
+      <map uvs="0xe0100" uv="0x4e06" name=""/>
       <map uvs="0xe0100" uv="0x4e10" name="g25"/>
       <map uvs="0xe0100" uv="0x4e11" name="g26"/>
     </cmap_format_14>

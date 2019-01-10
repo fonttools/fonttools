@@ -1156,7 +1156,8 @@ class cmap_format_14(CmapSubtable):
 			uvList.sort(key=lambda item: (item[1] is not None, item[0], item[1]))
 			for uv, gname in uvList:
 				if gname is None:
-					gname = "None"
+					# We use an empty string to signify a default mapping
+					gname = ""
 				# I use the arg rather than th keyword syntax in order to preserve the attribute order.
 				writer.simpletag("map", [ ("uvs",hex(uvs)), ("uv",hex(uv)), ("name", gname)]  )
 				writer.newline()
@@ -1180,12 +1181,13 @@ class cmap_format_14(CmapSubtable):
 			uvs = safeEval(attrs["uvs"])
 			uv = safeEval(attrs["uv"])
 			gname = attrs["name"]
-			if gname == "None":
+			if gname == "":
+				# We use an empty string in the TTX data to signify a default mapping
 				gname = None
 			try:
-				uvsDict[uvs].append( [uv, gname])
+				uvsDict[uvs].append((uv, gname))
 			except KeyError:
-				uvsDict[uvs] = [ [uv, gname] ]
+				uvsDict[uvs] = [(uv, gname)]
 
 	def compile(self, ttFont):
 		if self.data:
