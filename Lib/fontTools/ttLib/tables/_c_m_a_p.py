@@ -1155,7 +1155,7 @@ class cmap_format_14(CmapSubtable):
 			uvList = uvsDict[uvs]
 			uvList.sort(key=lambda item: (item[1] is not None, item[0], item[1]))
 			for uv, gname in uvList:
-				attrs = [("uvs", hex(uvs)), ("uv", hex(uv))]
+				attrs = [("uv", hex(uv)), ("uvs", hex(uvs))]
 				if gname is not None:
 					attrs.append(("name", gname))
 				writer.simpletag("map", attrs)
