@@ -1155,11 +1155,10 @@ class cmap_format_14(CmapSubtable):
 			uvList = uvsDict[uvs]
 			uvList.sort(key=lambda item: (item[1] is not None, item[0], item[1]))
 			for uv, gname in uvList:
-				if gname is None:
-					# We use an empty string to signify a default mapping
-					gname = ""
-				# I use the arg rather than th keyword syntax in order to preserve the attribute order.
-				writer.simpletag("map", [ ("uvs",hex(uvs)), ("uv",hex(uv)), ("name", gname)]  )
+				attrs = [("uvs", hex(uvs)), ("uv", hex(uv))]
+				if gname is not None:
+					attrs.append(("name", gname))
+				writer.simpletag("map", attrs)
 				writer.newline()
 		writer.endtag(self.__class__.__name__)
 		writer.newline()
@@ -1185,11 +1184,8 @@ class cmap_format_14(CmapSubtable):
 				continue
 			uvs = safeEval(attrs["uvs"])
 			uv = safeEval(attrs["uv"])
-			gname = attrs["name"]
-			if gname == "":
-				# We use an empty string in the TTX data to signify a default mapping
-				gname = None
-			elif gname == "None":
+			gname = attrs.get("name")
+			if gname == "None":
 				if _hasGlyphNamedNone is None:
 					_hasGlyphNamedNone = "None" in ttFont.getGlyphOrder()
 				if _hasGlyphNamedNone is False:
