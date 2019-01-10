@@ -11,6 +11,7 @@ from fontTools.ttLib.tables._c_m_a_p import CmapSubtable, table__c_m_a_p
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 DATA_DIR = os.path.join(CURR_DIR, 'data')
 CMAP_FORMAT_14_TTX = os.path.join(DATA_DIR, "_c_m_a_p_format_14.ttx")
+CMAP_FORMAT_14_BW_COMPAT_TTX = os.path.join(DATA_DIR, "_c_m_a_p_format_14_bw_compat.ttx")
 
 def strip_VariableItems(string):
     # ttlib changes with the fontTools version
@@ -122,6 +123,9 @@ class CmapSubtableTest(unittest.TestCase):
 		with open(CMAP_FORMAT_14_TTX) as f:
 			expected = strip_VariableItems(f.read())
 		self.assertEqual(ttx, expected)
+		with open(CMAP_FORMAT_14_BW_COMPAT_TTX) as f:
+			font.importXML(f)
+		self.assertEqual(font["cmap"].getcmap(0, 5).uvsDict, subtable.uvsDict)
 
 
 if __name__ == "__main__":

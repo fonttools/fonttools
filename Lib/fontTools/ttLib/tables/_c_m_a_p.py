@@ -1172,6 +1172,11 @@ class cmap_format_14(CmapSubtable):
 			self.uvsDict = {}
 			uvsDict = self.uvsDict
 
+		# For backwards compatibility reasons we accept "None" as an indicator
+		# for "default mapping", unless the font actually has a glyph named
+		# "None".
+		_hasGlyphNamedNone = None
+
 		for element in content:
 			if not isinstance(element, tuple):
 				continue
@@ -1184,6 +1189,11 @@ class cmap_format_14(CmapSubtable):
 			if gname == "":
 				# We use an empty string in the TTX data to signify a default mapping
 				gname = None
+			elif gname == "None":
+				if _hasGlyphNamedNone is None:
+					_hasGlyphNamedNone = "None" in ttFont.getGlyphOrder()
+				if _hasGlyphNamedNone is False:
+					gname = None
 			try:
 				uvsDict[uvs].append((uv, gname))
 			except KeyError:
