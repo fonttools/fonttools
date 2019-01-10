@@ -7,7 +7,7 @@
       <map code="0x20" name="space"/><!-- SPACE -->
       <map code="0x30" name="zero"/><!-- DIGIT ZERO -->
     </cmap_format_4>
-    <cmap_format_14 platformID="0" platEncID="5" format="14" length="49" numVarSelectorRecords="2">
+    <cmap_format_14 platformID="0" platEncID="5">
       <map uvs="0xfe00" uv="0x30" name="zero.slash"/>
       <map uvs="0xfe01" uv="0x30" name="None"/>
     </cmap_format_14>
