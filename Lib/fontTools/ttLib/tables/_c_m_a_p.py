@@ -1147,9 +1147,6 @@ class cmap_format_14(CmapSubtable):
 		writer.begintag(self.__class__.__name__, [
 				("platformID", self.platformID),
 				("platEncID", self.platEncID),
-				("format", self.format),
-				("length", self.length),
-				("numVarSelectorRecords", self.numVarSelectorRecords),
 				])
 		writer.newline()
 		uvsDict = self.uvsDict
@@ -1167,9 +1164,6 @@ class cmap_format_14(CmapSubtable):
 		writer.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
-		self.format = safeEval(attrs["format"])
-		self.length = safeEval(attrs["length"])
-		self.numVarSelectorRecords = safeEval(attrs["numVarSelectorRecords"])
 		self.language = 0xFF # provide a value so that  CmapSubtable.__lt__() won't fail
 		if not hasattr(self, "cmap"):
 			self.cmap = {} # so that clients that expect this to exist in a cmap table won't fail.
