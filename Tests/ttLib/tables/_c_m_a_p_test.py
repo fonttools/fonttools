@@ -1,8 +1,15 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
+import io
+import os
 from fontTools.misc.py23 import *
 from fontTools import ttLib
+from fontTools.fontBuilder import FontBuilder
 import unittest
 from fontTools.ttLib.tables._c_m_a_p import CmapSubtable, table__c_m_a_p
+
+CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
+DATA_DIR = os.path.join(CURR_DIR, 'data')
+CMAP_FORMAT_14_TTX = os.path.join(DATA_DIR, "_c_m_a_p_format_14.ttx")
 
 class CmapSubtableTest(unittest.TestCase):
 
@@ -81,6 +88,34 @@ class CmapSubtableTest(unittest.TestCase):
 		self.assertEqual(font.getBestCmap(), {0x10314: 'u10314'})
 		self.assertEqual(font.getBestCmap(cmapPreferences=[(3, 1)]), {0x0041:'A', 0x0391:'A'})
 		self.assertEqual(font.getBestCmap(cmapPreferences=[(0, 4)]), None)
+
+	def test_format_14(self):
+		subtable = self.makeSubtable(14, 0, 5, 0)
+		subtable.cmap = {}  # dummy
+		subtable.uvsDict = {
+			0xFE00: [[0x0030, "zero.slash"]],
+			0xFE01: [(0x0030, None)],  # yes, tuple here, list above, to match decompile
+		}
+		fb = FontBuilder(1024, isTTF=True)
+		font = fb.font
+		fb.setupGlyphOrder([".notdef", "zero.slash"])
+		fb.setupMaxp()
+		fb.setupPost()
+		cmap = table__c_m_a_p()
+		cmap.tableVersion = 0
+		cmap.tables = [subtable]
+		font["cmap"] = cmap
+		f = io.BytesIO()
+		font.save(f)
+		f.seek(0)
+		font = ttLib.TTFont(f)
+		self.assertEqual(font["cmap"].getcmap(0, 5).uvsDict, subtable.uvsDict)
+		f = io.StringIO()
+		font.saveXML(f, tables=["cmap"])
+		ttx = f.getvalue()
+		with open(CMAP_FORMAT_14_TTX) as f:
+			expected = f.read()
+		self.assertEqual(ttx, expected)
 
 
 if __name__ == "__main__":
