@@ -1188,7 +1188,7 @@ class cmap_format_14(CmapSubtable):
 			if gname == "None":
 				if _hasGlyphNamedNone is None:
 					_hasGlyphNamedNone = "None" in ttFont.getGlyphOrder()
-				if _hasGlyphNamedNone is False:
+				if not _hasGlyphNamedNone:
 					gname = None
 			try:
 				uvsDict[uvs].append((uv, gname))
