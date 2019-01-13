@@ -1,3 +1,6 @@
+- [varLib] Added support for localized axes' ``labelname`` and named instances'
+  ``stylename`` (#1438).
+
 3.35.1 (released 2019-01-09)
 ----------------------------
 
