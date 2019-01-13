@@ -81,11 +81,18 @@ def _add_fvar(font, axes, instances):
 
 	for instance in instances:
 		coordinates = instance.location
-		name = tounicode(instance.styleName)
+
+		if "en" not in instance.localisedStyleName:
+			assert instance.styleName
+			localisedStyleName = dict(instance.localisedStyleName)
+			localisedStyleName["en"] = tounicode(instance.styleName)
+		else:
+			localisedStyleName = instance.localisedStyleName
+
 		psname = instance.postScriptFontName
 
 		inst = NamedInstance()
-		inst.subfamilyNameID = nameTable.addName(name)
+		inst.subfamilyNameID = nameTable.addMultilingualName(localisedStyleName)
 		if psname is not None:
 			psname = tounicode(psname)
 			inst.postscriptNameID = nameTable.addName(psname)
