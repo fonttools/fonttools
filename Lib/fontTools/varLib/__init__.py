@@ -76,12 +76,7 @@ def _add_fvar(font, axes, instances):
 		axis.axisTag = Tag(a.tag)
 		# TODO Skip axes that have no variation.
 		axis.minValue, axis.defaultValue, axis.maxValue = a.minimum, a.default, a.maximum
-		axis.axisNameID = nameTable.addName(tounicode(a.labelNames['en']))
-		# TODO:
-		# Replace previous line with the following when the following issues are resolved:
-		# https://github.com/fonttools/fonttools/issues/930
-		# https://github.com/fonttools/fonttools/issues/931
-		# axis.axisNameID = nameTable.addMultilingualName(a.labelname, font)
+		axis.axisNameID = nameTable.addMultilingualName(a.labelNames, font)
 		fvar.axes.append(axis)
 
 	for instance in instances:
@@ -662,10 +657,10 @@ def load_designspace(designspace):
 	instances = ds.instances
 
 	standard_axis_map = OrderedDict([
-		('weight',  ('wght', {'en':'Weight'})),
-		('width',   ('wdth', {'en':'Width'})),
-		('slant',   ('slnt', {'en':'Slant'})),
-		('optical', ('opsz', {'en':'Optical Size'})),
+		('weight',  ('wght', {'en': u'Weight'})),
+		('width',   ('wdth', {'en': u'Width'})),
+		('slant',   ('slnt', {'en': u'Slant'})),
+		('optical', ('opsz', {'en': u'Optical Size'})),
 		])
 
 	# Setup axes
@@ -684,7 +679,7 @@ def load_designspace(designspace):
 		else:
 			assert axis.tag is not None
 			if not axis.labelNames:
-				axis.labelNames["en"] = axis_name
+				axis.labelNames["en"] = tounicode(axis_name)
 
 		axes[axis_name] = axis
 	log.info("Axes:\n%s", pformat([axis.asdict() for axis in axes.values()]))
