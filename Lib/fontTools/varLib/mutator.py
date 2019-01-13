@@ -345,6 +345,16 @@ def instantiateVariableFont(varfont, location, inplace=False):
 		for i in fvar.instances:
 			exclude.add(i.subfamilyNameID)
 			exclude.add(i.postscriptNameID)
+		if 'ltag' in varfont:
+			# Drop the whole 'ltag' table if all its language tags are referenced by
+			# name records to be pruned.
+			# TODO: prune unused ltag tags and re-enumerate langIDs accordingly
+			excludedUnicodeLangIDs = [
+				n.langID for n in varfont['name'].names
+				if n.nameID in exclude and n.platformID == 0 and n.langID != 0xFFFF
+			]
+			if set(excludedUnicodeLangIDs) == set(range(len((varfont['ltag'].tags)))):
+				del varfont['ltag']
 		varfont['name'].names[:] = [
 			n for n in varfont['name'].names
 			if n.nameID not in exclude

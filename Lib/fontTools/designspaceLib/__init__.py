@@ -246,25 +246,25 @@ class InstanceDescriptor(SimpleDescriptor):
     filename = posixpath_property("_filename")
 
     def setStyleName(self, styleName, languageCode="en"):
-        self.localisedStyleName[languageCode] = styleName
+        self.localisedStyleName[languageCode] = tounicode(styleName)
 
     def getStyleName(self, languageCode="en"):
         return self.localisedStyleName.get(languageCode)
 
     def setFamilyName(self, familyName, languageCode="en"):
-        self.localisedFamilyName[languageCode] = familyName
+        self.localisedFamilyName[languageCode] = tounicode(familyName)
 
     def getFamilyName(self, languageCode="en"):
         return self.localisedFamilyName.get(languageCode)
 
     def setStyleMapStyleName(self, styleMapStyleName, languageCode="en"):
-        self.localisedStyleMapStyleName[languageCode] = styleMapStyleName
+        self.localisedStyleMapStyleName[languageCode] = tounicode(styleMapStyleName)
 
     def getStyleMapStyleName(self, languageCode="en"):
         return self.localisedStyleMapStyleName.get(languageCode)
 
     def setStyleMapFamilyName(self, styleMapFamilyName, languageCode="en"):
-        self.localisedStyleMapFamilyName[languageCode] = styleMapFamilyName
+        self.localisedStyleMapFamilyName[languageCode] = tounicode(styleMapFamilyName)
 
     def getStyleMapFamilyName(self, languageCode="en"):
         return self.localisedStyleMapFamilyName.get(languageCode)
@@ -753,8 +753,7 @@ class BaseDocReader(LogMixin):
                 # '{http://www.w3.org/XML/1998/namespace}lang'
                 for key, lang in labelNameElement.items():
                     if key == XML_LANG:
-                        labelName = labelNameElement.text
-                        axisObject.labelNames[lang] = labelName
+                        axisObject.labelNames[lang] = tounicode(labelNameElement.text)
             self.documentObject.axes.append(axisObject)
             self.axisDefaults[axisObject.name] = axisObject.default
         self.documentObject.defaultLoc = self.axisDefaults

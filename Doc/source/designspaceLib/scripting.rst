@@ -70,7 +70,7 @@ readable names for this axis if this is not an axis that is registered
 by OpenType. Think "The label next to the slider". The attribute is a
 dictionary. The key is the `xml language
 tag <https://www.w3.org/International/articles/language-tags/>`__, the
-value is a utf-8 string with the name. Whether or not this attribute is
+value is a ``unicode`` string with the name. Whether or not this attribute is
 used depends on the font building tool, the operating system and the
 authoring software. This, at least, is the place to record it.
 

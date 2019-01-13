@@ -440,6 +440,9 @@
   </glyf>
 
   <name>
+    <namerecord nameID="257" platformID="0" platEncID="4" langID="0x0">
+      کنتراست
+    </namerecord>
     <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
       Weight
     </namerecord>
@@ -493,6 +496,12 @@
     </namerecord>
     <namerecord nameID="273" platformID="1" platEncID="0" langID="0x0" unicode="True">
       TestFamily-BlackHighContrast
+    </namerecord>
+    <namerecord nameID="257" platformID="1" platEncID="0" langID="0x2" unicode="True">
+      Kontrast
+    </namerecord>
+    <namerecord nameID="257" platformID="3" platEncID="1" langID="0x407">
+      Kontrast
     </namerecord>
     <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
       Test Family
@@ -2234,5 +2243,11 @@
       </tuple>
     </glyphVariations>
   </gvar>
+
+  <ltag>
+    <version value="1"/>
+    <flags value="0"/>
+    <LanguageTag tag="fa"/>
+  </ltag>
 
 </ttFont>
