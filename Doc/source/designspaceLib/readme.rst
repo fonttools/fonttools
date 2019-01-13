@@ -277,7 +277,8 @@ AxisDescriptor object
    dicts. MutatorMath + Varlib.
 -  ``labelNames``: dict. When defining a non-registered axis, it will be
    necessary to define user-facing readable names for the axis. Keyed by
-   xml:lang code. Varlib.
+   xml:lang code. Values are required to be ``unicode`` strings, even if
+   they only contain ASCII characters.
 -  ``minimum``: number. The minimum value for this axis in user space.
    MutatorMath + Varlib.
 -  ``maximum``: number. The maximum value for this axis in user space.
