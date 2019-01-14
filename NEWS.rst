@@ -1,3 +1,6 @@
+3.35.2 (released 2019-01-14)
+----------------------------
+
 - [hmtx/vmtx]: Allow to compile/decompile ``hmtx`` and ``vmtx`` tables even
   without the corresponding (required) metrics header tables, ``hhea`` and
   ``vhea`` (#1439).
