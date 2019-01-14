@@ -1,3 +1,6 @@
+- [hmtx/vmtx]: Allow to compile/decompile ``hmtx`` and ``vmtx`` tables even
+  without the corresponding (required) metrics header tables, ``hhea`` and
+  ``vhea`` (#1439).
 - [varLib] Added support for localized axes' ``labelname`` and named instances'
   ``stylename`` (#1438).
 
