@@ -123,6 +123,8 @@ Output options:
 
 Glyph set expansion:
   These options control how additional glyphs are added to the subset.
+  --retain-gids
+      Retain glyph indices; just empty glyphs not needed in-place.
   --notdef-glyph
       Add the '.notdef' glyph to the subset (ie, keep it). [default]
   --no-notdef-glyph
@@ -1714,11 +1716,15 @@ def subset_glyphs(self, s):
 @_add_method(ttLib.getTableClass('vmtx'))
 def subset_glyphs(self, s):
 	self.metrics = _dict_subset(self.metrics, s.glyphs)
+	for g in s.glyphs_emptied:
+		self.metrics[g] = (0,0)
 	return bool(self.metrics)
 
 @_add_method(ttLib.getTableClass('hmtx'))
 def subset_glyphs(self, s):
 	self.metrics = _dict_subset(self.metrics, s.glyphs)
+	for g in s.glyphs_emptied:
+		self.metrics[g] = (0,0)
 	return True # Required table
 
 @_add_method(ttLib.getTableClass('hdmx'))
@@ -1783,6 +1789,8 @@ def subset_glyphs(self, s):
 @_add_method(ttLib.getTableClass('HVAR'))
 def subset_glyphs(self, s):
 	table = self.table
+
+	# TODO Update for retain_gids
 
 	used = set()
 
@@ -2010,7 +2018,7 @@ def subset_glyphs(self, s):
 	return True
 
 @_add_method(ttLib.getTableModule('glyf').Glyph)
-def remapComponentsFast(self, indices):
+def remapComponentsFast(self, glyphidmap):
 	if not self.data or struct.unpack(">h", self.data[:2])[0] >= 0:
 		return	# Not composite
 	data = array.array("B", self.data)
@@ -2020,7 +2028,7 @@ def remapComponentsFast(self, indices):
 		flags =(data[i] << 8) | data[i+1]
 		glyphID =(data[i+2] << 8) | data[i+3]
 		# Remap
-		glyphID = indices.index(glyphID)
+		glyphID = glyphidmap[glyphID]
 		data[i+2] = glyphID >> 8
 		data[i+3] = glyphID & 0xFF
 		i += 4
@@ -2063,13 +2071,17 @@ def prune_pre_subset(self, font, options):
 @_add_method(ttLib.getTableClass('glyf'))
 def subset_glyphs(self, s):
 	self.glyphs = _dict_subset(self.glyphs, s.glyphs)
-	indices = [i for i,g in enumerate(self.glyphOrder) if g in s.glyphs]
-	for v in self.glyphs.values():
-		if hasattr(v, "data"):
-			v.remapComponentsFast(indices)
-		else:
-			pass	# No need
-	self.glyphOrder = [g for g in self.glyphOrder if g in s.glyphs]
+	if not s.options.retain_gids:
+		indices = [i for i,g in enumerate(self.glyphOrder) if g in s.glyphs]
+		glyphmap = {o:n for n,o in enumerate(indices)}
+		for v in self.glyphs.values():
+			if hasattr(v, "data"):
+				v.remapComponentsFast(glyphmap)
+	Glyph = ttLib.getTableModule('glyf').Glyph
+	for g in s.glyphs_emptied:
+		self.glyphs[g] = Glyph()
+		self.glyphs[g].data = ''
+	self.glyphOrder = [g for g in self.glyphOrder if g in s.glyphs or g in s.glyphs_emptied]
 	# Don't drop empty 'glyf' tables, otherwise 'loca' doesn't get subset.
 	return True
 
@@ -2275,6 +2287,7 @@ class Options(object):
 		self.name_legacy = False
 		self.name_languages = [0x0409] # English
 		self.obfuscate_names = False # to make webfont unusable as a system font
+		self.retain_gids = False
 		self.notdef_glyph = True # gid0 for TrueType / .notdef for CFF
 		self.notdef_outline = False # No need for notdef to have an outline really
 		self.recommended_glyphs = False # gid1, gid2, gid3 for TrueType
@@ -2533,12 +2546,17 @@ class Subsetter(object):
 				log.glyphs(self.glyphs, font=font)
 		self.glyphs_cffed = frozenset(self.glyphs)
 
-		self.glyphs_all = frozenset(self.glyphs)
+		self.glyphs_retained = frozenset(self.glyphs)
+
+		self.glyphs_emptied = frozenset()
+		if self.options.retain_gids:
+			self.glyphs_emptied = realGlyphs - self.glyphs_retained
+			# TODO Drop empty glyphs at the end of GlyphOrder vector.
 
 		order = font.getReverseGlyphMap()
-		self.reverseOrigGlyphMap = {g:order[g] for g in self.glyphs_all}
+		self.reverseOrigGlyphMap = {g:order[g] for g in self.glyphs_retained}
 
-		log.info("Retaining %d glyphs", len(self.glyphs_all))
+		log.info("Retaining %d glyphs", len(self.glyphs_retained))
 
 		del self.glyphs
 
@@ -2551,7 +2569,7 @@ class Subsetter(object):
 			elif hasattr(clazz, 'subset_glyphs'):
 				with timer("subset '%s'" % tag):
 					table = font[tag]
-					self.glyphs = self.glyphs_all
+					self.glyphs = self.glyphs_retained
 					retain = table.subset_glyphs(self)
 					del self.glyphs
 				if not retain:
@@ -2565,11 +2583,12 @@ class Subsetter(object):
 				log.warning("%s NOT subset; don't know how to subset; dropped", tag)
 				del font[tag]
 
-		with timer("subset GlyphOrder"):
-			glyphOrder = font.getGlyphOrder()
-			glyphOrder = [g for g in glyphOrder if g in self.glyphs_all]
-			font.setGlyphOrder(glyphOrder)
-			font._buildReverseGlyphOrderDict()
+		if not self.options.retain_gids:
+			with timer("subset GlyphOrder"):
+				glyphOrder = font.getGlyphOrder()
+				glyphOrder = [g for g in glyphOrder if g in self.glyphs_retained]
+				font.setGlyphOrder(glyphOrder)
+				font._buildReverseGlyphOrderDict()
 
 	def _prune_post_subset(self, font):
 		for tag in font.keys():
