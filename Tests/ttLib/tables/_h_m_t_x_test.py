@@ -107,6 +107,27 @@ class HmtxTableTest(unittest.TestCase):
             len([r for r in captor.records
                 if "has a huge advance" in r.msg]) == 1)
 
+    def test_decompile_no_header_table(self):
+        font = TTFont()
+        maxp = font['maxp'] = newTable('maxp')
+        maxp.numGlyphs = 3
+        font.glyphOrder = ["A", "B", "C"]
+
+        self.assertNotIn(self.tableClass.headerTag, font)
+
+        data = deHexStr("0190 001E 0190 0028 0190 0032")
+        mtxTable = newTable(self.tag)
+        mtxTable.decompile(data, font)
+
+        self.assertEqual(
+            mtxTable.metrics,
+            {
+                "A": (400, 30),
+                "B": (400, 40),
+                "C": (400, 50),
+            }
+        )
+
     def test_compile(self):
         # we set the wrong 'numberOfMetrics' to check it gets adjusted
         font = self.makeFont(numGlyphs=3, numberOfMetrics=4)
@@ -172,6 +193,24 @@ class HmtxTableTest(unittest.TestCase):
         data = mtxTable.compile(font)
 
         self.assertEqual(data, deHexStr("0001 0001 0000 0001 0000"))
+
+    def test_compile_no_header_table(self):
+        font = TTFont()
+        maxp = font['maxp'] = newTable('maxp')
+        maxp.numGlyphs = 3
+        font.glyphOrder = [chr(i) for i in range(65, 68)]
+        mtxTable = font[self.tag] = newTable(self.tag)
+        mtxTable.metrics = {
+            "A": (400, 30),
+            "B": (400, 40),
+            "C": (400, 50),
+        }
+
+        self.assertNotIn(self.tableClass.headerTag, font)
+
+        data = mtxTable.compile(font)
+
+        self.assertEqual(data, deHexStr("0190 001E 0190 0028 0190 0032"))
 
     def test_toXML(self):
         font = self.makeFont(numGlyphs=2, numberOfMetrics=2)
