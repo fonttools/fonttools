@@ -290,7 +290,7 @@ class BuildTest(unittest.TestCase):
         expected_ttx_path = self.get_test_output('BuildMain.ttx')
         self.expect_ttx(varfont, expected_ttx_path, tables)
 
-    def test_varlib_build_from_ds_object(self):
+    def test_varlib_build_from_ds_object_in_memory_ttfonts(self):
         ds_path = self.get_test_input("Build.designspace")
         ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
         expected_ttx_path = self.get_test_output("BuildMain.ttx")
@@ -308,6 +308,44 @@ class BuildTest(unittest.TestCase):
                 filename, recalcBBoxes=False, recalcTimestamp=False, lazy=True
             )
             source.filename = None  # Make sure no file path gets into build()
+
+        varfont, _, _ = build(ds)
+        varfont = reload_font(varfont)
+        tables = [table_tag for table_tag in varfont.keys() if table_tag != "head"]
+        self.expect_ttx(varfont, expected_ttx_path, tables)
+
+    def test_varlib_build_from_ttf_paths(self):
+        ds_path = self.get_test_input("Build.designspace")
+        ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
+        expected_ttx_path = self.get_test_output("BuildMain.ttx")
+
+        self.temp_dir()
+        for path in self.get_file_list(ttx_dir, '.ttx', 'TestFamily-'):
+            self.compile_font(path, ".ttf", self.tempdir)
+
+        ds = DesignSpaceDocument.fromfile(ds_path)
+        for source in ds.sources:
+            source.path = os.path.join(
+                self.tempdir, os.path.basename(source.filename).replace(".ufo", ".ttf")
+            )
+        ds.updatePaths()
+
+        varfont, _, _ = build(ds)
+        varfont = reload_font(varfont)
+        tables = [table_tag for table_tag in varfont.keys() if table_tag != "head"]
+        self.expect_ttx(varfont, expected_ttx_path, tables)
+
+    def test_varlib_build_from_ttx_paths(self):
+        ds_path = self.get_test_input("Build.designspace")
+        ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
+        expected_ttx_path = self.get_test_output("BuildMain.ttx")
+
+        ds = DesignSpaceDocument.fromfile(ds_path)
+        for source in ds.sources:
+            source.path = os.path.join(
+                ttx_dir, os.path.basename(source.filename).replace(".ufo", ".ttx")
+            )
+        ds.updatePaths()
 
         varfont, _, _ = build(ds)
         varfont = reload_font(varfont)
