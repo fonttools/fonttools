@@ -423,7 +423,7 @@ class GlyphSet(_UFOBaseIO):
 			and data == self.fs.readbytes(fileName)
 		):
 			return
-		self.fs.setbytes(fileName, data)
+		self.fs.writebytes(fileName, data)
 
 	def deleteGlyph(self, glyphName):
 		"""Permanently delete the glyph from the glyph set on disk. Will

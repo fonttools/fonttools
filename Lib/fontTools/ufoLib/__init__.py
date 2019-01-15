@@ -175,7 +175,7 @@ class _UFOBaseIO(object):
 				)
 			if self.fs.exists(fileName) and data == self.fs.readbytes(fileName):
 				return
-			self.fs.setbytes(fileName, data)
+			self.fs.writebytes(fileName, data)
 		else:
 			with self.fs.openbin(fileName, mode="w") as fp:
 				try:
@@ -1009,12 +1009,12 @@ class UFOWriter(UFOReader):
 			if self.fs.isfile(path) and data == self.fs.readbytes(path):
 				return
 		try:
-			self.fs.setbytes(path, data)
+			self.fs.writebytes(path, data)
 		except fs.errors.FileExpected:
 			raise UFOLibError("A directory exists at '%s'" % path)
 		except fs.errors.ResourceNotFound:
 			self.fs.makedirs(fs.path.dirname(path), recreate=True)
-			self.fs.setbytes(path, data)
+			self.fs.writebytes(path, data)
 
 	def getFileObjectForPath(self, path, mode="w", encoding=None):
 		"""
