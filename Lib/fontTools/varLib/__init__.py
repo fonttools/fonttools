@@ -512,13 +512,31 @@ def _add_MVAR(font, masterModel, master_ttfs, axisTags):
 	lastTableTag = None
 	fontTable = None
 	tables = None
+	# HACK: we need to special-case post.underlineThickness and .underlinePosition
+	# and unilaterally/arbitrarily define a sentinel value to distinguish the case
+	# when a post table is present in a given master simply because that's where
+	# the glyph names in TrueType must be stored, but the underline values are not
+	# meant to be used for building MVAR's deltas. The value of 0x8000 (-36768)
+	# the minimum FWord (int16) value, was chosen for its unlikelyhood to appear
+	# in real-world underline position/thickness values.
+	specialTags = {"unds": 0x8000, "undo": 0x8000}
 	for tag, (tableTag, itemName) in sorted(MVAR_ENTRIES.items(), key=lambda kv: kv[1]):
 		if tableTag != lastTableTag:
 			tables = fontTable = None
 			if tableTag in font:
 				fontTable = font[tableTag]
-				tables = [master[tableTag] if tableTag in master else None
-					  for master in master_ttfs]
+				tables = []
+				for master in master_ttfs:
+					if tableTag in master:
+						if (
+							tag in specialTags
+							and getattr(master[tableTag], itemName) == specialTags[tag]
+						):
+							tables.append(None)
+						else:
+							tables.append(master[tableTag])
+					else:
+						tables.append(None)
 			lastTableTag = tableTag
 		if tables is None:
 			continue
