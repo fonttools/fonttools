@@ -475,7 +475,7 @@ class SubsetTest(unittest.TestCase):
         subset.main([fontpath, "--recalc-timestamp", "--output-file=%s" % subsetpath, "*"])
         self.assertLess(modified, TTFont(subsetpath)['head'].modified)
 
-    def test_retain_gids(self):
+    def test_retain_gids_ttf(self):
         _, fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
         font = TTFont(fontpath)
 
@@ -506,6 +506,41 @@ class SubsetTest(unittest.TestCase):
         glyf = subsetfont["glyf"]
         self.assertGreater(glyf["A"].numberOfContours, 0)
         self.assertEqual(glyf["B"].numberOfContours, 0)
+
+    def test_retain_gids_otf(self):
+        _, fontpath = self.compile_font(self.getpath("TestOTF-Regular.ttx"), ".otf")
+        font = TTFont(fontpath)
+
+        self.assertEqual(font["hmtx"]["A"], (500, 132))
+        self.assertEqual(font["hmtx"]["B"], (400, 132))
+
+        font["CFF "].cff[0].decompileAllCharStrings()
+        cs = font["CFF "].cff[0].CharStrings
+        self.assertGreater(len(cs["A"].program), 0)
+        self.assertGreater(len(cs["B"].program), 0)
+
+        subsetpath = self.temp_path(".ttf")
+        subset.main(
+            [
+                fontpath,
+                "--retain-gids",
+                "--output-file=%s" % subsetpath,
+                "--glyph-names",
+                "A",
+            ]
+        )
+        subsetfont = TTFont(subsetpath)
+
+        self.assertEqual(subsetfont.getGlyphOrder(), font.getGlyphOrder())
+
+        hmtx = subsetfont["hmtx"]
+        self.assertEqual(hmtx["A"], (500, 132))
+        self.assertEqual(hmtx["B"], (0, 0))
+
+        subsetfont["CFF "].cff[0].decompileAllCharStrings()
+        cs = subsetfont["CFF "].cff[0].CharStrings
+        self.assertGreater(len(cs["A"].program), 0)
+        self.assertEqual(cs["B"].program, ["endchar"])
 
 
 if __name__ == "__main__":
