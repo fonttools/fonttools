@@ -540,7 +540,7 @@ class SubsetTest(unittest.TestCase):
         subsetfont["CFF "].cff[0].decompileAllCharStrings()
         cs = subsetfont["CFF "].cff[0].CharStrings
         self.assertGreater(len(cs["A"].program), 0)
-        self.assertEqual(cs["B"].program, ["endchar"])
+        self.assertEqual(cs["B"].program, [-300, "endchar"])
 
 
 if __name__ == "__main__":

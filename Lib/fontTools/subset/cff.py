@@ -66,6 +66,25 @@ def closure_glyphs(self, s):
 		s.glyphs.update(components)
 		decompose = components
 
+def _empty_charstring(font, glyphName, width=None):
+	c, fdSelectIndex = font.CharStrings.getItemAndSelector(glyphName)
+	if hasattr(font, 'FDArray') and font.FDArray is not None:
+		private = font.FDArray[fdSelectIndex].Private
+	else:
+		private = font.Private
+	dfltWdX = private.defaultWidthX
+	nmnlWdX = private.nominalWidthX
+	if width is None:
+		pen = NullPen()
+		c.draw(pen)  # this will set the charstring's width
+		width = c.width
+	else:
+		c.decompile()
+	if width != dfltWdX:
+		c.program = [width - nmnlWdX, 'endchar']
+	else:
+		c.program = ['endchar']
+
 @_add_method(ttLib.getTableClass('CFF '))
 def prune_pre_subset(self, font, options):
 	cff = self.cff
@@ -75,19 +94,7 @@ def prune_pre_subset(self, font, options):
 	if options.notdef_glyph and not options.notdef_outline:
 		for fontname in cff.keys():
 			font = cff[fontname]
-			c, fdSelectIndex = font.CharStrings.getItemAndSelector('.notdef')
-			if hasattr(font, 'FDArray') and font.FDArray is not None:
-				private = font.FDArray[fdSelectIndex].Private
-			else:
-				private = font.Private
-			dfltWdX = private.defaultWidthX
-			nmnlWdX = private.nominalWidthX
-			pen = NullPen()
-			c.draw(pen)  # this will set the charstring's width
-			if c.width != dfltWdX:
-				c.program = [c.width - nmnlWdX, 'endchar']
-			else:
-				c.program = ['endchar']
+			_empty_charstring(font, ".notdef")
 
 	# Clear useless Encoding
 	for fontname in cff.keys():
@@ -105,11 +112,8 @@ def subset_glyphs(self, s):
 		cs = font.CharStrings
 
 		if s.options.retain_gids:
-			for g in cs.keys():
-				if g in s.glyphs_emptied:
-					c = cs[g]
-					c.decompile()
-					c.program = ["endchar"]
+			for g in s.glyphs_emptied:
+				_empty_charstring(font, g, width=0)
 		else:
 			# Load all glyphs
 			for g in font.charset:
