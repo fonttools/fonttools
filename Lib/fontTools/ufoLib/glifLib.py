@@ -290,7 +290,7 @@ class GlyphSet(_UFOBaseIO):
 		"""
 		fileName = self.contents[glyphName]
 		try:
-			return self.fs.getbytes(fileName)
+			return self.fs.readbytes(fileName)
 		except fs.errors.ResourceNotFound:
 			raise GlifLibError(
 				"The file '%s' associated with glyph '%s' in contents.plist "
@@ -420,7 +420,7 @@ class GlyphSet(_UFOBaseIO):
 		if (
 			self._havePreviousFile
 			and self.fs.exists(fileName)
-			and data == self.fs.getbytes(fileName)
+			and data == self.fs.readbytes(fileName)
 		):
 			return
 		self.fs.setbytes(fileName, data)

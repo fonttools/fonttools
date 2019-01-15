@@ -173,7 +173,7 @@ class _UFOBaseIO(object):
 					"the data is not properly formatted: %s"
 					% (fileName, self.fs, e)
 				)
-			if self.fs.exists(fileName) and data == self.fs.getbytes(fileName):
+			if self.fs.exists(fileName) and data == self.fs.readbytes(fileName):
 				return
 			self.fs.setbytes(fileName, data)
 		else:
@@ -356,7 +356,7 @@ class UFOReader(_UFOBaseIO):
 		Returns None if the file does not exist.
 		"""
 		try:
-			return self.fs.getbytes(fsdecode(path))
+			return self.fs.readbytes(fsdecode(path))
 		except fs.errors.ResourceNotFound:
 			return None
 
@@ -758,7 +758,7 @@ class UFOReader(_UFOBaseIO):
 			except AttributeError:
 				# in case readData is called before getDataDirectoryListing
 				dataFS = self.fs.opendir(DATA_DIRNAME)
-			data = dataFS.getbytes(fileName)
+			data = dataFS.readbytes(fileName)
 		except fs.errors.ResourceNotFound:
 			raise UFOLibError("No data file named '%s' on %s" % (fileName, self.fs))
 		return data
@@ -781,7 +781,7 @@ class UFOReader(_UFOBaseIO):
 			except AttributeError:
 				# in case readImage is called before getImageDirectoryListing
 				imagesFS = self.fs.opendir(IMAGES_DIRNAME)
-			data = imagesFS.getbytes(fileName)
+			data = imagesFS.readbytes(fileName)
 		except fs.errors.ResourceNotFound:
 			raise UFOLibError("No image file named '%s' on %s" % (fileName, self.fs))
 		if validate:
@@ -1006,7 +1006,7 @@ class UFOWriter(UFOReader):
 		"""
 		path = fsdecode(path)
 		if self._havePreviousFile:
-			if self.fs.isfile(path) and data == self.fs.getbytes(path):
+			if self.fs.isfile(path) and data == self.fs.readbytes(path):
 				return
 		try:
 			self.fs.setbytes(path, data)
