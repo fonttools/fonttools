@@ -31,7 +31,7 @@ bumpversion = ['bump2version'] if needs_bumpversion else []
 extras_require = {
 	# for fontTools.ufoLib: to read/write UFO fonts
 	"ufo": [
-		"fs >= 2.1.1, < 3",
+		"fs >= 2.2.0, < 3",
 		"enum34 >= 1.1.6; python_version < '3.4'",
 	],
 	# for fontTools.misc.etree and fontTools.misc.plistlib: use lxml to
