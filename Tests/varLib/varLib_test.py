@@ -352,6 +352,15 @@ class BuildTest(unittest.TestCase):
         tables = [table_tag for table_tag in varfont.keys() if table_tag != "head"]
         self.expect_ttx(varfont, expected_ttx_path, tables)
 
+    def test_varlib_build_sparse_masters(self):
+        ds_path = self.get_test_input("SparseMasters.designspace")
+        expected_ttx_path = self.get_test_output("SparseMasters.ttx")
+
+        varfont, _, _ = build(ds_path)
+        varfont = reload_font(varfont)
+        tables = [table_tag for table_tag in varfont.keys() if table_tag != "head"]
+        self.expect_ttx(varfont, expected_ttx_path, tables)
+
 
 def test_load_masters_layerName_without_required_font():
     ds = DesignSpaceDocument()
