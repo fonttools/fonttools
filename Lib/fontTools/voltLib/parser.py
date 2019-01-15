@@ -422,16 +422,17 @@ class Parser(object):
         gid = self.expect_number_()
         self.expect_keyword_("GLYPH")
         glyph_name = self.expect_name_()
-        # check for duplicate anchor names on this glyph
-        if (glyph_name in self.anchors_
-                and self.anchors_[glyph_name].resolve(name) is not None):
-            raise VoltLibError(
-                'Anchor "%s" already defined, '
-                'anchor names are case insensitive' % name,
-                location
-            )
         self.expect_keyword_("COMPONENT")
         component = self.expect_number_()
+        # check for duplicate anchor names on this glyph
+        if glyph_name in self.anchors_:
+            anchor = self.anchors_[glyph_name].resolve(name)
+            if anchor is not None and anchor.component == component:
+                raise VoltLibError(
+                    'Anchor "%s" already defined, '
+                    'anchor names are case insensitive' % name,
+                    location
+                )
         if self.next_token_ == "LOCKED":
             locked = True
             self.advance_lexer_()

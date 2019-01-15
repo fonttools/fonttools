@@ -936,6 +936,22 @@ class ParserTest(unittest.TestCase):
              False, (None, 250, 0, {}, {}, {}))
         )
 
+    def test_def_anchor_multi_component(self):
+        [anchor1, anchor2] = self.parse(
+            'DEF_ANCHOR "top" ON 120 GLYPH a '
+            'COMPONENT 1 AT POS DX 250 DY 450 END_POS END_ANCHOR\n'
+            'DEF_ANCHOR "top" ON 120 GLYPH a '
+            'COMPONENT 2 AT POS DX 250 DY 450 END_POS END_ANCHOR\n'
+        ).statements
+        self.assertEqual(
+            (anchor1.name, anchor1.gid, anchor1.glyph_name, anchor1.component),
+            ("top", 120, "a", 1)
+        )
+        self.assertEqual(
+            (anchor2.name, anchor2.gid, anchor2.glyph_name, anchor2.component),
+            ("top", 120, "a", 2)
+        )
+
     def test_def_anchor_duplicate(self):
         self.assertRaisesRegex(
             VoltLibError,
