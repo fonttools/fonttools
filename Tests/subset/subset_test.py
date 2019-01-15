@@ -475,6 +475,38 @@ class SubsetTest(unittest.TestCase):
         subset.main([fontpath, "--recalc-timestamp", "--output-file=%s" % subsetpath, "*"])
         self.assertLess(modified, TTFont(subsetpath)['head'].modified)
 
+    def test_retain_gids(self):
+        _, fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
+        font = TTFont(fontpath)
+
+        self.assertEqual(font["hmtx"]["A"], (500, 132))
+        self.assertEqual(font["hmtx"]["B"], (400, 132))
+
+        self.assertGreater(font["glyf"]["A"].numberOfContours, 0)
+        self.assertGreater(font["glyf"]["B"].numberOfContours, 0)
+
+        subsetpath = self.temp_path(".ttf")
+        subset.main(
+            [
+                fontpath,
+                "--retain-gids",
+                "--output-file=%s" % subsetpath,
+                "--glyph-names",
+                "A",
+            ]
+        )
+        subsetfont = TTFont(subsetpath)
+
+        self.assertEqual(subsetfont.getGlyphOrder(), font.getGlyphOrder())
+
+        hmtx = subsetfont["hmtx"]
+        self.assertEqual(hmtx["A"], (500, 132))
+        self.assertEqual(hmtx["B"], (0, 0))
+
+        glyf = subsetfont["glyf"]
+        self.assertGreater(glyf["A"].numberOfContours, 0)
+        self.assertEqual(glyf["B"].numberOfContours, 0)
+
 
 if __name__ == "__main__":
     sys.exit(unittest.main())
