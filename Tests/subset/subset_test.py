@@ -507,7 +507,7 @@ class SubsetTest(unittest.TestCase):
         self.assertGreater(glyf["A"].numberOfContours, 0)
         self.assertEqual(glyf["B"].numberOfContours, 0)
 
-    def test_retain_gids_otf(self):
+    def test_retain_gids_cff(self):
         _, fontpath = self.compile_font(self.getpath("TestOTF-Regular.ttx"), ".otf")
         font = TTFont(fontpath)
 
@@ -519,7 +519,7 @@ class SubsetTest(unittest.TestCase):
         self.assertGreater(len(cs["A"].program), 0)
         self.assertGreater(len(cs["B"].program), 0)
 
-        subsetpath = self.temp_path(".ttf")
+        subsetpath = self.temp_path(".otf")
         subset.main(
             [
                 fontpath,
@@ -540,7 +540,41 @@ class SubsetTest(unittest.TestCase):
         subsetfont["CFF "].cff[0].decompileAllCharStrings()
         cs = subsetfont["CFF "].cff[0].CharStrings
         self.assertGreater(len(cs["A"].program), 0)
-        self.assertEqual(cs["B"].program, [-300, "endchar"])
+        self.assertEqual(cs["B"].program, ["endchar"])
+
+    def test_retain_gids_cff2(self):
+        fontpath = self.getpath("../../varLib/data/TestCFF2VF.otf")
+        font = TTFont(fontpath)
+
+        self.assertEqual(font["hmtx"]["A"], (600, 31))
+        self.assertEqual(font["hmtx"]["T"], (600, 41))
+
+        font["CFF2"].cff[0].decompileAllCharStrings()
+        cs = font["CFF2"].cff[0].CharStrings
+        self.assertGreater(len(cs["A"].program), 0)
+        self.assertGreater(len(cs["T"].program), 0)
+
+        subsetpath = self.temp_path(".otf")
+        subset.main(
+            [
+                fontpath,
+                "--retain-gids",
+                "--output-file=%s" % subsetpath,
+                "A",
+            ]
+        )
+        subsetfont = TTFont(subsetpath)
+
+        self.assertEqual(len(subsetfont.getGlyphOrder()), len(font.getGlyphOrder()))
+
+        hmtx = subsetfont["hmtx"]
+        self.assertEqual(hmtx["A"], (600, 31))
+        self.assertEqual(hmtx["glyph00002"], (0, 0))
+
+        subsetfont["CFF2"].cff[0].decompileAllCharStrings()
+        cs = subsetfont["CFF2"].cff[0].CharStrings
+        self.assertGreater(len(cs["A"].program), 0)
+        self.assertEqual(cs["glyph00002"].program, [])
 
 
 if __name__ == "__main__":
