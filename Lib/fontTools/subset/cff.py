@@ -93,9 +93,10 @@ def prune_pre_subset(self, font, options):
 	cff.fontNames = cff.fontNames[:1]
 
 	if options.notdef_glyph and not options.notdef_outline:
+		isCFF2 = cff.major > 1
 		for fontname in cff.keys():
 			font = cff[fontname]
-			_empty_charstring(font, ".notdef", isCFF2=cff.major > 1)
+			_empty_charstring(font, ".notdef", isCFF2=isCFF2)
 
 	# Clear useless Encoding
 	for fontname in cff.keys():
@@ -113,8 +114,9 @@ def subset_glyphs(self, s):
 		cs = font.CharStrings
 
 		if s.options.retain_gids:
+			isCFF2 = cff.major > 1
 			for g in s.glyphs_emptied:
-				_empty_charstring(font, g, isCFF2=cff.major > 1, ignoreWidth=True)
+				_empty_charstring(font, g, isCFF2=isCFF2, ignoreWidth=True)
 		else:
 			# Load all glyphs
 			for g in font.charset:
