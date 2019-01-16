@@ -66,6 +66,26 @@ def closure_glyphs(self, s):
 		s.glyphs.update(components)
 		decompose = components
 
+def _empty_charstring(font, glyphName, isCFF2, ignoreWidth=False):
+	c, fdSelectIndex = font.CharStrings.getItemAndSelector(glyphName)
+	if isCFF2 or ignoreWidth:
+		# CFF2 charstrings have no widths nor 'endchar' operators
+		c.decompile()
+		c.program = [] if isCFF2 else ['endchar']
+	else:
+		if hasattr(font, 'FDArray') and font.FDArray is not None:
+			private = font.FDArray[fdSelectIndex].Private
+		else:
+			private = font.Private
+		dfltWdX = private.defaultWidthX
+		nmnlWdX = private.nominalWidthX
+		pen = NullPen()
+		c.draw(pen)  # this will set the charstring's width
+		if c.width != dfltWdX:
+			c.program = [c.width - nmnlWdX, 'endchar']
+		else:
+			c.program = ['endchar']
+
 @_add_method(ttLib.getTableClass('CFF '))
 def prune_pre_subset(self, font, options):
 	cff = self.cff
@@ -73,21 +93,10 @@ def prune_pre_subset(self, font, options):
 	cff.fontNames = cff.fontNames[:1]
 
 	if options.notdef_glyph and not options.notdef_outline:
+		isCFF2 = cff.major > 1
 		for fontname in cff.keys():
 			font = cff[fontname]
-			c, fdSelectIndex = font.CharStrings.getItemAndSelector('.notdef')
-			if hasattr(font, 'FDArray') and font.FDArray is not None:
-				private = font.FDArray[fdSelectIndex].Private
-			else:
-				private = font.Private
-			dfltWdX = private.defaultWidthX
-			nmnlWdX = private.nominalWidthX
-			pen = NullPen()
-			c.draw(pen)  # this will set the charstring's width
-			if c.width != dfltWdX:
-				c.program = [c.width - nmnlWdX, 'endchar']
-			else:
-				c.program = ['endchar']
+			_empty_charstring(font, ".notdef", isCFF2=isCFF2)
 
 	# Clear useless Encoding
 	for fontname in cff.keys():
@@ -104,37 +113,42 @@ def subset_glyphs(self, s):
 		font = cff[fontname]
 		cs = font.CharStrings
 
-		# Load all glyphs
-		for g in font.charset:
-			if g not in s.glyphs: continue
-			c, _ = cs.getItemAndSelector(g)
-
-		if cs.charStringsAreIndexed:
-			indices = [i for i,g in enumerate(font.charset) if g in s.glyphs]
-			csi = cs.charStringsIndex
-			csi.items = [csi.items[i] for i in indices]
-			del csi.file, csi.offsets
-			if hasattr(font, "FDSelect"):
-				sel = font.FDSelect
-				# XXX We want to set sel.format to None, such that the
-				# most compact format is selected. However, OTS was
-				# broken and couldn't parse a FDSelect format 0 that
-				# happened before CharStrings. As such, always force
-				# format 3 until we fix cffLib to always generate
-				# FDSelect after CharStrings.
-				# https://github.com/khaledhosny/ots/pull/31
-				#sel.format = None
-				sel.format = 3
-				sel.gidArray = [sel.gidArray[i] for i in indices]
-			cs.charStrings = {g:indices.index(v)
-					  for g,v in cs.charStrings.items()
-					  if g in s.glyphs}
+		if s.options.retain_gids:
+			isCFF2 = cff.major > 1
+			for g in s.glyphs_emptied:
+				_empty_charstring(font, g, isCFF2=isCFF2, ignoreWidth=True)
 		else:
-			cs.charStrings = {g:v
-					  for g,v in cs.charStrings.items()
-					  if g in s.glyphs}
-		font.charset = [g for g in font.charset if g in s.glyphs]
-		font.numGlyphs = len(font.charset)
+			# Load all glyphs
+			for g in font.charset:
+				if g not in s.glyphs: continue
+				c, _ = cs.getItemAndSelector(g)
+
+			if cs.charStringsAreIndexed:
+				indices = [i for i,g in enumerate(font.charset) if g in s.glyphs]
+				csi = cs.charStringsIndex
+				csi.items = [csi.items[i] for i in indices]
+				del csi.file, csi.offsets
+				if hasattr(font, "FDSelect"):
+					sel = font.FDSelect
+					# XXX We want to set sel.format to None, such that the
+					# most compact format is selected. However, OTS was
+					# broken and couldn't parse a FDSelect format 0 that
+					# happened before CharStrings. As such, always force
+					# format 3 until we fix cffLib to always generate
+					# FDSelect after CharStrings.
+					# https://github.com/khaledhosny/ots/pull/31
+					#sel.format = None
+					sel.format = 3
+					sel.gidArray = [sel.gidArray[i] for i in indices]
+				cs.charStrings = {g:indices.index(v)
+						  for g,v in cs.charStrings.items()
+						  if g in s.glyphs}
+			else:
+				cs.charStrings = {g:v
+						  for g,v in cs.charStrings.items()
+						  if g in s.glyphs}
+			font.charset = [g for g in font.charset if g in s.glyphs]
+			font.numGlyphs = len(font.charset)
 
 	return True # any(cff[fontname].numGlyphs for fontname in cff.keys())
 
