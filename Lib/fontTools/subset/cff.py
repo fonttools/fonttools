@@ -66,8 +66,13 @@ def closure_glyphs(self, s):
 		s.glyphs.update(components)
 		decompose = components
 
-def _empty_charstring(font, glyphName, width=None):
+def _empty_charstring(font, glyphName, isCFF2, width=None):
 	c, fdSelectIndex = font.CharStrings.getItemAndSelector(glyphName)
+	if isCFF2:
+		# CFF2 charstrings have no widths nor 'endchar' operators
+		c.decompile()
+		c.program = []
+		return
 	if hasattr(font, 'FDArray') and font.FDArray is not None:
 		private = font.FDArray[fdSelectIndex].Private
 	else:
@@ -94,7 +99,7 @@ def prune_pre_subset(self, font, options):
 	if options.notdef_glyph and not options.notdef_outline:
 		for fontname in cff.keys():
 			font = cff[fontname]
-			_empty_charstring(font, ".notdef")
+			_empty_charstring(font, ".notdef", isCFF2=cff.major > 1)
 
 	# Clear useless Encoding
 	for fontname in cff.keys():
@@ -113,7 +118,7 @@ def subset_glyphs(self, s):
 
 		if s.options.retain_gids:
 			for g in s.glyphs_emptied:
-				_empty_charstring(font, g, width=0)
+				_empty_charstring(font, g, isCFF2=cff.major > 1, width=0)
 		else:
 			# Load all glyphs
 			for g in font.charset:
