@@ -1,3 +1,6 @@
+3.36.0 (released 2019-01-17)
+----------------------------
+
 - [ttx] Added ``--no-recalc-timestamp`` option to keep the original font's
   ``head.modified`` timestamp (#1455, #46).
 - [ttx/psCharStrings] Fixed issues while dumping and round-tripping CFF2 table
