@@ -983,6 +983,16 @@ class T2CharString(object):
 			return
 		opcodes = self.opcodes
 		program = self.program
+
+		if isCFF2:
+			# If present, remove return and endchar operators.
+			if program and program[-1] in ("return", "endchar"):
+				program = program[:-1]
+		elif program and not isinstance(program[-1], basestring):
+			raise CharStringCompileError(
+				"T2CharString or Subr has items on the stack after last operator."
+			)
+
 		bytecode = []
 		encodeInt = self.getIntEncoder()
 		encodeFixed = self.getFixedEncoder()
@@ -1005,21 +1015,12 @@ class T2CharString(object):
 				bytecode.append(encodeFixed(token))
 			else:
 				assert 0, "unsupported type: %s" % type(token)
-		if not isCFF2 and program and not isinstance(program[-1], basestring):
-			raise CharStringCompileError(
-				"T2CharString or Subr has items on the stack after last operator."
-			)
 		try:
 			bytecode = bytesjoin(bytecode)
 		except TypeError:
 			log.error(bytecode)
 			raise
 		self.setBytecode(bytecode)
-
-		if isCFF2:
-			# If present, remove return and endchar operators.
-			if self.bytecode and (byteord(self.bytecode[-1]) in (11, 14)):
-				self.bytecode = self.bytecode[:-1]
 
 	def needsDecompilation(self):
 		return self.bytecode is not None
