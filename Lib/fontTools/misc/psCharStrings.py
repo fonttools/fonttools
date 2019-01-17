@@ -1005,6 +1005,10 @@ class T2CharString(object):
 				bytecode.append(encodeFixed(token))
 			else:
 				assert 0, "unsupported type: %s" % type(token)
+		if not isCFF2 and program and not isinstance(program[-1], basestring):
+			raise CharStringCompileError(
+				"T2CharString or Subr has items on the stack after last operator."
+			)
 		try:
 			bytecode = bytesjoin(bytecode)
 		except TypeError:
@@ -1088,13 +1092,12 @@ class T2CharString(object):
 				else:
 					args.append(token)
 			if args:
-				if self.isCFF2:
-					# CFF2Subr's can have numeric arguments on the stack after the last operator.
-					args = [str(arg) for arg in args]
-					line = ' '.join(args)
-					xmlWriter.write(line)
-				else:
-					assert 0, "T2Charstring or Subr has items on the stack after last operator."
+				# NOTE: only CFF2 charstrings/subrs can have numeric arguments on
+				# the stack after the last operator. Compiling this would fail if
+				# this is part of CFF 1.0 table.
+				args = [str(arg) for arg in args]
+				line = ' '.join(args)
+				xmlWriter.write(line)
 
 	def fromXML(self, name, attrs, content):
 		from fontTools.misc.textTools import binary2num, readHex
