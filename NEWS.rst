@@ -1,3 +1,18 @@
+- [ttx] Added ``--no-recalc-timestamp`` option to keep the original font's
+  ``head.modified`` timestamp (#1455, #46).
+- [ttx/psCharStrings] Fixed issues while dumping and round-tripping CFF2 table
+  with ttx (#1451, #1452, #1456).
+- [voltLib] Fixed check for duplicate anchors (#1450). Don't try to read past
+  the ``END`` operator in .vtp file (#1453).
+- [varLib] Use sentinel value -0x8000 (-32768) to ignore post.underlineThickness
+  and post.underlinePosition when generating MVAR deltas (#1449,
+  googlei18n/ufo2ft#308).
+- [subset] Added ``--retain-gids`` option to subset font without modifying the
+  current glyph indices (#1443, #1447).
+- [ufoLib] Replace deprecated calls to ``getbytes`` and ``setbytes`` with new
+  equivalent ``readbytes`` and ``writebytes`` calls. ``fs`` >= 2.2 no required.
+- [varLib] Allow loading masters from TTX files as well (#1441).
+
 3.35.2 (released 2019-01-14)
 ----------------------------
 
