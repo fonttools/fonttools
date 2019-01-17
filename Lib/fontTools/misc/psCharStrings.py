@@ -983,6 +983,12 @@ class T2CharString(object):
 			return
 		opcodes = self.opcodes
 		program = self.program
+
+		if isCFF2:
+			# If present, remove return and endchar operators.
+			if program and program[-1] in ("return", "endchar"):
+				program = program[:-1]
+
 		bytecode = []
 		encodeInt = self.getIntEncoder()
 		encodeFixed = self.getFixedEncoder()
@@ -1015,11 +1021,6 @@ class T2CharString(object):
 			log.error(bytecode)
 			raise
 		self.setBytecode(bytecode)
-
-		if isCFF2:
-			# If present, remove return and endchar operators.
-			if self.bytecode and (byteord(self.bytecode[-1]) in (11, 14)):
-				self.bytecode = self.bytecode[:-1]
 
 	def needsDecompilation(self):
 		return self.bytecode is not None
