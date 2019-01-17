@@ -77,6 +77,7 @@ usage: ttx [options] inputfile1 [... inputfileN]
        file as-is.
     --recalc-timestamp Set font 'modified' timestamp to current time.
        By default, the modification time of the TTX file will be used.
+    --no-recalc-timestamp Keep the original font 'modified' timestamp.
     --flavor <type> Specify flavor of output font file. May be 'woff'
       or 'woff2'. Note that WOFF2 requires the Brotli Python extension,
       available at https://github.com/google/brotli
@@ -123,7 +124,7 @@ class Options(object):
 	bitmapGlyphDataFormat = 'raw'
 	unicodedata = None
 	newlinestr = None
-	recalcTimestamp = False
+	recalcTimestamp = None
 	flavor = None
 	useZopfli = False
 
@@ -204,6 +205,8 @@ class Options(object):
 						% (value, ", ".join(map(repr, validOptions))))
 			elif option == "--recalc-timestamp":
 				self.recalcTimestamp = True
+			elif option == "--no-recalc-timestamp":
+				self.recalcTimestamp = False
 			elif option == "--flavor":
 				self.flavor = value
 			elif option == "--with-zopfli":
@@ -282,7 +285,7 @@ def ttCompile(input, output, options):
 			allowVID=options.allowVID)
 	ttf.importXML(input)
 
-	if not options.recalcTimestamp and 'head' in ttf:
+	if options.recalcTimestamp is None and 'head' in ttf:
 		# use TTX file modification time for head "modified" timestamp
 		mtime = os.path.getmtime(input)
 		ttf['head'].modified = timestampSinceEpoch(mtime)

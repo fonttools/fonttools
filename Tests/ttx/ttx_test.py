@@ -476,6 +476,11 @@ def test_options_recalc_timestamp():
     assert tto.recalcTimestamp is True
 
 
+def test_options_recalc_timestamp():
+    tto = ttx.Options([("--no-recalc-timestamp", "")], 1)
+    assert tto.recalcTimestamp is False
+
+
 def test_options_flavor():
     tto = ttx.Options([("--flavor", "woff")], 1)
     assert tto.flavor == "woff"
@@ -788,6 +793,14 @@ def test_ttcompile_timestamp_calcs(inpath, outpath1, outpath2, tmpdir):
     epochtime = timestampSinceEpoch(mtime)
     ttf = TTFont(str(outttf2))
     assert ttf["head"].modified > epochtime
+
+    # --no-recalc-timestamp will keep original timestamp
+    options.recalcTimestamp = False
+    ttx.ttCompile(inttx, str(outttf2), options)
+    assert outttf2.check(file=True)
+    inttf = TTFont()
+    inttf.importXML(inttx)
+    assert inttf["head"].modified == TTFont(str(outttf2))["head"].modified
 
 
 # -------------------------
