@@ -331,8 +331,8 @@ def guessFileType(fileName):
 
 def parseOptions(args):
 	rawOptions, files = getopt.getopt(args, "ld:o:fvqht:x:sgim:z:baey:",
-			['unicodedata=', "recalc-timestamp", 'flavor=', 'version',
-			 'with-zopfli', 'newline='])
+			['unicodedata=', "recalc-timestamp", "no-recalc-timestamp",
+			 'flavor=', 'version', 'with-zopfli', 'newline='])
 
 	options = Options(rawOptions, len(files))
 	jobs = []
