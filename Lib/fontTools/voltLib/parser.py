@@ -44,10 +44,7 @@ class Parser(object):
                 func = getattr(self, PARSE_FUNCS[self.cur_token_])
                 statements.append(func())
             elif self.is_cur_keyword_("END"):
-                if self.next_token_type_ is not None:
-                    raise VoltLibError("Expected the end of the file",
-                                       self.cur_token_location_)
-                return self.doc_
+                break
             else:
                 raise VoltLibError(
                     "Expected " + ", ".join(sorted(PARSE_FUNCS.keys())),
@@ -602,6 +599,8 @@ class Parser(object):
         self.cur_token_type_, self.cur_token_, self.cur_token_location_ = (
             self.next_token_type_, self.next_token_, self.next_token_location_)
         try:
+            if self.is_cur_keyword_("END"):
+                raise StopIteration
             (self.next_token_type_, self.next_token_,
              self.next_token_location_) = self.lexer_.next()
         except StopIteration:

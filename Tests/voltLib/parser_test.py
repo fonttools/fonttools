@@ -1028,6 +1028,14 @@ class ParserTest(unittest.TestCase):
              ("CMAP_FORMAT", (3, 1, 4)))
         )
 
+    def test_stop_at_end(self):
+        [def_glyph] = self.parse(
+            'DEF_GLYPH ".notdef" ID 0 TYPE BASE END_GLYPH END\0\0\0\0'
+        ).statements
+        self.assertEqual((def_glyph.name, def_glyph.id, def_glyph.unicode,
+                          def_glyph.type, def_glyph.components),
+                         (".notdef", 0, None, "BASE", None))
+
     def setUp(self):
         self.tempdir = None
         self.num_tempfiles = 0
