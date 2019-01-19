@@ -514,29 +514,18 @@ class Parser(object):
             elif self.next_token_ == "GLYPH":
                 self.expect_keyword_("GLYPH")
                 name = self.expect_string_()
-                coverage.append(name)
+                coverage.append(ast.GlyphName(name, location=location))
             elif self.next_token_ == "GROUP":
                 self.expect_keyword_("GROUP")
                 name = self.expect_string_()
-                # resolved_group = self.groups_.resolve(name)
-                group = (name,)
-                coverage.append(group)
-                # if resolved_group is not None:
-                #     coverage.extend(resolved_group.enum)
-                # # TODO: check that group exists after all groups are defined
-                # else:
-                #     group = (name,)
-                #     coverage.append(group)
-                #     # raise VoltLibError(
-                #     #     'Glyph group "%s" is not defined' % name,
-                #     #     location)
+                coverage.append(ast.GroupName(name, self, location=location))
             elif self.next_token_ == "RANGE":
                 self.expect_keyword_("RANGE")
                 start = self.expect_string_()
                 self.expect_keyword_("TO")
                 end = self.expect_string_()
-                coverage.append((start, end))
-        return tuple(coverage)
+                coverage.append(ast.Range(start, end, self, location=location))
+        return ast.Enum(coverage, location=location)
 
     def resolve_group(self, group_name):
         return self.groups_.resolve(group_name)
