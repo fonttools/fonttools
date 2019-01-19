@@ -1115,6 +1115,9 @@ class ValueRecord(Expression):
                 hash(self.xAdvDevice) ^ hash(self.yAdvDevice))
 
     def makeString(self, vertical=None):
+        if not self:
+            return "<NULL>"
+
         x, y = self.xPlacement, self.yPlacement
         xAdvance, yAdvance = self.xAdvance, self.yAdvance
         xPlaDevice, yPlaDevice = self.xPlaDevice, self.yPlaDevice
@@ -1139,6 +1142,23 @@ class ValueRecord(Expression):
             x, y, xAdvance, yAdvance,
             deviceToString(xPlaDevice), deviceToString(yPlaDevice),
             deviceToString(xAdvDevice), deviceToString(yAdvDevice))
+
+    def __bool__(self):
+        return any(
+            getattr(self, v) is not None
+            for v in [
+                "xPlacement",
+                "yPlacement",
+                "xAdvance",
+                "yAdvance",
+                "xPlaDevice",
+                "yPlaDevice",
+                "xAdvDevice",
+                "yAdvDevice",
+            ]
+        )
+
+    __nonzero__ = __bool__
 
 
 class ValueRecordDefinition(Statement):

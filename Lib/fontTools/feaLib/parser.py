@@ -1153,7 +1153,7 @@ class Parser(object):
             name = self.expect_name_()
             if name == "NULL":
                 self.expect_symbol_(">")
-                return None
+                return self.ast.ValueRecord()
             vrd = self.valuerecords_.resolve(name)
             if vrd is None:
                 raise FeatureLibError("Unknown valueRecordDef \"%s\"" % name,
