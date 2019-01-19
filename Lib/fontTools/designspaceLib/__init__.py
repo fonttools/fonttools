@@ -235,7 +235,6 @@ class InstanceDescriptor(SimpleDescriptor):
         self.localisedStyleMapStyleName = {}
         self.localisedStyleMapFamilyName = {}
         self.glyphs = {}
-        self.mutedGlyphNames = []
         self.kerning = True
         self.info = True
 

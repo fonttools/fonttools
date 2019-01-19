@@ -216,8 +216,6 @@ Attributes
 -  ``glyphs``: dict for special master definitions for glyphs. If glyphs
    need special masters (to record the results of executed rules for
    example). MutatorMath.
--  ``mutedGlyphNames``: list of glyphnames that should be suppressed in
-   the generation of this instance.
 -  ``kerning``: bool. Indicates if this instance needs its kerning
    calculated. MutatorMath.
 -  ``info``: bool. Indicated if this instance needs the interpolating
