@@ -1,0 +1,7 @@
+# A pair position lookup where only the second glyph has a non-empty valuerecord
+# while the first glyph has a NULL valuerecord. The ValueFormat1 for the first
+# glyph is expected to be 0.
+# https://github.com/fonttools/fonttools/issues/1459
+feature kern {
+    pos A <NULL> V <-180 0 -90 0>;
+} kern;
