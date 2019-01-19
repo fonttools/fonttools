@@ -1114,7 +1114,7 @@ _VALUEREC_ATTRS = {
 
 def makeOpenTypeValueRecord(v, pairPosContext):
     """ast.ValueRecord --> (otBase.ValueRecord, int ValueFormat)"""
-    if v is None:
+    if not v:
         return None, 0
 
     vr = {}

@@ -800,7 +800,22 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(pos.valuerecord2.makeString(vertical=False),
                          "<1 2 3 4>")
 
-    def test_gpos_type_2_format_a_with_null(self):
+    def test_gpos_type_2_format_a_with_null_first(self):
+        doc = self.parse("feature kern {"
+                         "    pos [T V] <NULL> [a b c] <1 2 3 4>;"
+                         "} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertEqual(type(pos), ast.PairPosStatement)
+        self.assertFalse(pos.enumerated)
+        self.assertEqual(glyphstr([pos.glyphs1]), "[T V]")
+        self.assertFalse(pos.valuerecord1)
+        self.assertEqual(pos.valuerecord1.makeString(), "<NULL>")
+        self.assertEqual(glyphstr([pos.glyphs2]), "[a b c]")
+        self.assertEqual(pos.valuerecord2.makeString(vertical=False),
+                         "<1 2 3 4>")
+        self.assertEqual(pos.asFea(), "pos [T V] <NULL> [a b c] <1 2 3 4>;")
+
+    def test_gpos_type_2_format_a_with_null_second(self):
         doc = self.parse("feature kern {"
                          "    pos [T V] <1 2 3 4> [a b c] <NULL>;"
                          "} kern;")
@@ -811,7 +826,8 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(pos.valuerecord1.makeString(vertical=False),
                          "<1 2 3 4>")
         self.assertEqual(glyphstr([pos.glyphs2]), "[a b c]")
-        self.assertIsNone(pos.valuerecord2)
+        self.assertFalse(pos.valuerecord2)
+        self.assertEqual(pos.asFea(), "pos [T V] [a b c] <1 2 3 4>;")
 
     def test_gpos_type_2_format_b(self):
         doc = self.parse("feature kern {"
@@ -1523,7 +1539,8 @@ class ParserTest(unittest.TestCase):
     def test_valuerecord_format_d(self):
         doc = self.parse("feature test {valueRecordDef <NULL> foo;} test;")
         value = doc.statements[0].statements[0].value
-        self.assertIsNone(value)
+        self.assertFalse(value)
+        self.assertEqual(value.makeString(), "<NULL>")
 
     def test_valuerecord_named(self):
         doc = self.parse("valueRecordDef <1 2 3 4> foo;"
