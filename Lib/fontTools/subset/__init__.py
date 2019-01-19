@@ -1730,6 +1730,9 @@ def subset_glyphs(self, s):
 @_add_method(ttLib.getTableClass('hdmx'))
 def subset_glyphs(self, s):
 	self.hdmx = {sz:_dict_subset(l, s.glyphs) for sz,l in self.hdmx.items()}
+	for sz in self.hdmx:
+		for g in s.glyphs_emptied:
+			self.hdmx[sz][g] = 0
 	return bool(self.hdmx)
 
 @_add_method(ttLib.getTableClass('ankr'))
