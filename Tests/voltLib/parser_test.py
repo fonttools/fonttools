@@ -109,9 +109,9 @@ class ParserTest(unittest.TestCase):
         ).statements
         self.assertEqual((def_group.name, def_group.enum.glyphSet()),
                          ("aaccented",
-                          {"aacute", "abreve", "acircumflex", "adieresis",
+                          ("aacute", "abreve", "acircumflex", "adieresis",
                            "ae", "agrave", "amacron", "aogonek", "aring",
-                           "atilde"}))
+                           "atilde")))
 
     def test_def_group_groups(self):
         parser = self.parser(
@@ -164,8 +164,8 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(
             (test_group3.name, test_group3.enum),
             ("TestGroup3",
-             ast.Enum([ast.GroupName("Group1", parser),
-                       ast.GroupName("Group2", parser)])))
+             ast.Enum([ast.GroupName("Group2", parser),
+                       ast.GroupName("Group1", parser)])))
 
     # def test_def_group_groups_undefined(self):
     #     with self.assertRaisesRegex(
@@ -193,7 +193,7 @@ class ParserTest(unittest.TestCase):
         ).statements
         items = def_group2.enum.enum
         self.assertEqual((def_group2.name, items[0].glyphSet(), items[1].group),
-                         ("KERN_lc_a_2ND", {"a"}, "aaccented"))
+                         ("KERN_lc_a_2ND", ("a",), "aaccented"))
 
     def test_def_group_range(self):
         def_group = self.parse(
@@ -213,8 +213,8 @@ class ParserTest(unittest.TestCase):
         ).statements[-1]
         self.assertEqual((def_group.name, def_group.enum.glyphSet()),
                          ("KERN_lc_a_2ND",
-                          {"a", "agrave", "aacute", "acircumflex", "atilde",
-                           "b", "c", "ccaron", "ccedilla", "cdotaccent"}))
+                          ("a", "agrave", "aacute", "acircumflex", "atilde",
+                           "b", "c", "ccaron", "ccedilla", "cdotaccent")))
 
     def test_group_duplicate(self):
         self.assertRaisesRegex(

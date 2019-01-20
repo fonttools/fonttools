@@ -531,8 +531,7 @@ class Parser(object):
         return self.groups_.resolve(group_name)
 
     def glyph_range(self, start, end):
-        rng = self.glyphs_.range(start, end)
-        return frozenset(rng)
+        return self.glyphs_.range(start, end)
 
     def parse_ppem_(self):
         location = self.cur_token_location_

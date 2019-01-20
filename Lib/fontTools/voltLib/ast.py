@@ -83,7 +83,7 @@ class GlyphName(Expression):
         self.glyph = glyph
 
     def glyphSet(self):
-        return frozenset((self.glyph,))
+        return (self.glyph,)
 
 
 class Enum(Expression):
@@ -106,13 +106,13 @@ class Enum(Expression):
         return hash(self.glyphSet())
 
     def glyphSet(self, groups=None):
-        glyphs = set()
+        glyphs = []
         for element in self.enum:
             if isinstance(element, (GroupName, Enum)):
-                glyphs = glyphs.union(element.glyphSet(groups))
+                glyphs.extend(element.glyphSet(groups))
             else:
-                glyphs = glyphs.union(element.glyphSet())
-        return frozenset(glyphs)
+                glyphs.extend(element.glyphSet())
+        return tuple(glyphs)
 
 
 class GroupName(Expression):
@@ -142,8 +142,7 @@ class Range(Expression):
         self.parser = parser
 
     def glyphSet(self):
-        glyphs = self.parser.glyph_range(self.start, self.end)
-        return frozenset(glyphs)
+        return tuple(self.parser.glyph_range(self.start, self.end))
 
 
 class ScriptDefinition(Statement):
