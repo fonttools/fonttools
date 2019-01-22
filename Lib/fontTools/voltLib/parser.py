@@ -203,11 +203,12 @@ class Parser(object):
             self.advance_lexer_()
             process_base = False
         process_marks = True
+        mark_glyph_set = None
         if self.next_token_ == "PROCESS_MARKS":
             self.advance_lexer_()
             if self.next_token_ == "MARK_GLYPH_SET":
                 self.advance_lexer_()
-                process_marks = self.expect_string_()
+                mark_glyph_set = self.expect_string_()
             elif self.next_token_type_ == Lexer.STRING:
                 process_marks = self.expect_string_()
             elif self.next_token_ == "ALL":
@@ -249,8 +250,8 @@ class Parser(object):
                 "Got %s" % (as_pos_or_sub),
                 location)
         def_lookup = ast.LookupDefinition(
-            name, process_base, process_marks, direction, reversal,
-            comments, context, sub, pos, location=location)
+            name, process_base, process_marks, mark_glyph_set, direction,
+            reversal, comments, context, sub, pos, location=location)
         self.lookups_.define(name, def_lookup)
         return def_lookup
 

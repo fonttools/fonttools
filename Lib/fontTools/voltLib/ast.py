@@ -170,12 +170,14 @@ class FeatureDefinition(Statement):
 
 
 class LookupDefinition(Statement):
-    def __init__(self, name, process_base, process_marks, direction,
-                 reversal, comments, context, sub, pos, location=None):
+    def __init__(self, name, process_base, process_marks, mark_glyph_set,
+                 direction, reversal, comments, context, sub, pos,
+                 location=None):
         Statement.__init__(self, location)
         self.name = name
         self.process_base = process_base
         self.process_marks = process_marks
+        self.mark_glyph_set = mark_glyph_set
         self.direction = direction
         self.reversal = reversal
         self.comments = comments
