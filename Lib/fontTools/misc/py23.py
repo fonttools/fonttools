@@ -308,6 +308,35 @@ except AttributeError:
 		return result
 
 
+try:
+	_isfinite = _math.isfinite  # Python >= 3.2
+except AttributeError:
+	_isfinite = None
+	_isnan = _math.isnan
+	_isinf = _math.isinf
+
+
+def isfinite(f):
+	"""
+	>>> isfinite(0.0)
+	True
+	>>> isfinite(-0.1)
+	True
+	>>> isfinite(1e10)
+	True
+	>>> isfinite(float("nan"))
+	False
+	>>> isfinite(float("+inf"))
+	False
+	>>> isfinite(float("-inf"))
+	False
+	"""
+	if _isfinite is not None:
+		return _isfinite(f)
+	else:
+		return not (_isnan(f) or _isinf(f))
+
+
 import decimal as _decimal
 
 if PY3:
