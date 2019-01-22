@@ -122,13 +122,13 @@ class TimerTest(object):
         test1()
 
         assert re.match(
-            "Took [0-9]\.[0-9]{3}s to run 'test1'",
+            r"Took [0-9]\.[0-9]{3}s to run 'test1'",
             logger.handlers[0].stream.getvalue())
 
         test2()
 
         assert re.search(
-            "Took [0-9]\.[0-9]{3}s to run test 2",
+            r"Took [0-9]\.[0-9]{3}s to run test 2",
             logger.handlers[0].stream.getvalue())
 
 

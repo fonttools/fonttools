@@ -765,7 +765,7 @@ class Base128Test(unittest.TestCase):
 
 		self.assertRaisesRegex(
 			ttLib.TTLibError,
-			"UIntBase128 value exceeds 2\*\*32-1",
+			r"UIntBase128 value exceeds 2\*\*32-1",
 			unpackBase128, b'\x90\x80\x80\x80\x00')
 
 		self.assertRaisesRegex(
@@ -783,11 +783,11 @@ class Base128Test(unittest.TestCase):
 		self.assertEqual(packBase128(2**32-1), b'\x8f\xff\xff\xff\x7f')
 		self.assertRaisesRegex(
 			ttLib.TTLibError,
-			"UIntBase128 format requires 0 <= integer <= 2\*\*32-1",
+			r"UIntBase128 format requires 0 <= integer <= 2\*\*32-1",
 			packBase128, 2**32+1)
 		self.assertRaisesRegex(
 			ttLib.TTLibError,
-			"UIntBase128 format requires 0 <= integer <= 2\*\*32-1",
+			r"UIntBase128 format requires 0 <= integer <= 2\*\*32-1",
 			packBase128, -1)
 
 
