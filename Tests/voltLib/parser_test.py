@@ -665,7 +665,7 @@ class ParserTest(unittest.TestCase):
             (lookup.name, process_marks),
             ("SomeSub", False))
 
-    def test_substitution_process_marks(self):
+    def test_substitution_mark_attachment(self):
         [group, lookup] = self.parse(
             'DEF_GROUP "SomeMarks" ENUM GLYPH "acutecmb" GLYPH "gravecmb" '
             'END_ENUM END_GROUP\n'
@@ -681,6 +681,23 @@ class ParserTest(unittest.TestCase):
         process_marks = lookup.process_marks
         self.assertEqual(
             (lookup.name, process_marks),
+            ("SomeSub", "SomeMarks"))
+
+    def test_substitution_mark_glyph_set(self):
+        [group, lookup] = self.parse(
+            'DEF_GROUP "SomeMarks" ENUM GLYPH "acutecmb" GLYPH "gravecmb" '
+            'END_ENUM END_GROUP\n'
+            'DEF_LOOKUP "SomeSub" PROCESS_BASE '
+            'PROCESS_MARKS MARK_GLYPH_SET "SomeMarks" \n'
+            'DIRECTION RTL\n'
+            'AS_SUBSTITUTION\n'
+            'SUB GLYPH "A"\n'
+            'WITH GLYPH "A.c2sc"\n'
+            'END_SUB\n'
+            'END_SUBSTITUTION'
+        ).statements
+        self.assertEqual(
+            (lookup.name, lookup.mark_glyph_set),
             ("SomeSub", "SomeMarks"))
 
     def test_substitution_process_all_marks(self):
