@@ -622,9 +622,8 @@ class ParserTest(unittest.TestCase):
             'END_SUB\n'
             'END_SUBSTITUTION'
         ).statements
-        process_base = lookup.process_base
         self.assertEqual(
-            (lookup.name, process_base),
+            (lookup.name, lookup.process_base),
             ("SomeSub", False))
 
     def test_substitution_process_base(self):
@@ -641,9 +640,8 @@ class ParserTest(unittest.TestCase):
             'END_SUB\n'
             'END_SUBSTITUTION'
         ).statements
-        process_base = lookup.process_base
         self.assertEqual(
-            (lookup.name, process_base),
+            (lookup.name, lookup.process_base),
             ("SomeSub", True))
 
     def test_substitution_skip_marks(self):
@@ -660,9 +658,8 @@ class ParserTest(unittest.TestCase):
             'END_SUB\n'
             'END_SUBSTITUTION'
         ).statements
-        process_marks = lookup.process_marks
         self.assertEqual(
-            (lookup.name, process_marks),
+            (lookup.name, lookup.process_marks),
             ("SomeSub", False))
 
     def test_substitution_mark_attachment(self):
@@ -678,9 +675,8 @@ class ParserTest(unittest.TestCase):
             'END_SUB\n'
             'END_SUBSTITUTION'
         ).statements
-        process_marks = lookup.process_marks
         self.assertEqual(
-            (lookup.name, process_marks),
+            (lookup.name, lookup.process_marks),
             ("SomeSub", "SomeMarks"))
 
     def test_substitution_mark_glyph_set(self):
@@ -713,9 +709,8 @@ class ParserTest(unittest.TestCase):
             'END_SUB\n'
             'END_SUBSTITUTION'
         ).statements
-        process_marks = lookup.process_marks
         self.assertEqual(
-            (lookup.name, process_marks),
+            (lookup.name, lookup.process_marks),
             ("SomeSub", True))
 
     def test_substitution_no_reversal(self):
