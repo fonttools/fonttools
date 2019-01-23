@@ -316,7 +316,7 @@ class GlyphSet(_UFOBaseIO):
 		'glyphObject' argument can be any kind of object (even None);
 		the readGlyph() method will attempt to set the following
 		attributes on it:
-			"width"      the advance with of the glyph
+			"width"      the advance width of the glyph
 			"height"     the advance height of the glyph
 			"unicodes"   a list of unicode values for this glyph
 			"note"       a string
