@@ -77,6 +77,14 @@ class ParserTest(unittest.TestCase):
                           def_glyph.type, def_glyph.components),
                          ("f_f", 320, None, "LIGATURE", 2))
 
+    def test_def_glyph_mark(self):
+        [def_glyph] = self.parse(
+            'DEF_GLYPH "brevecomb" ID 320 TYPE MARK END_GLYPH'
+        ).statements
+        self.assertEqual((def_glyph.name, def_glyph.id, def_glyph.unicode,
+                          def_glyph.type, def_glyph.components),
+                         ("brevecomb", 320, None, "MARK", None))
+
     def test_def_glyph_component(self):
         [def_glyph] = self.parse(
             'DEF_GLYPH "f.f_f" ID 320 TYPE COMPONENT END_GLYPH'
