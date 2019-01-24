@@ -73,7 +73,7 @@ class Parser(object):
         if self.next_token_ == "TYPE":
             self.expect_keyword_("TYPE")
             gtype = self.expect_name_()
-            assert gtype in ("BASE", "LIGATURE", "MARK")
+            assert gtype in ("BASE", "LIGATURE", "MARK", "COMPONENT")
         components = None
         if self.next_token_ == "COMPONENTS":
             self.expect_keyword_("COMPONENTS")
