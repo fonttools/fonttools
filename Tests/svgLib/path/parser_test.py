@@ -290,8 +290,67 @@ def test_invalid_implicit_command():
     assert exc_info.match("Unallowed implicit command")
 
 
-def test_arc_not_implemented():
-    pathdef = "M300,200 h-150 a150,150 0 1,0 150,-150 z"
-    with pytest.raises(NotImplementedError) as exc_info:
-        parse_path(pathdef, RecordingPen())
-    assert exc_info.match("arcs are not supported")
+def test_arc_to_cubic_bezier():
+    pen = RecordingPen()
+    parse_path("M300,200 h-150 a150,150 0 1,0 150,-150 z", pen)
+    expected = [
+        ('moveTo', ((300.0, 200.0),)),
+        ('lineTo', ((150.0, 200.0),)),
+        (
+            'curveTo',
+            (
+                (150.0, 282.842),
+                (217.157, 350.0),
+                (300.0, 350.0)
+            )
+        ),
+        (
+            'curveTo',
+            (
+                (382.842, 350.0),
+                (450.0, 282.842),
+                (450.0, 200.0)
+            )
+        ),
+        (
+            'curveTo',
+            (
+                (450.0, 117.157),
+                (382.842, 50.0),
+                (300.0, 50.0)
+            )
+        ),
+        ('lineTo', ((300.0, 200.0),)),
+        ('closePath', ())
+    ]
+
+    result = list(pen.value)
+    assert len(result) == len(expected)
+    for (cmd1, points1), (cmd2, points2) in zip(result, expected):
+        assert cmd1 == cmd2
+        assert len(points1) == len(points2)
+        for pt1, pt2 in zip(points1, points2):
+            assert pt1 == pytest.approx(pt2, rel=1e-5)
+
+
+
+class ArcRecordingPen(RecordingPen):
+
+    def arcTo(self, rx, ry, rotation, arc_large, arc_sweep, end_point):
+        self.value.append(
+            ("arcTo", (rx, ry, rotation, arc_large, arc_sweep, end_point))
+        )
+
+
+def test_arc_pen_with_arcTo():
+    pen = ArcRecordingPen()
+    parse_path("M300,200 h-150 a150,150 0 1,0 150,-150 z", pen)
+    expected = [
+        ('moveTo', ((300.0, 200.0),)),
+        ('lineTo', ((150.0, 200.0),)),
+        ('arcTo', (150.0, 150.0, 0.0, True, False, (300.0, 50.0))),
+        ('lineTo', ((300.0, 200.0),)),
+        ('closePath', ())
+    ]
+
+    assert pen.value == expected
