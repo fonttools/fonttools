@@ -96,15 +96,6 @@ class Enum(Expression):
         for e in self.glyphSet():
             yield e
 
-    def __len__(self):
-        return len(self.enum)
-
-    def __eq__(self, other):
-        return self.glyphSet() == other.glyphSet()
-
-    def __hash__(self):
-        return hash(self.glyphSet())
-
     def glyphSet(self, groups=None):
         glyphs = []
         for element in self.enum:

@@ -96,7 +96,6 @@ class Parser(object):
         name = self.expect_string_()
         enum = None
         if self.next_token_ == "ENUM":
-            self.expect_keyword_("ENUM")
             enum = self.parse_enum_()
         self.expect_keyword_("END_GROUP")
         if self.groups_.resolve(name) is not None:
@@ -499,8 +498,9 @@ class Parser(object):
         return unicode_values if unicode_values != [] else None
 
     def parse_enum_(self):
-        assert self.is_cur_keyword_("ENUM")
-        enum = self.parse_coverage_()
+        self.expect_keyword_("ENUM")
+        location = self.cur_token_location_
+        enum = ast.Enum(self.parse_coverage_(), location=location)
         self.expect_keyword_("END_ENUM")
         return enum
 
@@ -509,7 +509,6 @@ class Parser(object):
         location = self.cur_token_location_
         while self.next_token_ in ("GLYPH", "GROUP", "RANGE", "ENUM"):
             if self.next_token_ == "ENUM":
-                self.advance_lexer_()
                 enum = self.parse_enum_()
                 coverage.append(enum)
             elif self.next_token_ == "GLYPH":
@@ -526,7 +525,7 @@ class Parser(object):
                 self.expect_keyword_("TO")
                 end = self.expect_string_()
                 coverage.append(ast.Range(start, end, self, location=location))
-        return ast.Enum(coverage, location=location)
+        return tuple(coverage)
 
     def resolve_group(self, group_name):
         return self.groups_.resolve(group_name)

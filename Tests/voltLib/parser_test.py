@@ -18,6 +18,13 @@ class ParserTest(unittest.TestCase):
         if not hasattr(self, "assertRaisesRegex"):
             self.assertRaisesRegex = self.assertRaisesRegexp
 
+    def assertSubEqual(self, sub, glyph_ref, replacement_ref):
+        glyphs = [[g.glyph for g in v] for v in sub.mapping.keys()]
+        replacement = [[g.glyph for g in v] for v in sub.mapping.values()]
+
+        self.assertEqual(glyphs, glyph_ref)
+        self.assertEqual(replacement, replacement_ref)
+
     def test_def_glyph_base(self):
         [def_glyph] = self.parse(
             'DEF_GLYPH ".notdef" ID 0 TYPE BASE END_GLYPH'
@@ -130,7 +137,7 @@ class ParserTest(unittest.TestCase):
                            "atilde")))
 
     def test_def_group_groups(self):
-        parser = self.parser(
+        [group1, group2, test_group] = self.parse(
             'DEF_GROUP "Group1"\n'
             'ENUM GLYPH "a" GLYPH "b" GLYPH "c" GLYPH "d" END_ENUM\n'
             'END_GROUP\n'
@@ -140,16 +147,14 @@ class ParserTest(unittest.TestCase):
             'DEF_GROUP "TestGroup"\n'
             'ENUM GROUP "Group1" GROUP "Group2" END_ENUM\n'
             'END_GROUP\n'
-        )
-        [group1, group2, test_group] = parser.parse().statements
-        self.assertEqual(
-            (test_group.name, test_group.enum),
-            ("TestGroup",
-             ast.Enum([ast.GroupName("Group1", parser),
-                       ast.GroupName("Group2", parser)])))
+        ).statements
+        groups = [g.group for g in test_group.enum.enum]
+        self.assertEqual((test_group.name, groups),
+                         ("TestGroup", ["Group1", "Group2"]))
 
     def test_def_group_groups_not_yet_defined(self):
-        parser = self.parser(
+        [group1, test_group1, test_group2, test_group3, group2] = \
+        self.parse(
             'DEF_GROUP "Group1"\n'
             'ENUM GLYPH "a" GLYPH "b" GLYPH "c" GLYPH "d" END_ENUM\n'
             'END_GROUP\n'
@@ -165,23 +170,19 @@ class ParserTest(unittest.TestCase):
             'DEF_GROUP "Group2"\n'
             'ENUM GLYPH "e" GLYPH "f" GLYPH "g" GLYPH "h" END_ENUM\n'
             'END_GROUP\n'
-        )
-        [group1, test_group1, test_group2, test_group3, group2] = \
-                parser.parse().statements
+        ).statements
+        groups = [g.group for g in test_group1.enum.enum]
         self.assertEqual(
-            (test_group1.name, test_group1.enum),
-            ("TestGroup1",
-             ast.Enum([ast.GroupName("Group1", parser),
-                       ast.GroupName("Group2", parser)])))
+            (test_group1.name, groups),
+            ("TestGroup1", ["Group1", "Group2"]))
+        groups = [g.group for g in test_group2.enum.enum]
         self.assertEqual(
-            (test_group2.name, test_group2.enum),
-            ("TestGroup2",
-             ast.Enum([ast.GroupName("Group2", parser)])))
+            (test_group2.name, groups),
+            ("TestGroup2", ["Group2"]))
+        groups = [g.group for g in test_group3.enum.enum]
         self.assertEqual(
-            (test_group3.name, test_group3.enum),
-            ("TestGroup3",
-             ast.Enum([ast.GroupName("Group2", parser),
-                       ast.GroupName("Group1", parser)])))
+            (test_group3.name, groups),
+            ("TestGroup3", ["Group2", "Group1"]))
 
     # def test_def_group_groups_undefined(self):
     #     with self.assertRaisesRegex(
@@ -556,12 +557,11 @@ class ParserTest(unittest.TestCase):
             'END_SUB\n'
             'END_SUBSTITUTION'
         ).statements
-        self.assertEqual((lookup.name, list(lookup.sub.mapping.items())),
-                         ("smcp", [(self.enum(["a"]), self.enum(["a.sc"])),
-                                   (self.enum(["b"]), self.enum(["b.sc"]))]))
+        self.assertEqual(lookup.name, "smcp")
+        self.assertSubEqual(lookup.sub, [["a"], ["b"]], [["a.sc"], ["b.sc"]])
 
     def test_substitution_single_in_context(self):
-        parser = self.parser(
+        [group, lookup] = self.parse(
             'DEF_GROUP "Denominators" ENUM GLYPH "one.dnom" GLYPH "two.dnom" '
             'END_ENUM END_GROUP\n'
             'DEF_LOOKUP "fracdnom" PROCESS_BASE PROCESS_MARKS ALL '
@@ -577,22 +577,22 @@ class ParserTest(unittest.TestCase):
             'WITH GLYPH "two.dnom"\n'
             'END_SUB\n'
             'END_SUBSTITUTION'
-        )
-        [group, lookup] = parser.parse().statements
+        ).statements
         context = lookup.context[0]
-        self.assertEqual(
-            (lookup.name, list(lookup.sub.mapping.items()),
-             context.ex_or_in, context.left, context.right),
-            ("fracdnom",
-            [(self.enum(["one"]), self.enum(["one.dnom"])),
-             (self.enum(["two"]), self.enum(["two.dnom"]))],
-             "IN_CONTEXT", [ast.Enum([
-                            ast.GroupName("Denominators", parser=parser),
-                            ast.GlyphName("fraction")])], [])
-        )
+
+        self.assertEqual(lookup.name, "fracdnom")
+        self.assertEqual(context.ex_or_in, "IN_CONTEXT")
+        self.assertEqual(len(context.left), 1)
+        self.assertEqual(len(context.left[0]), 1)
+        self.assertEqual(len(context.left[0][0].enum), 2)
+        self.assertEqual(context.left[0][0].enum[0].group, "Denominators")
+        self.assertEqual(context.left[0][0].enum[1].glyph, "fraction")
+        self.assertEqual(context.right, [])
+        self.assertSubEqual(lookup.sub, [["one"], ["two"]],
+                [["one.dnom"], ["two.dnom"]])
 
     def test_substitution_single_in_contexts(self):
-        parser = self.parser(
+        [group, lookup] = self.parse(
             'DEF_GROUP "Hebrew" ENUM GLYPH "uni05D0" GLYPH "uni05D1" '
             'END_ENUM END_GROUP\n'
             'DEF_LOOKUP "HebrewCurrency" PROCESS_BASE PROCESS_MARKS ALL '
@@ -610,19 +610,27 @@ class ParserTest(unittest.TestCase):
             'WITH GLYPH "dollar.Hebr"\n'
             'END_SUB\n'
             'END_SUBSTITUTION'
-        )
-        [group, lookup] = parser.parse().statements
+        ).statements
         context1 = lookup.context[0]
         context2 = lookup.context[1]
-        self.assertEqual(
-            (lookup.name, context1.ex_or_in, context1.left,
-             context1.right, context2.ex_or_in,
-             context2.left, context2.right),
-            ("HebrewCurrency", "IN_CONTEXT", [],
-             [ast.Enum([ast.GroupName("Hebrew", parser)]),
-              self.enum(["one.Hebr"])], "IN_CONTEXT",
-             [ast.Enum([ast.GroupName("Hebrew", parser)]),
-              self.enum(["one.Hebr"])], []))
+
+        self.assertEqual(lookup.name, "HebrewCurrency")
+
+        self.assertEqual(context1.ex_or_in, "IN_CONTEXT")
+        self.assertEqual(context1.left, [])
+        self.assertEqual(len(context1.right), 2)
+        self.assertEqual(len(context1.right[0]), 1)
+        self.assertEqual(len(context1.right[1]), 1)
+        self.assertEqual(context1.right[0][0].group, "Hebrew")
+        self.assertEqual(context1.right[1][0].glyph, "one.Hebr")
+
+        self.assertEqual(context2.ex_or_in, "IN_CONTEXT")
+        self.assertEqual(len(context2.left), 2)
+        self.assertEqual(len(context2.left[0]), 1)
+        self.assertEqual(len(context2.left[1]), 1)
+        self.assertEqual(context2.left[0][0].group, "Hebrew")
+        self.assertEqual(context2.left[1][0].glyph, "one.Hebr")
+        self.assertEqual(context2.right, [])
 
     def test_substitution_skip_base(self):
         [group, lookup] = self.parse(
@@ -787,11 +795,9 @@ class ParserTest(unittest.TestCase):
             'END_SUB\n'
             'END_SUBSTITUTION'
         ).statements
-        self.assertEqual((lookup.name, list(lookup.sub.mapping.items())),
-                         ("ccmp",
-                          [(self.enum(["aacute"]), self.enum(["a", "acutecomb"])),
-                           (self.enum(["agrave"]), self.enum(["a", "gravecomb"]))]
-                          ))
+        self.assertEqual(lookup.name, "ccmp")
+        self.assertSubEqual(lookup.sub, [["aacute"], ["agrave"]],
+                [["a", "acutecomb"], ["a", "gravecomb"]])
 
     def test_substitution_multiple_to_single(self):
         [lookup] = self.parse(
@@ -808,33 +814,12 @@ class ParserTest(unittest.TestCase):
             'END_SUB\n'
             'END_SUBSTITUTION'
         ).statements
-        self.assertEqual((lookup.name, list(lookup.sub.mapping.items())),
-                         ("liga",
-                          [(self.enum(["f", "i"]), self.enum(["f_i"])),
-                           (self.enum(["f", "t"]), self.enum(["f_t"]))]))
+        self.assertEqual(lookup.name, "liga")
+        self.assertSubEqual(lookup.sub, [["f", "i"], ["f", "t"]],
+                [["f_i"], ["f_t"]])
 
     def test_substitution_reverse_chaining_single(self):
-        parser = self.parser(
-            'DEF_GLYPH "zero" ID 1 UNICODE 48 TYPE BASE END_GLYPH\n'
-            'DEF_GLYPH "one" ID 2 UNICODE 49 TYPE BASE END_GLYPH\n'
-            'DEF_GLYPH "two" ID 3 UNICODE 50 TYPE BASE END_GLYPH\n'
-            'DEF_GLYPH "three" ID 4 UNICODE 51 TYPE BASE END_GLYPH\n'
-            'DEF_GLYPH "four" ID 5 UNICODE 52 TYPE BASE END_GLYPH\n'
-            'DEF_GLYPH "five" ID 6 UNICODE 53 TYPE BASE END_GLYPH\n'
-            'DEF_GLYPH "six" ID 7 UNICODE 54 TYPE BASE END_GLYPH\n'
-            'DEF_GLYPH "seven" ID 8 UNICODE 55 TYPE BASE END_GLYPH\n'
-            'DEF_GLYPH "eight" ID 9 UNICODE 56 TYPE BASE END_GLYPH\n'
-            'DEF_GLYPH "nine" ID 10 UNICODE 57 TYPE BASE END_GLYPH\n'
-            'DEF_GLYPH "zero.numr" ID 11 TYPE BASE END_GLYPH\n'
-            'DEF_GLYPH "one.numr" ID 12 TYPE BASE END_GLYPH\n'
-            'DEF_GLYPH "two.numr" ID 13 TYPE BASE END_GLYPH\n'
-            'DEF_GLYPH "three.numr" ID 14 TYPE BASE END_GLYPH\n'
-            'DEF_GLYPH "four.numr" ID 15 TYPE BASE END_GLYPH\n'
-            'DEF_GLYPH "five.numr" ID 16 TYPE BASE END_GLYPH\n'
-            'DEF_GLYPH "six.numr" ID 17 TYPE BASE END_GLYPH\n'
-            'DEF_GLYPH "seven.numr" ID 18 TYPE BASE END_GLYPH\n'
-            'DEF_GLYPH "eight.numr" ID 19 TYPE BASE END_GLYPH\n'
-            'DEF_GLYPH "nine.numr" ID 20 TYPE BASE END_GLYPH\n'
+        [lookup] = self.parse(
             'DEF_LOOKUP "numr" PROCESS_BASE PROCESS_MARKS ALL '
             'DIRECTION LTR REVERSAL\n'
             'IN_CONTEXT\n'
@@ -848,16 +833,23 @@ class ParserTest(unittest.TestCase):
             'WITH RANGE "zero.numr" TO "nine.numr"\n'
             'END_SUB\n'
             'END_SUBSTITUTION'
-        )
-        lookup = parser.parse().statements[-1]
-        self.assertEqual(
-            (lookup.name, lookup.context[0].right,
-             list(lookup.sub.mapping.items())),
-            ("numr",
-             [(ast.Enum([ast.GlyphName("fraction"),
-                         ast.Range("zero.numr", "nine.numr", parser)]))],
-             [(ast.Enum([ast.Range("zero", "nine", parser)]),
-               ast.Enum([ast.Range("zero.numr", "nine.numr", parser)]))]))
+        ).statements
+
+        mapping = lookup.sub.mapping
+        glyphs = [[(r.start, r.end) for r in v] for v in mapping.keys()]
+        replacement = [[(r.start, r.end) for r in v] for v in mapping.values()]
+
+        self.assertEqual(lookup.name, "numr")
+        self.assertEqual(glyphs, [[('zero', 'nine')]])
+        self.assertEqual(replacement, [[('zero.numr', 'nine.numr')]])
+
+        self.assertEqual(len(lookup.context[0].right), 1)
+        self.assertEqual(len(lookup.context[0].right[0]), 1)
+        enum = lookup.context[0].right[0][0]
+        self.assertEqual(len(enum.enum), 2)
+        self.assertEqual(enum.enum[0].glyph, "fraction")
+        self.assertEqual((enum.enum[1].start, enum.enum[1].end),
+                ('zero.numr', 'nine.numr'))
 
     # GPOS
     #  ATTACH_CURSIVE
@@ -899,11 +891,13 @@ class ParserTest(unittest.TestCase):
             'DEF_ANCHOR "top" ON 35 GLYPH e COMPONENT 1 '
             'AT POS DX 215 DY 450 END_POS END_ANCHOR\n'
         ).statements
+        pos = lookup.pos
+        coverage = [g.glyph for g in pos.coverage]
+        coverage_to = [[[g.glyph for g in e], a] for (e, a) in pos.coverage_to]
         self.assertEqual(
-            (lookup.name, lookup.pos.coverage, lookup.pos.coverage_to),
-            ("anchor_top", self.enum(["a", "e"]),
-             [(self.enum(["acutecomb"]), "top"),
-              (self.enum(["gravecomb"]), "top")])
+            (lookup.name, coverage, coverage_to),
+            ("anchor_top", ["a", "e"],
+             [[["acutecomb"], "top"], [["gravecomb"], "top"]])
         )
         self.assertEqual(
             (anchor1.name, anchor1.gid, anchor1.glyph_name, anchor1.component,
@@ -939,11 +933,11 @@ class ParserTest(unittest.TestCase):
             'END_ATTACH\n'
             'END_POSITION\n'
         ).statements
+        exit = [[g.glyph for g in v] for v in lookup.pos.coverages_exit]
+        enter = [[g.glyph for g in v] for v in lookup.pos.coverages_enter]
         self.assertEqual(
-            (lookup.name,
-             lookup.pos.coverages_exit, lookup.pos.coverages_enter),
-            ("SomeLookup",
-             [self.enum(["a", "b"])], [self.enum(["c"])])
+            (lookup.name, exit, enter),
+            ("SomeLookup", [["a", "b"]], [["c"]])
         )
 
     def test_position_adjust_pair(self):
@@ -961,10 +955,12 @@ class ParserTest(unittest.TestCase):
             'END_ADJUST\n'
             'END_POSITION\n'
         ).statements
+        coverages_1 = [[g.glyph for g in v] for v in lookup.pos.coverages_1]
+        coverages_2 = [[g.glyph for g in v] for v in lookup.pos.coverages_2]
         self.assertEqual(
-            (lookup.name, lookup.pos.coverages_1, lookup.pos.coverages_2,
+            (lookup.name, coverages_1, coverages_2,
              lookup.pos.adjust_pair),
-            ("kern1", [self.enum(["A"])], [self.enum(["V"])],
+            ("kern1", [["A"]], [["V"]],
              {(1, 2): ((-30, None, None, {}, {}, {}),
                        (None, None, None, {}, {}, {})),
               (2, 1): ((-30, None, None, {}, {}, {}),
@@ -986,11 +982,13 @@ class ParserTest(unittest.TestCase):
             'END_ADJUST\n'
             'END_POSITION\n'
         ).statements
+        pos = lookup.pos
+        adjust = [[[g.glyph for g in a], b] for (a, b) in pos.adjust_single]
         self.assertEqual(
-            (lookup.name, lookup.pos.adjust_single),
+            (lookup.name, adjust),
             ("TestLookup",
-             [(self.enum(["glyph1"]), (0, 123, None, {}, {}, {})),
-              (self.enum(["glyph2"]), (0, 456, None, {}, {}, {}))])
+             [[["glyph1"], (0, 123, None, {}, {}, {})],
+              [["glyph2"], (0, 456, None, {}, {}, {})]])
         )
 
     def test_def_anchor(self):
@@ -1129,20 +1127,14 @@ class ParserTest(unittest.TestCase):
         if self.tempdir:
             shutil.rmtree(self.tempdir)
 
-    def parser(self, text):
+    def parse(self, text):
         if not self.tempdir:
             self.tempdir = tempfile.mkdtemp()
         self.num_tempfiles += 1
         path = os.path.join(self.tempdir, "tmp%d.vtp" % self.num_tempfiles)
         with open(path, "w") as outfile:
             outfile.write(text)
-        return Parser(path)
-
-    def parse(self, text):
-        return self.parser(text).parse()
-
-    def enum(self, glyphs):
-        return ast.Enum([ast.GlyphName(g) for g in glyphs])
+        return Parser(path).parse()
 
 if __name__ == "__main__":
     import sys
