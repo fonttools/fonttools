@@ -293,7 +293,10 @@ class FeatureBlock(Block):
         builder.end_feature()
 
     def asFea(self, indent=""):
-        res = indent + "feature %s {\n" % self.name.strip()
+        res = indent + "feature %s " % self.name.strip()
+        if self.use_extension:
+            res += "useExtension "
+        res += "{\n"
         res += Block.asFea(self, indent=indent)
         res += indent + "} %s;\n" % self.name.strip()
         return res
@@ -329,7 +332,10 @@ class LookupBlock(Block):
         builder.end_lookup_block()
 
     def asFea(self, indent=""):
-        res = "lookup {} {{\n".format(self.name)
+        res = "lookup {} ".format(self.name)
+        if self.use_extension:
+            res += "useExtension "
+        res += "{\n"
         res += Block.asFea(self, indent=indent)
         res += "{}}} {};\n".format(indent, self.name)
         return res
