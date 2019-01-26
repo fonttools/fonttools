@@ -215,6 +215,8 @@ class ParserTest(unittest.TestCase):
         [liga] = self.parse("feature liga useExtension {} liga;").statements
         self.assertEqual(liga.name, "liga")
         self.assertTrue(liga.use_extension)
+        self.assertEqual(liga.asFea(),
+                         "feature liga useExtension {\n    \n} liga;\n")
 
     def test_feature_comment(self):
         [liga] = self.parse("feature liga { # Comment\n } liga;").statements
@@ -608,6 +610,8 @@ class ParserTest(unittest.TestCase):
         [lookup] = self.parse("lookup Foo useExtension {} Foo;").statements
         self.assertEqual(lookup.name, "Foo")
         self.assertTrue(lookup.use_extension)
+        self.assertEqual(lookup.asFea(),
+                         "lookup Foo useExtension {\n    \n} Foo;\n")
 
     def test_lookup_block_name_mismatch(self):
         self.assertRaisesRegex(
