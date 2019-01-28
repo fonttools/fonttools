@@ -1431,7 +1431,8 @@ class ParserTest(unittest.TestCase):
 
     def test_valuerecord_format_a_horizontal(self):
         doc = self.parse("feature liga {valueRecordDef 123 foo;} liga;")
-        value = doc.statements[0].statements[0].value
+        valuedef = doc.statements[0].statements[0]
+        value = valuedef.value
         self.assertIsNone(value.xPlacement)
         self.assertIsNone(value.yPlacement)
         self.assertEqual(value.xAdvance, 123)
@@ -1440,11 +1441,13 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(value.yPlaDevice)
         self.assertIsNone(value.xAdvDevice)
         self.assertIsNone(value.yAdvDevice)
+        self.assertEqual(valuedef.asFea(), "valueRecordDef 123 foo;")
         self.assertEqual(value.makeString(vertical=False), "123")
 
     def test_valuerecord_format_a_vertical(self):
         doc = self.parse("feature vkrn {valueRecordDef 123 foo;} vkrn;")
-        value = doc.statements[0].statements[0].value
+        valuedef = doc.statements[0].statements[0]
+        value = valuedef.value
         self.assertIsNone(value.xPlacement)
         self.assertIsNone(value.yPlacement)
         self.assertIsNone(value.xAdvance)
@@ -1453,11 +1456,13 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(value.yPlaDevice)
         self.assertIsNone(value.xAdvDevice)
         self.assertIsNone(value.yAdvDevice)
+        self.assertEqual(valuedef.asFea(), "valueRecordDef 123 foo;")
         self.assertEqual(value.makeString(vertical=True), "123")
 
     def test_valuerecord_format_a_zero_horizontal(self):
         doc = self.parse("feature liga {valueRecordDef 0 foo;} liga;")
-        value = doc.statements[0].statements[0].value
+        valuedef = doc.statements[0].statements[0]
+        value = valuedef.value
         self.assertIsNone(value.xPlacement)
         self.assertIsNone(value.yPlacement)
         self.assertEqual(value.xAdvance, 0)
@@ -1466,11 +1471,13 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(value.yPlaDevice)
         self.assertIsNone(value.xAdvDevice)
         self.assertIsNone(value.yAdvDevice)
+        self.assertEqual(valuedef.asFea(), "valueRecordDef 0 foo;")
         self.assertEqual(value.makeString(vertical=False), "0")
 
     def test_valuerecord_format_a_zero_vertical(self):
         doc = self.parse("feature vkrn {valueRecordDef 0 foo;} vkrn;")
-        value = doc.statements[0].statements[0].value
+        valuedef = doc.statements[0].statements[0]
+        value = valuedef.value
         self.assertIsNone(value.xPlacement)
         self.assertIsNone(value.yPlacement)
         self.assertIsNone(value.xAdvance)
@@ -1479,6 +1486,7 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(value.yPlaDevice)
         self.assertIsNone(value.xAdvDevice)
         self.assertIsNone(value.yAdvDevice)
+        self.assertEqual(valuedef.asFea(), "valueRecordDef 0 foo;")
         self.assertEqual(value.makeString(vertical=True), "0")
 
     def test_valuerecord_format_a_vertical_contexts_(self):
@@ -1492,7 +1500,8 @@ class ParserTest(unittest.TestCase):
 
     def test_valuerecord_format_b(self):
         doc = self.parse("feature liga {valueRecordDef <1 2 3 4> foo;} liga;")
-        value = doc.statements[0].statements[0].value
+        valuedef = doc.statements[0].statements[0]
+        value = valuedef.value
         self.assertEqual(value.xPlacement, 1)
         self.assertEqual(value.yPlacement, 2)
         self.assertEqual(value.xAdvance, 3)
@@ -1501,11 +1510,13 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(value.yPlaDevice)
         self.assertIsNone(value.xAdvDevice)
         self.assertIsNone(value.yAdvDevice)
+        self.assertEqual(valuedef.asFea(), "valueRecordDef <1 2 3 4> foo;")
         self.assertEqual(value.makeString(vertical=False), "<1 2 3 4>")
 
     def test_valuerecord_format_b_zero(self):
         doc = self.parse("feature liga {valueRecordDef <0 0 0 0> foo;} liga;")
-        value = doc.statements[0].statements[0].value
+        valuedef = doc.statements[0].statements[0]
+        value = valuedef.value
         self.assertEqual(value.xPlacement, 0)
         self.assertEqual(value.yPlacement, 0)
         self.assertEqual(value.xAdvance, 0)
@@ -1514,6 +1525,7 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(value.yPlaDevice)
         self.assertIsNone(value.xAdvDevice)
         self.assertIsNone(value.yAdvDevice)
+        self.assertEqual(valuedef.asFea(), "valueRecordDef <0 0 0 0> foo;")
         self.assertEqual(value.makeString(vertical=False), "<0 0 0 0>")
 
     def test_valuerecord_format_c(self):
