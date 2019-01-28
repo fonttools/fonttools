@@ -963,12 +963,12 @@ class PairPosStatement(Statement):
         res = "enum " if self.enumerated else ""
         if self.valuerecord2:
             res += "pos {} {} {} {};".format(
-                self.glyphs1.asFea(), self.valuerecord1.makeString(),
-                self.glyphs2.asFea(), self.valuerecord2.makeString())
+                self.glyphs1.asFea(), self.valuerecord1.asFea(),
+                self.glyphs2.asFea(), self.valuerecord2.asFea())
         else:
             res += "pos {} {} {};".format(
                 self.glyphs1.asFea(), self.glyphs2.asFea(),
-                self.valuerecord1.makeString())
+                self.valuerecord1.asFea())
         return res
 
 
@@ -1069,12 +1069,12 @@ class SinglePosStatement(Statement):
             if len(self.prefix):
                 res += " ".join(map(asFea, self.prefix)) + " "
             res += " ".join([asFea(x[0]) + "'" + (
-                (" " + x[1].makeString()) if x[1] else "") for x in self.pos])
+                (" " + x[1].asFea()) if x[1] else "") for x in self.pos])
             if len(self.suffix):
                 res += " " + " ".join(map(asFea, self.suffix))
         else:
             res += " ".join([asFea(x[0]) + " " +
-                             (x[1].makeString() if x[1] else "") for x in self.pos])
+                             (x[1].asFea() if x[1] else "") for x in self.pos])
         res += ";"
         return res
 
@@ -1120,7 +1120,7 @@ class ValueRecord(Expression):
                 hash(self.xPlaDevice) ^ hash(self.yPlaDevice) ^
                 hash(self.xAdvDevice) ^ hash(self.yAdvDevice))
 
-    def makeString(self, vertical=None):
+    def asFea(self, indent=""):
         if not self:
             return "<NULL>"
 
@@ -1128,8 +1128,7 @@ class ValueRecord(Expression):
         xAdvance, yAdvance = self.xAdvance, self.yAdvance
         xPlaDevice, yPlaDevice = self.xPlaDevice, self.yPlaDevice
         xAdvDevice, yAdvDevice = self.xAdvDevice, self.yAdvDevice
-        if vertical is None:
-            vertical = self.vertical
+        vertical = self.vertical
 
         # Try format A, if possible.
         if x is None and y is None:

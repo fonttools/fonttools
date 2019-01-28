@@ -726,7 +726,7 @@ class ParserTest(unittest.TestCase):
         self.assertIsInstance(pos, ast.SinglePosStatement)
         [(glyphs, value)] = pos.pos
         self.assertEqual(glyphstr([glyphs]), "one")
-        self.assertEqual(value.makeString(vertical=False), "<1 2 3 4>")
+        self.assertEqual(value.asFea(), "<1 2 3 4>")
 
     def test_gpos_type_1_glyphclass_horizontal(self):
         doc = self.parse("feature kern {pos [one two] -300;} kern;")
@@ -734,7 +734,7 @@ class ParserTest(unittest.TestCase):
         self.assertIsInstance(pos, ast.SinglePosStatement)
         [(glyphs, value)] = pos.pos
         self.assertEqual(glyphstr([glyphs]), "[one two]")
-        self.assertEqual(value.makeString(vertical=False), "-300")
+        self.assertEqual(value.asFea(), "-300")
 
     def test_gpos_type_1_glyphclass_vertical(self):
         doc = self.parse("feature vkrn {pos [one two] -300;} vkrn;")
@@ -742,7 +742,7 @@ class ParserTest(unittest.TestCase):
         self.assertIsInstance(pos, ast.SinglePosStatement)
         [(glyphs, value)] = pos.pos
         self.assertEqual(glyphstr([glyphs]), "[one two]")
-        self.assertEqual(value.makeString(vertical=True), "-300")
+        self.assertEqual(value.asFea(), "-300")
 
     def test_gpos_type_1_multiple(self):
         doc = self.parse("feature f {pos one'1 two'2 [five six]'56;} f;")
@@ -750,11 +750,11 @@ class ParserTest(unittest.TestCase):
         self.assertIsInstance(pos, ast.SinglePosStatement)
         [(glyphs1, val1), (glyphs2, val2), (glyphs3, val3)] = pos.pos
         self.assertEqual(glyphstr([glyphs1]), "one")
-        self.assertEqual(val1.makeString(vertical=False), "1")
+        self.assertEqual(val1.asFea(), "1")
         self.assertEqual(glyphstr([glyphs2]), "two")
-        self.assertEqual(val2.makeString(vertical=False), "2")
+        self.assertEqual(val2.asFea(), "2")
         self.assertEqual(glyphstr([glyphs3]), "[five six]")
-        self.assertEqual(val3.makeString(vertical=False), "56")
+        self.assertEqual(val3.asFea(), "56")
         self.assertEqual(pos.prefix, [])
         self.assertEqual(pos.suffix, [])
 
@@ -774,7 +774,7 @@ class ParserTest(unittest.TestCase):
         self.assertIsInstance(pos, ast.SinglePosStatement)
         [(glyphs, value)] = pos.pos
         self.assertEqual(glyphstr([glyphs]), "[T Y]")
-        self.assertEqual(value.makeString(vertical=False), "20")
+        self.assertEqual(value.asFea(), "20")
         self.assertEqual(glyphstr(pos.prefix), "[A B]")
         self.assertEqual(glyphstr(pos.suffix), "comma")
 
@@ -786,10 +786,9 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertFalse(pos.enumerated)
         self.assertEqual(glyphstr([pos.glyphs1]), "[T V]")
-        self.assertEqual(pos.valuerecord1.makeString(vertical=False), "-60")
+        self.assertEqual(pos.valuerecord1.asFea(), "-60")
         self.assertEqual(glyphstr([pos.glyphs2]), "[a b c]")
-        self.assertEqual(pos.valuerecord2.makeString(vertical=False),
-                         "<1 2 3 4>")
+        self.assertEqual(pos.valuerecord2.asFea(), "<1 2 3 4>")
 
     def test_gpos_type_2_format_a_enumerated(self):
         doc = self.parse("feature kern {"
@@ -799,10 +798,9 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertTrue(pos.enumerated)
         self.assertEqual(glyphstr([pos.glyphs1]), "[T V]")
-        self.assertEqual(pos.valuerecord1.makeString(vertical=False), "-60")
+        self.assertEqual(pos.valuerecord1.asFea(), "-60")
         self.assertEqual(glyphstr([pos.glyphs2]), "[a b c]")
-        self.assertEqual(pos.valuerecord2.makeString(vertical=False),
-                         "<1 2 3 4>")
+        self.assertEqual(pos.valuerecord2.asFea(), "<1 2 3 4>")
 
     def test_gpos_type_2_format_a_with_null_first(self):
         doc = self.parse("feature kern {"
@@ -813,10 +811,9 @@ class ParserTest(unittest.TestCase):
         self.assertFalse(pos.enumerated)
         self.assertEqual(glyphstr([pos.glyphs1]), "[T V]")
         self.assertFalse(pos.valuerecord1)
-        self.assertEqual(pos.valuerecord1.makeString(), "<NULL>")
+        self.assertEqual(pos.valuerecord1.asFea(), "<NULL>")
         self.assertEqual(glyphstr([pos.glyphs2]), "[a b c]")
-        self.assertEqual(pos.valuerecord2.makeString(vertical=False),
-                         "<1 2 3 4>")
+        self.assertEqual(pos.valuerecord2.asFea(), "<1 2 3 4>")
         self.assertEqual(pos.asFea(), "pos [T V] <NULL> [a b c] <1 2 3 4>;")
 
     def test_gpos_type_2_format_a_with_null_second(self):
@@ -827,8 +824,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertFalse(pos.enumerated)
         self.assertEqual(glyphstr([pos.glyphs1]), "[T V]")
-        self.assertEqual(pos.valuerecord1.makeString(vertical=False),
-                         "<1 2 3 4>")
+        self.assertEqual(pos.valuerecord1.asFea(), "<1 2 3 4>")
         self.assertEqual(glyphstr([pos.glyphs2]), "[a b c]")
         self.assertFalse(pos.valuerecord2)
         self.assertEqual(pos.asFea(), "pos [T V] [a b c] <1 2 3 4>;")
@@ -841,8 +837,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertFalse(pos.enumerated)
         self.assertEqual(glyphstr([pos.glyphs1]), "[T V]")
-        self.assertEqual(pos.valuerecord1.makeString(vertical=False),
-                         "<1 2 3 4>")
+        self.assertEqual(pos.valuerecord1.asFea(), "<1 2 3 4>")
         self.assertEqual(glyphstr([pos.glyphs2]), "[a b c]")
         self.assertIsNone(pos.valuerecord2)
 
@@ -854,8 +849,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(type(pos), ast.PairPosStatement)
         self.assertTrue(pos.enumerated)
         self.assertEqual(glyphstr([pos.glyphs1]), "[T V]")
-        self.assertEqual(pos.valuerecord1.makeString(vertical=False),
-                         "<1 2 3 4>")
+        self.assertEqual(pos.valuerecord1.asFea(), "<1 2 3 4>")
         self.assertEqual(glyphstr([pos.glyphs2]), "[a b c]")
         self.assertIsNone(pos.valuerecord2)
 
@@ -1442,7 +1436,7 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(value.xAdvDevice)
         self.assertIsNone(value.yAdvDevice)
         self.assertEqual(valuedef.asFea(), "valueRecordDef 123 foo;")
-        self.assertEqual(value.makeString(vertical=False), "123")
+        self.assertEqual(value.asFea(), "123")
 
     def test_valuerecord_format_a_vertical(self):
         doc = self.parse("feature vkrn {valueRecordDef 123 foo;} vkrn;")
@@ -1457,7 +1451,7 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(value.xAdvDevice)
         self.assertIsNone(value.yAdvDevice)
         self.assertEqual(valuedef.asFea(), "valueRecordDef 123 foo;")
-        self.assertEqual(value.makeString(vertical=True), "123")
+        self.assertEqual(value.asFea(), "123")
 
     def test_valuerecord_format_a_zero_horizontal(self):
         doc = self.parse("feature liga {valueRecordDef 0 foo;} liga;")
@@ -1472,7 +1466,7 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(value.xAdvDevice)
         self.assertIsNone(value.yAdvDevice)
         self.assertEqual(valuedef.asFea(), "valueRecordDef 0 foo;")
-        self.assertEqual(value.makeString(vertical=False), "0")
+        self.assertEqual(value.asFea(), "0")
 
     def test_valuerecord_format_a_zero_vertical(self):
         doc = self.parse("feature vkrn {valueRecordDef 0 foo;} vkrn;")
@@ -1487,7 +1481,7 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(value.xAdvDevice)
         self.assertIsNone(value.yAdvDevice)
         self.assertEqual(valuedef.asFea(), "valueRecordDef 0 foo;")
-        self.assertEqual(value.makeString(vertical=True), "0")
+        self.assertEqual(value.asFea(), "0")
 
     def test_valuerecord_format_a_vertical_contexts_(self):
         for tag in "vkrn vpal vhal valt".split():
@@ -1511,7 +1505,7 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(value.xAdvDevice)
         self.assertIsNone(value.yAdvDevice)
         self.assertEqual(valuedef.asFea(), "valueRecordDef <1 2 3 4> foo;")
-        self.assertEqual(value.makeString(vertical=False), "<1 2 3 4>")
+        self.assertEqual(value.asFea(), "<1 2 3 4>")
 
     def test_valuerecord_format_b_zero(self):
         doc = self.parse("feature liga {valueRecordDef <0 0 0 0> foo;} liga;")
@@ -1526,7 +1520,7 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(value.xAdvDevice)
         self.assertIsNone(value.yAdvDevice)
         self.assertEqual(valuedef.asFea(), "valueRecordDef <0 0 0 0> foo;")
-        self.assertEqual(value.makeString(vertical=False), "<0 0 0 0>")
+        self.assertEqual(value.asFea(), "<0 0 0 0>")
 
     def test_valuerecord_format_c(self):
         doc = self.parse(
@@ -1548,7 +1542,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(value.yPlaDevice, ((11, 111), (12, 112)))
         self.assertIsNone(value.xAdvDevice)
         self.assertEqual(value.yAdvDevice, ((33, -113), (44, -114), (55, 115)))
-        self.assertEqual(value.makeString(vertical=False),
+        self.assertEqual(value.asFea(),
                          "<1 2 3 4 <device 8 88> <device 11 111, 12 112>"
                          " <device NULL> <device 33 -113, 44 -114, 55 115>>")
 
@@ -1556,7 +1550,7 @@ class ParserTest(unittest.TestCase):
         doc = self.parse("feature test {valueRecordDef <NULL> foo;} test;")
         value = doc.statements[0].statements[0].value
         self.assertFalse(value)
-        self.assertEqual(value.makeString(), "<NULL>")
+        self.assertEqual(value.asFea(), "<NULL>")
 
     def test_valuerecord_named(self):
         doc = self.parse("valueRecordDef <1 2 3 4> foo;"
