@@ -1,3 +1,16 @@
+- [svgLib] Added support for converting elliptical arcs to cubic bezier curves
+  (#1464).
+- [py23] Added backport for ``math.isfinite``.
+- [varLib] Apply HIDDEN flag to fvar axis if designspace axis has attribute
+  ``hidden=1``.
+- Fixed "DeprecationWarning: invalid escape sequence" in Python 3.7.
+- [voltLib] Fixed parsing glyph groups. Distinguish different PROCESS_MARKS.
+  Accept COMPONENT glyph type.
+- [feaLib] Distinguish missing value and explicit ``<NULL>`` for PairPos2
+  format A (#1459). Round-trip ``useExtension`` keyword. Implemented
+  ``ValueRecord.asFea`` method.
+- [subset] Insert empty widths into hdmx when retaining gids (#1458).
+
 3.36.0 (released 2019-01-17)
 ----------------------------
 
