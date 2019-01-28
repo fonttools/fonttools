@@ -1,3 +1,6 @@
+3.37.0 (released 2019-01-28)
+----------------------------
+
 - [svgLib] Added support for converting elliptical arcs to cubic bezier curves
   (#1464).
 - [py23] Added backport for ``math.isfinite``.
