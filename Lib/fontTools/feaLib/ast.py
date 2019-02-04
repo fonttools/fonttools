@@ -160,7 +160,7 @@ class GlyphName(Expression):
         return (self.glyph,)
 
     def asFea(self, indent=""):
-        return str(self.glyph)
+        return asFea(self.glyph)
 
 
 class GlyphClass(Expression):
