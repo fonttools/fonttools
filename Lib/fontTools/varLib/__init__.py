@@ -521,7 +521,11 @@ def _add_MVAR(font, masterModel, master_ttfs, axisTags):
 	# the minimum FWord (int16) value, was chosen for its unlikelyhood to appear
 	# in real-world underline position/thickness values.
 	specialTags = {"unds": -0x8000, "undo": -0x8000}
+
 	for tag, (tableTag, itemName) in sorted(MVAR_ENTRIES.items(), key=lambda kv: kv[1]):
+		# For each tag, fetch the associated table from all fonts (or not when we are
+		# still looking at a tag from the same tables) and set up the variation model
+		# for them.
 		if tableTag != lastTableTag:
 			tables = fontTable = None
 			if tableTag in font:
@@ -535,14 +539,14 @@ def _add_MVAR(font, masterModel, master_ttfs, axisTags):
 						tables.append(None)
 					else:
 						tables.append(master[tableTag])
+				model, tables = masterModel.getSubModel(tables)
+				store_builder.setModel(model)
 			lastTableTag = tableTag
-		if tables is None:
+
+		if tables is None:  # Tag not applicable to the master font.
 			continue
 
 		# TODO support gasp entries
-
-		model, tables = masterModel.getSubModel(tables)
-		store_builder.setModel(model)
 
 		master_values = [getattr(table, itemName) for table in tables]
 		if models.allEqual(master_values):
@@ -886,7 +890,7 @@ def load_masters(designspace, master_finder=lambda s: s):
 				# 2. A SourceDescriptor's path might point an OpenType binary, a
 				# TTX file, or another source file (e.g. UFO), in which case we
 				# resolve the path using 'master_finder' function
-				font = _open_font(master.path, master_finder)
+				master.font = font = _open_font(master.path, master_finder)
 				master_fonts.append(font)
 
 	return master_fonts
