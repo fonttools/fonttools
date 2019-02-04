@@ -425,7 +425,7 @@ class MarkClass(object):
         return tuple(self.glyphs.keys())
 
     def asFea(self, indent=""):
-        res = "\n".join(d.asFea(indent=indent) for d in self.definitions)
+        res = "\n".join(d.asFea() for d in self.definitions)
         return res
 
 
@@ -440,8 +440,8 @@ class MarkClassDefinition(Statement):
         return self.glyphs.glyphSet()
 
     def asFea(self, indent=""):
-        return "{}markClass {} {} @{};".format(
-            indent, self.glyphs.asFea(), self.anchor.asFea(),
+        return "markClass {} {} @{};".format(
+            self.glyphs.asFea(), self.anchor.asFea(),
             self.markClass.name)
 
 
