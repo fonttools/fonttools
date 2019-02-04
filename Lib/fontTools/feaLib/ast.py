@@ -102,7 +102,8 @@ fea_keywords = set([
     "required", "righttoleft", "reversesub", "rsub",
     "script", "sub", "substitute", "subtable",
     "table",
-    "usemarkfilteringset", "useextension", "valuerecorddef"]
+    "usemarkfilteringset", "useextension", "valuerecorddef",
+    "base", "gdef", "head", "hhea", "name", "vhea", "vmtx"]
 )
 
 
