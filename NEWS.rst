@@ -1,3 +1,6 @@
+3.37.3 (released 2019-02-05)
+----------------------------
+
 - The previous release accidentally changed several files from Unix to DOS
   line-endings. Fix that.
 
