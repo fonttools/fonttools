@@ -1,3 +1,6 @@
+3.37.1 (released 2019-02-05)
+----------------------------
+
 - [varLib] ``load_masters()`` now actually assigns the fonts it loads to the
   source.font attributes.
 - [varLib] Fixed an MVAR table generation crash when sparse masters were
