@@ -1,3 +1,11 @@
+- [varLib] ``load_masters()`` now actually assigns the fonts it loads to the
+  source.font attributes.
+- [varLib] Fixed an MVAR table generation crash when sparse masters were
+  involved.
+- [voltLib] ``parse_coverage_()`` returns a tuple instead of an ast.Enum.
+- [feaLib] A MarkClassDefinition inside a block is no longer doubly indented
+  compared to the rest of the block.
+
 3.37.0 (released 2019-01-28)
 ----------------------------
 
