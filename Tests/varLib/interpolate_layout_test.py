@@ -162,22 +162,6 @@ class InterpolateLayoutTest(unittest.TestCase):
         with self.assertRaisesRegex(DesignSpaceDocumentError, "No axes defined"):
             instfont = interpolate_layout(ds_path, {'weight': 500})
 
-    def test_varlib_interpolate_layout_GSUB_only_otf(self):
-        """A smoke-test for layout-interpolating of OTFs."""
-        ds_path = self.get_test_input('InterpolateLayout.designspace')
-        ds = DesignSpaceDocument.fromfile(ds_path)
-        ttx_dir = self.get_test_input('master_ttx_interpolatable_otf')
-
-        self.temp_dir()
-        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily2-')
-        for path, source in zip(ttx_paths, ds.sources):
-            font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
-            font.importXML(path)
-            source.font = font
-
-        finder = lambda s: s
-        instfont = interpolate_layout(ds, {'weight': 500}, finder)
-
     def test_varlib_interpolate_layout_GPOS_only_size_feat_same_val_ttf(self):
         """Only GPOS; 'size' feature; same values in all masters.
         """
