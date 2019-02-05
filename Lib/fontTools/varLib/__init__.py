@@ -890,7 +890,7 @@ def load_masters(designspace, master_finder=lambda s: s):
 				# 2. A SourceDescriptor's path might point an OpenType binary, a
 				# TTX file, or another source file (e.g. UFO), in which case we
 				# resolve the path using 'master_finder' function
-				font = _open_font(master.path, master_finder)
+				master.font = font = _open_font(master.path, master_finder)
 				master_fonts.append(font)
 
 	return master_fonts
