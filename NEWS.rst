@@ -1,3 +1,6 @@
+- [varLib] Temporarily revert the fix to ``load_masters()``, which caused a
+  crash in ``interpolate_layout()`` when ``deepcopy``-ing OTFs.
+
 3.37.1 (released 2019-02-05)
 ----------------------------
 

@@ -366,11 +366,11 @@ class BuildTest(unittest.TestCase):
 
         ds_path = self.get_test_input("SparseMasters.designspace")
         ds = DesignSpaceDocument.fromfile(ds_path)
-        load_masters(ds)
+        masters = load_masters(ds)
 
         # Trigger MVAR generation so varLib is forced to create deltas with a
         # sparse master inbetween.
-        font_0_os2 = ds.sources[0].font["OS/2"]
+        font_0_os2 = masters[0]["OS/2"]
         font_0_os2.sTypoAscender = 1
         font_0_os2.sTypoDescender = 1
         font_0_os2.sTypoLineGap = 1
@@ -395,16 +395,16 @@ class BuildTest(unittest.TestCase):
         font_0_vhea.caretSlopeRise = 1
         font_0_vhea.caretSlopeRun = 1
         font_0_vhea.caretOffset = 1
-        ds.sources[0].font["vhea"] = font_0_vhea
-        font_0_hhea = ds.sources[0].font["hhea"]
+        masters[0]["vhea"] = font_0_vhea
+        font_0_hhea = masters[0]["hhea"]
         font_0_hhea.caretSlopeRise = 1
         font_0_hhea.caretSlopeRun = 1
         font_0_hhea.caretOffset = 1
-        font_0_post = ds.sources[0].font["post"]
+        font_0_post = masters[0]["post"]
         font_0_post.underlineThickness = 1
         font_0_post.underlinePosition = 1
 
-        font_2_os2 = ds.sources[2].font["OS/2"]
+        font_2_os2 = masters[2]["OS/2"]
         font_2_os2.sTypoAscender = 800
         font_2_os2.sTypoDescender = 800
         font_2_os2.sTypoLineGap = 800
@@ -429,14 +429,17 @@ class BuildTest(unittest.TestCase):
         font_2_vhea.caretSlopeRise = 800
         font_2_vhea.caretSlopeRun = 800
         font_2_vhea.caretOffset = 800
-        ds.sources[2].font["vhea"] = font_2_vhea
-        font_2_hhea = ds.sources[2].font["hhea"]
+        masters[2]["vhea"] = font_2_vhea
+        font_2_hhea = masters[2]["hhea"]
         font_2_hhea.caretSlopeRise = 800
         font_2_hhea.caretSlopeRun = 800
         font_2_hhea.caretOffset = 800
-        font_2_post = ds.sources[2].font["post"]
+        font_2_post = masters[2]["post"]
         font_2_post.underlineThickness = 800
         font_2_post.underlinePosition = 800
+
+        for m, s in zip(masters, ds.sources):
+            s.font = m
 
         varfont, _, _ = build(ds)
         mvar_tags = [vr.ValueTag for vr in varfont["MVAR"].table.ValueRecord]
