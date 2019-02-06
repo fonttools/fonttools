@@ -36,6 +36,7 @@ matrix:
     - python: pypy2.7-6.0
       # disable coverage.py on pypy because of performance problems
       env: TOXENV=pypy
+      dist: xenial
     - language: generic
       os: osx
       env: TOXENV=py27-cov
