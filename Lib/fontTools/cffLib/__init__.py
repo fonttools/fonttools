@@ -2432,11 +2432,9 @@ class PrivateDict(BaseDict):
 			self.defaults = buildDefaults(privateDictOperators)
 			self.order = buildOrder(privateDictOperators)
 
-	def __getattr__(self, name):
-		if name == "in_cff2":
-			return self._isCFF2
-		value = BaseDict.__getattr__(self, name)
-		return value
+	@property
+	def in_cff2(self):
+		return self._isCFF2
 
 	def getNumRegions(self, vi=None):  # called from misc/psCharStrings.py
 		# if getNumRegions is being called, we can assume that VarStore exists.
