@@ -470,9 +470,7 @@ def desubroutinize(self):
 				del pd.Subrs
 			if 'Subrs' in pd.rawDict:
 				del pd.rawDict['Subrs']
-	# clear GlobalSubrsIndex
-	if cff.GlobalSubrs:
-		cff.GlobalSubrs.items = []
+	cff.GlobalSubrs.clear()
 
 
 @_add_method(ttLib.getTableClass('CFF '))
