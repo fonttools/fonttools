@@ -607,6 +607,9 @@ class Index(object):
 	def getCompiler(self, strings, parent, isCFF2=None):
 		return self.compilerClass(self, strings, parent, isCFF2=isCFF2)
 
+	def clear(self):
+		del self.items[:]
+
 
 class GlobalSubrsIndex(Index):
 

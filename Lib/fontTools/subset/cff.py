@@ -425,16 +425,12 @@ def prune_post_subset(self, ttfFont, options):
 	# Desubroutinize if asked for
 	if options.desubroutinize:
 		self.desubroutinize()
-	else:
-		for fontname in cff.keys():
-			font = cff[fontname]
-			self.remove_unused_subroutines()
 
 	# Drop hints if not needed
 	if not options.hinting:
 		self.remove_hints()
-
-
+	elif not options.desubroutinize:
+		self.remove_unused_subroutines()
 	return True
 
 
@@ -468,7 +464,13 @@ def desubroutinize(self):
 					del pd.Subrs
 				if 'Subrs' in pd.rawDict:
 					del pd.rawDict['Subrs']
-	self.remove_unused_subroutines()
+		else:
+			pd = font.Private
+			if hasattr(pd, 'Subrs'):
+				del pd.Subrs
+			if 'Subrs' in pd.rawDict:
+				del pd.rawDict['Subrs']
+	cff.GlobalSubrs.clear()
 
 
 @_add_method(ttLib.getTableClass('CFF '))
@@ -506,7 +508,7 @@ def remove_hints(self):
 		for charstring in css:
 			charstring.drop_hints()
 		del css
-		
+
 		# Drop font-wide hinting values
 		all_privs = []
 		if hasattr(font, 'FDArray'):
