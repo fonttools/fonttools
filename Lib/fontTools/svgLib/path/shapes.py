@@ -2,9 +2,12 @@ def _PreferNonZero(*args):
   for arg  in args:
     if arg != 0:
       return arg
-  return 0
+  return 0.
 
-# TODO float movement
+def _ntos(n):
+  # %f likes to add unnecessary 0's, %g isn't consistent about # decimals
+  return ('%.3f' % n).rstrip('0').rstrip('.')
+
 class PathBuilder(object):
   def __init__(self):
     self.pathes = []
@@ -24,7 +27,7 @@ class PathBuilder(object):
     self.pathes[-1] =  path
 
   def _move(self, c, x, y):
-    self._Add('%s%d,%d' % (c, x, y))
+    self._Add('%s%s,%s' % (c, _ntos(x), _ntos(y)))
 
   def M(self, x, y):
     self._move('M', x, y)
@@ -33,7 +36,8 @@ class PathBuilder(object):
     self._move('m', x, y)
 
   def _arc(self, c, rx, ry, x, y, large_arc):
-    self._Add('%s%d,%d 0 %d 1 %d,%d' % (c, rx, ry, large_arc, x, y))
+    self._Add('%s%s,%s 0 %d 1 %s,%s' % (c, _ntos(rx), _ntos(ry), large_arc,
+                                        _ntos(x), _ntos(y)))
 
   def A(self, rx, ry, x, y, large_arc = 0):
     self._arc('A', rx, ry, x, y, large_arc)
@@ -42,7 +46,7 @@ class PathBuilder(object):
     self._arc('a', rx, ry, x, y, large_arc)
 
   def _vhline(self, c, x):
-    self._Add('%s%d' % (c, x))
+    self._Add('%s%s' % (c, _ntos(x)))
 
   def H(self, x):
     self._vhline('H', x)
@@ -57,16 +61,17 @@ class PathBuilder(object):
     self._vhline('v', y)
 
   def _ParseRect(self, rect):
-    # TODO what format(s) do these #s come in?
     x = float(rect.attrib.get('x', 0))
     y = float(rect.attrib.get('y', 0))
     w = float(rect.attrib.get('width'))
     h = float(rect.attrib.get('height'))
     rx = float(rect.attrib.get('rx', 0))
     ry = float(rect.attrib.get('ry', 0))
+
     rx = _PreferNonZero(rx, ry)
     ry = _PreferNonZero(ry, rx)
     # TODO there are more rules for adjusting rx, ry
+
     self.StartPath()
     self.M(x + rx, y)
     self.H(x + w -rx)
@@ -108,5 +113,8 @@ class PathBuilder(object):
     if '}' in el.tag:
       tag = el.tag.split('}', 1)[1]  # from https://bugs.python.org/issue18304
     parse_fn = getattr(self, '_Parse%s' % tag.lower().capitalize(), None)
-    if callable(parse_fn):
-      parse_fn(el)
+    if not callable(parse_fn):
+      return False
+    parse_fn(el)
+    return True
+
