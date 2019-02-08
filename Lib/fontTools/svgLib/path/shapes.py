@@ -12,6 +12,9 @@ class PathBuilder(object):
   def StartPath(self):
     self.pathes.append('')
 
+  def EndPath(self):
+    self._Add('z')
+
   def _Add(self, path_snippet):
     path = self.pathes[-1]
     if path:
@@ -30,7 +33,7 @@ class PathBuilder(object):
     self._move('m', x, y)
 
   def _arc(self, c, rx, ry, x, y):
-    self._Add('%s%d %d 0 0 1 %d %d' % (c, rx, ry, x, y))
+    self._Add('%s%d,%d 0 0 1 %d,%d' % (c, rx, ry, x, y))
 
   def A(self, rx, ry, x, y):
     self._arc('A', rx, ry, x, y)
@@ -56,7 +59,7 @@ class PathBuilder(object):
   def Rect(self, rect):
     # TODO what format(s) do these #s come in?
     x = float(rect.attrib.get('x', 0))
-    y = float(rect.attrib.get('x', 0))
+    y = float(rect.attrib.get('y', 0))
     w = float(rect.attrib.get('width'))
     h = float(rect.attrib.get('height'))
     rx = float(rect.attrib.get('rx', 0))
@@ -69,10 +72,13 @@ class PathBuilder(object):
     self.H(x + w -rx)
     if rx > 0:
       self.A(rx, ry, x + w, y + ry)
-    self.V(x + h -ry)
+    self.V(y + h -ry)
     if rx > 0:
-      self.A(rx, ry, x + w, y + ry)
+      self.A(rx, ry, x + w - rx, y + h)
     self.H(x + rx)
     if rx > 0:
       self.A(rx, ry, x, y + h - ry)
     self.V(y + ry)
+    if rx > 0:
+      self.A(rx, ry, x + rx, y)
+    self.EndPath()
