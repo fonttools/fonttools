@@ -9,8 +9,8 @@ class PathBuilder(object):
   def __init__(self):
     self.pathes = []
 
-  def StartPath(self):
-    self.pathes.append('')
+  def StartPath(self, initial_path=''):
+    self.pathes.append(initial_path)
 
   def EndPath(self):
     self._Add('z')
@@ -56,7 +56,7 @@ class PathBuilder(object):
   def v(self, x):
     self._vhline('v', y)
 
-  def Rect(self, rect):
+  def _ParseRect(self, rect):
     # TODO what format(s) do these #s come in?
     x = float(rect.attrib.get('x', 0))
     y = float(rect.attrib.get('y', 0))
@@ -82,3 +82,15 @@ class PathBuilder(object):
     if rx > 0:
       self.A(rx, ry, x + rx, y)
     self.EndPath()
+
+  def _ParsePath(self, path):
+    if 'd' in path.attrib:
+      self.StartPath(initial_path=path.attrib['d'])
+
+  def AddPathFromElement(self, el):
+    tag = el.tag
+    if '}' in el.tag:
+      tag = el.tag.split('}', 1)[1]  # from https://bugs.python.org/issue18304
+    parse_fn = getattr(self, '_Parse%s' % tag.lower().capitalize(), None)
+    if callable(parse_fn):
+      parse_fn(el)
