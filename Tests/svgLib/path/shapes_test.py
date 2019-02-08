@@ -36,6 +36,21 @@ import pytest
             "M11,9 H18 A2,2 0 0 1 20,11 V14 A2,2 0 0 1 18,16 H11"
             " A2,2 0 0 1 9,14 V11 A2,2 0 0 1 11,9 z",
         ),
+        # polygon
+        (
+            "<polygon points='30,10 50,30 10,30'/>",
+            "M30,10 50,30 10,30 z"
+        ),
+        # circle, minimal valid example
+        (
+            "<circle r='1'/>",
+            "M-1,0 A1,1 0 1 1 1,0 A1,1 0 1 1 -1,0"
+        ),
+        # circle
+        (
+            "<circle cx='600' cy='200' r='100'/>",
+            "M500,200 A100,100 0 1 1 700,200 A100,100 0 1 1 500,200"
+        )
     ]
 )
 def test_el_to_path(svg_xml, expected_path):

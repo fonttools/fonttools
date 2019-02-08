@@ -32,14 +32,14 @@ class PathBuilder(object):
   def m(self, x, y):
     self._move('m', x, y)
 
-  def _arc(self, c, rx, ry, x, y):
-    self._Add('%s%d,%d 0 0 1 %d,%d' % (c, rx, ry, x, y))
+  def _arc(self, c, rx, ry, x, y, large_arc):
+    self._Add('%s%d,%d 0 %d 1 %d,%d' % (c, rx, ry, large_arc, x, y))
 
-  def A(self, rx, ry, x, y):
-    self._arc('A', rx, ry, x, y)
+  def A(self, rx, ry, x, y, large_arc = 0):
+    self._arc('A', rx, ry, x, y, large_arc)
 
-  def a(self, rx, ry, x, y):
-    self._arc('a', rx, ry, x, y)
+  def a(self, rx, ry, x, y, large_arc = 0):
+    self._arc('a', rx, ry, x, y, large_arc)
 
   def _vhline(self, c, x):
     self._Add('%s%d' % (c, x))
@@ -86,6 +86,22 @@ class PathBuilder(object):
   def _ParsePath(self, path):
     if 'd' in path.attrib:
       self.StartPath(initial_path=path.attrib['d'])
+
+  def _ParsePolygon(self, poly):
+    if 'points' in poly.attrib:
+      self.StartPath('M' + poly.attrib['points'])
+      self.EndPath()
+
+  def _ParseCircle(self, circle):
+    cx = float(circle.attrib.get('cx', 0))
+    cy = float(circle.attrib.get('cy', 0))
+    r = float(circle.attrib.get('r'))
+
+    # arc doesn't seem to like being a complete shape, draw two halves
+    self.StartPath()
+    self.M(cx - r, cy)
+    self.A(r, r, cx + r, cy, large_arc=1)
+    self.A(r, r, cx - r, cy, large_arc=1)
 
   def AddPathFromElement(self, el):
     tag = el.tag
