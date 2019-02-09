@@ -1599,10 +1599,10 @@ def _sniffFileStructure(ufo_path):
 		return UFOFileStructure.PACKAGE
 	elif os.path.isfile(ufo_path):
 		raise UFOLibError(
-			"The specified UFO does not have a known structure: '%s'" % ufo_path
+			"The specified UFO does not have a known structure: %r" % ufo_path
 		)
 	else:
-		raise UFOLibError("No such file or directory: '%s'" % ufo_path)
+		raise UFOLibError("No such file or directory: %r" % ufo_path)
 
 
 def makeUFOPath(path):
