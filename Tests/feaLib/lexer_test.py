@@ -39,6 +39,7 @@ class LexerTest(unittest.TestCase):
 
     def test_glyphclass(self):
         self.assertEqual(lex("@Vowel.sc"), [(Lexer.GLYPHCLASS, "Vowel.sc")])
+        self.assertEqual(lex("@Vowel-sc"), [(Lexer.GLYPHCLASS, "Vowel-sc")])
         self.assertRaisesRegex(FeatureLibError,
                                "Expected glyph class", lex, "@(a)")
         self.assertRaisesRegex(FeatureLibError,
