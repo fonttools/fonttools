@@ -778,6 +778,26 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(glyphstr(pos.prefix), "[A B]")
         self.assertEqual(glyphstr(pos.suffix), "comma")
 
+    def test_gpos_type_1_chained_special_kern_format_valuerecord_format_a(self):
+        doc = self.parse("feature kern {pos [A B] [T Y]' comma 20;} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertIsInstance(pos, ast.SinglePosStatement)
+        [(glyphs, value)] = pos.pos
+        self.assertEqual(glyphstr([glyphs]), "[T Y]")
+        self.assertEqual(value.asFea(), "20")
+        self.assertEqual(glyphstr(pos.prefix), "[A B]")
+        self.assertEqual(glyphstr(pos.suffix), "comma")
+
+    def test_gpos_type_1_chained_special_kern_format_valuerecord_format_b(self):
+        doc = self.parse("feature kern {pos [A B] [T Y]' comma <0 0 0 0>;} kern;")
+        pos = doc.statements[0].statements[0]
+        self.assertIsInstance(pos, ast.SinglePosStatement)
+        [(glyphs, value)] = pos.pos
+        self.assertEqual(glyphstr([glyphs]), "[T Y]")
+        self.assertEqual(value.asFea(), "<0 0 0 0>")
+        self.assertEqual(glyphstr(pos.prefix), "[A B]")
+        self.assertEqual(glyphstr(pos.suffix), "comma")
+
     def test_gpos_type_2_format_a(self):
         doc = self.parse("feature kern {"
                          "    pos [T V] -60 [a b c] <1 2 3 4>;"
