@@ -60,9 +60,9 @@ import pytest
 )
 def test_el_to_path(svg_xml, expected_path):
     pb = shapes.PathBuilder()
-    pb.AddPathFromElement(etree.fromstring(svg_xml))
+    pb.add_path_from_element(etree.fromstring(svg_xml))
     if expected_path:
-      expected = [expected_path]
+        expected = [expected_path]
     else:
-      expected = []
+        expected = []
     assert pb.pathes == expected

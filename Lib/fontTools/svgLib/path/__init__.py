@@ -54,7 +54,7 @@ class SVGPath(object):
         pb = PathBuilder()
         # xpath | doesn't seem to reliable work so just walk it
         for el in self.root.iter():
-            pb.AddPathFromElement(el)
+            pb.add_path_from_element(el)
         for path in pb.pathes:
             parse_path(path, pen)
 
