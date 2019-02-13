@@ -427,7 +427,7 @@ class SubsetTest(unittest.TestCase):
             "test_hinted_subrs_CFF.desub.ttx"), ["CFF "])
 
     def test_no_hinting_desubroutinize_CFF(self):
-        ttxpath = self.getpath("Lobster.subset.ttx")
+        ttxpath = self.getpath("test_hinted_subrs_CFF.ttx")
         _, fontpath = self.compile_font(ttxpath, ".otf")
         subsetpath = self.temp_path(".otf")
         subset.main([fontpath, "--no-hinting", "--desubroutinize", "--notdef-outline",

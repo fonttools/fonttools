@@ -363,11 +363,11 @@ class StopHintCountEvent(Exception):
 	pass
 
 
-stop_hintcount_ops = ("op_hstem", "op_vstem", "op_rmoveto", "op_hmoveto",
-						"op_vmoveto")
 
 
 class _DesubroutinizingT2Decompiler(psCharStrings.SimpleT2Decompiler):
+	stop_hintcount_ops = ("op_hstem", "op_vstem", "op_rmoveto", "op_hmoveto",
+							"op_vmoveto")
 
 	def __init__(self, localSubrs, globalSubrs, private=None):
 		psCharStrings.SimpleT2Decompiler.__init__(self, localSubrs, globalSubrs,
@@ -375,7 +375,7 @@ class _DesubroutinizingT2Decompiler(psCharStrings.SimpleT2Decompiler):
 
 	def execute(self, charString):
 		self.need_hintcount = True  # until proven otherwise
-		for op_name in stop_hintcount_ops:
+		for op_name in self.stop_hintcount_ops:
 			setattr(self, op_name, self.stop_hint_count)
 
 		if hasattr(charString, '_desubroutinized'):
@@ -384,7 +384,6 @@ class _DesubroutinizingT2Decompiler(psCharStrings.SimpleT2Decompiler):
 					psCharStrings.SimpleT2Decompiler.execute(self, charString)
 				except StopHintCountEvent:
 					del self.callingStack[-1]
-				return
 			return
 
 		charString._patches = []
@@ -418,9 +417,9 @@ class _DesubroutinizingT2Decompiler(psCharStrings.SimpleT2Decompiler):
 		psCharStrings.SimpleT2Decompiler.op_callgsubr(self, index)
 		self.processSubr(index, subr)
 
-	def stop_hint_count(self, index=None):
+	def stop_hint_count(self, *args):
 		self.need_hintcount = False
-		for op_name in stop_hintcount_ops:
+		for op_name in self.stop_hintcount_ops:
 			setattr(self, op_name, None)
 		cs = self.callingStack[-1]
 		if hasattr(cs, '_desubroutinized'):
@@ -434,7 +433,6 @@ class _DesubroutinizingT2Decompiler(psCharStrings.SimpleT2Decompiler):
 	def processSubr(self, index, subr):
 		cs = self.callingStack[-1]
 		if not hasattr(cs, '_desubroutinized'):
-			cs = self.callingStack[-1]
 			cs._patches.append((index, subr._desubroutinized))
 
 
@@ -486,9 +484,7 @@ def desubroutinize(self):
 			decompiler.execute(c)
 			c.program = c._desubroutinized
 			del c._desubroutinized
-		# Delete All the Subrs!!!
-		if font.GlobalSubrs:
-			del font.GlobalSubrs
+		# Delete all the local subrs
 		if hasattr(font, 'FDArray'):
 			for fd in font.FDArray:
 				pd = fd.Private
@@ -502,6 +498,7 @@ def desubroutinize(self):
 				del pd.Subrs
 			if 'Subrs' in pd.rawDict:
 				del pd.rawDict['Subrs']
+	# as well as the global subrs
 	cff.GlobalSubrs.clear()
 
 
