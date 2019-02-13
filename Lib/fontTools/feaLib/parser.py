@@ -405,7 +405,7 @@ class Parser(object):
         else:
             assert not any(values[:len(prefix)]), values
             format1 = values[len(prefix):][:len(glyphs)]
-            format2 = values[len(prefix) + len(glyphs):][:len(suffix)]
+            format2 = values[(len(prefix) + len(glyphs)):][:len(suffix)]
             values = format2 if format2 and isinstance(format2[0], self.ast.ValueRecord) else format1
             return (prefix, glyphs, lookups, values, suffix, hasMarks)
 
