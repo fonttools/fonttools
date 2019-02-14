@@ -1,12 +1,14 @@
 def _prefer_non_zero(*args):
-    for arg  in args:
-      if arg != 0:
-        return arg
+    for arg in args:
+        if arg != 0:
+            return arg
     return 0.
 
+
 def _ntos(n):
-  # %f likes to add unnecessary 0's, %g isn't consistent about # decimals
+    # %f likes to add unnecessary 0's, %g isn't consistent about # decimals
     return ('%.3f' % n).rstrip('0').rstrip('.')
+
 
 class PathBuilder(object):
     def __init__(self):
@@ -24,7 +26,7 @@ class PathBuilder(object):
             path += ' ' + path_snippet
         else:
             path = path_snippet
-        self.pathes[-1] =  path
+        self.pathes[-1] = path
 
     def _move(self, c, x, y):
         self._add('%s%s,%s' % (c, _ntos(x), _ntos(y)))
@@ -39,10 +41,10 @@ class PathBuilder(object):
         self._add('%s%s,%s 0 %d 1 %s,%s' % (c, _ntos(rx), _ntos(ry), large_arc,
                                             _ntos(x), _ntos(y)))
 
-    def A(self, rx, ry, x, y, large_arc = 0):
+    def A(self, rx, ry, x, y, large_arc=0):
         self._arc('A', rx, ry, x, y, large_arc)
 
-    def a(self, rx, ry, x, y, large_arc = 0):
+    def a(self, rx, ry, x, y, large_arc=0):
         self._arc('a', rx, ry, x, y, large_arc)
 
     def _vhline(self, c, x):
@@ -57,7 +59,7 @@ class PathBuilder(object):
     def V(self, y):
         self._vhline('V', y)
 
-    def v(self, x):
+    def v(self, y):
         self._vhline('v', y)
 
     def _parse_rect(self, rect):
@@ -74,10 +76,10 @@ class PathBuilder(object):
 
         self._start_path()
         self.M(x + rx, y)
-        self.H(x + w -rx)
+        self.H(x + w - rx)
         if rx > 0:
             self.A(rx, ry, x + w, y + ry)
-        self.V(y + h -ry)
+        self.V(y + h - ry)
         if rx > 0:
             self.A(rx, ry, x + w - rx, y + h)
         self.H(x + rx)
@@ -117,4 +119,3 @@ class PathBuilder(object):
             return False
         parse_fn(el)
         return True
-
