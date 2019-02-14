@@ -774,8 +774,8 @@ class _TTGlyphGlyf(_TTGlyph):
 		glyph.draw(pen, glyfTable, offset)
 
 	def drawPoints(self, pen):
-		"""Draw the glyph onto PointPen. See ufoLib.pointPen for details
-		how that works.
+		"""Draw the glyph onto PointPen. See fontTools.pens.pointPen
+		for details how that works.
 		"""
 		glyfTable = self._glyphset._glyphs
 		glyph = self._glyph

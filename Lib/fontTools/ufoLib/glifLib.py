@@ -21,8 +21,8 @@ import fs.osfs
 import fs.path
 from fontTools.misc.py23 import basestring, unicode, tobytes, tounicode
 from fontTools.misc import plistlib
+from fontTools.pens.pointPen import AbstractPointPen, PointToSegmentPen
 from fontTools.ufoLib.errors import GlifLibError
-from fontTools.ufoLib.pointPen import AbstractPointPen, PointToSegmentPen
 from fontTools.ufoLib.filenames import userNameToFileName
 from fontTools.ufoLib.validators import (
 	genericTypeValidator,
