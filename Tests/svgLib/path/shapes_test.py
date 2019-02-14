@@ -65,4 +65,4 @@ def test_el_to_path(svg_xml, expected_path):
         expected = [expected_path]
     else:
         expected = []
-    assert pb.pathes == expected
+    assert pb.paths == expected

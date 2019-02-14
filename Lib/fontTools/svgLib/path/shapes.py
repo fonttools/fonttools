@@ -12,21 +12,21 @@ def _ntos(n):
 
 class PathBuilder(object):
     def __init__(self):
-        self.pathes = []
+        self.paths = []
 
     def _start_path(self, initial_path=''):
-        self.pathes.append(initial_path)
+        self.paths.append(initial_path)
 
     def _end_path(self):
         self._add('z')
 
     def _add(self, path_snippet):
-        path = self.pathes[-1]
+        path = self.paths[-1]
         if path:
             path += ' ' + path_snippet
         else:
             path = path_snippet
-        self.pathes[-1] = path
+        self.paths[-1] = path
 
     def _move(self, c, x, y):
         self._add('%s%s,%s' % (c, _ntos(x), _ntos(y)))
