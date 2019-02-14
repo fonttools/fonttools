@@ -10,6 +10,12 @@ def _ntos(n):
     return ('%.3f' % n).rstrip('0').rstrip('.')
 
 
+def _strip_xml_ns(tag):
+    # ElementTree API doesn't provide a way to ignore XML namespaces in tags
+    # so we here strip them ourselves: cf. https://bugs.python.org/issue18304
+    return tag.split('}', 1)[1] if '}' in tag else tag
+
+
 class PathBuilder(object):
     def __init__(self):
         self.paths = []
@@ -111,9 +117,7 @@ class PathBuilder(object):
         self.A(r, r, cx - r, cy, large_arc=1)
 
     def add_path_from_element(self, el):
-        tag = el.tag
-        if '}' in el.tag:
-            tag = el.tag.split('}', 1)[1]  # from https://bugs.python.org/issue18304
+        tag = _strip_xml_ns(el.tag)
         parse_fn = getattr(self, '_parse_%s' % tag.lower(), None)
         if not callable(parse_fn):
             return False
