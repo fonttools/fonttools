@@ -5,6 +5,7 @@ from fontTools.misc.py23 import *
 from fontTools.pens.transformPen import TransformPen
 from fontTools.misc import etree
 from .parser import parse_path
+from .shapes import PathBuilder
 
 
 __all__ = [tostr(s) for s in ("SVGPath", "parse_path")]
@@ -50,5 +51,10 @@ class SVGPath(object):
     def draw(self, pen):
         if self.transform:
             pen = TransformPen(pen, self.transform)
-        for el in self.root.findall(".//{http://www.w3.org/2000/svg}path[@d]"):
-            parse_path(el.get("d"), pen)
+        pb = PathBuilder()
+        # xpath | doesn't seem to reliable work so just walk it
+        for el in self.root.iter():
+            pb.add_path_from_element(el)
+        for path in pb.paths:
+            parse_path(path, pen)
+
