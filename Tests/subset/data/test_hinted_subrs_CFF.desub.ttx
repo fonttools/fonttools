@@ -21,9 +21,17 @@
       <!-- charset is dumped separately as the 'GlyphOrder' element -->
       <Encoding name="StandardEncoding"/>
       <Private>
-        <BlueScale value="0.039625"/>
+        <BlueValues value="-15 0 475 488 527 540 549 563 646 659 669 684 729 749"/>
+        <OtherBlues value="-249 -239"/>
+        <FamilyBlues value="-15 0 475 488 527 540 549 563 646 659 669 684 729 749"/>
+        <FamilyOtherBlues value="-249 -239"/>
+        <BlueScale value="0.0375"/>
         <BlueShift value="7"/>
-        <BlueFuzz value="1"/>
+        <BlueFuzz value="0"/>
+        <StdHW value="56"/>
+        <StdVW value="85"/>
+        <StemSnapH value="41 56"/>
+        <StemSnapV value="85 95"/>
         <ForceBold value="0"/>
         <LanguageGroup value="0"/>
         <ExpansionFactor value="0.06"/>
@@ -33,7 +41,9 @@
       </Private>
       <CharStrings>
         <CharString name=".notdef">
-          36 80 hmoveto
+          36 0 50 569 50 hstem
+          80 60 360 60 vstem
+          80 hmoveto
           480 669 -480 hlineto
           240 -286 rmoveto
           -148 236 rlineto
@@ -48,7 +58,9 @@
           endchar
         </CharString>
         <CharString name="y">
-          -92 92 -249 rmoveto
+          -92 -249 110 572 42 -40 40 -36 36 0 1 hstemhm
+          0 512 -195 195 vstemhm
+          92 -249 rmoveto
           82 56 75 177 67 hvcurveto
           161 425 54 11 rlineto
           36 -195 vlineto
@@ -62,10 +74,13 @@
           28 -27 -21 10 -26 hhcurveto
           -31 -29 -15 -29 -7 hvcurveto
           -39 42 -27 50 vhcurveto
+          hintmask 11001000
           endchar
         </CharString>
         <CharString name="yacute">
-          -92 92 -249 rmoveto
+          -92 -249 110 572 42 -40 40 -36 36 10 5 5 4 3 2 2 1 1 0 hstemhm
+          0 512 -195 195 vstemhm
+          92 -249 rmoveto
           82 56 75 177 67 hvcurveto
           161 425 54 11 rlineto
           36 -195 vlineto
@@ -79,6 +94,7 @@
           28 -27 -21 10 -26 hhcurveto
           -31 -29 -15 -29 -7 hvcurveto
           -39 42 -27 50 vhcurveto
+          hintmask 1100100010000000
           155 825 rmoveto
           26 -19 41 36 39 35 41 37 rlinecurve
           28 26 6 15 14 vvcurveto

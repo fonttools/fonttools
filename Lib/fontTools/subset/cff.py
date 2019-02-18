@@ -352,28 +352,44 @@ class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
 				if subr_hints.status == 0:
 					hints.last_hint = index
 				else:
-					hints.last_hint = index - 2 # Leave the subr call in
+					hints.last_hint = index - 2  # Leave the subr call in
 
 		elif subr_hints.status == 0:
 			hints.deletions.append(index)
 
 		hints.status = max(hints.status, subr_hints.status)
 
+class StopHintCountEvent(Exception):
+	pass
+
+
+
+
 class _DesubroutinizingT2Decompiler(psCharStrings.SimpleT2Decompiler):
+	stop_hintcount_ops = ("op_hstem", "op_vstem", "op_rmoveto", "op_hmoveto",
+							"op_vmoveto")
 
 	def __init__(self, localSubrs, globalSubrs, private=None):
-		psCharStrings.SimpleT2Decompiler.__init__(self,
-							  localSubrs,
-							  globalSubrs, private)
+		psCharStrings.SimpleT2Decompiler.__init__(self, localSubrs, globalSubrs,
+												private)
 
 	def execute(self, charString):
+		self.need_hintcount = True  # until proven otherwise
+		for op_name in self.stop_hintcount_ops:
+			setattr(self, op_name, self.stop_hint_count)
+
 		if hasattr(charString, '_desubroutinized'):
+			if self.need_hintcount and self.callingStack:
+				try:
+					psCharStrings.SimpleT2Decompiler.execute(self, charString)
+				except StopHintCountEvent:
+					del self.callingStack[-1]
 			return
 
 		charString._patches = []
 		psCharStrings.SimpleT2Decompiler.execute(self, charString)
 		desubroutinized = charString.program[:]
-		for idx,expansion in reversed (charString._patches):
+		for idx, expansion in reversed(charString._patches):
 			assert idx >= 2
 			assert desubroutinized[idx - 1] in ['callsubr', 'callgsubr'], desubroutinized[idx - 1]
 			assert type(desubroutinized[idx - 2]) == int
@@ -401,9 +417,23 @@ class _DesubroutinizingT2Decompiler(psCharStrings.SimpleT2Decompiler):
 		psCharStrings.SimpleT2Decompiler.op_callgsubr(self, index)
 		self.processSubr(index, subr)
 
+	def stop_hint_count(self, *args):
+		self.need_hintcount = False
+		for op_name in self.stop_hintcount_ops:
+			setattr(self, op_name, None)
+		cs = self.callingStack[-1]
+		if hasattr(cs, '_desubroutinized'):
+			raise StopHintCountEvent()
+
+	def op_hintmask(self, index):
+		psCharStrings.SimpleT2Decompiler.op_hintmask(self, index)
+		if self.need_hintcount:
+			self.stop_hint_count()
+
 	def processSubr(self, index, subr):
 		cs = self.callingStack[-1]
-		cs._patches.append((index, subr._desubroutinized))
+		if not hasattr(cs, '_desubroutinized'):
+			cs._patches.append((index, subr._desubroutinized))
 
 
 @_add_method(ttLib.getTableClass('CFF '))
@@ -454,9 +484,7 @@ def desubroutinize(self):
 			decompiler.execute(c)
 			c.program = c._desubroutinized
 			del c._desubroutinized
-		# Delete All the Subrs!!!
-		if font.GlobalSubrs:
-			del font.GlobalSubrs
+		# Delete all the local subrs
 		if hasattr(font, 'FDArray'):
 			for fd in font.FDArray:
 				pd = fd.Private
@@ -470,6 +498,7 @@ def desubroutinize(self):
 				del pd.Subrs
 			if 'Subrs' in pd.rawDict:
 				del pd.rawDict['Subrs']
+	# as well as the global subrs
 	cff.GlobalSubrs.clear()
 
 
@@ -592,4 +621,3 @@ def remove_unused_subroutines(self):
 		# Cleanup
 		for subrs in all_subrs:
 			del subrs._used, subrs._old_bias, subrs._new_bias
-
