@@ -1,3 +1,6 @@
+3.38.0 (released 2019-02-18)
+----------------------------
+
 - [cffLib] Fixed RecursionError when unpickling or deepcopying TTFont with
   CFF table (#1488, 649dc49).
 - [subset] Fixed AttributeError when using --desubroutinize option (#1490).
