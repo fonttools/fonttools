@@ -1,3 +1,5 @@
+import re
+
 def _prefer_non_zero(*args):
     for arg in args:
         if arg != 0:
@@ -16,12 +18,25 @@ def _strip_xml_ns(tag):
     return tag.split('}', 1)[1] if '}' in tag else tag
 
 
+def _transform(raw_value):
+    # start simple: if you aren't exactly matrix(...) then no love
+    match = re.match(r'matrix\((.*)\)', raw_value)
+    if not match:
+        raise NotImplementedError
+    matrix = tuple(float(p) for p in re.split(r'\s+|,', match.group(1)))
+    if len(matrix) != 6:
+        raise ValueError('wrong # of terms in %s' % raw_value)
+    return matrix
+
+
 class PathBuilder(object):
     def __init__(self):
         self.paths = []
+        self.transforms = []
 
     def _start_path(self, initial_path=''):
         self.paths.append(initial_path)
+        self.transforms.append(None)
 
     def _end_path(self):
         self._add('z')
@@ -134,4 +149,6 @@ class PathBuilder(object):
         if not callable(parse_fn):
             return False
         parse_fn(el)
+        if 'transform' in el.attrib:
+            self.transforms[-1] = _transform(el.attrib['transform'])
         return True

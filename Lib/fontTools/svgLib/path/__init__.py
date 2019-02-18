@@ -55,6 +55,7 @@ class SVGPath(object):
         # xpath | doesn't seem to reliable work so just walk it
         for el in self.root.iter():
             pb.add_path_from_element(el)
-        for path in pb.paths:
+        for path, transform in zip(pb.paths, pb.transforms):
+            # TODO use transform
             parse_path(path, pen)
 
