@@ -1,3 +1,17 @@
+- [cffLib] Fixed RecursionError when unpickling or deepcopying TTFont with
+  CFF table (#1488, 649dc49).
+- [subset] Fixed AttributeError when using --desubroutinize option (#1490).
+  Also, fixed desubroutinizing bug when subrs contain hints (#1499).
+- [CPAL] Make Color a subclass of namedtuple (173a0f5).
+- [feaLib] Allow hyphen in glyph class names.
+- [feaLib] Added 'tables' option to __main__.py (#1497).
+- [feaLib] Add support for special-case contextual positioning formatting
+  (#1501).
+- [svgLib] Support converting SVG basic shapes (rect, circle, etc.) into
+  equivalent SVG paths (#1500, #1508).
+- [Snippets] Added name-viewer.ipynb Jupyter notebook.
+
+
 3.37.3 (released 2019-02-05)
 ----------------------------
 
