@@ -1289,6 +1289,14 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(sub.glyph, "f_f_i")
         self.assertEqual(sub.replacement, ("f", "f", "i"))
 
+    def test_substitute_multiple_force_chained(self):
+        doc = self.parse("lookup L {sub f_f_i' by f f i;} L;")
+        sub = doc.statements[0].statements[0]
+        self.assertIsInstance(sub, ast.MultipleSubstStatement)
+        self.assertEqual(sub.glyph, "f_f_i")
+        self.assertEqual(sub.replacement, ("f", "f", "i"))
+        self.assertEqual(sub.asFea(), "sub f_f_i' by f f i;")
+
     def test_substitute_multiple_by_mutliple(self):
         self.assertRaisesRegex(
             FeatureLibError,

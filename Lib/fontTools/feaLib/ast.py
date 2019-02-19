@@ -905,20 +905,22 @@ class MarkMarkPosStatement(Statement):
 
 
 class MultipleSubstStatement(Statement):
-    def __init__(self, prefix, glyph, suffix, replacement, location=None):
+    def __init__(self, prefix, glyph, suffix, replacement, forceChain, location=None):
         Statement.__init__(self, location)
         self.prefix, self.glyph, self.suffix = prefix, glyph, suffix
         self.replacement = replacement
+        self.forceChain = forceChain
 
     def build(self, builder):
         prefix = [p.glyphSet() for p in self.prefix]
         suffix = [s.glyphSet() for s in self.suffix]
         builder.add_multiple_subst(
-            self.location, prefix, self.glyph, suffix, self.replacement)
+            self.location, prefix, self.glyph, suffix, self.replacement,
+            self.forceChain)
 
     def asFea(self, indent=""):
         res = "sub "
-        if len(self.prefix) or len(self.suffix):
+        if len(self.prefix) or len(self.suffix) or self.forceChain:
             if len(self.prefix):
                 res += " ".join(map(asFea, self.prefix)) + " "
             res += asFea(self.glyph) + "'"

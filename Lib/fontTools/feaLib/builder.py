@@ -881,8 +881,8 @@ class Builder(object):
             lookup.ligatures[g] = replacement
 
     def add_multiple_subst(self, location,
-                           prefix, glyph, suffix, replacements):
-        if prefix or suffix:
+                           prefix, glyph, suffix, replacements, forceChain):
+        if prefix or suffix or forceChain:
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
             sub = self.get_chained_lookup_(location, MultipleSubstBuilder)
             sub.mapping[glyph] = replacements

@@ -755,7 +755,8 @@ class Parser(object):
                 num_lookups == 0):
             return self.ast.MultipleSubstStatement(
                 old_prefix, tuple(old[0].glyphSet())[0], old_suffix,
-                tuple([list(n.glyphSet())[0] for n in new]), location=location)
+                tuple([list(n.glyphSet())[0] for n in new]),
+                forceChain=hasMarks, location=location)
 
         # GSUB lookup type 4: Ligature substitution.
         # Format: "substitute f f i by f_f_i;"
@@ -1442,7 +1443,7 @@ class Parser(object):
             if isinstance(s, self.ast.SingleSubstStatement):
                 has_single = not any([s.prefix, s.suffix, s.forceChain])
             elif isinstance(s, self.ast.MultipleSubstStatement):
-                has_multiple = not any([s.prefix, s.suffix])
+                has_multiple = not any([s.prefix, s.suffix, s.forceChain])
 
         # Upgrade all single substitutions to multiple substitutions.
         if has_single and has_multiple:
@@ -1451,7 +1452,7 @@ class Parser(object):
                     statements[i] = self.ast.MultipleSubstStatement(
                         s.prefix, s.glyphs[0].glyphSet()[0], s.suffix,
                         [r.glyphSet()[0] for r in s.replacements],
-                        location=s.location)
+                        s.forceChain, location=s.location)
 
     def is_cur_keyword_(self, k):
         if self.cur_token_type_ is Lexer.NAME:
