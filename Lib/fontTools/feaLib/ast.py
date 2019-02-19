@@ -1090,7 +1090,7 @@ class SubtableStatement(Statement):
         builder.add_subtable_break(self.location)
 
     def asFea(self, indent=""):
-        return indent + "subtable;"
+        return "subtable;"
 
 
 class ValueRecord(Expression):
