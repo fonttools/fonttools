@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="OTTO" ttLibVersion="3.32">
+<ttFont sfntVersion="OTTO" ttLibVersion="3.36">
 
   <fvar>
 
@@ -67,29 +67,29 @@
             <BlueValues>
                 <blend value="-12 0 0"/>
                 <blend value="0 0 0"/>
-                <blend value="486 -8 14"/>
+                <blend value="486 -8 -8"/>
                 <blend value="498 0 0"/>
-                <blend value="574 4 -8"/>
+                <blend value="574 4 4"/>
                 <blend value="586 0 0"/>
-                <blend value="638 6 -10"/>
+                <blend value="638 6 6"/>
                 <blend value="650 0 0"/>
-                <blend value="656 2 -2"/>
+                <blend value="656 2 2"/>
                 <blend value="668 0 0"/>
-                <blend value="712 6 -10"/>
+                <blend value="712 6 6"/>
                 <blend value="724 0 0"/>
             </BlueValues>
             <OtherBlues>
-                <blend value="-217 -17 29"/>
+                <blend value="-217 -17 -17"/>
                 <blend value="-205 0 0"/>
             </OtherBlues>
             <BlueScale value="0.0625"/>
             <BlueShift value="7"/>
             <BlueFuzz value="0"/>
             <StdHW>
-                <blend value="67 -39.0 67.0"/>
+                <blend value="67 -39.0 -39.0"/>
             </StdHW>
             <StdVW>
-                <blend value="85 -51.0 87.0"/>
+                <blend value="85 -51.0 -51.0"/>
             </StdVW>
           </Private>
         </FontDict>
@@ -127,6 +127,7 @@
           rlineto
         </CharString>
         <CharString name="A">
+          1 vsindex
           31 19 -31 1 blend
           hmoveto
           86 -54 90 1 blend
@@ -146,12 +147,14 @@
           hlineto
         </CharString>
         <CharString name="T">
-          258 26 -44 1 blend
+          2 vsindex
+          258 26 1 blend
           hmoveto
-          84 585 217 71 -518 -71 217 -585 -52 88 47 -79 17 -30 -43 73 18 -28 43 -73 17 -30 -47 79 8 blend
+          84 585 217 71 -518 -71 217 -585 -52 47 17 -43 18 43 17 -47 8 blend
           hlineto
         </CharString>
         <CharString name="dollar">
+          4 vsindex
           248 35 -3 12 -28 4 2 blend
           rmoveto
           -39 -45 5 18 -46 -26 -26 6 17 10 6 32 6 0 -3 5 blend
@@ -198,6 +201,7 @@
           hlineto
         </CharString>
         <CharString name="glyph00003">
+          3 vsindex
           304 7 -12 1 blend
           34 rmoveto
           125 86 65 96 -22 38 2 -3 -9 15 -2 4 4 blend
@@ -246,8 +250,35 @@
             </VarRegionAxis>
           </Region>
         </VarRegionList>
-        <!-- VarDataCount=1 -->
+        <!-- VarDataCount=5 -->
         <VarData index="0">
+          <!-- ItemCount=0 -->
+          <NumShorts value="0"/>
+          <!-- VarRegionCount=2 -->
+          <VarRegionIndex index="0" value="0"/>
+          <VarRegionIndex index="1" value="1"/>
+        </VarData>
+        <VarData index="1">
+          <!-- ItemCount=0 -->
+          <NumShorts value="0"/>
+          <!-- VarRegionCount=2 -->
+          <VarRegionIndex index="0" value="0"/>
+          <VarRegionIndex index="1" value="1"/>
+        </VarData>
+        <VarData index="2">
+          <!-- ItemCount=0 -->
+          <NumShorts value="0"/>
+          <!-- VarRegionCount=1 -->
+          <VarRegionIndex index="0" value="0"/>
+        </VarData>
+        <VarData index="3">
+          <!-- ItemCount=0 -->
+          <NumShorts value="0"/>
+          <!-- VarRegionCount=2 -->
+          <VarRegionIndex index="0" value="0"/>
+          <VarRegionIndex index="1" value="1"/>
+        </VarData>
+        <VarData index="4">
           <!-- ItemCount=0 -->
           <NumShorts value="0"/>
           <!-- VarRegionCount=2 -->
