@@ -244,6 +244,23 @@ class BuildTest(unittest.TestCase):
         self.expect_ttx(varfont, expected_ttx_path, tables)
         self.check_ttx_dump(varfont, expected_ttx_path, tables, suffix)
 
+    def test_varlib_build_sparse_CFF2(self):
+        ds_path = self.get_test_input('TestSparseCFF2VF.designspace')
+        suffix = '.otf'
+        expected_ttx_name = 'TestSparseCFF2VF'
+        tables = ["fvar", "CFF2"]
+
+        finder = lambda s: s.replace('.ufo', suffix)
+        varfont, model, _ = build(ds_path, finder)
+        # some data (e.g. counts printed in TTX inline comments) is only
+        # calculated at compile time, so before we can compare the TTX
+        # dumps we need to save to a temporary stream, and realod the font
+        varfont = reload_font(varfont)
+
+        expected_ttx_path = self.get_test_output(expected_ttx_name + '.ttx')
+        self.expect_ttx(varfont, expected_ttx_path, tables)
+        self.check_ttx_dump(varfont, expected_ttx_path, tables, suffix)
+
     def test_varlib_main_ttf(self):
         """Mostly for testing varLib.main()
         """
