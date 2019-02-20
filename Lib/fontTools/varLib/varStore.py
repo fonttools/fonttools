@@ -184,6 +184,71 @@ class VarStoreInstancer(object):
 		return self.interpolateFromDeltasAndScalars(deltas, scalars)
 
 
+class VarDataItem(object):
+	"""This class is needed in varLib/cffLib/specializer.py
+	commandsToProgram and programToCommands, to support mapping from
+	deltas to source values and back."""
+	def __init__(self, varstore, var_data_index, fvar_axes):
+		self._var_data_item = varstore.VarData[var_data_index]
+		region_indicies = self._var_data_item.VarRegionIndex
+		self.region_indicies = region_indicies
+		self.num_regions = len(region_indicies)
+		axes = fvar_axes
+		va_store_regions = varstore.VarRegionList.Region
+		delta_weights = []
+		locations = []
+		supports = []
+		for i, ri in enumerate(region_indicies):
+			support = va_store_regions[ri].get_support(axes)
+			loc = {
+					axis: peak for axis, (lower, peak, upper)
+					in support.items() if peak != 0.0}
+			supports.append(support)
+			locations.append(loc)
+			weight = {}
+			for j, support in enumerate(supports[:i]):
+				scalar = supportScalar(loc, support, ot=True)
+				if scalar:
+					weight[j] = scalar
+			delta_weights.append(weight)
+		self.delta_weights = delta_weights
+
+	def getDeltas(self, source_values):
+		# note: self.delta_weights contains weights for only the regions;
+		# source_values contains the default font value as well,
+		assert len(source_values) == (len(self.delta_weights) + 1)
+		default_value = source_values[0]
+		out = []
+		for i, weights in enumerate(self.delta_weights, 1):
+			delta = source_values[i] - default_value
+			for j, weight in weights.items():
+				assert j < i, "Delta weight index key error."
+				delta -= out[j] * weight
+			out.append(delta)
+		# Return same list as varLib.models.getDeltas.
+		return [default_value] + out
+
+	def deltasToSourceValues(self, default_value, deltas):
+		source_values = [default_value]
+		for i, weights in enumerate(self.delta_weights):
+			delta = deltas[i]
+			if weights:
+				scalars = [0.]*self.num_regions
+				for ri, scalar in weights.items():
+					scalars[ri] = scalar
+				delta += self.interpolateFromDeltasAndScalars(deltas, scalars)
+			source_values.append(default_value + delta)
+		return source_values
+
+	@staticmethod
+	def interpolateFromDeltasAndScalars(deltas, scalars):
+		delta = 0.
+		for d, s in zip(deltas, scalars):
+			if not s:
+				continue
+			delta += d * s
+		return delta
+
 #
 # Optimizations
 #

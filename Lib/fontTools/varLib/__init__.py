@@ -661,12 +661,11 @@ _DesignSpaceData = namedtuple(
 
 
 def _add_CFF2(varFont, model, master_fonts):
-	from .cff import (convertCFFtoCFF2, addCFFVarStore, merge_region_fonts)
+	from .cff import (convertCFFtoCFF2, merge_region_fonts)
 	glyphOrder = varFont.getGlyphOrder()
 	convertCFFtoCFF2(varFont)
 	ordered_fonts_list = model.reorderMasters(master_fonts, model.reverseMapping)
 	# re-ordering the master list simplifies building the CFF2 data item lists.
-	addCFFVarStore(varFont, model)  # Add VarStore to the CFF2 font.
 	merge_region_fonts(varFont, model, ordered_fonts_list, glyphOrder)
 
 

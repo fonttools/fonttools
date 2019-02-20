@@ -1,7 +1,5 @@
+from collections import namedtuple
 import os
-from fontTools.misc.py23 import BytesIO
-from fontTools.misc.psCharStrings import T2CharString, T2OutlineExtractor
-from fontTools.pens.t2CharStringPen import T2CharStringPen, t2c_round
 from fontTools.cffLib import (
 	maxStackLimit,
 	TopDictIndex,
@@ -14,20 +12,21 @@ from fontTools.cffLib import (
 	FontDict,
 	VarStoreData
 )
-from fontTools.cffLib.specializer import (commandsToProgram, specializeCommands)
+from fontTools.misc.py23 import BytesIO
+from fontTools.cffLib.specializer import (
+	specializeCommands, commandsToProgram)
 from fontTools.ttLib import newTable
 from fontTools import varLib
 from fontTools.varLib.models import allEqual
+from fontTools.misc.psCharStrings import T2CharString, T2OutlineExtractor
+from fontTools.pens.t2CharStringPen import T2CharStringPen, t2c_round
 
 
-def addCFFVarStore(varFont, varModel):
-	supports = varModel.supports[1:]
+def addCFFVarStore(varFont, varModel, varDataList, masterSupports):
 	fvarTable = varFont['fvar']
 	axisKeys = [axis.axisTag for axis in fvarTable.axes]
-	varTupleList = varLib.builder.buildVarRegionList(supports, axisKeys)
-	varTupleIndexes = list(range(len(supports)))
-	varDeltasCFFV = varLib.builder.buildVarData(varTupleIndexes, None, False)
-	varStoreCFFV = varLib.builder.buildVarStore(varTupleList, [varDeltasCFFV])
+	varTupleList = varLib.builder.buildVarRegionList(masterSupports, axisKeys)
+	varStoreCFFV = varLib.builder.buildVarStore(varTupleList, varDataList)
 
 	topDict = varFont['CFF2'].cff.topDictIndex[0]
 	topDict.VarStore = VarStoreData(otVarStore=varStoreCFFV)
@@ -143,16 +142,61 @@ pd_blend_fields = ("BlueValues", "OtherBlues", "FamilyBlues",
 				   "StemSnapV")
 
 
-def merge_PrivateDicts(topDict, region_top_dicts, num_masters, var_model):
+def get_private(regionFDArrays, fd_index, ri, fd_map):
+	region_fdArray = regionFDArrays[ri]
+	region_fd_map = fd_map[fd_index]
+	if ri in region_fd_map:
+		region_fdIndex = region_fd_map[ri]
+		private = region_fdArray[region_fdIndex].Private
+	else:
+		private = None
+	return private
+
+
+def merge_PrivateDicts(top_dicts, vsindex_dict, var_model, fd_map):
+	"""
+	I step through the FontDicts in the FDArray of the varfont TopDict.
+	For each varfont FontDict:
+		step through each key in FontDict.Private.
+		For each key, step through each relevant source font Private dict, and
+		build a list of values to blend.
+	The 'relevant' source fonts are selected by first getting the right
+	submodel using model_keys[vsindex]. The indices of the
+	subModel.locations are mapped to source font list indices by
+	assuming the latter order is the same as the order of the
+	var_model.locations. I can then get the index of each subModel
+	location in the list of var_model.locations.
+	"""
+
+	topDict = top_dicts[0]
+	region_top_dicts = top_dicts[1:]
 	if hasattr(region_top_dicts[0], 'FDArray'):
 		regionFDArrays = [fdTopDict.FDArray for fdTopDict in region_top_dicts]
 	else:
 		regionFDArrays = [[fdTopDict] for fdTopDict in region_top_dicts]
 	for fd_index, font_dict in enumerate(topDict.FDArray):
 		private_dict = font_dict.Private
-		pds = [private_dict] + [
-			regionFDArray[fd_index].Private for regionFDArray in regionFDArrays
-			]
+		vsindex = getattr(private_dict, 'vsindex', 0)
+		# At the moment, no PrivateDict has a vsindex key, but let's support
+		# how it should work. See comment at end of
+		# merge_charstrings() - still need to optimize use of vsindex.
+		sub_model, model_keys = vsindex_dict[vsindex]
+		master_indices = []
+		for loc in sub_model.locations[1:]:
+			i = var_model.locations.index(loc) - 1
+			master_indices.append(i)
+		pds = [private_dict]
+		last_pd = private_dict
+		for ri in master_indices:
+			pd = get_private(regionFDArrays, fd_index, ri, fd_map)
+			# If the region font doesn't have this FontDict, just reference
+			# the last one used.
+			if pd is None:
+				pd = last_pd
+			else:
+				last_pd = pd
+			pds.append(pd)
+		num_masters = len(pds)
 		for key, value in private_dict.rawDict.items():
 			if key not in pd_blend_fields:
 				continue
@@ -192,7 +236,7 @@ def merge_PrivateDicts(topDict, region_top_dicts, num_masters, var_model):
 					if (not any_points_differ) and not allEqual(rel_list):
 						any_points_differ = True
 					prev_val_list = val_list
-					deltas = var_model.getDeltas(rel_list)
+					deltas = sub_model.getDeltas(rel_list)
 					# Convert numbers with no decimal part to an int.
 					deltas = [conv_to_int(delta) for delta in deltas]
 					# For PrivateDict BlueValues, the default font
@@ -206,61 +250,158 @@ def merge_PrivateDicts(topDict, region_top_dicts, num_masters, var_model):
 			else:
 				values = [pd.rawDict[key] for pd in pds]
 				if not allEqual(values):
-					dataList = var_model.getDeltas(values)
+					dataList = sub_model.getDeltas(values)
 				else:
 					dataList = values[0]
 			private_dict.rawDict[key] = dataList
 
 
+def getfd_map(varFont, fonts_list):
+	""" Since a subset source font may have fewer FontDicts in their
+	FDArray than the default font, we have to match up the FontDicts in
+	the different fonts . We do this with the FDSelect array, and by
+	assuming that the same glyph will reference  matching FontDicts in
+	each source font. We return a mapping from fdIndex in the default
+	font to a dictionary which maps each master list index of each
+	region font to the equivalent fdIndex in the region font."""
+	fd_map = {}
+	default_font = fonts_list[0]
+	region_fonts = fonts_list[1:]
+	num_regions = len(region_fonts)
+	topDict = default_font['CFF '].cff.topDictIndex[0]
+	if not hasattr(topDict, 'FDSelect'):
+		fd_map[0] = [0]*num_regions
+		return fd_map
+
+	gname_mapping = {}
+	default_fdSelect = topDict.FDSelect
+	glyphOrder = default_font.getGlyphOrder()
+	for gid, fdIndex in enumerate(default_fdSelect):
+		gname_mapping[glyphOrder[gid]] = fdIndex
+		if fdIndex not in fd_map:
+			fd_map[fdIndex] = {}
+	for ri, region_font in enumerate(region_fonts):
+		region_glyphOrder = region_font.getGlyphOrder()
+		region_topDict = region_font['CFF '].cff.topDictIndex[0]
+		if not hasattr(region_topDict, 'FDSelect'):
+			# All the glyphs share the same FontDict. Pick any glyph.
+			default_fdIndex = gname_mapping[region_glyphOrder[0]]
+			fd_map[default_fdIndex][ri] = 0
+		else:
+			region_fdSelect = region_topDict.FDSelect
+			for gid, fdIndex in enumerate(region_fdSelect):
+				default_fdIndex = gname_mapping[region_glyphOrder[gid]]
+				region_map = fd_map[default_fdIndex]
+				if ri not in region_map:
+					region_map[ri] = fdIndex
+	return fd_map
+
+
+CVarData = namedtuple('CVarData', 'varDataList masterSupports vsindex_dict')
 def merge_region_fonts(varFont, model, ordered_fonts_list, glyphOrder):
 	topDict = varFont['CFF2'].cff.topDictIndex[0]
-	default_charstrings = topDict.CharStrings
-	region_fonts = ordered_fonts_list[1:]
-	region_top_dicts = [
-			ttFont['CFF '].cff.topDictIndex[0] for ttFont in region_fonts
-				]
+	top_dicts = [topDict] + [
+					ttFont['CFF '].cff.topDictIndex[0]
+					for ttFont in ordered_fonts_list[1:]
+					]
 	num_masters = len(model.mapping)
-	merge_PrivateDicts(topDict, region_top_dicts, num_masters, model)
-	merge_charstrings(default_charstrings,
-					  glyphOrder,
-					  num_masters,
-					  region_top_dicts, model)
+	cvData = merge_charstrings(glyphOrder, num_masters, top_dicts, model)
+	fd_map = getfd_map(varFont, ordered_fonts_list)
+	merge_PrivateDicts(top_dicts, cvData.vsindex_dict, model, fd_map)
+	addCFFVarStore(varFont, model, cvData.varDataList,
+		cvData.masterSupports)
 
 
-def merge_charstrings(default_charstrings,
-					  glyphOrder,
-					  num_masters,
-					  region_top_dicts,
-					  var_model):
-	for gname in glyphOrder:
-		default_charstring = default_charstrings[gname]
+def _get_cs(charstrings, glyphName):
+	if glyphName not in charstrings:
+		return None
+	return charstrings[glyphName]
+
+
+def merge_charstrings(glyphOrder, num_masters, top_dicts, masterModel):
+
+	vsindex_dict = {}
+	varDataList = []
+	masterSupports = []
+	default_charstrings = top_dicts[0].CharStrings
+	for gid, gname in enumerate(glyphOrder):
+		all_cs = [
+				_get_cs(td.CharStrings, gname)
+				for td in top_dicts]
+		if len([gs for gs in all_cs if gs is not None]) == 1:
+			continue
+		model, model_cs = masterModel.getSubModel(all_cs)
+
+		# create the first pass CFF2 charstring, from
+		# the default charstring.
+		default_charstring = model_cs[0]
 		var_pen = CFF2CharStringMergePen([], gname, num_masters, 0)
+		# We need to override outlineExtractor because these
+		# charstrings do have widths in the 'program'; we need to drop these
+		# values rather than post assertion error for them.
 		default_charstring.outlineExtractor = CFFToCFF2OutlineExtractor
 		default_charstring.draw(var_pen)
-		for region_idx, region_td in enumerate(region_top_dicts, start=1):
-			region_charstrings = region_td.CharStrings
-			region_charstring = region_charstrings[gname]
+
+		# Add the coordinates from all the other regions to the
+		# blend lists in the CFF2 charstring.
+		region_cs = model_cs[1:]
+		for region_idx, region_charstring in enumerate(region_cs, start=1):
 			var_pen.restart(region_idx)
 			region_charstring.draw(var_pen)
-		new_charstring = var_pen.getCharString(
+
+		# Collapse each coordinate list to a blend operator and its args.
+		new_cs = var_pen.getCharString(
 			private=default_charstring.private,
 			globalSubrs=default_charstring.globalSubrs,
-			var_model=var_model, optimize=True)
-		default_charstrings[gname] = new_charstring
+			var_model=model, optimize=True)
+		default_charstrings[gname] = new_cs
+
+		if (not var_pen.seen_moveto) or ('blend' not in new_cs.program):
+			# If this is not a marking glyph, or if there are no blend
+			# arguments, then we can use vsindex 0. No need to
+			# check if we need a new vsindex.
+			continue
+
+		# If the charstring required a new model, create
+		# a VarData table to go with, and set vsindex.
+		try:
+			key = tuple(v is not None for v in all_cs)
+			vsindex = vsindex_dict[key]
+			vsindex_dict[vsindex] = (model, key)
+		except KeyError:
+			varTupleIndexes = []
+			for support in model.supports[1:]:
+				if support not in masterSupports:
+					masterSupports.append(support)
+				varTupleIndexes.append(masterSupports.index(support))
+			var_data = varLib.builder.buildVarData(varTupleIndexes, None, False)
+			vsindex = len(vsindex_dict)
+			vsindex_dict[vsindex] = (model, key)
+			varDataList.append(var_data)
+		# We do not need to check for an existing new_cs.private.vsindex,
+		# as we know it doesn't exist yet.
+		if vsindex != 0:
+			new_cs.program[:0] = [vsindex, 'vsindex']
+	cvData = CVarData(varDataList=varDataList, masterSupports=masterSupports,
+						vsindex_dict=vsindex_dict)
+	# XXX To do: optimize use of vsindex between the PrivateDicts and
+	# charstrings
+	return cvData
 
 
 class MergeTypeError(TypeError):
 	def __init__(self, point_type, pt_index, m_index, default_type, glyphName):
-		self.error_msg = [
-					"In glyph '{gname}' "
-					"'{point_type}' at point index {pt_index} in master "
-					"index {m_index} differs from the default font point "
-					"type '{default_type}'"
-					"".format(gname=glyphName,
-							  point_type=point_type, pt_index=pt_index,
-							  m_index=m_index, default_type=default_type)
-					][0]
-		super(MergeTypeError, self).__init__(self.error_msg)
+			self.error_msg = [
+						"In glyph '{gname}' "
+						"'{point_type}' at point index {pt_index} in master "
+						"index {m_index} differs from the default font point "
+						"type '{default_type}'"
+						"".format(
+								gname=glyphName,
+								point_type=point_type, pt_index=pt_index,
+								m_index=m_index, default_type=default_type)
+						][0]
+			super(MergeTypeError, self).__init__(self.error_msg)
 
 
 def makeRoundNumberFunc(tolerance):
@@ -274,10 +415,9 @@ def makeRoundNumberFunc(tolerance):
 
 
 class CFFToCFF2OutlineExtractor(T2OutlineExtractor):
-	""" This class is used to remove the initial width
-	from the CFF charstring without adding the width
-	to self.nominalWidthX, which is None.
-	"""
+	""" This class is used to remove the initial width from the CFF
+	charstring without trying to add the width to self.nominalWidthX,
+	which is None. """
 	def popallWidth(self, evenOdd=0):
 		args = self.popall()
 		if not self.gotWidth:
@@ -291,29 +431,23 @@ class CFFToCFF2OutlineExtractor(T2OutlineExtractor):
 class CFF2CharStringMergePen(T2CharStringPen):
 	"""Pen to merge Type 2 CharStrings.
 	"""
-	def __init__(self, default_commands,
-				 glyphName, num_masters, master_idx, roundTolerance=0.5):
+	def __init__(
+				self, default_commands, glyphName, num_masters, master_idx,
+				roundTolerance=0.5, CFF2=True):
 		super(
 			CFF2CharStringMergePen,
-			self).__init__(width=None,
-						   glyphSet=None, CFF2=True,
-						   roundTolerance=roundTolerance)
+			self).__init__(
+							width=None,
+							glyphSet=None, CFF2=CFF2,
+							roundTolerance=roundTolerance)
 		self.pt_index = 0
 		self._commands = default_commands
 		self.m_index = master_idx
 		self.num_masters = num_masters
 		self.prev_move_idx = 0
+		self.seen_moveto = False
 		self.glyphName = glyphName
 		self.roundNumber = makeRoundNumberFunc(roundTolerance)
-
-	def _p(self, pt):
-		""" Unlike T2CharstringPen, this class stores absolute values.
-		This is to allow the logic in check_and_fix_closepath() to work,
-		where the current or previous absolute point has to be compared to
-		the path start-point.
-		"""
-		self._p0 = pt
-		return list(self._p0)
 
 	def add_point(self, point_type, pt_coords):
 		if self.m_index == 0:
@@ -321,27 +455,22 @@ class CFF2CharStringMergePen(T2CharStringPen):
 		else:
 			cmd = self._commands[self.pt_index]
 			if cmd[0] != point_type:
-				# Fix some issues that show up in some
-				# CFF workflows, even when fonts are
-				# topologically merge compatible.
-				success, pt_coords = self.check_and_fix_flat_curve(
-							cmd, point_type, pt_coords)
-				if not success:
-					success = self.check_and_fix_closepath(
-							cmd, point_type, pt_coords)
-					if success:
-						# We may have incremented self.pt_index
-						cmd = self._commands[self.pt_index]
-						if cmd[0] != point_type:
-							success = False
-					if not success:
-						raise MergeTypeError(point_type,
-											 self.pt_index, len(cmd[1]),
-											 cmd[0], self.glyphName)
+				raise MergeTypeError(
+									point_type,
+									self.pt_index, len(cmd[1]),
+									cmd[0], self.glyphName)
 			cmd[1].append(pt_coords)
 		self.pt_index += 1
 
+	def _p(self, pt):
+		""" Unlike T2CharstringPen, this class stores absolute values.
+		"""
+		self._p0 = pt
+		return list(self._p0)
+
 	def _moveTo(self, pt):
+		if not self.seen_moveto:
+			self.seen_moveto = True
 		pt_coords = self._p(pt)
 		self.add_point('rmoveto', pt_coords)
 		# I set prev_move_idx here because add_point()
@@ -414,89 +543,19 @@ class CFF2CharStringMergePen(T2CharStringPen):
 			cmd[1] = rel_coords
 		return commands
 
-	@staticmethod
-	def mergeCommandsToProgram(commands, var_model, round_func):
-		"""
-		Takes a commands list as returned by programToCommands() and
-		converts it back to a T2CharString or CFF2Charstring program list. I
-		need to use this rather than specialize.commandsToProgram, as the
-		commands produced by CFF2CharStringMergePen initially contains a
-		list of coordinate values, one for each master, wherever a single
-		coordinate value is expected by the regular logic. The problem with
-		doing using the specialize.py functions is that a commands list is
-		expected to be a op name with its associated argument list. For the
-		commands list here, some of the arguments may need to be converted
-		to a new argument list and opcode.
-		This version will convert each list of master arguments to a blend
-		op and its arguments, and will also combine successive blend ops up
-		to the stack limit.
-		"""
-		program = []
-		for op, args in commands:
-			num_args = len(args)
-			# some of the args may be blend lists, and some may be
-			# single coordinate values.
-			i = 0
-			stack_use = 0
-			while i < num_args:
-				arg = args[i]
-				if not isinstance(arg, list):
-					program.append(arg)
-					i += 1
-					stack_use += 1
-				else:
-					prev_stack_use = stack_use
-					""" The arg is a tuple of blend values.
-					These are each (master 0,master 1..master n)
-					Combine as many successive tuples as we can,
-					up to the max stack limit.
-					"""
-					num_masters = len(arg)
-					blendlist = [arg]
-					i += 1
-					stack_use += 1 + num_masters  # 1 for the num_blends arg
-					while (i < num_args) and isinstance(args[i], list):
-						blendlist.append(args[i])
-						i += 1
-						stack_use += num_masters
-						if stack_use + num_masters > maxStackLimit:
-							# if we are here, max stack is is the CFF2 max stack.
-							break
-					num_blends = len(blendlist)
-					# append the 'num_blends' default font values
-					for arg in blendlist:
-						if round_func:
-							arg[0] = round_func(arg[0])
-						program.append(arg[0])
-					for arg in blendlist:
-						# for each coordinate tuple, append the region deltas
-						if len(arg) != 3:
-							print(arg)
-							import pdb
-							pdb.set_trace()
-						deltas = var_model.getDeltas(arg)
-						if round_func:
-							deltas = [round_func(delta) for delta in deltas]
-						# First item in 'deltas' is the default master value;
-						# for CFF2 data, that has already been written.
-						program.extend(deltas[1:])
-					program.append(num_blends)
-					program.append('blend')
-					stack_use = prev_stack_use + num_blends
-			if op:
-				program.append(op)
-		return program
-
-
-	def getCharString(self, private=None, globalSubrs=None,
-					  var_model=None, optimize=True):
+	def getCharString(
+					self, private=None, globalSubrs=None,
+					var_model=None, optimize=True):
 		commands = self._commands
 		commands = self.reorder_blend_args(commands)
 		if optimize:
-			commands = specializeCommands(commands, generalizeFirst=False,
-										  maxstack=maxStackLimit)
-		program = self.mergeCommandsToProgram(commands, var_model=var_model,
-									round_func=self.roundNumber)
-		charString = T2CharString(program=program, private=private,
-							  globalSubrs=globalSubrs)
+			commands = specializeCommands(
+						commands, generalizeFirst=False,
+						maxstack=maxStackLimit)
+		program = commandsToProgram(
+						commands, get_delta_func=var_model.getDeltas,
+						round_func=self.roundNumber)
+		charString = T2CharString(
+						program=program, private=private,
+						globalSubrs=globalSubrs)
 		return charString

@@ -4,6 +4,7 @@
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.cffLib import maxStackLimit
 
 
 def stringToProgram(string):
@@ -26,26 +27,62 @@ def programToString(program):
 	return ' '.join(str(x) for x in program)
 
 
-def programToCommands(program):
+def programToCommands(program, deltasToSourceValues=None, numRegions=0):
 	"""Takes a T2CharString program list and returns list of commands.
 	Each command is a two-tuple of commandname,arg-list.  The commandname might
 	be empty string if no commandname shall be emitted (used for glyph width,
 	hintmask/cntrmask argument, as well as stray arguments at the end of the
-	program (¯\_(ツ)_/¯)."""
+	program. The latter happens in subroutines.
+	Note that each 'blend' operator and its argument list is  replaced by a
+	list of arguments in which each argument item is a list of source font
+	values.
+	'deltasToSourceValues' can be from varLib.varStore.VarDataItem."""
 
 	width = None
 	commands = []
 	stack = []
+	seen_blend = False
+	seen_op = False
+	num_sources = numRegions + 1
+
 	it = iter(program)
 	for token in it:
 		if not isinstance(token, basestring):
 			stack.append(token)
 			continue
+		if token == 'blend':
+			# if we see a blend, it is a CFF2 charstring, and there
+			# is never a width arg.
+			if not seen_op:
+				seen_op = True
+			num_blends = stack.pop()
+			if not seen_blend:
+				seen_blend = True
+				assert deltasToSourceValues is not None, (
+					"Cannot process charstring without varDataItem argument")
 
-		if width is None and token in {'hstem', 'hstemhm', 'vstem', 'vstemhm',
-					       'cntrmask', 'hintmask',
-					       'hmoveto', 'vmoveto', 'rmoveto',
-					       'endchar'}:
+			num_args = num_sources * num_blends
+			argi = len(stack) - num_args
+			# argi is the index of first blend arg, aka first default font value
+			# We will replace this with a list for the source font values.
+			end_args = tuplei = argi + num_blends
+			while argi < end_args:
+				next_ti = tuplei + numRegions
+				deltas = stack[tuplei:next_ti]
+				default_value = stack[argi]
+				blend_list = deltasToSourceValues(default_value, deltas)
+				stack[argi] = blend_list
+				tuplei = next_ti
+				argi += 1
+			del stack[-(num_args- num_blends):]
+			# convert blend op to blend value list args
+			continue
+			
+		if not seen_op and token in {'hstem', 'hstemhm', 'vstem', 'vstemhm',
+						   'cntrmask', 'hintmask',
+						   'hmoveto', 'vmoveto', 'rmoveto',
+						   'endchar'}:
+			seen_op = True
 			parity = token in {'hmoveto', 'vmoveto'}
 			if stack and (len(stack) % 2) ^ parity:
 				width = stack.pop(0)
@@ -64,12 +101,59 @@ def programToCommands(program):
 	return commands
 
 
-def commandsToProgram(commands):
+def commandsToProgram(commands, get_delta_func=None, round_func=None):
 	"""Takes a commands list as returned by programToCommands() and converts
-	it back to a T2CharString program list."""
+	it back to a T2CharString program list.
+	'get_delta_func' can be from either
+	varLib.models.getDeltas or varLib.varStore.VarDataItem.getDeltas"""
 	program = []
 	for op,args in commands:
-		program.extend(args)
+		if get_delta_func is None:
+			# assume that there are no blend argument lists.
+			program.extend(args)
+		else:
+			# any item in args may be a list of source font values.
+			num_args = len(args)
+			stack_use = 0
+			i = 0
+			while i < num_args:
+				arg = args[i]
+				if not isinstance(arg, list):
+					program.append(arg)
+					i += 1
+					stack_use += 1
+				else:
+					prev_stack_use = stack_use
+					# The arg is a tuple of blend values.
+					# These are each (master 0,master 1..master n)
+					# Combine as many successive tuples as we can,
+					# up to the max stack limit.
+					num_sources = len(arg)
+					blendlist = [arg]
+					i += 1
+					stack_use += 1 + num_sources  # 1 for the num_blends arg
+					while (i < num_args) and isinstance(args[i], list):
+						blendlist.append(args[i])
+						i += 1
+						stack_use += num_sources
+						if stack_use + num_sources > maxStackLimit:
+							# if we are here, max stack is is the CFF2 max stack.
+							break
+					num_blends = len(blendlist)
+					# append the 'num_blends' default font values
+					for arg in blendlist:
+						if round_func:
+							arg[0] = round_func(arg[0])
+						program.append(arg[0])
+					for arg in blendlist:
+						# for each coordinate tuple, append the region deltas
+						deltas = get_delta_func(arg)[1:]
+						if round_func:
+							deltas = [round_func(delta) for delta in deltas]
+						program.extend(deltas)
+					program.append(num_blends)
+					program.append('blend')
+					stack_use = prev_stack_use + num_blends
 		if op:
 			program.append(op)
 	return program
@@ -397,7 +481,6 @@ def specializeCommands(commands,
 	# For Type2 CharStrings the sequence is:
 	# w? {hs* vs* cm* hm* mt subpath}? {mt subpath}* endchar"
 
-
 	# Some other redundancies change topology (point numbers).
 	if not preserveTopology:
 		for i in range(len(commands)-1, -1, -1):
@@ -417,12 +500,26 @@ def specializeCommands(commands,
 				continue
 
 			# Merge adjacent hlineto's and vlineto's.
+			# In CFF2 charstrings from variable fonts, each
+			# arg item may be a list of blendable values, one from
+			# each source font.
 			if (i and op in {'hlineto', 'vlineto'} and
-					(op == commands[i-1][0]) and
-					(not isinstance(args[0], list))):
+							(op == commands[i-1][0])):
 				_, other_args = commands[i-1]
 				assert len(args) == 1 and len(other_args) == 1
-				commands[i-1] = (op, [other_args[0]+args[0]])
+				arg0 = args[0]
+				arg1 = other_args[0]
+				if isinstance(arg0, list):
+					if isinstance(arg1, list):
+						new_args = [[a1 + a2 for a1, a2 in zip(arg0, arg1)]]
+					else:
+						new_args = [[a1 + arg1 for a1 in arg0]]
+				else:
+					if isinstance(arg1, list):
+						new_args = [[arg0 + a1 for a1 in arg1]]
+					else:
+						new_args = [arg0 + arg1]
+				commands[i-1] = (op, new_args)
 				del commands[i]
 				continue
 
@@ -536,6 +633,7 @@ def specializeCommands(commands,
 
 	return commands
 
+
 def specializeProgram(program, **kwargs):
 	return commandsToProgram(specializeCommands(programToCommands(program), **kwargs))
 
@@ -554,4 +652,3 @@ if __name__ == '__main__':
 	assert program == program2
 	print("Generalized program:"); print(programToString(generalizeProgram(program)))
 	print("Specialized program:"); print(programToString(specializeProgram(program)))
-
