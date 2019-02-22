@@ -1,4 +1,4 @@
-VOrgMap# Copyright 2013 Google, Inc. All Rights Reserved.
+# Copyright 2013 Google, Inc. All Rights Reserved.
 #
 # Google Author(s): Behdad Esfahbod
 
