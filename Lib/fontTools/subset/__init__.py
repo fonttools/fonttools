@@ -1854,7 +1854,7 @@ def subset_glyphs(self, s):
 	if table.BsbMap:
 		table.RsbMap.mapping = {k:varidx_map[v] for k,v in table.RsbMap.mapping.items()}
 	if table.VOrgMap:
-		table.RsbMap.mapping = {k:varidx_map[v] for k,v in table.RsbMap.mapping.items()}
+		table.VOrgMap.mapping = {k:varidx_map[v] for k,v in table.VOrgMap.mapping.items()}
 
 	# TODO Return emptiness...
 	return True
