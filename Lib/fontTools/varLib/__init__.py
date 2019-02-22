@@ -688,6 +688,7 @@ def load_designspace(designspace):
 		('width',   ('wdth', {'en': u'Width'})),
 		('slant',   ('slnt', {'en': u'Slant'})),
 		('optical', ('opsz', {'en': u'Optical Size'})),
+		('italic',  ('ital', {'en': u'Italic'})),
 		])
 
 	# Setup axes
