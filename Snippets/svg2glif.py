@@ -8,8 +8,8 @@ __requires__ = ["FontTools", "ufoLib"]
 from fontTools.misc.py23 import SimpleNamespace
 from fontTools.svgLib import SVGPath
 
-from ufoLib.pointPen import SegmentToPointPen
-from ufoLib.glifLib import writeGlyphToString
+from fontTools.pens.pointPen import SegmentToPointPen
+from fontTools.ufoLib.glifLib import writeGlyphToString
 
 
 __all__ = ["svg2glif"]
