@@ -1852,9 +1852,9 @@ def subset_glyphs(self, s):
 	if table.TsbMap:
 		table.TsbMap.mapping = {k:varidx_map[v] for k,v in table.TsbMap.mapping.items()}
 	if table.BsbMap:
-		table.RsbMap.mapping = {k:varidx_map[v] for k,v in table.RsbMap.mapping.items()}
+		table.BsbMap.mapping = {k:varidx_map[v] for k,v in table.BsbMap.mapping.items()}
 	if table.VOrgMap:
-		table.RsbMap.mapping = {k:varidx_map[v] for k,v in table.RsbMap.mapping.items()}
+		table.VOrgMap.mapping = {k:varidx_map[v] for k,v in table.VOrgMap.mapping.items()}
 
 	# TODO Return emptiness...
 	return True
