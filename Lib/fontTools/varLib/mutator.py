@@ -145,7 +145,7 @@ def interpolate_cff2_metrics(varfont, topDict, glyphOrder, loc):
 			hmtx[gname] = tuple(entry)
 
 
-def instantiateVariableFont(varfont, location, inplace=False):
+def instantiateVariableFont(varfont, location, inplace=False, set_macos_rendering_bit=False):
 	""" Generate a static instance from a variable TTFont and a dictionary
 	defining the desired location along the variable font's axes.
 	The location values must be specified as user-space coordinates, e.g.:
@@ -154,6 +154,14 @@ def instantiateVariableFont(varfont, location, inplace=False):
 
 	By default, a new TTFont object is returned. If ``inplace`` is True, the
 	input varfont is modified and reduced to a static font.
+
+	When the set_macos_rendering_bit parameter is defined as True, the bit 6
+	of the first Outline Flag byte is set to 1 to address a macOS-specific
+	rendering issue that leads to inverted renders at sites in the glyph
+	where contours overlap. A detailed description of this issue can be
+	found in:
+
+	https://github.com/twardoch/test-fonts/tree/master/varia/160413-EvenOddTT
 	"""
 	if not inplace:
 		# make a copy to leave input varfont unmodified
@@ -308,6 +316,13 @@ def instantiateVariableFont(varfont, location, inplace=False):
 				addidef = any(op.startswith("GETVARIATION") for op in instructions)
 				if addidef:
 					break
+		# set macOS rendering bit (bit6) if set_macos_rendering_bit parameter is set to True
+		if set_macos_rendering_bit:
+			for glyph_name in glyf.keys():
+				glyph = glyf[glyph_name]
+				# Only set for glyphs with contours
+				if glyph.numberOfContours > 0:
+					glyph.flags[0] |= 1 << 6
 	if addidef:
 		log.info("Adding IDEF to fpgm table for GETVARIATION opcode")
 		asm = []
@@ -399,6 +414,8 @@ def main(args=None):
 	parser.add_argument(
 		"-o", "--output", metavar="OUTPUT.ttf", default=None,
 		help="Output instance TTF file (default: INPUT-instance.ttf).")
+	parser.add_argument(
+		"--setbit6", action="store_true", help="Set macOS overlap rendering bit")
 	logging_group = parser.add_mutually_exclusive_group(required=False)
 	logging_group.add_argument(
 		"-v", "--verbose", action="store_true", help="Run more verbosely.")
@@ -428,7 +445,7 @@ def main(args=None):
 	log.info("Loading variable font")
 	varfont = TTFont(varfilename)
 
-	instantiateVariableFont(varfont, loc, inplace=True)
+	instantiateVariableFont(varfont, loc, inplace=True, set_macos_rendering_bit=options.setbit6)
 
 	log.info("Saving instance font %s", outfile)
 	varfont.save(outfile)
