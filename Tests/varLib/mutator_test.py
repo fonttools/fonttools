@@ -118,6 +118,32 @@ class MutatorTest(unittest.TestCase):
         expected_ttx_path = self.get_test_output(varfont_name + '.ttx')
         self.expect_ttx(instfont, expected_ttx_path, tables)
 
+    def test_varlib_mutator_ttf_with_macos_overlap_rendering_bit_set(self):
+        suffix = '.ttf'
+        ds_path = self.get_test_input('Build.designspace')
+        ufo_dir = self.get_test_input('master_ufo')
+        ttx_dir = self.get_test_input('master_ttx_interpolatable_ttf')
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestFamily-')
+        for path in ttx_paths:
+            self.compile_font(path, suffix, self.tempdir)
+
+        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
+        varfont, _, _ = build(ds_path, finder)
+        varfont_name = 'Mutator'
+        varfont_path = os.path.join(self.tempdir, varfont_name + suffix)
+        varfont.save(varfont_path)
+
+        args = [varfont_path, 'wght=500', 'cntr=50', '--setbit6']
+        mutator(args)
+
+        instfont_path = os.path.splitext(varfont_path)[0] + '-instance' + suffix
+        instfont = TTFont(instfont_path)
+        tables = [table_tag for table_tag in instfont.keys() if table_tag != 'head']
+        expected_ttx_path = self.get_test_output(varfont_name + '-with_macOS_Overlap_Rendering_Bit.ttx')
+        self.expect_ttx(instfont, expected_ttx_path, tables)
+
     def test_varlib_mutator_getvar_ttf(self):
         suffix = '.ttf'
         ttx_dir = self.get_test_input('master_ttx_getvar_ttf')
