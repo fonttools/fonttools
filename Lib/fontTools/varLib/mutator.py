@@ -155,7 +155,7 @@ def instantiateVariableFont(varfont, location, inplace=False, set_macos_overlap_
 	By default, a new TTFont object is returned. If ``inplace`` is True, the
 	input varfont is modified and reduced to a static font.
 
-	When the set_macos_rendering_bit parameter is defined as True, the bit 6
+	When the set_macos_overlap_rendering_bit parameter is defined as True, the bit 6
 	of the first Outline Flag byte is set to 1 to address a macOS-specific
 	rendering issue that leads to inverted renders at sites in the glyph
 	where contours overlap. A detailed description of this issue can be
