@@ -145,7 +145,7 @@ def interpolate_cff2_metrics(varfont, topDict, glyphOrder, loc):
 			hmtx[gname] = tuple(entry)
 
 
-def instantiateVariableFont(varfont, location, inplace=False, set_macos_rendering_bit=False):
+def instantiateVariableFont(varfont, location, inplace=False, set_macos_overlap_rendering_bit=False):
 	""" Generate a static instance from a variable TTFont and a dictionary
 	defining the desired location along the variable font's axes.
 	The location values must be specified as user-space coordinates, e.g.:
@@ -317,7 +317,7 @@ def instantiateVariableFont(varfont, location, inplace=False, set_macos_renderin
 				if addidef:
 					break
 		# set macOS rendering bit (bit6) if set_macos_rendering_bit parameter is set to True
-		if set_macos_rendering_bit:
+		if set_macos_overlap_rendering_bit:
 			for glyph_name in glyf.keys():
 				glyph = glyf[glyph_name]
 				# Only set for glyphs with contours
@@ -445,7 +445,7 @@ def main(args=None):
 	log.info("Loading variable font")
 	varfont = TTFont(varfilename)
 
-	instantiateVariableFont(varfont, loc, inplace=True, set_macos_rendering_bit=options.setbit6)
+	instantiateVariableFont(varfont, loc, inplace=True, set_macos_overlap_rendering_bit=options.setbit6)
 
 	log.info("Saving instance font %s", outfile)
 	varfont.save(outfile)
