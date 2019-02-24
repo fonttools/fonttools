@@ -145,7 +145,7 @@ def interpolate_cff2_metrics(varfont, topDict, glyphOrder, loc):
 			hmtx[gname] = tuple(entry)
 
 
-def instantiateVariableFont(varfont, location, inplace=False, set_macos_overlap_rendering_bit=False):
+def instantiateVariableFont(varfont, location, inplace=False, overlapping_contours=False):
 	""" Generate a static instance from a variable TTFont and a dictionary
 	defining the desired location along the variable font's axes.
 	The location values must be specified as user-space coordinates, e.g.:
@@ -155,13 +155,9 @@ def instantiateVariableFont(varfont, location, inplace=False, set_macos_overlap_
 	By default, a new TTFont object is returned. If ``inplace`` is True, the
 	input varfont is modified and reduced to a static font.
 
-	When the set_macos_overlap_rendering_bit parameter is defined as True, the bit 6
-	of the first Outline Flag byte is set to 1 to address a macOS-specific
-	rendering issue that leads to inverted renders at sites in the glyph
-	where contours overlap. A detailed description of this issue can be
-	found in:
-
-	https://github.com/twardoch/test-fonts/tree/master/varia/160413-EvenOddTT
+	When the overlapping_contours parameter is defined as True, bit 6
+	(OVERLAP_SIMPLE) of the first Outline Flag byte is set to 1.  See
+	https://docs.microsoft.com/en-us/typography/opentype/spec/glyf
 	"""
 	if not inplace:
 		# make a copy to leave input varfont unmodified
@@ -317,7 +313,7 @@ def instantiateVariableFont(varfont, location, inplace=False, set_macos_overlap_
 				if addidef:
 					break
 		# set macOS rendering bit (bit6) if set_macos_rendering_bit parameter is set to True
-		if set_macos_overlap_rendering_bit:
+		if overlapping_contours:
 			for glyph_name in glyf.keys():
 				glyph = glyf[glyph_name]
 				# Only set for glyphs with contours
@@ -445,7 +441,7 @@ def main(args=None):
 	log.info("Loading variable font")
 	varfont = TTFont(varfilename)
 
-	instantiateVariableFont(varfont, loc, inplace=True, set_macos_overlap_rendering_bit=options.setbit6)
+	instantiateVariableFont(varfont, loc, inplace=True, overlapping_contours=options.setbit6)
 
 	log.info("Saving instance font %s", outfile)
 	varfont.save(outfile)
