@@ -9,7 +9,7 @@ from fontTools.misc.fixedTools import floatToFixedToFloat, otRound, floatToFixed
 from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables import ttProgram
-from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
+from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates, flagOverlapSimple
 from fontTools.varLib import _GetCoordinates, _SetCoordinates
 from fontTools.varLib.models import (
 	supportScalar,
@@ -318,7 +318,7 @@ def instantiateVariableFont(varfont, location, inplace=False, overlapping_contou
 				glyph = glyf[glyph_name]
 				# Only set for glyphs with contours
 				if glyph.numberOfContours > 0:
-					glyph.flags[0] |= 1 << 6
+					glyph.flags[0] |= flagOverlapSimple
 	if addidef:
 		log.info("Adding IDEF to fpgm table for GETVARIATION opcode")
 		asm = []
