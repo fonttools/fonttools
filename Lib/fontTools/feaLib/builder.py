@@ -918,19 +918,10 @@ class Builder(object):
                     location)
             lookup.mapping[from_glyph] = to_glyph
 
-    def find_chainable_SingleSubst_(self, chain, glyphs):
-        """Helper for add_single_subst_chained_()"""
-        for _, _, _, substitutions in chain.substitutions:
-            for sub in substitutions:
-                if (isinstance(sub, SingleSubstBuilder) and
-                        not any(g in glyphs for g in sub.mapping.keys())):
-                    return sub
-        return None
-
     def add_single_subst_chained_(self, location, prefix, suffix, mapping):
         # https://github.com/behdad/fonttools/issues/512
         chain = self.get_lookup_(location, ChainContextSubstBuilder)
-        sub = self.find_chainable_SingleSubst_(chain, set(mapping.keys()))
+        sub = chain.find_chainable_single_subst(set(mapping.keys()))
         if sub is None:
             sub = self.get_chained_lookup_(location, SingleSubstBuilder)
         sub.mapping.update(mapping)
@@ -1122,6 +1113,8 @@ def makeOpenTypeValueRecord(v, pairPosContext):
 
 
 class LookupBuilder(object):
+    SUBTABLE_BREAK_ = "SUBTABLE_BREAK"
+
     def __init__(self, font, location, table, lookup_type):
         self.font = font
         self.glyphMap = font.getReverseGlyphMap()
@@ -1250,6 +1243,8 @@ class ChainContextSubstBuilder(LookupBuilder):
     def build(self):
         subtables = []
         for (prefix, input, suffix, lookups) in self.substitutions:
+            if prefix == self.SUBTABLE_BREAK_:
+                continue
             st = otTables.ChainContextSubst()
             subtables.append(st)
             st.Format = 3
@@ -1269,12 +1264,30 @@ class ChainContextSubstBuilder(LookupBuilder):
 
     def getAlternateGlyphs(self):
         result = {}
-        for (_prefix, _input, _suffix, lookups) in self.substitutions:
+        for (_, _, _, lookups) in self.substitutions:
+            if lookups == self.SUBTABLE_BREAK_:
+                continue
             for lookup in lookups:
                 alts = lookup.getAlternateGlyphs()
                 for glyph, replacements in alts.items():
                     result.setdefault(glyph, set()).update(replacements)
         return result
+
+    def find_chainable_single_subst(self, glyphs):
+        """Helper for add_single_subst_chained_()"""
+        res = None
+        for _, _, _, substitutions in self.substitutions[::-1]:
+            if substitutions == self.SUBTABLE_BREAK_:
+                return res
+            for sub in substitutions:
+                if (isinstance(sub, SingleSubstBuilder) and
+                        not any(g in glyphs for g in sub.mapping.keys())):
+                    res = sub
+        return res
+
+    def add_subtable_break(self, location):
+        self.substitutions.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
+                                   self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_))
 
 
 class LigatureSubstBuilder(LookupBuilder):
@@ -1500,8 +1513,6 @@ class ClassPairPosSubtableBuilder(object):
 
 
 class PairPosBuilder(LookupBuilder):
-    SUBTABLE_BREAK_ = "SUBTABLE_BREAK"
-
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GPOS', 2)
         self.pairs = []  # [(gc1, value1, gc2, value2)*]
