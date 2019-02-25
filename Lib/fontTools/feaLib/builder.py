@@ -1308,8 +1308,19 @@ class LigatureSubstBuilder(LookupBuilder):
                 self.ligatures == other.ligatures)
 
     def build(self):
-        subtable = otl.buildLigatureSubstSubtable(self.ligatures)
-        return self.buildLookup_([subtable])
+        subtables = []
+        ligatures = {}
+        for key in self.ligatures:
+            if key[0] == self.SUBTABLE_BREAK_:
+                subtables.append(otl.buildLigatureSubstSubtable(ligatures))
+                ligatures = {}
+            else:
+                ligatures[key] = self.ligatures[key]
+        subtables.append(otl.buildLigatureSubstSubtable(ligatures))
+        return self.buildLookup_(subtables)
+
+    def add_subtable_break(self, location):
+        self.ligatures[(self.SUBTABLE_BREAK_, location)] = self.SUBTABLE_BREAK_
 
 
 class MultipleSubstBuilder(LookupBuilder):
