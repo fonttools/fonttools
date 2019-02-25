@@ -1,5 +1,5 @@
-feature salt {
+feature test {
     sub A from [A.alt1 A.alt2];
-    sub B from [B.alt1 B.alt2 B.alt3];
-    sub C from [C.alt1];
-} salt;
+    subtable;
+    sub B from [B.alt1 B.alt2];
+} test;
