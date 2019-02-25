@@ -145,7 +145,7 @@ def interpolate_cff2_metrics(varfont, topDict, glyphOrder, loc):
 			hmtx[gname] = tuple(entry)
 
 
-def instantiateVariableFont(varfont, location, inplace=False, overlapping_contours=False):
+def instantiateVariableFont(varfont, location, inplace=False, overlapping_contours=True):
 	""" Generate a static instance from a variable TTFont and a dictionary
 	defining the desired location along the variable font's axes.
 	The location values must be specified as user-space coordinates, e.g.:
@@ -410,8 +410,6 @@ def main(args=None):
 	parser.add_argument(
 		"-o", "--output", metavar="OUTPUT.ttf", default=None,
 		help="Output instance TTF file (default: INPUT-instance.ttf).")
-	parser.add_argument(
-		"--setbit6", action="store_true", help="Set macOS overlap rendering bit")
 	logging_group = parser.add_mutually_exclusive_group(required=False)
 	logging_group.add_argument(
 		"-v", "--verbose", action="store_true", help="Run more verbosely.")
@@ -441,7 +439,7 @@ def main(args=None):
 	log.info("Loading variable font")
 	varfont = TTFont(varfilename)
 
-	instantiateVariableFont(varfont, loc, inplace=True, overlapping_contours=options.setbit6)
+	instantiateVariableFont(varfont, loc, inplace=True)
 
 	log.info("Saving instance font %s", outfile)
 	varfont.save(outfile)
