@@ -1185,11 +1185,23 @@ class AlternateSubstBuilder(LookupBuilder):
                 self.alternates == other.alternates)
 
     def build(self):
-        subtable = otl.buildAlternateSubstSubtable(self.alternates)
-        return self.buildLookup_([subtable])
+        subtables = []
+        alternates = {}
+        for key in self.alternates:
+            if key[0] == self.SUBTABLE_BREAK_:
+                subtables.append(otl.buildAlternateSubstSubtable(alternates))
+                alternates = {}
+            else:
+                alternates[key] = self.alternates[key]
+        if alternates:
+            subtables.append(otl.buildAlternateSubstSubtable(alternates))
+        return self.buildLookup_(subtables)
 
     def getAlternateGlyphs(self):
         return self.alternates
+
+    def add_subtable_break(self, location):
+        self.alternates[(self.SUBTABLE_BREAK_, location)] = self.SUBTABLE_BREAK_
 
 
 class ChainContextPosBuilder(LookupBuilder):
