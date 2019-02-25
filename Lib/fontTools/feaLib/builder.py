@@ -996,14 +996,7 @@ class Builder(object):
         lookup.addClassPair(location, glyphclass1, value1, glyphclass2, value2)
 
     def add_subtable_break(self, location):
-        if type(self.cur_lookup_) is not PairPosBuilder:
-            raise FeatureLibError(
-                'explicit "subtable" statement is intended for use with only '
-                "Pair Adjustment Positioning Format 2 (i.e. pair class kerning)",
-                location
-            )
-        lookup = self.get_lookup_(location, PairPosBuilder)
-        lookup.add_subtable_break(location)
+        self.cur_lookup_.add_subtable_break(location)
 
     def add_specific_pair_pos(self, location, glyph1, value1, glyph2, value2):
         lookup = self.get_lookup_(location, PairPosBuilder)
@@ -1190,6 +1183,12 @@ class LookupBuilder(object):
         for g in glyphs:
             coverage = otl.buildCoverage(g, self.glyphMap)
             subtable.InputCoverage.append(coverage)
+
+    def add_subtable_break(self, location):
+        raise FeatureLibError(
+            'unsupported "subtable" statement for lookup type',
+            location
+        )
 
 
 class AlternateSubstBuilder(LookupBuilder):
