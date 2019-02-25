@@ -1002,28 +1002,19 @@ class Builder(object):
                 for glyph in glyphs:
                     lookup.add_pos(location, glyph, value)
 
-    def find_chainable_SinglePos_(self, lookups, glyphs, value):
-        """Helper for add_single_pos_chained_()"""
-        for look in lookups:
-            if all(look.can_add(glyph, value) for glyph in glyphs):
-                return look
-        return None
-
     def add_single_pos_chained_(self, location, prefix, suffix, pos):
         # https://github.com/fonttools/fonttools/issues/514
         chain = self.get_lookup_(location, ChainContextPosBuilder)
         targets = []
         for _, _, _, lookups in chain.rules:
-            for lookup in lookups:
-                if isinstance(lookup, SinglePosBuilder):
-                    targets.append(lookup)
+            targets.extend(lookups)
         subs = []
         for glyphs, value in pos:
             if value is None:
                 subs.append(None)
                 continue
             otValue, _ = makeOpenTypeValueRecord(value, pairPosContext=False)
-            sub = self.find_chainable_SinglePos_(targets, glyphs, otValue)
+            sub = chain.find_chainable_single_pos(targets, glyphs, otValue)
             if sub is None:
                 sub = self.get_chained_lookup_(location, SinglePosBuilder)
                 targets.append(sub)
@@ -1213,6 +1204,8 @@ class ChainContextPosBuilder(LookupBuilder):
     def build(self):
         subtables = []
         for (prefix, glyphs, suffix, lookups) in self.rules:
+            if prefix == self.SUBTABLE_BREAK_:
+                continue
             st = otTables.ChainContextPos()
             subtables.append(st)
             st.Format = 3
@@ -1229,6 +1222,21 @@ class ChainContextPosBuilder(LookupBuilder):
                     rec.LookupListIndex = l.lookup_index
                     st.PosLookupRecord.append(rec)
         return self.buildLookup_(subtables)
+
+    def find_chainable_single_pos(self, lookups, glyphs, value):
+        """Helper for add_single_pos_chained_()"""
+        res = None
+        for lookup in lookups[::-1]:
+            if lookup == self.SUBTABLE_BREAK_:
+                return res
+            if isinstance(lookup, SinglePosBuilder) and \
+                    all(lookup.can_add(glyph, value) for glyph in glyphs):
+                res = lookup
+        return res
+
+    def add_subtable_break(self, location):
+        self.rules.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
+                           self.SUBTABLE_BREAK_, [self.SUBTABLE_BREAK_]))
 
 
 class ChainContextSubstBuilder(LookupBuilder):
