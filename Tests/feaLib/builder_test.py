@@ -70,7 +70,7 @@ class BuilderTest(unittest.TestCase):
         ZeroValue_SinglePos_horizontal ZeroValue_SinglePos_vertical
         ZeroValue_PairPos_horizontal ZeroValue_PairPos_vertical
         ZeroValue_ChainSinglePos_horizontal ZeroValue_ChainSinglePos_vertical
-        PairPosSubtable ChainSubstSubtable ChainPosSubtable
+        PairPosSubtable ChainSubstSubtable ChainPosSubtable LigatureSubtable
     """.split()
 
     def __init__(self, methodName):
@@ -517,11 +517,11 @@ class BuilderTest(unittest.TestCase):
             FeatureLibError,
             'unsupported "subtable" statement for lookup type',
             self.build,
-            "feature liga {"
-            "    sub f f by f_f;"
+            "feature test {"
+            "    sub a by b;"
             "    subtable;"
-            "    sub f i by f_i;"
-            "} liga;"
+            "    sub c by d;"
+            "} test;"
         )
 
     def test_skip_featureNames_if_no_name_table(self):
