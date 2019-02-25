@@ -157,7 +157,7 @@
 
     <TTGlyph name="a" xMin="38" yMin="-12" xMax="388" yMax="468">
       <contour>
-        <pt x="312" y="0" on="1"/>
+        <pt x="312" y="0" on="1" overlap="1"/>
         <pt x="312" y="64" on="1"/>
         <pt x="244" y="-12" on="1"/>
         <pt x="180" y="-12" on="1"/>
@@ -185,7 +185,7 @@
 
     <TTGlyph name="b" xMin="76" yMin="-12" xMax="426" yMax="628">
       <contour>
-        <pt x="218" y="468" on="1"/>
+        <pt x="218" y="468" on="1" overlap="1"/>
         <pt x="284" y="468" on="1"/>
         <pt x="426" y="316" on="1"/>
         <pt x="426" y="140" on="1"/>
