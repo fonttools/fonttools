@@ -515,7 +515,7 @@ class BuilderTest(unittest.TestCase):
     def test_unsupported_subtable_break(self):
         self.assertRaisesRegex(
             FeatureLibError,
-            'explicit "subtable" statement is intended for .* class kerning',
+            'unsupported "subtable" statement for lookup type',
             self.build,
             "feature liga {"
             "    sub f f by f_f;"
