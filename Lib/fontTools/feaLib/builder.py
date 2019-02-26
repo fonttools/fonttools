@@ -1168,6 +1168,16 @@ class LookupBuilder(object):
             coverage = otl.buildCoverage(g, self.glyphMap)
             subtable.InputCoverage.append(coverage)
 
+    def build_subst_subtables(self, mapping, klass):
+        substitutions = [{}]
+        for key in mapping:
+            if key[0] == self.SUBTABLE_BREAK_:
+                substitutions.append({})
+            else:
+                substitutions[-1][key] = mapping[key]
+        subtables = [klass(s) for s in substitutions]
+        return subtables
+
     def add_subtable_break(self, location):
         raise FeatureLibError(
             'unsupported "subtable" statement for lookup type',
@@ -1185,16 +1195,8 @@ class AlternateSubstBuilder(LookupBuilder):
                 self.alternates == other.alternates)
 
     def build(self):
-        subtables = []
-        alternates = {}
-        for key in self.alternates:
-            if key[0] == self.SUBTABLE_BREAK_:
-                subtables.append(otl.buildAlternateSubstSubtable(alternates))
-                alternates = {}
-            else:
-                alternates[key] = self.alternates[key]
-        if alternates:
-            subtables.append(otl.buildAlternateSubstSubtable(alternates))
+        subtables = self.build_subst_subtables(self.alternates,
+                otl.buildAlternateSubstSubtable)
         return self.buildLookup_(subtables)
 
     def getAlternateGlyphs(self):
@@ -1320,15 +1322,8 @@ class LigatureSubstBuilder(LookupBuilder):
                 self.ligatures == other.ligatures)
 
     def build(self):
-        subtables = []
-        ligatures = {}
-        for key in self.ligatures:
-            if key[0] == self.SUBTABLE_BREAK_:
-                subtables.append(otl.buildLigatureSubstSubtable(ligatures))
-                ligatures = {}
-            else:
-                ligatures[key] = self.ligatures[key]
-        subtables.append(otl.buildLigatureSubstSubtable(ligatures))
+        subtables = self.build_subst_subtables(self.ligatures,
+                otl.buildLigatureSubstSubtable)
         return self.buildLookup_(subtables)
 
     def add_subtable_break(self, location):
@@ -1345,15 +1340,8 @@ class MultipleSubstBuilder(LookupBuilder):
                 self.mapping == other.mapping)
 
     def build(self):
-        subtables = []
-        mapping = {}
-        for key in self.mapping:
-            if key[0] == self.SUBTABLE_BREAK_:
-                subtables.append(otl.buildMultipleSubstSubtable(mapping))
-                mapping = {}
-            else:
-                mapping[key] = self.mapping[key]
-        subtables.append(otl.buildMultipleSubstSubtable(mapping))
+        subtables = self.build_subst_subtables(self.mapping,
+                otl.buildMultipleSubstSubtable)
         return self.buildLookup_(subtables)
 
     def add_subtable_break(self, location):
@@ -1509,15 +1497,8 @@ class SingleSubstBuilder(LookupBuilder):
                 self.mapping == other.mapping)
 
     def build(self):
-        subtables = []
-        mapping = {}
-        for key in self.mapping:
-            if key[0] == self.SUBTABLE_BREAK_:
-                subtables.append(otl.buildSingleSubstSubtable(mapping))
-                mapping = {}
-            else:
-                mapping[key] = self.mapping[key]
-        subtables.append(otl.buildSingleSubstSubtable(mapping))
+        subtables = self.build_subst_subtables(self.mapping,
+                otl.buildSingleSubstSubtable)
         return self.buildLookup_(subtables)
 
     def getAlternateGlyphs(self):
