@@ -71,7 +71,7 @@ class BuilderTest(unittest.TestCase):
         ZeroValue_PairPos_horizontal ZeroValue_PairPos_vertical
         ZeroValue_ChainSinglePos_horizontal ZeroValue_ChainSinglePos_vertical
         PairPosSubtable ChainSubstSubtable ChainPosSubtable LigatureSubtable
-        AlternateSubtable MultipleSubstSubtable
+        AlternateSubtable MultipleSubstSubtable SingleSubstSubtable
     """.split()
 
     def __init__(self, methodName):
@@ -519,9 +519,9 @@ class BuilderTest(unittest.TestCase):
             'unsupported "subtable" statement for lookup type',
             self.build,
             "feature test {"
-            "    sub a by b;"
+            "    pos a 10;"
             "    subtable;"
-            "    sub c by d;"
+            "    pos b 10;"
             "} test;"
         )
 

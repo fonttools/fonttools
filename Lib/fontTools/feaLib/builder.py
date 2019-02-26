@@ -1509,11 +1509,22 @@ class SingleSubstBuilder(LookupBuilder):
                 self.mapping == other.mapping)
 
     def build(self):
-        subtable = otl.buildSingleSubstSubtable(self.mapping)
-        return self.buildLookup_([subtable])
+        subtables = []
+        mapping = {}
+        for key in self.mapping:
+            if key[0] == self.SUBTABLE_BREAK_:
+                subtables.append(otl.buildSingleSubstSubtable(mapping))
+                mapping = {}
+            else:
+                mapping[key] = self.mapping[key]
+        subtables.append(otl.buildSingleSubstSubtable(mapping))
+        return self.buildLookup_(subtables)
 
     def getAlternateGlyphs(self):
         return {glyph: set([repl]) for glyph, repl in self.mapping.items()}
+
+    def add_subtable_break(self, location):
+        self.mapping[(self.SUBTABLE_BREAK_, location)] = self.SUBTABLE_BREAK_
 
 
 class ClassPairPosSubtableBuilder(object):
