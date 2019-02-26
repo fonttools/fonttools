@@ -1345,8 +1345,19 @@ class MultipleSubstBuilder(LookupBuilder):
                 self.mapping == other.mapping)
 
     def build(self):
-        subtable = otl.buildMultipleSubstSubtable(self.mapping)
-        return self.buildLookup_([subtable])
+        subtables = []
+        mapping = {}
+        for key in self.mapping:
+            if key[0] == self.SUBTABLE_BREAK_:
+                subtables.append(otl.buildMultipleSubstSubtable(mapping))
+                mapping = {}
+            else:
+                mapping[key] = self.mapping[key]
+        subtables.append(otl.buildMultipleSubstSubtable(mapping))
+        return self.buildLookup_(subtables)
+
+    def add_subtable_break(self, location):
+        self.mapping[(self.SUBTABLE_BREAK_, location)] = self.SUBTABLE_BREAK_
 
 
 class CursivePosBuilder(LookupBuilder):

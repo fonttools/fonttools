@@ -1,0 +1,5 @@
+feature test {
+    sub c_t by c t;
+    subtable;
+    sub f_i by f i;
+} test;
