@@ -514,16 +514,17 @@ class BuilderTest(unittest.TestCase):
         assert "GSUB" in font
 
     def test_unsupported_subtable_break(self):
-        self.assertRaisesRegex(
-            FeatureLibError,
-            'unsupported "subtable" statement for lookup type',
-            self.build,
-            "feature test {"
-            "    pos a 10;"
-            "    subtable;"
-            "    pos b 10;"
-            "} test;"
-        )
+        with self.assertLogs(level='WARNING') as logs:
+            self.build(
+                "feature test {"
+                "    pos a 10;"
+                "    subtable;"
+                "    pos b 10;"
+                "} test;"
+            )
+        self.assertEqual(logs.output,
+                ['WARNING:fontTools.feaLib.builder:<features>:1:32: '
+                 'unsupported "subtable" statement for lookup type'])
 
     def test_skip_featureNames_if_no_name_table(self):
         features = (
