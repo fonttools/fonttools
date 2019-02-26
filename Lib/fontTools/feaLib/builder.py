@@ -1179,10 +1179,10 @@ class LookupBuilder(object):
         return subtables
 
     def add_subtable_break(self, location):
-        raise FeatureLibError(
+        log.warning(FeatureLibError(
             'unsupported "subtable" statement for lookup type',
             location
-        )
+        ))
 
 
 class AlternateSubstBuilder(LookupBuilder):
