@@ -1494,6 +1494,10 @@ class ReverseChainSingleSubstBuilder(LookupBuilder):
             subtables.append(st)
         return self.buildLookup_(subtables)
 
+    def add_subtable_break(self, location):
+        # Nothing to do here, each substitution is in its own subtable.
+        pass
+
 
 class SingleSubstBuilder(LookupBuilder):
     def __init__(self, font, location):
