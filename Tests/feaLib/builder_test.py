@@ -513,6 +513,8 @@ class BuilderTest(unittest.TestCase):
         addOpenTypeFeatures(font, tree)
         assert "GSUB" in font
 
+    @unittest.skipIf(sys.version_info[0:2] < (3, 4),
+                     "assertLogs() was introduced in 3.4")
     def test_unsupported_subtable_break(self):
         with self.assertLogs(level='WARNING') as logs:
             self.build(
