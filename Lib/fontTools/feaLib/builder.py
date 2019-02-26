@@ -9,7 +9,7 @@ from fontTools.feaLib.ast import FeatureFile
 from fontTools.otlLib import builder as otl
 from fontTools.ttLib import newTable, getTableModule
 from fontTools.ttLib.tables import otBase, otTables
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 import itertools
 import logging
 
@@ -1188,7 +1188,7 @@ class LookupBuilder(object):
 class AlternateSubstBuilder(LookupBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 3)
-        self.alternates = {}
+        self.alternates = OrderedDict()
 
     def equals(self, other):
         return (LookupBuilder.equals(self, other) and
@@ -1315,7 +1315,7 @@ class ChainContextSubstBuilder(LookupBuilder):
 class LigatureSubstBuilder(LookupBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 4)
-        self.ligatures = {}  # {('f','f','i'): 'f_f_i'}
+        self.ligatures = OrderedDict()  # {('f','f','i'): 'f_f_i'}
 
     def equals(self, other):
         return (LookupBuilder.equals(self, other) and
@@ -1333,7 +1333,7 @@ class LigatureSubstBuilder(LookupBuilder):
 class MultipleSubstBuilder(LookupBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 2)
-        self.mapping = {}
+        self.mapping = OrderedDict()
 
     def equals(self, other):
         return (LookupBuilder.equals(self, other) and
@@ -1490,7 +1490,7 @@ class ReverseChainSingleSubstBuilder(LookupBuilder):
 class SingleSubstBuilder(LookupBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 1)
-        self.mapping = {}
+        self.mapping = OrderedDict()
 
     def equals(self, other):
         return (LookupBuilder.equals(self, other) and
