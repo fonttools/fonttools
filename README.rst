@@ -1,5 +1,4 @@
-|Travis Build Status| |Appveyor Build status| |Health| |Coverage Status|
-|PyPI| |Gitter Chat|
+|Travis Build Status| |Appveyor Build status| |Coverage Status| |PyPI| |Gitter Chat|
 
 What is this?
 ~~~~~~~~~~~~~
@@ -407,8 +406,6 @@ Have fun!
    :target: https://travis-ci.org/fonttools/fonttools
 .. |Appveyor Build status| image:: https://ci.appveyor.com/api/projects/status/0f7fmee9as744sl7/branch/master?svg=true
    :target: https://ci.appveyor.com/project/fonttools/fonttools/branch/master
-.. |Health| image:: https://landscape.io/github/behdad/fonttools/master/landscape.svg?style=flat
-   :target: https://landscape.io/github/behdad/fonttools/master
 .. |Coverage Status| image:: https://codecov.io/gh/fonttools/fonttools/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/fonttools/fonttools
 .. |PyPI| image:: https://img.shields.io/pypi/v/fonttools.svg
