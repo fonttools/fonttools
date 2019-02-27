@@ -45,7 +45,7 @@ def plotLocationsSurfaces(locations, fig, names=None, **kwargs):
 	names = [names[model.reverseMapping[i]] for i in range(len(names))]
 
 	ax1, ax2 = sorted(locations[0].keys())
-	for i, (support, color ,name) in enumerate(zip(model.supports, cycle(pyplot.cm.Set1.colors), cycle(names))):
+	for i, (support, color, name) in enumerate(zip(model.supports, cycle(pyplot.cm.Set1.colors), cycle(names))):
 
 		axis3D = fig.add_subplot(rows, cols, i + 1, projection='3d')
 		if name is not None:
