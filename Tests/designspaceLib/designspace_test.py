@@ -619,7 +619,7 @@ def test_normalise4():
     for axis in doc.axes:
         r.append((axis.name, axis.map))
     r.sort()
-    assert r == [('ddd', [(0, 0.1), (300, 0.5), (600, 0.5), (1000, 0.9)])]
+    assert r == [('ddd', [(0, 0.0), (300, 0.5), (600, 0.5), (1000, 1.0)])]
 
 def test_axisMapping():
     # note: because designspance lib does not do any actual
@@ -638,7 +638,7 @@ def test_axisMapping():
     for axis in doc.axes:
         r.append((axis.name, axis.map))
     r.sort()
-    assert r == [('ddd', [(0, 0.1), (300, 0.5), (600, 0.5), (1000, 0.9)])]
+    assert r == [('ddd', [(0, 0.0), (300, 0.5), (600, 0.5), (1000, 1.0)])]
 
 def test_rulesConditions(tmpdir):
     # tests of rules, conditionsets and conditions

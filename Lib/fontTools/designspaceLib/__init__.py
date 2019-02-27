@@ -1188,31 +1188,21 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         return None
 
     def normalizeLocation(self, location):
-        # adapted from fontTools.varlib.models.normalizeLocation because:
-        #   - this needs to work with axis names, not tags
-        #   - this needs to accomodate anisotropic locations
-        #   - the axes are stored differently here, it's just math
+        from fontTools.varLib.models import normalizeValue
+
         new = {}
         for axis in self.axes:
             if axis.name not in location:
                 # skipping this dimension it seems
                 continue
-            v = location.get(axis.name, axis.default)
-            if type(v) == tuple:
-                v = v[0]
-            if v == axis.default:
-                v = 0.0
-            elif v < axis.default:
-                if axis.default == axis.minimum:
-                    v = 0.0
-                else:
-                    v = (max(v, axis.minimum) - axis.default) / (axis.default - axis.minimum)
-            else:
-                if axis.default == axis.maximum:
-                    v = 0.0
-                else:
-                    v = (min(v, axis.maximum) - axis.default) / (axis.maximum - axis.default)
-            new[axis.name] = v
+            value = location[axis.name]
+            # 'anisotropic' location, take first coord only
+            if isinstance(value, tuple):
+                value = value[0]
+            triple = [
+                axis.map_forward(v) for v in (axis.minimum, axis.default, axis.maximum)
+            ]
+            new[axis.name] = normalizeValue(value, triple)
         return new
 
     def normalize(self):
