@@ -312,7 +312,6 @@ def instantiateVariableFont(varfont, location, inplace=False, overlapping_contou
 				addidef = any(op.startswith("GETVARIATION") for op in instructions)
 				if addidef:
 					break
-		# set macOS rendering bit (bit6) if set_macos_rendering_bit parameter is set to True
 		if overlapping_contours:
 			for glyph_name in glyf.keys():
 				glyph = glyf[glyph_name]
