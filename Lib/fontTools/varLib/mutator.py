@@ -9,7 +9,7 @@ from fontTools.misc.fixedTools import floatToFixedToFloat, otRound, floatToFixed
 from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables import ttProgram
-from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates, flagOverlapSimple
+from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates, flagOverlapSimple, OVERLAP_COMPOUND
 from fontTools.varLib import _GetCoordinates, _SetCoordinates
 from fontTools.varLib.models import (
 	supportScalar,
@@ -155,8 +155,8 @@ def instantiateVariableFont(varfont, location, inplace=False, overlapping_contou
 	By default, a new TTFont object is returned. If ``inplace`` is True, the
 	input varfont is modified and reduced to a static font.
 
-	When the overlapping_contours parameter is defined as True, bit 6
-	(OVERLAP_SIMPLE) of the first Outline Flag byte is set to 1.  See
+	When the overlapping_contours parameter is defined as True,
+	OVERLAP_SIMPLE and OVERLAP_COMPOUND bits are set to 1.  See
 	https://docs.microsoft.com/en-us/typography/opentype/spec/glyf
 	"""
 	if not inplace:
@@ -316,8 +316,11 @@ def instantiateVariableFont(varfont, location, inplace=False, overlapping_contou
 		if overlapping_contours:
 			for glyph_name in glyf.keys():
 				glyph = glyf[glyph_name]
-				# Only set for glyphs with contours
-				if glyph.numberOfContours > 0:
+				# Set OVERLAP_COMPOUND bit for compound glyphs
+				if glyph.isComposite():
+					glyph.components[0].flags |= OVERLAP_COMPOUND
+				# Set OVERLAP_SIMPLE bit for simple glyphs
+				elif glyph.numberOfContours > 0:
 					glyph.flags[0] |= flagOverlapSimple
 	if addidef:
 		log.info("Adding IDEF to fpgm table for GETVARIATION opcode")
