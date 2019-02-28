@@ -214,7 +214,7 @@
     <TTGlyph name="nonmarkingreturn"/><!-- contains no outline data -->
 
     <TTGlyph name="q" xMin="38" yMin="-172" xMax="388" yMax="468">
-      <component glyphName="b" x="464" y="456" scale="-0.99994" flags="0x4"/>
+      <component glyphName="b" x="464" y="456" scale="-0.99994" flags="0x404"/>
     </TTGlyph>
 
     <TTGlyph name="space"/><!-- contains no outline data -->
