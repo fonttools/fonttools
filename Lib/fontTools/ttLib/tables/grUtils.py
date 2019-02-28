@@ -1,8 +1,10 @@
 import struct, warnings
 try:
     import lz4
-except: 
+except ImportError:
     lz4 = None
+else:
+    import lz4.block
 
 #old scheme for VERSION < 0.9 otherwise use lz4.block
 

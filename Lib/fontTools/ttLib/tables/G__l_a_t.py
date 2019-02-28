@@ -7,10 +7,6 @@ from functools import partial
 from . import DefaultTable
 from . import grUtils
 import struct, operator, warnings
-try:
-    import lz4
-except: 
-    lz4 = None
 
 
 Glat_format_0 = """
