@@ -157,7 +157,7 @@
 
     <TTGlyph name="a" xMin="38" yMin="-12" xMax="388" yMax="468">
       <contour>
-        <pt x="312" y="0" on="1"/>
+        <pt x="312" y="0" on="1" overlap="1"/>
         <pt x="312" y="64" on="1"/>
         <pt x="244" y="-12" on="1"/>
         <pt x="180" y="-12" on="1"/>
@@ -185,7 +185,7 @@
 
     <TTGlyph name="b" xMin="76" yMin="-12" xMax="426" yMax="628">
       <contour>
-        <pt x="218" y="468" on="1"/>
+        <pt x="218" y="468" on="1" overlap="1"/>
         <pt x="284" y="468" on="1"/>
         <pt x="426" y="316" on="1"/>
         <pt x="426" y="140" on="1"/>
@@ -214,7 +214,7 @@
     <TTGlyph name="nonmarkingreturn"/><!-- contains no outline data -->
 
     <TTGlyph name="q" xMin="38" yMin="-172" xMax="388" yMax="468">
-      <component glyphName="b" x="464" y="456" scale="-0.99994" flags="0x4"/>
+      <component glyphName="b" x="464" y="456" scale="-0.99994" flags="0x404"/>
     </TTGlyph>
 
     <TTGlyph name="space"/><!-- contains no outline data -->

@@ -154,7 +154,7 @@
 
     <TTGlyph name=".notdef" xMin="80" yMin="0" xMax="560" yMax="666">
       <contour>
-        <pt x="83" y="0" on="1"/>
+        <pt x="83" y="0" on="1" overlap="1"/>
         <pt x="503" y="666" on="1"/>
         <pt x="557" y="666" on="1"/>
         <pt x="137" y="0" on="1"/>
@@ -190,7 +190,7 @@
 
     <TTGlyph name="uni0024" xMin="51" yMin="-115" xMax="474" yMax="746">
       <contour>
-        <pt x="251" y="31" on="1"/>
+        <pt x="251" y="31" on="1" overlap="1"/>
         <pt x="309" y="31" on="0"/>
         <pt x="379" y="92" on="0"/>
         <pt x="379" y="144" on="1"/>
@@ -262,7 +262,7 @@
 
     <TTGlyph name="uni0024.nostroke" xMin="51" yMin="-115" xMax="474" yMax="746">
       <contour>
-        <pt x="251" y="31" on="1"/>
+        <pt x="251" y="31" on="1" overlap="1"/>
         <pt x="308" y="31" on="0"/>
         <pt x="377" y="90" on="0"/>
         <pt x="377" y="142" on="1"/>
@@ -334,7 +334,7 @@
 
     <TTGlyph name="uni0041" xMin="7" yMin="0" xMax="656" yMax="670">
       <contour>
-        <pt x="7" y="0" on="1"/>
+        <pt x="7" y="0" on="1" overlap="1"/>
         <pt x="7" y="38" on="1"/>
         <pt x="104" y="53" on="1"/>
         <pt x="124" y="53" on="1"/>
@@ -370,7 +370,7 @@
 
     <TTGlyph name="uni0061" xMin="42" yMin="-14" xMax="511" yMax="490">
       <contour>
-        <pt x="42" y="110" on="1"/>
+        <pt x="42" y="110" on="1" overlap="1"/>
         <pt x="42" y="157" on="0"/>
         <pt x="110" y="229" on="0"/>
         <pt x="214" y="265" on="1"/>
