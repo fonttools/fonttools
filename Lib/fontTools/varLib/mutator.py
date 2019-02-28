@@ -145,7 +145,7 @@ def interpolate_cff2_metrics(varfont, topDict, glyphOrder, loc):
 			hmtx[gname] = tuple(entry)
 
 
-def instantiateVariableFont(varfont, location, inplace=False, overlapping_contours=True):
+def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
 	""" Generate a static instance from a variable TTFont and a dictionary
 	defining the desired location along the variable font's axes.
 	The location values must be specified as user-space coordinates, e.g.:
@@ -155,7 +155,7 @@ def instantiateVariableFont(varfont, location, inplace=False, overlapping_contou
 	By default, a new TTFont object is returned. If ``inplace`` is True, the
 	input varfont is modified and reduced to a static font.
 
-	When the overlapping_contours parameter is defined as True,
+	When the overlap parameter is defined as True,
 	OVERLAP_SIMPLE and OVERLAP_COMPOUND bits are set to 1.  See
 	https://docs.microsoft.com/en-us/typography/opentype/spec/glyf
 	"""
@@ -312,7 +312,7 @@ def instantiateVariableFont(varfont, location, inplace=False, overlapping_contou
 				addidef = any(op.startswith("GETVARIATION") for op in instructions)
 				if addidef:
 					break
-		if overlapping_contours:
+		if overlap:
 			for glyph_name in glyf.keys():
 				glyph = glyf[glyph_name]
 				# Set OVERLAP_COMPOUND bit for compound glyphs
