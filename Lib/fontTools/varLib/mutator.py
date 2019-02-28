@@ -417,7 +417,7 @@ def main(args=None):
 		"-v", "--verbose", action="store_true", help="Run more verbosely.")
 	logging_group.add_argument(
 		"-q", "--quiet", action="store_true", help="Turn verbosity off.")
-	logging_group.add_argument(
+	parser.add_argument(
 		"--no-overlap",
 		dest="overlap",
 		action="store_false",
