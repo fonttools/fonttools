@@ -417,6 +417,12 @@ def main(args=None):
 		"-v", "--verbose", action="store_true", help="Run more verbosely.")
 	logging_group.add_argument(
 		"-q", "--quiet", action="store_true", help="Turn verbosity off.")
+	logging_group.add_argument(
+		"--no-overlap",
+		dest="overlap",
+		action="store_false",
+		help="Don't set OVERLAP_SIMPLE/OVERLAP_COMPOUND glyf flags."
+	)
 	options = parser.parse_args(args)
 
 	varfilename = options.input
@@ -441,7 +447,7 @@ def main(args=None):
 	log.info("Loading variable font")
 	varfont = TTFont(varfilename)
 
-	instantiateVariableFont(varfont, loc, inplace=True)
+	instantiateVariableFont(varfont, loc, inplace=True, overlap=options.overlap)
 
 	log.info("Saving instance font %s", outfile)
 	varfont.save(outfile)
