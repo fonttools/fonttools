@@ -444,6 +444,7 @@ def main(args):
 		pprint(locs)
 		doc.normalize()
 		print("Normalized locations:")
+		locs = [s.location for s in doc.sources]
 		pprint(locs)
 	else:
 		axes = [chr(c) for c in range(ord('A'), ord('Z')+1)]
