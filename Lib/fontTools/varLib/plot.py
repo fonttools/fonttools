@@ -21,32 +21,81 @@ def stops(support, count=10):
 	       [b + (c - b) * i / count for i in range(count)] + \
 	       [c]
 
-def plotLocations(locations, axes, axis3D, **kwargs):
-	for loc,color in zip(locations, cycle(pyplot.cm.Set1.colors)):
-		axis3D.plot([loc.get(axes[0], 0)],
-			    [loc.get(axes[1], 0)],
-			    [1.],
-			    'o',
-			    color=color,
-			    **kwargs)
 
-def plotLocationsSurfaces(locations, fig, names=None, **kwargs):
+def _plotLocationsDots(locations, axes, subplot, **kwargs):
+	for loc, color in zip(locations, cycle(pyplot.cm.Set1.colors)):
+		if len(axes) == 1:
+			subplot.plot(
+				[loc.get(axes[0], 0)],
+				[1.],
+				'o',
+				color=color,
+				**kwargs
+			)
+		elif len(axes) == 2:
+			subplot.plot(
+				[loc.get(axes[0], 0)],
+				[loc.get(axes[1], 0)],
+				[1.],
+				'o',
+				color=color,
+				**kwargs
+			)
+		else:
+			raise AssertionError(len(axes))
 
-	assert len(locations[0].keys()) == 2
 
-	if names is None:
-		names = [None] * len(locations)
-
+def plotLocations(locations, fig, names=None, **kwargs):
 	n = len(locations)
 	cols = math.ceil(n**.5)
 	rows = math.ceil(n / cols)
 
+	if names is None:
+		names = [None] * len(locations)
+
 	model = VariationModel(locations)
 	names = [names[model.reverseMapping[i]] for i in range(len(names))]
 
-	ax1, ax2 = sorted(locations[0].keys())
-	for i, (support, color, name) in enumerate(zip(model.supports, cycle(pyplot.cm.Set1.colors), cycle(names))):
+	axes = sorted(locations[0].keys())
+	if len(axes) == 1:
+		_plotLocations2D(
+			model, axes[0], fig, cols, rows, names=names, **kwargs
+		)
+	elif len(axes) == 2:
+		_plotLocations3D(
+			model, axes, fig, cols, rows, names=names, **kwargs
+		)
+	else:
+		raise ValueError("Only 1 or 2 axes are supported")
 
+
+def _plotLocations2D(model, axis, fig, cols, rows, names, **kwargs):
+	for i, (support, color, name) in enumerate(
+		zip(model.supports, cycle(pyplot.cm.Set1.colors), cycle(names))
+	):
+		subplot = fig.add_subplot(rows, cols, i + 1)
+		if name is not None:
+			subplot.set_title(name)
+		subplot.set_xlabel(axis)
+		pyplot.xlim(-1.,+1.)
+
+		Xs = support.get(axis, (-1.,0.,+1.))
+		X, Y = [], []
+		for x in stops(Xs):
+			y = supportScalar({axis:x}, support)
+			X.append(x)
+			Y.append(y)
+		subplot.plot(X, Y, color=color, **kwargs)
+
+		_plotLocationsDots(model.locations, [axis], subplot)
+
+
+def _plotLocations3D(model, axes, fig, rows, cols, names, **kwargs):
+	ax1, ax2 = axes
+
+	for i, (support, color, name) in enumerate(
+		zip(model.supports, cycle(pyplot.cm.Set1.colors), cycle(names))
+	):
 		axis3D = fig.add_subplot(rows, cols, i + 1, projection='3d')
 		if name is not None:
 			axis3D.set_title(name)
@@ -74,14 +123,14 @@ def plotLocationsSurfaces(locations, fig, names=None, **kwargs):
 				Z.append(z)
 			axis3D.plot(X, Y, Z, color=color, **kwargs)
 
-		plotLocations(model.locations, [ax1, ax2], axis3D)
+		_plotLocationsDots(model.locations, [ax1, ax2], axis3D)
 
 
 def plotDocument(doc, fig, **kwargs):
 	doc.normalize()
 	locations = [s.location for s in doc.sources]
 	names = [s.name for s in doc.sources]
-	plotLocationsSurfaces(locations, fig, names, **kwargs)
+	plotLocations(locations, fig, names, **kwargs)
 
 
 def main(args=None):
@@ -102,6 +151,7 @@ def main(args=None):
 		sys.exit(1)
 
 	fig = pyplot.figure()
+	fig.set_tight_layout(True)
 
 	if len(args) == 1 and args[0].endswith('.designspace'):
 		doc = DesignSpaceDocument()
@@ -110,7 +160,7 @@ def main(args=None):
 	else:
 		axes = [chr(c) for c in range(ord('A'), ord('Z')+1)]
 		locs = [dict(zip(axes, (float(v) for v in s.split(',')))) for s in args]
-		plotLocationsSurfaces(locs, fig)
+		plotLocations(locs, fig)
 
 	pyplot.show()
 
