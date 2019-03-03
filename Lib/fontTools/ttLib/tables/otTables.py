@@ -9,7 +9,6 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 from fontTools.misc.py23 import *
 from fontTools.misc.textTools import pad, safeEval
 from .otBase import BaseTable, FormatSwitchingBaseTable, ValueRecord
-import operator
 import logging
 import struct
 
