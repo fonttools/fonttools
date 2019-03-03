@@ -8,7 +8,6 @@ from . import DefaultTable
 import sys
 import struct
 import array
-import operator
 import logging
 
 
