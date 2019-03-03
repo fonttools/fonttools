@@ -444,11 +444,11 @@ class cmap_format_2(CmapSubtable):
 		nameMap = ttFont.getReverseGlyphMap()
 		lenCharCodes = len(charCodes)
 		try:
-			gids = list(map(operator.getitem, [nameMap]*lenCharCodes, names))
+			gids = [nameMap[name] for name in names]
 		except KeyError:
 			nameMap = ttFont.getReverseGlyphMap(rebuild=True)
 			try:
-				gids = list(map(operator.getitem, [nameMap]*lenCharCodes, names))
+				gids = [nameMap[name] for name in names]
 			except KeyError:
 				# allow virtual GIDs in format 2 tables
 				gids = []
@@ -458,7 +458,7 @@ class cmap_format_2(CmapSubtable):
 					except KeyError:
 						try:
 							if (name[:3] == 'gid'):
-								gid = eval(name[3:])
+								gid = int(name[3:])
 							else:
 								gid = ttFont.getGlyphID(name)
 						except:
@@ -750,14 +750,14 @@ class cmap_format_4(CmapSubtable):
 			endCode = [0xffff]
 		else:
 			charCodes.sort()
-			names = list(map(operator.getitem, [self.cmap]*lenCharCodes, charCodes))
+			names = [self.cmap[code] for code in charCodes]
 			nameMap = ttFont.getReverseGlyphMap()
 			try:
-				gids = list(map(operator.getitem, [nameMap]*lenCharCodes, names))
+				gids = [nameMap[name] for name in names]
 			except KeyError:
 				nameMap = ttFont.getReverseGlyphMap(rebuild=True)
 				try:
-					gids = list(map(operator.getitem, [nameMap]*lenCharCodes, names))
+					gids = [nameMap[name] for name in names]
 				except KeyError:
 					# allow virtual GIDs in format 4 tables
 					gids = []
@@ -767,7 +767,7 @@ class cmap_format_4(CmapSubtable):
 						except KeyError:
 							try:
 								if (name[:3] == 'gid'):
-									gid = eval(name[3:])
+									gid = int(name[3:])
 								else:
 									gid = ttFont.getGlyphID(name)
 							except:
@@ -775,7 +775,8 @@ class cmap_format_4(CmapSubtable):
 
 						gids.append(gid)
 			cmap = {}  # code:glyphID mapping
-			list(map(operator.setitem, [cmap]*len(charCodes), charCodes, gids))
+			for code, gid in zip(charCodes, gids):
+				cmap[code] = gid
 
 			# Build startCode and endCode lists.
 			# Split the char codes in ranges of consecutive char codes, then split
@@ -959,11 +960,11 @@ class cmap_format_12_or_13(CmapSubtable):
 		names = list(self.cmap.values())
 		nameMap = ttFont.getReverseGlyphMap()
 		try:
-			gids = list(map(operator.getitem, [nameMap]*lenCharCodes, names))
+			gids = [nameMap[name] for name in names]
 		except KeyError:
 			nameMap = ttFont.getReverseGlyphMap(rebuild=True)
 			try:
-				gids = list(map(operator.getitem, [nameMap]*lenCharCodes, names))
+				gids = [nameMap[name] for name in names]
 			except KeyError:
 				# allow virtual GIDs in format 12 tables
 				gids = []
@@ -973,7 +974,7 @@ class cmap_format_12_or_13(CmapSubtable):
 					except KeyError:
 						try:
 							if (name[:3] == 'gid'):
-								gid = eval(name[3:])
+								gid = int(name[3:])
 							else:
 								gid = ttFont.getGlyphID(name)
 						except:
@@ -982,7 +983,8 @@ class cmap_format_12_or_13(CmapSubtable):
 					gids.append(gid)
 
 		cmap = {}  # code:glyphID mapping
-		list(map(operator.setitem, [cmap]*len(charCodes), charCodes, gids))
+		for code, gid in zip(charCodes, gids):
+			cmap[code] = gid
 
 		charCodes.sort()
 		index = 0
