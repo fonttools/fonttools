@@ -442,7 +442,6 @@ class cmap_format_2(CmapSubtable):
 		charCodes = [item[0] for item in items]
 		names = [item[1] for item in items]
 		nameMap = ttFont.getReverseGlyphMap()
-		lenCharCodes = len(charCodes)
 		try:
 			gids = [nameMap[name] for name in names]
 		except KeyError:
@@ -744,8 +743,7 @@ class cmap_format_4(CmapSubtable):
 			return struct.pack(">HHH", self.format, self.length, self.language) + self.data
 
 		charCodes = list(self.cmap.keys())
-		lenCharCodes = len(charCodes)
-		if lenCharCodes == 0:
+		if not charCodes:
 			startCode = [0xffff]
 			endCode = [0xffff]
 		else:
@@ -956,7 +954,6 @@ class cmap_format_12_or_13(CmapSubtable):
 		if self.data:
 			return struct.pack(">HHLLL", self.format, self.reserved, self.length, self.language, self.nGroups) + self.data
 		charCodes = list(self.cmap.keys())
-		lenCharCodes = len(charCodes)
 		names = list(self.cmap.values())
 		nameMap = ttFont.getReverseGlyphMap()
 		try:

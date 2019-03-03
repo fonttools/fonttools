@@ -82,6 +82,16 @@ class CmapSubtableTest(unittest.TestCase):
 			font.setGlyphOrder([".notdef"])
 			data = subtable.compile(font)
 
+	def test_compile_decompile_4_empty(self):
+		subtable = self.makeSubtable(4, 3, 1, 0)
+		subtable.cmap = {}
+		font = ttLib.TTFont()
+		font.setGlyphOrder([])
+		data = subtable.compile(font)
+		subtable2 = CmapSubtable.newSubtable(4)
+		subtable2.decompile(data, font)
+		self.assertEqual(subtable2.cmap, {})
+
 	def test_decompile_4(self):
 		subtable = CmapSubtable.newSubtable(4)
 		font = ttLib.TTFont()
