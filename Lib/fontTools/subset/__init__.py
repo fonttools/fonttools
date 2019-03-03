@@ -208,7 +208,7 @@ Font table options:
       By default, the following tables are dropped:
       'BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'SVG ', 'PCLT', 'LTSH'
       and Graphite tables: 'Feat', 'Glat', 'Gloc', 'Silf', 'Sill'
-      and color tables: 'CBLC', 'CBDT', 'sbix'.
+      and color tables: 'sbix'.
       The tool will attempt to subset the remaining tables.
       Examples:
         --drop-tables-='SVG '
@@ -1377,7 +1377,7 @@ def subset_glyphs(self, s):
 
 	return True
 
-# CBDC will inherit it
+# CBDT will inherit it
 @_add_method(ttLib.getTableClass('EBDT'))
 def subset_glyphs(self, s):
   self.strikeData = [{g: strike[g] for g in s.glyphs if g in strike}
