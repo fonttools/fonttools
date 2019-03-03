@@ -698,18 +698,19 @@ class SingleSubst(FormatSwitchingBaseTable):
 	def postRead(self, rawTable, font):
 		mapping = {}
 		input = _getGlyphsFromCoverageTable(rawTable["Coverage"])
-		lenMapping = len(input)
 		if self.Format == 1:
 			delta = rawTable["DeltaGlyphID"]
 			inputGIDS =  [ font.getGlyphID(name) for name in input ]
 			outGIDS = [ (glyphID + delta) % 65536 for glyphID in inputGIDS ]
 			outNames = [ font.getGlyphName(glyphID) for glyphID in outGIDS ]
-			list(map(operator.setitem, [mapping]*lenMapping, input, outNames))
+			for inp, out in zip(input, outNames):
+				mapping[inp] = out
 		elif self.Format == 2:
 			assert len(input) == rawTable["GlyphCount"], \
 					"invalid SingleSubstFormat2 table"
 			subst = rawTable["Substitute"]
-			list(map(operator.setitem, [mapping]*lenMapping, input, subst))
+			for inp, sub in zip(input, subst):
+				mapping[inp] = sub
 		else:
 			assert 0, "unknown format: %s" % self.Format
 		self.mapping = mapping
