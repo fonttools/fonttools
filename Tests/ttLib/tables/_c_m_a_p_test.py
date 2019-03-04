@@ -51,6 +51,47 @@ class CmapSubtableTest(unittest.TestCase):
 		self.assertEqual(subtable.getEncoding("ascii"), "ascii")
 		self.assertEqual(subtable.getEncoding(default="xyz"), "xyz")
 
+	def test_compile_2(self):
+		subtable = self.makeSubtable(2, 1, 2, 0)
+		subtable.cmap = {c: "cid%05d" % c for c in range(32, 8192)}
+		font = ttLib.TTFont()
+		font.setGlyphOrder([".notdef"] + list(subtable.cmap.values()))
+		data = subtable.compile(font)
+
+		subtable2 = CmapSubtable.newSubtable(2)
+		subtable2.decompile(data, font)
+		self.assertEqual(subtable2.cmap, subtable.cmap)
+
+	def test_compile_2_rebuild_rev_glyph_order(self):
+		for fmt in [2, 4, 12]:
+			subtable = self.makeSubtable(fmt, 1, 2, 0)
+			subtable.cmap = {c: "cid%05d" % c for c in range(32, 8192)}
+			font = ttLib.TTFont()
+			font.setGlyphOrder([".notdef"] + list(subtable.cmap.values()))
+			font._reverseGlyphOrderDict = {}  # force first KeyError branch in subtable.compile()
+			data = subtable.compile(font)
+			subtable2 = CmapSubtable.newSubtable(fmt)
+			subtable2.decompile(data, font)
+			self.assertEqual(subtable2.cmap, subtable.cmap, str(fmt))
+
+	def test_compile_2_gids(self):
+		for fmt in [2, 4, 12]:
+			subtable = self.makeSubtable(fmt, 1, 3, 0)
+			subtable.cmap = {0x0041:'gid001', 0x0042:'gid002'}
+			font = ttLib.TTFont()
+			font.setGlyphOrder([".notdef"])
+			data = subtable.compile(font)
+
+	def test_compile_decompile_4_empty(self):
+		subtable = self.makeSubtable(4, 3, 1, 0)
+		subtable.cmap = {}
+		font = ttLib.TTFont()
+		font.setGlyphOrder([])
+		data = subtable.compile(font)
+		subtable2 = CmapSubtable.newSubtable(4)
+		subtable2.decompile(data, font)
+		self.assertEqual(subtable2.cmap, {})
+
 	def test_decompile_4(self):
 		subtable = CmapSubtable.newSubtable(4)
 		font = ttLib.TTFont()
