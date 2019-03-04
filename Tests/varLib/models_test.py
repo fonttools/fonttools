@@ -36,103 +36,105 @@ def test_supportScalar():
     assert supportScalar({'wght':2.5}, {'wght':(0,2,4)}) == 0.75
 
 
-@pytest.mark.parametrize(
-    "locations, axisOrder, sortedLocs, supports, deltaWeights",
-    [
-        (
-            [
-                {'wght':100},
-                {'wght':-100},
-                {'wght':-180},
-                {'wdth':+.3},
-                {'wght':+120,'wdth':.3},
-                {'wght':+120,'wdth':.2},
-                {},
-                {'wght':+180,'wdth':.3},
-                {'wght':+180},
-            ],
-            ["wght"],
-            [
-                {},
-                {'wght': -100},
-                {'wght': -180},
-                {'wght': 100},
-                {'wght': 180},
-                {'wdth': 0.3},
-                {'wdth': 0.3, 'wght': 180},
-                {'wdth': 0.3, 'wght': 120},
-                {'wdth': 0.2, 'wght': 120}
-            ],
-            [
-                {},
-                {'wght': (-180, -100, 0)},
-                {'wght': (-180, -180, -100)},
-                {'wght': (0, 100, 180)},
-                {'wght': (100, 180, 180)},
-                {'wdth': (0, 0.3, 0.3)},
-                {'wdth': (0, 0.3, 0.3), 'wght': (0, 180, 180)},
-                {'wdth': (0, 0.3, 0.3), 'wght': (0, 120, 180)},
-                {'wdth': (0, 0.2, 0.3), 'wght': (0, 120, 180)}
-            ],
-            [
-                {},
-                {0: 1.0},
-                {0: 1.0},
-                {0: 1.0},
-                {0: 1.0},
-                {0: 1.0},
-                {0: 1.0, 4: 1.0, 5: 1.0},
-                {0: 1.0, 3: 0.75, 4: 0.25, 5: 1.0, 6: 0.6666666666666666},
-                {0: 1.0,
-                 3: 0.75,
-                 4: 0.25,
-                 5: 0.6666666666666667,
-                 6: 0.4444444444444445,
-                 7: 0.6666666666666667}
-            ]
-        ),
-        (
-            [
-                {},
-                {'bar': 0.5},
-                {'bar': 1.0},
-                {'foo': 1.0},
-                {'bar': 0.5, 'foo': 1.0},
-                {'bar': 1.0, 'foo': 1.0},
-            ],
-            None,
-            [
-                {},
-                {'bar': 0.5},
-                {'bar': 1.0},
-                {'foo': 1.0},
-                {'bar': 0.5, 'foo': 1.0},
-                {'bar': 1.0, 'foo': 1.0},
-            ],
-            [
-                {},
-                {'bar': (0, 0.5, 1.0)},
-                {'bar': (0.5, 1.0, 1.0)},
-                {'foo': (0, 1.0, 1.0)},
-                {'bar': (0, 0.5, 1.0), 'foo': (0, 1.0, 1.0)},
-                {'bar': (0.5, 1.0, 1.0), 'foo': (0, 1.0, 1.0)},
-            ],
-            [
-                {},
-                {0: 1.0},
-                {0: 1.0},
-                {0: 1.0},
-                {0: 1.0, 1: 1.0, 3: 1.0},
-                {0: 1.0, 2: 1.0, 3: 1.0},
-            ],
-        )
-    ]
-)
-def test_VariationModel(
-    locations, axisOrder, sortedLocs, supports, deltaWeights
-):
-    model = VariationModel(locations, axisOrder=axisOrder)
+class VariationModelTest(object):
 
-    assert model.locations == sortedLocs
-    assert model.supports == supports
-    assert model.deltaWeights == deltaWeights
+    @pytest.mark.parametrize(
+        "locations, axisOrder, sortedLocs, supports, deltaWeights",
+        [
+            (
+                [
+                    {'wght':100},
+                    {'wght':-100},
+                    {'wght':-180},
+                    {'wdth':+.3},
+                    {'wght':+120,'wdth':.3},
+                    {'wght':+120,'wdth':.2},
+                    {},
+                    {'wght':+180,'wdth':.3},
+                    {'wght':+180},
+                ],
+                ["wght"],
+                [
+                    {},
+                    {'wght': -100},
+                    {'wght': -180},
+                    {'wght': 100},
+                    {'wght': 180},
+                    {'wdth': 0.3},
+                    {'wdth': 0.3, 'wght': 180},
+                    {'wdth': 0.3, 'wght': 120},
+                    {'wdth': 0.2, 'wght': 120}
+                ],
+                [
+                    {},
+                    {'wght': (-180, -100, 0)},
+                    {'wght': (-180, -180, -100)},
+                    {'wght': (0, 100, 180)},
+                    {'wght': (100, 180, 180)},
+                    {'wdth': (0, 0.3, 0.3)},
+                    {'wdth': (0, 0.3, 0.3), 'wght': (0, 180, 180)},
+                    {'wdth': (0, 0.3, 0.3), 'wght': (0, 120, 180)},
+                    {'wdth': (0, 0.2, 0.3), 'wght': (0, 120, 180)}
+                ],
+                [
+                    {},
+                    {0: 1.0},
+                    {0: 1.0},
+                    {0: 1.0},
+                    {0: 1.0},
+                    {0: 1.0},
+                    {0: 1.0, 4: 1.0, 5: 1.0},
+                    {0: 1.0, 3: 0.75, 4: 0.25, 5: 1.0, 6: 0.6666666666666666},
+                    {0: 1.0,
+                     3: 0.75,
+                     4: 0.25,
+                     5: 0.6666666666666667,
+                     6: 0.4444444444444445,
+                     7: 0.6666666666666667}
+                ]
+            ),
+            (
+                [
+                    {},
+                    {'bar': 0.5},
+                    {'bar': 1.0},
+                    {'foo': 1.0},
+                    {'bar': 0.5, 'foo': 1.0},
+                    {'bar': 1.0, 'foo': 1.0},
+                ],
+                None,
+                [
+                    {},
+                    {'bar': 0.5},
+                    {'bar': 1.0},
+                    {'foo': 1.0},
+                    {'bar': 0.5, 'foo': 1.0},
+                    {'bar': 1.0, 'foo': 1.0},
+                ],
+                [
+                    {},
+                    {'bar': (0, 0.5, 1.0)},
+                    {'bar': (0.5, 1.0, 1.0)},
+                    {'foo': (0, 1.0, 1.0)},
+                    {'bar': (0, 0.5, 1.0), 'foo': (0, 1.0, 1.0)},
+                    {'bar': (0.5, 1.0, 1.0), 'foo': (0, 1.0, 1.0)},
+                ],
+                [
+                    {},
+                    {0: 1.0},
+                    {0: 1.0},
+                    {0: 1.0},
+                    {0: 1.0, 1: 1.0, 3: 1.0},
+                    {0: 1.0, 2: 1.0, 3: 1.0},
+                ],
+            )
+        ]
+    )
+    def test_init(
+        self, locations, axisOrder, sortedLocs, supports, deltaWeights
+    ):
+        model = VariationModel(locations, axisOrder=axisOrder)
+
+        assert model.locations == sortedLocs
+        assert model.supports == supports
+        assert model.deltaWeights == deltaWeights
