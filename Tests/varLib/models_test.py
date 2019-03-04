@@ -43,15 +43,15 @@ class VariationModelTest(object):
         [
             (
                 [
-                    {'wght': 0.55},
-                    {'wght': -0.55},
-                    {'wght': -1.0},
-                    {'wdth': 1.0},
+                    {'wght': 0.55, 'wdth': 0.0},
+                    {'wght': -0.55, 'wdth': 0.0},
+                    {'wght': -1.0, 'wdth': 0.0},
+                    {'wght': 0.0, 'wdth': 1.0},
                     {'wght': 0.66, 'wdth': 1.0},
                     {'wght': 0.66, 'wdth': 0.66},
-                    {},
+                    {'wght': 0.0, 'wdth': 0.0},
                     {'wght': 1.0, 'wdth': 1.0},
-                    {'wght': 1.0},
+                    {'wght': 1.0, 'wdth': 0.0},
                 ],
                 ["wght"],
                 [
