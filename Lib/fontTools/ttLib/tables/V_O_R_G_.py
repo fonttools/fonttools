@@ -50,7 +50,7 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 		vOriginTable = list(zip(gids, vorgs))
 		self.numVertOriginYMetrics = len(vorgs)
 		vOriginTable.sort() # must be in ascending GID order
-		dataList = [ struct.pack(">Hh", rec[0], rec[1]) for rec in vOriginTable]
+		dataList = [struct.pack(">Hh", rec[0], rec[1]) for rec in vOriginTable]
 		header = struct.pack(">HHhH", self.majorVersion, self.minorVersion, self.defaultVertOriginY, self.numVertOriginYMetrics)
 		dataList.insert(0, header)
 		data = bytesjoin(dataList)
