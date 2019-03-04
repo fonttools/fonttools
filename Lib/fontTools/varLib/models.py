@@ -189,19 +189,19 @@ class VariationModel(object):
 	  7: 0.6666666666666667}]
 	"""
 
-	def __init__(self, locations, axisOrder=[]):
+	def __init__(self, locations, axisOrder=None):
 		self.origLocations = locations
-		self.axisOrder = axisOrder
+		self.axisOrder = axisOrder if axisOrder else []
 
 		locations = [{k:v for k,v in loc.items() if v != 0.} for loc in locations]
-		keyFunc = self.getMasterLocationsSortKeyFunc(locations, axisOrder=axisOrder)
+		keyFunc = self.getMasterLocationsSortKeyFunc(locations, axisOrder=self.axisOrder)
 		axisPoints = keyFunc.axisPoints
 		self.locations = sorted(locations, key=keyFunc)
 		# TODO Assert that locations are unique.
 		self.mapping = [self.locations.index(l) for l in locations] # Mapping from user's master order to our master order
 		self.reverseMapping = [locations.index(l) for l in self.locations] # Reverse of above
 
-		self._computeMasterSupports(axisPoints, axisOrder)
+		self._computeMasterSupports(axisPoints, self.axisOrder)
 		self._subModels = {}
 
 	def getSubModel(self, items):
