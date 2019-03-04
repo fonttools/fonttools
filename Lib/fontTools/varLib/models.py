@@ -190,6 +190,9 @@ class VariationModel(object):
 	"""
 
 	def __init__(self, locations, axisOrder=None):
+		if len(set(tuple(sorted(l.items())) for l in locations)) != len(locations):
+			raise ValueError("locations must be unique")
+
 		self.origLocations = locations
 		self.axisOrder = axisOrder if axisOrder else []
 
@@ -197,9 +200,10 @@ class VariationModel(object):
 		keyFunc = self.getMasterLocationsSortKeyFunc(locations, axisOrder=self.axisOrder)
 		axisPoints = keyFunc.axisPoints
 		self.locations = sorted(locations, key=keyFunc)
-		# TODO Assert that locations are unique.
-		self.mapping = [self.locations.index(l) for l in locations] # Mapping from user's master order to our master order
-		self.reverseMapping = [locations.index(l) for l in self.locations] # Reverse of above
+
+		# Mapping from user's master order to our master order
+		self.mapping = [self.locations.index(l) for l in locations]
+		self.reverseMapping = [locations.index(l) for l in self.locations]
 
 		self._computeMasterSupports(axisPoints, self.axisOrder)
 		self._subModels = {}

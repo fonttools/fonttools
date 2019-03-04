@@ -138,3 +138,13 @@ class VariationModelTest(object):
         assert model.locations == sortedLocs
         assert model.supports == supports
         assert model.deltaWeights == deltaWeights
+
+    def test_init_duplicate_locations(self):
+        with pytest.raises(ValueError, match="locations must be unique"):
+            VariationModel(
+                [
+                    {"foo": 0.0, "bar": 0.0},
+                    {"foo": 1.0, "bar": 1.0},
+                    {"bar": 1.0, "foo": 1.0},
+                ]
+            )
