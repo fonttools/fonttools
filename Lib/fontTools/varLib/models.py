@@ -252,18 +252,6 @@ class VariationModel(object):
 		ret.axisPoints = axisPoints
 		return ret
 
-	@staticmethod
-	def lowerBound(value, lst):
-		if any(v < value for v in lst):
-			return max(v for v in lst if v < value)
-		else:
-			return value
-	@staticmethod
-	def upperBound(value, lst):
-		if any(v > value for v in lst):
-			return min(v for v in lst if v > value)
-		else:
-			return value
 	def reorderMasters(self, master_list, mapping):
 		# For changing the master data order without
 		# recomputing supports and deltaWeights.
