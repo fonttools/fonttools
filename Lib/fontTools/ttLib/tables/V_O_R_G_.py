@@ -42,14 +42,13 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 		vorgs = list(self.VOriginRecords.values())
 		names = list(self.VOriginRecords.keys())
 		nameMap = ttFont.getReverseGlyphMap()
-		lenRecords = len(vorgs)
 		try:
 			gids = [nameMap[name] for name in names]
 		except KeyError:
 			nameMap = ttFont.getReverseGlyphMap(rebuild=True)
 			gids = [nameMap[name] for name in names]
 		vOriginTable = list(zip(gids, vorgs))
-		self.numVertOriginYMetrics = lenRecords
+		self.numVertOriginYMetrics = len(vorgs)
 		vOriginTable.sort() # must be in ascending GID order
 		dataList = [ struct.pack(">Hh", rec[0], rec[1]) for rec in vOriginTable]
 		header = struct.pack(">HHhH", self.majorVersion, self.minorVersion, self.defaultVertOriginY, self.numVertOriginYMetrics)
