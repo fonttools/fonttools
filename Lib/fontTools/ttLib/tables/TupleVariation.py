@@ -71,7 +71,13 @@ class TupleVariation(object):
 				if minValue == defaultMinValue and maxValue == defaultMaxValue:
 					writer.simpletag("coord", axis=axis, value=value)
 				else:
-					writer.simpletag("coord", axis=axis, value=value, min=minValue, max=maxValue)
+					attrs = [
+						("axis", axis),
+						("min", minValue),
+						("value", value),
+						("max", maxValue),
+				        ]
+					writer.simpletag("coord", attrs)
 				writer.newline()
 		wrote_any_deltas = False
 		for i, delta in enumerate(self.coordinates):

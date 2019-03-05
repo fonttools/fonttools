@@ -93,7 +93,7 @@ GVAR_XML = [
     '</glyphVariations>',
     '<glyphVariations glyph="I">',
     '  <tuple>',
-    '    <coord axis="wght" max="1.0" min="0.0" value="0.5"/>',
+    '    <coord axis="wght" min="0.0" value="0.5" max="1.0"/>',
     '    <delta pt="0" x="3" y="3"/>',
     '    <delta pt="1" x="1" y="1"/>',
     '    <delta pt="2" x="4" y="4"/>',
