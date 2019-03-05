@@ -198,14 +198,13 @@ class VariationModel(object):
 
 		locations = [{k:v for k,v in loc.items() if v != 0.} for loc in locations]
 		keyFunc = self.getMasterLocationsSortKeyFunc(locations, axisOrder=self.axisOrder)
-		axisPoints = keyFunc.axisPoints
 		self.locations = sorted(locations, key=keyFunc)
 
 		# Mapping from user's master order to our master order
 		self.mapping = [self.locations.index(l) for l in locations]
 		self.reverseMapping = [locations.index(l) for l in self.locations]
 
-		self._computeMasterSupports(axisPoints, self.axisOrder)
+		self._computeMasterSupports(keyFunc.axisPoints)
 		self._subModels = {}
 
 	def getSubModel(self, items):
@@ -268,7 +267,7 @@ class VariationModel(object):
 		self._subModels = {}
 		return new_list
 
-	def _computeMasterSupports(self, axisPoints, axisOrder):
+	def _computeMasterSupports(self, axisPoints):
 		supports = []
 		deltaWeights = []
 		locations = self.locations
