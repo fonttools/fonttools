@@ -189,19 +189,23 @@ class VariationModel(object):
 	  7: 0.6666666666666667}]
 	"""
 
-	def __init__(self, locations, axisOrder=[]):
+	def __init__(self, locations, axisOrder=None):
+		if len(set(tuple(sorted(l.items())) for l in locations)) != len(locations):
+			raise ValueError("locations must be unique")
+
 		self.origLocations = locations
-		self.axisOrder = axisOrder
+		self.axisOrder = axisOrder if axisOrder else []
 
 		locations = [{k:v for k,v in loc.items() if v != 0.} for loc in locations]
-		keyFunc = self.getMasterLocationsSortKeyFunc(locations, axisOrder=axisOrder)
+		keyFunc = self.getMasterLocationsSortKeyFunc(locations, axisOrder=self.axisOrder)
 		axisPoints = keyFunc.axisPoints
 		self.locations = sorted(locations, key=keyFunc)
-		# TODO Assert that locations are unique.
-		self.mapping = [self.locations.index(l) for l in locations] # Mapping from user's master order to our master order
-		self.reverseMapping = [locations.index(l) for l in self.locations] # Reverse of above
 
-		self._computeMasterSupports(axisPoints, axisOrder)
+		# Mapping from user's master order to our master order
+		self.mapping = [self.locations.index(l) for l in locations]
+		self.reverseMapping = [locations.index(l) for l in self.locations]
+
+		self._computeMasterSupports(axisPoints, self.axisOrder)
 		self._subModels = {}
 
 	def getSubModel(self, items):
@@ -252,18 +256,6 @@ class VariationModel(object):
 		ret.axisPoints = axisPoints
 		return ret
 
-	@staticmethod
-	def lowerBound(value, lst):
-		if any(v < value for v in lst):
-			return max(v for v in lst if v < value)
-		else:
-			return value
-	@staticmethod
-	def upperBound(value, lst):
-		if any(v > value for v in lst):
-			return min(v for v in lst if v > value)
-		else:
-			return value
 	def reorderMasters(self, master_list, mapping):
 		# For changing the master data order without
 		# recomputing supports and deltaWeights.
