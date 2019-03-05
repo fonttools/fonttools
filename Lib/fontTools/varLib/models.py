@@ -194,7 +194,7 @@ class VariationModel(object):
 			raise ValueError("locations must be unique")
 
 		self.origLocations = locations
-		self.axisOrder = axisOrder if axisOrder else []
+		self.axisOrder = axisOrder if axisOrder is not None else []
 
 		locations = [{k:v for k,v in loc.items() if v != 0.} for loc in locations]
 		keyFunc = self.getMasterLocationsSortKeyFunc(locations, axisOrder=self.axisOrder)
