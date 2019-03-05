@@ -574,7 +574,7 @@
     </glyphVariations>
     <glyphVariations glyph="e">
       <tuple>
-        <coord axis="wght" max="1.0" min="0.0" value="0.36365"/>
+        <coord axis="wght" min="0.0" value="0.36365" max="1.0"/>
         <delta pt="0" x="-1" y="-25"/>
         <delta pt="1" x="0" y="0"/>
         <delta pt="2" x="-84" y="5"/>
@@ -594,7 +594,7 @@
         <delta pt="16" x="0" y="0"/>
       </tuple>
       <tuple>
-        <coord axis="wght" max="1.0" min="0.36365" value="1.0"/>
+        <coord axis="wght" min="0.36365" value="1.0" max="1.0"/>
         <delta pt="0" x="70" y="1"/>
         <delta pt="1" x="70" y="1"/>
         <delta pt="2" x="-76" y="1"/>
