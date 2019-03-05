@@ -233,9 +233,13 @@ def _GetCoordinates(font, glyphName):
 		glyph.recalcBounds(glyf)
 	leftSideX = glyph.xMin - leftSideBearing
 	rightSideX = leftSideX + horizontalAdvanceWidth
-	# XXX these are incorrect.  Load vmtx and fix.
-	topSideY = glyph.yMax
-	bottomSideY = -glyph.yMin
+	if "vmtx" in font:
+		verticalAdvanceWidth, topSideBearing = font["vmtx"].metrics[glyphName]
+		topSideY = topSideBearing + glyph.yMax
+		bottomSideY = topSideY - verticalAdvanceWidth
+	else:
+		topSideY = glyph.yMax
+		bottomSideY = glyph.yMin
 	coord = coord.copy()
 	coord.extend([(leftSideX, 0),
 	              (rightSideX, 0),
