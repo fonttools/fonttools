@@ -632,7 +632,7 @@
         <delta pt="12" x="0" y="0"/>
         <delta pt="13" x="0" y="0"/>
         <delta pt="14" x="0" y="0"/>
-        <delta pt="15" x="0" y="45"/>
+        <delta pt="15" x="0" y="-45"/>
       </tuple>
     </glyphVariations>
     <glyphVariations glyph="dotabovecomb">
@@ -645,7 +645,7 @@
         <delta pt="4" x="0" y="0"/>
         <delta pt="5" x="0" y="0"/>
         <delta pt="6" x="0" y="28"/>
-        <delta pt="7" x="0" y="18"/>
+        <delta pt="7" x="0" y="-18"/>
       </tuple>
     </glyphVariations>
     <glyphVariations glyph="edotabove">

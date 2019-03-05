@@ -689,7 +689,7 @@
         <delta pt="61" x="0" y="0"/>
         <delta pt="62" x="32" y="0"/>
         <delta pt="63" x="0" y="16"/>
-        <delta pt="64" x="0" y="3"/>
+        <delta pt="64" x="0" y="-3"/>
       </tuple>
       <tuple>
         <coord axis="cntr" value="1.0"/>
