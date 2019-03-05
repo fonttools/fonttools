@@ -209,8 +209,40 @@ def _add_stat(font, axes):
 	# TODO make this user-configurable via designspace document
 	stat.ElidedFallbackNameID = 2
 
+
+def _get_phantom_points(font, glyphName, defaultVerticalOrigin=None):
+	glyf = font["glyf"]
+	glyph = glyf[glyphName]
+	horizontalAdvanceWidth, leftSideBearing = font["hmtx"].metrics[glyphName]
+	if not hasattr(glyph, 'xMin'):
+		glyph.recalcBounds(glyf)
+	leftSideX = glyph.xMin - leftSideBearing
+	rightSideX = leftSideX + horizontalAdvanceWidth
+	if "vmtx" in font:
+		verticalAdvanceWidth, topSideBearing = font["vmtx"].metrics[glyphName]
+		topSideY = topSideBearing + glyph.yMax
+	else:
+		# without vmtx, use ascent as vertical origin and UPEM as vertical advance
+		# like HarfBuzz does
+		verticalAdvanceWidth = font["head"].unitsPerEm
+		try:
+			topSideY = font["hhea"].ascent
+		except KeyError:
+			# sparse masters may not contain an hhea table; use the ascent
+			# of the default master as the vertical origin
+			assert defaultVerticalOrigin is not None
+			topSideY = defaultVerticalOrigin
+	bottomSideY = topSideY - verticalAdvanceWidth
+	return [
+		(leftSideX, 0),
+		(rightSideX, 0),
+		(0, topSideY),
+		(0, bottomSideY),
+	]
+
+
 # TODO Move to glyf or gvar table proper
-def _GetCoordinates(font, glyphName):
+def _GetCoordinates(font, glyphName, defaultVerticalOrigin=None):
 	"""font, glyphName --> glyph coordinates as expected by "gvar" table
 
 	The result includes four "phantom points" for the glyph metrics,
@@ -228,23 +260,9 @@ def _GetCoordinates(font, glyphName):
 		control = (glyph.numberOfContours,)+allData[1:]
 
 	# Add phantom points for (left, right, top, bottom) positions.
-	horizontalAdvanceWidth, leftSideBearing = font["hmtx"].metrics[glyphName]
-	if not hasattr(glyph, 'xMin'):
-		glyph.recalcBounds(glyf)
-	leftSideX = glyph.xMin - leftSideBearing
-	rightSideX = leftSideX + horizontalAdvanceWidth
-	if "vmtx" in font:
-		verticalAdvanceWidth, topSideBearing = font["vmtx"].metrics[glyphName]
-		topSideY = topSideBearing + glyph.yMax
-		bottomSideY = topSideY - verticalAdvanceWidth
-	else:
-		topSideY = glyph.yMax
-		bottomSideY = glyph.yMin
+	phantomPoints = _get_phantom_points(font, glyphName, defaultVerticalOrigin)
 	coord = coord.copy()
-	coord.extend([(leftSideX, 0),
-	              (rightSideX, 0),
-	              (0, topSideY),
-	              (0, bottomSideY)])
+	coord.extend(phantomPoints)
 
 	return coord, control
 
@@ -301,11 +319,16 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 
 	glyf = font['glyf']
 
+	# use hhea.ascent of base master as default vertical origin when vmtx is missing
+	defaultVerticalOrigin = font['hhea'].ascent
 	for glyph in font.getGlyphOrder():
 
 		isComposite = glyf[glyph].isComposite()
 
-		allData = [_GetCoordinates(m, glyph) for m in master_ttfs]
+		allData = [
+			_GetCoordinates(m, glyph, defaultVerticalOrigin=defaultVerticalOrigin)
+			for m in master_ttfs
+		]
 		model, allData = masterModel.getSubModel(allData)
 
 		allCoords = [d[0] for d in allData]
