@@ -1,4 +1,4 @@
-# https://github.com/behdad/fonttools/issues/504
+# https://github.com/fonttools/fonttools/issues/504
 
 feature test {
     sub [a b c d] by [T E S T];

@@ -171,7 +171,7 @@ class NameTableTest(unittest.TestCase):
 		captor.assertRegex("cannot store language la into 'ltag' table")
 
 	def test_decompile_badOffset(self):
-                # https://github.com/behdad/fonttools/issues/525
+                # https://github.com/fonttools/fonttools/issues/525
 		table = table__n_a_m_e()
 		badRecord = {
 			"platformID": 1,

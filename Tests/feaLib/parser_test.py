@@ -408,7 +408,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(smcp.statements[0].glyphSet(), ("a", "b", "s"))
 
     def test_glyphclass_scoping_bug496(self):
-        # https://github.com/behdad/fonttools/issues/496
+        # https://github.com/fonttools/fonttools/issues/496
         f1, f2 = self.parse(
             "feature F1 { lookup L { @GLYPHCLASS = [A B C];} L; } F1;"
             "feature F2 { sub @GLYPHCLASS by D; } F2;"

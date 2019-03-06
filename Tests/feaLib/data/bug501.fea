@@ -1,4 +1,4 @@
-# https://github.com/behdad/fonttools/issues/501
+# https://github.com/fonttools/fonttools/issues/501
 languagesystem DFLT dflt;
 feature test {
     lookup L {
