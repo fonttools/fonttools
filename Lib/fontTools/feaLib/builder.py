@@ -545,7 +545,7 @@ class Builder(object):
         required_feature_indices = {}  # ('latn', 'DEU') --> 23
         scripts = {}  # 'latn' --> {'DEU': [23, 24]} for feature #23,24
         # Sort the feature table by feature tag:
-        # https://github.com/behdad/fonttools/issues/568
+        # https://github.com/fonttools/fonttools/issues/568
         sortFeatureTag = lambda f: (f[0][2], f[0][1], f[0][0], f[1])
         for key, lookups in sorted(self.features_.items(), key=sortFeatureTag):
             script, lang, feature_tag = key
@@ -919,7 +919,7 @@ class Builder(object):
             lookup.mapping[from_glyph] = to_glyph
 
     def add_single_subst_chained_(self, location, prefix, suffix, mapping):
-        # https://github.com/behdad/fonttools/issues/512
+        # https://github.com/fonttools/fonttools/issues/512
         chain = self.get_lookup_(location, ChainContextSubstBuilder)
         sub = chain.find_chainable_single_subst(set(mapping.keys()))
         if sub is None:

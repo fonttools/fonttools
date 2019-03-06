@@ -1,5 +1,5 @@
 """Extend the Python codecs module with a few encodings that are used in OpenType (name table)
-but missing from Python.  See https://github.com/behdad/fonttools/issues/236 for details."""
+but missing from Python.  See https://github.com/fonttools/fonttools/issues/236 for details."""
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *

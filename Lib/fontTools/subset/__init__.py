@@ -266,7 +266,7 @@ Font naming options:
   --name-legacy
       Keep legacy (non-Unicode) 'name' table entries (0.x, 1.x etc.).
       XXX Note: This might be needed for some fonts that have no Unicode name
-      entires for English. See: https://github.com/behdad/fonttools/issues/146
+      entires for English. See: https://github.com/fonttools/fonttools/issues/146
   --no-name-legacy
       Drop legacy (non-Unicode) 'name' table entries [default]
   --name-languages[+|-]=<langID>[,<langID>]
@@ -1425,7 +1425,7 @@ def subset_glyphs(self, s):
 @_add_method(ttLib.getTableClass('GSUB'),
 	     ttLib.getTableClass('GPOS'))
 def retain_empty_scripts(self):
-	# https://github.com/behdad/fonttools/issues/518
+	# https://github.com/fonttools/fonttools/issues/518
 	# https://bugzilla.mozilla.org/show_bug.cgi?id=1080739#c15
 	return self.__class__ == ttLib.getTableClass('GSUB')
 
