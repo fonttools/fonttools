@@ -298,7 +298,7 @@ class SubsetTest(unittest.TestCase):
         self.expect_ttx(subsetfont, self.getpath("expect_prop_1.ttx"), ["prop"])
 
     def test_options(self):
-        # https://github.com/behdad/fonttools/issues/413
+        # https://github.com/fonttools/fonttools/issues/413
         opt1 = subset.Options()
         self.assertTrue('Xyz-' not in opt1.layout_features)
         opt2 = subset.Options()

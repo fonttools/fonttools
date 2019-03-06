@@ -26,19 +26,19 @@ class TestXMLWriter(unittest.TestCase):
 				 writer.file.getvalue())
 
 	def test_encoding_utf8(self):
-		# https://github.com/behdad/fonttools/issues/246
+		# https://github.com/fonttools/fonttools/issues/246
 		writer = XMLWriter(BytesIO(), encoding="utf8")
 		self.assertEqual(b'<?xml version="1.0" encoding="UTF-8"?>' + linesep,
 				 writer.file.getvalue())
 
 	def test_encoding_UTF_8(self):
-		# https://github.com/behdad/fonttools/issues/246
+		# https://github.com/fonttools/fonttools/issues/246
 		writer = XMLWriter(BytesIO(), encoding="UTF-8")
 		self.assertEqual(b'<?xml version="1.0" encoding="UTF-8"?>' + linesep,
 				 writer.file.getvalue())
 
 	def test_encoding_UTF8(self):
-		# https://github.com/behdad/fonttools/issues/246
+		# https://github.com/fonttools/fonttools/issues/246
 		writer = XMLWriter(BytesIO(), encoding="UTF8")
 		self.assertEqual(b'<?xml version="1.0" encoding="UTF-8"?>' + linesep,
 				 writer.file.getvalue())

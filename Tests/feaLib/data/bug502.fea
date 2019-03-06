@@ -1,4 +1,4 @@
-# https://github.com/behdad/fonttools/issues/502
+# https://github.com/fonttools/fonttools/issues/502
 feature aalt {
     sub A by A.alt1;
     sub Eng by Eng.alt1;

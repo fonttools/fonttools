@@ -166,7 +166,7 @@ class MultipleSubstTest(unittest.TestCase):
                          {'c_t': ['c', 't'], 'f_f_i': ['f', 'f', 'i']})
 
     def test_fromXML_oldFormat_bug385(self):
-        # https://github.com/behdad/fonttools/issues/385
+        # https://github.com/fonttools/fonttools/issues/385
         table = otTables.MultipleSubst()
         table.Format = 1
         for name, attrs, content in parseXML(
