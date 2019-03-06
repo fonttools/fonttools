@@ -31,7 +31,7 @@ def asctime(t=None):
 	In Python 3.x, the day of the month is right-justified, whereas on Windows
 	Python 2.7 it is padded with zeros.
 
-	See https://github.com/behdad/fonttools/issues/455
+	See https://github.com/fonttools/fonttools/issues/455
 	"""
 	if t is None:
 		t = time.localtime()

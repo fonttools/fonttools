@@ -46,7 +46,7 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 		# bogus values there.  Since till 2038 those bytes only can be zero,
 		# ignore them.
 		#
-		# https://github.com/behdad/fonttools/issues/99#issuecomment-66776810
+		# https://github.com/fonttools/fonttools/issues/99#issuecomment-66776810
 		for stamp in 'created', 'modified':
 			value = getattr(self, stamp)
 			if value > 0xFFFFFFFF:

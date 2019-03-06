@@ -18,7 +18,7 @@ _encodingMap = {
 	},
 	1: { # Macintosh
 		# See
-		# https://github.com/behdad/fonttools/issues/236
+		# https://github.com/fonttools/fonttools/issues/236
 		0: { # Macintosh, platEncID==0, keyed by langID
 			15: "mac_iceland",
 			17: "mac_turkish",

@@ -303,7 +303,7 @@ class OTTableWriter(object):
 		# Certain versions of Uniscribe reject the font if the GSUB/GPOS top-level
 		# arrays (ScriptList, FeatureList, LookupList) point to the same, possibly
 		# empty, array.  So, we don't share those.
-		# See: https://github.com/behdad/fonttools/issues/518
+		# See: https://github.com/fonttools/fonttools/issues/518
 		dontShare = hasattr(self, 'DontShare')
 
 		if isExtension:

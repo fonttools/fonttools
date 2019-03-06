@@ -101,7 +101,7 @@ def prune_pre_subset(self, font, options):
 	# Clear useless Encoding
 	for fontname in cff.keys():
 		font = cff[fontname]
-		# https://github.com/behdad/fonttools/issues/620
+		# https://github.com/fonttools/fonttools/issues/620
 		font.Encoding = "StandardEncoding"
 
 	return True # bool(cff.fontNames)
