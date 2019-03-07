@@ -126,12 +126,24 @@ def normalizeAxisLimits(varfont, axis_limits):
         axis_limits[axis_tag] = tuple(normalize(v, triple, avar_mapping)
                                       for v in axis_limits[axis_tag])
 
+
+def sanityCheckVariableTables(varfont):
+    if "fvar" not in varfont:
+        raise ValueError("Missing required table fvar")
+    if "gvar" in varfont:
+        if "glyf" not in varfont:
+            raise ValueError("Can't have gvar without glyf")
+
 def instantiateVariableFont(varfont, axis_limits, inplace=False):
+    sanityCheckVariableTables(varfont)
+
     if not inplace:
         varfont = deepcopy(varfont)
     normalizeAxisLimits(varfont, axis_limits)
 
     log.info("Normalized limits: %s", axis_limits)
+
+
 
     if "gvar" in varfont:
         # TODO: support range, stop dropping max value
