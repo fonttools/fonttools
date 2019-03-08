@@ -149,7 +149,6 @@ def instantiateVariableFont(varfont, axis_limits, inplace=False):
     if "gvar" in varfont:
         # TODO: support range, stop dropping max value
         axis_limits = {tag: minv for tag, (minv, maxv) in axis_limits.items()}
-        print(axis_limits)
         instantiateGvar(varfont, axis_limits)
 
     # TODO: actually process HVAR instead of dropping it
