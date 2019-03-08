@@ -213,7 +213,7 @@ def parseArgs(args):
 
     infile = options.input
     outfile = (
-        os.path.splitext(infile)[0] + "-partial.ttf"
+        os.path.splitext(infile)[0] + "-instance.ttf"
         if not options.output
         else options.output
     )
