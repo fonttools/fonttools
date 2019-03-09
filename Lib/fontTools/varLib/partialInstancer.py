@@ -18,6 +18,7 @@ from fontTools.varLib.models import supportScalar, normalizeValue, piecewiseLine
 from fontTools.varLib.iup import iup_delta
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
+from copy import deepcopy
 import logging
 import os
 import re
