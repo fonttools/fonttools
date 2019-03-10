@@ -1188,7 +1188,6 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
 
         # Convert the default location from user space to design space before comparing
         # it against the SourceDescriptor locations (always in design space).
-        # Note: given no map, piecewiseLinearMap will simply return the value.
         default_location_design = {
             axis.name: axis.map_forward(self.defaultLoc[axis.name])
             for axis in self.axes
