@@ -847,3 +847,61 @@ def test_with_with_path_object(tmpdir):
     doc = DesignSpaceDocument()
     doc.write(dest)
     assert dest.exists()
+
+
+def test_findDefault_axis_mapping():
+    designspace_string = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="4.0">
+  <axes>
+    <axis tag="wght" name="Weight" minimum="100" maximum="800" default="400">
+      <map input="100" output="20"/>
+      <map input="300" output="40"/>
+      <map input="400" output="80"/>
+      <map input="700" output="126"/>
+      <map input="800" output="170"/>
+    </axis>
+    <axis tag="ital" name="Italic" minimum="0" maximum="1" default="1"/>
+  </axes>
+  <sources>
+    <source filename="Font-Light.ufo">
+      <location>
+        <dimension name="Weight" xvalue="20"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="Font-Regular.ufo">
+      <location>
+        <dimension name="Weight" xvalue="80"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="Font-Bold.ufo">
+      <location>
+        <dimension name="Weight" xvalue="170"/>
+        <dimension name="Italic" xvalue="0"/>
+      </location>
+    </source>
+    <source filename="Font-LightItalic.ufo">
+      <location>
+        <dimension name="Weight" xvalue="20"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </source>
+    <source filename="Font-Italic.ufo">
+      <location>
+        <dimension name="Weight" xvalue="80"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </source>
+    <source filename="Font-BoldItalic.ufo">
+      <location>
+        <dimension name="Weight" xvalue="170"/>
+        <dimension name="Italic" xvalue="1"/>
+      </location>
+    </source>
+  </sources>
+</designspace>
+    """
+    designspace = DesignSpaceDocument.fromstring(designspace_string)
+    assert designspace.findDefault().filename == "Font-Italic.ufo"
