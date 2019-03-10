@@ -66,10 +66,10 @@ def test_fill_document(tmpdir):
     a2 = AxisDescriptor()
     a2.minimum = 0
     a2.maximum = 1000
-    a2.default = 20
+    a2.default = 15
     a2.name = "width"
     a2.tag = "wdth"
-    a2.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
+    a2.map = [(0.0, 10.0), (15.0, 20.0), (401.0, 66.0), (1000.0, 990.0)]
     a2.hidden = True
     a2.labelNames[u'fr'] = u"Chasse"
     doc.addAxis(a2)

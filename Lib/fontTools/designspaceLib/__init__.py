@@ -1128,11 +1128,14 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         self.rules.append(ruleDescriptor)
 
     def newDefaultLocation(self):
+        """Return default location in design space."""
         # Without OrderedDict, output XML would be non-deterministic.
         # https://github.com/LettError/designSpaceDocument/issues/10
         loc = collections.OrderedDict()
         for axisDescriptor in self.axes:
-            loc[axisDescriptor.name] = axisDescriptor.default
+            loc[axisDescriptor.name] = axisDescriptor.map_forward(
+                axisDescriptor.default
+            )
         return loc
 
     def updateFilenameFromPath(self, masters=True, instances=True, force=False):
