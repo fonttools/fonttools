@@ -13,7 +13,6 @@ NOTE: The module is experimental and both the API and the CLI *will* change.
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import floatToFixedToFloat
-from fontTools.varLib import _GetCoordinates, _SetCoordinates
 from fontTools.varLib.models import supportScalar, normalizeValue, piecewiseLinearMap
 from fontTools.varLib.iup import iup_delta
 from fontTools.ttLib import TTFont
@@ -28,10 +27,11 @@ log = logging.getLogger("fontTools.varlib.partialInstancer")
 
 
 def instantiateGvarGlyph(varfont, location, glyphname):
+    glyf = varfont["glyf"]
     gvar = varfont["gvar"]
     variations = gvar.variations[glyphname]
-    coordinates, _ = _GetCoordinates(varfont, glyphname)
-    origCoords, endPts = None, None
+    coordinates, _ = glyf.getCoordinatesAndControls(glyphname, varfont)
+    origCoords = None
     newVariations = []
     pinnedAxes = set(location.keys())
     defaultModified = False
@@ -53,14 +53,8 @@ def instantiateGvarGlyph(varfont, location, glyphname):
             hasUntouchedPoints = None in deltas
             if hasUntouchedPoints:
                 if origCoords is None:
-                    origCoords, control = _GetCoordinates(varfont, glyphname)
-                    numberOfContours = control[0]
-                    isComposite = numberOfContours == -1
-                    if isComposite:
-                        endPts = list(range(len(control[1])))
-                    else:
-                        endPts = control[1]
-                deltas = iup_delta(deltas, origCoords, endPts)
+                    origCoords, g = glyf.getCoordinatesAndControls(glyphname, varfont)
+                deltas = iup_delta(deltas, origCoords, g.endPts)
             scaledDeltas = GlyphCoordinates(deltas) * scalar
             if tupleAxes.issubset(pinnedAxes):
                 # A tuple for only axes being pinned is discarded, and
@@ -74,7 +68,7 @@ def instantiateGvarGlyph(varfont, location, glyphname):
                     del var.axes[axis]
                 newVariations.append(var)
     if defaultModified:
-        _SetCoordinates(varfont, glyphname, coordinates)
+        glyf.setCoordinates(glyphname, coordinates, varfont)
     gvar.variations[glyphname] = newVariations
 
 
