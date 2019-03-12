@@ -184,6 +184,7 @@ def parseArgs(args):
         axis_limits is either a Dict[str, int], for pinning variation axes to specific
         coordinates along those axes; or a Dict[str, Tuple(int, int)], meaning limit
         this axis to min/max range.
+        Axes locations are in user-space coordinates, as defined in the "fvar" table.
     """
     from fontTools import configLogger
     import argparse
