@@ -119,9 +119,13 @@ def normalizeAxisLimits(varfont, axis_limits):
         avar_segments = varfont["avar"].segments
     for axis_tag, triple in axes.items():
         avar_mapping = avar_segments.get(axis_tag, None)
-        axis_limits[axis_tag] = tuple(
-            normalize(v, triple, avar_mapping) for v in axis_limits[axis_tag]
-        )
+        value = axis_limits[axis_tag]
+        if isinstance(value, tuple):
+            axis_limits[axis_tag] = tuple(
+                normalize(v, triple, avar_mapping) for v in axis_limits[axis_tag]
+            )
+        else:
+            axis_limits[axis_tag] = normalize(value, triple, avar_mapping)
 
 
 def sanityCheckVariableTables(varfont):
@@ -141,9 +145,11 @@ def instantiateVariableFont(varfont, axis_limits, inplace=False):
 
     log.info("Normalized limits: %s", axis_limits)
 
+    # TODO Remove this check once ranges are supported
+    if any(isinstance(v, tuple) for v in axis_limits.values()):
+        raise NotImplementedError("Axes range limits are not supported yet")
+
     if "gvar" in varfont:
-        # TODO: support range, stop dropping max value
-        axis_limits = {tag: minv for tag, (minv, maxv) in axis_limits.items()}
         instantiateGvar(varfont, axis_limits)
 
     # TODO: actually process HVAR instead of dropping it
@@ -163,7 +169,10 @@ def parseLimits(limits):
         ubound = lbound
         if match.group(3):
             ubound = float(match.group(3))
-        result[tag] = (lbound, ubound)
+        if lbound != ubound:
+            result[tag] = (lbound, ubound)
+        else:
+            result[tag] = lbound
     return result
 
 
@@ -172,8 +181,10 @@ def parseArgs(args):
 
     Returns:
         3-tuple (infile, outfile, axis_limits)
-        axis_limits is a map axis_tag:(min,max), meaning limit this axis to
-        range."""
+        axis_limits is either a Dict[str, int], for pinning variation axes to specific
+        coordinates along those axes; or a Dict[str, Tuple(int, int)], meaning limit
+        this axis to min/max range.
+    """
     from fontTools import configLogger
     import argparse
 
@@ -187,7 +198,7 @@ def parseArgs(args):
         metavar="AXIS=LOC",
         nargs="*",
         help="List of space separated locations. A location consist in "
-        "the name of a variation axis, followed by '=' and a number or"
+        "the tag of a variation axis, followed by '=' and a number or"
         "number:number. E.g.: wdth=100 or wght=75.0:125.0",
     )
     parser.add_argument(
