@@ -199,8 +199,7 @@ def getIntEncoder(format):
 				# distinguish anymore between small ints that were supposed to
 				# be small fixed numbers and small ints that were just small
 				# ints. Hence the warning.
-				import sys
-				sys.stderr.write("Warning: 4-byte T2 number got passed to the "
+				log.warning("4-byte T2 number got passed to the "
 					"IntType handler. This should happen only when reading in "
 					"old XML files.\n")
 				code = bytechr(255) + pack(">l", value)
