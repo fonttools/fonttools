@@ -189,7 +189,7 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
 				name))
 		for glyphname in glyphnames:
 			variations = gvar.variations[glyphname]
-			coordinates, _ = glyf.getCoordinatesAndControls(glyphname, varfont)
+			coordinates = glyf.getCoordinates(glyphname, varfont)
 			origCoords, endPts = None, None
 			for var in variations:
 				scalar = supportScalar(loc, var.axes)

@@ -335,6 +335,27 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		coords.extend(phantomPoints)
 		return coords, controls
 
+	def getCoordinates(self, glyphName, ttFont, defaultVerticalOrigin=None):
+		"""Same as `getCoordinatesAndControls` but only returns coordinates array,
+		or None if the glyph is missing.
+		"""
+		if glyphName not in self.glyphs:
+			return None
+		glyph = self[glyphName]
+		if glyph.isComposite():
+			coords = GlyphCoordinates(
+				[(getattr(c, 'x', 0), getattr(c, 'y', 0)) for c in glyph.components]
+			)
+		else:
+			coords, _, _ = glyph.getCoordinates(self)
+			coords = coords.copy()
+		# Add phantom points for (left, right, top, bottom) positions.
+		phantomPoints = self.getPhantomPoints(
+			glyphName, ttFont, defaultVerticalOrigin=defaultVerticalOrigin
+		)
+		coords.extend(phantomPoints)
+		return coords
+
 	def setCoordinates(self, glyphName, coord, ttFont):
 		"""Set coordinates and metrics for the given glyph.
 

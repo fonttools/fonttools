@@ -30,7 +30,7 @@ def instantiateGvarGlyph(varfont, location, glyphname):
     glyf = varfont["glyf"]
     gvar = varfont["gvar"]
     variations = gvar.variations[glyphname]
-    coordinates, _ = glyf.getCoordinatesAndControls(glyphname, varfont)
+    coordinates = glyf.getCoordinates(glyphname, varfont)
     origCoords = None
     newVariations = []
     pinnedAxes = set(location.keys())
