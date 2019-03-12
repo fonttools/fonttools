@@ -226,6 +226,23 @@ ttLib.getTableClass('hhea').mergeMap = {
 	'numberOfHMetrics': recalculate,
 }
 
+ttLib.getTableClass('vhea').mergeMap = {
+	'*': equal,
+	'tableTag': equal,
+	'tableVersion': max,
+	'ascent': max,
+	'descent': min,
+	'lineGap': max,
+	'advanceHeightMax': max,
+	'minTopSideBearing': min,
+	'minBottomSideBearing': min,
+	'yMaxExtent': max,
+	'caretSlopeRise': first,
+	'caretSlopeRun': first,
+	'caretOffset': first,
+	'numberOfVMetrics': recalculate,
+}
+
 os2FsTypeMergeBitMap = {
 	'size': 16,
 	'*': lambda bit: 0,
