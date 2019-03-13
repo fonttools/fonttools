@@ -905,7 +905,9 @@ class MarkMarkPosStatement(Statement):
 
 
 class MultipleSubstStatement(Statement):
-    def __init__(self, prefix, glyph, suffix, replacement, forceChain, location=None):
+    def __init__(
+        self, prefix, glyph, suffix, replacement, forceChain=False, location=None
+    ):
         Statement.__init__(self, location)
         self.prefix, self.glyph, self.suffix = prefix, glyph, suffix
         self.replacement = replacement
