@@ -1050,7 +1050,7 @@ Recommendation for editors
 =========================
 
 public.skipExportGlyphs
-~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------
 
 This lib key works the same as the UFO lib key with the same name. The
 difference is that applications using a Designspace as the corner stone of the
