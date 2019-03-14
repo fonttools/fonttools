@@ -1044,8 +1044,8 @@ Recommendation for editors
 -  Use ``documentObject.updateFilenameFromPath()`` to explicitly set the
    **filename** attributes for all instance and source descriptors.
 
-Common Lib Key Registry
------------------------
+7 Common Lib Key Registry
+=========================
 
 public.skipExportGlyphs
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -1059,7 +1059,7 @@ UFOs says.
 
 .. 7-this-document:
 
-7 This document
+8 This document
 ===============
 
 -  The package is rather new and changes are to be expected.
