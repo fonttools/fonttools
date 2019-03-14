@@ -1044,6 +1044,8 @@ Recommendation for editors
 -  Use ``documentObject.updateFilenameFromPath()`` to explicitly set the
    **filename** attributes for all instance and source descriptors.
 
+.. 7-common-lib-key-registry:
+
 7 Common Lib Key Registry
 =========================
 
@@ -1057,7 +1059,7 @@ any of the UFOs. If the lib key is empty or not present in the Designspace, all
 glyphs should be exported, regardless of what the same lib key in any of the
 UFOs says.
 
-.. 7-this-document:
+.. 8-this-document:
 
 8 This document
 ===============
