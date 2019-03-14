@@ -12,7 +12,7 @@ NOTE: The module is experimental and both the API and the CLI *will* change.
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.misc.fixedTools import floatToFixedToFloat
+from fontTools.misc.fixedTools import floatToFixedToFloat, otRound
 from fontTools.varLib.models import supportScalar, normalizeValue, piecewiseLinearMap
 from fontTools.varLib.iup import iup_delta
 from fontTools.ttLib import TTFont
@@ -94,6 +94,50 @@ def instantiateGvar(varfont, location):
         instantiateGvarGlyph(varfont, location, glyphname)
 
 
+def instantiateCvar(varfont, location):
+    log.info("Instantiating cvt/cvar tables")
+
+    cvar = varfont["cvar"]
+    cvt = varfont["cvt "]
+    pinnedAxes = set(location.keys())
+    newVariations = []
+    deltas = {}
+    for var in cvar.variations:
+        tupleAxes = set(var.axes.keys())
+        pinnedTupleAxes = tupleAxes & pinnedAxes
+        if not pinnedTupleAxes:
+            # A tuple for only axes being kept is untouched
+            newVariations.append(var)
+            continue
+        else:
+            # compute influence at pinned location only for the pinned axes
+            pinnedAxesSupport = {a: var.axes[a] for a in pinnedTupleAxes}
+            scalar = supportScalar(location, pinnedAxesSupport)
+            if not scalar:
+                # no influence (default value or out of range); drop tuple
+                continue
+            if tupleAxes.issubset(pinnedAxes):
+                for i, c in enumerate(var.coordinates):
+                    if c is not None:
+                        # Compute deltas which need to be applied to values in cvt
+                        deltas[i] = deltas.get(i, 0) + scalar * c
+            else:
+                # Apply influence to delta values
+                for i, d in enumerate(var.coordinates):
+                    if d is not None:
+                        var.coordinates[i] = otRound(d * scalar)
+                for axis in pinnedTupleAxes:
+                    del var.axes[axis]
+                newVariations.append(var)
+    if deltas:
+        for i, delta in deltas.items():
+            cvt[i] += otRound(delta)
+    if newVariations:
+        cvar.variations = newVariations
+    else:
+      del varfont["cvar"]
+
+
 def normalize(value, triple, avar_mapping):
     value = normalizeValue(value, triple)
     if avar_mapping:
@@ -151,6 +195,9 @@ def instantiateVariableFont(varfont, axis_limits, inplace=False):
 
     if "gvar" in varfont:
         instantiateGvar(varfont, axis_limits)
+
+    if "cvar" in varfont:
+        instantiateCvar(varfont, axis_limits)
 
     # TODO: actually process HVAR instead of dropping it
     del varfont["HVAR"]
