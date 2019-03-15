@@ -408,7 +408,7 @@ def buildSinglePos(mapping, glyphMap):
     # If a ValueRecord is shared between multiple glyphs, we generate
     # a SinglePos format 1 subtable; that is the most compact form.
     for key, glyphs in coverages.items():
-        if len(glyphs) > 1:
+        if len(glyphs) * _getSinglePosValueSize(key) > 5:
             format1Mapping = {g: values[key] for g in glyphs}
             result.append(buildSinglePosSubtable(format1Mapping, glyphMap))
             handled.add(key)
@@ -419,7 +419,9 @@ def buildSinglePos(mapping, glyphMap):
     for valueFormat, keys in masks.items():
         f2 = [k for k in keys if k not in handled]
         if len(f2) > 1:
-            format2Mapping = {coverages[k][0]: values[k] for k in f2}
+            format2Mapping = {}
+            for k in f2:
+                format2Mapping.update((g, values[k]) for g in coverages[k])
             result.append(buildSinglePosSubtable(format2Mapping, glyphMap))
             handled.update(f2)
 
@@ -428,8 +430,8 @@ def buildSinglePos(mapping, glyphMap):
     # is unique as well. We encode these in format 1 again.
     for key, glyphs in coverages.items():
         if key not in handled:
-            assert len(glyphs) == 1, glyphs
-            st = buildSinglePosSubtable({glyphs[0]: values[key]}, glyphMap)
+            for g in glyphs:
+                st = buildSinglePosSubtable({g: values[key]}, glyphMap)
             result.append(st)
 
     # When the OpenType layout engine traverses the subtables, it will
@@ -491,6 +493,14 @@ def _makeDeviceTuple(device):
     return (device.DeltaFormat, device.StartSize, device.EndSize,
             tuple(device.DeltaValue))
 
+def _getSinglePosValueSize(valueKey):
+    count = 0
+    for k in valueKey[1:]:
+        if hasattr(k[1], '__len__') and len(k[1]):
+            count += len(k[1][3]) + 3
+        else:
+            count += 1
+    return count
 
 def buildValue(value):
     self = ValueRecord()
