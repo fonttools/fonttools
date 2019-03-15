@@ -526,6 +526,7 @@ class Parser(object):
             return self.ast.LookupFlagStatement(value, location=location)
 
         # format A: "lookupflag RightToLeft MarkAttachmentType @M;"
+        value_seen = False
         value, markAttachment, markFilteringSet = 0, None, None
         flags = {
             "RightToLeft": 1, "IgnoreBaseGlyphs": 2,
@@ -545,12 +546,18 @@ class Parser(object):
                 self.expect_keyword_("UseMarkFilteringSet")
                 markFilteringSet = self.parse_class_name_()
             elif self.next_token_ in flags:
+                value_seen = True
                 value = value | flags[self.expect_name_()]
             else:
                 raise FeatureLibError(
                     '"%s" is not a recognized lookupflag' % self.next_token_,
                     self.next_token_location_)
         self.expect_symbol_(";")
+
+        if not any([value_seen, markAttachment, markFilteringSet]):
+            raise FeatureLibError(
+                'lookupflag must have a value', self.next_token_location_)
+
         return self.ast.LookupFlagStatement(value,
                                             markAttachment=markAttachment,
                                             markFilteringSet=markFilteringSet,

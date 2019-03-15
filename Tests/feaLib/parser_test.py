@@ -722,6 +722,13 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(flag.markFilteringSet)
         self.assertEqual(flag.asFea(), "lookupflag 0;")
 
+    def test_lookupflag_no_value(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'lookupflag must have a value',
+            self.parse,
+            "feature test {lookupflag;} test;")
+
     def test_lookupflag_repeated(self):
         self.assertRaisesRegex(
             FeatureLibError,
