@@ -1,6 +1,5 @@
 - [varLib] ``load_designspace()``: Provide a default English name for the ital
   axis tag.
-- Remove pyftinspect because it is unmaintained and bitrotted.
 
 3.38.0 (released 2019-02-18)
 ----------------------------

@@ -136,10 +136,12 @@ important, we maintain an ordered list of glyph names in the font.
 Other Tools
 ~~~~~~~~~~~
 
-Commands for merging and subsetting fonts are also available:
+Commands for inspecting, merging and subsetting fonts are also
+available:
 
 .. code:: sh
 
+    pyftinspect
     pyftmerge
     pyftsubset
 
@@ -297,6 +299,16 @@ are required to unlock the extra features named "ufo", etc.
 
   * `reportlab <https://pypi.python.org/pypi/reportlab>`__: Python toolkit
     for generating PDFs and graphics.
+
+- ``Lib/fontTools/inspect.py``
+
+  A GUI font inspector, requires one of the following packages:
+
+  * `PyGTK <https://pypi.python.org/pypi/PyGTK>`__: Python bindings for
+    GTK  2.x (only works with Python 2).
+  * `PyGObject <https://wiki.gnome.org/action/show/Projects/PyGObject>`__ :
+    Python bindings for GTK 3.x and gobject-introspection libraries (also
+    compatible with Python 3).
 
 Testing
 ~~~~~~~
