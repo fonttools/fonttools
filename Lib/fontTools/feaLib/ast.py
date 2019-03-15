@@ -821,19 +821,20 @@ class LookupFlagStatement(Statement):
                                 markAttach, markFilter)
 
     def asFea(self, indent=""):
-        res = "lookupflag"
+        res = []
         flags = ["RightToLeft", "IgnoreBaseGlyphs", "IgnoreLigatures", "IgnoreMarks"]
         curr = 1
         for i in range(len(flags)):
             if self.value & curr != 0:
-                res += " " + flags[i]
+                res.append(flags[i])
             curr = curr << 1
         if self.markAttachment is not None:
-            res += " MarkAttachmentType {}".format(self.markAttachment.asFea())
+            res.append("MarkAttachmentType {}".format(self.markAttachment.asFea()))
         if self.markFilteringSet is not None:
-            res += " UseMarkFilteringSet {}".format(self.markFilteringSet.asFea())
-        res += ";"
-        return res
+            res.append("UseMarkFilteringSet {}".format(self.markFilteringSet.asFea()))
+        if not res:
+            res = ["0"]
+        return "lookupflag {};".format(" ".join(res))
 
 
 class LookupReferenceStatement(Statement):
