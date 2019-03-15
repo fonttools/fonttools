@@ -374,7 +374,6 @@ setup(
 			"ttx = fontTools.ttx:main",
 			"pyftsubset = fontTools.subset:main",
 			"pyftmerge = fontTools.merge:main",
-			"pyftinspect = fontTools.inspect:main"
 		]
 	},
 	cmdclass={

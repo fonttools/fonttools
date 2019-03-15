@@ -8,7 +8,6 @@ fontTools Docs
    agl
    cffLib
    designspaceLib/index
-   inspect
    encodings
    feaLib
    merge
