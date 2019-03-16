@@ -1350,6 +1350,46 @@ def splitPairPos(oldSubTable, newSubTable, overflowRecord):
 	return ok
 
 
+def splitCursivePos(oldSubTable, newSubTable, overflowRecord):
+	# split half of the records to the new subtable
+	entryExitCount = oldSubTable.EntryExitCount
+	if entryExitCount < 2:
+		# oh well, not much left to split...
+		return False
+
+	oldEntryExitCount = entryExitCount // 2
+	newEntryExitCount = entryExitCount - oldEntryExitCount
+
+	oldCoverage, oldEntryExitRecords = [], []
+	newCoverage, newEntryExitRecords = [], []
+	for i, (glyphName, entryExitRecord) in enumerate(zip(
+		oldSubTable.Coverage.glyphs,
+		oldSubTable.EntryExitRecord
+	)):
+		if i < oldEntryExitCount:
+			oldCoverage.append(glyphName)
+			oldEntryExitRecords.append(entryExitRecord)
+		else:
+			newCoverage.append(glyphName)
+			newEntryExitRecords.append(entryExitRecord)
+
+	newSubTable.Format = oldSubTable.Format
+
+	oldSubTable.Coverage.glyphs = oldCoverage
+	newSubTable.Coverage = oldSubTable.Coverage.__class__()
+	newSubTable.Coverage.Format = oldSubTable.Coverage.Format
+	newSubTable.Coverage.glyphs = newCoverage
+
+	oldSubTable.EntryExitRecord = oldEntryExitRecords
+	newSubTable.EntryExitRecord = oldSubTable.EntryExitRecord.__class__()
+	newSubTable.EntryExitRecord = newEntryExitRecords
+
+	oldSubTable.EntryExitCount = len(oldEntryExitRecords)
+	newSubTable.EntryExitCount = len(newEntryExitRecords)
+
+	return True
+
+
 def splitMarkBasePos(oldSubTable, newSubTable, overflowRecord):
 	# split half of the mark classes to the new subtable
 	classCount = oldSubTable.ClassCount
@@ -1424,7 +1464,7 @@ splitTable = {	'GSUB': {
 				'GPOS': {
 #					1: splitSinglePos,
 					2: splitPairPos,
-#					3: splitCursivePos,
+					3: splitCursivePos,
 					4: splitMarkBasePos,
 #					5: splitMarkLigPos,
 #					6: splitMarkMarkPos,
