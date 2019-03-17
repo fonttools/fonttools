@@ -841,7 +841,10 @@ class Glyph(object):
 			allEndPts = []
 			for compo in self.components:
 				g = glyfTable[compo.glyphName]
-				coordinates, endPts, flags = g.getCoordinates(glyfTable)
+				try:
+					coordinates, endPts, flags = g.getCoordinates(glyfTable)
+				except RuntimeError:
+					raise ttLib.TTLibError("glyph '%s' contains recursive component reference" % compo.glyphName)
 				if hasattr(compo, "firstPt"):
 					# move according to two reference points
 					x1,y1 = allCoords[compo.firstPt]
