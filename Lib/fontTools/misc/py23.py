@@ -7,7 +7,7 @@ import sys
 __all__ = ['basestring', 'unicode', 'unichr', 'byteord', 'bytechr', 'BytesIO',
 		'StringIO', 'UnicodeIO', 'strjoin', 'bytesjoin', 'tobytes', 'tostr',
 		'tounicode', 'Tag', 'open', 'range', 'xrange', 'round', 'Py23Error',
-		'SimpleNamespace', 'zip']
+		'SimpleNamespace', 'zip', 'RecursionError']
 
 
 class Py23Error(NotImplementedError):
@@ -512,6 +512,12 @@ else:
 		"""Context manager for temporarily redirecting stderr to another file."""
 
 		_stream = "stderr"
+
+
+try:
+	RecursionError = RecursionError
+except NameError:
+	RecursionError = RuntimeError
 
 
 if __name__ == "__main__":
