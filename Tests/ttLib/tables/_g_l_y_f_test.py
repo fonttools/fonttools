@@ -237,7 +237,7 @@ class glyfTableTest(unittest.TestCase):
         glyph_B = pen_B.glyph()
         glyphSet["A"] = glyph_A
         glyphSet["B"] = glyph_B
-        with self.assertRaisesRegex(TTLibError, "glyph '.' contains recursive component reference"):
+        with self.assertRaisesRegex(TTLibError, "glyph '.' contains a recursive component reference"):
             glyph_A.getCoordinates(glyphSet)
 
 
