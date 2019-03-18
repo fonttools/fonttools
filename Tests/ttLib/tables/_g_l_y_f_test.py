@@ -1,7 +1,8 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
-from fontTools.ttLib import TTFont, newTable
+from fontTools.pens.ttGlyphPen import TTGlyphPen
+from fontTools.ttLib import TTFont, newTable, TTLibError
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 import sys
 import array
@@ -180,6 +181,13 @@ def strip_ttLibVersion(string):
 
 class glyfTableTest(unittest.TestCase):
 
+    def __init__(self, methodName):
+        unittest.TestCase.__init__(self, methodName)
+        # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
+        # and fires deprecation warnings if a program uses the old name.
+        if not hasattr(self, "assertRaisesRegex"):
+            self.assertRaisesRegex = self.assertRaisesRegexp
+
     @classmethod
     def setUpClass(cls):
         with open(GLYF_BIN, 'rb') as f:
@@ -214,6 +222,23 @@ class glyfTableTest(unittest.TestCase):
         glyfTable = font['glyf']
         glyfData = glyfTable.compile(font)
         self.assertEqual(glyfData, self.glyfData)
+
+    def test_recursiveComponent(self):
+        glyphSet = {}
+        pen_dummy = TTGlyphPen(glyphSet)
+        glyph_dummy = pen_dummy.glyph()
+        glyphSet["A"] = glyph_dummy
+        glyphSet["B"] = glyph_dummy
+        pen_A = TTGlyphPen(glyphSet)
+        pen_A.addComponent("B", (1, 0, 0, 1, 0, 0))
+        pen_B = TTGlyphPen(glyphSet)
+        pen_B.addComponent("A", (1, 0, 0, 1, 0, 0))
+        glyph_A = pen_A.glyph()
+        glyph_B = pen_B.glyph()
+        glyphSet["A"] = glyph_A
+        glyphSet["B"] = glyph_B
+        with self.assertRaisesRegex(TTLibError, "glyph '.' contains a recursive component reference"):
+            glyph_A.getCoordinates(glyphSet)
 
 
 if __name__ == "__main__":
