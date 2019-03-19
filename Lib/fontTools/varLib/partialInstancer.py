@@ -17,6 +17,8 @@ from fontTools.varLib.models import supportScalar, normalizeValue, piecewiseLine
 from fontTools.varLib.iup import iup_delta
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
+from fontTools.varLib.varStore import VarStoreInstancer
+from fontTools.varLib.mvar import MVAR_ENTRIES
 from copy import deepcopy
 import logging
 import os
@@ -24,6 +26,8 @@ import re
 
 
 log = logging.getLogger("fontTools.varlib.partialInstancer")
+
+PEAK_COORD_INDEX = 1
 
 
 def instantiateGvarGlyph(varfont, location, glyphname):
@@ -135,7 +139,107 @@ def instantiateCvar(varfont, location):
     if newVariations:
         cvar.variations = newVariations
     else:
-      del varfont["cvar"]
+        del varfont["cvar"]
+
+
+def setMvarDeltas(varfont, location):
+    log.info("Setting MVAR deltas")
+
+    mvar = varfont["MVAR"].table
+    fvar = varfont["fvar"]
+    varStoreInstancer = VarStoreInstancer(mvar.VarStore, fvar.axes, location)
+    records = mvar.ValueRecord
+    for rec in records:
+        mvarTag = rec.ValueTag
+        if mvarTag not in MVAR_ENTRIES:
+            continue
+        tableTag, itemName = MVAR_ENTRIES[mvarTag]
+        delta = otRound(varStoreInstancer[rec.VarIdx])
+        if not delta:
+            continue
+        setattr(
+            varfont[tableTag], itemName, getattr(varfont[tableTag], itemName) + delta
+        )
+
+
+def instantiateMvar(varfont, location):
+    log.info("Instantiating MVAR table")
+    # First instantiate to new position without modifying MVAR table
+    setMvarDeltas(varfont, location)
+
+    instantiateItemVariationStore(varfont, "MVAR", location)
+
+
+def instantiateItemVariationStore(varfont, tableName, location):
+    log.info("Instantiating ItemVariation store of %s table", tableName)
+
+    table = varfont[tableName].table
+    fvar = varfont["fvar"]
+    newRegions = []
+    regionInfluenceMap = {}
+    pinnedAxes = set(location.keys())
+    for regionIndex, region in enumerate(table.VarStore.VarRegionList.Region):
+        # collect set of axisTags which have influence: peakCoord != 0
+        regionAxes = set(
+            key
+            for key, value in region.get_support(fvar.axes).items()
+            if value[PEAK_COORD_INDEX] != 0
+        )
+        pinnedRegionAxes = regionAxes & pinnedAxes
+        if not pinnedRegionAxes:
+            # A region where none of the axes having effect are pinned
+            newRegions.append(region)
+            continue
+        if len(pinnedRegionAxes) == len(regionAxes):
+            # All the axes having effect in this region are being pinned so
+            # remove it
+            regionInfluenceMap.update({regionIndex: None})
+        else:
+            # This region will be retained but the deltas have to be adjusted.
+            pinnedSupport = {
+                key: value
+                for key, value in enumerate(region.get_support(fvar.axes))
+                if key in pinnedRegionAxes
+            }
+            pinnedScalar = supportScalar(location, pinnedSupport)
+            regionInfluenceMap.update({regionIndex: pinnedScalar})
+
+            for axisname in pinnedRegionAxes:
+                # For all pinnedRegionAxes make their influence null by setting
+                # PeakCoord to 0.
+                index = next(
+                    index
+                    for index, axis in enumerate(fvar.axes)
+                    if axis.axisTag == axisname
+                )
+                region.VarRegionAxis[index].PeakCoord = 0
+
+            newRegions.append(region)
+
+    table.VarStore.VarRegionList.Region = newRegions
+
+    if not table.VarStore.VarRegionList.Region:
+        # Delete table if no more regions left.
+        del varfont[tableName]
+        return
+
+    # First apply scalars to deltas then remove deltas in reverse index order
+    if regionInfluenceMap:
+        regionsToBeRemoved = [
+            regionIndex
+            for regionIndex, scalar in regionInfluenceMap.items()
+            if scalar is None
+        ]
+        for vardata in table.VarStore.VarData:
+            for regionIndex, scalar in regionInfluenceMap.items():
+                if scalar is not None:
+                    for item in vardata.Item:
+                        item[regionIndex] = otRound(item[regionIndex] * scalar)
+
+            for index in sorted(regionsToBeRemoved, reverse=True):
+                del vardata.VarRegionIndex[index]
+                for item in vardata.Item:
+                    del item[index]
 
 
 def normalize(value, triple, avar_mapping):
@@ -198,6 +302,9 @@ def instantiateVariableFont(varfont, axis_limits, inplace=False):
 
     if "cvar" in varfont:
         instantiateCvar(varfont, axis_limits)
+
+    if "MVAR" in varfont:
+        instantiateMvar(varfont, axis_limits)
 
     # TODO: actually process HVAR instead of dropping it
     del varfont["HVAR"]
