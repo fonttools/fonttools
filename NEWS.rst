@@ -1,3 +1,6 @@
+3.39.0 (released 2019-03-19)
+----------------------------
+
 - [ttLib/glyf] Raise more specific error when encountering recursive
   component references (#1545, #1546).
 - [Doc/designspaceLib] Defined new ``public.skipExportGlyphs`` lib key (#1534,
