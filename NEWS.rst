@@ -12,7 +12,9 @@
 - [mutator] Set ``OVERLAP_SIMPLE`` and ``OVERLAP_COMPOUND`` glyf flags by
   default in ``instantiateVariableFont``. Added ``--no-overlap`` cli option
   to disable this (#1518).
-- [subset] Fixed subsetting ``VVAR`` table (#1516, #1517).
+- [subset] Fixed subsetting ``VVAR`` table (#1516, #1517).  
+  Fixed subsetting an ``HVAR`` table that has an ``AdvanceWidthMap`` when the
+  option ``--retain-gids`` is used.
 - [feaLib] Added ``forceChained`` in MultipleSubstStatement (#1511).  
   Fixed double indentation of ``subtable`` statement (#1512).  
   Added support for ``subtable`` statement in more places than just PairPos
