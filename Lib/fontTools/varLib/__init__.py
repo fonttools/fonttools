@@ -463,46 +463,134 @@ def _merge_TTHinting(font, masterModel, master_ttfs, tolerance=0.5):
 		var = TupleVariation(support, delta)
 		cvar.variations.append(var)
 
-def _add_HVAR(font, masterModel, master_ttfs, axisTags):
+hvar_fields = { 'table_tag': 'HVAR',
+	'metrics_tag': 'hmtx',
+	'sb1': 'LsbMap',
+	'sb2': 'RsbMap',
+	'mapping_name': 'AdvWidthMap',
+	}
+vvar_fields = { 'table_tag': 'VVAR',
+	'metrics_tag': 'vmtx',
+	'bearing1': 'TsbMap',
+	'bearing2': 'BsbMap',
+	'mapping': 'AdvHeightMap',
+	}
+MetricsFields = namedtuple('MetricsFields',
+	['table_tag', 'metrics_tag', 'sb1', 'sb2', 'adv_mapping', 'vorig_mapping'])
 
-	log.info("Generating HVAR")
+hvar_fields = MetricsFields(table_tag='HVAR', metrics_tag='hmtx', sb1='LsbMap',
+	sb2='RsbMap', adv_mapping='AdvWidthMap', vorig_mapping=None)
+	
+vvar_fields = MetricsFields(table_tag='VVAR', metrics_tag='vmtx', sb1='TsbMap',
+	sb2='BsbMap', adv_mapping='AdvHeightMap', vorig_mapping='VOrgMap')
+
+def _add_HVAR(font, masterModel, master_ttfs, axisTags):
+	_add_VHVAR(font, masterModel, master_ttfs, axisTags, hvar_fields)
+
+def _add_VVAR(font, masterModel, master_ttfs, axisTags):
+	_add_VHVAR(font, masterModel, master_ttfs, axisTags, vvar_fields)
+
+
+def _add_VHVAR(font, masterModel, master_ttfs, axisTags, table_fields):
+
+	table_tag = table_fields.table_tag
+	assert table_tag not in font
+	log.info("Generating " + table_tag)
+	VHVAR = newTable(table_tag)
+	table_class = getattr(ot, table_tag)
+	vhvar = VHVAR.table = table_class()
+	vhvar.Version = 0x00010000
 
 	glyphOrder = font.getGlyphOrder()
 
-	hAdvanceDeltasAndSupports = {}
-	metricses = [m["hmtx"].metrics for m in master_ttfs]
-	for glyph in glyphOrder:
-		hAdvances = [metrics[glyph][0] if glyph in metrics else None for metrics in metricses]
-		hAdvanceDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(hAdvances)
+	# Build list of source font advance widths for each glyph
+	metrics_tag = table_fields.metrics_tag
+	adv_metricses = [m[metrics_tag].metrics for m in master_ttfs]
 
-	singleModel = models.allEqual(id(v[1]) for v in hAdvanceDeltasAndSupports.values())
+	# Build list of source font vertical origin coords for each glyph
+	if table_tag == 'VVAR' and 'VORG' in master_ttfs[0]:
+		v_orig_metricses = [m['VORG'].VOriginRecords for m in master_ttfs]
+		default_y_origs = [m['VORG'].defaultVertOriginY for m in master_ttfs]
+		v_orig_metricses = list(zip(v_orig_metricses, default_y_origs))
+	else:
+		v_orig_metricses = None
+
+	metricsStore, advanceMapping, vOrigMapping = _get_advance_metrics(font,
+		masterModel, master_ttfs, axisTags, glyphOrder, adv_metricses,
+		v_orig_metricses)
+
+	vhvar.VarStore = metricsStore
+	if advanceMapping is None:
+		setattr(vhvar, table_fields.adv_mapping, None)
+	else:
+		setattr(vhvar, table_fields.adv_mapping, advanceMapping)
+	if vOrigMapping is not None:
+		setattr(vhvar, table_fields.vorig_mapping, vOrigMapping)
+	setattr(vhvar, table_fields.sb1, None)
+	setattr(vhvar, table_fields.sb2, None)
+
+	font[table_tag] = VHVAR
+	return
+
+def _get_advance_metrics(font, masterModel, master_ttfs,
+		axisTags, glyphOrder, adv_metricses, v_orig_metricses=None):
+
+	vhAdvanceDeltasAndSupports = {}
+	vOrigDeltasAndSupports = {}
+	for glyph in glyphOrder:
+		vhAdvances = [metrics[glyph][0] if glyph in metrics else None for metrics in adv_metricses]
+		vhAdvanceDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(vhAdvances)
+
+	singleModel = models.allEqual(id(v[1]) for v in vhAdvanceDeltasAndSupports.values())
+
+	if v_orig_metricses:
+		singleModel = False
+		for glyph in glyphOrder:
+			# We need to supply a vOrigs tuple with non-None default values
+			# for each glyph. v_orig_metricses contains values only for those
+			# glyphs which have a non-default vOrig.
+			vOrigs = [metrics[glyph] if glyph in metrics else defaultVOrig
+				for metrics, defaultVOrig in v_orig_metricses]
+			print(glyph, vOrigs)
+			vOrigDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(vOrigs)
 
 	directStore = None
 	if singleModel:
 		# Build direct mapping
-
-		supports = next(iter(hAdvanceDeltasAndSupports.values()))[1][1:]
+		supports = next(iter(vhAdvanceDeltasAndSupports.values()))[1][1:]
 		varTupleList = builder.buildVarRegionList(supports, axisTags)
 		varTupleIndexes = list(range(len(supports)))
 		varData = builder.buildVarData(varTupleIndexes, [], optimize=False)
 		for glyphName in glyphOrder:
-			varData.addItem(hAdvanceDeltasAndSupports[glyphName][0])
+			varData.addItem(vhAdvanceDeltasAndSupports[glyphName][0])
 		varData.optimize()
 		directStore = builder.buildVarStore(varTupleList, [varData])
 
 	# Build optimized indirect mapping
 	storeBuilder = varStore.OnlineVarStoreBuilder(axisTags)
-	mapping = {}
+	adv_mapping = {}
 	for glyphName in glyphOrder:
-		deltas,supports = hAdvanceDeltasAndSupports[glyphName]
+		deltas, supports = vhAdvanceDeltasAndSupports[glyphName]
 		storeBuilder.setSupports(supports)
-		mapping[glyphName] = storeBuilder.storeDeltas(deltas)
+		adv_mapping[glyphName] = storeBuilder.storeDeltas(deltas)
+
+	if v_orig_metricses:
+		v_orig_mapping_i = {}
+		for glyphName in glyphOrder:
+			deltas, supports = vOrigDeltasAndSupports[glyphName]
+			storeBuilder.setSupports(supports)
+			v_orig_mapping_i[glyphName] = storeBuilder.storeDeltas(deltas)
+
 	indirectStore = storeBuilder.finish()
 	mapping2 = indirectStore.optimize()
-	mapping = [mapping2[mapping[g]] for g in glyphOrder]
-	advanceMapping = builder.buildVarIdxMap(mapping, glyphOrder)
+	adv_mapping = [mapping2[adv_mapping[g]] for g in glyphOrder]
+	advanceMapping = builder.buildVarIdxMap(adv_mapping, glyphOrder)
+
+	if v_orig_metricses:
+		v_orig_mapping_i = [mapping2[v_orig_mapping_i[g]] for g in glyphOrder]
 
 	use_direct = False
+	vOrigMapping = None
 	if directStore:
 		# Compile both, see which is more compact
 
@@ -517,18 +605,16 @@ def _add_HVAR(font, masterModel, master_ttfs, axisTags):
 
 		use_direct = directSize < indirectSize
 
-	# Done; put it all together.
-	assert "HVAR" not in font
-	HVAR = font["HVAR"] = newTable('HVAR')
-	hvar = HVAR.table = ot.HVAR()
-	hvar.Version = 0x00010000
-	hvar.LsbMap = hvar.RsbMap = None
 	if use_direct:
-		hvar.VarStore = directStore
-		hvar.AdvWidthMap = None
+		metricsStore = directStore
+		advanceMapping = None
 	else:
-		hvar.VarStore = indirectStore
-		hvar.AdvWidthMap = advanceMapping
+		metricsStore = indirectStore
+		if v_orig_metricses:
+			vOrigMapping = builder.buildVarIdxMap(v_orig_mapping_i, glyphOrder)
+
+	return metricsStore, advanceMapping, vOrigMapping
+
 
 def _add_MVAR(font, masterModel, master_ttfs, axisTags):
 
@@ -840,6 +926,8 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 		_add_MVAR(vf, model, master_fonts, axisTags)
 	if 'HVAR' not in exclude:
 		_add_HVAR(vf, model, master_fonts, axisTags)
+	if 'VVAR' not in exclude and 'vmtx' in vf:
+		_add_VVAR(vf, model, master_fonts, axisTags)
 	if 'GDEF' not in exclude or 'GPOS' not in exclude:
 		_merge_OTL(vf, model, master_fonts, axisTags)
 	if 'gvar' not in exclude and 'glyf' in vf:
