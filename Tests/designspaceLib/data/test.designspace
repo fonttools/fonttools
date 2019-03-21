@@ -5,9 +5,10 @@
       <labelname xml:lang="en">Wéíght</labelname>
       <labelname xml:lang="fa-IR">قطر</labelname>
     </axis>
-    <axis tag="wdth" name="width" minimum="0" maximum="1000" default="20" hidden="1">
+    <axis tag="wdth" name="width" minimum="0" maximum="1000" default="15" hidden="1">
       <labelname xml:lang="fr">Chasse</labelname>
       <map input="0" output="10"/>
+      <map input="15" output="20"/>
       <map input="401" output="66"/>
       <map input="1000" output="990"/>
     </axis>

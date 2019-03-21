@@ -1,5 +1,31 @@
-- [varLib] ``load_designspace()``: Provide a default English name for the ital
-  axis tag.
+3.39.0 (released 2019-03-19)
+----------------------------
+
+- [ttLib/glyf] Raise more specific error when encountering recursive
+  component references (#1545, #1546).
+- [Doc/designspaceLib] Defined new ``public.skipExportGlyphs`` lib key (#1534,
+  unified-font-object/ufo-spec#84).
+- [varLib] Use ``vmtx`` to compute vertical phantom points; or ``hhea.ascent``
+  and ``head.unitsPerEM`` if ``vmtx`` is missing (#1528).
+- [gvar/cvar] Sort XML element's min/value/max attributes in TupleVariation
+  toXML to improve readability of TTX dump (#1527).
+- [varLib.plot] Added support for 2D plots with only 1 variation axis (#1522).
+- [designspaceLib] Use axes maps when normalizing locations in
+  DesignSpaceDocument (#1226, #1521), and when finding default source (#1535).
+- [mutator] Set ``OVERLAP_SIMPLE`` and ``OVERLAP_COMPOUND`` glyf flags by
+  default in ``instantiateVariableFont``. Added ``--no-overlap`` cli option
+  to disable this (#1518).
+- [subset] Fixed subsetting ``VVAR`` table (#1516, #1517).  
+  Fixed subsetting an ``HVAR`` table that has an ``AdvanceWidthMap`` when the
+  option ``--retain-gids`` is used.
+- [feaLib] Added ``forceChained`` in MultipleSubstStatement (#1511).  
+  Fixed double indentation of ``subtable`` statement (#1512).  
+  Added support for ``subtable`` statement in more places than just PairPos
+  lookups (#1520).  
+  Handle lookupflag 0 and lookupflag without a value (#1540).
+- [varLib] In ``load_designspace``, provide a default English name for the
+  ``ital`` axis tag.
+- Remove pyftinspect because it is unmaintained and bitrotted.
 
 3.38.0 (released 2019-02-18)
 ----------------------------

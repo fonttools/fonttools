@@ -352,7 +352,7 @@ def find_data_files(manpath="share/man"):
 
 setup(
 	name="fonttools",
-	version="3.38.1.dev0",
+	version="3.39.1.dev0",
 	description="Tools to manipulate font files",
 	author="Just van Rossum",
 	author_email="just@letterror.com",
@@ -374,7 +374,6 @@ setup(
 			"ttx = fontTools.ttx:main",
 			"pyftsubset = fontTools.subset:main",
 			"pyftmerge = fontTools.merge:main",
-			"pyftinspect = fontTools.inspect:main"
 		]
 	},
 	cmdclass={

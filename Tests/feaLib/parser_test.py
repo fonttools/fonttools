@@ -677,6 +677,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(flag.value, 9)
         self.assertIsNone(flag.markAttachment)
         self.assertIsNone(flag.markFilteringSet)
+        self.assertEqual(flag.asFea(), "lookupflag RightToLeft IgnoreMarks;")
 
     def test_lookupflag_format_A_MarkAttachmentType(self):
         flag = self.parse_lookupflag_(
@@ -688,6 +689,8 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(flag.markAttachment.glyphSet(),
                          ("acute", "grave", "macron"))
         self.assertIsNone(flag.markFilteringSet)
+        self.assertEqual(flag.asFea(),
+            "lookupflag RightToLeft MarkAttachmentType @TOP_MARKS;")
 
     def test_lookupflag_format_A_UseMarkFilteringSet(self):
         flag = self.parse_lookupflag_(
@@ -699,6 +702,8 @@ class ParserTest(unittest.TestCase):
         self.assertIsInstance(flag.markFilteringSet, ast.GlyphClassName)
         self.assertEqual(flag.markFilteringSet.glyphSet(),
                          ("cedilla", "ogonek"))
+        self.assertEqual(flag.asFea(),
+            "lookupflag IgnoreLigatures UseMarkFilteringSet @BOTTOM_MARKS;")
 
     def test_lookupflag_format_B(self):
         flag = self.parse_lookupflag_("lookupflag 7;")
@@ -706,6 +711,23 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(flag.value, 7)
         self.assertIsNone(flag.markAttachment)
         self.assertIsNone(flag.markFilteringSet)
+        self.assertEqual(flag.asFea(),
+            "lookupflag RightToLeft IgnoreBaseGlyphs IgnoreLigatures;")
+
+    def test_lookupflag_format_B_zero(self):
+        flag = self.parse_lookupflag_("lookupflag 0;")
+        self.assertIsInstance(flag, ast.LookupFlagStatement)
+        self.assertEqual(flag.value, 0)
+        self.assertIsNone(flag.markAttachment)
+        self.assertIsNone(flag.markFilteringSet)
+        self.assertEqual(flag.asFea(), "lookupflag 0;")
+
+    def test_lookupflag_no_value(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            'lookupflag must have a value',
+            self.parse,
+            "feature test {lookupflag;} test;")
 
     def test_lookupflag_repeated(self):
         self.assertRaisesRegex(
