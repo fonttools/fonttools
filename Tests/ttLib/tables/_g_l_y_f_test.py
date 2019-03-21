@@ -4,6 +4,7 @@ from fontTools.misc.fixedTools import otRound
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont, newTable, TTLibError
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
+from fontTools.ttLib.tables import ttProgram
 import sys
 import array
 import pytest
@@ -239,6 +240,41 @@ class glyfTableTest(unittest.TestCase):
         glyphSet["B"] = glyph_B
         with self.assertRaisesRegex(TTLibError, "glyph '.' contains a recursive component reference"):
             glyph_A.getCoordinates(glyphSet)
+
+    def test_trim_remove_hinting_composite_glyph(self):
+        glyphSet = {"dummy": TTGlyphPen(None).glyph()}
+
+        pen = TTGlyphPen(glyphSet)
+        pen.addComponent("dummy", (1, 0, 0, 1, 0, 0))
+        composite = pen.glyph()
+        p = ttProgram.Program()
+        p.fromAssembly(['SVTCA[0]'])
+        composite.program = p
+        glyphSet["composite"] = composite
+
+        glyfTable = newTable("glyf")
+        glyfTable.glyphs = glyphSet
+        glyfTable.glyphOrder = sorted(glyphSet)
+
+        composite.compact(glyfTable)
+
+        self.assertTrue(hasattr(composite, "data"))
+
+        # remove hinting from the compacted composite glyph, without expanding it
+        composite.trim(remove_hinting=True)
+
+        # check that, after expanding the glyph, we have no instructions
+        composite.expand(glyfTable)
+        self.assertFalse(hasattr(composite, "program"))
+
+        # now remove hinting from expanded composite glyph
+        composite.program = p
+        composite.trim(remove_hinting=True)
+
+        # check we have no instructions
+        self.assertFalse(hasattr(composite, "program"))
+
+        composite.compact(glyfTable)
 
 
 if __name__ == "__main__":

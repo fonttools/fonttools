@@ -917,8 +917,12 @@ class Glyph(object):
 			expanding it."""
 		if not hasattr(self, "data"):
 			if remove_hinting:
-				self.program = ttProgram.Program()
-				self.program.fromBytecode([])
+				if self.isComposite():
+					if hasattr(self, "program"):
+						del self.program
+				else:
+					self.program = ttProgram.Program()
+					self.program.fromBytecode([])
 			# No padding to trim.
 			return
 		if not self.data:
