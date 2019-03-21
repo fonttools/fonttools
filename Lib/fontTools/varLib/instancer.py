@@ -6,7 +6,7 @@ variable fonts, only containing a subset of the variation space.
 For example, if you wish to pin the width axis to a given location while
 keeping the rest of the axes, you can do:
 
-$ fonttools varLib.partialInstancer ./NotoSans-VF.ttf wdth=85
+$ fonttools varLib.instancer ./NotoSans-VF.ttf wdth=85
 
 NOTE: The module is experimental and both the API and the CLI *will* change.
 """
@@ -25,7 +25,7 @@ import os
 import re
 
 
-log = logging.getLogger("fontTools.varlib.partialInstancer")
+log = logging.getLogger("fontTools.varlib.instancer")
 
 PEAK_COORD_INDEX = 1
 
@@ -344,7 +344,7 @@ def parseArgs(args):
     import argparse
 
     parser = argparse.ArgumentParser(
-        "fonttools varLib.partialInstancer",
+        "fonttools varLib.instancer",
         description="Partially instantiate a variable font",
     )
     parser.add_argument("input", metavar="INPUT.ttf", help="Input variable TTF file.")

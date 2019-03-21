@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
-from fontTools.varLib import partialInstancer as pi
+from fontTools.varLib import instancer
 import os
 import pytest
 
@@ -80,7 +80,7 @@ class InstantiateGvarTest(object):
         ],
     )
     def test_pin_and_drop_axis(self, varfont, glyph_name, location, expected):
-        pi.instantiateGvar(varfont, location)
+        instancer.instantiateGvar(varfont, location)
 
         assert _get_coordinates(varfont, glyph_name) == expected[glyph_name]
 
