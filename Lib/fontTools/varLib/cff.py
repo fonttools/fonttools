@@ -469,11 +469,6 @@ class CFF2CharStringMergePen(T2CharStringPen):
 							arg[0] = round_func(arg[0])
 						program.append(arg[0])
 					for arg in blendlist:
-						# for each coordinate tuple, append the region deltas
-						if len(arg) != 3:
-							print(arg)
-							import pdb
-							pdb.set_trace()
 						deltas = var_model.getDeltas(arg)
 						if round_func:
 							deltas = [round_func(delta) for delta in deltas]
