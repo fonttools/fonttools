@@ -51,7 +51,8 @@ def instantiateTupleVariationStore(variations, location):
             defaultDeltas.append(var.coordinates)
         else:
             # keep the TupleVariation, and round the scaled deltas to integers
-            var.roundDeltas()
+            if scalar != 1.0:
+                var.roundDeltas()
             newVariations.append(var)
     variations[:] = newVariations
     return defaultDeltas
