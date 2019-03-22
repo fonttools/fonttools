@@ -307,7 +307,7 @@ def parseLimits(limits):
     for limit_string in limits:
         match = re.match(r"^(\w{1,4})=([^:]+)(?:[:](.+))?$", limit_string)
         if not match:
-            parser.error("invalid location format: %r" % limit_string)
+            raise ValueError("invalid location format: %r" % limit_string)
         tag = match.group(1).ljust(4)
         lbound = float(match.group(2))
         ubound = lbound
