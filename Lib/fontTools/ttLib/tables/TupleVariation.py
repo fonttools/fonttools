@@ -306,7 +306,7 @@ class TupleVariation(object):
 			elif type(c) is int:
 				deltaX.append(c)
 			elif c is not None:
-				raise ValueError("invalid type of delta: %s" % type(c))
+				raise TypeError("invalid type of delta: %s" % type(c))
 		return self.compileDeltaValues_(deltaX) + self.compileDeltaValues_(deltaY)
 
 	@staticmethod
@@ -445,6 +445,49 @@ class TupleVariation(object):
 		if (flags & INTERMEDIATE_REGION) != 0:
 			size += axisCount * 4
 		return size
+
+	def scaleDeltas(self, scalar):
+		if scalar == 1.0:
+			return  # no change
+		# check if deltas are (x, y) as in gvar, or single values as in cvar
+		firstDelta = next((c for c in self.coordinates if c is not None), None)
+		if firstDelta is None:
+			return  # nothing to scale
+		if type(firstDelta) is tuple and len(firstDelta) == 2:
+			if scalar == 0:
+				self.coordinates = [(0, 0)] * len(self.coordinates)
+			else:
+				self.coordinates = [
+					(d[0] * scalar, d[1] * scalar) if d is not None else None
+					for d in self.coordinates
+				]
+		elif type(firstDelta) in (int, float):
+			if scalar == 0:
+				self.coordinates = [0] * len(self.coordinates)
+			else:
+				self.coordinates = [
+					d * scalar if d is not None else None
+					for d in self.coordinates
+				]
+		else:
+			raise TypeError("invalid type of delta: %s" % type(firstDelta))
+
+	def roundDeltas(self):
+		# check if deltas are (x, y) as in gvar, or single values as in cvar
+		firstDelta = next((c for c in self.coordinates if c is not None), None)
+		if firstDelta is None:
+			return  # nothing to round
+		if type(firstDelta) is tuple and len(firstDelta) == 2:
+			self.coordinates = [
+				(otRound(d[0]), otRound(d[1])) if d is not None else None
+				for d in self.coordinates
+			]
+		elif type(firstDelta) in (int, float):
+			self.coordinates = [
+				otRound(d) if d is not None else None for d in self.coordinates
+			]
+		else:
+			raise TypeError("invalid type of delta: %s" % type(firstDelta))
 
 
 def decompileSharedTuples(axisTags, sharedTupleCount, data, offset):
