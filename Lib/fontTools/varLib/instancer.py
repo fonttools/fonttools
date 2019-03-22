@@ -110,7 +110,7 @@ def instantiateGvar(varfont, location):
         del varfont["gvar"]
 
 
-def applyCvtDeltas(cvt, deltasets):
+def setCvarDeltas(cvt, deltasets):
     # copy cvt values internally represented as array.array("h") to a list,
     # accumulating deltas (that may be float since we scaled them) and only
     # do the rounding to integer once at the end to reduce rounding errors
@@ -128,7 +128,7 @@ def instantiateCvar(varfont, location):
     cvar = varfont["cvar"]
     cvt = varfont["cvt "]
     defaultDeltas = instantiateTupleVariationStore(cvar.variations, location)
-    applyCvtDeltas(cvt, defaultDeltas)
+    setCvarDeltas(cvt, defaultDeltas)
     if not cvar.variations:
         del varfont["cvar"]
 
