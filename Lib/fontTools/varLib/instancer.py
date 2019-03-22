@@ -30,50 +30,58 @@ log = logging.getLogger("fontTools.varlib.instancer")
 PEAK_COORD_INDEX = 1
 
 
-def instantiateGvarGlyph(varfont, location, glyphname):
+def instantiateTupleVariationStore(variations, location):
+    newVariations = []
+    defaultDeltas = []
+    for var in variations:
+        # Compute the scalar support of the axes to be pinned at the desired location,
+        # excluding any axes that we are not pinning.
+        # If a TupleVariation doesn't mention an axis, it implies that the axis peak
+        # is 0 (i.e. the axis does not participate).
+        support = {axis: var.axes.pop(axis, (-1, 0, +1)) for axis in location}
+        scalar = supportScalar(location, support)
+        if scalar == 0.0:
+            # no influence, drop the TupleVariation
+            continue
+        elif scalar != 1.0:
+            var.scaleDeltas(scalar)
+        if not var.axes:
+            # if no axis is left in the TupleVariation, also drop it; its deltas
+            # will be folded into the neutral
+            defaultDeltas.append(var.coordinates)
+        else:
+            # keep the TupleVariation, and round the scaled deltas to integers
+            var.roundDeltas()
+            newVariations.append(var)
+    variations[:] = newVariations
+    return defaultDeltas
+
+
+def setGvarGlyphDeltas(varfont, glyphname, deltasets):
     glyf = varfont["glyf"]
-    gvar = varfont["gvar"]
-    variations = gvar.variations[glyphname]
     coordinates = glyf.getCoordinates(glyphname, varfont)
     origCoords = None
-    newVariations = []
-    pinnedAxes = set(location.keys())
-    defaultModified = False
-    for var in variations:
-        tupleAxes = set(var.axes.keys())
-        pinnedTupleAxes = tupleAxes & pinnedAxes
-        if not pinnedTupleAxes:
-            # A tuple for only axes being kept is untouched
-            newVariations.append(var)
-            continue
-        else:
-            # compute influence at pinned location only for the pinned axes
-            pinnedAxesSupport = {a: var.axes[a] for a in pinnedTupleAxes}
-            scalar = supportScalar(location, pinnedAxesSupport)
-            if not scalar:
-                # no influence (default value or out of range); drop tuple
-                continue
-            deltas = var.coordinates
-            hasUntouchedPoints = None in deltas
-            if hasUntouchedPoints:
-                if origCoords is None:
-                    origCoords, g = glyf.getCoordinatesAndControls(glyphname, varfont)
-                deltas = iup_delta(deltas, origCoords, g.endPts)
-            scaledDeltas = GlyphCoordinates(deltas) * scalar
-            if tupleAxes.issubset(pinnedAxes):
-                # A tuple for only axes being pinned is discarded, and
-                # it's contribution is reflected into the base outlines
-                coordinates += scaledDeltas
-                defaultModified = True
-            else:
-                # A tuple for some axes being pinned has to be adjusted
-                var.coordinates = scaledDeltas
-                for axis in pinnedTupleAxes:
-                    del var.axes[axis]
-                newVariations.append(var)
-    if defaultModified:
-        glyf.setCoordinates(glyphname, coordinates, varfont)
-    gvar.variations[glyphname] = newVariations
+
+    for deltas in deltasets:
+        hasUntouchedPoints = None in deltas
+        if hasUntouchedPoints:
+            if origCoords is None:
+                origCoords, g = glyf.getCoordinatesAndControls(glyphname, varfont)
+            deltas = iup_delta(deltas, origCoords, g.endPts)
+        coordinates += GlyphCoordinates(deltas)
+
+    glyf.setCoordinates(glyphname, coordinates, varfont)
+
+
+def instantiateGvarGlyph(varfont, glyphname, location):
+    gvar = varfont["gvar"]
+
+    defaultDeltas = instantiateTupleVariationStore(gvar.variations[glyphname], location)
+    if defaultDeltas:
+        setGvarGlyphDeltas(varfont, glyphname, defaultDeltas)
+
+    if not gvar.variations[glyphname]:
+        del gvar.variations[glyphname]
 
 
 def instantiateGvar(varfont, location):
@@ -95,50 +103,32 @@ def instantiateGvar(varfont, location):
         ),
     )
     for glyphname in glyphnames:
-        instantiateGvarGlyph(varfont, location, glyphname)
+        instantiateGvarGlyph(varfont, glyphname, location)
+
+    if not gvar.variations:
+        del varfont["gvar"]
+
+
+def applyCvtDeltas(cvt, deltasets):
+    # copy cvt values internally represented as array.array("h") to a list,
+    # accumulating deltas (that may be float since we scaled them) and only
+    # do the rounding to integer once at the end to reduce rounding errors
+    values = list(cvt)
+    for deltas in deltasets:
+        for i, delta in enumerate(deltas):
+            if delta is not None:
+                values[i] += delta
+    for i, v in enumerate(values):
+        cvt[i] = otRound(v)
 
 
 def instantiateCvar(varfont, location):
     log.info("Instantiating cvt/cvar tables")
-
     cvar = varfont["cvar"]
     cvt = varfont["cvt "]
-    pinnedAxes = set(location.keys())
-    newVariations = []
-    deltas = {}
-    for var in cvar.variations:
-        tupleAxes = set(var.axes.keys())
-        pinnedTupleAxes = tupleAxes & pinnedAxes
-        if not pinnedTupleAxes:
-            # A tuple for only axes being kept is untouched
-            newVariations.append(var)
-            continue
-        else:
-            # compute influence at pinned location only for the pinned axes
-            pinnedAxesSupport = {a: var.axes[a] for a in pinnedTupleAxes}
-            scalar = supportScalar(location, pinnedAxesSupport)
-            if not scalar:
-                # no influence (default value or out of range); drop tuple
-                continue
-            if tupleAxes.issubset(pinnedAxes):
-                for i, c in enumerate(var.coordinates):
-                    if c is not None:
-                        # Compute deltas which need to be applied to values in cvt
-                        deltas[i] = deltas.get(i, 0) + scalar * c
-            else:
-                # Apply influence to delta values
-                for i, d in enumerate(var.coordinates):
-                    if d is not None:
-                        var.coordinates[i] = otRound(d * scalar)
-                for axis in pinnedTupleAxes:
-                    del var.axes[axis]
-                newVariations.append(var)
-    if deltas:
-        for i, delta in deltas.items():
-            cvt[i] += otRound(delta)
-    if newVariations:
-        cvar.variations = newVariations
-    else:
+    defaultDeltas = instantiateTupleVariationStore(cvar.variations, location)
+    applyCvtDeltas(cvt, defaultDeltas)
+    if not cvar.variations:
         del varfont["cvar"]
 
 
