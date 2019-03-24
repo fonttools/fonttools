@@ -998,7 +998,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         self.axes = []
         self.rules = []
         self.default = None         # name of the default master
-        self.defaultLoc = None
+        self.defaultLoc = {}
 
         self.lib = {}
         """Custom data associated with the whole document."""
@@ -1123,6 +1123,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
 
     def addAxis(self, axisDescriptor):
         self.axes.append(axisDescriptor)
+        self.defaultLoc[axisDescriptor.name] = axisDescriptor.default
 
     def addRule(self, ruleDescriptor):
         self.rules.append(ruleDescriptor)
