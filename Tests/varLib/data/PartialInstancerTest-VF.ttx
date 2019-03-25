@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.38">
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.39">
 
   <GlyphOrder>
     <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
@@ -12,12 +12,12 @@
     <!-- Most of this table will be recalculated by the compiler -->
     <tableVersion value="1.0"/>
     <fontRevision value="2.001"/>
-    <checkSumAdjustment value="0x648a72b4"/>
+    <checkSumAdjustment value="0x5060cf1e"/>
     <magicNumber value="0x5f0f3cf5"/>
     <flags value="00000000 00000011"/>
     <unitsPerEm value="1000"/>
     <created value="Tue Mar  5 00:05:14 2019"/>
-    <modified value="Fri Mar  8 21:09:33 2019"/>
+    <modified value="Mon Mar 25 10:59:41 2019"/>
     <xMin value="40"/>
     <yMin value="-200"/>
     <xMax value="450"/>
@@ -138,6 +138,13 @@
       <map code="0x2d" name="hyphen"/><!-- HYPHEN-MINUS -->
     </cmap_format_4>
   </cmap>
+
+  <cvt>
+    <cv index="0" value="500"/>
+    <cv index="1" value="-400"/>
+    <cv index="2" value="180"/>
+    <cv index="3" value="250"/>
+  </cvt>
 
   <loca>
     <!-- The 'loca' table will be calculated by the compiler -->
@@ -616,6 +623,18 @@
       <mapping from="1.0" to="1.0"/>
     </segment>
   </avar>
+
+  <cvar>
+    <version major="1" minor="0"/>
+    <tuple>
+      <coord axis="wght" value="-1.0"/>
+      <delta cvt="2" value="-30"/>
+    </tuple>
+    <tuple>
+      <coord axis="wdth" value="-1.0"/>
+      <delta cvt="3" value="-50"/>
+    </tuple>
+  </cvar>
 
   <fvar>
 

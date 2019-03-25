@@ -90,3 +90,32 @@ class InstantiateGvarTest(object):
             for tuples in varfont["gvar"].variations.values()
             for t in tuples
         )
+
+
+class InstantiateCvarTest(object):
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            pytest.param({"wght": -1.0}, [500, -400, 150, 250], id="wght=-1.0"),
+            pytest.param({"wdth": -1.0}, [500, -400, 180, 200], id="wdth=-1.0"),
+            pytest.param({"wght": -0.5}, [500, -400, 165, 250], id="wght=-0.5"),
+            pytest.param({"wdth": -0.3}, [500, -400, 180, 240], id="wdth=-0.3"),
+        ],
+    )
+    def test_pin_and_drop_axis(self, varfont, location, expected):
+        instancer.instantiateCvar(varfont, location)
+
+        assert list(varfont["cvt "].values) == expected
+
+        # check that the pinned axis has been dropped from gvar
+        pinned_axes = location.keys()
+        assert not any(
+            axis in t.axes for t in varfont["cvar"].variations for axis in pinned_axes
+        )
+
+    def test_full_instance(self, varfont):
+        instancer.instantiateCvar(varfont, {"wght": -0.5, "wdth": -0.5})
+
+        assert list(varfont["cvt "].values) == [500, -400, 165, 225]
+
+        assert "cvar" not in varfont
