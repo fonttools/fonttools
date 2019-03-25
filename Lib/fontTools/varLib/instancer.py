@@ -237,6 +237,50 @@ def instantiateItemVariationStore(varfont, tableName, location):
                     del item[index]
 
 
+def instantiateFeatureVariations(varfont, tableTag, location):
+    table = varfont[tableTag].table
+    if not hasattr(table, "FeatureVariations"):
+        log.info("No FeatureVariations in %s", tableTag)
+        return
+
+    log.info("Instantiating FeatureVariations of %s table", tableTag)
+    variations = table.FeatureVariations
+    fvar = varfont["fvar"]
+    newRecords = []
+    pinnedAxes = set(location.keys())
+    featureVariationApplied = False
+    for record in variations.FeatureVariationRecord:
+        retainRecord = True
+        applies = True
+        newConditions = []
+        for condition in record.ConditionSet.ConditionTable:
+            axisIdx = condition.AxisIndex
+            axisTag = fvar.axes[axisIdx].axisTag
+            if condition.Format == 1 and axisTag in pinnedAxes:
+                minValue = condition.FilterRangeMinValue
+                maxValue = condition.FilterRangeMaxValue
+                v = location[axisTag]
+                if not (minValue <= v <= maxValue):
+                    # condition not met so remove entire record
+                    retainRecord = False
+                    break
+            else:
+                applies = False
+                newConditions.append(condition)
+
+        if retainRecord and newConditions:
+            record.ConditionSet.ConditionTable = newConditions
+            newRecords.append(record)
+
+        if applies and not featureVariationApplied:
+            assert record.FeatureTableSubstitution.Version == 0x00010000
+            for rec in record.FeatureTableSubstitution.SubstitutionRecord:
+                table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = rec.Feature
+            # Set variations only once
+            featureVariationApplied = True
+    table.FeatureVariations.FeatureVariationRecord = newRecords if newRecords else None
+
+
 def normalize(value, triple, avar_mapping):
     value = normalizeValue(value, triple)
     if avar_mapping:
@@ -300,6 +344,12 @@ def instantiateVariableFont(varfont, axis_limits, inplace=False):
 
     if "MVAR" in varfont:
         instantiateMvar(varfont, axis_limits)
+
+    if "GSUB" in varfont:
+        instantiateFeatureVariationStore(varfont, "GSUB", axis_limits)
+
+    if "GPOS" in varfont:
+        instantiateFeatureVariationStore(varfont, "GPOS", axis_limits)
 
     # TODO: actually process HVAR instead of dropping it
     del varfont["HVAR"]
