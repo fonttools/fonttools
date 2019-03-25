@@ -172,6 +172,11 @@ def instantiateItemVariationStore(varfont, tableName, location):
     newRegions = []
     regionInfluenceMap = {}
     pinnedAxes = set(location.keys())
+    fvarAxisIndices = {
+        axis.axisTag: index
+        for index, axis in enumerate(fvar.axes)
+        if axis.axisTag in pinnedAxes
+    }
     for regionIndex, region in enumerate(table.VarStore.VarRegionList.Region):
         # collect set of axisTags which have influence: peak != 0
         regionAxes = set(
@@ -198,14 +203,10 @@ def instantiateItemVariationStore(varfont, tableName, location):
             pinnedScalar = supportScalar(location, pinnedSupport)
             regionInfluenceMap.update({regionIndex: pinnedScalar})
 
-            for axisname in pinnedRegionAxes:
+            for axis in pinnedRegionAxes:
                 # For all pinnedRegionAxes make their influence null by setting
                 # PeakCoord to 0.
-                index = next(
-                    index
-                    for index, axis in enumerate(fvar.axes)
-                    if axis.axisTag == axisname
-                )
+                index = fvarAxisIndices[axis]
                 region.VarRegionAxis[index].PeakCoord = 0
 
             newRegions.append(region)
