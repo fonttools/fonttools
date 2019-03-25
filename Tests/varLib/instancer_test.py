@@ -99,7 +99,7 @@ class InstantiateCvarTest(object):
             pytest.param({"wght": -1.0}, [500, -400, 150, 250], id="wght=-1.0"),
             pytest.param({"wdth": -1.0}, [500, -400, 180, 200], id="wdth=-1.0"),
             pytest.param({"wght": -0.5}, [500, -400, 165, 250], id="wght=-0.5"),
-            pytest.param({"wdth": -0.3}, [500, -400, 180, 240], id="wdth=-0.3"),
+            pytest.param({"wdth": -0.3}, [500, -400, 180, 235], id="wdth=-0.3"),
         ],
     )
     def test_pin_and_drop_axis(self, varfont, location, expected):
