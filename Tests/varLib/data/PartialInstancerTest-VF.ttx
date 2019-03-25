@@ -12,12 +12,12 @@
     <!-- Most of this table will be recalculated by the compiler -->
     <tableVersion value="1.0"/>
     <fontRevision value="2.001"/>
-    <checkSumAdjustment value="0x5060cf1e"/>
+    <checkSumAdjustment value="0x45c905be"/>
     <magicNumber value="0x5f0f3cf5"/>
     <flags value="00000000 00000011"/>
     <unitsPerEm value="1000"/>
     <created value="Tue Mar  5 00:05:14 2019"/>
-    <modified value="Mon Mar 25 10:59:41 2019"/>
+    <modified value="Mon Mar 25 12:51:29 2019"/>
     <xMin value="40"/>
     <yMin value="-200"/>
     <xMax value="450"/>
@@ -584,6 +584,80 @@
       </VarData>
     </VarStore>
   </HVAR>
+
+  <MVAR>
+    <Version value="0x00010000"/>
+    <Reserved value="0"/>
+    <ValueRecordSize value="8"/>
+    <!-- ValueRecordCount=3 -->
+    <VarStore Format="1">
+      <Format value="1"/>
+      <VarRegionList>
+        <!-- RegionAxisCount=2 -->
+        <!-- RegionCount=3 -->
+        <Region index="0">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="1">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="2">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+      </VarRegionList>
+      <!-- VarDataCount=1 -->
+      <VarData index="0">
+        <!-- ItemCount=3 -->
+        <NumShorts value="1"/>
+        <!-- VarRegionCount=3 -->
+        <VarRegionIndex index="0" value="0"/>
+        <VarRegionIndex index="1" value="1"/>
+        <VarRegionIndex index="2" value="2"/>
+        <Item index="0" value="[-100, 0, 20]"/>
+        <Item index="1" value="[100, 0, -20]"/>
+        <Item index="2" value="[50, -30, -20]"/>
+      </VarData>
+    </VarStore>
+    <ValueRecord index="0">
+      <ValueTag value="strs"/>
+      <VarIdx value="2"/>
+    </ValueRecord>
+    <ValueRecord index="1">
+      <ValueTag value="undo"/>
+      <VarIdx value="0"/>
+    </ValueRecord>
+    <ValueRecord index="2">
+      <ValueTag value="unds"/>
+      <VarIdx value="1"/>
+    </ValueRecord>
+  </MVAR>
 
   <STAT>
     <Version value="0x00010001"/>

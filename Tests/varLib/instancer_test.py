@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
+from fontTools.varLib.mvar import MVAR_ENTRIES
 import os
 import pytest
 
@@ -119,3 +120,90 @@ class InstantiateCvarTest(object):
         assert list(varfont["cvt "].values) == [500, -400, 165, 225]
 
         assert "cvar" not in varfont
+
+
+class InstantiateMvarTest(object):
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            pytest.param(
+                {"wght": 1.0}, {"strs": 100, "undo": -200, "unds": 150}, id="wght=1.0"
+            ),
+            pytest.param(
+                {"wght": 0.5}, {"strs": 75, "undo": -150, "unds": 100}, id="wght=0.5"
+            ),
+            pytest.param(
+                {"wght": 0.0}, {"strs": 50, "undo": -100, "unds": 50}, id="wght=0.0"
+            ),
+            pytest.param(
+                {"wdth": -1.0}, {"strs": 20, "undo": -100, "unds": 50}, id="wdth=-1.0"
+            ),
+            pytest.param(
+                {"wdth": -0.5}, {"strs": 35, "undo": -100, "unds": 50}, id="wdth=-0.5"
+            ),
+            pytest.param(
+                {"wdth": 0.0}, {"strs": 50, "undo": -100, "unds": 50}, id="wdth=0.0"
+            ),
+        ],
+    )
+    def test_pin_and_drop_axis(self, varfont, location, expected):
+        mvar = varfont["MVAR"].table
+        # initially we have a single VarData with deltas associated with 3 regions:
+        # 1 with only wght, 1 with only wdth, and 1 with both wght and wdth.
+        assert len(mvar.VarStore.VarData) == 1
+        assert mvar.VarStore.VarData[0].VarRegionCount == 3
+        assert all(len(item) == 3 for item in mvar.VarStore.VarData[0].Item)
+
+        instancer.instantiateMvar(varfont, location)
+
+        for mvar_tag, expected_value in expected.items():
+            table_tag, item_name = MVAR_ENTRIES[mvar_tag]
+            assert getattr(varfont[table_tag], item_name) == expected_value
+
+        # check that the pinned axis does not influence any of the remaining regions
+        # in MVAR VarStore
+        pinned_axes = location.keys()
+        fvar = varfont["fvar"]
+        assert all(
+            support[instancer.PEAK_COORD_INDEX] == 0
+            for region in mvar.VarStore.VarRegionList.Region
+            for axis, support in region.get_support(fvar.axes).items()
+            if axis in pinned_axes
+        )
+
+        # check that one region and accompanying deltas has been dropped
+        assert all(len(item) == 2 for item in mvar.VarStore.VarData[0].Item)
+
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            pytest.param(
+                {"wght": 1.0, "wdth": 0.0},
+                {"strs": 100, "undo": -200, "unds": 150},
+                id="wght=1.0,wdth=0.0",
+            ),
+            pytest.param(
+                {"wght": 0.0, "wdth": -1.0},
+                {"strs": 20, "undo": -100, "unds": 50},
+                id="wght=0.0,wdth=-1.0",
+            ),
+            pytest.param(
+                {"wght": 0.5, "wdth": -0.5},
+                {"strs": 55, "undo": -145, "unds": 95},
+                id="wght=0.5,wdth=-0.5",
+            ),
+            pytest.param(
+                {"wght": 1.0, "wdth": -1.0},
+                {"strs": 50, "undo": -180, "unds": 130},
+                id="wght=0.5,wdth=-0.5",
+            ),
+        ],
+    )
+    def test_full_instance(self, varfont, location, expected):
+        instancer.instantiateMvar(varfont, location)
+
+        for mvar_tag, expected_value in expected.items():
+            table_tag, item_name = MVAR_ENTRIES[mvar_tag]
+            assert getattr(varfont[table_tag], item_name) == expected_value
+
+        assert "MVAR" not in varfont
