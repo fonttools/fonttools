@@ -28,8 +28,6 @@ import re
 
 log = logging.getLogger("fontTools.varlib.instancer")
 
-PEAK_COORD_INDEX = 1
-
 
 def instantiateTupleVariationStore(variations, location):
     newVariations = []
@@ -175,11 +173,11 @@ def instantiateItemVariationStore(varfont, tableName, location):
     regionInfluenceMap = {}
     pinnedAxes = set(location.keys())
     for regionIndex, region in enumerate(table.VarStore.VarRegionList.Region):
-        # collect set of axisTags which have influence: peakCoord != 0
+        # collect set of axisTags which have influence: peak != 0
         regionAxes = set(
-            key
-            for key, value in region.get_support(fvar.axes).items()
-            if value[PEAK_COORD_INDEX] != 0
+            axis
+            for axis, (start, peak, end) in region.get_support(fvar.axes).items()
+            if peak != 0
         )
         pinnedRegionAxes = regionAxes & pinnedAxes
         if not pinnedRegionAxes:
@@ -193,9 +191,9 @@ def instantiateItemVariationStore(varfont, tableName, location):
         else:
             # This region will be retained but the deltas have to be adjusted.
             pinnedSupport = {
-                key: value
-                for key, value in region.get_support(fvar.axes).items()
-                if key in pinnedRegionAxes
+                axis: support
+                for axis, support in region.get_support(fvar.axes).items()
+                if axis in pinnedRegionAxes
             }
             pinnedScalar = supportScalar(location, pinnedSupport)
             regionInfluenceMap.update({regionIndex: pinnedScalar})

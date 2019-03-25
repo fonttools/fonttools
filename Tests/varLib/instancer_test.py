@@ -165,9 +165,9 @@ class InstantiateMvarTest(object):
         pinned_axes = location.keys()
         fvar = varfont["fvar"]
         assert all(
-            support[instancer.PEAK_COORD_INDEX] == 0
+            peak == 0
             for region in mvar.VarStore.VarRegionList.Region
-            for axis, support in region.get_support(fvar.axes).items()
+            for axis, (start, peak, end) in region.get_support(fvar.axes).items()
             if axis in pinned_axes
         )
 
