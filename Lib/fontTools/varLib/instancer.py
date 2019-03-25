@@ -21,6 +21,7 @@ from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.varLib.mvar import MVAR_ENTRIES
 import collections
 from copy import deepcopy
+import bisect
 import logging
 import os
 import re
@@ -218,23 +219,44 @@ def instantiateItemVariationStore(varfont, tableName, location):
         del varfont[tableName]
         return
 
-    # First apply scalars to deltas then remove deltas in reverse index order
+    # Start modifying deltas.
     if regionInfluenceMap:
-        regionsToBeRemoved = [
-            regionIndex
-            for regionIndex, scalar in regionInfluenceMap.items()
-            if scalar is None
-        ]
+        regionsToBeRemoved = sorted(
+            [
+                regionIndex
+                for regionIndex, scalar in regionInfluenceMap.items()
+                if scalar is None
+            ]
+        )
         for vardata in table.VarStore.VarData:
+            varRegionIndexMapping = {v: k for k, v in enumerate(vardata.VarRegionIndex)}
+            # Apply scalars for regions to be retained.
             for regionIndex, scalar in regionInfluenceMap.items():
                 if scalar is not None:
+                    varRegionIndex = varRegionIndexMapping[regionIndex]
                     for item in vardata.Item:
-                        item[regionIndex] = otRound(item[regionIndex] * scalar)
+                        item[varRegionIndex] = otRound(item[varRegionIndex] * scalar)
 
-            for index in sorted(regionsToBeRemoved, reverse=True):
-                del vardata.VarRegionIndex[index]
-                for item in vardata.Item:
-                    del item[index]
+            if regionsToBeRemoved:
+                # Delete deltas (in reverse order) for regions to be removed.
+                for regionIndex in sorted(
+                    regionsToBeRemoved,
+                    key=lambda x: varRegionIndexMapping[x],
+                    reverse=True,
+                ):
+                    varRegionIndex = varRegionIndexMapping[regionIndex]
+                    for item in vardata.Item:
+                        del item[varRegionIndex]
+
+                # Adjust VarRegionIndex since we are deleting regions.
+                newVarRegionIndex = []
+                for varRegionIndex in vardata.VarRegionIndex:
+                    if varRegionIndex not in regionsToBeRemoved:
+                        newVarRegionIndex.append(
+                            varRegionIndex
+                            - bisect.bisect_left(regionsToBeRemoved, varRegionIndex)
+                        )
+                vardata.VarRegionIndex = newVarRegionIndex
 
 
 def instantiateFeatureVariations(varfont, location):
