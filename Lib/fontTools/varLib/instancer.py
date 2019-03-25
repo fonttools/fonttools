@@ -19,6 +19,7 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.varLib.mvar import MVAR_ENTRIES
+import collections
 from copy import deepcopy
 import logging
 import os
@@ -140,16 +141,20 @@ def setMvarDeltas(varfont, location):
     fvar = varfont["fvar"]
     varStoreInstancer = VarStoreInstancer(mvar.VarStore, fvar.axes, location)
     records = mvar.ValueRecord
+    # accumulate applicable deltas as floats and only round at the end
+    deltas = collections.defaultdict(float)
     for rec in records:
         mvarTag = rec.ValueTag
         if mvarTag not in MVAR_ENTRIES:
             continue
         tableTag, itemName = MVAR_ENTRIES[mvarTag]
-        delta = otRound(varStoreInstancer[rec.VarIdx])
-        if not delta:
-            continue
+        deltas[(tableTag, itemName)] += varStoreInstancer[rec.VarIdx]
+
+    for (tableTag, itemName), delta in deltas.items():
         setattr(
-            varfont[tableTag], itemName, getattr(varfont[tableTag], itemName) + delta
+            varfont[tableTag],
+            itemName,
+            getattr(varfont[tableTag], itemName) + otRound(delta),
         )
 
 
@@ -189,7 +194,7 @@ def instantiateItemVariationStore(varfont, tableName, location):
             # This region will be retained but the deltas have to be adjusted.
             pinnedSupport = {
                 key: value
-                for key, value in enumerate(region.get_support(fvar.axes))
+                for key, value in region.get_support(fvar.axes).items()
                 if key in pinnedRegionAxes
             }
             pinnedScalar = supportScalar(location, pinnedSupport)
