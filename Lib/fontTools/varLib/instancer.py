@@ -237,25 +237,29 @@ def instantiateItemVariationStore(varfont, tableName, location):
                     del item[index]
 
 
-def instantiateFeatureVariations(varfont, tableTag, location):
-    table = varfont[tableTag].table
-    if not hasattr(table, "FeatureVariations"):
-        log.info("No FeatureVariations in %s", tableTag)
-        return
+def instantiateFeatureVariations(varfont, location):
+    for tableTag in ("GPOS", "GSUB"):
+        if tableTag not in varfont or not hasattr(
+            varfont[tableTag].table, "FeatureVariations"
+        ):
+            continue
+        log.info("Instantiating FeatureVariations of %s table", tableTag)
+        _instantiateFeatureVariations(
+            varfont[tableTag].table, varfont["fvar"].axes, location
+        )
 
-    log.info("Instantiating FeatureVariations of %s table", tableTag)
-    variations = table.FeatureVariations
-    fvar = varfont["fvar"]
+
+def _instantiateFeatureVariations(table, fvarAxes, location):
     newRecords = []
     pinnedAxes = set(location.keys())
     featureVariationApplied = False
-    for record in variations.FeatureVariationRecord:
+    for record in table.FeatureVariations.FeatureVariationRecord:
         retainRecord = True
         applies = True
         newConditions = []
         for condition in record.ConditionSet.ConditionTable:
             axisIdx = condition.AxisIndex
-            axisTag = fvar.axes[axisIdx].axisTag
+            axisTag = fvarAxes[axisIdx].axisTag
             if condition.Format == 1 and axisTag in pinnedAxes:
                 minValue = condition.FilterRangeMinValue
                 maxValue = condition.FilterRangeMaxValue
@@ -278,7 +282,11 @@ def instantiateFeatureVariations(varfont, tableTag, location):
                 table.FeatureList.FeatureRecord[rec.FeatureIndex].Feature = rec.Feature
             # Set variations only once
             featureVariationApplied = True
-    table.FeatureVariations.FeatureVariationRecord = newRecords if newRecords else None
+
+    if newRecords:
+        table.FeatureVariations.FeatureVariationRecord = newRecords
+    else:
+        del table.FeatureVariations
 
 
 def normalize(value, triple, avar_mapping):
@@ -345,11 +353,7 @@ def instantiateVariableFont(varfont, axis_limits, inplace=False):
     if "MVAR" in varfont:
         instantiateMvar(varfont, axis_limits)
 
-    if "GSUB" in varfont:
-        instantiateFeatureVariations(varfont, "GSUB", axis_limits)
-
-    if "GPOS" in varfont:
-        instantiateFeatureVariations(varfont, "GPOS", axis_limits)
+    instantiateFeatureVariations(varfont, axis_limits)
 
     # TODO: actually process HVAR instead of dropping it
     del varfont["HVAR"]
