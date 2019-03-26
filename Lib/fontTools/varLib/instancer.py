@@ -211,9 +211,15 @@ def instantiateItemVariationStore(varStore, fvarAxes, location):
 
     newVarDatas = []
     for vardata in varStore.VarData:
-        # drop VarData subtable if we remove all the regions referenced by it
-        if regionsToBeRemoved.issuperset(vardata.VarRegionIndex):
+        varRegionIndex = vardata.VarRegionIndex
+        if regionsToBeRemoved.issuperset(varRegionIndex):
+            # drop VarData subtable if we remove all the regions referenced by it
             continue
+        elif regionsToBeRemoved.isdisjoint(varRegionIndex):
+            # keep VarData unchanged if none of its referenced regions are being dropped
+            newVarDatas.append(vardata)
+            continue
+
         regionToColumnMap = {
             regionIndex: col for col, regionIndex in enumerate(vardata.VarRegionIndex)
         }
@@ -229,7 +235,6 @@ def instantiateItemVariationStore(varStore, fvarAxes, location):
             # from each deltaset row, delete columns corresponding to the regions to
             # be deleted
             newItems = []
-            varRegionIndex = vardata.VarRegionIndex
             for item in vardata.Item:
                 newItems.append(
                     [
