@@ -346,10 +346,10 @@ def instantiateVariableFont(varfont, axis_limits, inplace=False):
         instantiateMvar(varfont, axis_limits)
 
     if "GSUB" in varfont:
-        instantiateFeatureVariationStore(varfont, "GSUB", axis_limits)
+        instantiateFeatureVariations(varfont, "GSUB", axis_limits)
 
     if "GPOS" in varfont:
-        instantiateFeatureVariationStore(varfont, "GPOS", axis_limits)
+        instantiateFeatureVariations(varfont, "GPOS", axis_limits)
 
     # TODO: actually process HVAR instead of dropping it
     del varfont["HVAR"]
