@@ -249,6 +249,7 @@ def instantiateItemVariationStore(varStore, fvarAxes, location):
                 ri for ri in vardata.VarRegionIndex if ri not in regionsToBeRemoved
             ]
             vardata.VarRegionCount = len(vardata.VarRegionIndex)
+        vardata.calculateNumShorts()
         newVarDatas.append(vardata)
 
     varStore.VarData = newVarDatas
