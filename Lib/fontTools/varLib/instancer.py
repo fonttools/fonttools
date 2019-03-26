@@ -194,20 +194,26 @@ def instantiateItemVariationStore(varStore, fvarAxes, location):
             # remove it
             regionsToBeRemoved.add(regionIndex)
         else:
-            # This region will be retained but the deltas have to be adjusted.
+            # compute the scalar support of the axes to be pinned
             pinnedSupport = {
                 axis: support
                 for axis, support in region.get_support(fvarAxes).items()
                 if axis in pinnedRegionAxes
             }
             pinnedScalar = supportScalar(location, pinnedSupport)
-            regionScalars[regionIndex] = pinnedScalar
+            if pinnedScalar == 0.0:
+                # no influence, drop this region
+                regionsToBeRemoved.add(regionIndex)
+                continue
+            elif pinnedScalar != 1.0:
+                # This region will be retained but the deltas will be scaled
+                regionScalars[regionIndex] = pinnedScalar
 
-            for axis in pinnedRegionAxes:
+            for axisTag in pinnedRegionAxes:
                 # For all pinnedRegionAxes make their influence null by setting
                 # PeakCoord to 0.
-                index = fvarAxisIndices[axis]
-                region.VarRegionAxis[index].PeakCoord = 0
+                axis = region.VarRegionAxis[fvarAxisIndices[axisTag]]
+                axis.StartCoord, axis.PeakCoord, axis.EndCoord = (0, 0, 0)
 
     newVarDatas = []
     for vardata in varStore.VarData:
@@ -242,6 +248,7 @@ def instantiateItemVariationStore(varStore, fvarAxes, location):
             vardata.VarRegionIndex = [
                 ri for ri in vardata.VarRegionIndex if ri not in regionsToBeRemoved
             ]
+            vardata.VarRegionCount = len(vardata.VarRegionIndex)
         newVarDatas.append(vardata)
 
     varStore.VarData = newVarDatas

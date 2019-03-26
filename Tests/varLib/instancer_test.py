@@ -151,6 +151,7 @@ class InstantiateMvarTest(object):
         # initially we have a single VarData with deltas associated with 3 regions:
         # 1 with only wght, 1 with only wdth, and 1 with both wght and wdth.
         assert len(mvar.VarStore.VarData) == 1
+        assert mvar.VarStore.VarRegionList.RegionCount == 3
         assert mvar.VarStore.VarData[0].VarRegionCount == 3
         assert all(len(item) == 3 for item in mvar.VarStore.VarData[0].Item)
 
@@ -171,8 +172,11 @@ class InstantiateMvarTest(object):
             if axis in pinned_axes
         )
 
-        # check that one region and accompanying deltas has been dropped
-        assert all(len(item) == 2 for item in mvar.VarStore.VarData[0].Item)
+        # check that regions and accompanying deltas have been dropped
+        num_regions_left = len(mvar.VarStore.VarRegionList.Region)
+        assert num_regions_left < 3
+        assert mvar.VarStore.VarRegionList.RegionCount == num_regions_left
+        assert mvar.VarStore.VarData[0].VarRegionCount == num_regions_left
 
     @pytest.mark.parametrize(
         "location, expected",
