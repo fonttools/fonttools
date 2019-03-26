@@ -209,15 +209,21 @@ def instantiateItemVariationStore(varStore, fvarAxes, location):
                 index = fvarAxisIndices[axis]
                 region.VarRegionAxis[index].PeakCoord = 0
 
+    newVarDatas = []
     for vardata in varStore.VarData:
-        reverseVarRegionIndex = [
-            vardata.VarRegionIndex.index(ri) for ri in vardata.VarRegionIndex
-        ]
+        # drop VarData subtable if we remove all the regions referenced by it
+        if regionsToBeRemoved.issuperset(vardata.VarRegionIndex):
+            continue
+        regionToColumnMap = {
+            regionIndex: col for col, regionIndex in enumerate(vardata.VarRegionIndex)
+        }
         # Apply scalars for regions to be retained.
         for regionIndex, scalar in regionScalars.items():
-            varRegionIndex = reverseVarRegionIndex[regionIndex]
-            for item in vardata.Item:
-                item[varRegionIndex] *= otRound(scalar)
+            if regionIndex not in regionToColumnMap:
+                continue
+            column = regionToColumnMap[regionIndex]
+            for row in vardata.Item:
+                row[column] *= otRound(scalar)
 
         if regionsToBeRemoved:
             # from each deltaset row, delete columns corresponding to the regions to
@@ -233,19 +239,17 @@ def instantiateItemVariationStore(varStore, fvarAxes, location):
                     ]
                 )
             vardata.Item = newItems
+            vardata.ItemCount = len(newItems)
             # prune VarRegionIndex from the regions to be deleted
             vardata.VarRegionIndex = [
                 ri for ri in vardata.VarRegionIndex if ri not in regionsToBeRemoved
             ]
+        newVarDatas.append(vardata)
 
+    varStore.VarData = newVarDatas
+    varStore.VarDataCount = len(varStore.VarData)
     # remove unused regions from VarRegionList
     varStore.prune_regions()
-
-    # recalculate counts
-    varStore.VarRegionList.RegionCount = len(varStore.VarRegionList.Region)
-    varStore.VarDataCount = len(varStore.VarData)
-    for data in varStore.VarData:
-        data.ItemCount = len(data.Item)
 
 
 def instantiateFeatureVariations(varfont, location):
