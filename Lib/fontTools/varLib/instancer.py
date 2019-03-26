@@ -21,7 +21,6 @@ from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.varLib.mvar import MVAR_ENTRIES
 import collections
 from copy import deepcopy
-import bisect
 import logging
 import os
 import re
@@ -162,47 +161,47 @@ def instantiateMvar(varfont, location):
     # First instantiate to new position without modifying MVAR table
     setMvarDeltas(varfont, location)
 
-    instantiateItemVariationStore(varfont, "MVAR", location)
+    varStore = varfont["MVAR"].table.VarStore
+    instantiateItemVariationStore(varStore, varfont["fvar"].axes, location)
+
+    if not varStore.VarRegionList.Region:
+        # Delete table if no more regions left.
+        del varfont["MVAR"]
 
 
-def instantiateItemVariationStore(varfont, tableName, location):
-    log.info("Instantiating ItemVariation store of %s table", tableName)
-
-    table = varfont[tableName].table
-    fvar = varfont["fvar"]
-    newRegions = []
-    regionInfluenceMap = {}
+def instantiateItemVariationStore(varStore, fvarAxes, location):
+    regionsToBeRemoved = set()
+    regionScalars = {}
     pinnedAxes = set(location.keys())
     fvarAxisIndices = {
         axis.axisTag: index
-        for index, axis in enumerate(fvar.axes)
+        for index, axis in enumerate(fvarAxes)
         if axis.axisTag in pinnedAxes
     }
-    for regionIndex, region in enumerate(table.VarStore.VarRegionList.Region):
+    for regionIndex, region in enumerate(varStore.VarRegionList.Region):
         # collect set of axisTags which have influence: peak != 0
         regionAxes = set(
             axis
-            for axis, (start, peak, end) in region.get_support(fvar.axes).items()
+            for axis, (start, peak, end) in region.get_support(fvarAxes).items()
             if peak != 0
         )
         pinnedRegionAxes = regionAxes & pinnedAxes
         if not pinnedRegionAxes:
             # A region where none of the axes having effect are pinned
-            newRegions.append(region)
             continue
         if len(pinnedRegionAxes) == len(regionAxes):
             # All the axes having effect in this region are being pinned so
             # remove it
-            regionInfluenceMap.update({regionIndex: None})
+            regionsToBeRemoved.add(regionIndex)
         else:
             # This region will be retained but the deltas have to be adjusted.
             pinnedSupport = {
                 axis: support
-                for axis, support in region.get_support(fvar.axes).items()
+                for axis, support in region.get_support(fvarAxes).items()
                 if axis in pinnedRegionAxes
             }
             pinnedScalar = supportScalar(location, pinnedSupport)
-            regionInfluenceMap.update({regionIndex: pinnedScalar})
+            regionScalars[regionIndex] = pinnedScalar
 
             for axis in pinnedRegionAxes:
                 # For all pinnedRegionAxes make their influence null by setting
@@ -210,53 +209,43 @@ def instantiateItemVariationStore(varfont, tableName, location):
                 index = fvarAxisIndices[axis]
                 region.VarRegionAxis[index].PeakCoord = 0
 
-            newRegions.append(region)
+    for vardata in varStore.VarData:
+        reverseVarRegionIndex = [
+            vardata.VarRegionIndex.index(ri) for ri in vardata.VarRegionIndex
+        ]
+        # Apply scalars for regions to be retained.
+        for regionIndex, scalar in regionScalars.items():
+            varRegionIndex = reverseVarRegionIndex[regionIndex]
+            for item in vardata.Item:
+                item[varRegionIndex] *= otRound(scalar)
 
-    table.VarStore.VarRegionList.Region = newRegions
-
-    if not table.VarStore.VarRegionList.Region:
-        # Delete table if no more regions left.
-        del varfont[tableName]
-        return
-
-    # Start modifying deltas.
-    if regionInfluenceMap:
-        regionsToBeRemoved = sorted(
-            [
-                regionIndex
-                for regionIndex, scalar in regionInfluenceMap.items()
-                if scalar is None
+        if regionsToBeRemoved:
+            # from each deltaset row, delete columns corresponding to the regions to
+            # be deleted
+            newItems = []
+            varRegionIndex = vardata.VarRegionIndex
+            for item in vardata.Item:
+                newItems.append(
+                    [
+                        delta
+                        for column, delta in enumerate(item)
+                        if varRegionIndex[column] not in regionsToBeRemoved
+                    ]
+                )
+            vardata.Item = newItems
+            # prune VarRegionIndex from the regions to be deleted
+            vardata.VarRegionIndex = [
+                ri for ri in vardata.VarRegionIndex if ri not in regionsToBeRemoved
             ]
-        )
-        for vardata in table.VarStore.VarData:
-            varRegionIndexMapping = {v: k for k, v in enumerate(vardata.VarRegionIndex)}
-            # Apply scalars for regions to be retained.
-            for regionIndex, scalar in regionInfluenceMap.items():
-                if scalar is not None:
-                    varRegionIndex = varRegionIndexMapping[regionIndex]
-                    for item in vardata.Item:
-                        item[varRegionIndex] = otRound(item[varRegionIndex] * scalar)
 
-            if regionsToBeRemoved:
-                # Delete deltas (in reverse order) for regions to be removed.
-                for regionIndex in sorted(
-                    regionsToBeRemoved,
-                    key=lambda x: varRegionIndexMapping[x],
-                    reverse=True,
-                ):
-                    varRegionIndex = varRegionIndexMapping[regionIndex]
-                    for item in vardata.Item:
-                        del item[varRegionIndex]
+    # remove unused regions from VarRegionList
+    varStore.prune_regions()
 
-                # Adjust VarRegionIndex since we are deleting regions.
-                newVarRegionIndex = []
-                for varRegionIndex in vardata.VarRegionIndex:
-                    if varRegionIndex not in regionsToBeRemoved:
-                        newVarRegionIndex.append(
-                            varRegionIndex
-                            - bisect.bisect_left(regionsToBeRemoved, varRegionIndex)
-                        )
-                vardata.VarRegionIndex = newVarRegionIndex
+    # recalculate counts
+    varStore.VarRegionList.RegionCount = len(varStore.VarRegionList.Region)
+    varStore.VarDataCount = len(varStore.VarData)
+    for data in varStore.VarData:
+        data.ItemCount = len(data.Item)
 
 
 def instantiateFeatureVariations(varfont, location):
