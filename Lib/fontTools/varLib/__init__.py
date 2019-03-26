@@ -463,18 +463,6 @@ def _merge_TTHinting(font, masterModel, master_ttfs, tolerance=0.5):
 		var = TupleVariation(support, delta)
 		cvar.variations.append(var)
 
-hvar_fields = { 'table_tag': 'HVAR',
-	'metrics_tag': 'hmtx',
-	'sb1': 'LsbMap',
-	'sb2': 'RsbMap',
-	'mapping_name': 'AdvWidthMap',
-	}
-vvar_fields = { 'table_tag': 'VVAR',
-	'metrics_tag': 'vmtx',
-	'bearing1': 'TsbMap',
-	'bearing2': 'BsbMap',
-	'mapping': 'AdvHeightMap',
-	}
 MetricsFields = namedtuple('MetricsFields',
 	['table_tag', 'metrics_tag', 'sb1', 'sb2', 'adv_mapping', 'vorig_mapping'])
 
@@ -551,7 +539,6 @@ def _get_advance_metrics(font, masterModel, master_ttfs,
 			# glyphs which have a non-default vOrig.
 			vOrigs = [metrics[glyph] if glyph in metrics else defaultVOrig
 				for metrics, defaultVOrig in v_orig_metricses]
-			print(glyph, vOrigs)
 			vOrigDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(vOrigs)
 
 	directStore = None
@@ -575,11 +562,11 @@ def _get_advance_metrics(font, masterModel, master_ttfs,
 		adv_mapping[glyphName] = storeBuilder.storeDeltas(deltas)
 
 	if v_orig_metricses:
-		v_orig_mapping_i = {}
+		v_orig_mapping = {}
 		for glyphName in glyphOrder:
 			deltas, supports = vOrigDeltasAndSupports[glyphName]
 			storeBuilder.setSupports(supports)
-			v_orig_mapping_i[glyphName] = storeBuilder.storeDeltas(deltas)
+			v_orig_mapping[glyphName] = storeBuilder.storeDeltas(deltas)
 
 	indirectStore = storeBuilder.finish()
 	mapping2 = indirectStore.optimize()
@@ -587,7 +574,7 @@ def _get_advance_metrics(font, masterModel, master_ttfs,
 	advanceMapping = builder.buildVarIdxMap(adv_mapping, glyphOrder)
 
 	if v_orig_metricses:
-		v_orig_mapping_i = [mapping2[v_orig_mapping_i[g]] for g in glyphOrder]
+		v_orig_mapping = [mapping2[v_orig_mapping[g]] for g in glyphOrder]
 
 	use_direct = False
 	vOrigMapping = None
@@ -611,7 +598,7 @@ def _get_advance_metrics(font, masterModel, master_ttfs,
 	else:
 		metricsStore = indirectStore
 		if v_orig_metricses:
-			vOrigMapping = builder.buildVarIdxMap(v_orig_mapping_i, glyphOrder)
+			vOrigMapping = builder.buildVarIdxMap(v_orig_mapping, glyphOrder)
 
 	return metricsStore, advanceMapping, vOrigMapping
 
