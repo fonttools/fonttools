@@ -216,16 +216,13 @@ def instantiateItemVariationStore(varStore, fvarAxes, location):
             # drop VarData subtable if we remove all the regions referenced by it
             continue
 
-        regionToColumnMap = {
-            regionIndex: col for col, regionIndex in enumerate(vardata.VarRegionIndex)
-        }
         # Apply scalars for regions to be retained.
-        for regionIndex, scalar in regionScalars.items():
-            if regionIndex not in regionToColumnMap:
-                continue
-            column = regionToColumnMap[regionIndex]
-            for row in vardata.Item:
-                row[column] *= otRound(scalar)
+        for item in vardata.Item:
+            for column, delta in enumerate(item):
+                regionIndex = varRegionIndex[column]
+                if regionIndex in regionScalars:
+                    scalar = regionScalars[regionIndex]
+                    item[column] = otRound(delta * scalar)
 
         if not regionsToBeRemoved.isdisjoint(varRegionIndex):
             # from each deltaset row, delete columns corresponding to the regions to
