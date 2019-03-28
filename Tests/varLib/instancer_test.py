@@ -3,6 +3,7 @@ from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 from fontTools.varLib.mvar import MVAR_ENTRIES
+from fontTools.varLib import builder
 import os
 import pytest
 
@@ -211,3 +212,63 @@ class InstantiateMvarTest(object):
             assert getattr(varfont[table_tag], item_name) == expected_value
 
         assert "MVAR" not in varfont
+
+
+class InstantiateItemVariationStoreTest(object):
+    def test_getVarRegionAxes(self):
+        axisOrder = ["wght", "wdth", "opsz"]
+        regionAxes = {"wdth": (-1.0, -1.0, 0.0), "wght": (0.0, 1.0, 1.0)}
+        region = builder.buildVarRegion(regionAxes, axisOrder)
+        fvarAxes = [SimpleNamespace(axisTag=tag) for tag in axisOrder]
+
+        result = instancer._getVarRegionAxes(region, fvarAxes)
+
+        assert {
+            axisTag: (axis.StartCoord, axis.PeakCoord, axis.EndCoord)
+            for axisTag, axis in result.items()
+        } == regionAxes
+
+    @pytest.mark.parametrize(
+        "location, regionAxes, expected",
+        [
+            ({"wght": 0.5}, {"wght": (0.0, 1.0, 1.0)}, 0.5),
+            ({"wght": 0.5}, {"wght": (0.0, 1.0, 1.0), "wdth": (-1.0, -1.0, 0.0)}, 0.5),
+            (
+                {"wght": 0.5, "wdth": -0.5},
+                {"wght": (0.0, 1.0, 1.0), "wdth": (-1.0, -1.0, 0.0)},
+                0.25,
+            ),
+            ({"wght": 0.5, "wdth": -0.5}, {"wght": (0.0, 1.0, 1.0)}, 0.5),
+            ({"wght": 0.5}, {"wdth": (-1.0, -1.0, 1.0)}, 1.0),
+        ],
+    )
+    def test_getVarRegionScalar(self, location, regionAxes, expected):
+        varRegionAxes = {
+            axisTag: builder.buildVarRegionAxis(support)
+            for axisTag, support in regionAxes.items()
+        }
+
+        assert instancer._getVarRegionScalar(location, varRegionAxes) == expected
+
+    def test_scaleVarDataDeltas(self):
+        regionScalars = [0.0, 0.5, 1.0]
+        varData = builder.buildVarData(
+            [1, 0], [[100, 200], [-100, -200]], optimize=False
+        )
+
+        instancer._scaleVarDataDeltas(varData, regionScalars)
+
+        assert varData.Item == [[50, 0], [-50, 0]]
+
+    def test_getVarDataDeltasForRegions(self):
+        varData = builder.buildVarData(
+            [1, 0], [[33.5, 67.9], [-100, -200]], optimize=False
+        )
+
+        assert instancer._getVarDataDeltasForRegions(varData, {1}) == [[33.5], [-100]]
+        assert instancer._getVarDataDeltasForRegions(varData, {0}) == [[67.9], [-200]]
+        assert instancer._getVarDataDeltasForRegions(varData, set()) == [[], []]
+        assert instancer._getVarDataDeltasForRegions(varData, {1}, rounded=True) == [
+            [34],
+            [-100],
+        ]
