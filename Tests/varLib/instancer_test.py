@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.ttLib import TTFont
+from fontTools import ttLib
+from fontTools.ttLib.tables import _f_v_a_r
 from fontTools.varLib import instancer
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib import builder
@@ -13,7 +14,7 @@ TESTDATA = os.path.join(os.path.dirname(__file__), "data")
 
 @pytest.fixture
 def varfont():
-    f = TTFont()
+    f = ttLib.TTFont()
     f.importXML(os.path.join(TESTDATA, "PartialInstancerTest-VF.ttx"))
     return f
 
@@ -272,3 +273,118 @@ class InstantiateItemVariationStoreTest(object):
             [34],
             [-100],
         ]
+
+    def test_subsetVarStoreRegions(self):
+        regionList = builder.buildVarRegionList(
+            [
+                {"wght": (0, 0.5, 1)},
+                {"wght": (0.5, 1, 1)},
+                {"wdth": (-1, -1, 0)},
+                {"wght": (0, 0.5, 1), "wdth": (-1, -1, 0)},
+                {"wght": (0.5, 1, 1), "wdth": (-1, -1, 0)},
+            ],
+            ["wght", "wdth"],
+        )
+        varData1 = builder.buildVarData([0, 1, 2, 4], [[0, 1, 2, 3], [4, 5, 6, 7]])
+        varData2 = builder.buildVarData([2, 3, 1], [[8, 9, 10], [11, 12, 13]])
+        varStore = builder.buildVarStore(regionList, [varData1, varData2])
+
+        instancer._subsetVarStoreRegions(varStore, {0, 4})
+
+        assert (
+            varStore.VarRegionList.RegionCount
+            == len(varStore.VarRegionList.Region)
+            == 2
+        )
+        axis00 = varStore.VarRegionList.Region[0].VarRegionAxis[0]
+        assert (axis00.StartCoord, axis00.PeakCoord, axis00.EndCoord) == (0, 0.5, 1)
+        axis01 = varStore.VarRegionList.Region[0].VarRegionAxis[1]
+        assert (axis01.StartCoord, axis01.PeakCoord, axis01.EndCoord) == (0, 0, 0)
+        axis10 = varStore.VarRegionList.Region[1].VarRegionAxis[0]
+        assert (axis10.StartCoord, axis10.PeakCoord, axis10.EndCoord) == (0.5, 1, 1)
+        axis11 = varStore.VarRegionList.Region[1].VarRegionAxis[1]
+        assert (axis11.StartCoord, axis11.PeakCoord, axis11.EndCoord) == (-1, -1, 0)
+
+        assert varStore.VarDataCount == len(varStore.VarData) == 1
+        assert varStore.VarData[0].VarRegionCount == 2
+        assert varStore.VarData[0].VarRegionIndex == [0, 1]
+        assert varStore.VarData[0].Item == [[0, 3], [4, 7]]
+        assert varStore.VarData[0].NumShorts == 0
+
+    @pytest.fixture
+    def fvarAxes(self):
+        wght = _f_v_a_r.Axis()
+        wght.axisTag = Tag("wght")
+        wght.minValue = 100
+        wght.defaultValue = 400
+        wght.maxValue = 900
+        wdth = _f_v_a_r.Axis()
+        wdth.axisTag = Tag("wdth")
+        wdth.minValue = 70
+        wdth.defaultValue = 100
+        wdth.maxValue = 100
+        return [wght, wdth]
+
+    @pytest.fixture
+    def varStore(self):
+        return builder.buildVarStore(
+            builder.buildVarRegionList(
+                [
+                    {"wght": (-1.0, -1.0, 0)},
+                    {"wght": (0, 0.5, 1.0)},
+                    {"wght": (0.5, 1.0, 1.0)},
+                    {"wdth": (-1.0, -1.0, 0)},
+                    {"wght": (-1.0, -1.0, 0), "wdth": (-1.0, -1.0, 0)},
+                    {"wght": (0, 0.5, 1.0), "wdth": (-1.0, -1.0, 0)},
+                    {"wght": (0.5, 1.0, 1.0), "wdth": (-1.0, -1.0, 0)},
+                ],
+                ["wght", "wdth"],
+            ),
+            [
+                builder.buildVarData([0, 1, 2], [[100, 100, 100], [100, 100, 100]]),
+                builder.buildVarData(
+                    [3, 4, 5, 6], [[100, 100, 100, 100], [100, 100, 100, 100]]
+                ),
+            ],
+        )
+
+    @pytest.mark.parametrize(
+        "location, expected_deltas, num_regions, num_vardatas",
+        [
+            ({"wght": 0}, [[[0, 0, 0], [0, 0, 0]], [[], []]], 1, 1),
+            ({"wght": 0.25}, [[[0, 50, 0], [0, 50, 0]], [[], []]], 2, 1),
+            ({"wdth": 0}, [[[], []], [[0], [0]]], 3, 1),
+            ({"wdth": -0.75}, [[[], []], [[75], [75]]], 6, 2),
+            (
+                {"wght": 0, "wdth": 0},
+                [[[0, 0, 0], [0, 0, 0]], [[0, 0, 0, 0], [0, 0, 0, 0]]],
+                0,
+                0,
+            ),
+            (
+                {"wght": 0.25, "wdth": 0},
+                [[[0, 50, 0], [0, 50, 0]], [[0, 0, 0, 0], [0, 0, 0, 0]]],
+                0,
+                0,
+            ),
+            (
+                {"wght": 0, "wdth": -0.75},
+                [[[0, 0, 0], [0, 0, 0]], [[75, 0, 0, 0], [75, 0, 0, 0]]],
+                0,
+                0,
+            ),
+        ],
+    )
+    def test_instantiate_default_deltas(
+        self, varStore, fvarAxes, location, expected_deltas, num_regions, num_vardatas
+    ):
+        defaultDeltas = instancer.instantiateItemVariationStore(
+            varStore, fvarAxes, location
+        )
+
+        # from fontTools.misc.testTools import getXML
+        # print("\n".join(getXML(varStore.toXML, ttFont=None)))
+
+        assert defaultDeltas == expected_deltas
+        assert varStore.VarRegionList.RegionCount == num_regions
+        assert varStore.VarDataCount == num_vardatas
