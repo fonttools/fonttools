@@ -9,52 +9,52 @@ from fontTools.misc.py23 import *
 import re
 
 # every single line starts with a "word"
-identifierRE = re.compile("^([A-Za-z]+).*")
+identifierRE = re.compile(r"^([A-Za-z]+).*")
 
 # regular expression to parse char lines
 charRE = re.compile(
-		"(-?\d+)"			# charnum
-		"\s*;\s*WX\s+"			# ; WX
-		"(-?\d+)"			# width
-		"\s*;\s*N\s+"			# ; N
-		"([.A-Za-z0-9_]+)"		# charname
-		"\s*;\s*B\s+"			# ; B
-		"(-?\d+)"			# left
-		"\s+"
-		"(-?\d+)"			# bottom
-		"\s+"
-		"(-?\d+)"			# right
-		"\s+"
-		"(-?\d+)"			# top
-		"\s*;\s*"			# ;
+		r"(-?\d+)"			# charnum
+		r"\s*;\s*WX\s+"			# ; WX
+		r"(-?\d+)"			# width
+		r"\s*;\s*N\s+"			# ; N
+		r"([.A-Za-z0-9_]+)"		# charname
+		r"\s*;\s*B\s+"			# ; B
+		r"(-?\d+)"			# left
+		r"\s+"
+		r"(-?\d+)"			# bottom
+		r"\s+"
+		r"(-?\d+)"			# right
+		r"\s+"
+		r"(-?\d+)"			# top
+		r"\s*;\s*"			# ;
 		)
 
 # regular expression to parse kerning lines
 kernRE = re.compile(
-		"([.A-Za-z0-9_]+)"		# leftchar
-		"\s+"
-		"([.A-Za-z0-9_]+)"		# rightchar
-		"\s+"
-		"(-?\d+)"			# value
-		"\s*"
+		r"([.A-Za-z0-9_]+)"		# leftchar
+		r"\s+"
+		r"([.A-Za-z0-9_]+)"		# rightchar
+		r"\s+"
+		r"(-?\d+)"			# value
+		r"\s*"
 		)
 
 # regular expressions to parse composite info lines of the form:
 # Aacute 2 ; PCC A 0 0 ; PCC acute 182 211 ;
 compositeRE = re.compile(
-		"([.A-Za-z0-9_]+)"		# char name
-		"\s+"
-		"(\d+)"				# number of parts
-		"\s*;\s*"
+		r"([.A-Za-z0-9_]+)"		# char name
+		r"\s+"
+		r"(\d+)"				# number of parts
+		r"\s*;\s*"
 		)
 componentRE = re.compile(
-		"PCC\s+"			# PPC
-		"([.A-Za-z0-9_]+)"		# base char name
-		"\s+"
-		"(-?\d+)"			# x offset
-		"\s+"
-		"(-?\d+)"			# y offset
-		"\s*;\s*"
+		r"PCC\s+"			# PPC
+		r"([.A-Za-z0-9_]+)"		# base char name
+		r"\s+"
+		r"(-?\d+)"			# x offset
+		r"\s+"
+		r"(-?\d+)"			# y offset
+		r"\s*;\s*"
 		)
 
 preferredAttributeOrder = [

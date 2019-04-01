@@ -89,7 +89,7 @@ class TimerTest(object):
             time.sleep(0.01)
 
         assert re.match(
-            "Took [0-9]\.[0-9]{3}s to do something",
+            r"Took [0-9]\.[0-9]{3}s to do something",
             logger.handlers[0].stream.getvalue())
 
     def test_using_logger_calling_instance(self, logger):
@@ -98,7 +98,7 @@ class TimerTest(object):
             time.sleep(0.01)
 
         assert re.match(
-            "elapsed time: [0-9]\.[0-9]{3}s",
+            r"elapsed time: [0-9]\.[0-9]{3}s",
             logger.handlers[0].stream.getvalue())
 
         # do it again but with custom level
@@ -106,7 +106,7 @@ class TimerTest(object):
             time.sleep(0.02)
 
         assert re.search(
-            "WARNING: Took [0-9]\.[0-9]{3}s to redo it",
+            r"WARNING: Took [0-9]\.[0-9]{3}s to redo it",
             logger.handlers[0].stream.getvalue())
 
     def test_function_decorator(self, logger):
