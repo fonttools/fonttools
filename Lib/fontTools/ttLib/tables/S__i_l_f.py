@@ -219,7 +219,7 @@ def disassemble(aCode):
         pc += struct.calcsize(fmt)
     return res
 
-instre = re.compile("^\s*([^(]+)\s*(?:\(([^)]+)\))?")
+instre = re.compile(r"^\s*([^(]+)\s*(?:\(([^)]+)\))?")
 def assemble(instrs):
     res = b""
     for inst in instrs:
@@ -231,7 +231,7 @@ def assemble(instrs):
         if m.group(2):
             if parmfmt == 0:
                 continue
-            parms = [int(x) for x in re.split(",\s*", m.group(2))]
+            parms = [int(x) for x in re.split(r",\s*", m.group(2))]
             if parmfmt == -1:
                 l = len(parms)
                 res += struct.pack(("%dB" % (l+1)), l, *parms)
