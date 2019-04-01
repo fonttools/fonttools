@@ -690,8 +690,9 @@ class FontBuilder(object):
         """Create a new `post` table and initialize it with default values,
         which can be overridden by keyword arguments.
         """
+        isCFF2 = 'CFF2' in self.font
         postTable = self._initTableWithValues("post", _postDefaults, values)
-        if self.isTTF and keepGlyphNames:
+        if (self.isTTF or isCFF2) and keepGlyphNames:
             postTable.formatType = 2.0
             postTable.extraNames = []
             postTable.mapping = {}

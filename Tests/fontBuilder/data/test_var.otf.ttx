@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="OTTO" ttLibVersion="3.33">
+<ttFont sfntVersion="OTTO" ttLibVersion="3.38">
 
   <GlyphOrder>
     <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
     <GlyphID id="0" name=".notdef"/>
-    <GlyphID id="1" name="glyph00001"/>
+    <GlyphID id="1" name=".null"/>
     <GlyphID id="2" name="A"/>
     <GlyphID id="3" name="a"/>
   </GlyphOrder>
@@ -13,12 +13,12 @@
     <!-- Most of this table will be recalculated by the compiler -->
     <tableVersion value="1.0"/>
     <fontRevision value="1.0"/>
-    <checkSumAdjustment value="0xed07360f"/>
+    <checkSumAdjustment value="0x79eab779"/>
     <magicNumber value="0x5f0f3cf5"/>
     <flags value="00000000 00000011"/>
     <unitsPerEm value="1000"/>
-    <created value="Wed Dec  5 11:55:26 2018"/>
-    <modified value="Wed Dec  5 11:55:26 2018"/>
+    <created value="Wed Mar 27 00:23:21 2019"/>
+    <modified value="Wed Mar 27 00:23:21 2019"/>
     <xMin value="0"/>
     <yMin value="0"/>
     <xMax value="0"/>
@@ -110,9 +110,9 @@
 
   <hmtx>
     <mtx name=".notdef" width="600" lsb="0"/>
+    <mtx name=".null" width="600" lsb="0"/>
     <mtx name="A" width="600" lsb="0"/>
     <mtx name="a" width="600" lsb="0"/>
-    <mtx name="glyph00001" width="600" lsb="0"/>
   </hmtx>
 
   <cmap>
@@ -179,7 +179,7 @@
   </name>
 
   <post>
-    <formatType value="3.0"/>
+    <formatType value="2.0"/>
     <italicAngle value="0.0"/>
     <underlinePosition value="0"/>
     <underlineThickness value="0"/>
@@ -188,6 +188,18 @@
     <maxMemType42 value="0"/>
     <minMemType1 value="0"/>
     <maxMemType1 value="0"/>
+    <psNames>
+      <!-- This file uses unique glyph names based on the information
+           found in the 'post' table. Since these names might not be unique,
+           we have to invent artificial names in case of clashes. In order to
+           be able to retain the original information, we need a name to
+           ps name mapping for those cases where they differ. That's what
+           you see below.
+            -->
+    </psNames>
+    <extraNames>
+      <!-- following are the name that are not taken from the standard Mac glyph order -->
+    </extraNames>
   </post>
 
   <CFF2>
@@ -212,6 +224,13 @@
           67 66 33 67 67 hvcurveto
           -900 vlineto
         </CharString>
+        <CharString name=".null">
+          100 100 rmoveto
+          900 vlineto
+          -67 67 66 -33 67 hhcurveto
+          67 66 33 67 67 hvcurveto
+          -900 vlineto
+        </CharString>
         <CharString name="A">
           100 100 rmoveto
           900 vlineto
@@ -228,13 +247,6 @@
           vlineto
           -400 -400 1 blend
           hlineto
-        </CharString>
-        <CharString name="glyph00001">
-          100 100 rmoveto
-          900 vlineto
-          -67 67 66 -33 67 hhcurveto
-          67 66 33 67 67 hvcurveto
-          -900 vlineto
         </CharString>
       </CharStrings>
       <VarStore Format="1">
