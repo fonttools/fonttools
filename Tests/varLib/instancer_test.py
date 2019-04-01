@@ -28,6 +28,10 @@ def _get_coordinates(varfont, glyphname):
 class InstantiateGvarTest(object):
     @pytest.mark.parametrize("glyph_name", ["hyphen"])
     @pytest.mark.parametrize(
+        "optimize",
+        [pytest.param(True, id="optimize"), pytest.param(False, id="no-optimize")],
+    )
+    @pytest.mark.parametrize(
         "location, expected",
         [
             pytest.param(
@@ -82,8 +86,8 @@ class InstantiateGvarTest(object):
             ),
         ],
     )
-    def test_pin_and_drop_axis(self, varfont, glyph_name, location, expected):
-        instancer.instantiateGvar(varfont, location)
+    def test_pin_and_drop_axis(self, varfont, glyph_name, location, expected, optimize):
+        instancer.instantiateGvar(varfont, location, optimize=optimize)
 
         assert _get_coordinates(varfont, glyph_name) == expected[glyph_name]
 
@@ -93,6 +97,22 @@ class InstantiateGvarTest(object):
             for tuples in varfont["gvar"].variations.values()
             for t in tuples
         )
+
+    def test_full_instance(self, varfont):
+        instancer.instantiateGvar(varfont, {"wght": 0.0, "wdth": -0.5})
+
+        assert _get_coordinates(varfont, "hyphen") == [
+            (33.5, 229),
+            (33.5, 308.5),
+            (264.5, 308.5),
+            (264.5, 229),
+            (0, 0),
+            (298, 0),
+            (0, 1000),
+            (0, 0),
+        ]
+
+        assert "gvar" not in varfont
 
 
 class InstantiateCvarTest(object):
@@ -110,7 +130,7 @@ class InstantiateCvarTest(object):
 
         assert list(varfont["cvt "].values) == expected
 
-        # check that the pinned axis has been dropped from gvar
+        # check that the pinned axis has been dropped from cvar
         pinned_axes = location.keys()
         assert not any(
             axis in t.axes for t in varfont["cvar"].variations for axis in pinned_axes
