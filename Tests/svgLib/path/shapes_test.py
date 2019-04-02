@@ -21,6 +21,18 @@ import pytest
             None,
             None
         ),
+        # line
+        (
+            '<line x1="10" x2="50" y1="110" y2="150"/>',
+            'M10,110 L50,150',
+            None
+        ),
+        # line, decimal positioning
+        (
+            '<line x1="10.0" x2="50.5" y1="110.2" y2="150.7"/>',
+            'M10,110.2 L50.5,150.7',
+            None
+        ),
         # rect: minimal valid example
         (
             "<rect width='1' height='1'/>",

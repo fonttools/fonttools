@@ -87,6 +87,25 @@ class PathBuilder(object):
     def v(self, y):
         self._vhline('v', y)
 
+    def _line(self, c, x, y):
+        self._add('%s%s,%s' % (c, _ntos(x), _ntos(y)))
+
+    def L(self, x, y):
+        self._line('L', x, y)
+
+    def l(self, x, y):
+        self._line('l', x, y)
+
+    def _parse_line(self, line):
+        x1 = float(line.attrib.get('x1', 0))
+        y1 = float(line.attrib.get('y1', 0))
+        x2 = float(line.attrib.get('x2', 0))
+        y2 = float(line.attrib.get('y2', 0))
+
+        self._start_path()
+        self.M(x1, y1)
+        self.L(x2, y2)
+
     def _parse_rect(self, rect):
         x = float(rect.attrib.get('x', 0))
         y = float(rect.attrib.get('y', 0))
