@@ -2,14 +2,13 @@ from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 
 import os
-import shutil
+import pytest
 import re
 from fontTools.ttLib import TTFont
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.pens.t2CharStringPen import T2CharStringPen
 from fontTools.fontBuilder import FontBuilder
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
-from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.misc.psCharStrings import T2CharString
 
 
@@ -51,6 +50,43 @@ def _setupFontBuilder(isTTF, unitsPerEm=1024):
     nameStrings['psName'] = familyName + "-" + styleName
 
     return fb, advanceWidths, nameStrings
+
+
+def _setupFontBuilderFvar(fb):
+    assert 'name' in fb.font, 'Must run setupNameTable() first.'
+
+    axes = [
+        ('TEST', 0, 0, 100, "Test Axis"),
+    ]
+    instances = [
+        dict(location=dict(TEST=0), stylename="TotallyNormal"),
+        dict(location=dict(TEST=100), stylename="TotallyTested"),
+    ]
+    fb.setupFvar(axes, instances)
+
+    return fb
+
+
+def _setupFontBuilderCFF2(fb):
+    assert 'fvar' in fb.font, 'Must run _setupFontBuilderFvar() first.'
+
+    pen = T2CharStringPen(None, None, CFF2=True)
+    drawTestGlyph(pen)
+    charString = pen.getCharString()
+
+    program = [
+        200, 200, -200, -200, 2, "blend", "rmoveto",
+        400, 400, 1, "blend", "hlineto",
+        400, 400, 1, "blend", "vlineto",
+        -400, -400, 1, "blend", "hlineto"
+    ]
+    charStringVariable = T2CharString(program=program)
+
+    charStrings = {".notdef": charString, "A": charString,
+                   "a": charStringVariable, ".null": charString}
+    fb.setupCFF2(charStrings, regions=[{"TEST": (0, 1, 1)}])
+
+    return fb
 
 
 def _verifyOutput(outPath, tables=None):
@@ -99,9 +135,11 @@ def test_build_otf(tmpdir):
     charString = pen.getCharString()
     charStrings = {".notdef": charString, "A": charString, "a": charString, ".null": charString}
     fb.setupCFF(nameStrings['psName'], {"FullName": nameStrings['psName']}, charStrings, {})
+
+    lsb = {gn: cs.calcBounds(None)[0] for gn, cs in charStrings.items()}
     metrics = {}
     for gn, advanceWidth in advanceWidths.items():
-        metrics[gn] = (advanceWidth, 100)  # XXX lsb from glyph
+        metrics[gn] = (advanceWidth, lsb[gn])
     fb.setupHorizontalMetrics(metrics)
 
     fb.setupHorizontalHeader(ascent=824, descent=200)
@@ -118,17 +156,7 @@ def test_build_otf(tmpdir):
 def test_build_var(tmpdir):
     outPath = os.path.join(str(tmpdir), "test_var.ttf")
 
-    fb = FontBuilder(1024, isTTF=True)
-    fb.setupGlyphOrder([".notdef", ".null", "A", "a"])
-    fb.setupCharacterMap({65: "A", 97: "a"})
-
-    advanceWidths = {".notdef": 600, "A": 600, "a": 600, ".null": 600}
-
-    familyName = "HelloTestFont"
-    styleName = "TotallyNormal"
-    nameStrings = dict(familyName=dict(en="HelloTestFont", nl="HalloTestFont"),
-                       styleName=dict(en="TotallyNormal", nl="TotaalNormaal"))
-    nameStrings['psName'] = familyName + "-" + styleName
+    fb, advanceWidths, nameStrings = _setupFontBuilder(True)
 
     pen = TTGlyphPen(None)
     pen.moveTo((100, 0))
@@ -191,32 +219,9 @@ def test_build_cff2(tmpdir):
     outPath = os.path.join(str(tmpdir), "test_var.otf")
 
     fb, advanceWidths, nameStrings = _setupFontBuilder(False, 1000)
-
     fb.setupNameTable(nameStrings)
-
-    axes = [
-        ('TEST', 0, 0, 100, "Test Axis"),
-    ]
-    instances = [
-        dict(location=dict(TEST=0), stylename="TotallyNormal"),
-        dict(location=dict(TEST=100), stylename="TotallyTested"),
-    ]
-    fb.setupFvar(axes, instances)
-
-    pen = T2CharStringPen(None, None, CFF2=True)
-    drawTestGlyph(pen)
-    charString = pen.getCharString()
-
-    program = [
-        200, 200, -200, -200, 2, "blend", "rmoveto",
-        400, 400, 1, "blend", "hlineto",
-        400, 400, 1, "blend", "vlineto",
-        -400, -400, 1, "blend", "hlineto"
-    ]
-    charStringVariable = T2CharString(program=program)
-
-    charStrings = {".notdef": charString, "A": charString, "a": charStringVariable, ".null": charString}
-    fb.setupCFF2(charStrings, regions=[{"TEST": (0, 1, 1)}])
+    fb = _setupFontBuilderFvar(fb)
+    fb = _setupFontBuilderCFF2(fb)
 
     metrics = {gn: (advanceWidth, 0) for gn, advanceWidth in advanceWidths.items()}
     fb.setupHorizontalMetrics(metrics)
@@ -244,6 +249,31 @@ def test_setupNameTable_no_windows():
 
     assert all(n for n in fb.font["name"].names if n.platformID == 1)
     assert not any(n for n in fb.font["name"].names if n.platformID == 3)
+
+
+@pytest.mark.parametrize('is_ttf, keep_glyph_names, make_cff2, post_format', [
+    (True, True, False, 2),    # TTF with post table format 2.0
+    (True, False, False, 3),   # TTF with post table format 3.0
+    (False, True, False, 3),   # CFF with post table format 3.0
+    (False, False, False, 3),  # CFF with post table format 3.0
+    (False, True, True, 2),    # CFF2 with post table format 2.0
+    (False, False, True, 3),   # CFF2 with post table format 3.0
+])
+def test_setupPost(is_ttf, keep_glyph_names, make_cff2, post_format):
+    fb, _, nameStrings = _setupFontBuilder(is_ttf)
+
+    if make_cff2:
+        fb.setupNameTable(nameStrings)
+        fb = _setupFontBuilderCFF2(_setupFontBuilderFvar(fb))
+
+    if keep_glyph_names:
+        fb.setupPost()
+    else:
+        fb.setupPost(keepGlyphNames=keep_glyph_names)
+
+    assert fb.isTTF is is_ttf
+    assert ('CFF2' in fb.font) is make_cff2
+    assert fb.font["post"].formatType == post_format
 
 
 def test_unicodeVariationSequences(tmpdir):

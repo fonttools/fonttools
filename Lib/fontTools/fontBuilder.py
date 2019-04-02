@@ -100,9 +100,10 @@ charString = pen.getCharString()
 charStrings = {".notdef": charString, "A": charString, "a": charString, ".null": charString}
 fb.setupCFF(nameStrings['psName'], {"FullName": nameStrings['psName']}, charStrings, {})
 
+lsb = {gn: cs.calcBounds(None)[0] for gn, cs in charStrings.items()}
 metrics = {}
 for gn, advanceWidth in advanceWidths.items():
-    metrics[gn] = (advanceWidth, 100)  # XXX lsb from glyph
+    metrics[gn] = (advanceWidth, lsb[gn])
 fb.setupHorizontalMetrics(metrics)
 
 fb.setupHorizontalHeader(ascent=824, descent=200)
@@ -690,8 +691,9 @@ class FontBuilder(object):
         """Create a new `post` table and initialize it with default values,
         which can be overridden by keyword arguments.
         """
+        isCFF2 = 'CFF2' in self.font
         postTable = self._initTableWithValues("post", _postDefaults, values)
-        if self.isTTF and keepGlyphNames:
+        if (self.isTTF or isCFF2) and keepGlyphNames:
             postTable.formatType = 2.0
             postTable.extraNames = []
             postTable.mapping = {}
