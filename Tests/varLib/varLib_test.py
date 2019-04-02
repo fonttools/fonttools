@@ -442,6 +442,20 @@ class BuildTest(unittest.TestCase):
         mvar_tags = [vr.ValueTag for vr in varfont["MVAR"].table.ValueRecord]
         assert all(tag in mvar_tags for tag in fontTools.varLib.mvar.MVAR_ENTRIES)
 
+    def test_varlib_build_VVAR_CFF2(self):
+        ds_path = self.get_test_input('TestVVAR.designspace')
+        suffix = '.otf'
+        expected_ttx_name = 'TestVVAR'
+        tables = ["VVAR"]
+
+        finder = lambda s: s.replace('.ufo', suffix)
+        varfont, model, _ = build(ds_path, finder)
+        varfont = reload_font(varfont)
+
+        expected_ttx_path = self.get_test_output(expected_ttx_name + '.ttx')
+        self.expect_ttx(varfont, expected_ttx_path, tables)
+        self.check_ttx_dump(varfont, expected_ttx_path, tables, suffix)
+
 
 def test_load_masters_layerName_without_required_font():
     ds = DesignSpaceDocument()
