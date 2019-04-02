@@ -116,6 +116,18 @@ class PathBuilder(object):
         self.A(r, r, cx + r, cy, large_arc=1)
         self.A(r, r, cx - r, cy, large_arc=1)
 
+    def _parse_ellipse(self, ellipse):
+        cx = float(ellipse.attrib.get('cx', 0))
+        cy = float(ellipse.attrib.get('cy', 0))
+        rx = float(ellipse.attrib.get('rx'))
+        ry = float(ellipse.attrib.get('ry'))
+
+        # arc doesn't seem to like being a complete shape, draw two halves
+        self._start_path()
+        self.M(cx - rx, cy)
+        self.A(rx, ry, cx + rx, cy, large_arc=1)
+        self.A(rx, ry, cx - rx, cy, large_arc=1)
+
     def add_path_from_element(self, el):
         tag = _strip_xml_ns(el.tag)
         parse_fn = getattr(self, '_parse_%s' % tag.lower(), None)

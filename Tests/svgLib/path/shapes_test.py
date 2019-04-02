@@ -1,7 +1,6 @@
 from __future__ import print_function, absolute_import, division
 
 from fontTools.misc.py23 import *
-from fontTools.pens.recordingPen import RecordingPen
 from fontTools.svgLib.path import shapes
 from fontTools.misc import etree
 import pytest
@@ -55,7 +54,17 @@ import pytest
         (
             "<circle cx='12' cy='6.5' r='1.5'></circle>",
             "M10.5,6.5 A1.5,1.5 0 1 1 13.5,6.5 A1.5,1.5 0 1 1 10.5,6.5"
-        )
+        ),
+        # ellipse
+        (
+            '<ellipse cx="100" cy="50" rx="100" ry="50"/>',
+            'M0,50 A100,50 0 1 1 200,50 A100,50 0 1 1 0,50'
+        ),
+        # ellipse, decimal positioning
+        (
+            '<ellipse cx="100.5" cy="50" rx="10" ry="50.5"/>',
+            'M90.5,50 A10,50.5 0 1 1 110.5,50 A10,50.5 0 1 1 90.5,50'
+        ),
     ]
 )
 def test_el_to_path(svg_xml, expected_path):
