@@ -135,9 +135,11 @@ def test_build_otf(tmpdir):
     charString = pen.getCharString()
     charStrings = {".notdef": charString, "A": charString, "a": charString, ".null": charString}
     fb.setupCFF(nameStrings['psName'], {"FullName": nameStrings['psName']}, charStrings, {})
+
+    lsb = {gn: cs.calcBounds(None)[0] for gn, cs in charStrings.items()}
     metrics = {}
     for gn, advanceWidth in advanceWidths.items():
-        metrics[gn] = (advanceWidth, 100)  # XXX lsb from glyph
+        metrics[gn] = (advanceWidth, lsb[gn])
     fb.setupHorizontalMetrics(metrics)
 
     fb.setupHorizontalHeader(ascent=824, descent=200)
