@@ -379,8 +379,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		topSideY = coord[-2][1]
 		bottomSideY = coord[-1][1]
 
-		for _ in range(4):
-			del coord[-1]
+		coord = coord[:-4]
 
 		if glyph.isComposite():
 			assert len(coord) == len(glyph.components)
@@ -391,7 +390,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			assert len(coord) == 0
 		else:
 			assert len(coord) == len(glyph.coordinates)
-			glyph.coordinates = coord
+			glyph.coordinates = GlyphCoordinates(coord)
 
 		glyph.recalcBounds(self)
 
