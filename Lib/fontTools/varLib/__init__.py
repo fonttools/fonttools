@@ -484,8 +484,8 @@ def _add_VHVAR(font, masterModel, master_ttfs, axisTags, tableFields):
 	assert tableTag not in font
 	log.info("Generating " + tableTag)
 	VHVAR = newTable(tableTag)
-	table_class = getattr(ot, tableTag)
-	vhvar = VHVAR.table = table_class()
+	tableClass = getattr(ot, tableTag)
+	vhvar = VHVAR.table = tableClass()
 	vhvar.Version = 0x00010000
 
 	glyphOrder = font.getGlyphOrder()
