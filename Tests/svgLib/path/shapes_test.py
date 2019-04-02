@@ -58,6 +58,12 @@ import pytest
             "M30,10 50,30 10,30 z",
             None
         ),
+        # polyline
+        (
+            "<polyline points='30,10 50,30 10,30'/>",
+            "M30,10 50,30 10,30",
+            None
+        ),
         # circle, minimal valid example
         (
             "<circle r='1'/>",

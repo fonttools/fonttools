@@ -1,5 +1,6 @@
 import re
 
+
 def _prefer_non_zero(*args):
     for arg in args:
         if arg != 0:
@@ -122,6 +123,10 @@ class PathBuilder(object):
         if 'points' in poly.attrib:
             self._start_path('M' + poly.attrib['points'])
             self._end_path()
+
+    def _parse_polyline(self, poly):
+        if 'points' in poly.attrib:
+            self._start_path('M' + poly.attrib['points'])
 
     def _parse_circle(self, circle):
         cx = float(circle.attrib.get('cx', 0))
