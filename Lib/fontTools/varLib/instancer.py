@@ -17,9 +17,7 @@ from fontTools.varLib.models import supportScalar, normalizeValue, piecewiseLine
 from fontTools.varLib.iup import iup_delta
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
-from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.varLib.mvar import MVAR_ENTRIES
-import collections
 from copy import deepcopy
 import logging
 import os
@@ -132,130 +130,150 @@ def instantiateCvar(varfont, location):
         del varfont["cvar"]
 
 
-def setMvarDeltas(varfont, location):
+def setMvarDeltas(varfont, deltaArray):
     log.info("Setting MVAR deltas")
 
     mvar = varfont["MVAR"].table
-    fvar = varfont["fvar"]
-    varStoreInstancer = VarStoreInstancer(mvar.VarStore, fvar.axes, location)
     records = mvar.ValueRecord
-    # accumulate applicable deltas as floats and only round at the end
-    deltas = collections.defaultdict(float)
     for rec in records:
         mvarTag = rec.ValueTag
         if mvarTag not in MVAR_ENTRIES:
             continue
         tableTag, itemName = MVAR_ENTRIES[mvarTag]
-        deltas[(tableTag, itemName)] += varStoreInstancer[rec.VarIdx]
-
-    for (tableTag, itemName), delta in deltas.items():
-        setattr(
-            varfont[tableTag],
-            itemName,
-            getattr(varfont[tableTag], itemName) + otRound(delta),
-        )
+        varDataIndex = rec.VarIdx >> 16
+        itemIndex = rec.VarIdx & 0xFFFF
+        deltaRow = deltaArray[varDataIndex][itemIndex]
+        delta = sum(deltaRow)
+        if delta != 0:
+            setattr(
+                varfont[tableTag],
+                itemName,
+                getattr(varfont[tableTag], itemName) + otRound(delta),
+            )
 
 
 def instantiateMvar(varfont, location):
     log.info("Instantiating MVAR table")
-    # First instantiate to new position without modifying MVAR table
-    setMvarDeltas(varfont, location)
 
     varStore = varfont["MVAR"].table.VarStore
-    instantiateItemVariationStore(varStore, varfont["fvar"].axes, location)
+    fvarAxes = varfont["fvar"].axes
+    defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, location)
+    setMvarDeltas(varfont, defaultDeltas)
 
     if not varStore.VarRegionList.Region:
         # Delete table if no more regions left.
         del varfont["MVAR"]
 
 
-def instantiateItemVariationStore(varStore, fvarAxes, location):
-    regionsToBeRemoved = set()
-    regionScalars = {}
-    pinnedAxes = set(location.keys())
-    fvarAxisIndices = {
-        axis.axisTag: index
-        for index, axis in enumerate(fvarAxes)
-        if axis.axisTag in pinnedAxes
+def _getVarRegionAxes(region, fvarAxes):
+    # map fvar axes tags to VarRegionAxis in VarStore region, excluding axes that
+    # don't participate (peak == 0)
+    axes = {}
+    assert len(fvarAxes) == len(region.VarRegionAxis)
+    for fvarAxis, regionAxis in zip(fvarAxes, region.VarRegionAxis):
+        if regionAxis.PeakCoord != 0:
+            axes[fvarAxis.axisTag] = regionAxis
+    return axes
+
+
+def _getVarRegionScalar(location, regionAxes):
+    # compute partial product of per-axis scalars at location, excluding the axes
+    # that are not pinned
+    pinnedAxes = {
+        axisTag: (axis.StartCoord, axis.PeakCoord, axis.EndCoord)
+        for axisTag, axis in regionAxes.items()
+        if axisTag in location
     }
-    for regionIndex, region in enumerate(varStore.VarRegionList.Region):
-        # collect set of axisTags which have influence: peak != 0
-        regionAxes = set(
-            axis
-            for axis, (start, peak, end) in region.get_support(fvarAxes).items()
-            if peak != 0
+    return supportScalar(location, pinnedAxes)
+
+
+def _scaleVarDataDeltas(varData, regionScalars):
+    # multiply all varData deltas in-place by the corresponding region scalar
+    varRegionCount = len(varData.VarRegionIndex)
+    scalars = [regionScalars[regionIndex] for regionIndex in varData.VarRegionIndex]
+    for item in varData.Item:
+        assert len(item) == varRegionCount
+        item[:] = [delta * scalar for delta, scalar in zip(item, scalars)]
+
+
+def _getVarDataDeltasForRegions(varData, regionIndices, rounded=False):
+    # Get only the deltas that correspond to the given regions (optionally, rounded).
+    # Returns: list of lists of float
+    varRegionIndices = varData.VarRegionIndex
+    deltaSets = []
+    for item in varData.Item:
+        deltaSets.append(
+            [
+                delta if not rounded else otRound(delta)
+                for regionIndex, delta in zip(varRegionIndices, item)
+                if regionIndex in regionIndices
+            ]
         )
-        pinnedRegionAxes = regionAxes & pinnedAxes
-        if not pinnedRegionAxes:
-            # A region where none of the axes having effect are pinned
-            continue
-        if len(pinnedRegionAxes) == len(regionAxes):
-            # All the axes having effect in this region are being pinned so
-            # remove it
-            regionsToBeRemoved.add(regionIndex)
-        else:
-            # compute the scalar support of the axes to be pinned
-            pinnedSupport = {
-                axis: support
-                for axis, support in region.get_support(fvarAxes).items()
-                if axis in pinnedRegionAxes
-            }
-            pinnedScalar = supportScalar(location, pinnedSupport)
-            if pinnedScalar == 0.0:
-                # no influence, drop this region
-                regionsToBeRemoved.add(regionIndex)
-                continue
-            elif pinnedScalar != 1.0:
-                # This region will be retained but the deltas will be scaled
-                regionScalars[regionIndex] = pinnedScalar
+    return deltaSets
 
-            for axisTag in pinnedRegionAxes:
-                # For all pinnedRegionAxes make their influence null by setting
-                # PeakCoord to 0.
-                axis = region.VarRegionAxis[fvarAxisIndices[axisTag]]
-                axis.StartCoord, axis.PeakCoord, axis.EndCoord = (0, 0, 0)
 
+def _subsetVarStoreRegions(varStore, regionIndices):
+    # drop regions not in regionIndices
     newVarDatas = []
-    for vardata in varStore.VarData:
-        varRegionIndex = vardata.VarRegionIndex
-        if regionsToBeRemoved.issuperset(varRegionIndex):
+    for varData in varStore.VarData:
+        if regionIndices.isdisjoint(varData.VarRegionIndex):
             # drop VarData subtable if we remove all the regions referenced by it
             continue
 
-        # Apply scalars for regions to be retained.
-        for item in vardata.Item:
-            for column, delta in enumerate(item):
-                regionIndex = varRegionIndex[column]
-                if regionIndex in regionScalars:
-                    scalar = regionScalars[regionIndex]
-                    item[column] = otRound(delta * scalar)
+        # only retain delta-set columns that correspond to the given regions
+        varData.Item = _getVarDataDeltasForRegions(varData, regionIndices, rounded=True)
+        varData.VarRegionIndex = [
+            ri for ri in varData.VarRegionIndex if ri in regionIndices
+        ]
+        varData.VarRegionCount = len(varData.VarRegionIndex)
 
-        if not regionsToBeRemoved.isdisjoint(varRegionIndex):
-            # from each deltaset row, delete columns corresponding to the regions to
-            # be deleted
-            newItems = []
-            for item in vardata.Item:
-                newItems.append(
-                    [
-                        delta
-                        for column, delta in enumerate(item)
-                        if varRegionIndex[column] not in regionsToBeRemoved
-                    ]
-                )
-            vardata.Item = newItems
-            vardata.ItemCount = len(newItems)
-            # prune VarRegionIndex from the regions to be deleted
-            vardata.VarRegionIndex = [
-                ri for ri in vardata.VarRegionIndex if ri not in regionsToBeRemoved
-            ]
-            vardata.VarRegionCount = len(vardata.VarRegionIndex)
-        vardata.calculateNumShorts()
-        newVarDatas.append(vardata)
+        # recalculate NumShorts, reordering columns as necessary
+        varData.optimize()
+        newVarDatas.append(varData)
 
     varStore.VarData = newVarDatas
     varStore.VarDataCount = len(varStore.VarData)
     # remove unused regions from VarRegionList
     varStore.prune_regions()
+
+
+def instantiateItemVariationStore(varStore, fvarAxes, location):
+    regions = [
+        _getVarRegionAxes(reg, fvarAxes) for reg in varStore.VarRegionList.Region
+    ]
+    # for each region, compute the scalar support of the axes to be pinned at the
+    # desired location, and scale the deltas accordingly
+    regionScalars = [_getVarRegionScalar(location, axes) for axes in regions]
+    for varData in varStore.VarData:
+        _scaleVarDataDeltas(varData, regionScalars)
+
+    # disable the pinned axes by setting PeakCoord to 0
+    for axes in regions:
+        for axisTag, axis in axes.items():
+            if axisTag in location:
+                axis.StartCoord, axis.PeakCoord, axis.EndCoord = (0, 0, 0)
+    # If all axes in a region are pinned, its deltas are added to the default instance
+    defaultRegionIndices = {
+        regionIndex
+        for regionIndex, axes in enumerate(regions)
+        if all(axis.PeakCoord == 0 for axis in axes.values())
+    }
+    # Collect the default deltas into a two-dimension array, with outer/inner indices
+    # corresponding to a VarData subtable and a deltaset row within that table.
+    defaultDeltaArray = [
+        _getVarDataDeltasForRegions(varData, defaultRegionIndices)
+        for varData in varStore.VarData
+    ]
+
+    # drop default regions, or those whose influence at the pinned location is 0
+    newRegionIndices = {
+        regionIndex
+        for regionIndex in range(len(varStore.VarRegionList.Region))
+        if regionIndex not in defaultRegionIndices and regionScalars[regionIndex] != 0
+    }
+    _subsetVarStoreRegions(varStore, newRegionIndices)
+
+    return defaultDeltaArray
 
 
 def instantiateFeatureVariations(varfont, location):
