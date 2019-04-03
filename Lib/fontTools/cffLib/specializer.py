@@ -75,9 +75,13 @@ def commandsToProgram(commands):
 	it back to a T2CharString program list."""
 	program = []
 	for op,args in commands:
-		program.extend(args)
-		if op:
-			program.append(op)
+		if op in {'hintmask', 'cntrmask'}:
+			program.append(op)  # hintmask op precedes its argument.
+			program.extend(args)
+		else:
+			program.extend(args)
+			if op:
+				program.append(op)
 	return program
 
 
