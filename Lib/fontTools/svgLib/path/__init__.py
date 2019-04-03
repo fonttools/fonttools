@@ -55,6 +55,10 @@ class SVGPath(object):
         # xpath | doesn't seem to reliable work so just walk it
         for el in self.root.iter():
             pb.add_path_from_element(el)
-        for path in pb.paths:
+        original_pen = pen
+        for path, transform in zip(pb.paths, pb.transforms):
+            if transform:
+                pen = TransformPen(original_pen, transform)
+            else:
+                pen = original_pen
             parse_path(path, pen)
-
