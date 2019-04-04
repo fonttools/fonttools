@@ -50,28 +50,34 @@ def instantiateTupleVariationStore(variations, location, origCoords=None, endPts
         else:
             varGroups[axes] = [var]
 
-    defaultDeltas = None
-    newVariations = []
-    for axes, varGroup in varGroups.items():
-        var = varGroup.pop(0)
+    # TupleVariations in which all axes have been pinned are dropped from gvar/cvar,
+    # their deltas summed up, rounded and subsequently added to the default instance
+    emptyAxes = ()
+    if emptyAxes in varGroups:
+        defaultVars = varGroups.pop(emptyAxes)
+        var = defaultVars.pop(0)
+        var.sumDeltas(defaultVars, origCoords, endPts)
+        var.roundDeltas()
+        defaultDeltas = var.coordinates
+    else:
+        defaultDeltas = []
 
-        # merge TupleVariations having the same (or none) axes
+    # merge remaining TupleVariations having the same axes
+    newVariations = []
+    for varGroup in varGroups.values():
+        var = varGroup.pop(0)
         if varGroup:
             var.sumDeltas(varGroup, origCoords, endPts)
-
-        if axes is ():
-            # if no axis is left in the TupleVariation, we drop it and its deltas
-            # will be later added to the default instance; we need to interpolate
-            # any inferred (i.e. None) deltas to be able to sum the coordinates
-            if origCoords is not None:
-                var.calcInferredDeltas(origCoords, endPts)
-            defaultDeltas = var.coordinates
-        else:
-            var.roundDeltas()
-            newVariations.append(var)
-
+        elif origCoords is not None and defaultDeltas:
+            # if the default instance coordinates will be modified, all the inferred
+            # deltas that still remains need to be calculated using the original
+            # coordinates (can later be re-optimized using the modified ones)
+            var.calcInferredDeltas(origCoords, endPts)
+        var.roundDeltas()
+        newVariations.append(var)
     variations[:] = newVariations
-    return defaultDeltas or []
+
+    return defaultDeltas
 
 
 def instantiateGvarGlyph(varfont, glyphname, location, optimize=True):
@@ -130,7 +136,7 @@ def instantiateGvar(varfont, location, optimize=True):
 def setCvarDeltas(cvt, deltas):
     for i, delta in enumerate(deltas):
         if delta is not None:
-            cvt[i] += otRound(delta)
+            cvt[i] += delta
 
 
 def instantiateCvar(varfont, location):

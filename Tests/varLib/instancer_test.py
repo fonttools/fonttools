@@ -54,10 +54,10 @@ class InstantiateGvarTest(object):
                 {"wdth": -0.5},
                 {
                     "hyphen": [
-                        (33.5, 229),
-                        (33.5, 308.5),
-                        (264.5, 308.5),
-                        (264.5, 229),
+                        (34, 229),
+                        (34, 309),
+                        (265, 309),
+                        (265, 229),
                         (0, 0),
                         (298, 0),
                         (0, 1000),
@@ -102,10 +102,10 @@ class InstantiateGvarTest(object):
         instancer.instantiateGvar(varfont, {"wght": 0.0, "wdth": -0.5})
 
         assert _get_coordinates(varfont, "hyphen") == [
-            (33.5, 229),
-            (33.5, 308.5),
-            (264.5, 308.5),
-            (264.5, 229),
+            (34, 229),
+            (34, 309),
+            (265, 309),
+            (265, 229),
             (0, 0),
             (298, 0),
             (0, 1000),
