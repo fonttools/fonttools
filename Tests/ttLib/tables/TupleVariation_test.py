@@ -788,29 +788,23 @@ class TupleVariationTest(unittest.TestCase):
 		var.optimize([(0, 0)]*129, list(range(129-4)), isComposite=True)
 		self.assertEqual(var.coordinates, [(0, 0)] + [None]*128)
 
-	def test_sumDeltas_gvar(self):
-		coordinates = [
-			(0, 0), (0, 100), (100, 100), (100, 0),
-			(0, 0), (100, 0), (0, 0), (0, 0),
-		]
-		endPts = [3]
-		axes = {"wght": (0.0, 1.0, 1.0)}
+	def test_sum_deltas_gvar(self):
 		var1 = TupleVariation(
-			axes,
+			{},
 			[
-				(-20, 0), None, None, (20, 0),
-				None, None, None, None,
+				(-20, 0), (-20, 0), (20, 0), (20, 0),
+				(0, 0), (0, 0), (0, 0), (0, 0),
 			]
 		)
 		var2 = TupleVariation(
-			axes,
+			{},
 			[
-				(-10, 0), None, None, (10, 0),
-				None, (20, 0), None, None,
+				(-10, 0), (-10, 0), (10, 0), (10, 0),
+				(0, 0), (20, 0), (0, 0), (0, 0),
 			]
 		)
 
-		var1.sumDeltas([var2], coordinates, endPts)
+		var1 += var2
 
 		self.assertEqual(
 			var1.coordinates,
@@ -820,13 +814,14 @@ class TupleVariationTest(unittest.TestCase):
 			]
 		)
 
-	def test_sumDeltas_cvar(self):
+	def test_sum_deltas_cvar(self):
 		axes = {"wght": (0.0, 1.0, 1.0)}
 		var1 = TupleVariation(axes, [0, 1, None, None])
 		var2 = TupleVariation(axes, [None, 2, None, 3])
 		var3 = TupleVariation(axes, [None, None, None, 4])
 
-		var1.sumDeltas([var2, var3])
+		var1 += var2
+		var1 += var3
 
 		self.assertEqual(var1.coordinates, [0, 3, None, 7])
 

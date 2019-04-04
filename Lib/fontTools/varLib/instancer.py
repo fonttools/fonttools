@@ -28,7 +28,7 @@ log = logging.getLogger("fontTools.varlib.instancer")
 
 
 def instantiateTupleVariationStore(variations, location, origCoords=None, endPts=None):
-    varGroups = collections.OrderedDict()
+    newVariations = collections.OrderedDict()
     for var in variations:
         # Compute the scalar support of the axes to be pinned at the desired location,
         # excluding any axes that we are not pinning.
@@ -40,44 +40,28 @@ def instantiateTupleVariationStore(variations, location, origCoords=None, endPts
             # no influence, drop the TupleVariation
             continue
 
+        if origCoords is not None:
+            var.calcInferredDeltas(origCoords, endPts)
+
         var.scaleDeltas(scalar)
 
-        # group TupleVariations by overlapping "tents" (can be empty if all the axes
-        # were instanced)
+        # merge TupleVariations with overlapping "tents"
         axes = tuple(var.axes.items())
-        if axes in varGroups:
-            varGroups[axes].append(var)
+        if axes in newVariations:
+            newVariations[axes] += var
         else:
-            varGroups[axes] = [var]
+            newVariations[axes] = var
 
-    # TupleVariations in which all axes have been pinned are dropped from gvar/cvar,
-    # their deltas summed up, rounded and subsequently added to the default instance
-    emptyAxes = ()
-    if emptyAxes in varGroups:
-        defaultVars = varGroups.pop(emptyAxes)
-        var = defaultVars.pop(0)
-        var.sumDeltas(defaultVars, origCoords, endPts)
+    for var in newVariations.values():
         var.roundDeltas()
-        defaultDeltas = var.coordinates
-    else:
-        defaultDeltas = []
 
-    # merge remaining TupleVariations having the same axes
-    newVariations = []
-    for varGroup in varGroups.values():
-        var = varGroup.pop(0)
-        if varGroup:
-            var.sumDeltas(varGroup, origCoords, endPts)
-        elif origCoords is not None and defaultDeltas:
-            # if the default instance coordinates will be modified, all the inferred
-            # deltas that still remains need to be calculated using the original
-            # coordinates (can later be re-optimized using the modified ones)
-            var.calcInferredDeltas(origCoords, endPts)
-        var.roundDeltas()
-        newVariations.append(var)
-    variations[:] = newVariations
+    # drop TupleVariation if all axes have been pinned (var.axes.items() is empty);
+    # its deltas will be added to the default instance's coordinates
+    defaultVar = newVariations.pop(tuple(), None)
 
-    return defaultDeltas
+    variations[:] = list(newVariations.values())
+
+    return defaultVar.coordinates if defaultVar is not None else []
 
 
 def instantiateGvarGlyph(varfont, glyphname, location, optimize=True):

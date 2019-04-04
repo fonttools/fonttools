@@ -530,41 +530,32 @@ class TupleVariation(object):
 			if optimizedLength < unoptimizedLength:
 				self.coordinates = varOpt.coordinates
 
-	def sumDeltas(self, variations, origCoords=None, endPts=None):
-		# to sum the gvar deltas we need to first interpolate any inferred deltas
-		if origCoords is not None:
-			self.calcInferredDeltas(origCoords, endPts)
+	def __iadd__(self, other):
+		if not isinstance(other, TupleVariation):
+			return NotImplemented
 		deltas1 = self.coordinates
-		axes = self.axes
 		length = len(deltas1)
-		deltaRange = range(length)
 		deltaType = self.checkDeltaType()
-		for other in variations:
-			if other.axes != axes:
-				raise ValueError(
-					"cannot merge TupleVariations with different axes"
-				)
-			if origCoords is not None:
-				other.calcInferredDeltas(origCoords, endPts)
-			deltas2 = other.coordinates
-			if len(deltas2) != length:
-				raise ValueError(
-					"cannot merge TupleVariations with different lengths"
-				)
-			for i, d2 in zip(deltaRange, deltas2):
-				d1 = deltas1[i]
-				if d1 is not None and d2 is not None:
-					if deltaType == "gvar":
-						deltas1[i] = (d1[0] + d2[0], d1[1] + d2[1])
-					else:
-						deltas1[i] = d1 + d2
+		deltas2 = other.coordinates
+		if len(deltas2) != length:
+			raise ValueError(
+				"cannot sum TupleVariation deltas with different lengths"
+			)
+		for i, d2 in zip(range(length), deltas2):
+			d1 = deltas1[i]
+			if d1 is not None and d2 is not None:
+				if deltaType == "gvar":
+					deltas1[i] = (d1[0] + d2[0], d1[1] + d2[1])
 				else:
-					if deltaType == "gvar":
-						raise ValueError(
-							"cannot merge gvar deltas with inferred points"
-						)
-					if d1 is None and d2 is not None:
-						deltas1[i] = d2
+					deltas1[i] = d1 + d2
+			else:
+				if deltaType == "gvar":
+					raise ValueError(
+						"cannot sum gvar deltas with inferred points"
+					)
+				if d1 is None and d2 is not None:
+					deltas1[i] = d2
+		return self
 
 
 def decompileSharedTuples(axisTags, sharedTupleCount, data, offset):
