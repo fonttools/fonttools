@@ -107,8 +107,15 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			glyph = ttFont["glyf"][glyphName]
 			numPointsInGlyph = self.getNumPoints_(glyph)
 			gvarData = data[offsetToData + offsets[i] : offsetToData + offsets[i + 1]]
-			self.variations[glyphName] = decompileGlyph_(
-				numPointsInGlyph, sharedCoords, axisTags, gvarData)
+			try:
+				self.variations[glyphName] = decompileGlyph_(
+					numPointsInGlyph, sharedCoords, axisTags, gvarData)
+			except Exception:
+				log.error(
+					"Failed to decompile deltas for glyph '%s' (%d points)",
+					glyphName, numPointsInGlyph,
+				)
+				raise
 
 	@staticmethod
 	def decompileOffsets_(data, tableFormat, glyphCount):

@@ -5,7 +5,7 @@ import os
 import re
 
 
-numberAddedRE = re.compile("#\d+$")
+numberAddedRE = re.compile(r"#\d+$")
 
 
 def makeOutputFileName(input, outputDir=None, extension=None, overWrite=False):
