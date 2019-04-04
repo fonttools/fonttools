@@ -1,12 +1,9 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
+from fontTools.misc.py23 import *
 from fontTools.voltLib import ast
 from fontTools.voltLib.error import VoltLibError
 from fontTools.voltLib.parser import Parser
-from io import open
-import os
-import shutil
-import tempfile
 import unittest
 
 
@@ -1119,22 +1116,8 @@ class ParserTest(unittest.TestCase):
                           def_glyph.type, def_glyph.components),
                          (".notdef", 0, None, "BASE", None))
 
-    def setUp(self):
-        self.tempdir = None
-        self.num_tempfiles = 0
-
-    def tearDown(self):
-        if self.tempdir:
-            shutil.rmtree(self.tempdir)
-
     def parse(self, text):
-        if not self.tempdir:
-            self.tempdir = tempfile.mkdtemp()
-        self.num_tempfiles += 1
-        path = os.path.join(self.tempdir, "tmp%d.vtp" % self.num_tempfiles)
-        with open(path, "w") as outfile:
-            outfile.write(text)
-        return Parser(path).parse()
+        return Parser(UnicodeIO(text)).parse()
 
 if __name__ == "__main__":
     import sys
