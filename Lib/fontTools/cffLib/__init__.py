@@ -1382,7 +1382,7 @@ def packCharset0(charset, isCID, strings):
 	else:
 		getNameID = getSIDfromName
 
-	for name in charset[1:]:
+	for name in list(charset)[1:]:
 		data.append(packCard16(getNameID(name, strings)))
 	return bytesjoin(data)
 
@@ -1397,7 +1397,7 @@ def packCharset(charset, isCID, strings):
 	else:
 		getNameID = getSIDfromName
 
-	for name in charset[1:]:
+	for name in list(charset)[1:]:
 		SID = getNameID(name, strings)
 		if first is None:
 			first = SID
