@@ -1,3 +1,6 @@
+3.40.0 (released 2019-04-08)
+----------------------------
+
 - [subset] Fixed error while subsetting ``VVAR`` with ``--retain-gids``
   option (#1552).
 - [designspaceLib] Use up-to-date default location in ``findDefault`` method
