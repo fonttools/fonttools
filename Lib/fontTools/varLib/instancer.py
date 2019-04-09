@@ -158,7 +158,8 @@ def instantiateMvar(varfont, location):
     varStore = varfont["MVAR"].table.VarStore
     fvarAxes = varfont["fvar"].axes
     defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, location)
-    setMvarDeltas(varfont, defaultDeltas)
+    if defaultDeltas:
+      setMvarDeltas(varfont, defaultDeltas)
 
     if not varStore.VarRegionList.Region:
         # Delete table if no more regions left.
@@ -189,6 +190,9 @@ def _getVarRegionScalar(location, regionAxes):
 
 def _scaleVarDataDeltas(varData, regionScalars):
     # multiply all varData deltas in-place by the corresponding region scalar
+    if all(scalar == 1 for scalar in regionScalars):
+        return # nothing to scale
+
     varRegionCount = len(varData.VarRegionIndex)
     scalars = [regionScalars[regionIndex] for regionIndex in varData.VarRegionIndex]
     for item in varData.Item:
@@ -244,6 +248,11 @@ def instantiateItemVariationStore(varStore, fvarAxes, location):
     # for each region, compute the scalar support of the axes to be pinned at the
     # desired location, and scale the deltas accordingly
     regionScalars = [_getVarRegionScalar(location, axes) for axes in regions]
+    if all(scalar == 0 for scalar in regionScalars):
+        # All regions should be dropped.
+        varStore.VarRegionList.Region = None
+        return None
+
     for varData in varStore.VarData:
         _scaleVarDataDeltas(varData, regionScalars)
 
