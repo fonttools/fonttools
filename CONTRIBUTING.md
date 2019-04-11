@@ -5,19 +5,16 @@ FontTools development is on-going in an active community of developers, that inc
 The project is run on Github, in the typical free/libre/open-source software way. 
 If you are unfamiliar with that, check out [opensource.guide](https://opensource.guide) and [producingoss.com](http://producingoss.com).
 
-We use Github's Issue Tracker to report and track bugs, map out future improvements, set priorities and assign people to them.
-We only assign an issue to someone when they are going to work on that issue soon.
-We aim to tag all issues with a priority tag, P0 for "urgent" through P5 for "someday-maybe"
-
+We use Github's Issue Tracker to report, discuss and track bugs, map out future improvements, set priorities, and self-assign issues.
 If you find a bug, have an idea for a new feature, then please [create a new issue](https://github.com/fonttools/fonttools/issues) and we'll be happy to work with you on it!
 
 If you have a question or want to discuss usage from an end-user perspective, there is a mailing list at [groups.google.com/d/forum/fonttools](https://groups.google.com/d/forum/fonttools) mailing list.
 
-There is also a development [groups.google.com/d/forum/fonttools-dev](https://groups.google.com/d/forum/fonttools-dev) mailing list for Continuous Integration notifications.
-
 If you would like to speak to someone directly, you can also email the project lead, Behdad Esfahbod, privately at <behdad@behdad.org>
 
 If you make a pull request, you (or the organization that owns your copyrights) should be listed in the [README](https://github.com/fonttools/fonttools#copyrights).
+
+(There is also a development [groups.google.com/d/forum/fonttools-dev](https://groups.google.com/d/forum/fonttools-dev) mailing list for Continuous Integration notifications.)
 
 ## Code reviews
 
