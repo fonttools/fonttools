@@ -3,8 +3,6 @@ requires = [
     "setuptools",
     "wheel",
     "setuptools_scm",
-    # Cython is an optional build requirement, as the sdist includes
-    # pre-cythonized *.c sources
-    # "cython",
+    "cython",
 ]
 build-backend = "setuptools.build_meta"
