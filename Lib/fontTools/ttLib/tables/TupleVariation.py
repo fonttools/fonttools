@@ -30,6 +30,7 @@ log = logging.getLogger(__name__)
 
 
 class TupleVariation(object):
+
 	def __init__(self, axes, coordinates):
 		self.axes = axes.copy()
 		self.coordinates = coordinates[:]
@@ -443,8 +444,10 @@ class TupleVariation(object):
 			size += axisCount * 4
 		return size
 
-	def checkDeltaType(self):
-		# check if deltas are (x, y) as in gvar, or single values as in cvar
+	def getDeltaType(self):
+		""" Check if deltas are (x, y) as in gvar, or single values as in cvar.
+		Returns a string ("gvar" or "cvar"), or None if empty.
+		"""
 		firstDelta = next((c for c in self.coordinates if c is not None), None)
 		if firstDelta is None:
 			return  # empty or has no impact
@@ -458,7 +461,7 @@ class TupleVariation(object):
 	def scaleDeltas(self, scalar):
 		if scalar == 1.0:
 			return  # no change
-		deltaType = self.checkDeltaType()
+		deltaType = self.getDeltaType()
 		if deltaType == "gvar":
 			if scalar == 0:
 				self.coordinates = [(0, 0)] * len(self.coordinates)
@@ -477,7 +480,7 @@ class TupleVariation(object):
 				]
 
 	def roundDeltas(self):
-		deltaType = self.checkDeltaType()
+		deltaType = self.getDeltaType()
 		if deltaType == "gvar":
 			self.coordinates = [
 				(otRound(d[0]), otRound(d[1])) if d is not None else None
@@ -491,7 +494,7 @@ class TupleVariation(object):
 	def calcInferredDeltas(self, origCoords, endPts):
 		from fontTools.varLib.iup import iup_delta
 
-		if self.checkDeltaType() == "cvar":
+		if self.getDeltaType() == "cvar":
 			raise TypeError(
 				"Only 'gvar' TupleVariation can have inferred deltas"
 			)
@@ -535,26 +538,29 @@ class TupleVariation(object):
 			return NotImplemented
 		deltas1 = self.coordinates
 		length = len(deltas1)
-		deltaType = self.checkDeltaType()
+		deltaType = self.getDeltaType()
 		deltas2 = other.coordinates
 		if len(deltas2) != length:
 			raise ValueError(
 				"cannot sum TupleVariation deltas with different lengths"
 			)
-		for i, d2 in zip(range(length), deltas2):
-			d1 = deltas1[i]
-			if d1 is not None and d2 is not None:
-				if deltaType == "gvar":
+		if deltaType == "gvar":
+			for i, d2 in zip(range(length), deltas2):
+				d1 = deltas1[i]
+				try:
 					deltas1[i] = (d1[0] + d2[0], d1[1] + d2[1])
-				else:
-					deltas1[i] = d1 + d2
-			else:
-				if deltaType == "gvar":
+				except TypeError:
 					raise ValueError(
 						"cannot sum gvar deltas with inferred points"
 					)
-				if d1 is None and d2 is not None:
+		else:
+			for i, d2 in zip(range(length), deltas2):
+				d1 = deltas1[i]
+				if d1 is not None and d2 is not None:
+					deltas1[i] = d1 + d2
+				elif d1 is None and d2 is not None:
 					deltas1[i] = d2
+				# elif d2 is None do nothing
 		return self
 
 

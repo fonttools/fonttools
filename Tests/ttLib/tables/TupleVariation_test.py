@@ -69,6 +69,13 @@ SKIA_GVAR_I_DATA = deHexStr(
 
 
 class TupleVariationTest(unittest.TestCase):
+	def __init__(self, methodName):
+		unittest.TestCase.__init__(self, methodName)
+		# Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
+		# and fires deprecation warnings if a program uses the old name.
+		if not hasattr(self, "assertRaisesRegex"):
+			self.assertRaisesRegex = self.assertRaisesRegexp
+
 	def test_equal(self):
 		var1 = TupleVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
 		var2 = TupleVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
@@ -681,24 +688,24 @@ class TupleVariationTest(unittest.TestCase):
 		content = writer.file.getvalue().decode("utf-8")
 		return [line.strip() for line in content.splitlines()][1:]
 
-	def test_checkDeltaType(self):
+	def test_getDeltaType(self):
 		empty = TupleVariation({}, [])
-		self.assertIsNone(empty.checkDeltaType())
+		self.assertIsNone(empty.getDeltaType())
 
 		empty = TupleVariation({}, [None])
-		self.assertIsNone(empty.checkDeltaType())
+		self.assertIsNone(empty.getDeltaType())
 
 		gvarTuple = TupleVariation({}, [None, (0, 0)])
-		self.assertEqual(gvarTuple.checkDeltaType(), "gvar")
+		self.assertEqual(gvarTuple.getDeltaType(), "gvar")
 
 		cvarTuple = TupleVariation({}, [None, 0])
-		self.assertEqual(cvarTuple.checkDeltaType(), "cvar")
+		self.assertEqual(cvarTuple.getDeltaType(), "cvar")
 
 		cvarTuple.coordinates[1] *= 1.0
-		self.assertEqual(cvarTuple.checkDeltaType(), "cvar")
+		self.assertEqual(cvarTuple.getDeltaType(), "cvar")
 
 		with self.assertRaises(TypeError):
-			TupleVariation({}, [None, "a"]).checkDeltaType()
+			TupleVariation({}, [None, "a"]).getDeltaType()
 
 	def test_scaleDeltas_cvar(self):
 		var = TupleVariation({}, [100, None])
@@ -706,8 +713,9 @@ class TupleVariationTest(unittest.TestCase):
 		var.scaleDeltas(1.0)
 		self.assertEqual(var.coordinates, [100, None])
 
-		var.scaleDeltas(0.5)
-		self.assertEqual(var.coordinates, [50.0, None])
+		var.scaleDeltas(0.333)
+		self.assertAlmostEqual(var.coordinates[0], 33.3)
+		self.assertIsNone(var.coordinates[1])
 
 		var.scaleDeltas(0.0)
 		self.assertEqual(var.coordinates, [0, 0])
@@ -718,8 +726,10 @@ class TupleVariationTest(unittest.TestCase):
 		var.scaleDeltas(1.0)
 		self.assertEqual(var.coordinates, [(100, 200), None])
 
-		var.scaleDeltas(0.5)
-		self.assertEqual(var.coordinates, [(50.0, 100.0), None])
+		var.scaleDeltas(0.333)
+		self.assertAlmostEqual(var.coordinates[0][0], 33.3)
+		self.assertAlmostEqual(var.coordinates[0][1], 66.6)
+		self.assertIsNone(var.coordinates[1])
 
 		var.scaleDeltas(0.0)
 		self.assertEqual(var.coordinates, [(0, 0), (0, 0)])
@@ -813,6 +823,20 @@ class TupleVariationTest(unittest.TestCase):
 				(0, 0), (20, 0), (0, 0), (0, 0),
 			]
 		)
+
+	def test_sum_deltas_gvar_invalid_length(self):
+		var1 = TupleVariation({}, [(1, 2)])
+		var2 = TupleVariation({}, [(1, 2), (3, 4)])
+
+		with self.assertRaisesRegex(ValueError, "deltas with different lengths"):
+			var1 += var2
+
+	def test_sum_deltas_gvar_with_inferred_points(self):
+		var1 = TupleVariation({}, [(1, 2), None])
+		var2 = TupleVariation({}, [(2, 3), None])
+
+		with self.assertRaisesRegex(ValueError, "deltas with inferred points"):
+			var1 += var2
 
 	def test_sum_deltas_cvar(self):
 		axes = {"wght": (0.0, 1.0, 1.0)}

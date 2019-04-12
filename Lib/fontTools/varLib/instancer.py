@@ -40,6 +40,7 @@ def instantiateTupleVariationStore(variations, location, origCoords=None, endPts
             # no influence, drop the TupleVariation
             continue
 
+        # compute inferred deltas only for gvar ('origCoords' is None for cvar)
         if origCoords is not None:
             var.calcInferredDeltas(origCoords, endPts)
 
