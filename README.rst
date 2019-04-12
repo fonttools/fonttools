@@ -58,6 +58,9 @@ statistics between calls by providing your own report dictionary:
         fonts_to_quadratic([font], stats=stats)
     # "stats" will report combined statistics for both fonts
 
+The library also provides a command-line script also named ``cu2qu``.
+Check its ``--help`` to see all the options.
+
 Installation
 ------------
 
