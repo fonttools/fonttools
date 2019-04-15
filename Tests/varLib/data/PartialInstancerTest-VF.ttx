@@ -644,6 +644,13 @@
         <Item index="1" value="[100, 0, -20]"/>
         <Item index="2" value="[50, -30, -20]"/>
       </VarData>
+      <VarData>
+        <!-- ItemCount=1 -->
+        <NumShorts value="0"/>
+        <!-- VarRegionCount=1 -->
+        <VarRegionIndex index="0" value="0"/>
+        <Item index="0" value="[30]"/>
+      </VarData>
     </VarStore>
     <ValueRecord index="0">
       <ValueTag value="strs"/>
@@ -656,6 +663,10 @@
     <ValueRecord index="2">
       <ValueTag value="unds"/>
       <VarIdx value="1"/>
+    </ValueRecord>
+    <ValueRecord index="3">
+      <ValueTag value="xhgt"/>
+      <VarIdx value="65536"/>
     </ValueRecord>
   </MVAR>
 

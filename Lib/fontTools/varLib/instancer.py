@@ -163,12 +163,17 @@ def setMvarDeltas(varfont, deltaArray):
 def instantiateMvar(varfont, location):
     log.info("Instantiating MVAR table")
 
-    varStore = varfont["MVAR"].table.VarStore
+    mvar = varfont["MVAR"].table
     fvarAxes = varfont["fvar"].axes
-    defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, location)
+    defaultDeltas, varIndexMapping = instantiateItemVariationStore(
+        mvar.VarStore, fvarAxes, location
+    )
     setMvarDeltas(varfont, defaultDeltas)
 
-    if not varStore.VarRegionList.Region:
+    if varIndexMapping:
+        for rec in mvar.ValueRecord:
+            rec.VarIdx = varIndexMapping[rec.VarIdx]
+    else:
         # Delete table if no more regions left.
         del varfont["MVAR"]
 
@@ -222,10 +227,12 @@ def _getVarDataDeltasForRegions(varData, regionIndices, rounded=False):
 
 def _subsetVarStoreRegions(varStore, regionIndices):
     # drop regions not in regionIndices
-    newVarDatas = []
     for varData in varStore.VarData:
         if regionIndices.isdisjoint(varData.VarRegionIndex):
-            # drop VarData subtable if we remove all the regions referenced by it
+            # empty VarData subtable if we remove all the regions referenced by it
+            varData.Item = [[] for _ in range(varData.ItemCount)]
+            varData.VarRegionIndex = []
+            varData.VarRegionCount = varData.NumShorts = 0
             continue
 
         # only retain delta-set columns that correspond to the given regions
@@ -237,10 +244,7 @@ def _subsetVarStoreRegions(varStore, regionIndices):
 
         # recalculate NumShorts, reordering columns as necessary
         varData.optimize()
-        newVarDatas.append(varData)
 
-    varStore.VarData = newVarDatas
-    varStore.VarDataCount = len(varStore.VarData)
     # remove unused regions from VarRegionList
     varStore.prune_regions()
 
@@ -281,7 +285,13 @@ def instantiateItemVariationStore(varStore, fvarAxes, location):
     }
     _subsetVarStoreRegions(varStore, newRegionIndices)
 
-    return defaultDeltaArray
+    if varStore.VarRegionList.Region:
+        # optimize VarStore, and get a map from old to new VarIdx after optimization
+        varIndexMapping = varStore.optimize()
+    else:
+        varIndexMapping = None  # VarStore is empty
+
+    return defaultDeltaArray, varIndexMapping
 
 
 def instantiateFeatureVariations(varfont, location):

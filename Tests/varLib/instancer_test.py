@@ -152,33 +152,48 @@ class InstantiateMvarTest(object):
         "location, expected",
         [
             pytest.param(
-                {"wght": 1.0}, {"strs": 100, "undo": -200, "unds": 150}, id="wght=1.0"
+                {"wght": 1.0},
+                {"strs": 100, "undo": -200, "unds": 150, "xhgt": 530},
+                id="wght=1.0",
             ),
             pytest.param(
-                {"wght": 0.5}, {"strs": 75, "undo": -150, "unds": 100}, id="wght=0.5"
+                {"wght": 0.5},
+                {"strs": 75, "undo": -150, "unds": 100, "xhgt": 515},
+                id="wght=0.5",
             ),
             pytest.param(
-                {"wght": 0.0}, {"strs": 50, "undo": -100, "unds": 50}, id="wght=0.0"
+                {"wght": 0.0},
+                {"strs": 50, "undo": -100, "unds": 50, "xhgt": 500},
+                id="wght=0.0",
             ),
             pytest.param(
-                {"wdth": -1.0}, {"strs": 20, "undo": -100, "unds": 50}, id="wdth=-1.0"
+                {"wdth": -1.0},
+                {"strs": 20, "undo": -100, "unds": 50, "xhgt": 500},
+                id="wdth=-1.0",
             ),
             pytest.param(
-                {"wdth": -0.5}, {"strs": 35, "undo": -100, "unds": 50}, id="wdth=-0.5"
+                {"wdth": -0.5},
+                {"strs": 35, "undo": -100, "unds": 50, "xhgt": 500},
+                id="wdth=-0.5",
             ),
             pytest.param(
-                {"wdth": 0.0}, {"strs": 50, "undo": -100, "unds": 50}, id="wdth=0.0"
+                {"wdth": 0.0},
+                {"strs": 50, "undo": -100, "unds": 50, "xhgt": 500},
+                id="wdth=0.0",
             ),
         ],
     )
     def test_pin_and_drop_axis(self, varfont, location, expected):
         mvar = varfont["MVAR"].table
-        # initially we have a single VarData with deltas associated with 3 regions:
-        # 1 with only wght, 1 with only wdth, and 1 with both wght and wdth.
-        assert len(mvar.VarStore.VarData) == 1
+        # initially we have two VarData: the first contains deltas associated with 3
+        # regions: 1 with only wght, 1 with only wdth, and 1 with both wght and wdth
+        assert len(mvar.VarStore.VarData) == 2
         assert mvar.VarStore.VarRegionList.RegionCount == 3
         assert mvar.VarStore.VarData[0].VarRegionCount == 3
         assert all(len(item) == 3 for item in mvar.VarStore.VarData[0].Item)
+        # The second VarData has deltas associated only with 1 region (wght only).
+        assert mvar.VarStore.VarData[1].VarRegionCount == 1
+        assert all(len(item) == 1 for item in mvar.VarStore.VarData[1].Item)
 
         instancer.instantiateMvar(varfont, location)
 
@@ -202,6 +217,8 @@ class InstantiateMvarTest(object):
         assert num_regions_left < 3
         assert mvar.VarStore.VarRegionList.RegionCount == num_regions_left
         assert mvar.VarStore.VarData[0].VarRegionCount == num_regions_left
+        # VarData subtables have been merged
+        assert len(mvar.VarStore.VarData) == 1
 
     @pytest.mark.parametrize(
         "location, expected",
@@ -328,11 +345,15 @@ class InstantiateItemVariationStoreTest(object):
         axis11 = varStore.VarRegionList.Region[1].VarRegionAxis[1]
         assert (axis11.StartCoord, axis11.PeakCoord, axis11.EndCoord) == (-1, -1, 0)
 
-        assert varStore.VarDataCount == len(varStore.VarData) == 1
+        assert varStore.VarDataCount == len(varStore.VarData) == 2
         assert varStore.VarData[0].VarRegionCount == 2
         assert varStore.VarData[0].VarRegionIndex == [0, 1]
         assert varStore.VarData[0].Item == [[0, 3], [4, 7]]
         assert varStore.VarData[0].NumShorts == 0
+        assert varStore.VarData[1].VarRegionCount == 0
+        assert varStore.VarData[1].VarRegionIndex == []
+        assert varStore.VarData[1].Item == [[], []]
+        assert varStore.VarData[1].NumShorts == 0
 
     @pytest.fixture
     def fvarAxes(self):
@@ -372,42 +393,35 @@ class InstantiateItemVariationStoreTest(object):
         )
 
     @pytest.mark.parametrize(
-        "location, expected_deltas, num_regions, num_vardatas",
+        "location, expected_deltas, num_regions",
         [
-            ({"wght": 0}, [[[0, 0, 0], [0, 0, 0]], [[], []]], 1, 1),
-            ({"wght": 0.25}, [[[0, 50, 0], [0, 50, 0]], [[], []]], 2, 1),
-            ({"wdth": 0}, [[[], []], [[0], [0]]], 3, 1),
-            ({"wdth": -0.75}, [[[], []], [[75], [75]]], 6, 2),
+            ({"wght": 0}, [[[0, 0, 0], [0, 0, 0]], [[], []]], 1),
+            ({"wght": 0.25}, [[[0, 50, 0], [0, 50, 0]], [[], []]], 2),
+            ({"wdth": 0}, [[[], []], [[0], [0]]], 3),
+            ({"wdth": -0.75}, [[[], []], [[75], [75]]], 6),
             (
                 {"wght": 0, "wdth": 0},
                 [[[0, 0, 0], [0, 0, 0]], [[0, 0, 0, 0], [0, 0, 0, 0]]],
-                0,
                 0,
             ),
             (
                 {"wght": 0.25, "wdth": 0},
                 [[[0, 50, 0], [0, 50, 0]], [[0, 0, 0, 0], [0, 0, 0, 0]]],
                 0,
-                0,
             ),
             (
                 {"wght": 0, "wdth": -0.75},
                 [[[0, 0, 0], [0, 0, 0]], [[75, 0, 0, 0], [75, 0, 0, 0]]],
                 0,
-                0,
             ),
         ],
     )
     def test_instantiate_default_deltas(
-        self, varStore, fvarAxes, location, expected_deltas, num_regions, num_vardatas
+        self, varStore, fvarAxes, location, expected_deltas, num_regions
     ):
-        defaultDeltas = instancer.instantiateItemVariationStore(
+        defaultDeltas, _ = instancer.instantiateItemVariationStore(
             varStore, fvarAxes, location
         )
 
-        # from fontTools.misc.testTools import getXML
-        # print("\n".join(getXML(varStore.toXML, ttFont=None)))
-
         assert defaultDeltas == expected_deltas
         assert varStore.VarRegionList.RegionCount == num_regions
-        assert varStore.VarDataCount == num_vardatas
