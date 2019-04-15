@@ -408,6 +408,7 @@ def buildSinglePos(mapping, glyphMap):
     # If a ValueRecord is shared between multiple glyphs, we generate
     # a SinglePos format 1 subtable; that is the most compact form.
     for key, glyphs in coverages.items():
+        # 5 ushorts is the length of introducing another sublookup
         if len(glyphs) * _getSinglePosValueSize(key) > 5:
             format1Mapping = {g: values[key] for g in glyphs}
             result.append(buildSinglePosSubtable(format1Mapping, glyphMap))
@@ -425,9 +426,8 @@ def buildSinglePos(mapping, glyphMap):
             result.append(buildSinglePosSubtable(format2Mapping, glyphMap))
             handled.update(f2)
 
-    # The remaining ValueRecords are singletons in the sense that
-    # they are only used by a single glyph, and their valueFormat
-    # is unique as well. We encode these in format 1 again.
+    # The remaining ValueRecords are only used by a few glyphs, normally
+    # one. We encode these in format 1 again.
     for key, glyphs in coverages.items():
         if key not in handled:
             for g in glyphs:
@@ -494,6 +494,7 @@ def _makeDeviceTuple(device):
             tuple(device.DeltaValue))
 
 def _getSinglePosValueSize(valueKey):
+    """Returns how many ushorts this valueKey (short form of ValueRecord) takes up"""
     count = 0
     for k in valueKey[1:]:
         if hasattr(k[1], '__len__') and len(k[1]):
