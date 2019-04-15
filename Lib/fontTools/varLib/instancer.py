@@ -14,10 +14,10 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import floatToFixedToFloat, otRound
 from fontTools.varLib.models import supportScalar, normalizeValue, piecewiseLinearMap
-from fontTools.varLib.iup import iup_delta
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.varLib.mvar import MVAR_ENTRIES
+import collections
 from copy import deepcopy
 import logging
 import os
@@ -27,9 +27,8 @@ import re
 log = logging.getLogger("fontTools.varlib.instancer")
 
 
-def instantiateTupleVariationStore(variations, location):
-    newVariations = []
-    defaultDeltas = []
+def instantiateTupleVariationStore(variations, location, origCoords=None, endPts=None):
+    newVariations = collections.OrderedDict()
     for var in variations:
         # Compute the scalar support of the axes to be pinned at the desired location,
         # excluding any axes that we are not pinning.
@@ -40,49 +39,61 @@ def instantiateTupleVariationStore(variations, location):
         if scalar == 0.0:
             # no influence, drop the TupleVariation
             continue
-        elif scalar != 1.0:
-            var.scaleDeltas(scalar)
-        if not var.axes:
-            # if no axis is left in the TupleVariation, also drop it; its deltas
-            # will be folded into the neutral
-            defaultDeltas.append(var.coordinates)
+
+        # compute inferred deltas only for gvar ('origCoords' is None for cvar)
+        if origCoords is not None:
+            var.calcInferredDeltas(origCoords, endPts)
+
+        var.scaleDeltas(scalar)
+
+        # merge TupleVariations with overlapping "tents"
+        axes = tuple(var.axes.items())
+        if axes in newVariations:
+            newVariations[axes] += var
         else:
-            # keep the TupleVariation, and round the scaled deltas to integers
-            if scalar != 1.0:
-                var.roundDeltas()
-            newVariations.append(var)
-    variations[:] = newVariations
-    return defaultDeltas
+            newVariations[axes] = var
+
+    for var in newVariations.values():
+        var.roundDeltas()
+
+    # drop TupleVariation if all axes have been pinned (var.axes.items() is empty);
+    # its deltas will be added to the default instance's coordinates
+    defaultVar = newVariations.pop(tuple(), None)
+
+    variations[:] = list(newVariations.values())
+
+    return defaultVar.coordinates if defaultVar is not None else []
 
 
-def setGvarGlyphDeltas(varfont, glyphname, deltasets):
+def instantiateGvarGlyph(varfont, glyphname, location, optimize=True):
     glyf = varfont["glyf"]
-    coordinates = glyf.getCoordinates(glyphname, varfont)
-    origCoords = None
+    coordinates, ctrl = glyf.getCoordinatesAndControls(glyphname, varfont)
+    endPts = ctrl.endPts
 
-    for deltas in deltasets:
-        hasUntouchedPoints = None in deltas
-        if hasUntouchedPoints:
-            if origCoords is None:
-                origCoords, g = glyf.getCoordinatesAndControls(glyphname, varfont)
-            deltas = iup_delta(deltas, origCoords, g.endPts)
-        coordinates += GlyphCoordinates(deltas)
-
-    glyf.setCoordinates(glyphname, coordinates, varfont)
-
-
-def instantiateGvarGlyph(varfont, glyphname, location):
     gvar = varfont["gvar"]
+    tupleVarStore = gvar.variations[glyphname]
 
-    defaultDeltas = instantiateTupleVariationStore(gvar.variations[glyphname], location)
+    defaultDeltas = instantiateTupleVariationStore(
+        tupleVarStore, location, coordinates, endPts
+    )
+
     if defaultDeltas:
-        setGvarGlyphDeltas(varfont, glyphname, defaultDeltas)
+        coordinates += GlyphCoordinates(defaultDeltas)
+        # this will also set the hmtx advance widths and sidebearings from
+        # the fourth-last and third-last phantom points (and glyph.xMin)
+        glyf.setCoordinates(glyphname, coordinates, varfont)
 
-    if not gvar.variations[glyphname]:
+    if not tupleVarStore:
         del gvar.variations[glyphname]
+        return
+
+    if optimize:
+        isComposite = glyf[glyphname].isComposite()
+        for var in tupleVarStore:
+            var.optimize(coordinates, endPts, isComposite)
 
 
-def instantiateGvar(varfont, location):
+def instantiateGvar(varfont, location, optimize=True):
     log.info("Instantiating glyf/gvar tables")
 
     gvar = varfont["gvar"]
@@ -101,31 +112,28 @@ def instantiateGvar(varfont, location):
         ),
     )
     for glyphname in glyphnames:
-        instantiateGvarGlyph(varfont, glyphname, location)
+        instantiateGvarGlyph(varfont, glyphname, location, optimize=optimize)
 
     if not gvar.variations:
         del varfont["gvar"]
 
 
-def setCvarDeltas(cvt, deltasets):
-    # copy cvt values internally represented as array.array("h") to a list,
-    # accumulating deltas (that may be float since we scaled them) and only
-    # do the rounding to integer once at the end to reduce rounding errors
-    values = list(cvt)
-    for deltas in deltasets:
-        for i, delta in enumerate(deltas):
-            if delta is not None:
-                values[i] += delta
-    for i, v in enumerate(values):
-        cvt[i] = otRound(v)
+def setCvarDeltas(cvt, deltas):
+    for i, delta in enumerate(deltas):
+        if delta is not None:
+            cvt[i] += delta
 
 
 def instantiateCvar(varfont, location):
     log.info("Instantiating cvt/cvar tables")
+
     cvar = varfont["cvar"]
-    cvt = varfont["cvt "]
+
     defaultDeltas = instantiateTupleVariationStore(cvar.variations, location)
-    setCvarDeltas(cvt, defaultDeltas)
+
+    if defaultDeltas:
+        setCvarDeltas(varfont["cvt "], defaultDeltas)
+
     if not cvar.variations:
         del varfont["cvar"]
 
@@ -370,7 +378,7 @@ def sanityCheckVariableTables(varfont):
             raise ValueError("Can't have gvar without glyf")
 
 
-def instantiateVariableFont(varfont, axis_limits, inplace=False):
+def instantiateVariableFont(varfont, axis_limits, inplace=False, optimize=True):
     sanityCheckVariableTables(varfont)
 
     if not inplace:
@@ -384,7 +392,7 @@ def instantiateVariableFont(varfont, axis_limits, inplace=False):
         raise NotImplementedError("Axes range limits are not supported yet")
 
     if "gvar" in varfont:
-        instantiateGvar(varfont, axis_limits)
+        instantiateGvar(varfont, axis_limits, optimize=optimize)
 
     if "cvar" in varfont:
         instantiateCvar(varfont, axis_limits)
@@ -451,6 +459,12 @@ def parseArgs(args):
         default=None,
         help="Output instance TTF file (default: INPUT-instance.ttf).",
     )
+    parser.add_argument(
+        "--no-optimize",
+        dest="optimize",
+        action="store_false",
+        help="do not perform IUP optimization on the remaining gvar TupleVariations",
+    )
     logging_group = parser.add_mutually_exclusive_group(required=False)
     logging_group.add_argument(
         "-v", "--verbose", action="store_true", help="Run more verbosely."
@@ -473,17 +487,19 @@ def parseArgs(args):
     axis_limits = parseLimits(options.locargs)
     if len(axis_limits) != len(options.locargs):
         raise ValueError("Specified multiple limits for the same axis")
-    return (infile, outfile, axis_limits)
+    return (infile, outfile, axis_limits, options)
 
 
 def main(args=None):
-    infile, outfile, axis_limits = parseArgs(args)
+    infile, outfile, axis_limits, options = parseArgs(args)
     log.info("Restricting axes: %s", axis_limits)
 
     log.info("Loading variable font")
     varfont = TTFont(infile)
 
-    instantiateVariableFont(varfont, axis_limits, inplace=True)
+    instantiateVariableFont(
+        varfont, axis_limits, inplace=True, optimize=options.optimize
+    )
 
     log.info("Saving partial variable font %s", outfile)
     varfont.save(outfile)
