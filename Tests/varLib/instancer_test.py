@@ -19,6 +19,11 @@ def varfont():
     return f
 
 
+@pytest.fixture(params=[True, False], ids=["optimize", "no-optimize"])
+def optimize(request):
+    return request.param
+
+
 def _get_coordinates(varfont, glyphname):
     # converts GlyphCoordinates to a list of (x, y) tuples, so that pytest's
     # assert will give us a nicer diff
@@ -27,10 +32,6 @@ def _get_coordinates(varfont, glyphname):
 
 class InstantiateGvarTest(object):
     @pytest.mark.parametrize("glyph_name", ["hyphen"])
-    @pytest.mark.parametrize(
-        "optimize",
-        [pytest.param(True, id="optimize"), pytest.param(False, id="no-optimize")],
-    )
     @pytest.mark.parametrize(
         "location, expected",
         [
@@ -98,8 +99,10 @@ class InstantiateGvarTest(object):
             for t in tuples
         )
 
-    def test_full_instance(self, varfont):
-        instancer.instantiateGvar(varfont, {"wght": 0.0, "wdth": -0.5})
+    def test_full_instance(self, varfont, optimize):
+        instancer.instantiateGvar(
+            varfont, {"wght": 0.0, "wdth": -0.5}, optimize=optimize
+        )
 
         assert _get_coordinates(varfont, "hyphen") == [
             (34, 229),
