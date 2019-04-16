@@ -346,7 +346,6 @@ def merge_charstrings(glyphOrder, num_masters, top_dicts, masterModel):
 		# blend lists in the CFF2 charstring.
 		region_cs = model_cs[1:]
 		for region_idx, region_charstring in enumerate(region_cs, start=1):
-			print("region_idx", region_idx, "loc", model.locations[region_idx])
 			var_pen.restart(region_idx)
 			region_charstring.outlineExtractor = MergeOutlineExtractor
 			region_charstring.draw(var_pen)
@@ -402,7 +401,7 @@ class MergeTypeError(TypeError):
 								gname=glyphName,
 								point_type=point_type, pt_index=pt_index,
 								m_index=m_index, default_type=default_type)
-						][0]
+							][0]
 			super(MergeTypeError, self).__init__(self.error_msg)
 
 
@@ -464,7 +463,7 @@ class MergeOutlineExtractor(CFFToCFF2OutlineExtractor):
 		args = self.countHints()
 		self._hint_op('vstemhm', args)
 
-	def op_hintmask(self, index):
+	def _get_hintmask(self, index):
 		if not self.hintMaskBytes:
 			args = self.countHints()
 			if args:
@@ -472,10 +471,17 @@ class MergeOutlineExtractor(CFFToCFF2OutlineExtractor):
 			self.hintMaskBytes = (self.hintCount + 7) // 8
 		hintMaskBytes, index = self.callingStack[-1].getBytes(index,
 			self.hintMaskBytes)
-		self.pen.add_hint('hintmask', [hintMaskBytes])
+		return index, hintMaskBytes
+
+	def op_hintmask(self, index):
+		index, hintMaskBytes = self._get_hintmask(index)
+		self.pen.add_hintmask('hintmask', [hintMaskBytes])
 		return hintMaskBytes, index
 
-	op_cntrmask = op_hintmask
+	def op_cntrmask(self, index):
+		index, hintMaskBytes = self._get_hintmask(index)
+		self.pen.add_hintmask('cntrmask', [hintMaskBytes])
+		return hintMaskBytes, index
 
 
 class CFF2CharStringMergePen(T2CharStringPen):
@@ -512,14 +518,32 @@ class CFF2CharStringMergePen(T2CharStringPen):
 			cmd[1].append(pt_coords)
 		self.pt_index += 1
 
-	def add_hint(self, hint_type, abs_args):
+	def add_hint(self, hint_type, args):
 		if self.m_index == 0:
-			self._commands.append([hint_type, [abs_args]])
+			self._commands.append([hint_type, [args]])
 		else:
 			cmd = self._commands[self.pt_index]
 			if cmd[0] != hint_type:
 				raise MergeTypeError(hint_type, self.pt_index, len(cmd[1]),
 					cmd[0], self.glyphName)
+			cmd[1].append(args)
+		self.pt_index += 1
+
+	def add_hintmask(self, hint_type, abs_args):
+		# For hintmask, fonttools.cffLib.specializer.py expects
+		# each of these to be represented by two sequential commands:
+		# first holding only the operator name, with an empty arg list,
+		# second with an empty string as the op name, and  the mask arg list.
+		if self.m_index == 0:
+			self._commands.append([hint_type, []])
+			self._commands.append(["", [abs_args]])
+		else:
+			cmd = self._commands[self.pt_index]
+			if cmd[0] != hint_type:
+				raise MergeTypeError(hint_type, self.pt_index, len(cmd[1]),
+					cmd[0], self.glyphName)
+			self.pt_index += 1
+			cmd = self._commands[self.pt_index]
 			cmd[1].append(abs_args)
 		self.pt_index += 1
 
@@ -564,9 +588,13 @@ class CFF2CharStringMergePen(T2CharStringPen):
 		[	[master_0 x, master_1 x, master_2 x],
 			[master_0 y, master_1 y, master_2 y]
 		]
-		We also make the value relative.
 		If the master values are all the same, we collapse the list to
 		as single value instead of a list.
+
+		We then convert this to:
+		[ [master_0 x] + [x delta tuple] + [numBlends=1]
+		  [master_0 y] + [y delta tuple] + [numBlends=1]
+		]
 		"""
 		for cmd in commands:
 			# arg[i] is the set of arguments for this operator from master i.
@@ -575,46 +603,31 @@ class CFF2CharStringMergePen(T2CharStringPen):
 			# m_args[n] is now all num_master args for the i'th argument
 			# for this operation.
 			cmd[1] = list(m_args)
-
-		# Now convert from absolute to relative
-		x0 = [0]*self.num_masters
-		y0 = [0]*self.num_masters
+		lastOp = None
 		for cmd in commands:
 			op = cmd[0]
-			if op == 'hintmask':
+			# masks are represented by two cmd's: first has only op names,
+			# second has only args.
+			if lastOp in ['hintmask', 'cntrmask']:
 				coord = list(cmd[1])
 				assert allEqual(coord), (
 					"hintmask values cannot differ between source fonts.")
 				cmd[1] = [coord[0][0]]
 			else:
-				if 'stem' in op:
-					new_coords = []
-					for coord in cmd[1]:
-						if allEqual(coord):
-							new_coords.append(coord[0])
-						else:
-							new_coords.append(list(coord))
-				else:
-					is_x = True
-					coords = cmd[1]
-					new_coords = []
-					for coord in coords:
-						if allEqual(coord):
-							new_coords.append(coord[0])
-						else:
-							# convert to deltas
-							deltas = get_delta_func(coord)[1:]
-							if round_func:
-								deltas = [round_func(delta) for delta in deltas]
-							coord = [coord[0]] + deltas
-							new_coords.append(coord)
-
-						if is_x:
-							x0 = coord
-						else:
-							y0 = coord
-						is_x = not is_x
+				coords = cmd[1]
+				new_coords = []
+				for coord in coords:
+					if allEqual(coord):
+						new_coords.append(coord[0])
+					else:
+						# convert to deltas
+						deltas = get_delta_func(coord)[1:]
+						if round_func:
+							deltas = [round_func(delta) for delta in deltas]
+						coord = [coord[0]] + deltas
+						new_coords.append(coord)
 				cmd[1] = new_coords
+			lastOp = op
 		return commands
 
 	def getCharString(
@@ -626,7 +639,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 		if optimize:
 			commands = specializeCommands(
 						commands, generalizeFirst=False,
-						maxstack=maxStackLimit, numRegions=self.num_masters-1)
+						maxstack=maxStackLimit)
 		program = commandsToProgram(commands)
 		charString = T2CharString(
 						program=program, private=private,

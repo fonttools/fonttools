@@ -936,7 +936,6 @@ class CFF2VFTestSpecialize(unittest.TestCase):
         otfvf_path = self.get_test_input('TestSparseCFF2VF.otf')
         ttf_font = TTFont(otfvf_path)
         fontGlyphList = ttf_font.getGlyphOrder()
-        fvar = ttf_font['fvar']
         topDict = ttf_font['CFF2'].cff.topDictIndex[0]
         charstrings = topDict.CharStrings
         for glyphName in fontGlyphList:
@@ -944,11 +943,16 @@ class CFF2VFTestSpecialize(unittest.TestCase):
             cs = charstrings[glyphName]
             cs.decompile()
             numRegions = cs.private.getNumRegions(cs.vsindex)
-            cmds = programToCommands(cs.program)
-            cmds = generalizeCommands(cmds, numRegions=numRegions)
-            cmds = specializeCommands(cmds, generalizeFirst=False, numRegions=numRegions)
+            cmds = programToCommands(cs.program, numRegions=numRegions)
+            cmds_g = generalizeCommands(cmds)
+            cmds = specializeCommands(cmds_g, generalizeFirst=False)
             program = commandsToProgram(cmds)
             self.assertEqual(program, cs.program)
+            program = specializeProgram(program, numRegions=numRegions)
+            self.assertEqual(program, cs.program)
+            program_g = generalizeProgram(program, numRegions=numRegions)
+            program = commandsToProgram(cmds_g)
+            self.assertEqual(program, program_g)
 
 
 if __name__ == "__main__":
