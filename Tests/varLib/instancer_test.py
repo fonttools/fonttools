@@ -214,7 +214,7 @@ class InstantiateMvarTest(object):
 
         # check that regions and accompanying deltas have been dropped
         num_regions_left = len(mvar.VarStore.VarRegionList.Region)
-        assert num_regions_left < 3
+        assert num_regions_left == 1
         assert mvar.VarStore.VarRegionList.RegionCount == num_regions_left
         assert mvar.VarStore.VarData[0].VarRegionCount == num_regions_left
         # VarData subtables have been merged
@@ -299,61 +299,81 @@ class InstantiateItemVariationStoreTest(object):
 
         instancer._scaleVarDataDeltas(varData, regionScalars)
 
-        assert varData.Item == [[50, 0], [-50, 0]]
+        assert varData.Item == [[50], [-50]]
 
-    def test_getVarDataDeltasForRegions(self):
+    def test_popVarDataDeltas(self):
+        varData = builder.buildVarData([1, 0], [[34, 68], [-100, -200]], optimize=False)
+        assert instancer._popVarDataDeltas(varData, 1) == [34, -100]
+        assert varData.VarRegionCount == 1
+
+        varData = builder.buildVarData([1, 0], [[34, 68], [-100, -200]], optimize=False)
+        assert instancer._popVarDataDeltas(varData, 0) == [68, -200]
+        assert varData.VarRegionCount == 1
+
+        varData = builder.buildVarData([1, 0], [[34, 68], [-100, -200]], optimize=False)
+        assert instancer._popVarDataDeltas(varData, 2) == [0, 0]  # missing
+        assert varData.VarRegionCount == 2
+
+    def test_mergeVarDataRegions(self):
         varData = builder.buildVarData(
-            [1, 0], [[33.5, 67.9], [-100, -200]], optimize=False
+            [3, 1, 2, 0, 4], [[12, 34, 56, 78, 0], [91, 23, 45, 67, -1]]
         )
 
-        assert instancer._getVarDataDeltasForRegions(varData, {1}) == [[33.5], [-100]]
-        assert instancer._getVarDataDeltasForRegions(varData, {0}) == [[67.9], [-200]]
-        assert instancer._getVarDataDeltasForRegions(varData, set()) == [[], []]
-        assert instancer._getVarDataDeltasForRegions(varData, {1}, rounded=True) == [
-            [34],
-            [-100],
+        instancer._mergeVarDataRegions(varData, [0, 0, 0, 3, 4])
+
+        assert varData.VarRegionIndex == [3, 0, 4]
+        assert varData.Item == [[12, 34 + 56 + 78, 0], [91, 23 + 45 + 67, -1]]
+
+    def test_mergeVarDataItemColumns(self):
+        assert instancer._mergeVarDataItemColumns([[-100, 200, 300]], [0, 1, 2]) == [
+            [-100, 200, 300]
+        ]
+        assert instancer._mergeVarDataItemColumns([[-100, 200, 300]], [0, 0, 2]) == [
+            [100, 300]
+        ]
+        assert instancer._mergeVarDataItemColumns([[-100, 200, 300]], [0, 1, 0]) == [
+            [200, 200]
+        ]
+        assert instancer._mergeVarDataItemColumns([[-100, 200, 300]], [0, 0, 0]) == [
+            [400]
         ]
 
-    def test_subsetVarStoreRegions(self):
-        regionList = builder.buildVarRegionList(
-            [
-                {"wght": (0, 0.5, 1)},
-                {"wght": (0.5, 1, 1)},
-                {"wdth": (-1, -1, 0)},
-                {"wght": (0, 0.5, 1), "wdth": (-1, -1, 0)},
-                {"wght": (0.5, 1, 1), "wdth": (-1, -1, 0)},
-            ],
-            ["wght", "wdth"],
-        )
-        varData1 = builder.buildVarData([0, 1, 2, 4], [[0, 1, 2, 3], [4, 5, 6, 7]])
-        varData2 = builder.buildVarData([2, 3, 1], [[8, 9, 10], [11, 12, 13]])
-        varStore = builder.buildVarStore(regionList, [varData1, varData2])
+    @pytest.mark.parametrize(
+        "regions, expected",
+        [
+            (
+                [
+                    {"wght": (-1.0, -1.0, 0)},
+                    {"wght": (-1.0, -1.0, 0), "wdth": (0, 1.0, 1.0)},
+                    {"wght": (-1.0, -1.0, 0), "wdth": (0, 1.0, 1.0), "opsz": (0, 0, 0)},
+                ],
+                ([0, 1, 1], None),
+            ),
+            (
+                [
+                    {"wght": (-1.0, -1.0, 0.0)},
+                    {},
+                    {"opsz": (0, 0, 0)},
+                    {"wght": (-1.0, -1.0, 0.0), "opsz": (0, 0, 0)},
+                ],
+                ([0, 1, 1, 0], 1),
+            ),
+            (
+                [
+                    {"wght": (-1.0, -1.0, 0.0)},
+                    {"wght": (0.0, 1.0, 1.0)},
+                    {"wdth": (0, 1.0, 1.0)},
+                    {"opsz": (0, 0.5, 1.0)},
+                ],
+                ([0, 1, 2, 3], None),
+            ),
+        ],
+    )
+    def test_groupVarRegionsWithSameAxes(self, regions, expected):
+        axisOrder = sorted(set().union(*regions))
+        regionList = builder.buildVarRegionList(regions, axisOrder)
 
-        instancer._subsetVarStoreRegions(varStore, {0, 4})
-
-        assert (
-            varStore.VarRegionList.RegionCount
-            == len(varStore.VarRegionList.Region)
-            == 2
-        )
-        axis00 = varStore.VarRegionList.Region[0].VarRegionAxis[0]
-        assert (axis00.StartCoord, axis00.PeakCoord, axis00.EndCoord) == (0, 0.5, 1)
-        axis01 = varStore.VarRegionList.Region[0].VarRegionAxis[1]
-        assert (axis01.StartCoord, axis01.PeakCoord, axis01.EndCoord) == (0, 0, 0)
-        axis10 = varStore.VarRegionList.Region[1].VarRegionAxis[0]
-        assert (axis10.StartCoord, axis10.PeakCoord, axis10.EndCoord) == (0.5, 1, 1)
-        axis11 = varStore.VarRegionList.Region[1].VarRegionAxis[1]
-        assert (axis11.StartCoord, axis11.PeakCoord, axis11.EndCoord) == (-1, -1, 0)
-
-        assert varStore.VarDataCount == len(varStore.VarData) == 2
-        assert varStore.VarData[0].VarRegionCount == 2
-        assert varStore.VarData[0].VarRegionIndex == [0, 1]
-        assert varStore.VarData[0].Item == [[0, 3], [4, 7]]
-        assert varStore.VarData[0].NumShorts == 0
-        assert varStore.VarData[1].VarRegionCount == 0
-        assert varStore.VarData[1].VarRegionIndex == []
-        assert varStore.VarData[1].Item == [[], []]
-        assert varStore.VarData[1].NumShorts == 0
+        assert instancer._groupVarRegionsWithSameAxes(regionList.Region) == expected
 
     @pytest.fixture
     def fvarAxes(self):
@@ -395,25 +415,13 @@ class InstantiateItemVariationStoreTest(object):
     @pytest.mark.parametrize(
         "location, expected_deltas, num_regions",
         [
-            ({"wght": 0}, [[[0, 0, 0], [0, 0, 0]], [[], []]], 1),
-            ({"wght": 0.25}, [[[0, 50, 0], [0, 50, 0]], [[], []]], 2),
-            ({"wdth": 0}, [[[], []], [[0], [0]]], 3),
-            ({"wdth": -0.75}, [[[], []], [[75], [75]]], 6),
-            (
-                {"wght": 0, "wdth": 0},
-                [[[0, 0, 0], [0, 0, 0]], [[0, 0, 0, 0], [0, 0, 0, 0]]],
-                0,
-            ),
-            (
-                {"wght": 0.25, "wdth": 0},
-                [[[0, 50, 0], [0, 50, 0]], [[0, 0, 0, 0], [0, 0, 0, 0]]],
-                0,
-            ),
-            (
-                {"wght": 0, "wdth": -0.75},
-                [[[0, 0, 0], [0, 0, 0]], [[75, 0, 0, 0], [75, 0, 0, 0]]],
-                0,
-            ),
+            ({"wght": 0}, [[0, 0], [0, 0]], 1),
+            ({"wght": 0.25}, [[50, 50], [0, 0]], 1),
+            ({"wdth": 0}, [[0, 0], [0, 0]], 3),
+            ({"wdth": -0.75}, [[0, 0], [75, 75]], 3),
+            ({"wght": 0, "wdth": 0}, [[0, 0], [0, 0]], 0),
+            ({"wght": 0.25, "wdth": 0}, [[50, 50], [0, 0]], 0),
+            ({"wght": 0, "wdth": -0.75}, [[0, 0], [75, 75]], 0),
         ],
     )
     def test_instantiate_default_deltas(

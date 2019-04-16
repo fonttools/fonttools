@@ -150,13 +150,12 @@ def setMvarDeltas(varfont, deltaArray):
         tableTag, itemName = MVAR_ENTRIES[mvarTag]
         varDataIndex = rec.VarIdx >> 16
         itemIndex = rec.VarIdx & 0xFFFF
-        deltaRow = deltaArray[varDataIndex][itemIndex]
-        delta = sum(deltaRow)
+        delta = deltaArray[varDataIndex][itemIndex]
         if delta != 0:
             setattr(
                 varfont[tableTag],
                 itemName,
-                getattr(varfont[tableTag], itemName) + otRound(delta),
+                getattr(varfont[tableTag], itemName) + delta,
             )
 
 
@@ -201,58 +200,108 @@ def _getVarRegionScalar(location, regionAxes):
 
 
 def _scaleVarDataDeltas(varData, regionScalars):
-    # multiply all varData deltas in-place by the corresponding region scalar
-    varRegionCount = len(varData.VarRegionIndex)
-    scalars = [regionScalars[regionIndex] for regionIndex in varData.VarRegionIndex]
+    # multiply all varData deltas in-place by the corresponding region scalar, and
+    # remove regions whose scalar is 0
+    scalars = [regionScalars[ri] for ri in varData.VarRegionIndex]
     for item in varData.Item:
-        assert len(item) == varRegionCount
-        item[:] = [delta * scalar for delta, scalar in zip(item, scalars)]
-
-
-def _getVarDataDeltasForRegions(varData, regionIndices, rounded=False):
-    # Get only the deltas that correspond to the given regions (optionally, rounded).
-    # Returns: list of lists of float
-    varRegionIndices = varData.VarRegionIndex
-    deltaSets = []
-    for item in varData.Item:
-        deltaSets.append(
-            [
-                delta if not rounded else otRound(delta)
-                for regionIndex, delta in zip(varRegionIndices, item)
-                if regionIndex in regionIndices
-            ]
-        )
-    return deltaSets
-
-
-def _subsetVarStoreRegions(varStore, regionIndices):
-    # drop regions not in regionIndices
-    for varData in varStore.VarData:
-        if regionIndices.isdisjoint(varData.VarRegionIndex):
-            # empty VarData subtable if we remove all the regions referenced by it
-            varData.Item = [[] for _ in range(varData.ItemCount)]
-            varData.VarRegionIndex = []
-            varData.VarRegionCount = varData.NumShorts = 0
-            continue
-
-        # only retain delta-set columns that correspond to the given regions
-        varData.Item = _getVarDataDeltasForRegions(varData, regionIndices, rounded=True)
-        varData.VarRegionIndex = [
-            ri for ri in varData.VarRegionIndex if ri in regionIndices
+        item[:] = [
+            delta * scalar for delta, scalar in zip(item, scalars) if scalar != 0
         ]
-        varData.VarRegionCount = len(varData.VarRegionIndex)
+    varData.VarRegionIndex = [
+        ri for ri in varData.VarRegionIndex if regionScalars[ri] != 0
+    ]
+    varData.VarRegionCount = len(varData.VarRegionIndex)
 
-        # recalculate NumShorts, reordering columns as necessary
-        varData.optimize()
 
-    # remove unused regions from VarRegionList
-    varStore.prune_regions()
+def _popVarDataDeltas(varData, regionIndex):
+    # For each item's delta-set row, pop the column that correspond to regionIndex.
+    # If the region is not referenced by the varData.VarRegionIndex, return all zeros
+    # and keep varData as is.
+    # Returns: list of deltas, one per VarData item.
+    varRegionIndices = varData.VarRegionIndex
+    try:
+        regionColumn = varRegionIndices.index(regionIndex)
+    except ValueError:
+        return [0] * varData.ItemCount
+    deltas = [item.pop(regionColumn) for item in varData.Item]
+    del varData.VarRegionIndex[regionColumn]
+    varData.VarRegionCount = len(varData.VarRegionIndex)
+    return deltas
+
+
+def _mergeVarDataRegions(varData, regionMap):
+    # Merge VarData.Item columns whose associated region maps to the same key region.
+
+    # map VarData.Item columns to key regions
+    keyRegionIndices = [regionMap[ri] for ri in varData.VarRegionIndex]
+    # map key regions to the first VarData.Item column associated with it
+    columns = [keyRegionIndices.index(ri) for ri in keyRegionIndices]
+
+    varData.Item = _mergeVarDataItemColumns(varData.Item, columns)
+
+    # dedup keyRegionIndices list while keeping the original order
+    varData.VarRegionIndex = list(
+        collections.OrderedDict.fromkeys(ri for ri in keyRegionIndices)
+    )
+    varData.VarRegionCount = len(varData.VarRegionIndex)
+
+
+def _mergeVarDataItemColumns(items, columns):
+    # 'columns' is a list of (possibly repeated) indexes, one for each column in the
+    # items' rows of deltas.
+    # Return new items with same-index columns summed together, and rounded.
+    keyColumns = set(columns)
+    newItems = []
+    for item in items:
+        newItem = [0] * len(item)
+        for col, delta in zip(columns, item):
+            newItem[col] += delta
+        newItems.append(
+            [otRound(delta) for col, delta in enumerate(newItem) if col in keyColumns]
+        )
+    return newItems
+
+
+def _groupVarRegionsWithSameAxes(regions):
+    # map from region axes to the index of "key" region (i.e. the first with a given
+    # axes configuration) in VarRegionList
+    keyRegions = {}
+    # map from region index to "key" region index
+    regionMap = []
+    for regionIndex, region in enumerate(regions):
+        axes = tuple(
+            (axisIndex, axis.StartCoord, axis.PeakCoord, axis.EndCoord)
+            for axisIndex, axis in enumerate(region.VarRegionAxis)
+            if axis.PeakCoord != 0
+        )
+        regionMap.append(keyRegions.setdefault(axes, regionIndex))
+    # index of the region in which all axes are disabled (PeekCoord == 0), whose deltas
+    # will be removed from VarStore and added to the default instance
+    defaultRegionIndex = keyRegions.get(tuple())
+    return regionMap, defaultRegionIndex
 
 
 def instantiateItemVariationStore(varStore, fvarAxes, location):
-    regions = [
-        _getVarRegionAxes(reg, fvarAxes) for reg in varStore.VarRegionList.Region
-    ]
+    """ Compute deltas at partial location, and update varStore in-place.
+
+    Remove regions in which all axes were instanced, and scale the deltas of
+    the remaining regions where only some of the axes were instanced.
+
+    Args:
+        varStore: An otTables.VarStore object (Item Variation Store)
+        fvarAxes: list of fvar's Axis objects
+        location: Dict[str, float] mapping axis tags to normalized axis coordinates.
+            May not specify coordinates for all the fvar axes.
+
+    Returns:
+        defaultDeltaArray: the deltas to be added to the default instance (list of list
+            of integers, indexed by outer/inner VarIdx)
+        varIndexMapping: a mapping from old to new VarIdx after optimization (None if
+            varStore was fully instanced thus left empty).
+    """
+    regionList = varStore.VarRegionList.Region
+    # list of dicts mapping fvar axis tags to VarRegionAxis
+    regions = [_getVarRegionAxes(reg, fvarAxes) for reg in regionList]
     # for each region, compute the scalar support of the axes to be pinned at the
     # desired location, and scale the deltas accordingly
     regionScalars = [_getVarRegionScalar(location, axes) for axes in regions]
@@ -264,26 +313,20 @@ def instantiateItemVariationStore(varStore, fvarAxes, location):
         for axisTag, axis in axes.items():
             if axisTag in location:
                 axis.StartCoord, axis.PeakCoord, axis.EndCoord = (0, 0, 0)
-    # If all axes in a region are pinned, its deltas are added to the default instance
-    defaultRegionIndices = {
-        regionIndex
-        for regionIndex, axes in enumerate(regions)
-        if all(axis.PeakCoord == 0 for axis in axes.values())
-    }
-    # Collect the default deltas into a two-dimension array, with outer/inner indices
-    # corresponding to a VarData subtable and a deltaset row within that table.
+
+    # merge regions left with the same axes configuration
+    regionMap, defaultRegionIndex = _groupVarRegionsWithSameAxes(regionList)
+    for varData in varStore.VarData:
+        _mergeVarDataRegions(varData, regionMap)
+
+    # Collect the "default" (i.e. always-on) deltas into a two-dimension array, indexed
+    # by VarIdx outer/inner indices
     defaultDeltaArray = [
-        _getVarDataDeltasForRegions(varData, defaultRegionIndices)
-        for varData in varStore.VarData
+        _popVarDataDeltas(varData, defaultRegionIndex) for varData in varStore.VarData
     ]
 
-    # drop default regions, or those whose influence at the pinned location is 0
-    newRegionIndices = {
-        regionIndex
-        for regionIndex in range(len(varStore.VarRegionList.Region))
-        if regionIndex not in defaultRegionIndices and regionScalars[regionIndex] != 0
-    }
-    _subsetVarStoreRegions(varStore, newRegionIndices)
+    # remove unused regions from VarRegionList
+    varStore.prune_regions()
 
     if varStore.VarRegionList.Region:
         # optimize VarStore, and get a map from old to new VarIdx after optimization
