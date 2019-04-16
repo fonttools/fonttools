@@ -12,10 +12,12 @@ NOTE: The module is experimental and both the API and the CLI *will* change.
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.misc.fixedTools import floatToFixedToFloat, otRound
+from fontTools.misc.fixedTools import floatToFixedToFloat
 from fontTools.varLib.models import supportScalar, normalizeValue, piecewiseLinearMap
 from fontTools.ttLib import TTFont
+from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
+from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
 import collections
 from copy import deepcopy
@@ -150,13 +152,12 @@ def setMvarDeltas(varfont, deltaArray):
         tableTag, itemName = MVAR_ENTRIES[mvarTag]
         varDataIndex = rec.VarIdx >> 16
         itemIndex = rec.VarIdx & 0xFFFF
-        deltaRow = deltaArray[varDataIndex][itemIndex]
-        delta = sum(deltaRow)
+        delta = deltaArray[varDataIndex][itemIndex]
         if delta != 0:
             setattr(
                 varfont[tableTag],
                 itemName,
-                getattr(varfont[tableTag], itemName) + otRound(delta),
+                getattr(varfont[tableTag], itemName) + delta,
             )
 
 
@@ -178,116 +179,111 @@ def instantiateMvar(varfont, location):
         del varfont["MVAR"]
 
 
-def _getVarRegionAxes(region, fvarAxes):
-    # map fvar axes tags to VarRegionAxis in VarStore region, excluding axes that
-    # don't participate (peak == 0)
-    axes = {}
-    assert len(fvarAxes) == len(region.VarRegionAxis)
-    for fvarAxis, regionAxis in zip(fvarAxes, region.VarRegionAxis):
-        if regionAxis.PeakCoord != 0:
-            axes[fvarAxis.axisTag] = regionAxis
-    return axes
+class _TupleVarStoreAdapter(object):
+    def __init__(self, regions, axisOrder, tupleVarData, itemCounts):
+        self.regions = regions
+        self.axisOrder = axisOrder
+        self.tupleVarData = tupleVarData
+        self.itemCounts = itemCounts
 
-
-def _getVarRegionScalar(location, regionAxes):
-    # compute partial product of per-axis scalars at location, excluding the axes
-    # that are not pinned
-    pinnedAxes = {
-        axisTag: (axis.StartCoord, axis.PeakCoord, axis.EndCoord)
-        for axisTag, axis in regionAxes.items()
-        if axisTag in location
-    }
-    return supportScalar(location, pinnedAxes)
-
-
-def _scaleVarDataDeltas(varData, regionScalars):
-    # multiply all varData deltas in-place by the corresponding region scalar
-    varRegionCount = len(varData.VarRegionIndex)
-    scalars = [regionScalars[regionIndex] for regionIndex in varData.VarRegionIndex]
-    for item in varData.Item:
-        assert len(item) == varRegionCount
-        item[:] = [delta * scalar for delta, scalar in zip(item, scalars)]
-
-
-def _getVarDataDeltasForRegions(varData, regionIndices, rounded=False):
-    # Get only the deltas that correspond to the given regions (optionally, rounded).
-    # Returns: list of lists of float
-    varRegionIndices = varData.VarRegionIndex
-    deltaSets = []
-    for item in varData.Item:
-        deltaSets.append(
-            [
-                delta if not rounded else otRound(delta)
-                for regionIndex, delta in zip(varRegionIndices, item)
-                if regionIndex in regionIndices
-            ]
-        )
-    return deltaSets
-
-
-def _subsetVarStoreRegions(varStore, regionIndices):
-    # drop regions not in regionIndices
-    for varData in varStore.VarData:
-        if regionIndices.isdisjoint(varData.VarRegionIndex):
-            # empty VarData subtable if we remove all the regions referenced by it
-            varData.Item = [[] for _ in range(varData.ItemCount)]
-            varData.VarRegionIndex = []
-            varData.VarRegionCount = varData.NumShorts = 0
-            continue
-
-        # only retain delta-set columns that correspond to the given regions
-        varData.Item = _getVarDataDeltasForRegions(varData, regionIndices, rounded=True)
-        varData.VarRegionIndex = [
-            ri for ri in varData.VarRegionIndex if ri in regionIndices
+    @classmethod
+    def fromItemVarStore(cls, itemVarStore, fvarAxes):
+        axisOrder = [axis.axisTag for axis in fvarAxes]
+        regions = [
+            region.get_support(fvarAxes) for region in itemVarStore.VarRegionList.Region
         ]
-        varData.VarRegionCount = len(varData.VarRegionIndex)
+        tupleVarData = []
+        itemCounts = []
+        for varData in itemVarStore.VarData:
+            variations = []
+            varDataRegions = (regions[i] for i in varData.VarRegionIndex)
+            for axes, coordinates in zip(varDataRegions, zip(*varData.Item)):
+                variations.append(TupleVariation(axes, list(coordinates)))
+            tupleVarData.append(variations)
+            itemCounts.append(varData.ItemCount)
+        return cls(regions, axisOrder, tupleVarData, itemCounts)
 
-        # recalculate NumShorts, reordering columns as necessary
-        varData.optimize()
+    def dropAxes(self, axes):
+        prunedRegions = (
+            frozenset(
+                (axisTag, support)
+                for axisTag, support in region.items()
+                if axisTag not in axes
+            )
+            for region in self.regions
+        )
+        # dedup regions while keeping original order
+        uniqueRegions = collections.OrderedDict.fromkeys(prunedRegions)
+        self.regions = [dict(items) for items in uniqueRegions if items]
+        # TODO(anthrotype) uncomment this once we support subsetting fvar axes
+        # self.axisOrder = [
+        #     axisTag for axisTag in self.axisOrder if axisTag not in axes
+        # ]
 
-    # remove unused regions from VarRegionList
-    varStore.prune_regions()
+    def instantiate(self, location):
+        defaultDeltaArray = []
+        for variations, itemCount in zip(self.tupleVarData, self.itemCounts):
+            defaultDeltas = instantiateTupleVariationStore(variations, location)
+            if not defaultDeltas:
+                defaultDeltas = [0] * itemCount
+            defaultDeltaArray.append(defaultDeltas)
+
+        # remove pinned axes from all the regions
+        self.dropAxes(location.keys())
+
+        return defaultDeltaArray
+
+    def asItemVarStore(self):
+        regionOrder = [frozenset(axes.items()) for axes in self.regions]
+        varDatas = []
+        for variations, itemCount in zip(self.tupleVarData, self.itemCounts):
+            if variations:
+                assert len(variations[0].coordinates) == itemCount
+                varRegionIndices = [
+                    regionOrder.index(frozenset(var.axes.items())) for var in variations
+                ]
+                varDataItems = list(zip(*(var.coordinates for var in variations)))
+                varDatas.append(
+                    builder.buildVarData(varRegionIndices, varDataItems, optimize=False)
+                )
+            else:
+                varDatas.append(
+                    builder.buildVarData([], [[] for _ in range(itemCount)])
+                )
+        regionList = builder.buildVarRegionList(self.regions, self.axisOrder)
+        itemVarStore = builder.buildVarStore(regionList, varDatas)
+        return itemVarStore
 
 
-def instantiateItemVariationStore(varStore, fvarAxes, location):
-    regions = [
-        _getVarRegionAxes(reg, fvarAxes) for reg in varStore.VarRegionList.Region
-    ]
-    # for each region, compute the scalar support of the axes to be pinned at the
-    # desired location, and scale the deltas accordingly
-    regionScalars = [_getVarRegionScalar(location, axes) for axes in regions]
-    for varData in varStore.VarData:
-        _scaleVarDataDeltas(varData, regionScalars)
+def instantiateItemVariationStore(itemVarStore, fvarAxes, location):
+    """ Compute deltas at partial location, and update varStore in-place.
 
-    # disable the pinned axes by setting PeakCoord to 0
-    for axes in regions:
-        for axisTag, axis in axes.items():
-            if axisTag in location:
-                axis.StartCoord, axis.PeakCoord, axis.EndCoord = (0, 0, 0)
-    # If all axes in a region are pinned, its deltas are added to the default instance
-    defaultRegionIndices = {
-        regionIndex
-        for regionIndex, axes in enumerate(regions)
-        if all(axis.PeakCoord == 0 for axis in axes.values())
-    }
-    # Collect the default deltas into a two-dimension array, with outer/inner indices
-    # corresponding to a VarData subtable and a deltaset row within that table.
-    defaultDeltaArray = [
-        _getVarDataDeltasForRegions(varData, defaultRegionIndices)
-        for varData in varStore.VarData
-    ]
+    Remove regions in which all axes were instanced, and scale the deltas of
+    the remaining regions where only some of the axes were instanced.
 
-    # drop default regions, or those whose influence at the pinned location is 0
-    newRegionIndices = {
-        regionIndex
-        for regionIndex in range(len(varStore.VarRegionList.Region))
-        if regionIndex not in defaultRegionIndices and regionScalars[regionIndex] != 0
-    }
-    _subsetVarStoreRegions(varStore, newRegionIndices)
+    Args:
+        varStore: An otTables.VarStore object (Item Variation Store)
+        fvarAxes: list of fvar's Axis objects
+        location: Dict[str, float] mapping axis tags to normalized axis coordinates.
+            May not specify coordinates for all the fvar axes.
 
-    if varStore.VarRegionList.Region:
+    Returns:
+        defaultDeltaArray: the deltas to be added to the default instance (list of list
+            of integers, indexed by outer/inner VarIdx)
+        varIndexMapping: a mapping from old to new VarIdx after optimization (None if
+            varStore was fully instanced thus left empty).
+    """
+    tupleVarStore = _TupleVarStoreAdapter.fromItemVarStore(itemVarStore, fvarAxes)
+    defaultDeltaArray = tupleVarStore.instantiate(location)
+    newItemVarStore = tupleVarStore.asItemVarStore()
+
+    itemVarStore.VarRegionList = newItemVarStore.VarRegionList
+    assert itemVarStore.VarDataCount == newItemVarStore.VarDataCount
+    itemVarStore.VarData = newItemVarStore.VarData
+
+    if itemVarStore.VarRegionList.Region:
         # optimize VarStore, and get a map from old to new VarIdx after optimization
-        varIndexMapping = varStore.optimize()
+        varIndexMapping = itemVarStore.optimize()
     else:
         varIndexMapping = None  # VarStore is empty
 
