@@ -284,7 +284,7 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
 		gdef = varfont['GDEF'].table
 		instancer = VarStoreInstancer(gdef.VarStore, fvar.axes, loc)
 
-		merger = MutatorMerger(varfont, loc)
+		merger = MutatorMerger(varfont, instancer)
 		merger.mergeTables(varfont, [varfont], ['GDEF', 'GPOS'])
 
 		# Downgrade GDEF.

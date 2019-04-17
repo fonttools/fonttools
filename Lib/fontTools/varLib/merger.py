@@ -833,17 +833,10 @@ class MutatorMerger(AligningMerger):
 	the operation can benefit from many operations that the
 	aligning merger does."""
 
-	def __init__(self, font, location):
+	def __init__(self, font, instancer, deleteVariations=True):
 		Merger.__init__(self, font)
-		self.location = location
-
-		store = None
-		if 'GDEF' in font:
-			gdef = font['GDEF'].table
-			if gdef.Version >= 0x00010003:
-				store = gdef.VarStore
-
-		self.instancer = VarStoreInstancer(store, font['fvar'].axes, location)
+		self.instancer = instancer
+		self.deleteVariations = deleteVariations
 
 @MutatorMerger.merger(ot.CaretValue)
 def merge(merger, self, lst):
@@ -856,14 +849,16 @@ def merge(merger, self, lst):
 
 	instancer = merger.instancer
 	dev = self.DeviceTable
-	del self.DeviceTable
+	if merger.deleteVariations:
+		del self.DeviceTable
 	if dev:
 		assert dev.DeltaFormat == 0x8000
 		varidx = (dev.StartSize << 16) + dev.EndSize
 		delta = otRound(instancer[varidx])
-		self.Coordinate  += delta
+		self.Coordinate += delta
 
-	self.Format = 1
+	if merger.deleteVariations:
+		self.Format = 1
 
 @MutatorMerger.merger(ot.Anchor)
 def merge(merger, self, lst):
@@ -880,7 +875,8 @@ def merge(merger, self, lst):
 		if not hasattr(self, tableName):
 			continue
 		dev = getattr(self, tableName)
-		delattr(self, tableName)
+		if merger.deleteVariations:
+			delattr(self, tableName)
 		if dev is None:
 			continue
 
@@ -891,7 +887,8 @@ def merge(merger, self, lst):
 		attr = v+'Coordinate'
 		setattr(self, attr, getattr(self, attr) + delta)
 
-	self.Format = 1
+	if merger.deleteVariations:
+		self.Format = 1
 
 @MutatorMerger.merger(otBase.ValueRecord)
 def merge(merger, self, lst):
@@ -900,7 +897,6 @@ def merge(merger, self, lst):
 	self.__dict__ = lst[0].__dict__.copy()
 
 	instancer = merger.instancer
-	# TODO Handle differing valueformats
 	for name, tableName in [('XAdvance','XAdvDevice'),
 				('YAdvance','YAdvDevice'),
 				('XPlacement','XPlaDevice'),
@@ -909,7 +905,8 @@ def merge(merger, self, lst):
 		if not hasattr(self, tableName):
 			continue
 		dev = getattr(self, tableName)
-		delattr(self, tableName)
+		if merger.deleteVariations:
+			delattr(self, tableName)
 		if dev is None:
 			continue
 
