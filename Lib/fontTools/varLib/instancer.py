@@ -19,6 +19,7 @@ from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
+from fontTools.varLib.merger import MutatorMerger
 import collections
 from copy import deepcopy
 import logging
@@ -140,7 +141,7 @@ def instantiateCvar(varfont, location):
         del varfont["cvar"]
 
 
-def setMvarDeltas(varfont, deltaArray):
+def setMvarDeltas(varfont, deltas):
     log.info("Setting MVAR deltas")
 
     mvar = varfont["MVAR"].table
@@ -150,9 +151,7 @@ def setMvarDeltas(varfont, deltaArray):
         if mvarTag not in MVAR_ENTRIES:
             continue
         tableTag, itemName = MVAR_ENTRIES[mvarTag]
-        varDataIndex = rec.VarIdx >> 16
-        itemIndex = rec.VarIdx & 0xFFFF
-        delta = deltaArray[varDataIndex][itemIndex]
+        delta = deltas[rec.VarIdx]
         if delta != 0:
             setattr(
                 varfont[tableTag],
@@ -268,8 +267,8 @@ def instantiateItemVariationStore(itemVarStore, fvarAxes, location):
             May not specify coordinates for all the fvar axes.
 
     Returns:
-        defaultDeltaArray: the deltas to be added to the default instance (list of list
-            of integers, indexed by outer/inner VarIdx)
+        defaultDeltas: to be added to the default instance, of type dict of ints keyed
+            by VariationIndex compound values: i.e. (outer << 16) + inner.
         varIndexMapping: a mapping from old to new VarIdx after optimization (None if
             varStore was fully instanced thus left empty).
     """
@@ -287,7 +286,67 @@ def instantiateItemVariationStore(itemVarStore, fvarAxes, location):
     else:
         varIndexMapping = None  # VarStore is empty
 
-    return defaultDeltaArray, varIndexMapping
+    defaultDeltas = {
+        ((major << 16) + minor): delta
+        for major, deltas in enumerate(defaultDeltaArray)
+        for minor, delta in enumerate(deltas)
+    }
+    return defaultDeltas, varIndexMapping
+
+
+def instantiateOTL(varfont, location):
+    # TODO(anthrotype) Support partial instancing of JSTF and BASE tables
+
+    if "GDEF" not in varfont:
+        return
+
+    if "GPOS" in varfont:
+        msg = "Instantiating GDEF and GPOS tables"
+    else:
+        msg = "Instantiating GDEF table"
+    log.info(msg)
+
+    gdef = varfont["GDEF"].table
+    fvarAxes = varfont["fvar"].axes
+
+    defaultDeltas, varIndexMapping = instantiateItemVariationStore(
+        gdef.VarStore, fvarAxes, location
+    )
+
+    # When VF are built, big lookups may overflow and be broken into multiple
+    # subtables. MutatorMerger (which inherits from AligningMerger) reattaches
+    # them upon instancing, in case they can now fit a single subtable (if not,
+    # they will be split again upon compilation).
+    # This 'merger' also works as a 'visitor' that traverses the OTL tables and
+    # calls specific methods when instances of a given type are found.
+    # Specifically, it adds default deltas to GPOS Anchors/ValueRecords and GDEF
+    # LigatureCarets, and optionally deletes all VariationIndex tables if the
+    # VarStore is fully instanced.
+    merger = MutatorMerger(
+        varfont, defaultDeltas, deleteVariations=(varIndexMapping is None)
+    )
+    merger.mergeTables(varfont, [varfont], ["GDEF", "GPOS"])
+
+    if varIndexMapping:
+        gdef.remap_device_varidxes(varIndexMapping)
+        if "GPOS" in varfont:
+            varfont["GPOS"].table.remap_device_varidxes(varIndexMapping)
+    else:
+        # Downgrade GDEF.
+        del gdef.VarStore
+        gdef.Version = 0x00010002
+        if gdef.MarkGlyphSetsDef is None:
+            del gdef.MarkGlyphSetsDef
+            gdef.Version = 0x00010000
+
+        if not (
+            gdef.LigCaretList
+            or gdef.MarkAttachClassDef
+            or gdef.GlyphClassDef
+            or gdef.AttachList
+            or (gdef.Version >= 0x00010002 and gdef.MarkGlyphSetsDef)
+        ):
+            del varfont["GDEF"]
 
 
 def instantiateFeatureVariations(varfont, location):
@@ -405,6 +464,8 @@ def instantiateVariableFont(varfont, axis_limits, inplace=False, optimize=True):
 
     if "MVAR" in varfont:
         instantiateMvar(varfont, axis_limits)
+
+    instantiateOTL(varfont, axis_limits)
 
     instantiateFeatureVariations(varfont, axis_limits)
 

@@ -326,7 +326,15 @@ class InstantiateItemVariationStoreTest(object):
             varStore, fvarAxes, location
         )
 
-        assert defaultDeltas == expected_deltas
+        defaultDeltaArray = []
+        for varidx, delta in sorted(defaultDeltas.items()):
+            major, minor = varidx >> 16, varidx & 0xFFFF
+            if major == len(defaultDeltaArray):
+                defaultDeltaArray.append([])
+            assert len(defaultDeltaArray[major]) == minor
+            defaultDeltaArray[major].append(delta)
+
+        assert defaultDeltaArray == expected_deltas
         assert varStore.VarRegionList.RegionCount == num_regions
 
 
