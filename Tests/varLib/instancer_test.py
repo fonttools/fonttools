@@ -1,11 +1,17 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools import ttLib
+from fontTools import designspaceLib
+from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.ttLib.tables import _f_v_a_r
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
+from fontTools import varLib
 from fontTools.varLib import instancer
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib import builder
+from fontTools.varLib import models
+import collections
+from copy import deepcopy
 import os
 import pytest
 
@@ -484,3 +490,122 @@ class TupleVarStoreAdapterTest(object):
         ]
         assert itemVarStore2.VarData[1].VarRegionIndex == [3, 4, 5, 6]
         assert itemVarStore2.VarData[1].Item == [[5, -15, 25, -35], [45, -55, 65, -75]]
+
+
+def makeTTFont(glyphOrder, features):
+    font = ttLib.TTFont()
+    font.setGlyphOrder(glyphOrder)
+    addOpenTypeFeaturesFromString(font, features)
+    font["name"] = ttLib.newTable("name")
+    return font
+
+
+def _makeDSAxesDict(axes):
+    dsAxes = collections.OrderedDict()
+    for axisTag, axisValues in axes:
+        axis = designspaceLib.AxisDescriptor()
+        axis.name = axis.tag = axis.labelNames["en"] = axisTag
+        axis.minimum, axis.default, axis.maximum = axisValues
+        dsAxes[axis.tag] = axis
+    return dsAxes
+
+
+def makeVariableFont(masters, baseIndex, axes, masterLocations):
+    vf = deepcopy(masters[baseIndex])
+    dsAxes = _makeDSAxesDict(axes)
+    fvar = varLib._add_fvar(vf, dsAxes, instances=())
+    axisTags = [axis.axisTag for axis in fvar.axes]
+    normalizedLocs = [models.normalizeLocation(m, dict(axes)) for m in masterLocations]
+    model = models.VariationModel(normalizedLocs, axisOrder=axisTags)
+    varLib._merge_OTL(vf, model, masters, axisTags)
+    return vf
+
+
+@pytest.fixture
+def varfontGDEF():
+    glyphOrder = [".notdef", "f", "i", "f_i"]
+    masters = []
+    masterLocations = []
+    weight = v = 100
+    for _ in range(3):
+        width = 50
+        for _ in range(3):
+            master = makeTTFont(
+                glyphOrder,
+                features=(
+                    "feature liga { sub f i by f_i;} liga;"
+                    "table GDEF { LigatureCaretByPos f_i %d; } GDEF;" % v
+                ),
+            )
+            masters.append(master)
+            masterLocations.append({"wght": weight, "wdth": width})
+            width += 50
+            v += 10
+        weight += 300
+        v += 30
+    axes = [("wght", (100, 400, 700)), ("wdth", (50, 100, 150))]
+    baseIndex = 4  # index of base master (wght=400, wdth=100)
+    vf = makeVariableFont(masters, baseIndex, axes, masterLocations)
+    return vf
+
+
+class InstantiateOTLTest(object):
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"wght": -1.0}, 110),  # -60
+            ({"wght": 0}, 170),
+            ({"wght": 0.5}, 200),  # +30
+            ({"wght": 1.0}, 230),  # +60
+            ({"wdth": -1.0}, 160),  # -10
+            ({"wdth": -0.3}, 167),  # -3
+            ({"wdth": 0}, 170),
+            ({"wdth": 1.0}, 180),  # +10
+        ],
+    )
+    def test_pin_and_drop_axis_GDEF(self, varfontGDEF, location, expected):
+        vf = varfontGDEF
+        assert "GDEF" in vf
+
+        instancer.instantiateOTL(vf, location)
+
+        assert "GDEF" in vf
+        gdef = vf["GDEF"].table
+        assert gdef.Version == 0x00010003
+        assert gdef.VarStore
+        assert gdef.LigCaretList
+        caretValue = gdef.LigCaretList.LigGlyph[0].CaretValue[0]
+        assert caretValue.Format == 3
+        assert hasattr(caretValue, "DeviceTable")
+        assert caretValue.DeviceTable.DeltaFormat == 0x8000
+        assert caretValue.Coordinate == expected
+
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"wght": -1.0, "wdth": -1.0}, 100),  # -60 - 10
+            ({"wght": -1.0, "wdth": 0.0}, 110),  # -60
+            ({"wght": -1.0, "wdth": 1.0}, 120),  # -60 + 10
+            ({"wght": 0.0, "wdth": -1.0}, 160),  # -10
+            ({"wght": 0.0, "wdth": 0.0}, 170),
+            ({"wght": 0.0, "wdth": 1.0}, 180),  # +10
+            ({"wght": 1.0, "wdth": -1.0}, 220),  # +60 - 10
+            ({"wght": 1.0, "wdth": 0.0}, 230),  # +60
+            ({"wght": 1.0, "wdth": 1.0}, 240),  # +60 + 10
+        ],
+    )
+    def test_full_instance_GDEF(self, varfontGDEF, location, expected):
+        vf = varfontGDEF
+        assert "GDEF" in vf
+
+        instancer.instantiateOTL(vf, location)
+
+        assert "GDEF" in vf
+        gdef = vf["GDEF"].table
+        assert gdef.Version == 0x00010000
+        assert not hasattr(gdef, "VarStore")
+        assert gdef.LigCaretList
+        caretValue = gdef.LigCaretList.LigGlyph[0].CaretValue[0]
+        assert caretValue.Format == 1
+        assert not hasattr(caretValue, "DeviceTable")
+        assert caretValue.Coordinate == expected
