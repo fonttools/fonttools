@@ -473,8 +473,7 @@ class TupleVarStoreAdapterTest(object):
         itemVarStore2 = adapter.asItemVarStore()
 
         assert [
-            reg.get_support(fvarAxes)
-            for reg in itemVarStore2.VarRegionList.Region
+            reg.get_support(fvarAxes) for reg in itemVarStore2.VarRegionList.Region
         ] == regions
 
         assert itemVarStore2.VarDataCount == 2
