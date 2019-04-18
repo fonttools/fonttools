@@ -142,8 +142,6 @@ def instantiateCvar(varfont, location):
 
 
 def setMvarDeltas(varfont, deltas):
-    log.info("Setting MVAR deltas")
-
     mvar = varfont["MVAR"].table
     records = mvar.ValueRecord
     for rec in records:
