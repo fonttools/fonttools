@@ -521,32 +521,79 @@ def makeVariableFont(masters, baseIndex, axes, masterLocations):
     return vf
 
 
+def makeParametrizedVF(glyphOrder, features, values, increments):
+    # Create a test VF with given glyphs and parametrized OTL features.
+    # The VF is built from 9 masters (3 x 3 along wght and wdth), with
+    # locations hard-coded and base master at wght=400 and wdth=100.
+    # 'values' is a list of initial values that are interpolated in the
+    # 'features' string, and incremented for each subsequent master by the
+    # given 'increments' (list of 2-tuple) along the two axes.
+    assert values and len(values) == len(increments)
+    assert all(len(i) == 2 for i in increments)
+    masterLocations = [
+        {"wght": 100, "wdth": 50},
+        {"wght": 100, "wdth": 100},
+        {"wght": 100, "wdth": 150},
+        {"wght": 400, "wdth": 50},
+        {"wght": 400, "wdth": 100},  # base master
+        {"wght": 400, "wdth": 150},
+        {"wght": 700, "wdth": 50},
+        {"wght": 700, "wdth": 100},
+        {"wght": 700, "wdth": 150},
+    ]
+    n = len(values)
+    values = list(values)
+    masters = []
+    for _ in range(3):
+        for _ in range(3):
+            master = makeTTFont(glyphOrder, features=features % tuple(values))
+            masters.append(master)
+            for i in range(n):
+                values[i] += increments[i][1]
+        for i in range(n):
+            values[i] += increments[i][0]
+    baseIndex = 4
+    axes = [("wght", (100, 400, 700)), ("wdth", (50, 100, 150))]
+    vf = makeVariableFont(masters, baseIndex, axes, masterLocations)
+    return vf
+
+
 @pytest.fixture
 def varfontGDEF():
     glyphOrder = [".notdef", "f", "i", "f_i"]
-    masters = []
-    masterLocations = []
-    weight = v = 100
-    for _ in range(3):
-        width = 50
-        for _ in range(3):
-            master = makeTTFont(
-                glyphOrder,
-                features=(
-                    "feature liga { sub f i by f_i;} liga;"
-                    "table GDEF { LigatureCaretByPos f_i %d; } GDEF;" % v
-                ),
-            )
-            masters.append(master)
-            masterLocations.append({"wght": weight, "wdth": width})
-            width += 50
-            v += 10
-        weight += 300
-        v += 30
-    axes = [("wght", (100, 400, 700)), ("wdth", (50, 100, 150))]
-    baseIndex = 4  # index of base master (wght=400, wdth=100)
-    vf = makeVariableFont(masters, baseIndex, axes, masterLocations)
-    return vf
+    features = (
+        "feature liga { sub f i by f_i;} liga;"
+        "table GDEF { LigatureCaretByPos f_i %d; } GDEF;"
+    )
+    values = [100]
+    increments = [(+30, +10)]
+    return makeParametrizedVF(glyphOrder, features, values, increments)
+
+
+@pytest.fixture
+def varfontGPOS():
+    glyphOrder = [".notdef", "V", "A"]
+    features = "feature kern { pos V A %d; } kern;"
+    values = [-80]
+    increments = [(-10, -5)]
+    return makeParametrizedVF(glyphOrder, features, values, increments)
+
+
+@pytest.fixture
+def varfontGPOS2():
+    glyphOrder = [".notdef", "V", "A", "acutecomb"]
+    features = (
+        "markClass [acutecomb] <anchor 150 -10> @TOP_MARKS;"
+        "feature mark {"
+        "  pos base A <anchor %d 450> mark @TOP_MARKS;"
+        "} mark;"
+        "feature kern {"
+        "  pos V A %d;"
+        "} kern;"
+    )
+    values = [200, -80]
+    increments = [(+30, +10), (-10, -5)]
+    return makeParametrizedVF(glyphOrder, features, values, increments)
 
 
 class InstantiateOTLTest(object):
@@ -609,3 +656,152 @@ class InstantiateOTLTest(object):
         assert caretValue.Format == 1
         assert not hasattr(caretValue, "DeviceTable")
         assert caretValue.Coordinate == expected
+
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"wght": -1.0}, -85),  # +25
+            ({"wght": 0}, -110),
+            ({"wght": 1.0}, -135),  # -25
+            ({"wdth": -1.0}, -105),  # +5
+            ({"wdth": 0}, -110),
+            ({"wdth": 1.0}, -115),  # -5
+        ],
+    )
+    def test_pin_and_drop_axis_GPOS_kern(self, varfontGPOS, location, expected):
+        vf = varfontGPOS
+        assert "GDEF" in vf
+        assert "GPOS" in vf
+
+        instancer.instantiateOTL(vf, location)
+
+        gdef = vf["GDEF"].table
+        gpos = vf["GPOS"].table
+        assert gdef.Version == 0x00010003
+        assert gdef.VarStore
+
+        assert gpos.LookupList.Lookup[0].LookupType == 2  # PairPos
+        pairPos = gpos.LookupList.Lookup[0].SubTable[0]
+        valueRec1 = pairPos.PairSet[0].PairValueRecord[0].Value1
+        assert valueRec1.XAdvDevice
+        assert valueRec1.XAdvDevice.DeltaFormat == 0x8000
+        assert valueRec1.XAdvance == expected
+
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"wght": -1.0, "wdth": -1.0}, -80),  # +25 + 5
+            ({"wght": -1.0, "wdth": 0.0}, -85),  # +25
+            ({"wght": -1.0, "wdth": 1.0}, -90),  # +25 - 5
+            ({"wght": 0.0, "wdth": -1.0}, -105),  # +5
+            ({"wght": 0.0, "wdth": 0.0}, -110),
+            ({"wght": 0.0, "wdth": 1.0}, -115),  # -5
+            ({"wght": 1.0, "wdth": -1.0}, -130),  # -25 + 5
+            ({"wght": 1.0, "wdth": 0.0}, -135),  # -25
+            ({"wght": 1.0, "wdth": 1.0}, -140),  # -25 - 5
+        ],
+    )
+    def test_full_instance_GPOS_kern(self, varfontGPOS, location, expected):
+        vf = varfontGPOS
+        assert "GDEF" in vf
+        assert "GPOS" in vf
+
+        instancer.instantiateOTL(vf, location)
+
+        assert "GDEF" not in vf
+        gpos = vf["GPOS"].table
+
+        assert gpos.LookupList.Lookup[0].LookupType == 2  # PairPos
+        pairPos = gpos.LookupList.Lookup[0].SubTable[0]
+        valueRec1 = pairPos.PairSet[0].PairValueRecord[0].Value1
+        assert not hasattr(valueRec1, "XAdvDevice")
+        assert valueRec1.XAdvance == expected
+
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"wght": -1.0}, (210, -85)),  # -60, +25
+            ({"wght": 0}, (270, -110)),
+            ({"wght": 0.5}, (300, -122)),  # +30, -12
+            ({"wght": 1.0}, (330, -135)),  # +60, -25
+            ({"wdth": -1.0}, (260, -105)),  # -10, +5
+            ({"wdth": -0.3}, (267, -108)),  # -3, +2
+            ({"wdth": 0}, (270, -110)),
+            ({"wdth": 1.0}, (280, -115)),  # +10, -5
+        ],
+    )
+    def test_pin_and_drop_axis_GPOS_mark_and_kern(
+        self, varfontGPOS2, location, expected
+    ):
+        vf = varfontGPOS2
+        assert "GDEF" in vf
+        assert "GPOS" in vf
+
+        instancer.instantiateOTL(vf, location)
+
+        v1, v2 = expected
+        gdef = vf["GDEF"].table
+        gpos = vf["GPOS"].table
+        assert gdef.Version == 0x00010003
+        assert gdef.VarStore
+        assert gdef.GlyphClassDef
+
+        assert gpos.LookupList.Lookup[0].LookupType == 4  # MarkBasePos
+        markBasePos = gpos.LookupList.Lookup[0].SubTable[0]
+        baseAnchor = markBasePos.BaseArray.BaseRecord[0].BaseAnchor[0]
+        assert baseAnchor.Format == 3
+        assert baseAnchor.XDeviceTable
+        assert baseAnchor.XDeviceTable.DeltaFormat == 0x8000
+        assert not baseAnchor.YDeviceTable
+        assert baseAnchor.XCoordinate == v1
+        assert baseAnchor.YCoordinate == 450
+
+        assert gpos.LookupList.Lookup[1].LookupType == 2  # PairPos
+        pairPos = gpos.LookupList.Lookup[1].SubTable[0]
+        valueRec1 = pairPos.PairSet[0].PairValueRecord[0].Value1
+        assert valueRec1.XAdvDevice
+        assert valueRec1.XAdvDevice.DeltaFormat == 0x8000
+        assert valueRec1.XAdvance == v2
+
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"wght": -1.0, "wdth": -1.0}, (200, -80)),  # -60 - 10, +25 + 5
+            ({"wght": -1.0, "wdth": 0.0}, (210, -85)),  # -60, +25
+            ({"wght": -1.0, "wdth": 1.0}, (220, -90)),  # -60 + 10, +25 - 5
+            ({"wght": 0.0, "wdth": -1.0}, (260, -105)),  # -10, +5
+            ({"wght": 0.0, "wdth": 0.0}, (270, -110)),
+            ({"wght": 0.0, "wdth": 1.0}, (280, -115)),  # +10, -5
+            ({"wght": 1.0, "wdth": -1.0}, (320, -130)),  # +60 - 10, -25 + 5
+            ({"wght": 1.0, "wdth": 0.0}, (330, -135)),  # +60, -25
+            ({"wght": 1.0, "wdth": 1.0}, (340, -140)),  # +60 + 10, -25 - 5
+        ],
+    )
+    def test_full_instance_GPOS_mark_and_kern(self, varfontGPOS2, location, expected):
+        vf = varfontGPOS2
+        assert "GDEF" in vf
+        assert "GPOS" in vf
+
+        instancer.instantiateOTL(vf, location)
+
+        v1, v2 = expected
+        gdef = vf["GDEF"].table
+        gpos = vf["GPOS"].table
+        assert gdef.Version == 0x00010000
+        assert not hasattr(gdef, "VarStore")
+        assert gdef.GlyphClassDef
+
+        assert gpos.LookupList.Lookup[0].LookupType == 4  # MarkBasePos
+        markBasePos = gpos.LookupList.Lookup[0].SubTable[0]
+        baseAnchor = markBasePos.BaseArray.BaseRecord[0].BaseAnchor[0]
+        assert baseAnchor.Format == 1
+        assert not hasattr(baseAnchor, "XDeviceTable")
+        assert not hasattr(baseAnchor, "YDeviceTable")
+        assert baseAnchor.XCoordinate == v1
+        assert baseAnchor.YCoordinate == 450
+
+        assert gpos.LookupList.Lookup[1].LookupType == 2  # PairPos
+        pairPos = gpos.LookupList.Lookup[1].SubTable[0]
+        valueRec1 = pairPos.PairSet[0].PairValueRecord[0].Value1
+        assert not hasattr(valueRec1, "XAdvDevice")
+        assert valueRec1.XAdvance == v2
