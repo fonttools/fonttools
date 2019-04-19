@@ -27,7 +27,7 @@ def programToString(program):
 	return ' '.join(str(x) for x in program)
 
 
-def programToCommands(program, numRegions=None, **kwargs):
+def programToCommands(program, numRegions=None):
 	"""Takes a T2CharString program list and returns list of commands.
 	Each command is a two-tuple of commandname,arg-list.  The commandname might
 	be empty string if no commandname shall be emitted (used for glyph width,
@@ -274,7 +274,7 @@ def _convertBlendOpToArgs(blendList):
 	blend_args = [ a + b for a, b in zip(defaultArgs,deltaList)]
 	return blend_args
 
-def generalizeCommands(commands, ignoreErrors=False, **kwargs):
+def generalizeCommands(commands, ignoreErrors=False):
 	result = []
 	mapping = _GeneralizerDecombinerCommandsMap
 	for op, args in commands:
@@ -308,8 +308,8 @@ def generalizeCommands(commands, ignoreErrors=False, **kwargs):
 				raise
 	return result
 
-def generalizeProgram(program, **kwargs):
-	return commandsToProgram(generalizeCommands(programToCommands(program, **kwargs), **kwargs))
+def generalizeProgram(program, numRegions=None, **kwargs):
+	return commandsToProgram(generalizeCommands(programToCommands(program, numRegions), **kwargs))
 
 
 def _categorizeVector(v):
@@ -401,17 +401,22 @@ def _convertToBlendCmds(args):
 
 	return new_args
 
-def _combineLineArgs(listArg, valArg):
-	listArg[0] += valArg
-	newArgList = listArg
-	return newArgList
-					
+def _addArgs(a, b):
+	if isinstance(b, list):
+		if isinstance(a, list):
+			return [_addArgs(va, vb) for va,vb in zip(a, b)]
+		else:
+			a, b = b, a
+	if isinstance(a, list):
+		return [_addArgs(a[0], b)] + a[1:]
+	return a + b
+
+
 def specializeCommands(commands,
 		       ignoreErrors=False,
 		       generalizeFirst=True,
 		       preserveTopology=False,
-		       maxstack=48,
-		       **kwargs):
+		       maxstack=48):
 
 	# We perform several rounds of optimizations.  They are carefully ordered and are:
 	#
@@ -568,14 +573,7 @@ def specializeCommands(commands,
 				assert len(args) == 1 and len(other_args) == 1
 				arg0 = args[0]
 				arg1 = other_args[0]
-				if isinstance(arg0, list) and isinstance(arg1, list):
-					new_args = [[a1 + a2 for a1, a2 in zip(arg0, arg1)]]
-				elif isinstance(arg0, list):
-					new_args = _combineLineArgs(arg0, arg1)
-				elif isinstance(arg1, list):
-					new_args = _combineLineArgs(arg1, arg0)
-				else:
-					new_args = [arg0 + arg1]
+				new_args = [_addArgs(args[0], other_args[0])]
 				commands[i-1] = (op, new_args)
 				del commands[i]
 				continue
@@ -696,8 +694,8 @@ def specializeCommands(commands,
 
 	return commands
 
-def specializeProgram(program, **kwargs):
-	return commandsToProgram(specializeCommands(programToCommands(program, **kwargs), **kwargs))
+def specializeProgram(program, numRegions=None, **kwargs):
+	return commandsToProgram(specializeCommands(programToCommands(program, numRegions), **kwargs))
 
 
 if __name__ == '__main__':
