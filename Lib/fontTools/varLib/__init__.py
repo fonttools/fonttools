@@ -367,20 +367,20 @@ def _merge_TTHinting(font, masterModel, master_ttfs, tolerance=0.5):
 		var = TupleVariation(support, delta)
 		cvar.variations.append(var)
 
-MetricsFields = namedtuple('MetricsFields',
+_MetricsFields = namedtuple('_MetricsFields',
 	['tableTag', 'metricsTag', 'sb1', 'sb2', 'advMapping', 'vOrigMapping'])
 
-hvarFields = MetricsFields(tableTag='HVAR', metricsTag='hmtx', sb1='LsbMap',
+HVAR_FIELDS = _MetricsFields(tableTag='HVAR', metricsTag='hmtx', sb1='LsbMap',
 	sb2='RsbMap', advMapping='AdvWidthMap', vOrigMapping=None)
 
-vvarFields = MetricsFields(tableTag='VVAR', metricsTag='vmtx', sb1='TsbMap',
+VVAR_FIELDS = _MetricsFields(tableTag='VVAR', metricsTag='vmtx', sb1='TsbMap',
 	sb2='BsbMap', advMapping='AdvHeightMap', vOrigMapping='VOrgMap')
 
 def _add_HVAR(font, masterModel, master_ttfs, axisTags):
-	_add_VHVAR(font, masterModel, master_ttfs, axisTags, hvarFields)
+	_add_VHVAR(font, masterModel, master_ttfs, axisTags, HVAR_FIELDS)
 
 def _add_VVAR(font, masterModel, master_ttfs, axisTags):
-	_add_VHVAR(font, masterModel, master_ttfs, axisTags, vvarFields)
+	_add_VHVAR(font, masterModel, master_ttfs, axisTags, VVAR_FIELDS)
 
 def _add_VHVAR(font, masterModel, master_ttfs, axisTags, tableFields):
 
