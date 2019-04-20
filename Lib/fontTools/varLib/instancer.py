@@ -163,16 +163,15 @@ def instantiateMVAR(varfont, location):
 
     mvar = varfont["MVAR"].table
     fvarAxes = varfont["fvar"].axes
-    defaultDeltas, varIndexMapping = instantiateItemVariationStore(
-        mvar.VarStore, fvarAxes, location
-    )
+    varStore = mvar.VarStore
+    defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, location)
     setMvarDeltas(varfont, defaultDeltas)
 
-    if varIndexMapping:
+    if varStore.VarRegionList.Region:
+        varIndexMapping = varStore.optimize()
         for rec in mvar.ValueRecord:
             rec.VarIdx = varIndexMapping[rec.VarIdx]
     else:
-        # Delete table if no more regions left.
         del varfont["MVAR"]
 
 
@@ -258,6 +257,10 @@ def instantiateItemVariationStore(itemVarStore, fvarAxes, location):
     Remove regions in which all axes were instanced, and scale the deltas of
     the remaining regions where only some of the axes were instanced.
 
+    The number of VarData subtables, and the number of items within each, are
+    not modified, in order to keep the existing VariationIndex valid.
+    One may call VarStore.optimize() method after this to further optimize those.
+
     Args:
         varStore: An otTables.VarStore object (Item Variation Store)
         fvarAxes: list of fvar's Axis objects
@@ -267,8 +270,6 @@ def instantiateItemVariationStore(itemVarStore, fvarAxes, location):
     Returns:
         defaultDeltas: to be added to the default instance, of type dict of ints keyed
             by VariationIndex compound values: i.e. (outer << 16) + inner.
-        varIndexMapping: a mapping from old to new VarIdx after optimization (None if
-            varStore was fully instanced thus left empty).
     """
     tupleVarStore = _TupleVarStoreAdapter.fromItemVarStore(itemVarStore, fvarAxes)
     defaultDeltaArray = tupleVarStore.instantiate(location)
@@ -278,18 +279,12 @@ def instantiateItemVariationStore(itemVarStore, fvarAxes, location):
     assert itemVarStore.VarDataCount == newItemVarStore.VarDataCount
     itemVarStore.VarData = newItemVarStore.VarData
 
-    if itemVarStore.VarRegionList.Region:
-        # optimize VarStore, and get a map from old to new VarIdx after optimization
-        varIndexMapping = itemVarStore.optimize()
-    else:
-        varIndexMapping = None  # VarStore is empty
-
     defaultDeltas = {
         ((major << 16) + minor): delta
         for major, deltas in enumerate(defaultDeltaArray)
         for minor, delta in enumerate(deltas)
     }
-    return defaultDeltas, varIndexMapping
+    return defaultDeltas
 
 
 def instantiateOTL(varfont, location):
@@ -305,11 +300,10 @@ def instantiateOTL(varfont, location):
     log.info(msg)
 
     gdef = varfont["GDEF"].table
+    varStore = gdef.VarStore
     fvarAxes = varfont["fvar"].axes
 
-    defaultDeltas, varIndexMapping = instantiateItemVariationStore(
-        gdef.VarStore, fvarAxes, location
-    )
+    defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, location)
 
     # When VF are built, big lookups may overflow and be broken into multiple
     # subtables. MutatorMerger (which inherits from AligningMerger) reattaches
@@ -321,11 +315,12 @@ def instantiateOTL(varfont, location):
     # LigatureCarets, and optionally deletes all VariationIndex tables if the
     # VarStore is fully instanced.
     merger = MutatorMerger(
-        varfont, defaultDeltas, deleteVariations=(varIndexMapping is None)
+        varfont, defaultDeltas, deleteVariations=(not varStore.VarRegionList.Region)
     )
     merger.mergeTables(varfont, [varfont], ["GDEF", "GPOS"])
 
-    if varIndexMapping:
+    if varStore.VarRegionList.Region:
+        varIndexMapping = varStore.optimize()
         gdef.remap_device_varidxes(varIndexMapping)
         if "GPOS" in varfont:
             varfont["GPOS"].table.remap_device_varidxes(varIndexMapping)

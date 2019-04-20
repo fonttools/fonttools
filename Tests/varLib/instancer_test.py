@@ -328,7 +328,7 @@ class InstantiateItemVariationStoreTest(object):
     def test_instantiate_default_deltas(
         self, varStore, fvarAxes, location, expected_deltas, num_regions
     ):
-        defaultDeltas, _ = instancer.instantiateItemVariationStore(
+        defaultDeltas = instancer.instantiateItemVariationStore(
             varStore, fvarAxes, location
         )
 
