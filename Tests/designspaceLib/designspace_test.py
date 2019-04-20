@@ -905,3 +905,7 @@ def test_findDefault_axis_mapping():
     """
     designspace = DesignSpaceDocument.fromstring(designspace_string)
     assert designspace.findDefault().filename == "Font-Italic.ufo"
+
+    designspace.axes[1].default = 0
+
+    assert designspace.findDefault().filename == "Font-Regular.ufo"

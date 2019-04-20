@@ -1,3 +1,21 @@
+3.40.0 (released 2019-04-08)
+----------------------------
+
+- [subset] Fixed error while subsetting ``VVAR`` with ``--retain-gids``
+  option (#1552).
+- [designspaceLib] Use up-to-date default location in ``findDefault`` method
+  (#1554).
+- [voltLib] Allow passing file-like object to Parser.
+- [arrayTools/glyf] ``calcIntBounds`` (used to compute bounding boxes of glyf
+  table's glyphs) now uses ``otRound`` instead of ``round3`` (#1566).
+- [svgLib] Added support for converting more SVG shapes to path ``d`` strings
+  (ellipse, line, polyline), as well as support for ``transform`` attributes.
+  Only ``matrix`` transformations are currently supported (#1564, #1564).
+- [varLib] Added support for building ``VVAR`` table from ``vmtx`` and ``VORG``
+  tables (#1551).
+- [fontBuilder] Enable making CFF2 fonts with ``post`` table format 2 (#1557).
+- Fixed ``DeprecationWarning`` on invalid escape sequences (#1562).
+
 3.39.0 (released 2019-03-19)
 ----------------------------
 

@@ -32,9 +32,18 @@ class Parser(object):
         self.lookups_ = SymbolTable()
         self.next_token_type_, self.next_token_ = (None, None)
         self.next_token_location_ = None
-        with open(path, "r") as f:
-            self.lexer_ = Lexer(f.read(), path)
+        self.make_lexer_(path)
         self.advance_lexer_()
+
+    def make_lexer_(self, file_or_path):
+        if hasattr(file_or_path, "read"):
+            filename = getattr(file_or_path, "name", None)
+            data = file_or_path.read()
+        else:
+            filename = file_or_path
+            with open(file_or_path, "r") as f:
+                data = f.read()
+        self.lexer_ = Lexer(data, filename)
 
     def parse(self):
         statements = self.doc_.statements

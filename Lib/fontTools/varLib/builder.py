@@ -15,7 +15,6 @@ def buildVarRegion(support, axisTags):
 	self.VarRegionAxis = []
 	for tag in axisTags:
 		self.VarRegionAxis.append(buildVarRegionAxis(support.get(tag, (0,0,0))))
-	self.VarRegionAxisCount = len(self.VarRegionAxis)
 	return self
 
 def buildVarRegionList(supports, axisTags):

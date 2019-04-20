@@ -755,7 +755,6 @@ class BaseDocReader(LogMixin):
                         axisObject.labelNames[lang] = tounicode(labelNameElement.text)
             self.documentObject.axes.append(axisObject)
             self.axisDefaults[axisObject.name] = axisObject.default
-        self.documentObject.defaultLoc = self.axisDefaults
 
     def readSources(self):
         for sourceCount, sourceElement in enumerate(self.root.findall(".sources/source")):
@@ -998,7 +997,6 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         self.axes = []
         self.rules = []
         self.default = None         # name of the default master
-        self.defaultLoc = None
 
         self.lib = {}
         """Custom data associated with the whole document."""
@@ -1188,10 +1186,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
 
         # Convert the default location from user space to design space before comparing
         # it against the SourceDescriptor locations (always in design space).
-        default_location_design = {
-            axis.name: axis.map_forward(self.defaultLoc[axis.name])
-            for axis in self.axes
-        }
+        default_location_design = self.newDefaultLocation()
 
         for sourceDescriptor in self.sources:
             if sourceDescriptor.location == default_location_design:

@@ -1833,19 +1833,23 @@ def subset_glyphs(self, s):
 	used = set()
 
 	if table.AdvHeightMap:
-		table.AdvHeightMap.mapping = _dict_subset(table.AdvHeightMap.mapping, s.glyphs)
+		if not s.options.retain_gids:
+			table.AdvHeightMap.mapping = _dict_subset(table.AdvHeightMap.mapping, s.glyphs)
 		used.update(table.AdvHeightMap.mapping.values())
 	else:
 		assert table.TsbMap is None and table.BsbMap is None and table.VOrgMap is None, "File a bug."
 		used.update(s.reverseOrigGlyphMap.values())
 	if table.TsbMap:
-		table.TsbMap.mapping = _dict_subset(table.TsbMap.mapping, s.glyphs)
+		if not s.options.retain_gids:
+			table.TsbMap.mapping = _dict_subset(table.TsbMap.mapping, s.glyphs)
 		used.update(table.TsbMap.mapping.values())
 	if table.BsbMap:
-		table.BsbMap.mapping = _dict_subset(table.BsbMap.mapping, s.glyphs)
+		if not s.options.retain_gids:
+			table.BsbMap.mapping = _dict_subset(table.BsbMap.mapping, s.glyphs)
 		used.update(table.BsbMap.mapping.values())
 	if table.VOrgMap:
-		table.VOrgMap.mapping = _dict_subset(table.VOrgMap.mapping, s.glyphs)
+		if not s.options.retain_gids:
+			table.VOrgMap.mapping = _dict_subset(table.VOrgMap.mapping, s.glyphs)
 		used.update(table.VOrgMap.mapping.values())
 
 	varidx_map = varStore.VarStore_subset_varidxes(table.VarStore, used)
