@@ -169,7 +169,7 @@ class InstantiateCvarTest(object):
         assert "cvar" not in varfont
 
 
-class InstantiateMvarTest(object):
+class InstantiateMVARTest(object):
     @pytest.mark.parametrize(
         "location, expected",
         [
@@ -217,7 +217,7 @@ class InstantiateMvarTest(object):
         assert mvar.VarStore.VarData[1].VarRegionCount == 1
         assert all(len(item) == 1 for item in mvar.VarStore.VarData[1].Item)
 
-        instancer.instantiateMvar(varfont, location)
+        instancer.instantiateMVAR(varfont, location)
 
         for mvar_tag, expected_value in expected.items():
             table_tag, item_name = MVAR_ENTRIES[mvar_tag]
@@ -268,7 +268,7 @@ class InstantiateMvarTest(object):
         ],
     )
     def test_full_instance(self, varfont, location, expected):
-        instancer.instantiateMvar(varfont, location)
+        instancer.instantiateMVAR(varfont, location)
 
         for mvar_tag, expected_value in expected.items():
             table_tag, item_name = MVAR_ENTRIES[mvar_tag]

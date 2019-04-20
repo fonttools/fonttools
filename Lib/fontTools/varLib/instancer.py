@@ -158,7 +158,7 @@ def setMvarDeltas(varfont, deltas):
             )
 
 
-def instantiateMvar(varfont, location):
+def instantiateMVAR(varfont, location):
     log.info("Instantiating MVAR table")
 
     mvar = varfont["MVAR"].table
@@ -461,7 +461,7 @@ def instantiateVariableFont(varfont, axis_limits, inplace=False, optimize=True):
         instantiateCvar(varfont, axis_limits)
 
     if "MVAR" in varfont:
-        instantiateMvar(varfont, axis_limits)
+        instantiateMVAR(varfont, axis_limits)
 
     instantiateOTL(varfont, axis_limits)
 
