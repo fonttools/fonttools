@@ -1130,6 +1130,7 @@ class LigatureSubst(FormatSwitchingBaseTable):
 			lig.LigGlyph = attrs["glyph"]
 			components = attrs["components"]
 			lig.Component = components.split(",") if components else []
+			lig.CompCount = len(lig.Component)
 			ligs.append(lig)
 
 
