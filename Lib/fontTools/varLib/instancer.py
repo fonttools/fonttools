@@ -434,6 +434,11 @@ def sanityCheckVariableTables(varfont):
     if "gvar" in varfont:
         if "glyf" not in varfont:
             raise ValueError("Can't have gvar without glyf")
+    # TODO(anthrotype) Remove once we do support partial instancing CFF2
+    if "CFF2" in varfont:
+        raise NotImplementedError(
+            "Instancing CFF2 variable fonts is not supported yet"
+        )
 
 
 def instantiateVariableFont(varfont, axis_limits, inplace=False, optimize=True):
