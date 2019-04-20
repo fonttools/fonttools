@@ -83,8 +83,8 @@ def instantiateGvarGlyph(varfont, glyphname, location, optimize=True):
 
     if defaultDeltas:
         coordinates += GlyphCoordinates(defaultDeltas)
-        # this will also set the hmtx advance widths and sidebearings from
-        # the fourth-last and third-last phantom points (and glyph.xMin)
+        # this will also set the hmtx/vmtx advance widths and sidebearings from
+        # the four phantom points and glyph bounding boxes
         glyf.setCoordinates(glyphname, coordinates, varfont)
 
     if not tupleVarStore:
@@ -513,9 +513,8 @@ def instantiateVariableFont(varfont, axis_limits, inplace=False, optimize=True):
     if "HVAR" in varfont:
         instantiateHVAR(varfont, axis_limits)
 
-    # TODO(anthrotype) Uncomment this once we apply gvar deltas to vmtx
-    # if "VVAR" in varfont:
-    #     instantiateVVAR(varfont, axis_limits)
+    if "VVAR" in varfont:
+        instantiateVVAR(varfont, axis_limits)
 
     instantiateOTL(varfont, axis_limits)
 
