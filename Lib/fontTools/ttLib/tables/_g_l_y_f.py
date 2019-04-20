@@ -372,8 +372,6 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 
 		# Handle phantom points for (left, right, top, bottom) positions.
 		assert len(coord) >= 4
-		if not hasattr(glyph, 'xMin'):
-			glyph.recalcBounds(self)
 		leftSideX = coord[-4][0]
 		rightSideX = coord[-3][0]
 		topSideY = coord[-2][1]
