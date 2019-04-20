@@ -277,6 +277,62 @@ class InstantiateMVARTest(object):
         assert "MVAR" not in varfont
 
 
+class InstantiateHVARTest(object):
+    # the 'expectedDeltas' below refer to the VarData item deltas for the "hyphen"
+    # glyph in the PartialInstancerTest-VF.ttx test font, that are left after
+    # partial instancing
+    @pytest.mark.parametrize(
+        "location, expectedRegions, expectedDeltas",
+        [
+            ({"wght": -1.0}, [{"wdth": (-1.0, -1.0, 0)}], [-59]),
+            ({"wght": 0}, [{"wdth": (-1.0, -1.0, 0)}], [-48]),
+            ({"wght": 1.0}, [{"wdth": (-1.0, -1.0, 0)}], [7]),
+            (
+                {"wdth": -1.0},
+                [
+                    {"wght": (-1.0, -1.0, 0.0)},
+                    {"wght": (0.0, 0.61, 1.0)},
+                    {"wght": (0.61, 1.0, 1.0)},
+                ],
+                [-11, 31, 51],
+            ),
+            ({"wdth": 0}, [{"wght": (0.61, 1.0, 1.0)}], [-4]),
+        ],
+    )
+    def test_partial_instance(
+        self, varfont, fvarAxes, location, expectedRegions, expectedDeltas
+    ):
+        instancer.instantiateHVAR(varfont, location)
+
+        assert "HVAR" in varfont
+        hvar = varfont["HVAR"].table
+        varStore = hvar.VarStore
+
+        regions = varStore.VarRegionList.Region
+        assert [reg.get_support(fvarAxes) for reg in regions] == expectedRegions
+
+        assert len(varStore.VarData) == 1
+        assert varStore.VarData[0].ItemCount == 2
+
+        assert hvar.AdvWidthMap is not None
+        advWithMap = hvar.AdvWidthMap.mapping
+
+        assert advWithMap[".notdef"] == advWithMap["space"]
+        varIdx = advWithMap[".notdef"]
+        # these glyphs have no metrics variations in the test font
+        assert varStore.VarData[varIdx >> 16].Item[varIdx & 0xFFFF] == (
+            [0] * varStore.VarData[0].VarRegionCount
+        )
+
+        varIdx = advWithMap["hyphen"]
+        assert varStore.VarData[varIdx >> 16].Item[varIdx & 0xFFFF] == expectedDeltas
+
+    def test_full_instance(self, varfont):
+        instancer.instantiateHVAR(varfont, {"wght": 0, "wdth": 0})
+
+        assert "HVAR" not in varfont
+
+
 class InstantiateItemVariationStoreTest(object):
     def test_VarRegion_get_support(self):
         axisOrder = ["wght", "wdth", "opsz"]
