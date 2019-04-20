@@ -297,6 +297,8 @@ class _TupleVarStoreAdapter(object):
                 )
         regionList = builder.buildVarRegionList(self.regions, self.axisOrder)
         itemVarStore = builder.buildVarStore(regionList, varDatas)
+        # remove unused regions from VarRegionList
+        itemVarStore.prune_regions()
         return itemVarStore
 
 
