@@ -12,12 +12,12 @@
     <!-- Most of this table will be recalculated by the compiler -->
     <tableVersion value="1.0"/>
     <fontRevision value="2.001"/>
-    <checkSumAdjustment value="0x45c905be"/>
+    <checkSumAdjustment value="0x9184e88f"/>
     <magicNumber value="0x5f0f3cf5"/>
     <flags value="00000000 00000011"/>
     <unitsPerEm value="1000"/>
     <created value="Tue Mar  5 00:05:14 2019"/>
-    <modified value="Mon Mar 25 12:51:29 2019"/>
+    <modified value="Sat Apr 20 14:38:56 2019"/>
     <xMin value="40"/>
     <yMin value="-200"/>
     <xMax value="450"/>
@@ -589,7 +589,7 @@
     <Version value="0x00010000"/>
     <Reserved value="0"/>
     <ValueRecordSize value="8"/>
-    <!-- ValueRecordCount=3 -->
+    <!-- ValueRecordCount=4 -->
     <VarStore Format="1">
       <Format value="1"/>
       <VarRegionList>
@@ -632,7 +632,7 @@
           </VarRegionAxis>
         </Region>
       </VarRegionList>
-      <!-- VarDataCount=1 -->
+      <!-- VarDataCount=2 -->
       <VarData index="0">
         <!-- ItemCount=3 -->
         <NumShorts value="1"/>
@@ -644,7 +644,7 @@
         <Item index="1" value="[100, 0, -20]"/>
         <Item index="2" value="[50, -30, -20]"/>
       </VarData>
-      <VarData>
+      <VarData index="1">
         <!-- ItemCount=1 -->
         <NumShorts value="0"/>
         <!-- VarRegionCount=1 -->
@@ -1015,5 +1015,11 @@
       </tuple>
     </glyphVariations>
   </gvar>
+
+  <vmtx>
+    <mtx name=".notdef" height="1000" tsb="100"/>
+    <mtx name="hyphen" height="536" tsb="229"/>
+    <mtx name="space" height="600" tsb="0"/>
+  </vmtx>
 
 </ttFont>

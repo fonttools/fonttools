@@ -67,7 +67,7 @@ class InstantiateGvarTest(object):
                         (247, 229),
                         (0, 0),
                         (274, 0),
-                        (0, 1000),
+                        (0, 536),
                         (0, 0),
                     ]
                 },
@@ -83,7 +83,7 @@ class InstantiateGvarTest(object):
                         (265, 229),
                         (0, 0),
                         (298, 0),
-                        (0, 1000),
+                        (0, 536),
                         (0, 0),
                     ]
                 },
@@ -101,7 +101,7 @@ class InstantiateGvarTest(object):
                         (282, 229),
                         (0, 0),
                         (322, 0),
-                        (0, 1000),
+                        (0, 536),
                         (0, 0),
                     ]
                 },
@@ -133,7 +133,7 @@ class InstantiateGvarTest(object):
             (265, 229),
             (0, 0),
             (298, 0),
-            (0, 1000),
+            (0, 536),
             (0, 0),
         ]
 
