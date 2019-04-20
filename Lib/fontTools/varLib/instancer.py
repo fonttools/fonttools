@@ -17,6 +17,7 @@ from fontTools.varLib.models import supportScalar, normalizeValue, piecewiseLine
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
+from fontTools import varLib
 from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
@@ -173,6 +174,54 @@ def instantiateMVAR(varfont, location):
             rec.VarIdx = varIndexMapping[rec.VarIdx]
     else:
         del varfont["MVAR"]
+
+
+def _remapVarIdxMap(table, attrName, varIndexMapping, glyphOrder):
+    oldMapping = getattr(table, attrName).mapping
+    newMapping = [varIndexMapping[oldMapping[glyphName]] for glyphName in glyphOrder]
+    setattr(table, attrName, builder.buildVarIdxMap(newMapping, glyphOrder))
+
+
+# TODO(anthrotype) Add support for HVAR/VVAR in CFF2
+def _instantiateVHVAR(varfont, location, tableFields):
+    tableTag = tableFields.tableTag
+    fvarAxes = varfont["fvar"].axes
+    # Deltas from gvar table have already been applied to the hmtx/vmtx. For full
+    # instances (i.e. all axes pinned), we can simply drop HVAR/VVAR and return
+    if set(location).issuperset(axis.axisTag for axis in fvarAxes):
+        log.info("Dropping %s table", tableTag)
+        del varfont[tableTag]
+        return
+
+    log.info("Instantiating %s table", tableTag)
+    vhvar = varfont[tableTag].table
+    varStore = vhvar.VarStore
+    # since deltas were already applied, the return value here is ignored
+    instantiateItemVariationStore(varStore, fvarAxes, location)
+
+    if varStore.VarRegionList.Region:
+        if getattr(vhvar, tableFields.advMapping):
+            varIndexMapping = varStore.optimize()
+            glyphOrder = varfont.getGlyphOrder()
+            _remapVarIdxMap(vhvar, tableFields.advMapping, varIndexMapping, glyphOrder)
+            if getattr(vhvar, tableFields.sb1):
+                _remapVarIdxMap(vhvar, tableFields.sb1, varIndexMapping, glyphOrder)
+            if getattr(vhvar, tableFields.sb2):
+                _remapVarIdxMap(vhvar, tableFields.sb2, varIndexMapping, glyphOrder)
+            if tableFields.vOrigMapping and getattr(vhvar, tableFields.vOrigMapping):
+                _remapVarIdxMap(
+                    vhvar, tableFields.vOrigMapping, varIndexMapping, glyphOrder
+                )
+    else:
+        del varfont[tableTag]
+
+
+def instantiateHVAR(varfont, location):
+    return _instantiateVHVAR(varfont, location, varLib.HVAR_FIELDS)
+
+
+def instantiateVVAR(varfont, location):
+    return _instantiateVHVAR(varfont, location, varLib.VVAR_FIELDS)
 
 
 class _TupleVarStoreAdapter(object):
@@ -436,9 +485,7 @@ def sanityCheckVariableTables(varfont):
             raise ValueError("Can't have gvar without glyf")
     # TODO(anthrotype) Remove once we do support partial instancing CFF2
     if "CFF2" in varfont:
-        raise NotImplementedError(
-            "Instancing CFF2 variable fonts is not supported yet"
-        )
+        raise NotImplementedError("Instancing CFF2 variable fonts is not supported yet")
 
 
 def instantiateVariableFont(varfont, axis_limits, inplace=False, optimize=True):
@@ -463,12 +510,16 @@ def instantiateVariableFont(varfont, axis_limits, inplace=False, optimize=True):
     if "MVAR" in varfont:
         instantiateMVAR(varfont, axis_limits)
 
+    if "HVAR" in varfont:
+        instantiateHVAR(varfont, axis_limits)
+
+    # TODO(anthrotype) Uncomment this once we apply gvar deltas to vmtx
+    # if "VVAR" in varfont:
+    #     instantiateVVAR(varfont, axis_limits)
+
     instantiateOTL(varfont, axis_limits)
 
     instantiateFeatureVariations(varfont, axis_limits)
-
-    # TODO: actually process HVAR instead of dropping it
-    del varfont["HVAR"]
 
     return varfont
 
