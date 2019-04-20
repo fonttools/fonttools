@@ -104,6 +104,7 @@ class BaseTTXConverter(DefaultTable):
 			tableClass = getattr(otTables, self.tableTag)
 			self.table = tableClass()
 		self.table.fromXML(name, attrs, content, font)
+		self.table.populateDefaults()
 
 
 class OTTableReader(object):
