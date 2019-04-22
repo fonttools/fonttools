@@ -188,7 +188,7 @@ class VarStoreInstancer(object):
 # Optimizations
 #
 
-def VarStore_subset_varidxes(self, varIdxes, optimize=True):
+def VarStore_subset_varidxes(self, varIdxes, optimize=True, zeroUnusedDeltas=False):
 
 	# Sort out used varIdxes by major/minor.
 	used = {}
@@ -217,10 +217,16 @@ def VarStore_subset_varidxes(self, varIdxes, optimize=True):
 
 		items = data.Item
 		newItems = []
-		for minor in sorted(usedMinors):
-			newMinor = len(newItems)
-			newItems.append(items[minor])
-			varDataMap[(major<<16)+minor] = (newMajor<<16)+newMinor
+		if major == 0 and zeroUnusedDeltas:
+			zeros = [0] * len(items[0])
+			for minor in range(len(items)):
+				newItems.append(items[minor] if minor in usedMinors else zeros)
+				varDataMap[minor] = minor
+		else:
+			for minor in sorted(usedMinors):
+				newMinor = len(newItems)
+				newItems.append(items[minor])
+				varDataMap[(major<<16)+minor] = (newMajor<<16)+newMinor
 
 		data.Item = newItems
 		data.ItemCount = len(data.Item)
