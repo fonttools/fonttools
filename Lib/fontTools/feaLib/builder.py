@@ -7,6 +7,7 @@ from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser
 from fontTools.feaLib.ast import FeatureFile
 from fontTools.otlLib import builder as otl
+from fontTools.otlLib.maxContextCalc import maxCtxFont
 from fontTools.ttLib import newTable, getTableModule
 from fontTools.ttLib.tables import otBase, otTables
 from collections import defaultdict, OrderedDict
@@ -137,6 +138,9 @@ class Builder(object):
                 fontTable.table = table
             elif tag in self.font:
                 del self.font[tag]
+        if (any(tag in self.font for tag in ("GPOS", "GSUB")) and
+                "OS/2" in self.font):
+            self.font["OS/2"].usMaxContext = maxCtxFont(self.font)
         if "GDEF" in tables:
             gdef = self.buildGDEF()
             if gdef:

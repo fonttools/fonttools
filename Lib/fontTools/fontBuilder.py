@@ -21,6 +21,7 @@ that works:
     fb.setupHorizontalHeader()
     fb.setupNameTable(...)
     fb.setupOS2()
+    fb.addOpenTypeFeatures(...)
     fb.setupPost()
     fb.save(...)
 
@@ -299,7 +300,7 @@ _OS2Defaults = dict(
     sCapHeight = 0,
     usDefaultChar = 0,  # .notdef
     usBreakChar = 32,   # space
-    usMaxContext = 2,   # just kerning
+    usMaxContext = 0,
     usLowerOpticalPointSize = 0,
     usUpperOpticalPointSize = 0,
 )

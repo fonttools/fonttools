@@ -7,6 +7,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
+from fontTools.otlLib.maxContextCalc import maxCtxFont
 from fontTools.pens.basePen import NullPen
 from fontTools.misc.loggingTools import Timer
 from fontTools.subset.cff import *
@@ -322,6 +323,10 @@ Other font-specific options:
       Update the 'OS/2 xAvgCharWidth' field after subsetting.
   --no-recalc-average-width
       Don't change the 'OS/2 xAvgCharWidth' field. [default]
+  --recalc-max-context
+      Update the 'OS/2 usMaxContext' field after subsetting.
+  --no-recalc-max-context
+      Don't change the 'OS/2 usMaxContext' field. [default]
   --font-number=<number>
       Select font number for TrueType Collection (.ttc/.otc), starting from 0.
 
@@ -2305,6 +2310,7 @@ class Options(object):
 		self.recalc_timestamp = False # Recalculate font modified timestamp
 		self.prune_unicode_ranges = True # Clear unused 'ulUnicodeRange' bits
 		self.recalc_average_width = False # update 'xAvgCharWidth'
+		self.recalc_max_context = False # update 'usMaxContext'
 		self.canonical_order = None # Order tables as recommended
 		self.flavor = None  # May be 'woff' or 'woff2'
 		self.with_zopfli = False  # use zopfli instead of zlib for WOFF 1.0
@@ -2614,6 +2620,11 @@ class Subsetter(object):
 					if avg_width != font[tag].xAvgCharWidth:
 						font[tag].xAvgCharWidth = avg_width
 						log.info("%s xAvgCharWidth updated: %d", tag, avg_width)
+				if self.options.recalc_max_context:
+					max_context = maxCtxFont(font)
+					if max_context != font[tag].usMaxContext:
+						font[tag].usMaxContext = max_context
+						log.info("%s usMaxContext updated: %d", tag, max_context)
 			clazz = ttLib.getTableClass(tag)
 			if hasattr(clazz, 'prune_post_subset'):
 				with timer("prune '%s'" % tag):

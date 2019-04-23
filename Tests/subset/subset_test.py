@@ -485,6 +485,24 @@ class SubsetTest(unittest.TestCase):
         subset.main([fontpath, "--recalc-timestamp", "--output-file=%s" % subsetpath, "*"])
         self.assertLess(modified, TTFont(subsetpath)['head'].modified)
 
+    def test_recalc_max_context(self):
+        ttxpath = self.getpath("Lobster.subset.ttx")
+        font = TTFont()
+        font.importXML(ttxpath)
+        max_context = font['OS/2'].usMaxContext
+        _, fontpath = self.compile_font(ttxpath, ".otf")
+        subsetpath = self.temp_path(".otf")
+
+        # by default, the subsetter does not recalculate the usMaxContext
+        subset.main([fontpath, "--drop-tables+=GSUB,GPOS",
+                               "--output-file=%s" % subsetpath])
+        self.assertEqual(max_context, TTFont(subsetpath)['OS/2'].usMaxContext)
+
+        subset.main([fontpath, "--recalc-max-context",
+                               "--drop-tables+=GSUB,GPOS",
+                               "--output-file=%s" % subsetpath])
+        self.assertEqual(0, TTFont(subsetpath)['OS/2'].usMaxContext)
+
     def test_retain_gids_ttf(self):
         _, fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
         font = TTFont(fontpath)
