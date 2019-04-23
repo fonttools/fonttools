@@ -32,11 +32,15 @@ def programToCommands(program, numRegions=None):
 	Each command is a two-tuple of commandname,arg-list.  The commandname might
 	be empty string if no commandname shall be emitted (used for glyph width,
 	hintmask/cntrmask argument, as well as stray arguments at the end of the
-	program (¯\_(ツ)_/¯)."""
+	program (¯\_(ツ)_/¯).
+	'numRegions' may be None, or a function that returns the number
+	of regions. If the function is not passed a vsindex argument, it returns
+	the default number of regions for the charstring, else it returns the
+	numRegions for the vsindex."""
 
 	width = None
-	seen_width_op = False
-	width = None
+	seenWidthOp = False
+	vsIndex = None
 	commands = []
 	stack = []
 	it = iter(program)
@@ -46,15 +50,18 @@ def programToCommands(program, numRegions=None):
 			continue
 
 		if token == 'blend':
+			assert numRegions is not None
+			numSourceFonts = 1 + numRegions(vsIndex)
 			# replace the blend op args on the stack with a single list
 			# containing all the blend op args.
-			numBlendOps = stack[-1]*(numRegions+1) + 1
+			numBlendOps = stack[-1] * numSourceFonts + 1
+			# replace first blend op by a list of the blend ops.
 			stack[-numBlendOps] = stack[-numBlendOps:]
 			del stack[-numBlendOps + 1:]
-			
+
 			# Check for width.
-			if not seen_width_op:
-				seen_width_op = True
+			if not seenWidthOp:
+				seenWidthOp = True
 				widthLen = len(stack) - numBlendOps
 				if widthLen and (widthLen % 2):
 					stack.pop(0)
@@ -64,12 +71,15 @@ def programToCommands(program, numRegions=None):
 			# We do NOT add the width to the command list if a blend is seen:
 			# if a blend op exists, this is or will be a CFF2 charstring.
 			continue
-			
-		elif (not seen_width_op) and token in {'hstem', 'hstemhm', 'vstem', 'vstemhm',
+
+		elif token == 'vsindex':
+			vsIndex = stack[-1]
+
+		elif (not seenWidthOp) and token in {'hstem', 'hstemhm', 'vstem', 'vstemhm',
 			'cntrmask', 'hintmask',
 			'hmoveto', 'vmoveto', 'rmoveto',
 			'endchar'}:
-			seen_width_op = True
+			seenWidthOp = True
 			parity = token in {'hmoveto', 'vmoveto'}
 			if stack and (len(stack) % 2) ^ parity:
 				width = stack.pop(0)
@@ -249,19 +259,19 @@ def _convertBlendOpToArgs(blendList):
 					(_convertBlendOpToArgs(e) if isinstance(e,list) else [e]) ]
 	else:
 		args = blendList
-		
+
 	# We now know that blendList contains a blend op argument list, even if
 	# some of the args are lists that each contain a blend op argument list.
-    # 	Convert from:
-    # 		[default font arg sequence x0,...,xn] + [delta tuple for x0] + ... + [delta tuple for xn]
-    # 	to:
-    # 		[ [x0] + [delta tuple for x0],
-    #                 ...,
-    #          [xn] + [delta tuple for xn] ]	
+	# 	Convert from:
+	# 		[default font arg sequence x0,...,xn] + [delta tuple for x0] + ... + [delta tuple for xn]
+	# 	to:
+	# 		[ [x0] + [delta tuple for x0],
+	#                 ...,
+	#          [xn] + [delta tuple for xn] ]
 	numBlends = args[-1]
 	# Can't use args.pop() when the args are being used in a nested list
 	# comprehension. See calling context
-	args = args[:-1] 
+	args = args[:-1]
 
 	numRegions = len(args)//numBlends - 1
 	if not (numBlends*(numRegions + 1) == len(args)):
@@ -571,8 +581,6 @@ def specializeCommands(commands,
 							(op == commands[i-1][0])):
 				_, other_args = commands[i-1]
 				assert len(args) == 1 and len(other_args) == 1
-				arg0 = args[0]
-				arg1 = other_args[0]
 				new_args = [_addArgs(args[0], other_args[0])]
 				commands[i-1] = (op, new_args)
 				del commands[i]
