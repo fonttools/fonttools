@@ -406,7 +406,7 @@ class Silf(object):
             if version >= 3.0:
                 pseudo = sstruct.unpack(Silf_pseudomap_format, data[8+6*i:14+6*i], _Object())
             else:
-                pseudo = struct.unpack('>HH', data[8+4*i:12+4*i], _Object())
+                pseudo = sstruct.unpack('>HH', data[8+4*i:12+4*i], _Object())
             self.pMap[pseudo.unicode] = ttFont.getGlyphName(pseudo.nPseudo)
         data = data[8 + 6 * numPseudo:]
         currpos = (sstruct.calcsize(Silf_part1_format)
