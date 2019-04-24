@@ -218,9 +218,8 @@ def VarStore_subset_varidxes(self, varIdxes, optimize=True, retainFirstMap=False
 		items = data.Item
 		newItems = []
 		if major == 0 and retainFirstMap:
-			zeros = [0] * len(items[0])
 			for minor in range(len(items)):
-				newItems.append(items[minor] if minor in usedMinors else zeros)
+				newItems.append(items[minor] if minor in usedMinors else [0] * len(items[minor]))
 				varDataMap[minor] = minor
 		else:
 			for minor in sorted(usedMinors):
