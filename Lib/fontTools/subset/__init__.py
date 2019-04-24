@@ -1803,15 +1803,17 @@ def _remap_index_map(s, varidx_map, table_map):
 def subset_glyphs(self, s):
 	table = self.table
 
-	# TODO Update for retain_gids
-
 	used = set()
+	advIdxes_ = set()
+	retainAdvMap = False
 
 	if table.AdvWidthMap:
 		table.AdvWidthMap.mapping = _dict_subset(table.AdvWidthMap.mapping, s.glyphs)
 		used.update(table.AdvWidthMap.mapping.values())
 	else:
 		used.update(s.reverseOrigGlyphMap.values())
+		advIdxes_ = used.copy()
+		retainAdvMap = s.options.retain_gids
 
 	if table.LsbMap:
 		table.LsbMap.mapping = _dict_subset(table.LsbMap.mapping, s.glyphs)
@@ -1820,7 +1822,7 @@ def subset_glyphs(self, s):
 		table.RsbMap.mapping = _dict_subset(table.RsbMap.mapping, s.glyphs)
 		used.update(table.RsbMap.mapping.values())
 
-	varidx_map = varStore.VarStore_subset_varidxes(table.VarStore, used, retainFirstMap=table.AdvWidthMap is None)
+	varidx_map = varStore.VarStore_subset_varidxes(table.VarStore, used, retainFirstMap=retainAdvMap, advIdxes=advIdxes_)
 
 	if table.AdvWidthMap:
 		table.AdvWidthMap.mapping = _remap_index_map(s, varidx_map, table.AdvWidthMap)
@@ -1837,12 +1839,16 @@ def subset_glyphs(self, s):
 	table = self.table
 
 	used = set()
+	advIdxes_ = set()
+	retainAdvMap = False
 
 	if table.AdvHeightMap:
 		table.AdvHeightMap.mapping = _dict_subset(table.AdvHeightMap.mapping, s.glyphs)
 		used.update(table.AdvHeightMap.mapping.values())
 	else:
 		used.update(s.reverseOrigGlyphMap.values())
+		advIdxes_ = used.copy()
+		retainAdvMap = s.options.retain_gids
 
 	if table.TsbMap:
 		table.TsbMap.mapping = _dict_subset(table.TsbMap.mapping, s.glyphs)
@@ -1854,7 +1860,7 @@ def subset_glyphs(self, s):
 		table.VOrgMap.mapping = _dict_subset(table.VOrgMap.mapping, s.glyphs)
 		used.update(table.VOrgMap.mapping.values())
 
-	varidx_map = varStore.VarStore_subset_varidxes(table.VarStore, used, retainFirstMap=table.AdvHeightMap is None)
+	varidx_map = varStore.VarStore_subset_varidxes(table.VarStore, used, retainFirstMap=retainAdvMap, advIdxes=advIdxes_)
 
 	if table.AdvHeightMap:
 		table.AdvHeightMap.mapping = _remap_index_map(s, varidx_map, table.AdvHeightMap)

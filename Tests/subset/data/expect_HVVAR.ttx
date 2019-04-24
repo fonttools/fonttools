@@ -32,16 +32,15 @@
       </VarRegionList>
       <!-- VarDataCount=2 -->
       <VarData index="0">
-        <!-- ItemCount=6 -->
+        <!-- ItemCount=5 -->
         <NumShorts value="0"/>
         <!-- VarRegionCount=1 -->
         <VarRegionIndex index="0" value="1"/>
         <Item index="0" value="[1]"/>
-        <Item index="1" value="[2]"/>
-        <Item index="2" value="[3]"/>
-        <Item index="3" value="[4]"/>
-        <Item index="4" value="[5]"/>
-        <Item index="5" value="[0]"/>
+        <Item index="1" value="[3]"/>
+        <Item index="2" value="[5]"/>
+        <Item index="3" value="[2]"/>
+        <Item index="4" value="[4]"/>
       </VarData>
       <VarData index="1">
         <!-- ItemCount=3 -->
@@ -55,12 +54,12 @@
       </VarData>
     </VarStore>
     <LsbMap>
-      <Map glyph=".notdef" outer="0" inner="2"/>
+      <Map glyph=".notdef" outer="0" inner="1"/>
       <Map glyph="B" outer="1" inner="0"/>
-      <Map glyph="D" outer="0" inner="3"/>
+      <Map glyph="D" outer="0" inner="4"/>
     </LsbMap>
     <RsbMap>
-      <Map glyph=".notdef" outer="0" inner="1"/>
+      <Map glyph=".notdef" outer="0" inner="3"/>
       <Map glyph="B" outer="1" inner="2"/>
       <Map glyph="D" outer="1" inner="1"/>
     </RsbMap>

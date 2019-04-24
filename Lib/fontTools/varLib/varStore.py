@@ -187,8 +187,10 @@ class VarStoreInstancer(object):
 #
 # Optimizations
 #
+# retainFirstMap - If true, major 0 mappings are retained. Deltas for unused indices are zeroed
+# advIdxes - Set of major 0 indices for advance deltas to be listed first. Other major 0 indices follow.
 
-def VarStore_subset_varidxes(self, varIdxes, optimize=True, retainFirstMap=False):
+def VarStore_subset_varidxes(self, varIdxes, optimize=True, retainFirstMap=False, advIdxes=set()):
 
 	# Sort out used varIdxes by major/minor.
 	used = {}
@@ -222,7 +224,11 @@ def VarStore_subset_varidxes(self, varIdxes, optimize=True, retainFirstMap=False
 				newItems.append(items[minor] if minor in usedMinors else [0] * len(items[minor]))
 				varDataMap[minor] = minor
 		else:
-			for minor in sorted(usedMinors):
+			if major == 0:
+				minors = sorted(advIdxes) + sorted(usedMinors - advIdxes)
+			else:
+				minors = sorted(usedMinors)
+			for minor in minors:
 				newMinor = len(newItems)
 				newItems.append(items[minor])
 				varDataMap[(major<<16)+minor] = (newMajor<<16)+newMinor
