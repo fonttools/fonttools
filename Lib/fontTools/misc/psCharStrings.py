@@ -946,7 +946,7 @@ class T2CharString(object):
 		self.globalSubrs = globalSubrs if globalSubrs is not None else []
 		self._cur_vsindex = None
 
-	def numRegions(self, vsindex=None):
+	def getNumRegions(self, vsindex=None):
 		pd = self.private
 		assert(pd is not None)
 		if vsindex is not None:

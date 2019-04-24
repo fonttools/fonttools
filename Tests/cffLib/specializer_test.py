@@ -942,14 +942,14 @@ class CFF2VFTestSpecialize(unittest.TestCase):
             print(glyphName)
             cs = charstrings[glyphName]
             cs.decompile()
-            cmds = programToCommands(cs.program, numRegions=cs.numRegions)
+            cmds = programToCommands(cs.program, getNumRegions=cs.getNumRegions)
             cmds_g = generalizeCommands(cmds)
             cmds = specializeCommands(cmds_g, generalizeFirst=False)
             program = commandsToProgram(cmds)
             self.assertEqual(program, cs.program)
-            program = specializeProgram(program, numRegions=cs.numRegions)
+            program = specializeProgram(program, getNumRegions=cs.getNumRegions)
             self.assertEqual(program, cs.program)
-            program_g = generalizeProgram(program, numRegions=cs.numRegions)
+            program_g = generalizeProgram(program, getNumRegions=cs.getNumRegions)
             program = commandsToProgram(cmds_g)
             self.assertEqual(program, program_g)
 

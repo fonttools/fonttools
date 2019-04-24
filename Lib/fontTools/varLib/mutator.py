@@ -78,7 +78,7 @@ def interpolate_cff2_charstrings(topDict, interpolateFromDeltas, glyphOrder):
 					new_program.extend(charstring.program[last_i:i - 1])
 				last_i = i + 1
 			elif token == 'blend':
-				num_regions = charstring.numRegions(vsindex)
+				num_regions = charstring.getNumRegions(vsindex)
 				numMasters = 1 + num_regions
 				num_args = charstring.program[i - 1]
 				# The program list starting at program[i] is now:

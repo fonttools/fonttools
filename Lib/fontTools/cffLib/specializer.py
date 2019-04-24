@@ -27,16 +27,17 @@ def programToString(program):
 	return ' '.join(str(x) for x in program)
 
 
-def programToCommands(program, numRegions=None):
+def programToCommands(program, getNumRegions=None):
 	"""Takes a T2CharString program list and returns list of commands.
 	Each command is a two-tuple of commandname,arg-list.  The commandname might
 	be empty string if no commandname shall be emitted (used for glyph width,
 	hintmask/cntrmask argument, as well as stray arguments at the end of the
 	program (¯\_(ツ)_/¯).
-	'numRegions' may be None, or a function that returns the number
-	of regions. If the function is not passed a vsindex argument, it returns
-	the default number of regions for the charstring, else it returns the
-	numRegions for the vsindex."""
+	'getNumRegions' may be None, or a callable object. It must return the
+	number of regions. 'getNumRegions' takes a single argument, vsindex. If
+	the vsindex argument is None, getNumRegions returns the default number
+	of regions for the charstring, else it returns the numRegions for
+	the vsindex."""
 
 	width = None
 	seenWidthOp = False
@@ -50,14 +51,13 @@ def programToCommands(program, numRegions=None):
 			continue
 
 		if token == 'blend':
-			assert numRegions is not None
-			numSourceFonts = 1 + numRegions(vsIndex)
+			assert getNumRegions is not None
+			numSourceFonts = 1 + getNumRegions(vsIndex)
 			# replace the blend op args on the stack with a single list
 			# containing all the blend op args.
 			numBlendOps = stack[-1] * numSourceFonts + 1
 			# replace first blend op by a list of the blend ops.
-			stack[-numBlendOps] = stack[-numBlendOps:]
-			del stack[-numBlendOps + 1:]
+			stack[-numBlendOps:] = [stack[-numBlendOps:]]
 
 			# Check for width.
 			if not seenWidthOp:
@@ -74,6 +74,7 @@ def programToCommands(program, numRegions=None):
 
 		elif token == 'vsindex':
 			vsIndex = stack[-1]
+			assert type(vsIndex) is int
 
 		elif (not seenWidthOp) and token in {'hstem', 'hstemhm', 'vstem', 'vstemhm',
 			'cntrmask', 'hintmask',
@@ -107,7 +108,7 @@ def _flattenBlendArgs(args):
 		else:
 			token_list.append(arg)
 	return token_list
-			
+
 def commandsToProgram(commands):
 	"""Takes a commands list as returned by programToCommands() and converts
 	it back to a T2CharString program list."""
@@ -318,8 +319,8 @@ def generalizeCommands(commands, ignoreErrors=False):
 				raise
 	return result
 
-def generalizeProgram(program, numRegions=None, **kwargs):
-	return commandsToProgram(generalizeCommands(programToCommands(program, numRegions), **kwargs))
+def generalizeProgram(program, getNumRegions=None, **kwargs):
+	return commandsToProgram(generalizeCommands(programToCommands(program, getNumRegions), **kwargs))
 
 
 def _categorizeVector(v):
@@ -414,6 +415,8 @@ def _convertToBlendCmds(args):
 def _addArgs(a, b):
 	if isinstance(b, list):
 		if isinstance(a, list):
+			if len(a) != len(b):
+				raise ValueError()
 			return [_addArgs(va, vb) for va,vb in zip(a, b)]
 		else:
 			a, b = b, a
@@ -581,7 +584,10 @@ def specializeCommands(commands,
 							(op == commands[i-1][0])):
 				_, other_args = commands[i-1]
 				assert len(args) == 1 and len(other_args) == 1
-				new_args = [_addArgs(args[0], other_args[0])]
+				try:
+					new_args = [_addArgs(args[0], other_args[0])]
+				except ValueError:
+					continue
 				commands[i-1] = (op, new_args)
 				del commands[i]
 				continue
@@ -702,8 +708,8 @@ def specializeCommands(commands,
 
 	return commands
 
-def specializeProgram(program, numRegions=None, **kwargs):
-	return commandsToProgram(specializeCommands(programToCommands(program, numRegions), **kwargs))
+def specializeProgram(program, getNumRegions=None, **kwargs):
+	return commandsToProgram(specializeCommands(programToCommands(program, getNumRegions), **kwargs))
 
 
 if __name__ == '__main__':
