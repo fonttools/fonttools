@@ -1,0 +1,229 @@
+<?xml version='1.0' encoding='utf-8'?>
+<designspace format="3">
+	<axes>
+		<axis default="200" maximum="900" minimum="200" name="weight" tag="wght">
+			<map input="200" output="0" />   <!-- ExtraLight -->
+			<map input="300" output="160" /> <!-- Light -->
+			<map input="350" output="320" /> <!-- Normal -->
+			<map input="400" output="390" /> <!-- Regular -->
+			<map input="500" output="560" /> <!-- Medium -->
+			<map input="700" output="780" /> <!-- Bold -->
+			<map input="900" output="1000" /><!-- Heavy -->
+		</axis>
+	</axes>
+	<sources>
+		<source filename="master_sparse_cff2/MasterSet_Kanji-w0.00.ufo" stylename="w0.00">
+			<info copy="1" />
+			<location>
+				<dimension name="weight" xvalue="0.00" />
+			</location>
+		</source>
+		<source filename="master_sparse_cff2/MasterSet_Kanji-w439.00.ufo" stylename="w439.00">
+			
+			<location>
+				<dimension name="weight" xvalue="439.00" />
+			</location>
+		</source>
+		<source filename="master_sparse_cff2/MasterSet_Kanji-w440.00.ufo" stylename="w440.00">
+			
+			<location>
+				<dimension name="weight" xvalue="440.00" />
+			</location>
+		</source>
+		<source filename="master_sparse_cff2/MasterSet_Kanji-w599.00.ufo" stylename="w599.00">
+			
+			<location>
+				<dimension name="weight" xvalue="599.00" />
+			</location>
+		</source>
+		<source filename="master_sparse_cff2/MasterSet_Kanji-w600.00.ufo" stylename="w600.00">
+			
+			<location>
+				<dimension name="weight" xvalue="600.00" />
+			</location>
+		</source>
+		<source filename="master_sparse_cff2/MasterSet_Kanji-w669.00.ufo" stylename="w669.00">
+			
+			<location>
+				<dimension name="weight" xvalue="669.00" />
+			</location>
+		</source>
+		<source filename="master_sparse_cff2/MasterSet_Kanji-w670.00.ufo" stylename="w670.00">
+			
+			<location>
+				<dimension name="weight" xvalue="670.00" />
+			</location>
+		</source>
+		<source filename="master_sparse_cff2/MasterSet_Kanji-w799.00.ufo" stylename="w799.00">
+			
+			<location>
+				<dimension name="weight" xvalue="799.00" />
+			</location>
+		</source>
+		<source filename="master_sparse_cff2/MasterSet_Kanji-w800.00.ufo" stylename="w800.00">
+			
+			<location>
+				<dimension name="weight" xvalue="800.00" />
+			</location>
+		</source>
+		<source filename="master_sparse_cff2/MasterSet_Kanji-w889.00.ufo" stylename="w889.00">
+			
+			<location>
+				<dimension name="weight" xvalue="889.00" />
+			</location>
+		</source>
+		<source filename="master_sparse_cff2/MasterSet_Kanji-w890.00.ufo" stylename="w890.00">
+			
+			<location>
+				<dimension name="weight" xvalue="890.00" />
+			</location>
+		</source>
+		<source filename="master_sparse_cff2/MasterSet_Kanji-w1000.00.ufo" stylename="w1000.00">
+			
+			<location>
+				<dimension name="weight" xvalue="1000.00" />
+			</location>
+		</source>
+	</sources>
+	<instances>
+		<instance familyname="SHSansJPVFTest" filename="instances/SHSansJPVFTest-Kanji-w0.00.otf" postscriptfontname="SHSansJPVFTest-Kanji-w0.00" stylename="Kanji-w0.00">
+			<location>
+				<dimension name="weight" xvalue="0" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+		<instance familyname="SHSansJPVFTest" filename="instances/SHSansJPVFTest-Kanji-w239.00.otf" postscriptfontname="SHSansJPVFTest-Kanji-w239.00" stylename="Kanji-w239.00">
+			<location>
+				<dimension name="weight" xvalue="239" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+		<instance familyname="SHSansJPVFTest" filename="instances/SHSansJPVFTest-Kanji-w240.00.otf" postscriptfontname="SHSansJPVFTest-Kanji-w240.00" stylename="Kanji-w240.00">
+			<location>
+				<dimension name="weight" xvalue="240" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+
+		<instance familyname="SHSansJPVFTest" filename="instances/SHSansJPVFTest-Kanji-w439.00.otf" postscriptfontname="SHSansJPVFTest-Kanji-w439.00" stylename="Kanji-w439.00">
+			<location>
+				<dimension name="weight" xvalue="439" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+		<instance familyname="SHSansJPVFTest" filename="instances/SHSansJPVFTest-Kanji-w440.00.otf" postscriptfontname="SHSansJPVFTest-Kanji-w440.00" stylename="Kanji-w440.00">
+			<location>
+				<dimension name="weight" xvalue="440" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+
+
+		<instance familyname="SHSansJPVFTest" filename="instances/SHSansJPVFTest-Kanji-w499.00.otf" postscriptfontname="SHSansJPVFTest-Kanji-w499.00" stylename="Kanji-w499.00">
+			<location>
+				<dimension name="weight" xvalue="499" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+		<instance familyname="SHSansJPVFTest" filename="instances/SHSansJPVFTest-Kanji-w500.00.otf" postscriptfontname="SHSansJPVFTest-Kanji-w500.00" stylename="Kanji-w500.00">
+			<location>
+				<dimension name="weight" xvalue="500" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+
+
+		<instance familyname="SHSansJPVFTest" filename="instances/SHSansJPVFTest-Kanji-w599.00.otf" postscriptfontname="SHSansJPVFTest-Kanji-w599.00" stylename="Kanji-w599.00">
+			<location>
+				<dimension name="weight" xvalue="599" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+		<instance familyname="SHSansJPVFTest" filename="instances/SHSansJPVFTest-Kanji-w600.00.otf" postscriptfontname="SHSansJPVFTest-Kanji-w600.00" stylename="Kanji-w600.00">
+			<location>
+				<dimension name="weight" xvalue="600" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+
+
+		<instance familyname="SHSansJPVFTest" filename="instances/SHSansJPVFTest-Kanji-w669.00.otf" postscriptfontname="SHSansJPVFTest-Kanji-w669.00" stylename="Kanji-w669.00">
+			<location>
+				<dimension name="weight" xvalue="669" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+		<instance familyname="SHSansJPVFTest" filename="instances/SHSansJPVFTest-Kanji-w670.00.otf" postscriptfontname="SHSansJPVFTest-Kanji-w670.00" stylename="Kanji-w670.00">
+			<location>
+				<dimension name="weight" xvalue="670" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+
+
+		<instance familyname="SHSansJPVFTest" filename="instances/SHSansJPVFTest-Kanji-w699.00.otf" postscriptfontname="SHSansJPVFTest-Kanji-w699.00" stylename="Kanji-w699.00">
+			<location>
+				<dimension name="weight" xvalue="699" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+		<instance familyname="SHSansJPVFTest" filename="instances/SHSansJPVFTest-Kanji-w700.00.otf" postscriptfontname="SHSansJPVFTest-Kanji-w700.00" stylename="Kanji-w700.00">
+			<location>
+				<dimension name="weight" xvalue="700" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+
+
+		<instance familyname="SHSansJPVFTest" filename="instances/SHSansJPVFTest-Kanji-799.00.otf" postscriptfontname="SHSansJPVFTest-Kanji-799.00" stylename="Kanji-799.00">
+			<location>
+				<dimension name="weight" xvalue="799" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+		<instance familyname="SHSansJPVFTest" filename="instances/SHSansJPVFTest-Kanji-w800.00.otf" postscriptfontname="SHSansJPVFTest-Kanji-w800.00" stylename="Kanji-w800.00">
+			<location>
+				<dimension name="weight" xvalue="800" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+
+
+		<instance familyname="SHSansJPVFTest" filename="instances/SHSansJPVFTest-Kanji-w889.00.otf" postscriptfontname="SHSansJPVFTest-Kanji-w889.00" stylename="Kanji-w889.00">
+			<location>
+				<dimension name="weight" xvalue="889" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+		<instance familyname="SHSansJPVFTest" filename="instances/SHSansJPVFTest-Kanji-w890.00.otf" postscriptfontname="SHSansJPVFTest-Kanji-w890.00" stylename="Kanji-w890.00">
+			<location>
+				<dimension name="weight" xvalue="890" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+
+
+		<instance familyname="SHSansJPVFTest" filename="instances/SHSansJPVFTest-Kanji-w1000.00.otf" postscriptfontname="SHSansJPVFTest-Kanji-w1000.00" stylename="Kanji-w1000.00">
+			<location>
+				<dimension name="weight" xvalue="1000" />
+			</location>
+		</instance>
+	</instances>
+</designspace>

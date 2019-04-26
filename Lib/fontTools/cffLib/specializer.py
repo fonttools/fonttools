@@ -4,6 +4,7 @@
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.cffLib import maxStackLimit
 
 
 def stringToProgram(string):
@@ -26,14 +27,21 @@ def programToString(program):
 	return ' '.join(str(x) for x in program)
 
 
-def programToCommands(program):
-	r"""Takes a T2CharString program list and returns list of commands.
+def programToCommands(program, getNumRegions=None):
+	"""Takes a T2CharString program list and returns list of commands.
 	Each command is a two-tuple of commandname,arg-list.  The commandname might
 	be empty string if no commandname shall be emitted (used for glyph width,
 	hintmask/cntrmask argument, as well as stray arguments at the end of the
-	program (¯\_(ツ)_/¯)."""
+	program (¯\_(ツ)_/¯).
+	'getNumRegions' may be None, or a callable object. It must return the
+	number of regions. 'getNumRegions' takes a single argument, vsindex. If
+	the vsindex argument is None, getNumRegions returns the default number
+	of regions for the charstring, else it returns the numRegions for
+	the vsindex."""
 
 	width = None
+	seenWidthOp = False
+	vsIndex = None
 	commands = []
 	stack = []
 	it = iter(program)
@@ -42,10 +50,37 @@ def programToCommands(program):
 			stack.append(token)
 			continue
 
-		if width is None and token in {'hstem', 'hstemhm', 'vstem', 'vstemhm',
-					       'cntrmask', 'hintmask',
-					       'hmoveto', 'vmoveto', 'rmoveto',
-					       'endchar'}:
+		if token == 'blend':
+			assert getNumRegions is not None
+			numSourceFonts = 1 + getNumRegions(vsIndex)
+			# replace the blend op args on the stack with a single list
+			# containing all the blend op args.
+			numBlendOps = stack[-1] * numSourceFonts + 1
+			# replace first blend op by a list of the blend ops.
+			stack[-numBlendOps:] = [stack[-numBlendOps:]]
+
+			# Check for width.
+			if not seenWidthOp:
+				seenWidthOp = True
+				widthLen = len(stack) - numBlendOps
+				if widthLen and (widthLen % 2):
+					stack.pop(0)
+			elif width is not None:
+				commands.pop(0)
+				width = None
+			# We do NOT add the width to the command list if a blend is seen:
+			# if a blend op exists, this is or will be a CFF2 charstring.
+			continue
+
+		elif token == 'vsindex':
+			vsIndex = stack[-1]
+			assert type(vsIndex) is int
+
+		elif (not seenWidthOp) and token in {'hstem', 'hstemhm', 'vstem', 'vstemhm',
+			'cntrmask', 'hintmask',
+			'hmoveto', 'vmoveto', 'rmoveto',
+			'endchar'}:
+			seenWidthOp = True
 			parity = token in {'hmoveto', 'vmoveto'}
 			if stack and (len(stack) % 2) ^ parity:
 				width = stack.pop(0)
@@ -64,11 +99,23 @@ def programToCommands(program):
 	return commands
 
 
+def _flattenBlendArgs(args):
+	token_list = []
+	for arg in args:
+		if isinstance(arg, list):
+			token_list.extend(arg)
+			token_list.append('blend')
+		else:
+			token_list.append(arg)
+	return token_list
+
 def commandsToProgram(commands):
 	"""Takes a commands list as returned by programToCommands() and converts
 	it back to a T2CharString program list."""
 	program = []
 	for op,args in commands:
+		if any(isinstance(arg, list) for arg in args):
+			args = _flattenBlendArgs(args)
 		program.extend(args)
 		if op:
 			program.append(op)
@@ -203,11 +250,58 @@ class _GeneralizerDecombinerCommandsMap(object):
 			yield ('rlineto', args)
 		yield ('rrcurveto', last_args)
 
+def _convertBlendOpToArgs(blendList):
+	# args is list of blend op args. Since we are supporting
+	# recursive blend op calls, some of these args may also
+	# be a list of blend op args, and need to be converted before
+	# we convert the current list.
+	if any([isinstance(arg, list) for arg in blendList]):
+		args =  [i for e in blendList for i in 
+					(_convertBlendOpToArgs(e) if isinstance(e,list) else [e]) ]
+	else:
+		args = blendList
+
+	# We now know that blendList contains a blend op argument list, even if
+	# some of the args are lists that each contain a blend op argument list.
+	# 	Convert from:
+	# 		[default font arg sequence x0,...,xn] + [delta tuple for x0] + ... + [delta tuple for xn]
+	# 	to:
+	# 		[ [x0] + [delta tuple for x0],
+	#                 ...,
+	#          [xn] + [delta tuple for xn] ]
+	numBlends = args[-1]
+	# Can't use args.pop() when the args are being used in a nested list
+	# comprehension. See calling context
+	args = args[:-1]
+
+	numRegions = len(args)//numBlends - 1
+	if not (numBlends*(numRegions + 1) == len(args)):
+		raise ValueError(blendList)
+
+	defaultArgs = [[arg] for arg in args[:numBlends]]
+	deltaArgs = args[numBlends:]
+	numDeltaValues = len(deltaArgs)
+	deltaList = [ deltaArgs[i:i + numRegions] for i in range(0, numDeltaValues, numRegions) ]
+	blend_args = [ a + b for a, b in zip(defaultArgs,deltaList)]
+	return blend_args
 
 def generalizeCommands(commands, ignoreErrors=False):
 	result = []
 	mapping = _GeneralizerDecombinerCommandsMap
-	for op,args in commands:
+	for op, args in commands:
+		# First, generalize any blend args in the arg list.
+		if any([isinstance(arg, list) for arg in args]):
+			try:
+				args = [n for arg in args for n in (_convertBlendOpToArgs(arg) if isinstance(arg, list) else [arg])]
+			except ValueError:
+				if ignoreErrors:
+					# Store op as data, such that consumers of commands do not have to
+					# deal with incorrect number of arguments.
+					result.append(('', args))
+					result.append(('', [op]))
+				else:
+					raise
+
 		func = getattr(mapping, op, None)
 		if not func:
 			result.append((op,args))
@@ -225,8 +319,8 @@ def generalizeCommands(commands, ignoreErrors=False):
 				raise
 	return result
 
-def generalizeProgram(program, **kwargs):
-	return commandsToProgram(generalizeCommands(programToCommands(program), **kwargs))
+def generalizeProgram(program, getNumRegions=None, **kwargs):
+	return commandsToProgram(generalizeCommands(programToCommands(program, getNumRegions), **kwargs))
 
 
 def _categorizeVector(v):
@@ -267,6 +361,70 @@ def _negateCategory(a):
 	assert a in '0r'
 	return a
 
+def _convertToBlendCmds(args):
+	# return a list of blend commands, and
+	# the remaining non-blended args, if any.
+	num_args = len(args)
+	stack_use = 0
+	new_args = []
+	i = 0
+	while i < num_args:
+		arg = args[i]
+		if not isinstance(arg, list):
+			new_args.append(arg)
+			i += 1
+			stack_use += 1
+		else:
+			prev_stack_use = stack_use
+			# The arg is a tuple of blend values.
+			# These are each (master 0,delta 1..delta n)
+			# Combine as many successive tuples as we can,
+			# up to the max stack limit.
+			num_sources = len(arg)
+			blendlist = [arg]
+			i += 1
+			stack_use += 1 + num_sources  # 1 for the num_blends arg
+			while (i < num_args) and isinstance(args[i], list):
+				blendlist.append(args[i])
+				i += 1
+				stack_use += num_sources
+				if stack_use + num_sources > maxStackLimit:
+					# if we are here, max stack is the CFF2 max stack.
+					# I use the CFF2 max stack limit here rather than
+					# the 'maxstack' chosen by the client, as the default
+					#  maxstack may have been used unintentionally. For all
+					# the other operators, this just produces a little less
+					# optimization, but here it puts a hard (and low) limit
+					# on the number of source fonts that can be used.
+					break
+			# blendList now contains as many single blend tuples as can be
+			# combined without exceeding the CFF2 stack limit.
+			num_blends = len(blendlist)
+			# append the 'num_blends' default font values
+			blend_args = []
+			for arg in blendlist:
+				blend_args.append(arg[0])
+			for arg in blendlist:
+				blend_args.extend(arg[1:])
+			blend_args.append(num_blends)
+			new_args.append(blend_args)
+			stack_use = prev_stack_use + num_blends
+
+	return new_args
+
+def _addArgs(a, b):
+	if isinstance(b, list):
+		if isinstance(a, list):
+			if len(a) != len(b):
+				raise ValueError()
+			return [_addArgs(va, vb) for va,vb in zip(a, b)]
+		else:
+			a, b = b, a
+	if isinstance(a, list):
+		return [_addArgs(a[0], b)] + a[1:]
+	return a + b
+
+
 def specializeCommands(commands,
 		       ignoreErrors=False,
 		       generalizeFirst=True,
@@ -302,6 +460,8 @@ def specializeCommands(commands,
 	# I have convinced myself that this produces optimal bytecode (except for, possibly
 	# one byte each time maxstack size prohibits combining.)  YMMV, but you'd be wrong. :-)
 	# A dynamic-programming approach can do the same but would be significantly slower.
+	#
+	# 7. For any args which are blend lists, convert them to a blend command.
 
 
 	# 0. Generalize commands.
@@ -417,12 +577,18 @@ def specializeCommands(commands,
 				continue
 
 			# Merge adjacent hlineto's and vlineto's.
+			# In CFF2 charstrings from variable fonts, each
+			# arg item may be a list of blendable values, one from
+			# each source font.
 			if (i and op in {'hlineto', 'vlineto'} and
-					(op == commands[i-1][0]) and
-					(not isinstance(args[0], list))):
+							(op == commands[i-1][0])):
 				_, other_args = commands[i-1]
 				assert len(args) == 1 and len(other_args) == 1
-				commands[i-1] = (op, [other_args[0]+args[0]])
+				try:
+					new_args = [_addArgs(args[0], other_args[0])]
+				except ValueError:
+					continue
+				commands[i-1] = (op, new_args)
 				del commands[i]
 				continue
 
@@ -534,10 +700,16 @@ def specializeCommands(commands,
 			commands[i] = op0+op1+'curveto', args
 			continue
 
+	# 7. For any series of args which are blend lists, convert the series to a single blend arg.
+	for i in range(len(commands)):
+		op, args = commands[i]
+		if any(isinstance(arg, list) for arg in args):
+			commands[i] = op, _convertToBlendCmds(args)
+
 	return commands
 
-def specializeProgram(program, **kwargs):
-	return commandsToProgram(specializeCommands(programToCommands(program), **kwargs))
+def specializeProgram(program, getNumRegions=None, **kwargs):
+	return commandsToProgram(specializeCommands(programToCommands(program, getNumRegions), **kwargs))
 
 
 if __name__ == '__main__':
@@ -554,4 +726,3 @@ if __name__ == '__main__':
 	assert program == program2
 	print("Generalized program:"); print(programToString(generalizeProgram(program)))
 	print("Specialized program:"); print(programToString(specializeProgram(program)))
-
