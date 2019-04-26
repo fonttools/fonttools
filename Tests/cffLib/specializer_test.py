@@ -1,6 +1,11 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.cffLib.specializer import (programToString, stringToProgram,
-                                          generalizeProgram, specializeProgram)
+                                          generalizeProgram, specializeProgram,
+                                          programToCommands, commandsToProgram,
+                                          generalizeCommands,
+                                          specializeCommands)
+from fontTools.ttLib import TTFont
+import os
 import unittest
 
 # TODO
@@ -911,6 +916,42 @@ class CFFSpecializeProgramTest(unittest.TestCase):
         test_charstr = (operands + operator)*9
         xpct_charstr = (operands*2 + operator + operands*7 + operator).rstrip()
         self.assertEqual(get_specialized_charstr(test_charstr), xpct_charstr)
+
+
+class CFF2VFTestSpecialize(unittest.TestCase):
+
+    def __init__(self, methodName):
+        unittest.TestCase.__init__(self, methodName)
+        # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
+        # and fires deprecation warnings if a program uses the old name.
+        if not hasattr(self, "assertRaisesRegex"):
+            self.assertRaisesRegex = self.assertRaisesRegexp
+
+    @staticmethod
+    def get_test_input(test_file_or_folder):
+        path, _ = os.path.split(__file__)
+        return os.path.join(path, "data", test_file_or_folder)
+
+    def test_blend_round_trip(self):
+        otfvf_path = self.get_test_input('TestSparseCFF2VF.otf')
+        ttf_font = TTFont(otfvf_path)
+        fontGlyphList = ttf_font.getGlyphOrder()
+        topDict = ttf_font['CFF2'].cff.topDictIndex[0]
+        charstrings = topDict.CharStrings
+        for glyphName in fontGlyphList:
+            print(glyphName)
+            cs = charstrings[glyphName]
+            cs.decompile()
+            cmds = programToCommands(cs.program, getNumRegions=cs.getNumRegions)
+            cmds_g = generalizeCommands(cmds)
+            cmds = specializeCommands(cmds_g, generalizeFirst=False)
+            program = commandsToProgram(cmds)
+            self.assertEqual(program, cs.program)
+            program = specializeProgram(program, getNumRegions=cs.getNumRegions)
+            self.assertEqual(program, cs.program)
+            program_g = generalizeProgram(program, getNumRegions=cs.getNumRegions)
+            program = commandsToProgram(cmds_g)
+            self.assertEqual(program, program_g)
 
 
 if __name__ == "__main__":
