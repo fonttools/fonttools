@@ -604,6 +604,20 @@ class SubsetTest(unittest.TestCase):
         self.assertGreater(len(cs["A"].program), 0)
         self.assertEqual(cs["glyph00002"].program, [])
 
+    def test_HVAR_VVAR(self):
+        _, fontpath = self.compile_font(self.getpath("TestHVVAR.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--text=BD", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_HVVAR.ttx"), ["GlyphOrder", "HVAR", "VVAR", "avar", "fvar"])
+
+    def test_HVAR_VVAR_retain_gids(self):
+        _, fontpath = self.compile_font(self.getpath("TestHVVAR.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--text=BD", "--retain-gids", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_HVVAR_retain_gids.ttx"), ["GlyphOrder", "HVAR", "VVAR", "avar", "fvar"])
+
 
 if __name__ == "__main__":
     sys.exit(unittest.main())
