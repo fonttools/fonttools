@@ -119,7 +119,7 @@
     <sCapHeight value="0"/>
     <usDefaultChar value="0"/>
     <usBreakChar value="32"/>
-    <usMaxContext value="2"/>
+    <usMaxContext value="1"/>
   </OS_2>
 
   <hmtx>
@@ -256,6 +256,45 @@
       <!-- following are the name that are not taken from the standard Mac glyph order -->
     </extraNames>
   </post>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="salt"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0" Format="1">
+          <Substitution in="A" out="a"/>
+        </SingleSubst>
+      </Lookup>
+    </LookupList>
+  </GSUB>
 
   <DSIG>
     <!-- note that the Digital Signature will be invalid after recompilation! -->

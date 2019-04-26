@@ -117,6 +117,7 @@ def test_build_ttf(tmpdir):
     fb.setupHorizontalHeader(ascent=824, descent=200)
     fb.setupNameTable(nameStrings)
     fb.setupOS2()
+    fb.addOpenTypeFeatures("feature salt { sub A by a; } salt;")
     fb.setupPost()
     fb.setupDummyDSIG()
 
@@ -145,6 +146,7 @@ def test_build_otf(tmpdir):
     fb.setupHorizontalHeader(ascent=824, descent=200)
     fb.setupNameTable(nameStrings)
     fb.setupOS2()
+    fb.addOpenTypeFeatures("feature kern { pos A a -50; } kern;")
     fb.setupPost()
     fb.setupDummyDSIG()
 
