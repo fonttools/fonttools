@@ -1,3 +1,21 @@
+3.41.0 (released 2019-04-29)
+----------------------------
+
+- [varLib/cffLib] Added support for building ``CFF2`` variable font from sparse
+  masters, or masters with more than one model (multiple ``VarStore.VarData``).
+  In ``cffLib.specializer``, added support for ``CFF2`` CharStrings with
+  ``blend`` operators (#1547, #1591).
+- [subset] Fixed subsetting ``HVAR`` and ``VVAR`` with ``--retain-gids`` option,
+  and when advances mapping is null while sidebearings mappings are non-null
+  (#1587, #1588).
+- Added ``otlLib.maxContextCalc`` module to compute ``OS/2.usMaxContext`` value.
+  Calculate it automatically when compiling features with feaLib. Added option
+  ``--recalc-max-context`` to ``subset`` module (#1582).
+- [otBase/otTables] Fixed ``AttributeError`` on missing OT table fields after
+  importing font from TTX (#1584).
+- [Silf] Fixed typo ``Silf`` table's ``decompile`` method (#1586).
+- [otlLib] Better compress ``GPOS`` SinglePos (LookupType 1) subtables (#1539).
+
 3.40.0 (released 2019-04-08)
 ----------------------------
 

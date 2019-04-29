@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.40">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="glyph00001"/>
+    <GlyphID id="2" name="B"/>
+    <GlyphID id="3" name="glyph00003"/>
+    <GlyphID id="4" name="D"/>
+    <GlyphID id="5" name="glyph00005"/>
+  </GlyphOrder>
+
+  <HVAR>
+    <Version value="0x00010000"/>
+    <VarStore Format="1">
+      <Format value="1"/>
+      <VarRegionList>
+        <!-- RegionAxisCount=1 -->
+        <!-- RegionCount=2 -->
+        <Region index="0">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="1">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+      </VarRegionList>
+      <!-- VarDataCount=2 -->
+      <VarData index="0">
+        <!-- ItemCount=6 -->
+        <NumShorts value="0"/>
+        <!-- VarRegionCount=1 -->
+        <VarRegionIndex index="0" value="1"/>
+        <Item index="0" value="[1]"/>
+        <Item index="1" value="[2]"/>
+        <Item index="2" value="[3]"/>
+        <Item index="3" value="[4]"/>
+        <Item index="4" value="[5]"/>
+        <Item index="5" value="[0]"/>
+      </VarData>
+      <VarData index="1">
+        <!-- ItemCount=3 -->
+        <NumShorts value="1"/>
+        <!-- VarRegionCount=2 -->
+        <VarRegionIndex index="0" value="0"/>
+        <VarRegionIndex index="1" value="1"/>
+        <Item index="0" value="[11, 22]"/>
+        <Item index="1" value="[126, 23]"/>
+        <Item index="2" value="[-129, 26]"/>
+      </VarData>
+    </VarStore>
+    <LsbMap>
+      <Map glyph=".notdef" outer="0" inner="2"/>
+      <Map glyph="B" outer="1" inner="0"/>
+      <Map glyph="D" outer="0" inner="3"/>
+      <Map glyph="glyph00001" outer="0" inner="0"/>
+      <Map glyph="glyph00003" outer="0" inner="0"/>
+      <Map glyph="glyph00005" outer="0" inner="3"/>
+    </LsbMap>
+    <RsbMap>
+      <Map glyph=".notdef" outer="0" inner="1"/>
+      <Map glyph="B" outer="1" inner="2"/>
+      <Map glyph="D" outer="1" inner="1"/>
+      <Map glyph="glyph00001" outer="0" inner="0"/>
+      <Map glyph="glyph00003" outer="0" inner="0"/>
+      <Map glyph="glyph00005" outer="1" inner="1"/>
+    </RsbMap>
+  </HVAR>
+
+  <VVAR>
+    <Version value="0x00010000"/>
+    <VarStore Format="1">
+      <Format value="1"/>
+      <VarRegionList>
+        <!-- RegionAxisCount=1 -->
+        <!-- RegionCount=3 -->
+        <Region index="0">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="1">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-0.5"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="2">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.5"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+      </VarRegionList>
+      <!-- VarDataCount=2 -->
+      <VarData index="0">
+        <!-- ItemCount=2 -->
+        <NumShorts value="0"/>
+        <!-- VarRegionCount=1 -->
+        <VarRegionIndex index="0" value="0"/>
+        <Item index="0" value="[0]"/>
+        <Item index="1" value="[6]"/>
+      </VarData>
+      <VarData index="1">
+        <!-- ItemCount=4 -->
+        <NumShorts value="1"/>
+        <!-- VarRegionCount=3 -->
+        <VarRegionIndex index="0" value="1"/>
+        <VarRegionIndex index="1" value="0"/>
+        <VarRegionIndex index="2" value="2"/>
+        <Item index="0" value="[11, 1, 21]"/>
+        <Item index="1" value="[12, 2, 22]"/>
+        <Item index="2" value="[14, 4, 24]"/>
+        <Item index="3" value="[-129, 5, 25]"/>
+      </VarData>
+    </VarStore>
+    <AdvHeightMap>
+      <Map glyph=".notdef" outer="1" inner="0"/>
+      <Map glyph="B" outer="0" inner="0"/>
+      <Map glyph="D" outer="1" inner="1"/>
+      <Map glyph="glyph00001" outer="0" inner="0"/>
+      <Map glyph="glyph00003" outer="0" inner="0"/>
+      <Map glyph="glyph00005" outer="1" inner="1"/>
+    </AdvHeightMap>
+    <VOrgMap>
+      <Map glyph=".notdef" outer="1" inner="2"/>
+      <Map glyph="B" outer="0" inner="1"/>
+      <Map glyph="D" outer="1" inner="3"/>
+      <Map glyph="glyph00001" outer="0" inner="0"/>
+      <Map glyph="glyph00003" outer="0" inner="0"/>
+      <Map glyph="glyph00005" outer="1" inner="3"/>
+    </VOrgMap>
+  </VVAR>
+
+  <avar>
+    <segment axis="wght">
+      <mapping from="-1.0" to="-1.0"/>
+      <mapping from="0.0" to="0.0"/>
+      <mapping from="0.3" to="0.5"/>
+      <mapping from="1.0" to="1.0"/>
+    </segment>
+  </avar>
+
+  <fvar>
+    <Axis>
+      <AxisTag>wght</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>100.0</MinValue>
+      <DefaultValue>400.0</DefaultValue>
+      <MaxValue>900.0</MaxValue>
+      <AxisNameID>257</AxisNameID>
+    </Axis>
+    <NamedInstance flags="0x0" subfamilyNameID="258">
+      <coord axis="wght" value="100.0"/>
+    </NamedInstance>
+    <NamedInstance flags="0x0" subfamilyNameID="259">
+      <coord axis="wght" value="300.0"/>
+    </NamedInstance>
+    <NamedInstance flags="0x0" subfamilyNameID="260">
+      <coord axis="wght" value="400.0"/>
+    </NamedInstance>
+    <NamedInstance flags="0x0" subfamilyNameID="261">
+      <coord axis="wght" value="700.0"/>
+    </NamedInstance>
+    <NamedInstance flags="0x0" subfamilyNameID="262">
+      <coord axis="wght" value="900.0"/>
+    </NamedInstance>
+  </fvar>
+
+</ttFont>

@@ -7,6 +7,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
+from fontTools.otlLib.maxContextCalc import maxCtxFont
 from fontTools.pens.basePen import NullPen
 from fontTools.misc.loggingTools import Timer
 from fontTools.subset.cff import *
@@ -322,6 +323,10 @@ Other font-specific options:
       Update the 'OS/2 xAvgCharWidth' field after subsetting.
   --no-recalc-average-width
       Don't change the 'OS/2 xAvgCharWidth' field. [default]
+  --recalc-max-context
+      Update the 'OS/2 usMaxContext' field after subsetting.
+  --no-recalc-max-context
+      Don't change the 'OS/2 usMaxContext' field. [default]
   --font-number=<number>
       Select font number for TrueType Collection (.ttc/.otc), starting from 0.
 
@@ -1789,39 +1794,47 @@ def subset_glyphs(self, s):
 	self.glyphCount = len(self.variations)
 	return bool(self.variations)
 
+def _remap_index_map(s, varidx_map, table_map):
+	map_ = {k:varidx_map[v] for k,v in table_map.mapping.items()}
+	# Emptied glyphs are remapped to:
+	# if GID <= last retained GID, 0/0: delta set for 0/0 is expected to exist & zeros compress well
+	# if GID > last retained GID, major/minor of the last retained glyph: will be optimized out by table compiler
+	last_idx = varidx_map[table_map.mapping[s.last_retained_glyph]]
+	for g,i in s.reverseEmptiedGlyphMap.items():
+		map_[g] = last_idx if i > s.last_retained_order else 0
+	return map_
+
 @_add_method(ttLib.getTableClass('HVAR'))
 def subset_glyphs(self, s):
 	table = self.table
 
-	# TODO Update for retain_gids
-
 	used = set()
+	advIdxes_ = set()
+	retainAdvMap = False
 
 	if table.AdvWidthMap:
-		if not s.options.retain_gids:
-			table.AdvWidthMap.mapping = _dict_subset(table.AdvWidthMap.mapping, s.glyphs)
+		table.AdvWidthMap.mapping = _dict_subset(table.AdvWidthMap.mapping, s.glyphs)
 		used.update(table.AdvWidthMap.mapping.values())
 	else:
-		assert table.LsbMap is None and table.RsbMap is None, "File a bug."
 		used.update(s.reverseOrigGlyphMap.values())
+		advIdxes_ = used.copy()
+		retainAdvMap = s.options.retain_gids
 
 	if table.LsbMap:
-		if not s.options.retain_gids:
-			table.LsbMap.mapping = _dict_subset(table.LsbMap.mapping, s.glyphs)
+		table.LsbMap.mapping = _dict_subset(table.LsbMap.mapping, s.glyphs)
 		used.update(table.LsbMap.mapping.values())
 	if table.RsbMap:
-		if not s.options.retain_gids:
-			table.RsbMap.mapping = _dict_subset(table.RsbMap.mapping, s.glyphs)
+		table.RsbMap.mapping = _dict_subset(table.RsbMap.mapping, s.glyphs)
 		used.update(table.RsbMap.mapping.values())
 
-	varidx_map = varStore.VarStore_subset_varidxes(table.VarStore, used)
+	varidx_map = varStore.VarStore_subset_varidxes(table.VarStore, used, retainFirstMap=retainAdvMap, advIdxes=advIdxes_)
 
 	if table.AdvWidthMap:
-		table.AdvWidthMap.mapping = {k:varidx_map[v] for k,v in table.AdvWidthMap.mapping.items()}
+		table.AdvWidthMap.mapping = _remap_index_map(s, varidx_map, table.AdvWidthMap)
 	if table.LsbMap:
-		table.LsbMap.mapping = {k:varidx_map[v] for k,v in table.LsbMap.mapping.items()}
+		table.LsbMap.mapping = _remap_index_map(s, varidx_map, table.LsbMap)
 	if table.RsbMap:
-		table.RsbMap.mapping = {k:varidx_map[v] for k,v in table.RsbMap.mapping.items()}
+		table.RsbMap.mapping = _remap_index_map(s, varidx_map, table.RsbMap)
 
 	# TODO Return emptiness...
 	return True
@@ -1831,37 +1844,37 @@ def subset_glyphs(self, s):
 	table = self.table
 
 	used = set()
+	advIdxes_ = set()
+	retainAdvMap = False
 
 	if table.AdvHeightMap:
-		if not s.options.retain_gids:
-			table.AdvHeightMap.mapping = _dict_subset(table.AdvHeightMap.mapping, s.glyphs)
+		table.AdvHeightMap.mapping = _dict_subset(table.AdvHeightMap.mapping, s.glyphs)
 		used.update(table.AdvHeightMap.mapping.values())
 	else:
-		assert table.TsbMap is None and table.BsbMap is None and table.VOrgMap is None, "File a bug."
 		used.update(s.reverseOrigGlyphMap.values())
+		advIdxes_ = used.copy()
+		retainAdvMap = s.options.retain_gids
+
 	if table.TsbMap:
-		if not s.options.retain_gids:
-			table.TsbMap.mapping = _dict_subset(table.TsbMap.mapping, s.glyphs)
+		table.TsbMap.mapping = _dict_subset(table.TsbMap.mapping, s.glyphs)
 		used.update(table.TsbMap.mapping.values())
 	if table.BsbMap:
-		if not s.options.retain_gids:
-			table.BsbMap.mapping = _dict_subset(table.BsbMap.mapping, s.glyphs)
+		table.BsbMap.mapping = _dict_subset(table.BsbMap.mapping, s.glyphs)
 		used.update(table.BsbMap.mapping.values())
 	if table.VOrgMap:
-		if not s.options.retain_gids:
-			table.VOrgMap.mapping = _dict_subset(table.VOrgMap.mapping, s.glyphs)
+		table.VOrgMap.mapping = _dict_subset(table.VOrgMap.mapping, s.glyphs)
 		used.update(table.VOrgMap.mapping.values())
 
-	varidx_map = varStore.VarStore_subset_varidxes(table.VarStore, used)
+	varidx_map = varStore.VarStore_subset_varidxes(table.VarStore, used, retainFirstMap=retainAdvMap, advIdxes=advIdxes_)
 
 	if table.AdvHeightMap:
-		table.AdvHeightMap.mapping = {k:varidx_map[v] for k,v in table.AdvHeightMap.mapping.items()}
+		table.AdvHeightMap.mapping = _remap_index_map(s, varidx_map, table.AdvHeightMap)
 	if table.TsbMap:
-		table.TsbMap.mapping = {k:varidx_map[v] for k,v in table.TsbMap.mapping.items()}
+		table.TsbMap.mapping = _remap_index_map(s, varidx_map, table.TsbMap)
 	if table.BsbMap:
-		table.BsbMap.mapping = {k:varidx_map[v] for k,v in table.BsbMap.mapping.items()}
+		table.BsbMap.mapping = _remap_index_map(s, varidx_map, table.BsbMap)
 	if table.VOrgMap:
-		table.VOrgMap.mapping = {k:varidx_map[v] for k,v in table.VOrgMap.mapping.items()}
+		table.VOrgMap.mapping = _remap_index_map(s, varidx_map, table.VOrgMap)
 
 	# TODO Return emptiness...
 	return True
@@ -2305,6 +2318,7 @@ class Options(object):
 		self.recalc_timestamp = False # Recalculate font modified timestamp
 		self.prune_unicode_ranges = True # Clear unused 'ulUnicodeRange' bits
 		self.recalc_average_width = False # update 'xAvgCharWidth'
+		self.recalc_max_context = False # update 'usMaxContext'
 		self.canonical_order = None # Order tables as recommended
 		self.flavor = None  # May be 'woff' or 'woff2'
 		self.with_zopfli = False  # use zopfli instead of zlib for WOFF 1.0
@@ -2565,6 +2579,9 @@ class Subsetter(object):
 
 		order = font.getReverseGlyphMap()
 		self.reverseOrigGlyphMap = {g:order[g] for g in self.glyphs_retained}
+		self.reverseEmptiedGlyphMap = {g:order[g] for g in self.glyphs_emptied}
+		self.last_retained_order = max(self.reverseOrigGlyphMap.values())
+		self.last_retained_glyph = font.getGlyphOrder()[self.last_retained_order]
 
 		log.info("Retaining %d glyphs", len(self.glyphs_retained))
 
@@ -2614,6 +2631,11 @@ class Subsetter(object):
 					if avg_width != font[tag].xAvgCharWidth:
 						font[tag].xAvgCharWidth = avg_width
 						log.info("%s xAvgCharWidth updated: %d", tag, avg_width)
+				if self.options.recalc_max_context:
+					max_context = maxCtxFont(font)
+					if max_context != font[tag].usMaxContext:
+						font[tag].usMaxContext = max_context
+						log.info("%s usMaxContext updated: %d", tag, max_context)
 			clazz = ttLib.getTableClass(tag)
 			if hasattr(clazz, 'prune_post_subset'):
 				with timer("prune '%s'" % tag):

@@ -1,0 +1,1301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.38">
+
+  <fvar>
+
+    <!-- Weight -->
+    <Axis>
+      <AxisTag>wght</AxisTag>
+      <Flags>0x0</Flags>
+      <MinValue>200.0</MinValue>
+      <DefaultValue>200.0</DefaultValue>
+      <MaxValue>900.0</MaxValue>
+      <AxisNameID>256</AxisNameID>
+    </Axis>
+
+    <!-- Kanji-w0.00 -->
+    <!-- PostScript: SHSansJPVFTest-Kanji-w0.00 -->
+    <NamedInstance flags="0x0" postscriptNameID="258" subfamilyNameID="257">
+      <coord axis="wght" value="200.0"/>
+    </NamedInstance>
+
+    <!-- Kanji-w239.00 -->
+    <!-- PostScript: SHSansJPVFTest-Kanji-w239.00 -->
+    <NamedInstance flags="0x0" postscriptNameID="260" subfamilyNameID="259">
+      <coord axis="wght" value="324.6875"/>
+    </NamedInstance>
+
+    <!-- Kanji-w240.00 -->
+    <!-- PostScript: SHSansJPVFTest-Kanji-w240.00 -->
+    <NamedInstance flags="0x0" postscriptNameID="262" subfamilyNameID="261">
+      <coord axis="wght" value="325.0"/>
+    </NamedInstance>
+
+    <!-- Kanji-w439.00 -->
+    <!-- PostScript: SHSansJPVFTest-Kanji-w439.00 -->
+    <NamedInstance flags="0x0" postscriptNameID="264" subfamilyNameID="263">
+      <coord axis="wght" value="428.82353"/>
+    </NamedInstance>
+
+    <!-- Kanji-w440.00 -->
+    <!-- PostScript: SHSansJPVFTest-Kanji-w440.00 -->
+    <NamedInstance flags="0x0" postscriptNameID="266" subfamilyNameID="265">
+      <coord axis="wght" value="429.41176"/>
+    </NamedInstance>
+
+    <!-- Kanji-w499.00 -->
+    <!-- PostScript: SHSansJPVFTest-Kanji-w499.00 -->
+    <NamedInstance flags="0x0" postscriptNameID="268" subfamilyNameID="267">
+      <coord axis="wght" value="464.11765"/>
+    </NamedInstance>
+
+    <!-- Kanji-w500.00 -->
+    <!-- PostScript: SHSansJPVFTest-Kanji-w500.00 -->
+    <NamedInstance flags="0x0" postscriptNameID="270" subfamilyNameID="269">
+      <coord axis="wght" value="464.70589"/>
+    </NamedInstance>
+
+    <!-- Kanji-w599.00 -->
+    <!-- PostScript: SHSansJPVFTest-Kanji-w599.00 -->
+    <NamedInstance flags="0x0" postscriptNameID="272" subfamilyNameID="271">
+      <coord axis="wght" value="535.45454"/>
+    </NamedInstance>
+
+    <!-- Kanji-w600.00 -->
+    <!-- PostScript: SHSansJPVFTest-Kanji-w600.00 -->
+    <NamedInstance flags="0x0" postscriptNameID="274" subfamilyNameID="273">
+      <coord axis="wght" value="536.36363"/>
+    </NamedInstance>
+
+    <!-- Kanji-w669.00 -->
+    <!-- PostScript: SHSansJPVFTest-Kanji-w669.00 -->
+    <NamedInstance flags="0x0" postscriptNameID="276" subfamilyNameID="275">
+      <coord axis="wght" value="599.09091"/>
+    </NamedInstance>
+
+    <!-- Kanji-w670.00 -->
+    <!-- PostScript: SHSansJPVFTest-Kanji-w670.00 -->
+    <NamedInstance flags="0x0" postscriptNameID="278" subfamilyNameID="277">
+      <coord axis="wght" value="600.0"/>
+    </NamedInstance>
+
+    <!-- Kanji-w699.00 -->
+    <!-- PostScript: SHSansJPVFTest-Kanji-w699.00 -->
+    <NamedInstance flags="0x0" postscriptNameID="280" subfamilyNameID="279">
+      <coord axis="wght" value="626.36363"/>
+    </NamedInstance>
+
+    <!-- Kanji-w700.00 -->
+    <!-- PostScript: SHSansJPVFTest-Kanji-w700.00 -->
+    <NamedInstance flags="0x0" postscriptNameID="282" subfamilyNameID="281">
+      <coord axis="wght" value="627.27272"/>
+    </NamedInstance>
+
+    <!-- Kanji-799.00 -->
+    <!-- PostScript: SHSansJPVFTest-Kanji-799.00 -->
+    <NamedInstance flags="0x0" postscriptNameID="284" subfamilyNameID="283">
+      <coord axis="wght" value="717.27272"/>
+    </NamedInstance>
+
+    <!-- Kanji-w800.00 -->
+    <!-- PostScript: SHSansJPVFTest-Kanji-w800.00 -->
+    <NamedInstance flags="0x0" postscriptNameID="286" subfamilyNameID="285">
+      <coord axis="wght" value="718.18182"/>
+    </NamedInstance>
+
+    <!-- Kanji-w889.00 -->
+    <!-- PostScript: SHSansJPVFTest-Kanji-w889.00 -->
+    <NamedInstance flags="0x0" postscriptNameID="288" subfamilyNameID="287">
+      <coord axis="wght" value="799.09091"/>
+    </NamedInstance>
+
+    <!-- Kanji-w890.00 -->
+    <!-- PostScript: SHSansJPVFTest-Kanji-w890.00 -->
+    <NamedInstance flags="0x0" postscriptNameID="290" subfamilyNameID="289">
+      <coord axis="wght" value="800.0"/>
+    </NamedInstance>
+
+    <!-- Kanji-w1000.00 -->
+    <!-- PostScript: SHSansJPVFTest-Kanji-w1000.00 -->
+    <NamedInstance flags="0x0" postscriptNameID="292" subfamilyNameID="291">
+      <coord axis="wght" value="900.0"/>
+    </NamedInstance>
+  </fvar>
+
+  <CFF2>
+    <major value="2"/>
+    <minor value="0"/>
+    <CFFFont name="CFF2Font">
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FDSelect format="3"/>
+      <FDArray>
+        <FontDict index="0">
+          <Private>
+            <BlueValues value="-250 -250 1100 1100"/>
+            <BlueScale value="0.039625"/>
+            <BlueShift value="7"/>
+            <BlueFuzz value="0"/>
+            <StdHW value="1"/>
+            <StdVW value="1"/>
+          </Private>
+        </FontDict>
+        <FontDict index="1">
+          <Private>
+            <BlueValues value="-250 -250 1100 1100"/>
+            <BlueScale value="0.039625"/>
+            <BlueShift value="7"/>
+            <BlueFuzz value="0"/>
+            <StdHW value="1"/>
+            <StdVW value="1"/>
+          </Private>
+        </FontDict>
+        <FontDict index="2">
+          <Private>
+            <BlueValues value="0 0"/>
+            <BlueScale value="0.039625"/>
+            <BlueShift value="7"/>
+            <BlueFuzz value="1"/>
+          </Private>
+        </FontDict>
+      </FDArray>
+      <CharStrings>
+        <CharString name=".notdef" fdSelectIndex="0">
+          -120 50 859 91 -50 50 hstemhm
+          100 50 700 50 vstemhm
+          hintmask 10111000
+          100 -120 rmoveto
+          800 1000 -800 hlineto
+          400 -459 rmoveto
+          -318 409 rlineto
+          636 hlineto
+          -286 -450 rmoveto
+          hintmask 11011000
+          318 409 rlineto
+          -818 vlineto
+          -668 -41 rmoveto
+          318 409 318 -409 rlineto
+          -668 859 rmoveto
+          318 -409 -318 -409 rlineto
+        </CharString>
+        <CharString name="exclam" fdSelectIndex="2">
+          -12 83 1 126 2 blend
+          hstemhm
+          74 73 -57 40 -26 129 -125 122 4 blend
+          vstemhm
+          hintmask 10100000
+          134 755 107 18 2 blend
+          rmoveto
+          -48 -137 1 blend
+          hlineto
+          8 -565 16 50 2 blend
+          rlineto
+          32 106 1 blend
+          hlineto
+          hintmask 11000000
+          -17 -202 -52 -67 2 blend
+          rmoveto
+          24 14 18 22 25 -14 18 -22 -23 -14 -21 -24 -18 13 -20 22 38 25 26 38 37 -28 25 -37 -34 -30 -22 -38 -40 27 -26 39 16 blend
+          hvcurveto
+        </CharString>
+        <CharString name="uni0000" fdSelectIndex="2">
+        </CharString>
+        <CharString name="uni50CE" fdSelectIndex="1">
+          5 vsindex
+          121 30 -22 22 148 30 -30 136 23 30 129 30 116 30 -21 4 -29 52 3 92 -32 23 -21 32 -23 21 -54 9 -83 50 4 90 -50 -4 -90 22 27 62 -2 -43 -47 41 0 69 -44 0 -74 37 0 62 -50 0 -84 36 0 61 14 blend
+          hstemhm
+          167 30 129 30 -16 16 123 30 48 30 -6 29 -29 111 -30 30 -16 16 201 30 1 29 -29 0 -49 64 0 108 -34 0 -57 51 0 85 -29 0 -48 29 0 48 -72 -2 -123 60 2 103 -69 0 -115 46 0 77 -42 0 -70 42 0 70 -42 0 -70 67 0 111 -51 0 -85 51 0 85 -29 0 -48 29 0 48 -79 0 -132 47 0 79 -45 0 -75 42 0 70 22 blend
+          vstemhm
+          hintmask 011011111011001010000000
+          326 793 1 0 2 17 0 29 2 blend
+          rmoveto
+          -280 24 0 40 1 blend
+          vlineto
+          -47 16 -8 59 -31 0 -53 6 0 10 -13 0 -21 20 0 33 4 blend
+          vhcurveto
+          hintmask 000010000000100000000000
+          13 120 4 0 6 -46 0 -76 2 blend
+          0 13 4 0 7 1 blend
+          hhcurveto
+          49 10 20 82 4 12 0 19 12 0 20 3 0 5 2 0 3 4 0 8 5 blend
+          hvcurveto
+          hintmask 101010101000010000000000
+          -10 2 -11 5 -8 6 -12 0 -21 3 0 5 -21 0 -35 6 0 11 -9 0 -14 7 0 11 6 blend
+          rrcurveto
+          -75 19 0 32 1 blend
+          -3 -5 -10 -29 -24 -102 1 0 1 1 0 2 7 0 12 9 0 14 42 0 70 5 blend
+          0 -18 6 0 10 1 blend
+          hhcurveto
+          -38 -6 4 21 10 0 18 2 0 3 0 0 -1 4 0 7 4 blend
+          hvcurveto
+          280 -25 0 -41 1 blend
+          vlineto
+          -41 -464 -40 -8 -74 10 20 41 2 blend
+          rmoveto
+          -30 617 30 -50 -4 -90 -5 12 5 50 4 90 3 blend
+          vlineto
+          -661 -178 11 -4 12 4 -13 -7 2 blend
+          rmoveto
+          -30 689 30 -52 -3 -92 -11 0 -18 52 3 92 3 blend
+          vlineto
+          hintmask 010101100111001000000000
+          -481 284 -27 -2 -48 -32 36 -21 2 blend
+          rmoveto
+          -306 30 306 0 -13 0 60 2 103 0 13 0 3 blend
+          vlineto
+          218 0 -61 0 -102 -1 0 -1 2 blend
+          rmoveto
+          -306 30 306 0 -13 0 61 1 104 0 13 0 3 blend
+          vlineto
+          -417 358 -17 -1 -30 19 -43 -12 2 blend
+          rmoveto
+          -30 217 -116 -217 -30 247 176 -36 0 -61 -52 0 -87 50 0 84 52 0 87 -37 0 -62 -6 0 -10 23 0 39 7 blend
+          vlineto
+          75 -26 0 -44 1 blend
+          hmoveto
+          hintmask 000010100000001001000000
+          -280 24 0 40 1 blend
+          vlineto
+          -47 17 -8 60 -31 0 -53 5 0 9 -13 0 -21 20 0 33 4 blend
+          vhcurveto
+          12 125 5 0 8 -47 0 -78 2 blend
+          0 14 4 0 7 1 blend
+          hhcurveto
+          49 11 20 82 3 12 0 20 12 0 19 3 1 6 2 1 6 5 0 9 5 blend
+          hvcurveto
+          -9 2 -12 4 -8 7 -14 1 -22 3 0 5 -19 -1 -34 7 0 12 -9 0 -14 6 0 10 6 blend
+          rrcurveto
+          -75 19 -1 29 1 blend
+          -3 -5 -10 -30 -25 -105 1 -1 1 8 0 13 8 0 14 42 0 70 4 blend
+          0 -18 6 0 9 1 blend
+          hhcurveto
+          -40 -6 4 21 11 0 19 2 0 3 0 0 -1 4 1 8 4 blend
+          hvcurveto
+          280 -25 -1 -42 1 blend
+          vlineto
+          hintmask 000001110000000110000000
+          -16 -29 0 -48 1 blend
+          hmoveto
+          -30 217 -116 -217 -30 247 176 -36 0 -61 -50 0 -84 50 0 84 50 0 84 -37 0 -62 -3 0 -5 23 0 39 7 blend
+          vlineto
+          -424 -714 -19 0 -32 -12 0 -21 2 blend
+          rmoveto
+          -52 -54 -91 -49 -81 -33 8 -5 11 -13 4 -6 80 36 94 56 56 58 7 0 11 9 0 15 5 0 9 11 0 18 -2 0 -3 9 0 15 13 0 22 -11 0 -18 24 0 39 -22 0 -36 11 0 19 -12 0 -21 4 0 7 -4 0 -6 2 0 2 -2 0 -4 -1 0 -1 3 0 5 18 blend
+          rrcurveto
+          200 -7 -92 0 -154 -5 0 -8 2 blend
+          rmoveto
+          76 -41 90 -62 46 -42 -6 0 -10 5 0 8 -5 0 -7 6 0 10 -4 0 -7 4 0 7 6 blend
+          rrcurveto
+          22 23 -46 42 -91 60 -75 39 60 0 100 29 0 48 0 0 -1 -3 0 -5 3 0 5 -7 0 -11 6 0 11 -7 0 -11 8 blend
+          rlinecurve
+          -499 750 -48 0 -81 6 0 10 2 blend
+          rmoveto
+          -54 -167 -87 -164 -96 -108 7 -6 11 -12 4 -6 98 116 88 165 58 175 7 0 13 15 0 25 10 0 16 14 0 22 11 0 19 10 0 17 9 0 15 -20 0 -33 15 0 24 -44 0 -73 4 0 7 -18 0 -30 4 0 6 4 0 6 3 0 6 19 0 32 0 0 -1 1 0 1 18 blend
+          rrcurveto
+          -113 -214 -60 0 -100 -23 0 -37 2 blend
+          rmoveto
+          -691 30 718 20 0 33 64 0 108 43 0 72 3 blend
+          vlineto
+          -1 -1 0 -3 1 blend
+          2 rlineto
+        </CharString>
+        <CharString name="uni610F" fdSelectIndex="1">
+          1 vsindex
+          -72 30 253 30 94 30 92 30 65 30 131 45 -30 112 -99 17 -8 0 -12 59 -2 85 -64 2 -92 39 -1 56 -44 2 -63 35 -1 51 -43 1 -62 39 -1 56 -21 0 -31 56 -2 81 -56 2 -81 44 -2 63 -57 3 -81 31 -1 45 -18 0 -27 44 -2 63 16 blend
+          hstemhm
+          193 30 83 30 147 30 173 30 66 30 -20 1 -28 75 -3 107 -74 3 -106 78 -4 111 -99 5 -141 81 -3 116 -79 2 -114 64 -2 92 -81 4 -115 80 -4 114 10 blend
+          vstemhm
+          hintmask 1111100011111000
+          306 142 -19 1 -27 7 0 10 2 blend
+          rmoveto
+          -156 45 -2 64 1 blend
+          vlineto
+          -50 22 -8 79 -42 2 -59 8 -1 11 -18 0 -27 43 -1 62 4 blend
+          vhcurveto
+          17 186 8 -1 11 -68 3 -97 2 blend
+          0 18 8 0 12 1 blend
+          hhcurveto
+          70 13 25 114 5 22 -1 31 17 -1 24 2 1 4 0 -1 -1 7 0 10 5 blend
+          hvcurveto
+          -9 3 -12 4 -9 6 -20 1 -28 3 0 4 -31 1 -45 10 0 15 -13 0 -19 9 -1 13 6 blend
+          rrcurveto
+          -109 -4 -7 -13 -49 -38 -156 33 -1 47 -1 0 -1 1 0 1 2 0 3 10 0 15 9 0 13 60 -3 85 7 blend
+          0 -27 5 0 8 1 blend
+          hhcurveto
+          -59 -10 5 22 11 0 16 2 -1 2 -1 0 -2 4 0 6 4 blend
+          hvcurveto
+          157 -47 2 -67 1 blend
+          vlineto
+          63 34 -74 3 -106 -25 1 -36 2 blend
+          rmoveto
+          65 -30 74 -47 37 -37 -7 1 -10 5 -1 7 -3 0 -4 5 0 7 -3 0 -4 6 0 9 6 blend
+          rrcurveto
+          20 22 -37 36 -75 47 -65 28 48 -2 68 47 -2 67 -1 0 -1 -6 1 -8 2 0 3 -8 0 -11 8 -1 11 -6 0 -9 8 blend
+          rlinecurve
+          320 -64 -49 3 -69 -32 1 -46 2 blend
+          rmoveto
+          76 -49 83 -75 38 -12 0 -18 -6 1 -8 -13 0 -19 -4 0 -6 -9 1 -12 5 blend
+          -54 rrcurveto
+          23 19 -38 54 -84 73 -76 49 69 -3 98 35 -2 50 5 0 8 2 0 3 11 0 16 2 0 2 13 -1 18 2 0 4 8 blend
+          rlinecurve
+          -557 -5 -85 4 -121 -6 0 -9 2 blend
+          rmoveto
+          -28 -68 -50 -72 -77 -40 5 -1 6 1 0 1 3 1 5 6 0 9 13 -1 18 1 0 1 6 blend
+          rrcurveto
+          24 -17 79 42 47 74 31 71 62 -3 89 -42 2 -60 -7 1 -10 5 -1 7 -6 0 -8 1 0 1 -2 -1 -4 4 1 7 8 blend
+          rlinecurve
+          -117 625 -26 2 -36 42 -3 59 2 blend
+          rmoveto
+          -30 775 30 -57 3 -81 -3 0 -5 57 -3 81 3 blend
+          vlineto
+          -818 -176 -1 0 -2 12 0 18 2 blend
+          rmoveto
+          -30 869 30 -56 2 -81 3 0 5 56 -2 81 3 blend
+          vlineto
+          hintmask 0000001000100000
+          -455 258 -40 2 -57 -38 2 -54 2 blend
+          rmoveto
+          hintmask 0000000100100000
+          -99 30 -18 0 -27 81 -3 116 2 blend
+          vlineto
+          hintmask 0000001000100000
+          99 18 0 27 1 blend
+          vlineto
+          hintmask 0111010010001000
+          -236 -127 -60 2 -86 -18 0 -27 2 blend
+          rmoveto
+          26 -40 25 -53 9 -36 -12 1 -17 10 0 15 -10 -1 -15 13 0 19 -4 0 -6 11 -1 15 6 blend
+          rrcurveto
+          29 12 -10 35 -25 53 -27 39 76 -3 109 12 0 18 3 1 5 -10 0 -15 10 -1 14 -15 1 -21 11 0 16 -11 0 -16 8 blend
+          rlinecurve
+          393 2 -112 4 -161 -1 0 -2 2 blend
+          rmoveto
+          -16 -38 -31 -57 -23 -35 7 0 11 12 -1 17 13 -1 18 19 0 28 10 0 14 8 -1 11 6 blend
+          rrcurveto
+          27 -12 24 36 26 48 23 46 70 -2 101 -10 1 -14 -8 0 -12 -13 1 -18 -6 -1 -9 -17 0 -25 -1 1 -1 -10 1 -14 8 blend
+          rlinecurve
+          -504 -378 27 -1 39 -8 0 -12 2 blend
+          rmoveto
+          559 -94 -559 -110 5 -157 44 -2 63 110 -5 157 3 blend
+          hlineto
+          216 -52 2 -74 1 blend
+          vmoveto
+          559 -92 -559 -110 5 -157 43 -1 62 110 -5 157 3 blend
+          hlineto
+          -30 122 -75 3 -107 -4 0 -6 2 blend
+          rmoveto
+          -276 619 276 -26 0 -38 45 -2 64 26 0 38 3 blend
+          vlineto
+        </CharString>
+        <CharString name="uni6A1A" fdSelectIndex="1">
+          5 vsindex
+          -67 29 219 30 154 30 -16 16 150 30 -30 122 -85 30 -18 18 87 30 -30 140 -122 12 -14 0 -22 46 0 78 -59 -3 -106 46 0 77 -53 -9 -92 46 2 81 -18 20 -1 18 -20 1 -54 13 -80 46 2 81 -46 -2 -81 25 31 61 -14 -34 -48 60 0 100 -64 0 -107 64 0 107 -55 0 -92 54 0 90 -54 0 -90 36 0 59 -19 0 -31 37 0 62 22 blend
+          hstemhm
+          51 188 -30 30 -30 149 21 30 -18 18 -13 13 66 30 -12 12 135 30 41 30 172 30 -6 28 -8 0 -14 30 0 50 -62 0 -103 62 0 103 -62 0 -103 32 0 53 -5 0 -7 59 0 98 -24 0 -41 24 0 41 -16 0 -27 16 0 27 -32 0 -53 53 0 88 -33 0 -56 33 0 56 -87 0 -146 63 0 106 -42 0 -70 54 0 90 -99 0 -165 55 0 91 -42 0 -70 45 0 75 24 blend
+          vstemhm
+          hintmask 000000100001000000000000
+          51 612 -8 0 -14 29 0 49 2 blend
+          rmoveto
+          -30 -60 0 -100 1 blend
+          vlineto
+          hintmask 000000100000010000000000
+          307 30 60 0 100 1 blend
+          hlineto
+          hintmask 000000010010100100000000
+          -149 228 -32 0 -53 -20 0 -34 2 blend
+          rmoveto
+          -918 30 918 -19 0 -32 62 0 103 19 0 32 3 blend
+          vlineto
+          -36 -238 -55 0 -91 -32 0 -53 2 blend
+          rmoveto
+          -31 -160 -74 -193 -68 -95 7 -5 10 -11 6 -8 70 101 74 203 33 160 6 0 10 25 0 42 13 0 21 23 0 37 4 0 7 1 0 2 8 0 14 -18 0 -30 13 0 21 -27 0 -44 4 0 7 -19 0 -32 1 0 2 6 0 10 -12 0 -20 -2 0 -3 -2 0 -4 -1 0 -2 18 blend
+          rrcurveto
+          4 -143 19 0 32 77 0 128 2 blend
+          rmoveto
+          -21 -16 25 -26 72 -92 21 -33 -23 0 -38 -34 0 -57 1 0 2 -15 0 -24 -12 0 -21 -6 0 -11 2 0 3 -18 0 -29 8 blend
+          rlinecurve
+          24 24 -18 25 -81 96 -22 22 28 0 48 63 0 105 2 0 2 -1 0 -2 1 0 3 10 0 16 1 0 1 1 0 2 8 blend
+          rlinecurve
+          157 278 1 0 1 -14 0 -23 2 blend
+          rmoveto
+          hintmask 000000001000000100000000
+          -30 559 -54 0 -90 -17 3 -23 2 blend
+          vlineto
+          hintmask 010000000010000000100000
+          30 54 0 90 1 blend
+          vlineto
+          -457 -518 29 -3 43 -9 -3 -20 2 blend
+          rmoveto
+          -30 176 30 -46 0 -77 -17 0 -27 46 0 77 3 blend
+          vlineto
+          hintmask 000000000100000001010000
+          -194 120 -3 0 -5 -42 37 -35 2 blend
+          rmoveto
+          -365 30 365 38 -29 45 53 0 88 -38 29 -45 3 blend
+          vlineto
+          135 508 -87 0 -146 33 -34 24 2 blend
+          rmoveto
+          hintmask 000000000010000000010000
+          -122 30 -19 0 -31 63 0 106 2 blend
+          vlineto
+          hintmask 000101000100000000010000
+          122 19 0 31 1 blend
+          vlineto
+          -115 -172 -60 0 -100 -27 34 -19 2 blend
+          rmoveto
+          -288 30 288 11 -24 18 50 0 83 -11 24 -18 3 blend
+          vlineto
+          148 -62 -2 -106 1 blend
+          hmoveto
+          -288 30 288 11 -24 18 50 0 83 -11 24 -18 3 blend
+          vlineto
+          156 -394 -30 2 -47 19 -34 6 2 blend
+          rmoveto
+          -52 -36 -89 -48 -61 -29 7 0 12 2 0 4 14 0 23 3 0 4 11 0 18 4 0 8 6 blend
+          rrcurveto
+          15 -21 62 28 86 41 57 44 25 0 42 -39 0 -66 -10 0 -17 -4 0 -6 -12 0 -19 -3 0 -5 -6 0 -11 -5 0 -9 8 blend
+          rlinecurve
+          hintmask 101010000000000010001100
+          -541 323 10 0 17 44 5 84 2 blend
+          rmoveto
+          -30 517 -150 -517 -30 547 210 -46 -2 -81 -74 0 -123 54 -13 80 74 0 123 -46 -2 -81 -19 0 -32 38 17 82 7 blend
+          vlineto
+          -232 -242 -10 0 -16 -28 29 -27 2 blend
+          rmoveto
+          -344 58 -32 71 1 blend
+          vlineto
+          -47 15 -9 54 -33 -2 -58 3 0 4 -15 0 -25 22 0 37 4 blend
+          vhcurveto
+          hintmask 100000000010001000001010
+          12 100 3 0 5 -47 0 -78 2 blend
+          0 12 4 0 6 1 blend
+          hhcurveto
+          48 10 25 102 3 12 0 20 11 0 19 4 1 9 11 -1 16 5 0 8 5 blend
+          hvcurveto
+          -9 3 -11 4 -8 6 -14 0 -23 3 -1 5 -23 1 -37 8 1 15 -8 -1 -15 8 0 12 6 blend
+          rrcurveto
+          -97 11 1 20 1 blend
+          -3 -4 -14 -29 -21 -84 0 0 1 1 -1 1 10 0 16 10 1 17 43 -1 71 5 blend
+          0 -16 7 0 12 1 blend
+          hhcurveto
+          -33 -6 5 22 13 0 22 3 0 5 -1 0 -2 4 0 7 4 blend
+          hvcurveto
+          344 -59 34 -71 1 blend
+          vlineto
+          -346 -371 -24 0 -41 65 -34 78 2 blend
+          rmoveto
+          10 -31 77 16 100 22 99 21 3 0 5 -54 0 -90 -2 0 -3 -3 0 -5 -9 0 -15 -6 0 -10 -10 0 -17 -5 0 -8 8 blend
+          rlinecurve
+          -2 29 -108 -22 -104 -22 -72 -13 -3 0 -5 52 0 86 9 0 16 6 0 10 8 0 13 6 0 11 4 0 6 4 0 6 8 blend
+          rlinecurve
+          -16 767 -44 0 -72 -13 0 -21 2 blend
+          rmoveto
+          -316 -6 0 -11 1 blend
+          vlineto
+          -142 -7 -194 -74 -141 2 0 2 -2 0 -2 2 0 4 6 0 9 4 blend
+          vhcurveto
+          8 -3 13 -7 5 -6 13 0 21 -7 0 -11 25 0 43 -20 0 -34 11 0 17 -10 0 -17 6 blend
+          rrcurveto
+          75 143 10 205 145 4 0 7 3 0 5 2 0 4 21 0 35 9 0 15 5 blend
+          vvcurveto
+          316 6 0 11 1 blend
+          vlineto
+        </CharString>
+        <CharString name="uni82E8" fdSelectIndex="1">
+          3 vsindex
+          -71 30 427 30 153 30 33 111 -30 30 -30 126 -6 0 -13 45 0 102 -58 0 -132 38 0 87 -48 0 -111 38 0 87 -4 -2 -13 21 2 53 -43 0 -99 43 0 99 -43 0 -99 24 0 55 12 blend
+          hstemhm
+          159 30 -19 19 126 30 -6 30 281 30 160 30 18 31 -7 0 -16 50 0 114 -18 0 -42 18 0 42 -71 0 -161 50 0 114 -26 0 -61 48 0 111 -66 0 -150 51 0 115 -68 0 -154 50 0 114 -36 -1 -84 44 1 101 14 blend
+          vstemhm
+          hintmask 1110100101110000
+          58 743 -1 0 -2 26 0 60 2 blend
+          rmoveto
+          -30 887 30 -43 0 -99 2 0 5 43 0 99 3 blend
+          vlineto
+          hintmask 0000010010000000
+          -630 96 -29 0 -66 -19 0 -44 2 blend
+          rmoveto
+          hintmask 0001000010000000
+          -207 30 -2 -2 -9 50 0 114 2 blend
+          vlineto
+          hintmask 0000010010100000
+          207 2 2 9 1 blend
+          vlineto
+          305 -44 0 -100 1 blend
+          hmoveto
+          hintmask 0001000000100000
+          -207 30 -2 -2 -9 51 0 115 2 blend
+          vlineto
+          hintmask 0010011000100000
+          207 2 2 9 1 blend
+          vlineto
+          -521 -240 -36 0 -82 2 0 4 2 blend
+          rmoveto
+          -206 -5 0 -10 1 blend
+          vlineto
+          -137 -15 -184 -109 -136 5 0 11 3 0 6 5 0 10 -1 0 -1 8 0 19 5 blend
+          vhcurveto
+          7 -3 12 -9 5 -6 12 0 27 -6 0 -13 22 0 51 -15 0 -35 10 0 21 -8 0 -19 6 blend
+          rrcurveto
+          hintmask 1110000101010000
+          112 139 18 194 141 3 0 7 -4 0 -8 1 0 3 11 0 24 4 0 10 5 blend
+          vvcurveto
+          207 5 0 11 1 blend
+          vlineto
+          -19 -18 0 -42 1 blend
+          hmoveto
+          -30 670 -153 -670 -30 700 213 -38 0 -87 -64 0 -144 48 0 111 64 0 144 -38 0 -87 -14 0 -30 28 0 63 7 blend
+          vlineto
+          -531 -249 -15 0 -36 -23 0 -51 2 blend
+          rmoveto
+          -343 50 0 112 1 blend
+          vlineto
+          -66 31 -12 105 -29 0 -66 6 0 14 -13 0 -28 29 0 66 4 blend
+          vhcurveto
+          23 278 5 0 12 -59 0 -134 2 blend
+          0 24 6 0 14 1 blend
+          hhcurveto
+          hintmask 1000000001001000
+          96 15 31 123 8 20 0 44 11 0 26 4 0 8 14 0 32 5 0 11 5 blend
+          hvcurveto
+          -9 3 -13 4 -9 7 -13 0 -30 2 0 5 -21 0 -48 8 0 17 -10 -1 -23 6 0 15 6 blend
+          rrcurveto
+          -117 -6 -11 -21 -69 -56 -236 8 0 18 -1 1 -1 1 -1 1 3 0 7 3 1 9 7 0 15 49 0 112 7 blend
+          0 -41 4 0 8 1 blend
+          hhcurveto
+          -84 -16 11 37 4 0 10 2 0 5 -3 0 -7 1 0 2 4 blend
+          hvcurveto
+          343 -51 0 -115 1 blend
+          vlineto
+          444 -47 -59 0 -135 26 0 59 2 blend
+          rmoveto
+          -101 -52 -195 -56 -169 -40 4 -7 5 -10 3 -7 172 40 193 54 120 56 4 0 8 3 0 7 18 0 43 9 0 19 12 0 26 8 0 19 5 0 12 -10 0 -22 7 0 15 -18 0 -41 1 0 3 -11 0 -25 -8 0 -19 -9 0 -21 -8 0 -18 -8 0 -19 5 0 11 0 0 1 18 blend
+          rrcurveto
+        </CharString>
+        <CharString name="uni8552" fdSelectIndex="1">
+          2 vsindex
+          64 30 77 30 76 30 74 30 72 30 109 30 25 84 -30 30 -30 108 -2 0 -2 42 0 47 -48 0 -54 38 0 43 -48 0 -54 38 0 43 -46 0 -52 42 0 47 -43 0 -48 56 1 63 -72 -1 -81 57 1 64 -8 -32 -41 30 32 65 -65 -1 -73 65 1 73 -65 -1 -73 43 0 49 18 blend
+          hstemhm
+          135 30 21 30 102 30 14 30 205 30 17 30 113 30 19 30 -19 0 -21 87 2 98 -86 -2 -97 99 1 111 -125 -1 -141 98 1 111 -79 -1 -89 75 1 84 -99 -1 -111 75 1 84 -77 -1 -86 100 1 112 -127 -1 -143 105 1 118 -102 -1 -114 94 1 105 16 blend
+          vstemhm
+          hintmask 111111010011001100000000
+          53 761 -3 0 -3 36 0 40 2 blend
+          rmoveto
+          -30 896 30 -65 -1 -73 5 0 5 65 1 73 3 blend
+          vlineto
+          hintmask 000000001001000000000000
+          -631 78 -46 0 -52 -22 0 -24 2 blend
+          rmoveto
+          hintmask 000000100001000000000000
+          -162 30 -8 -32 -41 98 1 111 2 blend
+          vlineto
+          hintmask 000000001001001000000000
+          162 8 32 41 1 blend
+          vlineto
+          296 -105 -1 -118 1 blend
+          hmoveto
+          hintmask 000000100000001000000000
+          -162 30 -8 -32 -41 100 1 112 2 blend
+          vlineto
+          hintmask 000000001000001000000000
+          162 8 32 41 1 blend
+          vlineto
+          hintmask 000011000100110010000000
+          -47 -217 -23 0 -26 -57 -1 -64 2 blend
+          rmoveto
+          209 -109 -209 -101 -1 -113 72 1 81 101 1 113 3 blend
+          hlineto
+          -235 109 24 0 27 -72 -1 -81 2 blend
+          rmoveto
+          205 -109 -205 -99 -1 -111 72 1 81 99 1 111 3 blend
+          hlineto
+          -227 109 18 1 21 -72 -1 -81 2 blend
+          rmoveto
+          197 -109 -197 -93 -2 -105 72 1 81 93 2 105 3 blend
+          hlineto
+          -30 139 -87 -2 -98 -15 0 -17 2 blend
+          rmoveto
+          -169 731 169 -41 0 -46 38 0 42 41 0 46 3 blend
+          vlineto
+          hintmask 111100000010000100000000
+          -650 -375 62 1 70 -32 0 -36 2 blend
+          rmoveto
+          571 -76 -571 -159 -1 -179 48 0 54 159 1 179 3 blend
+          hlineto
+          -30 -38 0 -43 1 blend
+          vmoveto
+          571 -77 -571 -159 -1 -179 48 0 54 159 1 179 3 blend
+          hlineto
+          287 -66 -1 -74 1 blend
+          vmoveto
+          571 -74 -571 -159 -1 -179 46 0 52 159 1 179 3 blend
+          hlineto
+          -30 104 -99 -1 -111 -4 0 -5 2 blend
+          rmoveto
+          -347 631 347 -18 0 -20 45 0 50 18 0 20 3 blend
+          vlineto
+          -216 -389 -86 -1 -96 -31 0 -35 2 blend
+          rmoveto
+          127 -34 121 -39 72 -31 -17 0 -19 2 0 2 -13 0 -15 -2 0 -2 -13 0 -15 3 0 3 6 blend
+          rrcurveto
+          31 22 -78 32 -126 39 -121 136 1 153 39 0 44 1 0 1 -3 0 -3 -8 0 -9 4 0 5 9 0 10 7 blend
+          31 rlinecurve
+          -258 -1 -67 -1 -75 0 0 -1 2 blend
+          rmoveto
+          -81 -39 -128 -36 -107 -23 8 -6 12 -12 5 -6 103 25 130 41 86 43 9 0 10 6 0 7 3 0 4 7 0 8 -4 0 -5 7 0 8 19 0 22 -14 0 -16 32 0 36 -32 0 -36 17 0 19 -19 0 -21 3 0 3 -1 0 -1 5 0 6 2 0 2 1 0 1 4 0 5 18 blend
+          rrcurveto
+        </CharString>
+        <CharString name="uni85A8" fdSelectIndex="1">
+          2 vsindex
+          -60 30 203 30 -9 9 67 7 -7 14 -14 30 -20 20 80 30 59 30 121 30 18 93 -30 30 -30 108 -23 0 -26 67 2 76 -98 -2 -111 42 0 47 -13 0 -14 13 0 14 -33 0 -37 11 0 13 -11 0 -13 8 0 9 -7 0 -8 53 0 60 -32 0 -36 32 0 36 -52 0 -59 57 1 65 -33 0 -38 53 0 60 -83 -1 -93 54 0 60 -6 -19 -24 33 19 55 -76 -1 -86 76 1 86 -76 -1 -86 59 1 67 26 blend
+          hstemhm
+          77 30 42 30 139 30 23 30 71 10 74 30 15 30 16 30 158 30 28 30 -4 29 -14 0 -16 88 1 99 -82 -1 -92 87 1 98 -130 -1 -146 102 1 114 -73 -1 -82 74 2 84 -112 -2 -126 27 0 30 13 0 15 90 1 101 -126 -1 -142 75 1 84 -68 -1 -76 102 1 115 -144 -1 -162 94 1 105 -79 -1 -88 95 1 106 -81 -1 -91 74 1 83 22 blend
+          vstemhm
+          hintmask 110001011101011101101101
+          53 761 -3 0 -3 31 0 35 2 blend
+          rmoveto
+          -30 896 30 -76 -1 -86 5 0 5 76 1 86 3 blend
+          vlineto
+          -802 -461 2 0 2 -23 0 -26 2 blend
+          rmoveto
+          -30 703 30 -53 0 -60 3 0 4 53 0 60 3 blend
+          vlineto
+          hintmask 000000000000100100000000
+          -532 539 -58 -1 -65 6 0 7 2 blend
+          rmoveto
+          hintmask 000000000010000100000000
+          -171 30 -16 -19 -36 102 1 114 2 blend
+          vlineto
+          hintmask 000000000000100100001000
+          171 16 19 36 1 blend
+          vlineto
+          299 -100 -1 -112 1 blend
+          hmoveto
+          hintmask 000000000010000000001000
+          -171 30 -16 -19 -36 102 1 115 2 blend
+          vlineto
+          hintmask 000000000000100000001000
+          171 16 19 36 1 blend
+          vlineto
+          hintmask 000000111100011010010100
+          -46 -219 -34 0 -39 -64 -1 -72 2 blend
+          rmoveto
+          204 -121 -204 -110 -1 -123 83 1 93 110 1 123 3 blend
+          hlineto
+          -230 121 33 1 38 -83 -1 -93 2 blend
+          rmoveto
+          200 -121 -200 -108 -2 -122 83 1 93 108 2 122 3 blend
+          hlineto
+          -222 121 27 -1 30 -83 -1 -93 2 blend
+          rmoveto
+          192 -121 -192 -101 -1 -114 83 1 93 101 1 114 3 blend
+          hlineto
+          -30 151 -87 -1 -98 -29 0 -33 2 blend
+          rmoveto
+          -181 716 181 -24 0 -27 11 0 12 24 0 27 3 blend
+          vlineto
+          -788 -240 -17 0 -19 9 0 11 2 blend
+          rmoveto
+          -130 30 100 -37 0 -42 88 1 99 -20 0 -23 3 blend
+          vlineto
+          hintmask 000000110000000000000010
+          786 -100 30 130 -150 -1 -168 20 0 23 95 1 106 37 0 42 4 blend
+          hlineto
+          hintmask 000010000000000100000000
+          -610 -123 -56 -1 -63 -44 0 -50 2 blend
+          rmoveto
+          -50 -62 -93 -73 -118 -54 8 -4 10 -9 6 -7 9 0 11 13 0 15 19 0 21 29 0 32 9 0 10 22 0 25 12 0 14 -11 0 -12 19 0 21 -26 0 -30 7 0 8 -16 0 -18 12 blend
+          rrcurveto
+          hintmask 010000000000000001000000
+          121 58 92 75 59 70 3 0 3 -13 0 -14 -10 0 -11 -19 0 -21 -2 0 -2 8 0 8 6 blend
+          rrcurveto
+          124 -78 -89 -1 -100 32 0 36 2 blend
+          rmoveto
+          -7 -6 0 -6 1 blend
+          vlineto
+          -65 -139 -176 -81 -162 -31 6 -6 8 -12 3 -8 16 0 17 30 0 34 36 0 41 26 0 29 -7 0 -8 12 0 13 12 0 14 -16 0 -18 15 0 16 -30 0 -33 5 0 6 -18 0 -21 12 blend
+          rrcurveto
+          hintmask 001000000000000001000000
+          168 37 178 84 72 154 26 0 29 -5 0 -5 -23 0 -26 -12 0 -14 -5 0 -5 6 0 7 6 blend
+          rrcurveto
+          hintmask 110100000000000001100001
+          -19 11 -6 -2 -47 0 -53 13 0 15 -13 0 -15 0 0 -1 4 blend
+          rlineto
+          -333 -72 75 1 85 -55 0 -61 2 blend
+          rmoveto
+          65 -25 75 -46 38 -35 -35 0 -40 8 0 9 -38 0 -42 15 0 17 -18 0 -21 14 0 15 6 blend
+          rrcurveto
+          26 19 -39 34 -76 45 -64 25 49 0 56 31 0 35 19 0 21 -14 0 -16 39 0 44 -18 0 -20 32 0 36 -9 0 -10 8 blend
+          rlinecurve
+          72 55 -55 0 -62 28 0 31 2 blend
+          rmoveto
+          -30 -30 -42 0 -47 -42 0 -47 2 blend
+          rlineto
+          269 30 -14 0 -16 42 0 47 2 blend
+          hlineto
+          74 74 13 0 15 -22 0 -24 2 blend
+          rmoveto
+          -276 80 1 90 1 blend
+          vlineto
+          -52 21 -9 77 -48 0 -54 8 0 9 -21 0 -24 44 0 49 4 blend
+          vhcurveto
+          16 182 8 0 9 -90 -1 -101 2 blend
+          0 18 8 0 9 1 blend
+          hhcurveto
+          62 12 21 88 4 25 0 28 20 0 22 6 0 7 10 0 11 9 0 10 5 blend
+          hvcurveto
+          -9 2 -12 5 -8 6 -24 0 -26 4 0 5 -34 0 -39 12 0 13 -16 0 -18 10 0 11 6 blend
+          rrcurveto
+          -81 25 0 28 1 blend
+          -4 -6 -11 -41 -37 -154 -1 0 -1 0 1 1 11 -1 12 15 1 17 79 1 89 5 blend
+          0 -26 9 0 10 1 blend
+          hhcurveto
+          -56 -9 6 25 17 0 19 2 0 3 -1 -1 -2 4 0 5 4 blend
+          hvcurveto
+          276 -81 -1 -91 1 blend
+          vlineto
+          278 -62 -114 -1 -128 32 0 36 2 blend
+          rmoveto
+          -66 -32 -126 -33 -107 -23 5 -7 5 -10 2 -7 110 22 126 32 81 36 10 0 11 7 0 8 30 0 34 11 0 12 21 0 23 9 0 10 7 0 8 -14 0 -16 9 0 10 -27 0 -30 3 0 4 -15 0 -17 -15 0 -17 -10 0 -11 -12 0 -14 -11 0 -12 3 0 4 -3 0 -4 18 blend
+          rrcurveto
+        </CharString>
+        <CharString name="uni8E59" fdSelectIndex="1">
+          3 vsindex
+          -58 30 100 30 70 22 -22 30 94 30 19 31 -17 28 152 20 -20 30 -12 12 66 30 -30 89 -5 30 -30 121 -11 0 -24 36 0 81 -32 0 -74 22 0 52 -17 0 -39 16 1 37 -16 -1 -37 21 0 48 -27 0 -63 21 0 49 -11 0 -26 41 0 93 -47 0 -107 24 0 56 -34 0 -78 11 0 26 -11 0 -26 17 0 39 -15 0 -35 15 0 35 -19 0 -43 12 0 26 -12 0 -26 4 0 8 -5 0 -11 28 0 65 -28 0 -65 23 0 52 28 blend
+          hstemhm
+          127 30 -18 18 199 30 -20 20 -20 30 -24 14 97 30 -11 11 72 31 202 30 87 29 -12 0 -27 44 1 101 -19 -1 -45 19 1 45 -46 -1 -106 37 0 85 -31 0 -71 31 0 71 -31 0 -71 40 0 91 -27 0 -62 18 0 42 -47 0 -108 51 0 117 -27 0 -62 27 0 62 -53 0 -122 43 0 99 -60 -1 -138 52 1 120 -32 0 -73 32 0 72 22 blend
+          vstemhm
+          hintmask 00011000000000000000000100000000
+          193 296 41 0 93 -8 0 -19 2 blend
+          rmoveto
+          625 -94 -625 -84 -1 -192 27 0 63 84 1 192 3 blend
+          hlineto
+          -30 124 -48 0 -110 -6 0 -14 2 blend
+          rmoveto
+          -154 685 154 -15 0 -34 16 0 38 15 0 34 3 blend
+          vlineto
+          hintmask 00100000000000000000100000000000
+          -365 -132 -33 0 -76 1 1 3 2 blend
+          rmoveto
+          -232 -7 -1 -16 1 blend
+          vlineto
+          30 -5 51 0 117 -11 0 -27 2 blend
+          rlineto
+          237 18 1 43 1 blend
+          vlineto
+          hintmask 01000000000010010000010000000000
+          -11 -92 -27 0 -62 1 -1 2 2 blend
+          rmoveto
+          -30 397 30 -22 0 -52 -12 0 -27 22 0 52 3 blend
+          vlineto
+          -760 647 25 0 56 -4 0 -9 2 blend
+          rmoveto
+          -30 811 30 -28 0 -65 -12 0 -27 28 0 65 3 blend
+          vlineto
+          hintmask 00000000000010100000000000000000
+          -823 -13 0 -29 1 blend
+          hmoveto
+          -143 12 0 27 1 blend
+          vlineto
+          -83 -13 -107 -75 -82 4 0 9 3 0 6 5 1 12 -1 0 -1 5 -1 11 5 blend
+          vhcurveto
+          7 -4 11 -9 5 -6 10 0 21 -5 0 -12 20 0 46 -17 0 -38 6 0 15 -8 0 -18 6 blend
+          rrcurveto
+          79 5 0 11 1 blend
+          85 16 118 88 1 1 3 9 0 19 6 0 15 3 blend
+          vvcurveto
+          143 -11 0 -25 1 blend
+          vlineto
+          hintmask 00000000010100001000000000000000
+          199 -25 -46 -1 -106 -23 0 -54 2 blend
+          rmoveto
+          -167 vlineto
+          hintmask 00000000010100000100000000000000
+          30 37 0 85 1 blend
+          167 hlineto
+          hintmask 00000000101000000001000000000000
+          -14 -59 -18 0 -42 8 0 18 2 blend
+          rmoveto
+          -30 185 30 -12 0 -26 -4 0 -9 12 0 26 3 blend
+          vlineto
+          -365 -96 10 0 22 7 0 17 2 blend
+          rmoveto
+          -30 392 30 -17 0 -39 -4 0 -9 17 0 39 3 blend
+          vlineto
+          hintmask 00000011000000000100000000000000
+          -218 -10 -15 0 -33 -6 0 -13 2 blend
+          rmoveto
+          -160 23 0 51 1 blend
+          vlineto
+          -8 -2 0 0 -1 1 blend
+          -3 -11 -1 1 0 3 0 0 1 2 blend
+          vhcurveto
+          -11 -1 -30 2 0 4 1 0 1 4 0 10 3 blend
+          0 -47 13 0 30 1 blend
+          1 5 -9 6 -10 2 -9 4 0 8 -6 0 -13 6 0 13 -11 0 -25 2 0 6 -8 0 -19 6 blend
+          rrcurveto
+          hintmask 00000011000001000010001000000000
+          50 30 -5 0 -11 1 0 2 2 blend
+          0 6 17 3 0 8 5 1 12 2 blend
+          hvcurveto
+          17 5 4 9 21 6 -1 12 4 0 9 1 0 3 4 0 8 11 0 25 5 blend
+          vvcurveto
+          159 -21 0 -46 1 blend
+          vlineto
+          -132 -50 -39 0 -88 1 0 1 2 blend
+          rmoveto
+          -25 -42 -40 -39 -44 -30 8 -4 13 -10 5 -4 41 6 0 12 3 0 8 7 0 16 3 0 5 5 0 13 1 0 4 6 0 13 -3 0 -8 10 0 22 -6 0 -14 5 0 12 -5 0 -10 -3 0 -8 13 blend
+          30 45 -7 0 -14 1 blend
+          47 26 45 -3 0 -8 1 0 1 2 blend
+          rrcurveto
+          153 -7 -13 0 -30 -1 0 -2 2 blend
+          rmoveto
+          35 -27 38 -39 18 -28 -8 3 -11 3 -5 -3 -9 3 -14 6 -7 -3 -5 1 -9 4 -4 0 6 blend
+          rrcurveto
+          24 18 -18 27 -39 39 -34 25 23 1 55 6 -1 12 4 -1 8 -3 4 1 9 -3 13 -6 7 2 7 -3 9 -4 5 4 8 blend
+          rlinecurve
+          115 330 -53 -1 -124 9 1 21 2 blend
+          rmoveto
+          hintmask 10000101000001000000001010000000
+          14 -286 131 -209 160 0 50 1 18 34 6 108 -9 3 -11 5 -9 7 -4 -92 -9 -34 -31 -1 -137 -2 -126 185 -12 281 3 0 8 6 0 14 5 0 10 -10 0 -22 -3 0 -6 0 0 -1 14 0 33 -1 0 -1 11 0 23 -3 0 -8 5 0 12 10 0 24 -10 0 -23 3 0 7 -14 0 -32 8 0 18 -8 0 -17 8 0 17 0 0 -1 11 0 26 0 0 1 4 0 9 5 0 11 1 0 1 29 0 67 0 1 2 8 0 17 0 -1 -1 -2 0 -4 -37 0 -85 30 blend
+          rrcurveto
+          207 -169 -37 0 -85 -4 0 -9 2 blend
+          rmoveto
+          -61 -129 -111 -108 -121 -69 7 -5 12 -11 5 -6 119 74 113 110 66 136 4 15 19 8 14 33 4 28 29 8 5 22 2 28 27 6 2 17 8 1 20 -6 0 -14 14 1 34 -13 -1 -31 6 0 15 -7 0 -17 0 -28 -23 -4 -2 -10 0 -27 -20 -1 -3 -5 -1 -16 -12 -1 -15 -19 18 blend
+          rrcurveto
+          -156 153 -20 -2 -49 -2 0 -3 2 blend
+          rmoveto
+          52 -15 63 -26 34 -1 0 -3 -1 0 -1 0 0 1 0 0 -2 0 0 -2 5 blend
+          -21 rrcurveto
+          15 27 -34 20 -64 24 -51 14 21 0 48 20 0 47 -1 0 -1 1 0 1 0 0 -1 0 0 1 1 0 3 -1 0 -2 8 blend
+          rlinecurve
+          -453 -763 1 0 2 12 0 27 2 blend
+          rmoveto
+          -25 -16 -31 0 -71 -7 0 -17 2 blend
+          rlineto
+          -100 89 146 -18 233 -21 0 -46 -5 0 -12 -13 0 -29 -4 0 -9 -8 0 -18 5 blend
+          hhcurveto
+          249 23 0 53 1 blend
+          hlineto
+          2 8 6 14 6 8 -35 0 -207 2 -1 3 11 0 25 5 1 12 17 0 38 4 0 10 8 0 18 -16 0 -37 -1 0 -3 -1 0 -2 9 blend
+          0 -22 -14 0 -32 1 blend
+          0 -214 0 -150 15 -78 89 24 0 55 0 0 1 18 0 40 -2 0 -5 12 0 28 -1 0 -2 6 blend
+          rrcurveto
+          5 62 -50 0 -114 -10 0 -22 2 blend
+          rmoveto
+          -30 -97 -92 -60 -107 -36 8 -6 12 -11 4 -6 105 41 99 65 32 106 5 0 12 7 0 15 15 0 34 1 0 3 7 0 16 1 0 2 10 0 22 -6 0 -15 18 0 41 -17 0 -37 8 0 18 -8 0 -19 -2 0 -5 4 0 9 -12 0 -27 7 0 16 -1 0 -2 6 0 14 18 blend
+          rrcurveto
+        </CharString>
+        <CharString name="uni9A40" fdSelectIndex="1">
+          1 vsindex
+          -80 27 95 49 -48 48 -45 45 -30 30 -16 16 -13 13 49 30 48 30 47 19 -19 30 53 30 -18 18 51 11 -11 30 -22 22 62 30 60 30 15 81 -30 30 -30 102 -10 1 -14 41 -2 59 -53 2 -76 27 -1 38 -26 1 -37 26 -1 37 -27 1 -39 27 -1 39 -27 1 -39 27 -1 39 -13 0 -19 13 0 19 -14 0 -20 14 0 20 -19 1 -27 13 -1 19 -18 1 -26 13 0 19 -18 0 -26 18 0 26 -18 0 -26 23 -1 33 -21 1 -30 42 -2 60 -29 1 -42 29 -1 42 -19 1 -27 7 0 10 -7 0 -10 26 -1 37 -24 1 -34 24 -1 34 -27 1 -39 24 -1 34 -26 1 -37 26 -1 37 -40 1 -45 53 -2 66 -44 2 -62 44 -2 62 -44 2 -62 18 0 23 42 blend
+          hstemhm
+          193 30 -1 30 -15 15 106 29 96 30 142 30 109 30 5 10 -28 1 -40 71 -2 102 -56 2 -80 75 -4 106 -21 2 -29 21 -2 29 -104 5 -148 55 -3 78 -42 3 -59 69 -4 98 -84 4 -120 79 -3 113 -94 3 -135 76 -3 109 -51 2 -73 25 -1 36 16 blend
+          vstemhm
+          hintmask 10000011101100101101000101110000
+          55 767 2 0 3 37 -2 55 2 blend
+          rmoveto
+          -30 892 30 -44 2 -62 -6 0 -9 44 -2 62 3 blend
+          vlineto
+          hintmask 00000000000000000000100000000000
+          -637 72 -28 1 -40 -26 2 -39 2 blend
+          rmoveto
+          hintmask 00000000000000000010000000000000
+          -153 30 -27 0 -27 77 -2 111 2 blend
+          vlineto
+          hintmask 00000000000000000000100000100000
+          153 27 0 27 1 blend
+          vlineto
+          315 -89 3 -128 1 blend
+          hmoveto
+          hintmask 00000000000000000010000000100000
+          -153 30 -27 0 -27 79 -3 113 2 blend
+          vlineto
+          hintmask 00000000000100101100110000110000
+          153 27 0 27 1 blend
+          vlineto
+          -462 -288 8 0 12 -11 0 -16 2 blend
+          rmoveto
+          571 -62 -571 -102 3 -147 27 -1 39 102 -3 147 3 blend
+          hlineto
+          152 -29 1 -42 1 blend
+          vmoveto
+          571 -60 -571 -102 3 -147 26 -1 37 102 -3 147 3 blend
+          hlineto
+          -30 -71 2 -102 1 blend
+          90 rmoveto
+          -212 631 212 -23 1 -32 45 -2 64 23 -1 32 3 blend
+          vlineto
+          -776 -263 -22 1 -31 -4 0 -5 2 blend
+          rmoveto
+          -30 905 30 -42 2 -60 10 0 14 42 -2 60 3 blend
+          vlineto
+          hintmask 00000001100000000000000100000000
+          -716 -160 36 -1 52 -26 2 -37 2 blend
+          rmoveto
+          -30 554 30 -13 0 -19 -59 2 -85 13 0 19 3 blend
+          vlineto
+          -554 -78 59 -2 85 5 -1 7 2 blend
+          rmoveto
+          -30 563 30 -13 1 -19 -56 1 -81 13 -1 19 3 blend
+          vlineto
+          hintmask 00000010000000000000001000000000
+          -578 -79 2 1 4 6 0 8 2 blend
+          rmoveto
+          hintmask 00001000000000000000001000001000
+          -30 617 -27 1 -39 4 -1 5 2 blend
+          vlineto
+          hintmask 00000010000001000000000000001000
+          30 27 -1 39 1 blend
+          vlineto
+          -477 382 -24 2 -34 8 0 12 2 blend
+          rmoveto
+          -46 -92 -113 -104 -167 -65 7 -5 10 -9 5 -8 6 -1 8 -5 -1 -8 17 0 25 11 0 16 -3 -1 -5 6 0 9 12 0 18 -11 0 -16 18 0 26 -27 1 -39 6 -1 8 -16 1 -23 12 blend
+          rrcurveto
+          hintmask 00000100010010010000000001000000
+          172 70 111 106 55 101 14 0 20 3 0 5 -6 0 -8 1 0 1 3 0 4 28 -1 41 6 blend
+          rrcurveto
+          298 -65 -24 0 -35 3 0 4 2 blend
+          rmoveto
+          -25 -12 -55 2 -79 -15 0 -22 2 blend
+          rlineto
+          62 -80 121 -81 100 -38 5 8 9 11 7 6 -101 33 -119 76 -59 77 2 0 3 -14 1 -20 -10 1 -14 2 0 3 20 0 29 1 0 2 9 -1 13 18 -1 25 20 -1 28 26 -1 38 14 0 21 14 -1 19 -13 0 -19 -7 0 -10 9 0 13 -18 2 -25 4 -1 5 -7 0 -10 18 blend
+          rrcurveto
+          -211 -88 -39 3 -55 -12 1 -17 2 blend
+          rmoveto
+          -239 30 239 -2 -1 -4 69 -4 98 2 1 4 3 blend
+          vlineto
+          hintmask 10000010000000000000000000001000
+          316 -223 -74 3 -106 11 -1 15 2 blend
+          rmoveto
+          -6 -4 0 -6 1 blend
+          vlineto
+          -8 -87 -7 -34 -10 -10 2 0 3 24 -1 35 -1 1 -1 6 0 9 1 -1 1 1 0 1 6 blend
+          rrcurveto
+          -6 -1 0 -1 1 blend
+          -6 -6 -1 -12 2 0 3 1 blend
+          hhcurveto
+          -11 -31 1 0 1 10 0 15 2 blend
+          1 3 -34 0 -1 -1 9 0 13 2 blend
+          hvcurveto
+          5 -8 3 -13 6 -1 8 -11 1 -16 5 0 8 -19 1 -26 4 blend
+          1 -8 28 -2 30 -1 14 1 -14 1 -20 7 -1 9 1 0 1 2 0 3 2 -1 2 3 1 5 0 1 1 7 blend
+          21 0 10 4 10 9 16 15 7 35 2 -1 2 8 -1 11 2 0 3 5 0 7 5 0 8 3 -1 4 3 0 4 2 1 4 3 0 4 9 blend
+          9 89 -15 1 -21 1 blend
+          rrcurveto
+          7 1 1 12 6 -1 8 1 0 1 1 -1 1 9 0 13 4 blend
+          0 hhcurveto
+          -660 -34 -57 3 -82 -8 0 -11 2 blend
+          rmoveto
+          -17 -46 1 0 2 7 0 10 2 blend
+          -32 -46 -46 5 0 7 5 0 7 2 blend
+          -23 20 -21 56 -2 81 -24 0 -35 2 blend
+          rcurveline
+          hintmask 10010000000000000000000000000000
+          52 28 31 51 17 46 -4 -1 -7 0 1 1 -4 1 -5 -7 0 -10 1 -1 1 0 0 -1 6 blend
+          rrcurveto
+          hintmask 00100000000000000000000010000000
+          110 -3 -67 3 -96 1 0 2 2 blend
+          rmoveto
+          13 -38 10 -49 0 -32 -3 0 -4 4 -1 5 -2 0 -3 2 1 4 -1 1 -1 3 0 4 6 blend
+          rrcurveto
+          29 6 55 -3 78 8 -1 11 2 blend
+          -1 31 -10 50 -15 37 -3 0 -4 0 1 1 -4 0 -6 3 -1 4 -4 1 -5 5 blend
+          rlinecurve
+          hintmask 01000000000000000000000000100000
+          113 -6 -56 3 -80 -7 0 -10 2 blend
+          rmoveto
+          22 -32 20 -44 7 -30 2 0 3 1 -1 1 3 -1 3 1 0 1 2 0 3 5 blend
+          rrcurveto
+          28 10 -8 29 -21 44 -23 32 48 -2 69 15 0 22 -2 1 -2 -1 0 -2 0 -1 -1 -5 1 -6 -1 1 -1 -4 0 -6 8 blend
+          rlinecurve
+          hintmask 00010000001000000000001000000000
+          117 -5 -45 1 -65 -17 1 -24 2 blend
+          rmoveto
+          25 -23 -1 0 -1 2 -1 2 2 blend
+          27 -32 13 -23 -2 1 -2 1 0 2 2 blend
+          rrcurveto
+          21 14 -12 44 -2 63 20 -1 28 0 0 -1 3 blend
+          22 -27 32 -26 22 -2 0 -2 -2 0 -3 1 0 1 -2 1 -2 4 blend
+          rlinecurve
+          -381 267 39 -1 56 7 -1 10 2 blend
+          rmoveto
+          -16 -30 -33 1 -47 -23 1 -33 2 blend
+          rlineto
+          498 30 -42 1 -61 23 -1 33 2 blend
+          hlineto
+          -516 -23 21 0 31 -14 0 -21 2 blend
+          rmoveto
+          hintmask 00000010000000000000001000000000
+          -224 6 0 9 1 blend
+          vlineto
+          hintmask 00000010001000000000000100000000
+          30 247 75 -4 106 10 0 14 2 blend
+          hlineto
+        </CharString>
+        <CharString name="uniF9DC" fdSelectIndex="1">
+          4 vsindex
+          -50 30 -19 19 114 30 44 30 23 30 -30 114 35 30 316 30 -10 10 37 12 -21 0 -26 66 0 82 -29 21 -10 29 -21 10 -64 0 -80 55 0 69 -79 0 -99 75 0 94 -46 0 -58 56 0 71 -56 0 -71 26 21 59 -18 -25 -54 54 0 68 -76 8 -85 58 0 73 -24 0 -31 24 0 31 -46 -4 -63 30 0 37 20 blend
+          hstemhm
+          82 30 197 30 -26 8 317 30 168 13 -13 0 -16 77 0 96 -109 -1 -136 78 0 97 -77 0 -96 29 0 36 -10 0 -12 84 0 105 -86 0 -108 21 0 27 10 blend
+          vstemhm
+          hintmask 1010101101110110
+          529 746 23 0 29 30 4 43 2 blend
+          rmoveto
+          -30 320 30 -58 0 -73 -29 0 -36 58 0 73 3 blend
+          vlineto
+          -397 -495 15 0 18 12 -4 10 2 blend
+          rmoveto
+          -30 442 30 -56 0 -71 21 0 27 56 0 71 3 blend
+          vlineto
+          -420 149 -6 0 -8 6 -4 2 2 blend
+          rmoveto
+          -30 374 30 -54 0 -68 -25 0 -31 54 0 68 3 blend
+          vlineto
+          -514 -420 34 0 42 -3 4 1 2 blend
+          rmoveto
+          -30 626 30 -66 0 -82 -29 0 -36 66 0 82 3 blend
+          vlineto
+          -531 144 15 0 19 -9 0 -11 2 blend
+          rmoveto
+          -30 460 30 -55 0 -69 -4 0 -5 55 0 69 3 blend
+          vlineto
+          -53 622 -42 0 -53 -6 4 -2 2 blend
+          rmoveto
+          -7 -9 0 -12 1 blend
+          vlineto
+          -86 -171 -222 -118 -188 -45 7 -7 8 -11 3 -8 14 0 18 37 0 46 27 0 34 19 0 24 -7 0 -9 5 0 7 15 0 18 -16 0 -20 17 0 22 -32 0 -40 9 0 11 -19 0 -24 12 blend
+          rrcurveto
+          hintmask 0000000010000010
+          192 51 224 119 94 187 21 0 26 3 0 3 -17 0 -21 -9 0 -11 2 0 2 -3 0 -4 6 blend
+          rrcurveto
+          hintmask 0100010100000110
+          -19 12 -6 -2 -55 0 -68 27 0 34 -12 0 -15 -3 0 -3 4 blend
+          rlineto
+          -323 -32 55 0 69 -25 0 -32 2 blend
+          rmoveto
+          -25 -11 -68 0 -86 -23 0 -28 2 blend
+          rlineto
+          83 -154 177 -116 201 -44 4 8 9 12 7 6 -200 39 -177 113 -79 147 11 0 14 12 0 15 -18 0 -22 21 0 26 -1 0 -1 4 0 5 11 0 13 21 0 26 21 0 27 32 0 40 17 0 21 16 0 20 9 0 11 -10 0 -12 17 0 21 -36 0 -45 1 0 2 -37 0 -47 18 blend
+          rrcurveto
+          59 127 -46 0 -58 9 -4 6 2 blend
+          rmoveto
+          -40 -82 -80 -104 -112 -75 8 -4 10 -9 6 -7 115 80 2 0 2 8 0 10 7 0 9 23 0 29 2 0 3 16 0 20 16 0 20 -12 0 -15 26 0 32 -30 0 -37 10 0 13 -18 0 -23 8 0 10 -4 0 -5 14 blend
+          80 106 47 90 -13 0 -16 11 0 13 14 0 17 3 blend
+          rrcurveto
+          -129 -493 -106 -5 -137 21 6 34 2 blend
+          rmoveto
+          -27 -73 -43 -71 -51 -50 8 -5 13 -9 5 -5 49 52 47 77 29 77 6 0 8 11 0 14 7 0 8 8 0 10 5 0 7 8 0 10 16 0 20 -8 0 -10 28 0 35 -17 -1 -22 15 0 18 -11 0 -14 -3 0 -4 -4 0 -5 -2 0 -2 -1 0 -1 -3 0 -4 -3 1 -3 18 blend
+          rrcurveto
+          124 -1 -66 4 -77 10 15 31 2 blend
+          rmoveto
+          -374 30 374 4 0 5 84 0 105 -4 0 -5 3 blend
+          vlineto
+          hintmask 0000000000101000
+          -586 460 -72 0 -90 2 -21 -24 2 blend
+          rmoveto
+          -875 30 845 209 30 -27 0 -33 77 0 96 -53 0 -66 -79 0 -99 80 0 99 5 blend
+          vlineto
+          -8 -29 0 -36 1 blend
+          hmoveto
+          -7 -29 0 -36 1 blend
+          vlineto
+          -28 -75 -43 -102 -46 -95 14 0 17 10 0 13 11 0 14 -41 0 -51 17 0 22 4 0 5 6 blend
+          rrcurveto
+          hintmask 0001000000010000
+          89 -91 24 -74 -63 -32 0 -40 23 0 28 -11 0 -14 10 0 13 17 0 21 5 blend
+          vvcurveto
+          -33 -6 -35 -19 -13 3 0 4 1 0 1 15 0 18 7 0 9 4 0 5 5 blend
+          vhcurveto
+          -10 -6 -12 3 0 3 0 0 1 1 0 2 3 blend
+          -3 -14 -1 -20 -2 -26 1 -29 4 0 5 1 0 1 7 0 9 2 0 2 13 0 16 -1 0 -1 11 0 14 7 blend
+          2 7 -9 4 -13 11 0 13 -21 0 -26 5 0 6 -33 0 -41 4 blend
+          1 -8 22 -2 27 0 22 -21 0 -27 1 0 2 1 0 1 -3 0 -4 0 0 1 -4 0 -5 6 blend
+          2 19 2 17 5 12 9 3 0 4 2 0 2 3 0 3 2 0 2 4 0 5 3 0 4 6 blend
+          rrcurveto
+          25 17 10 7 0 9 5 0 7 4 0 5 3 blend
+          43 44 22 0 27 1 blend
+          vvcurveto
+          67 -22 76 -86 89 -8 0 -10 9 0 12 -6 0 -8 24 0 30 -11 0 -13 5 blend
+          vhcurveto
+          hintmask 0000000001001000
+          39 84 42 98 33 81 -10 0 -13 -4 0 -5 -8 0 -10 14 0 17 -6 0 -8 7 0 9 6 blend
+          rrcurveto
+          hintmask 0000000000001000
+          -20 14 -6 -2 -60 0 -75 32 0 40 -12 0 -14 -2 0 -3 4 blend
+          rlineto
+        </CharString>
+      </CharStrings>
+      <VarStore Format="1">
+        <Format value="1"/>
+        <VarRegionList>
+          <!-- RegionAxisCount=1 -->
+          <!-- RegionCount=16 -->
+          <Region index="0">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="1.0"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="1">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="0.669"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="2">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.669"/>
+              <PeakCoord value="0.67"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="3">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.67"/>
+              <PeakCoord value="1.0"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="4">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="0.889"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="5">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.889"/>
+              <PeakCoord value="0.89"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="6">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.89"/>
+              <PeakCoord value="1.0"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="7">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="0.439"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="8">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.439"/>
+              <PeakCoord value="0.44"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="9">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.44"/>
+              <PeakCoord value="1.0"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="10">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="0.799"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="11">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.799"/>
+              <PeakCoord value="0.8"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="12">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.8"/>
+              <PeakCoord value="1.0"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="13">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.0"/>
+              <PeakCoord value="0.599"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="14">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.599"/>
+              <PeakCoord value="0.6"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+          <Region index="15">
+            <VarRegionAxis index="0">
+              <StartCoord value="0.6"/>
+              <PeakCoord value="1.0"/>
+              <EndCoord value="1.0"/>
+            </VarRegionAxis>
+          </Region>
+        </VarRegionList>
+        <!-- VarDataCount=6 -->
+        <VarData index="0">
+          <!-- ItemCount=0 -->
+          <NumShorts value="0"/>
+          <!-- VarRegionCount=1 -->
+          <VarRegionIndex index="0" value="0"/>
+        </VarData>
+        <VarData index="1">
+          <!-- ItemCount=0 -->
+          <NumShorts value="0"/>
+          <!-- VarRegionCount=3 -->
+          <VarRegionIndex index="0" value="1"/>
+          <VarRegionIndex index="1" value="2"/>
+          <VarRegionIndex index="2" value="3"/>
+        </VarData>
+        <VarData index="2">
+          <!-- ItemCount=0 -->
+          <NumShorts value="0"/>
+          <!-- VarRegionCount=3 -->
+          <VarRegionIndex index="0" value="4"/>
+          <VarRegionIndex index="1" value="5"/>
+          <VarRegionIndex index="2" value="6"/>
+        </VarData>
+        <VarData index="3">
+          <!-- ItemCount=0 -->
+          <NumShorts value="0"/>
+          <!-- VarRegionCount=3 -->
+          <VarRegionIndex index="0" value="7"/>
+          <VarRegionIndex index="1" value="8"/>
+          <VarRegionIndex index="2" value="9"/>
+        </VarData>
+        <VarData index="4">
+          <!-- ItemCount=0 -->
+          <NumShorts value="0"/>
+          <!-- VarRegionCount=3 -->
+          <VarRegionIndex index="0" value="10"/>
+          <VarRegionIndex index="1" value="11"/>
+          <VarRegionIndex index="2" value="12"/>
+        </VarData>
+        <VarData index="5">
+          <!-- ItemCount=0 -->
+          <NumShorts value="0"/>
+          <!-- VarRegionCount=3 -->
+          <VarRegionIndex index="0" value="13"/>
+          <VarRegionIndex index="1" value="14"/>
+          <VarRegionIndex index="2" value="15"/>
+        </VarData>
+      </VarStore>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF2>
+
+</ttFont>

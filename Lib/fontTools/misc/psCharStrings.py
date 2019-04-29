@@ -944,6 +944,16 @@ class T2CharString(object):
 		self.program = program
 		self.private = private
 		self.globalSubrs = globalSubrs if globalSubrs is not None else []
+		self._cur_vsindex = None
+
+	def getNumRegions(self, vsindex=None):
+		pd = self.private
+		assert(pd is not None)
+		if vsindex is not None:
+			self._cur_vsindex = vsindex
+		elif self._cur_vsindex is None:
+			self._cur_vsindex = pd.vsindex if hasattr(pd, 'vsindex') else 0
+		return pd.getNumRegions(self._cur_vsindex)
 
 	def __repr__(self):
 		if self.bytecode is None:
