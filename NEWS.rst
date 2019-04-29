@@ -1,3 +1,6 @@
+3.41.0 (released 2019-04-29)
+----------------------------
+
 - [varLib/cffLib] Added support for building ``CFF2`` variable font from sparse
   masters, or masters with more than one model (multiple ``VarStore.VarData``).
   In ``cffLib.specializer``, added support for ``CFF2`` CharStrings with
