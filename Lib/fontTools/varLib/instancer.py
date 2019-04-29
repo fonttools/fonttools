@@ -263,10 +263,7 @@ class _TupleVarStoreAdapter(object):
         # dedup regions while keeping original order
         uniqueRegions = collections.OrderedDict.fromkeys(prunedRegions)
         self.regions = [dict(items) for items in uniqueRegions if items]
-        # TODO(anthrotype) uncomment this once we support subsetting fvar axes
-        # self.axisOrder = [
-        #     axisTag for axisTag in self.axisOrder if axisTag not in axes
-        # ]
+        self.axisOrder = [axisTag for axisTag in self.axisOrder if axisTag not in axes]
 
     def instantiate(self, location):
         defaultDeltaArray = []
@@ -448,6 +445,47 @@ def _instantiateFeatureVariations(table, fvarAxes, location):
         del table.FeatureVariations
 
 
+def instantiateAvar(varfont, location):
+    segments = varfont["avar"].segments
+
+    # drop table if we instantiate all the axes
+    if set(location).issuperset(segments):
+        log.info("Dropping avar table")
+        del varfont["avar"]
+        return
+
+    log.info("Instantiating avar table")
+    for axis in location:
+        if axis in segments:
+            del segments[axis]
+
+
+def instantiateFvar(varfont, location):
+    # 'location' dict must contain user-space (non-normalized) coordinates
+
+    fvar = varfont["fvar"]
+
+    # drop table if we instantiate all the axes
+    if set(location).issuperset(axis.axisTag for axis in fvar.axes):
+        log.info("Dropping fvar table")
+        del varfont["fvar"]
+        return
+
+    log.info("Instantiating fvar table")
+
+    fvar.axes = [axis for axis in fvar.axes if axis.axisTag not in location]
+
+    # only keep NamedInstances whose coordinates == pinned axis location
+    instances = []
+    for instance in fvar.instances:
+        if any(instance.coordinates[axis] != value for axis, value in location.items()):
+            continue
+        for axis in location:
+            del instance.coordinates[axis]
+        instances.append(instance)
+    fvar.instances = instances
+
+
 def normalize(value, triple, avar_mapping):
     value = normalizeValue(value, triple)
     if avar_mapping:
@@ -471,15 +509,17 @@ def normalizeAxisLimits(varfont, axis_limits):
     avar_segments = {}
     if "avar" in varfont:
         avar_segments = varfont["avar"].segments
+    normalized_limits = {}
     for axis_tag, triple in axes.items():
         avar_mapping = avar_segments.get(axis_tag, None)
         value = axis_limits[axis_tag]
         if isinstance(value, tuple):
-            axis_limits[axis_tag] = tuple(
+            normalized_limits[axis_tag] = tuple(
                 normalize(v, triple, avar_mapping) for v in axis_limits[axis_tag]
             )
         else:
-            axis_limits[axis_tag] = normalize(value, triple, avar_mapping)
+            normalized_limits[axis_tag] = normalize(value, triple, avar_mapping)
+    return normalized_limits
 
 
 def sanityCheckVariableTables(varfont):
@@ -498,32 +538,37 @@ def instantiateVariableFont(varfont, axis_limits, inplace=False, optimize=True):
 
     if not inplace:
         varfont = deepcopy(varfont)
-    normalizeAxisLimits(varfont, axis_limits)
+    normalized_limits = normalizeAxisLimits(varfont, axis_limits)
 
-    log.info("Normalized limits: %s", axis_limits)
+    log.info("Normalized limits: %s", normalized_limits)
 
     # TODO Remove this check once ranges are supported
     if any(isinstance(v, tuple) for v in axis_limits.values()):
         raise NotImplementedError("Axes range limits are not supported yet")
 
     if "gvar" in varfont:
-        instantiateGvar(varfont, axis_limits, optimize=optimize)
+        instantiateGvar(varfont, normalized_limits, optimize=optimize)
 
     if "cvar" in varfont:
-        instantiateCvar(varfont, axis_limits)
+        instantiateCvar(varfont, normalized_limits)
 
     if "MVAR" in varfont:
-        instantiateMVAR(varfont, axis_limits)
+        instantiateMVAR(varfont, normalized_limits)
 
     if "HVAR" in varfont:
-        instantiateHVAR(varfont, axis_limits)
+        instantiateHVAR(varfont, normalized_limits)
 
     if "VVAR" in varfont:
-        instantiateVVAR(varfont, axis_limits)
+        instantiateVVAR(varfont, normalized_limits)
 
-    instantiateOTL(varfont, axis_limits)
+    instantiateOTL(varfont, normalized_limits)
 
-    instantiateFeatureVariations(varfont, axis_limits)
+    instantiateFeatureVariations(varfont, normalized_limits)
+
+    if "avar" in varfont:
+        instantiateAvar(varfont, normalized_limits)
+
+    instantiateFvar(varfont, axis_limits)
 
     return varfont
 
