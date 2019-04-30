@@ -201,12 +201,32 @@ class CFFFontSet(object):
 					GlobalSubrs=self.GlobalSubrs,
 					cff2GetGlyphOrder=cff2GetGlyphOrder)
 				self.topDictIndex = TopDictIndex(None, cff2GetGlyphOrder, None)
+				v_list = [e for e in content if e[0] == 'VarStore']
+				if v_list:
+					# When reading from XML, _isCFF2 and vstore may not get
+					# initialized in the FontDict and PrivateDict classes, as the
+					# VarStore element may not preceed the FDArray element.
+					# Force VarStore to be read in first.
+					vs_element =  v_list[0]
+					name, attrs, v_content = vs_element
+					topDict.fromXML(name, attrs, v_content)
+					content.remove(vs_element)
+
 			self.topDictIndex.append(topDict)
 			for element in content:
 				if isinstance(element, basestring):
 					continue
 				name, attrs, content = element
 				topDict.fromXML(name, attrs, content)
+
+			if hasattr(topDict, "VarStore") and topDict.FDArray[0].vstore is None:
+				fdArray = topDict.FDArray
+				for fontDict in fdArray:
+					fontDict.vstore = topDict.VarStore
+					fontDict.isCFF2 = True
+					if hasattr(fontDict, "Private"):
+						fontDict.Private._isCFF2 = True
+						fontDict.Private.vstore = topDict.VarStore
 		elif name == "GlobalSubrs":
 			subrCharStringClass = psCharStrings.T2CharString
 			if not hasattr(self, "GlobalSubrs"):
@@ -257,7 +277,7 @@ class CFFFontSet(object):
 			else:
 				charStrings.fdArray = fdArray
 			fontDict = FontDict()
-			fontDict.setCFF2(True)
+			fontDict.isCFF2 = True
 			fdArray.append(fontDict)
 			fontDict.Private = privateDict
 			privateOpOrder = buildOrder(privateDictOperators2)
@@ -275,7 +295,7 @@ class CFFFontSet(object):
 			fdArray = topDict.FDArray
 			privateOpOrder = buildOrder(privateDictOperators2)
 			for fontDict in fdArray:
-				fontDict.setCFF2(True)
+				fontDict.isCFF2 = True
 				for key in fontDict.rawDict.keys():
 					if key not in fontDict.order:
 						del fontDict.rawDict[key]
@@ -2238,6 +2258,14 @@ class BaseDict(object):
 		self.rawDict = dec.getDict()
 		self.postDecompile()
 
+	@property
+	def isCFF2(self):
+		return self._isCFF2
+
+	@isCFF2.setter
+	def isCFF2(self, isCFF2):
+		self._isCFF2 = isCFF2
+
 	def postDecompile(self):
 		pass
 
@@ -2402,9 +2430,14 @@ class FontDict(BaseDict):
 			GlobalSubrs=None, isCFF2=None, vstore=None):
 		super(FontDict, self).__init__(strings, file, offset, isCFF2=isCFF2)
 		self.vstore = vstore
-		self.setCFF2(isCFF2)
+		self.isCFF2 = isCFF2
 
-	def setCFF2(self, isCFF2):
+	@property
+	def isCFF2(self):
+		return self._isCFF2
+
+	@isCFF2.setter
+	def isCFF2(self, isCFF2):
 		# isCFF2 may be None.
 		if isCFF2:
 			self.order = self.orderCFF2

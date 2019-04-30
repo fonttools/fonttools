@@ -7,6 +7,7 @@ from fontTools.cffLib.specializer import (programToString, stringToProgram,
 from fontTools.ttLib import TTFont
 import os
 import unittest
+from fontTools.misc.testTools import parseXML, DataFilesHandler
 
 # TODO
 # https://github.com/fonttools/fonttools/pull/959#commitcomment-22059841
@@ -918,14 +919,7 @@ class CFFSpecializeProgramTest(unittest.TestCase):
         self.assertEqual(get_specialized_charstr(test_charstr), xpct_charstr)
 
 
-class CFF2VFTestSpecialize(unittest.TestCase):
-
-    def __init__(self, methodName):
-        unittest.TestCase.__init__(self, methodName)
-        # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
-        # and fires deprecation warnings if a program uses the old name.
-        if not hasattr(self, "assertRaisesRegex"):
-            self.assertRaisesRegex = self.assertRaisesRegexp
+class CFF2VFTestSpecialize(DataFilesHandler):
 
     @staticmethod
     def get_test_input(test_file_or_folder):
@@ -933,13 +927,13 @@ class CFF2VFTestSpecialize(unittest.TestCase):
         return os.path.join(path, "data", test_file_or_folder)
 
     def test_blend_round_trip(self):
-        otfvf_path = self.get_test_input('TestSparseCFF2VF.otf')
-        ttf_font = TTFont(otfvf_path)
+        ttx_path = self.getpath('TestSparseCFF2VF.ttx')
+        ttf_font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
+        ttf_font.importXML(ttx_path)
         fontGlyphList = ttf_font.getGlyphOrder()
         topDict = ttf_font['CFF2'].cff.topDictIndex[0]
         charstrings = topDict.CharStrings
         for glyphName in fontGlyphList:
-            print(glyphName)
             cs = charstrings[glyphName]
             cs.decompile()
             cmds = programToCommands(cs.program, getNumRegions=cs.getNumRegions)

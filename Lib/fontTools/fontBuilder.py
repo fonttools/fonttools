@@ -548,7 +548,7 @@ class FontBuilder(object):
         fdArray.GlobalSubrs = globalSubrs
         for privateDict in fdArrayList:
             fontDict = FontDict()
-            fontDict.setCFF2(True)
+            fontDict.isCFF2 = True
             private = PrivateDict()
             for key, value in privateDict.items():
                 setattr(private, key, value)

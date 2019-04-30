@@ -162,13 +162,22 @@ class MutatorTest(unittest.TestCase):
         self.expect_ttx(instfont, expected_ttx_path, tables)
 
     def test_varlib_mutator_CFF2(self):
+        suffix = '.otf'
+        ttx_dir = self.get_test_input('master_ttx_varfont_otf')
 
-        otf_vf_path = self.get_test_input('TestCFF2VF.otf')
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestCFF2VF')
+        for path in ttx_paths:
+            self.compile_font(path, suffix, self.tempdir)
+
+        varfont_name = 'TestCFF2VF'
+        varfont_path = os.path.join(self.tempdir, varfont_name + suffix)
+
         expected_ttx_name = 'InterpolateTestCFF2VF'
         tables = ["hmtx", "CFF2"]
         loc = {'wght':float(200)}
 
-        varfont = TTFont(otf_vf_path)
+        varfont = TTFont(varfont_path)
         new_font = make_instance(varfont, loc)
         expected_ttx_path = self.get_test_output(expected_ttx_name + '.ttx')
         self.expect_ttx(new_font, expected_ttx_path, tables)
