@@ -1,0 +1,821 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.41">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="uniFF20"/>
+    <GlyphID id="2" name="uniFF21"/>
+    <GlyphID id="3" name="uniFF41"/>
+    <GlyphID id="4" name="uni3042"/>
+    <GlyphID id="5" name="uni6280"/>
+    <GlyphID id="6" name="uni56FD"/>
+    <GlyphID id="7" name="c30719"/>
+    <GlyphID id="8" name="c30790"/>
+    <GlyphID id="9" name="c30816"/>
+    <GlyphID id="10" name="c30843"/>
+    <GlyphID id="11" name="c31621"/>
+    <GlyphID id="12" name="c32051"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="1.00299"/>
+    <checkSumAdjustment value="0xaa083de0"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Tue Feb 19 17:21:59 2019"/>
+    <modified value="Tue Feb 19 17:21:59 2019"/>
+    <xMin value="19"/>
+    <yMin value="-83"/>
+    <xMax value="966"/>
+    <yMax value="840"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="3"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="1160"/>
+    <descent value="-317"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="1000"/>
+    <minLeftSideBearing value="19"/>
+    <minRightSideBearing value="23"/>
+    <xMaxExtent value="966"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="8"/>
+  </hhea>
+
+  <maxp>
+    <tableVersion value="0x5000"/>
+    <numGlyphs value="13"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="3"/>
+    <xAvgCharWidth value="822"/>
+    <usWeightClass value="250"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000100"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="600"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="75"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="600"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="350"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="228"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="0"/>
+      <bSerifStyle value="0"/>
+      <bWeight value="3"/>
+      <bProportion value="0"/>
+      <bContrast value="0"/>
+      <bStrokeVariation value="0"/>
+      <bArmStyle value="0"/>
+      <bLetterForm value="0"/>
+      <bMidline value="0"/>
+      <bXHeight value="0"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange2 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="UKWN"/>
+    <fsSelection value="00000000 00000000"/>
+    <usFirstCharIndex value="12354"/>
+    <usLastCharIndex value="65345"/>
+    <sTypoAscender value="880"/>
+    <sTypoDescender value="-120"/>
+    <sTypoLineGap value="200"/>
+    <usWinAscent value="1160"/>
+    <usWinDescent value="317"/>
+    <ulCodePageRange1 value="00000000 00000000 00000000 00000001"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="380"/>
+    <sCapHeight value="760"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="1"/>
+  </OS_2>
+
+  <name>
+    <namerecord nameID="0" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Copyright © 2018 Adobe systems Co., Ltd. All Rights Reserved.
+    </namerecord>
+    <namerecord nameID="1" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Source Han Sans VVAR TEST
+    </namerecord>
+    <namerecord nameID="2" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      1.003;UKWN;SHSansVVARTest_75-w0.00
+    </namerecord>
+    <namerecord nameID="4" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Source Han Sans VVAR TEST
+    </namerecord>
+    <namerecord nameID="5" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Version 1.003;hotconv 1.0.109;makeotfexe 2.5.65596
+    </namerecord>
+    <namerecord nameID="6" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      SHSansVVARTest_75-w0.00
+    </namerecord>
+    <namerecord nameID="8" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Adobe Systems Co., Ltd.
+    </namerecord>
+    <namerecord nameID="9" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Ryoko Nishizuka
+    </namerecord>
+    <namerecord nameID="10" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Masataka HATTORI (variable font production)
+    </namerecord>
+    <namerecord nameID="11" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      http://www.adobe.com
+    </namerecord>
+    <namerecord nameID="17" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Master3
+    </namerecord>
+    <namerecord nameID="0" platformID="3" platEncID="1" langID="0x409">
+      Copyright © 2018 Adobe systems Co., Ltd. All Rights Reserved.
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      Source Han Sans VVAR TEST
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      1.003;UKWN;SHSansVVARTest_75-w0.00
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      Source Han Sans VVAR TEST
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 1.003;hotconv 1.0.109;makeotfexe 2.5.65596
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      SHSansVVARTest_75-w0.00
+    </namerecord>
+    <namerecord nameID="8" platformID="3" platEncID="1" langID="0x409">
+      Adobe Systems Co., Ltd.
+    </namerecord>
+    <namerecord nameID="9" platformID="3" platEncID="1" langID="0x409">
+      Ryoko Nishizuka
+    </namerecord>
+    <namerecord nameID="10" platformID="3" platEncID="1" langID="0x409">
+      Masataka HATTORI 服部正貴 (variable font production)
+    </namerecord>
+    <namerecord nameID="11" platformID="3" platEncID="1" langID="0x409">
+      http://www.adobe.com
+    </namerecord>
+    <namerecord nameID="17" platformID="3" platEncID="1" langID="0x409">
+      Master3
+    </namerecord>
+  </name>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x3042" name="uni3042"/><!-- HIRAGANA LETTER A -->
+      <map code="0x56fd" name="uni56FD"/><!-- CJK UNIFIED IDEOGRAPH-56FD -->
+      <map code="0x6280" name="uni6280"/><!-- CJK UNIFIED IDEOGRAPH-6280 -->
+      <map code="0xff20" name="uniFF20"/><!-- FULLWIDTH COMMERCIAL AT -->
+      <map code="0xff21" name="uniFF21"/><!-- FULLWIDTH LATIN CAPITAL LETTER A -->
+      <map code="0xff41" name="uniFF41"/><!-- FULLWIDTH LATIN SMALL LETTER A -->
+    </cmap_format_4>
+    <cmap_format_6 platformID="1" platEncID="0" language="0">
+    </cmap_format_6>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x3042" name="uni3042"/><!-- HIRAGANA LETTER A -->
+      <map code="0x56fd" name="uni56FD"/><!-- CJK UNIFIED IDEOGRAPH-56FD -->
+      <map code="0x6280" name="uni6280"/><!-- CJK UNIFIED IDEOGRAPH-6280 -->
+      <map code="0xff20" name="uniFF20"/><!-- FULLWIDTH COMMERCIAL AT -->
+      <map code="0xff21" name="uniFF21"/><!-- FULLWIDTH LATIN CAPITAL LETTER A -->
+      <map code="0xff41" name="uniFF41"/><!-- FULLWIDTH LATIN SMALL LETTER A -->
+    </cmap_format_4>
+  </cmap>
+
+  <post>
+    <formatType value="3.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-75"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+  </post>
+
+  <CFF>
+    <major value="1"/>
+    <minor value="0"/>
+    <CFFFont name="SHSansVVARTest_75-w0.00">
+      <version value="1.0"/>
+      <FamilyName value="SHSansVVARTest_75"/>
+      <isFixedPitch value="0"/>
+      <ItalicAngle value="0"/>
+      <UnderlinePosition value="-100"/>
+      <UnderlineThickness value="50"/>
+      <PaintType value="0"/>
+      <CharstringType value="2"/>
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FontBBox value="19 -83 966 840"/>
+      <StrokeWidth value="0"/>
+      <!-- charset is dumped separately as the 'GlyphOrder' element -->
+      <Encoding name="StandardEncoding"/>
+      <Private>
+        <BlueValues value="0 0"/>
+        <BlueScale value="0.039625"/>
+        <BlueShift value="7"/>
+        <BlueFuzz value="1"/>
+        <ForceBold value="0"/>
+        <LanguageGroup value="0"/>
+        <ExpansionFactor value="0.06"/>
+        <initialRandomSeed value="0"/>
+        <defaultWidthX value="1000"/>
+        <nominalWidthX value="857"/>
+      </Private>
+      <CharStrings>
+        <CharString name=".notdef">
+          -669 endchar
+        </CharString>
+        <CharString name="c30719">
+          667 26 rmoveto
+          -12 22 rlineto
+          -47 -20 -60 -12 -73 0 rrcurveto
+          -168 0 -128 95 0 142 rrcurveto
+          0 170 146 130 211 0 rrcurveto
+          180 0 104 -93 0 -133 rrcurveto
+          0 -100 -81 -70 -60 0 rrcurveto
+          -50 0 -17 22 22 78 rrcurveto
+          49 166 rlineto
+          -31 9 -32 8 -47 0 rrcurveto
+          -150 0 -117 -98 0 -105 rrcurveto
+          0 -65 58 -38 58 0 rrcurveto
+          74 0 53 25 44 55 rrcurveto
+          4 0 rlineto
+          -9 -60 39 -20 43 0 rrcurveto
+          90 0 96 72 0 128 rrcurveto
+          0 140 -120 103 -193 0 rrcurveto
+          -233 0 -168 -141 0 -184 rrcurveto
+          0 -160 149 -102 182 0 rrcurveto
+          70 0 67 11 57 25 rrcurveto
+          -23 379 rmoveto
+          -32 -109 rlineto
+          -20 -69 -71 -69 -88 0 rrcurveto
+          -62 0 -31 34 0 42 rrcurveto
+          0 95 102 86 124 0 rrcurveto
+          38 0 25 -5 15 -5 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="c30790">
+          768 0 rmoveto
+          37 0 rlineto
+          -297 546 rlineto
+          -35 0 rlineto
+          -296 -546 rlineto
+          34 0 rlineto
+          106 190 rlineto
+          346 0 rlineto
+          105 -190 rlineto
+          -439 217 rmoveto
+          62 110 rlineto
+          34 65 32 55 32 67 rrcurveto
+          4 0 rlineto
+          34 -67 30 -54 35 -66 rrcurveto
+          61 -110 rlineto
+          -324 0 rlineto
+          endchar
+        </CharString>
+        <CharString name="c30816">
+          276 98 rmoveto
+          0 -74 92 -33 92 0 rrcurveto
+          80 0 83 33 62 36 rrcurveto
+          2 0 rlineto
+          4 -60 rlineto
+          29 0 rlineto
+          0 255 rlineto
+          0 83 -54 68 -140 0 rrcurveto
+          -94 0 -93 -35 -37 -24 rrcurveto
+          18 -25 rlineto
+          40 23 81 32 83 0 rrcurveto
+          128 0 34 -62 1 -67 rrcurveto
+          -290 -19 -121 -42 0 -89 rrcurveto
+          35 2 rmoveto
+          0 65 93 39 283 19 rrcurveto
+          0 -131 rlineto
+          -79 -48 -75 -25 -70 0 rrcurveto
+          -74 0 -78 23 0 58 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="c30843">
+          411 586 rmoveto
+          0 -5 -1 -11 -1 -12 rrcurveto
+          -7 -56 -23 -131 0 -107 rrcurveto
+          0 -83 26 -102 28 -67 rrcurveto
+          28 10 rlineto
+          -29 66 -27 95 0 79 rrcurveto
+          0 111 18 128 14 56 rrcurveto
+          2 10 4 14 3 4 rrcurveto
+          -35 1 rlineto
+          -254 -92 rmoveto
+          1 -31 rlineto
+          35 -2 78 -2 33 0 rrcurveto
+          147 0 184 11 152 19 rrcurveto
+          -1 29 rlineto
+          -124 -20 -198 -13 -161 0 rrcurveto
+          -25 0 -87 3 -34 6 rrcurveto
+          513 -70 rmoveto
+          -1 -9 -3 -10 -2 -6 rrcurveto
+          -51 -139 -97 -93 -105 -65 rrcurveto
+          -69 -42 -62 -17 -53 0 rrcurveto
+          -42 0 -26 18 0 36 rrcurveto
+          0 84 110 92 126 39 rrcurveto
+          53 17 75 18 77 0 rrcurveto
+          164 0 92 -72 0 -81 rrcurveto
+          0 -117 -146 -66 -168 -14 rrcurveto
+          18 -25 rlineto
+          219 27 106 85 0 109 rrcurveto
+          0 93 -99 84 -191 0 rrcurveto
+          -55 0 -80 -11 -67 -20 rrcurveto
+          -137 -43 -128 -101 0 -100 rrcurveto
+          0 -52 42 -29 59 0 rrcurveto
+          54 0 73 23 64 39 rrcurveto
+          115 68 96 106 63 142 rrcurveto
+          3 8 3 8 4 8 rrcurveto
+          -34 8 rlineto
+          endchar
+        </CharString>
+        <CharString name="c31621">
+          389 497 rmoveto
+          0 -26 rlineto
+          554 0 rlineto
+          0 26 rlineto
+          -554 0 rlineto
+          23 -174 rmoveto
+          0 -27 rlineto
+          479 0 rlineto
+          0 27 rlineto
+          -479 0 rlineto
+          241 308 rmoveto
+          0 -324 rlineto
+          28 0 rlineto
+          0 324 rlineto
+          -28 0 rlineto
+          -158 -332 rmoveto
+          -27 -9 rlineto
+          80 -174 169 -123 229 -55 rrcurveto
+          5 8 7 10 8 6 rrcurveto
+          -229 49 -166 122 -76 166 rrcurveto
+          386 24 rmoveto
+          0 -6 rlineto
+          -86 -194 -242 -117 -228 -43 rrcurveto
+          7 -6 7 -11 3 -8 rrcurveto
+          234 49 243 118 94 211 rrcurveto
+          -19 9 rlineto
+          -6 -2 rlineto
+          -7 0 rlineto
+          -854 -111 rmoveto
+          14 -28 rlineto
+          91 23 125 31 119 30 rrcurveto
+          -5 27 rlineto
+          -128 -33 -131 -31 -85 -19 rrcurveto
+          15 254 rmoveto
+          0 -26 rlineto
+          325 0 rlineto
+          0 26 rlineto
+          -325 0 rlineto
+          164 164 rmoveto
+          0 -650 rlineto
+          0 -11 -6 -3 -13 0 rrcurveto
+          -13 -1 -43 0 -53 1 rrcurveto
+          4 -8 6 -12 2 -7 rrcurveto
+          64 0 34 1 18 4 rrcurveto
+          19 5 9 10 0 22 rrcurveto
+          0 649 rlineto
+          -28 0 rlineto
+          endchar
+        </CharString>
+        <CharString name="c32051">
+          231 479 rmoveto
+          0 -26 rlineto
+          546 0 rlineto
+          0 26 rlineto
+          -546 0 rlineto
+          30 -166 rmoveto
+          0 -27 rlineto
+          487 0 rlineto
+          0 27 rlineto
+          -487 0 rlineto
+          -50 -190 rmoveto
+          0 -26 rlineto
+          592 0 rlineto
+          0 26 rlineto
+          -592 0 rlineto
+          270 348 rmoveto
+          0 -362 rlineto
+          28 0 rlineto
+          0 362 rlineto
+          -28 0 rlineto
+          124 -227 rmoveto
+          46 -28 52 -40 25 -26 rrcurveto
+          22 13 rlineto
+          -25 27 -52 38 -47 28 rrcurveto
+          -21 -12 rlineto
+          -518 347 rmoveto
+          0 -653 rlineto
+          29 0 rlineto
+          0 627 rlineto
+          771 0 rlineto
+          0 -627 rlineto
+          28 0 rlineto
+          0 653 rlineto
+          -828 0 rlineto
+          14 -588 rmoveto
+          0 -26 rlineto
+          799 0 rlineto
+          0 26 rlineto
+          -799 0 rlineto
+          endchar
+        </CharString>
+        <CharString name="uni3042">
+          -107 304 779 rmoveto
+          0 -6 -1 -13 -1 -16 rrcurveto
+          -5 -73 -17 -177 0 -145 rrcurveto
+          0 -105 19 -135 22 -89 rrcurveto
+          30 9 rlineto
+          -22 88 -20 128 0 100 rrcurveto
+          0 151 13 173 11 74 rrcurveto
+          1 12 3 18 3 5 rrcurveto
+          -36 1 rlineto
+          -188 -126 rmoveto
+          1 -33 rlineto
+          27 -3 58 -3 27 0 rrcurveto
+          110 0 142 16 111 25 rrcurveto
+          0 31 rlineto
+          -95 -26 -144 -19 -125 0 rrcurveto
+          -21 0 -66 5 -25 7 rrcurveto
+          382 -89 rmoveto
+          -1 -11 -2 -9 -3 -9 rrcurveto
+          -37 -188 -69 -128 -76 -89 rrcurveto
+          -51 -56 -47 -22 -39 0 rrcurveto
+          -30 0 -19 24 0 49 rrcurveto
+          0 117 79 126 92 53 rrcurveto
+          39 23 56 23 59 0 rrcurveto
+          120 0 67 -98 0 -110 rrcurveto
+          0 -162 -102 -88 -128 -18 rrcurveto
+          18 -26 rlineto
+          167 36 77 111 0 145 rrcurveto
+          0 122 -78 112 -144 0 rrcurveto
+          -42 0 -61 -15 -50 -27 rrcurveto
+          -105 -57 -96 -133 0 -133 rrcurveto
+          0 -67 34 -37 46 0 rrcurveto
+          44 0 56 30 48 51 rrcurveto
+          83 92 74 143 46 190 rrcurveto
+          4 10 3 7 3 9 rrcurveto
+          -35 10 rlineto
+          endchar
+        </CharString>
+        <CharString name="uni56FD">
+          -107 175 638 rmoveto
+          0 -28 rlineto
+          404 0 rlineto
+          0 28 rlineto
+          -404 0 rlineto
+          22 -225 rmoveto
+          0 -28 rlineto
+          362 0 rlineto
+          0 28 rlineto
+          -362 0 rlineto
+          -36 -254 rmoveto
+          0 -29 rlineto
+          437 0 rlineto
+          0 29 rlineto
+          -437 0 rlineto
+          196 470 rmoveto
+          0 -487 rlineto
+          30 0 rlineto
+          0 487 rlineto
+          -30 0 rlineto
+          95 -303 rmoveto
+          33 -38 37 -54 17 -36 rrcurveto
+          23 16 rlineto
+          -18 36 -37 52 -34 38 rrcurveto
+          -21 -14 rlineto
+          -388 460 rmoveto
+          0 -868 rlineto
+          31 0 rlineto
+          0 841 rlineto
+          562 0 rlineto
+          0 -841 rlineto
+          31 0 rlineto
+          0 868 rlineto
+          -624 0 rlineto
+          16 -788 rmoveto
+          0 -27 rlineto
+          590 0 rlineto
+          0 27 rlineto
+          -590 0 rlineto
+          endchar
+        </CharString>
+        <CharString name="uni6280">
+          -107 293 659 rmoveto
+          0 -28 rlineto
+          415 0 rlineto
+          0 28 rlineto
+          -415 0 rlineto
+          16 -233 rmoveto
+          0 -28 rlineto
+          355 0 rlineto
+          0 28 rlineto
+          -355 0 rlineto
+          177 414 rmoveto
+          0 -432 rlineto
+          31 0 rlineto
+          0 432 rlineto
+          -31 0 rlineto
+          -108 -439 rmoveto
+          -29 -9 rlineto
+          61 -235 124 -167 171 -73 rrcurveto
+          5 8 9 11 8 6 rrcurveto
+          -169 66 -124 165 -56 228 rrcurveto
+          276 25 rmoveto
+          0 -7 rlineto
+          -62 -262 -176 -156 -173 -58 rrcurveto
+          7 -5 8 -12 2 -9 rrcurveto
+          180 66 178 156 69 278 rrcurveto
+          -20 11 rlineto
+          -6 -2 rlineto
+          -7 0 rlineto
+          -635 -150 rmoveto
+          13 -28 rlineto
+          68 30 95 43 89 40 rrcurveto
+          -5 28 rlineto
+          -96 -43 -99 -43 -65 -27 rrcurveto
+          12 342 rmoveto
+          0 -28 rlineto
+          245 0 rlineto
+          0 28 rlineto
+          -245 0 rlineto
+          119 221 rmoveto
+          0 -873 rlineto
+          0 -15 -5 -4 -9 0 rrcurveto
+          -10 -1 -32 0 -39 1 rrcurveto
+          5 -8 5 -12 2 -7 rrcurveto
+          49 -1 26 1 16 5 rrcurveto
+          16 6 6 10 0 26 rrcurveto
+          0 872 rlineto
+          -30 0 rlineto
+          endchar
+        </CharString>
+        <CharString name="uniFF20">
+          -107 501 35 rmoveto
+          -9 27 rlineto
+          -35 -29 -45 -16 -54 0 rrcurveto
+          -126 0 -96 130 0 189 rrcurveto
+          0 226 111 176 155 0 rrcurveto
+          135 0 77 -123 0 -181 rrcurveto
+          0 -133 -60 -95 -44 0 rrcurveto
+          -34 0 -13 29 15 106 rrcurveto
+          35 223 rlineto
+          -22 12 -26 9 -36 0 rrcurveto
+          -114 0 -86 -130 0 -141 rrcurveto
+          0 -85 43 -51 45 0 rrcurveto
+          54 0 40 34 32 75 rrcurveto
+          3 0 rlineto
+          -6 -82 29 -27 34 0 rrcurveto
+          71 0 72 95 0 172 rrcurveto
+          0 185 -93 138 -146 0 rrcurveto
+          -176 0 -126 -187 0 -246 rrcurveto
+          0 -213 113 -136 137 0 rrcurveto
+          53 0 50 15 43 34 rrcurveto
+          -24 509 rmoveto
+          -22 -149 rlineto
+          -15 -95 -50 -94 -61 0 rrcurveto
+          -45 0 -23 46 0 58 rrcurveto
+          0 128 73 119 89 0 rrcurveto
+          26 0 18 -7 10 -6 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="uniFF21">
+          -107 569 0 rmoveto
+          41 0 rlineto
+          -220 726 rlineto
+          -42 0 rlineto
+          -219 -726 rlineto
+          38 0 rlineto
+          75 260 rlineto
+          253 0 rlineto
+          74 -260 rlineto
+          -316 288 rmoveto
+          42 153 rlineto
+          25 87 24 73 23 89 rrcurveto
+          3 0 rlineto
+          25 -89 22 -71 25 -89 rrcurveto
+          43 -153 rlineto
+          -232 0 rlineto
+          endchar
+        </CharString>
+        <CharString name="uniFF41">
+          -107 202 128 rmoveto
+          0 -99 68 -41 71 0 rrcurveto
+          59 0 62 44 46 49 rrcurveto
+          2 0 rlineto
+          4 -81 rlineto
+          31 0 rlineto
+          0 341 rlineto
+          0 106 -45 90 -106 0 rrcurveto
+          -71 0 -70 -48 -31 -30 rrcurveto
+          17 -26 rlineto
+          32 31 59 43 59 0 rrcurveto
+          92 0 26 -87 2 -93 rrcurveto
+          -217 -26 -90 -56 0 -117 rrcurveto
+          38 2 rmoveto
+          0 90 65 53 204 26 rrcurveto
+          0 -180 rlineto
+          -57 -68 -53 -33 -52 0 rrcurveto
+          -53 0 -54 30 0 82 rrcurveto
+          endchar
+        </CharString>
+      </CharStrings>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=2 -->
+            <FeatureIndex index="0" value="0"/>
+            <FeatureIndex index="1" value="1"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=2 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="vert"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+      <FeatureRecord index="1">
+        <FeatureTag value="vrt2"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="1"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=2 -->
+      <Lookup index="0">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0" Format="1">
+          <Substitution in="uni3042" out="c30843"/>
+          <Substitution in="uni56FD" out="c32051"/>
+          <Substitution in="uni6280" out="c31621"/>
+          <Substitution in="uniFF20" out="c30719"/>
+          <Substitution in="uniFF21" out="c30790"/>
+          <Substitution in="uniFF41" out="c30816"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="1">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0" Format="1">
+          <Substitution in="uni3042" out="c30843"/>
+          <Substitution in="uni56FD" out="c32051"/>
+          <Substitution in="uni6280" out="c31621"/>
+          <Substitution in="uniFF20" out="c30719"/>
+          <Substitution in="uniFF21" out="c30790"/>
+          <Substitution in="uniFF41" out="c30816"/>
+        </SingleSubst>
+      </Lookup>
+    </LookupList>
+  </GSUB>
+
+  <VORG>
+    <majorVersion value="1"/>
+    <minorVersion value="0"/>
+    <defaultVertOriginY value="880"/>
+    <numVertOriginYMetrics value="6"/>
+    <VOriginRecord>
+      <glyphName value="c30719"/>
+      <vOrigin value="660"/>
+    </VOriginRecord>
+    <VOriginRecord>
+      <glyphName value="c30790"/>
+      <vOrigin value="660"/>
+    </VOriginRecord>
+    <VOriginRecord>
+      <glyphName value="c30816"/>
+      <vOrigin value="660"/>
+    </VOriginRecord>
+    <VOriginRecord>
+      <glyphName value="c30843"/>
+      <vOrigin value="660"/>
+    </VOriginRecord>
+    <VOriginRecord>
+      <glyphName value="c31621"/>
+      <vOrigin value="660"/>
+    </VOriginRecord>
+    <VOriginRecord>
+      <glyphName value="c32051"/>
+      <vOrigin value="660"/>
+    </VOriginRecord>
+  </VORG>
+
+  <hmtx>
+    <mtx name=".notdef" width="188" lsb="0"/>
+    <mtx name="c30719" width="1000" lsb="142"/>
+    <mtx name="c30790" width="1000" lsb="177"/>
+    <mtx name="c30816" width="1000" lsb="276"/>
+    <mtx name="c30843" width="1000" lsb="128"/>
+    <mtx name="c31621" width="1000" lsb="27"/>
+    <mtx name="c32051" width="1000" lsb="87"/>
+    <mtx name="uni3042" width="750" lsb="92"/>
+    <mtx name="uni56FD" width="750" lsb="64"/>
+    <mtx name="uni6280" width="750" lsb="19"/>
+    <mtx name="uniFF20" width="750" lsb="105"/>
+    <mtx name="uniFF21" width="750" lsb="129"/>
+    <mtx name="uniFF41" width="750" lsb="202"/>
+  </hmtx>
+
+  <vhea>
+    <tableVersion value="0x00011000"/>
+    <ascent value="500"/>
+    <descent value="-500"/>
+    <lineGap value="0"/>
+    <advanceHeightMax value="1000"/>
+    <minTopSideBearing value="29"/>
+    <minBottomSideBearing value="28"/>
+    <yMaxExtent value="963"/>
+    <caretSlopeRise value="0"/>
+    <caretSlopeRun value="1"/>
+    <caretOffset value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <reserved4 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfVMetrics value="8"/>
+  </vhea>
+
+  <vmtx>
+    <mtx name=".notdef" height="1000" tsb="880"/>
+    <mtx name="c30719" height="750" tsb="83"/>
+    <mtx name="c30790" height="750" tsb="114"/>
+    <mtx name="c30816" height="750" tsb="254"/>
+    <mtx name="c30843" height="750" tsb="74"/>
+    <mtx name="c31621" height="750" tsb="29"/>
+    <mtx name="c32051" height="750" tsb="69"/>
+    <mtx name="uni3042" height="1000" tsb="101"/>
+    <mtx name="uni56FD" height="1000" tsb="94"/>
+    <mtx name="uni6280" height="1000" tsb="40"/>
+    <mtx name="uniFF20" height="1000" tsb="112"/>
+    <mtx name="uniFF21" height="1000" tsb="154"/>
+    <mtx name="uniFF41" height="1000" tsb="343"/>
+  </vmtx>
+
+  <DSIG>
+    <!-- note that the Digital Signature will be invalid after recompilation! -->
+    <tableHeader flag="0x0" numSigs="0" version="1"/>
+  </DSIG>
+
+</ttFont>
