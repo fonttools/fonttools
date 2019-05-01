@@ -200,15 +200,18 @@ def _instantiateVHVAR(varfont, location, tableFields):
     instantiateItemVariationStore(varStore, fvarAxes, location)
 
     if varStore.VarRegionList.Region:
+        # Only re-optimize VarStore if the HVAR/VVAR already uses indirect AdvWidthMap
+        # or AdvHeightMap. If a direct, implicit glyphID->VariationIndex mapping is
+        # used for advances, skip re-optimizing and maintain original VariationIndex.
         if getattr(vhvar, tableFields.advMapping):
             varIndexMapping = varStore.optimize()
             glyphOrder = varfont.getGlyphOrder()
             _remapVarIdxMap(vhvar, tableFields.advMapping, varIndexMapping, glyphOrder)
-            if getattr(vhvar, tableFields.sb1):
+            if getattr(vhvar, tableFields.sb1):  # left or top sidebearings
                 _remapVarIdxMap(vhvar, tableFields.sb1, varIndexMapping, glyphOrder)
-            if getattr(vhvar, tableFields.sb2):
+            if getattr(vhvar, tableFields.sb2):  # right or bottom sidebearings
                 _remapVarIdxMap(vhvar, tableFields.sb2, varIndexMapping, glyphOrder)
-            if tableFields.vOrigMapping and getattr(vhvar, tableFields.vOrigMapping):
+            if tableTag == "VVAR" and getattr(vhvar, tableFields.vOrigMapping):
                 _remapVarIdxMap(
                     vhvar, tableFields.vOrigMapping, varIndexMapping, glyphOrder
                 )
