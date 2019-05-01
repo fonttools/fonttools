@@ -570,6 +570,15 @@ def instantiateVariableFont(varfont, axis_limits, inplace=False, optimize=True):
 
     instantiateFvar(varfont, axis_limits)
 
+    if "fvar" not in varfont and "STAT" in varfont:
+        # Drop the entire STAT table when the varfont is fully instanced (or keep it
+        # as is if only partially instanced).
+        # TODO(anthrotype) Only drop DesignAxis and corresponding AxisValue records
+        # for the pinned axes that were removed from fvar. STAT design axes may be a
+        # superset of fvar axes (e.g. can include axes for an entire family).
+        log.info("Dropping STAT table")
+        del varfont["STAT"]
+
     return varfont
 
 
