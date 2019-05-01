@@ -849,3 +849,16 @@ class InstantiateOTLTest(object):
         valueRec1 = pairPos.PairSet[0].PairValueRecord[0].Value1
         assert not hasattr(valueRec1, "XAdvDevice")
         assert valueRec1.XAdvance == v2
+
+
+class InstantiateAvarTest(object):
+    @pytest.mark.parametrize("location", [{"wght": 0.0}, {"wdth": 0.0}])
+    def test_pin_and_drop_axis(self, varfont, location):
+        instancer.instantiateAvar(varfont, location)
+
+        assert set(varfont["avar"].segments).isdisjoint(location)
+
+    def test_full_instance(self, varfont):
+        instancer.instantiateAvar(varfont, {"wght": 0.0, "wdth": 0.0})
+
+        assert "avar" not in varfont
