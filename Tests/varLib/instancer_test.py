@@ -862,3 +862,53 @@ class InstantiateAvarTest(object):
         instancer.instantiateAvar(varfont, {"wght": 0.0, "wdth": 0.0})
 
         assert "avar" not in varfont
+
+
+class InstantiateFvarTest(object):
+    @pytest.mark.parametrize(
+        "location, instancesLeft",
+        [
+            (
+                {"wght": 400.0},
+                ["Regular", "SemiCondensed", "Condensed", "ExtraCondensed"],
+            ),
+            (
+                {"wght": 100.0},
+                ["Thin", "SemiCondensed Thin", "Condensed Thin", "ExtraCondensed Thin"],
+            ),
+            (
+                {"wdth": 100.0},
+                [
+                    "Thin",
+                    "ExtraLight",
+                    "Light",
+                    "Regular",
+                    "Medium",
+                    "SemiBold",
+                    "Bold",
+                    "ExtraBold",
+                    "Black",
+                ],
+            ),
+            # no named instance at pinned location
+            ({"wdth": 90.0}, []),
+        ],
+    )
+    def test_pin_and_drop_axis(self, varfont, location, instancesLeft):
+        instancer.instantiateFvar(varfont, location)
+
+        fvar = varfont["fvar"]
+        assert {a.axisTag for a in fvar.axes}.isdisjoint(location)
+
+        for instance in fvar.instances:
+            assert set(instance.coordinates).isdisjoint(location)
+
+        name = varfont["name"]
+        assert [
+            name.getDebugName(instance.subfamilyNameID) for instance in fvar.instances
+        ] == instancesLeft
+
+    def test_full_instance(self, varfont):
+        instancer.instantiateFvar(varfont, {"wght": 0.0, "wdth": 0.0})
+
+        assert "fvar" not in varfont
