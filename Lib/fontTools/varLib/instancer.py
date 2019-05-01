@@ -486,6 +486,48 @@ def instantiateFvar(varfont, location):
     fvar.instances = instances
 
 
+def instantiateSTAT(varfont, location):
+    pinnedAxes = set(location.keys())
+
+    stat = varfont["STAT"].table
+    designAxes = stat.DesignAxisRecord.Axis if stat.DesignAxisRecord else ()
+
+    pinnedAxisIndices = {
+        i for i, axis in enumerate(designAxes) if axis.AxisTag in pinnedAxes
+    }
+
+    if len(pinnedAxisIndices) == stat.DesignAxisCount:
+        log.info("Dropping STAT table")
+        del varfont["STAT"]
+        return
+
+    log.info("Instantiating STAT table")
+
+    if stat.AxisValueArray and stat.AxisValueArray.AxisValue:
+        newAxisValueTables = []
+        for axisValueTable in stat.AxisValueArray.AxisValue:
+            if axisValueTable.Format in (1, 2, 3):
+                if axisValueTable.AxisIndex in pinnedAxisIndices:
+                    continue
+                newAxisValueTables.append(axisValueTable)
+            elif axisValueTable.Format == 4:
+                if any(
+                    rec.AxisIndex in pinnedAxisIndices
+                    for rec in axisValueTable.AxisValueRecord
+                ):
+                    continue
+                newAxisValueTables.append(axisValueTable)
+            else:
+                raise NotImplementedError(axisValueTable.Format)
+        stat.AxisValueArray.AxisValue = newAxisValueTables
+        stat.AxisValueCount = len(stat.AxisValueArray.AxisValue)
+
+    stat.DesignAxisRecord.Axis[:] = [
+        axis for axis in designAxes if axis.AxisTag not in pinnedAxes
+    ]
+    stat.DesignAxisCount = len(stat.DesignAxisRecord.Axis)
+
+
 def normalize(value, triple, avar_mapping):
     value = normalizeValue(value, triple)
     if avar_mapping:
@@ -568,16 +610,10 @@ def instantiateVariableFont(varfont, axis_limits, inplace=False, optimize=True):
     if "avar" in varfont:
         instantiateAvar(varfont, normalized_limits)
 
-    instantiateFvar(varfont, axis_limits)
+    if "STAT" in varfont:
+        instantiateSTAT(varfont, axis_limits)
 
-    if "fvar" not in varfont and "STAT" in varfont:
-        # Drop the entire STAT table when the varfont is fully instanced (or keep it
-        # as is if only partially instanced).
-        # TODO(anthrotype) Only drop DesignAxis and corresponding AxisValue records
-        # for the pinned axes that were removed from fvar. STAT design axes may be a
-        # superset of fvar axes (e.g. can include axes for an entire family).
-        log.info("Dropping STAT table")
-        del varfont["STAT"]
+    instantiateFvar(varfont, axis_limits)
 
     return varfont
 
