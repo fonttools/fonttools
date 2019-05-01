@@ -67,7 +67,7 @@ class InstantiateGvarTest(object):
                         (247, 229),
                         (0, 0),
                         (274, 0),
-                        (0, 1000),
+                        (0, 536),
                         (0, 0),
                     ]
                 },
@@ -83,7 +83,7 @@ class InstantiateGvarTest(object):
                         (265, 229),
                         (0, 0),
                         (298, 0),
-                        (0, 1000),
+                        (0, 536),
                         (0, 0),
                     ]
                 },
@@ -101,7 +101,7 @@ class InstantiateGvarTest(object):
                         (282, 229),
                         (0, 0),
                         (322, 0),
-                        (0, 1000),
+                        (0, 536),
                         (0, 0),
                     ]
                 },
@@ -133,7 +133,7 @@ class InstantiateGvarTest(object):
             (265, 229),
             (0, 0),
             (298, 0),
-            (0, 1000),
+            (0, 536),
             (0, 0),
         ]
 
@@ -169,7 +169,7 @@ class InstantiateCvarTest(object):
         assert "cvar" not in varfont
 
 
-class InstantiateMvarTest(object):
+class InstantiateMVARTest(object):
     @pytest.mark.parametrize(
         "location, expected",
         [
@@ -217,7 +217,7 @@ class InstantiateMvarTest(object):
         assert mvar.VarStore.VarData[1].VarRegionCount == 1
         assert all(len(item) == 1 for item in mvar.VarStore.VarData[1].Item)
 
-        instancer.instantiateMvar(varfont, location)
+        instancer.instantiateMVAR(varfont, location)
 
         for mvar_tag, expected_value in expected.items():
             table_tag, item_name = MVAR_ENTRIES[mvar_tag]
@@ -268,13 +268,69 @@ class InstantiateMvarTest(object):
         ],
     )
     def test_full_instance(self, varfont, location, expected):
-        instancer.instantiateMvar(varfont, location)
+        instancer.instantiateMVAR(varfont, location)
 
         for mvar_tag, expected_value in expected.items():
             table_tag, item_name = MVAR_ENTRIES[mvar_tag]
             assert getattr(varfont[table_tag], item_name) == expected_value
 
         assert "MVAR" not in varfont
+
+
+class InstantiateHVARTest(object):
+    # the 'expectedDeltas' below refer to the VarData item deltas for the "hyphen"
+    # glyph in the PartialInstancerTest-VF.ttx test font, that are left after
+    # partial instancing
+    @pytest.mark.parametrize(
+        "location, expectedRegions, expectedDeltas",
+        [
+            ({"wght": -1.0}, [{"wdth": (-1.0, -1.0, 0)}], [-59]),
+            ({"wght": 0}, [{"wdth": (-1.0, -1.0, 0)}], [-48]),
+            ({"wght": 1.0}, [{"wdth": (-1.0, -1.0, 0)}], [7]),
+            (
+                {"wdth": -1.0},
+                [
+                    {"wght": (-1.0, -1.0, 0.0)},
+                    {"wght": (0.0, 0.61, 1.0)},
+                    {"wght": (0.61, 1.0, 1.0)},
+                ],
+                [-11, 31, 51],
+            ),
+            ({"wdth": 0}, [{"wght": (0.61, 1.0, 1.0)}], [-4]),
+        ],
+    )
+    def test_partial_instance(
+        self, varfont, fvarAxes, location, expectedRegions, expectedDeltas
+    ):
+        instancer.instantiateHVAR(varfont, location)
+
+        assert "HVAR" in varfont
+        hvar = varfont["HVAR"].table
+        varStore = hvar.VarStore
+
+        regions = varStore.VarRegionList.Region
+        assert [reg.get_support(fvarAxes) for reg in regions] == expectedRegions
+
+        assert len(varStore.VarData) == 1
+        assert varStore.VarData[0].ItemCount == 2
+
+        assert hvar.AdvWidthMap is not None
+        advWithMap = hvar.AdvWidthMap.mapping
+
+        assert advWithMap[".notdef"] == advWithMap["space"]
+        varIdx = advWithMap[".notdef"]
+        # these glyphs have no metrics variations in the test font
+        assert varStore.VarData[varIdx >> 16].Item[varIdx & 0xFFFF] == (
+            [0] * varStore.VarData[0].VarRegionCount
+        )
+
+        varIdx = advWithMap["hyphen"]
+        assert varStore.VarData[varIdx >> 16].Item[varIdx & 0xFFFF] == expectedDeltas
+
+    def test_full_instance(self, varfont):
+        instancer.instantiateHVAR(varfont, {"wght": 0, "wdth": 0})
+
+        assert "HVAR" not in varfont
 
 
 class InstantiateItemVariationStoreTest(object):
@@ -328,7 +384,7 @@ class InstantiateItemVariationStoreTest(object):
     def test_instantiate_default_deltas(
         self, varStore, fvarAxes, location, expected_deltas, num_regions
     ):
-        defaultDeltas, _ = instancer.instantiateItemVariationStore(
+        defaultDeltas = instancer.instantiateItemVariationStore(
             varStore, fvarAxes, location
         )
 

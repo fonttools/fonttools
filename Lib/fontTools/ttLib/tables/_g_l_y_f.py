@@ -362,9 +362,9 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		"coord" is an array of GlyphCoordinates which must include the four
 		"phantom points".
 
-		Only the horizontal advance and sidebearings in "hmtx" table are updated
-		from the first two phantom points. The last two phantom points for
-		vertical typesetting are currently ignored.
+		Both the horizontal/vertical advances and left/top sidebearings in "hmtx"
+		and "vmtx" tables (if any) are updated from four phantom points and
+		the glyph's bounding boxes.
 		"""
 		# TODO: Create new glyph if not already present
 		assert glyphName in self.glyphs
@@ -372,8 +372,6 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 
 		# Handle phantom points for (left, right, top, bottom) positions.
 		assert len(coord) >= 4
-		if not hasattr(glyph, 'xMin'):
-			glyph.recalcBounds(self)
 		leftSideX = coord[-4][0]
 		rightSideX = coord[-3][0]
 		topSideY = coord[-2][1]
@@ -400,8 +398,14 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			# https://github.com/fonttools/fonttools/pull/1198
 			horizontalAdvanceWidth = 0
 		leftSideBearing = otRound(glyph.xMin - leftSideX)
-		# TODO Handle vertical metrics?
 		ttFont["hmtx"].metrics[glyphName] = horizontalAdvanceWidth, leftSideBearing
+
+		if "vmtx" in ttFont:
+			verticalAdvanceWidth = otRound(topSideY - bottomSideY)
+			if verticalAdvanceWidth < 0:  # unlikely but do the same as horizontal
+				verticalAdvanceWidth = 0
+			topSideBearing = otRound(topSideY - glyph.yMax)
+			ttFont["vmtx"].metrics[glyphName] = verticalAdvanceWidth, topSideBearing
 
 
 _GlyphControls = namedtuple(

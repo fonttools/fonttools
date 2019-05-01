@@ -17,6 +17,7 @@ from fontTools.varLib.models import supportScalar, normalizeValue, piecewiseLine
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
+from fontTools import varLib
 from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
@@ -82,8 +83,8 @@ def instantiateGvarGlyph(varfont, glyphname, location, optimize=True):
 
     if defaultDeltas:
         coordinates += GlyphCoordinates(defaultDeltas)
-        # this will also set the hmtx advance widths and sidebearings from
-        # the fourth-last and third-last phantom points (and glyph.xMin)
+        # this will also set the hmtx/vmtx advance widths and sidebearings from
+        # the four phantom points and glyph bounding boxes
         glyf.setCoordinates(glyphname, coordinates, varfont)
 
     if not tupleVarStore:
@@ -158,22 +159,72 @@ def setMvarDeltas(varfont, deltas):
             )
 
 
-def instantiateMvar(varfont, location):
+def instantiateMVAR(varfont, location):
     log.info("Instantiating MVAR table")
 
     mvar = varfont["MVAR"].table
     fvarAxes = varfont["fvar"].axes
-    defaultDeltas, varIndexMapping = instantiateItemVariationStore(
-        mvar.VarStore, fvarAxes, location
-    )
+    varStore = mvar.VarStore
+    defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, location)
     setMvarDeltas(varfont, defaultDeltas)
 
-    if varIndexMapping:
+    if varStore.VarRegionList.Region:
+        varIndexMapping = varStore.optimize()
         for rec in mvar.ValueRecord:
             rec.VarIdx = varIndexMapping[rec.VarIdx]
     else:
-        # Delete table if no more regions left.
         del varfont["MVAR"]
+
+
+def _remapVarIdxMap(table, attrName, varIndexMapping, glyphOrder):
+    oldMapping = getattr(table, attrName).mapping
+    newMapping = [varIndexMapping[oldMapping[glyphName]] for glyphName in glyphOrder]
+    setattr(table, attrName, builder.buildVarIdxMap(newMapping, glyphOrder))
+
+
+# TODO(anthrotype) Add support for HVAR/VVAR in CFF2
+def _instantiateVHVAR(varfont, location, tableFields):
+    tableTag = tableFields.tableTag
+    fvarAxes = varfont["fvar"].axes
+    # Deltas from gvar table have already been applied to the hmtx/vmtx. For full
+    # instances (i.e. all axes pinned), we can simply drop HVAR/VVAR and return
+    if set(location).issuperset(axis.axisTag for axis in fvarAxes):
+        log.info("Dropping %s table", tableTag)
+        del varfont[tableTag]
+        return
+
+    log.info("Instantiating %s table", tableTag)
+    vhvar = varfont[tableTag].table
+    varStore = vhvar.VarStore
+    # since deltas were already applied, the return value here is ignored
+    instantiateItemVariationStore(varStore, fvarAxes, location)
+
+    if varStore.VarRegionList.Region:
+        # Only re-optimize VarStore if the HVAR/VVAR already uses indirect AdvWidthMap
+        # or AdvHeightMap. If a direct, implicit glyphID->VariationIndex mapping is
+        # used for advances, skip re-optimizing and maintain original VariationIndex.
+        if getattr(vhvar, tableFields.advMapping):
+            varIndexMapping = varStore.optimize()
+            glyphOrder = varfont.getGlyphOrder()
+            _remapVarIdxMap(vhvar, tableFields.advMapping, varIndexMapping, glyphOrder)
+            if getattr(vhvar, tableFields.sb1):  # left or top sidebearings
+                _remapVarIdxMap(vhvar, tableFields.sb1, varIndexMapping, glyphOrder)
+            if getattr(vhvar, tableFields.sb2):  # right or bottom sidebearings
+                _remapVarIdxMap(vhvar, tableFields.sb2, varIndexMapping, glyphOrder)
+            if tableTag == "VVAR" and getattr(vhvar, tableFields.vOrigMapping):
+                _remapVarIdxMap(
+                    vhvar, tableFields.vOrigMapping, varIndexMapping, glyphOrder
+                )
+    else:
+        del varfont[tableTag]
+
+
+def instantiateHVAR(varfont, location):
+    return _instantiateVHVAR(varfont, location, varLib.HVAR_FIELDS)
+
+
+def instantiateVVAR(varfont, location):
+    return _instantiateVHVAR(varfont, location, varLib.VVAR_FIELDS)
 
 
 class _TupleVarStoreAdapter(object):
@@ -249,6 +300,8 @@ class _TupleVarStoreAdapter(object):
                 )
         regionList = builder.buildVarRegionList(self.regions, self.axisOrder)
         itemVarStore = builder.buildVarStore(regionList, varDatas)
+        # remove unused regions from VarRegionList
+        itemVarStore.prune_regions()
         return itemVarStore
 
 
@@ -257,6 +310,10 @@ def instantiateItemVariationStore(itemVarStore, fvarAxes, location):
 
     Remove regions in which all axes were instanced, and scale the deltas of
     the remaining regions where only some of the axes were instanced.
+
+    The number of VarData subtables, and the number of items within each, are
+    not modified, in order to keep the existing VariationIndex valid.
+    One may call VarStore.optimize() method after this to further optimize those.
 
     Args:
         varStore: An otTables.VarStore object (Item Variation Store)
@@ -267,8 +324,6 @@ def instantiateItemVariationStore(itemVarStore, fvarAxes, location):
     Returns:
         defaultDeltas: to be added to the default instance, of type dict of ints keyed
             by VariationIndex compound values: i.e. (outer << 16) + inner.
-        varIndexMapping: a mapping from old to new VarIdx after optimization (None if
-            varStore was fully instanced thus left empty).
     """
     tupleVarStore = _TupleVarStoreAdapter.fromItemVarStore(itemVarStore, fvarAxes)
     defaultDeltaArray = tupleVarStore.instantiate(location)
@@ -278,18 +333,12 @@ def instantiateItemVariationStore(itemVarStore, fvarAxes, location):
     assert itemVarStore.VarDataCount == newItemVarStore.VarDataCount
     itemVarStore.VarData = newItemVarStore.VarData
 
-    if itemVarStore.VarRegionList.Region:
-        # optimize VarStore, and get a map from old to new VarIdx after optimization
-        varIndexMapping = itemVarStore.optimize()
-    else:
-        varIndexMapping = None  # VarStore is empty
-
     defaultDeltas = {
         ((major << 16) + minor): delta
         for major, deltas in enumerate(defaultDeltaArray)
         for minor, delta in enumerate(deltas)
     }
-    return defaultDeltas, varIndexMapping
+    return defaultDeltas
 
 
 def instantiateOTL(varfont, location):
@@ -305,11 +354,10 @@ def instantiateOTL(varfont, location):
     log.info(msg)
 
     gdef = varfont["GDEF"].table
+    varStore = gdef.VarStore
     fvarAxes = varfont["fvar"].axes
 
-    defaultDeltas, varIndexMapping = instantiateItemVariationStore(
-        gdef.VarStore, fvarAxes, location
-    )
+    defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, location)
 
     # When VF are built, big lookups may overflow and be broken into multiple
     # subtables. MutatorMerger (which inherits from AligningMerger) reattaches
@@ -321,11 +369,12 @@ def instantiateOTL(varfont, location):
     # LigatureCarets, and optionally deletes all VariationIndex tables if the
     # VarStore is fully instanced.
     merger = MutatorMerger(
-        varfont, defaultDeltas, deleteVariations=(varIndexMapping is None)
+        varfont, defaultDeltas, deleteVariations=(not varStore.VarRegionList.Region)
     )
     merger.mergeTables(varfont, [varfont], ["GDEF", "GPOS"])
 
-    if varIndexMapping:
+    if varStore.VarRegionList.Region:
+        varIndexMapping = varStore.optimize()
         gdef.remap_device_varidxes(varIndexMapping)
         if "GPOS" in varfont:
             varfont["GPOS"].table.remap_device_varidxes(varIndexMapping)
@@ -439,6 +488,9 @@ def sanityCheckVariableTables(varfont):
     if "gvar" in varfont:
         if "glyf" not in varfont:
             raise ValueError("Can't have gvar without glyf")
+    # TODO(anthrotype) Remove once we do support partial instancing CFF2
+    if "CFF2" in varfont:
+        raise NotImplementedError("Instancing CFF2 variable fonts is not supported yet")
 
 
 def instantiateVariableFont(varfont, axis_limits, inplace=False, optimize=True):
@@ -461,14 +513,17 @@ def instantiateVariableFont(varfont, axis_limits, inplace=False, optimize=True):
         instantiateCvar(varfont, axis_limits)
 
     if "MVAR" in varfont:
-        instantiateMvar(varfont, axis_limits)
+        instantiateMVAR(varfont, axis_limits)
+
+    if "HVAR" in varfont:
+        instantiateHVAR(varfont, axis_limits)
+
+    if "VVAR" in varfont:
+        instantiateVVAR(varfont, axis_limits)
 
     instantiateOTL(varfont, axis_limits)
 
     instantiateFeatureVariations(varfont, axis_limits)
-
-    # TODO: actually process HVAR instead of dropping it
-    del varfont["HVAR"]
 
     return varfont
 

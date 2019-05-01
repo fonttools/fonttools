@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.39">
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.40">
 
   <GlyphOrder>
     <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
@@ -12,12 +12,12 @@
     <!-- Most of this table will be recalculated by the compiler -->
     <tableVersion value="1.0"/>
     <fontRevision value="2.001"/>
-    <checkSumAdjustment value="0x45c905be"/>
+    <checkSumAdjustment value="0x9180a393"/>
     <magicNumber value="0x5f0f3cf5"/>
     <flags value="00000000 00000011"/>
     <unitsPerEm value="1000"/>
     <created value="Tue Mar  5 00:05:14 2019"/>
-    <modified value="Mon Mar 25 12:51:29 2019"/>
+    <modified value="Sat Apr 20 17:03:24 2019"/>
     <xMin value="40"/>
     <yMin value="-200"/>
     <xMax value="450"/>
@@ -570,7 +570,7 @@
       </VarRegionList>
       <!-- VarDataCount=1 -->
       <VarData index="0">
-        <!-- ItemCount=3 -->
+        <!-- ItemCount=2 -->
         <NumShorts value="0"/>
         <!-- VarRegionCount=5 -->
         <VarRegionIndex index="0" value="2"/>
@@ -578,18 +578,22 @@
         <VarRegionIndex index="2" value="4"/>
         <VarRegionIndex index="3" value="5"/>
         <VarRegionIndex index="4" value="6"/>
-        <Item index="0" value="[0, 0, 0, 0, 0]"/>
-        <Item index="1" value="[-4, -48, -11, 31, 55]"/>
-        <Item index="2" value="[0, 0, 0, 0, 0]"/>
+        <Item index="0" value="[-4, -48, -11, 31, 55]"/>
+        <Item index="1" value="[0, 0, 0, 0, 0]"/>
       </VarData>
     </VarStore>
+    <AdvWidthMap>
+      <Map glyph=".notdef" outer="0" inner="1"/>
+      <Map glyph="hyphen" outer="0" inner="0"/>
+      <Map glyph="space" outer="0" inner="1"/>
+    </AdvWidthMap>
   </HVAR>
 
   <MVAR>
     <Version value="0x00010000"/>
     <Reserved value="0"/>
     <ValueRecordSize value="8"/>
-    <!-- ValueRecordCount=3 -->
+    <!-- ValueRecordCount=4 -->
     <VarStore Format="1">
       <Format value="1"/>
       <VarRegionList>
@@ -632,7 +636,7 @@
           </VarRegionAxis>
         </Region>
       </VarRegionList>
-      <!-- VarDataCount=1 -->
+      <!-- VarDataCount=2 -->
       <VarData index="0">
         <!-- ItemCount=3 -->
         <NumShorts value="1"/>
@@ -644,7 +648,7 @@
         <Item index="1" value="[100, 0, -20]"/>
         <Item index="2" value="[50, -30, -20]"/>
       </VarData>
-      <VarData>
+      <VarData index="1">
         <!-- ItemCount=1 -->
         <NumShorts value="0"/>
         <!-- VarRegionCount=1 -->
@@ -1015,5 +1019,11 @@
       </tuple>
     </glyphVariations>
   </gvar>
+
+  <vmtx>
+    <mtx name=".notdef" height="1000" tsb="100"/>
+    <mtx name="hyphen" height="536" tsb="229"/>
+    <mtx name="space" height="600" tsb="0"/>
+  </vmtx>
 
 </ttFont>
