@@ -223,17 +223,6 @@ class InstantiateMVARTest(object):
             table_tag, item_name = MVAR_ENTRIES[mvar_tag]
             assert getattr(varfont[table_tag], item_name) == expected_value
 
-        # check that the pinned axis does not influence any of the remaining regions
-        # in MVAR VarStore
-        pinned_axes = location.keys()
-        fvar = varfont["fvar"]
-        assert all(
-            peak == 0
-            for region in mvar.VarStore.VarRegionList.Region
-            for axis, (start, peak, end) in region.get_support(fvar.axes).items()
-            if axis in pinned_axes
-        )
-
         # check that regions and accompanying deltas have been dropped
         num_regions_left = len(mvar.VarStore.VarRegionList.Region)
         assert num_regions_left < 3
@@ -299,9 +288,7 @@ class InstantiateHVARTest(object):
             ({"wdth": 0}, [{"wght": (0.61, 1.0, 1.0)}], [-4]),
         ],
     )
-    def test_partial_instance(
-        self, varfont, fvarAxes, location, expectedRegions, expectedDeltas
-    ):
+    def test_partial_instance(self, varfont, location, expectedRegions, expectedDeltas):
         instancer.instantiateHVAR(varfont, location)
 
         assert "HVAR" in varfont
@@ -309,6 +296,7 @@ class InstantiateHVARTest(object):
         varStore = hvar.VarStore
 
         regions = varStore.VarRegionList.Region
+        fvarAxes = [a for a in varfont["fvar"].axes if a.axisTag not in location]
         assert [reg.get_support(fvarAxes) for reg in regions] == expectedRegions
 
         assert len(varStore.VarData) == 1
