@@ -11,6 +11,10 @@ class AstTest(unittest.TestCase):
             statement.append(ast.GlyphName(name))
         self.assertEqual(statement.asFea(), r"[\BASE \NULL foo a]")
 
+    def test_valuerecord_none(self):
+        statement = ast.ValueRecord(xPlacement=10, xAdvance=20)
+        self.assertEqual(statement.asFea(), "<10 0 20 0>")
+
 
 if __name__ == "__main__":
     import sys

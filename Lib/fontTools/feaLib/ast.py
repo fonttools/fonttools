@@ -1143,6 +1143,12 @@ class ValueRecord(Expression):
             elif yAdvance is None and not vertical:
                 return str(xAdvance)
 
+        # Make any remaining None value 0 to avoid generating invalid records.
+        x = x or 0
+        y = y or 0
+        xAdvance = xAdvance or 0
+        yAdvance = yAdvance or 0
+
         # Try format B, if possible.
         if (xPlaDevice is None and yPlaDevice is None and
                 xAdvDevice is None and yAdvDevice is None):
