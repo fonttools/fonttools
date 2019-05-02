@@ -426,6 +426,16 @@ class SubsetTest(unittest.TestCase):
         self.expect_ttx(subsetfont, self.getpath(
             "test_hinted_subrs_CFF.desub.ttx"), ["CFF "])
 
+    def test_desubroutinize_cntrmask_CFF(self):
+        ttxpath = self.getpath("test_cntrmask_CFF.ttx")
+        _, fontpath = self.compile_font(ttxpath, ".otf")
+        subsetpath = self.temp_path(".otf")
+        subset.main([fontpath, "--desubroutinize", "--notdef-outline",
+                     "--output-file=%s" % subsetpath, "*"])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath(
+            "test_cntrmask_CFF.desub.ttx"), ["CFF "])
+
     def test_no_hinting_desubroutinize_CFF(self):
         ttxpath = self.getpath("test_hinted_subrs_CFF.ttx")
         _, fontpath = self.compile_font(ttxpath, ".otf")
