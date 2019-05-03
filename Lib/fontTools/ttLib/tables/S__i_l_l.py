@@ -28,7 +28,7 @@ class table_S__i_l_l(DefaultTable.DefaultTable):
                                                         data[i * 8:(i+1) * 8])
             offset = int(offset / 8) - (numLangs + 1)
             langcode = langcode.replace(b'\000', b'')
-            langinfo.append((langcode, numsettings, offset))
+            langinfo.append((langcode.decode("utf-8"), numsettings, offset))
             maxsetting = max(maxsetting, offset + numsettings)
         data = data[numLangs * 8:]
         finfo = []
