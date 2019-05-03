@@ -4,6 +4,7 @@ from fontTools import ttLib
 from fontTools import designspaceLib
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.ttLib.tables import _f_v_a_r
+from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools import varLib
 from fontTools.varLib import instancer
@@ -223,17 +224,6 @@ class InstantiateMVARTest(object):
             table_tag, item_name = MVAR_ENTRIES[mvar_tag]
             assert getattr(varfont[table_tag], item_name) == expected_value
 
-        # check that the pinned axis does not influence any of the remaining regions
-        # in MVAR VarStore
-        pinned_axes = location.keys()
-        fvar = varfont["fvar"]
-        assert all(
-            peak == 0
-            for region in mvar.VarStore.VarRegionList.Region
-            for axis, (start, peak, end) in region.get_support(fvar.axes).items()
-            if axis in pinned_axes
-        )
-
         # check that regions and accompanying deltas have been dropped
         num_regions_left = len(mvar.VarStore.VarRegionList.Region)
         assert num_regions_left < 3
@@ -299,9 +289,7 @@ class InstantiateHVARTest(object):
             ({"wdth": 0}, [{"wght": (0.61, 1.0, 1.0)}], [-4]),
         ],
     )
-    def test_partial_instance(
-        self, varfont, fvarAxes, location, expectedRegions, expectedDeltas
-    ):
+    def test_partial_instance(self, varfont, location, expectedRegions, expectedDeltas):
         instancer.instantiateHVAR(varfont, location)
 
         assert "HVAR" in varfont
@@ -309,6 +297,7 @@ class InstantiateHVARTest(object):
         varStore = hvar.VarStore
 
         regions = varStore.VarRegionList.Region
+        fvarAxes = [a for a in varfont["fvar"].axes if a.axisTag not in location]
         assert [reg.get_support(fvarAxes) for reg in regions] == expectedRegions
 
         assert len(varStore.VarData) == 1
@@ -861,3 +850,119 @@ class InstantiateOTLTest(object):
         valueRec1 = pairPos.PairSet[0].PairValueRecord[0].Value1
         assert not hasattr(valueRec1, "XAdvDevice")
         assert valueRec1.XAdvance == v2
+
+
+class InstantiateAvarTest(object):
+    @pytest.mark.parametrize("location", [{"wght": 0.0}, {"wdth": 0.0}])
+    def test_pin_and_drop_axis(self, varfont, location):
+        instancer.instantiateAvar(varfont, location)
+
+        assert set(varfont["avar"].segments).isdisjoint(location)
+
+    def test_full_instance(self, varfont):
+        instancer.instantiateAvar(varfont, {"wght": 0.0, "wdth": 0.0})
+
+        assert "avar" not in varfont
+
+
+class InstantiateFvarTest(object):
+    @pytest.mark.parametrize(
+        "location, instancesLeft",
+        [
+            (
+                {"wght": 400.0},
+                ["Regular", "SemiCondensed", "Condensed", "ExtraCondensed"],
+            ),
+            (
+                {"wght": 100.0},
+                ["Thin", "SemiCondensed Thin", "Condensed Thin", "ExtraCondensed Thin"],
+            ),
+            (
+                {"wdth": 100.0},
+                [
+                    "Thin",
+                    "ExtraLight",
+                    "Light",
+                    "Regular",
+                    "Medium",
+                    "SemiBold",
+                    "Bold",
+                    "ExtraBold",
+                    "Black",
+                ],
+            ),
+            # no named instance at pinned location
+            ({"wdth": 90.0}, []),
+        ],
+    )
+    def test_pin_and_drop_axis(self, varfont, location, instancesLeft):
+        instancer.instantiateFvar(varfont, location)
+
+        fvar = varfont["fvar"]
+        assert {a.axisTag for a in fvar.axes}.isdisjoint(location)
+
+        for instance in fvar.instances:
+            assert set(instance.coordinates).isdisjoint(location)
+
+        name = varfont["name"]
+        assert [
+            name.getDebugName(instance.subfamilyNameID) for instance in fvar.instances
+        ] == instancesLeft
+
+    def test_full_instance(self, varfont):
+        instancer.instantiateFvar(varfont, {"wght": 0.0, "wdth": 0.0})
+
+        assert "fvar" not in varfont
+
+
+class InstantiateSTATTest(object):
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"wght": 400}, ["Condensed", "Upright"]),
+            ({"wdth": 100}, ["Thin", "Regular", "Black", "Upright"]),
+        ],
+    )
+    def test_pin_and_drop_axis(self, varfont, location, expected):
+        instancer.instantiateSTAT(varfont, location)
+
+        stat = varfont["STAT"].table
+        designAxes = {a.AxisTag for a in stat.DesignAxisRecord.Axis}
+
+        assert designAxes == {"wght", "wdth", "ital"}.difference(location)
+
+        name = varfont["name"]
+        valueNames = []
+        for axisValueTable in stat.AxisValueArray.AxisValue:
+            valueName = name.getDebugName(axisValueTable.ValueNameID)
+            valueNames.append(valueName)
+
+        assert valueNames == expected
+
+    def test_skip_empty_table(self, varfont):
+        stat = otTables.STAT()
+        stat.Version = 0x00010001
+        stat.populateDefaults()
+        assert not stat.DesignAxisRecord
+        assert not stat.AxisValueArray
+        varfont["STAT"].table = stat
+
+        instancer.instantiateSTAT(varfont, {"wght": 100})
+
+        assert not varfont["STAT"].table.DesignAxisRecord
+
+    def test_drop_table(self, varfont):
+        stat = otTables.STAT()
+        stat.Version = 0x00010001
+        stat.populateDefaults()
+        stat.DesignAxisRecord = otTables.AxisRecordArray()
+        axis = otTables.AxisRecord()
+        axis.AxisTag = "wght"
+        axis.AxisNameID = 0
+        axis.AxisOrdering = 0
+        stat.DesignAxisRecord.Axis = [axis]
+        varfont["STAT"].table = stat
+
+        instancer.instantiateSTAT(varfont, {"wght": 100})
+
+        assert "STAT" not in varfont

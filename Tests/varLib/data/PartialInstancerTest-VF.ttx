@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.40">
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.41">
 
   <GlyphOrder>
     <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
@@ -12,12 +12,12 @@
     <!-- Most of this table will be recalculated by the compiler -->
     <tableVersion value="1.0"/>
     <fontRevision value="2.001"/>
-    <checkSumAdjustment value="0x9180a393"/>
+    <checkSumAdjustment value="0x710b1826"/>
     <magicNumber value="0x5f0f3cf5"/>
     <flags value="00000000 00000011"/>
     <unitsPerEm value="1000"/>
     <created value="Tue Mar  5 00:05:14 2019"/>
-    <modified value="Sat Apr 20 17:03:24 2019"/>
+    <modified value="Fri May  3 10:34:01 2019"/>
     <xMin value="40"/>
     <yMin value="-200"/>
     <xMax value="450"/>
@@ -300,6 +300,12 @@
     <namerecord nameID="293" platformID="1" platEncID="0" langID="0x0" unicode="True">
       ExtraCondensed Black
     </namerecord>
+    <namerecord nameID="294" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Italic
+    </namerecord>
+    <namerecord nameID="295" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Upright
+    </namerecord>
     <namerecord nameID="0" platformID="3" platEncID="1" langID="0x409">
       Copyright 2015 Google Inc. All Rights Reserved.
     </namerecord>
@@ -449,6 +455,12 @@
     </namerecord>
     <namerecord nameID="293" platformID="3" platEncID="1" langID="0x409">
       ExtraCondensed Black
+    </namerecord>
+    <namerecord nameID="294" platformID="3" platEncID="1" langID="0x409">
+      Italic
+    </namerecord>
+    <namerecord nameID="295" platformID="3" platEncID="1" langID="0x409">
+      Upright
     </namerecord>
   </name>
 
@@ -675,9 +687,9 @@
   </MVAR>
 
   <STAT>
-    <Version value="0x00010001"/>
+    <Version value="0x00010002"/>
     <DesignAxisRecordSize value="8"/>
-    <!-- DesignAxisCount=2 -->
+    <!-- DesignAxisCount=3 -->
     <DesignAxisRecord>
       <Axis index="0">
         <AxisTag value="wght"/>
@@ -689,8 +701,52 @@
         <AxisNameID value="257"/>  <!-- Width -->
         <AxisOrdering value="1"/>
       </Axis>
+      <Axis index="2">
+        <AxisTag value="ital"/>
+        <AxisNameID value="294"/>  <!-- Italic -->
+        <AxisOrdering value="2"/>
+      </Axis>
     </DesignAxisRecord>
-    <!-- AxisValueCount=0 -->
+    <!-- AxisValueCount=5 -->
+    <AxisValueArray>
+      <AxisValue index="0" Format="1">
+        <AxisIndex value="0"/>
+        <Flags value="0"/>
+        <ValueNameID value="258"/>  <!-- Thin -->
+        <Value value="100.0"/>
+      </AxisValue>
+      <AxisValue index="1" Format="3">
+        <AxisIndex value="0"/>
+        <Flags value="2"/>
+        <ValueNameID value="261"/>  <!-- Regular -->
+        <Value value="400.0"/>
+        <LinkedValue value="700.0"/>
+      </AxisValue>
+      <AxisValue index="2" Format="2">
+        <AxisIndex value="0"/>
+        <Flags value="0"/>
+        <ValueNameID value="266"/>  <!-- Black -->
+        <NominalValue value="900.0"/>
+        <RangeMinValue value="801.0"/>
+        <RangeMaxValue value="900.0"/>
+      </AxisValue>
+      <AxisValue index="3" Format="4">
+        <!-- AxisCount=1 -->
+        <Flags value="0"/>
+        <ValueNameID value="279"/>  <!-- Condensed -->
+        <AxisValueRecord index="0">
+          <AxisIndex value="1"/>
+          <Value value="79.0"/>
+        </AxisValueRecord>
+      </AxisValue>
+      <AxisValue index="4" Format="3">
+        <AxisIndex value="2"/>
+        <Flags value="2"/>
+        <ValueNameID value="295"/>  <!-- Upright -->
+        <Value value="0.0"/>
+        <LinkedValue value="1.0"/>
+      </AxisValue>
+    </AxisValueArray>
     <ElidedFallbackNameID value="2"/>  <!-- Regular -->
   </STAT>
 
