@@ -296,8 +296,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			- endPts: list of indices of end points for each contour in simple
 			glyphs, or component indices in composite glyphs (used for IUP
 			optimization).
-			- flags: array of contour point flags for simple glyphs, or component
-			flags for composite glyphs.
+			- flags: array of contour point flags for simple glyphs (None for
+			composite glyphs).
 			- components: list of base glyph names (str) for each component in
 			composite glyphs (None for simple glyphs).
 
@@ -316,7 +316,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			controls = _GlyphControls(
 				numberOfContours=glyph.numberOfContours,
 				endPts=list(range(len(glyph.components))),
-				flags=[c.flags for c in glyph.components],
+				flags=None,
 				components=[c.glyphName for c in glyph.components],
 			)
 		else:
