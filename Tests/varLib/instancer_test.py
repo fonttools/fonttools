@@ -4,6 +4,7 @@ from fontTools import ttLib
 from fontTools import designspaceLib
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.ttLib.tables import _f_v_a_r
+from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools import varLib
 from fontTools.varLib import instancer
@@ -912,3 +913,56 @@ class InstantiateFvarTest(object):
         instancer.instantiateFvar(varfont, {"wght": 0.0, "wdth": 0.0})
 
         assert "fvar" not in varfont
+
+
+class InstantiateSTATTest(object):
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"wght": 400}, ["Condensed", "Upright"]),
+            ({"wdth": 100}, ["Thin", "Regular", "Black", "Upright"]),
+        ],
+    )
+    def test_pin_and_drop_axis(self, varfont, location, expected):
+        instancer.instantiateSTAT(varfont, location)
+
+        stat = varfont["STAT"].table
+        designAxes = {a.AxisTag for a in stat.DesignAxisRecord.Axis}
+
+        assert designAxes == {"wght", "wdth", "ital"}.difference(location)
+
+        name = varfont["name"]
+        valueNames = []
+        for axisValueTable in stat.AxisValueArray.AxisValue:
+            valueName = name.getDebugName(axisValueTable.ValueNameID)
+            valueNames.append(valueName)
+
+        assert valueNames == expected
+
+    def test_skip_empty_table(self, varfont):
+        stat = otTables.STAT()
+        stat.Version = 0x00010001
+        stat.populateDefaults()
+        assert not stat.DesignAxisRecord
+        assert not stat.AxisValueArray
+        varfont["STAT"].table = stat
+
+        instancer.instantiateSTAT(varfont, {"wght": 100})
+
+        assert not varfont["STAT"].table.DesignAxisRecord
+
+    def test_drop_table(self, varfont):
+        stat = otTables.STAT()
+        stat.Version = 0x00010001
+        stat.populateDefaults()
+        stat.DesignAxisRecord = otTables.AxisRecordArray()
+        axis = otTables.AxisRecord()
+        axis.AxisTag = "wght"
+        axis.AxisNameID = 0
+        axis.AxisOrdering = 0
+        stat.DesignAxisRecord.Axis = [axis]
+        varfont["STAT"].table = stat
+
+        instancer.instantiateSTAT(varfont, {"wght": 100})
+
+        assert "STAT" not in varfont
