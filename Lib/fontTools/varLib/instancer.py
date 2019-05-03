@@ -490,25 +490,38 @@ def instantiateSTAT(varfont, location):
     pinnedAxes = set(location.keys())
 
     stat = varfont["STAT"].table
-    designAxes = stat.DesignAxisRecord.Axis if stat.DesignAxisRecord else ()
+    if not stat.DesignAxisRecord:
+        return  # skip empty STAT table
 
+    designAxes = stat.DesignAxisRecord.Axis
     pinnedAxisIndices = {
         i for i, axis in enumerate(designAxes) if axis.AxisTag in pinnedAxes
     }
 
-    if len(pinnedAxisIndices) == stat.DesignAxisCount:
+    if len(pinnedAxisIndices) == len(designAxes):
         log.info("Dropping STAT table")
         del varfont["STAT"]
         return
 
     log.info("Instantiating STAT table")
 
+    # only keep DesignAxis that were not instanced, a build a mapping from old
+    # to new axis indices
+    newDesignAxes = []
+    axisIndexMap = {}
+    for i, axis in enumerate(designAxes):
+        if i not in pinnedAxisIndices:
+            axisIndexMap[i] = len(newDesignAxes)
+            newDesignAxes.append(axis)
+
     if stat.AxisValueArray and stat.AxisValueArray.AxisValue:
+        # drop all AxisValue tables that reference any of the pinned axes
         newAxisValueTables = []
         for axisValueTable in stat.AxisValueArray.AxisValue:
             if axisValueTable.Format in (1, 2, 3):
                 if axisValueTable.AxisIndex in pinnedAxisIndices:
                     continue
+                axisValueTable.AxisIndex = axisIndexMap[axisValueTable.AxisIndex]
                 newAxisValueTables.append(axisValueTable)
             elif axisValueTable.Format == 4:
                 if any(
@@ -516,15 +529,15 @@ def instantiateSTAT(varfont, location):
                     for rec in axisValueTable.AxisValueRecord
                 ):
                     continue
+                for rec in axisValueTable.AxisValueRecord:
+                    rec.AxisIndex = axisIndexMap[rec.AxisIndex]
                 newAxisValueTables.append(axisValueTable)
             else:
                 raise NotImplementedError(axisValueTable.Format)
         stat.AxisValueArray.AxisValue = newAxisValueTables
         stat.AxisValueCount = len(stat.AxisValueArray.AxisValue)
 
-    stat.DesignAxisRecord.Axis[:] = [
-        axis for axis in designAxes if axis.AxisTag not in pinnedAxes
-    ]
+    stat.DesignAxisRecord.Axis[:] = newDesignAxes
     stat.DesignAxisCount = len(stat.DesignAxisRecord.Axis)
 
 
