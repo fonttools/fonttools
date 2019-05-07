@@ -12,7 +12,7 @@ NOTE: The module is experimental and both the API and the CLI *will* change.
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.misc.fixedTools import floatToFixedToFloat
+from fontTools.misc.fixedTools import floatToFixedToFloat, otRound
 from fontTools.varLib.models import supportScalar, normalizeValue, piecewiseLinearMap
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
@@ -57,13 +57,12 @@ def instantiateTupleVariationStore(variations, location, origCoords=None, endPts
         else:
             newVariations[axes] = var
 
-    for var in newVariations.values():
-        var.roundDeltas()
-
     # drop TupleVariation if all axes have been pinned (var.axes.items() is empty);
     # its deltas will be added to the default instance's coordinates
     defaultVar = newVariations.pop(tuple(), None)
 
+    for var in newVariations.values():
+        var.roundDeltas()
     variations[:] = list(newVariations.values())
 
     return defaultVar.coordinates if defaultVar is not None else []
@@ -125,7 +124,7 @@ def instantiateGvar(varfont, location, optimize=True):
 def setCvarDeltas(cvt, deltas):
     for i, delta in enumerate(deltas):
         if delta is not None:
-            cvt[i] += delta
+            cvt[i] += otRound(delta)
 
 
 def instantiateCvar(varfont, location):
@@ -155,7 +154,7 @@ def setMvarDeltas(varfont, deltas):
             setattr(
                 varfont[tableTag],
                 itemName,
-                getattr(varfont[tableTag], itemName) + delta,
+                getattr(varfont[tableTag], itemName) + otRound(delta),
             )
 
 
@@ -319,8 +318,8 @@ def instantiateItemVariationStore(itemVarStore, fvarAxes, location):
             May not specify coordinates for all the fvar axes.
 
     Returns:
-        defaultDeltas: to be added to the default instance, of type dict of ints keyed
-            by VariationIndex compound values: i.e. (outer << 16) + inner.
+        defaultDeltas: to be added to the default instance, of type dict of floats
+            keyed by VariationIndex compound values: i.e. (outer << 16) + inner.
     """
     tupleVarStore = _TupleVarStoreAdapter.fromItemVarStore(itemVarStore, fvarAxes)
     defaultDeltaArray = tupleVarStore.instantiate(location)
