@@ -21,6 +21,7 @@ from fontTools import varLib
 from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
+from contextlib import contextmanager
 import collections
 from copy import deepcopy
 import logging
@@ -540,6 +541,50 @@ def instantiateSTAT(varfont, location):
     stat.DesignAxisCount = len(stat.DesignAxisRecord.Axis)
 
 
+def getVariationNameIDs(varfont):
+    used = []
+    if "fvar" in varfont:
+        fvar = varfont["fvar"]
+        for axis in fvar.axes:
+            used.append(axis.axisNameID)
+        for instance in fvar.instances:
+            used.append(instance.subfamilyNameID)
+            if instance.postscriptNameID != 0xFFFF:
+                used.append(instance.postscriptNameID)
+    if "STAT" in varfont:
+        stat = varfont["STAT"].table
+        for axis in stat.DesignAxisRecord.Axis if stat.DesignAxisRecord else ():
+            used.append(axis.AxisNameID)
+        for value in stat.AxisValueArray.AxisValue if stat.AxisValueArray else ():
+            used.append(value.ValueNameID)
+    # nameIDs <= 255 are reserved by OT spec so we don't touch them
+    return {nameID for nameID in used if nameID > 255}
+
+
+@contextmanager
+def pruningUnusedNames(varfont):
+    origNameIDs = getVariationNameIDs(varfont)
+
+    yield
+
+    log.info("Pruning name table")
+    exclude = origNameIDs - getVariationNameIDs(varfont)
+    varfont["name"].names[:] = [
+        record for record in varfont["name"].names if record.nameID not in exclude
+    ]
+    if "ltag" in varfont:
+        # Drop the whole 'ltag' table if all the language-dependent Unicode name
+        # records that reference it have been dropped.
+        # TODO: Only prune unused ltag tags, renumerating langIDs accordingly.
+        # Note ltag can also be used by feat or morx tables, so check those too.
+        if not any(
+            record
+            for record in varfont["name"].names
+            if record.platformID == 0 and record.langID != 0xFFFF
+        ):
+            del varfont["ltag"]
+
+
 def normalize(value, triple, avar_mapping):
     value = normalizeValue(value, triple)
     if avar_mapping:
@@ -622,10 +667,11 @@ def instantiateVariableFont(varfont, axis_limits, inplace=False, optimize=True):
     if "avar" in varfont:
         instantiateAvar(varfont, normalized_limits)
 
-    if "STAT" in varfont:
-        instantiateSTAT(varfont, axis_limits)
+    with pruningUnusedNames(varfont):
+        if "STAT" in varfont:
+            instantiateSTAT(varfont, axis_limits)
 
-    instantiateFvar(varfont, axis_limits)
+        instantiateFvar(varfont, axis_limits)
 
     return varfont
 

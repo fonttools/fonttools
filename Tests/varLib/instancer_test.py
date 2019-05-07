@@ -966,3 +966,27 @@ class InstantiateSTATTest(object):
         instancer.instantiateSTAT(varfont, {"wght": 100})
 
         assert "STAT" not in varfont
+
+
+def test_pruningUnusedNames(varfont):
+    varNameIDs = instancer.getVariationNameIDs(varfont)
+
+    assert varNameIDs == set(range(256, 296 + 1))
+
+    fvar = varfont["fvar"]
+    stat = varfont["STAT"].table
+
+    with instancer.pruningUnusedNames(varfont):
+        del fvar.axes[0]  # Weight (nameID=256)
+        del fvar.instances[0]  # Thin (nameID=258)
+        del stat.DesignAxisRecord.Axis[0]  # Weight (nameID=256)
+        del stat.AxisValueArray.AxisValue[0]  # Thin (nameID=258)
+
+    assert not any(n for n in varfont["name"].names if n.nameID in {256, 258})
+
+    with instancer.pruningUnusedNames(varfont):
+        del varfont["fvar"]
+        del varfont["STAT"]
+
+    assert not any(n for n in varfont["name"].names if n.nameID in varNameIDs)
+    assert "ltag" not in varfont
