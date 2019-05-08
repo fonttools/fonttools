@@ -752,6 +752,13 @@ def parseArgs(args):
         action="store_false",
         help="do not perform IUP optimization on the remaining gvar TupleVariations",
     )
+    parser.add_argument(
+        "--no-overlap",
+        dest="overlap",
+        action="store_false",
+        help="Don't set OVERLAP_SIMPLE/OVERLAP_COMPOUND glyf flags (only applicable "
+        "when generating a full instance)",
+    )
     logging_group = parser.add_mutually_exclusive_group(required=False)
     logging_group.add_argument(
         "-v", "--verbose", action="store_true", help="Run more verbosely."
@@ -785,7 +792,11 @@ def main(args=None):
     varfont = TTFont(infile)
 
     instantiateVariableFont(
-        varfont, axis_limits, inplace=True, optimize=options.optimize
+        varfont,
+        axis_limits,
+        inplace=True,
+        optimize=options.optimize,
+        overlap=options.overlap,
     )
 
     log.info("Saving partial variable font %s", outfile)
