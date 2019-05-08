@@ -717,7 +717,7 @@ def parseArgs(args):
     """Parse argv.
 
     Returns:
-        3-tuple (infile, outfile, axis_limits)
+        3-tuple (infile, axis_limits, options)
         axis_limits is either a Dict[str, int], for pinning variation axes to specific
         coordinates along those axes; or a Dict[str, Tuple(int, int)], meaning limit
         this axis to min/max range.
@@ -750,7 +750,7 @@ def parseArgs(args):
         "--no-optimize",
         dest="optimize",
         action="store_false",
-        help="do not perform IUP optimization on the remaining gvar TupleVariations",
+        help="Don't perform IUP optimization on the remaining gvar TupleVariations",
     )
     parser.add_argument(
         "--no-overlap",
@@ -769,27 +769,36 @@ def parseArgs(args):
     options = parser.parse_args(args)
 
     infile = options.input
-    outfile = (
-        os.path.splitext(infile)[0] + "-instance.ttf"
-        if not options.output
-        else options.output
-    )
+    if not os.path.isfile(infile):
+        parser.error("No such file '{}'".format(infile))
+
     configLogger(
         level=("DEBUG" if options.verbose else "ERROR" if options.quiet else "INFO")
     )
 
-    axis_limits = parseLimits(options.locargs)
+    try:
+        axis_limits = parseLimits(options.locargs)
+    except ValueError as e:
+        parser.error(e)
+
     if len(axis_limits) != len(options.locargs):
-        raise ValueError("Specified multiple limits for the same axis")
-    return (infile, outfile, axis_limits, options)
+        parser.error("Specified multiple limits for the same axis")
+
+    return (infile, axis_limits, options)
 
 
 def main(args=None):
-    infile, outfile, axis_limits, options = parseArgs(args)
+    infile, axis_limits, options = parseArgs(args)
     log.info("Restricting axes: %s", axis_limits)
 
     log.info("Loading variable font")
     varfont = TTFont(infile)
+
+    isFullInstance = {
+        axisTag
+        for axisTag, limit in axis_limits.items()
+        if not isinstance(limit, tuple)
+    }.issuperset(axis.axisTag for axis in varfont["fvar"].axes)
 
     instantiateVariableFont(
         varfont,
@@ -799,7 +808,18 @@ def main(args=None):
         overlap=options.overlap,
     )
 
-    log.info("Saving partial variable font %s", outfile)
+    outfile = (
+        os.path.splitext(infile)[0]
+        + "-{}.ttf".format("instance" if isFullInstance else "partial")
+        if not options.output
+        else options.output
+    )
+
+    log.info(
+        "Saving %s font %s",
+        "instance" if isFullInstance else "partial variable",
+        outfile,
+    )
     varfont.save(outfile)
 
 
