@@ -3,7 +3,7 @@ from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools import designspaceLib
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
-from fontTools.ttLib.tables import _f_v_a_r
+from fontTools.ttLib.tables import _f_v_a_r, _g_l_y_f
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools import varLib
@@ -990,3 +990,27 @@ def test_pruningUnusedNames(varfont):
 
     assert not any(n for n in varfont["name"].names if n.nameID in varNameIDs)
     assert "ltag" not in varfont
+
+
+def test_setMacOverlapFlags():
+    flagOverlapCompound = _g_l_y_f.OVERLAP_COMPOUND
+    flagOverlapSimple = _g_l_y_f.flagOverlapSimple
+
+    glyf = ttLib.newTable("glyf")
+    glyf.glyphOrder = ["a", "b", "c"]
+    a = _g_l_y_f.Glyph()
+    a.numberOfContours = 1
+    a.flags = [0]
+    b = _g_l_y_f.Glyph()
+    b.numberOfContours = -1
+    comp = _g_l_y_f.GlyphComponent()
+    comp.flags = 0
+    b.components = [comp]
+    c = _g_l_y_f.Glyph()
+    c.numberOfContours = 0
+    glyf.glyphs = {"a": a, "b": b, "c": c}
+
+    instancer.setMacOverlapFlags(glyf)
+
+    assert a.flags[0] & flagOverlapSimple != 0
+    assert b.components[0].flags & flagOverlapCompound != 0

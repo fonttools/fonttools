@@ -16,7 +16,7 @@ from fontTools.misc.fixedTools import floatToFixedToFloat, otRound
 from fontTools.varLib.models import supportScalar, normalizeValue, piecewiseLinearMap
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
-from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
+from fontTools.ttLib.tables import _g_l_y_f
 from fontTools import varLib
 from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
@@ -82,7 +82,7 @@ def instantiateGvarGlyph(varfont, glyphname, location, optimize=True):
     )
 
     if defaultDeltas:
-        coordinates += GlyphCoordinates(defaultDeltas)
+        coordinates += _g_l_y_f.GlyphCoordinates(defaultDeltas)
         # this will also set the hmtx/vmtx advance widths and sidebearings from
         # the four phantom points and glyph bounding boxes
         glyf.setCoordinates(glyphname, coordinates, varfont)
@@ -585,6 +585,19 @@ def pruningUnusedNames(varfont):
             del varfont["ltag"]
 
 
+def setMacOverlapFlags(glyfTable):
+    flagOverlapCompound = _g_l_y_f.OVERLAP_COMPOUND
+    flagOverlapSimple = _g_l_y_f.flagOverlapSimple
+    for glyphName in glyfTable.keys():
+        glyph = glyfTable[glyphName]
+        # Set OVERLAP_COMPOUND bit for compound glyphs
+        if glyph.isComposite():
+            glyph.components[0].flags |= flagOverlapCompound
+        # Set OVERLAP_SIMPLE bit for simple glyphs
+        elif glyph.numberOfContours > 0:
+            glyph.flags[0] |= flagOverlapSimple
+
+
 def normalize(value, triple, avar_mapping):
     value = normalizeValue(value, triple)
     if avar_mapping:
@@ -632,7 +645,9 @@ def sanityCheckVariableTables(varfont):
         raise NotImplementedError("Instancing CFF2 variable fonts is not supported yet")
 
 
-def instantiateVariableFont(varfont, axis_limits, inplace=False, optimize=True):
+def instantiateVariableFont(
+    varfont, axis_limits, inplace=False, optimize=True, overlap=True
+):
     sanityCheckVariableTables(varfont)
 
     if not inplace:
@@ -672,6 +687,10 @@ def instantiateVariableFont(varfont, axis_limits, inplace=False, optimize=True):
             instantiateSTAT(varfont, axis_limits)
 
         instantiateFvar(varfont, axis_limits)
+
+    if "fvar" not in varfont:
+        if "glyf" in varfont and overlap:
+            setMacOverlapFlags(varfont["glyf"])
 
     return varfont
 
