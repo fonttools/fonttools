@@ -794,7 +794,7 @@ def parseArgs(args):
         help="Don't perform IUP optimization on the remaining gvar TupleVariations",
     )
     parser.add_argument(
-        "--no-overlap",
+        "--no-overlap-flag",
         dest="overlap",
         action="store_false",
         help="Don't set OVERLAP_SIMPLE/OVERLAP_COMPOUND glyf flags (only applicable "
