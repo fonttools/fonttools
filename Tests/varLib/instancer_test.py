@@ -3,7 +3,7 @@ from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools import designspaceLib
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
-from fontTools.ttLib.tables import _f_v_a_r
+from fontTools.ttLib.tables import _f_v_a_r, _g_l_y_f
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools import varLib
@@ -966,3 +966,124 @@ class InstantiateSTATTest(object):
         instancer.instantiateSTAT(varfont, {"wght": 100})
 
         assert "STAT" not in varfont
+
+
+def test_pruningUnusedNames(varfont):
+    varNameIDs = instancer.getVariationNameIDs(varfont)
+
+    assert varNameIDs == set(range(256, 296 + 1))
+
+    fvar = varfont["fvar"]
+    stat = varfont["STAT"].table
+
+    with instancer.pruningUnusedNames(varfont):
+        del fvar.axes[0]  # Weight (nameID=256)
+        del fvar.instances[0]  # Thin (nameID=258)
+        del stat.DesignAxisRecord.Axis[0]  # Weight (nameID=256)
+        del stat.AxisValueArray.AxisValue[0]  # Thin (nameID=258)
+
+    assert not any(n for n in varfont["name"].names if n.nameID in {256, 258})
+
+    with instancer.pruningUnusedNames(varfont):
+        del varfont["fvar"]
+        del varfont["STAT"]
+
+    assert not any(n for n in varfont["name"].names if n.nameID in varNameIDs)
+    assert "ltag" not in varfont
+
+
+def test_setMacOverlapFlags():
+    flagOverlapCompound = _g_l_y_f.OVERLAP_COMPOUND
+    flagOverlapSimple = _g_l_y_f.flagOverlapSimple
+
+    glyf = ttLib.newTable("glyf")
+    glyf.glyphOrder = ["a", "b", "c"]
+    a = _g_l_y_f.Glyph()
+    a.numberOfContours = 1
+    a.flags = [0]
+    b = _g_l_y_f.Glyph()
+    b.numberOfContours = -1
+    comp = _g_l_y_f.GlyphComponent()
+    comp.flags = 0
+    b.components = [comp]
+    c = _g_l_y_f.Glyph()
+    c.numberOfContours = 0
+    glyf.glyphs = {"a": a, "b": b, "c": c}
+
+    instancer.setMacOverlapFlags(glyf)
+
+    assert a.flags[0] & flagOverlapSimple != 0
+    assert b.components[0].flags & flagOverlapCompound != 0
+
+
+@pytest.fixture
+def ttFont():
+    f = ttLib.TTFont()
+    f["OS/2"] = ttLib.newTable("OS/2")
+    f["post"] = ttLib.newTable("post")
+    return f
+
+
+class SetDefaultWeightWidthSlantTest(object):
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"wght": 0}, 1),
+            ({"wght": 1}, 1),
+            ({"wght": 100}, 100),
+            ({"wght": 1000}, 1000),
+            ({"wght": 1001}, 1000),
+        ],
+    )
+    def test_wght(self, ttFont, location, expected):
+        instancer.setDefaultWeightWidthSlant(ttFont, location)
+
+        assert ttFont["OS/2"].usWeightClass == expected
+
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"wdth": 0}, 1),
+            ({"wdth": 56}, 1),
+            ({"wdth": 57}, 2),
+            ({"wdth": 62.5}, 2),
+            ({"wdth": 75}, 3),
+            ({"wdth": 87.5}, 4),
+            ({"wdth": 100}, 5),
+            ({"wdth": 112.5}, 6),
+            ({"wdth": 125}, 7),
+            ({"wdth": 150}, 8),
+            ({"wdth": 200}, 9),
+            ({"wdth": 201}, 9),
+            ({"wdth": 1000}, 9),
+        ],
+    )
+    def test_wdth(self, ttFont, location, expected):
+        instancer.setDefaultWeightWidthSlant(ttFont, location)
+
+        assert ttFont["OS/2"].usWidthClass == expected
+
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"slnt": -91}, -90),
+            ({"slnt": -90}, -90),
+            ({"slnt": 0}, 0),
+            ({"slnt": 11.5}, 11.5),
+            ({"slnt": 90}, 90),
+            ({"slnt": 91}, 90),
+        ],
+    )
+    def test_slnt(self, ttFont, location, expected):
+        instancer.setDefaultWeightWidthSlant(ttFont, location)
+
+        assert ttFont["post"].italicAngle == expected
+
+    def test_all(self, ttFont):
+        instancer.setDefaultWeightWidthSlant(
+            ttFont, {"wght": 500, "wdth": 150, "slnt": -12.0}
+        )
+
+        assert ttFont["OS/2"].usWeightClass == 500
+        assert ttFont["OS/2"].usWidthClass == 8
+        assert ttFont["post"].italicAngle == -12.0

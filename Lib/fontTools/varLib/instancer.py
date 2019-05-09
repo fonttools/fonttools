@@ -16,14 +16,16 @@ from fontTools.misc.fixedTools import floatToFixedToFloat, otRound
 from fontTools.varLib.models import supportScalar, normalizeValue, piecewiseLinearMap
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
-from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
+from fontTools.ttLib.tables import _g_l_y_f
 from fontTools import varLib
 from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
+from contextlib import contextmanager
 import collections
 from copy import deepcopy
 import logging
+from itertools import islice
 import os
 import re
 
@@ -81,7 +83,7 @@ def instantiateGvarGlyph(varfont, glyphname, location, optimize=True):
     )
 
     if defaultDeltas:
-        coordinates += GlyphCoordinates(defaultDeltas)
+        coordinates += _g_l_y_f.GlyphCoordinates(defaultDeltas)
         # this will also set the hmtx/vmtx advance widths and sidebearings from
         # the four phantom points and glyph bounding boxes
         glyf.setCoordinates(glyphname, coordinates, varfont)
@@ -540,6 +542,94 @@ def instantiateSTAT(varfont, location):
     stat.DesignAxisCount = len(stat.DesignAxisRecord.Axis)
 
 
+def getVariationNameIDs(varfont):
+    used = []
+    if "fvar" in varfont:
+        fvar = varfont["fvar"]
+        for axis in fvar.axes:
+            used.append(axis.axisNameID)
+        for instance in fvar.instances:
+            used.append(instance.subfamilyNameID)
+            if instance.postscriptNameID != 0xFFFF:
+                used.append(instance.postscriptNameID)
+    if "STAT" in varfont:
+        stat = varfont["STAT"].table
+        for axis in stat.DesignAxisRecord.Axis if stat.DesignAxisRecord else ():
+            used.append(axis.AxisNameID)
+        for value in stat.AxisValueArray.AxisValue if stat.AxisValueArray else ():
+            used.append(value.ValueNameID)
+    # nameIDs <= 255 are reserved by OT spec so we don't touch them
+    return {nameID for nameID in used if nameID > 255}
+
+
+@contextmanager
+def pruningUnusedNames(varfont):
+    origNameIDs = getVariationNameIDs(varfont)
+
+    yield
+
+    log.info("Pruning name table")
+    exclude = origNameIDs - getVariationNameIDs(varfont)
+    varfont["name"].names[:] = [
+        record for record in varfont["name"].names if record.nameID not in exclude
+    ]
+    if "ltag" in varfont:
+        # Drop the whole 'ltag' table if all the language-dependent Unicode name
+        # records that reference it have been dropped.
+        # TODO: Only prune unused ltag tags, renumerating langIDs accordingly.
+        # Note ltag can also be used by feat or morx tables, so check those too.
+        if not any(
+            record
+            for record in varfont["name"].names
+            if record.platformID == 0 and record.langID != 0xFFFF
+        ):
+            del varfont["ltag"]
+
+
+def setMacOverlapFlags(glyfTable):
+    flagOverlapCompound = _g_l_y_f.OVERLAP_COMPOUND
+    flagOverlapSimple = _g_l_y_f.flagOverlapSimple
+    for glyphName in glyfTable.keys():
+        glyph = glyfTable[glyphName]
+        # Set OVERLAP_COMPOUND bit for compound glyphs
+        if glyph.isComposite():
+            glyph.components[0].flags |= flagOverlapCompound
+        # Set OVERLAP_SIMPLE bit for simple glyphs
+        elif glyph.numberOfContours > 0:
+            glyph.flags[0] |= flagOverlapSimple
+
+
+def setDefaultWeightWidthSlant(ttFont, location):
+    if "wght" in location and "OS/2" in ttFont:
+        weightClass = otRound(max(1, min(location["wght"], 1000)))
+        log.info("Setting OS/2.usWidthClass = %s", weightClass)
+        ttFont["OS/2"].usWeightClass = weightClass
+
+    if "wdth" in location:
+        # map 'wdth' axis (1..200) to OS/2.usWidthClass (1..9), rounding to closest
+        steps = [50.0, 62.5, 75.0, 87.5, 100.0, 112.5, 125.0, 150.0, 200.0]
+        n = len(steps)
+        os2WidthClasses = {
+            (prev + curr) / 2: widthClass
+            for widthClass, (prev, curr) in enumerate(
+                zip(islice(steps, 0, n - 1), islice(steps, 1, n)), start=1
+            )
+        }
+        wdth = location["wdth"]
+        for percent, widthClass in sorted(os2WidthClasses.items()):
+            if wdth < percent:
+                break
+        else:
+            widthClass = 9
+        log.info("Setting OS/2.usWidthClass = %s", widthClass)
+        ttFont["OS/2"].usWidthClass = widthClass
+
+    if "slnt" in location and "post" in ttFont:
+        italicAngle = max(-90, min(location["slnt"], 90))
+        log.info("Setting post.italicAngle = %s", italicAngle)
+        ttFont["post"].italicAngle = italicAngle
+
+
 def normalize(value, triple, avar_mapping):
     value = normalizeValue(value, triple)
     if avar_mapping:
@@ -587,7 +677,9 @@ def sanityCheckVariableTables(varfont):
         raise NotImplementedError("Instancing CFF2 variable fonts is not supported yet")
 
 
-def instantiateVariableFont(varfont, axis_limits, inplace=False, optimize=True):
+def instantiateVariableFont(
+    varfont, axis_limits, inplace=False, optimize=True, overlap=True
+):
     sanityCheckVariableTables(varfont)
 
     if not inplace:
@@ -622,10 +714,24 @@ def instantiateVariableFont(varfont, axis_limits, inplace=False, optimize=True):
     if "avar" in varfont:
         instantiateAvar(varfont, normalized_limits)
 
-    if "STAT" in varfont:
-        instantiateSTAT(varfont, axis_limits)
+    with pruningUnusedNames(varfont):
+        if "STAT" in varfont:
+            instantiateSTAT(varfont, axis_limits)
 
-    instantiateFvar(varfont, axis_limits)
+        instantiateFvar(varfont, axis_limits)
+
+    if "fvar" not in varfont:
+        if "glyf" in varfont and overlap:
+            setMacOverlapFlags(varfont["glyf"])
+
+    setDefaultWeightWidthSlant(
+        varfont,
+        location={
+            axisTag: limit
+            for axisTag, limit in axis_limits.items()
+            if not isinstance(limit, tuple)
+        },
+    )
 
     return varfont
 
@@ -652,7 +758,7 @@ def parseArgs(args):
     """Parse argv.
 
     Returns:
-        3-tuple (infile, outfile, axis_limits)
+        3-tuple (infile, axis_limits, options)
         axis_limits is either a Dict[str, int], for pinning variation axes to specific
         coordinates along those axes; or a Dict[str, Tuple(int, int)], meaning limit
         this axis to min/max range.
@@ -685,7 +791,14 @@ def parseArgs(args):
         "--no-optimize",
         dest="optimize",
         action="store_false",
-        help="do not perform IUP optimization on the remaining gvar TupleVariations",
+        help="Don't perform IUP optimization on the remaining gvar TupleVariations",
+    )
+    parser.add_argument(
+        "--no-overlap-flag",
+        dest="overlap",
+        action="store_false",
+        help="Don't set OVERLAP_SIMPLE/OVERLAP_COMPOUND glyf flags (only applicable "
+        "when generating a full instance)",
     )
     logging_group = parser.add_mutually_exclusive_group(required=False)
     logging_group.add_argument(
@@ -697,33 +810,57 @@ def parseArgs(args):
     options = parser.parse_args(args)
 
     infile = options.input
-    outfile = (
-        os.path.splitext(infile)[0] + "-instance.ttf"
-        if not options.output
-        else options.output
-    )
+    if not os.path.isfile(infile):
+        parser.error("No such file '{}'".format(infile))
+
     configLogger(
         level=("DEBUG" if options.verbose else "ERROR" if options.quiet else "INFO")
     )
 
-    axis_limits = parseLimits(options.locargs)
+    try:
+        axis_limits = parseLimits(options.locargs)
+    except ValueError as e:
+        parser.error(e)
+
     if len(axis_limits) != len(options.locargs):
-        raise ValueError("Specified multiple limits for the same axis")
-    return (infile, outfile, axis_limits, options)
+        parser.error("Specified multiple limits for the same axis")
+
+    return (infile, axis_limits, options)
 
 
 def main(args=None):
-    infile, outfile, axis_limits, options = parseArgs(args)
+    infile, axis_limits, options = parseArgs(args)
     log.info("Restricting axes: %s", axis_limits)
 
     log.info("Loading variable font")
     varfont = TTFont(infile)
 
+    isFullInstance = {
+        axisTag
+        for axisTag, limit in axis_limits.items()
+        if not isinstance(limit, tuple)
+    }.issuperset(axis.axisTag for axis in varfont["fvar"].axes)
+
     instantiateVariableFont(
-        varfont, axis_limits, inplace=True, optimize=options.optimize
+        varfont,
+        axis_limits,
+        inplace=True,
+        optimize=options.optimize,
+        overlap=options.overlap,
     )
 
-    log.info("Saving partial variable font %s", outfile)
+    outfile = (
+        os.path.splitext(infile)[0]
+        + "-{}.ttf".format("instance" if isFullInstance else "partial")
+        if not options.output
+        else options.output
+    )
+
+    log.info(
+        "Saving %s font %s",
+        "instance" if isFullInstance else "partial variable",
+        outfile,
+    )
     varfont.save(outfile)
 
 
