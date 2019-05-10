@@ -1272,6 +1272,15 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         If the font attribute is already not None, it is not loaded again.
         Fonts with the same path are only loaded once and shared among SourceDescriptors.
 
+        For example, to load UFO sources using defcon:
+
+            designspace = DesignSpaceDocument.fromfile("path/to/my.designspace")
+            designspace.loadSourceFonts(defcon.Font)
+
+        Or to load masters as FontTools binary fonts, including extra options:
+
+            designspace.loadSourceFonts(ttLib.TTFont, recalcBBoxes=False)
+
         Args:
             opener (Callable): takes one required positional argument, the source.path,
                 and an optional list of keyword arguments, and returns a new font object
