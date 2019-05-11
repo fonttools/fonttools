@@ -13,6 +13,7 @@ from fontTools.misc import plistlib
 from fontTools.designspaceLib import (
     DesignSpaceDocument, SourceDescriptor, AxisDescriptor, RuleDescriptor,
     InstanceDescriptor, evaluateRule, processRules, posix, DesignSpaceDocumentError)
+from fontTools import ttLib
 
 def _axesAsDict(axes):
     """
@@ -909,3 +910,42 @@ def test_findDefault_axis_mapping():
     designspace.axes[1].default = 0
 
     assert designspace.findDefault().filename == "Font-Regular.ufo"
+
+
+def test_loadSourceFonts():
+
+    def opener(path):
+        font = ttLib.TTFont()
+        font.importXML(path)
+        return font
+
+    # this designspace file contains .TTX source paths
+    path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "varLib",
+        "data",
+        "SparseMasters.designspace"
+    )
+    designspace = DesignSpaceDocument.fromfile(path)
+
+    # force two source descriptors to have the same path
+    designspace.sources[1].path = designspace.sources[0].path
+
+    fonts = designspace.loadSourceFonts(opener)
+
+    assert len(fonts) == 3
+    assert all(isinstance(font, ttLib.TTFont) for font in fonts)
+    assert fonts[0] is fonts[1]  # same path, identical font object
+
+    fonts2 = designspace.loadSourceFonts(opener)
+
+    for font1, font2 in zip(fonts, fonts2):
+        assert font1 is font2
+
+
+def test_loadSourceFonts_no_required_path():
+    designspace = DesignSpaceDocument()
+    designspace.sources.append(SourceDescriptor())
+
+    with pytest.raises(DesignSpaceDocumentError, match="no 'path' attribute"):
+        designspace.loadSourceFonts(lambda p: p)
