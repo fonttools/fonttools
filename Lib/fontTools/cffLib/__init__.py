@@ -207,6 +207,13 @@ class CFFFontSet(object):
 					continue
 				name, attrs, content = element
 				topDict.fromXML(name, attrs, content)
+
+			if hasattr(topDict, "VarStore") and topDict.FDArray[0].vstore is None:
+				fdArray = topDict.FDArray
+				for fontDict in fdArray:
+					if hasattr(fontDict, "Private"):
+						fontDict.Private.vstore = topDict.VarStore
+
 		elif name == "GlobalSubrs":
 			subrCharStringClass = psCharStrings.T2CharString
 			if not hasattr(self, "GlobalSubrs"):

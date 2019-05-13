@@ -47,16 +47,19 @@ class CffLibTest(DataFilesHandler):
         self.assertEqual(topDict.FontBBox, [0, 0, 0, 0])
 
     def test_topDict_set_Encoding(self):
-        file_name = 'TestOTF.otf'
-        font_path = self.getpath(file_name)
-        temp_path = self.temp_font(font_path, file_name)
-        save_path = temp_path[:-4] + '2.otf'
-        font = TTFont(temp_path)
+        ttx_path = self.getpath('TestOTF.ttx')
+        font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
+        font.importXML(ttx_path)
+
         topDict = font["CFF "].cff.topDictIndex[0]
         encoding = [".notdef"] * 256
         encoding[0x20] = "space"
         topDict.Encoding = encoding
+        
+        self.temp_dir()
+        save_path = os.path.join(self.tempdir, 'TestOTF.otf')
         font.save(save_path)
+
         font2 = TTFont(save_path)
         topDict2 = font2["CFF "].cff.topDictIndex[0]
         self.assertEqual(topDict2.Encoding[32], "space")

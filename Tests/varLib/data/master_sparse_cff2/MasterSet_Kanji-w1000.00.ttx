@@ -1,0 +1,1266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.41">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="cid00001"/>
+    <GlyphID id="2" name="cid00002"/>
+    <GlyphID id="3" name="cid01177"/>
+    <GlyphID id="4" name="cid06449"/>
+    <GlyphID id="5" name="cid06821"/>
+    <GlyphID id="6" name="cid07253"/>
+    <GlyphID id="7" name="cid13393"/>
+    <GlyphID id="8" name="cid17290"/>
+    <GlyphID id="9" name="cid17852"/>
+    <GlyphID id="10" name="cid18480"/>
+    <GlyphID id="11" name="cid22370"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="1.002"/>
+    <checkSumAdjustment value="0xc54fcf7b"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Thu Dec 13 12:08:26 2018"/>
+    <modified value="Tue Apr 16 22:17:21 2019"/>
+    <xMin value="8"/>
+    <yMin value="-120"/>
+    <xMax value="995"/>
+    <yMax value="880"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="3"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="1160"/>
+    <descent value="-317"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="1000"/>
+    <minLeftSideBearing value="8"/>
+    <minRightSideBearing value="5"/>
+    <xMaxExtent value="995"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="4"/>
+  </hhea>
+
+  <maxp>
+    <tableVersion value="0x5000"/>
+    <numGlyphs value="12"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="3"/>
+    <xAvgCharWidth value="979"/>
+    <usWeightClass value="250"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000100"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="600"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="75"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="600"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="350"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="228"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="0"/>
+      <bSerifStyle value="0"/>
+      <bWeight value="3"/>
+      <bProportion value="0"/>
+      <bContrast value="0"/>
+      <bStrokeVariation value="0"/>
+      <bArmStyle value="0"/>
+      <bLetterForm value="0"/>
+      <bMidline value="0"/>
+      <bXHeight value="0"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000011"/>
+    <ulUnicodeRange2 value="00101000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="ADBE"/>
+    <fsSelection value="00000000 00000000"/>
+    <usFirstCharIndex value="0"/>
+    <usLastCharIndex value="63964"/>
+    <sTypoAscender value="880"/>
+    <sTypoDescender value="-120"/>
+    <sTypoLineGap value="200"/>
+    <usWinAscent value="1160"/>
+    <usWinDescent value="317"/>
+    <ulCodePageRange1 value="00100000 00000010 00000000 10011111"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="380"/>
+    <sCapHeight value="760"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="1"/>
+  </OS_2>
+
+  <name>
+    <namerecord nameID="0" platformID="3" platEncID="1" langID="0x409">
+      Copyright © 2018 Adobe systems Co., Ltd. All Rights Reserved.
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      SHSansJPVF w1000.00
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      1.002;ADBE;MasterSet_Kanji-w1000.00
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      SHSansJPVF w1000.00
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 1.002;hotconv 1.0.109;makeotfexe 2.5.65596 DEVELOPMENT
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      MasterSet_Kanji-w1000.00
+    </namerecord>
+  </name>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x0" name="cid00001"/><!-- ???? -->
+      <map code="0x1" name="cid00001"/><!-- ???? -->
+      <map code="0x2" name="cid00001"/><!-- ???? -->
+      <map code="0x3" name="cid00001"/><!-- ???? -->
+      <map code="0x4" name="cid00001"/><!-- ???? -->
+      <map code="0x5" name="cid00001"/><!-- ???? -->
+      <map code="0x6" name="cid00001"/><!-- ???? -->
+      <map code="0x7" name="cid00001"/><!-- ???? -->
+      <map code="0x8" name="cid00001"/><!-- ???? -->
+      <map code="0x9" name="cid00001"/><!-- ???? -->
+      <map code="0xa" name="cid00001"/><!-- ???? -->
+      <map code="0xb" name="cid00001"/><!-- ???? -->
+      <map code="0xc" name="cid00001"/><!-- ???? -->
+      <map code="0xd" name="cid00001"/><!-- ???? -->
+      <map code="0xe" name="cid00001"/><!-- ???? -->
+      <map code="0xf" name="cid00001"/><!-- ???? -->
+      <map code="0x10" name="cid00001"/><!-- ???? -->
+      <map code="0x11" name="cid00001"/><!-- ???? -->
+      <map code="0x12" name="cid00001"/><!-- ???? -->
+      <map code="0x13" name="cid00001"/><!-- ???? -->
+      <map code="0x14" name="cid00001"/><!-- ???? -->
+      <map code="0x15" name="cid00001"/><!-- ???? -->
+      <map code="0x16" name="cid00001"/><!-- ???? -->
+      <map code="0x17" name="cid00001"/><!-- ???? -->
+      <map code="0x18" name="cid00001"/><!-- ???? -->
+      <map code="0x19" name="cid00001"/><!-- ???? -->
+      <map code="0x1a" name="cid00001"/><!-- ???? -->
+      <map code="0x1b" name="cid00001"/><!-- ???? -->
+      <map code="0x1c" name="cid00001"/><!-- ???? -->
+      <map code="0x1d" name="cid00001"/><!-- ???? -->
+      <map code="0x1e" name="cid00001"/><!-- ???? -->
+      <map code="0x1f" name="cid00001"/><!-- ???? -->
+      <map code="0x20" name="cid00001"/><!-- SPACE -->
+      <map code="0x21" name="cid00002"/><!-- EXCLAMATION MARK -->
+      <map code="0xa0" name="cid00001"/><!-- NO-BREAK SPACE -->
+      <map code="0x50ce" name="cid17290"/><!-- CJK UNIFIED IDEOGRAPH-50CE -->
+      <map code="0x610f" name="cid01177"/><!-- CJK UNIFIED IDEOGRAPH-610F -->
+      <map code="0x6a1a" name="cid17852"/><!-- CJK UNIFIED IDEOGRAPH-6A1A -->
+      <map code="0x82e8" name="cid18480"/><!-- CJK UNIFIED IDEOGRAPH-82E8 -->
+      <map code="0x8552" name="cid22370"/><!-- CJK UNIFIED IDEOGRAPH-8552 -->
+      <map code="0x85a8" name="cid06449"/><!-- CJK UNIFIED IDEOGRAPH-85A8 -->
+      <map code="0x8e59" name="cid06821"/><!-- CJK UNIFIED IDEOGRAPH-8E59 -->
+      <map code="0x9a40" name="cid07253"/><!-- CJK UNIFIED IDEOGRAPH-9A40 -->
+      <map code="0xf9dc" name="cid13393"/><!-- CJK COMPATIBILITY IDEOGRAPH-F9DC -->
+    </cmap_format_4>
+    <cmap_format_12 platformID="0" platEncID="4" format="12" reserved="0" length="532" language="0" nGroups="43">
+      <map code="0x0" name="cid00001"/><!-- ???? -->
+      <map code="0x1" name="cid00001"/><!-- ???? -->
+      <map code="0x2" name="cid00001"/><!-- ???? -->
+      <map code="0x3" name="cid00001"/><!-- ???? -->
+      <map code="0x4" name="cid00001"/><!-- ???? -->
+      <map code="0x5" name="cid00001"/><!-- ???? -->
+      <map code="0x6" name="cid00001"/><!-- ???? -->
+      <map code="0x7" name="cid00001"/><!-- ???? -->
+      <map code="0x8" name="cid00001"/><!-- ???? -->
+      <map code="0x9" name="cid00001"/><!-- ???? -->
+      <map code="0xa" name="cid00001"/><!-- ???? -->
+      <map code="0xb" name="cid00001"/><!-- ???? -->
+      <map code="0xc" name="cid00001"/><!-- ???? -->
+      <map code="0xd" name="cid00001"/><!-- ???? -->
+      <map code="0xe" name="cid00001"/><!-- ???? -->
+      <map code="0xf" name="cid00001"/><!-- ???? -->
+      <map code="0x10" name="cid00001"/><!-- ???? -->
+      <map code="0x11" name="cid00001"/><!-- ???? -->
+      <map code="0x12" name="cid00001"/><!-- ???? -->
+      <map code="0x13" name="cid00001"/><!-- ???? -->
+      <map code="0x14" name="cid00001"/><!-- ???? -->
+      <map code="0x15" name="cid00001"/><!-- ???? -->
+      <map code="0x16" name="cid00001"/><!-- ???? -->
+      <map code="0x17" name="cid00001"/><!-- ???? -->
+      <map code="0x18" name="cid00001"/><!-- ???? -->
+      <map code="0x19" name="cid00001"/><!-- ???? -->
+      <map code="0x1a" name="cid00001"/><!-- ???? -->
+      <map code="0x1b" name="cid00001"/><!-- ???? -->
+      <map code="0x1c" name="cid00001"/><!-- ???? -->
+      <map code="0x1d" name="cid00001"/><!-- ???? -->
+      <map code="0x1e" name="cid00001"/><!-- ???? -->
+      <map code="0x1f" name="cid00001"/><!-- ???? -->
+      <map code="0x20" name="cid00001"/><!-- SPACE -->
+      <map code="0x21" name="cid00002"/><!-- EXCLAMATION MARK -->
+      <map code="0xa0" name="cid00001"/><!-- NO-BREAK SPACE -->
+      <map code="0x50ce" name="cid17290"/><!-- CJK UNIFIED IDEOGRAPH-50CE -->
+      <map code="0x610f" name="cid01177"/><!-- CJK UNIFIED IDEOGRAPH-610F -->
+      <map code="0x6a1a" name="cid17852"/><!-- CJK UNIFIED IDEOGRAPH-6A1A -->
+      <map code="0x82e8" name="cid18480"/><!-- CJK UNIFIED IDEOGRAPH-82E8 -->
+      <map code="0x8552" name="cid22370"/><!-- CJK UNIFIED IDEOGRAPH-8552 -->
+      <map code="0x85a8" name="cid06449"/><!-- CJK UNIFIED IDEOGRAPH-85A8 -->
+      <map code="0x8e59" name="cid06821"/><!-- CJK UNIFIED IDEOGRAPH-8E59 -->
+      <map code="0x9a40" name="cid07253"/><!-- CJK UNIFIED IDEOGRAPH-9A40 -->
+      <map code="0xf9dc" name="cid13393"/><!-- CJK COMPATIBILITY IDEOGRAPH-F9DC -->
+    </cmap_format_12>
+    <cmap_format_14 platformID="0" platEncID="5">
+      <map uv="0x9686" uvs="0xfe00" name="cid13393"/>
+      <map uv="0x9686" uvs="0xe0101" name="cid13393"/>
+    </cmap_format_14>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x0" name="cid00001"/><!-- ???? -->
+      <map code="0x1" name="cid00001"/><!-- ???? -->
+      <map code="0x2" name="cid00001"/><!-- ???? -->
+      <map code="0x3" name="cid00001"/><!-- ???? -->
+      <map code="0x4" name="cid00001"/><!-- ???? -->
+      <map code="0x5" name="cid00001"/><!-- ???? -->
+      <map code="0x6" name="cid00001"/><!-- ???? -->
+      <map code="0x7" name="cid00001"/><!-- ???? -->
+      <map code="0x8" name="cid00001"/><!-- ???? -->
+      <map code="0x9" name="cid00001"/><!-- ???? -->
+      <map code="0xa" name="cid00001"/><!-- ???? -->
+      <map code="0xb" name="cid00001"/><!-- ???? -->
+      <map code="0xc" name="cid00001"/><!-- ???? -->
+      <map code="0xd" name="cid00001"/><!-- ???? -->
+      <map code="0xe" name="cid00001"/><!-- ???? -->
+      <map code="0xf" name="cid00001"/><!-- ???? -->
+      <map code="0x10" name="cid00001"/><!-- ???? -->
+      <map code="0x11" name="cid00001"/><!-- ???? -->
+      <map code="0x12" name="cid00001"/><!-- ???? -->
+      <map code="0x13" name="cid00001"/><!-- ???? -->
+      <map code="0x14" name="cid00001"/><!-- ???? -->
+      <map code="0x15" name="cid00001"/><!-- ???? -->
+      <map code="0x16" name="cid00001"/><!-- ???? -->
+      <map code="0x17" name="cid00001"/><!-- ???? -->
+      <map code="0x18" name="cid00001"/><!-- ???? -->
+      <map code="0x19" name="cid00001"/><!-- ???? -->
+      <map code="0x1a" name="cid00001"/><!-- ???? -->
+      <map code="0x1b" name="cid00001"/><!-- ???? -->
+      <map code="0x1c" name="cid00001"/><!-- ???? -->
+      <map code="0x1d" name="cid00001"/><!-- ???? -->
+      <map code="0x1e" name="cid00001"/><!-- ???? -->
+      <map code="0x1f" name="cid00001"/><!-- ???? -->
+      <map code="0x20" name="cid00001"/><!-- SPACE -->
+      <map code="0x21" name="cid00002"/><!-- EXCLAMATION MARK -->
+      <map code="0xa0" name="cid00001"/><!-- NO-BREAK SPACE -->
+      <map code="0x50ce" name="cid17290"/><!-- CJK UNIFIED IDEOGRAPH-50CE -->
+      <map code="0x610f" name="cid01177"/><!-- CJK UNIFIED IDEOGRAPH-610F -->
+      <map code="0x6a1a" name="cid17852"/><!-- CJK UNIFIED IDEOGRAPH-6A1A -->
+      <map code="0x82e8" name="cid18480"/><!-- CJK UNIFIED IDEOGRAPH-82E8 -->
+      <map code="0x8552" name="cid22370"/><!-- CJK UNIFIED IDEOGRAPH-8552 -->
+      <map code="0x85a8" name="cid06449"/><!-- CJK UNIFIED IDEOGRAPH-85A8 -->
+      <map code="0x8e59" name="cid06821"/><!-- CJK UNIFIED IDEOGRAPH-8E59 -->
+      <map code="0x9a40" name="cid07253"/><!-- CJK UNIFIED IDEOGRAPH-9A40 -->
+      <map code="0xf9dc" name="cid13393"/><!-- CJK COMPATIBILITY IDEOGRAPH-F9DC -->
+    </cmap_format_4>
+    <cmap_format_12 platformID="3" platEncID="10" format="12" reserved="0" length="532" language="0" nGroups="43">
+      <map code="0x0" name="cid00001"/><!-- ???? -->
+      <map code="0x1" name="cid00001"/><!-- ???? -->
+      <map code="0x2" name="cid00001"/><!-- ???? -->
+      <map code="0x3" name="cid00001"/><!-- ???? -->
+      <map code="0x4" name="cid00001"/><!-- ???? -->
+      <map code="0x5" name="cid00001"/><!-- ???? -->
+      <map code="0x6" name="cid00001"/><!-- ???? -->
+      <map code="0x7" name="cid00001"/><!-- ???? -->
+      <map code="0x8" name="cid00001"/><!-- ???? -->
+      <map code="0x9" name="cid00001"/><!-- ???? -->
+      <map code="0xa" name="cid00001"/><!-- ???? -->
+      <map code="0xb" name="cid00001"/><!-- ???? -->
+      <map code="0xc" name="cid00001"/><!-- ???? -->
+      <map code="0xd" name="cid00001"/><!-- ???? -->
+      <map code="0xe" name="cid00001"/><!-- ???? -->
+      <map code="0xf" name="cid00001"/><!-- ???? -->
+      <map code="0x10" name="cid00001"/><!-- ???? -->
+      <map code="0x11" name="cid00001"/><!-- ???? -->
+      <map code="0x12" name="cid00001"/><!-- ???? -->
+      <map code="0x13" name="cid00001"/><!-- ???? -->
+      <map code="0x14" name="cid00001"/><!-- ???? -->
+      <map code="0x15" name="cid00001"/><!-- ???? -->
+      <map code="0x16" name="cid00001"/><!-- ???? -->
+      <map code="0x17" name="cid00001"/><!-- ???? -->
+      <map code="0x18" name="cid00001"/><!-- ???? -->
+      <map code="0x19" name="cid00001"/><!-- ???? -->
+      <map code="0x1a" name="cid00001"/><!-- ???? -->
+      <map code="0x1b" name="cid00001"/><!-- ???? -->
+      <map code="0x1c" name="cid00001"/><!-- ???? -->
+      <map code="0x1d" name="cid00001"/><!-- ???? -->
+      <map code="0x1e" name="cid00001"/><!-- ???? -->
+      <map code="0x1f" name="cid00001"/><!-- ???? -->
+      <map code="0x20" name="cid00001"/><!-- SPACE -->
+      <map code="0x21" name="cid00002"/><!-- EXCLAMATION MARK -->
+      <map code="0xa0" name="cid00001"/><!-- NO-BREAK SPACE -->
+      <map code="0x50ce" name="cid17290"/><!-- CJK UNIFIED IDEOGRAPH-50CE -->
+      <map code="0x610f" name="cid01177"/><!-- CJK UNIFIED IDEOGRAPH-610F -->
+      <map code="0x6a1a" name="cid17852"/><!-- CJK UNIFIED IDEOGRAPH-6A1A -->
+      <map code="0x82e8" name="cid18480"/><!-- CJK UNIFIED IDEOGRAPH-82E8 -->
+      <map code="0x8552" name="cid22370"/><!-- CJK UNIFIED IDEOGRAPH-8552 -->
+      <map code="0x85a8" name="cid06449"/><!-- CJK UNIFIED IDEOGRAPH-85A8 -->
+      <map code="0x8e59" name="cid06821"/><!-- CJK UNIFIED IDEOGRAPH-8E59 -->
+      <map code="0x9a40" name="cid07253"/><!-- CJK UNIFIED IDEOGRAPH-9A40 -->
+      <map code="0xf9dc" name="cid13393"/><!-- CJK COMPATIBILITY IDEOGRAPH-F9DC -->
+    </cmap_format_12>
+  </cmap>
+
+  <post>
+    <formatType value="3.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-75"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+  </post>
+
+  <CFF>
+    <major value="1"/>
+    <minor value="0"/>
+    <CFFFont name="MasterSet_Kanji-w1000.00">
+      <ROS Registry="Adobe" Order="Japan1" Supplement="6"/>
+      <Notice value="1997-2007, 2012 Adobe Systems Incorporated. All Rights Reserved. Kozuka Mincho is either a registered trademark or trademark of Adobe Systems Incorporated in the United States and/or other countries.&quot;"/>
+      <FullName value="Master Set Kanji w1000.00"/>
+      <FamilyName value="Master Set Kanji"/>
+      <Weight value="ExtraLight"/>
+      <isFixedPitch value="0"/>
+      <ItalicAngle value="0"/>
+      <UnderlinePosition value="-100"/>
+      <UnderlineThickness value="50"/>
+      <PaintType value="0"/>
+      <CharstringType value="2"/>
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FontBBox value="8 -120 995 880"/>
+      <StrokeWidth value="0"/>
+      <XUID value="1119273886"/>
+      <CIDFontVersion value="6.004"/>
+      <CIDFontRevision value="0"/>
+      <CIDFontType value="0"/>
+      <CIDCount value="23058"/>
+      <!-- charset is dumped separately as the 'GlyphOrder' element -->
+      <FDSelect format="3"/>
+      <FDArray>
+        <FontDict index="0">
+          <FontName value="MasterSet_Kanji-w1000.00-Generic"/>
+          <Private>
+            <BlueValues value="-250 -250 1100 1100"/>
+            <BlueScale value="0.039625"/>
+            <BlueShift value="7"/>
+            <BlueFuzz value="0"/>
+            <StdHW value="1"/>
+            <StdVW value="1"/>
+            <ForceBold value="0"/>
+            <LanguageGroup value="1"/>
+            <ExpansionFactor value="0.06"/>
+            <initialRandomSeed value="0"/>
+            <defaultWidthX value="1000"/>
+            <nominalWidthX value="607"/>
+          </Private>
+        </FontDict>
+        <FontDict index="1">
+          <FontName value="MasterSet_Kanji-w1000.00-Kanji"/>
+          <Private>
+            <BlueValues value="-250 -250 1100 1100"/>
+            <BlueScale value="0.039625"/>
+            <BlueShift value="7"/>
+            <BlueFuzz value="0"/>
+            <StdHW value="1"/>
+            <StdVW value="1"/>
+            <ForceBold value="0"/>
+            <LanguageGroup value="1"/>
+            <ExpansionFactor value="0.06"/>
+            <initialRandomSeed value="0"/>
+            <defaultWidthX value="1000"/>
+            <nominalWidthX value="0"/>
+          </Private>
+        </FontDict>
+        <FontDict index="2">
+          <FontName value="MasterSet_Kanji-w1000.00-Proportional"/>
+          <Private>
+            <BlueValues value="0 0"/>
+            <BlueScale value="0.039625"/>
+            <BlueShift value="7"/>
+            <BlueFuzz value="1"/>
+            <ForceBold value="0"/>
+            <LanguageGroup value="0"/>
+            <ExpansionFactor value="0.06"/>
+            <initialRandomSeed value="0"/>
+            <defaultWidthX value="683"/>
+            <nominalWidthX value="614"/>
+          </Private>
+        </FontDict>
+      </FDArray>
+      <CharStrings>
+        <CharString name=".notdef" fdSelectIndex="0">
+          393 -120 50 859 91 -50 50 hstemhm
+          100 50 700 50 hintmask 10111000
+          100 -120 rmoveto
+          800 0 rlineto
+          0 1000 rlineto
+          -800 0 rlineto
+          400 -459 rmoveto
+          -318 409 rlineto
+          636 0 rlineto
+          -286 -450 rmoveto
+          hintmask 11011000
+          318 409 rlineto
+          0 -818 rlineto
+          -668 -41 rmoveto
+          318 409 rlineto
+          318 -409 rlineto
+          -668 859 rmoveto
+          318 -409 rlineto
+          -318 -409 rlineto
+          endchar
+        </CharString>
+        <CharString name="cid00001" fdSelectIndex="2">
+          -405 endchar
+        </CharString>
+        <CharString name="cid00002" fdSelectIndex="2">
+          -316 -11 209 hstemhm
+          48 202 -182 161.5 hintmask 10100000
+          241 773 rmoveto
+          -185 0 rlineto
+          24 -515 rlineto
+          138 0 rlineto
+          hintmask 11000000
+          -69 -269 rmoveto
+          62 0 39 44 0 60 rrcurveto
+          0 62 -42 43 -59 0 rrcurveto
+          -57 0 -44 -43 0 -62 rrcurveto
+          0 -58 40 -46 61 0 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="cid01177" fdSelectIndex="1">
+          1000 -84 115 161 86 31 81 30 86 34 111 50 108 -111 157 -126 80 hstemhm
+          165 137 -23 141 6 146 59 122 -49 144 hintmask 1111100011111000
+          279 152 rmoveto
+          0 -92 rlineto
+          0 -109 33 -35 141 0 rrcurveto
+          28 0 89 0 30 0 rrcurveto
+          101 0 37 29 15 113 rrcurveto
+          -37 7 -57 19 -28 19 rrcurveto
+          -5 -62 -6 -10 -34 0 rrcurveto
+          -25 0 -71 0 -19 0 rrcurveto
+          -43 0 -8 3 0 28 rrcurveto
+          0 90 rlineto
+          -43 -2 rmoveto
+          55 -23 70 -40 33 -28 rrcurveto
+          88 89 rlineto
+          -38 28 -72 36 -54 19 rrcurveto
+          251 -110 rmoveto
+          58 -57 64 -81 26 -54 rrcurveto
+          121 69 rlineto
+          -30 57 -68 75 -58 53 rrcurveto
+          -678 -14 rmoveto
+          -22 -67 -45 -63 -59 -39 rrcurveto
+          113 -77 rlineto
+          69 49 39 75 27 78 rrcurveto
+          -153 684 rmoveto
+          0 -111 rlineto
+          770 0 rlineto
+          0 111 rlineto
+          -820 -158 rmoveto
+          0 -111 rlineto
+          874 0 rlineto
+          0 111 rlineto
+          hintmask 0000001000100000
+          -512 204 rmoveto
+          hintmask 0000000100100000
+          0 -126 rlineto
+          146 0 rlineto
+          hintmask 0000001000100000
+          0 126 rlineto
+          hintmask 0111010010001000
+          -322 -154 rmoveto
+          9 -25 10 -34 3 -21 rrcurveto
+          138 30 rlineto
+          -5 20 -11 32 -11 23 rrcurveto
+          232 0 rmoveto
+          -5 -21 -13 -29 -9 -24 rrcurveto
+          128 -26 rlineto
+          12 18 17 23 22 32 rrcurveto
+          -465 -390 rmoveto
+          402 0 rlineto
+          0 -31 rlineto
+          -402 0 rlineto
+          0 142 rmoveto
+          402 0 rlineto
+          0 -30 rlineto
+          -402 0 rlineto
+          -137 116 rmoveto
+          0 -314 rlineto
+          683 0 rlineto
+          0 314 rlineto
+          endchar
+        </CharString>
+        <CharString name="cid06449" fdSelectIndex="1">
+          1000 -86 106 92 77 -23 23 30 20 -20 22.5 -22.5 90 -56 56 21 95 21 90 28 90 -6 148 -116 116 -116 175 hstemhm
+          61 129 -50 128 -7 144 -59 114 -55 40 89 131 -127 114 -60 145 -4 135 -60 136 -95 112 hintmask 110001011101011101101101
+          50 796 rmoveto
+          0 -116 rlineto
+          901 0 rlineto
+          0 116 rlineto
+          -800 -487 rmoveto
+          0 -90 rlineto
+          707 0 rlineto
+          0 90 rlineto
+          hintmask 000000000000100100000000
+          -597 546 rmoveto
+          hintmask 000000000010000100000000
+          0 -207 rlineto
+          144 0 rlineto
+          hintmask 000000000000100100001000
+          0 207 rlineto
+          187 0 rmoveto
+          hintmask 000000000010000000001000
+          0 -207 rlineto
+          145 0 rlineto
+          hintmask 000000000000100000001000
+          0 207 rlineto
+          hintmask 000000111100011010010100
+          -85 -291 rmoveto
+          81 0 rlineto
+          0 -28 rlineto
+          -81 0 rlineto
+          -192 28 rmoveto
+          78 0 rlineto
+          0 -28 rlineto
+          -78 0 rlineto
+          -192 28 rmoveto
+          78 0 rlineto
+          0 -28 rlineto
+          -78 0 rlineto
+          -128 118 rmoveto
+          0 -208 rlineto
+          728 0 rlineto
+          0 208 rlineto
+          -807 -229 rmoveto
+          0 -172 rlineto
+          129 0 rlineto
+          0 77 rlineto
+          hintmask 000000110000000000000010
+          618 0 rlineto
+          0 -77 rlineto
+          136 0 rlineto
+          0 172 rlineto
+          hintmask 000010000000000100000000
+          -673 -173 rmoveto
+          -39 -47 -72 -41 -108 -29 rrcurveto
+          22 -16 31 -39 14 -25 rrcurveto
+          hintmask 010000000000000001000000
+          124 44 81 54 57 78 rrcurveto
+          24 -42 rmoveto
+          0 -13 rlineto
+          -48 -105 -135 -52 -170 -18 rrcurveto
+          20 -24 24 -45 9 -29 rrcurveto
+          hintmask 001000000000000001000000
+          197 32 152 70 67 161 rrcurveto
+          hintmask 110100000000000001100001
+          -72 26 rlineto
+          -21 -3 rlineto
+          -248 -133 rmoveto
+          25 -16 33 -29 17 -20 rrcurveto
+          82 54 rlineto
+          -18 18 -32 25 -28 15 rrcurveto
+          10 86 rmoveto
+          -77 -77 rlineto
+          253 0 rlineto
+          0 77 rlineto
+          89 50 rmoveto
+          0 -186 rlineto
+          0 -106 30 -33 126 0 rrcurveto
+          25 0 81 0 27 0 rrcurveto
+          90 0 34 28 14 99 rrcurveto
+          -35 7 -51 18 -26 17 rrcurveto
+          -4 -53 -7 -10 -29 0 rrcurveto
+          -20 0 -65 0 -16 0 rrcurveto
+          -37 0 -6 4 0 30 rrcurveto
+          0 185 rlineto
+          150 -26 rmoveto
+          -55 -24 -92 -21 -84 -13 rrcurveto
+          13 -23 15 -40 6 -24 rrcurveto
+          93 11 112 20 85 32 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="cid06821" fdSelectIndex="1">
+          1000 -82 111 26 82 31 59 -59 78 31 79 -7 124 -124 84 74 46 -46 69 -47 47 23 56 -56 97 -16 95 -95 173 hstemhm
+          100 131 -63 63 93 115 -91 91 -91 121 -86 56 -11 147 -73 73 -50 130 64 150 14 101 hintmask 00011000000000000000000100000000
+          286 277 rmoveto
+          433 0 rlineto
+          0 -31 rlineto
+          -433 0 rlineto
+          -140 110 rmoveto
+          0 -188 rlineto
+          723 0 rlineto
+          0 188 rlineto
+          hintmask 00100000000000000000100000000000
+          -441 -129 rmoveto
+          0 -248 rlineto
+          147 -32 rlineto
+          0 280 rlineto
+          hintmask 01000000000010010000010000000000
+          -73 -90 rmoveto
+          0 -82 rlineto
+          370 0 rlineto
+          0 82 rlineto
+          -704 638 rmoveto
+          0 -95 rlineto
+          784 0 rlineto
+          0 95 rlineto
+          hintmask 00000000000010100000000000000000
+          -852 0 rmoveto
+          0 -116 rlineto
+          0 -74 -7 -95 -76 -71 rrcurveto
+          28 -16 57 -47 20 -24 rrcurveto
+          90 85 19 137 0 103 rrcurveto
+          0 118 rlineto
+          hintmask 00000000010100001000000000000000
+          93 -79 rmoveto
+          0 -167 rlineto
+          hintmask 00000000010100000100000000000000
+          115 0 rlineto
+          0 167 rlineto
+          hintmask 00000000101000000001000000000000
+          -56 -41 rmoveto
+          0 -56 rlineto
+          176 0 rlineto
+          0 56 rlineto
+          -343 -79 rmoveto
+          0 -69 rlineto
+          383 0 rlineto
+          0 69 rlineto
+          hintmask 00000011000000000100000000000000
+          -251 -23 rmoveto
+          0 -109 rlineto
+          0 -8 -3 -3 -8 0 rrcurveto
+          -7 0 -20 0 -17 1 rrcurveto
+          13 -22 19 -35 8 -28 rrcurveto
+          hintmask 00000011000001000010001000000000
+          39 0 32 0 29 14 rrcurveto
+          29 14 7 17 0 46 rrcurveto
+          0 113 rlineto
+          -220 -49 rmoveto
+          -13 -34 -24 -34 -31 -26 rrcurveto
+          21 -12 35 -24 17 -14 rrcurveto
+          33 30 31 47 18 46 rrcurveto
+          123 -9 rmoveto
+          24 -30 24 -42 9 -28 rrcurveto
+          79 30 rlineto
+          -10 28 -26 41 -25 29 rrcurveto
+          -9 351 rmoveto
+          hintmask 10000101000001000000001010000000
+          22 -272 141 -231 154 -1 rrcurveto
+          83 0 41 26 18 132 rrcurveto
+          -32 10 -43 23 -26 24 rrcurveto
+          -5 -66 -8 -25 -20 0 rrcurveto
+          -70 0 -109 184 -16 196 rrcurveto
+          122 -178 rmoveto
+          -42 -96 -82 -86 -94 -52 rrcurveto
+          27 -19 46 -42 20 -23 rrcurveto
+          96 64 93 105 54 117 rrcurveto
+          -205 150 rmoveto
+          49 -16 64 -28 32 -21 rrcurveto
+          63 74 rlineto
+          -35 21 -65 25 -48 12 rrcurveto
+          -451 -736 rmoveto
+          -96 -33 rlineto
+          77 -146 117 -27 215 0 rrcurveto
+          234 0 rlineto
+          68 0 rlineto
+          5 33 18 52 16 26 rrcurveto
+          -72 -3 -209 0 -54 0 rrcurveto
+          -159 1 -110 10 -50 87 rrcurveto
+          -109 40 rmoveto
+          -18 -82 -58 -57 -91 -34 rrcurveto
+          30 -21 53 -48 22 -25 rrcurveto
+          100 50 72 81 30 120 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="cid07253" fdSelectIndex="1">
+          1000 -94 86 19 87 -85 85 -84 84 -69 69 -35 35 -33 33 22 49 22 49 21 45 -45 63 23 90 -60 60 24 21 -21 67 -56 56 23 64 23 67 -30 147 -92 92 -92 125 hstemhm
+          153 132 -81 136 -44 44 -42 107 37 128 22 143 -26 139 -68 46 hintmask 10000011101100101101000101110000
+          58 822 rmoveto
+          0 -92 rlineto
+          883 0 rlineto
+          0 92 rlineto
+          hintmask 00000000000000000000100000000000
+          -677 33 rmoveto
+          hintmask 00000000000000000010000000000000
+          0 -180 rlineto
+          141 0 rlineto
+          hintmask 00000000000000000000100000100000
+          0 180 rlineto
+          187 0 rmoveto
+          hintmask 00000000000000000010000000100000
+          0 -180 rlineto
+          143 0 rlineto
+          hintmask 00000000000100101100110000110000
+          0 180 rlineto
+          -450 -304 rmoveto
+          424 0 rlineto
+          0 -23 rlineto
+          -424 0 rlineto
+          0 110 rmoveto
+          424 0 rlineto
+          0 -23 rlineto
+          -424 0 rlineto
+          -132 90 rmoveto
+          0 -244 rlineto
+          695 0 rlineto
+          0 244 rlineto
+          -807 -268 rmoveto
+          0 -90 rlineto
+          919 0 rlineto
+          0 90 rlineto
+          hintmask 00000001100000000000000100000000
+          -664 -197 rmoveto
+          0 -49 rlineto
+          469 0 rlineto
+          0 49 rlineto
+          -469 -71 rmoveto
+          0 -49 rlineto
+          482 0 rlineto
+          0 49 rlineto
+          hintmask 00000010000000000000001000000000
+          -574 -71 rmoveto
+          hintmask 00001000000000000000001000001000
+          0 -69 rlineto
+          622 0 rlineto
+          hintmask 00000010000001000000000000001000
+          0 69 rlineto
+          -511 394 rmoveto
+          -38 -100 -88 -88 -172 -56 rrcurveto
+          25 -21 36 -48 13 -31 rrcurveto
+          hintmask 00000100010010010000000001000000
+          192 75 103 107 59 142 rrcurveto
+          263 -61 rmoveto
+          -104 -34 rlineto
+          65 -100 107 -78 129 -36 rrcurveto
+          18 33 37 49 28 25 rrcurveto
+          -120 23 -106 51 -54 67 rrcurveto
+          -266 -105 rmoveto
+          0 -243 rlineto
+          128 0 rlineto
+          0 243 rlineto
+          hintmask 10000010000000000000000000001000
+          210 -208 rmoveto
+          0 -12 rlineto
+          -5 -52 -8 -25 -9 -9 rrcurveto
+          -6 -7 -6 -1 -9 0 rrcurveto
+          -10 0 -16 1 -21 2 rrcurveto
+          13 -24 11 -39 1 -28 rrcurveto
+          37 -1 33 1 19 2 rrcurveto
+          21 2 21 7 17 17 rrcurveto
+          20 19 11 39 9 68 rrcurveto
+          2 15 2 25 0 0 rrcurveto
+          -742 -45 rmoveto
+          -15 -36 -32 -39 -39 -23 rrcurveto
+          101 -56 rlineto
+          hintmask 10010000000000000000000000000000
+          45 29 26 41 18 45 rrcurveto
+          hintmask 00100000000000000000000010000000
+          14 -1 rmoveto
+          9 -33 7 -45 -1 -28 rrcurveto
+          107 17 rlineto
+          -1 27 -9 44 -11 32 rrcurveto
+          hintmask 01000000000000000000000000100000
+          33 -16 rmoveto
+          22 -29 21 -41 8 -27 rrcurveto
+          97 32 rlineto
+          -10 27 -22 38 -24 26 rrcurveto
+          hintmask 00010000001000000000001000000000
+          52 -29 rmoveto
+          24 -21 27 -32 11 -21 rrcurveto
+          84 42 rlineto
+          -13 22 -29 29 -25 20 rrcurveto
+          -325 277 rmoveto
+          -63 -63 rlineto
+          437 0 rlineto
+          0 63 rlineto
+          -485 -44 rmoveto
+          hintmask 00000010000000000000001000000000
+          0 -215 rlineto
+          hintmask 00000010001000000000000100000000
+          136 0 rlineto
+          0 261 rlineto
+          endchar
+        </CharString>
+        <CharString name="cid13393" fdSelectIndex="1">
+          1000 -76 112 -29 29 34 99 -55 124 -35 101 -101 173 -19 98 231 103 -41 41 -26 49 hstemhm
+          66 126 61 127 -122 44 305 135 60 40 hintmask 1010101101110110
+          558 789 rmoveto
+          0 -103 rlineto
+          284 0 rlineto
+          0 103 rlineto
+          -379 -485 rmoveto
+          0 -101 rlineto
+          469 0 rlineto
+          0 101 rlineto
+          -428 151 rmoveto
+          0 -98 rlineto
+          343 0 rlineto
+          0 98 rlineto
+          -472 -419 rmoveto
+          0 -112 rlineto
+          590 0 rlineto
+          0 112 rlineto
+          -512 133 rmoveto
+          0 -99 rlineto
+          455 0 rlineto
+          0 99 rlineto
+          -106 620 rmoveto
+          0 -19 rlineto
+          -68 -125 -188 -94 -197 -38 rrcurveto
+          25 -27 30 -51 14 -32 rrcurveto
+          hintmask 0000000010000010
+          218 54 203 108 96 183 rrcurveto
+          hintmask 0100010100000110
+          -87 46 rlineto
+          -21 -5 rlineto
+          -254 -64 rmoveto
+          -111 -39 rlineto
+          97 -139 155 -90 200 -39 rrcurveto
+          17 34 36 52 28 26 rrcurveto
+          -189 27 -156 68 -77 100 rrcurveto
+          1 133 rmoveto
+          -38 -72 -71 -75 -109 -55 rrcurveto
+          28 -19 42 -46 19 -30 rrcurveto
+          125 75 80 90 60 107 rrcurveto
+          -266 -459 rmoveto
+          -19 -59 -35 -61 -44 -40 rrcurveto
+          28 -15 48 -31 23 -19 rrcurveto
+          45 47 45 76 25 74 rrcurveto
+          47 30 rmoveto
+          0 -369 rlineto
+          135 0 rlineto
+          0 369 rlineto
+          hintmask 0000000000101000
+          -676 436 rmoveto
+          0 -908 rlineto
+          126 0 rlineto
+          0 779 rlineto
+          110 0 rlineto
+          0 129 rlineto
+          -44 0 rmoveto
+          0 -43 rlineto
+          -11 -62 -29 -153 -24 -90 rrcurveto
+          hintmask 0001000000010000
+          49 -63 10 -61 0 -42 rrcurveto
+          0 -29 -5 -17 -10 -8 rrcurveto
+          -7 -5 -10 -3 -9 0 rrcurveto
+          -11 0 -10 0 -15 2 rrcurveto
+          20 -35 10 -54 1 -35 rrcurveto
+          24 -1 23 1 17 2 rrcurveto
+          23 4 20 7 17 13 rrcurveto
+          34 24 15 43 0 71 rrcurveto
+          0 57 -10 68 -56 76 rrcurveto
+          hintmask 0000000001001000
+          26 79 32 115 25 90 rrcurveto
+          hintmask 0000000000001000
+          -95 54 rlineto
+          -20 -5 rlineto
+          endchar
+        </CharString>
+        <CharString name="cid17290" fdSelectIndex="1">
+          1000 92 122 -43 43 65 120 -120 198 -24 99 55 92 32 91 hstemhm
+          118 138 72 115 -64 64 0 133 -67 107 -76 99 -99 222 -115 115 -64 64 69 109 -74 99 hintmask 011011111011001010000000
+          328 822 rmoveto
+          0 -240 rlineto
+          0 -100 26 -29 92 0 rrcurveto
+          hintmask 000010000000100000000000
+          19 0 44 0 20 0 rrcurveto
+          68 0 30 25 12 85 rrcurveto
+          hintmask 101010101000010000000000
+          -31 7 -46 16 -22 17 rrcurveto
+          -3 -43 -4 -8 -17 0 rrcurveto
+          -10 0 -32 0 -8 0 rrcurveto
+          -20 0 -3 3 0 28 rrcurveto
+          0 239 rlineto
+          -115 -423 rmoveto
+          0 -120 rlineto
+          622 0 rlineto
+          0 120 rlineto
+          -649 -185 rmoveto
+          0 -122 rlineto
+          671 0 rlineto
+          0 122 rlineto
+          hintmask 010101100111001000000000
+          -529 263 rmoveto
+          0 -306 rlineto
+          133 0 rlineto
+          0 306 rlineto
+          116 -1 rmoveto
+          0 -306 rlineto
+          134 0 rlineto
+          0 306 rlineto
+          -447 346 rmoveto
+          0 -91 rlineto
+          130 0 rlineto
+          0 -32 rlineto
+          -130 0 rlineto
+          0 -92 rlineto
+          237 0 rlineto
+          0 215 rlineto
+          31 0 rmoveto
+          hintmask 000010100000001001000000
+          0 -240 rlineto
+          0 -100 26 -29 93 0 rrcurveto
+          20 0 47 0 21 0 rrcurveto
+          69 0 30 26 12 88 rrcurveto
+          -31 7 -46 16 -22 17 rrcurveto
+          -3 -46 -5 -9 -17 0 rrcurveto
+          -11 0 -35 0 -9 0 rrcurveto
+          -21 0 -3 3 0 29 rrcurveto
+          0 238 rlineto
+          hintmask 000001110000000110000000
+          -64 0 rmoveto
+          0 -91 rlineto
+          133 0 rlineto
+          0 -32 rlineto
+          -133 0 rlineto
+          0 -92 rlineto
+          242 0 rlineto
+          0 215 rlineto
+          -456 -735 rmoveto
+          -41 -39 -82 -31 -84 -18 rrcurveto
+          30 -23 50 -49 23 -27 rrcurveto
+          87 30 96 52 55 63 rrcurveto
+          46 -15 rmoveto
+          66 -33 83 -52 39 -35 rrcurveto
+          122 71 rlineto
+          -47 37 -86 49 -64 28 rrcurveto
+          -580 760 rmoveto
+          -41 -142 -71 -142 -77 -91 rrcurveto
+          22 -39 35 -85 11 -36 rrcurveto
+          104 122 94 197 57 176 rrcurveto
+          -213 -251 rmoveto
+          0 -658 rlineto
+          138 0 rlineto
+          0 790 rlineto
+          -4 2 rlineto
+          endchar
+        </CharString>
+        <CharString name="cid17852" fdSelectIndex="1">
+          1000 -89 107 113 107 62 111 -17 17 70 111 -111 183 -133 130 -125 125 -5 120 -120 199 -153 74 hstemhm
+          37 238 -133 133 -133 202 14 128 -59 59 -40 40 13 118 -68 68 -11 136 -29 120 7 121 -76 103 hintmask 000000100001000000000000
+          37 661 rmoveto
+          0 -130 rlineto
+          hintmask 000000100000010000000000
+          307 0 rlineto
+          0 130 rlineto
+          hintmask 000000010010100100000000
+          -202 194 rmoveto
+          0 -950 rlineto
+          133 0 rlineto
+          0 950 rlineto
+          -127 -291 rmoveto
+          -21 -118 -53 -156 -61 -93 rrcurveto
+          21 -35 31 -55 13 -40 rrcurveto
+          72 111 54 200 29 158 rrcurveto
+          36 -15 rmoveto
+          -59 -73 rlineto
+          27 -50 51 -103 24 -62 rrcurveto
+          72 129 rlineto
+          -16 23 -78 112 -21 24 rrcurveto
+          158 255 rmoveto
+          hintmask 000000001000000100000000
+          0 -120 rlineto
+          536 0 rlineto
+          hintmask 010000000010000000100000
+          0 120 rlineto
+          -414 -538 rmoveto
+          0 -107 rlineto
+          149 0 rlineto
+          0 107 rlineto
+          hintmask 000000000100000001010000
+          -199 85 rmoveto
+          0 -320 rlineto
+          118 0 rlineto
+          0 320 rlineto
+          -11 532 rmoveto
+          hintmask 000000000010000000010000
+          0 -153 rlineto
+          136 0 rlineto
+          hintmask 000101000100000000010000
+          0 153 rlineto
+          -215 -191 rmoveto
+          0 -270 rlineto
+          113 0 rlineto
+          0 270 rlineto
+          42 0 rmoveto
+          0 -270 rlineto
+          113 0 rlineto
+          0 270 rlineto
+          109 -388 rmoveto
+          -40 -32 -66 -44 -43 -21 rrcurveto
+          57 -87 rlineto
+          45 22 67 36 46 35 rrcurveto
+          hintmask 101010000000000010001100
+          -524 407 rmoveto
+          0 -111 rlineto
+          394 0 rlineto
+          0 -70 rlineto
+          -394 0 rlineto
+          0 -111 rlineto
+          515 0 rlineto
+          0 292 rlineto
+          -248 -269 rmoveto
+          0 -273 rlineto
+          0 -105 19 -34 91 0 rrcurveto
+          hintmask 100000000010001000001010
+          17 0 22 0 18 0 rrcurveto
+          68 0 29 34 11 118 rrcurveto
+          -32 8 -48 19 -23 18 rrcurveto
+          -3 -77 -3 -13 -13 0 rrcurveto
+          -4 0 -13 0 -4 0 rrcurveto
+          -11 0 -1 3 0 29 rrcurveto
+          0 273 rlineto
+          -387 -293 rmoveto
+          15 -121 rlineto
+          74 11 85 12 82 13 rrcurveto
+          -7 115 rlineto
+          -92 -12 -91 -11 -66 -7 rrcurveto
+          -88 746 rmoveto
+          0 -327 rlineto
+          0 -142 -5 -196 -70 -132 rrcurveto
+          29 -14 56 -41 22 -23 rrcurveto
+          82 148 14 240 0 160 rrcurveto
+          0 327 rlineto
+          endchar
+        </CharString>
+        <CharString name="cid18480" fdSelectIndex="1">
+          1000 -84 132 295 117 42 117 20 164 -129 129 -129 181 hstemhm
+          143 144 -61 61 -35 144 -67 141 131 145 6 144 -66 132 hintmask 1110100101110000
+          56 803 rmoveto
+          0 -129 rlineto
+          892 0 rlineto
+          0 129 rlineto
+          hintmask 0000010010000000
+          -696 52 rmoveto
+          hintmask 0001000010000000
+          0 -216 rlineto
+          144 0 rlineto
+          hintmask 0000010010100000
+          0 216 rlineto
+          205 0 rmoveto
+          hintmask 0001000000100000
+          0 -216 rlineto
+          145 0 rlineto
+          hintmask 0010011000100000
+          0 216 rlineto
+          -603 -236 rmoveto
+          0 -216 rlineto
+          0 -126 -9 -174 -110 -117 rrcurveto
+          34 -16 63 -44 26 -25 rrcurveto
+          hintmask 1110000101010000
+          119 131 21 218 0 151 rrcurveto
+          0 218 rlineto
+          -61 0 rmoveto
+          0 -117 rlineto
+          526 0 rlineto
+          0 -42 rlineto
+          -526 0 rlineto
+          0 -117 rlineto
+          670 0 rlineto
+          0 276 rlineto
+          -567 -300 rmoveto
+          0 -231 rlineto
+          0 -132 45 -40 171 0 rrcurveto
+          35 0 144 0 38 0 rrcurveto
+          hintmask 1000000001001000
+          140 0 41 39 19 155 rrcurveto
+          -39 8 -61 21 -32 22 rrcurveto
+          -7 -99 -10 -14 -60 0 rrcurveto
+          -41 0 -124 0 -33 0 rrcurveto
+          -74 0 -11 4 0 39 rrcurveto
+          0 228 rlineto
+          309 12 rmoveto
+          -93 -45 -152 -37 -143 -21 rrcurveto
+          16 -29 20 -51 6 -32 rrcurveto
+          153 19 175 35 131 57 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="cid22370" fdSelectIndex="1">
+          1000 62 77 23 73 22 73 22 77 24 93 28 94 -16 149 -103 103 -103 157 hstemhm
+          114 128 -76 141 -39 141 -75 114 94 114 -69 142 -30 148 -95 135 hintmask 111111010011001100000000
+          50 801 rmoveto
+          0 -103 rlineto
+          901 0 rlineto
+          0 103 rlineto
+          hintmask 000000001001000000000000
+          -683 54 rmoveto
+          hintmask 000000100001000000000000
+          0 -203 rlineto
+          141 0 rlineto
+          hintmask 000000001001001000000000
+          0 203 rlineto
+          178 0 rmoveto
+          hintmask 000000100000001000000000
+          0 -203 rlineto
+          142 0 rlineto
+          hintmask 000000001000001000000000
+          0 203 rlineto
+          hintmask 000011000100110010000000
+          -73 -281 rmoveto
+          96 0 rlineto
+          0 -28 rlineto
+          -96 0 rlineto
+          -208 28 rmoveto
+          94 0 rlineto
+          0 -28 rlineto
+          -94 0 rlineto
+          -206 28 rmoveto
+          92 0 rlineto
+          0 -28 rlineto
+          -92 0 rlineto
+          -128 122 rmoveto
+          0 -215 rlineto
+          773 0 rlineto
+          0 215 rlineto
+          hintmask 111100000010000100000000
+          -580 -411 rmoveto
+          392 0 rlineto
+          0 -22 rlineto
+          -392 0 rlineto
+          0 -73 rmoveto
+          392 0 rlineto
+          0 -23 rlineto
+          -392 0 rlineto
+          0 213 rmoveto
+          392 0 rlineto
+          0 -22 rlineto
+          -392 0 rlineto
+          -141 99 rmoveto
+          0 -367 rlineto
+          681 0 rlineto
+          0 367 rlineto
+          -312 -424 rmoveto
+          108 -32 106 -41 57 -28 rrcurveto
+          184 66 rlineto
+          -77 29 -135 44 -111 31 rrcurveto
+          -333 -2 rmoveto
+          -71 -32 -124 -28 -112 -15 rrcurveto
+          30 -22 48 -48 24 -27 rrcurveto
+          106 24 136 43 87 48 rrcurveto
+          endchar
+        </CharString>
+      </CharStrings>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=0 -->
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=0 -->
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=0 -->
+    </LookupList>
+  </GSUB>
+
+  <VORG>
+    <majorVersion value="1"/>
+    <minorVersion value="0"/>
+    <defaultVertOriginY value="880"/>
+    <numVertOriginYMetrics value="0"/>
+  </VORG>
+
+  <hmtx>
+    <mtx name=".notdef" width="1000" lsb="100"/>
+    <mtx name="cid00001" width="209" lsb="0"/>
+    <mtx name="cid00002" width="298" lsb="48"/>
+    <mtx name="cid01177" width="1000" lsb="19"/>
+    <mtx name="cid06449" width="1000" lsb="50"/>
+    <mtx name="cid06821" width="1000" lsb="17"/>
+    <mtx name="cid07253" width="1000" lsb="17"/>
+    <mtx name="cid13393" width="1000" lsb="66"/>
+    <mtx name="cid17290" width="1000" lsb="8"/>
+    <mtx name="cid17852" width="1000" lsb="13"/>
+    <mtx name="cid18480" width="1000" lsb="24"/>
+    <mtx name="cid22370" width="1000" lsb="27"/>
+  </hmtx>
+
+  <vhea>
+    <tableVersion value="0x00011000"/>
+    <ascent value="500"/>
+    <descent value="-500"/>
+    <lineGap value="0"/>
+    <advanceHeightMax value="1000"/>
+    <minTopSideBearing value="0"/>
+    <minBottomSideBearing value="0"/>
+    <yMaxExtent value="1000"/>
+    <caretSlopeRise value="0"/>
+    <caretSlopeRun value="1"/>
+    <caretOffset value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <reserved4 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfVMetrics value="1"/>
+  </vhea>
+
+  <vmtx>
+    <mtx name=".notdef" height="1000" tsb="0"/>
+    <mtx name="cid00001" height="1000" tsb="880"/>
+    <mtx name="cid00002" height="1000" tsb="107"/>
+    <mtx name="cid01177" height="1000" tsb="25"/>
+    <mtx name="cid06449" height="1000" tsb="25"/>
+    <mtx name="cid06821" height="1000" tsb="20"/>
+    <mtx name="cid07253" height="1000" tsb="25"/>
+    <mtx name="cid13393" height="1000" tsb="22"/>
+    <mtx name="cid17290" height="1000" tsb="25"/>
+    <mtx name="cid17852" height="1000" tsb="25"/>
+    <mtx name="cid18480" height="1000" tsb="25"/>
+    <mtx name="cid22370" height="1000" tsb="25"/>
+  </vmtx>
+
+</ttFont>

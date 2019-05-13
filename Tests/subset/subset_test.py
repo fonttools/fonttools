@@ -581,8 +581,8 @@ class SubsetTest(unittest.TestCase):
         self.assertEqual(cs["B"].program, ["endchar"])
 
     def test_retain_gids_cff2(self):
-        fontpath = self.getpath("../../varLib/data/TestCFF2VF.otf")
-        font = TTFont(fontpath)
+        ttx_path = self.getpath("../../varLib/data/master_ttx_varfont_otf/TestCFF2VF.ttx")
+        font, fontpath = self.compile_font(ttx_path, ".otf")
 
         self.assertEqual(font["hmtx"]["A"], (600, 31))
         self.assertEqual(font["hmtx"]["T"], (600, 41))
