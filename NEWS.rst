@@ -1,3 +1,6 @@
+- [varLib] Don't drop ``post`` glyph names when building CFF2 variable font.
+
+
 3.41.1 (released 2019-05-13)
 ----------------------------
 
