@@ -1,3 +1,14 @@
+- [designspaceLib] Added ``loadSourceFonts`` method to load source fonts using
+  custom opener function (#1606).
+- [head] Round font bounding box coordinates to integers to fix compile error
+  if CFF font has float coordinates (#1604, #1605).
+- [feaLib] Don't write ``None`` in ``ast.ValueRecord.asFea()`` (#1599).
+- [subset] Fixed issue ``AssertionError`` when using ``--desubroutinize`` option
+  (#1590, #1594).
+- [graphite] Fixed bug in ``Silf`` table's ``decompile`` method unmasked by
+  previous typo fix (#1597). Decode languange code as UTF-8 in ``Sill`` table's
+  ``decompile`` method (#1600).
+
 3.41.0 (released 2019-04-29)
 ----------------------------
 
@@ -13,7 +24,7 @@
   ``--recalc-max-context`` to ``subset`` module (#1582).
 - [otBase/otTables] Fixed ``AttributeError`` on missing OT table fields after
   importing font from TTX (#1584).
-- [Silf] Fixed typo ``Silf`` table's ``decompile`` method (#1586).
+- [graphite] Fixed typo ``Silf`` table's ``decompile`` method (#1586).
 - [otlLib] Better compress ``GPOS`` SinglePos (LookupType 1) subtables (#1539).
 
 3.40.0 (released 2019-04-08)
