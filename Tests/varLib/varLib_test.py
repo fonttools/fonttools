@@ -234,7 +234,6 @@ class BuildTest(unittest.TestCase):
 
         self.temp_dir()
         for path in self.get_file_list(ttx_dir, '.ttx', 'TestCFF2_'):
-            print(path)
             self.compile_font(path, ".otf", self.tempdir)
 
         ds = DesignSpaceDocument.fromfile(ds_path)
@@ -258,7 +257,6 @@ class BuildTest(unittest.TestCase):
 
         self.temp_dir()
         for path in self.get_file_list(ttx_dir, '.ttx', 'MasterSet_Kanji-'):
-            print(path)
             self.compile_font(path, ".otf", self.tempdir)
 
         ds = DesignSpaceDocument.fromfile(ds_path)

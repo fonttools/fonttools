@@ -921,11 +921,6 @@ class CFFSpecializeProgramTest(unittest.TestCase):
 
 class CFF2VFTestSpecialize(DataFilesHandler):
 
-    @staticmethod
-    def get_test_input(test_file_or_folder):
-        path, _ = os.path.split(__file__)
-        return os.path.join(path, "data", test_file_or_folder)
-
     def test_blend_round_trip(self):
         ttx_path = self.getpath('TestSparseCFF2VF.ttx')
         ttf_font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
