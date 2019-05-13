@@ -1,3 +1,6 @@
+3.41.1 (released 2019-05-13)
+----------------------------
+
 - [designspaceLib] Added ``loadSourceFonts`` method to load source fonts using
   custom opener function (#1606).
 - [head] Round font bounding box coordinates to integers to fix compile error
