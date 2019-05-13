@@ -1,4 +1,6 @@
-- [varLib] Don't drop ``post`` glyph names when building CFF2 variable font.
+- [cffLib] Fixed issue when importing a ``CFF2`` variable font from XML, whereby
+  the VarStore state was not propagated to PrivateDict (#1598).
+- [varLib] Don't drop ``post`` glyph names when building CFF2 variable font (#1609).
 
 
 3.41.1 (released 2019-05-13)
