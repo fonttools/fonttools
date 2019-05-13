@@ -26,12 +26,12 @@
     </VarStore>
     <AdvHeightMap>
       <Map glyph=".notdef" outer="0" inner="0"/>
-      <Map glyph="glyph00007" outer="0" inner="0"/>
-      <Map glyph="glyph00008" outer="0" inner="0"/>
-      <Map glyph="glyph00009" outer="0" inner="0"/>
-      <Map glyph="glyph00010" outer="0" inner="0"/>
-      <Map glyph="glyph00011" outer="0" inner="0"/>
-      <Map glyph="glyph00012" outer="0" inner="0"/>
+      <Map glyph="c30719" outer="0" inner="0"/>
+      <Map glyph="c30790" outer="0" inner="0"/>
+      <Map glyph="c30816" outer="0" inner="0"/>
+      <Map glyph="c30843" outer="0" inner="0"/>
+      <Map glyph="c31621" outer="0" inner="0"/>
+      <Map glyph="c32051" outer="0" inner="0"/>
       <Map glyph="uni3042" outer="0" inner="0"/>
       <Map glyph="uni56FD" outer="0" inner="0"/>
       <Map glyph="uni6280" outer="0" inner="0"/>
@@ -41,12 +41,12 @@
     </AdvHeightMap>
     <VOrgMap>
       <Map glyph=".notdef" outer="0" inner="0"/>
-      <Map glyph="glyph00007" outer="0" inner="0"/>
-      <Map glyph="glyph00008" outer="0" inner="0"/>
-      <Map glyph="glyph00009" outer="0" inner="0"/>
-      <Map glyph="glyph00010" outer="0" inner="0"/>
-      <Map glyph="glyph00011" outer="0" inner="0"/>
-      <Map glyph="glyph00012" outer="0" inner="0"/>
+      <Map glyph="c30719" outer="0" inner="0"/>
+      <Map glyph="c30790" outer="0" inner="0"/>
+      <Map glyph="c30816" outer="0" inner="0"/>
+      <Map glyph="c30843" outer="0" inner="0"/>
+      <Map glyph="c31621" outer="0" inner="0"/>
+      <Map glyph="c32051" outer="0" inner="0"/>
       <Map glyph="uni3042" outer="0" inner="0"/>
       <Map glyph="uni56FD" outer="0" inner="0"/>
       <Map glyph="uni6280" outer="0" inner="0"/>
