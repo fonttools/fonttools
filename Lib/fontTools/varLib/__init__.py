@@ -922,6 +922,13 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 		_add_GSUB_feature_variations(vf, ds.axes, ds.internal_axis_supports, ds.rules)
 	if 'CFF2' not in exclude and 'CFF ' in vf:
 		_add_CFF2(vf, model, master_fonts)
+		if "post" in vf:
+			# set 'post' to format 2 to keep the glyph names dropped from CFF2
+			post = vf["post"]
+			if post.formatType != 2.0:
+				post.formatType = 2.0
+				post.extraNames = []
+				post.mapping = {}
 
 	for tag in exclude:
 		if tag in vf:
