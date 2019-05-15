@@ -12,11 +12,12 @@ NOTE: The module is experimental and both the API and the CLI *will* change.
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.misc.fixedTools import floatToFixedToFloat, otRound
+from fontTools.misc.fixedTools import floatToFixedToFloat, otRound, floatToFixed
 from fontTools.varLib.models import supportScalar, normalizeValue, piecewiseLinearMap
-from fontTools.ttLib import TTFont
+from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import _g_l_y_f
+from fontTools.ttLib.tables import ttProgram
 from fontTools import varLib
 from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
@@ -630,6 +631,45 @@ def setDefaultWeightWidthSlant(ttFont, location):
         ttFont["post"].italicAngle = italicAngle
 
 
+def addGetVariationIdef(font, coordinates):
+    """ When creating a full instance from a variable font containing TrueType hinting,
+    if the GETVARIATION opcode (0x91) is used in any glyph instructions, we need to
+    add an IDEF definition to the fpgm for legacy environments that don't know this
+    instruction.
+    The custom IDEF pushes to the stack the normalized coordinates for the particular
+    instance font, one for each axes listed in varfont's fvar table.
+
+    https://docs.microsoft.com/en-us/typography/opentype/spec/tt_instructions#get-variation
+    """
+    glyf = font["glyf"]
+    for glyphName in glyf.keys():
+        glyph = glyf[glyphName]
+        if hasattr(glyph, "program"):
+            instructions = glyph.program.getAssembly()
+            if any(op.startswith("GETVARIATION") for op in instructions):
+                break
+    else:
+        return  # no glyph instructions use GETVARIATION[]; no need for IDEF
+
+    log.info("Adding IDEF to fpgm table for GETVARIATION opcode")
+    if "fpgm" in font:
+        fpgm = font["fpgm"]
+        asm = fpgm.program.getAssembly()
+    else:
+        fpgm = newTable("fpgm")
+        fpgm.program = ttProgram.Program()
+        font["fpgm"] = fpgm
+        asm = []
+    asm.append("PUSHB[000] 145")
+    asm.append("IDEF[ ]")
+    args = [str(len(coordinates))]
+    for coord in coordinates:
+        args.append(str(floatToFixed(coord, 14)))
+    asm.append("NPUSHW[ ] " + " ".join(args))
+    asm.append("ENDF[ ]")
+    fpgm.program.fromAssembly(asm)
+
+
 def normalize(value, triple, avar_mapping):
     value = normalizeValue(value, triple)
     if avar_mapping:
@@ -692,6 +732,8 @@ def instantiateVariableFont(
     if any(isinstance(v, tuple) for v in axis_limits.values()):
         raise NotImplementedError("Axes range limits are not supported yet")
 
+    axisOrder = [axis.axisTag for axis in varfont["fvar"].axes]
+
     if "gvar" in varfont:
         instantiateGvar(varfont, normalized_limits, optimize=optimize)
 
@@ -720,9 +762,16 @@ def instantiateVariableFont(
 
         instantiateFvar(varfont, axis_limits)
 
-    if "fvar" not in varfont:
-        if "glyf" in varfont and overlap:
-            setMacOverlapFlags(varfont["glyf"])
+    isFullInstance = "fvar" not in varfont
+    if isFullInstance:
+        if "glyf" in varfont:
+            if overlap:
+                setMacOverlapFlags(varfont["glyf"])
+
+            addGetVariationIdef(
+                varfont,
+                coordinates=[normalized_limits[axisTag] for axisTag in axisOrder],
+            )
 
     setDefaultWeightWidthSlant(
         varfont,

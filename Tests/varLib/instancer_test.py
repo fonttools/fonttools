@@ -1,9 +1,10 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.fixedTools import floatToFixed
 from fontTools import ttLib
 from fontTools import designspaceLib
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
-from fontTools.ttLib.tables import _f_v_a_r, _g_l_y_f
+from fontTools.ttLib.tables import _f_v_a_r, _g_l_y_f, ttProgram
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools import varLib
@@ -1087,3 +1088,49 @@ class SetDefaultWeightWidthSlantTest(object):
         assert ttFont["OS/2"].usWeightClass == 500
         assert ttFont["OS/2"].usWidthClass == 8
         assert ttFont["post"].italicAngle == -12.0
+
+
+def test_addGetVariationIdefToFpgm():
+    font = ttLib.TTFont()
+
+    glyf = ttLib.newTable("glyf")
+    glyf.glyphOrder = ["a"]
+    a = _g_l_y_f.Glyph()
+    a.numberOfContours = 1
+    a.flags = [0]
+    a.program = ttProgram.Program()
+    glyf.glyphs = {"a": a}
+    font["glyf"] = glyf
+
+    coordinates = [1.0, -1.0]
+
+    instancer.addGetVariationIdef(font, coordinates)
+
+    # no glyph instructions contain GETVARIATION so no fpgm table created
+    assert "fpgm" not in font
+
+    # now we add GETVARIATION and a new fpgm table
+    glyf["a"].program.fromAssembly(["GETVARIATION[]"])
+    fpgm = ttLib.newTable("fpgm")
+    fpgm.program = ttProgram.Program()
+    font["fpgm"] = fpgm
+
+    expected = [
+        "PUSHB[000] 145",
+        "IDEF[ ]",
+        "NPUSHW[ ] 2 16384 -16384",
+        "ENDF[ ]",
+    ]
+
+    instancer.addGetVariationIdef(font, coordinates)
+
+    # expect this fpgm table to be extended with the IDEF
+    assert fpgm.program.getAssembly() == expected
+
+    del font["fpgm"]
+
+    instancer.addGetVariationIdef(font, coordinates)
+
+    # a new fpgm table is created if none already present (unlikely)
+    assert "fpgm" in font
+    assert font["fpgm"].program.getAssembly() == expected
