@@ -4,6 +4,7 @@ from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
 from fontTools.misc.timeTools import timestampFromString, timestampToString, timestampNow
 from fontTools.misc.timeTools import epoch_diff as mac_epoch_diff # For backward compat
+from fontTools.misc.arrayTools import intRect
 from . import DefaultTable
 import logging
 
@@ -63,7 +64,7 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 			# For TT-flavored fonts, xMin, yMin, xMax and yMax are set in table__m_a_x_p.recalc().
 			if 'CFF ' in ttFont:
 				topDict = ttFont['CFF '].cff.topDictIndex[0]
-				self.xMin, self.yMin, self.xMax, self.yMax = topDict.FontBBox
+				self.xMin, self.yMin, self.xMax, self.yMax = intRect(topDict.FontBBox)
 		if ttFont.recalcTimestamp:
 			self.modified = timestampNow()
 		data = sstruct.pack(headFormat, self)

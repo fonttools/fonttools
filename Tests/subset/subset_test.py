@@ -426,6 +426,16 @@ class SubsetTest(unittest.TestCase):
         self.expect_ttx(subsetfont, self.getpath(
             "test_hinted_subrs_CFF.desub.ttx"), ["CFF "])
 
+    def test_desubroutinize_cntrmask_CFF(self):
+        ttxpath = self.getpath("test_cntrmask_CFF.ttx")
+        _, fontpath = self.compile_font(ttxpath, ".otf")
+        subsetpath = self.temp_path(".otf")
+        subset.main([fontpath, "--desubroutinize", "--notdef-outline",
+                     "--output-file=%s" % subsetpath, "*"])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath(
+            "test_cntrmask_CFF.desub.ttx"), ["CFF "])
+
     def test_no_hinting_desubroutinize_CFF(self):
         ttxpath = self.getpath("test_hinted_subrs_CFF.ttx")
         _, fontpath = self.compile_font(ttxpath, ".otf")
@@ -571,8 +581,8 @@ class SubsetTest(unittest.TestCase):
         self.assertEqual(cs["B"].program, ["endchar"])
 
     def test_retain_gids_cff2(self):
-        fontpath = self.getpath("../../varLib/data/TestCFF2VF.otf")
-        font = TTFont(fontpath)
+        ttx_path = self.getpath("../../varLib/data/master_ttx_varfont_otf/TestCFF2VF.ttx")
+        font, fontpath = self.compile_font(ttx_path, ".otf")
 
         self.assertEqual(font["hmtx"]["A"], (600, 31))
         self.assertEqual(font["hmtx"]["T"], (600, 41))

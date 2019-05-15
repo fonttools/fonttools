@@ -33,7 +33,7 @@ install:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
   # upgrade pip and setuptools to avoid out-of-date warnings
-  - "python -m pip install --disable-pip-version-check --user --upgrade pip setuptools"
+  - "python -m pip install --disable-pip-version-check --user --upgrade pip setuptools virtualenv"
 
   # install the dependencies to run the tests
   - "python -m pip install tox"

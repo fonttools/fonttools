@@ -229,37 +229,49 @@ class BuildTest(unittest.TestCase):
 
     def test_varlib_build_CFF2(self):
         ds_path = self.get_test_input('TestCFF2.designspace')
-        suffix = '.otf'
-        expected_ttx_name = 'BuildTestCFF2'
-        tables = ["fvar", "CFF2"]
+        ttx_dir = self.get_test_input("master_cff2")
+        expected_ttx_path = self.get_test_output("BuildTestCFF2.ttx")
 
-        finder = lambda s: s.replace('.ufo', suffix)
-        varfont, model, _ = build(ds_path, finder)
-        # some data (e.g. counts printed in TTX inline comments) is only
-        # calculated at compile time, so before we can compare the TTX
-        # dumps we need to save to a temporary stream, and realod the font
+        self.temp_dir()
+        for path in self.get_file_list(ttx_dir, '.ttx', 'TestCFF2_'):
+            self.compile_font(path, ".otf", self.tempdir)
+
+        ds = DesignSpaceDocument.fromfile(ds_path)
+        for source in ds.sources:
+            source.path = os.path.join(
+                self.tempdir, os.path.basename(source.filename).replace(".ufo", ".otf")
+            )
+        ds.updatePaths()
+
+        varfont, _, _ = build(ds)
         varfont = reload_font(varfont)
 
-        expected_ttx_path = self.get_test_output(expected_ttx_name + '.ttx')
+        tables = ["fvar", "CFF2"]
         self.expect_ttx(varfont, expected_ttx_path, tables)
-        self.check_ttx_dump(varfont, expected_ttx_path, tables, suffix)
+
 
     def test_varlib_build_sparse_CFF2(self):
         ds_path = self.get_test_input('TestSparseCFF2VF.designspace')
-        suffix = '.otf'
-        expected_ttx_name = 'TestSparseCFF2VF'
-        tables = ["fvar", "CFF2"]
+        ttx_dir = self.get_test_input("master_sparse_cff2")
+        expected_ttx_path = self.get_test_output("TestSparseCFF2VF.ttx")
 
-        finder = lambda s: s.replace('.ufo', suffix)
-        varfont, model, _ = build(ds_path, finder)
-        # some data (e.g. counts printed in TTX inline comments) is only
-        # calculated at compile time, so before we can compare the TTX
-        # dumps we need to save to a temporary stream, and realod the font
+        self.temp_dir()
+        for path in self.get_file_list(ttx_dir, '.ttx', 'MasterSet_Kanji-'):
+            self.compile_font(path, ".otf", self.tempdir)
+
+        ds = DesignSpaceDocument.fromfile(ds_path)
+        for source in ds.sources:
+            source.path = os.path.join(
+                self.tempdir, os.path.basename(source.filename).replace(".ufo", ".otf")
+            )
+        ds.updatePaths()
+
+        varfont, _, _ = build(ds)
         varfont = reload_font(varfont)
 
-        expected_ttx_path = self.get_test_output(expected_ttx_name + '.ttx')
+        tables = ["fvar", "CFF2"]
         self.expect_ttx(varfont, expected_ttx_path, tables)
-        self.check_ttx_dump(varfont, expected_ttx_path, tables, suffix)
+
 
     def test_varlib_main_ttf(self):
         """Mostly for testing varLib.main()
@@ -461,15 +473,26 @@ class BuildTest(unittest.TestCase):
 
     def test_varlib_build_VVAR_CFF2(self):
         ds_path = self.get_test_input('TestVVAR.designspace')
-        suffix = '.otf'
+        ttx_dir = self.get_test_input("master_vvar_cff2")
         expected_ttx_name = 'TestVVAR'
-        tables = ["VVAR"]
+        suffix = '.otf'
 
-        finder = lambda s: s.replace('.ufo', suffix)
-        varfont, model, _ = build(ds_path, finder)
+        self.temp_dir()
+        for path in self.get_file_list(ttx_dir, '.ttx', 'TestVVAR'):
+            font, savepath = self.compile_font(path, suffix, self.tempdir)
+
+        ds = DesignSpaceDocument.fromfile(ds_path)
+        for source in ds.sources:
+            source.path = os.path.join(
+                self.tempdir, os.path.basename(source.filename).replace(".ufo", suffix)
+            )
+        ds.updatePaths()
+
+        varfont, _, _ = build(ds)
         varfont = reload_font(varfont)
 
         expected_ttx_path = self.get_test_output(expected_ttx_name + '.ttx')
+        tables = ["VVAR"]
         self.expect_ttx(varfont, expected_ttx_path, tables)
         self.check_ttx_dump(varfont, expected_ttx_path, tables, suffix)
 

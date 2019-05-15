@@ -832,6 +832,13 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 		_add_GSUB_feature_variations(vf, ds.axes, ds.internal_axis_supports, ds.rules)
 	if 'CFF2' not in exclude and 'CFF ' in vf:
 		_add_CFF2(vf, model, master_fonts)
+		if "post" in vf:
+			# set 'post' to format 2 to keep the glyph names dropped from CFF2
+			post = vf["post"]
+			if post.formatType != 2.0:
+				post.formatType = 2.0
+				post.extraNames = []
+				post.mapping = {}
 
 	for tag in exclude:
 		if tag in vf:
@@ -841,7 +848,7 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 	return vf, model, master_ttfs
 
 
-def _open_font(path, master_finder):
+def _open_font(path, master_finder=lambda s: s):
 	# load TTFont masters from given 'path': this can be either a .TTX or an
 	# OpenType binary font; or if neither of these, try use the 'master_finder'
 	# callable to resolve the path to a valid .TTX or OpenType font binary.
@@ -875,35 +882,17 @@ def load_masters(designspace, master_finder=lambda s: s):
 	Return list of master TTFont objects in the same order they are listed in the
 	DesignSpaceDocument.
 	"""
-	master_fonts = []
-
 	for master in designspace.sources:
-		# 1. If the caller already supplies a TTFont for a source, just take it.
-		if master.font:
-			font = master.font
-			master_fonts.append(font)
-		else:
-			# If a SourceDescriptor has a layer name, demand that the compiled TTFont
-			# be supplied by the caller. This spares us from modifying MasterFinder.
-			if master.layerName:
-				raise AttributeError(
-					"Designspace source '%s' specified a layer name but lacks the "
-					"required TTFont object in the 'font' attribute."
-					% (master.name or "<Unknown>")
+		# If a SourceDescriptor has a layer name, demand that the compiled TTFont
+		# be supplied by the caller. This spares us from modifying MasterFinder.
+		if master.layerName and master.font is None:
+			raise AttributeError(
+				"Designspace source '%s' specified a layer name but lacks the "
+				"required TTFont object in the 'font' attribute."
+				% (master.name or "<Unknown>")
 			)
-			else:
-				if master.path is None:
-					raise AttributeError(
-						"Designspace source '%s' has neither 'font' nor 'path' "
-						"attributes" % (master.name or "<Unknown>")
-					)
-				# 2. A SourceDescriptor's path might point an OpenType binary, a
-				# TTX file, or another source file (e.g. UFO), in which case we
-				# resolve the path using 'master_finder' function
-				master.font = font = _open_font(master.path, master_finder)
-				master_fonts.append(font)
 
-	return master_fonts
+	return designspace.loadSourceFonts(_open_font, master_finder=master_finder)
 
 
 class MasterFinder(object):

@@ -366,7 +366,7 @@ class StopHintCountEvent(Exception):
 
 
 class _DesubroutinizingT2Decompiler(psCharStrings.SimpleT2Decompiler):
-	stop_hintcount_ops = ("op_hstem", "op_vstem", "op_rmoveto", "op_hmoveto",
+	stop_hintcount_ops = ("op_hintmask", "op_cntrmask", "op_rmoveto", "op_hmoveto",
 							"op_vmoveto")
 
 	def __init__(self, localSubrs, globalSubrs, private=None):
@@ -379,6 +379,10 @@ class _DesubroutinizingT2Decompiler(psCharStrings.SimpleT2Decompiler):
 			setattr(self, op_name, self.stop_hint_count)
 
 		if hasattr(charString, '_desubroutinized'):
+			# If a charstring has already been desubroutinized, we will still
+			# need to execute it if we need to count hints in order to
+			# compute the byte length for mask arguments, and haven't finished
+			# counting hints pairs.
 			if self.need_hintcount and self.callingStack:
 				try:
 					psCharStrings.SimpleT2Decompiler.execute(self, charString)
