@@ -1102,12 +1102,21 @@ def test_addGetVariationIdefToFpgm():
     glyf.glyphs = {"a": a}
     font["glyf"] = glyf
 
+    maxp = ttLib.newTable("maxp")
+    maxp.tableVersion = 0x00010000
+    maxp.numGlyphs = 1
+    maxp.maxInstructionDefs = 0
+    maxp.maxStackElements = 0
+    font["maxp"] = maxp
+
     coordinates = [1.0, -1.0]
 
     instancer.addGetVariationIdef(font, coordinates)
 
     # no glyph instructions contain GETVARIATION so no fpgm table created
     assert "fpgm" not in font
+    assert maxp.maxInstructionDefs == 0
+    assert maxp.maxStackElements == 0
 
     # now we add GETVARIATION and a new fpgm table
     glyf["a"].program.fromAssembly(["GETVARIATION[]"])
@@ -1126,6 +1135,8 @@ def test_addGetVariationIdefToFpgm():
 
     # expect this fpgm table to be extended with the IDEF
     assert fpgm.program.getAssembly() == expected
+    assert maxp.maxInstructionDefs == 1
+    assert maxp.maxStackElements == 2
 
     del font["fpgm"]
 

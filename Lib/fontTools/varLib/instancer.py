@@ -669,6 +669,10 @@ def addGetVariationIdef(font, coordinates):
     asm.append("ENDF[ ]")
     fpgm.program.fromAssembly(asm)
 
+    maxp = font["maxp"]
+    maxp.maxInstructionDefs += 1
+    maxp.maxStackElements = max(len(coordinates), maxp.maxStackElements)
+
 
 def normalize(value, triple, avar_mapping):
     value = normalizeValue(value, triple)
