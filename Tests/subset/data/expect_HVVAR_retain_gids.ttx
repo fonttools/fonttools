@@ -8,7 +8,6 @@
     <GlyphID id="2" name="B"/>
     <GlyphID id="3" name="glyph00003"/>
     <GlyphID id="4" name="D"/>
-    <GlyphID id="5" name="glyph00005"/>
   </GlyphOrder>
 
   <HVAR>
@@ -63,7 +62,6 @@
       <Map glyph="D" outer="0" inner="3"/>
       <Map glyph="glyph00001" outer="0" inner="0"/>
       <Map glyph="glyph00003" outer="0" inner="0"/>
-      <Map glyph="glyph00005" outer="0" inner="3"/>
     </LsbMap>
     <RsbMap>
       <Map glyph=".notdef" outer="0" inner="1"/>
@@ -71,7 +69,6 @@
       <Map glyph="D" outer="1" inner="1"/>
       <Map glyph="glyph00001" outer="0" inner="0"/>
       <Map glyph="glyph00003" outer="0" inner="0"/>
-      <Map glyph="glyph00005" outer="1" inner="1"/>
     </RsbMap>
   </HVAR>
 
@@ -132,7 +129,6 @@
       <Map glyph="D" outer="1" inner="1"/>
       <Map glyph="glyph00001" outer="0" inner="0"/>
       <Map glyph="glyph00003" outer="0" inner="0"/>
-      <Map glyph="glyph00005" outer="1" inner="1"/>
     </AdvHeightMap>
     <VOrgMap>
       <Map glyph=".notdef" outer="1" inner="2"/>
@@ -140,7 +136,6 @@
       <Map glyph="D" outer="1" inner="3"/>
       <Map glyph="glyph00001" outer="0" inner="0"/>
       <Map glyph="glyph00003" outer="0" inner="0"/>
-      <Map glyph="glyph00005" outer="1" inner="3"/>
     </VOrgMap>
   </VVAR>
 

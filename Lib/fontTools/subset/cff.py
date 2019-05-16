@@ -113,42 +113,46 @@ def subset_glyphs(self, s):
 		font = cff[fontname]
 		cs = font.CharStrings
 
+		glyphs = s.glyphs.union(s.glyphs_emptied)
+
+		# Load all glyphs
+		for g in font.charset:
+			if g not in glyphs: continue
+			c, _ = cs.getItemAndSelector(g)
+
+		if cs.charStringsAreIndexed:
+			indices = [i for i,g in enumerate(font.charset) if g in glyphs]
+			csi = cs.charStringsIndex
+			csi.items = [csi.items[i] for i in indices]
+			del csi.file, csi.offsets
+			if hasattr(font, "FDSelect"):
+				sel = font.FDSelect
+				# XXX We want to set sel.format to None, such that the
+				# most compact format is selected. However, OTS was
+				# broken and couldn't parse a FDSelect format 0 that
+				# happened before CharStrings. As such, always force
+				# format 3 until we fix cffLib to always generate
+				# FDSelect after CharStrings.
+				# https://github.com/khaledhosny/ots/pull/31
+				#sel.format = None
+				sel.format = 3
+				sel.gidArray = [sel.gidArray[i] for i in indices]
+			cs.charStrings = {g:indices.index(v)
+					  for g,v in cs.charStrings.items()
+					  if g in glyphs}
+		else:
+			cs.charStrings = {g:v
+					  for g,v in cs.charStrings.items()
+					  if g in glyphs}
+		font.charset = [g for g in font.charset if g in glyphs]
+		font.numGlyphs = len(font.charset)
+
+
 		if s.options.retain_gids:
 			isCFF2 = cff.major > 1
 			for g in s.glyphs_emptied:
 				_empty_charstring(font, g, isCFF2=isCFF2, ignoreWidth=True)
-		else:
-			# Load all glyphs
-			for g in font.charset:
-				if g not in s.glyphs: continue
-				c, _ = cs.getItemAndSelector(g)
 
-			if cs.charStringsAreIndexed:
-				indices = [i for i,g in enumerate(font.charset) if g in s.glyphs]
-				csi = cs.charStringsIndex
-				csi.items = [csi.items[i] for i in indices]
-				del csi.file, csi.offsets
-				if hasattr(font, "FDSelect"):
-					sel = font.FDSelect
-					# XXX We want to set sel.format to None, such that the
-					# most compact format is selected. However, OTS was
-					# broken and couldn't parse a FDSelect format 0 that
-					# happened before CharStrings. As such, always force
-					# format 3 until we fix cffLib to always generate
-					# FDSelect after CharStrings.
-					# https://github.com/khaledhosny/ots/pull/31
-					#sel.format = None
-					sel.format = 3
-					sel.gidArray = [sel.gidArray[i] for i in indices]
-				cs.charStrings = {g:indices.index(v)
-						  for g,v in cs.charStrings.items()
-						  if g in s.glyphs}
-			else:
-				cs.charStrings = {g:v
-						  for g,v in cs.charStrings.items()
-						  if g in s.glyphs}
-			font.charset = [g for g in font.charset if g in s.glyphs]
-			font.numGlyphs = len(font.charset)
 
 	return True # any(cff[fontname].numGlyphs for fontname in cff.keys())
 
