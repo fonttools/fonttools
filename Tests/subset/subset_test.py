@@ -465,6 +465,46 @@ class SubsetTest(unittest.TestCase):
         subsetfont = TTFont(subsetpath)
         self.expect_ttx(subsetfont, self.getpath("expect_notdef_width_cid.ttx"), ["CFF "])
 
+    def test_recalc_bounds_ttf(self):
+        ttxpath = self.getpath("TestTTF-Regular.ttx")
+        font = TTFont()
+        font.importXML(ttxpath)
+        head = font['head']
+        bounds = [head.xMin, head.yMin, head.xMax, head.yMax]
+
+        _, fontpath = self.compile_font(ttxpath, ".ttf")
+        subsetpath = self.temp_path(".ttf")
+
+        # by default, the subsetter does not recalculate the bounding box
+        subset.main([fontpath, "--output-file=%s" % subsetpath, "*"])
+        head = TTFont(subsetpath)['head']
+        self.assertEqual(bounds, [head.xMin, head.yMin, head.xMax, head.yMax])
+
+        subset.main([fontpath, "--recalc-bounds", "--output-file=%s" % subsetpath, "*"])
+        head = TTFont(subsetpath)['head']
+        bounds = [132, 304, 365, 567]
+        self.assertEqual(bounds, [head.xMin, head.yMin, head.xMax, head.yMax])
+
+    def test_recalc_bounds_otf(self):
+        ttxpath = self.getpath("TestOTF-Regular.ttx")
+        font = TTFont()
+        font.importXML(ttxpath)
+        head = font['head']
+        bounds = [head.xMin, head.yMin, head.xMax, head.yMax]
+
+        _, fontpath = self.compile_font(ttxpath, ".otf")
+        subsetpath = self.temp_path(".otf")
+
+        # by default, the subsetter does not recalculate the bounding box
+        subset.main([fontpath, "--output-file=%s" % subsetpath, "*"])
+        head = TTFont(subsetpath)['head']
+        self.assertEqual(bounds, [head.xMin, head.yMin, head.xMax, head.yMax])
+
+        subset.main([fontpath, "--recalc-bounds", "--output-file=%s" % subsetpath, "*"])
+        head = TTFont(subsetpath)['head']
+        bounds = [132, 304, 365, 567]
+        self.assertEqual(bounds, [head.xMin, head.yMin, head.xMax, head.yMax])
+
     def test_recalc_timestamp_ttf(self):
         ttxpath = self.getpath("TestTTF-Regular.ttx")
         font = TTFont()
