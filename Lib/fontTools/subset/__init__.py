@@ -2239,6 +2239,12 @@ def prune_pre_subset(self, font, options):
 	return True	# Required table
 
 
+@_add_method(ttLib.getTableClass('head'))
+def prune_post_subset(self, font, options):
+	# Force re-compiling head table, to update any recalculated values.
+	return True
+
+
 # TODO(behdad) OS/2 ulCodePageRange?
 # TODO(behdad) Drop AAT tables.
 # TODO(behdad) Drop unneeded GSUB/GPOS Script/LangSys entries.
