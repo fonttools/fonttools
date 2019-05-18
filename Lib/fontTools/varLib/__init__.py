@@ -1046,10 +1046,21 @@ def main(args=None):
 			'name. The default value is "%(default)s".'
 		)
 	)
+	logging_group = parser.add_mutually_exclusive_group(required=False)
+	logging_group.add_argument(
+		"-v", "--verbose",
+                action="store_true",
+                help="Run more verbosely.")
+	logging_group.add_argument(
+		"-q", "--quiet",
+                action="store_true",
+                help="Turn verbosity off.")
 	options = parser.parse_args(args)
 
-	# TODO: allow user to configure logging via command-line options
-	configLogger(level="INFO")
+	configLogger(level=(
+		"DEBUG" if options.verbose else
+		"ERROR" if options.quiet else
+		"INFO"))
 
 	designspace_filename = options.designspace
 	finder = MasterFinder(options.master_finder)
