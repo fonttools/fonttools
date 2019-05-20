@@ -677,6 +677,17 @@ def sanityCheckVariableTables(varfont):
         raise NotImplementedError("Instancing CFF2 variable fonts is not supported yet")
 
 
+def populateAxisDefaults(varfont, axis_limits):
+    if any(value is None for value in axis_limits.values()):
+        fvar = varfont["fvar"]
+        defaultValues = {a.axisTag: a.defaultValue for a in fvar.axes}
+        return {
+            axisTag: defaultValues[axisTag] if value is None else value
+            for axisTag, value in axis_limits.items()
+        }
+    return axis_limits
+
+
 def instantiateVariableFont(
     varfont, axis_limits, inplace=False, optimize=True, overlap=True
 ):
@@ -684,6 +695,9 @@ def instantiateVariableFont(
 
     if not inplace:
         varfont = deepcopy(varfont)
+
+    axis_limits = populateAxisDefaults(varfont, axis_limits)
+
     normalized_limits = normalizeAxisLimits(varfont, axis_limits)
 
     log.info("Normalized limits: %s", normalized_limits)
@@ -739,14 +753,19 @@ def instantiateVariableFont(
 def parseLimits(limits):
     result = {}
     for limit_string in limits:
-        match = re.match(r"^(\w{1,4})=([^:]+)(?:[:](.+))?$", limit_string)
+        match = re.match(
+            r"^(\w{1,4})=(?:(None)|(?:([^:]+)(?:[:](.+))?))$", limit_string
+        )
         if not match:
             raise ValueError("invalid location format: %r" % limit_string)
         tag = match.group(1).ljust(4)
-        lbound = float(match.group(2))
+        if match.group(2):  # matches literal 'None', i.e. drop axis
+            lbound = None
+        else:
+            lbound = float(match.group(3))
         ubound = lbound
-        if match.group(3):
-            ubound = float(match.group(3))
+        if match.group(4):
+            ubound = float(match.group(4))
         if lbound != ubound:
             result[tag] = (lbound, ubound)
         else:
