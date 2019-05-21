@@ -14,6 +14,7 @@ from fontTools.varLib import models
 import collections
 from copy import deepcopy
 import os
+import re
 import pytest
 
 
@@ -1087,3 +1088,61 @@ class SetDefaultWeightWidthSlantTest(object):
         assert ttFont["OS/2"].usWeightClass == 500
         assert ttFont["OS/2"].usWidthClass == 8
         assert ttFont["post"].italicAngle == -12.0
+
+
+def _strip_ttLibVersion(string):
+    return re.sub(' ttLibVersion=".*"', "", string)
+
+
+@pytest.fixture
+def varfont2():
+    f = ttLib.TTFont(recalcTimestamp=False)
+    f.importXML(os.path.join(TESTDATA, "PartialInstancerTest2-VF.ttx"))
+    return f
+
+
+def _dump_ttx(ttFont):
+    # compile to temporary bytes stream, reload and dump to XML
+    tmp = BytesIO()
+    ttFont.save(tmp)
+    tmp.seek(0)
+    ttFont2 = ttLib.TTFont(tmp, recalcBBoxes=False, recalcTimestamp=False)
+    s = StringIO()
+    ttFont2.saveXML(s)
+    return _strip_ttLibVersion(s.getvalue())
+
+
+def _get_expected_instance_ttx(wght, wdth):
+    with open(
+        os.path.join(
+            TESTDATA,
+            "test_results",
+            "PartialInstancerTest2-VF-instance-{0},{1}.ttx".format(wght, wdth),
+        ),
+        "r",
+        encoding="utf-8",
+    ) as fp:
+        return _strip_ttLibVersion(fp.read())
+
+
+class InstantiateVariableFontTest(object):
+    @pytest.mark.parametrize(
+        "wght, wdth",
+        [(100, 100), (400, 100), (900, 100), (100, 62.5), (400, 62.5), (900, 62.5)],
+    )
+    def test_multiple_instancing(self, varfont2, wght, wdth):
+        partial = instancer.instantiateVariableFont(varfont2, {"wght": wght})
+        instance = instancer.instantiateVariableFont(partial, {"wdth": wdth})
+
+        expected = _get_expected_instance_ttx(wght, wdth)
+
+        assert _dump_ttx(instance) == expected
+
+    def test_default_instance(self, varfont2):
+        instance = instancer.instantiateVariableFont(
+            varfont2, {"wght": None, "wdth": None}
+        )
+
+        expected = _get_expected_instance_ttx(400, 100)
+
+        assert _dump_ttx(instance) == expected
