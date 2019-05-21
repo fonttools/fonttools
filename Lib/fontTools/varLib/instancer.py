@@ -342,7 +342,11 @@ def instantiateItemVariationStore(itemVarStore, fvarAxes, location):
 def instantiateOTL(varfont, location):
     # TODO(anthrotype) Support partial instancing of JSTF and BASE tables
 
-    if "GDEF" not in varfont or varfont["GDEF"].table.Version < 0x00010003:
+    if (
+        "GDEF" not in varfont
+        or varfont["GDEF"].table.Version < 0x00010003
+        or not varfont["GDEF"].table.VarStore
+    ):
         return
 
     if "GPOS" in varfont:
