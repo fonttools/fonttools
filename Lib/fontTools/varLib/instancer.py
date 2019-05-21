@@ -754,12 +754,12 @@ def parseLimits(limits):
     result = {}
     for limit_string in limits:
         match = re.match(
-            r"^(\w{1,4})=(?:(None)|(?:([^:]+)(?:[:](.+))?))$", limit_string
+            r"^(\w{1,4})=(?:(drop)|(?:([^:]+)(?:[:](.+))?))$", limit_string
         )
         if not match:
             raise ValueError("invalid location format: %r" % limit_string)
         tag = match.group(1).ljust(4)
-        if match.group(2):  # matches literal 'None', i.e. drop axis
+        if match.group(2):  # 'drop'
             lbound = None
         else:
             lbound = float(match.group(3))
