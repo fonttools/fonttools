@@ -119,10 +119,10 @@ def merge(merger, self, lst):
 		assert allNone(lst), (lst)
 		return
 
+	lst = [l.classDefs for l in lst]
 	self.classDefs = {}
 	# We only care about the .classDefs
 	self = self.classDefs
-	lst = [l.classDefs for l in lst]
 
 	allKeys = set()
 	allKeys.update(*[l.keys() for l in lst])

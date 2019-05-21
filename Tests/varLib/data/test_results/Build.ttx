@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.17">
 
+  <GDEF>
+    <Version value="0x00010003"/>
+    <GlyphClassDef Format="2">
+      <ClassDef glyph="uni0024" class="1"/>
+      <ClassDef glyph="uni0024.nostroke" class="1"/>
+      <ClassDef glyph="uni0041" class="1"/>
+      <ClassDef glyph="uni0061" class="1"/>
+    </GlyphClassDef>
+  </GDEF>
+
   <HVAR>
     <Version value="0x00010000"/>
     <VarStore Format="1">

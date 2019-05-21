@@ -2239,6 +2239,12 @@ def prune_pre_subset(self, font, options):
 	return True	# Required table
 
 
+@_add_method(ttLib.getTableClass('head'))
+def prune_post_subset(self, font, options):
+	# Force re-compiling head table, to update any recalculated values.
+	return True
+
+
 # TODO(behdad) OS/2 ulCodePageRange?
 # TODO(behdad) Drop AAT tables.
 # TODO(behdad) Drop unneeded GSUB/GPOS Script/LangSys entries.
@@ -2572,16 +2578,18 @@ class Subsetter(object):
 
 		self.glyphs_retained = frozenset(self.glyphs)
 
-		self.glyphs_emptied = frozenset()
-		if self.options.retain_gids:
-			self.glyphs_emptied = realGlyphs - self.glyphs_retained
-			# TODO Drop empty glyphs at the end of GlyphOrder vector.
-
 		order = font.getReverseGlyphMap()
 		self.reverseOrigGlyphMap = {g:order[g] for g in self.glyphs_retained}
-		self.reverseEmptiedGlyphMap = {g:order[g] for g in self.glyphs_emptied}
+
 		self.last_retained_order = max(self.reverseOrigGlyphMap.values())
 		self.last_retained_glyph = font.getGlyphOrder()[self.last_retained_order]
+
+		self.glyphs_emptied = frozenset()
+		if self.options.retain_gids:
+			self.glyphs_emptied = {g for g in realGlyphs - self.glyphs_retained if order[g] <= self.last_retained_order}
+
+		self.reverseEmptiedGlyphMap = {g:order[g] for g in self.glyphs_emptied}
+
 
 		log.info("Retaining %d glyphs", len(self.glyphs_retained))
 
@@ -2610,12 +2618,16 @@ class Subsetter(object):
 				log.warning("%s NOT subset; don't know how to subset; dropped", tag)
 				del font[tag]
 
-		if not self.options.retain_gids:
-			with timer("subset GlyphOrder"):
-				glyphOrder = font.getGlyphOrder()
+		with timer("subset GlyphOrder"):
+			glyphOrder = font.getGlyphOrder()
+			if not self.options.retain_gids:
 				glyphOrder = [g for g in glyphOrder if g in self.glyphs_retained]
-				font.setGlyphOrder(glyphOrder)
-				font._buildReverseGlyphOrderDict()
+			else:
+				glyphOrder = [g for g in glyphOrder if font.getGlyphID(g) <= self.last_retained_order]
+
+			font.setGlyphOrder(glyphOrder)
+			font._buildReverseGlyphOrderDict()
+
 
 	def _prune_post_subset(self, font):
 		for tag in font.keys():
