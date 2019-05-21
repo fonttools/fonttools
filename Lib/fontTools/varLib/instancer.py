@@ -778,9 +778,10 @@ def parseArgs(args):
 
     Returns:
         3-tuple (infile, axis_limits, options)
-        axis_limits is either a Dict[str, int], for pinning variation axes to specific
-        coordinates along those axes; or a Dict[str, Tuple(int, int)], meaning limit
-        this axis to min/max range.
+        axis_limits is either a Dict[str, Optional[float]], for pinning variation axes
+        to specific coordinates along those axes (with `None` as a placeholder for an
+        axis' default value); or a Dict[str, Tuple(float, float)], meaning limit this
+        axis to min/max range.
         Axes locations are in user-space coordinates, as defined in the "fvar" table.
     """
     from fontTools import configLogger
@@ -796,8 +797,9 @@ def parseArgs(args):
         metavar="AXIS=LOC",
         nargs="*",
         help="List of space separated locations. A location consist in "
-        "the tag of a variation axis, followed by '=' and a number or"
-        "number:number. E.g.: wdth=100 or wght=75.0:125.0",
+        "the tag of a variation axis, followed by '=' and one of number, "
+        "number:number or the literal string 'drop'. "
+        "E.g.: wdth=100 or wght=75.0:125.0 or wght=drop",
     )
     parser.add_argument(
         "-o",
