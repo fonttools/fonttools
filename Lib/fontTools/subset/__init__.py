@@ -516,11 +516,11 @@ def closure_glyphs(self, s, cur_glyphs):
 def subset_glyphs(self, s):
 	if self.Format == 1:
 		indices = self.Coverage.subset(s.glyphs)
-		self.Substitute = [self.Substitute[i] for i in indices]
+		self.Substitute = _list_subset(self.Substitute, indices)
 		# Now drop rules generating glyphs we don't want
 		indices = [i for i,sub in enumerate(self.Substitute)
 				 if sub in s.glyphs]
-		self.Substitute = [self.Substitute[i] for i in indices]
+		self.Substitute = _list_subset(self.Substitute, indices)
 		self.Coverage.remap(indices)
 		self.GlyphCount = len(self.Substitute)
 		return bool(self.GlyphCount and
@@ -563,7 +563,7 @@ def subset_glyphs(self, s):
 		# Remove empty pairsets
 		indices = [i for i,p in enumerate(self.PairSet) if p.PairValueCount]
 		self.Coverage.remap(indices)
-		self.PairSet = [self.PairSet[i] for i in indices]
+		self.PairSet = _list_subset(self.PairSet, indices)
 		self.PairSetCount = len(self.PairSet)
 		return bool(self.PairSetCount)
 	elif self.Format == 2:
@@ -1016,7 +1016,7 @@ def subset_glyphs(self, s):
 		# Prune empty rulesets
 		indices = [i for i,rs in enumerate(rss) if rs and getattr(rs, c.Rule)]
 		self.Coverage.remap(indices)
-		rss = [rss[i] for i in indices]
+		rss = _list_subset(rss, indices)
 		setattr(self, c.RuleSet, rss)
 		setattr(self, c.RuleSetCount, len(rss))
 		return bool(rss)
@@ -1281,7 +1281,7 @@ def collect_lookups(self, feature_indices):
 @_add_method(otTables.FeatureList)
 def subset_features(self, feature_indices):
 	self.ensureDecompiled()
-	self.FeatureRecord = [self.FeatureRecord[i] for i in feature_indices]
+	self.FeatureRecord = _list_subset(self.FeatureRecord, feature_indices)
 	self.FeatureCount = len(self.FeatureRecord)
 	return bool(self.FeatureCount)
 
@@ -1622,7 +1622,7 @@ def subset_glyphs(self, s):
 	table = self.table
 	if table.LigCaretList:
 		indices = table.LigCaretList.Coverage.subset(glyphs)
-		table.LigCaretList.LigGlyph = [table.LigCaretList.LigGlyph[i] for i in indices]
+		table.LigCaretList.LigGlyph = _list_subset(table.LigCaretList.LigGlyph, indices)
 		table.LigCaretList.LigGlyphCount = len(table.LigCaretList.LigGlyph)
 	if table.MarkAttachClassDef:
 		table.MarkAttachClassDef.classDefs = \
@@ -1992,21 +1992,21 @@ def closure_glyphs(self, s):
 @_add_method(otTables.MathItalicsCorrectionInfo)
 def subset_glyphs(self, s):
 	indices = self.Coverage.subset(s.glyphs)
-	self.ItalicsCorrection = [self.ItalicsCorrection[i] for i in indices]
+	self.ItalicsCorrection = _list_subset(self.ItalicsCorrection, indices)
 	self.ItalicsCorrectionCount = len(self.ItalicsCorrection)
 	return bool(self.ItalicsCorrectionCount)
 
 @_add_method(otTables.MathTopAccentAttachment)
 def subset_glyphs(self, s):
 	indices = self.TopAccentCoverage.subset(s.glyphs)
-	self.TopAccentAttachment = [self.TopAccentAttachment[i] for i in indices]
+	self.TopAccentAttachment = _list_subset(self.TopAccentAttachment, indices)
 	self.TopAccentAttachmentCount = len(self.TopAccentAttachment)
 	return bool(self.TopAccentAttachmentCount)
 
 @_add_method(otTables.MathKernInfo)
 def subset_glyphs(self, s):
 	indices = self.MathKernCoverage.subset(s.glyphs)
-	self.MathKernInfoRecords = [self.MathKernInfoRecords[i] for i in indices]
+	self.MathKernInfoRecords = _list_subset(self.MathKernInfoRecords, indices)
 	self.MathKernCount = len(self.MathKernInfoRecords)
 	return bool(self.MathKernCount)
 
@@ -2026,12 +2026,12 @@ def subset_glyphs(self, s):
 def subset_glyphs(self, s):
 	if self.VertGlyphCoverage:
 		indices = self.VertGlyphCoverage.subset(s.glyphs)
-		self.VertGlyphConstruction = [self.VertGlyphConstruction[i] for i in indices]
+		self.VertGlyphConstruction = _list_subset(self.VertGlyphConstruction, indices)
 		self.VertGlyphCount = len(self.VertGlyphConstruction)
 
 	if self.HorizGlyphCoverage:
 		indices = self.HorizGlyphCoverage.subset(s.glyphs)
-		self.HorizGlyphConstruction = [self.HorizGlyphConstruction[i] for i in indices]
+		self.HorizGlyphConstruction = _list_subset(self.HorizGlyphConstruction, indices)
 		self.HorizGlyphCount = len(self.HorizGlyphConstruction)
 
 	return True
