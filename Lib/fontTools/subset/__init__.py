@@ -482,7 +482,7 @@ def subset_glyphs(self, s):
 @_add_method(otTables.LigatureSubst)
 def closure_glyphs(self, s, cur_glyphs):
 	s.glyphs.update(*([seq.LigGlyph for seq in seqs
-				        if all(c in s.glyphs for c in seq.Component)]
+					if all(c in s.glyphs for c in seq.Component)]
 			  for g,seqs in self.ligatures.items()
 			  if g in cur_glyphs))
 
@@ -628,8 +628,8 @@ def subset_glyphs(self, s):
 		for b in self.BaseArray.BaseRecord:
 			b.BaseAnchor = [b.BaseAnchor[i] for i in class_indices]
 		return bool(self.ClassCount and
-					self.MarkArray.MarkCount and
-					self.BaseArray.BaseCount)
+			    self.MarkArray.MarkCount and
+			    self.BaseArray.BaseCount)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -663,8 +663,8 @@ def subset_glyphs(self, s):
 			for c in l.ComponentRecord:
 				c.LigatureAnchor = [c.LigatureAnchor[i] for i in class_indices]
 		return bool(self.ClassCount and
-					self.MarkArray.MarkCount and
-					self.LigatureArray.LigatureCount)
+			    self.MarkArray.MarkCount and
+			    self.LigatureArray.LigatureCount)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -698,8 +698,8 @@ def subset_glyphs(self, s):
 		for b in self.Mark2Array.Mark2Record:
 			b.Mark2Anchor = [b.Mark2Anchor[i] for i in class_indices]
 		return bool(self.ClassCount and
-					self.Mark1Array.MarkCount and
-					self.Mark2Array.MarkCount)
+			    self.Mark1Array.MarkCount and
+			    self.Mark2Array.MarkCount)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
