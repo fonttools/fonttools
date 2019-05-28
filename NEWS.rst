@@ -1,3 +1,6 @@
+3.42.0 (released 2019-05-28)
+----------------------------
+
 - [OS/2] Fixed sign of ``fsType``: it should be ``uint16``, not ``int16`` (#1619).
 - [subset] Skip out-of-range class values in mark attachment (#1478).
 - [fontBuilder] Add an empty ``DSIG`` table with ``setupDummyDSIG`` method (#1621).
