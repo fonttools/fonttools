@@ -228,8 +228,8 @@ are required to unlock the extra features named "ufo", etc.
   To use the latest available data, you can install:
 
   * `unicodedata2 <https://pypi.python.org/pypi/unicodedata2>`__:
-    ``unicodedata`` backport for Python 2.7 and 3.5 updated to the latest
-    Unicode version 9.0. Note this is not necessary if you use Python 3.6
+    ``unicodedata`` backport for Python 2.7 and 3.x updated to the latest
+    Unicode version 12.0. Note this is not necessary if you use Python 3.8
     as the latter already comes with an up-to-date ``unicodedata``.
 
   *Extra:* ``unicode``
