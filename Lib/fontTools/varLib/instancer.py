@@ -688,7 +688,7 @@ def normalize(value, triple, avar_mapping):
 
 def normalizeAxisLimits(varfont, axis_limits):
     fvar = varfont["fvar"]
-    bad_limits = axis_limits.keys() - {a.axisTag for a in fvar.axes}
+    bad_limits = set(axis_limits.keys()).difference(a.axisTag for a in fvar.axes)
     if bad_limits:
         raise ValueError("Cannot limit: {} not present in fvar".format(bad_limits))
 
