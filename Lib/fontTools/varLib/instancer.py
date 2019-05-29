@@ -411,25 +411,39 @@ def instantiateFeatureVariations(varfont, location):
 
 
 def _instantiateFeatureVariations(table, fvarAxes, location):
-    newRecords = []
     pinnedAxes = set(location.keys())
+    axisOrder = [axis.axisTag for axis in fvarAxes if axis.axisTag not in pinnedAxes]
+    axisIndexMap = {axisTag: axisOrder.index(axisTag) for axisTag in axisOrder}
+
     featureVariationApplied = False
-    for record in table.FeatureVariations.FeatureVariationRecord:
+    newRecords = []
+
+    for i, record in enumerate(table.FeatureVariations.FeatureVariationRecord):
         retainRecord = True
         applies = True
         newConditions = []
-        for condition in record.ConditionSet.ConditionTable:
-            axisIdx = condition.AxisIndex
-            axisTag = fvarAxes[axisIdx].axisTag
-            if condition.Format == 1 and axisTag in pinnedAxes:
-                minValue = condition.FilterRangeMinValue
-                maxValue = condition.FilterRangeMaxValue
-                v = location[axisTag]
-                if not (minValue <= v <= maxValue):
-                    # condition not met so remove entire record
-                    retainRecord = False
-                    break
+        for j, condition in enumerate(record.ConditionSet.ConditionTable):
+            if condition.Format == 1:
+                axisIdx = condition.AxisIndex
+                axisTag = fvarAxes[axisIdx].axisTag
+                if axisTag in pinnedAxes:
+                    minValue = condition.FilterRangeMinValue
+                    maxValue = condition.FilterRangeMaxValue
+                    v = location[axisTag]
+                    if not (minValue <= v <= maxValue):
+                        # condition not met so remove entire record
+                        retainRecord = applies = False
+                        break
+                else:
+                    # axis not pinned, keep condition with remapped axis index
+                    applies = False
+                    condition.AxisIndex = axisIndexMap[axisTag]
+                    newConditions.append(condition)
             else:
+                log.warning(
+                    "Condition table {0} of FeatureVariationRecord {1} has "
+                    "unsupported format ({2}); ignored".format(j, i, condition.Format)
+                )
                 applies = False
                 newConditions.append(condition)
 
@@ -446,6 +460,7 @@ def _instantiateFeatureVariations(table, fvarAxes, location):
 
     if newRecords:
         table.FeatureVariations.FeatureVariationRecord = newRecords
+        table.FeatureVariations.FeatureVariationCount = len(newRecords)
     else:
         del table.FeatureVariations
 
