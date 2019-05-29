@@ -33,7 +33,7 @@ import os
 import re
 
 
-log = logging.getLogger("fontTools.varlib.instancer")
+log = logging.getLogger("fontTools.varLib.instancer")
 
 
 def instantiateTupleVariationStore(variations, location, origCoords=None, endPts=None):
