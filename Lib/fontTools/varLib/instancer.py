@@ -18,6 +18,9 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import _g_l_y_f
 from fontTools import varLib
+# we import the `subset` module because we use the `prune_lookups` method on the GSUB
+# table class, and that method is only defined dynamically upon importing `subset`
+from fontTools import subset  # noqa: F401
 from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
@@ -408,6 +411,8 @@ def instantiateFeatureVariations(varfont, location):
         _instantiateFeatureVariations(
             varfont[tableTag].table, varfont["fvar"].axes, location
         )
+        # remove unreferenced lookups
+        varfont[tableTag].prune_lookups()
 
 
 def _instantiateFeatureVariations(table, fvarAxes, location):
