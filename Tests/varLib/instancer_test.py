@@ -11,6 +11,7 @@ from fontTools.varLib import instancer
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib import builder
 from fontTools.varLib import models
+from fontTools.misc.loggingTools import CapturingLogHandler
 import collections
 from copy import deepcopy
 import os
@@ -1146,3 +1147,152 @@ class InstantiateVariableFontTest(object):
         expected = _get_expected_instance_ttx(400, 100)
 
         assert _dump_ttx(instance) == expected
+
+
+@pytest.fixture
+def varfont3():
+    # The test file "Tests/varLib/data/test_results/FeatureVars.ttx" contains
+    # a GSUB.FeatureVariations table built from conditional rules specified in
+    # "Tests/varLib/data/FeatureVars.designspace" file, which are equivalent to:
+    #
+    #   conditionalSubstitutions = [
+    #       ([{"wght": (0.20886, 1.0)}], {"uni0024": "uni0024.nostroke"}),
+    #       ([{"cntr": (0.75, 1.0)}], {"uni0041": "uni0061"}),
+    #       ([{"wght": (-1.0, -0.45654), "cntr": (0, 0.25)}], {"uni0061": "uni0041"}),
+    #   ]
+    ttx = os.path.join(TESTDATA, "test_results", "FeatureVars.ttx")
+    font = ttLib.TTFont(recalcBBoxes=False, recalcTimestamp=False)
+    font.importXML(ttx)
+    return font
+
+
+def _conditionSetAsDict(conditionSet, axisOrder):
+    result = {}
+    for cond in conditionSet.ConditionTable:
+        assert cond.Format == 1
+        axisTag = axisOrder[cond.AxisIndex]
+        result[axisTag] = (cond.FilterRangeMinValue, cond.FilterRangeMaxValue)
+    return result
+
+
+def _getSubstitutions(gsub, lookupIndices):
+    subs = {}
+    for index, lookup in enumerate(gsub.LookupList.Lookup):
+        if index in lookupIndices:
+            for subtable in lookup.SubTable:
+                subs.update(subtable.mapping)
+    return subs
+
+
+class InstantiateFeatureVariationsTest(object):
+    @pytest.mark.parametrize(
+        "location, appliedSubs, expectedRecords",
+        [
+            ({"wght": 0}, {}, [({"cntr": (0.75, 1.0)}, {"uni0041": "uni0061"})]),
+            (
+                {"wght": -1.0},
+                {},
+                [
+                    ({"cntr": (0, 0.25)}, {"uni0061": "uni0041"}),
+                    ({"cntr": (0.75, 1.0)}, {"uni0041": "uni0061"}),
+                ],
+            ),
+            (
+                {"wght": 1.0},
+                {"uni0024": "uni0024.nostroke"},
+                [
+                    (
+                        {"cntr": (0.75, 1.0)},
+                        {"uni0024": "uni0024.nostroke", "uni0041": "uni0061"},
+                    )
+                ],
+            ),
+            (
+                {"cntr": 0},
+                {},
+                [
+                    ({"wght": (-1.0, -0.45654)}, {"uni0061": "uni0041"}),
+                    ({"wght": (0.20886, 1.0)}, {"uni0024": "uni0024.nostroke"}),
+                ],
+            ),
+            (
+                {"cntr": 1.0},
+                {"uni0041": "uni0061"},
+                [
+                    (
+                        {"wght": (0.20886, 1.0)},
+                        {"uni0024": "uni0024.nostroke", "uni0041": "uni0061"},
+                    )
+                ],
+            ),
+        ],
+    )
+    def test_partial_instance(self, varfont3, location, appliedSubs, expectedRecords):
+        font = varfont3
+
+        instancer.instantiateFeatureVariations(font, location)
+
+        gsub = font["GSUB"].table
+        featureVariations = gsub.FeatureVariations
+
+        assert featureVariations.FeatureVariationCount == len(expectedRecords)
+
+        axisOrder = [a.axisTag for a in font["fvar"].axes if a.axisTag not in location]
+        for i, (expectedConditionSet, expectedSubs) in enumerate(expectedRecords):
+            rec = featureVariations.FeatureVariationRecord[i]
+            conditionSet = _conditionSetAsDict(rec.ConditionSet, axisOrder)
+
+            assert conditionSet == expectedConditionSet
+
+            subsRecord = rec.FeatureTableSubstitution.SubstitutionRecord[0]
+            lookupIndices = subsRecord.Feature.LookupListIndex
+            substitutions = _getSubstitutions(gsub, lookupIndices)
+
+            assert substitutions == expectedSubs
+
+        appliedLookupIndices = gsub.FeatureList.FeatureRecord[0].Feature.LookupListIndex
+
+        assert _getSubstitutions(gsub, appliedLookupIndices) == appliedSubs
+
+    @pytest.mark.parametrize(
+        "location, appliedSubs",
+        [
+            ({"wght": 0, "cntr": 0}, None),
+            ({"wght": -1.0, "cntr": 0}, {"uni0061": "uni0041"}),
+            ({"wght": 1.0, "cntr": 0}, {"uni0024": "uni0024.nostroke"}),
+            ({"wght": 0.0, "cntr": 1.0}, {"uni0041": "uni0061"}),
+            (
+                {"wght": 1.0, "cntr": 1.0},
+                {"uni0041": "uni0061", "uni0024": "uni0024.nostroke"},
+            ),
+            ({"wght": -1.0, "cntr": 0.3}, None),
+        ],
+    )
+    def test_full_instance(self, varfont3, location, appliedSubs):
+        font = varfont3
+
+        instancer.instantiateFeatureVariations(font, location)
+
+        gsub = font["GSUB"].table
+        assert not hasattr(gsub, "FeatureVariations")
+
+        if appliedSubs:
+            lookupIndices = gsub.FeatureList.FeatureRecord[0].Feature.LookupListIndex
+            assert _getSubstitutions(gsub, lookupIndices) == appliedSubs
+        else:
+            assert not gsub.FeatureList.FeatureRecord
+
+    def test_unsupported_condition_format(self, varfont3):
+        gsub = varfont3["GSUB"].table
+        featureVariations = gsub.FeatureVariations
+        cd = featureVariations.FeatureVariationRecord[0].ConditionSet.ConditionTable[0]
+        assert cd.Format == 1
+        cd.Format = 2
+
+        with CapturingLogHandler("fontTools.varLib.instancer", "WARNING") as captor:
+            instancer.instantiateFeatureVariations(varfont3, {"wght": 0})
+
+        captor.assertRegex(
+            r"Condition table 0 of FeatureVariationRecord 0 "
+            r"has unsupported format \(2\); ignored"
+        )
