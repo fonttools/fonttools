@@ -415,12 +415,35 @@ def instantiateFeatureVariations(varfont, location):
         varfont[tableTag].prune_lookups()
 
 
+def _featureVariationRecordIsUnique(rec, seen):
+    conditionSet = []
+    for cond in rec.ConditionSet.ConditionTable:
+        if cond.Format != 1:
+            # can't tell whether this is duplicate, assume not seen
+            return False
+        conditionSet.append(
+            (cond.AxisIndex, cond.FilterRangeMinValue, cond.FilterRangeMaxValue)
+        )
+    # besides the set of conditions, we also include the FeatureTableSubstitution
+    # version to identify unique FeatureVariationRecords, even though only one
+    # version is currently defined. It's theoretically possible that multiple
+    # records with same conditions but different substitution table version be
+    # present in the same font for backward compatibility.
+    recordKey = frozenset([rec.FeatureTableSubstitution.Version] + conditionSet)
+    if recordKey in seen:
+        return False
+    else:
+        seen.add(recordKey)  # side effect
+        return True
+
+
 def _instantiateFeatureVariations(table, fvarAxes, location):
     pinnedAxes = set(location.keys())
     axisOrder = [axis.axisTag for axis in fvarAxes if axis.axisTag not in pinnedAxes]
     axisIndexMap = {axisTag: axisOrder.index(axisTag) for axisTag in axisOrder}
 
     featureVariationApplied = False
+    uniqueRecords = set()
     newRecords = []
 
     for i, record in enumerate(table.FeatureVariations.FeatureVariationRecord):
@@ -454,7 +477,8 @@ def _instantiateFeatureVariations(table, fvarAxes, location):
 
         if retainRecord and newConditions:
             record.ConditionSet.ConditionTable = newConditions
-            newRecords.append(record)
+            if _featureVariationRecordIsUnique(record, uniqueRecords):
+                newRecords.append(record)
 
         if applies and not featureVariationApplied:
             assert record.FeatureTableSubstitution.Version == 0x00010000
