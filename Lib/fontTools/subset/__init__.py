@@ -388,6 +388,9 @@ def _uniq_sort(l):
 def _dict_subset(d, glyphs):
 	return {g:d[g] for g in glyphs}
 
+def _list_subset(l, indices):
+	count = len(l)
+	return [l[i] for i in indices if i < count]
 
 @_add_method(otTables.Coverage)
 def intersect(self, glyphs):
@@ -482,7 +485,7 @@ def subset_glyphs(self, s):
 @_add_method(otTables.LigatureSubst)
 def closure_glyphs(self, s, cur_glyphs):
 	s.glyphs.update(*([seq.LigGlyph for seq in seqs
-				        if all(c in s.glyphs for c in seq.Component)]
+					if all(c in s.glyphs for c in seq.Component)]
 			  for g,seqs in self.ligatures.items()
 			  if g in cur_glyphs))
 
@@ -513,11 +516,11 @@ def closure_glyphs(self, s, cur_glyphs):
 def subset_glyphs(self, s):
 	if self.Format == 1:
 		indices = self.Coverage.subset(s.glyphs)
-		self.Substitute = [self.Substitute[i] for i in indices]
+		self.Substitute = _list_subset(self.Substitute, indices)
 		# Now drop rules generating glyphs we don't want
 		indices = [i for i,sub in enumerate(self.Substitute)
 				 if sub in s.glyphs]
-		self.Substitute = [self.Substitute[i] for i in indices]
+		self.Substitute = _list_subset(self.Substitute, indices)
 		self.Coverage.remap(indices)
 		self.GlyphCount = len(self.Substitute)
 		return bool(self.GlyphCount and
@@ -560,7 +563,7 @@ def subset_glyphs(self, s):
 		# Remove empty pairsets
 		indices = [i for i,p in enumerate(self.PairSet) if p.PairValueCount]
 		self.Coverage.remap(indices)
-		self.PairSet = [self.PairSet[i] for i in indices]
+		self.PairSet = _list_subset(self.PairSet, indices)
 		self.PairSetCount = len(self.PairSet)
 		return bool(self.PairSetCount)
 	elif self.Format == 2:
@@ -615,10 +618,10 @@ def prune_post_subset(self, font, options):
 def subset_glyphs(self, s):
 	if self.Format == 1:
 		mark_indices = self.MarkCoverage.subset(s.glyphs)
-		self.MarkArray.MarkRecord = [self.MarkArray.MarkRecord[i] for i in mark_indices]
+		self.MarkArray.MarkRecord = _list_subset(self.MarkArray.MarkRecord, mark_indices)
 		self.MarkArray.MarkCount = len(self.MarkArray.MarkRecord)
 		base_indices = self.BaseCoverage.subset(s.glyphs)
-		self.BaseArray.BaseRecord = [self.BaseArray.BaseRecord[i] for i in base_indices]
+		self.BaseArray.BaseRecord = _list_subset(self.BaseArray.BaseRecord, base_indices)
 		self.BaseArray.BaseCount = len(self.BaseArray.BaseRecord)
 		# Prune empty classes
 		class_indices = _uniq_sort(v.Class for v in self.MarkArray.MarkRecord)
@@ -626,10 +629,10 @@ def subset_glyphs(self, s):
 		for m in self.MarkArray.MarkRecord:
 			m.Class = class_indices.index(m.Class)
 		for b in self.BaseArray.BaseRecord:
-			b.BaseAnchor = [b.BaseAnchor[i] for i in class_indices]
+			b.BaseAnchor = _list_subset(b.BaseAnchor, class_indices)
 		return bool(self.ClassCount and
-					self.MarkArray.MarkCount and
-					self.BaseArray.BaseCount)
+			    self.MarkArray.MarkCount and
+			    self.BaseArray.BaseCount)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -649,10 +652,10 @@ def prune_post_subset(self, font, options):
 def subset_glyphs(self, s):
 	if self.Format == 1:
 		mark_indices = self.MarkCoverage.subset(s.glyphs)
-		self.MarkArray.MarkRecord = [self.MarkArray.MarkRecord[i] for i in mark_indices]
+		self.MarkArray.MarkRecord = _list_subset(self.MarkArray.MarkRecord, mark_indices)
 		self.MarkArray.MarkCount = len(self.MarkArray.MarkRecord)
 		ligature_indices = self.LigatureCoverage.subset(s.glyphs)
-		self.LigatureArray.LigatureAttach = [self.LigatureArray.LigatureAttach[i] for i in ligature_indices]
+		self.LigatureArray.LigatureAttach = _list_subset(self.LigatureArray.LigatureAttach, ligature_indices)
 		self.LigatureArray.LigatureCount = len(self.LigatureArray.LigatureAttach)
 		# Prune empty classes
 		class_indices = _uniq_sort(v.Class for v in self.MarkArray.MarkRecord)
@@ -661,10 +664,10 @@ def subset_glyphs(self, s):
 			m.Class = class_indices.index(m.Class)
 		for l in self.LigatureArray.LigatureAttach:
 			for c in l.ComponentRecord:
-				c.LigatureAnchor = [c.LigatureAnchor[i] for i in class_indices]
+				c.LigatureAnchor = _list_subset(c.LigatureAnchor, class_indices)
 		return bool(self.ClassCount and
-					self.MarkArray.MarkCount and
-					self.LigatureArray.LigatureCount)
+			    self.MarkArray.MarkCount and
+			    self.LigatureArray.LigatureCount)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -685,10 +688,10 @@ def prune_post_subset(self, font, options):
 def subset_glyphs(self, s):
 	if self.Format == 1:
 		mark1_indices = self.Mark1Coverage.subset(s.glyphs)
-		self.Mark1Array.MarkRecord = [self.Mark1Array.MarkRecord[i] for i in mark1_indices]
+		self.Mark1Array.MarkRecord = _list_subset(self.Mark1Array.MarkRecord, mark1_indices)
 		self.Mark1Array.MarkCount = len(self.Mark1Array.MarkRecord)
 		mark2_indices = self.Mark2Coverage.subset(s.glyphs)
-		self.Mark2Array.Mark2Record = [self.Mark2Array.Mark2Record[i] for i in mark2_indices]
+		self.Mark2Array.Mark2Record = _list_subset(self.Mark2Array.Mark2Record, mark2_indices)
 		self.Mark2Array.MarkCount = len(self.Mark2Array.Mark2Record)
 		# Prune empty classes
 		class_indices = _uniq_sort(v.Class for v in self.Mark1Array.MarkRecord)
@@ -696,10 +699,10 @@ def subset_glyphs(self, s):
 		for m in self.Mark1Array.MarkRecord:
 			m.Class = class_indices.index(m.Class)
 		for b in self.Mark2Array.Mark2Record:
-			b.Mark2Anchor = [b.Mark2Anchor[i] for i in class_indices]
+			b.Mark2Anchor = _list_subset(b.Mark2Anchor, class_indices)
 		return bool(self.ClassCount and
-					self.Mark1Array.MarkCount and
-					self.Mark2Array.MarkCount)
+			    self.Mark1Array.MarkCount and
+			    self.Mark2Array.MarkCount)
 	else:
 		assert 0, "unknown format: %s" % self.Format
 
@@ -1013,7 +1016,7 @@ def subset_glyphs(self, s):
 		# Prune empty rulesets
 		indices = [i for i,rs in enumerate(rss) if rs and getattr(rs, c.Rule)]
 		self.Coverage.remap(indices)
-		rss = [rss[i] for i in indices]
+		rss = _list_subset(rss, indices)
 		setattr(self, c.RuleSet, rss)
 		setattr(self, c.RuleSetCount, len(rss))
 		return bool(rss)
@@ -1278,7 +1281,7 @@ def collect_lookups(self, feature_indices):
 @_add_method(otTables.FeatureList)
 def subset_features(self, feature_indices):
 	self.ensureDecompiled()
-	self.FeatureRecord = [self.FeatureRecord[i] for i in feature_indices]
+	self.FeatureRecord = _list_subset(self.FeatureRecord, feature_indices)
 	self.FeatureCount = len(self.FeatureRecord)
 	return bool(self.FeatureCount)
 
@@ -1619,7 +1622,7 @@ def subset_glyphs(self, s):
 	table = self.table
 	if table.LigCaretList:
 		indices = table.LigCaretList.Coverage.subset(glyphs)
-		table.LigCaretList.LigGlyph = [table.LigCaretList.LigGlyph[i] for i in indices]
+		table.LigCaretList.LigGlyph = _list_subset(table.LigCaretList.LigGlyph, indices)
 		table.LigCaretList.LigGlyphCount = len(table.LigCaretList.LigGlyph)
 	if table.MarkAttachClassDef:
 		table.MarkAttachClassDef.classDefs = \
@@ -1989,21 +1992,21 @@ def closure_glyphs(self, s):
 @_add_method(otTables.MathItalicsCorrectionInfo)
 def subset_glyphs(self, s):
 	indices = self.Coverage.subset(s.glyphs)
-	self.ItalicsCorrection = [self.ItalicsCorrection[i] for i in indices]
+	self.ItalicsCorrection = _list_subset(self.ItalicsCorrection, indices)
 	self.ItalicsCorrectionCount = len(self.ItalicsCorrection)
 	return bool(self.ItalicsCorrectionCount)
 
 @_add_method(otTables.MathTopAccentAttachment)
 def subset_glyphs(self, s):
 	indices = self.TopAccentCoverage.subset(s.glyphs)
-	self.TopAccentAttachment = [self.TopAccentAttachment[i] for i in indices]
+	self.TopAccentAttachment = _list_subset(self.TopAccentAttachment, indices)
 	self.TopAccentAttachmentCount = len(self.TopAccentAttachment)
 	return bool(self.TopAccentAttachmentCount)
 
 @_add_method(otTables.MathKernInfo)
 def subset_glyphs(self, s):
 	indices = self.MathKernCoverage.subset(s.glyphs)
-	self.MathKernInfoRecords = [self.MathKernInfoRecords[i] for i in indices]
+	self.MathKernInfoRecords = _list_subset(self.MathKernInfoRecords, indices)
 	self.MathKernCount = len(self.MathKernInfoRecords)
 	return bool(self.MathKernCount)
 
@@ -2023,12 +2026,12 @@ def subset_glyphs(self, s):
 def subset_glyphs(self, s):
 	if self.VertGlyphCoverage:
 		indices = self.VertGlyphCoverage.subset(s.glyphs)
-		self.VertGlyphConstruction = [self.VertGlyphConstruction[i] for i in indices]
+		self.VertGlyphConstruction = _list_subset(self.VertGlyphConstruction, indices)
 		self.VertGlyphCount = len(self.VertGlyphConstruction)
 
 	if self.HorizGlyphCoverage:
 		indices = self.HorizGlyphCoverage.subset(s.glyphs)
-		self.HorizGlyphConstruction = [self.HorizGlyphConstruction[i] for i in indices]
+		self.HorizGlyphConstruction = _list_subset(self.HorizGlyphConstruction, indices)
 		self.HorizGlyphCount = len(self.HorizGlyphConstruction)
 
 	return True

@@ -342,7 +342,7 @@ def buildGSUB():
     langrec = ot.LangSysRecord()
     langrec.LangSys = ot.LangSys()
     langrec.LangSys.ReqFeatureIndex = 0xFFFF
-    langrec.LangSys.FeatureIndex = [0]
+    langrec.LangSys.FeatureIndex = []
     srec.Script.DefaultLangSys = langrec.LangSys
 
     gsub.ScriptList.ScriptRecord.append(srec)

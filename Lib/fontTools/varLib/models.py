@@ -25,7 +25,10 @@ def allEqual(lst, mapper=None):
 	if not lst:
 		return True
 	it = iter(lst)
-	first = next(it)
+	try:
+		first = next(it)
+	except StopIteration:
+		return True
 	return allEqualTo(first, it, mapper=mapper)
 
 def subList(truth, lst):

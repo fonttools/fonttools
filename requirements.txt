@@ -2,8 +2,10 @@
 # extension 'brotlipy' on PyPy
 brotli==1.0.7; platform_python_implementation != "PyPy"
 brotlipy==0.7.0; platform_python_implementation == "PyPy"
-unicodedata2==11.0.0; python_version < '3.7' and platform_python_implementation != "PyPy"
-scipy==1.2.1; platform_python_implementation != "PyPy"
-munkres==1.0.12; platform_python_implementation == "PyPy"  # pyup: ignore
+unicodedata2==12.0.0; python_version < '3.8' and platform_python_implementation != "PyPy"
+scipy==1.2.1; platform_python_implementation != "PyPy" and python_version < '3.5'  # pyup: ignore
+scipy==1.3.0; platform_python_implementation != "PyPy" and python_version >= '3.5'
+munkres==1.0.12; platform_python_implementation == "PyPy" and python_version < '3.5'  # pyup: ignore
+munkres==1.1.2; platform_python_implementation == "PyPy" and python_version >= '3.5'
 zopfli==0.1.6
 fs==2.4.5

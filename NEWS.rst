@@ -1,3 +1,17 @@
+3.42.0 (released 2019-05-28)
+----------------------------
+
+- [OS/2] Fixed sign of ``fsType``: it should be ``uint16``, not ``int16`` (#1619).
+- [subset] Skip out-of-range class values in mark attachment (#1478).
+- [fontBuilder] Add an empty ``DSIG`` table with ``setupDummyDSIG`` method (#1621).
+- [varLib.merger] Fixed bug whereby ``GDEF.GlyphClassDef`` were being dropped
+  when generating instance via ``varLib.mutator`` (#1614).
+- [varLib] Added command-line options ``-v`` and ``-q`` to configure logging (#1613).
+- [subset] Update font extents in head table (#1612).
+- [subset] Make --retain-gids truncate empty glyphs after the last non-empty glyph
+  (#1611).
+- [requirements] Updated ``unicodedata2`` backport for Unicode 12.0.
+
 3.41.2 (released 2019-05-13)
 ----------------------------
 
