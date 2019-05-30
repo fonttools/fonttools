@@ -1358,6 +1358,35 @@ def test_parseLimits_invalid(limits):
         instancer.parseLimits(limits)
 
 
+def test_normalizeAxisLimits_tuple(varfont):
+    normalized = instancer.normalizeAxisLimits(varfont, {"wght": (100, 400)})
+    assert normalized == {"wght": (-1.0, 0)}
+
+
+def test_normalizeAxisLimits_no_avar(varfont):
+    del varfont["avar"]
+
+    normalized = instancer.normalizeAxisLimits(varfont, {"wght": (500, 600)})
+
+    assert normalized["wght"] == pytest.approx((0.2, 0.4), 1e-4)
+
+
+def test_normalizeAxisLimits_missing_from_fvar(varfont):
+    with pytest.raises(ValueError, match="not present in fvar"):
+        instancer.normalizeAxisLimits(varfont, {"ZZZZ": 1000})
+
+
+def test_sanityCheckVariableTables(varfont):
+    font = ttLib.TTFont()
+    with pytest.raises(ValueError, match="Missing required table fvar"):
+        instancer.sanityCheckVariableTables(font)
+
+    del varfont["glyf"]
+
+    with pytest.raises(ValueError, match="Can't have gvar without glyf"):
+        instancer.sanityCheckVariableTables(varfont)
+
+
 def test_main(varfont, tmpdir):
     fontfile = str(tmpdir / "PartialInstancerTest-VF.ttf")
     varfont.save(fontfile)
