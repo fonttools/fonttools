@@ -474,7 +474,6 @@ def _instantiateFeatureVariations(table, fvarAxes, location):
                 )
                 applies = False
                 newConditions.append(condition)
-                break
 
         if retainRecord and newConditions:
             record.ConditionSet.ConditionTable = newConditions

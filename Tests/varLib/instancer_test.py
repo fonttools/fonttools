@@ -1316,18 +1316,22 @@ class InstantiateFeatureVariationsTest(object):
                 )
             ]
         )
-        gsub = font["GSUB"].table
-        featureVariations = gsub.FeatureVariations
+        featureVariations = font["GSUB"].table.FeatureVariations
         rec1 = featureVariations.FeatureVariationRecord[0]
+        assert len(rec1.ConditionSet.ConditionTable) == 2
         rec1.ConditionSet.ConditionTable[0].Format = 2
 
         with CapturingLogHandler("fontTools.varLib.instancer", "WARNING") as captor:
-            instancer.instantiateFeatureVariations(font, {"wght": 0})
+            instancer.instantiateFeatureVariations(font, {"wdth": 0})
 
         captor.assertRegex(
             r"Condition table 0 of FeatureVariationRecord 0 "
             r"has unsupported format \(2\); ignored"
         )
 
-        # check that record with unsupported condition format is kept
+        # check that record with unsupported condition format (but whose other
+        # conditions do not reference pinned axes) is kept as is
+        featureVariations = font["GSUB"].table.FeatureVariations
         assert featureVariations.FeatureVariationRecord[0] is rec1
+        assert len(rec1.ConditionSet.ConditionTable) == 2
+        assert rec1.ConditionSet.ConditionTable[0].Format == 2
