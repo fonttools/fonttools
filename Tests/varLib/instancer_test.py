@@ -10,6 +10,7 @@ from fontTools import varLib
 from fontTools.varLib import instancer
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib import builder
+from fontTools.varLib import featureVars
 from fontTools.varLib import models
 from fontTools.misc.loggingTools import CapturingLogHandler
 import collections
@@ -1149,23 +1150,6 @@ class InstantiateVariableFontTest(object):
         assert _dump_ttx(instance) == expected
 
 
-@pytest.fixture
-def varfont3():
-    # The test file "Tests/varLib/data/test_results/FeatureVars.ttx" contains
-    # a GSUB.FeatureVariations table built from conditional rules specified in
-    # "Tests/varLib/data/FeatureVars.designspace" file, which are equivalent to:
-    #
-    #   conditionalSubstitutions = [
-    #       ([{"wght": (0.20886, 1.0)}], {"uni0024": "uni0024.nostroke"}),
-    #       ([{"cntr": (0.75, 1.0)}], {"uni0041": "uni0061"}),
-    #       ([{"wght": (-1.0, -0.45654), "cntr": (0, 0.25)}], {"uni0061": "uni0041"}),
-    #   ]
-    ttx = os.path.join(TESTDATA, "test_results", "FeatureVars.ttx")
-    font = ttLib.TTFont(recalcBBoxes=False, recalcTimestamp=False)
-    font.importXML(ttx)
-    return font
-
-
 def _conditionSetAsDict(conditionSet, axisOrder):
     result = {}
     for cond in conditionSet.ConditionTable:
@@ -1182,6 +1166,29 @@ def _getSubstitutions(gsub, lookupIndices):
             for subtable in lookup.SubTable:
                 subs.update(subtable.mapping)
     return subs
+
+
+def makeFeatureVarsFont(conditionalSubstitutions):
+    axes = set()
+    glyphs = set()
+    for region, substitutions in conditionalSubstitutions:
+        for box in region:
+            axes.update(box.keys())
+        glyphs.update(*substitutions.items())
+
+    varfont = ttLib.TTFont()
+    varfont.setGlyphOrder(sorted(glyphs))
+
+    fvar = varfont["fvar"] = ttLib.newTable("fvar")
+    fvar.axes = []
+    for axisTag in sorted(axes):
+        axis = _f_v_a_r.Axis()
+        axis.axisTag = Tag(axisTag)
+        fvar.axes.append(axis)
+
+    featureVars.addFeatureVariations(varfont, conditionalSubstitutions)
+
+    return varfont
 
 
 class InstantiateFeatureVariationsTest(object):
@@ -1227,8 +1234,17 @@ class InstantiateFeatureVariationsTest(object):
             ),
         ],
     )
-    def test_partial_instance(self, varfont3, location, appliedSubs, expectedRecords):
-        font = varfont3
+    def test_partial_instance(self, location, appliedSubs, expectedRecords):
+        font = makeFeatureVarsFont(
+            [
+                ([{"wght": (0.20886, 1.0)}], {"uni0024": "uni0024.nostroke"}),
+                ([{"cntr": (0.75, 1.0)}], {"uni0041": "uni0061"}),
+                (
+                    [{"wght": (-1.0, -0.45654), "cntr": (0, 0.25)}],
+                    {"uni0061": "uni0041"},
+                ),
+            ]
+        )
 
         instancer.instantiateFeatureVariations(font, location)
 
@@ -1268,8 +1284,17 @@ class InstantiateFeatureVariationsTest(object):
             ({"wght": -1.0, "cntr": 0.3}, None),
         ],
     )
-    def test_full_instance(self, varfont3, location, appliedSubs):
-        font = varfont3
+    def test_full_instance(self, location, appliedSubs):
+        font = makeFeatureVarsFont(
+            [
+                ([{"wght": (0.20886, 1.0)}], {"uni0024": "uni0024.nostroke"}),
+                ([{"cntr": (0.75, 1.0)}], {"uni0041": "uni0061"}),
+                (
+                    [{"wght": (-1.0, -0.45654), "cntr": (0, 0.25)}],
+                    {"uni0061": "uni0041"},
+                ),
+            ]
+        )
 
         instancer.instantiateFeatureVariations(font, location)
 
@@ -1282,14 +1307,22 @@ class InstantiateFeatureVariationsTest(object):
         else:
             assert not gsub.FeatureList.FeatureRecord
 
-    def test_unsupported_condition_format(self, varfont3):
-        gsub = varfont3["GSUB"].table
+    def test_unsupported_condition_format(self):
+        font = makeFeatureVarsFont(
+            [
+                (
+                    [{"wdth": (-1.0, -0.5), "wght": (0.5, 1.0)}],
+                    {"dollar": "dollar.nostroke"},
+                )
+            ]
+        )
+        gsub = font["GSUB"].table
         featureVariations = gsub.FeatureVariations
         rec1 = featureVariations.FeatureVariationRecord[0]
         rec1.ConditionSet.ConditionTable[0].Format = 2
 
         with CapturingLogHandler("fontTools.varLib.instancer", "WARNING") as captor:
-            instancer.instantiateFeatureVariations(varfont3, {"wght": 0})
+            instancer.instantiateFeatureVariations(font, {"wght": 0})
 
         captor.assertRegex(
             r"Condition table 0 of FeatureVariationRecord 0 "
