@@ -419,8 +419,8 @@ def _featureVariationRecordIsUnique(rec, seen):
     conditionSet = []
     for cond in rec.ConditionSet.ConditionTable:
         if cond.Format != 1:
-            # can't tell whether this is duplicate, assume not seen
-            return False
+            # can't tell whether this is duplicate, assume is unique
+            return True
         conditionSet.append(
             (cond.AxisIndex, cond.FilterRangeMinValue, cond.FilterRangeMaxValue)
         )
@@ -474,6 +474,7 @@ def _instantiateFeatureVariations(table, fvarAxes, location):
                 )
                 applies = False
                 newConditions.append(condition)
+                break
 
         if retainRecord and newConditions:
             record.ConditionSet.ConditionTable = newConditions

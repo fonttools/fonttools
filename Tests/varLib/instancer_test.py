@@ -1285,9 +1285,8 @@ class InstantiateFeatureVariationsTest(object):
     def test_unsupported_condition_format(self, varfont3):
         gsub = varfont3["GSUB"].table
         featureVariations = gsub.FeatureVariations
-        cd = featureVariations.FeatureVariationRecord[0].ConditionSet.ConditionTable[0]
-        assert cd.Format == 1
-        cd.Format = 2
+        rec1 = featureVariations.FeatureVariationRecord[0]
+        rec1.ConditionSet.ConditionTable[0].Format = 2
 
         with CapturingLogHandler("fontTools.varLib.instancer", "WARNING") as captor:
             instancer.instantiateFeatureVariations(varfont3, {"wght": 0})
@@ -1296,3 +1295,6 @@ class InstantiateFeatureVariationsTest(object):
             r"Condition table 0 of FeatureVariationRecord 0 "
             r"has unsupported format \(2\); ignored"
         )
+
+        # check that record with unsupported condition format is kept
+        assert featureVariations.FeatureVariationRecord[0] is rec1
