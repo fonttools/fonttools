@@ -1356,3 +1356,42 @@ def test_parseLimits(limits, expected):
 def test_parseLimits_invalid(limits):
     with pytest.raises(ValueError, match="invalid location format"):
         instancer.parseLimits(limits)
+
+
+def test_main(varfont, tmpdir):
+    fontfile = str(tmpdir / "PartialInstancerTest-VF.ttf")
+    varfont.save(fontfile)
+    args = [fontfile, "wght=400"]
+
+    # exits without errors
+    assert instancer.main(args) is None
+
+
+def test_main_exit_nonexistent_file(capsys):
+    with pytest.raises(SystemExit):
+        instancer.main([""])
+    captured = capsys.readouterr()
+
+    assert "No such file ''" in captured.err
+
+
+def test_main_exit_invalid_location(varfont, tmpdir, capsys):
+    fontfile = str(tmpdir / "PartialInstancerTest-VF.ttf")
+    varfont.save(fontfile)
+
+    with pytest.raises(SystemExit):
+        instancer.main([fontfile, "wght:100"])
+    captured = capsys.readouterr()
+
+    assert "invalid location format" in captured.err
+
+
+def test_main_exit_multiple_limits(varfont, tmpdir, capsys):
+    fontfile = str(tmpdir / "PartialInstancerTest-VF.ttf")
+    varfont.save(fontfile)
+
+    with pytest.raises(SystemExit):
+        instancer.main([fontfile, "wght=400", "wght=90"])
+    captured = capsys.readouterr()
+
+    assert "Specified multiple limits for the same axis" in captured.err
