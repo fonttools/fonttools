@@ -1335,3 +1335,24 @@ class InstantiateFeatureVariationsTest(object):
         assert featureVariations.FeatureVariationRecord[0] is rec1
         assert len(rec1.ConditionSet.ConditionTable) == 2
         assert rec1.ConditionSet.ConditionTable[0].Format == 2
+
+
+@pytest.mark.parametrize(
+    "limits, expected",
+    [
+        (["wght=400", "wdth=100"], {"wght": 400, "wdth": 100}),
+        (["wght=400:900"], {"wght": (400, 900)}),
+        (["slnt=11.4"], {"slnt": 11.4}),
+        (["ABCD=drop"], {"ABCD": None}),
+    ],
+)
+def test_parseLimits(limits, expected):
+    assert instancer.parseLimits(limits) == expected
+
+
+@pytest.mark.parametrize(
+    "limits", [["abcde=123", "=0", "wght=:", "wght=1:", "wght=abcd", "wght=x:y"]]
+)
+def test_parseLimits_invalid(limits):
+    with pytest.raises(ValueError, match="invalid location format"):
+        instancer.parseLimits(limits)
