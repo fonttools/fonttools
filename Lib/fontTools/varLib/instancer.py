@@ -733,40 +733,40 @@ def setDefaultWeightWidthSlant(ttFont, location):
         ttFont["post"].italicAngle = italicAngle
 
 
-def normalize(value, triple, avar_mapping):
+def normalize(value, triple, avarMapping):
     value = normalizeValue(value, triple)
-    if avar_mapping:
-        value = piecewiseLinearMap(value, avar_mapping)
+    if avarMapping:
+        value = piecewiseLinearMap(value, avarMapping)
     # Quantize to F2Dot14, to avoid surprise interpolations.
     return floatToFixedToFloat(value, 14)
 
 
-def normalizeAxisLimits(varfont, axis_limits):
+def normalizeAxisLimits(varfont, axisLimits):
     fvar = varfont["fvar"]
-    bad_limits = set(axis_limits.keys()).difference(a.axisTag for a in fvar.axes)
-    if bad_limits:
-        raise ValueError("Cannot limit: {} not present in fvar".format(bad_limits))
+    badLimits = set(axisLimits.keys()).difference(a.axisTag for a in fvar.axes)
+    if badLimits:
+        raise ValueError("Cannot limit: {} not present in fvar".format(badLimits))
 
     axes = {
         a.axisTag: (a.minValue, a.defaultValue, a.maxValue)
         for a in fvar.axes
-        if a.axisTag in axis_limits
+        if a.axisTag in axisLimits
     }
 
-    avar_segments = {}
+    avarSegments = {}
     if "avar" in varfont:
-        avar_segments = varfont["avar"].segments
-    normalized_limits = {}
+        avarSegments = varfont["avar"].segments
+    normalizedLimits = {}
     for axis_tag, triple in axes.items():
-        avar_mapping = avar_segments.get(axis_tag, None)
-        value = axis_limits[axis_tag]
+        avarMapping = avarSegments.get(axis_tag, None)
+        value = axisLimits[axis_tag]
         if isinstance(value, tuple):
-            normalized_limits[axis_tag] = tuple(
-                normalize(v, triple, avar_mapping) for v in axis_limits[axis_tag]
+            normalizedLimits[axis_tag] = tuple(
+                normalize(v, triple, avarMapping) for v in axisLimits[axis_tag]
             )
         else:
-            normalized_limits[axis_tag] = normalize(value, triple, avar_mapping)
-    return normalized_limits
+            normalizedLimits[axis_tag] = normalize(value, triple, avarMapping)
+    return normalizedLimits
 
 
 def sanityCheckVariableTables(varfont):
@@ -780,19 +780,19 @@ def sanityCheckVariableTables(varfont):
         raise NotImplementedError("Instancing CFF2 variable fonts is not supported yet")
 
 
-def populateAxisDefaults(varfont, axis_limits):
-    if any(value is None for value in axis_limits.values()):
+def populateAxisDefaults(varfont, axisLimits):
+    if any(value is None for value in axisLimits.values()):
         fvar = varfont["fvar"]
         defaultValues = {a.axisTag: a.defaultValue for a in fvar.axes}
         return {
             axisTag: defaultValues[axisTag] if value is None else value
-            for axisTag, value in axis_limits.items()
+            for axisTag, value in axisLimits.items()
         }
-    return axis_limits
+    return axisLimits
 
 
 def instantiateVariableFont(
-    varfont, axis_limits, inplace=False, optimize=True, overlap=True
+    varfont, axisLimits, inplace=False, optimize=True, overlap=True
 ):
     """ Instantiate variable font, either fully or partially.
 
@@ -827,43 +827,43 @@ def instantiateVariableFont(
     if not inplace:
         varfont = deepcopy(varfont)
 
-    axis_limits = populateAxisDefaults(varfont, axis_limits)
+    axisLimits = populateAxisDefaults(varfont, axisLimits)
 
-    normalized_limits = normalizeAxisLimits(varfont, axis_limits)
+    normalizedLimits = normalizeAxisLimits(varfont, axisLimits)
 
-    log.info("Normalized limits: %s", normalized_limits)
+    log.info("Normalized limits: %s", normalizedLimits)
 
     # TODO Remove this check once ranges are supported
-    if any(isinstance(v, tuple) for v in axis_limits.values()):
+    if any(isinstance(v, tuple) for v in axisLimits.values()):
         raise NotImplementedError("Axes range limits are not supported yet")
 
     if "gvar" in varfont:
-        instantiateGvar(varfont, normalized_limits, optimize=optimize)
+        instantiateGvar(varfont, normalizedLimits, optimize=optimize)
 
     if "cvar" in varfont:
-        instantiateCvar(varfont, normalized_limits)
+        instantiateCvar(varfont, normalizedLimits)
 
     if "MVAR" in varfont:
-        instantiateMVAR(varfont, normalized_limits)
+        instantiateMVAR(varfont, normalizedLimits)
 
     if "HVAR" in varfont:
-        instantiateHVAR(varfont, normalized_limits)
+        instantiateHVAR(varfont, normalizedLimits)
 
     if "VVAR" in varfont:
-        instantiateVVAR(varfont, normalized_limits)
+        instantiateVVAR(varfont, normalizedLimits)
 
-    instantiateOTL(varfont, normalized_limits)
+    instantiateOTL(varfont, normalizedLimits)
 
-    instantiateFeatureVariations(varfont, normalized_limits)
+    instantiateFeatureVariations(varfont, normalizedLimits)
 
     if "avar" in varfont:
-        instantiateAvar(varfont, normalized_limits)
+        instantiateAvar(varfont, normalizedLimits)
 
     with pruningUnusedNames(varfont):
         if "STAT" in varfont:
-            instantiateSTAT(varfont, axis_limits)
+            instantiateSTAT(varfont, axisLimits)
 
-        instantiateFvar(varfont, axis_limits)
+        instantiateFvar(varfont, axisLimits)
 
     if "fvar" not in varfont:
         if "glyf" in varfont and overlap:
@@ -873,7 +873,7 @@ def instantiateVariableFont(
         varfont,
         location={
             axisTag: limit
-            for axisTag, limit in axis_limits.items()
+            for axisTag, limit in axisLimits.items()
             if not isinstance(limit, tuple)
         },
     )
@@ -883,12 +883,12 @@ def instantiateVariableFont(
 
 def parseLimits(limits):
     result = {}
-    for limit_string in limits:
+    for limitString in limits:
         match = re.match(
-            r"^(\w{1,4})=(?:(drop)|(?:([^:]+)(?:[:](.+))?))$", limit_string
+            r"^(\w{1,4})=(?:(drop)|(?:([^:]+)(?:[:](.+))?))$", limitString
         )
         if not match:
-            raise ValueError("invalid location format: %r" % limit_string)
+            raise ValueError("invalid location format: %r" % limitString)
         tag = match.group(1).ljust(4)
         if match.group(2):  # 'drop'
             lbound = None
@@ -908,8 +908,8 @@ def parseArgs(args):
     """Parse argv.
 
     Returns:
-        3-tuple (infile, axis_limits, options)
-        axis_limits is either a Dict[str, Optional[float]], for pinning variation axes
+        3-tuple (infile, axisLimits, options)
+        axisLimits is either a Dict[str, Optional[float]], for pinning variation axes
         to specific coordinates along those axes (with `None` as a placeholder for an
         axis' default value); or a Dict[str, Tuple(float, float)], meaning limit this
         axis to min/max range.
@@ -952,11 +952,11 @@ def parseArgs(args):
         help="Don't set OVERLAP_SIMPLE/OVERLAP_COMPOUND glyf flags (only applicable "
         "when generating a full instance)",
     )
-    logging_group = parser.add_mutually_exclusive_group(required=False)
-    logging_group.add_argument(
+    loggingGroup = parser.add_mutually_exclusive_group(required=False)
+    loggingGroup.add_argument(
         "-v", "--verbose", action="store_true", help="Run more verbosely."
     )
-    logging_group.add_argument(
+    loggingGroup.add_argument(
         "-q", "--quiet", action="store_true", help="Turn verbosity off."
     )
     options = parser.parse_args(args)
@@ -970,32 +970,32 @@ def parseArgs(args):
     )
 
     try:
-        axis_limits = parseLimits(options.locargs)
+        axisLimits = parseLimits(options.locargs)
     except ValueError as e:
         parser.error(e)
 
-    if len(axis_limits) != len(options.locargs):
+    if len(axisLimits) != len(options.locargs):
         parser.error("Specified multiple limits for the same axis")
 
-    return (infile, axis_limits, options)
+    return (infile, axisLimits, options)
 
 
 def main(args=None):
-    infile, axis_limits, options = parseArgs(args)
-    log.info("Restricting axes: %s", axis_limits)
+    infile, axisLimits, options = parseArgs(args)
+    log.info("Restricting axes: %s", axisLimits)
 
     log.info("Loading variable font")
     varfont = TTFont(infile)
 
     isFullInstance = {
         axisTag
-        for axisTag, limit in axis_limits.items()
+        for axisTag, limit in axisLimits.items()
         if not isinstance(limit, tuple)
     }.issuperset(axis.axisTag for axis in varfont["fvar"].axes)
 
     instantiateVariableFont(
         varfont,
-        axis_limits,
+        axisLimits,
         inplace=True,
         optimize=options.optimize,
         overlap=options.overlap,
