@@ -1110,7 +1110,7 @@ def _dump_ttx(ttFont):
     tmp.seek(0)
     ttFont2 = ttLib.TTFont(tmp, recalcBBoxes=False, recalcTimestamp=False)
     s = StringIO()
-    ttFont2.saveXML(s)
+    ttFont2.saveXML(s, newlinestr="\n")
     return _strip_ttLibVersion(s.getvalue())
 
 
@@ -1123,7 +1123,6 @@ def _get_expected_instance_ttx(wght, wdth):
         ),
         "r",
         encoding="utf-8",
-        newline="\n",
     ) as fp:
         return _strip_ttLibVersion(fp.read())
 
