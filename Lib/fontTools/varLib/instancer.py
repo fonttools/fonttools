@@ -3,12 +3,67 @@
 This is similar to fontTools.varLib.mutator, but instead of creating full
 instances (i.e. static fonts) from variable fonts, it creates "partial"
 variable fonts, only containing a subset of the variation space.
-For example, if you wish to pin the width axis to a given location while
-keeping the rest of the axes, you can do:
+For example, if you wish to pin the width axis to a given location while keeping
+the rest of the axes, you can do:
 
 $ fonttools varLib.instancer ./NotoSans-VF.ttf wdth=85
 
-NOTE: The module is experimental and both the API and the CLI *will* change.
+See `fonttools varLib.instancer --help` for more info on the CLI options.
+
+The module's entry point is the `instantiateVariableFont` function, which takes
+a TTFont object and a dict specifying a location along either some or all the axes,
+and returns a new TTFont representing respectively a partial or a full instance.
+
+E.g. here's how to pin the wght axis at a given location in a wght+wdth variable
+font, keeping only the deltas associated with the wdth axis:
+
+| >>> from fontTools import ttLib
+| >>> from fontTools.varLib import instancer
+| >>> varfont = ttLib.TTFont("path/to/MyVariableFont.ttf")
+| >>> [a.axisTag for a in partial["fvar"].axes]  # the varfont's current axes
+| ['wght', 'wdth']
+| >>> partial = instancer.instantiateVariableFont(varfont, {"wght": 300})
+| >>> [a.axisTag for a in partial["fvar"].axes]  # axes left after pinning 'wght'
+| ['wdth']
+
+If the input location specifies all the axes, the resulting instance is no longer
+'variable' (same as using fontools varLib.mutator):
+
+| >>> instance = instancer.instantiateVariableFont(
+| ...     varfont, {"wght": 700, "wdth": 67.5}
+| ... )
+| >>> "fvar" not in instance
+| True
+
+If one just want to drop an axis at the default location, without knowing in
+advance what the default value for that axis is, one can pass a `None` value:
+
+| >>> instance = instancer.instantiateVariableFont(varfont, {"wght": None})
+| >>> len(varfont["fvar"].axes)
+| 1
+
+From the console script, this is equivalent to passing `wght=drop` as input.
+
+Note that, unlike varLib.mutator, when an axis is not mentioned in the input
+location, the varLib.instancer will keep the axis and the corresponding deltas,
+whereas mutator implicitly drops the axis at its default coordinate.
+
+The module currently supports only the first two "levels" of partial instancing,
+with the rest planned to be implemented in the future, namely:
+L1) dropping one or more axes while leaving the default tables unmodified;
+L2) dropping one or more axes while pinning them at non-default locations;
+L3) restricting the range of variation of one or more axes, by setting either
+    a new minimum or maximum, potentially -- though not necessarily -- dropping
+    entire regions of variations that fall completely outside this new range.
+L4) moving the default location of an axis.
+
+Currently only TrueType-flavored variable fonts (i.e. containing 'glyf' table)
+are supported, but support for CFF2 variable fonts will be added soon.
+
+The discussion and implementation of these features are tracked at
+https://github.com/fonttools/fonttools/issues/1537
+
+NOTE: The module is experimental and both the API and the CLI *may* change.
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
@@ -739,6 +794,34 @@ def populateAxisDefaults(varfont, axis_limits):
 def instantiateVariableFont(
     varfont, axis_limits, inplace=False, optimize=True, overlap=True
 ):
+    """ Instantiate variable font, either fully or partially.
+
+    Depending on whether the `axisLimits` dictionary references all or some of the
+    input varfont's axes, the output font will either be a full instance (static
+    font) or a variable font with possibly less variation data.
+
+    Args:
+        varfont: a TTFont instance, which must contain at least an 'fvar' table.
+            Note that variable fonts with 'CFF2' table are not supported yet.
+        axisLimits: a dict keyed by axis tags (str) containing the coordinates (float)
+            along one or more axes where the desired instance will be located.
+            If the value is `None`, the default coordinate as per 'fvar' table for
+            that axis is used.
+            The limit values can also be (min, max) tuples for restricting an
+            axis's variation range, but this is not implemented yet.
+        inplace (bool): whether to modify input TTFont object in-place instead of
+            returning a distinct object.
+        optimize (bool): if False, do not perform IUP-delta optimization on the
+            remaining 'gvar' table's deltas. Possibly faster, and might work around
+            rendering issues in some buggy environments, at the cost of a slightly
+            larger file size.
+        overlap (bool): variable fonts usually contain overlapping contours, and some
+            font rendering engines on Apple platforms require that the `OVERLAP_SIMPLE`
+            and `OVERLAP_COMPOUND` flags in the 'glyf' table be set to force rendering
+            using a non-zero fill rule. Thus we always set these flags on all glyphs
+            to maximise cross-compatibility of the generated instance. You can disable
+            this by setting `overalap` to False.
+    """
     sanityCheckVariableTables(varfont)
 
     if not inplace:
