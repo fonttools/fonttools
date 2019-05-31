@@ -1123,6 +1123,7 @@ def _get_expected_instance_ttx(wght, wdth):
         ),
         "r",
         encoding="utf-8",
+        newline="\n",
     ) as fp:
         return _strip_ttLibVersion(fp.read())
 
