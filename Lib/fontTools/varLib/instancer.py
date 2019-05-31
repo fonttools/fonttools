@@ -73,6 +73,7 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import _g_l_y_f
 from fontTools import varLib
+
 # we import the `subset` module because we use the `prune_lookups` method on the GSUB
 # table class, and that method is only defined dynamically upon importing `subset`
 from fontTools import subset  # noqa: F401
@@ -884,9 +885,7 @@ def instantiateVariableFont(
 def parseLimits(limits):
     result = {}
     for limitString in limits:
-        match = re.match(
-            r"^(\w{1,4})=(?:(drop)|(?:([^:]+)(?:[:](.+))?))$", limitString
-        )
+        match = re.match(r"^(\w{1,4})=(?:(drop)|(?:([^:]+)(?:[:](.+))?))$", limitString)
         if not match:
             raise ValueError("invalid location format: %r" % limitString)
         tag = match.group(1).ljust(4)
@@ -988,9 +987,7 @@ def main(args=None):
     varfont = TTFont(infile)
 
     isFullInstance = {
-        axisTag
-        for axisTag, limit in axisLimits.items()
-        if not isinstance(limit, tuple)
+        axisTag for axisTag, limit in axisLimits.items() if not isinstance(limit, tuple)
     }.issuperset(axis.axisTag for axis in varfont["fvar"].axes)
 
     instantiateVariableFont(
