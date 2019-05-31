@@ -283,6 +283,7 @@ def addFeatureVariationsRaw(font, conditionalSubstitutions):
 
     rvrnFeature = buildFeatureRecord('rvrn', [])
     gsub.FeatureList.FeatureRecord.append(rvrnFeature)
+    gsub.FeatureList.FeatureCount = len(gsub.FeatureList.FeatureRecord)
 
     sortFeatureList(gsub)
     rvrnFeatureIndex = gsub.FeatureList.FeatureRecord.index(rvrnFeature)
@@ -346,6 +347,7 @@ def buildGSUB():
     srec.Script.DefaultLangSys = langrec.LangSys
 
     gsub.ScriptList.ScriptRecord.append(srec)
+    gsub.ScriptList.ScriptCount = 1
     gsub.FeatureVariations = None
 
     return fontTable
@@ -380,6 +382,7 @@ def buildSubstitutionLookups(gsub, allSubstitutions):
         lookup = buildLookup([buildSingleSubstSubtable(substMap)])
         gsub.LookupList.Lookup.append(lookup)
         assert gsub.LookupList.Lookup[lookupMap[subst]] is lookup
+    gsub.LookupList.LookupCount = len(gsub.LookupList.Lookup)
     return lookupMap
 
 
@@ -397,6 +400,7 @@ def buildFeatureRecord(featureTag, lookupListIndices):
     fr.FeatureTag = featureTag
     fr.Feature = ot.Feature()
     fr.Feature.LookupListIndex = lookupListIndices
+    fr.Feature.populateDefaults()
     return fr
 
 

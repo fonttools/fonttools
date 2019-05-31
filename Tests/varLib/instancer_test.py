@@ -10,7 +10,9 @@ from fontTools import varLib
 from fontTools.varLib import instancer
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib import builder
+from fontTools.varLib import featureVars
 from fontTools.varLib import models
+from fontTools.misc.loggingTools import CapturingLogHandler
 import collections
 from copy import deepcopy
 import os
@@ -1146,3 +1148,279 @@ class InstantiateVariableFontTest(object):
         expected = _get_expected_instance_ttx(400, 100)
 
         assert _dump_ttx(instance) == expected
+
+
+def _conditionSetAsDict(conditionSet, axisOrder):
+    result = {}
+    for cond in conditionSet.ConditionTable:
+        assert cond.Format == 1
+        axisTag = axisOrder[cond.AxisIndex]
+        result[axisTag] = (cond.FilterRangeMinValue, cond.FilterRangeMaxValue)
+    return result
+
+
+def _getSubstitutions(gsub, lookupIndices):
+    subs = {}
+    for index, lookup in enumerate(gsub.LookupList.Lookup):
+        if index in lookupIndices:
+            for subtable in lookup.SubTable:
+                subs.update(subtable.mapping)
+    return subs
+
+
+def makeFeatureVarsFont(conditionalSubstitutions):
+    axes = set()
+    glyphs = set()
+    for region, substitutions in conditionalSubstitutions:
+        for box in region:
+            axes.update(box.keys())
+        glyphs.update(*substitutions.items())
+
+    varfont = ttLib.TTFont()
+    varfont.setGlyphOrder(sorted(glyphs))
+
+    fvar = varfont["fvar"] = ttLib.newTable("fvar")
+    fvar.axes = []
+    for axisTag in sorted(axes):
+        axis = _f_v_a_r.Axis()
+        axis.axisTag = Tag(axisTag)
+        fvar.axes.append(axis)
+
+    featureVars.addFeatureVariations(varfont, conditionalSubstitutions)
+
+    return varfont
+
+
+class InstantiateFeatureVariationsTest(object):
+    @pytest.mark.parametrize(
+        "location, appliedSubs, expectedRecords",
+        [
+            ({"wght": 0}, {}, [({"cntr": (0.75, 1.0)}, {"uni0041": "uni0061"})]),
+            (
+                {"wght": -1.0},
+                {},
+                [
+                    ({"cntr": (0, 0.25)}, {"uni0061": "uni0041"}),
+                    ({"cntr": (0.75, 1.0)}, {"uni0041": "uni0061"}),
+                ],
+            ),
+            (
+                {"wght": 1.0},
+                {"uni0024": "uni0024.nostroke"},
+                [
+                    (
+                        {"cntr": (0.75, 1.0)},
+                        {"uni0024": "uni0024.nostroke", "uni0041": "uni0061"},
+                    )
+                ],
+            ),
+            (
+                {"cntr": 0},
+                {},
+                [
+                    ({"wght": (-1.0, -0.45654)}, {"uni0061": "uni0041"}),
+                    ({"wght": (0.20886, 1.0)}, {"uni0024": "uni0024.nostroke"}),
+                ],
+            ),
+            (
+                {"cntr": 1.0},
+                {"uni0041": "uni0061"},
+                [
+                    (
+                        {"wght": (0.20886, 1.0)},
+                        {"uni0024": "uni0024.nostroke", "uni0041": "uni0061"},
+                    )
+                ],
+            ),
+        ],
+    )
+    def test_partial_instance(self, location, appliedSubs, expectedRecords):
+        font = makeFeatureVarsFont(
+            [
+                ([{"wght": (0.20886, 1.0)}], {"uni0024": "uni0024.nostroke"}),
+                ([{"cntr": (0.75, 1.0)}], {"uni0041": "uni0061"}),
+                (
+                    [{"wght": (-1.0, -0.45654), "cntr": (0, 0.25)}],
+                    {"uni0061": "uni0041"},
+                ),
+            ]
+        )
+
+        instancer.instantiateFeatureVariations(font, location)
+
+        gsub = font["GSUB"].table
+        featureVariations = gsub.FeatureVariations
+
+        assert featureVariations.FeatureVariationCount == len(expectedRecords)
+
+        axisOrder = [a.axisTag for a in font["fvar"].axes if a.axisTag not in location]
+        for i, (expectedConditionSet, expectedSubs) in enumerate(expectedRecords):
+            rec = featureVariations.FeatureVariationRecord[i]
+            conditionSet = _conditionSetAsDict(rec.ConditionSet, axisOrder)
+
+            assert conditionSet == expectedConditionSet
+
+            subsRecord = rec.FeatureTableSubstitution.SubstitutionRecord[0]
+            lookupIndices = subsRecord.Feature.LookupListIndex
+            substitutions = _getSubstitutions(gsub, lookupIndices)
+
+            assert substitutions == expectedSubs
+
+        appliedLookupIndices = gsub.FeatureList.FeatureRecord[0].Feature.LookupListIndex
+
+        assert _getSubstitutions(gsub, appliedLookupIndices) == appliedSubs
+
+    @pytest.mark.parametrize(
+        "location, appliedSubs",
+        [
+            ({"wght": 0, "cntr": 0}, None),
+            ({"wght": -1.0, "cntr": 0}, {"uni0061": "uni0041"}),
+            ({"wght": 1.0, "cntr": 0}, {"uni0024": "uni0024.nostroke"}),
+            ({"wght": 0.0, "cntr": 1.0}, {"uni0041": "uni0061"}),
+            (
+                {"wght": 1.0, "cntr": 1.0},
+                {"uni0041": "uni0061", "uni0024": "uni0024.nostroke"},
+            ),
+            ({"wght": -1.0, "cntr": 0.3}, None),
+        ],
+    )
+    def test_full_instance(self, location, appliedSubs):
+        font = makeFeatureVarsFont(
+            [
+                ([{"wght": (0.20886, 1.0)}], {"uni0024": "uni0024.nostroke"}),
+                ([{"cntr": (0.75, 1.0)}], {"uni0041": "uni0061"}),
+                (
+                    [{"wght": (-1.0, -0.45654), "cntr": (0, 0.25)}],
+                    {"uni0061": "uni0041"},
+                ),
+            ]
+        )
+
+        instancer.instantiateFeatureVariations(font, location)
+
+        gsub = font["GSUB"].table
+        assert not hasattr(gsub, "FeatureVariations")
+
+        if appliedSubs:
+            lookupIndices = gsub.FeatureList.FeatureRecord[0].Feature.LookupListIndex
+            assert _getSubstitutions(gsub, lookupIndices) == appliedSubs
+        else:
+            assert not gsub.FeatureList.FeatureRecord
+
+    def test_unsupported_condition_format(self):
+        font = makeFeatureVarsFont(
+            [
+                (
+                    [{"wdth": (-1.0, -0.5), "wght": (0.5, 1.0)}],
+                    {"dollar": "dollar.nostroke"},
+                )
+            ]
+        )
+        featureVariations = font["GSUB"].table.FeatureVariations
+        rec1 = featureVariations.FeatureVariationRecord[0]
+        assert len(rec1.ConditionSet.ConditionTable) == 2
+        rec1.ConditionSet.ConditionTable[0].Format = 2
+
+        with CapturingLogHandler("fontTools.varLib.instancer", "WARNING") as captor:
+            instancer.instantiateFeatureVariations(font, {"wdth": 0})
+
+        captor.assertRegex(
+            r"Condition table 0 of FeatureVariationRecord 0 "
+            r"has unsupported format \(2\); ignored"
+        )
+
+        # check that record with unsupported condition format (but whose other
+        # conditions do not reference pinned axes) is kept as is
+        featureVariations = font["GSUB"].table.FeatureVariations
+        assert featureVariations.FeatureVariationRecord[0] is rec1
+        assert len(rec1.ConditionSet.ConditionTable) == 2
+        assert rec1.ConditionSet.ConditionTable[0].Format == 2
+
+
+@pytest.mark.parametrize(
+    "limits, expected",
+    [
+        (["wght=400", "wdth=100"], {"wght": 400, "wdth": 100}),
+        (["wght=400:900"], {"wght": (400, 900)}),
+        (["slnt=11.4"], {"slnt": 11.4}),
+        (["ABCD=drop"], {"ABCD": None}),
+    ],
+)
+def test_parseLimits(limits, expected):
+    assert instancer.parseLimits(limits) == expected
+
+
+@pytest.mark.parametrize(
+    "limits", [["abcde=123", "=0", "wght=:", "wght=1:", "wght=abcd", "wght=x:y"]]
+)
+def test_parseLimits_invalid(limits):
+    with pytest.raises(ValueError, match="invalid location format"):
+        instancer.parseLimits(limits)
+
+
+def test_normalizeAxisLimits_tuple(varfont):
+    normalized = instancer.normalizeAxisLimits(varfont, {"wght": (100, 400)})
+    assert normalized == {"wght": (-1.0, 0)}
+
+
+def test_normalizeAxisLimits_no_avar(varfont):
+    del varfont["avar"]
+
+    normalized = instancer.normalizeAxisLimits(varfont, {"wght": (500, 600)})
+
+    assert normalized["wght"] == pytest.approx((0.2, 0.4), 1e-4)
+
+
+def test_normalizeAxisLimits_missing_from_fvar(varfont):
+    with pytest.raises(ValueError, match="not present in fvar"):
+        instancer.normalizeAxisLimits(varfont, {"ZZZZ": 1000})
+
+
+def test_sanityCheckVariableTables(varfont):
+    font = ttLib.TTFont()
+    with pytest.raises(ValueError, match="Missing required table fvar"):
+        instancer.sanityCheckVariableTables(font)
+
+    del varfont["glyf"]
+
+    with pytest.raises(ValueError, match="Can't have gvar without glyf"):
+        instancer.sanityCheckVariableTables(varfont)
+
+
+def test_main(varfont, tmpdir):
+    fontfile = str(tmpdir / "PartialInstancerTest-VF.ttf")
+    varfont.save(fontfile)
+    args = [fontfile, "wght=400"]
+
+    # exits without errors
+    assert instancer.main(args) is None
+
+
+def test_main_exit_nonexistent_file(capsys):
+    with pytest.raises(SystemExit):
+        instancer.main([""])
+    captured = capsys.readouterr()
+
+    assert "No such file ''" in captured.err
+
+
+def test_main_exit_invalid_location(varfont, tmpdir, capsys):
+    fontfile = str(tmpdir / "PartialInstancerTest-VF.ttf")
+    varfont.save(fontfile)
+
+    with pytest.raises(SystemExit):
+        instancer.main([fontfile, "wght:100"])
+    captured = capsys.readouterr()
+
+    assert "invalid location format" in captured.err
+
+
+def test_main_exit_multiple_limits(varfont, tmpdir, capsys):
+    fontfile = str(tmpdir / "PartialInstancerTest-VF.ttf")
+    varfont.save(fontfile)
+
+    with pytest.raises(SystemExit):
+        instancer.main([fontfile, "wght=400", "wght=90"])
+    captured = capsys.readouterr()
+
+    assert "Specified multiple limits for the same axis" in captured.err

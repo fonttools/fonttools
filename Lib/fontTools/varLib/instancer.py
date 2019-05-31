@@ -18,6 +18,9 @@ from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import _g_l_y_f
 from fontTools import varLib
+# we import the `subset` module because we use the `prune_lookups` method on the GSUB
+# table class, and that method is only defined dynamically upon importing `subset`
+from fontTools import subset  # noqa: F401
 from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
@@ -30,7 +33,7 @@ import os
 import re
 
 
-log = logging.getLogger("fontTools.varlib.instancer")
+log = logging.getLogger("fontTools.varLib.instancer")
 
 
 def instantiateTupleVariationStore(variations, location, origCoords=None, endPts=None):
@@ -408,34 +411,74 @@ def instantiateFeatureVariations(varfont, location):
         _instantiateFeatureVariations(
             varfont[tableTag].table, varfont["fvar"].axes, location
         )
+        # remove unreferenced lookups
+        varfont[tableTag].prune_lookups()
+
+
+def _featureVariationRecordIsUnique(rec, seen):
+    conditionSet = []
+    for cond in rec.ConditionSet.ConditionTable:
+        if cond.Format != 1:
+            # can't tell whether this is duplicate, assume is unique
+            return True
+        conditionSet.append(
+            (cond.AxisIndex, cond.FilterRangeMinValue, cond.FilterRangeMaxValue)
+        )
+    # besides the set of conditions, we also include the FeatureTableSubstitution
+    # version to identify unique FeatureVariationRecords, even though only one
+    # version is currently defined. It's theoretically possible that multiple
+    # records with same conditions but different substitution table version be
+    # present in the same font for backward compatibility.
+    recordKey = frozenset([rec.FeatureTableSubstitution.Version] + conditionSet)
+    if recordKey in seen:
+        return False
+    else:
+        seen.add(recordKey)  # side effect
+        return True
 
 
 def _instantiateFeatureVariations(table, fvarAxes, location):
-    newRecords = []
     pinnedAxes = set(location.keys())
+    axisOrder = [axis.axisTag for axis in fvarAxes if axis.axisTag not in pinnedAxes]
+    axisIndexMap = {axisTag: axisOrder.index(axisTag) for axisTag in axisOrder}
+
     featureVariationApplied = False
-    for record in table.FeatureVariations.FeatureVariationRecord:
+    uniqueRecords = set()
+    newRecords = []
+
+    for i, record in enumerate(table.FeatureVariations.FeatureVariationRecord):
         retainRecord = True
         applies = True
         newConditions = []
-        for condition in record.ConditionSet.ConditionTable:
-            axisIdx = condition.AxisIndex
-            axisTag = fvarAxes[axisIdx].axisTag
-            if condition.Format == 1 and axisTag in pinnedAxes:
-                minValue = condition.FilterRangeMinValue
-                maxValue = condition.FilterRangeMaxValue
-                v = location[axisTag]
-                if not (minValue <= v <= maxValue):
-                    # condition not met so remove entire record
-                    retainRecord = False
-                    break
+        for j, condition in enumerate(record.ConditionSet.ConditionTable):
+            if condition.Format == 1:
+                axisIdx = condition.AxisIndex
+                axisTag = fvarAxes[axisIdx].axisTag
+                if axisTag in pinnedAxes:
+                    minValue = condition.FilterRangeMinValue
+                    maxValue = condition.FilterRangeMaxValue
+                    v = location[axisTag]
+                    if not (minValue <= v <= maxValue):
+                        # condition not met so remove entire record
+                        retainRecord = applies = False
+                        break
+                else:
+                    # axis not pinned, keep condition with remapped axis index
+                    applies = False
+                    condition.AxisIndex = axisIndexMap[axisTag]
+                    newConditions.append(condition)
             else:
+                log.warning(
+                    "Condition table {0} of FeatureVariationRecord {1} has "
+                    "unsupported format ({2}); ignored".format(j, i, condition.Format)
+                )
                 applies = False
                 newConditions.append(condition)
 
         if retainRecord and newConditions:
             record.ConditionSet.ConditionTable = newConditions
-            newRecords.append(record)
+            if _featureVariationRecordIsUnique(record, uniqueRecords):
+                newRecords.append(record)
 
         if applies and not featureVariationApplied:
             assert record.FeatureTableSubstitution.Version == 0x00010000
@@ -446,6 +489,7 @@ def _instantiateFeatureVariations(table, fvarAxes, location):
 
     if newRecords:
         table.FeatureVariations.FeatureVariationRecord = newRecords
+        table.FeatureVariations.FeatureVariationCount = len(newRecords)
     else:
         del table.FeatureVariations
 
@@ -644,7 +688,7 @@ def normalize(value, triple, avar_mapping):
 
 def normalizeAxisLimits(varfont, axis_limits):
     fvar = varfont["fvar"]
-    bad_limits = axis_limits.keys() - {a.axisTag for a in fvar.axes}
+    bad_limits = set(axis_limits.keys()).difference(a.axisTag for a in fvar.axes)
     if bad_limits:
         raise ValueError("Cannot limit: {} not present in fvar".format(bad_limits))
 
