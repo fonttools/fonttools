@@ -12,9 +12,9 @@ from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib import builder
 from fontTools.varLib import featureVars
 from fontTools.varLib import models
-from fontTools.misc.loggingTools import CapturingLogHandler
 import collections
 from copy import deepcopy
+import logging
 import os
 import re
 import pytest
@@ -1307,7 +1307,7 @@ class InstantiateFeatureVariationsTest(object):
         else:
             assert not gsub.FeatureList.FeatureRecord
 
-    def test_unsupported_condition_format(self):
+    def test_unsupported_condition_format(self, caplog):
         font = makeFeatureVarsFont(
             [
                 (
@@ -1321,13 +1321,13 @@ class InstantiateFeatureVariationsTest(object):
         assert len(rec1.ConditionSet.ConditionTable) == 2
         rec1.ConditionSet.ConditionTable[0].Format = 2
 
-        with CapturingLogHandler("fontTools.varLib.instancer", "WARNING") as captor:
+        with caplog.at_level(logging.WARNING, logger="fontTools.varLib.instancer"):
             instancer.instantiateFeatureVariations(font, {"wdth": 0})
 
-        captor.assertRegex(
-            r"Condition table 0 of FeatureVariationRecord 0 "
-            r"has unsupported format \(2\); ignored"
-        )
+        assert (
+            "Condition table 0 of FeatureVariationRecord 0 "
+            "has unsupported format (2); ignored"
+        ) in caplog.text
 
         # check that record with unsupported condition format (but whose other
         # conditions do not reference pinned axes) is kept as is
