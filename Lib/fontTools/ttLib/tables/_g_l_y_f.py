@@ -384,7 +384,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			for p,comp in zip(coord, glyph.components):
 				if hasattr(comp, 'x'):
 					comp.x,comp.y = p
-		elif glyph.numberOfContours is 0:
+		elif glyph.numberOfContours == 0:
 			assert len(coord) == 0
 		else:
 			assert len(coord) == len(glyph.coordinates)
