@@ -1,23 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.41">
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.42">
 
   <GlyphOrder>
     <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
     <GlyphID id="0" name=".notdef"/>
     <GlyphID id="1" name="hyphen"/>
     <GlyphID id="2" name="space"/>
+    <GlyphID id="3" name="minus"/>
   </GlyphOrder>
 
   <head>
     <!-- Most of this table will be recalculated by the compiler -->
     <tableVersion value="1.0"/>
     <fontRevision value="2.001"/>
-    <checkSumAdjustment value="0x7815682b"/>
+    <checkSumAdjustment value="0xb77caef"/>
     <magicNumber value="0x5f0f3cf5"/>
-    <flags value="00000000 00000011"/>
+    <flags value="00000000 00000001"/>
     <unitsPerEm value="1000"/>
     <created value="Tue Mar  5 00:05:14 2019"/>
-    <modified value="Wed May  8 10:35:06 2019"/>
+    <modified value="Wed Jun  5 15:42:16 2019"/>
     <xMin value="40"/>
     <yMin value="-200"/>
     <xMax value="450"/>
@@ -46,17 +47,17 @@
     <reserved2 value="0"/>
     <reserved3 value="0"/>
     <metricDataFormat value="0"/>
-    <numberOfHMetrics value="3"/>
+    <numberOfHMetrics value="4"/>
   </hhea>
 
   <maxp>
     <!-- Most of this table will be recalculated by the compiler -->
     <tableVersion value="0x10000"/>
-    <numGlyphs value="3"/>
+    <numGlyphs value="4"/>
     <maxPoints value="8"/>
     <maxContours value="2"/>
-    <maxCompositePoints value="0"/>
-    <maxCompositeContours value="0"/>
+    <maxCompositePoints value="4"/>
+    <maxCompositeContours value="1"/>
     <maxZones value="1"/>
     <maxTwilightPoints value="0"/>
     <maxStorage value="0"/>
@@ -64,8 +65,8 @@
     <maxInstructionDefs value="0"/>
     <maxStackElements value="0"/>
     <maxSizeOfInstructions value="0"/>
-    <maxComponentElements value="0"/>
-    <maxComponentDepth value="0"/>
+    <maxComponentElements value="1"/>
+    <maxComponentDepth value="1"/>
   </maxp>
 
   <OS_2>
@@ -106,7 +107,7 @@
     <achVendID value="GOOG"/>
     <fsSelection value="00000000 01000000"/>
     <usFirstCharIndex value="32"/>
-    <usLastCharIndex value="45"/>
+    <usLastCharIndex value="8722"/>
     <sTypoAscender value="800"/>
     <sTypoDescender value="-200"/>
     <sTypoLineGap value="200"/>
@@ -124,6 +125,7 @@
   <hmtx>
     <mtx name=".notdef" width="500" lsb="50"/>
     <mtx name="hyphen" width="322" lsb="40"/>
+    <mtx name="minus" width="422" lsb="40"/>
     <mtx name="space" width="600" lsb="0"/>
   </hmtx>
 
@@ -132,10 +134,12 @@
     <cmap_format_4 platformID="0" platEncID="3" language="0">
       <map code="0x20" name="space"/><!-- SPACE -->
       <map code="0x2d" name="hyphen"/><!-- HYPHEN-MINUS -->
+      <map code="0x2212" name="minus"/><!-- MINUS SIGN -->
     </cmap_format_4>
     <cmap_format_4 platformID="3" platEncID="1" language="0">
       <map code="0x20" name="space"/><!-- SPACE -->
       <map code="0x2d" name="hyphen"/><!-- HYPHEN-MINUS -->
+      <map code="0x2212" name="minus"/><!-- MINUS SIGN -->
     </cmap_format_4>
   </cmap>
 
@@ -179,6 +183,10 @@
         <pt x="282" y="229" on="1"/>
       </contour>
       <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="minus" xMin="40" yMin="229" xMax="282" yMax="307">
+      <component glyphName="hyphen" x="0" y="0" flags="0x204"/>
     </TTGlyph>
 
     <TTGlyph name="space"/><!-- contains no outline data -->
@@ -606,6 +614,7 @@
     <AdvWidthMap>
       <Map glyph=".notdef" outer="0" inner="1"/>
       <Map glyph="hyphen" outer="0" inner="0"/>
+      <Map glyph="minus" outer="0" inner="0"/>
       <Map glyph="space" outer="0" inner="1"/>
     </AdvWidthMap>
   </HVAR>
@@ -1092,9 +1101,30 @@
     <LanguageTag tag="gsw-LI"/>
   </ltag>
 
+  <vhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="0"/>
+    <descent value="0"/>
+    <lineGap value="0"/>
+    <advanceHeightMax value="1000"/>
+    <minTopSideBearing value="100"/>
+    <minBottomSideBearing value="-100"/>
+    <yMaxExtent value="1100"/>
+    <caretSlopeRise value="0"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <reserved4 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfVMetrics value="4"/>
+  </vhea>
+
   <vmtx>
     <mtx name=".notdef" height="1000" tsb="100"/>
     <mtx name="hyphen" height="536" tsb="229"/>
+    <mtx name="minus" height="536" tsb="229"/>
     <mtx name="space" height="600" tsb="0"/>
   </vmtx>
 
