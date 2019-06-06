@@ -143,6 +143,59 @@ class InstantiateGvarTest(object):
 
         assert "gvar" not in varfont
 
+    def test_composite_glyph_not_in_gvar(self, varfont):
+        """ The 'minus' glyph is a composite glyph, which references 'hyphen' as a
+        component, but has no tuple variations in gvar table, so the component offset
+        and the phantom points do not change; however the sidebearings and bounding box
+        do change as a result of the parent glyph 'hyphen' changing.
+        """
+        hmtx = varfont["hmtx"]
+        vmtx = varfont["vmtx"]
+
+        hyphenCoords = _get_coordinates(varfont, "hyphen")
+        assert hyphenCoords == [
+            (40, 229),
+            (40, 307),
+            (282, 307),
+            (282, 229),
+            (0, 0),
+            (322, 0),
+            (0, 536),
+            (0, 0),
+        ]
+        assert hmtx["hyphen"] == (322, 40)
+        assert vmtx["hyphen"] == (536, 229)
+
+        minusCoords = _get_coordinates(varfont, "minus")
+        assert minusCoords == [(0, 0), (0, 0), (422, 0), (0, 536), (0, 0)]
+        assert hmtx["minus"] == (422, 40)
+        assert vmtx["minus"] == (536, 229)
+
+        location = {"wght": -1.0, "wdth": -1.0}
+
+        instancer.instantiateGvar(varfont, location)
+
+        # check 'hyphen' coordinates changed
+        assert _get_coordinates(varfont, "hyphen") == [
+            (26, 259),
+            (26, 286),
+            (237, 286),
+            (237, 259),
+            (0, 0),
+            (263, 0),
+            (0, 536),
+            (0, 0),
+        ]
+        # check 'minus' coordinates (i.e. component offset and phantom points)
+        # did _not_ change
+        assert _get_coordinates(varfont, "minus") == minusCoords
+
+        assert hmtx["hyphen"] == (263, 26)
+        assert vmtx["hyphen"] == (536, 250)
+
+        assert hmtx["minus"] == (422, 26)  # 'minus' left sidebearing changed
+        assert vmtx["minus"] == (536, 250)  # 'minus' top sidebearing too
+
 
 class InstantiateCvarTest(object):
     @pytest.mark.parametrize(
