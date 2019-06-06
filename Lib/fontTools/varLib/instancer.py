@@ -135,20 +135,32 @@ def instantiateGvarGlyph(varfont, glyphname, location, optimize=True):
     endPts = ctrl.endPts
 
     gvar = varfont["gvar"]
-    tupleVarStore = gvar.variations[glyphname]
+    # when exporting to TTX, a glyph with no variations is omitted; thus when loading
+    # a TTFont from TTX, a glyph that's present in glyf table may be missing from gvar.
+    tupleVarStore = gvar.variations.get(glyphname)
 
-    defaultDeltas = instantiateTupleVariationStore(
-        tupleVarStore, location, coordinates, endPts
-    )
+    if tupleVarStore:
+        defaultDeltas = instantiateTupleVariationStore(
+            tupleVarStore, location, coordinates, endPts
+        )
 
-    if defaultDeltas:
-        coordinates += _g_l_y_f.GlyphCoordinates(defaultDeltas)
-        # this will also set the hmtx/vmtx advance widths and sidebearings from
-        # the four phantom points and glyph bounding boxes
-        glyf.setCoordinates(glyphname, coordinates, varfont)
+        if defaultDeltas:
+            coordinates += _g_l_y_f.GlyphCoordinates(defaultDeltas)
+
+    # setCoordinates also sets the hmtx/vmtx advance widths and sidebearings from
+    # the four phantom points and glyph bounding boxes.
+    # We call it unconditionally even if a glyph has no variations or no deltas are
+    # applied at this location, in case the glyph's xMin and in turn its sidebearing
+    # have changed. E.g. a composite glyph has no deltas for the component's (x, y)
+    # offset nor for the 4 phantom points (e.g. it's monospaced). Thus its entry in
+    # gvar table is empty; however, the composite's base glyph may have deltas
+    # applied, hence the composite's bbox and left/top sidebearings may need updating
+    # in the instanced font.
+    glyf.setCoordinates(glyphname, coordinates, varfont)
 
     if not tupleVarStore:
-        del gvar.variations[glyphname]
+        if glyphname in gvar.variations:
+            del gvar.variations[glyphname]
         return
 
     if optimize:
@@ -162,12 +174,12 @@ def instantiateGvar(varfont, location, optimize=True):
 
     gvar = varfont["gvar"]
     glyf = varfont["glyf"]
-    # Get list of glyph names in gvar sorted by component depth.
+    # Get list of glyph names sorted by component depth.
     # If a composite glyph is processed before its base glyph, the bounds may
     # be calculated incorrectly because deltas haven't been applied to the
     # base glyph yet.
     glyphnames = sorted(
-        gvar.variations.keys(),
+        glyf.glyphOrder,
         key=lambda name: (
             glyf[name].getCompositeMaxpValues(glyf).maxComponentDepth
             if glyf[name].isComposite()
