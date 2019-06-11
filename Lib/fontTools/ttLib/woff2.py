@@ -82,7 +82,7 @@ class WOFF2Reader(SFNTReader):
 		"""Fetch the raw table data. Reconstruct transformed tables."""
 		entry = self.tables[Tag(tag)]
 		if not hasattr(entry, 'data'):
-			if tag in woff2TransformedTableTags:
+			if entry.transformed:
 				entry.data = self.reconstructTable(tag)
 			else:
 				entry.data = entry.loadData(self.transformBuffer)
@@ -90,8 +90,6 @@ class WOFF2Reader(SFNTReader):
 
 	def reconstructTable(self, tag):
 		"""Reconstruct table named 'tag' from transformed data."""
-		if tag not in woff2TransformedTableTags:
-			raise TTLibError("transform for table '%s' is unknown" % tag)
 		entry = self.tables[Tag(tag)]
 		rawData = entry.loadData(self.transformBuffer)
 		if tag == 'glyf':
@@ -101,7 +99,7 @@ class WOFF2Reader(SFNTReader):
 		elif tag == 'loca':
 			data = self._reconstructLoca()
 		else:
-			raise NotImplementedError
+			raise TTLibError("transform for table '%s' is unknown" % tag)
 		return data
 
 	def _reconstructGlyf(self, data, padding=None):
@@ -293,11 +291,23 @@ class WOFF2Writer(SFNTWriter):
 
 	def _transformTables(self):
 		"""Return transformed font data."""
+		transformedTables = self.flavorData.transformedTables
+		if (
+			"glyf" in transformedTables and "loca" not in transformedTables
+			or "loca" in transformedTables and "glyf" not in transformedTables
+		):
+			raise ValueError(
+				"'glyf' and 'loca' must be transformed (or not) together"
+			)
+
 		for tag, entry in self.tables.items():
-			if tag in woff2TransformedTableTags:
+			if tag in transformedTables:
 				data = self.transformTable(tag)
+				entry.transformed = True
 			else:
+				# pass-through the table data without transformation
 				data = entry.data
+				entry.transformed = False
 			entry.offset = self.nextTableOffset
 			entry.saveData(self.transformBuffer, data)
 			self.nextTableOffset += entry.length
@@ -307,8 +317,6 @@ class WOFF2Writer(SFNTWriter):
 
 	def transformTable(self, tag):
 		"""Return transformed table data."""
-		if tag not in woff2TransformedTableTags:
-			raise TTLibError("Transform for table '%s' is unknown" % tag)
 		if tag == "loca":
 			data = b""
 		elif tag == "glyf":
@@ -317,7 +325,7 @@ class WOFF2Writer(SFNTWriter):
 			glyfTable = self.ttFont['glyf']
 			data = glyfTable.transform(self.ttFont)
 		else:
-			raise NotImplementedError
+			raise TTLibError("Transform for table '%s' is unknown" % tag)
 		return data
 
 	def _calcMasterChecksum(self):
@@ -533,11 +541,9 @@ class WOFF2DirectoryEntry(DirectoryEntry):
 			# otherwise, tag is derived from a fixed 'Known Tags' table
 			self.tag = woff2KnownTags[self.flags & 0x3F]
 		self.tag = Tag(self.tag)
-		if self.flags & 0xC0 != 0:
-			raise TTLibError('bits 6-7 are reserved and must be 0')
 		self.origLength, data = unpackBase128(data)
 		self.length = self.origLength
-		if self.tag in woff2TransformedTableTags:
+		if self.transformed:
 			self.length, data = unpackBase128(data)
 			if self.tag == 'loca' and self.length != 0:
 				raise TTLibError(
@@ -550,9 +556,43 @@ class WOFF2DirectoryEntry(DirectoryEntry):
 		if (self.flags & 0x3F) == 0x3F:
 			data += struct.pack('>4s', self.tag.tobytes())
 		data += packBase128(self.origLength)
-		if self.tag in woff2TransformedTableTags:
+		if self.transformed:
 			data += packBase128(self.length)
 		return data
+
+	@property
+	def transformVersion(self):
+		"""Return bits 6-7 of table entry's flags, which indicate the preprocessing
+		transformation version number (between 0 and 3).
+		"""
+		return self.flags >> 6
+
+	@transformVersion.setter
+	def transformVersion(self, value):
+		assert 0 <= value <= 3
+		self.flags |= value << 6
+
+	@property
+	def transformed(self):
+		"""Return True if the table has any transformation, else return False."""
+		# For all tables in a font, except for 'glyf' and 'loca', the transformation
+		# version 0 indicates the null transform (where the original table data is
+		# passed directly to the Brotli compressor). For 'glyf' and 'loca' tables,
+		# transformation version 3 indicates the null transform
+		if self.tag in {"glyf", "loca"}:
+			return self.transformVersion != 3
+		else:
+			return self.transformVersion != 0
+
+	@transformed.setter
+	def transformed(self, booleanValue):
+		# here we assume that a non-null transform means version 0 for 'glyf' and
+		# 'loca' and 1 for every other table (e.g. hmtx); but that may change as
+		# new transformation formats are introduced in the future (if ever).
+		if self.tag in {"glyf", "loca"}:
+			self.transformVersion = 3 if not booleanValue else 0
+		else:
+			self.transformVersion = int(booleanValue)
 
 
 class WOFF2LocaTable(getTableClass('loca')):
@@ -913,9 +953,22 @@ class WOFF2FlavorData(WOFFFlavorData):
 
 	Flavor = 'woff2'
 
-	def __init__(self, reader=None):
+	def __init__(self, reader=None, transformedTables=None):
+		"""Data class that holds the WOFF2 header major/minor version, any
+		metadata or private data (as bytes strings), and the set of
+		table tags that have transformations applied (if reader is not None),
+		or will have once the WOFF2 font is compiled.
+		"""
 		if not haveBrotli:
 			raise ImportError("No module named brotli")
+
+		if reader is not None and transformedTables is not None:
+			raise TypeError(
+				"'reader' and 'transformedTables' arguments are mutually exclusive"
+			)
+		if transformedTables is None:
+			transformedTables = woff2TransformedTableTags
+
 		self.majorVersion = None
 		self.minorVersion = None
 		self.metaData = None
@@ -935,6 +988,13 @@ class WOFF2FlavorData(WOFFFlavorData):
 				data = reader.file.read(reader.privLength)
 				assert len(data) == reader.privLength
 				self.privData = data
+			transformedTables = [
+				tag
+				for tag, entry in reader.tables.items()
+				if entry.transformed
+			]
+
+		self.transformedTables = set(transformedTables)
 
 
 def unpackBase128(data):
