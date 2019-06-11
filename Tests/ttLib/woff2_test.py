@@ -122,7 +122,7 @@ class WOFF2ReaderTest(unittest.TestCase):
 	def test_reconstruct_unknown(self):
 		reader = WOFF2Reader(self.file)
 		with self.assertRaisesRegex(ttLib.TTLibError, 'transform for table .* unknown'):
-			reader.reconstructTable('ZZZZ')
+			reader.reconstructTable('head')
 
 
 class WOFF2ReaderTTFTest(WOFF2ReaderTest):
@@ -243,10 +243,6 @@ class WOFF2DirectoryEntryTest(unittest.TestCase):
 		with self.assertRaisesRegex(ttLib.TTLibError, "can't read table 'tag'"):
 			self.entry.fromString(bytes(incompleteData))
 
-	def test_table_reserved_flags(self):
-		with self.assertRaisesRegex(ttLib.TTLibError, "bits 6-7 are reserved"):
-			self.entry.fromString(bytechr(0xC0))
-
 	def test_loca_zero_transformLength(self):
 		data = bytechr(getKnownTagIndex('loca'))  # flags
 		data += packBase128(random.randint(1, 100))  # origLength
@@ -300,6 +296,7 @@ class DummyReader(WOFF2Reader):
 		for attr in ('majorVersion', 'minorVersion', 'metaOffset', 'metaLength',
 				'metaOrigLength', 'privLength', 'privOffset'):
 			setattr(self, attr, 0)
+		self.tables = {}
 
 
 class WOFF2FlavorDataTest(unittest.TestCase):
