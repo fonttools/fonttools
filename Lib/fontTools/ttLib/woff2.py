@@ -98,6 +98,8 @@ class WOFF2Reader(SFNTReader):
 			data = self._reconstructGlyf(rawData, padding)
 		elif tag == 'loca':
 			data = self._reconstructLoca()
+		elif tag == 'hmtx':
+			data = self._reconstructHmtx(rawData)
 		else:
 			raise TTLibError("transform for table '%s' is unknown" % tag)
 		return data
@@ -127,6 +129,34 @@ class WOFF2Reader(SFNTReader):
 				"expected %d, found %d"
 				% (self.tables['loca'].origLength, len(data)))
 		return data
+
+	def _reconstructHmtx(self, data):
+		""" Return reconstructed hmtx table data. """
+		# Before reconstructing 'hmtx' table we need to parse other tables:
+		# 'glyf' is required for reconstructing the sidebearings from the glyphs'
+		# bounding box; 'hhea' is needed for the numberOfHMetrics field.
+		if "glyf" in self.flavorData.transformedTables:
+			# transformed 'glyf' table is self-contained, thus 'loca' not needed
+			tableDependencies = ("maxp", "hhea", "glyf")
+		else:
+			# decompiling untransformed 'glyf' requires 'loca', which requires 'head'
+			tableDependencies = ("maxp", "head", "hhea", "loca", "glyf")
+		for tag in tableDependencies:
+			self._decompileTable(tag)
+		hmtxTable = self.ttFont["hmtx"] = WOFF2HmtxTable()
+		hmtxTable.reconstruct(data, self.ttFont)
+		data = hmtxTable.compile(self.ttFont)
+		return data
+
+	def _decompileTable(self, tag):
+		"""Decompile table data and store it inside self.ttFont."""
+		data = self[tag]
+		if self.ttFont.isLoaded(tag):
+			return self.ttFont[tag]
+		tableClass = getTableClass(tag)
+		table = tableClass(tag)
+		self.ttFont.tables[tag] = table
+		table.decompile(data, self.ttFont)
 
 
 class WOFF2Writer(SFNTWriter):
@@ -257,6 +287,8 @@ class WOFF2Writer(SFNTWriter):
 			tableClass = WOFF2LocaTable
 		elif tag == 'glyf':
 			tableClass = WOFF2GlyfTable
+		elif tag == 'hmtx':
+			tableClass = WOFF2HmtxTable
 		else:
 			tableClass = getTableClass(tag)
 		table = tableClass(tag)
@@ -286,19 +318,13 @@ class WOFF2Writer(SFNTWriter):
 	def _transformTables(self):
 		"""Return transformed font data."""
 		transformedTables = self.flavorData.transformedTables
-		if (
-			"glyf" in transformedTables and "loca" not in transformedTables
-			or "loca" in transformedTables and "glyf" not in transformedTables
-		):
-			raise ValueError(
-				"'glyf' and 'loca' must be transformed (or not) together"
-			)
-
 		for tag, entry in self.tables.items():
+			data = None
 			if tag in transformedTables:
 				data = self.transformTable(tag)
-				entry.transformed = True
-			else:
+				if data is not None:
+					entry.transformed = True
+			if data is None:
 				# pass-through the table data without transformation
 				data = entry.data
 				entry.transformed = False
@@ -310,7 +336,9 @@ class WOFF2Writer(SFNTWriter):
 		return fontData
 
 	def transformTable(self, tag):
-		"""Return transformed table data."""
+		"""Return transformed table data, or None if some pre-conditions aren't
+		met -- in which case, the non-transformed table data will be used.
+		"""
 		if tag == "loca":
 			data = b""
 		elif tag == "glyf":
@@ -318,6 +346,13 @@ class WOFF2Writer(SFNTWriter):
 				self._decompileTable(tag)
 			glyfTable = self.ttFont['glyf']
 			data = glyfTable.transform(self.ttFont)
+		elif tag == "hmtx":
+			if "glyf" not in self.tables:
+				return
+			for tag in ("maxp", "head", "hhea", "loca", "glyf", "hmtx"):
+				self._decompileTable(tag)
+			hmtxTable = self.ttFont["hmtx"]
+			data = hmtxTable.transform(self.ttFont)  # can be None
 		else:
 			raise TTLibError("Transform for table '%s' is unknown" % tag)
 		return data
@@ -931,6 +966,164 @@ class WOFF2GlyfTable(getTableClass('glyf')):
 		self.glyphStream += triplets.tostring()
 
 
+class WOFF2HmtxTable(getTableClass("hmtx")):
+
+	def __init__(self, tag=None):
+		self.tableTag = Tag(tag or 'hmtx')
+
+	def reconstruct(self, data, ttFont):
+		flags, = struct.unpack(">B", data[:1])
+		data = data[1:]
+		if flags & 0b11111100 != 0:
+			raise TTLibError("Bits 2-7 of '%s' flags are reserved" % self.tableTag)
+
+		# When bit 0 is _not_ set, the lsb[] array is present
+		hasLsbArray = flags & 1 == 0
+		# When bit 1 is _not_ set, the leftSideBearing[] array is present
+		hasLeftSideBearingArray = flags & 2 == 0
+		if hasLsbArray and hasLeftSideBearingArray:
+			raise TTLibError(
+				"either bits 0 or 1 (or both) must set in transformed '%s' flags"
+				% self.tableTag
+			)
+
+		glyfTable = ttFont["glyf"]
+		headerTable = ttFont["hhea"]
+		glyphOrder = glyfTable.glyphOrder
+		numGlyphs = len(glyphOrder)
+		numberOfHMetrics = min(int(headerTable.numberOfHMetrics), numGlyphs)
+
+		assert len(data) >= 2 * numberOfHMetrics
+		advanceWidthArray = array.array("H", data[:2 * numberOfHMetrics])
+		if sys.byteorder != "big":
+			advanceWidthArray.byteswap()
+		data = data[2 * numberOfHMetrics:]
+
+		if hasLsbArray:
+			assert len(data) >= 2 * numberOfHMetrics
+			lsbArray = array.array("h", data[:2 * numberOfHMetrics])
+			if sys.byteorder != "big":
+				lsbArray.byteswap()
+			data = data[2 * numberOfHMetrics:]
+		else:
+			# compute (proportional) glyphs' lsb from their xMin
+			lsbArray = array.array("h")
+			for i, glyphName in enumerate(glyphOrder):
+				if i >= numberOfHMetrics:
+					break
+				glyph = glyfTable[glyphName]
+				xMin = getattr(glyph, "xMin", 0)
+				lsbArray.append(xMin)
+
+		numberOfSideBearings = numGlyphs - numberOfHMetrics
+		if hasLeftSideBearingArray:
+			assert len(data) >= 2 * numberOfSideBearings
+			leftSideBearingArray = array.array("h", data[:2 * numberOfSideBearings])
+			if sys.byteorder != "big":
+				leftSideBearingArray.byteswap()
+			data = data[2 * numberOfSideBearings:]
+		else:
+			# compute (monospaced) glyphs' leftSideBearing from their xMin
+			leftSideBearingArray = array.array("h")
+			for i, glyphName in enumerate(glyphOrder):
+				if i < numberOfHMetrics:
+					continue
+				glyph = glyfTable[glyphName]
+				xMin = getattr(glyph, "xMin", 0)
+				leftSideBearingArray.append(xMin)
+
+		if data:
+			raise TTLibError("too much '%s' table data" % self.tableTag)
+
+		self.metrics = {}
+		for i in range(numberOfHMetrics):
+			glyphName = glyphOrder[i]
+			advanceWidth, lsb = advanceWidthArray[i], lsbArray[i]
+			self.metrics[glyphName] = (advanceWidth, lsb)
+		lastAdvance = advanceWidthArray[-1]
+		for i in range(numberOfSideBearings):
+			glyphName = glyphOrder[i + numberOfHMetrics]
+			self.metrics[glyphName] = (lastAdvance, leftSideBearingArray[i])
+
+	def transform(self, ttFont):
+		glyphOrder = ttFont.getGlyphOrder()
+		glyf = ttFont["glyf"]
+		hhea = ttFont["hhea"]
+		numberOfHMetrics = hhea.numberOfHMetrics
+
+		# check if any of the proportional glyphs has left sidebearings that
+		# differ from their xMin bounding box values.
+		hasLsbArray = False
+		for i in range(numberOfHMetrics):
+			glyphName = glyphOrder[i]
+			lsb = self.metrics[glyphName][1]
+			if lsb != getattr(glyf[glyphName], "xMin", 0):
+				hasLsbArray = True
+				break
+
+		# do the same for the monospaced glyphs (if any) at the end of hmtx table
+		hasLeftSideBearingArray = False
+		for i in range(numberOfHMetrics, len(glyphOrder)):
+			glyphName = glyphOrder[i]
+			lsb = self.metrics[glyphName][1]
+			if lsb != getattr(glyf[glyphName], "xMin", 0):
+				hasLeftSideBearingArray = True
+				break
+
+		# if we need to encode both sidebearings arrays, then no transformation is
+		# applicable, and we must use the untransformed hmtx data
+		if hasLsbArray and hasLeftSideBearingArray:
+			return
+
+		# set bit 0 and 1 when the respective arrays are _not_ present
+		flags = 0
+		if not hasLsbArray:
+			flags |= 1 << 0
+		if not hasLeftSideBearingArray:
+			flags |= 1 << 1
+
+		data = struct.pack(">B", flags)
+
+		advanceWidthArray = array.array(
+			"H",
+			[
+				self.metrics[glyphName][0]
+				for i, glyphName in enumerate(glyphOrder)
+				if i < numberOfHMetrics
+			]
+		)
+		if sys.byteorder != "big":
+			advanceWidthArray.byteswap()
+		data += advanceWidthArray.tostring()
+
+		if hasLsbArray:
+			lsbArray = array.array(
+				"h",
+				[
+					self.metrics[glyphName][1]
+					for i, glyphName in enumerate(glyphOrder)
+					if i < numberOfHMetrics
+				]
+			)
+			if sys.byteorder != "big":
+				lsbArray.byteswap()
+			data += lsbArray.tostring()
+
+		if hasLeftSideBearingArray:
+			leftSideBearingArray = array.array(
+				"h",
+				[
+					self.metrics[glyphOrder[i]][1]
+					for i in range(numberOfHMetrics, len(glyphOrder))
+				]
+			)
+			if sys.byteorder != "big":
+				leftSideBearingArray.byteswap()
+			data += leftSideBearingArray.tostring()
+
+		return data
+
+
 class WOFF2FlavorData(WOFFFlavorData):
 
 	Flavor = 'woff2'
@@ -948,8 +1141,17 @@ class WOFF2FlavorData(WOFFFlavorData):
 			raise TypeError(
 				"'reader' and 'transformedTables' arguments are mutually exclusive"
 			)
+
 		if transformedTables is None:
 			transformedTables = woff2TransformedTableTags
+		else:
+			if (
+				"glyf" in transformedTables and "loca" not in transformedTables
+				or "loca" in transformedTables and "glyf" not in transformedTables
+			):
+				raise ValueError(
+					"'glyf' and 'loca' must be transformed (or not) together"
+				)
 
 		self.majorVersion = None
 		self.minorVersion = None
