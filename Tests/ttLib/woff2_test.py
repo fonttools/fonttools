@@ -706,28 +706,6 @@ class WOFF2GlyfTableTest(unittest.TestCase):
 		data = glyfTable.transform(self.font)
 		self.assertEqual(self.transformedGlyfData, data)
 
-	def test_transform_glyf_incorrect_glyphOrder(self):
-		glyfTable = self.font['glyf']
-		badGlyphOrder = self.font.getGlyphOrder()[:-1]
-		del glyfTable.glyphOrder
-		self.font.setGlyphOrder(badGlyphOrder)
-		with self.assertRaisesRegex(ttLib.TTLibError, "incorrect glyphOrder"):
-			glyfTable.transform(self.font)
-		glyfTable.glyphOrder = badGlyphOrder
-		with self.assertRaisesRegex(ttLib.TTLibError, "incorrect glyphOrder"):
-			glyfTable.transform(self.font)
-
-	def test_transform_glyf_missing_glyphOrder(self):
-		glyfTable = self.font['glyf']
-		del glyfTable.glyphOrder
-		del self.font.glyphOrder
-		numGlyphs = self.font['maxp'].numGlyphs
-		del self.font['maxp']
-		glyfTable.transform(self.font)
-		expected = [".notdef"]
-		expected.extend(["glyph%.5d" % i for i in range(1, numGlyphs)])
-		self.assertEqual(expected, glyfTable.glyphOrder)
-
 	def test_roundtrip_glyf_reconstruct_and_transform(self):
 		glyfTable = WOFF2GlyfTable()
 		glyfTable.reconstruct(self.transformedGlyfData, self.font)

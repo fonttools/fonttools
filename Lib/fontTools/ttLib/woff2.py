@@ -197,7 +197,7 @@ class WOFF2Writer(SFNTWriter):
 		# See:
 		# https://github.com/khaledhosny/ots/issues/60
 		# https://github.com/google/woff2/issues/15
-		if isTrueType:
+		if isTrueType and "glyf" in self.flavorData.transformedTables:
 			self._normaliseGlyfAndLoca(padding=4)
 		self._setHeadTransformFlag()
 
@@ -232,13 +232,7 @@ class WOFF2Writer(SFNTWriter):
 		if self.sfntVersion == "OTTO":
 			return
 
-		# make up glyph names required to decompile glyf table
-		self._decompileTable('maxp')
-		numGlyphs = self.ttFont['maxp'].numGlyphs
-		glyphOrder = ['.notdef'] + ["glyph%.5d" % i for i in range(1, numGlyphs)]
-		self.ttFont.setGlyphOrder(glyphOrder)
-
-		for tag in ('head', 'loca', 'glyf'):
+		for tag in ('maxp', 'head', 'loca', 'glyf'):
 			self._decompileTable(tag)
 		self.ttFont['glyf'].padding = padding
 		for tag in ('glyf', 'loca'):
@@ -692,19 +686,7 @@ class WOFF2GlyfTable(getTableClass('glyf')):
 	def transform(self, ttFont):
 		""" Return transformed 'glyf' data """
 		self.numGlyphs = len(self.glyphs)
-		if not hasattr(self, "glyphOrder"):
-			try:
-				self.glyphOrder = ttFont.getGlyphOrder()
-			except:
-				self.glyphOrder = None
-			if self.glyphOrder is None:
-				self.glyphOrder = [".notdef"]
-				self.glyphOrder.extend(["glyph%.5d" % i for i in range(1, self.numGlyphs)])
-		if len(self.glyphOrder) != self.numGlyphs:
-			raise TTLibError(
-				"incorrect glyphOrder: expected %d glyphs, found %d" %
-				(len(self.glyphOrder), self.numGlyphs))
-
+		assert len(self.glyphOrder) == self.numGlyphs
 		if 'maxp' in ttFont:
 			ttFont['maxp'].numGlyphs = self.numGlyphs
 		self.indexFormat = ttFont['head'].indexToLocFormat
