@@ -2,6 +2,7 @@
 Merge OpenType Layout tables (GDEF / GPOS / GSUB).
 """
 from __future__ import print_function, division, absolute_import
+from operator import ior
 from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc import classifyTools
@@ -12,6 +13,7 @@ from fontTools.varLib import builder, models, varStore
 from fontTools.varLib.models import nonNone, allNone, allEqual, allEqualTo
 from fontTools.varLib.varStore import VarStoreInstancer
 from functools import reduce
+from fontTools.otlLib.builder import buildSinglePos
 
 
 class Merger(object):
@@ -726,6 +728,31 @@ def _Lookup_PairPos_subtables_canonicalize(lst, font):
 
 	return lst
 
+def _Lookup_SinglePos_subtables_flatten(lst, font, min_inclusive_rec_format):
+	lst = list(lst)
+	glyphs, _ = _merge_GlyphOrders(font,
+		[v.Coverage.glyphs for v in lst], None)
+	num_glyphs = len(glyphs)
+	new = ot.SinglePos()
+	new.Format = 2
+	new.ValueFormat = min_inclusive_rec_format
+	new.Coverage = ot.Coverage()
+	new.Coverage.glyphs = glyphs
+	new.ValueCount = num_glyphs
+	new.Value = [None] * num_glyphs
+	for singlePos in lst:
+		if singlePos.Format == 1:
+			val_rec = singlePos.Value
+			for gname in singlePos.Coverage.glyphs:
+				i = glyphs.index(gname)
+				new.Value[i] = val_rec
+		elif singlePos.Format == 2:
+			for j, gname in enumerate(singlePos.Coverage.glyphs):
+				val_rec = singlePos.Value[j]
+				i = glyphs.index(gname)
+				new.Value[i] = val_rec
+	return [new]
+
 @AligningMerger.merger(ot.Lookup)
 def merge(merger, self, lst):
 	subtables = merger.lookup_subtables = [l.SubTable for l in lst]
@@ -743,19 +770,37 @@ def merge(merger, self, lst):
 			sts.extend(new_sts)
 
 	isPairPos = self.SubTable and isinstance(self.SubTable[0], ot.PairPos)
-
+	isSinglePos = False
+	
 	if isPairPos:
-
 		# AFDKO and feaLib sometimes generate two Format1 subtables instead of one.
 		# Merge those before continuing.
 		# https://github.com/fonttools/fonttools/issues/719
 		self.SubTable = _Lookup_PairPos_subtables_canonicalize(self.SubTable, merger.font)
 		subtables = merger.lookup_subtables = [_Lookup_PairPos_subtables_canonicalize(st, merger.font) for st in subtables]
-
+	else:
+		isSinglePos = self.SubTable and isinstance(self.SubTable[0], ot.SinglePos)
+		if isSinglePos:
+			numSubtables = [len(st) for st in subtables]
+			if not all([nums == numSubtables[0] for nums in numSubtables]):
+				# Flatten list of SinglePos subtables to single Format 2 subtable,
+				# with all value records set to the rec format type.
+				# We use buildSinglePos() to optimize the lookup after merging.
+				valueFormatList = [t.ValueFormat for st in subtables for t in st]
+				# Find the minimum value record that can accomodate all the singlePos subtables.
+				mirf = reduce(ior, valueFormatList)
+				self.SubTable = _Lookup_SinglePos_subtables_flatten(self.SubTable, merger.font, mirf)
+				subtables = merger.lookup_subtables = [
+					_Lookup_SinglePos_subtables_flatten(st, merger.font, mirf) for st in subtables]
+				flattened = True
+			else:
+				flattened = False
+	
 	merger.mergeLists(self.SubTable, subtables)
 	self.SubTableCount = len(self.SubTable)
 
 	if isPairPos:
+		isSinglePos = False
 		# If format-1 subtable created during canonicalization is empty, remove it.
 		assert len(self.SubTable) >= 1 and self.SubTable[0].Format == 1
 		if not self.SubTable[0].Coverage.glyphs:
@@ -768,6 +813,17 @@ def merge(merger, self, lst):
 			self.SubTable.pop(-1)
 			self.SubTableCount -= 1
 
+	if isSinglePos:
+		singlePosTable = self.SubTable[0]
+		glyphs = singlePosTable.Coverage.glyphs
+		if flattened:
+			# We know that singlePosTable is Format 2, as this is set
+			# in _Lookup_SinglePos_subtables_flatten.
+			recs = singlePosTable.Value
+			numRecs = len(recs)
+			recList = [ (glyphs[i], recs[i]) for i in range(numRecs)]
+			singlePosMapping = {gname: valRecord for gname, valRecord in recList}
+			self.SubTable = buildSinglePos(singlePosMapping, merger.font.getReverseGlyphMap())
 	merger.mergeObjects(self, lst, exclude=['SubTable', 'SubTableCount'])
 
 	del merger.lookup_subtables
