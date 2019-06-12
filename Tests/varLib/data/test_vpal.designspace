@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='utf-8'?>
+<designspace format="3">
+	<axes>
+		<axis default="0" maximum="1000" minimum="0" name="weight" tag="wght" />
+	</axes>
+	<sources>
+		<source filename="master_vpal_test/master_vpal_test_0.ufo" stylename="w0.00">
+			<info copy="1" />
+			<location>
+				<dimension name="weight" xvalue="0.00" />
+			</location>
+		</source>
+		<source filename="master_vpal_test/master_vpal_test_1.ufo" stylename="w1000.00">
+			<location>
+				<dimension name="weight" xvalue="1000.00" />
+			</location>
+		</source>
+	</sources>
+	<instances>
+		<instance familyname="SHSansJPVFTest" filename="instances/SHSansJPVFTest-ExtraLight.otf" postscriptfontname="SHSansJPVFTest-ExtraLight" stylename="ExtraLight">
+			<location>
+				<dimension name="weight" xvalue="0" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+		<instance familyname="SHSansJPVFTest" filename="instances/SHSansJPVFTest-Heavy.otf" postscriptfontname="SHSansJPVFTest-Heavy" stylename="Heavy">
+			<location>
+				<dimension name="weight" xvalue="1000" />
+			</location>
+			<kerning />
+			<info />
+		</instance>
+	</instances>
+</designspace>

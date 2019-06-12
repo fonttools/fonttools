@@ -273,6 +273,29 @@ class BuildTest(unittest.TestCase):
         self.expect_ttx(varfont, expected_ttx_path, tables)
 
 
+    def test_varlib_build_vpal(self):
+        ds_path = self.get_test_input('test_vpal.designspace')
+        ttx_dir = self.get_test_input("master_vpal_test")
+        expected_ttx_path = self.get_test_output("test_vpal.ttx")
+
+        self.temp_dir()
+        for path in self.get_file_list(ttx_dir, '.ttx', 'master_vpal_test_'):
+            self.compile_font(path, ".otf", self.tempdir)
+
+        ds = DesignSpaceDocument.fromfile(ds_path)
+        for source in ds.sources:
+            source.path = os.path.join(
+                self.tempdir, os.path.basename(source.filename).replace(".ufo", ".otf")
+            )
+        ds.updatePaths()
+
+        varfont, _, _ = build(ds)
+        varfont = reload_font(varfont)
+
+        tables = ["GPOS"]
+        self.expect_ttx(varfont, expected_ttx_path, tables)
+
+
     def test_varlib_main_ttf(self):
         """Mostly for testing varLib.main()
         """
