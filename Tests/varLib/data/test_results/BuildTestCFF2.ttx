@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="OTTO" ttLibVersion="3.38">
+<ttFont sfntVersion="OTTO" ttLibVersion="3.42">
 
   <fvar>
 
@@ -67,29 +67,29 @@
             <BlueValues>
                 <blend value="-12 0 0"/>
                 <blend value="0 0 0"/>
-                <blend value="486 -8 -8"/>
+                <blend value="486 -8 14"/>
                 <blend value="498 0 0"/>
-                <blend value="574 4 4"/>
+                <blend value="574 4 -8"/>
                 <blend value="586 0 0"/>
-                <blend value="638 6 6"/>
+                <blend value="638 6 -10"/>
                 <blend value="650 0 0"/>
-                <blend value="656 2 2"/>
+                <blend value="656 2 -2"/>
                 <blend value="668 0 0"/>
-                <blend value="712 6 6"/>
+                <blend value="712 6 -10"/>
                 <blend value="724 0 0"/>
             </BlueValues>
             <OtherBlues>
-                <blend value="-217 -17 -17"/>
+                <blend value="-217 -17 29"/>
                 <blend value="-205 0 0"/>
             </OtherBlues>
             <BlueScale value="0.0625"/>
             <BlueShift value="7"/>
             <BlueFuzz value="0"/>
             <StdHW>
-                <blend value="67 -39.0 -39.0"/>
+                <blend value="67 -39.0 67.0"/>
             </StdHW>
             <StdVW>
-                <blend value="85 -51.0 -51.0"/>
+                <blend value="85 -51.0 87.0"/>
             </StdVW>
           </Private>
         </FontDict>
