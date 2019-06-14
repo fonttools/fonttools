@@ -250,8 +250,8 @@ class Timer(object):
 	upon exiting the with-statement.
 
 	>>> import logging
-	>>> log = logging.getLogger("fontTools")
-	>>> configLogger(level="DEBUG", format="%(message)s", stream=sys.stdout)
+	>>> log = logging.getLogger("my-fancy-timer-logger")
+	>>> configLogger(logger=log, level="DEBUG", format="%(message)s", stream=sys.stdout)
 	>>> with Timer(log, 'do something'):
 	...     time.sleep(0.01)
 	Took ... to do something
