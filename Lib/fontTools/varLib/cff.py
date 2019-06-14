@@ -390,7 +390,7 @@ def merge_charstrings(glyphOrder, num_masters, top_dicts, masterModel):
 			new_cs.program[:0] = [vsindex, 'vsindex']
 			
 	# If there is no variation in any of the charstrings, then vsindex_dict
-	# never gets built. This is could still be needed if there is variation 
+	# never gets built. This could still be needed if there is variation 
 	# in the PrivatDict, so we will build the default data for vsindex = 0.
 	if not vsindex_dict:
 		key = (True)*num_masters
