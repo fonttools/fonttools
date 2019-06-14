@@ -529,6 +529,45 @@ def _featureVariationRecordIsUnique(rec, seen):
         return True
 
 
+def _instantiateFeatureVariationRecord(
+    record, recIdx, location, fvarAxes, axisIndexMap
+):
+    shouldKeep = False
+    applies = True
+    newConditions = []
+    for i, condition in enumerate(record.ConditionSet.ConditionTable):
+        if condition.Format == 1:
+            axisIdx = condition.AxisIndex
+            axisTag = fvarAxes[axisIdx].axisTag
+            if axisTag in location:
+                minValue = condition.FilterRangeMinValue
+                maxValue = condition.FilterRangeMaxValue
+                v = location[axisTag]
+                if not (minValue <= v <= maxValue):
+                    # condition not met so remove entire record
+                    applies = False
+                    newConditions = None
+                    break
+            else:
+                # axis not pinned, keep condition with remapped axis index
+                applies = False
+                condition.AxisIndex = axisIndexMap[axisTag]
+                newConditions.append(condition)
+        else:
+            log.warning(
+                "Condition table {0} of FeatureVariationRecord {1} has "
+                "unsupported format ({2}); ignored".format(i, recIdx, condition.Format)
+            )
+            applies = False
+            newConditions.append(condition)
+
+    if newConditions:
+        record.ConditionSet.ConditionTable = newConditions
+        shouldKeep = True
+
+    return applies, shouldKeep
+
+
 def _instantiateFeatureVariations(table, fvarAxes, location):
     pinnedAxes = set(location.keys())
     axisOrder = [axis.axisTag for axis in fvarAxes if axis.axisTag not in pinnedAxes]
@@ -539,36 +578,10 @@ def _instantiateFeatureVariations(table, fvarAxes, location):
     newRecords = []
 
     for i, record in enumerate(table.FeatureVariations.FeatureVariationRecord):
-        retainRecord = True
-        applies = True
-        newConditions = []
-        for j, condition in enumerate(record.ConditionSet.ConditionTable):
-            if condition.Format == 1:
-                axisIdx = condition.AxisIndex
-                axisTag = fvarAxes[axisIdx].axisTag
-                if axisTag in pinnedAxes:
-                    minValue = condition.FilterRangeMinValue
-                    maxValue = condition.FilterRangeMaxValue
-                    v = location[axisTag]
-                    if not (minValue <= v <= maxValue):
-                        # condition not met so remove entire record
-                        retainRecord = applies = False
-                        break
-                else:
-                    # axis not pinned, keep condition with remapped axis index
-                    applies = False
-                    condition.AxisIndex = axisIndexMap[axisTag]
-                    newConditions.append(condition)
-            else:
-                log.warning(
-                    "Condition table {0} of FeatureVariationRecord {1} has "
-                    "unsupported format ({2}); ignored".format(j, i, condition.Format)
-                )
-                applies = False
-                newConditions.append(condition)
-
-        if retainRecord and newConditions:
-            record.ConditionSet.ConditionTable = newConditions
+        applies, shouldKeep = _instantiateFeatureVariationRecord(
+            record, i, location, fvarAxes, axisIndexMap
+        )
+        if shouldKeep:
             if _featureVariationRecordIsUnique(record, uniqueRecords):
                 newRecords.append(record)
 
