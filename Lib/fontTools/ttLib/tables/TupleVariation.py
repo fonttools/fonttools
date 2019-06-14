@@ -444,49 +444,43 @@ class TupleVariation(object):
 			size += axisCount * 4
 		return size
 
-	def getDeltaType(self):
-		""" Check if deltas are (x, y) as in gvar, or single values as in cvar.
-		Returns a string ("gvar" or "cvar"), or None if empty.
+	def getCoordWidth(self):
+		""" Return 2 if coordinates are (x, y) as in gvar, 1 if single values
+		as in cvar, or 0 if empty.
 		"""
 		firstDelta = next((c for c in self.coordinates if c is not None), None)
 		if firstDelta is None:
-			return  # empty or has no impact
+			return 0  # empty or has no impact
 		if type(firstDelta) is tuple and len(firstDelta) == 2:
-			return "gvar"
+			return 2
 		elif type(firstDelta) in (int, float):
-			return "cvar"
+			return 1
 		else:
 			raise TypeError("invalid type of delta: %s" % type(firstDelta))
 
 	def scaleDeltas(self, scalar):
 		if scalar == 1.0:
 			return  # no change
-		deltaType = self.getDeltaType()
-		if deltaType == "gvar":
-			if scalar == 0:
-				self.coordinates = [(0, 0)] * len(self.coordinates)
-			else:
-				self.coordinates = [
-					(d[0] * scalar, d[1] * scalar) if d is not None else None
-					for d in self.coordinates
-				]
-		else:
-			if scalar == 0:
-				self.coordinates = [0] * len(self.coordinates)
-			else:
-				self.coordinates = [
-					d * scalar if d is not None else None
-					for d in self.coordinates
-				]
+		coordWidth = self.getCoordWidth()
+		if coordWidth == 2:
+			self.coordinates = [
+				(d[0] * scalar, d[1] * scalar) if d is not None else None
+				for d in self.coordinates
+			]
+		elif coordWidth == 1:
+			self.coordinates = [
+				d * scalar if d is not None else None
+				for d in self.coordinates
+			]
 
 	def roundDeltas(self):
-		deltaType = self.getDeltaType()
-		if deltaType == "gvar":
+		coordWidth = self.getCoordWidth()
+		if coordWidth == 2:
 			self.coordinates = [
 				(otRound(d[0]), otRound(d[1])) if d is not None else None
 				for d in self.coordinates
 			]
-		else:
+		elif coordWidth == 1:
 			self.coordinates = [
 				otRound(d) if d is not None else None for d in self.coordinates
 			]
@@ -494,7 +488,7 @@ class TupleVariation(object):
 	def calcInferredDeltas(self, origCoords, endPts):
 		from fontTools.varLib.iup import iup_delta
 
-		if self.getDeltaType() == "cvar":
+		if self.getCoordWidth() == 1:
 			raise TypeError(
 				"Only 'gvar' TupleVariation can have inferred deltas"
 			)
@@ -538,13 +532,12 @@ class TupleVariation(object):
 			return NotImplemented
 		deltas1 = self.coordinates
 		length = len(deltas1)
-		deltaType = self.getDeltaType()
 		deltas2 = other.coordinates
 		if len(deltas2) != length:
 			raise ValueError(
 				"cannot sum TupleVariation deltas with different lengths"
 			)
-		if deltaType == "gvar":
+		if self.getCoordWidth() == 2:
 			for i, d2 in zip(range(length), deltas2):
 				d1 = deltas1[i]
 				try:

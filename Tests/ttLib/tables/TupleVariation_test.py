@@ -688,24 +688,24 @@ class TupleVariationTest(unittest.TestCase):
 		content = writer.file.getvalue().decode("utf-8")
 		return [line.strip() for line in content.splitlines()][1:]
 
-	def test_getDeltaType(self):
+	def test_getCoordWidth(self):
 		empty = TupleVariation({}, [])
-		self.assertIsNone(empty.getDeltaType())
+		self.assertEqual(empty.getCoordWidth(), 0)
 
 		empty = TupleVariation({}, [None])
-		self.assertIsNone(empty.getDeltaType())
+		self.assertEqual(empty.getCoordWidth(), 0)
 
 		gvarTuple = TupleVariation({}, [None, (0, 0)])
-		self.assertEqual(gvarTuple.getDeltaType(), "gvar")
+		self.assertEqual(gvarTuple.getCoordWidth(), 2)
 
 		cvarTuple = TupleVariation({}, [None, 0])
-		self.assertEqual(cvarTuple.getDeltaType(), "cvar")
+		self.assertEqual(cvarTuple.getCoordWidth(), 1)
 
 		cvarTuple.coordinates[1] *= 1.0
-		self.assertEqual(cvarTuple.getDeltaType(), "cvar")
+		self.assertEqual(cvarTuple.getCoordWidth(), 1)
 
 		with self.assertRaises(TypeError):
-			TupleVariation({}, [None, "a"]).getDeltaType()
+			TupleVariation({}, [None, "a"]).getCoordWidth()
 
 	def test_scaleDeltas_cvar(self):
 		var = TupleVariation({}, [100, None])
@@ -718,7 +718,7 @@ class TupleVariationTest(unittest.TestCase):
 		self.assertIsNone(var.coordinates[1])
 
 		var.scaleDeltas(0.0)
-		self.assertEqual(var.coordinates, [0, 0])
+		self.assertEqual(var.coordinates, [0, None])
 
 	def test_scaleDeltas_gvar(self):
 		var = TupleVariation({}, [(100, 200), None])
@@ -732,7 +732,7 @@ class TupleVariationTest(unittest.TestCase):
 		self.assertIsNone(var.coordinates[1])
 
 		var.scaleDeltas(0.0)
-		self.assertEqual(var.coordinates, [(0, 0), (0, 0)])
+		self.assertEqual(var.coordinates, [(0, 0), None])
 
 	def test_roundDeltas_cvar(self):
 		var = TupleVariation({}, [55.5, None, 99.9])
