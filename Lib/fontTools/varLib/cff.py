@@ -393,7 +393,7 @@ def merge_charstrings(glyphOrder, num_masters, top_dicts, masterModel):
 	# never gets built. This could still be needed if there is variation 
 	# in the PrivatDict, so we will build the default data for vsindex = 0.
 	if not vsindex_dict:
-		key = (True)*num_masters
+		key = (True,) * num_masters
 		_add_new_vsindex(model, key, masterSupports, vsindex_dict,
 			vsindex_by_key, varDataList)
 	cvData = CVarData(varDataList=varDataList, masterSupports=masterSupports,
