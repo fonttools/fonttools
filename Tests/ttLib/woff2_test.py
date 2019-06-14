@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
 from fontTools import ttLib
+from fontTools.ttLib import woff2
 from fontTools.ttLib.woff2 import (
 	WOFF2Reader, woff2DirectorySize, woff2DirectoryFormat,
 	woff2FlagsSize, woff2UnknownTagSize, woff2Base128MaxSize, WOFF2DirectoryEntry,
@@ -1195,6 +1196,101 @@ class WOFF2RoundtripTest(object):
 
 		assert tmp.getvalue() == tmp2.getvalue()
 		assert ttFont2.reader.flavorData.transformedTables == {"hmtx"}
+
+
+class MainTest(object):
+
+	@staticmethod
+	def make_ttf(tmpdir):
+		ttFont = ttLib.TTFont(recalcBBoxes=False, recalcTimestamp=False)
+		ttFont.importXML(TTX)
+		filename = str(tmpdir / "TestTTF-Regular.ttf")
+		ttFont.save(filename)
+		return filename
+
+	def test_compress_ttf(self, tmpdir):
+		input_file = self.make_ttf(tmpdir)
+
+		assert woff2.main(["compress", input_file]) is None
+
+		assert (tmpdir / "TestTTF-Regular.woff2").check(file=True)
+
+	def test_compress_ttf_no_glyf_transform(self, tmpdir):
+		input_file = self.make_ttf(tmpdir)
+
+		assert woff2.main(["compress", "--no-glyf-transform", input_file]) is None
+
+		assert (tmpdir / "TestTTF-Regular.woff2").check(file=True)
+
+	def test_compress_ttf_hmtx_transform(self, tmpdir):
+		input_file = self.make_ttf(tmpdir)
+
+		assert woff2.main(["compress", "--hmtx-transform", input_file]) is None
+
+		assert (tmpdir / "TestTTF-Regular.woff2").check(file=True)
+
+	def test_compress_ttf_no_glyf_transform_hmtx_transform(self, tmpdir):
+		input_file = self.make_ttf(tmpdir)
+
+		assert woff2.main(
+			["compress", "--no-glyf-transform", "--hmtx-transform", input_file]
+		) is None
+
+		assert (tmpdir / "TestTTF-Regular.woff2").check(file=True)
+
+	def test_compress_output_file(self, tmpdir):
+		input_file = self.make_ttf(tmpdir)
+		output_file = tmpdir / "TestTTF.woff2"
+
+		assert woff2.main(
+			["compress", "-o", str(output_file), str(input_file)]
+		) is None
+
+		assert output_file.check(file=True)
+
+	def test_compress_otf(self, tmpdir):
+		ttFont = ttLib.TTFont(recalcBBoxes=False, recalcTimestamp=False)
+		ttFont.importXML(OTX)
+		input_file = str(tmpdir / "TestOTF-Regular.otf")
+		ttFont.save(input_file)
+
+		assert woff2.main(["compress", input_file]) is None
+
+		assert (tmpdir / "TestOTF-Regular.woff2").check(file=True)
+
+	def test_decompress_ttf(self, tmpdir):
+		input_file = tmpdir / "TestTTF-Regular.woff2"
+		input_file.write_binary(TT_WOFF2.getvalue())
+
+		assert woff2.main(["decompress", str(input_file)]) is None
+
+		assert (tmpdir / "TestTTF-Regular.ttf").check(file=True)
+
+	def test_decompress_otf(self, tmpdir):
+		input_file = tmpdir / "TestTTF-Regular.woff2"
+		input_file.write_binary(CFF_WOFF2.getvalue())
+
+		assert woff2.main(["decompress", str(input_file)]) is None
+
+		assert (tmpdir / "TestTTF-Regular.otf").check(file=True)
+
+	def test_decompress_output_file(self, tmpdir):
+		input_file = tmpdir / "TestTTF-Regular.woff2"
+		input_file.write_binary(TT_WOFF2.getvalue())
+		output_file = tmpdir / "TestTTF.ttf"
+
+		assert woff2.main(
+			["decompress", "-o", str(output_file), str(input_file)]
+		) is None
+
+		assert output_file.check(file=True)
+
+	def test_no_subcommand_show_help(self, capsys):
+		with pytest.raises(SystemExit):
+			woff2.main(["--help"])
+
+		captured = capsys.readouterr()
+		assert "usage: fonttools ttLib.woff2" in captured.out
 
 
 class Base128Test(unittest.TestCase):
