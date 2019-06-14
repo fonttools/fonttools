@@ -270,7 +270,9 @@ def getfd_map(varFont, fonts_list):
 	num_regions = len(region_fonts)
 	topDict = default_font['CFF '].cff.topDictIndex[0]
 	if not hasattr(topDict, 'FDSelect'):
-		fd_map[0] = [0]*num_regions
+		# All glyphs reference only one FontDict. 
+		# Map the FD index for regions to index 0.
+		fd_map[0] = {ri:0 for ri in range(num_regions)}
 		return fd_map
 
 	gname_mapping = {}
