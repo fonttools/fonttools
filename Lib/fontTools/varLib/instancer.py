@@ -93,6 +93,30 @@ log = logging.getLogger("fontTools.varLib.instancer")
 
 
 def instantiateTupleVariationStore(variations, location, origCoords=None, endPts=None):
+    """Instantiate TupleVariation list at the given location.
+
+    The 'variations' list of TupleVariation objects is modified in-place.
+    The input location can describe either a full instance (all the axes are assigned an
+    explicit coordinate) or partial (some of the axes are omitted).
+    Tuples that do not participate are kept as they are. Those that have 0 influence
+    at the given location are removed from the variation store.
+    Those that are fully instantiated (i.e. all their axes are being pinned) are also
+    removed from the variation store, their scaled deltas accummulated and returned, so
+    that they can be added by the caller to the default instance's coordinates.
+    Tuples that are only partially instantiated (i.e. not all the axes that they
+    participate in are being pinned) are kept in the store, and their deltas multiplied
+    by the scalar support of the axes to be pinned at the desired location.
+
+    Args:
+        variations: List[TupleVariation] from either 'gvar' or 'cvar'.
+        location: Dict[str, float]: axes coordinates for the full or partial instance.
+        origCoords: GlyphCoordinates: default instance's coordinates for computing 'gvar'
+            inferred points (cf. table__g_l_y_f.getCoordinatesAndControls).
+        endPts: List[int]: indices of contour end points, for inferring 'gvar' deltas.
+
+    Returns:
+        List[float]: the overall delta adjustment after applicable deltas were summed.
+    """
     newVariations = collections.OrderedDict()
     for var in variations:
         # Compute the scalar support of the axes to be pinned at the desired location,
