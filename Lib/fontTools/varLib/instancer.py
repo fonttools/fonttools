@@ -220,7 +220,7 @@ def instantiateGvar(varfont, location, optimize=True):
 
 def setCvarDeltas(cvt, deltas):
     for i, delta in enumerate(deltas):
-        if delta is not None:
+        if delta:
             cvt[i] += otRound(delta)
 
 
