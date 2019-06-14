@@ -513,10 +513,9 @@ class BuilderTest(unittest.TestCase):
         addOpenTypeFeatures(font, tree)
         assert "GSUB" in font
 
-    @unittest.skipIf(sys.version_info[0:2] < (3, 4),
-                     "assertLogs() was introduced in 3.4")
     def test_unsupported_subtable_break(self):
-        with self.assertLogs(level='WARNING') as logs:
+        logger = logging.getLogger("fontTools.feaLib.builder")
+        with CapturingLogHandler(logger, level='WARNING') as captor:
             self.build(
                 "feature test {"
                 "    pos a 10;"
@@ -524,9 +523,10 @@ class BuilderTest(unittest.TestCase):
                 "    pos b 10;"
                 "} test;"
             )
-        self.assertEqual(logs.output,
-                ['WARNING:fontTools.feaLib.builder:<features>:1:32: '
-                 'unsupported "subtable" statement for lookup type'])
+
+        captor.assertRegex(
+            '<features>:1:32: unsupported "subtable" statement for lookup type'
+        )
 
     def test_skip_featureNames_if_no_name_table(self):
         features = (

@@ -145,6 +145,7 @@ class WOFF2ReaderTTFTest(WOFF2ReaderTest):
 	def test_reconstruct_loca(self):
 		woff2Reader = WOFF2Reader(self.file)
 		reconstructedData = woff2Reader['loca']
+		self.font.getTableData("glyf")  # 'glyf' needs to be compiled before 'loca'
 		self.assertEqual(self.font.getTableData('loca'), reconstructedData)
 		self.assertTrue(hasattr(woff2Reader.tables['glyf'], 'data'))
 
@@ -360,7 +361,7 @@ class WOFF2WriterTest(unittest.TestCase):
 	def setUpClass(cls):
 		cls.font = ttLib.TTFont(recalcBBoxes=False, recalcTimestamp=False, flavor="woff2")
 		cls.font.importXML(OTX)
-		cls.tags = [t for t in cls.font.keys() if t != 'GlyphOrder']
+		cls.tags = sorted(t for t in cls.font.keys() if t != 'GlyphOrder')
 		cls.numTables = len(cls.tags)
 		cls.file = BytesIO(CFF_WOFF2.getvalue())
 		cls.file.seek(0, 2)
@@ -518,7 +519,7 @@ class WOFF2WriterTTFTest(WOFF2WriterTest):
 	def setUpClass(cls):
 		cls.font = ttLib.TTFont(recalcBBoxes=False, recalcTimestamp=False, flavor="woff2")
 		cls.font.importXML(TTX)
-		cls.tags = [t for t in cls.font.keys() if t != 'GlyphOrder']
+		cls.tags = sorted(t for t in cls.font.keys() if t != 'GlyphOrder')
 		cls.numTables = len(cls.tags)
 		cls.file = BytesIO(TT_WOFF2.getvalue())
 		cls.file.seek(0, 2)

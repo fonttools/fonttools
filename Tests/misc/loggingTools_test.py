@@ -6,15 +6,11 @@ from fontTools.misc.loggingTools import (
     configLogger,
     ChannelsFilter,
     LogMixin,
-    StderrHandler,
-    LastResortLogger,
-    _resetExistingLoggers,
 )
 import logging
 import textwrap
 import time
 import re
-import sys
 import pytest
 
 
@@ -179,32 +175,3 @@ def test_LogMixin():
     assert isinstance(b.log, logging.Logger)
     assert a.log.name == "loggingTools_test.A"
     assert b.log.name == "loggingTools_test.B"
-
-
-@pytest.mark.skipif(sys.version_info[:2] > (2, 7), reason="only for python2.7")
-@pytest.mark.parametrize(
-    "reset", [True, False], ids=["reset", "no-reset"]
-)
-def test_LastResortLogger(reset, capsys, caplog):
-    current = logging.getLoggerClass()
-    msg = "The quick brown fox jumps over the lazy dog"
-    try:
-        if reset:
-            _resetExistingLoggers()
-        else:
-            caplog.set_level(logging.ERROR, logger="myCustomLogger")
-        logging.lastResort = StderrHandler(logging.WARNING)
-        logging.setLoggerClass(LastResortLogger)
-        logger = logging.getLogger("myCustomLogger")
-        logger.error(msg)
-    finally:
-        del logging.lastResort
-        logging.setLoggerClass(current)
-
-    captured = capsys.readouterr()
-    if reset:
-        assert msg in captured.err
-        msg not in caplog.text
-    else:
-        msg in caplog.text
-        msg not in captured.err
