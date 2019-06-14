@@ -62,8 +62,6 @@ are supported, but support for CFF2 variable fonts will be added soon.
 
 The discussion and implementation of these features are tracked at
 https://github.com/fonttools/fonttools/issues/1537
-
-NOTE: The module is experimental and both the API and the CLI *may* change.
 """
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
