@@ -659,7 +659,7 @@ def instantiateSTAT(varfont, location):
 
     log.info("Instantiating STAT table")
 
-    # only keep DesignAxis that were not instanced, a build a mapping from old
+    # only keep DesignAxis that were not instanced, and build a mapping from old
     # to new axis indices
     newDesignAxes = []
     axisIndexMap = {}
