@@ -1,8 +1,9 @@
 """ Partially instantiate a variable font.
 
-This is similar to fontTools.varLib.mutator, but instead of creating full
-instances (i.e. static fonts) from variable fonts, it creates "partial"
-variable fonts, only containing a subset of the variation space.
+The module exports an `instantiateVariableFont` function and CLI that allow to
+create full instances (i.e. static fonts) from variable fonts, as well as "partial"
+variable fonts that only contain a subset of the original variation space.
+
 For example, if you wish to pin the width axis to a given location while keeping
 the rest of the axes, you can do:
 
@@ -44,6 +45,7 @@ advance what the default value for that axis is, one can pass a `None` value:
 
 From the console script, this is equivalent to passing `wght=drop` as input.
 
+This module is similar to fontTools.varLib.mutator, which it's intended to supersede.
 Note that, unlike varLib.mutator, when an axis is not mentioned in the input
 location, the varLib.instancer will keep the axis and the corresponding deltas,
 whereas mutator implicitly drops the axis at its default coordinate.
