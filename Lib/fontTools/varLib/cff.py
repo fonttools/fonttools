@@ -382,7 +382,7 @@ def merge_charstrings(glyphOrder, num_masters, top_dicts, masterModel):
 		try:
 			vsindex = vsindex_by_key[key]
 		except KeyError:
-			vsindex = _add_new_vsindex(model, key,masterSupports, vsindex_dict,
+			vsindex = _add_new_vsindex(model, key, masterSupports, vsindex_dict,
 				vsindex_by_key, varDataList)
 		# We do not need to check for an existing new_cs.private.vsindex,
 		# as we know it doesn't exist yet.
