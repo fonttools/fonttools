@@ -16,7 +16,7 @@ from fontTools.ttLib.tables import ttProgram
 import logging
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("fontTools.ttLib.woff2")
 
 haveBrotli = False
 try:
@@ -1335,6 +1335,164 @@ def pack255UShort(value):
 		return struct.pack(">BH", 253, value)
 
 
+def compress(input_file, output_file, transform_tables=None):
+	"""Compress OpenType font to WOFF2.
+
+	Args:
+		input_file: a file path, file or file-like object (open in binary mode)
+			containing an OpenType font (either CFF- or TrueType-flavored).
+		output_file: a file path, file or file-like object where to save the
+			compressed WOFF2 font.
+		transform_tables: Optional[Iterable[str]]: a set of table tags for which
+			to enable preprocessing transformations. By default, only 'glyf'
+			and 'loca' tables are transformed. An empty set means disable all
+			transformations.
+	"""
+	log.info("Processing %s => %s" % (input_file, output_file))
+
+	font = TTFont(input_file, recalcBBoxes=False, recalcTimestamp=False)
+	font.flavor = "woff2"
+
+	if transform_tables is not None:
+		font.flavorData = WOFF2FlavorData(transformedTables=transform_tables)
+
+	font.save(output_file, reorderTables=False)
+
+
+def decompress(input_file, output_file):
+	"""Decompress WOFF2 font to OpenType font.
+
+	Args:
+		input_file: a file path, file or file-like object (open in binary mode)
+			containing a compressed WOFF2 font.
+		output_file: a file path, file or file-like object where to save the
+			decompressed OpenType font.
+	"""
+	log.info("Processing %s => %s" % (input_file, output_file))
+
+	font = TTFont(input_file, recalcBBoxes=False, recalcTimestamp=False)
+	font.flavor = None
+	font.flavorData = None
+	font.save(output_file, reorderTables=True)
+
+
+def main(args=None):
+	import argparse
+	from fontTools import configLogger
+	from fontTools.ttx import makeOutputFileName
+
+	class _NoGlyfTransformAction(argparse.Action):
+		def __call__(self, parser, namespace, values, option_string=None):
+			namespace.transform_tables.difference_update({"glyf", "loca"})
+
+	class _HmtxTransformAction(argparse.Action):
+		def __call__(self, parser, namespace, values, option_string=None):
+			namespace.transform_tables.add("hmtx")
+
+	parser = argparse.ArgumentParser(
+		prog="fonttools ttLib.woff2",
+		description="Compress and decompress WOFF2 fonts",
+	)
+
+	parser_group = parser.add_subparsers(title="sub-commands")
+	parser_compress = parser_group.add_parser("compress")
+	parser_decompress = parser_group.add_parser("decompress")
+
+	for subparser in (parser_compress, parser_decompress):
+		group = subparser.add_mutually_exclusive_group(required=False)
+		group.add_argument(
+			"-v",
+			"--verbose",
+			action="store_true",
+			help="print more messages to console",
+		)
+		group.add_argument(
+			"-q",
+			"--quiet",
+			action="store_true",
+			help="do not print messages to console",
+		)
+
+	parser_compress.add_argument(
+		"input_file",
+		metavar="INPUT",
+		help="the input OpenType font (.ttf or .otf)",
+	)
+	parser_decompress.add_argument(
+		"input_file",
+		metavar="INPUT",
+		help="the input WOFF2 font",
+	)
+
+	parser_compress.add_argument(
+		"-o",
+		"--output-file",
+		metavar="OUTPUT",
+		help="the output WOFF2 font",
+	)
+	parser_decompress.add_argument(
+		"-o",
+		"--output-file",
+		metavar="OUTPUT",
+		help="the output OpenType font",
+	)
+
+	transform_group = parser_compress.add_argument_group()
+	transform_group.add_argument(
+		"--no-glyf-transform",
+		dest="transform_tables",
+		nargs=0,
+		action=_NoGlyfTransformAction,
+		help="Do not transform glyf (and loca) tables",
+	)
+	transform_group.add_argument(
+		"--hmtx-transform",
+		dest="transform_tables",
+		nargs=0,
+		action=_HmtxTransformAction,
+		help="Enable optional transformation for 'hmtx' table",
+	)
+
+	parser_compress.set_defaults(
+		subcommand=compress,
+		transform_tables={"glyf", "loca"},
+	)
+	parser_decompress.set_defaults(subcommand=decompress)
+
+	options = vars(parser.parse_args(args))
+
+	subcommand = options.pop("subcommand", None)
+	if not subcommand:
+		parser.print_help()
+		return
+
+	quiet = options.pop("quiet")
+	verbose = options.pop("verbose")
+	configLogger(
+		level=("ERROR" if quiet else "DEBUG" if verbose else "INFO"),
+	)
+
+	if not options["output_file"]:
+		if subcommand is compress:
+			extension = ".woff2"
+		elif subcommand is decompress:
+			# choose .ttf/.otf file extension depending on sfntVersion
+			with open(options["input_file"], "rb") as f:
+				f.seek(4)  # skip 'wOF2' signature
+				sfntVersion = f.read(4)
+			assert len(sfntVersion) == 4, "not enough data"
+			extension = ".otf" if sfntVersion == b"OTTO" else ".ttf"
+		else:
+			raise AssertionError(subcommand)
+		options["output_file"] = makeOutputFileName(
+			options["input_file"], outputDir=None, extension=extension
+		)
+
+	try:
+		subcommand(**options)
+	except TTLibError as e:
+		parser.error(e)
+
+
 if __name__ == "__main__":
-	import doctest
-	sys.exit(doctest.testmod().failed)
+	sys.exit(main())
