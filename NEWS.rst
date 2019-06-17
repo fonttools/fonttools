@@ -1,3 +1,17 @@
+- [woff2] Added support for compressing/decompressing WOFF2 fonts with non-transformed
+  ``glyf`` and ``loca`` tables, as well as with transformed ``hmtx`` table.
+  Removed ``Snippets/woff2_compress.py`` and ``Snippets/woff2_decompress.py`` scripts,
+  and replaced them with a new console entry point ``fonttools ttLib.woff2``
+  that provides two sub-commands ``compress`` and ``decompress``.
+- [varLib.cff] Fixed bug when merging CFF2 ``PrivateDicts``. The ``PrivateDict``
+  data from the first region font was incorrecty used for all subsequent fonts.
+  The bug would only affect variable CFF2 fonts with hinting (#1643, #1644).
+  Also, fixed a merging bug VF masters have no blends or marking glyphs (#1632, #1642).
+- [loggingTools] Removed unused backport of ``LastResortLogger`` class.
+- [subset] Gracefully handle partial MATH table (#1635).
+- [featureVars] Avoid duplicate references to ``rvrn`` feature record in
+  ``DefaultLangSys`` tables when calling ``addFeatureVariations`` on a font that
+  does not already have a ``GSUB`` table (aa8a5bc6).
 - [varLib] Fixed merging of class-based kerning. Before, the process could introduce
   rogue kerning values and variations for random classes against class zero (everything
   not otherwise classed).
