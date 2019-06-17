@@ -6,7 +6,8 @@
 - [varLib.cff] Fixed bug when merging CFF2 ``PrivateDicts``. The ``PrivateDict``
   data from the first region font was incorrecty used for all subsequent fonts.
   The bug would only affect variable CFF2 fonts with hinting (#1643, #1644).
-  Also, fixed a merging bug VF masters have no blends or marking glyphs (#1632, #1642).
+  Also, fixed a merging bug when VF masters have no blends or marking glyphs (#1632,
+  #1642).
 - [loggingTools] Removed unused backport of ``LastResortLogger`` class.
 - [subset] Gracefully handle partial MATH table (#1635).
 - [featureVars] Avoid duplicate references to ``rvrn`` feature record in
