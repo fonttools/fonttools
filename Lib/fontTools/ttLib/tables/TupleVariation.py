@@ -451,39 +451,38 @@ class TupleVariation(object):
 		firstDelta = next((c for c in self.coordinates if c is not None), None)
 		if firstDelta is None:
 			return 0  # empty or has no impact
+		if type(firstDelta) in (int, float):
+			return 1
 		if type(firstDelta) is tuple and len(firstDelta) == 2:
 			return 2
-		elif type(firstDelta) in (int, float):
-			return 1
-		else:
-			raise TypeError("invalid type of delta: %s" % type(firstDelta))
+		raise TypeError(
+			"invalid type of delta; expected (int or float) number, or "
+			"Tuple[number, number]: %r" % firstDelta
+		)
 
 	def scaleDeltas(self, scalar):
 		if scalar == 1.0:
 			return  # no change
 		coordWidth = self.getCoordWidth()
-		if coordWidth == 2:
-			self.coordinates = [
-				(d[0] * scalar, d[1] * scalar) if d is not None else None
-				for d in self.coordinates
-			]
-		elif coordWidth == 1:
-			self.coordinates = [
-				d * scalar if d is not None else None
-				for d in self.coordinates
-			]
+		self.coordinates = [
+			None
+			if d is None
+			else d * scalar
+			if coordWidth == 1
+			else (d[0] * scalar, d[1] * scalar)
+			for d in self.coordinates
+		]
 
 	def roundDeltas(self):
 		coordWidth = self.getCoordWidth()
-		if coordWidth == 2:
-			self.coordinates = [
-				(otRound(d[0]), otRound(d[1])) if d is not None else None
-				for d in self.coordinates
-			]
-		elif coordWidth == 1:
-			self.coordinates = [
-				otRound(d) if d is not None else None for d in self.coordinates
-			]
+		self.coordinates = [
+			None
+			if d is None
+			else otRound(d)
+			if coordWidth == 1
+			else (otRound(d[0]), otRound(d[1]))
+			for d in self.coordinates
+		]
 
 	def calcInferredDeltas(self, origCoords, endPts):
 		from fontTools.varLib.iup import iup_delta
