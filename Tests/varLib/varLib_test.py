@@ -228,6 +228,28 @@ class BuildTest(unittest.TestCase):
             expected_ttx_name=test_name
         )
 
+    def test_varlib_nonmarking_CFF2(self):
+        ds_path = self.get_test_input('TestNonMarkingCFF2.designspace')
+        ttx_dir = self.get_test_input("master_non_marking_cff2")
+        expected_ttx_path = self.get_test_output("TestNonMarkingCFF2.ttx")
+
+        self.temp_dir()
+        for path in self.get_file_list(ttx_dir, '.ttx', 'TestNonMarkingCFF2_'):
+            self.compile_font(path, ".otf", self.tempdir)
+
+        ds = DesignSpaceDocument.fromfile(ds_path)
+        for source in ds.sources:
+            source.path = os.path.join(
+                self.tempdir, os.path.basename(source.filename).replace(".ufo", ".otf")
+            )
+        ds.updatePaths()
+
+        varfont, _, _ = build(ds)
+        varfont = reload_font(varfont)
+
+        tables = ["CFF2"]
+        self.expect_ttx(varfont, expected_ttx_path, tables)
+
     def test_varlib_build_CFF2(self):
         ds_path = self.get_test_input('TestCFF2.designspace')
         ttx_dir = self.get_test_input("master_cff2")
@@ -250,7 +272,6 @@ class BuildTest(unittest.TestCase):
         tables = ["fvar", "CFF2"]
         self.expect_ttx(varfont, expected_ttx_path, tables)
 
-
     def test_varlib_build_sparse_CFF2(self):
         ds_path = self.get_test_input('TestSparseCFF2VF.designspace')
         ttx_dir = self.get_test_input("master_sparse_cff2")
@@ -272,7 +293,6 @@ class BuildTest(unittest.TestCase):
 
         tables = ["fvar", "CFF2"]
         self.expect_ttx(varfont, expected_ttx_path, tables)
-
 
     def test_varlib_main_ttf(self):
         """Mostly for testing varLib.main()
