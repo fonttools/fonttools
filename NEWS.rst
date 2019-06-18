@@ -1,3 +1,6 @@
+3.43.0 (released 2019-06-18)
+----------------------------
+
 - [woff2] Added support for compressing/decompressing WOFF2 fonts with non-transformed
   ``glyf`` and ``loca`` tables, as well as with transformed ``hmtx`` table.
   Removed ``Snippets/woff2_compress.py`` and ``Snippets/woff2_decompress.py`` scripts,
