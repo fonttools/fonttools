@@ -770,8 +770,7 @@ def merge(merger, self, lst):
 			sts.extend(new_sts)
 
 	isPairPos = self.SubTable and isinstance(self.SubTable[0], ot.PairPos)
-	isSinglePos = False
-	
+
 	if isPairPos:
 		# AFDKO and feaLib sometimes generate two Format1 subtables instead of one.
 		# Merge those before continuing.
@@ -795,12 +794,11 @@ def merge(merger, self, lst):
 				flattened = True
 			else:
 				flattened = False
-	
+
 	merger.mergeLists(self.SubTable, subtables)
 	self.SubTableCount = len(self.SubTable)
 
 	if isPairPos:
-		isSinglePos = False
 		# If format-1 subtable created during canonicalization is empty, remove it.
 		assert len(self.SubTable) >= 1 and self.SubTable[0].Format == 1
 		if not self.SubTable[0].Coverage.glyphs:
@@ -813,17 +811,16 @@ def merge(merger, self, lst):
 			self.SubTable.pop(-1)
 			self.SubTableCount -= 1
 
-	if isSinglePos:
+	elif isSinglePos and flattened:
 		singlePosTable = self.SubTable[0]
 		glyphs = singlePosTable.Coverage.glyphs
-		if flattened:
-			# We know that singlePosTable is Format 2, as this is set
-			# in _Lookup_SinglePos_subtables_flatten.
-			recs = singlePosTable.Value
-			numRecs = len(recs)
-			recList = [ (glyphs[i], recs[i]) for i in range(numRecs)]
-			singlePosMapping = {gname: valRecord for gname, valRecord in recList}
-			self.SubTable = buildSinglePos(singlePosMapping, merger.font.getReverseGlyphMap())
+		# We know that singlePosTable is Format 2, as this is set
+		# in _Lookup_SinglePos_subtables_flatten.
+		recs = singlePosTable.Value
+		numRecs = len(recs)
+		recList = [ (glyphs[i], recs[i]) for i in range(numRecs)]
+		singlePosMapping = {gname: valRecord for gname, valRecord in recList}
+		self.SubTable = buildSinglePos(singlePosMapping, merger.font.getReverseGlyphMap())
 	merger.mergeObjects(self, lst, exclude=['SubTable', 'SubTableCount'])
 
 	del merger.lookup_subtables
