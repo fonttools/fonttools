@@ -1,4 +1,5 @@
 from __future__ import print_function, division, absolute_import
+from collections import namedtuple
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
@@ -479,10 +480,7 @@ def _getSinglePosValueKey(valueRecord):
     valueFormat, result = 0, []
     for name, value in valueRecord.__dict__.items():
         if isinstance(value, ot.Device):
-            if value.DeltaFormat & 0x8000:
-                result.append((name, _makeVariationInstance(value)))
-            else:
-                result.append((name, _makeDeviceTuple(value)))
+            result.append((name, _makeDeviceTuple(value)))
         else:
             result.append((name, value))
         valueFormat |= valueRecordFormatDict[name][0]
@@ -491,25 +489,25 @@ def _getSinglePosValueKey(valueRecord):
     return tuple(result)
 
 
+_DeviceTuple = namedtuple("_DeviceTuple", "DeltaFormat StartSize EndSize DeltaValue")
+
+
 def _makeDeviceTuple(device):
     """otTables.Device --> tuple, for making device tables unique"""
-    return (device.DeltaFormat, device.StartSize, device.EndSize,
-            tuple(device.DeltaValue))
+    return _DeviceTuple(
+        device.DeltaFormat,
+        device.StartSize,
+        device.EndSize,
+        () if device.DeltaFormat & 0x8000 else tuple(device.DeltaValue)
+    )
 
-def _makeVariationInstance(device):
-    """otTables.Device --> tuple, for making device tables unique"""
-    return (device.DeltaFormat, device.StartSize, device.EndSize)
 
 def _getSinglePosValueSize(valueKey):
     """Returns how many ushorts this valueKey (short form of ValueRecord) takes up"""
     count = 0
-    for k in valueKey[1:]:
-        if hasattr(k[1], '__len__') and len(k[1]):
-            # it is a device table key
-            if k[1][0] & 0x8000:
-                count += 3
-            else:
-                count += len(k[1][3]) + 3
+    for _, v in valueKey[1:]:
+        if isinstance(v, _DeviceTuple):
+            count += len(v.DeltaValue) + 3
         else:
             count += 1
     return count
