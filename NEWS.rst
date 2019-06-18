@@ -16,6 +16,7 @@
 - [varLib] Fixed merging of class-based kerning. Before, the process could introduce
   rogue kerning values and variations for random classes against class zero (everything
   not otherwise classed).
+- [unicodedata] Updated Blocks, Scripts and ScriptExtensions to Unicode 12.1.
 
 3.42.0 (released 2019-05-28)
 ----------------------------
