@@ -1,4 +1,5 @@
 from __future__ import print_function, division, absolute_import
+from collections import namedtuple
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
@@ -488,17 +489,25 @@ def _getSinglePosValueKey(valueRecord):
     return tuple(result)
 
 
+_DeviceTuple = namedtuple("_DeviceTuple", "DeltaFormat StartSize EndSize DeltaValue")
+
+
 def _makeDeviceTuple(device):
     """otTables.Device --> tuple, for making device tables unique"""
-    return (device.DeltaFormat, device.StartSize, device.EndSize,
-            tuple(device.DeltaValue))
+    return _DeviceTuple(
+        device.DeltaFormat,
+        device.StartSize,
+        device.EndSize,
+        () if device.DeltaFormat & 0x8000 else tuple(device.DeltaValue)
+    )
+
 
 def _getSinglePosValueSize(valueKey):
     """Returns how many ushorts this valueKey (short form of ValueRecord) takes up"""
     count = 0
-    for k in valueKey[1:]:
-        if hasattr(k[1], '__len__') and len(k[1]):
-            count += len(k[1][3]) + 3
+    for _, v in valueKey[1:]:
+        if isinstance(v, _DeviceTuple):
+            count += len(v.DeltaValue) + 3
         else:
             count += 1
     return count
