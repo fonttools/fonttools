@@ -1987,7 +1987,8 @@ def closure_glyphs(self, s):
 
 @_add_method(ttLib.getTableClass('MATH'))
 def closure_glyphs(self, s):
-	self.table.MathVariants.closure_glyphs(s)
+	if self.table.MathVariants:
+		self.table.MathVariants.closure_glyphs(s)
 
 @_add_method(otTables.MathItalicsCorrectionInfo)
 def subset_glyphs(self, s):
@@ -2039,8 +2040,10 @@ def subset_glyphs(self, s):
 @_add_method(ttLib.getTableClass('MATH'))
 def subset_glyphs(self, s):
 	s.glyphs = s.glyphs_mathed
-	self.table.MathGlyphInfo.subset_glyphs(s)
-	self.table.MathVariants.subset_glyphs(s)
+	if self.table.MathGlyphInfo:
+		self.table.MathGlyphInfo.subset_glyphs(s)
+	if self.table.MathVariants:
+		self.table.MathVariants.subset_glyphs(s)
 	return True
 
 @_add_method(ttLib.getTableModule('glyf').Glyph)

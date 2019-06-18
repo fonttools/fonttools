@@ -250,8 +250,8 @@ class Timer(object):
 	upon exiting the with-statement.
 
 	>>> import logging
-	>>> log = logging.getLogger("fontTools")
-	>>> configLogger(level="DEBUG", format="%(message)s", stream=sys.stdout)
+	>>> log = logging.getLogger("my-fancy-timer-logger")
+	>>> configLogger(logger=log, level="DEBUG", format="%(message)s", stream=sys.stdout)
 	>>> with Timer(log, 'do something'):
 	...     time.sleep(0.01)
 	Took ... to do something
@@ -528,67 +528,6 @@ def deprecateFunction(msg, category=UserWarning):
 			return func(*args, **kwargs)
 		return wrapper
 	return decorator
-
-
-class LastResortLogger(logging.Logger):
-	""" Adds support for 'lastResort' handler introduced in Python 3.2.
-	It allows to print messages to sys.stderr even when no explicit handler
-	was configured.
-	To enable it, you can do:
-
-		import logging
-		logging.lastResort = StderrHandler(logging.WARNING)
-		logging.setLoggerClass(LastResortLogger)
-	"""
-
-	def callHandlers(self, record):
-		# this is the same as Python 3.5's logging.Logger.callHandlers
-		c = self
-		found = 0
-		while c:
-			for hdlr in c.handlers:
-				found = found + 1
-				if record.levelno >= hdlr.level:
-					hdlr.handle(record)
-			if not c.propagate:
-				c = None  # break out
-			else:
-				c = c.parent
-		if found == 0:
-			if logging.lastResort:
-				if record.levelno >= logging.lastResort.level:
-					logging.lastResort.handle(record)
-			elif (
-				logging.raiseExceptions
-				and not self.manager.emittedNoHandlerWarning
-			):
-				sys.stderr.write(
-					"No handlers could be found for logger"
-					' "%s"\n' % self.name
-				)
-				self.manager.emittedNoHandlerWarning = True
-
-
-class StderrHandler(logging.StreamHandler):
-	""" This class is like a StreamHandler using sys.stderr, but always uses
-	whateve sys.stderr is currently set to rather than the value of
-	sys.stderr at handler construction time.
-	"""
-
-	def __init__(self, level=logging.NOTSET):
-		"""
-		Initialize the handler.
-		"""
-		logging.Handler.__init__(self, level)
-
-	@property
-	def stream(self):
-		# the try/execept avoids failures during interpreter shutdown, when
-		# globals are set to None
-		try:
-			return sys.stderr
-		except AttributeError:
-			return __import__("sys").stderr
 
 
 if __name__ == "__main__":

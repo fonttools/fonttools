@@ -237,6 +237,13 @@ class SubsetTest(unittest.TestCase):
         subsetfont = TTFont(subsetpath)
         self.expect_ttx(subsetfont, self.getpath("expect_keep_math.ttx"), ["GlyphOrder", "CFF ", "MATH", "hmtx"])
 
+    def test_subset_math_partial(self):
+        _, fontpath = self.compile_font(self.getpath("test_math_partial.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--text=A", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_math_partial.ttx"), ["MATH"])
+
     def test_subset_opbd_remove(self):
         # In the test font, only the glyphs 'A' and 'zero' have an entry in
         # the Optical Bounds table. When subsetting, we do not request any

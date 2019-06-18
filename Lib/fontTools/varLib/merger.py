@@ -2,6 +2,7 @@
 Merge OpenType Layout tables (GDEF / GPOS / GSUB).
 """
 from __future__ import print_function, division, absolute_import
+import copy
 from operator import ior
 from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
@@ -457,7 +458,7 @@ def _PairPosFormat2_align_matrices(self, lst, font, transparent=False):
 					exemplarGlyph = next(iter(classSet))
 					klass = classDef2.get(exemplarGlyph, 0)
 					rec2 = oldClass2Records[klass]
-				class2Records.append(rec2)
+				class2Records.append(copy.deepcopy(rec2))
 			class1Records.append(rec1new)
 		new_matrices.append(class1Records)
 	matrices = new_matrices
