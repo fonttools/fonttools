@@ -4,9 +4,9 @@
 # Source: https://unicode.org/Public/UNIDATA/Blocks.txt
 # License: http://unicode.org/copyright.html#License
 #
-# Blocks-11.0.0.txt
-# Date: 2017-10-16, 24:39:00 GMT [KW]
-# © 2017 Unicode®, Inc.
+# Blocks-12.1.0.txt
+# Date: 2019-03-08, 23:59:00 GMT [KW]
+# © 2019 Unicode®, Inc.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
 #
 # Unicode Character Database
@@ -237,7 +237,8 @@ RANGES = [
     0x10E80,  # .. 0x10EFF ; No_Block
     0x10F00,  # .. 0x10F2F ; Old Sogdian
     0x10F30,  # .. 0x10F6F ; Sogdian
-    0x10F70,  # .. 0x10FFF ; No_Block
+    0x10F70,  # .. 0x10FDF ; No_Block
+    0x10FE0,  # .. 0x10FFF ; Elymaic
     0x11000,  # .. 0x1107F ; Brahmi
     0x11080,  # .. 0x110CF ; Kaithi
     0x110D0,  # .. 0x110FF ; Sora Sompeng
@@ -264,7 +265,8 @@ RANGES = [
     0x11800,  # .. 0x1184F ; Dogra
     0x11850,  # .. 0x1189F ; No_Block
     0x118A0,  # .. 0x118FF ; Warang Citi
-    0x11900,  # .. 0x119FF ; No_Block
+    0x11900,  # .. 0x1199F ; No_Block
+    0x119A0,  # .. 0x119FF ; Nandinagari
     0x11A00,  # .. 0x11A4F ; Zanabazar Square
     0x11A50,  # .. 0x11AAF ; Soyombo
     0x11AB0,  # .. 0x11ABF ; No_Block
@@ -277,13 +279,15 @@ RANGES = [
     0x11D60,  # .. 0x11DAF ; Gunjala Gondi
     0x11DB0,  # .. 0x11EDF ; No_Block
     0x11EE0,  # .. 0x11EFF ; Makasar
-    0x11F00,  # .. 0x11FFF ; No_Block
+    0x11F00,  # .. 0x11FBF ; No_Block
+    0x11FC0,  # .. 0x11FFF ; Tamil Supplement
     0x12000,  # .. 0x123FF ; Cuneiform
     0x12400,  # .. 0x1247F ; Cuneiform Numbers and Punctuation
     0x12480,  # .. 0x1254F ; Early Dynastic Cuneiform
     0x12550,  # .. 0x12FFF ; No_Block
     0x13000,  # .. 0x1342F ; Egyptian Hieroglyphs
-    0x13430,  # .. 0x143FF ; No_Block
+    0x13430,  # .. 0x1343F ; Egyptian Hieroglyph Format Controls
+    0x13440,  # .. 0x143FF ; No_Block
     0x14400,  # .. 0x1467F ; Anatolian Hieroglyphs
     0x14680,  # .. 0x167FF ; No_Block
     0x16800,  # .. 0x16A3F ; Bamum Supplement
@@ -302,7 +306,7 @@ RANGES = [
     0x18B00,  # .. 0x1AFFF ; No_Block
     0x1B000,  # .. 0x1B0FF ; Kana Supplement
     0x1B100,  # .. 0x1B12F ; Kana Extended-A
-    0x1B130,  # .. 0x1B16F ; No_Block
+    0x1B130,  # .. 0x1B16F ; Small Kana Extension
     0x1B170,  # .. 0x1B2FF ; Nushu
     0x1B300,  # .. 0x1BBFF ; No_Block
     0x1BC00,  # .. 0x1BC9F ; Duployan
@@ -320,13 +324,19 @@ RANGES = [
     0x1D800,  # .. 0x1DAAF ; Sutton SignWriting
     0x1DAB0,  # .. 0x1DFFF ; No_Block
     0x1E000,  # .. 0x1E02F ; Glagolitic Supplement
-    0x1E030,  # .. 0x1E7FF ; No_Block
+    0x1E030,  # .. 0x1E0FF ; No_Block
+    0x1E100,  # .. 0x1E14F ; Nyiakeng Puachue Hmong
+    0x1E150,  # .. 0x1E2BF ; No_Block
+    0x1E2C0,  # .. 0x1E2FF ; Wancho
+    0x1E300,  # .. 0x1E7FF ; No_Block
     0x1E800,  # .. 0x1E8DF ; Mende Kikakui
     0x1E8E0,  # .. 0x1E8FF ; No_Block
     0x1E900,  # .. 0x1E95F ; Adlam
     0x1E960,  # .. 0x1EC6F ; No_Block
     0x1EC70,  # .. 0x1ECBF ; Indic Siyaq Numbers
-    0x1ECC0,  # .. 0x1EDFF ; No_Block
+    0x1ECC0,  # .. 0x1ECFF ; No_Block
+    0x1ED00,  # .. 0x1ED4F ; Ottoman Siyaq Numbers
+    0x1ED50,  # .. 0x1EDFF ; No_Block
     0x1EE00,  # .. 0x1EEFF ; Arabic Mathematical Alphabetic Symbols
     0x1EF00,  # .. 0x1EFFF ; No_Block
     0x1F000,  # .. 0x1F02F ; Mahjong Tiles
@@ -343,7 +353,8 @@ RANGES = [
     0x1F800,  # .. 0x1F8FF ; Supplemental Arrows-C
     0x1F900,  # .. 0x1F9FF ; Supplemental Symbols and Pictographs
     0x1FA00,  # .. 0x1FA6F ; Chess Symbols
-    0x1FA70,  # .. 0x1FFFF ; No_Block
+    0x1FA70,  # .. 0x1FAFF ; Symbols and Pictographs Extended-A
+    0x1FB00,  # .. 0x1FFFF ; No_Block
     0x20000,  # .. 0x2A6DF ; CJK Unified Ideographs Extension B
     0x2A6E0,  # .. 0x2A6FF ; No_Block
     0x2A700,  # .. 0x2B73F ; CJK Unified Ideographs Extension C
@@ -582,7 +593,8 @@ VALUES = [
     'No_Block',                                        # 10E80..10EFF
     'Old Sogdian',                                     # 10F00..10F2F
     'Sogdian',                                         # 10F30..10F6F
-    'No_Block',                                        # 10F70..10FFF
+    'No_Block',                                        # 10F70..10FDF
+    'Elymaic',                                         # 10FE0..10FFF
     'Brahmi',                                          # 11000..1107F
     'Kaithi',                                          # 11080..110CF
     'Sora Sompeng',                                    # 110D0..110FF
@@ -609,7 +621,8 @@ VALUES = [
     'Dogra',                                           # 11800..1184F
     'No_Block',                                        # 11850..1189F
     'Warang Citi',                                     # 118A0..118FF
-    'No_Block',                                        # 11900..119FF
+    'No_Block',                                        # 11900..1199F
+    'Nandinagari',                                     # 119A0..119FF
     'Zanabazar Square',                                # 11A00..11A4F
     'Soyombo',                                         # 11A50..11AAF
     'No_Block',                                        # 11AB0..11ABF
@@ -622,13 +635,15 @@ VALUES = [
     'Gunjala Gondi',                                   # 11D60..11DAF
     'No_Block',                                        # 11DB0..11EDF
     'Makasar',                                         # 11EE0..11EFF
-    'No_Block',                                        # 11F00..11FFF
+    'No_Block',                                        # 11F00..11FBF
+    'Tamil Supplement',                                # 11FC0..11FFF
     'Cuneiform',                                       # 12000..123FF
     'Cuneiform Numbers and Punctuation',               # 12400..1247F
     'Early Dynastic Cuneiform',                        # 12480..1254F
     'No_Block',                                        # 12550..12FFF
     'Egyptian Hieroglyphs',                            # 13000..1342F
-    'No_Block',                                        # 13430..143FF
+    'Egyptian Hieroglyph Format Controls',             # 13430..1343F
+    'No_Block',                                        # 13440..143FF
     'Anatolian Hieroglyphs',                           # 14400..1467F
     'No_Block',                                        # 14680..167FF
     'Bamum Supplement',                                # 16800..16A3F
@@ -647,7 +662,7 @@ VALUES = [
     'No_Block',                                        # 18B00..1AFFF
     'Kana Supplement',                                 # 1B000..1B0FF
     'Kana Extended-A',                                 # 1B100..1B12F
-    'No_Block',                                        # 1B130..1B16F
+    'Small Kana Extension',                            # 1B130..1B16F
     'Nushu',                                           # 1B170..1B2FF
     'No_Block',                                        # 1B300..1BBFF
     'Duployan',                                        # 1BC00..1BC9F
@@ -665,13 +680,19 @@ VALUES = [
     'Sutton SignWriting',                              # 1D800..1DAAF
     'No_Block',                                        # 1DAB0..1DFFF
     'Glagolitic Supplement',                           # 1E000..1E02F
-    'No_Block',                                        # 1E030..1E7FF
+    'No_Block',                                        # 1E030..1E0FF
+    'Nyiakeng Puachue Hmong',                          # 1E100..1E14F
+    'No_Block',                                        # 1E150..1E2BF
+    'Wancho',                                          # 1E2C0..1E2FF
+    'No_Block',                                        # 1E300..1E7FF
     'Mende Kikakui',                                   # 1E800..1E8DF
     'No_Block',                                        # 1E8E0..1E8FF
     'Adlam',                                           # 1E900..1E95F
     'No_Block',                                        # 1E960..1EC6F
     'Indic Siyaq Numbers',                             # 1EC70..1ECBF
-    'No_Block',                                        # 1ECC0..1EDFF
+    'No_Block',                                        # 1ECC0..1ECFF
+    'Ottoman Siyaq Numbers',                           # 1ED00..1ED4F
+    'No_Block',                                        # 1ED50..1EDFF
     'Arabic Mathematical Alphabetic Symbols',          # 1EE00..1EEFF
     'No_Block',                                        # 1EF00..1EFFF
     'Mahjong Tiles',                                   # 1F000..1F02F
@@ -688,7 +709,8 @@ VALUES = [
     'Supplemental Arrows-C',                           # 1F800..1F8FF
     'Supplemental Symbols and Pictographs',            # 1F900..1F9FF
     'Chess Symbols',                                   # 1FA00..1FA6F
-    'No_Block',                                        # 1FA70..1FFFF
+    'Symbols and Pictographs Extended-A',              # 1FA70..1FAFF
+    'No_Block',                                        # 1FB00..1FFFF
     'CJK Unified Ideographs Extension B',              # 20000..2A6DF
     'No_Block',                                        # 2A6E0..2A6FF
     'CJK Unified Ideographs Extension C',              # 2A700..2B73F
