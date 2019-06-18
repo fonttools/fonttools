@@ -816,10 +816,10 @@ def merge(merger, self, lst):
 		glyphs = singlePosTable.Coverage.glyphs
 		# We know that singlePosTable is Format 2, as this is set
 		# in _Lookup_SinglePos_subtables_flatten.
-		recs = singlePosTable.Value
-		numRecs = len(recs)
-		recList = [ (glyphs[i], recs[i]) for i in range(numRecs)]
-		singlePosMapping = {gname: valRecord for gname, valRecord in recList}
+		singlePosMapping = {
+			gname: valRecord
+			for gname, valRecord in zip(glyphs, singlePosTable.Value)
+		}
 		self.SubTable = buildSinglePos(singlePosMapping, merger.font.getReverseGlyphMap())
 	merger.mergeObjects(self, lst, exclude=['SubTable', 'SubTableCount'])
 
