@@ -165,8 +165,8 @@ def test_script_extension():
 
     assert unicodedata.script_extension("\u0660") == {'Arab', 'Thaa'}
     assert unicodedata.script_extension("\u0964") == {
-        'Beng', 'Deva', 'Dogr', 'Gong', 'Gran', 'Gujr', 'Guru', 'Knda',
-        'Mahj', 'Mlym', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml',
+        'Beng', 'Deva', 'Dogr', 'Gong', 'Gonm', 'Gran', 'Gujr', 'Guru', 'Knda',
+        'Mahj', 'Mlym', 'Nand', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml',
         'Telu', 'Tirh'}
 
 
