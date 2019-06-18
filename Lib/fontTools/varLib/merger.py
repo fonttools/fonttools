@@ -730,7 +730,6 @@ def _Lookup_PairPos_subtables_canonicalize(lst, font):
 	return lst
 
 def _Lookup_SinglePos_subtables_flatten(lst, font, min_inclusive_rec_format):
-	lst = list(lst)
 	glyphs, _ = _merge_GlyphOrders(font,
 		[v.Coverage.glyphs for v in lst], None)
 	num_glyphs = len(glyphs)
@@ -746,12 +745,12 @@ def _Lookup_SinglePos_subtables_flatten(lst, font, min_inclusive_rec_format):
 			val_rec = singlePos.Value
 			for gname in singlePos.Coverage.glyphs:
 				i = glyphs.index(gname)
-				new.Value[i] = val_rec
+				new.Value[i] = copy.deepcopy(val_rec)
 		elif singlePos.Format == 2:
 			for j, gname in enumerate(singlePos.Coverage.glyphs):
 				val_rec = singlePos.Value[j]
 				i = glyphs.index(gname)
-				new.Value[i] = val_rec
+				new.Value[i] = copy.deepcopy(val_rec)
 	return [new]
 
 @AligningMerger.merger(ot.Lookup)
