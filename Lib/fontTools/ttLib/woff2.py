@@ -1158,10 +1158,7 @@ class WOFF2FlavorData(WOFFFlavorData):
 					"'reader' and 'transformedTables' arguments are mutually exclusive"
 				)
 
-		if transformedTables is None:
-			transformedTables = woff2TransformedTableTags
-		else:
-			if (
+		if transformedTables is not None and (
 				"glyf" in transformedTables and "loca" not in transformedTables
 				or "loca" in transformedTables and "glyf" not in transformedTables
 			):
@@ -1198,8 +1195,11 @@ class WOFF2FlavorData(WOFFFlavorData):
 			self.majorVersion = data.minorVersion
 			self.metaData = data.metaData
 			self.privData = data.privData
-			if hasattr(data, "transformedTables"):
+			if transformedTables is None and hasattr(data, "transformedTables"):
 				 transformedTables = data.transformedTables
+
+		if transformedTables is None:
+			transformedTables = woff2TransformedTableTags
 
 		self.transformedTables = set(transformedTables)
 
