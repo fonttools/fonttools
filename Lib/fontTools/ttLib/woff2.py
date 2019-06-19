@@ -1181,7 +1181,7 @@ class WOFF2FlavorData(WOFFFlavorData):
 				rawData = reader.file.read(reader.metaLength)
 				assert len(rawData) == reader.metaLength
 				metaData = brotli.decompress(rawData)
-				assert len(mataData) == reader.metaOrigLength
+				assert len(metaData) == reader.metaOrigLength
 				self.metaData = metaData
 			if reader.privLength:
 				reader.file.seek(reader.privOffset)
