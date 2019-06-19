@@ -1,3 +1,6 @@
+- [subset] Fixed regression when passing ``--flavor=woff2`` option with an input font
+  that was already compressed as WOFF 1.0 (#1650).
+
 3.43.0 (released 2019-06-18)
 ----------------------------
 
