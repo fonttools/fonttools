@@ -174,7 +174,7 @@ class WOFF2Writer(SFNTWriter):
 		self.file = file
 		self.numTables = numTables
 		self.sfntVersion = Tag(sfntVersion)
-		self.flavorData = flavorData or WOFF2FlavorData()
+		self.flavorData = WOFF2FlavorData(data=flavorData)
 
 		self.directoryFormat = woff2DirectoryFormat
 		self.directorySize = woff2DirectorySize
@@ -1128,19 +1128,35 @@ class WOFF2FlavorData(WOFFFlavorData):
 
 	Flavor = 'woff2'
 
-	def __init__(self, reader=None, transformedTables=None):
+	def __init__(self, reader=None, data=None, transformedTables=None):
 		"""Data class that holds the WOFF2 header major/minor version, any
 		metadata or private data (as bytes strings), and the set of
 		table tags that have transformations applied (if reader is not None),
 		or will have once the WOFF2 font is compiled.
+
+		Args:
+			reader: an SFNTReader (or subclass) object to read flavor data from.
+			data: another WOFFFlavorData object to initialise data from.
+			transformedTables: set of strings containing table tags to be transformed.
+
+		Raises:
+			ImportError if the brotli module is not installed.
+
+		NOTE: The 'reader' argument, on the one hand, and the 'data' and
+		'transformedTables' arguments, on the other hand, are mutually exclusive.
 		"""
 		if not haveBrotli:
 			raise ImportError("No module named brotli")
 
-		if reader is not None and transformedTables is not None:
-			raise TypeError(
-				"'reader' and 'transformedTables' arguments are mutually exclusive"
-			)
+		if reader is not None:
+			if data is not None:
+				raise TypeError(
+					"'reader' and 'data' arguments are mutually exclusive"
+				)
+			if transformedTables is not None:
+				raise TypeError(
+					"'reader' and 'transformedTables' arguments are mutually exclusive"
+				)
 
 		if transformedTables is None:
 			transformedTables = woff2TransformedTableTags
@@ -1164,19 +1180,26 @@ class WOFF2FlavorData(WOFFFlavorData):
 				reader.file.seek(reader.metaOffset)
 				rawData = reader.file.read(reader.metaLength)
 				assert len(rawData) == reader.metaLength
-				data = brotli.decompress(rawData)
-				assert len(data) == reader.metaOrigLength
-				self.metaData = data
+				metaData = brotli.decompress(rawData)
+				assert len(mataData) == reader.metaOrigLength
+				self.metaData = metaData
 			if reader.privLength:
 				reader.file.seek(reader.privOffset)
-				data = reader.file.read(reader.privLength)
-				assert len(data) == reader.privLength
-				self.privData = data
+				privData = reader.file.read(reader.privLength)
+				assert len(privData) == reader.privLength
+				self.privData = privData
 			transformedTables = [
 				tag
 				for tag, entry in reader.tables.items()
 				if entry.transformed
 			]
+		elif data:
+			self.majorVersion = data.majorVersion
+			self.majorVersion = data.minorVersion
+			self.metaData = data.metaData
+			self.privData = data.privData
+			if hasattr(data, "transformedTables"):
+				 transformedTables = data.transformedTables
 
 		self.transformedTables = set(transformedTables)
 
@@ -1354,7 +1377,9 @@ def compress(input_file, output_file, transform_tables=None):
 	font.flavor = "woff2"
 
 	if transform_tables is not None:
-		font.flavorData = WOFF2FlavorData(transformedTables=transform_tables)
+		font.flavorData = WOFF2FlavorData(
+			data=font.flavorData, transformedTables=transform_tables
+		)
 
 	font.save(output_file, reorderTables=False)
 
