@@ -23,8 +23,7 @@ from __future__ import unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.arrayTools import Vector
-from fontTools.ttLib import TTFont, newTable, TTLibError
-from fontTools.ttLib.tables._n_a_m_e import NameRecord
+from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 from fontTools.ttLib.tables.ttProgram import Program
@@ -36,7 +35,7 @@ from fontTools.varLib.merger import VariationMerger
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.iup import iup_delta_optimize
 from fontTools.varLib.featureVars import addFeatureVariations
-from fontTools.designspaceLib import DesignSpaceDocument, AxisDescriptor
+from fontTools.designspaceLib import DesignSpaceDocument
 from collections import OrderedDict, namedtuple
 import os.path
 import logging
@@ -1107,9 +1106,6 @@ def main(args=None):
 
 	designspace_filename = options.designspace
 	finder = MasterFinder(options.master_finder)
-	outfile = options.outfile
-	if outfile is None:
-		outfile = os.path.splitext(designspace_filename)[0] + '-VF.ttf'
 
 	vf, _, _ = build(
 		designspace_filename,
@@ -1117,6 +1113,11 @@ def main(args=None):
 		exclude=options.exclude,
 		optimize=options.optimize
 	)
+
+	outfile = options.outfile
+	if outfile is None:
+		ext = "otf" if vf.sfntVersion == "OTTO" else "ttf"
+		outfile = os.path.splitext(designspace_filename)[0] + '-VF.' + ext
 
 	log.info("Saving variation font %s", outfile)
 	vf.save(outfile)
