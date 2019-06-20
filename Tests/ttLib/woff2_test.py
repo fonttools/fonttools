@@ -386,15 +386,18 @@ class WOFF2FlavorDataTest(unittest.TestCase):
 		self.assertEqual(flavorData.minorVersion, 1)
 
 	def test_mutually_exclusive_args(self):
+		msg = "arguments are mutually exclusive"
 		reader = DummyReader(self.file)
-		with self.assertRaisesRegex(TypeError, "arguments are mutually exclusive"):
+		with self.assertRaisesRegex(TypeError, msg):
 			WOFF2FlavorData(reader, transformedTables={"hmtx"})
+		with self.assertRaisesRegex(TypeError, msg):
+			WOFF2FlavorData(reader, data=WOFF2FlavorData())
 
-	def test_transformTables_default(self):
+	def test_transformedTables_default(self):
 		flavorData = WOFF2FlavorData()
 		self.assertEqual(flavorData.transformedTables, set(woff2TransformedTableTags))
 
-	def test_transformTables_invalid(self):
+	def test_transformedTables_invalid(self):
 		msg = r"'glyf' and 'loca' must be transformed \(or not\) together"
 
 		with self.assertRaisesRegex(ValueError, msg):
@@ -1257,6 +1260,24 @@ class MainTest(object):
 		assert woff2.main(["compress", input_file]) is None
 
 		assert (tmpdir / "TestOTF-Regular.woff2").check(file=True)
+
+	def test_recompress_woff2_keeps_flavorData(self, tmpdir):
+		woff2_font = ttLib.TTFont(BytesIO(TT_WOFF2.getvalue()))
+		woff2_font.flavorData.privData = b"FOOBAR"
+		woff2_file = tmpdir / "TestTTF-Regular.woff2"
+		woff2_font.save(str(woff2_file))
+
+		assert woff2_font.flavorData.transformedTables == {"glyf", "loca"}
+
+		woff2.main(["compress", "--hmtx-transform", str(woff2_file)])
+
+		output_file = tmpdir / "TestTTF-Regular#1.woff2"
+		assert output_file.check(file=True)
+
+		new_woff2_font = ttLib.TTFont(str(output_file))
+
+		assert new_woff2_font.flavorData.transformedTables == {"glyf", "loca", "hmtx"}
+		assert new_woff2_font.flavorData.privData == b"FOOBAR"
 
 	def test_decompress_ttf(self, tmpdir):
 		input_file = tmpdir / "TestTTF-Regular.woff2"

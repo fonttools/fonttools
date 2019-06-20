@@ -678,6 +678,48 @@ class SubsetTest(unittest.TestCase):
         subsetfont = TTFont(subsetpath)
         self.expect_ttx(subsetfont, self.getpath("expect_HVVAR_retain_gids.ttx"), ["GlyphOrder", "HVAR", "VVAR", "avar", "fvar"])
 
+    def test_subset_flavor(self):
+        _, fontpath = self.compile_font(self.getpath("TestTTF-Regular.ttx"), ".ttf")
+        font = TTFont(fontpath)
+
+        woff_path = self.temp_path(".woff")
+        subset.main(
+            [
+                fontpath,
+                "*",
+                "--flavor=woff",
+                "--output-file=%s" % woff_path,
+            ]
+        )
+        woff = TTFont(woff_path)
+
+        self.assertEqual(woff.flavor, "woff")
+
+        woff2_path = self.temp_path(".woff2")
+        subset.main(
+            [
+                woff_path,
+                "*",
+                "--flavor=woff2",
+                "--output-file=%s" % woff2_path,
+            ]
+        )
+        woff2 = TTFont(woff2_path)
+
+        self.assertEqual(woff2.flavor, "woff2")
+
+        ttf_path = self.temp_path(".ttf")
+        subset.main(
+            [
+                woff2_path,
+                "*",
+                "--output-file=%s" % ttf_path,
+            ]
+        )
+        ttf = TTFont(ttf_path)
+
+        self.assertEqual(ttf.flavor, None)
+
 
 if __name__ == "__main__":
     sys.exit(unittest.main())

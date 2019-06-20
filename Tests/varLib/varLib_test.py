@@ -4,6 +4,7 @@ from fontTools.ttLib import TTFont, newTable
 from fontTools.varLib import build
 from fontTools.varLib.mutator import instantiateVariableFont
 from fontTools.varLib import main as varLib_main, load_masters
+from fontTools.varLib import set_default_weight_width_slant
 from fontTools.designspaceLib import (
     DesignSpaceDocumentError, DesignSpaceDocument, SourceDescriptor,
 )
@@ -659,6 +660,82 @@ def _extract_flat_kerning(font, pairpos_table):
             )
             extracted_kerning[(glyph_name_1, glyph_name_2)] = kern_value
     return extracted_kerning
+
+
+@pytest.fixture
+def ttFont():
+    f = TTFont()
+    f["OS/2"] = newTable("OS/2")
+    f["OS/2"].usWeightClass = 400
+    f["OS/2"].usWidthClass = 100
+    f["post"] = newTable("post")
+    f["post"].italicAngle = 0
+    return f
+
+
+class SetDefaultWeightWidthSlantTest(object):
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"wght": 0}, 1),
+            ({"wght": 1}, 1),
+            ({"wght": 100}, 100),
+            ({"wght": 1000}, 1000),
+            ({"wght": 1001}, 1000),
+        ],
+    )
+    def test_wght(self, ttFont, location, expected):
+        set_default_weight_width_slant(ttFont, location)
+
+        assert ttFont["OS/2"].usWeightClass == expected
+
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"wdth": 0}, 1),
+            ({"wdth": 56}, 1),
+            ({"wdth": 57}, 2),
+            ({"wdth": 62.5}, 2),
+            ({"wdth": 75}, 3),
+            ({"wdth": 87.5}, 4),
+            ({"wdth": 100}, 5),
+            ({"wdth": 112.5}, 6),
+            ({"wdth": 125}, 7),
+            ({"wdth": 150}, 8),
+            ({"wdth": 200}, 9),
+            ({"wdth": 201}, 9),
+            ({"wdth": 1000}, 9),
+        ],
+    )
+    def test_wdth(self, ttFont, location, expected):
+        set_default_weight_width_slant(ttFont, location)
+
+        assert ttFont["OS/2"].usWidthClass == expected
+
+    @pytest.mark.parametrize(
+        "location, expected",
+        [
+            ({"slnt": -91}, -90),
+            ({"slnt": -90}, -90),
+            ({"slnt": 0}, 0),
+            ({"slnt": 11.5}, 11.5),
+            ({"slnt": 90}, 90),
+            ({"slnt": 91}, 90),
+        ],
+    )
+    def test_slnt(self, ttFont, location, expected):
+        set_default_weight_width_slant(ttFont, location)
+
+        assert ttFont["post"].italicAngle == expected
+
+    def test_all(self, ttFont):
+        set_default_weight_width_slant(
+            ttFont, {"wght": 500, "wdth": 150, "slnt": -12.0}
+        )
+
+        assert ttFont["OS/2"].usWeightClass == 500
+        assert ttFont["OS/2"].usWidthClass == 8
+        assert ttFont["post"].italicAngle == -12.0
 
 
 if __name__ == "__main__":
