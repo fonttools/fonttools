@@ -752,37 +752,6 @@ def setMacOverlapFlags(glyfTable):
             glyph.flags[0] |= flagOverlapSimple
 
 
-def setDefaultWeightWidthSlant(ttFont, location):
-    if "wght" in location and "OS/2" in ttFont:
-        weightClass = otRound(max(1, min(location["wght"], 1000)))
-        log.info("Setting OS/2.usWidthClass = %s", weightClass)
-        ttFont["OS/2"].usWeightClass = weightClass
-
-    if "wdth" in location:
-        # map 'wdth' axis (1..200) to OS/2.usWidthClass (1..9), rounding to closest
-        steps = [50.0, 62.5, 75.0, 87.5, 100.0, 112.5, 125.0, 150.0, 200.0]
-        n = len(steps)
-        os2WidthClasses = {
-            (prev + curr) / 2: widthClass
-            for widthClass, (prev, curr) in enumerate(
-                zip(islice(steps, 0, n - 1), islice(steps, 1, n)), start=1
-            )
-        }
-        wdth = location["wdth"]
-        for percent, widthClass in sorted(os2WidthClasses.items()):
-            if wdth < percent:
-                break
-        else:
-            widthClass = 9
-        log.info("Setting OS/2.usWidthClass = %s", widthClass)
-        ttFont["OS/2"].usWidthClass = widthClass
-
-    if "slnt" in location and "post" in ttFont:
-        italicAngle = max(-90, min(location["slnt"], 90))
-        log.info("Setting post.italicAngle = %s", italicAngle)
-        ttFont["post"].italicAngle = italicAngle
-
-
 def normalize(value, triple, avarMapping):
     value = normalizeValue(value, triple)
     if avarMapping:
@@ -919,7 +888,7 @@ def instantiateVariableFont(
         if "glyf" in varfont and overlap:
             setMacOverlapFlags(varfont["glyf"])
 
-    setDefaultWeightWidthSlant(
+    varLib.set_default_weight_width_slant(
         varfont,
         location={
             axisTag: limit
