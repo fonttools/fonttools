@@ -205,11 +205,10 @@ def merge_PrivateDicts(top_dicts, vsindex_dict, var_model, fd_map):
 				try:
 					values = [pd.rawDict[key] for pd in pds]
 				except KeyError:
-					del private_dict.rawDict[key]
 					print(
-						b"Warning: {key} in default font Private dict is "
-						b"missing from another font, and was "
-						b"discarded.".format(key=key))
+						"Warning: {key} in default font Private dict is "
+						"missing from another font, and was "
+						"discarded.".format(key=key))
 					continue
 				try:
 					values = zip(*values)
