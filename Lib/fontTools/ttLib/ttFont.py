@@ -426,16 +426,20 @@ class TTFont(object):
 			return default
 
 	def setGlyphOrder(self, glyphOrder):
-		self.glyphOrder = glyphOrder
+		try:
+			del self._reverseGlyphOrderDict
+		except AttributeError:
+			pass
+		self._glyphOrder = tuple(glyphOrder)
 
 	def getGlyphOrder(self):
 		try:
-			return self.glyphOrder
+			return list(self._glyphOrder)
 		except AttributeError:
 			pass
 		if 'CFF ' in self:
 			cff = self['CFF ']
-			self.glyphOrder = cff.getGlyphOrder()
+			self._glyphOrder = tuple(cff.getGlyphOrder())
 		elif 'post' in self:
 			# TrueType font
 			glyphOrder = self['post'].getGlyphOrder()
@@ -447,10 +451,10 @@ class TTFont(object):
 				#
 				self._getGlyphNamesFromCmap()
 			else:
-				self.glyphOrder = glyphOrder
+				self._glyphOrder = tuple(glyphOrder)
 		else:
 			self._getGlyphNamesFromCmap()
-		return self.glyphOrder
+		return list(self._glyphOrder)
 
 	def _getGlyphNamesFromCmap(self):
 		#
@@ -487,7 +491,7 @@ class TTFont(object):
 			glyphOrder[i] = "glyph%.5d" % i
 		# Set the glyph order, so the cmap parser has something
 		# to work with (so we don't get called recursively).
-		self.glyphOrder = glyphOrder
+		self._glyphOrder = tuple(glyphOrder)
 
 		# Make up glyph names based on the reversed cmap table. Because some
 		# glyphs (eg. ligatures or alternates) may not be reachable via cmap,
@@ -514,7 +518,7 @@ class TTFont(object):
 			# Delete the temporary cmap table from the cache, so it can
 			# be parsed again with the right names.
 			del self.tables['cmap']
-			self.glyphOrder = glyphOrder
+			self._glyphOrder = tuple(glyphOrder)
 			if cmapLoading:
 				# restore partially loaded cmap, so it can continue loading
 				# using the proper names.
@@ -562,47 +566,43 @@ class TTFont(object):
 				return glyphName
 
 	def getGlyphID(self, glyphName, requireReal=False):
-		if not hasattr(self, "_reverseGlyphOrderDict"):
+		try:
+			return self._reverseGlyphOrderDict[glyphName]
+		except AttributeError:
+			glyphOrder = self.getGlyphOrder()
 			self._buildReverseGlyphOrderDict()
-		glyphOrder = self.getGlyphOrder()
+		except KeyError:
+			glyphOrder = self.getGlyphOrder()
 		d = self._reverseGlyphOrderDict
 		if glyphName not in d:
-			if glyphName in glyphOrder:
-				self._buildReverseGlyphOrderDict()
-				return self.getGlyphID(glyphName)
+			if requireReal:
+				raise KeyError(glyphName)
+			elif not self.allowVID:
+				# Handle glyphXXX only
+				if glyphName[:5] == "glyph":
+					try:
+						return int(glyphName[5:])
+					except (NameError, ValueError):
+						raise KeyError(glyphName)
 			else:
-				if requireReal:
-					raise KeyError(glyphName)
-				elif not self.allowVID:
-					# Handle glyphXXX only
+				# user intends virtual GID support
+				try:
+					glyphID = self.reverseVIDDict[glyphName]
+				except KeyError:
+					# if name is in glyphXXX format, use the specified name.
 					if glyphName[:5] == "glyph":
 						try:
-							return int(glyphName[5:])
+							glyphID = int(glyphName[5:])
 						except (NameError, ValueError):
-							raise KeyError(glyphName)
-				else:
-					# user intends virtual GID support
-					try:
-						glyphID = self.reverseVIDDict[glyphName]
-					except KeyError:
-						# if name is in glyphXXX format, use the specified name.
-						if glyphName[:5] == "glyph":
-							try:
-								glyphID = int(glyphName[5:])
-							except (NameError, ValueError):
-								glyphID = None
-						if glyphID is None:
-							glyphID = self.last_vid -1
-							self.last_vid = glyphID
-						self.reverseVIDDict[glyphName] = glyphID
-						self.VIDDict[glyphID] = glyphName
-					return glyphID
+							glyphID = None
+					if glyphID is None:
+						glyphID = self.last_vid -1
+						self.last_vid = glyphID
+					self.reverseVIDDict[glyphName] = glyphID
+					self.VIDDict[glyphID] = glyphName
+				return glyphID
 
-		glyphID = d[glyphName]
-		if glyphName != glyphOrder[glyphID]:
-			self._buildReverseGlyphOrderDict()
-			return self.getGlyphID(glyphName)
-		return glyphID
+		return d[glyphName]
 
 	def getReverseGlyphMap(self, rebuild=False):
 		if rebuild or not hasattr(self, "_reverseGlyphOrderDict"):
@@ -610,8 +610,8 @@ class TTFont(object):
 		return self._reverseGlyphOrderDict
 
 	def _buildReverseGlyphOrderDict(self):
-		self._reverseGlyphOrderDict = d = {}
 		glyphOrder = self.getGlyphOrder()
+		self._reverseGlyphOrderDict = d = {}
 		for glyphID in range(len(glyphOrder)):
 			d[glyphOrder[glyphID]] = glyphID
 
@@ -804,9 +804,9 @@ class GlyphOrder(object):
 	def fromXML(self, name, attrs, content, ttFont):
 		if not hasattr(self, "glyphOrder"):
 			self.glyphOrder = []
-			ttFont.setGlyphOrder(self.glyphOrder)
 		if name == "GlyphID":
 			self.glyphOrder.append(attrs["name"])
+		ttFont.setGlyphOrder(self.glyphOrder)
 
 
 def getTableModule(tag):

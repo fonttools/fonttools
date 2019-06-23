@@ -267,7 +267,7 @@ class GlyfTableTest(unittest.TestCase):
 
         glyfTable = newTable("glyf")
         glyfTable.glyphs = glyphSet
-        glyfTable.glyphOrder = sorted(glyphSet)
+        glyfTable.setGlyphOrder(sorted(glyphSet))
 
         composite.compact(glyfTable)
 

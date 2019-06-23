@@ -33,7 +33,7 @@ def font(indextable):
     # ['a', 'b', 'c', ...]
     ch = 0x61
     n = len(indextable.indices)
-    font.glyphOrder = [unichr(i) for i in range(ch, ch+n)]
+    font.setGlyphOrder([unichr(i) for i in range(ch, ch+n)])
     font['TSI0'] = indextable
     return font
 
@@ -41,7 +41,7 @@ def font(indextable):
 @pytest.fixture
 def empty_font():
     font = TTFont()
-    font.glyphOrder = []
+    font.setGlyphOrder([])
     indextable = table_T_S_I__0()
     indextable.set([], [(0xFFFA, 0, 0),
                         (0xFFFB, 0, 0),
@@ -94,7 +94,7 @@ def test_decompile_empty(empty_font):
 
 
 def test_decompile_invalid_length(empty_font):
-    empty_font.glyphOrder = ['a']
+    empty_font.setGlyphOrder(['a'])
     empty_font['TSI0'].indices = [(0, 0x8000+1, 0)]
 
     table = table_T_S_I__1()
@@ -104,7 +104,7 @@ def test_decompile_invalid_length(empty_font):
 
 
 def test_decompile_offset_past_end(empty_font):
-    empty_font.glyphOrder = ['foo', 'bar']
+    empty_font.setGlyphOrder(['foo', 'bar'])
     content = 'baz'
     data = tobytes(content)
     empty_font['TSI0'].indices = [(0, len(data), 0), (1, 1, len(data)+1)]
@@ -131,7 +131,7 @@ def test_decompile_magic_length_last_extra(empty_font):
 
 
 def test_decompile_magic_length_last_glyph(empty_font):
-    empty_font.glyphOrder = ['foo', 'bar']
+    empty_font.setGlyphOrder(['foo', 'bar'])
     indextable = empty_font['TSI0']
     indextable.indices = [
         (0, 3, 0),

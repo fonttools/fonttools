@@ -1815,7 +1815,7 @@ def subset_glyphs(self, s):
 @_add_method(ttLib.getTableClass('gvar'))
 def prune_pre_subset(self, font, options):
 	if options.notdef_glyph and not options.notdef_outline:
-		self.variations[font.glyphOrder[0]] = []
+		self.variations[font.getGlyphOrder()[0]] = []
 	return True
 
 @_add_method(ttLib.getTableClass('gvar'))

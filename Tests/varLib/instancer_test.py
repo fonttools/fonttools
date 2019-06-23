@@ -1370,7 +1370,7 @@ def test_setMacOverlapFlags():
     flagOverlapSimple = _g_l_y_f.flagOverlapSimple
 
     glyf = ttLib.newTable("glyf")
-    glyf.glyphOrder = ["a", "b", "c"]
+    glyf.setGlyphOrder(["a", "b", "c"])
     a = _g_l_y_f.Glyph()
     a.numberOfContours = 1
     a.flags = [0]

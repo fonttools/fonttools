@@ -622,8 +622,8 @@ class FontBuilder(object):
         self.font["loca"] = newTable("loca")
         self.font["glyf"] = newTable("glyf")
         self.font["glyf"].glyphs = glyphs
-        if hasattr(self.font, "glyphOrder"):
-            self.font["glyf"].glyphOrder = self.font.glyphOrder
+        if hasattr(self.font, "_glyphOrder"):
+            self.font["glyf"].glyphOrder = self.font._glyphOrder
         if calcGlyphBounds:
             self.calcGlyphBounds()
 

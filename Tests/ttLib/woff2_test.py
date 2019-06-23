@@ -761,7 +761,7 @@ class WOFF2GlyfTableTest(unittest.TestCase):
 
 	def test_reconstruct_glyf_missing_glyphOrder(self):
 		glyfTable = WOFF2GlyfTable()
-		del self.font.glyphOrder
+		del self.font._glyphOrder
 		numGlyphs = self.font['maxp'].numGlyphs
 		del self.font['maxp']
 		glyfTable.reconstruct(self.transformedGlyfData, self.font)

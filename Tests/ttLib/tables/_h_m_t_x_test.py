@@ -27,7 +27,7 @@ class HmtxTableTest(unittest.TestCase):
         maxp = font['maxp'] = newTable('maxp')
         maxp.numGlyphs = numGlyphs
         # from A to ...
-        font.glyphOrder = [chr(i) for i in range(65, 65+numGlyphs)]
+        font.setGlyphOrder([chr(i) for i in range(65, 65+numGlyphs)])
         headerTag = self.tableClass.headerTag
         font[headerTag] = newTable(headerTag)
         numberOfMetricsName = self.tableClass.numberOfMetricsName
@@ -109,7 +109,7 @@ class HmtxTableTest(unittest.TestCase):
         font = TTFont()
         maxp = font['maxp'] = newTable('maxp')
         maxp.numGlyphs = 3
-        font.glyphOrder = ["A", "B", "C"]
+        font.setGlyphOrder(["A", "B", "C"])
 
         self.assertNotIn(self.tableClass.headerTag, font)
 
@@ -196,7 +196,7 @@ class HmtxTableTest(unittest.TestCase):
         font = TTFont()
         maxp = font['maxp'] = newTable('maxp')
         maxp.numGlyphs = 3
-        font.glyphOrder = [chr(i) for i in range(65, 68)]
+        font.setGlyphOrder([chr(i) for i in range(65, 68)])
         mtxTable = font[self.tag] = newTable(self.tag)
         mtxTable.metrics = {
             "A": (400, 30),
