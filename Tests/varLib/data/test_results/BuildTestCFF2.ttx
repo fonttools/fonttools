@@ -86,10 +86,10 @@
             <BlueShift value="7"/>
             <BlueFuzz value="0"/>
             <StdHW>
-                <blend value="67 -39.0 67.0"/>
+                <blend value="67 -39 67"/>
             </StdHW>
             <StdVW>
-                <blend value="85 -51.0 87.0"/>
+                <blend value="85 -51 87"/>
             </StdVW>
           </Private>
         </FontDict>

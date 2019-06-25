@@ -374,6 +374,7 @@
           <FontName value="MasterSet_Kanji-w0.00-Generic"/>
           <Private>
             <BlueValues value="-250 -250 1100 1100"/>
+            <FamilyBlues value="-250 -240 1100 1110"/>
             <BlueScale value="0.039625"/>
             <BlueShift value="7"/>
             <BlueFuzz value="0"/>
