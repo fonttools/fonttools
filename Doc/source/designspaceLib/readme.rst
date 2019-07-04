@@ -9,17 +9,6 @@ An object to read, write and edit interpolation systems for typefaces.
 -  Define sources, axes and instances.
 -  Not all values might be required by all applications.
 
-A couple of differences between things that use designspaces:
-
--  Varlib does not support anisotropic interpolations.
--  MutatorMath and Superpolator will extrapolate over the boundaries of
-   the axes. Varlib can not (at the moment).
--  Varlib requires much less data to define an instance than
-   MutatorMath.
--  The goals of Varlib and MutatorMath are different, so not all
-   attributes are always needed.
--  Need to expand the description of FDK use of designspace files.
-
 The DesignSpaceDocument object can read and write ``.designspace`` data.
 It imports the axes, sources and instances to very basic **descriptor**
 objects that store the data in attributes. Data is added to the document
@@ -38,6 +27,33 @@ different objects, as long as they have the same attributes.
     doc.axes
     doc.sources
     doc.instances
+
+
+*********************************************
+Differences between consumers of Designspaces
+*********************************************
+
+The goals of Varlib and MutatorMath are different, so they put different
+requirements on the contained data and don't necessarily need all attributes.
+
+MutatorMath and Superpolator:
+
+- Support anisotropic interpolations.
+- Will extrapolate over the boundaries of the axes.
+
+varLib:
+
+- Does not support anisotropic interpolations (use more axes instead).
+- Requires the Designspace to be rectangular with full masters at each edge and
+  will only interpolate within the boundaries of an axis.
+- Will select the default source font from the axis defaults, i.e. the source
+  that rests at the default values of all axes is the default source.
+- Requires that if an axis mapping is present, the mapping contains entries for
+  minimum, default and maximum values of the axis.
+
+AFDKO:
+
+- ?
 
 **********
 Validation
