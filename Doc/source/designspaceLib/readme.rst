@@ -46,7 +46,12 @@ varLib:
 - Requires the Designspace to be rectangular with full masters at each edge and
   will only interpolate within the boundaries of an axis.
 - Will select the default source font from the axis defaults, i.e. the source
-  that rests at the default values of all axes is the default source.
+  that rests at the default values of all axes is the default source. All
+  information that does not interpolate will be taken from that source: feature
+  text, groups, the font's lib content and fontinfo entries that do not
+  interpolate. The ``copy*`` attributes on ``SourceDescriptor`` objects and the
+  ``info`` and ``kerning`` attributes on ``InstanceDescriptor`` objects are
+  ignored.
 - Requires that if an axis mapping is present, the mapping contains entries for
   minimum, default and maximum values of the axis.
 
@@ -101,7 +106,7 @@ Rules
 Rules describe designspace areas in which one glyph should be replaced by another.
 A rule has a name and a number of conditionsets. The rule also contains a list of
 glyphname pairs: the glyphs that need to be substituted. For a rule to be triggered
-**only one** of the conditionsets needs to be true, ``OR``. Within a conditionset 
+**only one** of the conditionsets needs to be true, ``OR``. Within a conditionset
 **all** conditions need to be true, ``AND``.
 
 The ``sub`` element contains a pair of glyphnames. The ``name`` attribute is the glyph that should be visible when the rule evaluates to **False**. The ``with`` attribute is the glyph that should be visible when the rule evaluates to **True**.
@@ -885,7 +890,7 @@ Attributes
    is not important for compiling variable fonts.
 
 5.1.1 conditionset element
-=======================
+==========================
 
 -  Child element of ``rule``
 -  Contains one or more ``condition`` elements.
@@ -935,7 +940,7 @@ Example
 -------
 
 Example with an implied ``conditionset``. Here the conditions are not
-contained in a conditionset. 
+contained in a conditionset.
 
 .. code:: xml
 
