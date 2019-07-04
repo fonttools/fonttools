@@ -21,9 +21,8 @@ different objects, as long as they have the same attributes.
 
 .. code:: python
 
-    from designSpaceDocument import DesignSpaceDocument
-    doc = DesignSpaceDocument()
-    doc.read("some/path/to/my.designspace")
+    from fontTools.designspaceLib import DesignSpaceDocument
+    doc = DesignSpaceDocument.fromfile("some/path/to/my.designspace")
     doc.axes
     doc.sources
     doc.instances
