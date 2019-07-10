@@ -1,3 +1,6 @@
+3.43.2 (released 2019-07-10)
+----------------------------
+
 - [featureVars] Fixed region-merging code on python3 (#1659).
 - [varLib.cff] Fixed merging of sparse PrivateDict items (#1653).
 
