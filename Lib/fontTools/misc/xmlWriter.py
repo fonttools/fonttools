@@ -18,15 +18,19 @@ class XMLWriter(object):
 		if fileOrPath == '-':
 			fileOrPath = sys.stdout
 		if not hasattr(fileOrPath, "write"):
+			self.filename = fileOrPath
 			self.file = open(fileOrPath, "wb")
+			self._closeStream = True
 		else:
+			self.filename = None
 			# assume writable file object
 			self.file = fileOrPath
+			self._closeStream = False
 
 		# Figure out if writer expects bytes or unicodes
 		try:
 			# The bytes check should be first.  See:
-			# https://github.com/behdad/fonttools/pull/233
+			# https://github.com/fonttools/fonttools/pull/233
 			self.file.write(b'')
 			self.totype = tobytes
 		except TypeError:
@@ -46,8 +50,15 @@ class XMLWriter(object):
 		self._writeraw('<?xml version="1.0" encoding="UTF-8"?>')
 		self.newline()
 
+	def __enter__(self):
+		return self
+
+	def __exit__(self, exception_type, exception_value, traceback):
+		self.close()
+
 	def close(self):
-		self.file.close()
+		if self._closeStream:
+			self.file.close()
 
 	def write(self, string, indent=True):
 		"""Writes text."""

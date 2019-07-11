@@ -69,7 +69,7 @@ class table__s_b_i_x(DefaultTable.DefaultTable):
 		del self.numStrikes
 
 	def compile(self, ttFont):
-		sbixData = ""
+		sbixData = b""
 		self.numStrikes = len(self.strikes)
 		sbixHeader = sstruct.pack(sbixHeaderFormat, self)
 

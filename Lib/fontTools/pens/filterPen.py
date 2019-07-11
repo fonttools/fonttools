@@ -1,9 +1,16 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.pens.basePen import AbstractPen
+from fontTools.pens.recordingPen import RecordingPen
 
 
-class FilterPen(AbstractPen):
+class _PassThruComponentsMixin(object):
+
+    def addComponent(self, glyphName, transformation):
+        self._outPen.addComponent(glyphName, transformation)
+
+
+class FilterPen(_PassThruComponentsMixin, AbstractPen):
 
     """ Base class for pens that apply some transformation to the coordinates
     they receive and pass them to another pen.
@@ -70,5 +77,45 @@ class FilterPen(AbstractPen):
     def endPath(self):
         self._outPen.endPath()
 
-    def addComponent(self, glyphName, transformation):
-        self._outPen.addComponent(glyphName, transformation)
+
+class ContourFilterPen(_PassThruComponentsMixin, RecordingPen):
+    """A "buffered" filter pen that accumulates contour data, passes
+    it through a ``filterContour`` method when the contour is closed or ended,
+    and finally draws the result with the output pen.
+
+    Components are passed through unchanged.
+    """
+
+    def __init__(self, outPen):
+        super(ContourFilterPen, self).__init__()
+        self._outPen = outPen
+
+    def closePath(self):
+        super(ContourFilterPen, self).closePath()
+        self._flushContour()
+
+    def endPath(self):
+        super(ContourFilterPen, self).endPath()
+        self._flushContour()
+
+    def _flushContour(self):
+        result = self.filterContour(self.value)
+        if result is not None:
+            self.value = result
+        self.replay(self._outPen)
+        self.value = []
+
+    def filterContour(self, contour):
+        """Subclasses must override this to perform the filtering.
+
+        The contour is a list of pen (operator, operands) tuples.
+        Operators are strings corresponding to the AbstractPen methods:
+        "moveTo", "lineTo", "curveTo", "qCurveTo", "closePath" and
+        "endPath". The operands are the positional arguments that are
+        passed to each method.
+
+        If the method doesn't return a value (i.e. returns None), it's
+        assumed that the argument was modified in-place.
+        Otherwise, the return value is drawn with the output pen.
+        """
+        return  # or return contour

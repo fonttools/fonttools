@@ -43,7 +43,7 @@ OS2_format_0 = """
 	xAvgCharWidth:          h       # average character width
 	usWeightClass:          H       # degree of thickness of strokes
 	usWidthClass:           H       # aspect ratio
-	fsType:                 h       # type flags
+	fsType:                 H       # type flags
 	ySubscriptXSize:        h       # subscript horizontal font size
 	ySubscriptYSize:        h       # subscript vertical font size
 	ySubscriptXOffset:      h       # subscript x offset
@@ -149,8 +149,8 @@ class table_O_S_2f_2(DefaultTable.DefaultTable):
 			data = sstruct.pack(OS2_format_2, self)
 		elif self.version == 5:
 			d = self.__dict__.copy()
-			d['usLowerOpticalPointSize'] = int(round(self.usLowerOpticalPointSize * 20))
-			d['usUpperOpticalPointSize'] = int(round(self.usUpperOpticalPointSize * 20))
+			d['usLowerOpticalPointSize'] = round(self.usLowerOpticalPointSize * 20)
+			d['usUpperOpticalPointSize'] = round(self.usUpperOpticalPointSize * 20)
 			data = sstruct.pack(OS2_format_5, d)
 		else:
 			from fontTools import ttLib

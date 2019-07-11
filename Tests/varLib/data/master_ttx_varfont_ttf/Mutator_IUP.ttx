@@ -405,11 +405,13 @@
       </VarData>
     </VarStore>
     <AdvWidthMap>
-      <Map index="0" outer="0" inner="1"/>
-      <Map index="1" outer="0" inner="1"/>
-      <Map index="2" outer="0" inner="1"/>
-      <Map index="3" outer="0" inner="1"/>
-      <Map index="4" outer="0" inner="0"/>
+      <Map glyph=".notdef" outer="0" inner="1"/>
+      <Map glyph="NULL" outer="0" inner="1"/>
+      <Map glyph="a" outer="0" inner="0"/>
+      <Map glyph="b" outer="0" inner="0"/>
+      <Map glyph="q" outer="0" inner="0"/>
+      <Map glyph="nonmarkingreturn" outer="0" inner="1"/>
+      <Map glyph="space" outer="0" inner="1"/>
     </AdvWidthMap>
   </HVAR>
 

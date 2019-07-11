@@ -17,7 +17,7 @@ BUFSIZE = 0x4000
 
 class XMLReader(object):
 
-	def __init__(self, fileOrPath, ttFont, progress=None, quiet=None):
+	def __init__(self, fileOrPath, ttFont, progress=None, quiet=None, contentOnly=False):
 		if fileOrPath == '-':
 			fileOrPath = sys.stdin
 		if not hasattr(fileOrPath, "read"):
@@ -35,6 +35,7 @@ class XMLReader(object):
 			self.quiet = quiet
 		self.root = None
 		self.contentStack = []
+		self.contentOnly = contentOnly
 		self.stackSize = 0
 
 	def read(self, rootless=False):
@@ -73,8 +74,24 @@ class XMLReader(object):
 			parser.Parse(chunk, 0)
 
 	def _startElementHandler(self, name, attrs):
+		if self.stackSize == 1 and self.contentOnly:
+			# We already know the table we're parsing, skip
+			# parsing the table tag and continue to
+			# stack '2' which begins parsing content
+			self.contentStack.append([])
+			self.stackSize = 2
+			return
 		stackSize = self.stackSize
 		self.stackSize = stackSize + 1
+		subFile = attrs.get("src")
+		if subFile is not None:
+			if hasattr(self.file, 'name'):
+				# if file has a name, get its parent directory
+				dirname = os.path.dirname(self.file.name)
+			else:
+				# else fall back to using the current working directory
+				dirname = os.getcwd()
+			subFile = os.path.join(dirname, subFile)
 		if not stackSize:
 			if name != "ttFont":
 				raise TTXParseError("illegal root tag: %s" % name)
@@ -85,15 +102,7 @@ class XMLReader(object):
 				self.ttFont.sfntVersion = sfntVersion
 			self.contentStack.append([])
 		elif stackSize == 1:
-			subFile = attrs.get("src")
 			if subFile is not None:
-				if hasattr(self.file, 'name'):
-					# if file has a name, get its parent directory
-					dirname = os.path.dirname(self.file.name)
-				else:
-					# else fall back to using the current working directory
-					dirname = os.getcwd()
-				subFile = os.path.join(dirname, subFile)
 				subReader = XMLReader(subFile, self.ttFont, self.progress)
 				subReader.read()
 				self.contentStack.append([])
@@ -119,6 +128,11 @@ class XMLReader(object):
 				self.currentTable = tableClass(tag)
 				self.ttFont[tag] = self.currentTable
 			self.contentStack.append([])
+		elif stackSize == 2 and subFile is not None:
+			subReader = XMLReader(subFile, self.ttFont, self.progress, contentOnly=True)
+			subReader.read()
+			self.contentStack.append([])
+			self.root = subReader.root
 		elif stackSize == 2:
 			self.contentStack.append([])
 			self.root = (name, attrs, self.contentStack[-1])
@@ -134,12 +148,13 @@ class XMLReader(object):
 	def _endElementHandler(self, name):
 		self.stackSize = self.stackSize - 1
 		del self.contentStack[-1]
-		if self.stackSize == 1:
-			self.root = None
-		elif self.stackSize == 2:
-			name, attrs, content = self.root
-			self.currentTable.fromXML(name, attrs, content, self.ttFont)
-			self.root = None
+		if not self.contentOnly:
+			if self.stackSize == 1:
+				self.root = None
+			elif self.stackSize == 2:
+				name, attrs, content = self.root
+				self.currentTable.fromXML(name, attrs, content, self.ttFont)
+				self.root = None
 
 
 class ProgressPrinter(object):

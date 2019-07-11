@@ -93,12 +93,12 @@ class NameTableTest(unittest.TestCase):
 				"en": "Width",
 				"de-CH": "Breite",
 				"gsw-LI": "Bräiti",
-			}, ttFont=font)
+			}, ttFont=font, mac=False)
 			self.assertEqual(widthID, 256)
 			xHeightID = nameTable.addMultilingualName({
 				"en": "X-Height",
 				"gsw-LI": "X-Hööchi"
-			}, ttFont=font)
+			}, ttFont=font, mac=False)
 			self.assertEqual(xHeightID, 257)
 		captor.assertRegex("cannot add Windows name in language gsw-LI")
 		self.assertEqual(names(nameTable), [
@@ -171,7 +171,7 @@ class NameTableTest(unittest.TestCase):
 		captor.assertRegex("cannot store language la into 'ltag' table")
 
 	def test_decompile_badOffset(self):
-                # https://github.com/behdad/fonttools/issues/525
+                # https://github.com/fonttools/fonttools/issues/525
 		table = table__n_a_m_e()
 		badRecord = {
 			"platformID": 1,
@@ -182,7 +182,7 @@ class NameTableTest(unittest.TestCase):
 			"offset": 8765  # out of range
 		}
 		data = bytesjoin([
-                        struct.pack(">HHH", 1, 1, 6 + nameRecordSize),
+                        struct.pack(tostr(">HHH"), 1, 1, 6 + nameRecordSize),
                         sstruct.pack(nameRecordFormat, badRecord)])
 		table.decompile(data, ttFont=None)
 		self.assertEqual(table.names, [])

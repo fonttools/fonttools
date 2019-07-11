@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.37">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="y"/>
+    <GlyphID id="2" name="yacute"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="2.0"/>
+    <checkSumAdjustment value="0x30fffb39"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Wed Jan  4 11:55:59 2017"/>
+    <modified value="Sat Feb  9 07:43:13 2019"/>
+    <xMin value="0"/>
+    <yMin value="-249"/>
+    <xMax value="560"/>
+    <yMax value="758"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="3"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="1036"/>
+    <descent value="-335"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="640"/>
+    <minLeftSideBearing value="0"/>
+    <minRightSideBearing value="0"/>
+    <xMaxExtent value="560"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="2"/>
+  </hhea>
+
+  <maxp>
+    <tableVersion value="0x5000"/>
+    <numGlyphs value="3"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="3"/>
+    <xAvgCharWidth value="554"/>
+    <usWeightClass value="400"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000000"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="600"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="75"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="600"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="350"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="285"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="2"/>
+      <bSerifStyle value="4"/>
+      <bWeight value="6"/>
+      <bProportion value="3"/>
+      <bContrast value="5"/>
+      <bStrokeVariation value="4"/>
+      <bArmStyle value="5"/>
+      <bLetterForm value="2"/>
+      <bMidline value="2"/>
+      <bXHeight value="4"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000011"/>
+    <ulUnicodeRange2 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="ADBO"/>
+    <fsSelection value="00000000 01000000"/>
+    <usFirstCharIndex value="121"/>
+    <usLastCharIndex value="253"/>
+    <sTypoAscender value="730"/>
+    <sTypoDescender value="-270"/>
+    <sTypoLineGap value="0"/>
+    <usWinAscent value="1036"/>
+    <usWinDescent value="335"/>
+    <ulCodePageRange1 value="00100000 00000000 00000001 10011111"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="475"/>
+    <sCapHeight value="670"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="3"/>
+  </OS_2>
+
+  <name>
+    <namerecord nameID="0" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Copyright 2014, 2015, 2016 Adobe Systems Incorporated (http://www.adobe.com/), with Reserved Font Name 'Source'.
+    </namerecord>
+    <namerecord nameID="1" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Source Serif Pro
+    </namerecord>
+    <namerecord nameID="2" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      2.000;ADBO;SourceSerifPro-Regular;ADOBE
+    </namerecord>
+    <namerecord nameID="4" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Source Serif Pro
+    </namerecord>
+    <namerecord nameID="5" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Version 2.000;PS 1.0;hotconv 16.6.51;makeotf.lib2.5.65220
+    </namerecord>
+    <namerecord nameID="6" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      SourceSerifPro-Regular
+    </namerecord>
+    <namerecord nameID="7" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Source is a trademark of Adobe Systems Incorporated in the United States and/or other countries.
+    </namerecord>
+    <namerecord nameID="8" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Adobe Systems Incorporated
+    </namerecord>
+    <namerecord nameID="9" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Frank Grießhammer
+    </namerecord>
+    <namerecord nameID="11" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      http://www.adobe.com/type
+    </namerecord>
+    <namerecord nameID="13" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      This Font Software is licensed under the SIL Open Font License, Version 1.1.&#13;
+&#13;
+This Font Software is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the SIL Open Font License for the specific language, permissions and limitations governing your use of this Font Software.
+    </namerecord>
+    <namerecord nameID="14" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      http://scripts.sil.org/OFL
+    </namerecord>
+    <namerecord nameID="0" platformID="3" platEncID="1" langID="0x409">
+      Copyright 2014, 2015, 2016 Adobe Systems Incorporated (http://www.adobe.com/), with Reserved Font Name 'Source'.
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      Source Serif Pro
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      2.000;ADBO;SourceSerifPro-Regular;ADOBE
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      Source Serif Pro
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 2.000;PS 1.0;hotconv 16.6.51;makeotf.lib2.5.65220
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      SourceSerifPro-Regular
+    </namerecord>
+    <namerecord nameID="7" platformID="3" platEncID="1" langID="0x409">
+      Source is a trademark of Adobe Systems Incorporated in the United States and/or other countries.
+    </namerecord>
+    <namerecord nameID="8" platformID="3" platEncID="1" langID="0x409">
+      Adobe Systems Incorporated
+    </namerecord>
+    <namerecord nameID="9" platformID="3" platEncID="1" langID="0x409">
+      Frank Grießhammer
+    </namerecord>
+    <namerecord nameID="11" platformID="3" platEncID="1" langID="0x409">
+      http://www.adobe.com/type
+    </namerecord>
+    <namerecord nameID="13" platformID="3" platEncID="1" langID="0x409">
+      This Font Software is licensed under the SIL Open Font License, Version 1.1.&#13;
+&#13;
+This Font Software is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the SIL Open Font License for the specific language, permissions and limitations governing your use of this Font Software.
+    </namerecord>
+    <namerecord nameID="14" platformID="3" platEncID="1" langID="0x409">
+      http://scripts.sil.org/OFL
+    </namerecord>
+  </name>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x79" name="y"/><!-- LATIN SMALL LETTER Y -->
+      <map code="0xfd" name="yacute"/><!-- LATIN SMALL LETTER Y WITH ACUTE -->
+    </cmap_format_4>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x79" name="y"/><!-- LATIN SMALL LETTER Y -->
+      <map code="0xfd" name="yacute"/><!-- LATIN SMALL LETTER Y WITH ACUTE -->
+    </cmap_format_4>
+    <cmap_format_12 platformID="3" platEncID="10" format="12" reserved="0" length="40" language="0" nGroups="2">
+      <map code="0x79" name="y"/><!-- LATIN SMALL LETTER Y -->
+      <map code="0xfd" name="yacute"/><!-- LATIN SMALL LETTER Y WITH ACUTE -->
+    </cmap_format_12>
+  </cmap>
+
+  <post>
+    <formatType value="3.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-75"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+  </post>
+
+  <CFF>
+    <major value="1"/>
+    <minor value="0"/>
+    <CFFFont name="SourceSerifPro-Regular">
+      <version value="1.0"/>
+      <Notice value="Source is a trademark of Adobe Systems Incorporated in the United States and/or other countries."/>
+      <Copyright value="Copyright 2014 Adobe Systems Incorporated. All Rights Reserved."/>
+      <FamilyName value="Source Serif Pro"/>
+      <isFixedPitch value="0"/>
+      <ItalicAngle value="0"/>
+      <UnderlinePosition value="-100"/>
+      <UnderlineThickness value="50"/>
+      <PaintType value="0"/>
+      <CharstringType value="2"/>
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FontBBox value="0 -249 560 758"/>
+      <StrokeWidth value="0"/>
+      <!-- charset is dumped separately as the 'GlyphOrder' element -->
+      <Encoding name="StandardEncoding"/>
+      <Private>
+        <BlueValues value="-15 0 475 488 527 540 549 563 646 659 669 684 729 749"/>
+        <OtherBlues value="-249 -239"/>
+        <FamilyBlues value="-15 0 475 488 527 540 549 563 646 659 669 684 729 749"/>
+        <FamilyOtherBlues value="-249 -239"/>
+        <BlueScale value="0.0375"/>
+        <BlueShift value="7"/>
+        <BlueFuzz value="0"/>
+        <StdHW value="56"/>
+        <StdVW value="85"/>
+        <StemSnapH value="41 56"/>
+        <StemSnapV value="85 95"/>
+        <ForceBold value="0"/>
+        <LanguageGroup value="0"/>
+        <ExpansionFactor value="0.06"/>
+        <initialRandomSeed value="0"/>
+        <defaultWidthX value="0"/>
+        <nominalWidthX value="604"/>
+        <Subrs>
+          <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+          <CharString index="0">
+            rmoveto
+            26 -19 41 36 39 35 41 37 rlinecurve
+            28 26 6 15 14 vvcurveto
+            26 -19 12 -19 -18 -17 -10 -31 -19 vhcurveto
+            -32 -48 -29 -46 -28 -47 rrcurveto
+            endchar
+          </CharString>
+          <CharString index="1">
+            195 vstemhm
+            -107 callgsubr
+            161 425 54 11 rlineto
+            36 -195 vlineto
+            -36 vlineto
+            87 -12 -123 -340 rlineto
+            -125 341 88 10 rlineto
+            37 -240 vlineto
+            -105 callsubr
+            -39 42 -27 50 vhcurveto
+            return
+          </CharString>
+          <CharString index="2">
+            -36 vlineto
+            55 -8 181 -457 -4 -12 -19 -54 -29 -54 -42 -36 rlinecurve
+            -5 5 rlineto
+            28 -27 -21 10 -26 hhcurveto
+            -31 -29 -15 -29 -7 hvcurveto
+            return
+          </CharString>
+          <CharString index="3">
+            -92 -249 110 572 42 -40 40 -36 36 return
+          </CharString>
+          <CharString index="4">
+            hstemhm
+            return
+          </CharString>
+        </Subrs>
+      </Private>
+      <CharStrings>
+        <CharString name=".notdef">
+          36 0 50 569 50 hstem
+          80 60 360 60 vstem
+          80 hmoveto
+          480 669 -480 hlineto
+          240 -286 rmoveto
+          -148 236 rlineto
+          296 hlineto
+          32 -523 rmoveto
+          -149 239 149 238 rlineto
+          -360 -477 rmoveto
+          477 vlineto
+          150 -238 rlineto
+          -118 -285 rmoveto
+          148 236 148 -236 rlineto
+          endchar
+        </CharString>
+        <CharString name="y">
+          -104 callsubr
+          0 1 -103 callsubr
+          0 512 -195 -106 callsubr
+          hintmask 11001000
+          endchar
+        </CharString>
+        <CharString name="yacute">
+          -104 callsubr
+          10 5 5 4 3 2 2 1 1 0 -103 callsubr
+          0 512 -195 -106 callsubr
+          hintmask 1100100010000000
+          155 825 -107 callsubr
+        </CharString>
+      </CharStrings>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+      <CharString index="0">
+        92 -249 rmoveto
+        82 56 75 177 67 hvcurveto
+        return
+      </CharString>
+    </GlobalSubrs>
+  </CFF>
+
+  <hmtx>
+    <mtx name=".notdef" width="640" lsb="80"/>
+    <mtx name="y" width="512" lsb="0"/>
+    <mtx name="yacute" width="512" lsb="0"/>
+  </hmtx>
+
+</ttFont>

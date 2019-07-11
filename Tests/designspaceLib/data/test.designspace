@@ -1,0 +1,112 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<designspace format="4.0">
+  <axes>
+    <axis tag="wght" name="weight" minimum="0" maximum="1000" default="0">
+      <labelname xml:lang="en">Wéíght</labelname>
+      <labelname xml:lang="fa-IR">قطر</labelname>
+    </axis>
+    <axis tag="wdth" name="width" minimum="0" maximum="1000" default="15" hidden="1">
+      <labelname xml:lang="fr">Chasse</labelname>
+      <map input="0" output="10"/>
+      <map input="15" output="20"/>
+      <map input="401" output="66"/>
+      <map input="1000" output="990"/>
+    </axis>
+  </axes>
+  <rules>
+    <rule name="named.rule.1">
+      <conditionset>
+        <condition name="axisName_a" minimum="0" maximum="1"/>
+        <condition name="axisName_b" minimum="2" maximum="3"/>
+      </conditionset>
+      <sub name="a" with="a.alt"/>
+    </rule>
+  </rules>
+  <sources>
+    <source filename="masters/masterTest1.ufo" name="master.ufo1" familyname="MasterFamilyName" stylename="MasterStyleNameOne">
+      <lib copy="1"/>
+      <features copy="1"/>
+      <info copy="1"/>
+      <glyph name="A" mute="1"/>
+      <glyph name="Z" mute="1"/>
+      <location>
+        <dimension name="weight" xvalue="0"/>
+        <dimension name="width" xvalue="20"/>
+      </location>
+    </source>
+    <source filename="masters/masterTest2.ufo" name="master.ufo2" familyname="MasterFamilyName" stylename="MasterStyleNameTwo">
+      <kerning mute="1"/>
+      <location>
+        <dimension name="weight" xvalue="1000"/>
+        <dimension name="width" xvalue="20"/>
+      </location>
+    </source>
+    <source filename="masters/masterTest2.ufo" name="master.ufo2" familyname="MasterFamilyName" stylename="Supports" layer="supports">
+      <location>
+        <dimension name="weight" xvalue="1000"/>
+        <dimension name="width" xvalue="20"/>
+      </location>
+    </source>
+  </sources>
+  <instances>
+    <instance name="instance.ufo1" familyname="InstanceFamilyName" stylename="InstanceStyleName" filename="instances/instanceTest1.ufo" postscriptfontname="InstancePostscriptName" stylemapfamilyname="InstanceStyleMapFamilyName" stylemapstylename="InstanceStyleMapStyleName">
+      <location>
+        <dimension name="weight" xvalue="500"/>
+        <dimension name="width" xvalue="20"/>
+      </location>
+      <glyphs>
+        <glyph mute="1" unicode="0x123 0x124 0x125" name="arrow"/>
+      </glyphs>
+      <kerning/>
+      <info/>
+      <lib>
+        <dict>
+          <key>com.coolDesignspaceApp.binaryData</key>
+          <data>
+          PGJpbmFyeSBndW5rPg==
+          </data>
+          <key>com.coolDesignspaceApp.specimenText</key>
+          <string>Hamburgerwhatever</string>
+        </dict>
+      </lib>
+    </instance>
+    <instance name="instance.ufo2" familyname="InstanceFamilyName" stylename="InstanceStyleName" filename="instances/instanceTest2.ufo" postscriptfontname="InstancePostscriptName" stylemapfamilyname="InstanceStyleMapFamilyName" stylemapstylename="InstanceStyleMapStyleName">
+      <location>
+        <dimension name="weight" xvalue="500"/>
+        <dimension name="width" xvalue="400" yvalue="300"/>
+      </location>
+      <glyphs>
+        <glyph unicode="0x65 0xc9 0x12d" name="arrow">
+          <location>
+            <dimension name="weight" xvalue="120"/>
+            <dimension name="width" xvalue="100"/>
+          </location>
+          <note>A note about this glyph</note>
+          <masters>
+            <master glyphname="BB" source="master.ufo1">
+              <location>
+                <dimension name="weight" xvalue="20"/>
+                <dimension name="width" xvalue="20"/>
+              </location>
+            </master>
+            <master glyphname="CC" source="master.ufo2">
+              <location>
+                <dimension name="weight" xvalue="900"/>
+                <dimension name="width" xvalue="900"/>
+              </location>
+            </master>
+          </masters>
+        </glyph>
+        <glyph name="arrow2"/>
+      </glyphs>
+      <kerning/>
+      <info/>
+    </instance>
+  </instances>
+  <lib>
+    <dict>
+      <key>com.coolDesignspaceApp.previewSize</key>
+      <integer>30</integer>
+    </dict>
+  </lib>
+</designspace>

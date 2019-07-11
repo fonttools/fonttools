@@ -1,5 +1,6 @@
 include README.rst
 include LICENSE
+include LICENSE.external
 include NEWS.rst
 include Makefile
 include fonttools
@@ -30,3 +31,4 @@ recursive-include Tests *.glif *.plist
 recursive-include Tests *.txt README
 recursive-include Tests *.lwfn *.pfa *.pfb
 recursive-include Tests *.xml *.designspace *.bin
+recursive-include Tests *.afm

@@ -1,4 +1,4 @@
-# https://github.com/behdad/fonttools/issues/568
+# https://github.com/fonttools/fonttools/issues/568
 
 feature tst1 {
   script latn;

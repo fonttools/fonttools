@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.35">
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x20" name="space"/><!-- SPACE -->
+      <map code="0x30" name="zero"/><!-- DIGIT ZERO -->
+    </cmap_format_4>
+    <cmap_format_14 platformID="0" platEncID="5">
+      <map uv="0x30" uvs="0xfe00" name="zero.slash"/>
+      <map uv="0x30" uvs="0xfe01"/>
+    </cmap_format_14>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x20" name="space"/><!-- SPACE -->
+      <map code="0x30" name="zero"/><!-- DIGIT ZERO -->
+    </cmap_format_4>
+  </cmap>
+
+</ttFont>

@@ -4,16 +4,17 @@ Interpolate OpenType Layout tables (GDEF / GPOS / GSUB).
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
-from fontTools.varLib import models, VarLibError, load_designspace
+from fontTools.varLib import models, VarLibError, load_designspace, load_masters
 from fontTools.varLib.merger import InstancerMerger
 import os.path
 import logging
+from copy import deepcopy
 from pprint import pformat
 
 log = logging.getLogger("fontTools.varLib.interpolate_layout")
 
 
-def interpolate_layout(designspace_filename, loc, master_finder=lambda s:s, mapped=False):
+def interpolate_layout(designspace, loc, master_finder=lambda s:s, mapped=False):
 	"""
 	Interpolate GPOS from a designspace file and location.
 
@@ -26,33 +27,34 @@ def interpolate_layout(designspace_filename, loc, master_finder=lambda s:s, mapp
 	it is assumed that location is in designspace's internal space and
 	no mapping is performed.
 	"""
+	if hasattr(designspace, "sources"):  # Assume a DesignspaceDocument
+		pass
+	else:  # Assume a file path
+		from fontTools.designspaceLib import DesignSpaceDocument
+		designspace = DesignSpaceDocument.fromfile(designspace)
 
-	axes, internal_axis_supports, base_idx, normalized_master_locs, masters, instances = load_designspace(designspace_filename)
-
-
+	ds = load_designspace(designspace)
 	log.info("Building interpolated font")
-	log.info("Loading master fonts")
-	basedir = os.path.dirname(designspace_filename)
-	master_ttfs = [master_finder(os.path.join(basedir, m['filename'])) for m in masters]
-	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
 
-	#font = master_fonts[base_idx]
-	font = TTFont(master_ttfs[base_idx])
+	log.info("Loading master fonts")
+	master_fonts = load_masters(designspace, master_finder)
+	font = deepcopy(master_fonts[ds.base_idx])
 
 	log.info("Location: %s", pformat(loc))
 	if not mapped:
-		loc = {name:axes[name].map_forward(v) for name,v in loc.items()}
+		loc = {name: ds.axes[name].map_forward(v) for name,v in loc.items()}
 	log.info("Internal location: %s", pformat(loc))
-	loc = models.normalizeLocation(loc, internal_axis_supports)
+	loc = models.normalizeLocation(loc, ds.internal_axis_supports)
 	log.info("Normalized location: %s", pformat(loc))
 
 	# Assume single-model for now.
-	model = models.VariationModel(normalized_master_locs)
-	assert 0 == model.mapping[base_idx]
+	model = models.VariationModel(ds.normalized_master_locs)
+	assert 0 == model.mapping[ds.base_idx]
 
 	merger = InstancerMerger(font, model, loc)
 
 	log.info("Building interpolated tables")
+	# TODO GSUB/GDEF
 	merger.mergeTables(font, master_fonts, ['GPOS'])
 	return font
 

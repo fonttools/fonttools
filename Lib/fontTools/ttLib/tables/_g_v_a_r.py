@@ -107,8 +107,15 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			glyph = ttFont["glyf"][glyphName]
 			numPointsInGlyph = self.getNumPoints_(glyph)
 			gvarData = data[offsetToData + offsets[i] : offsetToData + offsets[i + 1]]
-			self.variations[glyphName] = decompileGlyph_(
-				numPointsInGlyph, sharedCoords, axisTags, gvarData)
+			try:
+				self.variations[glyphName] = decompileGlyph_(
+					numPointsInGlyph, sharedCoords, axisTags, gvarData)
+			except Exception:
+				log.error(
+					"Failed to decompile deltas for glyph '%s' (%d points)",
+					glyphName, numPointsInGlyph,
+				)
+				raise
 
 	@staticmethod
 	def decompileOffsets_(data, tableFormat, glyphCount):
@@ -121,8 +128,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			offsets = array.array("I")
 			offsetsSize = (glyphCount + 1) * 4
 		offsets.fromstring(data[0 : offsetsSize])
-		if sys.byteorder != "big":
-			offsets.byteswap()
+		if sys.byteorder != "big": offsets.byteswap()
 
 		# In the short format, offsets need to be multiplied by 2.
 		# This is not documented in Apple's TrueType specification,
@@ -152,11 +158,10 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		else:
 			packed = array.array("I", offsets)
 			tableFormat = 1
-		if sys.byteorder != "big":
-			packed.byteswap()
+		if sys.byteorder != "big": packed.byteswap()
 		return (packed.tostring(), tableFormat)
 
-	def toXML(self, writer, ttFont, progress=None):
+	def toXML(self, writer, ttFont):
 		writer.simpletag("version", value=self.version)
 		writer.newline()
 		writer.simpletag("reserved", value=self.reserved)

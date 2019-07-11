@@ -42,7 +42,7 @@ class BaseTTXConverter(DefaultTable):
 		self.table.decompile(reader, font)
 
 	def compile(self, font):
-		""" Create a top-level OTFWriter for the GPOS/GSUB table.
+		""" Create a top-level OTTableWriter for the GPOS/GSUB table.
 			Call the compile method for the the table
 				for each 'converter' record in the table converter list
 					call converter's write method for each item in the value.
@@ -87,7 +87,13 @@ class BaseTTXConverter(DefaultTable):
 					from .otTables import fixSubTableOverFlows
 					ok = fixSubTableOverFlows(font, overflowRecord)
 				if not ok:
-					raise
+					# Try upgrading lookup to Extension and hope
+					# that cross-lookup sharing not happening would
+					# fix overflow...
+					from .otTables import fixLookupOverFlows
+					ok = fixLookupOverFlows(font, overflowRecord)
+					if not ok:
+						raise
 
 	def toXML(self, writer, font):
 		self.table.toXML2(writer, font)
@@ -98,6 +104,7 @@ class BaseTTXConverter(DefaultTable):
 			tableClass = getattr(otTables, self.tableTag)
 			self.table = tableClass()
 		self.table.fromXML(name, attrs, content, font)
+		self.table.populateDefaults()
 
 
 class OTTableReader(object):
@@ -139,8 +146,7 @@ class OTTableReader(object):
 		pos = self.pos
 		newpos = pos + count * 2
 		value = array.array("H", self.data[pos:newpos])
-		if sys.byteorder != "big":
-			value.byteswap()
+		if sys.byteorder != "big": value.byteswap()
 		self.pos = newpos
 		return value
 
@@ -283,7 +289,7 @@ class OTTableWriter(object):
 	def __eq__(self, other):
 		if type(self) != type(other):
 			return NotImplemented
-		return self.items == other.items
+		return self.longOffset == other.longOffset and self.items == other.items
 
 	def _doneWriting(self, internedTables):
 		# Convert CountData references to data string items
@@ -298,7 +304,7 @@ class OTTableWriter(object):
 		# Certain versions of Uniscribe reject the font if the GSUB/GPOS top-level
 		# arrays (ScriptList, FeatureList, LookupList) point to the same, possibly
 		# empty, array.  So, we don't share those.
-		# See: https://github.com/behdad/fonttools/issues/518
+		# See: https://github.com/fonttools/fonttools/issues/518
 		dontShare = hasattr(self, 'DontShare')
 
 		if isExtension:
@@ -331,7 +337,6 @@ class OTTableWriter(object):
 		iRange.reverse()
 
 		isExtension = hasattr(self, "Extension")
-		dontShare = hasattr(self, 'DontShare')
 
 		selfTables = tables
 
@@ -610,20 +615,27 @@ class BaseTable(object):
 			if conv.name == "SubStruct":
 				conv = conv.getConverter(reader.tableTag,
 				                         table["MorphType"])
-			if conv.repeat:
-				if conv.repeat in table:
-					countValue = table[conv.repeat]
+			try:
+				if conv.repeat:
+					if isinstance(conv.repeat, int):
+						countValue = conv.repeat
+					elif conv.repeat in table:
+						countValue = table[conv.repeat]
+					else:
+						# conv.repeat is a propagated count
+						countValue = reader[conv.repeat]
+					countValue += conv.aux
+					table[conv.name] = conv.readArray(reader, font, table, countValue)
 				else:
-					# conv.repeat is a propagated count
-					countValue = reader[conv.repeat]
-				countValue += conv.aux
-				table[conv.name] = conv.readArray(reader, font, table, countValue)
-			else:
-				if conv.aux and not eval(conv.aux, None, table):
-					continue
-				table[conv.name] = conv.read(reader, font, table)
-				if conv.isPropagated:
-					reader[conv.name] = table[conv.name]
+					if conv.aux and not eval(conv.aux, None, table):
+						continue
+					table[conv.name] = conv.read(reader, font, table)
+					if conv.isPropagated:
+						reader[conv.name] = table[conv.name]
+			except Exception as e:
+				name = conv.name
+				e.args = e.args + (name,)
+				raise
 
 		if hasattr(self, 'postRead'):
 			self.postRead(table, font)
@@ -656,7 +668,9 @@ class BaseTable(object):
 				if value is None:
 					value = []
 				countValue = len(value) - conv.aux
-				if conv.repeat in table:
+				if isinstance(conv.repeat, int):
+					assert len(value) == conv.repeat, 'expected %d values, got %d' % (conv.repeat, len(value))
+				elif conv.repeat in table:
 					CountReference(table, conv.repeat, value=countValue)
 				else:
 					# conv.repeat is a propagated count
@@ -775,7 +789,7 @@ class FormatSwitchingBaseTable(BaseTable):
 		return NotImplemented
 
 	def getConverters(self):
-		return self.converters[self.Format]
+		return self.converters.get(self.Format, [])
 
 	def getConverterByName(self, name):
 		return self.convertersByName[self.Format][name]
@@ -890,7 +904,8 @@ class ValueRecord(object):
 					setattr(self, name, None if isDevice else 0)
 			if src is not None:
 				for key,val in src.__dict__.items():
-					assert hasattr(self, key)
+					if not hasattr(self, key):
+						continue
 					setattr(self, key, val)
 		elif src is not None:
 			self.__dict__ = src.__dict__.copy()

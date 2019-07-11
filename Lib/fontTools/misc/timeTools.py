@@ -3,6 +3,7 @@
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+import os
 import time
 import calendar
 
@@ -30,7 +31,7 @@ def asctime(t=None):
 	In Python 3.x, the day of the month is right-justified, whereas on Windows
 	Python 2.7 it is padded with zeros.
 
-	See https://github.com/behdad/fonttools/issues/455
+	See https://github.com/fonttools/fonttools/issues/455
 	"""
 	if t is None:
 		t = time.localtime()
@@ -47,6 +48,10 @@ def timestampFromString(value):
 	return calendar.timegm(time.strptime(value)) - epoch_diff
 
 def timestampNow():
+	# https://reproducible-builds.org/specs/source-date-epoch/
+	source_date_epoch = os.environ.get("SOURCE_DATE_EPOCH")
+	if source_date_epoch is not None:
+		return int(source_date_epoch) - epoch_diff
 	return int(time.time() - epoch_diff)
 
 def timestampSinceEpoch(value):

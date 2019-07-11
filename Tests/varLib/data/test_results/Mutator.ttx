@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.7">
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.19">
 
   <GlyphOrder>
     <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
@@ -42,10 +42,10 @@
     <maxZones value="1"/>
     <maxTwilightPoints value="0"/>
     <maxStorage value="0"/>
-    <maxFunctionDefs value="0"/>
+    <maxFunctionDefs value="1"/>
     <maxInstructionDefs value="0"/>
-    <maxStackElements value="0"/>
-    <maxSizeOfInstructions value="0"/>
+    <maxStackElements value="1"/>
+    <maxSizeOfInstructions value="5"/>
     <maxComponentElements value="0"/>
     <maxComponentDepth value="0"/>
   </maxp>
@@ -55,7 +55,7 @@
          will be recalculated by the compiler -->
     <version value="4"/>
     <xAvgCharWidth value="506"/>
-    <usWeightClass value="400"/>
+    <usWeightClass value="500"/>
     <usWidthClass value="5"/>
     <fsType value="00000000 00000100"/>
     <ySubscriptXSize value="650"/>
@@ -67,7 +67,7 @@
     <ySuperscriptXOffset value="0"/>
     <ySuperscriptYOffset value="350"/>
     <yStrikeoutSize value="50"/>
-    <yStrikeoutPosition value="284"/>
+    <yStrikeoutPosition value="286"/>
     <sFamilyClass value="0"/>
     <panose>
       <bFamilyType value="2"/>
@@ -96,7 +96,7 @@
     <usWinDescent value="335"/>
     <ulCodePageRange1 value="00100000 00000000 00000000 00000011"/>
     <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
-    <sxHeight value="474"/>
+    <sxHeight value="477"/>
     <sCapHeight value="677"/>
     <usDefaultChar value="0"/>
     <usBreakChar value="32"/>
@@ -128,6 +128,21 @@
     </cmap_format_4>
   </cmap>
 
+  <fpgm>
+    <assembly>
+      PUSHB[ ]	/* 1 value pushed */
+      0
+      FDEF[ ]	/* FunctionDefinition */
+        POP[ ]	/* PopTopStack */
+      ENDF[ ]	/* EndFunctionDefinition */
+    </assembly>
+  </fpgm>
+
+  <cvt>
+    <cv index="0" value="477"/>
+    <cv index="1" value="677"/>
+  </cvt>
+
   <loca>
     <!-- The 'loca' table will be calculated by the compiler -->
   </loca>
@@ -139,7 +154,7 @@
 
     <TTGlyph name=".notdef" xMin="80" yMin="0" xMax="560" yMax="666">
       <contour>
-        <pt x="83" y="0" on="1"/>
+        <pt x="83" y="0" on="1" overlap="1"/>
         <pt x="503" y="666" on="1"/>
         <pt x="557" y="666" on="1"/>
         <pt x="137" y="0" on="1"/>
@@ -162,14 +177,20 @@
         <pt x="560" y="666" on="1"/>
         <pt x="560" y="0" on="1"/>
       </contour>
-      <instructions/>
+      <instructions>
+        <assembly>
+          PUSHB[ ]	/* 1 value pushed */
+          0
+          MDAP[0]	/* MoveDirectAbsPt */
+        </assembly>
+      </instructions>
     </TTGlyph>
 
     <TTGlyph name="uni0020"/><!-- contains no outline data -->
 
     <TTGlyph name="uni0024" xMin="51" yMin="-115" xMax="474" yMax="746">
       <contour>
-        <pt x="251" y="31" on="1"/>
+        <pt x="251" y="31" on="1" overlap="1"/>
         <pt x="309" y="31" on="0"/>
         <pt x="379" y="92" on="0"/>
         <pt x="379" y="144" on="1"/>
@@ -241,7 +262,7 @@
 
     <TTGlyph name="uni0024.nostroke" xMin="51" yMin="-115" xMax="474" yMax="746">
       <contour>
-        <pt x="251" y="31" on="1"/>
+        <pt x="251" y="31" on="1" overlap="1"/>
         <pt x="308" y="31" on="0"/>
         <pt x="377" y="90" on="0"/>
         <pt x="377" y="142" on="1"/>
@@ -313,7 +334,7 @@
 
     <TTGlyph name="uni0041" xMin="7" yMin="0" xMax="656" yMax="670">
       <contour>
-        <pt x="7" y="0" on="1"/>
+        <pt x="7" y="0" on="1" overlap="1"/>
         <pt x="7" y="38" on="1"/>
         <pt x="104" y="53" on="1"/>
         <pt x="124" y="53" on="1"/>
@@ -349,7 +370,7 @@
 
     <TTGlyph name="uni0061" xMin="42" yMin="-14" xMax="511" yMax="490">
       <contour>
-        <pt x="42" y="110" on="1"/>
+        <pt x="42" y="110" on="1" overlap="1"/>
         <pt x="42" y="157" on="0"/>
         <pt x="110" y="229" on="0"/>
         <pt x="214" y="265" on="1"/>
@@ -419,60 +440,6 @@
   </glyf>
 
   <name>
-    <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Weight
-    </namerecord>
-    <namerecord nameID="257" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Contrast
-    </namerecord>
-    <namerecord nameID="258" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      ExtraLight
-    </namerecord>
-    <namerecord nameID="259" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      TestFamily-ExtraLight
-    </namerecord>
-    <namerecord nameID="260" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Light
-    </namerecord>
-    <namerecord nameID="261" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      TestFamily-Light
-    </namerecord>
-    <namerecord nameID="262" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Regular
-    </namerecord>
-    <namerecord nameID="263" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      TestFamily-Regular
-    </namerecord>
-    <namerecord nameID="264" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Semibold
-    </namerecord>
-    <namerecord nameID="265" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      TestFamily-Semibold
-    </namerecord>
-    <namerecord nameID="266" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Bold
-    </namerecord>
-    <namerecord nameID="267" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      TestFamily-Bold
-    </namerecord>
-    <namerecord nameID="268" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Black
-    </namerecord>
-    <namerecord nameID="269" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      TestFamily-Black
-    </namerecord>
-    <namerecord nameID="270" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Black Medium Contrast
-    </namerecord>
-    <namerecord nameID="271" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      TestFamily-BlackMediumContrast
-    </namerecord>
-    <namerecord nameID="272" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      Black High Contrast
-    </namerecord>
-    <namerecord nameID="273" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      TestFamily-BlackHighContrast
-    </namerecord>
     <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
       Test Family
     </namerecord>
@@ -496,60 +463,6 @@
     </namerecord>
     <namerecord nameID="17" platformID="3" platEncID="1" langID="0x409">
       Master 1
-    </namerecord>
-    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
-      Weight
-    </namerecord>
-    <namerecord nameID="257" platformID="3" platEncID="1" langID="0x409">
-      Contrast
-    </namerecord>
-    <namerecord nameID="258" platformID="3" platEncID="1" langID="0x409">
-      ExtraLight
-    </namerecord>
-    <namerecord nameID="259" platformID="3" platEncID="1" langID="0x409">
-      TestFamily-ExtraLight
-    </namerecord>
-    <namerecord nameID="260" platformID="3" platEncID="1" langID="0x409">
-      Light
-    </namerecord>
-    <namerecord nameID="261" platformID="3" platEncID="1" langID="0x409">
-      TestFamily-Light
-    </namerecord>
-    <namerecord nameID="262" platformID="3" platEncID="1" langID="0x409">
-      Regular
-    </namerecord>
-    <namerecord nameID="263" platformID="3" platEncID="1" langID="0x409">
-      TestFamily-Regular
-    </namerecord>
-    <namerecord nameID="264" platformID="3" platEncID="1" langID="0x409">
-      Semibold
-    </namerecord>
-    <namerecord nameID="265" platformID="3" platEncID="1" langID="0x409">
-      TestFamily-Semibold
-    </namerecord>
-    <namerecord nameID="266" platformID="3" platEncID="1" langID="0x409">
-      Bold
-    </namerecord>
-    <namerecord nameID="267" platformID="3" platEncID="1" langID="0x409">
-      TestFamily-Bold
-    </namerecord>
-    <namerecord nameID="268" platformID="3" platEncID="1" langID="0x409">
-      Black
-    </namerecord>
-    <namerecord nameID="269" platformID="3" platEncID="1" langID="0x409">
-      TestFamily-Black
-    </namerecord>
-    <namerecord nameID="270" platformID="3" platEncID="1" langID="0x409">
-      Black Medium Contrast
-    </namerecord>
-    <namerecord nameID="271" platformID="3" platEncID="1" langID="0x409">
-      TestFamily-BlackMediumContrast
-    </namerecord>
-    <namerecord nameID="272" platformID="3" platEncID="1" langID="0x409">
-      Black High Contrast
-    </namerecord>
-    <namerecord nameID="273" platformID="3" platEncID="1" langID="0x409">
-      TestFamily-BlackHighContrast
     </namerecord>
   </name>
 
@@ -584,85 +497,13 @@
   </post>
 
   <GDEF>
-    <Version value="0x00010003"/>
-    <VarStore Format="1">
-      <Format value="1"/>
-      <VarRegionList>
-        <!-- RegionAxisCount=2 -->
-        <!-- RegionCount=5 -->
-        <Region index="0">
-          <VarRegionAxis index="0">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="1">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="1.0"/>
-            <EndCoord value="1.0"/>
-          </VarRegionAxis>
-        </Region>
-        <Region index="1">
-          <VarRegionAxis index="0">
-            <StartCoord value="-1.0"/>
-            <PeakCoord value="-1.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="1">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-        </Region>
-        <Region index="2">
-          <VarRegionAxis index="0">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="1.0"/>
-            <EndCoord value="1.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="1">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="0.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-        </Region>
-        <Region index="3">
-          <VarRegionAxis index="0">
-            <StartCoord value="-1.0"/>
-            <PeakCoord value="-1.0"/>
-            <EndCoord value="0.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="1">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="1.0"/>
-            <EndCoord value="1.0"/>
-          </VarRegionAxis>
-        </Region>
-        <Region index="4">
-          <VarRegionAxis index="0">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="1.0"/>
-            <EndCoord value="1.0"/>
-          </VarRegionAxis>
-          <VarRegionAxis index="1">
-            <StartCoord value="0.0"/>
-            <PeakCoord value="1.0"/>
-            <EndCoord value="1.0"/>
-          </VarRegionAxis>
-        </Region>
-      </VarRegionList>
-      <!-- VarDataCount=1 -->
-      <VarData index="0">
-        <!-- ItemCount=0 -->
-        <NumShorts value="0"/>
-        <!-- VarRegionCount=5 -->
-        <VarRegionIndex index="0" value="0"/>
-        <VarRegionIndex index="1" value="1"/>
-        <VarRegionIndex index="2" value="2"/>
-        <VarRegionIndex index="3" value="3"/>
-        <VarRegionIndex index="4" value="4"/>
-      </VarData>
-    </VarStore>
+    <Version value="0x00010000"/>
+    <GlyphClassDef Format="2">
+      <ClassDef glyph="uni0024" class="1"/>
+      <ClassDef glyph="uni0024.nostroke" class="1"/>
+      <ClassDef glyph="uni0041" class="1"/>
+      <ClassDef glyph="uni0061" class="1"/>
+    </GlyphClassDef>
   </GDEF>
 
 </ttFont>

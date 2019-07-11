@@ -30,27 +30,27 @@ class table_V_O_R_G_(DefaultTable.DefaultTable):
 		self.VOriginRecords = vOrig = {}
 		glyphOrder = ttFont.getGlyphOrder()
 		try:
-			names = map(operator.getitem, [glyphOrder]*self.numVertOriginYMetrics, gids)
+			names = [glyphOrder[gid] for gid in gids]
 		except IndexError:
 			getGlyphName = self.getGlyphName
-			names = map(getGlyphName, gids )
+			names = map(getGlyphName, gids)
 
-		list(map(operator.setitem, [vOrig]*self.numVertOriginYMetrics, names, vids))
+		for name, vid in zip(names, vids):
+			vOrig[name] = vid
 
 	def compile(self, ttFont):
 		vorgs = list(self.VOriginRecords.values())
 		names = list(self.VOriginRecords.keys())
 		nameMap = ttFont.getReverseGlyphMap()
-		lenRecords = len(vorgs)
 		try:
-			gids = map(operator.getitem, [nameMap]*lenRecords, names)
+			gids = [nameMap[name] for name in names]
 		except KeyError:
 			nameMap = ttFont.getReverseGlyphMap(rebuild=True)
-			gids = map(operator.getitem, [nameMap]*lenRecords, names)
+			gids = [nameMap[name] for name in names]
 		vOriginTable = list(zip(gids, vorgs))
-		self.numVertOriginYMetrics = lenRecords
+		self.numVertOriginYMetrics = len(vorgs)
 		vOriginTable.sort() # must be in ascending GID order
-		dataList = [ struct.pack(">Hh", rec[0], rec[1]) for rec in vOriginTable]
+		dataList = [struct.pack(">Hh", rec[0], rec[1]) for rec in vOriginTable]
 		header = struct.pack(">HHhH", self.majorVersion, self.minorVersion, self.defaultVertOriginY, self.numVertOriginYMetrics)
 		dataList.insert(0, header)
 		data = bytesjoin(dataList)

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <bsln>
+    <Version value="0x00010000"/>
+    <Baseline Format="3">
+      <DefaultBaseline value="0"/>
+      <StandardGlyph value="glyph00003"/>
+      <ControlPoint index="0" value="7"/>
+      <ControlPoint index="1" value="8"/>
+      <ControlPoint index="2" value="9"/>
+      <ControlPoint index="3" value="10"/>
+      <ControlPoint index="4" value="11"/>
+      <ControlPoint index="5" value="65535"/>
+      <ControlPoint index="6" value="65535"/>
+      <ControlPoint index="7" value="65535"/>
+      <ControlPoint index="8" value="65535"/>
+      <ControlPoint index="9" value="65535"/>
+      <ControlPoint index="10" value="65535"/>
+      <ControlPoint index="11" value="65535"/>
+      <ControlPoint index="12" value="65535"/>
+      <ControlPoint index="13" value="65535"/>
+      <ControlPoint index="14" value="65535"/>
+      <ControlPoint index="15" value="65535"/>
+      <ControlPoint index="16" value="65535"/>
+      <ControlPoint index="17" value="65535"/>
+      <ControlPoint index="18" value="65535"/>
+      <ControlPoint index="19" value="65535"/>
+      <ControlPoint index="20" value="65535"/>
+      <ControlPoint index="21" value="65535"/>
+      <ControlPoint index="22" value="65535"/>
+      <ControlPoint index="23" value="65535"/>
+      <ControlPoint index="24" value="65535"/>
+      <ControlPoint index="25" value="65535"/>
+      <ControlPoint index="26" value="65535"/>
+      <ControlPoint index="27" value="65535"/>
+      <ControlPoint index="28" value="65535"/>
+      <ControlPoint index="29" value="65535"/>
+      <ControlPoint index="30" value="65535"/>
+      <ControlPoint index="31" value="65535"/>
+      <BaselineValues>
+        <Lookup glyph="uni2EA2" value="1"/>
+      </BaselineValues>
+    </Baseline>
+  </bsln>
+
+</ttFont>

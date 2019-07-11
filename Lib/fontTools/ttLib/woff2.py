@@ -16,7 +16,7 @@ from fontTools.ttLib.tables import ttProgram
 import logging
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("fontTools.ttLib.woff2")
 
 haveBrotli = False
 try:
@@ -82,7 +82,7 @@ class WOFF2Reader(SFNTReader):
 		"""Fetch the raw table data. Reconstruct transformed tables."""
 		entry = self.tables[Tag(tag)]
 		if not hasattr(entry, 'data'):
-			if tag in woff2TransformedTableTags:
+			if entry.transformed:
 				entry.data = self.reconstructTable(tag)
 			else:
 				entry.data = entry.loadData(self.transformBuffer)
@@ -90,8 +90,6 @@ class WOFF2Reader(SFNTReader):
 
 	def reconstructTable(self, tag):
 		"""Reconstruct table named 'tag' from transformed data."""
-		if tag not in woff2TransformedTableTags:
-			raise TTLibError("transform for table '%s' is unknown" % tag)
 		entry = self.tables[Tag(tag)]
 		rawData = entry.loadData(self.transformBuffer)
 		if tag == 'glyf':
@@ -100,8 +98,10 @@ class WOFF2Reader(SFNTReader):
 			data = self._reconstructGlyf(rawData, padding)
 		elif tag == 'loca':
 			data = self._reconstructLoca()
+		elif tag == 'hmtx':
+			data = self._reconstructHmtx(rawData)
 		else:
-			raise NotImplementedError
+			raise TTLibError("transform for table '%s' is unknown" % tag)
 		return data
 
 	def _reconstructGlyf(self, data, padding=None):
@@ -130,6 +130,34 @@ class WOFF2Reader(SFNTReader):
 				% (self.tables['loca'].origLength, len(data)))
 		return data
 
+	def _reconstructHmtx(self, data):
+		""" Return reconstructed hmtx table data. """
+		# Before reconstructing 'hmtx' table we need to parse other tables:
+		# 'glyf' is required for reconstructing the sidebearings from the glyphs'
+		# bounding box; 'hhea' is needed for the numberOfHMetrics field.
+		if "glyf" in self.flavorData.transformedTables:
+			# transformed 'glyf' table is self-contained, thus 'loca' not needed
+			tableDependencies = ("maxp", "hhea", "glyf")
+		else:
+			# decompiling untransformed 'glyf' requires 'loca', which requires 'head'
+			tableDependencies = ("maxp", "head", "hhea", "loca", "glyf")
+		for tag in tableDependencies:
+			self._decompileTable(tag)
+		hmtxTable = self.ttFont["hmtx"] = WOFF2HmtxTable()
+		hmtxTable.reconstruct(data, self.ttFont)
+		data = hmtxTable.compile(self.ttFont)
+		return data
+
+	def _decompileTable(self, tag):
+		"""Decompile table data and store it inside self.ttFont."""
+		data = self[tag]
+		if self.ttFont.isLoaded(tag):
+			return self.ttFont[tag]
+		tableClass = getTableClass(tag)
+		table = tableClass(tag)
+		self.ttFont.tables[tag] = table
+		table.decompile(data, self.ttFont)
+
 
 class WOFF2Writer(SFNTWriter):
 
@@ -146,7 +174,7 @@ class WOFF2Writer(SFNTWriter):
 		self.file = file
 		self.numTables = numTables
 		self.sfntVersion = Tag(sfntVersion)
-		self.flavorData = flavorData or WOFF2FlavorData()
+		self.flavorData = WOFF2FlavorData(data=flavorData)
 
 		self.directoryFormat = woff2DirectoryFormat
 		self.directorySize = woff2DirectorySize
@@ -199,7 +227,7 @@ class WOFF2Writer(SFNTWriter):
 		# See:
 		# https://github.com/khaledhosny/ots/issues/60
 		# https://github.com/google/woff2/issues/15
-		if isTrueType:
+		if isTrueType and "glyf" in self.flavorData.transformedTables:
 			self._normaliseGlyfAndLoca(padding=4)
 		self._setHeadTransformFlag()
 
@@ -234,13 +262,7 @@ class WOFF2Writer(SFNTWriter):
 		if self.sfntVersion == "OTTO":
 			return
 
-		# make up glyph names required to decompile glyf table
-		self._decompileTable('maxp')
-		numGlyphs = self.ttFont['maxp'].numGlyphs
-		glyphOrder = ['.notdef'] + ["glyph%.5d" % i for i in range(1, numGlyphs)]
-		self.ttFont.setGlyphOrder(glyphOrder)
-
-		for tag in ('head', 'loca', 'glyf'):
+		for tag in ('maxp', 'head', 'loca', 'glyf'):
 			self._decompileTable(tag)
 		self.ttFont['glyf'].padding = padding
 		for tag in ('glyf', 'loca'):
@@ -265,6 +287,8 @@ class WOFF2Writer(SFNTWriter):
 			tableClass = WOFF2LocaTable
 		elif tag == 'glyf':
 			tableClass = WOFF2GlyfTable
+		elif tag == 'hmtx':
+			tableClass = WOFF2HmtxTable
 		else:
 			tableClass = getTableClass(tag)
 		table = tableClass(tag)
@@ -293,11 +317,17 @@ class WOFF2Writer(SFNTWriter):
 
 	def _transformTables(self):
 		"""Return transformed font data."""
+		transformedTables = self.flavorData.transformedTables
 		for tag, entry in self.tables.items():
-			if tag in woff2TransformedTableTags:
+			data = None
+			if tag in transformedTables:
 				data = self.transformTable(tag)
-			else:
+				if data is not None:
+					entry.transformed = True
+			if data is None:
+				# pass-through the table data without transformation
 				data = entry.data
+				entry.transformed = False
 			entry.offset = self.nextTableOffset
 			entry.saveData(self.transformBuffer, data)
 			self.nextTableOffset += entry.length
@@ -306,9 +336,9 @@ class WOFF2Writer(SFNTWriter):
 		return fontData
 
 	def transformTable(self, tag):
-		"""Return transformed table data."""
-		if tag not in woff2TransformedTableTags:
-			raise TTLibError("Transform for table '%s' is unknown" % tag)
+		"""Return transformed table data, or None if some pre-conditions aren't
+		met -- in which case, the non-transformed table data will be used.
+		"""
 		if tag == "loca":
 			data = b""
 		elif tag == "glyf":
@@ -316,8 +346,15 @@ class WOFF2Writer(SFNTWriter):
 				self._decompileTable(tag)
 			glyfTable = self.ttFont['glyf']
 			data = glyfTable.transform(self.ttFont)
+		elif tag == "hmtx":
+			if "glyf" not in self.tables:
+				return
+			for tag in ("maxp", "head", "hhea", "loca", "glyf", "hmtx"):
+				self._decompileTable(tag)
+			hmtxTable = self.ttFont["hmtx"]
+			data = hmtxTable.transform(self.ttFont)  # can be None
 		else:
-			raise NotImplementedError
+			raise TTLibError("Transform for table '%s' is unknown" % tag)
 		return data
 
 	def _calcMasterChecksum(self):
@@ -533,11 +570,9 @@ class WOFF2DirectoryEntry(DirectoryEntry):
 			# otherwise, tag is derived from a fixed 'Known Tags' table
 			self.tag = woff2KnownTags[self.flags & 0x3F]
 		self.tag = Tag(self.tag)
-		if self.flags & 0xC0 != 0:
-			raise TTLibError('bits 6-7 are reserved and must be 0')
 		self.origLength, data = unpackBase128(data)
 		self.length = self.origLength
-		if self.tag in woff2TransformedTableTags:
+		if self.transformed:
 			self.length, data = unpackBase128(data)
 			if self.tag == 'loca' and self.length != 0:
 				raise TTLibError(
@@ -550,9 +585,43 @@ class WOFF2DirectoryEntry(DirectoryEntry):
 		if (self.flags & 0x3F) == 0x3F:
 			data += struct.pack('>4s', self.tag.tobytes())
 		data += packBase128(self.origLength)
-		if self.tag in woff2TransformedTableTags:
+		if self.transformed:
 			data += packBase128(self.length)
 		return data
+
+	@property
+	def transformVersion(self):
+		"""Return bits 6-7 of table entry's flags, which indicate the preprocessing
+		transformation version number (between 0 and 3).
+		"""
+		return self.flags >> 6
+
+	@transformVersion.setter
+	def transformVersion(self, value):
+		assert 0 <= value <= 3
+		self.flags |= value << 6
+
+	@property
+	def transformed(self):
+		"""Return True if the table has any transformation, else return False."""
+		# For all tables in a font, except for 'glyf' and 'loca', the transformation
+		# version 0 indicates the null transform (where the original table data is
+		# passed directly to the Brotli compressor). For 'glyf' and 'loca' tables,
+		# transformation version 3 indicates the null transform
+		if self.tag in {"glyf", "loca"}:
+			return self.transformVersion != 3
+		else:
+			return self.transformVersion != 0
+
+	@transformed.setter
+	def transformed(self, booleanValue):
+		# here we assume that a non-null transform means version 0 for 'glyf' and
+		# 'loca' and 1 for every other table (e.g. hmtx); but that may change as
+		# new transformation formats are introduced in the future (if ever).
+		if self.tag in {"glyf", "loca"}:
+			self.transformVersion = 3 if not booleanValue else 0
+		else:
+			self.transformVersion = int(booleanValue)
 
 
 class WOFF2LocaTable(getTableClass('loca')):
@@ -582,8 +651,7 @@ class WOFF2LocaTable(getTableClass('loca')):
 					locations.append(self.locations[i] // 2)
 			else:
 				locations = array.array("I", self.locations)
-			if sys.byteorder != "big":
-				locations.byteswap()
+			if sys.byteorder != "big": locations.byteswap()
 			data = locations.tostring()
 		else:
 			# use the most compact indexFormat given the current glyph offsets
@@ -627,8 +695,7 @@ class WOFF2GlyfTable(getTableClass('glyf')):
 		self.bboxStream = self.bboxStream[bboxBitmapSize:]
 
 		self.nContourStream = array.array("h", self.nContourStream)
-		if sys.byteorder != "big":
-			self.nContourStream.byteswap()
+		if sys.byteorder != "big": self.nContourStream.byteswap()
 		assert len(self.nContourStream) == self.numGlyphs
 
 		if 'head' in ttFont:
@@ -654,19 +721,7 @@ class WOFF2GlyfTable(getTableClass('glyf')):
 	def transform(self, ttFont):
 		""" Return transformed 'glyf' data """
 		self.numGlyphs = len(self.glyphs)
-		if not hasattr(self, "glyphOrder"):
-			try:
-				self.glyphOrder = ttFont.getGlyphOrder()
-			except:
-				self.glyphOrder = None
-			if self.glyphOrder is None:
-				self.glyphOrder = [".notdef"]
-				self.glyphOrder.extend(["glyph%.5d" % i for i in range(1, self.numGlyphs)])
-		if len(self.glyphOrder) != self.numGlyphs:
-			raise TTLibError(
-				"incorrect glyphOrder: expected %d glyphs, found %d" %
-				(len(self.glyphOrder), self.numGlyphs))
-
+		assert len(self.glyphOrder) == self.numGlyphs
 		if 'maxp' in ttFont:
 			ttFont['maxp'].numGlyphs = self.numGlyphs
 		self.indexFormat = ttFont['head'].indexToLocFormat
@@ -911,13 +966,206 @@ class WOFF2GlyfTable(getTableClass('glyf')):
 		self.glyphStream += triplets.tostring()
 
 
+class WOFF2HmtxTable(getTableClass("hmtx")):
+
+	def __init__(self, tag=None):
+		self.tableTag = Tag(tag or 'hmtx')
+
+	def reconstruct(self, data, ttFont):
+		flags, = struct.unpack(">B", data[:1])
+		data = data[1:]
+		if flags & 0b11111100 != 0:
+			raise TTLibError("Bits 2-7 of '%s' flags are reserved" % self.tableTag)
+
+		# When bit 0 is _not_ set, the lsb[] array is present
+		hasLsbArray = flags & 1 == 0
+		# When bit 1 is _not_ set, the leftSideBearing[] array is present
+		hasLeftSideBearingArray = flags & 2 == 0
+		if hasLsbArray and hasLeftSideBearingArray:
+			raise TTLibError(
+				"either bits 0 or 1 (or both) must set in transformed '%s' flags"
+				% self.tableTag
+			)
+
+		glyfTable = ttFont["glyf"]
+		headerTable = ttFont["hhea"]
+		glyphOrder = glyfTable.glyphOrder
+		numGlyphs = len(glyphOrder)
+		numberOfHMetrics = min(int(headerTable.numberOfHMetrics), numGlyphs)
+
+		assert len(data) >= 2 * numberOfHMetrics
+		advanceWidthArray = array.array("H", data[:2 * numberOfHMetrics])
+		if sys.byteorder != "big":
+			advanceWidthArray.byteswap()
+		data = data[2 * numberOfHMetrics:]
+
+		if hasLsbArray:
+			assert len(data) >= 2 * numberOfHMetrics
+			lsbArray = array.array("h", data[:2 * numberOfHMetrics])
+			if sys.byteorder != "big":
+				lsbArray.byteswap()
+			data = data[2 * numberOfHMetrics:]
+		else:
+			# compute (proportional) glyphs' lsb from their xMin
+			lsbArray = array.array("h")
+			for i, glyphName in enumerate(glyphOrder):
+				if i >= numberOfHMetrics:
+					break
+				glyph = glyfTable[glyphName]
+				xMin = getattr(glyph, "xMin", 0)
+				lsbArray.append(xMin)
+
+		numberOfSideBearings = numGlyphs - numberOfHMetrics
+		if hasLeftSideBearingArray:
+			assert len(data) >= 2 * numberOfSideBearings
+			leftSideBearingArray = array.array("h", data[:2 * numberOfSideBearings])
+			if sys.byteorder != "big":
+				leftSideBearingArray.byteswap()
+			data = data[2 * numberOfSideBearings:]
+		else:
+			# compute (monospaced) glyphs' leftSideBearing from their xMin
+			leftSideBearingArray = array.array("h")
+			for i, glyphName in enumerate(glyphOrder):
+				if i < numberOfHMetrics:
+					continue
+				glyph = glyfTable[glyphName]
+				xMin = getattr(glyph, "xMin", 0)
+				leftSideBearingArray.append(xMin)
+
+		if data:
+			raise TTLibError("too much '%s' table data" % self.tableTag)
+
+		self.metrics = {}
+		for i in range(numberOfHMetrics):
+			glyphName = glyphOrder[i]
+			advanceWidth, lsb = advanceWidthArray[i], lsbArray[i]
+			self.metrics[glyphName] = (advanceWidth, lsb)
+		lastAdvance = advanceWidthArray[-1]
+		for i in range(numberOfSideBearings):
+			glyphName = glyphOrder[i + numberOfHMetrics]
+			self.metrics[glyphName] = (lastAdvance, leftSideBearingArray[i])
+
+	def transform(self, ttFont):
+		glyphOrder = ttFont.getGlyphOrder()
+		glyf = ttFont["glyf"]
+		hhea = ttFont["hhea"]
+		numberOfHMetrics = hhea.numberOfHMetrics
+
+		# check if any of the proportional glyphs has left sidebearings that
+		# differ from their xMin bounding box values.
+		hasLsbArray = False
+		for i in range(numberOfHMetrics):
+			glyphName = glyphOrder[i]
+			lsb = self.metrics[glyphName][1]
+			if lsb != getattr(glyf[glyphName], "xMin", 0):
+				hasLsbArray = True
+				break
+
+		# do the same for the monospaced glyphs (if any) at the end of hmtx table
+		hasLeftSideBearingArray = False
+		for i in range(numberOfHMetrics, len(glyphOrder)):
+			glyphName = glyphOrder[i]
+			lsb = self.metrics[glyphName][1]
+			if lsb != getattr(glyf[glyphName], "xMin", 0):
+				hasLeftSideBearingArray = True
+				break
+
+		# if we need to encode both sidebearings arrays, then no transformation is
+		# applicable, and we must use the untransformed hmtx data
+		if hasLsbArray and hasLeftSideBearingArray:
+			return
+
+		# set bit 0 and 1 when the respective arrays are _not_ present
+		flags = 0
+		if not hasLsbArray:
+			flags |= 1 << 0
+		if not hasLeftSideBearingArray:
+			flags |= 1 << 1
+
+		data = struct.pack(">B", flags)
+
+		advanceWidthArray = array.array(
+			"H",
+			[
+				self.metrics[glyphName][0]
+				for i, glyphName in enumerate(glyphOrder)
+				if i < numberOfHMetrics
+			]
+		)
+		if sys.byteorder != "big":
+			advanceWidthArray.byteswap()
+		data += advanceWidthArray.tostring()
+
+		if hasLsbArray:
+			lsbArray = array.array(
+				"h",
+				[
+					self.metrics[glyphName][1]
+					for i, glyphName in enumerate(glyphOrder)
+					if i < numberOfHMetrics
+				]
+			)
+			if sys.byteorder != "big":
+				lsbArray.byteswap()
+			data += lsbArray.tostring()
+
+		if hasLeftSideBearingArray:
+			leftSideBearingArray = array.array(
+				"h",
+				[
+					self.metrics[glyphOrder[i]][1]
+					for i in range(numberOfHMetrics, len(glyphOrder))
+				]
+			)
+			if sys.byteorder != "big":
+				leftSideBearingArray.byteswap()
+			data += leftSideBearingArray.tostring()
+
+		return data
+
+
 class WOFF2FlavorData(WOFFFlavorData):
 
 	Flavor = 'woff2'
 
-	def __init__(self, reader=None):
+	def __init__(self, reader=None, data=None, transformedTables=None):
+		"""Data class that holds the WOFF2 header major/minor version, any
+		metadata or private data (as bytes strings), and the set of
+		table tags that have transformations applied (if reader is not None),
+		or will have once the WOFF2 font is compiled.
+
+		Args:
+			reader: an SFNTReader (or subclass) object to read flavor data from.
+			data: another WOFFFlavorData object to initialise data from.
+			transformedTables: set of strings containing table tags to be transformed.
+
+		Raises:
+			ImportError if the brotli module is not installed.
+
+		NOTE: The 'reader' argument, on the one hand, and the 'data' and
+		'transformedTables' arguments, on the other hand, are mutually exclusive.
+		"""
 		if not haveBrotli:
 			raise ImportError("No module named brotli")
+
+		if reader is not None:
+			if data is not None:
+				raise TypeError(
+					"'reader' and 'data' arguments are mutually exclusive"
+				)
+			if transformedTables is not None:
+				raise TypeError(
+					"'reader' and 'transformedTables' arguments are mutually exclusive"
+				)
+
+		if transformedTables is not None and (
+				"glyf" in transformedTables and "loca" not in transformedTables
+				or "loca" in transformedTables and "glyf" not in transformedTables
+			):
+				raise ValueError(
+					"'glyf' and 'loca' must be transformed (or not) together"
+				)
+
 		self.majorVersion = None
 		self.minorVersion = None
 		self.metaData = None
@@ -929,14 +1177,31 @@ class WOFF2FlavorData(WOFFFlavorData):
 				reader.file.seek(reader.metaOffset)
 				rawData = reader.file.read(reader.metaLength)
 				assert len(rawData) == reader.metaLength
-				data = brotli.decompress(rawData)
-				assert len(data) == reader.metaOrigLength
-				self.metaData = data
+				metaData = brotli.decompress(rawData)
+				assert len(metaData) == reader.metaOrigLength
+				self.metaData = metaData
 			if reader.privLength:
 				reader.file.seek(reader.privOffset)
-				data = reader.file.read(reader.privLength)
-				assert len(data) == reader.privLength
-				self.privData = data
+				privData = reader.file.read(reader.privLength)
+				assert len(privData) == reader.privLength
+				self.privData = privData
+			transformedTables = [
+				tag
+				for tag, entry in reader.tables.items()
+				if entry.transformed
+			]
+		elif data:
+			self.majorVersion = data.majorVersion
+			self.majorVersion = data.minorVersion
+			self.metaData = data.metaData
+			self.privData = data.privData
+			if transformedTables is None and hasattr(data, "transformedTables"):
+				 transformedTables = data.transformedTables
+
+		if transformedTables is None:
+			transformedTables = woff2TransformedTableTags
+
+		self.transformedTables = set(transformedTables)
 
 
 def unpackBase128(data):
@@ -1093,6 +1358,166 @@ def pack255UShort(value):
 		return struct.pack(">BH", 253, value)
 
 
+def compress(input_file, output_file, transform_tables=None):
+	"""Compress OpenType font to WOFF2.
+
+	Args:
+		input_file: a file path, file or file-like object (open in binary mode)
+			containing an OpenType font (either CFF- or TrueType-flavored).
+		output_file: a file path, file or file-like object where to save the
+			compressed WOFF2 font.
+		transform_tables: Optional[Iterable[str]]: a set of table tags for which
+			to enable preprocessing transformations. By default, only 'glyf'
+			and 'loca' tables are transformed. An empty set means disable all
+			transformations.
+	"""
+	log.info("Processing %s => %s" % (input_file, output_file))
+
+	font = TTFont(input_file, recalcBBoxes=False, recalcTimestamp=False)
+	font.flavor = "woff2"
+
+	if transform_tables is not None:
+		font.flavorData = WOFF2FlavorData(
+			data=font.flavorData, transformedTables=transform_tables
+		)
+
+	font.save(output_file, reorderTables=False)
+
+
+def decompress(input_file, output_file):
+	"""Decompress WOFF2 font to OpenType font.
+
+	Args:
+		input_file: a file path, file or file-like object (open in binary mode)
+			containing a compressed WOFF2 font.
+		output_file: a file path, file or file-like object where to save the
+			decompressed OpenType font.
+	"""
+	log.info("Processing %s => %s" % (input_file, output_file))
+
+	font = TTFont(input_file, recalcBBoxes=False, recalcTimestamp=False)
+	font.flavor = None
+	font.flavorData = None
+	font.save(output_file, reorderTables=True)
+
+
+def main(args=None):
+	import argparse
+	from fontTools import configLogger
+	from fontTools.ttx import makeOutputFileName
+
+	class _NoGlyfTransformAction(argparse.Action):
+		def __call__(self, parser, namespace, values, option_string=None):
+			namespace.transform_tables.difference_update({"glyf", "loca"})
+
+	class _HmtxTransformAction(argparse.Action):
+		def __call__(self, parser, namespace, values, option_string=None):
+			namespace.transform_tables.add("hmtx")
+
+	parser = argparse.ArgumentParser(
+		prog="fonttools ttLib.woff2",
+		description="Compress and decompress WOFF2 fonts",
+	)
+
+	parser_group = parser.add_subparsers(title="sub-commands")
+	parser_compress = parser_group.add_parser("compress")
+	parser_decompress = parser_group.add_parser("decompress")
+
+	for subparser in (parser_compress, parser_decompress):
+		group = subparser.add_mutually_exclusive_group(required=False)
+		group.add_argument(
+			"-v",
+			"--verbose",
+			action="store_true",
+			help="print more messages to console",
+		)
+		group.add_argument(
+			"-q",
+			"--quiet",
+			action="store_true",
+			help="do not print messages to console",
+		)
+
+	parser_compress.add_argument(
+		"input_file",
+		metavar="INPUT",
+		help="the input OpenType font (.ttf or .otf)",
+	)
+	parser_decompress.add_argument(
+		"input_file",
+		metavar="INPUT",
+		help="the input WOFF2 font",
+	)
+
+	parser_compress.add_argument(
+		"-o",
+		"--output-file",
+		metavar="OUTPUT",
+		help="the output WOFF2 font",
+	)
+	parser_decompress.add_argument(
+		"-o",
+		"--output-file",
+		metavar="OUTPUT",
+		help="the output OpenType font",
+	)
+
+	transform_group = parser_compress.add_argument_group()
+	transform_group.add_argument(
+		"--no-glyf-transform",
+		dest="transform_tables",
+		nargs=0,
+		action=_NoGlyfTransformAction,
+		help="Do not transform glyf (and loca) tables",
+	)
+	transform_group.add_argument(
+		"--hmtx-transform",
+		dest="transform_tables",
+		nargs=0,
+		action=_HmtxTransformAction,
+		help="Enable optional transformation for 'hmtx' table",
+	)
+
+	parser_compress.set_defaults(
+		subcommand=compress,
+		transform_tables={"glyf", "loca"},
+	)
+	parser_decompress.set_defaults(subcommand=decompress)
+
+	options = vars(parser.parse_args(args))
+
+	subcommand = options.pop("subcommand", None)
+	if not subcommand:
+		parser.print_help()
+		return
+
+	quiet = options.pop("quiet")
+	verbose = options.pop("verbose")
+	configLogger(
+		level=("ERROR" if quiet else "DEBUG" if verbose else "INFO"),
+	)
+
+	if not options["output_file"]:
+		if subcommand is compress:
+			extension = ".woff2"
+		elif subcommand is decompress:
+			# choose .ttf/.otf file extension depending on sfntVersion
+			with open(options["input_file"], "rb") as f:
+				f.seek(4)  # skip 'wOF2' signature
+				sfntVersion = f.read(4)
+			assert len(sfntVersion) == 4, "not enough data"
+			extension = ".otf" if sfntVersion == b"OTTO" else ".ttf"
+		else:
+			raise AssertionError(subcommand)
+		options["output_file"] = makeOutputFileName(
+			options["input_file"], outputDir=None, extension=extension
+		)
+
+	try:
+		subcommand(**options)
+	except TTLibError as e:
+		parser.error(e)
+
+
 if __name__ == "__main__":
-	import doctest
-	sys.exit(doctest.testmod().failed)
+	sys.exit(main())

@@ -23,18 +23,19 @@ assert(len(LCAR_FORMAT_0_DATA) == 40)
 
 LCAR_FORMAT_0_XML = [
     '<Version value="0x00010000"/>',
-    '<Format value="0"/>',
-    '<Carets>',
-    '  <Lookup glyph="f_f_l">',
-    '    <!-- DivsionPointCount=2 -->',
-    '    <DivisionPoint index="0" value="239"/>',
-    '    <DivisionPoint index="1" value="472"/>',
-    '  </Lookup>',
-    '  <Lookup glyph="f_r">',
-    '    <!-- DivsionPointCount=1 -->',
-    '    <DivisionPoint index="0" value="220"/>',
-    '  </Lookup>',
-    '</Carets>',
+    '<LigatureCarets Format="0">',
+    '  <Carets>',
+    '    <Lookup glyph="f_f_l">',
+    '      <!-- DivsionPointCount=2 -->',
+    '      <DivisionPoint index="0" value="239"/>',
+    '      <DivisionPoint index="1" value="472"/>',
+    '    </Lookup>',
+    '    <Lookup glyph="f_r">',
+    '      <!-- DivsionPointCount=1 -->',
+    '      <DivisionPoint index="0" value="220"/>',
+    '    </Lookup>',
+    '  </Carets>',
+    '</LigatureCarets>',
 ]
 
 
@@ -55,18 +56,19 @@ assert(len(LCAR_FORMAT_1_DATA) == 40)
 
 LCAR_FORMAT_1_XML = [
     '<Version value="0x00010000"/>',
-    '<Format value="1"/>',
-    '<Carets>',
-    '  <Lookup glyph="f_f_l">',
-    '    <!-- DivsionPointCount=2 -->',
-    '    <DivisionPoint index="0" value="55"/>',
-    '    <DivisionPoint index="1" value="75"/>',
-    '  </Lookup>',
-    '  <Lookup glyph="f_r">',
-    '    <!-- DivsionPointCount=1 -->',
-    '    <DivisionPoint index="0" value="50"/>',
-    '  </Lookup>',
-    '</Carets>',
+    '<LigatureCarets Format="1">',
+    '  <Carets>',
+    '    <Lookup glyph="f_f_l">',
+    '      <!-- DivsionPointCount=2 -->',
+    '      <DivisionPoint index="0" value="55"/>',
+    '      <DivisionPoint index="1" value="75"/>',
+    '    </Lookup>',
+    '    <Lookup glyph="f_r">',
+    '      <!-- DivsionPointCount=1 -->',
+    '      <DivisionPoint index="0" value="50"/>',
+    '    </Lookup>',
+    '  </Carets>',
+    '</LigatureCarets>',
 ]
 
 

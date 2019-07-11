@@ -107,6 +107,27 @@ class HmtxTableTest(unittest.TestCase):
             len([r for r in captor.records
                 if "has a huge advance" in r.msg]) == 1)
 
+    def test_decompile_no_header_table(self):
+        font = TTFont()
+        maxp = font['maxp'] = newTable('maxp')
+        maxp.numGlyphs = 3
+        font.glyphOrder = ["A", "B", "C"]
+
+        self.assertNotIn(self.tableClass.headerTag, font)
+
+        data = deHexStr("0190 001E 0190 0028 0190 0032")
+        mtxTable = newTable(self.tag)
+        mtxTable.decompile(data, font)
+
+        self.assertEqual(
+            mtxTable.metrics,
+            {
+                "A": (400, 30),
+                "B": (400, 40),
+                "C": (400, 50),
+            }
+        )
+
     def test_compile(self):
         # we set the wrong 'numberOfMetrics' to check it gets adjusted
         font = self.makeFont(numGlyphs=3, numberOfMetrics=4)
@@ -164,14 +185,32 @@ class HmtxTableTest(unittest.TestCase):
         font = self.makeFont(numGlyphs=3, numberOfMetrics=2)
         mtxTable = font[self.tag] = newTable(self.tag)
         mtxTable.metrics = {
-            'A': (0.5, 0.5),  # round -> (0, 0)
+            'A': (0.5, 0.5),  # round -> (1, 1)
             'B': (0.1, 0.9),  # round -> (0, 1)
             'C': (0.1, 0.1),  # round -> (0, 0)
         }
 
         data = mtxTable.compile(font)
 
-        self.assertEqual(data, deHexStr("0000 0000 0000 0001 0000"))
+        self.assertEqual(data, deHexStr("0001 0001 0000 0001 0000"))
+
+    def test_compile_no_header_table(self):
+        font = TTFont()
+        maxp = font['maxp'] = newTable('maxp')
+        maxp.numGlyphs = 3
+        font.glyphOrder = [chr(i) for i in range(65, 68)]
+        mtxTable = font[self.tag] = newTable(self.tag)
+        mtxTable.metrics = {
+            "A": (400, 30),
+            "B": (400, 40),
+            "C": (400, 50),
+        }
+
+        self.assertNotIn(self.tableClass.headerTag, font)
+
+        data = mtxTable.compile(font)
+
+        self.assertEqual(data, deHexStr("0190 001E 0190 0028 0190 0032"))
 
     def test_toXML(self):
         font = self.makeFont(numGlyphs=2, numberOfMetrics=2)

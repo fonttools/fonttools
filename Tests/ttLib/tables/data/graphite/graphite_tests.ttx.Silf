@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00">
+
+  <Silf>
+    <!-- Attributes starting with _ are informative only -->
+    <version compilerVersion="0" compressionScheme="0" version="2.0"/>
+    <silf>
+      <info direction="1" extraAscent="0" extraDescent="0" flags="4" lbGID="6" maxCompPerLig="0" maxGlyphID="7" numLigComp="0" numUserDefn="0"/>
+      <passindexes iBidi="255" iJust="1" iPos="1" iSubst="0"/>
+      <contexts maxPostContext="0" maxPreContext="0"/>
+      <attributes attCollisions="0" attrBreakWeight="2" attrDirectionality="3" attrMirroring="4" attrPseudo="0" attrSkipPasses="1"/>
+      <classes>
+        <linearClasses>
+          <linear _index="0">
+            c
+          </linear>
+        </linearClasses>
+        <nonLinearClasses>
+        </nonLinearClasses>
+      </classes>
+      <passes>
+        <pass _index="0">
+          <info collisionThreshold="0" flags="0" maxBackup="0" maxRuleContext="3" maxRuleLoop="5" maxRulePreContext="1" minRulePreContext="0"/>
+          <fsminfo numColumns="3" numRows="6" numSuccess="2" numTransitional="5"/>
+          <colmap>
+            .notdef=0 space=0 a=1 b=2 c=0
+          </colmap>
+          <staterulemap>
+            <state number="4" rules="1"/>
+            <state number="5" rules="0"/>
+          </staterulemap>
+          <rules>
+            <rule index="0" precontext="0" sortkey="2">
+              <action>
+                PUT_GLYPH_8BIT_OBS(0)
+                ASSOC(0, 1)
+                NEXT
+                DELETE
+                NEXT
+                RET_ZERO
+              </action>
+            </rule>
+            <rule index="1" precontext="1" sortkey="2">
+              <action>
+                PUT_GLYPH_8BIT_OBS(0)
+                NEXT
+                RET_ZERO
+              </action>
+            </rule>
+          </rules>
+          <fsm>
+            <starts>0 1</starts>
+            <row _i="0">1 1 2</row>
+            <row _i="1">0 3 0</row>
+            <row _i="2">0 4 0</row>
+            <row _i="3">0 0 5</row>
+            <row _i="4">0 0 5</row>
+          </fsm>
+        </pass>
+        <pass _index="1">
+          <info collisionThreshold="10" flags="0" maxBackup="0" maxRuleContext="2" maxRuleLoop="5" maxRulePreContext="0" minRulePreContext="0"/>
+          <fsminfo numColumns="2" numRows="3" numSuccess="1" numTransitional="2"/>
+          <colmap>
+            a=0 c=1
+          </colmap>
+          <staterulemap>
+            <state number="2" rules="0"/>
+          </staterulemap>
+          <rules>
+            <rule index="0" precontext="0" sortkey="2">
+              <action>
+                COPY_NEXT
+                PUT_COPY(0)
+                PUSH_BYTE(-1)
+                ATTR_SET_SLOT(2)
+                PUSH_BYTE(0)
+                ATTR_SET(17)
+                PUSH_GLYPH_ATTR_OBS(6, 0)
+                ATTR_SET(8)
+                PUSH_GLYPH_ATTR_OBS(7, 0)
+                ATTR_SET(9)
+                PUSH_ATT_TO_GATTR_OBS(6, 0)
+                ATTR_SET(3)
+                PUSH_ATT_TO_GATTR_OBS(7, 0)
+                ATTR_SET(4)
+                NEXT
+                RET_ZERO
+              </action>
+            </rule>
+          </rules>
+          <fsm>
+            <starts>0</starts>
+            <row _i="0">1 0</row>
+            <row _i="1">0 2</row>
+          </fsm>
+        </pass>
+      </passes>
+    </silf>
+  </Silf>
+
+</ttFont>

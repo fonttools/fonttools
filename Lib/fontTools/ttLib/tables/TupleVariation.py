@@ -1,6 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
-from fontTools.misc.fixedTools import fixedToFloat, floatToFixed
+from fontTools.misc.fixedTools import fixedToFloat, floatToFixed, otRound
 from fontTools.misc.textTools import safeEval
 import array
 import io
@@ -71,7 +71,13 @@ class TupleVariation(object):
 				if minValue == defaultMinValue and maxValue == defaultMaxValue:
 					writer.simpletag("coord", axis=axis, value=value)
 				else:
-					writer.simpletag("coord", axis=axis, value=value, min=minValue, max=maxValue)
+					attrs = [
+						("axis", axis),
+						("min", minValue),
+						("value", value),
+						("max", maxValue),
+				        ]
+					writer.simpletag("coord", attrs)
 				writer.newline()
 		wrote_any_deltas = False
 		for i, delta in enumerate(self.coordinates):
@@ -134,16 +140,19 @@ class TupleVariation(object):
 			flags |= INTERMEDIATE_REGION
 			tupleData.append(intermediateCoord)
 
-		if sharedPoints is not None:
+		points = self.getUsedPoints()
+		if sharedPoints == points:
+			# Only use the shared points if they are identical to the actually used points
 			auxData = self.compileDeltas(sharedPoints)
+			usesSharedPoints = True
 		else:
 			flags |= PRIVATE_POINT_NUMBERS
-			points = self.getUsedPoints()
 			numPointsInGlyph = len(self.coordinates)
 			auxData = self.compilePoints(points, numPointsInGlyph) + self.compileDeltas(points)
+			usesSharedPoints = False
 
 		tupleData = struct.pack('>HH', len(auxData), flags) + bytesjoin(tupleData)
-		return (tupleData, auxData)
+		return (tupleData, auxData, usesSharedPoints)
 
 	def compileCoord(self, axisTags):
 		result = []
@@ -264,8 +273,7 @@ class TupleVariation(object):
 				points = array.array("B")
 				pointsSize = numPointsInRun
 			points.fromstring(data[pos:pos+pointsSize])
-			if sys.byteorder != "big":
-				points.byteswap()
+			if sys.byteorder != "big": points.byteswap()
 
 			assert len(points) == numPointsInRun
 			pos += pointsSize
@@ -366,7 +374,7 @@ class TupleVariation(object):
 		assert runLength >= 1 and runLength <= 64
 		stream.write(bytechr(runLength - 1))
 		for i in range(offset, pos):
-			stream.write(struct.pack('b', round(deltas[i])))
+			stream.write(struct.pack('b', otRound(deltas[i])))
 		return pos
 
 	@staticmethod
@@ -400,7 +408,7 @@ class TupleVariation(object):
 		assert runLength >= 1 and runLength <= 64
 		stream.write(bytechr(DELTAS_ARE_WORDS | (runLength - 1)))
 		for i in range(offset, pos):
-			stream.write(struct.pack('>h', round(deltas[i])))
+			stream.write(struct.pack('>h', otRound(deltas[i])))
 		return pos
 
 	@staticmethod
@@ -422,8 +430,7 @@ class TupleVariation(object):
 					deltas = array.array("b")
 					deltasSize = numDeltasInRun
 				deltas.fromstring(data[pos:pos+deltasSize])
-				if sys.byteorder != "big":
-					deltas.byteswap()
+				if sys.byteorder != "big": deltas.byteswap()
 				assert len(deltas) == numDeltasInRun
 				pos += deltasSize
 				result.extend(deltas)
@@ -462,7 +469,8 @@ def compileSharedTuples(axisTags, variations):
 
 
 def compileTupleVariationStore(variations, pointCount,
-                               axisTags, sharedTupleIndices):
+                               axisTags, sharedTupleIndices,
+                               useSharedPoints=True):
 	variations = [v for v in variations if v.hasImpact()]
 	if len(variations) == 0:
 		return (0, b"", b"")
@@ -499,32 +507,31 @@ def compileTupleVariationStore(variations, pointCount,
 	# For the time being, we try two variants and then pick the better one:
 	# (a) each tuple supplies its own private set of points;
 	# (b) all tuples refer to a shared set of points, which consists of
-	#     "every control point in the glyph".
-	allPoints = set(range(pointCount))
+	#     "every control point in the glyph that has explicit deltas".
+	usedPoints = set()
+	for v in variations:
+		usedPoints |= v.getUsedPoints()
 	tuples = []
 	data = []
 	someTuplesSharePoints = False
+	sharedPointVariation = None # To keep track of a variation that uses shared points
 	for v in variations:
-		privateTuple, privateData = v.compile(
+		privateTuple, privateData, _ = v.compile(
 			axisTags, sharedTupleIndices, sharedPoints=None)
-		sharedTuple, sharedData = v.compile(
-			axisTags, sharedTupleIndices, sharedPoints=allPoints)
-		# TODO: Apple macOS 10.9.5 (maybe also earlier) up to 10.12 had a bug
-		# that broke variations if the `gvar` table contains shared tuples.
-		# Apple will likely fix this in macOS 10.13. But for the time being,
-		# we never emit shared points although the result would be more compact.
-		# https://rawgit.com/unicode-org/text-rendering-tests/master/reports/CoreText.html#GVAR-1
-		#if (len(sharedTuple) + len(sharedData)) < (len(privateTuple) + len(privateData)):
-		if False:
+		sharedTuple, sharedData, usesSharedPoints = v.compile(
+			axisTags, sharedTupleIndices, sharedPoints=usedPoints)
+		if useSharedPoints and (len(sharedTuple) + len(sharedData)) < (len(privateTuple) + len(privateData)):
 			tuples.append(sharedTuple)
 			data.append(sharedData)
-			someTuplesSharePoints = True
+			someTuplesSharePoints |= usesSharedPoints
+			sharedPointVariation = v
 		else:
 			tuples.append(privateTuple)
 			data.append(privateData)
 	if someTuplesSharePoints:
-		data = bytechr(0) + bytesjoin(data)  # 0x00 = "all points in glyph"
-		tupleVariationCount = tv.TUPLES_SHARE_POINT_NUMBERS | len(tuples)
+		# Use the last of the variations that share points for compiling the packed point data
+		data = sharedPointVariation.compilePoints(usedPoints, len(sharedPointVariation.coordinates)) + bytesjoin(data)
+		tupleVariationCount = TUPLES_SHARE_POINT_NUMBERS | len(tuples)
 	else:
 		data = bytesjoin(data)
 		tupleVariationCount = len(tuples)

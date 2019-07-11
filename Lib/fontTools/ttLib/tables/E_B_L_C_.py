@@ -115,7 +115,7 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
 				indexSubTable.indexFormat = indexFormat
 				indexSubTable.imageFormat = imageFormat
 				indexSubTable.imageDataOffset = imageDataOffset
-				indexSubTable.decompile() # https://github.com/behdad/fonttools/issues/317
+				indexSubTable.decompile() # https://github.com/fonttools/fonttools/issues/317
 				curStrike.indexSubTables.append(indexSubTable)
 
 	def compile(self, ttFont):

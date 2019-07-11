@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00">
+
+  <Glat>
+    <version compressionScheme="0" version="1.0"/>
+    <glyph name=".notdef">
+      <attribute index="1" value="3"/>
+      <attribute index="2" value="30"/>
+    </glyph>
+    <glyph name="space">
+      <attribute index="1" value="3"/>
+      <attribute index="2" value="15"/>
+      <attribute index="3" value="9"/>
+    </glyph>
+    <glyph name="a">
+      <attribute index="1" value="2"/>
+      <attribute index="2" value="30"/>
+    </glyph>
+    <glyph name="b">
+      <attribute index="1" value="3"/>
+      <attribute index="2" value="30"/>
+    </glyph>
+    <glyph name="c">
+      <attribute index="1" value="1"/>
+      <attribute index="2" value="30"/>
+    </glyph>
+  </Glat>
+
+</ttFont>

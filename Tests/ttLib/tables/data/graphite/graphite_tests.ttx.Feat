@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00">
+
+  <Feat>
+    <version version="2.0"/>
+    <feature default="0" fid="1" flags="32768" label="258">
+    </feature>
+    <feature default="0" fid="nom " flags="32768" label="262">
+      <setting label="261" value="0"/>
+      <setting label="260" value="1"/>
+    </feature>
+    <feature default="0" fid="yesm" flags="32768" label="259">
+      <setting label="261" value="0"/>
+      <setting label="260" value="1"/>
+    </feature>
+  </Feat>
+
+</ttFont>

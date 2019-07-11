@@ -10,7 +10,11 @@ if len(sys.argv) != 2:
 	print("usage: layout-features.py fontfile.ttf")
 	sys.exit(1)
 fontfile = sys.argv[1]
-font = TTFont(fontfile)
+if fontfile.rsplit(".", 1)[-1] == "ttx":
+	font = TTFont()
+	font.importXML(fontfile)
+else:
+	font = TTFont(fontfile)
 
 for tag in ('GSUB', 'GPOS'):
 	if not tag in font: continue

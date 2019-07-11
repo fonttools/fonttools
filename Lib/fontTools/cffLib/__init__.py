@@ -144,7 +144,7 @@ class CFFFontSet(object):
 
 		writer.toFile(file)
 
-	def toXML(self, xmlWriter, progress=None):
+	def toXML(self, xmlWriter):
 		xmlWriter.simpletag("major", value=self.major)
 		xmlWriter.newline()
 		xmlWriter.simpletag("minor", value=self.minor)
@@ -153,13 +153,13 @@ class CFFFontSet(object):
 			xmlWriter.begintag("CFFFont", name=tostr(fontName))
 			xmlWriter.newline()
 			font = self[fontName]
-			font.toXML(xmlWriter, progress)
+			font.toXML(xmlWriter)
 			xmlWriter.endtag("CFFFont")
 			xmlWriter.newline()
 		xmlWriter.newline()
 		xmlWriter.begintag("GlobalSubrs")
 		xmlWriter.newline()
-		self.GlobalSubrs.toXML(xmlWriter, progress)
+		self.GlobalSubrs.toXML(xmlWriter)
 		xmlWriter.endtag("GlobalSubrs")
 		xmlWriter.newline()
 
@@ -207,6 +207,13 @@ class CFFFontSet(object):
 					continue
 				name, attrs, content = element
 				topDict.fromXML(name, attrs, content)
+
+			if hasattr(topDict, "VarStore") and topDict.FDArray[0].vstore is None:
+				fdArray = topDict.FDArray
+				for fontDict in fdArray:
+					if hasattr(fontDict, "Private"):
+						fontDict.Private.vstore = topDict.VarStore
+
 		elif name == "GlobalSubrs":
 			subrCharStringClass = psCharStrings.T2CharString
 			if not hasattr(self, "GlobalSubrs"):
@@ -244,7 +251,7 @@ class CFFFontSet(object):
 				if key in topDict.rawDict:
 					del topDict.rawDict[key]
 				if hasattr(topDict, key):
-					exec("del topDict.%s" % (key))
+					delattr(topDict, key)
 
 		if not hasattr(topDict, "FDArray"):
 			fdArray = topDict.FDArray = FDArrayIndex()
@@ -257,6 +264,7 @@ class CFFFontSet(object):
 			else:
 				charStrings.fdArray = fdArray
 			fontDict = FontDict()
+			fontDict.setCFF2(True)
 			fdArray.append(fontDict)
 			fontDict.Private = privateDict
 			privateOpOrder = buildOrder(privateDictOperators2)
@@ -267,12 +275,20 @@ class CFFFontSet(object):
 						# print "Removing private dict", key
 						del privateDict.rawDict[key]
 					if hasattr(privateDict, key):
-						exec("del privateDict.%s" % (key))
+						delattr(privateDict, key)
 						# print "Removing privateDict attr", key
 		else:
 			# clean up the PrivateDicts in the fdArray
+			fdArray = topDict.FDArray
 			privateOpOrder = buildOrder(privateDictOperators2)
 			for fontDict in fdArray:
+				fontDict.setCFF2(True)
+				for key in fontDict.rawDict.keys():
+					if key not in fontDict.order:
+						del fontDict.rawDict[key]
+						if hasattr(fontDict, key):
+							delattr(fontDict, key)
+
 				privateDict = fontDict.Private
 				for entry in privateDictOperators:
 					key = entry[1]
@@ -281,7 +297,7 @@ class CFFFontSet(object):
 							# print "Removing private dict", key
 							del privateDict.rawDict[key]
 						if hasattr(privateDict, key):
-							exec("del privateDict.%s" % (key))
+							delattr(privateDict, key)
 							# print "Removing privateDict attr", key
 		# At this point, the Subrs and Charstrings are all still T2Charstring class
 		# easiest to fix this by compiling, then decompiling again
@@ -598,6 +614,9 @@ class Index(object):
 	def getCompiler(self, strings, parent, isCFF2=None):
 		return self.compilerClass(self, strings, parent, isCFF2=isCFF2)
 
+	def clear(self):
+		del self.items[:]
+
 
 class GlobalSubrsIndex(Index):
 
@@ -628,7 +647,7 @@ class GlobalSubrsIndex(Index):
 			private = None
 		return self.subrClass(data, private=private, globalSubrs=self.globalSubrs)
 
-	def toXML(self, xmlWriter, progress):
+	def toXML(self, xmlWriter):
 		xmlWriter.comment(
 			"The 'index' attribute is only for humans; "
 			"it is ignored when parsed.")
@@ -693,11 +712,11 @@ class TopDictIndex(Index):
 		top.decompile(data)
 		return top
 
-	def toXML(self, xmlWriter, progress):
+	def toXML(self, xmlWriter):
 		for i in range(len(self)):
 			xmlWriter.begintag("FontDict", index=i)
 			xmlWriter.newline()
-			self[i].toXML(xmlWriter, progress)
+			self[i].toXML(xmlWriter)
 			xmlWriter.endtag("FontDict")
 			xmlWriter.newline()
 
@@ -706,11 +725,11 @@ class FDArrayIndex(Index):
 
 	compilerClass = FDArrayIndexCompiler
 
-	def toXML(self, xmlWriter, progress):
+	def toXML(self, xmlWriter):
 		for i in range(len(self)):
 			xmlWriter.begintag("FontDict", index=i)
 			xmlWriter.newline()
-			self[i].toXML(xmlWriter, progress)
+			self[i].toXML(xmlWriter)
 			xmlWriter.endtag("FontDict")
 			xmlWriter.newline()
 
@@ -901,11 +920,8 @@ class CharStrings(object):
 				sel = None
 			return self.charStrings[name], sel
 
-	def toXML(self, xmlWriter, progress):
+	def toXML(self, xmlWriter):
 		names = sorted(self.keys())
-		i = 0
-		step = 10
-		numGlyphs = len(names)
 		for name in names:
 			charStr, fdSelectIndex = self.getItemAndSelector(name)
 			if charStr.needsDecompilation():
@@ -922,10 +938,6 @@ class CharStrings(object):
 			charStr.toXML(xmlWriter)
 			xmlWriter.endtag("CharString")
 			xmlWriter.newline()
-			if not i % step and progress is not None:
-				progress.setLabel("Dumping 'CFF ' table... (%s)" % name)
-				progress.increment(step / numGlyphs)
-			i = i + 1
 
 	def fromXML(self, name, attrs, content):
 		for element in content:
@@ -1032,12 +1044,22 @@ def buildConverters(table):
 class SimpleConverter(object):
 
 	def read(self, parent, value):
+		if not hasattr(parent, "file"):
+			return self._read(parent, value)
+		file = parent.file
+		pos = file.tell()
+		try:
+			return self._read(parent, value)
+		finally:
+			file.seek(pos)
+
+	def _read(self, parent, value):
 		return value
 
 	def write(self, parent, value):
 		return value
 
-	def xmlWrite(self, xmlWriter, name, value, progress):
+	def xmlWrite(self, xmlWriter, name, value):
 		xmlWriter.simpletag(name, value=value)
 		xmlWriter.newline()
 
@@ -1047,13 +1069,13 @@ class SimpleConverter(object):
 
 class ASCIIConverter(SimpleConverter):
 
-	def read(self, parent, value):
+	def _read(self, parent, value):
 		return tostr(value, encoding='ascii')
 
 	def write(self, parent, value):
 		return tobytes(value, encoding='ascii')
 
-	def xmlWrite(self, xmlWriter, name, value, progress):
+	def xmlWrite(self, xmlWriter, name, value):
 		xmlWriter.simpletag(name, value=tounicode(value, encoding="ascii"))
 		xmlWriter.newline()
 
@@ -1063,13 +1085,13 @@ class ASCIIConverter(SimpleConverter):
 
 class Latin1Converter(SimpleConverter):
 
-	def read(self, parent, value):
+	def _read(self, parent, value):
 		return tostr(value, encoding='latin1')
 
 	def write(self, parent, value):
 		return tobytes(value, encoding='latin1')
 
-	def xmlWrite(self, xmlWriter, name, value, progress):
+	def xmlWrite(self, xmlWriter, name, value):
 		value = tounicode(value, encoding="latin1")
 		if name in ['Notice', 'Copyright']:
 			value = re.sub(r"[\r\n]\s+", " ", value)
@@ -1103,7 +1125,7 @@ def parseBlendList(s):
 
 
 class NumberConverter(SimpleConverter):
-	def xmlWrite(self, xmlWriter, name, value, progress):
+	def xmlWrite(self, xmlWriter, name, value):
 		if isinstance(value, list):
 			xmlWriter.begintag(name)
 			xmlWriter.newline()
@@ -1128,7 +1150,7 @@ class NumberConverter(SimpleConverter):
 
 
 class ArrayConverter(SimpleConverter):
-	def xmlWrite(self, xmlWriter, name, value, progress):
+	def xmlWrite(self, xmlWriter, name, value):
 		if value and isinstance(value[0], list):
 			xmlWriter.begintag(name)
 			xmlWriter.newline()
@@ -1157,10 +1179,10 @@ class ArrayConverter(SimpleConverter):
 
 class TableConverter(SimpleConverter):
 
-	def xmlWrite(self, xmlWriter, name, value, progress):
+	def xmlWrite(self, xmlWriter, name, value):
 		xmlWriter.begintag(name)
 		xmlWriter.newline()
-		value.toXML(xmlWriter, progress)
+		value.toXML(xmlWriter)
 		xmlWriter.endtag(name)
 		xmlWriter.newline()
 
@@ -1179,7 +1201,7 @@ class PrivateDictConverter(TableConverter):
 	def getClass(self):
 		return PrivateDict
 
-	def read(self, parent, value):
+	def _read(self, parent, value):
 		size, offset = value
 		file = parent.file
 		isCFF2 = parent._isCFF2
@@ -1204,7 +1226,7 @@ class SubrsConverter(TableConverter):
 	def getClass(self):
 		return SubrsIndex
 
-	def read(self, parent, value):
+	def _read(self, parent, value):
 		file = parent.file
 		isCFF2 = parent._isCFF2
 		file.seek(parent.offset + value)  # Offset(self)
@@ -1216,7 +1238,7 @@ class SubrsConverter(TableConverter):
 
 class CharStringsConverter(TableConverter):
 
-	def read(self, parent, value):
+	def _read(self, parent, value):
 		file = parent.file
 		isCFF2 = parent._isCFF2
 		charset = parent.charset
@@ -1260,8 +1282,8 @@ class CharStringsConverter(TableConverter):
 		return charStrings
 
 
-class CharsetConverter(object):
-	def read(self, parent, value):
+class CharsetConverter(SimpleConverter):
+	def _read(self, parent, value):
 		isCID = hasattr(parent, "ROS")
 		if value > 2:
 			numGlyphs = parent.numGlyphs
@@ -1296,7 +1318,7 @@ class CharsetConverter(object):
 	def write(self, parent, value):
 		return 0  # dummy value
 
-	def xmlWrite(self, xmlWriter, name, value, progress):
+	def xmlWrite(self, xmlWriter, name, value):
 		# XXX only write charset when not in OT/TTX context, where we
 		# dump charset as a separate "GlyphOrder" table.
 		# # xmlWriter.simpletag("charset")
@@ -1466,7 +1488,7 @@ class EncodingCompiler(object):
 
 class EncodingConverter(SimpleConverter):
 
-	def read(self, parent, value):
+	def _read(self, parent, value):
 		if value == 0:
 			return "StandardEncoding"
 		elif value == 1:
@@ -1496,7 +1518,7 @@ class EncodingConverter(SimpleConverter):
 			return 1
 		return 0  # dummy value
 
-	def xmlWrite(self, xmlWriter, name, value, progress):
+	def xmlWrite(self, xmlWriter, name, value):
 		if value in ("StandardEncoding", "ExpertEncoding"):
 			xmlWriter.simpletag(name, name=value)
 			xmlWriter.newline()
@@ -1608,7 +1630,7 @@ def packEncoding1(charset, encoding, strings):
 
 class FDArrayConverter(TableConverter):
 
-	def read(self, parent, value):
+	def _read(self, parent, value):
 		try:
 			vstore = parent.VarStore
 		except AttributeError:
@@ -1635,9 +1657,9 @@ class FDArrayConverter(TableConverter):
 		return fdArray
 
 
-class FDSelectConverter(object):
+class FDSelectConverter(SimpleConverter):
 
-	def read(self, parent, value):
+	def _read(self, parent, value):
 		file = parent.file
 		file.seek(value)
 		fdSelect = FDSelect(file, parent.numGlyphs)
@@ -1648,7 +1670,7 @@ class FDSelectConverter(object):
 
 	# The FDSelect glyph data is written out to XML in the charstring keys,
 	# so we write out only the format selector
-	def xmlWrite(self, xmlWriter, name, value, progress):
+	def xmlWrite(self, xmlWriter, name, value):
 		xmlWriter.simpletag(name, [('format', value.format)])
 		xmlWriter.newline()
 
@@ -1662,7 +1684,7 @@ class FDSelectConverter(object):
 
 class VarStoreConverter(SimpleConverter):
 
-	def read(self, parent, value):
+	def _read(self, parent, value):
 		file = parent.file
 		file.seek(value)
 		varStore = VarStoreData(file)
@@ -1672,7 +1694,7 @@ class VarStoreConverter(SimpleConverter):
 	def write(self, parent, value):
 		return 0  # dummy value
 
-	def xmlWrite(self, xmlWriter, name, value, progress):
+	def xmlWrite(self, xmlWriter, name, value):
 		value.writeXML(xmlWriter, name)
 
 	def xmlRead(self, name, attrs, content, parent):
@@ -1766,7 +1788,7 @@ class VarStoreCompiler(object):
 
 class ROSConverter(SimpleConverter):
 
-	def xmlWrite(self, xmlWriter, name, value, progress):
+	def xmlWrite(self, xmlWriter, name, value):
 		registry, order, supplement = value
 		xmlWriter.simpletag(
 			name,
@@ -1972,12 +1994,7 @@ class DictCompiler(object):
 
 	def arg_number(self, num):
 		if isinstance(num, list):
-			blendList = num
-			firstNum = blendList[0]
-			data = [firstNum]
-			for blendNum in blendList[1:]:
-				data.append(blendNum - firstNum)
-			data = [encodeNumber(val) for val in data]
+			data = [encodeNumber(val) for val in num]
 			data.append(encodeNumber(1))
 			data.append(bytechr(blendOp))
 			datum = bytesjoin(data)
@@ -2011,15 +2028,33 @@ class DictCompiler(object):
 				data.append(encodeNumber(num))
 		return bytesjoin(data)
 
+
 	def arg_delta_blend(self, value):
-		# A delta list with blend lists has to be *all* blend lists.
-		# We have a list of master value lists, where the nth master value list
-		# contains the absolute values from each master for the nth entry in the
-		# current array.
-		# We first convert these to relative values from the previous entry.
+		""" A delta list with blend lists has to be *all* blend lists.
+		The value is a list is arranged as follows.
+		[
+		   [V0, d0..dn] 
+		   [V1, d0..dn]
+		   ...
+		   [Vm, d0..dn]
+		]
+		V is the absolute coordinate value from the default font, and d0-dn are
+		the delta values from the n regions. Each V is an absolute coordinate
+		from the default font.
+		We want to return a list:
+		[
+		   [v0, v1..vm] 
+		   [d0..dn]
+		   ...
+		   [d0..dn]
+		   numBlends
+		   blendOp
+		]
+		where each v is relative to the previous default font value.
+		"""
 		numMasters = len(value[0])
-		numValues = len(value)
-		numStack = (numValues * numMasters) + 1
+		numBlends = len(value)
+		numStack = (numBlends * numMasters) + 1
 		if numStack > self.maxBlendStack:
 			# Figure out the max number of value we can blend
 			# and divide this list up into chunks of that size.
@@ -2035,28 +2070,26 @@ class DictCompiler(object):
 				out.extend(out1)
 				value = value[numVal:]
 		else:
-			firstList = [0] * numValues
-			deltaList = [None] * (numValues)
+			firstList = [0] * numBlends
+			deltaList = [None] * numBlends
 			i = 0
-			prevValList = numMasters * [0]
-			while i < numValues:
-				masterValList = value[i]
-				firstVal = firstList[i] = masterValList[0] - prevValList[0]
-				j = 1
-				deltaEntry = (numMasters - 1) * [0]
-				while j < numMasters:
-					masterValDelta = masterValList[j] - prevValList[j]
-					deltaEntry[j - 1] = masterValDelta - firstVal
-					j += 1
-				deltaList[i] = deltaEntry
+			prevVal = 0
+			while i < numBlends:
+				# For PrivateDict BlueValues, the default font
+				# values are absolute, not relative.
+				# Must convert these back to relative coordinates
+				# befor writing to CFF2.
+				defaultValue = value[i][0]
+				firstList[i] = defaultValue - prevVal
+				prevVal = defaultValue
+				deltaList[i] = value[i][1:]
 				i += 1
-				prevValList = masterValList
 
 			relValueList = firstList
 			for blendList in deltaList:
 				relValueList.extend(blendList)
 			out = [encodeNumber(val) for val in relValueList]
-			out.append(encodeNumber(numValues))
+			out.append(encodeNumber(numBlends))
 			out.append(bytechr(blendOp))
 		return out
 
@@ -2219,6 +2252,12 @@ class BaseDict(object):
 		return self.compilerClass(self, strings, parent, isCFF2=isCFF2)
 
 	def __getattr__(self, name):
+		if name[:2] == name[-2:] == "__":
+			# to make deepcopy() and pickle.load() work, we need to signal with
+			# AttributeError that dunder methods like '__deepcopy__' or '__getstate__'
+			# aren't implemented. For more details, see:
+			# https://github.com/fonttools/fonttools/pull/1488
+			raise AttributeError(name)
 		value = self.rawDict.get(name, None)
 		if value is None:
 			value = self.defaults.get(name)
@@ -2229,7 +2268,7 @@ class BaseDict(object):
 		setattr(self, name, value)
 		return value
 
-	def toXML(self, xmlWriter, progress):
+	def toXML(self, xmlWriter):
 		for name in self.order:
 			if name in self.skipNames:
 				continue
@@ -2246,7 +2285,7 @@ class BaseDict(object):
 			if value is None and name != "charset":
 				continue
 			conv = self.converters[name]
-			conv.xmlWrite(xmlWriter, name, value, progress)
+			conv.xmlWrite(xmlWriter, name, value)
 		ignoredNames = set(self.rawDict) - set(self.order)
 		if ignoredNames:
 			xmlWriter.comment(
@@ -2294,9 +2333,9 @@ class TopDict(BaseDict):
 		else:
 			self.numGlyphs = readCard16(self.file)
 
-	def toXML(self, xmlWriter, progress):
+	def toXML(self, xmlWriter):
 		if hasattr(self, "CharStrings"):
-			self.decompileAllCharStrings(progress)
+			self.decompileAllCharStrings()
 		if hasattr(self, "ROS"):
 			self.skipNames = ['Encoding']
 		if not hasattr(self, "ROS") or not hasattr(self, "CharStrings"):
@@ -2304,25 +2343,21 @@ class TopDict(BaseDict):
 			# in CID fonts.
 			self.skipNames = [
 				'CIDFontVersion', 'CIDFontRevision', 'CIDFontType', 'CIDCount']
-		BaseDict.toXML(self, xmlWriter, progress)
+		BaseDict.toXML(self, xmlWriter)
 
-	def decompileAllCharStrings(self, progress):
+	def decompileAllCharStrings(self):
 		# Make sure that all the Private Dicts have been instantiated.
-		i = 0
-		for charString in self.CharStrings.values():
+		for i, charString in enumerate(self.CharStrings.values()):
 			try:
 				charString.decompile()
 			except:
 				log.error("Error in charstring %s", i)
 				raise
-			if not i % 30 and progress:
-				progress.increment(0)  # update
-			i = i + 1
 
 	def recalcFontBBox(self):
 		fontBBox = None
 		for charString in self.CharStrings.values():
-			bounds = charString.calcBounds()
+			bounds = charString.calcBounds(self.CharStrings)
 			if bounds is not None:
 				if fontBBox is not None:
 					fontBBox = unionRect(fontBBox, bounds)
@@ -2366,13 +2401,24 @@ class FontDict(BaseDict):
 	defaults = {}
 	converters = buildConverters(topDictOperators)
 	compilerClass = FontDictCompiler
-	order = ['FontName', 'FontMatrix', 'Weight', 'Private']
+	orderCFF = ['FontName', 'FontMatrix', 'Weight', 'Private']
+	orderCFF2 = ['Private']
 	decompilerClass = TopDictDecompiler
 
 	def __init__(self, strings=None, file=None, offset=None,
 			GlobalSubrs=None, isCFF2=None, vstore=None):
 		super(FontDict, self).__init__(strings, file, offset, isCFF2=isCFF2)
 		self.vstore = vstore
+		self.setCFF2(isCFF2)
+
+	def setCFF2(self, isCFF2):
+		# isCFF2 may be None.
+		if isCFF2:
+			self.order = self.orderCFF2
+			self._isCFF2 = True
+		else:
+			self.order = self.orderCFF
+			self._isCFF2 = False
 
 
 class PrivateDict(BaseDict):
@@ -2389,9 +2435,16 @@ class PrivateDict(BaseDict):
 		if isCFF2:
 			self.defaults = buildDefaults(privateDictOperators2)
 			self.order = buildOrder(privateDictOperators2)
+			# Provide dummy values. This avoids needing to provide
+			# an isCFF2 state in a lot of places.
+			self.nominalWidthX = self.defaultWidthX = None
 		else:
 			self.defaults = buildDefaults(privateDictOperators)
 			self.order = buildOrder(privateDictOperators)
+
+	@property
+	def in_cff2(self):
+		return self._isCFF2
 
 	def getNumRegions(self, vi=None):  # called from misc/psCharStrings.py
 		# if getNumRegions is being called, we can assume that VarStore exists.

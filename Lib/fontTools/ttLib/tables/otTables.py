@@ -1,18 +1,489 @@
+# coding: utf-8
 """fontTools.ttLib.tables.otTables -- A collection of classes representing the various
 OpenType subtables.
 
 Most are constructed upon import from data in otData.py, all are populated with
 converter objects from otConverters.py.
 """
-from __future__ import print_function, division, absolute_import
+from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
-from fontTools.misc.textTools import safeEval
-from .otBase import BaseTable, FormatSwitchingBaseTable
-import operator
+from fontTools.misc.textTools import pad, safeEval
+from .otBase import BaseTable, FormatSwitchingBaseTable, ValueRecord
 import logging
+import struct
 
 
 log = logging.getLogger(__name__)
+
+
+class AATStateTable(object):
+	def __init__(self):
+		self.GlyphClasses = {}  # GlyphID --> GlyphClass
+		self.States = []  # List of AATState, indexed by state number
+		self.PerGlyphLookups = []  # [{GlyphID:GlyphID}, ...]
+
+
+class AATState(object):
+	def __init__(self):
+		self.Transitions = {}  # GlyphClass --> AATAction
+
+
+class AATAction(object):
+	_FLAGS = None
+
+	@staticmethod
+	def compileActions(font, states):
+		return (None, None)
+
+	def _writeFlagsToXML(self, xmlWriter):
+		flags = [f for f in self._FLAGS if self.__dict__[f]]
+		if flags:
+			xmlWriter.simpletag("Flags", value=",".join(flags))
+			xmlWriter.newline()
+		if self.ReservedFlags != 0:
+			xmlWriter.simpletag(
+				"ReservedFlags",
+				value='0x%04X' % self.ReservedFlags)
+			xmlWriter.newline()
+
+	def _setFlag(self, flag):
+		assert flag in self._FLAGS, "unsupported flag %s" % flag
+		self.__dict__[flag] = True
+
+
+class RearrangementMorphAction(AATAction):
+	staticSize = 4
+	actionHeaderSize = 0
+	_FLAGS = ["MarkFirst", "DontAdvance", "MarkLast"]
+
+	_VERBS = {
+		0: "no change",
+		1: "Ax ⇒ xA",
+		2: "xD ⇒ Dx",
+		3: "AxD ⇒ DxA",
+		4: "ABx ⇒ xAB",
+		5: "ABx ⇒ xBA",
+		6: "xCD ⇒ CDx",
+		7: "xCD ⇒ DCx",
+		8: "AxCD ⇒ CDxA",
+		9: "AxCD ⇒ DCxA",
+		10: "ABxD ⇒ DxAB",
+		11: "ABxD ⇒ DxBA",
+		12: "ABxCD ⇒ CDxAB",
+		13: "ABxCD ⇒ CDxBA",
+		14: "ABxCD ⇒ DCxAB",
+		15: "ABxCD ⇒ DCxBA",
+        }
+
+	def __init__(self):
+		self.NewState = 0
+		self.Verb = 0
+		self.MarkFirst = False
+		self.DontAdvance = False
+		self.MarkLast = False
+		self.ReservedFlags = 0
+
+	def compile(self, writer, font, actionIndex):
+		assert actionIndex is None
+		writer.writeUShort(self.NewState)
+		assert self.Verb >= 0 and self.Verb <= 15, self.Verb
+		flags = self.Verb | self.ReservedFlags
+		if self.MarkFirst: flags |= 0x8000
+		if self.DontAdvance: flags |= 0x4000
+		if self.MarkLast: flags |= 0x2000
+		writer.writeUShort(flags)
+
+	def decompile(self, reader, font, actionReader):
+		assert actionReader is None
+		self.NewState = reader.readUShort()
+		flags = reader.readUShort()
+		self.Verb = flags & 0xF
+		self.MarkFirst = bool(flags & 0x8000)
+		self.DontAdvance = bool(flags & 0x4000)
+		self.MarkLast = bool(flags & 0x2000)
+		self.ReservedFlags = flags & 0x1FF0
+
+	def toXML(self, xmlWriter, font, attrs, name):
+		xmlWriter.begintag(name, **attrs)
+		xmlWriter.newline()
+		xmlWriter.simpletag("NewState", value=self.NewState)
+		xmlWriter.newline()
+		self._writeFlagsToXML(xmlWriter)
+		xmlWriter.simpletag("Verb", value=self.Verb)
+		verbComment = self._VERBS.get(self.Verb)
+		if verbComment is not None:
+			xmlWriter.comment(verbComment)
+		xmlWriter.newline()
+		xmlWriter.endtag(name)
+		xmlWriter.newline()
+
+	def fromXML(self, name, attrs, content, font):
+		self.NewState = self.Verb = self.ReservedFlags = 0
+		self.MarkFirst = self.DontAdvance = self.MarkLast = False
+		content = [t for t in content if isinstance(t, tuple)]
+		for eltName, eltAttrs, eltContent in content:
+			if eltName == "NewState":
+				self.NewState = safeEval(eltAttrs["value"])
+			elif eltName == "Verb":
+				self.Verb = safeEval(eltAttrs["value"])
+			elif eltName == "ReservedFlags":
+				self.ReservedFlags = safeEval(eltAttrs["value"])
+			elif eltName == "Flags":
+				for flag in eltAttrs["value"].split(","):
+					self._setFlag(flag.strip())
+
+
+class ContextualMorphAction(AATAction):
+	staticSize = 8
+	actionHeaderSize = 0
+	_FLAGS = ["SetMark", "DontAdvance"]
+
+	def __init__(self):
+		self.NewState = 0
+		self.SetMark, self.DontAdvance = False, False
+		self.ReservedFlags = 0
+		self.MarkIndex, self.CurrentIndex = 0xFFFF, 0xFFFF
+
+	def compile(self, writer, font, actionIndex):
+		assert actionIndex is None
+		writer.writeUShort(self.NewState)
+		flags = self.ReservedFlags
+		if self.SetMark: flags |= 0x8000
+		if self.DontAdvance: flags |= 0x4000
+		writer.writeUShort(flags)
+		writer.writeUShort(self.MarkIndex)
+		writer.writeUShort(self.CurrentIndex)
+
+	def decompile(self, reader, font, actionReader):
+		assert actionReader is None
+		self.NewState = reader.readUShort()
+		flags = reader.readUShort()
+		self.SetMark = bool(flags & 0x8000)
+		self.DontAdvance = bool(flags & 0x4000)
+		self.ReservedFlags = flags & 0x3FFF
+		self.MarkIndex = reader.readUShort()
+		self.CurrentIndex = reader.readUShort()
+
+	def toXML(self, xmlWriter, font, attrs, name):
+		xmlWriter.begintag(name, **attrs)
+		xmlWriter.newline()
+		xmlWriter.simpletag("NewState", value=self.NewState)
+		xmlWriter.newline()
+		self._writeFlagsToXML(xmlWriter)
+		xmlWriter.simpletag("MarkIndex", value=self.MarkIndex)
+		xmlWriter.newline()
+		xmlWriter.simpletag("CurrentIndex",
+		                    value=self.CurrentIndex)
+		xmlWriter.newline()
+		xmlWriter.endtag(name)
+		xmlWriter.newline()
+
+	def fromXML(self, name, attrs, content, font):
+		self.NewState = self.ReservedFlags = 0
+		self.SetMark = self.DontAdvance = False
+		self.MarkIndex, self.CurrentIndex = 0xFFFF, 0xFFFF
+		content = [t for t in content if isinstance(t, tuple)]
+		for eltName, eltAttrs, eltContent in content:
+			if eltName == "NewState":
+				self.NewState = safeEval(eltAttrs["value"])
+			elif eltName == "Flags":
+				for flag in eltAttrs["value"].split(","):
+					self._setFlag(flag.strip())
+			elif eltName == "ReservedFlags":
+				self.ReservedFlags = safeEval(eltAttrs["value"])
+			elif eltName == "MarkIndex":
+				self.MarkIndex = safeEval(eltAttrs["value"])
+			elif eltName == "CurrentIndex":
+				self.CurrentIndex = safeEval(eltAttrs["value"])
+
+
+class LigAction(object):
+	def __init__(self):
+		self.Store = False
+		# GlyphIndexDelta is a (possibly negative) delta that gets
+		# added to the glyph ID at the top of the AAT runtime
+		# execution stack. It is *not* a byte offset into the
+		# morx table. The result of the addition, which is performed
+		# at run time by the shaping engine, is an index into
+		# the ligature components table. See 'morx' specification.
+		# In the AAT specification, this field is called Offset;
+		# but its meaning is quite different from other offsets
+		# in either AAT or OpenType, so we use a different name.
+		self.GlyphIndexDelta = 0
+
+
+class LigatureMorphAction(AATAction):
+	staticSize = 6
+
+	# 4 bytes for each of {action,ligComponents,ligatures}Offset
+	actionHeaderSize = 12
+
+	_FLAGS = ["SetComponent", "DontAdvance"]
+
+	def __init__(self):
+		self.NewState = 0
+		self.SetComponent, self.DontAdvance = False, False
+		self.ReservedFlags = 0
+		self.Actions = []
+
+	def compile(self, writer, font, actionIndex):
+		assert actionIndex is not None
+		writer.writeUShort(self.NewState)
+		flags = self.ReservedFlags
+		if self.SetComponent: flags |= 0x8000
+		if self.DontAdvance: flags |= 0x4000
+		if len(self.Actions) > 0: flags |= 0x2000
+		writer.writeUShort(flags)
+		if len(self.Actions) > 0:
+			actions = self.compileLigActions()
+			writer.writeUShort(actionIndex[actions])
+		else:
+			writer.writeUShort(0)
+
+	def decompile(self, reader, font, actionReader):
+		assert actionReader is not None
+		self.NewState = reader.readUShort()
+		flags = reader.readUShort()
+		self.SetComponent = bool(flags & 0x8000)
+		self.DontAdvance = bool(flags & 0x4000)
+		performAction = bool(flags & 0x2000)
+		# As of 2017-09-12, the 'morx' specification says that
+		# the reserved bitmask in ligature subtables is 0x3FFF.
+		# However, the specification also defines a flag 0x2000,
+		# so the reserved value should actually be 0x1FFF.
+		# TODO: Report this specification bug to Apple.
+		self.ReservedFlags = flags & 0x1FFF
+		actionIndex = reader.readUShort()
+		if performAction:
+			self.Actions = self._decompileLigActions(
+				actionReader, actionIndex)
+		else:
+			self.Actions = []
+
+	@staticmethod
+	def compileActions(font, states):
+		result, actions, actionIndex = b"", set(), {}
+		for state in states:
+			for _glyphClass, trans in state.Transitions.items():
+				actions.add(trans.compileLigActions())
+		# Sort the compiled actions in decreasing order of
+		# length, so that the longer sequence come before the
+		# shorter ones.  For each compiled action ABCD, its
+		# suffixes BCD, CD, and D do not be encoded separately
+		# (in case they occur); instead, we can just store an
+		# index that points into the middle of the longer
+		# sequence. Every compiled AAT ligature sequence is
+		# terminated with an end-of-sequence flag, which can
+		# only be set on the last element of the sequence.
+		# Therefore, it is sufficient to consider just the
+		# suffixes.
+		for a in sorted(actions, key=lambda x:(-len(x), x)):
+			if a not in actionIndex:
+				for i in range(0, len(a), 4):
+					suffix = a[i:]
+					suffixIndex = (len(result) + i) // 4
+					actionIndex.setdefault(
+						suffix, suffixIndex)
+				result += a
+		result = pad(result, 4)
+		return (result, actionIndex)
+
+	def compileLigActions(self):
+		result = []
+		for i, action in enumerate(self.Actions):
+			last = (i == len(self.Actions) - 1)
+			value = action.GlyphIndexDelta & 0x3FFFFFFF
+			value |= 0x80000000 if last else 0
+			value |= 0x40000000 if action.Store else 0
+			result.append(struct.pack(">L", value))
+		return bytesjoin(result)
+
+	def _decompileLigActions(self, actionReader, actionIndex):
+		actions = []
+		last = False
+		reader = actionReader.getSubReader(
+			actionReader.pos + actionIndex * 4)
+		while not last:
+			value = reader.readULong()
+			last = bool(value & 0x80000000)
+			action = LigAction()
+			actions.append(action)
+			action.Store = bool(value & 0x40000000)
+			delta = value & 0x3FFFFFFF
+			if delta >= 0x20000000: # sign-extend 30-bit value
+				delta = -0x40000000 + delta
+			action.GlyphIndexDelta = delta
+		return actions
+
+	def fromXML(self, name, attrs, content, font):
+		self.NewState = self.ReservedFlags = 0
+		self.SetComponent = self.DontAdvance = False
+		self.ReservedFlags = 0
+		self.Actions = []
+		content = [t for t in content if isinstance(t, tuple)]
+		for eltName, eltAttrs, eltContent in content:
+			if eltName == "NewState":
+				self.NewState = safeEval(eltAttrs["value"])
+			elif eltName == "Flags":
+				for flag in eltAttrs["value"].split(","):
+					self._setFlag(flag.strip())
+			elif eltName == "ReservedFlags":
+				self.ReservedFlags = safeEval(eltAttrs["value"])
+			elif eltName == "Action":
+				action = LigAction()
+				flags = eltAttrs.get("Flags", "").split(",")
+				flags = [f.strip() for f in flags]
+				action.Store = "Store" in flags
+				action.GlyphIndexDelta = safeEval(
+					eltAttrs["GlyphIndexDelta"])
+				self.Actions.append(action)
+
+	def toXML(self, xmlWriter, font, attrs, name):
+		xmlWriter.begintag(name, **attrs)
+		xmlWriter.newline()
+		xmlWriter.simpletag("NewState", value=self.NewState)
+		xmlWriter.newline()
+		self._writeFlagsToXML(xmlWriter)
+		for action in self.Actions:
+			attribs = [("GlyphIndexDelta", action.GlyphIndexDelta)]
+			if action.Store:
+				attribs.append(("Flags", "Store"))
+			xmlWriter.simpletag("Action", attribs)
+			xmlWriter.newline()
+		xmlWriter.endtag(name)
+		xmlWriter.newline()
+
+
+class InsertionMorphAction(AATAction):
+	staticSize = 8
+	actionHeaderSize = 4  # 4 bytes for actionOffset
+	_FLAGS = ["SetMark", "DontAdvance",
+	          "CurrentIsKashidaLike", "MarkedIsKashidaLike",
+	          "CurrentInsertBefore", "MarkedInsertBefore"]
+
+	def __init__(self):
+		self.NewState = 0
+		for flag in self._FLAGS:
+			setattr(self, flag, False)
+		self.ReservedFlags = 0
+		self.CurrentInsertionAction, self.MarkedInsertionAction = [], []
+
+	def compile(self, writer, font, actionIndex):
+		assert actionIndex is not None
+		writer.writeUShort(self.NewState)
+		flags = self.ReservedFlags
+		if self.SetMark: flags |= 0x8000
+		if self.DontAdvance: flags |= 0x4000
+		if self.CurrentIsKashidaLike: flags |= 0x2000
+		if self.MarkedIsKashidaLike: flags |= 0x1000
+		if self.CurrentInsertBefore: flags |= 0x0800
+		if self.MarkedInsertBefore: flags |= 0x0400
+		flags |= len(self.CurrentInsertionAction) << 5
+		flags |= len(self.MarkedInsertionAction)
+		writer.writeUShort(flags)
+		if len(self.CurrentInsertionAction) > 0:
+			currentIndex = actionIndex[
+				tuple(self.CurrentInsertionAction)]
+		else:
+			currentIndex = 0xFFFF
+		writer.writeUShort(currentIndex)
+		if len(self.MarkedInsertionAction) > 0:
+			markedIndex = actionIndex[
+				tuple(self.MarkedInsertionAction)]
+		else:
+			markedIndex = 0xFFFF
+		writer.writeUShort(markedIndex)
+
+	def decompile(self, reader, font, actionReader):
+		assert actionReader is not None
+		self.NewState = reader.readUShort()
+		flags = reader.readUShort()
+		self.SetMark = bool(flags & 0x8000)
+		self.DontAdvance = bool(flags & 0x4000)
+		self.CurrentIsKashidaLike = bool(flags & 0x2000)
+		self.MarkedIsKashidaLike = bool(flags & 0x1000)
+		self.CurrentInsertBefore = bool(flags & 0x0800)
+		self.MarkedInsertBefore = bool(flags & 0x0400)
+		self.CurrentInsertionAction = self._decompileInsertionAction(
+			actionReader, font,
+			index=reader.readUShort(),
+			count=((flags & 0x03E0) >> 5))
+		self.MarkedInsertionAction = self._decompileInsertionAction(
+			actionReader, font,
+			index=reader.readUShort(),
+			count=(flags & 0x001F))
+
+	def _decompileInsertionAction(self, actionReader, font, index, count):
+		if index == 0xFFFF or count == 0:
+			return []
+		reader = actionReader.getSubReader(
+			actionReader.pos + index * 2)
+		return [font.getGlyphName(glyphID)
+		        for glyphID in reader.readUShortArray(count)]
+
+	def toXML(self, xmlWriter, font, attrs, name):
+		xmlWriter.begintag(name, **attrs)
+		xmlWriter.newline()
+		xmlWriter.simpletag("NewState", value=self.NewState)
+		xmlWriter.newline()
+		self._writeFlagsToXML(xmlWriter)
+		for g in self.CurrentInsertionAction:
+			xmlWriter.simpletag("CurrentInsertionAction", glyph=g)
+			xmlWriter.newline()
+		for g in self.MarkedInsertionAction:
+			xmlWriter.simpletag("MarkedInsertionAction", glyph=g)
+			xmlWriter.newline()
+		xmlWriter.endtag(name)
+		xmlWriter.newline()
+
+	def fromXML(self, name, attrs, content, font):
+		self.__init__()
+		content = [t for t in content if isinstance(t, tuple)]
+		for eltName, eltAttrs, eltContent in content:
+			if eltName == "NewState":
+				self.NewState = safeEval(eltAttrs["value"])
+			elif eltName == "Flags":
+				for flag in eltAttrs["value"].split(","):
+					self._setFlag(flag.strip())
+			elif eltName == "CurrentInsertionAction":
+				self.CurrentInsertionAction.append(
+					eltAttrs["glyph"])
+			elif eltName == "MarkedInsertionAction":
+				self.MarkedInsertionAction.append(
+					eltAttrs["glyph"])
+			else:
+				assert False, eltName
+
+	@staticmethod
+	def compileActions(font, states):
+		actions, actionIndex, result = set(), {}, b""
+		for state in states:
+			for _glyphClass, trans in state.Transitions.items():
+				if trans.CurrentInsertionAction is not None:
+					actions.add(tuple(trans.CurrentInsertionAction))
+				if trans.MarkedInsertionAction is not None:
+					actions.add(tuple(trans.MarkedInsertionAction))
+		# Sort the compiled actions in decreasing order of
+		# length, so that the longer sequence come before the
+		# shorter ones.
+		for action in sorted(actions, key=lambda x:(-len(x), x)):
+			# We insert all sub-sequences of the action glyph sequence
+			# into actionIndex. For example, if one action triggers on
+			# glyph sequence [A, B, C, D, E] and another action triggers
+			# on [C, D], we return result=[A, B, C, D, E] (as list of
+			# encoded glyph IDs), and actionIndex={('A','B','C','D','E'): 0,
+			# ('C','D'): 2}.
+			if action in actionIndex:
+				continue
+			for start in range(0, len(action)):
+				startIndex = (len(result) // 2) + start
+				for limit in range(start, len(action)):
+					glyphs = action[start : limit + 1]
+					actionIndex.setdefault(glyphs, startIndex)
+			for glyph in action:
+				glyphID = font.getGlyphID(glyph)
+				result += struct.pack(">H", glyphID)
+		return result, actionIndex
 
 
 class FeatureParams(BaseTable):
@@ -78,7 +549,8 @@ class Coverage(FormatSwitchingBaseTable):
 					endID = len(glyphOrder)
 				glyphs.extend(glyphOrder[glyphID] for glyphID in range(startID, endID))
 		else:
-			assert 0, "unknown format: %s" % self.Format
+			self.glyphs = []
+			log.warning("Unknown Coverage format: %s", self.Format)
 
 	def preWrite(self, font):
 		glyphs = getattr(self, "glyphs", None)
@@ -142,20 +614,27 @@ class VarIdxMap(BaseTable):
 
 	def populateDefaults(self, propagator=None):
 		if not hasattr(self, 'mapping'):
-			self.mapping = []
+			self.mapping = {}
 
 	def postRead(self, rawTable, font):
 		assert (rawTable['EntryFormat'] & 0xFFC0) == 0
-		self.mapping = rawTable['mapping']
+		glyphOrder = font.getGlyphOrder()
+		mapList = rawTable['mapping']
+		mapList.extend([mapList[-1]] * (len(glyphOrder) - len(mapList)))
+		self.mapping = dict(zip(glyphOrder, mapList))
 
 	def preWrite(self, font):
 		mapping = getattr(self, "mapping", None)
 		if mapping is None:
-			mapping = self.mapping = []
+			mapping = self.mapping = {}
+
+		glyphOrder = font.getGlyphOrder()
+		mapping = [mapping[g] for g in glyphOrder]
+		while len(mapping) > 1 and mapping[-2] == mapping[-1]:
+			del mapping[-1]
+
 		rawTable = { 'mapping': mapping }
 		rawTable['MappingCount'] = len(mapping)
-
-		# TODO Remove this abstraction/optimization and move it varLib.builder?
 
 		ored = 0
 		for idx in mapping:
@@ -185,9 +664,9 @@ class VarIdxMap(BaseTable):
 		return rawTable
 
 	def toXML2(self, xmlWriter, font):
-		for i, value in enumerate(getattr(self, "mapping", [])):
+		for glyph, value in sorted(getattr(self, "mapping", {}).items()):
 			attrs = (
-				('index', i),
+				('glyph', glyph),
 				('outer', value >> 16),
 				('inner', value & 0xFFFF),
 			)
@@ -197,12 +676,16 @@ class VarIdxMap(BaseTable):
 	def fromXML(self, name, attrs, content, font):
 		mapping = getattr(self, "mapping", None)
 		if mapping is None:
-			mapping = []
+			mapping = {}
 			self.mapping = mapping
+		try:
+			glyph = attrs['glyph']
+		except: # https://github.com/fonttools/fonttools/commit/21cbab8ce9ded3356fef3745122da64dcaf314e9#commitcomment-27649836
+			glyph = font.getGlyphOrder()[attrs['index']]
 		outer = safeEval(attrs['outer'])
 		inner = safeEval(attrs['inner'])
 		assert inner <= 0xFFFF
-		mapping.append((outer << 16) | inner)
+		mapping[glyph] = (outer << 16) | inner
 
 
 class SingleSubst(FormatSwitchingBaseTable):
@@ -214,18 +697,19 @@ class SingleSubst(FormatSwitchingBaseTable):
 	def postRead(self, rawTable, font):
 		mapping = {}
 		input = _getGlyphsFromCoverageTable(rawTable["Coverage"])
-		lenMapping = len(input)
 		if self.Format == 1:
 			delta = rawTable["DeltaGlyphID"]
 			inputGIDS =  [ font.getGlyphID(name) for name in input ]
 			outGIDS = [ (glyphID + delta) % 65536 for glyphID in inputGIDS ]
 			outNames = [ font.getGlyphName(glyphID) for glyphID in outGIDS ]
-			list(map(operator.setitem, [mapping]*lenMapping, input, outNames))
+			for inp, out in zip(input, outNames):
+				mapping[inp] = out
 		elif self.Format == 2:
 			assert len(input) == rawTable["GlyphCount"], \
 					"invalid SingleSubstFormat2 table"
 			subst = rawTable["Substitute"]
-			list(map(operator.setitem, [mapping]*lenMapping, input, subst))
+			for inp, sub in zip(input, subst):
+				mapping[inp] = sub
 		else:
 			assert 0, "unknown format: %s" % self.Format
 		self.mapping = mapping
@@ -415,7 +899,7 @@ class ClassDef(FormatSwitchingBaseTable):
 					if cls:
 						classDefs[glyphOrder[glyphID]] = cls
 		else:
-			assert 0, "unknown format: %s" % self.Format
+			log.warning("Unknown ClassDef format: %s", self.Format)
 		self.classDefs = classDefs
 
 	def _getClassRanges(self, font):
@@ -646,10 +1130,10 @@ class LigatureSubst(FormatSwitchingBaseTable):
 			lig.LigGlyph = attrs["glyph"]
 			components = attrs["components"]
 			lig.Component = components.split(",") if components else []
+			lig.CompCount = len(lig.Component)
 			ligs.append(lig)
 
 
-#
 # For each subtable format there is a class. However, we don't really distinguish
 # between "field name" and "format name": often these are the same. Yet there's
 # a whole bunch of fields with different names. The following dict is a mapping
@@ -867,6 +1351,67 @@ def splitPairPos(oldSubTable, newSubTable, overflowRecord):
 	return ok
 
 
+def splitMarkBasePos(oldSubTable, newSubTable, overflowRecord):
+	# split half of the mark classes to the new subtable
+	classCount = oldSubTable.ClassCount
+	if classCount < 2:
+		# oh well, not much left to split...
+		return False
+
+	oldClassCount = classCount // 2
+	newClassCount = classCount - oldClassCount
+
+	oldMarkCoverage, oldMarkRecords = [], []
+	newMarkCoverage, newMarkRecords = [], []
+	for glyphName, markRecord in zip(
+		oldSubTable.MarkCoverage.glyphs,
+		oldSubTable.MarkArray.MarkRecord
+	):
+		if markRecord.Class < oldClassCount:
+			oldMarkCoverage.append(glyphName)
+			oldMarkRecords.append(markRecord)
+		else:
+			newMarkCoverage.append(glyphName)
+			newMarkRecords.append(markRecord)
+
+	oldBaseRecords, newBaseRecords = [], []
+	for rec in oldSubTable.BaseArray.BaseRecord:
+		oldBaseRecord, newBaseRecord = rec.__class__(), rec.__class__()
+		oldBaseRecord.BaseAnchor = rec.BaseAnchor[:oldClassCount]
+		newBaseRecord.BaseAnchor = rec.BaseAnchor[oldClassCount:]
+		oldBaseRecords.append(oldBaseRecord)
+		newBaseRecords.append(newBaseRecord)
+
+	newSubTable.Format = oldSubTable.Format
+
+	oldSubTable.MarkCoverage.glyphs = oldMarkCoverage
+	newSubTable.MarkCoverage = oldSubTable.MarkCoverage.__class__()
+	newSubTable.MarkCoverage.Format = oldSubTable.MarkCoverage.Format
+	newSubTable.MarkCoverage.glyphs = newMarkCoverage
+
+	# share the same BaseCoverage in both halves
+	newSubTable.BaseCoverage = oldSubTable.BaseCoverage
+
+	oldSubTable.ClassCount = oldClassCount
+	newSubTable.ClassCount = newClassCount
+
+	oldSubTable.MarkArray.MarkRecord = oldMarkRecords
+	newSubTable.MarkArray = oldSubTable.MarkArray.__class__()
+	newSubTable.MarkArray.MarkRecord = newMarkRecords
+
+	oldSubTable.MarkArray.MarkCount = len(oldMarkRecords)
+	newSubTable.MarkArray.MarkCount = len(newMarkRecords)
+
+	oldSubTable.BaseArray.BaseRecord = oldBaseRecords
+	newSubTable.BaseArray = oldSubTable.BaseArray.__class__()
+	newSubTable.BaseArray.BaseRecord = newBaseRecords
+
+	oldSubTable.BaseArray.BaseCount = len(oldBaseRecords)
+	newSubTable.BaseArray.BaseCount = len(newBaseRecords)
+
+	return True
+
+
 splitTable = {	'GSUB': {
 #					1: splitSingleSubst,
 #					2: splitMultipleSubst,
@@ -881,7 +1426,7 @@ splitTable = {	'GSUB': {
 #					1: splitSinglePos,
 					2: splitPairPos,
 #					3: splitCursivePos,
-#					4: splitMarkBasePos,
+					4: splitMarkBasePos,
 #					5: splitMarkLigPos,
 #					6: splitMarkMarkPos,
 #					7: splitContextPos,
@@ -895,7 +1440,6 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 	"""
 	An offset has overflowed within a sub-table. We need to divide this subtable into smaller parts.
 	"""
-	ok = 0
 	table = ttf[overflowRecord.tableType].table
 	lookup = table.LookupList.Lookup[overflowRecord.LookupListIndex]
 	subIndex = overflowRecord.SubTableIndex
@@ -916,7 +1460,7 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 		newExtSubTableClass = lookupTypes[overflowRecord.tableType][extSubTable.__class__.LookupType]
 		newExtSubTable = newExtSubTableClass()
 		newExtSubTable.Format = extSubTable.Format
-		lookup.SubTable.insert(subIndex + 1, newExtSubTable)
+		toInsert = newExtSubTable
 
 		newSubTableClass = lookupTypes[overflowRecord.tableType][subTableType]
 		newSubTable = newSubTableClass()
@@ -925,7 +1469,7 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 		subTableType = subtable.__class__.LookupType
 		newSubTableClass = lookupTypes[overflowRecord.tableType][subTableType]
 		newSubTable = newSubTableClass()
-		lookup.SubTable.insert(subIndex + 1, newSubTable)
+		toInsert = newSubTable
 
 	if hasattr(lookup, 'SubTableCount'): # may not be defined yet.
 		lookup.SubTableCount = lookup.SubTableCount + 1
@@ -933,9 +1477,16 @@ def fixSubTableOverFlows(ttf, overflowRecord):
 	try:
 		splitFunc = splitTable[overflowRecord.tableType][subTableType]
 	except KeyError:
-		return ok
+		log.error(
+			"Don't know how to split %s lookup type %s",
+			overflowRecord.tableType,
+			subTableType,
+		)
+		return False
 
 	ok = splitFunc(subtable, newSubTable, overflowRecord)
+	if ok:
+		lookup.SubTable.insert(subIndex + 1, toInsert)
 	return ok
 
 # End of OverFlow logic
@@ -945,7 +1496,7 @@ def _buildClasses():
 	import re
 	from .otData import otData
 
-	formatPat = re.compile("([A-Za-z0-9]+)Format(\d+)$")
+	formatPat = re.compile(r"([A-Za-z0-9]+)Format(\d+)$")
 	namespace = globals()
 
 	# populate module with classes
@@ -990,6 +1541,9 @@ def _buildClasses():
 			7: ContextPos,
 			8: ChainContextPos,
 			9: ExtensionPos,
+		},
+		'mort': {
+			4: NoncontextualMorph,
 		},
 		'morx': {
 			0: RearrangementMorph,

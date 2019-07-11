@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=2 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+      <ScriptRecord index="1">
+        <ScriptTag value="latn"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="kern"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <LookupType value="2"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=3 -->
+        <PairPos index="0" Format="1">
+          <Coverage>
+            <Glyph value="A"/>
+          </Coverage>
+          <ValueFormat1 value="4"/>
+          <ValueFormat2 value="0"/>
+          <!-- PairSetCount=1 -->
+          <PairSet index="0">
+            <!-- PairValueCount=1 -->
+            <PairValueRecord index="0">
+              <SecondGlyph value="V"/>
+              <Value1 XAdvance="-34"/>
+            </PairValueRecord>
+          </PairSet>
+        </PairPos>
+        <PairPos index="1" Format="2">
+          <Coverage>
+            <Glyph value="b"/>
+            <Glyph value="o"/>
+          </Coverage>
+          <ValueFormat1 value="4"/>
+          <ValueFormat2 value="0"/>
+          <ClassDef1>
+          </ClassDef1>
+          <ClassDef2>
+            <ClassDef glyph="c" class="1"/>
+            <ClassDef glyph="d" class="1"/>
+          </ClassDef2>
+          <!-- Class1Count=1 -->
+          <!-- Class2Count=2 -->
+          <Class1Record index="0">
+            <Class2Record index="0">
+            </Class2Record>
+            <Class2Record index="1">
+              <Value1 XAdvance="-12"/>
+            </Class2Record>
+          </Class1Record>
+        </PairPos>
+        <PairPos index="2" Format="2">
+          <Coverage>
+            <Glyph value="b"/>
+            <Glyph value="o"/>
+            <Glyph value="v"/>
+            <Glyph value="w"/>
+          </Coverage>
+          <ValueFormat1 value="4"/>
+          <ValueFormat2 value="0"/>
+          <ClassDef1>
+            <ClassDef glyph="b" class="1"/>
+            <ClassDef glyph="o" class="1"/>
+          </ClassDef1>
+          <ClassDef2>
+            <ClassDef glyph="c" class="2"/>
+            <ClassDef glyph="d" class="2"/>
+            <ClassDef glyph="v" class="1"/>
+            <ClassDef glyph="w" class="1"/>
+          </ClassDef2>
+          <!-- Class1Count=2 -->
+          <!-- Class2Count=3 -->
+          <Class1Record index="0">
+            <Class2Record index="0">
+            </Class2Record>
+            <Class2Record index="1">
+            </Class2Record>
+            <Class2Record index="2">
+              <Value1 XAdvance="-20"/>
+            </Class2Record>
+          </Class1Record>
+          <Class1Record index="1">
+            <Class2Record index="0">
+            </Class2Record>
+            <Class2Record index="1">
+              <Value1 XAdvance="-10"/>
+            </Class2Record>
+            <Class2Record index="2">
+            </Class2Record>
+          </Class1Record>
+        </PairPos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+</ttFont>

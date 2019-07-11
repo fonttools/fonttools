@@ -1,0 +1,37 @@
+StartFontMetrics 2.0
+Comment UniqueID 2123703
+Comment Panose 2 0 6 3 3 0 0 2 0 4
+FontName TestFont-Regular
+FullName TestFont-Regular
+FamilyName TestFont
+Weight Regular
+ItalicAngle 0.00
+IsFixedPitch false
+FontBBox -94 -317 1316 1009
+UnderlinePosition -296
+UnderlineThickness 111
+Version 001.000
+Notice [c] Copyright 2017. All Rights Reserved.
+EncodingScheme FontSpecific
+CapHeight 700
+XHeight 500
+Ascender 750
+Descender -250
+StdHW 181
+StdVW 194
+StartCharMetrics 4
+C 32 ; WX 200 ; N space ; B 0 0 0 0 ;
+C 65 ; WX 668 ; N A ; B 8 -25 660 666 ;
+C 66 ; WX 543 ; N B ; B 36 0 522 666 ;
+C 67 ; WX 582 ; N C ; B 24 -21 564 687 ;
+EndCharMetrics
+StartKernData
+StartKernPairs 5
+KPX T c 30
+KPX T comma -100
+KPX T period -100
+KPX V A -60
+KPX V d 30
+EndKernPairs
+EndKernData
+EndFontMetrics

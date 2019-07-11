@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.42">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="uni3001"/>
+    <GlyphID id="2" name="uni30FB"/>
+    <GlyphID id="3" name="uniFF1A"/>
+    <GlyphID id="4" name="uniFF2D"/>
+    <GlyphID id="5" name="uni3073"/>
+    <GlyphID id="6" name="uni3074"/>
+    <GlyphID id="7" name="uni307B"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="1.004"/>
+    <checkSumAdjustment value="0x90c6f91d"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Wed Jun  5 14:40:00 2019"/>
+    <modified value="Tue Jun 11 21:27:36 2019"/>
+    <xMin value="64"/>
+    <yMin value="-52"/>
+    <xMax value="974"/>
+    <yMax value="798"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="3"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="1160"/>
+    <descent value="-317"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="1000"/>
+    <minLeftSideBearing value="64"/>
+    <minRightSideBearing value="26"/>
+    <xMaxExtent value="974"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="2"/>
+  </hhea>
+
+  <maxp>
+    <tableVersion value="0x5000"/>
+    <numGlyphs value="8"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="3"/>
+    <xAvgCharWidth value="962"/>
+    <usWeightClass value="250"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000100"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="600"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="75"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="600"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="350"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="228"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="0"/>
+      <bSerifStyle value="0"/>
+      <bWeight value="3"/>
+      <bProportion value="0"/>
+      <bContrast value="0"/>
+      <bStrokeVariation value="0"/>
+      <bArmStyle value="0"/>
+      <bLetterForm value="0"/>
+      <bMidline value="0"/>
+      <bXHeight value="0"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange2 value="00000000 00000111 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00010000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="UKWN"/>
+    <fsSelection value="00000000 00000000"/>
+    <usFirstCharIndex value="12289"/>
+    <usLastCharIndex value="65325"/>
+    <sTypoAscender value="880"/>
+    <sTypoDescender value="-120"/>
+    <sTypoLineGap value="200"/>
+    <usWinAscent value="1160"/>
+    <usWinDescent value="317"/>
+    <ulCodePageRange1 value="00100000 00000010 00000000 10011111"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="380"/>
+    <sCapHeight value="760"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="1"/>
+  </OS_2>
+
+  <name>
+    <namerecord nameID="0" platformID="3" platEncID="1" langID="0x409">
+      Copyright © 2018 Adobe systems Co., Ltd. All Rights Reserved.
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      MasterSet_KanjiFullEX
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      1.004;UKWN;MasterSet_KanjiFullEX-w0.00
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      MasterSet_KanjiFullEX
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 1.004;hotconv 1.0.109;makeotfexe 2.5.65596
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      MasterSet_KanjiFullEX-w0.00
+    </namerecord>
+  </name>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x3001" name="uni3001"/><!-- IDEOGRAPHIC COMMA -->
+      <map code="0x3073" name="uni3073"/><!-- HIRAGANA LETTER BI -->
+      <map code="0x3074" name="uni3074"/><!-- HIRAGANA LETTER PI -->
+      <map code="0x307b" name="uni307B"/><!-- HIRAGANA LETTER HO -->
+      <map code="0x30fb" name="uni30FB"/><!-- KATAKANA MIDDLE DOT -->
+      <map code="0xff1a" name="uniFF1A"/><!-- FULLWIDTH COLON -->
+      <map code="0xff2d" name="uniFF2D"/><!-- FULLWIDTH LATIN CAPITAL LETTER M -->
+    </cmap_format_4>
+    <cmap_format_12 platformID="0" platEncID="4" format="12" reserved="0" length="88" language="0" nGroups="6">
+      <map code="0x3001" name="uni3001"/><!-- IDEOGRAPHIC COMMA -->
+      <map code="0x3073" name="uni3073"/><!-- HIRAGANA LETTER BI -->
+      <map code="0x3074" name="uni3074"/><!-- HIRAGANA LETTER PI -->
+      <map code="0x307b" name="uni307B"/><!-- HIRAGANA LETTER HO -->
+      <map code="0x30fb" name="uni30FB"/><!-- KATAKANA MIDDLE DOT -->
+      <map code="0xff1a" name="uniFF1A"/><!-- FULLWIDTH COLON -->
+      <map code="0xff2d" name="uniFF2D"/><!-- FULLWIDTH LATIN CAPITAL LETTER M -->
+    </cmap_format_12>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x3001" name="uni3001"/><!-- IDEOGRAPHIC COMMA -->
+      <map code="0x3073" name="uni3073"/><!-- HIRAGANA LETTER BI -->
+      <map code="0x3074" name="uni3074"/><!-- HIRAGANA LETTER PI -->
+      <map code="0x307b" name="uni307B"/><!-- HIRAGANA LETTER HO -->
+      <map code="0x30fb" name="uni30FB"/><!-- KATAKANA MIDDLE DOT -->
+      <map code="0xff1a" name="uniFF1A"/><!-- FULLWIDTH COLON -->
+      <map code="0xff2d" name="uniFF2D"/><!-- FULLWIDTH LATIN CAPITAL LETTER M -->
+    </cmap_format_4>
+    <cmap_format_12 platformID="3" platEncID="10" format="12" reserved="0" length="88" language="0" nGroups="6">
+      <map code="0x3001" name="uni3001"/><!-- IDEOGRAPHIC COMMA -->
+      <map code="0x3073" name="uni3073"/><!-- HIRAGANA LETTER BI -->
+      <map code="0x3074" name="uni3074"/><!-- HIRAGANA LETTER PI -->
+      <map code="0x307b" name="uni307B"/><!-- HIRAGANA LETTER HO -->
+      <map code="0x30fb" name="uni30FB"/><!-- KATAKANA MIDDLE DOT -->
+      <map code="0xff1a" name="uniFF1A"/><!-- FULLWIDTH COLON -->
+      <map code="0xff2d" name="uniFF2D"/><!-- FULLWIDTH LATIN CAPITAL LETTER M -->
+    </cmap_format_12>
+  </cmap>
+
+  <post>
+    <formatType value="3.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-75"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+  </post>
+
+  <CFF>
+    <major value="1"/>
+    <minor value="0"/>
+    <CFFFont name="MasterSet_KanjiFullEX-w0.00">
+      <FamilyName value="MasterSet_KanjiFullEX"/>
+      <isFixedPitch value="0"/>
+      <ItalicAngle value="0"/>
+      <UnderlinePosition value="-100"/>
+      <UnderlineThickness value="50"/>
+      <PaintType value="0"/>
+      <CharstringType value="2"/>
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FontBBox value="64 -52 974 798"/>
+      <StrokeWidth value="0"/>
+      <!-- charset is dumped separately as the 'GlyphOrder' element -->
+      <Encoding name="StandardEncoding"/>
+      <Private>
+        <BlueValues value="0 0"/>
+        <BlueScale value="0.039625"/>
+        <BlueShift value="7"/>
+        <BlueFuzz value="1"/>
+        <ForceBold value="0"/>
+        <LanguageGroup value="0"/>
+        <ExpansionFactor value="0.06"/>
+        <initialRandomSeed value="0"/>
+        <defaultWidthX value="1000"/>
+        <nominalWidthX value="532"/>
+      </Private>
+      <CharStrings>
+        <CharString name=".notdef">
+          -282 endchar
+        </CharString>
+        <CharString name="uni3001">
+          291 -43 rmoveto
+          29 24 rlineto
+          -74 84 -84 83 -73 58 rrcurveto
+          -25 -24 rlineto
+          72 -56 87 -85 68 -84 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="uni3073">
+          706 699 rmoveto
+          -32 -10 rlineto
+          50 -192 56 -132 112 -115 rrcurveto
+          24 26 rlineto
+          -143 124 -45 182 -22 117 rrcurveto
+          -592 -57 rmoveto
+          3 -38 rlineto
+          18 2 18 3 17 2 rrcurveto
+          43 6 101 12 63 13 rrcurveto
+          -83 -80 -128 -166 0 -210 rrcurveto
+          0 -150 92 -88 154 0 rrcurveto
+          294 0 65 313 -48 302 rrcurveto
+          -29 79 rlineto
+          64 -402 -96 -263 -249 0 rrcurveto
+          -109 0 -110 48 0 166 rrcurveto
+          0 219 171 196 58 42 rrcurveto
+          14 5 30 6 12 3 rrcurveto
+          -9 30 rlineto
+          -52 -21 -170 -26 -83 -3 rrcurveto
+          -18 -1 -21 0 -12 1 rrcurveto
+          677 114 rmoveto
+          -26 -11 rlineto
+          22 -34 33 -63 20 -42 rrcurveto
+          30 14 rlineto
+          -21 41 -37 62 -21 33 rrcurveto
+          97 40 rmoveto
+          -26 -13 rlineto
+          24 -33 31 -59 21 -44 rrcurveto
+          30 14 rlineto
+          -23 43 -36 60 -21 32 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="uni3074">
+          706 699 rmoveto
+          -32 -10 rlineto
+          50 -192 56 -132 112 -115 rrcurveto
+          24 26 rlineto
+          -143 124 -45 182 -22 117 rrcurveto
+          -592 -57 rmoveto
+          3 -38 rlineto
+          18 2 18 3 17 2 rrcurveto
+          43 6 101 12 63 13 rrcurveto
+          -83 -80 -128 -166 0 -210 rrcurveto
+          0 -150 92 -88 154 0 rrcurveto
+          294 0 65 313 -48 302 rrcurveto
+          -29 79 rlineto
+          64 -402 -96 -263 -249 0 rrcurveto
+          -109 0 -110 48 0 166 rrcurveto
+          0 219 171 196 58 42 rrcurveto
+          14 5 30 6 12 3 rrcurveto
+          -9 30 rlineto
+          -52 -21 -170 -26 -83 -3 rrcurveto
+          -18 -1 -21 0 -12 1 rrcurveto
+          681 51 rmoveto
+          0 42 33 33 41 0 rrcurveto
+          41 0 33 -33 0 -42 rrcurveto
+          0 -41 -33 -33 -41 0 rrcurveto
+          -42 0 -32 33 0 41 rrcurveto
+          -30 0 rmoveto
+          0 -57 46 -47 58 0 rrcurveto
+          57 0 48 47 0 57 rrcurveto
+          0 58 -48 47 -57 0 rrcurveto
+          -58 0 -46 -47 0 -58 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="uni307B">
+          703 676 rmoveto
+          -28 0 rlineto
+          0 -63 0 -106 0 -61 rrcurveto
+          0 -103 14 -162 0 -52 rrcurveto
+          0 -59 -17 -50 -97 0 rrcurveto
+          -91 0 -58 31 0 63 rrcurveto
+          0 53 62 37 87 0 rrcurveto
+          125 0 119 -56 94 -98 rrcurveto
+          19 31 rlineto
+          -90 81 -113 69 -154 0 rrcurveto
+          -130 0 -47 -64 0 -53 rrcurveto
+          0 -80 70 -42 105 0 rrcurveto
+          85 0 58 36 0 74 rrcurveto
+          0 68 -13 166 0 113 rrcurveto
+          0 61 0 96 0 70 rrcurveto
+          -284 -213 rmoveto
+          0 -31 rlineto
+          168 -10 194 12 125 13 rrcurveto
+          0 31 rlineto
+          -129 -15 -187 -13 -171 13 rrcurveto
+          16 230 rmoveto
+          0 -30 rlineto
+          139 -7 200 11 108 11 rrcurveto
+          0 30 rlineto
+          -111 -15 -197 -11 -139 11 rrcurveto
+          -207 51 rmoveto
+          -37 4 rlineto
+          0 -11 -1 -14 -3 -19 rrcurveto
+          -13 -88 -37 -183 0 -143 rrcurveto
+          0 -135 16 -105 20 -74 rrcurveto
+          28 3 rlineto
+          -1 7 -2 12 -1 9 rrcurveto
+          -1 13 2 16 3 14 rrcurveto
+          9 43 39 105 22 55 rrcurveto
+          -20 17 rlineto
+          -20 -48 -32 -89 -18 -56 rrcurveto
+          -10 78 -5 58 0 78 rrcurveto
+          0 124 26 166 25 119 rrcurveto
+          3 18 4 13 4 13 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="uni30FB">
+          500 465 rmoveto
+          -47 0 -38 -38 0 -47 rrcurveto
+          0 -47 38 -38 47 0 rrcurveto
+          47 0 38 38 0 47 rrcurveto
+          0 47 -38 38 -47 0 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="uniFF1A">
+          500 572 rmoveto
+          28 0 28 19 0 37 rrcurveto
+          0 37 -28 19 -28 0 rrcurveto
+          -28 0 -28 -19 0 -37 rrcurveto
+          0 -37 28 -19 28 0 rrcurveto
+          0 -502 rmoveto
+          28 0 28 19 0 37 rrcurveto
+          0 37 -28 19 -28 0 rrcurveto
+          -28 0 -28 -19 0 -37 rrcurveto
+          0 -37 28 -19 28 0 rrcurveto
+          endchar
+        </CharString>
+        <CharString name="uniFF2D">
+          180 0 rmoveto
+          35 0 rlineto
+          0 502 rlineto
+          0 57 -1 74 -2 59 rrcurveto
+          5 0 rlineto
+          67 -160 rlineto
+          196 -451 rlineto
+          39 0 rlineto
+          195 451 rlineto
+          69 160 rlineto
+          5 0 rlineto
+          -2 -59 -3 -74 0 -57 rrcurveto
+          0 -502 rlineto
+          37 0 rlineto
+          0 726 rlineto
+          -59 0 rlineto
+          -191 -438 rlineto
+          -23 -54 -20 -55 -24 -55 rrcurveto
+          -4 0 rlineto
+          -24 55 -23 55 -23 54 rrcurveto
+          -190 438 rlineto
+          -59 0 rlineto
+          0 -726 rlineto
+          endchar
+        </CharString>
+      </CharStrings>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF>
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="vpal"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=5 -->
+        <SinglePos index="0" Format="2">
+          <Coverage Format="1">
+            <Glyph value="uni3001"/>
+            <Glyph value="uniFF1A"/>
+          </Coverage>
+          <ValueFormat value="5"/>
+          <!-- ValueCount=2 -->
+          <Value index="0" XPlacement="-9" XAdvance="-500"/>
+          <Value index="1" XPlacement="-250" XAdvance="-500"/>
+        </SinglePos>
+        <SinglePos index="1" Format="2">
+          <Coverage Format="1">
+            <Glyph value="uni30FB"/>
+          </Coverage>
+          <ValueFormat value="7"/>
+          <!-- ValueCount=1 -->
+          <Value index="0" XPlacement="-250" YPlacement="1" XAdvance="-500"/>
+        </SinglePos>
+        <SinglePos index="2" Format="2">
+          <Coverage Format="1">
+            <Glyph value="uni3073"/>
+            <Glyph value="uni3074"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <!-- ValueCount=2 -->
+          <Value index="0" XAdvance="-36"/>
+          <Value index="1" XAdvance="-30"/>
+        </SinglePos>
+        <SinglePos index="3" Format="2">
+          <Coverage Format="1">
+            <Glyph value="uni307B"/>
+          </Coverage>
+          <ValueFormat value="1"/>
+          <!-- ValueCount=1 -->
+          <Value index="0" XPlacement="11"/>
+        </SinglePos>
+        <SinglePos index="4" Format="2">
+          <Coverage Format="1">
+            <Glyph value="uniFF2D"/>
+          </Coverage>
+          <ValueFormat value="5"/>
+          <!-- ValueCount=1 -->
+          <Value index="0" XPlacement="12" XAdvance="23"/>
+        </SinglePos>
+      </Lookup>
+    </LookupList>
+  </GPOS>
+
+  <hmtx>
+    <mtx name=".notdef" width="250" lsb="0"/>
+    <mtx name="uni3001" width="1000" lsb="64"/>
+    <mtx name="uni3073" width="1000" lsb="114"/>
+    <mtx name="uni3074" width="1000" lsb="114"/>
+    <mtx name="uni307B" width="1000" lsb="137"/>
+    <mtx name="uni30FB" width="1000" lsb="415"/>
+    <mtx name="uniFF1A" width="1000" lsb="444"/>
+    <mtx name="uniFF2D" width="1000" lsb="180"/>
+  </hmtx>
+
+</ttFont>

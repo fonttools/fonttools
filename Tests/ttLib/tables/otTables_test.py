@@ -1,7 +1,10 @@
-from __future__ import print_function, division, absolute_import
+# coding: utf-8
+from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
-from fontTools.misc.testTools import parseXML, FakeFont
+from fontTools.misc.testTools import getXML, parseXML, FakeFont
+from fontTools.misc.textTools import deHexStr, hexStr
 from fontTools.misc.xmlWriter import XMLWriter
+from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
 import fontTools.ttLib.tables.otTables as otTables
 import unittest
 
@@ -163,7 +166,7 @@ class MultipleSubstTest(unittest.TestCase):
                          {'c_t': ['c', 't'], 'f_f_i': ['f', 'f', 'i']})
 
     def test_fromXML_oldFormat_bug385(self):
-        # https://github.com/behdad/fonttools/issues/385
+        # https://github.com/fonttools/fonttools/issues/385
         table = otTables.MultipleSubst()
         table.Format = 1
         for name, attrs, content in parseXML(
@@ -365,6 +368,227 @@ class AlternateSubstTest(unittest.TestCase):
             "G": ["G.alt2", "G.alt1"],
             "Z": ["Z.fina"]
         })
+
+
+class RearrangementMorphActionTest(unittest.TestCase):
+    def setUp(self):
+        self.font = FakeFont(['.notdef', 'A', 'B', 'C'])
+
+    def testCompile(self):
+        r = otTables.RearrangementMorphAction()
+        r.NewState = 0x1234
+        r.MarkFirst = r.DontAdvance = r.MarkLast = True
+        r.ReservedFlags, r.Verb = 0x1FF0, 0xD
+        writer = OTTableWriter()
+        r.compile(writer, self.font, actionIndex=None)
+        self.assertEqual(hexStr(writer.getAllData()), "1234fffd")
+
+    def testCompileActions(self):
+        act = otTables.RearrangementMorphAction()
+        self.assertEqual(act.compileActions(self.font, []), (None, None))
+
+    def testDecompileToXML(self):
+        r = otTables.RearrangementMorphAction()
+        r.decompile(OTTableReader(deHexStr("1234fffd")),
+                    self.font, actionReader=None)
+        toXML = lambda w, f: r.toXML(w, f, {"Test": "Foo"}, "Transition")
+        self.assertEqual(getXML(toXML, self.font), [
+                '<Transition Test="Foo">',
+                '  <NewState value="4660"/>',  # 0x1234 = 4660
+                '  <Flags value="MarkFirst,DontAdvance,MarkLast"/>',
+                '  <ReservedFlags value="0x1FF0"/>',
+                '  <Verb value="13"/><!-- ABxCD ⇒ CDxBA -->',
+                '</Transition>',
+        ])
+
+
+class ContextualMorphActionTest(unittest.TestCase):
+    def setUp(self):
+        self.font = FakeFont(['.notdef', 'A', 'B', 'C'])
+
+    def testCompile(self):
+        a = otTables.ContextualMorphAction()
+        a.NewState = 0x1234
+        a.SetMark, a.DontAdvance, a.ReservedFlags = True, True, 0x3117
+        a.MarkIndex, a.CurrentIndex = 0xDEAD, 0xBEEF
+        writer = OTTableWriter()
+        a.compile(writer, self.font, actionIndex=None)
+        self.assertEqual(hexStr(writer.getAllData()), "1234f117deadbeef")
+
+    def testCompileActions(self):
+        act = otTables.ContextualMorphAction()
+        self.assertEqual(act.compileActions(self.font, []), (None, None))
+
+    def testDecompileToXML(self):
+        a = otTables.ContextualMorphAction()
+        a.decompile(OTTableReader(deHexStr("1234f117deadbeef")),
+                    self.font, actionReader=None)
+        toXML = lambda w, f: a.toXML(w, f, {"Test": "Foo"}, "Transition")
+        self.assertEqual(getXML(toXML, self.font), [
+                '<Transition Test="Foo">',
+                '  <NewState value="4660"/>',  # 0x1234 = 4660
+                '  <Flags value="SetMark,DontAdvance"/>',
+                '  <ReservedFlags value="0x3117"/>',
+                '  <MarkIndex value="57005"/>',  # 0xDEAD = 57005
+                '  <CurrentIndex value="48879"/>',  # 0xBEEF = 48879
+                '</Transition>',
+        ])
+
+
+class LigatureMorphActionTest(unittest.TestCase):
+    def setUp(self):
+        self.font = FakeFont(['.notdef', 'A', 'B', 'C'])
+
+    def testDecompileToXML(self):
+        a = otTables.LigatureMorphAction()
+        actionReader = OTTableReader(deHexStr("DEADBEEF 7FFFFFFE 80000003"))
+        a.decompile(OTTableReader(deHexStr("1234FAB30001")),
+                    self.font, actionReader)
+        toXML = lambda w, f: a.toXML(w, f, {"Test": "Foo"}, "Transition")
+        self.assertEqual(getXML(toXML, self.font), [
+                '<Transition Test="Foo">',
+                '  <NewState value="4660"/>',  # 0x1234 = 4660
+                '  <Flags value="SetComponent,DontAdvance"/>',
+                '  <ReservedFlags value="0x1AB3"/>',
+                '  <Action GlyphIndexDelta="-2" Flags="Store"/>',
+                '  <Action GlyphIndexDelta="3"/>',
+                '</Transition>',
+        ])
+
+    def testCompileActions_empty(self):
+        act = otTables.LigatureMorphAction()
+        actions, actionIndex = act.compileActions(self.font, [])
+        self.assertEqual(actions, b'')
+        self.assertEqual(actionIndex, {})
+
+    def testCompileActions_shouldShareSubsequences(self):
+        state = otTables.AATState()
+        t = state.Transitions = {i: otTables.LigatureMorphAction()
+                                 for i in range(3)}
+        ligs = [otTables.LigAction() for _ in range(3)]
+        for i, lig in enumerate(ligs):
+            lig.GlyphIndexDelta = i
+        t[0].Actions = ligs[1:2]
+        t[1].Actions = ligs[0:3]
+        t[2].Actions = ligs[1:3]
+        actions, actionIndex = t[0].compileActions(self.font, [state])
+        self.assertEqual(actions,
+                         deHexStr("00000000 00000001 80000002 80000001"))
+        self.assertEqual(actionIndex, {
+            deHexStr("00000000 00000001 80000002"): 0,
+            deHexStr("00000001 80000002"): 1,
+            deHexStr("80000002"): 2,
+            deHexStr("80000001"): 3,
+        })
+
+
+class InsertionMorphActionTest(unittest.TestCase):
+    MORPH_ACTION_XML = [
+        '<Transition Test="Foo">',
+        '  <NewState value="4660"/>',  # 0x1234 = 4660
+        '  <Flags value="SetMark,DontAdvance,CurrentIsKashidaLike,'
+              'MarkedIsKashidaLike,CurrentInsertBefore,MarkedInsertBefore"/>',
+        '  <CurrentInsertionAction glyph="B"/>',
+        '  <CurrentInsertionAction glyph="C"/>',
+        '  <MarkedInsertionAction glyph="B"/>',
+        '  <MarkedInsertionAction glyph="A"/>',
+        '  <MarkedInsertionAction glyph="D"/>',
+        '</Transition>'
+    ]
+
+    def setUp(self):
+        self.font = FakeFont(['.notdef', 'A', 'B', 'C', 'D'])
+        self.maxDiff = None
+
+    def testDecompileToXML(self):
+        a = otTables.InsertionMorphAction()
+        actionReader = OTTableReader(
+            deHexStr("DEAD BEEF 0002 0001 0004 0002 0003 DEAD BEEF"))
+        a.decompile(OTTableReader(deHexStr("1234 FC43 0005 0002")),
+                    self.font, actionReader)
+        toXML = lambda w, f: a.toXML(w, f, {"Test": "Foo"}, "Transition")
+        self.assertEqual(getXML(toXML, self.font), self.MORPH_ACTION_XML)
+
+    def testCompileFromXML(self):
+        a = otTables.InsertionMorphAction()
+        for name, attrs, content in parseXML(self.MORPH_ACTION_XML):
+            a.fromXML(name, attrs, content, self.font)
+        writer = OTTableWriter()
+        a.compile(writer, self.font,
+	          actionIndex={('B', 'C'): 9, ('B', 'A', 'D'): 7})
+        self.assertEqual(hexStr(writer.getAllData()), "1234fc4300090007")
+
+    def testCompileActions_empty(self):
+        act = otTables.InsertionMorphAction()
+        actions, actionIndex = act.compileActions(self.font, [])
+        self.assertEqual(actions, b'')
+        self.assertEqual(actionIndex, {})
+
+    def testCompileActions_shouldShareSubsequences(self):
+        state = otTables.AATState()
+        t = state.Transitions = {i: otTables.InsertionMorphAction()
+                                 for i in range(3)}
+        t[1].CurrentInsertionAction = []
+        t[0].MarkedInsertionAction = ['A']
+        t[1].CurrentInsertionAction = ['C', 'D']
+        t[1].MarkedInsertionAction = ['B']
+        t[2].CurrentInsertionAction = ['B', 'C', 'D']
+        t[2].MarkedInsertionAction = ['C', 'D']
+        actions, actionIndex = t[0].compileActions(self.font, [state])
+        self.assertEqual(actions, deHexStr('0002 0003 0004 0001'))
+        self.assertEqual(actionIndex, {
+            ('A',): 3,
+            ('B',): 0,
+            ('B', 'C'): 0,
+            ('B', 'C', 'D'): 0,
+            ('C',): 1,
+            ('C', 'D'): 1,
+            ('D',): 2,
+        })
+
+
+def test_splitMarkBasePos():
+	from fontTools.otlLib.builder import buildAnchor, buildMarkBasePosSubtable
+
+	marks = {
+		"acutecomb": (0, buildAnchor(0, 600)),
+		"gravecomb": (0, buildAnchor(0, 590)),
+		"cedillacomb": (1, buildAnchor(0, 0)),
+	}
+	bases = {
+		"a": {
+			0: buildAnchor(350, 500),
+			1: None,
+		},
+		"c": {
+			0: buildAnchor(300, 700),
+			1: buildAnchor(300, 0),
+		},
+	}
+	glyphOrder = ["a", "c", "acutecomb", "gravecomb", "cedillacomb"]
+	glyphMap = {g: i for i, g in enumerate(glyphOrder)}
+
+	oldSubTable = buildMarkBasePosSubtable(marks, bases, glyphMap)
+	oldSubTable.MarkCoverage.Format = oldSubTable.BaseCoverage.Format = 1
+	newSubTable = otTables.MarkBasePos()
+
+	ok = otTables.splitMarkBasePos(oldSubTable, newSubTable, overflowRecord=None)
+
+	assert ok
+	assert oldSubTable.Format == newSubTable.Format
+	assert oldSubTable.MarkCoverage.glyphs == [
+		"acutecomb", "gravecomb"
+	]
+	assert newSubTable.MarkCoverage.glyphs == ["cedillacomb"]
+	assert newSubTable.MarkCoverage.Format == 1
+	assert oldSubTable.BaseCoverage.glyphs == newSubTable.BaseCoverage.glyphs
+	assert newSubTable.BaseCoverage.Format == 1
+	assert oldSubTable.ClassCount == newSubTable.ClassCount == 1
+	assert oldSubTable.MarkArray.MarkCount == 2
+	assert newSubTable.MarkArray.MarkCount == 1
+	assert oldSubTable.BaseArray.BaseCount == newSubTable.BaseArray.BaseCount
+	assert newSubTable.BaseArray.BaseRecord[0].BaseAnchor[0] is None
+	assert newSubTable.BaseArray.BaseRecord[1].BaseAnchor[0] == buildAnchor(300, 0)
 
 
 if __name__ == "__main__":

@@ -6,7 +6,10 @@
 
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.fixedTools import otRound
+from numbers import Number
 import math
+import operator
 
 def calcBounds(array):
     """Return the bounding rectangle of a 2D points array as a tuple:
@@ -18,10 +21,11 @@ def calcBounds(array):
     ys = [y for x, y in array]
     return min(xs), min(ys), max(xs), max(ys)
 
-def calcIntBounds(array):
+def calcIntBounds(array, round=otRound):
     """Return the integer bounding rectangle of a 2D points array as a
     tuple: (xMin, yMin, xMax, yMax)
-    Values are rounded to closest integer.
+    Values are rounded to closest integer towards +Infinity using otRound
+    function by default, unless an optional 'round' function is passed.
     """
     return tuple(round(v) for v in calcBounds(array))
 
@@ -118,6 +122,136 @@ def intRect(rect1):
     xMax = int(math.ceil(xMax))
     yMax = int(math.ceil(yMax))
     return (xMin, yMin, xMax, yMax)
+
+
+class Vector(object):
+    """A math-like vector."""
+
+    def __init__(self, values, keep=False):
+        self.values = values if keep else list(values)
+
+    def __getitem__(self, index):
+        return self.values[index]
+
+    def __len__(self):
+        return len(self.values)
+
+    def __repr__(self):
+        return "Vector(%s)" % self.values
+
+    def _vectorOp(self, other, op):
+        if isinstance(other, Vector):
+            assert len(self.values) == len(other.values)
+            a = self.values
+            b = other.values
+            return [op(a[i], b[i]) for i in range(len(self.values))]
+        if isinstance(other, Number):
+            return [op(v, other) for v in self.values]
+        raise NotImplementedError
+
+    def _scalarOp(self, other, op):
+        if isinstance(other, Number):
+            return [op(v, other) for v in self.values]
+        raise NotImplementedError
+
+    def _unaryOp(self, op):
+        return [op(v) for v in self.values]
+
+    def __add__(self, other):
+        return Vector(self._vectorOp(other, operator.add), keep=True)
+    def __iadd__(self, other):
+        self.values = self._vectorOp(other, operator.add)
+        return self
+    __radd__ = __add__
+
+    def __sub__(self, other):
+        return Vector(self._vectorOp(other, operator.sub), keep=True)
+    def __isub__(self, other):
+        self.values = self._vectorOp(other, operator.sub)
+        return self
+    def __rsub__(self, other):
+        return other + (-self)
+
+    def __mul__(self, other):
+        return Vector(self._scalarOp(other, operator.mul), keep=True)
+    def __imul__(self, other):
+        self.values = self._scalarOp(other, operator.mul)
+        return self
+    __rmul__ = __mul__
+
+    def __truediv__(self, other):
+        return Vector(self._scalarOp(other, operator.div), keep=True)
+    def __itruediv__(self, other):
+        self.values = self._scalarOp(other, operator.div)
+        return self
+
+    def __pos__(self):
+        return Vector(self._unaryOp(operator.pos), keep=True)
+    def __neg__(self):
+        return Vector(self._unaryOp(operator.neg), keep=True)
+    def __round__(self):
+        return Vector(self._unaryOp(round), keep=True)
+    def toInt(self):
+        return self.__round__()
+
+    def __eq__(self, other):
+        if type(other) == Vector:
+            return self.values == other.values
+        else:
+            return self.values == other
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __bool__(self):
+        return any(self.values)
+    __nonzero__ = __bool__
+
+    def __abs__(self):
+        return math.sqrt(sum([x*x for x in self.values]))
+    def dot(self, other):
+        a = self.values
+        b = other.values if type(other) == Vector else b
+        assert len(a) == len(b)
+        return sum([a[i] * b[i] for i in range(len(a))])
+
+
+def pairwise(iterable, reverse=False):
+    """Iterate over current and next items in iterable, optionally in
+    reverse order.
+
+    >>> tuple(pairwise([]))
+    ()
+    >>> tuple(pairwise([], reverse=True))
+    ()
+    >>> tuple(pairwise([0]))
+    ((0, 0),)
+    >>> tuple(pairwise([0], reverse=True))
+    ((0, 0),)
+    >>> tuple(pairwise([0, 1]))
+    ((0, 1), (1, 0))
+    >>> tuple(pairwise([0, 1], reverse=True))
+    ((1, 0), (0, 1))
+    >>> tuple(pairwise([0, 1, 2]))
+    ((0, 1), (1, 2), (2, 0))
+    >>> tuple(pairwise([0, 1, 2], reverse=True))
+    ((2, 1), (1, 0), (0, 2))
+    >>> tuple(pairwise(['a', 'b', 'c', 'd']))
+    (('a', 'b'), ('b', 'c'), ('c', 'd'), ('d', 'a'))
+    >>> tuple(pairwise(['a', 'b', 'c', 'd'], reverse=True))
+    (('d', 'c'), ('c', 'b'), ('b', 'a'), ('a', 'd'))
+    """
+    if not iterable:
+        return
+    if reverse:
+        it = reversed(iterable)
+    else:
+        it = iter(iterable)
+    first = next(it, None)
+    a = first
+    for b in it:
+        yield (a, b)
+        a = b
+    yield (a, first)
 
 
 def _test():

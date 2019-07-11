@@ -142,14 +142,14 @@ class T2CharStringPenTest(unittest.TestCase):
         pen = T2CharStringPen(100.1, {}, roundTolerance=0.5)
         pen.moveTo((0, 0))
         pen.curveTo((10.1, 0.1), (19.9, 9.9), (20.49, 20.49))
-        pen.curveTo((20.49, 30.49), (9.9, 39.9), (0.1, 40.1))
+        pen.curveTo((20.49, 30.5), (9.9, 39.9), (0.1, 40.1))
         pen.closePath()
         charstring = pen.getCharString(None, None)
 
         self.assertEqual(
             [100,
              0, 'hmoveto',
-             10, 10, 10, 10, 10, -10, 10, -10, 'hvcurveto',
+             10, 10, 10, 10, 11, -10, 9, -10, 'hvcurveto',
              'endchar'],
             charstring.program)
 

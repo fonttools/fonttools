@@ -1,34 +1,18 @@
 environment:
   matrix:
-    - JOB: "2.7.13 32-bit"
+    - JOB: "2.7 32-bit"
       PYTHON_HOME: "C:\\Python27"
-      TOXENV: "py27-cov"
-      TOXPYTHON: "C:\\Python27\\python.exe"
 
-    - JOB: "3.5.2 32-bit"
-      PYTHON_HOME: "C:\\Python35"
-      TOXENV: "py35-cov"
-      TOXPYTHON: "C:\\Python35\\python.exe"
+    - JOB: "3.7 64-bit"
+      PYTHON_HOME: "C:\\Python37-x64"
 
-    - JOB: "3.6.0 32-bit"
-      PYTHON_HOME: "C:\\Python36"
-      TOXENV: "py36-cov"
-      TOXPYTHON: "C:\\Python36\\python.exe"
-
-    - JOB: "2.7.13 64-bit"
-      PYTHON_HOME: "C:\\Python27-x64"
-      TOXENV: "py27-cov"
-      TOXPYTHON: "C:\\Python27-x64\\python.exe"
-
-    - JOB: "3.5.2 64-bit"
-      PYTHON_HOME: "C:\\Python35-x64"
-      TOXENV: "py35-cov"
-      TOXPYTHON: "C:\\Python35-x64\\python.exe"
-
-    - JOB: "3.6.0 64-bit"
-      PYTHON_HOME: "C:\\Python36-x64"
-      TOXENV: "py36-cov"
-      TOXPYTHON: "C:\\Python36-x64\\python.exe"
+branches:
+  only:
+    - master
+    # We want to build wip/* branches since these are not usually used for PRs
+    - /^wip\/.*$/
+    # We want to build version tags as well.
+    - /^\d+\.\d+.*$/
 
 install:
   # If there is a newer build queued for the same PR, cancel this one.
@@ -49,18 +33,19 @@ install:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
   # upgrade pip and setuptools to avoid out-of-date warnings
-  - "python -m pip install --disable-pip-version-check --user --upgrade pip setuptools"
+  - "python -m pip install --disable-pip-version-check --user --upgrade pip setuptools virtualenv"
 
   # install the dependencies to run the tests
   - "python -m pip install tox"
- 
 
 build: false
 
 test_script:
-  - "tox"
+  # run tests with the current 'python' in %PATH%, and measure test coverage
+  - "tox -e py-cov"
 
 after_test:
+  # upload test coverage to Codecov.io
   - "tox -e codecov"
 
 notifications:

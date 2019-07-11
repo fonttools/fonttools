@@ -6,7 +6,6 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
-import operator
 import struct
 
 
@@ -44,12 +43,13 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 
 		self.ColorLayers = colorLayerLists = {}
 		try:
-			names = list(map(operator.getitem, [glyphOrder]*numBaseGlyphRecords, gids))
+			names = [glyphOrder[gid] for gid in gids]
 		except IndexError:
 			getGlyphName = self.getGlyphName
-			names = list(map(getGlyphName, gids ))
+			names = map(getGlyphName, gids)
 
-		list(map(operator.setitem, [colorLayerLists]*numBaseGlyphRecords, names, layerLists))
+		for name, layerList in zip(names, layerLists):
+			colorLayerLists[name] = layerList
 
 	def compile(self, ttFont):
 		ordered = []
@@ -112,7 +112,7 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 				layer = LayerRecord()
 				layer.fromXML(element[0], element[1], element[2], ttFont)
 				layers.append (layer)
-			operator.setitem(self, glyphName, layers)
+			self[glyphName] = layers
 		elif "value" in attrs:
 			setattr(self, name, safeEval(attrs["value"]))
 

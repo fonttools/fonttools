@@ -30,9 +30,9 @@ modules.sort()
 tables.sort()
 
 
-file = open(os.path.join(tablesDir, "__init__.py"), "w")
+with open(os.path.join(tablesDir, "__init__.py"), "w") as file:
 
-file.write('''
+	file.write('''
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
@@ -45,21 +45,20 @@ def _moduleFinderHint():
 	"""
 ''')
 
-for module in modules:
-	file.write("\tfrom . import %s\n" % module)
+	for module in modules:
+		file.write("\tfrom . import %s\n" % module)
 
-file.write('''
+	file.write('''
 if __name__ == "__main__":
 	import doctest, sys
 	sys.exit(doctest.testmod().failed)
 ''')
 
-file.close()
-
 
 begin = ".. begin table list\n.. code::\n"
 end = ".. end table list"
-doc = open(docFile).read()
+with open(docFile) as f:
+	doc = f.read()
 beginPos = doc.find(begin)
 assert beginPos > 0
 beginPos = beginPos + len(begin) + 1
@@ -70,4 +69,5 @@ blockquote = "\n".join(" "*4 + line for line in lines) + "\n"
 
 doc = doc[:beginPos] + blockquote + doc[endPos:]
 
-open(docFile, "w").write(doc)
+with open(docFile, "w") as f:
+	f.write(doc)

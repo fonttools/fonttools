@@ -1,0 +1,65 @@
+# Test of features and languagesystems
+
+lookup a {
+    sub a by A;
+} a;
+
+lookup b {
+    sub b by B;
+} b;
+
+lookup c {
+    sub c by C;
+} c;
+
+lookup d {
+    sub d by D;
+} d;
+
+lookup e {
+    sub e by E;
+} e;
+
+lookup f {
+    sub f by F;
+} f;
+
+lookup g {
+    sub g by G;
+} g;
+
+lookup h {
+    sub h by H;
+} h;
+
+lookup i {
+    sub i by I;
+} i;
+
+languagesystem DFLT dflt;
+languagesystem DFLT FRE;
+languagesystem DFLT ABC;
+languagesystem latn dflt;
+languagesystem latn ABC;
+
+feature smcp {
+    lookup a;
+} smcp;
+
+feature liga {
+    lookup b;
+    script DFLT;
+        lookup c;
+        language dflt;
+            lookup d;
+        language FRE;
+            lookup e;
+    script latn;
+        lookup f;
+        language dflt;
+            lookup g;
+        language FRE;
+            lookup h;
+        language DEF exclude_dflt;
+            lookup i;
+} liga;

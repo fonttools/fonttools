@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
+from fontTools.misc.py23 import round3
 from fontTools.misc.arrayTools import (
     calcBounds, calcIntBounds, updateBounds, pointInRect, pointsInRect,
     vectorLength, asInt16, normRect, scaleRect, offsetRect, insetRect,
@@ -15,8 +16,13 @@ def test_calcBounds():
 
 def test_calcIntBounds():
     assert calcIntBounds(
-        [(0.1, 40.1), (0.1, 100.1), (49.9, 49.9), (79.5, 9.5)]
-    ) == (0, 10, 80, 100)
+        [(0.1, 40.1), (0.1, 100.1), (49.9, 49.9), (78.5, 9.5)]
+    ) == (0, 10, 79, 100)
+
+    assert calcIntBounds(
+        [(0.1, 40.1), (0.1, 100.1), (49.9, 49.9), (78.5, 9.5)],
+        round=round3
+    ) == (0, 10, 78, 100)
 
 
 def test_updateBounds():

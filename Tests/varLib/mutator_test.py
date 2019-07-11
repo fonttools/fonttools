@@ -3,6 +3,7 @@ from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.varLib import build
 from fontTools.varLib.mutator import main as mutator
+from fontTools.varLib.mutator import instantiateVariableFont as make_instance
 import difflib
 import os
 import shutil
@@ -117,6 +118,27 @@ class MutatorTest(unittest.TestCase):
         expected_ttx_path = self.get_test_output(varfont_name + '.ttx')
         self.expect_ttx(instfont, expected_ttx_path, tables)
 
+    def test_varlib_mutator_getvar_ttf(self):
+        suffix = '.ttf'
+        ttx_dir = self.get_test_input('master_ttx_getvar_ttf')
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'Mutator_Getvar')
+        for path in ttx_paths:
+            self.compile_font(path, suffix, self.tempdir)
+
+        varfont_name = 'Mutator_Getvar'
+        varfont_path = os.path.join(self.tempdir, varfont_name + suffix)
+
+        args = [varfont_path, 'wdth=80', 'ASCN=628']
+        mutator(args)
+
+        instfont_path = os.path.splitext(varfont_path)[0] + '-instance' + suffix
+        instfont = TTFont(instfont_path)
+        tables = [table_tag for table_tag in instfont.keys() if table_tag != 'head']
+        expected_ttx_path = self.get_test_output(varfont_name + '-instance.ttx')
+        self.expect_ttx(instfont, expected_ttx_path, tables)
+
     def test_varlib_mutator_iup_ttf(self):
         suffix = '.ttf'
         ufo_dir = self.get_test_input('master_ufo')
@@ -138,6 +160,27 @@ class MutatorTest(unittest.TestCase):
         tables = [table_tag for table_tag in instfont.keys() if table_tag != 'head']
         expected_ttx_path = self.get_test_output(varfont_name + '-instance.ttx')
         self.expect_ttx(instfont, expected_ttx_path, tables)
+
+    def test_varlib_mutator_CFF2(self):
+        suffix = '.otf'
+        ttx_dir = self.get_test_input('master_ttx_varfont_otf')
+
+        self.temp_dir()
+        ttx_paths = self.get_file_list(ttx_dir, '.ttx', 'TestCFF2VF')
+        for path in ttx_paths:
+            self.compile_font(path, suffix, self.tempdir)
+
+        varfont_name = 'TestCFF2VF'
+        varfont_path = os.path.join(self.tempdir, varfont_name + suffix)
+
+        expected_ttx_name = 'InterpolateTestCFF2VF'
+        tables = ["hmtx", "CFF2"]
+        loc = {'wght':float(200)}
+
+        varfont = TTFont(varfont_path)
+        new_font = make_instance(varfont, loc)
+        expected_ttx_path = self.get_test_output(expected_ttx_name + '.ttx')
+        self.expect_ttx(new_font, expected_ttx_path, tables)
 
 
 if __name__ == "__main__":

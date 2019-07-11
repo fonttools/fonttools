@@ -142,7 +142,48 @@ class TestXMLReader(unittest.TestCase):
 		self.assertTrue(reader.file.closed)
 		os.remove(tmp.name)
 
+	def test_read_sub_file(self):
+		# Verifies that sub-file content is able to be read to a table.
+		expectedContent = 'testContent'
+		expectedNameID = '1'
+		expectedPlatform = '3'
+		expectedLangId = '0x409'
 
+		with tempfile.NamedTemporaryFile(delete=False) as tmp:
+			subFileData = (
+				'<ttFont ttLibVersion="3.15">'
+					'<name>'
+						'<namerecord nameID="%s" platformID="%s" platEncID="1" langID="%s">'
+							'%s'
+						'</namerecord>'
+					'</name>'
+				'</ttFont>'
+			) % (expectedNameID, expectedPlatform, expectedLangId, expectedContent)
+			tmp.write(subFileData.encode("utf-8"))
+
+		with tempfile.NamedTemporaryFile(delete=False) as tmp2:
+			fileData = (
+				'<ttFont ttLibVersion="3.15">'
+					'<name>'
+						'<namerecord src="%s"/>'
+					'</name>'
+				'</ttFont>'
+			) % tmp.name
+			tmp2.write(fileData.encode('utf-8'))
+
+		ttf = TTFont()
+		with open(tmp2.name, "rb") as f:
+			reader = XMLReader(f, ttf)
+			reader.read()
+			reader.close()
+			nameTable = ttf['name']
+			self.assertTrue(int(expectedNameID) == nameTable.names[0].nameID)
+			self.assertTrue(int(expectedLangId, 16) == nameTable.names[0].langID)
+			self.assertTrue(int(expectedPlatform) == nameTable.names[0].platformID)
+			self.assertEqual(expectedContent, nameTable.names[0].string.decode(nameTable.names[0].getEncoding()))
+
+		os.remove(tmp.name)
+		os.remove(tmp2.name)
 
 if __name__ == '__main__':
 	import sys

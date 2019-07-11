@@ -1,19 +1,24 @@
 from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
 from fontTools import ttLib
+from fontTools.ttLib import woff2
 from fontTools.ttLib.woff2 import (
 	WOFF2Reader, woff2DirectorySize, woff2DirectoryFormat,
 	woff2FlagsSize, woff2UnknownTagSize, woff2Base128MaxSize, WOFF2DirectoryEntry,
 	getKnownTagIndex, packBase128, base128Size, woff2UnknownTagIndex,
 	WOFF2FlavorData, woff2TransformedTableTags, WOFF2GlyfTable, WOFF2LocaTable,
-	WOFF2Writer, unpackBase128, unpack255UShort, pack255UShort)
+	WOFF2HmtxTable, WOFF2Writer, unpackBase128, unpack255UShort, pack255UShort)
 import unittest
 from fontTools.misc import sstruct
+from fontTools import fontBuilder
+from fontTools.pens.ttGlyphPen import TTGlyphPen
 import struct
 import os
 import random
 import copy
 from collections import OrderedDict
+from functools import partial
+import pytest
 
 haveBrotli = False
 try:
@@ -122,7 +127,7 @@ class WOFF2ReaderTest(unittest.TestCase):
 	def test_reconstruct_unknown(self):
 		reader = WOFF2Reader(self.file)
 		with self.assertRaisesRegex(ttLib.TTLibError, 'transform for table .* unknown'):
-			reader.reconstructTable('ZZZZ')
+			reader.reconstructTable('head')
 
 
 class WOFF2ReaderTTFTest(WOFF2ReaderTest):
@@ -145,6 +150,7 @@ class WOFF2ReaderTTFTest(WOFF2ReaderTest):
 	def test_reconstruct_loca(self):
 		woff2Reader = WOFF2Reader(self.file)
 		reconstructedData = woff2Reader['loca']
+		self.font.getTableData("glyf")  # 'glyf' needs to be compiled before 'loca'
 		self.assertEqual(self.font.getTableData('loca'), reconstructedData)
 		self.assertTrue(hasattr(woff2Reader.tables['glyf'], 'data'))
 
@@ -242,10 +248,6 @@ class WOFF2DirectoryEntryTest(unittest.TestCase):
 		with self.assertRaisesRegex(ttLib.TTLibError, "can't read table 'tag'"):
 			self.entry.fromString(bytes(incompleteData))
 
-	def test_table_reserved_flags(self):
-		with self.assertRaisesRegex(ttLib.TTLibError, "bits 6-7 are reserved"):
-			self.entry.fromString(bytechr(0xC0))
-
 	def test_loca_zero_transformLength(self):
 		data = bytechr(getKnownTagIndex('loca'))  # flags
 		data += packBase128(random.randint(1, 100))  # origLength
@@ -291,6 +293,35 @@ class WOFF2DirectoryEntryTest(unittest.TestCase):
 		data = self.entry.toString()
 		self.assertEqual(len(data), expectedSize)
 
+	def test_glyf_loca_transform_flags(self):
+		for tag in ("glyf", "loca"):
+			entry = WOFF2DirectoryEntry()
+			entry.tag = Tag(tag)
+			entry.flags = getKnownTagIndex(entry.tag)
+
+			self.assertEqual(entry.transformVersion, 0)
+			self.assertTrue(entry.transformed)
+
+			entry.transformed = False
+
+			self.assertEqual(entry.transformVersion, 3)
+			self.assertEqual(entry.flags & 0b11000000, (3 << 6))
+			self.assertFalse(entry.transformed)
+
+	def test_other_transform_flags(self):
+		entry = WOFF2DirectoryEntry()
+		entry.tag = Tag('ZZZZ')
+		entry.flags = woff2UnknownTagIndex
+
+		self.assertEqual(entry.transformVersion, 0)
+		self.assertFalse(entry.transformed)
+
+		entry.transformed = True
+
+		self.assertEqual(entry.transformVersion, 1)
+		self.assertEqual(entry.flags & 0b11000000, (1 << 6))
+		self.assertTrue(entry.transformed)
+
 
 class DummyReader(WOFF2Reader):
 
@@ -299,6 +330,7 @@ class DummyReader(WOFF2Reader):
 		for attr in ('majorVersion', 'minorVersion', 'metaOffset', 'metaLength',
 				'metaOrigLength', 'privLength', 'privOffset'):
 			setattr(self, attr, 0)
+		self.tables = {}
 
 
 class WOFF2FlavorDataTest(unittest.TestCase):
@@ -353,6 +385,27 @@ class WOFF2FlavorDataTest(unittest.TestCase):
 		self.assertEqual(flavorData.majorVersion, 1)
 		self.assertEqual(flavorData.minorVersion, 1)
 
+	def test_mutually_exclusive_args(self):
+		msg = "arguments are mutually exclusive"
+		reader = DummyReader(self.file)
+		with self.assertRaisesRegex(TypeError, msg):
+			WOFF2FlavorData(reader, transformedTables={"hmtx"})
+		with self.assertRaisesRegex(TypeError, msg):
+			WOFF2FlavorData(reader, data=WOFF2FlavorData())
+
+	def test_transformedTables_default(self):
+		flavorData = WOFF2FlavorData()
+		self.assertEqual(flavorData.transformedTables, set(woff2TransformedTableTags))
+
+	def test_transformedTables_invalid(self):
+		msg = r"'glyf' and 'loca' must be transformed \(or not\) together"
+
+		with self.assertRaisesRegex(ValueError, msg):
+			WOFF2FlavorData(transformedTables={"glyf"})
+
+		with self.assertRaisesRegex(ValueError, msg):
+			WOFF2FlavorData(transformedTables={"loca"})
+
 
 class WOFF2WriterTest(unittest.TestCase):
 
@@ -360,7 +413,7 @@ class WOFF2WriterTest(unittest.TestCase):
 	def setUpClass(cls):
 		cls.font = ttLib.TTFont(recalcBBoxes=False, recalcTimestamp=False, flavor="woff2")
 		cls.font.importXML(OTX)
-		cls.tags = [t for t in cls.font.keys() if t != 'GlyphOrder']
+		cls.tags = sorted(t for t in cls.font.keys() if t != 'GlyphOrder')
 		cls.numTables = len(cls.tags)
 		cls.file = BytesIO(CFF_WOFF2.getvalue())
 		cls.file.seek(0, 2)
@@ -511,6 +564,30 @@ class WOFF2WriterTest(unittest.TestCase):
 		flavorData.majorVersion, flavorData.minorVersion = (10, 11)
 		self.assertEqual((10, 11), self.writer._getVersion())
 
+	def test_hmtx_trasform(self):
+		tableTransforms = {"glyf", "loca", "hmtx"}
+
+		writer = WOFF2Writer(BytesIO(), self.numTables, self.font.sfntVersion)
+		writer.flavorData = WOFF2FlavorData(transformedTables=tableTransforms)
+
+		for tag in self.tags:
+			writer[tag] = self.font.getTableData(tag)
+		writer.close()
+
+		# enabling hmtx transform has no effect when font has no glyf table
+		self.assertEqual(writer.file.getvalue(), CFF_WOFF2.getvalue())
+
+	def test_no_transforms(self):
+		writer = WOFF2Writer(BytesIO(), self.numTables, self.font.sfntVersion)
+		writer.flavorData = WOFF2FlavorData(transformedTables=())
+
+		for tag in self.tags:
+			writer[tag] = self.font.getTableData(tag)
+		writer.close()
+
+		# transforms settings have no effect when font is CFF-flavored, since
+		# all the current transforms only apply to TrueType-flavored fonts.
+		self.assertEqual(writer.file.getvalue(), CFF_WOFF2.getvalue())
 
 class WOFF2WriterTTFTest(WOFF2WriterTest):
 
@@ -518,7 +595,7 @@ class WOFF2WriterTTFTest(WOFF2WriterTest):
 	def setUpClass(cls):
 		cls.font = ttLib.TTFont(recalcBBoxes=False, recalcTimestamp=False, flavor="woff2")
 		cls.font.importXML(TTX)
-		cls.tags = [t for t in cls.font.keys() if t != 'GlyphOrder']
+		cls.tags = sorted(t for t in cls.font.keys() if t != 'GlyphOrder')
 		cls.numTables = len(cls.tags)
 		cls.file = BytesIO(TT_WOFF2.getvalue())
 		cls.file.seek(0, 2)
@@ -538,6 +615,35 @@ class WOFF2WriterTTFTest(WOFF2WriterTest):
 		self.writer._setHeadTransformFlag()
 		for tag in normTables:
 			self.assertEqual(self.writer.tables[tag].data, normTables[tag])
+
+	def test_hmtx_trasform(self):
+		tableTransforms = {"glyf", "loca", "hmtx"}
+
+		writer = WOFF2Writer(BytesIO(), self.numTables, self.font.sfntVersion)
+		writer.flavorData = WOFF2FlavorData(transformedTables=tableTransforms)
+
+		for tag in self.tags:
+			writer[tag] = self.font.getTableData(tag)
+		writer.close()
+
+		length = len(writer.file.getvalue())
+
+		# enabling optional hmtx transform shaves off a few bytes
+		self.assertLess(length, len(TT_WOFF2.getvalue()))
+
+	def test_no_transforms(self):
+		writer = WOFF2Writer(BytesIO(), self.numTables, self.font.sfntVersion)
+		writer.flavorData = WOFF2FlavorData(transformedTables=())
+
+		for tag in self.tags:
+			writer[tag] = self.font.getTableData(tag)
+		writer.close()
+
+		self.assertNotEqual(writer.file.getvalue(), TT_WOFF2.getvalue())
+
+		writer.file.seek(0)
+		reader = WOFF2Reader(writer.file)
+		self.assertEqual(len(reader.flavorData.transformedTables), 0)
 
 
 class WOFF2LocaTableTest(unittest.TestCase):
@@ -708,28 +814,6 @@ class WOFF2GlyfTableTest(unittest.TestCase):
 		data = glyfTable.transform(self.font)
 		self.assertEqual(self.transformedGlyfData, data)
 
-	def test_transform_glyf_incorrect_glyphOrder(self):
-		glyfTable = self.font['glyf']
-		badGlyphOrder = self.font.getGlyphOrder()[:-1]
-		del glyfTable.glyphOrder
-		self.font.setGlyphOrder(badGlyphOrder)
-		with self.assertRaisesRegex(ttLib.TTLibError, "incorrect glyphOrder"):
-			glyfTable.transform(self.font)
-		glyfTable.glyphOrder = badGlyphOrder
-		with self.assertRaisesRegex(ttLib.TTLibError, "incorrect glyphOrder"):
-			glyfTable.transform(self.font)
-
-	def test_transform_glyf_missing_glyphOrder(self):
-		glyfTable = self.font['glyf']
-		del glyfTable.glyphOrder
-		del self.font.glyphOrder
-		numGlyphs = self.font['maxp'].numGlyphs
-		del self.font['maxp']
-		glyfTable.transform(self.font)
-		expected = [".notdef"]
-		expected.extend(["glyph%.5d" % i for i in range(1, numGlyphs)])
-		self.assertEqual(expected, glyfTable.glyphOrder)
-
 	def test_roundtrip_glyf_reconstruct_and_transform(self):
 		glyfTable = WOFF2GlyfTable()
 		glyfTable.reconstruct(self.transformedGlyfData, self.font)
@@ -745,6 +829,489 @@ class WOFF2GlyfTableTest(unittest.TestCase):
 		reconstructedData = newGlyfTable.compile(self.font)
 		normGlyfData = normalise_table(self.font, 'glyf', newGlyfTable.padding)
 		self.assertEqual(normGlyfData, reconstructedData)
+
+
+@pytest.fixture(scope="module")
+def fontfile():
+
+	class Glyph(object):
+		def __init__(self, empty=False, **kwargs):
+			if not empty:
+				self.draw = partial(self.drawRect, **kwargs)
+			else:
+				self.draw = lambda pen: None
+
+		@staticmethod
+		def drawRect(pen, xMin, xMax):
+			pen.moveTo((xMin, 0))
+			pen.lineTo((xMin, 1000))
+			pen.lineTo((xMax, 1000))
+			pen.lineTo((xMax, 0))
+			pen.closePath()
+
+	class CompositeGlyph(object):
+		def __init__(self, components):
+			self.components = components
+
+		def draw(self, pen):
+			for baseGlyph, (offsetX, offsetY) in self.components:
+				pen.addComponent(baseGlyph, (1, 0, 0, 1, offsetX, offsetY))
+
+	fb = fontBuilder.FontBuilder(unitsPerEm=1000, isTTF=True)
+	fb.setupGlyphOrder(
+		[".notdef", "space", "A", "acutecomb", "Aacute", "zero", "one", "two"]
+	)
+	fb.setupCharacterMap(
+		{
+			0x20: "space",
+			0x41: "A",
+			0x0301: "acutecomb",
+			0xC1: "Aacute",
+			0x30: "zero",
+			0x31: "one",
+			0x32: "two",
+		}
+	)
+	fb.setupHorizontalMetrics(
+		{
+			".notdef": (500, 50),
+			"space": (600, 0),
+			"A": (550, 40),
+			"acutecomb": (0, -40),
+			"Aacute": (550, 40),
+			"zero": (500, 30),
+			"one": (500, 50),
+			"two": (500, 40),
+		}
+	)
+	fb.setupHorizontalHeader(ascent=1000, descent=-200)
+
+	srcGlyphs = {
+		".notdef": Glyph(xMin=50, xMax=450),
+		"space": Glyph(empty=True),
+		"A": Glyph(xMin=40, xMax=510),
+		"acutecomb": Glyph(xMin=-40, xMax=60),
+		"Aacute": CompositeGlyph([("A", (0, 0)), ("acutecomb", (200, 0))]),
+		"zero": Glyph(xMin=30, xMax=470),
+		"one": Glyph(xMin=50, xMax=450),
+		"two": Glyph(xMin=40, xMax=460),
+	}
+	pen = TTGlyphPen(srcGlyphs)
+	glyphSet = {}
+	for glyphName, glyph in srcGlyphs.items():
+		glyph.draw(pen)
+		glyphSet[glyphName] = pen.glyph()
+	fb.setupGlyf(glyphSet)
+
+	fb.setupNameTable(
+		{
+			"familyName": "TestWOFF2",
+			"styleName": "Regular",
+			"uniqueFontIdentifier": "TestWOFF2 Regular; Version 1.000; ABCD",
+			"fullName": "TestWOFF2 Regular",
+			"version": "Version 1.000",
+			"psName": "TestWOFF2-Regular",
+		}
+	)
+	fb.setupOS2()
+	fb.setupPost()
+
+	buf = BytesIO()
+	fb.save(buf)
+	buf.seek(0)
+
+	assert fb.font["maxp"].numGlyphs == 8
+	assert fb.font["hhea"].numberOfHMetrics == 6
+	for glyphName in fb.font.getGlyphOrder():
+		xMin = getattr(fb.font["glyf"][glyphName], "xMin", 0)
+		assert xMin == fb.font["hmtx"][glyphName][1]
+
+	return buf
+
+
+@pytest.fixture
+def ttFont(fontfile):
+	return ttLib.TTFont(fontfile, recalcBBoxes=False, recalcTimestamp=False)
+
+
+class WOFF2HmtxTableTest(object):
+	def test_transform_no_sidebearings(self, ttFont):
+		hmtxTable = WOFF2HmtxTable()
+		hmtxTable.metrics = ttFont["hmtx"].metrics
+
+		data = hmtxTable.transform(ttFont)
+
+		assert data == (
+			b"\x03"  # 00000011 | bits 0 and 1 are set (no sidebearings arrays)
+
+			# advanceWidthArray
+			b'\x01\xf4'  # .notdef: 500
+			b'\x02X'     # space: 600
+			b'\x02&'     # A: 550
+			b'\x00\x00'  # acutecomb: 0
+			b'\x02&'     # Aacute: 550
+			b'\x01\xf4'  # zero: 500
+		)
+
+	def test_transform_proportional_sidebearings(self, ttFont):
+		hmtxTable = WOFF2HmtxTable()
+		metrics = ttFont["hmtx"].metrics
+		# force one of the proportional glyphs to have its left sidebearing be
+		# different from its xMin (40)
+		metrics["A"] = (550, 39)
+		hmtxTable.metrics = metrics
+
+		assert ttFont["glyf"]["A"].xMin != metrics["A"][1]
+
+		data = hmtxTable.transform(ttFont)
+
+		assert data == (
+			b"\x02"  # 00000010 | bits 0 unset: explicit proportional sidebearings
+
+			# advanceWidthArray
+			b'\x01\xf4'  # .notdef: 500
+			b'\x02X'     # space: 600
+			b'\x02&'     # A: 550
+			b'\x00\x00'  # acutecomb: 0
+			b'\x02&'     # Aacute: 550
+			b'\x01\xf4'  # zero: 500
+
+			# lsbArray
+			b'\x002'     # .notdef: 50
+			b'\x00\x00'  # space: 0
+			b"\x00'"     # A: 39 (xMin: 40)
+			b'\xff\xd8'  # acutecomb: -40
+			b'\x00('     # Aacute: 40
+			b'\x00\x1e'  # zero: 30
+		)
+
+	def test_transform_monospaced_sidebearings(self, ttFont):
+		hmtxTable = WOFF2HmtxTable()
+		metrics = ttFont["hmtx"].metrics
+		hmtxTable.metrics = metrics
+
+		# force one of the monospaced glyphs at the end of hmtx table to have
+		# its xMin different from its left sidebearing (50)
+		ttFont["glyf"]["one"].xMin = metrics["one"][1] + 1
+
+		data = hmtxTable.transform(ttFont)
+
+		assert data == (
+			b"\x01"  # 00000001 | bits 1 unset: explicit monospaced sidebearings
+
+			# advanceWidthArray
+			b'\x01\xf4'  # .notdef: 500
+			b'\x02X'     # space: 600
+			b'\x02&'     # A: 550
+			b'\x00\x00'  # acutecomb: 0
+			b'\x02&'     # Aacute: 550
+			b'\x01\xf4'  # zero: 500
+
+			# leftSideBearingArray
+			b'\x002'     # one: 50 (xMin: 51)
+			b'\x00('     # two: 40
+		)
+
+	def test_transform_not_applicable(self, ttFont):
+		hmtxTable = WOFF2HmtxTable()
+		metrics = ttFont["hmtx"].metrics
+		# force both a proportional and monospaced glyph to have sidebearings
+		# different from the respective xMin coordinates
+		metrics["A"] = (550, 39)
+		metrics["one"] = (500, 51)
+		hmtxTable.metrics = metrics
+
+		# 'None' signals to fall back using untransformed hmtx table data
+		assert hmtxTable.transform(ttFont) is None
+
+	def test_reconstruct_no_sidebearings(self, ttFont):
+		hmtxTable = WOFF2HmtxTable()
+
+		data = (
+			b"\x03"  # 00000011 | bits 0 and 1 are set (no sidebearings arrays)
+
+			# advanceWidthArray
+			b'\x01\xf4'  # .notdef: 500
+			b'\x02X'     # space: 600
+			b'\x02&'     # A: 550
+			b'\x00\x00'  # acutecomb: 0
+			b'\x02&'     # Aacute: 550
+			b'\x01\xf4'  # zero: 500
+		)
+
+		hmtxTable.reconstruct(data, ttFont)
+
+		assert hmtxTable.metrics == {
+			".notdef": (500, 50),
+			"space": (600, 0),
+			"A": (550, 40),
+			"acutecomb": (0, -40),
+			"Aacute": (550, 40),
+			"zero": (500, 30),
+			"one": (500, 50),
+			"two": (500, 40),
+		}
+
+	def test_reconstruct_proportional_sidebearings(self, ttFont):
+		hmtxTable = WOFF2HmtxTable()
+
+		data = (
+			b"\x02"  # 00000010 | bits 0 unset: explicit proportional sidebearings
+
+			# advanceWidthArray
+			b'\x01\xf4'  # .notdef: 500
+			b'\x02X'     # space: 600
+			b'\x02&'     # A: 550
+			b'\x00\x00'  # acutecomb: 0
+			b'\x02&'     # Aacute: 550
+			b'\x01\xf4'  # zero: 500
+
+			# lsbArray
+			b'\x002'     # .notdef: 50
+			b'\x00\x00'  # space: 0
+			b"\x00'"     # A: 39 (xMin: 40)
+			b'\xff\xd8'  # acutecomb: -40
+			b'\x00('     # Aacute: 40
+			b'\x00\x1e'  # zero: 30
+		)
+
+		hmtxTable.reconstruct(data, ttFont)
+
+		assert hmtxTable.metrics == {
+			".notdef": (500, 50),
+			"space": (600, 0),
+			"A": (550, 39),
+			"acutecomb": (0, -40),
+			"Aacute": (550, 40),
+			"zero": (500, 30),
+			"one": (500, 50),
+			"two": (500, 40),
+		}
+
+		assert ttFont["glyf"]["A"].xMin == 40
+
+	def test_reconstruct_monospaced_sidebearings(self, ttFont):
+		hmtxTable = WOFF2HmtxTable()
+
+		data = (
+			b"\x01"  # 00000001 | bits 1 unset: explicit monospaced sidebearings
+
+			# advanceWidthArray
+			b'\x01\xf4'  # .notdef: 500
+			b'\x02X'     # space: 600
+			b'\x02&'     # A: 550
+			b'\x00\x00'  # acutecomb: 0
+			b'\x02&'     # Aacute: 550
+			b'\x01\xf4'  # zero: 500
+
+			# leftSideBearingArray
+			b'\x003'     # one: 51 (xMin: 50)
+			b'\x00('     # two: 40
+		)
+
+		hmtxTable.reconstruct(data, ttFont)
+
+		assert hmtxTable.metrics == {
+			".notdef": (500, 50),
+			"space": (600, 0),
+			"A": (550, 40),
+			"acutecomb": (0, -40),
+			"Aacute": (550, 40),
+			"zero": (500, 30),
+			"one": (500, 51),
+			"two": (500, 40),
+		}
+
+		assert ttFont["glyf"]["one"].xMin == 50
+
+	def test_reconstruct_flags_reserved_bits(self):
+		hmtxTable = WOFF2HmtxTable()
+
+		with pytest.raises(
+			ttLib.TTLibError, match="Bits 2-7 of 'hmtx' flags are reserved"
+		):
+			hmtxTable.reconstruct(b"\xFF", ttFont=None)
+
+	def test_reconstruct_flags_required_bits(self):
+		hmtxTable = WOFF2HmtxTable()
+
+		with pytest.raises(ttLib.TTLibError, match="either bits 0 or 1 .* must set"):
+			hmtxTable.reconstruct(b"\x00", ttFont=None)
+
+	def test_reconstruct_too_much_data(self, ttFont):
+		ttFont["hhea"].numberOfHMetrics = 2
+		data = b'\x03\x01\xf4\x02X\x02&'
+		hmtxTable = WOFF2HmtxTable()
+
+		with pytest.raises(ttLib.TTLibError, match="too much 'hmtx' table data"):
+			hmtxTable.reconstruct(data, ttFont)
+
+
+class WOFF2RoundtripTest(object):
+	@staticmethod
+	def roundtrip(infile):
+		infile.seek(0)
+		ttFont = ttLib.TTFont(infile, recalcBBoxes=False, recalcTimestamp=False)
+		outfile = BytesIO()
+		ttFont.save(outfile)
+		return outfile, ttFont
+
+	def test_roundtrip_default_transforms(self, ttFont):
+		ttFont.flavor = "woff2"
+		# ttFont.flavorData = None
+		tmp = BytesIO()
+		ttFont.save(tmp)
+
+		tmp2, ttFont2 = self.roundtrip(tmp)
+
+		assert tmp.getvalue() == tmp2.getvalue()
+		assert ttFont2.reader.flavorData.transformedTables == {"glyf", "loca"}
+
+	def test_roundtrip_no_transforms(self, ttFont):
+		ttFont.flavor = "woff2"
+		ttFont.flavorData = WOFF2FlavorData(transformedTables=[])
+		tmp = BytesIO()
+		ttFont.save(tmp)
+
+		tmp2, ttFont2 = self.roundtrip(tmp)
+
+		assert tmp.getvalue() == tmp2.getvalue()
+		assert not ttFont2.reader.flavorData.transformedTables
+
+	def test_roundtrip_all_transforms(self, ttFont):
+		ttFont.flavor = "woff2"
+		ttFont.flavorData = WOFF2FlavorData(transformedTables=["glyf", "loca", "hmtx"])
+		tmp = BytesIO()
+		ttFont.save(tmp)
+
+		tmp2, ttFont2 = self.roundtrip(tmp)
+
+		assert tmp.getvalue() == tmp2.getvalue()
+		assert ttFont2.reader.flavorData.transformedTables == {"glyf", "loca", "hmtx"}
+
+	def test_roundtrip_only_hmtx_no_glyf_transform(self, ttFont):
+		ttFont.flavor = "woff2"
+		ttFont.flavorData = WOFF2FlavorData(transformedTables=["hmtx"])
+		tmp = BytesIO()
+		ttFont.save(tmp)
+
+		tmp2, ttFont2 = self.roundtrip(tmp)
+
+		assert tmp.getvalue() == tmp2.getvalue()
+		assert ttFont2.reader.flavorData.transformedTables == {"hmtx"}
+
+
+class MainTest(object):
+
+	@staticmethod
+	def make_ttf(tmpdir):
+		ttFont = ttLib.TTFont(recalcBBoxes=False, recalcTimestamp=False)
+		ttFont.importXML(TTX)
+		filename = str(tmpdir / "TestTTF-Regular.ttf")
+		ttFont.save(filename)
+		return filename
+
+	def test_compress_ttf(self, tmpdir):
+		input_file = self.make_ttf(tmpdir)
+
+		assert woff2.main(["compress", input_file]) is None
+
+		assert (tmpdir / "TestTTF-Regular.woff2").check(file=True)
+
+	def test_compress_ttf_no_glyf_transform(self, tmpdir):
+		input_file = self.make_ttf(tmpdir)
+
+		assert woff2.main(["compress", "--no-glyf-transform", input_file]) is None
+
+		assert (tmpdir / "TestTTF-Regular.woff2").check(file=True)
+
+	def test_compress_ttf_hmtx_transform(self, tmpdir):
+		input_file = self.make_ttf(tmpdir)
+
+		assert woff2.main(["compress", "--hmtx-transform", input_file]) is None
+
+		assert (tmpdir / "TestTTF-Regular.woff2").check(file=True)
+
+	def test_compress_ttf_no_glyf_transform_hmtx_transform(self, tmpdir):
+		input_file = self.make_ttf(tmpdir)
+
+		assert woff2.main(
+			["compress", "--no-glyf-transform", "--hmtx-transform", input_file]
+		) is None
+
+		assert (tmpdir / "TestTTF-Regular.woff2").check(file=True)
+
+	def test_compress_output_file(self, tmpdir):
+		input_file = self.make_ttf(tmpdir)
+		output_file = tmpdir / "TestTTF.woff2"
+
+		assert woff2.main(
+			["compress", "-o", str(output_file), str(input_file)]
+		) is None
+
+		assert output_file.check(file=True)
+
+	def test_compress_otf(self, tmpdir):
+		ttFont = ttLib.TTFont(recalcBBoxes=False, recalcTimestamp=False)
+		ttFont.importXML(OTX)
+		input_file = str(tmpdir / "TestOTF-Regular.otf")
+		ttFont.save(input_file)
+
+		assert woff2.main(["compress", input_file]) is None
+
+		assert (tmpdir / "TestOTF-Regular.woff2").check(file=True)
+
+	def test_recompress_woff2_keeps_flavorData(self, tmpdir):
+		woff2_font = ttLib.TTFont(BytesIO(TT_WOFF2.getvalue()))
+		woff2_font.flavorData.privData = b"FOOBAR"
+		woff2_file = tmpdir / "TestTTF-Regular.woff2"
+		woff2_font.save(str(woff2_file))
+
+		assert woff2_font.flavorData.transformedTables == {"glyf", "loca"}
+
+		woff2.main(["compress", "--hmtx-transform", str(woff2_file)])
+
+		output_file = tmpdir / "TestTTF-Regular#1.woff2"
+		assert output_file.check(file=True)
+
+		new_woff2_font = ttLib.TTFont(str(output_file))
+
+		assert new_woff2_font.flavorData.transformedTables == {"glyf", "loca", "hmtx"}
+		assert new_woff2_font.flavorData.privData == b"FOOBAR"
+
+	def test_decompress_ttf(self, tmpdir):
+		input_file = tmpdir / "TestTTF-Regular.woff2"
+		input_file.write_binary(TT_WOFF2.getvalue())
+
+		assert woff2.main(["decompress", str(input_file)]) is None
+
+		assert (tmpdir / "TestTTF-Regular.ttf").check(file=True)
+
+	def test_decompress_otf(self, tmpdir):
+		input_file = tmpdir / "TestTTF-Regular.woff2"
+		input_file.write_binary(CFF_WOFF2.getvalue())
+
+		assert woff2.main(["decompress", str(input_file)]) is None
+
+		assert (tmpdir / "TestTTF-Regular.otf").check(file=True)
+
+	def test_decompress_output_file(self, tmpdir):
+		input_file = tmpdir / "TestTTF-Regular.woff2"
+		input_file.write_binary(TT_WOFF2.getvalue())
+		output_file = tmpdir / "TestTTF.ttf"
+
+		assert woff2.main(
+			["decompress", "-o", str(output_file), str(input_file)]
+		) is None
+
+		assert output_file.check(file=True)
+
+	def test_no_subcommand_show_help(self, capsys):
+		with pytest.raises(SystemExit):
+			woff2.main(["--help"])
+
+		captured = capsys.readouterr()
+		assert "usage: fonttools ttLib.woff2" in captured.out
 
 
 class Base128Test(unittest.TestCase):
@@ -765,7 +1332,7 @@ class Base128Test(unittest.TestCase):
 
 		self.assertRaisesRegex(
 			ttLib.TTLibError,
-			"UIntBase128 value exceeds 2\*\*32-1",
+			r"UIntBase128 value exceeds 2\*\*32-1",
 			unpackBase128, b'\x90\x80\x80\x80\x00')
 
 		self.assertRaisesRegex(
@@ -783,11 +1350,11 @@ class Base128Test(unittest.TestCase):
 		self.assertEqual(packBase128(2**32-1), b'\x8f\xff\xff\xff\x7f')
 		self.assertRaisesRegex(
 			ttLib.TTLibError,
-			"UIntBase128 format requires 0 <= integer <= 2\*\*32-1",
+			r"UIntBase128 format requires 0 <= integer <= 2\*\*32-1",
 			packBase128, 2**32+1)
 		self.assertRaisesRegex(
 			ttLib.TTLibError,
-			"UIntBase128 format requires 0 <= integer <= 2\*\*32-1",
+			r"UIntBase128 format requires 0 <= integer <= 2\*\*32-1",
 			packBase128, -1)
 
 

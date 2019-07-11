@@ -84,8 +84,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		data = data[2:]
 		indices = array.array("H")
 		indices.fromstring(data[:2*numGlyphs])
-		if sys.byteorder != "big":
-			indices.byteswap()
+		if sys.byteorder != "big": indices.byteswap()
 		data = data[2*numGlyphs:]
 		self.extraNames = extraNames = unpackPStrings(data)
 		self.glyphOrder = glyphOrder = [""] * int(ttFont['maxp'].numGlyphs)
@@ -134,8 +133,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		numGlyphs = ttFont['maxp'].numGlyphs
 		indices = array.array("H")
 		indices.fromstring(data)
-		if sys.byteorder != "big":
-			indices.byteswap()
+		if sys.byteorder != "big": indices.byteswap()
 		# In some older fonts, the size of the post table doesn't match
 		# the number of glyphs. Sometimes it's bigger, sometimes smaller.
 		self.glyphOrder = glyphOrder = [''] * int(numGlyphs)
@@ -154,7 +152,8 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		assert len(glyphOrder) == numGlyphs
 		indices = array.array("H")
 		extraDict = {}
-		extraNames = self.extraNames
+		extraNames = self.extraNames = [
+			n for n in self.extraNames if n not in standardGlyphOrder]
 		for i in range(len(extraNames)):
 			extraDict[extraNames[i]] = i
 		for glyphID in range(numGlyphs):
@@ -172,8 +171,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 				extraDict[psName] = len(extraNames)
 				extraNames.append(psName)
 			indices.append(index)
-		if sys.byteorder != "big":
-			indices.byteswap()
+		if sys.byteorder != "big": indices.byteswap()
 		return struct.pack(">H", numGlyphs) + indices.tostring() + packPStrings(extraNames)
 
 	def encode_format_4_0(self, ttFont):
@@ -190,8 +188,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 				indices.append(int(glyphID[3:],16))
 			else:
 				indices.append(0xFFFF)
-		if sys.byteorder != "big":
-			indices.byteswap()
+		if sys.byteorder != "big": indices.byteswap()
 		return indices.tostring()
 
 	def toXML(self, writer, ttFont):

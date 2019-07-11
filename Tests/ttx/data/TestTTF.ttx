@@ -462,13 +462,13 @@
       FontTools
     </namerecord>
     <namerecord nameID="11" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      https://github.com/behdad/fonttools
+      https://github.com/fonttools/fonttools
     </namerecord>
     <namerecord nameID="12" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      https://github.com/behdad/fonttools
+      https://github.com/fonttools/fonttools
     </namerecord>
     <namerecord nameID="14" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      https://github.com/behdad/fonttools/blob/master/LICENSE.txt
+      https://github.com/fonttools/fonttools/blob/master/LICENSE
     </namerecord>
     <namerecord nameID="18" platformID="1" platEncID="0" langID="0x0" unicode="True">
       Test TTF
@@ -504,13 +504,13 @@
       FontTools
     </namerecord>
     <namerecord nameID="11" platformID="3" platEncID="1" langID="0x409">
-      https://github.com/behdad/fonttools
+      https://github.com/fonttools/fonttools
     </namerecord>
     <namerecord nameID="12" platformID="3" platEncID="1" langID="0x409">
-      https://github.com/behdad/fonttools
+      https://github.com/fonttools/fonttools
     </namerecord>
     <namerecord nameID="14" platformID="3" platEncID="1" langID="0x409">
-      https://github.com/behdad/fonttools/blob/master/LICENSE.txt
+      https://github.com/fonttools/fonttools/blob/master/LICENSE
     </namerecord>
   </name>
 

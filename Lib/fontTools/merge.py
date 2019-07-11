@@ -12,6 +12,7 @@ from fontTools import ttLib, cffLib
 from fontTools.ttLib.tables import otTables, _h_e_a_d
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.misc.loggingTools import Timer
+from fontTools.pens.recordingPen import DecomposingRecordingPen
 from functools import reduce
 import sys
 import time
@@ -225,6 +226,23 @@ ttLib.getTableClass('hhea').mergeMap = {
 	'numberOfHMetrics': recalculate,
 }
 
+ttLib.getTableClass('vhea').mergeMap = {
+	'*': equal,
+	'tableTag': equal,
+	'tableVersion': max,
+	'ascent': max,
+	'descent': min,
+	'lineGap': max,
+	'advanceHeightMax': max,
+	'minTopSideBearing': min,
+	'minBottomSideBearing': min,
+	'yMaxExtent': max,
+	'caretSlopeRise': first,
+	'caretSlopeRun': first,
+	'caretOffset': first,
+	'numberOfVMetrics': recalculate,
+}
+
 os2FsTypeMergeBitMap = {
 	'size': 16,
 	'*': lambda bit: 0,
@@ -351,10 +369,29 @@ ttLib.getTableClass('fpgm').mergeMap = lambda self, lst: first(lst)
 ttLib.getTableClass('cvt ').mergeMap = lambda self, lst: first(lst)
 ttLib.getTableClass('gasp').mergeMap = lambda self, lst: first(lst) # FIXME? Appears irreconcilable
 
+def _glyphsAreSame(glyphSet1, glyphSet2, glyph1, glyph2):
+	pen1 = DecomposingRecordingPen(glyphSet1)
+	pen2 = DecomposingRecordingPen(glyphSet2)
+	g1 = glyphSet1[glyph1]
+	g2 = glyphSet2[glyph2]
+	g1.draw(pen1)
+	g2.draw(pen2)
+	return (pen1.value == pen2.value and
+		g1.width == g2.width and
+		(not hasattr(g1, 'height') or g1.height == g2.height))
+
+# Valid (format, platformID, platEncID) triplets for cmap subtables containing
+# Unicode BMP-only and Unicode Full Repertoire semantics.
+# Cf. OpenType spec for "Platform specific encodings":
+# https://docs.microsoft.com/en-us/typography/opentype/spec/name
+class CmapUnicodePlatEncodings:
+	BMP = {(4, 3, 1), (4, 0, 3), (4, 0, 4), (4, 0, 6)}
+	FullRepertoire = {(12, 3, 10), (12, 0, 4), (12, 0, 6)}
+
 @_add_method(ttLib.getTableClass('cmap'))
 def merge(self, m, tables):
 	# TODO Handle format=14.
-	# Only merges 4/3/1 and 12/3/10 subtables, ignores all other subtables
+	# Only merge format 4 and 12 Unicode subtables, ignores all other subtables
 	# If there is a format 12 table for the same font, ignore the format 4 table
 	cmapTables = []
 	for fontIdx,table in enumerate(tables):
@@ -362,10 +399,16 @@ def merge(self, m, tables):
 		format12 = None
 		for subtable in table.tables:
 			properties = (subtable.format, subtable.platformID, subtable.platEncID)
-			if properties == (4,3,1):
+			if properties in CmapUnicodePlatEncodings.BMP:
 				format4 = subtable
-			elif properties == (12,3,10):
+			elif properties in CmapUnicodePlatEncodings.FullRepertoire:
 				format12 = subtable
+			else:
+				log.warning(
+					"Dropped cmap subtable from font [%s]:\t"
+					"format %2s, platformID %2s, platEncID %2s",
+					fontIdx, subtable.format, subtable.platformID, subtable.platEncID
+				)
 		if format12 is not None:
 			cmapTables.append((format12, fontIdx))
 		elif format4 is not None:
@@ -373,21 +416,31 @@ def merge(self, m, tables):
 
 	# Build a unicode mapping, then decide which format is needed to store it.
 	cmap = {}
+	fontIndexForGlyph = {}
+	glyphSets = [None for f in m.fonts] if hasattr(m, 'fonts') else None
 	for table,fontIdx in cmapTables:
 		# handle duplicates
 		for uni,gid in table.cmap.items():
 			oldgid = cmap.get(uni, None)
 			if oldgid is None:
 				cmap[uni] = gid
+				fontIndexForGlyph[gid] = fontIdx
 			elif oldgid != gid:
 				# Char previously mapped to oldgid, now to gid.
 				# Record, to fix up in GSUB 'locl' later.
-				if m.duplicateGlyphsPerFont[fontIdx].get(oldgid, gid) == gid:
+				if m.duplicateGlyphsPerFont[fontIdx].get(oldgid) is None:
+					if glyphSets is not None:
+						oldFontIdx = fontIndexForGlyph[oldgid]
+						for idx in (fontIdx, oldFontIdx):
+							if glyphSets[idx] is None:
+								glyphSets[idx] = m.fonts[idx].getGlyphSet()
+						if _glyphsAreSame(glyphSets[oldFontIdx], glyphSets[fontIdx], oldgid, gid):
+							continue
 					m.duplicateGlyphsPerFont[fontIdx][oldgid] = gid
-				else:
-					# char previously mapped to oldgid but already remapped to a different gid,
-					# save new gid as an alternate
-					# TODO: try harder to save these
+				elif m.duplicateGlyphsPerFont[fontIdx][oldgid] != gid:
+					# Char previously mapped to oldgid but oldgid is already remapped to a different
+					# gid, because of another Unicode character.
+					# TODO: Try harder to do something about these.
 					log.warning("Dropped mapping from codepoint %#06X to glyphId '%s'", uni, gid)
 
 	cmapBmpOnly = {uni: gid for uni,gid in cmap.items() if uni <= 0xFFFF}
@@ -414,13 +467,97 @@ def merge(self, m, tables):
 	return self
 
 
+def mergeLookupLists(lst):
+	# TODO Do smarter merge.
+	return sumLists(lst)
+
+def mergeFeatures(lst):
+	assert lst
+	self = otTables.Feature()
+	self.FeatureParams = None
+	self.LookupListIndex = mergeLookupLists([l.LookupListIndex for l in lst if l.LookupListIndex])
+	self.LookupCount = len(self.LookupListIndex)
+	return self
+
+def mergeFeatureLists(lst):
+	d = {}
+	for l in lst:
+		for f in l:
+			tag = f.FeatureTag
+			if tag not in d:
+				d[tag] = []
+			d[tag].append(f.Feature)
+	ret = []
+	for tag in sorted(d.keys()):
+		rec = otTables.FeatureRecord()
+		rec.FeatureTag = tag
+		rec.Feature = mergeFeatures(d[tag])
+		ret.append(rec)
+	return ret
+
+def mergeLangSyses(lst):
+	assert lst
+
+	# TODO Support merging ReqFeatureIndex
+	assert all(l.ReqFeatureIndex == 0xFFFF for l in lst)
+
+	self = otTables.LangSys()
+	self.LookupOrder = None
+	self.ReqFeatureIndex = 0xFFFF
+	self.FeatureIndex = mergeFeatureLists([l.FeatureIndex for l in lst if l.FeatureIndex])
+	self.FeatureCount = len(self.FeatureIndex)
+	return self
+
+def mergeScripts(lst):
+	assert lst
+
+	if len(lst) == 1:
+		return lst[0]
+	langSyses = {}
+	for sr in lst:
+		for lsr in sr.LangSysRecord:
+			if lsr.LangSysTag not in langSyses:
+				langSyses[lsr.LangSysTag] = []
+			langSyses[lsr.LangSysTag].append(lsr.LangSys)
+	lsrecords = []
+	for tag, langSys_list in sorted(langSyses.items()):
+		lsr = otTables.LangSysRecord()
+		lsr.LangSys = mergeLangSyses(langSys_list)
+		lsr.LangSysTag = tag
+		lsrecords.append(lsr)
+
+	self = otTables.Script()
+	self.LangSysRecord = lsrecords
+	self.LangSysCount = len(lsrecords)
+	dfltLangSyses = [s.DefaultLangSys for s in lst if s.DefaultLangSys]
+	if dfltLangSyses:
+		self.DefaultLangSys = mergeLangSyses(dfltLangSyses)
+	else:
+		self.DefaultLangSys = None
+	return self
+
+def mergeScriptRecords(lst):
+	d = {}
+	for l in lst:
+		for s in l:
+			tag = s.ScriptTag
+			if tag not in d:
+				d[tag] = []
+			d[tag].append(s.Script)
+	ret = []
+	for tag in sorted(d.keys()):
+		rec = otTables.ScriptRecord()
+		rec.ScriptTag = tag
+		rec.Script = mergeScripts(d[tag])
+		ret.append(rec)
+	return ret
+
 otTables.ScriptList.mergeMap = {
-	'ScriptCount': sum,
-	# TODO: Merge duplicate entries
-	'ScriptRecord': lambda lst: sorted(sumLists(lst), key=lambda s: s.ScriptTag),
+	'ScriptCount': lambda lst: None, # TODO
+	'ScriptRecord': mergeScriptRecords,
 }
 otTables.BaseScriptList.mergeMap = {
-	'BaseScriptCount': sum,
+	'BaseScriptCount': lambda lst: None, # TODO
 	# TODO: Merge duplicate entries
 	'BaseScriptRecord': lambda lst: sorted(sumLists(lst), key=lambda s: s.BaseScriptTag),
 }
@@ -502,16 +639,14 @@ def merge(self, m, tables):
 	assert len(tables) == len(m.duplicateGlyphsPerFont)
 	for i,(table,dups) in enumerate(zip(tables, m.duplicateGlyphsPerFont)):
 		if not dups: continue
-		assert (table is not None and table is not NotImplemented), "Have duplicates to resolve for font %d but no GSUB" % (i + 1)
-		lookupMap = {id(v):v for v in table.table.LookupList.Lookup}
-		featureMap = {id(v):v for v in table.table.FeatureList.FeatureRecord}
+		assert (table is not None and table is not NotImplemented), "Have duplicates to resolve for font %d but no GSUB: %s" % (i + 1, dups)
 		synthFeature = None
 		synthLookup = None
 		for script in table.table.ScriptList.ScriptRecord:
 			if script.ScriptTag == 'DFLT': continue # XXX
 			for langsys in [script.Script.DefaultLangSys] + [l.LangSys for l in script.Script.LangSysRecord]:
 				if langsys is None: continue # XXX Create!
-				feature = [featureMap[v] for v in langsys.FeatureIndex if featureMap[v].FeatureTag == 'locl']
+				feature = [v for v in langsys.FeatureIndex if v.FeatureTag == 'locl']
 				assert len(feature) <= 1
 				if feature:
 					feature = feature[0]
@@ -523,9 +658,8 @@ def merge(self, m, tables):
 						f.FeatureParams = None
 						f.LookupCount = 0
 						f.LookupListIndex = []
-						langsys.FeatureIndex.append(id(synthFeature))
-						featureMap[id(synthFeature)] = synthFeature
-						langsys.FeatureIndex.sort(key=lambda v: featureMap[v].FeatureTag)
+						langsys.FeatureIndex.append(synthFeature)
+						langsys.FeatureIndex.sort(key=lambda v: v.FeatureTag)
 						table.table.FeatureList.FeatureRecord.append(synthFeature)
 						table.table.FeatureList.FeatureCount += 1
 					feature = synthFeature
@@ -538,10 +672,17 @@ def merge(self, m, tables):
 					synthLookup.LookupType = 1
 					synthLookup.SubTableCount = 1
 					synthLookup.SubTable = [subtable]
+					if table.table.LookupList is None:
+						# mtiLib uses None as default value for LookupList,
+						# while feaLib points to an empty array with count 0
+						# TODO: make them do the same
+						table.table.LookupList = otTables.LookupList()
+						table.table.LookupList.Lookup = []
+						table.table.LookupList.LookupCount = 0
 					table.table.LookupList.Lookup.append(synthLookup)
 					table.table.LookupList.LookupCount += 1
 
-				feature.Feature.LookupListIndex[:0] = [id(synthLookup)]
+				feature.Feature.LookupListIndex[:0] = [synthLookup]
 				feature.Feature.LookupCount += 1
 
 	DefaultTable.merge(self, m, tables)
@@ -698,7 +839,7 @@ class Options(object):
 				raise self.UnknownOptionError("Unknown option '%s'" % k)
 			setattr(self, k, v)
 
-	def parse_opts(self, argv, ignore_unknown=False):
+	def parse_opts(self, argv, ignore_unknown=[]):
 		ret = []
 		opts = {}
 		for a in argv:
@@ -758,6 +899,50 @@ class Options(object):
 
 		return ret
 
+class _AttendanceRecordingIdentityDict(object):
+	"""A dictionary-like object that records indices of items actually accessed
+	from a list."""
+
+	def __init__(self, lst):
+		self.l = lst
+		self.d = {id(v):i for i,v in enumerate(lst)}
+		self.s = set()
+
+	def __getitem__(self, v):
+		self.s.add(self.d[id(v)])
+		return v
+
+class _GregariousIdentityDict(object):
+	"""A dictionary-like object that welcomes guests without reservations and
+	adds them to the end of the guest list."""
+
+	def __init__(self, lst):
+		self.l = lst
+		self.s = set(id(v) for v in lst)
+
+	def __getitem__(self, v):
+		if id(v) not in self.s:
+			self.s.add(id(v))
+			self.l.append(v)
+		return v
+
+class _NonhashableDict(object):
+	"""A dictionary-like object mapping objects to values."""
+
+	def __init__(self, keys, values=None):
+		if values is None:
+			self.d = {id(v):i for i,v in enumerate(keys)}
+		else:
+			self.d = {id(k):v for k,v in zip(keys, values)}
+
+	def __getitem__(self, k):
+		return self.d[id(k)]
+
+	def __setitem__(self, k, v):
+		self.d[id(k)] = v
+
+	def __delitem__(self, k):
+		del self.d[id(k)]
 
 class Merger(object):
 
@@ -789,6 +974,7 @@ class Merger(object):
 		for font in fonts:
 			self._preMerge(font)
 
+		self.fonts = fonts
 		self.duplicateGlyphsPerFont = [{} for f in fonts]
 
 		allTags = reduce(set.union, (list(font.keys()) for font in fonts), set())
@@ -818,6 +1004,7 @@ class Merger(object):
 					log.info("Dropped '%s'.", tag)
 
 		del self.duplicateGlyphsPerFont
+		del self.fonts
 
 		self._postMerge(mega)
 
@@ -871,14 +1058,12 @@ class Merger(object):
 			if not t: continue
 
 			if t.table.LookupList:
-				lookupMap = {i:id(v) for i,v in enumerate(t.table.LookupList.Lookup)}
+				lookupMap = {i:v for i,v in enumerate(t.table.LookupList.Lookup)}
 				t.table.LookupList.mapLookups(lookupMap)
-				if t.table.FeatureList:
-					# XXX Handle present FeatureList but absent LookupList
-					t.table.FeatureList.mapLookups(lookupMap)
+				t.table.FeatureList.mapLookups(lookupMap)
 
 			if t.table.FeatureList and t.table.ScriptList:
-				featureMap = {i:id(v) for i,v in enumerate(t.table.FeatureList.FeatureRecord)}
+				featureMap = {i:v for i,v in enumerate(t.table.FeatureList.FeatureRecord)}
 				t.table.ScriptList.mapFeatures(featureMap)
 
 		# TODO GDEF/Lookup MarkFilteringSets
@@ -895,17 +1080,48 @@ class Merger(object):
 		for t in [GSUB, GPOS]:
 			if not t: continue
 
-			if t.table.LookupList:
-				lookupMap = {id(v):i for i,v in enumerate(t.table.LookupList.Lookup)}
-				t.table.LookupList.mapLookups(lookupMap)
-				if t.table.FeatureList:
-					# XXX Handle present FeatureList but absent LookupList
-					t.table.FeatureList.mapLookups(lookupMap)
-
 			if t.table.FeatureList and t.table.ScriptList:
-				# XXX Handle present ScriptList but absent FeatureList
-				featureMap = {id(v):i for i,v in enumerate(t.table.FeatureList.FeatureRecord)}
+
+				# Collect unregistered (new) features.
+				featureMap = _GregariousIdentityDict(t.table.FeatureList.FeatureRecord)
 				t.table.ScriptList.mapFeatures(featureMap)
+
+				# Record used features.
+				featureMap = _AttendanceRecordingIdentityDict(t.table.FeatureList.FeatureRecord)
+				t.table.ScriptList.mapFeatures(featureMap)
+				usedIndices = featureMap.s
+
+				# Remove unused features
+				t.table.FeatureList.FeatureRecord = [f for i,f in enumerate(t.table.FeatureList.FeatureRecord) if i in usedIndices]
+
+				# Map back to indices.
+				featureMap = _NonhashableDict(t.table.FeatureList.FeatureRecord)
+				t.table.ScriptList.mapFeatures(featureMap)
+
+				t.table.FeatureList.FeatureCount = len(t.table.FeatureList.FeatureRecord)
+
+			if t.table.LookupList:
+
+				# Collect unregistered (new) lookups.
+				lookupMap = _GregariousIdentityDict(t.table.LookupList.Lookup)
+				t.table.FeatureList.mapLookups(lookupMap)
+				t.table.LookupList.mapLookups(lookupMap)
+
+				# Record used lookups.
+				lookupMap = _AttendanceRecordingIdentityDict(t.table.LookupList.Lookup)
+				t.table.FeatureList.mapLookups(lookupMap)
+				t.table.LookupList.mapLookups(lookupMap)
+				usedIndices = lookupMap.s
+
+				# Remove unused lookups
+				t.table.LookupList.Lookup = [l for i,l in enumerate(t.table.LookupList.Lookup) if i in usedIndices]
+
+				# Map back to indices.
+				lookupMap = _NonhashableDict(t.table.LookupList.Lookup)
+				t.table.FeatureList.mapLookups(lookupMap)
+				t.table.LookupList.mapLookups(lookupMap)
+
+				t.table.LookupList.LookupCount = len(t.table.LookupList.Lookup)
 
 		# TODO GDEF/Lookup MarkFilteringSets
 		# TODO FeatureParams nameIDs

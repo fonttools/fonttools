@@ -15,7 +15,6 @@ def buildVarRegion(support, axisTags):
 	self.VarRegionAxis = []
 	for tag in axisTags:
 		self.VarRegionAxis.append(buildVarRegionAxis(support.get(tag, (0,0,0))))
-	self.VarRegionAxisCount = len(self.VarRegionAxis)
 	return self
 
 def buildVarRegionList(supports, axisTags):
@@ -28,36 +27,55 @@ def buildVarRegionList(supports, axisTags):
 	return self
 
 
-def _reorderItem(lst, narrows):
+def _reorderItem(lst, narrows, zeroes):
 	out = []
 	count = len(lst)
 	for i in range(count):
 		if i not in narrows:
 			out.append(lst[i])
 	for i in range(count):
-		if i in narrows:
+		if i in narrows  and i not in zeroes:
 			out.append(lst[i])
 	return out
 
-def calculateNumShorts(self, optimize=True):
+def VarData_calculateNumShorts(self, optimize=False):
 	count = self.VarRegionCount
 	items = self.Item
 	narrows = set(range(count))
+	zeroes = set(range(count))
 	for item in items:
 		wides = [i for i in narrows if not (-128 <= item[i] <= 127)]
 		narrows.difference_update(wides)
-		if not narrows:
+		nonzeroes = [i for i in zeroes if item[i]]
+		zeroes.difference_update(nonzeroes)
+		if not narrows and not zeroes:
 			break
 	if optimize:
 		# Reorder columns such that all SHORT columns come before UINT8
-		self.VarRegionIndex = _reorderItem(self.VarRegionIndex, narrows)
-		for i in range(self.ItemCount):
-			items[i] = _reorderItem(items[i], narrows)
+		self.VarRegionIndex = _reorderItem(self.VarRegionIndex, narrows, zeroes)
+		self.VarRegionCount = len(self.VarRegionIndex)
+		for i in range(len(items)):
+			items[i] = _reorderItem(items[i], narrows, zeroes)
 		self.NumShorts = count - len(narrows)
 	else:
 		wides = set(range(count)) - narrows
 		self.NumShorts = 1+max(wides) if wides else 0
+	self.VarRegionCount = len(self.VarRegionIndex)
 	return self
+
+ot.VarData.calculateNumShorts = VarData_calculateNumShorts
+
+def VarData_CalculateNumShorts(self, optimize=True):
+	"""Deprecated name for VarData_calculateNumShorts() which
+	defaults to optimize=True.  Use varData.calculateNumShorts()
+	or varData.optimize()."""
+	return VarData_calculateNumShorts(self, optimize=optimize)
+
+def VarData_optimize(self):
+	return VarData_calculateNumShorts(self, optimize=True)
+
+ot.VarData.optimize = VarData_optimize
+
 
 def buildVarData(varRegionIndices, items, optimize=True):
 	self = ot.VarData()
@@ -69,7 +87,7 @@ def buildVarData(varRegionIndices, items, optimize=True):
 			assert len(item) == regionCount
 			records.append(list(item))
 	self.ItemCount = len(self.Item)
-	calculateNumShorts(self, optimize=optimize)
+	self.calculateNumShorts(optimize=optimize)
 	return self
 
 
@@ -82,62 +100,11 @@ def buildVarStore(varRegionList, varDataList):
 	return self
 
 
-def _getLocationKey(loc):
-	return tuple(sorted(loc.items(), key=lambda kv: kv[0]))
-
-class OnlineVarStoreBuilder(object):
-
-	def __init__(self, axisTags):
-		self._axisTags = axisTags
-		self._regionMap = {}
-		self._regionList = buildVarRegionList([], axisTags)
-		self._store = buildVarStore(self._regionList, [])
-
-	def setModel(self, model):
-		self._model = model
-
-		regionMap = self._regionMap
-		regionList = self._regionList
-
-		regions = model.supports[1:]
-		regionIndices = []
-		for region in regions:
-			key = _getLocationKey(region)
-			idx = regionMap.get(key)
-			if idx is None:
-				varRegion = buildVarRegion(region, self._axisTags)
-				idx = regionMap[key] = len(regionList.Region)
-				regionList.Region.append(varRegion)
-			regionIndices.append(idx)
-
-		data = self._data = buildVarData(regionIndices, [], optimize=False)
-		self._outer = len(self._store.VarData)
-		self._store.VarData.append(data)
-
-	def finish(self, optimize=True):
-		self._regionList.RegionCount = len(self._regionList.Region)
-		self._store.VarDataCount = len(self._store.VarData)
-		for data in self._store.VarData:
-			data.ItemCount = len(data.Item)
-			calculateNumShorts(data, optimize)
-		return self._store
-
-	def storeMasters(self, master_values):
-		deltas = [int(round(d)) for d in self._model.getDeltas(master_values)]
-		base = deltas.pop(0)
-		inner = len(self._data.Item)
-		self._data.Item.append(deltas)
-		# TODO Check for full data array?
-		return base, (self._outer << 16) + inner
-
-
-
 # Variation helpers
 
-def buildVarIdxMap(varIdxes):
-	# TODO Change VarIdxMap mapping to hold separate outer,inner indices
+def buildVarIdxMap(varIdxes, glyphOrder):
 	self = ot.VarIdxMap()
-	self.mapping = list(varIdxes)
+	self.mapping = {g:v for g,v in zip(glyphOrder, varIdxes)}
 	return self
 
 def buildVarDevTable(varIdx):

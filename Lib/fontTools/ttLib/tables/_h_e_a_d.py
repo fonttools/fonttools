@@ -4,6 +4,7 @@ from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
 from fontTools.misc.timeTools import timestampFromString, timestampToString, timestampNow
 from fontTools.misc.timeTools import epoch_diff as mac_epoch_diff # For backward compat
+from fontTools.misc.arrayTools import intRect
 from . import DefaultTable
 import logging
 
@@ -46,7 +47,7 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 		# bogus values there.  Since till 2038 those bytes only can be zero,
 		# ignore them.
 		#
-		# https://github.com/behdad/fonttools/issues/99#issuecomment-66776810
+		# https://github.com/fonttools/fonttools/issues/99#issuecomment-66776810
 		for stamp in 'created', 'modified':
 			value = getattr(self, stamp)
 			if value > 0xFFFFFFFF:
@@ -63,7 +64,7 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 			# For TT-flavored fonts, xMin, yMin, xMax and yMax are set in table__m_a_x_p.recalc().
 			if 'CFF ' in ttFont:
 				topDict = ttFont['CFF '].cff.topDictIndex[0]
-				self.xMin, self.yMin, self.xMax, self.yMax = topDict.FontBBox
+				self.xMin, self.yMin, self.xMax, self.yMax = intRect(topDict.FontBBox)
 		if ttFont.recalcTimestamp:
 			self.modified = timestampNow()
 		data = sstruct.pack(headFormat, self)

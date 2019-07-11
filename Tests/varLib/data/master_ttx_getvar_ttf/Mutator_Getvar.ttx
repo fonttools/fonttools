@@ -1,0 +1,555 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.10">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="NULL"/>
+    <GlyphID id="2" name="nonmarkingreturn"/>
+    <GlyphID id="3" name="space"/>
+    <GlyphID id="4" name="b"/>
+    <GlyphID id="5" name="q"/>
+    <GlyphID id="6" name="a"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="1.0"/>
+    <checkSumAdjustment value="0xe59c28a1"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00001011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Thu Apr 27 12:41:42 2017"/>
+    <modified value="Tue May  2 16:43:12 2017"/>
+    <xMin value="38"/>
+    <yMin value="-152"/>
+    <xMax value="456"/>
+    <yMax value="608"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="9"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="750"/>
+    <descent value="-250"/>
+    <lineGap value="9"/>
+    <advanceWidthMax value="494"/>
+    <minLeftSideBearing value="38"/>
+    <minRightSideBearing value="38"/>
+    <xMaxExtent value="456"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="5"/>
+  </hhea>
+
+  <maxp>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="0x10000"/>
+    <numGlyphs value="7"/>
+    <maxPoints value="20"/>
+    <maxContours value="2"/>
+    <maxCompositePoints value="20"/>
+    <maxCompositeContours value="2"/>
+    <maxZones value="1"/>
+    <maxTwilightPoints value="0"/>
+    <maxStorage value="0"/>
+    <maxFunctionDefs value="0"/>
+    <maxInstructionDefs value="0"/>
+    <maxStackElements value="0"/>
+    <maxSizeOfInstructions value="0"/>
+    <maxComponentElements value="1"/>
+    <maxComponentDepth value="1"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="3"/>
+    <xAvgCharWidth value="347"/>
+    <usWeightClass value="400"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000100"/>
+    <ySubscriptXSize value="700"/>
+    <ySubscriptYSize value="650"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="140"/>
+    <ySuperscriptXSize value="700"/>
+    <ySuperscriptYSize value="650"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="477"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="250"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="0"/>
+      <bSerifStyle value="0"/>
+      <bWeight value="0"/>
+      <bProportion value="0"/>
+      <bContrast value="0"/>
+      <bStrokeVariation value="0"/>
+      <bArmStyle value="0"/>
+      <bLetterForm value="0"/>
+      <bMidline value="0"/>
+      <bXHeight value="0"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000001"/>
+    <ulUnicodeRange2 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="LuFo"/>
+    <fsSelection value="00000000 01000000"/>
+    <usFirstCharIndex value="0"/>
+    <usLastCharIndex value="113"/>
+    <sTypoAscender value="750"/>
+    <sTypoDescender value="-250"/>
+    <sTypoLineGap value="0"/>
+    <usWinAscent value="608"/>
+    <usWinDescent value="152"/>
+    <ulCodePageRange1 value="00000000 00000000 00000000 00000001"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="456"/>
+    <sCapHeight value="608"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="0"/>
+  </OS_2>
+
+  <hmtx>
+    <mtx name=".notdef" width="200" lsb="0"/>
+    <mtx name="NULL" width="0" lsb="0"/>
+    <mtx name="a" width="494" lsb="38"/>
+    <mtx name="b" width="494" lsb="76"/>
+    <mtx name="nonmarkingreturn" width="200" lsb="0"/>
+    <mtx name="q" width="494" lsb="38"/>
+    <mtx name="space" width="200" lsb="0"/>
+  </hmtx>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x0" name="NULL"/><!-- ???? -->
+      <map code="0xd" name="nonmarkingreturn"/><!-- ???? -->
+      <map code="0x20" name="space"/><!-- SPACE -->
+      <map code="0x61" name="a"/><!-- LATIN SMALL LETTER A -->
+      <map code="0x62" name="b"/><!-- LATIN SMALL LETTER B -->
+      <map code="0x71" name="q"/><!-- LATIN SMALL LETTER Q -->
+    </cmap_format_4>
+    <cmap_format_6 platformID="1" platEncID="0" language="0">
+      <map code="0x0" name="NULL"/>
+      <map code="0xd" name="nonmarkingreturn"/>
+      <map code="0x20" name="space"/>
+      <map code="0x61" name="a"/>
+      <map code="0x62" name="b"/>
+      <map code="0x71" name="q"/>
+    </cmap_format_6>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x0" name="NULL"/><!-- ???? -->
+      <map code="0xd" name="nonmarkingreturn"/><!-- ???? -->
+      <map code="0x20" name="space"/><!-- SPACE -->
+      <map code="0x61" name="a"/><!-- LATIN SMALL LETTER A -->
+      <map code="0x62" name="b"/><!-- LATIN SMALL LETTER B -->
+      <map code="0x71" name="q"/><!-- LATIN SMALL LETTER Q -->
+    </cmap_format_4>
+  </cmap>
+
+  <loca>
+    <!-- The 'loca' table will be calculated by the compiler -->
+  </loca>
+
+  <glyf>
+
+    <!-- The xMin, yMin, xMax and yMax values
+         will be recalculated by the compiler. -->
+
+    <TTGlyph name=".notdef"/><!-- contains no outline data -->
+
+    <TTGlyph name="NULL"/><!-- contains no outline data -->
+
+    <TTGlyph name="a" xMin="38" yMin="-12" xMax="418" yMax="468">
+      <contour>
+        <pt x="342" y="0" on="1"/>
+        <pt x="342" y="64" on="1"/>
+        <pt x="264" y="-12" on="1"/>
+        <pt x="190" y="-12" on="1"/>
+        <pt x="38" y="140" on="1"/>
+        <pt x="38" y="316" on="1"/>
+        <pt x="190" y="468" on="1"/>
+        <pt x="266" y="468" on="1"/>
+        <pt x="342" y="392" on="1"/>
+        <pt x="342" y="456" on="1"/>
+        <pt x="418" y="456" on="1"/>
+        <pt x="418" y="0" on="1"/>
+      </contour>
+      <contour>
+        <pt x="266" y="64" on="1"/>
+        <pt x="342" y="140" on="1"/>
+        <pt x="342" y="316" on="1"/>
+        <pt x="266" y="392" on="1"/>
+        <pt x="190" y="392" on="1"/>
+        <pt x="114" y="316" on="1"/>
+        <pt x="114" y="140" on="1"/>
+        <pt x="190" y="64" on="1"/>
+      </contour>
+      <instructions>
+        <assembly>
+          GETVARIATION[]
+        </assembly>
+    </instructions>
+    </TTGlyph>
+
+    <TTGlyph name="b" xMin="76" yMin="-12" xMax="456" yMax="608">
+      <contour>
+        <pt x="228" y="468" on="1"/>
+        <pt x="304" y="468" on="1"/>
+        <pt x="456" y="316" on="1"/>
+        <pt x="456" y="140" on="1"/>
+        <pt x="304" y="-12" on="1"/>
+        <pt x="230" y="-12" on="1"/>
+        <pt x="152" y="64" on="1"/>
+        <pt x="152" y="0" on="1"/>
+        <pt x="76" y="0" on="1"/>
+        <pt x="76" y="608" on="1"/>
+        <pt x="152" y="608" on="1"/>
+        <pt x="152" y="392" on="1"/>
+      </contour>
+      <contour>
+        <pt x="152" y="316" on="1"/>
+        <pt x="152" y="140" on="1"/>
+        <pt x="228" y="64" on="1"/>
+        <pt x="304" y="64" on="1"/>
+        <pt x="380" y="140" on="1"/>
+        <pt x="380" y="316" on="1"/>
+        <pt x="304" y="392" on="1"/>
+        <pt x="228" y="392" on="1"/>
+      </contour>
+      <instructions/>
+    </TTGlyph>
+
+    <TTGlyph name="nonmarkingreturn"/><!-- contains no outline data -->
+
+    <TTGlyph name="q" xMin="38" yMin="-152" xMax="418" yMax="468">
+      <component glyphName="b" x="494" y="456" scale="-0.99994" flags="0x4"/>
+    </TTGlyph>
+
+    <TTGlyph name="space"/><!-- contains no outline data -->
+
+  </glyf>
+
+  <name>
+    <namerecord nameID="1" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      VarFont
+    </namerecord>
+    <namerecord nameID="2" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      VarFont Regular: 2017
+    </namerecord>
+    <namerecord nameID="4" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      VarFont Regular
+    </namerecord>
+    <namerecord nameID="6" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      VarFont-Regular
+    </namerecord>
+    <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Width
+    </namerecord>
+    <namerecord nameID="257" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Ascender
+    </namerecord>
+    <namerecord nameID="258" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Regular
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      VarFont
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      VarFont Regular: 2017
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      VarFont Regular
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      VarFont-Regular
+    </namerecord>
+    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
+      Width
+    </namerecord>
+    <namerecord nameID="257" platformID="3" platEncID="1" langID="0x409">
+      Ascender
+    </namerecord>
+    <namerecord nameID="258" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+  </name>
+
+  <post>
+    <formatType value="2.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-75"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+    <psNames>
+      <!-- This file uses unique glyph names based on the information
+           found in the 'post' table. Since these names might not be unique,
+           we have to invent artificial names in case of clashes. In order to
+           be able to retain the original information, we need a name to
+           ps name mapping for those cases where they differ. That's what
+           you see below.
+            -->
+    </psNames>
+    <extraNames>
+      <!-- following are the name that are not taken from the standard Mac glyph order -->
+      <psName name="NULL"/>
+    </extraNames>
+  </post>
+
+  <GDEF>
+    <Version value="0x00010003"/>
+    <VarStore Format="1">
+      <Format value="1"/>
+      <VarRegionList>
+        <!-- RegionAxisCount=2 -->
+        <!-- RegionCount=2 -->
+        <Region index="0">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="1">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+      </VarRegionList>
+      <!-- VarDataCount=1 -->
+      <VarData index="0">
+        <!-- ItemCount=0 -->
+        <NumShorts value="0"/>
+        <!-- VarRegionCount=2 -->
+        <VarRegionIndex index="0" value="0"/>
+        <VarRegionIndex index="1" value="1"/>
+      </VarData>
+    </VarStore>
+  </GDEF>
+
+  <HVAR>
+    <Version value="0x00010000"/>
+    <VarStore Format="1">
+      <Format value="1"/>
+      <VarRegionList>
+        <!-- RegionAxisCount=2 -->
+        <!-- RegionCount=2 -->
+        <Region index="0">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="1">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+      </VarRegionList>
+      <!-- VarDataCount=1 -->
+      <VarData index="0">
+        <!-- ItemCount=2 -->
+        <NumShorts value="0"/>
+        <!-- VarRegionCount=2 -->
+        <VarRegionIndex index="0" value="0"/>
+        <VarRegionIndex index="1" value="1"/>
+        <Item index="0" value="[0, -60]"/>
+        <Item index="1" value="[0, 0]"/>
+      </VarData>
+    </VarStore>
+    <AdvWidthMap>
+      <Map glyph=".notdef" outer="0" inner="1"/>
+      <Map glyph="NULL" outer="0" inner="1"/>
+      <Map glyph="a" outer="0" inner="0"/>
+      <Map glyph="b" outer="0" inner="0"/>
+      <Map glyph="q" outer="0" inner="0"/>
+      <Map glyph="nonmarkingreturn" outer="0" inner="1"/>
+      <Map glyph="space" outer="0" inner="1"/>
+    </AdvWidthMap>
+  </HVAR>
+
+  <MVAR>
+    <Version value="0x00010000"/>
+    <Reserved value="0"/>
+    <ValueRecordSize value="0"/>
+    <!-- ValueRecordCount=0 -->
+    <VarStore Format="1">
+      <Format value="1"/>
+      <VarRegionList>
+        <!-- RegionAxisCount=2 -->
+        <!-- RegionCount=2 -->
+        <Region index="0">
+          <VarRegionAxis index="0">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="1.0"/>
+            <EndCoord value="1.0"/>
+          </VarRegionAxis>
+        </Region>
+        <Region index="1">
+          <VarRegionAxis index="0">
+            <StartCoord value="-1.0"/>
+            <PeakCoord value="-1.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+          <VarRegionAxis index="1">
+            <StartCoord value="0.0"/>
+            <PeakCoord value="0.0"/>
+            <EndCoord value="0.0"/>
+          </VarRegionAxis>
+        </Region>
+      </VarRegionList>
+      <!-- VarDataCount=1 -->
+      <VarData index="0">
+        <!-- ItemCount=0 -->
+        <NumShorts value="0"/>
+        <!-- VarRegionCount=2 -->
+        <VarRegionIndex index="0" value="0"/>
+        <VarRegionIndex index="1" value="1"/>
+      </VarData>
+    </VarStore>
+  </MVAR>
+
+  <fvar>
+
+    <!-- Width -->
+    <Axis>
+      <AxisTag>wdth</AxisTag>
+      <MinValue>60.0</MinValue>
+      <DefaultValue>100.0</DefaultValue>
+      <MaxValue>100.0</MaxValue>
+      <AxisNameID>256</AxisNameID>
+    </Axis>
+
+    <!-- Ascender -->
+    <Axis>
+      <AxisTag>ASCN</AxisTag>
+      <MinValue>608.0</MinValue>
+      <DefaultValue>608.0</DefaultValue>
+      <MaxValue>648.0</MaxValue>
+      <AxisNameID>257</AxisNameID>
+    </Axis>
+
+    <!-- Regular -->
+    <NamedInstance subfamilyNameID="258">
+      <coord axis="wdth" value="100.0"/>
+      <coord axis="ASCN" value="608.0"/>
+    </NamedInstance>
+  </fvar>
+
+  <gvar>
+    <version value="1"/>
+    <reserved value="0"/>
+    <glyphVariations glyph="b">
+      <tuple>
+        <coord axis="ASCN" value="1.0"/>
+        <delta pt="8" x="0" y="0"/>
+        <delta pt="9" x="0" y="40"/>
+        <delta pt="10" x="0" y="40"/>
+        <delta pt="11" x="0" y="0"/>
+        <delta pt="12" x="0" y="0"/>
+        <delta pt="22" x="0" y="40"/>
+      </tuple>
+      <tuple>
+        <coord axis="wdth" value="-1.0"/>
+        <delta pt="0" x="-20" y="0"/>
+        <delta pt="1" x="-40" y="0"/>
+        <delta pt="2" x="-60" y="0"/>
+        <delta pt="3" x="-60" y="0"/>
+        <delta pt="4" x="-40" y="0"/>
+        <delta pt="5" x="-20" y="0"/>
+        <delta pt="6" x="0" y="0"/>
+        <delta pt="11" x="0" y="0"/>
+        <delta pt="12" x="0" y="0"/>
+        <delta pt="17" x="-60" y="0"/>
+        <delta pt="21" x="-60" y="0"/>
+      </tuple>
+    </glyphVariations>
+    <glyphVariations glyph="q">
+      <tuple>
+        <coord axis="ASCN" value="1.0"/>
+        <delta pt="4" x="0" y="40"/>
+      </tuple>
+      <tuple>
+        <coord axis="wdth" value="-1.0"/>
+        <delta pt="0" x="-60" y="0"/>
+        <delta pt="2" x="-60" y="0"/>
+      </tuple>
+    </glyphVariations>
+    <glyphVariations glyph="a">
+      <tuple>
+        <coord axis="wdth" value="-1.0"/>
+        <delta pt="0" x="-60" y="0"/>
+        <delta pt="1" x="-60" y="0"/>
+        <delta pt="2" x="-40" y="0"/>
+        <delta pt="3" x="-20" y="0"/>
+        <delta pt="4" x="0" y="0"/>
+        <delta pt="5" x="0" y="0"/>
+        <delta pt="6" x="-20" y="0"/>
+        <delta pt="7" x="-40" y="0"/>
+        <delta pt="8" x="-60" y="0"/>
+        <delta pt="14" x="-60" y="0"/>
+        <delta pt="20" x="0" y="0"/>
+        <delta pt="21" x="-60" y="0"/>
+        <delta pt="22" x="0" y="0"/>
+        <delta pt="23" x="0" y="0"/>
+      </tuple>
+    </glyphVariations>
+  </gvar>
+
+</ttFont>

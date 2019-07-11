@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.35">
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_14 platformID="0" platEncID="5">
+      <map uvs="0xfe00" uv="0x30" name="zero.slash"/>
+      <map uvs="0xfe01" uv="0x30" name="None"/><!-- testing whether the old format that uses name="None" is still accepted -->
+    </cmap_format_14>
+  </cmap>
+
+</ttFont>

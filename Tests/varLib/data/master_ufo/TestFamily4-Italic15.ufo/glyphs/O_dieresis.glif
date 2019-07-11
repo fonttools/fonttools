@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<glyph name="Odieresis" format="2">
+  <advance width="404.0"/>
+  <unicode hex="00D6"/>
+  <anchor x="155.0" y="0.0" name="bottom"/>
+  <anchor x="222.0" y="250.0" name="center"/>
+  <anchor x="318.0" y="10.0" name="ogonek"/>
+  <anchor x="322.0" y="625.0" name="top"/>
+  <anchor x="109.0" y="500.0" name="topleft"/>
+  <anchor x="469.0" y="500.0" name="topright"/>
+  <outline>
+    <component base="O"/>
+    <component base="dieresiscomb" xOffset="92.0" yOffset="150.0"/>
+  </outline>
+  <lib>
+    <dict>
+      <key>com.schriftgestaltung.Glyphs.lastChange</key>
+      <string>2017/10/27 21:28:35</string>
+      <key>public.markColor</key>
+      <string>0,0.67,0.91,1</string>
+    </dict>
+  </lib>
+</glyph>

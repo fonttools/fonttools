@@ -23,3 +23,5 @@ htmlcov/
 
 # OSX Finder
 .DS_Store
+
+.pytest_cache

@@ -6,7 +6,8 @@ import sys
 
 __all__ = ['basestring', 'unicode', 'unichr', 'byteord', 'bytechr', 'BytesIO',
 		'StringIO', 'UnicodeIO', 'strjoin', 'bytesjoin', 'tobytes', 'tostr',
-		'tounicode', 'Tag', 'open', 'range', 'xrange', 'round', 'Py23Error']
+		'tounicode', 'Tag', 'open', 'range', 'xrange', 'round', 'Py23Error',
+		'SimpleNamespace', 'zip', 'RecursionError']
 
 
 class Py23Error(NotImplementedError):
@@ -147,7 +148,7 @@ else:
 
 		@staticmethod
 		def transcode(blob):
-			if not isinstance(blob, str):
+			if isinstance(blob, bytes):
 				blob = blob.decode('latin-1')
 			return blob
 
@@ -249,7 +250,7 @@ def open(file, mode='r', buffering=-1, encoding=None, errors=None,
 			file, mode, buffering, encoding, errors, newline, closefd)
 
 
-# always use iterator for 'range' on both py 2 and 3
+# always use iterator for 'range' and 'zip' on both py 2 and 3
 try:
 	range = xrange
 except NameError:
@@ -257,6 +258,11 @@ except NameError:
 
 def xrange(*args, **kwargs):
 	raise Py23Error("'xrange' is not defined. Use 'range' instead.")
+
+try:
+	from itertools import izip as zip
+except ImportError:
+	zip = zip
 
 
 import math as _math
@@ -300,6 +306,35 @@ except AttributeError:
 				  (diff <= _fabs(rel_tol * b)) or
 				  (diff <= abs_tol))
 		return result
+
+
+try:
+	_isfinite = _math.isfinite  # Python >= 3.2
+except AttributeError:
+	_isfinite = None
+	_isnan = _math.isnan
+	_isinf = _math.isinf
+
+
+def isfinite(f):
+	"""
+	>>> isfinite(0.0)
+	True
+	>>> isfinite(-0.1)
+	True
+	>>> isfinite(1e10)
+	True
+	>>> isfinite(float("nan"))
+	False
+	>>> isfinite(float("+inf"))
+	False
+	>>> isfinite(float("-inf"))
+	False
+	"""
+	if _isfinite is not None:
+		return _isfinite(f)
+	else:
+		return not (_isnan(f) or _isinf(f))
 
 
 import decimal as _decimal
@@ -413,70 +448,6 @@ else:
 	round = round3
 
 
-import logging
-
-
-class _Logger(logging.Logger):
-	""" Add support for 'lastResort' handler introduced in Python 3.2. """
-
-	def callHandlers(self, record):
-		# this is the same as Python 3.5's logging.Logger.callHandlers
-		c = self
-		found = 0
-		while c:
-			for hdlr in c.handlers:
-				found = found + 1
-				if record.levelno >= hdlr.level:
-					hdlr.handle(record)
-			if not c.propagate:
-				c = None  # break out
-			else:
-				c = c.parent
-		if (found == 0):
-			if logging.lastResort:
-				if record.levelno >= logging.lastResort.level:
-					logging.lastResort.handle(record)
-			elif logging.raiseExceptions and not self.manager.emittedNoHandlerWarning:
-				sys.stderr.write("No handlers could be found for logger"
-								 " \"%s\"\n" % self.name)
-				self.manager.emittedNoHandlerWarning = True
-
-
-class _StderrHandler(logging.StreamHandler):
-	""" This class is like a StreamHandler using sys.stderr, but always uses
-	whatever sys.stderr is currently set to rather than the value of
-	sys.stderr at handler construction time.
-	"""
-	def __init__(self, level=logging.NOTSET):
-		"""
-		Initialize the handler.
-		"""
-		logging.Handler.__init__(self, level)
-
-	@property
-	def stream(self):
-		# the try/execept avoids failures during interpreter shutdown, when
-		# globals are set to None
-		try:
-			return sys.stderr
-		except AttributeError:
-			return __import__('sys').stderr
-
-
-if not hasattr(logging, 'lastResort'):
-	# for Python pre-3.2, we need to define the "last resort" handler used when
-	# clients don't explicitly configure logging (in Python 3.2 and above this is
-	# already defined). The handler prints the bare message to sys.stderr, only
-	# for events of severity WARNING or greater.
-	# To obtain the pre-3.2 behaviour, you can set logging.lastResort to None.
-	# https://docs.python.org/3.5/howto/logging.html#what-happens-if-no-configuration-is-provided
-	logging.lastResort = _StderrHandler(logging.WARNING)
-	# Also, we need to set the Logger class to one which supports the last resort
-	# handler. All new loggers instantiated after this call will use the custom
-	# logger class (the already existing ones, like the 'root' logger, will not)
-	logging.setLoggerClass(_Logger)
-
-
 try:
 	from types import SimpleNamespace
 except ImportError:
@@ -494,6 +465,59 @@ except ImportError:
 
 		def __eq__(self, other):
 			return self.__dict__ == other.__dict__
+
+
+if sys.version_info[:2] > (3, 4):
+	from contextlib import redirect_stdout, redirect_stderr
+else:
+	# `redirect_stdout` was added with python3.4, while `redirect_stderr`
+	# with python3.5. For simplicity, I redefine both for any versions
+	# less than or equal to 3.4.
+	# The code below is copied from:
+	# https://github.com/python/cpython/blob/57161aa/Lib/contextlib.py
+
+	class _RedirectStream(object):
+
+		_stream = None
+
+		def __init__(self, new_target):
+			self._new_target = new_target
+			# We use a list of old targets to make this CM re-entrant
+			self._old_targets = []
+
+		def __enter__(self):
+			self._old_targets.append(getattr(sys, self._stream))
+			setattr(sys, self._stream, self._new_target)
+			return self._new_target
+
+		def __exit__(self, exctype, excinst, exctb):
+			setattr(sys, self._stream, self._old_targets.pop())
+
+
+	class redirect_stdout(_RedirectStream):
+		"""Context manager for temporarily redirecting stdout to another file.
+			# How to send help() to stderr
+			with redirect_stdout(sys.stderr):
+				help(dir)
+			# How to write help() to a file
+			with open('help.txt', 'w') as f:
+				with redirect_stdout(f):
+					help(pow)
+		"""
+
+		_stream = "stdout"
+
+
+	class redirect_stderr(_RedirectStream):
+		"""Context manager for temporarily redirecting stderr to another file."""
+
+		_stream = "stderr"
+
+
+try:
+	RecursionError = RecursionError
+except NameError:
+	RecursionError = RuntimeError
 
 
 if __name__ == "__main__":

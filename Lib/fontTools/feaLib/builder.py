@@ -5,51 +5,81 @@ from fontTools.misc import sstruct
 from fontTools.misc.textTools import binary2num, safeEval
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser
+from fontTools.feaLib.ast import FeatureFile
 from fontTools.otlLib import builder as otl
+from fontTools.otlLib.maxContextCalc import maxCtxFont
 from fontTools.ttLib import newTable, getTableModule
 from fontTools.ttLib.tables import otBase, otTables
+from collections import defaultdict, OrderedDict
 import itertools
+import logging
 
 
-def addOpenTypeFeatures(font, featurefile):
+log = logging.getLogger(__name__)
+
+
+def addOpenTypeFeatures(font, featurefile, tables=None):
     builder = Builder(font, featurefile)
-    builder.build()
+    builder.build(tables=tables)
 
 
-def addOpenTypeFeaturesFromString(font, features, filename=None):
+def addOpenTypeFeaturesFromString(font, features, filename=None, tables=None):
     featurefile = UnicodeIO(tounicode(features))
     if filename:
         # the directory containing 'filename' is used as the root of relative
         # include paths; if None is provided, the current directory is assumed
         featurefile.name = filename
-    addOpenTypeFeatures(font, featurefile)
+    addOpenTypeFeatures(font, featurefile, tables=tables)
 
 
 class Builder(object):
+
+    supportedTables = frozenset(Tag(tag) for tag in [
+        "BASE",
+        "GDEF",
+        "GPOS",
+        "GSUB",
+        "OS/2",
+        "head",
+        "hhea",
+        "name",
+        "vhea",
+    ])
+
     def __init__(self, font, featurefile):
         self.font = font
-        self.file = featurefile
+        # 'featurefile' can be either a path or file object (in which case we
+        # parse it into an AST), or a pre-parsed AST instance
+        if isinstance(featurefile, FeatureFile):
+            self.parseTree, self.file = featurefile, None
+        else:
+            self.parseTree, self.file = None, featurefile
         self.glyphMap = font.getReverseGlyphMap()
         self.default_language_systems_ = set()
         self.script_ = None
         self.lookupflag_ = 0
         self.lookupflag_markFilterSet_ = None
         self.language_systems = set()
+        self.seen_non_DFLT_script_ = False
         self.named_lookups_ = {}
         self.cur_lookup_ = None
         self.cur_lookup_name_ = None
         self.cur_feature_name_ = None
         self.lookups_ = []
         self.features_ = {}  # ('latn', 'DEU ', 'smcp') --> [LookupBuilder*]
-        self.parseTree = None
         self.required_features_ = {}  # ('latn', 'DEU ') --> 'scmp'
         # for feature 'aalt'
         self.aalt_features_ = []  # [(location, featureName)*], for 'aalt'
         self.aalt_location_ = None
         self.aalt_alternates_ = {}
         # for 'featureNames'
-        self.featureNames_ = []
+        self.featureNames_ = set()
         self.featureNames_ids_ = {}
+        # for 'cvParameters'
+        self.cv_parameters_ = set()
+        self.cv_parameters_ids_ = {}
+        self.cv_num_named_params_ = {}
+        self.cv_characters_ = defaultdict(list)
         # for feature 'size'
         self.size_parameters_ = None
         # for table 'head'
@@ -74,16 +104,32 @@ class Builder(object):
         # for table 'vhea'
         self.vhea_ = {}
 
-    def build(self):
-        self.parseTree = Parser(self.file, self.glyphMap).parse()
+    def build(self, tables=None):
+        if self.parseTree is None:
+            self.parseTree = Parser(self.file, self.glyphMap).parse()
         self.parseTree.build(self)
-        self.build_feature_aalt_()
-        self.build_head()
-        self.build_hhea()
-        self.build_vhea()
-        self.build_name()
-        self.build_OS_2()
+        # by default, build all the supported tables
+        if tables is None:
+            tables = self.supportedTables
+        else:
+            tables = frozenset(tables)
+            unsupported = tables - self.supportedTables
+            assert not unsupported, unsupported
+        if "GSUB" in tables:
+            self.build_feature_aalt_()
+        if "head" in tables:
+            self.build_head()
+        if "hhea" in tables:
+            self.build_hhea()
+        if "vhea" in tables:
+            self.build_vhea()
+        if "name" in tables:
+            self.build_name()
+        if "OS/2" in tables:
+            self.build_OS_2()
         for tag in ('GPOS', 'GSUB'):
+            if tag not in tables:
+                continue
             table = self.makeTable(tag)
             if (table.ScriptList.ScriptCount > 0 or
                     table.FeatureList.FeatureCount > 0 or
@@ -92,16 +138,21 @@ class Builder(object):
                 fontTable.table = table
             elif tag in self.font:
                 del self.font[tag]
-        gdef = self.buildGDEF()
-        if gdef:
-            self.font["GDEF"] = gdef
-        elif "GDEF" in self.font:
-            del self.font["GDEF"]
-        base = self.buildBASE()
-        if base:
-            self.font["BASE"] = base
-        elif "BASE" in self.font:
-            del self.font["BASE"]
+        if (any(tag in self.font for tag in ("GPOS", "GSUB")) and
+                "OS/2" in self.font):
+            self.font["OS/2"].usMaxContext = maxCtxFont(self.font)
+        if "GDEF" in tables:
+            gdef = self.buildGDEF()
+            if gdef:
+                self.font["GDEF"] = gdef
+            elif "GDEF" in self.font:
+                del self.font["GDEF"]
+        if "BASE" in tables:
+            base = self.buildBASE()
+            if base:
+                self.font["BASE"] = base
+            elif "BASE" in self.font:
+                del self.font["BASE"]
 
     def get_chained_lookup_(self, location, builder_class):
         result = builder_class(self.font, location)
@@ -243,10 +294,28 @@ class Builder(object):
             else:
                 params.SubfamilyNameID = 0
         elif tag in self.featureNames_:
-            assert tag in self.featureNames_ids_
-            params = otTables.FeatureParamsStylisticSet()
-            params.Version = 0
-            params.UINameID = self.featureNames_ids_[tag]
+            if not self.featureNames_ids_:
+                # name table wasn't selected among the tables to build; skip
+                pass
+            else:
+                assert tag in self.featureNames_ids_
+                params = otTables.FeatureParamsStylisticSet()
+                params.Version = 0
+                params.UINameID = self.featureNames_ids_[tag]
+        elif tag in self.cv_parameters_:
+            params = otTables.FeatureParamsCharacterVariants()
+            params.Format = 0
+            params.FeatUILabelNameID = self.cv_parameters_ids_.get(
+                (tag, 'FeatUILabelNameID'), 0)
+            params.FeatUITooltipTextNameID = self.cv_parameters_ids_.get(
+                (tag, 'FeatUITooltipTextNameID'), 0)
+            params.SampleTextNameID = self.cv_parameters_ids_.get(
+                (tag, 'SampleTextNameID'), 0)
+            params.NumNamedParameters = self.cv_num_named_params_.get(tag, 0)
+            params.FirstParamUILabelNameID = self.cv_parameters_ids_.get(
+                (tag, 'ParamUILabelNameID_0'), 0)
+            params.CharCount = len(self.cv_characters_[tag])
+            params.Character = self.cv_characters_[tag]
         return params
 
     def build_name(self):
@@ -258,13 +327,20 @@ class Builder(object):
             table.names = []
         for name in self.names_:
             nameID, platformID, platEncID, langID, string = name
+            # For featureNames block, nameID is 'feature tag'
+            # For cvParameters blocks, nameID is ('feature tag', 'block name')
             if not isinstance(nameID, int):
-                # A featureNames name and nameID is actually the tag
                 tag = nameID
-                if tag not in self.featureNames_ids_:
-                    self.featureNames_ids_[tag] = self.get_user_name_id(table)
-                    assert self.featureNames_ids_[tag] is not None
-                nameID = self.featureNames_ids_[tag]
+                if tag in self.featureNames_:
+                    if tag not in self.featureNames_ids_:
+                        self.featureNames_ids_[tag] = self.get_user_name_id(table)
+                        assert self.featureNames_ids_[tag] is not None
+                    nameID = self.featureNames_ids_[tag]
+                elif tag[0] in self.cv_parameters_:
+                    if tag not in self.cv_parameters_ids_:
+                        self.cv_parameters_ids_[tag] = self.get_user_name_id(table)
+                        assert self.cv_parameters_ids_[tag] is not None
+                    nameID = self.cv_parameters_ids_[tag]
             table.setName(string, nameID, platformID, platEncID, langID)
 
     def build_OS_2(self):
@@ -413,17 +489,16 @@ class Builder(object):
             return None
 
     def buildGDEFGlyphClassDef_(self):
-        inferredGlyphClass = {}
-        for lookup in self.lookups_:
-            inferredGlyphClass.update(lookup.inferGlyphClasses())
-        for markClass in self.parseTree.markClasses.values():
-            for markClassDef in markClass.definitions:
-                for glyph in markClassDef.glyphSet():
-                    inferredGlyphClass[glyph] = 3
         if self.glyphClassDefs_:
             classes = {g: c for (g, (c, _)) in self.glyphClassDefs_.items()}
         else:
-            classes = inferredGlyphClass
+            classes = {}
+            for lookup in self.lookups_:
+                classes.update(lookup.inferGlyphClasses())
+            for markClass in self.parseTree.markClasses.values():
+                for markClassDef in markClass.definitions:
+                    for glyph in markClassDef.glyphSet():
+                        classes[glyph] = 3
         if classes:
             result = otTables.GlyphClassDef()
             result.classDefs = classes
@@ -474,7 +549,7 @@ class Builder(object):
         required_feature_indices = {}  # ('latn', 'DEU') --> 23
         scripts = {}  # 'latn' --> {'DEU': [23, 24]} for feature #23,24
         # Sort the feature table by feature tag:
-        # https://github.com/behdad/fonttools/issues/568
+        # https://github.com/fonttools/fonttools/issues/568
         sortFeatureTag = lambda f: (f[0][2], f[0][1], f[0][0], f[1])
         for key, lookups in sorted(self.features_.items(), key=sortFeatureTag):
             script, lang, feature_tag = key
@@ -497,7 +572,7 @@ class Builder(object):
                 frec.Feature = otTables.Feature()
                 frec.Feature.FeatureParams = self.buildFeatureParams(
                                                 feature_tag)
-                frec.Feature.LookupListIndex = lookup_indices
+                frec.Feature.LookupListIndex = list(lookup_indices)
                 frec.Feature.LookupCount = len(lookup_indices)
                 table.FeatureList.FeatureRecord.append(frec)
                 feature_indices[feature_key] = feature_index
@@ -550,6 +625,15 @@ class Builder(object):
             raise FeatureLibError(
                 'If "languagesystem DFLT dflt" is present, it must be '
                 'the first of the languagesystem statements', location)
+        if script == "DFLT":
+            if self.seen_non_DFLT_script_:
+                raise FeatureLibError(
+                    'languagesystems using the "DFLT" script tag must '
+                    "precede all other languagesystems",
+                    location
+                )
+        else:
+            self.seen_non_DFLT_script_ = True
         if (script, language) in self.default_language_systems_:
             raise FeatureLibError(
                 '"languagesystem %s %s" has already been specified' %
@@ -622,31 +706,15 @@ class Builder(object):
             raise FeatureLibError(
                 "Language statements are not allowed "
                 "within \"feature %s\"" % self.cur_feature_name_, location)
-        if language != 'dflt' and self.script_ == 'DFLT':
-            raise FeatureLibError("Need non-DFLT script when using non-dflt "
-                                  "language (was: \"%s\")" % language, location)
         self.cur_lookup_ = None
 
         key = (self.script_, language, self.cur_feature_name_)
-        if not include_default:
-            # don't include any lookups added by script DFLT in this feature
-            self.features_[key] = []
-        elif language != 'dflt':
-            # add rules defined between script statement and its first following
-            # language statement to each of its explicitly specified languages:
-            # http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html#4.b.ii
-            lookups = self.features_.get((key[0], 'dflt', key[2]))
-            dflt_lookups = self.features_.get(('DFLT', 'dflt', key[2]), [])
-            if lookups:
-                if key[:2] in self.get_default_language_systems_():
-                    lookups = [l for l in lookups if l not in dflt_lookups]
-                self.features_.setdefault(key, []).extend(lookups)
-        if self.script_ == 'DFLT':
-            langsys = set(self.get_default_language_systems_())
+        lookups = self.features_.get((key[0], 'dflt', key[2]))
+        if (language == 'dflt' or include_default) and lookups:
+            self.features_[key] = lookups[:]
         else:
-            langsys = set()
-        langsys.add((self.script_, language))
-        self.language_systems = frozenset(langsys)
+            self.features_[key] = []
+        self.language_systems = frozenset([(self.script_, language)])
 
         if required:
             key = (self.script_, language)
@@ -765,8 +833,22 @@ class Builder(object):
                 location)
         self.aalt_features_.append((location, featureName))
 
-    def add_featureName(self, location, tag):
-        self.featureNames_.append(tag)
+    def add_featureName(self, tag):
+        self.featureNames_.add(tag)
+
+    def add_cv_parameter(self, tag):
+        self.cv_parameters_.add(tag)
+
+    def add_to_cv_num_named_params(self, tag):
+        """Adds new items to self.cv_num_named_params_
+        or increments the count of existing items."""
+        if tag in self.cv_num_named_params_:
+            self.cv_num_named_params_[tag] += 1
+        else:
+            self.cv_num_named_params_[tag] = 1
+
+    def add_cv_character(self, character, tag):
+        self.cv_characters_[tag].append(character)
 
     def set_base_axis(self, bases, scripts, vertical):
         if vertical:
@@ -803,8 +885,8 @@ class Builder(object):
             lookup.ligatures[g] = replacement
 
     def add_multiple_subst(self, location,
-                           prefix, glyph, suffix, replacements):
-        if prefix or suffix:
+                           prefix, glyph, suffix, replacements, forceChain=False):
+        if prefix or suffix or forceChain:
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
             sub = self.get_chained_lookup_(location, MultipleSubstBuilder)
             sub.mapping[glyph] = replacements
@@ -840,19 +922,10 @@ class Builder(object):
                     location)
             lookup.mapping[from_glyph] = to_glyph
 
-    def find_chainable_SingleSubst_(self, chain, glyphs):
-        """Helper for add_single_subst_chained_()"""
-        for _, _, _, substitutions in chain.substitutions:
-            for sub in substitutions:
-                if (isinstance(sub, SingleSubstBuilder) and
-                        not any(g in glyphs for g in sub.mapping.keys())):
-                    return sub
-        return None
-
     def add_single_subst_chained_(self, location, prefix, suffix, mapping):
-        # https://github.com/behdad/fonttools/issues/512
+        # https://github.com/fonttools/fonttools/issues/512
         chain = self.get_lookup_(location, ChainContextSubstBuilder)
-        sub = self.find_chainable_SingleSubst_(chain, set(mapping.keys()))
+        sub = chain.find_chainable_single_subst(set(mapping.keys()))
         if sub is None:
             sub = self.get_chained_lookup_(location, SingleSubstBuilder)
         sub.mapping.update(mapping)
@@ -917,6 +990,9 @@ class Builder(object):
         lookup = self.get_lookup_(location, PairPosBuilder)
         lookup.addClassPair(location, glyphclass1, value1, glyphclass2, value2)
 
+    def add_subtable_break(self, location):
+        self.cur_lookup_.add_subtable_break(location)
+
     def add_specific_pair_pos(self, location, glyph1, value1, glyph2, value2):
         lookup = self.get_lookup_(location, PairPosBuilder)
         lookup.addGlyphPair(location, glyph1, value1, glyph2, value2)
@@ -930,28 +1006,19 @@ class Builder(object):
                 for glyph in glyphs:
                     lookup.add_pos(location, glyph, value)
 
-    def find_chainable_SinglePos_(self, lookups, glyphs, value):
-        """Helper for add_single_pos_chained_()"""
-        for look in lookups:
-            if all(look.can_add(glyph, value) for glyph in glyphs):
-                return look
-        return None
-
     def add_single_pos_chained_(self, location, prefix, suffix, pos):
         # https://github.com/fonttools/fonttools/issues/514
         chain = self.get_lookup_(location, ChainContextPosBuilder)
         targets = []
         for _, _, _, lookups in chain.rules:
-            for lookup in lookups:
-                if isinstance(lookup, SinglePosBuilder):
-                    targets.append(lookup)
+            targets.extend(lookups)
         subs = []
         for glyphs, value in pos:
             if value is None:
                 subs.append(None)
                 continue
             otValue, _ = makeOpenTypeValueRecord(value, pairPosContext=False)
-            sub = self.find_chainable_SinglePos_(targets, glyphs, otValue)
+            sub = chain.find_chainable_single_pos(targets, glyphs, otValue)
             if sub is None:
                 sub = self.get_chained_lookup_(location, SinglePosBuilder)
                 targets.append(sub)
@@ -1026,7 +1093,7 @@ _VALUEREC_ATTRS = {
 
 def makeOpenTypeValueRecord(v, pairPosContext):
     """ast.ValueRecord --> (otBase.ValueRecord, int ValueFormat)"""
-    if v is None:
+    if not v:
         return None, 0
 
     vr = {}
@@ -1041,6 +1108,8 @@ def makeOpenTypeValueRecord(v, pairPosContext):
 
 
 class LookupBuilder(object):
+    SUBTABLE_BREAK_ = "SUBTABLE_BREAK"
+
     def __init__(self, font, location, table, lookup_type):
         self.font = font
         self.glyphMap = font.getReverseGlyphMap()
@@ -1103,22 +1172,42 @@ class LookupBuilder(object):
             coverage = otl.buildCoverage(g, self.glyphMap)
             subtable.InputCoverage.append(coverage)
 
+    def build_subst_subtables(self, mapping, klass):
+        substitutions = [{}]
+        for key in mapping:
+            if key[0] == self.SUBTABLE_BREAK_:
+                substitutions.append({})
+            else:
+                substitutions[-1][key] = mapping[key]
+        subtables = [klass(s) for s in substitutions]
+        return subtables
+
+    def add_subtable_break(self, location):
+        log.warning(FeatureLibError(
+            'unsupported "subtable" statement for lookup type',
+            location
+        ))
+
 
 class AlternateSubstBuilder(LookupBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 3)
-        self.alternates = {}
+        self.alternates = OrderedDict()
 
     def equals(self, other):
         return (LookupBuilder.equals(self, other) and
                 self.alternates == other.alternates)
 
     def build(self):
-        subtable = otl.buildAlternateSubstSubtable(self.alternates)
-        return self.buildLookup_([subtable])
+        subtables = self.build_subst_subtables(self.alternates,
+                otl.buildAlternateSubstSubtable)
+        return self.buildLookup_(subtables)
 
     def getAlternateGlyphs(self):
         return self.alternates
+
+    def add_subtable_break(self, location):
+        self.alternates[(self.SUBTABLE_BREAK_, location)] = self.SUBTABLE_BREAK_
 
 
 class ChainContextPosBuilder(LookupBuilder):
@@ -1133,6 +1222,8 @@ class ChainContextPosBuilder(LookupBuilder):
     def build(self):
         subtables = []
         for (prefix, glyphs, suffix, lookups) in self.rules:
+            if prefix == self.SUBTABLE_BREAK_:
+                continue
             st = otTables.ChainContextPos()
             subtables.append(st)
             st.Format = 3
@@ -1150,6 +1241,21 @@ class ChainContextPosBuilder(LookupBuilder):
                     st.PosLookupRecord.append(rec)
         return self.buildLookup_(subtables)
 
+    def find_chainable_single_pos(self, lookups, glyphs, value):
+        """Helper for add_single_pos_chained_()"""
+        res = None
+        for lookup in lookups[::-1]:
+            if lookup == self.SUBTABLE_BREAK_:
+                return res
+            if isinstance(lookup, SinglePosBuilder) and \
+                    all(lookup.can_add(glyph, value) for glyph in glyphs):
+                res = lookup
+        return res
+
+    def add_subtable_break(self, location):
+        self.rules.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
+                           self.SUBTABLE_BREAK_, [self.SUBTABLE_BREAK_]))
+
 
 class ChainContextSubstBuilder(LookupBuilder):
     def __init__(self, font, location):
@@ -1163,6 +1269,8 @@ class ChainContextSubstBuilder(LookupBuilder):
     def build(self):
         subtables = []
         for (prefix, input, suffix, lookups) in self.substitutions:
+            if prefix == self.SUBTABLE_BREAK_:
+                continue
             st = otTables.ChainContextSubst()
             subtables.append(st)
             st.Format = 3
@@ -1182,40 +1290,66 @@ class ChainContextSubstBuilder(LookupBuilder):
 
     def getAlternateGlyphs(self):
         result = {}
-        for (_prefix, _input, _suffix, lookups) in self.substitutions:
+        for (_, _, _, lookups) in self.substitutions:
+            if lookups == self.SUBTABLE_BREAK_:
+                continue
             for lookup in lookups:
                 alts = lookup.getAlternateGlyphs()
                 for glyph, replacements in alts.items():
                     result.setdefault(glyph, set()).update(replacements)
         return result
 
+    def find_chainable_single_subst(self, glyphs):
+        """Helper for add_single_subst_chained_()"""
+        res = None
+        for _, _, _, substitutions in self.substitutions[::-1]:
+            if substitutions == self.SUBTABLE_BREAK_:
+                return res
+            for sub in substitutions:
+                if (isinstance(sub, SingleSubstBuilder) and
+                        not any(g in glyphs for g in sub.mapping.keys())):
+                    res = sub
+        return res
+
+    def add_subtable_break(self, location):
+        self.substitutions.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
+                                   self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_))
+
 
 class LigatureSubstBuilder(LookupBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 4)
-        self.ligatures = {}  # {('f','f','i'): 'f_f_i'}
+        self.ligatures = OrderedDict()  # {('f','f','i'): 'f_f_i'}
 
     def equals(self, other):
         return (LookupBuilder.equals(self, other) and
                 self.ligatures == other.ligatures)
 
     def build(self):
-        subtable = otl.buildLigatureSubstSubtable(self.ligatures)
-        return self.buildLookup_([subtable])
+        subtables = self.build_subst_subtables(self.ligatures,
+                otl.buildLigatureSubstSubtable)
+        return self.buildLookup_(subtables)
+
+    def add_subtable_break(self, location):
+        self.ligatures[(self.SUBTABLE_BREAK_, location)] = self.SUBTABLE_BREAK_
 
 
 class MultipleSubstBuilder(LookupBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 2)
-        self.mapping = {}
+        self.mapping = OrderedDict()
 
     def equals(self, other):
         return (LookupBuilder.equals(self, other) and
                 self.mapping == other.mapping)
 
     def build(self):
-        subtable = otl.buildMultipleSubstSubtable(self.mapping)
-        return self.buildLookup_([subtable])
+        subtables = self.build_subst_subtables(self.mapping,
+                otl.buildMultipleSubstSubtable)
+        return self.buildLookup_(subtables)
+
+    def add_subtable_break(self, location):
+        self.mapping[(self.SUBTABLE_BREAK_, location)] = self.SUBTABLE_BREAK_
 
 
 class CursivePosBuilder(LookupBuilder):
@@ -1352,22 +1486,30 @@ class ReverseChainSingleSubstBuilder(LookupBuilder):
             subtables.append(st)
         return self.buildLookup_(subtables)
 
+    def add_subtable_break(self, location):
+        # Nothing to do here, each substitution is in its own subtable.
+        pass
+
 
 class SingleSubstBuilder(LookupBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 1)
-        self.mapping = {}
+        self.mapping = OrderedDict()
 
     def equals(self, other):
         return (LookupBuilder.equals(self, other) and
                 self.mapping == other.mapping)
 
     def build(self):
-        subtable = otl.buildSingleSubstSubtable(self.mapping)
-        return self.buildLookup_([subtable])
+        subtables = self.build_subst_subtables(self.mapping,
+                otl.buildSingleSubstSubtable)
+        return self.buildLookup_(subtables)
 
     def getAlternateGlyphs(self):
         return {glyph: set([repl]) for glyph, repl in self.mapping.items()}
+
+    def add_subtable_break(self, location):
+        self.mapping[(self.SUBTABLE_BREAK_, location)] = self.SUBTABLE_BREAK_
 
 
 class ClassPairPosSubtableBuilder(object):
@@ -1406,12 +1548,13 @@ class ClassPairPosSubtableBuilder(object):
             return
         st = otl.buildPairPosClassesSubtable(self.values_,
                                              self.builder_.glyphMap)
+        if st.Coverage is None:
+            return
         self.subtables_.append(st)
+        self.forceSubtableBreak_ = False
 
 
 class PairPosBuilder(LookupBuilder):
-    SUBTABLE_BREAK_ = "SUBTABLE_BREAK"
-
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GPOS', 2)
         self.pairs = []  # [(gc1, value1, gc2, value2)*]
@@ -1425,15 +1568,18 @@ class PairPosBuilder(LookupBuilder):
         key = (glyph1, glyph2)
         oldValue = self.glyphPairs.get(key, None)
         if oldValue is not None:
+            # the Feature File spec explicitly allows specific pairs generated
+            # by an 'enum' rule to be overridden by preceding single pairs
             otherLoc = self.locations[key]
-            raise FeatureLibError(
-                'Already defined position for pair %s %s at %s:%d:%d'
-                % (glyph1, glyph2, otherLoc[0], otherLoc[1], otherLoc[2]),
-                location)
-        val1, _ = makeOpenTypeValueRecord(value1, pairPosContext=True)
-        val2, _ = makeOpenTypeValueRecord(value2, pairPosContext=True)
-        self.glyphPairs[key] = (val1, val2)
-        self.locations[key] = location
+            log.debug(
+                'Already defined position for pair %s %s at %s:%d:%d; '
+                'choosing the first value',
+                glyph1, glyph2, otherLoc[0], otherLoc[1], otherLoc[2])
+        else:
+            val1, _ = makeOpenTypeValueRecord(value1, pairPosContext=True)
+            val2, _ = makeOpenTypeValueRecord(value2, pairPosContext=True)
+            self.glyphPairs[key] = (val1, val2)
+            self.locations[key] = location
 
     def add_subtable_break(self, location):
         self.pairs.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,

@@ -10,28 +10,36 @@ ttf-interpolatable files for the masters and build a variable-font from
 them.  Such ttf-interpolatable and designspace files can be generated from
 a Glyphs source, eg., using noto-source as an example:
 
-  $ fontmake -o ttf-interpolatable -g NotoSansArabic-MM.glyphs
+	$ fontmake -o ttf-interpolatable -g NotoSansArabic-MM.glyphs
 
 Then you can make a variable-font this way:
 
-  $ fonttools varLib master_ufo/NotoSansArabic.designspace
+	$ fonttools varLib master_ufo/NotoSansArabic.designspace
 
 API *will* change in near future.
 """
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.misc.py23 import *
+from fontTools.misc.fixedTools import otRound
+from fontTools.misc.arrayTools import Vector
 from fontTools.ttLib import TTFont, newTable
-from fontTools.ttLib.tables._n_a_m_e import NameRecord
 from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
+from fontTools.ttLib.tables.ttProgram import Program
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools.ttLib.tables import otTables as ot
-from fontTools.varLib import builder, designspace, models
-from fontTools.varLib.merger import VariationMerger, _all_equal
-from collections import OrderedDict
+from fontTools.ttLib.tables.otBase import OTTableWriter
+from fontTools.varLib import builder, models, varStore
+from fontTools.varLib.merger import VariationMerger
+from fontTools.varLib.mvar import MVAR_ENTRIES
+from fontTools.varLib.iup import iup_delta_optimize
+from fontTools.varLib.featureVars import addFeatureVariations
+from fontTools.designspaceLib import DesignSpaceDocument
+from collections import OrderedDict, namedtuple
 import os.path
 import logging
+from copy import deepcopy
 from pprint import pformat
 
 log = logging.getLogger("fontTools.varLib")
@@ -65,22 +73,26 @@ def _add_fvar(font, axes, instances):
 	for a in axes.values():
 		axis = Axis()
 		axis.axisTag = Tag(a.tag)
+		# TODO Skip axes that have no variation.
 		axis.minValue, axis.defaultValue, axis.maxValue = a.minimum, a.default, a.maximum
-		axis.axisNameID = nameTable.addName(tounicode(a.labelname['en']))
-		# TODO:
-		# Replace previous line with the following when the following issues are resolved:
-		# https://github.com/fonttools/fonttools/issues/930
-		# https://github.com/fonttools/fonttools/issues/931
-		# axis.axisNameID = nameTable.addMultilingualName(a.labelname, font)
+		axis.axisNameID = nameTable.addMultilingualName(a.labelNames, font)
+		axis.flags = int(a.hidden)
 		fvar.axes.append(axis)
 
 	for instance in instances:
-		coordinates = instance['location']
-		name = tounicode(instance['stylename'])
-		psname = instance.get('postscriptfontname')
+		coordinates = instance.location
+
+		if "en" not in instance.localisedStyleName:
+			assert instance.styleName
+			localisedStyleName = dict(instance.localisedStyleName)
+			localisedStyleName["en"] = tounicode(instance.styleName)
+		else:
+			localisedStyleName = instance.localisedStyleName
+
+		psname = instance.postScriptFontName
 
 		inst = NamedInstance()
-		inst.subfamilyNameID = nameTable.addName(name)
+		inst.subfamilyNameID = nameTable.addMultilingualName(localisedStyleName)
 		if psname is not None:
 			psname = tounicode(psname)
 			inst.postscriptNameID = nameTable.addName(psname)
@@ -97,7 +109,7 @@ def _add_avar(font, axes):
 	"""
 	Add 'avar' table to font.
 
-	axes is an ordered dictionary of DesignspaceAxis objects.
+	axes is an ordered dictionary of AxisDescriptor objects.
 	"""
 
 	assert axes
@@ -120,7 +132,7 @@ def _add_avar(font, axes):
 		if not axis.map:
 			continue
 
-		items = sorted(axis.map.items())
+		items = sorted(axis.map)
 		keys = [item[0] for item in items]
 		vals = [item[1] for item in items]
 
@@ -162,8 +174,74 @@ def _add_avar(font, axes):
 
 	return avar
 
+def _add_stat(font, axes):
+	# for now we just get the axis tags and nameIDs from the fvar,
+	# so we can reuse the same nameIDs which were defined in there.
+	# TODO make use of 'axes' once it adds style attributes info:
+	# https://github.com/LettError/designSpaceDocument/issues/8
+
+	if "STAT" in font:
+		return
+
+	fvarTable = font['fvar']
+
+	STAT = font["STAT"] = newTable('STAT')
+	stat = STAT.table = ot.STAT()
+	stat.Version = 0x00010001
+
+	axisRecords = []
+	for i, a in enumerate(fvarTable.axes):
+		axis = ot.AxisRecord()
+		axis.AxisTag = Tag(a.axisTag)
+		axis.AxisNameID = a.axisNameID
+		axis.AxisOrdering = i
+		axisRecords.append(axis)
+
+	axisRecordArray = ot.AxisRecordArray()
+	axisRecordArray.Axis = axisRecords
+	# XXX these should not be hard-coded but computed automatically
+	stat.DesignAxisRecordSize = 8
+	stat.DesignAxisCount = len(axisRecords)
+	stat.DesignAxisRecord = axisRecordArray
+
+	# for the elided fallback name, we default to the base style name.
+	# TODO make this user-configurable via designspace document
+	stat.ElidedFallbackNameID = 2
+
+
+def _get_phantom_points(font, glyphName, defaultVerticalOrigin=None):
+	glyf = font["glyf"]
+	glyph = glyf[glyphName]
+	horizontalAdvanceWidth, leftSideBearing = font["hmtx"].metrics[glyphName]
+	if not hasattr(glyph, 'xMin'):
+		glyph.recalcBounds(glyf)
+	leftSideX = glyph.xMin - leftSideBearing
+	rightSideX = leftSideX + horizontalAdvanceWidth
+	if "vmtx" in font:
+		verticalAdvanceWidth, topSideBearing = font["vmtx"].metrics[glyphName]
+		topSideY = topSideBearing + glyph.yMax
+	else:
+		# without vmtx, use ascent as vertical origin and UPEM as vertical advance
+		# like HarfBuzz does
+		verticalAdvanceWidth = font["head"].unitsPerEm
+		try:
+			topSideY = font["hhea"].ascent
+		except KeyError:
+			# sparse masters may not contain an hhea table; use the ascent
+			# of the default master as the vertical origin
+			assert defaultVerticalOrigin is not None
+			topSideY = defaultVerticalOrigin
+	bottomSideY = topSideY - verticalAdvanceWidth
+	return [
+		(leftSideX, 0),
+		(rightSideX, 0),
+		(0, topSideY),
+		(0, bottomSideY),
+	]
+
+
 # TODO Move to glyf or gvar table proper
-def _GetCoordinates(font, glyphName):
+def _GetCoordinates(font, glyphName, defaultVerticalOrigin=None):
 	"""font, glyphName --> glyph coordinates as expected by "gvar" table
 
 	The result includes four "phantom points" for the glyph metrics,
@@ -181,19 +259,9 @@ def _GetCoordinates(font, glyphName):
 		control = (glyph.numberOfContours,)+allData[1:]
 
 	# Add phantom points for (left, right, top, bottom) positions.
-	horizontalAdvanceWidth, leftSideBearing = font["hmtx"].metrics[glyphName]
-	if not hasattr(glyph, 'xMin'):
-		glyph.recalcBounds(glyf)
-	leftSideX = glyph.xMin - leftSideBearing
-	rightSideX = leftSideX + horizontalAdvanceWidth
-	# XXX these are incorrect.  Load vmtx and fix.
-	topSideY = glyph.yMax
-	bottomSideY = -glyph.yMin
+	phantomPoints = _get_phantom_points(font, glyphName, defaultVerticalOrigin)
 	coord = coord.copy()
-	coord.extend([(leftSideX, 0),
-	              (rightSideX, 0),
-	              (0, topSideY),
-	              (0, bottomSideY)])
+	coord.extend(phantomPoints)
 
 	return coord, control
 
@@ -228,227 +296,16 @@ def _SetCoordinates(font, glyphName, coord):
 
 	glyph.recalcBounds(glyf)
 
-	horizontalAdvanceWidth = round(rightSideX - leftSideX)
-	leftSideBearing = round(glyph.xMin - leftSideX)
+	horizontalAdvanceWidth = otRound(rightSideX - leftSideX)
+	if horizontalAdvanceWidth < 0:
+		# unlikely, but it can happen, see:
+		# https://github.com/fonttools/fonttools/pull/1198
+		horizontalAdvanceWidth = 0
+	leftSideBearing = otRound(glyph.xMin - leftSideX)
 	# XXX Handle vertical
 	font["hmtx"].metrics[glyphName] = horizontalAdvanceWidth, leftSideBearing
 
-
-def _all_interpolatable_in_between(deltas, coords, i, j, tolerance):
-	assert j - i >= 2
-	from fontTools.varLib.mutator import _iup_segment
-	interp = list(_iup_segment(coords[i+1:j], coords[i], deltas[i], coords[j], deltas[j]))
-	deltas = deltas[i+1:j]
-
-	assert len(deltas) == len(interp)
-
-	return all(abs(complex(x-p, y-q)) <= tolerance for (x,y),(p,q) in zip(deltas, interp))
-
-def _iup_contour_bound_forced_set(delta, coords, tolerance=0):
-	"""The forced set is a conservative set of points on the contour that must be encoded
-	explicitly (ie. cannot be interpolated).  Calculating this set allows for significantly
-	speeding up the dynamic-programming, as well as resolve circularity in DP.
-
-	The set is precise; that is, if an index is in the returned set, then there is no way
-	that IUP can generate delta for that point, given coords and delta.
-	"""
-	assert len(delta) == len(coords)
-
-	forced = set()
-	# Track "last" and "next" points on the contour as we sweep.
-	nd, nc = delta[0], coords[0]
-	ld, lc = delta[-1], coords[-1]
-	for i in range(len(delta)-1, -1, -1):
-		d, c = ld, lc
-		ld, lc = delta[i-1], coords[i-1]
-
-		for j in (0,1): # For X and for Y
-			cj = c[j]
-			dj = d[j]
-			lcj = lc[j]
-			ldj = ld[j]
-			ncj = nc[j]
-			ndj = nd[j]
-
-			if lcj <= ncj:
-				c1, c2 = lcj, ncj
-				d1, d2 = ldj, ndj
-			else:
-				c1, c2 = ncj, lcj
-				d1, d2 = ndj, ldj
-
-			# If coordinate for current point is between coordinate of adjacent
-			# points on the two sides, but the delta for current point is NOT
-			# between delta for those adjacent points (considering tolerance
-			# allowance), then there is no way that current point can be IUP-ed.
-			# Mark it forced.
-			force = False
-			if c1 <= cj <= c2:
-				if not (min(d1,d2)-tolerance <= dj <= max(d1,d2)+tolerance):
-					force = True
-			else: # cj < c1 or c2 < cj
-				if c1 == c2:
-					if d1 == d2:
-						if abs(dj - d1) > tolerance:
-							force = True
-					else:
-						if abs(dj) > tolerance:
-							# Disabled the following because the "d1 == d2" does
-							# check does not take tolerance into consideration...
-							pass # force = True
-				elif d1 != d2:
-					if cj < c1:
-						if dj != d1 and ((dj-tolerance < d1) != (d1 < d2)):
-							force = True
-					else: # c2 < cj
-						if d2 != dj and ((d2 < dj+tolerance) != (d1 < d2)):
-							force = True
-
-			if force:
-				forced.add(i)
-				break
-
-		nd, nc = d, c
-
-	return forced
-
-def _iup_contour_optimize_dp(delta, coords, forced={}, tolerance=0, lookback=None):
-	"""Straightforward Dynamic-Programming.  For each index i, find least-costly encoding of
-	points i to n-1 where i is explicitly encoded.  We find this by considering all next
-	explicit points j and check whether interpolation can fill points between i and j.
-
-	Note that solution always encodes last point explicitly.  Higher-level is responsible
-	for removing that restriction.
-
-	As major speedup, we stop looking further whenever we see a "forced" point."""
-
-	n = len(delta)
-	if lookback is None:
-		lookback = n
-	costs = {-1:0}
-	chain = {-1:None}
-	for i in range(0, n):
-		best_cost = costs[i-1] + 1
-
-		costs[i] = best_cost
-		chain[i] = i - 1
-
-		if i - 1 in forced:
-			continue
-
-		for j in range(i-2, max(i-lookback, -2), -1):
-
-			cost = costs[j] + 1
-
-			if cost < best_cost and _all_interpolatable_in_between(delta, coords, j, i, tolerance):
-				costs[i] = best_cost = cost
-				chain[i] = j
-
-			if j in forced:
-				break
-
-	return chain, costs
-
-def _rot_list(l, k):
-	"""Rotate list by k items forward.  Ie. item at position 0 will be
-	at position k in returned list.  Negative k is allowed."""
-	n = len(l)
-	k %= n
-	if not k: return l
-	return l[n-k:] + l[:n-k]
-
-def _rot_set(s, k, n):
-	k %= n
-	if not k: return s
-	return {(v + k) % n for v in s}
-
-def _iup_contour_optimize(delta, coords, tolerance=0.):
-	n = len(delta)
-
-	# Get the easy cases out of the way:
-
-	# If all are within tolerance distance of 0, encode nothing:
-	if all(abs(complex(*p)) <= tolerance for p in delta):
-		return [None] * n
-
-	# If there's exactly one point, return it:
-	if n == 1:
-		return delta
-
-	# If all deltas are exactly the same, return just one (the first one):
-	d0 = delta[0]
-	if all(d0 == d for d in delta):
-		return [d0] + [None] * (n-1)
-
-	# Else, solve the general problem using Dynamic Programming.
-
-	forced = _iup_contour_bound_forced_set(delta, coords, tolerance)
-	# The _iup_contour_optimize_dp() routine returns the optimal encoding
-	# solution given the constraint that the last point is always encoded.
-	# To remove this constraint, we use two different methods, depending on
-	# whether forced set is non-empty or not:
-
-	if forced:
-		# Forced set is non-empty: rotate the contour start point
-		# such that the last point in the list is a forced point.
-		k = (n-1) - max(forced)
-		assert k >= 0
-
-		delta  = _rot_list(delta, k)
-		coords = _rot_list(coords, k)
-		forced = _rot_set(forced, k, n)
-
-		chain, costs = _iup_contour_optimize_dp(delta, coords, forced, tolerance)
-
-		# Assemble solution.
-		solution = set()
-		i = n - 1
-		while i is not None:
-			solution.add(i)
-			i = chain[i]
-		assert forced <= solution, (forced, solution)
-		delta = [delta[i] if i in solution else None for i in range(n)]
-
-		delta = _rot_list(delta, -k)
-	else:
-		# Repeat the contour an extra time, solve the 2*n case, then look for solutions of the
-		# circular n-length problem in the solution for 2*n linear case.  I cannot prove that
-		# this always produces the optimal solution...
-		chain, costs = _iup_contour_optimize_dp(delta+delta, coords+coords, forced, tolerance, n)
-		best_sol, best_cost = None, n+1
-
-		for start in range(n-1, 2*n-1):
-			# Assemble solution.
-			solution = set()
-			i = start
-			while i > start - n:
-				solution.add(i % n)
-				i = chain[i]
-			if i == start - n:
-				cost = costs[start] - costs[start - n]
-				if cost <= best_cost:
-					best_sol, best_cost = solution, cost
-
-		delta = [delta[i] if i in best_sol else None for i in range(n)]
-
-
-	return delta
-
-def _iup_delta_optimize(delta, coords, ends, tolerance=0.):
-	assert sorted(ends) == ends and len(coords) == (ends[-1]+1 if ends else 0) + 4
-	n = len(coords)
-	ends = ends + [n-4, n-3, n-2, n-1]
-	out = []
-	start = 0
-	for end in ends:
-		contour = _iup_contour_optimize(delta[start:end+1], coords[start:end+1], tolerance)
-		assert len(contour) == end - start + 1
-		out.extend(contour)
-		start = end+1
-
-	return out
-
-def _add_gvar(font, model, master_ttfs, tolerance=0.5, optimize=True):
+def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 
 	assert tolerance >= 0
 
@@ -459,13 +316,24 @@ def _add_gvar(font, model, master_ttfs, tolerance=0.5, optimize=True):
 	gvar.reserved = 0
 	gvar.variations = {}
 
+	glyf = font['glyf']
+
+	# use hhea.ascent of base master as default vertical origin when vmtx is missing
+	defaultVerticalOrigin = font['hhea'].ascent
 	for glyph in font.getGlyphOrder():
 
-		allData = [_GetCoordinates(m, glyph) for m in master_ttfs]
+		isComposite = glyf[glyph].isComposite()
+
+		allData = [
+			_GetCoordinates(m, glyph, defaultVerticalOrigin=defaultVerticalOrigin)
+			for m in master_ttfs
+		]
+		model, allData = masterModel.getSubModel(allData)
+
 		allCoords = [d[0] for d in allData]
 		allControls = [d[1] for d in allData]
 		control = allControls[0]
-		if (any(c != control for c in allControls)):
+		if not models.allEqual(allControls):
 			log.warning("glyph %s has incompatible masters; skipping" % glyph)
 			continue
 		del allControls
@@ -481,20 +349,30 @@ def _add_gvar(font, model, master_ttfs, tolerance=0.5, optimize=True):
 		endPts = control[1] if control[0] >= 1 else list(range(len(control[1])))
 
 		for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
-			if all(abs(v) <= tolerance for v in delta.array):
+			if all(abs(v) <= tolerance for v in delta.array) and not isComposite:
 				continue
 			var = TupleVariation(support, delta)
 			if optimize:
-				delta_opt = _iup_delta_optimize(delta, origCoords, endPts, tolerance=tolerance)
+				delta_opt = iup_delta_optimize(delta, origCoords, endPts, tolerance=tolerance)
 
 				if None in delta_opt:
+					"""In composite glyphs, there should be one 0 entry
+					to make sure the gvar entry is written to the font.
+
+					This is to work around an issue with macOS 10.14 and can be
+					removed once the behaviour of macOS is changed.
+
+					https://github.com/fonttools/fonttools/issues/1381
+					"""
+					if all(d is None for d in delta_opt):
+						delta_opt = [(0, 0)] + [None] * (len(delta_opt) - 1)
 					# Use "optimized" version only if smaller...
 					var_opt = TupleVariation(support, delta_opt)
 
 					axis_tags = sorted(support.keys()) # Shouldn't matter that this is different from fvar...?
-					tupleData, auxData = var.compile(axis_tags, [], None)
+					tupleData, auxData, _ = var.compile(axis_tags, [], None)
 					unoptimized_len = len(tupleData) + len(auxData)
-					tupleData, auxData = var_opt.compile(axis_tags, [], None)
+					tupleData, auxData, _ = var_opt.compile(axis_tags, [], None)
 					optimized_len = len(tupleData) + len(auxData)
 
 					if optimized_len < unoptimized_len:
@@ -502,124 +380,273 @@ def _add_gvar(font, model, master_ttfs, tolerance=0.5, optimize=True):
 
 			gvar.variations[glyph].append(var)
 
-def _add_HVAR(font, model, master_ttfs, axisTags):
+def _remove_TTHinting(font):
+	for tag in ("cvar", "cvt ", "fpgm", "prep"):
+		if tag in font:
+			del font[tag]
+	for attr in ("maxTwilightPoints", "maxStorage", "maxFunctionDefs", "maxInstructionDefs", "maxStackElements", "maxSizeOfInstructions"):
+		setattr(font["maxp"], attr, 0)
+	font["maxp"].maxZones = 1
+	font["glyf"].removeHinting()
+	# TODO: Modify gasp table to deactivate gridfitting for all ranges?
 
-	log.info("Generating HVAR")
+def _merge_TTHinting(font, masterModel, master_ttfs, tolerance=0.5):
 
-	hAdvanceDeltas = {}
-	metricses = [m["hmtx"].metrics for m in master_ttfs]
-	for glyph in font.getGlyphOrder():
-		hAdvances = [metrics[glyph][0] for metrics in metricses]
-		# TODO move round somewhere else?
-		hAdvanceDeltas[glyph] = tuple(round(d) for d in model.getDeltas(hAdvances)[1:])
+	log.info("Merging TT hinting")
+	assert "cvar" not in font
 
-	# We only support the direct mapping right now.
+	# Check that the existing hinting is compatible
 
-	supports = model.supports[1:]
-	varTupleList = builder.buildVarRegionList(supports, axisTags)
-	varTupleIndexes = list(range(len(supports)))
-	n = len(supports)
-	items = []
-	zeroes = [0]*n
-	for glyphName in font.getGlyphOrder():
-		items.append(hAdvanceDeltas.get(glyphName, zeroes))
-	while items and items[-1] is zeroes:
-		del items[-1]
+	# fpgm and prep table
 
-	advanceMapping = None
-	# Add indirect mapping to save on duplicates
-	uniq = set(items)
-	# TODO Improve heuristic
-	if (len(items) - len(uniq)) * len(varTupleIndexes) > len(items):
-		newItems = sorted(uniq)
-		mapper = {v:i for i,v in enumerate(newItems)}
-		mapping = [mapper[item] for item in items]
-		while len(mapping) > 1 and mapping[-1] == mapping[-2]:
-			del mapping[-1]
-		advanceMapping = builder.buildVarIdxMap(mapping)
-		items = newItems
-		del mapper, mapping, newItems
-	del uniq
+	for tag in ("fpgm", "prep"):
+		all_pgms = [m[tag].program for m in master_ttfs if tag in m]
+		if len(all_pgms) == 0:
+			continue
+		if tag in font:
+			font_pgm = font[tag].program
+		else:
+			font_pgm = Program()
+		if any(pgm != font_pgm for pgm in all_pgms):
+			log.warning("Masters have incompatible %s tables, hinting is discarded." % tag)
+			_remove_TTHinting(font)
+			return
 
-	varData = builder.buildVarData(varTupleIndexes, items)
-	varStore = builder.buildVarStore(varTupleList, [varData])
+	# glyf table
 
-	assert "HVAR" not in font
-	HVAR = font["HVAR"] = newTable('HVAR')
-	hvar = HVAR.table = ot.HVAR()
-	hvar.Version = 0x00010000
-	hvar.VarStore = varStore
-	hvar.AdvWidthMap = advanceMapping
-	hvar.LsbMap = hvar.RsbMap = None
+	for name, glyph in font["glyf"].glyphs.items():
+		all_pgms = [
+			m["glyf"][name].program
+			for m in master_ttfs
+			if name in m['glyf'] and hasattr(m["glyf"][name], "program")
+		]
+		if not any(all_pgms):
+			continue
+		glyph.expand(font["glyf"])
+		if hasattr(glyph, "program"):
+			font_pgm = glyph.program
+		else:
+			font_pgm = Program()
+		if any(pgm != font_pgm for pgm in all_pgms if pgm):
+			log.warning("Masters have incompatible glyph programs in glyph '%s', hinting is discarded." % name)
+			# TODO Only drop hinting from this glyph.
+			_remove_TTHinting(font)
+			return
 
-_MVAR_entries = {
-	'hasc': ('OS/2', 'sTypoAscender'),		 # horizontal ascender
-	'hdsc': ('OS/2', 'sTypoDescender'),		 # horizontal descender
-	'hlgp': ('OS/2', 'sTypoLineGap'),		 # horizontal line gap
-	'hcla': ('OS/2', 'usWinAscent'),		 # horizontal clipping ascent
-	'hcld': ('OS/2', 'usWinDescent'),		 # horizontal clipping descent
-	'vasc': ('vhea', 'ascent'),			 # vertical ascender
-	'vdsc': ('vhea', 'descent'),			 # vertical descender
-	'vlgp': ('vhea', 'lineGap'),			 # vertical line gap
-	'hcrs': ('hhea', 'caretSlopeRise'),		 # horizontal caret rise
-	'hcrn': ('hhea', 'caretSlopeRun'),		 # horizontal caret run
-	'hcof': ('hhea', 'caretOffset'),		 # horizontal caret offset
-	'vcrs': ('vhea', 'caretSlopeRise'),		 # vertical caret rise
-	'vcrn': ('vhea', 'caretSlopeRun'),		 # vertical caret run
-	'vcof': ('vhea', 'caretOffset'),		 # vertical caret offset
-	'xhgt': ('OS/2', 'sxHeight'),			 # x height
-	'cpht': ('OS/2', 'sCapHeight'),			 # cap height
-	'sbxs': ('OS/2', 'ySubscriptXSize'),		 # subscript em x size
-	'sbys': ('OS/2', 'ySubscriptYSize'),		 # subscript em y size
-	'sbxo': ('OS/2', 'ySubscriptXOffset'),		 # subscript em x offset
-	'sbyo': ('OS/2', 'ySubscriptYOffset'),		 # subscript em y offset
-	'spxs': ('OS/2', 'ySuperscriptXSize'),		 # superscript em x size
-	'spys': ('OS/2', 'ySuperscriptYSize'),		 # superscript em y size
-	'spxo': ('OS/2', 'ySuperscriptXOffset'),	 # superscript em x offset
-	'spyo': ('OS/2', 'ySuperscriptYOffset'),	 # superscript em y offset
-	'strs': ('OS/2', 'yStrikeoutSize'),		 # strikeout size
-	'stro': ('OS/2', 'yStrikeoutPosition'),		 # strikeout offset
-	'unds': ('post', 'underlineThickness'),		 # underline size
-	'undo': ('post', 'underlinePosition'),		 # underline offset
-	#'gsp0': ('gasp', 'gaspRange[0].rangeMaxPPEM'),	 # gaspRange[0]
-	#'gsp1': ('gasp', 'gaspRange[1].rangeMaxPPEM'),	 # gaspRange[1]
-	#'gsp2': ('gasp', 'gaspRange[2].rangeMaxPPEM'),	 # gaspRange[2]
-	#'gsp3': ('gasp', 'gaspRange[3].rangeMaxPPEM'),	 # gaspRange[3]
-	#'gsp4': ('gasp', 'gaspRange[4].rangeMaxPPEM'),	 # gaspRange[4]
-	#'gsp5': ('gasp', 'gaspRange[5].rangeMaxPPEM'),	 # gaspRange[5]
-	#'gsp6': ('gasp', 'gaspRange[6].rangeMaxPPEM'),	 # gaspRange[6]
-	#'gsp7': ('gasp', 'gaspRange[7].rangeMaxPPEM'),	 # gaspRange[7]
-	#'gsp8': ('gasp', 'gaspRange[8].rangeMaxPPEM'),	 # gaspRange[8]
-	#'gsp9': ('gasp', 'gaspRange[9].rangeMaxPPEM'),	 # gaspRange[9]
-}
+	# cvt table
 
+	all_cvs = [Vector(m["cvt "].values) if 'cvt ' in m else None
+		   for m in master_ttfs]
 
-def _add_MVAR(font, model, master_ttfs, axisTags):
+	nonNone_cvs = models.nonNone(all_cvs)
+	if not nonNone_cvs:
+		# There is no cvt table to make a cvar table from, we're done here.
+		return
+
+	if not models.allEqual(len(c) for c in nonNone_cvs):
+		log.warning("Masters have incompatible cvt tables, hinting is discarded.")
+		_remove_TTHinting(font)
+		return
+
+	# We can build the cvar table now.
+
+	cvar = font["cvar"] = newTable('cvar')
+	cvar.version = 1
+	cvar.variations = []
+
+	deltas, supports = masterModel.getDeltasAndSupports(all_cvs)
+	for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
+		delta = [otRound(d) for d in delta]
+		if all(abs(v) <= tolerance for v in delta):
+			continue
+		var = TupleVariation(support, delta)
+		cvar.variations.append(var)
+
+MetricsFields = namedtuple('MetricsFields',
+	['tableTag', 'metricsTag', 'sb1', 'sb2', 'advMapping', 'vOrigMapping'])
+
+hvarFields = MetricsFields(tableTag='HVAR', metricsTag='hmtx', sb1='LsbMap',
+	sb2='RsbMap', advMapping='AdvWidthMap', vOrigMapping=None)
+
+vvarFields = MetricsFields(tableTag='VVAR', metricsTag='vmtx', sb1='TsbMap',
+	sb2='BsbMap', advMapping='AdvHeightMap', vOrigMapping='VOrgMap')
+
+def _add_HVAR(font, masterModel, master_ttfs, axisTags):
+	_add_VHVAR(font, masterModel, master_ttfs, axisTags, hvarFields)
+
+def _add_VVAR(font, masterModel, master_ttfs, axisTags):
+	_add_VHVAR(font, masterModel, master_ttfs, axisTags, vvarFields)
+
+def _add_VHVAR(font, masterModel, master_ttfs, axisTags, tableFields):
+
+	tableTag = tableFields.tableTag
+	assert tableTag not in font
+	log.info("Generating " + tableTag)
+	VHVAR = newTable(tableTag)
+	tableClass = getattr(ot, tableTag)
+	vhvar = VHVAR.table = tableClass()
+	vhvar.Version = 0x00010000
+
+	glyphOrder = font.getGlyphOrder()
+
+	# Build list of source font advance widths for each glyph
+	metricsTag = tableFields.metricsTag
+	advMetricses = [m[metricsTag].metrics for m in master_ttfs]
+
+	# Build list of source font vertical origin coords for each glyph
+	if tableTag == 'VVAR' and 'VORG' in master_ttfs[0]:
+		vOrigMetricses = [m['VORG'].VOriginRecords for m in master_ttfs]
+		defaultYOrigs = [m['VORG'].defaultVertOriginY for m in master_ttfs]
+		vOrigMetricses = list(zip(vOrigMetricses, defaultYOrigs))
+	else:
+		vOrigMetricses = None
+
+	metricsStore, advanceMapping, vOrigMapping = _get_advance_metrics(font,
+		masterModel, master_ttfs, axisTags, glyphOrder, advMetricses,
+		vOrigMetricses)
+
+	vhvar.VarStore = metricsStore
+	if advanceMapping is None:
+		setattr(vhvar, tableFields.advMapping, None)
+	else:
+		setattr(vhvar, tableFields.advMapping, advanceMapping)
+	if vOrigMapping is not None:
+		setattr(vhvar, tableFields.vOrigMapping, vOrigMapping)
+	setattr(vhvar, tableFields.sb1, None)
+	setattr(vhvar, tableFields.sb2, None)
+
+	font[tableTag] = VHVAR
+	return
+
+def _get_advance_metrics(font, masterModel, master_ttfs,
+		axisTags, glyphOrder, advMetricses, vOrigMetricses=None):
+
+	vhAdvanceDeltasAndSupports = {}
+	vOrigDeltasAndSupports = {}
+	for glyph in glyphOrder:
+		vhAdvances = [metrics[glyph][0] if glyph in metrics else None for metrics in advMetricses]
+		vhAdvanceDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(vhAdvances)
+
+	singleModel = models.allEqual(id(v[1]) for v in vhAdvanceDeltasAndSupports.values())
+
+	if vOrigMetricses:
+		singleModel = False
+		for glyph in glyphOrder:
+			# We need to supply a vOrigs tuple with non-None default values
+			# for each glyph. vOrigMetricses contains values only for those
+			# glyphs which have a non-default vOrig.
+			vOrigs = [metrics[glyph] if glyph in metrics else defaultVOrig
+				for metrics, defaultVOrig in vOrigMetricses]
+			vOrigDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(vOrigs)
+
+	directStore = None
+	if singleModel:
+		# Build direct mapping
+		supports = next(iter(vhAdvanceDeltasAndSupports.values()))[1][1:]
+		varTupleList = builder.buildVarRegionList(supports, axisTags)
+		varTupleIndexes = list(range(len(supports)))
+		varData = builder.buildVarData(varTupleIndexes, [], optimize=False)
+		for glyphName in glyphOrder:
+			varData.addItem(vhAdvanceDeltasAndSupports[glyphName][0])
+		varData.optimize()
+		directStore = builder.buildVarStore(varTupleList, [varData])
+
+	# Build optimized indirect mapping
+	storeBuilder = varStore.OnlineVarStoreBuilder(axisTags)
+	advMapping = {}
+	for glyphName in glyphOrder:
+		deltas, supports = vhAdvanceDeltasAndSupports[glyphName]
+		storeBuilder.setSupports(supports)
+		advMapping[glyphName] = storeBuilder.storeDeltas(deltas)
+
+	if vOrigMetricses:
+		vOrigMap = {}
+		for glyphName in glyphOrder:
+			deltas, supports = vOrigDeltasAndSupports[glyphName]
+			storeBuilder.setSupports(supports)
+			vOrigMap[glyphName] = storeBuilder.storeDeltas(deltas)
+
+	indirectStore = storeBuilder.finish()
+	mapping2 = indirectStore.optimize()
+	advMapping = [mapping2[advMapping[g]] for g in glyphOrder]
+	advanceMapping = builder.buildVarIdxMap(advMapping, glyphOrder)
+
+	if vOrigMetricses:
+		vOrigMap = [mapping2[vOrigMap[g]] for g in glyphOrder]
+
+	useDirect = False
+	vOrigMapping = None
+	if directStore:
+		# Compile both, see which is more compact
+
+		writer = OTTableWriter()
+		directStore.compile(writer, font)
+		directSize = len(writer.getAllData())
+
+		writer = OTTableWriter()
+		indirectStore.compile(writer, font)
+		advanceMapping.compile(writer, font)
+		indirectSize = len(writer.getAllData())
+
+		useDirect = directSize < indirectSize
+
+	if useDirect:
+		metricsStore = directStore
+		advanceMapping = None
+	else:
+		metricsStore = indirectStore
+		if vOrigMetricses:
+			vOrigMapping = builder.buildVarIdxMap(vOrigMap, glyphOrder)
+
+	return metricsStore, advanceMapping, vOrigMapping
+
+def _add_MVAR(font, masterModel, master_ttfs, axisTags):
 
 	log.info("Generating MVAR")
 
-	store_builder = builder.OnlineVarStoreBuilder(axisTags)
-	store_builder.setModel(model)
+	store_builder = varStore.OnlineVarStoreBuilder(axisTags)
 
 	records = []
 	lastTableTag = None
 	fontTable = None
 	tables = None
-	for tag, (tableTag, itemName) in sorted(_MVAR_entries.items(), key=lambda kv: kv[1]):
+	# HACK: we need to special-case post.underlineThickness and .underlinePosition
+	# and unilaterally/arbitrarily define a sentinel value to distinguish the case
+	# when a post table is present in a given master simply because that's where
+	# the glyph names in TrueType must be stored, but the underline values are not
+	# meant to be used for building MVAR's deltas. The value of -0x8000 (-36768)
+	# the minimum FWord (int16) value, was chosen for its unlikelyhood to appear
+	# in real-world underline position/thickness values.
+	specialTags = {"unds": -0x8000, "undo": -0x8000}
+
+	for tag, (tableTag, itemName) in sorted(MVAR_ENTRIES.items(), key=lambda kv: kv[1]):
+		# For each tag, fetch the associated table from all fonts (or not when we are
+		# still looking at a tag from the same tables) and set up the variation model
+		# for them.
 		if tableTag != lastTableTag:
 			tables = fontTable = None
 			if tableTag in font:
-				# TODO Check all masters have same table set?
 				fontTable = font[tableTag]
-				tables = [master[tableTag] for master in master_ttfs]
+				tables = []
+				for master in master_ttfs:
+					if tableTag not in master or (
+						tag in specialTags
+						and getattr(master[tableTag], itemName) == specialTags[tag]
+					):
+						tables.append(None)
+					else:
+						tables.append(master[tableTag])
+				model, tables = masterModel.getSubModel(tables)
+				store_builder.setModel(model)
 			lastTableTag = tableTag
-		if tables is None:
+
+		if tables is None:  # Tag not applicable to the master font.
 			continue
 
 		# TODO support gasp entries
 
 		master_values = [getattr(table, itemName) for table in tables]
-		if _all_equal(master_values):
+		if models.allEqual(master_values):
 			base, varIdx = master_values[0], None
 		else:
 			base, varIdx = store_builder.storeMasters(master_values)
@@ -635,11 +662,17 @@ def _add_MVAR(font, model, master_ttfs, axisTags):
 
 	assert "MVAR" not in font
 	if records:
+		store = store_builder.finish()
+		# Optimize
+		mapping = store.optimize()
+		for rec in records:
+			rec.VarIdx = mapping[rec.VarIdx]
+
 		MVAR = font["MVAR"] = newTable('MVAR')
 		mvar = MVAR.table = ot.MVAR()
 		mvar.Version = 0x00010000
 		mvar.Reserved = 0
-		mvar.VarStore = store_builder.finish()
+		mvar.VarStore = store
 		# XXX these should not be hard-coded but computed automatically
 		mvar.ValueRecordSize = 8
 		mvar.ValueRecordCount = len(records)
@@ -651,8 +684,10 @@ def _merge_OTL(font, model, master_fonts, axisTags):
 	log.info("Merging OpenType Layout tables")
 	merger = VariationMerger(model, axisTags, font)
 
-	merger.mergeTables(font, master_fonts, ['GPOS'])
+	merger.mergeTables(font, master_fonts, ['GSUB', 'GDEF', 'GPOS'])
 	store = merger.store_builder.finish()
+	if not store.VarData:
+		return
 	try:
 		GDEF = font['GDEF'].table
 		assert GDEF.Version <= 0x00010002
@@ -663,119 +698,120 @@ def _merge_OTL(font, model, master_fonts, axisTags):
 	GDEF.Version = 0x00010003
 	GDEF.VarStore = store
 
+	# Optimize
+	varidx_map = store.optimize()
+	GDEF.remap_device_varidxes(varidx_map)
+	if 'GPOS' in font:
+		font['GPOS'].table.remap_device_varidxes(varidx_map)
 
-def load_designspace(designspace_filename):
 
-	ds = designspace.load(designspace_filename)
-	axes = ds.get('axes')
-	masters = ds.get('sources')
+def _add_GSUB_feature_variations(font, axes, internal_axis_supports, rules):
+
+	def normalize(name, value):
+		return models.normalizeLocation(
+			{name: value}, internal_axis_supports
+		)[name]
+
+	log.info("Generating GSUB FeatureVariations")
+
+	axis_tags = {name: axis.tag for name, axis in axes.items()}
+
+	conditional_subs = []
+	for rule in rules:
+
+		region = []
+		for conditions in rule.conditionSets:
+			space = {}
+			for condition in conditions:
+				axis_name = condition["name"]
+				if condition["minimum"] is not None:
+					minimum = normalize(axis_name, condition["minimum"])
+				else:
+					minimum = -1.0
+				if condition["maximum"] is not None:
+					maximum = normalize(axis_name, condition["maximum"])
+				else:
+					maximum = 1.0
+				tag = axis_tags[axis_name]
+				space[tag] = (minimum, maximum)
+			region.append(space)
+
+		subs = {k: v for k, v in rule.subs}
+
+		conditional_subs.append((region, subs))
+
+	addFeatureVariations(font, conditional_subs)
+
+
+_DesignSpaceData = namedtuple(
+	"_DesignSpaceData",
+	[
+		"axes",
+		"internal_axis_supports",
+		"base_idx",
+		"normalized_master_locs",
+		"masters",
+		"instances",
+		"rules",
+	],
+)
+
+
+def _add_CFF2(varFont, model, master_fonts):
+	from .cff import (convertCFFtoCFF2, merge_region_fonts)
+	glyphOrder = varFont.getGlyphOrder()
+	convertCFFtoCFF2(varFont)
+	ordered_fonts_list = model.reorderMasters(master_fonts, model.reverseMapping)
+	# re-ordering the master list simplifies building the CFF2 data item lists.
+	merge_region_fonts(varFont, model, ordered_fonts_list, glyphOrder)
+
+
+def load_designspace(designspace):
+	# TODO: remove this and always assume 'designspace' is a DesignSpaceDocument,
+	# never a file path, as that's already handled by caller
+	if hasattr(designspace, "sources"):  # Assume a DesignspaceDocument
+		ds = designspace
+	else:  # Assume a file path
+		ds = DesignSpaceDocument.fromfile(designspace)
+
+	masters = ds.sources
 	if not masters:
 		raise VarLibError("no sources found in .designspace")
-	instances = ds.get('instances', [])
+	instances = ds.instances
 
 	standard_axis_map = OrderedDict([
-		('weight',  ('wght', {'en':'Weight'})),
-		('width',   ('wdth', {'en':'Width'})),
-		('slant',   ('slnt', {'en':'Slant'})),
-		('optical', ('opsz', {'en':'Optical Size'})),
+		('weight',  ('wght', {'en': u'Weight'})),
+		('width',   ('wdth', {'en': u'Width'})),
+		('slant',   ('slnt', {'en': u'Slant'})),
+		('optical', ('opsz', {'en': u'Optical Size'})),
+		('italic',  ('ital', {'en': u'Italic'})),
 		])
 
-
 	# Setup axes
-	class DesignspaceAxis(object):
+	axes = OrderedDict()
+	for axis in ds.axes:
+		axis_name = axis.name
+		if not axis_name:
+			assert axis.tag is not None
+			axis_name = axis.name = axis.tag
 
-		def __repr__(self):
-			return repr(self.__dict__)
+		if axis_name in standard_axis_map:
+			if axis.tag is None:
+				axis.tag = standard_axis_map[axis_name][0]
+			if not axis.labelNames:
+				axis.labelNames.update(standard_axis_map[axis_name][1])
+		else:
+			assert axis.tag is not None
+			if not axis.labelNames:
+				axis.labelNames["en"] = tounicode(axis_name)
 
-		@staticmethod
-		def _map(v, map):
-			keys = map.keys()
-			if not keys:
-				return v
-			if v in keys:
-				return map[v]
-			k = min(keys)
-			if v < k:
-				return v + map[k] - k
-			k = max(keys)
-			if v > k:
-				return v + map[k] - k
-			# Interpolate
-			a = max(k for k in keys if k < v)
-			b = min(k for k in keys if k > v)
-			va = map[a]
-			vb = map[b]
-			return va + (vb - va) * (v - a) / (b - a)
-
-		def map_forward(self, v):
-			if self.map is None: return v
-			return self._map(v, self.map)
-
-		def map_backward(self, v):
-			if self.map is None: return v
-			map = {v:k for k,v in self.map.items()}
-			return self._map(v, map)
-
-	axis_objects = OrderedDict()
-	if axes is not None:
-		for axis_dict in axes:
-			axis_name = axis_dict.get('name')
-			if not axis_name:
-				axis_name = axis_dict['name'] = axis_dict['tag']
-			if 'map' not in axis_dict:
-				axis_dict['map'] = None
-			else:
-				axis_dict['map'] = {m['input']:m['output'] for m in axis_dict['map']}
-
-			if axis_name in standard_axis_map:
-				if 'tag' not in axis_dict:
-					axis_dict['tag'] = standard_axis_map[axis_name][0]
-				if 'labelname' not in axis_dict:
-					axis_dict['labelname'] = standard_axis_map[axis_name][1].copy()
-
-			axis = DesignspaceAxis()
-			for item in ['name', 'tag', 'labelname', 'minimum', 'default', 'maximum', 'map']:
-				assert item in axis_dict, 'Axis does not have "%s"' % item
-			axis.__dict__ = axis_dict
-			axis_objects[axis_name] = axis
-	else:
-		# No <axes> element. Guess things...
-		base_idx = None
-		for i,m in enumerate(masters):
-			if 'info' in m and m['info']['copy']:
-				assert base_idx is None
-				base_idx = i
-		assert base_idx is not None, "Cannot find 'base' master; Either add <axes> element to .designspace document, or add <info> element to one of the sources in the .designspace document."
-
-		master_locs = [o['location'] for o in masters]
-		base_loc = master_locs[base_idx]
-		axis_names = set(base_loc.keys())
-		assert all(name in standard_axis_map for name in axis_names), "Non-standard axis found and there exist no <axes> element."
-
-		for name,(tag,labelname) in standard_axis_map.items():
-			if name not in axis_names:
-				continue
-
-			axis = DesignspaceAxis()
-			axis.name = name
-			axis.tag = tag
-			axis.labelname = labelname.copy()
-			axis.default = base_loc[name]
-			axis.minimum = min(m[name] for m in master_locs if name in m)
-			axis.maximum = max(m[name] for m in master_locs if name in m)
-			axis.map = None
-			# TODO Fill in weight / width mapping from OS/2 table? Need loading fonts...
-			axis_objects[name] = axis
-		del base_idx, base_loc, axis_names, master_locs
-	axes = axis_objects
-	del axis_objects
-	log.info("Axes:\n%s", pformat(axes))
-
+		axes[axis_name] = axis
+	log.info("Axes:\n%s", pformat([axis.asdict() for axis in axes.values()]))
 
 	# Check all master and instance locations are valid and fill in defaults
 	for obj in masters+instances:
-		obj_name = obj.get('name', obj.get('stylename', ''))
-		loc = obj['location']
+		obj_name = obj.name or obj.styleName or ''
+		loc = obj.location
 		for axis_name in loc.keys():
 			assert axis_name in axes, "Location axis '%s' unknown for '%s'." % (axis_name, obj_name)
 		for axis_name,axis in axes.items():
@@ -785,11 +821,10 @@ def load_designspace(designspace_filename):
 				v = axis.map_backward(loc[axis_name])
 				assert axis.minimum <= v <= axis.maximum, "Location for axis '%s' (mapped to %s) out of range for '%s' [%s..%s]" % (axis_name, v, obj_name, axis.minimum, axis.maximum)
 
-
 	# Normalize master locations
 
-	normalized_master_locs = [o['location'] for o in masters]
-	log.info("Internal master locations:\n%s", pformat(normalized_master_locs))
+	internal_master_locs = [o.location for o in masters]
+	log.info("Internal master locations:\n%s", pformat(internal_master_locs))
 
 	# TODO This mapping should ideally be moved closer to logic in _add_fvar/avar
 	internal_axis_supports = {}
@@ -798,9 +833,8 @@ def load_designspace(designspace_filename):
 		internal_axis_supports[axis.name] = [axis.map_forward(v) for v in triple]
 	log.info("Internal axis supports:\n%s", pformat(internal_axis_supports))
 
-	normalized_master_locs = [models.normalizeLocation(m, internal_axis_supports) for m in normalized_master_locs]
+	normalized_master_locs = [models.normalizeLocation(m, internal_axis_supports) for m in internal_master_locs]
 	log.info("Normalized master locations:\n%s", pformat(normalized_master_locs))
-
 
 	# Find base master
 	base_idx = None
@@ -811,10 +845,57 @@ def load_designspace(designspace_filename):
 	assert base_idx is not None, "Base master not found; no master at default location?"
 	log.info("Index of base master: %s", base_idx)
 
-	return axes, internal_axis_supports, base_idx, normalized_master_locs, masters, instances
+	return _DesignSpaceData(
+		axes,
+		internal_axis_supports,
+		base_idx,
+		normalized_master_locs,
+		masters,
+		instances,
+		ds.rules,
+	)
 
 
-def build(designspace_filename, master_finder=lambda s:s):
+# https://docs.microsoft.com/en-us/typography/opentype/spec/os2#uswidthclass
+WDTH_VALUE_TO_OS2_WIDTH_CLASS = {
+	50: 1,
+	62.5: 2,
+	75: 3,
+	87.5: 4,
+	100: 5,
+	112.5: 6,
+	125: 7,
+	150: 8,
+	200: 9,
+}
+
+
+def set_default_weight_width_slant(font, location):
+	if "OS/2" in font:
+		if "wght" in location:
+			weight_class = otRound(max(1, min(location["wght"], 1000)))
+			if font["OS/2"].usWeightClass != weight_class:
+				log.info("Setting OS/2.usWidthClass = %s", weight_class)
+				font["OS/2"].usWeightClass = weight_class
+
+		if "wdth" in location:
+			# map 'wdth' axis (50..200) to OS/2.usWidthClass (1..9), rounding to closest
+			widthValue = min(max(location["wdth"], 50), 200)
+			widthClass = otRound(
+				models.piecewiseLinearMap(widthValue, WDTH_VALUE_TO_OS2_WIDTH_CLASS)
+			)
+			if font["OS/2"].usWidthClass != widthClass:
+				log.info("Setting OS/2.usWidthClass = %s", widthClass)
+				font["OS/2"].usWidthClass = widthClass
+
+	if "slnt" in location and "post" in font:
+		italicAngle = max(-90, min(location["slnt"], 90))
+		if font["post"].italicAngle != italicAngle:
+			log.info("Setting post.italicAngle = %s", italicAngle)
+			font["post"].italicAngle = italicAngle
+
+
+def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 	"""
 	Build variation font from a designspace file.
 
@@ -822,40 +903,147 @@ def build(designspace_filename, master_finder=lambda s:s):
 	filename as found in designspace file and map it to master font
 	binary as to be opened (eg. .ttf or .otf).
 	"""
+	if hasattr(designspace, "sources"):  # Assume a DesignspaceDocument
+		pass
+	else:  # Assume a file path
+		designspace = DesignSpaceDocument.fromfile(designspace)
 
-	axes, internal_axis_supports, base_idx, normalized_master_locs, masters, instances = load_designspace(designspace_filename)
-
+	ds = load_designspace(designspace)
 	log.info("Building variable font")
+
 	log.info("Loading master fonts")
-	basedir = os.path.dirname(designspace_filename)
-	master_ttfs = [master_finder(os.path.join(basedir, m['filename'])) for m in masters]
-	master_fonts = [TTFont(ttf_path) for ttf_path in master_ttfs]
-	# Reload base font as target font
-	vf = TTFont(master_ttfs[base_idx])
+	master_fonts = load_masters(designspace, master_finder)
+
+	# TODO: 'master_ttfs' is unused except for return value, remove later
+	master_ttfs = []
+	for master in master_fonts:
+		try:
+			master_ttfs.append(master.reader.file.name)
+		except AttributeError:
+			master_ttfs.append(None)  # in-memory fonts have no path
+
+	# Copy the base master to work from it
+	vf = deepcopy(master_fonts[ds.base_idx])
 
 	# TODO append masters as named-instances as well; needs .designspace change.
-	fvar = _add_fvar(vf, axes, instances)
-	_add_avar(vf, axes)
-	del instances
+	fvar = _add_fvar(vf, ds.axes, ds.instances)
+	if 'STAT' not in exclude:
+		_add_stat(vf, ds.axes)
+	if 'avar' not in exclude:
+		_add_avar(vf, ds.axes)
 
 	# Map from axis names to axis tags...
-	normalized_master_locs = [{axes[k].tag:v for k,v in loc.items()} for loc in normalized_master_locs]
-	#del axes
+	normalized_master_locs = [
+		{ds.axes[k].tag: v for k,v in loc.items()} for loc in ds.normalized_master_locs
+	]
 	# From here on, we use fvar axes only
 	axisTags = [axis.axisTag for axis in fvar.axes]
 
 	# Assume single-model for now.
-	model = models.VariationModel(normalized_master_locs)
-	assert 0 == model.mapping[base_idx]
+	model = models.VariationModel(normalized_master_locs, axisOrder=axisTags)
+	assert 0 == model.mapping[ds.base_idx]
 
 	log.info("Building variations tables")
-	_add_MVAR(vf, model, master_fonts, axisTags)
-	_add_HVAR(vf, model, master_fonts, axisTags)
-	_merge_OTL(vf, model, master_fonts, axisTags)
-	if 'glyf' in vf:
-		_add_gvar(vf, model, master_fonts)
+	if 'MVAR' not in exclude:
+		_add_MVAR(vf, model, master_fonts, axisTags)
+	if 'HVAR' not in exclude:
+		_add_HVAR(vf, model, master_fonts, axisTags)
+	if 'VVAR' not in exclude and 'vmtx' in vf:
+		_add_VVAR(vf, model, master_fonts, axisTags)
+	if 'GDEF' not in exclude or 'GPOS' not in exclude:
+		_merge_OTL(vf, model, master_fonts, axisTags)
+	if 'gvar' not in exclude and 'glyf' in vf:
+		_add_gvar(vf, model, master_fonts, optimize=optimize)
+	if 'cvar' not in exclude and 'glyf' in vf:
+		_merge_TTHinting(vf, model, master_fonts)
+	if 'GSUB' not in exclude and ds.rules:
+		_add_GSUB_feature_variations(vf, ds.axes, ds.internal_axis_supports, ds.rules)
+	if 'CFF2' not in exclude and 'CFF ' in vf:
+		_add_CFF2(vf, model, master_fonts)
+		if "post" in vf:
+			# set 'post' to format 2 to keep the glyph names dropped from CFF2
+			post = vf["post"]
+			if post.formatType != 2.0:
+				post.formatType = 2.0
+				post.extraNames = []
+				post.mapping = {}
 
+	set_default_weight_width_slant(
+		vf, location={axis.axisTag: axis.defaultValue for axis in vf["fvar"].axes}
+	)
+
+	for tag in exclude:
+		if tag in vf:
+			del vf[tag]
+
+	# TODO: Only return vf for 4.0+, the rest is unused.
 	return vf, model, master_ttfs
+
+
+def _open_font(path, master_finder=lambda s: s):
+	# load TTFont masters from given 'path': this can be either a .TTX or an
+	# OpenType binary font; or if neither of these, try use the 'master_finder'
+	# callable to resolve the path to a valid .TTX or OpenType font binary.
+	from fontTools.ttx import guessFileType
+
+	master_path = os.path.normpath(path)
+	tp = guessFileType(master_path)
+	if tp is None:
+		# not an OpenType binary/ttx, fall back to the master finder.
+		master_path = master_finder(master_path)
+		tp = guessFileType(master_path)
+	if tp in ("TTX", "OTX"):
+		font = TTFont()
+		font.importXML(master_path)
+	elif tp in ("TTF", "OTF", "WOFF", "WOFF2"):
+		font = TTFont(master_path)
+	else:
+		raise VarLibError("Invalid master path: %r" % master_path)
+	return font
+
+
+def load_masters(designspace, master_finder=lambda s: s):
+	"""Ensure that all SourceDescriptor.font attributes have an appropriate TTFont
+	object loaded, or else open TTFont objects from the SourceDescriptor.path
+	attributes.
+
+	The paths can point to either an OpenType font, a TTX file, or a UFO. In the
+	latter case, use the provided master_finder callable to map from UFO paths to
+	the respective master font binaries (e.g. .ttf, .otf or .ttx).
+
+	Return list of master TTFont objects in the same order they are listed in the
+	DesignSpaceDocument.
+	"""
+	for master in designspace.sources:
+		# If a SourceDescriptor has a layer name, demand that the compiled TTFont
+		# be supplied by the caller. This spares us from modifying MasterFinder.
+		if master.layerName and master.font is None:
+			raise AttributeError(
+				"Designspace source '%s' specified a layer name but lacks the "
+				"required TTFont object in the 'font' attribute."
+				% (master.name or "<Unknown>")
+			)
+
+	return designspace.loadSourceFonts(_open_font, master_finder=master_finder)
+
+
+class MasterFinder(object):
+
+	def __init__(self, template):
+		self.template = template
+
+	def __call__(self, src_path):
+		fullname = os.path.abspath(src_path)
+		dirname, basename = os.path.split(fullname)
+		stem, ext = os.path.splitext(basename)
+		path = self.template.format(
+			fullname=fullname,
+			dirname=dirname,
+			basename=basename,
+			stem=stem,
+			ext=ext,
+		)
+		return os.path.normpath(path)
 
 
 def main(args=None):
@@ -864,16 +1052,72 @@ def main(args=None):
 
 	parser = ArgumentParser(prog='varLib')
 	parser.add_argument('designspace')
+	parser.add_argument(
+		'-o',
+		metavar='OUTPUTFILE',
+		dest='outfile',
+		default=None,
+		help='output file'
+	)
+	parser.add_argument(
+		'-x',
+		metavar='TAG',
+		dest='exclude',
+		action='append',
+		default=[],
+		help='exclude table'
+	)
+	parser.add_argument(
+		'--disable-iup',
+		dest='optimize',
+		action='store_false',
+		help='do not perform IUP optimization'
+	)
+	parser.add_argument(
+		'--master-finder',
+		default='master_ttf_interpolatable/{stem}.ttf',
+		help=(
+			'templated string used for finding binary font '
+			'files given the source file names defined in the '
+			'designspace document. The following special strings '
+			'are defined: {fullname} is the absolute source file '
+			'name; {basename} is the file name without its '
+			'directory; {stem} is the basename without the file '
+			'extension; {ext} is the source file extension; '
+			'{dirname} is the directory of the absolute file '
+			'name. The default value is "%(default)s".'
+		)
+	)
+	logging_group = parser.add_mutually_exclusive_group(required=False)
+	logging_group.add_argument(
+		"-v", "--verbose",
+                action="store_true",
+                help="Run more verbosely.")
+	logging_group.add_argument(
+		"-q", "--quiet",
+                action="store_true",
+                help="Turn verbosity off.")
 	options = parser.parse_args(args)
 
-	# TODO: allow user to configure logging via command-line options
-	configLogger(level="INFO")
+	configLogger(level=(
+		"DEBUG" if options.verbose else
+		"ERROR" if options.quiet else
+		"INFO"))
 
 	designspace_filename = options.designspace
-	finder = lambda s: s.replace('master_ufo', 'master_ttf_interpolatable').replace('.ufo', '.ttf')
-	outfile = os.path.splitext(designspace_filename)[0] + '-VF.ttf'
+	finder = MasterFinder(options.master_finder)
 
-	vf, model, master_ttfs = build(designspace_filename, finder)
+	vf, _, _ = build(
+		designspace_filename,
+		finder,
+		exclude=options.exclude,
+		optimize=options.optimize
+	)
+
+	outfile = options.outfile
+	if outfile is None:
+		ext = "otf" if vf.sfntVersion == "OTTO" else "ttf"
+		outfile = os.path.splitext(designspace_filename)[0] + '-VF.' + ext
 
 	log.info("Saving variation font %s", outfile)
 	vf.save(outfile)

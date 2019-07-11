@@ -8,7 +8,10 @@ import sys
 import logging
 import timeit
 from functools import wraps
-import collections
+try:
+	from collections.abc import Mapping, Callable
+except ImportError:  # python < 3.3
+	from collections import Mapping, Callable
 import warnings
 
 try:
@@ -64,7 +67,7 @@ class LevelFormatter(logging.Formatter):
 		if isinstance(fmt, basestring):
 			default_format = fmt
 			custom_formats = {}
-		elif isinstance(fmt, collections.Mapping):
+		elif isinstance(fmt, Mapping):
 			custom_formats = dict(fmt)
 			default_format = custom_formats.pop("*", None)
 		else:
@@ -247,8 +250,8 @@ class Timer(object):
 	upon exiting the with-statement.
 
 	>>> import logging
-	>>> log = logging.getLogger("fontTools")
-	>>> configLogger(level="DEBUG", format="%(message)s", stream=sys.stdout)
+	>>> log = logging.getLogger("my-fancy-timer-logger")
+	>>> configLogger(logger=log, level="DEBUG", format="%(message)s", stream=sys.stdout)
 	>>> with Timer(log, 'do something'):
 	...     time.sleep(0.01)
 	Took ... to do something
@@ -360,7 +363,7 @@ class Timer(object):
 		Timer instance, referencing the same logger.
 		A 'level' keyword can also be passed to override self.level.
 		"""
-		if isinstance(func_or_msg, collections.Callable):
+		if isinstance(func_or_msg, Callable):
 			func = func_or_msg
 			# use the function name when no explicit 'msg' is provided
 			if not self.msg:
@@ -431,8 +434,8 @@ class ChannelsFilter(logging.Filter):
 
 class CapturingLogHandler(logging.Handler):
 	def __init__(self, logger, level):
+		super(CapturingLogHandler, self).__init__(level=level)
 		self.records = []
-		self.level = logging._checkLevel(level)
 		if isinstance(logger, basestring):
 			self.logger = logging.getLogger(logger)
 		else:
@@ -441,35 +444,35 @@ class CapturingLogHandler(logging.Handler):
 	def __enter__(self):
 		self.original_disabled = self.logger.disabled
 		self.original_level = self.logger.level
+		self.original_propagate = self.logger.propagate
 
 		self.logger.addHandler(self)
-		self.logger.level = self.level
+		self.logger.setLevel(self.level)
 		self.logger.disabled = False
+		self.logger.propagate = False
 
 		return self
 
 	def __exit__(self, type, value, traceback):
 		self.logger.removeHandler(self)
-		self.logger.level = self.original_level
-		self.logger.disabled = self.logger.disabled
+		self.logger.setLevel(self.original_level)
+		self.logger.disabled = self.original_disabled
+		self.logger.propagate = self.original_propagate
+
 		return self
 
-	def handle(self, record):
+	def emit(self, record):
 		self.records.append(record)
 
-	def emit(self, record):
-		pass
-
-	def createLock(self):
-		self.lock = None
-
-	def assertRegex(self, regexp):
+	def assertRegex(self, regexp, msg=None):
 		import re
 		pattern = re.compile(regexp)
 		for r in self.records:
-			if pattern.search(r.msg):
+			if pattern.search(r.getMessage()):
 				return True
-		assert 0, "Pattern '%s' not found in logger records" % regexp
+		if msg is None:
+			msg = "Pattern '%s' not found in logger records" % regexp
+		assert 0, msg
 
 
 class LogMixin(object):
@@ -500,8 +503,12 @@ class LogMixin(object):
 
 	@property
 	def log(self):
-		name = ".".join([self.__class__.__module__, self.__class__.__name__])
-		return logging.getLogger(name)
+		if not hasattr(self, "_log"):
+			name = ".".join(
+				(self.__class__.__module__, self.__class__.__name__)
+			)
+			self._log = logging.getLogger(name)
+		return self._log
 
 
 def deprecateArgument(name, msg, category=UserWarning):

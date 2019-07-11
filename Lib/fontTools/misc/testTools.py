@@ -1,8 +1,16 @@
 """Helpers for writing unit tests."""
 
-from __future__ import print_function, division, absolute_import
-from __future__ import unicode_literals
-import collections
+from __future__ import (print_function, division, absolute_import,
+                        unicode_literals)
+try:
+    from collections.abc import Iterable
+except ImportError:  # python < 3.3
+    from collections import Iterable
+import os
+import shutil
+import sys
+import tempfile
+from unittest import TestCase as _TestCase
 from fontTools.misc.py23 import *
 from fontTools.misc.xmlWriter import XMLWriter
 
@@ -24,7 +32,7 @@ def parseXML(xmlSnippet):
         xml += xmlSnippet
     elif isinstance(xmlSnippet, unicode):
         xml += tobytes(xmlSnippet, 'utf-8')
-    elif isinstance(xmlSnippet, collections.Iterable):
+    elif isinstance(xmlSnippet, Iterable):
         xml += b"".join(tobytes(s, 'utf-8') for s in xmlSnippet)
     else:
         raise TypeError("expected string or sequence of strings; found %r"
@@ -37,7 +45,7 @@ def parseXML(xmlSnippet):
 class FakeFont:
     def __init__(self, glyphs):
         self.glyphOrder_ = glyphs
-        self.reverseGlyphOrderDict_ = {g:i for i,g in enumerate(glyphs)}
+        self.reverseGlyphOrderDict_ = {g: i for i, g in enumerate(glyphs)}
         self.lazy = False
         self.tables = {}
 
@@ -114,29 +122,65 @@ def getXML(func, ttFont=None):
 
 
 class MockFont(object):
-	"""A font-like object that automatically adds any looked up glyphname
-	to its glyphOrder."""
+    """A font-like object that automatically adds any looked up glyphname
+    to its glyphOrder."""
 
-	def __init__(self):
-		self._glyphOrder = ['.notdef']
-		class AllocatingDict(dict):
-			def __missing__(reverseDict, key):
-				self._glyphOrder.append(key)
-				gid = len(reverseDict)
-				reverseDict[key] = gid
-				return gid
-		self._reverseGlyphOrder = AllocatingDict({'.notdef': 0})
-		self.lazy = False
+    def __init__(self):
+        self._glyphOrder = ['.notdef']
 
-	def getGlyphID(self, glyph, requireReal=None):
-		gid = self._reverseGlyphOrder[glyph]
-		return gid
+        class AllocatingDict(dict):
+            def __missing__(reverseDict, key):
+                self._glyphOrder.append(key)
+                gid = len(reverseDict)
+                reverseDict[key] = gid
+                return gid
+        self._reverseGlyphOrder = AllocatingDict({'.notdef': 0})
+        self.lazy = False
 
-	def getReverseGlyphMap(self):
-		return self._reverseGlyphOrder
+    def getGlyphID(self, glyph, requireReal=None):
+        gid = self._reverseGlyphOrder[glyph]
+        return gid
 
-	def getGlyphName(self, gid):
-		return self._glyphOrder[gid]
+    def getReverseGlyphMap(self):
+        return self._reverseGlyphOrder
 
-	def getGlyphOrder(self):
-		return self._glyphOrder
+    def getGlyphName(self, gid):
+        return self._glyphOrder[gid]
+
+    def getGlyphOrder(self):
+        return self._glyphOrder
+
+
+class TestCase(_TestCase):
+
+    def __init__(self, methodName):
+        _TestCase.__init__(self, methodName)
+        # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
+        # and fires deprecation warnings if a program uses the old name.
+        if not hasattr(self, "assertRaisesRegex"):
+            self.assertRaisesRegex = self.assertRaisesRegexp
+
+
+class DataFilesHandler(TestCase):
+
+    def setUp(self):
+        self.tempdir = None
+        self.num_tempfiles = 0
+
+    def tearDown(self):
+        if self.tempdir:
+            shutil.rmtree(self.tempdir)
+
+    def getpath(self, testfile):
+        folder = os.path.dirname(sys.modules[self.__module__].__file__)
+        return os.path.join(folder, "data", testfile)
+
+    def temp_dir(self):
+        if not self.tempdir:
+            self.tempdir = tempfile.mkdtemp()
+
+    def temp_font(self, font_path, file_name):
+        self.temp_dir()
+        temppath = os.path.join(self.tempdir, file_name)
+        shutil.copy2(font_path, temppath)
+        return temppath

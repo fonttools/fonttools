@@ -1,7 +1,7 @@
 languagesystem DFLT dflt;
 
 # Mixes kerning between single glyphs, and class-based kerning.
-# https://github.com/behdad/fonttools/issues/456
+# https://github.com/fonttools/fonttools/issues/456
 lookup MixedKerning {
     pos v v 14;
     pos [D O Q] [T V W] -26;

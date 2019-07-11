@@ -17,7 +17,7 @@ class DefaultTable(object):
 	def compile(self, ttFont):
 		return self.data
 
-	def toXML(self, writer, ttFont, progress=None):
+	def toXML(self, writer, ttFont, **kwargs):
 		if hasattr(self, "ERROR"):
 			writer.comment("An error occurred during the decompilation of this table")
 			writer.newline()

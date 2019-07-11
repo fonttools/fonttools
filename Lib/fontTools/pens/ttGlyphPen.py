@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from array import array
-from fontTools.pens.basePen import AbstractPen
+from fontTools.pens.basePen import LoggingPen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.ttLib.tables import ttProgram
 from fontTools.ttLib.tables._g_l_y_f import Glyph
@@ -12,11 +12,32 @@ from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 __all__ = ["TTGlyphPen"]
 
 
-class TTGlyphPen(AbstractPen):
-    """Pen used for drawing to a TrueType glyph."""
+# the max value that can still fit in an F2Dot14:
+# 1.99993896484375
+MAX_F2DOT14 = 0x7FFF / (1 << 14)
 
-    def __init__(self, glyphSet):
+
+class TTGlyphPen(LoggingPen):
+    """Pen used for drawing to a TrueType glyph.
+
+    If `handleOverflowingTransforms` is True, the components' transform values
+    are checked that they don't overflow the limits of a F2Dot14 number:
+    -2.0 <= v < +2.0. If any transform value exceeds these, the composite
+    glyph is decomposed.
+    An exception to this rule is done for values that are very close to +2.0
+    (both for consistency with the -2.0 case, and for the relative frequency
+    these occur in real fonts). When almost +2.0 values occur (and all other
+    values are within the range -2.0 <= x <= +2.0), they are clamped to the
+    maximum positive value that can still be encoded as an F2Dot14: i.e.
+    1.99993896484375.
+    If False, no check is done and all components are translated unmodified
+    into the glyf table, followed by an inevitable `struct.error` once an
+    attempt is made to compile them.
+    """
+
+    def __init__(self, glyphSet, handleOverflowingTransforms=True):
         self.glyphSet = glyphSet
+        self.handleOverflowingTransforms = handleOverflowingTransforms
         self.init()
 
     def init(self):
@@ -79,24 +100,46 @@ class TTGlyphPen(AbstractPen):
     def addComponent(self, glyphName, transformation):
         self.components.append((glyphName, transformation))
 
-    def glyph(self, componentFlags=0x4):
-        assert self._isClosed(), "Didn't close last contour."
-
+    def _buildComponents(self, componentFlags):
+        if self.handleOverflowingTransforms:
+            # we can't encode transform values > 2 or < -2 in F2Dot14,
+            # so we must decompose the glyph if any transform exceeds these
+            overflowing = any(s > 2 or s < -2
+                              for (glyphName, transformation) in self.components
+                              for s in transformation[:4])
         components = []
         for glyphName, transformation in self.components:
-            if self.points:
-                # can't have both, so decompose the glyph
+            if glyphName not in self.glyphSet:
+                self.log.warning(
+                    "skipped non-existing component '%s'", glyphName
+                )
+                continue
+            if (self.points or
+                    (self.handleOverflowingTransforms and overflowing)):
+                # can't have both coordinates and components, so decompose
                 tpen = TransformPen(self, transformation)
                 self.glyphSet[glyphName].draw(tpen)
                 continue
 
             component = GlyphComponent()
             component.glyphName = glyphName
-            if transformation[:4] != (1, 0, 0, 1):
-                component.transform = (transformation[:2], transformation[2:4])
             component.x, component.y = transformation[4:]
+            transformation = transformation[:4]
+            if transformation != (1, 0, 0, 1):
+                if (self.handleOverflowingTransforms and
+                        any(MAX_F2DOT14 < s <= 2 for s in transformation)):
+                    # clamp values ~= +2.0 so we can keep the component
+                    transformation = tuple(MAX_F2DOT14 if MAX_F2DOT14 < s <= 2
+                                           else s for s in transformation)
+                component.transform = (transformation[:2], transformation[2:])
             component.flags = componentFlags
             components.append(component)
+        return components
+
+    def glyph(self, componentFlags=0x4):
+        assert self._isClosed(), "Didn't close last contour."
+
+        components = self._buildComponents(componentFlags)
 
         glyph = Glyph()
         glyph.coordinates = GlyphCoordinates(self.points)

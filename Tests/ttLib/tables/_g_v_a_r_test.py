@@ -25,9 +25,9 @@ GVAR_DATA = deHexStr(
     #
     # 28: Glyph variation data for glyph #1, "space"
     # ----------------------------------------------
-    "0001 000C "      #  28: tupleVariationCount=1, offsetToData=12(+28=40)
-    "000B "           #  32: tvHeader[0].variationDataSize=11
-    "A000 "           #  34: tvHeader[0].tupleIndex=EMBEDDED_PEAK|PRIVATE_POINTS
+    "8001 000C "      #  28: tupleVariationCount=1|TUPLES_SHARE_POINT_NUMBERS, offsetToData=12(+28=40)
+    "000A "           #  32: tvHeader[0].variationDataSize=10
+    "8000 "           #  34: tvHeader[0].tupleIndex=EMBEDDED_PEAK
     "0000 2CCD "      #  36: tvHeader[0].peakTuple={wght:0.0, wdth:0.7}
     "00 "             #  40: all points
     "03 01 02 03 04 " #  41: deltaX=[1, 2, 3, 4]
@@ -36,10 +36,9 @@ GVAR_DATA = deHexStr(
     #
     # 52: Glyph variation data for glyph #2, "I"
     # ------------------------------------------
-    "0002 001c "      #  52: tupleVariationCount=2, offsetToData=28(+52=80)
-    "0013 "           #  56: tvHeader[0].variationDataSize=19
-    "E000 "           #  58: tvHeader[0].tupleIndex=
-    #                 #      EMBEDDED_PEAK|INTERMEDIATE_REGION|PRIVATE_POINTS
+    "8002 001c "      #  52: tupleVariationCount=2|TUPLES_SHARE_POINT_NUMBERS, offsetToData=28(+52=80)
+    "0012 "           #  56: tvHeader[0].variationDataSize=18
+    "C000 "           #  58: tvHeader[0].tupleIndex=EMBEDDED_PEAK|INTERMEDIATE_REGION
     "2000 0000 "      #  60: tvHeader[0].peakTuple={wght:0.5, wdth:0.0}
     "0000 0000 "      #  64: tvHeader[0].intermediateStart={wght:0.0, wdth:0.0}
     "4000 0000 "      #  68: tvHeader[0].intermediateEnd={wght:1.0, wdth:0.0}
@@ -94,7 +93,7 @@ GVAR_XML = [
     '</glyphVariations>',
     '<glyphVariations glyph="I">',
     '  <tuple>',
-    '    <coord axis="wght" max="1.0" min="0.0" value="0.5"/>',
+    '    <coord axis="wght" min="0.0" value="0.5" max="1.0"/>',
     '    <delta pt="0" x="3" y="3"/>',
     '    <delta pt="1" x="1" y="1"/>',
     '    <delta pt="2" x="4" y="4"/>',
