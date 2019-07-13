@@ -41,9 +41,9 @@ def drawTestGlyph(pen):
 
 
 fb = FontBuilder(1024, isTTF=True)
-fb.setupGlyphOrder([".notdef", ".null", ".space", "A", "a"])
-fb.setupCharacterMap({32: ".space", 65: "A", 97: "a"})
-advanceWidths = {".notdef": 600, ".space": 500, "A": 600, "a": 600, ".null": 0}
+fb.setupGlyphOrder([".notdef", ".null", "space", "A", "a"])
+fb.setupCharacterMap({32: "space", 65: "A", 97: "a"})
+advanceWidths = {".notdef": 600, "space": 500, "A": 600, "a": 600, ".null": 0}
 
 familyName = "HelloTestFont"
 styleName = "TotallyNormal"
@@ -61,7 +61,7 @@ nameStrings = dict(
 pen = TTGlyphPen(None)
 drawTestGlyph(pen)
 glyph = pen.glyph()
-glyphs = {".notdef": glyph, ".space": glyph, "A": glyph, "a": glyph, ".null": glyph}
+glyphs = {".notdef": glyph, "space": glyph, "A": glyph, "a": glyph, ".null": glyph}
 fb.setupGlyf(glyphs)
 metrics = {}
 glyphTable = fb.font["glyf"]
