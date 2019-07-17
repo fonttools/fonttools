@@ -70,7 +70,7 @@ for gn, advanceWidth in advanceWidths.items():
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=824, descent=-200)
 fb.setupNameTable(nameStrings)
-fb.setupOS2(sTypoAscender=824)
+fb.setupOS2(sTypoAscender=824, usWinAscent=824, usWinDescent=200)
 fb.setupPost()
 fb.save("test.ttf")
 ```
