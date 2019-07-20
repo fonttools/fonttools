@@ -91,19 +91,21 @@ def drawTestGlyph(pen):
 
 
 fb = FontBuilder(1024, isTTF=False)
-fb.setupGlyphOrder([".notdef", ".null", "A", "a"])
-fb.setupCharacterMap({65: "A", 97: "a"})
-
-advanceWidths = {".notdef": 600, "A": 600, "a": 600, ".null": 600}
+fb.setupGlyphOrder([".notdef", ".null", "space", "A", "a"])
+fb.setupCharacterMap({32: "space", 65: "A", 97: "a"})
+advanceWidths = {".notdef": 600, "space": 500, "A": 600, "a": 600, ".null": 0}
 
 familyName = "HelloTestFont"
 styleName = "TotallyNormal"
+version = "0.1"
+
 nameStrings = dict(
     familyName=dict(en=familyName, nl="HalloTestFont"),
     styleName=dict(en=styleName, nl="TotaalNormaal"),
     uniqueFontIdentifier="fontBuilder: " + familyName + "." + styleName,
     fullName=familyName + "-" + styleName,
     psName=familyName + "-" + styleName,
+    version="Version " + version,
 )
 
 pen = T2CharStringPen(600, None)
@@ -111,23 +113,21 @@ drawTestGlyph(pen)
 charString = pen.getCharString()
 charStrings = {
     ".notdef": charString,
+    "space": charString,
     "A": charString,
     "a": charString,
     ".null": charString,
 }
 fb.setupCFF(nameStrings["psName"], {"FullName": nameStrings["psName"]}, charStrings, {})
-
 lsb = {gn: cs.calcBounds(None)[0] for gn, cs in charStrings.items()}
 metrics = {}
 for gn, advanceWidth in advanceWidths.items():
     metrics[gn] = (advanceWidth, lsb[gn])
 fb.setupHorizontalMetrics(metrics)
-
 fb.setupHorizontalHeader(ascent=824, descent=200)
 fb.setupNameTable(nameStrings)
-fb.setupOS2()
+fb.setupOS2(sTypoAscender=824, usWinAscent=824, usWinDescent=200)
 fb.setupPost()
-
 fb.save("test.otf")
 ```
 """
