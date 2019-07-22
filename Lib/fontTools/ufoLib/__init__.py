@@ -1391,7 +1391,7 @@ class UFOWriter(UFOReader):
 	def _getGlyphSetFormatVersion1(self, validateRead, validateWrite, glyphNameToFileNameFunc=None):
 		from fontTools.ufoLib.glifLib import GlyphSet
 
-		glyphSubFS = self.fs.makedir(DEFAULT_GLYPHS_DIRNAME, recreate=True),
+		glyphSubFS = self.fs.makedir(DEFAULT_GLYPHS_DIRNAME, recreate=True)
 		return GlyphSet(
 			glyphSubFS,
 			glyphNameToFileNameFunc=glyphNameToFileNameFunc,
