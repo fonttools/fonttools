@@ -311,13 +311,15 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 
 	log.info("Generating gvar")
 	assert "gvar" not in font
+	gvar = font["gvar"] = newTable('gvar')
+	gvar.version = 1
+	gvar.reserved = 0
+	gvar.variations = {}
 
 	glyf = font['glyf']
 
 	# use hhea.ascent of base master as default vertical origin when vmtx is missing
 	defaultVerticalOrigin = font['hhea'].ascent
-
-	variations = {}
 	for glyph in font.getGlyphOrder():
 
 		isComposite = glyf[glyph].isComposite()
@@ -337,6 +339,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 		del allControls
 
 		# Update gvar
+		gvar.variations[glyph] = []
 		deltas = model.getDeltas(allCoords)
 		supports = model.supports
 		assert len(deltas) == len(supports)
@@ -375,14 +378,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 					if optimized_len < unoptimized_len:
 						var = var_opt
 
-			variations.setdefault(glyph, []).append(var)
-
-	if variations:
-		gvar = font["gvar"] = newTable('gvar')
-		gvar.version = 1
-		gvar.reserved = 0
-		gvar.variations = variations
-
+			gvar.variations[glyph].append(var)
 
 def _remove_TTHinting(font):
 	for tag in ("cvar", "cvt ", "fpgm", "prep"):
@@ -486,6 +482,10 @@ def _add_VHVAR(font, masterModel, master_ttfs, axisTags, tableFields):
 	tableTag = tableFields.tableTag
 	assert tableTag not in font
 	log.info("Generating " + tableTag)
+	VHVAR = newTable(tableTag)
+	tableClass = getattr(ot, tableTag)
+	vhvar = VHVAR.table = tableClass()
+	vhvar.Version = 0x00010000
 
 	glyphOrder = font.getGlyphOrder()
 
@@ -505,15 +505,7 @@ def _add_VHVAR(font, masterModel, master_ttfs, axisTags, tableFields):
 		masterModel, master_ttfs, axisTags, glyphOrder, advMetricses,
 		vOrigMetricses)
 
-	if not metricsStore.VarRegionList.Region:  # VarStore is empty
-		return
-
-	VHVAR = newTable(tableTag)
-	tableClass = getattr(ot, tableTag)
-	vhvar = VHVAR.table = tableClass()
-	vhvar.Version = 0x00010000
 	vhvar.VarStore = metricsStore
-
 	if advanceMapping is None:
 		setattr(vhvar, tableFields.advMapping, None)
 	else:
@@ -524,7 +516,7 @@ def _add_VHVAR(font, masterModel, master_ttfs, axisTags, tableFields):
 	setattr(vhvar, tableFields.sb2, None)
 
 	font[tableTag] = VHVAR
-
+	return
 
 def _get_advance_metrics(font, masterModel, master_ttfs,
 		axisTags, glyphOrder, advMetricses, vOrigMetricses=None):
