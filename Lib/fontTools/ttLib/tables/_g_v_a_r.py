@@ -217,8 +217,9 @@ def compileGlyph_(variations, pointCount, axisTags, sharedCoordIndices):
 		variations, pointCount, axisTags, sharedCoordIndices)
 	if tupleVariationCount == 0:
 		return b""
-	result = (struct.pack(">HH", tupleVariationCount, 4 + len(tuples)) +
-	          tuples + data)
+	result = (
+		struct.pack(">HH", tupleVariationCount, 4 + len(tuples)) + tuples + data
+	)
 	if len(result) % 2 != 0:
 		result = result + b"\0"  # padding
 	return result
@@ -229,6 +230,8 @@ def decompileGlyph_(pointCount, sharedTuples, axisTags, data):
 		return []
 	tupleVariationCount, offsetToData = struct.unpack(">HH", data[:4])
 	dataPos = offsetToData
-	return tv.decompileTupleVariationStore("gvar", axisTags,
-                                           tupleVariationCount, pointCount,
-                                           sharedTuples, data, 4, offsetToData)
+	return tv.decompileTupleVariationStore(
+		"gvar", axisTags,
+		tupleVariationCount, pointCount,
+		sharedTuples, data, 4, offsetToData
+	)

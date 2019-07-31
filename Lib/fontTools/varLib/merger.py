@@ -292,7 +292,8 @@ def merge(merger, self, lst):
 			if vpair is None:
 				v1, v2 = None, None
 			else:
-				v1, v2 = vpair.Value1, vpair.Value2
+				v1 = getattr(vpair, "Value1", None)
+				v2 = getattr(vpair, "Value2", None)
 			v.Value1 = otBase.ValueRecord(merger.valueFormat1, src=v1) if merger.valueFormat1 else None
 			v.Value2 = otBase.ValueRecord(merger.valueFormat2, src=v2) if merger.valueFormat2 else None
 			values[j] = v
@@ -518,19 +519,19 @@ def merge(merger, self, lst):
 	if self.Format == 1:
 		for pairSet in self.PairSet:
 			for pairValueRecord in pairSet.PairValueRecord:
-				pv1 = pairValueRecord.Value1
+				pv1 = getattr(pairValueRecord, "Value1", None)
 				if pv1 is not None:
 					vf1 |= pv1.getFormat()
-				pv2 = pairValueRecord.Value2
+				pv2 = getattr(pairValueRecord, "Value2", None)
 				if pv2 is not None:
 					vf2 |= pv2.getFormat()
 	elif self.Format == 2:
 		for class1Record in self.Class1Record:
 			for class2Record in class1Record.Class2Record:
-				pv1 = class2Record.Value1
+				pv1 = getattr(class2Record, "Value1", None)
 				if pv1 is not None:
 					vf1 |= pv1.getFormat()
-				pv2 = class2Record.Value2
+				pv2 = getattr(class2Record, "Value2", None)
 				if pv2 is not None:
 					vf2 |= pv2.getFormat()
 	self.ValueFormat1 = vf1
@@ -886,17 +887,10 @@ class MutatorMerger(AligningMerger):
 	the operation can benefit from many operations that the
 	aligning merger does."""
 
-	def __init__(self, font, location):
+	def __init__(self, font, instancer, deleteVariations=True):
 		Merger.__init__(self, font)
-		self.location = location
-
-		store = None
-		if 'GDEF' in font:
-			gdef = font['GDEF'].table
-			if gdef.Version >= 0x00010003:
-				store = gdef.VarStore
-
-		self.instancer = VarStoreInstancer(store, font['fvar'].axes, location)
+		self.instancer = instancer
+		self.deleteVariations = deleteVariations
 
 @MutatorMerger.merger(ot.CaretValue)
 def merge(merger, self, lst):
@@ -909,14 +903,16 @@ def merge(merger, self, lst):
 
 	instancer = merger.instancer
 	dev = self.DeviceTable
-	del self.DeviceTable
+	if merger.deleteVariations:
+		del self.DeviceTable
 	if dev:
 		assert dev.DeltaFormat == 0x8000
 		varidx = (dev.StartSize << 16) + dev.EndSize
 		delta = otRound(instancer[varidx])
-		self.Coordinate  += delta
+		self.Coordinate += delta
 
-	self.Format = 1
+	if merger.deleteVariations:
+		self.Format = 1
 
 @MutatorMerger.merger(ot.Anchor)
 def merge(merger, self, lst):
@@ -933,7 +929,8 @@ def merge(merger, self, lst):
 		if not hasattr(self, tableName):
 			continue
 		dev = getattr(self, tableName)
-		delattr(self, tableName)
+		if merger.deleteVariations:
+			delattr(self, tableName)
 		if dev is None:
 			continue
 
@@ -944,7 +941,8 @@ def merge(merger, self, lst):
 		attr = v+'Coordinate'
 		setattr(self, attr, getattr(self, attr) + delta)
 
-	self.Format = 1
+	if merger.deleteVariations:
+		self.Format = 1
 
 @MutatorMerger.merger(otBase.ValueRecord)
 def merge(merger, self, lst):
@@ -953,7 +951,6 @@ def merge(merger, self, lst):
 	self.__dict__ = lst[0].__dict__.copy()
 
 	instancer = merger.instancer
-	# TODO Handle differing valueformats
 	for name, tableName in [('XAdvance','XAdvDevice'),
 				('YAdvance','YAdvDevice'),
 				('XPlacement','XPlaDevice'),
@@ -962,7 +959,8 @@ def merge(merger, self, lst):
 		if not hasattr(self, tableName):
 			continue
 		dev = getattr(self, tableName)
-		delattr(self, tableName)
+		if merger.deleteVariations:
+			delattr(self, tableName)
 		if dev is None:
 			continue
 

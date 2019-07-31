@@ -209,102 +209,6 @@ def _add_stat(font, axes):
 	stat.ElidedFallbackNameID = 2
 
 
-def _get_phantom_points(font, glyphName, defaultVerticalOrigin=None):
-	glyf = font["glyf"]
-	glyph = glyf[glyphName]
-	horizontalAdvanceWidth, leftSideBearing = font["hmtx"].metrics[glyphName]
-	if not hasattr(glyph, 'xMin'):
-		glyph.recalcBounds(glyf)
-	leftSideX = glyph.xMin - leftSideBearing
-	rightSideX = leftSideX + horizontalAdvanceWidth
-	if "vmtx" in font:
-		verticalAdvanceWidth, topSideBearing = font["vmtx"].metrics[glyphName]
-		topSideY = topSideBearing + glyph.yMax
-	else:
-		# without vmtx, use ascent as vertical origin and UPEM as vertical advance
-		# like HarfBuzz does
-		verticalAdvanceWidth = font["head"].unitsPerEm
-		try:
-			topSideY = font["hhea"].ascent
-		except KeyError:
-			# sparse masters may not contain an hhea table; use the ascent
-			# of the default master as the vertical origin
-			assert defaultVerticalOrigin is not None
-			topSideY = defaultVerticalOrigin
-	bottomSideY = topSideY - verticalAdvanceWidth
-	return [
-		(leftSideX, 0),
-		(rightSideX, 0),
-		(0, topSideY),
-		(0, bottomSideY),
-	]
-
-
-# TODO Move to glyf or gvar table proper
-def _GetCoordinates(font, glyphName, defaultVerticalOrigin=None):
-	"""font, glyphName --> glyph coordinates as expected by "gvar" table
-
-	The result includes four "phantom points" for the glyph metrics,
-	as mandated by the "gvar" spec.
-	"""
-	glyf = font["glyf"]
-	if glyphName not in glyf.glyphs: return None
-	glyph = glyf[glyphName]
-	if glyph.isComposite():
-		coord = GlyphCoordinates([(getattr(c, 'x', 0),getattr(c, 'y', 0)) for c in glyph.components])
-		control = (glyph.numberOfContours,[c.glyphName for c in glyph.components])
-	else:
-		allData = glyph.getCoordinates(glyf)
-		coord = allData[0]
-		control = (glyph.numberOfContours,)+allData[1:]
-
-	# Add phantom points for (left, right, top, bottom) positions.
-	phantomPoints = _get_phantom_points(font, glyphName, defaultVerticalOrigin)
-	coord = coord.copy()
-	coord.extend(phantomPoints)
-
-	return coord, control
-
-# TODO Move to glyf or gvar table proper
-def _SetCoordinates(font, glyphName, coord):
-	glyf = font["glyf"]
-	assert glyphName in glyf.glyphs
-	glyph = glyf[glyphName]
-
-	# Handle phantom points for (left, right, top, bottom) positions.
-	assert len(coord) >= 4
-	if not hasattr(glyph, 'xMin'):
-		glyph.recalcBounds(glyf)
-	leftSideX = coord[-4][0]
-	rightSideX = coord[-3][0]
-	topSideY = coord[-2][1]
-	bottomSideY = coord[-1][1]
-
-	for _ in range(4):
-		del coord[-1]
-
-	if glyph.isComposite():
-		assert len(coord) == len(glyph.components)
-		for p,comp in zip(coord, glyph.components):
-			if hasattr(comp, 'x'):
-				comp.x,comp.y = p
-	elif glyph.numberOfContours is 0:
-		assert len(coord) == 0
-	else:
-		assert len(coord) == len(glyph.coordinates)
-		glyph.coordinates = coord
-
-	glyph.recalcBounds(glyf)
-
-	horizontalAdvanceWidth = otRound(rightSideX - leftSideX)
-	if horizontalAdvanceWidth < 0:
-		# unlikely, but it can happen, see:
-		# https://github.com/fonttools/fonttools/pull/1198
-		horizontalAdvanceWidth = 0
-	leftSideBearing = otRound(glyph.xMin - leftSideX)
-	# XXX Handle vertical
-	font["hmtx"].metrics[glyphName] = horizontalAdvanceWidth, leftSideBearing
-
 def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 
 	assert tolerance >= 0
@@ -319,13 +223,13 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 	glyf = font['glyf']
 
 	# use hhea.ascent of base master as default vertical origin when vmtx is missing
-	defaultVerticalOrigin = font['hhea'].ascent
+	baseAscent = font['hhea'].ascent
 	for glyph in font.getGlyphOrder():
 
 		isComposite = glyf[glyph].isComposite()
 
 		allData = [
-			_GetCoordinates(m, glyph, defaultVerticalOrigin=defaultVerticalOrigin)
+			m["glyf"].getCoordinatesAndControls(glyph, m, defaultVerticalOrigin=baseAscent)
 			for m in master_ttfs
 		]
 		model, allData = masterModel.getSubModel(allData)
@@ -346,7 +250,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 
 		# Prepare for IUP optimization
 		origCoords = deltas[0]
-		endPts = control[1] if control[0] >= 1 else list(range(len(control[1])))
+		endPts = control.endPts
 
 		for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
 			if all(abs(v) <= tolerance for v in delta.array) and not isComposite:
@@ -462,20 +366,20 @@ def _merge_TTHinting(font, masterModel, master_ttfs, tolerance=0.5):
 		var = TupleVariation(support, delta)
 		cvar.variations.append(var)
 
-MetricsFields = namedtuple('MetricsFields',
+_MetricsFields = namedtuple('_MetricsFields',
 	['tableTag', 'metricsTag', 'sb1', 'sb2', 'advMapping', 'vOrigMapping'])
 
-hvarFields = MetricsFields(tableTag='HVAR', metricsTag='hmtx', sb1='LsbMap',
+HVAR_FIELDS = _MetricsFields(tableTag='HVAR', metricsTag='hmtx', sb1='LsbMap',
 	sb2='RsbMap', advMapping='AdvWidthMap', vOrigMapping=None)
 
-vvarFields = MetricsFields(tableTag='VVAR', metricsTag='vmtx', sb1='TsbMap',
+VVAR_FIELDS = _MetricsFields(tableTag='VVAR', metricsTag='vmtx', sb1='TsbMap',
 	sb2='BsbMap', advMapping='AdvHeightMap', vOrigMapping='VOrgMap')
 
 def _add_HVAR(font, masterModel, master_ttfs, axisTags):
-	_add_VHVAR(font, masterModel, master_ttfs, axisTags, hvarFields)
+	_add_VHVAR(font, masterModel, master_ttfs, axisTags, HVAR_FIELDS)
 
 def _add_VVAR(font, masterModel, master_ttfs, axisTags):
-	_add_VHVAR(font, masterModel, master_ttfs, axisTags, vvarFields)
+	_add_VHVAR(font, masterModel, master_ttfs, axisTags, VVAR_FIELDS)
 
 def _add_VHVAR(font, masterModel, master_ttfs, axisTags, tableFields):
 
@@ -692,9 +596,15 @@ def _merge_OTL(font, model, master_fonts, axisTags):
 		GDEF = font['GDEF'].table
 		assert GDEF.Version <= 0x00010002
 	except KeyError:
-		font['GDEF']= newTable('GDEF')
+		font['GDEF'] = newTable('GDEF')
 		GDEFTable = font["GDEF"] = newTable('GDEF')
 		GDEF = GDEFTable.table = ot.GDEF()
+		GDEF.GlyphClassDef = None
+		GDEF.AttachList = None
+		GDEF.LigCaretList = None
+		GDEF.MarkAttachClassDef = None
+		GDEF.MarkGlyphSetsDef = None
+
 	GDEF.Version = 0x00010003
 	GDEF.VarStore = store
 

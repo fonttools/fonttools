@@ -69,6 +69,13 @@ SKIA_GVAR_I_DATA = deHexStr(
 
 
 class TupleVariationTest(unittest.TestCase):
+	def __init__(self, methodName):
+		unittest.TestCase.__init__(self, methodName)
+		# Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
+		# and fires deprecation warnings if a program uses the old name.
+		if not hasattr(self, "assertRaisesRegex"):
+			self.assertRaisesRegex = self.assertRaisesRegexp
+
 	def test_equal(self):
 		var1 = TupleVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
 		var2 = TupleVariation({"wght":(0.0, 1.0, 1.0)}, [(0,0), (9,8), (7,6)])
@@ -680,6 +687,167 @@ class TupleVariationTest(unittest.TestCase):
 	def xml_lines(writer):
 		content = writer.file.getvalue().decode("utf-8")
 		return [line.strip() for line in content.splitlines()][1:]
+
+	def test_getCoordWidth(self):
+		empty = TupleVariation({}, [])
+		self.assertEqual(empty.getCoordWidth(), 0)
+
+		empty = TupleVariation({}, [None])
+		self.assertEqual(empty.getCoordWidth(), 0)
+
+		gvarTuple = TupleVariation({}, [None, (0, 0)])
+		self.assertEqual(gvarTuple.getCoordWidth(), 2)
+
+		cvarTuple = TupleVariation({}, [None, 0])
+		self.assertEqual(cvarTuple.getCoordWidth(), 1)
+
+		cvarTuple.coordinates[1] *= 1.0
+		self.assertEqual(cvarTuple.getCoordWidth(), 1)
+
+		with self.assertRaises(TypeError):
+			TupleVariation({}, [None, "a"]).getCoordWidth()
+
+	def test_scaleDeltas_cvar(self):
+		var = TupleVariation({}, [100, None])
+
+		var.scaleDeltas(1.0)
+		self.assertEqual(var.coordinates, [100, None])
+
+		var.scaleDeltas(0.333)
+		self.assertAlmostEqual(var.coordinates[0], 33.3)
+		self.assertIsNone(var.coordinates[1])
+
+		var.scaleDeltas(0.0)
+		self.assertEqual(var.coordinates, [0, None])
+
+	def test_scaleDeltas_gvar(self):
+		var = TupleVariation({}, [(100, 200), None])
+
+		var.scaleDeltas(1.0)
+		self.assertEqual(var.coordinates, [(100, 200), None])
+
+		var.scaleDeltas(0.333)
+		self.assertAlmostEqual(var.coordinates[0][0], 33.3)
+		self.assertAlmostEqual(var.coordinates[0][1], 66.6)
+		self.assertIsNone(var.coordinates[1])
+
+		var.scaleDeltas(0.0)
+		self.assertEqual(var.coordinates, [(0, 0), None])
+
+	def test_roundDeltas_cvar(self):
+		var = TupleVariation({}, [55.5, None, 99.9])
+		var.roundDeltas()
+		self.assertEqual(var.coordinates, [56, None, 100])
+
+	def test_roundDeltas_gvar(self):
+		var = TupleVariation({}, [(55.5, 100.0), None, (99.9, 100.0)])
+		var.roundDeltas()
+		self.assertEqual(var.coordinates, [(56, 100), None, (100, 100)])
+
+	def test_calcInferredDeltas(self):
+		var = TupleVariation({}, [(0, 0), None, None, None])
+		coords = [(1, 1), (1, 1), (1, 1), (1, 1)]
+
+		var.calcInferredDeltas(coords, [])
+
+		self.assertEqual(
+			var.coordinates,
+			[(0, 0), (0, 0), (0, 0), (0, 0)]
+		)
+
+	def test_calcInferredDeltas_invalid(self):
+		# cvar tuples can't have inferred deltas
+		with self.assertRaises(TypeError):
+			TupleVariation({}, [0]).calcInferredDeltas([], [])
+
+		# origCoords must have same length as self.coordinates
+		with self.assertRaises(ValueError):
+			TupleVariation({}, [(0, 0), None]).calcInferredDeltas([], [])
+
+		# at least 4 phantom points required
+		with self.assertRaises(AssertionError):
+			TupleVariation({}, [(0, 0), None]).calcInferredDeltas([(0, 0), (0, 0)], [])
+
+		with self.assertRaises(AssertionError):
+			TupleVariation({}, [(0, 0)] + [None]*5).calcInferredDeltas(
+				[(0, 0)]*6,
+				[1, 0]  # endPts not in increasing order
+			)
+
+	def test_optimize(self):
+		var = TupleVariation({"wght": (0.0, 1.0, 1.0)}, [(0, 0)]*5)
+
+		var.optimize([(0, 0)]*5, [0])
+
+		self.assertEqual(var.coordinates, [None, None, None, None, None])
+
+	def test_optimize_isComposite(self):
+		# when a composite glyph's deltas are all (0, 0), we still want
+		# to write out an entry in gvar, else macOS doesn't apply any
+		# variations to the composite glyph (even if its individual components
+		# do vary).
+		# https://github.com/fonttools/fonttools/issues/1381
+		var = TupleVariation({"wght": (0.0, 1.0, 1.0)}, [(0, 0)]*5)
+		var.optimize([(0, 0)]*5, [0], isComposite=True)
+		self.assertEqual(var.coordinates, [(0, 0)]*5)
+
+		# it takes more than 128 (0, 0) deltas before the optimized tuple with
+		# (None) inferred deltas (except for the first) becomes smaller than
+		# the un-optimized one that has all deltas explicitly set to (0, 0).
+		var = TupleVariation({"wght": (0.0, 1.0, 1.0)}, [(0, 0)]*129)
+		var.optimize([(0, 0)]*129, list(range(129-4)), isComposite=True)
+		self.assertEqual(var.coordinates, [(0, 0)] + [None]*128)
+
+	def test_sum_deltas_gvar(self):
+		var1 = TupleVariation(
+			{},
+			[
+				(-20, 0), (-20, 0), (20, 0), (20, 0),
+				(0, 0), (0, 0), (0, 0), (0, 0),
+			]
+		)
+		var2 = TupleVariation(
+			{},
+			[
+				(-10, 0), (-10, 0), (10, 0), (10, 0),
+				(0, 0), (20, 0), (0, 0), (0, 0),
+			]
+		)
+
+		var1 += var2
+
+		self.assertEqual(
+			var1.coordinates,
+			[
+				(-30, 0), (-30, 0), (30, 0), (30, 0),
+				(0, 0), (20, 0), (0, 0), (0, 0),
+			]
+		)
+
+	def test_sum_deltas_gvar_invalid_length(self):
+		var1 = TupleVariation({}, [(1, 2)])
+		var2 = TupleVariation({}, [(1, 2), (3, 4)])
+
+		with self.assertRaisesRegex(ValueError, "deltas with different lengths"):
+			var1 += var2
+
+	def test_sum_deltas_gvar_with_inferred_points(self):
+		var1 = TupleVariation({}, [(1, 2), None])
+		var2 = TupleVariation({}, [(2, 3), None])
+
+		with self.assertRaisesRegex(ValueError, "deltas with inferred points"):
+			var1 += var2
+
+	def test_sum_deltas_cvar(self):
+		axes = {"wght": (0.0, 1.0, 1.0)}
+		var1 = TupleVariation(axes, [0, 1, None, None])
+		var2 = TupleVariation(axes, [None, 2, None, 3])
+		var3 = TupleVariation(axes, [None, None, None, 4])
+
+		var1 += var2
+		var1 += var3
+
+		self.assertEqual(var1.coordinates, [0, 3, None, 7])
 
 
 if __name__ == "__main__":

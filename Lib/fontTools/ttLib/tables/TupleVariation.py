@@ -30,6 +30,7 @@ log = logging.getLogger(__name__)
 
 
 class TupleVariation(object):
+
 	def __init__(self, axes, coordinates):
 		self.axes = axes.copy()
 		self.coordinates = coordinates[:]
@@ -54,10 +55,7 @@ class TupleVariation(object):
 		If the result is False, the TupleVariation can be omitted from the font
 		without making any visible difference.
 		"""
-		for c in self.coordinates:
-			if c is not None:
-				return True
-		return False
+		return any(c is not None for c in self.coordinates)
 
 	def toXML(self, writer, axisTags):
 		writer.begintag("tuple")
@@ -306,7 +304,7 @@ class TupleVariation(object):
 			elif type(c) is int:
 				deltaX.append(c)
 			elif c is not None:
-				raise ValueError("invalid type of delta: %s" % type(c))
+				raise TypeError("invalid type of delta: %s" % type(c))
 		return self.compileDeltaValues_(deltaX) + self.compileDeltaValues_(deltaY)
 
 	@staticmethod
@@ -445,6 +443,125 @@ class TupleVariation(object):
 		if (flags & INTERMEDIATE_REGION) != 0:
 			size += axisCount * 4
 		return size
+
+	def getCoordWidth(self):
+		""" Return 2 if coordinates are (x, y) as in gvar, 1 if single values
+		as in cvar, or 0 if empty.
+		"""
+		firstDelta = next((c for c in self.coordinates if c is not None), None)
+		if firstDelta is None:
+			return 0  # empty or has no impact
+		if type(firstDelta) in (int, float):
+			return 1
+		if type(firstDelta) is tuple and len(firstDelta) == 2:
+			return 2
+		raise TypeError(
+			"invalid type of delta; expected (int or float) number, or "
+			"Tuple[number, number]: %r" % firstDelta
+		)
+
+	def scaleDeltas(self, scalar):
+		if scalar == 1.0:
+			return  # no change
+		coordWidth = self.getCoordWidth()
+		self.coordinates = [
+			None
+			if d is None
+			else d * scalar
+			if coordWidth == 1
+			else (d[0] * scalar, d[1] * scalar)
+			for d in self.coordinates
+		]
+
+	def roundDeltas(self):
+		coordWidth = self.getCoordWidth()
+		self.coordinates = [
+			None
+			if d is None
+			else otRound(d)
+			if coordWidth == 1
+			else (otRound(d[0]), otRound(d[1]))
+			for d in self.coordinates
+		]
+
+	def calcInferredDeltas(self, origCoords, endPts):
+		from fontTools.varLib.iup import iup_delta
+
+		if self.getCoordWidth() == 1:
+			raise TypeError(
+				"Only 'gvar' TupleVariation can have inferred deltas"
+			)
+		if None in self.coordinates:
+			if len(self.coordinates) != len(origCoords):
+				raise ValueError(
+					"Expected len(origCoords) == %d; found %d"
+					% (len(self.coordinates), len(origCoords))
+				)
+			self.coordinates = iup_delta(self.coordinates, origCoords, endPts)
+
+	def optimize(self, origCoords, endPts, tolerance=0.5, isComposite=False):
+		from fontTools.varLib.iup import iup_delta_optimize
+
+		if None in self.coordinates:
+			return  # already optimized
+
+		deltaOpt = iup_delta_optimize(
+		    self.coordinates, origCoords, endPts, tolerance=tolerance
+		)
+		if None in deltaOpt:
+			if isComposite and all(d is None for d in deltaOpt):
+				# Fix for macOS composites
+				# https://github.com/fonttools/fonttools/issues/1381
+				deltaOpt = [(0, 0)] + [None] * (len(deltaOpt) - 1)
+			# Use "optimized" version only if smaller...
+			varOpt = TupleVariation(self.axes, deltaOpt)
+
+			# Shouldn't matter that this is different from fvar...?
+			axisTags = sorted(self.axes.keys())
+			tupleData, auxData, _ = self.compile(axisTags, [], None)
+			unoptimizedLength = len(tupleData) + len(auxData)
+			tupleData, auxData, _ = varOpt.compile(axisTags, [], None)
+			optimizedLength = len(tupleData) + len(auxData)
+
+			if optimizedLength < unoptimizedLength:
+				self.coordinates = varOpt.coordinates
+
+	def __iadd__(self, other):
+		if not isinstance(other, TupleVariation):
+			return NotImplemented
+		deltas1 = self.coordinates
+		length = len(deltas1)
+		deltas2 = other.coordinates
+		if len(deltas2) != length:
+			raise ValueError(
+				"cannot sum TupleVariation deltas with different lengths"
+			)
+		# 'None' values have different meanings in gvar vs cvar TupleVariations:
+		# within the gvar, when deltas are not provided explicitly for some points,
+		# they need to be inferred; whereas for the 'cvar' table, if deltas are not
+		# provided for some CVT values, then no adjustments are made (i.e. None == 0).
+		# Thus, we cannot sum deltas for gvar TupleVariations if they contain
+		# inferred inferred deltas (the latter need to be computed first using
+		# 'calcInferredDeltas' method), but we can treat 'None' values in cvar
+		# deltas as if they are zeros.
+		if self.getCoordWidth() == 2:
+			for i, d2 in zip(range(length), deltas2):
+				d1 = deltas1[i]
+				try:
+					deltas1[i] = (d1[0] + d2[0], d1[1] + d2[1])
+				except TypeError:
+					raise ValueError(
+						"cannot sum gvar deltas with inferred points"
+					)
+		else:
+			for i, d2 in zip(range(length), deltas2):
+				d1 = deltas1[i]
+				if d1 is not None and d2 is not None:
+					deltas1[i] = d1 + d2
+				elif d1 is None and d2 is not None:
+					deltas1[i] = d2
+				# elif d2 is None do nothing
+		return self
 
 
 def decompileSharedTuples(axisTags, sharedTupleCount, data, offset):

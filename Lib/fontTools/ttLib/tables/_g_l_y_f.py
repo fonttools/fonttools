@@ -243,6 +243,162 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		assert len(self.glyphOrder) == len(self.glyphs)
 		return len(self.glyphs)
 
+	def getPhantomPoints(self, glyphName, ttFont, defaultVerticalOrigin=None):
+		"""Compute the four "phantom points" for the given glyph from its bounding box
+		and the horizontal and vertical advance widths and sidebearings stored in the
+		ttFont's "hmtx" and "vmtx" tables.
+
+		If the ttFont doesn't contain a "vmtx" table, the hhea.ascent is used as the
+		vertical origin, and the head.unitsPerEm as the vertical advance.
+
+		The "defaultVerticalOrigin" (Optional[int]) is needed when the ttFont contains
+		neither a "vmtx" nor an "hhea" table, as may happen with 'sparse' masters.
+		The value should be the hhea.ascent of the default master.
+
+		https://docs.microsoft.com/en-us/typography/opentype/spec/tt_instructing_glyphs#phantoms
+		"""
+		glyph = self[glyphName]
+		assert glyphName in ttFont["hmtx"].metrics, ttFont["hmtx"].metrics
+		horizontalAdvanceWidth, leftSideBearing = ttFont["hmtx"].metrics[glyphName]
+		if not hasattr(glyph, 'xMin'):
+			glyph.recalcBounds(self)
+		leftSideX = glyph.xMin - leftSideBearing
+		rightSideX = leftSideX + horizontalAdvanceWidth
+		if "vmtx" in ttFont:
+			verticalAdvanceWidth, topSideBearing = ttFont["vmtx"].metrics[glyphName]
+			topSideY = topSideBearing + glyph.yMax
+		else:
+			# without vmtx, use ascent as vertical origin and UPEM as vertical advance
+			# like HarfBuzz does
+			verticalAdvanceWidth = ttFont["head"].unitsPerEm
+			if "hhea" in ttFont:
+				topSideY = ttFont["hhea"].ascent
+			else:
+				# sparse masters may not contain an hhea table; use the ascent
+				# of the default master as the vertical origin
+				if defaultVerticalOrigin is not None:
+					topSideY = defaultVerticalOrigin
+				else:
+					log.warning(
+						"font is missing both 'vmtx' and 'hhea' tables, "
+						"and no 'defaultVerticalOrigin' was provided; "
+						"the vertical phantom points may be incorrect."
+					)
+					topSideY = verticalAdvanceWidth
+		bottomSideY = topSideY - verticalAdvanceWidth
+		return [
+			(leftSideX, 0),
+			(rightSideX, 0),
+			(0, topSideY),
+			(0, bottomSideY),
+		]
+
+	def getCoordinatesAndControls(self, glyphName, ttFont, defaultVerticalOrigin=None):
+		"""Return glyph coordinates and controls as expected by "gvar" table.
+
+		The coordinates includes four "phantom points" for the glyph metrics,
+		as mandated by the "gvar" spec.
+
+		The glyph controls is a namedtuple with the following attributes:
+			- numberOfContours: -1 for composite glyphs.
+			- endPts: list of indices of end points for each contour in simple
+			glyphs, or component indices in composite glyphs (used for IUP
+			optimization).
+			- flags: array of contour point flags for simple glyphs (None for
+			composite glyphs).
+			- components: list of base glyph names (str) for each component in
+			composite glyphs (None for simple glyphs).
+
+		The "ttFont" and "defaultVerticalOrigin" args are used to compute the
+		"phantom points" (see "getPhantomPoints" method).
+
+		Return None if the requested glyphName is not present.
+		"""
+		if glyphName not in self.glyphs:
+			return None
+		glyph = self[glyphName]
+		if glyph.isComposite():
+			coords = GlyphCoordinates(
+				[(getattr(c, 'x', 0), getattr(c, 'y', 0)) for c in glyph.components]
+			)
+			controls = _GlyphControls(
+				numberOfContours=glyph.numberOfContours,
+				endPts=list(range(len(glyph.components))),
+				flags=None,
+				components=[c.glyphName for c in glyph.components],
+			)
+		else:
+			coords, endPts, flags = glyph.getCoordinates(self)
+			coords = coords.copy()
+			controls = _GlyphControls(
+				numberOfContours=glyph.numberOfContours,
+				endPts=endPts,
+				flags=flags,
+				components=None,
+			)
+		# Add phantom points for (left, right, top, bottom) positions.
+		phantomPoints = self.getPhantomPoints(
+			glyphName, ttFont, defaultVerticalOrigin=defaultVerticalOrigin
+		)
+		coords.extend(phantomPoints)
+		return coords, controls
+
+	def setCoordinates(self, glyphName, coord, ttFont):
+		"""Set coordinates and metrics for the given glyph.
+
+		"coord" is an array of GlyphCoordinates which must include the "phantom
+		points" as the last four coordinates.
+
+		Both the horizontal/vertical advances and left/top sidebearings in "hmtx"
+		and "vmtx" tables (if any) are updated from four phantom points and
+		the glyph's bounding boxes.
+		"""
+		# TODO: Create new glyph if not already present
+		assert glyphName in self.glyphs
+		glyph = self[glyphName]
+
+		# Handle phantom points for (left, right, top, bottom) positions.
+		assert len(coord) >= 4
+		leftSideX = coord[-4][0]
+		rightSideX = coord[-3][0]
+		topSideY = coord[-2][1]
+		bottomSideY = coord[-1][1]
+
+		coord = coord[:-4]
+
+		if glyph.isComposite():
+			assert len(coord) == len(glyph.components)
+			for p, comp in zip(coord, glyph.components):
+				if hasattr(comp, 'x'):
+					comp.x, comp.y = p
+		elif glyph.numberOfContours == 0:
+			assert len(coord) == 0
+		else:
+			assert len(coord) == len(glyph.coordinates)
+			glyph.coordinates = GlyphCoordinates(coord)
+
+		glyph.recalcBounds(self)
+
+		horizontalAdvanceWidth = otRound(rightSideX - leftSideX)
+		if horizontalAdvanceWidth < 0:
+			# unlikely, but it can happen, see:
+			# https://github.com/fonttools/fonttools/pull/1198
+			horizontalAdvanceWidth = 0
+		leftSideBearing = otRound(glyph.xMin - leftSideX)
+		ttFont["hmtx"].metrics[glyphName] = horizontalAdvanceWidth, leftSideBearing
+
+		if "vmtx" in ttFont:
+			verticalAdvanceWidth = otRound(topSideY - bottomSideY)
+			if verticalAdvanceWidth < 0:  # unlikely but do the same as horizontal
+				verticalAdvanceWidth = 0
+			topSideBearing = otRound(topSideY - glyph.yMax)
+			ttFont["vmtx"].metrics[glyphName] = verticalAdvanceWidth, topSideBearing
+
+
+_GlyphControls = namedtuple(
+	"_GlyphControls", "numberOfContours endPts flags components"
+)
+
 
 glyphHeaderFormat = """
 		>	# big endian
