@@ -942,6 +942,20 @@ class CFF2VFTestSpecialize(DataFilesHandler):
             program = commandsToProgram(cmds_g)
             self.assertEqual(program, program_g)
 
+    def test_blend_programToCommands(self):
+        ttx_path = self.getpath('TestCFF2Widths.ttx')
+        ttf_font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
+        ttf_font.importXML(ttx_path)
+        fontGlyphList = ttf_font.getGlyphOrder()
+        topDict = ttf_font['CFF2'].cff.topDictIndex[0]
+        charstrings = topDict.CharStrings
+        for glyphName in fontGlyphList:
+            cs = charstrings[glyphName]
+            cs.decompile()
+            cmds = programToCommands(cs.program, getNumRegions=cs.getNumRegions)
+            program = commandsToProgram(cmds)
+            self.assertEqual(program, cs.program)
+
 
 if __name__ == "__main__":
     import sys
