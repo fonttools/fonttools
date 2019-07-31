@@ -31,10 +31,10 @@
             <BlueShift value="7"/>
             <BlueFuzz value="0"/>
             <StdHW>
-                <blend value="28 39.0"/>
+                <blend value="28 39"/>
             </StdHW>
             <StdVW>
-                <blend value="34 51.0"/>
+                <blend value="34 51"/>
             </StdVW>
           </Private>
         </FontDict>

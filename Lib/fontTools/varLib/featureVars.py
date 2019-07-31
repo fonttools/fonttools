@@ -71,13 +71,14 @@ def overlayFeatureVariations(conditionalSubstitutions):
     and rules with the same Box merged.  The more specific rules appear earlier
     in the resulting list.  Moreover, instead of just a dictionary of substitutions,
     a list of dictionaries is returned for substitutions corresponding to each
-    uniq space, with each dictionary being identical to one of the input
+    unique space, with each dictionary being identical to one of the input
     substitution dictionaries.  These dictionaries are not merged to allow data
     sharing when they are converted into font tables.
 
     Example:
     >>> condSubst = [
     ...     # A list of (Region, Substitution) tuples.
+    ...     ([{"wght": (0.5, 1.0)}], {"dollar": "dollar.rvrn"}),
     ...     ([{"wght": (0.5, 1.0)}], {"dollar": "dollar.rvrn"}),
     ...     ([{"wdth": (0.5, 1.0)}], {"cent": "cent.rvrn"}),
     ... ]
@@ -107,7 +108,8 @@ def overlayFeatureVariations(conditionalSubstitutions):
     # rules for the same region.
     merged = OrderedDict()
     for key,value in reversed(conditionalSubstitutions):
-        key = tuple(sorted(hashdict(cleanupBox(k)) for k in key))
+        key = tuple(sorted((hashdict(cleanupBox(k)) for k in key),
+                           key=lambda d: tuple(sorted(d.items()))))
         if key in merged:
             merged[key].update(value)
         else:

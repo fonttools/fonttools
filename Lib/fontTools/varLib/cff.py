@@ -131,7 +131,7 @@ class MergeDictError(TypeError):
 
 
 def conv_to_int(num):
-	if num % 1 == 0:
+	if isinstance(num, float) and num.is_integer():
 		return int(num)
 	return num
 
@@ -198,17 +198,17 @@ def merge_PrivateDicts(top_dicts, vsindex_dict, var_model, fd_map):
 			pds.append(pd)
 		num_masters = len(pds)
 		for key, value in private_dict.rawDict.items():
+			dataList = []
 			if key not in pd_blend_fields:
 				continue
 			if isinstance(value, list):
 				try:
 					values = [pd.rawDict[key] for pd in pds]
 				except KeyError:
-					del private_dict.rawDict[key]
 					print(
-						b"Warning: {key} in default font Private dict is "
-						b"missing from another font, and was "
-						b"discarded.".format(key=key))
+						"Warning: {key} in default font Private dict is "
+						"missing from another font, and was "
+						"discarded.".format(key=key))
 					continue
 				try:
 					values = zip(*values)
@@ -227,7 +227,6 @@ def merge_PrivateDicts(top_dicts, vsindex_dict, var_model, fd_map):
 				and is converted finally to:
 				OtherBlues = [[-217, 17.0, 46.0], [-205, 0.0, 0.0]]
 				"""
-				dataList = []
 				prev_val_list = [0] * num_masters
 				any_points_differ = False
 				for val_list in values:
@@ -237,8 +236,6 @@ def merge_PrivateDicts(top_dicts, vsindex_dict, var_model, fd_map):
 						any_points_differ = True
 					prev_val_list = val_list
 					deltas = sub_model.getDeltas(rel_list)
-					# Convert numbers with no decimal part to an int.
-					deltas = [conv_to_int(delta) for delta in deltas]
 					# For PrivateDict BlueValues, the default font
 					# values are absolute, not relative to the prior value.
 					deltas[0] = val_list[0]
@@ -253,6 +250,18 @@ def merge_PrivateDicts(top_dicts, vsindex_dict, var_model, fd_map):
 					dataList = sub_model.getDeltas(values)
 				else:
 					dataList = values[0]
+
+			# Convert numbers with no decimal part to an int
+			if isinstance(dataList, list):
+				for i, item in enumerate(dataList):
+					if isinstance(item, list):
+						for j, jtem in enumerate(item):
+							dataList[i][j] = conv_to_int(jtem)
+					else:
+						dataList[i] = conv_to_int(item)
+			else:
+				dataList = conv_to_int(dataList)
+
 			private_dict.rawDict[key] = dataList
 
 
@@ -270,7 +279,7 @@ def getfd_map(varFont, fonts_list):
 	num_regions = len(region_fonts)
 	topDict = default_font['CFF '].cff.topDictIndex[0]
 	if not hasattr(topDict, 'FDSelect'):
-		# All glyphs reference only one FontDict. 
+		# All glyphs reference only one FontDict.
 		# Map the FD index for regions to index 0.
 		fd_map[0] = {ri:0 for ri in range(num_regions)}
 		return fd_map
@@ -390,9 +399,9 @@ def merge_charstrings(glyphOrder, num_masters, top_dicts, masterModel):
 		# as we know it doesn't exist yet.
 		if vsindex != 0:
 			new_cs.program[:0] = [vsindex, 'vsindex']
-			
+
 	# If there is no variation in any of the charstrings, then vsindex_dict
-	# never gets built. This could still be needed if there is variation 
+	# never gets built. This could still be needed if there is variation
 	# in the PrivatDict, so we will build the default data for vsindex = 0.
 	if not vsindex_dict:
 		key = (True,) * num_masters
