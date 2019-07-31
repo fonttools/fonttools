@@ -251,8 +251,9 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		If the ttFont doesn't contain a "vmtx" table, the hhea.ascent is used as the
 		vertical origin, and the head.unitsPerEm as the vertical advance.
 
-		The "defaultVerticalOrigin" (Optional[int]) is used when the ttFont contains
-		neither a "vmtx" nor an "hhea" table.
+		The "defaultVerticalOrigin" (Optional[int]) is needed when the ttFont contains
+		neither a "vmtx" nor an "hhea" table, as may happen with 'sparse' masters.
+		The value should be the hhea.ascent of the default master.
 
 		https://docs.microsoft.com/en-us/typography/opentype/spec/tt_instructing_glyphs#phantoms
 		"""
@@ -270,13 +271,20 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			# without vmtx, use ascent as vertical origin and UPEM as vertical advance
 			# like HarfBuzz does
 			verticalAdvanceWidth = ttFont["head"].unitsPerEm
-			try:
+			if "hhea" in ttFont:
 				topSideY = ttFont["hhea"].ascent
-			except KeyError:
+			else:
 				# sparse masters may not contain an hhea table; use the ascent
 				# of the default master as the vertical origin
-				assert defaultVerticalOrigin is not None
-				topSideY = defaultVerticalOrigin
+				if defaultVerticalOrigin is not None:
+					topSideY = defaultVerticalOrigin
+				else:
+					log.warning(
+						"font is missing both 'vmtx' and 'hhea' tables, "
+						"and no 'defaultVerticalOrigin' was provided; "
+						"the vertical phantom points may be incorrect."
+					)
+					topSideY = verticalAdvanceWidth
 		bottomSideY = topSideY - verticalAdvanceWidth
 		return [
 			(leftSideX, 0),
@@ -338,8 +346,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 	def setCoordinates(self, glyphName, coord, ttFont):
 		"""Set coordinates and metrics for the given glyph.
 
-		"coord" is an array of GlyphCoordinates which must include the four
-		"phantom points".
+		"coord" is an array of GlyphCoordinates which must include the "phantom
+		points" as the last four coordinates.
 
 		Both the horizontal/vertical advances and left/top sidebearings in "hmtx"
 		and "vmtx" tables (if any) are updated from four phantom points and
@@ -360,9 +368,9 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 
 		if glyph.isComposite():
 			assert len(coord) == len(glyph.components)
-			for p,comp in zip(coord, glyph.components):
+			for p, comp in zip(coord, glyph.components):
 				if hasattr(comp, 'x'):
-					comp.x,comp.y = p
+					comp.x, comp.y = p
 		elif glyph.numberOfContours == 0:
 			assert len(coord) == 0
 		else:

@@ -536,6 +536,14 @@ class TupleVariation(object):
 			raise ValueError(
 				"cannot sum TupleVariation deltas with different lengths"
 			)
+		# 'None' values have different meanings in gvar vs cvar TupleVariations:
+		# within the gvar, when deltas are not provided explicitly for some points,
+		# they need to be inferred; whereas for the 'cvar' table, if deltas are not
+		# provided for some CVT values, then no adjustments are made (i.e. None == 0).
+		# Thus, we cannot sum deltas for gvar TupleVariations if they contain
+		# inferred inferred deltas (the latter need to be computed first using
+		# 'calcInferredDeltas' method), but we can treat 'None' values in cvar
+		# deltas as if they are zeros.
 		if self.getCoordWidth() == 2:
 			for i, d2 in zip(range(length), deltas2):
 				d1 = deltas1[i]
