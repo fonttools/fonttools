@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="3.43">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="A"/>
+    <GlyphID id="2" name="a"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="1.004"/>
+    <checkSumAdjustment value="0x61e1f145"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Sat Oct 10 16:55:59 2015"/>
+    <modified value="Mon Jul 29 22:04:10 2019"/>
+    <xMin value="-454"/>
+    <yMin value="-322"/>
+    <xMax value="2159"/>
+    <yMax value="968"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="6"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="900"/>
+    <descent value="-300"/>
+    <lineGap value="96"/>
+    <advanceWidthMax value="2200"/>
+    <minLeftSideBearing value="-454"/>
+    <minRightSideBearing value="-454"/>
+    <xMaxExtent value="2159"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="3"/>
+  </hhea>
+
+  <maxp>
+    <tableVersion value="0x5000"/>
+    <numGlyphs value="3"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="4"/>
+    <xAvgCharWidth value="564"/>
+    <usWeightClass value="500"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000000"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="600"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="75"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="600"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="350"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="294"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="0"/>
+      <bSerifStyle value="0"/>
+      <bWeight value="0"/>
+      <bProportion value="0"/>
+      <bContrast value="0"/>
+      <bStrokeVariation value="0"/>
+      <bArmStyle value="0"/>
+      <bLetterForm value="0"/>
+      <bMidline value="0"/>
+      <bXHeight value="0"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000001"/>
+    <ulUnicodeRange2 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="ALIF"/>
+    <fsSelection value="00000000 11000000"/>
+    <usFirstCharIndex value="65"/>
+    <usLastCharIndex value="97"/>
+    <sTypoAscender value="900"/>
+    <sTypoDescender value="-300"/>
+    <sTypoLineGap value="100"/>
+    <usWinAscent value="790"/>
+    <usWinDescent value="330"/>
+    <ulCodePageRange1 value="00100000 00000000 00000001 11011111"/>
+    <ulCodePageRange2 value="00000000 00001000 00000000 00000000"/>
+    <sxHeight value="489"/>
+    <sCapHeight value="655"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="3"/>
+  </OS_2>
+
+  <hmtx>
+    <mtx name=".notdef" width="663" lsb="86"/>
+    <mtx name="A" width="552" lsb="0"/>
+    <mtx name="a" width="510" lsb="49"/>
+  </hmtx>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x41" name="A"/><!-- LATIN CAPITAL LETTER A -->
+      <map code="0x61" name="a"/><!-- LATIN SMALL LETTER A -->
+    </cmap_format_4>
+  </cmap>
+
+  <name>
+    <namerecord nameID="0" platformID="3" platEncID="1" langID="0x409">
+      Copyright © 2015-2019 The Mada Project Authors, with Reserved Font Name “Source”.
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      Mada Medium
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      Mada-Medium
+    </namerecord>
+  </name>
+
+  <post>
+    <formatType value="3.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-200"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="0"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+  </post>
+
+  <CFF2>
+    <major value="2"/>
+    <minor value="0"/>
+    <CFFFont name="CFF2Font">
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FDSelect format="4"/>
+      <FDArray>
+        <FontDict index="0">
+          <Private>
+            <BlueScale value="0.039625"/>
+            <BlueShift value="7"/>
+            <BlueFuzz value="1"/>
+          </Private>
+        </FontDict>
+        <FontDict index="1">
+          <Private>
+            <BlueScale value="0.039625"/>
+            <BlueShift value="7"/>
+            <BlueFuzz value="1"/>
+          </Private>
+        </FontDict>
+      </FDArray>
+      <CharStrings>
+        <CharString name=".notdef" fdSelectIndex="0">
+        </CharString>
+        <CharString name="A" fdSelectIndex="0">
+          0 hmoveto
+          103 hlineto
+          107 357 22 71 20 73 19 74 rlinecurve
+          4 hlineto
+          20 -74 20 -73 22 -71 rrcurveto
+          106 -357 108 0 -217 655 rlineto
+          -117 hlineto
+          -96 -467 rmoveto
+          306 hlineto
+          0 80 rlineto
+          -306 hlineto
+        </CharString>
+        <CharString name="a" fdSelectIndex="1">
+          193 -12 rmoveto
+          60 52 30 38 45 hvcurveto
+          3 hlineto
+          8 -56 82 0 0 294 rlineto
+          130 0 -56 77 -121 hhcurveto
+          -78 -69 -32 -32 -50 hvcurveto
+          38 -68 rlineto
+          26 41 48 24 52 hhcurveto
+          73 20 -51 -57 1 hvcurveto
+          -204 -22 -89 -54 0 -106 rrcurveto
+          -86 0 60 -55 84 hhcurveto
+          31 79 rmoveto
+          -44 -34 21 49 0 hvcurveto
+          0 55 50 37 146 18 0 -122 rcurveline
+          -38 -41 -34 -21 -43 hhcurveto
+        </CharString>
+      </CharStrings>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF2>
+
+</ttFont>

@@ -831,6 +831,23 @@ class FDSelect(object):
 					for glyphID in range(prev, first):
 						gidArray[glyphID] = fd
 				self.gidArray = gidArray
+			elif self.format == 4:
+				gidArray = [None] * numGlyphs
+				nRanges = readCard32(file)
+				fd = None
+				prev = None
+				for i in range(nRanges):
+					first = readCard32(file)
+					if prev is not None:
+						for glyphID in range(prev, first):
+							gidArray[glyphID] = fd
+					prev = first
+					fd = readCard16(file)
+				if prev is not None:
+					first = readCard32(file)
+					for glyphID in range(prev, first):
+						gidArray[glyphID] = fd
+				self.gidArray = gidArray
 			else:
 				assert False, "unsupported FDSelect format: %s" % format
 		else:
@@ -999,6 +1016,10 @@ def packCard8(value):
 
 def packCard16(value):
 	return struct.pack(">H", value)
+
+
+def packCard32(value):
+	return struct.pack(">L", value)
 
 
 def buildOperatorDict(table):
@@ -1732,6 +1753,27 @@ def packFDSelect3(fdSelectArray):
 	return bytesjoin(data)
 
 
+def packFDSelect4(fdSelectArray):
+	fmt = 4
+	fdRanges = []
+	lenArray = len(fdSelectArray)
+	lastFDIndex = -1
+	for i in range(lenArray):
+		fdIndex = fdSelectArray[i]
+		if lastFDIndex != fdIndex:
+			fdRanges.append([i, fdIndex])
+			lastFDIndex = fdIndex
+	sentinelGID = i + 1
+
+	data = [packCard8(fmt)]
+	data.append(packCard32(len(fdRanges)))
+	for fdRange in fdRanges:
+		data.append(packCard32(fdRange[0]))
+		data.append(packCard16(fdRange[1]))
+	data.append(packCard32(sentinelGID))
+	return bytesjoin(data)
+
+
 class FDSelectCompiler(object):
 
 	def __init__(self, fdSelect, parent):
@@ -1741,6 +1783,8 @@ class FDSelectCompiler(object):
 			self.data = packFDSelect0(fdSelectArray)
 		elif fmt == 3:
 			self.data = packFDSelect3(fdSelectArray)
+		elif fmt == 4:
+			self.data = packFDSelect4(fdSelectArray)
 		else:
 			# choose smaller of the two formats
 			data0 = packFDSelect0(fdSelectArray)
