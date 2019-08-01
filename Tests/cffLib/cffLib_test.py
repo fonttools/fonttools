@@ -79,6 +79,20 @@ class CffLibTest(DataFilesHandler):
         font.importXML(ttx_path)
         copy.deepcopy(font)
 
+    def test_FDSelect_format_4(self):
+        ttx_path = self.getpath('TestFDSelect4.ttx')
+        font = TTFont(recalcBBoxes=False, recalcTimestamp=False)
+        font.importXML(ttx_path)
+
+        self.temp_dir()
+        save_path = os.path.join(self.tempdir, 'TestOTF.otf')
+        font.save(save_path)
+
+        font2 = TTFont(save_path)
+        topDict2 = font2["CFF2"].cff.topDictIndex[0]
+        self.assertEqual(topDict2.FDSelect.format, 4)
+        self.assertEqual(topDict2.FDSelect.gidArray, [0, 0, 1])
+
 
 if __name__ == "__main__":
     sys.exit(unittest.main())
