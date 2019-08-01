@@ -37,14 +37,28 @@ def programToCommands(program, getNumRegions=None):
 	number of regions. 'getNumRegions' takes a single argument, vsindex. If
 	the vsindex argument is None, getNumRegions returns the default number
 	of regions for the charstring, else it returns the numRegions for
-	the vsindex."""
+	the vsindex.
+	The Charstring may or may not start with a width value. If the first
+	non-blend operator has an odd number of arguments, then the first argument is
+	a width, and is popped off. This is complicated with blend operators, as
+	there may be more than one before the first hint or moveto operator, and each
+	one reduces several arguments to just one list argument. We have to sum the
+	number of arguments that are not part of the blend arguments, and all the
+	'numBlends' values. We could instead have said that by definition, if there
+	is a blend operator, there is no width value, since CFF2 Charstrings don't
+	have width values. I discussed this with Behdad, and we are allowing for an
+	initial width value in this case because developers may assemble a CFF2
+	charstring from CFF Charstrings, which could have width values.
+	"""
 
-	width = None
 	seenWidthOp = False
 	vsIndex = None
+	lenBlendStack = 0
+	lastBlendIndex = 0
 	commands = []
 	stack = []
 	it = iter(program)
+
 	for token in it:
 		if not isinstance(token, basestring):
 			stack.append(token)
@@ -55,20 +69,12 @@ def programToCommands(program, getNumRegions=None):
 			numSourceFonts = 1 + getNumRegions(vsIndex)
 			# replace the blend op args on the stack with a single list
 			# containing all the blend op args.
-			numBlendOps = stack[-1] * numSourceFonts + 1
+			numBlends = stack[-1]
+			numBlendArgs = numBlends * numSourceFonts + 1
 			# replace first blend op by a list of the blend ops.
-			stack[-numBlendOps:] = [stack[-numBlendOps:]]
-
-			# Check for width.
-			if not seenWidthOp:
-				seenWidthOp = True
-				widthLen = len(stack) - numBlendOps
-				if widthLen and (widthLen % 2):
-					stack.pop(0)
-			elif width is not None:
-				commands.pop(0)
-				width = None
-			# We do NOT add the width to the command list if a blend is seen:
+			stack[-numBlendArgs:] = [stack[-numBlendArgs:]]
+			lenBlendStack += numBlends + len(stack) - 1
+			lastBlendIndex = len(stack)
 			# if a blend op exists, this is or will be a CFF2 charstring.
 			continue
 
@@ -82,7 +88,14 @@ def programToCommands(program, getNumRegions=None):
 			'endchar'}:
 			seenWidthOp = True
 			parity = token in {'hmoveto', 'vmoveto'}
-			if stack and (len(stack) % 2) ^ parity:
+			if lenBlendStack:
+				# lenBlendStack has the number of args represented by the last blend
+				# arg and all the preceding args. We need to now add the number of
+				# args following the last blend arg.
+				numArgs = lenBlendStack + len(stack[lastBlendIndex:])
+			else:
+				numArgs = len(stack)
+			if numArgs and (numArgs % 2) ^ parity:
 				width = stack.pop(0)
 				commands.append(('', [width]))
 
@@ -92,7 +105,7 @@ def programToCommands(program, getNumRegions=None):
 			commands.append((token, []))
 			commands.append(('', [next(it)]))
 		else:
-			commands.append((token,stack))
+			commands.append((token, stack))
 		stack = []
 	if stack:
 		commands.append(('', stack))
