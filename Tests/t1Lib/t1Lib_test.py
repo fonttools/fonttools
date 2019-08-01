@@ -14,6 +14,7 @@ DATADIR = os.path.join(CWD, 'data')
 LWFN = os.path.join(DATADIR, 'TestT1-Regular.lwfn')
 PFA = os.path.join(DATADIR, 'TestT1-Regular.pfa')
 PFB = os.path.join(DATADIR, 'TestT1-Regular.pfb')
+WEIRD_ZEROS = os.path.join(DATADIR, 'TestT1-weird-zeros.pfa')
 
 
 class FindEncryptedChunksTest(unittest.TestCase):
@@ -27,6 +28,14 @@ class FindEncryptedChunksTest(unittest.TestCase):
 		# the second chunk is encrypted
 		self.assertTrue(chunks[1][0])
 		self.assertFalse(chunks[2][0])
+
+	def test_findEncryptedChunks_weird_zeros(self):
+		with open(WEIRD_ZEROS, 'rb') as f:
+			data = f.read()
+
+		# Just assert that this doesn't raise any exception for not finding the
+		# end of eexec
+		t1Lib.findEncryptedChunks(data)
 
 
 class DecryptType1Test(unittest.TestCase):
