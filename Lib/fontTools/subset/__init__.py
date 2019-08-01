@@ -208,8 +208,7 @@ Font table options:
       set of tables that will be be dropped.
       By default, the following tables are dropped:
       'BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC', 'EBSC', 'SVG ', 'PCLT', 'LTSH'
-      and Graphite tables: 'Feat', 'Glat', 'Gloc', 'Silf', 'Sill'
-      and color tables: 'sbix'.
+      and Graphite tables: 'Feat', 'Glat', 'Gloc', 'Silf', 'Sill'.
       The tool will attempt to subset the remaining tables.
       Examples:
         --drop-tables-='SVG '
@@ -1392,6 +1391,13 @@ def subset_glyphs(self, s):
 					 for strike in self.strikeData]
   return True
 
+@_add_method(ttLib.getTableClass('sbix'))
+def subset_glyphs(self, s):
+	for strike in self.strikes.values():
+		strike.glyphs = {g: strike.glyphs[g] for g in s.glyphs if g in strike.glyphs}
+
+	return True
+
 @_add_method(ttLib.getTableClass('GSUB'))
 def closure_glyphs(self, s):
 	s.table = self.table
@@ -2273,7 +2279,6 @@ class Options(object):
 	_drop_tables_default = ['BASE', 'JSTF', 'DSIG', 'EBDT', 'EBLC',
 				'EBSC', 'SVG', 'PCLT', 'LTSH']
 	_drop_tables_default += ['Feat', 'Glat', 'Gloc', 'Silf', 'Sill']  # Graphite
-	_drop_tables_default += ['sbix']  # Color
 	_no_subset_tables_default = ['avar', 'fvar',
 				     'gasp', 'head', 'hhea', 'maxp',
 				     'vhea', 'OS/2', 'loca', 'name', 'cvt',
