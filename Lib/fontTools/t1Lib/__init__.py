@@ -315,7 +315,7 @@ def findEncryptedChunks(data):
 			break
 		eBegin = eBegin + len(EEXECBEGIN) + 1
 		endMatch = EEXECEND.search(data, eBegin)
-		if not endMatch:
+		if endMatch is None:
 			raise T1Error("can't find end of eexec part")
 		eEnd = endMatch.start()
 		cypherText = data[eBegin:eEnd + 2]
