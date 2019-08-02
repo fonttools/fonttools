@@ -223,6 +223,7 @@ class InstanceDescriptor(SimpleDescriptor):
     def __init__(self):
         self.filename = None    # the original path as found in the document
         self.path = None        # the absolute path, calculated from filename
+        self.font = None        # Same as in SourceDescriptor.
         self.name = None
         self.location = None
         self.familyName = None
