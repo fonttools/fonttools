@@ -1,7 +1,7 @@
 environment:
   matrix:
-    - JOB: "2.7 32-bit"
-      PYTHON_HOME: "C:\\Python27"
+    - JOB: "3.6 32-bit"
+      PYTHON_HOME: "C:\\Python36"
 
     - JOB: "3.7 64-bit"
       PYTHON_HOME: "C:\\Python37-x64"
