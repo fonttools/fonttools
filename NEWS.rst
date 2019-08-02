@@ -1,3 +1,6 @@
+3.44.0 (released 2019-08-02)
+----------------------------
+
 - NOTE: This is the last scheduled release to support Python 2.7. The upcoming fonttools
   v4.x series is going to require Python 3.6 or greater.
 - [varLib] Added new ``varLib.instancer`` module for partially instantiating variable
