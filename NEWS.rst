@@ -1,3 +1,18 @@
+- NOTE: This is the last scheduled release to support Python 2.7. The upcoming fonttools
+  v4.x series is going to require Python 3.6 or greater.
+- [varLib] Added new ``varLib.instancer`` module for partially instantiating variable
+  fonts. This extends (and will eventually replace) ``varLib.mutator`` module, as
+  it allows to create not just full static instances from a variable font, but also
+  "partial" or "less variable" fonts where some of the axes are dropped or
+  instantiated at a particular value.
+  Also available from the command-line as `fonttools varLib.instancer --help`
+  (#1537, #1628).
+- [cffLib] Added support for ``FDSelect`` format 4 (#1677).
+- [subset] Added support for subsetting ``sbix`` (Apple bitmap color font) table.
+- [t1Lib] Fixed issue parsing ``eexec`` section in Type1 fonts when whitespace
+  characters are interspersed among the trailing zeros (#1676).
+- [cffLib.specializer] Fixed bug in ``programToCommands`` with CFF2 charstrings (#1669).
+
 3.43.2 (released 2019-07-10)
 ----------------------------
 
