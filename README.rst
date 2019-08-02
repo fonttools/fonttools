@@ -17,10 +17,10 @@ Installation
 FontTools requires `Python <http://www.python.org/download/>`__ 2.7, 3.4
 or later.
 
-**NOTE** After January 1 2019, until no later than June 30 2019, the support
-for *Python 2.7* will be limited to only bug fixes, and no new features will
-be added to the ``py27`` branch. The upcoming FontTools 4.x series will require
-*Python 3.5* or above. You can read more `here <https://python3statement.org>`__
+**NOTE** From August 2019, until no later than January 1 2020, the support
+for *Python 2.7* will be limited to only critical bug fixes, and no new features
+will be added to the ``py27`` branch. The upcoming FontTools 4.x series will require
+*Python 3.6* or above. You can read more `here <https://python3statement.org>`__
 and `here <https://github.com/fonttools/fonttools/issues/765>`__ for the
 reasons behind this decision.
 
