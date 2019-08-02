@@ -17,13 +17,9 @@ branches:
 matrix:
   fast_finish: true
   exclude:
-    # Exclude the default Python 3.5 build
-    - python: 3.5
+    # Exclude the default Python 3.6 build
+    - python: 3.6
   include:
-    - python: 2.7
-      env: TOXENV=py27-cov
-    - python: 3.5
-      env: TOXENV=py35-cov
     - python: 3.6
       env:
         - TOXENV=py36-cov,package_readme
@@ -33,30 +29,18 @@ matrix:
       # required to run python3.7 on Travis CI
       # https://github.com/travis-ci/travis-ci/issues/9815
       dist: xenial
-    - python: pypy2.7-6.0
+    - python: pypy3
       # disable coverage.py on pypy because of performance problems
-      env: TOXENV=pypy
+      env: TOXENV=pypy3
       dist: xenial
-    - language: generic
-      os: osx
-      env: TOXENV=py27-cov
     - language: generic
       os: osx
       env:
         - TOXENV=py3-cov
         - HOMEBREW_NO_AUTO_UPDATE=1
-    - env:
-        - TOXENV=py27
-        - PYENV_VERSION='2.7.6'
-        - PYENV_VERSION_STRING='Python 2.7.6'
-        - PYENV_ROOT=$HOME/.travis-pyenv
-        - TRAVIS_PYENV_VERSION='0.4.0'
   allow_failures:
     # We use fast_finish + allow_failures because OSX builds take forever
     # https://blog.travis-ci.com/2013-11-27-fast-finishing-builds
-    - language: generic
-      os: osx
-      env: TOXENV=py27-cov
     - language: generic
       os: osx
       env:
