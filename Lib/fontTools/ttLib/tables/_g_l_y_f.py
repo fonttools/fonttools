@@ -55,28 +55,28 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 
 	def decompile(self, data, ttFont):
 		loca = ttFont['loca']
-		last = int(loca[0])
+		pos = int(loca[0])
+		nextPos = 0
 		noname = 0
 		self.glyphs = {}
 		self.glyphOrder = glyphOrder = ttFont.getGlyphOrder()
-		next = 0
 		for i in range(0, len(loca)-1):
 			try:
 				glyphName = glyphOrder[i]
 			except IndexError:
 				noname = noname + 1
 				glyphName = 'ttxautoglyph%s' % i
-			next = int(loca[i+1])
-			glyphdata = data[last:next]
-			if len(glyphdata) != (next - last):
+			nextPos = int(loca[i+1])
+			glyphdata = data[pos:nextPos]
+			if len(glyphdata) != (nextPos - pos):
 				raise ttLib.TTLibError("not enough 'glyf' table data")
 			glyph = Glyph(glyphdata)
 			self.glyphs[glyphName] = glyph
-			last = next
-		if len(data) - next >= 4:
+			pos = nextPos
+		if len(data) - nextPos >= 4:
 			log.warning(
 				"too much 'glyf' table data: expected %d, received %d bytes",
-				next, len(data))
+				nextPos, len(data))
 		if noname:
 			log.warning('%s glyphs have no name', noname)
 		if ttFont.lazy is False: # Be lazy for None and True
