@@ -138,6 +138,8 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			path, ext = os.path.splitext(writer.file.name)
 			existingGlyphFiles = set()
 		for glyphName in glyphNames:
+			if glyphName not in self:
+				continue
 			glyph = self[glyphName]
 			if glyph.numberOfContours:
 				if splitGlyphs:
