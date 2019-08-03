@@ -59,6 +59,7 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		noname = 0
 		self.glyphs = {}
 		self.glyphOrder = glyphOrder = ttFont.getGlyphOrder()
+		next = 0
 		for i in range(0, len(loca)-1):
 			try:
 				glyphName = glyphOrder[i]
