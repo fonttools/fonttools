@@ -572,7 +572,9 @@ There are two meanings for the ``lib`` element:
 
     - Child element of ``designspace`` and ``instance``
     - Contains arbitrary data about the whole document or about a specific
-      instance.
+      instance. The lib element of an InstanceDescriptor (but not the
+      Designspace-level one) is supposed to be overlayed on top of the
+      generated instance UFO.
     - Items in the dict need to use **reverse domain name notation** <https://en.wikipedia.org/wiki/Reverse_domain_name_notation>__
 
 .. 32-info-element:
@@ -1057,7 +1059,8 @@ difference is that applications using a Designspace as the corner stone of the
 font compilation process should use the lib key in that Designspace instead of
 any of the UFOs. If the lib key is empty or not present in the Designspace, all
 glyphs should be exported, regardless of what the same lib key in any of the
-UFOs says.
+UFOs says. If an InstanceDescriptor.lib carries the lib key, it takes precedence
+over the global Designspace one for that instance.
 
 .. 8-this-document:
 
