@@ -1,4 +1,4 @@
-from __future__ import print_function, division, absolute_import
+
 from array import array
 from fontTools.pens.basePen import LoggingPen
 from fontTools.pens.transformPen import TransformPen

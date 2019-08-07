@@ -1,7 +1,7 @@
 """fontTools.misc.fixedTools.py -- tools for working with fixed numbers.
 """
 
-from __future__ import print_function, division, absolute_import
+
 import math
 import logging
 

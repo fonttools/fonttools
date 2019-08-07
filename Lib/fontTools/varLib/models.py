@@ -1,5 +1,5 @@
 """Variation fonts interpolation models."""
-from __future__ import print_function, division, absolute_import
+
 
 __all__ = ['nonNone', 'allNone', 'allEqual', 'allEqualTo', 'subList',
 	   'normalizeValue', 'normalizeLocation',

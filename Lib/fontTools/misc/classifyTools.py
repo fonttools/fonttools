@@ -1,7 +1,7 @@
 """ fontTools.misc.classifyTools.py -- tools for classifying things.
 """
 
-from __future__ import print_function, absolute_import
+
 
 class Classifier(object):
 

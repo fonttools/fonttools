@@ -6,7 +6,7 @@ Call as:
 $ fonttools varLib.interpolatable font1 font2 ...
 """
 
-from __future__ import print_function, division, absolute_import
+
 
 from fontTools.pens.basePen import BasePen
 from fontTools.pens.recordingPen import RecordingPen

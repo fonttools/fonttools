@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Calculate the perimeter of a glyph."""
 
-from __future__ import print_function, division, absolute_import
+
 from fontTools.pens.basePen import BasePen
 from fontTools.misc.bezierTools import approximateQuadraticArcLengthC, calcQuadraticArcLengthC, approximateCubicArcLengthC, calcCubicArcLengthC
 import math

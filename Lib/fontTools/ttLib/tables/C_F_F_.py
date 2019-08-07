@@ -1,4 +1,4 @@
-from __future__ import print_function, division, absolute_import
+
 from fontTools import cffLib
 from . import DefaultTable
 from io import BytesIO

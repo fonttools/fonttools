@@ -1,5 +1,3 @@
-from __future__ import (
-    print_function, division, absolute_import, unicode_literals)
 from collections import OrderedDict
 import fontTools.voltLib.ast as ast
 from fontTools.voltLib.lexer import Lexer

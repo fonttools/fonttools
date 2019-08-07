@@ -1,4 +1,4 @@
-from __future__ import print_function, division, absolute_import
+
 from fontTools.ttLib.tables.C_F_F_ import table_C_F_F_
 from io import BytesIO
 

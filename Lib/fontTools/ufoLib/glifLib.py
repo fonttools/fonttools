@@ -11,7 +11,7 @@ in a folder. It offers two ways to read glyph data, and one way to write
 glyph data. See the class doc string for details.
 """
 
-from __future__ import absolute_import, unicode_literals
+
 from warnings import warn
 from collections import OrderedDict
 import fs

@@ -5,7 +5,7 @@ OpenType subtables.
 Most are constructed upon import from data in otData.py, all are populated with
 converter objects from otConverters.py.
 """
-from __future__ import print_function, division, absolute_import, unicode_literals
+
 from fontTools.misc.py23 import *
 from fontTools.misc.textTools import pad, safeEval
 from .otBase import BaseTable, FormatSwitchingBaseTable, ValueRecord

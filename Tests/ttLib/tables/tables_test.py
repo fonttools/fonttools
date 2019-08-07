@@ -1,5 +1,5 @@
-from __future__ import print_function, division, absolute_import
-from __future__ import unicode_literals
+
+
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, tagToXML
 import os

@@ -1,5 +1,5 @@
-from __future__ import print_function, division, absolute_import
-from __future__ import unicode_literals
+
+
 from fontTools.misc.py23 import *
 from fontTools.feaLib.error import FeatureLibError, IncludedFeaNotFound
 from fontTools.feaLib.lexer import IncludingLexer, Lexer

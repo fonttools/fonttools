@@ -2,7 +2,7 @@
 CFF dictionary data and Type1/Type2 CharStrings.
 """
 
-from __future__ import print_function, division, absolute_import
+
 from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import fixedToFloat, otRound
 from fontTools.pens.boundsPen import BoundsPen

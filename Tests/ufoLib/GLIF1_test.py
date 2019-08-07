@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, unicode_literals
+
 import unittest
 from fontTools.ufoLib.glifLib import GlifLibError, readGlyphFromString, writeGlyphToString
 from .testSupport import Glyph, stripText

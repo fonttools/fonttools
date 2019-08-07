@@ -1,4 +1,4 @@
-from __future__ import print_function, division, absolute_import
+
 
 MacRoman = [
 		'NUL', 'Eth', 'eth', 'Lslash', 'lslash', 'Scaron', 'scaron', 'Yacute',

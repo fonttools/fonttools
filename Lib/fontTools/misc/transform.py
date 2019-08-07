@@ -45,7 +45,7 @@ Examples:
 	>>>
 """
 
-from __future__ import print_function, division, absolute_import
+
 
 __all__ = ["Transform", "Identity", "Offset", "Scale"]
 

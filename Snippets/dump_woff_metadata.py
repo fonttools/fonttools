@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import sys
 from fontTools.ttx import makeOutputFileName
 from fontTools.ttLib import TTFont

@@ -4,7 +4,7 @@
 # It does not implement the full spec (Adobe Technote 5004, Adobe Font Metrics
 # File Format Specification). Still, it should read most "common" AFM files.
 
-from __future__ import print_function, division, absolute_import
+
 import re
 
 # every single line starts with a "word"

@@ -2,7 +2,7 @@
 
 """T2CharString glyph width optimizer."""
 
-from __future__ import print_function, division, absolute_import
+
 from fontTools.ttLib import TTFont
 from collections import defaultdict
 from operator import add

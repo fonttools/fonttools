@@ -5,7 +5,7 @@
 """Font merger.
 """
 
-from __future__ import print_function, division, absolute_import
+
 from fontTools.misc.timeTools import timestampNow
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables

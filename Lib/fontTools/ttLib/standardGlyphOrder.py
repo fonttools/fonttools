@@ -1,4 +1,4 @@
-from __future__ import print_function, division, absolute_import
+
 
 #
 # 'post' table formats 1.0 and 2.0 rely on this list of "standard"

@@ -1,4 +1,4 @@
-from __future__ import print_function, division, absolute_import
+
 from fontTools.ttLib import getSearchRange
 from fontTools.misc.textTools import safeEval, readHex
 from fontTools.misc.fixedTools import (

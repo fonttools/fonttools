@@ -1,4 +1,4 @@
-from __future__ import print_function, division, absolute_import
+
 from types import SimpleNamespace
 from fontTools.misc.textTools import deHexStr
 from fontTools.misc.testTools import getXML

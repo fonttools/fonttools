@@ -1,4 +1,4 @@
-from __future__ import print_function, division, absolute_import
+
 from fontTools.misc.arrayTools import updateBounds, pointInRect, unionRect
 from fontTools.misc.bezierTools import calcCubicBounds, calcQuadraticBounds
 from fontTools.pens.basePen import BasePen
