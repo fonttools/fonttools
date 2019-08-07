@@ -9,7 +9,7 @@ import os
 import unittest
 
 from fontTools.misc.py23 import (
-	round2, round3, isclose, redirect_stdout, redirect_stderr)
+	isclose, redirect_stdout, redirect_stderr)
 
 
 PIPE_SCRIPT = """\
@@ -68,187 +68,98 @@ class OpenFuncWrapperTest(unittest.TestCase):
 		self.assertEqual(result, expected)
 
 
-class Round2Test(unittest.TestCase):
-	"""
-	Test cases taken from cpython 2.7 test suite:
-
-	https://github.com/python/cpython/blob/2.7/Lib/test/test_float.py#L748
-
-	Excludes the test cases that are not supported when using the `decimal`
-	module's `quantize` method.
-	"""
-
-	def test_second_argument_type(self):
-		# floats should be illegal
-		self.assertRaises(TypeError, round2, 3.14159, 2.0)
-
-	def test_halfway_cases(self):
-		# Halfway cases need special attention, since the current
-		# implementation has to deal with them specially.  Note that
-		# 2.x rounds halfway values up (i.e., away from zero) while
-		# 3.x does round-half-to-even.
-		self.assertAlmostEqual(round2(0.125, 2), 0.13)
-		self.assertAlmostEqual(round2(0.375, 2), 0.38)
-		self.assertAlmostEqual(round2(0.625, 2), 0.63)
-		self.assertAlmostEqual(round2(0.875, 2), 0.88)
-		self.assertAlmostEqual(round2(-0.125, 2), -0.13)
-		self.assertAlmostEqual(round2(-0.375, 2), -0.38)
-		self.assertAlmostEqual(round2(-0.625, 2), -0.63)
-		self.assertAlmostEqual(round2(-0.875, 2), -0.88)
-
-		self.assertAlmostEqual(round2(0.25, 1), 0.3)
-		self.assertAlmostEqual(round2(0.75, 1), 0.8)
-		self.assertAlmostEqual(round2(-0.25, 1), -0.3)
-		self.assertAlmostEqual(round2(-0.75, 1), -0.8)
-
-		self.assertEqual(round2(-6.5, 0), -7.0)
-		self.assertEqual(round2(-5.5, 0), -6.0)
-		self.assertEqual(round2(-1.5, 0), -2.0)
-		self.assertEqual(round2(-0.5, 0), -1.0)
-		self.assertEqual(round2(0.5, 0), 1.0)
-		self.assertEqual(round2(1.5, 0), 2.0)
-		self.assertEqual(round2(2.5, 0), 3.0)
-		self.assertEqual(round2(3.5, 0), 4.0)
-		self.assertEqual(round2(4.5, 0), 5.0)
-		self.assertEqual(round2(5.5, 0), 6.0)
-		self.assertEqual(round2(6.5, 0), 7.0)
-
-		# same but without an explicit second argument; in 3.x these
-		# will give integers
-		self.assertEqual(round2(-6.5), -7.0)
-		self.assertEqual(round2(-5.5), -6.0)
-		self.assertEqual(round2(-1.5), -2.0)
-		self.assertEqual(round2(-0.5), -1.0)
-		self.assertEqual(round2(0.5), 1.0)
-		self.assertEqual(round2(1.5), 2.0)
-		self.assertEqual(round2(2.5), 3.0)
-		self.assertEqual(round2(3.5), 4.0)
-		self.assertEqual(round2(4.5), 5.0)
-		self.assertEqual(round2(5.5), 6.0)
-		self.assertEqual(round2(6.5), 7.0)
-
-		self.assertEqual(round2(-25.0, -1), -30.0)
-		self.assertEqual(round2(-15.0, -1), -20.0)
-		self.assertEqual(round2(-5.0, -1), -10.0)
-		self.assertEqual(round2(5.0, -1), 10.0)
-		self.assertEqual(round2(15.0, -1), 20.0)
-		self.assertEqual(round2(25.0, -1), 30.0)
-		self.assertEqual(round2(35.0, -1), 40.0)
-		self.assertEqual(round2(45.0, -1), 50.0)
-		self.assertEqual(round2(55.0, -1), 60.0)
-		self.assertEqual(round2(65.0, -1), 70.0)
-		self.assertEqual(round2(75.0, -1), 80.0)
-		self.assertEqual(round2(85.0, -1), 90.0)
-		self.assertEqual(round2(95.0, -1), 100.0)
-		self.assertEqual(round2(12325.0, -1), 12330.0)
-		self.assertEqual(round2(0, -1), 0.0)
-
-		self.assertEqual(round2(350.0, -2), 400.0)
-		self.assertEqual(round2(450.0, -2), 500.0)
-
-		self.assertAlmostEqual(round2(0.5e21, -21), 1e21)
-		self.assertAlmostEqual(round2(1.5e21, -21), 2e21)
-		self.assertAlmostEqual(round2(2.5e21, -21), 3e21)
-		self.assertAlmostEqual(round2(5.5e21, -21), 6e21)
-		self.assertAlmostEqual(round2(8.5e21, -21), 9e21)
-
-		self.assertAlmostEqual(round2(-1.5e22, -22), -2e22)
-		self.assertAlmostEqual(round2(-0.5e22, -22), -1e22)
-		self.assertAlmostEqual(round2(0.5e22, -22), 1e22)
-		self.assertAlmostEqual(round2(1.5e22, -22), 2e22)
-
 
 class Round3Test(unittest.TestCase):
 	""" Same as above but results adapted for Python 3 round() """
 
 	def test_second_argument_type(self):
 		# floats should be illegal
-		self.assertRaises(TypeError, round3, 3.14159, 2.0)
+		self.assertRaises(TypeError, round, 3.14159, 2.0)
 
 		# None should be allowed
-		self.assertEqual(round3(1.0, None), 1)
+		self.assertEqual(round(1.0, None), 1)
 		# the following would raise an error with the built-in Python3.5 round:
 		# TypeError: 'NoneType' object cannot be interpreted as an integer
-		self.assertEqual(round3(1, None), 1)
+		self.assertEqual(round(1, None), 1)
 
 	def test_halfway_cases(self):
-		self.assertAlmostEqual(round3(0.125, 2), 0.12)
-		self.assertAlmostEqual(round3(0.375, 2), 0.38)
-		self.assertAlmostEqual(round3(0.625, 2), 0.62)
-		self.assertAlmostEqual(round3(0.875, 2), 0.88)
-		self.assertAlmostEqual(round3(-0.125, 2), -0.12)
-		self.assertAlmostEqual(round3(-0.375, 2), -0.38)
-		self.assertAlmostEqual(round3(-0.625, 2), -0.62)
-		self.assertAlmostEqual(round3(-0.875, 2), -0.88)
+		self.assertAlmostEqual(round(0.125, 2), 0.12)
+		self.assertAlmostEqual(round(0.375, 2), 0.38)
+		self.assertAlmostEqual(round(0.625, 2), 0.62)
+		self.assertAlmostEqual(round(0.875, 2), 0.88)
+		self.assertAlmostEqual(round(-0.125, 2), -0.12)
+		self.assertAlmostEqual(round(-0.375, 2), -0.38)
+		self.assertAlmostEqual(round(-0.625, 2), -0.62)
+		self.assertAlmostEqual(round(-0.875, 2), -0.88)
 
-		self.assertAlmostEqual(round3(0.25, 1), 0.2)
-		self.assertAlmostEqual(round3(0.75, 1), 0.8)
-		self.assertAlmostEqual(round3(-0.25, 1), -0.2)
-		self.assertAlmostEqual(round3(-0.75, 1), -0.8)
+		self.assertAlmostEqual(round(0.25, 1), 0.2)
+		self.assertAlmostEqual(round(0.75, 1), 0.8)
+		self.assertAlmostEqual(round(-0.25, 1), -0.2)
+		self.assertAlmostEqual(round(-0.75, 1), -0.8)
 
-		self.assertEqual(round3(-6.5, 0), -6.0)
-		self.assertEqual(round3(-5.5, 0), -6.0)
-		self.assertEqual(round3(-1.5, 0), -2.0)
-		self.assertEqual(round3(-0.5, 0), 0.0)
-		self.assertEqual(round3(0.5, 0), 0.0)
-		self.assertEqual(round3(1.5, 0), 2.0)
-		self.assertEqual(round3(2.5, 0), 2.0)
-		self.assertEqual(round3(3.5, 0), 4.0)
-		self.assertEqual(round3(4.5, 0), 4.0)
-		self.assertEqual(round3(5.5, 0), 6.0)
-		self.assertEqual(round3(6.5, 0), 6.0)
+		self.assertEqual(round(-6.5, 0), -6.0)
+		self.assertEqual(round(-5.5, 0), -6.0)
+		self.assertEqual(round(-1.5, 0), -2.0)
+		self.assertEqual(round(-0.5, 0), 0.0)
+		self.assertEqual(round(0.5, 0), 0.0)
+		self.assertEqual(round(1.5, 0), 2.0)
+		self.assertEqual(round(2.5, 0), 2.0)
+		self.assertEqual(round(3.5, 0), 4.0)
+		self.assertEqual(round(4.5, 0), 4.0)
+		self.assertEqual(round(5.5, 0), 6.0)
+		self.assertEqual(round(6.5, 0), 6.0)
 
 		# same but without an explicit second argument; in 2.x these
 		# will give floats
-		self.assertEqual(round3(-6.5), -6)
-		self.assertEqual(round3(-5.5), -6)
-		self.assertEqual(round3(-1.5), -2.0)
-		self.assertEqual(round3(-0.5), 0)
-		self.assertEqual(round3(0.5), 0)
-		self.assertEqual(round3(1.5), 2)
-		self.assertEqual(round3(2.5), 2)
-		self.assertEqual(round3(3.5), 4)
-		self.assertEqual(round3(4.5), 4)
-		self.assertEqual(round3(5.5), 6)
-		self.assertEqual(round3(6.5), 6)
+		self.assertEqual(round(-6.5), -6)
+		self.assertEqual(round(-5.5), -6)
+		self.assertEqual(round(-1.5), -2.0)
+		self.assertEqual(round(-0.5), 0)
+		self.assertEqual(round(0.5), 0)
+		self.assertEqual(round(1.5), 2)
+		self.assertEqual(round(2.5), 2)
+		self.assertEqual(round(3.5), 4)
+		self.assertEqual(round(4.5), 4)
+		self.assertEqual(round(5.5), 6)
+		self.assertEqual(round(6.5), 6)
 
 		# no ndigits and input is already an integer: output == input
-		rv = round3(1)
+		rv = round(1)
 		self.assertEqual(rv, 1)
 		self.assertTrue(isinstance(rv, int))
-		rv = round3(1.0)
+		rv = round(1.0)
 		self.assertEqual(rv, 1)
 		self.assertTrue(isinstance(rv, int))
 
-		self.assertEqual(round3(-25.0, -1), -20.0)
-		self.assertEqual(round3(-15.0, -1), -20.0)
-		self.assertEqual(round3(-5.0, -1), 0.0)
-		self.assertEqual(round3(5.0, -1), 0.0)
-		self.assertEqual(round3(15.0, -1), 20.0)
-		self.assertEqual(round3(25.0, -1), 20.0)
-		self.assertEqual(round3(35.0, -1), 40.0)
-		self.assertEqual(round3(45.0, -1), 40.0)
-		self.assertEqual(round3(55.0, -1), 60.0)
-		self.assertEqual(round3(65.0, -1), 60.0)
-		self.assertEqual(round3(75.0, -1), 80.0)
-		self.assertEqual(round3(85.0, -1), 80.0)
-		self.assertEqual(round3(95.0, -1), 100.0)
-		self.assertEqual(round3(12325.0, -1), 12320.0)
-		self.assertEqual(round3(0, -1), 0.0)
+		self.assertEqual(round(-25.0, -1), -20.0)
+		self.assertEqual(round(-15.0, -1), -20.0)
+		self.assertEqual(round(-5.0, -1), 0.0)
+		self.assertEqual(round(5.0, -1), 0.0)
+		self.assertEqual(round(15.0, -1), 20.0)
+		self.assertEqual(round(25.0, -1), 20.0)
+		self.assertEqual(round(35.0, -1), 40.0)
+		self.assertEqual(round(45.0, -1), 40.0)
+		self.assertEqual(round(55.0, -1), 60.0)
+		self.assertEqual(round(65.0, -1), 60.0)
+		self.assertEqual(round(75.0, -1), 80.0)
+		self.assertEqual(round(85.0, -1), 80.0)
+		self.assertEqual(round(95.0, -1), 100.0)
+		self.assertEqual(round(12325.0, -1), 12320.0)
+		self.assertEqual(round(0, -1), 0.0)
 
-		self.assertEqual(round3(350.0, -2), 400.0)
-		self.assertEqual(round3(450.0, -2), 400.0)
+		self.assertEqual(round(350.0, -2), 400.0)
+		self.assertEqual(round(450.0, -2), 400.0)
 
-		self.assertAlmostEqual(round3(0.5e21, -21), 0.0)
-		self.assertAlmostEqual(round3(1.5e21, -21), 2e21)
-		self.assertAlmostEqual(round3(2.5e21, -21), 2e21)
-		self.assertAlmostEqual(round3(5.5e21, -21), 6e21)
-		self.assertAlmostEqual(round3(8.5e21, -21), 8e21)
+		self.assertAlmostEqual(round(0.5e21, -21), 0.0)
+		self.assertAlmostEqual(round(1.5e21, -21), 2e21)
+		self.assertAlmostEqual(round(2.5e21, -21), 2e21)
+		self.assertAlmostEqual(round(5.5e21, -21), 6e21)
+		self.assertAlmostEqual(round(8.5e21, -21), 8e21)
 
-		self.assertAlmostEqual(round3(-1.5e22, -22), -2e22)
-		self.assertAlmostEqual(round3(-0.5e22, -22), 0.0)
-		self.assertAlmostEqual(round3(0.5e22, -22), 0.0)
-		self.assertAlmostEqual(round3(1.5e22, -22), 2e22)
+		self.assertAlmostEqual(round(-1.5e22, -22), -2e22)
+		self.assertAlmostEqual(round(-0.5e22, -22), 0.0)
+		self.assertAlmostEqual(round(0.5e22, -22), 0.0)
+		self.assertAlmostEqual(round(1.5e22, -22), 2e22)
 
 
 NAN = float('nan')
