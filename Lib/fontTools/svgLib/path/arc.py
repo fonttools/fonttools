@@ -6,9 +6,8 @@ blink/renderer/core/svg/svg_path_parser.cc#L169-L278
 """
 from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
-from fontTools.misc.py23 import isfinite
 from fontTools.misc.transform import Identity, Scale
-from math import atan2, ceil, cos, fabs, pi, radians, sin, sqrt, tan
+from math import atan2, ceil, cos, fabs, pi, radians, sin, sqrt, tan, isfinite
 
 
 TWO_PI = 2 * pi

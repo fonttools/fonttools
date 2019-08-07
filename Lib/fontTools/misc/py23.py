@@ -1,10 +1,5 @@
 """Python 2/3 compat layer leftovers."""
 
-import decimal as _decimal
-import io as _io
-import math as _math
-import os
-import sys
 from contextlib import redirect_stderr, redirect_stdout
 
 __all__ = [
@@ -22,8 +17,6 @@ __all__ = [
 ]
 
 basestring = str
-isclose = _math.isclose
-isfinite = _math.isfinite
 unichr = chr
 unicode = str
 
