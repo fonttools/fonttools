@@ -6,8 +6,6 @@ import math as _math
 import os
 import sys
 from contextlib import redirect_stderr, redirect_stdout
-# from io import BytesIO
-# from io import StringIO as StringIO
 
 __all__ = [
     "basestring",
@@ -22,8 +20,6 @@ __all__ = [
     "tounicode",
     "Tag",
 ]
-
-# StringIO = StringIO
 
 basestring = str
 isclose = _math.isclose
