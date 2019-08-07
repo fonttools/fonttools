@@ -1,6 +1,5 @@
 from __future__ import print_function, division, absolute_import
 from collections import namedtuple
-from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
 

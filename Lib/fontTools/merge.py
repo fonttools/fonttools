@@ -6,10 +6,9 @@
 """
 
 from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.misc.timeTools import timestampNow
-from fontTools import ttLib, cffLib
-from fontTools.ttLib.tables import otTables, _h_e_a_d
+from fontTools import ttLib
+from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 from fontTools.misc.loggingTools import Timer
 from fontTools.pens.recordingPen import DecomposingRecordingPen

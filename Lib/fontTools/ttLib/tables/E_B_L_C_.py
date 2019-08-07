@@ -3,7 +3,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from . import DefaultTable
 from fontTools.misc.textTools import safeEval
-from .BitmapGlyphMetrics import BigGlyphMetrics, bigGlyphMetricsFormat, SmallGlyphMetrics, smallGlyphMetricsFormat
+from .BitmapGlyphMetrics import BigGlyphMetrics, SmallGlyphMetrics, bigGlyphMetricsFormat
 import struct
 import itertools
 from collections import deque

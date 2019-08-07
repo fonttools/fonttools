@@ -1,6 +1,5 @@
 """Pen recording operations that can be accessed or replayed."""
 from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.pens.basePen import AbstractPen, DecomposingPen
 
 
@@ -91,7 +90,6 @@ class DecomposingRecordingPen(DecomposingPen, RecordingPen):
 
 
 if __name__ == "__main__":
-	from fontTools.pens.basePen import _TestPen
 	pen = RecordingPen()
 	pen.moveTo((0, 0))
 	pen.lineTo((0, 100))

@@ -66,7 +66,6 @@ The discussion and implementation of these features are tracked at
 https://github.com/fonttools/fonttools/issues/1537
 """
 from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import floatToFixedToFloat, otRound
 from fontTools.varLib.models import supportScalar, normalizeValue, piecewiseLinearMap
 from fontTools.ttLib import TTFont
@@ -84,7 +83,6 @@ from contextlib import contextmanager
 import collections
 from copy import deepcopy
 import logging
-from itertools import islice
 import os
 import re
 

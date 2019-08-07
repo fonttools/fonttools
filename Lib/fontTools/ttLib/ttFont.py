@@ -7,7 +7,6 @@ from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
 from io import BytesIO, StringIO
 import os
 import logging
-import itertools
 
 log = logging.getLogger(__name__)
 

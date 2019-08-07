@@ -12,7 +12,7 @@ Copyright (c) 2005-2016, The RoboFab Developers:
 	Just van Rossum
 """
 from __future__ import unicode_literals
-from fontTools.misc.py23 import basestring, unicode
+from fontTools.misc.py23 import unicode
 
 
 illegalCharacters = r"\" * + / : < > ? [ \ ] | \0".split(" ")

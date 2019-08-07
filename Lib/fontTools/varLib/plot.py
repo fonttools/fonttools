@@ -1,7 +1,6 @@
 """Visualize DesignSpaceDocument and resulting VariationModel."""
 
 from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.varLib.models import VariationModel, supportScalar
 from fontTools.designspaceLib import DesignSpaceDocument
 from mpl_toolkits.mplot3d import axes3d

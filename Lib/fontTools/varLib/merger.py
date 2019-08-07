@@ -4,15 +4,12 @@ Merge OpenType Layout tables (GDEF / GPOS / GSUB).
 from __future__ import print_function, division, absolute_import
 import copy
 from operator import ior
-from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc import classifyTools
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables import otBase as otBase
-from fontTools.ttLib.tables.DefaultTable import DefaultTable
-from fontTools.varLib import builder, models, varStore
+from fontTools.varLib import builder, varStore
 from fontTools.varLib.models import nonNone, allNone, allEqual, allEqualTo
-from fontTools.varLib.varStore import VarStoreInstancer
 from functools import reduce
 from fontTools.otlLib.builder import buildSinglePos
 

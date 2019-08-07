@@ -1,19 +1,5 @@
 """Python 2/3 compat layer leftovers."""
 
-__all__ = [
-    "basestring",
-    "unicode",
-    "unichr",
-    "byteord",
-    "bytechr",
-    "strjoin",
-    "bytesjoin",
-    "tobytes",
-    "tostr",
-    "tounicode",
-    "Tag",
-]
-
 basestring = str
 unichr = chr
 unicode = str
@@ -73,9 +59,3 @@ class Tag(str):
 
 def bytesjoin(iterable, joiner=b""):
     return tobytes(joiner).join(tobytes(item) for item in iterable)
-
-
-if __name__ == "__main__":
-    import doctest, sys
-
-    sys.exit(doctest.testmod().failed)

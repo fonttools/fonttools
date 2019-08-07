@@ -4,7 +4,6 @@ Instantiate a variation font.  Run, eg:
 $ fonttools varLib.mutator ./NotoSansArabic-VF.ttf wght=140 wdth=85
 """
 from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import floatToFixedToFloat, otRound, floatToFixed
 from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont, newTable
@@ -19,7 +18,6 @@ from fontTools.varLib.merger import MutatorMerger
 from fontTools.varLib.varStore import VarStoreInstancer
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.iup import iup_delta
-import fontTools.subset.cff
 import os.path
 import logging
 from io import BytesIO

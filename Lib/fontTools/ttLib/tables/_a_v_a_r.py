@@ -1,12 +1,10 @@
 from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import bytesjoin
-from fontTools import ttLib
 from fontTools.misc import sstruct
 from fontTools.misc.fixedTools import fixedToFloat, floatToFixed
 from fontTools.misc.textTools import safeEval
 from fontTools.ttLib import TTLibError
 from . import DefaultTable
-import array
 import struct
 import logging
 

@@ -6,7 +6,6 @@ programs that are contained in the TSI3 table. It uses the same format as
 the TSI0 table.
 """
 from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
 from fontTools import ttLib
 
 superclass = ttLib.getTableClass("TSI0")
