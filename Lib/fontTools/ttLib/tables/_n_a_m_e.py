@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-
-
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import safeEval

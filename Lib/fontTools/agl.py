@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # The table below is taken from
 # http://www.adobe.com/devnet/opentype/archives/aglfn.txt
 

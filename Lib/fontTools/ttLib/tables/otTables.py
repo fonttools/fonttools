@@ -1,4 +1,3 @@
-# coding: utf-8
 """fontTools.ttLib.tables.otTables -- A collection of classes representing the various
 OpenType subtables.
 

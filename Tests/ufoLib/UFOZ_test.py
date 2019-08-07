@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from fontTools.misc.py23 import tostr
 from fontTools.ufoLib import UFOReader, UFOWriter, UFOFileStructure

@@ -32,8 +32,6 @@ UNIDATA_LICENSE_URL = "http://unicode.org/copyright.html#License"
 UNIDATA_PATH = pjoin(abspath(dirname(__file__)), pardir,
                      "Lib", "fontTools", "unicodedata") + sep
 
-SRC_ENCODING = "# -*- coding: utf-8 -*-\n"
-
 NOTICE = "# NOTE: This file was auto-generated with MetaTools/buildUCD.py.\n"
 
 MAX_UNICODE = 0x10FFFF
@@ -192,8 +190,6 @@ def build_ranges(filename, local_ucd=None, output_path=None,
         max_value_length = min(56, max(len(repr(v)) for _, _, v in ranges))
 
     with open(output_path, "w", encoding="utf-8") as f:
-        f.write(SRC_ENCODING)
-        f.write("#\n")
         f.write(NOTICE)
         f.write("# Source: {}{}\n".format(UNIDATA_URL, filename))
         f.write("# License: {}\n".format(UNIDATA_LICENSE_URL))

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # NOTE: This file was auto-generated with MetaTools/buildUCD.py.
 # Source: https://unicode.org/Public/UNIDATA/ScriptExtensions.txt
 # License: http://unicode.org/copyright.html#License

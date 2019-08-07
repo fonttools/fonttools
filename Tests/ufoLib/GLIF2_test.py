@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import unittest
 from fontTools.ufoLib.glifLib import GlifLibError, readGlyphFromString, writeGlyphToString

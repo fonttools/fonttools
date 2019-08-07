@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """T2CharString glyph width optimizer."""
 
 
@@ -16,7 +14,7 @@ class missingdict(dict):
 		return self.missing_func(v)
 
 def cumSum(f, op=add, start=0, decreasing=False):
-	
+
 	keys = sorted(f.keys())
 	minx, maxx = keys[0], keys[-1]
 
@@ -99,7 +97,7 @@ def optimizeWidths(widths):
 		for w in widths:
 			d[w] += 1
 		widths = d
-	
+
 	keys = sorted(widths.keys())
 	minw, maxw = keys[0], keys[-1]
 	domain = list(range(minw, maxw+1))

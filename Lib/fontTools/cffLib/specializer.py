@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """T2CharString operator specializer and generalizer."""
 
 
@@ -269,7 +267,7 @@ def _convertBlendOpToArgs(blendList):
 	# be a list of blend op args, and need to be converted before
 	# we convert the current list.
 	if any([isinstance(arg, list) for arg in blendList]):
-		args =  [i for e in blendList for i in 
+		args =  [i for e in blendList for i in
 					(_convertBlendOpToArgs(e) if isinstance(e,list) else [e]) ]
 	else:
 		args = blendList

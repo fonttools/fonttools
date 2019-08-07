@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 glifLib.py -- Generic module for reading and writing the .glif format.
 

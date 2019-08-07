@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-
-
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser, SymbolTable
 from fontTools.misc.py23 import *
