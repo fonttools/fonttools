@@ -5,7 +5,7 @@ from __future__ import print_function, absolute_import
 
 __requires__ = ["FontTools", "ufoLib"]
 
-from fontTools.misc.py23 import SimpleNamespace
+from types import SimpleNamespace
 from fontTools.svgLib import SVGPath
 
 from fontTools.pens.pointPen import SegmentToPointPen

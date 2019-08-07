@@ -4,6 +4,7 @@ from fontTools.misc.py23 import *
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.misc.encodingTools import getEncoding
 from collections import OrderedDict
+from types import SimpleNamespace
 import itertools
 
 SHIFT = " " * 4
@@ -60,7 +61,6 @@ __all__ = [
     'OS2Field',
     'OrderedDict',
     'PairPosStatement',
-    'Py23Error',
     'ReverseChainSingleSubstStatement',
     'ScriptStatement',
     'SimpleNamespace',

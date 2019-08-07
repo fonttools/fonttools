@@ -13,6 +13,7 @@ a table's length chages you need to rewrite the whole file anyway.
 """
 
 from __future__ import print_function, division, absolute_import
+from types import SimpleNamespace
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.ttLib import TTLibError

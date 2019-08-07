@@ -8,7 +8,6 @@ import sys
 from contextlib import redirect_stderr, redirect_stdout
 from io import BytesIO
 from io import StringIO as UnicodeIO
-from types import SimpleNamespace
 
 __all__ = [
     "basestring",
@@ -25,7 +24,6 @@ __all__ = [
     "tostr",
     "tounicode",
     "Tag",
-    "SimpleNamespace",
 ]
 
 StringIO = UnicodeIO

@@ -13,6 +13,7 @@ from fontTools.varLib import builder
 from fontTools.varLib import featureVars
 from fontTools.varLib import models
 import collections
+from types import SimpleNamespace
 from copy import deepcopy
 import logging
 import os

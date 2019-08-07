@@ -5,6 +5,7 @@ from io import BytesIO
 from datetime import datetime
 from base64 import b64encode, b64decode
 from numbers import Integral
+from types import SimpleNamespace
 
 try:
     from collections.abc import Mapping # python >= 3.3
@@ -26,7 +27,6 @@ from fontTools.misc.py23 import (
     basestring,
     tounicode,
     tobytes,
-    SimpleNamespace,
 )
 
 # On python3, by default we deserialize <data> elements as bytes, whereas on
