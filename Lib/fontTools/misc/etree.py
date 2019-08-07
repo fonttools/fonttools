@@ -12,7 +12,7 @@ only availble in lxml, like OrderedDict for attributes, pretty_print and
 iterwalk.
 """
 from __future__ import absolute_import, unicode_literals
-from fontTools.misc.py23 import basestring, unicode, tounicode, open
+from fontTools.misc.py23 import basestring, unicode, tounicode
 
 
 XML_DECLARATION = """<?xml version='1.0' encoding='%s'?>"""

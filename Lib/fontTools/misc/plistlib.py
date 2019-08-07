@@ -27,7 +27,6 @@ from fontTools.misc.py23 import (
     tounicode,
     tobytes,
     SimpleNamespace,
-    range,
 )
 
 # On python3, by default we deserialize <data> elements as bytes, whereas on

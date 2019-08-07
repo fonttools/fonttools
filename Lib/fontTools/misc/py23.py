@@ -25,26 +25,16 @@ __all__ = [
     "tostr",
     "tounicode",
     "Tag",
-    "open",
-    "range",
-    "round",
     "SimpleNamespace",
-    "zip",
-    "RecursionError",
 ]
 
-RecursionError = RecursionError
 StringIO = UnicodeIO
 
 basestring = str
 isclose = _math.isclose
 isfinite = _math.isfinite
-open = open
-range = range
-round = round3 = round
 unichr = chr
 unicode = str
-zip = zip
 
 
 def bytechr(n):

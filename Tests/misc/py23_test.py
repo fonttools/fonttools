@@ -51,11 +51,6 @@ class OpenFuncWrapperTest(unittest.TestCase):
 			os.remove(outfile.name)
 		return result
 
-	def test_binary_pipe_py23_open_wrapper(self):
-		if self.diff_piped(
-				TEST_BIN_DATA, "from fontTools.misc.py23 import open"):
-			self.fail("Input and output data differ!")
-
 	def test_binary_pipe_built_in_io_open(self):
 		if sys.version_info.major < 3 and sys.platform == 'win32':
 			# On Windows Python 2.x, the piped input and output data are
