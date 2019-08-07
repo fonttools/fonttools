@@ -8,7 +8,6 @@
 
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
-from fontTools.misc.py23 import *
 from fontTools import ttLib
 from fontTools.ttLib.tables._c_m_a_p import cmap_classes
 from fontTools.ttLib.tables import otTables as ot
