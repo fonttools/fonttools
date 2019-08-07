@@ -1,5 +1,5 @@
 from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import Tag, bytesjoin
 from fontTools.misc import sstruct
 from fontTools.misc.fixedTools import fixedToFloat, floatToFixed
 from fontTools.misc.textTools import safeEval, num2binary, binary2num

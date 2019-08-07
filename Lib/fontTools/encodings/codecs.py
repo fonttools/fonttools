@@ -2,7 +2,7 @@
 but missing from Python.  See https://github.com/fonttools/fonttools/issues/236 for details."""
 
 from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import unichr
 import codecs
 import encodings
 

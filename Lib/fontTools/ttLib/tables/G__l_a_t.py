@@ -6,7 +6,7 @@ from itertools import *
 from functools import partial
 from . import DefaultTable
 from . import grUtils
-import struct, operator, warnings
+import struct
 
 
 Glat_format_0 = """

@@ -3,7 +3,7 @@ charstring encryption algorithm as used by PostScript Type 1 fonts.
 """
 
 from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import bytechr, byteord, bytesjoin
 
 def _decryptChar(cipher, R):
 	cipher = byteord(cipher)

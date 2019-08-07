@@ -7,7 +7,6 @@ try:
 except ImportError:
 	import xml.etree.ElementTree as ET
 import struct
-import re
 import logging
 
 

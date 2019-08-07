@@ -4,7 +4,7 @@
 
 from __future__ import (print_function, division, absolute_import,
                         unicode_literals)
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import tostr, unichr
 import re
 
 

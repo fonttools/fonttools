@@ -11,7 +11,7 @@ import shutil
 import sys
 import tempfile
 from unittest import TestCase as _TestCase
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import tobytes, unicode
 from fontTools.misc.xmlWriter import XMLWriter
 from io import BytesIO
 

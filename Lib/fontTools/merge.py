@@ -15,7 +15,6 @@ from fontTools.misc.loggingTools import Timer
 from fontTools.pens.recordingPen import DecomposingRecordingPen
 from functools import reduce
 import sys
-import time
 import operator
 import logging
 

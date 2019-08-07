@@ -247,7 +247,6 @@ class _DehintingT2Decompiler(psCharStrings.T2WidthExtractor):
 			self.has_hintmask = False
 			# List of indices of calls to empty subroutines to remove.
 			self.deletions = []
-		pass
 
 	def __init__(self, css, localSubrs, globalSubrs, nominalWidthX, defaultWidthX, private=None):
 		self._css = css

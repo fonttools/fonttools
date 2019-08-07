@@ -382,7 +382,6 @@ class Program(object):
 
 						# Write bytes
 						if nBytes:
-							pass
 							if nBytes <= 8:
 								op, argBits, name = streamMnemonicDict["PUSHB"]
 								op = op + nBytes - 1

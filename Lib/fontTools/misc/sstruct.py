@@ -47,7 +47,7 @@ calcsize(fmt)
 """
 
 from __future__ import print_function, division, absolute_import
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import basestring, tobytes, tostr
 from fontTools.misc.fixedTools import fixedToFloat as fi2fl, floatToFixed as fl2fi
 import struct
 import re
