@@ -98,13 +98,11 @@ class AbstractPen(object):
 		"""Close the current sub path. You must call either pen.closePath()
 		or pen.endPath() after each sub path.
 		"""
-		pass
 
 	def endPath(self):
 		"""End the current sub path, but don't close it. You must call
 		either pen.closePath() or pen.endPath() after each sub path.
 		"""
-		pass
 
 	def addComponent(self, glyphName, transformation):
 		"""Add a sub glyph. The 'transformation' argument must be a 6-tuple
@@ -145,7 +143,6 @@ class NullPen(object):
 class LoggingPen(LogMixin, AbstractPen):
 	"""A pen with a `log` property (see fontTools.misc.loggingTools.LogMixin)
 	"""
-	pass
 
 
 class DecomposingPen(LoggingPen):

@@ -333,7 +333,6 @@ class SFNTWriter(object):
 
 		else:
 			assert not self.flavor, "Unknown flavor '%s'" % self.flavor
-			pass
 
 		directory = sstruct.pack(self.directoryFormat, self)
 
