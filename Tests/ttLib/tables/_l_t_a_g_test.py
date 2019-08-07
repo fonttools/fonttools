@@ -6,6 +6,7 @@ import os
 import struct
 import unittest
 from fontTools.ttLib import newTable
+from io import BytesIO
 
 
 class Test_l_t_a_g(unittest.TestCase):

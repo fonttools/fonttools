@@ -8,6 +8,7 @@ try:
 	from collections.abc import MutableMapping
 except ImportError:
 	from UserDict import DictMixin as MutableMapping
+from io import BytesIO
 
 
 class ResourceError(Exception):

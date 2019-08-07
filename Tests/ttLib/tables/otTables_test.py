@@ -7,6 +7,7 @@ from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
 import fontTools.ttLib.tables.otTables as otTables
 import unittest
+from io import StringIO
 
 
 def makeCoverage(glyphs):

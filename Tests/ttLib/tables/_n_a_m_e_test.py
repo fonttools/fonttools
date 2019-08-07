@@ -10,7 +10,7 @@ import unittest
 from fontTools.ttLib import newTable
 from fontTools.ttLib.tables._n_a_m_e import (
 	table__n_a_m_e, NameRecord, nameRecordFormat, nameRecordSize, makeName, log)
-
+from io import BytesIO
 
 def names(nameTable):
 	result = [(n.nameID, n.platformID, n.platEncID, n.langID, n.string)

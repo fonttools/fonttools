@@ -9,6 +9,7 @@ from fontTools.ttLib import TTFont
 from fontTools.feaLib.parser import Parser
 from fontTools.feaLib import ast
 from fontTools.feaLib.lexer import Lexer
+from io import StringIO
 import difflib
 import os
 import shutil
@@ -507,7 +508,7 @@ class BuilderTest(unittest.TestCase):
         self.assertRaises(AssertionError, self.build, "", tables={"FOO"})
 
     def test_build_pre_parsed_ast_featurefile(self):
-        f = UnicodeIO("feature liga {sub f i by f_i;} liga;")
+        f = StringIO("feature liga {sub f i by f_i;} liga;")
         tree = Parser(f).parse()
         font = makeTTFont()
         addOpenTypeFeatures(font, tree)

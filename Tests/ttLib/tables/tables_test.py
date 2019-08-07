@@ -7,6 +7,7 @@ import sys
 import re
 import contextlib
 import pytest
+from io import StringIO
 
 try:
     import unicodedata2
@@ -255,13 +256,13 @@ def read_expected_ttx(testfile, tableTag):
 
 
 def dump_ttx(font, tableTag):
-    f = UnicodeIO()
+    f = StringIO()
     font.saveXML(f, newlinestr='\n', tables=[tableTag])
     return ttLibVersion_RE.sub('', f.getvalue())
 
 
 def load_ttx(ttx):
-    f = UnicodeIO()
+    f = StringIO()
     f.write(ttx)
     f.seek(0)
     font = TTFont()

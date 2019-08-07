@@ -8,6 +8,7 @@ import difflib
 import os
 import sys
 import unittest
+from io import StringIO
 
 
 class MtiTest(unittest.TestCase):

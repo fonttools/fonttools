@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 from __future__ import unicode_literals
 from fontTools.misc.py23 import *
+from io import StringIO
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import binary2num, safeEval
 from fontTools.feaLib.error import FeatureLibError
@@ -24,7 +25,7 @@ def addOpenTypeFeatures(font, featurefile, tables=None):
 
 
 def addOpenTypeFeaturesFromString(font, features, filename=None, tables=None):
-    featurefile = UnicodeIO(tounicode(features))
+    featurefile = StringIO(tounicode(features))
     if filename:
         # the directory containing 'filename' is used as the root of relative
         # include paths; if None is provided, the current directory is assumed

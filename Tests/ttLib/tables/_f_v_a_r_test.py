@@ -7,7 +7,7 @@ from fontTools.ttLib import TTLibError
 from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis, NamedInstance
 from fontTools.ttLib.tables._n_a_m_e import table__n_a_m_e, NameRecord
 import unittest
-
+from io import BytesIO
 
 
 FVAR_DATA = deHexStr(

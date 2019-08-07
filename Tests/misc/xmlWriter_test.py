@@ -3,6 +3,7 @@ from fontTools.misc.py23 import *
 import os
 import unittest
 from fontTools.misc.xmlWriter import XMLWriter
+from io import BytesIO
 
 linesep = tobytes(os.linesep)
 HEADER = b'<?xml version="1.0" encoding="UTF-8"?>' + linesep

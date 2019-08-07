@@ -9,6 +9,7 @@ from fontTools.ttLib.woff2 import (
 	WOFF2FlavorData, woff2TransformedTableTags, WOFF2GlyfTable, WOFF2LocaTable,
 	WOFF2HmtxTable, WOFF2Writer, unpackBase128, unpack255UShort, pack255UShort)
 import unittest
+from io import BytesIO
 from fontTools.misc import sstruct
 from fontTools import fontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen

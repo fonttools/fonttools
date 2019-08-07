@@ -11,6 +11,7 @@ import pytest
 import re
 import os
 import unittest
+from io import StringIO
 
 
 class GlyphCoordinatesTest(object):
@@ -212,7 +213,7 @@ class glyfTableTest(unittest.TestCase):
         font['head'].decompile(self.headData, font)
         font['loca'].decompile(self.locaData, font)
         glyfTable.decompile(self.glyfData, font)
-        out = UnicodeIO()
+        out = StringIO()
         font.saveXML(out)
         glyfXML = strip_ttLibVersion(out.getvalue()).splitlines()
         self.assertEqual(glyfXML, self.glyfXML)

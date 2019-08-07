@@ -19,6 +19,7 @@ import logging
 import os
 import re
 import pytest
+from io import BytesIO, StringIO
 
 
 TESTDATA = os.path.join(os.path.dirname(__file__), "data")

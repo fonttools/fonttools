@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools import cffLib
 from . import DefaultTable
+from io import BytesIO
 
 
 class table_C_F_F_(DefaultTable.DefaultTable):

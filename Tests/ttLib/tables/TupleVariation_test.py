@@ -10,6 +10,7 @@ from fontTools.ttLib.tables.TupleVariation import \
 	compileTupleVariationStore, decompileTupleVariationStore, inferRegion_
 import random
 import unittest
+from io import BytesIO
 
 
 def hexencode(s):

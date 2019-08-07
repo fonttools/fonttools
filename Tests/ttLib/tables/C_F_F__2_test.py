@@ -7,6 +7,7 @@ from fontTools.ttLib import TTFont, newTable
 import re
 import os
 import unittest
+from io import StringIO
 
 
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
@@ -41,7 +42,7 @@ class CFFTableTest(unittest.TestCase):
         font = TTFont(file=CFF_BIN)
         cffTable = font['CFF2']
         cffData = cffTable.compile(font)
-        out = UnicodeIO()
+        out = StringIO()
         font.saveXML(out)
         cff2XML = out.getvalue()
         cff2XML = strip_VariableItems(cff2XML)

@@ -7,6 +7,7 @@ from fontTools.ttLib import TTFont, newTable
 import re
 import os
 import unittest
+from io import StringIO
 
 
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
@@ -33,7 +34,7 @@ class CFFTableTest(unittest.TestCase):
         font = TTFont(sfntVersion='OTTO')
         cffTable = font['CFF '] = newTable('CFF ')
         cffTable.decompile(self.cffData, font)
-        out = UnicodeIO()
+        out = StringIO()
         font.saveXML(out)
         cffXML = strip_ttLibVersion(out.getvalue()).splitlines()
         self.assertEqual(cffXML, self.cffXML)

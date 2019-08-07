@@ -7,6 +7,7 @@ import unittest
 from fontTools.ttLib import TTFont
 from fontTools.misc.xmlReader import XMLReader, ProgressPrinter, BUFSIZE
 import tempfile
+from io import BytesIO
 
 
 class TestXMLReader(unittest.TestCase):
@@ -59,7 +60,7 @@ class TestXMLReader(unittest.TestCase):
 		# notice how when CR is escaped, it is not normalised by the XML parser
 		data = (
 			'<ttFont>\r'                                    #        \r -> \n
-			'  <test>\r\n'                                  #      \r\n -> \n 
+			'  <test>\r\n'                                  #      \r\n -> \n
 			'    a line of text\n'                          #              \n
 			'    escaped CR and unix newline &#13;\n'       #   &#13;\n -> \r\n
 			'    escaped CR and macintosh newline &#13;\r'  #   &#13;\r -> \r\n

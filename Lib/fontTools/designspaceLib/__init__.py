@@ -5,6 +5,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import LogMixin
 import collections
 import os
+from io import BytesIO, StringIO
 import posixpath
 from fontTools.misc import etree as ET
 from fontTools.misc import plistlib
@@ -1031,7 +1032,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         if encoding is unicode or (
             encoding is not None and encoding.lower() == "unicode"
         ):
-            f = UnicodeIO()
+            f = StringIO()
             xml_declaration = False
         elif encoding is None or encoding == "utf-8":
             f = BytesIO()

@@ -12,6 +12,7 @@ import textwrap
 import time
 import re
 import pytest
+from io import StringIO
 
 
 def logger_name_generator():

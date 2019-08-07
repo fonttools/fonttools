@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.pens.pointInsidePen import PointInsidePen
 import unittest
+from io import BytesIO
 
 
 class PointInsidePenTest(unittest.TestCase):

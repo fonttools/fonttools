@@ -9,6 +9,7 @@ from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis
 import collections
 import logging
 import unittest
+from io import BytesIO
 
 
 TEST_DATA = deHexStr(

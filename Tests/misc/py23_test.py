@@ -7,6 +7,7 @@ from subprocess import check_call
 import sys
 import os
 import unittest
+from io import StringIO, BytesIO
 
 from fontTools.misc.py23 import (
 	isclose, redirect_stdout, redirect_stderr)

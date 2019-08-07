@@ -6,6 +6,7 @@ from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib import TTLibError
 from fontTools.ttLib.tables._m_e_t_a import table__m_e_t_a
 import unittest
+from io import BytesIO
 
 
 # From a real font on MacOS X, but substituted 'bild' tag by 'TEST',

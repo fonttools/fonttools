@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from fontTools.misc.textTools import deHexStr
 from fontTools.misc.macRes import ResourceReader
+from io import BytesIO
 
 
 # test resource data in DeRez notation

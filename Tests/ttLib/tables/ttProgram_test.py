@@ -7,6 +7,7 @@ import array
 import os
 import re
 import unittest
+from io import StringIO
 
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 DATA_DIR = os.path.join(CURR_DIR, 'data')
@@ -105,14 +106,14 @@ class ProgramTest(unittest.TestCase):
         p = Program()
         p.fromBytecode(BYTECODE)
         ttfont = TestFont()
-        buf = UnicodeIO()
+        buf = StringIO()
         writer = XMLWriter(buf, newlinestr='\n')
         try:
             p.toXML(writer, ttfont)
         finally:
             output_string = buf.getvalue()
         assert output_string == ttProgramXML
-        
+
 
 if __name__ == '__main__':
     import sys

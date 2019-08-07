@@ -5,6 +5,7 @@ from fontTools.voltLib import ast
 from fontTools.voltLib.error import VoltLibError
 from fontTools.voltLib.parser import Parser
 import unittest
+from io import StringIO
 
 
 class ParserTest(unittest.TestCase):
@@ -1117,7 +1118,7 @@ class ParserTest(unittest.TestCase):
                          (".notdef", 0, None, "BASE", None))
 
     def parse(self, text):
-        return Parser(UnicodeIO(text)).parse()
+        return Parser(StringIO(text)).parse()
 
 if __name__ == "__main__":
     import sys

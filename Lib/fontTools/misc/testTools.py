@@ -13,6 +13,7 @@ import tempfile
 from unittest import TestCase as _TestCase
 from fontTools.misc.py23 import *
 from fontTools.misc.xmlWriter import XMLWriter
+from io import BytesIO
 
 
 def parseXML(xmlSnippet):

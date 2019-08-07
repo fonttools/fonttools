@@ -6,7 +6,7 @@ from fontTools.misc.textTools import num2binary, binary2num, readHex
 import array
 import re
 import logging
-
+from io import StringIO
 
 log = logging.getLogger(__name__)
 

@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.feaLib.error import FeatureLibError, IncludedFeaNotFound
 from fontTools.feaLib.lexer import IncludingLexer, Lexer
+from io import StringIO
 import os
 import shutil
 import tempfile
@@ -183,7 +184,7 @@ class IncludingLexerTest(unittest.TestCase):
                                lambda: list(lexer))
 
     def test_featurefilepath_None(self):
-        lexer = IncludingLexer(UnicodeIO("# foobar"))
+        lexer = IncludingLexer(StringIO("# foobar"))
         self.assertIsNone(lexer.featurefilepath)
         files = set(loc[0] for _, _, loc in lexer)
         self.assertIn("<features>", files)
@@ -195,7 +196,7 @@ class IncludingLexerTest(unittest.TestCase):
                     pos A B -40;
                 } kern;
                 """, encoding="utf-8"))
-        including = UnicodeIO("include(%s);" % included.name)
+        including = StringIO("include(%s);" % included.name)
         try:
             lexer = IncludingLexer(including)
             files = set(loc[0] for _, _, loc in lexer)
@@ -223,7 +224,7 @@ class IncludingLexerTest(unittest.TestCase):
             # itself have a path, because it was initialized from
             # an in-memory stream, so it will use the current working
             # directory to resolve relative include statements
-            lexer = IncludingLexer(UnicodeIO("include(included.fea);"))
+            lexer = IncludingLexer(StringIO("include(included.fea);"))
             files = set(loc[0] for _, _, loc in lexer)
             expected = os.path.realpath(included.name)
             self.assertIn(expected, files)

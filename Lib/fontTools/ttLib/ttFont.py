@@ -4,6 +4,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import deprecateArgument
 from fontTools.ttLib import TTLibError
 from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
+from io import BytesIO, StringIO
 import os
 import logging
 import itertools

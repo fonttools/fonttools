@@ -20,6 +20,7 @@ from fontTools.ttLib import TTLibError
 import struct
 from collections import OrderedDict
 import logging
+from io import BytesIO
 
 
 log = logging.getLogger(__name__)

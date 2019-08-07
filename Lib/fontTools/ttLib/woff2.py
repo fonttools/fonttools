@@ -14,6 +14,7 @@ from fontTools.ttLib.sfnt import (SFNTReader, SFNTWriter, DirectoryEntry,
 	sfntDirectoryEntrySize, calcChecksum)
 from fontTools.ttLib.tables import ttProgram
 import logging
+from io import BytesIO
 
 
 log = logging.getLogger("fontTools.ttLib.woff2")
