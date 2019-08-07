@@ -1,7 +1,5 @@
 """Python 2/3 compat layer leftovers."""
 
-from contextlib import redirect_stderr, redirect_stdout
-
 __all__ = [
     "basestring",
     "unicode",
