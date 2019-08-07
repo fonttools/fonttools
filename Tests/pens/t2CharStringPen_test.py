@@ -1,5 +1,5 @@
 
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import basestring
 from fontTools.pens.t2CharStringPen import T2CharStringPen
 import unittest
 

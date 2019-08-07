@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import unichr
 
 from fontTools import unicodedata
 

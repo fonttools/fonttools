@@ -1,5 +1,5 @@
 
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import tobytes
 from fontTools.misc.textTools import deHexStr
 import filecmp
 import tempfile

@@ -132,7 +132,7 @@ fb.save("test.otf")
 ```
 """
 
-from .misc.py23 import *
+from .misc.py23 import basestring
 from .ttLib import TTFont, newTable
 from .ttLib.tables._c_m_a_p import cmap_classes
 from .misc.timeTools import timestampNow

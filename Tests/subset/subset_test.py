@@ -1,5 +1,5 @@
 
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import tobytes, tostr
 from fontTools import subset
 from fontTools.ttLib import TTFont, newTable
 from fontTools.misc.loggingTools import CapturingLogHandler

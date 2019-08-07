@@ -1,5 +1,5 @@
 
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import basestring
 from fontTools.misc.loggingTools import CapturingLogHandler
 import unittest
 

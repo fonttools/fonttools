@@ -1,6 +1,6 @@
 
 
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import Tag, tounicode
 from io import StringIO
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import binary2num, safeEval

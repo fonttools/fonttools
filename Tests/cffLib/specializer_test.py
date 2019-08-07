@@ -5,7 +5,6 @@ from fontTools.cffLib.specializer import (programToString, stringToProgram,
                                           generalizeCommands,
                                           specializeCommands)
 from fontTools.ttLib import TTFont
-import os
 import unittest
 from fontTools.misc.testTools import parseXML, DataFilesHandler
 

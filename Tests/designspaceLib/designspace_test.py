@@ -1,7 +1,6 @@
 import os
 import sys
 import pytest
-import warnings
 
 from fontTools.misc import plistlib
 from fontTools.designspaceLib import (

@@ -1,4 +1,4 @@
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import strjoin
 import os
 import unittest
 from fontTools.ttLib import TTFont

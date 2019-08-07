@@ -6,8 +6,6 @@ from fontTools.misc.xmlWriter import XMLWriter
 from fontTools.ttLib import TTLibError
 from fontTools.ttLib.tables._a_v_a_r import table__a_v_a_r
 from fontTools.ttLib.tables._f_v_a_r import table__f_v_a_r, Axis
-import collections
-import logging
 import unittest
 from io import BytesIO
 

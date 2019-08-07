@@ -1,6 +1,6 @@
 
 from fontTools.ttLib import TTFont, newTable, getTableModule
-from fontTools.ttLib.tables.O_S_2f_2 import *
+from fontTools.ttLib.tables.O_S_2f_2 import intersectUnicodeRanges, table_O_S_2f_2
 import unittest
 
 

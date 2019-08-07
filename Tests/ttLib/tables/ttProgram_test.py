@@ -5,7 +5,6 @@ from fontTools.ttLib.tables.ttProgram import Program
 from fontTools.misc.textTools import deHexStr
 import array
 import os
-import re
 import unittest
 from io import StringIO
 

@@ -1,7 +1,7 @@
 """T2CharString operator specializer and generalizer."""
 
 
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import basestring
 from fontTools.cffLib import maxStackLimit
 
 

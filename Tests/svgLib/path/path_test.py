@@ -1,6 +1,6 @@
 
 
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import tobytes
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.svgLib import SVGPath
 

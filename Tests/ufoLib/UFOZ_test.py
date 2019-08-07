@@ -10,7 +10,6 @@ import fs.tempfs
 import fs.memoryfs
 import fs.copy
 import pytest
-import warnings
 
 
 TESTDATA = fs.osfs.OSFS(

@@ -1,5 +1,5 @@
 
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import tounicode
 from fontTools.pens.pointInsidePen import PointInsidePen
 import unittest
 from io import BytesIO

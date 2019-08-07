@@ -1,5 +1,5 @@
 
-from fontTools.misc.py23 import *
+from fontTools.misc.py23 import unichr
 import unittest
 import fontTools.encodings.codecs # Not to be confused with "import codecs"
 
