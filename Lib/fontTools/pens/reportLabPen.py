@@ -11,7 +11,7 @@ class ReportLabPen(BasePen):
 
 	"""A pen for drawing onto a reportlab.graphics.shapes.Path object."""
 
-	def __init__(self, glyphSet, path=None):
+	def __init__(self, glyphSet=None, path=None):
 		BasePen.__init__(self, glyphSet)
 		if path is None:
 			path = Path()

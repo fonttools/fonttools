@@ -44,7 +44,7 @@ class T2CharStringPen(BasePen):
     which are close to their integral part within the tolerated range.
     """
 
-    def __init__(self, width, glyphSet, roundTolerance=0.5, CFF2=False):
+    def __init__(self, width, glyphSet=None, roundTolerance=0.5, CFF2=False):
         super(T2CharStringPen, self).__init__(glyphSet)
         self.roundPoint = makeRoundFunc(roundTolerance)
         self._CFF2 = CFF2

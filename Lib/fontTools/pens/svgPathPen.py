@@ -9,7 +9,7 @@ def pointToString(pt):
 
 class SVGPathPen(BasePen):
 
-    def __init__(self, glyphSet):
+    def __init__(self, glyphSet=None):
         BasePen.__init__(self, glyphSet)
         self._commands = []
         self._lastCommand = None

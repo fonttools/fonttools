@@ -22,7 +22,7 @@ class ControlBoundsPen(BasePen):
 	If 'ignoreSinglePoints' is True, single points are ignored.
 	"""
 
-	def __init__(self, glyphSet, ignoreSinglePoints=False):
+	def __init__(self, glyphSet=None, ignoreSinglePoints=False):
 		BasePen.__init__(self, glyphSet)
 		self.ignoreSinglePoints = ignoreSinglePoints
 		self.init()

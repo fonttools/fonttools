@@ -8,7 +8,7 @@ __all__ = ["QtPen"]
 
 class QtPen(BasePen):
 
-	def __init__(self, glyphSet, path=None):
+	def __init__(self, glyphSet=None, path=None):
 		BasePen.__init__(self, glyphSet)
 		if path is None:
 			from PyQt5.QtGui import QPainterPath
