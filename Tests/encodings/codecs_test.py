@@ -1,4 +1,3 @@
-from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
 import unittest
 import fontTools.encodings.codecs # Not to be confused with "import codecs"

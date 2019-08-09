@@ -3,8 +3,6 @@
 Tools to parse data files from the Unicode Character Database.
 """
 
-from __future__ import print_function, absolute_import, division
-from __future__ import unicode_literals
 
 try:
     from urllib.request import urlopen

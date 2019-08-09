@@ -1,7 +1,5 @@
 """cffLib_test.py -- unit test for Adobe CFF fonts."""
 
-from __future__ import print_function, division, absolute_import
-from __future__ import unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, newTable
 import re

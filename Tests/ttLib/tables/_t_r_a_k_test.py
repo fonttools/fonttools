@@ -1,4 +1,3 @@
-from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.misc.testTools import parseXML, getXML
 from fontTools.misc.textTools import deHexStr

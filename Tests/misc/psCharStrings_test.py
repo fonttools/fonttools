@@ -1,4 +1,3 @@
-from __future__ import print_function, division, absolute_import
 from fontTools.cffLib import PrivateDict
 from fontTools.cffLib.specializer import stringToProgram
 from fontTools.misc.psCharStrings import T2CharString, encodeFloat, read_realNumber

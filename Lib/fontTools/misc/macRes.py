@@ -1,5 +1,4 @@
 """ Tools for reading Mac resource forks. """
-from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 import struct
 from fontTools.misc import sstruct

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, unicode_literals
 from fontTools.misc.py23 import tostr
 from fontTools.ufoLib import UFOReader, UFOWriter, UFOFileStructure
 from fontTools.ufoLib.errors import UFOLibError, GlifLibError

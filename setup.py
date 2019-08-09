@@ -361,6 +361,7 @@ setup(
 	url="http://github.com/fonttools/fonttools",
 	license="MIT",
 	platforms=["Any"],
+	python_requires=">=3.6",
 	long_description=long_description,
 	package_dir={'': 'Lib'},
 	packages=find_packages("Lib"),

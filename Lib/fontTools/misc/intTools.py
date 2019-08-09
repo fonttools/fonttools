@@ -1,6 +1,5 @@
 """Misc integer tools."""
 
-from __future__ import print_function, absolute_import, division
 from fontTools.misc.py23 import *
 
 __all__ = ['popCount']

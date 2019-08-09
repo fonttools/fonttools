@@ -1,5 +1,4 @@
 # coding: utf-8
-from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.misc.testTools import getXML, parseXML, FakeFont
 from fontTools.misc.textTools import deHexStr, hexStr

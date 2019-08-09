@@ -1,6 +1,5 @@
 """cffLib.py -- read/write tools for Adobe CFF fonts."""
 
-from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc import psCharStrings

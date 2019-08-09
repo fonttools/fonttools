@@ -1,4 +1,3 @@
-from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.ttLib.tables._f_p_g_m import table__f_p_g_m
 from fontTools.ttLib.tables import ttProgram
