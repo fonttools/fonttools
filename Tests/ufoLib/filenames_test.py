@@ -1,4 +1,3 @@
-from __future__ import absolute_import, unicode_literals
 import unittest
 from fontTools.ufoLib.filenames import userNameToFileName, handleClash1, handleClash2
 

@@ -2,8 +2,6 @@
 # The table below is taken from
 # http://www.adobe.com/devnet/opentype/archives/aglfn.txt
 
-from __future__ import (print_function, division, absolute_import,
-                        unicode_literals)
 from fontTools.misc.py23 import *
 import re
 

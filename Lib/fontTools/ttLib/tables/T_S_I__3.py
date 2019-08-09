@@ -3,7 +3,6 @@ tool to store its hinting source data.
 
 TSI3 contains the text of the glyph programs in the form of 'VTTTalk' code.
 """
-from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools import ttLib
 

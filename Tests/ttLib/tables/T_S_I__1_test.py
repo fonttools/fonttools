@@ -1,6 +1,3 @@
-from __future__ import (
-    print_function, division, absolute_import, unicode_literals
-)
 from fontTools.misc.py23 import unichr, tobytes
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.ttLib import TTFont, TTLibError

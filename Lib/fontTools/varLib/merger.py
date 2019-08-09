@@ -1,7 +1,6 @@
 """
 Merge OpenType Layout tables (GDEF / GPOS / GSUB).
 """
-from __future__ import print_function, division, absolute_import
 import copy
 from operator import ior
 from fontTools.misc.py23 import *

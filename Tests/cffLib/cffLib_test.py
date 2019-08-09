@@ -1,4 +1,3 @@
-from __future__ import print_function, division, absolute_import
 from fontTools.cffLib import TopDict, PrivateDict, CharStrings
 from fontTools.misc.testTools import parseXML, DataFilesHandler
 from fontTools.ttLib import TTFont

@@ -1,5 +1,3 @@
-from __future__ import print_function, division, absolute_import
-from __future__ import unicode_literals
 from fontTools.misc.testTools import getXML
 from fontTools.otlLib import builder
 from fontTools.ttLib.tables import otTables

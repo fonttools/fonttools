@@ -1,4 +1,3 @@
-from __future__ import print_function, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.ttLib import newTable
 from fontTools.ttLib.tables._k_e_r_n import (

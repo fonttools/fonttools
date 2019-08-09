@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """ Convert SVG paths to UFO glyphs. """
 
-from __future__ import print_function, absolute_import
 
 __requires__ = ["FontTools", "ufoLib"]
 

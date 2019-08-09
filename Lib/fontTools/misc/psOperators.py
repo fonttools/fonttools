@@ -1,4 +1,3 @@
-from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
 _accessstrings = {0: "", 1: "readonly", 2: "executeonly", 3: "noaccess"}

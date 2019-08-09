@@ -1,5 +1,3 @@
-from __future__ import print_function, division, absolute_import
-from __future__ import unicode_literals
 from fontTools.voltLib.error import VoltLibError
 from fontTools.voltLib.lexer import Lexer
 import unittest

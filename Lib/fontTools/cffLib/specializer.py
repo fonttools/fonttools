@@ -2,7 +2,6 @@
 
 """T2CharString operator specializer and generalizer."""
 
-from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.cffLib import maxStackLimit
 

@@ -2,7 +2,6 @@
 """fontTools.misc.bezierTools.py -- tools for working with bezier path segments.
 """
 
-from __future__ import print_function, division, absolute_import
 from fontTools.misc.arrayTools import calcBounds
 from fontTools.misc.py23 import *
 import math

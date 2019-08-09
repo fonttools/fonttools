@@ -11,7 +11,6 @@ Copyright (c) 2005-2016, The RoboFab Developers:
 	Tal Leming
 	Just van Rossum
 """
-from __future__ import unicode_literals
 from fontTools.misc.py23 import basestring, unicode
 
 

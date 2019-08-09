@@ -4,7 +4,6 @@ The code is mostly adapted from Blink's SVGPathNormalizer::DecomposeArcToCubic
 https://github.com/chromium/chromium/blob/93831f2/third_party/
 blink/renderer/core/svg/svg_path_parser.cc#L169-L278
 """
-from __future__ import print_function, division, absolute_import, unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.misc.py23 import isfinite
 from fontTools.misc.transform import Identity, Scale

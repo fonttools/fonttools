@@ -5,7 +5,6 @@ TSI0 is the index table containing the lengths and offsets for the glyph
 programs and 'extra' programs ('fpgm', 'prep', and 'cvt') that are contained
 in the TSI1 table.
 """
-from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from . import DefaultTable
 import struct

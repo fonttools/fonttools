@@ -1,5 +1,4 @@
 """Variation fonts interpolation models."""
-from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 
 __all__ = ['nonNone', 'allNone', 'allEqual', 'allEqualTo', 'subList',

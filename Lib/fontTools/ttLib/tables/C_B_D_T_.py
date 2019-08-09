@@ -3,7 +3,6 @@
 # Google Author(s): Matt Fontaine
 
 
-from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from . import E_B_D_T_

@@ -1,4 +1,3 @@
-from __future__ import print_function, division, absolute_import
 from fontTools.misc.py23 import *
 from fontTools.pens.t2CharStringPen import T2CharStringPen
 import unittest

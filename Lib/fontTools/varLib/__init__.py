@@ -18,8 +18,6 @@ Then you can make a variable-font this way:
 
 API *will* change in near future.
 """
-from __future__ import print_function, division, absolute_import
-from __future__ import unicode_literals
 from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.arrayTools import Vector
