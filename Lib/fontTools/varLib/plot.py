@@ -1,6 +1,5 @@
 """Visualize DesignSpaceDocument and resulting VariationModel."""
 
-from fontTools.misc.py23 import *
 from fontTools.varLib.models import VariationModel, supportScalar
 from fontTools.designspaceLib import DesignSpaceDocument
 from mpl_toolkits.mplot3d import axes3d
