@@ -1,5 +1,3 @@
-from fontTools.misc.py23 import *
-
 MVAR_ENTRIES = {
 	'hasc': ('OS/2', 'sTypoAscender'),		 # horizontal ascender
 	'hdsc': ('OS/2', 'sTypoDescender'),		 # horizontal descender

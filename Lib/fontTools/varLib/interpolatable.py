@@ -6,8 +6,6 @@ Call as:
 $ fonttools varLib.interpolatable font1 font2 ...
 """
 
-from fontTools.misc.py23 import *
-
 from fontTools.pens.basePen import AbstractPen, BasePen
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.statisticsPen import StatisticsPen

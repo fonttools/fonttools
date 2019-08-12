@@ -12,7 +12,7 @@ from fontTools.cffLib import (
 	FontDict,
 	VarStoreData
 )
-from fontTools.misc.py23 import BytesIO
+from io import BytesIO
 from fontTools.cffLib.specializer import (
 	specializeCommands, commandsToProgram)
 from fontTools.ttLib import newTable

@@ -3,7 +3,6 @@ Merge OpenType Layout tables (GDEF / GPOS / GSUB).
 """
 import copy
 from operator import ior
-from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc import classifyTools
 from fontTools.ttLib.tables import otTables as ot

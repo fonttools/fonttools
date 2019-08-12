@@ -3,7 +3,6 @@ https://docs.microsoft.com/en-us/typography/opentype/spec/chapter2#featurevariat
 
 NOTE: The API is experimental and subject to change.
 """
-from fontTools.misc.py23 import *
 from fontTools.misc.dictTools import hashdict
 from fontTools.misc.intTools import popCount
 from fontTools.ttLib import newTable
