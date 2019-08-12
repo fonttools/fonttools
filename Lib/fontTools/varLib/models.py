@@ -239,7 +239,11 @@ class VariationModel(object):
 				return -1 if v < 0 else +1 if v > 0 else 0
 			def key(loc):
 				rank = len(loc)
-				onPointAxes = [axis for axis,value in loc.items() if value in axisPoints[axis]]
+				onPointAxes = [
+					axis for axis, value in loc.items()
+					if axis in axisPoints
+					and value in axisPoints[axis]
+				]
 				orderedAxes = [axis for axis in axisOrder if axis in loc]
 				orderedAxes.extend([axis for axis in sorted(loc.keys()) if axis not in axisOrder])
 				return (
