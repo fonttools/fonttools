@@ -32,18 +32,11 @@ extras_require = {
 	# for fontTools.ufoLib: to read/write UFO fonts
 	"ufo": [
 		"fs >= 2.2.0, < 3",
-		"enum34 >= 1.1.6; python_version < '3.4'",
 	],
 	# for fontTools.misc.etree and fontTools.misc.plistlib: use lxml to
 	# read/write XML files (faster/safer than built-in ElementTree)
 	"lxml": [
 		"lxml >= 4.0, < 5",
-		"singledispatch >= 3.4.0.3; python_version < '3.4'",
-		# typing >= 3.6.4 is required when using ABC collections with the
-		# singledispatch backport, see:
-		# https://github.com/fonttools/fonttools/issues/1423
-		# https://github.com/python/typing/issues/484
-		"typing >= 3.6.4; python_version < '3.4'",
 	],
 	# for fontTools.sfnt and fontTools.woff2: to compress/uncompress
 	# WOFF 1.0 and WOFF 2.0 webfonts.
