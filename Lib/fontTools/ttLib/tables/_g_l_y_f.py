@@ -140,7 +140,6 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		for glyphName in glyphNames:
 			if glyphName not in self:
 				log.warning("glyph '%s' does not exist in glyf table", glyphName)
-				log.warning
 				continue
 			glyph = self[glyphName]
 			if glyph.numberOfContours:
