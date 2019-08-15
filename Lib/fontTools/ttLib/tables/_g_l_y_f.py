@@ -137,6 +137,9 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 			path, ext = os.path.splitext(writer.file.name)
 			existingGlyphFiles = set()
 		for glyphName in glyphNames:
+			if glyphName not in self:
+				log.warning("glyph '%s' does not exist in glyf table", glyphName)
+				continue
 			glyph = self[glyphName]
 			if glyph.numberOfContours:
 				if splitGlyphs:
