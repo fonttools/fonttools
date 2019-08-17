@@ -1117,6 +1117,36 @@ class ParserTest(unittest.TestCase):
             FeatureLibError, "Expected platform id 1 or 3",
             self.parse, 'table name { nameid 9 666 "Foo"; } name;')
 
+    def test_nameid_hexadecimal(self):
+        doc = self.parse(
+            r'table name { nameid 0x9 0x3 0x1 0x0409 "Test"; } name;')
+        name = doc.statements[0].statements[0]
+        self.assertEqual(name.nameID, 9)
+        self.assertEqual(name.platformID, 3)
+        self.assertEqual(name.platEncID, 1)
+        self.assertEqual(name.langID, 0x0409)
+
+    def test_nameid_octal(self):
+        doc = self.parse(
+            r'table name { nameid 011 03 012 02011 "Test"; } name;')
+        name = doc.statements[0].statements[0]
+        self.assertEqual(name.nameID, 9)
+        self.assertEqual(name.platformID, 3)
+        self.assertEqual(name.platEncID, 10)
+        self.assertEqual(name.langID, 0o2011)
+
+    def test_cv_hexadecimal(self):
+        doc = self.parse(
+            r'feature cv01 { cvParameters { Character 0x5DDE; }; } cv01;')
+        cv = doc.statements[0].statements[0].statements[0]
+        self.assertEqual(cv.character, 0x5DDE)
+
+    def test_cv_octal(self):
+        doc = self.parse(
+            r'feature cv01 { cvParameters { Character 056736; }; } cv01;')
+        cv = doc.statements[0].statements[0].statements[0]
+        self.assertEqual(cv.character, 0o56736)
+
     def test_rsub_format_a(self):
         doc = self.parse("feature test {rsub a [b B] c' d [e E] by C;} test;")
         rsub = doc.statements[0].statements[0]
