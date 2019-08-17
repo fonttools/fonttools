@@ -67,9 +67,9 @@ class LexerTest(unittest.TestCase):
     def test_number(self):
         self.assertEqual(lex("123 -456"),
                          [(Lexer.NUMBER, 123), (Lexer.NUMBER, -456)])
-        self.assertEqual(lex("0xCAFED00D"), [(Lexer.NUMBER, 0xCAFED00D)])
-        self.assertEqual(lex("0xcafed00d"), [(Lexer.NUMBER, 0xCAFED00D)])
-        self.assertEqual(lex("010"), [(Lexer.NUMBER, 0o10)])
+        self.assertEqual(lex("0xCAFED00D"), [(Lexer.HEXADECIMAL, 0xCAFED00D)])
+        self.assertEqual(lex("0xcafed00d"), [(Lexer.HEXADECIMAL, 0xCAFED00D)])
+        self.assertEqual(lex("010"), [(Lexer.OCTAL, 0o10)])
 
     def test_float(self):
         self.assertEqual(lex("1.23 -4.5"),
