@@ -124,6 +124,9 @@ class Lexer(object):
             self.pos_ += 2
             self.scan_over_(Lexer.CHAR_HEXDIGIT_)
             return (Lexer.NUMBER, int(text[start:self.pos_], 16), location)
+        if cur_char == "0" and next_char in Lexer.CHAR_DIGIT_:
+            self.scan_over_(Lexer.CHAR_DIGIT_)
+            return (Lexer.NUMBER, int(text[start:self.pos_], 8), location)
         if cur_char in Lexer.CHAR_DIGIT_:
             self.scan_over_(Lexer.CHAR_DIGIT_)
             if self.pos_ >= limit or text[self.pos_] != ".":
