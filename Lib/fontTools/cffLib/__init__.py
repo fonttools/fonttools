@@ -1319,6 +1319,20 @@ class CharsetConverter(SimpleConverter):
 				raise NotImplementedError
 			assert len(charset) == numGlyphs
 			log.log(DEBUG, "    charset end at %s", file.tell())
+			# make sure glyph names are unique
+			allNames = {}
+			newCharset = []
+			for glyphName in charset:
+				if glyphName in allNames:
+					# make up a new glyphName that's unique
+					n = allNames[glyphName]
+					while (glyphName + "#" + str(n)) in allNames:
+						n += 1
+					allNames[glyphName] = n + 1
+					glyphName = glyphName + "#" + str(n)
+				allNames[glyphName] = 1
+				newCharset.append(glyphName)
+			charset = newCharset
 		else:  # offset == 0 -> no charset data.
 			if isCID or "CharStrings" not in parent.rawDict:
 				# We get here only when processing fontDicts from the FDArray of

@@ -92,6 +92,21 @@ class CffLibTest(DataFilesHandler):
         self.assertEqual(topDict2.FDSelect.format, 4)
         self.assertEqual(topDict2.FDSelect.gidArray, [0, 0, 1])
 
+    def test_unique_glyph_names(self):
+        font_path = self.getpath('LinLibertine_RBI.otf')
+        font = TTFont(font_path, recalcBBoxes=False, recalcTimestamp=False)
+
+        glyphOrder = font.getGlyphOrder()
+        self.assertEqual(len(glyphOrder), len(set(glyphOrder)))
+
+        self.temp_dir()
+        save_path = os.path.join(self.tempdir, 'TestOTF.otf')
+        font.save(save_path)
+
+        font2 = TTFont(save_path)
+        glyphOrder = font2.getGlyphOrder()
+        self.assertEqual(len(glyphOrder), len(set(glyphOrder)))
+
 
 if __name__ == "__main__":
     sys.exit(unittest.main())
