@@ -308,7 +308,6 @@ Table of Contents
    agl
    cffLib/index
    designspaceLib/index
-   inspect
    encodings/index
    feaLib/index
    merge
