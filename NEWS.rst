@@ -1,3 +1,6 @@
+4.0.0 (released 2019-08-22)
+---------------------------
+
 - NOTE: The v4.x version series only supports Python 3.6 or greater. You can keep
   using fonttools 3.x if you need support for Python 2.
 - [py23] Removed all the python2-only code since it is no longer reachable, thus
