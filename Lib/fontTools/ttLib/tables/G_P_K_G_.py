@@ -23,7 +23,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 
 		GMAPoffsets = array.array("I")
 		endPos = (self.numGMAPs+1) * 4
-		GMAPoffsets.fromstring(newData[:endPos])
+		GMAPoffsets.frombytes(newData[:endPos])
 		if sys.byteorder != "big": GMAPoffsets.byteswap()
 		self.GMAPs = []
 		for i in range(self.numGMAPs):
@@ -33,7 +33,7 @@ class table_G_P_K_G_(DefaultTable.DefaultTable):
 		pos = endPos
 		endPos = pos + (self.numGlyplets + 1)*4
 		glyphletOffsets = array.array("I")
-		glyphletOffsets.fromstring(newData[pos:endPos])
+		glyphletOffsets.frombytes(newData[pos:endPos])
 		if sys.byteorder != "big": glyphletOffsets.byteswap()
 		self.glyphlets = []
 		for i in range(self.numGlyplets):

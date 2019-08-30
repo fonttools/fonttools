@@ -126,7 +126,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			# Long format: array of UInt32
 			offsets = array.array("I")
 			offsetsSize = (glyphCount + 1) * 4
-		offsets.fromstring(data[0 : offsetsSize])
+		offsets.frombytes(data[0 : offsetsSize])
 		if sys.byteorder != "big": offsets.byteswap()
 
 		# In the short format, offsets need to be multiplied by 2.

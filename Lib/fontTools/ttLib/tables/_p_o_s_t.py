@@ -82,7 +82,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 			numGlyphs = ttFont['maxp'].numGlyphs
 		data = data[2:]
 		indices = array.array("H")
-		indices.fromstring(data[:2*numGlyphs])
+		indices.frombytes(data[:2*numGlyphs])
 		if sys.byteorder != "big": indices.byteswap()
 		data = data[2*numGlyphs:]
 		self.extraNames = extraNames = unpackPStrings(data)
@@ -131,7 +131,7 @@ class table__p_o_s_t(DefaultTable.DefaultTable):
 		from fontTools import agl
 		numGlyphs = ttFont['maxp'].numGlyphs
 		indices = array.array("H")
-		indices.fromstring(data)
+		indices.frombytes(data)
 		if sys.byteorder != "big": indices.byteswap()
 		# In some older fonts, the size of the post table doesn't match
 		# the number of glyphs. Sometimes it's bigger, sometimes smaller.

@@ -252,7 +252,7 @@ class cmap_format_0(CmapSubtable):
 		data = self.data # decompileHeader assigns the data after the header to self.data
 		assert 262 == self.length, "Format 0 cmap subtable not 262 bytes"
 		gids = array.array("B")
-		gids.fromstring(self.data)
+		gids.frombytes(self.data)
 		charCodes = list(range(len(gids)))
 		self.cmap = _make_map(self.ttFont, charCodes, gids)
 
@@ -336,7 +336,7 @@ class cmap_format_2(CmapSubtable):
 		maxSubHeaderindex = 0
 		# get the key array, and determine the number of subHeaders.
 		allKeys = array.array("H")
-		allKeys.fromstring(data[:512])
+		allKeys.frombytes(data[:512])
 		data = data[512:]
 		if sys.byteorder != "big": allKeys.byteswap()
 		subHeaderKeys = [ key//8 for key in allKeys]
@@ -352,7 +352,7 @@ class cmap_format_2(CmapSubtable):
 			pos += 8
 			giDataPos = pos + subHeader.idRangeOffset-2
 			giList = array.array("H")
-			giList.fromstring(data[giDataPos:giDataPos + subHeader.entryCount*2])
+			giList.frombytes(data[giDataPos:giDataPos + subHeader.entryCount*2])
 			if sys.byteorder != "big": giList.byteswap()
 			subHeader.glyphIndexArray = giList
 			subHeaderList.append(subHeader)
@@ -694,7 +694,7 @@ class cmap_format_4(CmapSubtable):
 		segCount = segCountX2 // 2
 
 		allCodes = array.array("H")
-		allCodes.fromstring(data)
+		allCodes.frombytes(data)
 		self.data = data = None
 
 		if sys.byteorder != "big": allCodes.byteswap()
@@ -864,7 +864,7 @@ class cmap_format_6(CmapSubtable):
 		data = data[4:]
 		#assert len(data) == 2 * entryCount  # XXX not true in Apple's Helvetica!!!
 		gids = array.array("H")
-		gids.fromstring(data[:2 * int(entryCount)])
+		gids.frombytes(data[:2 * int(entryCount)])
 		if sys.byteorder != "big": gids.byteswap()
 		self.data = data = None
 

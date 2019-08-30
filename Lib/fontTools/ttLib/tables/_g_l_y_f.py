@@ -681,7 +681,7 @@ class Glyph(object):
 
 	def decompileCoordinates(self, data):
 		endPtsOfContours = array.array("h")
-		endPtsOfContours.fromstring(data[:2*self.numberOfContours])
+		endPtsOfContours.frombytes(data[:2*self.numberOfContours])
 		if sys.byteorder != "big": endPtsOfContours.byteswap()
 		self.endPtsOfContours = endPtsOfContours.tolist()
 
