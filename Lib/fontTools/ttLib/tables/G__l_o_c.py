@@ -42,11 +42,11 @@ class table_G__l_o_c(DefaultTable.DefaultTable):
                 flags=(bool(self.attribIds) << 1) + (self.locations.typecode == 'I'),
                 numAttribs=self.numAttribs))
         if sys.byteorder != "big": self.locations.byteswap()
-        data += self.locations.tostring()
+        data += self.locations.tobytes()
         if sys.byteorder != "big": self.locations.byteswap()
         if self.attribIds:
             if sys.byteorder != "big": self.attribIds.byteswap()
-            data += self.attribIds.tostring()
+            data += self.attribIds.tobytes()
             if sys.byteorder != "big": self.attribIds.byteswap()
         return data
 

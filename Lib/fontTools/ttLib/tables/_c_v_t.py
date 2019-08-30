@@ -15,7 +15,7 @@ class table__c_v_t(DefaultTable.DefaultTable):
 	def compile(self, ttFont):
 		values = self.values[:]
 		if sys.byteorder != "big": values.byteswap()
-		return values.tostring()
+		return values.tobytes()
 
 	def toXML(self, writer, ttFont):
 		for i in range(len(self.values)):

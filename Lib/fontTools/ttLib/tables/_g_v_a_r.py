@@ -158,7 +158,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			packed = array.array("I", offsets)
 			tableFormat = 1
 		if sys.byteorder != "big": packed.byteswap()
-		return (packed.tostring(), tableFormat)
+		return (packed.tobytes(), tableFormat)
 
 	def toXML(self, writer, ttFont):
 		writer.simpletag("version", value=self.version)

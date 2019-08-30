@@ -28,7 +28,7 @@ class table_T_S_I__5(DefaultTable.DefaultTable):
 		for i in range(len(glyphNames)):
 			a.append(self.glyphGrouping.get(glyphNames[i], 0))
 		if sys.byteorder != "big": a.byteswap()
-		return a.tostring()
+		return a.tobytes()
 
 	def toXML(self, writer, ttFont):
 		names = sorted(self.glyphGrouping.keys())
