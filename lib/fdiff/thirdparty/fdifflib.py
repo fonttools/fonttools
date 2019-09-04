@@ -325,8 +325,19 @@ class SequenceMatcher:
         # Purge popular elements that are not junk
         self.bpopular = popular = set()
         n = len(b)
-        if self.autojunk and n >= 200:
+
+        # Define the number of identical lines that must be included
+        # in order to consider the string "popular" for the autojunk
+        # strategy.  Edited from upstream Python difflib to decrease
+        # the number of lines as file sizes become larger
+        if n >= 20000:
+            ntest = n // 10000 + 1
+        elif n >= 2000:
+            ntest = n // 1000 + 1
+        elif n >= 200:
             ntest = n // 100 + 1
+
+        if self.autojunk and n >= 200:
             for elt, idxs in b2j.items():
                 if len(idxs) > ntest:
                     popular.add(elt)
