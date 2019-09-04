@@ -21,4 +21,13 @@ def run(argv):
     parser.add_argument(
         "--version", action="version", version="fdiff v{}".format(__version__)
     )
+    parser.add_argument('-c', action='store_true', default=False,
+                        help='ANSI escape code colored diff')
+    parser.add_argument('-l', '--lines', type=int, default=3,
+                        help='Number of context lines (default 3)')
+    parser.add_argument('PREFILE',
+                        help='Font file path 1')
+    parser.add_argument('POSTFILE',
+                        help='Font file path 2')
+
     args = parser.parse_args(argv)
