@@ -18,6 +18,8 @@ reset = ansicolors["RESET"]
 
 
 def color_unified_diff_line(line):
+    """Returns an ANSI escape code colored string with color based
+    on the unified diff line type."""
     if line[0:2] == "+ ":
         return f"{green_start}{line}{reset}"
     elif line[0:2] == "- ":
