@@ -26,6 +26,18 @@ Class HtmlDiff:
     For producing HTML side by side comparison with change highlights.
 """
 
+# fdifflib is a derivative of the Python v3.7.4 difflib.py library.
+# It includes the following modifications to the upstream source file:
+#
+#  - change the `SequenceMatcher.__chain_b` autojunk heuristic to make
+#    it adapt the "popular" string definition to file size.  These
+#    definitions were made more permissive (i.e., includes more
+#    strings as "popular" for larger file sizes.  This leads to a
+#    significant performance increase in the setting of text diffs
+#    of TTX dumps of font binaries that tend to be in the 10k-100k
+#    lines of text
+#  - black tool source formatting
+
 __all__ = [
     "get_close_matches",
     "ndiff",
