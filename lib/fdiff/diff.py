@@ -7,7 +7,7 @@ from fdiff.utils import get_file_modtime
 from fdiff.thirdparty.fdifflib import unified_diff
 
 
-def u_diff(filepath_a, filepath_b, context_lines):
+def u_diff(filepath_a, filepath_b, context_lines=3):
     tt_left = TTFont(filepath_a)
     tt_right = TTFont(filepath_b)
 
