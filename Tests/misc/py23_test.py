@@ -8,7 +8,7 @@ import os
 import unittest
 
 from fontTools.misc.py23 import (
-	round2, round3, isclose, redirect_stdout, redirect_stderr)
+	round2, round3, isclose)
 
 
 PIPE_SCRIPT = """\
@@ -416,68 +416,6 @@ class NarrowUnicodeBuildTest(unittest.TestCase):
 
 		self.assertEqual(byteord(u'\U00010000'), 0xFFFF + 1)
 		self.assertEqual(byteord(u'\U0010FFFF'), 1114111)
-
-
-class TestRedirectStream:
-
-    redirect_stream = None
-    orig_stream = None
-
-    def test_no_redirect_in_init(self):
-        orig_stdout = getattr(sys, self.orig_stream)
-        self.redirect_stream(None)
-        self.assertIs(getattr(sys, self.orig_stream), orig_stdout)
-
-    def test_redirect_to_string_io(self):
-        f = StringIO()
-        msg = "Consider an API like help(), which prints directly to stdout"
-        orig_stdout = getattr(sys, self.orig_stream)
-        with self.redirect_stream(f):
-            print(msg, file=getattr(sys, self.orig_stream))
-        self.assertIs(getattr(sys, self.orig_stream), orig_stdout)
-        s = f.getvalue().strip()
-        self.assertEqual(s, msg)
-
-    def test_enter_result_is_target(self):
-        f = StringIO()
-        with self.redirect_stream(f) as enter_result:
-            self.assertIs(enter_result, f)
-
-    def test_cm_is_reusable(self):
-        f = StringIO()
-        write_to_f = self.redirect_stream(f)
-        orig_stdout = getattr(sys, self.orig_stream)
-        with write_to_f:
-            print("Hello", end=" ", file=getattr(sys, self.orig_stream))
-        with write_to_f:
-            print("World!", file=getattr(sys, self.orig_stream))
-        self.assertIs(getattr(sys, self.orig_stream), orig_stdout)
-        s = f.getvalue()
-        self.assertEqual(s, "Hello World!\n")
-
-    def test_cm_is_reentrant(self):
-        f = StringIO()
-        write_to_f = self.redirect_stream(f)
-        orig_stdout = getattr(sys, self.orig_stream)
-        with write_to_f:
-            print("Hello", end=" ", file=getattr(sys, self.orig_stream))
-            with write_to_f:
-                print("World!", file=getattr(sys, self.orig_stream))
-        self.assertIs(getattr(sys, self.orig_stream), orig_stdout)
-        s = f.getvalue()
-        self.assertEqual(s, "Hello World!\n")
-
-
-class TestRedirectStdout(TestRedirectStream, unittest.TestCase):
-
-    redirect_stream = redirect_stdout
-    orig_stream = "stdout"
-
-
-class TestRedirectStderr(TestRedirectStream, unittest.TestCase):
-
-    redirect_stream = redirect_stderr
-    orig_stream = "stderr"
 
 
 if __name__ == "__main__":
