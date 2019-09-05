@@ -126,6 +126,13 @@ class HheaCompileOrToXMLTest(unittest.TestCase):
             len([r for r in captor.records
                  if "Table version value is a float" in r.msg]) == 1)
 
+    def test_aliases(self):
+        hhea = self.font['hhea']
+        self.assertEqual(hhea.ascent, hhea.ascender)
+        self.assertEqual(hhea.descent, hhea.descender)
+        hhea.ascender = 800
+        self.assertEqual(hhea.ascent, 800)
+        hhea.ascent = 750
 
 class HheaDecompileOrFromXMLTest(unittest.TestCase):
 
