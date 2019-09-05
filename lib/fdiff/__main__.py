@@ -49,7 +49,13 @@ def run(argv):
         )
         sys.exit(1)
 
-    diff = u_diff(args.PREFILE, args.POSTFILE, context_lines=args.lines)
+    try:
+        diff = u_diff(args.PREFILE, args.POSTFILE, context_lines=args.lines)
+    except Exception as e:
+        sys.stderr.write(
+            f"[*] ERROR: During the attempt to diff the requested files the following error was encountered: {str(e)}"
+        )
+        sys.exit(1)
 
     if args.color:
         for line in diff:
