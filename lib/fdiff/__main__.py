@@ -12,7 +12,19 @@ from fdiff.utils import file_exists
 
 
 def main():  # pragma: no cover
-    run(sys.argv[1:])
+    # try/except block rationale:
+    # handles "premature" socket closure exception that is
+    # raised by Python when stdout is piped to tools like
+    # the `head` executable and socket is closed early
+    # see: https://docs.python.org/3/library/signal.html#note-on-sigpipe
+    try:
+        run(sys.argv[1:])
+    except BrokenPipeError:
+        # Python flushes standard streams on exit; redirect remaining output
+        # to devnull to avoid another BrokenPipeError at shutdown
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(devnull, sys.stdout.fileno())
+        sys.exit(0)
 
 
 def run(argv):
