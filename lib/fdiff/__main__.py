@@ -19,7 +19,9 @@ def run(argv):
     # ===========================================================
     # argparse command line argument definitions
     # ===========================================================
-    parser = argparse.ArgumentParser(description="An OpenType table diff tool for fonts.")
+    parser = argparse.ArgumentParser(
+        description="An OpenType table diff tool for fonts."
+    )
     parser.add_argument(
         "--version", action="version", version="fdiff v{}".format(__version__)
     )
@@ -38,6 +40,10 @@ def run(argv):
 
     args = parser.parse_args(argv)
 
+    #
+    #  File path argument validations
+    #
+
     if not file_exists(args.PREFILE):
         sys.stderr.write(
             f"[*] ERROR: The file path '{args.PREFILE}' can not be found.{os.linesep}"
@@ -48,6 +54,10 @@ def run(argv):
             f"[*] ERROR: The file path '{args.POSTFILE}' can not be found.{os.linesep}"
         )
         sys.exit(1)
+
+    #
+    #  Unified diff logic
+    #
 
     try:
         diff = u_diff(args.PREFILE, args.POSTFILE, context_lines=args.lines)
