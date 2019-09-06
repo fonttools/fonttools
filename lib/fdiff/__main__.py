@@ -19,7 +19,7 @@ def run(argv):
     # ===========================================================
     # argparse command line argument definitions
     # ===========================================================
-    parser = argparse.ArgumentParser(description="A font OpenType table diff tool")
+    parser = argparse.ArgumentParser(description="An OpenType table diff tool for fonts.")
     parser.add_argument(
         "--version", action="version", version="fdiff v{}".format(__version__)
     )
