@@ -8,7 +8,7 @@ import argparse
 from fdiff import __version__
 from fdiff.color import color_unified_diff_line
 from fdiff.diff import u_diff
-from fdiff.utils import file_exists
+from fdiff.utils import file_exists, get_tables_argument_list
 
 
 def main():  # pragma: no cover
@@ -28,9 +28,9 @@ def main():  # pragma: no cover
 
 
 def run(argv):
-    # ===========================================================
+    # ------------------------------------------
     # argparse command line argument definitions
-    # ===========================================================
+    # ------------------------------------------
     parser = argparse.ArgumentParser(
         description="An OpenType table diff tool for fonts."
     )
@@ -47,14 +47,43 @@ def run(argv):
     parser.add_argument(
         "-l", "--lines", type=int, default=3, help="Number of context lines (default 3)"
     )
+    parser.add_argument(
+        "--include",
+        type=str,
+        default=None,
+        help="Comma separated list of tables to include",
+    )
+    parser.add_argument(
+        "--exclude",
+        type=str,
+        default=None,
+        help="Comma separated list of tables to exclude",
+    )
     parser.add_argument("PREFILE", help="Font file path 1")
     parser.add_argument("POSTFILE", help="Font file path 2")
 
     args = parser.parse_args(argv)
 
+    # /////////////////////////////////////////////////////////
     #
+    #  Validations
+    #
+    # /////////////////////////////////////////////////////////
+
+    # ----------------------------------
+    #  Incompatible argument validations
+    # ----------------------------------
+    #   --include and --exclude are mutually exclusive options
+    if args.include and args.exclude:
+        sys.stderr.write(
+            f"[*] Error: --include and --exclude are mutually exclusive options. "
+            f"Please use ONLY one of these options in your command.{os.linesep}"
+        )
+        sys.exit(1)
+
+    # -------------------------------
     #  File path argument validations
-    #
+    # -------------------------------
 
     if not file_exists(args.PREFILE):
         sys.stderr.write(
@@ -67,18 +96,40 @@ def run(argv):
         )
         sys.exit(1)
 
+    # /////////////////////////////////////////////////////////
     #
-    #  Unified diff logic
+    #  Command line logic
     #
+    # /////////////////////////////////////////////////////////
 
+    # ---------------
+    #  Unified diff
+    # ---------------
+
+    # parse explicitly included or excluded tables in
+    # the command line arguments
+    # set as a Python list if it was defined on the command line
+    # or as None if it was not set on the command line
+    include_list = get_tables_argument_list(args.include)
+    exclude_list = get_tables_argument_list(args.exclude)
+
+    # perform the unified diff analysis
     try:
-        diff = u_diff(args.PREFILE, args.POSTFILE, context_lines=args.lines)
+        diff = u_diff(
+            args.PREFILE,
+            args.POSTFILE,
+            context_lines=args.lines,
+            include_tables=include_list,
+            exclude_tables=exclude_list,
+        )
     except Exception as e:
         sys.stderr.write(
-            f"[*] ERROR: During the attempt to diff the requested files the following error was encountered: {str(e)}"
+            f"[*] ERROR: During the attempt to diff the requested files the following error was encountered: "
+            f"{e}{os.linesep}"
         )
         sys.exit(1)
 
+    # print unified diff results to standard output stream
     if args.color:
         for line in diff:
             sys.stdout.write(color_unified_diff_line(line))
