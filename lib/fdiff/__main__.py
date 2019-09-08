@@ -60,16 +60,8 @@ def run(argv):
         default=None,
         help="Comma separated list of tables to exclude",
     )
-    parser.add_argument(
-        "--head",
-        type=int,
-        help="Display first n lines of output"
-    )
-    parser.add_argument(
-        "--tail",
-        type=int,
-        help="Display last n lines of output"
-    )
+    parser.add_argument("--head", type=int, help="Display first n lines of output")
+    parser.add_argument("--tail", type=int, help="Display last n lines of output")
     parser.add_argument("PREFILE", help="Font file path 1")
     parser.add_argument("POSTFILE", help="Font file path 2")
 
