@@ -8,6 +8,7 @@ import argparse
 from fdiff import __version__
 from fdiff.color import color_unified_diff_line
 from fdiff.diff import u_diff
+from fdiff.textiter import head, tail
 from fdiff.utils import file_exists, get_tables_argument_list
 
 
@@ -58,6 +59,16 @@ def run(argv):
         type=str,
         default=None,
         help="Comma separated list of tables to exclude",
+    )
+    parser.add_argument(
+        "--head",
+        type=int,
+        help="Display first n lines of output"
+    )
+    parser.add_argument(
+        "--tail",
+        type=int,
+        help="Display last n lines of output"
     )
     parser.add_argument("PREFILE", help="Font file path 1")
     parser.add_argument("POSTFILE", help="Font file path 2")
@@ -129,9 +140,18 @@ def run(argv):
         )
         sys.exit(1)
 
+    # re-define the line contents of the diff iterable
+    # if head or tail is requested
+    if args.head:
+        iterable = head(diff, args.head)
+    elif args.tail:
+        iterable = tail(diff, args.tail)
+    else:
+        iterable = diff
+
     # print unified diff results to standard output stream
     if args.color:
-        for line in diff:
+        for line in iterable:
             sys.stdout.write(color_unified_diff_line(line))
     else:
-        sys.stdout.writelines(diff)
+        sys.stdout.writelines(iterable)
