@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 glifLib.py -- Generic module for reading and writing the .glif format.
 
@@ -59,7 +58,7 @@ supportedGLIFFormatVersions = [1, 2]
 # Simple Glyph
 # ------------
 
-class Glyph(object):
+class Glyph:
 
 	"""
 	Minimal glyph object. It has no glyph attributes until either
@@ -852,7 +851,7 @@ def validateLayerInfoVersion3Data(infoData):
 			raise GlifLibError("Unknown attribute %s." % attr)
 		isValidValue = validateLayerInfoVersion3ValueForAttribute(attr, value)
 		if not isValidValue:
-			raise GlifLibError("Invalid value for attribute %s (%s)." % (attr, repr(value)))
+			raise GlifLibError(f"Invalid value for attribute {attr} ({repr(value)}).")
 	return infoData
 
 # -----------------
@@ -1072,13 +1071,13 @@ def _readImage(glyphObject, image, validate):
 # GLIF to PointPen
 # ----------------
 
-contourAttributesFormat2 = set(["identifier"])
-componentAttributesFormat1 = set(["base", "xScale", "xyScale", "yxScale", "yScale", "xOffset", "yOffset"])
-componentAttributesFormat2 = componentAttributesFormat1 | set(["identifier"])
-pointAttributesFormat1 = set(["x", "y", "type", "smooth", "name"])
-pointAttributesFormat2 = pointAttributesFormat1 | set(["identifier"])
-pointSmoothOptions = set(("no", "yes"))
-pointTypeOptions = set(["move", "line", "offcurve", "curve", "qcurve"])
+contourAttributesFormat2 = {"identifier"}
+componentAttributesFormat1 = {"base", "xScale", "xyScale", "yxScale", "yScale", "xOffset", "yOffset"}
+componentAttributesFormat2 = componentAttributesFormat1 | {"identifier"}
+pointAttributesFormat1 = {"x", "y", "type", "smooth", "name"}
+pointAttributesFormat2 = pointAttributesFormat1 | {"identifier"}
+pointSmoothOptions = {"no", "yes"}
+pointTypeOptions = {"move", "line", "offcurve", "curve", "qcurve"}
 
 # format 1
 
@@ -1388,7 +1387,7 @@ def _number(s):
 
 class _DoneParsing(Exception): pass
 
-class _BaseParser(object):
+class _BaseParser:
 
 	def __init__(self):
 		self._elementStack = []
@@ -1422,7 +1421,7 @@ class _FetchUnicodesParser(_BaseParser):
 
 	def __init__(self):
 		self.unicodes = []
-		super(_FetchUnicodesParser, self).__init__()
+		super().__init__()
 
 	def startElementHandler(self, name, attrs):
 		if name == "unicode" and self._elementStack and self._elementStack[-1] == "glyph":
@@ -1434,7 +1433,7 @@ class _FetchUnicodesParser(_BaseParser):
 						self.unicodes.append(value)
 				except ValueError:
 					pass
-		super(_FetchUnicodesParser, self).startElementHandler(name, attrs)
+		super().startElementHandler(name, attrs)
 
 # image
 
@@ -1453,13 +1452,13 @@ class _FetchImageFileNameParser(_BaseParser):
 
 	def __init__(self):
 		self.fileName = None
-		super(_FetchImageFileNameParser, self).__init__()
+		super().__init__()
 
 	def startElementHandler(self, name, attrs):
 		if name == "image" and self._elementStack and self._elementStack[-1] == "glyph":
 			self.fileName = attrs.get("fileName")
 			raise _DoneParsing
-		super(_FetchImageFileNameParser, self).startElementHandler(name, attrs)
+		super().startElementHandler(name, attrs)
 
 # component references
 
@@ -1478,19 +1477,19 @@ class _FetchComponentBasesParser(_BaseParser):
 
 	def __init__(self):
 		self.bases = []
-		super(_FetchComponentBasesParser, self).__init__()
+		super().__init__()
 
 	def startElementHandler(self, name, attrs):
 		if name == "component" and self._elementStack and self._elementStack[-1] == "outline":
 			base = attrs.get("base")
 			if base is not None:
 				self.bases.append(base)
-		super(_FetchComponentBasesParser, self).startElementHandler(name, attrs)
+		super().startElementHandler(name, attrs)
 
 	def endElementHandler(self, name):
 		if name == "outline":
 			raise _DoneParsing
-		super(_FetchComponentBasesParser, self).endElementHandler(name)
+		super().endElementHandler(name)
 
 # --------------
 # GLIF Point Pen

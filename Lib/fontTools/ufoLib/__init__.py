@@ -106,7 +106,7 @@ class UFOFileStructure(enum.Enum):
 # --------------
 
 
-class _UFOBaseIO(object):
+class _UFOBaseIO:
 
 	def getFileModificationTime(self, path):
 		"""
@@ -146,7 +146,7 @@ class _UFOBaseIO(object):
 		except Exception as e:
 			# TODO(anthrotype): try to narrow this down a little
 			raise UFOLibError(
-				"'%s' could not be read on %s: %s" % (fileName, self.fs, e)
+				f"'{fileName}' could not be read on {self.fs}: {e}"
 			)
 
 	def _writePlist(self, fileName, obj):
@@ -212,7 +212,7 @@ class UFOReader(_UFOBaseIO):
 				else:
 					parentFS = fs.osfs.OSFS(path)
 			except fs.errors.CreateFailed as e:
-				raise UFOLibError("unable to open '%s': %s" % (path, e))
+				raise UFOLibError(f"unable to open '{path}': {e}")
 
 			if structure is UFOFileStructure.ZIP:
 				# .ufoz zip files must contain a single root directory, with arbitrary
@@ -660,7 +660,7 @@ class UFOReader(_UFOBaseIO):
 			glyphSubFS = self.fs.opendir(directory)
 		except fs.errors.ResourceNotFound:
 			raise UFOLibError(
-				"No '%s' directory for layer '%s'" % (directory, layerName)
+				f"No '{directory}' directory for layer '{layerName}'"
 			)
 		return GlyphSet(
 			glyphSubFS,
@@ -759,7 +759,7 @@ class UFOReader(_UFOBaseIO):
 				dataFS = self.fs.opendir(DATA_DIRNAME)
 			data = dataFS.readbytes(fileName)
 		except fs.errors.ResourceNotFound:
-			raise UFOLibError("No data file named '%s' on %s" % (fileName, self.fs))
+			raise UFOLibError(f"No data file named '{fileName}' on {self.fs}")
 		return data
 
 	def readImage(self, fileName, validate=None):
@@ -782,7 +782,7 @@ class UFOReader(_UFOBaseIO):
 				imagesFS = self.fs.opendir(IMAGES_DIRNAME)
 			data = imagesFS.readbytes(fileName)
 		except fs.errors.ResourceNotFound:
-			raise UFOLibError("No image file named '%s' on %s" % (fileName, self.fs))
+			raise UFOLibError(f"No image file named '{fileName}' on {self.fs}")
 		if validate:
 			valid, error = pngValidator(data=data)
 			if not valid:
@@ -1039,7 +1039,7 @@ class UFOWriter(UFOReader):
 				return self.fs.open(path, mode=mode, encoding=encoding)
 		except fs.errors.ResourceError as e:
 			return UFOLibError(
-				"unable to open '%s' on %s: %s" % (path, self.fs, e)
+				f"unable to open '{path}' on {self.fs}: {e}"
 			)
 
 	def removePath(self, path, force=False, removeEmptyParents=True):
@@ -1059,7 +1059,7 @@ class UFOWriter(UFOReader):
 		except fs.errors.ResourceNotFound:
 			if not force:
 				raise UFOLibError(
-					"'%s' does not exist on %s" % (path, self.fs)
+					f"'{path}' does not exist on {self.fs}"
 				)
 		if removeEmptyParents:
 			parent = fs.path.dirname(path)
@@ -1517,13 +1517,13 @@ class UFOWriter(UFOReader):
 		Write data to fileName in the 'data' directory.
 		The data must be a bytes string.
 		"""
-		self.writeBytesToPath("%s/%s" % (DATA_DIRNAME, fsdecode(fileName)), data)
+		self.writeBytesToPath(f"{DATA_DIRNAME}/{fsdecode(fileName)}", data)
 
 	def removeData(self, fileName):
 		"""
 		Remove the file named fileName from the data directory.
 		"""
-		self.removePath("%s/%s" % (DATA_DIRNAME, fsdecode(fileName)))
+		self.removePath(f"{DATA_DIRNAME}/{fsdecode(fileName)}")
 
 	# /images
 
@@ -1541,7 +1541,7 @@ class UFOWriter(UFOReader):
 			valid, error = pngValidator(data=data)
 			if not valid:
 				raise UFOLibError(error)
-		self.writeBytesToPath("%s/%s" % (IMAGES_DIRNAME, fileName), data)
+		self.writeBytesToPath(f"{IMAGES_DIRNAME}/{fileName}", data)
 
 	def removeImage(self, fileName, validate=None):  # XXX remove unused 'validate'?
 		"""
@@ -1550,7 +1550,7 @@ class UFOWriter(UFOReader):
 		"""
 		if self._formatVersion < 3:
 			raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
-		self.removePath("%s/%s" % (IMAGES_DIRNAME, fsdecode(fileName)))
+		self.removePath(f"{IMAGES_DIRNAME}/{fsdecode(fileName)}")
 
 	def copyImageFromReader(self, reader, sourceFileName, destFileName, validate=None):
 		"""
@@ -1562,8 +1562,8 @@ class UFOWriter(UFOReader):
 			validate = self._validate
 		if self._formatVersion < 3:
 			raise UFOLibError("Images are not allowed in UFO %d." % self._formatVersion)
-		sourcePath = "%s/%s" % (IMAGES_DIRNAME, fsdecode(sourceFileName))
-		destPath = "%s/%s" % (IMAGES_DIRNAME, fsdecode(destFileName))
+		sourcePath = f"{IMAGES_DIRNAME}/{fsdecode(sourceFileName)}"
+		destPath = f"{IMAGES_DIRNAME}/{fsdecode(destFileName)}"
 		self.copyFromReader(reader, sourcePath, destPath)
 
 	def close(self):
@@ -1573,7 +1573,7 @@ class UFOWriter(UFOReader):
 			rootDir = os.path.splitext(os.path.basename(self._path))[0] + ".ufo"
 			with fs.zipfs.ZipFS(self._path, write=True, encoding="utf-8") as destFS:
 				fs.copy.copy_fs(self.fs, destFS.makedir(rootDir))
-		super(UFOWriter, self).close()
+		super().close()
 
 
 # just an alias, makes it more explicit
@@ -1668,7 +1668,7 @@ def validateInfoVersion2Data(infoData):
 	for attr, value in list(infoData.items()):
 		isValidValue = validateFontInfoVersion2ValueForAttribute(attr, value)
 		if not isValidValue:
-			raise UFOLibError("Invalid value for attribute %s (%s)." % (attr, repr(value)))
+			raise UFOLibError(f"Invalid value for attribute {attr} ({repr(value)}).")
 		else:
 			validInfoData[attr] = value
 	return validInfoData
@@ -1712,7 +1712,7 @@ def validateInfoVersion3Data(infoData):
 	for attr, value in list(infoData.items()):
 		isValidValue = validateFontInfoVersion3ValueForAttribute(attr, value)
 		if not isValidValue:
-			raise UFOLibError("Invalid value for attribute %s (%s)." % (attr, repr(value)))
+			raise UFOLibError(f"Invalid value for attribute {attr} ({repr(value)}).")
 		else:
 			validInfoData[attr] = value
 	return validInfoData
@@ -1730,7 +1730,7 @@ fontInfoOpenTypeOS2TypeOptions = [0, 1, 2, 3, 8, 9]
 # cases the possible values, that can exist is
 # fontinfo.plist.
 
-fontInfoAttributesVersion1 = set([
+fontInfoAttributesVersion1 = {
 	"familyName",
 	"styleName",
 	"fullName",
@@ -1771,7 +1771,7 @@ fontInfoAttributesVersion1 = set([
 	"ttVendor",
 	"ttUniqueID",
 	"ttVersion",
-])
+}
 
 fontInfoAttributesVersion2ValueData = {
 	"familyName"							: dict(type=basestring),
@@ -2042,17 +2042,17 @@ def convertFontInfoValueForAttributeFromVersion1ToVersion2(attr, value):
 		if attr == "fontStyle":
 			v = _fontStyle1To2.get(value)
 			if v is None:
-				raise UFOLibError("Cannot convert value (%s) for attribute %s." % (repr(value), attr))
+				raise UFOLibError(f"Cannot convert value ({repr(value)}) for attribute {attr}.")
 			value = v
 		elif attr == "widthName":
 			v = _widthName1To2.get(value)
 			if v is None:
-				raise UFOLibError("Cannot convert value (%s) for attribute %s." % (repr(value), attr))
+				raise UFOLibError(f"Cannot convert value ({repr(value)}) for attribute {attr}.")
 			value = v
 		elif attr == "msCharSet":
 			v = _msCharSet1To2.get(value)
 			if v is None:
-				raise UFOLibError("Cannot convert value (%s) for attribute %s." % (repr(value), attr))
+				raise UFOLibError(f"Cannot convert value ({repr(value)}) for attribute {attr}.")
 			value = v
 	attr = fontInfoAttributesVersion1To2.get(attr, attr)
 	return attr, value
@@ -2087,7 +2087,7 @@ def _convertFontInfoDataVersion1ToVersion2(data):
 			continue
 		# catch values that can't be converted
 		if value is None:
-			raise UFOLibError("Cannot convert value (%s) for attribute %s." % (repr(value), newAttr))
+			raise UFOLibError(f"Cannot convert value ({repr(value)}) for attribute {newAttr}.")
 		# store
 		converted[newAttr] = newValue
 	return converted
@@ -2101,23 +2101,23 @@ def _convertFontInfoDataVersion2ToVersion1(data):
 			continue
 		# catch values that can't be converted
 		if value is None:
-			raise UFOLibError("Cannot convert value (%s) for attribute %s." % (repr(value), newAttr))
+			raise UFOLibError(f"Cannot convert value ({repr(value)}) for attribute {newAttr}.")
 		# store
 		converted[newAttr] = newValue
 	return converted
 
 # 2 <-> 3
 
-_ufo2To3NonNegativeInt = set((
+_ufo2To3NonNegativeInt = {
 	"versionMinor",
 	"openTypeHeadLowestRecPPEM",
 	"openTypeOS2WinAscent",
 	"openTypeOS2WinDescent"
-))
-_ufo2To3NonNegativeIntOrFloat = set((
-	"unitsPerEm"
-))
-_ufo2To3FloatToInt = set(((
+}
+_ufo2To3NonNegativeIntOrFloat = {
+	"unitsPerEm",
+}
+_ufo2To3FloatToInt = {
 	"openTypeHeadLowestRecPPEM",
 	"openTypeHheaAscender",
 	"openTypeHheaDescender",
@@ -2142,7 +2142,7 @@ _ufo2To3FloatToInt = set(((
 	"openTypeVheaVertTypoDescender",
 	"openTypeVheaVertTypoLineGap",
 	"openTypeVheaCaretOffset"
-)))
+}
 
 def convertFontInfoValueForAttributeFromVersion2ToVersion3(attr, value):
 	"""
