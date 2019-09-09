@@ -622,8 +622,8 @@ def _writeGlyphToBytes(
 
 def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, formatVersion=2, validate=True):
 	"""
-	Return .glif data for a glyph as a Unicode string (`unicode` in py2, `str`
-	in py3). The XML declaration's encoding is always set to "UTF-8".
+	Return .glif data for a glyph as a string. The XML declaration's
+	encoding is always set to "UTF-8".
 	The 'glyphObject' argument can be any kind of object (even None);
 	the writeGlyphToString() method will attempt to get the following
 	attributes from it:
