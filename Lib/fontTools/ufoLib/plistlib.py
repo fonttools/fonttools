@@ -2,7 +2,7 @@
 for the old ufoLib.plistlib module, which was moved to fontTools.misc.plistlib.
 Please use the latter instead.
 """
-from fontTools.misc.plistlib import *
+from fontTools.misc.plistlib import dump, dumps, load, loads, tobytes
 
 # The following functions were part of the old py2-like ufoLib.plistlib API.
 # They are kept only for backward compatiblity.

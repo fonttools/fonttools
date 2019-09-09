@@ -17,7 +17,7 @@ import fs.base
 import fs.errors
 import fs.osfs
 import fs.path
-from fontTools.misc.py23 import tobytes, tostr
+from fontTools.misc.py23 import tobytes
 from fontTools.misc import plistlib
 from fontTools.pens.pointPen import AbstractPointPen, PointToSegmentPen
 from fontTools.ufoLib.errors import GlifLibError

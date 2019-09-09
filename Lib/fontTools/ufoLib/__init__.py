@@ -1,4 +1,3 @@
-import sys
 import os
 from copy import deepcopy
 from os import fsdecode
