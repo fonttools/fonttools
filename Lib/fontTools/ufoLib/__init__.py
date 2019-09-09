@@ -1,6 +1,7 @@
 import sys
 import os
 from copy import deepcopy
+from os import fsdecode
 import logging
 import zipfile
 import enum
@@ -20,7 +21,7 @@ from fontTools.ufoLib.validators import *
 from fontTools.ufoLib.filenames import userNameToFileName
 from fontTools.ufoLib.converters import convertUFO1OrUFO2KerningToUFO3Kerning
 from fontTools.ufoLib.errors import UFOLibError
-from fontTools.ufoLib.utils import datetimeAsTimestamp, fsdecode, numberTypes
+from fontTools.ufoLib.utils import numberTypes
 
 """
 A library for importing .ufo files and their descendants.
@@ -120,7 +121,7 @@ class _UFOBaseIO:
 		except (fs.errors.MissingInfoNamespace, fs.errors.ResourceNotFound):
 			return None
 		else:
-			return datetimeAsTimestamp(dt)
+			return dt.timestamp()
 
 	def _getPlist(self, fileName, default=None):
 		"""
