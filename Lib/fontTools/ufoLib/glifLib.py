@@ -17,7 +17,7 @@ import fs.base
 import fs.errors
 import fs.osfs
 import fs.path
-from fontTools.misc.py23 import basestring, unicode, tobytes, tounicode
+from fontTools.misc.py23 import tobytes, tostr
 from fontTools.misc import plistlib
 from fontTools.pens.pointPen import AbstractPointPen, PointToSegmentPen
 from fontTools.ufoLib.errors import GlifLibError
@@ -127,7 +127,7 @@ class GlyphSet(_UFOBaseIO):
 		"""
 		if ufoFormatVersion not in supportedUFOFormatVersions:
 			raise GlifLibError("Unsupported UFO format version: %s" % ufoFormatVersion)
-		if isinstance(path, basestring):
+		if isinstance(path, str):
 			try:
 				filesystem = fs.osfs.OSFS(path)
 			except fs.errors.CreateFailed:
@@ -149,7 +149,7 @@ class GlyphSet(_UFOBaseIO):
 			path = filesystem.getsyspath("/")
 		except fs.errors.NoSysPath:
 			# network or in-memory FS may not map to the local one
-			path = unicode(filesystem)
+			path = str(filesystem)
 		# 'dirName' is kept for backward compatibility only, but it's DEPRECATED
 		# as it's not guaranteed that it maps to an existing OSFS directory.
 		# Client could use the FS api via the `self.fs` attribute instead.
@@ -185,9 +185,9 @@ class GlyphSet(_UFOBaseIO):
 				invalidFormat = True
 			else:
 				for name, fileName in contents.items():
-					if not isinstance(name, basestring):
+					if not isinstance(name, str):
 						invalidFormat = True
-					if not isinstance(fileName, basestring):
+					if not isinstance(fileName, str):
 						invalidFormat = True
 					elif not self.fs.exists(fileName):
 						raise GlifLibError(
@@ -521,9 +521,9 @@ def glyphNameToFileName(glyphName, existingFileNames):
 	"""
 	if existingFileNames is None:
 		existingFileNames = []
-	if not isinstance(glyphName, unicode):
+	if not isinstance(glyphName, str):
 		try:
-			new = unicode(glyphName)
+			new = str(glyphName)
 			glyphName = new
 		except UnicodeDecodeError:
 			pass
@@ -576,7 +576,7 @@ def _writeGlyphToBytes(
 		formatVersion=2, validate=True):
 	"""Return .glif data for a glyph as a UTF-8 encoded bytes string."""
 	# start
-	if validate and not isinstance(glyphName, basestring):
+	if validate and not isinstance(glyphName, str):
 		raise GlifLibError("The glyph name is not properly formatted.")
 	if validate and len(glyphName) == 0:
 		raise GlifLibError("The glyph name is empty.")
@@ -695,12 +695,12 @@ def _writeUnicodes(glyphObject, element, validate):
 
 def _writeNote(glyphObject, element, validate):
 	note = getattr(glyphObject, "note", None)
-	if validate and not isinstance(note, basestring):
-		raise GlifLibError("note attribute must be str or unicode")
+	if validate and not isinstance(note, str):
+		raise GlifLibError("note attribute must be str")
 	note = note.strip()
 	note = "\n" + note + "\n"
-	# ensure text is unicode, if it's bytes decode as ASCII
-	etree.SubElement(element, "note").text = tounicode(note)
+	# ensure text is str, if it's bytes decode as ASCII
+	etree.SubElement(element, "note").text = note
 
 def _writeImage(glyphObject, element, validate):
 	image = getattr(glyphObject, "image", None)
@@ -805,7 +805,7 @@ def _writeLib(glyphObject, element, validate):
 # -----------------------
 
 layerInfoVersion3ValueData = {
-	"color"			: dict(type=basestring, valueValidator=colorValidator),
+	"color"			: dict(type=str, valueValidator=colorValidator),
 	"lib"			: dict(type=dict, valueValidator=genericTypeValidator)
 }
 

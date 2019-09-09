@@ -15,7 +15,7 @@ import fs.osfs
 import fs.zipfs
 import fs.tempfs
 import fs.tools
-from fontTools.misc.py23 import basestring, unicode, tounicode
+from fontTools.misc.py23 import tostr
 from fontTools.misc import plistlib
 from fontTools.ufoLib.validators import *
 from fontTools.ufoLib.filenames import userNameToFileName
@@ -205,7 +205,7 @@ class UFOReader(_UFOBaseIO):
 		if hasattr(path, "__fspath__"):  # support os.PathLike objects
 			path = path.__fspath__()
 
-		if isinstance(path, basestring):
+		if isinstance(path, str):
 			structure = _sniffFileStructure(path)
 			try:
 				if structure is UFOFileStructure.ZIP:
@@ -252,7 +252,7 @@ class UFOReader(_UFOBaseIO):
 				path = filesystem.getsyspath("/")
 			except fs.errors.NoSysPath:
 				# network or in-memory FS may not map to the local one
-				path = unicode(filesystem)
+				path = str(filesystem)
 			# when user passed an already initialized fs instance, it is her
 			# responsibility to close it, thus UFOReader.close/__exit__ are no-op
 			self._shouldClose = False
@@ -324,12 +324,12 @@ class UFOReader(_UFOBaseIO):
 				if not isinstance(groups, dict):
 					raise UFOLibError(invalidFormatMessage)
 				for groupName, glyphList in groups.items():
-					if not isinstance(groupName, basestring):
+					if not isinstance(groupName, str):
 						raise UFOLibError(invalidFormatMessage)
 					elif not isinstance(glyphList, list):
 						raise UFOLibError(invalidFormatMessage)
 					for glyphName in glyphList:
-						if not isinstance(glyphName, basestring):
+						if not isinstance(glyphName, str):
 							raise UFOLibError(invalidFormatMessage)
 			self._upConvertedKerningData = dict(
 				kerning={},
@@ -366,7 +366,7 @@ class UFOReader(_UFOBaseIO):
 		The path must be relative to the UFO path.
 		Returns None if the file does not exist.
 		By default the file is opened in binary mode (reads bytes).
-		If encoding is passed, the file is opened in text mode (reads unicode).
+		If encoding is passed, the file is opened in text mode (reads str).
 
 		Note: The caller is responsible for closing the open file.
 		"""
@@ -572,7 +572,7 @@ class UFOReader(_UFOBaseIO):
 
 	def readFeatures(self):
 		"""
-		Read features.fea. Return a unicode string.
+		Read features.fea. Return a string.
 		The returned string is empty if the file is missing.
 		"""
 		try:
@@ -672,7 +672,7 @@ class UFOReader(_UFOBaseIO):
 
 	def getCharacterMapping(self, layerName=None, validate=None):
 		"""
-		Return a dictionary that maps unicode values (ints) to
+		Return a dictionary that maps str values (ints) to
 		lists of glyph names.
 		"""
 		if validate is None:
@@ -829,7 +829,7 @@ class UFOWriter(UFOReader):
 		if hasattr(path, "__fspath__"):  # support os.PathLike objects
 			path = path.__fspath__()
 
-		if isinstance(path, basestring):
+		if isinstance(path, str):
 			# normalize path by removing trailing or double slashes
 			path = os.path.normpath(path)
 			havePreviousFile = os.path.exists(path)
@@ -909,7 +909,7 @@ class UFOWriter(UFOReader):
 				path = filesystem.getsyspath("/")
 			except fs.errors.NoSysPath:
 				# network or in-memory FS may not map to the local one
-				path = unicode(filesystem)
+				path = str(filesystem)
 			# if passed an FS object, always use 'package' structure
 			if structure and structure is not UFOFileStructure.PACKAGE:
 				import warnings
@@ -1241,9 +1241,9 @@ class UFOWriter(UFOReader):
 					raise UFOLibError(invalidFormatMessage)
 				if not len(pair) == 2:
 					raise UFOLibError(invalidFormatMessage)
-				if not isinstance(pair[0], basestring):
+				if not isinstance(pair[0], str):
 					raise UFOLibError(invalidFormatMessage)
-				if not isinstance(pair[1], basestring):
+				if not isinstance(pair[1], str):
 					raise UFOLibError(invalidFormatMessage)
 				if not isinstance(value, numberTypes):
 					raise UFOLibError(invalidFormatMessage)
@@ -1301,7 +1301,7 @@ class UFOWriter(UFOReader):
 		if self._formatVersion == 1:
 			raise UFOLibError("features.fea is not allowed in UFO Format Version 1.")
 		if validate:
-			if not isinstance(features, basestring):
+			if not isinstance(features, str):
 				raise UFOLibError("The features are not text.")
 		if features:
 			self.writeBytesToPath(FEATURES_FILENAME, features.encode("utf8"))
@@ -1325,7 +1325,7 @@ class UFOWriter(UFOReader):
 				if layerName is None:
 					layerName = DEFAULT_LAYER_NAME
 				else:
-					layerName = tounicode(layerName)
+					layerName = tostr(layerName)
 				newOrder.append(layerName)
 			layerOrder = newOrder
 		else:
@@ -1439,9 +1439,9 @@ class UFOWriter(UFOReader):
 				# not caching this could be slightly expensive,
 				# but caching it will be cumbersome
 				existing = {d.lower() for d in self.layerContents.values()}
-				if not isinstance(layerName, unicode):
+				if not isinstance(layerName, str):
 					try:
-						layerName = unicode(layerName)
+						layerName = str(layerName)
 					except UnicodeDecodeError:
 						raise UFOLibError("The specified layer name is not a Unicode string.")
 				directory = userNameToFileName(layerName, existing=existing, prefix="glyphs.")
@@ -1587,7 +1587,7 @@ UFOReaderWriter = UFOWriter
 
 
 def _sniffFileStructure(ufo_path):
-	"""Return UFOFileStructure.ZIP if the UFO at path 'ufo_path' (basestring)
+	"""Return UFOFileStructure.ZIP if the UFO at path 'ufo_path' (str)
 	is a zip file, else return UFOFileStructure.PACKAGE if 'ufo_path' is a
 	directory.
 	Raise UFOLibError if it is a file with unknown structure, or if the path
@@ -1775,23 +1775,23 @@ fontInfoAttributesVersion1 = {
 }
 
 fontInfoAttributesVersion2ValueData = {
-	"familyName"							: dict(type=basestring),
-	"styleName"								: dict(type=basestring),
-	"styleMapFamilyName"					: dict(type=basestring),
-	"styleMapStyleName"						: dict(type=basestring, valueValidator=fontInfoStyleMapStyleNameValidator),
+	"familyName"							: dict(type=str),
+	"styleName"								: dict(type=str),
+	"styleMapFamilyName"					: dict(type=str),
+	"styleMapStyleName"						: dict(type=str, valueValidator=fontInfoStyleMapStyleNameValidator),
 	"versionMajor"							: dict(type=int),
 	"versionMinor"							: dict(type=int),
 	"year"									: dict(type=int),
-	"copyright"								: dict(type=basestring),
-	"trademark"								: dict(type=basestring),
+	"copyright"								: dict(type=str),
+	"trademark"								: dict(type=str),
 	"unitsPerEm"							: dict(type=(int, float)),
 	"descender"								: dict(type=(int, float)),
 	"xHeight"								: dict(type=(int, float)),
 	"capHeight"								: dict(type=(int, float)),
 	"ascender"								: dict(type=(int, float)),
 	"italicAngle"							: dict(type=(float, int)),
-	"note"									: dict(type=basestring),
-	"openTypeHeadCreated"					: dict(type=basestring, valueValidator=fontInfoOpenTypeHeadCreatedValidator),
+	"note"									: dict(type=str),
+	"openTypeHeadCreated"					: dict(type=str, valueValidator=fontInfoOpenTypeHeadCreatedValidator),
 	"openTypeHeadLowestRecPPEM"				: dict(type=(int, float)),
 	"openTypeHeadFlags"						: dict(type="integerList", valueValidator=genericIntListValidator, valueOptions=fontInfoOpenTypeHeadFlagsOptions),
 	"openTypeHheaAscender"					: dict(type=(int, float)),
@@ -1800,25 +1800,25 @@ fontInfoAttributesVersion2ValueData = {
 	"openTypeHheaCaretSlopeRise"			: dict(type=int),
 	"openTypeHheaCaretSlopeRun"				: dict(type=int),
 	"openTypeHheaCaretOffset"				: dict(type=(int, float)),
-	"openTypeNameDesigner"					: dict(type=basestring),
-	"openTypeNameDesignerURL"				: dict(type=basestring),
-	"openTypeNameManufacturer"				: dict(type=basestring),
-	"openTypeNameManufacturerURL"			: dict(type=basestring),
-	"openTypeNameLicense"					: dict(type=basestring),
-	"openTypeNameLicenseURL"				: dict(type=basestring),
-	"openTypeNameVersion"					: dict(type=basestring),
-	"openTypeNameUniqueID"					: dict(type=basestring),
-	"openTypeNameDescription"				: dict(type=basestring),
-	"openTypeNamePreferredFamilyName"		: dict(type=basestring),
-	"openTypeNamePreferredSubfamilyName"	: dict(type=basestring),
-	"openTypeNameCompatibleFullName"		: dict(type=basestring),
-	"openTypeNameSampleText"				: dict(type=basestring),
-	"openTypeNameWWSFamilyName"				: dict(type=basestring),
-	"openTypeNameWWSSubfamilyName"			: dict(type=basestring),
+	"openTypeNameDesigner"					: dict(type=str),
+	"openTypeNameDesignerURL"				: dict(type=str),
+	"openTypeNameManufacturer"				: dict(type=str),
+	"openTypeNameManufacturerURL"			: dict(type=str),
+	"openTypeNameLicense"					: dict(type=str),
+	"openTypeNameLicenseURL"				: dict(type=str),
+	"openTypeNameVersion"					: dict(type=str),
+	"openTypeNameUniqueID"					: dict(type=str),
+	"openTypeNameDescription"				: dict(type=str),
+	"openTypeNamePreferredFamilyName"		: dict(type=str),
+	"openTypeNamePreferredSubfamilyName"	: dict(type=str),
+	"openTypeNameCompatibleFullName"		: dict(type=str),
+	"openTypeNameSampleText"				: dict(type=str),
+	"openTypeNameWWSFamilyName"				: dict(type=str),
+	"openTypeNameWWSSubfamilyName"			: dict(type=str),
 	"openTypeOS2WidthClass"					: dict(type=int, valueValidator=fontInfoOpenTypeOS2WidthClassValidator),
 	"openTypeOS2WeightClass"				: dict(type=int, valueValidator=fontInfoOpenTypeOS2WeightClassValidator),
 	"openTypeOS2Selection"					: dict(type="integerList", valueValidator=genericIntListValidator, valueOptions=fontInfoOpenTypeOS2SelectionOptions),
-	"openTypeOS2VendorID"					: dict(type=basestring),
+	"openTypeOS2VendorID"					: dict(type=str),
 	"openTypeOS2Panose"						: dict(type="integerList", valueValidator=fontInfoVersion2OpenTypeOS2PanoseValidator),
 	"openTypeOS2FamilyClass"				: dict(type="integerList", valueValidator=fontInfoOpenTypeOS2FamilyClassValidator),
 	"openTypeOS2UnicodeRanges"				: dict(type="integerList", valueValidator=genericIntListValidator, valueOptions=fontInfoOpenTypeOS2UnicodeRangesOptions),
@@ -1845,8 +1845,8 @@ fontInfoAttributesVersion2ValueData = {
 	"openTypeVheaCaretSlopeRise"			: dict(type=int),
 	"openTypeVheaCaretSlopeRun"				: dict(type=int),
 	"openTypeVheaCaretOffset"				: dict(type=(int, float)),
-	"postscriptFontName"					: dict(type=basestring),
-	"postscriptFullName"					: dict(type=basestring),
+	"postscriptFontName"					: dict(type=str),
+	"postscriptFullName"					: dict(type=str),
 	"postscriptSlantAngle"					: dict(type=(float, int)),
 	"postscriptUniqueID"					: dict(type=int),
 	"postscriptUnderlineThickness"			: dict(type=(int, float)),
@@ -1864,11 +1864,11 @@ fontInfoAttributesVersion2ValueData = {
 	"postscriptForceBold"					: dict(type=bool),
 	"postscriptDefaultWidthX"				: dict(type=(int, float)),
 	"postscriptNominalWidthX"				: dict(type=(int, float)),
-	"postscriptWeightName"					: dict(type=basestring),
-	"postscriptDefaultCharacter"			: dict(type=basestring),
+	"postscriptWeightName"					: dict(type=str),
+	"postscriptDefaultCharacter"			: dict(type=str),
 	"postscriptWindowsCharacterSet"			: dict(type=int, valueValidator=fontInfoPostscriptWindowsCharacterSetValidator),
 	"macintoshFONDFamilyID"					: dict(type=int),
-	"macintoshFONDName"						: dict(type=basestring),
+	"macintoshFONDName"						: dict(type=str),
 }
 fontInfoAttributesVersion2 = set(fontInfoAttributesVersion2ValueData.keys())
 

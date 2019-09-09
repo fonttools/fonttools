@@ -12,7 +12,7 @@ from fontTools.ufoLib.utils import deprecated
 @deprecated("Use 'fontTools.misc.plistlib.load' instead")
 def readPlist(path_or_file):
     did_open = False
-    if isinstance(path_or_file, basestring):
+    if isinstance(path_or_file, str):
         path_or_file = open(path_or_file, "rb")
         did_open = True
     try:
@@ -25,7 +25,7 @@ def readPlist(path_or_file):
 @deprecated("Use 'fontTools.misc.plistlib.dump' instead")
 def writePlist(value, path_or_file):
     did_open = False
-    if isinstance(path_or_file, basestring):
+    if isinstance(path_or_file, str):
         path_or_file = open(path_or_file, "wb")
         did_open = True
     try:

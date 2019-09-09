@@ -3,10 +3,6 @@
 import os
 from fontTools.ufoLib.utils import numberTypes
 
-try:
-	basestring
-except NameError:
-	basestring = str
 
 def getDemoFontPath():
 	"""Return the path to Data/DemoFont.ufo/."""
@@ -102,7 +98,7 @@ def _dictToString(d):
 			value = _tupleToString(value)
 		elif isinstance(value, numberTypes):
 			value = repr(value)
-		elif isinstance(value, basestring):
+		elif isinstance(value, str):
 			value = "\"%s\"" % value
 		text.append(f"{key} : {value}")
 	if not text:
@@ -120,7 +116,7 @@ def _listToString(l):
 			value = _tupleToString(value)
 		elif isinstance(value, numberTypes):
 			value = repr(value)
-		elif isinstance(value, basestring):
+		elif isinstance(value, str):
 			value = "\"%s\"" % value
 		text.append(value)
 	if not text:
@@ -138,7 +134,7 @@ def _tupleToString(t):
 			value = _tupleToString(value)
 		elif isinstance(value, numberTypes):
 			value = repr(value)
-		elif isinstance(value, basestring):
+		elif isinstance(value, str):
 			value = "\"%s\"" % value
 		text.append(value)
 	if not text:

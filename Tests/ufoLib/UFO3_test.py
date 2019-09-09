@@ -3,7 +3,6 @@ import shutil
 import unittest
 import tempfile
 from io import open
-from fontTools.misc.py23 import unicode
 from fontTools.ufoLib import UFOReader, UFOWriter, UFOLibError
 from fontTools.ufoLib.glifLib import GlifLibError
 from fontTools.misc import plistlib
@@ -4151,7 +4150,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		]
 		self.assertEqual(expected, result)
 		for layerName, directory in result:
-			assert isinstance(layerName, unicode)
+			assert isinstance(layerName, str)
 
 # -----
 # /data
