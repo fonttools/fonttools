@@ -987,7 +987,7 @@ def parseArgs(args):
     try:
         axisLimits = parseLimits(options.locargs)
     except ValueError as e:
-        parser.error(e)
+        parser.error(str(e))
 
     if len(axisLimits) != len(options.locargs):
         parser.error("Specified multiple limits for the same axis")

@@ -61,15 +61,16 @@ def lib_convertCFFToCFF2(cff, otFont):
 		fdArray.append(fontDict)
 		fontDict.Private = privateDict
 		privateOpOrder = buildOrder(privateDictOperators2)
-		for entry in privateDictOperators:
-			key = entry[1]
-			if key not in privateOpOrder:
-				if key in privateDict.rawDict:
-					# print "Removing private dict", key
-					del privateDict.rawDict[key]
-				if hasattr(privateDict, key):
-					delattr(privateDict, key)
-					# print "Removing privateDict attr", key
+		if privateDict is not None:
+			for entry in privateDictOperators:
+				key = entry[1]
+				if key not in privateOpOrder:
+					if key in privateDict.rawDict:
+						# print "Removing private dict", key
+						del privateDict.rawDict[key]
+					if hasattr(privateDict, key):
+						delattr(privateDict, key)
+						# print "Removing privateDict attr", key
 	else:
 		# clean up the PrivateDicts in the fdArray
 		fdArray = topDict.FDArray
