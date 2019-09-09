@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import shutil
 import unittest
@@ -11,7 +10,7 @@ from fontTools.misc import plistlib
 from .testSupport import fontInfoVersion3
 
 
-class TestInfoObject(object): pass
+class TestInfoObject: pass
 
 
 # --------------
@@ -4310,7 +4309,7 @@ class UFO3WriteDataTestCase(unittest.TestCase):
 # layerinfo.plist
 # ---------------
 
-class TestLayerInfoObject(object):
+class TestLayerInfoObject:
 
 	color = guidelines = lib = None
 

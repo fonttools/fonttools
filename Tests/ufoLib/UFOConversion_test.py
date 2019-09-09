@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import shutil
 import unittest
@@ -121,7 +120,7 @@ class ConversionFunctionsTestCase(unittest.TestCase):
 # kerning up conversion
 # ---------------------
 
-class TestInfoObject(object): pass
+class TestInfoObject: pass
 
 
 class KerningUpConversionTestCase(unittest.TestCase):

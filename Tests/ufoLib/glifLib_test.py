@@ -138,7 +138,7 @@ class FileNameTests(unittest.TestCase):
 		self.assertEqual(glyphNameToFileName("alt.con", None), "alt._con.glif")
 
 
-class _Glyph(object):
+class _Glyph:
 	pass
 
 

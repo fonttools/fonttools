@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import unittest
 from fontTools.ufoLib.glifLib import GlifLibError, readGlyphFromString, writeGlyphToString
 from .testSupport import Glyph, stripText
@@ -19,7 +18,7 @@ class TestGLIF1(unittest.TestCase):
 			first = stripText(first)
 		if isinstance(second, basestring):
 			second = stripText(second)
-		return super(TestGLIF1, self).assertEqual(first, second, msg=msg)
+		return super().assertEqual(first, second, msg=msg)
 
 	def pyToGLIF(self, py):
 		py = stripText(py)

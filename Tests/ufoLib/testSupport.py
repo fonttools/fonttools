@@ -21,7 +21,7 @@ def getDemoFontGlyphSetPath():
 
 # GLIF test tools
 
-class Glyph(object):
+class Glyph:
 
 	def __init__(self):
 		self.name = None
@@ -39,11 +39,11 @@ class Glyph(object):
 		args = _listToString(args)
 		kwargs = _dictToString(kwargs)
 		if args and kwargs:
-			return "pointPen.%s(*%s, **%s)" % (command, args, kwargs)
+			return f"pointPen.{command}(*{args}, **{kwargs})"
 		elif len(args):
-			return "pointPen.%s(*%s)" % (command, args)
+			return f"pointPen.{command}(*{args})"
 		elif len(kwargs):
-			return "pointPen.%s(**%s)" % (command, kwargs)
+			return f"pointPen.{command}(**{kwargs})"
 		else:
 			return "pointPen.%s()" % command
 
@@ -104,7 +104,7 @@ def _dictToString(d):
 			value = repr(value)
 		elif isinstance(value, basestring):
 			value = "\"%s\"" % value
-		text.append("%s : %s" % (key, value))
+		text.append(f"{key} : {value}")
 	if not text:
 		return ""
 	return "{%s}" % ", ".join(text)
