@@ -133,6 +133,11 @@ class HheaCompileOrToXMLTest(unittest.TestCase):
         hhea.ascender = 800
         self.assertEqual(hhea.ascent, 800)
         hhea.ascent = 750
+        self.assertEqual(hhea.ascender, 750)
+        hhea.descender = -300
+        self.assertEqual(hhea.descent, -300)
+        hhea.descent = -299
+        self.assertEqual(hhea.descender, -299)
 
 class HheaDecompileOrFromXMLTest(unittest.TestCase):
 
