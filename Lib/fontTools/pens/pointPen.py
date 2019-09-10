@@ -180,18 +180,36 @@ class PointToSegmentPen(BasePointToSegmentPen):
 			pen.moveTo(movePt)
 		outputImpliedClosingLine = self.outputImpliedClosingLine
 		nSegments = len(segments)
+		lastPt = movePt
 		for i in range(nSegments):
 			segmentType, points = segments[i]
 			points = [pt for pt, smooth, name, kwargs in points]
 			if segmentType == "line":
 				assert len(points) == 1, "illegal line segment point count: %d" % len(points)
 				pt = points[0]
-				if i + 1 != nSegments or outputImpliedClosingLine or not closed:
+				# For closed contours, a 'lineTo' is always implied from the last oncurve
+				# point to the starting point, thus we can omit it when the last and
+				# starting point don't overlap.
+				# However, when the last oncurve point is a "line" segment and has same
+				# coordinates as the starting point of a closed contour, we need to output
+				# the closing 'lineTo' explicitly (regardless of the value of the
+				# 'outputImpliedClosingLine' option) in order to disambiguate this case from
+				# the implied closing 'lineTo', otherwise the duplicate point would be lost.
+				# See https://github.com/googlefonts/fontmake/issues/572.
+				if (
+					i + 1 != nSegments
+					or outputImpliedClosingLine
+					or not closed
+					or pt == lastPt
+				):
 					pen.lineTo(pt)
+					lastPt = pt
 			elif segmentType == "curve":
 				pen.curveTo(*points)
+				lastPt = points[-1]
 			elif segmentType == "qcurve":
 				pen.qCurveTo(*points)
+				lastPt = points[-1]
 			else:
 				assert 0, "illegal segmentType: %s" % segmentType
 		if closed:
