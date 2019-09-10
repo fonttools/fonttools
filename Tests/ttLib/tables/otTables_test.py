@@ -546,6 +546,37 @@ class InsertionMorphActionTest(unittest.TestCase):
         })
 
 
+class SplitMultipleSubstTest:
+    def overflow(self, itemName, itemRecord):
+        from fontTools.otlLib.builder import buildMultipleSubstSubtable
+        from fontTools.ttLib.tables.otBase import OverflowErrorRecord
+
+        oldSubTable = buildMultipleSubstSubtable({'e': 1, 'a': 2, 'b': 3, 'c': 4, 'd': 5})
+        oldSubTable.Format = 1
+        newSubTable = otTables.MultipleSubst()
+
+        ok = otTables.splitMultipleSubst(oldSubTable, newSubTable, OverflowErrorRecord((None, None, None, itemName, itemRecord)))
+
+        assert ok
+        assert oldSubTable.Format == newSubTable.Format
+        return oldSubTable.mapping, newSubTable.mapping
+
+    def test_Coverage(self):
+        oldMapping, newMapping = self.overflow('Coverage', None)
+        assert oldMapping == {'a': 2, 'b': 3}
+        assert newMapping == {'c': 4, 'd': 5, 'e': 1}
+
+    def test_RangeRecord(self):
+        oldMapping, newMapping = self.overflow('RangeRecord', None)
+        assert oldMapping == {'a': 2, 'b': 3}
+        assert newMapping == {'c': 4, 'd': 5, 'e': 1}
+
+    def test_Sequence(self):
+        oldMapping, newMapping = self.overflow('Sequence', 4)
+        assert oldMapping == {'a': 2, 'b': 3,'c': 4}
+        assert newMapping == {'d': 5, 'e': 1}
+
+
 def test_splitMarkBasePos():
 	from fontTools.otlLib.builder import buildAnchor, buildMarkBasePosSubtable
 
