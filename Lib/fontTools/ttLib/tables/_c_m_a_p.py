@@ -252,7 +252,7 @@ class cmap_format_0(CmapSubtable):
 		data = self.data # decompileHeader assigns the data after the header to self.data
 		assert 262 == self.length, "Format 0 cmap subtable not 262 bytes"
 		gids = array.array("B")
-		gids.fromstring(self.data)
+		gids.frombytes(self.data)
 		charCodes = list(range(len(gids)))
 		self.cmap = _make_map(self.ttFont, charCodes, gids)
 
@@ -266,7 +266,7 @@ class cmap_format_0(CmapSubtable):
 		valueList = [getGlyphID(cmap[i]) if i in cmap else 0 for i in range(256)]
 
 		gids = array.array("B", valueList)
-		data = struct.pack(">HHH", 0, 262, self.language) + gids.tostring()
+		data = struct.pack(">HHH", 0, 262, self.language) + gids.tobytes()
 		assert len(data) == 262
 		return data
 
@@ -336,7 +336,7 @@ class cmap_format_2(CmapSubtable):
 		maxSubHeaderindex = 0
 		# get the key array, and determine the number of subHeaders.
 		allKeys = array.array("H")
-		allKeys.fromstring(data[:512])
+		allKeys.frombytes(data[:512])
 		data = data[512:]
 		if sys.byteorder != "big": allKeys.byteswap()
 		subHeaderKeys = [ key//8 for key in allKeys]
@@ -352,7 +352,7 @@ class cmap_format_2(CmapSubtable):
 			pos += 8
 			giDataPos = pos + subHeader.idRangeOffset-2
 			giList = array.array("H")
-			giList.fromstring(data[giDataPos:giDataPos + subHeader.entryCount*2])
+			giList.frombytes(data[giDataPos:giDataPos + subHeader.entryCount*2])
 			if sys.byteorder != "big": giList.byteswap()
 			subHeader.glyphIndexArray = giList
 			subHeaderList.append(subHeader)
@@ -694,7 +694,7 @@ class cmap_format_4(CmapSubtable):
 		segCount = segCountX2 // 2
 
 		allCodes = array.array("H")
-		allCodes.fromstring(data)
+		allCodes.frombytes(data)
 		self.data = data = None
 
 		if sys.byteorder != "big": allCodes.byteswap()
@@ -826,7 +826,7 @@ class cmap_format_4(CmapSubtable):
 		if sys.byteorder != "big": charCodeArray.byteswap()
 		if sys.byteorder != "big": idDeltaArray.byteswap()
 		if sys.byteorder != "big": restArray.byteswap()
-		data = charCodeArray.tostring() + idDeltaArray.tostring() + restArray.tostring()
+		data = charCodeArray.tobytes() + idDeltaArray.tobytes() + restArray.tobytes()
 
 		length = struct.calcsize(cmap_format_4_format) + len(data)
 		header = struct.pack(cmap_format_4_format, self.format, length, self.language,
@@ -864,7 +864,7 @@ class cmap_format_6(CmapSubtable):
 		data = data[4:]
 		#assert len(data) == 2 * entryCount  # XXX not true in Apple's Helvetica!!!
 		gids = array.array("H")
-		gids.fromstring(data[:2 * int(entryCount)])
+		gids.frombytes(data[:2 * int(entryCount)])
 		if sys.byteorder != "big": gids.byteswap()
 		self.data = data = None
 
@@ -885,7 +885,7 @@ class cmap_format_6(CmapSubtable):
 			]
 			gids = array.array("H", valueList)
 			if sys.byteorder != "big": gids.byteswap()
-			data = gids.tostring()
+			data = gids.tobytes()
 		else:
 			data = b""
 			firstCode = 0

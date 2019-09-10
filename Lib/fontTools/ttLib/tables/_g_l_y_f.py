@@ -681,7 +681,7 @@ class Glyph(object):
 
 	def decompileCoordinates(self, data):
 		endPtsOfContours = array.array("h")
-		endPtsOfContours.fromstring(data[:2*self.numberOfContours])
+		endPtsOfContours.frombytes(data[:2*self.numberOfContours])
 		if sys.byteorder != "big": endPtsOfContours.byteswap()
 		self.endPtsOfContours = endPtsOfContours.tolist()
 
@@ -795,7 +795,7 @@ class Glyph(object):
 		data = []
 		endPtsOfContours = array.array("h", self.endPtsOfContours)
 		if sys.byteorder != "big": endPtsOfContours.byteswap()
-		data.append(endPtsOfContours.tostring())
+		data.append(endPtsOfContours.tobytes())
 		instructions = self.program.getBytecode()
 		data.append(struct.pack(">h", len(instructions)))
 		data.append(instructions)
@@ -859,7 +859,7 @@ class Glyph(object):
 				repeat = 0
 				compressedflags.append(flag)
 			lastflag = flag
-		compressedFlags = array.array("B", compressedflags).tostring()
+		compressedFlags = array.array("B", compressedflags).tobytes()
 		compressedXs = bytesjoin(xPoints)
 		compressedYs = bytesjoin(yPoints)
 		return (compressedFlags, compressedXs, compressedYs)
@@ -914,9 +914,9 @@ class Glyph(object):
 			raise Exception("internal error")
 		except StopIteration:
 			pass
-		compressedFlags = compressedFlags.tostring()
-		compressedXs = compressedXs.tostring()
-		compressedYs = compressedYs.tostring()
+		compressedFlags = compressedFlags.tobytes()
+		compressedXs = compressedXs.tobytes()
+		compressedYs = compressedYs.tobytes()
 
 		return (compressedFlags, compressedXs, compressedYs)
 
@@ -1156,7 +1156,7 @@ class Glyph(object):
 			# Remove padding
 			data = data[:i]
 
-		self.data = data.tostring()
+		self.data = data.tobytes()
 
 	def removeHinting(self):
 		self.trim (remove_hinting=True)

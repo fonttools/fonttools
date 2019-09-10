@@ -651,7 +651,7 @@ class WOFF2LocaTable(getTableClass('loca')):
 			else:
 				locations = array.array("I", self.locations)
 			if sys.byteorder != "big": locations.byteswap()
-			data = locations.tostring()
+			data = locations.tobytes()
 		else:
 			# use the most compact indexFormat given the current glyph offsets
 			data = super(WOFF2LocaTable, self).compile(ttFont)
@@ -733,7 +733,7 @@ class WOFF2GlyfTable(getTableClass('glyf')):
 		for glyphID in range(self.numGlyphs):
 			self._encodeGlyph(glyphID)
 
-		self.bboxStream = self.bboxBitmap.tostring() + self.bboxStream
+		self.bboxStream = self.bboxBitmap.tobytes() + self.bboxStream
 		for stream in self.subStreams:
 			setattr(self, stream + 'Size', len(getattr(self, stream)))
 		self.version = 0
@@ -961,8 +961,8 @@ class WOFF2GlyfTable(getTableClass('glyf')):
 				triplets.append(absY >> 8)
 				triplets.append(absY & 0xff)
 
-		self.flagStream += flags.tostring()
-		self.glyphStream += triplets.tostring()
+		self.flagStream += flags.tobytes()
+		self.glyphStream += triplets.tobytes()
 
 
 class WOFF2HmtxTable(getTableClass("hmtx")):
@@ -1093,7 +1093,7 @@ class WOFF2HmtxTable(getTableClass("hmtx")):
 		)
 		if sys.byteorder != "big":
 			advanceWidthArray.byteswap()
-		data += advanceWidthArray.tostring()
+		data += advanceWidthArray.tobytes()
 
 		if hasLsbArray:
 			lsbArray = array.array(
@@ -1106,7 +1106,7 @@ class WOFF2HmtxTable(getTableClass("hmtx")):
 			)
 			if sys.byteorder != "big":
 				lsbArray.byteswap()
-			data += lsbArray.tostring()
+			data += lsbArray.tobytes()
 
 		if hasLeftSideBearingArray:
 			leftSideBearingArray = array.array(
@@ -1118,7 +1118,7 @@ class WOFF2HmtxTable(getTableClass("hmtx")):
 			)
 			if sys.byteorder != "big":
 				leftSideBearingArray.byteswap()
-			data += leftSideBearingArray.tostring()
+			data += leftSideBearingArray.tobytes()
 
 		return data
 

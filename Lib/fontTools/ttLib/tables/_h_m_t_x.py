@@ -108,7 +108,7 @@ class table__h_m_t_x(DefaultTable.DefaultTable):
 				raise
 		additionalMetrics = array.array("h", additionalMetrics)
 		if sys.byteorder != "big": additionalMetrics.byteswap()
-		data = data + additionalMetrics.tostring()
+		data = data + additionalMetrics.tobytes()
 		return data
 
 	def toXML(self, writer, ttFont):

@@ -2075,7 +2075,7 @@ def remapComponentsFast(self, glyphidmap):
 		elif flags & 0x0080: i += 8	# WE_HAVE_A_TWO_BY_TWO
 		more = flags & 0x0020	# MORE_COMPONENTS
 
-	self.data = data.tostring()
+	self.data = data.tobytes()
 
 @_add_method(ttLib.getTableClass('glyf'))
 def closure_glyphs(self, s):

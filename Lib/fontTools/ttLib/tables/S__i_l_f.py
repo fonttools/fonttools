@@ -745,7 +745,7 @@ class Pass(object):
         transes = []
         for t in self.stateTrans:
             if sys.byteorder != "big": t.byteswap()
-            transes.append(t.tostring())
+            transes.append(t.tobytes())
             if sys.byteorder != "big": t.byteswap()
         if not len(transes):
             self.startStates = [0]
