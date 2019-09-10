@@ -156,6 +156,67 @@ class PointToSegmentPenTest(unittest.TestCase):
                          "addPoint((20, 20)) addPoint((20, 40), segmentType='curve') endPath()",
                          repr(tpen))
 
+    def test_closed_outputImpliedClosingLine(self):
+        tpen = _TestSegmentPen()
+        ppen = PointToSegmentPen(tpen, outputImpliedClosingLine=True)
+        ppen.beginPath()
+        ppen.addPoint((10, 10), "line")
+        ppen.addPoint((10, 20), "line")
+        ppen.addPoint((20, 20), "line")
+        ppen.endPath()
+        self.assertEqual(
+            "10 10 moveto "
+            "10 20 lineto "
+            "20 20 lineto "
+            "10 10 lineto "  # explicit closing line
+            "closepath",
+            repr(tpen)
+        )
+
+    def test_closed_line_overlapping_start_end_points(self):
+        # Test case from https://github.com/googlefonts/fontmake/issues/572.
+        tpen = _TestSegmentPen()
+        ppen = PointToSegmentPen(tpen, outputImpliedClosingLine=False)
+        # The last oncurve point on this closed contour is a "line" segment and has
+        # same coordinates as the starting point.
+        ppen.beginPath()
+        ppen.addPoint((0, 651), segmentType="line")
+        ppen.addPoint((0, 101), segmentType="line")
+        ppen.addPoint((0, 101), segmentType="line")
+        ppen.addPoint((0, 651), segmentType="line")
+        ppen.endPath()
+        # Check that we always output an explicit 'lineTo' segment at the end,
+        # regardless of the value of 'outputImpliedClosingLine', to disambiguate
+        # the duplicate point from the implied closing line.
+        self.assertEqual(
+            "0 651 moveto "
+            "0 101 lineto "
+            "0 101 lineto "
+            "0 651 lineto "
+            "0 651 lineto "
+            "closepath",
+            repr(tpen)
+        )
+
+    def test_roundTrip2(self):
+        tpen = _TestPointPen()
+        ppen = PointToSegmentPen(SegmentToPointPen(tpen))
+        ppen.beginPath()
+        ppen.addPoint((0, 651), segmentType="line")
+        ppen.addPoint((0, 101), segmentType="line")
+        ppen.addPoint((0, 101), segmentType="line")
+        ppen.addPoint((0, 651), segmentType="line")
+        ppen.endPath()
+        self.assertEqual(
+            "beginPath() "
+            "addPoint((0, 651), segmentType='line') "
+            "addPoint((0, 101), segmentType='line') "
+            "addPoint((0, 101), segmentType='line') "
+            "addPoint((0, 651), segmentType='line') "
+            "endPath()",
+            repr(tpen)
+        )
+
 
 class TestSegmentToPointPen(unittest.TestCase):
 
@@ -409,3 +470,23 @@ class TestReverseContourPointPen(unittest.TestCase):
                          "endPath() "
                          "addComponent('base', [1, 0, 0, 1, 0, 0], identifier='foo')",
                          repr(tpen))
+
+    def test_closed_line_overlapping_start_end_points(self):
+        # Test case from https://github.com/googlefonts/fontmake/issues/572
+        tpen = _TestPointPen()
+        pen = ReverseContourPointPen(tpen)
+        pen.beginPath()
+        pen.addPoint((0, 651), segmentType="line")
+        pen.addPoint((0, 101), segmentType="line")
+        pen.addPoint((0, 101), segmentType="line")
+        pen.addPoint((0, 651), segmentType="line")
+        pen.endPath()
+        self.assertEqual(
+            "beginPath() "
+            "addPoint((0, 651), segmentType='line') "
+            "addPoint((0, 651), segmentType='line') "
+            "addPoint((0, 101), segmentType='line') "
+            "addPoint((0, 101), segmentType='line') "
+            "endPath()",
+            repr(tpen)
+        )
