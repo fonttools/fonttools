@@ -75,6 +75,39 @@ class NameTableTest(unittest.TestCase):
 		with self.assertRaises(TypeError):
 			table.addName(b"abc")  # must be unicode string
 
+	def test_removeNames(self):
+		table = table__n_a_m_e()
+		table.setName("Regular", 2, 1, 0, 0)
+		table.setName("Regular", 2, 3, 1, 0x409)
+		table.removeNames(nameID=2)
+		self.assertEqual(table.names, [])
+
+		table = table__n_a_m_e()
+		table.setName("FamilyName", 1, 1, 0, 0)
+		table.setName("Regular", 2, 1, 0, 0)
+		table.setName("FamilyName", 1, 3, 1, 0x409)
+		table.setName("Regular", 2, 3, 1, 0x409)
+		table.removeNames(platformID=1)
+		self.assertEqual(len(table.names), 2)
+
+		table = table__n_a_m_e()
+		table.setName("FamilyName", 1, 1, 0, 0)
+		table.setName("Regular", 2, 1, 0, 0)
+		table.removeNames(nameID=1)
+		self.assertEqual(len(table.names), 1)
+
+		table = table__n_a_m_e()
+		table.setName("FamilyName", 1, 1, 0, 0)
+		table.setName("Regular", 2, 1, 0, 0)
+		table.removeNames(2, 1, 0, 0)
+		self.assertEqual(len(table.names), 1)
+
+		table = table__n_a_m_e()
+		table.setName("FamilyName", 1, 1, 0, 0)
+		table.setName("Regular", 2, 1, 0, 0)
+		table.removeNames()
+		self.assertEqual(len(table.names), 2)
+
 	def test_addMultilingualName(self):
 		# Microsoft Windows has language codes for “English” (en)
 		# and for “Standard German as used in Switzerland” (de-CH).
