@@ -148,8 +148,8 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			self.names.append(makeName(string, nameID, platformID, platEncID, langID))
 
 	def removeNames(self, nameID=None, platformID=None, platEncID=None, langID=None):
-		"""Remove any name records identified by 'nameID', 'platformID', 'platEncID'
-		or 'langID'.
+		"""Remove any name records identified by the given combination of 'nameID',
+		'platformID', 'platEncID' and 'langID'.
 		"""
 		args = {
 			argName: argValue
