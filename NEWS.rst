@@ -1,3 +1,13 @@
+- [otTables] Support fixing offset overflows in ``MultipleSubst`` lookup subtables
+  (#1706).
+- [subset] Prune empty strikes in ``EBDT`` and ``CBDT`` table data (#1698, #1633).
+- [pens] Fixed issue in ``PointToSegmentPen`` when last point of closed contour has
+  same coordinates as the starting point and was incorrectly dropped (#1720).
+- [Graphite] Fixed ``Sill`` table output to pass OTS (#1705).
+- [name] Added ``removeNames`` method to ``table__n_a_m_e`` class (#1719).
+- [ttLib] Added aliases for renamed entries ``ascender`` and ``descender`` in
+  ``hhea`` table (#1715).
+
 4.0.0 (released 2019-08-22)
 ---------------------------
 
