@@ -1,3 +1,6 @@
+4.0.1 (released 2019-09-11)
+---------------------------
+
 - [otTables] Support fixing offset overflows in ``MultipleSubst`` lookup subtables
   (#1706).
 - [subset] Prune empty strikes in ``EBDT`` and ``CBDT`` table data (#1698, #1633).
