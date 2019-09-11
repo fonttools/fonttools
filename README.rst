@@ -19,8 +19,7 @@ or later. FontTools 3.x requires Python 2.7 or later.
 
 **NOTE** From August 2019, until no later than January 1 2020, the support
 for *Python 2.7* will be limited to only critical bug fixes, and no new features
-will be added to the ``py27`` branch. The upcoming FontTools 4.x series will require
-*Python 3.6* or above. You can read more `here <https://python3statement.org>`__
+will be added to the ``py27`` branch. You can read more `here <https://python3statement.org>`__
 and `here <https://github.com/fonttools/fonttools/issues/765>`__ for the
 reasons behind this decision.
 
