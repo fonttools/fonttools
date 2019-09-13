@@ -208,7 +208,7 @@ setup(
     description='Cubic-to-quadratic bezier curve conversion',
     author="James Godfrey-Kittle, Behdad Esfahbod",
     author_email="jamesgk@google.com",
-    url="https://github.com/googlei18n",
+    url="https://github.com/googlefonts",
     license="Apache License, Version 2.0",
     long_description=long_description,
     packages=find_packages('Lib'),

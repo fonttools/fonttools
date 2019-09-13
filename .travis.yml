@@ -32,6 +32,6 @@ after_success:
   - if [ -z "$TRAVIS_TAG" ]; then tox -e codecov; fi
   # deploy to PyPI on tags
   - |
-    if [ -n "$TRAVIS_TAG" ] && [ "$TRAVIS_REPO_SLUG" == "googlei18n/cu2qu" ] && [ "$BUILD_DIST" == true ]; then
+    if [ -n "$TRAVIS_TAG" ] && [ "$TRAVIS_REPO_SLUG" == "googlefonts/cu2qu" ] && [ "$BUILD_DIST" == true ]; then
       tox -e pypi
     fi
