@@ -244,3 +244,42 @@ class GlyphsToQuadraticTest(object):
         pen.closePath()
         assert glyph_to_quadratic(glyph)
         assert len(glyph.components) == 1
+
+    def test_overlapping_start_end_points(self):
+        # https://github.com/googlefonts/fontmake/issues/572
+        glyph1 = Glyph()
+        pen = glyph1.getPointPen()
+        pen.beginPath()
+        pen.addPoint((0, 651), segmentType="line")
+        pen.addPoint((0, 101), segmentType="line")
+        pen.addPoint((0, 101), segmentType="line")
+        pen.addPoint((0, 651), segmentType="line")
+        pen.endPath()
+
+        glyph2 = Glyph()
+        pen = glyph2.getPointPen()
+        pen.beginPath()
+        pen.addPoint((1, 651), segmentType="line")
+        pen.addPoint((2, 101), segmentType="line")
+        pen.addPoint((3, 101), segmentType="line")
+        pen.addPoint((4, 651), segmentType="line")
+        pen.endPath()
+
+        glyphs = [glyph1, glyph2]
+
+        assert glyphs_to_quadratic(glyphs, reverse_direction=True)
+
+        assert [[(p.x, p.y) for p in glyph[0]] for glyph in glyphs] == [
+            [
+                (0, 651),
+                (0, 651),
+                (0, 101),
+                (0, 101),
+            ],
+            [
+                (1, 651),
+                (4, 651),
+                (3, 101),
+                (2, 101)
+            ],
+        ]
