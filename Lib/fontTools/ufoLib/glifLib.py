@@ -851,7 +851,7 @@ def validateLayerInfoVersion3Data(infoData):
 			raise GlifLibError("Unknown attribute %s." % attr)
 		isValidValue = validateLayerInfoVersion3ValueForAttribute(attr, value)
 		if not isValidValue:
-			raise GlifLibError(f"Invalid value for attribute {attr} ({repr(value)}).")
+			raise GlifLibError(f"Invalid value for attribute {attr} ({value!r}).")
 	return infoData
 
 # -----------------

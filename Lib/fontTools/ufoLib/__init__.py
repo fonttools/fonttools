@@ -1668,7 +1668,7 @@ def validateInfoVersion2Data(infoData):
 	for attr, value in list(infoData.items()):
 		isValidValue = validateFontInfoVersion2ValueForAttribute(attr, value)
 		if not isValidValue:
-			raise UFOLibError(f"Invalid value for attribute {attr} ({repr(value)}).")
+			raise UFOLibError(f"Invalid value for attribute {attr} ({value!r}).")
 		else:
 			validInfoData[attr] = value
 	return validInfoData
@@ -1712,7 +1712,7 @@ def validateInfoVersion3Data(infoData):
 	for attr, value in list(infoData.items()):
 		isValidValue = validateFontInfoVersion3ValueForAttribute(attr, value)
 		if not isValidValue:
-			raise UFOLibError(f"Invalid value for attribute {attr} ({repr(value)}).")
+			raise UFOLibError(f"Invalid value for attribute {attr} ({value!r}).")
 		else:
 			validInfoData[attr] = value
 	return validInfoData
@@ -2042,17 +2042,17 @@ def convertFontInfoValueForAttributeFromVersion1ToVersion2(attr, value):
 		if attr == "fontStyle":
 			v = _fontStyle1To2.get(value)
 			if v is None:
-				raise UFOLibError(f"Cannot convert value ({repr(value)}) for attribute {attr}.")
+				raise UFOLibError(f"Cannot convert value ({value!r}) for attribute {attr}.")
 			value = v
 		elif attr == "widthName":
 			v = _widthName1To2.get(value)
 			if v is None:
-				raise UFOLibError(f"Cannot convert value ({repr(value)}) for attribute {attr}.")
+				raise UFOLibError(f"Cannot convert value ({value!r}) for attribute {attr}.")
 			value = v
 		elif attr == "msCharSet":
 			v = _msCharSet1To2.get(value)
 			if v is None:
-				raise UFOLibError(f"Cannot convert value ({repr(value)}) for attribute {attr}.")
+				raise UFOLibError(f"Cannot convert value ({value!r}) for attribute {attr}.")
 			value = v
 	attr = fontInfoAttributesVersion1To2.get(attr, attr)
 	return attr, value
@@ -2087,7 +2087,7 @@ def _convertFontInfoDataVersion1ToVersion2(data):
 			continue
 		# catch values that can't be converted
 		if value is None:
-			raise UFOLibError(f"Cannot convert value ({repr(value)}) for attribute {newAttr}.")
+			raise UFOLibError(f"Cannot convert value ({value!r}) for attribute {newAttr}.")
 		# store
 		converted[newAttr] = newValue
 	return converted
@@ -2101,7 +2101,7 @@ def _convertFontInfoDataVersion2ToVersion1(data):
 			continue
 		# catch values that can't be converted
 		if value is None:
-			raise UFOLibError(f"Cannot convert value ({repr(value)}) for attribute {newAttr}.")
+			raise UFOLibError(f"Cannot convert value ({value!r}) for attribute {newAttr}.")
 		# store
 		converted[newAttr] = newValue
 	return converted
