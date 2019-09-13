@@ -78,7 +78,7 @@ from Github and install in ``--editable`` (or ``-e``) mode:
 
 .. code:: sh
 
-    $ git clone https://github.com/googlei18n/cu2qu
+    $ git clone https://github.com/googlefonts/cu2qu
     $ cd cu2qu
     $ pip install --editable .
 
@@ -114,9 +114,9 @@ source checkout, like so:
 
 
 .. _Cython: https://github.com/cython/cython
-.. |Build Status| image:: https://travis-ci.org/googlei18n/cu2qu.svg
-   :target: https://travis-ci.org/googlei18n/cu2qu
+.. |Build Status| image:: https://travis-ci.org/googlefonts/cu2qu.svg
+   :target: https://travis-ci.org/googlefonts/cu2qu
 .. |PyPI Version| image:: https://img.shields.io/pypi/v/cu2qu.svg
    :target: https://pypi.org/project/cu2qu/
-.. |Coverage| image:: https://codecov.io/gh/googlei18n/cu2qu/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/googlei18n/cu2qu
+.. |Coverage| image:: https://codecov.io/gh/googlefonts/cu2qu/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/googlefonts/cu2qu
