@@ -5,7 +5,6 @@ import warnings
 import functools
 
 
-integerTypes = int
 numberTypes = (int, float)
 
 

@@ -6,7 +6,7 @@ import fs.base
 import fs.osfs
 
 from collections.abc import Mapping
-from fontTools.ufoLib.utils import integerTypes, numberTypes
+from fontTools.ufoLib.utils import numberTypes
 
 
 # -------
@@ -42,7 +42,7 @@ def genericIntListValidator(values, validValues):
 	if valuesSet - validValuesSet:
 		return False
 	for value in values:
-		if not isinstance(value, integerTypes):
+		if not isinstance(value, int):
 			return False
 	return True
 
@@ -50,7 +50,7 @@ def genericNonNegativeIntValidator(value):
 	"""
 	Generic. (Added at version 3.)
 	"""
-	if not isinstance(value, integerTypes):
+	if not isinstance(value, int):
 		return False
 	if value < 0:
 		return False
@@ -207,7 +207,7 @@ def fontInfoOpenTypeOS2WeightClassValidator(value):
 	"""
 	Version 2+.
 	"""
-	if not isinstance(value, integerTypes):
+	if not isinstance(value, int):
 		return False
 	if value < 0:
 		return False
@@ -217,7 +217,7 @@ def fontInfoOpenTypeOS2WidthClassValidator(value):
 	"""
 	Version 2+.
 	"""
-	if not isinstance(value, integerTypes):
+	if not isinstance(value, int):
 		return False
 	if value < 1:
 		return False
@@ -234,7 +234,7 @@ def fontInfoVersion2OpenTypeOS2PanoseValidator(values):
 	if len(values) != 10:
 		return False
 	for value in values:
-		if not isinstance(value, integerTypes):
+		if not isinstance(value, int):
 			return False
 	# XXX further validation?
 	return True
@@ -248,7 +248,7 @@ def fontInfoVersion3OpenTypeOS2PanoseValidator(values):
 	if len(values) != 10:
 		return False
 	for value in values:
-		if not isinstance(value, integerTypes):
+		if not isinstance(value, int):
 			return False
 		if value < 0:
 			return False
@@ -264,7 +264,7 @@ def fontInfoOpenTypeOS2FamilyClassValidator(values):
 	if len(values) != 2:
 		return False
 	for value in values:
-		if not isinstance(value, integerTypes):
+		if not isinstance(value, int):
 			return False
 	classID, subclassID = values
 	if classID < 0 or classID > 14:

@@ -33,7 +33,7 @@ from fontTools.ufoLib.validators import (
 )
 from fontTools.misc import etree
 from fontTools.ufoLib import _UFOBaseIO
-from fontTools.ufoLib.utils import integerTypes, numberTypes
+from fontTools.ufoLib.utils import numberTypes
 
 
 __all__ = [
@@ -681,11 +681,11 @@ def _writeAdvance(glyphObject, element, validate):
 
 def _writeUnicodes(glyphObject, element, validate):
 	unicodes = getattr(glyphObject, "unicodes", None)
-	if validate and isinstance(unicodes, integerTypes):
+	if validate and isinstance(unicodes, int):
 		unicodes = [unicodes]
 	seen = set()
 	for code in unicodes:
-		if validate and not isinstance(code, integerTypes):
+		if validate and not isinstance(code, int):
 			raise GlifLibError("unicode values must be int")
 		if code in seen:
 			continue
