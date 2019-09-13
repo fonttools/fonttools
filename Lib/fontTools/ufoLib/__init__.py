@@ -671,7 +671,7 @@ class UFOReader(_UFOBaseIO):
 
 	def getCharacterMapping(self, layerName=None, validate=None):
 		"""
-		Return a dictionary that maps str values (ints) to
+		Return a dictionary that maps unicode values (ints) to
 		lists of glyph names.
 		"""
 		if validate is None:
