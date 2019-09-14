@@ -4105,16 +4105,14 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		self.makeUFO()
 		writer = UFOWriter(self.ufoPath)
 		writer.deleteGlyphSet("public.default")
+		writer.writeLayerContents(["layer 1", "layer 2"])
 		# directories
 		path = os.path.join(self.ufoPath, "glyphs")
-		exists = os.path.exists(path)
-		self.assertEqual(False, exists)
+		self.assertEqual(False, os.path.exists(path))
 		path = os.path.join(self.ufoPath, "glyphs.layer 1")
-		exists = os.path.exists(path)
-		self.assertEqual(True, exists)
+		self.assertEqual(True, os.path.exists(path))
 		path = os.path.join(self.ufoPath, "glyphs.layer 2")
-		exists = os.path.exists(path)
-		self.assertEqual(True, exists)
+		self.assertEqual(True, os.path.exists(path))
 		# layer contents
 		path = os.path.join(self.ufoPath, "layercontents.plist")
 		with open(path, "rb") as f:
@@ -4124,7 +4122,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 
 	# remove unknown layer
 
-	def testRemoveDefaultLayer(self):
+	def testRemoveDefaultLayer2(self):
 		self.makeUFO()
 		writer = UFOWriter(self.ufoPath)
 		self.assertRaises(UFOLibError, writer.deleteGlyphSet, "does not exist")
