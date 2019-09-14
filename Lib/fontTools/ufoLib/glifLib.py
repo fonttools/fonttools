@@ -699,7 +699,6 @@ def _writeNote(glyphObject, element, validate):
 		raise GlifLibError("note attribute must be str")
 	note = note.strip()
 	note = "\n" + note + "\n"
-	# ensure text is str, if it's bytes decode as ASCII
 	etree.SubElement(element, "note").text = note
 
 def _writeImage(glyphObject, element, validate):
