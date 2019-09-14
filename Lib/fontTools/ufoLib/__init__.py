@@ -1323,8 +1323,6 @@ class UFOWriter(UFOReader):
 			for layerName in layerOrder:
 				if layerName is None:
 					layerName = DEFAULT_LAYER_NAME
-				else:
-					layerName = tostr(layerName)
 				newOrder.append(layerName)
 			layerOrder = newOrder
 		else:

@@ -4138,8 +4138,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 			]
 		)
 		writer = UFOWriter(self.ufoPath)
-		# if passed bytes string, it'll be decoded to ASCII unicode string
-		writer.writeLayerContents(["public.default", "layer 2", b"layer 1"])
+		writer.writeLayerContents(["public.default", "layer 2", "layer 1"])
 		path = os.path.join(self.ufoPath, "layercontents.plist")
 		with open(path, "rb") as f:
 			result = plistlib.load(f)
@@ -4149,7 +4148,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 			["layer 1", "glyphs.layer 1"],
 		]
 		self.assertEqual(expected, result)
-		for layerName, directory in result:
+		for layerName, _ in result:
 			assert isinstance(layerName, str)
 
 # -----
