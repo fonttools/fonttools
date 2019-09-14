@@ -521,12 +521,6 @@ def glyphNameToFileName(glyphName, existingFileNames):
 	"""
 	if existingFileNames is None:
 		existingFileNames = []
-	if not isinstance(glyphName, str):
-		try:
-			new = str(glyphName)
-			glyphName = new
-		except UnicodeDecodeError:
-			pass
 	return userNameToFileName(glyphName, existing=existingFileNames, suffix=".glif")
 
 # -----------------------

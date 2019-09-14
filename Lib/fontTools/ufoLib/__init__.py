@@ -1436,11 +1436,6 @@ class UFOWriter(UFOReader):
 				# not caching this could be slightly expensive,
 				# but caching it will be cumbersome
 				existing = {d.lower() for d in self.layerContents.values()}
-				if not isinstance(layerName, str):
-					try:
-						layerName = str(layerName)
-					except UnicodeDecodeError:
-						raise UFOLibError("The specified layer name is not a Unicode string.")
 				directory = userNameToFileName(layerName, existing=existing, prefix="glyphs.")
 		# make the directory
 		glyphSubFS = self.fs.makedir(directory, recreate=True)
