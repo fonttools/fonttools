@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import os
 import sys
@@ -36,7 +35,7 @@ def run(argv):
         description="An OpenType table diff tool for fonts."
     )
     parser.add_argument(
-        "--version", action="version", version="fdiff v{}".format(__version__)
+        "--version", action="version", version=f"fdiff v{__version__}"
     )
     parser.add_argument(
         "-c",
