@@ -34,9 +34,7 @@ def run(argv):
     parser = argparse.ArgumentParser(
         description="An OpenType table diff tool for fonts."
     )
-    parser.add_argument(
-        "--version", action="version", version=f"fdiff v{__version__}"
-    )
+    parser.add_argument("--version", action="version", version=f"fdiff v{__version__}")
     parser.add_argument(
         "-c",
         "--color",
