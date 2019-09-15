@@ -85,12 +85,12 @@ def run(argv):
     #  File path argument validations
     # -------------------------------
 
-    if not file_exists(args.PREFILE):
+    if not args.PREFILE.startswith("http") and not file_exists(args.PREFILE):
         sys.stderr.write(
             f"[*] ERROR: The file path '{args.PREFILE}' can not be found.{os.linesep}"
         )
         sys.exit(1)
-    if not file_exists(args.POSTFILE):
+    if not args.PREFILE.startswith("http") and not file_exists(args.POSTFILE):
         sys.stderr.write(
             f"[*] ERROR: The file path '{args.POSTFILE}' can not be found.{os.linesep}"
         )
