@@ -10,6 +10,7 @@ from fdiff.aio import async_write_bin
 
 
 def _get_filepath_from_url(url, dirpath):
+    """Returns filepath from base file name in URL and directory path."""
     url_path_list = urllib.parse.urlsplit(url)
     abs_filepath = url_path_list.path
     basepath = os.path.split(abs_filepath)[-1]
@@ -17,6 +18,7 @@ def _get_filepath_from_url(url, dirpath):
 
 
 async def async_fetch(session, url):
+    """Asynchronous I/O HTTP GET request with a ClientSession instantiated from the aiohttp library."""
     async with session.get(url) as response:
         status = response.status
         if status != 200:
@@ -27,6 +29,10 @@ async def async_fetch(session, url):
 
 
 async def async_fetch_and_write(session, url, dirpath):
+    """Asynchronous I/O HTTP GET request with a ClientSession instantiated from the aiohttp library, followed
+    by an asynchronous I/O file write of the binary to disk with the aiofiles library.
+
+    :returns `FWRes` namedtuple with url, filepath, http_status, write_success fields"""
     FWResponse = namedtuple(
         "FWRes", ["url", "filepath", "http_status", "write_success"]
     )
@@ -45,6 +51,10 @@ async def async_fetch_and_write(session, url, dirpath):
 
 
 async def create_async_get_request_session_and_run(urls, dirpath):
+    """Creates an aiohttp library ClientSession and performs asynchronous GET requests +
+    binary file writes with the binary response from the GET request.
+
+    :returns list of asyncio Tasks that include `FWRes` namedtuple instances (defined in async_fetch_and_write)"""
     async with aiohttp.ClientSession() as session:
         tasks = []
         for url in urls:
