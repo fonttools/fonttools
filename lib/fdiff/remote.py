@@ -1,6 +1,8 @@
 import os.path
 import urllib.parse
 
+from collections import namedtuple
+
 import aiohttp
 import asyncio
 
@@ -25,15 +27,21 @@ async def async_fetch(session, url):
 
 
 async def async_fetch_and_write(session, url, dirpath):
+    FWResponse = namedtuple(
+        "FWRes", ["url", "filepath", "http_status", "write_success"]
+    )
     url, status, binary = await async_fetch(session, url)
     if status != 200:
         filepath = None
-        return url, filepath, False
+        write_success = False
     else:
         filepath = _get_filepath_from_url(url, dirpath)
         await async_write_bin(filepath, binary)
-        # TODO: refactor to namedtuple?
-        return url, filepath, True
+        write_success = True
+
+    return FWResponse(
+        url=url, filepath=filepath, http_status=status, write_success=write_success
+    )
 
 
 async def create_async_get_request_session_and_run(urls, dirpath):
