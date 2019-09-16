@@ -1,8 +1,13 @@
+import asyncio
 import os
 import tempfile
 
 from fontTools.ttLib import TTFont
 
+from fdiff.remote import (
+    _get_filepath_from_url,
+    create_async_get_request_session_and_run,
+)
 from fdiff.utils import get_file_modtime
 from fdiff.thirdparty.fdifflib import unified_diff
 
@@ -25,38 +30,75 @@ def u_diff(
     :returns: Generator of ordered diff line strings that include newline line endings
     :raises: KeyError if include_tables or exclude_tables includes a mis-specified table
     that is not included in filepath_a OR filepath_b"""
-    tt_left = TTFont(filepath_a)
-    tt_right = TTFont(filepath_b)
-
-    # Validation: include_tables request should be for tables that are in one of
-    # the two fonts. This otherwise silently passes with exit status code 0 which
-    # could lead to the interpretation of no diff between two files when the table
-    # entry is incorrectly defined or is a typo.  Let's be conservative and consider
-    # this an error, force user to use explicit definitions that include tables in
-    # one of the two files, and understand that the diff request was for one or more
-    # tables that are not present.
-    if include_tables is not None:
-        for table in include_tables:
-            if table not in tt_left and table not in tt_right:
-                raise KeyError(
-                    f"'{table}' table was not identified for inclusion in either font"
-                )
-
-    # Validation: exclude_tables request should be for tables that are in one of
-    # the two fonts.  Mis-specified OT table definitions could otherwise result
-    # in the presence of a table in the diff when the request was to exclude it.
-    # For example, when an "OS/2" table request is entered as "OS2".
-    if exclude_tables is not None:
-        for table in exclude_tables:
-            if table not in tt_left and table not in tt_right:
-                raise KeyError(
-                    f"'{table}' table was not identified for exclusion in either font"
-                )
-
-    fromdate = get_file_modtime(filepath_a)
-    todate = get_file_modtime(filepath_b)
-
     with tempfile.TemporaryDirectory() as tmpdirname:
+        # define the file paths with either local file requests
+        # or pulls of remote files based on the command line request
+        urls = []
+        if filepath_a.startswith("http"):
+            urls.append(filepath_a)
+            prepath = _get_filepath_from_url(filepath_a, tmpdirname)
+            # keep URL as path name for remote file requests
+            pre_pathname = filepath_a
+        else:
+            prepath = filepath_a
+            pre_pathname = filepath_a
+
+        if filepath_b.startswith("http"):
+            urls.append(filepath_b)
+            postpath = _get_filepath_from_url(filepath_b, tmpdirname)
+            # keep URL as path name for remote file requests
+            post_pathname = filepath_b
+        else:
+            postpath = filepath_b
+            post_pathname = filepath_b
+
+        # Async IO fetch and write of any remote file requests
+        if len(urls) > 0:
+            loop = asyncio.get_event_loop()
+            tasks = loop.run_until_complete(
+                create_async_get_request_session_and_run(urls, tmpdirname)
+            )
+            for task in tasks:
+                if task.exception():
+                    # raise exception here to notify calling code that something
+                    # did not work
+                    # TODO: handle exceptions
+                    pass
+                elif task.result().http_status != 200:
+                    # TODO: handle non-200 HTTP response status codes + file write fails
+                    pass
+
+        tt_left = TTFont(prepath)
+        tt_right = TTFont(postpath)
+
+        # Validation: include_tables request should be for tables that are in one of
+        # the two fonts. This otherwise silently passes with exit status code 0 which
+        # could lead to the interpretation of no diff between two files when the table
+        # entry is incorrectly defined or is a typo.  Let's be conservative and consider
+        # this an error, force user to use explicit definitions that include tables in
+        # one of the two files, and understand that the diff request was for one or more
+        # tables that are not present.
+        if include_tables is not None:
+            for table in include_tables:
+                if table not in tt_left and table not in tt_right:
+                    raise KeyError(
+                        f"'{table}' table was not identified for inclusion in either font"
+                    )
+
+        # Validation: exclude_tables request should be for tables that are in one of
+        # the two fonts.  Mis-specified OT table definitions could otherwise result
+        # in the presence of a table in the diff when the request was to exclude it.
+        # For example, when an "OS/2" table request is entered as "OS2".
+        if exclude_tables is not None:
+            for table in exclude_tables:
+                if table not in tt_left and table not in tt_right:
+                    raise KeyError(
+                        f"'{table}' table was not identified for exclusion in either font"
+                    )
+
+        fromdate = get_file_modtime(prepath)
+        todate = get_file_modtime(postpath)
+
         tt_left.saveXML(
             os.path.join(tmpdirname, "left.ttx"),
             tables=include_tables,
@@ -76,8 +118,8 @@ def u_diff(
         return unified_diff(
             fromlines,
             tolines,
-            filepath_a,
-            filepath_b,
+            pre_pathname,
+            post_pathname,
             fromdate,
             todate,
             n=context_lines,
