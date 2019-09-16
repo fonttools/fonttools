@@ -123,10 +123,7 @@ def run(argv):
             exclude_tables=exclude_list,
         )
     except Exception as e:
-        sys.stderr.write(
-            f"[*] ERROR: During the attempt to diff the requested files the following error was encountered: "
-            f"{e}{os.linesep}"
-        )
+        sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
         sys.exit(1)
 
     # re-define the line contents of the diff iterable
