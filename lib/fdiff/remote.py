@@ -6,7 +6,7 @@ import asyncio
 import aiofiles
 
 
-def _get_temp_filepath_from_url(url, dirpath):
+def _get_filepath_from_url(url, dirpath):
     url_path_list = urllib.parse.urlsplit(url)
     abs_filepath = url_path_list.path
     basepath = os.path.split(abs_filepath)[-1]
@@ -34,7 +34,7 @@ async def async_fetch_and_write(session, url, dirpath):
         filepath = None
         return url, filepath, False
     else:
-        filepath = _get_temp_filepath_from_url(url, dirpath)
+        filepath = _get_filepath_from_url(url, dirpath)
         await async_write(filepath, binary)
         return url, filepath, True
 
