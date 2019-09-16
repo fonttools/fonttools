@@ -3,7 +3,8 @@ import urllib.parse
 
 import aiohttp
 import asyncio
-import aiofiles
+
+from fdiff.aio import async_write_bin
 
 
 def _get_filepath_from_url(url, dirpath):
@@ -11,11 +12,6 @@ def _get_filepath_from_url(url, dirpath):
     abs_filepath = url_path_list.path
     basepath = os.path.split(abs_filepath)[-1]
     return os.path.join(dirpath, basepath)
-
-
-async def async_write(path, binary):
-    async with aiofiles.open(path, "wb") as f:
-        await f.write(binary)
 
 
 async def async_fetch(session, url):
@@ -35,7 +31,8 @@ async def async_fetch_and_write(session, url, dirpath):
         return url, filepath, False
     else:
         filepath = _get_filepath_from_url(url, dirpath)
-        await async_write(filepath, binary)
+        await async_write_bin(filepath, binary)
+        # TODO: refactor to namedtuple?
         return url, filepath, True
 
 
