@@ -144,8 +144,17 @@ def run(argv):
         iterable = diff
 
     # print unified diff results to standard output stream
+    # TODO: add support for text output to indicate that there was no diff found
+    # TODO: ( see https://stackoverflow.com/a/661967 )
+    has_output = False
     if args.color:
         for line in iterable:
+            has_output = True
             sys.stdout.write(color_unified_diff_line(line))
     else:
-        sys.stdout.writelines(iterable)
+        for line in iterable:
+            has_output = True
+            sys.stdout.write(line)
+
+    if not has_output:
+        print("[*] There is no difference between the files.")
