@@ -888,9 +888,10 @@ def groupsValidator(value):
 			else:
 				if len("public.kernN.") == len(groupName):
 					return False, "The group data contains a kerning group with an incomplete name."
+			d = {}
 			if groupName.startswith("public.kern1."):
 				d = firstSideMapping
-			else:
+			elif groupName.startswith("public.kern2."):
 				d = secondSideMapping
 			for glyphName in glyphList:
 				if not isinstance(glyphName, str):
