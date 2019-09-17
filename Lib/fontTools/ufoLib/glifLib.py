@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 glifLib.py -- Generic module for reading and writing the .glif format.
 
@@ -18,7 +17,7 @@ import fs.base
 import fs.errors
 import fs.osfs
 import fs.path
-from fontTools.misc.py23 import basestring, unicode, tobytes, tounicode
+from fontTools.misc.py23 import tobytes
 from fontTools.misc import plistlib
 from fontTools.pens.pointPen import AbstractPointPen, PointToSegmentPen
 from fontTools.ufoLib.errors import GlifLibError
@@ -34,7 +33,7 @@ from fontTools.ufoLib.validators import (
 )
 from fontTools.misc import etree
 from fontTools.ufoLib import _UFOBaseIO
-from fontTools.ufoLib.utils import integerTypes, numberTypes
+from fontTools.ufoLib.utils import numberTypes
 
 
 __all__ = [
@@ -59,7 +58,7 @@ supportedGLIFFormatVersions = [1, 2]
 # Simple Glyph
 # ------------
 
-class Glyph(object):
+class Glyph:
 
 	"""
 	Minimal glyph object. It has no glyph attributes until either
@@ -128,7 +127,7 @@ class GlyphSet(_UFOBaseIO):
 		"""
 		if ufoFormatVersion not in supportedUFOFormatVersions:
 			raise GlifLibError("Unsupported UFO format version: %s" % ufoFormatVersion)
-		if isinstance(path, basestring):
+		if isinstance(path, str):
 			try:
 				filesystem = fs.osfs.OSFS(path)
 			except fs.errors.CreateFailed:
@@ -150,7 +149,7 @@ class GlyphSet(_UFOBaseIO):
 			path = filesystem.getsyspath("/")
 		except fs.errors.NoSysPath:
 			# network or in-memory FS may not map to the local one
-			path = unicode(filesystem)
+			path = str(filesystem)
 		# 'dirName' is kept for backward compatibility only, but it's DEPRECATED
 		# as it's not guaranteed that it maps to an existing OSFS directory.
 		# Client could use the FS api via the `self.fs` attribute instead.
@@ -186,9 +185,9 @@ class GlyphSet(_UFOBaseIO):
 				invalidFormat = True
 			else:
 				for name, fileName in contents.items():
-					if not isinstance(name, basestring):
+					if not isinstance(name, str):
 						invalidFormat = True
-					if not isinstance(fileName, basestring):
+					if not isinstance(fileName, str):
 						invalidFormat = True
 					elif not self.fs.exists(fileName):
 						raise GlifLibError(
@@ -522,12 +521,6 @@ def glyphNameToFileName(glyphName, existingFileNames):
 	"""
 	if existingFileNames is None:
 		existingFileNames = []
-	if not isinstance(glyphName, unicode):
-		try:
-			new = unicode(glyphName)
-			glyphName = new
-		except UnicodeDecodeError:
-			pass
 	return userNameToFileName(glyphName, existing=existingFileNames, suffix=".glif")
 
 # -----------------------
@@ -577,7 +570,7 @@ def _writeGlyphToBytes(
 		formatVersion=2, validate=True):
 	"""Return .glif data for a glyph as a UTF-8 encoded bytes string."""
 	# start
-	if validate and not isinstance(glyphName, basestring):
+	if validate and not isinstance(glyphName, str):
 		raise GlifLibError("The glyph name is not properly formatted.")
 	if validate and len(glyphName) == 0:
 		raise GlifLibError("The glyph name is empty.")
@@ -623,8 +616,8 @@ def _writeGlyphToBytes(
 
 def writeGlyphToString(glyphName, glyphObject=None, drawPointsFunc=None, formatVersion=2, validate=True):
 	"""
-	Return .glif data for a glyph as a Unicode string (`unicode` in py2, `str`
-	in py3). The XML declaration's encoding is always set to "UTF-8".
+	Return .glif data for a glyph as a string. The XML declaration's
+	encoding is always set to "UTF-8".
 	The 'glyphObject' argument can be any kind of object (even None);
 	the writeGlyphToString() method will attempt to get the following
 	attributes from it:
@@ -682,11 +675,11 @@ def _writeAdvance(glyphObject, element, validate):
 
 def _writeUnicodes(glyphObject, element, validate):
 	unicodes = getattr(glyphObject, "unicodes", None)
-	if validate and isinstance(unicodes, integerTypes):
+	if validate and isinstance(unicodes, int):
 		unicodes = [unicodes]
 	seen = set()
 	for code in unicodes:
-		if validate and not isinstance(code, integerTypes):
+		if validate and not isinstance(code, int):
 			raise GlifLibError("unicode values must be int")
 		if code in seen:
 			continue
@@ -696,12 +689,11 @@ def _writeUnicodes(glyphObject, element, validate):
 
 def _writeNote(glyphObject, element, validate):
 	note = getattr(glyphObject, "note", None)
-	if validate and not isinstance(note, basestring):
-		raise GlifLibError("note attribute must be str or unicode")
+	if validate and not isinstance(note, str):
+		raise GlifLibError("note attribute must be str")
 	note = note.strip()
 	note = "\n" + note + "\n"
-	# ensure text is unicode, if it's bytes decode as ASCII
-	etree.SubElement(element, "note").text = tounicode(note)
+	etree.SubElement(element, "note").text = note
 
 def _writeImage(glyphObject, element, validate):
 	image = getattr(glyphObject, "image", None)
@@ -806,7 +798,7 @@ def _writeLib(glyphObject, element, validate):
 # -----------------------
 
 layerInfoVersion3ValueData = {
-	"color"			: dict(type=basestring, valueValidator=colorValidator),
+	"color"			: dict(type=str, valueValidator=colorValidator),
 	"lib"			: dict(type=dict, valueValidator=genericTypeValidator)
 }
 
@@ -852,7 +844,7 @@ def validateLayerInfoVersion3Data(infoData):
 			raise GlifLibError("Unknown attribute %s." % attr)
 		isValidValue = validateLayerInfoVersion3ValueForAttribute(attr, value)
 		if not isValidValue:
-			raise GlifLibError("Invalid value for attribute %s (%s)." % (attr, repr(value)))
+			raise GlifLibError(f"Invalid value for attribute {attr} ({value!r}).")
 	return infoData
 
 # -----------------
@@ -1072,13 +1064,13 @@ def _readImage(glyphObject, image, validate):
 # GLIF to PointPen
 # ----------------
 
-contourAttributesFormat2 = set(["identifier"])
-componentAttributesFormat1 = set(["base", "xScale", "xyScale", "yxScale", "yScale", "xOffset", "yOffset"])
-componentAttributesFormat2 = componentAttributesFormat1 | set(["identifier"])
-pointAttributesFormat1 = set(["x", "y", "type", "smooth", "name"])
-pointAttributesFormat2 = pointAttributesFormat1 | set(["identifier"])
-pointSmoothOptions = set(("no", "yes"))
-pointTypeOptions = set(["move", "line", "offcurve", "curve", "qcurve"])
+contourAttributesFormat2 = {"identifier"}
+componentAttributesFormat1 = {"base", "xScale", "xyScale", "yxScale", "yScale", "xOffset", "yOffset"}
+componentAttributesFormat2 = componentAttributesFormat1 | {"identifier"}
+pointAttributesFormat1 = {"x", "y", "type", "smooth", "name"}
+pointAttributesFormat2 = pointAttributesFormat1 | {"identifier"}
+pointSmoothOptions = {"no", "yes"}
+pointTypeOptions = {"move", "line", "offcurve", "curve", "qcurve"}
 
 # format 1
 
@@ -1388,7 +1380,7 @@ def _number(s):
 
 class _DoneParsing(Exception): pass
 
-class _BaseParser(object):
+class _BaseParser:
 
 	def __init__(self):
 		self._elementStack = []
@@ -1422,7 +1414,7 @@ class _FetchUnicodesParser(_BaseParser):
 
 	def __init__(self):
 		self.unicodes = []
-		super(_FetchUnicodesParser, self).__init__()
+		super().__init__()
 
 	def startElementHandler(self, name, attrs):
 		if name == "unicode" and self._elementStack and self._elementStack[-1] == "glyph":
@@ -1434,7 +1426,7 @@ class _FetchUnicodesParser(_BaseParser):
 						self.unicodes.append(value)
 				except ValueError:
 					pass
-		super(_FetchUnicodesParser, self).startElementHandler(name, attrs)
+		super().startElementHandler(name, attrs)
 
 # image
 
@@ -1453,13 +1445,13 @@ class _FetchImageFileNameParser(_BaseParser):
 
 	def __init__(self):
 		self.fileName = None
-		super(_FetchImageFileNameParser, self).__init__()
+		super().__init__()
 
 	def startElementHandler(self, name, attrs):
 		if name == "image" and self._elementStack and self._elementStack[-1] == "glyph":
 			self.fileName = attrs.get("fileName")
 			raise _DoneParsing
-		super(_FetchImageFileNameParser, self).startElementHandler(name, attrs)
+		super().startElementHandler(name, attrs)
 
 # component references
 
@@ -1478,19 +1470,19 @@ class _FetchComponentBasesParser(_BaseParser):
 
 	def __init__(self):
 		self.bases = []
-		super(_FetchComponentBasesParser, self).__init__()
+		super().__init__()
 
 	def startElementHandler(self, name, attrs):
 		if name == "component" and self._elementStack and self._elementStack[-1] == "outline":
 			base = attrs.get("base")
 			if base is not None:
 				self.bases.append(base)
-		super(_FetchComponentBasesParser, self).startElementHandler(name, attrs)
+		super().startElementHandler(name, attrs)
 
 	def endElementHandler(self, name):
 		if name == "outline":
 			raise _DoneParsing
-		super(_FetchComponentBasesParser, self).endElementHandler(name)
+		super().endElementHandler(name)
 
 # --------------
 # GLIF Point Pen

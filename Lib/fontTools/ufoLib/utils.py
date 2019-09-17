@@ -1,50 +1,11 @@
 """The module contains miscellaneous helpers.
 It's not considered part of the public ufoLib API.
 """
-import sys
 import warnings
 import functools
-from datetime import datetime
-from fontTools.misc.py23 import tounicode
 
 
-if hasattr(datetime, "timestamp"):  # python >= 3.3
-
-    def datetimeAsTimestamp(dt):
-        return dt.timestamp()
-
-else:
-    from datetime import tzinfo, timedelta
-
-    ZERO = timedelta(0)
-
-    class UTC(tzinfo):
-
-        def utcoffset(self, dt):
-            return ZERO
-
-        def tzname(self, dt):
-            return "UTC"
-
-        def dst(self, dt):
-            return ZERO
-
-    utc = UTC()
-
-    EPOCH = datetime.fromtimestamp(0, tz=utc)
-
-    def datetimeAsTimestamp(dt):
-        return (dt - EPOCH).total_seconds()
-
-
-# TODO: should import from fontTools.misc.py23
-try:
-	long = long
-except NameError:
-	long = int
-
-integerTypes = (int, long)
-numberTypes = (int, float, long)
+numberTypes = (int, float)
 
 
 def deprecated(msg=""):
@@ -64,7 +25,7 @@ def deprecated(msg=""):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             warnings.warn(
-                "{} function is a deprecated. {}".format(func.__name__, msg),
+                f"{func.__name__} function is a deprecated. {msg}",
                 category=DeprecationWarning,
                 stacklevel=2,
             )
@@ -73,10 +34,6 @@ def deprecated(msg=""):
         return wrapper
 
     return deprecated_decorator
-
-
-def fsdecode(path, encoding=sys.getfilesystemencoding()):
-    return tounicode(path, encoding=encoding)
 
 
 if __name__ == "__main__":

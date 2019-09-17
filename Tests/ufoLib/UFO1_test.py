@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import shutil
 import unittest
@@ -9,7 +8,7 @@ from fontTools.ufoLib import plistlib
 from .testSupport import fontInfoVersion1, fontInfoVersion2
 
 
-class TestInfoObject(object): pass
+class TestInfoObject: pass
 
 
 class ReadFontInfoVersion1TestCase(unittest.TestCase):

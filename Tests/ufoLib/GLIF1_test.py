@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
 import unittest
 from fontTools.ufoLib.glifLib import GlifLibError, readGlyphFromString, writeGlyphToString
 from .testSupport import Glyph, stripText
 from itertools import islice
 
-try:
-	basestring
-except NameError:
-	basestring = str
 # ----------
 # Test Cases
 # ----------
@@ -15,11 +10,11 @@ except NameError:
 class TestGLIF1(unittest.TestCase):
 
 	def assertEqual(self, first, second, msg=None):
-		if isinstance(first, basestring):
+		if isinstance(first, str):
 			first = stripText(first)
-		if isinstance(second, basestring):
+		if isinstance(second, str):
 			second = stripText(second)
-		return super(TestGLIF1, self).assertEqual(first, second, msg=msg)
+		return super().assertEqual(first, second, msg=msg)
 
 	def pyToGLIF(self, py):
 		py = stripText(py)

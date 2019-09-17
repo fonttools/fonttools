@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from fontTools.misc.py23 import tostr
 from fontTools.ufoLib import UFOReader, UFOWriter, UFOFileStructure
 from fontTools.ufoLib.errors import UFOLibError, GlifLibError
@@ -38,7 +37,7 @@ def testufoz():
         yield tmp.getsyspath(TEST_UFOZ)
 
 
-class TestUFOZ(object):
+class TestUFOZ:
 
     def test_read(self, testufoz):
         with UFOReader(testufoz) as reader:
@@ -54,7 +53,7 @@ class TestUFOZ(object):
 
 def test_pathlike(testufo):
 
-    class PathLike(object):
+    class PathLike:
 
         def __init__(self, s):
             self._path = s
@@ -84,7 +83,7 @@ def memufo():
     return m
 
 
-class TestMemoryFS(object):
+class TestMemoryFS:
 
     def test_init_reader(self, memufo):
         with UFOReader(memufo) as reader:
