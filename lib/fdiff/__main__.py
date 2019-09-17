@@ -59,6 +59,9 @@ def run(argv):
     )
     parser.add_argument("--head", type=int, help="Display first n lines of output")
     parser.add_argument("--tail", type=int, help="Display last n lines of output")
+    parser.add_argument(
+        "--nomp", action="store_true", help="Do not use multi process optimizations"
+    )
     parser.add_argument("PREFILE", help="Font file path 1")
     parser.add_argument("POSTFILE", help="Font file path 2")
 
@@ -113,6 +116,10 @@ def run(argv):
     include_list = get_tables_argument_list(args.include)
     exclude_list = get_tables_argument_list(args.exclude)
 
+    # flip logic of the command line flag for multi process
+    # optimizations for use as a u_diff function argument
+    use_mp = not args.nomp
+
     # perform the unified diff analysis
     try:
         diff = u_diff(
@@ -121,6 +128,7 @@ def run(argv):
             context_lines=args.lines,
             include_tables=include_list,
             exclude_tables=exclude_list,
+            use_multiprocess=use_mp,
         )
     except Exception as e:
         sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
