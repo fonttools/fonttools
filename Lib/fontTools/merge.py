@@ -1012,16 +1012,18 @@ class Merger(object):
 	def _mergeGlyphOrders(self, glyphOrders):
 		"""Modifies passed-in glyphOrders to reflect new glyph names.
 		Returns glyphOrder for the merged font."""
-		# Simply append font index to the glyph name for now.
-		# TODO Even this simplistic numbering can result in conflicts.
-		# But then again, we have to improve this soon anyway.
-		mega = []
-		for n,glyphOrder in enumerate(glyphOrders):
+		mega = {}
+		for glyphOrder in glyphOrders:
 			for i,glyphName in enumerate(glyphOrder):
-				glyphName += "#" + repr(n)
-				glyphOrder[i] = glyphName
-				mega.append(glyphName)
-		return mega
+				if glyphName in mega:
+					n = mega[glyphName]
+					while (glyphName + "#" + repr(n)) in mega:
+						n += 1
+					mega[glyphName] = n
+					glyphName += "#" + repr(n)
+					glyphOrder[i] = glyphName
+				mega[glyphName] = 1
+		return list(mega.keys())
 
 	def mergeObjects(self, returnTable, logic, tables):
 		# Right now we don't use self at all.  Will use in the future
