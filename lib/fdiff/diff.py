@@ -1,5 +1,6 @@
 import asyncio
 import os
+from multiprocessing import Pool, cpu_count
 import tempfile
 
 from fontTools.ttLib import TTFont
@@ -13,8 +14,19 @@ from fdiff.thirdparty.fdifflib import unified_diff
 from fdiff.utils import get_file_modtime
 
 
+def _ttfont_save_xml(ttf, filepath, include_tables, exclude_tables):
+    """Writes TTX specification formatted XML to disk on filepath."""
+    ttf.saveXML(filepath, tables=include_tables, skipTables=exclude_tables)
+    return True
+
+
 def u_diff(
-    filepath_a, filepath_b, context_lines=3, include_tables=None, exclude_tables=None
+    filepath_a,
+    filepath_b,
+    context_lines=3,
+    include_tables=None,
+    exclude_tables=None,
+    use_multiprocess=True,
 ):
     """Performs a unified diff on a TTX serialized data format dump of font binary data using
     a modified version of the Python standard libary difflib module.
@@ -105,20 +117,30 @@ def u_diff(
         fromdate = get_file_modtime(prepath)
         todate = get_file_modtime(postpath)
 
-        tt_left.saveXML(
-            os.path.join(tmpdirname, "left.ttx"),
-            tables=include_tables,
-            skipTables=exclude_tables,
-        )
-        tt_right.saveXML(
-            os.path.join(tmpdirname, "right.ttx"),
-            tables=include_tables,
-            skipTables=exclude_tables,
-        )
+        left_ttxpath = os.path.join(tmpdirname, "left.ttx")
+        right_ttxpath = os.path.join(tmpdirname, "right.ttx")
 
-        with open(os.path.join(tmpdirname, "left.ttx")) as ff:
+        if use_multiprocess and cpu_count() > 1:
+            # Use parallel fontTools.ttLib.TTFont.saveXML dump
+            # by default on multi CPU systems.  This is a performance
+            # optimization. Profiling demonstrates that this can reduce
+            # execution time by up to 30% for some fonts
+            mp_args_list = [
+                (tt_left, left_ttxpath, include_tables, exclude_tables),
+                (tt_right, right_ttxpath, include_tables, exclude_tables),
+            ]
+            with Pool(processes=2) as pool:
+                pool.starmap(_ttfont_save_xml, mp_args_list)
+        else:
+            # use sequential fontTools.ttLib.TTFont.saveXML dumps
+            # when use_multiprocess is False or single CPU system
+            # detected
+            _ttfont_save_xml(tt_left, left_ttxpath, include_tables, exclude_tables)
+            _ttfont_save_xml(tt_right, right_ttxpath, include_tables, exclude_tables)
+
+        with open(left_ttxpath) as ff:
             fromlines = ff.readlines()
-        with open(os.path.join(tmpdirname, "right.ttx")) as tf:
+        with open(right_ttxpath) as tf:
             tolines = tf.readlines()
 
         return unified_diff(

@@ -59,6 +59,9 @@ def run(argv):
     )
     parser.add_argument("--head", type=int, help="Display first n lines of output")
     parser.add_argument("--tail", type=int, help="Display last n lines of output")
+    parser.add_argument(
+        "--nomp", action="store_true", help="Do not use multi process optimizations"
+    )
     parser.add_argument("PREFILE", help="Font file path 1")
     parser.add_argument("POSTFILE", help="Font file path 2")
 
@@ -113,6 +116,10 @@ def run(argv):
     include_list = get_tables_argument_list(args.include)
     exclude_list = get_tables_argument_list(args.exclude)
 
+    # flip logic of the command line flag for multi process
+    # optimizations for use as a u_diff function argument
+    use_mp = not args.nomp
+
     # perform the unified diff analysis
     try:
         diff = u_diff(
@@ -121,6 +128,7 @@ def run(argv):
             context_lines=args.lines,
             include_tables=include_list,
             exclude_tables=exclude_list,
+            use_multiprocess=use_mp,
         )
     except Exception as e:
         sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
@@ -136,8 +144,17 @@ def run(argv):
         iterable = diff
 
     # print unified diff results to standard output stream
+    has_diff = False
     if args.color:
         for line in iterable:
+            has_diff = True
             sys.stdout.write(color_unified_diff_line(line))
     else:
-        sys.stdout.writelines(iterable)
+        for line in iterable:
+            has_diff = True
+            sys.stdout.write(line)
+
+    # if no difference was found, tell the user instead of
+    # simply closing with zero exit status code.
+    if not has_diff:
+        print("[*] There is no difference between the files.")
