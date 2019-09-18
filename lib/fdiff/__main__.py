@@ -62,8 +62,8 @@ def run(argv):
     parser.add_argument(
         "--nomp", action="store_true", help="Do not use multi process optimizations"
     )
-    parser.add_argument("PREFILE", help="Font file path 1")
-    parser.add_argument("POSTFILE", help="Font file path 2")
+    parser.add_argument("PREFILE", help="Font file path/URL 1")
+    parser.add_argument("POSTFILE", help="Font file path/URL 2")
 
     args = parser.parse_args(argv)
 
