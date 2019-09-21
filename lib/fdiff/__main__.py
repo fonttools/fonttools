@@ -6,7 +6,7 @@ import argparse
 
 from fdiff import __version__
 from fdiff.color import color_unified_diff_line
-from fdiff.diff import u_diff
+from fdiff.diff import external_diff, u_diff
 from fdiff.textiter import head, tail
 from fdiff.utils import file_exists, get_tables_argument_list
 
@@ -62,6 +62,7 @@ def run(argv):
     parser.add_argument(
         "--nomp", action="store_true", help="Do not use multi process optimizations"
     )
+    parser.add_argument("--external", type=str, help="Run external diff tool command")
     parser.add_argument("PREFILE", help="Font file path/URL 1")
     parser.add_argument("POSTFILE", help="Font file path/URL 2")
 
@@ -105,10 +106,6 @@ def run(argv):
     #
     # /////////////////////////////////////////////////////////
 
-    # ---------------
-    #  Unified diff
-    # ---------------
-
     # parse explicitly included or excluded tables in
     # the command line arguments
     # set as a Python list if it was defined on the command line
@@ -120,41 +117,68 @@ def run(argv):
     # optimizations for use as a u_diff function argument
     use_mp = not args.nomp
 
-    # perform the unified diff analysis
-    try:
-        diff = u_diff(
-            args.PREFILE,
-            args.POSTFILE,
-            context_lines=args.lines,
-            include_tables=include_list,
-            exclude_tables=exclude_list,
-            use_multiprocess=use_mp,
-        )
-    except Exception as e:
-        sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
-        sys.exit(1)
+    if args.external:
+        # ------------------------------
+        #  External executable tool diff
+        # ------------------------------
+        try:
+            diff = external_diff(
+                args.external,
+                args.PREFILE,
+                args.POSTFILE,
+                include_tables=include_list,
+                exclude_tables=exclude_list,
+                use_multiprocess=use_mp,
+            )
 
-    # re-define the line contents of the diff iterable
-    # if head or tail is requested
-    if args.head:
-        iterable = head(diff, args.head)
-    elif args.tail:
-        iterable = tail(diff, args.tail)
+            # write stdout from external tool
+            for line, exit_code in diff:
+                # if exit_code is None:
+                sys.stdout.write(line)
+                if exit_code is not None:
+                    sys.exit(exit_code)
+        except Exception as e:
+            sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
+            sys.exit(1)
     else:
-        iterable = diff
+        # ---------------
+        #  Unified diff
+        # ---------------
+        # perform the unified diff analysis
+        try:
+            diff = u_diff(
+                args.PREFILE,
+                args.POSTFILE,
+                context_lines=args.lines,
+                include_tables=include_list,
+                exclude_tables=exclude_list,
+                use_multiprocess=use_mp,
+            )
+        except Exception as e:
+            sys.stderr.write(f"[*] ERROR: {e}{os.linesep}")
+            sys.exit(1)
 
-    # print unified diff results to standard output stream
-    has_diff = False
-    if args.color:
-        for line in iterable:
-            has_diff = True
-            sys.stdout.write(color_unified_diff_line(line))
-    else:
-        for line in iterable:
-            has_diff = True
-            sys.stdout.write(line)
+        # re-define the line contents of the diff iterable
+        # if head or tail is requested
+        if args.head:
+            iterable = head(diff, args.head)
+        elif args.tail:
+            iterable = tail(diff, args.tail)
+        else:
+            iterable = diff
 
-    # if no difference was found, tell the user instead of
-    # simply closing with zero exit status code.
-    if not has_diff:
-        print("[*] There is no difference between the files.")
+        # print unified diff results to standard output stream
+        has_diff = False
+        if args.color:
+            for line in iterable:
+                has_diff = True
+                sys.stdout.write(color_unified_diff_line(line))
+        else:
+            for line in iterable:
+                has_diff = True
+                sys.stdout.write(line)
+
+        # if no difference was found, tell the user instead of
+        # simply closing with zero exit status code.
+        if not has_diff:
+            print("[*] There is no difference between the files.")
