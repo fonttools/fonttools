@@ -663,6 +663,58 @@ class ParserTest(unittest.TestCase):
             (lookup.name, lookup.process_base),
             ("SomeSub", True))
 
+    def test_substitution_process_marks(self):
+        [group, lookup] = self.parse(
+            'DEF_GROUP "SomeMarks" ENUM GLYPH "marka" GLYPH "markb" '
+            'END_ENUM END_GROUP\n'
+            'DEF_LOOKUP "SomeSub" PROCESS_BASE PROCESS_MARKS "SomeMarks" '
+            'AS_SUBSTITUTION\n'
+            'SUB GLYPH "A" WITH GLYPH "A.c2sc"\n'
+            'END_SUB\n'
+            'END_SUBSTITUTION'
+        ).statements
+        self.assertEqual(
+            (lookup.name, lookup.process_marks),
+            ("SomeSub", 'SomeMarks'))
+
+    def test_substitution_process_marks_all(self):
+        [lookup] = self.parse(
+            'DEF_LOOKUP "SomeSub" PROCESS_BASE PROCESS_MARKS "ALL" '
+            'AS_SUBSTITUTION\n'
+            'SUB GLYPH "A" WITH GLYPH "A.c2sc"\n'
+            'END_SUB\n'
+            'END_SUBSTITUTION'
+        ).statements
+        self.assertEqual(
+            (lookup.name, lookup.process_marks),
+            ("SomeSub", True))
+
+    def test_substitution_process_marks_none(self):
+        [lookup] = self.parse(
+            'DEF_LOOKUP "SomeSub" PROCESS_BASE PROCESS_MARKS "NONE" '
+            'AS_SUBSTITUTION\n'
+            'SUB GLYPH "A" WITH GLYPH "A.c2sc"\n'
+            'END_SUB\n'
+            'END_SUBSTITUTION'
+        ).statements
+        self.assertEqual(
+            (lookup.name, lookup.process_marks),
+            ("SomeSub", False))
+
+    def test_substitution_process_marks_bad(self):
+        with self.assertRaisesRegex(
+                VoltLibError,
+                'Expected ALL, NONE, MARK_GLYPH_SET or an ID'):
+            self.parse(
+                'DEF_GROUP "SomeMarks" ENUM GLYPH "marka" GLYPH "markb" '
+                'END_ENUM END_GROUP\n'
+                'DEF_LOOKUP "SomeSub" PROCESS_BASE PROCESS_MARKS SomeMarks '
+                'AS_SUBSTITUTION\n'
+                'SUB GLYPH "A" WITH GLYPH "A.c2sc"\n'
+                'END_SUB\n'
+                'END_SUBSTITUTION'
+            )
+
     def test_substitution_skip_marks(self):
         [group, lookup] = self.parse(
             'DEF_GROUP "SomeMarks" ENUM GLYPH "marka" GLYPH "markb" '

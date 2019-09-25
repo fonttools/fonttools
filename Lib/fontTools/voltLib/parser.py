@@ -215,13 +215,16 @@ class Parser(object):
             if self.next_token_ == "MARK_GLYPH_SET":
                 self.advance_lexer_()
                 mark_glyph_set = self.expect_string_()
-            elif self.next_token_type_ == Lexer.STRING:
-                process_marks = self.expect_string_()
             elif self.next_token_ == "ALL":
                 self.advance_lexer_()
+            elif self.next_token_ == "NONE":
+                self.advance_lexer_()
+                process_marks = False
+            elif self.next_token_type_ == Lexer.STRING:
+                process_marks = self.expect_string_()
             else:
                 raise VoltLibError(
-                    "Expected ALL, MARK_GLYPH_SET or an ID. "
+                    "Expected ALL, NONE, MARK_GLYPH_SET or an ID. "
                     "Got %s" % (self.next_token_type_),
                     location)
         elif self.next_token_ == "SKIP_MARKS":
