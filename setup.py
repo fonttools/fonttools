@@ -254,7 +254,7 @@ class release(Command):
 		""" Run bumpversion.main() with the specified arguments, and return the
 		new computed version string (cf. 'bumpversion --help' for more info)
 		"""
-		import bumpversion
+		import bumpversion.cli
 
 		args = (
 			(['--verbose'] if self.verbose > 1 else []) +
@@ -267,7 +267,7 @@ class release(Command):
 		log.debug("$ bumpversion %s" % " ".join(a.replace(" ", "\\ ") for a in args))
 
 		with capture_logger("bumpversion.list") as out:
-			bumpversion.main(args)
+			bumpversion.cli.main(args)
 
 		last_line = out.getvalue().splitlines()[-1]
 		new_version = last_line.replace("new_version=", "")
