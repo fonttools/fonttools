@@ -1,3 +1,6 @@
+4.0.2 (released 2019-09-26)
+---------------------------
+
 - [voltLib] Added support for ``ALL`` and ``NONE`` in ``PROCESS_MARKS`` (#1732).
 - [Silf] Fixed issue in ``Silf`` table compilation and decompilation regarding str vs
   bytes in python3 (#1728).
