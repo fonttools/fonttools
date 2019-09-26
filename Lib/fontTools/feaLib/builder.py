@@ -1049,11 +1049,13 @@ class Builder(object):
 
     def add_ligatureCaretByIndex_(self, location, glyphs, carets):
         for glyph in glyphs:
-            self.ligCaretPoints_.setdefault(glyph, set()).update(carets)
+            if glyph not in self.ligCaretPoints_:
+                self.ligCaretPoints_[glyph] = carets
 
     def add_ligatureCaretByPos_(self, location, glyphs, carets):
         for glyph in glyphs:
-            self.ligCaretCoords_.setdefault(glyph, set()).update(carets)
+            if glyph not in self.ligCaretCoords_:
+                self.ligCaretCoords_[glyph] = carets
 
     def add_name_record(self, location, nameID, platformID, platEncID,
                         langID, string):

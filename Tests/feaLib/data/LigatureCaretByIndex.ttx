@@ -17,14 +17,11 @@
         </CaretValue>
       </LigGlyph>
       <LigGlyph index="1">
-        <!-- CaretCount=3 -->
+        <!-- CaretCount=2 -->
         <CaretValue index="0" Format="2">
           <CaretValuePoint value="33"/>
         </CaretValue>
         <CaretValue index="1" Format="2">
-          <CaretValuePoint value="55"/>
-        </CaretValue>
-        <CaretValue index="2" Format="2">
           <CaretValuePoint value="66"/>
         </CaretValue>
       </LigGlyph>
