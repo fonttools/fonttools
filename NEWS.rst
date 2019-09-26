@@ -1,3 +1,9 @@
+- [voltLib] Added support for ``ALL`` and ``NONE`` in ``PROCESS_MARKS`` (#1732).
+- [Silf] Fixed issue in ``Silf`` table compilation and decompilation regarding str vs
+  bytes in python3 (#1728).
+- [merge] Handle duplicate glyph names better: instead of appending font index to
+  all glyph names, use similar code like we use in ``post`` and ``CFF`` tables (#1729).
+
 4.0.1 (released 2019-09-11)
 ---------------------------
 
