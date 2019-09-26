@@ -400,7 +400,7 @@ class Silf(object):
         data = data[self.numCritFeatures * 2 + 1:]
         (numScriptTag,) = struct.unpack_from('B', data)
         if numScriptTag:
-            self.scriptTags = [struct.unpack("4s", data[x:x+4])[0] for x in range(1, 1 + 4 * numScriptTag, 4)]
+            self.scriptTags = [struct.unpack("4s", data[x:x+4])[0].decode("ascii") for x in range(1, 1 + 4 * numScriptTag, 4)]
         data = data[1 + 4 * numScriptTag:]
         (self.lbGID,) = struct.unpack('>H', data[:2])
         if self.numPasses:
@@ -446,8 +446,8 @@ class Silf(object):
             data += struct.pack((">%dH" % self.numCritFeaturs), *self.critFeatures)
         data += struct.pack("BB", 0, len(self.scriptTags))
         if len(self.scriptTags):
-            tdata = [struct.pack("4s", x) for x in self.scriptTags]
-            data += "".join(tdata)
+            tdata = [struct.pack("4s", x.encode("ascii")) for x in self.scriptTags]
+            data += b"".join(tdata)
         data += struct.pack(">H", self.lbGID)
         self.passOffset = len(data)
 
