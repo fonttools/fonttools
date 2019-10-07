@@ -336,12 +336,12 @@ class InstantiateHVARTest(object):
                 {"wdth": -1.0},
                 [
                     {"wght": (-1.0, -1.0, 0.0)},
-                    {"wght": (0.0, 0.61, 1.0)},
-                    {"wght": (0.61, 1.0, 1.0)},
+                    {"wght": (0.0, 0.6099854, 1.0)},
+                    {"wght": (0.6099854, 1.0, 1.0)},
                 ],
                 [-11, 31, 51],
             ),
-            ({"wdth": 0}, [{"wght": (0.61, 1.0, 1.0)}], [-4]),
+            ({"wdth": 0}, [{"wght": (0.6099854, 1.0, 1.0)}], [-4]),
         ],
     )
     def test_partial_instance(self, varfont, location, expectedRegions, expectedDeltas):
@@ -353,7 +353,12 @@ class InstantiateHVARTest(object):
 
         regions = varStore.VarRegionList.Region
         fvarAxes = [a for a in varfont["fvar"].axes if a.axisTag not in location]
-        assert [reg.get_support(fvarAxes) for reg in regions] == expectedRegions
+        regionDicts = [reg.get_support(fvarAxes) for reg in regions]
+        assert len(regionDicts) == len(expectedRegions)
+        for region, expectedRegion in zip(regionDicts, expectedRegions):
+            assert region.keys() == expectedRegion.keys()
+            for axisTag, support in region.items():
+                assert support == pytest.approx(expectedRegion[axisTag])
 
         assert len(varStore.VarData) == 1
         assert varStore.VarData[0].ItemCount == 2

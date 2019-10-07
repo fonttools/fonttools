@@ -64,7 +64,7 @@ GVAR_VARIATIONS = {
     ],
     "space": [
         TupleVariation(
-            {"wdth": (0.0, 0.7, 0.7)},
+            {"wdth": (0.0, 0.7000122, 0.7000122)},
             [(1, 11), (2, 22), (3, 33), (4, 44)]),
     ],
     "I": [
@@ -72,7 +72,7 @@ GVAR_VARIATIONS = {
             {"wght": (0.0, 0.5, 1.0)},
             [(3,3), (1,1), (4,4), (1,1), (5,5), (9,9), (2,2), (6,6)]),
         TupleVariation(
-            {"wght": (-1.0, -1.0, 0.0), "wdth": (0.0, 0.8, 0.8)},
+            {"wght": (-1.0, -1.0, 0.0), "wdth": (0.0, 0.7999878, 0.7999878)},
             [(-8,-88), (7,77), None, None, (-4,44), (3,33), (-2,-22), (1,11)]),
     ],
 }
@@ -132,6 +132,20 @@ def hexencode(s):
 
 
 class GVARTableTest(unittest.TestCase):
+	def assertVariationsAlmostEqual(self, vars1, vars2):
+		self.assertSetEqual(set(vars1.keys()), set(vars2.keys()))
+		for glyphName, variations1 in vars1.items():
+			variations2 = vars2[glyphName]
+			self.assertEqual(len(variations1), len(variations2))
+			for (v1, v2) in zip(variations1, variations2):
+				self.assertSetEqual(set(v1.axes), set(v2.axes))
+				for axisTag, support1 in v1.axes.items():
+					support2 = v2.axes[axisTag]
+					self.assertEqual(len(support1), len(support2))
+					for s1, s2 in zip(support1, support2):
+						self.assertAlmostEqual(s1, s2)
+				self.assertEqual(v1.coordinates, v2.coordinates)
+
 	def makeFont(self, variations):
 		glyphs=[".notdef", "space", "I"]
 		Axis = getTableModule("fvar").Axis
@@ -163,7 +177,7 @@ class GVARTableTest(unittest.TestCase):
 	def test_decompile(self):
 		font, gvar = self.makeFont({})
 		gvar.decompile(GVAR_DATA, font)
-		self.assertEqual(gvar.variations, GVAR_VARIATIONS)
+		self.assertVariationsAlmostEqual(gvar.variations, GVAR_VARIATIONS)
 
 	def test_decompile_noVariations(self):
 		font, gvar = self.makeFont({})
@@ -175,8 +189,10 @@ class GVARTableTest(unittest.TestCase):
 		font, gvar = self.makeFont({})
 		for name, attrs, content in parseXML(GVAR_XML):
 			gvar.fromXML(name, attrs, content, ttFont=font)
-		self.assertEqual(gvar.variations,
-                         {g:v for g,v in GVAR_VARIATIONS.items() if v})
+		self.assertVariationsAlmostEqual(
+			gvar.variations,
+			{g:v for g,v in GVAR_VARIATIONS.items() if v}
+		)
 
 	def test_toXML(self):
 		font, gvar = self.makeFont(GVAR_VARIATIONS)
