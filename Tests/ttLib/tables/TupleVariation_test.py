@@ -16,9 +16,9 @@ def hexencode(s):
 
 
 AXES = {
-	"wdth": (0.3, 0.4, 0.5),
+	"wdth": (0.25, 0.375, 0.5),
 	"wght": (0.0, 1.0, 1.0),
-	"opsz": (-0.7, -0.7, 0.0)
+	"opsz": (-0.75, -0.75, 0.0)
 }
 
 
@@ -112,7 +112,7 @@ class TupleVariationTest(unittest.TestCase):
 		self.assertIn("bad delta format", [r.msg for r in captor.records])
 		self.assertEqual([
 			'<tuple>',
-			  '<coord axis="wdth" min="0.3" value="0.4" max="0.5"/>',
+			  '<coord axis="wdth" min="0.25" value="0.375" max="0.5"/>',
 			  '<!-- bad delta #0 -->',
 			'</tuple>',
 		], TupleVariationTest.xml_lines(writer))
@@ -123,9 +123,9 @@ class TupleVariationTest(unittest.TestCase):
 		g.toXML(writer, ["wdth", "wght", "opsz"])
 		self.assertEqual([
 			'<tuple>',
-			  '<coord axis="wdth" min="0.3" value="0.4" max="0.5"/>',
+			  '<coord axis="wdth" min="0.25" value="0.375" max="0.5"/>',
 			  '<coord axis="wght" value="1.0"/>',
-			  '<coord axis="opsz" value="-0.7"/>',
+			  '<coord axis="opsz" value="-0.75"/>',
 			  '<delta cvt="0" value="42"/>',
 			  '<delta cvt="2" value="23"/>',
 			  '<delta cvt="3" value="0"/>',
@@ -139,9 +139,9 @@ class TupleVariationTest(unittest.TestCase):
 		g.toXML(writer, ["wdth", "wght", "opsz"])
 		self.assertEqual([
 			'<tuple>',
-			  '<coord axis="wdth" min="0.3" value="0.4" max="0.5"/>',
+			  '<coord axis="wdth" min="0.25" value="0.375" max="0.5"/>',
 			  '<coord axis="wght" value="1.0"/>',
-			  '<coord axis="opsz" value="-0.7"/>',
+			  '<coord axis="opsz" value="-0.75"/>',
 			  '<delta pt="0" x="9" y="8"/>',
 			  '<delta pt="2" x="7" y="6"/>',
 			  '<delta pt="3" x="0" y="0"/>',
@@ -161,6 +161,22 @@ class TupleVariationTest(unittest.TestCase):
 			'</tuple>'
 		], TupleVariationTest.xml_lines(writer))
 
+	def test_toXML_axes_floats(self):
+		writer = XMLWriter(BytesIO())
+		axes = {
+			"wght": (0.0, 0.2999878, 0.7000122),
+			"wdth": (0.0, 0.4000244, 0.4000244),
+		}
+		g = TupleVariation(axes, [None] * 5)
+		g.toXML(writer, ["wght", "wdth"])
+		self.assertEqual(
+			[
+				'<coord axis="wght" min="0.0" value="0.3" max="0.7"/>',
+				'<coord axis="wdth" value="0.4"/>',
+			],
+			TupleVariationTest.xml_lines(writer)[1:3]
+		)
+
 	def test_fromXML_badDeltaFormat(self):
 		g = TupleVariation({}, [])
 		with CapturingLogHandler(log, "WARNING") as captor:
@@ -172,9 +188,9 @@ class TupleVariationTest(unittest.TestCase):
 	def test_fromXML_constants(self):
 		g = TupleVariation({}, [None] * 4)
 		for name, attrs, content in parseXML(
-				'<coord axis="wdth" min="0.3" value="0.4" max="0.5"/>'
+				'<coord axis="wdth" min="0.25" value="0.375" max="0.5"/>'
 				'<coord axis="wght" value="1.0"/>'
-				'<coord axis="opsz" value="-0.7"/>'
+				'<coord axis="opsz" value="-0.75"/>'
 				'<delta cvt="1" value="42"/>'
 				'<delta cvt="2" value="-23"/>'):
 			g.fromXML(name, attrs, content)
@@ -184,14 +200,30 @@ class TupleVariationTest(unittest.TestCase):
 	def test_fromXML_points(self):
 		g = TupleVariation({}, [None] * 4)
 		for name, attrs, content in parseXML(
-				'<coord axis="wdth" min="0.3" value="0.4" max="0.5"/>'
+				'<coord axis="wdth" min="0.25" value="0.375" max="0.5"/>'
 				'<coord axis="wght" value="1.0"/>'
-				'<coord axis="opsz" value="-0.7"/>'
+				'<coord axis="opsz" value="-0.75"/>'
 				'<delta pt="1" x="33" y="44"/>'
 				'<delta pt="2" x="-2" y="170"/>'):
 			g.fromXML(name, attrs, content)
 		self.assertEqual(AXES, g.axes)
 		self.assertEqual([None, (33, 44), (-2, 170), None], g.coordinates)
+
+	def test_fromXML_axes_floats(self):
+		g = TupleVariation({}, [None] * 4)
+		for name, attrs, content in parseXML(
+			'<coord axis="wght" min="0.0" value="0.3" max="0.7"/>'
+			'<coord axis="wdth" value="0.4"/>'
+		):
+			g.fromXML(name, attrs, content)
+
+		self.assertEqual(g.axes["wght"][0], 0)
+		self.assertAlmostEqual(g.axes["wght"][1], 0.2999878)
+		self.assertAlmostEqual(g.axes["wght"][2], 0.7000122)
+
+		self.assertEqual(g.axes["wdth"][0], 0)
+		self.assertAlmostEqual(g.axes["wdth"][1], 0.4000244)
+		self.assertAlmostEqual(g.axes["wdth"][2], 0.4000244)
 
 	def test_compile_sharedPeaks_nonIntermediate_sharedPoints(self):
 		var = TupleVariation(
