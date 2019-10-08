@@ -1,5 +1,6 @@
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
+from fontTools.misc.fixedTools import floatToFixedToStr
 from fontTools.misc.textTools import safeEval
 from itertools import *
 from . import DefaultTable
@@ -312,6 +313,7 @@ class table_S__i_l_f(DefaultTable.DefaultTable):
 
     def decompile(self, data, ttFont):
         sstruct.unpack2(Silf_hdr_format, data, self)
+        self.version = float(floatToFixedToStr(self.version, precisionBits=16))
         if self.version >= 5.0:
             (data, self.scheme) = grUtils.decompress(data)
             sstruct.unpack2(Silf_hdr_format_3, data, self)
@@ -390,6 +392,7 @@ class Silf(object):
     def decompile(self, data, ttFont, version=2.0):
         if version >= 3.0 :
             _, data = sstruct.unpack2(Silf_part1_format_v3, data, self)
+            self.ruleVersion = float(floatToFixedToStr(self.ruleVersion, precisionBits=16))
         _, data = sstruct.unpack2(Silf_part1_format, data, self)
         for jlevel in range(self.numJLevels):
             j, data = sstruct.unpack2(Silf_justify_format, data, _Object())
