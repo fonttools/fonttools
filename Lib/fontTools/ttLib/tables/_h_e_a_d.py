@@ -1,5 +1,6 @@
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
+from fontTools.misc.fixedTools import floatToFixedToStr, strToFixedToFloat
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
 from fontTools.misc.timeTools import timestampFromString, timestampToString, timestampNow
 from fontTools.misc.timeTools import epoch_diff as mac_epoch_diff # For backward compat
@@ -72,12 +73,14 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 	def toXML(self, writer, ttFont):
 		writer.comment("Most of this table will be recalculated by the compiler")
 		writer.newline()
-		formatstring, names, fixes = sstruct.getformat(headFormat)
+		_, names, fixes = sstruct.getformat(headFormat)
 		for name in names:
 			value = getattr(self, name)
-			if name in ("created", "modified"):
+			if name in fixes:
+				value = floatToFixedToStr(value, precisionBits=fixes[name])
+			elif name in ("created", "modified"):
 				value = timestampToString(value)
-			if name in ("magicNumber", "checkSumAdjustment"):
+			elif name in ("magicNumber", "checkSumAdjustment"):
 				if value < 0:
 					value = value + 0x100000000
 				value = hex(value)
@@ -90,7 +93,10 @@ class table__h_e_a_d(DefaultTable.DefaultTable):
 
 	def fromXML(self, name, attrs, content, ttFont):
 		value = attrs["value"]
-		if name in ("created", "modified"):
+		fixes = sstruct.getformat(headFormat)[2]
+		if name in fixes:
+			value = strToFixedToFloat(value, precisionBits=fixes[name])
+		elif name in ("created", "modified"):
 			value = timestampFromString(value)
 		elif name in ("macStyle", "flags"):
 			value = binary2num(value)

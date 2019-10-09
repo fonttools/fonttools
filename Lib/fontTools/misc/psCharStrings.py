@@ -3,7 +3,9 @@ CFF dictionary data and Type1/Type2 CharStrings.
 """
 
 from fontTools.misc.py23 import *
-from fontTools.misc.fixedTools import fixedToFloat, otRound
+from fontTools.misc.fixedTools import (
+	fixedToFloat, floatToFixed, floatToFixedToStr, strToFixedToFloat,
+)
 from fontTools.pens.boundsPen import BoundsPen
 import struct
 import logging
@@ -215,7 +217,7 @@ encodeIntT2 = getIntEncoder("t2")
 
 def encodeFixed(f, pack=struct.pack):
 	"""For T2 only"""
-	value = otRound(f * 65536)  # convert the float to fixed point
+	value = floatToFixed(f, precisionBits=16)
 	if value & 0xFFFF == 0:  # check if the fractional part is zero
 		return encodeIntT2(value >> 16)  # encode only the integer part
 	else:
@@ -1073,7 +1075,7 @@ class T2CharString(object):
 	def handle_operator(self, operator):
 		return operator
 
-	def toXML(self, xmlWriter):
+	def toXML(self, xmlWriter, ttFont=None):
 		from fontTools.misc.textTools import num2binary
 		if self.bytecode is not None:
 			xmlWriter.dumphex(self.bytecode)
@@ -1085,7 +1087,6 @@ class T2CharString(object):
 				if token is None:
 					break
 				if isOperator:
-					args = [str(arg) for arg in args]
 					if token in ('hintmask', 'cntrmask'):
 						hintMask, isOperator, index = self.getToken(index)
 						bits = []
@@ -1099,12 +1100,15 @@ class T2CharString(object):
 					xmlWriter.newline()
 					args = []
 				else:
+					if isinstance(token, float):
+						token = floatToFixedToStr(token, precisionBits=16)
+					else:
+						token = str(token)
 					args.append(token)
 			if args:
 				# NOTE: only CFF2 charstrings/subrs can have numeric arguments on
 				# the stack after the last operator. Compiling this would fail if
 				# this is part of CFF 1.0 table.
-				args = [str(arg) for arg in args]
 				line = ' '.join(args)
 				xmlWriter.write(line)
 
@@ -1125,7 +1129,7 @@ class T2CharString(object):
 				token = int(token)
 			except ValueError:
 				try:
-					token = float(token)
+					token = strToFixedToFloat(token, precisionBits=16)
 				except ValueError:
 					program.append(token)
 					if token in ('hintmask', 'cntrmask'):

@@ -1,7 +1,18 @@
 from fontTools.cffLib import PrivateDict
 from fontTools.cffLib.specializer import stringToProgram
-from fontTools.misc.psCharStrings import T2CharString, encodeFloat, read_realNumber
+from fontTools.misc.testTools import getXML, parseXML
+from fontTools.misc.psCharStrings import (
+    T2CharString,
+    encodeFloat,
+    encodeFixed,
+    read_fixed1616,
+    read_realNumber,
+)
 import unittest
+
+
+def hexenc(s):
+    return ' '.join('%02x' % x for x in s)
 
 
 class T2CharStringTest(unittest.TestCase):
@@ -47,14 +58,6 @@ class T2CharStringTest(unittest.TestCase):
                           'rrcurveto'])
 
     def test_encodeFloat(self):
-        import sys
-        def hexenc(s):
-            return ' '.join('%02x' % ord(x) for x in s)
-        if sys.version_info[0] >= 3:
-            def hexenc_py3(s):
-                return ' '.join('%02x' % x for x in s)
-            hexenc = hexenc_py3
-
         testNums = [
             # value                expected result
             (-9.399999999999999,   '1e e9 a4 ff'),  # -9.4
@@ -72,7 +75,7 @@ class T2CharStringTest(unittest.TestCase):
 
         for sample in testNums:
             encoded_result = encodeFloat(sample[0])
-            
+
             # check to see if we got the expected bytes
             self.assertEqual(hexenc(encoded_result), sample[1])
 
@@ -86,6 +89,74 @@ class T2CharStringTest(unittest.TestCase):
             self.assertEqual(decoded_result[0], float('%.8g' % sample[0]))
             # We limit to 8 digits of precision to match the implementation
             # of encodeFloat.
+
+    def test_encode_decode_fixed(self):
+        testNums = [
+            # value                expected hex      expected float
+            (-9.399999999999999,   'ff ff f6 99 9a', -9.3999939),
+            (-9.4,                 'ff ff f6 99 9a', -9.3999939),
+            (9.399999999999999999, 'ff 00 09 66 66', 9.3999939),
+            (9.4,                  'ff 00 09 66 66', 9.3999939),
+            (456.8,                'ff 01 c8 cc cd', 456.8000031),
+            (-456.8,               'ff fe 37 33 33', -456.8000031),
+        ]
+
+        for (value, expected_hex, expected_float) in testNums:
+            encoded_result = encodeFixed(value)
+
+            # check to see if we got the expected bytes
+            self.assertEqual(hexenc(encoded_result), expected_hex)
+
+            # check to see if we get the same value by decoding the data
+            decoded_result = read_fixed1616(
+                None,
+                None,
+                encoded_result,
+                1,
+            )
+            self.assertAlmostEqual(decoded_result[0], expected_float)
+
+    def test_toXML(self):
+        program = [
+            '107 53.4004 166.199 hstem',
+            '174.6 163.801 vstem',
+            '338.4 142.8 rmoveto',
+            '28 0 21.9 9 15.8 18 15.8 18 7.9 20.79959 0 23.6 rrcurveto',
+            'endchar'
+        ]
+        cs = self.stringToT2CharString(" ".join(program))
+
+        self.assertEqual(getXML(cs.toXML), program)
+
+    def test_fromXML(self):
+        cs = T2CharString()
+        for name, attrs, content in parseXML(
+            [
+                '<CharString name="period">'
+                '  338.4 142.8 rmoveto',
+                '  28 0 21.9 9 15.8 18 15.8 18 7.9 20.79959 0 23.6 rrcurveto',
+                '  endchar'
+                '</CharString>'
+            ]
+        ):
+            cs.fromXML(name, attrs, content)
+
+        expected_program = [
+            338.3999939, 142.8000031, 'rmoveto',
+            28, 0, 21.8999939, 9, 15.8000031,
+            18, 15.8000031, 18, 7.8999939,
+            20.7995911, 0, 23.6000061, 'rrcurveto',
+            'endchar'
+        ]
+
+        self.assertEqual(len(cs.program), len(expected_program))
+        for arg, expected_arg in zip(cs.program, expected_program):
+            if isinstance(arg, str):
+                self.assertIsInstance(expected_arg, str)
+                self.assertEqual(arg, expected_arg)
+            else:
+                self.assertNotIsInstance(expected_arg, str)
+                self.assertAlmostEqual(arg, expected_arg)
 
 
 if __name__ == "__main__":

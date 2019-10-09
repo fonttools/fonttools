@@ -1,5 +1,6 @@
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
+from fontTools.misc.fixedTools import floatToFixedToStr
 from fontTools.misc.textTools import safeEval
 from . import DefaultTable
 from . import grUtils
@@ -18,6 +19,7 @@ class table_S__i_l_l(DefaultTable.DefaultTable):
 
     def decompile(self, data, ttFont):
         (_, data) = sstruct.unpack2(Sill_hdr, data, self)
+        self.version = float(floatToFixedToStr(self.version, precisionBits=16))
         numLangs, = struct.unpack('>H', data[:2])
         data = data[8:]
         maxsetting = 0

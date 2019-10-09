@@ -11,6 +11,8 @@ from fontTools.misc.bezierTools import calcQuadraticBounds
 from fontTools.misc.fixedTools import (
 	fixedToFloat as fi2fl,
 	floatToFixed as fl2fi,
+	floatToFixedToStr as fl2str,
+	strToFixedToFloat as str2fl,
 	otRound,
 )
 from numbers import Number
@@ -1365,15 +1367,18 @@ class GlyphComponent(object):
 			transform = self.transform
 			if transform[0][1] or transform[1][0]:
 				attrs = attrs + [
-						("scalex", transform[0][0]), ("scale01", transform[0][1]),
-						("scale10", transform[1][0]), ("scaley", transform[1][1]),
-						]
+					("scalex", fl2str(transform[0][0], 14)),
+					("scale01", fl2str(transform[0][1], 14)),
+					("scale10", fl2str(transform[1][0], 14)),
+					("scaley", fl2str(transform[1][1], 14)),
+				]
 			elif transform[0][0] != transform[1][1]:
 				attrs = attrs + [
-						("scalex", transform[0][0]), ("scaley", transform[1][1]),
-						]
+					("scalex", fl2str(transform[0][0], 14)),
+					("scaley", fl2str(transform[1][1], 14)),
+				]
 			else:
-				attrs = attrs + [("scale", transform[0][0])]
+				attrs = attrs + [("scale", fl2str(transform[0][0], 14))]
 		attrs = attrs + [("flags", hex(self.flags))]
 		writer.simpletag("component", attrs)
 		writer.newline()
@@ -1387,17 +1392,17 @@ class GlyphComponent(object):
 			self.x = safeEval(attrs["x"])
 			self.y = safeEval(attrs["y"])
 		if "scale01" in attrs:
-			scalex = safeEval(attrs["scalex"])
-			scale01 = safeEval(attrs["scale01"])
-			scale10 = safeEval(attrs["scale10"])
-			scaley = safeEval(attrs["scaley"])
+			scalex = str2fl(attrs["scalex"], 14)
+			scale01 = str2fl(attrs["scale01"], 14)
+			scale10 = str2fl(attrs["scale10"], 14)
+			scaley = str2fl(attrs["scaley"], 14)
 			self.transform = [[scalex, scale01], [scale10, scaley]]
 		elif "scalex" in attrs:
-			scalex = safeEval(attrs["scalex"])
-			scaley = safeEval(attrs["scaley"])
+			scalex = str2fl(attrs["scalex"], 14)
+			scaley = str2fl(attrs["scaley"], 14)
 			self.transform = [[scalex, 0], [0, scaley]]
 		elif "scale" in attrs:
-			scale = safeEval(attrs["scale"])
+			scale = str2fl(attrs["scale"], 14)
 			self.transform = [[scale, 0], [0, scale]]
 		self.flags = safeEval(attrs["flags"])
 

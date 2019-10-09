@@ -1,11 +1,20 @@
 from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
+from fontTools.misc.testTools import getXML, parseXML
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont, newTable, TTLibError
-from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
+from fontTools.ttLib.tables._g_l_y_f import (
+    GlyphCoordinates,
+    GlyphComponent,
+    ARGS_ARE_XY_VALUES,
+    WE_HAVE_A_SCALE,
+    WE_HAVE_A_TWO_BY_TWO,
+    WE_HAVE_AN_X_AND_Y_SCALE,
+)
 from fontTools.ttLib.tables import ttProgram
 import sys
 import array
+import itertools
 import pytest
 import re
 import os
@@ -274,6 +283,124 @@ class glyfTableTest(unittest.TestCase):
         self.assertFalse(hasattr(composite, "program"))
 
         composite.compact(glyfTable)
+
+
+class GlyphComponentTest:
+
+    def test_toXML_no_transform(self):
+        comp = GlyphComponent()
+        comp.glyphName = "a"
+        comp.flags = ARGS_ARE_XY_VALUES
+        comp.x, comp.y = 1, 2
+
+        assert getXML(comp.toXML) == [
+            '<component glyphName="a" x="1" y="2" flags="0x2"/>'
+        ]
+
+    def test_toXML_transform_scale(self):
+        comp = GlyphComponent()
+        comp.glyphName = "a"
+        comp.flags = ARGS_ARE_XY_VALUES | WE_HAVE_A_SCALE
+        comp.x, comp.y = 1, 2
+
+        comp.transform = [[0.2999878, 0], [0, 0.2999878]]
+        assert getXML(comp.toXML) == [
+            '<component glyphName="a" x="1" y="2" scale="0.3" flags="0xa"/>'
+        ]
+
+    def test_toXML_transform_xy_scale(self):
+        comp = GlyphComponent()
+        comp.glyphName = "a"
+        comp.flags = ARGS_ARE_XY_VALUES | WE_HAVE_AN_X_AND_Y_SCALE
+        comp.x, comp.y = 1, 2
+
+        comp.transform = [[0.5999756, 0], [0, 0.2999878]]
+        assert getXML(comp.toXML) == [
+            '<component glyphName="a" x="1" y="2" scalex="0.6" '
+            'scaley="0.3" flags="0x42"/>'
+        ]
+
+    def test_toXML_transform_2x2_scale(self):
+        comp = GlyphComponent()
+        comp.glyphName = "a"
+        comp.flags = ARGS_ARE_XY_VALUES | WE_HAVE_A_TWO_BY_TWO
+        comp.x, comp.y = 1, 2
+
+        comp.transform = [[0.5999756, -0.2000122], [0.2000122, 0.2999878]]
+        assert getXML(comp.toXML) == [
+            '<component glyphName="a" x="1" y="2" scalex="0.6" scale01="-0.2" '
+            'scale10="0.2" scaley="0.3" flags="0x82"/>'
+        ]
+
+    def test_fromXML_no_transform(self):
+        comp = GlyphComponent()
+        for name, attrs, content in parseXML(
+            ['<component glyphName="a" x="1" y="2" flags="0x2"/>']
+        ):
+            comp.fromXML(name, attrs, content, ttFont=None)
+
+        assert comp.glyphName == "a"
+        assert comp.flags & ARGS_ARE_XY_VALUES != 0
+        assert (comp.x, comp.y) == (1, 2)
+        assert not hasattr(comp, "transform")
+
+    def test_fromXML_transform_scale(self):
+        comp = GlyphComponent()
+        for name, attrs, content in parseXML(
+            ['<component glyphName="a" x="1" y="2" scale="0.3" flags="0xa"/>']
+        ):
+            comp.fromXML(name, attrs, content, ttFont=None)
+
+        assert comp.glyphName == "a"
+        assert comp.flags & ARGS_ARE_XY_VALUES != 0
+        assert comp.flags & WE_HAVE_A_SCALE != 0
+        assert (comp.x, comp.y) == (1, 2)
+        assert hasattr(comp, "transform")
+        for value, expected in zip(
+            itertools.chain(*comp.transform), [0.2999878, 0, 0, 0.2999878]
+        ):
+            assert value == pytest.approx(expected)
+
+    def test_fromXML_transform_xy_scale(self):
+        comp = GlyphComponent()
+        for name, attrs, content in parseXML(
+            [
+                '<component glyphName="a" x="1" y="2" scalex="0.6" '
+                'scaley="0.3" flags="0x42"/>'
+            ]
+        ):
+            comp.fromXML(name, attrs, content, ttFont=None)
+
+        assert comp.glyphName == "a"
+        assert comp.flags & ARGS_ARE_XY_VALUES != 0
+        assert comp.flags & WE_HAVE_AN_X_AND_Y_SCALE != 0
+        assert (comp.x, comp.y) == (1, 2)
+        assert hasattr(comp, "transform")
+        for value, expected in zip(
+            itertools.chain(*comp.transform), [0.5999756, 0, 0, 0.2999878]
+        ):
+            assert value == pytest.approx(expected)
+
+    def test_fromXML_transform_2x2_scale(self):
+        comp = GlyphComponent()
+        for name, attrs, content in parseXML(
+            [
+                '<component glyphName="a" x="1" y="2" scalex="0.6" scale01="-0.2" '
+                'scale10="0.2" scaley="0.3" flags="0x82"/>'
+            ]
+        ):
+            comp.fromXML(name, attrs, content, ttFont=None)
+
+        assert comp.glyphName == "a"
+        assert comp.flags & ARGS_ARE_XY_VALUES != 0
+        assert comp.flags & WE_HAVE_A_TWO_BY_TWO != 0
+        assert (comp.x, comp.y) == (1, 2)
+        assert hasattr(comp, "transform")
+        for value, expected in zip(
+            itertools.chain(*comp.transform),
+            [0.5999756, -0.2000122, 0.2000122, 0.2999878]
+        ):
+            assert value == pytest.approx(expected)
 
 
 if __name__ == "__main__":

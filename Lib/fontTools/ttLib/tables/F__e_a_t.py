@@ -1,5 +1,6 @@
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
+from fontTools.misc.fixedTools import floatToFixedToStr
 from fontTools.misc.textTools import safeEval
 from .otBase import BaseTTXConverter
 from . import DefaultTable
@@ -19,6 +20,7 @@ class table_F__e_a_t(DefaultTable.DefaultTable):
 
     def decompile(self, data, ttFont):
         (_, data) = sstruct.unpack2(Feat_hdr_format, data, self)
+        self.version = float(floatToFixedToStr(self.version, precisionBits=16))
         numFeats, = struct.unpack('>H', data[:2])
         data = data[8:]
         allfeats = []
