@@ -459,22 +459,36 @@ class NameRecord(object):
 		if type(self) != type(other):
 			return NotImplemented
 
-		# implemented so that list.sort() sorts according to the spec.
-		selfTuple = (
-			getattr(self, "platformID", None),
-			getattr(self, "platEncID", None),
-			getattr(self, "langID", None),
-			getattr(self, "nameID", None),
-			getattr(self, "string", None),
-		)
-		otherTuple = (
-			getattr(other, "platformID", None),
-			getattr(other, "platEncID", None),
-			getattr(other, "langID", None),
-			getattr(other, "nameID", None),
-			getattr(other, "string", None),
-		)
-		return selfTuple < otherTuple
+		try:
+			# implemented so that list.sort() sorts according to the spec.
+			selfTuple = (
+				getattr(self, "platformID", None),
+				getattr(self, "platEncID", None),
+				getattr(self, "langID", None),
+				getattr(self, "nameID", None),
+				self.toBytes(),
+			)
+			otherTuple = (
+				getattr(other, "platformID", None),
+				getattr(other, "platEncID", None),
+				getattr(other, "langID", None),
+				getattr(other, "nameID", None),
+				other.toBytes(),
+			)
+			return selfTuple < otherTuple
+		except UnicodeEncodeError:
+			# This can only be reached if all IDs are identical but the strings
+			# can't be encoded for their platform encoding.
+			logging.warning(
+				"The name table contains multiple entries for platformID %d, "
+				"platEncID %d, langID %d, nameID %d with strings that cannot be "
+				"properly encoded.",
+				getattr(self, "platformID", None),
+				getattr(self, "platEncID", None),
+				getattr(self, "langID", None),
+				getattr(self, "nameID", None),
+			)
+			return NotImplemented
 
 	def __repr__(self):
 		return "<NameRecord NameID=%d; PlatformID=%d; LanguageID=%d>" % (

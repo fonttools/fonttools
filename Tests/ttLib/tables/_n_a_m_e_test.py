@@ -53,6 +53,30 @@ class NameTableTest(unittest.TestCase):
 		with self.assertRaises(TypeError):
 			table.setName(1.000, 5, 1, 0, 0)
 
+	def test_names_sort_bytes_str(self):
+		# Corner case: If a user appends a name record directly to `names`, the
+		# `__lt__` method on NameRecord may run into duplicate name records where
+		# one `string` is a str and the other one bytes, leading to an exception.
+		table = table__n_a_m_e()
+		table.names = [
+			makeName("Test", 25, 3, 1, 0x409),
+			makeName("Test".encode("utf-16be"), 25, 3, 1, 0x409),
+		]
+		table.compile(None)
+
+	def test_names_sort_bytes_str_encoding_error(self):
+		table = table__n_a_m_e()
+		table.names = [
+			makeName("Test寬", 25, 1, 0, 0),
+			makeName("Test鬆鬆", 25, 1, 0, 0),
+		]
+		with CapturingLogHandler(log, "WARNING") as captor:
+			with self.assertRaises(TypeError):
+				table.names.sort()
+		self.assertTrue(
+			all("cannot be properly encoded" in r.msg for r in captor.records)
+		)
+
 	def test_addName(self):
 		table = table__n_a_m_e()
 		nameIDs = []
