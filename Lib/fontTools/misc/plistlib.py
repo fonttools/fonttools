@@ -5,18 +5,8 @@ from datetime import datetime
 from base64 import b64encode, b64decode
 from numbers import Integral
 
-try:
-    from collections.abc import Mapping # python >= 3.3
-except ImportError:
-    from collections import Mapping
-
-try:
-    from functools import singledispatch
-except ImportError:
-    try:
-        from singledispatch import singledispatch
-    except ImportError:
-        singledispatch = None
+from collections.abc import Mapping
+from functools import singledispatch
 
 from fontTools.misc import etree
 

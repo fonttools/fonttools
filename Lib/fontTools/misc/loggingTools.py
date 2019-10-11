@@ -7,16 +7,9 @@ import sys
 import logging
 import timeit
 from functools import wraps
-try:
-	from collections.abc import Mapping, Callable
-except ImportError:  # python < 3.3
-	from collections import Mapping, Callable
+from collections.abc import Mapping, Callable
 import warnings
-
-try:
-	from logging import PercentStyle
-except ImportError:
-	PercentStyle = None
+from logging import PercentStyle
 
 
 # default logging level used by Timer class

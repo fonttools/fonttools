@@ -12,11 +12,8 @@ from fontTools.ufoLib.plistlib import (
     readPlist, readPlistFromString, writePlist, writePlistToString,
 )
 import pytest
+from collections.abc import Mapping
 
-try:
-    from collections.abc import Mapping # python >= 3.3
-except ImportError:
-    from collections import Mapping
 
 PY2 = sys.version_info < (3,)
 if PY2:

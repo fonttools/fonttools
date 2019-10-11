@@ -3,10 +3,7 @@ from fontTools.misc.py23 import *
 import struct
 from fontTools.misc import sstruct
 from collections import OrderedDict
-try:
-	from collections.abc import MutableMapping
-except ImportError:
-	from UserDict import DictMixin as MutableMapping
+from collections.abc import MutableMapping
 
 
 class ResourceError(Exception):
