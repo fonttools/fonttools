@@ -70,12 +70,8 @@ class NameTableTest(unittest.TestCase):
 			makeName("Test寬", 25, 1, 0, 0),
 			makeName("Test鬆鬆", 25, 1, 0, 0),
 		]
-		with CapturingLogHandler(log, "WARNING") as captor:
-			with self.assertRaises(TypeError):
-				table.names.sort()
-		self.assertTrue(
-			all("cannot be properly encoded" in r.msg for r in captor.records)
-		)
+		with self.assertRaises(TypeError):
+			table.names.sort()
 
 	def test_addName(self):
 		table = table__n_a_m_e()
