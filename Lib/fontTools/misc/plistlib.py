@@ -364,52 +364,21 @@ def _string_or_data_element(raw_bytes, ctx):
         return _string_element(string, ctx)
 
 
-# if singledispatch is available, we use a generic '_make_element' function
-# and register overloaded implementations that are run based on the type of
-# the first argument
+@singledispatch
+def _make_element(value, ctx):
+    raise TypeError("unsupported type: %s" % type(value))
 
-if singledispatch is not None:
-
-    @singledispatch
-    def _make_element(value, ctx):
-        raise TypeError("unsupported type: %s" % type(value))
-
-    _make_element.register(unicode)(_string_element)
-    _make_element.register(bool)(_bool_element)
-    _make_element.register(Integral)(_integer_element)
-    _make_element.register(float)(_real_element)
-    _make_element.register(Mapping)(_dict_element)
-    _make_element.register(list)(_array_element)
-    _make_element.register(tuple)(_array_element)
-    _make_element.register(datetime)(_date_element)
-    _make_element.register(bytes)(_string_or_data_element)
-    _make_element.register(bytearray)(_data_element)
-    _make_element.register(Data)(lambda v, ctx: _data_element(v.data, ctx))
-
-else:
-    # otherwise we use a long switch-like if statement
-
-    def _make_element(value, ctx):
-        if isinstance(value, unicode):
-            return _string_element(value, ctx)
-        elif isinstance(value, bool):
-            return _bool_element(value, ctx)
-        elif isinstance(value, Integral):
-            return _integer_element(value, ctx)
-        elif isinstance(value, float):
-            return _real_element(value, ctx)
-        elif isinstance(value, Mapping):
-            return _dict_element(value, ctx)
-        elif isinstance(value, (list, tuple)):
-            return _array_element(value, ctx)
-        elif isinstance(value, datetime):
-            return _date_element(value, ctx)
-        elif isinstance(value, bytes):
-            return _string_or_data_element(value, ctx)
-        elif isinstance(value, bytearray):
-            return _data_element(value, ctx)
-        elif isinstance(value, Data):
-            return _data_element(value.data, ctx)
+_make_element.register(unicode)(_string_element)
+_make_element.register(bool)(_bool_element)
+_make_element.register(Integral)(_integer_element)
+_make_element.register(float)(_real_element)
+_make_element.register(Mapping)(_dict_element)
+_make_element.register(list)(_array_element)
+_make_element.register(tuple)(_array_element)
+_make_element.register(datetime)(_date_element)
+_make_element.register(bytes)(_string_or_data_element)
+_make_element.register(bytearray)(_data_element)
+_make_element.register(Data)(lambda v, ctx: _data_element(v.data, ctx))
 
 
 # Public functions to create element tree from plist-compatible python
