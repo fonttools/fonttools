@@ -5,17 +5,15 @@ from datetime import datetime
 from base64 import b64encode, b64decode
 from numbers import Integral
 
+from types import SimpleNamespace
 from collections.abc import Mapping
 from functools import singledispatch
 
 from fontTools.misc import etree
 
 from fontTools.misc.py23 import (
-    basestring,
     tounicode,
     tobytes,
-    SimpleNamespace,
-    range,
 )
 
 # On python3, by default we deserialize <data> elements as bytes, whereas on
@@ -311,7 +309,7 @@ def _dict_element(d, ctx):
         items = sorted(items)
     ctx.indent_level += 1
     for key, value in items:
-        if not isinstance(key, basestring):
+        if not isinstance(key, str):
             if ctx.skipkeys:
                 continue
             raise TypeError("keys must be strings")
