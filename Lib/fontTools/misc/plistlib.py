@@ -22,7 +22,7 @@ from fontTools.misc.py23 import (
 # Before, on Python 2, we
 #  - deserialized <data> elements as plistlib.Data objects, in order to
 #    distinguish them from the built-in str type (which is bytes on python2)
-#  - deserialized bytes as <string> elements (they must have only contained
+#  - serialized bytes as <string> elements (they must have only contained
 #    ASCII characters in this case)
 # You can pass use_builtin_types=[True|False] to the load/dump etc. functions
 # to enforce a specific treatment.
