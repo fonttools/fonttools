@@ -5,7 +5,7 @@ import codecs
 import collections
 from io import BytesIO
 from numbers import Integral
-from fontTools.misc.py23 import tounicode, unicode
+from fontTools.misc.py23 import tounicode
 from fontTools.misc import etree
 from fontTools.misc import plistlib
 from fontTools.ufoLib.plistlib import (
@@ -14,15 +14,6 @@ from fontTools.ufoLib.plistlib import (
 import pytest
 from collections.abc import Mapping
 
-
-PY2 = sys.version_info < (3,)
-if PY2:
-    # This is a ResourceWarning that only happens on py27 at interpreter
-    # finalization, and only when coverage is enabled. We can ignore it.
-    # https://github.com/numpy/numpy/issues/3778#issuecomment-24885336
-    pytestmark = pytest.mark.filterwarnings(
-        "ignore:tp_compare didn't return -1 or -2 for exception"
-    )
 
 # The testdata is generated using https://github.com/python/cpython/...
 # Mac/Tools/plistlib_generate_testdata.py
@@ -185,7 +176,7 @@ def test_bytes_string(use_builtin_types):
     pl = b"some ASCII bytes"
     data = plistlib.dumps(pl, use_builtin_types=False)
     pl2 = plistlib.loads(data, use_builtin_types=use_builtin_types)
-    assert isinstance(pl2, unicode)  # it's always a <string>
+    assert isinstance(pl2, str)  # it's always a <string>
     assert pl2 == pl.decode()
 
 
@@ -513,15 +504,13 @@ def test_writePlistToString(pl_no_builtin_types):
 
 def test_load_use_builtin_types_default():
     pl = plistlib.loads(TESTDATA)
-    expected = plistlib.Data if PY2 else bytes
-    assert isinstance(pl["someData"], expected)
+    assert isinstance(pl["someData"], bytes)
 
 
 def test_dump_use_builtin_types_default(pl_no_builtin_types):
     data = plistlib.dumps(pl_no_builtin_types)
     pl2 = plistlib.loads(data)
-    expected = plistlib.Data if PY2 else bytes
-    assert isinstance(pl2["someData"], expected)
+    assert isinstance(pl2["someData"], bytes)
     assert pl2 == pl_no_builtin_types
 
 
