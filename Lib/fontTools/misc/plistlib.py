@@ -11,7 +11,6 @@ from functools import singledispatch
 from fontTools.misc import etree
 
 from fontTools.misc.py23 import (
-    unicode,
     basestring,
     tounicode,
     tobytes,
@@ -368,7 +367,7 @@ def _string_or_data_element(raw_bytes, ctx):
 def _make_element(value, ctx):
     raise TypeError("unsupported type: %s" % type(value))
 
-_make_element.register(unicode)(_string_element)
+_make_element.register(str)(_string_element)
 _make_element.register(bool)(_bool_element)
 _make_element.register(Integral)(_integer_element)
 _make_element.register(float)(_real_element)
