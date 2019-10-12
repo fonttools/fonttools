@@ -120,7 +120,7 @@ class Data:
         return "%s(%s)" % (self.__class__.__name__, repr(self.data))
 
 
-class PlistTarget(object):
+class PlistTarget:
     """ Event handler using the ElementTree Target API that can be
     passed to a XMLParser to produce property list objects from XML.
     It is based on the CPython plistlib module's _PlistParser class,
