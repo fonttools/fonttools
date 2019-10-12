@@ -52,7 +52,7 @@ _date_parser = re.compile(
     r"(?::(?P<minute>\d\d)"
     r"(?::(?P<second>\d\d))"
     r"?)?)?)?)?Z",
-    getattr(re, "ASCII", 0),  # py3-only
+    re.ASCII
 )
 
 
