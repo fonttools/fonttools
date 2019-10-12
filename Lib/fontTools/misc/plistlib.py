@@ -16,21 +16,19 @@ from fontTools.misc.py23 import (
     tobytes,
 )
 
-# On python3, by default we deserialize <data> elements as bytes, whereas on
-# python2 we deserialize <data> elements as plistlib.Data objects, in order
-# to distinguish them from the built-in str type (which is bytes on python2).
-# Similarly, by default on python3 we serialize bytes as <data> elements;
-# however, on python2 we serialize bytes as <string> elements (they must
-# only contain ASCII characters in this case).
-# You can pass use_builtin_types=[True|False] to load/dump etc. functions to
-# enforce the same treatment of bytes across python 2 and 3.
+# By default, we 
+#  - deserialize <data> elements as bytes and
+#  - serialize bytes as <data> elements.
+# Before, on Python 2, we
+#  - deserialized <data> elements as plistlib.Data objects, in order to
+#    distinguish them from the built-in str type (which is bytes on python2)
+#  - deserialized bytes as <string> elements (they must have only contained
+#    ASCII characters in this case)
+# You can pass use_builtin_types=[True|False] to the load/dump etc. functions
+# to enforce a specific treatment.
 # NOTE that unicode type always maps to <string> element, and plistlib.Data
 # always maps to <data> element, regardless of use_builtin_types.
-PY3 = sys.version_info[0] > 2
-if PY3:
-    USE_BUILTIN_TYPES = True
-else:
-    USE_BUILTIN_TYPES = False
+USE_BUILTIN_TYPES = True
 
 XML_DECLARATION = b"""<?xml version='1.0' encoding='UTF-8'?>"""
 
