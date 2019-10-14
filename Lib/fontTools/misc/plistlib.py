@@ -1,5 +1,6 @@
 import sys
 import re
+import warnings
 from io import BytesIO
 from datetime import datetime
 from base64 import b64encode, b64decode
@@ -149,6 +150,12 @@ class PlistTarget:
         if use_builtin_types is None:
             self._use_builtin_types = USE_BUILTIN_TYPES
         else:
+            if use_builtin_types is False:
+                warnings.warn(
+                    "Setting use_builtin_types to False is deprecated and will be "
+                    "removed soon.",
+                    DeprecationWarning,
+                )
             self._use_builtin_types = use_builtin_types
         self._dict_type = dict_type
 
