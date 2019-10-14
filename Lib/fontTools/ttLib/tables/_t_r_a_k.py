@@ -10,10 +10,7 @@ from fontTools.misc.textTools import safeEval
 from fontTools.ttLib import TTLibError
 from . import DefaultTable
 import struct
-try:
-	from collections.abc import MutableMapping
-except ImportError:
-	from UserDict import DictMixin as MutableMapping
+from collections.abc import MutableMapping
 
 
 # Apple's documentation of 'trak':

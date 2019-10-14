@@ -1,49 +1,35 @@
 import sys
 import re
+import warnings
 from io import BytesIO
 from datetime import datetime
 from base64 import b64encode, b64decode
 from numbers import Integral
 
-try:
-    from collections.abc import Mapping # python >= 3.3
-except ImportError:
-    from collections import Mapping
-
-try:
-    from functools import singledispatch
-except ImportError:
-    try:
-        from singledispatch import singledispatch
-    except ImportError:
-        singledispatch = None
+from types import SimpleNamespace
+from collections.abc import Mapping
+from functools import singledispatch
 
 from fontTools.misc import etree
 
 from fontTools.misc.py23 import (
-    unicode,
-    basestring,
     tounicode,
     tobytes,
-    SimpleNamespace,
-    range,
 )
 
-# On python3, by default we deserialize <data> elements as bytes, whereas on
-# python2 we deserialize <data> elements as plistlib.Data objects, in order
-# to distinguish them from the built-in str type (which is bytes on python2).
-# Similarly, by default on python3 we serialize bytes as <data> elements;
-# however, on python2 we serialize bytes as <string> elements (they must
-# only contain ASCII characters in this case).
-# You can pass use_builtin_types=[True|False] to load/dump etc. functions to
-# enforce the same treatment of bytes across python 2 and 3.
+# By default, we 
+#  - deserialize <data> elements as bytes and
+#  - serialize bytes as <data> elements.
+# Before, on Python 2, we
+#  - deserialized <data> elements as plistlib.Data objects, in order to
+#    distinguish them from the built-in str type (which is bytes on python2)
+#  - serialized bytes as <string> elements (they must have only contained
+#    ASCII characters in this case)
+# You can pass use_builtin_types=[True|False] to the load/dump etc. functions
+# to enforce a specific treatment.
 # NOTE that unicode type always maps to <string> element, and plistlib.Data
 # always maps to <data> element, regardless of use_builtin_types.
-PY3 = sys.version_info[0] > 2
-if PY3:
-    USE_BUILTIN_TYPES = True
-else:
-    USE_BUILTIN_TYPES = False
+USE_BUILTIN_TYPES = True
 
 XML_DECLARATION = b"""<?xml version='1.0' encoding='UTF-8'?>"""
 
@@ -62,7 +48,7 @@ _date_parser = re.compile(
     r"(?::(?P<minute>\d\d)"
     r"(?::(?P<second>\d\d))"
     r"?)?)?)?)?Z",
-    getattr(re, "ASCII", 0),  # py3-only
+    re.ASCII
 )
 
 
@@ -135,7 +121,7 @@ class Data:
         return "%s(%s)" % (self.__class__.__name__, repr(self.data))
 
 
-class PlistTarget(object):
+class PlistTarget:
     """ Event handler using the ElementTree Target API that can be
     passed to a XMLParser to produce property list objects from XML.
     It is based on the CPython plistlib module's _PlistParser class,
@@ -164,6 +150,12 @@ class PlistTarget(object):
         if use_builtin_types is None:
             self._use_builtin_types = USE_BUILTIN_TYPES
         else:
+            if use_builtin_types is False:
+                warnings.warn(
+                    "Setting use_builtin_types to False is deprecated and will be "
+                    "removed soon.",
+                    DeprecationWarning,
+                )
             self._use_builtin_types = use_builtin_types
         self._dict_type = dict_type
 
@@ -322,7 +314,7 @@ def _dict_element(d, ctx):
         items = sorted(items)
     ctx.indent_level += 1
     for key, value in items:
-        if not isinstance(key, basestring):
+        if not isinstance(key, str):
             if ctx.skipkeys:
                 continue
             raise TypeError("keys must be strings")
@@ -374,52 +366,21 @@ def _string_or_data_element(raw_bytes, ctx):
         return _string_element(string, ctx)
 
 
-# if singledispatch is available, we use a generic '_make_element' function
-# and register overloaded implementations that are run based on the type of
-# the first argument
+@singledispatch
+def _make_element(value, ctx):
+    raise TypeError("unsupported type: %s" % type(value))
 
-if singledispatch is not None:
-
-    @singledispatch
-    def _make_element(value, ctx):
-        raise TypeError("unsupported type: %s" % type(value))
-
-    _make_element.register(unicode)(_string_element)
-    _make_element.register(bool)(_bool_element)
-    _make_element.register(Integral)(_integer_element)
-    _make_element.register(float)(_real_element)
-    _make_element.register(Mapping)(_dict_element)
-    _make_element.register(list)(_array_element)
-    _make_element.register(tuple)(_array_element)
-    _make_element.register(datetime)(_date_element)
-    _make_element.register(bytes)(_string_or_data_element)
-    _make_element.register(bytearray)(_data_element)
-    _make_element.register(Data)(lambda v, ctx: _data_element(v.data, ctx))
-
-else:
-    # otherwise we use a long switch-like if statement
-
-    def _make_element(value, ctx):
-        if isinstance(value, unicode):
-            return _string_element(value, ctx)
-        elif isinstance(value, bool):
-            return _bool_element(value, ctx)
-        elif isinstance(value, Integral):
-            return _integer_element(value, ctx)
-        elif isinstance(value, float):
-            return _real_element(value, ctx)
-        elif isinstance(value, Mapping):
-            return _dict_element(value, ctx)
-        elif isinstance(value, (list, tuple)):
-            return _array_element(value, ctx)
-        elif isinstance(value, datetime):
-            return _date_element(value, ctx)
-        elif isinstance(value, bytes):
-            return _string_or_data_element(value, ctx)
-        elif isinstance(value, bytearray):
-            return _data_element(value, ctx)
-        elif isinstance(value, Data):
-            return _data_element(value.data, ctx)
+_make_element.register(str)(_string_element)
+_make_element.register(bool)(_bool_element)
+_make_element.register(Integral)(_integer_element)
+_make_element.register(float)(_real_element)
+_make_element.register(Mapping)(_dict_element)
+_make_element.register(list)(_array_element)
+_make_element.register(tuple)(_array_element)
+_make_element.register(datetime)(_date_element)
+_make_element.register(bytes)(_string_or_data_element)
+_make_element.register(bytearray)(_data_element)
+_make_element.register(Data)(lambda v, ctx: _data_element(v.data, ctx))
 
 
 # Public functions to create element tree from plist-compatible python

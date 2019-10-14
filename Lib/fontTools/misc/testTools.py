@@ -1,9 +1,6 @@
 """Helpers for writing unit tests."""
 
-try:
-    from collections.abc import Iterable
-except ImportError:  # python < 3.3
-    from collections import Iterable
+from collections.abc import Iterable
 import os
 import shutil
 import sys
