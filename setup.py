@@ -50,9 +50,9 @@ extras_require = {
 	# which varies between python versions and may be outdated.
 	"unicode": [
 		# the unicodedata2 extension module doesn't work on PyPy.
-		# Python 3.8 already has Unicode 12, so the backport is not needed.
+		# Python 3.8 already has Unicode 12.1, so the backport is not needed.
 		(
-			"unicodedata2 >= 12.0.0; "
+			"unicodedata2 >= 12.1.0; "
 			"python_version < '3.8' and platform_python_implementation != 'PyPy'"
 		),
 	],
