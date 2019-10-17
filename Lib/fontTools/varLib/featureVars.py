@@ -279,16 +279,12 @@ def addFeatureVariationsRaw(font, conditionalSubstitutions, featureTag='rvrn'):
 
     gsub.FeatureVariations = None  # delete any existing FeatureVariations
 
-    varFeature = None
+    varFeatureIndices = []
     for index, feature in enumerate(gsub.FeatureList.FeatureRecord):
         if feature.FeatureTag == featureTag:
-            varFeature = feature
-            varFeatureIndex = index
-            existingLookupIndices = feature.Feature.LookupListIndex
-            break
+            varFeatureIndices.append(index)
 
-    if varFeature is None:
-        existingLookupIndices = []
+    if not varFeatureIndices:
         varFeature = buildFeatureRecord(featureTag, [])
         gsub.FeatureList.FeatureRecord.append(varFeature)
         gsub.FeatureList.FeatureCount = len(gsub.FeatureList.FeatureRecord)
@@ -300,6 +296,8 @@ def addFeatureVariationsRaw(font, conditionalSubstitutions, featureTag='rvrn'):
             langSystems = [lsr.LangSys for lsr in scriptRecord.Script.LangSysRecord]
             for langSys in [scriptRecord.Script.DefaultLangSys] + langSystems:
                 langSys.FeatureIndex.append(varFeatureIndex)
+
+        varFeatureIndices = [varFeatureIndex]
 
     # setup lookups
 
@@ -319,8 +317,11 @@ def addFeatureVariationsRaw(font, conditionalSubstitutions, featureTag='rvrn'):
             conditionTable.append(ct)
 
         lookupIndices = [lookupMap[subst] for subst in substitutions]
-        record = buildFeatureTableSubstitutionRecord(varFeatureIndex, existingLookupIndices + lookupIndices)
-        featureVariationRecords.append(buildFeatureVariationRecord(conditionTable, [record]))
+        records = []
+        for varFeatureIndex in varFeatureIndices:
+            existingLookupIndices = gsub.FeatureList.FeatureRecord[varFeatureIndex].Feature.LookupListIndex
+            records.append(buildFeatureTableSubstitutionRecord(varFeatureIndex, existingLookupIndices + lookupIndices))
+        featureVariationRecords.append(buildFeatureVariationRecord(conditionTable, records))
 
     gsub.FeatureVariations = buildFeatureVariations(featureVariationRecords)
 
