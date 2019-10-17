@@ -14,12 +14,12 @@
     <!-- Most of this table will be recalculated by the compiler -->
     <tableVersion value="1.0"/>
     <fontRevision value="2.001"/>
-    <checkSumAdjustment value="0xd9290bac"/>
+    <checkSumAdjustment value="0x39ab2622"/>
     <magicNumber value="0x5f0f3cf5"/>
     <flags value="00000000 00000011"/>
     <unitsPerEm value="1000"/>
     <created value="Tue Mar 15 19:50:39 2016"/>
-    <modified value="Tue May 21 16:23:19 2019"/>
+    <modified value="Thu Oct 17 14:43:10 2019"/>
     <xMin value="0"/>
     <yMin value="0"/>
     <xMax value="496"/>
@@ -238,6 +238,18 @@
   </glyf>
 
   <name>
+    <namerecord nameID="256" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Weight
+    </namerecord>
+    <namerecord nameID="257" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Width
+    </namerecord>
+    <namerecord nameID="261" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Regular
+    </namerecord>
+    <namerecord nameID="288" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      ExtraCondensed
+    </namerecord>
     <namerecord nameID="0" platformID="3" platEncID="1" langID="0x409">
       Copyright 2015 Google Inc. All Rights Reserved.
     </namerecord>
@@ -282,6 +294,18 @@
     </namerecord>
     <namerecord nameID="14" platformID="3" platEncID="1" langID="0x409">
       http://scripts.sil.org/OFL
+    </namerecord>
+    <namerecord nameID="256" platformID="3" platEncID="1" langID="0x409">
+      Weight
+    </namerecord>
+    <namerecord nameID="257" platformID="3" platEncID="1" langID="0x409">
+      Width
+    </namerecord>
+    <namerecord nameID="261" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="288" platformID="3" platEncID="1" langID="0x409">
+      ExtraCondensed
     </namerecord>
   </name>
 
@@ -480,5 +504,42 @@
       <!-- LookupCount=0 -->
     </LookupList>
   </GSUB>
+
+  <STAT>
+    <Version value="0x00010001"/>
+    <DesignAxisRecordSize value="8"/>
+    <!-- DesignAxisCount=2 -->
+    <DesignAxisRecord>
+      <Axis index="0">
+        <AxisTag value="wght"/>
+        <AxisNameID value="256"/>  <!-- Weight -->
+        <AxisOrdering value="1"/>
+      </Axis>
+      <Axis index="1">
+        <AxisTag value="wdth"/>
+        <AxisNameID value="257"/>  <!-- Width -->
+        <AxisOrdering value="0"/>
+      </Axis>
+    </DesignAxisRecord>
+    <!-- AxisValueCount=2 -->
+    <AxisValueArray>
+      <AxisValue index="0" Format="3">
+        <AxisIndex value="0"/>
+        <Flags value="2"/>
+        <ValueNameID value="261"/>  <!-- Regular -->
+        <Value value="400.0"/>
+        <LinkedValue value="700.0"/>
+      </AxisValue>
+      <AxisValue index="1" Format="2">
+        <AxisIndex value="1"/>
+        <Flags value="0"/>
+        <ValueNameID value="288"/>  <!-- ExtraCondensed -->
+        <NominalValue value="62.5"/>
+        <RangeMinValue value="62.5"/>
+        <RangeMaxValue value="68.75"/>
+      </AxisValue>
+    </AxisValueArray>
+    <ElidedFallbackNameID value="2"/>  <!-- Regular -->
+  </STAT>
 
 </ttFont>
