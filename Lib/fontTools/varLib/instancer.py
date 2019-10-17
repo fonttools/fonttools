@@ -981,61 +981,57 @@ def instantiateFvar(varfont, axisLimits):
 def instantiateSTAT(varfont, axisLimits):
     # 'axisLimits' dict must contain user-space (non-normalized) coordinates
 
-    # XXX do something with axisRanges
+    stat = varfont["STAT"].table
+    if not stat.DesignAxisRecord or not (
+        stat.AxisValueArray and stat.AxisValueArray.AxisValue
+    ):
+        return  # STAT table empty, nothing to do
+
     location, axisRanges = splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange)
 
-    pinnedAxes = set(location.keys())
-
-    stat = varfont["STAT"].table
-    if not stat.DesignAxisRecord:
-        return  # skip empty STAT table
-
-    designAxes = stat.DesignAxisRecord.Axis
-    pinnedAxisIndices = {
-        i for i, axis in enumerate(designAxes) if axis.AxisTag in pinnedAxes
-    }
-
-    if len(pinnedAxisIndices) == len(designAxes):
-        log.info("Dropping STAT table")
-        del varfont["STAT"]
-        return
+    def isAxisValueOutsideLimits(axisTag, axisValue):
+        if axisTag in location and axisValue != location[axisTag]:
+            return True
+        elif axisTag in axisRanges:
+            axisRange = axisRanges[axisTag]
+            if axisValue < axisRange.minimum or axisValue > axisRange.maximum:
+                return True
+        return False
 
     log.info("Instantiating STAT table")
 
-    # only keep DesignAxis that were not instanced, and build a mapping from old
-    # to new axis indices
-    newDesignAxes = []
-    axisIndexMap = {}
-    for i, axis in enumerate(designAxes):
-        if i not in pinnedAxisIndices:
-            axisIndexMap[i] = len(newDesignAxes)
-            newDesignAxes.append(axis)
-
-    if stat.AxisValueArray and stat.AxisValueArray.AxisValue:
-        # drop all AxisValue tables that reference any of the pinned axes
-        newAxisValueTables = []
-        for axisValueTable in stat.AxisValueArray.AxisValue:
-            if axisValueTable.Format in (1, 2, 3):
-                if axisValueTable.AxisIndex in pinnedAxisIndices:
-                    continue
-                axisValueTable.AxisIndex = axisIndexMap[axisValueTable.AxisIndex]
-                newAxisValueTables.append(axisValueTable)
-            elif axisValueTable.Format == 4:
-                if any(
-                    rec.AxisIndex in pinnedAxisIndices
-                    for rec in axisValueTable.AxisValueRecord
-                ):
-                    continue
-                for rec in axisValueTable.AxisValueRecord:
-                    rec.AxisIndex = axisIndexMap[rec.AxisIndex]
-                newAxisValueTables.append(axisValueTable)
+    # only keep AxisValues whose axis is not pinned nor restricted, or is pinned at the
+    # exact (nominal) value, or is restricted but the value is within the new range
+    designAxes = stat.DesignAxisRecord.Axis
+    newAxisValueTables = []
+    for axisValueTable in stat.AxisValueArray.AxisValue:
+        axisValueFormat = axisValueTable.Format
+        if axisValueFormat in (1, 2, 3):
+            axisTag = designAxes[axisValueTable.AxisIndex].AxisTag
+            if axisValueFormat == 2:
+                axisValue = axisValueTable.NominalValue
             else:
-                raise NotImplementedError(axisValueTable.Format)
-        stat.AxisValueArray.AxisValue = newAxisValueTables
-        stat.AxisValueCount = len(stat.AxisValueArray.AxisValue)
+                axisValue = axisValueTable.Value
+            if isAxisValueOutsideLimits(axisTag, axisValue):
+                continue
+        elif axisValueFormat == 4:
+            # drop 'non-analytic' AxisValue if _any_ AxisValueRecord doesn't match
+            # the pinned location or is outside range
+            dropAxisValueTable = False
+            for rec in axisValueTable.AxisValueRecord:
+                axisTag = designAxes[rec.AxisIndex].AxisTag
+                axisValue = rec.Value
+                if isAxisValueOutsideLimits(axisTag, axisValue):
+                    dropAxisValueTable = True
+                    break
+            if dropAxisValueTable:
+                continue
+        else:
+            log.warn("Unknown AxisValue table format (%s); ignored", axisValueFormat)
+        newAxisValueTables.append(axisValueTable)
 
-    stat.DesignAxisRecord.Axis[:] = newDesignAxes
-    stat.DesignAxisCount = len(stat.DesignAxisRecord.Axis)
+    stat.AxisValueArray.AxisValue = newAxisValueTables
+    stat.AxisValueCount = len(stat.AxisValueArray.AxisValue)
 
 
 def getVariationNameIDs(varfont):
