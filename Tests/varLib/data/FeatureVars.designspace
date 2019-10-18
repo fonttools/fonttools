@@ -6,7 +6,7 @@
             <labelname xml:lang="en">Contrast</labelname>
         </axis>
     </axes>
-    <rules>
+    <rules processing="last">
         <rule name="dollar-stroke">
             <conditionset>
                 <condition name="weight" minimum="500" /> <!-- intentionally omitted maximum -->
