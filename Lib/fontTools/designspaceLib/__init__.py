@@ -358,7 +358,7 @@ class BaseDocWriter(object):
     def __init__(self, documentPath, documentObject):
         self.path = documentPath
         self.documentObject = documentObject
-        self.documentVersion = "4.0"
+        self.documentVersion = "4.1"
         self.root = ET.Element("designspace")
         self.root.attrib['format'] = self.documentVersion
         self._axes = []     # for use by the writer only
@@ -371,7 +371,11 @@ class BaseDocWriter(object):
             self._addAxis(axisObject)
 
         if self.documentObject.rules:
-            self.root.append(ET.Element("rules"))
+            if getattr(self.documentObject, "rulesProcessingLast", False):
+                attributes = {"processing": "last"}
+            else:
+                attributes = {}
+            self.root.append(ET.Element("rules", attributes))
         for ruleObject in self.documentObject.rules:
             self._addRule(ruleObject)
 
@@ -675,6 +679,12 @@ class BaseDocReader(LogMixin):
     def readRules(self):
         # we also need to read any conditions that are outside of a condition set.
         rules = []
+        rulesElement = self.root.find(".rules")
+        if rulesElement is not None:
+            processingValue = rulesElement.attrib.get("processing", "first")
+            if processingValue not in {"first", "last"}:
+                raise DesignSpaceDocumentError("<rules> processing attribute value is not valid: %r, expected 'first' or 'last'")
+            self.documentObject.rulesProcessingLast = processingValue == "last"
         for ruleElement in self.root.findall(".rules/rule"):
             ruleObject = self.ruleDescriptorClass()
             ruleName = ruleObject.name = ruleElement.attrib.get("name")
@@ -996,6 +1006,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         self.instances = []
         self.axes = []
         self.rules = []
+        self.rulesProcessingLast = False
         self.default = None         # name of the default master
 
         self.lib = {}
