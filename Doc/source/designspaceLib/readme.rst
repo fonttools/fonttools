@@ -836,9 +836,6 @@ glyphname pairs: the glyphs that need to be substituted. For a rule to be trigge
 **only one** of the conditionsets needs to be true, ``OR``. Within a conditionset 
 **all** conditions need to be true, ``AND``.
 
-The ``sub`` element contains a pair of glyphnames. The ``name`` attribute is the glyph that should be visible when the rule evaluates to **False**. The ``with`` attribute is the glyph that should be visible when the rule evaluates to **True**.
-
-Axis values in Conditions are in designspace coordinates.
 
 Attributes
 ----------
@@ -853,8 +850,8 @@ Attributes
 
 -  Defines a named rule.
 -  Each ``rule`` element contains one or more ``conditionset`` elements.
--  Only one ``conditionset`` needs to be true to trigger the rule.
--  All conditions in a ``conditionset`` must be true to make the ``conditionset`` true.
+-  **Only one** ``conditionset`` needs to be true to trigger the rule.
+-  **All** conditions in a ``conditionset`` must be true to make the ``conditionset`` true.
 -  For backwards compatibility a ``rule`` can contain ``condition`` elements outside of a conditionset. These are then understood to be part of a single, implied, ``conditionset``. Note: these conditions should be written wrapped in a conditionset.
 -  A rule element needs to contain one or more ``sub`` elements in order to be compiled to a variable font.
 -  Rules without sub elements should be ignored when compiling a font.
@@ -881,7 +878,7 @@ Attributes
 =======================
 
 -  Child element of ``conditionset``
--  Between the ``minimum`` and ``maximum`` this rule is ``True``.
+-  Between the ``minimum`` and ``maximum`` this condition is ``True``.
 -  ``minimum`` and ``maximum`` are in designspace coordinates.
 -  If ``minimum`` is not available, assume it is ``axis.minimum``, mapped to designspace coordinates.
 -  If ``maximum`` is not available, assume it is ``axis.maximum``, mapped to designspace coordinates.
@@ -904,6 +901,9 @@ Attributes
 
 -  Child element of ``rule``.
 -  Defines which glyph to replace when the rule evaluates to **True**.
+-  The ``sub`` element contains a pair of glyphnames. The ``name`` attribute is the glyph that should be visible when the rule evaluates to **False**. The ``with`` attribute is the glyph that should be visible when the rule evaluates to **True**.
+
+Axis values in Conditions are in designspace coordinates.
 
 .. attributes-13:
 
@@ -925,7 +925,7 @@ contained in a conditionset.
 
 .. code:: xml
 
-    <rules>
+    <rules processing="last">
         <rule name="named.rule.1">
             <condition minimum="250" maximum="750" name="weight" />
             <condition minimum="50" maximum="100" name="width" />
