@@ -52,27 +52,37 @@ Attributes
 -  ``rules``: list if ruleDescriptors
 -  ``readerClass``: class of the reader object.
 -  ``writerClass``: class of the writer object.
--  ``lib``: dict for user defined, custom data that needs to be stored in the designspace. Use reverse-DNS notation to identify your own data. Respect the data stored by others.
+-  ``lib``: dict for user defined, custom data that needs to be stored
+   in the designspace. Use reverse-DNS notation to identify your own data.
+   Respect the data stored by others.
 
 Methods
 -------
 
 -  ``read(path)``: read a designspace file from ``path``
 -  ``write(path)``: write this designspace to ``path``
--  ``addSource(aSourceDescriptor)``: add this sourceDescriptor to ``doc.sources``.
--  ``addInstance(anInstanceDescriptor)``: add this instanceDescriptor to ``doc.instances``.
+-  ``addSource(aSourceDescriptor)``: add this sourceDescriptor to 
+   ``doc.sources``.
+-  ``addInstance(anInstanceDescriptor)``: add this instanceDescriptor
+   to ``doc.instances``.
 -  ``addAxis(anAxisDescriptor)``: add this instanceDescriptor to ``doc.axes``.
--  ``newDefaultLocation()``: returns a dict with the default location in designspace coordinates.
--  ``updateFilenameFromPath(masters=True, instances=True, force=False)``: set a descriptor filename attr from the pt h and this document patf. If the filename attribute is not None: skip it.
+-  ``newDefaultLocation()``: returns a dict with the default location
+   in designspace coordinates.
+-  ``updateFilenameFromPath(masters=True, instances=True, force=False)``:
+   set a descriptor filename attr from the path and this document.
 -  ``newAxisDescriptor()``: return a new axisDescriptor object.
 -  ``newSourceDescriptor()``: return a new sourceDescriptor object.
 -  ``newInstanceDescriptor()``: return a new instanceDescriptor object.
 -  ``getAxisOrder()``: return a list of axisnames
--  ``findDefault()``: return the sourceDescriptor that is on the default location. Returns None if there isn't oe.
+-  ``findDefault()``: return the sourceDescriptor that is on the default
+   location. Returns None if there isn't one.
 -  ``normalizeLocation(aLocation)``: return a dict with normalized axis values.
--  ``normalize()``: normalize the geometry of this designspace: scale all the locations of all masters and ins tnces to the ``-1 - 0 - 1`` value.
--  ``loadSourceFonts()``: Ensure SourceDescriptor.font attributes are loaded, and return list of fonts.
--  ``tostring(encoding=None)``: Returns the designspace as a string. Default encoding '`utf-8`.
+-  ``normalize()``: normalize the geometry of this designspace: scale all the
+  locations of all masters and ins tnces to the ``-1 - 0 - 1`` value.
+-  ``loadSourceFonts()``: Ensure SourceDescriptor.font attributes are loaded,
+   and return list of fonts.
+-  ``tostring(encoding=None)``: Returns the designspace as a string. Default 
+   encoding `utf-8`.
 
 Class Methods
 -------------
@@ -289,9 +299,12 @@ RuleDescriptor object
 Evaluating rules
 ----------------
     
--  ``evaluateRule(rule, location)``: Return True if any of the rule's conditionsets matches the given location.
--  ``evaluateConditions(conditions, location)``: Return True if all the conditions matches the given location. 
--  ``processRules(rules, location, glyphNames)``: Apply all the rules to the list of glyphNames. Return a new list of glyphNames with substitutions applied.
+-  ``evaluateRule(rule, location)``: Return True if any of the rule's conditionsets 
+   matches the given location.
+-  ``evaluateConditions(conditions, location)``: Return True if all the conditions
+   matches the given location. 
+-  ``processRules(rules, location, glyphNames)``: Apply all the rules to the list
+   of glyphNames. Return a new list of glyphNames with substitutions applied.
 
 .. code:: python
 
@@ -430,8 +443,8 @@ Example
 1.2 map element
 ===============
 
--  Defines a single node in a series of input value (user space coordinate) to output value (designspace coordinate)
-   pairs.
+-  Defines a single node in a series of input value (user space coordinate)
+   to output value (designspace coordinate) pairs.
 -  Together these values transform the designspace.
 -  Child of ``axis`` element.
 
