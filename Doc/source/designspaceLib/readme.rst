@@ -50,8 +50,8 @@ Attributes
 -  ``sources``: list of sourceDescriptors
 -  ``instances``: list of instanceDescriptors
 -  ``rules``: list if ruleDescriptors
--  ``readerClass``: class of the reader object.
--  ``writerClass``: class of the writer object.
+-  ``readerClass``: class of the reader object
+-  ``writerClass``: class of the writer object
 -  ``lib``: dict for user defined, custom data that needs to be stored
    in the designspace. Use reverse-DNS notation to identify your own data.
    Respect the data stored by others.
