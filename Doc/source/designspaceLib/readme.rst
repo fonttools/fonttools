@@ -55,6 +55,7 @@ Attributes
 -  ``lib``: dict for user defined, custom data that needs to be stored
    in the designspace. Use reverse-DNS notation to identify your own data.
    Respect the data stored by others.
+-  ``rulesProcessingLast``: This flag indicates whether the substitution rules should be applied before or after other glyph substitution features. False: before, True: after.
 
 Methods
 -------
@@ -853,7 +854,7 @@ glyphname pairs: the glyphs that need to be substituted. For a rule to be trigge
 Attributes
 ----------
 
--  ``processing``: flag, optional. Valid values are [``first``, ``last``]. This flag indicates the featureVariations should be executed before or after all the other features.
+-  ``processing``: flag, optional. Valid values are [``first``, ``last``]. This flag indicates whether the substitution rules should be applied before or after other glyph substitution features.
 -  If no ``processing`` attribute is given, interpret as ``first``.
 
 .. 51-rule-element:
