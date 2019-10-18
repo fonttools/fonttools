@@ -49,6 +49,7 @@ def test_fill_document(tmpdir):
     instancePath1 = os.path.join(tmpdir, "instances", "instanceTest1.ufo")
     instancePath2 = os.path.join(tmpdir, "instances", "instanceTest2.ufo")
     doc = DesignSpaceDocument()
+    doc.rulesProcessingLast = True
 
     # write some axes
     a1 = AxisDescriptor()
@@ -698,6 +699,7 @@ def test_rulesDocument(tmpdir):
     testDocPath = os.path.join(tmpdir, "testRules.designspace")
     testDocPath2 = os.path.join(tmpdir, "testRules_roundtrip.designspace")
     doc = DesignSpaceDocument()
+    doc.rulesProcessingLast = True
     a1 = AxisDescriptor()
     a1.minimum = 0
     a1.maximum = 1000
@@ -741,6 +743,7 @@ def test_rulesDocument(tmpdir):
     _addUnwrappedCondition(testDocPath)
     doc2 = DesignSpaceDocument()
     doc2.read(testDocPath)
+    assert doc2.rulesProcessingLast
     assert len(doc2.axes) == 2
     assert len(doc2.rules) == 1
     assert len(doc2.rules[0].conditionSets) == 2
