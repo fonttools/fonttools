@@ -2,23 +2,24 @@
 DesignSpaceDocument Specification
 #################################
 
-An object to read, write and edit interpolation systems for typefaces.
+An object to read, write and edit interpolation systems for typefaces. Define sources, axes, rules and instances.
 
--  the format was originally written for MutatorMath.
--  the format is now also used in fontTools.varlib.
--  Define sources, axes and instances.
--  Not all values might be required by all applications.
+-  `The Python API of the objects <#python-api>`_
+-  `The document XML structure <#document-xml-structure>`_
 
-A couple of differences between things that use designspaces:
 
--  Varlib does not support anisotropic interpolations.
--  MutatorMath and Superpolator will extrapolate over the boundaries of
-   the axes. Varlib can not (at the moment).
--  Varlib requires much less data to define an instance than
-   MutatorMath.
--  The goals of Varlib and MutatorMath are different, so not all
-   attributes are always needed.
--  Need to expand the description of FDK use of designspace files.
+**********
+Python API
+**********
+
+
+
+
+
+.. _designspacedocument-object:
+
+DesignSpaceDocument object
+==========================
 
 The DesignSpaceDocument object can read and write ``.designspace`` data.
 It imports the axes, sources and instances to very basic **descriptor**
@@ -28,87 +29,60 @@ adding them to the document. This makes it easy to integrate this object
 in different contexts.
 
 The **DesignSpaceDocument** object can be subclassed to work with
-different objects, as long as they have the same attributes.
+different objects, as long as they have the same attributes. Reader and
+Writer objects can be subclassed as well.
+
+.. example-1:
 
 .. code:: python
 
-    from designSpaceDocument import DesignSpaceDocument
+    from designspaceLib import DesignSpaceDocument
     doc = DesignSpaceDocument()
     doc.read("some/path/to/my.designspace")
     doc.axes
     doc.sources
     doc.instances
 
-**********
-Validation
-**********
+Attributes
+----------
 
-Some validation is done when reading.
+-  ``axes``: list of axisDescriptors
+-  ``sources``: list of sourceDescriptors
+-  ``instances``: list of instanceDescriptors
+-  ``rules``: list if ruleDescriptors
+-  ``readerClass``: class of the reader object.
+-  ``writerClass``: class of the writer object.
+-  ``lib``: dict for user defined, custom data that needs to be stored in the designspace. Use reverse-DNS notation to identify your own data. Respect the data stored by others.
 
-Axes
-====
+Methods
+-------
 
--  If the ``axes`` element is available in the document then all
-   locations will check their dimensions against the defined axes. If a
-   location uses an axis that is not defined it will be ignored.
--  If there are no ``axes`` in the document, locations will accept all
-   axis names, so that we can..
--  Use ``doc.checkAxes()`` to reconstruct axes definitions based on the
-   ``source.location`` values. If you save the document the axes will be
-   there.
+-  ``read(path)``: read a designspace file from ``path``
+-  ``write(path)``: write this designspace to ``path``
+-  ``addSource(aSourceDescriptor)``: add this sourceDescriptor to ``doc.sources``.
+-  ``addInstance(anInstanceDescriptor)``: add this instanceDescriptor to ``doc.instances``.
+-  ``addAxis(anAxisDescriptor)``: add this instanceDescriptor to ``doc.axes``.
+-  ``newDefaultLocation()``: returns a dict with the default location in designspace coordinates.
+-  ``updateFilenameFromPath(masters=True, instances=True, force=False)``: set a descriptor filename attr from the pt h and this document patf. If the filename attribute is not None: skip it.
+-  ``newAxisDescriptor()``: return a new axisDescriptor object.
+-  ``newSourceDescriptor()``: return a new sourceDescriptor object.
+-  ``newInstanceDescriptor()``: return a new instanceDescriptor object.
+-  ``getAxisOrder()``: return a list of axisnames
+-  ``findDefault()``: return the sourceDescriptor that is on the default location. Returns None if there isn't oe.
+-  ``normalizeLocation(aLocation)``: return a dict with normalized axis values.
+-  ``normalize()``: normalize the geometry of this designspace: scale all the locations of all masters and ins tnces to the ``-1 - 0 - 1`` value.
+-  ``loadSourceFonts()``: Ensure SourceDescriptor.font attributes are loaded, and return list of fonts.
+-  ``tostring(encoding=None)``: Returns the designspace as a string. Default encoding '`utf-8`.
 
-Default font
-============
+Class Methods
+-------------
+- ``fromfile(path)``
+- ``fromstring(string)``
 
--  The source with the ``copyInfo`` flag indicates this is the default
-   font.
--  In mutatorMath the default font is selected automatically. A warning
-   is printed if the mutatorMath default selection differs from the one
-   set by ``copyInfo``. But the ``copyInfo`` source will be used.
--  If no source has a ``copyInfo`` flag, mutatorMath will be used to
-   select one. This source gets its ``copyInfo`` flag set. If you save
-   the document this flag will be set.
--  Use ``doc.checkDefault()`` to set the default font.
 
-************
-Localisation
-************
 
-Some of the descriptors support localised names. The names are stored in
-dictionaries using the language code as key. That means that there are
-now two places to store names: the old attribute and the new localised
-dictionary, ``obj.stylename`` and ``obj.localisedStyleName['en']``.
 
-*****
-Rules
-*****
 
-Rules describe designspace areas in which one glyph should be replaced by another.
-A rule has a name and a number of conditionsets. The rule also contains a list of
-glyphname pairs: the glyphs that need to be substituted. For a rule to be triggered
-**only one** of the conditionsets needs to be true, ``OR``. Within a conditionset 
-**all** conditions need to be true, ``AND``.
-
-The ``sub`` element contains a pair of glyphnames. The ``name`` attribute is the glyph that should be visible when the rule evaluates to **False**. The ``with`` attribute is the glyph that should be visible when the rule evaluates to **True**.
-
-UFO instances
-=============
-
--  When making instances as UFOs however, we need to swap the glyphs so
-   that the original shape is still available. For instance, if a rule
-   swaps ``a`` for ``a.alt``, but a glyph that references ``a`` in a
-   component would then show the new ``a.alt``.
--  But that can lead to unexpected results. So, if there are no rules
-   for ``adieresis`` (assuming it references ``a``) then that glyph
-   **should not change appearance**. That means that when the rule swaps
-   ``a`` and ``a.alt`` it also swaps all components that reference these
-   glyphs so they keep their appearance.
--  The swap function also needs to take care of swapping the names in
-   kerning data.
-
-**********
-Python API
-**********
 
 SourceDescriptor object
 =======================
@@ -312,6 +286,13 @@ RuleDescriptor object
 -  ``subs``: list of substitutions
 -  Each substitution is stored as tuples of glyphnames, e.g. ("a", "a.alt").
 
+Evaluating rules
+----------------
+    
+-  ``evaluateRule(rule, location)``: Return True if any of the rule's conditionsets matches the given location.
+-  ``evaluateConditions(conditions, location)``: Return True if all the conditions matches the given location. 
+-  ``processRules(rules, location, glyphNames)``: Apply all the rules to the list of glyphNames. Return a new list of glyphNames with substitutions applied.
+
 .. code:: python
 
     r1 = RuleDescriptor()
@@ -319,6 +300,7 @@ RuleDescriptor object
     r1.conditionsSets.append([dict(name="weight", minimum=-10, maximum=10), dict(...)])
     r1.conditionsSets.append([dict(...), dict(...)])
     r1.subs.append(("a", "a.alt"))
+
 
 .. _subclassing-descriptors:
 
@@ -400,9 +382,9 @@ Attributes
    location elements.
 -  ``tag``: required, string, 4 letters. Some axis tags are registered
    in the OpenType Specification.
--  ``minimum``: required, number. The minimum value for this axis.
--  ``maximum``: required, number. The maximum value for this axis.
--  ``default``: required, number. The default value for this axis.
+-  ``minimum``: required, number. The minimum value for this axis, in user space coordinates.
+-  ``maximum``: required, number. The maximum value for this axis, in user space coordinates.
+-  ``default``: required, number. The default value for this axis, in user space coordinates.
 -  ``hidden``: optional, 0 or 1. Records whether this axis needs to be
    hidden in interfaces.
 
@@ -433,7 +415,7 @@ Value
 
 -  The natural language name of this axis.
 
-.. example-1:
+.. example-2:
 
 Example
 -------
@@ -448,12 +430,12 @@ Example
 1.2 map element
 ===============
 
--  Defines a single node in a series of input value / output value
+-  Defines a single node in a series of input value (user space coordinate) to output value (designspace coordinate)
    pairs.
 -  Together these values transform the designspace.
 -  Child of ``axis`` element.
 
-.. example-2:
+.. example-3:
 
 Example
 -------
@@ -507,7 +489,7 @@ Attributes
 -  ``yvalue``: optional, number. Separate value for anisotropic
    interpolations.
 
-.. example-3:
+.. example-4:
 
 Example
 -------
@@ -524,8 +506,9 @@ Example
 3. source element
 =================
 
--  Defines a single font that contributes to the designspace.
+-  Defines a single font or layer that contributes to the designspace.
 -  Child element of ``sources``
+-  Location in designspace coordinates.
 
 .. attributes-5:
 
@@ -638,7 +621,7 @@ Attributes
    include the kerning of this source in the calculation.
 -  MutatorMath only
 
-.. example-4:
+.. example-5:
 
 Example
 -------
@@ -669,6 +652,7 @@ Example
 -  MutatorMath uses the ``glyphs`` element to describe how certain
    glyphs need different masters, mainly to describe the effects of
    conditional rules in Superpolator.
+-  Location in designspace coordinates.   
 
 .. attributes-8:
 
@@ -774,7 +758,7 @@ with an ``xml:lang`` attribute:
 -  stylemapstylename
 -  stylemapfamilyname
 
-.. example-5:
+.. example-6:
 
 Example
 -------
@@ -798,7 +782,7 @@ Attributes
 -  ``source``: the identifier name of the source this master glyph needs
    to be loaded from
 
-.. example-6:
+.. example-7:
 
 Example
 -------
@@ -846,6 +830,22 @@ Example
 -  Container for ``rule`` elements
 -  The rules are evaluated in this order.
 
+Rules describe designspace areas in which one glyph should be replaced by another.
+A rule has a name and a number of conditionsets. The rule also contains a list of
+glyphname pairs: the glyphs that need to be substituted. For a rule to be triggered
+**only one** of the conditionsets needs to be true, ``OR``. Within a conditionset 
+**all** conditions need to be true, ``AND``.
+
+The ``sub`` element contains a pair of glyphnames. The ``name`` attribute is the glyph that should be visible when the rule evaluates to **False**. The ``with`` attribute is the glyph that should be visible when the rule evaluates to **True**.
+
+Axis values in Conditions are in designspace coordinates.
+
+Attributes
+----------
+
+-  ``processing``: flag, optional. Valid values are [``first``, ``last``]. This flag indicates the featureVariations should be executed before or after all the other features.
+-  If no ``processing`` attribute is given, interpret as ``first``.
+
 .. 51-rule-element:
 
 5.1 rule element
@@ -882,8 +882,9 @@ Attributes
 
 -  Child element of ``conditionset``
 -  Between the ``minimum`` and ``maximum`` this rule is ``True``.
--  If ``minimum`` is not available, assume it is ``axis.minimum``.
--  If ``maximum`` is not available, assume it is ``axis.maximum``.
+-  ``minimum`` and ``maximum`` are in designspace coordinates.
+-  If ``minimum`` is not available, assume it is ``axis.minimum``, mapped to designspace coordinates.
+-  If ``maximum`` is not available, assume it is ``axis.maximum``, mapped to designspace coordinates.
 -  The condition must contain at least a minimum or maximum or both.
 
 .. attributes-12:
@@ -893,8 +894,8 @@ Attributes
 
 -  ``name``: string, required. Must match one of the defined ``axis``
    name attributes.
--  ``minimum``: number, required*. The low value.
--  ``maximum``: number, required*. The high value.
+-  ``minimum``: number, required*. The low value, in designspace coordinates.
+-  ``maximum``: number, required*. The high value, in designspace coordinates.
 
 .. 513-sub-element:
 
@@ -914,7 +915,7 @@ Attributes
 -  ``with``: string, required. The name of the glyph it is replaced
    with.
 
-.. example-7:
+.. example-8:
 
 Example
 -------
@@ -1065,3 +1066,5 @@ UFOs says.
 ===============
 
 -  The package is rather new and changes are to be expected.
+
+
