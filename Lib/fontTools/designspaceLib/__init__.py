@@ -683,7 +683,9 @@ class BaseDocReader(LogMixin):
         if rulesElement is not None:
             processingValue = rulesElement.attrib.get("processing", "first")
             if processingValue not in {"first", "last"}:
-                raise DesignSpaceDocumentError("<rules> processing attribute value is not valid: %r, expected 'first' or 'last'")
+                raise DesignSpaceDocumentError(
+                    "<rules> processing attribute value is not valid: %r, "
+                    "expected 'first' or 'last'" % processingValue)
             self.documentObject.rulesProcessingLast = processingValue == "last"
         for ruleElement in self.root.findall(".rules/rule"):
             ruleObject = self.ruleDescriptorClass()
