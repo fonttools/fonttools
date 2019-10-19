@@ -766,7 +766,7 @@ def load_designspace(designspace):
 		masters,
 		instances,
 		ds.rules,
-		getattr(ds, "rulesProcessingLast", False),
+		ds.rulesProcessingLast,
 	)
 
 
