@@ -35,6 +35,16 @@ class TTCollection(object):
 		for i in range(header.numFonts):
 			font = TTFont(file, fontNumber=i, _tableCache=tableCache, **kwargs)
 			fonts.append(font)
+			
+	def __enter__(self):
+		return self
+	
+	def __exit__(self, type, value, traceback):
+		self.close()
+		
+	def close(self):
+		for font in self.fonts:
+			font.close()
 
 	def save(self, file, shareTables=True):
 		"""Save the font to disk. Similarly to the constructor,
