@@ -613,7 +613,7 @@ def _merge_OTL(font, model, master_fonts, axisTags):
 		font['GPOS'].table.remap_device_varidxes(varidx_map)
 
 
-def _add_GSUB_feature_variations(font, axes, internal_axis_supports, rules):
+def _add_GSUB_feature_variations(font, axes, internal_axis_supports, rules, rulesProcessingLast):
 
 	def normalize(name, value):
 		return models.normalizeLocation(
@@ -648,7 +648,11 @@ def _add_GSUB_feature_variations(font, axes, internal_axis_supports, rules):
 
 		conditional_subs.append((region, subs))
 
-	addFeatureVariations(font, conditional_subs)
+	if rulesProcessingLast:
+		featureTag = 'rclt'
+	else:
+		featureTag = 'rvrn'
+	addFeatureVariations(font, conditional_subs, featureTag)
 
 
 _DesignSpaceData = namedtuple(
@@ -661,6 +665,7 @@ _DesignSpaceData = namedtuple(
 		"masters",
 		"instances",
 		"rules",
+		"rulesProcessingLast",
 	],
 )
 
@@ -761,6 +766,7 @@ def load_designspace(designspace):
 		masters,
 		instances,
 		ds.rules,
+		ds.rulesProcessingLast,
 	)
 
 
@@ -865,7 +871,7 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 	if 'cvar' not in exclude and 'glyf' in vf:
 		_merge_TTHinting(vf, model, master_fonts)
 	if 'GSUB' not in exclude and ds.rules:
-		_add_GSUB_feature_variations(vf, ds.axes, ds.internal_axis_supports, ds.rules)
+		_add_GSUB_feature_variations(vf, ds.axes, ds.internal_axis_supports, ds.rules, ds.rulesProcessingLast)
 	if 'CFF2' not in exclude and 'CFF ' in vf:
 		_add_CFF2(vf, model, master_fonts)
 		if "post" in vf:

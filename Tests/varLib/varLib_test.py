@@ -7,6 +7,7 @@ from fontTools.varLib import set_default_weight_width_slant
 from fontTools.designspaceLib import (
     DesignSpaceDocumentError, DesignSpaceDocument, SourceDescriptor,
 )
+from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 import difflib
 import os
 import shutil
@@ -107,7 +108,8 @@ class BuildTest(unittest.TestCase):
         return font, savepath
 
     def _run_varlib_build_test(self, designspace_name, font_name, tables,
-                               expected_ttx_name, save_before_dump=False):
+                               expected_ttx_name, save_before_dump=False,
+                               post_process_master=None):
         suffix = '.ttf'
         ds_path = self.get_test_input(designspace_name + '.designspace')
         ufo_dir = self.get_test_input('master_ufo')
@@ -116,7 +118,9 @@ class BuildTest(unittest.TestCase):
         self.temp_dir()
         ttx_paths = self.get_file_list(ttx_dir, '.ttx', font_name + '-')
         for path in ttx_paths:
-            self.compile_font(path, suffix, self.tempdir)
+            font, savepath = self.compile_font(path, suffix, self.tempdir)
+            if post_process_master is not None:
+                post_process_master(font, savepath)
 
         finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
         varfont, model, _ = build(ds_path, finder)
@@ -211,6 +215,47 @@ class BuildTest(unittest.TestCase):
             tables=["fvar", "GSUB"],
             expected_ttx_name="FeatureVars",
             save_before_dump=True,
+        )
+
+    def test_varlib_build_feature_variations_with_existing_rclt(self):
+        """Designspace file contains <rules> element, used to build GSUB
+        FeatureVariations table. <rules> is specified to do its OT processing
+        "last", so a 'rclt' feature will be used or created. This test covers
+        the case when a 'rclt' already exists in the masters.
+
+        We dynamically add a 'rclt' feature to an existing set of test
+        masters, to avoid adding more test data.
+
+        The multiple languages are done to verify whether multiple existing
+        'rclt' features are updated correctly.
+        """
+        def add_rclt(font, savepath):
+            features = """
+            languagesystem DFLT dflt;
+            languagesystem latn dflt;
+            languagesystem latn NLD;
+
+            feature rclt {
+                script latn;
+                language NLD;
+                lookup A {
+                    sub uni0041 by uni0061;
+                } A;
+                language dflt;
+                lookup B {
+                    sub uni0041 by uni0061;
+                } B;
+            } rclt;
+            """
+            addOpenTypeFeaturesFromString(font, features)
+            font.save(savepath)
+        self._run_varlib_build_test(
+            designspace_name="FeatureVars",
+            font_name="TestFamily",
+            tables=["fvar", "GSUB"],
+            expected_ttx_name="FeatureVars_rclt",
+            save_before_dump=True,
+            post_process_master=add_rclt,
         )
 
     def test_varlib_gvar_explicit_delta(self):

@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<designspace format="4.0">
+<designspace format="4.1">
   <axes>
     <axis tag="wght" name="weight" minimum="0" maximum="1000" default="0">
       <labelname xml:lang="en">Wéíght</labelname>
@@ -13,7 +13,7 @@
       <map input="1000" output="990"/>
     </axis>
   </axes>
-  <rules>
+  <rules processing="last">
     <rule name="named.rule.1">
       <conditionset>
         <condition name="axisName_a" minimum="0" maximum="1"/>
