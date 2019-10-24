@@ -498,6 +498,11 @@ class OTTableWriter(object):
 		return OverflowErrorRecord( (self.tableTag, LookupListIndex, SubTableIndex, itemName, itemIndex) )
 
 
+class LiteralCount(int):
+	"""A count value that should be taken literally, rather than recomputed on compile."""
+	pass
+
+
 class CountReference(object):
 	"""A reference to a Count value, not a count of references."""
 	def __init__(self, table, name, size=None, value=None):
@@ -690,8 +695,12 @@ class BaseTable(object):
 				# table. We will later store it here.
 				# We add a reference: by the time the data is assembled
 				# the Count value will be filled in.
-				ref = writer.writeCountReference(table, conv.name, conv.staticSize)
-				table[conv.name] = None
+				if not isinstance(value, LiteralCount):
+					# we ignore the current count value since it's being recomputed,
+					# unless this is a LiteralCount, which is assumed to be already correct.
+					value = None
+				ref = writer.writeCountReference(table, conv.name, conv.staticSize, value)
+				table[conv.name] = value
 				if conv.isPropagated:
 					writer[conv.name] = ref
 			elif conv.isLookupType:
