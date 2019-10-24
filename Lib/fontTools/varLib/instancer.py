@@ -467,8 +467,6 @@ def _instantiateVHVAR(varfont, axisLimits, tableFields):
                 _remapVarIdxMap(
                     vhvar, tableFields.vOrigMapping, varIndexMapping, glyphOrder
                 )
-    else:
-        del varfont[tableTag]
 
 
 def instantiateHVAR(varfont, location):
