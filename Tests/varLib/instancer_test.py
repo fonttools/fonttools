@@ -382,6 +382,26 @@ class InstantiateHVARTest(object):
 
         assert "HVAR" not in varfont
 
+    def test_partial_instance_keep_empty_table(self, varfont):
+        # Append an additional dummy axis to fvar, for which the current HVAR table
+        # in our test 'varfont' contains no variation data.
+        # Instancing the other two wght and wdth axes should leave HVAR table empty,
+        # to signal there are variations to the glyph's advance widths.
+        fvar = varfont["fvar"]
+        axis = _f_v_a_r.Axis()
+        axis.axisTag = "TEST"
+        fvar.axes.append(axis)
+
+        instancer.instantiateHVAR(varfont, {"wght": 0, "wdth": 0})
+
+        assert "HVAR" in varfont
+
+        varStore = varfont["HVAR"].table.VarStore
+
+        assert varStore.VarRegionList.RegionCount == 0
+        assert not varStore.VarRegionList.Region
+        assert varStore.VarRegionList.RegionAxisCount == 1
+
 
 class InstantiateItemVariationStoreTest(object):
     def test_VarRegion_get_support(self):
