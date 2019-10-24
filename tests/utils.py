@@ -112,7 +112,7 @@ class DummyGlyph(object):
         """Return True if 'other' glyph's outline is different from self."""
         return not (self == other)
 
-    def approx(self, other):
+    def approx(self, other, rel_tol=1e-12):
         if hasattr(other, 'outline'):
             outline2 == other.outline
         elif hasattr(other, 'draw'):
@@ -132,7 +132,10 @@ class DummyGlyph(object):
                     if not arg2 or not isinstance(arg2[0], tuple):
                         return False
                     for (x1, y1), (x2, y2) in zip(arg1, arg2):
-                        if not isclose(x1, x2) or not isclose(y1, y2):
+                        if (
+                            not isclose(x1, x2, rel_tol=rel_tol) or
+                            not isclose(y1, y2, rel_tol=rel_tol)
+                        ):
                             return False
                 elif arg1 != arg2:
                     return False
@@ -208,9 +211,12 @@ def _repr_pen_commands(commands):
     for cmd, args, kwargs in commands:
         if args:
             if isinstance(args[0], tuple):
-                # cast float to int if there're no digits after decimal point
-                args = [tuple((int(v) if int(v) == v else v) for v in pt)
-                        for pt in args]
+                # cast float to int if there're no digits after decimal point,
+                # and round floats to 12 decimal digits (more than enough)
+                args = [
+                    tuple((int(v) if int(v) == v else round(v, 12)) for v in pt)
+                    for pt in args
+                ]
             args = ", ".join(repr(a) for a in args)
         if kwargs:
             kwargs = ", ".join("%s=%r" % (k, v)

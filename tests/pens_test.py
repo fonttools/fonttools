@@ -39,7 +39,7 @@ class _TestPenMixin(object):
     def expect_glyph(self, source, expected):
         converted = self.convert_glyph(source)
         self.assertNotEqual(converted, source)
-        if converted != expected:
+        if not converted.approx(expected):
             print(self.diff(expected, converted))
             self.fail("converted glyph is different from expected")
 
