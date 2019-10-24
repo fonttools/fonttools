@@ -498,7 +498,7 @@ class OTTableWriter(object):
 		return OverflowErrorRecord( (self.tableTag, LookupListIndex, SubTableIndex, itemName, itemIndex) )
 
 
-class LiteralCount(int):
+class StaticCount(int):
 	"""A count value that should be taken literally, rather than recomputed on compile."""
 	pass
 
@@ -695,9 +695,9 @@ class BaseTable(object):
 				# table. We will later store it here.
 				# We add a reference: by the time the data is assembled
 				# the Count value will be filled in.
-				if not isinstance(value, LiteralCount):
+				if not isinstance(value, StaticCount):
 					# we ignore the current count value since it's being recomputed,
-					# unless this is a LiteralCount, which is assumed to be already correct.
+					# unless this is of type StaticCount, which is assumed to be correct.
 					value = None
 				ref = writer.writeCountReference(table, conv.name, conv.staticSize, value)
 				table[conv.name] = value
