@@ -4,16 +4,17 @@ The module exports an `instantiateVariableFont` function and CLI that allow to
 create full instances (i.e. static fonts) from variable fonts, as well as "partial"
 variable fonts that only contain a subset of the original variation space.
 
-For example, if you wish to pin the width axis to a given location while keeping
-the rest of the axes, you can do:
+For example, if you wish to pin the width axis to a given location while also
+restricting the weight axis to 400..700 range, you can do:
 
-$ fonttools varLib.instancer ./NotoSans-VF.ttf wdth=85
+$ fonttools varLib.instancer ./NotoSans-VF.ttf wdth=85 wght=400:700
 
 See `fonttools varLib.instancer --help` for more info on the CLI options.
 
 The module's entry point is the `instantiateVariableFont` function, which takes
-a TTFont object and a dict specifying a location along either some or all the axes,
-and returns a new TTFont representing respectively a partial or a full instance.
+a TTFont object and a dict specifying either axis coodinates or (min, max) ranges,
+and returns a new TTFont representing either a partial VF, or full instance if all
+the VF axes were given an explicit coordinate.
 
 E.g. here's how to pin the wght axis at a given location in a wght+wdth variable
 font, keeping only the deltas associated with the wdth axis:
@@ -50,7 +51,7 @@ Note that, unlike varLib.mutator, when an axis is not mentioned in the input
 location, the varLib.instancer will keep the axis and the corresponding deltas,
 whereas mutator implicitly drops the axis at its default coordinate.
 
-The module currently supports only the first two "levels" of partial instancing,
+The module currently supports only the first three "levels" of partial instancing,
 with the rest planned to be implemented in the future, namely:
 L1) dropping one or more axes while leaving the default tables unmodified;
 L2) dropping one or more axes while pinning them at non-default locations;
