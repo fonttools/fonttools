@@ -578,9 +578,7 @@ There are two meanings for the ``lib`` element:
 -  Child element of ``source``
 -  Defines if the instances can inherit the non-interpolating font info
    from this source.
--  MutatorMath + Varlib
--  NOTE: **This presence of this element indicates this source is to be
-   the default font.**
+-  MutatorMath
 
 .. 33-features-element:
 
