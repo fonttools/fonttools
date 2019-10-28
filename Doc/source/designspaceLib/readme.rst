@@ -14,8 +14,6 @@ Python API
 
 
 
-
-
 .. _designspacedocument-object:
 
 DesignSpaceDocument object
@@ -79,7 +77,7 @@ Methods
    location. Returns None if there isn't one.
 -  ``normalizeLocation(aLocation)``: return a dict with normalized axis values.
 -  ``normalize()``: normalize the geometry of this designspace: scale all the
-  locations of all masters and ins tnces to the ``-1 - 0 - 1`` value.
+  locations of all masters and instances to the ``-1 - 0 - 1`` value.
 -  ``loadSourceFonts()``: Ensure SourceDescriptor.font attributes are loaded,
    and return list of fonts.
 -  ``tostring(encoding=None)``: Returns the designspace as a string. Default 
@@ -123,8 +121,7 @@ Attributes
 -  ``copyLib``: bool. Indicates if the contents of the font.lib need to
    be copied to the instances. MutatorMath.
 -  ``copyInfo`` bool. Indicates if the non-interpolating font.info needs
-   to be copied to the instances. Also indicates this source is expected
-   to be the default font. MutatorMath + Varlib
+   to be copied to the instances. MutatorMath
 -  ``copyGroups`` bool. Indicates if the groups need to be copied to the
    instances. MutatorMath.
 -  ``copyFeatures`` bool. Indicates if the feature text needs to be
@@ -166,6 +163,7 @@ InstanceDescriptor object
 =========================
 
 .. attributes-1:
+
 
 Attributes
 ----------
@@ -269,10 +267,9 @@ AxisDescriptor object
 -  ``default``: number. The default value for this axis, i.e. when a new
    location is created, this is the value this axis will get in user
    space. MutatorMath + Varlib.
--  ``map``: list of input / output values that can describe a warp of user space
-   to design space coordinates. If no map values are present, it is assumed user
-   space is the same as design space, as in [(minimum, minimum), (maximum, maximum)].
-   Varlib.
+-  ``map``: list of input / output values that can describe a warp
+   of user space to design space coordinates. If no map values are present, it is assumed user space is the same as design space, as
+   in [(minimum, minimum), (maximum, maximum)]. Varlib.
 
 .. code:: python
 
@@ -666,7 +663,7 @@ Example
 -  MutatorMath uses the ``glyphs`` element to describe how certain
    glyphs need different masters, mainly to describe the effects of
    conditional rules in Superpolator.
--  Location in designspace coordinates.   
+-  Location in designspace coordinates.
 
 .. attributes-8:
 
@@ -1076,9 +1073,73 @@ UFOs says.
 
 .. 8-this-document:
 
-8 This document
+
+While it may be possible to guess about older files in individual cases, it is not recommended to make assumptions about the intention.
+
+8 Implementation differences
+============================
+
+The designspace format has gone through considerable development. 
+
+ -  the format was originally written for MutatorMath.
+ -  the format is now also used in fontTools.varlib.
+ -  not all values are be required by all implementations.
+
+8.1 Varlib vs. MutatorMath
+--------------------------
+
+There are some differences between the way MutatorMath and fontTools.varlib handle designspaces.
+
+ -  Varlib does not support anisotropic interpolations.
+ -  MutatorMath will extrapolate over the boundaries of
+    the axes. Varlib can not (at the moment).
+ -  Varlib requires much less data to define an instance than
+    MutatorMath.
+ -  The goals of Varlib and MutatorMath are different, so not all
+    attributes are always needed.
+
+8.2 Older versions
+------------------
+
+-  In some implementations that preceed Variable Fonts, the `copyInfo`
+   flag in a source indicated the source was to be treated as the default.
+   This is no longer compatible with the assumption that the default font
+   is located on the default value of each axis.
+-  Older implementations did not require axis records to be present in
+   the designspace file. The axis extremes for instance were generated 
+   from the locations used in the sources. This is no longer possible.
+
+8.3 Rules and generating static UFO instances
+---------------------------------------------
+
+When making instances as UFOs from a designspace with rules, it can
+be useful to evaluate the rules so that the characterset of the ufo 
+reflects, as much as possible, the state of a variable font when seen
+at the same location. This can be done by some swapping and renaming of
+glyphs.
+
+While useful for proofing or development work, it should be noted that
+swapping and renaming leaves the UFOs with glyphnames that are no longer
+descriptive. For instance, after a swap `dollar.bar` could contain a shape
+without a bar. Also, when the swapped glyphs are part of other GSUB variations
+it can become complex very quickly. So proceed with caution.
+
+ -  Assuming `rulesProcessingLast = True`:
+ -  We need to swap the glyphs so that the original shape is still available. 
+    For instance, if a rule swaps ``a`` for ``a.alt``, a glyph
+    that references ``a`` in a component would then show the new ``a.alt``.
+ -  But that can lead to unexpected results, the two glyphs may have different
+    widths or height. So, glyphs that are not specifically referenced in a rule
+    **should not change appearance**. That means that the implementation that swaps
+    ``a`` and ``a.alt`` also swap all components that reference these
+    glyphs in order to preserve their appearance.
+ -  The swap function also needs to take care of swapping the names in
+    kerning data and any GSUB code.
+
+
+9 This document
 ===============
 
--  The package is rather new and changes are to be expected.
+-  Changes are to be expected.
 
 
