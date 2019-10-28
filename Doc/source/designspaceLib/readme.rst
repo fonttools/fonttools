@@ -34,7 +34,7 @@ Writer objects can be subclassed as well.
 
 .. code:: python
 
-    from designspaceLib import DesignSpaceDocument
+    from fontTools.designspaceLib import DesignSpaceDocument
     doc = DesignSpaceDocument()
     doc.read("some/path/to/my.designspace")
     doc.axes
