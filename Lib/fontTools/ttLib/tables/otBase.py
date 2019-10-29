@@ -498,11 +498,6 @@ class OTTableWriter(object):
 		return OverflowErrorRecord( (self.tableTag, LookupListIndex, SubTableIndex, itemName, itemIndex) )
 
 
-class StaticCount(int):
-	"""A count value that should be taken literally, rather than recomputed on compile."""
-	pass
-
-
 class CountReference(object):
 	"""A reference to a Count value, not a count of references."""
 	def __init__(self, table, name, size=None, value=None):
@@ -518,6 +513,8 @@ class CountReference(object):
 			table[name] = value
 		else:
 			assert table[name] == value, (name, table[name], value)
+	def getValue(self):
+		return self.table[self.name]
 	def getCountData(self):
 		v = self.table[self.name]
 		if v is None: v = 0
@@ -695,12 +692,16 @@ class BaseTable(object):
 				# table. We will later store it here.
 				# We add a reference: by the time the data is assembled
 				# the Count value will be filled in.
-				if not isinstance(value, StaticCount):
-					# we ignore the current count value since it's being recomputed,
-					# unless this is of type StaticCount, which is assumed to be correct.
-					value = None
-				ref = writer.writeCountReference(table, conv.name, conv.staticSize, value)
-				table[conv.name] = value
+				# We ignore the current count value since it will be recomputed,
+				# unless it's a CountReference that was already initialized in a custom preWrite.
+				if isinstance(value, CountReference):
+					ref = value
+					ref.size = conv.staticSize
+					writer.writeData(ref)
+					table[conv.name] = ref.getValue()
+				else:
+					ref = writer.writeCountReference(table, conv.name, conv.staticSize)
+					table[conv.name] = None
 				if conv.isPropagated:
 					writer[conv.name] = ref
 			elif conv.isLookupType:

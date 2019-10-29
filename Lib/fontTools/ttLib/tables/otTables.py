@@ -7,7 +7,7 @@ converter objects from otConverters.py.
 """
 from fontTools.misc.py23 import *
 from fontTools.misc.textTools import pad, safeEval
-from .otBase import BaseTable, FormatSwitchingBaseTable, ValueRecord, StaticCount
+from .otBase import BaseTable, FormatSwitchingBaseTable, ValueRecord, CountReference
 import logging
 import struct
 
@@ -699,8 +699,11 @@ class VarRegionList(BaseTable):
 		# https://github.com/khaledhosny/ots/pull/192
 		fvarTable = font.get("fvar")
 		if fvarTable:
-			self.RegionAxisCount = StaticCount(len(fvarTable.axes))
-		return self.__dict__.copy()
+			self.RegionAxisCount = len(fvarTable.axes)
+		return {
+			**self.__dict__,
+			"RegionAxisCount": CountReference(self.__dict__, "RegionAxisCount")
+		}
 
 
 class SingleSubst(FormatSwitchingBaseTable):
