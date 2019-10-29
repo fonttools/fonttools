@@ -7,7 +7,7 @@ converter objects from otConverters.py.
 """
 from fontTools.misc.py23 import *
 from fontTools.misc.textTools import pad, safeEval
-from .otBase import BaseTable, FormatSwitchingBaseTable, ValueRecord
+from .otBase import BaseTable, FormatSwitchingBaseTable, ValueRecord, CountReference
 import logging
 import struct
 
@@ -685,6 +685,25 @@ class VarIdxMap(BaseTable):
 		inner = safeEval(attrs['inner'])
 		assert inner <= 0xFFFF
 		mapping[glyph] = (outer << 16) | inner
+
+
+class VarRegionList(BaseTable):
+
+	def preWrite(self, font):
+		# The OT spec says VarStore.VarRegionList.RegionAxisCount should always
+		# be equal to the fvar.axisCount, and OTS < v8.0.0 enforces this rule
+		# even when the VarRegionList is empty. We can't treat RegionAxisCount
+		# like a normal propagated count (== len(Region[i].VarRegionAxis)),
+		# otherwise it would default to 0 if VarRegionList is empty.
+		# Thus, we force it to always be equal to fvar.axisCount.
+		# https://github.com/khaledhosny/ots/pull/192
+		fvarTable = font.get("fvar")
+		if fvarTable:
+			self.RegionAxisCount = len(fvarTable.axes)
+		return {
+			**self.__dict__,
+			"RegionAxisCount": CountReference(self.__dict__, "RegionAxisCount")
+		}
 
 
 class SingleSubst(FormatSwitchingBaseTable):
