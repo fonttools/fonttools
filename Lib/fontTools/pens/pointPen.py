@@ -247,11 +247,11 @@ class SegmentToPointPen(AbstractPen):
 		self.contour.append((pt, "move"))
 
 	def lineTo(self, pt):
-		assert self.contour is not None, "no current contour"
+		assert self.contour is not None, "contour missing required initial moveTo"
 		self.contour.append((pt, "line"))
 
 	def curveTo(self, *pts):
-		assert self.contour is not None, "no current contour"
+		assert self.contour is not None, "contour missing required initial moveTo"
 		for pt in pts[:-1]:
 			self.contour.append((pt, None))
 		self.contour.append((pts[-1], "curve"))
@@ -260,14 +260,14 @@ class SegmentToPointPen(AbstractPen):
 		if pts[-1] is None:
 			self.contour = []
 		else:
-			assert self.contour is not None, "no current contour"
+			assert self.contour is not None, "contour missing required initial moveTo"
 		for pt in pts[:-1]:
 			self.contour.append((pt, None))
 		if pts[-1] is not None:
 			self.contour.append((pts[-1], "qcurve"))
 
 	def closePath(self):
-		assert self.contour is not None, "no current contour"
+		assert self.contour is not None, "contour missing required initial moveTo"
 		if len(self.contour) > 1 and self.contour[0][0] == self.contour[-1][0]:
 			self.contour[0] = self.contour[-1]
 			del self.contour[-1]
@@ -281,7 +281,7 @@ class SegmentToPointPen(AbstractPen):
 		self.contour = None
 
 	def endPath(self):
-		assert self.contour is not None, "no current contour"
+		assert self.contour is not None, "contour missing required initial moveTo"
 		self._flushContour()
 		self.contour = None
 
