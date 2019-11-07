@@ -1132,7 +1132,7 @@ it can become complex very quickly. So proceed with caution.
     ``a`` and ``a.alt`` also swap all components that reference these
     glyphs in order to preserve their appearance.
  -  The swap function also needs to take care of swapping the names in
-    kerning data and any GSUB code.
+    kerning data and any GPOS code.
 
 
 9 This document
