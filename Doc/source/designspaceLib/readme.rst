@@ -1069,13 +1069,11 @@ any of the UFOs. If the lib key is empty or not present in the Designspace, all
 glyphs should be exported, regardless of what the same lib key in any of the
 UFOs says.
 
-.. 8-this-document:
+.. 8-implementation-differences:
 
 
-While it may be possible to guess about older files in individual cases, it is not recommended to make assumptions about the intention.
-
-8 Implementation differences
-============================
+8 Implementation and differences
+================================
 
 The designspace format has gone through considerable development. 
 
@@ -1134,6 +1132,8 @@ it can become complex very quickly. So proceed with caution.
  -  The swap function also needs to take care of swapping the names in
     kerning data and any GPOS code.
 
+
+.. 9-this-document
 
 9 This document
 ===============
