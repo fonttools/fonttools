@@ -1069,7 +1069,7 @@ any of the UFOs. If the lib key is empty or not present in the Designspace, all
 glyphs should be exported, regardless of what the same lib key in any of the
 UFOs says.
 
-.. 8-implementation-differences:
+.. 8-implementation-and-differences:
 
 
 8 Implementation and differences
