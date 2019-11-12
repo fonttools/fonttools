@@ -165,7 +165,7 @@ def _merge_GlyphOrders(font, lst, values_lst=None, default=None):
 	sortKey = font.getReverseGlyphMap().__getitem__
 	order = sorted(combined, key=sortKey)
 	# Make sure all input glyphsets were in proper order
-	assert all(sorted(vs, key=sortKey) == vs for vs in lst)
+	assert all(sorted(vs, key=sortKey) == vs for vs in lst), "glyph orders are not consistent across masters"
 	del combined
 
 	paddedValues = None
