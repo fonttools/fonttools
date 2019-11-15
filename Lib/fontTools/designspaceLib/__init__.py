@@ -182,7 +182,7 @@ def evaluateConditions(conditions, location):
 
 
 def processRules(rules, location, glyphNames):
-    """ Apply these rules at this location to these glyphnames.minimum
+    """ Apply these rules at this location to these glyphnames
         - rule order matters
     """
     newNames = []

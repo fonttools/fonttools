@@ -584,6 +584,15 @@ class BuildTest(unittest.TestCase):
         self.expect_ttx(varfont, expected_ttx_path, tables)
         self.check_ttx_dump(varfont, expected_ttx_path, tables, suffix)
 
+    def test_varlib_build_single_master(self):
+        self._run_varlib_build_test(
+            designspace_name='SingleMaster',
+            font_name='TestFamily',
+            tables=['GDEF', 'HVAR', 'MVAR', 'STAT', 'fvar', 'cvar', 'gvar', 'name'],
+            expected_ttx_name='SingleMaster',
+            save_before_dump=True,
+        )
+
     def test_kerning_merging(self):
         """Test the correct merging of class-based pair kerning.
 

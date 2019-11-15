@@ -513,6 +513,8 @@ class CountReference(object):
 			table[name] = value
 		else:
 			assert table[name] == value, (name, table[name], value)
+	def getValue(self):
+		return self.table[self.name]
 	def getCountData(self):
 		v = self.table[self.name]
 		if v is None: v = 0
@@ -690,8 +692,16 @@ class BaseTable(object):
 				# table. We will later store it here.
 				# We add a reference: by the time the data is assembled
 				# the Count value will be filled in.
-				ref = writer.writeCountReference(table, conv.name, conv.staticSize)
-				table[conv.name] = None
+				# We ignore the current count value since it will be recomputed,
+				# unless it's a CountReference that was already initialized in a custom preWrite.
+				if isinstance(value, CountReference):
+					ref = value
+					ref.size = conv.staticSize
+					writer.writeData(ref)
+					table[conv.name] = ref.getValue()
+				else:
+					ref = writer.writeCountReference(table, conv.name, conv.staticSize)
+					table[conv.name] = None
 				if conv.isPropagated:
 					writer[conv.name] = ref
 			elif conv.isLookupType:

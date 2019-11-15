@@ -213,15 +213,13 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 
 	log.info("Generating gvar")
 	assert "gvar" not in font
-	gvar = font["gvar"] = newTable('gvar')
-	gvar.version = 1
-	gvar.reserved = 0
-	gvar.variations = {}
 
 	glyf = font['glyf']
 
 	# use hhea.ascent of base master as default vertical origin when vmtx is missing
 	baseAscent = font['hhea'].ascent
+
+	variations = {}
 	for glyph in font.getGlyphOrder():
 
 		isComposite = glyf[glyph].isComposite()
@@ -241,7 +239,6 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 		del allControls
 
 		# Update gvar
-		gvar.variations[glyph] = []
 		deltas = model.getDeltas(allCoords)
 		supports = model.supports
 		assert len(deltas) == len(supports)
@@ -280,7 +277,14 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 					if optimized_len < unoptimized_len:
 						var = var_opt
 
-			gvar.variations[glyph].append(var)
+			variations.setdefault(glyph, []).append(var)
+
+	if variations:
+		gvar = font["gvar"] = newTable('gvar')
+		gvar.version = 1
+		gvar.reserved = 0
+		gvar.variations = {g: variations.get(g, []) for g in font.getGlyphOrder()}
+
 
 def _remove_TTHinting(font):
 	for tag in ("cvar", "cvt ", "fpgm", "prep"):
@@ -350,19 +354,21 @@ def _merge_TTHinting(font, masterModel, master_ttfs, tolerance=0.5):
 		_remove_TTHinting(font)
 		return
 
-	# We can build the cvar table now.
-
-	cvar = font["cvar"] = newTable('cvar')
-	cvar.version = 1
-	cvar.variations = []
-
+	variations = []
 	deltas, supports = masterModel.getDeltasAndSupports(all_cvs)
 	for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
 		delta = [otRound(d) for d in delta]
 		if all(abs(v) <= tolerance for v in delta):
 			continue
 		var = TupleVariation(support, delta)
-		cvar.variations.append(var)
+		variations.append(var)
+
+	# We can build the cvar table now.
+	if variations:
+		cvar = font["cvar"] = newTable('cvar')
+		cvar.version = 1
+		cvar.variations = variations
+
 
 _MetricsFields = namedtuple('_MetricsFields',
 	['tableTag', 'metricsTag', 'sb1', 'sb2', 'advMapping', 'vOrigMapping'])

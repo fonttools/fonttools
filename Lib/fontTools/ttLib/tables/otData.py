@@ -702,6 +702,7 @@ otData = [
 		('Version', 'Version', None, None, 'Version of the BASE table-initially 0x00010000'),
 		('Offset', 'HorizAxis', None, None, 'Offset to horizontal Axis table-from beginning of BASE table-may be NULL'),
 		('Offset', 'VertAxis', None, None, 'Offset to vertical Axis table-from beginning of BASE table-may be NULL'),
+		('LOffset', 'VarStore', None, 'Version >= 0x00010001', 'Offset to variation store (may be NULL)'),
 	]),
 
 	('Axis', [
