@@ -733,10 +733,6 @@ def _limitFeatureVariationConditionRange(condition, axisRange):
             newValue = 0
         values[i] = newValue
 
-    # TODO(anthrotype): Is (0,0) condition supposed to be applied ever? Ask Behdad
-    # if not any(values):
-    #     return
-
     return AxisRange(*values)
 
 
