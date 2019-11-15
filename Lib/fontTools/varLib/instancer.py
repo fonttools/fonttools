@@ -315,7 +315,7 @@ def limitTupleVariationAxisRange(var, axisTag, axisRange):
         return [var, newVar]
 
 
-def instantiateGvarGlyph(varfont, glyphname, location, optimize=True):
+def instantiateGvarGlyph(varfont, glyphname, axisLimits, optimize=True):
     glyf = varfont["glyf"]
     coordinates, ctrl = glyf.getCoordinatesAndControls(glyphname, varfont)
     endPts = ctrl.endPts
@@ -327,7 +327,7 @@ def instantiateGvarGlyph(varfont, glyphname, location, optimize=True):
 
     if tupleVarStore:
         defaultDeltas = instantiateTupleVariationStore(
-            tupleVarStore, location, coordinates, endPts
+            tupleVarStore, axisLimits, coordinates, endPts
         )
 
         if defaultDeltas:
@@ -355,7 +355,7 @@ def instantiateGvarGlyph(varfont, glyphname, location, optimize=True):
             var.optimize(coordinates, endPts, isComposite)
 
 
-def instantiateGvar(varfont, location, optimize=True):
+def instantiateGvar(varfont, axisLimits, optimize=True):
     log.info("Instantiating glyf/gvar tables")
 
     gvar = varfont["gvar"]
@@ -374,7 +374,7 @@ def instantiateGvar(varfont, location, optimize=True):
         ),
     )
     for glyphname in glyphnames:
-        instantiateGvarGlyph(varfont, glyphname, location, optimize=optimize)
+        instantiateGvarGlyph(varfont, glyphname, axisLimits, optimize=optimize)
 
     if not gvar.variations:
         del varfont["gvar"]
@@ -386,12 +386,12 @@ def setCvarDeltas(cvt, deltas):
             cvt[i] += otRound(delta)
 
 
-def instantiateCvar(varfont, location):
+def instantiateCvar(varfont, axisLimits):
     log.info("Instantiating cvt/cvar tables")
 
     cvar = varfont["cvar"]
 
-    defaultDeltas = instantiateTupleVariationStore(cvar.variations, location)
+    defaultDeltas = instantiateTupleVariationStore(cvar.variations, axisLimits)
 
     if defaultDeltas:
         setCvarDeltas(varfont["cvt "], defaultDeltas)
@@ -417,13 +417,13 @@ def setMvarDeltas(varfont, deltas):
             )
 
 
-def instantiateMVAR(varfont, location):
+def instantiateMVAR(varfont, axisLimits):
     log.info("Instantiating MVAR table")
 
     mvar = varfont["MVAR"].table
     fvarAxes = varfont["fvar"].axes
     varStore = mvar.VarStore
-    defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, location)
+    defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, axisLimits)
     setMvarDeltas(varfont, defaultDeltas)
 
     if varStore.VarRegionList.Region:
@@ -477,12 +477,12 @@ def _instantiateVHVAR(varfont, axisLimits, tableFields):
                 )
 
 
-def instantiateHVAR(varfont, location):
-    return _instantiateVHVAR(varfont, location, varLib.HVAR_FIELDS)
+def instantiateHVAR(varfont, axisLimits):
+    return _instantiateVHVAR(varfont, axisLimits, varLib.HVAR_FIELDS)
 
 
-def instantiateVVAR(varfont, location):
-    return _instantiateVHVAR(varfont, location, varLib.VVAR_FIELDS)
+def instantiateVVAR(varfont, axisLimits):
+    return _instantiateVHVAR(varfont, axisLimits, varLib.VVAR_FIELDS)
 
 
 class _TupleVarStoreAdapter(object):
@@ -580,8 +580,9 @@ class _TupleVarStoreAdapter(object):
 def instantiateItemVariationStore(itemVarStore, fvarAxes, axisLimits):
     """ Compute deltas at partial location, and update varStore in-place.
 
-    Remove regions in which all axes were instanced, and scale the deltas of
-    the remaining regions where only some of the axes were instanced.
+    Remove regions in which all axes were instanced, or fall outside the new axis
+    limits. Scale the deltas of the remaining regions where only some of the axes
+    were instanced.
 
     The number of VarData subtables, and the number of items within each, are
     not modified, in order to keep the existing VariationIndex valid.
@@ -590,8 +591,9 @@ def instantiateItemVariationStore(itemVarStore, fvarAxes, axisLimits):
     Args:
         varStore: An otTables.VarStore object (Item Variation Store)
         fvarAxes: list of fvar's Axis objects
-        location: Dict[str, float] mapping axis tags to normalized axis coordinates.
-            May not specify coordinates for all the fvar axes.
+        axisLimits: Dict[str, float] mapping axis tags to normalized axis coordinates
+            (float) or ranges for restricting an axis' min/max (NormalizedAxisRange).
+            May not specify coordinates/ranges for all the fvar axes.
 
     Returns:
         defaultDeltas: to be added to the default instance, of type dict of floats
@@ -613,7 +615,7 @@ def instantiateItemVariationStore(itemVarStore, fvarAxes, axisLimits):
     return defaultDeltas
 
 
-def instantiateOTL(varfont, location):
+def instantiateOTL(varfont, axisLimits):
     # TODO(anthrotype) Support partial instancing of JSTF and BASE tables
 
     if (
@@ -633,7 +635,7 @@ def instantiateOTL(varfont, location):
     varStore = gdef.VarStore
     fvarAxes = varfont["fvar"].axes
 
-    defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, location)
+    defaultDeltas = instantiateItemVariationStore(varStore, fvarAxes, axisLimits)
 
     # When VF are built, big lookups may overflow and be broken into multiple
     # subtables. MutatorMerger (which inherits from AligningMerger) reattaches
