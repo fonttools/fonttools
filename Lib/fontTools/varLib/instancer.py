@@ -158,10 +158,10 @@ def instantiateTupleVariationStore(
         axisLimits, rangeType=NormalizedAxisRange
     )
 
+    newVariations = variations
+
     if pinnedLocation:
         newVariations = pinTupleVariationAxes(variations, pinnedLocation)
-    else:
-        newVariations = variations
 
     if axisRanges:
         newVariations = limitTupleVariationAxisRanges(newVariations, axisRanges)
@@ -871,6 +871,8 @@ def _isValidAvarSegmentMap(axisTag, segmentMap):
 
 
 def instantiateAvar(varfont, axisLimits):
+    # 'axisLimits' dict must contain user-space (non-normalized) coordinates.
+
     location, axisRanges = splitAxisLocationAndRanges(axisLimits)
 
     segments = varfont["avar"].segments
@@ -887,6 +889,12 @@ def instantiateAvar(varfont, axisLimits):
         if axis in segments:
             del segments[axis]
 
+    # First compute the default normalization for axisRanges coordinates: i.e.
+    # min = -1.0, default = 0, max = +1.0, and in between values interpolated linearly,
+    # without using the avar table's mappings.
+    # Then, for each axis' SegmentMap, if we are restricting its, compute the new
+    # mappings by dividing the key/value pairs by the desired new min/max values,
+    # dropping any mappings that fall outside the restricted range.
     normalizedRanges = normalizeAxisLimits(varfont, axisRanges, usingAvar=False)
     newSegments = {}
     for axisTag, mapping in segments.items():
