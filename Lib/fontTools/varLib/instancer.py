@@ -289,10 +289,14 @@ def limitTupleVariationAxisRange(var, axisTag, axisRange):
         var.axes[axisTag] = (newLower, newPeak, newUpper)
         return [var]
 
-    # case 4: new limit doesn't fit, we need to chop the tent into two triangles,
-    # with an additional tent with scaled-down deltas that peaks as the original
-    # one tapers down. NOTE: This increases the file size!
+    # case 4: new limit doesn't fit; we need to chop the deltaset into two 'tents',
+    # because the shape of a triangle with part of one side cut off cannot be
+    # represented as a triangle itself. It can be represented as sum of two triangles.
+    # NOTE: This increases the file size!
     else:
+        # duplicate the tent, then adjust lower/peak/upper so that the outermost limit
+        # of the original tent is +/-2.0, whereas the new tent's starts as the old
+        # one peaks and maxes out at +/-1.0.
         newVar = TupleVariation(var.axes, var.coordinates)
         if negative:
             var.axes[axisTag] = (-2.0, -1 * newPeak, -1 * newLower)
@@ -300,8 +304,11 @@ def limitTupleVariationAxisRange(var, axisTag, axisRange):
         else:
             var.axes[axisTag] = (newLower, newPeak, MAX_F2DOT14)
             newVar.axes[axisTag] = (newPeak, 1.0, 1.0)
-        # TODO: document optimization
+        # the new tent's deltas are scaled by the difference between the scalar value
+        # for the old tent at the desired limit...
         scalar1 = supportScalar({axisTag: limit}, {axisTag: (lower, peak, upper)})
+        # ... and the scalar value for the clamped tent (with outer limit +/-2.0),
+        # which can be simplified like this:
         scalar2 = 1 / (2 - newPeak)
         newVar.scaleDeltas(scalar1 - scalar2)
 
