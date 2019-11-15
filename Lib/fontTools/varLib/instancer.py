@@ -1124,13 +1124,24 @@ def normalizeAxisLimits(varfont, axisLimits, usingAvar=True):
     avarSegments = {}
     if usingAvar and "avar" in varfont:
         avarSegments = varfont["avar"].segments
+
+    for axis_tag, (_, default, _) in axes.items():
+        value = axisLimits[axis_tag]
+        if isinstance(value, tuple):
+            minV, maxV = value
+            if minV > default or maxV < default:
+                raise NotImplementedError(
+                    f"Unsupported range {axis_tag}={minV:g}:{maxV:g}; "
+                    f"can't change default position ({axis_tag}={default:g})"
+                )
+
     normalizedLimits = {}
     for axis_tag, triple in axes.items():
         avarMapping = avarSegments.get(axis_tag, None)
         value = axisLimits[axis_tag]
         if isinstance(value, tuple):
             normalizedLimits[axis_tag] = NormalizedAxisRange(
-                *(normalize(v, triple, avarMapping) for v in axisLimits[axis_tag])
+                *(normalize(v, triple, avarMapping) for v in value)
             )
         else:
             normalizedLimits[axis_tag] = normalize(value, triple, avarMapping)
@@ -1192,14 +1203,14 @@ def instantiateVariableFont(
     """
     sanityCheckVariableTables(varfont)
 
-    if not inplace:
-        varfont = deepcopy(varfont)
-
     axisLimits = populateAxisDefaults(varfont, axisLimits)
 
     normalizedLimits = normalizeAxisLimits(varfont, axisLimits)
 
     log.info("Normalized limits: %s", normalizedLimits)
+
+    if not inplace:
+        varfont = deepcopy(varfont)
 
     if "gvar" in varfont:
         instantiateGvar(varfont, normalizedLimits, optimize=optimize)

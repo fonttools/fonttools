@@ -1852,6 +1852,11 @@ def test_normalizeAxisLimits_tuple(varfont):
     assert normalized == {"wght": (-1.0, 0)}
 
 
+def test_normalizeAxisLimits_unsupported_range(varfont):
+    with pytest.raises(NotImplementedError, match="Unsupported range"):
+        instancer.normalizeAxisLimits(varfont, {"wght": (401, 700)})
+
+
 def test_normalizeAxisLimits_no_avar(varfont):
     del varfont["avar"]
 
