@@ -1,5 +1,6 @@
 from fontTools.misc.py23 import *
 from array import array
+from fontTools.misc.fixedTools import MAX_F2DOT14
 from fontTools.pens.basePen import LoggingPen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.ttLib.tables import ttProgram
@@ -9,11 +10,6 @@ from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
 
 
 __all__ = ["TTGlyphPen"]
-
-
-# the max value that can still fit in an F2Dot14:
-# 1.99993896484375
-MAX_F2DOT14 = 0x7FFF / (1 << 14)
 
 
 class TTGlyphPen(LoggingPen):

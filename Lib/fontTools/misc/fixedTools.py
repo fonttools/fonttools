@@ -21,6 +21,11 @@ __all__ = [
 ]
 
 
+# the max value that can still fit in an F2Dot14:
+# 1.99993896484375
+MAX_F2DOT14 = 0x7FFF / (1 << 14)
+
+
 def otRound(value):
 	"""Round float value to nearest integer towards +Infinity.
 	For fractional values of 0.5 and higher, take the next higher integer;

@@ -1,4 +1,5 @@
 from fontTools.misc.py23 import *
+from fontTools.misc.fixedTools import floatToFixedToFloat
 from fontTools import ttLib
 from fontTools import designspaceLib
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
@@ -381,6 +382,26 @@ class InstantiateHVARTest(object):
 
         assert "HVAR" not in varfont
 
+    def test_partial_instance_keep_empty_table(self, varfont):
+        # Append an additional dummy axis to fvar, for which the current HVAR table
+        # in our test 'varfont' contains no variation data.
+        # Instancing the other two wght and wdth axes should leave HVAR table empty,
+        # to signal there are variations to the glyph's advance widths.
+        fvar = varfont["fvar"]
+        axis = _f_v_a_r.Axis()
+        axis.axisTag = "TEST"
+        fvar.axes.append(axis)
+
+        instancer.instantiateHVAR(varfont, {"wght": 0, "wdth": 0})
+
+        assert "HVAR" in varfont
+
+        varStore = varfont["HVAR"].table.VarStore
+
+        assert varStore.VarRegionList.RegionCount == 0
+        assert not varStore.VarRegionList.Region
+        assert varStore.VarRegionList.RegionAxisCount == 1
+
 
 class InstantiateItemVariationStoreTest(object):
     def test_VarRegion_get_support(self):
@@ -493,32 +514,39 @@ class TupleVarStoreAdapterTest(object):
             [TupleVariation({"wdth": (-1.0, -1.0, 0)}, [-12, 8])],
         ]
 
-    def test_dropAxes(self):
+    def test_rebuildRegions(self):
         regions = [
             {"wght": (-1.0, -1.0, 0)},
             {"wght": (0.0, 1.0, 1.0)},
             {"wdth": (-1.0, -1.0, 0)},
-            {"opsz": (0.0, 1.0, 1.0)},
             {"wght": (-1.0, -1.0, 0), "wdth": (-1.0, -1.0, 0)},
-            {"wght": (0, 0.5, 1.0), "wdth": (-1.0, -1.0, 0)},
-            {"wght": (0.5, 1.0, 1.0), "wdth": (-1.0, -1.0, 0)},
+            {"wght": (0, 1.0, 1.0), "wdth": (-1.0, -1.0, 0)},
         ]
-        axisOrder = ["wght", "wdth", "opsz"]
-        adapter = instancer._TupleVarStoreAdapter(regions, axisOrder, [], itemCounts=[])
+        axisOrder = ["wght", "wdth"]
+        variations = []
+        for region in regions:
+            variations.append(TupleVariation(region, [100]))
+        tupleVarData = [variations[:3], variations[3:]]
+        adapter = instancer._TupleVarStoreAdapter(
+            regions, axisOrder, tupleVarData, itemCounts=[1, 1]
+        )
 
-        adapter.dropAxes({"wdth"})
+        adapter.rebuildRegions()
+
+        assert adapter.regions == regions
+
+        del tupleVarData[0][2]
+        tupleVarData[1][0].axes = {"wght": (-1.0, -0.5, 0)}
+        tupleVarData[1][1].axes = {"wght": (0, 0.5, 1.0)}
+
+        adapter.rebuildRegions()
 
         assert adapter.regions == [
             {"wght": (-1.0, -1.0, 0)},
             {"wght": (0.0, 1.0, 1.0)},
-            {"opsz": (0.0, 1.0, 1.0)},
-            {"wght": (0.0, 0.5, 1.0)},
-            {"wght": (0.5, 1.0, 1.0)},
+            {"wght": (-1.0, -0.5, 0)},
+            {"wght": (0, 0.5, 1.0)},
         ]
-
-        adapter.dropAxes({"wght", "opsz"})
-
-        assert adapter.regions == []
 
     def test_roundtrip(self, fvarAxes):
         regions = [
@@ -924,6 +952,208 @@ class InstantiateAvarTest(object):
 
         assert "avar" not in varfont
 
+    @staticmethod
+    def quantizeF2Dot14Floats(mapping):
+        return {
+            floatToFixedToFloat(k, 14): floatToFixedToFloat(v, 14)
+            for k, v in mapping.items()
+        }
+
+    # the following values come from NotoSans-VF.ttf
+    DFLT_WGHT_MAPPING = {
+        -1.0: -1.0,
+        -0.6667: -0.7969,
+        -0.3333: -0.5,
+        0: 0,
+        0.2: 0.18,
+        0.4: 0.38,
+        0.6: 0.61,
+        0.8: 0.79,
+        1.0: 1.0,
+    }
+
+    DFLT_WDTH_MAPPING = {-1.0: -1.0, -0.6667: -0.7, -0.3333: -0.36664, 0: 0, 1.0: 1.0}
+
+    @pytest.fixture
+    def varfont(self):
+        fvarAxes = ("wght", (100, 400, 900)), ("wdth", (62.5, 100, 100))
+        avarSegments = {
+            "wght": self.quantizeF2Dot14Floats(self.DFLT_WGHT_MAPPING),
+            "wdth": self.quantizeF2Dot14Floats(self.DFLT_WDTH_MAPPING),
+        }
+        varfont = ttLib.TTFont()
+        varfont["name"] = ttLib.newTable("name")
+        varLib._add_fvar(varfont, _makeDSAxesDict(fvarAxes), instances=())
+        avar = varfont["avar"] = ttLib.newTable("avar")
+        avar.segments = avarSegments
+        return varfont
+
+    @pytest.mark.parametrize(
+        "axisLimits, expectedSegments",
+        [
+            pytest.param(
+                {"wght": (100, 900)},
+                {"wght": DFLT_WGHT_MAPPING, "wdth": DFLT_WDTH_MAPPING},
+                id="wght=100:900",
+            ),
+            pytest.param(
+                {"wght": (400, 900)},
+                {
+                    "wght": {
+                        -1.0: -1.0,
+                        0: 0,
+                        0.2: 0.18,
+                        0.4: 0.38,
+                        0.6: 0.61,
+                        0.8: 0.79,
+                        1.0: 1.0,
+                    },
+                    "wdth": DFLT_WDTH_MAPPING,
+                },
+                id="wght=400:900",
+            ),
+            pytest.param(
+                {"wght": (100, 400)},
+                {
+                    "wght": {
+                        -1.0: -1.0,
+                        -0.6667: -0.7969,
+                        -0.3333: -0.5,
+                        0: 0,
+                        1.0: 1.0,
+                    },
+                    "wdth": DFLT_WDTH_MAPPING,
+                },
+                id="wght=100:400",
+            ),
+            pytest.param(
+                {"wght": (400, 800)},
+                {
+                    "wght": {
+                        -1.0: -1.0,
+                        0: 0,
+                        0.25: 0.22784,
+                        0.50006: 0.48103,
+                        0.75: 0.77214,
+                        1.0: 1.0,
+                    },
+                    "wdth": DFLT_WDTH_MAPPING,
+                },
+                id="wght=400:800",
+            ),
+            pytest.param(
+                {"wght": (400, 700)},
+                {
+                    "wght": {
+                        -1.0: -1.0,
+                        0: 0,
+                        0.3334: 0.2951,
+                        0.66675: 0.623,
+                        1.0: 1.0,
+                    },
+                    "wdth": DFLT_WDTH_MAPPING,
+                },
+                id="wght=400:700",
+            ),
+            pytest.param(
+                {"wght": (400, 600)},
+                {
+                    "wght": {-1.0: -1.0, 0: 0, 0.5: 0.47363, 1.0: 1.0},
+                    "wdth": DFLT_WDTH_MAPPING,
+                },
+                id="wght=400:600",
+            ),
+            pytest.param(
+                {"wdth": (62.5, 100)},
+                {
+                    "wght": DFLT_WGHT_MAPPING,
+                    "wdth": {
+                        -1.0: -1.0,
+                        -0.6667: -0.7,
+                        -0.3333: -0.36664,
+                        0: 0,
+                        1.0: 1.0,
+                    },
+                },
+                id="wdth=62.5:100",
+            ),
+            pytest.param(
+                {"wdth": (70, 100)},
+                {
+                    "wght": DFLT_WGHT_MAPPING,
+                    "wdth": {
+                        -1.0: -1.0,
+                        -0.8334: -0.85364,
+                        -0.4166: -0.44714,
+                        0: 0,
+                        1.0: 1.0,
+                    },
+                },
+                id="wdth=70:100",
+            ),
+            pytest.param(
+                {"wdth": (75, 100)},
+                {
+                    "wght": DFLT_WGHT_MAPPING,
+                    "wdth": {-1.0: -1.0, -0.49994: -0.52374, 0: 0, 1.0: 1.0},
+                },
+                id="wdth=75:100",
+            ),
+            pytest.param(
+                {"wdth": (77, 100)},
+                {
+                    "wght": DFLT_WGHT_MAPPING,
+                    "wdth": {-1.0: -1.0, -0.54346: -0.56696, 0: 0, 1.0: 1.0},
+                },
+                id="wdth=77:100",
+            ),
+            pytest.param(
+                {"wdth": (87.5, 100)},
+                {"wght": DFLT_WGHT_MAPPING, "wdth": {-1.0: -1.0, 0: 0, 1.0: 1.0}},
+                id="wdth=87.5:100",
+            ),
+        ],
+    )
+    def test_limit_axes(self, varfont, axisLimits, expectedSegments):
+        instancer.instantiateAvar(varfont, axisLimits)
+
+        newSegments = varfont["avar"].segments
+        expectedSegments = {
+            axisTag: self.quantizeF2Dot14Floats(mapping)
+            for axisTag, mapping in expectedSegments.items()
+        }
+        assert newSegments == expectedSegments
+
+    @pytest.mark.parametrize(
+        "invalidSegmentMap",
+        [
+            pytest.param({0.5: 0.5}, id="missing-required-maps-1"),
+            pytest.param({-1.0: -1.0, 1.0: 1.0}, id="missing-required-maps-2"),
+            pytest.param(
+                {-1.0: -1.0, 0: 0, 0.5: 0.5, 0.6: 0.4, 1.0: 1.0},
+                id="retrograde-value-maps",
+            ),
+        ],
+    )
+    def test_drop_invalid_segment_map(self, varfont, invalidSegmentMap, caplog):
+        varfont["avar"].segments["wght"] = invalidSegmentMap
+
+        with caplog.at_level(logging.WARNING, logger="fontTools.varLib.instancer"):
+            instancer.instantiateAvar(varfont, {"wght": (100, 400)})
+
+        assert "Invalid avar" in caplog.text
+        assert "wght" not in varfont["avar"].segments
+
+    def test_isValidAvarSegmentMap(self):
+        assert instancer._isValidAvarSegmentMap("FOOO", {})
+        assert instancer._isValidAvarSegmentMap("FOOO", {-1.0: -1.0, 0: 0, 1.0: 1.0})
+        assert instancer._isValidAvarSegmentMap(
+            "FOOO", {-1.0: -1.0, 0: 0, 0.5: 0.5, 1.0: 1.0}
+        )
+        assert instancer._isValidAvarSegmentMap(
+            "FOOO", {-1.0: -1.0, 0: 0, 0.5: 0.5, 0.7: 0.5, 1.0: 1.0}
+        )
+
 
 class InstantiateFvarTest(object):
     @pytest.mark.parametrize(
@@ -979,7 +1209,7 @@ class InstantiateSTATTest(object):
     @pytest.mark.parametrize(
         "location, expected",
         [
-            ({"wght": 400}, ["Condensed", "Upright"]),
+            ({"wght": 400}, ["Regular", "Condensed", "Upright"]),
             ({"wdth": 100}, ["Thin", "Regular", "Black", "Upright"]),
         ],
     )
@@ -989,7 +1219,7 @@ class InstantiateSTATTest(object):
         stat = varfont["STAT"].table
         designAxes = {a.AxisTag for a in stat.DesignAxisRecord.Axis}
 
-        assert designAxes == {"wght", "wdth", "ital"}.difference(location)
+        assert designAxes == {"wght", "wdth", "ital"}
 
         name = varfont["name"]
         valueNames = []
@@ -999,7 +1229,23 @@ class InstantiateSTATTest(object):
 
         assert valueNames == expected
 
-    def test_skip_empty_table(self, varfont):
+    def test_skip_table_no_axis_value_array(self, varfont):
+        varfont["STAT"].table.AxisValueArray = None
+
+        instancer.instantiateSTAT(varfont, {"wght": 100})
+
+        assert len(varfont["STAT"].table.DesignAxisRecord.Axis) == 3
+        assert varfont["STAT"].table.AxisValueArray is None
+
+    def test_skip_table_axis_value_array_empty(self, varfont):
+        varfont["STAT"].table.AxisValueArray.AxisValue = []
+
+        instancer.instantiateSTAT(varfont, {"wght": 100})
+
+        assert len(varfont["STAT"].table.DesignAxisRecord.Axis) == 3
+        assert not varfont["STAT"].table.AxisValueArray.AxisValue
+
+    def test_skip_table_no_design_axes(self, varfont):
         stat = otTables.STAT()
         stat.Version = 0x00010001
         stat.populateDefaults()
@@ -1011,21 +1257,88 @@ class InstantiateSTATTest(object):
 
         assert not varfont["STAT"].table.DesignAxisRecord
 
-    def test_drop_table(self, varfont):
-        stat = otTables.STAT()
-        stat.Version = 0x00010001
-        stat.populateDefaults()
-        stat.DesignAxisRecord = otTables.AxisRecordArray()
-        axis = otTables.AxisRecord()
-        axis.AxisTag = "wght"
-        axis.AxisNameID = 0
-        axis.AxisOrdering = 0
-        stat.DesignAxisRecord.Axis = [axis]
-        varfont["STAT"].table = stat
+    @staticmethod
+    def get_STAT_axis_values(stat):
+        axes = stat.DesignAxisRecord.Axis
+        result = []
+        for axisValue in stat.AxisValueArray.AxisValue:
+            if axisValue.Format == 1:
+                result.append((axes[axisValue.AxisIndex].AxisTag, axisValue.Value))
+            elif axisValue.Format == 3:
+                result.append(
+                    (
+                        axes[axisValue.AxisIndex].AxisTag,
+                        (axisValue.Value, axisValue.LinkedValue),
+                    )
+                )
+            elif axisValue.Format == 2:
+                result.append(
+                    (
+                        axes[axisValue.AxisIndex].AxisTag,
+                        (
+                            axisValue.RangeMinValue,
+                            axisValue.NominalValue,
+                            axisValue.RangeMaxValue,
+                        ),
+                    )
+                )
+            elif axisValue.Format == 4:
+                result.append(
+                    tuple(
+                        (axes[rec.AxisIndex].AxisTag, rec.Value)
+                        for rec in axisValue.AxisValueRecord
+                    )
+                )
+            else:
+                raise AssertionError(axisValue.Format)
+        return result
 
-        instancer.instantiateSTAT(varfont, {"wght": 100})
+    def test_limit_axes(self, varfont2):
+        instancer.instantiateSTAT(varfont2, {"wght": (400, 500), "wdth": (75, 100)})
 
-        assert "STAT" not in varfont
+        assert len(varfont2["STAT"].table.AxisValueArray.AxisValue) == 5
+        assert self.get_STAT_axis_values(varfont2["STAT"].table) == [
+            ("wght", (400.0, 700.0)),
+            ("wght", 500.0),
+            ("wdth", (93.75, 100.0, 100.0)),
+            ("wdth", (81.25, 87.5, 93.75)),
+            ("wdth", (68.75, 75.0, 81.25)),
+        ]
+
+    def test_limit_axis_value_format_4(self, varfont2):
+        stat = varfont2["STAT"].table
+
+        axisValue = otTables.AxisValue()
+        axisValue.Format = 4
+        axisValue.AxisValueRecord = []
+        for tag, value in (("wght", 575), ("wdth", 90)):
+            rec = otTables.AxisValueRecord()
+            rec.AxisIndex = next(
+                i for i, a in enumerate(stat.DesignAxisRecord.Axis) if a.AxisTag == tag
+            )
+            rec.Value = value
+            axisValue.AxisValueRecord.append(rec)
+        stat.AxisValueArray.AxisValue.append(axisValue)
+
+        instancer.instantiateSTAT(varfont2, {"wght": (100, 600)})
+
+        assert axisValue in varfont2["STAT"].table.AxisValueArray.AxisValue
+
+        instancer.instantiateSTAT(varfont2, {"wdth": (62.5, 87.5)})
+
+        assert axisValue not in varfont2["STAT"].table.AxisValueArray.AxisValue
+
+    def test_unknown_axis_value_format(self, varfont2, caplog):
+        stat = varfont2["STAT"].table
+        axisValue = otTables.AxisValue()
+        axisValue.Format = 5
+        stat.AxisValueArray.AxisValue.append(axisValue)
+
+        with caplog.at_level(logging.WARNING, logger="fontTools.varLib.instancer"):
+            instancer.instantiateSTAT(varfont2, {"wght": 400})
+
+        assert "Unknown AxisValue table format (5)" in caplog.text
+        assert axisValue in varfont2["STAT"].table.AxisValueArray.AxisValue
 
 
 def test_pruningUnusedNames(varfont):
@@ -1321,12 +1634,204 @@ class InstantiateFeatureVariationsTest(object):
         assert rec1.ConditionSet.ConditionTable[0].Format == 2
 
 
+class LimitTupleVariationAxisRangesTest:
+    def check_limit_single_var_axis_range(self, var, axisTag, axisRange, expected):
+        result = instancer.limitTupleVariationAxisRange(var, axisTag, axisRange)
+        print(result)
+
+        assert len(result) == len(expected)
+        for v1, v2 in zip(result, expected):
+            assert v1.coordinates == pytest.approx(v2.coordinates)
+            assert v1.axes.keys() == v2.axes.keys()
+            for k in v1.axes:
+                p, q = v1.axes[k], v2.axes[k]
+                assert p == pytest.approx(q)
+
+    @pytest.mark.parametrize(
+        "var, axisTag, newMax, expected",
+        [
+            (
+                TupleVariation({"wght": (0.0, 1.0, 1.0)}, [100, 100]),
+                "wdth",
+                0.5,
+                [TupleVariation({"wght": (0.0, 1.0, 1.0)}, [100, 100])],
+            ),
+            (
+                TupleVariation({"wght": (0.0, 1.0, 1.0)}, [100, 100]),
+                "wght",
+                0.5,
+                [TupleVariation({"wght": (0.0, 1.0, 1.0)}, [50, 50])],
+            ),
+            (
+                TupleVariation({"wght": (0.0, 1.0, 1.0)}, [100, 100]),
+                "wght",
+                0.8,
+                [TupleVariation({"wght": (0.0, 1.0, 1.0)}, [80, 80])],
+            ),
+            (
+                TupleVariation({"wght": (0.0, 1.0, 1.0)}, [100, 100]),
+                "wght",
+                1.0,
+                [TupleVariation({"wght": (0.0, 1.0, 1.0)}, [100, 100])],
+            ),
+            (TupleVariation({"wght": (0.0, 1.0, 1.0)}, [100, 100]), "wght", 0.0, []),
+            (TupleVariation({"wght": (0.5, 1.0, 1.0)}, [100, 100]), "wght", 0.4, []),
+            (
+                TupleVariation({"wght": (0.0, 0.5, 1.0)}, [100, 100]),
+                "wght",
+                0.5,
+                [TupleVariation({"wght": (0.0, 1.0, 1.0)}, [100, 100])],
+            ),
+            (
+                TupleVariation({"wght": (0.0, 0.5, 1.0)}, [100, 100]),
+                "wght",
+                0.4,
+                [TupleVariation({"wght": (0.0, 1.0, 1.0)}, [80, 80])],
+            ),
+            (
+                TupleVariation({"wght": (0.0, 0.5, 1.0)}, [100, 100]),
+                "wght",
+                0.6,
+                [TupleVariation({"wght": (0.0, 0.833334, 1.666667)}, [100, 100])],
+            ),
+            (
+                TupleVariation({"wght": (0.0, 0.2, 1.0)}, [100, 100]),
+                "wght",
+                0.4,
+                [
+                    TupleVariation({"wght": (0.0, 0.5, 1.99994)}, [100, 100]),
+                    TupleVariation({"wght": (0.5, 1.0, 1.0)}, [8.33333, 8.33333]),
+                ],
+            ),
+            (
+                TupleVariation({"wght": (0.0, 0.2, 1.0)}, [100, 100]),
+                "wght",
+                0.5,
+                [TupleVariation({"wght": (0.0, 0.4, 1.99994)}, [100, 100])],
+            ),
+            (
+                TupleVariation({"wght": (0.5, 0.5, 1.0)}, [100, 100]),
+                "wght",
+                0.5,
+                [TupleVariation({"wght": (1.0, 1.0, 1.0)}, [100, 100])],
+            ),
+        ],
+    )
+    def test_positive_var(self, var, axisTag, newMax, expected):
+        axisRange = instancer.NormalizedAxisRange(0, newMax)
+        self.check_limit_single_var_axis_range(var, axisTag, axisRange, expected)
+
+    @pytest.mark.parametrize(
+        "var, axisTag, newMin, expected",
+        [
+            (
+                TupleVariation({"wght": (-1.0, -1.0, 0.0)}, [100, 100]),
+                "wdth",
+                -0.5,
+                [TupleVariation({"wght": (-1.0, -1.0, 0.0)}, [100, 100])],
+            ),
+            (
+                TupleVariation({"wght": (-1.0, -1.0, 0.0)}, [100, 100]),
+                "wght",
+                -0.5,
+                [TupleVariation({"wght": (-1.0, -1.0, 0.0)}, [50, 50])],
+            ),
+            (
+                TupleVariation({"wght": (-1.0, -1.0, 0.0)}, [100, 100]),
+                "wght",
+                -0.8,
+                [TupleVariation({"wght": (-1.0, -1.0, 0.0)}, [80, 80])],
+            ),
+            (
+                TupleVariation({"wght": (-1.0, -1.0, 0.0)}, [100, 100]),
+                "wght",
+                -1.0,
+                [TupleVariation({"wght": (-1.0, -1.0, 0.0)}, [100, 100])],
+            ),
+            (TupleVariation({"wght": (-1.0, -1.0, 0.0)}, [100, 100]), "wght", 0.0, []),
+            (
+                TupleVariation({"wght": (-1.0, -1.0, -0.5)}, [100, 100]),
+                "wght",
+                -0.4,
+                [],
+            ),
+            (
+                TupleVariation({"wght": (-1.0, -0.5, 0.0)}, [100, 100]),
+                "wght",
+                -0.5,
+                [TupleVariation({"wght": (-1.0, -1.0, 0.0)}, [100, 100])],
+            ),
+            (
+                TupleVariation({"wght": (-1.0, -0.5, 0.0)}, [100, 100]),
+                "wght",
+                -0.4,
+                [TupleVariation({"wght": (-1.0, -1.0, 0.0)}, [80, 80])],
+            ),
+            (
+                TupleVariation({"wght": (-1.0, -0.5, 0.0)}, [100, 100]),
+                "wght",
+                -0.6,
+                [TupleVariation({"wght": (-1.666667, -0.833334, 0.0)}, [100, 100])],
+            ),
+            (
+                TupleVariation({"wght": (-1.0, -0.2, 0.0)}, [100, 100]),
+                "wght",
+                -0.4,
+                [
+                    TupleVariation({"wght": (-2.0, -0.5, -0.0)}, [100, 100]),
+                    TupleVariation({"wght": (-1.0, -1.0, -0.5)}, [8.33333, 8.33333]),
+                ],
+            ),
+            (
+                TupleVariation({"wght": (-1.0, -0.2, 0.0)}, [100, 100]),
+                "wght",
+                -0.5,
+                [TupleVariation({"wght": (-2.0, -0.4, 0.0)}, [100, 100])],
+            ),
+            (
+                TupleVariation({"wght": (-1.0, -0.5, -0.5)}, [100, 100]),
+                "wght",
+                -0.5,
+                [TupleVariation({"wght": (-1.0, -1.0, -1.0)}, [100, 100])],
+            ),
+        ],
+    )
+    def test_negative_var(self, var, axisTag, newMin, expected):
+        axisRange = instancer.NormalizedAxisRange(newMin, 0)
+        self.check_limit_single_var_axis_range(var, axisTag, axisRange, expected)
+
+
+@pytest.mark.parametrize(
+    "oldRange, newRange, expected",
+    [
+        ((1.0, -1.0), (-1.0, 1.0), None),  # invalid oldRange min > max
+        ((0.6, 1.0), (0, 0.5), None),
+        ((-1.0, -0.6), (-0.5, 0), None),
+        ((0.4, 1.0), (0, 0.5), (0.8, 1.0)),
+        ((-1.0, -0.4), (-0.5, 0), (-1.0, -0.8)),
+        ((0.4, 1.0), (0, 0.4), (1.0, 1.0)),
+        ((-1.0, -0.4), (-0.4, 0), (-1.0, -1.0)),
+        ((-0.5, 0.5), (-0.4, 0.4), (-1.0, 1.0)),
+        ((0, 1.0), (-1.0, 0), (0, 0)),  # or None?
+        ((-1.0, 0), (0, 1.0), (0, 0)),  # or None?
+    ],
+)
+def test_limitFeatureVariationConditionRange(oldRange, newRange, expected):
+    condition = featureVars.buildConditionTable(0, *oldRange)
+
+    result = instancer._limitFeatureVariationConditionRange(
+        condition, instancer.NormalizedAxisRange(*newRange)
+    )
+
+    assert result == expected
+
+
 @pytest.mark.parametrize(
     "limits, expected",
     [
         (["wght=400", "wdth=100"], {"wght": 400, "wdth": 100}),
         (["wght=400:900"], {"wght": (400, 900)}),
-        (["slnt=11.4"], {"slnt": 11.4}),
+        (["slnt=11.4"], {"slnt": pytest.approx(11.399994)}),
         (["ABCD=drop"], {"ABCD": None}),
     ],
 )
@@ -1347,12 +1852,17 @@ def test_normalizeAxisLimits_tuple(varfont):
     assert normalized == {"wght": (-1.0, 0)}
 
 
+def test_normalizeAxisLimits_unsupported_range(varfont):
+    with pytest.raises(NotImplementedError, match="Unsupported range"):
+        instancer.normalizeAxisLimits(varfont, {"wght": (401, 700)})
+
+
 def test_normalizeAxisLimits_no_avar(varfont):
     del varfont["avar"]
 
-    normalized = instancer.normalizeAxisLimits(varfont, {"wght": (500, 600)})
+    normalized = instancer.normalizeAxisLimits(varfont, {"wght": (400, 500)})
 
-    assert normalized["wght"] == pytest.approx((0.2, 0.4), 1e-4)
+    assert normalized["wght"] == pytest.approx((0, 0.2), 1e-4)
 
 
 def test_normalizeAxisLimits_missing_from_fvar(varfont):
