@@ -1,3 +1,6 @@
+4.1.0 (released 2019-11-18)
+---------------------------
+
 - [instancer] Implemented restricting axis ranges (level 3 partial instancing).
   You can now pass ``{axis_tag: (min, max)}`` tuples as input to the
   ``instantiateVariableFont`` function. Note that changing the default axis
