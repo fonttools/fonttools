@@ -279,7 +279,7 @@ def limitTupleVariationAxisRange(var, axisTag, axisRange):
 
     # case 3: peak falls inside but outermost limit still fits within F2Dot14 bounds;
     # we keep deltas as is and only scale the axes bounds. Deltas beyond -1.0
-    # or +1.0 will never be applied as implementations must clap to that range.
+    # or +1.0 will never be applied as implementations must clamp to that range.
     elif newUpper <= 2.0:
         if negative:
             newLower, newPeak, newUpper = _negate(newUpper, newPeak, newLower)
@@ -897,9 +897,11 @@ def instantiateAvar(varfont, axisLimits):
     # First compute the default normalization for axisRanges coordinates: i.e.
     # min = -1.0, default = 0, max = +1.0, and in between values interpolated linearly,
     # without using the avar table's mappings.
-    # Then, for each axis' SegmentMap, if we are restricting its, compute the new
+    # Then, for each SegmentMap, if we are restricting its axis, compute the new
     # mappings by dividing the key/value pairs by the desired new min/max values,
     # dropping any mappings that fall outside the restricted range.
+    # The keys ('fromCoord') are specified in default normalized coordinate space,
+    # whereas the values ('toCoord') are "mapped forward" using the SegmentMap.
     normalizedRanges = normalizeAxisLimits(varfont, axisRanges, usingAvar=False)
     newSegments = {}
     for axisTag, mapping in segments.items():
@@ -914,28 +916,28 @@ def instantiateAvar(varfont, axisLimits):
                 piecewiseLinearMap(axisRange.maximum, mapping), 14
             )
             newMapping = {}
-            for key, value in mapping.items():
-                if key < 0:
-                    if axisRange.minimum == 0 or key < axisRange.minimum:
+            for fromCoord, toCoord in mapping.items():
+                if fromCoord < 0:
+                    if axisRange.minimum == 0 or fromCoord < axisRange.minimum:
                         continue
                     else:
-                        key /= abs(axisRange.minimum)
-                elif key > 0:
-                    if axisRange.maximum == 0 or key > axisRange.maximum:
+                        fromCoord /= abs(axisRange.minimum)
+                elif fromCoord > 0:
+                    if axisRange.maximum == 0 or fromCoord > axisRange.maximum:
                         continue
                     else:
-                        key /= axisRange.maximum
-                if value < 0:
+                        fromCoord /= axisRange.maximum
+                if toCoord < 0:
                     assert mappedMin != 0
-                    assert value >= mappedMin
-                    value /= abs(mappedMin)
-                elif value > 0:
+                    assert toCoord >= mappedMin
+                    toCoord /= abs(mappedMin)
+                elif toCoord > 0:
                     assert mappedMax != 0
-                    assert value <= mappedMax
-                    value /= mappedMax
-                key = floatToFixedToFloat(key, 14)
-                value = floatToFixedToFloat(value, 14)
-                newMapping[key] = value
+                    assert toCoord <= mappedMax
+                    toCoord /= mappedMax
+                fromCoord = floatToFixedToFloat(fromCoord, 14)
+                toCoord = floatToFixedToFloat(toCoord, 14)
+                newMapping[fromCoord] = toCoord
             newMapping.update({-1.0: -1.0, 1.0: 1.0})
             newSegments[axisTag] = newMapping
         else:
