@@ -1,3 +1,36 @@
+- [instancer] Implemented restricting axis ranges (level 3 partial instancing).
+  You can now pass ``{axis_tag: (min, max)}`` tuples as input to the
+  ``instantiateVariableFont`` function. Note that changing the default axis
+  position is not supported yet. The command-line script also accepts axis ranges
+  in the form of colon-separated float values, e.g. ``wght=400:700`` (#1753, #1537).
+- [instancer] Never drop STAT ``DesignAxis`` records, but only prune out-of-range
+  ``AxisValue`` records.
+- [otBase/otTables] Enforce that VarStore.RegionAxisCount == fvar.axisCount, even
+  when regions list is empty to appease OTS < v8.0 (#1752).
+- [designspaceLib] Defined new ``processing`` attribute for ``<rules>`` element,
+  with values "first" or "last", plus other editorial changes to DesignSpace
+  specification. Bumped format version to 4.1 (#1750).
+- [varLib] Improved error message when masters' glyph orders do not match (#1758,
+  #1759).
+- [featureVars] Allow to specify custom feature tag in ``addFeatureVariations``;
+  allow said feature to already exist, in which case we append new lookup indices
+  to existing features. Implemented ``<rules>`` attribute ``processing`` according to
+  DesignSpace specification update in #1750. Depending on this flag, we generate
+  either an 'rvrn' (always processed first) or a 'rclt' feature (follows lookup order,
+  therefore last) (#1747, #1625, #1371).
+- [ttCollection] Added support for context manager auto-closing via ``with`` statement
+  like with ``TTFont`` (#1751).
+- [unicodedata] Require unicodedata2 >= 12.1.0.
+- [py2.py3] Removed yet more PY2 vestiges (#1743).
+- [_n_a_m_e] Fixed issue when comparing NameRecords with different string types (#1742).
+- [fixedTools] Changed ``fixedToFloat`` to not do any rounding but simply return
+  ``value / (1 << precisionBits)``. Added ``floatToFixedToStr`` and
+  ``strToFixedToFloat`` functions to be used when loading from or dumping to XML.
+  Fixed values (e.g. fvar axes and instance coordinates, avar mappings, etc.) are
+  are now stored as un-rounded decimal floats upon decompiling (#1740, #737).
+- [feaLib] Fixed handling of multiple ``LigatureCaret`` statements for the same glyph.
+  Only the first rule per glyph is used, additional ones are ignored (#1733).
+
 4.0.2 (released 2019-09-26)
 ---------------------------
 
