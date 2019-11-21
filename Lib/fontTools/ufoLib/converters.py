@@ -6,7 +6,9 @@ Conversion functions.
 
 # adapted from the UFO spec
 
-def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups, glyphSet=set()):
+def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups, glyphSet=None):
+    if glyphSet is None:
+        glyphSet = set()
     # gather known kerning groups based on the prefixes
     firstReferencedGroups, secondReferencedGroups = findKnownKerningGroups(groups)
     # Make lists of groups referenced in kerning pairs.
