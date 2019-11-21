@@ -339,7 +339,8 @@ class UFOReader(_UFOBaseIO):
 			# convert kerning and groups
 			kerning, groups, conversionMaps = convertUFO1OrUFO2KerningToUFO3Kerning(
 				self._upConvertedKerningData["originalKerning"],
-				deepcopy(self._upConvertedKerningData["originalGroups"])
+				deepcopy(self._upConvertedKerningData["originalGroups"]),
+				self.getGlyphSet()
 			)
 			# store
 			self._upConvertedKerningData["kerning"] = kerning
