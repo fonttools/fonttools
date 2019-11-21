@@ -13,11 +13,11 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups, glyphSet=None):
     firstReferencedGroups, secondReferencedGroups = findKnownKerningGroups(groups)
     # Make lists of groups referenced in kerning pairs.
     for first, seconds in list(kerning.items()):
-        if first in groups and not first in glyphSet:
+        if first in groups and first not in glyphSet:
             if not first.startswith("public.kern1."):
                 firstReferencedGroups.add(first)
         for second in list(seconds.keys()):
-            if second in groups and not second in glyphSet:
+            if second in groups and second not in glyphSet:
                 if not second.startswith("public.kern2."):
                     secondReferencedGroups.add(second)
     # Create new names for these groups.
