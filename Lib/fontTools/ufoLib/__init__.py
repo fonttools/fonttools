@@ -638,7 +638,7 @@ class UFOReader(_UFOBaseIO):
 
 		``validateRead`` will validate the read data, by default it is set to the
 		class's validate value, can be overridden.
-		``validateWrte`` will validate the written data, by default it is set to the
+		``validateWrite`` will validate the written data, by default it is set to the
 		class's validate value, can be overridden.
 		"""
 		from fontTools.ufoLib.glifLib import GlyphSet
