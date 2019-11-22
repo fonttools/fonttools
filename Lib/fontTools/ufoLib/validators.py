@@ -883,7 +883,7 @@ def groupsValidator(value):
 			return False, "A group has an empty name."
 		if groupName.startswith("public."):
 			if not groupName.startswith("public.kern1.") and not groupName.startswith("public.kern2."):
-				# unknown pubic.* name. silently skip.
+				# unknown public.* name. silently skip.
 				continue
 			else:
 				if len("public.kernN.") == len(groupName):

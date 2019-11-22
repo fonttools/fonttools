@@ -339,7 +339,8 @@ class UFOReader(_UFOBaseIO):
 			# convert kerning and groups
 			kerning, groups, conversionMaps = convertUFO1OrUFO2KerningToUFO3Kerning(
 				self._upConvertedKerningData["originalKerning"],
-				deepcopy(self._upConvertedKerningData["originalGroups"])
+				deepcopy(self._upConvertedKerningData["originalGroups"]),
+				self.getGlyphSet()
 			)
 			# store
 			self._upConvertedKerningData["kerning"] = kerning
@@ -637,7 +638,7 @@ class UFOReader(_UFOBaseIO):
 
 		``validateRead`` will validate the read data, by default it is set to the
 		class's validate value, can be overridden.
-		``validateWrte`` will validate the written data, by default it is set to the
+		``validateWrite`` will validate the written data, by default it is set to the
 		class's validate value, can be overridden.
 		"""
 		from fontTools.ufoLib.glifLib import GlyphSet
