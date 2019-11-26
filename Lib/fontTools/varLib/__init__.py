@@ -795,7 +795,7 @@ def set_default_weight_width_slant(font, location):
 		if "wght" in location:
 			weight_class = otRound(max(1, min(location["wght"], 1000)))
 			if font["OS/2"].usWeightClass != weight_class:
-				log.info("Setting OS/2.usWidthClass = %s", weight_class)
+				log.info("Setting OS/2.usWeightClass = %s", weight_class)
 				font["OS/2"].usWeightClass = weight_class
 
 		if "wdth" in location:
