@@ -1,6 +1,6 @@
 from fontTools.misc.py23 import *
 from array import array
-from fontTools.misc.fixedTools import MAX_F2DOT14
+from fontTools.misc.fixedTools import MAX_F2DOT14, otRound
 from fontTools.pens.basePen import LoggingPen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.ttLib.tables import ttProgram
@@ -118,7 +118,7 @@ class TTGlyphPen(LoggingPen):
 
             component = GlyphComponent()
             component.glyphName = glyphName
-            component.x, component.y = transformation[4:]
+            component.x, component.y = (otRound(v) for v in transformation[4:])
             transformation = transformation[:4]
             if transformation != (1, 0, 0, 1):
                 if (self.handleOverflowingTransforms and
@@ -138,6 +138,7 @@ class TTGlyphPen(LoggingPen):
 
         glyph = Glyph()
         glyph.coordinates = GlyphCoordinates(self.points)
+        glyph.coordinates.toInt()
         glyph.endPtsOfContours = self.endPts
         glyph.flags = array("B", self.types)
         self.init()
