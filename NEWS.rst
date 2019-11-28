@@ -2,12 +2,14 @@
 ---------------------------
 
 - [pens] Added the following pens:
+
   * ``roundingPen.RoundingPen``: filter pen that rounds coordinates and components'
-  offsets to integer;
+    offsets to integer;
   * ``roundingPen.RoundingPointPen``: like the above, but using PointPen protocol.
   * ``filterPen.FilterPointPen``: base class for filter point pens;
   * ``transformPen.TransformPointPen``: filter point pen to apply affine transform;
   * ``recordingPen.RecordingPointPen``: records and replays point-pen commands.
+
 - [ttGlyphPen] Always round float coordinates and component offsets to integers
   (#1763).
 - [ufoLib] When converting kerning groups from UFO2 to UFO3, avoid confusing
