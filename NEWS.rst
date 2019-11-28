@@ -8,7 +8,6 @@
   * ``filterPen.FilterPointPen``: base class for filter point pens;
   * ``transformPen.TransformPointPen``: filter point pen to apply affine transform;
   * ``recordingPen.RecordingPointPen``: records and replays point-pen commands.
-  (in roundingPen module); filterPen.FilterPointPen, transform
 - [ttGlyphPen] Always round float coordinates and component offsets to integers
   (#1763).
 - [ufoLib] When converting kerning groups from UFO2 to UFO3, avoid confusing
