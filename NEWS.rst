@@ -1,3 +1,6 @@
+4.2.0 (released 2019-11-28)
+---------------------------
+
 - [pens] Added the following pens:
   * ``roundingPen.RoundingPen``: filter pen that rounds coordinates and components'
   offsets to integer;
