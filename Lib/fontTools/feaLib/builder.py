@@ -914,10 +914,19 @@ class Builder(object):
         lookup = self.get_lookup_(location, SingleSubstBuilder)
         for (from_glyph, to_glyph) in mapping.items():
             if from_glyph in lookup.mapping:
-                raise FeatureLibError(
-                    'Already defined rule for replacing glyph "%s" by "%s"' %
-                    (from_glyph, lookup.mapping[from_glyph]),
-                    location)
+                if to_glyph == lookup.mapping[from_glyph]:
+                    # log warning?
+                    # FDK logs "[NOTE] Removing duplicate single substitution in 'xxxx' feature: from_glyph, to_glyph" in this case
+                    log.info(FeatureLibError(
+                        'Removing duplicate single substitution for glyph "%s" by "%s"' %
+                        (from_glyph, to_glyph),
+                        location
+                    ))
+                else:
+                    raise FeatureLibError(
+                        'Already defined rule for replacing glyph "%s" by "%s"' %
+                        (from_glyph, lookup.mapping[from_glyph]),
+                        location)
             lookup.mapping[from_glyph] = to_glyph
 
     def add_single_subst_chained_(self, location, prefix, suffix, mapping):
