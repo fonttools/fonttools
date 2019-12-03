@@ -239,6 +239,31 @@ class TTGlyphPenTest(TestCase):
         with self.assertRaises(struct.error):
             compositeGlyph.compile({'a': baseGlyph})
 
+    def assertGlyphBoundsEqual(self, glyph, bounds):
+        self.assertEqual((glyph.xMin, glyph.yMin, glyph.xMax, glyph.yMax), bounds)
+
+    def test_round_float_coordinates_and_component_offsets(self):
+        glyphSet = {}
+        pen = TTGlyphPen(glyphSet)
+
+        pen.moveTo((0, 0))
+        pen.lineTo((0, 1))
+        pen.lineTo((367.6, 0))
+        pen.closePath()
+        simpleGlyph = pen.glyph()
+
+        simpleGlyph.recalcBounds(glyphSet)
+        self.assertGlyphBoundsEqual(simpleGlyph, (0, 0, 368, 1))
+
+        componentName = 'a'
+        glyphSet[componentName] = simpleGlyph
+
+        pen.addComponent(componentName, (1, 0, 0, 1, -86.4, 0))
+        compositeGlyph = pen.glyph()
+
+        compositeGlyph.recalcBounds(glyphSet)
+        self.assertGlyphBoundsEqual(compositeGlyph, (-86, 0, 282, 1))
+
 
 class _TestGlyph(object):
     def __init__(self, glyph):

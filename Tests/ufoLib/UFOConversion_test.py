@@ -137,7 +137,9 @@ class KerningUpConversionTestCase(unittest.TestCase):
 		("A", "public.kern2.CGroup"): 3,
 		("A", "public.kern2.DGroup"): 4,
 		("A", "A"): 1,
-		("A", "B"): 2
+		("A", "B"): 2,
+		("X", "A"): 13,
+		("X", "public.kern2.CGroup"): 14
 	}
 
 	expectedGroups = {
@@ -148,7 +150,8 @@ class KerningUpConversionTestCase(unittest.TestCase):
 		"public.kern1.CGroup": ["C", "Ccedilla"],
 		"public.kern2.CGroup": ["C", "Ccedilla"],
 		"public.kern2.DGroup": ["D"],
-		"Not A Kerning Group" : ["A"]
+		"Not A Kerning Group" : ["A"],
+		"X": ["X", "X.sc"]
 	}
 
 	def setUp(self):
@@ -163,6 +166,20 @@ class KerningUpConversionTestCase(unittest.TestCase):
 		self.clearUFO()
 		if not os.path.exists(self.ufoPath):
 			os.mkdir(self.ufoPath)
+
+		# glyphs
+		glyphsPath = os.path.join(self.ufoPath, "glyphs")
+		if not os.path.exists(glyphsPath):
+			os.mkdir(glyphsPath)
+		glyphFile = "X_.glif"
+		glyphsContents = dict(X=glyphFile)
+		path = os.path.join(glyphsPath, "contents.plist")
+		with open(path, "wb") as f:
+			plistlib.dump(glyphsContents, f)
+		path = os.path.join(glyphsPath, glyphFile)
+		with open(path, "w") as f:
+			f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+
 		# metainfo.plist
 		metaInfo = dict(creator="test", formatVersion=formatVersion)
 		path = os.path.join(self.ufoPath, "metainfo.plist")
@@ -187,6 +204,10 @@ class KerningUpConversionTestCase(unittest.TestCase):
 				"B" : 10,
 				"CGroup" : 11,
 				"DGroup" : 12
+			},
+			"X": {
+				"A" : 13,
+				"CGroup" : 14
 			}
 		}
 		path = os.path.join(self.ufoPath, "kerning.plist")
@@ -197,7 +218,8 @@ class KerningUpConversionTestCase(unittest.TestCase):
 			"BGroup" : ["B"],
 			"CGroup" : ["C", "Ccedilla"],
 			"DGroup" : ["D"],
-			"Not A Kerning Group" : ["A"]
+			"Not A Kerning Group" : ["A"],
+			"X" : ["X", "X.sc"]  # a group with a name that is also a glyph name
 		}
 		path = os.path.join(self.ufoPath, "groups.plist")
 		with open(path, "wb") as f:
