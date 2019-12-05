@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Script to add a suffix to all family names in the input font's `name` table,
 and to optionally rename the output files with the given suffix.
 

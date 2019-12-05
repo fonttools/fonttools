@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 # Illustrates how a fonttools script can construct variable fonts.
 #
