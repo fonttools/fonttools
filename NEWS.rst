@@ -1,3 +1,6 @@
+4.2.1 (released 2019-12-06)
+---------------------------
+
 - [glyf] Use the ``flagOnCurve`` bit mask in ``glyph.draw()``, so that we ignore
   the ``overlap`` flag that may be set when instantiating variable fonts (#1771).
 
