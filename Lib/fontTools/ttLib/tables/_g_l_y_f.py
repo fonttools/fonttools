@@ -1179,7 +1179,7 @@ class Glyph(object):
 		for end in endPts:
 			end = end + 1
 			contour = coordinates[start:end]
-			cFlags = flags[start:end]
+			cFlags = [flagOnCurve & f for f in flags[start:end]]
 			start = end
 			if 1 not in cFlags:
 				# There is not a single on-curve point on the curve,
