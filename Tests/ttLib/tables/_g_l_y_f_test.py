@@ -288,6 +288,8 @@ class glyfTableTest(unittest.TestCase):
     def test_bit6_draw_to_pen_issue1771(self):
         # https://github.com/fonttools/fonttools/issues/1771
         font = TTFont(sfntVersion="\x00\x01\x00\x00")
+        # glyph00003 contains a bit 6 flag on the first point,
+        # which triggered the issue
         font.importXML(GLYF_TTX)
         glyfTable = font['glyf']
         pen = RecordingPen()
