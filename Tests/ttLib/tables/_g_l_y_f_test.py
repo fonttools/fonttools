@@ -301,13 +301,11 @@ class glyfTableTest(unittest.TestCase):
                     ('lineTo', ((591, 1193),)),
                     ('lineTo', ((199, 0),)),
                     ('lineTo', ((12, 0),)),
-                    ('lineTo', ((501, 1430),)),
                     ('closePath', ()),
                     ('moveTo', ((249, 514),)),
                     ('lineTo', ((935, 514),)),
                     ('lineTo', ((935, 352),)),
                     ('lineTo', ((249, 352),)),
-                    ('lineTo', ((249, 514),)),
                     ('closePath', ())]
         self.assertEqual(pen.value, expected)
 

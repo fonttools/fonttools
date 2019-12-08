@@ -1198,7 +1198,10 @@ class Glyph(object):
 				while contour:
 					nextOnCurve = cFlags.index(1) + 1
 					if nextOnCurve == 1:
-						pen.lineTo(contour[0])
+						# Skip a final lineTo(), as it is implied by
+						# pen.closePath()
+						if len(contour) > 1:
+							pen.lineTo(contour[0])
 					else:
 						pen.qCurveTo(*contour[:nextOnCurve])
 					contour = contour[nextOnCurve:]
