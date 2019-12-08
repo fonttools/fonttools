@@ -2,7 +2,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.testTools import getXML, parseXML
 from fontTools.pens.ttGlyphPen import TTGlyphPen
-from fontTools.pens.recordingPen import RecordingPen
+from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
 from fontTools.ttLib import TTFont, newTable, TTLibError
 from fontTools.ttLib.tables._g_l_y_f import (
     GlyphCoordinates,
@@ -310,6 +310,24 @@ class glyfTableTest(unittest.TestCase):
                     ('lineTo', ((249, 514),)),
                     ('closePath', ())]
         self.assertEqual(pen.value, expected)
+
+    def test_bit6_draw_to_pointpen(self):
+        # https://github.com/fonttools/fonttools/issues/1771
+        font = TTFont(sfntVersion="\x00\x01\x00\x00")
+        # glyph00003 contains a bit 6 flag on the first point
+        # which triggered the issue
+        font.importXML(GLYF_TTX)
+        glyfTable = font['glyf']
+        pen = RecordingPointPen()
+        glyfTable["glyph00003"].drawPoints(pen, glyfTable=glyfTable)
+        expected = [
+            ('beginPath', (), {}),
+            ('addPoint', ((501, 1430), 'line', False, None), {}),
+            ('addPoint', ((683, 1430), 'line', False, None), {}),
+            ('addPoint', ((1172, 0), 'line', False, None), {}),
+            ('addPoint', ((983, 0), 'line', False, None), {}),
+        ]
+        self.assertEqual(pen.value[:len(expected)], expected)
 
 
 class GlyphComponentTest:
