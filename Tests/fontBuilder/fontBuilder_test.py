@@ -164,13 +164,20 @@ def test_build_var(tmpdir):
     pen.lineTo((500, 400))
     pen.lineTo((500, 000))
     pen.closePath()
+    glyph1 = pen.glyph()
 
-    glyph = pen.glyph()
+    pen = TTGlyphPen(None)
+    pen.moveTo((50, 0))
+    pen.lineTo((50, 200))
+    pen.lineTo((250, 200))
+    pen.lineTo((250, 0))
+    pen.closePath()
+    glyph2 = pen.glyph()
 
     pen = TTGlyphPen(None)
     emptyGlyph = pen.glyph()
 
-    glyphs = {".notdef": emptyGlyph, "A": glyph, "a": glyph, ".null": emptyGlyph}
+    glyphs = {".notdef": emptyGlyph, "A": glyph1, "a": glyph2, ".null": emptyGlyph}
     fb.setupGlyf(glyphs)
     metrics = {}
     glyphTable = fb.font["glyf"]
@@ -205,6 +212,19 @@ def test_build_var(tmpdir):
         TupleVariation(dict(DOWN=(0, 1, 1)), downDeltas),
     ]
     fb.setupGvar(variations)
+
+    fb.addFeatureVariations(
+        [
+            (
+                [
+                    {"LEFT": (0.8, 1), "DOWN": (0.8, 1)},
+                    {"RGHT": (0.8, 1), "UPPP": (0.8, 1)},
+                  ],
+                {"A": "a"}
+            )
+        ],
+        featureTag="rclt",
+    )
 
     fb.setupOS2()
     fb.setupPost()
