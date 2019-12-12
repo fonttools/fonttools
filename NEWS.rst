@@ -1,3 +1,6 @@
+4.2.2 (released 2019-12-12)
+---------------------------
+
 - [subset] Fixed issue with subsetting FeatureVariations table when the index
   of features changes as features get dropped. The feature index need to be
   remapped to point to index of the remaining features (#1777, #1782).
