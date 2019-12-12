@@ -1,3 +1,6 @@
+- [varLib] Added legible error messages to the ``_add_avar()`` axis mapping duplicate
+  check.
+
 4.2.1 (released 2019-12-06)
 ---------------------------
 
