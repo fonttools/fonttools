@@ -141,8 +141,14 @@ def _add_avar(font, axes):
 		assert axis.maximum == max(keys)
 		assert axis.default in keys
 		# No duplicates
-		assert len(set(keys)) == len(keys)
-		assert len(set(vals)) == len(vals)
+		assert len(set(keys)) == len(keys), (
+			f"{axis.tag} axis: All axis mapping input='...' "
+			"values must be unique, but we found duplicates."
+		)
+		assert len(set(vals)) == len(vals), (
+			f"{axis.tag} axis: All axis mapping output='...' "
+			"values must be unique, but we found duplicates."
+		)
 		# Ascending values
 		assert sorted(vals) == vals
 
