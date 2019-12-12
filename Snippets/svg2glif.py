@@ -2,7 +2,7 @@
 """ Convert SVG paths to UFO glyphs. """
 
 
-__requires__ = ["FontTools", "ufoLib"]
+__requires__ = ["fontTools"]
 
 from fontTools.misc.py23 import SimpleNamespace
 from fontTools.svgLib import SVGPath
