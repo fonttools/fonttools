@@ -3,6 +3,7 @@ from fontTools.misc.fixedTools import otRound
 from fontTools.misc.testTools import getXML, parseXML
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
+from fontTools.pens.pointPen import PointToSegmentPen
 from fontTools.ttLib import TTFont, newTable, TTLibError
 from fontTools.ttLib.tables._g_l_y_f import (
     GlyphCoordinates,
@@ -326,6 +327,16 @@ class glyfTableTest(unittest.TestCase):
             ('addPoint', ((983, 0), 'line', False, None), {}),
         ]
         self.assertEqual(pen.value[:len(expected)], expected)
+
+    def test_draw_vs_drawpoints(self):
+        font = TTFont(sfntVersion="\x00\x01\x00\x00")
+        font.importXML(GLYF_TTX)
+        glyfTable = font['glyf']
+        pen1 = RecordingPen()
+        pen2 = RecordingPen()
+        glyfTable["glyph00003"].draw(pen1, glyfTable)
+        glyfTable["glyph00003"].drawPoints(PointToSegmentPen(pen2), glyfTable)
+        self.assertEqual(pen1.value, pen2.value)
 
 
 class GlyphComponentTest:
