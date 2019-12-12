@@ -1,5 +1,11 @@
-- [varLib] Added legible error messages to the ``_add_avar()`` axis mapping duplicate
-  check.
+- [subset] Fixed issue with subsetting FeatureVariations table when the index
+  of features changes as features get dropped. The feature index need to be
+  remapped to point to index of the remaining features (#1777, #1782).
+- [fontBuilder] Added `addFeatureVariations` method to `FontBuilder` class. This
+  is a shorthand for calling `featureVars.addFeatureVariations` on the builder's
+  TTFont object (#1781).
+- [glyf] Fixed the flags bug in glyph.drawPoints() like we did for glyph.draw()
+  (#1771, #1774).
 
 4.2.1 (released 2019-12-06)
 ---------------------------
