@@ -1307,6 +1307,9 @@ def subset_features(self, feature_indices):
 	self.ensureDecompiled()
 	self.SubstitutionRecord = [r for r in self.SubstitutionRecord
 				     if r.FeatureIndex in feature_indices]
+	# remap feature indices
+	for r in self.SubstitutionRecord:
+		r.FeatureIndex = feature_indices.index(r.FeatureIndex)
 	self.SubstitutionCount = len(self.SubstitutionRecord)
 	return bool(self.SubstitutionCount)
 

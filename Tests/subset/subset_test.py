@@ -1,5 +1,7 @@
+import io
 from fontTools.misc.py23 import *
 from fontTools import subset
+from fontTools.fontBuilder import FontBuilder
 from fontTools.ttLib import TTFont, newTable
 from fontTools.misc.loggingTools import CapturingLogHandler
 import difflib
@@ -726,6 +728,44 @@ class SubsetTest(unittest.TestCase):
         ttf = TTFont(ttf_path)
 
         self.assertEqual(ttf.flavor, None)
+
+
+def test_subset_feature_variations():
+    fb = FontBuilder(unitsPerEm=100)
+    fb.setupGlyphOrder([".notdef", "f", "f_f", "dollar", "dollar.rvrn"])
+    fb.setupCharacterMap({ord("f"): "f", ord("$"): "dollar"})
+    fb.setupNameTable({"familyName": "TestFeatureVars", "styleName": "Regular"})
+    fb.setupPost()
+    fb.setupFvar(axes=[("wght", 100, 400, 900, "Weight")], instances=[])
+    fb.addOpenTypeFeatures("""\
+        feature dlig {
+            sub f f by f_f;
+        } dlig;
+    """)
+    fb.addFeatureVariations(
+        [([{"wght": (0.20886, 1.0)}], {"dollar": "dollar.rvrn"})],
+        featureTag="rvrn"
+    )
+    buf = io.BytesIO()
+    fb.save(buf)
+    buf.seek(0)
+
+    font = TTFont(buf)
+
+    options = subset.Options()
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(unicodes=[ord("f"), ord("$")])
+    subsetter.subset(font)
+
+    featureTags = {
+        r.FeatureTag for r in font["GSUB"].table.FeatureList.FeatureRecord
+    }
+    # 'dlig' is discretionary so it is dropped by default
+    assert "dlig" not in featureTags
+    assert "f_f" not in font.getGlyphOrder()
+    # 'rvrn' is required so it is kept by default
+    assert "rvrn" in featureTags
+    assert "dollar.rvrn" in font.getGlyphOrder()
 
 
 if __name__ == "__main__":
