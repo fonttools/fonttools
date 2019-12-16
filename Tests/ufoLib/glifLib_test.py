@@ -161,3 +161,21 @@ class ReadWriteFuncTest(unittest.TestCase):
 	def testXmlDeclaration(self):
 		s = writeGlyphToString("a", _Glyph())
 		self.assertTrue(s.startswith(XML_DECLARATION % "UTF-8"))
+
+
+def test_parse_xml_remove_comments():
+	s = b"""<?xml version='1.0' encoding='UTF-8'?>
+	<!-- a comment -->
+	<glyph name="A" format="2">
+		<advance width="1290"/>
+		<unicode hex="0041"/>
+		<!-- another comment -->
+	</glyph>
+	"""
+
+	g = _Glyph()
+	readGlyphFromString(s, g)
+
+	assert g.name == "A"
+	assert g.width == 1290
+	assert g.unicodes == [0x0041]

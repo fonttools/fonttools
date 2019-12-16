@@ -852,7 +852,11 @@ def validateLayerInfoVersion3Data(infoData):
 # -----------------
 
 def _glifTreeFromFile(aFile):
-	root = etree.parse(aFile).getroot()
+	if etree._have_lxml:
+		tree = etree.parse(aFile, parser=etree.XMLParser(remove_comments=True))
+	else:
+		tree = etree.parse(aFile)
+	root = tree.getroot()
 	if root.tag != "glyph":
 		raise GlifLibError("The GLIF is not properly formatted.")
 	if root.text and root.text.strip() != '':
@@ -862,7 +866,10 @@ def _glifTreeFromFile(aFile):
 
 def _glifTreeFromString(aString):
 	data = tobytes(aString, encoding="utf-8")
-	root = etree.fromstring(data)
+	if etree._have_lxml:
+		root = etree.fromstring(data, parser=etree.XMLParser(remove_comments=True))
+	else:
+		root = etree.fromstring(data)
 	if root.tag != "glyph":
 		raise GlifLibError("The GLIF is not properly formatted.")
 	if root.text and root.text.strip() != '':
