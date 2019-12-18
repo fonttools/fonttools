@@ -187,6 +187,17 @@ class BuilderTest(unittest.TestCase):
             "    sub A from [A.alt1 A.alt2];"
             "} test;")
 
+    def test_singleSubst_multipleIdenticalSubstitutionsForSameGlyph_info(self):
+        logger = logging.getLogger("fontTools.feaLib.builder")
+        with CapturingLogHandler(logger, "INFO") as captor:
+            self.build(
+                "feature test {"
+                "    sub A by A.sc;"
+                "    sub B by B.sc;"
+                "    sub A by A.sc;"
+                "} test;")
+        captor.assertRegex('Removing duplicate single substitution from glyph "A" to "A.sc"')
+
     def test_multipleSubst_multipleSubstitutionsForSameGlyph(self):
         self.assertRaisesRegex(
             FeatureLibError,
