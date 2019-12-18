@@ -1,4 +1,3 @@
-
 ansicolors = {
     "BLACK": "\033[30m",
     "RED": "\033[31m",
