@@ -21,7 +21,7 @@ from fdiff.utils import get_file_modtime
 #  Private functions
 #
 #
-
+# TODO: add docstrings for all private functions
 
 def _async_fetch_files(dirpath, urls):
     loop = asyncio.get_event_loop()
@@ -252,7 +252,7 @@ def external_diff(
             if len(output) == 0 and exit_status is not None:
                 err = process.stderr.read()
                 if err:
-                    raise AIOError(err)
+                    raise IOError(err)
                 yield output, exit_status
                 break
             else:
