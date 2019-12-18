@@ -114,13 +114,23 @@ def run(argv):
     exclude_list = get_tables_argument_list(args.exclude)
 
     # flip logic of the command line flag for multi process
-    # optimizations for use as a u_diff function argument
+    # optimization use
     use_mp = not args.nomp
 
     if args.external:
         # ------------------------------
         #  External executable tool diff
         # ------------------------------
+        # head and tail are not supported when external diff tool is called
+        if args.head or args.tail:
+            sys.stderr.write(f"[ERROR] The head and tail options are not supported with external diff executable calls.{os.linesep}")
+            sys.exit(1)
+
+        # lines of context filter is not supported when external diff tool is called
+        if args.lines != 3:
+            sys.stderr.write(f"[ERROR] The lines option is not supported with external diff executable calls.{os.linesep}")
+            sys.exit(1)
+
         try:
             diff = external_diff(
                 args.external,
@@ -133,8 +143,11 @@ def run(argv):
 
             # write stdout from external tool
             for line, exit_code in diff:
-                # if exit_code is None:
-                sys.stdout.write(line)
+                # format with color if color flag is entered on command line
+                if args.color:
+                    sys.stdout.write(color_unified_diff_line(line))
+                else:
+                    sys.stdout.write(line)
                 if exit_code is not None:
                     sys.exit(exit_code)
         except Exception as e:
