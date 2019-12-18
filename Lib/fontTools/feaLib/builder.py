@@ -915,13 +915,11 @@ class Builder(object):
         for (from_glyph, to_glyph) in mapping.items():
             if from_glyph in lookup.mapping:
                 if to_glyph == lookup.mapping[from_glyph]:
-                    # log warning?
-                    # FDK logs "[NOTE] Removing duplicate single substitution in 'xxxx' feature: from_glyph, to_glyph" in this case
-                    log.info(FeatureLibError(
-                        'Removing duplicate single substitution for glyph "%s" by "%s"' %
-                        (from_glyph, to_glyph),
-                        location
-                    ))
+                    log.info(
+                        'Removing duplicate single substitution from glyph'
+                        ' "%s" to "%s" at %s:%i:%i' %
+                        (from_glyph, to_glyph, *location),
+                    )
                 else:
                     raise FeatureLibError(
                         'Already defined rule for replacing glyph "%s" by "%s"' %
