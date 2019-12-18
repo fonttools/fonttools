@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Tools to parse data files from the Unicode Character Database.
 """

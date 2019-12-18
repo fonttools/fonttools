@@ -1,3 +1,21 @@
+4.2.2 (released 2019-12-12)
+---------------------------
+
+- [subset] Fixed issue with subsetting FeatureVariations table when the index
+  of features changes as features get dropped. The feature index need to be
+  remapped to point to index of the remaining features (#1777, #1782).
+- [fontBuilder] Added `addFeatureVariations` method to `FontBuilder` class. This
+  is a shorthand for calling `featureVars.addFeatureVariations` on the builder's
+  TTFont object (#1781).
+- [glyf] Fixed the flags bug in glyph.drawPoints() like we did for glyph.draw()
+  (#1771, #1774).
+
+4.2.1 (released 2019-12-06)
+---------------------------
+
+- [glyf] Use the ``flagOnCurve`` bit mask in ``glyph.draw()``, so that we ignore
+  the ``overlap`` flag that may be set when instantiating variable fonts (#1771).
+
 4.2.0 (released 2019-11-28)
 ---------------------------
 

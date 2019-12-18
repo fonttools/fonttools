@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="3.32">
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.2">
 
   <GlyphOrder>
     <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
@@ -19,7 +19,7 @@
     <unitsPerEm value="1024"/>
     <created value="Thu Nov  1 20:29:01 2018"/>
     <modified value="Thu Nov  1 20:29:01 2018"/>
-    <xMin value="100"/>
+    <xMin value="50"/>
     <yMin value="0"/>
     <xMax value="500"/>
     <yMax value="400"/>
@@ -36,7 +36,7 @@
     <descent value="200"/>
     <lineGap value="0"/>
     <advanceWidthMax value="600"/>
-    <minLeftSideBearing value="100"/>
+    <minLeftSideBearing value="50"/>
     <minRightSideBearing value="100"/>
     <xMaxExtent value="500"/>
     <caretSlopeRise value="1"/>
@@ -126,7 +126,7 @@
     <mtx name=".notdef" width="600" lsb="0"/>
     <mtx name=".null" width="600" lsb="0"/>
     <mtx name="A" width="600" lsb="100"/>
-    <mtx name="a" width="600" lsb="100"/>
+    <mtx name="a" width="600" lsb="50"/>
   </hmtx>
 
   <cmap>
@@ -164,12 +164,12 @@
       <instructions/>
     </TTGlyph>
 
-    <TTGlyph name="a" xMin="100" yMin="0" xMax="500" yMax="400">
+    <TTGlyph name="a" xMin="50" yMin="0" xMax="250" yMax="200">
       <contour>
-        <pt x="100" y="0" on="1"/>
-        <pt x="100" y="400" on="1"/>
-        <pt x="500" y="400" on="1"/>
-        <pt x="500" y="0" on="1"/>
+        <pt x="50" y="0" on="1"/>
+        <pt x="50" y="200" on="1"/>
+        <pt x="250" y="200" on="1"/>
+        <pt x="250" y="0" on="1"/>
       </contour>
       <instructions/>
     </TTGlyph>
@@ -268,6 +268,100 @@
       <!-- following are the name that are not taken from the standard Mac glyph order -->
     </extraNames>
   </post>
+
+  <GSUB>
+    <Version value="0x00010001"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="rclt"/>
+        <Feature>
+          <!-- LookupCount=0 -->
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0" Format="1">
+          <Substitution in="A" out="a"/>
+        </SingleSubst>
+      </Lookup>
+    </LookupList>
+    <FeatureVariations>
+      <Version value="0x00010000"/>
+      <!-- FeatureVariationCount=2 -->
+      <FeatureVariationRecord index="0">
+        <ConditionSet>
+          <!-- ConditionCount=2 -->
+          <ConditionTable index="0" Format="1">
+            <AxisIndex value="3"/>
+            <FilterRangeMinValue value="0.8"/>
+            <FilterRangeMaxValue value="1.0"/>
+          </ConditionTable>
+          <ConditionTable index="1" Format="1">
+            <AxisIndex value="0"/>
+            <FilterRangeMinValue value="0.8"/>
+            <FilterRangeMaxValue value="1.0"/>
+          </ConditionTable>
+        </ConditionSet>
+        <FeatureTableSubstitution>
+          <Version value="0x00010000"/>
+          <!-- SubstitutionCount=1 -->
+          <SubstitutionRecord index="0">
+            <FeatureIndex value="0"/>
+            <Feature>
+              <!-- LookupCount=1 -->
+              <LookupListIndex index="0" value="0"/>
+            </Feature>
+          </SubstitutionRecord>
+        </FeatureTableSubstitution>
+      </FeatureVariationRecord>
+      <FeatureVariationRecord index="1">
+        <ConditionSet>
+          <!-- ConditionCount=2 -->
+          <ConditionTable index="0" Format="1">
+            <AxisIndex value="1"/>
+            <FilterRangeMinValue value="0.8"/>
+            <FilterRangeMaxValue value="1.0"/>
+          </ConditionTable>
+          <ConditionTable index="1" Format="1">
+            <AxisIndex value="2"/>
+            <FilterRangeMinValue value="0.8"/>
+            <FilterRangeMaxValue value="1.0"/>
+          </ConditionTable>
+        </ConditionSet>
+        <FeatureTableSubstitution>
+          <Version value="0x00010000"/>
+          <!-- SubstitutionCount=1 -->
+          <SubstitutionRecord index="0">
+            <FeatureIndex value="0"/>
+            <Feature>
+              <!-- LookupCount=1 -->
+              <LookupListIndex index="0" value="0"/>
+            </Feature>
+          </SubstitutionRecord>
+        </FeatureTableSubstitution>
+      </FeatureVariationRecord>
+    </FeatureVariations>
+  </GSUB>
 
   <fvar>
 

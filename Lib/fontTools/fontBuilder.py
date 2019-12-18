@@ -751,6 +751,20 @@ class FontBuilder(object):
         from .feaLib.builder import addOpenTypeFeaturesFromString
         addOpenTypeFeaturesFromString(self.font, features, filename=filename, tables=tables)
 
+    def addFeatureVariations(self, conditionalSubstitutions, featureTag="rvrn"):
+        """Add conditional substitutions to a Variable Font.
+
+        See `fontTools.varLib.featureVars.addFeatureVariations`.
+        """
+        from .varLib import featureVars
+
+        if "fvar" not in self.font:
+            raise KeyError("'fvar' table is missing; can't add FeatureVariations.")
+
+        featureVars.addFeatureVariations(
+            self.font, conditionalSubstitutions, featureTag=featureTag
+        )
+
 
 def buildCmapSubTable(cmapping, format, platformID, platEncID):
     subTable = cmap_classes[format](format)

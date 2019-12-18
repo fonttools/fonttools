@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 # Sample script to convert legacy cmap subtables to format-4
 # subtables.  Note that this is rarely what one needs.  You

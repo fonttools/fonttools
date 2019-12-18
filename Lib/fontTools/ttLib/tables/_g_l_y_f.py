@@ -1179,7 +1179,7 @@ class Glyph(object):
 		for end in endPts:
 			end = end + 1
 			contour = coordinates[start:end]
-			cFlags = flags[start:end]
+			cFlags = [flagOnCurve & f for f in flags[start:end]]
 			start = end
 			if 1 not in cFlags:
 				# There is not a single on-curve point on the curve,
@@ -1198,7 +1198,10 @@ class Glyph(object):
 				while contour:
 					nextOnCurve = cFlags.index(1) + 1
 					if nextOnCurve == 1:
-						pen.lineTo(contour[0])
+						# Skip a final lineTo(), as it is implied by
+						# pen.closePath()
+						if len(contour) > 1:
+							pen.lineTo(contour[0])
 					else:
 						pen.qCurveTo(*contour[:nextOnCurve])
 					contour = contour[nextOnCurve:]
@@ -1230,7 +1233,7 @@ class Glyph(object):
 			# Start with the appropriate segment type based on the final segment
 			segmentType = "line" if cFlags[-1] == 1 else "qcurve"
 			for i, pt in enumerate(contour):
-				if cFlags[i] == 1:
+				if cFlags[i] & flagOnCurve == 1:
 					pen.addPoint(pt, segmentType=segmentType)
 					segmentType = "line"
 				else:
