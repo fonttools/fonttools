@@ -22,7 +22,15 @@ def color_unified_diff_line(line):
     on the unified diff line type."""
     if line[0:2] == "+ ":
         return f"{green_start}{line}{reset}"
+    elif line == "+\n":
+        # some lines are formatted as hyphen only with no other characters
+        # this indicates an added empty line
+        return f"{green_start}{line}{reset}"
     elif line[0:2] == "- ":
+        return f"{red_start}{line}{reset}"
+    elif line == "-\n":
+        # some lines are formatted as hyphen only with no other characters
+        # this indicates a deleted empty line
         return f"{red_start}{line}{reset}"
     elif line[0:3] == "@@ ":
         return f"{cyan_start}{line}{reset}"
