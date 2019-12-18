@@ -917,8 +917,8 @@ class Builder(object):
                 if to_glyph == lookup.mapping[from_glyph]:
                     log.info(
                         'Removing duplicate single substitution from glyph'
-                        ' "%s" to "%s" at %s:%i:%i' %
-                        (from_glyph, to_glyph, *location),
+                        ' "%s" to "%s" at %s:%i:%i',
+                        from_glyph, to_glyph, *location,
                     )
                 else:
                     raise FeatureLibError(
