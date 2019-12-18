@@ -23,6 +23,7 @@ from fdiff.utils import get_file_modtime
 #
 # TODO: add docstrings for all private functions
 
+
 def _async_fetch_files(dirpath, urls):
     loop = asyncio.get_event_loop()
     tasks = loop.run_until_complete(
@@ -175,6 +176,7 @@ def u_diff(
     context_lines: (int) number of context lines to include in the diff (default=3)
     include_tables: (list of str) Python list of OpenType tables to include in the diff
     exclude_tables: (list of str) Python list of OpentType tables to exclude from the diff
+    use_multiprocess: (bool) use multi-processor optimizations (default=True)
 
     include_tables and exclude_tables are mutually exclusive arguments.  Only one should
     be defined
@@ -224,7 +226,24 @@ def external_diff(
     exclude_tables=None,
     use_multiprocess=True,
 ):
-    # TODO: Add docstring documentation
+    """Performs a unified diff on a TTX serialized data format dump of font binary data using
+        an external diff executable that is requested by the caller via `command`
+
+        command: (string) command line executable string and arguments to define execution
+        filepath_a: (string) pre-file local file path or URL path
+        filepath_b: (string) post-file local file path or URL path
+        include_tables: (list of str) Python list of OpenType tables to include in the diff
+        exclude_tables: (list of str) Python list of OpentType tables to exclude from the diff
+        use_multiprocess: (bool) use multi-processor optimizations (default=True)
+
+        include_tables and exclude_tables are mutually exclusive arguments.  Only one should
+        be defined
+
+        :returns: Generator of ordered diff line strings that include newline line endings
+        :raises: KeyError if include_tables or exclude_tables includes a mis-specified table
+        that is not included in filepath_a OR filepath_b
+        :raises: IOError if exception raised during execution of `command` on TTX files
+        :raises: fdiff.exceptions.AIOError if GET request to URL returned non-200 response status code"""
     with tempfile.TemporaryDirectory() as tmpdirpath:
         # define the file paths with either local file requests
         # or HTTP GET requests of remote files based on the command line request
