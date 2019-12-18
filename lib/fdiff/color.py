@@ -1,4 +1,3 @@
-import os
 
 ansicolors = {
     "BLACK": "\033[30m",
