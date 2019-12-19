@@ -325,7 +325,6 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 
     for glyph in font.getGlyphOrder():
         log.debug("building gvar for glyph '%s'", glyph)
-        isComposite = glyf[glyph].isComposite()
 
         allData = [
             m.glyf._getCoordinatesAndControls(glyph, m.hMetrics, m.vMetrics)
@@ -363,7 +362,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
         endPts = control.endPts
 
         for i, (delta, support) in enumerate(zip(deltas[1:], supports[1:])):
-            if all(v == 0 for v in delta.array) and not isComposite:
+            if all(v == 0 for v in delta.array):
                 continue
             var = TupleVariation(support, delta)
             if optimize:

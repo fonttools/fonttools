@@ -176,17 +176,6 @@
         <delta pt="35" x="0" y="0"/>
       </tuple>
     </glyphVariations>
-    <glyphVariations glyph="odieresis">
-      <tuple>
-        <coord axis="slnt" value="-1.0"/>
-        <delta pt="0" x="0" y="0"/>
-        <delta pt="1" x="0" y="0"/>
-        <delta pt="2" x="0" y="0"/>
-        <delta pt="3" x="0" y="0"/>
-        <delta pt="4" x="0" y="0"/>
-        <delta pt="5" x="0" y="0"/>
-      </tuple>
-    </glyphVariations>
     <glyphVariations glyph="uni0308">
       <tuple>
         <coord axis="slnt" value="-1.0"/>
