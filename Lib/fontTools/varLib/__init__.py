@@ -372,16 +372,6 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
                 )
 
                 if None in delta_opt:
-                    """In composite glyphs, there should be one 0 entry
-                    to make sure the gvar entry is written to the font.
-
-                    This is to work around an issue with macOS 10.14 and can be
-                    removed once the behaviour of macOS is changed.
-
-                    https://github.com/fonttools/fonttools/issues/1381
-                    """
-                    if all(d is None for d in delta_opt):
-                        delta_opt = [(0, 0)] + [None] * (len(delta_opt) - 1)
                     # Use "optimized" version only if smaller...
                     var_opt = TupleVariation(support, delta_opt)
 
