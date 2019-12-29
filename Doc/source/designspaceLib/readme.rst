@@ -30,7 +30,7 @@ The **DesignSpaceDocument** object can be subclassed to work with
 different objects, as long as they have the same attributes. Reader and
 Writer objects can be subclassed as well.
 
-**Note:** Python attribute names are usually cammelCased, the
+**Note:** Python attribute names are usually camelCased, the
 corresponding `XML <#document-xml-structure>`_ attributes are usually
 all lowercase.
 
