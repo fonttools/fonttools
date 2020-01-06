@@ -18,7 +18,7 @@ def _make_map(font, chars, gids):
 	cmap = {}
 	glyphOrder = font.getGlyphOrder()
 	for char,gid in zip(chars,gids):
-		if gid is 0:
+		if gid == 0:
 			continue
 		try:
 			name = glyphOrder[gid]
