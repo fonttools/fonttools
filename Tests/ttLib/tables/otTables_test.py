@@ -605,20 +605,87 @@ def test_splitMarkBasePos():
 	ok = otTables.splitMarkBasePos(oldSubTable, newSubTable, overflowRecord=None)
 
 	assert ok
-	assert oldSubTable.Format == newSubTable.Format
-	assert oldSubTable.MarkCoverage.glyphs == [
-		"acutecomb", "gravecomb"
+
+	assert getXML(oldSubTable.toXML) == [
+		'<MarkBasePos Format="1">',
+		'  <MarkCoverage Format="1">',
+		'    <Glyph value="acutecomb"/>',
+		'    <Glyph value="gravecomb"/>',
+		'  </MarkCoverage>',
+		'  <BaseCoverage Format="1">',
+		'    <Glyph value="a"/>',
+		'    <Glyph value="c"/>',
+		'  </BaseCoverage>',
+		'  <!-- ClassCount=1 -->',
+		'  <MarkArray>',
+		'    <!-- MarkCount=2 -->',
+		'    <MarkRecord index="0">',
+		'      <Class value="0"/>',
+		'      <MarkAnchor Format="1">',
+		'        <XCoordinate value="0"/>',
+		'        <YCoordinate value="600"/>',
+		'      </MarkAnchor>',
+		'    </MarkRecord>',
+		'    <MarkRecord index="1">',
+		'      <Class value="0"/>',
+		'      <MarkAnchor Format="1">',
+		'        <XCoordinate value="0"/>',
+		'        <YCoordinate value="590"/>',
+		'      </MarkAnchor>',
+		'    </MarkRecord>',
+		'  </MarkArray>',
+		'  <BaseArray>',
+		'    <!-- BaseCount=2 -->',
+		'    <BaseRecord index="0">',
+		'      <BaseAnchor index="0" Format="1">',
+		'        <XCoordinate value="350"/>',
+		'        <YCoordinate value="500"/>',
+		'      </BaseAnchor>',
+		'    </BaseRecord>',
+		'    <BaseRecord index="1">',
+		'      <BaseAnchor index="0" Format="1">',
+		'        <XCoordinate value="300"/>',
+		'        <YCoordinate value="700"/>',
+		'      </BaseAnchor>',
+		'    </BaseRecord>',
+		'  </BaseArray>',
+		'</MarkBasePos>',
 	]
-	assert newSubTable.MarkCoverage.glyphs == ["cedillacomb"]
-	assert newSubTable.MarkCoverage.Format == 1
-	assert oldSubTable.BaseCoverage.glyphs == newSubTable.BaseCoverage.glyphs
-	assert newSubTable.BaseCoverage.Format == 1
-	assert oldSubTable.ClassCount == newSubTable.ClassCount == 1
-	assert oldSubTable.MarkArray.MarkCount == 2
-	assert newSubTable.MarkArray.MarkCount == 1
-	assert oldSubTable.BaseArray.BaseCount == newSubTable.BaseArray.BaseCount
-	assert newSubTable.BaseArray.BaseRecord[0].BaseAnchor[0] is None
-	assert newSubTable.BaseArray.BaseRecord[1].BaseAnchor[0] == buildAnchor(300, 0)
+
+	assert getXML(newSubTable.toXML) == [
+		'<MarkBasePos Format="1">',
+		'  <MarkCoverage Format="1">',
+		'    <Glyph value="cedillacomb"/>',
+		'  </MarkCoverage>',
+		'  <BaseCoverage Format="1">',
+		'    <Glyph value="a"/>',
+		'    <Glyph value="c"/>',
+		'  </BaseCoverage>',
+		'  <!-- ClassCount=1 -->',
+		'  <MarkArray>',
+		'    <!-- MarkCount=1 -->',
+		'    <MarkRecord index="0">',
+		'      <Class value="0"/>',
+		'      <MarkAnchor Format="1">',
+		'        <XCoordinate value="0"/>',
+		'        <YCoordinate value="0"/>',
+		'      </MarkAnchor>',
+		'    </MarkRecord>',
+		'  </MarkArray>',
+		'  <BaseArray>',
+		'    <!-- BaseCount=2 -->',
+		'    <BaseRecord index="0">',
+		'      <BaseAnchor index="0" empty="1"/>',
+		'    </BaseRecord>',
+		'    <BaseRecord index="1">',
+		'      <BaseAnchor index="0" Format="1">',
+		'        <XCoordinate value="300"/>',
+		'        <YCoordinate value="0"/>',
+		'      </BaseAnchor>',
+		'    </BaseRecord>',
+		'  </BaseArray>',
+		'</MarkBasePos>',
+	]
 
 
 if __name__ == "__main__":

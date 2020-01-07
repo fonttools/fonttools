@@ -1415,6 +1415,7 @@ def splitMarkBasePos(oldSubTable, newSubTable, overflowRecord):
 			oldMarkCoverage.append(glyphName)
 			oldMarkRecords.append(markRecord)
 		else:
+			markRecord.Class -= oldClassCount
 			newMarkCoverage.append(glyphName)
 			newMarkRecords.append(markRecord)
 
