@@ -1,3 +1,6 @@
+4.2.3 (released 2020-01-07)
+---------------------------
+
 - [otTables] Fixed bug when splitting `MarkBasePos` subtables as offsets overflow.
   The mark class values in the split subtable were not being updated, leading to
   invalid mark-base attachments (#1797, googlefonts/noto-source#145).
