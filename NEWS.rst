@@ -1,3 +1,10 @@
+- [otTables] Fixed bug when splitting `MarkBasePos` subtables as offsets overflow.
+  The mark class values in the split subtable were not being updated, leading to
+  invalid mark-base attachments (#1797, googlefonts/noto-source#145).
+- [feaLib] Only log a warning instead of error when features contain duplicate
+  substitutions (#1767).
+- [glifLib] Strip XML comments when parsing with lxml (#1784, #1785).
+
 4.2.2 (released 2019-12-12)
 ---------------------------
 
