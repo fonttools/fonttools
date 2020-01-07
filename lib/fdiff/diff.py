@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import asyncio
 import os
 from multiprocessing import Pool, cpu_count

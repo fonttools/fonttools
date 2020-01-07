@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 ansicolors = {
     "BLACK": "\033[30m",
     "RED": "\033[31m",
