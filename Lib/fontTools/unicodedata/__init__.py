@@ -190,6 +190,14 @@ RTL_SCRIPTS = {
 
     # Unicode-9.0 additions
     'Adlm',  # Adlam
+
+    # Unicode-11.0 additions
+    'Rohg',  # Hanifi Rohingya
+    'Sogo',  # Old Sogdian
+    'Sogd',  # Sogdian
+
+    # Unicode-12.0 additions
+    'Elym',  # Elymaic
 }
 
 def script_horizontal_direction(script_code, default=KeyError):
