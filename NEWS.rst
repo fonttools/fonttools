@@ -1,3 +1,6 @@
+4.2.4 (released 2020-01-09)
+---------------------------
+
 - [unicodedata] Update RTL_SCRIPTS for Unicode 11 and 12.
 
 4.2.3 (released 2020-01-07)
