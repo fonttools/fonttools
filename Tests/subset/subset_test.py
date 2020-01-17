@@ -1,5 +1,6 @@
 import io
 from fontTools.misc.py23 import *
+from fontTools.misc.testTools import getXML
 from fontTools import subset
 from fontTools.fontBuilder import FontBuilder
 from fontTools.ttLib import TTFont, newTable
@@ -766,6 +767,72 @@ def test_subset_feature_variations():
     # 'rvrn' is required so it is kept by default
     assert "rvrn" in featureTags
     assert "dollar.rvrn" in font.getGlyphOrder()
+
+
+def test_subset_single_pos_format():
+    fb = FontBuilder(unitsPerEm=1000)
+    fb.setupGlyphOrder([".notdef", "a", "b", "c"])
+    fb.setupCharacterMap({ord("a"): "a", ord("b"): "b", ord("c"): "c"})
+    fb.setupNameTable({"familyName": "TestSingePosFormat", "styleName": "Regular"})
+    fb.setupPost()
+    fb.addOpenTypeFeatures("""
+        feature kern {
+            pos a -50;
+            pos b -40;
+            pos c -50;
+        } kern;
+    """)
+
+    buf = io.BytesIO()
+    fb.save(buf)
+    buf.seek(0)
+
+    font = TTFont(buf)
+
+    # The input font has a SinglePos Format 2 subtable where each glyph has
+    # different ValueRecords
+    assert getXML(font["GPOS"].table.LookupList.Lookup[0].toXML, font) == [
+        '<Lookup>',
+        '  <LookupType value="1"/>',
+        '  <LookupFlag value="0"/>',
+        '  <!-- SubTableCount=1 -->',
+        '  <SinglePos index="0" Format="2">',
+        '    <Coverage Format="1">',
+        '      <Glyph value="a"/>',
+        '      <Glyph value="b"/>',
+        '      <Glyph value="c"/>',
+        '    </Coverage>',
+        '    <ValueFormat value="4"/>',
+        '    <!-- ValueCount=3 -->',
+        '    <Value index="0" XAdvance="-50"/>',
+        '    <Value index="1" XAdvance="-40"/>',
+        '    <Value index="2" XAdvance="-50"/>',
+        '  </SinglePos>',
+        '</Lookup>',
+    ]
+
+    options = subset.Options()
+    subsetter = subset.Subsetter(options)
+    subsetter.populate(unicodes=[ord("a"), ord("c")])
+    subsetter.subset(font)
+
+    # All the subsetted glyphs from the original SinglePos Format2 subtable
+    # now have the same ValueRecord, so we use a more compact Format 1 subtable.
+    assert getXML(font["GPOS"].table.LookupList.Lookup[0].toXML, font) == [
+        '<Lookup>',
+        '  <LookupType value="1"/>',
+        '  <LookupFlag value="0"/>',
+        '  <!-- SubTableCount=1 -->',
+        '  <SinglePos index="0" Format="1">',
+        '    <Coverage Format="1">',
+        '      <Glyph value="a"/>',
+        '      <Glyph value="c"/>',
+        '    </Coverage>',
+        '    <ValueFormat value="4"/>',
+        '    <Value XAdvance="-50"/>',
+        '  </SinglePos>',
+        '</Lookup>',
+    ]
 
 
 if __name__ == "__main__":
