@@ -546,6 +546,11 @@ def prune_post_subset(self, font, options):
 	if not options.hinting:
 		# Drop device tables
 		self.ValueFormat &= ~0x00F0
+	# Downgrade to Format 1 if all ValueRecords are the same
+	if self.Format == 2 and all(v == self.Value[0] for v in self.Value):
+		self.Format = 1
+		self.Value = self.Value[0] if self.ValueFormat != 0 else None
+		del self.ValueCount
 	return True
 
 @_add_method(otTables.PairPos)
