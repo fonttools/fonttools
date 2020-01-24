@@ -922,7 +922,7 @@ def _open_font(path, master_finder=lambda s: s):
 		font = TTFont()
 		font.importXML(master_path)
 	elif tp in ("TTF", "OTF", "WOFF", "WOFF2"):
-		font = TTFont(master_path)
+		font = TTFont(master_path, lazy=True)
 	else:
 		raise VarLibError("Invalid master path: %r" % master_path)
 	return font
