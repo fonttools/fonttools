@@ -892,9 +892,17 @@ class Builder(object):
             return
         lookup = self.get_lookup_(location, MultipleSubstBuilder)
         if glyph in lookup.mapping:
-            raise FeatureLibError(
-                'Already defined substitution for glyph "%s"' % glyph,
-                location)
+            if replacements == lookup.mapping[glyph]:
+                log.info(
+                    'Removing duplicate multiple substitution from glyph'
+                    ' "%s" to %s%s',
+                    glyph, replacements,
+                    ' at {}:{}:{}'.format(*location) if location else '',
+                )
+            else:
+                raise FeatureLibError(
+                    'Already defined substitution for glyph "%s"' % glyph,
+                    location)
         lookup.mapping[glyph] = replacements
 
     def add_reverse_chain_single_subst(self, location, old_prefix,
