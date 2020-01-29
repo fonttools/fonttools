@@ -1396,12 +1396,22 @@ class ParserTest(unittest.TestCase):
                          "  sub f_f   by f f;"
                          "  sub f     by f;"
                          "  sub f_f_i by f f i;"
+                         "  sub [a a.sc] by a;"
+                         "  sub [a a.sc] by [b b.sc];"
                          "} Look;")
         statements = doc.statements[0].statements
         for sub in statements:
             self.assertIsInstance(sub, ast.MultipleSubstStatement)
         self.assertEqual(statements[1].glyph, "f")
         self.assertEqual(statements[1].replacement, ["f"])
+        self.assertEqual(statements[3].glyph, "a")
+        self.assertEqual(statements[3].replacement, ["a"])
+        self.assertEqual(statements[4].glyph, "a.sc")
+        self.assertEqual(statements[4].replacement, ["a"])
+        self.assertEqual(statements[5].glyph, "a")
+        self.assertEqual(statements[5].replacement, ["b"])
+        self.assertEqual(statements[6].glyph, "a.sc")
+        self.assertEqual(statements[6].replacement, ["b.sc"])
 
     def test_substitute_from(self):  # GSUB LookupType 3
         doc = self.parse("feature test {"
