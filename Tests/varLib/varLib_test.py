@@ -483,7 +483,7 @@ class BuildTest(unittest.TestCase):
 
         ds_path = self.get_test_input("SparseMasters.designspace")
         ds = DesignSpaceDocument.fromfile(ds_path)
-        master_fonts = load_masters(ds)
+        load_masters(ds)
 
         # Trigger MVAR generation so varLib is forced to create deltas with a
         # sparse master inbetween.
