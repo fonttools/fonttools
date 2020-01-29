@@ -1322,3 +1322,14 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
                 loaded[source.path] = source.font
             fonts.append(source.font)
         return fonts
+
+    def closeSourceFonts(self):
+        for source in self.sources:
+            if source.font is not None:
+                source.font.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.closeSourceFonts()
