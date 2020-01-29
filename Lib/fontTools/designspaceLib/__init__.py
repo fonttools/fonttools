@@ -1325,7 +1325,7 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
 
     def closeSourceFonts(self):
         for source in self.sources:
-            if source.font is not None:
+            if source.font is not None and hasattr(source.font, "close"):
                 source.font.close()
 
     def __enter__(self):
