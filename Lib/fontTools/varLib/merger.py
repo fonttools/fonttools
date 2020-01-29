@@ -87,6 +87,11 @@ class Merger(object):
 
 	def mergeThings(self, out, lst):
 		try:
+			if hasattr(out, "ensureDecompiled"):
+				out.ensureDecompiled()
+			for item in lst:
+				if hasattr(item, "ensureDecompiled"):
+					item.ensureDecompiled()
 			assert allEqualTo(out, lst, type), (out, lst)
 			mergerFunc = self.mergersFor(out).get(None, None)
 			if mergerFunc is not None:
