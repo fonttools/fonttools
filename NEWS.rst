@@ -1,3 +1,7 @@
+- [feaLib] Do not fail on duplicate multiple substitutions, only warn (#1811).
+- [subset] Optimize SinglePos subtables to Format 1 if all ValueRecords are the same
+  (#1802).
+
 4.2.4 (released 2020-01-09)
 ---------------------------
 
