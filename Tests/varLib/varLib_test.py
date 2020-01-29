@@ -485,83 +485,79 @@ class BuildTest(unittest.TestCase):
         ds = DesignSpaceDocument.fromfile(ds_path)
         master_fonts = load_masters(ds)
 
-        try:
-            # Trigger MVAR generation so varLib is forced to create deltas with a
-            # sparse master inbetween.
-            font_0_os2 = ds.sources[0].font["OS/2"]
-            font_0_os2.sTypoAscender = 1
-            font_0_os2.sTypoDescender = 1
-            font_0_os2.sTypoLineGap = 1
-            font_0_os2.usWinAscent = 1
-            font_0_os2.usWinDescent = 1
-            font_0_os2.sxHeight = 1
-            font_0_os2.sCapHeight = 1
-            font_0_os2.ySubscriptXSize = 1
-            font_0_os2.ySubscriptYSize = 1
-            font_0_os2.ySubscriptXOffset = 1
-            font_0_os2.ySubscriptYOffset = 1
-            font_0_os2.ySuperscriptXSize = 1
-            font_0_os2.ySuperscriptYSize = 1
-            font_0_os2.ySuperscriptXOffset = 1
-            font_0_os2.ySuperscriptYOffset = 1
-            font_0_os2.yStrikeoutSize = 1
-            font_0_os2.yStrikeoutPosition = 1
-            font_0_vhea = newTable("vhea")
-            font_0_vhea.ascent = 1
-            font_0_vhea.descent = 1
-            font_0_vhea.lineGap = 1
-            font_0_vhea.caretSlopeRise = 1
-            font_0_vhea.caretSlopeRun = 1
-            font_0_vhea.caretOffset = 1
-            ds.sources[0].font["vhea"] = font_0_vhea
-            font_0_hhea = ds.sources[0].font["hhea"]
-            font_0_hhea.caretSlopeRise = 1
-            font_0_hhea.caretSlopeRun = 1
-            font_0_hhea.caretOffset = 1
-            font_0_post = ds.sources[0].font["post"]
-            font_0_post.underlineThickness = 1
-            font_0_post.underlinePosition = 1
+        # Trigger MVAR generation so varLib is forced to create deltas with a
+        # sparse master inbetween.
+        font_0_os2 = ds.sources[0].font["OS/2"]
+        font_0_os2.sTypoAscender = 1
+        font_0_os2.sTypoDescender = 1
+        font_0_os2.sTypoLineGap = 1
+        font_0_os2.usWinAscent = 1
+        font_0_os2.usWinDescent = 1
+        font_0_os2.sxHeight = 1
+        font_0_os2.sCapHeight = 1
+        font_0_os2.ySubscriptXSize = 1
+        font_0_os2.ySubscriptYSize = 1
+        font_0_os2.ySubscriptXOffset = 1
+        font_0_os2.ySubscriptYOffset = 1
+        font_0_os2.ySuperscriptXSize = 1
+        font_0_os2.ySuperscriptYSize = 1
+        font_0_os2.ySuperscriptXOffset = 1
+        font_0_os2.ySuperscriptYOffset = 1
+        font_0_os2.yStrikeoutSize = 1
+        font_0_os2.yStrikeoutPosition = 1
+        font_0_vhea = newTable("vhea")
+        font_0_vhea.ascent = 1
+        font_0_vhea.descent = 1
+        font_0_vhea.lineGap = 1
+        font_0_vhea.caretSlopeRise = 1
+        font_0_vhea.caretSlopeRun = 1
+        font_0_vhea.caretOffset = 1
+        ds.sources[0].font["vhea"] = font_0_vhea
+        font_0_hhea = ds.sources[0].font["hhea"]
+        font_0_hhea.caretSlopeRise = 1
+        font_0_hhea.caretSlopeRun = 1
+        font_0_hhea.caretOffset = 1
+        font_0_post = ds.sources[0].font["post"]
+        font_0_post.underlineThickness = 1
+        font_0_post.underlinePosition = 1
 
-            font_2_os2 = ds.sources[2].font["OS/2"]
-            font_2_os2.sTypoAscender = 800
-            font_2_os2.sTypoDescender = 800
-            font_2_os2.sTypoLineGap = 800
-            font_2_os2.usWinAscent = 800
-            font_2_os2.usWinDescent = 800
-            font_2_os2.sxHeight = 800
-            font_2_os2.sCapHeight = 800
-            font_2_os2.ySubscriptXSize = 800
-            font_2_os2.ySubscriptYSize = 800
-            font_2_os2.ySubscriptXOffset = 800
-            font_2_os2.ySubscriptYOffset = 800
-            font_2_os2.ySuperscriptXSize = 800
-            font_2_os2.ySuperscriptYSize = 800
-            font_2_os2.ySuperscriptXOffset = 800
-            font_2_os2.ySuperscriptYOffset = 800
-            font_2_os2.yStrikeoutSize = 800
-            font_2_os2.yStrikeoutPosition = 800
-            font_2_vhea = newTable("vhea")
-            font_2_vhea.ascent = 800
-            font_2_vhea.descent = 800
-            font_2_vhea.lineGap = 800
-            font_2_vhea.caretSlopeRise = 800
-            font_2_vhea.caretSlopeRun = 800
-            font_2_vhea.caretOffset = 800
-            ds.sources[2].font["vhea"] = font_2_vhea
-            font_2_hhea = ds.sources[2].font["hhea"]
-            font_2_hhea.caretSlopeRise = 800
-            font_2_hhea.caretSlopeRun = 800
-            font_2_hhea.caretOffset = 800
-            font_2_post = ds.sources[2].font["post"]
-            font_2_post.underlineThickness = 800
-            font_2_post.underlinePosition = 800
+        font_2_os2 = ds.sources[2].font["OS/2"]
+        font_2_os2.sTypoAscender = 800
+        font_2_os2.sTypoDescender = 800
+        font_2_os2.sTypoLineGap = 800
+        font_2_os2.usWinAscent = 800
+        font_2_os2.usWinDescent = 800
+        font_2_os2.sxHeight = 800
+        font_2_os2.sCapHeight = 800
+        font_2_os2.ySubscriptXSize = 800
+        font_2_os2.ySubscriptYSize = 800
+        font_2_os2.ySubscriptXOffset = 800
+        font_2_os2.ySubscriptYOffset = 800
+        font_2_os2.ySuperscriptXSize = 800
+        font_2_os2.ySuperscriptYSize = 800
+        font_2_os2.ySuperscriptXOffset = 800
+        font_2_os2.ySuperscriptYOffset = 800
+        font_2_os2.yStrikeoutSize = 800
+        font_2_os2.yStrikeoutPosition = 800
+        font_2_vhea = newTable("vhea")
+        font_2_vhea.ascent = 800
+        font_2_vhea.descent = 800
+        font_2_vhea.lineGap = 800
+        font_2_vhea.caretSlopeRise = 800
+        font_2_vhea.caretSlopeRun = 800
+        font_2_vhea.caretOffset = 800
+        ds.sources[2].font["vhea"] = font_2_vhea
+        font_2_hhea = ds.sources[2].font["hhea"]
+        font_2_hhea.caretSlopeRise = 800
+        font_2_hhea.caretSlopeRun = 800
+        font_2_hhea.caretOffset = 800
+        font_2_post = ds.sources[2].font["post"]
+        font_2_post.underlineThickness = 800
+        font_2_post.underlinePosition = 800
 
-            varfont, _, _ = build(ds)
-            mvar_tags = [vr.ValueTag for vr in varfont["MVAR"].table.ValueRecord]
-            assert all(tag in mvar_tags for tag in fontTools.varLib.mvar.MVAR_ENTRIES)
-        finally:
-            for master in master_fonts:
-                master.close()
+        varfont, _, _ = build(ds)
+        mvar_tags = [vr.ValueTag for vr in varfont["MVAR"].table.ValueRecord]
+        assert all(tag in mvar_tags for tag in fontTools.varLib.mvar.MVAR_ENTRIES)
 
     def test_varlib_build_VVAR_CFF2(self):
         ds_path = self.get_test_input('TestVVAR.designspace')
