@@ -95,3 +95,42 @@ feature test {
     lookup M;
     lookup N;
 } test;
+
+feature test {
+    lookupflag IgnoreMarks;
+    lookup O {
+        pos one 1;
+    } O;
+    lookup P {
+       pos one 1;
+    } P;
+} test;
+
+feature test {
+    lookup Q {
+         pos one 1;
+    } Q;
+    lookup R {
+         pos one 1;
+    } R;
+} test;
+
+feature test {
+    lookup S {
+        lookupflag IgnoreMarks;
+        pos one 1;
+    } S;
+    lookup T {
+        pos one 1;
+    } T;
+} test;
+
+feature test {
+    lookup U {
+        pos one 1;
+    } U;
+    lookup V {
+        lookupflag IgnoreMarks;
+        pos one 1;
+    } V;
+} test;

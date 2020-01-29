@@ -61,7 +61,7 @@
       <FeatureRecord index="0">
         <FeatureTag value="test"/>
         <Feature>
-          <!-- LookupCount=14 -->
+          <!-- LookupCount=22 -->
           <LookupListIndex index="0" value="0"/>
           <LookupListIndex index="1" value="1"/>
           <LookupListIndex index="2" value="2"/>
@@ -76,11 +76,19 @@
           <LookupListIndex index="11" value="11"/>
           <LookupListIndex index="12" value="12"/>
           <LookupListIndex index="13" value="13"/>
+          <LookupListIndex index="14" value="14"/>
+          <LookupListIndex index="15" value="15"/>
+          <LookupListIndex index="16" value="16"/>
+          <LookupListIndex index="17" value="17"/>
+          <LookupListIndex index="18" value="18"/>
+          <LookupListIndex index="19" value="19"/>
+          <LookupListIndex index="20" value="20"/>
+          <LookupListIndex index="21" value="21"/>
         </Feature>
       </FeatureRecord>
     </FeatureList>
     <LookupList>
-      <!-- LookupCount=14 -->
+      <!-- LookupCount=22 -->
       <Lookup index="0">
         <LookupType value="1"/>
         <LookupFlag value="1"/>
@@ -248,6 +256,102 @@
         <SinglePos index="0" Format="1">
           <Coverage>
             <Glyph value="N"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="14">
+        <LookupType value="1"/>
+        <LookupFlag value="8"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="one"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="15">
+        <LookupType value="1"/>
+        <LookupFlag value="8"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="one"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="16">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="one"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="17">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="one"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="18">
+        <LookupType value="1"/>
+        <LookupFlag value="8"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="one"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="19">
+        <LookupType value="1"/>
+        <LookupFlag value="8"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="one"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="20">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="one"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="21">
+        <LookupType value="1"/>
+        <LookupFlag value="8"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="one"/>
           </Coverage>
           <ValueFormat value="4"/>
           <Value XAdvance="1"/>
