@@ -854,7 +854,7 @@ def parseLookup(lines, tableTag, font, lookupMap=None):
 
 	lookup.SubTable = subtables
 	lookup.SubTableCount = len(lookup.SubTable)
-	if lookup.SubTableCount is 0:
+	if lookup.SubTableCount == 0:
 		# Remove this return when following is fixed:
 		# https://github.com/fonttools/fonttools/issues/789
 		return None
