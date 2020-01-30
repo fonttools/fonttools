@@ -1452,12 +1452,21 @@ class Parser(object):
 
         # Upgrade all single substitutions to multiple substitutions.
         if has_single and has_multiple:
-            for i, s in enumerate(statements):
+            statements = []
+            for s in block.statements:
                 if isinstance(s, self.ast.SingleSubstStatement):
-                    statements[i] = self.ast.MultipleSubstStatement(
-                        s.prefix, s.glyphs[0].glyphSet()[0], s.suffix,
-                        [r.glyphSet()[0] for r in s.replacements],
-                        s.forceChain, location=s.location)
+                    glyphs = s.glyphs[0].glyphSet()
+                    replacements = s.replacements[0].glyphSet()
+                    if len(replacements) == 1:
+                        replacements *= len(glyphs)
+                    for i, glyph in enumerate(glyphs):
+                        statements.append(
+                            self.ast.MultipleSubstStatement(
+                                s.prefix, glyph, s.suffix, [replacements[i]],
+                                s.forceChain, location=s.location))
+                else:
+                    statements.append(s)
+            block.statements = statements
 
     def is_cur_keyword_(self, k):
         if self.cur_token_type_ is Lexer.NAME:
