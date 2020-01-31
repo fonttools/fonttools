@@ -33,7 +33,7 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 
 	# Note: Keep in sync with table__v_h_e_a
 
-	dependencies = ['hmtx', 'glyf', 'CFF ']
+	dependencies = ['hmtx', 'glyf', 'CFF ', 'CFF2']
 
 	# OpenType spec renamed these, add aliases for compatibility
 	@property
@@ -52,7 +52,7 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 		sstruct.unpack(hheaFormat, data, self)
 
 	def compile(self, ttFont):
-		if ttFont.recalcBBoxes and (ttFont.isLoaded('glyf') or ttFont.isLoaded('CFF ')):
+		if ttFont.recalcBBoxes and (ttFont.isLoaded('glyf') or ttFont.isLoaded('CFF ') or ttFont.isLoaded('CFF2')):
 			self.recalc(ttFont)
 		self.tableVersion = fi2ve(self.tableVersion)
 		return sstruct.pack(hheaFormat, self)
@@ -74,8 +74,11 @@ class table__h_h_e_a(DefaultTable.DefaultTable):
 					# Calculate those.
 					g.recalcBounds(glyfTable)
 				boundsWidthDict[name] = g.xMax - g.xMin
-		elif 'CFF ' in ttFont:
-			topDict = ttFont['CFF '].cff.topDictIndex[0]
+		elif 'CFF ' in ttFont or 'CFF2' in ttFont:
+			if 'CFF ' in ttFont:
+				topDict = ttFont['CFF '].cff.topDictIndex[0]
+			else:
+				topDict = ttFont['CFF2'].cff.topDictIndex[0]
 			charStrings = topDict.CharStrings
 			for name in ttFont.getGlyphOrder():
 				cs = charStrings[name]
