@@ -1,0 +1,510 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont sfntVersion="OTTO" ttLibVersion="4.2">
+
+  <GlyphOrder>
+    <!-- The 'id' attribute is only for humans; it is ignored when parsed. -->
+    <GlyphID id="0" name=".notdef"/>
+    <GlyphID id="1" name="A"/>
+    <GlyphID id="2" name="T"/>
+    <GlyphID id="3" name="dollar.a"/>
+    <GlyphID id="4" name="dollar"/>
+  </GlyphOrder>
+
+  <head>
+    <!-- Most of this table will be recalculated by the compiler -->
+    <tableVersion value="1.0"/>
+    <fontRevision value="1.01"/>
+    <checkSumAdjustment value="0xeb345d38"/>
+    <magicNumber value="0x5f0f3cf5"/>
+    <flags value="00000000 00000011"/>
+    <unitsPerEm value="1000"/>
+    <created value="Thu Nov 29 14:52:09 2018"/>
+    <modified value="Thu Nov 29 14:52:09 2018"/>
+    <xMin value="50"/>
+    <yMin value="-115"/>
+    <xMax value="550"/>
+    <yMax value="762"/>
+    <macStyle value="00000000 00000000"/>
+    <lowestRecPPEM value="3"/>
+    <fontDirectionHint value="2"/>
+    <indexToLocFormat value="0"/>
+    <glyphDataFormat value="0"/>
+  </head>
+
+  <hhea>
+    <tableVersion value="0x00010000"/>
+    <ascent value="984"/>
+    <descent value="-273"/>
+    <lineGap value="0"/>
+    <advanceWidthMax value="600"/>
+    <minLeftSideBearing value="50"/>
+    <minRightSideBearing value="50"/>
+    <xMaxExtent value="550"/>
+    <caretSlopeRise value="1"/>
+    <caretSlopeRun value="0"/>
+    <caretOffset value="0"/>
+    <reserved0 value="0"/>
+    <reserved1 value="0"/>
+    <reserved2 value="0"/>
+    <reserved3 value="0"/>
+    <metricDataFormat value="0"/>
+    <numberOfHMetrics value="5"/>
+  </hhea>
+
+  <maxp>
+    <tableVersion value="0x5000"/>
+    <numGlyphs value="5"/>
+  </maxp>
+
+  <OS_2>
+    <!-- The fields 'usFirstCharIndex' and 'usLastCharIndex'
+         will be recalculated by the compiler -->
+    <version value="3"/>
+    <xAvgCharWidth value="578"/>
+    <usWeightClass value="200"/>
+    <usWidthClass value="5"/>
+    <fsType value="00000000 00000000"/>
+    <ySubscriptXSize value="650"/>
+    <ySubscriptYSize value="600"/>
+    <ySubscriptXOffset value="0"/>
+    <ySubscriptYOffset value="75"/>
+    <ySuperscriptXSize value="650"/>
+    <ySuperscriptYSize value="600"/>
+    <ySuperscriptXOffset value="0"/>
+    <ySuperscriptYOffset value="350"/>
+    <yStrikeoutSize value="50"/>
+    <yStrikeoutPosition value="286"/>
+    <sFamilyClass value="0"/>
+    <panose>
+      <bFamilyType value="2"/>
+      <bSerifStyle value="11"/>
+      <bWeight value="3"/>
+      <bProportion value="9"/>
+      <bContrast value="3"/>
+      <bStrokeVariation value="4"/>
+      <bArmStyle value="3"/>
+      <bLetterForm value="2"/>
+      <bMidline value="2"/>
+      <bXHeight value="4"/>
+    </panose>
+    <ulUnicodeRange1 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange2 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange3 value="00000000 00000000 00000000 00000000"/>
+    <ulUnicodeRange4 value="00000000 00000000 00000000 00000000"/>
+    <achVendID value="ADBO"/>
+    <fsSelection value="00000000 00000000"/>
+    <usFirstCharIndex value="36"/>
+    <usLastCharIndex value="84"/>
+    <sTypoAscender value="750"/>
+    <sTypoDescender value="-250"/>
+    <sTypoLineGap value="0"/>
+    <usWinAscent value="984"/>
+    <usWinDescent value="273"/>
+    <ulCodePageRange1 value="00000000 00000000 00000000 00000001"/>
+    <ulCodePageRange2 value="00000000 00000000 00000000 00000000"/>
+    <sxHeight value="478"/>
+    <sCapHeight value="660"/>
+    <usDefaultChar value="0"/>
+    <usBreakChar value="32"/>
+    <usMaxContext value="1"/>
+  </OS_2>
+
+  <name>
+    <namerecord nameID="1" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Source Code Variable
+    </namerecord>
+    <namerecord nameID="2" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      1.010;ADBO;SourceCode_ExtraLight
+    </namerecord>
+    <namerecord nameID="4" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Source Code Variable
+    </namerecord>
+    <namerecord nameID="5" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Version 1.010;hotconv 1.0.109;makeotfexe 2.5.65596
+    </namerecord>
+    <namerecord nameID="6" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      SourceCode_ExtraLight
+    </namerecord>
+    <namerecord nameID="17" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Roman Master 0
+    </namerecord>
+    <namerecord nameID="1" platformID="3" platEncID="1" langID="0x409">
+      Source Code Variable
+    </namerecord>
+    <namerecord nameID="2" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="3" platformID="3" platEncID="1" langID="0x409">
+      1.010;ADBO;SourceCode_ExtraLight
+    </namerecord>
+    <namerecord nameID="4" platformID="3" platEncID="1" langID="0x409">
+      Source Code Variable
+    </namerecord>
+    <namerecord nameID="5" platformID="3" platEncID="1" langID="0x409">
+      Version 1.010;hotconv 1.0.109;makeotfexe 2.5.65596
+    </namerecord>
+    <namerecord nameID="6" platformID="3" platEncID="1" langID="0x409">
+      SourceCode_ExtraLight
+    </namerecord>
+    <namerecord nameID="17" platformID="3" platEncID="1" langID="0x409">
+      Roman Master 0
+    </namerecord>
+  </name>
+
+  <cmap>
+    <tableVersion version="0"/>
+    <cmap_format_4 platformID="0" platEncID="3" language="0">
+      <map code="0x24" name="dollar"/><!-- DOLLAR SIGN -->
+      <map code="0x41" name="A"/><!-- LATIN CAPITAL LETTER A -->
+      <map code="0x54" name="T"/><!-- LATIN CAPITAL LETTER T -->
+    </cmap_format_4>
+    <cmap_format_6 platformID="1" platEncID="0" language="0">
+      <map code="0x24" name="dollar"/>
+      <map code="0x41" name="A"/>
+      <map code="0x54" name="T"/>
+    </cmap_format_6>
+    <cmap_format_4 platformID="3" platEncID="1" language="0">
+      <map code="0x24" name="dollar"/><!-- DOLLAR SIGN -->
+      <map code="0x41" name="A"/><!-- LATIN CAPITAL LETTER A -->
+      <map code="0x54" name="T"/><!-- LATIN CAPITAL LETTER T -->
+    </cmap_format_4>
+  </cmap>
+
+  <post>
+    <formatType value="2.0"/>
+    <italicAngle value="0.0"/>
+    <underlinePosition value="-75"/>
+    <underlineThickness value="50"/>
+    <isFixedPitch value="1"/>
+    <minMemType42 value="0"/>
+    <maxMemType42 value="0"/>
+    <minMemType1 value="0"/>
+    <maxMemType1 value="0"/>
+    <psNames>
+      <!-- This file uses unique glyph names based on the information
+           found in the 'post' table. Since these names might not be unique,
+           we have to invent artificial names in case of clashes. In order to
+           be able to retain the original information, we need a name to
+           ps name mapping for those cases where they differ. That's what
+           you see below.
+            -->
+    </psNames>
+    <extraNames>
+      <!-- following are the name that are not taken from the standard Mac glyph order -->
+      <psName name="dollar.a"/>
+    </extraNames>
+  </post>
+
+  <CFF2>
+    <major value="2"/>
+    <minor value="0"/>
+    <CFFFont name="CFF2Font">
+      <FontMatrix value="0.001 0 0 0.001 0 0"/>
+      <FDArray>
+        <FontDict index="0">
+          <Private>
+            <BlueValues value="-12 0 478 490 570 582 640 652 660 672 722 734"/>
+            <OtherBlues value="-234 -222"/>
+            <FamilyBlues value="-12 0 486 498 574 586 638 650 656 668 712 724"/>
+            <FamilyOtherBlues value="-217 -205"/>
+            <BlueScale value="0.0625"/>
+            <BlueShift value="7"/>
+            <BlueFuzz value="0"/>
+            <StdHW value="28"/>
+            <StdVW value="34"/>
+          </Private>
+        </FontDict>
+      </FDArray>
+      <CharStrings>
+        <CharString name=".notdef">
+          84 0 rmoveto
+          432 0 rlineto
+          0 660 rlineto
+          -432 0 rlineto
+          0 -660 rlineto
+          48 32 rmoveto
+          102 176 rlineto
+          64 106 rlineto
+          4 0 rlineto
+          62 -106 rlineto
+          100 -176 rlineto
+          -332 0 rlineto
+          -10 42 rmoveto
+          0 536 rlineto
+          154 -270 rlineto
+          -154 -266 rlineto
+          176 292 rmoveto
+          -56 92 rlineto
+          -94 168 rlineto
+          302 0 rlineto
+          -94 -168 rlineto
+          -54 -92 rlineto
+          -4 0 rlineto
+          26 -26 rmoveto
+          152 270 rlineto
+          0 -536 rlineto
+          -152 266 rlineto
+        </CharString>
+        <CharString name="A">
+          50 0 rmoveto
+          32 0 rlineto
+          140 396 rlineto
+          28 80 24 68 24 82 rrcurveto
+          4 0 rlineto
+          24 -82 24 -68 28 -80 rrcurveto
+          138 -396 rlineto
+          34 0 rlineto
+          -236 660 rlineto
+          -28 0 rlineto
+          -236 -660 rlineto
+          102 236 rmoveto
+          293 0 rlineto
+          0 28 rlineto
+          -293 0 rlineto
+          0 -28 rlineto
+        </CharString>
+        <CharString name="T">
+          284 0 rmoveto
+          32 0 rlineto
+          0 632 rlineto
+          234 0 rlineto
+          0 28 rlineto
+          -500 0 rlineto
+          0 -28 rlineto
+          234 0 rlineto
+          0 -632 rlineto
+        </CharString>
+        <CharString name="dollar">
+          -107 245 7 rmoveto
+          -65 0 -39 15 -46 50 rrcurveto
+          36 -48 rlineto
+          -28 100 rlineto
+          -4 16 -12 4 -11 0 rrcurveto
+          -14 0 -8 -7 -1 -14 rrcurveto
+          24 -85 61 -51 107 0 rrcurveto
+          91 0 90 53 0 111 rrcurveto
+          0 70 -26 66 -134 57 rrcurveto
+          -19 8 rlineto
+          -93 39 -42 49 0 68 rrcurveto
+          0 91 60 48 88 0 rrcurveto
+          56 0 35 -14 44 -50 rrcurveto
+          -38 47 rlineto
+          28 -100 rlineto
+          6 -15 10 -5 11 0 rrcurveto
+          14 0 8 7 1 14 rrcurveto
+          -24 88 -67 48 -84 0 rrcurveto
+          -92 0 -82 -51 0 -108 rrcurveto
+          0 -80 45 -53 92 -42 rrcurveto
+          37 -17 rlineto
+          114 -52 26 -46 0 -65 rrcurveto
+          0 -92 -65 -54 -90 0 rrcurveto
+          18 327 rmoveto
+          0 428 rlineto
+          -22 0 rlineto
+          0 -428 rlineto
+          22 0 rlineto
+          -22 -449 rmoveto
+          22 0 rlineto
+          0 449 rlineto
+          -22 0 rlineto
+          0 -449 rlineto
+        </CharString>
+        <CharString name="dollar.a">
+          311 34 rmoveto
+          103 0 88 56 0 94 rrcurveto
+          0 184 -338 -32 0 142 rrcurveto
+          0 68 57 44 85 0 rrcurveto
+          76 0 34 -24 44 -38 rrcurveto
+          20 20 rlineto
+          -41 38 -45 32 -85 0 rrcurveto
+          -99 0 -78 -54 0 -88 rrcurveto
+          0 -166 338 28 0 -156 rrcurveto
+          0 -70 -56 -50 -103 0 rrcurveto
+          -85 0 -66 38 -40 34 rrcurveto
+          -18 -22 rlineto
+          45 -38 73 -40 91 0 rrcurveto
+          -70 -146 rmoveto
+          158 860 rlineto
+          -30 4 rlineto
+          -158 -860 rlineto
+          30 -4 rlineto
+        </CharString>
+      </CharStrings>
+    </CFFFont>
+
+    <GlobalSubrs>
+      <!-- The 'index' attribute is only for humans; it is ignored when parsed. -->
+    </GlobalSubrs>
+  </CFF2>
+
+  <BASE>
+    <Version value="0x00010000"/>
+    <HorizAxis>
+      <BaseTagList>
+        <!-- BaseTagCount=2 -->
+        <BaselineTag index="0" value="ideo"/>
+        <BaselineTag index="1" value="romn"/>
+      </BaseTagList>
+      <BaseScriptList>
+        <!-- BaseScriptCount=4 -->
+        <BaseScriptRecord index="0">
+          <BaseScriptTag value="DFLT"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="1"/>
+              <!-- BaseCoordCount=2 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="-170"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="1">
+          <BaseScriptTag value="cyrl"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="1"/>
+              <!-- BaseCoordCount=2 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="-170"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="2">
+          <BaseScriptTag value="grek"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="1"/>
+              <!-- BaseCoordCount=2 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="-170"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+        <BaseScriptRecord index="3">
+          <BaseScriptTag value="latn"/>
+          <BaseScript>
+            <BaseValues>
+              <DefaultIndex value="1"/>
+              <!-- BaseCoordCount=2 -->
+              <BaseCoord index="0" Format="1">
+                <Coordinate value="-170"/>
+              </BaseCoord>
+              <BaseCoord index="1" Format="1">
+                <Coordinate value="0"/>
+              </BaseCoord>
+            </BaseValues>
+            <!-- BaseLangSysCount=0 -->
+          </BaseScript>
+        </BaseScriptRecord>
+      </BaseScriptList>
+    </HorizAxis>
+  </BASE>
+
+  <GPOS>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="size"/>
+        <Feature>
+          <FeatureParamsSize>
+            <DesignSize value="10.0"/>
+            <SubfamilyID value="0"/>
+            <SubfamilyNameID value="0"/>
+            <RangeStart value="0.0"/>
+            <RangeEnd value="0.0"/>
+          </FeatureParamsSize>
+          <!-- LookupCount=0 -->
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=0 -->
+    </LookupList>
+  </GPOS>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="test"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="0"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=1 -->
+      <Lookup index="0">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0" Format="1">
+          <Substitution in="dollar" out="dollar.a"/>
+        </SingleSubst>
+      </Lookup>
+    </LookupList>
+  </GSUB>
+
+  <hmtx>
+    <mtx name=".notdef" width="600" lsb="84"/>
+    <mtx name="A" width="600" lsb="50"/>
+    <mtx name="T" width="600" lsb="50"/>
+    <mtx name="dollar" width="490" lsb="53"/>
+    <mtx name="dollar.a" width="600" lsb="102"/>
+  </hmtx>
+
+  <DSIG>
+    <!-- note that the Digital Signature will be invalid after recompilation! -->
+    <tableHeader flag="0x0" numSigs="0" version="1"/>
+  </DSIG>
+
+</ttFont>
