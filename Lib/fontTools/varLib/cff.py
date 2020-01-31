@@ -30,6 +30,11 @@ def addCFFVarStore(varFont, varModel, varDataList, masterSupports):
 
 	topDict = varFont['CFF2'].cff.topDictIndex[0]
 	topDict.VarStore = VarStoreData(otVarStore=varStoreCFFV)
+	if topDict.FDArray[0].vstore is None:
+		fdArray = topDict.FDArray
+		for fontDict in fdArray:
+			if hasattr(fontDict, "Private"):
+				fontDict.Private.vstore = topDict.VarStore
 
 
 def lib_convertCFFToCFF2(cff, otFont):
