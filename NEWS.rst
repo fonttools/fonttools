@@ -1,3 +1,14 @@
+- [EBLC/CBLC] Fixed incorrect padding length calculation for Format 3 IndexSubTable
+  (#1817, #1818).
+- [varLib] Allow to use master fonts containing ``CFF2`` table when building VF (#1816).
+- [ttLib] Make ``recalcBBoxes`` option work also with ``CFF2`` table (#1816).
+- [feaLib] Don't reset ``lookupflag`` in lookups defined inside feature blocks.
+  They will now inherit the current ``lookupflag`` of the feature. This is what
+  Adobe ``makeotf`` also does in this case (#1815).
+- [feaLib] Fixed bug with mixed single/multiple substitutions. If a single substitution
+  involved a glyph class, we were incorrectly using only the first glyph in the class
+  (#1814).
+
 4.2.5 (released 2020-01-29)
 ---------------------------
 
