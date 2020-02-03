@@ -60,6 +60,11 @@ class Merger(object):
 		return _default
 
 	def mergeObjects(self, out, lst, exclude=()):
+		if hasattr(out, "ensureDecompiled"):
+			out.ensureDecompiled()
+		for item in lst:
+			if hasattr(item, "ensureDecompiled"):
+				item.ensureDecompiled()
 		keys = sorted(vars(out).keys())
 		assert all(keys == sorted(vars(v).keys()) for v in lst), \
 			(keys, [sorted(vars(v).keys()) for v in lst])

@@ -500,6 +500,27 @@ class BuildTest(unittest.TestCase):
         tables = [table_tag for table_tag in varfont.keys() if table_tag != "head"]
         self.expect_ttx(varfont, expected_ttx_path, tables)
 
+    def test_varlib_build_lazy_masters(self):
+        # See https://github.com/fonttools/fonttools/issues/1808
+        ds_path = self.get_test_input("SparseMasters.designspace")
+        expected_ttx_path = self.get_test_output("SparseMasters.ttx")
+
+        def _open_font(master_path, master_finder=lambda s: s):
+            font = TTFont()
+            font.importXML(master_path)
+            buf = BytesIO()
+            font.save(buf, reorderTables=False)
+            buf.seek(0)
+            font = TTFont(buf, lazy=True)  # reopen in lazy mode, to reproduce #1808
+            return font
+
+        ds = DesignSpaceDocument.fromfile(ds_path)
+        ds.loadSourceFonts(_open_font)
+        varfont, _, _ = build(ds)
+        varfont = reload_font(varfont)
+        tables = [table_tag for table_tag in varfont.keys() if table_tag != "head"]
+        self.expect_ttx(varfont, expected_ttx_path, tables)
+
     def test_varlib_build_sparse_masters_MVAR(self):
         import fontTools.varLib.mvar
 
