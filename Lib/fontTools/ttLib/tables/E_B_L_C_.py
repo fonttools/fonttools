@@ -482,7 +482,7 @@ def _createOffsetArrayIndexSubTableMixin(formatStringForDataType):
 			dataList = [EblcIndexSubTable.compile(self, ttFont)]
 			dataList += [struct.pack(dataFormat, offsetValue) for offsetValue in offsetArray]
 			# Take care of any padding issues. Only occurs in format 3.
-			if offsetDataSize * len(dataList) % 4 != 0:
+			if offsetDataSize * len(offsetArray) % 4 != 0:
 				dataList.append(struct.pack(dataFormat, 0))
 			return bytesjoin(dataList)
 
