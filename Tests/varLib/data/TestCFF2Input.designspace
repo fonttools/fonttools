@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<designspace format="3">
+    <axes>
+        <axis default="400.0" maximum="900.0" minimum="200.0" name="weight" tag="wght">
+            <map input="200" output="0" />   <!-- ExtraLight -->
+            <map input="300" output="100" /> <!-- Light -->
+            <map input="400" output="368" /> <!-- Regular -->
+            <map input="500" output="486" /> <!-- Medium -->
+            <map input="600" output="600" /> <!-- Semibold -->
+            <map input="700" output="824" /> <!-- Bold -->
+            <map input="900" output="1000" /><!-- Black -->
+        </axis>
+    </axes>
+    <rules>
+        <rule name="named.rule.1">
+            <conditionset>
+                <condition maximum="600" minimum="0" name="weight" />
+            </conditionset>
+            <sub name="dollar" with="dollar.a" />
+        </rule>
+    </rules>
+    <sources>
+        <source filename="master_cff2_input/TestCFF2_ExtraLight.ufo" name="master_0">
+            <lib copy="1" />
+            <location>
+                <dimension name="weight" xvalue="0" />
+            </location>
+        </source>
+        <source filename="master_cff2_input/TestCFF2_Regular.ufo" name="master_1">
+            <glyph mute="1" name="T" />
+            <info copy="1" />
+            <location>
+                <dimension name="weight" xvalue="368" />
+            </location>
+        </source>
+        <source filename="master_cff2_input/TestCFF2_Black.ufo" name="master_2">
+            <location>
+                <dimension name="weight" xvalue="1000" />
+            </location>
+        </source>
+    </sources>
+    <instances>
+        <instance familyname="Test CFF2 Roman" postscriptfontname="TestCFF2Roman-ExtraLight" stylename="ExtraLight">
+            <location>
+                <dimension name="weight" xvalue="0" />
+            </location>
+            <kerning />
+            <info />
+        </instance>
+        <instance familyname="Test CFF2 Roman" postscriptfontname="TestCFF2Roman-Light" stylename="Light">
+            <location>
+                <dimension name="weight" xvalue="100" />
+            </location>
+            <kerning />
+            <info />
+        </instance>
+        <instance familyname="Test CFF2 Roman" postscriptfontname="TestCFF2Roman-Regular" stylename="Regular">
+            <location>
+                <dimension name="weight" xvalue="368" />
+            </location>
+            <kerning />
+            <info />
+        </instance>
+        <instance familyname="Test CFF2 Roman" postscriptfontname="TestCFF2Roman-Medium" stylename="Medium">
+            <location>
+                <dimension name="weight" xvalue="486" />
+            </location>
+            <kerning />
+            <info />
+        </instance>
+        <instance familyname="Test CFF2 Roman" postscriptfontname="TestCFF2Roman-Semibold" stylename="Semibold">
+            <location>
+                <dimension name="weight" xvalue="600" />
+            </location>
+            <kerning />
+            <info />
+        </instance>
+        <instance familyname="Test CFF2 Roman" postscriptfontname="TestCFF2Roman-Bold" stylename="Bold">
+            <location>
+                <dimension name="weight" xvalue="824" />
+            </location>
+            <kerning />
+            <info />
+        </instance>
+        <instance familyname="Test CFF2 Roman" postscriptfontname="TestCFF2Roman-Black" stylename="Black">
+            <location>
+                <dimension name="weight" xvalue="1000" />
+            </location>
+            <kerning />
+            <info />
+        </instance>
+    </instances>
+</designspace>

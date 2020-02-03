@@ -30,6 +30,11 @@ def addCFFVarStore(varFont, varModel, varDataList, masterSupports):
 
 	topDict = varFont['CFF2'].cff.topDictIndex[0]
 	topDict.VarStore = VarStoreData(otVarStore=varStoreCFFV)
+	if topDict.FDArray[0].vstore is None:
+		fdArray = topDict.FDArray
+		for fontDict in fdArray:
+			if hasattr(fontDict, "Private"):
+				fontDict.Private.vstore = topDict.VarStore
 
 
 def lib_convertCFFToCFF2(cff, otFont):
@@ -266,6 +271,12 @@ def merge_PrivateDicts(top_dicts, vsindex_dict, var_model, fd_map):
 			private_dict.rawDict[key] = dataList
 
 
+def _cff_or_cff2(font):
+	if "CFF " in font:
+		return font["CFF "]
+	return font["CFF2"]
+
+
 def getfd_map(varFont, fonts_list):
 	""" Since a subset source font may have fewer FontDicts in their
 	FDArray than the default font, we have to match up the FontDicts in
@@ -278,7 +289,7 @@ def getfd_map(varFont, fonts_list):
 	default_font = fonts_list[0]
 	region_fonts = fonts_list[1:]
 	num_regions = len(region_fonts)
-	topDict = default_font['CFF '].cff.topDictIndex[0]
+	topDict = _cff_or_cff2(default_font).cff.topDictIndex[0]
 	if not hasattr(topDict, 'FDSelect'):
 		# All glyphs reference only one FontDict.
 		# Map the FD index for regions to index 0.
@@ -294,7 +305,7 @@ def getfd_map(varFont, fonts_list):
 			fd_map[fdIndex] = {}
 	for ri, region_font in enumerate(region_fonts):
 		region_glyphOrder = region_font.getGlyphOrder()
-		region_topDict = region_font['CFF '].cff.topDictIndex[0]
+		region_topDict = _cff_or_cff2(region_font).cff.topDictIndex[0]
 		if not hasattr(region_topDict, 'FDSelect'):
 			# All the glyphs share the same FontDict. Pick any glyph.
 			default_fdIndex = gname_mapping[region_glyphOrder[0]]
@@ -313,7 +324,7 @@ CVarData = namedtuple('CVarData', 'varDataList masterSupports vsindex_dict')
 def merge_region_fonts(varFont, model, ordered_fonts_list, glyphOrder):
 	topDict = varFont['CFF2'].cff.topDictIndex[0]
 	top_dicts = [topDict] + [
-					ttFont['CFF '].cff.topDictIndex[0]
+					_cff_or_cff2(ttFont).cff.topDictIndex[0]
 					for ttFont in ordered_fonts_list[1:]
 					]
 	num_masters = len(model.mapping)

@@ -602,7 +602,10 @@ class FontBuilder(object):
         varData = buildVarData(list(range(len(regions))), None, optimize=False)
         varStore = buildVarStore(varRegionList, [varData])
         vstore = VarStoreData(otVarStore=varStore)
-        self.font["CFF2"].cff.topDictIndex[0].VarStore = vstore
+        topDict = self.font["CFF2"].cff.topDictIndex[0]
+        topDict.VarStore = vstore
+        for fontDict in topDict.FDArray:
+            fontDict.Private.vstore = vstore
 
     def setupGlyf(self, glyphs, calcGlyphBounds=True):
         """Create the `glyf` table from a dict, that maps glyph names
