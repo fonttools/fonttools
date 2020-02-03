@@ -1,3 +1,6 @@
+4.3.0 (released 2020-02-03)
+---------------------------
+
 - [EBLC/CBLC] Fixed incorrect padding length calculation for Format 3 IndexSubTable
   (#1817, #1818).
 - [varLib] Fixed error when merging OTL tables and TTFonts were loaded as ``lazy=True``
