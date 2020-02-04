@@ -1539,4 +1539,35 @@ otData = [
 		('int16', 'CVTValueArray', 'NumCVTEntries', 0, 'CVT value'),
 	]),
 
+	#
+	# COLR
+	#
+
+	('COLR', [
+		('uint16', 'Version', None, None, 'Table version number (starts at 0).'),
+		('uint16', 'BaseGlyphRecordCount', None, None, 'Number of Base Glyph Records.'),
+		('LOffset', 'BaseGlyphRecordArray', None, None, 'Offset (from beginning of COLR table) to Base Glyph records.'),
+		('LOffset', 'LayerRecordArray', None, None, 'Offset (from beginning of COLR table) to Layer Records.'),
+		('uint16', 'LayerRecordCount', None, None, 'Number of Layer Records.'),
+	]),
+
+	('BaseGlyphRecordArray', [
+		('BaseGlyphRecord', 'BaseGlyphRecord', 'BaseGlyphRecordCount', 0, 'Base Glyph records.'),
+	]),
+
+	('BaseGlyphRecord', [
+		('GlyphID', 'BaseGlyph', None, None, 'Glyph ID of reference glyph. This glyph is for reference only and is not rendered for color.'),
+		('uint16', 'FirstLayerIndex', None, None, 'Index (from beginning of the Layer Records) to the layer record. There will be numLayers consecutive entries for this base glyph.'),
+		('uint16', 'NumLayers', None, None, 'Number of color layers associated with this glyph.'),
+	]),
+
+	('LayerRecordArray', [
+		('LayerRecord', 'LayerRecord', 'LayerRecordCount', 0, 'Layer records.'),
+	]),
+
+	('LayerRecord', [
+		('GlyphID', 'LayerGlyph', None, None, 'Glyph ID of layer glyph (must be in z-order from bottom to top).'),
+		('uint16', 'PaletteIndex', None, None, 'Index value to use with a selected color palette.'),
+	]),
+
 ]
