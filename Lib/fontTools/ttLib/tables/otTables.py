@@ -1172,6 +1172,16 @@ class COLR(BaseTable):
 			raise AssertionError("LayerRecordCount converter not found")
 		return BaseTable.decompile(self, reader, font)
 
+	def preWrite(self, font):
+		# The writer similarly assumes Count values precede the things counted,
+		# thus here we pre-initialize a CountReference; the actual count value
+		# will be set to the lenght of the array by the time this is assembled.
+		self.LayerRecordCount = None
+		return {
+			**self.__dict__,
+			"LayerRecordCount": CountReference(self.__dict__, "LayerRecordCount")
+		}
+
 
 # For each subtable format there is a class. However, we don't really distinguish
 # between "field name" and "format name": often these are the same. Yet there's
