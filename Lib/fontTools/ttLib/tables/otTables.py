@@ -1152,6 +1152,27 @@ class LigatureSubst(FormatSwitchingBaseTable):
 			ligs.append(lig)
 
 
+class COLR(BaseTable):
+
+	def decompile(self, reader, font):
+		# COLRv0 is exceptional in that LayerRecordCount appears *after* the
+		# LayerRecordArray it counts, but the parser logic expects Count fields
+		# to always precede the arrays. Here we work around this by parsing the
+		# LayerRecordCount before the rest of the table, and storing it in
+		# the reader's local state.
+		subReader = reader.getSubReader(offset=0)
+		for conv in self.getConverters():
+			if conv.name != "LayerRecordCount":
+				subReader.advance(conv.staticSize)
+				continue
+			conv = self.getConverterByName("LayerRecordCount")
+			reader[conv.name] = conv.read(subReader, font, tableDict={})
+			break
+		else:
+			raise AssertionError("LayerRecordCount converter not found")
+		return BaseTable.decompile(self, reader, font)
+
+
 # For each subtable format there is a class. However, we don't really distinguish
 # between "field name" and "format name": often these are the same. Yet there's
 # a whole bunch of fields with different names. The following dict is a mapping
