@@ -26,6 +26,7 @@ except ImportError:
 
 import math
 
+from .errors import Error as Cu2QuError, ApproxNotFoundError
 
 __all__ = ['curve_to_quadratic', 'curves_to_quadratic']
 
@@ -41,16 +42,6 @@ else:
     # Just a lowly interpreted script.
     COMPILED = False
 
-
-class Cu2QuError(Exception):
-    pass
-
-
-class ApproxNotFoundError(Cu2QuError):
-    def __init__(self, curve):
-        message = "no approximation found: %s" % curve
-        super(Cu2QuError, self).__init__(message)
-        self.curve = curve
 
 @cython.cfunc
 @cython.inline
