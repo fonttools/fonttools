@@ -1,12 +1,22 @@
 from __future__ import print_function, absolute_import, division
 
 
-class UnequalZipLengthsError(ValueError):
+class Error(Exception):
+    """Base Cu2Qu exception class for all other errors."""
+
+
+class ApproxNotFoundError(Error):
+    def __init__(self, curve):
+        message = "no approximation found: %s" % curve
+        super(Error, self).__init__(message)
+        self.curve = curve
+
+
+class UnequalZipLengthsError(Error):
     pass
 
 
-class IncompatibleGlyphsError(ValueError):
-
+class IncompatibleGlyphsError(Error):
     def __init__(self, glyphs):
         assert len(glyphs) > 1
         self.glyphs = glyphs
@@ -21,14 +31,13 @@ class IncompatibleGlyphsError(ValueError):
 
 
 class IncompatibleSegmentNumberError(IncompatibleGlyphsError):
-
     def __str__(self):
         return "Glyphs named %s have different number of segments" % (
-            self.combined_name)
+            self.combined_name
+        )
 
 
 class IncompatibleSegmentTypesError(IncompatibleGlyphsError):
-
     def __init__(self, glyphs, segments):
         IncompatibleGlyphsError.__init__(self, glyphs)
         self.segments = segments
@@ -37,17 +46,24 @@ class IncompatibleSegmentTypesError(IncompatibleGlyphsError):
         lines = []
         ndigits = len(str(max(self.segments)))
         for i, tags in sorted(self.segments.items()):
-            lines.append("%s: (%s)" % (
-                str(i).rjust(ndigits), ", ".join(repr(t) for t in tags)))
+            lines.append(
+                "%s: (%s)" % (str(i).rjust(ndigits), ", ".join(repr(t) for t in tags))
+            )
         return "Glyphs named %s have incompatible segment types:\n  %s" % (
-            self.combined_name, "\n  ".join(lines))
+            self.combined_name,
+            "\n  ".join(lines),
+        )
 
 
-class IncompatibleFontsError(ValueError):
-
+class IncompatibleFontsError(Error):
     def __init__(self, glyph_errors):
         self.glyph_errors = glyph_errors
 
     def __str__(self):
         return "fonts contains incompatible glyphs: %s" % (
-            ", ".join(repr(g) for g in sorted(self.glyph_errors.keys())))
+            ", ".join(repr(g) for g in sorted(self.glyph_errors.keys()))
+        )
+
+
+class InvalidTypeSpecification(Error):
+    pass

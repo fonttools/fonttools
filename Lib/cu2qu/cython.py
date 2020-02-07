@@ -13,6 +13,8 @@ try:
 except ImportError:
     basestring = str
 
+from .errors import InvalidTypeSpecification
+
 
 # BEGIN shameless copy from Cython/minivect/minitypes.py
 
@@ -46,8 +48,6 @@ def index_type(base_type, item):
     a 2D strided array of doubles. The syntax is the same as for
     Cython memoryviews.
     """
-    class InvalidTypeSpecification(Exception):
-        pass
 
     def verify_slice(s):
         if s.start or s.stop or s.step not in (None, 1):
