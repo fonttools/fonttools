@@ -63,7 +63,3 @@ class IncompatibleFontsError(Error):
         return "fonts contains incompatible glyphs: %s" % (
             ", ".join(repr(g) for g in sorted(self.glyph_errors.keys()))
         )
-
-
-class InvalidTypeSpecification(Error):
-    pass
