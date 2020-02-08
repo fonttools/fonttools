@@ -2771,7 +2771,7 @@ def usage():
 	print("Try pyftsubset --help for more information.\n", file=sys.stderr)
 
 @timer("make one with everything (TOTAL TIME)")
-def main(args=None):
+def main(args=None, outfile=None):
 	from os.path import splitext
 	from fontTools import configLogger
 
@@ -2781,6 +2781,10 @@ def main(args=None):
 	if '--help' in args:
 		print(__doc__)
 		return 0
+
+	fontfile = args[0]
+	args = args[1:]
+
 
 	options = Options()
 	try:
@@ -2795,7 +2799,7 @@ def main(args=None):
 		print("ERROR:", e, file=sys.stderr)
 		return 2
 
-	if len(args) < 2:
+	if len(args) < 1:
 		usage()
 		return 1
 
@@ -2805,11 +2809,7 @@ def main(args=None):
 	else:
 		timer.logger.disabled = True
 
-	fontfile = args[0]
-	args = args[1:]
-
 	subsetter = Subsetter(options=options)
-	outfile = None
 	glyphs = []
 	gids = []
 	unicodes = []
