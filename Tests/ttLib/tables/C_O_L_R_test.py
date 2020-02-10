@@ -1,7 +1,6 @@
 from fontTools import ttLib
 from fontTools.misc.testTools import getXML, parseXML
-from fontTools.ttLib.tables import otTables as ot
-from fontTools.ttLib.tables.otBase import OTTableReader, OTTableWriter
+from fontTools.ttLib.tables.C_O_L_R_ import table_C_O_L_R_
 
 import pytest
 
@@ -25,32 +24,12 @@ COLR_DATA = (
 
 
 COLR_XML = [
-    "<COLR>",
-    '  <Version value="0"/>',
-    "  <!-- BaseGlyphRecordCount=1 -->",
-    "  <BaseGlyphRecordArray>",
-    '    <BaseGlyphRecord index="0">',
-    '      <BaseGlyph value="glyph00006"/>',
-    '      <FirstLayerIndex value="0"/>',
-    '      <NumLayers value="3"/>',
-    "    </BaseGlyphRecord>",
-    "  </BaseGlyphRecordArray>",
-    "  <LayerRecordArray>",
-    '    <LayerRecord index="0">',
-    '      <LayerGlyph value="glyph00007"/>',
-    '      <PaletteIndex value="0"/>',
-    "    </LayerRecord>",
-    '    <LayerRecord index="1">',
-    '      <LayerGlyph value="glyph00008"/>',
-    '      <PaletteIndex value="1"/>',
-    "    </LayerRecord>",
-    '    <LayerRecord index="2">',
-    '      <LayerGlyph value="glyph00009"/>',
-    '      <PaletteIndex value="2"/>',
-    "    </LayerRecord>",
-    "  </LayerRecordArray>",
-    "  <!-- LayerRecordCount=3 -->",
-    "</COLR>",
+    '<version value="0"/>',
+    '<ColorGlyph name="glyph00006">',
+    '  <layer colorID="0" name="glyph00007"/>',
+    '  <layer colorID="1" name="glyph00008"/>',
+    '  <layer colorID="2" name="glyph00009"/>',
+    '</ColorGlyph>',
 ]
 
 
@@ -66,21 +45,14 @@ def font():
 
 
 def test_decompile_and_compile(font):
-    colr = ot.COLR()
-    reader = OTTableReader(COLR_DATA)
-    colr.decompile(reader, font)
-
-    writer = OTTableWriter()
-    colr.compile(writer, font)
-    data = writer.getAllData()
-
-    assert data == COLR_DATA
+    colr = table_C_O_L_R_()
+    colr.decompile(COLR_DATA, font)
+    assert colr.compile(font) == COLR_DATA
 
 
 def test_decompile_and_dump_xml(font):
-    colr = ot.COLR()
-    reader = OTTableReader(COLR_DATA)
-    colr.decompile(reader, font)
+    colr = table_C_O_L_R_()
+    colr.decompile(COLR_DATA, font)
 
     dump(colr, font)
     assert getXML(colr.toXML, font) == COLR_XML
