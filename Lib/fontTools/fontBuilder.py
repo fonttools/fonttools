@@ -768,6 +768,24 @@ class FontBuilder(object):
             self.font, conditionalSubstitutions, featureTag=featureTag
         )
 
+    def setupCOLR(self, colorLayers):
+        """Build new COLR table using color layers dictionary.
+
+        Cf. `fontTools.colorLib.builder.buildCOLR`.
+        """
+        from fontTools.colorLib.builder import buildCOLR
+
+        self.font["COLR"] = buildCOLR(colorLayers)
+
+    def setupCPAL(self, palettes):
+        """Build new CPAL table using list of palettes.
+
+        Cf. `fontTools.colorLib.builder.buildCPAL`.
+        """
+        from fontTools.colorLib.builder import buildCPAL
+
+        self.font["CPAL"] = buildCPAL(palettes)
+
 
 def buildCmapSubTable(cmapping, format, platformID, platEncID):
     subTable = cmap_classes[format](format)
