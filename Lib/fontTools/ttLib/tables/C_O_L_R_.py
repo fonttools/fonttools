@@ -85,19 +85,10 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 	def toXML(self, writer, ttFont):
 		writer.simpletag("version", value=self.version)
 		writer.newline()
-		ordered = []
-		glyphNames = self.ColorLayers.keys()
-		for glyphName in glyphNames:
-			try:
-				gid = ttFont.getGlyphID(glyphName)
-			except:
-				assert 0, "COLR table contains a glyph name not in ttFont.getGlyphNames(): " + str(glyphName)
-			ordered.append([gid, glyphName, self.ColorLayers[glyphName]])
-		ordered.sort()
-		for entry in ordered:
-			writer.begintag("ColorGlyph", name=entry[1])
+		for baseGlyph in sorted(self.ColorLayers.keys(), key=ttFont.getGlyphID):
+			writer.begintag("ColorGlyph", name=baseGlyph)
 			writer.newline()
-			for layer in entry[2]:
+			for layer in self.ColorLayers[baseGlyph]:
 				layer.toXML(writer, ttFont)
 			writer.endtag("ColorGlyph")
 			writer.newline()
