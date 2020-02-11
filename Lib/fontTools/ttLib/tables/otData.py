@@ -1549,6 +1549,8 @@ otData = [
 		('LOffset', 'BaseGlyphRecordArray', None, None, 'Offset (from beginning of COLR table) to Base Glyph records.'),
 		('LOffset', 'LayerRecordArray', None, None, 'Offset (from beginning of COLR table) to Layer Records.'),
 		('uint16', 'LayerRecordCount', None, None, 'Number of Layer Records.'),
+		('LOffset', 'BaseGlyphV1Array', None, 'Version >= 1', 'Offset (from beginning of COLR table) to array of Version-1 Base Glyph records.'),
+		('LOffset', 'VarStore', None, 'Version >= 1', 'Offset to variation store (may be NULL)'),
 	]),
 
 	('BaseGlyphRecordArray', [
@@ -1570,4 +1572,94 @@ otData = [
 		('uint16', 'PaletteIndex', None, None, 'Index value to use with a selected color palette.'),
 	]),
 
+	('BaseGlyphV1Array', [
+		('uint32', 'BaseGlyphCount', None, None, 'Number of Version-1 Base Glyph records'),
+		('struct', 'BaseGlyphV1Record', 'BaseGlyphCount', 0, 'Array of Version-1 Base Glyph records'),
+	]),
+
+	('BaseGlyphV1Record', [
+		('GlyphID', 'BaseGlyph', None, None, 'Glyph ID of reference glyph.'),
+		('LOffset', 'LayerV1Array', None, None, 'Offset (from beginning of COLR table) to array of Version-1 Layer records.'),
+	]),
+
+	('LayerV1Array', [
+		('uint32', 'LayerCount', None, None, 'Number of Version-1 Layer records'),
+		('struct', 'LayerV1Record', 'LayerCount', 0, 'Array of Version-1 Layer records'),
+	]),
+
+	('LayerV1Record', [
+		('GlyphID', 'LayerGlyph', None, None, 'Glyph ID of layer glyph (must be in z-order from bottom to top).'),
+		('LOffset', 'Paint', None, None, 'Offset (from beginning of COLR table) to Paint subtable.'),
+	]),
+
+	('VariableScalar', [
+		('Fixed', 'Value', None, None, 'A variable Fixed 16.16 value.'),
+		('uint32', 'VarIdx', None, None, 'Combined outer-inner variation index.'),
+	]),
+
+	('VariablePosition', [
+		('int16', 'Value', None, None, 'A variable FWORD (int16 font design units) value.'),
+		('uint32', 'VarIdx', None, None, 'Combined outer-inner variation index.'),
+	]),
+
+	('VariableDistance', [
+		('uint16', 'Value', None, None, 'A variable UFWORD (uint16 font design units) value.'),
+		('uint32', 'VarIdx', None, None, 'Combined outer-inner variation index.'),
+	]),
+
+	('VariableNormalizedScalar', [
+		('F2Dot14', 'Value', None, None, 'A variable Fixed 2.14 value.'),
+		('uint32', 'VarIdx', None, None, 'Combined outer-inner variation index.'),
+	]),
+
+	('VariableAffine2x2', [
+		('VariableScalar', 'xx', None, None, ''),
+		('VariableScalar', 'xy', None, None, ''),
+		('VariableScalar', 'yx', None, None, ''),
+		('VariableScalar', 'yy', None, None, ''),
+	]),
+
+	('VariablePoint', [
+		('VariablePosition', 'x', None, None, ''),
+		('VariablePosition', 'y', None, None, ''),
+	]),
+
+	('Color', [
+		('uint16', 'PaletteIndex', None, None, 'Index value to use with a selected color palette.'),
+		('VariableNormalizedScalar', 'Transparency', None, None, 'Values outsided [0.,1.] reserved'),
+	]),
+
+	('ColorStop', [
+		('VariableNormalizedScalar', 'StopOffset', None, None, ''),
+		('Color', 'Color', None, None, ''),
+	]),
+
+	('ColorLine', [
+		('uint16', 'Extend', None, None, 'Enum {PAD = 0, REPEAT = 1, REFLECT = 2}'),
+		('uint16', 'StopCount', None, None, 'Number of Color stops.'),
+		('ColorStop', 'Stops', 'StopCount', 0, 'Array of Color stops.'),
+	]),
+
+	('PaintFormat1', [
+		('uint16', 'PaintFormat', None, None, 'Format identifier-format = 1'),
+		('Color', 'Color', None, None, 'A solid color paint.'),
+	]),
+
+	('PaintFormat2', [
+		('uint16', 'PaintFormat', None, None, 'Format identifier-format = 2'),
+		('LOffset', 'ColorLine', None, None, 'Offset to ColorLine subtable.'),
+		('VariablePoint', 'p0', None, None, ''),
+		('VariablePoint', 'p1', None, None, ''),
+		('VariablePoint', 'p2', None, None, 'Normal; equal to p1 in simple cases.'),
+	]),
+
+	('PaintFormat3', [
+		('uint16', 'PaintFormat', None, None, 'Format identifier-format = 3'),
+		('LOffset', 'ColorLine', None, None, 'Offset to ColorLine subtable.'),
+		('VariablePoint', 'c0', None, None, ''),
+		('VariablePoint', 'c1', None, None, ''),
+		('VariableDistance', 'r0', None, None, ''),
+		('VariableDistance', 'r1', None, None, ''),
+		('LOffsetTo(VariableAffine2x2)', 'Affine', None, None, 'Offset to VariableAffine2x2 subtable.'),
+	]),
 ]
