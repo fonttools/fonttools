@@ -27,25 +27,20 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 		self.version = table.Version
 		assert (self.version == 0), "Version of COLR table is higher than I know how to handle"
 
-		baseGlyphNames = []
-		layerLists = []
+		self.ColorLayers = colorLayerLists = {}
+
 		layerRecords = table.LayerRecordArray.LayerRecord
 		numLayerRecords = len(layerRecords)
 		for baseRec in table.BaseGlyphRecordArray.BaseGlyphRecord:
 			baseGlyph = baseRec.BaseGlyph
 			firstLayerIndex = baseRec.FirstLayerIndex
 			numLayers = baseRec.NumLayers
-			baseGlyphNames.append(baseGlyph)
 			assert (firstLayerIndex + numLayers <= numLayerRecords)
 			layers = []
 			for i in range(firstLayerIndex, firstLayerIndex+numLayers):
 				layerRec = layerRecords[i]
 				layers.append(LayerRecord(layerRec.LayerGlyph, layerRec.PaletteIndex))
-			layerLists.append(layers)
-
-		self.ColorLayers = colorLayerLists = {}
-		for name, layerList in zip(baseGlyphNames, layerLists):
-			colorLayerLists[name] = layerList
+			colorLayerLists[baseGlyph] = layers
 
 	def compile(self, ttFont):
 		from .otBase import OTTableWriter
