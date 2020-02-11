@@ -39,12 +39,10 @@ import os.path
 import logging
 from copy import deepcopy
 from pprint import pformat
+from .errors import VarLibError, VarLibValidationError
 
 log = logging.getLogger("fontTools.varLib")
 
-
-class VarLibError(Exception):
-	pass
 
 #
 # Creation routines
@@ -703,7 +701,7 @@ def load_designspace(designspace):
 
 	masters = ds.sources
 	if not masters:
-		raise VarLibError("no sources found in .designspace")
+		raise VarLibValidationError("Designspace must have at least one source.")
 	instances = ds.instances
 
 	standard_axis_map = OrderedDict([
@@ -927,7 +925,7 @@ def _open_font(path, master_finder=lambda s: s):
 	elif tp in ("TTF", "OTF", "WOFF", "WOFF2"):
 		font = TTFont(master_path)
 	else:
-		raise VarLibError("Invalid master path: %r" % master_path)
+		raise VarLibValidationError("Invalid master path: %r" % master_path)
 	return font
 
 
@@ -947,10 +945,10 @@ def load_masters(designspace, master_finder=lambda s: s):
 		# If a SourceDescriptor has a layer name, demand that the compiled TTFont
 		# be supplied by the caller. This spares us from modifying MasterFinder.
 		if master.layerName and master.font is None:
-			raise AttributeError(
-				"Designspace source '%s' specified a layer name but lacks the "
-				"required TTFont object in the 'font' attribute."
-				% (master.name or "<Unknown>")
+			raise VarLibValidationError(
+				f"Designspace source '{master.name or '<Unknown>'}' specified a "
+				"layer name but lacks the required TTFont object in the 'font' "
+				"attribute."
 			)
 
 	return designspace.loadSourceFonts(_open_font, master_finder=master_finder)
