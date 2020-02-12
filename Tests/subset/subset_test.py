@@ -12,6 +12,8 @@ import shutil
 import sys
 import tempfile
 import unittest
+import pathlib
+import pytest
 
 
 class SubsetTest(unittest.TestCase):
@@ -833,6 +835,41 @@ def test_subset_single_pos_format():
         '  </SinglePos>',
         '</Lookup>',
     ]
+
+
+@pytest.fixture
+def ttf_path(tmp_path):
+    # $(dirname $0)/../ttLib/data
+    ttLib_data = pathlib.Path(__file__).parent.parent / "ttLib" / "data"
+    font = TTFont()
+    font.importXML(ttLib_data / "TestTTF-Regular.ttx")
+    font_path = tmp_path / "TestTTF-Regular.ttf"
+    font.save(font_path)
+    return font_path
+
+
+def test_subset_empty_glyf(tmp_path, ttf_path):
+    subset_path = tmp_path / (ttf_path.name + ".subset")
+    # only keep empty .notdef and space glyph, resulting in an empty glyf table
+    subset.main(
+        [
+            str(ttf_path),
+            "--no-notdef-outline",
+            "--glyph-names",
+            f"--output-file={subset_path}",
+            "--glyphs=.notdef space",
+        ]
+    )
+    subset_font = TTFont(subset_path)
+
+    assert subset_font.getGlyphOrder() == [".notdef", "space"]
+    assert subset_font.reader['glyf'] == b"\x00"
+
+    glyf = subset_font["glyf"]
+    assert all(glyf[g].numberOfContours == 0 for g in subset_font.getGlyphOrder())
+
+    loca = subset_font["loca"]
+    assert all(loc == 0 for loc in loca)
 
 
 if __name__ == "__main__":
