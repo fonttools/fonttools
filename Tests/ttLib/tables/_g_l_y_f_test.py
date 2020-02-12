@@ -6,6 +6,7 @@ from fontTools.pens.recordingPen import RecordingPen, RecordingPointPen
 from fontTools.pens.pointPen import PointToSegmentPen
 from fontTools.ttLib import TTFont, newTable, TTLibError
 from fontTools.ttLib.tables._g_l_y_f import (
+    Glyph,
     GlyphCoordinates,
     GlyphComponent,
     ARGS_ARE_XY_VALUES,
@@ -190,7 +191,7 @@ def strip_ttLibVersion(string):
     return re.sub(' ttLibVersion=".*"', '', string)
 
 
-class glyfTableTest(unittest.TestCase):
+class GlyfTableTest(unittest.TestCase):
 
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
@@ -337,6 +338,28 @@ class glyfTableTest(unittest.TestCase):
         glyfTable["glyph00003"].draw(pen1, glyfTable)
         glyfTable["glyph00003"].drawPoints(PointToSegmentPen(pen2), glyfTable)
         self.assertEqual(pen1.value, pen2.value)
+
+    def test_compile_empty_table(self):
+        font = TTFont(sfntVersion="\x00\x01\x00\x00")
+        font.importXML(GLYF_TTX)
+        glyfTable = font['glyf']
+        # set all glyphs to zero contours
+        glyfTable.glyphs = {glyphName: Glyph() for glyphName in font.getGlyphOrder()}
+        glyfData = glyfTable.compile(font)
+        self.assertEqual(glyfData, b"\x00")
+        self.assertEqual(list(font["loca"]), [0] * (font["maxp"].numGlyphs+1))
+
+    def test_decompile_empty_table(self):
+        font = TTFont()
+        glyphNames = [".notdef", "space"]
+        font.setGlyphOrder(glyphNames)
+        font["loca"] = newTable("loca")
+        font["loca"].locations = [0] * (len(glyphNames) + 1)
+        font["glyf"] = newTable("glyf")
+        font["glyf"].decompile(b"\x00", font)
+        self.assertEqual(len(font["glyf"]), 2)
+        self.assertEqual(font["glyf"][".notdef"].numberOfContours, 0)
+        self.assertEqual(font["glyf"]["space"].numberOfContours, 0)
 
 
 class GlyphComponentTest:
