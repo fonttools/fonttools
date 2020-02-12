@@ -1,3 +1,6 @@
+- [varLib] When filling in the default axis value for a missing location of a source or
+  instance, correctly map the value forward.
+
 4.3.0 (released 2020-02-03)
 ---------------------------
 

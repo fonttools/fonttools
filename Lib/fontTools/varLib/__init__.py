@@ -743,7 +743,8 @@ def load_designspace(designspace):
 			assert axis_name in axes, "Location axis '%s' unknown for '%s'." % (axis_name, obj_name)
 		for axis_name,axis in axes.items():
 			if axis_name not in loc:
-				loc[axis_name] = axis.default
+				# NOTE: `axis.default` is always user-space, but `obj.location` always design-space.
+				loc[axis_name] = axis.map_forward(axis.default)
 			else:
 				v = axis.map_backward(loc[axis_name])
 				assert axis.minimum <= v <= axis.maximum, "Location for axis '%s' (mapped to %s) out of range for '%s' [%s..%s]" % (axis_name, v, obj_name, axis.minimum, axis.maximum)
