@@ -1,3 +1,5 @@
+- [feaLib] Parsing feature code now ensures that referenced glyph names are part of
+  the known glyph set, unless a glyph set was not provided.
 - [varLib] When filling in the default axis value for a missing location of a source or
   instance, correctly map the value forward.
 
