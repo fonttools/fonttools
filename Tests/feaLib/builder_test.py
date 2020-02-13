@@ -41,7 +41,7 @@ def makeTTFont():
         a_n_d T_h T_h.swash germandbls ydieresis yacute breve
         grave acute dieresis macron circumflex cedilla umlaut ogonek caron
         damma hamza sukun kasratan lam_meem_jeem noon.final noon.initial
-        by feature lookup sub table
+        by feature lookup sub table uni0327 uni0328 e.fina
     """.split()
     font = TTFont()
     font.setGlyphOrder(glyphs)

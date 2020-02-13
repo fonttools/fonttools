@@ -39,6 +39,14 @@ GLYPHNAMES = ("""
     n.sc o.sc p.sc q.sc r.sc s.sc t.sc u.sc v.sc w.sc x.sc y.sc z.sc
     a.swash b.swash x.swash y.swash z.swash
     foobar foo.09 foo.1234 foo.9876
+    one two five six acute grave dieresis umlaut cedilla ogonek macron
+    a_f_f_i o_f_f_i f_i f_f_i one.fitted one.oldstyle a.1 a.2 a.3 c_t
+    PRE SUF FIX BACK TRACK LOOK AHEAD ampersand ampersand.1 ampersand.2
+    cid00001 cid00002 cid00003 cid00004 cid00005 cid00006 cid00007
+    cid12345 cid78987 cid00999 cid01000 cid01001 cid00998 cid00995
+    cid00111 cid00222
+    comma endash emdash figuredash damma hamza
+    c_d d.alt n.end s.end f_f
 """).split() + ["foo.%d" % i for i in range(1, 200)]
 
 
@@ -259,6 +267,12 @@ class ParserTest(unittest.TestCase):
         self.assertRaisesRegex(
             FeatureLibError, "Font revision numbers must be positive",
             self.parse, "table head {FontRevision -17.2;} head;")
+
+    def test_strict_glyph_name_check(self):
+        self.parse("@bad = [a b ccc];", glyphNames=("a", "b", "ccc"))
+
+        with self.assertRaisesRegex(FeatureLibError, "missing from the glyph set: ccc"):
+            self.parse("@bad = [a b ccc];", glyphNames=("a", "b"))
 
     def test_glyphclass(self):
         [gc] = self.parse("@dash = [endash emdash figuredash];").statements
