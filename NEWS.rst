@@ -2,6 +2,10 @@
   the known glyph set, unless a glyph set was not provided.
 - [varLib] When filling in the default axis value for a missing location of a source or
   instance, correctly map the value forward.
+- [varLib] The avar table can now contain mapping output values that are greater than
+  OR EQUAL to the preceeding value, as the avar specification allows this.
+- [varLib] The errors of the module are now ordered hierarchically below VarLibError. 
+  See #1821.
 
 4.3.0 (released 2020-02-03)
 ---------------------------

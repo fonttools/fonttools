@@ -39,12 +39,10 @@ import os.path
 import logging
 from copy import deepcopy
 from pprint import pformat
+from .errors import VarLibError, VarLibValidationError
 
 log = logging.getLogger("fontTools.varLib")
 
-
-class VarLibError(Exception):
-	pass
 
 #
 # Creation routines
@@ -81,7 +79,12 @@ def _add_fvar(font, axes, instances):
 		coordinates = instance.location
 
 		if "en" not in instance.localisedStyleName:
-			assert instance.styleName
+			if not instance.styleName:
+				raise VarLibValidationError(
+					f"Instance at location '{coordinates}' must have a default English "
+					"style name ('stylename' attribute on the instance element or a "
+					"stylename element with an 'xml:lang=\"en\"' attribute)."
+				)
 			localisedStyleName = dict(instance.localisedStyleName)
 			localisedStyleName["en"] = tounicode(instance.styleName)
 		else:
@@ -137,20 +140,32 @@ def _add_avar(font, axes):
 		# Current avar requirements.  We don't have to enforce
 		# these on the designer and can deduce some ourselves,
 		# but for now just enforce them.
-		assert axis.minimum == min(keys)
-		assert axis.maximum == max(keys)
-		assert axis.default in keys
-		# No duplicates
-		assert len(set(keys)) == len(keys), (
-			f"{axis.tag} axis: All axis mapping input='...' "
-			"values must be unique, but we found duplicates."
-		)
-		assert len(set(vals)) == len(vals), (
-			f"{axis.tag} axis: All axis mapping output='...' "
-			"values must be unique, but we found duplicates."
-		)
+		if axis.minimum != min(keys):
+			raise VarLibValidationError(
+				f"Axis '{axis.name}': there must be a mapping for the axis minimum "
+				f"value {axis.minimum} and it must be the lowest input mapping value."
+			)
+		if axis.maximum != max(keys):
+			raise VarLibValidationError(
+				f"Axis '{axis.name}': there must be a mapping for the axis maximum "
+				f"value {axis.maximum} and it must be the highest input mapping value."
+			)
+		if axis.default not in keys:
+			raise VarLibValidationError(
+				f"Axis '{axis.name}': there must be a mapping for the axis default "
+				f"value {axis.default}."
+			)
+		# No duplicate input values (output values can be >= their preceeding value).
+		if len(set(keys)) != len(keys):
+			raise VarLibValidationError(
+				f"Axis '{axis.name}': All axis mapping input='...' values must be "
+				"unique, but we found duplicates."
+			)
 		# Ascending values
-		assert sorted(vals) == vals
+		if sorted(vals) != vals:
+			raise VarLibValidationError(
+				f"Axis '{axis.name}': mapping output values must be in ascending order."
+			)
 
 		keys_triple = (axis.minimum, axis.default, axis.maximum)
 		vals_triple = tuple(axis.map_forward(v) for v in keys_triple)
@@ -214,8 +229,8 @@ def _add_stat(font, axes):
 
 
 def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
-
-	assert tolerance >= 0
+	if tolerance < 0:
+		raise ValueError("`tolerance` must be a positive number.")
 
 	log.info("Generating gvar")
 	assert "gvar" not in font
@@ -703,9 +718,10 @@ def load_designspace(designspace):
 
 	masters = ds.sources
 	if not masters:
-		raise VarLibError("no sources found in .designspace")
+		raise VarLibValidationError("Designspace must have at least one source.")
 	instances = ds.instances
 
+	# TODO: Use fontTools.designspaceLib.tagForAxisName instead.
 	standard_axis_map = OrderedDict([
 		('weight',  ('wght', {'en': u'Weight'})),
 		('width',   ('wdth', {'en': u'Width'})),
@@ -715,11 +731,15 @@ def load_designspace(designspace):
 		])
 
 	# Setup axes
+	if not ds.axes:
+		raise VarLibValidationError(f"Designspace must have at least one axis.")
+
 	axes = OrderedDict()
-	for axis in ds.axes:
+	for axis_index, axis in enumerate(ds.axes):
 		axis_name = axis.name
 		if not axis_name:
-			assert axis.tag is not None
+			if not axis.tag:
+				raise VarLibValidationError(f"Axis at index {axis_index} needs a tag.")
 			axis_name = axis.name = axis.tag
 
 		if axis_name in standard_axis_map:
@@ -728,7 +748,8 @@ def load_designspace(designspace):
 			if not axis.labelNames:
 				axis.labelNames.update(standard_axis_map[axis_name][1])
 		else:
-			assert axis.tag is not None
+			if not axis.tag:
+				raise VarLibValidationError(f"Axis at index {axis_index} needs a tag.")
 			if not axis.labelNames:
 				axis.labelNames["en"] = tounicode(axis_name)
 
@@ -739,15 +760,28 @@ def load_designspace(designspace):
 	for obj in masters+instances:
 		obj_name = obj.name or obj.styleName or ''
 		loc = obj.location
+		if loc is None:
+			raise VarLibValidationError(
+				f"Source or instance '{obj_name}' has no location."
+			)
 		for axis_name in loc.keys():
-			assert axis_name in axes, "Location axis '%s' unknown for '%s'." % (axis_name, obj_name)
+			if axis_name not in axes:
+				raise VarLibValidationError(
+					f"Location axis '{axis_name}' unknown for '{obj_name}'."
+				)
 		for axis_name,axis in axes.items():
 			if axis_name not in loc:
 				# NOTE: `axis.default` is always user-space, but `obj.location` always design-space.
 				loc[axis_name] = axis.map_forward(axis.default)
 			else:
 				v = axis.map_backward(loc[axis_name])
-				assert axis.minimum <= v <= axis.maximum, "Location for axis '%s' (mapped to %s) out of range for '%s' [%s..%s]" % (axis_name, v, obj_name, axis.minimum, axis.maximum)
+				if not (axis.minimum <= v <= axis.maximum):
+					raise VarLibValidationError(
+						f"Source or instance '{obj_name}' has out-of-range location "
+						f"for axis '{axis_name}': is mapped to {v} but must be in "
+						f"mapped range [{axis.minimum}..{axis.maximum}] (NOTE: all "
+						"values are in user-space)."
+					)
 
 	# Normalize master locations
 
@@ -768,9 +802,15 @@ def load_designspace(designspace):
 	base_idx = None
 	for i,m in enumerate(normalized_master_locs):
 		if all(v == 0 for v in m.values()):
-			assert base_idx is None
+			if base_idx is not None:
+				raise VarLibValidationError(
+					"More than one base master found in Designspace."
+				)
 			base_idx = i
-	assert base_idx is not None, "Base master not found; no master at default location?"
+	if base_idx is None:
+		raise VarLibValidationError(
+			"Base master not found; no master at default location?"
+		)
 	log.info("Index of base master: %s", base_idx)
 
 	return _DesignSpaceData(
@@ -927,7 +967,7 @@ def _open_font(path, master_finder=lambda s: s):
 	elif tp in ("TTF", "OTF", "WOFF", "WOFF2"):
 		font = TTFont(master_path)
 	else:
-		raise VarLibError("Invalid master path: %r" % master_path)
+		raise VarLibValidationError("Invalid master path: %r" % master_path)
 	return font
 
 
@@ -947,10 +987,10 @@ def load_masters(designspace, master_finder=lambda s: s):
 		# If a SourceDescriptor has a layer name, demand that the compiled TTFont
 		# be supplied by the caller. This spares us from modifying MasterFinder.
 		if master.layerName and master.font is None:
-			raise AttributeError(
-				"Designspace source '%s' specified a layer name but lacks the "
-				"required TTFont object in the 'font' attribute."
-				% (master.name or "<Unknown>")
+			raise VarLibValidationError(
+				f"Designspace source '{master.name or '<Unknown>'}' specified a "
+				"layer name but lacks the required TTFont object in the 'font' "
+				"attribute."
 			)
 
 	return designspace.loadSourceFonts(_open_font, master_finder=master_finder)

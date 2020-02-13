@@ -5,6 +5,8 @@ __all__ = ['nonNone', 'allNone', 'allEqual', 'allEqualTo', 'subList',
 	   'supportScalar',
 	   'VariationModel']
 
+from .errors import VariationModelError
+
 
 def nonNone(lst):
 	return [l for l in lst if l is not None]
@@ -43,7 +45,11 @@ def normalizeValue(v, triple):
 	0.5
 	"""
 	lower, default, upper = triple
-	assert lower <= default <= upper, "invalid axis values: %3.3f, %3.3f %3.3f"%(lower, default, upper)
+	if not (lower <= default <= upper):
+		raise ValueError(
+			f"Invalid axis values, must be minimum, default, maximum: "
+			f"{lower:3.3f}, {default:3.3f}, {upper:3.3f}"
+		)
 	v = max(min(v, upper), lower)
 	if v == default:
 		v = 0.
@@ -192,7 +198,7 @@ class VariationModel(object):
 
 	def __init__(self, locations, axisOrder=None):
 		if len(set(tuple(sorted(l.items())) for l in locations)) != len(locations):
-			raise ValueError("locations must be unique")
+			raise VariationModelError("Locations must be unique.")
 
 		self.origLocations = locations
 		self.axisOrder = axisOrder if axisOrder is not None else []
@@ -220,7 +226,8 @@ class VariationModel(object):
 
 	@staticmethod
 	def getMasterLocationsSortKeyFunc(locations, axisOrder=[]):
-		assert {} in locations, "Base master not found."
+		if {} not in locations:
+			raise VariationModelError("Base master not found.")
 		axisPoints = {}
 		for loc in locations:
 			if len(loc) != 1:

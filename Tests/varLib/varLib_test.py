@@ -1,6 +1,7 @@
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, newTable
 from fontTools.varLib import build, load_designspace
+from fontTools.varLib.errors import VarLibValidationError
 from fontTools.varLib.mutator import instantiateVariableFont
 from fontTools.varLib import main as varLib_main, load_masters
 from fontTools.varLib import set_default_weight_width_slant
@@ -744,7 +745,7 @@ def test_load_masters_layerName_without_required_font():
     ds.addSource(s)
 
     with pytest.raises(
-        AttributeError,
+        VarLibValidationError,
         match="specified a layer name but lacks the required TTFont object",
     ):
         load_masters(ds)
