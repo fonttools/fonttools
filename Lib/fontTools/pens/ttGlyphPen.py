@@ -1,6 +1,6 @@
 from fontTools.misc.py23 import *
 from array import array
-from fontTools.misc.fixedTools import MAX_F2DOT14, otRound
+from fontTools.misc.fixedTools import MAX_F2DOT14, otRound, floatToFixedToFloat
 from fontTools.pens.basePen import LoggingPen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.ttLib.tables import ttProgram
@@ -119,7 +119,11 @@ class TTGlyphPen(LoggingPen):
             component = GlyphComponent()
             component.glyphName = glyphName
             component.x, component.y = (otRound(v) for v in transformation[4:])
-            transformation = transformation[:4]
+            # quantize floats to F2Dot14 so we get same values as when decompiled
+            # from a binary glyf table
+            transformation = tuple(
+                floatToFixedToFloat(v, 14) for v in transformation[:4]
+            )
             if transformation != (1, 0, 0, 1):
                 if (self.handleOverflowingTransforms and
                         any(MAX_F2DOT14 < s <= 2 for s in transformation)):
