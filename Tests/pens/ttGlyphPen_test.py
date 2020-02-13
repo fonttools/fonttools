@@ -264,6 +264,33 @@ class TTGlyphPenTest(TestCase):
         compositeGlyph.recalcBounds(glyphSet)
         self.assertGlyphBoundsEqual(compositeGlyph, (-86, 0, 282, 1))
 
+    def test_scaled_component_bounds(self):
+        glyphSet = {}
+
+        pen = TTGlyphPen(glyphSet)
+        pen.moveTo((-231, 939))
+        pen.lineTo((-55, 939))
+        pen.lineTo((-55, 745))
+        pen.lineTo((-231, 745))
+        pen.closePath()
+        glyphSet["gravecomb"] = gravecomb = pen.glyph()
+
+        pen = TTGlyphPen(glyphSet)
+        pen.moveTo((-278, 939))
+        pen.lineTo((8, 939))
+        pen.lineTo((8, 745))
+        pen.lineTo((-278, 745))
+        pen.closePath()
+        glyphSet["circumflexcomb"] = circumflexcomb = pen.glyph()
+
+        pen = TTGlyphPen(glyphSet)
+        pen.addComponent("circumflexcomb", (1, 0, 0, 1, 0, 0))
+        pen.addComponent("gravecomb", (0.9, 0, 0, 0.9, 198, 180))
+        glyphSet["uni0302_uni0300"] = uni0302_uni0300 = pen.glyph()
+
+        uni0302_uni0300.recalcBounds(glyphSet)
+        self.assertGlyphBoundsEqual(uni0302_uni0300, (-278, 745, 148, 1025))
+
 
 class _TestGlyph(object):
     def __init__(self, glyph):
