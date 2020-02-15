@@ -2146,18 +2146,14 @@ def convertFontInfoValueForAttributeFromVersion2ToVersion3(attr, value):
 	"""
 	if attr in _ufo2To3FloatToInt:
 		try:
-			v = int(round(value))
+			value = round(value)
 		except (ValueError, TypeError):
 			raise UFOLibError("Could not convert value for %s." % attr)
-		if v != value:
-			value = v
 	if attr in _ufo2To3NonNegativeInt:
 		try:
-			v = int(abs(value))
+			value = int(abs(value))
 		except (ValueError, TypeError):
 			raise UFOLibError("Could not convert value for %s." % attr)
-		if v != value:
-			value = v
 	elif attr in _ufo2To3NonNegativeIntOrFloat:
 		try:
 			v = float(abs(value))
