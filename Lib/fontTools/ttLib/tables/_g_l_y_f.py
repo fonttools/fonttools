@@ -1012,33 +1012,37 @@ class Glyph(object):
 					coordinates, endPts, flags = g.getCoordinates(glyfTable)
 				except RecursionError:
 					raise ttLib.TTLibError("glyph '%s' contains a recursive component reference" % compo.glyphName)
+				coordinates = GlyphCoordinates(coordinates)
 				if hasattr(compo, "firstPt"):
-					# move according to two reference points
+					# component uses two reference points: we apply the transform _before_
+					# computing the offset between the points
+					if hasattr(compo, "transform"):
+						coordinates.transform(compo.transform)
 					x1,y1 = allCoords[compo.firstPt]
 					x2,y2 = coordinates[compo.secondPt]
 					move = x1-x2, y1-y2
-				else:
-					move = compo.x, compo.y
-
-				coordinates = GlyphCoordinates(coordinates)
-				if not hasattr(compo, "transform"):
 					coordinates.translate(move)
 				else:
-					apple_way = compo.flags & SCALED_COMPONENT_OFFSET
-					ms_way = compo.flags & UNSCALED_COMPONENT_OFFSET
-					assert not (apple_way and ms_way)
-					if not (apple_way or ms_way):
-						scale_component_offset = SCALE_COMPONENT_OFFSET_DEFAULT  # see top of this file
-					else:
-						scale_component_offset = apple_way
-					if scale_component_offset:
-						# the Apple way: first move, then scale (ie. scale the component offset)
+					# component uses XY offsets
+					move = compo.x, compo.y
+					if not hasattr(compo, "transform"):
 						coordinates.translate(move)
-						coordinates.transform(compo.transform)
 					else:
-						# the MS way: first scale, then move
-						coordinates.transform(compo.transform)
-						coordinates.translate(move)
+						apple_way = compo.flags & SCALED_COMPONENT_OFFSET
+						ms_way = compo.flags & UNSCALED_COMPONENT_OFFSET
+						assert not (apple_way and ms_way)
+						if not (apple_way or ms_way):
+							scale_component_offset = SCALE_COMPONENT_OFFSET_DEFAULT  # see top of this file
+						else:
+							scale_component_offset = apple_way
+						if scale_component_offset:
+							# the Apple way: first move, then scale (ie. scale the component offset)
+							coordinates.translate(move)
+							coordinates.transform(compo.transform)
+						else:
+							# the MS way: first scale, then move
+							coordinates.transform(compo.transform)
+							coordinates.translate(move)
 				offset = len(allCoords)
 				allEndPts.extend(e + offset for e in endPts)
 				allCoords.extend(coordinates)
