@@ -66,9 +66,6 @@ class CPALTest(unittest.TestCase):
         self.assertEqual(cpal.numPaletteEntries, 2)
         self.assertEqual(repr(cpal.palettes),
                          '[[#000000FF, #66CCFFFF], [#000000FF, #800000FF]]')
-        self.assertEqual(cpal.paletteLabels, [0, 0])
-        self.assertEqual(cpal.paletteTypes, [0, 0])
-        self.assertEqual(cpal.paletteEntryLabels, [0, 0])
 
     def test_decompile_v0_sharingColors(self):
         cpal = newTable('CPAL')
@@ -80,9 +77,6 @@ class CPALTest(unittest.TestCase):
             '[#223344FF, #99887711, #55555555]',
             '[#223344FF, #99887711, #FFFFFFFF]',
             '[#223344FF, #99887711, #55555555]'])
-        self.assertEqual(cpal.paletteLabels, [0, 0, 0, 0])
-        self.assertEqual(cpal.paletteTypes, [0, 0, 0, 0])
-        self.assertEqual(cpal.paletteEntryLabels, [0, 0, 0])
 
     def test_decompile_v1_noLabelsNoTypes(self):
         cpal = newTable('CPAL')
@@ -92,9 +86,10 @@ class CPALTest(unittest.TestCase):
         self.assertEqual([repr(p) for p in cpal.palettes], [
             '[#CAFECAFE, #22110033, #66554477]',  # RGBA
             '[#59413127, #42424242, #13330037]'])
-        self.assertEqual(cpal.paletteLabels, [0, 0])
+        self.assertEqual(cpal.paletteLabels, [cpal.NO_NAME_ID] * len(cpal.palettes))
         self.assertEqual(cpal.paletteTypes, [0, 0])
-        self.assertEqual(cpal.paletteEntryLabels, [0, 0, 0])
+        self.assertEqual(cpal.paletteEntryLabels,
+                        [cpal.NO_NAME_ID] * cpal.numPaletteEntries)
 
     def test_decompile_v1(self):
         cpal = newTable('CPAL')
@@ -194,9 +189,6 @@ class CPALTest(unittest.TestCase):
         self.assertEqual(cpal.version, 0)
         self.assertEqual(cpal.numPaletteEntries, 2)
         self.assertEqual(repr(cpal.palettes), '[[#12345678, #FEDCBA98]]')
-        self.assertEqual(cpal.paletteLabels, [0])
-        self.assertEqual(cpal.paletteTypes, [0])
-        self.assertEqual(cpal.paletteEntryLabels, [0, 0])
 
     def test_fromXML_v1(self):
         cpal = newTable('CPAL')
@@ -218,7 +210,8 @@ class CPALTest(unittest.TestCase):
                          '[[#12345678, #FEDCBA98, #CAFECAFE]]')
         self.assertEqual(cpal.paletteLabels, [259])
         self.assertEqual(cpal.paletteTypes, [2])
-        self.assertEqual(cpal.paletteEntryLabels, [0, 262, 0])
+        self.assertEqual(cpal.paletteEntryLabels,
+                        [cpal.NO_NAME_ID, 262, cpal.NO_NAME_ID])
 
 
 if __name__ == "__main__":

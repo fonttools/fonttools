@@ -13,6 +13,9 @@ import sys
 
 class table_C_P_A_L_(DefaultTable.DefaultTable):
 
+	NO_NAME_ID = 0xFFFF
+	DEFAULT_PALETTE_TYPE = 0
+
 	def __init__(self, tag=None):
 		DefaultTable.DefaultTable.__init__(self, tag)
 		self.palettes = []
@@ -45,24 +48,25 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 			offsetToPaletteEntryLabelArray) = (
 				struct.unpack(">LLL", data[pos:pos+12]))
 		self.paletteTypes = self._decompileUInt32Array(
-			data, offsetToPaletteTypeArray, numPalettes)
+			data, offsetToPaletteTypeArray, numPalettes,
+			default=self.DEFAULT_PALETTE_TYPE)
 		self.paletteLabels = self._decompileUInt16Array(
-			data, offsetToPaletteLabelArray, numPalettes)
+			data, offsetToPaletteLabelArray, numPalettes, default=self.NO_NAME_ID)
 		self.paletteEntryLabels = self._decompileUInt16Array(
 			data, offsetToPaletteEntryLabelArray,
-			self.numPaletteEntries)
+			self.numPaletteEntries, default=self.NO_NAME_ID)
 
-	def _decompileUInt16Array(self, data, offset, numElements):
+	def _decompileUInt16Array(self, data, offset, numElements, default=0):
 		if offset == 0:
-			return [0] * numElements
+			return [default] * numElements
 		result = array.array("H", data[offset : offset + 2 * numElements])
 		if sys.byteorder != "big": result.byteswap()
 		assert len(result) == numElements, result
 		return result.tolist()
 
-	def _decompileUInt32Array(self, data, offset, numElements):
+	def _decompileUInt32Array(self, data, offset, numElements, default=0):
 		if offset == 0:
-			return [0] * numElements
+			return [default] * numElements
 		result = array.array("I", data[offset : offset + 4 * numElements])
 		if sys.byteorder != "big": result.byteswap()
 		assert len(result) == numElements, result
@@ -136,7 +140,7 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 		return result
 
 	def _compilePaletteLabels(self):
-		if self.version == 0 or not any(self.paletteLabels):
+		if self.version == 0 or all(l == self.NO_NAME_ID for l in self.paletteLabels):
 			return b''
 		assert len(self.paletteLabels) == len(self.palettes)
 		result = bytesjoin([struct.pack(">H", label)
@@ -145,7 +149,7 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 		return result
 
 	def _compilePaletteEntryLabels(self):
-		if self.version == 0 or not any(self.paletteEntryLabels):
+		if self.version == 0 or all(l == self.NO_NAME_ID for l in self.paletteEntryLabels):
 			return b''
 		assert len(self.paletteEntryLabels) == self.numPaletteEntries
 		result = bytesjoin([struct.pack(">H", label)
@@ -165,15 +169,15 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 		writer.newline()
 		for index, palette in enumerate(self.palettes):
 			attrs = {"index": index}
-			paletteType = paletteTypes.get(index)
-			paletteLabel = paletteLabels.get(index)
-			if self.version > 0 and paletteLabel is not None:
+			paletteType = paletteTypes.get(index, self.DEFAULT_PALETTE_TYPE)
+			paletteLabel = paletteLabels.get(index, self.NO_NAME_ID)
+			if self.version > 0 and paletteLabel != self.NO_NAME_ID:
 				attrs["label"] = paletteLabel
-			if self.version > 0 and paletteType is not None:
+			if self.version > 0 and paletteType != self.DEFAULT_PALETTE_TYPE:
 				attrs["type"] = paletteType
 			writer.begintag("palette", **attrs)
 			writer.newline()
-			if (self.version > 0 and paletteLabel and
+			if (self.version > 0 and paletteLabel != self.NO_NAME_ID and
 			    ttFont and "name" in ttFont):
 				name = ttFont["name"].getDebugName(paletteLabel)
 				if name is not None:
@@ -184,11 +188,11 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 				color.toXML(writer, ttFont, cindex)
 			writer.endtag("palette")
 			writer.newline()
-		if self.version > 0 and any(self.paletteEntryLabels):
+		if self.version > 0 and not all(l == self.NO_NAME_ID for l in self.paletteEntryLabels):
 			writer.begintag("paletteEntryLabels")
 			writer.newline()
 			for index, label in enumerate(self.paletteEntryLabels):
-				if label:
+				if label != self.NO_NAME_ID:
 					writer.simpletag("label", index=index, value=label)
 					if (self.version > 0 and label and ttFont and "name" in ttFont):
 						name = ttFont["name"].getDebugName(label)
@@ -200,8 +204,8 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 
 	def fromXML(self, name, attrs, content, ttFont):
 		if name == "palette":
-			self.paletteLabels.append(int(attrs.get("label", "0")))
-			self.paletteTypes.append(int(attrs.get("type", "0")))
+			self.paletteLabels.append(int(attrs.get("label", self.NO_NAME_ID)))
+			self.paletteTypes.append(int(attrs.get("type", self.DEFAULT_PALETTE_TYPE)))
 			palette = []
 			for element in content:
 				if isinstance(element, basestring):
@@ -221,13 +225,13 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 					nameID = safeEval(elementAttr["value"])
 					colorLabels[labelIndex] = nameID
 			self.paletteEntryLabels = [
-				colorLabels.get(i, 0)
+				colorLabels.get(i, self.NO_NAME_ID)
 				for i in range(self.numPaletteEntries)]
 		elif "value" in attrs:
 			value = safeEval(attrs["value"])
 			setattr(self, name, value)
 			if name == "numPaletteEntries":
-				self.paletteEntryLabels = [0] * self.numPaletteEntries
+				self.paletteEntryLabels = [self.NO_NAME_ID] * self.numPaletteEntries
 
 
 class Color(namedtuple("Color", "blue green red alpha")):
