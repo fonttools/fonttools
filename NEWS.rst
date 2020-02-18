@@ -1,3 +1,13 @@
+- [colorLib] Added ``fontTools.colorLib.builder`` module, initially with ``buildCOLR``
+  and ``buildCPAL`` public functions. More color font formats will follow (#1827).
+- [fontBuilder] Added ``setupCOLR`` and ``setupCPAL`` methods (#1826).
+- [ttGlyphPen] Quantize ``GlyphComponent.transform`` floats to ``F2Dot14`` to fix
+  round-trip issue when computing bounding boxes of transformed components (#1830).
+- [glyf] If a component uses reference points (``firstPt`` and ``secondPt``) for
+  alignment (instead of X and Y offsets), compute the effective translation offset
+  *after* having applied any transform (#1831).
+- [glyf] When all glyphs have zero contours, compile ``glyf`` table data as a single
+  null byte in order to pass validation by OTS and Windows (#1829).
 - [feaLib] Parsing feature code now ensures that referenced glyph names are part of
   the known glyph set, unless a glyph set was not provided.
 - [varLib] When filling in the default axis value for a missing location of a source or
