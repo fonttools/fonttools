@@ -1,3 +1,6 @@
+4.4.0 (released 2020-02-18)
+---------------------------
+
 - [colorLib] Added ``fontTools.colorLib.builder`` module, initially with ``buildCOLR``
   and ``buildCPAL`` public functions. More color font formats will follow (#1827).
 - [fontBuilder] Added ``setupCOLR`` and ``setupCPAL`` methods (#1826).
