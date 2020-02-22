@@ -255,6 +255,19 @@ def test_build_cff2(tmpdir):
     _verifyOutput(outPath)
 
 
+def test_build_cff_to_cff2(tmpdir):
+    fb, _, _ = _setupFontBuilder(False, 1000)
+
+    pen = T2CharStringPen(600, None)
+    drawTestGlyph(pen)
+    charString = pen.getCharString()
+    charStrings = {".notdef": charString, "A": charString, "a": charString, ".null": charString}
+    fb.setupCFF("TestFont", {}, charStrings, {})
+
+    from fontTools.varLib.cff import convertCFFtoCFF2
+    convertCFFtoCFF2(fb.font)
+
+
 def test_setupNameTable_no_mac():
     fb, _, nameStrings = _setupFontBuilder(True)
     fb.setupNameTable(nameStrings, mac=False)
