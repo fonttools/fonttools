@@ -52,6 +52,11 @@ cache:
   - directories:
     - $HOME/.pyenv_cache
 
+addons:
+  apt:
+    packages:
+      - language-pack-de
+
 before_install:
   - source ./.travis/before_install.sh
 
