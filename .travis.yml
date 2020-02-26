@@ -16,9 +16,6 @@ branches:
 
 matrix:
   fast_finish: true
-  exclude:
-    # Exclude the default Python 3.6 build
-    - python: 3.6
   include:
     - python: 3.6
       env:
