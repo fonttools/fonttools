@@ -1,3 +1,6 @@
+4.4.1 (released 2020-02-26)
+---------------------------
+
 - [woff2] Skip normalizing ``glyf`` and ``loca`` tables if these are missing from
   a font (e.g. in NotoColorEmoji using ``CBDT/CBLC`` tables).
 - [timeTools] Use non-localized date parsing in ``timestampFromString``, to fix
