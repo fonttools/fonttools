@@ -178,7 +178,9 @@ class IncludingLexerTest(unittest.TestCase):
     def test_include_missing_file(self):
         lexer = IncludingLexer(self.getpath("include/includemissingfile.fea"))
         self.assertRaisesRegex(IncludedFeaNotFound,
-                               "includemissingfile.fea:1:8: missingfile.fea",
+                               "includemissingfile.fea:1:8: The following feature file "
+                               "should be included but cannot be found: "
+                               "missingfile.fea",
                                lambda: list(lexer))
 
     def test_featurefilepath_None(self):
