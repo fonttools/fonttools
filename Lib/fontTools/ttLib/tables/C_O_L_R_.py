@@ -23,7 +23,6 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 		table = tableClass()
 		table.decompile(reader, ttFont)
 
-		self.getGlyphName = ttFont.getGlyphName # for use in get/set item functions, for access by GID
 		self.version = table.Version
 		assert (self.version == 0), "Version of COLR table is higher than I know how to handle"
 
@@ -91,7 +90,6 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 	def fromXML(self, name, attrs, content, ttFont):
 		if not hasattr(self, "ColorLayers"):
 			self.ColorLayers = {}
-		self.getGlyphName = ttFont.getGlyphName # for use in get/set item functions, for access by GID
 		if name == "ColorGlyph":
 			glyphName = attrs["name"]
 			for element in content:
@@ -108,28 +106,21 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 		elif "value" in attrs:
 			setattr(self, name, safeEval(attrs["value"]))
 
-	def __getitem__(self, glyphSelector):
-		if isinstance(glyphSelector, int):
-			# its a gid, convert to glyph name
-			glyphSelector = self.getGlyphName(glyphSelector)
+	def __getitem__(self, glyphName):
+		if not isinstance(glyphName, str):
+			raise TypeError(f"expected str, found {type(glyphName).__name__}")
+		return self.ColorLayers[glyphName]
 
-		if glyphSelector not in self.ColorLayers:
-			return None
+	def __setitem__(self, glyphName, value):
+		if not isinstance(glyphName, str):
+			raise TypeError(f"expected str, found {type(glyphName).__name__}")
+		if value is not None:
+			self.ColorLayers[glyphName] = value
+		elif glyphName in self.ColorLayers:
+			del self.ColorLayers[glyphName]
 
-		return self.ColorLayers[glyphSelector]
-
-	def __setitem__(self, glyphSelector, value):
-		if isinstance(glyphSelector, int):
-			# its a gid, convert to glyph name
-			glyphSelector = self.getGlyphName(glyphSelector)
-
-		if  value:
-			self.ColorLayers[glyphSelector] = value
-		elif glyphSelector in self.ColorLayers:
-			del self.ColorLayers[glyphSelector]
-
-	def __delitem__(self, glyphSelector):
-		del self.ColorLayers[glyphSelector]
+	def __delitem__(self, glyphName):
+		del self.ColorLayers[glyphName]
 
 class LayerRecord(object):
 
