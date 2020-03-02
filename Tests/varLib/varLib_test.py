@@ -1,6 +1,7 @@
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, newTable
-from fontTools.varLib import build
+from fontTools.varLib import build, load_designspace
+from fontTools.varLib.errors import VarLibValidationError
 from fontTools.varLib.mutator import instantiateVariableFont
 from fontTools.varLib import main as varLib_main, load_masters
 from fontTools.varLib import set_default_weight_width_slant
@@ -728,6 +729,13 @@ class BuildTest(unittest.TestCase):
             ("B", "D"): 40,
         }
 
+    def test_designspace_fill_in_location(self):
+        ds_path = self.get_test_input("VarLibLocationTest.designspace")
+        ds = DesignSpaceDocument.fromfile(ds_path)
+        ds_loaded = load_designspace(ds)
+
+        assert ds_loaded.instances[0].location == {"weight": 0, "width": 50}
+
 
 def test_load_masters_layerName_without_required_font():
     ds = DesignSpaceDocument()
@@ -737,7 +745,7 @@ def test_load_masters_layerName_without_required_font():
     ds.addSource(s)
 
     with pytest.raises(
-        AttributeError,
+        VarLibValidationError,
         match="specified a layer name but lacks the required TTFont object",
     ):
         load_masters(ds)

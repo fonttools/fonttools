@@ -178,7 +178,9 @@ class IncludingLexerTest(unittest.TestCase):
     def test_include_missing_file(self):
         lexer = IncludingLexer(self.getpath("include/includemissingfile.fea"))
         self.assertRaisesRegex(IncludedFeaNotFound,
-                               "includemissingfile.fea:1:8: missingfile.fea",
+                               "includemissingfile.fea:1:8: The following feature file "
+                               "should be included but cannot be found: "
+                               "missingfile.fea",
                                lambda: list(lexer))
 
     def test_featurefilepath_None(self):
@@ -223,7 +225,7 @@ class IncludingLexerTest(unittest.TestCase):
             # an in-memory stream, so it will use the current working
             # directory to resolve relative include statements
             lexer = IncludingLexer(UnicodeIO("include(included.fea);"))
-            files = set(loc[0] for _, _, loc in lexer)
+            files = set(os.path.realpath(loc[0]) for _, _, loc in lexer)
             expected = os.path.realpath(included.name)
             self.assertIn(expected, files)
         finally:

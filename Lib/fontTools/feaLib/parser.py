@@ -19,6 +19,14 @@ class Parser(object):
 
     def __init__(self, featurefile, glyphNames=(), followIncludes=True,
                  **kwargs):
+        """Initializes a Parser object.
+
+        Note: the `glyphNames` iterable serves a double role to help distinguish
+        glyph names from ranges in the presence of hyphens and to ensure that glyph
+        names referenced in a feature file are actually part of a font's glyph set.
+        If the iterable is left empty, no glyph name in glyph set checking takes
+        place.
+        """
         if "glyphMap" in kwargs:
             from fontTools.misc.loggingTools import deprecateArgument
             deprecateArgument("glyphMap", "use 'glyphNames' (iterable) instead")
@@ -268,6 +276,7 @@ class Parser(object):
         if (accept_glyphname and
                 self.next_token_type_ in (Lexer.NAME, Lexer.CID)):
             glyph = self.expect_glyph_()
+            self.check_glyph_name_in_glyph_set(glyph)
             return self.ast.GlyphName(glyph, location=self.cur_token_location_)
         if self.next_token_type_ is Lexer.GLYPHCLASS:
             self.advance_lexer_()
@@ -292,6 +301,7 @@ class Parser(object):
                 location = self.cur_token_location_
                 if '-' in glyph and glyph not in self.glyphNames_:
                     start, limit = self.split_glyph_range_(glyph, location)
+                    self.check_glyph_name_in_glyph_set(start, limit)
                     glyphs.add_range(
                         start, limit,
                         self.make_glyph_range_(location, start, limit))
@@ -299,10 +309,12 @@ class Parser(object):
                     start = glyph
                     self.expect_symbol_("-")
                     limit = self.expect_glyph_()
+                    self.check_glyph_name_in_glyph_set(start, limit)
                     glyphs.add_range(
                         start, limit,
                         self.make_glyph_range_(location, start, limit))
                 else:
+                    self.check_glyph_name_in_glyph_set(glyph)
                     glyphs.append(glyph)
             elif self.next_token_type_ is Lexer.CID:
                 glyph = self.expect_glyph_()
@@ -311,11 +323,17 @@ class Parser(object):
                     range_start = self.cur_token_
                     self.expect_symbol_("-")
                     range_end = self.expect_cid_()
+                    self.check_glyph_name_in_glyph_set(
+                        f"cid{range_start:05d}",
+                        f"cid{range_end:05d}",
+                    )
                     glyphs.add_cid_range(range_start, range_end,
                                          self.make_cid_range_(range_location,
                                                               range_start, range_end))
                 else:
-                    glyphs.append("cid%05d" % self.cur_token_)
+                    glyph_name = f"cid{self.cur_token_:05d}"
+                    self.check_glyph_name_in_glyph_set(glyph_name)
+                    glyphs.append(glyph_name)
             elif self.next_token_type_ is Lexer.GLYPHCLASS:
                 self.advance_lexer_()
                 gc = self.glyphclasses_.resolve(self.cur_token_)
@@ -1508,6 +1526,21 @@ class Parser(object):
             return "cid%05d" % self.cur_token_
         raise FeatureLibError("Expected a glyph name or CID",
                               self.cur_token_location_)
+
+    def check_glyph_name_in_glyph_set(self, *names):
+        """Raises if glyph name (just `start`) or glyph names of a
+        range (`start` and `end`) are not in the glyph set.
+
+        If no glyph set is present, does nothing.
+        """
+        if self.glyphNames_:
+            missing = [name for name in names if name not in self.glyphNames_]
+            if missing:
+                raise FeatureLibError(
+                    "The following glyph names are referenced but are missing from the "
+                    f"glyph set: {', '.join(missing)}",
+                    self.cur_token_location_
+                )
 
     def expect_markClass_reference_(self):
         name = self.expect_class_name_()

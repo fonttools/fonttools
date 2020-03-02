@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='utf-8'?>
+<designspace format="4.0">
+    <axes>
+        <axis default="100" maximum="900" minimum="100" name="weight" tag="wght">
+            <map input="500" output="105"/>
+            <map input="300" output="57"/>
+            <map input="900" output="158"/>
+            <map input="100" output="0"/>
+        </axis>
+        <axis default="50" maximum="100" minimum="0" name="width" tag="wdth" />
+    </axes>
+    <sources>
+        <source filename="A.ufo">
+            <location>
+                <dimension name="weight" xvalue="0" />
+                <dimension name="width" xvalue="50" />
+            </location>
+        </source>
+    </sources>
+    <instances>
+        <instance filename="C.ufo" familyname="C" stylename="CCC">
+            <location>
+            </location>
+        </instance>
+    </instances>
+</designspace>

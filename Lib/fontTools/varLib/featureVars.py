@@ -10,6 +10,8 @@ from fontTools.ttLib.tables import otTables as ot
 from fontTools.otlLib.builder import buildLookup, buildSingleSubstSubtable
 from collections import OrderedDict
 
+from .errors import VarLibValidationError
+
 
 def addFeatureVariations(font, conditionalSubstitutions, featureTag='rvrn'):
     """Add conditional substitutions to a Variable Font.
@@ -312,7 +314,10 @@ def addFeatureVariationsRaw(font, conditionalSubstitutions, featureTag='rvrn'):
     for conditionSet, substitutions in conditionalSubstitutions:
         conditionTable = []
         for axisTag, (minValue, maxValue) in sorted(conditionSet.items()):
-            assert minValue < maxValue
+            if minValue > maxValue:
+                raise VarLibValidationError(
+                    "A condition set has a minimum value above the maximum value."
+                )
             ct = buildConditionTable(axisIndices[axisTag], minValue, maxValue)
             conditionTable.append(ct)
 

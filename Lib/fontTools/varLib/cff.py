@@ -1,5 +1,4 @@
 from collections import namedtuple
-import os
 from fontTools.cffLib import (
 	maxStackLimit,
 	TopDictIndex,
@@ -20,6 +19,13 @@ from fontTools import varLib
 from fontTools.varLib.models import allEqual
 from fontTools.misc.psCharStrings import T2CharString, T2OutlineExtractor
 from fontTools.pens.t2CharStringPen import T2CharStringPen, t2c_round
+
+from .errors import VarLibCFFDictMergeError, VarLibCFFPointTypeMergeError, VarLibMergeError
+
+
+# Backwards compatibility
+MergeDictError = VarLibCFFDictMergeError
+MergeTypeError = VarLibCFFPointTypeMergeError
 
 
 def addCFFVarStore(varFont, varModel, varDataList, masterSupports):
@@ -126,16 +132,6 @@ def convertCFFtoCFF2(varFont):
 	del varFont['CFF ']
 
 
-class MergeDictError(TypeError):
-	def __init__(self, key, value, values):
-		error_msg = ["For the Private Dict key '{}', ".format(key),
-					 "the default font value list:",
-					 "\t{}".format(value),
-					 "had a different number of values than a region font:"]
-		error_msg += ["\t{}".format(region_value) for region_value in values]
-		error_msg = os.linesep.join(error_msg)
-
-
 def conv_to_int(num):
 	if isinstance(num, float) and num.is_integer():
 		return int(num)
@@ -219,7 +215,7 @@ def merge_PrivateDicts(top_dicts, vsindex_dict, var_model, fd_map):
 				try:
 					values = zip(*values)
 				except IndexError:
-					raise MergeDictError(key, value, values)
+					raise VarLibCFFDictMergeError(key, value, values)
 				"""
 				Row 0 contains the first  value from each master.
 				Convert each row from absolute values to relative
@@ -426,21 +422,6 @@ def merge_charstrings(glyphOrder, num_masters, top_dicts, masterModel):
 	return cvData
 
 
-class MergeTypeError(TypeError):
-	def __init__(self, point_type, pt_index, m_index, default_type, glyphName):
-			self.error_msg = [
-						"In glyph '{gname}' "
-						"'{point_type}' at point index {pt_index} in master "
-						"index {m_index} differs from the default font point "
-						"type '{default_type}'"
-						"".format(
-								gname=glyphName,
-								point_type=point_type, pt_index=pt_index,
-								m_index=m_index, default_type=default_type)
-							][0]
-			super(MergeTypeError, self).__init__(self.error_msg)
-
-
 def makeRoundNumberFunc(tolerance):
 	if tolerance < 0:
 		raise ValueError("Rounding tolerance must be positive")
@@ -547,7 +528,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 		else:
 			cmd = self._commands[self.pt_index]
 			if cmd[0] != point_type:
-				raise MergeTypeError(
+				raise VarLibCFFPointTypeMergeError(
 									point_type,
 									self.pt_index, len(cmd[1]),
 									cmd[0], self.glyphName)
@@ -560,7 +541,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 		else:
 			cmd = self._commands[self.pt_index]
 			if cmd[0] != hint_type:
-				raise MergeTypeError(hint_type, self.pt_index, len(cmd[1]),
+				raise VarLibCFFPointTypeMergeError(hint_type, self.pt_index, len(cmd[1]),
 					cmd[0], self.glyphName)
 			cmd[1].append(args)
 		self.pt_index += 1
@@ -576,7 +557,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 		else:
 			cmd = self._commands[self.pt_index]
 			if cmd[0] != hint_type:
-				raise MergeTypeError(hint_type, self.pt_index, len(cmd[1]),
+				raise VarLibCFFPointTypeMergeError(hint_type, self.pt_index, len(cmd[1]),
 					cmd[0], self.glyphName)
 			self.pt_index += 1
 			cmd = self._commands[self.pt_index]
@@ -646,8 +627,8 @@ class CFF2CharStringMergePen(T2CharStringPen):
 			# second has only args.
 			if lastOp in ['hintmask', 'cntrmask']:
 				coord = list(cmd[1])
-				assert allEqual(coord), (
-					"hintmask values cannot differ between source fonts.")
+				if not allEqual(coord):
+					raise VarLibMergeError("Hintmask values cannot differ between source fonts.")
 				cmd[1] = [coord[0][0]]
 			else:
 				coords = cmd[1]

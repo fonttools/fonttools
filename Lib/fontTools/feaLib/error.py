@@ -9,10 +9,18 @@ class FeatureLibError(Exception):
         message = Exception.__str__(self)
         if self.location:
             path, line, column = self.location
-            return "%s:%d:%d: %s" % (path, line, column, message)
+            return f"{path}:{line}:{column}: {message}"
         else:
             return message
 
 
 class IncludedFeaNotFound(FeatureLibError):
-    pass
+    def __str__(self):
+        assert self.location is not None
+
+        message = (
+            "The following feature file should be included but cannot be found: "
+            f"{Exception.__str__(self)}"
+        )
+        path, line, column = self.location
+        return f"{path}:{line}:{column}: {message}"

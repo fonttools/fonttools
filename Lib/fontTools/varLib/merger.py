@@ -14,6 +14,8 @@ from fontTools.varLib.varStore import VarStoreInstancer
 from functools import reduce
 from fontTools.otlLib.builder import buildSinglePos
 
+from .errors import VarLibMergeError
+
 
 class Merger(object):
 
@@ -66,8 +68,8 @@ class Merger(object):
 			if hasattr(item, "ensureDecompiled"):
 				item.ensureDecompiled()
 		keys = sorted(vars(out).keys())
-		assert all(keys == sorted(vars(v).keys()) for v in lst), \
-			(keys, [sorted(vars(v).keys()) for v in lst])
+		if not all(keys == sorted(vars(v).keys()) for v in lst):
+			raise VarLibMergeError((keys, [sorted(vars(v).keys()) for v in lst]))
 		mergers = self.mergersFor(out)
 		defaultMerger = mergers.get('*', self.__class__.mergeThings)
 		try:
@@ -82,7 +84,8 @@ class Merger(object):
 			raise
 
 	def mergeLists(self, out, lst):
-		assert allEqualTo(out, lst, len), (len(out), [len(v) for v in lst])
+		if not allEqualTo(out, lst, len):
+			raise VarLibMergeError((len(out), [len(v) for v in lst]))
 		for i,(value,values) in enumerate(zip(out, zip(*lst))):
 			try:
 				self.mergeThings(value, values)
@@ -92,7 +95,8 @@ class Merger(object):
 
 	def mergeThings(self, out, lst):
 		try:
-			assert allEqualTo(out, lst, type), (out, lst)
+			if not allEqualTo(out, lst, type):
+				raise VarLibMergeError((out, lst))
 			mergerFunc = self.mergersFor(out).get(None, None)
 			if mergerFunc is not None:
 				mergerFunc(self, out, lst)
@@ -101,7 +105,8 @@ class Merger(object):
 			elif isinstance(out, list):
 				self.mergeLists(out, lst)
 			else:
-				assert allEqualTo(out, lst), (out, lst)
+				if not allEqualTo(out, lst):
+					raise VarLibMergeError((out, lst))
 		except Exception as e:
 			e.args = e.args + (type(out).__name__,)
 			raise
@@ -122,7 +127,8 @@ class AligningMerger(Merger):
 @AligningMerger.merger(ot.GDEF, "GlyphClassDef")
 def merge(merger, self, lst):
 	if self is None:
-		assert allNone(lst), (lst)
+		if not allNone(lst):
+			raise VarLibMergeError(lst)
 		return
 
 	lst = [l.classDefs for l in lst]
@@ -134,7 +140,8 @@ def merge(merger, self, lst):
 	allKeys.update(*[l.keys() for l in lst])
 	for k in allKeys:
 		allValues = nonNone(l.get(k) for l in lst)
-		assert allEqual(allValues), allValues
+		if not allEqual(allValues):
+			raise VarLibMergeError(allValues)
 		if not allValues:
 			self[k] = None
 		else:
@@ -170,7 +177,8 @@ def _merge_GlyphOrders(font, lst, values_lst=None, default=None):
 	sortKey = font.getReverseGlyphMap().__getitem__
 	order = sorted(combined, key=sortKey)
 	# Make sure all input glyphsets were in proper order
-	assert all(sorted(vs, key=sortKey) == vs for vs in lst), "glyph orders are not consistent across masters"
+	if not all(sorted(vs, key=sortKey) == vs for vs in lst):
+		raise VarLibMergeError("Glyph order inconsistent across masters.")
 	del combined
 
 	paddedValues = None
@@ -197,7 +205,10 @@ def _Lookup_SinglePos_get_effective_value(subtables, glyph):
 		elif self.Format == 2:
 			return self.Value[self.Coverage.glyphs.index(glyph)]
 		else:
-			assert 0
+			raise VarLibMergeError(
+				"Cannot retrieve effective value for SinglePos lookup, unsupported "
+				f"format {self.Format}."
+			)
 	return None
 
 def _Lookup_PairPos_get_effective_value_pair(subtables, firstGlyph, secondGlyph):
@@ -219,13 +230,17 @@ def _Lookup_PairPos_get_effective_value_pair(subtables, firstGlyph, secondGlyph)
 			klass2 = self.ClassDef2.classDefs.get(secondGlyph, 0)
 			return self.Class1Record[klass1].Class2Record[klass2]
 		else:
-			assert 0
+			raise VarLibMergeError(
+				"Cannot retrieve effective value pair for PairPos lookup, unsupported "
+				f"format {self.Format}."
+			)
 	return None
 
 @AligningMerger.merger(ot.SinglePos)
 def merge(merger, self, lst):
 	self.ValueFormat = valueFormat = reduce(int.__or__, [l.ValueFormat for l in lst], 0)
-	assert len(lst) == 1 or (valueFormat & ~0xF == 0), valueFormat
+	if not (len(lst) == 1 or (valueFormat & ~0xF == 0)):
+		raise VarLibMergeError(f"SinglePos format {valueFormat} is unsupported.")
 
 	# If all have same coverage table and all are format 1,
 	coverageGlyphs = self.Coverage.glyphs
@@ -511,7 +526,9 @@ def merge(merger, self, lst):
 	elif self.Format == 2:
 		_PairPosFormat2_merge(self, lst, merger)
 	else:
-		assert False
+		raise VarLibMergeError(
+			f"Cannot merge PairPos lookup, unsupported format {self.Format}."
+		)
 
 	del merger.valueFormat1, merger.valueFormat2
 
@@ -576,7 +593,8 @@ def _MarkBasePosFormat1_merge(self, lst, merger, Mark='Mark', Base='Base'):
 		# failures in that case will probably signify mistakes in the
 		# input masters.
 
-		assert allEqual(allClasses), allClasses
+		if not allEqual(allClasses):
+			raise VarLibMergeError(allClasses)
 		if not allClasses:
 			rec = None
 		else:
@@ -625,19 +643,31 @@ def _MarkBasePosFormat1_merge(self, lst, merger, Mark='Mark', Base='Base'):
 
 @AligningMerger.merger(ot.MarkBasePos)
 def merge(merger, self, lst):
-	assert allEqualTo(self.Format, (l.Format for l in lst))
+	if not allEqualTo(self.Format, (l.Format for l in lst)):
+		raise VarLibMergeError(
+			f"MarkBasePos formats inconsistent across masters, "
+			f"expected {self.Format} but got {[l.Format for l in lst]}."
+		)
 	if self.Format == 1:
 		_MarkBasePosFormat1_merge(self, lst, merger)
 	else:
-		assert False
+		raise VarLibMergeError(
+			f"Cannot merge MarkBasePos lookup, unsupported format {self.Format}."
+		)
 
 @AligningMerger.merger(ot.MarkMarkPos)
 def merge(merger, self, lst):
-	assert allEqualTo(self.Format, (l.Format for l in lst))
+	if not allEqualTo(self.Format, (l.Format for l in lst)):
+		raise VarLibMergeError(
+			f"MarkMarkPos formats inconsistent across masters, "
+			f"expected {self.Format} but got {[l.Format for l in lst]}."
+		)
 	if self.Format == 1:
 		_MarkBasePosFormat1_merge(self, lst, merger, 'Mark1', 'Mark2')
 	else:
-		assert False
+		raise VarLibMergeError(
+			f"Cannot merge MarkMarkPos lookup, unsupported format {self.Format}."
+		)
 
 
 def _PairSet_flatten(lst, font):
@@ -766,8 +796,16 @@ def merge(merger, self, lst):
 		if not sts:
 			continue
 		if sts[0].__class__.__name__.startswith('Extension'):
-			assert allEqual([st.__class__ for st in sts])
-			assert allEqual([st.ExtensionLookupType for st in sts])
+			if not allEqual([st.__class__ for st in sts]):
+				raise VarLibMergeError(
+					"Use of extensions inconsistent between masters: "
+					f"{[st.__class__.__name__ for st in sts]}."
+				)
+			if not allEqual([st.ExtensionLookupType for st in sts]):
+				raise VarLibMergeError(
+					"Extension lookup type differs between masters: "
+					f"{[st.ExtensionLookupType for st in sts]}."
+				)
 			l.LookupType = sts[0].ExtensionLookupType
 			new_sts = [st.ExtSubTable for st in sts]
 			del sts[:]
@@ -995,7 +1033,8 @@ class VariationMerger(AligningMerger):
 		masterModel = None
 		if None in lst:
 			if allNone(lst):
-				assert out is None, (out, lst)
+				if out is not None:
+					raise VarLibMergeError((out, lst))
 				return
 			masterModel = self.model
 			model, lst = masterModel.getSubModel(lst)
@@ -1015,7 +1054,8 @@ def buildVarDevTable(store_builder, master_values):
 
 @VariationMerger.merger(ot.CaretValue)
 def merge(merger, self, lst):
-	assert self.Format == 1
+	if self.Format != 1:
+		raise VarLibMergeError(f"CaretValue format {self.Format} unsupported.")
 	self.Coordinate, DeviceTable = buildVarDevTable(merger.store_builder, [a.Coordinate for a in lst])
 	if DeviceTable:
 		self.Format = 3
@@ -1023,7 +1063,8 @@ def merge(merger, self, lst):
 
 @VariationMerger.merger(ot.Anchor)
 def merge(merger, self, lst):
-	assert self.Format == 1
+	if self.Format != 1:
+		raise VarLibMergeError(f"Anchor format {self.Format} unsupported.")
 	self.XCoordinate, XDeviceTable = buildVarDevTable(merger.store_builder, [a.XCoordinate for a in lst])
 	self.YCoordinate, YDeviceTable = buildVarDevTable(merger.store_builder, [a.YCoordinate for a in lst])
 	if XDeviceTable or YDeviceTable:

@@ -226,7 +226,11 @@ class WOFF2Writer(SFNTWriter):
 		# See:
 		# https://github.com/khaledhosny/ots/issues/60
 		# https://github.com/google/woff2/issues/15
-		if isTrueType and "glyf" in self.flavorData.transformedTables:
+		if (
+			isTrueType
+			and "glyf" in self.flavorData.transformedTables
+			and "glyf" in self.tables
+		):
 			self._normaliseGlyfAndLoca(padding=4)
 		self._setHeadTransformFlag()
 

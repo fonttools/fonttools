@@ -506,6 +506,7 @@ class FontBuilder(object):
         fontSet = CFFFontSet()
         fontSet.major = 1
         fontSet.minor = 0
+        fontSet.otFont = self.font
         fontSet.fontNames = [psName]
         fontSet.topDictIndex = TopDictIndex()
 
@@ -520,6 +521,7 @@ class FontBuilder(object):
         topDict = TopDict()
         topDict.charset = self.font.getGlyphOrder()
         topDict.Private = private
+        topDict.GlobalSubrs = fontSet.GlobalSubrs
         for key, value in fontInfo.items():
             setattr(topDict, key, value)
         if "FontMatrix" not in fontInfo:
@@ -766,6 +768,39 @@ class FontBuilder(object):
 
         featureVars.addFeatureVariations(
             self.font, conditionalSubstitutions, featureTag=featureTag
+        )
+
+    def setupCOLR(self, colorLayers):
+        """Build new COLR table using color layers dictionary.
+
+        Cf. `fontTools.colorLib.builder.buildCOLR`.
+        """
+        from fontTools.colorLib.builder import buildCOLR
+
+        self.font["COLR"] = buildCOLR(colorLayers)
+
+    def setupCPAL(
+        self,
+        palettes,
+        paletteTypes=None,
+        paletteLabels=None,
+        paletteEntryLabels=None,
+    ):
+        """Build new CPAL table using list of palettes.
+
+        Optionally build CPAL v1 table using paletteTypes, paletteLabels and
+        paletteEntryLabels.
+
+        Cf. `fontTools.colorLib.builder.buildCPAL`.
+        """
+        from fontTools.colorLib.builder import buildCPAL
+
+        self.font["CPAL"] = buildCPAL(
+            palettes,
+            paletteTypes=paletteTypes,
+            paletteLabels=paletteLabels,
+            paletteEntryLabels=paletteEntryLabels,
+            nameTable=self.font.get("name")
         )
 
 

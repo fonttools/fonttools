@@ -1,5 +1,5 @@
 language: python
-python: 3.5
+python: 3.6
 
 env:
   global:
@@ -16,9 +16,6 @@ branches:
 
 matrix:
   fast_finish: true
-  exclude:
-    # Exclude the default Python 3.6 build
-    - python: 3.6
   include:
     - python: 3.6
       env:
@@ -51,6 +48,11 @@ cache:
   - pip
   - directories:
     - $HOME/.pyenv_cache
+
+addons:
+  apt:
+    packages:
+      - language-pack-de
 
 before_install:
   - source ./.travis/before_install.sh
