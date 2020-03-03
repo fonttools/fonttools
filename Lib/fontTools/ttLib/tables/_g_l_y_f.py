@@ -677,6 +677,13 @@ class Glyph(object):
 			haveInstructions = haveInstructions | haveInstr
 			self.components.append(component)
 		if haveInstructions:
+			if not data:
+				log.warning(
+					"Composite glyph flags announce presence of instructions, but there are none. %s",
+					[c.glyphName for c in self.components]
+				)
+				return
+
 			numInstructions, = struct.unpack(">h", data[:2])
 			data = data[2:]
 			self.program = ttProgram.Program()
