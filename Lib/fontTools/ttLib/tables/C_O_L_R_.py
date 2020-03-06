@@ -14,20 +14,9 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 	ttFont['COLR'][<glyphName>] = <value> will set the color layers for any glyph.
 	"""
 
-	def decompile(self, data, ttFont):
-		from .otBase import OTTableReader
-		from . import otTables
-
-		reader = OTTableReader(data, tableTag=self.tableTag)
-		tableClass = getattr(otTables, self.tableTag)
-		table = tableClass()
-		table.decompile(reader, ttFont)
-
-		self.version = table.Version
-		assert (self.version == 0), "Version of COLR table is higher than I know how to handle"
-
+	def _fromOTTable(self, table):
+		self.version = 0
 		self.ColorLayers = colorLayerLists = {}
-
 		layerRecords = table.LayerRecordArray.LayerRecord
 		numLayerRecords = len(layerRecords)
 		for baseRec in table.BaseGlyphRecordArray.BaseGlyphRecord:
@@ -38,59 +27,78 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 			layers = []
 			for i in range(firstLayerIndex, firstLayerIndex+numLayers):
 				layerRec = layerRecords[i]
-				layers.append(LayerRecord(layerRec.LayerGlyph, layerRec.PaletteIndex))
+				layers.append(
+					LayerRecord(layerRec.LayerGlyph, layerRec.PaletteIndex)
+				)
 			colorLayerLists[baseGlyph] = layers
 
-	def compile(self, ttFont):
-		from .otBase import OTTableWriter
+	def _toOTTable(self, ttFont):
 		from . import otTables
-
-		ttFont.getReverseGlyphMap(rebuild=True)
+		from fontTools.colorLib.builder import populateCOLRv0
 
 		tableClass = getattr(otTables, self.tableTag)
 		table = tableClass()
-
 		table.Version = self.version
 
-		table.BaseGlyphRecordArray = otTables.BaseGlyphRecordArray()
-		table.BaseGlyphRecordArray.BaseGlyphRecord = baseGlyphRecords = []
-		table.LayerRecordArray = otTables.LayerRecordArray()
-		table.LayerRecordArray.LayerRecord = layerRecords = []
+		populateCOLRv0(
+			table,
+			{
+				baseGlyph: [(layer.name, layer.colorID) for layer in layers]
+				for baseGlyph, layers in self.ColorLayers.items()
+			},
+			glyphMap=ttFont.getReverseGlyphMap(rebuild=True),
+		)
+		return table
 
-		for baseGlyph in sorted(self.ColorLayers.keys(), key=ttFont.getGlyphID):
-			layers = self.ColorLayers[baseGlyph]
+	def decompile(self, data, ttFont):
+		from .otBase import OTTableReader
+		from . import otTables
 
-			baseRec = otTables.BaseGlyphRecord()
-			baseRec.BaseGlyph = baseGlyph
-			baseRec.FirstLayerIndex = len(layerRecords)
-			baseRec.NumLayers = len(layers)
-			baseGlyphRecords.append(baseRec)
+		# We use otData to decompile, but we adapt the decompiled otTables to the
+		# existing COLR v0 API for backward compatibility.
+		reader = OTTableReader(data, tableTag=self.tableTag)
+		tableClass = getattr(otTables, self.tableTag)
+		table = tableClass()
+		table.decompile(reader, ttFont)
 
-			for layer in layers:
-				layerRec = otTables.LayerRecord()
-				layerRec.LayerGlyph = layer.name
-				layerRec.PaletteIndex = layer.colorID
-				layerRecords.append(layerRec)
+		if table.Version == 0:
+			self._fromOTTable(table)
+		else:
+			# for new versions, keep the raw otTables around
+			self.table = table
+
+	def compile(self, ttFont):
+		from .otBase import OTTableWriter
+
+		if hasattr(self, "table"):
+			table = self.table
+		else:
+			table = self._toOTTable(ttFont)
 
 		writer = OTTableWriter(tableTag=self.tableTag)
 		table.compile(writer, ttFont)
 		return writer.getAllData()
 
 	def toXML(self, writer, ttFont):
-		writer.simpletag("version", value=self.version)
-		writer.newline()
-		for baseGlyph in sorted(self.ColorLayers.keys(), key=ttFont.getGlyphID):
-			writer.begintag("ColorGlyph", name=baseGlyph)
+		if hasattr(self, "table"):
+			self.table.toXML2(writer, ttFont)
+		else:
+			writer.simpletag("version", value=self.version)
 			writer.newline()
-			for layer in self.ColorLayers[baseGlyph]:
-				layer.toXML(writer, ttFont)
-			writer.endtag("ColorGlyph")
-			writer.newline()
+			for baseGlyph in sorted(self.ColorLayers.keys(), key=ttFont.getGlyphID):
+				writer.begintag("ColorGlyph", name=baseGlyph)
+				writer.newline()
+				for layer in self.ColorLayers[baseGlyph]:
+					layer.toXML(writer, ttFont)
+				writer.endtag("ColorGlyph")
+				writer.newline()
 
 	def fromXML(self, name, attrs, content, ttFont):
-		if not hasattr(self, "ColorLayers"):
-			self.ColorLayers = {}
-		if name == "ColorGlyph":
+		if name == "version":  # old COLR v0 API
+			setattr(self, name, safeEval(attrs["value"]))
+		elif name == "ColorGlyph":
+			if not hasattr(self, "ColorLayers"):
+				self.ColorLayers = {}
 			glyphName = attrs["name"]
 			for element in content:
 				if isinstance(element, basestring):
@@ -102,9 +110,15 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 				layer = LayerRecord()
 				layer.fromXML(element[0], element[1], element[2], ttFont)
 				layers.append (layer)
-			self[glyphName] = layers
-		elif "value" in attrs:
-			setattr(self, name, safeEval(attrs["value"]))
+			self.ColorLayers[glyphName] = layers
+		else:  # new COLR v1 API
+			from . import otTables
+
+			if not hasattr(self, "table"):
+				tableClass = getattr(otTables, self.tableTag)
+				self.table = tableClass()
+			self.table.fromXML(name, attrs, content, ttFont)
+			self.table.populateDefaults()
 
 	def __getitem__(self, glyphName):
 		if not isinstance(glyphName, str):
