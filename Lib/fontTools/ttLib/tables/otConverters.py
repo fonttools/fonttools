@@ -13,7 +13,8 @@ from .otBase import (CountReference, FormatSwitchingBaseTable,
                      OTTableReader, OTTableWriter, ValueRecordFactory)
 from .otTables import (lookupTypes, AATStateTable, AATState, AATAction,
                        ContextualMorphAction, LigatureMorphAction,
-                       InsertionMorphAction, MorxSubtable)
+                       InsertionMorphAction, MorxSubtable, VariableFloat,
+                       VariableInt, ExtendMode as _ExtendMode)
 from functools import partial
 import struct
 import logging
@@ -200,15 +201,22 @@ class BaseConverter(object):
 
 
 class SimpleValue(BaseConverter):
+	@staticmethod
+	def toString(value):
+		return value
+	@staticmethod
+	def fromString(value):
+		return value
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
-		xmlWriter.simpletag(name, attrs + [("value", value)])
+		xmlWriter.simpletag(name, attrs + [("value", self.toString(value))])
 		xmlWriter.newline()
 	def xmlRead(self, attrs, content, font):
-		return attrs["value"]
+		return self.fromString(attrs["value"])
 
 class IntValue(SimpleValue):
-	def xmlRead(self, attrs, content, font):
-		return int(attrs["value"], 0)
+	@staticmethod
+	def fromString(value):
+		return int(value, 0)
 
 class Long(IntValue):
 	staticSize = 4
@@ -225,9 +233,9 @@ class ULong(IntValue):
 		writer.writeULong(value)
 
 class Flags32(ULong):
-	def xmlWrite(self, xmlWriter, font, value, name, attrs):
-		xmlWriter.simpletag(name, attrs + [("value", "0x%08X" % value)])
-		xmlWriter.newline()
+	@staticmethod
+	def toString(value):
+		return "0x%08X" % value
 
 class Short(IntValue):
 	staticSize = 2
@@ -318,8 +326,9 @@ class NameID(UShort):
 
 
 class FloatValue(SimpleValue):
-	def xmlRead(self, attrs, content, font):
-		return float(attrs["value"])
+	@staticmethod
+	def fromString(value):
+		return float(value)
 
 class DeciPoints(FloatValue):
 	staticSize = 2
@@ -335,11 +344,12 @@ class Fixed(FloatValue):
 		return  fi2fl(reader.readLong(), 16)
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeLong(fl2fi(value, 16))
-	def xmlRead(self, attrs, content, font):
-		return str2fl(attrs["value"], 16)
-	def xmlWrite(self, xmlWriter, font, value, name, attrs):
-		xmlWriter.simpletag(name, attrs + [("value", fl2str(value, 16))])
-		xmlWriter.newline()
+	@staticmethod
+	def fromString(value):
+		return str2fl(value, 16)
+	@staticmethod
+	def toString(value):
+		return fl2str(value, 16)
 
 class F2Dot14(FloatValue):
 	staticSize = 2
@@ -347,13 +357,14 @@ class F2Dot14(FloatValue):
 		return  fi2fl(reader.readShort(), 14)
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
 		writer.writeShort(fl2fi(value, 14))
-	def xmlRead(self, attrs, content, font):
-		return str2fl(attrs["value"], 14)
-	def xmlWrite(self, xmlWriter, font, value, name, attrs):
-		xmlWriter.simpletag(name, attrs + [("value", fl2str(value, 14))])
-		xmlWriter.newline()
+	@staticmethod
+	def fromString(value):
+		return str2fl(value, 14)
+	@staticmethod
+	def toString(value):
+		return fl2str(value, 14)
 
-class Version(BaseConverter):
+class Version(SimpleValue):
 	staticSize = 4
 	def read(self, reader, font, tableDict):
 		value = reader.readLong()
@@ -363,16 +374,12 @@ class Version(BaseConverter):
 		value = fi2ve(value)
 		assert (value >> 16) == 1, "Unsupported version 0x%08x" % value
 		writer.writeLong(value)
-	def xmlRead(self, attrs, content, font):
-		value = attrs["value"]
-		value = ve2fi(value)
-		return value
-	def xmlWrite(self, xmlWriter, font, value, name, attrs):
-		value = fi2ve(value)
-		value = "0x%08x" % value
-		xmlWriter.simpletag(name, attrs + [("value", value)])
-		xmlWriter.newline()
-
+	@staticmethod
+	def fromString(value):
+		return ve2fi(value)
+	@staticmethod
+	def toString(value):
+		return "0x%08x" % value
 	@staticmethod
 	def fromFloat(v):
 		return fl2fi(v, 16)
@@ -1585,6 +1592,95 @@ class VarDataValue(BaseConverter):
 		return safeEval(attrs["value"])
 
 
+def _issubclass_namedtuple(x):
+	return (
+		issubclass(x, tuple)
+		and getattr(x, "_fields", None) is not None
+	)
+
+
+class _NamedTupleConverter(BaseConverter):
+	# subclasses must override this
+	tupleClass = NotImplemented
+	# List[SimpleValue]
+	converterClasses = NotImplemented
+
+	def __init__(self, name, repeat, aux, tableClass=None):
+		# we expect all converters to be subclasses of SimpleValue
+		assert all(issubclass(klass, SimpleValue) for klass in self.converterClasses)
+		assert _issubclass_namedtuple(self.tupleClass), repr(self.tupleClass)
+		assert len(self.tupleClass._fields) == len(self.converterClasses)
+		assert tableClass is None  # tableClass is unused by SimplValues
+		BaseConverter.__init__(self, name, repeat, aux)
+		self.converters = [
+			klass(name=name, repeat=None, aux=None)
+			for name, klass in zip(self.tupleClass._fields, self.converterClasses)
+		]
+		# returned by getRecordSize method
+		self.staticSize = sum(c.staticSize for c in self.converters)
+
+	def read(self, reader, font, tableDict):
+		kwargs = {
+			conv.name: conv.read(reader, font, tableDict)
+			for conv in self.converters
+		}
+		return self.tupleClass(**kwargs)
+
+	def write(self, writer, font, tableDict, value, repeatIndex=None):
+		for conv in self.converters:
+			v = getattr(value, conv.name)
+			# repeatIndex is unused for SimpleValues
+			conv.write(writer, font, tableDict, v, repeatIndex=None)
+
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		assert value is not None
+		if attrs is None:
+			attrs = []
+		for conv in self.converters:
+			v = getattr(value, conv.name)
+			attrs.append((conv.name, conv.toString(v)))
+		xmlWriter.simpletag(name, attrs)
+		xmlWriter.newline()
+
+	def xmlRead(self, attrs, content, font):
+		kwargs = {
+			conv.name: conv.fromString(attrs[conv.name])
+			for conv in self.converters
+		}
+		return self.tupleClass(**kwargs)
+
+
+class VariableScalar(_NamedTupleConverter):
+	tupleClass = VariableFloat
+	converterClasses = [Fixed, ULong]
+
+
+class VariableNormalizedScalar(_NamedTupleConverter):
+	tupleClass = VariableFloat
+	converterClasses = [F2Dot14, ULong]
+
+
+class VariablePosition(_NamedTupleConverter):
+	tupleClass = VariableInt
+	converterClasses = [Short, ULong]
+
+
+class VariableDistance(_NamedTupleConverter):
+	tupleClass = VariableInt
+	converterClasses = [UShort, ULong]
+
+
+class ExtendMode(UShort):
+	def read(self, reader, font, tableDict):
+		return _ExtendMode(super().read(reader, font, tableDict))
+	@staticmethod
+	def fromString(value):
+		return getattr(_ExtendMode, value.upper())
+	@staticmethod
+	def toString(value):
+		return _ExtendMode(value).name.lower()
+
+
 converterMapping = {
 	# type		class
 	"int8":		Int8,
@@ -1610,6 +1706,7 @@ converterMapping = {
 	"DeltaValue":	DeltaValue,
 	"VarIdxMapValue":	VarIdxMapValue,
 	"VarDataValue":	VarDataValue,
+	"ExtendMode": ExtendMode,
 
 	# AAT
 	"CIDGlyphMap":	CIDGlyphMap,
@@ -1625,4 +1722,10 @@ converterMapping = {
 	"STXHeader":	lambda C: partial(STXHeader, tableClass=C),
 	"OffsetTo":	lambda C: partial(Table, tableClass=C),
 	"LOffsetTo":	lambda C: partial(LTable, tableClass=C),
+
+	# Variable types
+	"VariableScalar": VariableScalar,
+	"VariableNormalizedScalar": VariableNormalizedScalar,
+	"VariablePosition": VariablePosition,
+	"VariableDistance": VariableDistance,
 }

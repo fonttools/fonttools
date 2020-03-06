@@ -5,7 +5,11 @@ OpenType subtables.
 Most are constructed upon import from data in otData.py, all are populated with
 converter objects from otConverters.py.
 """
+from enum import IntEnum
+import itertools
+from collections import namedtuple
 from fontTools.misc.py23 import *
+from fontTools.misc.fixedTools import otRound
 from fontTools.misc.textTools import pad, safeEval
 from .otBase import BaseTable, FormatSwitchingBaseTable, ValueRecord, CountReference
 import logging
@@ -1181,6 +1185,69 @@ class COLR(BaseTable):
 			**self.__dict__,
 			"LayerRecordCount": CountReference(self.__dict__, "LayerRecordCount")
 		}
+
+
+class BaseGlyphRecordArray(BaseTable):
+
+	def preWrite(self, font):
+		self.BaseGlyphRecord = sorted(
+			self.BaseGlyphRecord,
+			key=lambda rec: font.getGlyphID(rec.BaseGlyph)
+		)
+		return self.__dict__.copy()
+
+
+class BaseGlyphV1Array(BaseTable):
+
+	def preWrite(self, font):
+		self.BaseGlyphV1Record = sorted(
+			self.BaseGlyphV1Record,
+			key=lambda rec: font.getGlyphID(rec.BaseGlyph)
+		)
+		return self.__dict__.copy()
+
+
+
+class VariableValue(namedtuple("VariableValue", ["value", "varIdx"])):
+	__slots__ = ()
+
+	_value_mapper = None
+
+	def __new__(cls, value, varIdx=0):
+		return super().__new__(
+			cls,
+			cls._value_mapper(value) if cls._value_mapper else value,
+			varIdx
+		)
+
+	@classmethod
+	def _make(cls, iterable):
+		if cls._value_mapper:
+			it = iter(iterable)
+			try:
+				value = next(it)
+			except StopIteration:
+				pass
+			else:
+				value = cls._value_mapper(value)
+				iterable = itertools.chain((value,), it)
+		return super()._make(iterable)
+
+
+class VariableFloat(VariableValue):
+	__slots__ = ()
+	_value_mapper = float
+
+
+class VariableInt(VariableValue):
+	__slots__ = ()
+	_value_mapper = otRound
+
+
+class ExtendMode(IntEnum):
+	PAD = 0
+	REPEAT = 1
+	REFLECT = 2
 
 
 # For each subtable format there is a class. However, we don't really distinguish

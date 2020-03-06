@@ -1592,34 +1592,14 @@ otData = [
 		('LOffset', 'Paint', None, None, 'Offset (from beginning of COLR table) to Paint subtable.'),
 	]),
 
-	('VariableScalar', [
-		('Fixed', 'Value', None, None, 'A variable Fixed 16.16 value.'),
-		('uint32', 'VarIdx', None, None, 'Combined outer-inner variation index.'),
-	]),
-
-	('VariablePosition', [
-		('int16', 'Value', None, None, 'A variable FWORD (int16 font design units) value.'),
-		('uint32', 'VarIdx', None, None, 'Combined outer-inner variation index.'),
-	]),
-
-	('VariableDistance', [
-		('uint16', 'Value', None, None, 'A variable UFWORD (uint16 font design units) value.'),
-		('uint32', 'VarIdx', None, None, 'Combined outer-inner variation index.'),
-	]),
-
-	('VariableNormalizedScalar', [
-		('F2Dot14', 'Value', None, None, 'A variable Fixed 2.14 value.'),
-		('uint32', 'VarIdx', None, None, 'Combined outer-inner variation index.'),
-	]),
-
-	('VariableAffine2x2', [
+	('Affine2x2', [
 		('VariableScalar', 'xx', None, None, ''),
 		('VariableScalar', 'xy', None, None, ''),
 		('VariableScalar', 'yx', None, None, ''),
 		('VariableScalar', 'yy', None, None, ''),
 	]),
 
-	('VariablePoint', [
+	('Point', [
 		('VariablePosition', 'x', None, None, ''),
 		('VariablePosition', 'y', None, None, ''),
 	]),
@@ -1635,9 +1615,9 @@ otData = [
 	]),
 
 	('ColorLine', [
-		('uint16', 'Extend', None, None, 'Enum {PAD = 0, REPEAT = 1, REFLECT = 2}'),
+		('ExtendMode', 'Extend', None, None, 'Enum {PAD = 0, REPEAT = 1, REFLECT = 2}'),
 		('uint16', 'StopCount', None, None, 'Number of Color stops.'),
-		('ColorStop', 'Stops', 'StopCount', 0, 'Array of Color stops.'),
+		('ColorStop', 'ColorStop', 'StopCount', 0, 'Array of Color stops.'),
 	]),
 
 	('PaintFormat1', [
@@ -1648,18 +1628,18 @@ otData = [
 	('PaintFormat2', [
 		('uint16', 'PaintFormat', None, None, 'Format identifier-format = 2'),
 		('LOffset', 'ColorLine', None, None, 'Offset to ColorLine subtable.'),
-		('VariablePoint', 'p0', None, None, ''),
-		('VariablePoint', 'p1', None, None, ''),
-		('VariablePoint', 'p2', None, None, 'Normal; equal to p1 in simple cases.'),
+		('Point', 'p0', None, None, ''),
+		('Point', 'p1', None, None, ''),
+		('Point', 'p2', None, None, 'Normal; equal to p1 in simple cases.'),
 	]),
 
 	('PaintFormat3', [
 		('uint16', 'PaintFormat', None, None, 'Format identifier-format = 3'),
 		('LOffset', 'ColorLine', None, None, 'Offset to ColorLine subtable.'),
-		('VariablePoint', 'c0', None, None, ''),
-		('VariablePoint', 'c1', None, None, ''),
+		('Point', 'c0', None, None, ''),
+		('Point', 'c1', None, None, ''),
 		('VariableDistance', 'r0', None, None, ''),
 		('VariableDistance', 'r1', None, None, ''),
-		('LOffsetTo(VariableAffine2x2)', 'Affine', None, None, 'Offset to VariableAffine2x2 subtable.'),
+		('LOffsetTo(Affine2x2)', 'Affine', None, None, 'Offset to Affine2x2 subtable.'),
 	]),
 ]
