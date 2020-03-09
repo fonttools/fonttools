@@ -296,7 +296,7 @@ def _splitSolidAndGradientGlyphs(
 # See draft proposal at: https://github.com/googlefonts/colr-gradients-spec
 
 
-_DEFAULT_TRANSPARENCY = VariableFloat(1.0)
+_DEFAULT_TRANSPARENCY = VariableFloat(0.0)
 
 
 def _to_variable_value(value: _VariableScalar, cls=VariableValue) -> VariableValue:
