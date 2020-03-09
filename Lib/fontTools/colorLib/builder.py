@@ -333,10 +333,10 @@ def buildSolidColorPaint(
 
 
 def buildColorStop(
-    stopOffset: _VariableScalar, color: Union[int, ot.Color]
+    offset: _VariableScalar, color: Union[int, ot.Color]
 ) -> ot.ColorStop:
     self = ot.ColorStop()
-    self.StopOffset = _to_variable_float(stopOffset)
+    self.StopOffset = _to_variable_float(offset)
 
     if not isinstance(color, ot.Color):
         color = buildColor(paletteIndex=color)
@@ -354,7 +354,7 @@ def buildColorLine(
     self.ColorStop = [
         stop
         if isinstance(stop, ot.ColorStop)
-        else buildColorStop(stopOffset=stop[0], color=stop[1])
+        else buildColorStop(offset=stop[0], color=stop[1])
         for stop in colorStops
     ]
     return self
