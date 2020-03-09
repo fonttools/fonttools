@@ -68,7 +68,7 @@ def populateCOLRv0(
 
 
 def buildCOLR(
-    colorGlyphs: Dict[str, List[Tuple[str, Union[int, ot.Paint]]]],
+    colorGlyphs: _ColorGlyphsDict,
     version: Optional[int] = None,
     glyphMap: Optional[Dict] = None,
     varStore: Optional[ot.VarStore] = None,
