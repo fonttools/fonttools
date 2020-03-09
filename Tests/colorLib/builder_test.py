@@ -281,3 +281,85 @@ def test_buildPoint():
     )
     assert pt.x == builder.VariableInt(2, varIdx=1)
     assert pt.y == builder.VariableInt(3, varIdx=2)
+
+    # float coords are rounded
+    pt = builder.buildPoint(x=-2.5, y=3.5)
+    assert pt.x == builder.VariableInt(-2)
+    assert pt.y == builder.VariableInt(4)
+
+    # tuple args are cast to VariableInt namedtuple
+    pt = builder.buildPoint((1, 2), (3, 4))
+    assert pt.x == builder.VariableInt(1, varIdx=2)
+    assert pt.y == builder.VariableInt(3, varIdx=4)
+
+
+def test_buildAffine2x2():
+    matrix = builder.buildAffine2x2(1.5, 0, 0.5, 2.0)
+    assert matrix.xx == builder.VariableFloat(1.5)
+    assert matrix.xy == builder.VariableFloat(0.0)
+    assert matrix.yx == builder.VariableFloat(0.5)
+    assert matrix.yy == builder.VariableFloat(2.0)
+
+
+def test_buildLinearGradientPaint():
+    color_stops = [
+        builder.buildColorStop(0.0, builder.buildColor(0)),
+        builder.buildColorStop(0.5, builder.buildColor(1)),
+        builder.buildColorStop(1.0, builder.buildColor(2, transparency=0.8)),
+    ]
+    color_line = builder.buildColorLine(color_stops, extend=builder.ExtendMode.REPEAT)
+    p0 = builder.buildPoint(x=100, y=200)
+    p1 = builder.buildPoint(x=150, y=250)
+
+    gradient = builder.buildLinearGradientPaint(color_line, p0, p1)
+    assert gradient.Format == 2
+    assert gradient.ColorLine == color_line
+    assert gradient.p0 == p0
+    assert gradient.p1 == p1
+    assert gradient.p2 == gradient.p1
+    assert gradient.p2 is not gradient.p1
+
+    gradient = builder.buildLinearGradientPaint(color_stops, p0, p1)
+    assert gradient.ColorLine.Extend == builder.ExtendMode.PAD
+    assert gradient.ColorLine.ColorStop == color_stops
+
+    gradient = builder.buildLinearGradientPaint(color_line, p0, p1, p2=(150, 230))
+    assert gradient.p2 == builder.buildPoint(x=150, y=230)
+    assert gradient.p2 != gradient.p1
+
+
+def test_buildRadialGradientPaint():
+    color_stops = [
+        builder.buildColorStop(0.0, builder.buildColor(0)),
+        builder.buildColorStop(0.5, builder.buildColor(1)),
+        builder.buildColorStop(1.0, builder.buildColor(2, transparency=0.8)),
+    ]
+    color_line = builder.buildColorLine(color_stops, extend=builder.ExtendMode.REPEAT)
+    c0 = builder.buildPoint(x=100, y=200)
+    c1 = builder.buildPoint(x=150, y=250)
+    r0 = builder.VariableInt(10)
+    r1 = builder.VariableInt(5)
+
+    gradient = builder.buildRadialGradientPaint(color_line, c0, c1, r0, r1)
+    assert gradient.Format == 3
+    assert gradient.ColorLine == color_line
+    assert gradient.c0 == c0
+    assert gradient.c1 == c1
+    assert gradient.r0 == r0
+    assert gradient.r1 == r1
+    assert gradient.Affine is None
+
+    gradient = builder.buildRadialGradientPaint(color_stops, c0, c1, r0, r1)
+    assert gradient.ColorLine.Extend == builder.ExtendMode.PAD
+    assert gradient.ColorLine.ColorStop == color_stops
+
+    matrix = builder.buildAffine2x2(2.0, 0.0, 0.0, 2.0)
+    gradient = builder.buildRadialGradientPaint(
+        color_stops, c0, c1, r0, r1, affine=matrix
+    )
+    assert gradient.Affine == matrix
+
+    gradient = builder.buildRadialGradientPaint(
+        color_stops, c0, c1, r0, r1, affine=(2.0, 0.0, 0.0, 2.0)
+    )
+    assert gradient.Affine == matrix
