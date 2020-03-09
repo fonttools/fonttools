@@ -1,7 +1,7 @@
+import copy
 import enum
 from functools import partial
 from typing import Dict, List, Optional, Tuple, Union
-from fontTools.misc.fixedTools import otRound
 from fontTools.ttLib.tables import C_O_L_R_
 from fontTools.ttLib.tables import C_P_A_L_
 from fontTools.ttLib.tables import _n_a_m_e
@@ -390,7 +390,7 @@ def buildLinearGradientPaint(
     self.ColorLine = colorLine
 
     if p2 is None:
-        p2 = p1
+        p2 = copy.copy(p1)
     for i, pt in enumerate((p0, p1, p2)):
         setattr(self, f"p{i}", _to_variable_point(pt))
 
