@@ -185,3 +185,99 @@ def test_buildCPAL_invalid_color():
         ),
     ):
         builder.buildCPAL([[(0, 0, 0, 0)], [(1, 1, -1, 2)]])
+
+
+def test_buildColor():
+    c = builder.buildColor(0)
+    assert c.PaletteIndex == 0
+    assert c.Transparency.value == 0.0
+    assert c.Transparency.varIdx == 0
+
+    c = builder.buildColor(1, transparency=0.5)
+    assert c.PaletteIndex == 1
+    assert c.Transparency.value == 0.5
+    assert c.Transparency.varIdx == 0
+
+    c = builder.buildColor(3, transparency=builder.VariableFloat(0.5, varIdx=2))
+    assert c.PaletteIndex == 3
+    assert c.Transparency.value == 0.5
+    assert c.Transparency.varIdx == 2
+
+
+def test_buildSolidColorPaint():
+    p = builder.buildSolidColorPaint(0)
+    assert p.Format == 1
+    assert p.Color.PaletteIndex == 0
+    assert p.Color.Transparency.value == 0.0
+    assert p.Color.Transparency.varIdx == 0
+
+    p = builder.buildSolidColorPaint(1, transparency=0.5)
+    assert p.Format == 1
+    assert p.Color.PaletteIndex == 1
+    assert p.Color.Transparency.value == 0.5
+    assert p.Color.Transparency.varIdx == 0
+
+    p = builder.buildSolidColorPaint(
+        3, transparency=builder.VariableFloat(0.5, varIdx=2)
+    )
+    assert p.Format == 1
+    assert p.Color.PaletteIndex == 3
+    assert p.Color.Transparency.value == 0.5
+    assert p.Color.Transparency.varIdx == 2
+
+
+def test_buildColorStop():
+    s = builder.buildColorStop(offset=0.1, color=2)
+    assert s.StopOffset == builder.VariableFloat(0.1)
+    assert s.Color.PaletteIndex == 2
+    assert s.Color.Transparency == builder._DEFAULT_TRANSPARENCY
+
+    c = builder.buildColor(3, transparency=0.4)
+    s = builder.buildColorStop(offset=0.2, color=c)
+    assert s.StopOffset == builder.VariableFloat(0.2)
+    assert s.Color.PaletteIndex == 3
+    assert s.Color.Transparency == builder.VariableFloat(0.4)
+
+    s = builder.buildColorStop(
+        offset=builder.VariableFloat(0.0, varIdx=1),
+        color=builder.buildColor(0, transparency=builder.VariableFloat(0.3, varIdx=2)),
+    )
+    assert s.StopOffset == builder.VariableFloat(0.0, varIdx=1)
+    assert s.Color.PaletteIndex == 0
+    assert s.Color.Transparency == builder.VariableFloat(0.3, varIdx=2)
+
+
+def test_buildColorLine():
+    stops = [(0.0, 0), (0.5, 1), (1.0, 2)]
+
+    cline = builder.buildColorLine(stops)
+    assert cline.Extend == builder.ExtendMode.PAD
+    assert cline.StopCount == 3
+    assert [
+        (cs.StopOffset.value, cs.Color.PaletteIndex) for cs in cline.ColorStop
+    ] == stops
+
+    cline = builder.buildColorLine(stops, extend=builder.ExtendMode.REPEAT)
+    assert cline.Extend == builder.ExtendMode.REPEAT
+
+    cline = builder.buildColorLine(stops, extend=builder.ExtendMode.REFLECT)
+    assert cline.Extend == builder.ExtendMode.REFLECT
+
+    cline = builder.buildColorLine(
+        [builder.buildColorStop(offset=s[0], color=s[1]) for s in stops]
+    )
+    assert [
+        (cs.StopOffset.value, cs.Color.PaletteIndex) for cs in cline.ColorStop
+    ] == stops
+
+
+def test_buildPoint():
+    pt = builder.buildPoint(0, 1)
+    assert pt.x == builder.VariableInt(0)
+    assert pt.y == builder.VariableInt(1)
+
+    pt = builder.buildPoint(
+        builder.VariableInt(2, varIdx=1), builder.VariableInt(3, varIdx=2)
+    )
+    assert pt.x == builder.VariableInt(2, varIdx=1)
+    assert pt.y == builder.VariableInt(3, varIdx=2)
