@@ -15,6 +15,7 @@ from .otTables import (lookupTypes, AATStateTable, AATState, AATAction,
                        ContextualMorphAction, LigatureMorphAction,
                        InsertionMorphAction, MorxSubtable, VariableFloat,
                        VariableInt, ExtendMode as _ExtendMode)
+from itertools import zip_longest
 from functools import partial
 import struct
 import logging
@@ -1616,6 +1617,7 @@ class _NamedTupleConverter(BaseConverter):
 			klass(name=name, repeat=None, aux=None)
 			for name, klass in zip(self.tupleClass._fields, self.converterClasses)
 		]
+		self.convertersByName = {conv.name: conv for conv in self.converters}
 		# returned by getRecordSize method
 		self.staticSize = sum(c.staticSize for c in self.converters)
 
@@ -1634,18 +1636,33 @@ class _NamedTupleConverter(BaseConverter):
 
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		assert value is not None
+		defaults = value.__new__.__defaults__ or ()
+		assert len(self.converters) >= len(defaults)
+		values = {}
+		required = object()
+		for conv, default in zip_longest(
+			reversed(self.converters),
+			reversed(defaults),
+			fillvalue=required,
+		):
+			v = getattr(value, conv.name)
+			if default is required or v != default:
+				values[conv.name] = conv.toString(v)
 		if attrs is None:
 			attrs = []
-		for conv in self.converters:
-			v = getattr(value, conv.name)
-			attrs.append((conv.name, conv.toString(v)))
+		attrs.extend(
+			(conv.name, values[conv.name])
+			for conv in self.converters
+			if conv.name in values
+		)
 		xmlWriter.simpletag(name, attrs)
 		xmlWriter.newline()
 
 	def xmlRead(self, attrs, content, font):
+		converters = self.convertersByName
 		kwargs = {
-			conv.name: conv.fromString(attrs[conv.name])
-			for conv in self.converters
+			k: converters[k].fromString(v)
+			for k, v in attrs.items()
 		}
 		return self.tupleClass(**kwargs)
 
