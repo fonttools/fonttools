@@ -1,7 +1,7 @@
 import copy
 import enum
 from functools import partial
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
 from fontTools.ttLib.tables import C_O_L_R_
 from fontTools.ttLib.tables import C_P_A_L_
 from fontTools.ttLib.tables import _n_a_m_e
@@ -16,13 +16,14 @@ from .errors import ColorLibError
 
 
 # TODO move type aliases to colorLib.types?
-_LayersList = List[Tuple[str, Union[int, ot.Paint]]]
+_LayersList = Sequence[Tuple[str, Union[int, ot.Paint]]]
 _ColorGlyphsDict = Dict[str, _LayersList]
-_ColorGlyphsV0Dict = Dict[str, List[Tuple[str, int]]]
+_ColorGlyphsV0Dict = Dict[str, Sequence[Tuple[str, int]]]
 _Number = Union[int, float]
 _VariableScalar = Union[_Number, VariableValue, Tuple[_Number, int]]
-_ColorStopTuple = Tuple[_VariableScalar, Union[int, ot.Color]]
-_ColorStopsList = List[Union[_ColorStopTuple, ot.ColorStop]]
+_ColorTuple = Tuple[int, VariableValue]
+_ColorStopTuple = Tuple[_VariableScalar, Union[int, _ColorTuple, ot.Color]]
+_ColorStopsList = Sequence[Union[_ColorStopTuple, ot.ColorStop]]
 _PointTuple = Tuple[_VariableScalar, _VariableScalar]
 _AffineTuple = Tuple[_VariableScalar, _VariableScalar, _VariableScalar, _VariableScalar]
 
@@ -152,7 +153,7 @@ _OptionalLocalizedString = Union[None, str, Dict[str, str]]
 
 
 def buildPaletteLabels(
-    labels: List[_OptionalLocalizedString], nameTable: _n_a_m_e.table__n_a_m_e
+    labels: Iterable[_OptionalLocalizedString], nameTable: _n_a_m_e.table__n_a_m_e
 ) -> List[Optional[int]]:
     return [
         nameTable.addMultilingualName(l, mac=False)
@@ -165,10 +166,10 @@ def buildPaletteLabels(
 
 
 def buildCPAL(
-    palettes: List[List[Tuple[float, float, float, float]]],
-    paletteTypes: Optional[List[ColorPaletteType]] = None,
-    paletteLabels: Optional[List[_OptionalLocalizedString]] = None,
-    paletteEntryLabels: Optional[List[_OptionalLocalizedString]] = None,
+    palettes: Sequence[Sequence[Tuple[float, float, float, float]]],
+    paletteTypes: Optional[Sequence[ColorPaletteType]] = None,
+    paletteLabels: Optional[Sequence[_OptionalLocalizedString]] = None,
+    paletteEntryLabels: Optional[Sequence[_OptionalLocalizedString]] = None,
     nameTable: Optional[_n_a_m_e.table__n_a_m_e] = None,
 ) -> C_P_A_L_.table_C_P_A_L_:
     """Build CPAL table from list of color palettes.
@@ -333,13 +334,15 @@ def buildSolidColorPaint(
 
 
 def buildColorStop(
-    offset: _VariableScalar, color: Union[int, ot.Color]
+    offset: _VariableScalar, color: Union[int, _ColorTuple, ot.Color]
 ) -> ot.ColorStop:
     self = ot.ColorStop()
     self.StopOffset = _to_variable_float(offset)
 
-    if not isinstance(color, ot.Color):
+    if isinstance(color, int):
         color = buildColor(paletteIndex=color)
+    elif not isinstance(color, ot.Color):
+        color = buildColor(*color)
     self.Color = color
 
     return self

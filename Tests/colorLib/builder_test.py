@@ -270,6 +270,13 @@ def test_buildColorLine():
         (cs.StopOffset.value, cs.Color.PaletteIndex) for cs in cline.ColorStop
     ] == stops
 
+    stops = [((0.0, 1), (0, (0.5, 2))), ((1.0, 3), (1, (0.3, 4)))]
+    cline = builder.buildColorLine(stops)
+    assert [
+        (tuple(cs.StopOffset), (cs.Color.PaletteIndex, tuple(cs.Color.Transparency)))
+        for cs in cline.ColorStop
+    ] == stops
+
 
 def test_buildPoint():
     pt = builder.buildPoint(0, 1)
