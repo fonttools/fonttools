@@ -1,4 +1,5 @@
 from fontTools.ttLib import newTable
+from fontTools.ttLib.tables import otTables as ot
 from fontTools.colorLib import builder
 from fontTools.colorLib.errors import ColorLibError
 import pytest
@@ -370,3 +371,125 @@ def test_buildRadialGradientPaint():
         color_stops, c0, c1, r0, r1, affine=(2.0, 0.0, 0.0, 2.0)
     )
     assert gradient.Affine == matrix
+
+
+def test_buildLayerV1Record():
+    layer = builder.buildLayerV1Record("a", 2)
+    assert layer.LayerGlyph == "a"
+    assert layer.Paint.Format == 1
+    assert layer.Paint.Color.PaletteIndex == 2
+
+    layer = builder.buildLayerV1Record("a", builder.buildSolidColorPaint(3, 0.9))
+    assert layer.Paint.Format == 1
+    assert layer.Paint.Color.PaletteIndex == 3
+    assert layer.Paint.Color.Transparency.value == 0.9
+
+    layer = builder.buildLayerV1Record(
+        "a",
+        builder.buildLinearGradientPaint([(0.0, 3), (1.0, 4)], (100, 200), (150, 250)),
+    )
+    assert layer.Paint.Format == 2
+    assert layer.Paint.ColorLine.ColorStop[0].StopOffset.value == 0.0
+    assert layer.Paint.ColorLine.ColorStop[0].Color.PaletteIndex == 3
+    assert layer.Paint.ColorLine.ColorStop[1].StopOffset.value == 1.0
+    assert layer.Paint.ColorLine.ColorStop[1].Color.PaletteIndex == 4
+    assert layer.Paint.p0.x.value == 100
+    assert layer.Paint.p0.y.value == 200
+    assert layer.Paint.p1.x.value == 150
+    assert layer.Paint.p1.y.value == 250
+
+    layer = builder.buildLayerV1Record(
+        "a",
+        builder.buildRadialGradientPaint(
+            [(0.0, 5), (0.5, (6, 0.8)), (1.0, 7)], (50, 50), (75, 75), 30, 10
+        ),
+    )
+    assert layer.Paint.Format == 3
+    assert layer.Paint.ColorLine.ColorStop[0].StopOffset.value == 0.0
+    assert layer.Paint.ColorLine.ColorStop[0].Color.PaletteIndex == 5
+    assert layer.Paint.ColorLine.ColorStop[1].StopOffset.value == 0.5
+    assert layer.Paint.ColorLine.ColorStop[1].Color.PaletteIndex == 6
+    assert layer.Paint.ColorLine.ColorStop[1].Color.Transparency.value == 0.8
+    assert layer.Paint.ColorLine.ColorStop[2].StopOffset.value == 1.0
+    assert layer.Paint.ColorLine.ColorStop[2].Color.PaletteIndex == 7
+    assert layer.Paint.c0.x.value == 50
+    assert layer.Paint.c0.y.value == 50
+    assert layer.Paint.c1.x.value == 75
+    assert layer.Paint.c1.y.value == 75
+    assert layer.Paint.r0.value == 30
+    assert layer.Paint.r1.value == 10
+
+
+def test_buildLayerV1Array():
+    layers = [
+        ("a", 1),
+        ("b", builder.buildSolidColorPaint(2, 0.5)),
+        (
+            "c",
+            builder.buildLinearGradientPaint(
+                [(0.0, 3), (1.0, 4)], (100, 200), (150, 250)
+            ),
+        ),
+        (
+            "d",
+            builder.buildRadialGradientPaint(
+                [(0.0, 5), (0.5, (6, 0.8)), (1.0, 7)], (50, 50), (75, 75), 30, 10
+            ),
+        ),
+        builder.buildLayerV1Record("e", builder.buildSolidColorPaint(8)),
+    ]
+
+    layersArray = builder.buildLayerV1Array(layers)
+
+    assert layersArray.LayerCount == len(layersArray.LayerV1Record)
+    assert all(isinstance(l, ot.LayerV1Record) for l in layersArray.LayerV1Record)
+
+
+def test_buildBaseGlyphV1Record():
+    baseGlyphRec = builder.buildBaseGlyphV1Record("a", [("b", 0), ("c", 1)])
+    assert baseGlyphRec.BaseGlyph == "a"
+    assert isinstance(baseGlyphRec.LayerV1Array, ot.LayerV1Array)
+
+    layerArray = builder.buildLayerV1Array([("b", 0), ("c", 1)])
+    baseGlyphRec = builder.buildBaseGlyphV1Record("a", layerArray)
+    assert baseGlyphRec.BaseGlyph == "a"
+    assert baseGlyphRec.LayerV1Array == layerArray
+
+
+def test_buildBaseGlyphV1Array():
+    colorGlyphs = {
+        "a": [("b", 0), ("c", 1)],
+        "d": [
+            ("e", builder.buildSolidColorPaint(2, transparency=0.8)),
+            (
+                "f",
+                builder.buildRadialGradientPaint(
+                    [(0.0, 3), (1.0, 4)], (0, 0), (0, 0), 10, 0
+                ),
+            ),
+        ],
+        "g": builder.buildLayerV1Array([("h", 5)]),
+    }
+    glyphMap = {
+        ".notdef": 0,
+        "a": 4,
+        "b": 3,
+        "c": 2,
+        "d": 1,
+        "e": 5,
+        "f": 6,
+        "g": 7,
+        "h": 8,
+    }
+
+    baseGlyphArray = builder.buildBaseGlyphV1Array(colorGlyphs, glyphMap)
+    assert baseGlyphArray.BaseGlyphCount == len(colorGlyphs)
+    assert baseGlyphArray.BaseGlyphV1Record[0].BaseGlyph == "d"
+    assert baseGlyphArray.BaseGlyphV1Record[1].BaseGlyph == "a"
+    assert baseGlyphArray.BaseGlyphV1Record[2].BaseGlyph == "g"
+
+    baseGlyphArray = builder.buildBaseGlyphV1Array(colorGlyphs)
+    assert baseGlyphArray.BaseGlyphCount == len(colorGlyphs)
+    assert baseGlyphArray.BaseGlyphV1Record[0].BaseGlyph == "a"
+    assert baseGlyphArray.BaseGlyphV1Record[1].BaseGlyph == "d"
+    assert baseGlyphArray.BaseGlyphV1Record[2].BaseGlyph == "g"
