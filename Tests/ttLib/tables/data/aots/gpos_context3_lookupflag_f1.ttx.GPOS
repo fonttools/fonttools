@@ -72,7 +72,7 @@
       </Lookup>
       <Lookup index="2">
         <LookupType value="2"/>
-        <LookupFlag value="8"/>
+        <LookupFlag value="8"/><!-- ignoreMarks -->
         <!-- SubTableCount=1 -->
         <PairPos index="0" Format="1">
           <Coverage Format="1">
@@ -97,7 +97,7 @@
       </Lookup>
       <Lookup index="4">
         <LookupType value="7"/>
-        <LookupFlag value="8"/>
+        <LookupFlag value="8"/><!-- ignoreMarks -->
         <!-- SubTableCount=1 -->
         <ContextPos index="0" Format="3">
           <!-- GlyphCount=3 -->

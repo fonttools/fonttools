@@ -31,7 +31,7 @@
       <!-- LookupCount=1 -->
       <Lookup index="0">
         <LookupType value="3"/>
-        <LookupFlag value="2"/>
+        <LookupFlag value="2"/><!-- ignoreBaseGlyphs -->
         <!-- SubTableCount=1 -->
         <CursivePos index="0" Format="1">
           <Coverage Format="1">

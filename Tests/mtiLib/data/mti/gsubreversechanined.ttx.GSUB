@@ -5,7 +5,7 @@
     <!-- LookupCount=1 -->
     <Lookup index="0">
       <LookupType value="8"/>
-      <LookupFlag value="9"/>
+      <LookupFlag value="9"/><!-- rightToLeft ignoreMarks -->
       <!-- SubTableCount=3 -->
       <ReverseChainSingleSubst index="0" Format="1">
         <Coverage Format="2">
