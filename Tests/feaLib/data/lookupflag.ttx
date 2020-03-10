@@ -263,7 +263,7 @@
       </Lookup>
       <Lookup index="14">
         <LookupType value="1"/>
-        <LookupFlag value="8"/>
+        <LookupFlag value="8"/><!-- ignoreMarks -->
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
           <Coverage>
@@ -275,7 +275,7 @@
       </Lookup>
       <Lookup index="15">
         <LookupType value="1"/>
-        <LookupFlag value="8"/>
+        <LookupFlag value="8"/><!-- ignoreMarks -->
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
           <Coverage>
@@ -311,7 +311,7 @@
       </Lookup>
       <Lookup index="18">
         <LookupType value="1"/>
-        <LookupFlag value="8"/>
+        <LookupFlag value="8"/><!-- ignoreMarks -->
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
           <Coverage>
@@ -323,7 +323,7 @@
       </Lookup>
       <Lookup index="19">
         <LookupType value="1"/>
-        <LookupFlag value="8"/>
+        <LookupFlag value="8"/><!-- ignoreMarks -->
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
           <Coverage>
@@ -347,7 +347,7 @@
       </Lookup>
       <Lookup index="21">
         <LookupType value="1"/>
-        <LookupFlag value="8"/>
+        <LookupFlag value="8"/><!-- ignoreMarks -->
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
           <Coverage>
