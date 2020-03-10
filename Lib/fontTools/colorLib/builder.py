@@ -16,7 +16,8 @@ from .errors import ColorLibError
 
 
 # TODO move type aliases to colorLib.types?
-_LayersList = Sequence[Tuple[str, Union[int, ot.Paint]]]
+_LayerTuple = Tuple[str, Union[int, ot.Paint]]
+_LayersList = Sequence[_LayerTuple]
 _ColorGlyphsDict = Dict[str, _LayersList]
 _ColorGlyphsV0Dict = Dict[str, Sequence[Tuple[str, int]]]
 _Number = Union[int, float]
@@ -31,7 +32,7 @@ _AffineTuple = Tuple[_VariableScalar, _VariableScalar, _VariableScalar, _Variabl
 def populateCOLRv0(
     table: ot.COLR,
     colorGlyphsV0: _ColorGlyphsV0Dict,
-    glyphMap: Optional[Dict[str, int]] = None,
+    glyphMap: Optional[Mapping[str, int]] = None,
 ):
     """Build v0 color layers and add to existing COLR table.
 
@@ -71,7 +72,7 @@ def populateCOLRv0(
 def buildCOLR(
     colorGlyphs: _ColorGlyphsDict,
     version: Optional[int] = None,
-    glyphMap: Optional[Dict] = None,
+    glyphMap: Optional[Mapping[str, int]] = None,
     varStore: Optional[ot.VarStore] = None,
 ) -> C_O_L_R_.table_C_O_L_R_:
     """Build COLR table from color layers mapping.
@@ -441,34 +442,57 @@ def buildRadialGradientPaint(
     return self
 
 
-def buildLayerV1Array(layers: _LayersList) -> ot.LayerV1Array:
+def buildLayerV1Record(
+    layerGlyph: str, paint: Union[int, ot.Paint]
+) -> ot.LayerV1Record:
+    self = ot.LayerV1Record()
+    self.LayerGlyph = layerGlyph
+    if isinstance(paint, int):
+        paletteIndex = paint
+        paint = buildSolidColorPaint(paletteIndex)
+    self.Paint = paint
+    return self
+
+
+def buildLayerV1Array(
+    layers: Sequence[Union[_LayerTuple, ot.LayerV1Record]]
+) -> ot.LayerV1Array:
     self = ot.LayerV1Array()
     self.LayerCount = len(layers)
     records = []
-    for layerGlyph, paint in layers:
-        rec = ot.LayerV1Record()
-        rec.LayerGlyph = layerGlyph
-        if isinstance(paint, int):
-            paletteIndex = paint
-            paint = buildSolidColorPaint(paletteIndex)
-        rec.Paint = paint
-        records.append(rec)
+    for layer in layers:
+        if isinstance(layer, ot.LayerV1Record):
+            record = layer
+        else:
+            layerGlyph, paint = layer
+            record = buildLayerV1Record(layerGlyph, paint)
+        records.append(record)
     self.LayerV1Record = records
     return self
 
 
+def buildBaseGlyphV1Record(
+    baseGlyph: str, layers: Union[_LayersList, ot.LayerV1Array]
+) -> ot.BaseGlyphV1Array:
+    self = ot.BaseGlyphV1Record()
+    self.BaseGlyph = baseGlyph
+    if not isinstance(layers, ot.LayerV1Array):
+        layers = buildLayerV1Array(layers)
+    self.LayerV1Array = layers
+    return self
+
+
 def buildBaseGlyphV1Array(
-    colorGlyphs: _ColorGlyphsDict, glyphMap: Optional[Dict[str, int]] = None
+    colorGlyphs: Union[_ColorGlyphsDict, Dict[str, ot.LayerV1Array]],
+    glyphMap: Optional[Mapping[str, int]] = None,
 ) -> ot.BaseGlyphV1Array:
     colorGlyphItems = colorGlyphs.items()
     if glyphMap:
         colorGlyphItems = sorted(colorGlyphItems, key=lambda item: glyphMap[item[0]])
-    records = []
-    for baseGlyph, layers in colorGlyphItems:
-        rec = ot.BaseGlyphV1Record()
-        rec.BaseGlyph = baseGlyph
-        rec.LayerV1Array = buildLayerV1Array(layers)
-        records.append(rec)
+    records = [
+        buildBaseGlyphV1Record(baseGlyph, layers)
+        for baseGlyph, layers in colorGlyphItems
+    ]
     self = ot.BaseGlyphV1Array()
     self.BaseGlyphCount = len(records)
     self.BaseGlyphV1Record = records
