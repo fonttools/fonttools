@@ -568,3 +568,61 @@ def test_buildBaseGlyphV1Array():
     assert baseGlyphArray.BaseGlyphV1Record[0].BaseGlyph == "a"
     assert baseGlyphArray.BaseGlyphV1Record[1].BaseGlyph == "d"
     assert baseGlyphArray.BaseGlyphV1Record[2].BaseGlyph == "g"
+
+
+def test_splitSolidAndGradientGlyphs():
+    colorGlyphs = {
+        "a": [
+            ("b", 0),
+            ("c", 1),
+            ("d", {"format": 1, "paletteIndex": 2}),
+            ("e", builder.buildSolidColorPaint(paletteIndex=3)),
+        ]
+    }
+
+    colorGlyphsV0, colorGlyphsV1 = builder._splitSolidAndGradientGlyphs(colorGlyphs)
+
+    assert colorGlyphsV0 == {"a": [("b", 0), ("c", 1), ("d", 2), ("e", 3)]}
+    assert not colorGlyphsV1
+
+    colorGlyphs = {
+        "a": [("b", builder.buildSolidColorPaint(paletteIndex=0, transparency=1.0))]
+    }
+
+    colorGlyphsV0, colorGlyphsV1 = builder._splitSolidAndGradientGlyphs(colorGlyphs)
+
+    assert not colorGlyphsV0
+    assert colorGlyphsV1 == colorGlyphs
+
+    colorGlyphs = {
+        "a": [("b", 0)],
+        "c": [
+            ("d", 1),
+            (
+                "e",
+                {
+                    "format": 2,
+                    "colorLine": {"stops": [(0.0, 2), (1.0, 3)]},
+                    "p0": (0, 0),
+                    "p1": (10, 10),
+                },
+            ),
+        ],
+    }
+
+    colorGlyphsV0, colorGlyphsV1 = builder._splitSolidAndGradientGlyphs(colorGlyphs)
+
+    assert colorGlyphsV0 == {"a": [("b", 0)]}
+    assert "a" not in colorGlyphsV1
+    assert "c" in colorGlyphsV1
+    assert len(colorGlyphsV1["c"]) == 2
+
+    layer_d = colorGlyphsV1["c"][0]
+    assert layer_d[0] == "d"
+    assert isinstance(layer_d[1], ot.Paint)
+    assert layer_d[1].Format == 1
+
+    layer_e = colorGlyphsV1["c"][1]
+    assert layer_e[0] == "e"
+    assert isinstance(layer_e[1], ot.Paint)
+    assert layer_e[1].Format == 2

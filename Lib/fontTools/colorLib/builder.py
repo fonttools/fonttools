@@ -269,45 +269,40 @@ def buildCPAL(
     return cpal
 
 
+# COLR v1 tables
+# See draft proposal at: https://github.com/googlefonts/colr-gradients-spec
+
+_DEFAULT_TRANSPARENCY = VariableFloat(0.0)
+
+
 def _splitSolidAndGradientGlyphs(
     colorGlyphs: _ColorGlyphsDict,
-) -> Tuple[_ColorGlyphsV0Dict, _ColorGlyphsDict]:
+) -> Tuple[Dict[str, List[Tuple[str, int]]], Dict[str, List[Tuple[str, ot.Paint]]]]:
     colorGlyphsV0 = {}
     colorGlyphsV1 = {}
     for baseGlyph, layers in colorGlyphs.items():
-        layersV0 = []
+        newLayers = []
         allSolidColors = True
         for layerGlyph, paint in layers:
-            if isinstance(paint, ot.Paint):
-                if (
-                    paint.Format == 1
-                    and paint.Color.Transparency.value == _DEFAULT_TRANSPARENCY.value
-                ):
-                    paint = paint.Color.PaletteIndex
-                else:
-                    allSolidColors = False
-                    break
-            elif isinstance(paint, int):
-                pass
-            else:
-                raise TypeError(paint)
-            layersV0.append((layerGlyph, paint))
+            paint = _to_ot_paint(paint)
+            if (
+                paint.Format != 1
+                or paint.Color.Transparency.value != _DEFAULT_TRANSPARENCY.value
+            ):
+                allSolidColors = False
+            newLayers.append((layerGlyph, paint))
         if allSolidColors:
-            colorGlyphsV0[baseGlyph] = layersV0
+            colorGlyphsV0[baseGlyph] = [
+                (layerGlyph, paint.Color.PaletteIndex)
+                for layerGlyph, paint in newLayers
+            ]
         else:
-            colorGlyphsV1[baseGlyph] = layers
+            colorGlyphsV1[baseGlyph] = newLayers
 
     # sanity check
     assert set(colorGlyphs) == (set(colorGlyphsV0) | set(colorGlyphsV1))
 
     return colorGlyphsV0, colorGlyphsV1
-
-
-# COLR v1 tables
-# See draft proposal at: https://github.com/googlefonts/colr-gradients-spec
-
-
-_DEFAULT_TRANSPARENCY = VariableFloat(0.0)
 
 
 def _to_variable_value(value: _ScalarInput, cls=VariableValue) -> VariableValue:
