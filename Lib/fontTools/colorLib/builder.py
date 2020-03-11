@@ -28,6 +28,7 @@ _ScalarInput = Union[_Number, VariableValue, Tuple[_Number, int]]
 _ColorInput = Union[int, _Kwargs, ot.Color]
 _ColorStopTuple = Tuple[_ScalarInput, _ColorInput]
 _ColorStopsList = Sequence[Union[_ColorStopTuple, ot.ColorStop]]
+_ExtendInput = Union[int, str, ExtendMode]
 _ColorLineInput = Union[_Kwargs, ot.ColorLine]
 _PointTuple = Tuple[_ScalarInput, _ScalarInput]
 _PointInput = Union[_PointTuple, ot.Point]
@@ -349,7 +350,7 @@ def buildColorStop(offset: _ScalarInput, color: _ColorInput) -> ot.ColorStop:
     return self
 
 
-def _to_extend_mode(v):
+def _to_extend_mode(v: _ExtendInput) -> ExtendMode:
     if isinstance(v, ExtendMode):
         return v
     elif isinstance(v, str):
@@ -361,7 +362,7 @@ def _to_extend_mode(v):
 
 
 def buildColorLine(
-    stops: _ColorStopsList, extend: ExtendMode = ExtendMode.PAD
+    stops: _ColorStopsList, extend: _ExtendInput = ExtendMode.PAD
 ) -> ot.ColorLine:
     self = ot.ColorLine()
     self.Extend = _to_extend_mode(extend)
