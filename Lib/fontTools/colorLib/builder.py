@@ -1,7 +1,8 @@
+import collections
 import copy
 import enum
 from functools import partial
-from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
 from fontTools.ttLib.tables import C_O_L_R_
 from fontTools.ttLib.tables import C_P_A_L_
 from fontTools.ttLib.tables import _n_a_m_e
@@ -16,17 +17,22 @@ from .errors import ColorLibError
 
 
 # TODO move type aliases to colorLib.types?
-_LayerTuple = Tuple[str, Union[int, ot.Paint]]
+_Kwargs = Mapping[str, Any]
+_PaintInput = Union[int, _Kwargs, ot.Paint]
+_LayerTuple = Tuple[str, _PaintInput]
 _LayersList = Sequence[_LayerTuple]
 _ColorGlyphsDict = Dict[str, _LayersList]
 _ColorGlyphsV0Dict = Dict[str, Sequence[Tuple[str, int]]]
 _Number = Union[int, float]
-_VariableScalar = Union[_Number, VariableValue, Tuple[_Number, int]]
-_ColorTuple = Tuple[int, VariableValue]
-_ColorStopTuple = Tuple[_VariableScalar, Union[int, _ColorTuple, ot.Color]]
+_ScalarInput = Union[_Number, VariableValue, Tuple[_Number, int]]
+_ColorInput = Union[int, _Kwargs, ot.Color]
+_ColorStopTuple = Tuple[_ScalarInput, _ColorInput]
 _ColorStopsList = Sequence[Union[_ColorStopTuple, ot.ColorStop]]
-_PointTuple = Tuple[_VariableScalar, _VariableScalar]
-_AffineTuple = Tuple[_VariableScalar, _VariableScalar, _VariableScalar, _VariableScalar]
+_ColorLineInput = Union[_Kwargs, ot.ColorLine]
+_PointTuple = Tuple[_ScalarInput, _ScalarInput]
+_PointInput = Union[_PointTuple, ot.Point]
+_AffineTuple = Tuple[_ScalarInput, _ScalarInput, _ScalarInput, _ScalarInput]
+_AffineInput = Union[_AffineTuple, ot.Affine2x2]
 
 
 def populateCOLRv0(
@@ -43,9 +49,12 @@ def populateCOLRv0(
         glyphMap: a map from glyph names to glyph indices, as returned from
             TTFont.getReverseGlyphMap(), to optionally sort base records by GID.
     """
-    colorGlyphItems = colorGlyphsV0.items()
-    if glyphMap:
-        colorGlyphItems = sorted(colorGlyphItems, key=lambda item: glyphMap[item[0]])
+    if glyphMap is not None:
+        colorGlyphItems = sorted(
+            colorGlyphsV0.items(), key=lambda item: glyphMap[item[0]]
+        )
+    else:
+        colorGlyphItems = colorGlyphsV0.items()
     baseGlyphRecords = []
     layerRecords = []
     for baseGlyph, layers in colorGlyphItems:
@@ -301,7 +310,7 @@ def _splitSolidAndGradientGlyphs(
 _DEFAULT_TRANSPARENCY = VariableFloat(0.0)
 
 
-def _to_variable_value(value: _VariableScalar, cls=VariableValue) -> VariableValue:
+def _to_variable_value(value: _ScalarInput, cls=VariableValue) -> VariableValue:
     if isinstance(value, cls):
         return value
     try:
@@ -317,7 +326,7 @@ _to_variable_int = partial(_to_variable_value, cls=VariableInt)
 
 
 def buildColor(
-    paletteIndex: int, transparency: _VariableScalar = _DEFAULT_TRANSPARENCY
+    paletteIndex: int, transparency: _ScalarInput = _DEFAULT_TRANSPARENCY
 ) -> ot.Color:
     self = ot.Color()
     self.PaletteIndex = int(paletteIndex)
@@ -326,7 +335,7 @@ def buildColor(
 
 
 def buildSolidColorPaint(
-    paletteIndex: int, transparency: _VariableScalar = _DEFAULT_TRANSPARENCY
+    paletteIndex: int, transparency: _ScalarInput = _DEFAULT_TRANSPARENCY
 ) -> ot.Paint:
     self = ot.Paint()
     self.Format = 1
@@ -334,37 +343,46 @@ def buildSolidColorPaint(
     return self
 
 
-def buildColorStop(
-    offset: _VariableScalar, color: Union[int, _ColorTuple, ot.Color]
-) -> ot.ColorStop:
+def buildColorStop(offset: _ScalarInput, color: _ColorInput) -> ot.ColorStop:
     self = ot.ColorStop()
     self.StopOffset = _to_variable_float(offset)
 
     if isinstance(color, int):
         color = buildColor(paletteIndex=color)
     elif not isinstance(color, ot.Color):
-        color = buildColor(*color)
+        color = buildColor(**color)
     self.Color = color
 
     return self
 
 
+def _to_extend_mode(v):
+    if isinstance(v, ExtendMode):
+        return v
+    elif isinstance(v, str):
+        try:
+            return getattr(ExtendMode, v.upper())
+        except AttributeError:
+            raise ValueError(f"{v!r} is not a valid ExtendMode")
+    return ExtendMode(v)
+
+
 def buildColorLine(
-    colorStops: _ColorStopsList, extend: ExtendMode = ExtendMode.PAD
+    stops: _ColorStopsList, extend: ExtendMode = ExtendMode.PAD
 ) -> ot.ColorLine:
     self = ot.ColorLine()
-    self.Extend = ExtendMode(extend)
-    self.StopCount = len(colorStops)
+    self.Extend = _to_extend_mode(extend)
+    self.StopCount = len(stops)
     self.ColorStop = [
         stop
         if isinstance(stop, ot.ColorStop)
         else buildColorStop(offset=stop[0], color=stop[1])
-        for stop in colorStops
+        for stop in stops
     ]
     return self
 
 
-def buildPoint(x: _VariableScalar, y: _VariableScalar) -> ot.Point:
+def buildPoint(x: _ScalarInput, y: _ScalarInput) -> ot.Point:
     self = ot.Point()
     # positions are encoded as Int16 so round to int
     self.x = _to_variable_int(x)
@@ -372,7 +390,7 @@ def buildPoint(x: _VariableScalar, y: _VariableScalar) -> ot.Point:
     return self
 
 
-def _to_variable_point(pt: Union[_PointTuple, ot.Point]) -> ot.Point:
+def _to_variable_point(pt: _PointInput) -> ot.Point:
     if isinstance(pt, ot.Point):
         return pt
     if isinstance(pt, tuple):
@@ -380,18 +398,23 @@ def _to_variable_point(pt: Union[_PointTuple, ot.Point]) -> ot.Point:
     raise TypeError(pt)
 
 
+def _to_color_line(obj):
+    if isinstance(obj, ot.ColorLine):
+        return obj
+    elif isinstance(obj, collections.abc.Mapping):
+        return buildColorLine(**obj)
+    raise TypeError(obj)
+
+
 def buildLinearGradientPaint(
-    colorLine: Union[_ColorStopsList, ot.ColorLine],
-    p0: Union[_PointTuple, ot.Point],
-    p1: Union[_PointTuple, ot.Point],
-    p2: Optional[Union[_PointTuple, ot.Point]] = None,
+    colorLine: _ColorLineInput,
+    p0: _PointInput,
+    p1: _PointInput,
+    p2: Optional[_PointInput] = None,
 ) -> ot.Paint:
     self = ot.Paint()
     self.Format = 2
-
-    if not isinstance(colorLine, ot.ColorLine):
-        colorLine = buildColorLine(colorStops=colorLine)
-    self.ColorLine = colorLine
+    self.ColorLine = _to_color_line(colorLine)
 
     if p2 is None:
         p2 = copy.copy(p1)
@@ -402,7 +425,7 @@ def buildLinearGradientPaint(
 
 
 def buildAffine2x2(
-    xx: _VariableScalar, xy: _VariableScalar, yx: _VariableScalar, yy: _VariableScalar
+    xx: _ScalarInput, xy: _ScalarInput, yx: _ScalarInput, yy: _ScalarInput
 ) -> ot.Affine2x2:
     self = ot.Affine2x2()
     locs = locals()
@@ -413,20 +436,17 @@ def buildAffine2x2(
 
 
 def buildRadialGradientPaint(
-    colorLine: Union[_ColorStopsList, ot.ColorLine],
-    c0: Union[_PointTuple, ot.Point],
-    c1: Union[_PointTuple, ot.Point],
-    r0: _VariableScalar,
-    r1: _VariableScalar,
-    affine: Optional[Union[_AffineTuple, ot.Affine2x2]] = None,
+    colorLine: _ColorLineInput,
+    c0: _PointInput,
+    c1: _PointInput,
+    r0: _ScalarInput,
+    r1: _ScalarInput,
+    affine: Optional[_AffineInput] = None,
 ) -> ot.Paint:
 
     self = ot.Paint()
     self.Format = 3
-
-    if not isinstance(colorLine, ot.ColorLine):
-        colorLine = buildColorLine(colorStops=colorLine)
-    self.ColorLine = colorLine
+    self.ColorLine = _to_color_line(colorLine)
 
     for i, pt in [(0, c0), (1, c1)]:
         setattr(self, f"c{i}", _to_variable_point(pt))
@@ -442,15 +462,21 @@ def buildRadialGradientPaint(
     return self
 
 
-def buildLayerV1Record(
-    layerGlyph: str, paint: Union[int, ot.Paint]
-) -> ot.LayerV1Record:
+def _to_ot_paint(paint: _PaintInput) -> ot.Paint:
+    if isinstance(paint, ot.Paint):
+        return paint
+    elif isinstance(paint, int):
+        paletteIndex = paint
+        return buildSolidColorPaint(paletteIndex)
+    elif isinstance(paint, collections.abc.Mapping):
+        return buildPaint(**paint)
+    raise TypeError(f"expected int, Mapping or ot.Paint, found {type(paint.__name__)}")
+
+
+def buildLayerV1Record(layerGlyph: str, paint: _PaintInput) -> ot.LayerV1Record:
     self = ot.LayerV1Record()
     self.LayerGlyph = layerGlyph
-    if isinstance(paint, int):
-        paletteIndex = paint
-        paint = buildSolidColorPaint(paletteIndex)
-    self.Paint = paint
+    self.Paint = _to_ot_paint(paint)
     return self
 
 
@@ -486,9 +512,12 @@ def buildBaseGlyphV1Array(
     colorGlyphs: Union[_ColorGlyphsDict, Dict[str, ot.LayerV1Array]],
     glyphMap: Optional[Mapping[str, int]] = None,
 ) -> ot.BaseGlyphV1Array:
-    colorGlyphItems = colorGlyphs.items()
-    if glyphMap:
-        colorGlyphItems = sorted(colorGlyphItems, key=lambda item: glyphMap[item[0]])
+    if glyphMap is not None:
+        colorGlyphItems = sorted(
+            colorGlyphs.items(), key=lambda item: glyphMap[item[0]]
+        )
+    else:
+        colorGlyphItems = colorGlyphs.items()
     records = [
         buildBaseGlyphV1Record(baseGlyph, layers)
         for baseGlyph, layers in colorGlyphItems
@@ -497,3 +526,17 @@ def buildBaseGlyphV1Array(
     self.BaseGlyphCount = len(records)
     self.BaseGlyphV1Record = records
     return self
+
+
+_PAINT_BUILDERS = {
+    1: buildSolidColorPaint,
+    2: buildLinearGradientPaint,
+    3: buildRadialGradientPaint,
+}
+
+
+def buildPaint(format: int, **kwargs) -> ot.Paint:
+    try:
+        return _PAINT_BUILDERS[format](**kwargs)
+    except KeyError:
+        raise NotImplementedError(format)

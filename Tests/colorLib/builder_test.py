@@ -258,6 +258,9 @@ def test_buildColorLine():
         (cs.StopOffset.value, cs.Color.PaletteIndex) for cs in cline.ColorStop
     ] == stops
 
+    cline = builder.buildColorLine(stops, extend="pad")
+    assert cline.Extend == builder.ExtendMode.PAD
+
     cline = builder.buildColorLine(stops, extend=builder.ExtendMode.REPEAT)
     assert cline.Extend == builder.ExtendMode.REPEAT
 
@@ -271,10 +274,19 @@ def test_buildColorLine():
         (cs.StopOffset.value, cs.Color.PaletteIndex) for cs in cline.ColorStop
     ] == stops
 
-    stops = [((0.0, 1), (0, (0.5, 2))), ((1.0, 3), (1, (0.3, 4)))]
+    stops = [
+        ((0.0, 1), {"paletteIndex": 0, "transparency": (0.5, 2)}),
+        ((1.0, 3), {"paletteIndex": 1, "transparency": (0.3, 4)}),
+    ]
     cline = builder.buildColorLine(stops)
     assert [
-        (tuple(cs.StopOffset), (cs.Color.PaletteIndex, tuple(cs.Color.Transparency)))
+        (
+            cs.StopOffset,
+            {
+                "paletteIndex": cs.Color.PaletteIndex,
+                "transparency": cs.Color.Transparency,
+            },
+        )
         for cs in cline.ColorStop
     ] == stops
 
@@ -327,7 +339,7 @@ def test_buildLinearGradientPaint():
     assert gradient.p2 == gradient.p1
     assert gradient.p2 is not gradient.p1
 
-    gradient = builder.buildLinearGradientPaint(color_stops, p0, p1)
+    gradient = builder.buildLinearGradientPaint({"stops": color_stops}, p0, p1)
     assert gradient.ColorLine.Extend == builder.ExtendMode.PAD
     assert gradient.ColorLine.ColorStop == color_stops
 
@@ -357,18 +369,18 @@ def test_buildRadialGradientPaint():
     assert gradient.r1 == r1
     assert gradient.Affine is None
 
-    gradient = builder.buildRadialGradientPaint(color_stops, c0, c1, r0, r1)
+    gradient = builder.buildRadialGradientPaint({"stops": color_stops}, c0, c1, r0, r1)
     assert gradient.ColorLine.Extend == builder.ExtendMode.PAD
     assert gradient.ColorLine.ColorStop == color_stops
 
     matrix = builder.buildAffine2x2(2.0, 0.0, 0.0, 2.0)
     gradient = builder.buildRadialGradientPaint(
-        color_stops, c0, c1, r0, r1, affine=matrix
+        color_line, c0, c1, r0, r1, affine=matrix
     )
     assert gradient.Affine == matrix
 
     gradient = builder.buildRadialGradientPaint(
-        color_stops, c0, c1, r0, r1, affine=(2.0, 0.0, 0.0, 2.0)
+        color_line, c0, c1, r0, r1, affine=(2.0, 0.0, 0.0, 2.0)
     )
     assert gradient.Affine == matrix
 
@@ -386,7 +398,9 @@ def test_buildLayerV1Record():
 
     layer = builder.buildLayerV1Record(
         "a",
-        builder.buildLinearGradientPaint([(0.0, 3), (1.0, 4)], (100, 200), (150, 250)),
+        builder.buildLinearGradientPaint(
+            {"stops": [(0.0, 3), (1.0, 4)]}, (100, 200), (150, 250)
+        ),
     )
     assert layer.Paint.Format == 2
     assert layer.Paint.ColorLine.ColorStop[0].StopOffset.value == 0.0
@@ -401,7 +415,17 @@ def test_buildLayerV1Record():
     layer = builder.buildLayerV1Record(
         "a",
         builder.buildRadialGradientPaint(
-            [(0.0, 5), (0.5, (6, 0.8)), (1.0, 7)], (50, 50), (75, 75), 30, 10
+            {
+                "stops": [
+                    (0.0, 5),
+                    (0.5, {"paletteIndex": 6, "transparency": 0.8}),
+                    (1.0, 7),
+                ]
+            },
+            (50, 50),
+            (75, 75),
+            30,
+            10,
         ),
     )
     assert layer.Paint.Format == 3
@@ -420,25 +444,71 @@ def test_buildLayerV1Record():
     assert layer.Paint.r1.value == 10
 
 
+def test_buildLayerV1Record_from_dict():
+    layer = builder.buildLayerV1Record("a", {"format": 1, "paletteIndex": 0})
+    assert layer.LayerGlyph == "a"
+    assert layer.Paint.Format == 1
+    assert layer.Paint.Color.PaletteIndex == 0
+
+    layer = builder.buildLayerV1Record(
+        "a",
+        {
+            "format": 2,
+            "colorLine": {"stops": [(0.0, 0), (1.0, 1)]},
+            "p0": (0, 0),
+            "p1": (10, 10),
+        },
+    )
+    assert layer.Paint.Format == 2
+    assert layer.Paint.ColorLine.ColorStop[0].StopOffset.value == 0.0
+
+    layer = builder.buildLayerV1Record(
+        "a",
+        {
+            "format": 3,
+            "colorLine": {"stops": [(0.0, 0), (1.0, 1)]},
+            "c0": (0, 0),
+            "c1": (10, 10),
+            "r0": 4,
+            "r1": 0,
+        },
+    )
+    assert layer.Paint.Format == 3
+    assert layer.Paint.r0.value == 4
+
+
 def test_buildLayerV1Array():
     layers = [
         ("a", 1),
-        ("b", builder.buildSolidColorPaint(2, 0.5)),
+        ("b", {"format": 1, "paletteIndex": 2, "transparency": 0.5}),
         (
             "c",
-            builder.buildLinearGradientPaint(
-                [(0.0, 3), (1.0, 4)], (100, 200), (150, 250)
-            ),
+            {
+                "format": 2,
+                "colorLine": {"stops": [(0.0, 3), (1.0, 4)], "extend": "repeat"},
+                "p0": (100, 200),
+                "p1": (150, 250),
+            },
         ),
         (
             "d",
-            builder.buildRadialGradientPaint(
-                [(0.0, 5), (0.5, (6, 0.8)), (1.0, 7)], (50, 50), (75, 75), 30, 10
-            ),
+            {
+                "format": 3,
+                "colorLine": {
+                    "stops": [
+                        (0.0, 5),
+                        (0.5, {"paletteIndex": 6, "transparency": 0.8}),
+                        (1.0, 7),
+                    ]
+                },
+                "c0": (50, 50),
+                "c1": (75, 75),
+                "r0": 30,
+                "r1": 10,
+            },
         ),
         builder.buildLayerV1Record("e", builder.buildSolidColorPaint(8)),
     ]
-
     layersArray = builder.buildLayerV1Array(layers)
 
     assert layersArray.LayerCount == len(layersArray.LayerV1Record)
@@ -460,12 +530,17 @@ def test_buildBaseGlyphV1Array():
     colorGlyphs = {
         "a": [("b", 0), ("c", 1)],
         "d": [
-            ("e", builder.buildSolidColorPaint(2, transparency=0.8)),
+            ("e", {"format": 1, "paletteIndex": 2, "transparency": 0.8}),
             (
                 "f",
-                builder.buildRadialGradientPaint(
-                    [(0.0, 3), (1.0, 4)], (0, 0), (0, 0), 10, 0
-                ),
+                {
+                    "format": 3,
+                    "colorLine": {"stops": [(0.0, 3), (1.0, 4)], "extend": "reflect"},
+                    "c0": (0, 0),
+                    "c1": (0, 0),
+                    "r0": 10,
+                    "r1": 0,
+                },
             ),
         ],
         "g": builder.buildLayerV1Array([("h", 5)]),
