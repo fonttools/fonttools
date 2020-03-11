@@ -151,7 +151,7 @@
       </Lookup>
       <Lookup index="5">
         <LookupType value="1"/>
-        <LookupFlag value="256"/><!-- markAttachmentType -->
+        <LookupFlag value="256"/><!-- markAttachmentType[1] -->
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
           <Coverage>
@@ -163,7 +163,7 @@
       </Lookup>
       <Lookup index="6">
         <LookupType value="1"/>
-        <LookupFlag value="512"/><!-- markAttachmentType -->
+        <LookupFlag value="512"/><!-- markAttachmentType[2] -->
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
           <Coverage>
@@ -175,7 +175,7 @@
       </Lookup>
       <Lookup index="7">
         <LookupType value="1"/>
-        <LookupFlag value="260"/><!-- ignoreLigatures markAttachmentType -->
+        <LookupFlag value="260"/><!-- ignoreLigatures markAttachmentType[1] -->
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
           <Coverage>
@@ -251,7 +251,7 @@
       </Lookup>
       <Lookup index="13">
         <LookupType value="1"/>
-        <LookupFlag value="768"/><!-- markAttachmentType -->
+        <LookupFlag value="768"/><!-- markAttachmentType[3] -->
         <!-- SubTableCount=1 -->
         <SinglePos index="0" Format="1">
           <Coverage>

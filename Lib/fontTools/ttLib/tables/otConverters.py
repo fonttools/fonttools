@@ -1579,7 +1579,7 @@ class LookupFlag(UShort):
 			if value & 0x04: flags.append("ignoreLigatures")
 			if value & 0x08: flags.append("ignoreMarks")
 			if value & 0x10: flags.append("useMarkFilteringSet")
-			if value & 0xff00: flags.append("markAttachmentType")
+			if value & 0xff00: flags.append("markAttachmentType[%i]" % (value >> 8))
 			xmlWriter.comment(" ".join(flags))
 		xmlWriter.newline()
 
