@@ -626,3 +626,117 @@ def test_splitSolidAndGradientGlyphs():
     assert layer_e[0] == "e"
     assert isinstance(layer_e[1], ot.Paint)
     assert layer_e[1].Format == 2
+
+
+class BuildCOLRTest(object):
+    def test_automatic_version_all_solid_color_glyphs(self):
+        colr = builder.buildCOLR({"a": [("b", 0), ("c", 1)]})
+        assert colr.version == 0
+        assert hasattr(colr, "ColorLayers")
+        assert colr.ColorLayers["a"][0].name == "b"
+        assert colr.ColorLayers["a"][1].name == "c"
+
+    def test_automatic_version_no_solid_color_glyphs(self):
+        colr = builder.buildCOLR(
+            {
+                "a": [
+                    (
+                        "b",
+                        {
+                            "format": 3,
+                            "colorLine": {
+                                "stops": [(0.0, 0), (1.0, 1)],
+                                "extend": "repeat",
+                            },
+                            "c0": (1, 0),
+                            "c1": (10, 0),
+                            "r0": 4,
+                            "r1": 2,
+                        },
+                    ),
+                    ("c", {"format": 1, "paletteIndex": 2, "transparency": 0.8}),
+                ],
+                "d": [
+                    (
+                        "e",
+                        {
+                            "format": 2,
+                            "colorLine": {
+                                "stops": [(0.0, 2), (1.0, 3)],
+                                "extend": "reflect",
+                            },
+                            "p0": (1, 2),
+                            "p1": (3, 4),
+                            "p2": (2, 2),
+                        },
+                    )
+                ],
+            }
+        )
+        assert colr.version == 1
+        assert not hasattr(colr, "ColorLayers")
+        assert hasattr(colr, "table")
+        assert isinstance(colr.table, ot.COLR)
+        assert colr.table.BaseGlyphRecordCount == 0
+        assert colr.table.BaseGlyphRecordArray is None
+        assert colr.table.LayerRecordCount == 0
+        assert colr.table.LayerRecordArray is None
+
+    def test_automatic_version_mixed_solid_and_gradient_glyphs(self):
+        colr = builder.buildCOLR(
+            {
+                "a": [("b", 0), ("c", 1)],
+                "d": [
+                    (
+                        "e",
+                        {
+                            "format": 2,
+                            "colorLine": {"stops": [(0.0, 2), (1.0, 3)]},
+                            "p0": (1, 2),
+                            "p1": (3, 4),
+                            "p2": (2, 2),
+                        },
+                    )
+                ],
+            }
+        )
+        assert colr.version == 1
+        assert not hasattr(colr, "ColorLayers")
+        assert hasattr(colr, "table")
+        assert isinstance(colr.table, ot.COLR)
+        assert colr.table.VarStore is None
+
+        assert colr.table.BaseGlyphRecordCount == 1
+        assert isinstance(colr.table.BaseGlyphRecordArray, ot.BaseGlyphRecordArray)
+        assert colr.table.LayerRecordCount == 2
+        assert isinstance(colr.table.LayerRecordArray, ot.LayerRecordArray)
+
+        assert isinstance(colr.table.BaseGlyphV1Array, ot.BaseGlyphV1Array)
+        assert colr.table.BaseGlyphV1Array.BaseGlyphCount == 1
+        assert isinstance(
+            colr.table.BaseGlyphV1Array.BaseGlyphV1Record[0], ot.BaseGlyphV1Record
+        )
+        assert colr.table.BaseGlyphV1Array.BaseGlyphV1Record[0].BaseGlyph == "d"
+        assert isinstance(
+            colr.table.BaseGlyphV1Array.BaseGlyphV1Record[0].LayerV1Array,
+            ot.LayerV1Array,
+        )
+        assert (
+            colr.table.BaseGlyphV1Array.BaseGlyphV1Record[0]
+            .LayerV1Array.LayerV1Record[0]
+            .LayerGlyph
+            == "e"
+        )
+
+    def test_explicit_version_0(self):
+        colr = builder.buildCOLR({"a": [("b", 0), ("c", 1)]}, version=0)
+        assert colr.version == 0
+        assert hasattr(colr, "ColorLayers")
+
+    def test_explicit_version_1(self):
+        colr = builder.buildCOLR({"a": [("b", 0), ("c", 1)]}, version=1)
+        assert colr.version == 1
+        assert not hasattr(colr, "ColorLayers")
+        assert hasattr(colr, "table")
+        assert isinstance(colr.table, ot.COLR)
+        assert colr.table.VarStore is None

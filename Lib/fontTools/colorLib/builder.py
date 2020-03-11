@@ -129,9 +129,6 @@ def buildCOLR(
     if colorGlyphsV1:
         colr.BaseGlyphV1Array = buildBaseGlyphV1Array(colorGlyphsV1, glyphMap)
 
-    if varStore:
-        colr.VarStore = varStore
-
     if version is None:
         version = 1 if (varStore or colorGlyphsV1) else 0
     elif version not in (0, 1):
@@ -141,6 +138,7 @@ def buildCOLR(
     if version == 0:
         self._fromOTTable(colr)
     else:
+        colr.VarStore = varStore
         self.table = colr
 
     return self
