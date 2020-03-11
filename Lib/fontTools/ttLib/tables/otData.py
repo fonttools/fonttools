@@ -1579,7 +1579,7 @@ otData = [
 
 	('BaseGlyphV1Record', [
 		('GlyphID', 'BaseGlyph', None, None, 'Glyph ID of reference glyph.'),
-		('LOffset', 'LayerV1Array', None, None, 'Offset (from beginning of COLR table) to array of Version-1 Layer records.'),
+		('LOffset', 'LayerV1Array', None, None, 'Offset (from beginning of BaseGlyphV1Array) to LayerV1Array.'),
 	]),
 
 	('LayerV1Array', [
@@ -1589,7 +1589,7 @@ otData = [
 
 	('LayerV1Record', [
 		('GlyphID', 'LayerGlyph', None, None, 'Glyph ID of layer glyph (must be in z-order from bottom to top).'),
-		('LOffset', 'Paint', None, None, 'Offset (from beginning of COLR table) to Paint subtable.'),
+		('LOffset', 'Paint', None, None, 'Offset (from beginning of LayerV1Array) to Paint subtable.'),
 	]),
 
 	('Affine2x2', [
@@ -1627,7 +1627,7 @@ otData = [
 
 	('PaintFormat2', [
 		('uint16', 'PaintFormat', None, None, 'Format identifier-format = 2'),
-		('LOffset', 'ColorLine', None, None, 'Offset to ColorLine subtable.'),
+		('LOffset', 'ColorLine', None, None, 'Offset (from beginning of Paint table) to ColorLine subtable.'),
 		('Point', 'p0', None, None, ''),
 		('Point', 'p1', None, None, ''),
 		('Point', 'p2', None, None, 'Normal; equal to p1 in simple cases.'),
@@ -1635,11 +1635,11 @@ otData = [
 
 	('PaintFormat3', [
 		('uint16', 'PaintFormat', None, None, 'Format identifier-format = 3'),
-		('LOffset', 'ColorLine', None, None, 'Offset to ColorLine subtable.'),
+		('LOffset', 'ColorLine', None, None, 'Offset (from beginning of Paint table) to ColorLine subtable.'),
 		('Point', 'c0', None, None, ''),
 		('Point', 'c1', None, None, ''),
 		('VariableDistance', 'r0', None, None, ''),
 		('VariableDistance', 'r1', None, None, ''),
-		('LOffsetTo(Affine2x2)', 'Affine', None, None, 'Offset to Affine2x2 subtable.'),
+		('LOffsetTo(Affine2x2)', 'Affine', None, None, 'Offset (from beginning of Paint table) to Affine2x2 subtable.'),
 	]),
 ]
