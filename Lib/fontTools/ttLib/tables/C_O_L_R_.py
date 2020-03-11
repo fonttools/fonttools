@@ -149,8 +149,6 @@ class LayerRecord(object):
 	def fromXML(self, eltname, attrs, content, ttFont):
 		for (name, value) in attrs.items():
 			if name == "name":
-				if isinstance(value, int):
-					value = ttFont.getGlyphName(value)
 				setattr(self, name, value)
 			else:
 				setattr(self, name, safeEval(value))
