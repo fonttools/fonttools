@@ -1,3 +1,4 @@
+dist: xenial
 language: python
 python: 3.6
 
@@ -23,9 +24,8 @@ matrix:
         - BUILD_DIST=true
     - python: 3.7
       env: TOXENV=py37-cov
-      # required to run python3.7 on Travis CI
-      # https://github.com/travis-ci/travis-ci/issues/9815
-      dist: xenial
+    - python: 3.8
+      env: TOXENV=py38-cov
     - python: pypy3
       # disable coverage.py on pypy because of performance problems
       env: TOXENV=pypy3
