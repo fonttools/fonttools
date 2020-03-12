@@ -31,7 +31,7 @@
       <!-- LookupCount=2 -->
       <Lookup index="0">
         <LookupType value="6"/>
-        <LookupFlag value="7"/>
+        <LookupFlag value="7"/><!-- rightToLeft ignoreBaseGlyphs ignoreLigatures -->
         <!-- SubTableCount=1 -->
         <ChainContextSubst index="0" Format="3">
           <!-- BacktrackGlyphCount=1 -->
@@ -54,7 +54,7 @@
       </Lookup>
       <Lookup index="1">
         <LookupType value="1"/>
-        <LookupFlag value="7"/>
+        <LookupFlag value="7"/><!-- rightToLeft ignoreBaseGlyphs ignoreLigatures -->
         <!-- SubTableCount=1 -->
         <SingleSubst index="0">
           <Substitution in="d" out="d.alt"/>

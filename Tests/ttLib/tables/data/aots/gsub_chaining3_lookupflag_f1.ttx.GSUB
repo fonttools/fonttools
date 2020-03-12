@@ -58,7 +58,7 @@
       </Lookup>
       <Lookup index="2">
         <LookupType value="4"/>
-        <LookupFlag value="8"/>
+        <LookupFlag value="8"/><!-- ignoreMarks -->
         <!-- SubTableCount=1 -->
         <LigatureSubst index="0" Format="1">
           <LigatureSet glyph="g21">
@@ -76,7 +76,7 @@
       </Lookup>
       <Lookup index="4">
         <LookupType value="6"/>
-        <LookupFlag value="8"/>
+        <LookupFlag value="8"/><!-- ignoreMarks -->
         <!-- SubTableCount=1 -->
         <ChainContextSubst index="0" Format="3">
           <!-- BacktrackGlyphCount=2 -->

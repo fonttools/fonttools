@@ -31,7 +31,7 @@
       <!-- LookupCount=1 -->
       <Lookup index="0">
         <LookupType value="4"/>
-        <LookupFlag value="4"/>
+        <LookupFlag value="4"/><!-- ignoreLigatures -->
         <!-- SubTableCount=1 -->
         <LigatureSubst index="0" Format="1">
           <LigatureSet glyph="g18">

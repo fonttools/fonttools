@@ -1569,6 +1569,19 @@ class VarDataValue(BaseConverter):
 	def xmlRead(self, attrs, content, font):
 		return safeEval(attrs["value"])
 
+class LookupFlag(UShort):
+	def xmlWrite(self, xmlWriter, font, value, name, attrs):
+		xmlWriter.simpletag(name, attrs + [("value", value)])
+		flags = []
+		if value & 0x01: flags.append("rightToLeft")
+		if value & 0x02: flags.append("ignoreBaseGlyphs")
+		if value & 0x04: flags.append("ignoreLigatures")
+		if value & 0x08: flags.append("ignoreMarks")
+		if value & 0x10: flags.append("useMarkFilteringSet")
+		if value & 0xff00: flags.append("markAttachmentType[%i]" % (value >> 8))
+		if flags:
+			xmlWriter.comment(" ".join(flags))
+		xmlWriter.newline()
 
 converterMapping = {
 	# type		class
@@ -1595,6 +1608,7 @@ converterMapping = {
 	"DeltaValue":	DeltaValue,
 	"VarIdxMapValue":	VarIdxMapValue,
 	"VarDataValue":	VarDataValue,
+	"LookupFlag": LookupFlag,
 
 	# AAT
 	"CIDGlyphMap":	CIDGlyphMap,

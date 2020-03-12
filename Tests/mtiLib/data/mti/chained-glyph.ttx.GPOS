@@ -5,7 +5,7 @@
     <!-- LookupCount=2 -->
     <Lookup index="0">
       <LookupType value="8"/>
-      <LookupFlag value="512"/>
+      <LookupFlag value="512"/><!-- markAttachmentType[2] -->
       <!-- SubTableCount=1 -->
       <ChainContextPos index="0" Format="1">
         <Coverage Format="1">

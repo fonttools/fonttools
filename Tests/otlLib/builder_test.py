@@ -470,7 +470,7 @@ class BuilderTest(object):
         assert getXML(lookup.toXML) == [
             "<Lookup>",
             '  <LookupType value="1"/>',
-            '  <LookupFlag value="7"/>',
+            '  <LookupFlag value="7"/><!-- rightToLeft ignoreBaseGlyphs ignoreLigatures -->',
             "  <!-- SubTableCount=2 -->",
             '  <SingleSubst index="0">',
             '    <Substitution in="one" out="two"/>',
@@ -524,7 +524,7 @@ class BuilderTest(object):
         assert getXML(lookup.toXML) == [
             "<Lookup>",
             '  <LookupType value="1"/>',
-            '  <LookupFlag value="17"/>',
+            '  <LookupFlag value="17"/><!-- rightToLeft useMarkFilteringSet -->',
             "  <!-- SubTableCount=1 -->",
             '  <SingleSubst index="0">',
             '    <Substitution in="one" out="two"/>',
