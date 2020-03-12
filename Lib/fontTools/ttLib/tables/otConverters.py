@@ -1572,14 +1572,14 @@ class VarDataValue(BaseConverter):
 class LookupFlag(UShort):
 	def xmlWrite(self, xmlWriter, font, value, name, attrs):
 		xmlWriter.simpletag(name, attrs + [("value", value)])
-		if value > 0:
-			flags = []
-			if value & 0x01: flags.append("rightToLeft")
-			if value & 0x02: flags.append("ignoreBaseGlyphs")
-			if value & 0x04: flags.append("ignoreLigatures")
-			if value & 0x08: flags.append("ignoreMarks")
-			if value & 0x10: flags.append("useMarkFilteringSet")
-			if value & 0xff00: flags.append("markAttachmentType[%i]" % (value >> 8))
+		flags = []
+		if value & 0x01: flags.append("rightToLeft")
+		if value & 0x02: flags.append("ignoreBaseGlyphs")
+		if value & 0x04: flags.append("ignoreLigatures")
+		if value & 0x08: flags.append("ignoreMarks")
+		if value & 0x10: flags.append("useMarkFilteringSet")
+		if value & 0xff00: flags.append("markAttachmentType[%i]" % (value >> 8))
+		if flags:
 			xmlWriter.comment(" ".join(flags))
 		xmlWriter.newline()
 
