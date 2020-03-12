@@ -25,9 +25,9 @@ _ColorGlyphsDict = Dict[str, _LayersList]
 _ColorGlyphsV0Dict = Dict[str, Sequence[Tuple[str, int]]]
 _Number = Union[int, float]
 _ScalarInput = Union[_Number, VariableValue, Tuple[_Number, int]]
-_ColorInput = Union[int, _Kwargs, ot.Color]
-_ColorStopTuple = Tuple[_ScalarInput, _ColorInput]
-_ColorStopsList = Sequence[Union[_ColorStopTuple, ot.ColorStop]]
+_ColorStopTuple = Tuple[_ScalarInput, int]
+_ColorStopInput = Union[_ColorStopTuple, _Kwargs, ot.ColorStop]
+_ColorStopsList = Sequence[_ColorStopInput]
 _ExtendInput = Union[int, str, ExtendMode]
 _ColorLineInput = Union[_Kwargs, ot.ColorLine]
 _PointTuple = Tuple[_ScalarInput, _ScalarInput]
@@ -337,16 +337,14 @@ def buildSolidColorPaint(
     return self
 
 
-def buildColorStop(offset: _ScalarInput, color: _ColorInput) -> ot.ColorStop:
+def buildColorStop(
+    offset: _ScalarInput,
+    paletteIndex: int,
+    transparency: _ScalarInput = _DEFAULT_TRANSPARENCY,
+) -> ot.ColorStop:
     self = ot.ColorStop()
     self.StopOffset = _to_variable_float(offset)
-
-    if isinstance(color, int):
-        color = buildColor(paletteIndex=color)
-    elif not isinstance(color, ot.Color):
-        color = buildColor(**color)
-    self.Color = color
-
+    self.Color = buildColor(paletteIndex, transparency)
     return self
 
 
@@ -370,7 +368,9 @@ def buildColorLine(
     self.ColorStop = [
         stop
         if isinstance(stop, ot.ColorStop)
-        else buildColorStop(offset=stop[0], color=stop[1])
+        else buildColorStop(**stop)
+        if isinstance(stop, collections.abc.Mapping)
+        else buildColorStop(*stop)
         for stop in stops
     ]
     return self

@@ -228,20 +228,19 @@ def test_buildSolidColorPaint():
 
 
 def test_buildColorStop():
-    s = builder.buildColorStop(offset=0.1, color=2)
+    s = builder.buildColorStop(0.1, 2)
     assert s.StopOffset == builder.VariableFloat(0.1)
     assert s.Color.PaletteIndex == 2
     assert s.Color.Transparency == builder._DEFAULT_TRANSPARENCY
 
-    c = builder.buildColor(3, transparency=0.4)
-    s = builder.buildColorStop(offset=0.2, color=c)
+    s = builder.buildColorStop(offset=0.2, paletteIndex=3, transparency=0.4)
     assert s.StopOffset == builder.VariableFloat(0.2)
-    assert s.Color.PaletteIndex == 3
-    assert s.Color.Transparency == builder.VariableFloat(0.4)
+    assert s.Color == builder.buildColor(3, transparency=0.4)
 
     s = builder.buildColorStop(
         offset=builder.VariableFloat(0.0, varIdx=1),
-        color=builder.buildColor(0, transparency=builder.VariableFloat(0.3, varIdx=2)),
+        paletteIndex=0,
+        transparency=builder.VariableFloat(0.3, varIdx=2),
     )
     assert s.StopOffset == builder.VariableFloat(0.0, varIdx=1)
     assert s.Color.PaletteIndex == 0
@@ -267,26 +266,22 @@ def test_buildColorLine():
     cline = builder.buildColorLine(stops, extend=builder.ExtendMode.REFLECT)
     assert cline.Extend == builder.ExtendMode.REFLECT
 
-    cline = builder.buildColorLine(
-        [builder.buildColorStop(offset=s[0], color=s[1]) for s in stops]
-    )
+    cline = builder.buildColorLine([builder.buildColorStop(*s) for s in stops])
     assert [
         (cs.StopOffset.value, cs.Color.PaletteIndex) for cs in cline.ColorStop
     ] == stops
 
     stops = [
-        ((0.0, 1), {"paletteIndex": 0, "transparency": (0.5, 2)}),
-        ((1.0, 3), {"paletteIndex": 1, "transparency": (0.3, 4)}),
+        {"offset": (0.0, 1), "paletteIndex": 0, "transparency": (0.5, 2)},
+        {"offset": (1.0, 3), "paletteIndex": 1, "transparency": (0.3, 4)},
     ]
     cline = builder.buildColorLine(stops)
     assert [
-        (
-            cs.StopOffset,
-            {
-                "paletteIndex": cs.Color.PaletteIndex,
-                "transparency": cs.Color.Transparency,
-            },
-        )
+        {
+            "offset": cs.StopOffset,
+            "paletteIndex": cs.Color.PaletteIndex,
+            "transparency": cs.Color.Transparency,
+        }
         for cs in cline.ColorStop
     ] == stops
 
@@ -323,9 +318,9 @@ def test_buildAffine2x2():
 
 def test_buildLinearGradientPaint():
     color_stops = [
-        builder.buildColorStop(0.0, builder.buildColor(0)),
-        builder.buildColorStop(0.5, builder.buildColor(1)),
-        builder.buildColorStop(1.0, builder.buildColor(2, transparency=0.8)),
+        builder.buildColorStop(0.0, 0),
+        builder.buildColorStop(0.5, 1),
+        builder.buildColorStop(1.0, 2, transparency=0.8),
     ]
     color_line = builder.buildColorLine(color_stops, extend=builder.ExtendMode.REPEAT)
     p0 = builder.buildPoint(x=100, y=200)
@@ -350,9 +345,9 @@ def test_buildLinearGradientPaint():
 
 def test_buildRadialGradientPaint():
     color_stops = [
-        builder.buildColorStop(0.0, builder.buildColor(0)),
-        builder.buildColorStop(0.5, builder.buildColor(1)),
-        builder.buildColorStop(1.0, builder.buildColor(2, transparency=0.8)),
+        builder.buildColorStop(0.0, 0),
+        builder.buildColorStop(0.5, 1),
+        builder.buildColorStop(1.0, 2, transparency=0.8),
     ]
     color_line = builder.buildColorLine(color_stops, extend=builder.ExtendMode.REPEAT)
     c0 = builder.buildPoint(x=100, y=200)
@@ -418,7 +413,7 @@ def test_buildLayerV1Record():
             {
                 "stops": [
                     (0.0, 5),
-                    (0.5, {"paletteIndex": 6, "transparency": 0.8}),
+                    {"offset": 0.5, "paletteIndex": 6, "transparency": 0.8},
                     (1.0, 7),
                 ]
             },
@@ -496,9 +491,9 @@ def test_buildLayerV1Array():
                 "format": 3,
                 "colorLine": {
                     "stops": [
-                        (0.0, 5),
-                        (0.5, {"paletteIndex": 6, "transparency": 0.8}),
-                        (1.0, 7),
+                        {"offset": 0.0, "paletteIndex": 5},
+                        {"offset": 0.5, "paletteIndex": 6, "transparency": 0.8},
+                        {"offset": 1.0, "paletteIndex": 7},
                     ]
                 },
                 "c0": (50, 50),
