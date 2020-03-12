@@ -31,7 +31,7 @@
       <!-- LookupCount=1 -->
       <Lookup index="0">
         <LookupType value="4"/>
-        <LookupFlag value="512"/>
+        <LookupFlag value="512"/><!-- markAttachmentType[2] -->
         <!-- SubTableCount=1 -->
         <LigatureSubst index="0" Format="1">
           <LigatureSet glyph="g11">

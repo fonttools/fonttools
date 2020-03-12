@@ -417,7 +417,6 @@ class SimpleT2Decompiler(object):
 			self.numRegions = self.private.getNumRegions()
 		numBlends = self.pop()
 		numOps = numBlends * (self.numRegions + 1)
-		blendArgs = self.operandStack[-numOps:]
 		del self.operandStack[-(numOps-numBlends):] # Leave the default operands on the stack.
 
 	def op_vsindex(self, index):

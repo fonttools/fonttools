@@ -31,7 +31,7 @@
       <!-- LookupCount=1 -->
       <Lookup index="0">
         <LookupType value="1"/>
-        <LookupFlag value="2"/>
+        <LookupFlag value="2"/><!-- ignoreBaseGlyphs -->
         <!-- SubTableCount=1 -->
         <SingleSubst index="0" Format="1">
           <Substitution in="g18" out="g23"/>

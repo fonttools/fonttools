@@ -624,7 +624,7 @@
       </Lookup>
       <Lookup index="2">
         <LookupType value="6"/>
-        <LookupFlag value="16"/>
+        <LookupFlag value="16"/><!-- useMarkFilteringSet -->
         <!-- SubTableCount=1 -->
         <MarkMarkPos index="0" Format="1">
           <Mark1Coverage Format="1">
