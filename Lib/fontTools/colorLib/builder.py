@@ -387,9 +387,7 @@ def buildPoint(x: _ScalarInput, y: _ScalarInput) -> ot.Point:
 def _to_variable_point(pt: _PointInput) -> ot.Point:
     if isinstance(pt, ot.Point):
         return pt
-    if isinstance(pt, tuple):
-        return buildPoint(*pt)
-    raise TypeError(pt)
+    return buildPoint(*pt)
 
 
 def _to_color_line(obj):
