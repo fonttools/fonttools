@@ -1,3 +1,7 @@
+- [ttx] Annotate ``LookupFlag`` in XML dump with comment explaining what bits
+  are set and what they mean (#1850).
+- [feaLib] Added more descriptive message to ``IncludedFeaNotFound`` error (#1842).
+
 4.4.1 (released 2020-02-26)
 ---------------------------
 
