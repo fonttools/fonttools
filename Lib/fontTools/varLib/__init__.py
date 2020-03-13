@@ -234,13 +234,11 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 
 	log.info("Generating gvar")
 	assert "gvar" not in font
-
+	gvar = font["gvar"] = newTable('gvar')
 	glyf = font['glyf']
 
 	# use hhea.ascent of base master as default vertical origin when vmtx is missing
 	baseAscent = font['hhea'].ascent
-
-	variations = {}
 	for glyph in font.getGlyphOrder():
 
 		isComposite = glyf[glyph].isComposite()
@@ -260,6 +258,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 		del allControls
 
 		# Update gvar
+		gvar.variations[glyph] = []
 		deltas = model.getDeltas(allCoords)
 		supports = model.supports
 		assert len(deltas) == len(supports)
@@ -298,13 +297,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 					if optimized_len < unoptimized_len:
 						var = var_opt
 
-			variations.setdefault(glyph, []).append(var)
-
-	if variations:
-		gvar = font["gvar"] = newTable('gvar')
-		gvar.version = 1
-		gvar.reserved = 0
-		gvar.variations = {g: variations.get(g, []) for g in font.getGlyphOrder()}
+			gvar.variations[glyph].append(var)
 
 
 def _remove_TTHinting(font):
