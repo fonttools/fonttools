@@ -1,3 +1,7 @@
+- [varLib] Always build ``gvar`` table for TrueType-flavored Variable Fonts,
+  even if it contains no variation data. The table is required according to
+  the OpenType spec (#1855, #1857).
+
 4.4.2 (released 2020-03-12)
 ---------------------------
 
