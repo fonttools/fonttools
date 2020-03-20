@@ -1188,14 +1188,34 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
     def addSource(self, sourceDescriptor):
         self.sources.append(sourceDescriptor)
 
+    def addSourceDescriptor(self, **kwargs):
+        source = self.writerClass.sourceDescriptorClass(**kwargs)
+        self.addSource(source)
+        return source
+
     def addInstance(self, instanceDescriptor):
         self.instances.append(instanceDescriptor)
+
+    def addInstanceDescriptor(self, **kwargs):
+        instance = self.writerClass.instanceDescriptorClass(**kwargs)
+        self.addInstance(instance)
+        return instance
 
     def addAxis(self, axisDescriptor):
         self.axes.append(axisDescriptor)
 
+    def addAxisDescriptor(self, **kwargs):
+        axis = self.writerClass.axisDescriptorClass(**kwargs)
+        self.addAxis(axis)
+        return axis
+
     def addRule(self, ruleDescriptor):
         self.rules.append(ruleDescriptor)
+
+    def addRuleDescriptor(self, **kwargs):
+        rule = self.writerClass.ruleDescriptorClass(**kwargs)
+        self.addRule(rule)
+        return rule
 
     def newDefaultLocation(self):
         """Return default location in design space."""
