@@ -949,3 +949,70 @@ def test_loadSourceFonts_no_required_path():
 
     with pytest.raises(DesignSpaceDocumentError, match="no 'path' attribute"):
         designspace.loadSourceFonts(lambda p: p)
+
+
+def test_addAxisDescriptor():
+    ds = DesignSpaceDocument()
+
+    axis = ds.addAxisDescriptor(
+      name="Weight", tag="wght", minimum=100, default=400, maximum=900
+    )
+
+    assert ds.axes[0] is axis
+    assert isinstance(axis, AxisDescriptor)
+    assert axis.name == "Weight"
+    assert axis.tag == "wght"
+    assert axis.minimum == 100
+    assert axis.default == 400
+    assert axis.maximum == 900
+
+
+def test_addSourceDescriptor():
+    ds = DesignSpaceDocument()
+
+    source = ds.addSourceDescriptor(name="TestSource", location={"Weight": 400})
+
+    assert ds.sources[0] is source
+    assert isinstance(source, SourceDescriptor)
+    assert source.name == "TestSource"
+    assert source.location == {"Weight": 400}
+
+
+def test_addInstanceDescriptor():
+    ds = DesignSpaceDocument()
+
+    instance = ds.addInstanceDescriptor(
+      name="TestInstance",
+      location={"Weight": 400},
+      styleName="Regular",
+      styleMapStyleName="regular",
+    )
+
+    assert ds.instances[0] is instance
+    assert isinstance(instance, InstanceDescriptor)
+    assert instance.name == "TestInstance"
+    assert instance.location == {"Weight": 400}
+    assert instance.styleName == "Regular"
+    assert instance.styleMapStyleName == "regular"
+
+
+def test_addRuleDescriptor():
+    ds = DesignSpaceDocument()
+
+    rule = ds.addRuleDescriptor(
+      name="TestRule",
+      conditionSets=[
+          dict(name='Weight', minimum=100, maximum=200),
+          dict(name='Weight', minimum=700, maximum=900),
+      ],
+      subs=[("a", "a.alt")],
+    )
+
+    assert ds.rules[0] is rule
+    assert isinstance(rule, RuleDescriptor)
+    assert rule.name == "TestRule"
+    assert rule.conditionSets == [
+        dict(name='Weight', minimum=100, maximum=200),
+        dict(name='Weight', minimum=700, maximum=900),
+    ]
+    assert rule.subs == [("a", "a.alt")]
