@@ -601,6 +601,22 @@ def _add_MVAR(font, masterModel, master_ttfs, axisTags):
 		mvar.ValueRecord = sorted(records, key=lambda r: r.ValueTag)
 
 
+def _add_BASE(font, masterModel, master_ttfs, axisTags):
+
+	log.info("Generating BASE")
+
+	merger = VariationMerger(masterModel, axisTags, font)
+	merger.mergeTables(font, master_ttfs, ['BASE'])
+	store = merger.store_builder.finish()
+
+	if not store.VarData:
+		return
+	base = font['BASE'].table
+	assert base.Version == 0x00010000
+	base.Version = 0x00010001
+	base.VarStore = store
+
+
 def _merge_OTL(font, model, master_fonts, axisTags):
 
 	log.info("Merging OpenType Layout tables")
@@ -906,6 +922,8 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 	assert 0 == model.mapping[ds.base_idx]
 
 	log.info("Building variations tables")
+	if 'BASE' not in exclude and 'BASE' in vf:
+		_add_BASE(vf, model, master_fonts, axisTags)
 	if 'MVAR' not in exclude:
 		_add_MVAR(vf, model, master_fonts, axisTags)
 	if 'HVAR' not in exclude:
