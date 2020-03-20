@@ -4,9 +4,9 @@
 # Source: https://unicode.org/Public/UNIDATA/ScriptExtensions.txt
 # License: http://unicode.org/copyright.html#License
 #
-# ScriptExtensions-12.1.0.txt
-# Date: 2019-04-01, 09:10:42 GMT
-# © 2019 Unicode®, Inc.
+# ScriptExtensions-13.0.0.txt
+# Date: 2020-01-22, 00:07:43 GMT
+# © 2020 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
 #
@@ -52,21 +52,19 @@ RANGES = [
     0x0484,  # .. 0x0484 ; {'Cyrl', 'Glag'}
     0x0485,  # .. 0x0486 ; {'Cyrl', 'Latn'}
     0x0487,  # .. 0x0487 ; {'Cyrl', 'Glag'}
-    0x0488,  # .. 0x0588 ; None
-    0x0589,  # .. 0x0589 ; {'Armn', 'Geor'}
-    0x058A,  # .. 0x060B ; None
-    0x060C,  # .. 0x060C ; {'Arab', 'Rohg', 'Syrc', 'Thaa'}
+    0x0488,  # .. 0x060B ; None
+    0x060C,  # .. 0x060C ; {'Arab', 'Rohg', 'Syrc', 'Thaa', 'Yezi'}
     0x060D,  # .. 0x061A ; None
-    0x061B,  # .. 0x061B ; {'Arab', 'Rohg', 'Syrc', 'Thaa'}
+    0x061B,  # .. 0x061B ; {'Arab', 'Rohg', 'Syrc', 'Thaa', 'Yezi'}
     0x061C,  # .. 0x061C ; {'Arab', 'Syrc', 'Thaa'}
     0x061D,  # .. 0x061E ; None
-    0x061F,  # .. 0x061F ; {'Arab', 'Rohg', 'Syrc', 'Thaa'}
+    0x061F,  # .. 0x061F ; {'Arab', 'Rohg', 'Syrc', 'Thaa', 'Yezi'}
     0x0620,  # .. 0x063F ; None
     0x0640,  # .. 0x0640 ; {'Adlm', 'Arab', 'Mand', 'Mani', 'Phlp', 'Rohg', 'Sogd', 'Syrc'}
     0x0641,  # .. 0x064A ; None
     0x064B,  # .. 0x0655 ; {'Arab', 'Syrc'}
     0x0656,  # .. 0x065F ; None
-    0x0660,  # .. 0x0669 ; {'Arab', 'Thaa'}
+    0x0660,  # .. 0x0669 ; {'Arab', 'Thaa', 'Yezi'}
     0x066A,  # .. 0x066F ; None
     0x0670,  # .. 0x0670 ; {'Arab', 'Syrc'}
     0x0671,  # .. 0x06D3 ; None
@@ -129,7 +127,9 @@ RANGES = [
     0x1CFA,  # .. 0x1CFA ; {'Nand'}
     0x1CFB,  # .. 0x1DBF ; None
     0x1DC0,  # .. 0x1DC1 ; {'Grek'}
-    0x1DC2,  # .. 0x202E ; None
+    0x1DC2,  # .. 0x1DF7 ; None
+    0x1DF8,  # .. 0x1DF8 ; {'Cyrl', 'Syrc'}
+    0x1DF9,  # .. 0x202E ; None
     0x202F,  # .. 0x202F ; {'Latn', 'Mong'}
     0x2030,  # .. 0x20EF ; None
     0x20F0,  # .. 0x20F0 ; {'Deva', 'Gran', 'Latn'}
@@ -183,7 +183,9 @@ RANGES = [
     0x33E0,  # .. 0x33FE ; {'Hani'}
     0x33FF,  # .. 0xA66E ; None
     0xA66F,  # .. 0xA66F ; {'Cyrl', 'Glag'}
-    0xA670,  # .. 0xA82F ; None
+    0xA670,  # .. 0xA6FF ; None
+    0xA700,  # .. 0xA707 ; {'Hani', 'Latn'}
+    0xA708,  # .. 0xA82F ; None
     0xA830,  # .. 0xA832 ; {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Knda', 'Kthi', 'Mahj', 'Mlym', 'Modi', 'Nand', 'Sind', 'Takr', 'Tirh'}
     0xA833,  # .. 0xA835 ; {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Knda', 'Kthi', 'Mahj', 'Modi', 'Nand', 'Sind', 'Takr', 'Tirh'}
     0xA836,  # .. 0xA839 ; {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Kthi', 'Mahj', 'Modi', 'Sind', 'Takr', 'Tirh'}
@@ -246,21 +248,19 @@ VALUES = [
     {'Cyrl', 'Glag'},                                          # 0484..0484
     {'Cyrl', 'Latn'},                                          # 0485..0486
     {'Cyrl', 'Glag'},                                          # 0487..0487
-    None,                                                      # 0488..0588
-    {'Armn', 'Geor'},                                          # 0589..0589
-    None,                                                      # 058A..060B
-    {'Arab', 'Rohg', 'Syrc', 'Thaa'},                          # 060C..060C
+    None,                                                      # 0488..060B
+    {'Arab', 'Rohg', 'Syrc', 'Thaa', 'Yezi'},                  # 060C..060C
     None,                                                      # 060D..061A
-    {'Arab', 'Rohg', 'Syrc', 'Thaa'},                          # 061B..061B
+    {'Arab', 'Rohg', 'Syrc', 'Thaa', 'Yezi'},                  # 061B..061B
     {'Arab', 'Syrc', 'Thaa'},                                  # 061C..061C
     None,                                                      # 061D..061E
-    {'Arab', 'Rohg', 'Syrc', 'Thaa'},                          # 061F..061F
+    {'Arab', 'Rohg', 'Syrc', 'Thaa', 'Yezi'},                  # 061F..061F
     None,                                                      # 0620..063F
     {'Adlm', 'Arab', 'Mand', 'Mani', 'Phlp', 'Rohg', 'Sogd', 'Syrc'},  # 0640..0640
     None,                                                      # 0641..064A
     {'Arab', 'Syrc'},                                          # 064B..0655
     None,                                                      # 0656..065F
-    {'Arab', 'Thaa'},                                          # 0660..0669
+    {'Arab', 'Thaa', 'Yezi'},                                  # 0660..0669
     None,                                                      # 066A..066F
     {'Arab', 'Syrc'},                                          # 0670..0670
     None,                                                      # 0671..06D3
@@ -323,7 +323,9 @@ VALUES = [
     {'Nand'},                                                  # 1CFA..1CFA
     None,                                                      # 1CFB..1DBF
     {'Grek'},                                                  # 1DC0..1DC1
-    None,                                                      # 1DC2..202E
+    None,                                                      # 1DC2..1DF7
+    {'Cyrl', 'Syrc'},                                          # 1DF8..1DF8
+    None,                                                      # 1DF9..202E
     {'Latn', 'Mong'},                                          # 202F..202F
     None,                                                      # 2030..20EF
     {'Deva', 'Gran', 'Latn'},                                  # 20F0..20F0
@@ -377,7 +379,9 @@ VALUES = [
     {'Hani'},                                                  # 33E0..33FE
     None,                                                      # 33FF..A66E
     {'Cyrl', 'Glag'},                                          # A66F..A66F
-    None,                                                      # A670..A82F
+    None,                                                      # A670..A6FF
+    {'Hani', 'Latn'},                                          # A700..A707
+    None,                                                      # A708..A82F
     {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Knda', 'Kthi', 'Mahj', 'Mlym', 'Modi', 'Nand', 'Sind', 'Takr', 'Tirh'},  # A830..A832
     {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Knda', 'Kthi', 'Mahj', 'Modi', 'Nand', 'Sind', 'Takr', 'Tirh'},  # A833..A835
     {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Kthi', 'Mahj', 'Modi', 'Sind', 'Takr', 'Tirh'},  # A836..A839
