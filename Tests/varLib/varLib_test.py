@@ -628,6 +628,31 @@ class BuildTest(unittest.TestCase):
         self.expect_ttx(varfont, expected_ttx_path, tables)
         self.check_ttx_dump(varfont, expected_ttx_path, tables, suffix)
 
+    def test_varlib_build_BASE(self):
+        ds_path = self.get_test_input('TestBASE.designspace')
+        ttx_dir = self.get_test_input("master_base_test")
+        expected_ttx_name = 'TestBASE'
+        suffix = '.otf'
+
+        self.temp_dir()
+        for path in self.get_file_list(ttx_dir, '.ttx', 'TestBASE'):
+            font, savepath = self.compile_font(path, suffix, self.tempdir)
+
+        ds = DesignSpaceDocument.fromfile(ds_path)
+        for source in ds.sources:
+            source.path = os.path.join(
+                self.tempdir, os.path.basename(source.filename).replace(".ufo", suffix)
+            )
+        ds.updatePaths()
+
+        varfont, _, _ = build(ds)
+        varfont = reload_font(varfont)
+
+        expected_ttx_path = self.get_test_output(expected_ttx_name + '.ttx')
+        tables = ["BASE"]
+        self.expect_ttx(varfont, expected_ttx_path, tables)
+        self.check_ttx_dump(varfont, expected_ttx_path, tables, suffix)
+
     def test_varlib_build_single_master(self):
         self._run_varlib_build_test(
             designspace_name='SingleMaster',
