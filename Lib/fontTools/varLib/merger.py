@@ -1052,6 +1052,15 @@ def buildVarDevTable(store_builder, master_values):
 	base, varIdx = store_builder.storeMasters(master_values)
 	return base, builder.buildVarDevTable(varIdx)
 
+@VariationMerger.merger(ot.BaseCoord)
+def merge(merger, self, lst):
+	if self.Format != 1:
+		raise VarLibMergeError(f"BaseCoord format {self.Format} unsupported.")
+	self.Coordinate, DeviceTable = buildVarDevTable(merger.store_builder, [a.Coordinate for a in lst])
+	if DeviceTable:
+		self.Format = 3
+		self.DeviceTable = DeviceTable
+
 @VariationMerger.merger(ot.CaretValue)
 def merge(merger, self, lst):
 	if self.Format != 1:

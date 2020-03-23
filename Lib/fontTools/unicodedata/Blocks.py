@@ -4,8 +4,8 @@
 # Source: https://unicode.org/Public/UNIDATA/Blocks.txt
 # License: http://unicode.org/copyright.html#License
 #
-# Blocks-12.1.0.txt
-# Date: 2019-03-08, 23:59:00 GMT [KW]
+# Blocks-13.0.0.txt
+# Date: 2019-07-10, 19:06:00 GMT [KW]
 # © 2019 Unicode®, Inc.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
 #
@@ -234,10 +234,12 @@ RANGES = [
     0x10D00,  # .. 0x10D3F ; Hanifi Rohingya
     0x10D40,  # .. 0x10E5F ; No_Block
     0x10E60,  # .. 0x10E7F ; Rumi Numeral Symbols
-    0x10E80,  # .. 0x10EFF ; No_Block
+    0x10E80,  # .. 0x10EBF ; Yezidi
+    0x10EC0,  # .. 0x10EFF ; No_Block
     0x10F00,  # .. 0x10F2F ; Old Sogdian
     0x10F30,  # .. 0x10F6F ; Sogdian
-    0x10F70,  # .. 0x10FDF ; No_Block
+    0x10F70,  # .. 0x10FAF ; No_Block
+    0x10FB0,  # .. 0x10FDF ; Chorasmian
     0x10FE0,  # .. 0x10FFF ; Elymaic
     0x11000,  # .. 0x1107F ; Brahmi
     0x11080,  # .. 0x110CF ; Kaithi
@@ -265,7 +267,8 @@ RANGES = [
     0x11800,  # .. 0x1184F ; Dogra
     0x11850,  # .. 0x1189F ; No_Block
     0x118A0,  # .. 0x118FF ; Warang Citi
-    0x11900,  # .. 0x1199F ; No_Block
+    0x11900,  # .. 0x1195F ; Dives Akuru
+    0x11960,  # .. 0x1199F ; No_Block
     0x119A0,  # .. 0x119FF ; Nandinagari
     0x11A00,  # .. 0x11A4F ; Zanabazar Square
     0x11A50,  # .. 0x11AAF ; Soyombo
@@ -279,7 +282,8 @@ RANGES = [
     0x11D60,  # .. 0x11DAF ; Gunjala Gondi
     0x11DB0,  # .. 0x11EDF ; No_Block
     0x11EE0,  # .. 0x11EFF ; Makasar
-    0x11F00,  # .. 0x11FBF ; No_Block
+    0x11F00,  # .. 0x11FAF ; No_Block
+    0x11FB0,  # .. 0x11FBF ; Lisu Supplement
     0x11FC0,  # .. 0x11FFF ; Tamil Supplement
     0x12000,  # .. 0x123FF ; Cuneiform
     0x12400,  # .. 0x1247F ; Cuneiform Numbers and Punctuation
@@ -303,7 +307,9 @@ RANGES = [
     0x16FE0,  # .. 0x16FFF ; Ideographic Symbols and Punctuation
     0x17000,  # .. 0x187FF ; Tangut
     0x18800,  # .. 0x18AFF ; Tangut Components
-    0x18B00,  # .. 0x1AFFF ; No_Block
+    0x18B00,  # .. 0x18CFF ; Khitan Small Script
+    0x18D00,  # .. 0x18D8F ; Tangut Supplement
+    0x18D90,  # .. 0x1AFFF ; No_Block
     0x1B000,  # .. 0x1B0FF ; Kana Supplement
     0x1B100,  # .. 0x1B12F ; Kana Extended-A
     0x1B130,  # .. 0x1B16F ; Small Kana Extension
@@ -354,7 +360,8 @@ RANGES = [
     0x1F900,  # .. 0x1F9FF ; Supplemental Symbols and Pictographs
     0x1FA00,  # .. 0x1FA6F ; Chess Symbols
     0x1FA70,  # .. 0x1FAFF ; Symbols and Pictographs Extended-A
-    0x1FB00,  # .. 0x1FFFF ; No_Block
+    0x1FB00,  # .. 0x1FBFF ; Symbols for Legacy Computing
+    0x1FC00,  # .. 0x1FFFF ; No_Block
     0x20000,  # .. 0x2A6DF ; CJK Unified Ideographs Extension B
     0x2A6E0,  # .. 0x2A6FF ; No_Block
     0x2A700,  # .. 0x2B73F ; CJK Unified Ideographs Extension C
@@ -363,7 +370,9 @@ RANGES = [
     0x2CEB0,  # .. 0x2EBEF ; CJK Unified Ideographs Extension F
     0x2EBF0,  # .. 0x2F7FF ; No_Block
     0x2F800,  # .. 0x2FA1F ; CJK Compatibility Ideographs Supplement
-    0x2FA20,  # .. 0xDFFFF ; No_Block
+    0x2FA20,  # .. 0x2FFFF ; No_Block
+    0x30000,  # .. 0x3134F ; CJK Unified Ideographs Extension G
+    0x31350,  # .. 0xDFFFF ; No_Block
     0xE0000,  # .. 0xE007F ; Tags
     0xE0080,  # .. 0xE00FF ; No_Block
     0xE0100,  # .. 0xE01EF ; Variation Selectors Supplement
@@ -590,10 +599,12 @@ VALUES = [
     'Hanifi Rohingya',                                 # 10D00..10D3F
     'No_Block',                                        # 10D40..10E5F
     'Rumi Numeral Symbols',                            # 10E60..10E7F
-    'No_Block',                                        # 10E80..10EFF
+    'Yezidi',                                          # 10E80..10EBF
+    'No_Block',                                        # 10EC0..10EFF
     'Old Sogdian',                                     # 10F00..10F2F
     'Sogdian',                                         # 10F30..10F6F
-    'No_Block',                                        # 10F70..10FDF
+    'No_Block',                                        # 10F70..10FAF
+    'Chorasmian',                                      # 10FB0..10FDF
     'Elymaic',                                         # 10FE0..10FFF
     'Brahmi',                                          # 11000..1107F
     'Kaithi',                                          # 11080..110CF
@@ -621,7 +632,8 @@ VALUES = [
     'Dogra',                                           # 11800..1184F
     'No_Block',                                        # 11850..1189F
     'Warang Citi',                                     # 118A0..118FF
-    'No_Block',                                        # 11900..1199F
+    'Dives Akuru',                                     # 11900..1195F
+    'No_Block',                                        # 11960..1199F
     'Nandinagari',                                     # 119A0..119FF
     'Zanabazar Square',                                # 11A00..11A4F
     'Soyombo',                                         # 11A50..11AAF
@@ -635,7 +647,8 @@ VALUES = [
     'Gunjala Gondi',                                   # 11D60..11DAF
     'No_Block',                                        # 11DB0..11EDF
     'Makasar',                                         # 11EE0..11EFF
-    'No_Block',                                        # 11F00..11FBF
+    'No_Block',                                        # 11F00..11FAF
+    'Lisu Supplement',                                 # 11FB0..11FBF
     'Tamil Supplement',                                # 11FC0..11FFF
     'Cuneiform',                                       # 12000..123FF
     'Cuneiform Numbers and Punctuation',               # 12400..1247F
@@ -659,7 +672,9 @@ VALUES = [
     'Ideographic Symbols and Punctuation',             # 16FE0..16FFF
     'Tangut',                                          # 17000..187FF
     'Tangut Components',                               # 18800..18AFF
-    'No_Block',                                        # 18B00..1AFFF
+    'Khitan Small Script',                             # 18B00..18CFF
+    'Tangut Supplement',                               # 18D00..18D8F
+    'No_Block',                                        # 18D90..1AFFF
     'Kana Supplement',                                 # 1B000..1B0FF
     'Kana Extended-A',                                 # 1B100..1B12F
     'Small Kana Extension',                            # 1B130..1B16F
@@ -710,7 +725,8 @@ VALUES = [
     'Supplemental Symbols and Pictographs',            # 1F900..1F9FF
     'Chess Symbols',                                   # 1FA00..1FA6F
     'Symbols and Pictographs Extended-A',              # 1FA70..1FAFF
-    'No_Block',                                        # 1FB00..1FFFF
+    'Symbols for Legacy Computing',                    # 1FB00..1FBFF
+    'No_Block',                                        # 1FC00..1FFFF
     'CJK Unified Ideographs Extension B',              # 20000..2A6DF
     'No_Block',                                        # 2A6E0..2A6FF
     'CJK Unified Ideographs Extension C',              # 2A700..2B73F
@@ -719,7 +735,9 @@ VALUES = [
     'CJK Unified Ideographs Extension F',              # 2CEB0..2EBEF
     'No_Block',                                        # 2EBF0..2F7FF
     'CJK Compatibility Ideographs Supplement',         # 2F800..2FA1F
-    'No_Block',                                        # 2FA20..DFFFF
+    'No_Block',                                        # 2FA20..2FFFF
+    'CJK Unified Ideographs Extension G',              # 30000..3134F
+    'No_Block',                                        # 31350..DFFFF
     'Tags',                                            # E0000..E007F
     'No_Block',                                        # E0080..E00FF
     'Variation Selectors Supplement',                  # E0100..E01EF

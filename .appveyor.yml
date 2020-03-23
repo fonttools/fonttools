@@ -1,10 +1,9 @@
 environment:
   matrix:
-    - JOB: "3.6 32-bit"
-      PYTHON_HOME: "C:\\Python36"
-
     - JOB: "3.7 64-bit"
       PYTHON_HOME: "C:\\Python37-x64"
+    - JOB: "3.8 64-bit"
+      PYTHON_HOME: "C:\\Python38-x64"
 
 branches:
   only:

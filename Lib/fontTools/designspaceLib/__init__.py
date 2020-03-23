@@ -100,14 +100,32 @@ class SourceDescriptor(SimpleDescriptor):
               'mutedGlyphNames',
               'familyName', 'styleName']
 
-    def __init__(self):
-        self.filename = None
+    def __init__(
+        self,
+        *,
+        filename=None,
+        path=None,
+        font=None,
+        name=None,
+        location=None,
+        layerName=None,
+        familyName=None,
+        styleName=None,
+        copyLib=False,
+        copyInfo=False,
+        copyGroups=False,
+        copyFeatures=False,
+        muteKerning=False,
+        muteInfo=False,
+        mutedGlyphNames=None,
+    ):
+        self.filename = filename
         """The original path as found in the document."""
 
-        self.path = None
+        self.path = path
         """The absolute path, calculated from filename."""
 
-        self.font = None
+        self.font = font
         """Any Python object. Optional. Points to a representation of this
         source font that is loaded in memory, as a Python object (e.g. a
         ``defcon.Font`` or a ``fontTools.ttFont.TTFont``).
@@ -119,18 +137,19 @@ class SourceDescriptor(SimpleDescriptor):
         this field to the disk and make ```filename`` point to that.
         """
 
-        self.name = None
-        self.location = None
-        self.layerName = None
-        self.copyLib = False
-        self.copyInfo = False
-        self.copyGroups = False
-        self.copyFeatures = False
-        self.muteKerning = False
-        self.muteInfo = False
-        self.mutedGlyphNames = []
-        self.familyName = None
-        self.styleName = None
+        self.name = name
+        self.location = location
+        self.layerName = layerName
+        self.familyName = familyName
+        self.styleName = styleName
+
+        self.copyLib = copyLib
+        self.copyInfo = copyInfo
+        self.copyGroups = copyGroups
+        self.copyFeatures = copyFeatures
+        self.muteKerning = muteKerning
+        self.muteInfo = muteInfo
+        self.mutedGlyphNames = mutedGlyphNames or []
 
     path = posixpath_property("_path")
     filename = posixpath_property("_filename")
@@ -152,10 +171,12 @@ class RuleDescriptor(SimpleDescriptor):
     """
     _attrs = ['name', 'conditionSets', 'subs']   # what do we need here
 
-    def __init__(self):
-        self.name = None
-        self.conditionSets = []  # list of list of dict(name='aaaa', minimum=0, maximum=1000)
-        self.subs = []  # list of substitutions stored as tuples of glyphnames ("a", "a.alt")
+    def __init__(self, *, name=None, conditionSets=None, subs=None):
+        self.name = name
+        # list of lists of dict(name='aaaa', minimum=0, maximum=1000)
+        self.conditionSets = conditionSets or []
+        # list of substitutions stored as tuples of glyphnames ("a", "a.alt")
+        self.subs = subs or []
 
 
 def evaluateRule(rule, location):
@@ -219,26 +240,50 @@ class InstanceDescriptor(SimpleDescriptor):
               'info',
               'lib']
 
-    def __init__(self):
-        self.filename = None    # the original path as found in the document
-        self.path = None        # the absolute path, calculated from filename
-        self.font = None        # Same as in SourceDescriptor.
-        self.name = None
-        self.location = None
-        self.familyName = None
-        self.styleName = None
-        self.postScriptFontName = None
-        self.styleMapFamilyName = None
-        self.styleMapStyleName = None
-        self.localisedStyleName = {}
-        self.localisedFamilyName = {}
-        self.localisedStyleMapStyleName = {}
-        self.localisedStyleMapFamilyName = {}
-        self.glyphs = {}
-        self.kerning = True
-        self.info = True
+    def __init__(
+        self,
+        *,
+        filename=None,
+        path=None,
+        font=None,
+        name=None,
+        location=None,
+        familyName=None,
+        styleName=None,
+        postScriptFontName=None,
+        styleMapFamilyName=None,
+        styleMapStyleName=None,
+        localisedFamilyName=None,
+        localisedStyleName=None,
+        localisedStyleMapFamilyName=None,
+        localisedStyleMapStyleName=None,
+        glyphs=None,
+        kerning=True,
+        info=True,
+        lib=None,
+    ):
+        # the original path as found in the document
+        self.filename = filename
+        # the absolute path, calculated from filename
+        self.path = path
+        # Same as in SourceDescriptor.
+        self.font = font
+        self.name = name
+        self.location = location
+        self.familyName = familyName
+        self.styleName = styleName
+        self.postScriptFontName = postScriptFontName
+        self.styleMapFamilyName = styleMapFamilyName
+        self.styleMapStyleName = styleMapStyleName
+        self.localisedFamilyName = localisedFamilyName or {}
+        self.localisedStyleName = localisedStyleName or {}
+        self.localisedStyleMapFamilyName = localisedStyleMapFamilyName or {}
+        self.localisedStyleMapStyleName = localisedStyleMapStyleName or {}
+        self.glyphs = glyphs or {}
+        self.kerning = kerning
+        self.info = info
 
-        self.lib = {}
+        self.lib = lib or {}
         """Custom data associated with this instance."""
 
     path = posixpath_property("_path")
@@ -294,15 +339,29 @@ class AxisDescriptor(SimpleDescriptor):
     flavor = "axis"
     _attrs = ['tag', 'name', 'maximum', 'minimum', 'default', 'map']
 
-    def __init__(self):
-        self.tag = None       # opentype tag for this axis
-        self.name = None      # name of the axis used in locations
-        self.labelNames = {}  # names for UI purposes, if this is not a standard axis,
-        self.minimum = None
-        self.maximum = None
-        self.default = None
-        self.hidden = False
-        self.map = []
+    def __init__(
+        self,
+        *,
+        tag=None,
+        name=None,
+        labelNames=None,
+        minimum=None,
+        default=None,
+        maximum=None,
+        hidden=False,
+        map=None,
+    ):
+        # opentype tag for this axis
+        self.tag = tag
+        # name of the axis used in locations
+        self.name = name
+        # names for UI purposes, if this is not a standard axis,
+        self.labelNames = labelNames or {}
+        self.minimum = minimum
+        self.maximum = maximum
+        self.default = default
+        self.hidden = hidden
+        self.map = map or []
 
     def serialize(self):
         # output to a dict, used in testing
@@ -1129,14 +1188,34 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
     def addSource(self, sourceDescriptor):
         self.sources.append(sourceDescriptor)
 
+    def addSourceDescriptor(self, **kwargs):
+        source = self.writerClass.sourceDescriptorClass(**kwargs)
+        self.addSource(source)
+        return source
+
     def addInstance(self, instanceDescriptor):
         self.instances.append(instanceDescriptor)
+
+    def addInstanceDescriptor(self, **kwargs):
+        instance = self.writerClass.instanceDescriptorClass(**kwargs)
+        self.addInstance(instance)
+        return instance
 
     def addAxis(self, axisDescriptor):
         self.axes.append(axisDescriptor)
 
+    def addAxisDescriptor(self, **kwargs):
+        axis = self.writerClass.axisDescriptorClass(**kwargs)
+        self.addAxis(axis)
+        return axis
+
     def addRule(self, ruleDescriptor):
         self.rules.append(ruleDescriptor)
+
+    def addRuleDescriptor(self, **kwargs):
+        rule = self.writerClass.ruleDescriptorClass(**kwargs)
+        self.addRule(rule)
+        return rule
 
     def newDefaultLocation(self):
         """Return default location in design space."""

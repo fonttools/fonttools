@@ -234,13 +234,11 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 
 	log.info("Generating gvar")
 	assert "gvar" not in font
-
+	gvar = font["gvar"] = newTable('gvar')
 	glyf = font['glyf']
 
 	# use hhea.ascent of base master as default vertical origin when vmtx is missing
 	baseAscent = font['hhea'].ascent
-
-	variations = {}
 	for glyph in font.getGlyphOrder():
 
 		isComposite = glyf[glyph].isComposite()
@@ -260,6 +258,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 		del allControls
 
 		# Update gvar
+		gvar.variations[glyph] = []
 		deltas = model.getDeltas(allCoords)
 		supports = model.supports
 		assert len(deltas) == len(supports)
@@ -298,13 +297,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 					if optimized_len < unoptimized_len:
 						var = var_opt
 
-			variations.setdefault(glyph, []).append(var)
-
-	if variations:
-		gvar = font["gvar"] = newTable('gvar')
-		gvar.version = 1
-		gvar.reserved = 0
-		gvar.variations = {g: variations.get(g, []) for g in font.getGlyphOrder()}
+			gvar.variations[glyph].append(var)
 
 
 def _remove_TTHinting(font):
@@ -606,6 +599,22 @@ def _add_MVAR(font, masterModel, master_ttfs, axisTags):
 		mvar.ValueRecordSize = 8
 		mvar.ValueRecordCount = len(records)
 		mvar.ValueRecord = sorted(records, key=lambda r: r.ValueTag)
+
+
+def _add_BASE(font, masterModel, master_ttfs, axisTags):
+
+	log.info("Generating BASE")
+
+	merger = VariationMerger(masterModel, axisTags, font)
+	merger.mergeTables(font, master_ttfs, ['BASE'])
+	store = merger.store_builder.finish()
+
+	if not store.VarData:
+		return
+	base = font['BASE'].table
+	assert base.Version == 0x00010000
+	base.Version = 0x00010001
+	base.VarStore = store
 
 
 def _merge_OTL(font, model, master_fonts, axisTags):
@@ -913,6 +922,8 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 	assert 0 == model.mapping[ds.base_idx]
 
 	log.info("Building variations tables")
+	if 'BASE' not in exclude and 'BASE' in vf:
+		_add_BASE(vf, model, master_fonts, axisTags)
 	if 'MVAR' not in exclude:
 		_add_MVAR(vf, model, master_fonts, axisTags)
 	if 'HVAR' not in exclude:

@@ -161,7 +161,7 @@ def test_script_extension():
     assert unicodedata.script_extension(unichr(0x0378)) == {"Zzzz"}
     assert unicodedata.script_extension(unichr(0x10FFFF)) == {"Zzzz"}
 
-    assert unicodedata.script_extension("\u0660") == {'Arab', 'Thaa'}
+    assert unicodedata.script_extension("\u0660") == {'Arab', 'Thaa', 'Yezi'}
     assert unicodedata.script_extension("\u0964") == {
         'Beng', 'Deva', 'Dogr', 'Gong', 'Gonm', 'Gran', 'Gujr', 'Guru', 'Knda',
         'Mahj', 'Mlym', 'Nand', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml',

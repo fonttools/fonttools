@@ -255,3 +255,7 @@ class Color(namedtuple("Color", "blue green red alpha")):
 		blue = int(value[4:6], 16)
 		alpha = int(value[6:8], 16) if len (value) >= 8 else 0xFF
 		return cls(red=red, green=green, blue=blue, alpha=alpha)
+
+	@classmethod
+	def fromRGBA(cls, red, green, blue, alpha):
+		return cls(red=red, green=green, blue=blue, alpha=alpha)
