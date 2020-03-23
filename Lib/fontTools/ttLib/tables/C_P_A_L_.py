@@ -234,13 +234,7 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 				self.paletteEntryLabels = [self.NO_NAME_ID] * self.numPaletteEntries
 
 
-class Color:
-
-	def __init__(self, blue, green, red, alpha):
-		self.blue = blue
-		self.green = green
-		self.red = red
-		self.alpha = alpha
+class Color(namedtuple("Color", "blue green red alpha")):
 
 	def __repr__(self):
 		return self.hex()
