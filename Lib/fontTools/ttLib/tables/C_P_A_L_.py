@@ -82,8 +82,8 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 		if self.version >= 1:
 			offsetToFirstColorRecord += 12
 		header = struct.pack(">HHHHL", self.version,
-                                     self.numPaletteEntries, len(self.palettes),
-                                     numColorRecords, offsetToFirstColorRecord)
+									 self.numPaletteEntries, len(self.palettes),
+									 numColorRecords, offsetToFirstColorRecord)
 		if self.version == 0:
 			dataList = [header, colorRecordIndices, colorRecords]
 		else:
@@ -108,8 +108,8 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 				offsetToPaletteLabelArray,
 				offsetToPaletteEntryLabelArray)
 			dataList = [header, colorRecordIndices, header1,
-				    colorRecords, paletteTypes, paletteLabels,
-                                    paletteEntryLabels]
+					colorRecords, paletteTypes, paletteLabels,
+									paletteEntryLabels]
 		return bytesjoin(dataList)
 
 	def _compilePalette(self, palette):
@@ -135,7 +135,7 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 			return b''
 		assert len(self.paletteTypes) == len(self.palettes)
 		result = bytesjoin([struct.pack(">I", ptype)
-                                    for ptype in self.paletteTypes])
+									for ptype in self.paletteTypes])
 		assert len(result) == 4 * len(self.palettes)
 		return result
 
@@ -144,7 +144,7 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 			return b''
 		assert len(self.paletteLabels) == len(self.palettes)
 		result = bytesjoin([struct.pack(">H", label)
-                                    for label in self.paletteLabels])
+									for label in self.paletteLabels])
 		assert len(result) == 2 * len(self.palettes)
 		return result
 
@@ -153,7 +153,7 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 			return b''
 		assert len(self.paletteEntryLabels) == self.numPaletteEntries
 		result = bytesjoin([struct.pack(">H", label)
-                                    for label in self.paletteEntryLabels])
+									for label in self.paletteEntryLabels])
 		assert len(result) == 2 * self.numPaletteEntries
 		return result
 
@@ -178,7 +178,7 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 			writer.begintag("palette", **attrs)
 			writer.newline()
 			if (self.version > 0 and paletteLabel != self.NO_NAME_ID and
-			    ttFont and "name" in ttFont):
+				ttFont and "name" in ttFont):
 				name = ttFont["name"].getDebugName(paletteLabel)
 				if name is not None:
 					writer.comment(name)
@@ -234,13 +234,19 @@ class table_C_P_A_L_(DefaultTable.DefaultTable):
 				self.paletteEntryLabels = [self.NO_NAME_ID] * self.numPaletteEntries
 
 
-class Color(namedtuple("Color", "blue green red alpha")):
+class Color:
 
-	def hex(self):
-		return "#%02X%02X%02X%02X" % (self.red, self.green, self.blue, self.alpha)
+	def __init__(self, blue, green, red, alpha):
+		self.blue = blue
+		self.green = green
+		self.red = red
+		self.alpha = alpha
 
 	def __repr__(self):
 		return self.hex()
+
+	def hex(self):
+		return "#%02X%02X%02X%02X" % (self.red, self.green, self.blue, self.alpha)
 
 	def toXML(self, writer, ttFont, index=None):
 		writer.simpletag("color", value=self.hex(), index=index)
@@ -254,4 +260,8 @@ class Color(namedtuple("Color", "blue green red alpha")):
 		green = int(value[2:4], 16)
 		blue = int(value[4:6], 16)
 		alpha = int(value[6:8], 16) if len (value) >= 8 else 0xFF
+		return cls(red=red, green=green, blue=blue, alpha=alpha)
+
+	@classmethod
+	def fromRGBA(cls, red, green, blue, alpha):
 		return cls(red=red, green=green, blue=blue, alpha=alpha)
