@@ -1,3 +1,7 @@
+- [varLib] Added support for building variable ``BASE`` table version 1.1 (#1858).
+- [CPAL] Added ``fromRGBA`` method to ``Color`` class (#1861).
+
+
 4.5.0 (released 2020-03-20)
 ---------------------------
 
