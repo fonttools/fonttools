@@ -192,7 +192,14 @@ def u_diff(
     with tempfile.TemporaryDirectory() as tmpdirpath:
         # define the file paths with either local file requests
         # or HTTP GET requests of remote files based on the command line request
-        left_ttxpath, right_ttxpath, pre_pathname, prepath, post_pathname, postpath = _get_fonts_and_save_xml(
+        (
+            left_ttxpath,
+            right_ttxpath,
+            pre_pathname,
+            prepath,
+            post_pathname,
+            postpath,
+        ) = _get_fonts_and_save_xml(
             filepath_a,
             filepath_b,
             tmpdirpath,
@@ -249,7 +256,14 @@ def external_diff(
     with tempfile.TemporaryDirectory() as tmpdirpath:
         # define the file paths with either local file requests
         # or HTTP GET requests of remote files based on the command line request
-        left_ttxpath, right_ttxpath, pre_pathname, prepath, post_pathname, postpath = _get_fonts_and_save_xml(
+        (
+            left_ttxpath,
+            right_ttxpath,
+            pre_pathname,
+            prepath,
+            post_pathname,
+            postpath,
+        ) = _get_fonts_and_save_xml(
             filepath_a,
             filepath_b,
             tmpdirpath,
