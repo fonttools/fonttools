@@ -58,7 +58,7 @@ class Cu2QuError(Exception):
 class ApproxNotFoundError(Cu2QuError):
     def __init__(self, curve):
         message = "no approximation found: %s" % curve
-        super(Error, self).__init__(message)
+        super(Cu2QuError, self).__init__(message)
         self.curve = curve
 
 
