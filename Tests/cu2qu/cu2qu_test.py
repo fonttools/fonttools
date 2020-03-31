@@ -21,7 +21,7 @@ import unittest
 import os
 import json
 
-from cu2qu import curve_to_quadratic, curves_to_quadratic
+from fontTools.cu2qu import curve_to_quadratic, curves_to_quadratic
 from . import DATADIR
 
 

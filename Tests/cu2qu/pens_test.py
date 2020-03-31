@@ -1,7 +1,7 @@
 from __future__ import print_function, division, absolute_import
 import unittest
 
-from cu2qu.pens import Cu2QuPen, Cu2QuPointPen
+from fontTools.cu2qu.pens import Cu2QuPen, Cu2QuPointPen
 from . import CUBIC_GLYPHS, QUAD_GLYPHS
 from .utils import DummyGlyph, DummyPointGlyph
 from .utils import DummyPen, DummyPointPen

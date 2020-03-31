@@ -1,5 +1,5 @@
 from __future__ import print_function, division, absolute_import
-from cu2qu import curve_to_quadratic
+from fontTools.cu2qu import curve_to_quadratic
 from fontTools.pens.basePen import AbstractPen, decomposeSuperBezierSegment
 from fontTools.pens.reverseContourPen import ReverseContourPen
 from fontTools.pens.pointPen import BasePointToSegmentPen
