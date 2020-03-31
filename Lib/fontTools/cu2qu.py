@@ -33,10 +33,8 @@ except ImportError:
     cython.locals = lambda **_: _empty_decorator
     cython.returns = lambda _: _empty_decorator
 
-
 import math
 
-from .errors import Error as Cu2QuError, ApproxNotFoundError
 
 __all__ = ['curve_to_quadratic', 'curves_to_quadratic']
 
@@ -51,6 +49,17 @@ if cython.compiled:
 else:
     # Just a lowly interpreted script.
     COMPILED = False
+
+
+class Cu2QuError(Exception):
+    """Base Cu2Qu exception class for all other errors."""
+
+
+class ApproxNotFoundError(Cu2QuError):
+    def __init__(self, curve):
+        message = "no approximation found: %s" % curve
+        super(Error, self).__init__(message)
+        self.curve = curve
 
 
 @cython.cfunc
