@@ -1,2 +1,0 @@
-fonttools[ufo]==3.32.0
-defcon==0.6.0
