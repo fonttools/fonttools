@@ -19,19 +19,7 @@ try:
     import cython
 except ImportError:
     # if cython not installed, use mock module with no-op decorators and types
-    from types import SimpleNamespace
-
-    def _empty_decorator(x):
-        return x
-
-    cython = SimpleNamespace()
-    cython.compiled = False
-    for name in ("double", "complex", "int"):
-        setattr(cython, name, None)
-    for name in ("cfunc", "inline"):
-        setattr(cython, name, _empty_decorator)
-    cython.locals = lambda **_: _empty_decorator
-    cython.returns = lambda _: _empty_decorator
+    from fontTools.misc import cython
 
 import math
 
