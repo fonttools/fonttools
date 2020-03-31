@@ -21,8 +21,21 @@ from __future__ import print_function, division, absolute_import
 try:
     import cython
 except ImportError:
-    # if not installed, use the embedded (no-op) copy of Cython.Shadow
-    from . import cython
+    # if cython not installed, use mock module with no-op decorators and types
+    from types import SimpleNamespace
+
+    def _empty_decorator(x):
+        return x
+
+    cython = SimpleNamespace()
+    cython.compiled = False
+    for name in ("double", "complex", "int"):
+        setattr(cython, name, None)
+    for name in ("cfunc", "inline"):
+        setattr(cython, name, _empty_decorator)
+    cython.locals = lambda **_: _empty_decorator
+    cython.returns = lambda _: _empty_decorator
+
 
 import math
 
