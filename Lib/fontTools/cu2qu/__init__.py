@@ -12,12 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-from __future__ import print_function, division, absolute_import
-
-try:
-    from ._version import version as __version__
-except ImportError:
-    __version__ = "0.0.0+unknown"
-
 from .cu2qu import *
