@@ -1,5 +1,3 @@
-from __future__ import print_function, absolute_import, division
-
 
 class Error(Exception):
     """Base Cu2Qu exception class for all other errors."""

@@ -1,4 +1,3 @@
-from __future__ import print_function, division, absolute_import
 from . import CUBIC_GLYPHS
 from fontTools.pens.pointPen import PointToSegmentPen, SegmentToPointPen
 from fontTools.misc.py23 import isclose

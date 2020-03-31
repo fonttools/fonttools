@@ -1,4 +1,3 @@
-from __future__ import print_function, division, absolute_import
 import unittest
 
 from fontTools.pens.cu2quPen import Cu2QuPen, Cu2QuPointPen
