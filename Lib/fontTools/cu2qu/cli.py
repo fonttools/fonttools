@@ -1,4 +1,3 @@
-from __future__ import print_function, division, absolute_import
 import os
 import argparse
 import logging
@@ -7,12 +6,12 @@ import multiprocessing as mp
 from contextlib import closing
 from functools import partial
 
-import cu2qu
-from cu2qu.ufo import font_to_quadratic, fonts_to_quadratic
+import fontTools
+from .ufo import font_to_quadratic, fonts_to_quadratic
 
 import defcon
 
-logger = logging.getLogger("cu2qu")
+logger = logging.getLogger("fontTools.cu2qu")
 
 
 def _cpu_count():
@@ -52,7 +51,7 @@ def _copytree(input_path, output_path):
 def main(args=None):
     parser = argparse.ArgumentParser(prog="cu2qu")
     parser.add_argument(
-        "--version", action="version", version=cu2qu.__version__)
+        "--version", action="version", version=fontTools.__version__)
     parser.add_argument(
         "infiles",
         nargs="+",

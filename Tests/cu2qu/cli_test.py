@@ -1,14 +1,15 @@
-from __future__ import print_function, division, absolute_import
+import os
 
 import defcon
 
-from . import DATADIR
 import pytest
 import py
 
-from cu2qu.ufo import CURVE_TYPE_LIB_KEY
-from cu2qu.cli import main
+from fontTools.cu2qu.ufo import CURVE_TYPE_LIB_KEY
+from fontTools.cu2qu.cli import main
 
+
+DATADIR = os.path.join(os.path.dirname(__file__), 'data')
 
 TEST_UFOS = [
     py.path.local(DATADIR).join("RobotoSubset-Regular.ufo"),

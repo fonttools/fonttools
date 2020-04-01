@@ -1,9 +1,8 @@
-from __future__ import print_function, division, absolute_import
 import os
 
 from fontTools.misc.loggingTools import CapturingLogHandler
 from defcon import Font, Glyph
-from cu2qu.ufo import (
+from fontTools.cu2qu.ufo import (
     fonts_to_quadratic,
     font_to_quadratic,
     glyphs_to_quadratic,
@@ -11,15 +10,16 @@ from cu2qu.ufo import (
     logger,
     CURVE_TYPE_LIB_KEY,
 )
-from cu2qu.errors import (
+from fontTools.cu2qu.errors import (
     IncompatibleSegmentNumberError,
     IncompatibleSegmentTypesError,
     IncompatibleFontsError,
 )
 
-from . import DATADIR
 import pytest
 
+
+DATADIR = os.path.join(os.path.dirname(__file__), 'data')
 
 TEST_UFOS = [
     os.path.join(DATADIR, "RobotoSubset-Regular.ufo"),

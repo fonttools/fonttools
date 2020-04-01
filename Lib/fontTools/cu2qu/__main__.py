@@ -1,5 +1,5 @@
 import sys
-from cu2qu.cli import main
+from .cli import main
 
 
 if __name__ == "__main__":

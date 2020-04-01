@@ -23,16 +23,13 @@ Respective curves from multiple fonts will be converted at once to ensure that
 the resulting splines are interpolation-compatible.
 """
 
-
-from __future__ import print_function, division, absolute_import
-
 import logging
 from fontTools.pens.basePen import AbstractPen
 from fontTools.pens.pointPen import PointToSegmentPen
 from fontTools.pens.reverseContourPen import ReverseContourPen
 
-from cu2qu import curves_to_quadratic
-from cu2qu.errors import (
+from . import curves_to_quadratic
+from .errors import (
     UnequalZipLengthsError, IncompatibleSegmentNumberError,
     IncompatibleSegmentTypesError, IncompatibleGlyphsError,
     IncompatibleFontsError)
