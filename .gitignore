@@ -1,0 +1,29 @@
+# Byte-compiled and optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# cython generated C/HTML files
+Lib/cu2qu/*.c
+Lib/cu2qu/*.html
+
+# Packaging
+*.egg-info
+*.eggs
+build
+dist
+
+# Unit test and coverage files
+.cache
+.coverage
+.coverage.*
+.tox
+htmlcov
+.pytest_cache/
+
+# OS X Finder
+.DS_Store
+
+# auto-generated version file
+Lib/cu2qu/_version.py

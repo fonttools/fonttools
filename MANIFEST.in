@@ -1,0 +1,12 @@
+include LICENSE
+include README.rst
+include CONTRIBUTING.md
+include requirements.txt
+include test-requirements.txt
+include tox.ini
+include .coveragerc
+recursive-include tests *.py
+recursive-include tests/data *.json
+recursive-include tests/data */*.glif
+recursive-include tests/data */*.plist */*/*.glif */*/*.plist
+recursive-include tools *.py

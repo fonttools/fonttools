@@ -1,0 +1,5 @@
+# controls the frequency of updates (undocumented beta feature)
+schedule: every week
+
+# do not pin dependencies unless they have explicit version specifiers
+pin: False

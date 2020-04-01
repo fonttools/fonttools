@@ -1,0 +1,35 @@
+[run]
+# measure 'branch' coverage in addition to 'statement' coverage
+# See: http://coverage.readthedocs.org/en/coverage-4.0.3/branch.html#branch
+branch = True
+
+# list of directories or packages to measure
+source = cu2qu
+
+# this is simply vendored, no need to include in coverage report
+omit =
+    */cu2qu/cython.py
+
+# these are treated as equivalent when combining data
+[paths]
+source =
+    Lib/cu2qu
+    .tox/*/lib/python*/site-packages/cu2qu
+    .tox/pypy*/site-packages/cu2qu
+
+[report]
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # keywords to use in inline comments to skip coverage
+    pragma: no cover
+
+    # don't complain if tests don't hit defensive assertion code
+    raise AssertionError
+    raise NotImplementedError
+
+    # don't complain if non-runnable code isn't run
+    if 0:
+    if __name__ == .__main__.:
+
+# ignore source code that can’t be found
+ignore_errors = True
