@@ -1,7 +1,6 @@
 import os
 
 from fontTools.misc.loggingTools import CapturingLogHandler
-from defcon import Font, Glyph
 from fontTools.cu2qu.ufo import (
     fonts_to_quadratic,
     font_to_quadratic,
@@ -19,6 +18,8 @@ from fontTools.cu2qu.errors import (
 import pytest
 
 
+ufoLib2 = pytest.importorskip("ufoLib2")
+
 DATADIR = os.path.join(os.path.dirname(__file__), 'data')
 
 TEST_UFOS = [
@@ -29,7 +30,7 @@ TEST_UFOS = [
 
 @pytest.fixture
 def fonts():
-    return [Font(ufo) for ufo in TEST_UFOS]
+    return [ufoLib2.Font.open(ufo) for ufo in TEST_UFOS]
 
 
 class FontsToQuadraticTest(object):
@@ -178,8 +179,7 @@ class GlyphsToQuadraticTest(object):
     def test_incompatible_glyphs(self, outlines, exception, message):
         glyphs = []
         for i, outline in enumerate(outlines):
-            glyph = Glyph()
-            glyph.name = "glyph%d" % i
+            glyph = ufoLib2.objects.Glyph("glyph%d" % i)
             pen = glyph.getPen()
             for operator, args in outline:
                 getattr(pen, operator)(*args)
@@ -189,7 +189,7 @@ class GlyphsToQuadraticTest(object):
         assert excinfo.match(message)
 
     def test_incompatible_fonts(self):
-        font1 = Font()
+        font1 = ufoLib2.Font()
         font1.info.unitsPerEm = 1000
         glyph1 = font1.newGlyph("a")
         pen1 = glyph1.getPen()
@@ -198,7 +198,7 @@ class GlyphsToQuadraticTest(object):
                                ("endPath", ())]:
             getattr(pen1, operator)(*args)
 
-        font2 = Font()
+        font2 = ufoLib2.Font()
         font2.info.unitsPerEm = 1000
         glyph2 = font2.newGlyph("a")
         pen2 = glyph2.getPen()
@@ -217,7 +217,7 @@ class GlyphsToQuadraticTest(object):
         assert error.segments == {1: ["line", "curve"]}
 
     def test_already_quadratic(self):
-        glyph = Glyph()
+        glyph = ufoLib2.objects.Glyph()
         pen = glyph.getPen()
         pen.moveTo((0, 0))
         pen.qCurveTo((1, 1), (2, 2))
@@ -225,7 +225,7 @@ class GlyphsToQuadraticTest(object):
         assert not glyph_to_quadratic(glyph)
 
     def test_open_paths(self):
-        glyph = Glyph()
+        glyph = ufoLib2.objects.Glyph()
         pen = glyph.getPen()
         pen.moveTo((0, 0))
         pen.lineTo((1, 1))
@@ -236,7 +236,7 @@ class GlyphsToQuadraticTest(object):
         assert glyph[-1][0].segmentType == "move"
 
     def test_ignore_components(self):
-        glyph = Glyph()
+        glyph = ufoLib2.objects.Glyph()
         pen = glyph.getPen()
         pen.addComponent('a', (1, 0, 0, 1, 0, 0))
         pen.moveTo((0, 0))
@@ -247,7 +247,7 @@ class GlyphsToQuadraticTest(object):
 
     def test_overlapping_start_end_points(self):
         # https://github.com/googlefonts/fontmake/issues/572
-        glyph1 = Glyph()
+        glyph1 = ufoLib2.objects.Glyph()
         pen = glyph1.getPointPen()
         pen.beginPath()
         pen.addPoint((0, 651), segmentType="line")
@@ -256,7 +256,7 @@ class GlyphsToQuadraticTest(object):
         pen.addPoint((0, 651), segmentType="line")
         pen.endPath()
 
-        glyph2 = Glyph()
+        glyph2 = ufoLib2.objects.Glyph()
         pen = glyph2.getPointPen()
         pen.beginPath()
         pen.addPoint((1, 651), segmentType="line")

@@ -1,9 +1,9 @@
 import os
 
-import defcon
-
 import pytest
 import py
+
+ufoLib2 = pytest.importorskip("ufoLib2")
 
 from fontTools.cu2qu.ufo import CURVE_TYPE_LIB_KEY
 from fontTools.cu2qu.cli import main
@@ -38,7 +38,7 @@ class MainTest(object):
 
         self.run_main(ufo_path)
 
-        font = defcon.Font(str(ufo_path))
+        font = ufoLib2.Font.open(ufo_path)
         assert font.lib[CURVE_TYPE_LIB_KEY] == "quadratic"
 
     def test_single_input_output_file(self, tmpdir):

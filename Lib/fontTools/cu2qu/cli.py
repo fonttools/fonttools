@@ -9,7 +9,7 @@ from functools import partial
 import fontTools
 from .ufo import font_to_quadratic, fonts_to_quadratic
 
-import defcon
+import ufoLib2
 
 logger = logging.getLogger("fontTools.cu2qu")
 
@@ -23,12 +23,15 @@ def _cpu_count():
 
 def _font_to_quadratic(zipped_paths, **kwargs):
     input_path, output_path = zipped_paths
-    ufo = defcon.Font(input_path)
+    ufo = ufoLib2.Font.open(input_path)
     logger.info('Converting curves for %s', input_path)
     if font_to_quadratic(ufo, **kwargs):
         logger.info("Saving %s", output_path)
-        ufo.save(output_path)
-    else:
+        if output_path:
+            ufo.save(output_path, overwrite=True)
+        else:
+            ufo.save()  # save in-place
+    elif output_path:
         _copytree(input_path, output_path)
 
 
@@ -130,7 +133,7 @@ def main(args=None):
         output_paths = [options.output_file]
     else:
         # save in-place
-        output_paths = list(options.infiles)
+        output_paths = [None] * len(options.infiles)
 
     kwargs = dict(dump_stats=options.verbose > 0,
                   max_err_em=options.conversion_error,
@@ -138,14 +141,18 @@ def main(args=None):
 
     if options.interpolatable:
         logger.info('Converting curves compatibly')
-        ufos = [defcon.Font(infile) for infile in options.infiles]
+        ufos = [ufoLib2.Font.open(infile) for infile in options.infiles]
         if fonts_to_quadratic(ufos, **kwargs):
             for ufo, output_path in zip(ufos, output_paths):
                 logger.info("Saving %s", output_path)
-                ufo.save(output_path)
+                if output_path:
+                    ufo.save(output_path, overwrite=True)
+                else:
+                    ufo.save()
         else:
             for input_path, output_path in zip(options.infiles, output_paths):
-                _copytree(input_path, output_path)
+                if output_path:
+                    _copytree(input_path, output_path)
     else:
         jobs = min(len(options.infiles),
                    options.jobs) if options.jobs > 1 else 1
