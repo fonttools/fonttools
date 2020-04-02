@@ -429,6 +429,11 @@ class cython_build_ext(_build_ext):
 				bdist_wheel.root_is_pure = True
 			log.error('error: building extensions failed: %s' % e)
 
+cmdclass = {"release": release}
+
+if ext_modules:
+    cmdclass["build_ext"] = cython_build_ext
+
 
 setup_params = dict(
 	name="fonttools",
@@ -458,10 +463,7 @@ setup_params = dict(
 			"pyftmerge = fontTools.merge:main",
 		]
 	},
-	cmdclass={
-		"release": release,
-		"build_ext": cython_build_ext,
-	},
+	cmdclass=cmdclass,
 	**classifiers
 )
 
