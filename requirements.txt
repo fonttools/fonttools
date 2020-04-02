@@ -7,4 +7,3 @@ scipy==1.4.1; platform_python_implementation != "PyPy"
 munkres==1.1.2; platform_python_implementation == "PyPy"
 zopfli==0.1.6
 fs==2.4.11
-lxml==4.5.0
