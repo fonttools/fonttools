@@ -49,16 +49,16 @@ with_cython = (
 opt_with_cython = {'--with-cython'}.intersection(sys.argv)
 opt_without_cython = {'--without-cython'}.intersection(sys.argv)
 if opt_with_cython and opt_without_cython:
-    sys.exit(
-        "error: the options '--with-cython' and '--without-cython' are "
-        "mutually exclusive"
-    )
+	sys.exit(
+		"error: the options '--with-cython' and '--without-cython' are "
+		"mutually exclusive"
+	)
 elif opt_with_cython:
-    sys.argv.remove("--with-cython")
-    with_cython = True
+	sys.argv.remove("--with-cython")
+	with_cython = True
 elif opt_without_cython:
-    sys.argv.remove("--without-cython")
-    with_cython = False
+	sys.argv.remove("--without-cython")
+	with_cython = False
 
 if with_cython and not has_cython:
 	setup_requires.append("cython")
