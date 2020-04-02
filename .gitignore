@@ -51,3 +51,6 @@ dmypy.json
 
 # VSCode
 .vscode
+
+# Cython sources (e.g. cu2qu)
+Lib/**/*.c
