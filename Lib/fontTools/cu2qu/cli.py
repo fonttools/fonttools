@@ -21,8 +21,7 @@ def _cpu_count():
         return 1
 
 
-def _font_to_quadratic(zipped_paths, **kwargs):
-    input_path, output_path = zipped_paths
+def _font_to_quadratic(input_path, output_path=None, **kwargs):
     ufo = ufoLib2.Font.open(input_path)
     logger.info('Converting curves for %s', input_path)
     if font_to_quadratic(ufo, **kwargs):
@@ -160,8 +159,7 @@ def main(args=None):
             func = partial(_font_to_quadratic, **kwargs)
             logger.info('Running %d parallel processes', jobs)
             with closing(mp.Pool(jobs)) as pool:
-                # can't use Pool.starmap as it's 3.3+ only
-                pool.map(func, zip(options.infiles, output_paths))
+                pool.starmap(func, zip(options.infiles, output_paths))
         else:
-            for paths in zip(options.infiles, output_paths):
-                _font_to_quadratic(paths, **kwargs)
+            for input_path, output_path in zip(options.infiles, output_paths):
+                _font_to_quadratic(input_path, output_path, **kwargs)
