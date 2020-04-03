@@ -197,7 +197,7 @@ class GlyphClass(Expression):
     def add_cid_range(self, start, end, glyphs):
         if self.curr < len(self.glyphs):
             self.original.extend(self.glyphs[self.curr:])
-        self.original.append(("cid{:05d}".format(start), "cid{:05d}".format(end)))
+        self.original.append(("\\{}".format(start), "\\{}".format(end)))
         self.glyphs.extend(glyphs)
         self.curr = len(self.glyphs)
 

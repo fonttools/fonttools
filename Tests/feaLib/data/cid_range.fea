@@ -1,0 +1,6 @@
+# A CID range can be valid even if it is invalid as a glyph name range.
+# For example, [cid00800 - cid01001] is invalid.
+
+feature zero {
+  sub [\800 - \1001] by zero;
+} zero;
