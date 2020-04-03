@@ -1,3 +1,6 @@
+4.7.0 (released 2020-04-03)
+---------------------------
+
 - [cu2qu] Added ``fontTools.cu2qu`` package, imported from the original
   `cu2qu <https://github.com/googlefonts/cu2qu>`__ project. The ``cu2qu.pens`` module
   was moved to ``fontTools.pens.cu2quPen``. The optional cu2qu extension module
