@@ -299,7 +299,7 @@ class Parser(object):
             if self.next_token_type_ is Lexer.NAME:
                 glyph = self.expect_glyph_()
                 location = self.cur_token_location_
-                if '-' in glyph and glyph not in self.glyphNames_:
+                if '-' in glyph and self.glyphNames_ and glyph not in self.glyphNames_:
                     start, limit = self.split_glyph_range_(glyph, location)
                     self.check_glyph_name_in_glyph_set(start, limit)
                     glyphs.add_range(
@@ -314,6 +314,11 @@ class Parser(object):
                         start, limit,
                         self.make_glyph_range_(location, start, limit))
                 else:
+                    if not self.glyphNames_:
+                        log.warning(str(FeatureLibError(
+                            f"Ambiguous glyph name that looks like a range: {glyph!r}",
+                            location
+                        )))
                     self.check_glyph_name_in_glyph_set(glyph)
                     glyphs.append(glyph)
             elif self.next_token_type_ is Lexer.CID:
@@ -350,8 +355,8 @@ class Parser(object):
                 glyphs.add_class(gc)
             else:
                 raise FeatureLibError(
-                    "Expected glyph name, glyph range, "
-                    "or glyph class reference",
+                    f"Expected glyph name, glyph range, "
+                    f"or glyph class reference, found {self.next_token_!r}",
                     self.next_token_location_)
         self.expect_symbol_("]")
         return glyphs
