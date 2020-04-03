@@ -355,7 +355,7 @@ class Parser(object):
                 glyphs.add_class(gc)
             else:
                 raise FeatureLibError(
-                    f"Expected glyph name, glyph range, "
+                    "Expected glyph name, glyph range, "
                     f"or glyph class reference, found {self.next_token_!r}",
                     self.next_token_location_)
         self.expect_symbol_("]")
