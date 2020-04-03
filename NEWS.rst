@@ -1,3 +1,21 @@
+4.7.0 (released 2020-04-03)
+---------------------------
+
+- [cu2qu] Added ``fontTools.cu2qu`` package, imported from the original
+  `cu2qu <https://github.com/googlefonts/cu2qu>`__ project. The ``cu2qu.pens`` module
+  was moved to ``fontTools.pens.cu2quPen``. The optional cu2qu extension module
+  can be compiled by installing `Cython <https://cython.org/>`__ before installing
+  fonttools from source (i.e. git repo or sdist tarball). The wheel package that
+  is published on PyPI (i.e. the one ``pip`` downloads, unless ``--no-binary``
+  option is used), will continue to be pure-Python for now (#1868).
+
+4.6.0 (released 2020-03-24)
+---------------------------
+
+- [varLib] Added support for building variable ``BASE`` table version 1.1 (#1858).
+- [CPAL] Added ``fromRGBA`` method to ``Color`` class (#1861).
+
+
 4.5.0 (released 2020-03-20)
 ---------------------------
 
