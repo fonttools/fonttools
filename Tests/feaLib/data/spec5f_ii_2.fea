@@ -3,7 +3,7 @@
 # http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html
 
 feature test {
-    @LETTER = [a-z];
+    @LETTER = [a - z];
     ignore sub @LETTER f' i';
     sub f' i' by f_i.begin;
 } test;

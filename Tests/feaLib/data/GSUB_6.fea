@@ -1,10 +1,10 @@
 lookup ChainedSingleSubst {
     sub [one two] three A' by A.sc;
-    sub [B-D]' seven [eight nine] by [B.sc-D.sc];
+    sub [B - D]' seven [eight nine] by [B.sc - D.sc];
 } ChainedSingleSubst;
 
 lookup ChainedMultipleSubst {
-    sub [A-C a-c] [D d] E c_t' V [W w] [X-Z x-z] by c t;
+    sub [A - C a - c] [D d] E c_t' V [W w] [X - Z x - z] by c t;
 } ChainedMultipleSubst;
 
 lookup ChainedAlternateSubst {

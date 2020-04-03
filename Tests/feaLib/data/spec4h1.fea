@@ -8,7 +8,7 @@ languagesystem latn TRK;
 languagesystem cyrl dflt;
 
 feature smcp {
-    sub [a-z] by [A.sc-Z.sc];
+    sub [a - z] by [A.sc - Z.sc];
 
     # Since all the rules in this feature are of the same type, they
     # will be grouped in a single lookup.  Since no script or language
