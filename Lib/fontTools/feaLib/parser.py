@@ -827,7 +827,14 @@ class Parser(object):
                 location)
 
         # GSUB lookup type 6: Chaining contextual substitution.
-        assert len(new) == 0, new
+        import pdb; pdb.set_trace()
+        if len(new) != 0:
+            raise FeatureLibError(
+                'In chaining contextual substitution you must define an input sequence '
+                'by following it with "\'"',
+                location)
+
+        # assert len(new) == 0, new
         rule = self.ast.ChainContextSubstStatement(
             old_prefix, old, old_suffix, lookups, location=location)
         return rule
