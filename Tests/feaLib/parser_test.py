@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser, SymbolTable
-from fontTools.misc.py23 import *
+from io import StringIO
 import warnings
 import fontTools.feaLib.ast as ast
 import os
@@ -62,7 +62,7 @@ class ParserTest(unittest.TestCase):
         glyphMap = {'a': 0, 'b': 1, 'c': 2}
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            parser = Parser(UnicodeIO(), glyphMap=glyphMap)
+            parser = Parser(StringIO(), glyphMap=glyphMap)
 
             self.assertEqual(len(w), 1)
             self.assertEqual(w[-1].category, UserWarning)
@@ -71,11 +71,11 @@ class ParserTest(unittest.TestCase):
 
             self.assertRaisesRegex(
                 TypeError, "mutually exclusive",
-                Parser, UnicodeIO(), ("a",), glyphMap={"a": 0})
+                Parser, StringIO(), ("a",), glyphMap={"a": 0})
 
             self.assertRaisesRegex(
                 TypeError, "unsupported keyword argument",
-                Parser, UnicodeIO(), foo="bar")
+                Parser, StringIO(), foo="bar")
 
     def test_comments(self):
         doc = self.parse(
@@ -1720,7 +1720,7 @@ class ParserTest(unittest.TestCase):
             self.assertEqual(doc.statements[0].statements, [])
 
     def parse(self, text, glyphNames=GLYPHNAMES, followIncludes=True):
-        featurefile = UnicodeIO(text)
+        featurefile = StringIO(text)
         p = Parser(featurefile, glyphNames, followIncludes=followIncludes)
         return p.parse()
 
