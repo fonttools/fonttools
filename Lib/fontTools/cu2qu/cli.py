@@ -9,7 +9,15 @@ from functools import partial
 import fontTools
 from .ufo import font_to_quadratic, fonts_to_quadratic
 
-import ufoLib2
+ufo_module = None
+try:
+    import ufoLib2 as ufo_module
+except ImportError:
+    try:
+        import defcon as ufo_module
+    except ImportError as e:
+        pass
+
 
 logger = logging.getLogger("fontTools.cu2qu")
 
@@ -22,12 +30,12 @@ def _cpu_count():
 
 
 def _font_to_quadratic(input_path, output_path=None, **kwargs):
-    ufo = ufoLib2.Font.open(input_path)
+    ufo = ufo_module.Font(input_path)
     logger.info('Converting curves for %s', input_path)
     if font_to_quadratic(ufo, **kwargs):
         logger.info("Saving %s", output_path)
         if output_path:
-            ufo.save(output_path, overwrite=True)
+            ufo.save(output_path)
         else:
             ufo.save()  # save in-place
     elif output_path:
@@ -107,6 +115,9 @@ def main(args=None):
 
     options = parser.parse_args(args)
 
+    if ufo_module is None:
+        parser.error("Either ufoLib2 or defcon are required to run this script.")
+
     if not options.verbose:
         level = "WARNING"
     elif options.verbose == 1:
@@ -140,12 +151,12 @@ def main(args=None):
 
     if options.interpolatable:
         logger.info('Converting curves compatibly')
-        ufos = [ufoLib2.Font.open(infile) for infile in options.infiles]
+        ufos = [ufo_module.Font(infile) for infile in options.infiles]
         if fonts_to_quadratic(ufos, **kwargs):
             for ufo, output_path in zip(ufos, output_paths):
                 logger.info("Saving %s", output_path)
                 if output_path:
-                    ufo.save(output_path, overwrite=True)
+                    ufo.save(output_path)
                 else:
                     ufo.save()
         else:
