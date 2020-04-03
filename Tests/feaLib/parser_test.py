@@ -355,8 +355,8 @@ class ParserTest(unittest.TestCase):
         # https://github.com/fonttools/fonttools/issues/1768
         glyphNames = ()
         with CapturingLogHandler("fontTools.feaLib.parser", level="WARNING") as caplog:
-            [gc] = self.parse("@class = [A-foo.sc B-foo.sc];", glyphNames).statements
-        self.assertEqual(gc.glyphSet(), ("A-foo.sc", "B-foo.sc"))
+            [gc] = self.parse("@class = [A-foo.sc B-foo.sc C D];", glyphNames).statements
+        self.assertEqual(gc.glyphSet(), ("A-foo.sc", "B-foo.sc", "C", "D"))
         self.assertEqual(len(caplog.records), 2)
         caplog.assertRegex("Ambiguous glyph name that looks like a range:")
 

@@ -314,7 +314,7 @@ class Parser(object):
                         start, limit,
                         self.make_glyph_range_(location, start, limit))
                 else:
-                    if not self.glyphNames_:
+                    if '-' in glyph and not self.glyphNames_:
                         log.warning(str(FeatureLibError(
                             f"Ambiguous glyph name that looks like a range: {glyph!r}",
                             location
