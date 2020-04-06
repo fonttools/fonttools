@@ -24,7 +24,7 @@ class Cu2QuPen(AbstractPen):
     using the FontTools SegmentPen protocol.
 
     other_pen: another SegmentPen used to draw the transformed outline.
-    max_err: maximum approximation error in font units. For optimal resuls,
+    max_err: maximum approximation error in font units. For optimal results,
         if you know the UPEM of the font, we recommend setting this to a
         value equal, or close to UPEM / 1000.
     reverse_direction: flip the contours' direction but keep starting point.
@@ -139,7 +139,7 @@ class Cu2QuPointPen(BasePointToSegmentPen):
     using the RoboFab PointPen protocol.
 
     other_point_pen: another PointPen used to draw the transformed outline.
-    max_err: maximum approximation error in font units. For optimal resuls,
+    max_err: maximum approximation error in font units. For optimal results,
         if you know the UPEM of the font, we recommend setting this to a
         value equal, or close to UPEM / 1000.
     reverse_direction: reverse the winding direction of all contours.
