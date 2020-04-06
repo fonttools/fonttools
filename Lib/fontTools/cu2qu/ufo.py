@@ -37,6 +37,9 @@ from .errors import (
 
 __all__ = ['fonts_to_quadratic', 'font_to_quadratic']
 
+# The default approximation error below is a relative value (1/1000 of the EM square).
+# Later on, we convert it to absolute font units by multiplying it by a font's UPEM
+# (see fonts_to_quadratic).
 DEFAULT_MAX_ERR = 0.001
 CURVE_TYPE_LIB_KEY = "com.github.googlei18n.cu2qu.curve_type"
 
