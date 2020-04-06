@@ -43,6 +43,7 @@ def makeTTFont():
         damma hamza sukun kasratan lam_meem_jeem noon.final noon.initial
         by feature lookup sub table uni0327 uni0328 e.fina
     """.split()
+    glyphs.extend("cid{:05d}".format(cid) for cid in range(800, 1001 + 1))
     font = TTFont()
     font.setGlyphOrder(glyphs)
     return font
@@ -51,7 +52,7 @@ def makeTTFont():
 class BuilderTest(unittest.TestCase):
     # Feature files in data/*.fea; output gets compared to data/*.ttx.
     TEST_FEATURE_FILES = """
-        Attach enum markClass language_required
+        Attach cid_range enum markClass language_required
         GlyphClassDef LigatureCaretByIndex LigatureCaretByPos
         lookup lookupflag feature_aalt ignore_pos
         GPOS_1 GPOS_1_zero GPOS_2 GPOS_2b GPOS_3 GPOS_4 GPOS_5 GPOS_6 GPOS_8

@@ -10,7 +10,7 @@ feature aalt {
 } aalt;
 
 feature smcp {
-    sub [a-c] by [A.sc-C.sc];
+    sub [a - c] by [A.sc - C.sc];
     sub f i by f_i;  # not considered for aalt
 } smcp;
 

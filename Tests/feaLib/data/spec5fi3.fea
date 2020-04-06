@@ -5,5 +5,5 @@
 languagesystem latn dflt;
 
 feature test {
-    sub [A-Z] [A.sc-Z.sc]' by [a-z];
+    sub [A - Z] [A.sc - Z.sc]' by [a - z];
 } test;

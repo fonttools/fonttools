@@ -109,7 +109,7 @@ def asFea(g):
     if hasattr(g, 'asFea'):
         return g.asFea()
     elif isinstance(g, tuple) and len(g) == 2:
-        return asFea(g[0]) + "-" + asFea(g[1])   # a range
+        return asFea(g[0]) + " - " + asFea(g[1])   # a range
     elif g.lower() in fea_keywords:
         return "\\" + g
     else:
@@ -197,7 +197,7 @@ class GlyphClass(Expression):
     def add_cid_range(self, start, end, glyphs):
         if self.curr < len(self.glyphs):
             self.original.extend(self.glyphs[self.curr:])
-        self.original.append(("cid{:05d}".format(start), "cid{:05d}".format(end)))
+        self.original.append(("\\{}".format(start), "\\{}".format(end)))
         self.glyphs.extend(glyphs)
         self.curr = len(self.glyphs)
 
