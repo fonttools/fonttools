@@ -38,6 +38,13 @@ def glyphs_to_quadratic(
     return quadGlyphs
 
 
+def update_hmtx(ttFont, glyf):
+    hmtx = ttFont["hmtx"]
+    for glyphName, glyph in glyf.glyphs.items():
+        if hasattr(glyph, 'xMin'):
+            hmtx[glyphName] = (hmtx[glyphName][0], glyph.xMin)
+
+
 def otf_to_ttf(ttFont, post_format=POST_FORMAT, **kwargs):
     assert ttFont.sfntVersion == "OTTO"
     assert "CFF " in ttFont
@@ -50,6 +57,7 @@ def otf_to_ttf(ttFont, post_format=POST_FORMAT, **kwargs):
     glyf.glyphs = glyphs_to_quadratic(ttFont.getGlyphSet(), **kwargs)
     del ttFont["CFF "]
     glyf.compile(ttFont)
+    update_hmtx(ttFont, glyf)
 
     ttFont["maxp"] = maxp = newTable("maxp")
     maxp.tableVersion = 0x00010000
