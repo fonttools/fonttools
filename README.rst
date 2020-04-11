@@ -183,7 +183,7 @@ are required to unlock the extra features named "ufo", etc.
 
   The module exports a ElementTree-like API for reading/writing XML files, and
   allows to use as the backend either the built-in ``xml.etree`` module or
-  `lxml <https://http://lxml.de>`__. The latter is preferred whenever present,
+  `lxml <https://lxml.de>`__. The latter is preferred whenever present,
   as it is generally faster and more secure.
 
   *Extra:* ``lxml``
