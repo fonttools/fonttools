@@ -827,7 +827,13 @@ class Parser(object):
                 location)
 
         # GSUB lookup type 6: Chaining contextual substitution.
-        assert len(new) == 0, new
+        if len(new) != 0:
+            raise FeatureLibError(
+                'This is not a valid substitution. If attempting contextual '
+                'substitution, remember to mark the input sequence with a "\'"',
+                location
+            )
+
         rule = self.ast.ChainContextSubstStatement(
             old_prefix, old, old_suffix, lookups, location=location)
         return rule
