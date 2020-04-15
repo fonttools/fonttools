@@ -1503,10 +1503,10 @@ class ParserTest(unittest.TestCase):
             'Expected "by", "from" or explicit lookup references',
             self.parse, "feature liga {substitute f f i;} liga;")
     
-    def test_substitute_missing_input_sequence(self):
+    def test_substitute_invalid_statement(self):
         self.assertRaisesRegex(
             FeatureLibError,
-            "This is not a valid substitution. If attempting contextual ",
+            "This is an invalid GSUB statement. Make sure your statement ",
             Parser(self.getpath("GSUB_error.fea"), GLYPHNAMES).parse
         )
 

@@ -826,14 +826,15 @@ class Parser(object):
                 'is not supported',
                 location)
 
-        # GSUB lookup type 6: Chaining contextual substitution.
+        # If there are remaining glyphs to parse, this is an invalid GSUB statement
         if len(new) != 0:
             raise FeatureLibError(
-                'This is not a valid substitution. If attempting contextual '
-                'substitution, remember to mark the input sequence with a "\'"',
+                'This is an invalid GSUB statement. Make sure your statement '
+                'follows the format of one of the GSUB rules.',
                 location
             )
 
+        # GSUB lookup type 6: Chaining contextual substitution.
         rule = self.ast.ChainContextSubstStatement(
             old_prefix, old, old_suffix, lookups, location=location)
         return rule
