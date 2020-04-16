@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.feaLib.parser import Parser, SymbolTable
-from fontTools.misc.py23 import *
+from io import StringIO
 import warnings
 import fontTools.feaLib.ast as ast
 import os
@@ -62,7 +63,7 @@ class ParserTest(unittest.TestCase):
         glyphMap = {'a': 0, 'b': 1, 'c': 2}
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            parser = Parser(UnicodeIO(), glyphMap=glyphMap)
+            parser = Parser(StringIO(), glyphMap=glyphMap)
 
             self.assertEqual(len(w), 1)
             self.assertEqual(w[-1].category, UserWarning)
@@ -71,11 +72,11 @@ class ParserTest(unittest.TestCase):
 
             self.assertRaisesRegex(
                 TypeError, "mutually exclusive",
-                Parser, UnicodeIO(), ("a",), glyphMap={"a": 0})
+                Parser, StringIO(), ("a",), glyphMap={"a": 0})
 
             self.assertRaisesRegex(
                 TypeError, "unsupported keyword argument",
-                Parser, UnicodeIO(), foo="bar")
+                Parser, StringIO(), foo="bar")
 
     def test_comments(self):
         doc = self.parse(
@@ -345,6 +346,19 @@ class ParserTest(unittest.TestCase):
         gn = "A-foo.sc B-foo.sc C-foo.sc".split()
         [gc] = self.parse("@range = [A-foo.sc - C-foo.sc];", gn).statements
         self.assertEqual(gc.glyphSet(), ("A-foo.sc", "B-foo.sc", "C-foo.sc"))
+
+    def test_glyphclass_ambiguous_dash_no_glyph_names(self):
+        # If Parser is initialized without a glyphNames parameter (or with empty one)
+        # it cannot distinguish between a glyph name containing an hyphen, or a
+        # range of glyph names; thus it will interpret them as literal glyph names
+        # while also outputting a logging warning to alert user about the ambiguity.
+        # https://github.com/fonttools/fonttools/issues/1768
+        glyphNames = ()
+        with CapturingLogHandler("fontTools.feaLib.parser", level="WARNING") as caplog:
+            [gc] = self.parse("@class = [A-foo.sc B-foo.sc C D];", glyphNames).statements
+        self.assertEqual(gc.glyphSet(), ("A-foo.sc", "B-foo.sc", "C", "D"))
+        self.assertEqual(len(caplog.records), 2)
+        caplog.assertRegex("Ambiguous glyph name that looks like a range:")
 
     def test_glyphclass_glyph_name_should_win_over_range(self):
         # The OpenType Feature File Specification v1.20 makes it clear
@@ -1727,7 +1741,7 @@ class ParserTest(unittest.TestCase):
             self.assertEqual(doc.statements[0].statements, [])
 
     def parse(self, text, glyphNames=GLYPHNAMES, followIncludes=True):
-        featurefile = UnicodeIO(text)
+        featurefile = StringIO(text)
         p = Parser(featurefile, glyphNames, followIncludes=followIncludes)
         return p.parse()
 
