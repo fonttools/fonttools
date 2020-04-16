@@ -1,3 +1,12 @@
+- [feaLib] If Parser is initialized without a ``glyphNames`` parameter, it cannot
+  distinguish between a glyph name containing an hyphen, or a range of glyph names;
+  instead of raising an error, it now interprets them as literal glyph names, while
+  also outputting a logging warning to alert user about the ambiguity (#1768, #1870).
+- [feaLib] When serializing AST to string, emit spaces around hyphens that denote
+  ranges. Also, fixed an issue with CID ranges when round-tripping AST->string->AST
+  (#1872).
+- [Snippets/otf2ttf] In otf2ttf.py script update LSB in hmtx to match xMin (#1873).
+
 4.7.0 (released 2020-04-03)
 ---------------------------
 
