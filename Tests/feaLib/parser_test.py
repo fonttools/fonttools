@@ -1506,7 +1506,7 @@ class ParserTest(unittest.TestCase):
     def test_substitute_invalid_statement(self):
         self.assertRaisesRegex(
             FeatureLibError,
-            "This is an invalid GSUB statement. Make sure your statement ",
+            "Invalid substitution statement",
             Parser(self.getpath("GSUB_error.fea"), GLYPHNAMES).parse
         )
 

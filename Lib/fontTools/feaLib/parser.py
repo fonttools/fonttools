@@ -829,8 +829,7 @@ class Parser(object):
         # If there are remaining glyphs to parse, this is an invalid GSUB statement
         if len(new) != 0:
             raise FeatureLibError(
-                'This is an invalid GSUB statement. Make sure your statement '
-                'follows the format of one of the GSUB rules.',
+                'Invalid substitution statement',
                 location
             )
 
