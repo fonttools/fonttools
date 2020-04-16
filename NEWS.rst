@@ -1,3 +1,6 @@
+4.8.0 (released 2020-04-16)
+---------------------------
+
 - [feaLib] If Parser is initialized without a ``glyphNames`` parameter, it cannot
   distinguish between a glyph name containing an hyphen, or a range of glyph names;
   instead of raising an error, it now interprets them as literal glyph names, while
