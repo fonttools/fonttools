@@ -1502,6 +1502,13 @@ class ParserTest(unittest.TestCase):
             FeatureLibError,
             'Expected "by", "from" or explicit lookup references',
             self.parse, "feature liga {substitute f f i;} liga;")
+    
+    def test_substitute_invalid_statement(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Invalid substitution statement",
+            Parser(self.getpath("GSUB_error.fea"), GLYPHNAMES).parse
+        )
 
     def test_subtable(self):
         doc = self.parse("feature test {subtable;} test;")

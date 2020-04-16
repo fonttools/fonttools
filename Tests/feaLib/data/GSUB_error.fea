@@ -1,0 +1,13 @@
+# Trigger a parser error in the function parse_substitute_ in order to improve the error message.
+# Note that this is not a valid substitution, this test is made to trigger an error.
+
+languagesystem latn dflt;
+
+@base = [a e];
+@accents = [acute grave];
+
+feature abvs {
+    lookup lookup1 {
+        sub @base @accents by @base;
+    } lookup1;
+} abvs;
