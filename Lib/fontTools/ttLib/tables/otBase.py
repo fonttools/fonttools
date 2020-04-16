@@ -652,6 +652,15 @@ class BaseTable(object):
 		else:
 			table = self.__dict__.copy()
 
+		# some count references may have been initialized in a custom preWrite; we set
+		# these in the writer's state beforehand (instead of sequentially) so they will
+		# be propagated to all nested subtables even if the count appears in the current
+		# table only *after* the offset to the subtable that it is counting.
+		for conv in self.getConverters():
+			if conv.isCount and conv.isPropagated:
+				value = table.get(conv.name)
+				if isinstance(value, CountReference):
+					writer[conv.name] = value
 
 		if hasattr(self, 'sortCoverageLast'):
 			writer.sortCoverageLast = 1

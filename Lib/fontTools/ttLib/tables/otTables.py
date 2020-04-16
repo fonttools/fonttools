@@ -5,7 +5,11 @@ OpenType subtables.
 Most are constructed upon import from data in otData.py, all are populated with
 converter objects from otConverters.py.
 """
+from enum import IntEnum
+import itertools
+from collections import namedtuple
 from fontTools.misc.py23 import *
+from fontTools.misc.fixedTools import otRound
 from fontTools.misc.textTools import pad, safeEval
 from .otBase import BaseTable, FormatSwitchingBaseTable, ValueRecord, CountReference
 import logging
@@ -1150,6 +1154,100 @@ class LigatureSubst(FormatSwitchingBaseTable):
 			lig.Component = components.split(",") if components else []
 			lig.CompCount = len(lig.Component)
 			ligs.append(lig)
+
+
+class COLR(BaseTable):
+
+	def decompile(self, reader, font):
+		# COLRv0 is exceptional in that LayerRecordCount appears *after* the
+		# LayerRecordArray it counts, but the parser logic expects Count fields
+		# to always precede the arrays. Here we work around this by parsing the
+		# LayerRecordCount before the rest of the table, and storing it in
+		# the reader's local state.
+		subReader = reader.getSubReader(offset=0)
+		for conv in self.getConverters():
+			if conv.name != "LayerRecordCount":
+				subReader.advance(conv.staticSize)
+				continue
+			conv = self.getConverterByName("LayerRecordCount")
+			reader[conv.name] = conv.read(subReader, font, tableDict={})
+			break
+		else:
+			raise AssertionError("LayerRecordCount converter not found")
+		return BaseTable.decompile(self, reader, font)
+
+	def preWrite(self, font):
+		# The writer similarly assumes Count values precede the things counted,
+		# thus here we pre-initialize a CountReference; the actual count value
+		# will be set to the lenght of the array by the time this is assembled.
+		self.LayerRecordCount = None
+		return {
+			**self.__dict__,
+			"LayerRecordCount": CountReference(self.__dict__, "LayerRecordCount")
+		}
+
+
+class BaseGlyphRecordArray(BaseTable):
+
+	def preWrite(self, font):
+		self.BaseGlyphRecord = sorted(
+			self.BaseGlyphRecord,
+			key=lambda rec: font.getGlyphID(rec.BaseGlyph)
+		)
+		return self.__dict__.copy()
+
+
+class BaseGlyphV1Array(BaseTable):
+
+	def preWrite(self, font):
+		self.BaseGlyphV1Record = sorted(
+			self.BaseGlyphV1Record,
+			key=lambda rec: font.getGlyphID(rec.BaseGlyph)
+		)
+		return self.__dict__.copy()
+
+
+
+class VariableValue(namedtuple("VariableValue", ["value", "varIdx"])):
+	__slots__ = ()
+
+	_value_mapper = None
+
+	def __new__(cls, value, varIdx=0):
+		return super().__new__(
+			cls,
+			cls._value_mapper(value) if cls._value_mapper else value,
+			varIdx
+		)
+
+	@classmethod
+	def _make(cls, iterable):
+		if cls._value_mapper:
+			it = iter(iterable)
+			try:
+				value = next(it)
+			except StopIteration:
+				pass
+			else:
+				value = cls._value_mapper(value)
+				iterable = itertools.chain((value,), it)
+		return super()._make(iterable)
+
+
+class VariableFloat(VariableValue):
+	__slots__ = ()
+	_value_mapper = float
+
+
+class VariableInt(VariableValue):
+	__slots__ = ()
+	_value_mapper = otRound
+
+
+class ExtendMode(IntEnum):
+	PAD = 0
+	REPEAT = 1
+	REFLECT = 2
 
 
 # For each subtable format there is a class. However, we don't really distinguish
