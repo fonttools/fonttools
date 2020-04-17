@@ -1311,9 +1311,10 @@ class ChainContextSubstBuilder(LookupBuilder):
             if lookups == self.SUBTABLE_BREAK_:
                 continue
             for lookup in lookups:
-                alts = lookup.getAlternateGlyphs()
-                for glyph, replacements in alts.items():
-                    result.setdefault(glyph, set()).update(replacements)
+                if lookup is not None:
+                    alts = lookup.getAlternateGlyphs()
+                    for glyph, replacements in alts.items():
+                        result.setdefault(glyph, set()).update(replacements)
         return result
 
     def find_chainable_single_subst(self, glyphs):
