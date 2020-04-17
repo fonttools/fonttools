@@ -1,3 +1,7 @@
+- [feaLib] Fixed ``AttributeError: 'NoneType' has no attribute 'getAlternateGlyphs'``
+  when ``aalt`` feature references a chain contextual substitution lookup
+  (googlefonts/fontmake#648, #1878).
+
 4.8.0 (released 2020-04-16)
 ---------------------------
 
