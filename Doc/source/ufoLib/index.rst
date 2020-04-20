@@ -11,6 +11,8 @@ ufoLib
    filenames
    glifLib
    kerning
+   plistlib
+   pointpen
    utils
    validators
 
