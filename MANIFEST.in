@@ -21,6 +21,8 @@ recursive-include .travis *.sh
 
 include Doc/Makefile
 include Doc/make.bat
+include Doc/docs-requirements.txt
+include Doc/README.md
 recursive-include Doc/man/man1 *.1
 recursive-include Doc/source *.py *.rst
 
