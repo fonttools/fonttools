@@ -320,6 +320,7 @@ Table of Contents
    afmLib
    agl
    cffLib/index
+   colorLib/index
    designspaceLib/index
    encodings/index
    feaLib/index
