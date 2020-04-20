@@ -293,7 +293,7 @@ fontTools development is ongoing in an active community of developers that inclu
 
 Feature requests and bug reports are always welcome at https://github.com/fonttools/fonttools/issues/
 
-The best place for end-user and developer discussion about the fontTools project is the https://groups.google.com/d/forum/fonttools mailing list. There is also a development https://groups.google.com/d/forum/fonttools-dev mailing list for continuous integration notifications. You can also email Behdad privately at behdad@behdad.org.
+The best place for end-user and developer discussion about the fontTools project is the `fontTools gitter channel <https://gitter.im/fonttools-dev/Lobby>`_. There is also a development https://groups.google.com/d/forum/fonttools-dev mailing list for continuous integration notifications.
 
 
 Acknowledgments
