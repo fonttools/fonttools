@@ -337,6 +337,12 @@ class BuilderTest(unittest.TestCase):
             "Script statements are not allowed within \"feature size\"",
             self.build, "feature size { script latn; } size;")
 
+    def test_script_in_standalone_lookup(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Script statements are not allowed within standalone lookup blocks",
+            self.build, "lookup test { script latn; } test;")
+
     def test_language(self):
         builder = Builder(makeTTFont(), (None, None))
         builder.add_language_system(None, 'latn', 'FRA ')
@@ -363,6 +369,12 @@ class BuilderTest(unittest.TestCase):
             FeatureLibError,
             "Language statements are not allowed within \"feature size\"",
             self.build, "feature size { language FRA; } size;")
+
+    def test_language_in_standalone_lookup(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Language statements are not allowed within standalone lookup blocks",
+            self.build, "lookup test { language FRA; } test;")
 
     def test_language_required_duplicate(self):
         self.assertRaisesRegex(
