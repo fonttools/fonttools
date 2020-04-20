@@ -19,22 +19,24 @@ fontTools is a library for manipulating fonts, written in Python. The project in
 Installation
 ------------
 
-FontTools requires `Python <http://www.python.org/download/>`_ 2.7, 3.4 or later.
+.. note::
+
+    fontTools requires `Python <http://www.python.org/download/>`_ 3.6 or later.
 
 The package is listed in the Python Package Index (PyPI), so you can install it with `pip <https://pip.pypa.io/>`_::
 
     pip install fonttools
 
-If you would like to contribute to its development, you can clone the repository from GitHub, install the package in 'editable' mode and modify the source code in place. We recommend creating a virtual environment, using `virtualenv <https://virtualenv.pypa.io/>`_ or Python 3 `venv <https://docs.python.org/3/library/venv.html>`_ module::
+If you would like to contribute to its development, you can clone the repository from GitHub, install the package in 'editable' mode and modify the source code in place. We recommend creating a virtual environment, using the Python 3 `venv <https://docs.python.org/3/library/venv.html>`_ module::
 
     # download the source code to 'fonttools' folder
     git clone https://github.com/fonttools/fonttools.git
     cd fonttools
 
     # create new virtual environment called e.g. 'fonttools-venv', or anything you like
-    python -m virtualenv fonttools-venv
+    python -m venv fonttools-venv
 
-    # source the `activate` shell script to enter the environment (Un*x); to exit, just type `deactivate`
+    # source the `activate` shell script to enter the environment (Un*x)
     . fonttools-venv/bin/activate
 
     # to activate the virtual environment in Windows `cmd.exe`, do
@@ -42,6 +44,11 @@ If you would like to contribute to its development, you can clone the repository
 
     # install in 'editable' mode
     pip install -e .
+
+
+.. note::
+
+    To exit a Python virtual environment, enter the command ``deactivate``.
 
 See the Optional Requirements section below for details about module-specific dependencies that must be installed in select cases.
 
@@ -129,7 +136,9 @@ Please navigate to the respective area of the documentation to learn more about 
 Optional Requirements
 ---------------------
 
-Additional dependencies are required by some of the fontTools modules to unlock optional features.  The list below details these optional dependencies.
+.. note::
+
+    Additional dependencies are required by some of the fontTools modules to unlock optional features.  The list below details these optional dependencies.
 
 
 inspect Module
@@ -265,7 +274,11 @@ You can also use `tox <https://testrun.org/tox/latest/>`_ to automatically run t
     pip install tox
     tox
 
-Note that when you run ``tox`` without arguments, the tests are executed for all the environments listed in the ``tox.ini`` ``envlist``. The current Python interpreters defined for tox testing must be available on your system ``PATH``.
+
+
+.. note::
+
+    When you run ``tox`` without arguments, the tests are executed for all the environments listed in the ``tox.ini`` ``envlist``. The current Python interpreters defined for tox testing must be available on your system ``PATH``.
 
 You can specify a different testing environment list via the ``-e`` option, or the ``TOXENV`` environment variable::
 
