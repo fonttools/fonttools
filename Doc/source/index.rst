@@ -321,6 +321,7 @@ Table of Contents
    agl
    cffLib/index
    colorLib/index
+   cu2qu/index
    designspaceLib/index
    encodings/index
    feaLib/index
