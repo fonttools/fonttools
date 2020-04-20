@@ -2,7 +2,7 @@
 
 The fontTools project documentation updates continuously on Read the Docs as the project source changes.  
 
-The documentation is available at **TODO - RTD URL when pushed and available**.
+The documentation is hosted at https://fonttools.readthedocs.io/.
 
 ## Contents
 
@@ -16,21 +16,22 @@ The documentation is available at **TODO - RTD URL when pushed and available**.
 
 You must have a Python 3 interpreter and the `pip` Python package manager installed on your system to build the fontTools documentation.
 
-Pull the fontTools project source files, create a Python virtual environment, and then install fontTools and the documentation build dependencies by executing the following command in the root of the fontTools source repository:
+Pull the fontTools project source files, create a Python virtual environment, and then install fontTools and the documentation build dependencies by executing the following commands in the root of the fontTools source repository:
 
 ```
-$ pip install -e . [doc]
+$ pip install -e . [all]
+$ pip install -r Doc/docs-requirements.txt
 ```
 
 ### Build Documentation
 
-**With `make`**: execute the following command in the `Doc` directory:
+**With `make`**: execute the following command in the root of the repository:
 
 ```
-$ make html
+$ make docs
 ```
 
-**Without `make`**: execute the following command in the `Doc` directory:
+**Without `make`**: execute the following command in the **`Doc` directory**:
 
 ```
 $ sphinx-build -b html source build
