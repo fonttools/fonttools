@@ -1,8 +1,8 @@
-######
-subset
-######
+###
+cff
+###
 
-.. automodule:: fontTools.subset
+.. automodule:: fontTools.subset.cff
    :inherited-members:
    :members:
    :undoc-members:

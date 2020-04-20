@@ -330,7 +330,7 @@ Table of Contents
    mtiLib
    otlLib/index
    pens/index
-   subset
+   subset/index
    svgLib/index
    t1Lib
    ttLib/index
