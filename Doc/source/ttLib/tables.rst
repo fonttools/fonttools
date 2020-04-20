@@ -2,7 +2,113 @@
 tables
 ######
 
+This folder is a subpackage of :py:mod:`fontTools.ttLib`. Each module here is a
+specialized TT/OT table converter: they can convert raw data
+to Python objects and vice versa. Usually you don't need to
+use the modules directly: they are imported and used
+automatically when needed by :py:mod:`fontTools.ttLib`.
+
+If you are writing you own table converter the following is
+important.
+
+The modules here have pretty strange names: this is due to the
+fact that we need to map TT table tags (which are case sensitive)
+to filenames (which on Mac and Win aren't case sensitive) as well
+as to Python identifiers. The latter means it can only contain
+[A-Za-z0-9_] and cannot start with a number.
+
+:py:mod:`fontTools.ttLib` provides functions to expand a tag into the format used here::
+
+    >>> from fontTools import ttLib
+    >>> ttLib.tagToIdentifier("FOO ")
+    'F_O_O_'
+    >>> ttLib.tagToIdentifier("cvt ")
+    '_c_v_t'
+    >>> ttLib.tagToIdentifier("OS/2")
+    'O_S_2f_2'
+    >>> ttLib.tagToIdentifier("glyf")
+    '_g_l_y_f'
+    >>>
+
+And vice versa::
+
+    >>> ttLib.identifierToTag("F_O_O_")
+    'FOO '
+    >>> ttLib.identifierToTag("_c_v_t")
+    'cvt '
+    >>> ttLib.identifierToTag("O_S_2f_2")
+    'OS/2'
+    >>> ttLib.identifierToTag("_g_l_y_f")
+    'glyf'
+    >>>
+
+Eg. the 'glyf' table converter lives in a Python file called::
+
+	_g_l_y_f.py
+
+The converter itself is a class, named "table_" + expandedtag. Eg::
+
+
+	class table__g_l_y_f:
+		etc.
+
+
+Note that if you _do_ need to use such modules or classes manually,
+there are two convenient API functions that let you find them by tag::
+
+    >>> ttLib.getTableModule('glyf')
+    <module 'ttLib.tables._g_l_y_f'>
+    >>> ttLib.getTableClass('glyf')
+    <class ttLib.tables._g_l_y_f.table__g_l_y_f at 645f400>
+    >>
+
+You must subclass from :py:mod:`fontTools.ttLib.tables.DefaultTable.DefaultTable`. It provides some default
+behavior, as well as a constructor method (__init__) that you don't need to
+override.
+
+Your converter should minimally provide two methods::
+
+
+    class table_F_O_O_(DefaultTable.DefaultTable): # converter for table 'FOO '
+
+        def decompile(self, data, ttFont):
+            # 'data' is the raw table data. Unpack it into a
+            # Python data structure.
+            # 'ttFont' is a ttLib.TTfile instance, enabling you to
+            # refer to other tables. Do ***not*** keep a reference to
+            # it: it will cause a circular reference (ttFont saves
+            # a reference to us), and that means we'll be leaking
+            # memory. If you need to use it in other methods, just
+            # pass it around as a method argument.
+
+        def compile(self, ttFont):
+            # Return the raw data, as converted from the Python
+            # data structure.
+            # Again, 'ttFont' is there so you can access other tables.
+            # Same warning applies.
+
+
+If you want to support TTX import/export as well, you need to provide two
+additional methods::
+
+
+	def toXML(self, writer, ttFont):
+		# XXX
+
+	def fromXML(self, (name, attrs, content), ttFont):
+		# XXX
+
+
+
 .. automodule:: fontTools.ttLib.tables
+   :inherited-members:
+   :members:
+   :undoc-members:
+
+_a_n_k_r
+--------
+
+.. automodule:: fontTools.ttLib.tables._a_n_k_r
    :inherited-members:
    :members:
    :undoc-members:
@@ -11,6 +117,22 @@ _a_v_a_r
 --------
 
 .. automodule:: fontTools.ttLib.tables._a_v_a_r
+   :inherited-members:
+   :members:
+   :undoc-members:
+
+_b_s_l_n
+--------
+
+.. automodule:: fontTools.ttLib.tables._b_s_l_n
+   :inherited-members:
+   :members:
+   :undoc-members:
+
+_c_i_d_g
+--------
+
+.. automodule:: fontTools.ttLib.tables._c_i_d_g
    :inherited-members:
    :members:
    :undoc-members:
@@ -71,6 +193,15 @@ _g_a_s_p
    :members:
    :undoc-members:
 
+
+_g_c_i_d
+--------
+
+.. automodule:: fontTools.ttLib.tables._g_c_i_d
+   :inherited-members:
+   :members:
+   :undoc-members:
+
 _g_l_y_f
 --------
 
@@ -127,6 +258,14 @@ _k_e_r_n
    :members:
    :undoc-members:
 
+_l_c_a_r
+--------
+
+.. automodule:: fontTools.ttLib.tables._l_c_a_r
+   :inherited-members:
+   :members:
+   :undoc-members:
+
 _l_o_c_a
 --------
 
@@ -159,10 +298,35 @@ _m_e_t_a
    :members:
    :undoc-members:
 
+_m_o_r_t
+--------
+
+.. automodule:: fontTools.ttLib.tables._m_o_r_t
+   :inherited-members:
+   :members:
+   :undoc-members:
+
+
+_m_o_r_x
+--------
+
+.. automodule:: fontTools.ttLib.tables._m_o_r_x
+   :inherited-members:
+   :members:
+   :undoc-members:
+
 _n_a_m_e
 --------
 
 .. automodule:: fontTools.ttLib.tables._n_a_m_e
+   :inherited-members:
+   :members:
+   :undoc-members:
+
+_o_p_b_d
+--------
+
+.. automodule:: fontTools.ttLib.tables._o_p_b_d
    :inherited-members:
    :members:
    :undoc-members:
@@ -179,6 +343,15 @@ _p_r_e_p
 --------
 
 .. automodule:: fontTools.ttLib.tables._p_r_e_p
+   :inherited-members:
+   :members:
+   :undoc-members:
+
+
+_p_r_o_p
+--------
+
+.. automodule:: fontTools.ttLib.tables._p_r_o_p
    :inherited-members:
    :members:
    :undoc-members:
@@ -319,10 +492,36 @@ E_B_L_C_
    :members:
    :undoc-members:
 
+F__e_a_t_
+---------
+
+.. automodule:: fontTools.ttLib.tables.F__e_a_t_
+   :inherited-members:
+   :members:
+   :undoc-members:
+
+
 F_F_T_M_
 --------
 
 .. automodule:: fontTools.ttLib.tables.F_F_T_M_
+   :inherited-members:
+   :members:
+   :undoc-members:
+
+
+G__l_a_t_
+---------
+
+.. automodule:: fontTools.ttLib.tables.G__l_a_t_
+   :inherited-members:
+   :members:
+   :undoc-members:
+
+G__l_o_c_
+---------
+
+.. automodule:: fontTools.ttLib.tables.G__l_o_c_
    :inherited-members:
    :members:
    :undoc-members:
@@ -363,6 +562,14 @@ G_S_U_B_
 --------
 
 .. automodule:: fontTools.ttLib.tables.G_S_U_B_
+   :inherited-members:
+   :members:
+   :undoc-members:
+
+grUtils
+-------
+
+.. automodule:: fontTools.ttLib.tables.grUtils
    :inherited-members:
    :members:
    :undoc-members:
@@ -455,6 +662,22 @@ otTables
    :members:
    :undoc-members:
 
+S__i_l_f_
+---------
+
+.. automodule:: fontTools.ttLib.tables.S__i_l_f_
+   :inherited-members:
+   :members:
+   :undoc-members:
+
+S__i_l_l_
+---------
+
+.. automodule:: fontTools.ttLib.tables.S__i_l_l_
+   :inherited-members:
+   :members:
+   :undoc-members:
+
 S_I_N_G_
 --------
 
@@ -531,6 +754,70 @@ T_S_I__5
 --------
 
 .. automodule:: fontTools.ttLib.tables.T_S_I__5
+   :inherited-members:
+   :members:
+   :undoc-members:
+
+T_S_I_B_
+--------
+
+.. automodule:: fontTools.ttLib.tables.T_S_I_B_
+   :inherited-members:
+   :members:
+   :undoc-members:
+
+T_S_I_C_
+--------
+
+.. automodule:: fontTools.ttLib.tables.T_S_I_C_
+   :inherited-members:
+   :members:
+   :undoc-members:
+
+T_S_I_D_
+--------
+
+.. automodule:: fontTools.ttLib.tables.T_S_I_D_
+   :inherited-members:
+   :members:
+   :undoc-members:
+
+T_S_I_J_
+--------
+
+.. automodule:: fontTools.ttLib.tables.T_S_I_J_
+   :inherited-members:
+   :members:
+   :undoc-members:
+
+T_S_I_P_
+--------
+
+.. automodule:: fontTools.ttLib.tables.T_S_I_P_
+   :inherited-members:
+   :members:
+   :undoc-members:
+
+T_S_I_S_
+--------
+
+.. automodule:: fontTools.ttLib.tables.T_S_I_S_
+   :inherited-members:
+   :members:
+   :undoc-members:
+
+T_S_I_V_
+--------
+
+.. automodule:: fontTools.ttLib.tables.T_S_I_V_
+   :inherited-members:
+   :members:
+   :undoc-members:
+
+T_T_F_A_
+--------
+
+.. automodule:: fontTools.ttLib.tables.T_T_F_A_
    :inherited-members:
    :members:
    :undoc-members:
