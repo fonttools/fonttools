@@ -13,5 +13,6 @@ to have a reader and writer that are independent of a specific system.
    scripting
 
 .. automodule:: fontTools.designspaceLib
+   :inherited-members:
    :members:
    :undoc-members:

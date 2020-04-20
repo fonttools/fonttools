@@ -1,9 +1,9 @@
-.. highlight:: python
 
-=========
+#########
 filenames
-=========
+#########
 
-.. automodule:: ufoLib.filenames
+.. automodule:: fontTools.ufoLib.filenames
    :inherited-members:
    :members:
+   :undoc-members:
