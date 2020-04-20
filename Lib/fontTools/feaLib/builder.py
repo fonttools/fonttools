@@ -780,6 +780,9 @@ class Builder(object):
             raise FeatureLibError(
                 "Script statements are not allowed "
                 "within standalone lookup blocks", location)
+        if self.language_systems == {(script, 'dflt')}:
+            # Nothing to do.
+            return
         self.cur_lookup_ = None
         self.script_ = script
         self.lookupflag_ = 0
