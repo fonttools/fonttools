@@ -6,7 +6,10 @@ varLib
    :maxdepth: 2
 
    builder
+   cff
+   errors
    featureVars
+   instancer
    interpolatable
    interpolate_layout
    iup
