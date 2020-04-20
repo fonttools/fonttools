@@ -19,4 +19,7 @@ check: all
 clean:
 	./setup.py clean --all
 
-.PHONY: all dist install install-user uninstall check clean
+docs:
+	cd Doc && $(MAKE) html
+
+.PHONY: all dist install install-user uninstall check clean docs
