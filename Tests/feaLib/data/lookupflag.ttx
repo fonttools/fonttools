@@ -43,7 +43,7 @@
   <GPOS>
     <Version value="0x00010000"/>
     <ScriptList>
-      <!-- ScriptCount=1 -->
+      <!-- ScriptCount=2 -->
       <ScriptRecord index="0">
         <ScriptTag value="DFLT"/>
         <Script>
@@ -55,9 +55,20 @@
           <!-- LangSysCount=0 -->
         </Script>
       </ScriptRecord>
+      <ScriptRecord index="1">
+        <ScriptTag value="latn"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="1"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
     </ScriptList>
     <FeatureList>
-      <!-- FeatureCount=1 -->
+      <!-- FeatureCount=2 -->
       <FeatureRecord index="0">
         <FeatureTag value="test"/>
         <Feature>
@@ -86,9 +97,17 @@
           <LookupListIndex index="21" value="21"/>
         </Feature>
       </FeatureRecord>
+      <FeatureRecord index="1">
+        <FeatureTag value="test"/>
+        <Feature>
+          <!-- LookupCount=2 -->
+          <LookupListIndex index="0" value="22"/>
+          <LookupListIndex index="1" value="23"/>
+        </Feature>
+      </FeatureRecord>
     </FeatureList>
     <LookupList>
-      <!-- LookupCount=22 -->
+      <!-- LookupCount=24 -->
       <Lookup index="0">
         <LookupType value="1"/>
         <LookupFlag value="1"/><!-- rightToLeft -->
@@ -355,6 +374,30 @@
           </Coverage>
           <ValueFormat value="4"/>
           <Value XAdvance="1"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="22">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="one"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="23">
+        <LookupType value="1"/>
+        <LookupFlag value="8"/><!-- ignoreMarks -->
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="two"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="2"/>
         </SinglePos>
       </Lookup>
     </LookupList>

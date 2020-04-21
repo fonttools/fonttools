@@ -706,6 +706,10 @@ class Builder(object):
             raise FeatureLibError(
                 "Language statements are not allowed "
                 "within \"feature %s\"" % self.cur_feature_name_, location)
+        if self.cur_feature_name_ is None:
+            raise FeatureLibError(
+                "Language statements are not allowed "
+                "within standalone lookup blocks", location)
         self.cur_lookup_ = None
 
         key = (self.script_, language, self.cur_feature_name_)
@@ -772,6 +776,13 @@ class Builder(object):
             raise FeatureLibError(
                 "Script statements are not allowed "
                 "within \"feature %s\"" % self.cur_feature_name_, location)
+        if self.cur_feature_name_ is None:
+            raise FeatureLibError(
+                "Script statements are not allowed "
+                "within standalone lookup blocks", location)
+        if self.language_systems == {(script, 'dflt')}:
+            # Nothing to do.
+            return
         self.cur_lookup_ = None
         self.script_ = script
         self.lookupflag_ = 0

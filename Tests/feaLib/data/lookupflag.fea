@@ -134,3 +134,16 @@ feature test {
         pos one 1;
     } V;
 } test;
+
+feature test {
+    lookup W {
+        lookupflag IgnoreMarks;
+        script latn;
+        pos one 1;
+    } W;
+    lookup X {
+        lookupflag IgnoreMarks;
+        script latn;
+        pos two 2;
+    } X;
+} test;
