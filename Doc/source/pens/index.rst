@@ -9,13 +9,16 @@ pens
    basePen
    boundsPen
    cocoaPen
+   cu2quPen
    filterPen
    momentsPen
    perimeterPen
    pointInsidePen
+   pointPen
    qtPen
    recordingPen
    reverseContourPen
+   roundingPen
    statisticsPen
    svgPathPen
    t2CharStringPen
