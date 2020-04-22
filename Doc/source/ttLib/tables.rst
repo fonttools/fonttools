@@ -492,10 +492,10 @@ E_B_L_C_
    :members:
    :undoc-members:
 
-F__e_a_t_
----------
+F__e_a_t
+--------
 
-.. automodule:: fontTools.ttLib.tables.F__e_a_t_
+.. automodule:: fontTools.ttLib.tables.F__e_a_t
    :inherited-members:
    :members:
    :undoc-members:
@@ -510,18 +510,18 @@ F_F_T_M_
    :undoc-members:
 
 
-G__l_a_t_
----------
+G__l_a_t
+--------
 
-.. automodule:: fontTools.ttLib.tables.G__l_a_t_
+.. automodule:: fontTools.ttLib.tables.G__l_a_t
    :inherited-members:
    :members:
    :undoc-members:
 
-G__l_o_c_
----------
+G__l_o_c
+--------
 
-.. automodule:: fontTools.ttLib.tables.G__l_o_c_
+.. automodule:: fontTools.ttLib.tables.G__l_o_c
    :inherited-members:
    :members:
    :undoc-members:
@@ -662,18 +662,18 @@ otTables
    :members:
    :undoc-members:
 
-S__i_l_f_
----------
+S__i_l_f
+--------
 
-.. automodule:: fontTools.ttLib.tables.S__i_l_f_
+.. automodule:: fontTools.ttLib.tables.S__i_l_f
    :inherited-members:
    :members:
    :undoc-members:
 
-S__i_l_l_
----------
+S__i_l_l
+--------
 
-.. automodule:: fontTools.ttLib.tables.S__i_l_l_
+.. automodule:: fontTools.ttLib.tables.S__i_l_l
    :inherited-members:
    :members:
    :undoc-members:
