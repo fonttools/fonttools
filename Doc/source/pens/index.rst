@@ -17,6 +17,7 @@ pens
    pointPen
    qtPen
    recordingPen
+   reportLabPen
    reverseContourPen
    roundingPen
    statisticsPen
