@@ -11,11 +11,13 @@ misc
    cliTools
    eexec
    encodingTools
+   etree
    filenames
    fixedTools
+   intTools
+   loggingTools
    macCreatorType
    macRes
-   loggingTools
    psCharStrings
    psLib
    psOperators

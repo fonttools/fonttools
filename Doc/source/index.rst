@@ -108,13 +108,12 @@ Please see the :py:mod:`fontTools.ttx` documentation for additional details.
 Other Tools
 -----------
 
-Commands for inspecting, merging and subsetting fonts are also available::
+Commands for merging and subsetting fonts are also available::
 
-    pyftinspect
     pyftmerge
     pyftsubset
 
-Please see the :py:mod:`fontTools.inspect`, :py:mod:`fontTools.merge`, and :py:mod:`fontTools.subset` documentation for additional information about these tools.
+Please see the :py:mod:`fontTools.merge` and :py:mod:`fontTools.subset` documentation for additional information about these tools.
 
 
 fontTools Python Library
@@ -136,53 +135,143 @@ Please navigate to the respective area of the documentation to learn more about 
 Optional Requirements
 ---------------------
 
-.. note::
+The fontTools package currently has no (required) external dependencies
+besides the modules included in the Python Standard Library.
+However, a few extra dependencies are required to unlock optional features
+in some of the library modules.
 
-    Additional dependencies are required by some of the fontTools modules to unlock optional features.  The list below details these optional dependencies.
+The fonttools PyPI distribution also supports so-called "extras", i.e. a
+set of keywords that describe a group of additional dependencies, which can be
+used when installing via pip, or when specifying a requirement.
+For example:
+
+.. code:: sh
+
+    pip install fonttools[ufo,lxml,woff,unicode]
+
+This command will install fonttools, as well as the optional dependencies that
+are required to unlock the extra features named "ufo", etc.
+
+Optional dependencies are detailed by module in the list below.
 
 
-inspect Module
-^^^^^^^^^^^^^^
 
-:py:mod:`fontTools.inspect`
+:py:mod:`fontTools.misc.etree`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The module exports a ElementTree-like API for reading/writing XML files, and allows to use as the backend either the built-in ``xml.etree`` module or `lxml <https://lxml.de>`__. The latter is preferred whenever present, as it is generally faster and more secure.
+
+*Extra:* ``lxml``
+
+
+:py:mod:`fontTools.ufoLib`
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Package for reading and writing UFO source files; it requires:
+
+* `fs <https://pypi.org/pypi/fs>`__: (aka ``pyfilesystem2``) filesystem
+abstraction layer.
+
+* `enum34 <https://pypi.org/pypi/enum34>`__: backport for the built-in ``enum``
+module (only required on Python < 3.4).
+
+*Extra:* ``ufo``
+
+
+:py:mod:`fontTools.ttLib.woff2`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Module to compress/decompress WOFF 2.0 web fonts; it requires:
+
+* `brotli <https://pypi.python.org/pypi/Brotli>`__: Python bindings of
+the Brotli compression library.
+
+*Extra:* ``woff``
+
+
+:py:mod:`fontTools.unicode`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A GUI font inspector, requires one of the following packages:
+To display the Unicode character names when dumping the ``cmap`` table
+with ``ttx`` we use the ``unicodedata`` module in the Standard Library.
+The version included in there varies between different Python versions.
+To use the latest available data, you can install:
 
-* `PyGTK <https://pypi.python.org/pypi/PyGTK>`_: Python bindings for GTK  2.x (only works with Python 2)
-* `PyGObject <https://wiki.gnome.org/action/show/Projects/PyGObject>`_ : Python bindings for GTK 3.x and gobject-introspection libraries (also compatible with Python 3)
+* `unicodedata2 <https://pypi.python.org/pypi/unicodedata2>`__:
+``unicodedata`` backport for Python 2.7 and 3.x updated to the latest
+Unicode version 12.0. Note this is not necessary if you use Python 3.8
+as the latter already comes with an up-to-date ``unicodedata``.
+
+*Extra:* ``unicode``
 
 
+:py:mod:`fontTools.varLib.interpolatable`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-misc Module
-^^^^^^^^^^^
+Module for finding wrong contour/component order between different masters.
+It requires one of the following packages in order to solve the so-called
+"minimum weight perfect matching problem in bipartite graphs", or
+the Assignment problem:
+
+* `scipy <https://pypi.python.org/pypi/scipy>`__: the Scientific Library
+for Python, which internally uses `NumPy <https://pypi.python.org/pypi/numpy>`__
+arrays and hence is very fast;
+* `munkres <https://pypi.python.org/pypi/munkres>`__: a pure-Python
+module that implements the Hungarian or Kuhn-Munkres algorithm.
+
+*Extra:* ``interpolatable``
+
+
+:py:mod:`fontTools.varLib.plot`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Module for visualizing DesignSpaceDocument and resulting VariationModel.
+
+* `matplotlib <https://pypi.org/pypi/matplotlib>`__: 2D plotting library.
+
+*Extra:* ``plot``
+
 
 :py:mod:`fontTools.misc.symfont`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Advanced module for symbolic font statistics analysis; it requires:
 
-* `sympy <https://pypi.python.org/pypi/sympy>`_: the Python library for symbolic mathematics
+* `sympy <https://pypi.python.org/pypi/sympy>`__: the Python library for
+symbolic mathematics.
+
+*Extra:* ``symfont``
 
 
+:py:mod:`fontTools.t1Lib`
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-pens Modules
-^^^^^^^^^^^^
+To get the file creator and type of Macintosh PostScript Type 1 fonts
+on Python 3 you need to install the following module, as the old ``MacOS``
+module is no longer included in Mac Python:
+
+* `xattr <https://pypi.python.org/pypi/xattr>`__: Python wrapper for
+extended filesystem attributes (macOS platform only).
+
+*Extra:* ``type1``
+
 
 :py:mod:`fontTools.pens.cocoaPen`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Pen for drawing glyphs with Cocoa ``NSBezierPath``, requires:
 
-* `PyObjC <https://pypi.python.org/pypi/pyobjc>`_: the bridge between Python and the Objective-C runtime (macOS platform only)
+* `PyObjC <https://pypi.python.org/pypi/pyobjc>`__: the bridge between
+Python and the Objective-C runtime (macOS platform only).
 
 
 :py:mod:`fontTools.pens.qtPen`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Pen for drawing glyphs with Qt's QPainterPath, requires:
+Pen for drawing glyphs with Qt's ``QPainterPath``, requires:
 
-* `PyQt5 <https://pypi.python.org/pypi/PyQt5>`_: Python bindings for the Qt cross platform UI and application toolkit
+* `PyQt5 <https://pypi.python.org/pypi/PyQt5>`__: Python bindings for
+the Qt cross platform UI and application toolkit.
 
 
 :py:mod:`fontTools.pens.reportLabPen`
@@ -190,90 +279,24 @@ Pen for drawing glyphs with Qt's QPainterPath, requires:
 
 Pen to drawing glyphs as PNG images, requires:
 
-* `reportlab <https://pypi.python.org/pypi/reportlab>`_: Python toolkit for generating PDFs and graphics
-
-
-
-t1Lib Module
-^^^^^^^^^^^^
-
-:py:mod:`fontTools.t1Lib`
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To get the file creator and type of Apple PostScript Type 1 fonts on Python 3 you need to install the following module, as the old macOS module is no longer included in macOS Python:
-
-* `xattr <https://pypi.python.org/pypi/xattr>`_: Python wrapper for extended filesystem attributes (macOS platform only)
-
-
-
-ttLib Modules
-^^^^^^^^^^^^^
-
-:py:mod:`fontTools.ttLib.woff2`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Module to compress/decompress WOFF 2.0 web fonts; it requires:
-
-* `brotli <https://pypi.python.org/pypi/Brotli>`_: Python bindings of the Brotli compression library.
-
-
-:py:mod:`fontTools.ttLib.sfnt`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To better compress WOFF 1.0 web fonts, the following module can be used instead of the built-in zlib library:
-
-* `zopfli <https://pypi.python.org/pypi/zopfli>`_: Python bindings of the Zopfli compression library
-
-
-ufoLib Module
-^^^^^^^^^^^^^
-
-:py:mod:`fontTools.ufoLib`
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Package for reading and writing UFO source files; it requires:
-
-* `fs <https://pypi.org/pypi/fs>`_: (aka ``pyfilesystem2``) filesystem abstraction layer
-* `enum34 <https://pypi.org/pypi/enum34>`_: backport for the built-in enum module (only required on Python < 3.4)
-
-
-unicode Module
-^^^^^^^^^^^^^^
-
-:py:mod:`fontTools.unicode`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To display the Unicode character names when dumping the cmap table with ttx we use the unicodedata module in the Standard Library. The version included in there varies between different Python versions. To use the latest available data, you can install:
-
-* `unicodedata2 <https://pypi.python.org/pypi/unicodedata2>`_: unicodedata backport for Python 2.7 and 3.5 updated to the latest Unicode version 9.0. Note this is not necessary if you use Python 3.6 as the latter already comes with an up-to-date unicodedata.
-
-
-varLib Module
-^^^^^^^^^^^^^
-
-:py:mod:`fontTools.varLib.interpolatable`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Module for finding wrong contour/component order between different masters. It requires one of the following packages in order to solve the so-called "minimum weight perfect matching problem in bipartite graphs", or the Assignment problem:
-
-* `scipy <https://pypi.python.org/pypi/scipy>`_: the Scientific Library for Python, which internally uses `NumPy <https://pypi.python.org/pypi/numpy>`_ arrays and hence is very fast
-* `munkres <https://pypi.python.org/pypi/munkres>`_: a pure-Python module that implements the Hungarian or Kuhn-Munkres algorithm
+* `reportlab <https://pypi.python.org/pypi/reportlab>`__: Python toolkit
+for generating PDFs and graphics.
 
 
 Testing
 -------
 
-To run the test suite, use::
+To run the test suite, you need to install `pytest <http://docs.pytest.org/en/latest/>`__.
+When you run the ``pytest`` command, the tests will run against the
+installed fontTools package, or the first one found in the
+``PYTHONPATH``.
 
-    python setup.py test
-
-If you have `pytest <http://docs.pytest.org/en/latest/>`_, you can run the pytest command directly. The tests will run against the installed fontTools package, or the first one found in the ``PYTHONPATH``.
-
-You can also use `tox <https://testrun.org/tox/latest/>`_ to automatically run tests on different Python versions in isolated virtual environments::
+You can also use `tox <https://tox.readthedocs.io/en/latest/>`__ to
+automatically run tests on different Python versions in isolated virtual
+environments::
 
     pip install tox
     tox
-
 
 
 .. note::
@@ -282,7 +305,7 @@ You can also use `tox <https://testrun.org/tox/latest/>`_ to automatically run t
 
 You can specify a different testing environment list via the ``-e`` option, or the ``TOXENV`` environment variable::
 
-    tox -e py27-nocov
+    tox -e py36
     TOXENV="py36-cov,htmlcov" tox
 
 
@@ -296,13 +319,34 @@ Feature requests and bug reports are always welcome at https://github.com/fontto
 The best place for end-user and developer discussion about the fontTools project is the `fontTools gitter channel <https://gitter.im/fonttools-dev/Lobby>`_. There is also a development https://groups.google.com/d/forum/fonttools-dev mailing list for continuous integration notifications.
 
 
+History
+-------
+
+The fontTools project was started by Just van Rossum in 1999, and was
+maintained as an open source project at
+http://sourceforge.net/projects/fonttools/. In 2008, Paul Wise (pabs3)
+began helping Just with stability maintenance. In 2013 Behdad Esfahbod
+began a friendly fork, thoroughly reviewing the codebase and making
+changes at https://github.com/behdad/fonttools to add new features and
+support for new font formats.
+
+
 Acknowledgments
 ---------------
 
 In alphabetical order:
 
-Olivier Berten, Samyak Bhuta, Erik van Blokland, Petr van Blokland, Jelle Bosma, Sascha Brawer, Tom Byrer, Frédéric Coiffier, Vincent Connare, Dave Crossland, Simon Daniels, Behdad Esfahbod, Behnam Esfahbod, Hannes Famira, Sam Fishman, Matt Fontaine, Yannis Haralambous, Greg Hitchcock, Jeremie Hornus, Khaled Hosny, John Hudson, Denis Moyogo Jacquerye, Jack Jansen, Tom Kacvinsky, Jens Kutilek, Antoine Leca, Werner Lemberg, Tal Leming, Peter Lofting, Cosimo Lupo, Masaya Nakamura, Dave Opstad, Laurence Penney, Roozbeh Pournader, Garret Rieger, Read Roberts, Guido van Rossum, Just van Rossum, Andreas Seidel, Georg Seifert, Miguel Sousa, Adam Twardoch, Adrien Tétar, Vitaly Volkov, Paul Wise
-
+Olivier Berten, Samyak Bhuta, Erik van Blokland, Petr van Blokland,
+Jelle Bosma, Sascha Brawer, Tom Byrer, Frédéric Coiffier, Vincent
+Connare, Dave Crossland, Simon Daniels, Peter Dekkers, Behdad Esfahbod,
+Behnam Esfahbod, Hannes Famira, Sam Fishman, Matt Fontaine, Yannis
+Haralambous, Greg Hitchcock, Jeremie Hornus, Khaled Hosny, John Hudson,
+Denis Moyogo Jacquerye, Jack Jansen, Tom Kacvinsky, Jens Kutilek,
+Antoine Leca, Werner Lemberg, Tal Leming, Peter Lofting, Cosimo Lupo,
+Masaya Nakamura, Dave Opstad, Laurence Penney, Roozbeh Pournader, Garret
+Rieger, Read Roberts, Guido van Rossum, Just van Rossum, Andreas Seidel,
+Georg Seifert, Chris Simpkins, Miguel Sousa, Adam Twardoch, Adrien Tétar, Vitaly Volkov,
+Paul Wise.
 
 License
 -------
