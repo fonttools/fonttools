@@ -1263,6 +1263,10 @@ class ChainContextPosBuilder(LookupBuilder):
             st.PosLookupRecord = []
             for sequenceIndex, l in enumerate(lookups):
                 if l is not None:
+                    if l.lookup_index is None:
+                        raise FeatureLibError('Missing index of the specified '
+                            'lookup, might be a substitution lookup',
+                            self.location)
                     rec = otTables.PosLookupRecord()
                     rec.SequenceIndex = sequenceIndex
                     rec.LookupListIndex = l.lookup_index
@@ -1310,6 +1314,10 @@ class ChainContextSubstBuilder(LookupBuilder):
             st.SubstLookupRecord = []
             for sequenceIndex, l in enumerate(lookups):
                 if l is not None:
+                    if l.lookup_index is None:
+                        raise FeatureLibError('Missing index of the specified '
+                            'lookup, might be a positioning lookup',
+                            self.location)
                     rec = otTables.SubstLookupRecord()
                     rec.SequenceIndex = sequenceIndex
                     rec.LookupListIndex = l.lookup_index

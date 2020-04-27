@@ -430,6 +430,28 @@ class BuilderTest(unittest.TestCase):
             "Lookup blocks cannot be placed inside 'aalt' features",
             self.build, "feature aalt {lookup L {} L;} aalt;")
 
+    def test_chain_subst_refrences_GPOS_looup(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Missing index of the specified lookup, might be a positioning lookup",
+            self.build,
+            "lookup dummy { pos a 50; } dummy;"
+            "feature test {"
+            "    sub a' lookup dummy b;"
+            "} test;"
+        )
+
+    def test_chain_pos_refrences_GSUB_looup(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Missing index of the specified lookup, might be a substitution lookup",
+            self.build,
+            "lookup dummy { sub a by A; } dummy;"
+            "feature test {"
+            "    pos a' lookup dummy b;"
+            "} test;"
+        )
+
     def test_extensions(self):
         class ast_BaseClass(ast.MarkClass):
             def asFea(self, indent=""):
