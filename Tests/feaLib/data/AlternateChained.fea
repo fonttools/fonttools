@@ -1,0 +1,3 @@
+feature test {
+  sub A B a' [Y y] Z from [a.alt1 a.alt2 a.alt3];
+} test;
