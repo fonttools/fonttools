@@ -828,7 +828,7 @@ class Builder(object):
         if prefix or suffix:
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
             lookup = self.get_chained_lookup_(location, AlternateSubstBuilder)
-            chain.substitutions.append((prefix, [glyph], suffix, [lookup]))
+            chain.substitutions.append((prefix, [{glyph}], suffix, [lookup]))
         else:
             lookup = self.get_lookup_(location, AlternateSubstBuilder)
         if glyph in lookup.alternates:

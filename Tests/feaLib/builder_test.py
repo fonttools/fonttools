@@ -71,7 +71,7 @@ class BuilderTest(unittest.TestCase):
         ZeroValue_ChainSinglePos_horizontal ZeroValue_ChainSinglePos_vertical
         PairPosSubtable ChainSubstSubtable ChainPosSubtable LigatureSubtable
         AlternateSubtable MultipleSubstSubtable SingleSubstSubtable
-        aalt_chain_contextual_subst
+        aalt_chain_contextual_subst AlternateChained
     """.split()
 
     def __init__(self, methodName):
