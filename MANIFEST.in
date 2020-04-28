@@ -19,10 +19,13 @@ include .coveragerc
 include .travis.yml
 recursive-include .travis *.sh
 
+recursive-include Icons *.png *.pdf
+
 include Doc/Makefile
 include Doc/make.bat
 include Doc/docs-requirements.txt
 include Doc/README.md
+include Doc/source/assets/img/favicon.ico
 recursive-include Doc/man/man1 *.1
 recursive-include Doc/source *.py *.rst
 
