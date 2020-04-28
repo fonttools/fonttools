@@ -793,7 +793,8 @@ def test_subset_feature_variations_drop_all(featureVarsTestFont):
     assert "rvrn" not in featureTags
     assert glyphs == {".notdef", "f", "dollar"}
     # all FeatureVariationRecords were dropped
-    assert not font["GSUB"].table.FeatureVariations.FeatureVariationRecord
+    assert font["GSUB"].table.FeatureVariations is None
+    assert font["GSUB"].table.Version == 0x00010000
 
 
 # TODO test_subset_feature_variations_drop_from_end_empty_records
