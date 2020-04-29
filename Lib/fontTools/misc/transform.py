@@ -317,8 +317,6 @@ class Transform(NamedTuple):
 		"""
 		return self != Identity
 
-	__nonzero__ = __bool__
-
 	def __repr__(self):
 		return "<%s [%g %g %g %g %g %g]>" % ((self.__class__.__name__,) + self)
 
