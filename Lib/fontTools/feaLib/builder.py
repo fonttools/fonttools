@@ -203,9 +203,11 @@ class Builder(object):
                 raise FeatureLibError("Feature %s has not been defined" % name,
                                       location)
             for script, lang, feature, lookups in feature:
-                for lookup in lookups:
-                    for glyph, alts in lookup.getAlternateGlyphs().items():
-                        alternates.setdefault(glyph, set()).update(alts)
+                for lookuplist in lookups:
+                    if type(lookuplist) != list: lookuplist = [ lookuplist ]
+                    for lookup in lookuplist:
+                        for glyph, alts in lookup.getAlternateGlyphs().items():
+                            alternates.setdefault(glyph, set()).update(alts)
         single = {glyph: list(repl)[0] for glyph, repl in alternates.items()
                   if len(repl) == 1}
         # TODO: Figure out the glyph alternate ordering used by makeotf.
@@ -799,8 +801,8 @@ class Builder(object):
         lookup_builders = []
         for lookuplist in lookups:
             if lookuplist is not None:
-                for lookup in lookuplist:
-                    lookup_builders.append(self.named_lookups_.get(lookup.name))
+                lookup_builders.append([ self.named_lookups_.get(l.name)
+                    for l in lookuplist])
             else:
                 lookup_builders.append(None)
         return lookup_builders
@@ -1262,16 +1264,18 @@ class ChainContextPosBuilder(LookupBuilder):
 
             st.PosCount = len([l for l in lookups if l is not None])
             st.PosLookupRecord = []
-            for sequenceIndex, l in enumerate(lookups):
-                if l is not None:
-                    if l.lookup_index is None:
-                        raise FeatureLibError('Missing index of the specified '
-                            'lookup, might be a substitution lookup',
-                            self.location)
-                    rec = otTables.PosLookupRecord()
-                    rec.SequenceIndex = sequenceIndex
-                    rec.LookupListIndex = l.lookup_index
-                    st.PosLookupRecord.append(rec)
+            for sequenceIndex, ll in enumerate(lookups):
+                if ll is not None:
+                    if type(ll) is not list: ll = [ll]
+                    for l in ll:
+                        if l.lookup_index is None:
+                            raise FeatureLibError('Missing index of the specified '
+                                'lookup, might be a substitution lookup',
+                                self.location)
+                        rec = otTables.PosLookupRecord()
+                        rec.SequenceIndex = sequenceIndex
+                        rec.LookupListIndex = l.lookup_index
+                        st.PosLookupRecord.append(rec)
         return self.buildLookup_(subtables)
 
     def find_chainable_single_pos(self, lookups, glyphs, value):
@@ -1313,28 +1317,32 @@ class ChainContextSubstBuilder(LookupBuilder):
 
             st.SubstCount = len([l for l in lookups if l is not None])
             st.SubstLookupRecord = []
-            for sequenceIndex, l in enumerate(lookups):
-                if l is not None:
-                    if l.lookup_index is None:
-                        raise FeatureLibError('Missing index of the specified '
-                            'lookup, might be a positioning lookup',
-                            self.location)
-                    rec = otTables.SubstLookupRecord()
-                    rec.SequenceIndex = sequenceIndex
-                    rec.LookupListIndex = l.lookup_index
-                    st.SubstLookupRecord.append(rec)
+            for sequenceIndex, ll in enumerate(lookups):
+                if ll is not None:
+                    if type(ll) is not list: ll = [ll]
+                    for l in ll:
+                        if l.lookup_index is None:
+                            raise FeatureLibError('Missing index of the specified '
+                                'lookup, might be a positioning lookup',
+                                self.location)
+                        rec = otTables.SubstLookupRecord()
+                        rec.SequenceIndex = sequenceIndex
+                        rec.LookupListIndex = l.lookup_index
+                        st.SubstLookupRecord.append(rec)
         return self.buildLookup_(subtables)
 
     def getAlternateGlyphs(self):
         result = {}
-        for (_, _, _, lookups) in self.substitutions:
-            if lookups == self.SUBTABLE_BREAK_:
+        for (_, _, _, lookuplist) in self.substitutions:
+            if lookuplist == self.SUBTABLE_BREAK_:
                 continue
-            for lookup in lookups:
-                if lookup is not None:
-                    alts = lookup.getAlternateGlyphs()
-                    for glyph, replacements in alts.items():
-                        result.setdefault(glyph, set()).update(replacements)
+            for lookups in lookuplist:
+                if type(lookups) != list: lookups = [ lookups ]
+                for lookup in lookups:
+                    if lookup is not None:
+                        alts = lookup.getAlternateGlyphs()
+                        for glyph, replacements in alts.items():
+                            result.setdefault(glyph, set()).update(replacements)
         return result
 
     def find_chainable_single_subst(self, glyphs):
