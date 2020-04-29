@@ -1631,11 +1631,11 @@ def prune_post_subset(self, font, options):
 	#if table.ScriptList and not table.ScriptList.ScriptRecord:
 	#	table.ScriptList = None
 
-	if not table.FeatureList and hasattr(table, 'FeatureVariations'):
-		table.FeatureVariations = None
+	if hasattr(table, 'FeatureVariations'):
+		if not (table.FeatureList and table.FeatureVariations.FeatureVariationRecord):
+			table.FeatureVariations = None
 
-	if hasattr(table, 'FeatureVariations') and not table.FeatureVariations:
-		if table.Version == 0x00010001:
+		if not table.FeatureVariations and table.Version == 0x00010001:
 			table.Version = 0x00010000
 
 	return True
