@@ -166,7 +166,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		writer.simpletag("reserved", value=self.reserved)
 		writer.newline()
 		axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
-		for glyphName in ttFont.getGlyphOrder():
+		for glyphName in ttFont.getGlyphNames():
 			variations = self.variations.get(glyphName)
 			if not variations:
 				continue
