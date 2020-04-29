@@ -1,3 +1,6 @@
+4.9.0 (released 2020-04-29)
+---------------------------
+
 - [subset] Fixed subsetting of FeatureVariations table. The subsetter no longer drops
   FeatureVariationRecords that have empty substitutions as that will keep the search
   going and thus change the logic. It will only drop empty records that occur at the
