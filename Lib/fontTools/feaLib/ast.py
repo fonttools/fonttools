@@ -546,8 +546,9 @@ class ChainContextPosStatement(Statement):
                 res += " ".join(g.asFea() for g in self.prefix) + " "
             for i, g in enumerate(self.glyphs):
                 res += g.asFea() + "'"
-                if self.lookups[i] is not None:
-                    res += " lookup " + self.lookups[i].name
+                if self.lookups[i]:
+                    for lu in self.lookups[i]:
+                        res += " lookup " + lu.name
                 if i < len(self.glyphs) - 1:
                     res += " "
             if len(self.suffix):
@@ -578,8 +579,9 @@ class ChainContextSubstStatement(Statement):
                 res += " ".join(g.asFea() for g in self.prefix) + " "
             for i, g in enumerate(self.glyphs):
                 res += g.asFea() + "'"
-                if self.lookups[i] is not None:
-                    res += " lookup " + self.lookups[i].name
+                if self.lookups[i]:
+                    for lu in self.lookups[i]:
+                        res += " lookup " + lu.name
                 if i < len(self.glyphs) - 1:
                     res += " "
             if len(self.suffix):

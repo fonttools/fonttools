@@ -797,9 +797,10 @@ class Builder(object):
         If an input name is None, it gets mapped to a None LookupBuilder.
         """
         lookup_builders = []
-        for lookup in lookups:
-            if lookup is not None:
-                lookup_builders.append(self.named_lookups_.get(lookup.name))
+        for lookuplist in lookups:
+            if lookuplist is not None:
+                for lookup in lookuplist:
+                    lookup_builders.append(self.named_lookups_.get(lookup.name))
             else:
                 lookup_builders.append(None)
         return lookup_builders
