@@ -1,0 +1,11 @@
+lookup a_to_bc {
+	sub a by b c;
+} a_to_bc;
+
+lookup b_to_d {
+	sub b by d;
+} b_to_d;
+
+feature test {
+	sub a' lookup a_to_bc lookup b_to_d b;
+} test;
