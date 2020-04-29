@@ -2,6 +2,8 @@
   FeatureVariationRecords that have empty substitutions as that will keep the search
   going and thus change the logic. It will only drop empty records that occur at the
   end of the FeatureVariationRecords array (#1881).
+- [subset] Remove FeatureVariations table and downgrade GSUB/GPOS to version 0x10000
+  when FeatureVariations contain no FeatureVariationRecords after subsetting (#1903).
 - [agl] Add support for legacy Adobe Glyph List of glyph names in ``fontTools.agl``
   (#1895).
 - [feaLib] Ignore superfluous script statements (#1883).
@@ -13,6 +15,8 @@
 - [Doc] Included all fontTools modules in the sphinx-generated documentation, and
   published it to ReadTheDocs for continuous documentation of the fontTools project
   (#1333). Check it out at https://fonttools.readthedocs.io/. Thanks to Chris Simpkins!
+- [transform] The ``Transform`` class is now subclass of ``typing.NamedTuple``. No
+  change in functionality (#1904).
 
 
 4.8.1 (released 2020-04-17)
