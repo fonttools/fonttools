@@ -1,3 +1,5 @@
+- [ufoLib] Only write fontinfo.plist when there is content to be had.
+
 4.9.0 (released 2020-04-29)
 ---------------------------
 
