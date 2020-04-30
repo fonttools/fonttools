@@ -1211,8 +1211,9 @@ class UFOWriter(UFOReader):
 			if validate:
 				infoData = validateInfoVersion2Data(infoData)
 			infoData = _convertFontInfoDataVersion2ToVersion1(infoData)
-		# write file
-		self._writePlist(FONTINFO_FILENAME, infoData)
+		# write file if there is anything to write
+		if infoData:
+			self._writePlist(FONTINFO_FILENAME, infoData)
 
 	# kerning.plist
 
