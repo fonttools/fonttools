@@ -204,7 +204,8 @@ class Builder(object):
                                       location)
             for script, lang, feature, lookups in feature:
                 for lookuplist in lookups:
-                    if type(lookuplist) != list: lookuplist = [ lookuplist ]
+                    if not isinstance(lookuplist, list):
+                        lookuplist = [ lookuplist ]
                     for lookup in lookuplist:
                         for glyph, alts in lookup.getAlternateGlyphs().items():
                             alternates.setdefault(glyph, set()).update(alts)
@@ -1337,7 +1338,8 @@ class ChainContextSubstBuilder(LookupBuilder):
             if lookuplist == self.SUBTABLE_BREAK_:
                 continue
             for lookups in lookuplist:
-                if type(lookups) != list: lookups = [ lookups ]
+                if not isinstance(lookups, list):
+                    lookups = [ lookups ]
                 for lookup in lookups:
                     if lookup is not None:
                         alts = lookup.getAlternateGlyphs()
