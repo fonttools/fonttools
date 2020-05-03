@@ -12,7 +12,7 @@ What is this?
 | Among other things this means you can use it free of charge.
 
 `User documentation <https://fonttools.readthedocs.io/en/latest/>` and
-`developer documentation <https://fonttools.readthedocs.io/en/latest/developer.html>` is available at `Read the Docs <https://fonttools.readthedocs.io/>`.
+`developer documentation <https://fonttools.readthedocs.io/en/latest/developer.html>` are available at `Read the Docs <https://fonttools.readthedocs.io/>`.
 
 Installation
 ~~~~~~~~~~~~
