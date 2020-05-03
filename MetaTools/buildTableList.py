@@ -11,7 +11,7 @@ fontToolsDir = os.path.dirname(os.path.dirname(os.path.join(os.getcwd(), sys.arg
 fontToolsDir= os.path.normpath(fontToolsDir)
 tablesDir = os.path.join(fontToolsDir,
 		"Lib", "fontTools", "ttLib", "tables")
-docFile = os.path.join(fontToolsDir, "README.rst")
+docFile = os.path.join(fontToolsDir, "Doc/source/ttx.rst")
 
 names = glob.glob1(tablesDir, "*.py")
 
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 ''')
 
 
-begin = ".. begin table list\n.. code::\n"
+begin = ".. begin table list\n"
 end = ".. end table list"
 with open(docFile) as f:
 	doc = f.read()
@@ -64,9 +64,10 @@ beginPos = beginPos + len(begin) + 1
 endPos = doc.find(end)
 
 lines = textwrap.wrap(", ".join(tables[:-1]) + " and " + tables[-1], 66)
+intro = "The following tables are currently supported::\n\n"
 blockquote = "\n".join(" "*4 + line for line in lines) + "\n"
 
-doc = doc[:beginPos] + blockquote + doc[endPos:]
+doc = doc[:beginPos] + intro + blockquote + "\n" + doc[endPos:]
 
 with open(docFile, "w") as f:
 	f.write(doc)
