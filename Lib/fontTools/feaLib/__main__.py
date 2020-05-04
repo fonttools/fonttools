@@ -1,4 +1,3 @@
-"""Add features from a feature file (.fea) into a OTF font"""
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont
 from fontTools.feaLib.builder import addOpenTypeFeatures, Builder
