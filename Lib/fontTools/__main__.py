@@ -5,8 +5,6 @@ def main(args=None):
 	if args is None:
 		args = sys.argv[1:]
 
-	# TODO Add help output, --help, etc.
-
 	# TODO Handle library-wide options. Eg.:
 	# --unicodedata
 	# --verbose / other logging stuff
@@ -20,6 +18,10 @@ def main(args=None):
 	# can be added.  Should we just try importing the fonttools
 	# module first and try without if it fails?
 
+	if len(sys.argv) < 2:
+		sys.argv.append("help")
+	if sys.argv[1] == "-h" or sys.argv[1] == "--help":
+		sys.argv[1] = "help"
 	mod = 'fontTools.'+sys.argv[1]
 	sys.argv[1] = sys.argv[0] + ' ' + sys.argv[1]
 	del sys.argv[0]
