@@ -53,12 +53,20 @@ whereas mutator implicitly drops the axis at its default coordinate.
 
 The module currently supports only the first three "levels" of partial instancing,
 with the rest planned to be implemented in the future, namely:
-L1) dropping one or more axes while leaving the default tables unmodified;
-L2) dropping one or more axes while pinning them at non-default locations;
-L3) restricting the range of variation of one or more axes, by setting either
-    a new minimum or maximum, potentially -- though not necessarily -- dropping
-    entire regions of variations that fall completely outside this new range.
-L4) moving the default location of an axis.
+
+L1
+  dropping one or more axes while leaving the default tables unmodified;
+
+L2
+  dropping one or more axes while pinning them at non-default locations;
+
+L3
+  restricting the range of variation of one or more axes, by setting either
+  a new minimum or maximum, potentially -- though not necessarily -- dropping
+  entire regions of variations that fall completely outside this new range.
+
+L4
+  moving the default location of an axis.
 
 Currently only TrueType-flavored variable fonts (i.e. containing 'glyf' table)
 are supported, but support for CFF2 variable fonts will be added soon.

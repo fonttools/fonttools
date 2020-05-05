@@ -851,7 +851,7 @@ class Builder(object):
         self.cv_parameters_.add(tag)
 
     def add_to_cv_num_named_params(self, tag):
-        """Adds new items to self.cv_num_named_params_
+        """Adds new items to ``self.cv_num_named_params_``
         or increments the count of existing items."""
         if tag in self.cv_num_named_params_:
             self.cv_num_named_params_[tag] += 1

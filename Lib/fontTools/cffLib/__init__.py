@@ -2087,27 +2087,33 @@ class DictCompiler(object):
 
 
 	def arg_delta_blend(self, value):
-		""" A delta list with blend lists has to be *all* blend lists.
-		The value is a list is arranged as follows.
-		[
-		   [V0, d0..dn] 
-		   [V1, d0..dn]
-		   ...
-		   [Vm, d0..dn]
-		]
-		V is the absolute coordinate value from the default font, and d0-dn are
-		the delta values from the n regions. Each V is an absolute coordinate
-		from the default font.
-		We want to return a list:
-		[
-		   [v0, v1..vm] 
-		   [d0..dn]
-		   ...
-		   [d0..dn]
-		   numBlends
-		   blendOp
-		]
-		where each v is relative to the previous default font value.
+		"""A delta list with blend lists has to be *all* blend lists.
+
+		The value is a list is arranged as follows::
+
+			[
+				[V0, d0..dn]
+				[V1, d0..dn]
+				...
+				[Vm, d0..dn]
+			]
+
+		``V`` is the absolute coordinate value from the default font, and ``d0-dn``
+		are the delta values from the *n* regions. Each ``V`` is an absolute
+		coordinate from the default font.
+
+		We want to return a list::
+
+			[
+				[v0, v1..vm]
+				[d0..dn]
+				...
+				[d0..dn]
+				numBlends
+				blendOp
+			]
+
+		where each ``v`` is relative to the previous default font value.
 		"""
 		numMasters = len(value[0])
 		numBlends = len(value)

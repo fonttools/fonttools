@@ -42,24 +42,37 @@ class BaseTTXConverter(DefaultTable):
 
 	def compile(self, font):
 		""" Create a top-level OTTableWriter for the GPOS/GSUB table.
-			Call the compile method for the the table
-				for each 'converter' record in the table converter list
-					call converter's write method for each item in the value.
-						- For simple items, the write method adds a string to the
-						writer's self.items list.
-						- For Struct/Table/Subtable items, it add first adds new writer to the
-						to the writer's self.items, then calls the item's compile method.
-						This creates a tree of writers, rooted at the GUSB/GPOS writer, with
-						each writer representing a table, and the writer.items list containing
-						the child data strings and writers.
-			call the getAllData method
-				call _doneWriting, which removes duplicates
-				call _gatherTables. This traverses the tables, adding unique occurences to a flat list of tables
-				Traverse the flat list of tables, calling getDataLength on each to update their position
-				Traverse the flat list of tables again, calling getData each get the data in the table, now that
-				pos's and offset are known.
 
-				If a lookup subtable overflows an offset, we have to start all over.
+		Call the compile method for the table.
+
+			For each 'converter' record in the table converter list:
+
+				call converter's ``write`` method for each item in the value.
+
+					- For simple items, the write method adds a string to the
+					  writer's ``self.items`` list.
+
+					- For ``Struct``/``Table``/``Subtable`` items, it add first adds
+					  new writer to the to the writer's ``self.items``, then calls the
+					  item's compile method. This creates a tree of writers, rooted at the
+					  GUSB/GPOS writer, with each writer representing a table, and the
+					  ``writer.items`` list containing the child data strings and writers.
+
+		Call the writer's ``getAllData`` method.
+
+			This calls ``_doneWriting``, which removes duplicates.
+
+			It also calls ``_gatherTables``. This traverses the tables, adding
+			unique occurences to a flat list of tables.
+
+			Traverse the flat list of tables, calling ``getDataLength`` on each to
+			update their position.
+
+			Traverse the flat list of tables again, calling ``getData`` on each to
+			get the data in the table, now that pos's and offset are known.
+
+		If a lookup subtable overflows an offset, we have to start all over.
+
 		"""
 		overflowRecord = None
 

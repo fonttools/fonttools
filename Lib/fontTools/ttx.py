@@ -1,88 +1,95 @@
 """\
 usage: ttx [options] inputfile1 [... inputfileN]
 
-    TTX -- From OpenType To XML And Back
+TTX -- From OpenType To XML And Back
 
-    If an input file is a TrueType or OpenType font file, it will be
-       decompiled to a TTX file (an XML-based text format).
-    If an input file is a TTX file, it will be compiled to whatever 
-       format the data is in, a TrueType or OpenType/CFF font file.
+If an input file is a TrueType or OpenType font file, it will be
+decompiled to a TTX file (an XML-based text format).
+If an input file is a TTX file, it will be compiled to whatever 
+format the data is in, a TrueType or OpenType/CFF font file.
 
-    Output files are created so they are unique: an existing file is
-       never overwritten.
+Output files are created so they are unique: an existing file is
+never overwritten.
 
-    General options:
-    -h Help: print this message.
-    --version: show version and exit.
-    -d <outputfolder> Specify a directory where the output files are
-       to be created.
-    -o <outputfile> Specify a file to write the output to. A special
-       value of - would use the standard output.
-    -f Overwrite existing output file(s), ie. don't append numbers.
-    -v Verbose: more messages will be written to stdout about what
-       is being done.
-    -q Quiet: No messages will be written to stdout about what
-       is being done.
-    -a allow virtual glyphs ID's on compile or decompile.
+General options:
 
-    Dump options:
-    -l List table info: instead of dumping to a TTX file, list some
-       minimal info about each table.
-    -t <table> Specify a table to dump. Multiple -t options
-       are allowed. When no -t option is specified, all tables
-       will be dumped.
-    -x <table> Specify a table to exclude from the dump. Multiple
-       -x options are allowed. -t and -x are mutually exclusive.
-    -s Split tables: save the TTX data into separate TTX files per
-       table and write one small TTX file that contains references
-       to the individual table dumps. This file can be used as
-       input to ttx, as long as the table files are in the
-       same directory.
-    -g Split glyf table: Save the glyf data into separate TTX files
-       per glyph and write a small TTX for the glyf table which
-       contains references to the individual TTGlyph elements.
-       NOTE: specifying -g implies -s (no need for -s together with -g)
-    -i Do NOT disassemble TT instructions: when this option is given,
-       all TrueType programs (glyph programs, the font program and the
-       pre-program) will be written to the TTX file as hex data
-       instead of assembly. This saves some time and makes the TTX
-       file smaller.
-    -z <format> Specify a bitmap data export option for EBDT:
-       {'raw', 'row', 'bitwise', 'extfile'} or for the CBDT:
-       {'raw', 'extfile'} Each option does one of the following:
-         -z raw
-            * export the bitmap data as a hex dump
-         -z row
-            * export each row as hex data
-         -z bitwise
-            * export each row as binary in an ASCII art style
-         -z extfile
-            * export the data as external files with XML references
-       If no export format is specified 'raw' format is used.
-    -e Don't ignore decompilation errors, but show a full traceback
-       and abort.
-    -y <number> Select font number for TrueType Collection (.ttc/.otc),
-       starting from 0.
-    --unicodedata <UnicodeData.txt> Use custom database file to write
-       character names in the comments of the cmap TTX output.
-    --newline <value> Control how line endings are written in the XML
-       file. It can be 'LF', 'CR', or 'CRLF'. If not specified, the
-       default platform-specific line endings are used.
+-h               Help: print this message.
+--version        Show version and exit.
+-d outputfolder  Specify a directory where the output files are
+                 to be created.
+-o outputfile    Specify a file to write the output to. A special
+                 value of - would use the standard output.
+-f               Overwrite existing output file(s), ie. don't
+                 append numbers.
+-v               Verbose: more messages will be written to stdout
+                 about what is being done.
+-q               Quiet: No messages will be written to stdout about
+                 what is being done.
+-a               allow virtual glyphs ID's on compile or decompile.
 
-    Compile options:
-    -m Merge with TrueType-input-file: specify a TrueType or OpenType
-       font file to be merged with the TTX file. This option is only
-       valid when at most one TTX file is specified.
-    -b Don't recalc glyph bounding boxes: use the values in the TTX
-       file as-is.
-    --recalc-timestamp Set font 'modified' timestamp to current time.
-       By default, the modification time of the TTX file will be used.
-    --no-recalc-timestamp Keep the original font 'modified' timestamp.
-    --flavor <type> Specify flavor of output font file. May be 'woff'
-      or 'woff2'. Note that WOFF2 requires the Brotli Python extension,
-      available at https://github.com/google/brotli
-    --with-zopfli Use Zopfli instead of Zlib to compress WOFF. The Python
-      extension is available at https://pypi.python.org/pypi/zopfli
+Dump options:
+
+-l  List table info: instead of dumping to a TTX file, list some
+    minimal info about each table.
+-t <table>  Specify a table to dump. Multiple -t options
+    are allowed. When no -t option is specified, all tables
+    will be dumped.
+-x <table>  Specify a table to exclude from the dump. Multiple
+   -x options are allowed. -t and -x are mutually exclusive.
+-s  Split tables: save the TTX data into separate TTX files per
+   table and write one small TTX file that contains references
+   to the individual table dumps. This file can be used as
+   input to ttx, as long as the table files are in the
+   same directory.
+-g  Split glyf table: Save the glyf data into separate TTX files
+   per glyph and write a small TTX for the glyf table which
+   contains references to the individual TTGlyph elements.
+   NOTE: specifying -g implies -s (no need for -s together with -g)
+-i  Do NOT disassemble TT instructions: when this option is given,
+   all TrueType programs (glyph programs, the font program and the
+   pre-program) will be written to the TTX file as hex data
+   instead of assembly. This saves some time and makes the TTX
+   file smaller.
+-z <format>  Specify a bitmap data export option. For the EBDT, one of
+   ``raw``, ``row``, ``bitwise``, ``extfile``, or for the CBDT:
+   ``raw``, ``extfile``. Each option does one of the following:
+
+     -z raw
+        * export the bitmap data as a hex dump
+     -z row
+        * export each row as hex data
+     -z bitwise
+        * export each row as binary in an ASCII art style
+     -z extfile
+        * export the data as external files with XML references
+
+   If no export format is specified 'raw' format is used.
+-e  Don't ignore decompilation errors, but show a full traceback
+   and abort.
+-y number  Select font number for TrueType Collection (.ttc/.otc),
+   starting from 0.
+--unicodedata  UnicodeData.txt  Use custom database file to write
+   character names in the comments of the cmap TTX output.
+--newline value  Control how line endings are written in the XML
+   file. It can be 'LF', 'CR', or 'CRLF'. If not specified, the
+   default platform-specific line endings are used.
+
+Compile options:
+
+-m  Merge with TrueType-input-file: specify a TrueType or OpenType
+   font file to be merged with the TTX file. This option is only
+   valid when at most one TTX file is specified.
+-b  Don't recalc glyph bounding boxes: use the values in the TTX
+   file as-is.
+--recalc-timestamp  Set font 'modified' timestamp to current time.
+   By default, the modification time of the TTX file will be used.
+--no-recalc-timestamp  Keep the original font 'modified' timestamp.
+--flavor type  Specify flavor of output font file. May be 'woff'
+  or 'woff2'. Note that WOFF2 requires the Brotli Python extension,
+  available at https://github.com/google/brotli
+--with-zopfli  Use Zopfli instead of Zlib to compress WOFF. The Python
+  extension is available at https://pypi.python.org/pypi/zopfli
+
 """
 
 
@@ -229,6 +236,7 @@ class Options(object):
 
 
 def ttList(input, output, options):
+	"""Implements the -l (list tables) functionality."""
 	ttf = TTFont(input, fontNumber=options.fontNumber, lazy=True)
 	reader = ttf.reader
 	tags = sorted(reader.keys())
@@ -255,6 +263,13 @@ def ttList(input, output, options):
 
 @Timer(log, 'Done dumping TTX in %(time).3f seconds')
 def ttDump(input, output, options):
+	"""Uncompiles binary font (input) to XML file (output).
+
+The actual work is done by the ``toXML`` method on each of the objects inside
+the font. This just calls the top-level ``saveXML`` method which kicks off the
+transformation.
+
+	"""
 	log.info('Dumping "%s" to "%s"...', input, output)
 	if options.unicodedata:
 		setUnicodeData(options.unicodedata)
@@ -274,6 +289,13 @@ def ttDump(input, output, options):
 
 @Timer(log, 'Done compiling TTX in %(time).3f seconds')
 def ttCompile(input, output, options):
+	"""The inverse of ttDump: compiles XML file (input) to binary font (output).
+
+The actual work is done by the ``toXML`` method on each of the objects inside
+the font. This just calls the top-level ``saveXML`` method which kicks off the
+transformation.
+
+	"""
 	log.info('Compiling "%s" to "%s"...' % (input, output))
 	if options.useZopfli:
 		from fontTools.ttLib import sfnt
@@ -293,6 +315,8 @@ def ttCompile(input, output, options):
 
 
 def guessFileType(fileName):
+	"""Sniffs file header to determine whether input is TTF, OTF, TTC, WOFF,
+	or XML."""
 	base, ext = os.path.splitext(fileName)
 	try:
 		with open(fileName, "rb") as f:
@@ -329,6 +353,7 @@ def guessFileType(fileName):
 
 
 def parseOptions(args):
+	"""Handles command-line options"""
 	rawOptions, files = getopt.getopt(args, "ld:o:fvqht:x:sgim:z:baey:",
 			['unicodedata=', "recalc-timestamp", "no-recalc-timestamp",
 			 'flavor=', 'version', 'with-zopfli', 'newline='])

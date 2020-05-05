@@ -7,9 +7,11 @@ https://github.com/unified-font-object/ufoLib/blob/8747da7/Lib/ufoLib/filenames.
 
 Author: Tal Leming
 Copyright (c) 2005-2016, The RoboFab Developers:
+
 	Erik van Blokland
 	Tal Leming
 	Just van Rossum
+
 """
 from fontTools.misc.py23 import basestring, unicode
 

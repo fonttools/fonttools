@@ -16,44 +16,46 @@ log = logging.getLogger(__name__)
 __doc__="""
 Compiles/decompiles version 0 and 1 SVG tables from/to XML.
 
-Version 1 is the first SVG definition, implemented in Mozilla before Aug 2013, now deprecated.
-This module will decompile this correctly, but will compile a version 1 table
-only if you add the secret element "<version1/>" to the SVG element in the TTF file.
+Version 1 is the first SVG definition, implemented in Mozilla before Aug 2013,
+now deprecated. This module will decompile this correctly, but will compile a
+version 1 table only if you add the secret element ``<version1/>`` to the SVG
+element in the TTF file.
 
 Version 0 is the joint Adobe-Mozilla proposal, which supports color palettes.
 
-The XML format is:
-<SVG>
-	<svgDoc endGlyphID="1" startGlyphID="1">
-		<![CDATA[ <complete SVG doc> ]]
-	</svgDoc>
-...
-	<svgDoc endGlyphID="n" startGlyphID="m">
-		<![CDATA[ <complete SVG doc> ]]
-	</svgDoc>
+The XML format is::
 
-	<colorPalettes>
-		<colorParamUINameID>n</colorParamUINameID>
-		...
-		<colorParamUINameID>m</colorParamUINameID>
-		<colorPalette uiNameID="n">
-			<colorRecord red="<int>" green="<int>" blue="<int>" alpha="<int>" />
+	<SVG>
+		<svgDoc endGlyphID="1" startGlyphID="1">
+			<![CDATA[ <complete SVG doc> ]]
+		</svgDoc>
+	...
+		<svgDoc endGlyphID="n" startGlyphID="m">
+			<![CDATA[ <complete SVG doc> ]]
+		</svgDoc>
+
+		<colorPalettes>
+			<colorParamUINameID>n</colorParamUINameID>
 			...
-			<colorRecord red="<int>" green="<int>" blue="<int>" alpha="<int>" />
-		</colorPalette>
-		...
-		<colorPalette uiNameID="m">
-			<colorRecord red="<int> green="<int>" blue="<int>" alpha="<int>" />
+			<colorParamUINameID>m</colorParamUINameID>
+			<colorPalette uiNameID="n">
+				<colorRecord red="<int>" green="<int>" blue="<int>" alpha="<int>" />
+				...
+				<colorRecord red="<int>" green="<int>" blue="<int>" alpha="<int>" />
+			</colorPalette>
 			...
-			<colorRecord red=<int>" green="<int>" blue="<int>" alpha="<int>" />
-		</colorPalette>
-	</colorPalettes>
-</SVG>
+			<colorPalette uiNameID="m">
+				<colorRecord red="<int> green="<int>" blue="<int>" alpha="<int>" />
+				...
+				<colorRecord red=<int>" green="<int>" blue="<int>" alpha="<int>" />
+			</colorPalette>
+		</colorPalettes>
+	</SVG>
 
 Color values must be less than 256.
 
-The number of color records in each </colorPalette> must be the same as
-the number of <colorParamUINameID> elements.
+The number of color records in each ``</colorPalette>`` must be the same as
+the number of ``<colorParamUINameID>`` elements.
 
 """
 

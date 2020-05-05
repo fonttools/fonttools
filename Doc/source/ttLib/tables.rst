@@ -15,7 +15,7 @@ The modules here have pretty strange names: this is due to the
 fact that we need to map TT table tags (which are case sensitive)
 to filenames (which on Mac and Win aren't case sensitive) as well
 as to Python identifiers. The latter means it can only contain
-[A-Za-z0-9_] and cannot start with a number.
+``[A-Za-z0-9_]`` and cannot start with a number.
 
 :py:mod:`fontTools.ttLib` provides functions to expand a tag into the format used here::
 
@@ -46,7 +46,7 @@ Eg. the 'glyf' table converter lives in a Python file called::
 
 	_g_l_y_f.py
 
-The converter itself is a class, named "table_" + expandedtag. Eg::
+The converter itself is a class, named ``table_`` + expandedtag. Eg::
 
 
 	class table__g_l_y_f:

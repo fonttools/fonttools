@@ -683,12 +683,14 @@ class TTFont(object):
 
 	def getBestCmap(self, cmapPreferences=((3, 10), (0, 6), (0, 4), (3, 1), (0, 3), (0, 2), (0, 1), (0, 0))):
 		"""Return the 'best' unicode cmap dictionary available in the font,
-		or None, if no unicode cmap subtable is available.
+		or ``None``, if no unicode cmap subtable is available.
 
 		By default it will search for the following (platformID, platEncID)
-		pairs:
-			(3, 10), (0, 6), (0, 4), (3, 1), (0, 3), (0, 2), (0, 1), (0, 0)
-		This can be customized via the cmapPreferences argument.
+		pairs::
+
+				(3, 10), (0, 6), (0, 4), (3, 1), (0, 3), (0, 2), (0, 1), (0, 0)
+
+		This can be customized via the ``cmapPreferences`` argument.
 		"""
 		return self["cmap"].getBestCmap(cmapPreferences=cmapPreferences)
 
@@ -877,6 +879,7 @@ def tagToIdentifier(tag):
 	trimmed. Illegal characters are escaped as two hex bytes. If the
 	result starts with a number (as the result of a hex escape), an
 	extra underscore is prepended. Examples:
+
 		'glyf' -> '_g_l_y_f'
 		'cvt ' -> '_c_v_t'
 		'OS/2' -> 'O_S_2f_2'

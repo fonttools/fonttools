@@ -310,20 +310,28 @@ class table__g_l_y_f(DefaultTable.DefaultTable):
 		The coordinates includes four "phantom points" for the glyph metrics,
 		as mandated by the "gvar" spec.
 
-		The glyph controls is a namedtuple with the following attributes:
-			- numberOfContours: -1 for composite glyphs.
-			- endPts: list of indices of end points for each contour in simple
+		The glyph controls is a ``namedtuple`` with the following attributes:
+
+		``numberOfContours``
+			-1 for composite glyphs.
+
+		``endPts``
+			list of indices of end points for each contour in simple
 			glyphs, or component indices in composite glyphs (used for IUP
 			optimization).
-			- flags: array of contour point flags for simple glyphs (None for
+
+		``flags``
+			array of contour point flags for simple glyphs (``None`` for
 			composite glyphs).
-			- components: list of base glyph names (str) for each component in
-			composite glyphs (None for simple glyphs).
 
-		The "ttFont" and "defaultVerticalOrigin" args are used to compute the
-		"phantom points" (see "getPhantomPoints" method).
+		``components``
+			list of base glyph names (``str``) for each component in
+			composite glyphs (``None`` for simple glyphs).
 
-		Return None if the requested glyphName is not present.
+		The ``ttFont`` and ``defaultVerticalOrigin`` args are used to compute the
+		"phantom points" (see :meth:`getPhantomPoints` method).
+
+		Return ``None`` if the requested ``glyphName`` is not present.
 		"""
 		if glyphName not in self.glyphs:
 			return None

@@ -41,9 +41,11 @@ class table__c_m_a_p(DefaultTable.DefaultTable):
 		or None, if no unicode cmap subtable is available.
 
 		By default it will search for the following (platformID, platEncID)
-		pairs:
-			(3, 10), (0, 6), (0, 4), (3, 1), (0, 3), (0, 2), (0, 1), (0, 0)
-		This can be customized via the cmapPreferences argument.
+		pairs::
+
+				(3, 10), (0, 6), (0, 4), (3, 1), (0, 3), (0, 2), (0, 1), (0, 0)
+
+		This can be customized via the ``cmapPreferences`` argument.
 		"""
 		for platformID, platEncID in cmapPreferences:
 			cmapSubtable = self.getcmap(platformID, platEncID)
