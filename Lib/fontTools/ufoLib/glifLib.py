@@ -11,6 +11,7 @@ glyph data. See the class doc string for details.
 """
 
 import logging
+import enum
 from warnings import warn
 from collections import OrderedDict
 import fs
@@ -33,14 +34,8 @@ from fontTools.ufoLib.validators import (
 	glyphLibValidator,
 )
 from fontTools.misc import etree
-from fontTools.ufoLib import (
-	_UFOBaseIO,
-	FormatVersion,
-	LATEST_UFO_FORMAT,
-	UFO_FORMAT_3_0,
-	supportedUFOFormatVersions,
-)
-from fontTools.ufoLib.utils import numberTypes
+from fontTools.ufoLib import _UFOBaseIO, UFOFormatVersion
+from fontTools.ufoLib.utils import numberTypes, _VersionTupleEnumMixin
 
 
 __all__ = [
@@ -60,15 +55,27 @@ logger = logging.getLogger(__name__)
 CONTENTS_FILENAME = "contents.plist"
 LAYERINFO_FILENAME = "layerinfo.plist"
 
-GLIF_FORMAT_1_0 = FormatVersion(1)
-GLIF_FORMAT_2_0 = FormatVersion(2)
 
-supportedGLIFFormatVersions = {
-	GLIF_FORMAT_1_0,
-	GLIF_FORMAT_2_0,
-}
+class GLIFFormatVersion(tuple, _VersionTupleEnumMixin, enum.Enum):
+	FORMAT_1_0 = (1, 0)
+	FORMAT_2_0 = (2, 0)
 
-LATEST_GLIF_FORMAT = sorted(supportedGLIFFormatVersions)[-1]
+	@classmethod
+	def default(cls, ufoFormatVersion=None):
+		if ufoFormatVersion is not None:
+			return max(cls.supported_versions(ufoFormatVersion))
+		return super().default()
+
+	@classmethod
+	def supported_versions(cls, ufoFormatVersion=None):
+		if ufoFormatVersion is None:
+			# if ufo format unspecified, return all the supported GLIF formats
+			return super().supported_versions()
+		# else only return the GLIF formats supported by the given UFO format
+		versions = {cls.FORMAT_1_0}
+		if ufoFormatVersion >= UFOFormatVersion.FORMAT_3_0:
+			versions.add(cls.FORMAT_2_0)
+		return frozenset(versions)
 
 
 # ------------
@@ -125,7 +132,7 @@ class GlyphSet(_UFOBaseIO):
 		self,
 		path,
 		glyphNameToFileNameFunc=None,
-		ufoFormatVersion=LATEST_UFO_FORMAT,
+		ufoFormatVersion=None,
 		validateRead=True,
 		validateWrite=True,
 	):
@@ -142,10 +149,18 @@ class GlyphSet(_UFOBaseIO):
 		``validateRead`` will validate read operations. Its default is ``True``.
 		``validateWrite`` will validate write operations. Its default is ``True``.
 		"""
-		if not isinstance(ufoFormatVersion, FormatVersion):
-			ufoFormatVersion = FormatVersion(ufoFormatVersion)
-		if ufoFormatVersion not in supportedUFOFormatVersions and validateRead:
-			raise GlifLibError("Unsupported UFO format version: %d.%d" % ufoFormatVersion)
+		try:
+			ufoFormatVersion = UFOFormatVersion(ufoFormatVersion)
+		except ValueError as e:
+			from fontTools.ufoLib.errors import UnsupportedUFOFormat
+
+			raise UnsupportedUFOFormat(
+				f"Unsupported UFO format: {ufoFormatVersion!r}"
+			) from e
+
+		if hasattr(path, "__fspath__"):  # support os.PathLike objects
+			path = path.__fspath__()
+
 		if isinstance(path, str):
 			try:
 				filesystem = fs.osfs.OSFS(path)
@@ -369,9 +384,7 @@ class GlyphSet(_UFOBaseIO):
 			validate = self._validateRead
 		text = self.getGLIF(glyphName)
 		tree = _glifTreeFromString(text)
-		formatVersions = {GLIF_FORMAT_1_0}
-		if self.ufoFormatVersionTuple >= UFO_FORMAT_3_0:
-			formatVersions.add(GLIF_FORMAT_2_0)
+		formatVersions = GLIFFormatVersion.supported_versions(self.ufoFormatVersionTuple)
 		_readGlyphFromTree(tree, glyphObject, pointPen, formatVersions=formatVersions, validate=validate)
 
 	def writeGlyph(self, glyphName, glyphObject=None, drawPointsFunc=None, formatVersion=None, validate=None):
@@ -401,23 +414,35 @@ class GlyphSet(_UFOBaseIO):
 		The GLIF format version will be chosen based on the ufoFormatVersion
 		passed during the creation of this object. If a particular format
 		version is desired, it can be passed with the formatVersion argument.
+		The formatVersion argument accepts either a tuple of integers for
+		(major, minor), or a single integer for the major digit only (with
+		minor digit implied as 0).
+
+		An UnsupportedGLIFFormat exception is raised if the requested GLIF
+		formatVersion is not supported.
 
 		``validate`` will validate the data, by default it is set to the
 		class's ``validateWrite`` value, can be overridden.
 		"""
 		if formatVersion is None:
-			if self.ufoFormatVersionTuple >= UFO_FORMAT_3_0:
-				formatVersion = GLIF_FORMAT_2_0
-			else:
-				formatVersion = GLIF_FORMAT_1_0
-		elif not isinstance(formatVersion, FormatVersion):
-			formatVersion = FormatVersion(formatVersion)
-		if formatVersion not in supportedGLIFFormatVersions:
-			raise GlifLibError("Unsupported GLIF format version: %d.%d" % formatVersion)
-		if formatVersion.major == 2 and self.ufoFormatVersionTuple.major < 3:
-			raise GlifLibError(
-				"Unsupported GLIF format version (%d.%d) for UFO format version %d.%d."
-				% (*formatVersion, *self.ufoFormatVersionTuple)
+			formatVersion = GLIFFormatVersion.default(self.ufoFormatVersionTuple)
+		else:
+			try:
+				formatVersion = GLIFFormatVersion(formatVersion)
+			except ValueError as e:
+				from fontTools.ufoLib.errors import UnsupportedGLIFFormat
+
+				raise UnsupportedGLIFFormat(
+					f"Unsupported GLIF format version: {formatVersion!r}"
+				) from e
+		if formatVersion not in GLIFFormatVersion.supported_versions(
+			self.ufoFormatVersionTuple
+		):
+			from fontTools.ufoLib.errors import UnsupportedGLIFFormat
+
+			raise UnsupportedGLIFFormat(
+				f"Unsupported GLIF format version ({formatVersion!s}) "
+				f"for UFO format version {self.ufoFormatVersionTuple!s}."
 			)
 		if validate is None:
 			validate = self._validateWrite
@@ -555,7 +580,7 @@ def readGlyphFromString(
 	aString,
 	glyphObject=None,
 	pointPen=None,
-	formatVersions=supportedGLIFFormatVersions,
+	formatVersions=None,
 	validate=True,
 ):
 	"""
@@ -586,17 +611,37 @@ def readGlyphFromString(
 	conforming to the PointPen protocol as the 'pointPen' argument.
 	This argument may be None if you don't need the outline data.
 
-	The formatVersions argument defined the GLIF format versions
+	The formatVersions optional argument defines the GLIF format versions
 	that are allowed to be read.
+	The type is Optional[Iterable[Tuple[int, int], int]]. It can contain
+	either integers (for the major versions to be allowed, with minor
+	digits defaulting to 0), or tuples of integers to specify both
+	(major, minor) versions.
 
 	``validate`` will validate the read data. It is set to ``True`` by default.
 	"""
 	tree = _glifTreeFromString(aString)
-	formatVersions = {
-		FormatVersion(v) if not isinstance(v, FormatVersion) else v
-		for v in formatVersions
-	}
-	_readGlyphFromTree(tree, glyphObject, pointPen, formatVersions=formatVersions, validate=validate)
+
+	if formatVersions is None:
+		validFormatVersions = GLIFFormatVersion.supported_versions()
+	else:
+		validFormatVersions, invalidFormatVersions = set(), set()
+		for v in formatVersions:
+			try:
+				formatVersion = GLIFFormatVersion(v)
+			except ValueError:
+				invalidFormatVersions.add(v)
+			else:
+				validFormatVersions.add(formatVersion)
+		if not validFormatVersions:
+			raise ValueError(
+				"None of the requested GLIF formatVersions are supported: "
+				f"{formatVersions!r}"
+			)
+
+	_readGlyphFromTree(
+		tree, glyphObject, pointPen, formatVersions=validFormatVersions, validate=validate
+	)
 
 
 def _writeGlyphToBytes(
@@ -604,10 +649,16 @@ def _writeGlyphToBytes(
 		glyphObject=None,
 		drawPointsFunc=None,
 		writer=None,
-		formatVersion=LATEST_GLIF_FORMAT,
+		formatVersion=None,
 		validate=True,
 ):
 	"""Return .glif data for a glyph as a UTF-8 encoded bytes string."""
+	try:
+		formatVersion = GLIFFormatVersion(formatVersion)
+	except ValueError:
+		from fontTools.ufoLib.errors import UnsupportedGLIFFormat
+
+		raise UnsupportedGLIFFormat("Unsupported GLIF format version: {formatVersion!r}")
 	# start
 	if validate and not isinstance(glyphName, str):
 		raise GlifLibError("The glyph name is not properly formatted.")
@@ -660,7 +711,7 @@ def writeGlyphToString(
 	glyphName,
 	glyphObject=None,
 	drawPointsFunc=None,
-	formatVersion=LATEST_GLIF_FORMAT,
+	formatVersion=None,
 	validate=True,
 ):
 	"""
@@ -688,11 +739,14 @@ def writeGlyphToString(
 	proper PointPen methods to transfer the outline to the .glif file.
 
 	The GLIF format version can be specified with the formatVersion argument.
+	This accepts either a tuple of integers for (major, minor), or a single
+	integer for the major digit only (with minor digit implied as 0).
+
+	An UnsupportedGLIFFormat exception is raised if the requested UFO
+	formatVersion is not supported.
 
 	``validate`` will validate the written data. It is set to ``True`` by default.
 	"""
-	if not isinstance(formatVersion, FormatVersion):
-		formatVersion = FormatVersion(formatVersion)
 	data = _writeGlyphToBytes(
 		glyphName,
 		glyphObject=glyphObject,
@@ -931,7 +985,7 @@ def _readGlyphFromTree(
 	tree,
 	glyphObject=None,
 	pointPen=None,
-	formatVersions=supportedGLIFFormatVersions,
+	formatVersions=GLIFFormatVersion.supported_versions(),
 	validate=True,
 ):
 	# check the format version
@@ -940,27 +994,40 @@ def _readGlyphFromTree(
 		raise GlifLibError("Unspecified format version in GLIF.")
 	formatVersionMinor = tree.get("formatMinor", 0)
 	try:
-		formatVersion = FormatVersion(int(formatVersionMajor), int(formatVersionMinor))
-	except ValueError:
-		raise GlifLibError(
-			"Invalid GLIF format version: (%r, %r)" % (formatVersionMajor, formatVersionMinor)
-		)
-	if validate and formatVersion not in formatVersions:
-		raise GlifLibError("Forbidden GLIF format version: %s.%s" % formatVersion)
-
-	readGlyphFromTree = _READ_GLYPH_FROM_TREE_FUNCS.get(formatVersion)
-	if not readGlyphFromTree:
-		msg = "Unsupported GLIF format version: %s.%s" % formatVersion
+		formatVersion = GLIFFormatVersion((int(formatVersionMajor), int(formatVersionMinor)))
+	except ValueError as e:
+		msg = "Unsupported GLIF format: %s.%s" % (formatVersionMajor, formatVersionMinor)
 		if validate:
-			raise GlifLibError(msg)
+			from fontTools.ufoLib.errors import UnsupportedGLIFFormat
+
+			raise UnsupportedGLIFFormat(msg) from e
 		# warn but continue using the latest supported format
-		logger.warn("%s. Some data may be skipped or parsed incorrectly.", msg)
-		readGlyphFromTree = _READ_GLYPH_FROM_TREE_FUNCS[LATEST_GLIF_FORMAT]
+		formatVersion = GLIFFormatVersion.default()
+		logger.warning(
+			"%s. Assuming the latest supported version (%s). "
+			"Some data may be skipped or parsed incorrectly.",
+			msg,
+			formatVersion,
+		)
 
-	readGlyphFromTree(tree=tree, glyphObject=glyphObject, pointPen=pointPen, validate=validate)
+	if validate and formatVersion not in formatVersions:
+		raise GlifLibError(f"Forbidden GLIF format version: {formatVersion!s}")
+
+	try:
+		readGlyphFromTree = _READ_GLYPH_FROM_TREE_FUNCS[formatVersion]
+	except KeyError:
+		raise NotImplementedError(formatVersion)
+
+	readGlyphFromTree(
+		tree=tree,
+		glyphObject=glyphObject,
+		pointPen=pointPen,
+		validate=validate,
+		formatMinor=formatVersion.minor,
+	)
 
 
-def _readGlyphFromTreeFormat1(tree, glyphObject=None, pointPen=None, validate=None):
+def _readGlyphFromTreeFormat1(tree, glyphObject=None, pointPen=None, validate=None, **kwargs):
 	# get the name
 	_readName(glyphObject, tree, validate)
 	# populate the sub elements
@@ -1098,8 +1165,8 @@ def _readGlyphFromTreeFormat2(
 
 
 _READ_GLYPH_FROM_TREE_FUNCS = {
-	GLIF_FORMAT_1_0: _readGlyphFromTreeFormat1,
-	GLIF_FORMAT_2_0: _readGlyphFromTreeFormat2,
+	GLIFFormatVersion.FORMAT_1_0: _readGlyphFromTreeFormat1,
+	GLIFFormatVersion.FORMAT_2_0: _readGlyphFromTreeFormat2,
 }
 
 
@@ -1585,12 +1652,10 @@ class GLIFPointPen(AbstractPointPen):
 	part of .glif files.
 	"""
 
-	def __init__(self, element, formatVersion=LATEST_GLIF_FORMAT, identifiers=None, validate=True):
+	def __init__(self, element, formatVersion=None, identifiers=None, validate=True):
 		if identifiers is None:
 			identifiers = set()
-		if not isinstance(formatVersion, FormatVersion):
-			formatVersion = FormatVersion(formatVersion)
-		self.formatVersion = formatVersion
+		self.formatVersion = GLIFFormatVersion(formatVersion)
 		self.identifiers = identifiers
 		self.outline = element
 		self.contour = None
