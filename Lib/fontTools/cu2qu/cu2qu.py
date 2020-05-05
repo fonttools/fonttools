@@ -77,6 +77,9 @@ def calc_cubic_parameters(p0, p1, p2, p3):
 @cython.cfunc
 @cython.locals(p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex)
 def split_cubic_into_n_iter(p0, p1, p2, p3, n):
+    """Given four vectors representing control points of a cubic curve,
+    splits the curve into `n` equal parts by curve time. (t=0..1/n, t=1/n..2/n,
+    ...) and returns an iterator of the control points of the subcurves."""
     # Hand-coded special-cases
     if n == 2:
         return iter(split_cubic_into_two(p0, p1, p2, p3))
@@ -115,6 +118,9 @@ def _split_cubic_into_n_gen(p0, p1, p2, p3, n):
 @cython.locals(p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex)
 @cython.locals(mid=cython.complex, deriv3=cython.complex)
 def split_cubic_into_two(p0, p1, p2, p3):
+    """Given four vectors representing control points of a cubic curve,
+    returns a tuple of two sets of control points with the curve split at
+    t = 1/2"""
     mid = (p0 + 3 * (p1 + p2) + p3) * .125
     deriv3 = (p3 + p2 - p1 - p0) * .125
     return ((p0, (p0 + p1) * .5, mid - deriv3, mid),
@@ -124,6 +130,9 @@ def split_cubic_into_two(p0, p1, p2, p3):
 @cython.locals(p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex, _27=cython.double)
 @cython.locals(mid1=cython.complex, deriv1=cython.complex, mid2=cython.complex, deriv2=cython.complex)
 def split_cubic_into_three(p0, p1, p2, p3, _27=1/27):
+    """Given four vectors representing control points of a cubic curve,
+    returns a tuple of three sets of control points with the curve split at
+    t = 1/3 and 2/3"""
     # we define 1/27 as a keyword argument so that it will be evaluated only
     # once but still in the scope of this function
     mid1 = (8*p0 + 12*p1 + 6*p2 + p3) * _27
@@ -268,7 +277,10 @@ def cubic_approx_spline(cubic, n, tolerance, _2_3=2/3):
 @cython.locals(max_err=cython.double)
 @cython.locals(n=cython.int)
 def curve_to_quadratic(curve, max_err):
-    """Return a quadratic spline approximating this cubic bezier.
+    """Return a quadratic spline approximating this cubic bezier. Takes a curve
+    (a list of four pairs) and an error value in font units. See the following
+    method for how to interpret the result value.
+
     Raise 'ApproxNotFoundError' if no suitable approximation can be found
     with the given parameters.
     """
@@ -288,6 +300,22 @@ def curve_to_quadratic(curve, max_err):
 @cython.locals(l=cython.int, last_i=cython.int, i=cython.int)
 def curves_to_quadratic(curves, max_errors):
     """Return quadratic splines approximating these cubic beziers.
+    Takes a list of curves, and a corresponding list of maximum error
+    values in font units.
+    The curves are expected to be passed as a list of list of points,
+    e.g.:
+
+    >>> curves_to_quadratic( [
+    ...   [ (50,50), (100,100), (150,100), (200,50) ],
+    ...   [ (75,50), (120,100), (150,75),  (200,60) ]
+    ... ], [1,1] )
+    [[(50.0, 50.0), (75.0, 75.0), (125.0, 91.66666666666666), (175.0, 75.0), (200.0, 50.0)], [(75.0, 50.0), (97.5, 75.0), (135.41666666666666, 82.08333333333333), (175.0, 67.5), (200.0, 60.0)]]
+
+    The returned splines have "implied oncurve points" suitable for use in
+    TrueType ``glif`` outlines - i.e. in the first spline returned above,
+    the first quadratic segment runs from (50,50) to
+    ( (75 + 125)/2 , (120 + 91.666..)/2 ) = (100, 83.333...).
+
     Raise 'ApproxNotFoundError' if no suitable approximation can be found
     for all curves with the given parameters.
     """
