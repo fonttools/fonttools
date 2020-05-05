@@ -49,12 +49,14 @@ class CFFFontSet(object):
 	``keys()`` and ``values()`` methods) mapping font names to :class:`TopDict`
 	objects, or as a list.
 
-	>>> from fontTools import ttLib
-	>>> tt = ttLib.TTFont("Tests/cffLib/data/LinLibertine_RBI.otf")
-	>>> tt["CFF "].cff
-	<fontTools.cffLib.CFFFontSet object at 0x101e24c90>
-	>>> tt["CFF "].cff[0] # Here's your actual font data
-	<fontTools.cffLib.TopDict object at 0x1020f1fd0>
+	.. code:: python
+
+		from fontTools import ttLib
+		tt = ttLib.TTFont("Tests/cffLib/data/LinLibertine_RBI.otf")
+		tt["CFF "].cff
+		# <fontTools.cffLib.CFFFontSet object at 0x101e24c90>
+		tt["CFF "].cff[0] # Here's your actual font data
+		# <fontTools.cffLib.TopDict object at 0x1020f1fd0>
 	
 	"""
 
@@ -193,8 +195,11 @@ class CFFFontSet(object):
 		"""Write the object into XML representation onto the given
 		:class:`fontTools.misc.xmlWriter.XMLWriter`.
 
-		>>> writer = xmlWriter.XMLWriter(sys.stdout)
-		>>> tt["CFF "].cff.toXML(writer)
+		.. code:: python
+
+			writer = xmlWriter.XMLWriter(sys.stdout)
+			tt["CFF "].cff.toXML(writer)
+
 		"""
 
 		xmlWriter.simpletag("major", value=self.major)
@@ -701,17 +706,22 @@ class GlobalSubrsIndex(Index):
 	a ``callsubr`` instruction) that you will need to add the "subroutine
 	number bias" to number given:
 
-	>>> tt = ttLib.TTFont("Almendra-Bold.otf")
-	>>> u = tt["CFF "].cff[0].CharStrings["udieresis"]
-	>>> u.decompile()
-	>>> u.toXML(XMLWriter(sys.stdout))
-	<some stuff>
-	-64 callgsubr # Subroutine which implements the dieresis mark
-	<other stuff>
-	>>> tt["CFF "].cff[0].GlobalSubrs[-64] # WRONG
-	<T2CharString (bytecode) at 103451d10>
-	>>> tt["CFF "].cff[0].GlobalSubrs[-64 + 107] # RIGHT
-	<T2CharString (source) at 103451390>
+	.. code:: python
+
+		tt = ttLib.TTFont("Almendra-Bold.otf")
+		u = tt["CFF "].cff[0].CharStrings["udieresis"]
+		u.decompile()
+
+		u.toXML(XMLWriter(sys.stdout))
+		# <some stuff>
+		# -64 callgsubr <-- Subroutine which implements the dieresis mark
+		# <other stuff>
+
+		tt["CFF "].cff[0].GlobalSubrs[-64] # <-- WRONG
+		# <T2CharString (bytecode) at 103451d10>
+
+		tt["CFF "].cff[0].GlobalSubrs[-64 + 107] # <-- RIGHT
+		# <T2CharString (source) at 103451390>
 
 	"""
 
@@ -746,8 +756,11 @@ class GlobalSubrsIndex(Index):
 		"""Write the subroutines index into XML representation onto the given
 		:class:`fontTools.misc.xmlWriter.XMLWriter`.
 
-		>>> writer = xmlWriter.XMLWriter(sys.stdout)
-		>>> tt["CFF "].cff[0].GlobalSubrs.toXML(writer)
+		.. code:: python
+
+			writer = xmlWriter.XMLWriter(sys.stdout)
+			tt["CFF "].cff[0].GlobalSubrs.toXML(writer)
+
 		"""
 		xmlWriter.comment(
 			"The 'index' attribute is only for humans; "
@@ -791,10 +804,12 @@ class TopDictIndex(Index):
 	(again, usually only one entry is present). Hence the following calls are
 	equivalent:
 
-	>>> tt["CFF "].cff[0]
-	<fontTools.cffLib.TopDict object at 0x102ed6e50>
-	>>> tt["CFF "].cff.topDictIndex[0]
-	<fontTools.cffLib.TopDict object at 0x102ed6e50>
+	.. code:: python
+
+		tt["CFF "].cff[0]
+		# <fontTools.cffLib.TopDict object at 0x102ed6e50>
+		tt["CFF "].cff.topDictIndex[0]
+		# <fontTools.cffLib.TopDict object at 0x102ed6e50>
 
 	"""
 
@@ -989,8 +1004,10 @@ class CharStrings(object):
 	each glyph. This object presents a dictionary interface to the font's
 	CharStrings, indexed by glyph name:
 
-		>>> tt["CFF "].cff[0].CharStrings["a"]
-		<T2CharString (bytecode) at 103451e90>
+	.. code:: python
+	
+		tt["CFF "].cff[0].CharStrings["a"]
+		# <T2CharString (bytecode) at 103451e90>
 
 	See :class:`fontTools.misc.psCharStrings.T1CharString` and
 	:class:`fontTools.misc.psCharStrings.T2CharString` for how to decompile,
@@ -2497,17 +2514,22 @@ class TopDict(BaseDict):
 	can be accessed through attributes or through the dictionary returned
 	through the ``rawDict`` property:
 
-	>>> font = tt["CFF "].cff[0]
-	>>> font.FamilyName
-	'Linux Libertine O'
-	>>> font.rawDict["FamilyName"]
-	'Linux Libertine O'
+	.. code:: python
+
+		font = tt["CFF "].cff[0]
+		font.FamilyName
+		# 'Linux Libertine O'
+		font.rawDict["FamilyName"]
+		# 'Linux Libertine O'
 
 	More information is available in the CFF file's private dictionary, accessed
 	via the ``Private`` property:
 
-	>>> tt["CFF "].cff[0].Private.BlueValues
-	[-15, 0, 515, 515, 666, 666]
+	.. code:: python
+
+		tt["CFF "].cff[0].Private.BlueValues
+		# [-15, 0, 515, 515, 666, 666]
+	
 	"""
 
 	defaults = buildDefaults(topDictOperators)
