@@ -2,8 +2,7 @@
 #
 # Google Author(s): Behdad Esfahbod, Roozbeh Pournader
 
-"""Font merger.
-"""
+cli_description = "Merge multiple fonts into one"
 
 from fontTools.misc.py23 import *
 from fontTools.misc.timeTools import timestampNow

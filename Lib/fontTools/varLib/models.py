@@ -8,6 +8,8 @@ __all__ = ['nonNone', 'allNone', 'allEqual', 'allEqualTo', 'subList',
 from .errors import VariationModelError
 
 
+cli_description = "Normalize locations on a given designspace"
+
 def nonNone(lst):
 	return [l for l in lst if l is not None]
 

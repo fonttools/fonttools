@@ -100,6 +100,7 @@ import re
 import logging
 
 
+cli_description = "Convert OpenType fonts to XML and back"
 log = logging.getLogger("fontTools.ttx")
 
 opentypeheaderRE = re.compile('''sfntVersion=['"]OTTO["']''')

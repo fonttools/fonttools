@@ -9,6 +9,8 @@ from operator import add
 from functools import partial, reduce
 
 
+cli_description = "Calculate optimum defaultWidthX/nominalWidthX values"
+
 class missingdict(dict):
 	def __init__(self, missing_func):
 		self.missing_func = missing_func

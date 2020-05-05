@@ -16,6 +16,7 @@ import logging
 
 
 log = logging.getLogger("fontTools.ttLib.woff2")
+cli_description = "Compress and decompress WOFF2 fonts"
 
 haveBrotli = False
 try:
@@ -1419,7 +1420,7 @@ def main(args=None):
 
 	parser = argparse.ArgumentParser(
 		prog="fonttools ttLib.woff2",
-		description="Compress and decompress WOFF2 fonts",
+		description=cli_description
 	)
 
 	parser_group = parser.add_subparsers(title="sub-commands")

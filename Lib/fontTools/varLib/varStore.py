@@ -8,6 +8,8 @@ from collections import defaultdict
 from array import array
 
 
+cli_description = "Optimize a font's GDEF variation store"
+
 def _getLocationKey(loc):
 	return tuple(sorted(loc.items(), key=lambda kv: kv[0]))
 
