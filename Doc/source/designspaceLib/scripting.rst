@@ -1,4 +1,3 @@
-#######################
 Scripting a designspace
 #######################
 
@@ -10,7 +9,6 @@ construct one with an interface like
 `fontTools.designspaceLib` offers a some tools for building designspaces in
 Python. This document shows an example.
 
-********************************
 Filling-in a DesignSpaceDocument
 ********************************
 
@@ -38,7 +36,7 @@ attributes.
 -  Read about :ref:`subclassing-descriptors`
 
 Make an axis object
-===================
+^^^^^^^^^^^^^^^^^^^
 
 Make a descriptor object and add it to the document.
 
@@ -63,7 +61,7 @@ Make a descriptor object and add it to the document.
    default values of all axes. 
 
 Option: add label names
------------------------
+"""""""""""""""""""""""
 
 The **labelnames** attribute is intended to store localisable, human
 readable names for this axis if this is not an axis that is registered
@@ -80,7 +78,7 @@ authoring software. This, at least, is the place to record it.
     a1.labelNames['en'] = u"Wéíght"
 
 Option: add a map
------------------
+"""""""""""""""""
 
 The **map** attribute is a list of (input, output) mapping values
 intended for `axis variations table of
@@ -91,7 +89,7 @@ OpenType <https://www.microsoft.com/typography/otspec/avar.htm>`__.
     a1.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
 
 Make a source object
-====================
+^^^^^^^^^^^^^^^^^^^^
 
 A **source** is an object that points to a UFO file. It provides the
 outline geometry, kerning and font.info that we want to work with.
@@ -127,7 +125,7 @@ So go ahead and add another master:
     
 
 Option: exclude glyphs
-----------------------
+""""""""""""""""""""""
 
 By default all glyphs in a source will be processed. If you want to
 exclude certain glyphs, add their names to the ``mutedGlyphNames`` list.
@@ -137,7 +135,7 @@ exclude certain glyphs, add their names to the ``mutedGlyphNames`` list.
     s1.mutedGlyphNames = ["A.test", "A.old"]
 
 Make an instance object
-=======================
+^^^^^^^^^^^^^^^^^^^^^^^
 
 An **instance** is description of a UFO that you want to generate with
 the designspace. For an instance you can define more things. If you want
@@ -165,7 +163,7 @@ and so on. You can also set a path where to generate the instance.
 -  Instances for variable fonts become **named instances**.
 
 Option: add more names
-----------------------
+""""""""""""""""""""""
 
 If you want you can add a PostScript font name, a stylemap familyName
 and a stylemap styleName.
@@ -177,7 +175,7 @@ and a stylemap styleName.
     i0.styleMapStyleName = "regular"
 
 Option: add glyph specific masters
-----------------------------------
+""""""""""""""""""""""""""""""""""
 
 This bit is not supported by OpenType variable fonts, but it is needed
 for some designspaces intended for generating instances with
@@ -211,7 +209,6 @@ this into something clever.
     # With all of that set up, store it in the instance.
     i4.glyphs['dollar'] = glyphData
 
-******
 Saving
 ******
 
@@ -220,7 +217,6 @@ Saving
     path = "myprototype.designspace"
     doc.write(path)
 
-************************
 Reading old designspaces
 ************************
 
@@ -237,7 +233,6 @@ This is how you check the default font.
 
     doc.checkDefault()
 
-***********
 Generating?
 ***********
 

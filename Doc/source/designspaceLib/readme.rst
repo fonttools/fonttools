@@ -1,4 +1,3 @@
-#################################
 DesignSpaceDocument Specification
 #################################
 
@@ -8,16 +7,14 @@ An object to read, write and edit interpolation systems for typefaces. Define so
 -  `The document XML structure <#document-xml-structure>`_
 
 
-**********
 Python API
 **********
-
 
 
 .. _designspacedocument-object:
 
 DesignSpaceDocument object
-==========================
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The DesignSpaceDocument object can read and write ``.designspace`` data.
 It imports the axes, sources and instances to very basic **descriptor**
@@ -46,7 +43,7 @@ all lowercase.
     doc.instances
 
 Attributes
-----------
+""""""""""
 
 -  ``axes``: list of axisDescriptors
 -  ``sources``: list of sourceDescriptors
@@ -60,7 +57,7 @@ Attributes
 -  ``rulesProcessingLast``: This flag indicates whether the substitution rules should be applied before or after other glyph substitution features. False: before, True: after.
 
 Methods
--------
+"""""""
 
 -  ``read(path)``: read a designspace file from ``path``
 -  ``write(path)``: write this designspace to ``path``
@@ -81,14 +78,14 @@ Methods
    location. Returns None if there isn't one.
 -  ``normalizeLocation(aLocation)``: return a dict with normalized axis values.
 -  ``normalize()``: normalize the geometry of this designspace: scale all the
-  locations of all masters and instances to the ``-1 - 0 - 1`` value.
+   locations of all masters and instances to the ``-1 - 0 - 1`` value.
 -  ``loadSourceFonts()``: Ensure SourceDescriptor.font attributes are loaded,
    and return list of fonts.
 -  ``tostring(encoding=None)``: Returns the designspace as a string. Default 
    encoding `utf-8`.
 
 Class Methods
--------------
+"""""""""""""
 - ``fromfile(path)``
 - ``fromstring(string)``
 
@@ -98,10 +95,10 @@ Class Methods
 
 
 SourceDescriptor object
-=======================
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Attributes
-----------
+""""""""""
 
 -  ``filename``: string. A relative path to the source file, **as it is
    in the document**. MutatorMath + Varlib.
@@ -164,13 +161,13 @@ Attributes
 .. _instance-descriptor-object:
 
 InstanceDescriptor object
-=========================
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. attributes-1:
 
 
 Attributes
-----------
+""""""""""
 
 -  ``filename``: string. Relative path to the instance file, **as it is
    in the document**. The file may or may not exist. MutatorMath.
@@ -210,7 +207,7 @@ Attributes
 -  ``lib``: dict. Custom data associated with this instance.
 
 Methods
--------
+"""""""
 
 These methods give easier access to the localised names.
 
@@ -224,7 +221,7 @@ These methods give easier access to the localised names.
 -  ``getStyleMapFamilyName(languageCode="en")``
 
 Example
--------
+"""""""
 
 .. code:: python
 
@@ -251,7 +248,7 @@ Example
 .. _axis-descriptor-object:
 
 AxisDescriptor object
-=====================
+^^^^^^^^^^^^^^^^^^^^^
 
 -  ``tag``: string. Four letter tag for this axis. Some might be
    registered at the `OpenType
@@ -288,7 +285,7 @@ AxisDescriptor object
     a1.map = [(1.0, 10.0), (400.0, 66.0), (1000.0, 990.0)]
 
 RuleDescriptor object
-=====================
+^^^^^^^^^^^^^^^^^^^^^
 
 -  ``name``: string. Unique name for this rule. Can be used to
    reference this rule data.
@@ -299,7 +296,7 @@ RuleDescriptor object
 -  Each substitution is stored as tuples of glyphnames, e.g. ("a", "a.alt").
 
 Evaluating rules
-----------------
+""""""""""""""""
     
 -  ``evaluateRule(rule, location)``: Return True if any of the rule's conditionsets 
    matches the given location.
@@ -320,7 +317,7 @@ Evaluating rules
 .. _subclassing-descriptors:
 
 Subclassing descriptors
-=======================
+^^^^^^^^^^^^^^^^^^^^^^^
 
 The DesignSpaceDocument can take subclassed Reader and Writer objects.
 This allows you to work with your own descriptors. You could subclass
@@ -343,7 +340,6 @@ descriptor does not need to be a subclass.
 
     myDoc = DesignSpaceDocument(KeyedDocReader, KeyedDocWriter)
 
-**********************
 Document xml structure
 **********************
 
@@ -383,7 +379,7 @@ Document xml structure
 .. 1-axis-element:
 
 1. axis element
-===============
+^^^^^^^^^^^^^^^
 
 -  Define a single axis
 -  Child element of ``axes``
@@ -391,7 +387,7 @@ Document xml structure
 .. attributes-2:
 
 Attributes
-----------
+""""""""""
 
 -  ``name``: required, string. Name of the axis that is used in the
    location elements.
@@ -410,7 +406,7 @@ Attributes
 .. 11-labelname-element:
 
 1.1 labelname element
-=====================
+^^^^^^^^^^^^^^^^^^^^^
 
 -  Defines a human readable name for UI use.
 -  Optional for non-registered axis names.
@@ -420,20 +416,20 @@ Attributes
 .. attributes-3:
 
 Attributes
-----------
+""""""""""
 
 -  ``xml:lang``: required, string. `XML language
    definition <https://www.w3.org/International/questions/qa-when-xmllang.en>`__
 
 Value
------
+"""""
 
 -  The natural language name of this axis.
 
 .. example-2:
 
 Example
--------
+"""""""
 
 .. code:: xml
 
@@ -443,7 +439,7 @@ Example
 .. 12-map-element:
 
 1.2 map element
-===============
+^^^^^^^^^^^^^^^
 
 -  Defines a single node in a series of input value (user space coordinate)
    to output value (designspace coordinate) pairs.
@@ -453,7 +449,7 @@ Example
 .. example-3:
 
 Example
--------
+"""""""
 
 .. code:: xml
 
@@ -462,7 +458,7 @@ Example
     <map input="1000.0" output="990.0" />
 
 Example of all axis elements together:
---------------------------------------
+""""""""""""""""""""""""""""""""""""""
 
 .. code:: xml
 
@@ -481,7 +477,7 @@ Example of all axis elements together:
 .. 2-location-element:
 
 2. location element
-===================
+^^^^^^^^^^^^^^^^^^^
 
 -  Defines a coordinate in the design space.
 -  Dictionary of axisname: axisvalue
@@ -490,14 +486,14 @@ Example of all axis elements together:
 .. 21-dimension-element:
 
 2.1 dimension element
-=====================
+^^^^^^^^^^^^^^^^^^^^^
 
 -  Child element of ``location``
 
 .. attributes-4:
 
 Attributes
-----------
+""""""""""
 
 -  ``name``: required, string. Name of the axis.
 -  ``xvalue``: required, number. The value on this axis.
@@ -507,7 +503,7 @@ Attributes
 .. example-4:
 
 Example
--------
+"""""""
 
 .. code:: xml
 
@@ -519,7 +515,7 @@ Example
 .. 3-source-element:
 
 3. source element
-=================
+^^^^^^^^^^^^^^^^^
 
 -  Defines a single font or layer that contributes to the designspace.
 -  Child element of ``sources``
@@ -528,7 +524,7 @@ Example
 .. attributes-5:
 
 Attributes
-----------
+""""""""""
 
 -  ``familyname``: optional, string. The family name of the source font.
    While this could be extracted from the font data itself, it can be
@@ -545,11 +541,12 @@ Attributes
 .. 31-lib-element:
 
 3.1 lib element
-===============
+^^^^^^^^^^^^^^^
 
 There are two meanings for the ``lib`` element:
 
 1. Source lib
+
     -  Example: ``<lib copy="1" />``
     -  Child element of ``source``
     -  Defines if the instances can inherit the data in the lib of this
@@ -557,6 +554,7 @@ There are two meanings for the ``lib`` element:
     -  MutatorMath only
 
 2. Document and instance lib
+
     - Example:
 
       .. code:: xml
@@ -576,7 +574,7 @@ There are two meanings for the ``lib`` element:
 .. 32-info-element:
 
 3.2 info element
-================
+^^^^^^^^^^^^^^^^
 
 -  ``<info copy="1" />``
 -  Child element of ``source``
@@ -587,7 +585,7 @@ There are two meanings for the ``lib`` element:
 .. 33-features-element:
 
 3.3 features element
-====================
+^^^^^^^^^^^^^^^^^^^^
 
 -  ``<features copy="1" />``
 -  Defines if the instances can inherit opentype feature text from this
@@ -598,7 +596,7 @@ There are two meanings for the ``lib`` element:
 .. 34-glyph-element:
 
 3.4 glyph element
-=================
+^^^^^^^^^^^^^^^^^
 
 -  Can appear in ``source`` as well as in ``instance`` elements.
 -  In a ``source`` element this states if a glyph is to be excluded from
@@ -608,7 +606,7 @@ There are two meanings for the ``lib`` element:
 .. attributes-6:
 
 Attributes
-----------
+""""""""""
 
 -  ``mute``: optional attribute, number 1 or 0. Indicate if this glyph
    should be ignored as a master.
@@ -618,7 +616,7 @@ Attributes
 .. 35-kerning-element:
 
 3.5 kerning element
-===================
+^^^^^^^^^^^^^^^^^^^
 
 -  ``<kerning mute="1" />``
 -  Can appear in ``source`` as well as in ``instance`` elements.
@@ -626,7 +624,7 @@ Attributes
 .. attributes-7:
 
 Attributes
-----------
+""""""""""
 
 -  ``mute``: required attribute, number 1 or 0. Indicate if the kerning
    data from this source is to be excluded from the calculation.
@@ -637,7 +635,7 @@ Attributes
 .. example-5:
 
 Example
--------
+"""""""
 
 .. code:: xml
 
@@ -656,7 +654,7 @@ Example
 .. 4-instance-element:
 
 4. instance element
-===================
+^^^^^^^^^^^^^^^^^^^
 
 -  Defines a single font that can be calculated with the designspace.
 -  Child element of ``instances``
@@ -670,7 +668,7 @@ Example
 .. attributes-8:
 
 Attributes
-----------
+""""""""""
 
 -  ``familyname``: required, string. The family name of the instance
    font. Corresponds with ``font.info.familyName``
@@ -689,7 +687,7 @@ Attributes
    with ``styleMapStyleName``
 
 Example for varlib
-------------------
+^^^^^^^^^^^^^^^^^^
 
 .. code:: xml
 
@@ -711,7 +709,7 @@ Example for varlib
 .. 41-glyphs-element:
 
 4.1 glyphs element
-==================
+^^^^^^^^^^^^^^^^^^
 
 -  Container for ``glyph`` elements.
 -  Optional
@@ -720,7 +718,7 @@ Example for varlib
 .. 42-glyph-element:
 
 4.2 glyph element
-=================
+^^^^^^^^^^^^^^^^^
 
 -  Child element of ``glyphs``
 -  May contain a ``location`` element.
@@ -728,7 +726,7 @@ Example for varlib
 .. attributes-9:
 
 Attributes
-----------
+""""""""""
 
 -  ``name``: string. The name of the glyph.
 -  ``unicode``: string. Unicode values for this glyph, in hexadecimal.
@@ -739,14 +737,14 @@ Attributes
 .. 421-note-element:
 
 4.2.1 note element
-==================
+^^^^^^^^^^^^^^^^^^
 
 -  String. The value corresponds to glyph.note in UFO.
 
 .. 422-masters-element:
 
 4.2.2 masters element
-=====================
+^^^^^^^^^^^^^^^^^^^^^
 
 -  Container for ``master`` elements
 -  These ``master`` elements define an alternative set of glyph masters
@@ -755,12 +753,12 @@ Attributes
 .. 4221-master-element:
 
 4.2.2.1 master element
-======================
+^^^^^^^^^^^^^^^^^^^^^^
 
 -  Defines a single alternative master for this glyph.
 
 4.3 Localised names for instances
-=================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Localised names for instances can be included with these simple elements
 with an ``xml:lang`` attribute:
@@ -774,7 +772,7 @@ with an ``xml:lang`` attribute:
 .. example-6:
 
 Example
--------
+"""""""
 
 .. code:: xml
 
@@ -789,7 +787,7 @@ Example
 .. attributes-10:
 
 Attributes
-----------
+""""""""""
 
 -  ``glyphname``: the name of the alternate master glyph.
 -  ``source``: the identifier name of the source this master glyph needs
@@ -798,7 +796,7 @@ Attributes
 .. example-7:
 
 Example
--------
+"""""""
 
 .. code:: xml
 
@@ -838,7 +836,7 @@ Example
 .. 50-rules-element:
 
 5.0 rules element
-=================
+^^^^^^^^^^^^^^^^^
 
 -  Container for ``rule`` elements
 -  The rules are evaluated in this order.
@@ -851,7 +849,7 @@ glyphname pairs: the glyphs that need to be substituted. For a rule to be trigge
 
 
 Attributes
-----------
+""""""""""
 
 -  ``processing``: flag, optional. Valid values are [``first``, ``last``]. This flag indicates whether the substitution rules should be applied before or after other glyph substitution features.
 -  If no ``processing`` attribute is given, interpret as ``first``.
@@ -859,7 +857,7 @@ Attributes
 .. 51-rule-element:
 
 5.1 rule element
-================
+^^^^^^^^^^^^^^^^
 
 -  Defines a named rule.
 -  Each ``rule`` element contains one or more ``conditionset`` elements.
@@ -873,14 +871,14 @@ Attributes
 .. attributes-11:
 
 Attributes
-----------
+""""""""""
 
 -  ``name``: optional, string. A unique name that can be used to
    identify this rule if it needs to be referenced elsewhere. The name
    is not important for compiling variable fonts.
 
 5.1.1 conditionset element
-=======================
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 -  Child element of ``rule``
 -  Contains one or more ``condition`` elements.
@@ -888,7 +886,7 @@ Attributes
 .. 512-condition-element:
 
 5.1.2 condition element
-=======================
+^^^^^^^^^^^^^^^^^^^^^^^
 
 -  Child element of ``conditionset``
 -  Between the ``minimum`` and ``maximum`` this condition is ``True``.
@@ -900,7 +898,7 @@ Attributes
 .. attributes-12:
 
 Attributes
-----------
+""""""""""
 
 -  ``name``: string, required. Must match one of the defined ``axis``
    name attributes.
@@ -910,7 +908,7 @@ Attributes
 .. 513-sub-element:
 
 5.1.3 sub element
-=================
+^^^^^^^^^^^^^^^^^
 
 -  Child element of ``rule``.
 -  Defines which glyph to replace when the rule evaluates to **True**.
@@ -921,7 +919,7 @@ Axis values in Conditions are in designspace coordinates.
 .. attributes-13:
 
 Attributes
-----------
+""""""""""
 
 -  ``name``: string, required. The name of the glyph this rule looks
    for.
@@ -931,7 +929,7 @@ Attributes
 .. example-8:
 
 Example
--------
+"""""""
 
 Example with an implied ``conditionset``. Here the conditions are not
 contained in a conditionset. 
@@ -957,8 +955,8 @@ Example with ``conditionsets``. All conditions in a conditionset must be true.
                 <condition minimum="50" maximum="100" name="width" />
             </conditionset>
             <conditionset>
-                <condition ... />
-                <condition ... />
+                <condition  />
+                <condition  />
             </conditionset>
             <sub name="dollar" with="dollar.alt"/>
         </rule>
@@ -966,11 +964,11 @@ Example with ``conditionsets``. All conditions in a conditionset must be true.
 
 .. 6-notes:
 
-6 Notes
-=======
+Notes
+*****
 
 Paths and filenames
--------------------
+^^^^^^^^^^^^^^^^^^^
 
 A designspace file needs to store many references to UFO files.
 
@@ -1049,7 +1047,7 @@ method prepares the paths as follows:
    for filename based on the path and the document path.
 
 Recommendation for editors
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 -  If you want to explicitly set the **filename** attribute, leave the
    path attribute empty.
@@ -1060,11 +1058,11 @@ Recommendation for editors
 
 .. 7-common-lib-key-registry:
 
-7 Common Lib Key Registry
-=========================
+Common Lib Key Registry
+***********************
 
 public.skipExportGlyphs
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^
 
 This lib key works the same as the UFO lib key with the same name. The
 difference is that applications using a Designspace as the corner stone of the
@@ -1076,19 +1074,20 @@ UFOs says.
 .. 8-implementation-and-differences:
 
 
-8 Implementation and differences
-================================
+Implementation and differences
+******************************
 
 The designspace format has gone through considerable development. 
 
  -  the format was originally written for MutatorMath.
- -  the format is now also used in fontTools.varlib.
+ -  the format is now also used in fontTools.designspaceLib.
  -  not all values are be required by all implementations.
 
-8.1 Varlib vs. MutatorMath
---------------------------
+8.1 designspaceLib vs. MutatorMath
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-There are some differences between the way MutatorMath and fontTools.varlib handle designspaces.
+There are some differences between the way MutatorMath and
+fontTools.designspaceLib handle designspaces.
 
  -  Varlib does not support anisotropic interpolations.
  -  MutatorMath will extrapolate over the boundaries of
@@ -1099,7 +1098,7 @@ There are some differences between the way MutatorMath and fontTools.varlib hand
     attributes are always needed.
 
 8.2 Older versions
-------------------
+^^^^^^^^^^^^^^^^^^
 
 -  In some implementations that preceed Variable Fonts, the `copyInfo`
    flag in a source indicated the source was to be treated as the default.
@@ -1110,7 +1109,7 @@ There are some differences between the way MutatorMath and fontTools.varlib hand
    from the locations used in the sources. This is no longer possible.
 
 8.3 Rules and generating static UFO instances
----------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^-
 
 When making instances as UFOs from a designspace with rules, it can
 be useful to evaluate the rules so that the characterset of the ufo 
@@ -1135,13 +1134,4 @@ it can become complex very quickly. So proceed with caution.
     glyphs in order to preserve their appearance.
  -  The swap function also needs to take care of swapping the names in
     kerning data and any GPOS code.
-
-
-.. 9-this-document
-
-9 This document
-===============
-
--  Changes are to be expected.
-
 
