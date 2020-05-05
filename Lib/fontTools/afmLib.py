@@ -8,37 +8,35 @@ implement the whole Adobe AFM specification [#f1]_ but, it should read most
 Here is an example of using `afmLib` to read, modify and write an AFM file:
 
 	>>> from fontTools.afmLib import AFM
-	>>> f = AFM("uplb8a.afm")
+	>>> f = AFM("Tests/afmLib/data/TestAFM.afm")
 	>>>
 	>>> # Accessing a pair gets you the kern value
-	>>> f[("A","V")]
-	-124
+	>>> f[("V","A")]
+	-60
 	>>>
 	>>> # Accessing a glyph name gets you metrics
 	>>> f["A"]
-	(65, 778, (24, -3, 757, 686))
+	(65, 668, (8, -25, 660, 666))
 	>>> # (charnum, width, bounding box)
 	>>>
 	>>> # Accessing an attribute gets you metadata
 	>>> f.FontName
-	'URWPalladioL-Bold'
-	>>> f.FullName
-	'URW Palladio L Bold'
+	'TestFont-Regular'
 	>>> f.FamilyName
-	'URW Palladio L'
+	'TestFont'
 	>>> f.Weight
-	'Bold'
+	'Regular'
 	>>> f.XHeight
-	471
+	500
 	>>> f.Ascender
-	720
+	750
 	>>>
 	>>> # Attributes and items can also be set
 	>>> f[("A","V")] = -150 # Tighten kerning
-	>>> f.FontName = "Palatino Squished"
+	>>> f.FontName = "TestFont Squished"
 	>>>
 	>>> # And the font written out again
-	>>> f.write("squished.afm")
+	>>> f.write("testfont-squished.afm")
 
 .. rubric:: Footnotes
 

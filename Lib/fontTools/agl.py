@@ -16,6 +16,7 @@ to their Unicode equivalents. Example usage:
 It also contains two dictionaries, ``UV2AGL`` and ``AGL2UV`` which maps from
 Unicode codepoints to AGL names and vice versa:
 
+	>>> import fontTools
 	>>> fontTools.agl.UV2AGL[ord("?")]
 	'question'
 	>>> fontTools.agl.AGL2UV["wcircumflex"]
