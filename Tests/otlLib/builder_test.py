@@ -1,4 +1,5 @@
 import io
+import re
 from fontTools.misc.testTools import getXML
 from fontTools.otlLib import builder
 from fontTools import ttLib
@@ -1326,7 +1327,13 @@ def test_buildStatTable(stat_data, elided_fallback_nameID, expected_ttx):
     font.saveXML(f, tables=["STAT"])
     ttx = f.getvalue().splitlines()
     ttx = ttx[3:-2]  # strip XML header and <ttFont> element
-    assert expected_ttx == ttx
+    assert _filterNameIDs(expected_ttx) == _filterNameIDs(ttx)
+
+
+# TODO: this can go once https://github.com/fonttools/fonttools/pull/1921
+# is accepted
+def _filterNameIDs(lines):
+    return [re.sub(r'(ValueNameID value=")(\d+)(")', r"\1***\3", s) for s in lines]
 
 
 if __name__ == "__main__":

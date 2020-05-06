@@ -676,7 +676,7 @@ def buildStatTable(ttFont, axisData, elidedFallbackNameID=2):
     for axisRecordIndex, axisData in enumerate(axisData):
         axis = ot.AxisRecord()
         axis.AxisTag = axisData["tag"]
-        axis.AxisNameID = addName(nameTable, axisData["name"])
+        axis.AxisNameID = _addName(nameTable, axisData["name"])
         axis.AxisOrdering = axisData.get("ordering", axisRecordIndex)
         axisRecords.append(axis)
 
@@ -684,7 +684,7 @@ def buildStatTable(ttFont, axisData, elidedFallbackNameID=2):
             axisValRec = ot.AxisValue()
             axisValRec.AxisIndex = axisRecordIndex
             axisValRec.Flags = axisVal.get("flags", 0)
-            axisValRec.ValueNameID = addName(nameTable, axisVal['name'])
+            axisValRec.ValueNameID = _addName(nameTable, axisVal['name'])
 
             if "value" in axisVal:
                 axisValRec.Value = axisVal["value"]
@@ -724,36 +724,15 @@ def buildStatTable(ttFont, axisData, elidedFallbackNameID=2):
     statTable.AxisValueCount = len(axisValues)
 
 
-def addName(nameTable, value):
-    """Find whether the name already exists in the name table, or add it.
-    In both cases return the nameID.
-
-    `value` is either a string (in which case it is assumed to be English)
-    or a {language: string, ...} dict. `language` is a IETF BCP 47 language
-    code.
-
-    If `value` is a multi language dict, the "en" (english) key must be
-    present. Only the english value is used to test whether a name record
-    already exists.
-    """
-    # NOTE: this is not specific for STAT and may be useful elsewhere, too.
-    # It could even become a method of the name table in fonttools.
+def _addName(nameTable, value):
     if isinstance(value, str):
-        valueEnglish = value
-        names = dict(en=valueEnglish)
+        names = dict(en=value)
     else:
         assert isinstance(value, dict)
         names = value
-        valueEnglish = names["en"]
-    nameID = _findEnglish(nameTable, valueEnglish)
-    if nameID is None:
-        nameID = nameTable.addMultilingualName(names)
+    # Fix once https://github.com/fonttools/fonttools/pull/1921 is accepted
+    # nameID = nameTable.findMultilingualName(names)
+    # if nameID is None:
+    #     nameID = nameTable.addMultilingualName(names)
+    nameID = nameTable.addMultilingualName(names)
     return nameID
-
-
-def _findEnglish(nameTable, value):
-    for nr in nameTable.names:
-        if ((nr.platformID, nr.platEncID, nr.langID) == (3, 1, 0x409) and
-                nr.toUnicode() == value):
-            return nr.nameID
-    return None
