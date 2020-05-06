@@ -1114,7 +1114,6 @@ buildStatTable_test_data = [
         dict(
             tag="wght",
             name="Weight",
-            ordering=0,
             values=[
                 dict(value=100, name='Thin'),
                 dict(value=400, name='Regular', flags=0x2),
@@ -1157,7 +1156,6 @@ buildStatTable_test_data = [
         dict(
             tag="wght",
             name=dict(en="Weight", nl="Gewicht"),
-            ordering=0,
             values=[
                 dict(value=100, name=dict(en='Thin', nl='Dun')),
                 dict(value=400, name='Regular', flags=0x2),
@@ -1166,7 +1164,6 @@ buildStatTable_test_data = [
         dict(
             tag="wdth",
             name="Width",
-            ordering=1,
             values=[
                 dict(value=50, name='Condensed'),
                 dict(value=100, name='Regular', flags=0x2),
@@ -1232,7 +1229,6 @@ buildStatTable_test_data = [
         dict(
             tag="wght",
             name="Weight",
-            ordering=0,
             values=[
                 dict(value=400, name='Regular', flags=0x2),
                 dict(value=600, linkedValue=650, name='Bold')])], 18, [
@@ -1269,7 +1265,6 @@ buildStatTable_test_data = [
         dict(
             tag="opsz",
             name="Optical Size",
-            ordering=0,
             values=[
                 dict(nominalValue=6, rangeMaxValue=10, name='Small'),
                 dict(rangeMinValue=10, nominalValue=14, rangeMaxValue=24, name='Text', flags=0x2),
@@ -1318,12 +1313,14 @@ buildStatTable_test_data = [
         dict(
             tag="wght",
             name="Weight",
+            ordering=1,
             values=[
                 dict(axisValues=[dict(tag="wght", value=300),
                                  dict(tag="ABCD", value=100)], name='Regular ABCD')]),
         dict(
             tag="ABCD",
             name="ABCDTest",
+            ordering=0,
             values=[
                 dict(value=100, name="Regular", flags=0x2)])], 18, [
         '  <STAT>',
@@ -1334,12 +1331,12 @@ buildStatTable_test_data = [
         '      <Axis index="0">',
         '        <AxisTag value="wght"/>',
         '        <AxisNameID value="256"/>  <!-- Weight -->',
-        '        <AxisOrdering value="0"/>',
+        '        <AxisOrdering value="1"/>',
         '      </Axis>',
         '      <Axis index="1">',
         '        <AxisTag value="ABCD"/>',
         '        <AxisNameID value="258"/>  <!-- ABCDTest -->',
-        '        <AxisOrdering value="1"/>',
+        '        <AxisOrdering value="0"/>',
         '      </Axis>',
         '    </DesignAxisRecord>',
         '    <!-- AxisValueCount=2 -->',
