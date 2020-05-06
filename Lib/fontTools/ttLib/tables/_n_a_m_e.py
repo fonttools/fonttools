@@ -250,7 +250,8 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		names that otherwise cannot get encoded at all.
 
 		'nameID' is the name ID to be used, or None to let the library
-		pick an unused name ID.
+		find an existing set of name records that match, or pick an
+		unused name ID.
 
 		If 'windows' is True, a platformID=3 name record will be added.
 		If 'mac' is True, a platformID=1 name record will be added.
