@@ -702,8 +702,11 @@ def buildStatTable(ttFont, axisData, elidedFallbackNameID=2):
     dict with multilingual names, like the axis name. It translates to
     the ValueNameID field.
 
-    The format of the AxisValue is determined by the contents of the
-    value dictionary:
+    Optionally the value dict can contain a 'flags' item. It maps to
+    the AxisValue Flags field, and will be 0 when omitted.
+
+    The format of the AxisValue is determined by the remaining contents
+    of the value dictionary:
 
     If the value dict contains a 'value' item, an AxisValue record
     Format 1 is created. If in addition to the 'value' item it contains
