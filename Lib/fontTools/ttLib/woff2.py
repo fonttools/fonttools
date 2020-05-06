@@ -1188,6 +1188,9 @@ class WOFF2FlavorData(WOFFFlavorData):
 
 		self.transformedTables = set(transformedTables)
 
+	def _decompress(self, rawData):
+		return brotli.decompress(rawData)
+
 
 def unpackBase128(data):
 	r""" Read one to five bytes from UIntBase128-encoded input string, and return

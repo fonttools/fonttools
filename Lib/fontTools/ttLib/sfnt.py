@@ -553,8 +553,7 @@ class WOFFFlavorData():
 				reader.file.seek(reader.metaOffset)
 				rawData = reader.file.read(reader.metaLength)
 				assert len(rawData) == reader.metaLength
-				import zlib
-				data = zlib.decompress(rawData)
+				data = self._decompress(rawData)
 				assert len(data) == reader.metaOrigLength
 				self.metaData = data
 			if reader.privLength:
@@ -562,6 +561,10 @@ class WOFFFlavorData():
 				data = reader.file.read(reader.privLength)
 				assert len(data) == reader.privLength
 				self.privData = data
+
+	def _decompress(self, rawData):
+		import zlib
+		return zlib.decompress(rawData)
 
 
 def calcChecksum(data):
