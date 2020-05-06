@@ -267,8 +267,13 @@ class UFOReader(_UFOBaseIO):
 			)
 		self._path = fsdecode(path)
 		self._validate = validate
-		self.readMetaInfo(validate=validate)
 		self._upConvertedKerningData = None
+
+		try:
+			self.readMetaInfo(validate=validate)
+		except UFOLibError:
+			self.close()
+			raise
 
 	# properties
 
