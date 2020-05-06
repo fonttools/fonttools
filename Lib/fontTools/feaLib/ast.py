@@ -1223,7 +1223,7 @@ class ReverseChainSingleSubstStatement(Statement):
 
 
 class SingleSubstStatement(Statement):
-    """A reverse chaining substitution statement. You don't see those every day.
+    """A single substitution statement.
 
     Note the unusual argument order: ``prefix`` and suffix come `after`
     the replacement ``glyphs``. ``prefix``, ``suffix``, ``glyphs`` and
