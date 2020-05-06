@@ -1328,8 +1328,15 @@ def test_buildStatTable(stat_data, elided_fallback_nameID, expected_ttx):
     ttx = f.getvalue().splitlines()
     ttx = ttx[3:-2]  # strip XML header and <ttFont> element
     assert _filterNameIDs(expected_ttx) == _filterNameIDs(ttx)
+    # Compile and round-trip
     f = io.BytesIO()
     font.save(f)
+    font = ttLib.TTFont(f)
+    f = io.StringIO()
+    font.saveXML(f, tables=["STAT"])
+    ttx = f.getvalue().splitlines()
+    ttx = ttx[3:-2]  # strip XML header and <ttFont> element
+    assert _filterNameIDs(expected_ttx) == _filterNameIDs(ttx)
 
 
 # TODO: this can go once https://github.com/fonttools/fonttools/pull/1921
