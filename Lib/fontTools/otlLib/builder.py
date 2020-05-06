@@ -665,6 +665,55 @@ AXIS_VALUE_POSITIVE_INFINITY = fixedToFloat(0x7FFFFFFF, 16)
 
 
 def buildStatTable(ttFont, axisData, elidedFallbackNameID=2):
+    """Add a 'STAT' table to the font.
+
+    'axisData' is a list of dictionaries describing axes and their
+    values.
+
+    Example:
+
+    axisData = [
+        dict(
+            tag="wght",
+            name="Weight",
+            ordering=0,  # optional
+            values=[
+                dict(value=100, name='Thin'),
+                dict(value=300, name='Light'),
+                dict(value=400, name='Regular', flags=0x2),
+                dict(value=900, name='Black'),
+            ],
+        )
+    ]
+
+    Each axis dict must have 'tag' and 'name' items. 'tag' maps
+    to the 'AxisTag' field. 'name' is either a string, or a dictionary
+    containing multilingual names (see the addMultilingualName() name
+    table method), and will translate to the AxisNameID field.
+
+    An axis dict may contain an 'ordering' item that maps to the
+    AxisOrdering field. If omitted, the order if the axisData list is
+    used to calculate AxisOrdering fields.
+
+    The axis dict must contain a 'values' item, which is a list of
+    dictionaries describing AxisValue records belonging to this axis.
+
+    Each value dict must have a 'name' item, which is a string or a
+    dict with multilingual names, like the axis name. It translates to
+    the ValueNameID field.
+
+    The format of the AxisValue is determined by the contents of the
+    value dictionary:
+
+    If the value dict contains a 'value' item, an AxisValue record
+    Format 1 is created. If in addition to the 'value' item it contains
+    a 'linkedValue' item, an AxisValue record Format 3 is built.
+
+    If the value dict contains 'nominalValue', 'rangeMinValue' and
+    'rangeMaxValue' items, an AxisValue record Format 2 is built.
+
+    AxisValue record Format 4 is not yet supported.
+    """
     ttFont["STAT"] = ttLib.newTable("STAT")
     statTable = ttFont["STAT"].table = ot.STAT()
     statTable.Version = 0x00010001  # Upgrade to 0x00010002 when using Format 4 value records
