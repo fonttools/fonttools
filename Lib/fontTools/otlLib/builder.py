@@ -692,7 +692,7 @@ def buildStatTable(ttFont, axisData, elidedFallbackNameID=2):
     table method), and will translate to the AxisNameID field.
 
     An axis dict may contain an 'ordering' item that maps to the
-    AxisOrdering field. If omitted, the order if the axisData list is
+    AxisOrdering field. If omitted, the order of the axisData list is
     used to calculate AxisOrdering fields.
 
     The axis dict must contain a 'values' item, which is a list of
