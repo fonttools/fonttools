@@ -184,6 +184,57 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			raise ValueError("nameID must be less than 32768")
 		return nameID
 
+	def findMultilingualName(self, names, windows=True, mac=True):
+		"""Return the name ID of an existing multilingual name matching
+		the 'names' dictionary, or None if not found.
+
+		'names' is a dictionary with the name in multiple languages,
+		such as {'en': 'Pale', 'de': 'Blaß', 'de-CH': 'Blass'}.
+		The keys can be arbitrary IETF BCP 47 language codes;
+		the values are Unicode strings.
+
+		If 'windows' is True, the returned name ID is guaranteed
+		exist for all requested languages for platformID=3 and
+		platEncID=1.
+		If 'mac' is True, the returned name ID is guaranteed to exist
+		for all requested languages for platformID=1 and platEncID=0.
+		"""
+		# Gather the set of requested
+		#   (string, platformID, platEncID, langID)
+		# tuples
+		reqNameSet = set()
+		for lang, name in sorted(names.items()):
+			if windows:
+				windowsName = _makeWindowsName(name, None, lang)
+				if windowsName is not None:
+					reqNameSet.add((windowsName.string,
+					                windowsName.platformID,
+					                windowsName.platEncID,
+					                windowsName.langID))
+			if mac:
+				macName = _makeMacName(name, None, lang)
+				if macName is not None:
+					reqNameSet.add((macName.string,
+				                    macName.platformID,
+				                    macName.platEncID,
+				                    macName.langID))
+
+		# Collect matching name IDs
+		matchingNames = dict()
+		for name in self.names:
+			key = (name.string, name.platformID,
+			       name.platEncID, name.langID)
+			if key in reqNameSet:
+				nameSet = matchingNames.setdefault(name.nameID, set())
+				nameSet.add(key)
+
+		# Return the first name ID that defines all requested strings
+		for nameID, nameSet in sorted(matchingNames.items()):
+			if nameSet == reqNameSet:
+				return nameID
+
+		return None  # not found
+
 	def addMultilingualName(self, names, ttFont=None, nameID=None,
 	                        windows=True, mac=True):
 		"""Add a multilingual name, returning its name ID
