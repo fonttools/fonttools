@@ -185,8 +185,8 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		return nameID
 
 	def findMultilingualName(self, names, windows=True, mac=True):
-		"""Return the name ID of an existing multilingual name matching
-		the 'names' dictionary, or None if not found.
+		"""Return the name ID of an existing multilingual name that
+		matches the 'names' dictionary, or None if not found.
 
 		'names' is a dictionary with the name in multiple languages,
 		such as {'en': 'Pale', 'de': 'Blaß', 'de-CH': 'Blass'}.
