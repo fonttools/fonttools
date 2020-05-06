@@ -166,6 +166,15 @@ class NameTableTest(unittest.TestCase):
 		self.assertEqual(nameID, table.findMultilingualName(namesSubSet))
 		self.assertEqual(None, table.findMultilingualName(namesSuperSet))
 
+	def test_addMultilingualNameReuse(self):
+		table = table__n_a_m_e()
+		names, namesSubSet, namesSuperSet = self._get_test_names()
+		nameID = table.addMultilingualName(names)
+		assert nameID is not None
+		self.assertEqual(nameID, table.addMultilingualName(names))
+		self.assertEqual(nameID, table.addMultilingualName(namesSubSet))
+		self.assertNotEqual(None, table.addMultilingualName(namesSuperSet))
+
 	def test_findMultilingualNameNoMac(self):
 		table = table__n_a_m_e()
 		names, namesSubSet, namesSuperSet = self._get_test_names()
