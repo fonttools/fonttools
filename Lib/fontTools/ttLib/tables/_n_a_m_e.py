@@ -258,6 +258,10 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		if not hasattr(self, 'names'):
 			self.names = []
 		if nameID is None:
+			# Reuse nameID if possible
+			nameID = self.findMultilingualName(names, windows=windows, mac=mac)
+			if nameID is not None:
+				return nameID
 			nameID = self._findUnusedNameID()
 		# TODO: Should minimize BCP 47 language codes.
 		# https://github.com/fonttools/fonttools/issues/930
