@@ -709,8 +709,10 @@ def buildStatTable(ttFont, axisData, elidedFallbackNameID=2):
     Format 1 is created. If in addition to the 'value' item it contains
     a 'linkedValue' item, an AxisValue record Format 3 is built.
 
-    If the value dict contains 'nominalValue', 'rangeMinValue' and
-    'rangeMaxValue' items, an AxisValue record Format 2 is built.
+    If the value dict contains a 'nominalValue' item, an AxisValue
+    record Format 2 is built. Optionally it may contain 'rangeMinValue'
+    and 'rangeMaxValue' items. These map to -Infinity and +Infinity
+    respectively if omitted.
 
     AxisValue record Format 4 is not yet supported.
     """
