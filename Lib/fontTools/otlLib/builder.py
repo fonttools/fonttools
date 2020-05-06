@@ -717,7 +717,10 @@ def buildStatTable(ttFont, axisData, elidedFallbackNameID=2):
     and 'rangeMaxValue' items. These map to -Infinity and +Infinity
     respectively if omitted.
 
-    AxisValue record Format 4 is not yet supported.
+    If the value dict contains an 'axisValues' item, an AxisValue
+    record Format 2 is built. It should be a list of value dicts,
+    that each contain two items: 'tag' for the contributing axis, and
+    'value' for the associated value.
     """
     ttFont["STAT"] = ttLib.newTable("STAT")
     statTable = ttFont["STAT"].table = ot.STAT()
