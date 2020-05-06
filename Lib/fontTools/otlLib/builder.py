@@ -660,7 +660,7 @@ class ClassDefBuilder(object):
         return classDef
 
 
-AXIS_VALUE_NEGATIVE_INFINITY = fixedToFloat(0x80000000, 16)
+AXIS_VALUE_NEGATIVE_INFINITY = fixedToFloat(-0x80000000, 16)
 AXIS_VALUE_POSITIVE_INFINITY = fixedToFloat(0x7FFFFFFF, 16)
 
 
