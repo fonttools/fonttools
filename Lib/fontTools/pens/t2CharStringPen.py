@@ -72,7 +72,7 @@ class T2CharStringPen(BasePen):
     def _endPath(self):
         pass
 
-    def getCharString(self, private=None, globalSubrs=None, optimize=True):
+    def getCharString(self, private=None, globalSubrs=None, optimize=True): # lgtm[py/inheritance/incorrect-overridden-signature]
         commands = self._commands
         if optimize:
             maxstack = 48 if not self._CFF2 else 513

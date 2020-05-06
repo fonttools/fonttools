@@ -345,7 +345,7 @@ class SFNTWriter(object):
 		self.file.seek(self.directoryOffset)
 		self.file.write(directory)
 
-	def _calcMasterChecksum(self, directory):
+	def _calcMasterChecksum(self, directory): # lgtm[py/inheritance/incorrect-overridden-signature]
 		# calculate checkSumAdjustment
 		tags = list(self.tables.keys())
 		checksums = []

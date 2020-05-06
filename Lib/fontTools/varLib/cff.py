@@ -453,7 +453,7 @@ class MergeOutlineExtractor(CFFToCFF2OutlineExtractor):
 
 	def __init__(self, pen, localSubrs, globalSubrs,
 			nominalWidthX, defaultWidthX, private=None):
-		super(CFFToCFF2OutlineExtractor, self).__init__(pen, localSubrs,
+		super(MergeOutlineExtractor, self).__init__(pen, localSubrs,
 			globalSubrs, nominalWidthX, defaultWidthX, private)
 
 	def countHints(self):

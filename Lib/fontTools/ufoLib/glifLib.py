@@ -867,7 +867,7 @@ def _glifTreeFromFile(aFile):
 def _glifTreeFromString(aString):
 	data = tobytes(aString, encoding="utf-8")
 	if etree._have_lxml:
-		root = etree.fromstring(data, parser=etree.XMLParser(remove_comments=True))
+		root = etree.fromstring(data, parser=etree.XMLParser(remove_comments=True)) # lgtm[py/call/wrong-named-class-argument]
 	else:
 		root = etree.fromstring(data)
 	if root.tag != "glyph":

@@ -397,8 +397,6 @@ def totree(
 ):
     if use_builtin_types is None:
         use_builtin_types = USE_BUILTIN_TYPES
-    else:
-        use_builtin_types = use_builtin_types
     context = SimpleNamespace(
         sort_keys=sort_keys,
         skipkeys=skipkeys,

@@ -25,7 +25,7 @@ except ImportError:
 	pass
 
 
-class WOFF2Reader(SFNTReader):
+class WOFF2Reader(SFNTReader): # lgtm[py/missing-call-to-init]
 
 	flavor = "woff2"
 
@@ -1168,26 +1168,8 @@ class WOFF2FlavorData(WOFFFlavorData):
 				raise ValueError(
 					"'glyf' and 'loca' must be transformed (or not) together"
 				)
-
-		self.majorVersion = None
-		self.minorVersion = None
-		self.metaData = None
-		self.privData = None
+		super(WOFF2FlavorData, self).__init__(reader=reader)
 		if reader:
-			self.majorVersion = reader.majorVersion
-			self.minorVersion = reader.minorVersion
-			if reader.metaLength:
-				reader.file.seek(reader.metaOffset)
-				rawData = reader.file.read(reader.metaLength)
-				assert len(rawData) == reader.metaLength
-				metaData = brotli.decompress(rawData)
-				assert len(metaData) == reader.metaOrigLength
-				self.metaData = metaData
-			if reader.privLength:
-				reader.file.seek(reader.privOffset)
-				privData = reader.file.read(reader.privLength)
-				assert len(privData) == reader.privLength
-				self.privData = privData
 			transformedTables = [
 				tag
 				for tag, entry in reader.tables.items()

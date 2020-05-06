@@ -17,7 +17,7 @@ class ps_object(object):
 		return "<%s %s>" % (self.__class__.__name__[3:], repr(self.value))
 
 
-class ps_operator(ps_object):
+class ps_operator(ps_object): # lgtm[py/missing-call-to-init]
 
 	literal = 0
 
@@ -169,17 +169,17 @@ class ps_dict(ps_object):
 	def __repr__(self):
 		return "<dict>"
 
-class ps_mark(ps_object):
+class ps_mark(ps_object): # lgtm[py/missing-call-to-init]
 	def __init__(self):
 		self.value = 'mark'
 		self.type = self.__class__.__name__[3:] + "type"
 
-class ps_procmark(ps_object):
+class ps_procmark(ps_object): # lgtm[py/missing-call-to-init]
 	def __init__(self):
 		self.value = 'procmark'
 		self.type = self.__class__.__name__[3:] + "type"
 
-class ps_null(ps_object):
+class ps_null(ps_object): # lgtm[py/missing-call-to-init]
 	def __init__(self):
 		self.type = self.__class__.__name__[3:] + "type"
 

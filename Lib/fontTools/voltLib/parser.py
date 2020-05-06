@@ -630,7 +630,7 @@ class SymbolTable(object):
         return None
 
 
-class OrderedSymbolTable(SymbolTable):
+class OrderedSymbolTable(SymbolTable): # lgtm[py/missing-call-to-init]
     def __init__(self):
         self.scopes_ = [OrderedDict()]
 

@@ -67,7 +67,7 @@ class RecordingPen(AbstractPen):
 		replayRecording(self.value, pen)
 
 
-class DecomposingRecordingPen(DecomposingPen, RecordingPen):
+class DecomposingRecordingPen(DecomposingPen, RecordingPen): # lgtm[py/missing-call-to-init]
 	""" Same as RecordingPen, except that it doesn't keep components
 	as references, but draws them decomposed as regular contours.
 

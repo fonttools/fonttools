@@ -154,7 +154,7 @@ class table_E_B_L_C_(DefaultTable.DefaultTable):
 		# (2) Build each bitmapSizeTable.
 		# (3) Consolidate all the data into the main dataList in the correct order.
 
-		for curStrike in self.strikes:
+		for _ in self.strikes:
 			dataSize += sstruct.calcsize(bitmapSizeTableFormatPart1)
 			dataSize += len(('hori', 'vert')) * sstruct.calcsize(sbitLineMetricsFormat)
 			dataSize += sstruct.calcsize(bitmapSizeTableFormatPart2)

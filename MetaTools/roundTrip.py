@@ -31,9 +31,9 @@ def usage():
 
 def roundTrip(ttFile1, options, report):
 	fn = os.path.basename(ttFile1)
-	xmlFile1 = tempfile.mktemp(".%s.ttx1" % fn)
-	ttFile2 = tempfile.mktemp(".%s" % fn)
-	xmlFile2 = tempfile.mktemp(".%s.ttx2" % fn)
+	xmlFile1 = tempfile.mkstemp(".%s.ttx1" % fn)
+	ttFile2 = tempfile.mkstemp(".%s" % fn)
+	xmlFile2 = tempfile.mkstemp(".%s.ttx2" % fn)
 	
 	try:
 		ttx.ttDump(ttFile1, xmlFile1, options)
