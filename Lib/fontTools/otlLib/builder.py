@@ -718,7 +718,7 @@ def buildStatTable(ttFont, axisData, elidedFallbackNameID=2):
     respectively if omitted.
 
     If the value dict contains an 'axisValues' item, an AxisValue
-    record Format 2 is built. It should be a list of value dicts,
+    record Format 4 is built. It should be a list of value dicts,
     that each contain two items: 'tag' for the contributing axis, and
     'value' for the associated value.
     """
