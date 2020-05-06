@@ -1,4 +1,5 @@
 from collections import namedtuple
+from fontTools.misc.fixedTools import fixedToFloat
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
@@ -657,3 +658,102 @@ class ClassDefBuilder(object):
         classDef = ot.ClassDef()
         classDef.classDefs = glyphClasses
         return classDef
+
+
+AXIS_VALUE_NEGATIVE_INFINITY = fixedToFloat(0x80000000, 16)
+AXIS_VALUE_POSITIVE_INFINITY = fixedToFloat(0x7FFFFFFF, 16)
+
+
+def buildStatTable(ttFont, axisData, elidedFallbackNameID=2):
+    ttFont["STAT"] = ttLib.newTable("STAT")
+    statTable = ttFont["STAT"].table = ot.STAT()
+    statTable.Version = 0x00010001  # Upgrade to 0x00010002 when using Format 4 value records
+    statTable.ElidedFallbackNameID = elidedFallbackNameID
+    nameTable = ttFont["name"]
+
+    axisRecords = []
+    axisValues = []
+    for axisRecordIndex, axisData in enumerate(axisData):
+        axis = ot.AxisRecord()
+        axis.AxisTag = axisData["tag"]
+        axis.AxisNameID = addName(nameTable, axisData["name"])
+        axis.AxisOrdering = axisData.get("ordering", axisRecordIndex)
+        axisRecords.append(axis)
+
+        for axisVal in axisData["values"]:
+            axisValRec = ot.AxisValue()
+            axisValRec.AxisIndex = axisRecordIndex
+            axisValRec.Flags = axisVal.get("flags", 0)
+            axisValRec.ValueNameID = addName(nameTable, axisVal['name'])
+
+            if "value" in axisVal:
+                axisValRec.Value = axisVal["value"]
+                if "linkedValue" in axisVal:
+                    axisValRec.Format = 3
+                    axisValRec.LinkedValue = axisVal["linkedValue"]
+                else:
+                    axisValRec.Format = 1
+            elif "nominalValue" in axisVal:
+                axisValRec.Format = 2
+                axisValRec.NominalValue = axisVal["nominalValue"]
+                axisValRec.RangeMinValue = axisVal.get("rangeMinValue", AXIS_VALUE_NEGATIVE_INFINITY)
+                axisValRec.RangeMaxValue = axisVal.get("rangeMaxValue", AXIS_VALUE_POSITIVE_INFINITY)
+            elif "values" in axisData:
+                raise NotImplementedError("Format 4 AxisValue is not yet supported")
+                axisValRec.Format = 4
+                # axisData["values"] -> [dict(tag="wght", 123), ...]
+                # axisValRec.AxisValues = [...]
+                # axisValRec.AxisCount = len(values)
+                statTable.Version = 0x00010002  # Format 4 requires this
+            else:
+                raise ValueError("Can't determine format for AxisValue")
+
+            axisValues.append(axisValRec)
+
+    # Store AxisRecords
+    axisRecordArray = ot.AxisRecordArray()
+    axisRecordArray.Axis = axisRecords
+    statTable.DesignAxisRecordSize = 8  # See comment in varLib
+    statTable.DesignAxisRecord = axisRecordArray
+    statTable.DesignAxisCount = len(axisRecords)
+
+    # Store AxisValueRecords
+    axisValueArray = ot.AxisValueArray()
+    axisValueArray.AxisValue = axisValues
+    statTable.AxisValueArray = axisValueArray
+    statTable.AxisValueCount = len(axisValues)
+
+
+def addName(nameTable, value):
+    """Find whether the name already exists in the name table, or add it.
+    In both cases return the nameID.
+
+    `value` is either a string (in which case it is assumed to be English)
+    or a {language: string, ...} dict. `language` is a IETF BCP 47 language
+    code.
+
+    If `value` is a multi language dict, the "en" (english) key must be
+    present. Only the english value is used to test whether a name record
+    already exists.
+    """
+    # NOTE: this is not specific for STAT and may be useful elsewhere, too.
+    # It could even become a method of the name table in fonttools.
+    if isinstance(value, str):
+        valueEnglish = value
+        names = dict(en=valueEnglish)
+    else:
+        assert isinstance(value, dict)
+        names = value
+        valueEnglish = names["en"]
+    nameID = _findEnglish(nameTable, valueEnglish)
+    if nameID is None:
+        nameID = nameTable.addMultilingualName(names)
+    return nameID
+
+
+def _findEnglish(nameTable, value):
+    for nr in nameTable.names:
+        if ((nr.platformID, nr.platEncID, nr.langID) == (3, 1, 0x409) and
+                nr.toUnicode() == value):
+            return nr.nameID
+    return None
