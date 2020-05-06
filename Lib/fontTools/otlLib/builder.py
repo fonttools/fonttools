@@ -725,16 +725,20 @@ def buildStatTable(ttFont, axisData, elidedFallbackNameID=2):
     statTable.ElidedFallbackNameID = elidedFallbackNameID
     nameTable = ttFont["name"]
 
+    axisTagToIndex = {}
+    for axisRecordIndex, axisDict in enumerate(axisData):
+        axisTagToIndex[axisDict["tag"]] = axisRecordIndex
+
     axisRecords = []
     axisValues = []
-    for axisRecordIndex, axisData in enumerate(axisData):
+    for axisRecordIndex, axisDict in enumerate(axisData):
         axis = ot.AxisRecord()
-        axis.AxisTag = axisData["tag"]
-        axis.AxisNameID = _addName(nameTable, axisData["name"])
-        axis.AxisOrdering = axisData.get("ordering", axisRecordIndex)
+        axis.AxisTag = axisDict["tag"]
+        axis.AxisNameID = _addName(nameTable, axisDict["name"])
+        axis.AxisOrdering = axisDict.get("ordering", axisRecordIndex)
         axisRecords.append(axis)
 
-        for axisVal in axisData["values"]:
+        for axisVal in axisDict["values"]:
             axisValRec = ot.AxisValue()
             axisValRec.AxisIndex = axisRecordIndex
             axisValRec.Flags = axisVal.get("flags", 0)
@@ -752,12 +756,16 @@ def buildStatTable(ttFont, axisData, elidedFallbackNameID=2):
                 axisValRec.NominalValue = axisVal["nominalValue"]
                 axisValRec.RangeMinValue = axisVal.get("rangeMinValue", AXIS_VALUE_NEGATIVE_INFINITY)
                 axisValRec.RangeMaxValue = axisVal.get("rangeMaxValue", AXIS_VALUE_POSITIVE_INFINITY)
-            elif "values" in axisData:
-                raise NotImplementedError("Format 4 AxisValue is not yet supported")
+            elif "axisValues" in axisVal:
                 axisValRec.Format = 4
-                # axisData["values"] -> [dict(tag="wght", 123), ...]
-                # axisValRec.AxisValues = [...]
-                # axisValRec.AxisCount = len(values)
+                axisValueRecords = []
+                for axisValue in axisVal["axisValues"]:
+                    avr = ot.AxisValueRecord()
+                    avr.AxisIndex = axisTagToIndex[axisValue["tag"]]
+                    avr.Value = axisValue["value"]
+                    axisValueRecords.append(avr)
+                axisValRec.AxisCount = len(axisValueRecords)
+                axisValRec.AxisValueRecord = axisValueRecords
                 statTable.Version = 0x00010002  # Format 4 requires this
             else:
                 raise ValueError("Can't determine format for AxisValue")
