@@ -760,6 +760,10 @@ def buildStatTable(ttFont, axisData, elidedFallbackNameID=2):
                 axisValRec.RangeMinValue = axisVal.get("rangeMinValue", AXIS_VALUE_NEGATIVE_INFINITY)
                 axisValRec.RangeMaxValue = axisVal.get("rangeMaxValue", AXIS_VALUE_POSITIVE_INFINITY)
             elif "axisValues" in axisVal:
+                # Note that in this case it isn't completely obvious
+                # that this should be part of an axis definition (it
+                # refers to multiple axes after all), but it is the
+                # simples way given the overall input data structure
                 axisValRec.Format = 4
                 axisValueRecords = []
                 for axisValue in axisVal["axisValues"]:
