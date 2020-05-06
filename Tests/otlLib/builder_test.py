@@ -1292,7 +1292,7 @@ buildStatTable_test_data = [
         '        <Flags value="0"/>',
         '        <ValueNameID value="257"/>  <!-- Small -->',
         '        <NominalValue value="6.0"/>',
-        '        <RangeMinValue value="32768.0"/>',
+        '        <RangeMinValue value="-32768.0"/>',
         '        <RangeMaxValue value="10.0"/>',
         '      </AxisValue>',
         '      <AxisValue index="1" Format="2">',
@@ -1328,6 +1328,8 @@ def test_buildStatTable(stat_data, elided_fallback_nameID, expected_ttx):
     ttx = f.getvalue().splitlines()
     ttx = ttx[3:-2]  # strip XML header and <ttFont> element
     assert _filterNameIDs(expected_ttx) == _filterNameIDs(ttx)
+    f = io.BytesIO()
+    font.save(f)
 
 
 # TODO: this can go once https://github.com/fonttools/fonttools/pull/1921
