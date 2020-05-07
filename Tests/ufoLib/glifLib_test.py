@@ -1,3 +1,4 @@
+import logging
 import os
 import tempfile
 import shutil
@@ -7,7 +8,9 @@ from .testSupport import getDemoFontGlyphSetPath
 from fontTools.ufoLib.glifLib import (
 	GlyphSet, glyphNameToFileName, readGlyphFromString, writeGlyphToString,
 )
+from fontTools.ufoLib.errors import GlifLibError, UnsupportedGLIFFormat, UnsupportedUFOFormat
 from fontTools.misc.etree import XML_DECLARATION
+import pytest
 
 GLYPHSETDIR = getDemoFontGlyphSetPath()
 
@@ -142,9 +145,9 @@ class _Glyph:
 	pass
 
 
-class ReadWriteFuncTest(unittest.TestCase):
+class ReadWriteFuncTest:
 
-	def testRoundTrip(self):
+	def test_roundtrip(self):
 		glyph = _Glyph()
 		glyph.name = "a"
 		glyph.unicodes = [0x0061]
@@ -153,29 +156,105 @@ class ReadWriteFuncTest(unittest.TestCase):
 
 		glyph2 = _Glyph()
 		readGlyphFromString(s1, glyph2)
-		self.assertEqual(glyph.__dict__, glyph2.__dict__)
+		assert glyph.__dict__ == glyph2.__dict__
 
 		s2 = writeGlyphToString(glyph2.name, glyph2)
-		self.assertEqual(s1, s2)
+		assert s1 == s2
 
-	def testXmlDeclaration(self):
+	def test_xml_declaration(self):
 		s = writeGlyphToString("a", _Glyph())
-		self.assertTrue(s.startswith(XML_DECLARATION % "UTF-8"))
+		assert s.startswith(XML_DECLARATION % "UTF-8")
+
+	def test_parse_xml_remove_comments(self):
+		s = b"""<?xml version='1.0' encoding='UTF-8'?>
+		<!-- a comment -->
+		<glyph name="A" format="2">
+			<advance width="1290"/>
+			<unicode hex="0041"/>
+			<!-- another comment -->
+		</glyph>
+		"""
+
+		g = _Glyph()
+		readGlyphFromString(s, g)
+
+		assert g.name == "A"
+		assert g.width == 1290
+		assert g.unicodes == [0x0041]
+
+	def test_read_unsupported_format_version(self, caplog):
+		s = """<?xml version='1.0' encoding='utf-8'?>
+		<glyph name="A" format="0" formatMinor="0">
+			<advance width="500"/>
+			<unicode hex="0041"/>
+		</glyph>
+		"""
+
+		with pytest.raises(UnsupportedGLIFFormat):
+			readGlyphFromString(s, _Glyph())  # validate=True by default
+
+		with pytest.raises(UnsupportedGLIFFormat):
+			readGlyphFromString(s, _Glyph(), validate=True)
+
+		caplog.clear()
+		with caplog.at_level(logging.WARNING, logger="fontTools.ufoLib.glifLib"):
+			readGlyphFromString(s, _Glyph(), validate=False)
+
+		assert len(caplog.records) == 1
+		assert "Unsupported GLIF format" in caplog.text
+		assert "Assuming the latest supported version" in caplog.text
+
+	def test_read_allow_format_versions(self):
+		s = """<?xml version='1.0' encoding='utf-8'?>
+		<glyph name="A" format="2">
+			<advance width="500"/>
+			<unicode hex="0041"/>
+		</glyph>
+		"""
+
+		# these two calls are are equivalent
+		readGlyphFromString(s, _Glyph(), formatVersions=[1, 2])
+		readGlyphFromString(s, _Glyph(), formatVersions=[(1, 0), (2, 0)])
+
+		# if at least one supported formatVersion, unsupported ones are ignored
+		readGlyphFromString(s, _Glyph(), formatVersions=[(2, 0), (123, 456)])
+
+		with pytest.raises(
+			ValueError,
+			match="None of the requested GLIF formatVersions are supported"
+		):
+			readGlyphFromString(s, _Glyph(), formatVersions=[0, 2001])
+
+		with pytest.raises(GlifLibError, match="Forbidden GLIF format version"):
+			readGlyphFromString(s, _Glyph(), formatVersions=[1])
 
 
-def test_parse_xml_remove_comments():
-	s = b"""<?xml version='1.0' encoding='UTF-8'?>
-	<!-- a comment -->
-	<glyph name="A" format="2">
-		<advance width="1290"/>
-		<unicode hex="0041"/>
-		<!-- another comment -->
-	</glyph>
-	"""
+def test_GlyphSet_unsupported_ufoFormatVersion(tmp_path, caplog):
+	with pytest.raises(UnsupportedUFOFormat):
+		GlyphSet(tmp_path, ufoFormatVersion=0)
+	with pytest.raises(UnsupportedUFOFormat):
+		GlyphSet(tmp_path, ufoFormatVersion=(0, 1))
 
-	g = _Glyph()
-	readGlyphFromString(s, g)
 
-	assert g.name == "A"
-	assert g.width == 1290
-	assert g.unicodes == [0x0041]
+def test_GlyphSet_writeGlyph_formatVersion(tmp_path):
+	src = GlyphSet(GLYPHSETDIR)
+	dst = GlyphSet(tmp_path, ufoFormatVersion=(2, 0))
+	glyph = src["A"]
+
+	# no explicit formatVersion passed: use the more recent GLIF formatVersion
+	# that is supported by given ufoFormatVersion (GLIF 1 for UFO 2)
+	dst.writeGlyph("A", glyph)
+	glif = dst.getGLIF("A")
+	assert b'format="1"' in glif
+	assert b'formatMinor' not in glif  # omitted when 0
+
+	# explicit, unknown formatVersion
+	with pytest.raises(UnsupportedGLIFFormat):
+		dst.writeGlyph("A", glyph, formatVersion=(0, 0))
+
+	# explicit, known formatVersion but unsupported by given ufoFormatVersion
+	with pytest.raises(
+		UnsupportedGLIFFormat,
+		match="Unsupported GLIF format version .*for UFO format version",
+	):
+		dst.writeGlyph("A", glyph, formatVersion=(2, 0))
