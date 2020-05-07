@@ -1117,7 +1117,7 @@ buildStatTable_test_data = [
             values=[
                 dict(value=100, name='Thin'),
                 dict(value=400, name='Regular', flags=0x2),
-                dict(value=900, name='Black')])], 2, [
+                dict(value=900, name='Black')])], "Regular", [
         '  <STAT>',
         '    <Version value="0x00010001"/>',
         '    <DesignAxisRecordSize value="8"/>',
@@ -1125,7 +1125,7 @@ buildStatTable_test_data = [
         '    <DesignAxisRecord>',
         '      <Axis index="0">',
         '        <AxisTag value="wght"/>',
-        '        <AxisNameID value="256"/>  <!-- Weight -->',
+        '        <AxisNameID value="257"/>  <!-- Weight -->',
         '        <AxisOrdering value="0"/>',
         '      </Axis>',
         '    </DesignAxisRecord>',
@@ -1134,13 +1134,13 @@ buildStatTable_test_data = [
         '      <AxisValue index="0" Format="1">',
         '        <AxisIndex value="0"/>',
         '        <Flags value="0"/>',
-        '        <ValueNameID value="257"/>  <!-- Thin -->',
+        '        <ValueNameID value="258"/>  <!-- Thin -->',
         '        <Value value="100.0"/>',
         '      </AxisValue>',
         '      <AxisValue index="1" Format="1">',
         '        <AxisIndex value="0"/>',
         '        <Flags value="2"/>',
-        '        <ValueNameID value="258"/>  <!-- Regular -->',
+        '        <ValueNameID value="256"/>  <!-- Regular -->',
         '        <Value value="400.0"/>',
         '      </AxisValue>',
         '      <AxisValue index="2" Format="1">',
@@ -1150,7 +1150,7 @@ buildStatTable_test_data = [
         '        <Value value="900.0"/>',
         '      </AxisValue>',
         '    </AxisValueArray>',
-        '    <ElidedFallbackNameID value="2"/>  <!-- missing from name table -->',
+        '    <ElidedFallbackNameID value="256"/>  <!-- Regular -->',
         '  </STAT>']),
     ([
         dict(
@@ -1366,12 +1366,12 @@ buildStatTable_test_data = [
 ]
 
 
-@pytest.mark.parametrize("statData, elidedFallbackNameID, expected_ttx", buildStatTable_test_data)
-def test_buildStatTable(statData, elidedFallbackNameID, expected_ttx):
+@pytest.mark.parametrize("statData, elidedFallbackName, expected_ttx", buildStatTable_test_data)
+def test_buildStatTable(statData, elidedFallbackName, expected_ttx):
     font = ttLib.TTFont()
     font["name"] = ttLib.newTable("name")
     font["name"].names = []
-    builder.buildStatTable(font, statData, elidedFallbackNameID)
+    builder.buildStatTable(font, statData, elidedFallbackName)
     f = io.StringIO()
     font.saveXML(f, tables=["STAT"])
     ttx = f.getvalue().splitlines()
