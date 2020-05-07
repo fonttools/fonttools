@@ -731,6 +731,13 @@ def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
     location on the specified axis. They map to the AxisIndex and Value
     fields of the AxisValueRecord.
 
+    Example:
+
+    locations = [
+        dict(name='Regular ABCD', location=dict(wght=300, ABCD=100)),
+        dict(name='Bold ABCD XYZ', location=dict(wght=600, ABCD=200)),
+    ]
+
     The optional 'elidedFallbackName' argument can be a name ID (int),
     a string, or a dictionary containing multilingual names. It
     translates to the ElidedFallbackNameID field.
