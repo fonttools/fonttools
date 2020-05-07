@@ -40,11 +40,22 @@ fontTools installs four command-line utilities:
 
 This last utility takes a subcommand, which could be one of:
 
-- ``cu2qu``: Convert a UFO font with cubic curves to quadratic curves
+- ``cffLib.width``: Calculate optimum defaultWidthX/nominalWidthX values
+- ``cu2qu``: Convert a UFO font from cubic to quadratic curves
 - ``feaLib``: Add features from a feature file (.fea) into a OTF font
-- ``mtiLib``: Convert Monotype FontDame layout files to TTX
+- ``help``: Show this help
+- ``merge``: Merge multiple fonts into one
+- ``mtiLib``: Convert a FontDame OTL file to TTX XML
 - ``subset``: OpenType font subsetter and optimizer
+- ``ttLib.woff2``: Compress and decompress WOFF2 fonts
+- ``ttx``: Convert OpenType fonts to XML and back
 - ``varLib``: Build a variable font from a designspace file and masters
+- ``varLib.instancer``: Partially instantiate a variable font.
+- ``varLib.interpolatable``: Test for interpolatability issues between fonts
+- ``varLib.interpolate_layout``: Interpolate GDEF/GPOS/GSUB tables for a point on a designspace
+- ``varLib.models``: Normalize locations on a given designspace
+- ``varLib.mutator``: Instantiate a variation font
+- ``varLib.varStore``: Optimize a font's GDEF variation store
 
 Libraries
 ---------
