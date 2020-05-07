@@ -76,7 +76,7 @@ def test_UFOWriter_formatVersion(tmp_path):
     with UFOWriter(ufo_path, formatVersion=3) as writer:
         assert writer.formatVersionTuple == (3, 0)
 
-    shutil.rmtree(ufo_path)
+    shutil.rmtree(str(ufo_path))
     with UFOWriter(ufo_path, formatVersion=(2, 0)) as writer:
         assert writer.formatVersionTuple == (2, 0)
 
