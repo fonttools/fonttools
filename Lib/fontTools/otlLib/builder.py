@@ -664,7 +664,7 @@ AXIS_VALUE_NEGATIVE_INFINITY = fixedToFloat(-0x80000000, 16)
 AXIS_VALUE_POSITIVE_INFINITY = fixedToFloat(0x7FFFFFFF, 16)
 
 
-def buildStatTable(ttFont, axisData, elidedFallbackNameID=2):
+def buildStatTable(ttFont, axisData, elidedFallbackName=2):
     """Add a 'STAT' table to the font.
 
     'axisData' is a list of dictionaries describing axes and their
@@ -687,9 +687,10 @@ def buildStatTable(ttFont, axisData, elidedFallbackNameID=2):
     ]
 
     Each axis dict must have 'tag' and 'name' items. 'tag' maps
-    to the 'AxisTag' field. 'name' is either a string, or a dictionary
-    containing multilingual names (see the addMultilingualName() name
-    table method), and will translate to the AxisNameID field.
+    to the 'AxisTag' field. 'name' can be a name ID (int), a string,
+    or a dictionary containing multilingual names (see the
+    addMultilingualName() name table method), and will translate to
+    the AxisNameID field.
 
     An axis dict may contain an 'ordering' item that maps to the
     AxisOrdering field. If omitted, the order of the axisData list is
@@ -698,9 +699,9 @@ def buildStatTable(ttFont, axisData, elidedFallbackNameID=2):
     The axis dict must contain a 'values' item, which is a list of
     dictionaries describing AxisValue records belonging to this axis.
 
-    Each value dict must have a 'name' item, which is a string or a
-    dict with multilingual names, like the axis name. It translates to
-    the ValueNameID field.
+    Each value dict must have a 'name' item, which can be a name ID
+    (int), a string, or a dictionary containing multilingual names,
+    like the axis name. It translates to the ValueNameID field.
 
     Optionally the value dict can contain a 'flags' item. It maps to
     the AxisValue Flags field, and will be 0 when omitted.
@@ -721,12 +722,16 @@ def buildStatTable(ttFont, axisData, elidedFallbackNameID=2):
     record Format 4 is built. It should be a list of value dicts,
     that each contain two items: 'tag' for the contributing axis, and
     'value' for the associated value.
+
+    The optional 'elidedFallbackName' argument can be a name ID (int),
+    a string, or a dictionary containing multilingual names. It
+    translates to the ElidedFallbackNameID field.
     """
     ttFont["STAT"] = ttLib.newTable("STAT")
     statTable = ttFont["STAT"].table = ot.STAT()
     statTable.Version = 0x00010001  # Upgrade to 0x00010002 when using Format 4 value records
-    statTable.ElidedFallbackNameID = elidedFallbackNameID
     nameTable = ttFont["name"]
+    statTable.ElidedFallbackNameID = _addName(nameTable, elidedFallbackName)
 
     axisTagToIndex = {}
     for axisRecordIndex, axisDict in enumerate(axisData):
@@ -794,6 +799,9 @@ def buildStatTable(ttFont, axisData, elidedFallbackNameID=2):
 
 
 def _addName(nameTable, value):
+    if isinstance(value, int):
+        # Already a nameID
+        return value
     if isinstance(value, str):
         names = dict(en=value)
     else:
