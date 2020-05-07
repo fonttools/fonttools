@@ -719,15 +719,17 @@ def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
     respectively if omitted.
 
     You cannot specify Format 4 AxisValue tables this way, as they are
-    not tied to a single axis, but instead specify a name for a
-    location that is defined by multiple axes values. Instead, you need
-    to supply the optional 'locations' argument.
+    not tied to a single axis, and specify a name for a location that
+    is defined by multiple axes values. Instead, you need to supply the
+    'locations' argument.
 
-    'locations' is a list of dicts, where each dict has a 'name' item,
-    which works just like the value dicts above, an optional 'flags'
-    item (defaulting to 0x0) and a 'location' dict. A 'location' dict
-    key is an axis tag, and the associated value is the location on the
-    specified axis.
+    The optional 'locations' argument specifies AxisValue Format 4
+    tables. It should be a list of dicts, where each dict has a 'name'
+    item, which works just like the value dicts above, an optional
+    'flags' item (defaulting to 0x0), and a 'location' dict. A
+    location dict key is an axis tag, and the associated value is the
+    location on the specified axis. They map to the AxisIndex and Value
+    fields of the AxisValueRecord.
 
     The optional 'elidedFallbackName' argument can be a name ID (int),
     a string, or a dictionary containing multilingual names. It
