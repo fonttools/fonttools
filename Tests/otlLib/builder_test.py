@@ -1366,12 +1366,12 @@ buildStatTable_test_data = [
 ]
 
 
-@pytest.mark.parametrize("stat_data, elided_fallback_nameID, expected_ttx", buildStatTable_test_data)
-def test_buildStatTable(stat_data, elided_fallback_nameID, expected_ttx):
+@pytest.mark.parametrize("statData, elidedFallbackNameID, expected_ttx", buildStatTable_test_data)
+def test_buildStatTable(statData, elidedFallbackNameID, expected_ttx):
     font = ttLib.TTFont()
     font["name"] = ttLib.newTable("name")
     font["name"].names = []
-    builder.buildStatTable(font, stat_data, elided_fallback_nameID)
+    builder.buildStatTable(font, statData, elidedFallbackNameID)
     f = io.StringIO()
     font.saveXML(f, tables=["STAT"])
     ttx = f.getvalue().splitlines()
