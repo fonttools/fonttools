@@ -11,6 +11,9 @@ What is this?
   licence <LICENSE>`__.
 | Among other things this means you can use it free of charge.
 
+`User documentation <https://fonttools.readthedocs.io/en/latest/>` and
+`developer documentation <https://fonttools.readthedocs.io/en/latest/developer.html>` are available at `Read the Docs <https://fonttools.readthedocs.io/>`.
+
 Installation
 ~~~~~~~~~~~~
 
@@ -53,112 +56,6 @@ Python 3 `venv <https://docs.python.org/3/library/venv.html>`__ module.
 
     # install in 'editable' mode
     pip install -e .
-
-TTX – From OpenType and TrueType to XML and Back
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Once installed you can use the ``ttx`` command to convert binary font
-files (``.otf``, ``.ttf``, etc) to the TTX XML format, edit them, and
-convert them back to binary format. TTX files have a .ttx file
-extension.
-
-.. code:: sh
-
-    ttx /path/to/font.otf
-    ttx /path/to/font.ttx
-
-The TTX application can be used in two ways, depending on what
-platform you run it on:
-
--  As a command line tool (Windows/DOS, Unix, macOS)
--  By dropping files onto the application (Windows, macOS)
-
-TTX detects what kind of files it is fed: it will output a ``.ttx`` file
-when it sees a ``.ttf`` or ``.otf``, and it will compile a ``.ttf`` or
-``.otf`` when the input file is a ``.ttx`` file. By default, the output
-file is created in the same folder as the input file, and will have the
-same name as the input file but with a different extension. TTX will
-*never* overwrite existing files, but if necessary will append a unique
-number to the output filename (before the extension) such as
-``Arial#1.ttf``
-
-When using TTX from the command line there are a bunch of extra options.
-These are explained in the help text, as displayed when typing
-``ttx -h`` at the command prompt. These additional options include:
-
--  specifying the folder where the output files are created
--  specifying which tables to dump or which tables to exclude
--  merging partial ``.ttx`` files with existing ``.ttf`` or ``.otf``
-   files
--  listing brief table info instead of dumping to ``.ttx``
--  splitting tables to separate ``.ttx`` files
--  disabling TrueType instruction disassembly
-
-The TTX file format
--------------------
-
-The following tables are currently supported:
-
-.. begin table list
-.. code::
-
-    BASE, CBDT, CBLC, CFF, CFF2, COLR, CPAL, DSIG, EBDT, EBLC, FFTM,
-    Feat, GDEF, GMAP, GPKG, GPOS, GSUB, Glat, Gloc, HVAR, JSTF, LTSH,
-    MATH, META, MVAR, OS/2, SING, STAT, SVG, Silf, Sill, TSI0, TSI1,
-    TSI2, TSI3, TSI5, TSIB, TSID, TSIJ, TSIP, TSIS, TSIV, TTFA, VDMX,
-    VORG, VVAR, ankr, avar, bsln, cidg, cmap, cvar, cvt, feat, fpgm,
-    fvar, gasp, gcid, glyf, gvar, hdmx, head, hhea, hmtx, kern, lcar,
-    loca, ltag, maxp, meta, mort, morx, name, opbd, post, prep, prop,
-    sbix, trak, vhea and vmtx
-.. end table list
-
-Other tables are dumped as hexadecimal data.
-
-TrueType fonts use glyph indices (GlyphIDs) to refer to glyphs in most
-places. While this is fine in binary form, it is really hard to work
-with for humans. Therefore we use names instead.
-
-The glyph names are either extracted from the ``CFF`` table or the
-``post`` table, or are derived from a Unicode ``cmap`` table. In the
-latter case the Adobe Glyph List is used to calculate names based on
-Unicode values. If all of these methods fail, names are invented based
-on GlyphID (eg ``glyph00142``)
-
-It is possible that different glyphs use the same name. If this happens,
-we force the names to be unique by appending ``#n`` to the name (``n``
-being an integer number.) The original names are being kept, so this has
-no influence on a "round tripped" font.
-
-Because the order in which glyphs are stored inside the binary font is
-important, we maintain an ordered list of glyph names in the font.
-
-Other Tools
-~~~~~~~~~~~
-
-Commands for merging and subsetting fonts are also available:
-
-.. code:: sh
-
-    pyftmerge
-    pyftsubset
-
-fontTools Python Module
-~~~~~~~~~~~~~~~~~~~~~~~
-
-The fontTools Python module provides a convenient way to
-programmatically edit font files.
-
-.. code:: py
-
-    >>> from fontTools.ttLib import TTFont
-    >>> font = TTFont('/path/to/font.ttf')
-    >>> font
-    <fontTools.ttLib.TTFont object at 0x10c34ed50>
-    >>>
-
-A selection of sample Python programs is in the
-`Snippets <https://github.com/fonttools/fonttools/blob/master/Snippets/>`__
-directory.
 
 Optional Requirements
 ---------------------
@@ -296,64 +193,6 @@ are required to unlock the extra features named "ufo", etc.
 
   * `reportlab <https://pypi.python.org/pypi/reportlab>`__: Python toolkit
     for generating PDFs and graphics.
-
-Testing
-~~~~~~~
-
-To run the test suite, you need to install `pytest <http://docs.pytest.org/en/latest/>`__.
-When you run the ``pytest`` command, the tests will run against the
-installed ``fontTools`` package, or the first one found in the
-``PYTHONPATH``.
-
-You can also use `tox <https://tox.readthedocs.io/en/latest/>`__ to
-automatically run tests on different Python versions in isolated virtual
-environments.
-
-.. code:: sh
-
-    pip install tox
-    tox
-
-Note that when you run ``tox`` without arguments, the tests are executed
-for all the environments listed in tox.ini's ``envlist``. In our case,
-this includes Python 3.6 and 3.7, so for this to work the ``python3.6``
-and ``python3.7`` executables must be available in your ``PATH``.
-
-You can specify an alternative environment list via the ``-e`` option,
-or the ``TOXENV`` environment variable:
-
-.. code:: sh
-
-    tox -e py36
-    TOXENV="py36-cov,htmlcov" tox
-
-Development Community
-~~~~~~~~~~~~~~~~~~~~~
-
-TTX/FontTools development is ongoing in an active community of
-developers, that includes professional developers employed at major
-software corporations and type foundries as well as hobbyists.
-
-Feature requests and bug reports are always welcome at
-https://github.com/fonttools/fonttools/issues/
-
-The best place for discussions about TTX from an end-user perspective as
-well as TTX/FontTools development is the
-https://groups.google.com/d/forum/fonttools mailing list. There is also
-a development https://groups.google.com/d/forum/fonttools-dev mailing
-list for continuous integration notifications. You can also email Behdad
-privately at behdad@behdad.org
-
-History
-~~~~~~~
-
-The fontTools project was started by Just van Rossum in 1999, and was
-maintained as an open source project at
-http://sourceforge.net/projects/fonttools/. In 2008, Paul Wise (pabs3)
-began helping Just with stability maintenance. In 2013 Behdad Esfahbod
-began a friendly fork, thoroughly reviewing the codebase and making
-changes at https://github.com/behdad/fonttools to add new features and
-support for new font formats.
 
 Acknowledgements
 ~~~~~~~~~~~~~~~~
