@@ -5105,7 +5105,7 @@ _builddicts()
 
 
 def toUnicode(glyph, isZapfDingbats=False):
-	"""Convert glyph names to Unicode, such as 'longs_t.oldstyle' --> u'ſt'
+	"""Convert glyph names to Unicode, such as ``'longs_t.oldstyle'`` --> ``u'ſt'``
 
 	If ``isZapfDingbats`` is ``True``, the implementation recognizes additional
 	glyph names (as required by the AGL specification).

@@ -169,7 +169,7 @@ class Parser(object):
         return anchorMarks
 
     def parse_anchordef_(self):
-        """Parses a named anchor definition (2.e.viii)."""
+        """Parses a named anchor definition (`section 2.e.viii <http://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#2.e.vii>`_)."""
         assert self.is_cur_keyword_("anchorDef")
         location = self.cur_token_location_
         x, y = self.expect_number_(), self.expect_number_()
@@ -186,7 +186,7 @@ class Parser(object):
         return anchordef
 
     def parse_anonymous_(self):
-        """Parses an anonymous data block (section 10)."""
+        """Parses an anonymous data block (`section 10 <http://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#10>`_)."""
         assert self.is_cur_keyword_(("anon", "anonymous"))
         tag = self.expect_tag_()
         _, content, location = self.lexer_.scan_anonymous_block(tag)
@@ -198,7 +198,7 @@ class Parser(object):
         return self.ast.AnonymousBlock(tag, content, location=location)
 
     def parse_attach_(self):
-        """Parses a GDEF Attach statement (section 9.b)"""
+        """Parses a GDEF Attach statement (`section 9.b <http://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#9.b>`_)"""
         assert self.is_cur_keyword_("Attach")
         location = self.cur_token_location_
         glyphs = self.parse_glyphclass_(accept_glyphname=True)
@@ -210,7 +210,7 @@ class Parser(object):
                                         location=location)
 
     def parse_enumerate_(self, vertical):
-        """Parse an enumerated pair positioning rule (6.b.ii)."""
+        """Parse an enumerated pair positioning rule (`section 6.b.ii <http://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#6.b.ii>`_)."""
         assert self.cur_token_ in {"enumerate", "enum"}
         self.advance_lexer_()
         return self.parse_position_(enumerated=True, vertical=vertical)
@@ -295,7 +295,7 @@ class Parser(object):
 
     def parse_glyphclass_(self, accept_glyphname):
         """Parses a glyph class, either named or anonymous, or (if
-        ``accept_glyphname==True``) a glyph name."""
+        ``bool(accept_glyphname)``) a glyph name."""
         if (accept_glyphname and
                 self.next_token_type_ in (Lexer.NAME, Lexer.CID)):
             glyph = self.expect_glyph_()
@@ -887,7 +887,7 @@ class Parser(object):
 
     def parse_size_parameters_(self):
         """Parses a ``parameters`` statement used in ``size`` features. See
-        section 8.b."""
+        `section 8.b <http://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#8.b>`_."""
         assert self.is_cur_keyword_("parameters")
         location = self.cur_token_location_
         DesignSize = self.expect_decipoint_()
@@ -1041,7 +1041,7 @@ class Parser(object):
                                       self.cur_token_location_)
 
     def parse_name_(self):
-        """Parses a name record. See section 9.e."""
+        """Parses a name record. See `section 9.e <http://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#9.e>`_."""
         platEncID = None
         langID = None
         if self.next_token_type_ in Lexer.NUMBERS:
@@ -1169,7 +1169,7 @@ class Parser(object):
                 continue
 
     def parse_base_tag_list_(self):
-        """Parses BASE table entries. (See section 9.a)"""
+        """Parses BASE table entries. (See `section 9.a <http://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#9.a>`_)"""
         assert self.cur_token_ in ("HorizAxis.BaseTagList",
                                    "VertAxis.BaseTagList"), self.cur_token_
         bases = []
@@ -1269,7 +1269,7 @@ class Parser(object):
             vertical=vertical, location=location)
 
     def parse_valuerecord_definition_(self, vertical):
-        """Parses a named value record definition. (See section 2.e.v)"""
+        """Parses a named value record definition. (See section `2.e.v <http://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#2.e.v>`_)"""
         assert self.is_cur_keyword_("valueRecordDef")
         location = self.cur_token_location_
         value = self.parse_valuerecord_(vertical)
@@ -1325,7 +1325,7 @@ class Parser(object):
 
     def parse_featureNames_(self, tag):
         """Parses a ``featureNames`` statement found in stylistic set features.
-        See section 8.c."""
+        See section `8.c <http://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#8.c>`_."""
         assert self.cur_token_ == "featureNames", self.cur_token_
         block = self.ast.NestedBlock(tag, self.cur_token_,
                                      location=self.cur_token_location_)
@@ -1357,7 +1357,7 @@ class Parser(object):
 
     def parse_cvParameters_(self, tag):
         """Parses a ``cvParameters`` block found in Character Variant features.
-        See section 8.d."""
+        See section `8.d <http://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#8.d>`_."""
         assert self.cur_token_ == "cvParameters", self.cur_token_
         block = self.ast.NestedBlock(tag, self.cur_token_,
                                      location=self.cur_token_location_)
@@ -1434,7 +1434,7 @@ class Parser(object):
 
     def parse_FontRevision_(self):
         """Parses a ``FontRevision`` statement found in the head table. See
-        section 9.c."""
+        `section 9.c <http://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#9.c>`_."""
         assert self.cur_token_ == "FontRevision", self.cur_token_
         location, version = self.cur_token_location_, self.expect_float_()
         self.expect_symbol_(";")

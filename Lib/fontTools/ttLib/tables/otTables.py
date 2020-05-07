@@ -1293,10 +1293,10 @@ def fixLookupOverFlows(ttf, overflowRecord):
 	an offset from a lookup to a subtable overflowed.
 	The table layout is::
 
-		GPSO/GUSB
+		GPOS/GUSB
 			Script List
 			Feature List
-			LookUpList
+			LookUp List
 				Lookup[0] and contents
 					SubTable offset list
 						SubTable[0] and contents

@@ -1433,7 +1433,7 @@ def simplify_name_attributes(pid, eid, lid):
 
 
 class NameRecord(Statement):
-    """Represents a name record. (Section 9.e.)"""
+    """Represents a name record. (`Section 9.e. <http://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#9.e>`_)"""
     def __init__(self, nameID, platformID, platEncID, langID, string,
                  location=None):
         Statement.__init__(self, location)

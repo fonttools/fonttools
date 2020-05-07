@@ -281,7 +281,7 @@ def curve_to_quadratic(curve, max_err):
     (a list of four pairs) and an error value in font units. See the following
     method for how to interpret the result value.
 
-    Raise 'ApproxNotFoundError' if no suitable approximation can be found
+    Raises ``ApproxNotFoundError`` if no suitable approximation can be found
     with the given parameters.
     """
 
@@ -316,7 +316,7 @@ def curves_to_quadratic(curves, max_errors):
     the first quadratic segment runs from (50,50) to
     ( (75 + 125)/2 , (120 + 91.666..)/2 ) = (100, 83.333...).
 
-    Raise 'ApproxNotFoundError' if no suitable approximation can be found
+    Raises ``ApproxNotFoundError`` if no suitable approximation can be found
     for all curves with the given parameters.
     """
 

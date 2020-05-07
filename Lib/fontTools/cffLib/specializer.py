@@ -2,7 +2,7 @@
 
 """T2CharString operator specializer and generalizer.
 
-Postscript glyph drawing operations can be expressed in multiple different
+PostScript glyph drawing operations can be expressed in multiple different
 ways. For example, as well as the ``lineto`` operator, there is also a
 ``hlineto`` operator which draws a horizontal line, removing the need to
 specify a ``dx`` coordinate, and a ``vlineto`` operator which draws a

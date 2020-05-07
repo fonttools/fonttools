@@ -108,13 +108,13 @@ def configLogger(**kwargs):
 
 	filemode
 		Specifies the mode to open the file, if filename is specified
-		(if filemode is unspecified, it defaults to 'a').
+		(if filemode is unspecified, it defaults to ``'a'``).
 
 	format
 		Use the specified format string for the handler. This argument
 		also accepts a dictionary of format strings keyed by level name,
 		to allow customising the records appearance for specific levels.
-		The special '*' key is for 'any other' level.
+		The special ``'*'`` key is for 'any other' level.
 
 	datefmt
 		Use the specified date/time format.

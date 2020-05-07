@@ -1,10 +1,8 @@
 ########################################################
-designspaceLib: Read, write, and edit .designspace files
+designspaceLib: Read, write, and edit designspace files
 ########################################################
 
-MutatorMath started out with its own reader and writer for designspaces.
-Since then the use of designspace has broadened and it would be useful
-to have a reader and writer that are independent of a specific system.
+Implements support for reading and manipulating ``designspace`` files.
 
 .. include:: readme.rst
 .. include:: scripting.rst

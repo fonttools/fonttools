@@ -601,7 +601,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 	def reorder_blend_args(self, commands, get_delta_func, round_func):
 		"""
 		We first re-order the master coordinate values.
-		For a moveto to lineto, the args are now arranged as::
+		For a ``moveto`` to ``lineto``, the args are now arranged as::
 		
 			[ [master_0 x,y], [master_1 x,y], [master_2 x,y] ]
 		
