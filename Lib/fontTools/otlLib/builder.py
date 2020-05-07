@@ -799,9 +799,5 @@ def _addName(nameTable, value):
     else:
         assert isinstance(value, dict)
         names = value
-    # Fix once https://github.com/fonttools/fonttools/pull/1921 is accepted
-    # nameID = nameTable.findMultilingualName(names)
-    # if nameID is None:
-    #     nameID = nameTable.addMultilingualName(names)
     nameID = nameTable.addMultilingualName(names)
     return nameID
