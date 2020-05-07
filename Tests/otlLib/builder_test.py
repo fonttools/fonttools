@@ -1,5 +1,4 @@
 import io
-import re
 from fontTools.misc.testTools import getXML
 from fontTools.otlLib import builder
 from fontTools import ttLib
@@ -1117,7 +1116,7 @@ buildStatTable_test_data = [
             values=[
                 dict(value=100, name='Thin'),
                 dict(value=400, name='Regular', flags=0x2),
-                dict(value=900, name='Black')])], "Regular", [
+                dict(value=900, name='Black')])], None, "Regular", [
         '  <STAT>',
         '    <Version value="0x00010001"/>',
         '    <DesignAxisRecordSize value="8"/>',
@@ -1167,7 +1166,7 @@ buildStatTable_test_data = [
             values=[
                 dict(value=50, name='Condensed'),
                 dict(value=100, name='Regular', flags=0x2),
-                dict(value=200, name='Extended')])], 2, [
+                dict(value=200, name='Extended')])], None, 2, [
         '  <STAT>',
         '    <Version value="0x00010001"/>',
         '    <DesignAxisRecordSize value="8"/>',
@@ -1231,7 +1230,7 @@ buildStatTable_test_data = [
             name="Weight",
             values=[
                 dict(value=400, name='Regular', flags=0x2),
-                dict(value=600, linkedValue=650, name='Bold')])], 18, [
+                dict(value=600, linkedValue=650, name='Bold')])], None, 18, [
         '  <STAT>',
         '    <Version value="0x00010001"/>',
         '    <DesignAxisRecordSize value="8"/>',
@@ -1268,7 +1267,7 @@ buildStatTable_test_data = [
             values=[
                 dict(nominalValue=6, rangeMaxValue=10, name='Small'),
                 dict(rangeMinValue=10, nominalValue=14, rangeMaxValue=24, name='Text', flags=0x2),
-                dict(rangeMinValue=24, nominalValue=600, name='Display')])], 2, [
+                dict(rangeMinValue=24, nominalValue=600, name='Display')])], None, 2, [
         '  <STAT>',
         '    <Version value="0x00010001"/>',
         '    <DesignAxisRecordSize value="8"/>',
@@ -1314,15 +1313,14 @@ buildStatTable_test_data = [
             tag="wght",
             name="Weight",
             ordering=1,
-            values=[
-                dict(axisValues=[dict(tag="wght", value=300),
-                                 dict(tag="ABCD", value=100)], name='Regular ABCD')]),
+            values=[]),
         dict(
             tag="ABCD",
             name="ABCDTest",
             ordering=0,
             values=[
-                dict(value=100, name="Regular", flags=0x2)])], 18, [
+                dict(value=100, name="Regular", flags=0x2)])],
+     [dict(location=dict(wght=300, ABCD=100), name='Regular ABCD')], 18, [
         '  <STAT>',
         '    <Version value="0x00010002"/>',
         '    <DesignAxisRecordSize value="8"/>',
@@ -1330,7 +1328,7 @@ buildStatTable_test_data = [
         '    <DesignAxisRecord>',
         '      <Axis index="0">',
         '        <AxisTag value="wght"/>',
-        '        <AxisNameID value="256"/>  <!-- Weight -->',
+        '        <AxisNameID value="257"/>  <!-- Weight -->',
         '        <AxisOrdering value="1"/>',
         '      </Axis>',
         '      <Axis index="1">',
@@ -1344,7 +1342,7 @@ buildStatTable_test_data = [
         '      <AxisValue index="0" Format="4">',
         '        <!-- AxisCount=2 -->',
         '        <Flags value="0"/>',
-        '        <ValueNameID value="257"/>  <!-- Regular ABCD -->',
+        '        <ValueNameID value="256"/>  <!-- Regular ABCD -->',
         '        <AxisValueRecord index="0">',
         '          <AxisIndex value="0"/>',
         '          <Value value="300.0"/>',
@@ -1366,12 +1364,12 @@ buildStatTable_test_data = [
 ]
 
 
-@pytest.mark.parametrize("axes, elidedFallbackName, expected_ttx", buildStatTable_test_data)
-def test_buildStatTable(axes, elidedFallbackName, expected_ttx):
+@pytest.mark.parametrize("axes, axisValues, elidedFallbackName, expected_ttx", buildStatTable_test_data)
+def test_buildStatTable(axes, axisValues, elidedFallbackName, expected_ttx):
     font = ttLib.TTFont()
     font["name"] = ttLib.newTable("name")
     font["name"].names = []
-    builder.buildStatTable(font, axes, elidedFallbackName)
+    builder.buildStatTable(font, axes, axisValues, elidedFallbackName)
     f = io.StringIO()
     font.saveXML(f, tables=["STAT"])
     ttx = f.getvalue().splitlines()

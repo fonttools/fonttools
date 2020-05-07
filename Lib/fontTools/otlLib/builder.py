@@ -664,7 +664,7 @@ AXIS_VALUE_NEGATIVE_INFINITY = fixedToFloat(-0x80000000, 16)
 AXIS_VALUE_POSITIVE_INFINITY = fixedToFloat(0x7FFFFFFF, 16)
 
 
-def buildStatTable(ttFont, axes, elidedFallbackName=2):
+def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
     """Add a 'STAT' table to the font.
 
     'axes' is a list of dictionaries describing axes and their
@@ -718,10 +718,16 @@ def buildStatTable(ttFont, axes, elidedFallbackName=2):
     and 'rangeMaxValue' items. These map to -Infinity and +Infinity
     respectively if omitted.
 
-    If the value dict contains an 'axisValues' item, an AxisValue
-    record Format 4 is built. It should be a list of value dicts,
-    that each contain two items: 'tag' for the contributing axis, and
-    'value' for the associated value.
+    You cannot specify Format 4 AxisValue tables this way, as they are
+    not tied to a single axis, but instead specify a name for a
+    location that is defined by multiple axes values. Instead, you need
+    to supply the optional 'locations' argument.
+
+    'locations' is a list of dicts, where each dict has a 'name' item,
+    which works just like the value dicts above, an optional 'flags'
+    item (defaulting to 0x0) and a 'location' dict. A 'location' dict
+    key is an axis tag, and the associated value is the location on the
+    specified axis.
 
     The optional 'elidedFallbackName' argument can be a name ID (int),
     a string, or a dictionary containing multilingual names. It
@@ -729,7 +735,13 @@ def buildStatTable(ttFont, axes, elidedFallbackName=2):
     """
     ttFont["STAT"] = ttLib.newTable("STAT")
     statTable = ttFont["STAT"].table = ot.STAT()
-    statTable.Version = 0x00010001  # Upgrade to 0x00010002 when using Format 4 value records
+    if not locations:
+        statTable.Version = 0x00010001
+        locations = ()
+    else:
+        # We'll be adding Format 4 AxisValue records, which
+        # requires a higher table version
+        statTable.Version = 0x00010002
     nameTable = ttFont["name"]
     statTable.ElidedFallbackNameID = _addName(nameTable, elidedFallbackName)
 
@@ -737,8 +749,25 @@ def buildStatTable(ttFont, axes, elidedFallbackName=2):
     for axisRecordIndex, axisDict in enumerate(axes):
         axisTagToIndex[axisDict["tag"]] = axisRecordIndex
 
-    axisRecords = []
+    # 'locations' contains data for AxisValue Format 4
     axisValues = []
+    for axisLocationDict in locations:
+        axisValRec = ot.AxisValue()
+        axisValRec.Format = 4
+        axisValRec.ValueNameID = _addName(nameTable, axisLocationDict['name'])
+        axisValRec.Flags = axisLocationDict.get("flags", 0)
+        axisValueRecords = []
+        for tag, value in axisLocationDict["location"].items():
+            avr = ot.AxisValueRecord()
+            avr.AxisIndex = axisTagToIndex[tag]
+            avr.Value = value
+            axisValueRecords.append(avr)
+        axisValueRecords.sort(key=lambda avr: avr.AxisIndex)
+        axisValRec.AxisCount = len(axisValueRecords)
+        axisValRec.AxisValueRecord = axisValueRecords
+        axisValues.append(axisValRec)
+
+    axisRecords = []
     for axisRecordIndex, axisDict in enumerate(axes):
         axis = ot.AxisRecord()
         axis.AxisTag = axisDict["tag"]
@@ -764,21 +793,6 @@ def buildStatTable(ttFont, axes, elidedFallbackName=2):
                 axisValRec.NominalValue = axisVal["nominalValue"]
                 axisValRec.RangeMinValue = axisVal.get("rangeMinValue", AXIS_VALUE_NEGATIVE_INFINITY)
                 axisValRec.RangeMaxValue = axisVal.get("rangeMaxValue", AXIS_VALUE_POSITIVE_INFINITY)
-            elif "axisValues" in axisVal:
-                # Note that in this case it isn't completely obvious
-                # that this should be part of an axis definition (it
-                # refers to multiple axes after all), but it is the
-                # simples way given the overall input data structure
-                axisValRec.Format = 4
-                axisValueRecords = []
-                for axisValue in axisVal["axisValues"]:
-                    avr = ot.AxisValueRecord()
-                    avr.AxisIndex = axisTagToIndex[axisValue["tag"]]
-                    avr.Value = axisValue["value"]
-                    axisValueRecords.append(avr)
-                axisValRec.AxisCount = len(axisValueRecords)
-                axisValRec.AxisValueRecord = axisValueRecords
-                statTable.Version = 0x00010002  # Format 4 requires this
             else:
                 raise ValueError("Can't determine format for AxisValue")
 
