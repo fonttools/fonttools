@@ -144,6 +144,48 @@ class NameTableTest(unittest.TestCase):
 		rec2 = table.getName(2, 1, 0, 0)
 		self.assertEqual(str(rec2), "Regular")
 
+	@staticmethod
+	def _get_test_names():
+		names = {
+			"en": "Width",
+			"de-CH": "Breite",
+			"gsw-LI": "Bräiti",
+		}
+		namesSubSet = names.copy()
+		del namesSubSet["gsw-LI"]
+		namesSuperSet = names.copy()
+		namesSuperSet["nl"] = "Breedte"
+		return names, namesSubSet, namesSuperSet
+
+	def test_findMultilingualName(self):
+		table = table__n_a_m_e()
+		names, namesSubSet, namesSuperSet = self._get_test_names()
+		nameID = table.addMultilingualName(names)
+		assert nameID is not None
+		self.assertEqual(nameID, table.findMultilingualName(names))
+		self.assertEqual(nameID, table.findMultilingualName(namesSubSet))
+		self.assertEqual(None, table.findMultilingualName(namesSuperSet))
+
+	def test_addMultilingualNameReuse(self):
+		table = table__n_a_m_e()
+		names, namesSubSet, namesSuperSet = self._get_test_names()
+		nameID = table.addMultilingualName(names)
+		assert nameID is not None
+		self.assertEqual(nameID, table.addMultilingualName(names))
+		self.assertEqual(nameID, table.addMultilingualName(namesSubSet))
+		self.assertNotEqual(None, table.addMultilingualName(namesSuperSet))
+
+	def test_findMultilingualNameNoMac(self):
+		table = table__n_a_m_e()
+		names, namesSubSet, namesSuperSet = self._get_test_names()
+		nameID = table.addMultilingualName(names, mac=False)
+		assert nameID is not None
+		self.assertEqual(nameID, table.findMultilingualName(names, mac=False))
+		self.assertEqual(None, table.findMultilingualName(names))
+		self.assertEqual(nameID, table.findMultilingualName(namesSubSet, mac=False))
+		self.assertEqual(None, table.findMultilingualName(namesSubSet))
+		self.assertEqual(None, table.findMultilingualName(namesSuperSet))
+
 	def test_addMultilingualName(self):
 		# Microsoft Windows has language codes for “English” (en)
 		# and for “Standard German as used in Switzerland” (de-CH).
