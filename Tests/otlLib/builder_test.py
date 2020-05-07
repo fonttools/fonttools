@@ -1344,7 +1344,7 @@ buildStatTable_test_data = [
         '      <AxisValue index="0" Format="4">',
         '        <!-- AxisCount=2 -->',
         '        <Flags value="0"/>',
-        '        <ValueNameID value="***"/>  <!-- Regular ABCD -->',
+        '        <ValueNameID value="257"/>  <!-- Regular ABCD -->',
         '        <AxisValueRecord index="0">',
         '          <AxisIndex value="0"/>',
         '          <Value value="300.0"/>',
@@ -1357,7 +1357,7 @@ buildStatTable_test_data = [
         '      <AxisValue index="1" Format="1">',
         '        <AxisIndex value="1"/>',
         '        <Flags value="2"/>',
-        '        <ValueNameID value="***"/>  <!-- Regular -->',
+        '        <ValueNameID value="259"/>  <!-- Regular -->',
         '        <Value value="100.0"/>',
         '      </AxisValue>',
         '    </AxisValueArray>',
@@ -1376,7 +1376,7 @@ def test_buildStatTable(statData, elidedFallbackNameID, expected_ttx):
     font.saveXML(f, tables=["STAT"])
     ttx = f.getvalue().splitlines()
     ttx = ttx[3:-2]  # strip XML header and <ttFont> element
-    assert _filterNameIDs(expected_ttx) == _filterNameIDs(ttx)
+    assert expected_ttx == ttx
     # Compile and round-trip
     f = io.BytesIO()
     font.save(f)
@@ -1385,13 +1385,7 @@ def test_buildStatTable(statData, elidedFallbackNameID, expected_ttx):
     font.saveXML(f, tables=["STAT"])
     ttx = f.getvalue().splitlines()
     ttx = ttx[3:-2]  # strip XML header and <ttFont> element
-    assert _filterNameIDs(expected_ttx) == _filterNameIDs(ttx)
-
-
-# TODO: this can go once https://github.com/fonttools/fonttools/pull/1921
-# is accepted
-def _filterNameIDs(lines):
-    return [re.sub(r'(ValueNameID value=")(\d+)(")', r"\1***\3", s) for s in lines]
+    assert expected_ttx == ttx
 
 
 if __name__ == "__main__":
