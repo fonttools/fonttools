@@ -1,4 +1,5 @@
 from collections import namedtuple
+from fontTools.misc.fixedTools import fixedToFloat
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
@@ -657,3 +658,146 @@ class ClassDefBuilder(object):
         classDef = ot.ClassDef()
         classDef.classDefs = glyphClasses
         return classDef
+
+
+AXIS_VALUE_NEGATIVE_INFINITY = fixedToFloat(-0x80000000, 16)
+AXIS_VALUE_POSITIVE_INFINITY = fixedToFloat(0x7FFFFFFF, 16)
+
+
+def buildStatTable(ttFont, axisData, elidedFallbackNameID=2):
+    """Add a 'STAT' table to the font.
+
+    'axisData' is a list of dictionaries describing axes and their
+    values.
+
+    Example:
+
+    axisData = [
+        dict(
+            tag="wght",
+            name="Weight",
+            ordering=0,  # optional
+            values=[
+                dict(value=100, name='Thin'),
+                dict(value=300, name='Light'),
+                dict(value=400, name='Regular', flags=0x2),
+                dict(value=900, name='Black'),
+            ],
+        )
+    ]
+
+    Each axis dict must have 'tag' and 'name' items. 'tag' maps
+    to the 'AxisTag' field. 'name' is either a string, or a dictionary
+    containing multilingual names (see the addMultilingualName() name
+    table method), and will translate to the AxisNameID field.
+
+    An axis dict may contain an 'ordering' item that maps to the
+    AxisOrdering field. If omitted, the order of the axisData list is
+    used to calculate AxisOrdering fields.
+
+    The axis dict must contain a 'values' item, which is a list of
+    dictionaries describing AxisValue records belonging to this axis.
+
+    Each value dict must have a 'name' item, which is a string or a
+    dict with multilingual names, like the axis name. It translates to
+    the ValueNameID field.
+
+    Optionally the value dict can contain a 'flags' item. It maps to
+    the AxisValue Flags field, and will be 0 when omitted.
+
+    The format of the AxisValue is determined by the remaining contents
+    of the value dictionary:
+
+    If the value dict contains a 'value' item, an AxisValue record
+    Format 1 is created. If in addition to the 'value' item it contains
+    a 'linkedValue' item, an AxisValue record Format 3 is built.
+
+    If the value dict contains a 'nominalValue' item, an AxisValue
+    record Format 2 is built. Optionally it may contain 'rangeMinValue'
+    and 'rangeMaxValue' items. These map to -Infinity and +Infinity
+    respectively if omitted.
+
+    If the value dict contains an 'axisValues' item, an AxisValue
+    record Format 4 is built. It should be a list of value dicts,
+    that each contain two items: 'tag' for the contributing axis, and
+    'value' for the associated value.
+    """
+    ttFont["STAT"] = ttLib.newTable("STAT")
+    statTable = ttFont["STAT"].table = ot.STAT()
+    statTable.Version = 0x00010001  # Upgrade to 0x00010002 when using Format 4 value records
+    statTable.ElidedFallbackNameID = elidedFallbackNameID
+    nameTable = ttFont["name"]
+
+    axisTagToIndex = {}
+    for axisRecordIndex, axisDict in enumerate(axisData):
+        axisTagToIndex[axisDict["tag"]] = axisRecordIndex
+
+    axisRecords = []
+    axisValues = []
+    for axisRecordIndex, axisDict in enumerate(axisData):
+        axis = ot.AxisRecord()
+        axis.AxisTag = axisDict["tag"]
+        axis.AxisNameID = _addName(nameTable, axisDict["name"])
+        axis.AxisOrdering = axisDict.get("ordering", axisRecordIndex)
+        axisRecords.append(axis)
+
+        for axisVal in axisDict["values"]:
+            axisValRec = ot.AxisValue()
+            axisValRec.AxisIndex = axisRecordIndex
+            axisValRec.Flags = axisVal.get("flags", 0)
+            axisValRec.ValueNameID = _addName(nameTable, axisVal['name'])
+
+            if "value" in axisVal:
+                axisValRec.Value = axisVal["value"]
+                if "linkedValue" in axisVal:
+                    axisValRec.Format = 3
+                    axisValRec.LinkedValue = axisVal["linkedValue"]
+                else:
+                    axisValRec.Format = 1
+            elif "nominalValue" in axisVal:
+                axisValRec.Format = 2
+                axisValRec.NominalValue = axisVal["nominalValue"]
+                axisValRec.RangeMinValue = axisVal.get("rangeMinValue", AXIS_VALUE_NEGATIVE_INFINITY)
+                axisValRec.RangeMaxValue = axisVal.get("rangeMaxValue", AXIS_VALUE_POSITIVE_INFINITY)
+            elif "axisValues" in axisVal:
+                # Note that in this case it isn't completely obvious
+                # that this should be part of an axis definition (it
+                # refers to multiple axes after all), but it is the
+                # simples way given the overall input data structure
+                axisValRec.Format = 4
+                axisValueRecords = []
+                for axisValue in axisVal["axisValues"]:
+                    avr = ot.AxisValueRecord()
+                    avr.AxisIndex = axisTagToIndex[axisValue["tag"]]
+                    avr.Value = axisValue["value"]
+                    axisValueRecords.append(avr)
+                axisValRec.AxisCount = len(axisValueRecords)
+                axisValRec.AxisValueRecord = axisValueRecords
+                statTable.Version = 0x00010002  # Format 4 requires this
+            else:
+                raise ValueError("Can't determine format for AxisValue")
+
+            axisValues.append(axisValRec)
+
+    # Store AxisRecords
+    axisRecordArray = ot.AxisRecordArray()
+    axisRecordArray.Axis = axisRecords
+    statTable.DesignAxisRecordSize = 8  # See comment in varLib
+    statTable.DesignAxisRecord = axisRecordArray
+    statTable.DesignAxisCount = len(axisRecords)
+
+    # Store AxisValueRecords
+    axisValueArray = ot.AxisValueArray()
+    axisValueArray.AxisValue = axisValues
+    statTable.AxisValueArray = axisValueArray
+    statTable.AxisValueCount = len(axisValues)
+
+
+def _addName(nameTable, value):
+    if isinstance(value, str):
+        names = dict(en=value)
+    else:
+        assert isinstance(value, dict)
+        names = value
+    nameID = nameTable.addMultilingualName(names)
+    return nameID
