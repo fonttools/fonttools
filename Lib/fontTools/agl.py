@@ -13,7 +13,7 @@ to their Unicode equivalents. Example usage:
 	>>> toUnicode("nahiragana")
 	'な'
 
-It also contains two dictionaries, ``UV2AGL`` and ``AGL2UV`` which maps from
+It also contains two dictionaries, ``UV2AGL`` and ``AGL2UV``, which map from
 Unicode codepoints to AGL names and vice versa:
 
 	>>> import fontTools
