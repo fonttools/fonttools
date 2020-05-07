@@ -664,15 +664,15 @@ AXIS_VALUE_NEGATIVE_INFINITY = fixedToFloat(-0x80000000, 16)
 AXIS_VALUE_POSITIVE_INFINITY = fixedToFloat(0x7FFFFFFF, 16)
 
 
-def buildStatTable(ttFont, axisData, elidedFallbackName=2):
+def buildStatTable(ttFont, axes, elidedFallbackName=2):
     """Add a 'STAT' table to the font.
 
-    'axisData' is a list of dictionaries describing axes and their
+    'axes' is a list of dictionaries describing axes and their
     values.
 
     Example:
 
-    axisData = [
+    axes = [
         dict(
             tag="wght",
             name="Weight",
@@ -693,7 +693,7 @@ def buildStatTable(ttFont, axisData, elidedFallbackName=2):
     the AxisNameID field.
 
     An axis dict may contain an 'ordering' item that maps to the
-    AxisOrdering field. If omitted, the order of the axisData list is
+    AxisOrdering field. If omitted, the order of the axes list is
     used to calculate AxisOrdering fields.
 
     The axis dict must contain a 'values' item, which is a list of
@@ -734,12 +734,12 @@ def buildStatTable(ttFont, axisData, elidedFallbackName=2):
     statTable.ElidedFallbackNameID = _addName(nameTable, elidedFallbackName)
 
     axisTagToIndex = {}
-    for axisRecordIndex, axisDict in enumerate(axisData):
+    for axisRecordIndex, axisDict in enumerate(axes):
         axisTagToIndex[axisDict["tag"]] = axisRecordIndex
 
     axisRecords = []
     axisValues = []
-    for axisRecordIndex, axisDict in enumerate(axisData):
+    for axisRecordIndex, axisDict in enumerate(axes):
         axis = ot.AxisRecord()
         axis.AxisTag = axisDict["tag"]
         axis.AxisNameID = _addName(nameTable, axisDict["name"])
