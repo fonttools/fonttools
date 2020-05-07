@@ -453,7 +453,7 @@ class MergeOutlineExtractor(CFFToCFF2OutlineExtractor):
 
 	def __init__(self, pen, localSubrs, globalSubrs,
 			nominalWidthX, defaultWidthX, private=None):
-		super(CFFToCFF2OutlineExtractor, self).__init__(pen, localSubrs,
+		super().__init__(pen, localSubrs,
 			globalSubrs, nominalWidthX, defaultWidthX, private)
 
 	def countHints(self):
@@ -507,9 +507,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 	def __init__(
 				self, default_commands, glyphName, num_masters, master_idx,
 				roundTolerance=0.5):
-		super(
-			CFF2CharStringMergePen,
-			self).__init__(
+		super().__init__(
 							width=None,
 							glyphSet=None, CFF2=True,
 							roundTolerance=roundTolerance)
