@@ -210,7 +210,7 @@ class GlyphClass(Expression):
         self.curr = len(self.glyphs)
 
     def add_class(self, gc):
-        """Adds glyphs from the given :class:`GlyphClassName` object to the
+        """Add glyphs from the given :class:`GlyphClassName` object to the
         class."""
         if self.curr < len(self.glyphs):
             self.original.extend(self.glyphs[self.curr:])
@@ -382,7 +382,7 @@ class TableBlock(Block):
 
 
 class GlyphClassDefinition(Statement):
-    """Example: ``@UPPERCASE = [A-Z]`;``."""
+    """Example: ``@UPPERCASE = [A-Z];``."""
     def __init__(self, name, glyphs, location=None):
         Statement.__init__(self, location)
         self.name = name #: class name as a string, without initial ``@``
@@ -609,7 +609,7 @@ class AttachStatement(Statement):
 class ChainContextPosStatement(Statement):
     """A chained contextual positioning statement.
 
-    ``prefix``, ``glyph``, and ``suffix`` should be lists of
+    ``prefix``, ``glyphs``, and ``suffix`` should be lists of
     `glyph-containing objects`_ .
 
     ``lookups`` should be a list of :class:`LookupBlock` statements, with
@@ -821,7 +821,7 @@ class LanguageStatement(Statement):
         Statement.__init__(self, location)
         assert(len(language) == 4)
         self.language = language #: A four-character language tag
-        self.include_default = include_default #: If false, "exclude_deflt"
+        self.include_default = include_default #: If false, "exclude_dflt"
         self.required = required
 
     def build(self, builder):
@@ -856,7 +856,7 @@ class LanguageSystemStatement(Statement):
 
 class FontRevisionStatement(Statement):
     """A ``head`` table ``FontRevision`` statement. ``revision`` should be a
-    decimal number with three significant decimal places."""
+    number, and will be formatted to three significant decimal places."""
     def __init__(self, revision, location=None):
         Statement.__init__(self, location)
         self.revision = revision
@@ -998,7 +998,7 @@ class LookupReferenceStatement(Statement):
 
 
 class MarkBasePosStatement(Statement):
-    """A mark-to-base positioning rule. The ``base`` must be a
+    """A mark-to-base positioning rule. The ``base`` should be a
     `glyph-containing object`_. The ``marks`` should be a list of
     (:class:`Anchor`, :class:`MarkClass`) tuples."""
     def __init__(self, base, marks, location=None):
@@ -1134,6 +1134,8 @@ class PairPosStatement(Statement):
     ``glyphs1`` and ``glyphs2`` should be `glyph-containing objects`_.
     ``valuerecord1`` should be a :class:`ValueRecord` object;
     ``valuerecord2`` should be either a :class:`ValueRecord` object or ``None``.
+    If ``enumerated`` is true, then this is expressed as an
+    `enumerated pair <http://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#6.b.ii>`_.
     """
     def __init__(self, glyphs1, valuerecord1, glyphs2, valuerecord2,
                  enumerated=False, location=None):
@@ -1283,9 +1285,8 @@ class SinglePosStatement(Statement):
     """A single position statement. ``prefix`` and ``suffix`` should be
     lists of `glyph-containing objects`_.
 
-    ``pos`` should be a list of (`glyph-containing object`_,
-    :class:`ValueRecord`) tuples. There should probably be only one entry in
-    that list."""
+    ``pos`` should be a one-element list containing a (`glyph-containing object`_,
+    :class:`ValueRecord`) tuple."""
 
     def __init__(self, pos, prefix, suffix, forceChain, location=None):
         Statement.__init__(self, location)
@@ -1317,7 +1318,7 @@ class SinglePosStatement(Statement):
 
 
 class SubtableStatement(Statement):
-    """Represents a subtable break"""
+    """Represents a subtable break."""
     def __init__(self, location=None):
         Statement.__init__(self, location)
 

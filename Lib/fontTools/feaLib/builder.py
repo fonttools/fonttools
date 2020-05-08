@@ -39,8 +39,8 @@ def addOpenTypeFeaturesFromString(font, features, filename=None, tables=None):
     Args:
         font (feaLib.ttLib.TTFont): The font object.
         features: A string containing feature code.
-        filename: The directory containing 'filename' is used as the root of
-            relative ``include()`` paths; if None is provided, the current
+        filename: The directory containing ``filename`` is used as the root of
+            relative ``include()`` paths; if ``None`` is provided, the current
             directory is assumed.
         tables: If passed, restrict the set of affected tables to those in the
             list.
