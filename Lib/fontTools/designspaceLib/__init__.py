@@ -156,18 +156,22 @@ class SourceDescriptor(SimpleDescriptor):
 
 
 class RuleDescriptor(SimpleDescriptor):
-    """<!-- optional: list of substitution rules -->
-    <rules>
-        <rule name="vertical.bars">
-            <conditionset>
-                <condition minimum="250.000000" maximum="750.000000" name="weight"/>
-                <condition minimum="100" name="width"/>
-                <condition minimum="10" maximum="40" name="optical"/>
-            </conditionset>
-            <sub name="cent" with="cent.alt"/>
-            <sub name="dollar" with="dollar.alt"/>
-        </rule>
-    </rules>
+    """Optionally represents a list of substitution rules, e.g.
+
+    .. code-block:: xml
+
+        <rules>
+            <rule name="vertical.bars">
+                <conditionset>
+                    <condition minimum="250.000000" maximum="750.000000" name="weight"/>
+                    <condition minimum="100" name="width"/>
+                    <condition minimum="10" maximum="40" name="optical"/>
+                </conditionset>
+                <sub name="cent" with="cent.alt"/>
+                <sub name="dollar" with="dollar.alt"/>
+            </rule>
+        </rules>
+
     """
     _attrs = ['name', 'conditionSets', 'subs']   # what do we need here
 
@@ -992,9 +996,12 @@ class BaseDocReader(LogMixin):
 
     def readGlyphElement(self, glyphElement, instanceObject):
         """
-        Read the glyph element.
+        Read the glyph element, which could look like either one of these::
+
             <glyph name="b" unicode="0x62"/>
+
             <glyph name="b"/>
+
             <glyph name="b">
                 <master location="location-token-bbb" source="master-token-aaa2"/>
                 <master glyphname="b.alt1" location="location-token-ccc" source="master-token-aaa3"/>
@@ -1002,6 +1009,7 @@ class BaseDocReader(LogMixin):
                     This is an instance from an anisotropic interpolation.
                 </note>
             </glyph>
+
         """
         glyphData = {}
         glyphName = glyphElement.attrib.get('name')

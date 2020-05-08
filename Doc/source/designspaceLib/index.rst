@@ -1,16 +1,24 @@
-##############
-designspaceLib
-##############
+#######################################################
+designspaceLib: Read, write, and edit designspace files
+#######################################################
 
-MutatorMath started out with its own reader and writer for designspaces.
-Since then the use of designspace has broadened and it would be useful
-to have a reader and writer that are independent of a specific system.
+Implements support for reading and manipulating ``designspace`` files.
+Allows the users to define sources, axes, rules and instances.
 
-.. toctree::
-   :maxdepth: 1
+This documentation covers:
 
-   readme
-   scripting
+-  `Reading a designspace file in Python <#python-api>`_
+-  `The XML structure of a designspace file <#document-xml-structure>`_
+-  `How to create a designspace file in code <#designspacedocument-scripting>`_
+-  `API documentation  <#designspacelib-api>`_
+
+.. include:: readme.rst
+.. include:: scripting.rst
+
+fontTools.designspaceLib
+########################
+
+.. _designspacelib-api:
 
 .. automodule:: fontTools.designspaceLib
    :inherited-members:
