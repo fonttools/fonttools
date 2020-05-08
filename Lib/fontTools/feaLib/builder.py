@@ -1263,12 +1263,13 @@ class ChainContextPosBuilder(LookupBuilder):
             self.setLookAheadCoverage_(suffix, st)
             self.setInputCoverage_(glyphs, st)
 
-            st.PosCount = len([l for l in lookups if l is not None])
+            st.PosCount = 0
             st.PosLookupRecord = []
             for sequenceIndex, ll in enumerate(lookups):
                 if ll is not None:
                     if type(ll) is not list: ll = [ll]
                     for l in ll:
+                        st.PosCount = st.PosCount + 1
                         if l.lookup_index is None:
                             raise FeatureLibError('Missing index of the specified '
                                 'lookup, might be a substitution lookup',
@@ -1316,12 +1317,13 @@ class ChainContextSubstBuilder(LookupBuilder):
             self.setLookAheadCoverage_(suffix, st)
             self.setInputCoverage_(input, st)
 
-            st.SubstCount = len([l for l in lookups if l is not None])
+            st.SubstCount = 0
             st.SubstLookupRecord = []
             for sequenceIndex, ll in enumerate(lookups):
                 if ll is not None:
                     if type(ll) is not list: ll = [ll]
                     for l in ll:
+                        st.SubstCount = st.SubstCount + 1
                         if l.lookup_index is None:
                             raise FeatureLibError('Missing index of the specified '
                                 'lookup, might be a positioning lookup',

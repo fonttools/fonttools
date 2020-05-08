@@ -59,7 +59,7 @@
           <LookAheadCoverage index="0">
             <Glyph value="b"/>
           </LookAheadCoverage>
-          <!-- SubstCount=1 -->
+          <!-- SubstCount=2 -->
           <SubstLookupRecord index="0">
             <SequenceIndex value="0"/>
             <LookupListIndex value="0"/>
