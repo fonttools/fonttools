@@ -1,6 +1,17 @@
 # -*- coding: utf-8 -*-
 
-"""T2CharString operator specializer and generalizer."""
+"""T2CharString operator specializer and generalizer.
+
+PostScript glyph drawing operations can be expressed in multiple different
+ways. For example, as well as the ``lineto`` operator, there is also a
+``hlineto`` operator which draws a horizontal line, removing the need to
+specify a ``dx`` coordinate, and a ``vlineto`` operator which draws a
+vertical line, removing the need to specify a ``dy`` coordinate. As well
+as decompiling :class:`fontTools.misc.psCharStrings.T2CharString` objects
+into lists of operations, this module allows for conversion between general
+and specific forms of the operation.
+
+"""
 
 from fontTools.misc.py23 import *
 from fontTools.cffLib import maxStackLimit
