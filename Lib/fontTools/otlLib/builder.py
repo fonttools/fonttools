@@ -665,7 +665,7 @@ AXIS_VALUE_POSITIVE_INFINITY = fixedToFloat(0x7FFFFFFF, 16)
 
 
 def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
-    """Add a 'STAT' table to the font.
+    """Add a 'STAT' table to 'ttFont'.
 
     'axes' is a list of dictionaries describing axes and their
     values.
@@ -741,6 +741,10 @@ def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
     The optional 'elidedFallbackName' argument can be a name ID (int),
     a string, or a dictionary containing multilingual names. It
     translates to the ElidedFallbackNameID field.
+
+    The 'ttFont' argument must be a TTFont instance that already has a
+    'name' table. If a 'STAT' table already exists, it will be
+    overwritten by the newly created one.
     """
     ttFont["STAT"] = ttLib.newTable("STAT")
     statTable = ttFont["STAT"].table = ot.STAT()
