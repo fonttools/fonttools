@@ -803,6 +803,11 @@ class FontBuilder(object):
             nameTable=self.font.get("name")
         )
 
+    def setupStat(self, axes, locations=None, elidedFallbackName=2):
+        """Build a new 'STAT' table."""
+        from fontTools.otlLib.builder import buildStatTable
+        buildStatTable(self.font, axes, locations, elidedFallbackName)
+
 
 def buildCmapSubTable(cmapping, format, platformID, platEncID):
     subTable = cmap_classes[format](format)
