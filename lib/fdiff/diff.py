@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import asyncio
+from difflib import unified_diff
 import os
 from multiprocessing import Pool, cpu_count
 import shlex
@@ -14,7 +15,7 @@ from fdiff.remote import (
     _get_filepath_from_url,
     create_async_get_request_session_and_run,
 )
-from fdiff.thirdparty.fdifflib import unified_diff
+
 from fdiff.utils import get_file_modtime
 
 
@@ -23,7 +24,6 @@ from fdiff.utils import get_file_modtime
 #  Private functions
 #
 #
-# TODO: add docstrings for all private functions
 
 
 def _async_fetch_files(dirpath, urls):
