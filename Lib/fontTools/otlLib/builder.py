@@ -827,8 +827,8 @@ def _addName(nameTable, value):
         return value
     if isinstance(value, str):
         names = dict(en=value)
-    else:
-        assert isinstance(value, dict)
+    elif isinstance(value, dict):
         names = value
-    nameID = nameTable.addMultilingualName(names)
-    return nameID
+    else:
+        raise TypeError("value must be int, str or dict")
+    return nameTable.addMultilingualName(names)
