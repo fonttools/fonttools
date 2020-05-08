@@ -17,15 +17,38 @@ log = logging.getLogger(__name__)
 
 
 def addOpenTypeFeatures(font, featurefile, tables=None):
+    """Add features from a file to a font. Note that this replaces any features
+    currently present.
+
+    Args:
+        font (feaLib.ttLib.TTFont): The font object.
+        featurefile: Either a path or file object (in which case we
+            parse it into an AST), or a pre-parsed AST instance.
+        tables: If passed, restrict the set of affected tables to those in the
+            list.
+
+    """
     builder = Builder(font, featurefile)
     builder.build(tables=tables)
 
 
 def addOpenTypeFeaturesFromString(font, features, filename=None, tables=None):
+    """Add features from a string to a font. Note that this replaces any
+    features currently present.
+
+    Args:
+        font (feaLib.ttLib.TTFont): The font object.
+        features: A string containing feature code.
+        filename: The directory containing 'filename' is used as the root of
+            relative ``include()`` paths; if None is provided, the current
+            directory is assumed.
+        tables: If passed, restrict the set of affected tables to those in the
+            list.
+
+    """
+
     featurefile = UnicodeIO(tounicode(features))
     if filename:
-        # the directory containing 'filename' is used as the root of relative
-        # include paths; if None is provided, the current directory is assumed
         featurefile.name = filename
     addOpenTypeFeatures(font, featurefile, tables=tables)
 
@@ -851,7 +874,7 @@ class Builder(object):
         self.cv_parameters_.add(tag)
 
     def add_to_cv_num_named_params(self, tag):
-        """Adds new items to self.cv_num_named_params_
+        """Adds new items to ``self.cv_num_named_params_``
         or increments the count of existing items."""
         if tag in self.cv_num_named_params_:
             self.cv_num_named_params_[tag] += 1
