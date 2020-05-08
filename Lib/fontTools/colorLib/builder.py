@@ -1,3 +1,7 @@
+"""
+colorLib.builder: Build COLR/CPAL tables from scratch
+
+"""
 import collections
 import copy
 import enum
