@@ -202,30 +202,14 @@ def _add_stat(font, axes):
 	if "STAT" in font:
 		return
 
+	from ..otlLib.builder import buildStatTable
 	fvarTable = font['fvar']
-
-	STAT = font["STAT"] = newTable('STAT')
-	stat = STAT.table = ot.STAT()
-	stat.Version = 0x00010001
-
-	axisRecords = []
+	axes = []
 	for i, a in enumerate(fvarTable.axes):
-		axis = ot.AxisRecord()
-		axis.AxisTag = Tag(a.axisTag)
-		axis.AxisNameID = a.axisNameID
-		axis.AxisOrdering = i
-		axisRecords.append(axis)
-
-	axisRecordArray = ot.AxisRecordArray()
-	axisRecordArray.Axis = axisRecords
-	# XXX these should not be hard-coded but computed automatically
-	stat.DesignAxisRecordSize = 8
-	stat.DesignAxisCount = len(axisRecords)
-	stat.DesignAxisRecord = axisRecordArray
-
-	# for the elided fallback name, we default to the base style name.
-	# TODO make this user-configurable via designspace document
-	stat.ElidedFallbackNameID = 2
+		axes.append(dict(tag=a.axisTag,
+		                 name=a.axisNameID,
+		                 ordering=i))
+	buildStatTable(font, axes)
 
 
 def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
