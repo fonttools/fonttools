@@ -809,7 +809,7 @@ class FontBuilder(object):
         See `fontTools.otlLib.builder.buildStatTable` for details about
         the arguments.
         """
-        from fontTools.otlLib.builder import buildStatTable
+        from .otlLib.builder import buildStatTable
         buildStatTable(self.font, axes, locations, elidedFallbackName)
 
 
