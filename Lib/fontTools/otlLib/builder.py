@@ -748,21 +748,39 @@ def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
     """
     ttFont["STAT"] = ttLib.newTable("STAT")
     statTable = ttFont["STAT"].table = ot.STAT()
+    nameTable = ttFont["name"]
+    statTable.ElidedFallbackNameID = _addName(nameTable, elidedFallbackName)
+
+    # 'locations' contains data for AxisValue Format 4
+    axisRecords, axisValues = _buildAxisRecords(axes, nameTable)
     if not locations:
         statTable.Version = 0x00010001
-        locations = ()
     else:
         # We'll be adding Format 4 AxisValue records, which
         # requires a higher table version
         statTable.Version = 0x00010002
-    nameTable = ttFont["name"]
-    statTable.ElidedFallbackNameID = _addName(nameTable, elidedFallbackName)
+        multiAxisValues = _buildAxisValuesFormat4(locations, axes, nameTable)
+        axisValues = multiAxisValues + axisValues
 
+    # Store AxisRecords
+    axisRecordArray = ot.AxisRecordArray()
+    axisRecordArray.Axis = axisRecords
+    statTable.DesignAxisRecordSize = 8  # See comment in varLib
+    statTable.DesignAxisRecord = axisRecordArray
+    statTable.DesignAxisCount = len(axisRecords)
+
+    # Store AxisValueRecords
+    axisValueArray = ot.AxisValueArray()
+    axisValueArray.AxisValue = axisValues
+    statTable.AxisValueArray = axisValueArray
+    statTable.AxisValueCount = len(axisValues)
+
+
+def _buildAxisValuesFormat4(locations, axes, nameTable):
     axisTagToIndex = {}
     for axisRecordIndex, axisDict in enumerate(axes):
         axisTagToIndex[axisDict["tag"]] = axisRecordIndex
 
-    # 'locations' contains data for AxisValue Format 4
     axisValues = []
     for axisLocationDict in locations:
         axisValRec = ot.AxisValue()
@@ -779,8 +797,12 @@ def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
         axisValRec.AxisCount = len(axisValueRecords)
         axisValRec.AxisValueRecord = axisValueRecords
         axisValues.append(axisValRec)
+    return axisValues
 
+
+def _buildAxisRecords(axes, nameTable):
     axisRecords = []
+    axisValues = []
     for axisRecordIndex, axisDict in enumerate(axes):
         axis = ot.AxisRecord()
         axis.AxisTag = axisDict["tag"]
@@ -810,19 +832,7 @@ def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
                 raise ValueError("Can't determine format for AxisValue")
 
             axisValues.append(axisValRec)
-
-    # Store AxisRecords
-    axisRecordArray = ot.AxisRecordArray()
-    axisRecordArray.Axis = axisRecords
-    statTable.DesignAxisRecordSize = 8  # See comment in varLib
-    statTable.DesignAxisRecord = axisRecordArray
-    statTable.DesignAxisCount = len(axisRecords)
-
-    # Store AxisValueRecords
-    axisValueArray = ot.AxisValueArray()
-    axisValueArray.AxisValue = axisValues
-    statTable.AxisValueArray = axisValueArray
-    statTable.AxisValueCount = len(axisValues)
+    return axisRecords, axisValues
 
 
 def _addName(nameTable, value):
