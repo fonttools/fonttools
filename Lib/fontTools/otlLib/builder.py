@@ -696,7 +696,7 @@ def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
     AxisOrdering field. If omitted, the order of the axes list is
     used to calculate AxisOrdering fields.
 
-    The axis dict must contain a 'values' item, which is a list of
+    The axis dict may contain a 'values' item, which is a list of
     dictionaries describing AxisValue records belonging to this axis.
 
     Each value dict must have a 'name' item, which can be a name ID
@@ -770,11 +770,12 @@ def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
     statTable.DesignAxisRecord = axisRecordArray
     statTable.DesignAxisCount = len(axisRecords)
 
-    # Store AxisValueRecords
-    axisValueArray = ot.AxisValueArray()
-    axisValueArray.AxisValue = axisValues
-    statTable.AxisValueArray = axisValueArray
-    statTable.AxisValueCount = len(axisValues)
+    if axisValues:
+        # Store AxisValueRecords
+        axisValueArray = ot.AxisValueArray()
+        axisValueArray.AxisValue = axisValues
+        statTable.AxisValueArray = axisValueArray
+        statTable.AxisValueCount = len(axisValues)
 
 
 def _buildAxisValuesFormat4(locations, axes, nameTable):
@@ -811,7 +812,7 @@ def _buildAxisRecords(axes, nameTable):
         axis.AxisOrdering = axisDict.get("ordering", axisRecordIndex)
         axisRecords.append(axis)
 
-        for axisVal in axisDict["values"]:
+        for axisVal in axisDict.get("values", ()):
             axisValRec = ot.AxisValue()
             axisValRec.AxisIndex = axisRecordIndex
             axisValRec.Flags = axisVal.get("flags", 0)
