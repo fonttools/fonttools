@@ -778,30 +778,6 @@ def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
         statTable.AxisValueCount = len(axisValues)
 
 
-def _buildAxisValuesFormat4(locations, axes, nameTable):
-    axisTagToIndex = {}
-    for axisRecordIndex, axisDict in enumerate(axes):
-        axisTagToIndex[axisDict["tag"]] = axisRecordIndex
-
-    axisValues = []
-    for axisLocationDict in locations:
-        axisValRec = ot.AxisValue()
-        axisValRec.Format = 4
-        axisValRec.ValueNameID = _addName(nameTable, axisLocationDict['name'])
-        axisValRec.Flags = axisLocationDict.get("flags", 0)
-        axisValueRecords = []
-        for tag, value in axisLocationDict["location"].items():
-            avr = ot.AxisValueRecord()
-            avr.AxisIndex = axisTagToIndex[tag]
-            avr.Value = value
-            axisValueRecords.append(avr)
-        axisValueRecords.sort(key=lambda avr: avr.AxisIndex)
-        axisValRec.AxisCount = len(axisValueRecords)
-        axisValRec.AxisValueRecord = axisValueRecords
-        axisValues.append(axisValRec)
-    return axisValues
-
-
 def _buildAxisRecords(axes, nameTable):
     axisRecords = []
     axisValues = []
@@ -835,6 +811,30 @@ def _buildAxisRecords(axes, nameTable):
 
             axisValues.append(axisValRec)
     return axisRecords, axisValues
+
+
+def _buildAxisValuesFormat4(locations, axes, nameTable):
+    axisTagToIndex = {}
+    for axisRecordIndex, axisDict in enumerate(axes):
+        axisTagToIndex[axisDict["tag"]] = axisRecordIndex
+
+    axisValues = []
+    for axisLocationDict in locations:
+        axisValRec = ot.AxisValue()
+        axisValRec.Format = 4
+        axisValRec.ValueNameID = _addName(nameTable, axisLocationDict['name'])
+        axisValRec.Flags = axisLocationDict.get("flags", 0)
+        axisValueRecords = []
+        for tag, value in axisLocationDict["location"].items():
+            avr = ot.AxisValueRecord()
+            avr.AxisIndex = axisTagToIndex[tag]
+            avr.Value = value
+            axisValueRecords.append(avr)
+        axisValueRecords.sort(key=lambda avr: avr.AxisIndex)
+        axisValRec.AxisCount = len(axisValueRecords)
+        axisValRec.AxisValueRecord = axisValueRecords
+        axisValues.append(axisValRec)
+    return axisValues
 
 
 def _addName(nameTable, value):
