@@ -1,4 +1,6 @@
 import io
+import struct
+from fontTools.misc.fixedTools import floatToFixed
 from fontTools.misc.testTools import getXML
 from fontTools.otlLib import builder
 from fontTools import ttLib
@@ -1384,6 +1386,13 @@ def test_buildStatTable(axes, axisValues, elidedFallbackName, expected_ttx):
     ttx = f.getvalue().splitlines()
     ttx = ttx[3:-2]  # strip XML header and <ttFont> element
     assert expected_ttx == ttx
+
+
+def test_stat_infinities():
+    negInf = floatToFixed(builder.AXIS_VALUE_NEGATIVE_INFINITY, 16)
+    assert struct.pack(">l", negInf) == b"\x80\x00\x00\x00"
+    posInf = floatToFixed(builder.AXIS_VALUE_POSITIVE_INFINITY, 16)
+    assert struct.pack(">l", posInf) == b"\x7f\xff\xff\xff"
 
 
 if __name__ == "__main__":
