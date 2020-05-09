@@ -204,8 +204,7 @@ def _add_stat(font, axes):
 
 	from ..otlLib.builder import buildStatTable
 	fvarTable = font['fvar']
-	axes = [dict(tag=a.axisTag, name=a.axisNameID)
-			for a in fvarTable.axes]
+	axes = [dict(tag=a.axisTag, name=a.axisNameID) for a in fvarTable.axes]
 	buildStatTable(font, axes)
 
 
