@@ -765,7 +765,8 @@ def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
     # Store AxisRecords
     axisRecordArray = ot.AxisRecordArray()
     axisRecordArray.Axis = axisRecords
-    statTable.DesignAxisRecordSize = 8  # See comment in varLib
+    # XXX these should not be hard-coded but computed automatically
+    statTable.DesignAxisRecordSize = 8
     statTable.DesignAxisRecord = axisRecordArray
     statTable.DesignAxisCount = len(axisRecords)
 
