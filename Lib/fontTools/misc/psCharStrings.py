@@ -1150,10 +1150,7 @@ class T1CharString(T2CharString):
 	operators, opcodes = buildOperatorDict(t1Operators)
 
 	def __init__(self, bytecode=None, program=None, subrs=None):
-		if program is None:
-			program = []
-		self.bytecode = bytecode
-		self.program = program
+		super().__init__(bytecode, program)
 		self.subrs = subrs
 
 	def getIntEncoder(self):
