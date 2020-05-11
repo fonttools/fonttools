@@ -406,7 +406,7 @@ class Parser(object):
 
             lookuplist = None
             while self.next_token_ == "lookup":
-                if not lookuplist:
+                if lookuplist is None:
                     lookuplist = []
                 self.expect_keyword_("lookup")
                 if not marked:

@@ -205,7 +205,7 @@ class Builder(object):
             for script, lang, feature, lookups in feature:
                 for lookuplist in lookups:
                     if not isinstance(lookuplist, list):
-                        lookuplist = [ lookuplist ]
+                        lookuplist = [lookuplist]
                     for lookup in lookuplist:
                         for glyph, alts in lookup.getAlternateGlyphs().items():
                             alternates.setdefault(glyph, set()).update(alts)
@@ -802,7 +802,7 @@ class Builder(object):
         lookup_builders = []
         for lookuplist in lookups:
             if lookuplist is not None:
-                lookup_builders.append([ self.named_lookups_.get(l.name)
+                lookup_builders.append([self.named_lookups_.get(l.name)
                     for l in lookuplist])
             else:
                 lookup_builders.append(None)
@@ -1269,7 +1269,7 @@ class ChainContextPosBuilder(LookupBuilder):
                 if ll is not None:
                     if type(ll) is not list: ll = [ll]
                     for l in ll:
-                        st.PosCount = st.PosCount + 1
+                        st.PosCount += 1
                         if l.lookup_index is None:
                             raise FeatureLibError('Missing index of the specified '
                                 'lookup, might be a substitution lookup',
@@ -1323,7 +1323,7 @@ class ChainContextSubstBuilder(LookupBuilder):
                 if ll is not None:
                     if type(ll) is not list: ll = [ll]
                     for l in ll:
-                        st.SubstCount = st.SubstCount + 1
+                        st.SubstCount += 1
                         if l.lookup_index is None:
                             raise FeatureLibError('Missing index of the specified '
                                 'lookup, might be a positioning lookup',
@@ -1341,7 +1341,7 @@ class ChainContextSubstBuilder(LookupBuilder):
                 continue
             for lookups in lookuplist:
                 if not isinstance(lookups, list):
-                    lookups = [ lookups ]
+                    lookups = [lookups]
                 for lookup in lookups:
                     if lookup is not None:
                         alts = lookup.getAlternateGlyphs()
