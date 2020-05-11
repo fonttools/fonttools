@@ -159,17 +159,25 @@ def test(glyphsets, glyphs=None, names=None):
 
 def main(args):
 	"""Test for interpolatability issues between fonts"""
-	filenames = args
+	import argparse
+	parser = argparse.ArgumentParser(
+		"fonttools varLib.interpolatable",
+		description=main.__doc__,
+	)
+	parser.add_argument('inputs', metavar='FILE', type=str, nargs='+',
+		help="Input TTF files")
+
+	args = parser.parse_args(args)
 	glyphs = None
 	#glyphs = ['uni08DB', 'uniFD76']
 	#glyphs = ['uni08DE', 'uni0034']
 	#glyphs = ['uni08DE', 'uni0034', 'uni0751', 'uni0753', 'uni0754', 'uni08A4', 'uni08A4.fina', 'uni08A5.fina']
 
 	from os.path import basename
-	names = [basename(filename).rsplit('.', 1)[0] for filename in filenames]
+	names = [basename(filename).rsplit('.', 1)[0] for filename in args.inputs]
 
 	from fontTools.ttLib import TTFont
-	fonts = [TTFont(filename) for filename in filenames]
+	fonts = [TTFont(filename) for filename in args.inputs]
 
 	glyphsets = [font.getGlyphSet() for font in fonts]
 	test(glyphsets, glyphs=glyphs, names=names)
