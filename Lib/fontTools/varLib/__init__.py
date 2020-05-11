@@ -1011,7 +1011,7 @@ def main(args=None):
 	from argparse import ArgumentParser
 	from fontTools import configLogger
 
-	parser = ArgumentParser(prog='varLib')
+	parser = ArgumentParser(prog='varLib', description = main.__doc__)
 	parser.add_argument('designspace')
 	parser.add_argument(
 		'-o',
