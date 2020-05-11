@@ -551,7 +551,7 @@ def main(args=None):
 	from fontTools.ttLib import TTFont
 	from fontTools.ttLib.tables.otBase import OTTableWriter
 
-	parser = ArgumentParser(prog='varLib.varStore')
+	parser = ArgumentParser(prog='varLib.varStore', description= main.__doc__)
 	parser.add_argument('fontfile')
 	parser.add_argument('outfile', nargs='?')
 	options = parser.parse_args(args)
