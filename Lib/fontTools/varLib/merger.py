@@ -154,7 +154,7 @@ def _SinglePosUpgradeToFormat2(self):
 	ret.Format = 2
 	ret.Coverage = self.Coverage
 	ret.ValueFormat = self.ValueFormat
-	ret.Value = [self.Value for g in ret.Coverage.glyphs]
+	ret.Value = [self.Value for _ in ret.Coverage.glyphs]
 	ret.ValueCount = len(ret.Value)
 
 	return ret
@@ -260,7 +260,7 @@ def merge(merger, self, lst):
 					    [v.Value for v in lst])
 
 	self.Coverage.glyphs = glyphs
-	self.Value = [otBase.ValueRecord(valueFormat) for g in glyphs]
+	self.Value = [otBase.ValueRecord(valueFormat) for _ in glyphs]
 	self.ValueCount = len(self.Value)
 
 	for i,values in enumerate(padded):
@@ -339,7 +339,7 @@ def _PairPosFormat1_merge(self, lst, merger):
 					    default=empty)
 
 	self.Coverage.glyphs = glyphs
-	self.PairSet = [ot.PairSet() for g in glyphs]
+	self.PairSet = [ot.PairSet() for _ in glyphs]
 	self.PairSetCount = len(self.PairSet)
 	for glyph, ps in zip(glyphs, self.PairSet):
 		ps._firstGlyph = glyph
