@@ -1265,10 +1265,12 @@ class ChainContextPosBuilder(LookupBuilder):
 
             st.PosCount = 0
             st.PosLookupRecord = []
-            for sequenceIndex, ll in enumerate(lookups):
-                if ll is not None:
-                    if type(ll) is not list: ll = [ll]
-                    for l in ll:
+            for sequenceIndex, lookupList in enumerate(lookups):
+                if lookupList is not None:
+                    if not isinstance(lookupList, list):
+                        # Can happen with synthesised lookups
+                        lookupList = [ lookupList ]
+                    for l in lookupList:
                         st.PosCount += 1
                         if l.lookup_index is None:
                             raise FeatureLibError('Missing index of the specified '
@@ -1319,10 +1321,12 @@ class ChainContextSubstBuilder(LookupBuilder):
 
             st.SubstCount = 0
             st.SubstLookupRecord = []
-            for sequenceIndex, ll in enumerate(lookups):
-                if ll is not None:
-                    if type(ll) is not list: ll = [ll]
-                    for l in ll:
+            for sequenceIndex, lookupList in enumerate(lookups):
+                if lookupList is not None:
+                    if not isinstance(lookupList, list):
+                        # Can happen with synthesised lookups
+                        lookupList = [ lookupList ]
+                    for l in lookupList:
                         st.SubstCount += 1
                         if l.lookup_index is None:
                             raise FeatureLibError('Missing index of the specified '
