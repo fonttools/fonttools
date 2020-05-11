@@ -153,6 +153,7 @@ class GlyphName(Expression):
         self.glyph = glyph
 
     def glyphSet(self):
+        """The glyphs in this class as a tuple of :class:`GlyphName` objects."""
         return (self.glyph,)
 
     def asFea(self, indent=""):
@@ -169,6 +170,7 @@ class GlyphClass(Expression):
         self.curr = 0
 
     def glyphSet(self):
+        """The glyphs in this class as a tuple of :class:`GlyphName` objects."""
         return tuple(self.glyphs)
 
     def asFea(self, indent=""):
@@ -228,7 +230,7 @@ class GlyphClassName(Expression):
         self.glyphclass = glyphclass
 
     def glyphSet(self):
-        """The glyphs in this class as :class:`GlyphName` objects."""
+        """The glyphs in this class as a tuple of :class:`GlyphName` objects."""
         return tuple(self.glyphclass.glyphSet())
 
     def asFea(self, indent=""):
@@ -244,6 +246,7 @@ class MarkClassName(Expression):
         self.markClass = markClass
 
     def glyphSet(self):
+        """The glyphs in this class as a tuple of :class:`GlyphName` objects."""
         return self.markClass.glyphSet()
 
     def asFea(self, indent=""):
@@ -389,6 +392,7 @@ class GlyphClassDefinition(Statement):
         self.glyphs = glyphs #: a :class:`GlyphClass` object
 
     def glyphSet(self):
+        """The glyphs in this class as a tuple of :class:`GlyphName` objects."""
         return tuple(self.glyphs.glyphSet())
 
     def asFea(self, indent=""):
@@ -462,9 +466,7 @@ class MarkClass(object):
             self.glyphs[glyph] = definition
 
     def glyphSet(self):
-        """The set of glyphs contained in this mark class. In the example above,
-        this would be ``[ GlyphName("acute"), GlyphName("grave"),
-        GlyphName("cedilla") ]``."""
+        """The glyphs in this class as a tuple of :class:`GlyphName` objects."""
         return tuple(self.glyphs.keys())
 
     def asFea(self, indent=""):
@@ -501,6 +503,7 @@ class MarkClassDefinition(Statement):
         self.markClass, self.anchor, self.glyphs = markClass, anchor, glyphs
 
     def glyphSet(self):
+        """The glyphs in this class as a tuple of :class:`GlyphName` objects."""
         return self.glyphs.glyphSet()
 
     def asFea(self, indent=""):
