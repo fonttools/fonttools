@@ -11,18 +11,17 @@ def main():
     path = fontTools.__path__
     descriptions = {}
     for pkg in sorted(
-        mod.name for mod in pkgutil.walk_packages([fontTools.__path__[0]], prefix="fontTools.")
+        mod.name
+        for mod in pkgutil.walk_packages([fontTools.__path__[0]], prefix="fontTools.")
     ):
         try:
-            imports = __import__(
-                pkg, globals(), locals(), ["main"]
-            )
+            imports = __import__(pkg, globals(), locals(), ["main"])
         except ImportError as e:
             continue
         try:
             description = imports.main.__doc__
             if description:
-                pkg = pkg.replace("fontTools.","").replace(".__main__", "")
+                pkg = pkg.replace("fontTools.", "").replace(".__main__", "")
                 descriptions[pkg] = description
         except AttributeError as e:
             pass
