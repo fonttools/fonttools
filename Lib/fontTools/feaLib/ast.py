@@ -593,7 +593,7 @@ class AnchorDefinition(Statement):
 
 
 class AttachStatement(Statement):
-    """A GDEF table ``Attach`` statement."""
+    """A ``GDEF`` table ``Attach`` statement."""
     def __init__(self, glyphs, contourPoints, location=None):
         Statement.__init__(self, location)
         self.glyphs = glyphs #: A `glyph-containing object`_
@@ -872,7 +872,7 @@ class FontRevisionStatement(Statement):
 
 
 class LigatureCaretByIndexStatement(Statement):
-    """A GDEF table ``LigatureCaretByIndex`` statement. ``glyphs`` should be
+    """A ``GDEF`` table ``LigatureCaretByIndex`` statement. ``glyphs`` should be
     a `glyph-containing object`_, and ``carets`` should be a list of integers."""
     def __init__(self, glyphs, carets, location=None):
         Statement.__init__(self, location)
@@ -889,7 +889,7 @@ class LigatureCaretByIndexStatement(Statement):
 
 
 class LigatureCaretByPosStatement(Statement):
-    """A GDEF table ``LigatureCaretByPos`` statement. ``glyphs`` should be
+    """A ``GDEF`` table ``LigatureCaretByPos`` statement. ``glyphs`` should be
     a `glyph-containing object`_, and ``carets`` should be a list of integers."""
     def __init__(self, glyphs, carets, location=None):
         Statement.__init__(self, location)
