@@ -148,14 +148,28 @@ def optimizeWidths(widths):
 
 def main():
 	"""Calculate optimum defaultWidthX/nominalWidthX values"""
-	for fontfile in sys.argv[1:]:
+
+	import argparse
+	parser = argparse.ArgumentParser(
+		"fonttools cffLib.width",
+		description=main.__doc__,
+	)
+	parser.add_argument('inputs', metavar='FILE', type=str, nargs='+',
+		help="Input TTF files")
+	parser.add_argument('-b', '--brute-force', dest="brute", action="store_true",
+		help="Use brute-force approach (VERY slow)")
+
+	args = parser.parse_args()
+
+	for fontfile in args.inputs:
 		font = TTFont(fontfile)
 		hmtx = font['hmtx']
 		widths = [m[0] for m in hmtx.metrics.values()]
-		default, nominal = optimizeWidths(widths)
+		if args.brute:
+			default, nominal = optimizeWidthsBruteforce(widths)
+		else:
+			default, nominal = optimizeWidths(widths)
 		print("glyphs=%d default=%d nominal=%d byteCost=%d" % (len(widths), default, nominal, byteCost(widths, default, nominal)))
-		#default, nominal = optimizeWidthsBruteforce(widths)
-		#print("glyphs=%d default=%d nominal=%d byteCost=%d" % (len(widths), default, nominal, byteCost(widths, default, nominal)))
 
 if __name__ == '__main__':
 	import sys
