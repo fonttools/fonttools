@@ -119,7 +119,9 @@ class Element(object):
         pass
 
     def asFea(self, indent=""):
-        """Returns this element as a string of feature code."""
+        """Returns this element as a string of feature code. For block-type
+        elements (such as :class:`FeatureBlock`), the `indent` string is
+        added to the start of each line in the output."""
         raise NotImplementedError
 
     def __str__(self):
@@ -254,7 +256,7 @@ class MarkClassName(Expression):
 
 
 class AnonymousBlock(Statement):
-    """An anonymous data block"""
+    """An anonymous data block."""
 
     def __init__(self, tag, content, location=None):
         Statement.__init__(self, location)
