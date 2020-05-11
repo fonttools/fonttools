@@ -22,7 +22,7 @@ def main():
         try:
             description = imports.main.__doc__
             if description:
-                pkg = pkg[10:].replace(".__main__", "")
+                pkg = pkg.replace("fontTools.","").replace(".__main__", "")
                 descriptions[pkg] = description
         except AttributeError as e:
             pass
