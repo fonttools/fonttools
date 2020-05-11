@@ -2,8 +2,6 @@
 #
 # Google Author(s): Behdad Esfahbod, Roozbeh Pournader
 
-cli_description = "Merge multiple fonts into one"
-
 from fontTools.misc.py23 import *
 from fontTools.misc.timeTools import timestampNow
 from fontTools import ttLib, cffLib
@@ -1135,6 +1133,7 @@ __all__ = [
 
 @timer("make one with everything (TOTAL TIME)")
 def main(args=None):
+	"""Merge multiple fonts into one"""
 	from fontTools import configLogger
 
 	if args is None:

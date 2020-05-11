@@ -24,7 +24,6 @@ from io import BytesIO
 
 
 log = logging.getLogger("fontTools.varlib.mutator")
-cli_description = "Instantiate a variation font"
 
 # map 'wdth' axis (1..200) to OS/2.usWidthClass (1..9), rounding to closest
 OS2_WIDTH_CLASS_VALUES = {}
@@ -400,6 +399,7 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
 
 
 def main(args=None):
+	"""Instantiate a variation font"""
 	from fontTools import configLogger
 	import argparse
 

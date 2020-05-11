@@ -100,7 +100,6 @@ import re
 import logging
 
 
-cli_description = "Convert OpenType fonts to XML and back"
 log = logging.getLogger("fontTools.ttx")
 
 opentypeheaderRE = re.compile('''sfntVersion=['"]OTTO["']''')
@@ -385,6 +384,7 @@ def waitForKeyPress():
 
 
 def main(args=None):
+	"""Convert OpenType fonts to XML and back"""
 	from fontTools import configLogger
 
 	if args is None:

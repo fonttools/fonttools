@@ -11,7 +11,6 @@ from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.statisticsPen import StatisticsPen
 import itertools
 
-cli_description = "Test for interpolatability issues between fonts"
 
 class PerContourPen(BasePen):
 	def __init__(self, Pen, glyphset=None):
@@ -159,6 +158,7 @@ def test(glyphsets, glyphs=None, names=None):
 	#	print(x)
 
 def main(args):
+	"""Test for interpolatability issues between fonts"""
 	filenames = args
 	glyphs = None
 	#glyphs = ['uni08DB', 'uniFD76']

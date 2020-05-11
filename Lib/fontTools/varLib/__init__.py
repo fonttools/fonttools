@@ -1027,6 +1027,7 @@ class MasterFinder(object):
 
 
 def main(args=None):
+	"""Build a variable font from a designspace file and masters"""
 	from argparse import ArgumentParser
 	from fontTools import configLogger
 

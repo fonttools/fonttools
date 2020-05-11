@@ -10,7 +10,6 @@ from copy import deepcopy
 from pprint import pformat
 
 log = logging.getLogger("fontTools.varLib.interpolate_layout")
-cli_description = "Interpolate GDEF/GPOS/GSUB tables for a point on a designspace"
 
 
 def interpolate_layout(designspace, loc, master_finder=lambda s:s, mapped=False):
@@ -59,6 +58,7 @@ def interpolate_layout(designspace, loc, master_finder=lambda s:s, mapped=False)
 
 
 def main(args=None):
+	"""Interpolate GDEF/GPOS/GSUB tables for a point on a designspace"""
 	from fontTools import configLogger
 
 	import sys

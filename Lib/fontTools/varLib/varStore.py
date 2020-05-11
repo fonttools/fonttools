@@ -8,8 +8,6 @@ from collections import defaultdict
 from array import array
 
 
-cli_description = "Optimize a font's GDEF variation store"
-
 def _getLocationKey(loc):
 	return tuple(sorted(loc.items(), key=lambda kv: kv[0]))
 
@@ -547,6 +545,7 @@ ot.VarStore.optimize = VarStore_optimize
 
 
 def main(args=None):
+	"""Optimize a font's GDEF variation store"""
 	from argparse import ArgumentParser
 	from fontTools import configLogger
 	from fontTools.ttLib import TTFont

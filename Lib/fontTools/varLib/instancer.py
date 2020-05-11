@@ -94,7 +94,6 @@ import re
 
 
 log = logging.getLogger("fontTools.varLib.instancer")
-cli_description = "Partially instantiate a variable font."
 
 
 class AxisRange(collections.namedtuple("AxisRange", "minimum maximum")):
@@ -1376,6 +1375,7 @@ def parseArgs(args):
 
 
 def main(args=None):
+    """Partially instantiate a variable font."""
     infile, axisLimits, options = parseArgs(args)
     log.info("Restricting axes: %s", axisLimits)
 
