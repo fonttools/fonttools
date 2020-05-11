@@ -611,12 +611,14 @@ def readGlyphFromString(
 	conforming to the PointPen protocol as the 'pointPen' argument.
 	This argument may be None if you don't need the outline data.
 
-	The formatVersions optional argument defines the GLIF format versions
+	The formatVersions optional argument define the GLIF format versions
 	that are allowed to be read.
 	The type is Optional[Iterable[Tuple[int, int], int]]. It can contain
 	either integers (for the major versions to be allowed, with minor
 	digits defaulting to 0), or tuples of integers to specify both
 	(major, minor) versions.
+	By default when formatVersions is None all the GLIF format versions
+	currently defined are allowed to be read.
 
 	``validate`` will validate the read data. It is set to ``True`` by default.
 	"""
@@ -741,6 +743,8 @@ def writeGlyphToString(
 	The GLIF format version can be specified with the formatVersion argument.
 	This accepts either a tuple of integers for (major, minor), or a single
 	integer for the major digit only (with minor digit implied as 0).
+	By default when formatVesion is None the latest GLIF format version will
+	be used; currently it's 2.0, which is equivalent to formatVersion=(2, 0).
 
 	An UnsupportedGLIFFormat exception is raised if the requested UFO
 	formatVersion is not supported.
