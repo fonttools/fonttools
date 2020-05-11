@@ -4,7 +4,7 @@ feaLib: Read/write OpenType feature files
 
 fontTools' ``feaLib`` allows for the creation and parsing of Adobe
 Font Development Kit for OpenType feature (``.fea``) files. The syntax
-of these files is described `here <http://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html>`_.
+of these files is described `here <https://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html>`_.
 
 The :class:`fontTools.feaLib.parser.Parser` class can be used to parse files
 into an abstract syntax tree, and from there the
