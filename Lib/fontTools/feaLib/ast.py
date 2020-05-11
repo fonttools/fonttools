@@ -1135,7 +1135,7 @@ class PairPosStatement(Statement):
     ``valuerecord1`` should be a :class:`ValueRecord` object;
     ``valuerecord2`` should be either a :class:`ValueRecord` object or ``None``.
     If ``enumerated`` is true, then this is expressed as an
-    `enumerated pair <http://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#6.b.ii>`_.
+    `enumerated pair <https://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#6.b.ii>`_.
     """
     def __init__(self, glyphs1, valuerecord1, glyphs2, valuerecord2,
                  enumerated=False, location=None):
@@ -1434,7 +1434,7 @@ def simplify_name_attributes(pid, eid, lid):
 
 
 class NameRecord(Statement):
-    """Represents a name record. (`Section 9.e. <http://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#9.e>`_)"""
+    """Represents a name record. (`Section 9.e. <https://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#9.e>`_)"""
     def __init__(self, nameID, platformID, platEncID, langID, string,
                  location=None):
         Statement.__init__(self, location)
