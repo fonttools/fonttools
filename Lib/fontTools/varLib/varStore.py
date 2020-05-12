@@ -545,6 +545,7 @@ ot.VarStore.optimize = VarStore_optimize
 
 
 def main(args=None):
+	"""Optimize a font's GDEF variation store"""
 	from argparse import ArgumentParser
 	from fontTools import configLogger
 	from fontTools.ttLib import TTFont

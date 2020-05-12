@@ -399,6 +399,7 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
 
 
 def main(args=None):
+	"""Instantiate a variation font"""
 	from fontTools import configLogger
 	import argparse
 

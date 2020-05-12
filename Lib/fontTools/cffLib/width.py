@@ -146,12 +146,8 @@ def optimizeWidths(widths):
 
 	return default, nominal
 
-
-if __name__ == '__main__':
-	import sys
-	if len(sys.argv) == 1:
-		import doctest
-		sys.exit(doctest.testmod().failed)
+def main():
+	"""Calculate optimum defaultWidthX/nominalWidthX values"""
 	for fontfile in sys.argv[1:]:
 		font = TTFont(fontfile)
 		hmtx = font['hmtx']
@@ -160,3 +156,10 @@ if __name__ == '__main__':
 		print("glyphs=%d default=%d nominal=%d byteCost=%d" % (len(widths), default, nominal, byteCost(widths, default, nominal)))
 		#default, nominal = optimizeWidthsBruteforce(widths)
 		#print("glyphs=%d default=%d nominal=%d byteCost=%d" % (len(widths), default, nominal, byteCost(widths, default, nominal)))
+
+if __name__ == '__main__':
+	import sys
+	if len(sys.argv) == 1:
+		import doctest
+		sys.exit(doctest.testmod().failed)
+	main()

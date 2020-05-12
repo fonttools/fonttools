@@ -13,6 +13,7 @@ log = logging.getLogger("fontTools.feaLib")
 
 
 def main(args=None):
+    """Add features from a feature file (.fea) into a OTF font"""
     parser = argparse.ArgumentParser(
         description="Use fontTools to compile OpenType feature files (*.fea).")
     parser.add_argument(

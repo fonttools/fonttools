@@ -1151,6 +1151,7 @@ def build(f, font, tableTag=None):
 
 
 def main(args=None, font=None):
+	"""Convert a FontDame OTL file to TTX XML"""
 	import sys
 	from fontTools import configLogger
 	from fontTools.misc.testTools import MockFont

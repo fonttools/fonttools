@@ -158,6 +158,7 @@ def test(glyphsets, glyphs=None, names=None):
 	#	print(x)
 
 def main(args):
+	"""Test for interpolatability issues between fonts"""
 	filenames = args
 	glyphs = None
 	#glyphs = ['uni08DB', 'uniFD76']

@@ -423,6 +423,7 @@ def piecewiseLinearMap(v, mapping):
 
 
 def main(args):
+	"""Normalize locations on a given designspace"""
 	from fontTools import configLogger
 
 	args = args[1:]

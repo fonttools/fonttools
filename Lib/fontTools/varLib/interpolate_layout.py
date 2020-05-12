@@ -58,6 +58,7 @@ def interpolate_layout(designspace, loc, master_finder=lambda s:s, mapped=False)
 
 
 def main(args=None):
+	"""Interpolate GDEF/GPOS/GSUB tables for a point on a designspace"""
 	from fontTools import configLogger
 
 	import sys
