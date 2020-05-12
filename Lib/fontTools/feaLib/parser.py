@@ -404,8 +404,10 @@ class Parser(object):
             else:
                 values.append(None)
 
-            lookup = None
-            if self.next_token_ == "lookup":
+            lookuplist = None
+            while self.next_token_ == "lookup":
+                if lookuplist is None:
+                    lookuplist = []
                 self.expect_keyword_("lookup")
                 if not marked:
                     raise FeatureLibError(
@@ -417,8 +419,9 @@ class Parser(object):
                     raise FeatureLibError(
                         'Unknown lookup "%s"' % lookup_name,
                         self.cur_token_location_)
+                lookuplist.append(lookup)
             if marked:
-                lookups.append(lookup)
+                lookups.append(lookuplist)
 
         if not glyphs and not suffix:  # eg., "sub f f i by"
             assert lookups == []

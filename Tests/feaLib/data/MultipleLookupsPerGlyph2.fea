@@ -1,0 +1,11 @@
+lookup a_reduce_sb {
+       pos a <-80 0 -160 0>;
+} a_reduce_sb;
+
+lookup a_raise {
+       pos a <0 100 0 0>;
+} a_raise;
+
+feature test {
+       pos a' lookup a_reduce_sb lookup a_raise b;
+} test;
