@@ -157,7 +157,7 @@ def test(glyphsets, glyphs=None, names=None):
 	#for x in hist:
 	#	print(x)
 
-def main(args):
+def main(args=None):
 	"""Test for interpolatability issues between fonts"""
 	import argparse
 	parser = argparse.ArgumentParser(
@@ -184,4 +184,4 @@ def main(args):
 
 if __name__ == '__main__':
 	import sys
-	main(sys.argv[1:])
+	main()

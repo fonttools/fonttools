@@ -146,7 +146,7 @@ def optimizeWidths(widths):
 
 	return default, nominal
 
-def main():
+def main(args=None):
 	"""Calculate optimum defaultWidthX/nominalWidthX values"""
 
 	import argparse
@@ -159,7 +159,7 @@ def main():
 	parser.add_argument('-b', '--brute-force', dest="brute", action="store_true",
 		help="Use brute-force approach (VERY slow)")
 
-	args = parser.parse_args()
+	args = parser.parse_args(args)
 
 	for fontfile in args.inputs:
 		font = TTFont(fontfile)

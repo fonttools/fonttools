@@ -63,9 +63,6 @@ def main(args=None):
 	import argparse
 	import sys
 
-	if args is None:
-		args = sys.argv[1:]
-
 	parser = argparse.ArgumentParser(
 		"fonttools varLib.interpolate_layout",
 		description=main.__doc__,
@@ -95,8 +92,8 @@ def main(args=None):
 		loc[tag] = float(val)
 
 	font = interpolate_layout(args.designspace_filename, loc, finder)
-	log.info("Saving font %s", outfile)
-	font.save(outfile)
+	log.info("Saving font %s", args.output)
+	font.save(args.output)
 
 
 if __name__ == "__main__":

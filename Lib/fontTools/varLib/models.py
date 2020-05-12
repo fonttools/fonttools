@@ -422,7 +422,7 @@ def piecewiseLinearMap(v, mapping):
 	return va + (vb - va) * (v - a) / (b - a)
 
 
-def main(args):
+def main(args=None):
 	"""Normalize locations on a given designspace"""
 	from fontTools import configLogger
 	import argparse
@@ -431,15 +431,15 @@ def main(args):
 		"fonttools varLib.models",
 		description=main.__doc__,
 	)
-	parser.add_argument('-l', '--loglevel', metavar='LEVEL', default="INFO",
+	parser.add_argument('--loglevel', metavar='LEVEL', default="INFO",
 		help="Logging level (defaults to INFO)")
 
 	group = parser.add_mutually_exclusive_group(required=True)
-	group.add_argument('--designspacefile',metavar="DESIGNSPACE",type=str)
-	group.add_argument('--locations', metavar='LOCATION', nargs='+',
+	group.add_argument('-d', '--designspace',metavar="DESIGNSPACE",type=str)
+	group.add_argument('-l', '--locations', metavar='LOCATION', nargs='+',
 		help="Master locations as comma-separate coordinates. One must be all zeros.")
 
-	args = parser.parse_args(args[1:])
+	args = parser.parse_args(args)
 
 	configLogger(level=args.loglevel)
 	from pprint import pprint
@@ -469,6 +469,6 @@ if __name__ == "__main__":
 	import doctest, sys
 
 	if len(sys.argv) > 1:
-		sys.exit(main(sys.argv))
+		sys.exit(main())
 
 	sys.exit(doctest.testmod().failed)
