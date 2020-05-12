@@ -260,8 +260,8 @@ class AnonymousBlock(Statement):
 
     def __init__(self, tag, content, location=None):
         Statement.__init__(self, location)
-        self.tag = tag #: string containing the block's "tag"
-        self.content = content #: block data as string
+        self.tag = tag  #: string containing the block's "tag"
+        self.content = content  #: block data as string
 
     def asFea(self, indent=""):
         res = "anon {} {{\n".format(self.tag)
@@ -274,7 +274,7 @@ class Block(Statement):
     """A block of statements: feature, lookup, etc."""
     def __init__(self, location=None):
         Statement.__init__(self, location)
-        self.statements = [] #: Statements contained in the block
+        self.statements = []  #: Statements contained in the block
 
     def build(self, builder):
         """When handed a 'builder' object of comparable interface to
@@ -390,8 +390,8 @@ class GlyphClassDefinition(Statement):
     """Example: ``@UPPERCASE = [A-Z];``."""
     def __init__(self, name, glyphs, location=None):
         Statement.__init__(self, location)
-        self.name = name #: class name as a string, without initial ``@``
-        self.glyphs = glyphs #: a :class:`GlyphClass` object
+        self.name = name  #: class name as a string, without initial ``@``
+        self.glyphs = glyphs  #: a :class:`GlyphClass` object
 
     def glyphSet(self):
         """The glyphs in this class as a tuple of :class:`GlyphName` objects."""
@@ -598,8 +598,8 @@ class AttachStatement(Statement):
     """A ``GDEF`` table ``Attach`` statement."""
     def __init__(self, glyphs, contourPoints, location=None):
         Statement.__init__(self, location)
-        self.glyphs = glyphs #: A `glyph-containing object`_
-        self.contourPoints = contourPoints #: A list of integer contour points
+        self.glyphs = glyphs  #: A `glyph-containing object`_
+        self.contourPoints = contourPoints  #: A list of integer contour points
 
     def build(self, builder):
         """Calls the builder's ``add_attach_points`` callback."""
@@ -617,10 +617,11 @@ class ChainContextPosStatement(Statement):
     ``prefix``, ``glyphs``, and ``suffix`` should be lists of
     `glyph-containing objects`_ .
 
-    ``lookups`` should be a list of :class:`LookupBlock` statements, with
-    length equal to the length of ``glyphs``. Where there is no chaining
-    lookup at the given glyph position, the entry in ``lookups`` should be
-    ``None``."""
+    ``lookups`` should be a list of lists containing :class:`LookupBlock`
+    statements. The length of the outer list should equal to the length of
+    ``glyphs``; the inner lists can be of variable length. Where there is no
+    chaining lookup at the given glyph position, the entry in ``lookups``
+    should be ``None``."""
 
     def __init__(self, prefix, glyphs, suffix, lookups, location=None):
         Statement.__init__(self, location)
@@ -806,7 +807,7 @@ class IncludeStatement(Statement):
     """An ``include()`` statement."""
     def __init__(self, filename, location=None):
         super(IncludeStatement, self).__init__(location)
-        self.filename = filename #: String containing name of file to include
+        self.filename = filename  #: String containing name of file to include
 
     def build(self):
         # TODO: consider lazy-loading the including parser/lexer?
@@ -825,8 +826,8 @@ class LanguageStatement(Statement):
                  location=None):
         Statement.__init__(self, location)
         assert(len(language) == 4)
-        self.language = language #: A four-character language tag
-        self.include_default = include_default #: If false, "exclude_dflt"
+        self.language = language  #: A four-character language tag
+        self.include_default = include_default  #: If false, "exclude_dflt"
         self.required = required
 
     def build(self, builder):
@@ -1276,7 +1277,7 @@ class ScriptStatement(Statement):
     """A ``script`` statement."""
     def __init__(self, script, location=None):
         Statement.__init__(self, location)
-        self.script = script #: the script code
+        self.script = script  #: the script code
 
     def build(self, builder):
         """Calls the builder's ``set_script`` callback."""
@@ -1422,8 +1423,8 @@ class ValueRecordDefinition(Statement):
     """Represents a named value record definition."""
     def __init__(self, name, value, location=None):
         Statement.__init__(self, location)
-        self.name = name #: Value record name as string
-        self.value = value #: :class:`ValueRecord` object
+        self.name = name  #: Value record name as string
+        self.value = value  #: :class:`ValueRecord` object
 
     def asFea(self, indent=""):
         return "valueRecordDef {} {};".format(self.value.asFea(), self.name)
@@ -1443,11 +1444,11 @@ class NameRecord(Statement):
     def __init__(self, nameID, platformID, platEncID, langID, string,
                  location=None):
         Statement.__init__(self, location)
-        self.nameID = nameID #: Name ID as integer (e.g. 9 for designer's name)
-        self.platformID = platformID #: Platform ID as integer
-        self.platEncID = platEncID #: Platform encoding ID as integer
-        self.langID = langID #: Language ID as integer
-        self.string = string #: Name record value
+        self.nameID = nameID  #: Name ID as integer (e.g. 9 for designer's name)
+        self.platformID = platformID  #: Platform ID as integer
+        self.platEncID = platEncID  #: Platform encoding ID as integer
+        self.langID = langID  #: Language ID as integer
+        self.string = string  #: Name record value
 
     def build(self, builder):
         """Calls the builder object's ``add_name_record`` callback."""
@@ -1570,9 +1571,9 @@ class BaseAxis(Statement):
     pair or a ``HorizAxis.BaseTagList/BaseScriptList`` pair."""
     def __init__(self, bases, scripts, vertical, location=None):
         Statement.__init__(self, location)
-        self.bases = bases #: A list of baseline tag names as strings 
-        self.scripts = scripts #: A list of script record tuplets (script tag, default baseline tag, base coordinate)
-        self.vertical = vertical #: Boolean; VertAxis if True, HorizAxis if False
+        self.bases = bases  #: A list of baseline tag names as strings 
+        self.scripts = scripts  #: A list of script record tuplets (script tag, default baseline tag, base coordinate)
+        self.vertical = vertical  #: Boolean; VertAxis if True, HorizAxis if False
 
     def build(self, builder):
         """Calls the builder object's ``set_base_axis`` callback."""
