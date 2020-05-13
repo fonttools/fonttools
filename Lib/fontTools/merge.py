@@ -941,6 +941,38 @@ class _NonhashableDict(object):
 		del self.d[id(k)]
 
 class Merger(object):
+	"""Font merger.
+
+	This class merges multiple files into a single OpenType font, taking into
+	account complexities such as OpenType layout (``GSUB``/``GPOS``) tables and
+	cross-font metrics (e.g. ``hhea.ascent`` is set to the maximum value across
+	all the fonts).
+
+	If multiple glyphs map to the same Unicode value, subsequent glyphs are
+	renamed and a lookup in the ``locl`` feature will be created to disambiguate
+	them. For example, if the arguments are an Arabic font and a Latin font and
+	both contain a set of parentheses, the Latin glyphs will be renamed to
+	``parenleft#1`` and ``parenright#1``, and the equivalent of the following
+	feature code will be added:
+
+	.. code:: none
+
+		feature locl {
+			script latn;
+			language dflt;
+			sub [parenleft parenright] by [parenleft#1 parenright#1];
+		} locl;
+
+
+	Restrictions:
+
+	- All fonts must currently have TrueType outlines (``glyf`` table).
+		Merging fonts with CFF outlines is not supported.
+	- All fonts must have the same units per em.
+
+	Attributes:
+		options: Currently unused.
+	"""
 
 	def __init__(self, options=None):
 
@@ -950,7 +982,15 @@ class Merger(object):
 		self.options = options
 
 	def merge(self, fontfiles):
+		"""Merges fonts together.
 
+		Args:
+			fontfiles: A list of file names to be merged
+
+		Returns:
+			A :class:`fontTools.ttLib.TTFont` object. Call the ``save`` method on
+			this to write it out to an OTF file.
+		"""
 		mega = ttLib.TTFont()
 
 		#
