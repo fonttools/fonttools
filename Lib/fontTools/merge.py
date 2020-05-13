@@ -291,11 +291,18 @@ ttLib.getTableClass('OS/2').mergeMap = {
 	'sTypoLineGap': max,
 	'usWinAscent': max,
 	'usWinDescent': max,
-	# Version 2,3,4
+	# Version 1
 	'ulCodePageRange1': onlyExisting(bitwise_or),
 	'ulCodePageRange2': onlyExisting(bitwise_or),
-	'usMaxContex': onlyExisting(max),
-	# TODO version 5
+	# Version 2, 3, 4
+	'sxHeight': onlyExisting(max),
+	'sCapHeight': onlyExisting(max),
+	'usDefaultChar': onlyExisting(first),
+	'usBreakChar': onlyExisting(first),
+	'usMaxContext': onlyExisting(max),
+	# version 5
+	'usLowerOpticalPointSize': onlyExisting(min),
+	'usUpperOpticalPointSize': onlyExisting(max),
 }
 
 @_add_method(ttLib.getTableClass('OS/2'))

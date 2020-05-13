@@ -1,7 +1,12 @@
+import io
+import itertools
 from fontTools.misc.py23 import *
 from fontTools import ttLib
+from fontTools.ttLib.tables._g_l_y_f import Glyph
+from fontTools.fontBuilder import FontBuilder
 from fontTools.merge import *
 import unittest
+import pytest
 
 
 class MergeIntegrationTest(unittest.TestCase):
@@ -111,6 +116,53 @@ class CmapMergeUnitTest(unittest.TestCase):
 		self.assertEqual((table.format, table.platformID, table.platEncID, table.language), (4,3,1,0))
 		self.assertEqual(table.cmap, expectedCmap)
 		self.assertEqual(self.merger.duplicateGlyphsPerFont, [{}, {'space#0': 'space#1'}])
+
+
+def _compile(ttFont):
+	buf = io.BytesIO()
+	ttFont.save(buf)
+	buf.seek(0)
+	return buf
+
+
+def _make_fontfile_with_OS2(*, version, **kwargs):
+	upem = 1000
+	glyphOrder = [".notdef", "a"]
+	cmap = {0x61: "a"}
+	glyphs = {gn: Glyph() for gn in glyphOrder}
+	hmtx = {gn: (500, 0) for gn in glyphOrder}
+	names = {"familyName": "TestOS2", "styleName": "Regular"}
+
+	fb = FontBuilder(unitsPerEm=upem)
+	fb.setupGlyphOrder(glyphOrder)
+	fb.setupCharacterMap(cmap)
+	fb.setupGlyf(glyphs)
+	fb.setupHorizontalMetrics(hmtx)
+	fb.setupHorizontalHeader()
+	fb.setupNameTable(names)
+	fb.setupOS2(version=version, **kwargs)
+
+	return _compile(fb.font)
+
+
+def _merge_and_recompile(fontfiles, options=None):
+	merger = Merger(options)
+	merged = merger.merge(fontfiles)
+	buf = _compile(merged)
+	return ttLib.TTFont(buf)
+
+
+@pytest.mark.parametrize(
+	"v1, v2", list(itertools.permutations(range(5+1), 2))
+)
+def test_merge_OS2_mixed_versions(v1, v2):
+	# https://github.com/fonttools/fonttools/issues/1865
+	fontfiles = [
+		_make_fontfile_with_OS2(version=v1),
+		_make_fontfile_with_OS2(version=v2),
+	]
+	merged = _merge_and_recompile(fontfiles)
+	assert merged["OS/2"].version == max(v1, v2)
 
 
 if __name__ == "__main__":
