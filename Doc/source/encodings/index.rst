@@ -12,3 +12,10 @@ and ``decode`` support for the following encodings:
 * ``x_mac_trad_chinese_ttx``
 * ``x_mac_korean_ttx``
 * ``x_mac_simp_chinese_ttx``
+
+fontTools also includes a package (``fontTools.encodings.MacRoman``) which
+contains a mapping of glyph IDs to glyph names in the MacRoman character set::
+
+		>>> from fontTools.encodings.MacRoman import MacRoman
+		>>> MacRoman[26]
+		'twosuperior'
