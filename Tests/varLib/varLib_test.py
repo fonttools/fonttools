@@ -218,6 +218,18 @@ class BuildTest(unittest.TestCase):
             save_before_dump=True,
         )
 
+    def test_varlib_build_feature_variations_whole_range(self):
+        """Designspace file contains <rules> element, used to build
+        GSUB FeatureVariations table.
+        """
+        self._run_varlib_build_test(
+            designspace_name="FeatureVarsWholeRange",
+            font_name="TestFamily",
+            tables=["fvar", "GSUB"],
+            expected_ttx_name="FeatureVarsWholeRange",
+            save_before_dump=True,
+        )
+
     def test_varlib_build_feature_variations_with_existing_rclt(self):
         """Designspace file contains <rules> element, used to build GSUB
         FeatureVariations table. <rules> is specified to do its OT processing

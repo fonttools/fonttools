@@ -136,7 +136,11 @@ def overlayFeatureVariations(conditionalSubstitutions):
                     remainder = hashdict(remainder)
                     newMap[remainder] = newMap.get(remainder, 0) | rank
         boxMap = newMap
-    del boxMap[hashdict()]
+    # Delete initMapInit from boxMap. Need to test for `0` explicitly because there
+    # could be an actual user-defined rule that applies to the entire space, which
+    # would be `1`.
+    if boxMap[hashdict()] == 0:
+        del boxMap[hashdict()]
 
     # Generate output
     items = []
