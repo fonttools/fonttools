@@ -572,6 +572,19 @@
         <delta pt="21" x="0" y="0"/>
       </tuple>
     </glyphVariations>
+    <glyphVariations glyph="dotabovecomb">
+      <tuple>
+        <coord axis="wght" value="1.0"/>
+        <delta pt="0" x="-8" y="28"/>
+        <delta pt="1" x="13" y="16"/>
+        <delta pt="2" x="17" y="-13"/>
+        <delta pt="3" x="-27" y="-20"/>
+        <delta pt="4" x="0" y="0"/>
+        <delta pt="5" x="0" y="0"/>
+        <delta pt="6" x="0" y="0"/>
+        <delta pt="7" x="0" y="0"/>
+      </tuple>
+    </glyphVariations>
     <glyphVariations glyph="e">
       <tuple>
         <coord axis="wght" min="0.0" value="0.36365" max="1.0"/>
@@ -614,6 +627,12 @@
         <delta pt="16" x="0" y="0"/>
       </tuple>
     </glyphVariations>
+    <glyphVariations glyph="edotabove">
+      <tuple>
+        <coord axis="wght" value="1.0"/>
+        <delta pt="1" x="-6" y="91"/>
+      </tuple>
+    </glyphVariations>
     <glyphVariations glyph="s">
       <tuple>
         <coord axis="wght" value="1.0"/>
@@ -633,25 +652,6 @@
         <delta pt="13" x="0" y="0"/>
         <delta pt="14" x="0" y="0"/>
         <delta pt="15" x="0" y="0"/>
-      </tuple>
-    </glyphVariations>
-    <glyphVariations glyph="dotabovecomb">
-      <tuple>
-        <coord axis="wght" value="1.0"/>
-        <delta pt="0" x="-8" y="28"/>
-        <delta pt="1" x="13" y="16"/>
-        <delta pt="2" x="17" y="-13"/>
-        <delta pt="3" x="-27" y="-20"/>
-        <delta pt="4" x="0" y="0"/>
-        <delta pt="5" x="0" y="0"/>
-        <delta pt="6" x="0" y="0"/>
-        <delta pt="7" x="0" y="0"/>
-      </tuple>
-    </glyphVariations>
-    <glyphVariations glyph="edotabove">
-      <tuple>
-        <coord axis="wght" value="1.0"/>
-        <delta pt="1" x="-6" y="91"/>
       </tuple>
     </glyphVariations>
   </gvar>

@@ -1065,7 +1065,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(glyphstr(pos.prefix), "[A a] [B b]")
         self.assertEqual(glyphstr(pos.glyphs), "I [N n] P")
         self.assertEqual(glyphstr(pos.suffix), "[Y y] [Z z]")
-        self.assertEqual(pos.lookups, [lookup1, lookup2, None])
+        self.assertEqual(pos.lookups, [[lookup1], [lookup2], None])
 
     def test_gpos_type_8_lookup_with_values(self):
         self.assertRaisesRegex(
@@ -1508,8 +1508,8 @@ class ParserTest(unittest.TestCase):
     def test_substitute_lookups(self):  # GSUB LookupType 6
         doc = Parser(self.getpath("spec5fi1.fea"), GLYPHNAMES).parse()
         [_, _, _, langsys, ligs, sub, feature] = doc.statements
-        self.assertEqual(feature.statements[0].lookups, [ligs, None, sub])
-        self.assertEqual(feature.statements[1].lookups, [ligs, None, sub])
+        self.assertEqual(feature.statements[0].lookups, [[ligs], None, [sub]])
+        self.assertEqual(feature.statements[1].lookups, [[ligs], None, [sub]])
 
     def test_substitute_missing_by(self):
         self.assertRaisesRegex(

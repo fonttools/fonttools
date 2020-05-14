@@ -1,4 +1,3 @@
-"""Build a variable font from a designspace file and masters"""
 import sys
 from fontTools.varLib import main
 

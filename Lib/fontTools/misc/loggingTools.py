@@ -409,13 +409,13 @@ class ChannelsFilter(logging.Filter):
 	def __init__(self, *names):
 		self.names = names
 		self.num = len(names)
-		self.lenghts = {n: len(n) for n in names}
+		self.lengths = {n: len(n) for n in names}
 
 	def filter(self, record):
 		if self.num == 0:
 			return True
 		for name in self.names:
-			nlen = self.lenghts[name]
+			nlen = self.lengths[name]
 			if name == record.name:
 				return True
 			elif (record.name.find(name, 0, nlen) == 0

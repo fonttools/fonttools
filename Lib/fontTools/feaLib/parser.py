@@ -12,6 +12,27 @@ log = logging.getLogger(__name__)
 
 
 class Parser(object):
+    """Initializes a Parser object.
+
+    Example:
+
+        .. code:: python
+
+            from fontTools.feaLib.parser import Parser
+            parser = Parser(file, font.getReverseGlyphMap())
+            parsetree = parser.parse()
+
+    Note: the ``glyphNames`` iterable serves a double role to help distinguish
+    glyph names from ranges in the presence of hyphens and to ensure that glyph
+    names referenced in a feature file are actually part of a font's glyph set.
+    If the iterable is left empty, no glyph name in glyph set checking takes
+    place, and all glyph tokens containing hyphens are treated as literal glyph
+    names, not as ranges. (Adding a space around the hyphen can, in any case,
+    help to disambiguate ranges from glyph names containing hyphens.)
+
+    By default, the parser will follow ``include()`` statements in the feature
+    file. To turn this off, pass ``followIncludes=False``.
+    """
     extensions = {}
     ast = ast
     SS_FEATURE_TAGS = {"ss%02d" % i for i in range(1, 20+1)}
@@ -19,14 +40,7 @@ class Parser(object):
 
     def __init__(self, featurefile, glyphNames=(), followIncludes=True,
                  **kwargs):
-        """Initializes a Parser object.
 
-        Note: the `glyphNames` iterable serves a double role to help distinguish
-        glyph names from ranges in the presence of hyphens and to ensure that glyph
-        names referenced in a feature file are actually part of a font's glyph set.
-        If the iterable is left empty, no glyph name in glyph set checking takes
-        place.
-        """
         if "glyphMap" in kwargs:
             from fontTools.misc.loggingTools import deprecateArgument
             deprecateArgument("glyphMap", "use 'glyphNames' (iterable) instead")
@@ -56,6 +70,9 @@ class Parser(object):
         self.advance_lexer_(comments=True)
 
     def parse(self):
+        """Parse the file, and return a :class:`fontTools.feaLib.ast.FeatureFile`
+        object representing the root of the abstract syntax tree containing the
+        parsed contents of the file."""
         statements = self.doc_.statements
         while self.next_token_type_ is not None or self.cur_comments_:
             self.advance_lexer_(comments=True)
@@ -96,16 +113,18 @@ class Parser(object):
         return self.doc_
 
     def parse_anchor_(self):
+        # Parses an anchor in any of the four formats given in the feature
+        # file specification (2.e.vii).
         self.expect_symbol_("<")
         self.expect_keyword_("anchor")
         location = self.cur_token_location_
 
-        if self.next_token_ == "NULL":
+        if self.next_token_ == "NULL": # Format D
             self.expect_keyword_("NULL")
             self.expect_symbol_(">")
             return None
 
-        if self.next_token_type_ == Lexer.NAME:
+        if self.next_token_type_ == Lexer.NAME: # Format E
             name = self.expect_name_()
             anchordef = self.anchors_.resolve(name)
             if anchordef is None:
@@ -122,11 +141,11 @@ class Parser(object):
         x, y = self.expect_number_(), self.expect_number_()
 
         contourpoint = None
-        if self.next_token_ == "contourpoint":
+        if self.next_token_ == "contourpoint": # Format B
             self.expect_keyword_("contourpoint")
             contourpoint = self.expect_number_()
 
-        if self.next_token_ == "<":
+        if self.next_token_ == "<": # Format C
             xDeviceTable = self.parse_device_()
             yDeviceTable = self.parse_device_()
         else:
@@ -140,7 +159,7 @@ class Parser(object):
                                location=location)
 
     def parse_anchor_marks_(self):
-        """Parses a sequence of [<anchor> mark @MARKCLASS]*."""
+        # Parses a sequence of ``[<anchor> mark @MARKCLASS]*.``
         anchorMarks = []  # [(self.ast.Anchor, markClassName)*]
         while self.next_token_ == "<":
             anchor = self.parse_anchor_()
@@ -152,6 +171,7 @@ class Parser(object):
         return anchorMarks
 
     def parse_anchordef_(self):
+        # Parses a named anchor definition (`section 2.e.viii <https://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#2.e.vii>`_).
         assert self.is_cur_keyword_("anchorDef")
         location = self.cur_token_location_
         x, y = self.expect_number_(), self.expect_number_()
@@ -168,6 +188,7 @@ class Parser(object):
         return anchordef
 
     def parse_anonymous_(self):
+        # Parses an anonymous data block (`section 10 <https://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#10>`_).
         assert self.is_cur_keyword_(("anon", "anonymous"))
         tag = self.expect_tag_()
         _, content, location = self.lexer_.scan_anonymous_block(tag)
@@ -179,6 +200,7 @@ class Parser(object):
         return self.ast.AnonymousBlock(tag, content, location=location)
 
     def parse_attach_(self):
+        # Parses a GDEF Attach statement (`section 9.b <https://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#9.b>`_)
         assert self.is_cur_keyword_("Attach")
         location = self.cur_token_location_
         glyphs = self.parse_glyphclass_(accept_glyphname=True)
@@ -190,12 +212,13 @@ class Parser(object):
                                         location=location)
 
     def parse_enumerate_(self, vertical):
+        # Parse an enumerated pair positioning rule (`section 6.b.ii <https://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#6.b.ii>`_).
         assert self.cur_token_ in {"enumerate", "enum"}
         self.advance_lexer_()
         return self.parse_position_(enumerated=True, vertical=vertical)
 
     def parse_GlyphClassDef_(self):
-        """Parses 'GlyphClassDef @BASE, @LIGATURES, @MARKS, @COMPONENTS;'"""
+        # Parses 'GlyphClassDef @BASE, @LIGATURES, @MARKS, @COMPONENTS;'
         assert self.is_cur_keyword_("GlyphClassDef")
         location = self.cur_token_location_
         if self.next_token_ != ",":
@@ -223,7 +246,7 @@ class Parser(object):
                                                location=location)
 
     def parse_glyphclass_definition_(self):
-        """Parses glyph class definitions such as '@UPPERCASE = [A-Z];'"""
+        # Parses glyph class definitions such as '@UPPERCASE = [A-Z];'
         location, name = self.cur_token_location_, self.cur_token_
         self.expect_symbol_("=")
         glyphs = self.parse_glyphclass_(accept_glyphname=False)
@@ -273,6 +296,8 @@ class Parser(object):
                 location)
 
     def parse_glyphclass_(self, accept_glyphname):
+        # Parses a glyph class, either named or anonymous, or (if
+        # ``bool(accept_glyphname)``) a glyph name.
         if (accept_glyphname and
                 self.next_token_type_ in (Lexer.NAME, Lexer.CID)):
             glyph = self.expect_glyph_()
@@ -362,6 +387,7 @@ class Parser(object):
         return glyphs
 
     def parse_class_name_(self):
+        # Parses named class - either a glyph class or mark class.
         name = self.expect_class_name_()
         gc = self.glyphclasses_.resolve(name)
         if gc is None:
@@ -376,6 +402,11 @@ class Parser(object):
                 gc, location=self.cur_token_location_)
 
     def parse_glyph_pattern_(self, vertical):
+        # Parses a glyph pattern, including lookups and context, e.g.::
+        #
+        #    a b
+        #    a b c' d e
+        #    a b c' lookup ChangeC d e
         prefix, glyphs, lookups, values, suffix = ([], [], [], [], [])
         hasMarks = False
         while self.next_token_ not in {"by", "from", ";", ","}:
@@ -404,8 +435,10 @@ class Parser(object):
             else:
                 values.append(None)
 
-            lookup = None
-            if self.next_token_ == "lookup":
+            lookuplist = None
+            while self.next_token_ == "lookup":
+                if lookuplist is None:
+                    lookuplist = []
                 self.expect_keyword_("lookup")
                 if not marked:
                     raise FeatureLibError(
@@ -417,8 +450,9 @@ class Parser(object):
                     raise FeatureLibError(
                         'Unknown lookup "%s"' % lookup_name,
                         self.cur_token_location_)
+                lookuplist.append(lookup)
             if marked:
-                lookups.append(lookup)
+                lookups.append(lookuplist)
 
         if not glyphs and not suffix:  # eg., "sub f f i by"
             assert lookups == []
@@ -446,6 +480,7 @@ class Parser(object):
         return chainContext, hasLookups
 
     def parse_ignore_(self):
+        # Parses an ignore sub/pos rule.
         assert self.is_cur_keyword_("ignore")
         location = self.cur_token_location_
         self.advance_lexer_()
@@ -514,6 +549,8 @@ class Parser(object):
                                                     location=location)
 
     def parse_lookup_(self, vertical):
+        # Parses a ``lookup`` - either a lookup block, or a lookup reference
+        # inside a feature.
         assert self.is_cur_keyword_("lookup")
         location, name = self.cur_token_location_, self.expect_name_()
 
@@ -537,6 +574,8 @@ class Parser(object):
         return block
 
     def parse_lookupflag_(self):
+        # Parses a ``lookupflag`` statement, either specified by number or
+        # in words.
         assert self.is_cur_keyword_("lookupflag")
         location = self.cur_token_location_
 
@@ -850,6 +889,8 @@ class Parser(object):
         return self.ast.SubtableStatement(location=location)
 
     def parse_size_parameters_(self):
+        # Parses a ``parameters`` statement used in ``size`` features. See
+        # `section 8.b <https://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#8.b>`_.
         assert self.is_cur_keyword_("parameters")
         location = self.cur_token_location_
         DesignSize = self.expect_decipoint_()
@@ -1003,6 +1044,7 @@ class Parser(object):
                                       self.cur_token_location_)
 
     def parse_name_(self):
+        """Parses a name record. See `section 9.e <https://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#9.e>`_."""
         platEncID = None
         langID = None
         if self.next_token_type_ in Lexer.NUMBERS:
@@ -1130,6 +1172,7 @@ class Parser(object):
                 continue
 
     def parse_base_tag_list_(self):
+        # Parses BASE table entries. (See `section 9.a <https://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#9.a>`_)
         assert self.cur_token_ in ("HorizAxis.BaseTagList",
                                    "VertAxis.BaseTagList"), self.cur_token_
         bases = []
@@ -1229,6 +1272,7 @@ class Parser(object):
             vertical=vertical, location=location)
 
     def parse_valuerecord_definition_(self, vertical):
+        # Parses a named value record definition. (See section `2.e.v <https://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#2.e.v>`_)
         assert self.is_cur_keyword_("valueRecordDef")
         location = self.cur_token_location_
         value = self.parse_valuerecord_(vertical)
@@ -1283,6 +1327,8 @@ class Parser(object):
                                                   location=location)
 
     def parse_featureNames_(self, tag):
+        """Parses a ``featureNames`` statement found in stylistic set features.
+        See section `8.c <https://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#8.c>`_."""
         assert self.cur_token_ == "featureNames", self.cur_token_
         block = self.ast.NestedBlock(tag, self.cur_token_,
                                      location=self.cur_token_location_)
@@ -1313,6 +1359,8 @@ class Parser(object):
         return block
 
     def parse_cvParameters_(self, tag):
+        # Parses a ``cvParameters`` block found in Character Variant features.
+        # See section `8.d <https://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#8.d>`_.
         assert self.cur_token_ == "cvParameters", self.cur_token_
         block = self.ast.NestedBlock(tag, self.cur_token_,
                                      location=self.cur_token_location_)
@@ -1388,6 +1436,8 @@ class Parser(object):
         return self.ast.CharacterStatement(character, tag, location=location)
 
     def parse_FontRevision_(self):
+        # Parses a ``FontRevision`` statement found in the head table. See
+        # `section 9.c <https://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#9.c>`_.
         assert self.cur_token_ == "FontRevision", self.cur_token_
         location, version = self.cur_token_location_, self.expect_float_()
         self.expect_symbol_(";")

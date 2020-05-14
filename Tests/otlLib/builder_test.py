@@ -1,5 +1,9 @@
+import io
+import struct
+from fontTools.misc.fixedTools import floatToFixed
 from fontTools.misc.testTools import getXML
 from fontTools.otlLib import builder
+from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
 import pytest
 
@@ -1104,6 +1108,291 @@ class ClassDefBuilderTest(object):
         assert not b.canAdd({"a", "b", "c", "d", "e", "f"})
         assert not b.canAdd({"d", "e", "f"})
         assert not b.canAdd({"f"})
+
+
+buildStatTable_test_data = [
+    ([
+        dict(
+            tag="wght",
+            name="Weight",
+            values=[
+                dict(value=100, name='Thin'),
+                dict(value=400, name='Regular', flags=0x2),
+                dict(value=900, name='Black')])], None, "Regular", [
+        '  <STAT>',
+        '    <Version value="0x00010001"/>',
+        '    <DesignAxisRecordSize value="8"/>',
+        '    <!-- DesignAxisCount=1 -->',
+        '    <DesignAxisRecord>',
+        '      <Axis index="0">',
+        '        <AxisTag value="wght"/>',
+        '        <AxisNameID value="257"/>  <!-- Weight -->',
+        '        <AxisOrdering value="0"/>',
+        '      </Axis>',
+        '    </DesignAxisRecord>',
+        '    <!-- AxisValueCount=3 -->',
+        '    <AxisValueArray>',
+        '      <AxisValue index="0" Format="1">',
+        '        <AxisIndex value="0"/>',
+        '        <Flags value="0"/>',
+        '        <ValueNameID value="258"/>  <!-- Thin -->',
+        '        <Value value="100.0"/>',
+        '      </AxisValue>',
+        '      <AxisValue index="1" Format="1">',
+        '        <AxisIndex value="0"/>',
+        '        <Flags value="2"/>',
+        '        <ValueNameID value="256"/>  <!-- Regular -->',
+        '        <Value value="400.0"/>',
+        '      </AxisValue>',
+        '      <AxisValue index="2" Format="1">',
+        '        <AxisIndex value="0"/>',
+        '        <Flags value="0"/>',
+        '        <ValueNameID value="259"/>  <!-- Black -->',
+        '        <Value value="900.0"/>',
+        '      </AxisValue>',
+        '    </AxisValueArray>',
+        '    <ElidedFallbackNameID value="256"/>  <!-- Regular -->',
+        '  </STAT>']),
+    ([
+        dict(
+            tag="wght",
+            name=dict(en="Weight", nl="Gewicht"),
+            values=[
+                dict(value=100, name=dict(en='Thin', nl='Dun')),
+                dict(value=400, name='Regular', flags=0x2),
+                dict(value=900, name='Black'),
+            ]),
+        dict(
+            tag="wdth",
+            name="Width",
+            values=[
+                dict(value=50, name='Condensed'),
+                dict(value=100, name='Regular', flags=0x2),
+                dict(value=200, name='Extended')])], None, 2, [
+        '  <STAT>',
+        '    <Version value="0x00010001"/>',
+        '    <DesignAxisRecordSize value="8"/>',
+        '    <!-- DesignAxisCount=2 -->',
+        '    <DesignAxisRecord>',
+        '      <Axis index="0">',
+        '        <AxisTag value="wght"/>',
+        '        <AxisNameID value="256"/>  <!-- Weight -->',
+        '        <AxisOrdering value="0"/>',
+        '      </Axis>',
+        '      <Axis index="1">',
+        '        <AxisTag value="wdth"/>',
+        '        <AxisNameID value="260"/>  <!-- Width -->',
+        '        <AxisOrdering value="1"/>',
+        '      </Axis>',
+        '    </DesignAxisRecord>',
+        '    <!-- AxisValueCount=6 -->',
+        '    <AxisValueArray>',
+        '      <AxisValue index="0" Format="1">',
+        '        <AxisIndex value="0"/>',
+        '        <Flags value="0"/>',
+        '        <ValueNameID value="257"/>  <!-- Thin -->',
+        '        <Value value="100.0"/>',
+        '      </AxisValue>',
+        '      <AxisValue index="1" Format="1">',
+        '        <AxisIndex value="0"/>',
+        '        <Flags value="2"/>',
+        '        <ValueNameID value="258"/>  <!-- Regular -->',
+        '        <Value value="400.0"/>',
+        '      </AxisValue>',
+        '      <AxisValue index="2" Format="1">',
+        '        <AxisIndex value="0"/>',
+        '        <Flags value="0"/>',
+        '        <ValueNameID value="259"/>  <!-- Black -->',
+        '        <Value value="900.0"/>',
+        '      </AxisValue>',
+        '      <AxisValue index="3" Format="1">',
+        '        <AxisIndex value="1"/>',
+        '        <Flags value="0"/>',
+        '        <ValueNameID value="261"/>  <!-- Condensed -->',
+        '        <Value value="50.0"/>',
+        '      </AxisValue>',
+        '      <AxisValue index="4" Format="1">',
+        '        <AxisIndex value="1"/>',
+        '        <Flags value="2"/>',
+        '        <ValueNameID value="258"/>  <!-- Regular -->',
+        '        <Value value="100.0"/>',
+        '      </AxisValue>',
+        '      <AxisValue index="5" Format="1">',
+        '        <AxisIndex value="1"/>',
+        '        <Flags value="0"/>',
+        '        <ValueNameID value="262"/>  <!-- Extended -->',
+        '        <Value value="200.0"/>',
+        '      </AxisValue>',
+        '    </AxisValueArray>',
+        '    <ElidedFallbackNameID value="2"/>  <!-- missing from name table -->',
+        '  </STAT>']),
+    ([
+        dict(
+            tag="wght",
+            name="Weight",
+            values=[
+                dict(value=400, name='Regular', flags=0x2),
+                dict(value=600, linkedValue=650, name='Bold')])], None, 18, [
+        '  <STAT>',
+        '    <Version value="0x00010001"/>',
+        '    <DesignAxisRecordSize value="8"/>',
+        '    <!-- DesignAxisCount=1 -->',
+        '    <DesignAxisRecord>',
+        '      <Axis index="0">',
+        '        <AxisTag value="wght"/>',
+        '        <AxisNameID value="256"/>  <!-- Weight -->',
+        '        <AxisOrdering value="0"/>',
+        '      </Axis>',
+        '    </DesignAxisRecord>',
+        '    <!-- AxisValueCount=2 -->',
+        '    <AxisValueArray>',
+        '      <AxisValue index="0" Format="1">',
+        '        <AxisIndex value="0"/>',
+        '        <Flags value="2"/>',
+        '        <ValueNameID value="257"/>  <!-- Regular -->',
+        '        <Value value="400.0"/>',
+        '      </AxisValue>',
+        '      <AxisValue index="1" Format="3">',
+        '        <AxisIndex value="0"/>',
+        '        <Flags value="0"/>',
+        '        <ValueNameID value="258"/>  <!-- Bold -->',
+        '        <Value value="600.0"/>',
+        '        <LinkedValue value="650.0"/>',
+        '      </AxisValue>',
+        '    </AxisValueArray>',
+        '    <ElidedFallbackNameID value="18"/>  <!-- missing from name table -->',
+        '  </STAT>']),
+    ([
+        dict(
+            tag="opsz",
+            name="Optical Size",
+            values=[
+                dict(nominalValue=6, rangeMaxValue=10, name='Small'),
+                dict(rangeMinValue=10, nominalValue=14, rangeMaxValue=24, name='Text', flags=0x2),
+                dict(rangeMinValue=24, nominalValue=600, name='Display')])], None, 2, [
+        '  <STAT>',
+        '    <Version value="0x00010001"/>',
+        '    <DesignAxisRecordSize value="8"/>',
+        '    <!-- DesignAxisCount=1 -->',
+        '    <DesignAxisRecord>',
+        '      <Axis index="0">',
+        '        <AxisTag value="opsz"/>',
+        '        <AxisNameID value="256"/>  <!-- Optical Size -->',
+        '        <AxisOrdering value="0"/>',
+        '      </Axis>',
+        '    </DesignAxisRecord>',
+        '    <!-- AxisValueCount=3 -->',
+        '    <AxisValueArray>',
+        '      <AxisValue index="0" Format="2">',
+        '        <AxisIndex value="0"/>',
+        '        <Flags value="0"/>',
+        '        <ValueNameID value="257"/>  <!-- Small -->',
+        '        <NominalValue value="6.0"/>',
+        '        <RangeMinValue value="-32768.0"/>',
+        '        <RangeMaxValue value="10.0"/>',
+        '      </AxisValue>',
+        '      <AxisValue index="1" Format="2">',
+        '        <AxisIndex value="0"/>',
+        '        <Flags value="2"/>',
+        '        <ValueNameID value="258"/>  <!-- Text -->',
+        '        <NominalValue value="14.0"/>',
+        '        <RangeMinValue value="10.0"/>',
+        '        <RangeMaxValue value="24.0"/>',
+        '      </AxisValue>',
+        '      <AxisValue index="2" Format="2">',
+        '        <AxisIndex value="0"/>',
+        '        <Flags value="0"/>',
+        '        <ValueNameID value="259"/>  <!-- Display -->',
+        '        <NominalValue value="600.0"/>',
+        '        <RangeMinValue value="24.0"/>',
+        '        <RangeMaxValue value="32767.99998"/>',
+        '      </AxisValue>',
+        '    </AxisValueArray>',
+        '    <ElidedFallbackNameID value="2"/>  <!-- missing from name table -->',
+        '  </STAT>']),
+    ([
+        dict(
+            tag="wght",
+            name="Weight",
+            ordering=1,
+            values=[]),
+        dict(
+            tag="ABCD",
+            name="ABCDTest",
+            ordering=0,
+            values=[
+                dict(value=100, name="Regular", flags=0x2)])],
+     [dict(location=dict(wght=300, ABCD=100), name='Regular ABCD')], 18, [
+        '  <STAT>',
+        '    <Version value="0x00010002"/>',
+        '    <DesignAxisRecordSize value="8"/>',
+        '    <!-- DesignAxisCount=2 -->',
+        '    <DesignAxisRecord>',
+        '      <Axis index="0">',
+        '        <AxisTag value="wght"/>',
+        '        <AxisNameID value="256"/>  <!-- Weight -->',
+        '        <AxisOrdering value="1"/>',
+        '      </Axis>',
+        '      <Axis index="1">',
+        '        <AxisTag value="ABCD"/>',
+        '        <AxisNameID value="257"/>  <!-- ABCDTest -->',
+        '        <AxisOrdering value="0"/>',
+        '      </Axis>',
+        '    </DesignAxisRecord>',
+        '    <!-- AxisValueCount=2 -->',
+        '    <AxisValueArray>',
+        '      <AxisValue index="0" Format="4">',
+        '        <!-- AxisCount=2 -->',
+        '        <Flags value="0"/>',
+        '        <ValueNameID value="259"/>  <!-- Regular ABCD -->',
+        '        <AxisValueRecord index="0">',
+        '          <AxisIndex value="0"/>',
+        '          <Value value="300.0"/>',
+        '        </AxisValueRecord>',
+        '        <AxisValueRecord index="1">',
+        '          <AxisIndex value="1"/>',
+        '          <Value value="100.0"/>',
+        '        </AxisValueRecord>',
+        '      </AxisValue>',
+        '      <AxisValue index="1" Format="1">',
+        '        <AxisIndex value="1"/>',
+        '        <Flags value="2"/>',
+        '        <ValueNameID value="258"/>  <!-- Regular -->',
+        '        <Value value="100.0"/>',
+        '      </AxisValue>',
+        '    </AxisValueArray>',
+        '    <ElidedFallbackNameID value="18"/>  <!-- missing from name table -->',
+        '  </STAT>']),
+]
+
+
+@pytest.mark.parametrize("axes, axisValues, elidedFallbackName, expected_ttx", buildStatTable_test_data)
+def test_buildStatTable(axes, axisValues, elidedFallbackName, expected_ttx):
+    font = ttLib.TTFont()
+    font["name"] = ttLib.newTable("name")
+    font["name"].names = []
+    builder.buildStatTable(font, axes, axisValues, elidedFallbackName)
+    f = io.StringIO()
+    font.saveXML(f, tables=["STAT"])
+    ttx = f.getvalue().splitlines()
+    ttx = ttx[3:-2]  # strip XML header and <ttFont> element
+    assert expected_ttx == ttx
+    # Compile and round-trip
+    f = io.BytesIO()
+    font.save(f)
+    font = ttLib.TTFont(f)
+    f = io.StringIO()
+    font.saveXML(f, tables=["STAT"])
+    ttx = f.getvalue().splitlines()
+    ttx = ttx[3:-2]  # strip XML header and <ttFont> element
+    assert expected_ttx == ttx
+
+
+def test_stat_infinities():
+    negInf = floatToFixed(builder.AXIS_VALUE_NEGATIVE_INFINITY, 16)
+    assert struct.pack(">l", negInf) == b"\x80\x00\x00\x00"
+    posInf = floatToFixed(builder.AXIS_VALUE_POSITIVE_INFINITY, 16)
+    assert struct.pack(">l", posInf) == b"\x7f\xff\xff\xff"
 
 
 if __name__ == "__main__":

@@ -1,14 +1,11 @@
-########
-colorLib
-########
+#####################################################
+colorLib.builder: Build COLR/CPAL tables from scratch
+#####################################################
 
-.. toctree::
-   :maxdepth: 1
+.. automodule:: fontTools.colorLib.builder
+   :members: buildCPAL, buildCOLR, populateCOLRv0
 
-   builder
-   errors
-
-.. automodule:: fontTools.colorLib
+.. autoclass:: fontTools.colorLib.builder.ColorPaletteType
    :inherited-members:
    :members:
    :undoc-members:

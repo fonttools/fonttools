@@ -226,6 +226,13 @@ def test_build_var(tmpdir):
         featureTag="rclt",
     )
 
+    statAxes = []
+    for tag, minVal, defaultVal, maxVal, name in axes:
+        values = [dict(name="Neutral", value=defaultVal, flags=0x2),
+                  dict(name=name, value=maxVal)]
+        statAxes.append(dict(tag=tag, name=name, values=values))
+    fb.setupStat(statAxes)
+
     fb.setupOS2()
     fb.setupPost()
     fb.setupDummyDSIG()

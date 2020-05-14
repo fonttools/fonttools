@@ -56,7 +56,7 @@ class SubsetTest(unittest.TestCase):
                     lines.append(line.rstrip() + os.linesep)
         return lines
 
-    def expect_ttx(self, font, expected_ttx, tables):
+    def expect_ttx(self, font, expected_ttx, tables=None):
         path = self.temp_path(suffix=".ttx")
         font.saveXML(path, tables=tables)
         actual = self.read_ttx(path)
@@ -731,6 +731,17 @@ class SubsetTest(unittest.TestCase):
         ttf = TTFont(ttf_path)
 
         self.assertEqual(ttf.flavor, None)
+
+    def test_subset_context_subst_format_3(self):
+        # https://github.com/fonttools/fonttools/issues/1879
+        # Test font contains 'calt' feature with Format 3 ContextSubst lookup subtables
+        ttx = self.getpath("TestContextSubstFormat3.ttx")
+        font, fontpath = self.compile_font(ttx, ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--unicodes=*", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        # check all glyphs are kept via GSUB closure, no changes expected
+        self.expect_ttx(subsetfont, ttx)
 
 
 @pytest.fixture

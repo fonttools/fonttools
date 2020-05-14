@@ -68,6 +68,9 @@ class FakeFont:
     def getReverseGlyphMap(self):
         return self.reverseGlyphOrderDict_
 
+    def getGlyphNames(self):
+        return sorted(self.getGlyphOrder())
+
 
 class TestXMLReader_(object):
     def __init__(self):

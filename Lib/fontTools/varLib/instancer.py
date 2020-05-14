@@ -22,7 +22,7 @@ font, keeping only the deltas associated with the wdth axis:
 | >>> from fontTools import ttLib
 | >>> from fontTools.varLib import instancer
 | >>> varfont = ttLib.TTFont("path/to/MyVariableFont.ttf")
-| >>> [a.axisTag for a in partial["fvar"].axes]  # the varfont's current axes
+| >>> [a.axisTag for a in varfont["fvar"].axes]  # the varfont's current axes
 | ['wght', 'wdth']
 | >>> partial = instancer.instantiateVariableFont(varfont, {"wght": 300})
 | >>> [a.axisTag for a in partial["fvar"].axes]  # axes left after pinning 'wght'
@@ -1375,6 +1375,7 @@ def parseArgs(args):
 
 
 def main(args=None):
+    """Partially instantiate a variable font."""
     infile, axisLimits, options = parseArgs(args)
     log.info("Restricting axes: %s", axisLimits)
 

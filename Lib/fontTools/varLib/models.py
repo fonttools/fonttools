@@ -422,26 +422,32 @@ def piecewiseLinearMap(v, mapping):
 	return va + (vb - va) * (v - a) / (b - a)
 
 
-def main(args):
+def main(args=None):
+	"""Normalize locations on a given designspace"""
 	from fontTools import configLogger
+	import argparse
 
-	args = args[1:]
+	parser = argparse.ArgumentParser(
+		"fonttools varLib.models",
+		description=main.__doc__,
+	)
+	parser.add_argument('--loglevel', metavar='LEVEL', default="INFO",
+		help="Logging level (defaults to INFO)")
 
-	# TODO: allow user to configure logging via command-line options
-	configLogger(level="INFO")
+	group = parser.add_mutually_exclusive_group(required=True)
+	group.add_argument('-d', '--designspace',metavar="DESIGNSPACE",type=str)
+	group.add_argument('-l', '--locations', metavar='LOCATION', nargs='+',
+		help="Master locations as comma-separate coordinates. One must be all zeros.")
 
-	if len(args) < 1:
-		print("usage: fonttools varLib.models source.designspace", file=sys.stderr)
-		print("  or")
-		print("usage: fonttools varLib.models location1 location2 ...", file=sys.stderr)
-		sys.exit(1)
+	args = parser.parse_args(args)
 
+	configLogger(level=args.loglevel)
 	from pprint import pprint
 
-	if len(args) == 1 and args[0].endswith('.designspace'):
+	if args.designspacefile:
 		from fontTools.designspaceLib import DesignSpaceDocument
 		doc = DesignSpaceDocument()
-		doc.read(args[0])
+		doc.read(args.designspacefile)
 		locs = [s.location for s in doc.sources]
 		print("Original locations:")
 		pprint(locs)
@@ -451,7 +457,7 @@ def main(args):
 		pprint(locs)
 	else:
 		axes = [chr(c) for c in range(ord('A'), ord('Z')+1)]
-		locs = [dict(zip(axes, (float(v) for v in s.split(',')))) for s in args]
+		locs = [dict(zip(axes, (float(v) for v in s.split(',')))) for s in args.locations]
 
 	model = VariationModel(locs)
 	print("Sorted locations:")
@@ -463,6 +469,6 @@ if __name__ == "__main__":
 	import doctest, sys
 
 	if len(sys.argv) > 1:
-		sys.exit(main(sys.argv))
+		sys.exit(main())
 
 	sys.exit(doctest.testmod().failed)

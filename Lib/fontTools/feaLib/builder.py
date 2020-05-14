@@ -17,15 +17,38 @@ log = logging.getLogger(__name__)
 
 
 def addOpenTypeFeatures(font, featurefile, tables=None):
+    """Add features from a file to a font. Note that this replaces any features
+    currently present.
+
+    Args:
+        font (feaLib.ttLib.TTFont): The font object.
+        featurefile: Either a path or file object (in which case we
+            parse it into an AST), or a pre-parsed AST instance.
+        tables: If passed, restrict the set of affected tables to those in the
+            list.
+
+    """
     builder = Builder(font, featurefile)
     builder.build(tables=tables)
 
 
 def addOpenTypeFeaturesFromString(font, features, filename=None, tables=None):
+    """Add features from a string to a font. Note that this replaces any
+    features currently present.
+
+    Args:
+        font (feaLib.ttLib.TTFont): The font object.
+        features: A string containing feature code.
+        filename: The directory containing ``filename`` is used as the root of
+            relative ``include()`` paths; if ``None`` is provided, the current
+            directory is assumed.
+        tables: If passed, restrict the set of affected tables to those in the
+            list.
+
+    """
+
     featurefile = UnicodeIO(tounicode(features))
     if filename:
-        # the directory containing 'filename' is used as the root of relative
-        # include paths; if None is provided, the current directory is assumed
         featurefile.name = filename
     addOpenTypeFeatures(font, featurefile, tables=tables)
 
@@ -203,9 +226,12 @@ class Builder(object):
                 raise FeatureLibError("Feature %s has not been defined" % name,
                                       location)
             for script, lang, feature, lookups in feature:
-                for lookup in lookups:
-                    for glyph, alts in lookup.getAlternateGlyphs().items():
-                        alternates.setdefault(glyph, set()).update(alts)
+                for lookuplist in lookups:
+                    if not isinstance(lookuplist, list):
+                        lookuplist = [lookuplist]
+                    for lookup in lookuplist:
+                        for glyph, alts in lookup.getAlternateGlyphs().items():
+                            alternates.setdefault(glyph, set()).update(alts)
         single = {glyph: list(repl)[0] for glyph, repl in alternates.items()
                   if len(repl) == 1}
         # TODO: Figure out the glyph alternate ordering used by makeotf.
@@ -797,9 +823,10 @@ class Builder(object):
         If an input name is None, it gets mapped to a None LookupBuilder.
         """
         lookup_builders = []
-        for lookup in lookups:
-            if lookup is not None:
-                lookup_builders.append(self.named_lookups_.get(lookup.name))
+        for lookuplist in lookups:
+            if lookuplist is not None:
+                lookup_builders.append([self.named_lookups_.get(l.name)
+                    for l in lookuplist])
             else:
                 lookup_builders.append(None)
         return lookup_builders
@@ -851,7 +878,7 @@ class Builder(object):
         self.cv_parameters_.add(tag)
 
     def add_to_cv_num_named_params(self, tag):
-        """Adds new items to self.cv_num_named_params_
+        """Adds new items to ``self.cv_num_named_params_``
         or increments the count of existing items."""
         if tag in self.cv_num_named_params_:
             self.cv_num_named_params_[tag] += 1
@@ -1259,18 +1286,23 @@ class ChainContextPosBuilder(LookupBuilder):
             self.setLookAheadCoverage_(suffix, st)
             self.setInputCoverage_(glyphs, st)
 
-            st.PosCount = len([l for l in lookups if l is not None])
+            st.PosCount = 0
             st.PosLookupRecord = []
-            for sequenceIndex, l in enumerate(lookups):
-                if l is not None:
-                    if l.lookup_index is None:
-                        raise FeatureLibError('Missing index of the specified '
-                            'lookup, might be a substitution lookup',
-                            self.location)
-                    rec = otTables.PosLookupRecord()
-                    rec.SequenceIndex = sequenceIndex
-                    rec.LookupListIndex = l.lookup_index
-                    st.PosLookupRecord.append(rec)
+            for sequenceIndex, lookupList in enumerate(lookups):
+                if lookupList is not None:
+                    if not isinstance(lookupList, list):
+                        # Can happen with synthesised lookups
+                        lookupList = [ lookupList ]
+                    for l in lookupList:
+                        st.PosCount += 1
+                        if l.lookup_index is None:
+                            raise FeatureLibError('Missing index of the specified '
+                                'lookup, might be a substitution lookup',
+                                self.location)
+                        rec = otTables.PosLookupRecord()
+                        rec.SequenceIndex = sequenceIndex
+                        rec.LookupListIndex = l.lookup_index
+                        st.PosLookupRecord.append(rec)
         return self.buildLookup_(subtables)
 
     def find_chainable_single_pos(self, lookups, glyphs, value):
@@ -1310,30 +1342,38 @@ class ChainContextSubstBuilder(LookupBuilder):
             self.setLookAheadCoverage_(suffix, st)
             self.setInputCoverage_(input, st)
 
-            st.SubstCount = len([l for l in lookups if l is not None])
+            st.SubstCount = 0
             st.SubstLookupRecord = []
-            for sequenceIndex, l in enumerate(lookups):
-                if l is not None:
-                    if l.lookup_index is None:
-                        raise FeatureLibError('Missing index of the specified '
-                            'lookup, might be a positioning lookup',
-                            self.location)
-                    rec = otTables.SubstLookupRecord()
-                    rec.SequenceIndex = sequenceIndex
-                    rec.LookupListIndex = l.lookup_index
-                    st.SubstLookupRecord.append(rec)
+            for sequenceIndex, lookupList in enumerate(lookups):
+                if lookupList is not None:
+                    if not isinstance(lookupList, list):
+                        # Can happen with synthesised lookups
+                        lookupList = [ lookupList ]
+                    for l in lookupList:
+                        st.SubstCount += 1
+                        if l.lookup_index is None:
+                            raise FeatureLibError('Missing index of the specified '
+                                'lookup, might be a positioning lookup',
+                                self.location)
+                        rec = otTables.SubstLookupRecord()
+                        rec.SequenceIndex = sequenceIndex
+                        rec.LookupListIndex = l.lookup_index
+                        st.SubstLookupRecord.append(rec)
         return self.buildLookup_(subtables)
 
     def getAlternateGlyphs(self):
         result = {}
-        for (_, _, _, lookups) in self.substitutions:
-            if lookups == self.SUBTABLE_BREAK_:
+        for (_, _, _, lookuplist) in self.substitutions:
+            if lookuplist == self.SUBTABLE_BREAK_:
                 continue
-            for lookup in lookups:
-                if lookup is not None:
-                    alts = lookup.getAlternateGlyphs()
-                    for glyph, replacements in alts.items():
-                        result.setdefault(glyph, set()).update(replacements)
+            for lookups in lookuplist:
+                if not isinstance(lookups, list):
+                    lookups = [lookups]
+                for lookup in lookups:
+                    if lookup is not None:
+                        alts = lookup.getAlternateGlyphs()
+                        for glyph, replacements in alts.items():
+                            result.setdefault(glyph, set()).update(replacements)
         return result
 
     def find_chainable_single_subst(self, glyphs):

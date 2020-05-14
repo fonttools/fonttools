@@ -1,32 +1,34 @@
-"""Show this help"""
 import pkgutil
 import sys
-from setuptools import find_packages
-from pkgutil import iter_modules
 import fontTools
 import importlib
+import os
+from pathlib import Path
 
 
-def describe(pkg):
-    try:
-        description = __import__(
-            "fontTools." + pkg + ".__main__", globals(), locals(), ["__doc__"]
-        ).__doc__
-        print("fonttools %-10s %s" % (pkg, description), file=sys.stderr)
-    except Exception as e:
-        return None
-
-
-def show_help_list():
-    path = fontTools.__path__[0]
-    for pkg in find_packages(path):
-        qualifiedPkg = "fontTools." + pkg
-        describe(pkg)
-        pkgpath = path + "/" + qualifiedPkg.replace(".", "/")
-        for info in iter_modules([pkgpath]):
-            describe(pkg + "." + info.name)
+def main():
+    """Show this help"""
+    path = fontTools.__path__
+    descriptions = {}
+    for pkg in sorted(
+        mod.name
+        for mod in pkgutil.walk_packages([fontTools.__path__[0]], prefix="fontTools.")
+    ):
+        try:
+            imports = __import__(pkg, globals(), locals(), ["main"])
+        except ImportError as e:
+            continue
+        try:
+            description = imports.main.__doc__
+            if description:
+                pkg = pkg.replace("fontTools.", "").replace(".__main__", "")
+                descriptions[pkg] = description
+        except AttributeError as e:
+            pass
+    for pkg, description in descriptions.items():
+        print("fonttools %-12s %s" % (pkg, description), file=sys.stderr)
 
 
 if __name__ == "__main__":
     print("fonttools v%s\n" % fontTools.__version__, file=sys.stderr)
-    show_help_list()
+    main()

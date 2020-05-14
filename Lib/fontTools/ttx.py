@@ -384,6 +384,7 @@ def waitForKeyPress():
 
 
 def main(args=None):
+	"""Convert OpenType fonts to XML and back"""
 	from fontTools import configLogger
 
 	if args is None:

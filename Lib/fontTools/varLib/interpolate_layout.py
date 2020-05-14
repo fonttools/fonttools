@@ -58,29 +58,42 @@ def interpolate_layout(designspace, loc, master_finder=lambda s:s, mapped=False)
 
 
 def main(args=None):
+	"""Interpolate GDEF/GPOS/GSUB tables for a point on a designspace"""
 	from fontTools import configLogger
-
+	import argparse
 	import sys
-	if args is None:
-		args = sys.argv[1:]
 
-	designspace_filename = args[0]
-	locargs = args[1:]
-	outfile = os.path.splitext(designspace_filename)[0] + '-instance.ttf'
+	parser = argparse.ArgumentParser(
+		"fonttools varLib.interpolate_layout",
+		description=main.__doc__,
+	)
+	parser.add_argument('designspace_filename', metavar='DESIGNSPACE',
+		help="Input TTF files")
+	parser.add_argument('locations', metavar='LOCATION', type=str, nargs='+',
+		help="Axis locations (e.g. wdth=120")
+	parser.add_argument('-o', '--output', metavar='OUTPUT',
+		help="Output font file (defaults to <designspacename>-instance.ttf)")
+	parser.add_argument('-l', '--loglevel', metavar='LEVEL', default="INFO",
+		help="Logging level (defaults to INFO)")
 
-	# TODO: allow user to configure logging via command-line options
-	configLogger(level="INFO")
+
+	args = parser.parse_args(args)
+
+	if not args.output:
+		args.output = os.path.splitext(args.designspace_filename)[0] + '-instance.ttf'
+
+	configLogger(level=args.loglevel)
 
 	finder = lambda s: s.replace('master_ufo', 'master_ttf_interpolatable').replace('.ufo', '.ttf')
 
 	loc = {}
-	for arg in locargs:
+	for arg in args.locations:
 		tag,val = arg.split('=')
 		loc[tag] = float(val)
 
-	font = interpolate_layout(designspace_filename, loc, finder)
-	log.info("Saving font %s", outfile)
-	font.save(outfile)
+	font = interpolate_layout(args.designspace_filename, loc, finder)
+	log.info("Saving font %s", args.output)
+	font.save(args.output)
 
 
 if __name__ == "__main__":

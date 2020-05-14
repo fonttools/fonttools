@@ -996,23 +996,30 @@ def test_addInstanceDescriptor():
     assert instance.styleMapStyleName == "regular"
 
 
-def test_addRuleDescriptor():
+def test_addRuleDescriptor(tmp_path):
     ds = DesignSpaceDocument()
 
     rule = ds.addRuleDescriptor(
-      name="TestRule",
-      conditionSets=[
-          dict(name='Weight', minimum=100, maximum=200),
-          dict(name='Weight', minimum=700, maximum=900),
-      ],
-      subs=[("a", "a.alt")],
+        name="TestRule",
+        conditionSets=[
+            [
+                dict(name="Weight", minimum=100, maximum=200),
+                dict(name="Weight", minimum=700, maximum=900),
+            ]
+        ],
+        subs=[("a", "a.alt")],
     )
 
     assert ds.rules[0] is rule
     assert isinstance(rule, RuleDescriptor)
     assert rule.name == "TestRule"
     assert rule.conditionSets == [
-        dict(name='Weight', minimum=100, maximum=200),
-        dict(name='Weight', minimum=700, maximum=900),
+        [
+            dict(name="Weight", minimum=100, maximum=200),
+            dict(name="Weight", minimum=700, maximum=900),
+        ]
     ]
     assert rule.subs == [("a", "a.alt")]
+
+    # Test it doesn't crash.
+    ds.write(tmp_path / "test.designspace")

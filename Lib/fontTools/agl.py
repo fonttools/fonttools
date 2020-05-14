@@ -3,6 +3,28 @@
 # https://github.com/adobe-type-tools/agl-aglfn/raw/4036a9ca80a62f64f9de4f7321a9a045ad0ecfd6/glyphlist.txt
 # and
 # https://github.com/adobe-type-tools/agl-aglfn/raw/4036a9ca80a62f64f9de4f7321a9a045ad0ecfd6/aglfn.txt
+"""
+Interface to the Adobe Glyph List
+
+This module exists to convert glyph names from the Adobe Glyph List
+to their Unicode equivalents. Example usage:
+
+	>>> from fontTools.agl import toUnicode
+	>>> toUnicode("nahiragana")
+	'な'
+
+It also contains two dictionaries, ``UV2AGL`` and ``AGL2UV``, which map from
+Unicode codepoints to AGL names and vice versa:
+
+	>>> import fontTools
+	>>> fontTools.agl.UV2AGL[ord("?")]
+	'question'
+	>>> fontTools.agl.AGL2UV["wcircumflex"]
+	373
+
+This is used by fontTools when it has to construct glyph names for a font which
+doesn't include any (e.g. format 3.0 post tables).
+"""
 
 from fontTools.misc.py23 import *
 import re
@@ -5083,9 +5105,9 @@ _builddicts()
 
 
 def toUnicode(glyph, isZapfDingbats=False):
-	"""Convert glyph names to Unicode, such as 'longs_t.oldstyle' --> u'ſt'
+	"""Convert glyph names to Unicode, such as ``'longs_t.oldstyle'`` --> ``u'ſt'``
 
-	If isZapfDingbats is True, the implementation recognizes additional
+	If ``isZapfDingbats`` is ``True``, the implementation recognizes additional
 	glyph names (as required by the AGL specification).
 	"""
 	# https://github.com/adobe-type-tools/agl-specification#2-the-mapping
