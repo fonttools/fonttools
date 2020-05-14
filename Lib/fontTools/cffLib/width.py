@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 
-"""T2CharString glyph width optimizer."""
+"""T2CharString glyph width optimizer.
+
+CFF glyphs whose width equals the CFF Private dictionary's ``defaultWidthX``
+value do not need to specify their width in their charstring, saving bytes.
+This module determines the optimum ``defaultWidthX`` and ``nominalWidthX``
+values for a font, when provided with a list of glyph widths."""
 
 from fontTools.misc.py23 import *
 from fontTools.ttLib import TTFont, getTableClass

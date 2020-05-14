@@ -1,4 +1,15 @@
-"""cffLib.py -- read/write tools for Adobe CFF fonts."""
+"""cffLib: read/write Adobe CFF fonts
+
+OpenType fonts with PostScript outlines contain a completely independent
+font file, Adobe's *Compact Font Format*. So dealing with OpenType fonts
+requires also dealing with CFF. This module allows you to read and write
+fonts written in the CFF format.
+
+In 2016, OpenType 1.8 introduced the `CFF2 <https://docs.microsoft.com/en-us/typography/opentype/spec/cff2>`_
+format which, along with other changes, extended the CFF format to deal with
+the demands of variable fonts. This module parses both original CFF and CFF2.
+
+"""
 
 from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
@@ -28,8 +39,37 @@ maxStackLimit = 513
 
 
 class CFFFontSet(object):
+	"""A CFF font "file" can contain more than one font, although this is
+	extremely rare (and not allowed within OpenType fonts).
+
+	This class is the entry point for parsing a CFF table. To actually
+	manipulate the data inside the CFF font, you will want to access the
+	``CFFFontSet``'s :class:`TopDict` object. To do this, a ``CFFFontSet``
+	object can either be treated as a dictionary (with appropriate
+	``keys()`` and ``values()`` methods) mapping font names to :class:`TopDict`
+	objects, or as a list.
+
+	.. code:: python
+
+		from fontTools import ttLib
+		tt = ttLib.TTFont("Tests/cffLib/data/LinLibertine_RBI.otf")
+		tt["CFF "].cff
+		# <fontTools.cffLib.CFFFontSet object at 0x101e24c90>
+		tt["CFF "].cff[0] # Here's your actual font data
+		# <fontTools.cffLib.TopDict object at 0x1020f1fd0>
+	
+	"""
 
 	def decompile(self, file, otFont, isCFF2=None):
+		"""Parse a binary CFF file into an internal representation. ``file``
+		should be a file handle object. ``otFont`` is the top-level
+		:py:class:`fontTools.ttLib.ttFont.TTFont` object containing this CFF file.
+
+		If ``isCFF2`` is passed and set to ``True`` or ``False``, then the
+		library makes an assertion that the CFF header is of the appropriate
+		version.
+		"""
+
 		self.otFont = otFont
 		sstruct.unpack(cffHeaderFormat, file.read(3), self)
 		if isCFF2 is not None:
@@ -89,6 +129,14 @@ class CFFFontSet(object):
 		return self.topDictIndex[index]
 
 	def compile(self, file, otFont, isCFF2=None):
+		"""Write the object back into binary representation onto the given file.
+		``file`` should be a file handle object. ``otFont`` is the top-level
+		:py:class:`fontTools.ttLib.ttFont.TTFont` object containing this CFF file.
+
+		If ``isCFF2`` is passed and set to ``True`` or ``False``, then the
+		library makes an assertion that the CFF header is of the appropriate
+		version.
+		"""
 		self.otFont = otFont
 		if isCFF2 is not None:
 			# called from ttLib: assert 'major' value matches expected version
@@ -144,6 +192,16 @@ class CFFFontSet(object):
 		writer.toFile(file)
 
 	def toXML(self, xmlWriter):
+		"""Write the object into XML representation onto the given
+		:class:`fontTools.misc.xmlWriter.XMLWriter`.
+
+		.. code:: python
+
+			writer = xmlWriter.XMLWriter(sys.stdout)
+			tt["CFF "].cff.toXML(writer)
+
+		"""
+
 		xmlWriter.simpletag("major", value=self.major)
 		xmlWriter.newline()
 		xmlWriter.simpletag("minor", value=self.minor)
@@ -163,6 +221,7 @@ class CFFFontSet(object):
 		xmlWriter.newline()
 
 	def fromXML(self, name, attrs, content, otFont=None):
+		"""Reads data from the XML element into the ``CFFFontSet`` object."""
 		self.otFont = otFont
 
 		# set defaults. These will be replaced if there are entries for them
@@ -230,7 +289,11 @@ class CFFFontSet(object):
 			self.minor = int(attrs['value'])
 
 	def convertCFFToCFF2(self, otFont):
-		# This assumes a decompiled CFF table.
+		"""Converts this object from CFF format to CFF2 format. This conversion
+		is done 'in-place'. The conversion cannot be reversed.
+
+		This assumes a decompiled CFF table. (i.e. that the object has been
+		filled via :meth:`decompile`.)"""
 		self.major = 2
 		cff2GetGlyphOrder = self.otFont.getGlyphOrder
 		topDictData = TopDictIndex(None, cff2GetGlyphOrder, None)
@@ -307,7 +370,8 @@ class CFFFontSet(object):
 
 
 class CFFWriter(object):
-
+	"""Helper class for serializing CFF data to binary. Used by
+	:meth:`CFFFontSet.compile`."""
 	def __init__(self, isCFF2):
 		self.data = []
 		self.isCFF2 = isCFF2
@@ -367,6 +431,8 @@ def calcOffSize(largestOffset):
 
 
 class IndexCompiler(object):
+	"""Base class for writing CFF `INDEX data <https://docs.microsoft.com/en-us/typography/opentype/spec/cff2#5-index-data>`_
+	to binary."""
 
 	def __init__(self, items, strings, parent, isCFF2=None):
 		if isCFF2 is None and hasattr(parent, "isCFF2"):
@@ -446,6 +512,7 @@ class IndexedStringsCompiler(IndexCompiler):
 
 
 class TopDictIndexCompiler(IndexCompiler):
+	"""Helper class for writing the TopDict to binary."""
 
 	def getItems(self, items, strings):
 		out = []
@@ -481,6 +548,9 @@ class TopDictIndexCompiler(IndexCompiler):
 
 
 class FDArrayIndexCompiler(IndexCompiler):
+	"""Helper class for writing the
+	`Font DICT INDEX <https://docs.microsoft.com/en-us/typography/opentype/spec/cff2#10-font-dict-index-font-dicts-and-fdselect>`_
+	to binary."""
 
 	def getItems(self, items, strings):
 		out = []
@@ -519,6 +589,8 @@ class FDArrayIndexCompiler(IndexCompiler):
 
 
 class GlobalSubrsCompiler(IndexCompiler):
+	"""Helper class for writing the `global subroutine INDEX <https://docs.microsoft.com/en-us/typography/opentype/spec/cff2#9-local-and-global-subr-indexes>`_
+	to binary."""
 
 	def getItems(self, items, strings):
 		out = []
@@ -529,14 +601,17 @@ class GlobalSubrsCompiler(IndexCompiler):
 
 
 class SubrsCompiler(GlobalSubrsCompiler):
-
+	"""Helper class for writing the `local subroutine INDEX <https://docs.microsoft.com/en-us/typography/opentype/spec/cff2#9-local-and-global-subr-indexes>`_
+	to binary."""
+	
 	def setPos(self, pos, endPos):
 		offset = pos - self.parent.pos
 		self.parent.rawDict["Subrs"] = offset
 
 
 class CharStringsCompiler(GlobalSubrsCompiler):
-
+	"""Helper class for writing the `CharStrings INDEX <https://docs.microsoft.com/en-us/typography/opentype/spec/cff2#9-local-and-global-subr-indexes>`_
+	to binary."""
 	def getItems(self, items, strings):
 		out = []
 		for cs in items:
@@ -549,8 +624,9 @@ class CharStringsCompiler(GlobalSubrsCompiler):
 
 
 class Index(object):
-
-	"""This class represents what the CFF spec calls an INDEX."""
+	"""This class represents what the CFF spec calls an INDEX (an array of
+	variable-sized objects). `Index` items can be addressed and set using
+	Python list indexing."""
 
 	compilerClass = IndexCompiler
 
@@ -608,16 +684,50 @@ class Index(object):
 		return data
 
 	def append(self, item):
+		"""Add an item to an INDEX."""
 		self.items.append(item)
 
 	def getCompiler(self, strings, parent, isCFF2=None):
 		return self.compilerClass(self, strings, parent, isCFF2=isCFF2)
 
 	def clear(self):
+		"""Empty the INDEX."""
 		del self.items[:]
 
 
 class GlobalSubrsIndex(Index):
+	"""This index contains all the global subroutines in the font. A global
+	subroutine is a set of ``CharString`` data which is accessible to any
+	glyph in the font, and are used to store repeated instructions - for
+	example, components may be encoded as global subroutines, but so could
+	hinting instructions.
+
+	Remember that when interpreting a ``callgsubr`` instruction (or indeed
+	a ``callsubr`` instruction) that you will need to add the "subroutine
+	number bias" to number given:
+
+	.. code:: python
+
+		tt = ttLib.TTFont("Almendra-Bold.otf")
+		u = tt["CFF "].cff[0].CharStrings["udieresis"]
+		u.decompile()
+
+		u.toXML(XMLWriter(sys.stdout))
+		# <some stuff>
+		# -64 callgsubr <-- Subroutine which implements the dieresis mark
+		# <other stuff>
+
+		tt["CFF "].cff[0].GlobalSubrs[-64] # <-- WRONG
+		# <T2CharString (bytecode) at 103451d10>
+
+		tt["CFF "].cff[0].GlobalSubrs[-64 + 107] # <-- RIGHT
+		# <T2CharString (source) at 103451390>
+
+	("The bias applied depends on the number of subrs (gsubrs). If the number of
+	subrs (gsubrs) is less than 1240, the bias is 107. Otherwise if it is less
+	than 33900, it is 1131; otherwise it is 32768.",
+	`Subroutine Operators <https://docs.microsoft.com/en-us/typography/opentype/otspec180/cff2charstr#section4.4>`)
+	"""
 
 	compilerClass = GlobalSubrsCompiler
 	subrClass = psCharStrings.T2CharString
@@ -647,6 +757,15 @@ class GlobalSubrsIndex(Index):
 		return self.subrClass(data, private=private, globalSubrs=self.globalSubrs)
 
 	def toXML(self, xmlWriter):
+		"""Write the subroutines index into XML representation onto the given
+		:class:`fontTools.misc.xmlWriter.XMLWriter`.
+
+		.. code:: python
+
+			writer = xmlWriter.XMLWriter(sys.stdout)
+			tt["CFF "].cff[0].GlobalSubrs.toXML(writer)
+
+		"""
 		xmlWriter.comment(
 			"The 'index' attribute is only for humans; "
 			"it is ignored when parsed.")
@@ -677,10 +796,26 @@ class GlobalSubrsIndex(Index):
 
 
 class SubrsIndex(GlobalSubrsIndex):
+	"""This index contains a glyph's local subroutines. A local subroutine is a
+	private set of ``CharString`` data which is accessible only to the glyph to
+	which the index is attached."""
+
 	compilerClass = SubrsCompiler
 
 
 class TopDictIndex(Index):
+	"""This index represents the array of ``TopDict`` structures in the font
+	(again, usually only one entry is present). Hence the following calls are
+	equivalent:
+
+	.. code:: python
+
+		tt["CFF "].cff[0]
+		# <fontTools.cffLib.TopDict object at 0x102ed6e50>
+		tt["CFF "].cff.topDictIndex[0]
+		# <fontTools.cffLib.TopDict object at 0x102ed6e50>
+
+	"""
 
 	compilerClass = TopDictIndexCompiler
 
@@ -869,6 +1004,20 @@ class FDSelect(object):
 
 
 class CharStrings(object):
+	"""The ``CharStrings`` in the font represent the instructions for drawing 
+	each glyph. This object presents a dictionary interface to the font's
+	CharStrings, indexed by glyph name:
+
+	.. code:: python
+	
+		tt["CFF "].cff[0].CharStrings["a"]
+		# <T2CharString (bytecode) at 103451e90>
+
+	See :class:`fontTools.misc.psCharStrings.T1CharString` and
+	:class:`fontTools.misc.psCharStrings.T2CharString` for how to decompile,
+	compile and interpret the glyph drawing instructions in the returned objects.
+
+	"""
 
 	def __init__(self, file, charset, globalSubrs, private, fdSelect, fdArray,
 			isCFF2=None):
@@ -2087,27 +2236,33 @@ class DictCompiler(object):
 
 
 	def arg_delta_blend(self, value):
-		""" A delta list with blend lists has to be *all* blend lists.
-		The value is a list is arranged as follows.
-		[
-		   [V0, d0..dn] 
-		   [V1, d0..dn]
-		   ...
-		   [Vm, d0..dn]
-		]
-		V is the absolute coordinate value from the default font, and d0-dn are
-		the delta values from the n regions. Each V is an absolute coordinate
-		from the default font.
-		We want to return a list:
-		[
-		   [v0, v1..vm] 
-		   [d0..dn]
-		   ...
-		   [d0..dn]
-		   numBlends
-		   blendOp
-		]
-		where each v is relative to the previous default font value.
+		"""A delta list with blend lists has to be *all* blend lists.
+
+		The value is a list is arranged as follows::
+
+			[
+				[V0, d0..dn]
+				[V1, d0..dn]
+				...
+				[Vm, d0..dn]
+			]
+
+		``V`` is the absolute coordinate value from the default font, and ``d0-dn``
+		are the delta values from the *n* regions. Each ``V`` is an absolute
+		coordinate from the default font.
+
+		We want to return a list::
+
+			[
+				[v0, v1..vm]
+				[d0..dn]
+				...
+				[d0..dn]
+				numBlends
+				blendOp
+			]
+
+		where each ``v`` is relative to the previous default font value.
 		"""
 		numMasters = len(value[0])
 		numBlends = len(value)
@@ -2356,6 +2511,30 @@ class BaseDict(object):
 
 
 class TopDict(BaseDict):
+	"""The ``TopDict`` represents the top-level dictionary holding font
+	information. CFF2 tables contain a restricted set of top-level entries
+	as described `here <https://docs.microsoft.com/en-us/typography/opentype/spec/cff2#7-top-dict-data>`_,
+	but CFF tables may contain a wider range of information. This information
+	can be accessed through attributes or through the dictionary returned
+	through the ``rawDict`` property:
+
+	.. code:: python
+
+		font = tt["CFF "].cff[0]
+		font.FamilyName
+		# 'Linux Libertine O'
+		font.rawDict["FamilyName"]
+		# 'Linux Libertine O'
+
+	More information is available in the CFF file's private dictionary, accessed
+	via the ``Private`` property:
+
+	.. code:: python
+
+		tt["CFF "].cff[0].Private.BlueValues
+		# [-15, 0, 515, 515, 666, 666]
+	
+	"""
 
 	defaults = buildDefaults(topDictOperators)
 	converters = buildConverters(topDictOperators)
@@ -2377,6 +2556,7 @@ class TopDict(BaseDict):
 			self.order = buildOrder(topDictOperators)
 
 	def getGlyphOrder(self):
+		"""Returns a list of glyph names in the CFF font."""
 		return self.charset
 
 	def postDecompile(self):

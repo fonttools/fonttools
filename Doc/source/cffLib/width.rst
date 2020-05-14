@@ -1,8 +1,6 @@
-#####
-width
-#####
+#########################################
+width: T2CharString glyph width optimizer
+#########################################
 
 .. automodule:: fontTools.cffLib.width
-   :inherited-members:
-   :members:
-   :undoc-members:
+   :members: optimizeWidths, optimizeWidthsBruteforce
