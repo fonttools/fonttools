@@ -129,7 +129,7 @@ def _scaleLookupType8(subTable, UPM, target_UPM):
     # TO DO
     pass        
 
-def scaleFont(font, target_UPM):
+def scale_font_toUPM(font, target_UPM):
     UPM = font['head'].unitsPerEm
     glyphOrder = font.getGlyphOrder()
     
@@ -258,7 +258,7 @@ def main():
     outputPath = argv[3]
 
     inputFont = ttLib.TTFont(inputPath)
-    scaleFont(inputFont, targetUPM)
+    scale_font_toUPM(inputFont, targetUPM)
     inputFont.save(outputPath)
 
 if __name__ == '__main__':
