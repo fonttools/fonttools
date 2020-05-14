@@ -219,11 +219,23 @@ class BuildTest(unittest.TestCase):
         )
 
     def test_varlib_build_feature_variations_whole_range(self):
-        """Designspace file contains <rules> element, used to build
-        GSUB FeatureVariations table.
+        """Designspace file contains <rules> element specifying the entire design
+        space, used to build GSUB FeatureVariations table.
         """
         self._run_varlib_build_test(
             designspace_name="FeatureVarsWholeRange",
+            font_name="TestFamily",
+            tables=["fvar", "GSUB"],
+            expected_ttx_name="FeatureVarsWholeRange",
+            save_before_dump=True,
+        )
+
+    def test_varlib_build_feature_variations_whole_range_empty(self):
+        """Designspace file contains <rules> element without a condition, specifying
+        the entire design space, used to build GSUB FeatureVariations table.
+        """
+        self._run_varlib_build_test(
+            designspace_name="FeatureVarsWholeRangeEmpty",
             font_name="TestFamily",
             tables=["fvar", "GSUB"],
             expected_ttx_name="FeatureVarsWholeRange",
