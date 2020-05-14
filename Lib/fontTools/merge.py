@@ -948,27 +948,23 @@ class Merger(object):
 	cross-font metrics (e.g. ``hhea.ascent`` is set to the maximum value across
 	all the fonts).
 
-	If multiple glyphs map to the same Unicode value, subsequent glyphs are
-	renamed and a lookup in the ``locl`` feature will be created to disambiguate
-	them. For example, if the arguments are an Arabic font and a Latin font and
-	both contain a set of parentheses, the Latin glyphs will be renamed to
-	``parenleft#1`` and ``parenright#1``, and the equivalent of the following
-	feature code will be added:
-
-	.. code:: none
-
-		feature locl {
-			script latn;
-			language dflt;
-			sub [parenleft parenright] by [parenleft#1 parenright#1];
-		} locl;
-
+	If multiple glyphs map to the same Unicode value, and the glyphs are considered
+	sufficiently different (that is, they differ in any of paths, widths, or
+	height), then subsequent glyphs are renamed and a lookup in the ``locl``
+	feature will be created to disambiguate them. For example, if the arguments
+	are an Arabic font and a Latin font and both contain a set of parentheses,
+	the Latin glyphs will be renamed to ``parenleft#1`` and ``parenright#1``,
+	and a lookup will be inserted into the to ``locl`` feature (creating it if
+	necessary) under the ``latn`` script to substitute ``parenleft`` with
+	``parenleft#1`` etc.
 
 	Restrictions:
 
 	- All fonts must currently have TrueType outlines (``glyf`` table).
 		Merging fonts with CFF outlines is not supported.
 	- All fonts must have the same units per em.
+	- If duplicate glyph disambiguation takes place as described above then the
+		fonts must have a ``GSUB`` table.
 
 	Attributes:
 		options: Currently unused.
