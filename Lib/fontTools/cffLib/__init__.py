@@ -1,9 +1,9 @@
 """cffLib: read/write Adobe CFF fonts
 
-OpenType fonts with PostScript layouts essentially contain within them a
-completely independent font file, Adobe's *Compact Font Format*. So dealing
-with OpenType fonts requires also dealing with CFF. This module allows you
-to read and write fonts written in the CFF format.
+OpenType fonts with PostScript outlines contain a completely independent
+font file, Adobe's *Compact Font Format*. So dealing with OpenType fonts
+requires also dealing with CFF. This module allows you to read and write
+fonts written in the CFF format.
 
 In 2016, OpenType 1.8 introduced the `CFF2 <https://docs.microsoft.com/en-us/typography/opentype/spec/cff2>`_
 format which, along with other changes, extended the CFF format to deal with
@@ -40,7 +40,7 @@ maxStackLimit = 513
 
 class CFFFontSet(object):
 	"""A CFF font "file" can contain more than one font, although this is
-	extremely rare (and fontTools can't handle such files anyway...).
+	extremely rare (and not allowed within OpenType fonts).
 
 	This class is the entry point for parsing a CFF table. To actually
 	manipulate the data inside the CFF font, you will want to access the
@@ -723,6 +723,10 @@ class GlobalSubrsIndex(Index):
 		tt["CFF "].cff[0].GlobalSubrs[-64 + 107] # <-- RIGHT
 		# <T2CharString (source) at 103451390>
 
+	("The bias applied depends on the number of subrs (gsubrs). If the number of
+	subrs (gsubrs) is less than 1240, the bias is 107. Otherwise if it is less
+	than 33900, it is 1131; otherwise it is 32768.",
+	`Subroutine Operators <https://docs.microsoft.com/en-us/typography/opentype/otspec180/cff2charstr#section4.4>`)
 	"""
 
 	compilerClass = GlobalSubrsCompiler
