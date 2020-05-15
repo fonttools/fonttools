@@ -1,3 +1,6 @@
+4.10.0 (released 2020-05-15)
+----------------------------
+
 - [varLib] Allow feature variations to be active across the entire space (#1957).
 - [ufoLib] Added support for ``formatVersionMinor`` in UFO's ``fontinfo.plist`` and for
   ``formatMinor`` attribute in GLIF file as discussed in unified-font-object/ufo-spec#78.
