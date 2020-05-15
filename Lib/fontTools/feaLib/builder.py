@@ -1285,24 +1285,7 @@ class ChainContextPosBuilder(LookupBuilder):
             self.setBacktrackCoverage_(prefix, st)
             self.setLookAheadCoverage_(suffix, st)
             self.setInputCoverage_(glyphs, st)
-
-            st.PosCount = 0
-            st.PosLookupRecord = []
-            for sequenceIndex, lookupList in enumerate(lookups):
-                if lookupList is not None:
-                    if not isinstance(lookupList, list):
-                        # Can happen with synthesised lookups
-                        lookupList = [ lookupList ]
-                    for l in lookupList:
-                        st.PosCount += 1
-                        if l.lookup_index is None:
-                            raise FeatureLibError('Missing index of the specified '
-                                'lookup, might be a substitution lookup',
-                                self.location)
-                        rec = otTables.PosLookupRecord()
-                        rec.SequenceIndex = sequenceIndex
-                        rec.LookupListIndex = l.lookup_index
-                        st.PosLookupRecord.append(rec)
+            otl.buildLookupRecords(lookups, st, "pos")
         return self.buildLookup_(subtables)
 
     def find_chainable_single_pos(self, lookups, glyphs, value):
@@ -1341,24 +1324,7 @@ class ChainContextSubstBuilder(LookupBuilder):
             self.setBacktrackCoverage_(prefix, st)
             self.setLookAheadCoverage_(suffix, st)
             self.setInputCoverage_(input, st)
-
-            st.SubstCount = 0
-            st.SubstLookupRecord = []
-            for sequenceIndex, lookupList in enumerate(lookups):
-                if lookupList is not None:
-                    if not isinstance(lookupList, list):
-                        # Can happen with synthesised lookups
-                        lookupList = [ lookupList ]
-                    for l in lookupList:
-                        st.SubstCount += 1
-                        if l.lookup_index is None:
-                            raise FeatureLibError('Missing index of the specified '
-                                'lookup, might be a positioning lookup',
-                                self.location)
-                        rec = otTables.SubstLookupRecord()
-                        rec.SequenceIndex = sequenceIndex
-                        rec.LookupListIndex = l.lookup_index
-                        st.SubstLookupRecord.append(rec)
+            otl.buildLookupRecords(lookups, st, "sub")
         return self.buildLookup_(subtables)
 
     def getAlternateGlyphs(self):

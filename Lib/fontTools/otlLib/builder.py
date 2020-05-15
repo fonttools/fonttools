@@ -509,6 +509,38 @@ def _classWorthwhileForContext(context):
 
     return classdefbuilder, classdefglyphcount, totalglyphcount
 
+def buildLookupRecords(lookups, st, pos_or_sub):
+    assert(pos_or_sub == "sub" or pos_or_sub == "pos")
+    if pos_or_sub == "sub":
+        rectype = ot.SubstLookupRecord
+    else:
+        rectype = ot.PosLookupRecord
+    records = []
+    count = 0
+    for sequenceIndex, lookupList in enumerate(lookups):
+        if lookupList is not None:
+            if not isinstance(lookupList, list):
+                # Can happen with synthesised lookups
+                lookupList = [ lookupList ]
+            for l in lookupList:
+                count += 1
+                if l.lookup_index is None:
+                    othertype = "positioning"
+                    if pos_or_sub == "pos": othertype = "substitution"
+                    raise FeatureLibError('Missing index of the specified '
+                        'lookup, might be a %s lookup',
+                        ( self.location, othertype))
+                rec = rectype()
+                rec.SequenceIndex = sequenceIndex
+                rec.LookupListIndex = l.lookup_index
+                records.append(rec)
+    if pos_or_sub == "sub":
+        st.SubstCount = count
+        st.SubstLookupRecord = records
+    else:
+        st.PosCount = count
+        st.PosLookupRecord = records
+
 
 def _getSinglePosTableKey(subtable, glyphMap):
     assert isinstance(subtable, ot.SinglePos), subtable
