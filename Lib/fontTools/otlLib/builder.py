@@ -468,6 +468,48 @@ def buildSinglePosSubtable(values, glyphMap):
     return self
 
 
+def classContextIsWorthwhile(rules):
+    """Determines whether to make this lookup into a class-based contextual.
+
+    Args:
+        rules: Array of rules as (prefix,input,suffix,lookup) tuples
+
+    Returns:
+        Tuple of (backtrackclassdef, inputclassdef, lookaheadclassdef) if
+        it is worth converting to class-based, or None otherwise.
+    """
+    classdefbuilders = []
+    classdefglyphcount = 0
+    totalglyphcount = 0
+    for ix in range(0,3):
+        # XXX Skip subtable breaks
+        context = [r[ix] for r in rules]
+        classes, c, cv = _classWorthwhileForContext(context)
+        classdefglyphcount += c
+        totalglyphcount += cv
+        classdefbuilders.append(classes)
+    if classdefglyphcount < totalglyphcount * 0.25:
+        return classdefbuilders
+    return None
+
+
+def _classWorthwhileForContext(context):
+    classdefbuilder = ClassDefBuilder(useClass0=False)
+    totalglyphcount = 0
+    for position in context:
+        for glyphset in position:
+            if not classdefbuilder.canAdd(glyphset):
+                return None
+            classdefbuilder.add(glyphset)
+            totalglyphcount += len(glyphset)
+    classdefglyphcount = 0
+    classes = classdefbuilder.classes()
+    for c in classes[1:]:
+        classdefglyphcount += len(c[0])
+
+    return classdefbuilder, classdefglyphcount, totalglyphcount
+
+
 def _getSinglePosTableKey(subtable, glyphMap):
     assert isinstance(subtable, ot.SinglePos), subtable
     glyphs = subtable.Coverage.glyphs
