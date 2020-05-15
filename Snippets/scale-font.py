@@ -18,76 +18,80 @@ def scale_value_factor(value, scale_factor):
 def _scale_lookup_type1(subTable, scale_factor):
     attrs = ['XAdvance', 'YAdvance', 'XPlacement', 'YPlacement']
 
-    if subTable.Format == 1:
-        for attr in attrs:
+    for attr in attrs:
+        if subTable.Format == 1:
             setattr(subTable.Value, attr, scale_value_factor(getattr(subTable.Value, attr), scale_factor))
-
-    elif subTable.Format == 2:
-        for subSubTable in subTable.Value:
-            for attr in attrs:
+        elif subTable.Format == 2:
+            for subSubTable in subTable.Value:
                 setattr(subSubTable, attr, scale_value_factor(getattr(subSubTable, attr), scale_factor))
 
 def _scale_lookup_type2(subTable, scale_factor):
-    attrs = ['XAdvance', 'YAdvance', 'XPlacement', 'YPlacement']
-    if subTable.Format == 1:
-        for pairSet in subTable.PairSet:
-            for pair in pairSet.PairValueRecord:
-                for attr in attrs:
-                    if hasattr(pair.Value1, attr):
-                        setattr(pair.Value1, attr, scale_value_factor(getattr(pair.Value1, attr), scale_factor))
-                for attr in attrs:
-                    if hasattr(pair.Value2, attr):
-                        setattr(pair.Value2, attr, scale_value_factor(getattr(pair.Value2, attr), scale_factor))
     
-    attrs = ['XAdvance', 'XPlacement']
-    if subTable.Format == 2:
-        for class1Record in subTable.Class1Record:
-            for class2Record in class1Record.Class2Record:
-                for attr in attrs:
-                    if hasattr(class2Record.Value1, attr):
-                        setattr(class2Record.Value1, attr, scale_value_factor(getattr(class2Record.Value1, attr), scale_factor))
-                for attr in attrs:
-                    if hasattr(class2Record.Value2, attr):
-                        setattr(class2Record.Value2, attr, scale_value_factor(getattr(class2Record.Value2, attr), scale_factor))
+    if subTable.Format == 1:
+        attrs = ['XAdvance', 'YAdvance', 'XPlacement', 'YPlacement']
+        pairs = [pair for pairSet in subTable.PairSet for pair in pairSet.PairValueRecord]
+        
+        for attr in attrs:
+            for pair in pairs:
+                if hasattr(pair.Value1, attr):
+                    setattr(pair.Value1, attr, scale_value_factor(getattr(pair.Value1, attr), scale_factor))
+                if hasattr(pair.Value2, attr):
+                    setattr(pair.Value2, attr, scale_value_factor(getattr(pair.Value2, attr), scale_factor))
+
+    elif subTable.Format == 2:
+        attrs = ['XAdvance', 'XPlacement']
+        class2Records = [class2Record for class1Record in subTable.Class1Record for class2Record in class1Record.Class2Record]
+
+        for attr in attrs:
+            for class2Record in class2Records:
+                if hasattr(class2Record.Value1, attr):
+                    setattr(class2Record.Value1, attr, scale_value_factor(getattr(class2Record.Value1, attr), scale_factor))
+                if hasattr(class2Record.Value2, attr):
+                    setattr(class2Record.Value2, attr, scale_value_factor(getattr(class2Record.Value2, attr), scale_factor))
 
 def _scale_lookup_type3(subTable, scale_factor):
     attrs = ['XCoordinate', 'YCoordinate']
-    for entryExitRecord in subTable.EntryExitRecord:
-        for attr in attrs:
+
+    for attr in attrs:
+        for entryExitRecord in subTable.EntryExitRecord:
             setattr(entryExitRecord.EntryAnchor, attr, scale_value_factor(getattr(entryExitRecord.EntryAnchor, attr), scale_factor))
             setattr(entryExitRecord.ExitAnchor, attr, scale_value_factor(getattr(entryExitRecord.ExitAnchor, attr), scale_factor))
 
 def _scale_lookup_type4(subTable, scale_factor):
-    # To Optimize
-    for baseRecord in subTable.BaseArray.BaseRecord:
-        for baseAnchor in baseRecord.BaseAnchor:
-            if baseAnchor:
-                baseAnchor.XCoordinate = scale_value_factor(baseAnchor.XCoordinate, scale_factor)
-                baseAnchor.YCoordinate = scale_value_factor(baseAnchor.YCoordinate, scale_factor)
-    for markRecord in subTable.MarkArray.MarkRecord:
-        markRecord.MarkAnchor.XCoordinate = scale_value_factor(markRecord.MarkAnchor.XCoordinate, scale_factor)
-        markRecord.MarkAnchor.YCoordinate = scale_value_factor(markRecord.MarkAnchor.YCoordinate, scale_factor)
+    attrs = ['XCoordinate', 'YCoordinate']
+    baseAnchors = [baseAnchor for attr in attrs for baseRecord in subTable.BaseArray.BaseRecord 
+                    for baseAnchor in baseRecord.BaseAnchor if hasattr(baseAnchor, attr)]
+    markRecords = [markRecord for attr in attrs for markRecord in subTable.MarkArray.MarkRecord 
+                    if hasattr(markRecord, attr)]
+
+    for attr in attrs:
+        for baseAnchor in baseAnchors:
+            setattr(baseAnchor, attr, scale_value_factor(getattr(baseAnchor, attr), scale_factor))
+        for markRecord in markRecords:
+            setattr(markRecord, attr, scale_value_factor(getattr(markRecord, attr), scale_factor))
 
 def _scale_lookup_type5(subTable, scale_factor):
-    # To Optimize
-    for markRecord in subTable.MarkArray.MarkRecord:     
-        markRecord.MarkAnchor.XCoordinate = scale_value_factor(markRecord.MarkAnchor.XCoordinate, scale_factor)
-        markRecord.MarkAnchor.YCoordinate = scale_value_factor(markRecord.MarkAnchor.YCoordinate, scale_factor)
-    for ligatureAttach in subTable.LigatureArray.LigatureAttach:
-        for componentRecord in ligatureAttach.ComponentRecord:
-            for ligatureAnchor in componentRecord.LigatureAnchor:
-                ligatureAnchor.XCoordinate = scale_value_factor(ligatureAnchor.XCoordinate, scale_factor)
-                ligatureAnchor.YCoordinate = scale_value_factor(ligatureAnchor.YCoordinate, scale_factor)
+    attrs = ['XCoordinate', 'YCoordinate']
+    markRecords = [markRecord for markRecord in subTable.MarkArray.MarkRecord]
+    ligatureAnchors = [ligatureAnchor for ligatureAttach in subTable.LigatureArray.LigatureAttach 
+                        for componentRecord in ligatureAttach.ComponentRecord 
+                        for ligatureAnchor in componentRecord.LigatureAnchor]
+
+    for attr in attrs:
+        for markRecord in markRecords:
+            setattr(markRecord.MarkAnchor, attr, scale_value_factor(getattr(markRecord.MarkAnchor, attr), scale_factor))
+        for ligatureAnchor in ligatureAnchors:
+            setattr(ligatureAnchor, attr, scale_value_factor(getattr(ligatureAnchor, attr), scale_factor))
                 
 def _scale_lookup_type6(subTable, scale_factor):
-    # To Optimize
-    for mark1Record in subTable.Mark1Array.MarkRecord:
-        mark1Record.MarkAnchor.XCoordinate = scale_value_factor(mark1Record.MarkAnchor.XCoordinate, scale_factor)
-        mark1Record.MarkAnchor.YCoordinate = scale_value_factor(mark1Record.MarkAnchor.YCoordinate, scale_factor)
-    for mark2Record in subTable.Mark2Array.Mark2Record:
-        for mark2Anchor in mark2Record.Mark2Anchor:
-            mark2Anchor.XCoordinate = scale_value_factor(mark2Anchor.XCoordinate, scale_factor)
-            mark2Anchor.YCoordinate = scale_value_factor(mark2Anchor.YCoordinate, scale_factor)
+    attrs = ['XCoordinate', 'YCoordinate']
+    mark2Anchors = [mark2Anchor for mark2Record in subTable.Mark2Array.Mark2Record for mark2Anchor in mark2Record.Mark2Anchor]
+
+    for attr in attrs:
+        for mark1Record in subTable.Mark1Array.MarkRecord:
+            setattr(mark1Record.MarkAnchor, attr, scale_value_factor(getattr(mark1Record.MarkAnchor, attr), scale_factor))    
+        for mark2Anchor in mark2Anchors:
+            setattr(mark2Anchor, attr, scale_value_factor(getattr(mark1Record.MarkAnchor, attr), scale_factor))
 
 def _scale_lookup_type7(subTable, scale_factor):
     # TO DO
@@ -134,7 +138,6 @@ def scale_font(font, scale_factor):
                             'ySuperscriptXOffset', 'ySuperscriptYOffset', 'yStrikeoutSize', 
                             'yStrikeoutSize', 'yStrikeoutPosition', 'sTypoAscender', 'sTypoDescender',
                             'sTypoLineGap', 'usWinAscent', 'usWinDescent', 'sxHeight', 'sCapHeight']
-
                   }
 
     for table, attrs in table2attrs.items():
