@@ -142,7 +142,7 @@ def overlayFeatureVariations(conditionalSubstitutions):
     items = []
     for box,rank in sorted(boxMap.items(),
                            key=(lambda BoxAndRank: -popCount(BoxAndRank[1]))):
-        # Skip the initial entire-space box only if no layers apply.
+        # Skip any box that doesn't have any substitution.
         if rank == 0:
             continue
         substsList = []
