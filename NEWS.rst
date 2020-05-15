@@ -21,7 +21,7 @@
 - [gvar] Sort ``gvar`` XML output by glyph name, not glyph order (#1907, #1908).
 - [Doc] Added help options to ``fonttools`` command line tool (#1913, #1920).
   Ensure all fonttools CLI tools have help documentation (#1948).
-- [ufoLib] Only write fontinfo.plist when there is content to be had.
+- [ufoLib] Only write fontinfo.plist when there actually is content (#1911).
 
 4.9.0 (released 2020-04-29)
 ---------------------------
