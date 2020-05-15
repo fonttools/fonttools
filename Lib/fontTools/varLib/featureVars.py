@@ -82,6 +82,7 @@ def overlayFeatureVariations(conditionalSubstitutions):
     ...     ([{"wght": (0.5, 1.0)}], {"dollar": "dollar.rvrn"}),
     ...     ([{"wght": (0.5, 1.0)}], {"dollar": "dollar.rvrn"}),
     ...     ([{"wdth": (0.5, 1.0)}], {"cent": "cent.rvrn"}),
+    ...     ([{"wght": (0.5, 1.0), "wdth": (-1, 1.0)}], {"dollar": "dollar.rvrn"}),
     ... ]
     >>> from pprint import pprint
     >>> pprint(overlayFeatureVariations(condSubst))
@@ -136,12 +137,14 @@ def overlayFeatureVariations(conditionalSubstitutions):
                     remainder = hashdict(remainder)
                     newMap[remainder] = newMap.get(remainder, 0) | rank
         boxMap = newMap
-    del boxMap[hashdict()]
 
     # Generate output
     items = []
     for box,rank in sorted(boxMap.items(),
                            key=(lambda BoxAndRank: -popCount(BoxAndRank[1]))):
+        # Skip any box that doesn't have any substitution.
+        if rank == 0:
+            continue
         substsList = []
         i = 0
         while rank:
