@@ -1,3 +1,26 @@
+- [varLib] Allow feature variations to be active across the entire space (#1957).
+- [ufoLib] Added support for ``formatVersionMinor`` in UFO's ``fontinfo.plist`` and for
+  ``formatMinor`` attribute in GLIF file as discussed in unified-font-object/ufo-spec#78.
+  No changes in reading or writing UFOs until an upcoming (non-0) minor update of the
+  UFO specification is published (#1786).
+- [merge] Fixed merging fonts with different versions of ``OS/2`` table (#1865, #1952).
+- [subset] Fixed ``AttributeError`` while subsetting ``ContextSubst`` and ``ContextPos``
+  Format 3 subtable (#1879, #1944).
+- [ttLib.table._m_e_t_a] if data happens to be ascii, emit comment in TTX (#1938).
+- [feaLib] Support multiple lookups per glyph position (#1905).
+- [psCharStrings] Use inheritance to avoid repeated code in initializer (#1932).
+- [Doc] Improved documentation for the following modules: ``afmLib`` (#1933), ``agl``
+  (#1934), ``cffLib`` (#1935), ``cu2qu`` (#1937), ``encodings`` (#1940), ``feaLib``
+  (#1941), ``merge`` (#1949).
+- [Doc] Split off developer-centric info to new page, making front page of docs more
+  user-focused. List all utilities and sub-modules with brief descriptions.
+  Make README more concise and focused (#1914).
+- [otlLib] Add function to build STAT table from high-level description (#1926).
+- [ttLib._n_a_m_e] Add ``findMultilingualName()`` method (#1921).
+- [unicodedata] Update ``RTL_SCRIPTS`` for Unicode 13.0 (#1925).
+- [gvar] Sort ``gvar`` XML output by glyph name, not glyph order (#1907, #1908).
+- [Doc] Added help options to ``fonttools`` command line tool (#1913, #1920).
+  Ensure all fonttools CLI tools have help documentation (#1948).
 - [ufoLib] Only write fontinfo.plist when there is content to be had.
 
 4.9.0 (released 2020-04-29)
