@@ -485,6 +485,8 @@ def classContextIsWorthwhile(rules):
         # XXX Skip subtable breaks
         context = [r[ix] for r in rules]
         classes, c, cv = _classWorthwhileForContext(context)
+        if not classes:
+            return None
         classdefglyphcount += c
         totalglyphcount += cv
         classdefbuilders.append(classes)
@@ -499,7 +501,7 @@ def _classWorthwhileForContext(context):
     for position in context:
         for glyphset in position:
             if not classdefbuilder.canAdd(glyphset):
-                return None
+                return None, None, None
             classdefbuilder.add(glyphset)
             totalglyphcount += len(glyphset)
     classdefglyphcount = 0
