@@ -82,6 +82,7 @@ def overlayFeatureVariations(conditionalSubstitutions):
     ...     ([{"wght": (0.5, 1.0)}], {"dollar": "dollar.rvrn"}),
     ...     ([{"wght": (0.5, 1.0)}], {"dollar": "dollar.rvrn"}),
     ...     ([{"wdth": (0.5, 1.0)}], {"cent": "cent.rvrn"}),
+    ...     ([{"wght": (0.5, 1.0), "wdth": (-1, 1.0)}], {"dollar": "dollar.rvrn"}),
     ... ]
     >>> from pprint import pprint
     >>> pprint(overlayFeatureVariations(condSubst))
@@ -136,16 +137,14 @@ def overlayFeatureVariations(conditionalSubstitutions):
                     remainder = hashdict(remainder)
                     newMap[remainder] = newMap.get(remainder, 0) | rank
         boxMap = newMap
-    # Delete initMapInit from boxMap. Need to test for `0` explicitly because there
-    # could be an actual user-defined rule that applies to the entire space, which
-    # would be `1`.
-    if boxMap[hashdict()] == 0:
-        del boxMap[hashdict()]
 
     # Generate output
     items = []
     for box,rank in sorted(boxMap.items(),
                            key=(lambda BoxAndRank: -popCount(BoxAndRank[1]))):
+        # Skip the initial entire-space box only if no layers apply.
+        if rank == 0:
+            continue
         substsList = []
         i = 0
         while rank:
