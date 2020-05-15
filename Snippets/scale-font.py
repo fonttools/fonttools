@@ -1,7 +1,7 @@
 """
 Script to change UnitsPerEm of a Font
 USAGE:
-python3 scale-font.py [--output path/to/outputFont.ttf] path/to/inputFont.ttf scaledUPM
+scale-font.py path/to/inputFont.ttf targetUPM path/to/outputFont.ttf
 
 Only works on .ttf (no CFF) for now
 
@@ -19,18 +19,19 @@ def _scale_lookup_type1(subTable, scale_factor):
     attrs = ['XAdvance', 'YAdvance', 'XPlacement', 'YPlacement']
 
     for attr in attrs:
-        if subTable.Format == 1:
+        if subTable.Format == 1 and hasattr(subTable, attr):
             setattr(subTable.Value, attr, scale_value_factor(getattr(subTable.Value, attr), scale_factor))
         elif subTable.Format == 2:
             for subSubTable in subTable.Value:
-                setattr(subSubTable, attr, scale_value_factor(getattr(subSubTable, attr), scale_factor))
+                if hasattr(subSubTable, attr):
+                    setattr(subSubTable, attr, scale_value_factor(getattr(subSubTable, attr), scale_factor))
 
 def _scale_lookup_type2(subTable, scale_factor):
     
     if subTable.Format == 1:
         attrs = ['XAdvance', 'YAdvance', 'XPlacement', 'YPlacement']
         pairs = [pair for pairSet in subTable.PairSet for pair in pairSet.PairValueRecord]
-        
+
         for attr in attrs:
             for pair in pairs:
                 if hasattr(pair.Value1, attr):
@@ -54,8 +55,10 @@ def _scale_lookup_type3(subTable, scale_factor):
 
     for attr in attrs:
         for entryExitRecord in subTable.EntryExitRecord:
-            setattr(entryExitRecord.EntryAnchor, attr, scale_value_factor(getattr(entryExitRecord.EntryAnchor, attr), scale_factor))
-            setattr(entryExitRecord.ExitAnchor, attr, scale_value_factor(getattr(entryExitRecord.ExitAnchor, attr), scale_factor))
+            if hasattr(entryExitRecord.EntryAnchor, attr):
+                setattr(entryExitRecord.EntryAnchor, attr, scale_value_factor(getattr(entryExitRecord.EntryAnchor, attr), scale_factor))
+            if hasattr(entryExitRecord.ExitAnchor, attr):
+                setattr(entryExitRecord.ExitAnchor, attr, scale_value_factor(getattr(entryExitRecord.ExitAnchor, attr), scale_factor))
 
 def _scale_lookup_type4(subTable, scale_factor):
     attrs = ['XCoordinate', 'YCoordinate']
@@ -75,13 +78,15 @@ def _scale_lookup_type5(subTable, scale_factor):
     markRecords = [markRecord for markRecord in subTable.MarkArray.MarkRecord]
     ligatureAnchors = [ligatureAnchor for ligatureAttach in subTable.LigatureArray.LigatureAttach 
                         for componentRecord in ligatureAttach.ComponentRecord 
-                        for ligatureAnchor in componentRecord.LigatureAnchor]
+                        for ligatureAnchor in componentRecord.LigatureAnchor if ligatureAnchor]
 
     for attr in attrs:
         for markRecord in markRecords:
-            setattr(markRecord.MarkAnchor, attr, scale_value_factor(getattr(markRecord.MarkAnchor, attr), scale_factor))
+            if hasattr(markRecord.MarkAnchor, attr):
+                setattr(markRecord.MarkAnchor, attr, scale_value_factor(getattr(markRecord.MarkAnchor, attr), scale_factor))
         for ligatureAnchor in ligatureAnchors:
-            setattr(ligatureAnchor, attr, scale_value_factor(getattr(ligatureAnchor, attr), scale_factor))
+            if hasattr(ligatureAnchor, attr):
+                setattr(ligatureAnchor, attr, scale_value_factor(getattr(ligatureAnchor, attr), scale_factor))
                 
 def _scale_lookup_type6(subTable, scale_factor):
     attrs = ['XCoordinate', 'YCoordinate']
@@ -89,9 +94,11 @@ def _scale_lookup_type6(subTable, scale_factor):
 
     for attr in attrs:
         for mark1Record in subTable.Mark1Array.MarkRecord:
-            setattr(mark1Record.MarkAnchor, attr, scale_value_factor(getattr(mark1Record.MarkAnchor, attr), scale_factor))    
+            if hasattr(mark1Record.MarkAnchor, attr):
+                setattr(mark1Record.MarkAnchor, attr, scale_value_factor(getattr(mark1Record.MarkAnchor, attr), scale_factor))    
         for mark2Anchor in mark2Anchors:
-            setattr(mark2Anchor, attr, scale_value_factor(getattr(mark1Record.MarkAnchor, attr), scale_factor))
+            if hasattr(mark2Anchor, attr):
+                setattr(mark2Anchor, attr, scale_value_factor(getattr(mark1Record.MarkAnchor, attr), scale_factor))
 
 def _scale_lookup_type7(subTable, scale_factor):
     # TO DO
