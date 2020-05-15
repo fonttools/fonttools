@@ -1,7 +1,7 @@
 """
 Script to change UnitsPerEm of a Font
 USAGE:
-scale-font.py path/to/inputFont.ttf targetUPM path/to/outputFont.ttf
+python3 scale-font.py [--output path/to/outputFont.ttf] path/to/inputFont.ttf scaledUPM
 
 Only works on .ttf (no CFF) for now
 
