@@ -52,7 +52,7 @@ environments::
 
     When you run ``tox`` without arguments, the tests are executed for all the environments listed in the ``tox.ini`` ``envlist``. The Python versions that are not available on your system ``PATH`` will be skipped.
 
-You can specify a specific testing environment list via the ``-e`` option, or the ``TOXENV`` environment variable::
+You can specify a particular testing environment list via the ``-e`` option, or the ``TOXENV`` environment variable::
 
     tox -e py36
     TOXENV="py36-cov,htmlcov" tox
