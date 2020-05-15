@@ -28,8 +28,6 @@ def _scale_lookup_type1(subTable, scale_factor):
                 setattr(subSubTable, attr, scale_value_factor(getattr(subSubTable, attr), scale_factor))
 
 def _scale_lookup_type2(subTable, scale_factor):
-    attrs = ['Value1', 'Value2']
-
     attrs = ['XAdvance', 'YAdvance', 'XPlacement', 'YPlacement']
     if subTable.Format == 1:
         for pairSet in subTable.PairSet:
@@ -61,7 +59,6 @@ def _scale_lookup_type3(subTable, scale_factor):
 
 def _scale_lookup_type4(subTable, scale_factor):
     # To Optimize
-
     for baseRecord in subTable.BaseArray.BaseRecord:
         for baseAnchor in baseRecord.BaseAnchor:
             if baseAnchor:
@@ -73,7 +70,6 @@ def _scale_lookup_type4(subTable, scale_factor):
 
 def _scale_lookup_type5(subTable, scale_factor):
     # To Optimize
-
     for markRecord in subTable.MarkArray.MarkRecord:     
         markRecord.MarkAnchor.XCoordinate = scale_value_factor(markRecord.MarkAnchor.XCoordinate, scale_factor)
         markRecord.MarkAnchor.YCoordinate = scale_value_factor(markRecord.MarkAnchor.YCoordinate, scale_factor)
@@ -85,7 +81,6 @@ def _scale_lookup_type5(subTable, scale_factor):
                 
 def _scale_lookup_type6(subTable, scale_factor):
     # To Optimize
-
     for mark1Record in subTable.Mark1Array.MarkRecord:
         mark1Record.MarkAnchor.XCoordinate = scale_value_factor(mark1Record.MarkAnchor.XCoordinate, scale_factor)
         mark1Record.MarkAnchor.YCoordinate = scale_value_factor(mark1Record.MarkAnchor.YCoordinate, scale_factor)
