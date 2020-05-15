@@ -542,6 +542,60 @@ def buildLookupRecords(lookups, st, pos_or_sub):
         st.PosLookupRecord = records
 
 
+def buildClassBased(rules, classdefs, glyphMap, pos_or_sub):
+    assert(pos_or_sub == "sub" or pos_or_sub == "pos")
+    if pos_or_sub == "pos":
+        subtable = ot.ChainContextPos()
+        classsetclass = ot.ChainPosClassSet
+        ruleclass = ot.ChainPosClassRule
+    else:
+        subtable = ot.ChainContextSubst()
+        classsetclass = ot.ChainSubClassSet
+        ruleclass = ot.ChainSubClassRule
+
+    subtable.BacktrackClassDef, subtable.InputClassDef, \
+        subtable.LookAheadClassDef = [ c.build() for c in classdefs ]
+
+    btClasses, inClasses, laClasses = [ c.classes() for c in classdefs ]
+
+    classsets = []
+    for _ in inClasses:
+        classset = classsetclass()
+        classset.populateDefaults()
+        classsets.append(classset)
+    coverage = set()
+
+    for (prefix, inputs, suffix, lookups) in rules:
+        rule = ruleclass()
+
+        rule.BacktrackGlyphCount = len(prefix)
+        rule.InputGlyphCount     = len(inputs)
+        rule.LookAheadGlyphCount = len(suffix)
+        rule.Backtrack   = [ btClasses.index(x) for x in prefix ]
+        rule.Input       = [ inClasses.index(x) for x in inputs[1:] ]
+        rule.LookAhead   = [ laClasses.index(x) for x in suffix ]
+        buildLookupRecords(lookups, rule, pos_or_sub)
+        setForThisRule = classsets[ inClasses.index(inputs[0]) ]
+        coverage |= set(inputs[0])
+        if pos_or_sub == "pos":
+            setForThisRule.ChainPosClassRule.append(rule)
+            setForThisRule.ChainPosClassRuleCount += 1
+        else:
+            setForThisRule.ChainSubClassRule.append(rule)
+            setForThisRule.ChainSubClassRuleCount += 1
+
+    subtable.Format = 2
+    subtable.populateDefaults()
+    if pos_or_sub == "pos":
+        subtable.ChainPosClassSet = classsets
+        subtable.ChainPosClassSetCount = len(classsets)
+    else:
+        subtable.ChainSubClassSet = classsets
+        subtable.ChainSubClassSetCount = len(classsets)
+    subtable.Coverage = buildCoverage(coverage, glyphMap)
+    return subtable
+
+
 def _getSinglePosTableKey(subtable, glyphMap):
     assert isinstance(subtable, ot.SinglePos), subtable
     glyphs = subtable.Coverage.glyphs
