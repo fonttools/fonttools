@@ -166,6 +166,20 @@ class NameTableTest(unittest.TestCase):
 		self.assertEqual(nameID, table.findMultilingualName(namesSubSet))
 		self.assertEqual(None, table.findMultilingualName(namesSuperSet))
 
+	def test_findMultilingualName_compiled(self):
+		table = table__n_a_m_e()
+		names, namesSubSet, namesSuperSet = self._get_test_names()
+		nameID = table.addMultilingualName(names)
+		assert nameID is not None
+		# After compile/decompile, name.string is a bytes sequence, which
+		# findMultilingualName() should also handle
+		data = table.compile(None)
+		table = table__n_a_m_e()
+		table.decompile(data, None)
+		self.assertEqual(nameID, table.findMultilingualName(names))
+		self.assertEqual(nameID, table.findMultilingualName(namesSubSet))
+		self.assertEqual(None, table.findMultilingualName(namesSuperSet))
+
 	def test_addMultilingualNameReuse(self):
 		table = table__n_a_m_e()
 		names, namesSubSet, namesSuperSet = self._get_test_names()
