@@ -222,8 +222,11 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		# Collect matching name IDs
 		matchingNames = dict()
 		for name in self.names:
-			key = (name.string, name.platformID,
-			       name.platEncID, name.langID)
+			try:
+				key = (name.toUnicode(), name.platformID,
+				       name.platEncID, name.langID)
+			except UnicodeDecodeError:
+				continue
 			if key in reqNameSet:
 				nameSet = matchingNames.setdefault(name.nameID, set())
 				nameSet.add(key)
