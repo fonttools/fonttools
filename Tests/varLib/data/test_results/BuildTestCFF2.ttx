@@ -27,31 +27,31 @@
 
     <!-- Regular -->
     <!-- PostScript: TestCFF2Roman-Regular -->
-    <NamedInstance flags="0x0" postscriptNameID="262" subfamilyNameID="261">
+    <NamedInstance flags="0x0" postscriptNameID="261" subfamilyNameID="2">
       <coord axis="wght" value="400.0"/>
     </NamedInstance>
 
     <!-- Medium -->
     <!-- PostScript: TestCFF2Roman-Medium -->
-    <NamedInstance flags="0x0" postscriptNameID="264" subfamilyNameID="263">
+    <NamedInstance flags="0x0" postscriptNameID="263" subfamilyNameID="262">
       <coord axis="wght" value="500.0"/>
     </NamedInstance>
 
     <!-- Semibold -->
     <!-- PostScript: TestCFF2Roman-Semibold -->
-    <NamedInstance flags="0x0" postscriptNameID="266" subfamilyNameID="265">
+    <NamedInstance flags="0x0" postscriptNameID="265" subfamilyNameID="264">
       <coord axis="wght" value="600.0"/>
     </NamedInstance>
 
     <!-- Bold -->
     <!-- PostScript: TestCFF2Roman-Bold -->
-    <NamedInstance flags="0x0" postscriptNameID="268" subfamilyNameID="267">
+    <NamedInstance flags="0x0" postscriptNameID="267" subfamilyNameID="266">
       <coord axis="wght" value="700.0"/>
     </NamedInstance>
 
     <!-- Black -->
     <!-- PostScript: TestCFF2Roman-Black -->
-    <NamedInstance flags="0x0" postscriptNameID="270" subfamilyNameID="269">
+    <NamedInstance flags="0x0" postscriptNameID="269" subfamilyNameID="268">
       <coord axis="wght" value="900.0"/>
     </NamedInstance>
   </fvar>
