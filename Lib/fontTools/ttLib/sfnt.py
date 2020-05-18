@@ -12,7 +12,8 @@ classes, since whenever to number of tables changes or whenever
 a table's length chages you need to rewrite the whole file anyway.
 """
 
-from fontTools.misc.py23 import *
+from io import BytesIO
+from fontTools.misc.py23 import Tag
 from fontTools.misc import sstruct
 from fontTools.ttLib import TTLibError
 import struct
@@ -122,29 +123,15 @@ class SFNTReader(object):
 	def close(self):
 		self.file.close()
 
-	def __deepcopy__(self, memo):
-		"""Overrides the default deepcopy of SFNTReader object, to make it work
-		in the case when TTFont is loaded with lazy=True, and thus reader holds a
-		reference to a file object which is not pickleable.
-		We work around it by manually copying the data into a in-memory stream.
-		"""
-		from copy import deepcopy
-
-		cls = self.__class__
-		obj = cls.__new__(cls)
-		for k, v in self.__dict__.items():
-			if k == "file":
-				obj.file = _copy_file_to_bytes_stream(v)
-			else:
-				obj.__dict__[k] = deepcopy(v, memo)
-		return obj
-
 	def __getstate__(self):
-		"""Makes the SFNTReader pickleable even when TTFont was loaded with lazy=True.
+		"""Makes SFNTReader pickle/deepcopy-able even with TTFont loaded as lazy=True.
 
-		Similar to the custom `__deepcopy__` above, we copy the unpickleable file data
-		to an in-memory bytes stream, which is pickelable and behaves just like a file.
+		If SFNTReader holds a reference to an external file object which is not
+		pickleable, we copy the file data to an in-memory bytes stream, which is
+		pickelable and behaves just like a file.
 		"""
+		if isinstance(self.file, BytesIO):
+			return self.__dict__
 		state = self.__dict__.copy()
 		state["file"] = _copy_file_to_bytes_stream(state["file"])
 		return state
