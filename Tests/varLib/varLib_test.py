@@ -22,6 +22,7 @@ def reload_font(font):
     """(De)serialize to get final binary layout."""
     buf = BytesIO()
     font.save(buf)
+    font.close()
     buf.seek(0)
     return TTFont(buf)
 
