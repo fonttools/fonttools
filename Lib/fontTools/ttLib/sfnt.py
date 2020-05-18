@@ -134,17 +134,33 @@ class SFNTReader(object):
 		obj = cls.__new__(cls)
 		for k, v in self.__dict__.items():
 			if k == "file":
-				pos = v.tell()
-				v.seek(0)
-				buf = BytesIO(v.read())
-				v.seek(pos)
-				buf.seek(pos)
-				if hasattr(v, "name"):
-					buf.name = v.name
-				obj.file = buf
+				obj.file = _copy_file_to_bytes_stream(v)
 			else:
 				obj.__dict__[k] = deepcopy(v, memo)
 		return obj
+
+	def __getstate__(self):
+		"""Makes the SFNTReader pickleable even when TTFont was loaded with lazy=True.
+
+		Similar to the custom `__deepcopy__` above, we copy the unpickleable file data
+		to an in-memory bytes stream, which is pickelable and behaves just like a file.
+		"""
+		state = self.__dict__.copy()
+		state["file"] = _copy_file_to_bytes_stream(state["file"])
+		return state
+
+
+def _copy_file_to_bytes_stream(f) -> BytesIO:
+	# Copy bytes from file object to BytesIO stream.
+	# The returned stream also records the original file `name` and current position.
+	pos = f.tell()
+	f.seek(0)
+	buf = BytesIO(f.read())
+	f.seek(pos)
+	buf.seek(pos)
+	if hasattr(f, "name"):
+		buf.name = f.name
+	return buf
 
 
 # default compression level for WOFF 1.0 tables and metadata
