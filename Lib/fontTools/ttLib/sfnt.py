@@ -123,31 +123,29 @@ class SFNTReader(object):
 	def close(self):
 		self.file.close()
 
-	def __getstate__(self):
-		"""Makes SFNTReader pickle/deepcopy-able even with TTFont loaded as lazy=True.
+	# We define custom __getstate__ and __setstate__ to make SFNTReader pickle-able
+	# and deepcopy-able. When a TTFont is loaded as lazy=True, SFNTReader holds a
+	# reference to an external file object which is not pickleable. So in __getstate__
+	# we store the file name and current position, and in __setstate__ we reopen the
+	# same named file after unpickling.
 
-		If SFNTReader holds a reference to an external file object which is not
-		pickleable, we copy the file data to an in-memory bytes stream, which is
-		pickelable and behaves just like a file.
-		"""
+	def __getstate__(self):
 		if isinstance(self.file, BytesIO):
+			# BytesIO is already pickleable, return the state unmodified
 			return self.__dict__
+
+		# remove unpickleable file attribute, and only store its name and pos
 		state = self.__dict__.copy()
-		state["file"] = _copy_file_to_bytes_stream(state["file"])
+		del state["file"]
+		state["_filename"] = self.file.name
+		state["_filepos"] = self.file.tell()
 		return state
 
-
-def _copy_file_to_bytes_stream(f) -> BytesIO:
-	# Copy bytes from file object to BytesIO stream.
-	# The returned stream also records the original file `name` and current position.
-	pos = f.tell()
-	f.seek(0)
-	buf = BytesIO(f.read())
-	f.seek(pos)
-	buf.seek(pos)
-	if hasattr(f, "name"):
-		buf.name = f.name
-	return buf
+	def __setstate__(self, state):
+		if "file" not in state:
+			self.file = open(state.pop("_filename"), "rb")
+			self.file.seek(state.pop("_filepos"))
+		self.__dict__.update(state)
 
 
 # default compression level for WOFF 1.0 tables and metadata
