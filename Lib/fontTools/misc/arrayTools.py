@@ -1,8 +1,6 @@
-#
-# Various array and rectangle tools, but mostly rectangles, hence the
-# name of this module (not).
-#
-
+"""Routines for calculating bounding boxes, point in rectangle calculations and
+so on.
+"""
 
 from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
@@ -11,8 +9,13 @@ import math
 import operator
 
 def calcBounds(array):
-    """Return the bounding rectangle of a 2D points array as a tuple:
-    (xMin, yMin, xMax, yMax)
+    """Calculate the bounding rectangle of a 2D points array.
+
+    Args:
+        array: A sequence of 2D tuples.
+
+    Returns:
+        A four-item tuple representing the bounding rectangle ``(xMin, yMin, xMax, yMax)``.
     """
     if len(array) == 0:
         return 0, 0, 0, 0
@@ -21,29 +24,64 @@ def calcBounds(array):
     return min(xs), min(ys), max(xs), max(ys)
 
 def calcIntBounds(array, round=otRound):
-    """Return the integer bounding rectangle of a 2D points array as a
-    tuple: (xMin, yMin, xMax, yMax)
-    Values are rounded to closest integer towards +Infinity using otRound
-    function by default, unless an optional 'round' function is passed.
+    """Calculate the integer bounding rectangle of a 2D points array.
+
+    Values are rounded to closest integer towards ``+Infinity`` using the
+    :func:`fontTools.misc.fixedTools.otRound` function by default, unless
+    an optional ``round`` function is passed.
+
+    Args:
+        array: A sequence of 2D tuples.
+        round: A rounding function of type ``f(x: float) -> int``.
+
+    Returns:
+        A four-item tuple of integers representing the bounding rectangle:
+        ``(xMin, yMin, xMax, yMax)``.
     """
     return tuple(round(v) for v in calcBounds(array))
 
 
 def updateBounds(bounds, p, min=min, max=max):
-    """Return the bounding recangle of rectangle bounds and point (x, y)."""
+    """Add a point to a bounding rectangle.
+
+    Args:
+        bounds: A bounding rectangle expressed as a tuple
+            ``(xMin, yMin, xMax, yMax)``.
+        p: A 2D tuple representing a point.
+        min,max: functions to compute the minimum and maximum.
+
+    Returns:
+        The updated bounding rectangle ``(xMin, yMin, xMax, yMax)``.
+    """
     (x, y) = p
     xMin, yMin, xMax, yMax = bounds
     return min(xMin, x), min(yMin, y), max(xMax, x), max(yMax, y)
 
 def pointInRect(p, rect):
-    """Return True when point (x, y) is inside rect."""
+    """Test if a point is inside a bounding rectangle.
+
+    Args:
+        p: A 2D tuple representing a point.
+        rect: A bounding rectangle expressed as a tuple
+            ``(xMin, yMin, xMax, yMax)``.
+
+    Returns:
+        ``True`` if the point is inside the rectangle, ``False`` otherwise.
+    """
     (x, y) = p
     xMin, yMin, xMax, yMax = rect
     return (xMin <= x <= xMax) and (yMin <= y <= yMax)
 
 def pointsInRect(array, rect):
-    """Find out which points or array are inside rect.
-    Returns an array with a boolean for each point.
+    """Determine which points are inside a bounding rectangle.
+
+    Args:
+        array: A sequence of 2D tuples.
+        rect: A bounding rectangle expressed as a tuple
+            ``(xMin, yMin, xMax, yMax)``.
+
+    Returns:
+        A list containing the points inside the rectangle.
     """
     if len(array) < 1:
         return []
@@ -51,41 +89,105 @@ def pointsInRect(array, rect):
     return [(xMin <= x <= xMax) and (yMin <= y <= yMax) for x, y in array]
 
 def vectorLength(vector):
-    """Return the length of the given vector."""
+    """Calculate the length of the given vector.
+
+    Args:
+        vector: A 2D tuple.
+
+    Returns:
+        The Euclidean length of the vector.
+    """
     x, y = vector
     return math.sqrt(x**2 + y**2)
 
 def asInt16(array):
-    """Round and cast to 16 bit integer."""
+    """Round a list of floats to 16-bit signed integers.
+
+    Args:
+        array: List of float values.
+
+    Returns:
+        A list of rounded integers.
+    """
     return [int(math.floor(i+0.5)) for i in array]
 
 
 def normRect(rect):
-    """Normalize the rectangle so that the following holds:
+    """Normalize a bounding box rectangle.
+
+    This function "turns the rectangle the right way up", so that the following
+    holds::
+
         xMin <= xMax and yMin <= yMax
+
+    Args:
+        rect: A bounding rectangle expressed as a tuple
+            ``(xMin, yMin, xMax, yMax)``.
+
+    Returns:
+        A normalized bounding rectangle.
     """
     (xMin, yMin, xMax, yMax) = rect
     return min(xMin, xMax), min(yMin, yMax), max(xMin, xMax), max(yMin, yMax)
 
 def scaleRect(rect, x, y):
-    """Scale the rectangle by x, y."""
+    """Scale a bounding box rectangle.
+
+    Args:
+        rect: A bounding rectangle expressed as a tuple
+            ``(xMin, yMin, xMax, yMax)``.
+        x: Factor to scale the rectangle along the X axis.
+        Y: Factor to scale the rectangle along the Y axis.
+
+    Returns:
+        A scaled bounding rectangle.
+    """
     (xMin, yMin, xMax, yMax) = rect
     return xMin * x, yMin * y, xMax * x, yMax * y
 
 def offsetRect(rect, dx, dy):
-    """Offset the rectangle by dx, dy."""
+    """Offset a bounding box rectangle.
+
+    Args:
+        rect: A bounding rectangle expressed as a tuple
+            ``(xMin, yMin, xMax, yMax)``.
+        dx: Amount to offset the rectangle along the X axis.
+        dY: Amount to offset the rectangle along the Y axis.
+
+    Returns:
+        An offset bounding rectangle.
+    """
     (xMin, yMin, xMax, yMax) = rect
     return xMin+dx, yMin+dy, xMax+dx, yMax+dy
 
 def insetRect(rect, dx, dy):
-    """Inset the rectangle by dx, dy on all sides."""
+    """Inset a bounding box rectangle on all sides.
+
+    Args:
+        rect: A bounding rectangle expressed as a tuple
+            ``(xMin, yMin, xMax, yMax)``.
+        dx: Amount to inset the rectangle along the X axis.
+        dY: Amount to inset the rectangle along the Y axis.
+
+    Returns:
+        An inset bounding rectangle.
+    """
     (xMin, yMin, xMax, yMax) = rect
     return xMin+dx, yMin+dy, xMax-dx, yMax-dy
 
 def sectRect(rect1, rect2):
-    """Return a boolean and a rectangle. If the input rectangles intersect, return
-    True and the intersecting rectangle. Return False and (0, 0, 0, 0) if the input
-    rectangles don't intersect.
+    """Test for rectangle-rectangle intersection.
+
+    Args:
+        rect1: First bounding rectangle, expressed as tuples
+            ``(xMin, yMin, xMax, yMax)``.
+        rect2: Second bounding rectangle.
+
+    Returns:
+        A boolean and a rectangle.
+        If the input rectangles intersect, returns ``True`` and the intersecting
+        rectangle. Returns ``False`` and ``(0, 0, 0, 0)`` if the input
+        rectangles don't intersect.
     """
     (xMin1, yMin1, xMax1, yMax1) = rect1
     (xMin2, yMin2, xMax2, yMax2) = rect2
@@ -96,9 +198,16 @@ def sectRect(rect1, rect2):
     return True, (xMin, yMin, xMax, yMax)
 
 def unionRect(rect1, rect2):
-    """Return the smallest rectangle in which both input rectangles are fully
-    enclosed. In other words, return the total bounding rectangle of both input
-    rectangles.
+    """Determine union of bounding rectangles.
+
+    Args:
+        rect1: First bounding rectangle, expressed as tuples
+            ``(xMin, yMin, xMax, yMax)``.
+        rect2: Second bounding rectangle.
+
+    Returns:
+        The smallest rectangle in which both input rectangles are fully
+        enclosed.
     """
     (xMin1, yMin1, xMax1, yMax1) = rect1
     (xMin2, yMin2, xMax2, yMax2) = rect2
@@ -106,16 +215,32 @@ def unionRect(rect1, rect2):
                               max(xMax1, xMax2), max(yMax1, yMax2))
     return (xMin, yMin, xMax, yMax)
 
-def rectCenter(rect0):
-    """Return the center of the rectangle as an (x, y) coordinate."""
-    (xMin, yMin, xMax, yMax) = rect0
+def rectCenter(rect):
+    """Determine rectangle center.
+
+    Args:
+        rect: Bounding rectangle, expressed as tuples
+            ``(xMin, yMin, xMax, yMax)``.
+
+    Returns:
+        A 2D tuple representing the point at the center of the rectangle.
+    """
+    (xMin, yMin, xMax, yMax) = rect
     return (xMin+xMax)/2, (yMin+yMax)/2
 
-def intRect(rect1):
-    """Return the rectangle, rounded off to integer values, but guaranteeing that
-    the resulting rectangle is NOT smaller than the original.
+def intRect(rect):
+    """Round a rectangle to integer values.
+
+    Guarantees that the resulting rectangle is NOT smaller than the original.
+
+    Args:
+        rect: Bounding rectangle, expressed as tuples
+            ``(xMin, yMin, xMax, yMax)``.
+
+    Returns:
+        A rounded bounding rectangle.
     """
-    (xMin, yMin, xMax, yMax) = rect1
+    (xMin, yMin, xMax, yMax) = rect
     xMin = int(math.floor(xMin))
     yMin = int(math.floor(yMin))
     xMax = int(math.ceil(xMax))
@@ -124,9 +249,18 @@ def intRect(rect1):
 
 
 class Vector(object):
-    """A math-like vector."""
+    """A math-like vector.
+
+    Represents an n-dimensional numeric vector. ``Vector`` objects support
+    vector addition and subtraction, scalar multiplication and division,
+    negation, rounding, and comparison tests.
+
+    Attributes:
+        values: Sequence of values stored in the vector.
+    """
 
     def __init__(self, values, keep=False):
+        """Initialize a vector. If ``keep`` is true, values will be copied."""
         self.values = values if keep else list(values)
 
     def __getitem__(self, index):
@@ -191,6 +325,7 @@ class Vector(object):
     def __round__(self):
         return Vector(self._unaryOp(round), keep=True)
     def toInt(self):
+        """Synonym for ``round``."""
         return self.__round__()
 
     def __eq__(self, other):
@@ -208,6 +343,8 @@ class Vector(object):
     def __abs__(self):
         return math.sqrt(sum([x*x for x in self.values]))
     def dot(self, other):
+        """Performs vector dot product, returning sum of
+        ``a[0] * b[0], a[1] * b[1], ...``"""
         a = self.values
         b = other.values if type(other) == Vector else b
         assert len(a) == len(b)
@@ -215,29 +352,37 @@ class Vector(object):
 
 
 def pairwise(iterable, reverse=False):
-    """Iterate over current and next items in iterable, optionally in
-    reverse order.
+    """Iterate over current and next items in iterable.
 
-    >>> tuple(pairwise([]))
-    ()
-    >>> tuple(pairwise([], reverse=True))
-    ()
-    >>> tuple(pairwise([0]))
-    ((0, 0),)
-    >>> tuple(pairwise([0], reverse=True))
-    ((0, 0),)
-    >>> tuple(pairwise([0, 1]))
-    ((0, 1), (1, 0))
-    >>> tuple(pairwise([0, 1], reverse=True))
-    ((1, 0), (0, 1))
-    >>> tuple(pairwise([0, 1, 2]))
-    ((0, 1), (1, 2), (2, 0))
-    >>> tuple(pairwise([0, 1, 2], reverse=True))
-    ((2, 1), (1, 0), (0, 2))
-    >>> tuple(pairwise(['a', 'b', 'c', 'd']))
-    (('a', 'b'), ('b', 'c'), ('c', 'd'), ('d', 'a'))
-    >>> tuple(pairwise(['a', 'b', 'c', 'd'], reverse=True))
-    (('d', 'c'), ('c', 'b'), ('b', 'a'), ('a', 'd'))
+    Args:
+        iterable: An iterable
+        reverse: If true, iterate in reverse order.
+
+    Returns:
+        A iterable yielding two elements per iteration.
+
+    Example:
+
+        >>> tuple(pairwise([]))
+        ()
+        >>> tuple(pairwise([], reverse=True))
+        ()
+        >>> tuple(pairwise([0]))
+        ((0, 0),)
+        >>> tuple(pairwise([0], reverse=True))
+        ((0, 0),)
+        >>> tuple(pairwise([0, 1]))
+        ((0, 1), (1, 0))
+        >>> tuple(pairwise([0, 1], reverse=True))
+        ((1, 0), (0, 1))
+        >>> tuple(pairwise([0, 1, 2]))
+        ((0, 1), (1, 2), (2, 0))
+        >>> tuple(pairwise([0, 1, 2], reverse=True))
+        ((2, 1), (1, 0), (0, 2))
+        >>> tuple(pairwise(['a', 'b', 'c', 'd']))
+        (('a', 'b'), ('b', 'c'), ('c', 'd'), ('d', 'a'))
+        >>> tuple(pairwise(['a', 'b', 'c', 'd'], reverse=True))
+        (('d', 'c'), ('c', 'b'), ('b', 'a'), ('a', 'd'))
     """
     if not iterable:
         return

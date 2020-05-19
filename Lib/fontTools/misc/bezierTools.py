@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""fontTools.misc.bezierTools.py -- tools for working with bezier path segments.
+"""fontTools.misc.bezierTools.py -- tools for working with Bezier path segments.
 """
 
 from fontTools.misc.arrayTools import calcBounds
@@ -29,7 +29,19 @@ __all__ = [
 
 
 def calcCubicArcLength(pt1, pt2, pt3, pt4, tolerance=0.005):
-    """Return the arc length for a cubic bezier segment."""
+    """Calculates the arc length for a cubic Bezier segment.
+
+    Whereas :func:`approximateCubicArcLength` approximates the length, this
+    function calculates it by "measuring", recursively dividing the curve
+    until the divided segments are shorter than ``tolerance``.
+
+    Args:
+        pt1,pt2,pt3,pt4: Control points of the Bezier as 2D tuples.
+        tolerance: Controls the precision of the calcuation.
+
+    Returns:
+        Arc length value.
+    """
     return calcCubicArcLengthC(complex(*pt1), complex(*pt2), complex(*pt3), complex(*pt4), tolerance)
 
 
@@ -49,7 +61,15 @@ def _calcCubicArcLengthCRecurse(mult, p0, p1, p2, p3):
 		return _calcCubicArcLengthCRecurse(mult, *one) + _calcCubicArcLengthCRecurse(mult, *two)
 
 def calcCubicArcLengthC(pt1, pt2, pt3, pt4, tolerance=0.005):
-    """Return the arc length for a cubic bezier segment using complex points."""
+    """Calculates the arc length for a cubic Bezier segment.
+
+    Args:
+        pt1,pt2,pt3,pt4: Control points of the Bezier as complex numbers.
+        tolerance: Controls the precision of the calcuation.
+
+    Returns:
+        Arc length value.
+    """
     mult = 1. + 1.5 * tolerance # The 1.5 is a empirical hack; no math
     return _calcCubicArcLengthCRecurse(mult, pt1, pt2, pt3, pt4)
 
@@ -69,8 +89,17 @@ def _intSecAtan(x):
 
 
 def calcQuadraticArcLength(pt1, pt2, pt3):
-    """Return the arc length for a qudratic bezier segment.
-    pt1 and pt3 are the "anchor" points, pt2 is the "handle".
+    """Calculates the arc length for a quadratic Bezier segment.
+
+    Args:
+        pt1: Start point of the Bezier as 2D tuple.
+        pt2: Handle point of the Bezier as 2D tuple.
+        pt3: End point of the Bezier as 2D tuple.
+
+    Returns:
+        Arc length value.
+
+    Example::
 
         >>> calcQuadraticArcLength((0, 0), (0, 0), (0, 0)) # empty segment
         0.0
@@ -95,9 +124,16 @@ def calcQuadraticArcLength(pt1, pt2, pt3):
 
 
 def calcQuadraticArcLengthC(pt1, pt2, pt3):
-    """Return the arc length for a qudratic bezier segment using complex points.
-    pt1 and pt3 are the "anchor" points, pt2 is the "handle"."""
+    """Calculates the arc length for a quadratic Bezier segment.
 
+    Args:
+        pt1: Start point of the Bezier as a complex number.
+        pt2: Handle point of the Bezier as a complex number.
+        pt3: End point of the Bezier as a complex number.
+
+    Returns:
+        Arc length value.
+    """
     # Analytical solution to the length of a quadratic bezier.
     # I'll explain how I arrived at this later.
     d0 = pt2 - pt1
@@ -120,15 +156,36 @@ def calcQuadraticArcLengthC(pt1, pt2, pt3):
 
 
 def approximateQuadraticArcLength(pt1, pt2, pt3):
-    # Approximate length of quadratic Bezier curve using Gauss-Legendre quadrature
-    # with n=3 points.
+    """Calculates the arc length for a quadratic Bezier segment.
+
+    Uses Gauss-Legendre quadrature for a branch-free approximation.
+    See :func:`calcQuadraticArcLength` for a slower but more accurate result.
+
+    Args:
+        pt1: Start point of the Bezier as 2D tuple.
+        pt2: Handle point of the Bezier as 2D tuple.
+        pt3: End point of the Bezier as 2D tuple.
+
+    Returns:
+        Approximate arc length value.
+    """
     return approximateQuadraticArcLengthC(complex(*pt1), complex(*pt2), complex(*pt3))
 
 
 def approximateQuadraticArcLengthC(pt1, pt2, pt3):
-    # Approximate length of quadratic Bezier curve using Gauss-Legendre quadrature
-    # with n=3 points for complex points.
-    #
+    """Calculates the arc length for a quadratic Bezier segment.
+
+    Uses Gauss-Legendre quadrature for a branch-free approximation.
+    See :func:`calcQuadraticArcLength` for a slower but more accurate result.
+
+    Args:
+        pt1: Start point of the Bezier as a complex number.
+        pt2: Handle point of the Bezier as a complex number.
+        pt3: End point of the Bezier as a complex number.
+
+    Returns:
+        Approximate arc length value.
+    """
     # This, essentially, approximates the length-of-derivative function
     # to be integrated with the best-matching fifth-degree polynomial
     # approximation of it.
@@ -145,8 +202,17 @@ def approximateQuadraticArcLengthC(pt1, pt2, pt3):
 
 
 def calcQuadraticBounds(pt1, pt2, pt3):
-    """Return the bounding rectangle for a qudratic bezier segment.
-    pt1 and pt3 are the "anchor" points, pt2 is the "handle".
+    """Calculates the bounding rectangle for a quadratic Bezier segment.
+
+    Args:
+        pt1: Start point of the Bezier as a 2D tuple.
+        pt2: Handle point of the Bezier as a 2D tuple.
+        pt3: End point of the Bezier as a 2D tuple.
+
+    Returns:
+        A four-item tuple representing the bounding rectangle ``(xMin, yMin, xMax, yMax)``.
+
+    Example::
 
         >>> calcQuadraticBounds((0, 0), (50, 100), (100, 0))
         (0, 0, 100, 50.0)
@@ -166,8 +232,18 @@ def calcQuadraticBounds(pt1, pt2, pt3):
 
 
 def approximateCubicArcLength(pt1, pt2, pt3, pt4):
-    """Return the approximate arc length for a cubic bezier segment.
-    pt1 and pt4 are the "anchor" points, pt2 and pt3 are the "handles".
+    """Approximates the arc length for a cubic Bezier segment.
+
+    Uses Gauss-Lobatto quadrature with n=5 points to approximate arc length.
+    See :func:`calcCubicArcLength` for a slower but more accurate result.
+
+    Args:
+        pt1,pt2,pt3,pt4: Control points of the Bezier as 2D tuples.
+
+    Returns:
+        Arc length value.
+
+    Example::
 
         >>> approximateCubicArcLength((0, 0), (25, 100), (75, 100), (100, 0))
         190.04332968932817
@@ -180,18 +256,18 @@ def approximateCubicArcLength(pt1, pt2, pt3, pt4):
         >>> approximateCubicArcLength((0, 0), (50, 0), (100, -50), (-50, 0)) # cusp
         154.80848416537057
     """
-    # Approximate length of cubic Bezier curve using Gauss-Lobatto quadrature
-    # with n=5 points.
     return approximateCubicArcLengthC(complex(*pt1), complex(*pt2), complex(*pt3), complex(*pt4))
 
 
 def approximateCubicArcLengthC(pt1, pt2, pt3, pt4):
-    """Return the approximate arc length for a cubic bezier segment of complex points.
-    pt1 and pt4 are the "anchor" points, pt2 and pt3 are the "handles"."""
+    """Approximates the arc length for a cubic Bezier segment.
 
-    # Approximate length of cubic Bezier curve using Gauss-Lobatto quadrature
-    # with n=5 points for complex points.
-    #
+    Args:
+        pt1,pt2,pt3,pt4: Control points of the Bezier as complex numbers.
+
+    Returns:
+        Arc length value.
+    """
     # This, essentially, approximates the length-of-derivative function
     # to be integrated with the best-matching seventh-degree polynomial
     # approximation of it.
@@ -210,8 +286,15 @@ def approximateCubicArcLengthC(pt1, pt2, pt3, pt4):
 
 
 def calcCubicBounds(pt1, pt2, pt3, pt4):
-    """Return the bounding rectangle for a cubic bezier segment.
-    pt1 and pt4 are the "anchor" points, pt2 and pt3 are the "handles".
+    """Calculates the bounding rectangle for a quadratic Bezier segment.
+
+    Args:
+        pt1,pt2,pt3,pt4: Control points of the Bezier as 2D tuples.
+
+    Returns:
+        A four-item tuple representing the bounding rectangle ``(xMin, yMin, xMax, yMax)``.
+
+    Example::
 
         >>> calcCubicBounds((0, 0), (25, 100), (75, 100), (100, 0))
         (0, 0, 100, 75.0)
@@ -235,11 +318,22 @@ def calcCubicBounds(pt1, pt2, pt3, pt4):
 
 
 def splitLine(pt1, pt2, where, isHorizontal):
-    """Split the line between pt1 and pt2 at position 'where', which
-    is an x coordinate if isHorizontal is False, a y coordinate if
-    isHorizontal is True. Return a list of two line segments if the
-    line was successfully split, or a list containing the original
-    line.
+    """Split a line at a given coordinate.
+
+    Args:
+        pt1: Start point of line as 2D tuple.
+        pt2: End point of line as 2D tuple.
+        where: Position at which to split the line.
+        isHorizontal: Direction of the ray splitting the line. If true,
+            ``where`` is interpreted as a Y coordinate; if false, then
+            ``where`` is interpreted as an X coordinate.
+
+    Returns:
+        A list of two line segments (each line segment being two 2D tuples)
+        if the line was successfully split, or a list containing the original
+        line.
+
+    Example::
 
         >>> printSegments(splitLine((0, 0), (100, 100), 50, True))
         ((0, 0), (50, 50))
@@ -281,9 +375,21 @@ def splitLine(pt1, pt2, where, isHorizontal):
 
 
 def splitQuadratic(pt1, pt2, pt3, where, isHorizontal):
-    """Split the quadratic curve between pt1, pt2 and pt3 at position 'where',
-    which is an x coordinate if isHorizontal is False, a y coordinate if
-    isHorizontal is True. Return a list of curve segments.
+    """Split a quadratic Bezier curve at a given coordinate.
+
+    Args:
+        pt1,pt2,pt3: Control points of the Bezier as 2D tuples.
+        where: Position at which to split the curve.
+        isHorizontal: Direction of the ray splitting the curve. If true,
+            ``where`` is interpreted as a Y coordinate; if false, then
+            ``where`` is interpreted as an X coordinate.
+
+    Returns:
+        A list of two curve segments (each curve segment being three 2D tuples)
+        if the curve was successfully split, or a list containing the original
+        curve.
+
+    Example::
 
         >>> printSegments(splitQuadratic((0, 0), (50, 100), (100, 0), 150, False))
         ((0, 0), (50, 100), (100, 0))
@@ -313,9 +419,21 @@ def splitQuadratic(pt1, pt2, pt3, where, isHorizontal):
 
 
 def splitCubic(pt1, pt2, pt3, pt4, where, isHorizontal):
-    """Split the cubic curve between pt1, pt2, pt3 and pt4 at position 'where',
-    which is an x coordinate if isHorizontal is False, a y coordinate if
-    isHorizontal is True. Return a list of curve segments.
+    """Split a cubic Bezier curve at a given coordinate.
+
+    Args:
+        pt1,pt2,pt3,pt4: Control points of the Bezier as 2D tuples.
+        where: Position at which to split the curve.
+        isHorizontal: Direction of the ray splitting the curve. If true,
+            ``where`` is interpreted as a Y coordinate; if false, then
+            ``where`` is interpreted as an X coordinate.
+
+    Returns:
+        A list of two curve segments (each curve segment being four 2D tuples)
+        if the curve was successfully split, or a list containing the original
+        curve.
+
+    Example::
 
         >>> printSegments(splitCubic((0, 0), (25, 100), (75, 100), (100, 0), 150, False))
         ((0, 0), (25, 100), (75, 100), (100, 0))
@@ -337,8 +455,16 @@ def splitCubic(pt1, pt2, pt3, pt4, where, isHorizontal):
 
 
 def splitQuadraticAtT(pt1, pt2, pt3, *ts):
-    """Split the quadratic curve between pt1, pt2 and pt3 at one or more
-    values of t. Return a list of curve segments.
+    """Split a quadratic Bezier curve at one or more values of t.
+
+    Args:
+        pt1,pt2,pt3: Control points of the Bezier as 2D tuples.
+        *ts: Positions at which to split the curve.
+
+    Returns:
+        A list of curve segments (each curve segment being three 2D tuples).
+
+    Examples::
 
         >>> printSegments(splitQuadraticAtT((0, 0), (50, 100), (100, 0), 0.5))
         ((0, 0), (25, 50), (50, 50))
@@ -353,8 +479,16 @@ def splitQuadraticAtT(pt1, pt2, pt3, *ts):
 
 
 def splitCubicAtT(pt1, pt2, pt3, pt4, *ts):
-    """Split the cubic curve between pt1, pt2, pt3 and pt4 at one or more
-    values of t. Return a list of curve segments.
+    """Split a cubic Bezier curve at one or more values of t.
+
+    Args:
+        pt1,pt2,pt3,pt4: Control points of the Bezier as 2D tuples.
+        *ts: Positions at which to split the curve.
+
+    Returns:
+        A list of curve segments (each curve segment being four 2D tuples).
+
+    Examples::
 
         >>> printSegments(splitCubicAtT((0, 0), (25, 100), (75, 100), (100, 0), 0.5))
         ((0, 0), (12.5, 50), (31.25, 75), (50, 75))
@@ -437,10 +571,18 @@ from math import sqrt, acos, cos, pi
 
 def solveQuadratic(a, b, c,
         sqrt=sqrt):
-    """Solve a quadratic equation where a, b and c are real.
-        a*x*x + b*x + c = 0
-    This function returns a list of roots. Note that the returned list
-    is neither guaranteed to be sorted nor to contain unique values!
+    """Solve a quadratic equation.
+
+    Solves *a*x*x + b*x + c = 0* where a, b and c are real.
+
+    Args:
+        a: coefficient of *x²*
+        b: coefficient of *x*
+        c: constant term
+
+    Returns:
+        A list of roots. Note that the returned list is neither guaranteed to
+        be sorted nor to contain unique values!
     """
     if abs(a) < epsilon:
         if abs(b) < epsilon:
@@ -462,25 +604,36 @@ def solveQuadratic(a, b, c,
 
 
 def solveCubic(a, b, c, d):
-    """Solve a cubic equation where a, b, c and d are real.
-        a*x*x*x + b*x*x + c*x + d = 0
-    This function returns a list of roots. Note that the returned list
-    is neither guaranteed to be sorted nor to contain unique values!
+    """Solve a cubic equation.
 
-    >>> solveCubic(1, 1, -6, 0)
-    [-3.0, -0.0, 2.0]
-    >>> solveCubic(-10.0, -9.0, 48.0, -29.0)
-    [-2.9, 1.0, 1.0]
-    >>> solveCubic(-9.875, -9.0, 47.625, -28.75)
-    [-2.911392, 1.0, 1.0]
-    >>> solveCubic(1.0, -4.5, 6.75, -3.375)
-    [1.5, 1.5, 1.5]
-    >>> solveCubic(-12.0, 18.0, -9.0, 1.50023651123)
-    [0.5, 0.5, 0.5]
-    >>> solveCubic(
-    ...     9.0, 0.0, 0.0, -7.62939453125e-05
-    ... ) == [-0.0, -0.0, -0.0]
-    True
+    Solves *a*x*x*x + b*x*x + c*x + d = 0* where a, b, c and d are real.
+
+    Args:
+        a: coefficient of *x³*
+        b: coefficient of *x²*
+        c: coefficient of *x*
+        d: constant term
+
+    Returns:
+        A list of roots. Note that the returned list is neither guaranteed to
+        be sorted nor to contain unique values!
+
+    Examples::
+
+        >>> solveCubic(1, 1, -6, 0)
+        [-3.0, -0.0, 2.0]
+        >>> solveCubic(-10.0, -9.0, 48.0, -29.0)
+        [-2.9, 1.0, 1.0]
+        >>> solveCubic(-9.875, -9.0, 47.625, -28.75)
+        [-2.911392, 1.0, 1.0]
+        >>> solveCubic(1.0, -4.5, 6.75, -3.375)
+        [1.5, 1.5, 1.5]
+        >>> solveCubic(-12.0, 18.0, -9.0, 1.50023651123)
+        [0.5, 0.5, 0.5]
+        >>> solveCubic(
+        ...     9.0, 0.0, 0.0, -7.62939453125e-05
+        ... ) == [-0.0, -0.0, -0.0]
+        True
     """
     #
     # adapted from:
