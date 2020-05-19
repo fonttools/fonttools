@@ -12,7 +12,8 @@ classes, since whenever to number of tables changes or whenever
 a table's length chages you need to rewrite the whole file anyway.
 """
 
-from fontTools.misc.py23 import *
+from io import BytesIO
+from fontTools.misc.py23 import Tag
 from fontTools.misc import sstruct
 from fontTools.ttLib import TTLibError
 import struct
@@ -122,29 +123,29 @@ class SFNTReader(object):
 	def close(self):
 		self.file.close()
 
-	def __deepcopy__(self, memo):
-		"""Overrides the default deepcopy of SFNTReader object, to make it work
-		in the case when TTFont is loaded with lazy=True, and thus reader holds a
-		reference to a file object which is not pickleable.
-		We work around it by manually copying the data into a in-memory stream.
-		"""
-		from copy import deepcopy
+	# We define custom __getstate__ and __setstate__ to make SFNTReader pickle-able
+	# and deepcopy-able. When a TTFont is loaded as lazy=True, SFNTReader holds a
+	# reference to an external file object which is not pickleable. So in __getstate__
+	# we store the file name and current position, and in __setstate__ we reopen the
+	# same named file after unpickling.
 
-		cls = self.__class__
-		obj = cls.__new__(cls)
-		for k, v in self.__dict__.items():
-			if k == "file":
-				pos = v.tell()
-				v.seek(0)
-				buf = BytesIO(v.read())
-				v.seek(pos)
-				buf.seek(pos)
-				if hasattr(v, "name"):
-					buf.name = v.name
-				obj.file = buf
-			else:
-				obj.__dict__[k] = deepcopy(v, memo)
-		return obj
+	def __getstate__(self):
+		if isinstance(self.file, BytesIO):
+			# BytesIO is already pickleable, return the state unmodified
+			return self.__dict__
+
+		# remove unpickleable file attribute, and only store its name and pos
+		state = self.__dict__.copy()
+		del state["file"]
+		state["_filename"] = self.file.name
+		state["_filepos"] = self.file.tell()
+		return state
+
+	def __setstate__(self, state):
+		if "file" not in state:
+			self.file = open(state.pop("_filename"), "rb")
+			self.file.seek(state.pop("_filepos"))
+		self.__dict__.update(state)
 
 
 # default compression level for WOFF 1.0 tables and metadata

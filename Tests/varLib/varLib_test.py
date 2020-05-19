@@ -22,6 +22,9 @@ def reload_font(font):
     """(De)serialize to get final binary layout."""
     buf = BytesIO()
     font.save(buf)
+    # Close the font to release filesystem resources so that on Windows the tearDown
+    # method can successfully remove the temporary directory created during setUp.
+    font.close()
     buf.seek(0)
     return TTFont(buf)
 
