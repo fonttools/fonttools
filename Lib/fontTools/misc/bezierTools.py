@@ -579,7 +579,6 @@ def solveQuadratic(a, b, c,
         a: coefficient of *x²*
         b: coefficient of *x*
         c: constant term
-        sqrt: square root function to be used
 
     Returns:
         A list of roots. Note that the returned list is neither guaranteed to
@@ -605,7 +604,7 @@ def solveQuadratic(a, b, c,
 
 
 def solveCubic(a, b, c, d):
-    """Solve a quadratic equation.
+    """Solve a cubic equation.
 
     Solves *a*x*x*x + b*x*x + c*x + d = 0* where a, b, c and d are real.
 
@@ -614,7 +613,6 @@ def solveCubic(a, b, c, d):
         b: coefficient of *x²*
         c: coefficient of *x*
         d: constant term
-        sqrt: square root function to be used
 
     Returns:
         A list of roots. Note that the returned list is neither guaranteed to
