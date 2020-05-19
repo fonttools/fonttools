@@ -1,3 +1,13 @@
+- [sfnt] Make ``SFNTReader`` pickleable even when TTFont is loaded with lazy=True
+  option and thus keeps a reference to an external file (#1962, #1967).
+- [feaLib.ast] Restore backward compatibility (broken in 4.10 with #1905) for
+  ``ChainContextPosStatement`` and ``ChainContextSubstStatement`` classes.
+  Make them accept either list of lookups or list of lists of lookups (#1961).
+- [docs] Document some modules in ``fontTools.misc`` package: ``arrayTools``,
+  ``bezierTools`` ``cliTools`` and ``eexec`` (#1956).
+- [ttLib._n_a_m_e] Fixed ``findMultilingualName()`` when name record's ``string`` is
+  encoded as bytes sequence (#1963).
+
 4.10.0 (released 2020-05-15)
 ----------------------------
 
