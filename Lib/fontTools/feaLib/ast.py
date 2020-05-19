@@ -617,16 +617,24 @@ class ChainContextPosStatement(Statement):
     ``prefix``, ``glyphs``, and ``suffix`` should be lists of
     `glyph-containing objects`_ .
 
-    ``lookups`` should be a list of lists containing :class:`LookupBlock`
-    statements. The length of the outer list should equal to the length of
-    ``glyphs``; the inner lists can be of variable length. Where there is no
-    chaining lookup at the given glyph position, the entry in ``lookups``
-    should be ``None``."""
+    ``lookups`` should be a list of elements representing what lookups
+    to apply at each glyph position. Each element should be a
+    :class:`LookupBlock` to apply a single chaining lookup at the given
+    position, a list of :class:`LookupBlock`\ s to apply multiple
+    lookups, or ``None`` to apply no lookup. The length of the outer
+    list should equal the length of ``glyphs``; the inner lists can be
+    of variable length."""
 
     def __init__(self, prefix, glyphs, suffix, lookups, location=None):
         Statement.__init__(self, location)
         self.prefix, self.glyphs, self.suffix = prefix, glyphs, suffix
-        self.lookups = lookups
+        self.lookups = list(lookups)
+        for i, lookup in enumerate(lookups):
+            if lookup:
+                try:
+                    (_ for _ in lookup)
+                except TypeError:
+                    self.lookups[i] = [lookup]
 
     def build(self, builder):
         """Calls the builder's ``add_chain_context_pos`` callback."""
@@ -662,14 +670,24 @@ class ChainContextSubstStatement(Statement):
     ``prefix``, ``glyphs``, and ``suffix`` should be lists of
     `glyph-containing objects`_ .
 
-    ``lookups`` should be a list of :class:`LookupBlock` statements, with
-    length equal to the length of ``glyphs``. Where there is no chaining
-    lookup at the given glyph position, the entry in ``lookups`` should be
-    ``None``."""
+    ``lookups`` should be a list of elements representing what lookups
+    to apply at each glyph position. Each element should be a
+    :class:`LookupBlock` to apply a single chaining lookup at the given
+    position, a list of :class:`LookupBlock`\ s to apply multiple
+    lookups, or ``None`` to apply no lookup. The length of the outer
+    list should equal the length of ``glyphs``; the inner lists can be
+    of variable length."""
+
     def __init__(self, prefix, glyphs, suffix, lookups, location=None):
         Statement.__init__(self, location)
         self.prefix, self.glyphs, self.suffix = prefix, glyphs, suffix
-        self.lookups = lookups
+        self.lookups = list(lookups)
+        for i, lookup in enumerate(lookups):
+            if lookup:
+                try:
+                    (_ for _ in lookup)
+                except TypeError:
+                    self.lookups[i] = [lookup]
 
     def build(self, builder):
         """Calls the builder's ``add_chain_context_subst`` callback."""
