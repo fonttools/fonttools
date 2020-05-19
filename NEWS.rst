@@ -1,3 +1,6 @@
+4.10.1 (released 2020-05-19)
+----------------------------
+
 - [sfnt] Make ``SFNTReader`` pickleable even when TTFont is loaded with lazy=True
   option and thus keeps a reference to an external file (#1962, #1967).
 - [feaLib.ast] Restore backward compatibility (broken in 4.10 with #1905) for
