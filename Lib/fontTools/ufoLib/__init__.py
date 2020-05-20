@@ -476,6 +476,10 @@ class UFOReader(_UFOBaseIO):
 		# normal
 		else:
 			groups = self._readGroups()
+			# remove any duplicate glyphs in a kerning group
+			for groupName, glyphList in groups.items():
+				if groupName.startswith('public.kern1.') or groupName.startswith('public.kern2.'):
+					glyphList = list(OrderedDict.fromkeys(glyphList))
 		if validate:
 			valid, message = groupsValidator(groups)
 			if not valid:
