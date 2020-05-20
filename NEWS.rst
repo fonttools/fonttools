@@ -1,3 +1,6 @@
+- [sfnt] Fixed ``NameError: SimpleNamespace`` while reading TTC header. The regression
+  was introduced with 4.10.1 after removing ``py23`` star import.
+
 4.10.1 (released 2020-05-19)
 ----------------------------
 
