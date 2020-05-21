@@ -66,6 +66,7 @@ class table_C_O_L_R_(DefaultTable.DefaultTable):
 		else:
 			# for new versions, keep the raw otTables around
 			self.table = table
+			self.version = table.Version
 
 	def compile(self, ttFont):
 		from .otBase import OTTableWriter
