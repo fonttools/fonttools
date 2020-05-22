@@ -462,7 +462,7 @@ class UFOReader(_UFOBaseIO):
 		groups = self._getPlist(GROUPS_FILENAME, {})
 		# remove any duplicate glyphs in a kerning group
 		for groupName, glyphList in groups.items():
-			if groupName.startswith('public.kern1.') or groupName.startswith('public.kern2.'):
+			if groupName.startswith(('public.kern1.', 'public.kern2.')):
 				groups[groupName] = list(OrderedDict.fromkeys(glyphList))
 		return groups
 
