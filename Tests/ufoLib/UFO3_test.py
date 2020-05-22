@@ -4197,9 +4197,9 @@ class UFO3ReadDataTestCase(unittest.TestCase):
 		# Kerning group duplicates are removed
 		expected_groups = {
 			"group1" : ["A"],
-			"group2" : ["B", "B"],
+			"group2" : ["B", "C", "B"],
 			"public.kern1.A" : ["A"],
-			"public.kern2.B" : ["B"],
+			"public.kern2.B" : ["B", "A", "C"],
 		}
 		reader = UFOReader(self.getFontPath())
 		groups = reader.readGroups()

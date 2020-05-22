@@ -9,6 +9,7 @@
 	<key>group2</key>
 	<array>
 		<string>B</string>
+		<string>C</string>
 		<string>B</string>
 	</array>
 	<key>public.kern1.A</key>
@@ -18,7 +19,10 @@
 	<key>public.kern2.B</key>
 	<array>
 		<string>B</string>
+		<string>A</string>
 		<string>B</string>
+		<string>A</string>
+		<string>C</string>
 	</array>
 </dict>
 </plist>
