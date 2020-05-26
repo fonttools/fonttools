@@ -459,7 +459,12 @@ class UFOReader(_UFOBaseIO):
 	# groups.plist
 
 	def _readGroups(self):
-		return self._getPlist(GROUPS_FILENAME, {})
+		groups = self._getPlist(GROUPS_FILENAME, {})
+		# remove any duplicate glyphs in a kerning group
+		for groupName, glyphList in groups.items():
+			if groupName.startswith(('public.kern1.', 'public.kern2.')):
+				groups[groupName] = list(OrderedDict.fromkeys(glyphList))
+		return groups
 
 	def readGroups(self, validate=None):
 		"""

@@ -4192,6 +4192,19 @@ class UFO3ReadDataTestCase(unittest.TestCase):
 		fileObject = reader.getReadFileForPath("data/org.unifiedfontobject.doesNotExist")
 		self.assertEqual(fileObject, None)
 
+	def testUFOReaderKernGroupDuplicatesRemoved(self):
+		# Non-kerning group duplicates are kept
+		# Kerning group duplicates are removed
+		expected_groups = {
+			"group1" : ["A"],
+			"group2" : ["B", "C", "B"],
+			"public.kern1.A" : ["A"],
+			"public.kern2.B" : ["B", "A", "C"],
+		}
+		reader = UFOReader(self.getFontPath())
+		groups = reader.readGroups()
+		self.assertEqual(expected_groups, groups)
+
 
 class UFO3WriteDataTestCase(unittest.TestCase):
 
