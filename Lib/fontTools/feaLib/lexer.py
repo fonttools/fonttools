@@ -232,12 +232,8 @@ class IncludingLexer(object):
                                           fname_location)
                 try:
                     self.lexers_.append(self.make_lexer_(path))
-                except IOError as err:
-                    # FileNotFoundError does not exist on Python < 3.3
-                    import errno
-                    if err.errno == errno.ENOENT:
-                        raise IncludedFeaNotFound(fname_token, fname_location)
-                    raise  # pragma: no cover
+                except FileNotFoundError as err:
+                    raise IncludedFeaNotFound(fname_token, fname_location) from err
             else:
                 return (token_type, token, location)
         raise StopIteration()
