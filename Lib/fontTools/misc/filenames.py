@@ -1,18 +1,22 @@
 """
-User name to file name conversion based on the UFO 3 spec:
-http://unifiedfontobject.org/versions/ufo3/conventions/
+This module implements the algorithm for converting between a "user name" -
+something that a user can choose arbitrarily inside a font editor - and a file
+name suitable for use in a wide range of operating systems and filesystems.
 
-The code was copied from:
-https://github.com/unified-font-object/ufoLib/blob/8747da7/Lib/ufoLib/filenames.py
+The `UFO 3 specification <http://unifiedfontobject.org/versions/ufo3/conventions/>`_
+provides an example of an algorithm for such conversion, which avoids illegal
+characters, reserved file names, ambiguity between upper- and lower-case
+characters, and clashes with existing files.
 
-Author: Tal Leming
-Copyright (c) 2005-2016, The RoboFab Developers:
-	Erik van Blokland
-	Tal Leming
-	Just van Rossum
+This code was originally copied from
+`ufoLib <https://github.com/unified-font-object/ufoLib/blob/8747da7/Lib/ufoLib/filenames.py>`_
+by Tal Leming and is copyright (c) 2005-2016, The RoboFab Developers:
+
+-	Erik van Blokland
+-	Tal Leming
+-	Just van Rossum
 """
 from fontTools.misc.py23 import basestring, unicode
-
 
 illegalCharacters = r"\" * + / : < > ? [ \ ] | \0".split(" ")
 illegalCharacters += [chr(i) for i in range(1, 32)]
@@ -27,54 +31,69 @@ class NameTranslationError(Exception):
 
 
 def userNameToFileName(userName, existing=[], prefix="", suffix=""):
-	"""
-	existing should be a case-insensitive list
-	of all existing file names.
+	"""Converts from a user name to a file name.
 
-	>>> userNameToFileName("a") == "a"
-	True
-	>>> userNameToFileName("A") == "A_"
-	True
-	>>> userNameToFileName("AE") == "A_E_"
-	True
-	>>> userNameToFileName("Ae") == "A_e"
-	True
-	>>> userNameToFileName("ae") == "ae"
-	True
-	>>> userNameToFileName("aE") == "aE_"
-	True
-	>>> userNameToFileName("a.alt") == "a.alt"
-	True
-	>>> userNameToFileName("A.alt") == "A_.alt"
-	True
-	>>> userNameToFileName("A.Alt") == "A_.A_lt"
-	True
-	>>> userNameToFileName("A.aLt") == "A_.aL_t"
-	True
-	>>> userNameToFileName(u"A.alT") == "A_.alT_"
-	True
-	>>> userNameToFileName("T_H") == "T__H_"
-	True
-	>>> userNameToFileName("T_h") == "T__h"
-	True
-	>>> userNameToFileName("t_h") == "t_h"
-	True
-	>>> userNameToFileName("F_F_I") == "F__F__I_"
-	True
-	>>> userNameToFileName("f_f_i") == "f_f_i"
-	True
-	>>> userNameToFileName("Aacute_V.swash") == "A_acute_V_.swash"
-	True
-	>>> userNameToFileName(".notdef") == "_notdef"
-	True
-	>>> userNameToFileName("con") == "_con"
-	True
-	>>> userNameToFileName("CON") == "C_O_N_"
-	True
-	>>> userNameToFileName("con.alt") == "_con.alt"
-	True
-	>>> userNameToFileName("alt.con") == "alt._con"
-	True
+	Takes care to avoid illegal characters, reserved file names, ambiguity between
+	upper- and lower-case characters, and clashes with existing files.
+
+	Args:
+		userName (str): The input file name.
+		existing: A case-insensitive list of all existing file names.
+		prefix: Prefix to be prepended to the file name.
+		suffix: Suffix to be appended to the file name.
+
+	Returns:
+		A suitable filename.
+
+	Raises:
+		NameTranslationError: If no suitable name could be generated.
+
+	Examples::
+
+		>>> userNameToFileName("a") == "a"
+		True
+		>>> userNameToFileName("A") == "A_"
+		True
+		>>> userNameToFileName("AE") == "A_E_"
+		True
+		>>> userNameToFileName("Ae") == "A_e"
+		True
+		>>> userNameToFileName("ae") == "ae"
+		True
+		>>> userNameToFileName("aE") == "aE_"
+		True
+		>>> userNameToFileName("a.alt") == "a.alt"
+		True
+		>>> userNameToFileName("A.alt") == "A_.alt"
+		True
+		>>> userNameToFileName("A.Alt") == "A_.A_lt"
+		True
+		>>> userNameToFileName("A.aLt") == "A_.aL_t"
+		True
+		>>> userNameToFileName(u"A.alT") == "A_.alT_"
+		True
+		>>> userNameToFileName("T_H") == "T__H_"
+		True
+		>>> userNameToFileName("T_h") == "T__h"
+		True
+		>>> userNameToFileName("t_h") == "t_h"
+		True
+		>>> userNameToFileName("F_F_I") == "F__F__I_"
+		True
+		>>> userNameToFileName("f_f_i") == "f_f_i"
+		True
+		>>> userNameToFileName("Aacute_V.swash") == "A_acute_V_.swash"
+		True
+		>>> userNameToFileName(".notdef") == "_notdef"
+		True
+		>>> userNameToFileName("con") == "_con"
+		True
+		>>> userNameToFileName("CON") == "C_O_N_"
+		True
+		>>> userNameToFileName("con.alt") == "_con.alt"
+		True
+		>>> userNameToFileName("alt.con") == "alt._con"
+		True
 	"""
 	# the incoming name must be a unicode string
 	if not isinstance(userName, unicode):

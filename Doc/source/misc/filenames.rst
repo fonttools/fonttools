@@ -1,8 +1,7 @@
-#########
-filenames
-#########
+##########################################################
+filenames: Implements UFO User Name to File Name Algorithm
+##########################################################
 
 .. automodule:: fontTools.misc.filenames
-   :inherited-members:
-   :members:
+   :members: userNameToFileName
    :undoc-members:
