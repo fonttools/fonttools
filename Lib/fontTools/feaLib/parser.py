@@ -31,7 +31,9 @@ class Parser(object):
     help to disambiguate ranges from glyph names containing hyphens.)
 
     By default, the parser will follow ``include()`` statements in the feature
-    file. To turn this off, pass ``followIncludes=False``.
+    file. To turn this off, pass ``followIncludes=False``. Pass a directory string as
+    ``includeDir`` to explicitly declare a directory to search included feature files
+    in.
     """
     extensions = {}
     ast = ast
@@ -39,7 +41,7 @@ class Parser(object):
     CV_FEATURE_TAGS = {"cv%02d" % i for i in range(1, 99+1)}
 
     def __init__(self, featurefile, glyphNames=(), followIncludes=True,
-                 **kwargs):
+                 includeDir=None, **kwargs):
 
         if "glyphMap" in kwargs:
             from fontTools.misc.loggingTools import deprecateArgument
@@ -66,7 +68,7 @@ class Parser(object):
         self.cur_comments_ = []
         self.next_token_location_ = None
         lexerClass = IncludingLexer if followIncludes else NonIncludingLexer
-        self.lexer_ = lexerClass(featurefile)
+        self.lexer_ = lexerClass(featurefile, includeDir=includeDir)
         self.advance_lexer_(comments=True)
 
     def parse(self):

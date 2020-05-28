@@ -190,9 +190,33 @@ class Lexer(object):
 
 
 class IncludingLexer(object):
-    def __init__(self, featurefile):
+    """A Lexer that follows include statements.
+
+    The OpenType feature file specification states that due to
+    historical reasons, relative imports should be resolved in this 
+    order:
+
+    1. If the source font is UFO format, then relative to the UFO's
+       font directory
+    2. relative to the top-level include file
+    3. relative to the parent include file
+
+    We only support 1 (via includeDir) and 2.
+    """
+
+    def __init__(self, featurefile, *, includeDir=None):
+        """Initializes an IncludingLexer.
+
+        Behavior:
+            If includeDir is passed, it will be used to determine the top-level
+            include directory to use for all encountered include statements. If it is
+            not passed, ``os.path.dirname(featurefile)`` will be considered the
+            include directory.
+        """
+
         self.lexers_ = [self.make_lexer_(featurefile)]
         self.featurefilepath = self.lexers_[0].filename_
+        self.includeDir = includeDir
 
     def __iter__(self):
         return self
@@ -218,7 +242,9 @@ class IncludingLexer(object):
                 if os.path.isabs(fname_token):
                     path = fname_token
                 else:
-                    if self.featurefilepath is not None:
+                    if self.includeDir is not None:
+                        curpath = self.includeDir
+                    elif self.featurefilepath is not None:
                         curpath = os.path.dirname(self.featurefilepath)
                     else:
                         # if the IncludingLexer was initialized from an in-memory
@@ -232,12 +258,8 @@ class IncludingLexer(object):
                                           fname_location)
                 try:
                     self.lexers_.append(self.make_lexer_(path))
-                except IOError as err:
-                    # FileNotFoundError does not exist on Python < 3.3
-                    import errno
-                    if err.errno == errno.ENOENT:
-                        raise IncludedFeaNotFound(fname_token, fname_location)
-                    raise  # pragma: no cover
+                except FileNotFoundError as err:
+                    raise IncludedFeaNotFound(fname_token, fname_location) from err
             else:
                 return (token_type, token, location)
         raise StopIteration()

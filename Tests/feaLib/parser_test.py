@@ -1740,6 +1740,12 @@ class ParserTest(unittest.TestCase):
             doc = self.parse("table %s { ;;; } %s;" % (table, table))
             self.assertEqual(doc.statements[0].statements, [])
 
+    def test_ufo_features_parse_include_dir(self):
+        fea_path = self.getpath("include/test.ufo/features.fea")
+        include_dir = os.path.dirname(os.path.dirname(fea_path))
+        doc = Parser(fea_path, includeDir=include_dir).parse()
+        assert len(doc.statements) == 1 and doc.statements[0].text == "# Nothing"
+
     def parse(self, text, glyphNames=GLYPHNAMES, followIncludes=True):
         featurefile = StringIO(text)
         p = Parser(featurefile, glyphNames, followIncludes=followIncludes)
