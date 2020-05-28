@@ -1,3 +1,7 @@
+- [feaLib] Introduced ``includeDir`` parameter on Parser and IncludingLexer to
+  explicitly specify the directory to search when ``include()`` statements are
+  encountered.
+
 4.10.2 (released 2020-05-20)
 ----------------------------
 
