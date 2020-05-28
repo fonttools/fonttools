@@ -201,14 +201,14 @@ class IncludingLexer(object):
     2. relative to the top-level include file
     3. relative to the parent include file
 
-    We only support 1 and 2.
+    We only support 1 (via includeDir) and 2.
     """
 
-    def __init__(self, featurefile, *, include_dir=None):
+    def __init__(self, featurefile, *, includeDir=None):
         """Initializes an IncludingLexer.
 
         Behavior:
-            If include_dir is passed, it will be used to determine the top-level
+            If includeDir is passed, it will be used to determine the top-level
             include directory to use for all encountered include statements. If it is
             not passed, ``os.path.dirname(featurefile)`` will be considered the
             include directory.
@@ -216,7 +216,7 @@ class IncludingLexer(object):
 
         self.lexers_ = [self.make_lexer_(featurefile)]
         self.featurefilepath = self.lexers_[0].filename_
-        self.include_dir = include_dir
+        self.includeDir = includeDir
 
     def __iter__(self):
         return self
@@ -242,8 +242,8 @@ class IncludingLexer(object):
                 if os.path.isabs(fname_token):
                     path = fname_token
                 else:
-                    if self.include_dir is not None:
-                        curpath = self.include_dir
+                    if self.includeDir is not None:
+                        curpath = self.includeDir
                     elif self.featurefilepath is not None:
                         curpath = os.path.dirname(self.featurefilepath)
                     else:
