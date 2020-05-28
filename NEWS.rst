@@ -1,6 +1,9 @@
 - [feaLib] Introduced ``includeDir`` parameter on Parser and IncludingLexer to
   explicitly specify the directory to search when ``include()`` statements are
   encountered.
+- [ufoLib] Silently delete duplicate glyphs within the same kerning group when reading
+  groups.
+- [ttLib] Set version of COLR table when decompiling COLRv1.
 
 4.10.2 (released 2020-05-20)
 ----------------------------
