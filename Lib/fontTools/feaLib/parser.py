@@ -39,7 +39,7 @@ class Parser(object):
     CV_FEATURE_TAGS = {"cv%02d" % i for i in range(1, 99+1)}
 
     def __init__(self, featurefile, glyphNames=(), followIncludes=True,
-                 include_dir=None, **kwargs):
+                 includeDir=None, **kwargs):
 
         if "glyphMap" in kwargs:
             from fontTools.misc.loggingTools import deprecateArgument
@@ -66,7 +66,7 @@ class Parser(object):
         self.cur_comments_ = []
         self.next_token_location_ = None
         lexerClass = IncludingLexer if followIncludes else NonIncludingLexer
-        self.lexer_ = lexerClass(featurefile, include_dir=include_dir)
+        self.lexer_ = lexerClass(featurefile, include_dir=includeDir)
         self.advance_lexer_(comments=True)
 
     def parse(self):
