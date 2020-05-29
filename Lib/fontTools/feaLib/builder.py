@@ -137,7 +137,7 @@ class Builder(object):
             unsupported = tables - self.supportedTables
             if unsupported:
                 unsupported_string = ", ".join(sorted(unsupported))
-                raise ValueError(
+                raise NotImplementedError(
                     "The following tables were requested but are unsupported: "
                     f"{unsupported_string}."
                 )

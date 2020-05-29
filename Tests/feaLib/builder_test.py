@@ -285,7 +285,7 @@ class BuilderTest(unittest.TestCase):
 
     def test_error_unsupported_table(self):
         self.assertRaisesRegex(
-            ValueError, "requested but are unsupported: abcd",
+            NotImplementedError, "requested but are unsupported: abcd",
             self.build,
             "", {"abcd"})
 
