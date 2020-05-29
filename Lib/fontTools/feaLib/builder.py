@@ -135,7 +135,12 @@ class Builder(object):
         else:
             tables = frozenset(tables)
             unsupported = tables - self.supportedTables
-            assert not unsupported, unsupported
+            if unsupported:
+                unsupported_string = ", ".join(sorted(unsupported))
+                raise NotImplementedError(
+                    "The following tables were requested but are unsupported: "
+                    f"{unsupported_string}."
+                )
         if "GSUB" in tables:
             self.build_feature_aalt_()
         if "head" in tables:

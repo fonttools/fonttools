@@ -561,7 +561,7 @@ class BuilderTest(unittest.TestCase):
         assert "GSUB" not in font2
 
     def test_build_unsupported_tables(self):
-        self.assertRaises(AssertionError, self.build, "", tables={"FOO"})
+        self.assertRaises(NotImplementedError, self.build, "", tables={"FOO"})
 
     def test_build_pre_parsed_ast_featurefile(self):
         f = UnicodeIO("feature liga {sub f i by f_i;} liga;")
