@@ -35,8 +35,8 @@ Here is an example of using `afmLib` to read, modify and write an AFM file:
 	>>> f[("A","V")] = -150 # Tighten kerning
 	>>> f.FontName = "TestFont Squished"
 	>>>
-	>>> # And the font written out again
-	>>> f.write("testfont-squished.afm")
+	>>> # And the font written out again (remove the # in front)
+	>>> #f.write("testfont-squished.afm")
 
 .. rubric:: Footnotes
 
