@@ -283,6 +283,12 @@ class BuilderTest(unittest.TestCase):
             "    GlyphClassDef [a b X], , , ;"
             "} GDEF;")
 
+    def test_error_unsupported_table(self):
+        self.assertRaisesRegex(
+            ValueError, "requested but are unsupported: abcd",
+            self.build,
+            "", {"abcd"})
+
     def test_languagesystem(self):
         builder = Builder(makeTTFont(), (None, None))
         builder.add_language_system(None, 'latn', 'FRA')
