@@ -283,12 +283,6 @@ class BuilderTest(unittest.TestCase):
             "    GlyphClassDef [a b X], , , ;"
             "} GDEF;")
 
-    def test_error_unsupported_table(self):
-        self.assertRaisesRegex(
-            NotImplementedError, "requested but are unsupported: abcd",
-            self.build,
-            "", {"abcd"})
-
     def test_languagesystem(self):
         builder = Builder(makeTTFont(), (None, None))
         builder.add_language_system(None, 'latn', 'FRA')
@@ -567,7 +561,7 @@ class BuilderTest(unittest.TestCase):
         assert "GSUB" not in font2
 
     def test_build_unsupported_tables(self):
-        self.assertRaises(AssertionError, self.build, "", tables={"FOO"})
+        self.assertRaises(NotImplementedError, self.build, "", tables={"FOO"})
 
     def test_build_pre_parsed_ast_featurefile(self):
         f = UnicodeIO("feature liga {sub f i by f_i;} liga;")
