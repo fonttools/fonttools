@@ -317,14 +317,16 @@ def getfd_map(varFont, fonts_list):
 
 
 CVarData = namedtuple('CVarData', 'varDataList masterSupports vsindex_dict')
-def merge_region_fonts(varFont, model, ordered_fonts_list, glyphOrder):
+def merge_region_fonts(varFont, model, ordered_fonts_list, glyphOrder, optimize=True):
 	topDict = varFont['CFF2'].cff.topDictIndex[0]
 	top_dicts = [topDict] + [
 					_cff_or_cff2(ttFont).cff.topDictIndex[0]
 					for ttFont in ordered_fonts_list[1:]
 					]
 	num_masters = len(model.mapping)
-	cvData = merge_charstrings(glyphOrder, num_masters, top_dicts, model)
+	cvData = merge_charstrings(
+		glyphOrder, num_masters, top_dicts, model, optimize=optimize
+	)
 	fd_map = getfd_map(varFont, ordered_fonts_list)
 	merge_PrivateDicts(top_dicts, cvData.vsindex_dict, model, fd_map)
 	addCFFVarStore(varFont, model, cvData.varDataList,
@@ -350,7 +352,7 @@ def _add_new_vsindex(model, key, masterSupports, vsindex_dict,
 	varDataList.append(var_data)
 	return vsindex
 
-def merge_charstrings(glyphOrder, num_masters, top_dicts, masterModel):
+def merge_charstrings(glyphOrder, num_masters, top_dicts, masterModel, optimize=True):
 
 	vsindex_dict = {}
 	vsindex_by_key = {}
@@ -386,7 +388,7 @@ def merge_charstrings(glyphOrder, num_masters, top_dicts, masterModel):
 		new_cs = var_pen.getCharString(
 			private=default_charstring.private,
 			globalSubrs=default_charstring.globalSubrs,
-			var_model=model, optimize=True)
+			var_model=model, optimize=optimize)
 		default_charstrings[gname] = new_cs
 
 		if (not var_pen.seen_moveto) or ('blend' not in new_cs.program):
