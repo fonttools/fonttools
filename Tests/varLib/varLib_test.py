@@ -457,6 +457,26 @@ class BuildTest(unittest.TestCase):
         expected_ttx_path = self.get_test_output('BuildMain.ttx')
         self.expect_ttx(varfont, expected_ttx_path, tables)
 
+    def test_varlib_main_otf_no_optimize(self):
+        ds_path = self.get_test_input("TestCFF2.designspace")
+        ttx_dir = self.get_test_input("master_cff2")
+
+        self.temp_dir()
+        otf_dir = os.path.join(self.tempdir, 'master_otf_interpolatable')
+        os.makedirs(otf_dir)
+        for path in self.get_file_list(ttx_dir, ".ttx", "TestCFF2_"):
+            self.compile_font(path, ".otf", otf_dir)
+
+        finder = f"{self.tempdir}/master_otf_interpolatable/{{stem}}.otf"
+        varLib_main([ds_path, "--master-finder", finder, "--no-optimize"])
+        varfont_path = os.path.splitext(ds_copy)[0] + '-VF.otf'
+        self.assertTrue(os.path.exists(varfont_path))
+
+        # varfont = TTFont(varfont_path)
+        # tables = ["fvar", "CFF2"]
+        # expected_ttx_path = self.get_test_output("BuildTestCFF2.ttx")
+        # self.expect_ttx(varfont, expected_ttx_path, tables)
+
     def test_varlib_build_from_ds_object_in_memory_ttfonts(self):
         ds_path = self.get_test_input("Build.designspace")
         ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
