@@ -1010,7 +1010,7 @@ class MasterFinder(object):
 
 def main(args=None):
 	"""Build a variable font from a designspace file and masters"""
-	from argparse import ArgumentParser
+	from argparse import ArgumentParser, SUPPRESS
 	from fontTools import configLogger
 
 	parser = ArgumentParser(prog='varLib', description = main.__doc__)
@@ -1034,7 +1034,17 @@ def main(args=None):
 		'--disable-iup',
 		dest='optimize',
 		action='store_false',
-		help='do not perform IUP optimization'
+		# hidden from -h (replaced by --no-optimize), kept for backward compat
+		help=SUPPRESS,
+	)
+	parser.add_argument(
+		'--no-optimize',
+		dest='optimize',
+		action='store_false',
+		help=(
+			'do not perform IUP optimization on gvar, or specialization of'
+			' CFF2 charstrings'
+		),
 	)
 	parser.add_argument(
 		'--master-finder',
