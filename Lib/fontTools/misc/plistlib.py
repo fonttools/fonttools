@@ -395,6 +395,19 @@ def totree(
     pretty_print=True,
     indent_level=1,
 ):
+    """Convert a value derived from a plist into an XML tree.
+
+    Args:
+        value: Any kind of value to be serialized to XML.
+        sort_keys: Whether keys of dictionaries should be sorted.
+        skipkeys: Keys which should be skipped when enumerating.
+        use_builtin_types: Whether to use standard plist types or
+            to wrap values in a Data block. Deprecated.
+        pretty_print: Whether to indent the output.
+        indent_level (int): Level of indentation when serializing.
+
+    Returns: an ``etree`` ``Element`` object.
+    """
     if use_builtin_types is None:
         use_builtin_types = USE_BUILTIN_TYPES
     else:
@@ -410,6 +423,16 @@ def totree(
 
 
 def fromtree(tree, use_builtin_types=None, dict_type=dict):
+    """Converts an XML tree to a plist structure.
+
+    Args:
+        tree: An ``etree`` ``Element``.
+        use_builtin_types: Whether to use standard plist types or
+            to wrap values in a Data block. Deprecated.
+        dict_type: What type to use for dictionaries.
+
+    Returns: A dictionary which can be serialized as a plist.
+    """
     target = PlistTarget(
         use_builtin_types=use_builtin_types, dict_type=dict_type
     )
@@ -429,6 +452,19 @@ def fromtree(tree, use_builtin_types=None, dict_type=dict):
 
 
 def load(fp, use_builtin_types=None, dict_type=dict):
+    """Load a plist file into an object.
+
+    Args:
+        fp: An opened file.
+        use_builtin_types: Whether to use standard plist types or
+            to wrap values in a Data block. Deprecated.
+        dict_type: What type to use for dictionaries.
+
+    Returns:
+        An object (usually a dictionary) representing the top level of
+        the plist file.
+    """
+
     if not hasattr(fp, "read"):
         raise AttributeError(
             "'%s' object has no attribute 'read'" % type(fp).__name__
@@ -447,6 +483,19 @@ def load(fp, use_builtin_types=None, dict_type=dict):
 
 
 def loads(value, use_builtin_types=None, dict_type=dict):
+    """Load a plist file from a string into an object.
+
+    Args:
+        value: A string containing a plist.
+        use_builtin_types: Whether to use standard plist types or
+            to wrap values in a Data block. Deprecated.
+        dict_type: What type to use for dictionaries.
+
+    Returns:
+        An object (usually a dictionary) representing the top level of
+        the plist file.
+    """
+
     fp = BytesIO(value)
     return load(fp, use_builtin_types=use_builtin_types, dict_type=dict_type)
 
@@ -459,6 +508,19 @@ def dump(
     use_builtin_types=None,
     pretty_print=True,
 ):
+    """Write a Python object to a plist file.
+
+    Args:
+        value: An object to write.
+        fp: A file opened for writing.
+        sort_keys: Whether keys of dictionaries should be sorted.
+        skipkeys: Keys which should be skipped when enumerating.
+        use_builtin_types: Whether to use standard plist types or
+            to wrap values in a Data block. Deprecated.
+        pretty_print: Whether to indent the output.
+        indent_level (int): Level of indentation when serializing.
+    """
+
     if not hasattr(fp, "write"):
         raise AttributeError(
             "'%s' object has no attribute 'write'" % type(fp).__name__
@@ -493,6 +555,20 @@ def dumps(
     use_builtin_types=None,
     pretty_print=True,
 ):
+    """Write a Python object to a string in plist format.
+
+    Args:
+        value: An object to write.
+        sort_keys: Whether keys of dictionaries should be sorted.
+        skipkeys: Keys which should be skipped when enumerating.
+        use_builtin_types: Whether to use standard plist types or
+            to wrap values in a Data block. Deprecated.
+        pretty_print: Whether to indent the output.
+        indent_level (int): Level of indentation when serializing.
+
+    Returns:
+        string: A plist representation of the Python object.
+    """
     fp = BytesIO()
     dump(
         value,

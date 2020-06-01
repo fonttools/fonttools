@@ -18,6 +18,7 @@ misc
    loggingTools
    macCreatorType
    macRes
+   plistlib
    psCharStrings
    psLib
    psOperators
