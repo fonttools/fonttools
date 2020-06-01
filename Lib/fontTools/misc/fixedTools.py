@@ -262,8 +262,9 @@ def ensureVersionIsLong(value):
 
 	OpenType table version numbers are expressed as a single unsigned long
 	comprising of an unsigned short major version and unsigned short minor
-	version. This function detects if the value to be used a version number
-	looks too small, and converts it to fixed-point if so.
+	version. This function detects if the value to be used as a version number
+	looks too small (i.e. is less than ``0x10000``), and converts it to
+	fixed-point using :func:`floatToFixed` if so.
 
 	Args:
 		value (Number): a candidate table version number.
