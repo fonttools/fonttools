@@ -1,8 +1,7 @@
-############
-loggingTools
-############
+###################################################################
+loggingTools: tools for interfacing with the Python logging package
+###################################################################
 
 .. automodule:: fontTools.misc.loggingTools
-   :inherited-members:
    :members:
    :undoc-members:
