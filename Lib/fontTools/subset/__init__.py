@@ -899,12 +899,12 @@ def __subset_classify_context(self):
 
 	if self.Format not in [1, 2, 3]:
 		return None	# Don't shoot the messenger; let it go
-	if not hasattr(self.__class__, "__ContextHelpers"):
-		self.__class__.__ContextHelpers = {}
-	if self.Format not in self.__class__.__ContextHelpers:
+	if not hasattr(self.__class__, "_subset__ContextHelpers"):
+		self.__class__._subset__ContextHelpers = {}
+	if self.Format not in self.__class__._subset__ContextHelpers:
 		helper = ContextHelper(self.__class__, self.Format)
-		self.__class__.__ContextHelpers[self.Format] = helper
-	return self.__class__.__ContextHelpers[self.Format]
+		self.__class__._subset__ContextHelpers[self.Format] = helper
+	return self.__class__._subset__ContextHelpers[self.Format]
 
 @_add_method(otTables.ContextSubst,
 			 otTables.ChainContextSubst)
