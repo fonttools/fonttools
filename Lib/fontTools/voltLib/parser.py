@@ -494,7 +494,7 @@ class Parser(object):
                 adjustment, size = self.parse_adjust_by_()
                 dy_adjust_by[size] = adjustment
         self.expect_keyword_("END_POS")
-        return (adv, dx, dy, adv_adjust_by, dx_adjust_by, dy_adjust_by)
+        return ast.Pos(adv, dx, dy, adv_adjust_by, dx_adjust_by, dy_adjust_by)
 
     def parse_unicode_values_(self):
         location = self.cur_token_location_

@@ -1,4 +1,14 @@
 from fontTools.voltLib.error import VoltLibError
+from typing import NamedTuple
+
+
+class Pos(NamedTuple):
+    adv: int
+    dx: int
+    dy: int
+    adv_adjust_by: dict
+    dx_adjust_by: dict
+    dy_adjust_by: dict
 
 
 class Element(object):
