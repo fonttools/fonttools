@@ -473,6 +473,21 @@ class ParserTest(unittest.TestCase):
                 'END_SUBSTITUTION\n'
             ).statements
 
+    def test_lookup_comments(self):
+        [lookup] = self.parse(
+            'DEF_LOOKUP "test" PROCESS_BASE PROCESS_MARKS ALL DIRECTION LTR\n'
+            'COMMENTS "Hello\\nWorld"\n'
+            'IN_CONTEXT\n'
+            'END_CONTEXT\n'
+            'AS_SUBSTITUTION\n'
+            'SUB GLYPH "a"\n'
+            'WITH GLYPH "b"\n'
+            'END_SUB\n'
+            'END_SUBSTITUTION'
+        ).statements
+        self.assertEqual(lookup.name, "test")
+        self.assertEqual(lookup.comments, "Hello\nWorld")
+
     def test_substitution_empty(self):
         with self.assertRaisesRegex(
                 VoltLibError,

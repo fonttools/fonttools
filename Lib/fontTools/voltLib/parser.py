@@ -242,7 +242,7 @@ class Parser(object):
         comments = None
         if self.next_token_ == "COMMENTS":
             self.expect_keyword_("COMMENTS")
-            comments = self.expect_string_()
+            comments = self.expect_string_().replace(r'\n', '\n')
         context = []
         while self.next_token_ in ("EXCEPT_CONTEXT", "IN_CONTEXT"):
             context = self.parse_context_()
