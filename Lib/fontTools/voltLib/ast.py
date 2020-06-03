@@ -1,7 +1,7 @@
 from fontTools.voltLib.error import VoltLibError
 
 
-class Statement(object):
+class Element(object):
     def __init__(self, location=None):
         self.location = location
 
@@ -9,38 +9,22 @@ class Statement(object):
         pass
 
 
-class Expression(object):
-    def __init__(self, location=None):
-        self.location = location
-
-    def build(self, builder):
-        pass
+class Statement(Element):
+    pass
 
 
-class Block(Statement):
-    def __init__(self, location=None):
-        Statement.__init__(self, location)
+class Expression(Element):
+    pass
+
+
+class VoltFile(Statement):
+    def __init__(self):
+        Statement.__init__(self, location=None)
         self.statements = []
 
     def build(self, builder):
         for s in self.statements:
             s.build(builder)
-
-
-class VoltFile(Block):
-    def __init__(self):
-        Block.__init__(self, location=None)
-
-
-class LookupBlock(Block):
-    def __init__(self, name, location=None):
-        Block.__init__(self, location)
-        self.name = name
-
-    def build(self, builder):
-        builder.start_lookup_block(self.location, self.name)
-        Block.build(self, builder)
-        builder.end_lookup_block()
 
 
 class GlyphDefinition(Statement):
