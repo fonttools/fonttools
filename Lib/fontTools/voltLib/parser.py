@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import fontTools.voltLib.ast as ast
 from fontTools.voltLib.lexer import Lexer
 from fontTools.voltLib.error import VoltLibError
@@ -312,7 +311,7 @@ class Parser(object):
             raise VoltLibError(
                 "Invalid substitution type",
                 location)
-        mapping = OrderedDict(zip(tuple(src), tuple(dest)))
+        mapping = dict(zip(tuple(src), tuple(dest)))
         if max_src == 1 and max_dest == 1:
             if reversal:
                 sub = ast.SubstitutionReverseChainingSingleDefinition(
@@ -632,10 +631,10 @@ class SymbolTable(object):
 
 class OrderedSymbolTable(SymbolTable):
     def __init__(self):
-        self.scopes_ = [OrderedDict()]
+        self.scopes_ = [{}]
 
     def enter_scope(self):
-        self.scopes_.append(OrderedDict())
+        self.scopes_.append({})
 
     def resolve(self, name, case_insensitive=False):
         SymbolTable.resolve(self, name, case_insensitive=case_insensitive)
