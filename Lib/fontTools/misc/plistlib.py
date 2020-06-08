@@ -409,8 +409,8 @@ def totree(
             keys.
         use_builtin_types (bool): If true, byte strings will be
             encoded in Base-64 and wrapped in a ``data`` tag; if
-            false, they will be either stored as strings or an
-            exception raised if they cannot be represented. Defaults
+            false, they will be either stored as ASCII strings or an
+            exception raised if they cannot be decoded as such. Defaults
             to ``True`` if not present. Deprecated.
         pretty_print (bool): Whether to indent the output.
         indent_level (int): Level of indentation when serializing.
@@ -422,7 +422,7 @@ def totree(
             if non-string dictionary keys are serialized
             and ``skipkeys`` is false.
         ``ValueError``
-            if non-representable binary data is present
+            if non-ASCII binary data is present
             and `use_builtin_types` is false.
     """
     if use_builtin_types is None:
@@ -538,7 +538,7 @@ def dump(
             keys.
         use_builtin_types (bool): If true, byte strings will be
             encoded in Base-64 and wrapped in a ``data`` tag; if
-            false, they will be either stored as strings or an
+            false, they will be either stored as ASCII strings or an
             exception raised if they cannot be represented. Defaults
         pretty_print (bool): Whether to indent the output.
         indent_level (int): Level of indentation when serializing.
