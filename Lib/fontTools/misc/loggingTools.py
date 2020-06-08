@@ -481,7 +481,7 @@ class LogMixin(object):
 	You can define a new class that subclasses from ``LogMixin`` as well as
 	other base classes through multiple inheritance.
 	All instances of that class will have a ``log`` property that returns
-	a logging.Logger named after their respective ``<module>.<class>``.
+	a ``logging.Logger`` named after their respective ``<module>.<class>``.
 
 	For example:
 
