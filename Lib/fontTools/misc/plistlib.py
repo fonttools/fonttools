@@ -440,7 +440,7 @@ def totree(
 
 
 def fromtree(tree, use_builtin_types=None, dict_type=dict):
-    """Converts an XML tree to a plist structure.
+    """Convert an XML tree to a plist structure.
 
     Args:
         tree: An ``etree`` ``Element``.
