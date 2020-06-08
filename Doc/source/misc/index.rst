@@ -21,6 +21,7 @@ utilities by fontTools, but some of which may be more generally useful.
    loggingTools
    macCreatorType
    macRes
+   plistlib
    psCharStrings
    psLib
    psOperators

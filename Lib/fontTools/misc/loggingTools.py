@@ -1,7 +1,3 @@
-""" fontTools.misc.loggingTools.py -- tools for interfacing with the Python
-logging package.
-"""
-
 from fontTools.misc.py23 import *
 import sys
 import logging
@@ -25,10 +21,18 @@ DEFAULT_FORMATS = {
 
 
 class LevelFormatter(logging.Formatter):
-	""" Formatter class which optionally takes a dict of logging levels to
+	"""Log formatter with level-specific formatting.
+
+	Formatter class which optionally takes a dict of logging levels to
 	format strings, allowing to customise the log records appearance for
 	specific levels.
-	The '*' key identifies the default format string.
+
+
+	Attributes:
+		fmt: A dictionary mapping logging levels to format strings.
+			The ``*`` key identifies the default format string.
+		datefmt: As per py:class:`logging.Formatter`
+		style: As per py:class:`logging.Formatter`
 
 	>>> import sys
 	>>> handler = logging.StreamHandler(sys.stdout)
@@ -83,46 +87,48 @@ class LevelFormatter(logging.Formatter):
 
 
 def configLogger(**kwargs):
-	""" Do basic configuration for the logging system. This is more or less
-	the same as logging.basicConfig with some additional options and defaults.
+	"""A more sophisticated logging system configuation manager.
 
-	The default behaviour is to create a StreamHandler which writes to
-	sys.stderr, set a formatter using the DEFAULT_FORMATS strings, and add
+	This is more or less the same as :py:func:`logging.basicConfig`,
+	with some additional options and defaults.
+
+	The default behaviour is to create a ``StreamHandler`` which writes to
+	sys.stderr, set a formatter using the ``DEFAULT_FORMATS`` strings, and add
 	the handler to the top-level library logger ("fontTools").
 
 	A number of optional keyword arguments may be specified, which can alter
 	the default behaviour.
 
-	logger    Specifies the logger name or a Logger instance to be configured.
-	          (it defaults to "fontTools" logger). Unlike basicConfig, this
-	          function can be called multiple times to reconfigure a logger.
-	          If the logger or any of its children already exists before the
-	          call is made, they will be reset before the new configuration
-	          is applied.
-	filename  Specifies that a FileHandler be created, using the specified
-	          filename, rather than a StreamHandler.
-	filemode  Specifies the mode to open the file, if filename is specified
-	          (if filemode is unspecified, it defaults to 'a').
-	format    Use the specified format string for the handler. This argument
-	          also accepts a dictionary of format strings keyed by level name,
-	          to allow customising the records appearance for specific levels.
-	          The special '*' key is for 'any other' level.
-	datefmt   Use the specified date/time format.
-	level     Set the logger level to the specified level.
-	stream    Use the specified stream to initialize the StreamHandler. Note
-	          that this argument is incompatible with 'filename' - if both
-	          are present, 'stream' is ignored.
-	handlers  If specified, this should be an iterable of already created
-	          handlers, which will be added to the logger. Any handler
-	          in the list which does not have a formatter assigned will be
-	          assigned the formatter created in this function.
-	filters   If specified, this should be an iterable of already created
-	          filters, which will be added to the handler(s), if the latter
-	          do(es) not already have filters assigned.
-	propagate All loggers have a "propagate" attribute initially set to True,
-	          which determines whether to continue searching for handlers up
-	          the logging hierarchy. By default, this arguments sets the
-	          "propagate" attribute to False.
+	Args:
+
+		logger: Specifies the logger name or a Logger instance to be
+			configured. (Defaults to "fontTools" logger). Unlike ``basicConfig``,
+			this function can be called multiple times to reconfigure a logger.
+			If the logger or any of its children already exists before the call is
+			made, they will be reset before the new configuration is applied.
+		filename: Specifies that a ``FileHandler`` be created, using the
+			specified filename, rather than a ``StreamHandler``.
+		filemode: Specifies the mode to open the file, if filename is
+			specified. (If filemode is unspecified, it defaults to ``a``).
+		format: Use the specified format string for the handler. This
+			argument also accepts a dictionary of format strings keyed by
+			level name, to allow customising the records appearance for
+			specific levels. The special ``'*'`` key is for 'any other' level.
+		datefmt: Use the specified date/time format.
+		level: Set the logger level to the specified level.
+		stream: Use the specified stream to initialize the StreamHandler. Note
+			that this argument is incompatible with ``filename`` - if both
+			are present, ``stream`` is ignored.
+		handlers: If specified, this should be an iterable of already created
+			handlers, which will be added to the logger. Any handler in the
+			list which does not have a formatter assigned will be assigned the
+			formatter created in this function.
+		filters: If specified, this should be an iterable of already created
+			filters. If the ``handlers`` do not already have filters assigned,
+			these filters will be added to them.
+		propagate: All loggers have a ``propagate`` attribute which determines
+			whether to continue searching for handlers up the logging hierarchy.
+			If not provided, the "propagate" attribute will be set to ``False``.
 	"""
 	# using kwargs to enforce keyword-only arguments in py2.
 	handlers = kwargs.pop("handlers", None)
@@ -382,9 +388,11 @@ class Timer(object):
 
 
 class ChannelsFilter(logging.Filter):
-	""" Filter out records emitted from a list of enabled channel names,
-	including their children. It works the same as the logging.Filter class,
-	but allows to specify multiple channel names.
+	"""Provides a hierarchical filter for log entries based on channel names.
+
+	Filters out records emitted from a list of enabled channel names,
+	including their children. It works the same as the ``logging.Filter``
+	class, but allows the user to specify multiple channel names.
 
 	>>> import sys
 	>>> handler = logging.StreamHandler(sys.stdout)
@@ -469,10 +477,12 @@ class CapturingLogHandler(logging.Handler):
 
 class LogMixin(object):
 	""" Mixin class that adds logging functionality to another class.
-	You can define a new class that subclasses from LogMixin as well as
+
+	You can define a new class that subclasses from ``LogMixin`` as well as
 	other base classes through multiple inheritance.
-	All instances of that class will have a 'log' property that returns
-	a logging.Logger named after their respective <module>.<class>.
+	All instances of that class will have a ``log`` property that returns
+	a ``logging.Logger`` named after their respective ``<module>.<class>``.
+
 	For example:
 
 	>>> class BaseClass(object):
