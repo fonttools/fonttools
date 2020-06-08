@@ -91,8 +91,13 @@ def _encode_base64(data, maxlinelength=76, indent_level=1):
 
 
 class Data:
-    """Wrapper for binary data returned in place of the built-in bytes type
-    when loading property list data with use_builtin_types=False.
+    """Represents binary data when ``use_builtin_types=False.``
+
+    This class wraps binary data loaded from a plist file when the
+    ``use_builtin_types`` argument to the loading function (:py:func:`fromtree`,
+    :py:func:`load`, :py:func:`loads`) is false.
+
+    The actual binary data is retrieved using the ``data`` attribute.
     """
 
     def __init__(self, data):
@@ -400,13 +405,25 @@ def totree(
     Args:
         value: Any kind of value to be serialized to XML.
         sort_keys: Whether keys of dictionaries should be sorted.
-        skipkeys: Keys which should be skipped when enumerating.
-        use_builtin_types: Whether to use standard plist types or
-            to wrap values in a Data block. Deprecated.
-        pretty_print: Whether to indent the output.
+        skipkeys (bool): Whether to silently skip non-string dictionary
+            keys.
+        use_builtin_types (bool): If true, byte strings will be
+            encoded in Base-64 and wrapped in a ``data`` tag; if
+            false, they will be either stored as strings or an
+            exception raised if they cannot be represented. Defaults
+            to ``True`` if not present. Deprecated.
+        pretty_print (bool): Whether to indent the output.
         indent_level (int): Level of indentation when serializing.
 
     Returns: an ``etree`` ``Element`` object.
+
+    Raises:
+        ``TypeError``
+            if non-string dictionary keys are serialized
+            and ``skipkeys`` is false.
+        ``ValueError``
+            if non-representable binary data is present
+            and `use_builtin_types` is false.
     """
     if use_builtin_types is None:
         use_builtin_types = USE_BUILTIN_TYPES
@@ -427,11 +444,12 @@ def fromtree(tree, use_builtin_types=None, dict_type=dict):
 
     Args:
         tree: An ``etree`` ``Element``.
-        use_builtin_types: Whether to use standard plist types or
-            to wrap values in a Data block. Deprecated.
+        use_builtin_types: If True, binary data is deserialized to
+            bytes strings. If False, it is wrapped in :py:class:`Data`
+            objects. Defaults to True if not provided. Deprecated.
         dict_type: What type to use for dictionaries.
 
-    Returns: A dictionary which can be serialized as a plist.
+    Returns: An object (usually a dictionary).
     """
     target = PlistTarget(
         use_builtin_types=use_builtin_types, dict_type=dict_type
@@ -456,8 +474,9 @@ def load(fp, use_builtin_types=None, dict_type=dict):
 
     Args:
         fp: An opened file.
-        use_builtin_types: Whether to use standard plist types or
-            to wrap values in a Data block. Deprecated.
+        use_builtin_types: If True, binary data is deserialized to
+            bytes strings. If False, it is wrapped in :py:class:`Data`
+            objects. Defaults to True if not provided. Deprecated.
         dict_type: What type to use for dictionaries.
 
     Returns:
@@ -487,8 +506,9 @@ def loads(value, use_builtin_types=None, dict_type=dict):
 
     Args:
         value: A string containing a plist.
-        use_builtin_types: Whether to use standard plist types or
-            to wrap values in a Data block. Deprecated.
+        use_builtin_types: If True, binary data is deserialized to
+            bytes strings. If False, it is wrapped in :py:class:`Data`
+            objects. Defaults to True if not provided. Deprecated.
         dict_type: What type to use for dictionaries.
 
     Returns:
@@ -513,13 +533,24 @@ def dump(
     Args:
         value: An object to write.
         fp: A file opened for writing.
-        sort_keys: Whether keys of dictionaries should be sorted.
-        skipkeys: Keys which should be skipped when enumerating.
-        use_builtin_types: Whether to use standard plist types or
-            to wrap values in a Data block. Deprecated.
-        pretty_print: Whether to indent the output.
+        sort_keys (bool): Whether keys of dictionaries should be sorted.
+        skipkeys (bool): Whether to silently skip non-string dictionary
+            keys.
+        use_builtin_types (bool): If true, byte strings will be
+            encoded in Base-64 and wrapped in a ``data`` tag; if
+            false, they will be either stored as strings or an
+            exception raised if they cannot be represented. Defaults
+        pretty_print (bool): Whether to indent the output.
         indent_level (int): Level of indentation when serializing.
-    """
+
+    Raises:
+        ``TypeError``
+            if non-string dictionary keys are serialized
+            and ``skipkeys`` is false.
+        ``ValueError``
+            if non-representable binary data is present
+            and `use_builtin_types` is false.
+   """
 
     if not hasattr(fp, "write"):
         raise AttributeError(
@@ -559,15 +590,26 @@ def dumps(
 
     Args:
         value: An object to write.
-        sort_keys: Whether keys of dictionaries should be sorted.
-        skipkeys: Keys which should be skipped when enumerating.
-        use_builtin_types: Whether to use standard plist types or
-            to wrap values in a Data block. Deprecated.
-        pretty_print: Whether to indent the output.
+        sort_keys (bool): Whether keys of dictionaries should be sorted.
+        skipkeys (bool): Whether to silently skip non-string dictionary
+            keys.
+        use_builtin_types (bool): If true, byte strings will be
+            encoded in Base-64 and wrapped in a ``data`` tag; if
+            false, they will be either stored as strings or an
+            exception raised if they cannot be represented. Defaults
+        pretty_print (bool): Whether to indent the output.
         indent_level (int): Level of indentation when serializing.
 
     Returns:
         string: A plist representation of the Python object.
+
+    Raises:
+        ``TypeError``
+            if non-string dictionary keys are serialized
+            and ``skipkeys`` is false.
+        ``ValueError``
+            if non-representable binary data is present
+            and `use_builtin_types` is false.
     """
     fp = BytesIO()
     dump(
