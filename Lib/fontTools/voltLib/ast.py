@@ -259,7 +259,7 @@ class LookupDefinition(Statement):
             res += ' SKIP_MARKS'
         if self.direction is not None:
             res += f' DIRECTION {self.direction}'
-        if self.reversal is not None:
+        if self.reversal:
             res += ' REVERSAL'
         if self.comments is not None:
             comments = self.comments.replace('\n', r'\n')
