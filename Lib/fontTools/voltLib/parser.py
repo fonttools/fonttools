@@ -12,9 +12,10 @@ PARSE_FUNCS = {
     "GRID_PPEM": "parse_ppem_",
     "PRESENTATION_PPEM": "parse_ppem_",
     "PPOSITIONING_PPEM": "parse_ppem_",
-    "COMPILER_USEEXTENSIONLOOKUPS": "parse_compiler_flag_",
-    "COMPILER_USEPAIRPOSFORMAT2": "parse_compiler_flag_",
+    "COMPILER_USEEXTENSIONLOOKUPS": "parse_noarg_option_",
+    "COMPILER_USEPAIRPOSFORMAT2": "parse_noarg_option_",
     "CMAP_FORMAT": "parse_cmap_format",
+    "DO_NOT_TOUCH_CMAP": "parse_noarg_option_",
 }
 
 
@@ -549,11 +550,11 @@ class Parser(object):
         setting = ast.SettingDefinition(ppem_name, value, location=location)
         return setting
 
-    def parse_compiler_flag_(self):
+    def parse_noarg_option_(self):
         location = self.cur_token_location_
-        flag_name = self.cur_token_
+        name = self.cur_token_
         value = True
-        setting = ast.SettingDefinition(flag_name, value, location=location)
+        setting = ast.SettingDefinition(name, value, location=location)
         return setting
 
     def parse_cmap_format(self):
