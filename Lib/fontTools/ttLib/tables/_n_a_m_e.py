@@ -199,7 +199,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		If 'mac' is True, the returned name ID is guaranteed to exist
 		for all requested languages for platformID=1 and platEncID=0.
 
-		The returned name ID will be not less than the 'minNameID'
+		The returned name ID will not be less than the 'minNameID'
 		argument.
 		"""
 		# Gather the set of requested
