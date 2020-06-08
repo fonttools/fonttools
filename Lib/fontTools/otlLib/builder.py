@@ -784,7 +784,7 @@ def _buildAxisRecords(axes, nameTable):
     for axisRecordIndex, axisDict in enumerate(axes):
         axis = ot.AxisRecord()
         axis.AxisTag = axisDict["tag"]
-        axis.AxisNameID = _addName(nameTable, axisDict["name"])
+        axis.AxisNameID = _addName(nameTable, axisDict["name"], 256)
         axis.AxisOrdering = axisDict.get("ordering", axisRecordIndex)
         axisRecords.append(axis)
 
@@ -837,7 +837,7 @@ def _buildAxisValuesFormat4(locations, axes, nameTable):
     return axisValues
 
 
-def _addName(nameTable, value):
+def _addName(nameTable, value, minNameID=0):
     if isinstance(value, int):
         # Already a nameID
         return value
@@ -847,4 +847,4 @@ def _addName(nameTable, value):
         names = value
     else:
         raise TypeError("value must be int, str or dict")
-    return nameTable.addMultilingualName(names)
+    return nameTable.addMultilingualName(names, minNameID=minNameID)

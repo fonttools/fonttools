@@ -71,7 +71,7 @@ def _add_fvar(font, axes, instances):
 		axis.axisTag = Tag(a.tag)
 		# TODO Skip axes that have no variation.
 		axis.minValue, axis.defaultValue, axis.maxValue = a.minimum, a.default, a.maximum
-		axis.axisNameID = nameTable.addMultilingualName(a.labelNames, font)
+		axis.axisNameID = nameTable.addMultilingualName(a.labelNames, font, minNameID=256)
 		axis.flags = int(a.hidden)
 		fvar.axes.append(axis)
 

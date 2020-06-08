@@ -184,7 +184,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 			raise ValueError("nameID must be less than 32768")
 		return nameID
 
-	def findMultilingualName(self, names, windows=True, mac=True):
+	def findMultilingualName(self, names, windows=True, mac=True, minNameID=0):
 		"""Return the name ID of an existing multilingual name that
 		matches the 'names' dictionary, or None if not found.
 
@@ -198,6 +198,9 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		platEncID=1.
 		If 'mac' is True, the returned name ID is guaranteed to exist
 		for all requested languages for platformID=1 and platEncID=0.
+
+		The returned name ID will not be less than the 'minNameID'
+		argument.
 		"""
 		# Gather the set of requested
 		#   (string, platformID, platEncID, langID)
@@ -227,7 +230,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 				       name.platEncID, name.langID)
 			except UnicodeDecodeError:
 				continue
-			if key in reqNameSet:
+			if key in reqNameSet and name.nameID >= minNameID:
 				nameSet = matchingNames.setdefault(name.nameID, set())
 				nameSet.add(key)
 
@@ -239,7 +242,7 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 		return None  # not found
 
 	def addMultilingualName(self, names, ttFont=None, nameID=None,
-	                        windows=True, mac=True):
+	                        windows=True, mac=True, minNameID=0):
 		"""Add a multilingual name, returning its name ID
 
 		'names' is a dictionary with the name in multiple languages,
@@ -258,12 +261,16 @@ class table__n_a_m_e(DefaultTable.DefaultTable):
 
 		If 'windows' is True, a platformID=3 name record will be added.
 		If 'mac' is True, a platformID=1 name record will be added.
+
+		If the 'nameID' argument is None, the created nameID will not
+		be less than the 'minNameID' argument.
 		"""
 		if not hasattr(self, 'names'):
 			self.names = []
 		if nameID is None:
 			# Reuse nameID if possible
-			nameID = self.findMultilingualName(names, windows=windows, mac=mac)
+			nameID = self.findMultilingualName(
+				names, windows=windows, mac=mac, minNameID=minNameID)
 			if nameID is not None:
 				return nameID
 			nameID = self._findUnusedNameID()
