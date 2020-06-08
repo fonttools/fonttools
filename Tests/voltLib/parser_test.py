@@ -1193,6 +1193,24 @@ class ParserTest(unittest.TestCase):
              ("CMAP_FORMAT", (3, 1, 4)))
         )
 
+    def test_do_not_touch_cmap(self):
+        [option1, option2, option3, option4] = self.parse(
+            'DO_NOT_TOUCH_CMAP\n'
+            'CMAP_FORMAT 0 3 4\n'
+            'CMAP_FORMAT 1 0 6\n'
+            'CMAP_FORMAT 3 1 4'
+        ).statements
+        self.assertEqual(
+            ((option1.name, option1.value),
+             (option2.name, option2.value),
+             (option3.name, option3.value),
+             (option4.name, option4.value)),
+            (("DO_NOT_TOUCH_CMAP", True),
+             ("CMAP_FORMAT", (0, 3, 4)),
+             ("CMAP_FORMAT", (1, 0, 6)),
+             ("CMAP_FORMAT", (3, 1, 4)))
+        )
+
     def test_stop_at_end(self):
         doc = self.parse_(
             'DEF_GLYPH ".notdef" ID 0 TYPE BASE END_GLYPH END\0\0\0\0'
