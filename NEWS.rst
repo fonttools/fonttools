@@ -1,3 +1,14 @@
+- [otlLib/varLib] Ensure that the ``AxisNameID`` in the ``STAT`` and ``fvar``
+  tables is grater than 255 as per OpenType spec (#1985, #1986).
+- [docs] Document more modules in ``fontTools.misc`` package: ``filenames``,
+  ``fixedTools``, ``intTools``, ``loggingTools``, ``macCreatorType``, ``macRes``,
+  ``plistlib`` (#1981).
+- [OS/2] Don't calculate whole sets of unicode codepoints, use faster and more memory
+  efficient ranges and bisect lookups (#1984).
+- [voltLib] Support writing back abstract syntax tree as VOLT data (#1983).
+- [voltLib] Accept DO_NOT_TOUCH_CMAP keyword (#1987).
+- [subset/merge] Fixed a namespace clash involving a private helper class (#1955).
+
 4.11.0 (released 2020-05-28)
 ----------------------------
 
