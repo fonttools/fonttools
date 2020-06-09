@@ -1,3 +1,6 @@
+4.12.0 (released 2020-06-09)
+----------------------------
+
 - [otlLib/varLib] Ensure that the ``AxisNameID`` in the ``STAT`` and ``fvar``
   tables is grater than 255 as per OpenType spec (#1985, #1986).
 - [docs] Document more modules in ``fontTools.misc`` package: ``filenames``,
