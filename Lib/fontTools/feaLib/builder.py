@@ -848,7 +848,7 @@ class Builder(object):
     def add_chain_context_subst(self, location,
                                 prefix, glyphs, suffix, lookups):
         lookup = self.get_lookup_(location, ChainContextSubstBuilder)
-        lookup.substitutions.append((prefix, glyphs, suffix,
+        lookup.rules.append((prefix, glyphs, suffix,
                                      self.find_lookup_builders_(lookups)))
 
     def add_alternate_subst(self, location,
@@ -860,7 +860,7 @@ class Builder(object):
         if prefix or suffix:
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
             lookup = self.get_chained_lookup_(location, AlternateSubstBuilder)
-            chain.substitutions.append((prefix, [{glyph}], suffix, [lookup]))
+            chain.rules.append((prefix, [{glyph}], suffix, [lookup]))
         else:
             lookup = self.get_lookup_(location, AlternateSubstBuilder)
         if glyph in lookup.alternates:
@@ -915,7 +915,7 @@ class Builder(object):
         if prefix or suffix or forceChain:
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
             lookup = self.get_chained_lookup_(location, LigatureSubstBuilder)
-            chain.substitutions.append((prefix, glyphs, suffix, [lookup]))
+            chain.rules.append((prefix, glyphs, suffix, [lookup]))
         else:
             lookup = self.get_lookup_(location, LigatureSubstBuilder)
 
@@ -933,7 +933,7 @@ class Builder(object):
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
             sub = self.get_chained_lookup_(location, MultipleSubstBuilder)
             sub.mapping[glyph] = replacements
-            chain.substitutions.append((prefix, [{glyph}], suffix, [sub]))
+            chain.rules.append((prefix, [{glyph}], suffix, [sub]))
             return
         lookup = self.get_lookup_(location, MultipleSubstBuilder)
         if glyph in lookup.mapping:
@@ -953,7 +953,7 @@ class Builder(object):
     def add_reverse_chain_single_subst(self, location, old_prefix,
                                        old_suffix, mapping):
         lookup = self.get_lookup_(location, ReverseChainSingleSubstBuilder)
-        lookup.substitutions.append((old_prefix, old_suffix, mapping))
+        lookup.rules.append((old_prefix, old_suffix, mapping))
 
     def add_single_subst(self, location, prefix, suffix, mapping, forceChain):
         if self.cur_feature_name_ == "aalt":
@@ -987,7 +987,7 @@ class Builder(object):
         if sub is None:
             sub = self.get_chained_lookup_(location, SingleSubstBuilder)
         sub.mapping.update(mapping)
-        chain.substitutions.append((prefix, [mapping.keys()], suffix, [sub]))
+        chain.rules.append((prefix, [mapping.keys()], suffix, [sub]))
 
     def add_cursive_pos(self, location, glyphclass, entryAnchor, exitAnchor):
         lookup = self.get_lookup_(location, CursivePosBuilder)
@@ -1341,7 +1341,7 @@ class ChainContextPosBuilder(ChainContextualBuilder):
 class ChainContextSubstBuilder(ChainContextualBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 6)
-        self.rules = self.substitutions = []
+        self.rules = []
 
     def newSubtable_(self):
         st = otTables.ChainContextSubst()
@@ -1358,7 +1358,7 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
 
     def getAlternateGlyphs(self):
         result = {}
-        for (_, _, _, lookuplist) in self.substitutions:
+        for (_, _, _, lookuplist) in self.rules:
             if lookuplist == self.SUBTABLE_BREAK_:
                 continue
             for lookups in lookuplist:
@@ -1374,10 +1374,10 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
     def find_chainable_single_subst(self, glyphs):
         """Helper for add_single_subst_chained_()"""
         res = None
-        for _, _, _, substitutions in self.substitutions[::-1]:
-            if substitutions == self.SUBTABLE_BREAK_:
+        for _, _, _, rules in self.rules[::-1]:
+            if rules == self.SUBTABLE_BREAK_:
                 return res
-            for sub in substitutions:
+            for sub in rules:
                 if (isinstance(sub, SingleSubstBuilder) and
                         not any(g in glyphs for g in sub.mapping.keys())):
                     res = sub
@@ -1549,15 +1549,15 @@ class MarkMarkPosBuilder(LookupBuilder):
 class ReverseChainSingleSubstBuilder(LookupBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 8)
-        self.substitutions = []  # (prefix, suffix, mapping)
+        self.rules = []  # (prefix, suffix, mapping)
 
     def equals(self, other):
         return (LookupBuilder.equals(self, other) and
-                self.substitutions == other.substitutions)
+                self.rules == other.rules)
 
     def build(self):
         subtables = []
-        for prefix, suffix, mapping in self.substitutions:
+        for prefix, suffix, mapping in self.rules:
             st = otTables.ReverseChainSingleSubst()
             st.Format = 1
             self.setBacktrackCoverage_(prefix, st)
