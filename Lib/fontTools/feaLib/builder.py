@@ -1389,11 +1389,12 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
             st.ChainSubRuleSet.append(ruleset)
         return ruleset
 
-    def newChainRule_(self, ruleset):
+    def newChainRule_(self, ruleset, rule = None):
         if not hasattr(ruleset, "ChainSubRuleCount"):
             ruleset.ChainSubRuleCount = 0
             ruleset.ChainSubRule = []
-        rule = otTables.ChainSubRule()
+        if not rule:
+            rule = otTables.ChainSubRule()
         ruleset.ChainSubRuleCount += 1
         ruleset.ChainSubRule.append(rule)
         return rule
