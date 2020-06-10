@@ -1294,7 +1294,7 @@ class ChainContextualBuilder(LookupBuilder):
                     for l in lookupList:
                         if l.lookup_index is None:
                             raise FeatureLibError('Missing index of the specified '
-                                'lookup, might be a %s lookup' % self.other,
+                                f'lookup, might be a {self.other} lookup',
                                 self.location)
                         self.addLookupRecord_(st, sequenceIndex, l.lookup_index)
         return self.buildLookup_(subtables)
