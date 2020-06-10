@@ -20,7 +20,7 @@ LOOKUP_FLAG_IGNORE_MARKS = 0x0008
 LOOKUP_FLAG_USE_MARK_FILTERING_SET = 0x0010
 
 
-def buildLookup(subtables, flags=0, markFilterSet=None):
+def buildLookup(subtables, flags=0, markFilterSet=None, optimize=None, builder=None):
     if subtables is None:
         return None
     subtables = [st for st in subtables if st is not None]

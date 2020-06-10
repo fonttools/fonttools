@@ -1275,6 +1275,10 @@ class ChainContextualBuilder(LookupBuilder):
         return (LookupBuilder.equals(self, other) and
                 self.rules == other.rules)
 
+    def buildLookup_(self, subtables):
+        return otl.buildLookup(subtables, self.lookupflag, self.markFilterSet,
+            optimize="chaining_format", builder=self)
+
     def build(self):
         subtables = []
         for (prefix, glyphs, suffix, lookups) in self.rules:
