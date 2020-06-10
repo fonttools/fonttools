@@ -1299,6 +1299,10 @@ class ChainContextualBuilder(LookupBuilder):
                         self.addLookupRecord_(st, sequenceIndex, l.lookup_index)
         return self.buildLookup_(subtables)
 
+    def add_subtable_break(self, location):
+        self.rules.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
+                           self.SUBTABLE_BREAK_, [self.SUBTABLE_BREAK_]))
+
 
 class ChainContextPosBuilder(ChainContextualBuilder):
     def __init__(self, font, location):
@@ -1333,11 +1337,6 @@ class ChainContextPosBuilder(ChainContextualBuilder):
                 res = lookup
         return res
 
-    def add_subtable_break(self, location):
-        self.rules.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
-                           self.SUBTABLE_BREAK_, [self.SUBTABLE_BREAK_]))
-
-
 class ChainContextSubstBuilder(ChainContextualBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 6)
@@ -1359,7 +1358,7 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
     def getAlternateGlyphs(self):
         result = {}
         for (_, _, _, lookuplist) in self.rules:
-            if lookuplist == self.SUBTABLE_BREAK_:
+            if lookuplist[0] == self.SUBTABLE_BREAK_:
                 continue
             for lookups in lookuplist:
                 if not isinstance(lookups, list):
@@ -1375,23 +1374,13 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
         """Helper for add_single_subst_chained_()"""
         res = None
         for _, _, _, rules in self.rules[::-1]:
-            if rules == self.SUBTABLE_BREAK_:
+            if len(rules) > 0 and rules[0] == self.SUBTABLE_BREAK_:
                 return res
             for sub in rules:
                 if (isinstance(sub, SingleSubstBuilder) and
                         not any(g in glyphs for g in sub.mapping.keys())):
                     res = sub
         return res
-
-    def add_subtable_break(self, location):
-        self.rules.append(
-            (
-                self.SUBTABLE_BREAK_,
-                self.SUBTABLE_BREAK_,
-                self.SUBTABLE_BREAK_,
-                self.SUBTABLE_BREAK_,
-            )
-        )
 
     @property
     def other(self):
