@@ -72,7 +72,7 @@ class BuilderTest(unittest.TestCase):
         PairPosSubtable ChainSubstSubtable ChainPosSubtable LigatureSubtable
         AlternateSubtable MultipleSubstSubtable SingleSubstSubtable
         aalt_chain_contextual_subst AlternateChained MultipleLookupsPerGlyph
-        MultipleLookupsPerGlyph2
+        MultipleLookupsPerGlyph2 MergeFormat1Contextual
     """.split()
 
     def __init__(self, methodName):

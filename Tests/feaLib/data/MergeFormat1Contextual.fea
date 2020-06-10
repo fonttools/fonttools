@@ -1,0 +1,14 @@
+languagesystem DFLT dflt;
+feature test {
+pos A B' 50;
+pos C B' 20;
+pos D B' 20;
+pos E B' 10;
+pos B' 50 A;
+pos B' 20 C;
+pos B' 20 D;
+pos B' 10 E;
+pos C' F G;
+pos C' X Y Z;
+pos J K L C' X Y Z;
+} test;

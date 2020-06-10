@@ -2,8 +2,8 @@ from collections import namedtuple
 from fontTools.misc.fixedTools import fixedToFloat
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot
-from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
-
+from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict, OTTableWriter, CountReference
+import bisect
 
 def buildCoverage(glyphs, glyphMap):
     if not glyphs:
@@ -29,6 +29,8 @@ def buildLookup(subtables, flags=0, markFilterSet=None, optimize=None, builder=N
     assert all(t.LookupType == subtables[0].LookupType for t in subtables), \
         ("all subtables must have the same LookupType; got %s" %
          repr([t.LookupType for t in subtables]))
+    if optimize == "chaining_format":
+        subtables = optimizeChainingFormats(subtables, builder)
     self = ot.Lookup()
     self.LookupType = subtables[0].LookupType
     self.LookupFlag = flags
@@ -46,6 +48,162 @@ def buildLookup(subtables, flags=0, markFilterSet=None, optimize=None, builder=N
              "LOOKUP_FLAG_USE_MARK_FILTERING_SET; flags=0x%04x" % flags)
     return self
 
+def optimizeChainingFormats(subtables, builder):
+
+    def binary_len(st):
+        # Determine the binary length of a subtable
+        w = OTTableWriter()
+        w["LookupType"] = CountReference({"LookupType": st.LookupType}, "LookupType")
+        # XXX Compiling the subtable computes the coverage format, so ends up
+        # modifying the original. I can't find a good way to clone a subtable.
+        st.compile(w, builder.font)
+        return len(w.getAllData())
+
+    def make_format1(format3):
+        # Returns a Format1 subtable if possible, None otherwise
+
+        # Format 1 is "simple glyph" contexts, so give up if there are classes.
+        for coverage in [
+            format3.BacktrackCoverage,
+            format3.InputCoverage,
+            format3.LookAheadCoverage,
+        ]:
+            if any([len(x.glyphs) > 1 for x in coverage]):
+                return None
+
+        format1 = builder.newSubtable_()
+        format1.Format = 1
+
+        in_glyphs = [x.glyphs[0] for x in format3.InputCoverage]
+        format1.Coverage = buildCoverage(in_glyphs, builder.glyphMap)
+
+        ruleset = builder.newChainRuleSet_(format1)
+        rule = builder.newChainRule_(ruleset)
+
+        rule.BacktrackGlyphCount = len(format3.BacktrackCoverage)
+        rule.InputGlyphCount = len(format3.InputCoverage)
+        rule.LookAheadGlyphCount = len(format3.LookAheadCoverage)
+        rule.Backtrack = [x.glyphs[0] for x in format3.BacktrackCoverage]
+        rule.Input = [x.glyphs[0] for x in format3.InputCoverage[1:]]
+        rule.LookAhead = [x.glyphs[0] for x in format3.LookAheadCoverage]
+
+        # Copy over the lookup records.
+        if hasattr(format3, "SubstLookupRecord"):
+            # There goes my nice abstraction
+            lookups = format3.SubstLookupRecord
+        else:
+            lookups = format3.PosLookupRecord
+        for l in lookups:
+            builder.addLookupRecord_(rule, l.SequenceIndex, l.LookupListIndex)
+        return format1
+
+    def make_format2(format3):
+        # Coming soon!
+        return None
+
+    def merge_format1(old, new):
+        if not old or not new:
+            return None
+
+        # XXX Note that we should refuse to merge if merging would create
+        # a rule so big it would not be able to fit into its containing
+        # lookup. Yes, this happens.
+
+        # At this stage there is only one covered glyph, one ruleset
+        # and one rule in the "new" subtable. The "old" subtable may
+        # already be merged and so maybe more complex.
+        if hasattr(new, "ChainSubRuleSet"):
+            newrule = new.ChainSubRuleSet[0].ChainSubRule[0]
+        else:
+            newrule = new.ChainPosRuleSet[0].ChainPosRule[0]
+
+        newFirstGlyph = new.Coverage.glyphs[0]
+        # If first glyph is already in old coverage, append rule to
+        # relevant ruleset.
+        if newFirstGlyph in old.Coverage.glyphs:
+            rulesetPos = old.Coverage.glyphs.index(newFirstGlyph)
+            if hasattr(new, "ChainSubRuleSet"):
+                builder.newChainRule_(old.ChainSubRuleSet[rulesetPos], newrule)
+            else:
+                builder.newChainRule_(old.ChainPosRuleSet[rulesetPos], newrule)
+            return old
+
+        # Otherwise, create a new ruleset. The ruleset needs to be inserted
+        # in the right place to ensure that it corresponds to the appropriate
+        # glyph in the coverage table when the table is sorted by GID.
+        # If
+        #   new: Coverage=<h> rulesets = [h_rules]
+        # and
+        #   old: Coverage=<a, g, z> rulesets=[ a_rules, g_rules, z_rules ]
+        #                                                       ^
+        #                       new ruleset must be inserted here
+        oldGlyphIds = [builder.glyphMap[x] for x in old.Coverage.glyphs]
+        thisGlyphId = builder.glyphMap[newFirstGlyph]
+        insertionIndex = bisect.bisect(oldGlyphIds, thisGlyphId)
+        ruleset = builder.newChainRuleSet_(old, index=insertionIndex)
+
+        old.Coverage.glyphs.append(newFirstGlyph)
+        return old
+
+    def merge_format2(old, new):
+        if not old or not new:
+            return None
+        # Coming later
+        return None
+
+    # Attempt to build each subtable in all three possible formats.
+    subtable_formats = [
+        [
+            None,  # there is no format 0, but we want to 1-index for clarity
+            make_format1(st),
+            make_format2(st),
+            st,
+        ]
+        for st in subtables
+    ]
+
+    # Now attempt to merge consecutive formats
+    mergecount = 0
+    for ix in range(1, len(subtable_formats)):
+        prev = subtable_formats[ix - 1]
+        this = subtable_formats[ix]
+        if this[2] and prev[2]:
+            merged = merge_format2(prev[2], this[2])
+            if merged:
+                subtable_formats[ix - 1][2] = "MERGED"
+                subtable_formats[ix][2] = merged
+                mergecount += 1
+        if this[1] and prev[1]:
+            merged = merge_format1(prev[1], this[1])
+            if merged:
+                subtable_formats[ix - 1][1] = "MERGED"
+                subtable_formats[ix][1] = merged
+                mergecount += 1
+
+    # Now choose best format. Always choose a run of merged subtables
+    # if possible, prefering a format 2 run over a format 1. If there's
+    # a straight choice between individual subtable representations,
+    # choose the most compact.
+    prevMerged = None
+    subtables = []
+    for st_options in subtable_formats:
+        if st_options[2] == "MERGED":
+            prevMerged = 2
+            continue
+        elif st_options[1] == "MERGED":
+            prevMerged = 1
+            continue
+        if prevMerged:
+            subtables.append(st_options[prevMerged])
+        else:
+            options = [x for x in st_options if x]
+            if len(options) == 1:
+                subtables.append(options[0])
+            else:
+                subtables.append(min(options, key=lambda st: binary_len(st)))
+        prevMerged = None
+
+    return subtables
 
 # GSUB
 
