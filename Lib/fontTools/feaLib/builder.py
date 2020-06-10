@@ -1315,7 +1315,32 @@ class ChainContextPosBuilder(ChainContextualBuilder):
         st.PosLookupRecord = []
         return st
 
+    def newChainRuleSet_(self, st, index=None):
+        if not hasattr(st, "ChainPosRuleSetCount"):
+            st.ChainPosRuleSetCount = 0
+            st.ChainPosRuleSet = []
+        ruleset = otTables.ChainPosRuleSet()
+        st.ChainPosRuleSetCount += 1
+        if index:
+            st.ChainPosRuleSet.insert(index, ruleset)
+        else:
+            st.ChainPosRuleSet.append(ruleset)
+        return ruleset
+
+    def newChainRule_(self, ruleset, rule = None):
+        if not hasattr(ruleset, "ChainPosRuleCount"):
+            ruleset.ChainPosRuleCount = 0
+            ruleset.ChainPosRule = []
+        if not rule:
+            rule = otTables.ChainPosRule()
+        ruleset.ChainPosRuleCount += 1
+        ruleset.ChainPosRule.append(rule)
+        return rule
+
     def addLookupRecord_(self, st, sequenceIndex, lookupIndex):
+        if not hasattr(st, "PosCount"):
+            st.PosCount = 0
+            st.PosLookupRecord = []
         rec = otTables.PosLookupRecord()
         rec.SequenceIndex = sequenceIndex
         rec.LookupListIndex = lookupIndex
@@ -1348,7 +1373,31 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
         st.SubstLookupRecord = []
         return st
 
+    def newChainRuleSet_(self, st, index=None):
+        if not hasattr(st, "ChainSubRuleSetCount"):
+            st.ChainSubRuleSetCount = 0
+            st.ChainSubRuleSet = []
+        ruleset = otTables.ChainSubRuleSet()
+        st.ChainSubRuleSetCount += 1
+        if index:
+            st.ChainSubRuleSet.insert(index, ruleset)
+        else:
+            st.ChainSubRuleSet.append(ruleset)
+        return ruleset
+
+    def newChainRule_(self, ruleset):
+        if not hasattr(ruleset, "ChainSubRuleCount"):
+            ruleset.ChainSubRuleCount = 0
+            ruleset.ChainSubRule = []
+        rule = otTables.ChainSubRule()
+        ruleset.ChainSubRuleCount += 1
+        ruleset.ChainSubRule.append(rule)
+        return rule
+
     def addLookupRecord_(self, st, sequenceIndex, lookupIndex):
+        if not hasattr(st, "SubstCount"):
+            st.SubstCount = 0
+            st.SubstLookupRecord = []
         rec = otTables.SubstLookupRecord()
         rec.SequenceIndex = sequenceIndex
         rec.LookupListIndex = lookupIndex
