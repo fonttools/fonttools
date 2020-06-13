@@ -3,6 +3,7 @@ from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.feaLib.builder import Builder, addOpenTypeFeatures, \
         addOpenTypeFeaturesFromString
 from fontTools.feaLib.error import FeatureLibError
+from fontTools.otlLib.error import OTLLibError
 from fontTools.ttLib import TTFont
 from fontTools.feaLib.parser import Parser
 from fontTools.feaLib import ast
@@ -225,7 +226,7 @@ class BuilderTest(unittest.TestCase):
 
     def test_pairPos_redefinition_warning(self):
         # https://github.com/fonttools/fonttools/issues/1147
-        logger = logging.getLogger("fontTools.feaLib.builder")
+        logger = logging.getLogger("fontTools.otlLib.lookupBuilders")
         with CapturingLogHandler(logger, "DEBUG") as captor:
             # the pair "yacute semicolon" is redefined in the enum pos
             font = self.build(
@@ -259,7 +260,7 @@ class BuilderTest(unittest.TestCase):
 
     def test_singlePos_redefinition(self):
         self.assertRaisesRegex(
-            FeatureLibError,
+            OTLLibError,
             "Already defined different position for glyph \"A\"",
             self.build, "feature test { pos A 123; pos A 456; } test;")
 
@@ -433,7 +434,7 @@ class BuilderTest(unittest.TestCase):
 
     def test_chain_subst_refrences_GPOS_looup(self):
         self.assertRaisesRegex(
-            FeatureLibError,
+            OTLLibError,
             "Missing index of the specified lookup, might be a positioning lookup",
             self.build,
             "lookup dummy { pos a 50; } dummy;"
@@ -444,7 +445,7 @@ class BuilderTest(unittest.TestCase):
 
     def test_chain_pos_refrences_GSUB_looup(self):
         self.assertRaisesRegex(
-            FeatureLibError,
+            OTLLibError,
             "Missing index of the specified lookup, might be a substitution lookup",
             self.build,
             "lookup dummy { sub a by A; } dummy;"
@@ -571,7 +572,7 @@ class BuilderTest(unittest.TestCase):
         assert "GSUB" in font
 
     def test_unsupported_subtable_break(self):
-        logger = logging.getLogger("fontTools.feaLib.builder")
+        logger = logging.getLogger("fontTools.otlLib.lookupBuilders")
         with CapturingLogHandler(logger, level='WARNING') as captor:
             self.build(
                 "feature test {"

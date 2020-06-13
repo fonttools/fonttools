@@ -3,6 +3,8 @@ from fontTools.misc.fixedTools import fixedToFloat
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
+from fontTools.ttLib.tables import otBase, otTables
+from fontTools.otlLib.error import OTLLibError
 
 
 def buildCoverage(glyphs, glyphMap):
