@@ -1067,14 +1067,18 @@ class Builder(object):
     def add_class_pair_pos(self, location, glyphclass1, value1,
                            glyphclass2, value2):
         lookup = self.get_lookup_(location, PairPosBuilder)
-        lookup.addClassPair(location, glyphclass1, value1, glyphclass2, value2)
+        v1, _ = makeOpenTypeValueRecord(value1, pairPosContext=True)
+        v2, _ = makeOpenTypeValueRecord(value2, pairPosContext=True)
+        lookup.addClassPair(location, glyphclass1, v1, glyphclass2, v2)
 
     def add_subtable_break(self, location):
         self.cur_lookup_.add_subtable_break(location)
 
     def add_specific_pair_pos(self, location, glyph1, value1, glyph2, value2):
         lookup = self.get_lookup_(location, PairPosBuilder)
-        lookup.addGlyphPair(location, glyph1, value1, glyph2, value2)
+        v1, _ = makeOpenTypeValueRecord(value1, pairPosContext=True)
+        v2, _ = makeOpenTypeValueRecord(value2, pairPosContext=True)
+        lookup.addGlyphPair(location, glyph1, v1, glyph2, v2)
 
     def add_single_pos(self, location, prefix, suffix, pos, forceChain):
         if prefix or suffix or forceChain:
@@ -1082,9 +1086,10 @@ class Builder(object):
         else:
             lookup = self.get_lookup_(location, SinglePosBuilder)
             for glyphs, value in pos:
+                otValueRecord, _ = makeOpenTypeValueRecord(value, pairPosContext=False)
                 for glyph in glyphs:
                     try:
-                        lookup.add_pos(location, glyph, value)
+                        lookup.add_pos(location, glyph, otValueRecord)
                     except OpentypeLibError as e:
                         raise FeatureLibError("Failed to build", location) from e
 
@@ -1105,7 +1110,8 @@ class Builder(object):
                 sub = self.get_chained_lookup_(location, SinglePosBuilder)
                 targets.append(sub)
             for glyph in glyphs:
-                sub.add_pos(location, glyph, value)
+                otValueRecord, _ = makeOpenTypeValueRecord(value, pairPosContext=False)
+                sub.add_pos(location, glyph, otValueRecord)
             subs.append(sub)
         assert len(pos) == len(subs), (pos, subs)
         chain.rules.append(

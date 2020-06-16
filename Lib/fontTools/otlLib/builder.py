@@ -567,9 +567,7 @@ class PairPosBuilder(LookupBuilder):
                 'choosing the first value',
                 glyph1, glyph2, otherLoc[0], otherLoc[1], otherLoc[2])
         else:
-            val1, _ = makeOpenTypeValueRecord(value1, pairPosContext=True)
-            val2, _ = makeOpenTypeValueRecord(value2, pairPosContext=True)
-            self.glyphPairs[key] = (val1, val2)
+            self.glyphPairs[key] = (value1, value2)
             self.locations[key] = location
 
     def add_subtable_break(self, location):
@@ -589,16 +587,15 @@ class PairPosBuilder(LookupBuilder):
                 if builder is not None:
                     builder.addSubtableBreak()
                 continue
-            val1, valFormat1 = makeOpenTypeValueRecord(
-                value1, pairPosContext=True)
-            val2, valFormat2 = makeOpenTypeValueRecord(
-                value2, pairPosContext=True)
+            valFormat1, valFormat2 = 0, 0
+            if value1: valFormat1 = value1.getFormat()
+            if value2: valFormat2 = value2.getFormat()
             builder = builders.get((valFormat1, valFormat2))
             if builder is None:
                 builder = ClassPairPosSubtableBuilder(
                     self, valFormat1, valFormat2)
                 builders[(valFormat1, valFormat2)] = builder
-            builder.addPair(glyphclass1, val1, glyphclass2, val2)
+            builder.addPair(glyphclass1, value1, glyphclass2, value2)
         subtables = []
         if self.glyphPairs:
             subtables.extend(
@@ -614,9 +611,7 @@ class SinglePosBuilder(LookupBuilder):
         self.locations = {}  # glyph -> (filename, line, column)
         self.mapping = {}  # glyph -> ot.ValueRecord
 
-    def add_pos(self, location, glyph, valueRecord):
-        otValueRecord, _ = makeOpenTypeValueRecord(
-            valueRecord, pairPosContext=False)
+    def add_pos(self, location, glyph, otValueRecord):
         if not self.can_add(glyph, otValueRecord):
             otherLoc = self.locations[glyph]
             raise OpentypeLibError(
