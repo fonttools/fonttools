@@ -24,6 +24,7 @@ from fontTools.otlLib.builder import (
     PairPosBuilder,
     SinglePosBuilder,
 )
+from fontTools.otlLib.error import OpentypeLibError
 from collections import defaultdict
 import itertools
 import logging
@@ -576,7 +577,11 @@ class Builder(object):
                 continue
             lookup.lookup_index = len(lookups)
             lookups.append(lookup)
-        return [l.build() for l in lookups]
+        try:
+            otLookups = [l.build() for l in lookups]
+        except OpentypeLibError as e:
+            raise FeatureLibError("Failed to build",()) from e
+        return otLookups
 
     def makeTable(self, tag):
         table = getattr(otTables, tag, None)()
@@ -1078,7 +1083,10 @@ class Builder(object):
             lookup = self.get_lookup_(location, SinglePosBuilder)
             for glyphs, value in pos:
                 for glyph in glyphs:
-                    lookup.add_pos(location, glyph, value)
+                    try:
+                        lookup.add_pos(location, glyph, value)
+                    except OpentypeLibError as e:
+                        raise FeatureLibError("Failed to build", location) from e
 
     def add_single_pos_chained_(self, location, prefix, suffix, pos):
         # https://github.com/fonttools/fonttools/issues/514
