@@ -75,7 +75,7 @@ class LookupBuilder(object):
         return {}
 
     def buildLookup_(self, subtables):
-        return otl.buildLookup(subtables, self.lookupflag, self.markFilterSet)
+        return buildLookup(subtables, self.lookupflag, self.markFilterSet)
 
     def buildMarkClasses_(self, marks):
         """{"cedilla": ("BOTTOM", ast.Anchor), ...} --> {"BOTTOM":0, "TOP":1}
@@ -95,21 +95,21 @@ class LookupBuilder(object):
         subtable.BacktrackGlyphCount = len(prefix)
         subtable.BacktrackCoverage = []
         for p in reversed(prefix):
-            coverage = otl.buildCoverage(p, self.glyphMap)
+            coverage = buildCoverage(p, self.glyphMap)
             subtable.BacktrackCoverage.append(coverage)
 
     def setLookAheadCoverage_(self, suffix, subtable):
         subtable.LookAheadGlyphCount = len(suffix)
         subtable.LookAheadCoverage = []
         for s in suffix:
-            coverage = otl.buildCoverage(s, self.glyphMap)
+            coverage = buildCoverage(s, self.glyphMap)
             subtable.LookAheadCoverage.append(coverage)
 
     def setInputCoverage_(self, glyphs, subtable):
         subtable.InputGlyphCount = len(glyphs)
         subtable.InputCoverage = []
         for g in glyphs:
-            coverage = otl.buildCoverage(g, self.glyphMap)
+            coverage = buildCoverage(g, self.glyphMap)
             subtable.InputCoverage.append(coverage)
 
     def build_subst_subtables(self, mapping, klass):
@@ -140,7 +140,7 @@ class AlternateSubstBuilder(LookupBuilder):
 
     def build(self):
         subtables = self.build_subst_subtables(self.alternates,
-                otl.buildAlternateSubstSubtable)
+                buildAlternateSubstSubtable)
         return self.buildLookup_(subtables)
 
     def getAlternateGlyphs(self):
@@ -289,7 +289,7 @@ class LigatureSubstBuilder(LookupBuilder):
 
     def build(self):
         subtables = self.build_subst_subtables(self.ligatures,
-                otl.buildLigatureSubstSubtable)
+                buildLigatureSubstSubtable)
         return self.buildLookup_(subtables)
 
     def add_subtable_break(self, location):
@@ -307,7 +307,7 @@ class MultipleSubstBuilder(LookupBuilder):
 
     def build(self):
         subtables = self.build_subst_subtables(self.mapping,
-                otl.buildMultipleSubstSubtable)
+                buildMultipleSubstSubtable)
         return self.buildLookup_(subtables)
 
     def add_subtable_break(self, location):
@@ -328,7 +328,7 @@ class CursivePosBuilder(LookupBuilder):
             self.attachments[glyph] = (entryAnchor, exitAnchor)
 
     def build(self):
-        st = otl.buildCursivePosSubtable(self.attachments, self.glyphMap)
+        st = buildCursivePosSubtable(self.attachments, self.glyphMap)
         return self.buildLookup_([st])
 
 
@@ -356,7 +356,7 @@ class MarkBasePosBuilder(LookupBuilder):
         for glyph, anchors in self.bases.items():
             bases[glyph] = {markClasses[mc]: anchor
                             for (mc, anchor) in anchors.items()}
-        subtables = otl.buildMarkBasePos(marks, bases, self.glyphMap)
+        subtables = buildMarkBasePos(marks, bases, self.glyphMap)
         return self.buildLookup_(subtables)
 
 
@@ -385,7 +385,7 @@ class MarkLigPosBuilder(LookupBuilder):
             ligs[lig] = []
             for c in components:
                 ligs[lig].append({markClasses[mc]: a for mc, a in c.items()})
-        subtables = otl.buildMarkLigPos(marks, ligs, self.glyphMap)
+        subtables = buildMarkLigPos(marks, ligs, self.glyphMap)
         return self.buildLookup_(subtables)
 
 
@@ -414,15 +414,15 @@ class MarkMarkPosBuilder(LookupBuilder):
         st = otTables.MarkMarkPos()
         st.Format = 1
         st.ClassCount = len(markClasses)
-        st.Mark1Coverage = otl.buildCoverage(marks, self.glyphMap)
-        st.Mark2Coverage = otl.buildCoverage(self.baseMarks, self.glyphMap)
-        st.Mark1Array = otl.buildMarkArray(marks, self.glyphMap)
+        st.Mark1Coverage = buildCoverage(marks, self.glyphMap)
+        st.Mark2Coverage = buildCoverage(self.baseMarks, self.glyphMap)
+        st.Mark1Array = buildMarkArray(marks, self.glyphMap)
         st.Mark2Array = otTables.Mark2Array()
         st.Mark2Array.Mark2Count = len(st.Mark2Coverage.glyphs)
         st.Mark2Array.Mark2Record = []
         for base in st.Mark2Coverage.glyphs:
             anchors = [self.baseMarks[base].get(mc) for mc in markClassList]
-            st.Mark2Array.Mark2Record.append(otl.buildMark2Record(anchors))
+            st.Mark2Array.Mark2Record.append(buildMark2Record(anchors))
         return self.buildLookup_([st])
 
 
@@ -442,7 +442,7 @@ class ReverseChainSingleSubstBuilder(LookupBuilder):
             st.Format = 1
             self.setBacktrackCoverage_(prefix, st)
             self.setLookAheadCoverage_(suffix, st)
-            st.Coverage = otl.buildCoverage(mapping.keys(), self.glyphMap)
+            st.Coverage = buildCoverage(mapping.keys(), self.glyphMap)
             st.GlyphCount = len(mapping)
             st.Substitute = [mapping[g] for g in st.Coverage.glyphs]
             subtables.append(st)
@@ -464,7 +464,7 @@ class SingleSubstBuilder(LookupBuilder):
 
     def build(self):
         subtables = self.build_subst_subtables(self.mapping,
-                otl.buildSingleSubstSubtable)
+                buildSingleSubstSubtable)
         return self.buildLookup_(subtables)
 
     def getAlternateGlyphs(self):
@@ -491,8 +491,8 @@ class ClassPairPosSubtableBuilder(object):
                      self.classDef2_.canAdd(gc2))
         if not mergeable:
             self.flush_()
-            self.classDef1_ = otl.ClassDefBuilder(useClass0=True)
-            self.classDef2_ = otl.ClassDefBuilder(useClass0=False)
+            self.classDef1_ = ClassDefBuilder(useClass0=True)
+            self.classDef2_ = ClassDefBuilder(useClass0=False)
             self.values_ = {}
         self.classDef1_.add(gc1)
         self.classDef2_.add(gc2)
@@ -508,7 +508,7 @@ class ClassPairPosSubtableBuilder(object):
     def flush_(self):
         if self.classDef1_ is None or self.classDef2_ is None:
             return
-        st = otl.buildPairPosClassesSubtable(self.values_,
+        st = buildPairPosClassesSubtable(self.values_,
                                              self.builder_.glyphMap)
         if st.Coverage is None:
             return
@@ -573,7 +573,7 @@ class PairPosBuilder(LookupBuilder):
         subtables = []
         if self.glyphPairs:
             subtables.extend(
-                otl.buildPairPosGlyphs(self.glyphPairs, self.glyphMap))
+                buildPairPosGlyphs(self.glyphPairs, self.glyphMap))
         for key in sorted(builders.keys()):
             subtables.extend(builders[key].subtables())
         return self.buildLookup_(subtables)
@@ -599,7 +599,7 @@ class SinglePosBuilder(LookupBuilder):
         self.locations[glyph] = location
 
     def can_add(self, glyph, value):
-        assert isinstance(value, otl.ValueRecord)
+        assert isinstance(value, ValueRecord)
         curValue = self.mapping.get(glyph)
         return curValue is None or curValue == value
 
@@ -608,7 +608,7 @@ class SinglePosBuilder(LookupBuilder):
                 self.mapping == other.mapping)
 
     def build(self):
-        subtables = otl.buildSinglePos(self.mapping, self.glyphMap)
+        subtables = buildSinglePos(self.mapping, self.glyphMap)
         return self.buildLookup_(subtables)
 
 
