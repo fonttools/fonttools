@@ -8,6 +8,22 @@ from fontTools.otlLib import builder as otl
 from fontTools.otlLib.maxContextCalc import maxCtxFont
 from fontTools.ttLib import newTable, getTableModule
 from fontTools.ttLib.tables import otBase, otTables
+from fontTools.otlLib.builder import (
+    AlternateSubstBuilder,
+    ChainContextPosBuilder,
+    ChainContextSubstBuilder,
+    LigatureSubstBuilder,
+    MultipleSubstBuilder,
+    CursivePosBuilder,
+    MarkBasePosBuilder,
+    MarkLigPosBuilder,
+    MarkMarkPosBuilder,
+    ReverseChainSingleSubstBuilder,
+    SingleSubstBuilder,
+    ClassPairPosSubtableBuilder,
+    PairPosBuilder,
+    SinglePosBuilder,
+)
 from collections import defaultdict, OrderedDict
 import itertools
 import logging
