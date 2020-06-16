@@ -1110,8 +1110,7 @@ class Builder(object):
                 sub = self.get_chained_lookup_(location, SinglePosBuilder)
                 targets.append(sub)
             for glyph in glyphs:
-                otValueRecord = makeOpenTypeValueRecord(value, pairPosContext=False)
-                sub.add_pos(location, glyph, otValueRecord)
+                sub.add_pos(location, glyph, otValue)
             subs.append(sub)
         assert len(pos) == len(subs), (pos, subs)
         chain.rules.append(
