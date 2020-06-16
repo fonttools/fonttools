@@ -1,3 +1,6 @@
+4.12.1 (released 2020-06-16)
+----------------------------
+
 - [_n_a_m_e] Fixed error in ``addMultilingualName`` with one-character names.
   Only attempt to recovered malformed UTF-16 data from a ``bytes`` string,
   not from unicode ``str`` (#1997, #1998).
