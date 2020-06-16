@@ -345,6 +345,11 @@ class NameRecordTest(unittest.TestCase):
 		self.assertEqual("utf_16_be", name.getEncoding())
 		self.assertRaises(UnicodeDecodeError, name.toUnicode)
 
+	def test_toUnicode_singleChar(self):
+		# https://github.com/fonttools/fonttools/issues/1997
+		name = makeName("A", 256, 3, 1, 0x409)
+		self.assertEqual(name.toUnicode(), "A")
+
 	def toXML(self, name):
 		writer = XMLWriter(BytesIO())
 		name.toXML(writer, ttFont=None)
