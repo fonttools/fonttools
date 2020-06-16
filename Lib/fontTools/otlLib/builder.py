@@ -1,4 +1,4 @@
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from fontTools.misc.fixedTools import fixedToFloat
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot

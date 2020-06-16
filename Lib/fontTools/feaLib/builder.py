@@ -24,7 +24,7 @@ from fontTools.otlLib.builder import (
     PairPosBuilder,
     SinglePosBuilder,
 )
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 import itertools
 import logging
 
