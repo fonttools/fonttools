@@ -19,29 +19,6 @@ def buildCoverage(glyphs, glyphMap):
     return self
 
 
-_VALUEREC_ATTRS = {
-    name[0].lower() + name[1:]: (name, isDevice)
-    for _, name, isDevice, _ in otBase.valueRecordFormat
-    if not name.startswith("Reserved")
-}
-
-
-def makeOpenTypeValueRecord(v, pairPosContext):
-    """ast.ValueRecord --> (otBase.ValueRecord, int ValueFormat)"""
-    if not v:
-        return None, 0
-
-    vr = {}
-    for astName, (otName, isDevice) in _VALUEREC_ATTRS.items():
-        val = getattr(v, astName, None)
-        if val:
-            vr[otName] = buildDevice(dict(val)) if isDevice else val
-    if pairPosContext and not vr:
-        vr = {"YAdvance": 0} if v.vertical else {"XAdvance": 0}
-    valRec = buildValue(vr)
-    return valRec, valRec.getFormat()
-
-
 LOOKUP_FLAG_RIGHT_TO_LEFT = 0x0001
 LOOKUP_FLAG_IGNORE_BASE_GLYPHS = 0x0002
 LOOKUP_FLAG_IGNORE_LIGATURES = 0x0004
