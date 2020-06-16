@@ -30,10 +30,10 @@ def makeOpenTypeValueRecord(v, pairPosContext):
     for astName, (otName, isDevice) in _VALUEREC_ATTRS.items():
         val = getattr(v, astName, None)
         if val:
-            vr[otName] = otl.buildDevice(dict(val)) if isDevice else val
+            vr[otName] = buildDevice(dict(val)) if isDevice else val
     if pairPosContext and not vr:
         vr = {"YAdvance": 0} if v.vertical else {"XAdvance": 0}
-    valRec = otl.buildValue(vr)
+    valRec = buildValue(vr)
     return valRec, valRec.getFormat()
 
 
