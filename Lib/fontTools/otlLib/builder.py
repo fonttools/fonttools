@@ -188,7 +188,7 @@ class ChainContextPosBuilder(LookupBuilder):
         for (prefix, glyphs, suffix, lookups) in self.rules:
             if prefix == self.SUBTABLE_BREAK_:
                 continue
-            st = otTables.ChainContextPos()
+            st = ot.ChainContextPos()
             subtables.append(st)
             st.Format = 3
             self.setBacktrackCoverage_(prefix, st)
@@ -208,7 +208,7 @@ class ChainContextPosBuilder(LookupBuilder):
                             raise FeatureLibError('Missing index of the specified '
                                 'lookup, might be a substitution lookup',
                                 self.location)
-                        rec = otTables.PosLookupRecord()
+                        rec = ot.PosLookupRecord()
                         rec.SequenceIndex = sequenceIndex
                         rec.LookupListIndex = l.lookup_index
                         st.PosLookupRecord.append(rec)
@@ -244,7 +244,7 @@ class ChainContextSubstBuilder(LookupBuilder):
         for (prefix, input, suffix, lookups) in self.substitutions:
             if prefix == self.SUBTABLE_BREAK_:
                 continue
-            st = otTables.ChainContextSubst()
+            st = ot.ChainContextSubst()
             subtables.append(st)
             st.Format = 3
             self.setBacktrackCoverage_(prefix, st)
@@ -264,7 +264,7 @@ class ChainContextSubstBuilder(LookupBuilder):
                             raise FeatureLibError('Missing index of the specified '
                                 'lookup, might be a positioning lookup',
                                 self.location)
-                        rec = otTables.SubstLookupRecord()
+                        rec = ot.SubstLookupRecord()
                         rec.SequenceIndex = sequenceIndex
                         rec.LookupListIndex = l.lookup_index
                         st.SubstLookupRecord.append(rec)
@@ -435,13 +435,13 @@ class MarkMarkPosBuilder(LookupBuilder):
         marks = {mark: (markClasses[mc], anchor)
                  for mark, (mc, anchor) in self.marks.items()}
 
-        st = otTables.MarkMarkPos()
+        st = ot.MarkMarkPos()
         st.Format = 1
         st.ClassCount = len(markClasses)
         st.Mark1Coverage = buildCoverage(marks, self.glyphMap)
         st.Mark2Coverage = buildCoverage(self.baseMarks, self.glyphMap)
         st.Mark1Array = buildMarkArray(marks, self.glyphMap)
-        st.Mark2Array = otTables.Mark2Array()
+        st.Mark2Array = ot.Mark2Array()
         st.Mark2Array.Mark2Count = len(st.Mark2Coverage.glyphs)
         st.Mark2Array.Mark2Record = []
         for base in st.Mark2Coverage.glyphs:
@@ -462,7 +462,7 @@ class ReverseChainSingleSubstBuilder(LookupBuilder):
     def build(self):
         subtables = []
         for prefix, suffix, mapping in self.substitutions:
-            st = otTables.ReverseChainSingleSubst()
+            st = ot.ReverseChainSingleSubst()
             st.Format = 1
             self.setBacktrackCoverage_(prefix, st)
             self.setLookAheadCoverage_(suffix, st)
@@ -607,7 +607,7 @@ class SinglePosBuilder(LookupBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GPOS', 1)
         self.locations = {}  # glyph -> (filename, line, column)
-        self.mapping = {}  # glyph -> otTables.ValueRecord
+        self.mapping = {}  # glyph -> ot.ValueRecord
 
     def add_pos(self, location, glyph, valueRecord):
         otValueRecord, _ = makeOpenTypeValueRecord(
@@ -726,14 +726,14 @@ def buildBaseArray(bases, numMarkClasses, glyphMap):
 
 
 def buildBaseRecord(anchors):
-    """[otTables.Anchor, otTables.Anchor, ...] --> otTables.BaseRecord"""
+    """[ot.Anchor, ot.Anchor, ...] --> ot.BaseRecord"""
     self = ot.BaseRecord()
     self.BaseAnchor = anchors
     return self
 
 
 def buildComponentRecord(anchors):
-    """[otTables.Anchor, otTables.Anchor, ...] --> otTables.ComponentRecord"""
+    """[ot.Anchor, ot.Anchor, ...] --> ot.ComponentRecord"""
     if not anchors:
         return None
     self = ot.ComponentRecord()
@@ -742,7 +742,7 @@ def buildComponentRecord(anchors):
 
 
 def buildCursivePosSubtable(attach, glyphMap):
-    """{"alef": (entry, exit)} --> otTables.CursivePos"""
+    """{"alef": (entry, exit)} --> ot.CursivePos"""
     if not attach:
         return None
     self = ot.CursivePos()
@@ -760,7 +760,7 @@ def buildCursivePosSubtable(attach, glyphMap):
 
 
 def buildDevice(deltas):
-    """{8:+1, 10:-3, ...} --> otTables.Device"""
+    """{8:+1, 10:-3, ...} --> ot.Device"""
     if not deltas:
         return None
     self = ot.Device()
@@ -804,7 +804,7 @@ def buildLigatureAttach(components):
 
 
 def buildMarkArray(marks, glyphMap):
-    """{"acute": (markClass, otTables.Anchor)} --> otTables.MarkArray"""
+    """{"acute": (markClass, ot.Anchor)} --> ot.MarkArray"""
     self = ot.MarkArray()
     self.MarkRecord = []
     for mark in sorted(marks.keys(), key=glyphMap.__getitem__):
@@ -894,7 +894,7 @@ def buildMarkRecord(classID, anchor):
 
 
 def buildMark2Record(anchors):
-    """[otTables.Anchor, otTables.Anchor, ...] --> otTables.Mark2Record"""
+    """[ot.Anchor, ot.Anchor, ...] --> ot.Mark2Record"""
     self = ot.Mark2Record()
     self.Mark2Anchor = anchors
     return self
@@ -983,7 +983,7 @@ def buildPairPosGlyphsSubtable(pairs, glyphMap,
 
 
 def buildSinglePos(mapping, glyphMap):
-    """{"glyph": ValueRecord} --> [otTables.SinglePos*]"""
+    """{"glyph": ValueRecord} --> [ot.SinglePos*]"""
     result, handled = [], set()
     # In SinglePos format 1, the covered glyphs all share the same ValueRecord.
     # In format 2, each glyph has its own ValueRecord, but these records
@@ -1037,7 +1037,7 @@ def buildSinglePos(mapping, glyphMap):
 
 
 def buildSinglePosSubtable(values, glyphMap):
-    """{glyphName: otBase.ValueRecord} --> otTables.SinglePos"""
+    """{glyphName: otBase.ValueRecord} --> ot.SinglePos"""
     self = ot.SinglePos()
     self.Coverage = buildCoverage(values.keys(), glyphMap)
     valueRecords = [values[g] for g in self.Coverage.glyphs]
@@ -1082,7 +1082,7 @@ _DeviceTuple = namedtuple("_DeviceTuple", "DeltaFormat StartSize EndSize DeltaVa
 
 
 def _makeDeviceTuple(device):
-    """otTables.Device --> tuple, for making device tables unique"""
+    """ot.Device --> tuple, for making device tables unique"""
     return _DeviceTuple(
         device.DeltaFormat,
         device.StartSize,
@@ -1111,7 +1111,7 @@ def buildValue(value):
 # GDEF
 
 def buildAttachList(attachPoints, glyphMap):
-    """{"glyphName": [4, 23]} --> otTables.AttachList, or None"""
+    """{"glyphName": [4, 23]} --> ot.AttachList, or None"""
     if not attachPoints:
         return None
     self = ot.AttachList()
@@ -1123,7 +1123,7 @@ def buildAttachList(attachPoints, glyphMap):
 
 
 def buildAttachPoint(points):
-    """[4, 23, 41] --> otTables.AttachPoint"""
+    """[4, 23, 41] --> ot.AttachPoint"""
     if not points:
         return None
     self = ot.AttachPoint()
@@ -1133,7 +1133,7 @@ def buildAttachPoint(points):
 
 
 def buildCaretValueForCoord(coord):
-    """500 --> otTables.CaretValue, format 1"""
+    """500 --> ot.CaretValue, format 1"""
     self = ot.CaretValue()
     self.Format = 1
     self.Coordinate = coord
@@ -1141,7 +1141,7 @@ def buildCaretValueForCoord(coord):
 
 
 def buildCaretValueForPoint(point):
-    """4 --> otTables.CaretValue, format 2"""
+    """4 --> ot.CaretValue, format 2"""
     self = ot.CaretValue()
     self.Format = 2
     self.CaretValuePoint = point
@@ -1149,7 +1149,7 @@ def buildCaretValueForPoint(point):
 
 
 def buildLigCaretList(coords, points, glyphMap):
-    """{"f_f_i":[300,600]}, {"c_t":[28]} --> otTables.LigCaretList, or None"""
+    """{"f_f_i":[300,600]}, {"c_t":[28]} --> ot.LigCaretList, or None"""
     glyphs = set(coords.keys()) if coords else set()
     if points:
         glyphs.update(points.keys())
@@ -1165,7 +1165,7 @@ def buildLigCaretList(coords, points, glyphMap):
 
 
 def buildLigGlyph(coords, points):
-    """([500], [4]) --> otTables.LigGlyph; None for empty coords/points"""
+    """([500], [4]) --> ot.LigGlyph; None for empty coords/points"""
     carets = []
     if coords:
         carets.extend([buildCaretValueForCoord(c) for c in sorted(coords)])
@@ -1180,7 +1180,7 @@ def buildLigGlyph(coords, points):
 
 
 def buildMarkGlyphSetsDef(markSets, glyphMap):
-    """[{"acute","grave"}, {"caron","grave"}] --> otTables.MarkGlyphSetsDef"""
+    """[{"acute","grave"}, {"caron","grave"}] --> ot.MarkGlyphSetsDef"""
     if not markSets:
         return None
     self = ot.MarkGlyphSetsDef()
