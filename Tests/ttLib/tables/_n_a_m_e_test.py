@@ -305,13 +305,6 @@ class NameTableTest(unittest.TestCase):
 		self.assertGreaterEqual(nameID, 256)
 		self.assertEqual(nameID, table.findMultilingualName(names, minNameID=256))
 
-	def test_addMultilingualName_singleChar(self):
-		# https://github.com/fonttools/fonttools/issues/1997
-		table = table__n_a_m_e()
-		nameID = table.addMultilingualName({"en": "A"})
-		rec = table.getName(nameID, 3, 1)
-		self.assertEqual(rec.toUnicode(), "A")
-
 	def test_decompile_badOffset(self):
                 # https://github.com/fonttools/fonttools/issues/525
 		table = table__n_a_m_e()
@@ -351,6 +344,11 @@ class NameRecordTest(unittest.TestCase):
 		name = makeName(b"\1", 111, 0, 2, 7)
 		self.assertEqual("utf_16_be", name.getEncoding())
 		self.assertRaises(UnicodeDecodeError, name.toUnicode)
+
+	def test_toUnicode_singleChar(self):
+		# https://github.com/fonttools/fonttools/issues/1997
+		name = makeName("A", 256, 3, 1, 0x409)
+		self.assertEqual(name.toUnicode(), "A")
 
 	def toXML(self, name):
 		writer = XMLWriter(BytesIO())
