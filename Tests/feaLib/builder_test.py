@@ -225,7 +225,7 @@ class BuilderTest(unittest.TestCase):
 
     def test_pairPos_redefinition_warning(self):
         # https://github.com/fonttools/fonttools/issues/1147
-        logger = logging.getLogger("fontTools.feaLib.builder")
+        logger = logging.getLogger("fontTools.otlLib.builder")
         with CapturingLogHandler(logger, "DEBUG") as captor:
             # the pair "yacute semicolon" is redefined in the enum pos
             font = self.build(
@@ -571,7 +571,7 @@ class BuilderTest(unittest.TestCase):
         assert "GSUB" in font
 
     def test_unsupported_subtable_break(self):
-        logger = logging.getLogger("fontTools.feaLib.builder")
+        logger = logging.getLogger("fontTools.otlLib.builder")
         with CapturingLogHandler(logger, level='WARNING') as captor:
             self.build(
                 "feature test {"

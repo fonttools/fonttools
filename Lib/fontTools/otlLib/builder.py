@@ -5,6 +5,10 @@ from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
 from fontTools.ttLib.tables import otBase
 from fontTools.otlLib.error import OpentypeLibError
+import logging
+
+
+log = logging.getLogger(__name__)
 
 
 def buildCoverage(glyphs, glyphMap):
