@@ -441,7 +441,7 @@ class NameRecord(object):
 		encoding = self.getEncoding()
 		string = self.string
 
-		if encoding == 'utf_16_be' and len(string) % 2 == 1:
+		if isinstance(string, bytes) and encoding == 'utf_16_be' and len(string) % 2 == 1:
 			# Recover badly encoded UTF-16 strings that have an odd number of bytes:
 			# - If the last byte is zero, drop it.  Otherwise,
 			# - If all the odd bytes are zero and all the even bytes are ASCII,

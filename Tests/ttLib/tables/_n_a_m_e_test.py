@@ -305,6 +305,13 @@ class NameTableTest(unittest.TestCase):
 		self.assertGreaterEqual(nameID, 256)
 		self.assertEqual(nameID, table.findMultilingualName(names, minNameID=256))
 
+	def test_addMultilingualName_singleChar(self):
+		# https://github.com/fonttools/fonttools/issues/1997
+		table = table__n_a_m_e()
+		nameID = table.addMultilingualName({"en": "A"})
+		rec = table.getName(nameID, 3, 1)
+		self.assertEqual(rec.toUnicode(), "A")
+
 	def test_decompile_badOffset(self):
                 # https://github.com/fonttools/fonttools/issues/525
 		table = table__n_a_m_e()
