@@ -565,8 +565,10 @@ class PairPosBuilder(LookupBuilder):
                     builder.addSubtableBreak()
                 continue
             valFormat1, valFormat2 = 0, 0
-            if value1: valFormat1 = value1.getFormat()
-            if value2: valFormat2 = value2.getFormat()
+            if value1:
+                valFormat1 = value1.getFormat()
+            if value2:
+                valFormat2 = value2.getFormat()
             builder = builders.get((valFormat1, valFormat2))
             if builder is None:
                 builder = ClassPairPosSubtableBuilder(
