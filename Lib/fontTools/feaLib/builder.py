@@ -197,8 +197,14 @@ class Builder(object):
             elif "BASE" in self.font:
                 del self.font["BASE"]
 
+    def format_location_(self, location):
+        if not location:
+            return None
+        path, line, column = location
+        return f"{path}:{line}:{column}"
+
     def get_chained_lookup_(self, location, builder_class):
-        result = builder_class(self.font, location)
+        result = builder_class(self.font, self.format_location_(location))
         result.lookupflag = self.lookupflag_
         result.markFilterSet = self.lookupflag_markFilterSet_
         self.lookups_.append(result)
@@ -220,7 +226,7 @@ class Builder(object):
             raise FeatureLibError(
                 "Within a named lookup block, all rules must be of "
                 "the same lookup type and flag", location)
-        self.cur_lookup_ = builder_class(self.font, location)
+        self.cur_lookup_ = builder_class(self.font, self.format_location_(location))
         self.cur_lookup_.lookupflag = self.lookupflag_
         self.cur_lookup_.markFilterSet = self.lookupflag_markFilterSet_
         self.lookups_.append(self.cur_lookup_)
@@ -580,7 +586,7 @@ class Builder(object):
         try:
             otLookups = [l.build() for l in lookups]
         except OpenTypeLibError as e:
-            raise FeatureLibError("Failed to build",()) from e
+            raise FeatureLibError("Failed to build", location=None) from e
         return otLookups
 
     def makeTable(self, tag):
@@ -1072,7 +1078,7 @@ class Builder(object):
         lookup.addClassPair(location, glyphclass1, v1, glyphclass2, v2)
 
     def add_subtable_break(self, location):
-        self.cur_lookup_.add_subtable_break(location)
+        self.cur_lookup_.add_subtable_break(self.format_location_(location))
 
     def add_specific_pair_pos(self, location, glyph1, value1, glyph2, value2):
         lookup = self.get_lookup_(location, PairPosBuilder)
