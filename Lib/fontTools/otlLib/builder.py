@@ -4,7 +4,7 @@ from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
 from fontTools.ttLib.tables import otBase
-from fontTools.otlLib.error import OpentypeLibError
+from fontTools.otlLib.error import OpenTypeLibError
 import logging
 
 
@@ -129,7 +129,7 @@ class LookupBuilder(object):
         return subtables
 
     def add_subtable_break(self, location):
-        log.warning(OpentypeLibError(
+        log.warning(OpenTypeLibError(
             'unsupported "subtable" statement for lookup type',
             location
         ))
@@ -187,7 +187,7 @@ class ChainContextPosBuilder(LookupBuilder):
                     for l in lookupList:
                         st.PosCount += 1
                         if l.lookup_index is None:
-                            raise OpentypeLibError('Missing index of the specified '
+                            raise OpenTypeLibError('Missing index of the specified '
                                 'lookup, might be a substitution lookup',
                                 self.location)
                         rec = ot.PosLookupRecord()
@@ -243,7 +243,7 @@ class ChainContextSubstBuilder(LookupBuilder):
                     for l in lookupList:
                         st.SubstCount += 1
                         if l.lookup_index is None:
-                            raise OpentypeLibError('Missing index of the specified '
+                            raise OpenTypeLibError('Missing index of the specified '
                                 'lookup, might be a positioning lookup',
                                 self.location)
                         rec = ot.SubstLookupRecord()
@@ -591,7 +591,7 @@ class SinglePosBuilder(LookupBuilder):
     def add_pos(self, location, glyph, otValueRecord):
         if not self.can_add(glyph, otValueRecord):
             otherLoc = self.locations[glyph]
-            raise OpentypeLibError(
+            raise OpenTypeLibError(
                 'Already defined different position for glyph "%s" at %s:%d:%d'
                 % (glyph, otherLoc[0], otherLoc[1], otherLoc[2]),
                 location)

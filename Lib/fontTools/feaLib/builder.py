@@ -24,7 +24,7 @@ from fontTools.otlLib.builder import (
     PairPosBuilder,
     SinglePosBuilder,
 )
-from fontTools.otlLib.error import OpentypeLibError
+from fontTools.otlLib.error import OpenTypeLibError
 from collections import defaultdict
 import itertools
 import logging
@@ -579,7 +579,7 @@ class Builder(object):
             lookups.append(lookup)
         try:
             otLookups = [l.build() for l in lookups]
-        except OpentypeLibError as e:
+        except OpenTypeLibError as e:
             raise FeatureLibError("Failed to build",()) from e
         return otLookups
 
@@ -1090,7 +1090,7 @@ class Builder(object):
                 for glyph in glyphs:
                     try:
                         lookup.add_pos(location, glyph, otValueRecord)
-                    except OpentypeLibError as e:
+                    except OpenTypeLibError as e:
                         raise FeatureLibError("Failed to build", location) from e
 
     def add_single_pos_chained_(self, location, prefix, suffix, pos):

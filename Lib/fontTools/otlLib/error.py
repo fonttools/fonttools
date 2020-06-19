@@ -1,6 +1,6 @@
 
 
-class OpentypeLibError(Exception):
+class OpenTypeLibError(Exception):
     def __init__(self, message, location):
         Exception.__init__(self, message)
         self.location = location
