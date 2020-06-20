@@ -452,7 +452,7 @@ class GlyphSet(_UFOBaseIO):
 				self._existingFileNames = {}
 				for fileName in self.contents.values():
 					self._existingFileNames[fileName] = fileName.lower()
-			fileName = self.glyphNameToFileName(glyphName, self._existingFileNames)
+			fileName = self.glyphNameToFileName(glyphName, self._existingFileNames.values())
 			self.contents[glyphName] = fileName
 			self._existingFileNames[fileName] = fileName.lower()
 			if self._reverseContents is not None:
