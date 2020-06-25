@@ -6,8 +6,6 @@ class FeatureLibError(Exception):
         self.location = location
 
     def __str__(self):
-        if self.__cause__:
-            return self.__cause__.__str__()
         message = Exception.__str__(self)
         if self.location:
             path, line, column = self.location

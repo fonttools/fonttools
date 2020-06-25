@@ -580,7 +580,7 @@ class Builder(object):
         try:
             otLookups = [l.build() for l in lookups]
         except OpenTypeLibError as e:
-            raise FeatureLibError("Failed to build",()) from e
+            raise FeatureLibError(str(e), e.location) from e
         return otLookups
 
     def makeTable(self, tag):
@@ -1091,7 +1091,7 @@ class Builder(object):
                     try:
                         lookup.add_pos(location, glyph, otValueRecord)
                     except OpenTypeLibError as e:
-                        raise FeatureLibError("Failed to build", location) from e
+                        raise FeatureLibError(str(e), e.location) from e
 
     def add_single_pos_chained_(self, location, prefix, suffix, pos):
         # https://github.com/fonttools/fonttools/issues/514
