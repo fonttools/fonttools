@@ -1,5 +1,6 @@
 from fontTools.misc.py23 import *
 from fontTools.feaLib.error import FeatureLibError
+from fontTools.feaLib.location import FeatureLibLocation
 from fontTools.misc.encodingTools import getEncoding
 from collections import OrderedDict
 import itertools
@@ -112,7 +113,9 @@ class Element(object):
     """A base class representing "something" in a feature file."""
 
     def __init__(self, location=None):
-        #: location of this element - tuple of ``(filename, line, column)``
+        #: location of this element as a `FeatureLibLocation` object.
+        if location and not isinstance(location, FeatureLibLocation):
+            location = FeatureLibLocation(*location)
         self.location = location
 
     def build(self, builder):
