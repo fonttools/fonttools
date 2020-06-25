@@ -540,9 +540,9 @@ class PairPosBuilder(LookupBuilder):
             # by an 'enum' rule to be overridden by preceding single pairs
             otherLoc = self.locations[key]
             log.debug(
-                'Already defined position for pair %s %s at %s:%d:%d; '
+                'Already defined position for pair %s %s at %s; '
                 'choosing the first value',
-                glyph1, glyph2, otherLoc[0], otherLoc[1], otherLoc[2])
+                glyph1, glyph2, otherLoc)
         else:
             self.glyphPairs[key] = (value1, value2)
             self.locations[key] = location
@@ -594,8 +594,8 @@ class SinglePosBuilder(LookupBuilder):
         if not self.can_add(glyph, otValueRecord):
             otherLoc = self.locations[glyph]
             raise OpenTypeLibError(
-                'Already defined different position for glyph "%s" at %s:%d:%d'
-                % (glyph, otherLoc[0], otherLoc[1], otherLoc[2]),
+                'Already defined different position for glyph "%s" at %s'
+                % (glyph, otherLoc),
                 location)
         if otValueRecord:
             self.mapping[glyph] = otValueRecord

@@ -795,8 +795,8 @@ class Builder(object):
                 _, loc = self.markAttach_[glyph]
                 raise FeatureLibError(
                     "Glyph %s already has been assigned "
-                    "a MarkAttachmentType at %s:%d:%d" % (
-                        glyph, loc[0], loc[1], loc[2]),
+                    "a MarkAttachmentType at %s" % (
+                        glyph, loc),
                     location)
             self.markAttach_[glyph] = (id_, location)
         return id_
@@ -963,7 +963,7 @@ class Builder(object):
                     'Removing duplicate multiple substitution from glyph'
                     ' "%s" to %s%s',
                     glyph, replacements,
-                    ' at {}:{}:{}'.format(*location) if location else '',
+                    ' at {}'.format(location) if location else '',
                 )
             else:
                 raise FeatureLibError(
@@ -991,8 +991,8 @@ class Builder(object):
                 if to_glyph == lookup.mapping[from_glyph]:
                     log.info(
                         'Removing duplicate single substitution from glyph'
-                        ' "%s" to "%s" at %s:%i:%i',
-                        from_glyph, to_glyph, *location,
+                        ' "%s" to "%s" at %s',
+                        from_glyph, to_glyph, location,
                     )
                 else:
                     raise FeatureLibError(
@@ -1120,8 +1120,8 @@ class Builder(object):
         oldClass, oldLocation = self.glyphClassDefs_.get(glyph, (None, None))
         if oldClass and oldClass != glyphClass:
             raise FeatureLibError(
-                "Glyph %s was assigned to a different class at %s:%s:%s" %
-                (glyph, oldLocation[0], oldLocation[1], oldLocation[2]),
+                "Glyph %s was assigned to a different class at %s" %
+                (glyph, oldLocation),
                 location)
         self.glyphClassDefs_[glyph] = (glyphClass, location)
 
