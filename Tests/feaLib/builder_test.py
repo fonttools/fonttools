@@ -598,6 +598,26 @@ class BuilderTest(unittest.TestCase):
         self.assertIn("GSUB", font)
         self.assertNotIn("name", font)
 
+    def test_singlePos_multiplePositionsForSameGlyph(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Already defined different position for glyph",
+            self.build,
+            "lookup foo {"
+            "    pos A -45; "
+            "    pos A 45; "
+            "} foo;")
+
+    def test_pairPos_enumRuleOverridenBySinglePair_DEBUG(self):
+        logger = logging.getLogger("fontTools.otlLib.builder")
+        with CapturingLogHandler(logger, "DEBUG") as captor:
+            self.build(
+                "feature test {"
+                "    enum pos A [V Y] -80;"
+                "    pos A V -75;"
+                "} test;")
+        captor.assertRegex('Already defined position for pair A V at')
+
 
 def generate_feature_file_test(name):
     return lambda self: self.check_feature_file(name)
