@@ -1593,24 +1593,24 @@ otData = [
 	]),
 
 	('Affine2x2', [
-		('VariableScalar', 'xx', None, None, ''),
-		('VariableScalar', 'xy', None, None, ''),
-		('VariableScalar', 'yx', None, None, ''),
-		('VariableScalar', 'yy', None, None, ''),
+		('VarFixed', 'xx', None, None, ''),
+		('VarFixed', 'xy', None, None, ''),
+		('VarFixed', 'yx', None, None, ''),
+		('VarFixed', 'yy', None, None, ''),
 	]),
 
 	('Point', [
-		('VariablePosition', 'x', None, None, ''),
-		('VariablePosition', 'y', None, None, ''),
+		('VarInt16', 'x', None, None, ''),
+		('VarInt16', 'y', None, None, ''),
 	]),
 
 	('Color', [
 		('uint16', 'PaletteIndex', None, None, 'Index value to use with a selected color palette.'),
-		('VariableNormalizedScalar', 'Transparency', None, None, 'Values outsided [0.,1.] reserved'),
+		('VarF2Dot14', 'Transparency', None, None, 'Values outsided [0.,1.] reserved'),
 	]),
 
 	('ColorStop', [
-		('VariableNormalizedScalar', 'StopOffset', None, None, ''),
+		('VarF2Dot14', 'StopOffset', None, None, ''),
 		('Color', 'Color', None, None, ''),
 	]),
 
@@ -1638,8 +1638,8 @@ otData = [
 		('LOffset', 'ColorLine', None, None, 'Offset (from beginning of Paint table) to ColorLine subtable.'),
 		('Point', 'c0', None, None, ''),
 		('Point', 'c1', None, None, ''),
-		('VariableDistance', 'r0', None, None, ''),
-		('VariableDistance', 'r1', None, None, ''),
+		('VarUInt16', 'r0', None, None, ''),
+		('VarUInt16', 'r1', None, None, ''),
 		('LOffsetTo(Affine2x2)', 'Affine', None, None, 'Offset (from beginning of Paint table) to Affine2x2 subtable.'),
 	]),
 ]

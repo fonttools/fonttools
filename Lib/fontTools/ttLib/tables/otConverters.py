@@ -1686,22 +1686,22 @@ class _NamedTupleConverter(BaseConverter):
 		return self.tupleClass(**kwargs)
 
 
-class VariableScalar(_NamedTupleConverter):
+class VarFixed(_NamedTupleConverter):
 	tupleClass = VariableFloat
 	converterClasses = [Fixed, ULong]
 
 
-class VariableNormalizedScalar(_NamedTupleConverter):
+class VarF2Dot14(_NamedTupleConverter):
 	tupleClass = VariableFloat
 	converterClasses = [F2Dot14, ULong]
 
 
-class VariablePosition(_NamedTupleConverter):
+class VarInt16(_NamedTupleConverter):
 	tupleClass = VariableInt
 	converterClasses = [Short, ULong]
 
 
-class VariableDistance(_NamedTupleConverter):
+class VarUInt16(_NamedTupleConverter):
 	tupleClass = VariableInt
 	converterClasses = [UShort, ULong]
 
@@ -1762,8 +1762,8 @@ converterMapping = {
 	"LOffsetTo":	lambda C: partial(LTable, tableClass=C),
 
 	# Variable types
-	"VariableScalar": VariableScalar,
-	"VariableNormalizedScalar": VariableNormalizedScalar,
-	"VariablePosition": VariablePosition,
-	"VariableDistance": VariableDistance,
+	"VarFixed": VarFixed,
+	"VarF2Dot14": VarF2Dot14,
+	"VarInt16": VarInt16,
+	"VarUInt16": VarUInt16,
 }
