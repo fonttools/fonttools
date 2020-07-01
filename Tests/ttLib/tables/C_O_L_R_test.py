@@ -89,7 +89,7 @@ COLR_V1_DATA = (
     b"\x00\x0b"  # LayerV1Array.LayerV1Record[0].LayerGlyph (11)
     b"\x00\x00\x00\x16"  # Offset to Paint from beginning of LayerV1Array (22)
     b"\x00\x0c"  # LayerV1Array.LayerV1Record[1].LayerGlyph (12)
-    b"\x00\x00\x00 "  # Offset to Paint from beginning of LayerV1Array
+    b"\x00\x00\x00 "  # Offset to Paint from beginning of LayerV1Array (32)
     b"\x00\r"  # LayerV1Array.LayerV1Record[2].LayerGlyph (13)
     b"\x00\x00\x00x"  # Offset to Paint from beginning of LayerV1Array (120)
     b"\x00\x01"  # Paint.Format (1)
