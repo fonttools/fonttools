@@ -295,9 +295,10 @@ class Tag(SimpleValue):
 
 class GlyphID(SimpleValue):
 	staticSize = 2
+	typecode = "H"
 	def readArray(self, reader, font, tableDict, count):
 		glyphOrder = font.getGlyphOrder()
-		gids = reader.readUShortArray(count)
+		gids = reader.readArray(self.typecode, self.staticSize, count)
 		try:
 			l = [glyphOrder[gid] for gid in gids]
 		except IndexError:
@@ -305,9 +306,14 @@ class GlyphID(SimpleValue):
 			l = [font.getGlyphName(gid) for gid in gids]
 		return l
 	def read(self, reader, font, tableDict):
-		return font.getGlyphName(reader.readUShort())
+		return font.getGlyphName(reader.readValue(self.typecode, self.staticSize))
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
-		writer.writeUShort(font.getGlyphID(value))
+		writer.writeValue(self.typecode, font.getGlyphID(value))
+
+
+class GlyphID32(GlyphID):
+	staticSize = 4
+	typecode = "L"
 
 
 class NameID(UShort):
@@ -1725,6 +1731,7 @@ converterMapping = {
 	"Version":	Version,
 	"Tag":		Tag,
 	"GlyphID":	GlyphID,
+	"GlyphID32":	GlyphID32,
 	"NameID":	NameID,
 	"DeciPoints":	DeciPoints,
 	"Fixed":	Fixed,

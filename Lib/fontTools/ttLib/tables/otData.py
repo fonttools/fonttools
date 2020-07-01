@@ -1578,7 +1578,7 @@ otData = [
 	]),
 
 	('BaseGlyphV1Record', [
-		('GlyphID', 'BaseGlyph', None, None, 'Glyph ID of reference glyph.'),
+		('GlyphID32', 'BaseGlyph', None, None, 'Glyph ID of reference glyph.'),
 		('LOffset', 'LayerV1List', None, None, 'Offset (from beginning of BaseGlyphV1List) to LayerV1List.'),
 	]),
 
@@ -1588,7 +1588,7 @@ otData = [
 	]),
 
 	('LayerV1Record', [
-		('GlyphID', 'LayerGlyph', None, None, 'Glyph ID of layer glyph (must be in z-order from bottom to top).'),
+		('GlyphID32', 'LayerGlyph', None, None, 'Glyph ID of layer glyph (must be in z-order from bottom to top).'),
 		('LOffset', 'Paint', None, None, 'Offset (from beginning of LayerV1List) to Paint subtable.'),
 	]),
 

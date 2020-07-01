@@ -134,48 +134,38 @@ class OTTableReader(object):
 		offset = self.offset + offset
 		return self.__class__(self.data, self.localState, offset, self.tableTag)
 
-	def readUShort(self):
+	def readValue(self, typecode, staticSize):
 		pos = self.pos
-		newpos = pos + 2
-		value, = struct.unpack(">H", self.data[pos:newpos])
+		newpos = pos + staticSize
+		value, = struct.unpack(f">{typecode}", self.data[pos:newpos])
 		self.pos = newpos
 		return value
 
-	def readUShortArray(self, count):
+	def readUShort(self):
+		return self.readValue("H", staticSize=2)
+
+	def readArray(self, typecode, staticSize, count):
 		pos = self.pos
-		newpos = pos + count * 2
-		value = array.array("H", self.data[pos:newpos])
+		newpos = pos + count * staticSize
+		value = array.array(typecode, self.data[pos:newpos])
 		if sys.byteorder != "big": value.byteswap()
 		self.pos = newpos
 		return value
 
+	def readUShortArray(self, count):
+		return self.readArray("H", staticSize=2, count=count)
+
 	def readInt8(self):
-		pos = self.pos
-		newpos = pos + 1
-		value, = struct.unpack(">b", self.data[pos:newpos])
-		self.pos = newpos
-		return value
+		return self.readValue("b", staticSize=1)
 
 	def readShort(self):
-		pos = self.pos
-		newpos = pos + 2
-		value, = struct.unpack(">h", self.data[pos:newpos])
-		self.pos = newpos
-		return value
+		return self.readValue("h", staticSize=2)
 
 	def readLong(self):
-		pos = self.pos
-		newpos = pos + 4
-		value, = struct.unpack(">l", self.data[pos:newpos])
-		self.pos = newpos
-		return value
+		return self.readValue("l", staticSize=4)
 
 	def readUInt8(self):
-		pos = self.pos
-		newpos = pos + 1
-		value, = struct.unpack(">B", self.data[pos:newpos])
-		self.pos = newpos
-		return value
+		return self.readValue("B", staticSize=1)
 
 	def readUInt24(self):
 		pos = self.pos
@@ -185,11 +175,7 @@ class OTTableReader(object):
 		return value
 
 	def readULong(self):
-		pos = self.pos
-		newpos = pos + 4
-		value, = struct.unpack(">L", self.data[pos:newpos])
-		self.pos = newpos
-		return value
+		return self.readValue("L", staticSize=4)
 
 	def readTag(self):
 		pos = self.pos
@@ -416,6 +402,9 @@ class OTTableWriter(object):
 					# subtable writers can have more than one parent writer.
 					# But we just care about first one right now.
 		return subwriter
+
+	def writeValue(self, typecode, value):
+		self.items.append(struct.pack(f">{typecode}", value))
 
 	def writeUShort(self, value):
 		assert 0 <= value < 0x10000, value
