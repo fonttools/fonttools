@@ -476,10 +476,10 @@ def buildLayerV1Record(layerGlyph: str, paint: _PaintInput) -> ot.LayerV1Record:
     return self
 
 
-def buildLayerV1Array(
+def buildLayerV1List(
     layers: Sequence[Union[_LayerTuple, ot.LayerV1Record]]
-) -> ot.LayerV1Array:
-    self = ot.LayerV1Array()
+) -> ot.LayerV1List:
+    self = ot.LayerV1List()
     self.LayerCount = len(layers)
     records = []
     for layer in layers:
@@ -494,18 +494,18 @@ def buildLayerV1Array(
 
 
 def buildBaseGlyphV1Record(
-    baseGlyph: str, layers: Union[_LayersList, ot.LayerV1Array]
+    baseGlyph: str, layers: Union[_LayersList, ot.LayerV1List]
 ) -> ot.BaseGlyphV1List:
     self = ot.BaseGlyphV1Record()
     self.BaseGlyph = baseGlyph
-    if not isinstance(layers, ot.LayerV1Array):
-        layers = buildLayerV1Array(layers)
-    self.LayerV1Array = layers
+    if not isinstance(layers, ot.LayerV1List):
+        layers = buildLayerV1List(layers)
+    self.LayerV1List = layers
     return self
 
 
 def buildBaseGlyphV1List(
-    colorGlyphs: Union[_ColorGlyphsDict, Dict[str, ot.LayerV1Array]],
+    colorGlyphs: Union[_ColorGlyphsDict, Dict[str, ot.LayerV1List]],
     glyphMap: Optional[Mapping[str, int]] = None,
 ) -> ot.BaseGlyphV1List:
     if glyphMap is not None:

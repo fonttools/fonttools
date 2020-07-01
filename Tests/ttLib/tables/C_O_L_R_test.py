@@ -84,14 +84,14 @@ COLR_V1_DATA = (
     b"\x00\x02"  # LayerRecord[2].PaletteIndex (2)
     b"\x00\x00\x00\x01"  # BaseGlyphV1List.BaseGlyphCount (1)
     b"\x00\n"  # BaseGlyphV1List.BaseGlyphV1Record[0].BaseGlyph (10)
-    b"\x00\x00\x00\n"  # Offset to LayerV1Array from beginning of BaseGlyphV1List (10)
-    b"\x00\x00\x00\x03"  # LayerV1Array.LayerCount (3)
-    b"\x00\x0b"  # LayerV1Array.LayerV1Record[0].LayerGlyph (11)
-    b"\x00\x00\x00\x16"  # Offset to Paint from beginning of LayerV1Array (22)
-    b"\x00\x0c"  # LayerV1Array.LayerV1Record[1].LayerGlyph (12)
-    b"\x00\x00\x00 "  # Offset to Paint from beginning of LayerV1Array (32)
-    b"\x00\r"  # LayerV1Array.LayerV1Record[2].LayerGlyph (13)
-    b"\x00\x00\x00x"  # Offset to Paint from beginning of LayerV1Array (120)
+    b"\x00\x00\x00\n"  # Offset to LayerV1List from beginning of BaseGlyphV1List (10)
+    b"\x00\x00\x00\x03"  # LayerV1List.LayerCount (3)
+    b"\x00\x0b"  # LayerV1List.LayerV1Record[0].LayerGlyph (11)
+    b"\x00\x00\x00\x16"  # Offset to Paint from beginning of LayerV1List (22)
+    b"\x00\x0c"  # LayerV1List.LayerV1Record[1].LayerGlyph (12)
+    b"\x00\x00\x00 "  # Offset to Paint from beginning of LayerV1List (32)
+    b"\x00\r"  # LayerV1List.LayerV1Record[2].LayerGlyph (13)
+    b"\x00\x00\x00x"  # Offset to Paint from beginning of LayerV1List (120)
     b"\x00\x01"  # Paint.Format (1)
     b"\x00\x02"  # Paint.Color.PaletteIndex (2)
     b" \x00"  # Paint.Color.Transparency.value (0.5)
@@ -194,7 +194,7 @@ COLR_V1_XML = [
     "  <!-- BaseGlyphCount=1 -->",
     '  <BaseGlyphV1Record index="0">',
     '    <BaseGlyph value="glyph00010"/>',
-    "    <LayerV1Array>",
+    "    <LayerV1List>",
     "      <!-- LayerCount=3 -->",
     '      <LayerV1Record index="0">',
     '        <LayerGlyph value="glyph00011"/>',
@@ -286,7 +286,7 @@ COLR_V1_XML = [
     "          </Affine>",
     "        </Paint>",
     "      </LayerV1Record>",
-    "    </LayerV1Array>",
+    "    </LayerV1List>",
     "  </BaseGlyphV1Record>",
     "</BaseGlyphV1List>",
 ]

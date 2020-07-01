@@ -472,7 +472,7 @@ def test_buildLayerV1Record_from_dict():
     assert layer.Paint.r0.value == 4
 
 
-def test_buildLayerV1Array():
+def test_buildLayerV1List():
     layers = [
         ("a", 1),
         ("b", {"format": 1, "paletteIndex": 2, "transparency": 0.5}),
@@ -504,7 +504,7 @@ def test_buildLayerV1Array():
         ),
         builder.buildLayerV1Record("e", builder.buildSolidColorPaint(8)),
     ]
-    layersArray = builder.buildLayerV1Array(layers)
+    layersArray = builder.buildLayerV1List(layers)
 
     assert layersArray.LayerCount == len(layersArray.LayerV1Record)
     assert all(isinstance(l, ot.LayerV1Record) for l in layersArray.LayerV1Record)
@@ -513,12 +513,12 @@ def test_buildLayerV1Array():
 def test_buildBaseGlyphV1Record():
     baseGlyphRec = builder.buildBaseGlyphV1Record("a", [("b", 0), ("c", 1)])
     assert baseGlyphRec.BaseGlyph == "a"
-    assert isinstance(baseGlyphRec.LayerV1Array, ot.LayerV1Array)
+    assert isinstance(baseGlyphRec.LayerV1List, ot.LayerV1List)
 
-    layerArray = builder.buildLayerV1Array([("b", 0), ("c", 1)])
+    layerArray = builder.buildLayerV1List([("b", 0), ("c", 1)])
     baseGlyphRec = builder.buildBaseGlyphV1Record("a", layerArray)
     assert baseGlyphRec.BaseGlyph == "a"
-    assert baseGlyphRec.LayerV1Array == layerArray
+    assert baseGlyphRec.LayerV1List == layerArray
 
 
 def test_buildBaseGlyphV1List():
@@ -538,7 +538,7 @@ def test_buildBaseGlyphV1List():
                 },
             ),
         ],
-        "g": builder.buildLayerV1Array([("h", 5)]),
+        "g": builder.buildLayerV1List([("h", 5)]),
     }
     glyphMap = {
         ".notdef": 0,
@@ -713,12 +713,12 @@ class BuildCOLRTest(object):
         )
         assert colr.table.BaseGlyphV1List.BaseGlyphV1Record[0].BaseGlyph == "d"
         assert isinstance(
-            colr.table.BaseGlyphV1List.BaseGlyphV1Record[0].LayerV1Array,
-            ot.LayerV1Array,
+            colr.table.BaseGlyphV1List.BaseGlyphV1Record[0].LayerV1List,
+            ot.LayerV1List,
         )
         assert (
             colr.table.BaseGlyphV1List.BaseGlyphV1Record[0]
-            .LayerV1Array.LayerV1Record[0]
+            .LayerV1List.LayerV1Record[0]
             .LayerGlyph
             == "e"
         )

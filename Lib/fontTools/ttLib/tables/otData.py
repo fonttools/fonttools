@@ -1579,17 +1579,17 @@ otData = [
 
 	('BaseGlyphV1Record', [
 		('GlyphID', 'BaseGlyph', None, None, 'Glyph ID of reference glyph.'),
-		('LOffset', 'LayerV1Array', None, None, 'Offset (from beginning of BaseGlyphV1List) to LayerV1Array.'),
+		('LOffset', 'LayerV1List', None, None, 'Offset (from beginning of BaseGlyphV1List) to LayerV1List.'),
 	]),
 
-	('LayerV1Array', [
+	('LayerV1List', [
 		('uint32', 'LayerCount', None, None, 'Number of Version-1 Layer records'),
 		('struct', 'LayerV1Record', 'LayerCount', 0, 'Array of Version-1 Layer records'),
 	]),
 
 	('LayerV1Record', [
 		('GlyphID', 'LayerGlyph', None, None, 'Glyph ID of layer glyph (must be in z-order from bottom to top).'),
-		('LOffset', 'Paint', None, None, 'Offset (from beginning of LayerV1Array) to Paint subtable.'),
+		('LOffset', 'Paint', None, None, 'Offset (from beginning of LayerV1List) to Paint subtable.'),
 	]),
 
 	('Affine2x2', [
