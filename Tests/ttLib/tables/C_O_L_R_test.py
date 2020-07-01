@@ -81,7 +81,7 @@ COLR_V1_DATA = (
     b"\x00\x08"  # LayerRecord[1].LayerGlyph (8)
     b"\x00\x01"  # LayerRecord[1].PaletteIndex (1)
     b"\x00\t"  # LayerRecord[2].LayerGlyph (9)
-    b"\x00\x02"  # LayerRecord[3].PaletteIndex (2)
+    b"\x00\x02"  # LayerRecord[2].PaletteIndex (2)
     b"\x00\x00\x00\x01"  # BaseGlyphV1Array.BaseGlyphCount (1)
     b"\x00\n"  # BaseGlyphV1Array.BaseGlyphV1Record[0].BaseGlyph (10)
     b"\x00\x00\x00\n"  # Offset to LayerV1Array
