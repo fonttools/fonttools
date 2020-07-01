@@ -8,8 +8,8 @@ import pytest
 COLR_V0_DATA = (
     b"\x00\x00"  # Version (0)
     b"\x00\x01"  # BaseGlyphRecordCount (1)
-    b"\x00\x00\x00\x0e"  # Offset to BaseGlyphRecordArray
-    b"\x00\x00\x00\x14"  # Offset to LayerRecordArray
+    b"\x00\x00\x00\x0e"  # Offset to BaseGlyphRecordArray from beginning of table (14)
+    b"\x00\x00\x00\x14"  # Offset to LayerRecordArray from beginning of table (20)
     b"\x00\x03"  # LayerRecordCount (3)
     b"\x00\x06"  # BaseGlyphRecord[0].BaseGlyph (6)
     b"\x00\x00"  # BaseGlyphRecord[0].FirstLayerIndex (0)
@@ -68,10 +68,10 @@ class COLR_V0_Test(object):
 COLR_V1_DATA = (
     b"\x00\x01"  # Version (1)
     b"\x00\x01"  # BaseGlyphRecordCount (1)
-    b"\x00\x00\x00\x16"  # Offset to BaseGlyphRecordArray
-    b"\x00\x00\x00\x1c"  # Offset to LayerRecordArray
+    b"\x00\x00\x00\x16"  # Offset to BaseGlyphRecordArray from beginning of table (22)
+    b"\x00\x00\x00\x1c"  # Offset to LayerRecordArray from beginning of table (28)
     b"\x00\x03"  # LayerRecordCount (3)
-    b"\x00\x00\x00("  # Offset to BaseGlyphV1Array
+    b"\x00\x00\x00("  # Offset to BaseGlyphV1Array from beginning of table (40)
     b"\x00\x00\x00\x00"  # Offset to VarStore (NULL)
     b"\x00\x06"  # BaseGlyphRecord[0].BaseGlyph (6)
     b"\x00\x00"  # BaseGlyphRecord[0].FirstLayerIndex (0)
@@ -84,20 +84,20 @@ COLR_V1_DATA = (
     b"\x00\x02"  # LayerRecord[2].PaletteIndex (2)
     b"\x00\x00\x00\x01"  # BaseGlyphV1Array.BaseGlyphCount (1)
     b"\x00\n"  # BaseGlyphV1Array.BaseGlyphV1Record[0].BaseGlyph (10)
-    b"\x00\x00\x00\n"  # Offset to LayerV1Array
+    b"\x00\x00\x00\n"  # Offset to LayerV1Array from beginning of BaseGlyphV1Array (10)
     b"\x00\x00\x00\x03"  # LayerV1Array.LayerCount (3)
     b"\x00\x0b"  # LayerV1Array.LayerV1Record[0].LayerGlyph (11)
-    b"\x00\x00\x00\x16"  # Offset to Paint
+    b"\x00\x00\x00\x16"  # Offset to Paint from beginning of LayerV1Array (22)
     b"\x00\x0c"  # LayerV1Array.LayerV1Record[1].LayerGlyph (12)
-    b"\x00\x00\x00 "  # Offset to Paint
+    b"\x00\x00\x00 "  # Offset to Paint from beginning of LayerV1Array
     b"\x00\r"  # LayerV1Array.LayerV1Record[2].LayerGlyph (13)
-    b"\x00\x00\x00x"  # Offset to Paint
+    b"\x00\x00\x00x"  # Offset to Paint from beginning of LayerV1Array (120)
     b"\x00\x01"  # Paint.Format (1)
     b"\x00\x02"  # Paint.Color.PaletteIndex (2)
     b" \x00"  # Paint.Color.Transparency.value (0.5)
     b"\x00\x00\x00\x00"  # Paint.Color.Transparency.varIdx (0)
     b"\x00\x02"  # Paint.Format (2)
-    b"\x00\x00\x00*"  # Offset to ColorLine
+    b"\x00\x00\x00*"  # Offset to ColorLine from beginning of Paint (42)
     b"\x00\x01"  # Paint.p0.x.value (1)
     b"\x00\x00\x00\x00"  # Paint.p0.x.varIdx (0)
     b"\x00\x02"  # Paint.p0.y.value (2)
@@ -128,7 +128,7 @@ COLR_V1_DATA = (
     b"\x00\x00"  # ColorLine.ColorStop[2].Color.Transparency.value (0.0)
     b"\x00\x00\x00\x00"  # ColorLine.ColorStop[2].Color.Transparency.varIdx (0)
     b"\x00\x03"  # Paint.Format (3)
-    b"\x00\x00\x00."  # Offset to ColorLine
+    b"\x00\x00\x00."  # Offset to ColorLine from beginning of Paint (46)
     b"\x00\x07"  # Paint.c0.x.value (7)
     b"\x00\x00\x00\x00"
     b"\x00\x08"  # Paint.c0.y.value (8)
@@ -141,7 +141,7 @@ COLR_V1_DATA = (
     b"\x00\x00\x00\x00"
     b"\x00\x0c"  # Paint.r1.value (12)
     b"\x00\x00\x00\x00"
-    b"\x00\x00\x00N"  # Offset to Affine2x2
+    b"\x00\x00\x00N"  # Offset to Affine2x2 from beginning of Paint (78)
     b"\x00\x00"  # ColorLine.Extend (0 or "pad")
     b"\x00\x02"  # ColorLine.StopCount (2)
     b"\x00\x00"  # ColorLine.ColorStop[0].StopOffset.value (0.0)
