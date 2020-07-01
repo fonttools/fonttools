@@ -504,10 +504,10 @@ def test_buildLayerV1List():
         ),
         builder.buildLayerV1Record("e", builder.buildSolidColorPaint(8)),
     ]
-    layersArray = builder.buildLayerV1List(layers)
+    layers = builder.buildLayerV1List(layers)
 
-    assert layersArray.LayerCount == len(layersArray.LayerV1Record)
-    assert all(isinstance(l, ot.LayerV1Record) for l in layersArray.LayerV1Record)
+    assert layers.LayerCount == len(layers.LayerV1Record)
+    assert all(isinstance(l, ot.LayerV1Record) for l in layers.LayerV1Record)
 
 
 def test_buildBaseGlyphV1Record():
@@ -515,10 +515,10 @@ def test_buildBaseGlyphV1Record():
     assert baseGlyphRec.BaseGlyph == "a"
     assert isinstance(baseGlyphRec.LayerV1List, ot.LayerV1List)
 
-    layerArray = builder.buildLayerV1List([("b", 0), ("c", 1)])
-    baseGlyphRec = builder.buildBaseGlyphV1Record("a", layerArray)
+    layers = builder.buildLayerV1List([("b", 0), ("c", 1)])
+    baseGlyphRec = builder.buildBaseGlyphV1Record("a", layers)
     assert baseGlyphRec.BaseGlyph == "a"
-    assert baseGlyphRec.LayerV1List == layerArray
+    assert baseGlyphRec.LayerV1List == layers
 
 
 def test_buildBaseGlyphV1List():
@@ -552,17 +552,17 @@ def test_buildBaseGlyphV1List():
         "h": 8,
     }
 
-    baseGlyphArray = builder.buildBaseGlyphV1List(colorGlyphs, glyphMap)
-    assert baseGlyphArray.BaseGlyphCount == len(colorGlyphs)
-    assert baseGlyphArray.BaseGlyphV1Record[0].BaseGlyph == "d"
-    assert baseGlyphArray.BaseGlyphV1Record[1].BaseGlyph == "a"
-    assert baseGlyphArray.BaseGlyphV1Record[2].BaseGlyph == "g"
+    baseGlyphs = builder.buildBaseGlyphV1List(colorGlyphs, glyphMap)
+    assert baseGlyphs.BaseGlyphCount == len(colorGlyphs)
+    assert baseGlyphs.BaseGlyphV1Record[0].BaseGlyph == "d"
+    assert baseGlyphs.BaseGlyphV1Record[1].BaseGlyph == "a"
+    assert baseGlyphs.BaseGlyphV1Record[2].BaseGlyph == "g"
 
-    baseGlyphArray = builder.buildBaseGlyphV1List(colorGlyphs)
-    assert baseGlyphArray.BaseGlyphCount == len(colorGlyphs)
-    assert baseGlyphArray.BaseGlyphV1Record[0].BaseGlyph == "a"
-    assert baseGlyphArray.BaseGlyphV1Record[1].BaseGlyph == "d"
-    assert baseGlyphArray.BaseGlyphV1Record[2].BaseGlyph == "g"
+    baseGlyphs = builder.buildBaseGlyphV1List(colorGlyphs)
+    assert baseGlyphs.BaseGlyphCount == len(colorGlyphs)
+    assert baseGlyphs.BaseGlyphV1Record[0].BaseGlyph == "a"
+    assert baseGlyphs.BaseGlyphV1Record[1].BaseGlyph == "d"
+    assert baseGlyphs.BaseGlyphV1Record[2].BaseGlyph == "g"
 
 
 def test_splitSolidAndGradientGlyphs():
