@@ -1549,7 +1549,7 @@ otData = [
 		('LOffset', 'BaseGlyphRecordArray', None, None, 'Offset (from beginning of COLR table) to Base Glyph records.'),
 		('LOffset', 'LayerRecordArray', None, None, 'Offset (from beginning of COLR table) to Layer Records.'),
 		('uint16', 'LayerRecordCount', None, None, 'Number of Layer Records.'),
-		('LOffset', 'BaseGlyphV1Array', None, 'Version >= 1', 'Offset (from beginning of COLR table) to array of Version-1 Base Glyph records.'),
+		('LOffset', 'BaseGlyphV1List', None, 'Version >= 1', 'Offset (from beginning of COLR table) to array of Version-1 Base Glyph records.'),
 		('LOffset', 'VarStore', None, 'Version >= 1', 'Offset to variation store (may be NULL)'),
 	]),
 
@@ -1572,14 +1572,14 @@ otData = [
 		('uint16', 'PaletteIndex', None, None, 'Index value to use with a selected color palette.'),
 	]),
 
-	('BaseGlyphV1Array', [
+	('BaseGlyphV1List', [
 		('uint32', 'BaseGlyphCount', None, None, 'Number of Version-1 Base Glyph records'),
 		('struct', 'BaseGlyphV1Record', 'BaseGlyphCount', 0, 'Array of Version-1 Base Glyph records'),
 	]),
 
 	('BaseGlyphV1Record', [
 		('GlyphID', 'BaseGlyph', None, None, 'Glyph ID of reference glyph.'),
-		('LOffset', 'LayerV1Array', None, None, 'Offset (from beginning of BaseGlyphV1Array) to LayerV1Array.'),
+		('LOffset', 'LayerV1Array', None, None, 'Offset (from beginning of BaseGlyphV1List) to LayerV1Array.'),
 	]),
 
 	('LayerV1Array', [

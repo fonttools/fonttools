@@ -71,7 +71,7 @@ COLR_V1_DATA = (
     b"\x00\x00\x00\x16"  # Offset to BaseGlyphRecordArray from beginning of table (22)
     b"\x00\x00\x00\x1c"  # Offset to LayerRecordArray from beginning of table (28)
     b"\x00\x03"  # LayerRecordCount (3)
-    b"\x00\x00\x00("  # Offset to BaseGlyphV1Array from beginning of table (40)
+    b"\x00\x00\x00("  # Offset to BaseGlyphV1List from beginning of table (40)
     b"\x00\x00\x00\x00"  # Offset to VarStore (NULL)
     b"\x00\x06"  # BaseGlyphRecord[0].BaseGlyph (6)
     b"\x00\x00"  # BaseGlyphRecord[0].FirstLayerIndex (0)
@@ -82,9 +82,9 @@ COLR_V1_DATA = (
     b"\x00\x01"  # LayerRecord[1].PaletteIndex (1)
     b"\x00\t"  # LayerRecord[2].LayerGlyph (9)
     b"\x00\x02"  # LayerRecord[2].PaletteIndex (2)
-    b"\x00\x00\x00\x01"  # BaseGlyphV1Array.BaseGlyphCount (1)
-    b"\x00\n"  # BaseGlyphV1Array.BaseGlyphV1Record[0].BaseGlyph (10)
-    b"\x00\x00\x00\n"  # Offset to LayerV1Array from beginning of BaseGlyphV1Array (10)
+    b"\x00\x00\x00\x01"  # BaseGlyphV1List.BaseGlyphCount (1)
+    b"\x00\n"  # BaseGlyphV1List.BaseGlyphV1Record[0].BaseGlyph (10)
+    b"\x00\x00\x00\n"  # Offset to LayerV1Array from beginning of BaseGlyphV1List (10)
     b"\x00\x00\x00\x03"  # LayerV1Array.LayerCount (3)
     b"\x00\x0b"  # LayerV1Array.LayerV1Record[0].LayerGlyph (11)
     b"\x00\x00\x00\x16"  # Offset to Paint from beginning of LayerV1Array (22)
@@ -190,7 +190,7 @@ COLR_V1_XML = [
     "  </LayerRecord>",
     "</LayerRecordArray>",
     "<!-- LayerRecordCount=3 -->",
-    "<BaseGlyphV1Array>",
+    "<BaseGlyphV1List>",
     "  <!-- BaseGlyphCount=1 -->",
     '  <BaseGlyphV1Record index="0">',
     '    <BaseGlyph value="glyph00010"/>',
@@ -288,7 +288,7 @@ COLR_V1_XML = [
     "      </LayerV1Record>",
     "    </LayerV1Array>",
     "  </BaseGlyphV1Record>",
-    "</BaseGlyphV1Array>",
+    "</BaseGlyphV1List>",
 ]
 
 

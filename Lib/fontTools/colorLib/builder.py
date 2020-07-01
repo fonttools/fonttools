@@ -132,7 +132,7 @@ def buildCOLR(
         colr.BaseGlyphRecordArray = colr.LayerRecordArray = None
 
     if colorGlyphsV1:
-        colr.BaseGlyphV1Array = buildBaseGlyphV1Array(colorGlyphsV1, glyphMap)
+        colr.BaseGlyphV1List = buildBaseGlyphV1List(colorGlyphsV1, glyphMap)
 
     if version is None:
         version = 1 if (varStore or colorGlyphsV1) else 0
@@ -495,7 +495,7 @@ def buildLayerV1Array(
 
 def buildBaseGlyphV1Record(
     baseGlyph: str, layers: Union[_LayersList, ot.LayerV1Array]
-) -> ot.BaseGlyphV1Array:
+) -> ot.BaseGlyphV1List:
     self = ot.BaseGlyphV1Record()
     self.BaseGlyph = baseGlyph
     if not isinstance(layers, ot.LayerV1Array):
@@ -504,10 +504,10 @@ def buildBaseGlyphV1Record(
     return self
 
 
-def buildBaseGlyphV1Array(
+def buildBaseGlyphV1List(
     colorGlyphs: Union[_ColorGlyphsDict, Dict[str, ot.LayerV1Array]],
     glyphMap: Optional[Mapping[str, int]] = None,
-) -> ot.BaseGlyphV1Array:
+) -> ot.BaseGlyphV1List:
     if glyphMap is not None:
         colorGlyphItems = sorted(
             colorGlyphs.items(), key=lambda item: glyphMap[item[0]]
@@ -518,7 +518,7 @@ def buildBaseGlyphV1Array(
         buildBaseGlyphV1Record(baseGlyph, layers)
         for baseGlyph, layers in colorGlyphItems
     ]
-    self = ot.BaseGlyphV1Array()
+    self = ot.BaseGlyphV1List()
     self.BaseGlyphCount = len(records)
     self.BaseGlyphV1Record = records
     return self
