@@ -1604,14 +1604,14 @@ otData = [
 		('VarInt16', 'y', None, None, ''),
 	]),
 
-	('Color', [
+	('ColorIndex', [
 		('uint16', 'PaletteIndex', None, None, 'Index value to use with a selected color palette.'),
-		('VarF2Dot14', 'Transparency', None, None, 'Values outsided [0.,1.] reserved'),
+		('VarF2Dot14', 'Alpha', None, None, 'Values outsided [0.,1.] reserved'),
 	]),
 
 	('ColorStop', [
 		('VarF2Dot14', 'StopOffset', None, None, ''),
-		('Color', 'Color', None, None, ''),
+		('ColorIndex', 'Color', None, None, ''),
 	]),
 
 	('ColorLine', [
@@ -1622,7 +1622,7 @@ otData = [
 
 	('PaintFormat1', [
 		('uint16', 'PaintFormat', None, None, 'Format identifier-format = 1'),
-		('Color', 'Color', None, None, 'A solid color paint.'),
+		('ColorIndex', 'Color', None, None, 'A solid color paint.'),
 	]),
 
 	('PaintFormat2', [

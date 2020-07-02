@@ -94,8 +94,8 @@ COLR_V1_DATA = (
     b"\x00\x00\x00~"  # Offset to Paint from beginning of LayerV1List (126)
     b"\x00\x01"  # Paint.Format (1)
     b"\x00\x02"  # Paint.Color.PaletteIndex (2)
-    b" \x00"  # Paint.Color.Transparency.value (0.5)
-    b"\x00\x00\x00\x00"  # Paint.Color.Transparency.varIdx (0)
+    b" \x00"  # Paint.Color.Alpha.value (0.5)
+    b"\x00\x00\x00\x00"  # Paint.Color.Alpha.varIdx (0)
     b"\x00\x02"  # Paint.Format (2)
     b"\x00\x00\x00*"  # Offset to ColorLine from beginning of Paint (42)
     b"\x00\x01"  # Paint.p0.x.value (1)
@@ -115,18 +115,18 @@ COLR_V1_DATA = (
     b"\x00\x00"  # ColorLine.ColorStop[0].StopOffset.value (0.0)
     b"\x00\x00\x00\x00"  # ColorLine.ColorStop[0].StopOffset.varIdx (0)
     b"\x00\x03"  # ColorLine.ColorStop[0].Color.PaletteIndex (3)
-    b"\x00\x00"  # ColorLine.ColorStop[0].Color.Transparency.value (0.0)
-    b"\x00\x00\x00\x00"  # ColorLine.ColorStop[0].Color.Transparency.varIdx (0)
+    b"@\x00"  # ColorLine.ColorStop[0].Color.Alpha.value (1.0)
+    b"\x00\x00\x00\x00"  # ColorLine.ColorStop[0].Color.Alpha.varIdx (0)
     b" \x00"  # ColorLine.ColorStop[1].StopOffset.value (0.5)
     b"\x00\x00\x00\x00"  # ColorLine.ColorStop[1].StopOffset.varIdx (0)
     b"\x00\x04"  # ColorLine.ColorStop[1].Color.PaletteIndex (4)
-    b"\x00\x00"  # ColorLine.ColorStop[1].Color.Transparency.value (0.0)
-    b"\x00\x00\x00\x00"  # ColorLine.ColorStop[1].Color.Transparency.varIdx (0)
+    b"@\x00"  # ColorLine.ColorStop[1].Color.Alpha.value (1.0)
+    b"\x00\x00\x00\x00"  # ColorLine.ColorStop[1].Color.Alpha.varIdx (0)
     b"@\x00"  # ColorLine.ColorStop[2].StopOffset.value (1.0)
     b"\x00\x00\x00\x00"  # ColorLine.ColorStop[2].StopOffset.varIdx (0)
     b"\x00\x05"  # ColorLine.ColorStop[2].Color.PaletteIndex (5)
-    b"\x00\x00"  # ColorLine.ColorStop[2].Color.Transparency.value (0.0)
-    b"\x00\x00\x00\x00"  # ColorLine.ColorStop[2].Color.Transparency.varIdx (0)
+    b"@\x00"  # ColorLine.ColorStop[2].Color.Alpha.value (1.0)
+    b"\x00\x00\x00\x00"  # ColorLine.ColorStop[2].Color.Alpha.varIdx (0)
     b"\x00\x03"  # Paint.Format (3)
     b"\x00\x00\x00."  # Offset to ColorLine from beginning of Paint (46)
     b"\x00\x07"  # Paint.c0.x.value (7)
@@ -147,12 +147,12 @@ COLR_V1_DATA = (
     b"\x00\x00"  # ColorLine.ColorStop[0].StopOffset.value (0.0)
     b"\x00\x00\x00\x00"
     b"\x00\x06"  # ColorLine.ColorStop[0].Color.PaletteIndex (6)
-    b"\x00\x00"
+    b"@\x00"     # ColorLine.ColorStop[0].Color.Alpha.value (1.0)
     b"\x00\x00\x00\x00"
     b"@\x00"  # ColorLine.ColorStop[1].StopOffset.value (1.0)
     b"\x00\x00\x00\x00"
     b"\x00\x07"  # ColorLine.ColorStop[1].Color.PaletteIndex (7)
-    b"\x19\x9a"  # ColorLine.ColorStop[1].Color.Transparency.value (0.4)
+    b"\x19\x9a"  # ColorLine.ColorStop[1].Color.Alpha.value (0.4)
     b"\x00\x00\x00\x00"
     b"\xff\xf3\x00\x00"  # Affine2x2.xx.value (-13)
     b"\x00\x00\x00\x00"
@@ -201,7 +201,7 @@ COLR_V1_XML = [
     '        <Paint Format="1">',
     "          <Color>",
     '            <PaletteIndex value="2"/>',
-    '            <Transparency value="0.5"/>',
+    '            <Alpha value="0.5"/>',
     "          </Color>",
     "        </Paint>",
     "      </LayerV1Record>",
@@ -215,21 +215,21 @@ COLR_V1_XML = [
     '              <StopOffset value="0.0"/>',
     "              <Color>",
     '                <PaletteIndex value="3"/>',
-    '                <Transparency value="0.0"/>',
+    '                <Alpha value="1.0"/>',
     "              </Color>",
     "            </ColorStop>",
     '            <ColorStop index="1">',
     '              <StopOffset value="0.5"/>',
     "              <Color>",
     '                <PaletteIndex value="4"/>',
-    '                <Transparency value="0.0"/>',
+    '                <Alpha value="1.0"/>',
     "              </Color>",
     "            </ColorStop>",
     '            <ColorStop index="2">',
     '              <StopOffset value="1.0"/>',
     "              <Color>",
     '                <PaletteIndex value="5"/>',
-    '                <Transparency value="0.0"/>',
+    '                <Alpha value="1.0"/>',
     "              </Color>",
     "            </ColorStop>",
     "          </ColorLine>",
@@ -257,14 +257,14 @@ COLR_V1_XML = [
     '              <StopOffset value="0.0"/>',
     "              <Color>",
     '                <PaletteIndex value="6"/>',
-    '                <Transparency value="0.0"/>',
+    '                <Alpha value="1.0"/>',
     "              </Color>",
     "            </ColorStop>",
     '            <ColorStop index="1">',
     '              <StopOffset value="1.0"/>',
     "              <Color>",
     '                <PaletteIndex value="7"/>',
-    '                <Transparency value="0.4"/>',
+    '                <Alpha value="0.4"/>',
     "              </Color>",
     "            </ColorStop>",
     "          </ColorLine>",

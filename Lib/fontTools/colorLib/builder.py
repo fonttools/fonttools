@@ -275,7 +275,7 @@ def buildCPAL(
 # COLR v1 tables
 # See draft proposal at: https://github.com/googlefonts/colr-gradients-spec
 
-_DEFAULT_TRANSPARENCY = VariableFloat(0.0)
+_DEFAULT_ALPHA = VariableFloat(1.0)
 
 
 def _splitSolidAndGradientGlyphs(
@@ -290,7 +290,7 @@ def _splitSolidAndGradientGlyphs(
             paint = _to_ot_paint(paint)
             if (
                 paint.Format != 1
-                or paint.Color.Transparency.value != _DEFAULT_TRANSPARENCY.value
+                or paint.Color.Alpha.value != _DEFAULT_ALPHA.value
             ):
                 allSolidColors = False
             newLayers.append((layerGlyph, paint))
@@ -323,32 +323,32 @@ _to_variable_float = partial(_to_variable_value, cls=VariableFloat)
 _to_variable_int = partial(_to_variable_value, cls=VariableInt)
 
 
-def buildColor(
-    paletteIndex: int, transparency: _ScalarInput = _DEFAULT_TRANSPARENCY
-) -> ot.Color:
-    self = ot.Color()
+def buildColorIndex(
+    paletteIndex: int, alpha: _ScalarInput = _DEFAULT_ALPHA
+) -> ot.ColorIndex:
+    self = ot.ColorIndex()
     self.PaletteIndex = int(paletteIndex)
-    self.Transparency = _to_variable_float(transparency)
+    self.Alpha = _to_variable_float(alpha)
     return self
 
 
 def buildSolidColorPaint(
-    paletteIndex: int, transparency: _ScalarInput = _DEFAULT_TRANSPARENCY
+    paletteIndex: int, alpha: _ScalarInput = _DEFAULT_ALPHA
 ) -> ot.Paint:
     self = ot.Paint()
     self.Format = 1
-    self.Color = buildColor(paletteIndex, transparency)
+    self.Color = buildColorIndex(paletteIndex, alpha)
     return self
 
 
 def buildColorStop(
     offset: _ScalarInput,
     paletteIndex: int,
-    transparency: _ScalarInput = _DEFAULT_TRANSPARENCY,
+    alpha: _ScalarInput = _DEFAULT_ALPHA,
 ) -> ot.ColorStop:
     self = ot.ColorStop()
     self.StopOffset = _to_variable_float(offset)
-    self.Color = buildColor(paletteIndex, transparency)
+    self.Color = buildColorIndex(paletteIndex, alpha)
     return self
 
 

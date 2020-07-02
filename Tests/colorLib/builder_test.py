@@ -188,63 +188,61 @@ def test_buildCPAL_invalid_color():
         builder.buildCPAL([[(0, 0, 0, 0)], [(1, 1, -1, 2)]])
 
 
-def test_buildColor():
-    c = builder.buildColor(0)
+def test_buildColorIndex():
+    c = builder.buildColorIndex(0)
     assert c.PaletteIndex == 0
-    assert c.Transparency.value == 0.0
-    assert c.Transparency.varIdx == 0
+    assert c.Alpha.value == 1.0
+    assert c.Alpha.varIdx == 0
 
-    c = builder.buildColor(1, transparency=0.5)
+    c = builder.buildColorIndex(1, alpha=0.5)
     assert c.PaletteIndex == 1
-    assert c.Transparency.value == 0.5
-    assert c.Transparency.varIdx == 0
+    assert c.Alpha.value == 0.5
+    assert c.Alpha.varIdx == 0
 
-    c = builder.buildColor(3, transparency=builder.VariableFloat(0.5, varIdx=2))
+    c = builder.buildColorIndex(3, alpha=builder.VariableFloat(0.5, varIdx=2))
     assert c.PaletteIndex == 3
-    assert c.Transparency.value == 0.5
-    assert c.Transparency.varIdx == 2
+    assert c.Alpha.value == 0.5
+    assert c.Alpha.varIdx == 2
 
 
 def test_buildSolidColorPaint():
     p = builder.buildSolidColorPaint(0)
     assert p.Format == 1
     assert p.Color.PaletteIndex == 0
-    assert p.Color.Transparency.value == 0.0
-    assert p.Color.Transparency.varIdx == 0
+    assert p.Color.Alpha.value == 1.0
+    assert p.Color.Alpha.varIdx == 0
 
-    p = builder.buildSolidColorPaint(1, transparency=0.5)
+    p = builder.buildSolidColorPaint(1, alpha=0.5)
     assert p.Format == 1
     assert p.Color.PaletteIndex == 1
-    assert p.Color.Transparency.value == 0.5
-    assert p.Color.Transparency.varIdx == 0
+    assert p.Color.Alpha.value == 0.5
+    assert p.Color.Alpha.varIdx == 0
 
-    p = builder.buildSolidColorPaint(
-        3, transparency=builder.VariableFloat(0.5, varIdx=2)
-    )
+    p = builder.buildSolidColorPaint(3, alpha=builder.VariableFloat(0.5, varIdx=2))
     assert p.Format == 1
     assert p.Color.PaletteIndex == 3
-    assert p.Color.Transparency.value == 0.5
-    assert p.Color.Transparency.varIdx == 2
+    assert p.Color.Alpha.value == 0.5
+    assert p.Color.Alpha.varIdx == 2
 
 
 def test_buildColorStop():
     s = builder.buildColorStop(0.1, 2)
     assert s.StopOffset == builder.VariableFloat(0.1)
     assert s.Color.PaletteIndex == 2
-    assert s.Color.Transparency == builder._DEFAULT_TRANSPARENCY
+    assert s.Color.Alpha == builder._DEFAULT_ALPHA
 
-    s = builder.buildColorStop(offset=0.2, paletteIndex=3, transparency=0.4)
+    s = builder.buildColorStop(offset=0.2, paletteIndex=3, alpha=0.4)
     assert s.StopOffset == builder.VariableFloat(0.2)
-    assert s.Color == builder.buildColor(3, transparency=0.4)
+    assert s.Color == builder.buildColorIndex(3, alpha=0.4)
 
     s = builder.buildColorStop(
         offset=builder.VariableFloat(0.0, varIdx=1),
         paletteIndex=0,
-        transparency=builder.VariableFloat(0.3, varIdx=2),
+        alpha=builder.VariableFloat(0.3, varIdx=2),
     )
     assert s.StopOffset == builder.VariableFloat(0.0, varIdx=1)
     assert s.Color.PaletteIndex == 0
-    assert s.Color.Transparency == builder.VariableFloat(0.3, varIdx=2)
+    assert s.Color.Alpha == builder.VariableFloat(0.3, varIdx=2)
 
 
 def test_buildColorLine():
@@ -272,15 +270,15 @@ def test_buildColorLine():
     ] == stops
 
     stops = [
-        {"offset": (0.0, 1), "paletteIndex": 0, "transparency": (0.5, 2)},
-        {"offset": (1.0, 3), "paletteIndex": 1, "transparency": (0.3, 4)},
+        {"offset": (0.0, 1), "paletteIndex": 0, "alpha": (0.5, 2)},
+        {"offset": (1.0, 3), "paletteIndex": 1, "alpha": (0.3, 4)},
     ]
     cline = builder.buildColorLine(stops)
     assert [
         {
             "offset": cs.StopOffset,
             "paletteIndex": cs.Color.PaletteIndex,
-            "transparency": cs.Color.Transparency,
+            "alpha": cs.Color.Alpha,
         }
         for cs in cline.ColorStop
     ] == stops
@@ -320,7 +318,7 @@ def test_buildLinearGradientPaint():
     color_stops = [
         builder.buildColorStop(0.0, 0),
         builder.buildColorStop(0.5, 1),
-        builder.buildColorStop(1.0, 2, transparency=0.8),
+        builder.buildColorStop(1.0, 2, alpha=0.8),
     ]
     color_line = builder.buildColorLine(color_stops, extend=builder.ExtendMode.REPEAT)
     p0 = builder.buildPoint(x=100, y=200)
@@ -347,7 +345,7 @@ def test_buildRadialGradientPaint():
     color_stops = [
         builder.buildColorStop(0.0, 0),
         builder.buildColorStop(0.5, 1),
-        builder.buildColorStop(1.0, 2, transparency=0.8),
+        builder.buildColorStop(1.0, 2, alpha=0.8),
     ]
     color_line = builder.buildColorLine(color_stops, extend=builder.ExtendMode.REPEAT)
     c0 = builder.buildPoint(x=100, y=200)
@@ -389,7 +387,7 @@ def test_buildLayerV1Record():
     layer = builder.buildLayerV1Record("a", builder.buildSolidColorPaint(3, 0.9))
     assert layer.Paint.Format == 1
     assert layer.Paint.Color.PaletteIndex == 3
-    assert layer.Paint.Color.Transparency.value == 0.9
+    assert layer.Paint.Color.Alpha.value == 0.9
 
     layer = builder.buildLayerV1Record(
         "a",
@@ -413,7 +411,7 @@ def test_buildLayerV1Record():
             {
                 "stops": [
                     (0.0, 5),
-                    {"offset": 0.5, "paletteIndex": 6, "transparency": 0.8},
+                    {"offset": 0.5, "paletteIndex": 6, "alpha": 0.8},
                     (1.0, 7),
                 ]
             },
@@ -428,7 +426,7 @@ def test_buildLayerV1Record():
     assert layer.Paint.ColorLine.ColorStop[0].Color.PaletteIndex == 5
     assert layer.Paint.ColorLine.ColorStop[1].StopOffset.value == 0.5
     assert layer.Paint.ColorLine.ColorStop[1].Color.PaletteIndex == 6
-    assert layer.Paint.ColorLine.ColorStop[1].Color.Transparency.value == 0.8
+    assert layer.Paint.ColorLine.ColorStop[1].Color.Alpha.value == 0.8
     assert layer.Paint.ColorLine.ColorStop[2].StopOffset.value == 1.0
     assert layer.Paint.ColorLine.ColorStop[2].Color.PaletteIndex == 7
     assert layer.Paint.c0.x.value == 50
@@ -475,7 +473,7 @@ def test_buildLayerV1Record_from_dict():
 def test_buildLayerV1List():
     layers = [
         ("a", 1),
-        ("b", {"format": 1, "paletteIndex": 2, "transparency": 0.5}),
+        ("b", {"format": 1, "paletteIndex": 2, "alpha": 0.5}),
         (
             "c",
             {
@@ -492,7 +490,7 @@ def test_buildLayerV1List():
                 "colorLine": {
                     "stops": [
                         {"offset": 0.0, "paletteIndex": 5},
-                        {"offset": 0.5, "paletteIndex": 6, "transparency": 0.8},
+                        {"offset": 0.5, "paletteIndex": 6, "alpha": 0.8},
                         {"offset": 1.0, "paletteIndex": 7},
                     ]
                 },
@@ -525,7 +523,7 @@ def test_buildBaseGlyphV1List():
     colorGlyphs = {
         "a": [("b", 0), ("c", 1)],
         "d": [
-            ("e", {"format": 1, "paletteIndex": 2, "transparency": 0.8}),
+            ("e", {"format": 1, "paletteIndex": 2, "alpha": 0.8}),
             (
                 "f",
                 {
@@ -581,7 +579,7 @@ def test_splitSolidAndGradientGlyphs():
     assert not colorGlyphsV1
 
     colorGlyphs = {
-        "a": [("b", builder.buildSolidColorPaint(paletteIndex=0, transparency=1.0))]
+        "a": [("b", builder.buildSolidColorPaint(paletteIndex=0, alpha=0.0))]
     }
 
     colorGlyphsV0, colorGlyphsV1 = builder._splitSolidAndGradientGlyphs(colorGlyphs)
@@ -649,7 +647,7 @@ class BuildCOLRTest(object):
                             "r1": 2,
                         },
                     ),
-                    ("c", {"format": 1, "paletteIndex": 2, "transparency": 0.8}),
+                    ("c", {"format": 1, "paletteIndex": 2, "alpha": 0.8}),
                 ],
                 "d": [
                     (
@@ -713,8 +711,7 @@ class BuildCOLRTest(object):
         )
         assert colr.table.BaseGlyphV1List.BaseGlyphV1Record[0].BaseGlyph == "d"
         assert isinstance(
-            colr.table.BaseGlyphV1List.BaseGlyphV1Record[0].LayerV1List,
-            ot.LayerV1List,
+            colr.table.BaseGlyphV1List.BaseGlyphV1Record[0].LayerV1List, ot.LayerV1List
         )
         assert (
             colr.table.BaseGlyphV1List.BaseGlyphV1Record[0]
