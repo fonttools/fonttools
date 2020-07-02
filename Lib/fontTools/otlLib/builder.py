@@ -156,14 +156,16 @@ class AlternateSubstBuilder(LookupBuilder):
         self.alternates[(self.SUBTABLE_BREAK_, location)] = self.SUBTABLE_BREAK_
 
 
-class ChainContextPosBuilder(LookupBuilder):
-    def __init__(self, font, location):
-        LookupBuilder.__init__(self, font, location, 'GPOS', 8)
-        self.rules = []  # (prefix, input, suffix, lookups)
-
+class ChainContextualBuilder(LookupBuilder):
     def equals(self, other):
         return (LookupBuilder.equals(self, other) and
                 self.rules == other.rules)
+
+
+class ChainContextPosBuilder(ChainContextualBuilder):
+    def __init__(self, font, location):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 8)
+        self.rules = []  # (prefix, input, suffix, lookups)
 
     def build(self):
         subtables = []
@@ -212,14 +214,10 @@ class ChainContextPosBuilder(LookupBuilder):
                            self.SUBTABLE_BREAK_, [self.SUBTABLE_BREAK_]))
 
 
-class ChainContextSubstBuilder(LookupBuilder):
+class ChainContextSubstBuilder(ChainContextualBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 6)
         self.substitutions = []  # (prefix, input, suffix, lookups)
-
-    def equals(self, other):
-        return (LookupBuilder.equals(self, other) and
-                self.substitutions == other.substitutions)
 
     def build(self):
         subtables = []
