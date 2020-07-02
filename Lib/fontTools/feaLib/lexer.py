@@ -1,5 +1,6 @@
 from fontTools.misc.py23 import *
 from fontTools.feaLib.error import FeatureLibError, IncludedFeaNotFound
+from fontTools.feaLib.location import FeatureLibLocation
 import re
 import os
 
@@ -57,7 +58,7 @@ class Lexer(object):
 
     def location_(self):
         column = self.pos_ - self.line_start_ + 1
-        return (self.filename_ or "<features>", self.line_, column)
+        return FeatureLibLocation(self.filename_ or "<features>", self.line_, column)
 
     def next_(self):
         self.scan_over_(Lexer.CHAR_WHITESPACE_)

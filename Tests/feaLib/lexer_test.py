@@ -107,7 +107,7 @@ class LexerTest(unittest.TestCase):
 
     def test_newline(self):
         def lines(s):
-            return [loc[1] for (_, _, loc) in Lexer(s, "test.fea")]
+            return [loc.line for (_, _, loc) in Lexer(s, "test.fea")]
         self.assertEqual(lines("FOO\n\nBAR\nBAZ"), [1, 3, 4])  # Unix
         self.assertEqual(lines("FOO\r\rBAR\rBAZ"), [1, 3, 4])  # Macintosh
         self.assertEqual(lines("FOO\r\n\r\n BAR\r\nBAZ"), [1, 3, 4])  # Windows
@@ -115,7 +115,7 @@ class LexerTest(unittest.TestCase):
 
     def test_location(self):
         def locs(s):
-            return ["%s:%d:%d" % loc for (_, _, loc) in Lexer(s, "test.fea")]
+            return [str(loc) for (_, _, loc) in Lexer(s, "test.fea")]
         self.assertEqual(locs("a b # Comment\n12 @x"), [
             "test.fea:1:1", "test.fea:1:3", "test.fea:1:5", "test.fea:2:1",
             "test.fea:2:4"
@@ -150,7 +150,7 @@ class IncludingLexerTest(unittest.TestCase):
 
     def test_include(self):
         lexer = IncludingLexer(self.getpath("include/include4.fea"))
-        result = ['%s %s:%d' % (token, os.path.split(loc[0])[1], loc[1])
+        result = ['%s %s:%d' % (token, os.path.split(loc.file)[1], loc.line)
                   for _, token, loc in lexer]
         self.assertEqual(result, [
             "I4a include4.fea:1",
@@ -186,7 +186,7 @@ class IncludingLexerTest(unittest.TestCase):
     def test_featurefilepath_None(self):
         lexer = IncludingLexer(UnicodeIO("# foobar"))
         self.assertIsNone(lexer.featurefilepath)
-        files = set(loc[0] for _, _, loc in lexer)
+        files = set(loc.file for _, _, loc in lexer)
         self.assertIn("<features>", files)
 
     def test_include_absolute_path(self):
@@ -199,7 +199,7 @@ class IncludingLexerTest(unittest.TestCase):
         including = UnicodeIO("include(%s);" % included.name)
         try:
             lexer = IncludingLexer(including)
-            files = set(loc[0] for _, _, loc in lexer)
+            files = set(loc.file for _, _, loc in lexer)
             self.assertIn(included.name, files)
         finally:
             os.remove(included.name)
@@ -225,7 +225,7 @@ class IncludingLexerTest(unittest.TestCase):
             # an in-memory stream, so it will use the current working
             # directory to resolve relative include statements
             lexer = IncludingLexer(UnicodeIO("include(included.fea);"))
-            files = set(os.path.realpath(loc[0]) for _, _, loc in lexer)
+            files = set(os.path.realpath(loc.file) for _, _, loc in lexer)
             expected = os.path.realpath(included.name)
             self.assertIn(expected, files)
         finally:

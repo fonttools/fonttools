@@ -8,8 +8,7 @@ class FeatureLibError(Exception):
     def __str__(self):
         message = Exception.__str__(self)
         if self.location:
-            path, line, column = self.location
-            return f"{path}:{line}:{column}: {message}"
+            return f"{self.location}: {message}"
         else:
             return message
 
@@ -22,5 +21,4 @@ class IncludedFeaNotFound(FeatureLibError):
             "The following feature file should be included but cannot be found: "
             f"{Exception.__str__(self)}"
         )
-        path, line, column = self.location
-        return f"{path}:{line}:{column}: {message}"
+        return f"{self.location}: {message}"
