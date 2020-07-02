@@ -18,10 +18,11 @@ from fontTools.otlLib.error import OpenTypeLibError
 from fontTools.ttLib import TTFont
 from fontTools.misc.loggingTools import CapturingLogHandler
 import logging
-import unittest
+import pytest
 
 
-def makeTTFont():
+@pytest.fixture
+def ttfont():
     glyphs = """
         .notdef space slash fraction semicolon period comma ampersand
         quotedblleft quotedblright quoteleft quoteright
@@ -62,29 +63,23 @@ class MockBuilderLocation(object):
         return "%s:%s" % self.location
 
 
-class MockBuilderTest(unittest.TestCase):
-    def test_unsupported_subtable_break_1(self):
-        location = MockBuilderLocation((0, "alpha"))
-        font = makeTTFont()
+def test_unsupported_subtable_break_1(ttfont):
+    location = MockBuilderLocation((0, "alpha"))
 
-        logger = logging.getLogger("fontTools.otlLib.builder")
+    logger = logging.getLogger("fontTools.otlLib.builder")
 
-        with CapturingLogHandler(logger, "INFO") as captor:
-            builder = SinglePosBuilder(font, location)
-            builder.add_subtable_break(MockBuilderLocation((5, "beta")))
-            builder.build()
+    with CapturingLogHandler(logger, "INFO") as captor:
+        builder = SinglePosBuilder(ttfont, location)
+        builder.add_subtable_break(MockBuilderLocation((5, "beta")))
+        builder.build()
 
-        captor.assertRegex('5:beta: unsupported "subtable" statement for lookup type')
+    captor.assertRegex('5:beta: unsupported "subtable" statement for lookup type')
 
-    def test_chain_pos_references_GSUB_lookup(self):
-        location = MockBuilderLocation((0, "alpha"))
-        font = makeTTFont()
-        builder = ChainContextPosBuilder(font, location)
-        builder2 = SingleSubstBuilder(font, location)
-        builder.rules.append(([], [], [], [[builder2]]))
+def test_chain_pos_references_GSUB_lookup(ttfont):
+    location = MockBuilderLocation((0, "alpha"))
+    builder = ChainContextPosBuilder(ttfont, location)
+    builder2 = SingleSubstBuilder(ttfont, location)
+    builder.rules.append(([], [], [], [[builder2]]))
 
-        self.assertRaisesRegex(
-            OpenTypeLibError,
-            "0:alpha: Missing index of the specified lookup, might be a substitution lookup",
-            builder.build,
-        )
+    with pytest.raises(OpenTypeLibError, match="0:alpha: Missing index of the specified lookup, might be a substitution lookup"):
+        builder.build()
