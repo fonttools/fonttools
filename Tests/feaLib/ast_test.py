@@ -13,6 +13,12 @@ class AstTest(unittest.TestCase):
         statement = ast.ValueRecord(xPlacement=10, xAdvance=20)
         self.assertEqual(statement.asFea(), "<10 0 20 0>")
 
+    def test_non_object_location(self):
+        el = ast.Element(location=("file.fea", 1, 2))
+        self.assertEqual(el.location.file, "file.fea")
+        self.assertEqual(el.location.line, 1)
+        self.assertEqual(el.location.column, 2)
+
 
 if __name__ == "__main__":
     import sys
