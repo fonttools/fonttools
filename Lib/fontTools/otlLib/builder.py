@@ -171,35 +171,45 @@ class ChainContextPosBuilder(ChainContextualBuilder):
         LookupBuilder.__init__(self, font, location, 'GPOS', 8)
         self.rules = []  # (prefix, input, suffix, lookups)
 
+    def newSubtable_(self):
+        st = ot.ChainContextPos()
+        st.PosCount = 0
+        st.PosLookupRecord = []
+        return st
+
+    def newLookupRecord_(self):
+        return ot.PosLookupRecord()
+
+    def addLookupRecordToSubtable_(self, st, rec):
+        st.PosCount += 1
+        st.PosLookupRecord.append(rec)
+
     def build(self):
         subtables = []
         for (prefix, glyphs, suffix, lookups) in self.rules:
             if prefix == self.SUBTABLE_BREAK_:
                 continue
-            st = ot.ChainContextPos()
+            st = self.newSubtable_()
             subtables.append(st)
             st.Format = 3
             self.setBacktrackCoverage_(prefix, st)
             self.setLookAheadCoverage_(suffix, st)
             self.setInputCoverage_(glyphs, st)
 
-            st.PosCount = 0
-            st.PosLookupRecord = []
             for sequenceIndex, lookupList in enumerate(lookups):
                 if lookupList is not None:
                     if not isinstance(lookupList, list):
                         # Can happen with synthesised lookups
                         lookupList = [ lookupList ]
                     for l in lookupList:
-                        st.PosCount += 1
                         if l.lookup_index is None:
                             raise OpenTypeLibError('Missing index of the specified '
                                 'lookup, might be a substitution lookup',
                                 self.location)
-                        rec = ot.PosLookupRecord()
+                        rec = self.newLookupRecord_()
                         rec.SequenceIndex = sequenceIndex
                         rec.LookupListIndex = l.lookup_index
-                        st.PosLookupRecord.append(rec)
+                        self.addLookupRecordToSubtable_(st, rec)
         return self.buildLookup_(subtables)
 
     def find_chainable_single_pos(self, lookups, glyphs, value):
@@ -219,35 +229,45 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
         LookupBuilder.__init__(self, font, location, 'GSUB', 6)
         self.rules = []  # (prefix, input, suffix, lookups)
 
+    def newSubtable_(self):
+        st = ot.ChainContextSubst()
+        st.SubstCount = 0
+        st.SubstLookupRecord = []
+        return st
+
+    def newLookupRecord_(self):
+        return ot.SubstLookupRecord()
+
+    def addLookupRecordToSubtable_(self, st, rec):
+        st.SubstCount += 1
+        st.SubstLookupRecord.append(rec)
+
     def build(self):
         subtables = []
         for (prefix, input, suffix, lookups) in self.rules:
             if prefix == self.SUBTABLE_BREAK_:
                 continue
-            st = ot.ChainContextSubst()
+            st = self.newSubtable_()
             subtables.append(st)
             st.Format = 3
             self.setBacktrackCoverage_(prefix, st)
             self.setLookAheadCoverage_(suffix, st)
             self.setInputCoverage_(input, st)
 
-            st.SubstCount = 0
-            st.SubstLookupRecord = []
             for sequenceIndex, lookupList in enumerate(lookups):
                 if lookupList is not None:
                     if not isinstance(lookupList, list):
                         # Can happen with synthesised lookups
                         lookupList = [ lookupList ]
                     for l in lookupList:
-                        st.SubstCount += 1
                         if l.lookup_index is None:
                             raise OpenTypeLibError('Missing index of the specified '
                                 'lookup, might be a positioning lookup',
                                 self.location)
-                        rec = ot.SubstLookupRecord()
+                        rec = self.newLookupRecord_()
                         rec.SequenceIndex = sequenceIndex
                         rec.LookupListIndex = l.lookup_index
-                        st.SubstLookupRecord.append(rec)
+                        self.addLookupRecordToSubtable_(st, rec)
         return self.buildLookup_(subtables)
 
     def getAlternateGlyphs(self):
