@@ -217,11 +217,11 @@ class ChainContextPosBuilder(ChainContextualBuilder):
 class ChainContextSubstBuilder(ChainContextualBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 6)
-        self.substitutions = []  # (prefix, input, suffix, lookups)
+        self.rules = []  # (prefix, input, suffix, lookups)
 
     def build(self):
         subtables = []
-        for (prefix, input, suffix, lookups) in self.substitutions:
+        for (prefix, input, suffix, lookups) in self.rules:
             if prefix == self.SUBTABLE_BREAK_:
                 continue
             st = ot.ChainContextSubst()
@@ -252,7 +252,7 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
 
     def getAlternateGlyphs(self):
         result = {}
-        for (_, _, _, lookuplist) in self.substitutions:
+        for (_, _, _, lookuplist) in self.rules:
             if lookuplist == self.SUBTABLE_BREAK_:
                 continue
             for lookups in lookuplist:
@@ -268,17 +268,17 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
     def find_chainable_single_subst(self, glyphs):
         """Helper for add_single_subst_chained_()"""
         res = None
-        for _, _, _, substitutions in self.substitutions[::-1]:
-            if substitutions == self.SUBTABLE_BREAK_:
+        for _, _, _, rules in self.rules[::-1]:
+            if rules == self.SUBTABLE_BREAK_:
                 return res
-            for sub in substitutions:
+            for sub in rules:
                 if (isinstance(sub, SingleSubstBuilder) and
                         not any(g in glyphs for g in sub.mapping.keys())):
                     res = sub
         return res
 
     def add_subtable_break(self, location):
-        self.substitutions.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
+        self.rules.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
                                    self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_))
 
 
@@ -433,15 +433,15 @@ class MarkMarkPosBuilder(LookupBuilder):
 class ReverseChainSingleSubstBuilder(LookupBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 8)
-        self.substitutions = []  # (prefix, suffix, mapping)
+        self.rules = []  # (prefix, suffix, mapping)
 
     def equals(self, other):
         return (LookupBuilder.equals(self, other) and
-                self.substitutions == other.substitutions)
+                self.rules == other.rules)
 
     def build(self):
         subtables = []
-        for prefix, suffix, mapping in self.substitutions:
+        for prefix, suffix, mapping in self.rules:
             st = ot.ReverseChainSingleSubst()
             st.Format = 1
             self.setBacktrackCoverage_(prefix, st)
