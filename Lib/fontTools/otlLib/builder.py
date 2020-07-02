@@ -156,11 +156,7 @@ class AlternateSubstBuilder(LookupBuilder):
         self.alternates[(self.SUBTABLE_BREAK_, location)] = self.SUBTABLE_BREAK_
 
 
-class ChainContextPosBuilder(LookupBuilder):
-    def __init__(self, font, location):
-        LookupBuilder.__init__(self, font, location, 'GPOS', 8)
-        self.rules = []  # (prefix, input, suffix, lookups)
-
+class ChainContextualBuilder(LookupBuilder):
     def equals(self, other):
         return (LookupBuilder.equals(self, other) and
                 self.rules == other.rules)
@@ -170,31 +166,55 @@ class ChainContextPosBuilder(LookupBuilder):
         for (prefix, glyphs, suffix, lookups) in self.rules:
             if prefix == self.SUBTABLE_BREAK_:
                 continue
-            st = ot.ChainContextPos()
+            st = self.newSubtable_()
             subtables.append(st)
             st.Format = 3
             self.setBacktrackCoverage_(prefix, st)
             self.setLookAheadCoverage_(suffix, st)
             self.setInputCoverage_(glyphs, st)
 
-            st.PosCount = 0
-            st.PosLookupRecord = []
             for sequenceIndex, lookupList in enumerate(lookups):
                 if lookupList is not None:
                     if not isinstance(lookupList, list):
                         # Can happen with synthesised lookups
                         lookupList = [ lookupList ]
                     for l in lookupList:
-                        st.PosCount += 1
                         if l.lookup_index is None:
+                            if isinstance(self, ChainContextPosBuilder):
+                                other = "substitution"
+                            else:
+                                other = "positioning"
                             raise OpenTypeLibError('Missing index of the specified '
-                                'lookup, might be a substitution lookup',
+                                f'lookup, might be a {other} lookup',
                                 self.location)
-                        rec = ot.PosLookupRecord()
+                        rec = self.newLookupRecord_()
                         rec.SequenceIndex = sequenceIndex
                         rec.LookupListIndex = l.lookup_index
-                        st.PosLookupRecord.append(rec)
+                        self.addLookupRecordToSubtable_(st, rec)
         return self.buildLookup_(subtables)
+
+    def add_subtable_break(self, location):
+        self.rules.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
+                           self.SUBTABLE_BREAK_, [self.SUBTABLE_BREAK_]))
+
+
+class ChainContextPosBuilder(ChainContextualBuilder):
+    def __init__(self, font, location):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 8)
+        self.rules = []  # (prefix, input, suffix, lookups)
+
+    def newSubtable_(self):
+        st = ot.ChainContextPos()
+        st.PosCount = 0
+        st.PosLookupRecord = []
+        return st
+
+    def newLookupRecord_(self):
+        return ot.PosLookupRecord()
+
+    def addLookupRecordToSubtable_(self, st, rec):
+        st.PosCount += 1
+        st.PosLookupRecord.append(rec)
 
     def find_chainable_single_pos(self, lookups, glyphs, value):
         """Helper for add_single_pos_chained_()"""
@@ -207,55 +227,29 @@ class ChainContextPosBuilder(LookupBuilder):
                 res = lookup
         return res
 
-    def add_subtable_break(self, location):
-        self.rules.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
-                           self.SUBTABLE_BREAK_, [self.SUBTABLE_BREAK_]))
 
-
-class ChainContextSubstBuilder(LookupBuilder):
+class ChainContextSubstBuilder(ChainContextualBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 6)
-        self.substitutions = []  # (prefix, input, suffix, lookups)
+        self.rules = []  # (prefix, input, suffix, lookups)
 
-    def equals(self, other):
-        return (LookupBuilder.equals(self, other) and
-                self.substitutions == other.substitutions)
+    def newSubtable_(self):
+        st = ot.ChainContextSubst()
+        st.SubstCount = 0
+        st.SubstLookupRecord = []
+        return st
 
-    def build(self):
-        subtables = []
-        for (prefix, input, suffix, lookups) in self.substitutions:
-            if prefix == self.SUBTABLE_BREAK_:
-                continue
-            st = ot.ChainContextSubst()
-            subtables.append(st)
-            st.Format = 3
-            self.setBacktrackCoverage_(prefix, st)
-            self.setLookAheadCoverage_(suffix, st)
-            self.setInputCoverage_(input, st)
+    def newLookupRecord_(self):
+        return ot.SubstLookupRecord()
 
-            st.SubstCount = 0
-            st.SubstLookupRecord = []
-            for sequenceIndex, lookupList in enumerate(lookups):
-                if lookupList is not None:
-                    if not isinstance(lookupList, list):
-                        # Can happen with synthesised lookups
-                        lookupList = [ lookupList ]
-                    for l in lookupList:
-                        st.SubstCount += 1
-                        if l.lookup_index is None:
-                            raise OpenTypeLibError('Missing index of the specified '
-                                'lookup, might be a positioning lookup',
-                                self.location)
-                        rec = ot.SubstLookupRecord()
-                        rec.SequenceIndex = sequenceIndex
-                        rec.LookupListIndex = l.lookup_index
-                        st.SubstLookupRecord.append(rec)
-        return self.buildLookup_(subtables)
+    def addLookupRecordToSubtable_(self, st, rec):
+        st.SubstCount += 1
+        st.SubstLookupRecord.append(rec)
 
     def getAlternateGlyphs(self):
         result = {}
-        for (_, _, _, lookuplist) in self.substitutions:
-            if lookuplist == self.SUBTABLE_BREAK_:
+        for (prefix, _, _, lookuplist) in self.rules:
+            if prefix == self.SUBTABLE_BREAK_:
                 continue
             for lookups in lookuplist:
                 if not isinstance(lookups, list):
@@ -270,18 +264,14 @@ class ChainContextSubstBuilder(LookupBuilder):
     def find_chainable_single_subst(self, glyphs):
         """Helper for add_single_subst_chained_()"""
         res = None
-        for _, _, _, substitutions in self.substitutions[::-1]:
-            if substitutions == self.SUBTABLE_BREAK_:
+        for prefix, _, _, rules in self.rules[::-1]:
+            if prefix == self.SUBTABLE_BREAK_:
                 return res
-            for sub in substitutions:
+            for sub in rules:
                 if (isinstance(sub, SingleSubstBuilder) and
                         not any(g in glyphs for g in sub.mapping.keys())):
                     res = sub
         return res
-
-    def add_subtable_break(self, location):
-        self.substitutions.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
-                                   self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_))
 
 
 class LigatureSubstBuilder(LookupBuilder):
@@ -435,15 +425,15 @@ class MarkMarkPosBuilder(LookupBuilder):
 class ReverseChainSingleSubstBuilder(LookupBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 8)
-        self.substitutions = []  # (prefix, suffix, mapping)
+        self.rules = []  # (prefix, suffix, mapping)
 
     def equals(self, other):
         return (LookupBuilder.equals(self, other) and
-                self.substitutions == other.substitutions)
+                self.rules == other.rules)
 
     def build(self):
         subtables = []
-        for prefix, suffix, mapping in self.substitutions:
+        for prefix, suffix, mapping in self.rules:
             st = ot.ReverseChainSingleSubst()
             st.Format = 1
             self.setBacktrackCoverage_(prefix, st)
