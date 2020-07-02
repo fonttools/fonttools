@@ -463,8 +463,7 @@ class MarkClass(object):
                 if otherLoc is None:
                     end = ""
                 else:
-                    end = " at %s" % (
-                        otherLoc)
+                    end = f" at {otherLoc}"
                 raise FeatureLibError(
                     "Glyph %s already defined%s" % (glyph, end),
                     definition.location)

@@ -6,4 +6,4 @@ class FeatureLibLocation(object):
         self.column = column
 
     def __str__(self):
-    		return "%s:%i:%i" % (self.file, self.line, self.column)
+    		return f"{self.file}:{self.line}:{self.column}"
