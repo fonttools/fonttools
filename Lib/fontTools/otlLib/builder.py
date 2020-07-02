@@ -161,6 +161,10 @@ class ChainContextualBuilder(LookupBuilder):
         return (LookupBuilder.equals(self, other) and
                 self.rules == other.rules)
 
+    def add_subtable_break(self, location):
+        self.rules.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
+                           self.SUBTABLE_BREAK_, [self.SUBTABLE_BREAK_]))
+
 
 class ChainContextPosBuilder(ChainContextualBuilder):
     def __init__(self, font, location):
@@ -208,10 +212,6 @@ class ChainContextPosBuilder(ChainContextualBuilder):
                     all(lookup.can_add(glyph, value) for glyph in glyphs):
                 res = lookup
         return res
-
-    def add_subtable_break(self, location):
-        self.rules.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
-                           self.SUBTABLE_BREAK_, [self.SUBTABLE_BREAK_]))
 
 
 class ChainContextSubstBuilder(ChainContextualBuilder):
@@ -276,10 +276,6 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
                         not any(g in glyphs for g in sub.mapping.keys())):
                     res = sub
         return res
-
-    def add_subtable_break(self, location):
-        self.rules.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
-                                   self.SUBTABLE_BREAK_, [self.SUBTABLE_BREAK_]))
 
 
 class LigatureSubstBuilder(LookupBuilder):
