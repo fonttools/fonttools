@@ -180,8 +180,12 @@ class ChainContextualBuilder(LookupBuilder):
                         lookupList = [ lookupList ]
                     for l in lookupList:
                         if l.lookup_index is None:
+                            if isinstance(self, ChainContextPosBuilder):
+                                other = "substitution"
+                            else:
+                                other = "positioning"
                             raise OpenTypeLibError('Missing index of the specified '
-                                'lookup, might be a substitution lookup',
+                                f'lookup, might be a {other} lookup',
                                 self.location)
                         rec = self.newLookupRecord_()
                         rec.SequenceIndex = sequenceIndex
