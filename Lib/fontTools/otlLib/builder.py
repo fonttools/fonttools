@@ -161,29 +161,6 @@ class ChainContextualBuilder(LookupBuilder):
         return (LookupBuilder.equals(self, other) and
                 self.rules == other.rules)
 
-    def add_subtable_break(self, location):
-        self.rules.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
-                           self.SUBTABLE_BREAK_, [self.SUBTABLE_BREAK_]))
-
-
-class ChainContextPosBuilder(ChainContextualBuilder):
-    def __init__(self, font, location):
-        LookupBuilder.__init__(self, font, location, 'GPOS', 8)
-        self.rules = []  # (prefix, input, suffix, lookups)
-
-    def newSubtable_(self):
-        st = ot.ChainContextPos()
-        st.PosCount = 0
-        st.PosLookupRecord = []
-        return st
-
-    def newLookupRecord_(self):
-        return ot.PosLookupRecord()
-
-    def addLookupRecordToSubtable_(self, st, rec):
-        st.PosCount += 1
-        st.PosLookupRecord.append(rec)
-
     def build(self):
         subtables = []
         for (prefix, glyphs, suffix, lookups) in self.rules:
@@ -211,6 +188,29 @@ class ChainContextPosBuilder(ChainContextualBuilder):
                         rec.LookupListIndex = l.lookup_index
                         self.addLookupRecordToSubtable_(st, rec)
         return self.buildLookup_(subtables)
+
+    def add_subtable_break(self, location):
+        self.rules.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
+                           self.SUBTABLE_BREAK_, [self.SUBTABLE_BREAK_]))
+
+
+class ChainContextPosBuilder(ChainContextualBuilder):
+    def __init__(self, font, location):
+        LookupBuilder.__init__(self, font, location, 'GPOS', 8)
+        self.rules = []  # (prefix, input, suffix, lookups)
+
+    def newSubtable_(self):
+        st = ot.ChainContextPos()
+        st.PosCount = 0
+        st.PosLookupRecord = []
+        return st
+
+    def newLookupRecord_(self):
+        return ot.PosLookupRecord()
+
+    def addLookupRecordToSubtable_(self, st, rec):
+        st.PosCount += 1
+        st.PosLookupRecord.append(rec)
 
     def find_chainable_single_pos(self, lookups, glyphs, value):
         """Helper for add_single_pos_chained_()"""
@@ -241,34 +241,6 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
     def addLookupRecordToSubtable_(self, st, rec):
         st.SubstCount += 1
         st.SubstLookupRecord.append(rec)
-
-    def build(self):
-        subtables = []
-        for (prefix, input, suffix, lookups) in self.rules:
-            if prefix == self.SUBTABLE_BREAK_:
-                continue
-            st = self.newSubtable_()
-            subtables.append(st)
-            st.Format = 3
-            self.setBacktrackCoverage_(prefix, st)
-            self.setLookAheadCoverage_(suffix, st)
-            self.setInputCoverage_(input, st)
-
-            for sequenceIndex, lookupList in enumerate(lookups):
-                if lookupList is not None:
-                    if not isinstance(lookupList, list):
-                        # Can happen with synthesised lookups
-                        lookupList = [ lookupList ]
-                    for l in lookupList:
-                        if l.lookup_index is None:
-                            raise OpenTypeLibError('Missing index of the specified '
-                                'lookup, might be a positioning lookup',
-                                self.location)
-                        rec = self.newLookupRecord_()
-                        rec.SequenceIndex = sequenceIndex
-                        rec.LookupListIndex = l.lookup_index
-                        self.addLookupRecordToSubtable_(st, rec)
-        return self.buildLookup_(subtables)
 
     def getAlternateGlyphs(self):
         result = {}
