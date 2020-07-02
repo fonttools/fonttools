@@ -252,8 +252,8 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
 
     def getAlternateGlyphs(self):
         result = {}
-        for (_, _, _, lookuplist) in self.rules:
-            if lookuplist == self.SUBTABLE_BREAK_:
+        for (prefix, _, _, lookuplist) in self.rules:
+            if prefix == self.SUBTABLE_BREAK_:
                 continue
             for lookups in lookuplist:
                 if not isinstance(lookups, list):
@@ -268,8 +268,8 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
     def find_chainable_single_subst(self, glyphs):
         """Helper for add_single_subst_chained_()"""
         res = None
-        for _, _, _, rules in self.rules[::-1]:
-            if rules == self.SUBTABLE_BREAK_:
+        for prefix, _, _, rules in self.rules[::-1]:
+            if prefix == self.SUBTABLE_BREAK_:
                 return res
             for sub in rules:
                 if (isinstance(sub, SingleSubstBuilder) and
@@ -279,7 +279,7 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
 
     def add_subtable_break(self, location):
         self.rules.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
-                                   self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_))
+                                   self.SUBTABLE_BREAK_, [self.SUBTABLE_BREAK_]))
 
 
 class LigatureSubstBuilder(LookupBuilder):
