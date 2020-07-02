@@ -35,7 +35,6 @@ _ColorStopsList = Sequence[_ColorStopInput]
 _ExtendInput = Union[int, str, ExtendMode]
 _ColorLineInput = Union[_Kwargs, ot.ColorLine]
 _PointTuple = Tuple[_ScalarInput, _ScalarInput]
-_PointInput = Union[_PointTuple, ot.Point]
 _AffineTuple = Tuple[_ScalarInput, _ScalarInput, _ScalarInput, _ScalarInput]
 _AffineInput = Union[_AffineTuple, ot.Affine2x2]
 
@@ -380,20 +379,6 @@ def buildColorLine(
     return self
 
 
-def buildPoint(x: _ScalarInput, y: _ScalarInput) -> ot.Point:
-    self = ot.Point()
-    # positions are encoded as Int16 so round to int
-    self.x = _to_variable_int(x)
-    self.y = _to_variable_int(y)
-    return self
-
-
-def _to_variable_point(pt: _PointInput) -> ot.Point:
-    if isinstance(pt, ot.Point):
-        return pt
-    return buildPoint(*pt)
-
-
 def _to_color_line(obj):
     if isinstance(obj, ot.ColorLine):
         return obj
@@ -404,9 +389,9 @@ def _to_color_line(obj):
 
 def buildLinearGradientPaint(
     colorLine: _ColorLineInput,
-    p0: _PointInput,
-    p1: _PointInput,
-    p2: Optional[_PointInput] = None,
+    p0: _PointTuple,
+    p1: _PointTuple,
+    p2: Optional[_PointTuple] = None,
 ) -> ot.Paint:
     self = ot.Paint()
     self.Format = 2
@@ -414,8 +399,9 @@ def buildLinearGradientPaint(
 
     if p2 is None:
         p2 = copy.copy(p1)
-    for i, pt in enumerate((p0, p1, p2)):
-        setattr(self, f"p{i}", _to_variable_point(pt))
+    for i, (x, y) in enumerate((p0, p1, p2)):
+        setattr(self, f"x{i}", _to_variable_int(x))
+        setattr(self, f"y{i}", _to_variable_int(y))
 
     return self
 
@@ -433,8 +419,8 @@ def buildAffine2x2(
 
 def buildRadialGradientPaint(
     colorLine: _ColorLineInput,
-    c0: _PointInput,
-    c1: _PointInput,
+    c0: _PointTuple,
+    c1: _PointTuple,
     r0: _ScalarInput,
     r1: _ScalarInput,
     affine: Optional[_AffineInput] = None,
@@ -444,11 +430,9 @@ def buildRadialGradientPaint(
     self.Format = 3
     self.ColorLine = _to_color_line(colorLine)
 
-    for i, pt in [(0, c0), (1, c1)]:
-        setattr(self, f"c{i}", _to_variable_point(pt))
-
-    for i, r in [(0, r0), (1, r1)]:
-        # distances are encoded as UShort so we round to int
+    for i, (x, y), r in [(0, c0, r0), (1, c1, r1)]:
+        setattr(self, f"x{i}", _to_variable_int(x))
+        setattr(self, f"y{i}", _to_variable_int(y))
         setattr(self, f"r{i}", _to_variable_int(r))
 
     if affine is not None and not isinstance(affine, ot.Affine2x2):

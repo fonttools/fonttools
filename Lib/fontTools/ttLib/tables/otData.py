@@ -1599,11 +1599,6 @@ otData = [
 		('VarFixed', 'yy', None, None, ''),
 	]),
 
-	('Point', [
-		('VarInt16', 'x', None, None, ''),
-		('VarInt16', 'y', None, None, ''),
-	]),
-
 	('ColorIndex', [
 		('uint16', 'PaletteIndex', None, None, 'Index value to use with a selected color palette.'),
 		('VarF2Dot14', 'Alpha', None, None, 'Values outsided [0.,1.] reserved'),
@@ -1628,17 +1623,22 @@ otData = [
 	('PaintFormat2', [
 		('uint16', 'PaintFormat', None, None, 'Format identifier-format = 2'),
 		('LOffset', 'ColorLine', None, None, 'Offset (from beginning of Paint table) to ColorLine subtable.'),
-		('Point', 'p0', None, None, ''),
-		('Point', 'p1', None, None, ''),
-		('Point', 'p2', None, None, 'Normal; equal to p1 in simple cases.'),
+		('VarInt16', 'x0', None, None, ''),
+		('VarInt16', 'y0', None, None, ''),
+		('VarInt16', 'x1', None, None, ''),
+		('VarInt16', 'y1', None, None, ''),
+		('VarInt16', 'x2', None, None, ''),
+		('VarInt16', 'y2', None, None, ''),
 	]),
 
 	('PaintFormat3', [
 		('uint16', 'PaintFormat', None, None, 'Format identifier-format = 3'),
 		('LOffset', 'ColorLine', None, None, 'Offset (from beginning of Paint table) to ColorLine subtable.'),
-		('Point', 'c0', None, None, ''),
-		('Point', 'c1', None, None, ''),
+		('VarInt16', 'x0', None, None, ''),
+		('VarInt16', 'y0', None, None, ''),
 		('VarUInt16', 'r0', None, None, ''),
+		('VarInt16', 'x1', None, None, ''),
+		('VarInt16', 'y1', None, None, ''),
 		('VarUInt16', 'r1', None, None, ''),
 		('LOffsetTo(Affine2x2)', 'Affine', None, None, 'Offset (from beginning of Paint table) to Affine2x2 subtable.'),
 	]),

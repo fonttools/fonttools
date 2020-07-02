@@ -98,18 +98,18 @@ COLR_V1_DATA = (
     b"\x00\x00\x00\x00"  # Paint.Color.Alpha.varIdx (0)
     b"\x00\x02"  # Paint.Format (2)
     b"\x00\x00\x00*"  # Offset to ColorLine from beginning of Paint (42)
-    b"\x00\x01"  # Paint.p0.x.value (1)
-    b"\x00\x00\x00\x00"  # Paint.p0.x.varIdx (0)
-    b"\x00\x02"  # Paint.p0.y.value (2)
-    b"\x00\x00\x00\x00"  # Paint.p0.y.varIdx (0)
-    b"\xff\xfd"  # Paint.p1.x.value (-3)
-    b"\x00\x00\x00\x00"  # Paint.p1.x.varIdx (0)
-    b"\xff\xfc"  # Paint.p1.y.value (-4)
-    b"\x00\x00\x00\x00"  # Paint.p1.y.varIdx (0)
-    b"\x00\x05"  # Paint.p2.x.value (5)
-    b"\x00\x00\x00\x00"  # Paint.p2.y.varIdx (0)
-    b"\x00\x06"  # Paint.p2.y.value (5)
-    b"\x00\x00\x00\x00"  # Paint.p2.y.varIdx (0)
+    b"\x00\x01"  # Paint.x0.value (1)
+    b"\x00\x00\x00\x00"  # Paint.x0.varIdx (0)
+    b"\x00\x02"  # Paint.y0.value (2)
+    b"\x00\x00\x00\x00"  # Paint.y0.varIdx (0)
+    b"\xff\xfd"  # Paint.x1.value (-3)
+    b"\x00\x00\x00\x00"  # Paint.x1.varIdx (0)
+    b"\xff\xfc"  # Paint.y1.value (-4)
+    b"\x00\x00\x00\x00"  # Paint.y1.varIdx (0)
+    b"\x00\x05"  # Paint.x2.value (5)
+    b"\x00\x00\x00\x00"  # Paint.x2.varIdx (0)
+    b"\x00\x06"  # Paint.y2.value (5)
+    b"\x00\x00\x00\x00"  # Paint.y2.varIdx (0)
     b"\x00\x01"  # ColorLine.Extend (1 or "repeat")
     b"\x00\x03"  # ColorLine.StopCount (3)
     b"\x00\x00"  # ColorLine.ColorStop[0].StopOffset.value (0.0)
@@ -129,15 +129,15 @@ COLR_V1_DATA = (
     b"\x00\x00\x00\x00"  # ColorLine.ColorStop[2].Color.Alpha.varIdx (0)
     b"\x00\x03"  # Paint.Format (3)
     b"\x00\x00\x00."  # Offset to ColorLine from beginning of Paint (46)
-    b"\x00\x07"  # Paint.c0.x.value (7)
+    b"\x00\x07"  # Paint.x0.value (7)
     b"\x00\x00\x00\x00"
-    b"\x00\x08"  # Paint.c0.y.value (8)
+    b"\x00\x08"  # Paint.y0.value (8)
     b"\x00\x00\x00\x00"
-    b"\x00\t"  # Paint.c1.x.value (9)
+    b"\x00\t"  # Paint.r0.value (9)
     b"\x00\x00\x00\x00"
-    b"\x00\n"  # Paint.c1.y.value (10)
+    b"\x00\n"  # Paint.x1.value (10)
     b"\x00\x00\x00\x00"
-    b"\x00\x0b"  # Paint.r0.value (11)
+    b"\x00\x0b"  # Paint.y1.value (11)
     b"\x00\x00\x00\x00"
     b"\x00\x0c"  # Paint.r1.value (12)
     b"\x00\x00\x00\x00"
@@ -233,18 +233,12 @@ COLR_V1_XML = [
     "              </Color>",
     "            </ColorStop>",
     "          </ColorLine>",
-    "          <p0>",
-    '            <x value="1"/>',
-    '            <y value="2"/>',
-    "          </p0>",
-    "          <p1>",
-    '            <x value="-3"/>',
-    '            <y value="-4"/>',
-    "          </p1>",
-    "          <p2>",
-    '            <x value="5"/>',
-    '            <y value="6"/>',
-    "          </p2>",
+    '          <x0 value="1"/>',
+    '          <y0 value="2"/>',
+    '          <x1 value="-3"/>',
+    '          <y1 value="-4"/>',
+    '          <x2 value="5"/>',
+    '          <y2 value="6"/>',
     "        </Paint>",
     "      </LayerV1Record>",
     '      <LayerV1Record index="2">',
@@ -268,15 +262,11 @@ COLR_V1_XML = [
     "              </Color>",
     "            </ColorStop>",
     "          </ColorLine>",
-    "          <c0>",
-    '            <x value="7"/>',
-    '            <y value="8"/>',
-    "          </c0>",
-    "          <c1>",
-    '            <x value="9"/>',
-    '            <y value="10"/>',
-    "          </c1>",
-    '          <r0 value="11"/>',
+    '          <x0 value="7"/>',
+    '          <y0 value="8"/>',
+    '          <r0 value="9"/>',
+    '          <x1 value="10"/>',
+    '          <y1 value="11"/>',
     '          <r1 value="12"/>',
     "          <Affine>",
     '            <xx value="-13.0"/>',
