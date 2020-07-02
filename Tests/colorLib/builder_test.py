@@ -337,7 +337,7 @@ def test_buildRadialGradientPaint():
     assert (gradient.x1, gradient.y1) == c1
     assert gradient.r0 == r0
     assert gradient.r1 == r1
-    assert gradient.Affine is None
+    assert gradient.Transform is None
 
     gradient = builder.buildRadialGradientPaint({"stops": color_stops}, c0, c1, r0, r1)
     assert gradient.ColorLine.Extend == builder.ExtendMode.PAD
@@ -345,14 +345,14 @@ def test_buildRadialGradientPaint():
 
     matrix = builder.buildAffine2x2(2.0, 0.0, 0.0, 2.0)
     gradient = builder.buildRadialGradientPaint(
-        color_line, c0, c1, r0, r1, affine=matrix
+        color_line, c0, c1, r0, r1, transform=matrix
     )
-    assert gradient.Affine == matrix
+    assert gradient.Transform == matrix
 
     gradient = builder.buildRadialGradientPaint(
-        color_line, c0, c1, r0, r1, affine=(2.0, 0.0, 0.0, 2.0)
+        color_line, c0, c1, r0, r1, transform=(2.0, 0.0, 0.0, 2.0)
     )
-    assert gradient.Affine == matrix
+    assert gradient.Transform == matrix
 
 
 def test_buildLayerV1Record():

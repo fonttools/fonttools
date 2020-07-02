@@ -423,7 +423,7 @@ def buildRadialGradientPaint(
     c1: _PointTuple,
     r0: _ScalarInput,
     r1: _ScalarInput,
-    affine: Optional[_AffineInput] = None,
+    transform: Optional[_AffineInput] = None,
 ) -> ot.Paint:
 
     self = ot.Paint()
@@ -435,9 +435,9 @@ def buildRadialGradientPaint(
         setattr(self, f"y{i}", _to_variable_int(y))
         setattr(self, f"r{i}", _to_variable_int(r))
 
-    if affine is not None and not isinstance(affine, ot.Affine2x2):
-        affine = buildAffine2x2(*affine)
-    self.Affine = affine
+    if transform is not None and not isinstance(transform, ot.Affine2x2):
+        transform = buildAffine2x2(*transform)
+    self.Transform = transform
 
     return self
 

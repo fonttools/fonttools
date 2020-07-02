@@ -1640,6 +1640,6 @@ otData = [
 		('VarInt16', 'x1', None, None, ''),
 		('VarInt16', 'y1', None, None, ''),
 		('VarUInt16', 'r1', None, None, ''),
-		('LOffsetTo(Affine2x2)', 'Affine', None, None, 'Offset (from beginning of Paint table) to Affine2x2 subtable.'),
+		('LOffsetTo(Affine2x2)', 'Transform', None, None, 'Offset (from beginning of Paint table) to Affine2x2 subtable.'),
 	]),
 ]
