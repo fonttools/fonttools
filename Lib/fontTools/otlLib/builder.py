@@ -214,8 +214,9 @@ class AlternateSubstBuilder(LookupBuilder):
         lookupflag (int): The lookup's flag
         markFilterSet: Either ``None`` if no mark filtering set is used, or
             an integer representing the filtering set to be used for this
-            lookup. *Note* that if this is not ``None``, then the ``flags``
-            parameter must include ``LOOKUP_FLAG_USE_MARK_FILTERING_SET``.
+            lookup. If a mark filtering set is provided,
+            `LOOKUP_FLAG_USE_MARK_FILTERING_SET` will be set on the lookup's
+            flags.
     """
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 3)
@@ -313,8 +314,9 @@ class ChainContextPosBuilder(ChainContextualBuilder):
         lookupflag (int): The lookup's flag
         markFilterSet: Either ``None`` if no mark filtering set is used, or
             an integer representing the filtering set to be used for this
-            lookup. *Note* that if this is not ``None``, then the ``flags``
-            parameter must include ``LOOKUP_FLAG_USE_MARK_FILTERING_SET``.
+            lookup. If a mark filtering set is provided,
+            `LOOKUP_FLAG_USE_MARK_FILTERING_SET` will be set on the lookup's
+            flags.
     """
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GPOS', 8)
@@ -367,8 +369,9 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
         lookupflag (int): The lookup's flag
         markFilterSet: Either ``None`` if no mark filtering set is used, or
             an integer representing the filtering set to be used for this
-            lookup. *Note* that if this is not ``None``, then the ``flags``
-            parameter must include ``LOOKUP_FLAG_USE_MARK_FILTERING_SET``.
+            lookup. If a mark filtering set is provided,
+            `LOOKUP_FLAG_USE_MARK_FILTERING_SET` will be set on the lookup's
+            flags.
     """
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 6)
@@ -433,8 +436,9 @@ class LigatureSubstBuilder(LookupBuilder):
         lookupflag (int): The lookup's flag
         markFilterSet: Either ``None`` if no mark filtering set is used, or
             an integer representing the filtering set to be used for this
-            lookup. *Note* that if this is not ``None``, then the ``flags``
-            parameter must include ``LOOKUP_FLAG_USE_MARK_FILTERING_SET``.
+            lookup. If a mark filtering set is provided,
+            `LOOKUP_FLAG_USE_MARK_FILTERING_SET` will be set on the lookup's
+            flags.
     """
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 4)
@@ -477,8 +481,9 @@ class MultipleSubstBuilder(LookupBuilder):
         lookupflag (int): The lookup's flag
         markFilterSet: Either ``None`` if no mark filtering set is used, or
             an integer representing the filtering set to be used for this
-            lookup. *Note* that if this is not ``None``, then the ``flags``
-            parameter must include ``LOOKUP_FLAG_USE_MARK_FILTERING_SET``.
+            lookup. If a mark filtering set is provided,
+            `LOOKUP_FLAG_USE_MARK_FILTERING_SET` will be set on the lookup's
+            flags.
     """
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 2)
@@ -509,8 +514,9 @@ class CursivePosBuilder(LookupBuilder):
         lookupflag (int): The lookup's flag
         markFilterSet: Either ``None`` if no mark filtering set is used, or
             an integer representing the filtering set to be used for this
-            lookup. *Note* that if this is not ``None``, then the ``flags``
-            parameter must include ``LOOKUP_FLAG_USE_MARK_FILTERING_SET``.
+            lookup. If a mark filtering set is provided,
+            `LOOKUP_FLAG_USE_MARK_FILTERING_SET` will be set on the lookup's
+            flags.
     """
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GPOS', 3)
@@ -570,8 +576,9 @@ class MarkBasePosBuilder(LookupBuilder):
         lookupflag (int): The lookup's flag
         markFilterSet: Either ``None`` if no mark filtering set is used, or
             an integer representing the filtering set to be used for this
-            lookup. *Note* that if this is not ``None``, then the ``flags``
-            parameter must include ``LOOKUP_FLAG_USE_MARK_FILTERING_SET``.
+            lookup. If a mark filtering set is provided,
+            `LOOKUP_FLAG_USE_MARK_FILTERING_SET` will be set on the lookup's
+            flags.
     """
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GPOS', 4)
@@ -632,8 +639,9 @@ class MarkLigPosBuilder(LookupBuilder):
         lookupflag (int): The lookup's flag
         markFilterSet: Either ``None`` if no mark filtering set is used, or
             an integer representing the filtering set to be used for this
-            lookup. *Note* that if this is not ``None``, then the ``flags``
-            parameter must include ``LOOKUP_FLAG_USE_MARK_FILTERING_SET``.
+            lookup. If a mark filtering set is provided,
+            `LOOKUP_FLAG_USE_MARK_FILTERING_SET` will be set on the lookup's
+            flags.
     """
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GPOS', 5)
@@ -691,8 +699,9 @@ class MarkMarkPosBuilder(LookupBuilder):
         lookupflag (int): The lookup's flag
         markFilterSet: Either ``None`` if no mark filtering set is used, or
             an integer representing the filtering set to be used for this
-            lookup. *Note* that if this is not ``None``, then the ``flags``
-            parameter must include ``LOOKUP_FLAG_USE_MARK_FILTERING_SET``.
+            lookup. If a mark filtering set is provided,
+            `LOOKUP_FLAG_USE_MARK_FILTERING_SET` will be set on the lookup's
+            flags.
     """
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GPOS', 6)
@@ -757,8 +766,9 @@ class ReverseChainSingleSubstBuilder(LookupBuilder):
         lookupflag (int): The lookup's flag
         markFilterSet: Either ``None`` if no mark filtering set is used, or
             an integer representing the filtering set to be used for this
-            lookup. *Note* that if this is not ``None``, then the ``flags``
-            parameter must include ``LOOKUP_FLAG_USE_MARK_FILTERING_SET``.
+            lookup. If a mark filtering set is provided,
+            `LOOKUP_FLAG_USE_MARK_FILTERING_SET` will be set on the lookup's
+            flags.
     """
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 8)
@@ -809,8 +819,9 @@ class SingleSubstBuilder(LookupBuilder):
         lookupflag (int): The lookup's flag
         markFilterSet: Either ``None`` if no mark filtering set is used, or
             an integer representing the filtering set to be used for this
-            lookup. *Note* that if this is not ``None``, then the ``flags``
-            parameter must include ``LOOKUP_FLAG_USE_MARK_FILTERING_SET``.
+            lookup. If a mark filtering set is provided,
+            `LOOKUP_FLAG_USE_MARK_FILTERING_SET` will be set on the lookup's
+            flags.
     """
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 1)
@@ -915,8 +926,9 @@ class PairPosBuilder(LookupBuilder):
         lookupflag (int): The lookup's flag
         markFilterSet: Either ``None`` if no mark filtering set is used, or
             an integer representing the filtering set to be used for this
-            lookup. *Note* that if this is not ``None``, then the ``flags``
-            parameter must include ``LOOKUP_FLAG_USE_MARK_FILTERING_SET``.
+            lookup. If a mark filtering set is provided,
+            `LOOKUP_FLAG_USE_MARK_FILTERING_SET` will be set on the lookup's
+            flags.
     """
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GPOS', 2)
@@ -1016,8 +1028,9 @@ class SinglePosBuilder(LookupBuilder):
         lookupflag (int): The lookup's flag
         markFilterSet: Either ``None`` if no mark filtering set is used, or
             an integer representing the filtering set to be used for this
-            lookup. *Note* that if this is not ``None``, then the ``flags``
-            parameter must include ``LOOKUP_FLAG_USE_MARK_FILTERING_SET``.
+            lookup. If a mark filtering set is provided,
+            `LOOKUP_FLAG_USE_MARK_FILTERING_SET` will be set on the lookup's
+            flags.
     """
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GPOS', 1)
