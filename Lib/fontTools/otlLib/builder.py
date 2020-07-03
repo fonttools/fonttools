@@ -187,7 +187,8 @@ class LookupBuilder(object):
 
         Args:
             location: A string or tuple representing the location in the
-                original source which produced this break.
+                original source which produced this break, or ``None`` if
+                no location is provided.
         """
         log.warning(OpenTypeLibError(
             'unsupported "subtable" statement for lookup type',
