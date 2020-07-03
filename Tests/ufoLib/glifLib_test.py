@@ -111,34 +111,56 @@ class GlyphSetTests(unittest.TestCase):
 				self.assertEqual(g.unicodes, unicodes[glyphName])
 
 
-class FileNameTests(unittest.TestCase):
+class FileNameTest:
 
-	def testDefaultFileNameScheme(self):
-		self.assertEqual(glyphNameToFileName("a", None), "a.glif")
-		self.assertEqual(glyphNameToFileName("A", None), "A_.glif")
-		self.assertEqual(glyphNameToFileName("Aring", None), "A_ring.glif")
-		self.assertEqual(glyphNameToFileName("F_A_B", None), "F__A__B_.glif")
-		self.assertEqual(glyphNameToFileName("A.alt", None), "A_.alt.glif")
-		self.assertEqual(glyphNameToFileName("A.Alt", None), "A_.A_lt.glif")
-		self.assertEqual(glyphNameToFileName(".notdef", None), "_notdef.glif")
-		self.assertEqual(glyphNameToFileName("T_H", None), "T__H_.glif")
-		self.assertEqual(glyphNameToFileName("T_h", None), "T__h.glif")
-		self.assertEqual(glyphNameToFileName("t_h", None), "t_h.glif")
-		self.assertEqual(glyphNameToFileName("F_F_I", None), "F__F__I_.glif")
-		self.assertEqual(glyphNameToFileName("f_f_i", None), "f_f_i.glif")
-		self.assertEqual(glyphNameToFileName("AE", None), "A_E_.glif")
-		self.assertEqual(glyphNameToFileName("Ae", None), "A_e.glif")
-		self.assertEqual(glyphNameToFileName("ae", None), "ae.glif")
-		self.assertEqual(glyphNameToFileName("aE", None), "aE_.glif")
-		self.assertEqual(glyphNameToFileName("a.alt", None), "a.alt.glif")
-		self.assertEqual(glyphNameToFileName("A.aLt", None), "A_.aL_t.glif")
-		self.assertEqual(glyphNameToFileName("A.alT", None), "A_.alT_.glif")
-		self.assertEqual(glyphNameToFileName("Aacute_V.swash", None), "A_acute_V_.swash.glif")
-		self.assertEqual(glyphNameToFileName(".notdef", None), "_notdef.glif")
-		self.assertEqual(glyphNameToFileName("con", None), "_con.glif")
-		self.assertEqual(glyphNameToFileName("CON", None), "C_O_N_.glif")
-		self.assertEqual(glyphNameToFileName("con.alt", None), "_con.alt.glif")
-		self.assertEqual(glyphNameToFileName("alt.con", None), "alt._con.glif")
+	def test_default_file_name_scheme(self):
+		assert glyphNameToFileName("a", None) == "a.glif"
+		assert glyphNameToFileName("A", None) == "A_.glif"
+		assert glyphNameToFileName("Aring", None) == "A_ring.glif"
+		assert glyphNameToFileName("F_A_B", None) == "F__A__B_.glif"
+		assert glyphNameToFileName("A.alt", None) == "A_.alt.glif"
+		assert glyphNameToFileName("A.Alt", None) == "A_.A_lt.glif"
+		assert glyphNameToFileName(".notdef", None) == "_notdef.glif"
+		assert glyphNameToFileName("T_H", None) =="T__H_.glif"
+		assert glyphNameToFileName("T_h", None) =="T__h.glif"
+		assert glyphNameToFileName("t_h", None) =="t_h.glif"
+		assert glyphNameToFileName("F_F_I", None) == "F__F__I_.glif"
+		assert glyphNameToFileName("f_f_i", None) == "f_f_i.glif"
+		assert glyphNameToFileName("AE", None) == "A_E_.glif"
+		assert glyphNameToFileName("Ae", None) == "A_e.glif"
+		assert glyphNameToFileName("ae", None) == "ae.glif"
+		assert glyphNameToFileName("aE", None) == "aE_.glif"
+		assert glyphNameToFileName("a.alt", None) == "a.alt.glif"
+		assert glyphNameToFileName("A.aLt", None) == "A_.aL_t.glif"
+		assert glyphNameToFileName("A.alT", None) == "A_.alT_.glif"
+		assert glyphNameToFileName("Aacute_V.swash", None) == "A_acute_V_.swash.glif"
+		assert glyphNameToFileName(".notdef", None) == "_notdef.glif"
+		assert glyphNameToFileName("con", None) == "_con.glif"
+		assert glyphNameToFileName("CON", None) == "C_O_N_.glif"
+		assert glyphNameToFileName("con.alt", None) == "_con.alt.glif"
+		assert glyphNameToFileName("alt.con", None) == "alt._con.glif"
+
+	def test_conflicting_case_insensitive_file_names(self, tmp_path):
+		src = GlyphSet(GLYPHSETDIR)
+		dst = GlyphSet(tmp_path)
+		glyph = src["a"]
+
+		dst.writeGlyph("a", glyph)
+		dst.writeGlyph("A", glyph)
+		dst.writeGlyph("a_", glyph)
+		dst.writeGlyph("A_", glyph)
+		dst.writeGlyph("i_j", glyph)
+
+		assert dst.contents == {
+			'a': 'a.glif',
+			'A': 'A_.glif',
+			'a_': 'a_000000000000001.glif',
+			'A_': 'A__.glif',
+			'i_j': 'i_j.glif',
+		}
+
+		# make sure filenames are unique even on case-insensitive filesystems
+		assert len({fileName.lower() for fileName in dst.contents.values()}) == 5
 
 
 class _Glyph:
