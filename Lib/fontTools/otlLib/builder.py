@@ -1269,8 +1269,6 @@ def buildBaseArray(bases, numMarkClasses, glyphMap):
 
 def buildBaseRecord(anchors):
     # [otTables.Anchor, otTables.Anchor, ...] --> otTables.BaseRecord
-    # (Not docstringed because it's only needed when building BaseArray,
-    # at which point you should be using the above.)
     self = ot.BaseRecord()
     self.BaseAnchor = anchors
     return self
@@ -1422,8 +1420,6 @@ def buildLigatureArray(ligs, numMarkClasses, glyphMap):
 
 def buildLigatureAttach(components):
     # [[Anchor, Anchor], [Anchor, Anchor, Anchor]] --> LigatureAttach
-    # (Not docstringed because it's only needed when building LigatureArray,
-    # at which point you should be using the above.)
     self = ot.LigatureAttach()
     self.ComponentRecord = [buildComponentRecord(c) for c in components]
     self.ComponentCount = len(self.ComponentRecord)
@@ -1631,7 +1627,6 @@ def buildMarkLigPosSubtable(marks, ligs, glyphMap):
 
 
 def buildMarkRecord(classID, anchor):
-    # Only used by buildMarkArray
     assert isinstance(classID, int)
     assert isinstance(anchor, ot.Anchor)
     self = ot.MarkRecord()
@@ -1642,8 +1637,6 @@ def buildMarkRecord(classID, anchor):
 
 def buildMark2Record(anchors):
     # [otTables.Anchor, otTables.Anchor, ...] --> otTables.Mark2Record
-    # (Not docstringed because it's only needed when building MarkMarkPos,
-    # at which point you should be using otl.lookupBuilders.MarkMarkPosBuilder.)
     self = ot.Mark2Record()
     self.Mark2Anchor = anchors
     return self
