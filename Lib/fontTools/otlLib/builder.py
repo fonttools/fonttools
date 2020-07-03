@@ -75,8 +75,9 @@ def buildLookup(subtables, flags=0, markFilterSet=None):
         flags (int): This lookup's flags.
         markFilterSet: Either ``None`` if no mark filtering set is used, or
             an integer representing the filtering set to be used for this
-            lookup. *Note* that if this is not ``None``, then the ``flags``
-            parameter must include ``LOOKUP_FLAG_USE_MARK_FILTERING_SET``.
+            lookup. If a mark filtering set is provided,
+            `LOOKUP_FLAG_USE_MARK_FILTERING_SET` will be set on the lookup's
+            flags.
 
     Returns:
         An ``otTables.Lookup`` object or ``None`` if there are no subtables
@@ -96,9 +97,7 @@ def buildLookup(subtables, flags=0, markFilterSet=None):
     self.SubTable = subtables
     self.SubTableCount = len(self.SubTable)
     if markFilterSet is not None:
-        assert self.LookupFlag & LOOKUP_FLAG_USE_MARK_FILTERING_SET, \
-            ("if markFilterSet is not None, flags must set "
-             "LOOKUP_FLAG_USE_MARK_FILTERING_SET; flags=0x%04x" % flags)
+        self.LookupFlag |= LOOKUP_FLAG_USE_MARK_FILTERING_SET
         assert isinstance(markFilterSet, int), markFilterSet
         self.MarkFilteringSet = markFilterSet
     else:
