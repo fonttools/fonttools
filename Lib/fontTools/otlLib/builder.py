@@ -848,11 +848,10 @@ class ClassPairPosSubtableBuilder(object):
     Attributes:
         builder (PairPosBuilder): A pair positioning lookup builder.
     """
-    def __init__(self, builder, valueFormat1, valueFormat2):
+    def __init__(self, builder):
         self.builder_ = builder
         self.classDef1_, self.classDef2_ = None, None
         self.values_ = {}  # (glyphclass1, glyphclass2) --> (value1, value2)
-        self.valueFormat1_, self.valueFormat2_ = valueFormat1, valueFormat2
         self.forceSubtableBreak_ = False
         self.subtables_ = []
 
@@ -993,8 +992,7 @@ class PairPosBuilder(LookupBuilder):
                 valFormat2 = value2.getFormat()
             builder = builders.get((valFormat1, valFormat2))
             if builder is None:
-                builder = ClassPairPosSubtableBuilder(
-                    self, valFormat1, valFormat2)
+                builder = ClassPairPosSubtableBuilder(self)
                 builders[(valFormat1, valFormat2)] = builder
             builder.addPair(glyphclass1, value1, glyphclass2, value2)
         subtables = []
