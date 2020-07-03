@@ -495,14 +495,6 @@ class BuilderTest(object):
             ),
         ) as excinfo:
             builder.buildLookup([s], builder.LOOKUP_FLAG_USE_MARK_FILTERING_SET, None)
-        with pytest.raises(
-            AssertionError,
-            match=(
-                "if markFilterSet is not None, flags must set "
-                "LOOKUP_FLAG_USE_MARK_FILTERING_SET; flags=0x0004"
-            ),
-        ) as excinfo:
-            builder.buildLookup([s], builder.LOOKUP_FLAG_IGNORE_LIGATURES, 777)
 
     def test_buildLookup_conflictingSubtableTypes(self):
         s1 = builder.buildSingleSubstSubtable({"one": "two"})
