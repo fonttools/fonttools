@@ -323,18 +323,26 @@ class ChainContextualBuilder(LookupBuilder):
             contextual positioning lookup.
         """
         subtables = []
-        for ruleset in self.rulesets():
+        chaining = False
+        rulesets = self.rulesets()
+        chaining = any([ruleset.hasPrefixOrSuffix for ruleset in rulesets])
+        for ruleset in rulesets:
             for rule in ruleset.rules:
-                subtables.append(self.buildFormat3Subtable(rule))
+                subtables.append(self.buildFormat3Subtable(rule, chaining))
+        # If we are not chaining, lookup type will be automatically fixed by
+        # buildLookup_
         return self.buildLookup_(subtables)
 
-    def buildFormat3Subtable(self, rule):
+    def buildFormat3Subtable(self, rule, chaining=True):
         (prefix, glyphs, suffix, lookups) = rule
-        st = self.newSubtable_()
+        st = self.newSubtable_(chaining=chaining)
         st.Format = 3
-        self.setBacktrackCoverage_(prefix, st)
-        self.setLookAheadCoverage_(suffix, st)
-        self.setInputCoverage_(glyphs, st)
+        if chaining:
+            self.setBacktrackCoverage_(prefix, st)
+            self.setLookAheadCoverage_(suffix, st)
+            self.setInputCoverage_(glyphs, st)
+        else:
+            self.setCoverage_(glyphs, st)
 
         for sequenceIndex, lookupList in enumerate(lookups):
             if lookupList is not None:
@@ -391,8 +399,11 @@ class ChainContextPosBuilder(ChainContextualBuilder):
         LookupBuilder.__init__(self, font, location, 'GPOS', 8)
         self.rules = []  # (prefix, input, suffix, lookups)
 
-    def newSubtable_(self):
-        st = ot.ChainContextPos()
+    def newSubtable_(self, chaining=True):
+        if chaining:
+            st = ot.ChainContextPos()
+        else:
+            st = ot.ContextPos()
         st.PosCount = 0
         st.PosLookupRecord = []
         return st
@@ -446,8 +457,11 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
         LookupBuilder.__init__(self, font, location, 'GSUB', 6)
         self.rules = []  # (prefix, input, suffix, lookups)
 
-    def newSubtable_(self):
-        st = ot.ChainContextSubst()
+    def newSubtable_(self, chaining=True):
+        if chaining:
+            st = ot.ChainContextSubst()
+        else:
+            st = ot.ContextSubst()
         st.SubstCount = 0
         st.SubstLookupRecord = []
         return st
