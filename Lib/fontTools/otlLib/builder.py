@@ -316,35 +316,38 @@ class ChainContextualBuilder(LookupBuilder):
             contextual positioning lookup.
         """
         subtables = []
-        for (prefix, glyphs, suffix, lookups) in self.rules:
-            if prefix == self.SUBTABLE_BREAK_:
-                continue
-            st = self.newSubtable_()
-            subtables.append(st)
-            st.Format = 3
-            self.setBacktrackCoverage_(prefix, st)
-            self.setLookAheadCoverage_(suffix, st)
-            self.setInputCoverage_(glyphs, st)
-
-            for sequenceIndex, lookupList in enumerate(lookups):
-                if lookupList is not None:
-                    if not isinstance(lookupList, list):
-                        # Can happen with synthesised lookups
-                        lookupList = [ lookupList ]
-                    for l in lookupList:
-                        if l.lookup_index is None:
-                            if isinstance(self, ChainContextPosBuilder):
-                                other = "substitution"
-                            else:
-                                other = "positioning"
-                            raise OpenTypeLibError('Missing index of the specified '
-                                f'lookup, might be a {other} lookup',
-                                self.location)
-                        rec = self.newLookupRecord_()
-                        rec.SequenceIndex = sequenceIndex
-                        rec.LookupListIndex = l.lookup_index
-                        self.addLookupRecordToSubtable_(st, rec)
+        for ruleset in self.rulesets():
+            for rule in ruleset.rules:
+                subtables.append(self.buildFormat3Subtable(rule))
         return self.buildLookup_(subtables)
+
+    def buildFormat3Subtable(self, rule):
+        (prefix, glyphs, suffix, lookups) = rule
+        st = self.newSubtable_()
+        st.Format = 3
+        self.setBacktrackCoverage_(prefix, st)
+        self.setLookAheadCoverage_(suffix, st)
+        self.setInputCoverage_(glyphs, st)
+
+        for sequenceIndex, lookupList in enumerate(lookups):
+            if lookupList is not None:
+                if not isinstance(lookupList, list):
+                    # Can happen with synthesised lookups
+                    lookupList = [ lookupList ]
+                for l in lookupList:
+                    if l.lookup_index is None:
+                        if isinstance(self, ChainContextPosBuilder):
+                            other = "substitution"
+                        else:
+                            other = "positioning"
+                        raise OpenTypeLibError('Missing index of the specified '
+                            f'lookup, might be a {other} lookup',
+                            self.location)
+                    rec = self.newLookupRecord_()
+                    rec.SequenceIndex = sequenceIndex
+                    rec.LookupListIndex = l.lookup_index
+                    self.addLookupRecordToSubtable_(st, rec)
+        return st
 
     def add_subtable_break(self, location):
         self.rules.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
