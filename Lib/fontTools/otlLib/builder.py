@@ -172,6 +172,13 @@ class LookupBuilder(object):
             coverage = buildCoverage(g, self.glyphMap)
             subtable.InputCoverage.append(coverage)
 
+    def setCoverage_(self, glyphs, subtable):
+        subtable.GlyphCount = len(glyphs)
+        subtable.Coverage = []
+        for g in glyphs:
+            coverage = buildCoverage(g, self.glyphMap)
+            subtable.Coverage.append(coverage)
+
     def build_subst_subtables(self, mapping, klass):
         substitutions = [{}]
         for key in mapping:
