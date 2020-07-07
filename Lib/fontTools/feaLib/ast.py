@@ -1119,11 +1119,14 @@ class MarkMarkPosStatement(Statement):
 class MultipleSubstStatement(Statement):
     """A multiple substitution statement.
 
-    ``prefix``, ``glyph``, ``suffix`` and ``replacement`` should be lists of
-    `glyph-containing objects`_.
-
-    If ``forceChain`` is True, this is expressed as a chaining rule
-    (e.g. ``sub f' i' by f_i``) even when no context is given."""
+    Args:
+        prefix: a list of `glyph-containing objects`_.
+        glyph: a single glyph-containing object.
+        suffix: a list of glyph-containing objects.
+        replacement: a list of glyph-containing objects.
+        forceChain: If true, the statement is expressed as a chaining rule
+            (e.g. ``sub f' i' by f_i``) even when no context is given.
+    """
     def __init__(
         self, prefix, glyph, suffix, replacement, forceChain=False, location=None
     ):
