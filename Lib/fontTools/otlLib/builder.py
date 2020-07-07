@@ -244,10 +244,69 @@ class AlternateSubstBuilder(LookupBuilder):
         self.alternates[(self.SUBTABLE_BREAK_, location)] = self.SUBTABLE_BREAK_
 
 
+class ChainContextualRuleset():
+    def __init__(self):
+        self.rules = []
+
+    def addRule(self, prefix, glyphs, suffix, lookups):
+        self.rules.append((prefix, glyphs, suffix, lookups))
+
+    @property
+    def hasPrefixOrSuffix(self):
+        # Do we have any prefixes/suffixes? If this is False for all
+        # rulesets, we can express the whole lookup as GPOS5/GSUB7.
+        for (prefix, glyphs, suffix, lookups) in self.rules:
+            if len(prefix) > 0 or len(suffix) > 0: return True
+        return False
+
+    @property
+    def hasAnyGlyphClasses(self):
+        # Do we use glyph classes anywhere in the rules? If this is False
+        # we can express this subtable as a Format 1.
+        for (prefix, glyphs, suffix, lookups) in self.rules:
+            for coverage in (prefix, glyphs, suffix):
+                if any([len(x) > 1 for x in coverage]):
+                    return True
+        return False
+
+    def format1Classdefs(self):
+        PREFIX, GLYPHS, SUFFIX = 0,1,2
+        classdefbuilders = []
+        for ix in [PREFIX, GLYPHS, SUFFIX]:
+            context = []
+            for r in self.rules:
+                context.append(r[ix])
+            classes = self._classBuilderForContext(context)
+            if not classes:
+                return None
+            classdefbuilders.append(classes)
+        return classdefbuilders
+
+    def _classBuilderForContext(self, context):
+        classdefbuilder = ClassDefBuilder(useClass0=False)
+        for position in context:
+            for glyphset in position:
+                if not classdefbuilder.canAdd(glyphset):
+                    return None
+                classdefbuilder.add(glyphset)
+        return classdefbuilder
+
 class ChainContextualBuilder(LookupBuilder):
     def equals(self, other):
         return (LookupBuilder.equals(self, other) and
                 self.rules == other.rules)
+
+    def rulesets(self):
+        # Return a list of ChainContextRuleset objects, taking explicit
+        # subtable breaks into account
+        ruleset = [ ChainContextualRuleset() ]
+        for (prefix, glyphs, suffix, lookups) in self.rules:
+            if prefix == self.SUBTABLE_BREAK_:
+                ruleset.append(ChainContextualRuleset() )
+                continue
+            ruleset[-1].addRule(prefix, glyphs, suffix, lookups)
+        # Squish any empty subtables
+        return [x for x in ruleset if len(x.rules) > 0]
 
     def build(self):
         """Build the lookup.

@@ -1392,6 +1392,63 @@ def test_stat_infinities():
     assert struct.pack(">l", posInf) == b"\x7f\xff\xff\xff"
 
 
+class ChainContextualRulesetTest(object):
+    def test_makeRulesets(self):
+        font = ttLib.TTFont()
+        font.setGlyphOrder(["a","b","c","d","A","B","C","D","E"])
+        sb = builder.ChainContextSubstBuilder(font, None)
+        prefix = [ ["a"], ["b"] ]
+        input_ = [ ["c"] ]
+        suffix = [ ]
+        lookups = [ None ]
+        sb.rules.append((prefix, input_, suffix, lookups))
+
+        prefix = [ ["a"], ["d"] ]
+        sb.rules.append((prefix, input_, suffix, lookups))
+
+        sb.add_subtable_break(None)
+
+        # Second subtable has some glyph classes
+        prefix = [ ["A"] ]
+        input_ = [ ["E"] ]
+        sb.rules.append((prefix, input_, suffix, lookups))
+        input_ = [ ["C","D"] ]
+        sb.rules.append((prefix, input_, suffix, lookups))
+        prefix = [ ["A", "B"] ]
+        input_ = [ ["E"] ]
+        sb.rules.append((prefix, input_, suffix, lookups))
+
+        sb.add_subtable_break(None)
+
+        # Third subtable has no pre/post context
+        prefix = []
+        suffix = []
+        sb.rules.append((prefix, input_, suffix, lookups))
+        input_ = [ ["C","D"] ]
+        sb.rules.append((prefix, input_, suffix, lookups))
+
+        rulesets = sb.rulesets()
+        assert len(rulesets) == 3
+        assert rulesets[0].hasPrefixOrSuffix
+        assert not rulesets[0].hasAnyGlyphClasses
+        cd = rulesets[0].format1Classdefs()
+        assert set(cd[0].classes()[1:]) == set([("d",),("b",),("a",)])
+        assert set(cd[1].classes()[1:]) == set([("c",)])
+        assert set(cd[2].classes()[1:]) == set()
+
+        assert rulesets[1].hasPrefixOrSuffix
+        assert rulesets[1].hasAnyGlyphClasses
+        assert not rulesets[1].format1Classdefs()
+
+        assert not rulesets[2].hasPrefixOrSuffix
+        assert rulesets[2].hasAnyGlyphClasses
+        assert rulesets[2].format1Classdefs()
+        cd = rulesets[2].format1Classdefs()
+        assert set(cd[0].classes()[1:]) == set()
+        assert set(cd[1].classes()[1:]) == set([("C","D"), ("E",)])
+        assert set(cd[2].classes()[1:]) == set()
+
+
 if __name__ == "__main__":
     import sys
 
