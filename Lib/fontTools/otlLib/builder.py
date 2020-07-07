@@ -358,16 +358,56 @@ class ChainContextualBuilder(LookupBuilder):
                         raise OpenTypeLibError('Missing index of the specified '
                             f'lookup, might be a {other} lookup',
                             self.location)
-                    rec = self.newLookupRecord_()
+                    rec = self.newLookupRecord_(st)
                     rec.SequenceIndex = sequenceIndex
                     rec.LookupListIndex = l.lookup_index
-                    self.addLookupRecordToSubtable_(st, rec)
         return st
 
     def add_subtable_break(self, location):
         self.rules.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
                            self.SUBTABLE_BREAK_, [self.SUBTABLE_BREAK_]))
 
+    def newSubtable_(self, chaining=True):
+        subtablename = f"Context{self.subtable_type}"
+        if chaining:
+            subtablename = "Chain"+subtablename
+        st = getattr(ot,subtablename)() # ot.ChainContextPos()/ot.ChainSubst()/etc.
+        setattr(st, f"{self.subtable_type}Count", 0)
+        setattr(st, f"{self.subtable_type}LookupRecord", [])
+        return st
+
+    def attachSubtableWithCount_(self, st,
+        subtable_name, count_name,
+        existing=None,
+        index=None, chaining=False):
+        if chaining:
+            subtable_name = "Chain"+subtable_name
+            count_name    = "Chain"+count_name
+
+        if not hasattr(st, count_name):
+            setattr(st, count_name, 0)
+            setattr(st, subtable_name, [])
+
+        if existing:
+            new_subtable = existing
+        else:
+            # Create a new, empty subtable from otTables
+            new_subtable = getattr(ot, subtable_name)()
+
+        setattr(st, count_name, getattr(st, count_name) + 1)
+
+        if index:
+            getattr(st, subtable_name).insert(index, new_subtable)
+        else:
+            getattr(st, subtable_name).append(new_subtable)
+
+        return new_subtable
+
+    def newLookupRecord_(self, st):
+        return self.attachSubtableWithCount_(st,
+            f"{self.subtable_type}LookupRecord",
+            f"{self.subtable_type}Count",
+            chaining=False) # Oddly, it isn't ChainSubstLookupRecord
 
 class ChainContextPosBuilder(ChainContextualBuilder):
     """Builds a Chained Contextual Positioning (GPOS8) lookup.
@@ -398,22 +438,7 @@ class ChainContextPosBuilder(ChainContextualBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GPOS', 8)
         self.rules = []  # (prefix, input, suffix, lookups)
-
-    def newSubtable_(self, chaining=True):
-        if chaining:
-            st = ot.ChainContextPos()
-        else:
-            st = ot.ContextPos()
-        st.PosCount = 0
-        st.PosLookupRecord = []
-        return st
-
-    def newLookupRecord_(self):
-        return ot.PosLookupRecord()
-
-    def addLookupRecordToSubtable_(self, st, rec):
-        st.PosCount += 1
-        st.PosLookupRecord.append(rec)
+        self.subtable_type = "Pos"
 
     def find_chainable_single_pos(self, lookups, glyphs, value):
         """Helper for add_single_pos_chained_()"""
@@ -456,22 +481,7 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 6)
         self.rules = []  # (prefix, input, suffix, lookups)
-
-    def newSubtable_(self, chaining=True):
-        if chaining:
-            st = ot.ChainContextSubst()
-        else:
-            st = ot.ContextSubst()
-        st.SubstCount = 0
-        st.SubstLookupRecord = []
-        return st
-
-    def newLookupRecord_(self):
-        return ot.SubstLookupRecord()
-
-    def addLookupRecordToSubtable_(self, st, rec):
-        st.SubstCount += 1
-        st.SubstLookupRecord.append(rec)
+        self.subtable_type = "Subst"
 
     def getAlternateGlyphs(self):
         result = {}
