@@ -276,7 +276,7 @@ class ChainContextualRuleset():
                     return True
         return False
 
-    def format1Classdefs(self):
+    def format2Classdefs(self):
         PREFIX, GLYPHS, SUFFIX = 0,1,2
         classdefbuilders = []
         for ix in [PREFIX, GLYPHS, SUFFIX]:

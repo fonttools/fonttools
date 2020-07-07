@@ -1431,19 +1431,19 @@ class ChainContextualRulesetTest(object):
         assert len(rulesets) == 3
         assert rulesets[0].hasPrefixOrSuffix
         assert not rulesets[0].hasAnyGlyphClasses
-        cd = rulesets[0].format1Classdefs()
+        cd = rulesets[0].format2Classdefs()
         assert set(cd[0].classes()[1:]) == set([("d",),("b",),("a",)])
         assert set(cd[1].classes()[1:]) == set([("c",)])
         assert set(cd[2].classes()[1:]) == set()
 
         assert rulesets[1].hasPrefixOrSuffix
         assert rulesets[1].hasAnyGlyphClasses
-        assert not rulesets[1].format1Classdefs()
+        assert not rulesets[1].format2Classdefs()
 
         assert not rulesets[2].hasPrefixOrSuffix
         assert rulesets[2].hasAnyGlyphClasses
-        assert rulesets[2].format1Classdefs()
-        cd = rulesets[2].format1Classdefs()
+        assert rulesets[2].format2Classdefs()
+        cd = rulesets[2].format2Classdefs()
         assert set(cd[0].classes()[1:]) == set()
         assert set(cd[1].classes()[1:]) == set([("C","D"), ("E",)])
         assert set(cd[2].classes()[1:]) == set()
