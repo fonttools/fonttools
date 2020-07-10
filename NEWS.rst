@@ -1,3 +1,6 @@
+4.13.0 (released 2020-07-10)
+----------------------------
+
 - [feaLib/otlLib] Moved lookup subtable builders from feaLib to otlLib; refactored
   some common code (#2004, #2007).
 - [docs] Document otlLib module (#2009).
