@@ -349,7 +349,7 @@ class ChainContextualBuilder(LookupBuilder):
             if lookupList is not None:
                 if not isinstance(lookupList, list):
                     # Can happen with synthesised lookups
-                    lookupList = [ lookupList ]
+                    lookupList = [lookupList]
                 for l in lookupList:
                     if l.lookup_index is None:
                         if isinstance(self, ChainContextPosBuilder):
