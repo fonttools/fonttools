@@ -410,6 +410,21 @@ class ChainContextualBuilder(LookupBuilder):
             f"{self.subtable_type}Count",
             chaining=False) # Oddly, it isn't ChainSubstLookupRecord
 
+    # Format 1 subtables
+    # While everything else is "Pos" and "Subst" (LookupRecord,Count,Format)
+    # Rule and RuleSet subtables are "Pos" and "Sub".
+    def newRuleSet_(self, st, index=None, chaining=False):
+        return self.attachSubtableWithCount_(st,
+            f"{self.subtable_type[0:3]}RuleSet",
+            f"{self.subtable_type[0:3]}RuleSetCount",
+            index=index, chaining=chaining)
+
+    def newRule_(self, st, rule = None, chaining=False):
+        return self.attachSubtableWithCount_(st,
+            f"{self.subtable_type[0:3]}Rule",
+            f"{self.subtable_type[0:3]}RuleCount",
+            chaining=chaining)
+
 class ChainContextPosBuilder(ChainContextualBuilder):
     """Builds a Chained Contextual Positioning (GPOS8) lookup.
 
