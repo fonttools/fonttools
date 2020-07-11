@@ -328,11 +328,44 @@ class ChainContextualBuilder(LookupBuilder):
         rulesets = self.rulesets()
         chaining = any(ruleset.hasPrefixOrSuffix for ruleset in rulesets)
         for ruleset in rulesets:
-            for rule in ruleset.rules:
-                subtables.append(self.buildFormat3Subtable(rule, chaining))
+            if not ruleset.hasAnyGlyphClasses:
+                subtables.append(self.buildFormat1Subtable(ruleset, chaining))
+            else:
+                for rule in ruleset.rules:
+                    subtables.append(self.buildFormat3Subtable(rule, chaining))
         # If we are not chaining, lookup type will be automatically fixed by
         # buildLookup_
         return self.buildLookup_(subtables)
+
+    def buildFormat1Subtable(self, ruleset, chaining=True):
+        # Format 1 subtables are arranged into rulesets all starting with the
+        # same first input glyph. Because of this, the layout order of rules in
+        # the subtable may be different from the order of rules in the input.
+        # I *think* this is safe.
+        st = self.newSubtable_(chaining=chaining)
+        st.Format = 1
+        rulesetObjs = OrderedDict()
+        for rule in ruleset.rules:
+            (prefix, glyphs, suffix, lookups) = rule
+            firstGlyph = list(glyphs[0])[0] # odict_keys can't be indexed, needs coercion
+            if not firstGlyph in rulesetObjs:
+                rulesetObjs[firstGlyph] = self.newRuleSet_(st, chaining=chaining)
+            rulesetObj = rulesetObjs[firstGlyph]
+            ruleObj = self.newRule_(rulesetObj, chaining=chaining)
+            if chaining:
+                ruleObj.BacktrackGlyphCount = len(prefix)
+                ruleObj.InputGlyphCount = len(glyphs)-1
+                ruleObj.LookAheadGlyphCount = len(suffix)
+                ruleObj.Backtrack = [list(x)[0] for x in reversed(prefix)]
+                ruleObj.Input     = [list(x)[0] for x in glyphs[1:]]
+                ruleObj.LookAhead = [list(x)[0] for x in suffix]
+            else:
+                ruleObj.glyphCount = len(glyphs)
+                ruleObj.Input = [list(x)[0] for x in glyphs]
+
+            self.buildContextualLookups(ruleObj, lookups)
+        st.Coverage = buildCoverage(rulesetObjs.keys(), self.glyphMap)
+        return st
 
     def buildFormat3Subtable(self, rule, chaining=True):
         (prefix, glyphs, suffix, lookups) = rule
@@ -344,7 +377,10 @@ class ChainContextualBuilder(LookupBuilder):
             self.setInputCoverage_(glyphs, st)
         else:
             self.setCoverage_(glyphs, st)
+        self.buildContextualLookups(st, lookups)
+        return st
 
+    def buildContextualLookups(self, st, lookups):
         for sequenceIndex, lookupList in enumerate(lookups):
             if lookupList is not None:
                 if not isinstance(lookupList, list):
