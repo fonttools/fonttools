@@ -338,10 +338,6 @@ class ChainContextualBuilder(LookupBuilder):
         return self.buildLookup_(subtables)
 
     def buildFormat1Subtable(self, ruleset, chaining=True):
-        # Format 1 subtables are arranged into rulesets all starting with the
-        # same first input glyph. Because of this, the layout order of rules in
-        # the subtable may be different from the order of rules in the input.
-        # I *think* this is safe.
         st = self.newSubtable_(chaining=chaining)
         st.Format = 1
         rulesetObjs = OrderedDict()
