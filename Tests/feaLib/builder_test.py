@@ -51,7 +51,7 @@ def makeTTFont():
 
 class BuilderTest(unittest.TestCase):
     # Feature files in data/*.fea; output gets compared to data/*.ttx.
-    TEST_FEATURE_FILES = """
+    TEST_FEATURE_FILES = os.getenv("TEST_FEATURE_FILES","""
         Attach cid_range enum markClass language_required
         GlyphClassDef LigatureCaretByIndex LigatureCaretByPos
         lookup lookupflag feature_aalt ignore_pos
@@ -73,7 +73,7 @@ class BuilderTest(unittest.TestCase):
         LigatureSubtable AlternateSubtable MultipleSubstSubtable 
         SingleSubstSubtable aalt_chain_contextual_subst AlternateChained 
         MultipleLookupsPerGlyph MultipleLookupsPerGlyph2
-    """.split()
+    """).split()
 
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
