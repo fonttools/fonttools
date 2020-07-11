@@ -328,7 +328,8 @@ class ChainContextualBuilder(LookupBuilder):
         rulesets = self.rulesets()
         chaining = any(ruleset.hasPrefixOrSuffix for ruleset in rulesets)
         for ruleset in rulesets:
-            if not ruleset.hasAnyGlyphClasses:
+            if not ruleset.hasAnyGlyphClasses and len(ruleset.rules) > 2:
+                # Experimentally, format 1 is only more efficient for >2 rules
                 subtables.append(self.buildFormat1Subtable(ruleset, chaining))
             else:
                 for rule in ruleset.rules:
