@@ -1,0 +1,15 @@
+lookup lcuc {
+  sub [a - z] by [A - Z];
+} lcuc;
+feature test {
+  sub a b c d' lookup lcuc;
+  sub b c d' lookup lcuc e' lookup lcuc f;
+  sub e f g' lookup lcuc h i j;
+  sub e f g' lookup lcuc h' lookup lcuc x;
+  sub e f g' lookup lcuc z;
+  sub a g' lookup lcuc h' lookup lcuc b;
+  sub g' lookup lcuc z' lookup lcuc;
+  sub r' lookup lcuc;
+  sub t' lookup lcuc u v;
+  sub z' lookup lcuc;
+} test;

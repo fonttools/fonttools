@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ttFont>
+
+  <GSUB>
+    <Version value="0x00010000"/>
+    <ScriptList>
+      <!-- ScriptCount=1 -->
+      <ScriptRecord index="0">
+        <ScriptTag value="DFLT"/>
+        <Script>
+          <DefaultLangSys>
+            <ReqFeatureIndex value="65535"/>
+            <!-- FeatureCount=1 -->
+            <FeatureIndex index="0" value="0"/>
+          </DefaultLangSys>
+          <!-- LangSysCount=0 -->
+        </Script>
+      </ScriptRecord>
+    </ScriptList>
+    <FeatureList>
+      <!-- FeatureCount=1 -->
+      <FeatureRecord index="0">
+        <FeatureTag value="test"/>
+        <Feature>
+          <!-- LookupCount=1 -->
+          <LookupListIndex index="0" value="1"/>
+        </Feature>
+      </FeatureRecord>
+    </FeatureList>
+    <LookupList>
+      <!-- LookupCount=2 -->
+      <Lookup index="0">
+        <LookupType value="1"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <SingleSubst index="0">
+          <Substitution in="a" out="A"/>
+          <Substitution in="b" out="B"/>
+          <Substitution in="c" out="C"/>
+          <Substitution in="d" out="D"/>
+          <Substitution in="e" out="E"/>
+          <Substitution in="f" out="F"/>
+          <Substitution in="g" out="G"/>
+          <Substitution in="h" out="H"/>
+          <Substitution in="i" out="I"/>
+          <Substitution in="j" out="J"/>
+          <Substitution in="k" out="K"/>
+          <Substitution in="l" out="L"/>
+          <Substitution in="m" out="M"/>
+          <Substitution in="n" out="N"/>
+          <Substitution in="o" out="O"/>
+          <Substitution in="p" out="P"/>
+          <Substitution in="q" out="Q"/>
+          <Substitution in="r" out="R"/>
+          <Substitution in="s" out="S"/>
+          <Substitution in="t" out="T"/>
+          <Substitution in="u" out="U"/>
+          <Substitution in="v" out="V"/>
+          <Substitution in="w" out="W"/>
+          <Substitution in="x" out="X"/>
+          <Substitution in="y" out="Y"/>
+          <Substitution in="z" out="Z"/>
+        </SingleSubst>
+      </Lookup>
+      <Lookup index="1">
+        <LookupType value="6"/>
+        <LookupFlag value="0"/>
+        <!-- SubTableCount=1 -->
+        <ChainContextSubst index="0" Format="1">
+          <Coverage>
+            <Glyph value="d"/>
+            <Glyph value="g"/>
+            <Glyph value="r"/>
+            <Glyph value="t"/>
+            <Glyph value="z"/>
+          </Coverage>
+          <!-- ChainSubRuleSetCount=5 -->
+          <ChainSubRuleSet index="0">
+            <!-- ChainSubRuleCount=2 -->
+            <ChainSubRule index="0">
+              <!-- BacktrackGlyphCount=3 -->
+              <Backtrack index="0" value="c"/>
+              <Backtrack index="1" value="b"/>
+              <Backtrack index="2" value="a"/>
+              <!-- InputGlyphCount=0 -->
+              <!-- LookAheadGlyphCount=0 -->
+              <!-- SubstCount=1 -->
+              <SubstLookupRecord index="0">
+                <SequenceIndex value="0"/>
+                <LookupListIndex value="0"/>
+              </SubstLookupRecord>
+            </ChainSubRule>
+            <ChainSubRule index="1">
+              <!-- BacktrackGlyphCount=2 -->
+              <Backtrack index="0" value="c"/>
+              <Backtrack index="1" value="b"/>
+              <!-- InputGlyphCount=1 -->
+              <Input index="0" value="e"/>
+              <!-- LookAheadGlyphCount=1 -->
+              <LookAhead index="0" value="f"/>
+              <!-- SubstCount=2 -->
+              <SubstLookupRecord index="0">
+                <SequenceIndex value="0"/>
+                <LookupListIndex value="0"/>
+              </SubstLookupRecord>
+              <SubstLookupRecord index="1">
+                <SequenceIndex value="1"/>
+                <LookupListIndex value="0"/>
+              </SubstLookupRecord>
+            </ChainSubRule>
+          </ChainSubRuleSet>
+          <ChainSubRuleSet index="1">
+            <!-- ChainSubRuleCount=5 -->
+            <ChainSubRule index="0">
+              <!-- BacktrackGlyphCount=2 -->
+              <Backtrack index="0" value="f"/>
+              <Backtrack index="1" value="e"/>
+              <!-- InputGlyphCount=0 -->
+              <!-- LookAheadGlyphCount=3 -->
+              <LookAhead index="0" value="h"/>
+              <LookAhead index="1" value="i"/>
+              <LookAhead index="2" value="j"/>
+              <!-- SubstCount=1 -->
+              <SubstLookupRecord index="0">
+                <SequenceIndex value="0"/>
+                <LookupListIndex value="0"/>
+              </SubstLookupRecord>
+            </ChainSubRule>
+            <ChainSubRule index="1">
+              <!-- BacktrackGlyphCount=2 -->
+              <Backtrack index="0" value="f"/>
+              <Backtrack index="1" value="e"/>
+              <!-- InputGlyphCount=1 -->
+              <Input index="0" value="h"/>
+              <!-- LookAheadGlyphCount=1 -->
+              <LookAhead index="0" value="x"/>
+              <!-- SubstCount=2 -->
+              <SubstLookupRecord index="0">
+                <SequenceIndex value="0"/>
+                <LookupListIndex value="0"/>
+              </SubstLookupRecord>
+              <SubstLookupRecord index="1">
+                <SequenceIndex value="1"/>
+                <LookupListIndex value="0"/>
+              </SubstLookupRecord>
+            </ChainSubRule>
+            <ChainSubRule index="2">
+              <!-- BacktrackGlyphCount=2 -->
+              <Backtrack index="0" value="f"/>
+              <Backtrack index="1" value="e"/>
+              <!-- InputGlyphCount=0 -->
+              <!-- LookAheadGlyphCount=1 -->
+              <LookAhead index="0" value="z"/>
+              <!-- SubstCount=1 -->
+              <SubstLookupRecord index="0">
+                <SequenceIndex value="0"/>
+                <LookupListIndex value="0"/>
+              </SubstLookupRecord>
+            </ChainSubRule>
+            <ChainSubRule index="3">
+              <!-- BacktrackGlyphCount=1 -->
+              <Backtrack index="0" value="a"/>
+              <!-- InputGlyphCount=1 -->
+              <Input index="0" value="h"/>
+              <!-- LookAheadGlyphCount=1 -->
+              <LookAhead index="0" value="b"/>
+              <!-- SubstCount=2 -->
+              <SubstLookupRecord index="0">
+                <SequenceIndex value="0"/>
+                <LookupListIndex value="0"/>
+              </SubstLookupRecord>
+              <SubstLookupRecord index="1">
+                <SequenceIndex value="1"/>
+                <LookupListIndex value="0"/>
+              </SubstLookupRecord>
+            </ChainSubRule>
+            <ChainSubRule index="4">
+              <!-- BacktrackGlyphCount=0 -->
+              <!-- InputGlyphCount=1 -->
+              <Input index="0" value="z"/>
+              <!-- LookAheadGlyphCount=0 -->
+              <!-- SubstCount=2 -->
+              <SubstLookupRecord index="0">
+                <SequenceIndex value="0"/>
+                <LookupListIndex value="0"/>
+              </SubstLookupRecord>
+              <SubstLookupRecord index="1">
+                <SequenceIndex value="1"/>
+                <LookupListIndex value="0"/>
+              </SubstLookupRecord>
+            </ChainSubRule>
+          </ChainSubRuleSet>
+          <ChainSubRuleSet index="2">
+            <!-- ChainSubRuleCount=1 -->
+            <ChainSubRule index="0">
+              <!-- BacktrackGlyphCount=0 -->
+              <!-- InputGlyphCount=0 -->
+              <!-- LookAheadGlyphCount=0 -->
+              <!-- SubstCount=1 -->
+              <SubstLookupRecord index="0">
+                <SequenceIndex value="0"/>
+                <LookupListIndex value="0"/>
+              </SubstLookupRecord>
+            </ChainSubRule>
+          </ChainSubRuleSet>
+          <ChainSubRuleSet index="3">
+            <!-- ChainSubRuleCount=1 -->
+            <ChainSubRule index="0">
+              <!-- BacktrackGlyphCount=0 -->
+              <!-- InputGlyphCount=0 -->
+              <!-- LookAheadGlyphCount=2 -->
+              <LookAhead index="0" value="u"/>
+              <LookAhead index="1" value="v"/>
+              <!-- SubstCount=1 -->
+              <SubstLookupRecord index="0">
+                <SequenceIndex value="0"/>
+                <LookupListIndex value="0"/>
+              </SubstLookupRecord>
+            </ChainSubRule>
+          </ChainSubRuleSet>
+          <ChainSubRuleSet index="4">
+            <!-- ChainSubRuleCount=1 -->
+            <ChainSubRule index="0">
+              <!-- BacktrackGlyphCount=0 -->
+              <!-- InputGlyphCount=0 -->
+              <!-- LookAheadGlyphCount=0 -->
+              <!-- SubstCount=1 -->
+              <SubstLookupRecord index="0">
+                <SequenceIndex value="0"/>
+                <LookupListIndex value="0"/>
+              </SubstLookupRecord>
+            </ChainSubRule>
+          </ChainSubRuleSet>
+        </ChainContextSubst>
+      </Lookup>
+    </LookupList>
+  </GSUB>
+
+</ttFont>
