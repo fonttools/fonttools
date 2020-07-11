@@ -34,7 +34,10 @@
         <LookupFlag value="0"/>
         <!-- SubTableCount=4 -->
         <ChainContextSubst index="0" Format="3">
-          <!-- BacktrackGlyphCount=0 -->
+          <!-- BacktrackGlyphCount=1 -->
+          <BacktrackCoverage index="0">
+            <Glyph value="A"/>
+          </BacktrackCoverage>
           <!-- InputGlyphCount=1 -->
           <InputCoverage index="0">
             <Glyph value="G"/>
@@ -47,7 +50,10 @@
           </SubstLookupRecord>
         </ChainContextSubst>
         <ChainContextSubst index="1" Format="3">
-          <!-- BacktrackGlyphCount=0 -->
+          <!-- BacktrackGlyphCount=1 -->
+          <BacktrackCoverage index="0">
+            <Glyph value="A"/>
+          </BacktrackCoverage>
           <!-- InputGlyphCount=1 -->
           <InputCoverage index="0">
             <Glyph value="H"/>
@@ -60,7 +66,10 @@
           </SubstLookupRecord>
         </ChainContextSubst>
         <ChainContextSubst index="2" Format="3">
-          <!-- BacktrackGlyphCount=0 -->
+          <!-- BacktrackGlyphCount=1 -->
+          <BacktrackCoverage index="0">
+            <Glyph value="A"/>
+          </BacktrackCoverage>
           <!-- InputGlyphCount=1 -->
           <InputCoverage index="0">
             <Glyph value="G"/>
@@ -73,7 +82,10 @@
           </SubstLookupRecord>
         </ChainContextSubst>
         <ChainContextSubst index="3" Format="3">
-          <!-- BacktrackGlyphCount=0 -->
+          <!-- BacktrackGlyphCount=1 -->
+          <BacktrackCoverage index="0">
+            <Glyph value="A"/>
+          </BacktrackCoverage>
           <!-- InputGlyphCount=1 -->
           <InputCoverage index="0">
             <Glyph value="H"/>

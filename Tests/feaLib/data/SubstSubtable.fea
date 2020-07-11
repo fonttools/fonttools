@@ -1,0 +1,9 @@
+feature test {
+    sub G' by G.swash;
+    subtable;
+    sub H' by H.swash;
+    subtable;
+    sub G' by g;
+    subtable;
+    sub H' by H.swash;
+} test;

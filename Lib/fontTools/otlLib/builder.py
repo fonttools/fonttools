@@ -172,6 +172,13 @@ class LookupBuilder(object):
             coverage = buildCoverage(g, self.glyphMap)
             subtable.InputCoverage.append(coverage)
 
+    def setCoverage_(self, glyphs, subtable):
+        subtable.GlyphCount = len(glyphs)
+        subtable.Coverage = []
+        for g in glyphs:
+            coverage = buildCoverage(g, self.glyphMap)
+            subtable.Coverage.append(coverage)
+
     def build_subst_subtables(self, mapping, klass):
         substitutions = [{}]
         for key in mapping:
@@ -244,10 +251,70 @@ class AlternateSubstBuilder(LookupBuilder):
         self.alternates[(self.SUBTABLE_BREAK_, location)] = self.SUBTABLE_BREAK_
 
 
+class ChainContextualRuleset():
+    def __init__(self):
+        self.rules = []
+
+    def addRule(self, prefix, glyphs, suffix, lookups):
+        self.rules.append((prefix, glyphs, suffix, lookups))
+
+    @property
+    def hasPrefixOrSuffix(self):
+        # Do we have any prefixes/suffixes? If this is False for all
+        # rulesets, we can express the whole lookup as GPOS5/GSUB7.
+        for (prefix, glyphs, suffix, lookups) in self.rules:
+            if len(prefix) > 0 or len(suffix) > 0:
+                return True
+        return False
+
+    @property
+    def hasAnyGlyphClasses(self):
+        # Do we use glyph classes anywhere in the rules? If this is False
+        # we can express this subtable as a Format 1.
+        for (prefix, glyphs, suffix, lookups) in self.rules:
+            for coverage in (prefix, glyphs, suffix):
+                if any(len(x) > 1 for x in coverage):
+                    return True
+        return False
+
+    def format2ClassDefs(self):
+        PREFIX, GLYPHS, SUFFIX = 0,1,2
+        classDefBuilders = []
+        for ix in [PREFIX, GLYPHS, SUFFIX]:
+            context = []
+            for r in self.rules:
+                context.append(r[ix])
+            classes = self._classBuilderForContext(context)
+            if not classes:
+                return None
+            classDefBuilders.append(classes)
+        return classDefBuilders
+
+    def _classBuilderForContext(self, context):
+        classdefbuilder = ClassDefBuilder(useClass0=False)
+        for position in context:
+            for glyphset in position:
+                if not classdefbuilder.canAdd(glyphset):
+                    return None
+                classdefbuilder.add(glyphset)
+        return classdefbuilder
+
 class ChainContextualBuilder(LookupBuilder):
     def equals(self, other):
         return (LookupBuilder.equals(self, other) and
                 self.rules == other.rules)
+
+    def rulesets(self):
+        # Return a list of ChainContextRuleset objects, taking explicit
+        # subtable breaks into account
+        ruleset = [ChainContextualRuleset()]
+        for (prefix, glyphs, suffix, lookups) in self.rules:
+            if prefix == self.SUBTABLE_BREAK_:
+                ruleset.append(ChainContextualRuleset())
+                continue
+            ruleset[-1].addRule(prefix, glyphs, suffix, lookups)
+        # Squish any empty subtables
+        return [x for x in ruleset if len(x.rules) > 0]
 
     def build(self):
         """Build the lookup.
@@ -257,40 +324,91 @@ class ChainContextualBuilder(LookupBuilder):
             contextual positioning lookup.
         """
         subtables = []
-        for (prefix, glyphs, suffix, lookups) in self.rules:
-            if prefix == self.SUBTABLE_BREAK_:
-                continue
-            st = self.newSubtable_()
-            subtables.append(st)
-            st.Format = 3
+        chaining = False
+        rulesets = self.rulesets()
+        chaining = any(ruleset.hasPrefixOrSuffix for ruleset in rulesets)
+        for ruleset in rulesets:
+            for rule in ruleset.rules:
+                subtables.append(self.buildFormat3Subtable(rule, chaining))
+        # If we are not chaining, lookup type will be automatically fixed by
+        # buildLookup_
+        return self.buildLookup_(subtables)
+
+    def buildFormat3Subtable(self, rule, chaining=True):
+        (prefix, glyphs, suffix, lookups) = rule
+        st = self.newSubtable_(chaining=chaining)
+        st.Format = 3
+        if chaining:
             self.setBacktrackCoverage_(prefix, st)
             self.setLookAheadCoverage_(suffix, st)
             self.setInputCoverage_(glyphs, st)
+        else:
+            self.setCoverage_(glyphs, st)
 
-            for sequenceIndex, lookupList in enumerate(lookups):
-                if lookupList is not None:
-                    if not isinstance(lookupList, list):
-                        # Can happen with synthesised lookups
-                        lookupList = [ lookupList ]
-                    for l in lookupList:
-                        if l.lookup_index is None:
-                            if isinstance(self, ChainContextPosBuilder):
-                                other = "substitution"
-                            else:
-                                other = "positioning"
-                            raise OpenTypeLibError('Missing index of the specified '
-                                f'lookup, might be a {other} lookup',
-                                self.location)
-                        rec = self.newLookupRecord_()
-                        rec.SequenceIndex = sequenceIndex
-                        rec.LookupListIndex = l.lookup_index
-                        self.addLookupRecordToSubtable_(st, rec)
-        return self.buildLookup_(subtables)
+        for sequenceIndex, lookupList in enumerate(lookups):
+            if lookupList is not None:
+                if not isinstance(lookupList, list):
+                    # Can happen with synthesised lookups
+                    lookupList = [lookupList]
+                for l in lookupList:
+                    if l.lookup_index is None:
+                        if isinstance(self, ChainContextPosBuilder):
+                            other = "substitution"
+                        else:
+                            other = "positioning"
+                        raise OpenTypeLibError('Missing index of the specified '
+                            f'lookup, might be a {other} lookup',
+                            self.location)
+                    rec = self.newLookupRecord_(st)
+                    rec.SequenceIndex = sequenceIndex
+                    rec.LookupListIndex = l.lookup_index
+        return st
 
     def add_subtable_break(self, location):
         self.rules.append((self.SUBTABLE_BREAK_, self.SUBTABLE_BREAK_,
                            self.SUBTABLE_BREAK_, [self.SUBTABLE_BREAK_]))
 
+    def newSubtable_(self, chaining=True):
+        subtablename = f"Context{self.subtable_type}"
+        if chaining:
+            subtablename = "Chain"+subtablename
+        st = getattr(ot,subtablename)() # ot.ChainContextPos()/ot.ChainSubst()/etc.
+        setattr(st, f"{self.subtable_type}Count", 0)
+        setattr(st, f"{self.subtable_type}LookupRecord", [])
+        return st
+
+    def attachSubtableWithCount_(self, st,
+        subtable_name, count_name,
+        existing=None,
+        index=None, chaining=False):
+        if chaining:
+            subtable_name = "Chain"+subtable_name
+            count_name    = "Chain"+count_name
+
+        if not hasattr(st, count_name):
+            setattr(st, count_name, 0)
+            setattr(st, subtable_name, [])
+
+        if existing:
+            new_subtable = existing
+        else:
+            # Create a new, empty subtable from otTables
+            new_subtable = getattr(ot, subtable_name)()
+
+        setattr(st, count_name, getattr(st, count_name) + 1)
+
+        if index:
+            getattr(st, subtable_name).insert(index, new_subtable)
+        else:
+            getattr(st, subtable_name).append(new_subtable)
+
+        return new_subtable
+
+    def newLookupRecord_(self, st):
+        return self.attachSubtableWithCount_(st,
+            f"{self.subtable_type}LookupRecord",
+            f"{self.subtable_type}Count",
+            chaining=False) # Oddly, it isn't ChainSubstLookupRecord
 
 class ChainContextPosBuilder(ChainContextualBuilder):
     """Builds a Chained Contextual Positioning (GPOS8) lookup.
@@ -321,19 +439,7 @@ class ChainContextPosBuilder(ChainContextualBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GPOS', 8)
         self.rules = []  # (prefix, input, suffix, lookups)
-
-    def newSubtable_(self):
-        st = ot.ChainContextPos()
-        st.PosCount = 0
-        st.PosLookupRecord = []
-        return st
-
-    def newLookupRecord_(self):
-        return ot.PosLookupRecord()
-
-    def addLookupRecordToSubtable_(self, st, rec):
-        st.PosCount += 1
-        st.PosLookupRecord.append(rec)
+        self.subtable_type = "Pos"
 
     def find_chainable_single_pos(self, lookups, glyphs, value):
         """Helper for add_single_pos_chained_()"""
@@ -376,19 +482,7 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, 'GSUB', 6)
         self.rules = []  # (prefix, input, suffix, lookups)
-
-    def newSubtable_(self):
-        st = ot.ChainContextSubst()
-        st.SubstCount = 0
-        st.SubstLookupRecord = []
-        return st
-
-    def newLookupRecord_(self):
-        return ot.SubstLookupRecord()
-
-    def addLookupRecordToSubtable_(self, st, rec):
-        st.SubstCount += 1
-        st.SubstLookupRecord.append(rec)
+        self.subtable_type = "Subst"
 
     def getAlternateGlyphs(self):
         result = {}
