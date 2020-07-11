@@ -357,7 +357,7 @@ class ChainContextualBuilder(LookupBuilder):
                 ruleObj.Input     = [list(x)[0] for x in glyphs[1:]]
                 ruleObj.LookAhead = [list(x)[0] for x in suffix]
             else:
-                ruleObj.glyphCount = len(glyphs)
+                ruleObj.GlyphCount = len(glyphs)
                 ruleObj.Input = [list(x)[0] for x in glyphs]
 
             self.buildContextualLookups(ruleObj, lookups)
