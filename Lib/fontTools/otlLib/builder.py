@@ -263,7 +263,8 @@ class ChainContextualRuleset():
         # Do we have any prefixes/suffixes? If this is False for all
         # rulesets, we can express the whole lookup as GPOS5/GSUB7.
         for (prefix, glyphs, suffix, lookups) in self.rules:
-            if len(prefix) > 0 or len(suffix) > 0: return True
+            if len(prefix) > 0 or len(suffix) > 0:
+                return True
         return False
 
     @property
@@ -272,13 +273,13 @@ class ChainContextualRuleset():
         # we can express this subtable as a Format 1.
         for (prefix, glyphs, suffix, lookups) in self.rules:
             for coverage in (prefix, glyphs, suffix):
-                if any([len(x) > 1 for x in coverage]):
+                if any(len(x) > 1 for x in coverage):
                     return True
         return False
 
-    def format2Classdefs(self):
+    def format2ClassDefs(self):
         PREFIX, GLYPHS, SUFFIX = 0,1,2
-        classdefbuilders = []
+        classDefBuilders = []
         for ix in [PREFIX, GLYPHS, SUFFIX]:
             context = []
             for r in self.rules:
@@ -286,8 +287,8 @@ class ChainContextualRuleset():
             classes = self._classBuilderForContext(context)
             if not classes:
                 return None
-            classdefbuilders.append(classes)
-        return classdefbuilders
+            classDefBuilders.append(classes)
+        return classDefBuilders
 
     def _classBuilderForContext(self, context):
         classdefbuilder = ClassDefBuilder(useClass0=False)
@@ -306,10 +307,10 @@ class ChainContextualBuilder(LookupBuilder):
     def rulesets(self):
         # Return a list of ChainContextRuleset objects, taking explicit
         # subtable breaks into account
-        ruleset = [ ChainContextualRuleset() ]
+        ruleset = [ChainContextualRuleset()]
         for (prefix, glyphs, suffix, lookups) in self.rules:
             if prefix == self.SUBTABLE_BREAK_:
-                ruleset.append(ChainContextualRuleset() )
+                ruleset.append(ChainContextualRuleset())
                 continue
             ruleset[-1].addRule(prefix, glyphs, suffix, lookups)
         # Squish any empty subtables
@@ -325,7 +326,7 @@ class ChainContextualBuilder(LookupBuilder):
         subtables = []
         chaining = False
         rulesets = self.rulesets()
-        chaining = any([ruleset.hasPrefixOrSuffix for ruleset in rulesets])
+        chaining = any(ruleset.hasPrefixOrSuffix for ruleset in rulesets)
         for ruleset in rulesets:
             for rule in ruleset.rules:
                 subtables.append(self.buildFormat3Subtable(rule, chaining))

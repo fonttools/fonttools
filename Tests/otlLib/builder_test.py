@@ -1397,53 +1397,47 @@ class ChainContextualRulesetTest(object):
         font = ttLib.TTFont()
         font.setGlyphOrder(["a","b","c","d","A","B","C","D","E"])
         sb = builder.ChainContextSubstBuilder(font, None)
-        prefix = [ ["a"], ["b"] ]
-        input_ = [ ["c"] ]
-        suffix = [ ]
-        lookups = [ None ]
+        prefix, input_, suffix, lookups = [["a"], ["b"]], [["c"]], [], [None]
         sb.rules.append((prefix, input_, suffix, lookups))
 
-        prefix = [ ["a"], ["d"] ]
+        prefix, input_, suffix, lookups = [["a"], ["d"]], [["c"]], [], [None]
         sb.rules.append((prefix, input_, suffix, lookups))
 
         sb.add_subtable_break(None)
 
         # Second subtable has some glyph classes
-        prefix = [ ["A"] ]
-        input_ = [ ["E"] ]
+        prefix, input_, suffix, lookups = [["A"]], [["E"]], [], [None]
         sb.rules.append((prefix, input_, suffix, lookups))
-        input_ = [ ["C","D"] ]
+        prefix, input_, suffix, lookups = [["A"]], [["C","D"]], [], [None]
         sb.rules.append((prefix, input_, suffix, lookups))
-        prefix = [ ["A", "B"] ]
-        input_ = [ ["E"] ]
+        prefix, input_, suffix, lookups = [["A", "B"]], [["E"]], [], [None]
         sb.rules.append((prefix, input_, suffix, lookups))
 
         sb.add_subtable_break(None)
 
         # Third subtable has no pre/post context
-        prefix = []
-        suffix = []
+        prefix, input_, suffix, lookups = [], [["E"]], [], [None]
         sb.rules.append((prefix, input_, suffix, lookups))
-        input_ = [ ["C","D"] ]
+        prefix, input_, suffix, lookups = [], [["C","D"]], [], [None]
         sb.rules.append((prefix, input_, suffix, lookups))
 
         rulesets = sb.rulesets()
         assert len(rulesets) == 3
         assert rulesets[0].hasPrefixOrSuffix
         assert not rulesets[0].hasAnyGlyphClasses
-        cd = rulesets[0].format2Classdefs()
+        cd = rulesets[0].format2ClassDefs()
         assert set(cd[0].classes()[1:]) == set([("d",),("b",),("a",)])
         assert set(cd[1].classes()[1:]) == set([("c",)])
         assert set(cd[2].classes()[1:]) == set()
 
         assert rulesets[1].hasPrefixOrSuffix
         assert rulesets[1].hasAnyGlyphClasses
-        assert not rulesets[1].format2Classdefs()
+        assert not rulesets[1].format2ClassDefs()
 
         assert not rulesets[2].hasPrefixOrSuffix
         assert rulesets[2].hasAnyGlyphClasses
-        assert rulesets[2].format2Classdefs()
-        cd = rulesets[2].format2Classdefs()
+        assert rulesets[2].format2ClassDefs()
+        cd = rulesets[2].format2ClassDefs()
         assert set(cd[0].classes()[1:]) == set()
         assert set(cd[1].classes()[1:]) == set([("C","D"), ("E",)])
         assert set(cd[2].classes()[1:]) == set()
