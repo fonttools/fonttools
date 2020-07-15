@@ -8,65 +8,65 @@ import itertools
 SHIFT = " " * 4
 
 __all__ = [
-    'Element',
-    'FeatureFile',
-    'Comment',
-    'GlyphName',
-    'GlyphClass',
-    'GlyphClassName',
-    'MarkClassName',
-    'AnonymousBlock',
-    'Block',
-    'FeatureBlock',
-    'NestedBlock',
-    'LookupBlock',
-    'GlyphClassDefinition',
-    'GlyphClassDefStatement',
-    'MarkClass',
-    'MarkClassDefinition',
-    'AlternateSubstStatement',
-    'Anchor',
-    'AnchorDefinition',
-    'AttachStatement',
-    'BaseAxis',
-    'CVParametersNameStatement',
-    'ChainContextPosStatement',
-    'ChainContextSubstStatement',
-    'CharacterStatement',
-    'CursivePosStatement',
-    'Expression',
-    'FeatureNameStatement',
-    'FeatureReferenceStatement',
-    'FontRevisionStatement',
-    'HheaField',
-    'IgnorePosStatement',
-    'IgnoreSubstStatement',
-    'IncludeStatement',
-    'LanguageStatement',
-    'LanguageSystemStatement',
-    'LigatureCaretByIndexStatement',
-    'LigatureCaretByPosStatement',
-    'LigatureSubstStatement',
-    'LookupFlagStatement',
-    'LookupReferenceStatement',
-    'MarkBasePosStatement',
-    'MarkLigPosStatement',
-    'MarkMarkPosStatement',
-    'MultipleSubstStatement',
-    'NameRecord',
-    'OS2Field',
-    'PairPosStatement',
-    'ReverseChainSingleSubstStatement',
-    'ScriptStatement',
-    'SinglePosStatement',
-    'SingleSubstStatement',
-    'SizeParameters',
-    'Statement',
-    'SubtableStatement',
-    'TableBlock',
-    'ValueRecord',
-    'ValueRecordDefinition',
-    'VheaField',
+    "Element",
+    "FeatureFile",
+    "Comment",
+    "GlyphName",
+    "GlyphClass",
+    "GlyphClassName",
+    "MarkClassName",
+    "AnonymousBlock",
+    "Block",
+    "FeatureBlock",
+    "NestedBlock",
+    "LookupBlock",
+    "GlyphClassDefinition",
+    "GlyphClassDefStatement",
+    "MarkClass",
+    "MarkClassDefinition",
+    "AlternateSubstStatement",
+    "Anchor",
+    "AnchorDefinition",
+    "AttachStatement",
+    "BaseAxis",
+    "CVParametersNameStatement",
+    "ChainContextPosStatement",
+    "ChainContextSubstStatement",
+    "CharacterStatement",
+    "CursivePosStatement",
+    "Expression",
+    "FeatureNameStatement",
+    "FeatureReferenceStatement",
+    "FontRevisionStatement",
+    "HheaField",
+    "IgnorePosStatement",
+    "IgnoreSubstStatement",
+    "IncludeStatement",
+    "LanguageStatement",
+    "LanguageSystemStatement",
+    "LigatureCaretByIndexStatement",
+    "LigatureCaretByPosStatement",
+    "LigatureSubstStatement",
+    "LookupFlagStatement",
+    "LookupReferenceStatement",
+    "MarkBasePosStatement",
+    "MarkLigPosStatement",
+    "MarkMarkPosStatement",
+    "MultipleSubstStatement",
+    "NameRecord",
+    "OS2Field",
+    "PairPosStatement",
+    "ReverseChainSingleSubstStatement",
+    "ScriptStatement",
+    "SinglePosStatement",
+    "SingleSubstStatement",
+    "SizeParameters",
+    "Statement",
+    "SubtableStatement",
+    "TableBlock",
+    "ValueRecord",
+    "ValueRecordDefinition",
+    "VheaField",
 ]
 
 
@@ -77,32 +77,69 @@ def deviceToString(device):
         return "<device %s>" % ", ".join("%d %d" % t for t in device)
 
 
-fea_keywords = set([
-    "anchor", "anchordef", "anon", "anonymous",
-    "by",
-    "contour", "cursive",
-    "device",
-    "enum", "enumerate", "excludedflt", "exclude_dflt",
-    "feature", "from",
-    "ignore", "ignorebaseglyphs", "ignoreligatures", "ignoremarks",
-    "include", "includedflt", "include_dflt",
-    "language", "languagesystem", "lookup", "lookupflag",
-    "mark", "markattachmenttype", "markclass",
-    "nameid", "null",
-    "parameters", "pos", "position",
-    "required", "righttoleft", "reversesub", "rsub",
-    "script", "sub", "substitute", "subtable",
-    "table",
-    "usemarkfilteringset", "useextension", "valuerecorddef",
-    "base", "gdef", "head", "hhea", "name", "vhea", "vmtx"]
+fea_keywords = set(
+    [
+        "anchor",
+        "anchordef",
+        "anon",
+        "anonymous",
+        "by",
+        "contour",
+        "cursive",
+        "device",
+        "enum",
+        "enumerate",
+        "excludedflt",
+        "exclude_dflt",
+        "feature",
+        "from",
+        "ignore",
+        "ignorebaseglyphs",
+        "ignoreligatures",
+        "ignoremarks",
+        "include",
+        "includedflt",
+        "include_dflt",
+        "language",
+        "languagesystem",
+        "lookup",
+        "lookupflag",
+        "mark",
+        "markattachmenttype",
+        "markclass",
+        "nameid",
+        "null",
+        "parameters",
+        "pos",
+        "position",
+        "required",
+        "righttoleft",
+        "reversesub",
+        "rsub",
+        "script",
+        "sub",
+        "substitute",
+        "subtable",
+        "table",
+        "usemarkfilteringset",
+        "useextension",
+        "valuerecorddef",
+        "base",
+        "gdef",
+        "head",
+        "hhea",
+        "name",
+        "vhea",
+        "vmtx",
+    ]
 )
 
 
 def asFea(g):
-    if hasattr(g, 'asFea'):
+    if hasattr(g, "asFea"):
         return g.asFea()
     elif isinstance(g, tuple) and len(g) == 2:
-        return asFea(g[0]) + " - " + asFea(g[1])   # a range
+        return asFea(g[0]) + " - " + asFea(g[1])  # a range
     elif g.lower() in fea_keywords:
         return "\\" + g
     else:
@@ -141,6 +178,7 @@ class Expression(Element):
 
 class Comment(Element):
     """A comment in a feature file."""
+
     def __init__(self, text, location=None):
         super(Comment, self).__init__(location)
         #: Text of the comment
@@ -152,6 +190,7 @@ class Comment(Element):
 
 class GlyphName(Expression):
     """A single glyph name, such as ``cedilla``."""
+
     def __init__(self, glyph, location=None):
         Expression.__init__(self, location)
         #: The name itself as a string
@@ -167,6 +206,7 @@ class GlyphName(Expression):
 
 class GlyphClass(Expression):
     """A glyph class, such as ``[acute cedilla grave]``."""
+
     def __init__(self, glyphs=None, location=None):
         Expression.__init__(self, location)
         #: The list of glyphs in this class, as :class:`GlyphName` objects.
@@ -181,7 +221,7 @@ class GlyphClass(Expression):
     def asFea(self, indent=""):
         if len(self.original):
             if self.curr < len(self.glyphs):
-                self.original.extend(self.glyphs[self.curr:])
+                self.original.extend(self.glyphs[self.curr :])
                 self.curr = len(self.glyphs)
             return "[" + " ".join(map(asFea, self.original)) + "]"
         else:
@@ -201,7 +241,7 @@ class GlyphClass(Expression):
         start and end glyphs in the class, and ``glyphs`` is the full list of
         :class:`GlyphName` objects in the range."""
         if self.curr < len(self.glyphs):
-            self.original.extend(self.glyphs[self.curr:])
+            self.original.extend(self.glyphs[self.curr :])
         self.original.append((start, end))
         self.glyphs.extend(glyphs)
         self.curr = len(self.glyphs)
@@ -211,7 +251,7 @@ class GlyphClass(Expression):
         initial and final IDs, and ``glyphs`` is the full list of
         :class:`GlyphName` objects in the range."""
         if self.curr < len(self.glyphs):
-            self.original.extend(self.glyphs[self.curr:])
+            self.original.extend(self.glyphs[self.curr :])
         self.original.append(("\\{}".format(start), "\\{}".format(end)))
         self.glyphs.extend(glyphs)
         self.curr = len(self.glyphs)
@@ -220,7 +260,7 @@ class GlyphClass(Expression):
         """Add glyphs from the given :class:`GlyphClassName` object to the
         class."""
         if self.curr < len(self.glyphs):
-            self.original.extend(self.glyphs[self.curr:])
+            self.original.extend(self.glyphs[self.curr :])
         self.original.append(gc)
         self.glyphs.extend(gc.glyphSet())
         self.curr = len(self.glyphs)
@@ -229,6 +269,7 @@ class GlyphClass(Expression):
 class GlyphClassName(Expression):
     """A glyph class name, such as ``@FRENCH_MARKS``. This must be instantiated
     with a :class:`GlyphClassDefinition` object."""
+
     def __init__(self, glyphclass, location=None):
         Expression.__init__(self, location)
         assert isinstance(glyphclass, GlyphClassDefinition)
@@ -245,6 +286,7 @@ class GlyphClassName(Expression):
 class MarkClassName(Expression):
     """A mark class name, such as ``@FRENCH_MARKS`` defined with ``markClass``.
     This must be instantiated with a :class:`MarkClass` object."""
+
     def __init__(self, markClass, location=None):
         Expression.__init__(self, location)
         assert isinstance(markClass, MarkClass)
@@ -275,6 +317,7 @@ class AnonymousBlock(Statement):
 
 class Block(Statement):
     """A block of statements: feature, lookup, etc."""
+
     def __init__(self, location=None):
         Statement.__init__(self, location)
         self.statements = []  #: Statements contained in the block
@@ -288,13 +331,17 @@ class Block(Statement):
 
     def asFea(self, indent=""):
         indent += SHIFT
-        return indent + ("\n" + indent).join(
-            [s.asFea(indent=indent) for s in self.statements]) + "\n"
+        return (
+            indent
+            + ("\n" + indent).join([s.asFea(indent=indent) for s in self.statements])
+            + "\n"
+        )
 
 
 class FeatureFile(Block):
     """The top-level element of the syntax tree, containing the whole feature
     file in its ``statements`` attribute."""
+
     def __init__(self):
         Block.__init__(self, location=None)
         self.markClasses = {}  # name --> ast.MarkClass
@@ -305,6 +352,7 @@ class FeatureFile(Block):
 
 class FeatureBlock(Block):
     """A named feature block."""
+
     def __init__(self, name, use_extension=False, location=None):
         Block.__init__(self, location)
         self.name, self.use_extension = name, use_extension
@@ -337,6 +385,7 @@ class FeatureBlock(Block):
 class NestedBlock(Block):
     """A block inside another block, for example when found inside a
     ``cvParameters`` block."""
+
     def __init__(self, tag, block_name, location=None):
         Block.__init__(self, location)
         self.tag = tag
@@ -356,6 +405,7 @@ class NestedBlock(Block):
 
 class LookupBlock(Block):
     """A named lookup, containing ``statements``."""
+
     def __init__(self, name, use_extension=False, location=None):
         Block.__init__(self, location)
         self.name, self.use_extension = name, use_extension
@@ -378,6 +428,7 @@ class LookupBlock(Block):
 
 class TableBlock(Block):
     """A ``table ... { }`` block."""
+
     def __init__(self, name, location=None):
         Block.__init__(self, location)
         self.name = name
@@ -391,6 +442,7 @@ class TableBlock(Block):
 
 class GlyphClassDefinition(Statement):
     """Example: ``@UPPERCASE = [A-Z];``."""
+
     def __init__(self, name, glyphs, location=None):
         Statement.__init__(self, location)
         self.name = name  #: class name as a string, without initial ``@``
@@ -408,8 +460,10 @@ class GlyphClassDefStatement(Statement):
     """Example: ``GlyphClassDef @UPPERCASE, [B], [C], [D];``. The parameters
     must be either :class:`GlyphClass` or :class:`GlyphClassName` objects, or
     ``None``."""
-    def __init__(self, baseGlyphs, markGlyphs, ligatureGlyphs,
-                 componentGlyphs, location=None):
+
+    def __init__(
+        self, baseGlyphs, markGlyphs, ligatureGlyphs, componentGlyphs, location=None
+    ):
         Statement.__init__(self, location)
         self.baseGlyphs, self.markGlyphs = (baseGlyphs, markGlyphs)
         self.ligatureGlyphs = ligatureGlyphs
@@ -418,11 +472,9 @@ class GlyphClassDefStatement(Statement):
     def build(self, builder):
         """Calls the builder's ``add_glyphClassDef`` callback."""
         base = self.baseGlyphs.glyphSet() if self.baseGlyphs else tuple()
-        liga = self.ligatureGlyphs.glyphSet() \
-            if self.ligatureGlyphs else tuple()
+        liga = self.ligatureGlyphs.glyphSet() if self.ligatureGlyphs else tuple()
         mark = self.markGlyphs.glyphSet() if self.markGlyphs else tuple()
-        comp = (self.componentGlyphs.glyphSet()
-                if self.componentGlyphs else tuple())
+        comp = self.componentGlyphs.glyphSet() if self.componentGlyphs else tuple()
         builder.add_glyphClassDef(self.location, base, liga, mark, comp)
 
     def asFea(self, indent=""):
@@ -430,7 +482,8 @@ class GlyphClassDefStatement(Statement):
             self.baseGlyphs.asFea() if self.baseGlyphs else "",
             self.ligatureGlyphs.asFea() if self.ligatureGlyphs else "",
             self.markGlyphs.asFea() if self.markGlyphs else "",
-            self.componentGlyphs.asFea() if self.componentGlyphs else "")
+            self.componentGlyphs.asFea() if self.componentGlyphs else "",
+        )
 
 
 class MarkClass(object):
@@ -465,8 +518,8 @@ class MarkClass(object):
                 else:
                     end = f" at {otherLoc}"
                 raise FeatureLibError(
-                    "Glyph %s already defined%s" % (glyph, end),
-                    definition.location)
+                    "Glyph %s already defined%s" % (glyph, end), definition.location
+                )
             self.glyphs[glyph] = definition
 
     def glyphSet(self):
@@ -500,6 +553,7 @@ class MarkClassDefinition(Statement):
             # markClass [cedilla] <anchor 350 -200> @FRENCH_ACCENTS;
 
     """
+
     def __init__(self, markClass, anchor, glyphs, location=None):
         Statement.__init__(self, location)
         assert isinstance(markClass, MarkClass)
@@ -512,8 +566,8 @@ class MarkClassDefinition(Statement):
 
     def asFea(self, indent=""):
         return "markClass {} {} @{};".format(
-            self.glyphs.asFea(), self.anchor.asFea(),
-            self.markClass.name)
+            self.glyphs.asFea(), self.anchor.asFea(), self.markClass.name
+        )
 
 
 class AlternateSubstStatement(Statement):
@@ -535,15 +589,14 @@ class AlternateSubstStatement(Statement):
         prefix = [p.glyphSet() for p in self.prefix]
         suffix = [s.glyphSet() for s in self.suffix]
         replacement = self.replacement.glyphSet()
-        builder.add_alternate_subst(self.location, prefix, glyph, suffix,
-                                    replacement)
+        builder.add_alternate_subst(self.location, prefix, glyph, suffix, replacement)
 
     def asFea(self, indent=""):
         res = "sub "
         if len(self.prefix) or len(self.suffix):
             if len(self.prefix):
                 res += " ".join(map(asFea, self.prefix)) + " "
-            res += asFea(self.glyph) + "'"    # even though we really only use 1
+            res += asFea(self.glyph) + "'"  # even though we really only use 1
             if len(self.suffix):
                 res += " " + " ".join(map(asFea, self.suffix))
         else:
@@ -560,8 +613,17 @@ class Anchor(Expression):
     If a ``name`` is given, this will be used in preference to the coordinates.
     Other values should be integer.
     """
-    def __init__(self, x, y, name=None, contourpoint=None,
-                 xDeviceTable=None, yDeviceTable=None, location=None):
+
+    def __init__(
+        self,
+        x,
+        y,
+        name=None,
+        contourpoint=None,
+        xDeviceTable=None,
+        yDeviceTable=None,
+        location=None,
+    ):
         Expression.__init__(self, location)
         self.name = name
         self.x, self.y, self.contourpoint = x, y, contourpoint
@@ -584,6 +646,7 @@ class Anchor(Expression):
 
 class AnchorDefinition(Statement):
     """A named anchor definition. (2.e.viii). ``name`` should be a string."""
+
     def __init__(self, name, x, y, contourpoint=None, location=None):
         Statement.__init__(self, location)
         self.name, self.x, self.y, self.contourpoint = name, x, y, contourpoint
@@ -598,6 +661,7 @@ class AnchorDefinition(Statement):
 
 class AttachStatement(Statement):
     """A ``GDEF`` table ``Attach`` statement."""
+
     def __init__(self, glyphs, contourPoints, location=None):
         Statement.__init__(self, location)
         self.glyphs = glyphs  #: A `glyph-containing object`_
@@ -610,7 +674,8 @@ class AttachStatement(Statement):
 
     def asFea(self, indent=""):
         return "Attach {} {};".format(
-            self.glyphs.asFea(), " ".join(str(c) for c in self.contourPoints))
+            self.glyphs.asFea(), " ".join(str(c) for c in self.contourPoints)
+        )
 
 
 class ChainContextPosStatement(Statement):
@@ -644,11 +709,16 @@ class ChainContextPosStatement(Statement):
         glyphs = [g.glyphSet() for g in self.glyphs]
         suffix = [s.glyphSet() for s in self.suffix]
         builder.add_chain_context_pos(
-            self.location, prefix, glyphs, suffix, self.lookups)
+            self.location, prefix, glyphs, suffix, self.lookups
+        )
 
     def asFea(self, indent=""):
         res = "pos "
-        if len(self.prefix) or len(self.suffix) or any([x is not None for x in self.lookups]):
+        if (
+            len(self.prefix)
+            or len(self.suffix)
+            or any([x is not None for x in self.lookups])
+        ):
             if len(self.prefix):
                 res += " ".join(g.asFea() for g in self.prefix) + " "
             for i, g in enumerate(self.glyphs):
@@ -697,11 +767,16 @@ class ChainContextSubstStatement(Statement):
         glyphs = [g.glyphSet() for g in self.glyphs]
         suffix = [s.glyphSet() for s in self.suffix]
         builder.add_chain_context_subst(
-            self.location, prefix, glyphs, suffix, self.lookups)
+            self.location, prefix, glyphs, suffix, self.lookups
+        )
 
     def asFea(self, indent=""):
         res = "sub "
-        if len(self.prefix) or len(self.suffix) or any([x is not None for x in self.lookups]):
+        if (
+            len(self.prefix)
+            or len(self.suffix)
+            or any([x is not None for x in self.lookups])
+        ):
             if len(self.prefix):
                 res += " ".join(g.asFea() for g in self.prefix) + " "
             for i, g in enumerate(self.glyphs):
@@ -722,6 +797,7 @@ class ChainContextSubstStatement(Statement):
 class CursivePosStatement(Statement):
     """A cursive positioning statement. Entry and exit anchors can either
     be :class:`Anchor` objects or ``None``."""
+
     def __init__(self, glyphclass, entryAnchor, exitAnchor, location=None):
         Statement.__init__(self, location)
         self.glyphclass = glyphclass
@@ -730,7 +806,8 @@ class CursivePosStatement(Statement):
     def build(self, builder):
         """Calls the builder object's ``add_cursive_pos`` callback."""
         builder.add_cursive_pos(
-            self.location, self.glyphclass.glyphSet(), self.entryAnchor, self.exitAnchor)
+            self.location, self.glyphclass.glyphSet(), self.entryAnchor, self.exitAnchor
+        )
 
     def asFea(self, indent=""):
         entry = self.entryAnchor.asFea() if self.entryAnchor else "<anchor NULL>"
@@ -740,6 +817,7 @@ class CursivePosStatement(Statement):
 
 class FeatureReferenceStatement(Statement):
     """Example: ``feature salt;``"""
+
     def __init__(self, featureName, location=None):
         Statement.__init__(self, location)
         self.location, self.featureName = (location, featureName)
@@ -770,8 +848,7 @@ class IgnorePosStatement(Statement):
             prefix = [p.glyphSet() for p in prefix]
             glyphs = [g.glyphSet() for g in glyphs]
             suffix = [s.glyphSet() for s in suffix]
-            builder.add_chain_context_pos(
-                self.location, prefix, glyphs, suffix, [])
+            builder.add_chain_context_pos(self.location, prefix, glyphs, suffix, [])
 
     def asFea(self, indent=""):
         contexts = []
@@ -795,6 +872,7 @@ class IgnoreSubstStatement(Statement):
     ``chainContexts`` should be a list of ``(prefix, glyphs, suffix)`` tuples,
     with each of ``prefix``, ``glyphs`` and ``suffix`` being
     `glyph-containing objects`_ ."""
+
     def __init__(self, chainContexts, location=None):
         Statement.__init__(self, location)
         self.chainContexts = chainContexts
@@ -806,8 +884,7 @@ class IgnoreSubstStatement(Statement):
             prefix = [p.glyphSet() for p in prefix]
             glyphs = [g.glyphSet() for g in glyphs]
             suffix = [s.glyphSet() for s in suffix]
-            builder.add_chain_context_subst(
-                self.location, prefix, glyphs, suffix, [])
+            builder.add_chain_context_subst(self.location, prefix, glyphs, suffix, [])
 
     def asFea(self, indent=""):
         contexts = []
@@ -827,6 +904,7 @@ class IgnoreSubstStatement(Statement):
 
 class IncludeStatement(Statement):
     """An ``include()`` statement."""
+
     def __init__(self, filename, location=None):
         super(IncludeStatement, self).__init__(location)
         self.filename = filename  #: String containing name of file to include
@@ -836,7 +914,8 @@ class IncludeStatement(Statement):
         raise FeatureLibError(
             "Building an include statement is not implemented yet. "
             "Instead, use Parser(..., followIncludes=True) for building.",
-            self.location)
+            self.location,
+        )
 
     def asFea(self, indent=""):
         return indent + "include(%s);" % self.filename
@@ -844,19 +923,22 @@ class IncludeStatement(Statement):
 
 class LanguageStatement(Statement):
     """A ``language`` statement within a feature."""
-    def __init__(self, language, include_default=True, required=False,
-                 location=None):
+
+    def __init__(self, language, include_default=True, required=False, location=None):
         Statement.__init__(self, location)
-        assert(len(language) == 4)
+        assert len(language) == 4
         self.language = language  #: A four-character language tag
         self.include_default = include_default  #: If false, "exclude_dflt"
         self.required = required
 
     def build(self, builder):
         """Call the builder object's ``set_language`` callback."""
-        builder.set_language(location=self.location, language=self.language,
-                             include_default=self.include_default,
-                             required=self.required)
+        builder.set_language(
+            location=self.location,
+            language=self.language,
+            include_default=self.include_default,
+            required=self.required,
+        )
 
     def asFea(self, indent=""):
         res = "language {}".format(self.language.strip())
@@ -870,6 +952,7 @@ class LanguageStatement(Statement):
 
 class LanguageSystemStatement(Statement):
     """A top-level ``languagesystem`` statement."""
+
     def __init__(self, script, language, location=None):
         Statement.__init__(self, location)
         self.script, self.language = (script, language)
@@ -885,6 +968,7 @@ class LanguageSystemStatement(Statement):
 class FontRevisionStatement(Statement):
     """A ``head`` table ``FontRevision`` statement. ``revision`` should be a
     number, and will be formatted to three significant decimal places."""
+
     def __init__(self, revision, location=None):
         Statement.__init__(self, location)
         self.revision = revision
@@ -899,6 +983,7 @@ class FontRevisionStatement(Statement):
 class LigatureCaretByIndexStatement(Statement):
     """A ``GDEF`` table ``LigatureCaretByIndex`` statement. ``glyphs`` should be
     a `glyph-containing object`_, and ``carets`` should be a list of integers."""
+
     def __init__(self, glyphs, carets, location=None):
         Statement.__init__(self, location)
         self.glyphs, self.carets = (glyphs, carets)
@@ -910,12 +995,14 @@ class LigatureCaretByIndexStatement(Statement):
 
     def asFea(self, indent=""):
         return "LigatureCaretByIndex {} {};".format(
-            self.glyphs.asFea(), " ".join(str(x) for x in self.carets))
+            self.glyphs.asFea(), " ".join(str(x) for x in self.carets)
+        )
 
 
 class LigatureCaretByPosStatement(Statement):
     """A ``GDEF`` table ``LigatureCaretByPos`` statement. ``glyphs`` should be
     a `glyph-containing object`_, and ``carets`` should be a list of integers."""
+
     def __init__(self, glyphs, carets, location=None):
         Statement.__init__(self, location)
         self.glyphs, self.carets = (glyphs, carets)
@@ -927,7 +1014,8 @@ class LigatureCaretByPosStatement(Statement):
 
     def asFea(self, indent=""):
         return "LigatureCaretByPos {} {};".format(
-            self.glyphs.asFea(), " ".join(str(x) for x in self.carets))
+            self.glyphs.asFea(), " ".join(str(x) for x in self.carets)
+        )
 
 
 class LigatureSubstStatement(Statement):
@@ -939,8 +1027,8 @@ class LigatureSubstStatement(Statement):
 
     If ``forceChain`` is True, this is expressed as a chaining rule
     (e.g. ``sub f' i' by f_i``) even when no context is given."""
-    def __init__(self, prefix, glyphs, suffix, replacement,
-                 forceChain, location=None):
+
+    def __init__(self, prefix, glyphs, suffix, replacement, forceChain, location=None):
         Statement.__init__(self, location)
         self.prefix, self.glyphs, self.suffix = (prefix, glyphs, suffix)
         self.replacement, self.forceChain = replacement, forceChain
@@ -950,8 +1038,8 @@ class LigatureSubstStatement(Statement):
         glyphs = [g.glyphSet() for g in self.glyphs]
         suffix = [s.glyphSet() for s in self.suffix]
         builder.add_ligature_subst(
-            self.location, prefix, glyphs, suffix, self.replacement,
-            self.forceChain)
+            self.location, prefix, glyphs, suffix, self.replacement, self.forceChain
+        )
 
     def asFea(self, indent=""):
         res = "sub "
@@ -974,8 +1062,10 @@ class LookupFlagStatement(Statement):
     representing the flags in use, but not including the ``markAttachment``
     class and ``markFilteringSet`` values, which must be specified as
     glyph-containing objects."""
-    def __init__(self, value=0, markAttachment=None, markFilteringSet=None,
-                 location=None):
+
+    def __init__(
+        self, value=0, markAttachment=None, markFilteringSet=None, location=None
+    ):
         Statement.__init__(self, location)
         self.value = value
         self.markAttachment = markAttachment
@@ -989,8 +1079,7 @@ class LookupFlagStatement(Statement):
         markFilter = None
         if self.markFilteringSet is not None:
             markFilter = self.markFilteringSet.glyphSet()
-        builder.set_lookup_flag(self.location, self.value,
-                                markAttach, markFilter)
+        builder.set_lookup_flag(self.location, self.value, markAttach, markFilter)
 
     def asFea(self, indent=""):
         res = []
@@ -1013,6 +1102,7 @@ class LookupReferenceStatement(Statement):
     """Represents a ``lookup ...;`` statement to include a lookup in a feature.
 
     The ``lookup`` should be a :class:`LookupBlock` object."""
+
     def __init__(self, lookup, location=None):
         Statement.__init__(self, location)
         self.location, self.lookup = (location, lookup)
@@ -1029,6 +1119,7 @@ class MarkBasePosStatement(Statement):
     """A mark-to-base positioning rule. The ``base`` should be a
     `glyph-containing object`_. The ``marks`` should be a list of
     (:class:`Anchor`, :class:`MarkClass`) tuples."""
+
     def __init__(self, base, marks, location=None):
         Statement.__init__(self, location)
         self.base, self.marks = base, marks
@@ -1100,6 +1191,7 @@ class MarkMarkPosStatement(Statement):
     """A mark-to-mark positioning rule. The ``baseMarks`` must be a
     `glyph-containing object`_. The ``marks`` should be a list of
     (:class:`Anchor`, :class:`MarkClass`) tuples."""
+
     def __init__(self, baseMarks, marks, location=None):
         Statement.__init__(self, location)
         self.baseMarks, self.marks = baseMarks, marks
@@ -1127,6 +1219,7 @@ class MultipleSubstStatement(Statement):
         forceChain: If true, the statement is expressed as a chaining rule
             (e.g. ``sub f' i' by f_i``) even when no context is given.
     """
+
     def __init__(
         self, prefix, glyph, suffix, replacement, forceChain=False, location=None
     ):
@@ -1140,8 +1233,8 @@ class MultipleSubstStatement(Statement):
         prefix = [p.glyphSet() for p in self.prefix]
         suffix = [s.glyphSet() for s in self.suffix]
         builder.add_multiple_subst(
-            self.location, prefix, self.glyph, suffix, self.replacement,
-            self.forceChain)
+            self.location, prefix, self.glyph, suffix, self.replacement, self.forceChain
+        )
 
     def asFea(self, indent=""):
         res = "sub "
@@ -1168,8 +1261,16 @@ class PairPosStatement(Statement):
     If ``enumerated`` is true, then this is expressed as an
     `enumerated pair <https://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#6.b.ii>`_.
     """
-    def __init__(self, glyphs1, valuerecord1, glyphs2, valuerecord2,
-                 enumerated=False, location=None):
+
+    def __init__(
+        self,
+        glyphs1,
+        valuerecord1,
+        glyphs2,
+        valuerecord2,
+        enumerated=False,
+        location=None,
+    ):
         Statement.__init__(self, location)
         self.enumerated = enumerated
         self.glyphs1, self.valuerecord1 = glyphs1, valuerecord1
@@ -1188,31 +1289,43 @@ class PairPosStatement(Statement):
             g = [self.glyphs1.glyphSet(), self.glyphs2.glyphSet()]
             for glyph1, glyph2 in itertools.product(*g):
                 builder.add_specific_pair_pos(
-                    self.location, glyph1, self.valuerecord1,
-                    glyph2, self.valuerecord2)
+                    self.location, glyph1, self.valuerecord1, glyph2, self.valuerecord2
+                )
             return
 
-        is_specific = (isinstance(self.glyphs1, GlyphName) and
-                       isinstance(self.glyphs2, GlyphName))
+        is_specific = isinstance(self.glyphs1, GlyphName) and isinstance(
+            self.glyphs2, GlyphName
+        )
         if is_specific:
             builder.add_specific_pair_pos(
-                self.location, self.glyphs1.glyph, self.valuerecord1,
-                self.glyphs2.glyph, self.valuerecord2)
+                self.location,
+                self.glyphs1.glyph,
+                self.valuerecord1,
+                self.glyphs2.glyph,
+                self.valuerecord2,
+            )
         else:
             builder.add_class_pair_pos(
-                self.location, self.glyphs1.glyphSet(), self.valuerecord1,
-                self.glyphs2.glyphSet(), self.valuerecord2)
+                self.location,
+                self.glyphs1.glyphSet(),
+                self.valuerecord1,
+                self.glyphs2.glyphSet(),
+                self.valuerecord2,
+            )
 
     def asFea(self, indent=""):
         res = "enum " if self.enumerated else ""
         if self.valuerecord2:
             res += "pos {} {} {} {};".format(
-                self.glyphs1.asFea(), self.valuerecord1.asFea(),
-                self.glyphs2.asFea(), self.valuerecord2.asFea())
+                self.glyphs1.asFea(),
+                self.valuerecord1.asFea(),
+                self.glyphs2.asFea(),
+                self.valuerecord2.asFea(),
+            )
         else:
             res += "pos {} {} {};".format(
-                self.glyphs1.asFea(), self.glyphs2.asFea(),
-                self.valuerecord1.asFea())
+                self.glyphs1.asFea(), self.glyphs2.asFea(), self.valuerecord1.asFea()
+            )
         return res
 
 
@@ -1224,8 +1337,8 @@ class ReverseChainSingleSubstStatement(Statement):
     lists of `glyph-containing objects`_. ``glyphs`` and ``replacements`` should
     be one-item lists.
     """
-    def __init__(self, old_prefix, old_suffix, glyphs, replacements,
-                 location=None):
+
+    def __init__(self, old_prefix, old_suffix, glyphs, replacements, location=None):
         Statement.__init__(self, location)
         self.old_prefix, self.old_suffix = old_prefix, old_suffix
         self.glyphs = glyphs
@@ -1239,7 +1352,8 @@ class ReverseChainSingleSubstStatement(Statement):
         if len(replaces) == 1:
             replaces = replaces * len(originals)
         builder.add_reverse_chain_single_subst(
-            self.location, prefix, suffix, dict(zip(originals, replaces)))
+            self.location, prefix, suffix, dict(zip(originals, replaces))
+        )
 
     def asFea(self, indent=""):
         res = "rsub "
@@ -1264,8 +1378,7 @@ class SingleSubstStatement(Statement):
     ``replace`` should be one-item lists.
     """
 
-    def __init__(self, glyphs, replace, prefix, suffix, forceChain,
-                 location=None):
+    def __init__(self, glyphs, replace, prefix, suffix, forceChain, location=None):
         Statement.__init__(self, location)
         self.prefix, self.suffix = prefix, suffix
         self.forceChain = forceChain
@@ -1280,9 +1393,13 @@ class SingleSubstStatement(Statement):
         replaces = self.replacements[0].glyphSet()
         if len(replaces) == 1:
             replaces = replaces * len(originals)
-        builder.add_single_subst(self.location, prefix, suffix,
-                                 OrderedDict(zip(originals, replaces)),
-                                 self.forceChain)
+        builder.add_single_subst(
+            self.location,
+            prefix,
+            suffix,
+            OrderedDict(zip(originals, replaces)),
+            self.forceChain,
+        )
 
     def asFea(self, indent=""):
         res = "sub "
@@ -1300,6 +1417,7 @@ class SingleSubstStatement(Statement):
 
 class ScriptStatement(Statement):
     """A ``script`` statement."""
+
     def __init__(self, script, location=None):
         Statement.__init__(self, location)
         self.script = script  #: the script code
@@ -1329,27 +1447,32 @@ class SinglePosStatement(Statement):
         prefix = [p.glyphSet() for p in self.prefix]
         suffix = [s.glyphSet() for s in self.suffix]
         pos = [(g.glyphSet(), value) for g, value in self.pos]
-        builder.add_single_pos(self.location, prefix, suffix,
-                               pos, self.forceChain)
+        builder.add_single_pos(self.location, prefix, suffix, pos, self.forceChain)
 
     def asFea(self, indent=""):
         res = "pos "
         if len(self.prefix) or len(self.suffix) or self.forceChain:
             if len(self.prefix):
                 res += " ".join(map(asFea, self.prefix)) + " "
-            res += " ".join([asFea(x[0]) + "'" + (
-                (" " + x[1].asFea()) if x[1] else "") for x in self.pos])
+            res += " ".join(
+                [
+                    asFea(x[0]) + "'" + ((" " + x[1].asFea()) if x[1] else "")
+                    for x in self.pos
+                ]
+            )
             if len(self.suffix):
                 res += " " + " ".join(map(asFea, self.suffix))
         else:
-            res += " ".join([asFea(x[0]) + " " +
-                             (x[1].asFea() if x[1] else "") for x in self.pos])
+            res += " ".join(
+                [asFea(x[0]) + " " + (x[1].asFea() if x[1] else "") for x in self.pos]
+            )
         res += ";"
         return res
 
 
 class SubtableStatement(Statement):
     """Represents a subtable break."""
+
     def __init__(self, location=None):
         Statement.__init__(self, location)
 
@@ -1363,11 +1486,20 @@ class SubtableStatement(Statement):
 
 class ValueRecord(Expression):
     """Represents a value record."""
-    def __init__(self, xPlacement=None, yPlacement=None,
-                 xAdvance=None, yAdvance=None,
-                 xPlaDevice=None, yPlaDevice=None,
-                 xAdvDevice=None, yAdvDevice=None,
-                 vertical=False, location=None):
+
+    def __init__(
+        self,
+        xPlacement=None,
+        yPlacement=None,
+        xAdvance=None,
+        yAdvance=None,
+        xPlaDevice=None,
+        yPlaDevice=None,
+        xAdvDevice=None,
+        yAdvDevice=None,
+        vertical=False,
+        location=None,
+    ):
         Expression.__init__(self, location)
         self.xPlacement, self.yPlacement = (xPlacement, yPlacement)
         self.xAdvance, self.yAdvance = (xAdvance, yAdvance)
@@ -1376,21 +1508,29 @@ class ValueRecord(Expression):
         self.vertical = vertical
 
     def __eq__(self, other):
-        return (self.xPlacement == other.xPlacement and
-                self.yPlacement == other.yPlacement and
-                self.xAdvance == other.xAdvance and
-                self.yAdvance == other.yAdvance and
-                self.xPlaDevice == other.xPlaDevice and
-                self.xAdvDevice == other.xAdvDevice)
+        return (
+            self.xPlacement == other.xPlacement
+            and self.yPlacement == other.yPlacement
+            and self.xAdvance == other.xAdvance
+            and self.yAdvance == other.yAdvance
+            and self.xPlaDevice == other.xPlaDevice
+            and self.xAdvDevice == other.xAdvDevice
+        )
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return (hash(self.xPlacement) ^ hash(self.yPlacement) ^
-                hash(self.xAdvance) ^ hash(self.yAdvance) ^
-                hash(self.xPlaDevice) ^ hash(self.yPlaDevice) ^
-                hash(self.xAdvDevice) ^ hash(self.yAdvDevice))
+        return (
+            hash(self.xPlacement)
+            ^ hash(self.yPlacement)
+            ^ hash(self.xAdvance)
+            ^ hash(self.yAdvance)
+            ^ hash(self.xPlaDevice)
+            ^ hash(self.yPlaDevice)
+            ^ hash(self.xAdvDevice)
+            ^ hash(self.yAdvDevice)
+        )
 
     def asFea(self, indent=""):
         if not self:
@@ -1416,15 +1556,25 @@ class ValueRecord(Expression):
         yAdvance = yAdvance or 0
 
         # Try format B, if possible.
-        if (xPlaDevice is None and yPlaDevice is None and
-                xAdvDevice is None and yAdvDevice is None):
+        if (
+            xPlaDevice is None
+            and yPlaDevice is None
+            and xAdvDevice is None
+            and yAdvDevice is None
+        ):
             return "<%s %s %s %s>" % (x, y, xAdvance, yAdvance)
 
         # Last resort is format C.
         return "<%s %s %s %s %s %s %s %s>" % (
-            x, y, xAdvance, yAdvance,
-            deviceToString(xPlaDevice), deviceToString(yPlaDevice),
-            deviceToString(xAdvDevice), deviceToString(yAdvDevice))
+            x,
+            y,
+            xAdvance,
+            yAdvance,
+            deviceToString(xPlaDevice),
+            deviceToString(yPlaDevice),
+            deviceToString(xAdvDevice),
+            deviceToString(yAdvDevice),
+        )
 
     def __bool__(self):
         return any(
@@ -1446,6 +1596,7 @@ class ValueRecord(Expression):
 
 class ValueRecordDefinition(Statement):
     """Represents a named value record definition."""
+
     def __init__(self, name, value, location=None):
         Statement.__init__(self, location)
         self.name = name  #: Value record name as string
@@ -1466,8 +1617,8 @@ def simplify_name_attributes(pid, eid, lid):
 
 class NameRecord(Statement):
     """Represents a name record. (`Section 9.e. <https://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html#9.e>`_)"""
-    def __init__(self, nameID, platformID, platEncID, langID, string,
-                 location=None):
+
+    def __init__(self, nameID, platformID, platEncID, langID, string, location=None):
         Statement.__init__(self, location)
         self.nameID = nameID  #: Name ID as integer (e.g. 9 for designer's name)
         self.platformID = platformID  #: Platform ID as integer
@@ -1478,8 +1629,13 @@ class NameRecord(Statement):
     def build(self, builder):
         """Calls the builder object's ``add_name_record`` callback."""
         builder.add_name_record(
-            self.location, self.nameID, self.platformID,
-            self.platEncID, self.langID, self.string)
+            self.location,
+            self.nameID,
+            self.platformID,
+            self.platEncID,
+            self.langID,
+            self.string,
+        )
 
     def asFea(self, indent=""):
         def escape(c, escape_pattern):
@@ -1488,21 +1644,24 @@ class NameRecord(Statement):
                 return unichr(c)
             else:
                 return escape_pattern % c
+
         encoding = getEncoding(self.platformID, self.platEncID, self.langID)
         if encoding is None:
             raise FeatureLibError("Unsupported encoding", self.location)
         s = tobytes(self.string, encoding=encoding)
         if encoding == "utf_16_be":
-            escaped_string = "".join([
-                escape(byteord(s[i]) * 256 + byteord(s[i + 1]), r"\%04x")
-                for i in range(0, len(s), 2)])
+            escaped_string = "".join(
+                [
+                    escape(byteord(s[i]) * 256 + byteord(s[i + 1]), r"\%04x")
+                    for i in range(0, len(s), 2)
+                ]
+            )
         else:
             escaped_string = "".join([escape(byteord(b), r"\%02x") for b in s])
-        plat = simplify_name_attributes(
-            self.platformID, self.platEncID, self.langID)
+        plat = simplify_name_attributes(self.platformID, self.platEncID, self.langID)
         if plat != "":
             plat += " "
-        return "nameid {} {}\"{}\";".format(self.nameID, plat, escaped_string)
+        return 'nameid {} {}"{}";'.format(self.nameID, plat, escaped_string)
 
 
 class FeatureNameStatement(NameRecord):
@@ -1521,13 +1680,13 @@ class FeatureNameStatement(NameRecord):
         plat = simplify_name_attributes(self.platformID, self.platEncID, self.langID)
         if plat != "":
             plat += " "
-        return "{} {}\"{}\";".format(tag, plat, self.string)
+        return '{} {}"{}";'.format(tag, plat, self.string)
 
 
 class SizeParameters(Statement):
     """A ``parameters`` statement."""
-    def __init__(self, DesignSize, SubfamilyID, RangeStart, RangeEnd,
-                 location=None):
+
+    def __init__(self, DesignSize, SubfamilyID, RangeStart, RangeEnd, location=None):
         Statement.__init__(self, location)
         self.DesignSize = DesignSize
         self.SubfamilyID = SubfamilyID
@@ -1536,8 +1695,13 @@ class SizeParameters(Statement):
 
     def build(self, builder):
         """Calls the builder object's ``set_size_parameters`` callback."""
-        builder.set_size_parameters(self.location, self.DesignSize,
-                                    self.SubfamilyID, self.RangeStart, self.RangeEnd)
+        builder.set_size_parameters(
+            self.location,
+            self.DesignSize,
+            self.SubfamilyID,
+            self.RangeStart,
+            self.RangeEnd,
+        )
 
     def asFea(self, indent=""):
         res = "parameters {:.1f} {}".format(self.DesignSize, self.SubfamilyID)
@@ -1548,10 +1712,13 @@ class SizeParameters(Statement):
 
 class CVParametersNameStatement(NameRecord):
     """Represent a name statement inside a ``cvParameters`` block."""
-    def __init__(self, nameID, platformID, platEncID, langID, string,
-                 block_name, location=None):
-        NameRecord.__init__(self, nameID, platformID, platEncID, langID,
-                            string, location=location)
+
+    def __init__(
+        self, nameID, platformID, platEncID, langID, string, block_name, location=None
+    ):
+        NameRecord.__init__(
+            self, nameID, platformID, platEncID, langID, string, location=location
+        )
         self.block_name = block_name
 
     def build(self, builder):
@@ -1564,11 +1731,10 @@ class CVParametersNameStatement(NameRecord):
         NameRecord.build(self, builder)
 
     def asFea(self, indent=""):
-        plat = simplify_name_attributes(self.platformID, self.platEncID,
-                                        self.langID)
+        plat = simplify_name_attributes(self.platformID, self.platEncID, self.langID)
         if plat != "":
             plat += " "
-        return "name {}\"{}\";".format(plat, self.string)
+        return 'name {}"{}";'.format(plat, self.string)
 
 
 class CharacterStatement(Statement):
@@ -1578,6 +1744,7 @@ class CharacterStatement(Statement):
     notation. The value must be preceded by '0x' if it is a hexadecimal value.
     The largest Unicode value allowed is 0xFFFFFF.
     """
+
     def __init__(self, character, tag, location=None):
         Statement.__init__(self, location)
         self.character = character
@@ -1594,9 +1761,10 @@ class CharacterStatement(Statement):
 class BaseAxis(Statement):
     """An axis definition, being either a ``VertAxis.BaseTagList/BaseScriptList``
     pair or a ``HorizAxis.BaseTagList/BaseScriptList`` pair."""
+
     def __init__(self, bases, scripts, vertical, location=None):
         Statement.__init__(self, location)
-        self.bases = bases  #: A list of baseline tag names as strings 
+        self.bases = bases  #: A list of baseline tag names as strings
         self.scripts = scripts  #: A list of script record tuplets (script tag, default baseline tag, base coordinate)
         self.vertical = vertical  #: Boolean; VertAxis if True, HorizAxis if False
 
@@ -1606,15 +1774,20 @@ class BaseAxis(Statement):
 
     def asFea(self, indent=""):
         direction = "Vert" if self.vertical else "Horiz"
-        scripts = ["{} {} {}".format(a[0], a[1], " ".join(map(str, a[2]))) for a in self.scripts]
+        scripts = [
+            "{} {} {}".format(a[0], a[1], " ".join(map(str, a[2])))
+            for a in self.scripts
+        ]
         return "{}Axis.BaseTagList {};\n{}{}Axis.BaseScriptList {};".format(
-            direction, " ".join(self.bases), indent, direction, ", ".join(scripts))
+            direction, " ".join(self.bases), indent, direction, ", ".join(scripts)
+        )
 
 
 class OS2Field(Statement):
     """An entry in the ``OS/2`` table. Most ``values`` should be numbers or
     strings, apart from when the key is ``UnicodeRange``, ``CodePageRange``
     or ``Panose``, in which case it should be an array of integers."""
+
     def __init__(self, key, value, location=None):
         Statement.__init__(self, location)
         self.key = key
@@ -1627,21 +1800,36 @@ class OS2Field(Statement):
     def asFea(self, indent=""):
         def intarr2str(x):
             return " ".join(map(str, x))
-        numbers = ("FSType", "TypoAscender", "TypoDescender", "TypoLineGap",
-                   "winAscent", "winDescent", "XHeight", "CapHeight",
-                   "WeightClass", "WidthClass", "LowerOpSize", "UpperOpSize")
+
+        numbers = (
+            "FSType",
+            "TypoAscender",
+            "TypoDescender",
+            "TypoLineGap",
+            "winAscent",
+            "winDescent",
+            "XHeight",
+            "CapHeight",
+            "WeightClass",
+            "WidthClass",
+            "LowerOpSize",
+            "UpperOpSize",
+        )
         ranges = ("UnicodeRange", "CodePageRange")
         keywords = dict([(x.lower(), [x, str]) for x in numbers])
         keywords.update([(x.lower(), [x, intarr2str]) for x in ranges])
         keywords["panose"] = ["Panose", intarr2str]
         keywords["vendor"] = ["Vendor", lambda y: '"{}"'.format(y)]
         if self.key in keywords:
-            return "{} {};".format(keywords[self.key][0], keywords[self.key][1](self.value))
-        return ""   # should raise exception
+            return "{} {};".format(
+                keywords[self.key][0], keywords[self.key][1](self.value)
+            )
+        return ""  # should raise exception
 
 
 class HheaField(Statement):
     """An entry in the ``hhea`` table."""
+
     def __init__(self, key, value, location=None):
         Statement.__init__(self, location)
         self.key = key
@@ -1659,6 +1847,7 @@ class HheaField(Statement):
 
 class VheaField(Statement):
     """An entry in the ``vhea`` table."""
+
     def __init__(self, key, value, location=None):
         Statement.__init__(self, location)
         self.key = key
