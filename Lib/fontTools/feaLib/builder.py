@@ -23,6 +23,7 @@ from fontTools.otlLib.builder import (
     ClassPairPosSubtableBuilder,
     PairPosBuilder,
     SinglePosBuilder,
+    ChainContextualRule,
 )
 from fontTools.otlLib.error import OpenTypeLibError
 from collections import defaultdict
@@ -948,13 +949,17 @@ class Builder(object):
     def add_chain_context_pos(self, location, prefix, glyphs, suffix, lookups):
         lookup = self.get_lookup_(location, ChainContextPosBuilder)
         lookup.rules.append(
-            (prefix, glyphs, suffix, self.find_lookup_builders_(lookups))
+            ChainContextualRule(
+                prefix, glyphs, suffix, self.find_lookup_builders_(lookups)
+            )
         )
 
     def add_chain_context_subst(self, location, prefix, glyphs, suffix, lookups):
         lookup = self.get_lookup_(location, ChainContextSubstBuilder)
         lookup.rules.append(
-            (prefix, glyphs, suffix, self.find_lookup_builders_(lookups))
+            ChainContextualRule(
+                prefix, glyphs, suffix, self.find_lookup_builders_(lookups)
+            )
         )
 
     def add_alternate_subst(self, location, prefix, glyph, suffix, replacement):
@@ -965,7 +970,7 @@ class Builder(object):
         if prefix or suffix:
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
             lookup = self.get_chained_lookup_(location, AlternateSubstBuilder)
-            chain.rules.append((prefix, [{glyph}], suffix, [lookup]))
+            chain.rules.append(ChainContextualRule(prefix, [{glyph}], suffix, [lookup]))
         else:
             lookup = self.get_lookup_(location, AlternateSubstBuilder)
         if glyph in lookup.alternates:
@@ -1024,7 +1029,7 @@ class Builder(object):
         if prefix or suffix or forceChain:
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
             lookup = self.get_chained_lookup_(location, LigatureSubstBuilder)
-            chain.rules.append((prefix, glyphs, suffix, [lookup]))
+            chain.rules.append(ChainContextualRule(prefix, glyphs, suffix, [lookup]))
         else:
             lookup = self.get_lookup_(location, LigatureSubstBuilder)
 
@@ -1043,7 +1048,7 @@ class Builder(object):
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
             sub = self.get_chained_lookup_(location, MultipleSubstBuilder)
             sub.mapping[glyph] = replacements
-            chain.rules.append((prefix, [{glyph}], suffix, [sub]))
+            chain.rules.append(ChainContextualRule(prefix, [{glyph}], suffix, [sub]))
             return
         lookup = self.get_lookup_(location, MultipleSubstBuilder)
         if glyph in lookup.mapping:
@@ -1100,7 +1105,9 @@ class Builder(object):
         if sub is None:
             sub = self.get_chained_lookup_(location, SingleSubstBuilder)
         sub.mapping.update(mapping)
-        chain.rules.append((prefix, [mapping.keys()], suffix, [sub]))
+        chain.rules.append(
+            ChainContextualRule(prefix, [list(mapping.keys())], suffix, [sub])
+        )
 
     def add_cursive_pos(self, location, glyphclass, entryAnchor, exitAnchor):
         lookup = self.get_lookup_(location, CursivePosBuilder)
@@ -1206,7 +1213,9 @@ class Builder(object):
                 sub.add_pos(location, glyph, otValue)
             subs.append(sub)
         assert len(pos) == len(subs), (pos, subs)
-        chain.rules.append((prefix, [g for g, v in pos], suffix, subs))
+        chain.rules.append(
+            ChainContextualRule(prefix, [g for g, v in pos], suffix, subs)
+        )
 
     def setGlyphClass_(self, location, glyph, glyphClass):
         oldClass, oldLocation = self.glyphClassDefs_.get(glyph, (None, None))

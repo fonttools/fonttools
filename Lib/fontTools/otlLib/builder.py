@@ -269,15 +269,15 @@ class ChainContextualRuleset:
     def __init__(self):
         self.rules = []
 
-    def addRule(self, prefix, glyphs, suffix, lookups):
-        self.rules.append((prefix, glyphs, suffix, lookups))
+    def addRule(self, rule):
+        self.rules.append(rule)
 
     @property
     def hasPrefixOrSuffix(self):
         # Do we have any prefixes/suffixes? If this is False for all
         # rulesets, we can express the whole lookup as GPOS5/GSUB7.
-        for (prefix, glyphs, suffix, lookups) in self.rules:
-            if len(prefix) > 0 or len(suffix) > 0:
+        for rule in self.rules:
+            if len(rule.prefix) > 0 or len(rule.suffix) > 0:
                 return True
         return False
 
@@ -285,8 +285,8 @@ class ChainContextualRuleset:
     def hasAnyGlyphClasses(self):
         # Do we use glyph classes anywhere in the rules? If this is False
         # we can express this subtable as a Format 1.
-        for (prefix, glyphs, suffix, lookups) in self.rules:
-            for coverage in (prefix, glyphs, suffix):
+        for rule in self.rules:
+            for coverage in (rule.prefix, rule.glyphs, rule.suffix):
                 if any(len(x) > 1 for x in coverage):
                     return True
         return False
@@ -322,11 +322,11 @@ class ChainContextualBuilder(LookupBuilder):
         # Return a list of ChainContextRuleset objects, taking explicit
         # subtable breaks into account
         ruleset = [ChainContextualRuleset()]
-        for (prefix, glyphs, suffix, lookups) in self.rules:
-            if prefix == self.SUBTABLE_BREAK_:
+        for rule in self.rules:
+            if rule.is_subtable_break:
                 ruleset.append(ChainContextualRuleset())
                 continue
-            ruleset[-1].addRule(prefix, glyphs, suffix, lookups)
+            ruleset[-1].addRule(rule)
         # Squish any empty subtables
         return [x for x in ruleset if len(x.rules) > 0]
 
@@ -349,17 +349,16 @@ class ChainContextualBuilder(LookupBuilder):
         return self.buildLookup_(subtables)
 
     def buildFormat3Subtable(self, rule, chaining=True):
-        (prefix, glyphs, suffix, lookups) = rule
         st = self.newSubtable_(chaining=chaining)
         st.Format = 3
         if chaining:
-            self.setBacktrackCoverage_(prefix, st)
-            self.setLookAheadCoverage_(suffix, st)
-            self.setInputCoverage_(glyphs, st)
+            self.setBacktrackCoverage_(rule.prefix, st)
+            self.setLookAheadCoverage_(rule.suffix, st)
+            self.setInputCoverage_(rule.glyphs, st)
         else:
-            self.setCoverage_(glyphs, st)
+            self.setCoverage_(rule.glyphs, st)
 
-        for sequenceIndex, lookupList in enumerate(lookups):
+        for sequenceIndex, lookupList in enumerate(rule.lookups):
             if lookupList is not None:
                 if not isinstance(lookupList, list):
                     # Can happen with synthesised lookups
@@ -382,7 +381,7 @@ class ChainContextualBuilder(LookupBuilder):
 
     def add_subtable_break(self, location):
         self.rules.append(
-            (
+            ChainContextualRule(
                 self.SUBTABLE_BREAK_,
                 self.SUBTABLE_BREAK_,
                 self.SUBTABLE_BREAK_,
@@ -463,7 +462,7 @@ class ChainContextPosBuilder(ChainContextualBuilder):
 
     def __init__(self, font, location):
         LookupBuilder.__init__(self, font, location, "GPOS", 8)
-        self.rules = []  # (prefix, input, suffix, lookups)
+        self.rules = []
         self.subtable_type = "Pos"
 
     def find_chainable_single_pos(self, lookups, glyphs, value):
@@ -513,10 +512,10 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
 
     def getAlternateGlyphs(self):
         result = {}
-        for (prefix, _, _, lookuplist) in self.rules:
-            if prefix == self.SUBTABLE_BREAK_:
+        for rule in self.rules:
+            if rule.is_subtable_break:
                 continue
-            for lookups in lookuplist:
+            for lookups in rule.lookups:
                 if not isinstance(lookups, list):
                     lookups = [lookups]
                 for lookup in lookups:
@@ -529,10 +528,10 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
     def find_chainable_single_subst(self, glyphs):
         """Helper for add_single_subst_chained_()"""
         res = None
-        for prefix, _, _, rules in self.rules[::-1]:
-            if prefix == self.SUBTABLE_BREAK_:
+        for rule in self.rules[::-1]:
+            if rule.is_subtable_break:
                 return res
-            for sub in rules:
+            for sub in rule.lookups:
                 if isinstance(sub, SingleSubstBuilder) and not any(
                     g in glyphs for g in sub.mapping.keys()
                 ):
