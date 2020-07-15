@@ -15,23 +15,39 @@ log = logging.getLogger("fontTools.feaLib")
 def main(args=None):
     """Add features from a feature file (.fea) into a OTF font"""
     parser = argparse.ArgumentParser(
-        description="Use fontTools to compile OpenType feature files (*.fea).")
+        description="Use fontTools to compile OpenType feature files (*.fea)."
+    )
     parser.add_argument(
-        "input_fea", metavar="FEATURES", help="Path to the feature file")
+        "input_fea", metavar="FEATURES", help="Path to the feature file"
+    )
     parser.add_argument(
-        "input_font", metavar="INPUT_FONT", help="Path to the input font")
+        "input_font", metavar="INPUT_FONT", help="Path to the input font"
+    )
     parser.add_argument(
-        "-o", "--output", dest="output_font", metavar="OUTPUT_FONT",
-        help="Path to the output font.")
+        "-o",
+        "--output",
+        dest="output_font",
+        metavar="OUTPUT_FONT",
+        help="Path to the output font.",
+    )
     parser.add_argument(
-        "-t", "--tables", metavar="TABLE_TAG", choices=Builder.supportedTables,
-        nargs='+', help="Specify the table(s) to be built.")
+        "-t",
+        "--tables",
+        metavar="TABLE_TAG",
+        choices=Builder.supportedTables,
+        nargs="+",
+        help="Specify the table(s) to be built.",
+    )
     parser.add_argument(
-        "-v", "--verbose", help="increase the logger verbosity. Multiple -v "
-        "options are allowed.", action="count", default=0)
+        "-v",
+        "--verbose",
+        help="increase the logger verbosity. Multiple -v " "options are allowed.",
+        action="count",
+        default=0,
+    )
     parser.add_argument(
-        "--traceback", help="show traceback for exceptions.",
-        action="store_true")
+        "--traceback", help="show traceback for exceptions.", action="store_true"
+    )
     options = parser.parse_args(args)
 
     levels = ["WARNING", "INFO", "DEBUG"]
@@ -50,5 +66,5 @@ def main(args=None):
     font.save(output_font)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())
