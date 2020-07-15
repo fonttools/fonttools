@@ -257,6 +257,14 @@ class AlternateSubstBuilder(LookupBuilder):
         self.alternates[(self.SUBTABLE_BREAK_, location)] = self.SUBTABLE_BREAK_
 
 
+class ChainContextualRule(
+    namedtuple("ChainContextualRule", ["prefix", "glyphs", "suffix", "lookups"])
+):
+    @property
+    def is_subtable_break(self):
+        return self.prefix == LookupBuilder.SUBTABLE_BREAK_
+
+
 class ChainContextualRuleset:
     def __init__(self):
         self.rules = []
