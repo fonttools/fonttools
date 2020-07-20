@@ -1,15 +1,17 @@
 # Modified from https://github.com/adobe-type-tools/psautohint/blob/08b346865710ed3c172f1eb581d6ef243b203f99/python/psautohint/ufoFont.py#L800-L838
 import hashlib
+
+from fontTools.misc.transform import Identity
 from fontTools.pens.pointPen import AbstractPointPen
 from fontTools.pens.transformPen import TransformPointPen
 
 
 class HashPointPen(AbstractPointPen):
-    DEFAULT_TRANSFORM = (1, 0, 0, 1, 0, 0)
+    DEFAULT_TRANSFORM = Identity
 
     def __init__(self, glyph, glyphSet=None):
         self.glyphset = glyphSet
-        self.width = round(getattr(glyph, "width", 1000), 9)
+        self.width = round(getattr(glyph, "width", 0), 9)
         self.data = ["w%s" % self.width]
 
     def getHash(self):
