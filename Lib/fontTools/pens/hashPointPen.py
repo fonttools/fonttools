@@ -1,13 +1,18 @@
 # Modified from https://github.com/adobe-type-tools/psautohint/blob/08b346865710ed3c172f1eb581d6ef243b203f99/python/psautohint/ufoFont.py#L800-L838
 import hashlib
 
-from fontTools.misc.transform import Identity
 from fontTools.pens.pointPen import AbstractPointPen
 from fontTools.pens.transformPen import TransformPointPen
 
 
 class HashPointPen(AbstractPointPen):
-    DEFAULT_TRANSFORM = Identity
+    """
+    This pen can be used to check if a glyph's contents (outlines plus
+    components) has changed.
+
+    Components are decomposed, because that is what happens in TrueType
+    hinting.
+    """
 
     def __init__(self, glyph, glyphSet=None):
         self.glyphset = glyphSet
@@ -20,11 +25,15 @@ class HashPointPen(AbstractPointPen):
             data = hashlib.sha512(data.encode("ascii")).hexdigest()
         return data
 
+    @property
+    def hash(self):
+        return self.getHash()
+
     def beginPath(self, identifier=None, **kwargs):
         pass
 
     def endPath(self):
-        pass
+        self.data.append("|")
 
     def addPoint(
         self,
@@ -33,13 +42,13 @@ class HashPointPen(AbstractPointPen):
         smooth=False,
         name=None,
         identifier=None,
-        **kwargs
+        **kwargs,
     ):
         if segmentType is None:
-            pt_type = ""
+            pt_type = "o"  # offcurve
         else:
             pt_type = segmentType[0]
-        self.data.append(f"{pt_type}{pt[0]}{pt[1]:+}")
+        self.data.append(f"{pt_type}{pt[0]:g}{pt[1]:+g}")
 
     def addComponent(
         self, baseGlyphName, transformation, identifier=None, **kwargs
