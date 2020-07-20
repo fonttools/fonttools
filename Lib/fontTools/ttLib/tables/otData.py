@@ -1549,7 +1549,7 @@ otData = [
 		('LOffset', 'BaseGlyphRecordArray', None, None, 'Offset (from beginning of COLR table) to Base Glyph records.'),
 		('LOffset', 'LayerRecordArray', None, None, 'Offset (from beginning of COLR table) to Layer Records.'),
 		('uint16', 'LayerRecordCount', None, None, 'Number of Layer Records.'),
-		('LOffset', 'BaseGlyphV1Array', None, 'Version >= 1', 'Offset (from beginning of COLR table) to array of Version-1 Base Glyph records.'),
+		('LOffset', 'BaseGlyphV1List', None, 'Version >= 1', 'Offset (from beginning of COLR table) to array of Version-1 Base Glyph records.'),
 		('LOffset', 'VarStore', None, 'Version >= 1', 'Offset to variation store (may be NULL)'),
 	]),
 
@@ -1572,46 +1572,41 @@ otData = [
 		('uint16', 'PaletteIndex', None, None, 'Index value to use with a selected color palette.'),
 	]),
 
-	('BaseGlyphV1Array', [
+	('BaseGlyphV1List', [
 		('uint32', 'BaseGlyphCount', None, None, 'Number of Version-1 Base Glyph records'),
 		('struct', 'BaseGlyphV1Record', 'BaseGlyphCount', 0, 'Array of Version-1 Base Glyph records'),
 	]),
 
 	('BaseGlyphV1Record', [
 		('GlyphID', 'BaseGlyph', None, None, 'Glyph ID of reference glyph.'),
-		('LOffset', 'LayerV1Array', None, None, 'Offset (from beginning of BaseGlyphV1Array) to LayerV1Array.'),
+		('LOffset', 'LayerV1List', None, None, 'Offset (from beginning of BaseGlyphV1List) to LayerV1List.'),
 	]),
 
-	('LayerV1Array', [
+	('LayerV1List', [
 		('uint32', 'LayerCount', None, None, 'Number of Version-1 Layer records'),
 		('struct', 'LayerV1Record', 'LayerCount', 0, 'Array of Version-1 Layer records'),
 	]),
 
 	('LayerV1Record', [
 		('GlyphID', 'LayerGlyph', None, None, 'Glyph ID of layer glyph (must be in z-order from bottom to top).'),
-		('LOffset', 'Paint', None, None, 'Offset (from beginning of LayerV1Array) to Paint subtable.'),
+		('LOffset', 'Paint', None, None, 'Offset (from beginning of LayerV1List) to Paint subtable.'),
 	]),
 
 	('Affine2x2', [
-		('VariableScalar', 'xx', None, None, ''),
-		('VariableScalar', 'xy', None, None, ''),
-		('VariableScalar', 'yx', None, None, ''),
-		('VariableScalar', 'yy', None, None, ''),
+		('VarFixed', 'xx', None, None, ''),
+		('VarFixed', 'xy', None, None, ''),
+		('VarFixed', 'yx', None, None, ''),
+		('VarFixed', 'yy', None, None, ''),
 	]),
 
-	('Point', [
-		('VariablePosition', 'x', None, None, ''),
-		('VariablePosition', 'y', None, None, ''),
-	]),
-
-	('Color', [
+	('ColorIndex', [
 		('uint16', 'PaletteIndex', None, None, 'Index value to use with a selected color palette.'),
-		('VariableNormalizedScalar', 'Transparency', None, None, 'Values outsided [0.,1.] reserved'),
+		('VarF2Dot14', 'Alpha', None, None, 'Values outsided [0.,1.] reserved'),
 	]),
 
 	('ColorStop', [
-		('VariableNormalizedScalar', 'StopOffset', None, None, ''),
-		('Color', 'Color', None, None, ''),
+		('VarF2Dot14', 'StopOffset', None, None, ''),
+		('ColorIndex', 'Color', None, None, ''),
 	]),
 
 	('ColorLine', [
@@ -1622,24 +1617,29 @@ otData = [
 
 	('PaintFormat1', [
 		('uint16', 'PaintFormat', None, None, 'Format identifier-format = 1'),
-		('Color', 'Color', None, None, 'A solid color paint.'),
+		('ColorIndex', 'Color', None, None, 'A solid color paint.'),
 	]),
 
 	('PaintFormat2', [
 		('uint16', 'PaintFormat', None, None, 'Format identifier-format = 2'),
 		('LOffset', 'ColorLine', None, None, 'Offset (from beginning of Paint table) to ColorLine subtable.'),
-		('Point', 'p0', None, None, ''),
-		('Point', 'p1', None, None, ''),
-		('Point', 'p2', None, None, 'Normal; equal to p1 in simple cases.'),
+		('VarInt16', 'x0', None, None, ''),
+		('VarInt16', 'y0', None, None, ''),
+		('VarInt16', 'x1', None, None, ''),
+		('VarInt16', 'y1', None, None, ''),
+		('VarInt16', 'x2', None, None, ''),
+		('VarInt16', 'y2', None, None, ''),
 	]),
 
 	('PaintFormat3', [
 		('uint16', 'PaintFormat', None, None, 'Format identifier-format = 3'),
 		('LOffset', 'ColorLine', None, None, 'Offset (from beginning of Paint table) to ColorLine subtable.'),
-		('Point', 'c0', None, None, ''),
-		('Point', 'c1', None, None, ''),
-		('VariableDistance', 'r0', None, None, ''),
-		('VariableDistance', 'r1', None, None, ''),
-		('LOffsetTo(Affine2x2)', 'Affine', None, None, 'Offset (from beginning of Paint table) to Affine2x2 subtable.'),
+		('VarInt16', 'x0', None, None, ''),
+		('VarInt16', 'y0', None, None, ''),
+		('VarUInt16', 'r0', None, None, ''),
+		('VarInt16', 'x1', None, None, ''),
+		('VarInt16', 'y1', None, None, ''),
+		('VarUInt16', 'r1', None, None, ''),
+		('LOffsetTo(Affine2x2)', 'Transform', None, None, 'Offset (from beginning of Paint table) to Affine2x2 subtable.'),
 	]),
 ]

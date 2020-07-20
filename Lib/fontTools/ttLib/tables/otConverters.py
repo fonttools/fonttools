@@ -295,9 +295,10 @@ class Tag(SimpleValue):
 
 class GlyphID(SimpleValue):
 	staticSize = 2
+	typecode = "H"
 	def readArray(self, reader, font, tableDict, count):
 		glyphOrder = font.getGlyphOrder()
-		gids = reader.readUShortArray(count)
+		gids = reader.readArray(self.typecode, self.staticSize, count)
 		try:
 			l = [glyphOrder[gid] for gid in gids]
 		except IndexError:
@@ -305,9 +306,14 @@ class GlyphID(SimpleValue):
 			l = [font.getGlyphName(gid) for gid in gids]
 		return l
 	def read(self, reader, font, tableDict):
-		return font.getGlyphName(reader.readUShort())
+		return font.getGlyphName(reader.readValue(self.typecode, self.staticSize))
 	def write(self, writer, font, tableDict, value, repeatIndex=None):
-		writer.writeUShort(font.getGlyphID(value))
+		writer.writeValue(self.typecode, font.getGlyphID(value))
+
+
+class GlyphID32(GlyphID):
+	staticSize = 4
+	typecode = "L"
 
 
 class NameID(UShort):
@@ -1680,22 +1686,22 @@ class _NamedTupleConverter(BaseConverter):
 		return self.tupleClass(**kwargs)
 
 
-class VariableScalar(_NamedTupleConverter):
+class VarFixed(_NamedTupleConverter):
 	tupleClass = VariableFloat
 	converterClasses = [Fixed, ULong]
 
 
-class VariableNormalizedScalar(_NamedTupleConverter):
+class VarF2Dot14(_NamedTupleConverter):
 	tupleClass = VariableFloat
 	converterClasses = [F2Dot14, ULong]
 
 
-class VariablePosition(_NamedTupleConverter):
+class VarInt16(_NamedTupleConverter):
 	tupleClass = VariableInt
 	converterClasses = [Short, ULong]
 
 
-class VariableDistance(_NamedTupleConverter):
+class VarUInt16(_NamedTupleConverter):
 	tupleClass = VariableInt
 	converterClasses = [UShort, ULong]
 
@@ -1725,6 +1731,7 @@ converterMapping = {
 	"Version":	Version,
 	"Tag":		Tag,
 	"GlyphID":	GlyphID,
+	"GlyphID32":	GlyphID32,
 	"NameID":	NameID,
 	"DeciPoints":	DeciPoints,
 	"Fixed":	Fixed,
@@ -1755,8 +1762,8 @@ converterMapping = {
 	"LOffsetTo":	lambda C: partial(LTable, tableClass=C),
 
 	# Variable types
-	"VariableScalar": VariableScalar,
-	"VariableNormalizedScalar": VariableNormalizedScalar,
-	"VariablePosition": VariablePosition,
-	"VariableDistance": VariableDistance,
+	"VarFixed": VarFixed,
+	"VarF2Dot14": VarF2Dot14,
+	"VarInt16": VarInt16,
+	"VarUInt16": VarUInt16,
 }

@@ -1197,7 +1197,7 @@ class BaseGlyphRecordArray(BaseTable):
 		return self.__dict__.copy()
 
 
-class BaseGlyphV1Array(BaseTable):
+class BaseGlyphV1List(BaseTable):
 
 	def preWrite(self, font):
 		self.BaseGlyphV1Record = sorted(

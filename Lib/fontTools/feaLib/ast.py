@@ -1,5 +1,6 @@
 from fontTools.misc.py23 import *
 from fontTools.feaLib.error import FeatureLibError
+from fontTools.feaLib.location import FeatureLibLocation
 from fontTools.misc.encodingTools import getEncoding
 from collections import OrderedDict
 import itertools
@@ -112,7 +113,9 @@ class Element(object):
     """A base class representing "something" in a feature file."""
 
     def __init__(self, location=None):
-        #: location of this element - tuple of ``(filename, line, column)``
+        #: location of this element as a `FeatureLibLocation` object.
+        if location and not isinstance(location, FeatureLibLocation):
+            location = FeatureLibLocation(*location)
         self.location = location
 
     def build(self, builder):
@@ -460,8 +463,7 @@ class MarkClass(object):
                 if otherLoc is None:
                     end = ""
                 else:
-                    end = " at %s:%d:%d" % (
-                        otherLoc[0], otherLoc[1], otherLoc[2])
+                    end = f" at {otherLoc}"
                 raise FeatureLibError(
                     "Glyph %s already defined%s" % (glyph, end),
                     definition.location)
@@ -1117,11 +1119,14 @@ class MarkMarkPosStatement(Statement):
 class MultipleSubstStatement(Statement):
     """A multiple substitution statement.
 
-    ``prefix``, ``glyph``, ``suffix`` and ``replacement`` should be lists of
-    `glyph-containing objects`_.
-
-    If ``forceChain`` is True, this is expressed as a chaining rule
-    (e.g. ``sub f' i' by f_i``) even when no context is given."""
+    Args:
+        prefix: a list of `glyph-containing objects`_.
+        glyph: a single glyph-containing object.
+        suffix: a list of glyph-containing objects.
+        replacement: a list of glyph-containing objects.
+        forceChain: If true, the statement is expressed as a chaining rule
+            (e.g. ``sub f' i' by f_i``) even when no context is given.
+    """
     def __init__(
         self, prefix, glyph, suffix, replacement, forceChain=False, location=None
     ):

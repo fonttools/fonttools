@@ -188,63 +188,61 @@ def test_buildCPAL_invalid_color():
         builder.buildCPAL([[(0, 0, 0, 0)], [(1, 1, -1, 2)]])
 
 
-def test_buildColor():
-    c = builder.buildColor(0)
+def test_buildColorIndex():
+    c = builder.buildColorIndex(0)
     assert c.PaletteIndex == 0
-    assert c.Transparency.value == 0.0
-    assert c.Transparency.varIdx == 0
+    assert c.Alpha.value == 1.0
+    assert c.Alpha.varIdx == 0
 
-    c = builder.buildColor(1, transparency=0.5)
+    c = builder.buildColorIndex(1, alpha=0.5)
     assert c.PaletteIndex == 1
-    assert c.Transparency.value == 0.5
-    assert c.Transparency.varIdx == 0
+    assert c.Alpha.value == 0.5
+    assert c.Alpha.varIdx == 0
 
-    c = builder.buildColor(3, transparency=builder.VariableFloat(0.5, varIdx=2))
+    c = builder.buildColorIndex(3, alpha=builder.VariableFloat(0.5, varIdx=2))
     assert c.PaletteIndex == 3
-    assert c.Transparency.value == 0.5
-    assert c.Transparency.varIdx == 2
+    assert c.Alpha.value == 0.5
+    assert c.Alpha.varIdx == 2
 
 
 def test_buildSolidColorPaint():
     p = builder.buildSolidColorPaint(0)
     assert p.Format == 1
     assert p.Color.PaletteIndex == 0
-    assert p.Color.Transparency.value == 0.0
-    assert p.Color.Transparency.varIdx == 0
+    assert p.Color.Alpha.value == 1.0
+    assert p.Color.Alpha.varIdx == 0
 
-    p = builder.buildSolidColorPaint(1, transparency=0.5)
+    p = builder.buildSolidColorPaint(1, alpha=0.5)
     assert p.Format == 1
     assert p.Color.PaletteIndex == 1
-    assert p.Color.Transparency.value == 0.5
-    assert p.Color.Transparency.varIdx == 0
+    assert p.Color.Alpha.value == 0.5
+    assert p.Color.Alpha.varIdx == 0
 
-    p = builder.buildSolidColorPaint(
-        3, transparency=builder.VariableFloat(0.5, varIdx=2)
-    )
+    p = builder.buildSolidColorPaint(3, alpha=builder.VariableFloat(0.5, varIdx=2))
     assert p.Format == 1
     assert p.Color.PaletteIndex == 3
-    assert p.Color.Transparency.value == 0.5
-    assert p.Color.Transparency.varIdx == 2
+    assert p.Color.Alpha.value == 0.5
+    assert p.Color.Alpha.varIdx == 2
 
 
 def test_buildColorStop():
     s = builder.buildColorStop(0.1, 2)
     assert s.StopOffset == builder.VariableFloat(0.1)
     assert s.Color.PaletteIndex == 2
-    assert s.Color.Transparency == builder._DEFAULT_TRANSPARENCY
+    assert s.Color.Alpha == builder._DEFAULT_ALPHA
 
-    s = builder.buildColorStop(offset=0.2, paletteIndex=3, transparency=0.4)
+    s = builder.buildColorStop(offset=0.2, paletteIndex=3, alpha=0.4)
     assert s.StopOffset == builder.VariableFloat(0.2)
-    assert s.Color == builder.buildColor(3, transparency=0.4)
+    assert s.Color == builder.buildColorIndex(3, alpha=0.4)
 
     s = builder.buildColorStop(
         offset=builder.VariableFloat(0.0, varIdx=1),
         paletteIndex=0,
-        transparency=builder.VariableFloat(0.3, varIdx=2),
+        alpha=builder.VariableFloat(0.3, varIdx=2),
     )
     assert s.StopOffset == builder.VariableFloat(0.0, varIdx=1)
     assert s.Color.PaletteIndex == 0
-    assert s.Color.Transparency == builder.VariableFloat(0.3, varIdx=2)
+    assert s.Color.Alpha == builder.VariableFloat(0.3, varIdx=2)
 
 
 def test_buildColorLine():
@@ -272,40 +270,18 @@ def test_buildColorLine():
     ] == stops
 
     stops = [
-        {"offset": (0.0, 1), "paletteIndex": 0, "transparency": (0.5, 2)},
-        {"offset": (1.0, 3), "paletteIndex": 1, "transparency": (0.3, 4)},
+        {"offset": (0.0, 1), "paletteIndex": 0, "alpha": (0.5, 2)},
+        {"offset": (1.0, 3), "paletteIndex": 1, "alpha": (0.3, 4)},
     ]
     cline = builder.buildColorLine(stops)
     assert [
         {
             "offset": cs.StopOffset,
             "paletteIndex": cs.Color.PaletteIndex,
-            "transparency": cs.Color.Transparency,
+            "alpha": cs.Color.Alpha,
         }
         for cs in cline.ColorStop
     ] == stops
-
-
-def test_buildPoint():
-    pt = builder.buildPoint(0, 1)
-    assert pt.x == builder.VariableInt(0)
-    assert pt.y == builder.VariableInt(1)
-
-    pt = builder.buildPoint(
-        builder.VariableInt(2, varIdx=1), builder.VariableInt(3, varIdx=2)
-    )
-    assert pt.x == builder.VariableInt(2, varIdx=1)
-    assert pt.y == builder.VariableInt(3, varIdx=2)
-
-    # float coords are rounded
-    pt = builder.buildPoint(x=-2.5, y=3.5)
-    assert pt.x == builder.VariableInt(-2)
-    assert pt.y == builder.VariableInt(4)
-
-    # tuple args are cast to VariableInt namedtuple
-    pt = builder.buildPoint((1, 2), (3, 4))
-    assert pt.x == builder.VariableInt(1, varIdx=2)
-    assert pt.y == builder.VariableInt(3, varIdx=4)
 
 
 def test_buildAffine2x2():
@@ -320,49 +296,48 @@ def test_buildLinearGradientPaint():
     color_stops = [
         builder.buildColorStop(0.0, 0),
         builder.buildColorStop(0.5, 1),
-        builder.buildColorStop(1.0, 2, transparency=0.8),
+        builder.buildColorStop(1.0, 2, alpha=0.8),
     ]
     color_line = builder.buildColorLine(color_stops, extend=builder.ExtendMode.REPEAT)
-    p0 = builder.buildPoint(x=100, y=200)
-    p1 = builder.buildPoint(x=150, y=250)
+    p0 = (builder.VariableInt(100), builder.VariableInt(200))
+    p1 = (builder.VariableInt(150), builder.VariableInt(250))
 
     gradient = builder.buildLinearGradientPaint(color_line, p0, p1)
     assert gradient.Format == 2
     assert gradient.ColorLine == color_line
-    assert gradient.p0 == p0
-    assert gradient.p1 == p1
-    assert gradient.p2 == gradient.p1
-    assert gradient.p2 is not gradient.p1
+    assert (gradient.x0, gradient.y0) == p0
+    assert (gradient.x1, gradient.y1) == p1
+    assert (gradient.x2, gradient.y2) == p1
 
     gradient = builder.buildLinearGradientPaint({"stops": color_stops}, p0, p1)
     assert gradient.ColorLine.Extend == builder.ExtendMode.PAD
     assert gradient.ColorLine.ColorStop == color_stops
 
     gradient = builder.buildLinearGradientPaint(color_line, p0, p1, p2=(150, 230))
-    assert gradient.p2 == builder.buildPoint(x=150, y=230)
-    assert gradient.p2 != gradient.p1
+    assert (gradient.x2.value, gradient.y2.value) == (150, 230)
+    assert (gradient.x2, gradient.y2) != (gradient.x1, gradient.y1)
 
 
 def test_buildRadialGradientPaint():
     color_stops = [
         builder.buildColorStop(0.0, 0),
         builder.buildColorStop(0.5, 1),
-        builder.buildColorStop(1.0, 2, transparency=0.8),
+        builder.buildColorStop(1.0, 2, alpha=0.8),
     ]
     color_line = builder.buildColorLine(color_stops, extend=builder.ExtendMode.REPEAT)
-    c0 = builder.buildPoint(x=100, y=200)
-    c1 = builder.buildPoint(x=150, y=250)
+    c0 = (builder.VariableInt(100), builder.VariableInt(200))
+    c1 = (builder.VariableInt(150), builder.VariableInt(250))
     r0 = builder.VariableInt(10)
     r1 = builder.VariableInt(5)
 
     gradient = builder.buildRadialGradientPaint(color_line, c0, c1, r0, r1)
     assert gradient.Format == 3
     assert gradient.ColorLine == color_line
-    assert gradient.c0 == c0
-    assert gradient.c1 == c1
+    assert (gradient.x0, gradient.y0) == c0
+    assert (gradient.x1, gradient.y1) == c1
     assert gradient.r0 == r0
     assert gradient.r1 == r1
-    assert gradient.Affine is None
+    assert gradient.Transform is None
 
     gradient = builder.buildRadialGradientPaint({"stops": color_stops}, c0, c1, r0, r1)
     assert gradient.ColorLine.Extend == builder.ExtendMode.PAD
@@ -370,14 +345,14 @@ def test_buildRadialGradientPaint():
 
     matrix = builder.buildAffine2x2(2.0, 0.0, 0.0, 2.0)
     gradient = builder.buildRadialGradientPaint(
-        color_line, c0, c1, r0, r1, affine=matrix
+        color_line, c0, c1, r0, r1, transform=matrix
     )
-    assert gradient.Affine == matrix
+    assert gradient.Transform == matrix
 
     gradient = builder.buildRadialGradientPaint(
-        color_line, c0, c1, r0, r1, affine=(2.0, 0.0, 0.0, 2.0)
+        color_line, c0, c1, r0, r1, transform=(2.0, 0.0, 0.0, 2.0)
     )
-    assert gradient.Affine == matrix
+    assert gradient.Transform == matrix
 
 
 def test_buildLayerV1Record():
@@ -389,7 +364,7 @@ def test_buildLayerV1Record():
     layer = builder.buildLayerV1Record("a", builder.buildSolidColorPaint(3, 0.9))
     assert layer.Paint.Format == 1
     assert layer.Paint.Color.PaletteIndex == 3
-    assert layer.Paint.Color.Transparency.value == 0.9
+    assert layer.Paint.Color.Alpha.value == 0.9
 
     layer = builder.buildLayerV1Record(
         "a",
@@ -402,10 +377,10 @@ def test_buildLayerV1Record():
     assert layer.Paint.ColorLine.ColorStop[0].Color.PaletteIndex == 3
     assert layer.Paint.ColorLine.ColorStop[1].StopOffset.value == 1.0
     assert layer.Paint.ColorLine.ColorStop[1].Color.PaletteIndex == 4
-    assert layer.Paint.p0.x.value == 100
-    assert layer.Paint.p0.y.value == 200
-    assert layer.Paint.p1.x.value == 150
-    assert layer.Paint.p1.y.value == 250
+    assert layer.Paint.x0.value == 100
+    assert layer.Paint.y0.value == 200
+    assert layer.Paint.x1.value == 150
+    assert layer.Paint.y1.value == 250
 
     layer = builder.buildLayerV1Record(
         "a",
@@ -413,7 +388,7 @@ def test_buildLayerV1Record():
             {
                 "stops": [
                     (0.0, 5),
-                    {"offset": 0.5, "paletteIndex": 6, "transparency": 0.8},
+                    {"offset": 0.5, "paletteIndex": 6, "alpha": 0.8},
                     (1.0, 7),
                 ]
             },
@@ -428,14 +403,14 @@ def test_buildLayerV1Record():
     assert layer.Paint.ColorLine.ColorStop[0].Color.PaletteIndex == 5
     assert layer.Paint.ColorLine.ColorStop[1].StopOffset.value == 0.5
     assert layer.Paint.ColorLine.ColorStop[1].Color.PaletteIndex == 6
-    assert layer.Paint.ColorLine.ColorStop[1].Color.Transparency.value == 0.8
+    assert layer.Paint.ColorLine.ColorStop[1].Color.Alpha.value == 0.8
     assert layer.Paint.ColorLine.ColorStop[2].StopOffset.value == 1.0
     assert layer.Paint.ColorLine.ColorStop[2].Color.PaletteIndex == 7
-    assert layer.Paint.c0.x.value == 50
-    assert layer.Paint.c0.y.value == 50
-    assert layer.Paint.c1.x.value == 75
-    assert layer.Paint.c1.y.value == 75
+    assert layer.Paint.x0.value == 50
+    assert layer.Paint.y0.value == 50
     assert layer.Paint.r0.value == 30
+    assert layer.Paint.x1.value == 75
+    assert layer.Paint.y1.value == 75
     assert layer.Paint.r1.value == 10
 
 
@@ -472,10 +447,10 @@ def test_buildLayerV1Record_from_dict():
     assert layer.Paint.r0.value == 4
 
 
-def test_buildLayerV1Array():
+def test_buildLayerV1List():
     layers = [
         ("a", 1),
-        ("b", {"format": 1, "paletteIndex": 2, "transparency": 0.5}),
+        ("b", {"format": 1, "paletteIndex": 2, "alpha": 0.5}),
         (
             "c",
             {
@@ -492,7 +467,7 @@ def test_buildLayerV1Array():
                 "colorLine": {
                     "stops": [
                         {"offset": 0.0, "paletteIndex": 5},
-                        {"offset": 0.5, "paletteIndex": 6, "transparency": 0.8},
+                        {"offset": 0.5, "paletteIndex": 6, "alpha": 0.8},
                         {"offset": 1.0, "paletteIndex": 7},
                     ]
                 },
@@ -504,28 +479,28 @@ def test_buildLayerV1Array():
         ),
         builder.buildLayerV1Record("e", builder.buildSolidColorPaint(8)),
     ]
-    layersArray = builder.buildLayerV1Array(layers)
+    layers = builder.buildLayerV1List(layers)
 
-    assert layersArray.LayerCount == len(layersArray.LayerV1Record)
-    assert all(isinstance(l, ot.LayerV1Record) for l in layersArray.LayerV1Record)
+    assert layers.LayerCount == len(layers.LayerV1Record)
+    assert all(isinstance(l, ot.LayerV1Record) for l in layers.LayerV1Record)
 
 
 def test_buildBaseGlyphV1Record():
     baseGlyphRec = builder.buildBaseGlyphV1Record("a", [("b", 0), ("c", 1)])
     assert baseGlyphRec.BaseGlyph == "a"
-    assert isinstance(baseGlyphRec.LayerV1Array, ot.LayerV1Array)
+    assert isinstance(baseGlyphRec.LayerV1List, ot.LayerV1List)
 
-    layerArray = builder.buildLayerV1Array([("b", 0), ("c", 1)])
-    baseGlyphRec = builder.buildBaseGlyphV1Record("a", layerArray)
+    layers = builder.buildLayerV1List([("b", 0), ("c", 1)])
+    baseGlyphRec = builder.buildBaseGlyphV1Record("a", layers)
     assert baseGlyphRec.BaseGlyph == "a"
-    assert baseGlyphRec.LayerV1Array == layerArray
+    assert baseGlyphRec.LayerV1List == layers
 
 
-def test_buildBaseGlyphV1Array():
+def test_buildBaseGlyphV1List():
     colorGlyphs = {
         "a": [("b", 0), ("c", 1)],
         "d": [
-            ("e", {"format": 1, "paletteIndex": 2, "transparency": 0.8}),
+            ("e", {"format": 1, "paletteIndex": 2, "alpha": 0.8}),
             (
                 "f",
                 {
@@ -538,7 +513,7 @@ def test_buildBaseGlyphV1Array():
                 },
             ),
         ],
-        "g": builder.buildLayerV1Array([("h", 5)]),
+        "g": builder.buildLayerV1List([("h", 5)]),
     }
     glyphMap = {
         ".notdef": 0,
@@ -552,17 +527,17 @@ def test_buildBaseGlyphV1Array():
         "h": 8,
     }
 
-    baseGlyphArray = builder.buildBaseGlyphV1Array(colorGlyphs, glyphMap)
-    assert baseGlyphArray.BaseGlyphCount == len(colorGlyphs)
-    assert baseGlyphArray.BaseGlyphV1Record[0].BaseGlyph == "d"
-    assert baseGlyphArray.BaseGlyphV1Record[1].BaseGlyph == "a"
-    assert baseGlyphArray.BaseGlyphV1Record[2].BaseGlyph == "g"
+    baseGlyphs = builder.buildBaseGlyphV1List(colorGlyphs, glyphMap)
+    assert baseGlyphs.BaseGlyphCount == len(colorGlyphs)
+    assert baseGlyphs.BaseGlyphV1Record[0].BaseGlyph == "d"
+    assert baseGlyphs.BaseGlyphV1Record[1].BaseGlyph == "a"
+    assert baseGlyphs.BaseGlyphV1Record[2].BaseGlyph == "g"
 
-    baseGlyphArray = builder.buildBaseGlyphV1Array(colorGlyphs)
-    assert baseGlyphArray.BaseGlyphCount == len(colorGlyphs)
-    assert baseGlyphArray.BaseGlyphV1Record[0].BaseGlyph == "a"
-    assert baseGlyphArray.BaseGlyphV1Record[1].BaseGlyph == "d"
-    assert baseGlyphArray.BaseGlyphV1Record[2].BaseGlyph == "g"
+    baseGlyphs = builder.buildBaseGlyphV1List(colorGlyphs)
+    assert baseGlyphs.BaseGlyphCount == len(colorGlyphs)
+    assert baseGlyphs.BaseGlyphV1Record[0].BaseGlyph == "a"
+    assert baseGlyphs.BaseGlyphV1Record[1].BaseGlyph == "d"
+    assert baseGlyphs.BaseGlyphV1Record[2].BaseGlyph == "g"
 
 
 def test_splitSolidAndGradientGlyphs():
@@ -581,7 +556,7 @@ def test_splitSolidAndGradientGlyphs():
     assert not colorGlyphsV1
 
     colorGlyphs = {
-        "a": [("b", builder.buildSolidColorPaint(paletteIndex=0, transparency=1.0))]
+        "a": [("b", builder.buildSolidColorPaint(paletteIndex=0, alpha=0.0))]
     }
 
     colorGlyphsV0, colorGlyphsV1 = builder._splitSolidAndGradientGlyphs(colorGlyphs)
@@ -649,7 +624,7 @@ class BuildCOLRTest(object):
                             "r1": 2,
                         },
                     ),
-                    ("c", {"format": 1, "paletteIndex": 2, "transparency": 0.8}),
+                    ("c", {"format": 1, "paletteIndex": 2, "alpha": 0.8}),
                 ],
                 "d": [
                     (
@@ -706,19 +681,18 @@ class BuildCOLRTest(object):
         assert colr.table.LayerRecordCount == 2
         assert isinstance(colr.table.LayerRecordArray, ot.LayerRecordArray)
 
-        assert isinstance(colr.table.BaseGlyphV1Array, ot.BaseGlyphV1Array)
-        assert colr.table.BaseGlyphV1Array.BaseGlyphCount == 1
+        assert isinstance(colr.table.BaseGlyphV1List, ot.BaseGlyphV1List)
+        assert colr.table.BaseGlyphV1List.BaseGlyphCount == 1
         assert isinstance(
-            colr.table.BaseGlyphV1Array.BaseGlyphV1Record[0], ot.BaseGlyphV1Record
+            colr.table.BaseGlyphV1List.BaseGlyphV1Record[0], ot.BaseGlyphV1Record
         )
-        assert colr.table.BaseGlyphV1Array.BaseGlyphV1Record[0].BaseGlyph == "d"
+        assert colr.table.BaseGlyphV1List.BaseGlyphV1Record[0].BaseGlyph == "d"
         assert isinstance(
-            colr.table.BaseGlyphV1Array.BaseGlyphV1Record[0].LayerV1Array,
-            ot.LayerV1Array,
+            colr.table.BaseGlyphV1List.BaseGlyphV1Record[0].LayerV1List, ot.LayerV1List
         )
         assert (
-            colr.table.BaseGlyphV1Array.BaseGlyphV1Record[0]
-            .LayerV1Array.LayerV1Record[0]
+            colr.table.BaseGlyphV1List.BaseGlyphV1Record[0]
+            .LayerV1List.LayerV1Record[0]
             .LayerGlyph
             == "e"
         )

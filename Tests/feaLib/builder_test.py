@@ -69,10 +69,10 @@ class BuilderTest(unittest.TestCase):
         ZeroValue_SinglePos_horizontal ZeroValue_SinglePos_vertical
         ZeroValue_PairPos_horizontal ZeroValue_PairPos_vertical
         ZeroValue_ChainSinglePos_horizontal ZeroValue_ChainSinglePos_vertical
-        PairPosSubtable ChainSubstSubtable ChainPosSubtable LigatureSubtable
-        AlternateSubtable MultipleSubstSubtable SingleSubstSubtable
-        aalt_chain_contextual_subst AlternateChained MultipleLookupsPerGlyph
-        MultipleLookupsPerGlyph2
+        PairPosSubtable ChainSubstSubtable SubstSubtable ChainPosSubtable 
+        LigatureSubtable AlternateSubtable MultipleSubstSubtable 
+        SingleSubstSubtable aalt_chain_contextual_subst AlternateChained 
+        MultipleLookupsPerGlyph MultipleLookupsPerGlyph2
     """.split()
 
     def __init__(self, methodName):
@@ -225,7 +225,7 @@ class BuilderTest(unittest.TestCase):
 
     def test_pairPos_redefinition_warning(self):
         # https://github.com/fonttools/fonttools/issues/1147
-        logger = logging.getLogger("fontTools.feaLib.builder")
+        logger = logging.getLogger("fontTools.otlLib.builder")
         with CapturingLogHandler(logger, "DEBUG") as captor:
             # the pair "yacute semicolon" is redefined in the enum pos
             font = self.build(
@@ -571,7 +571,7 @@ class BuilderTest(unittest.TestCase):
         assert "GSUB" in font
 
     def test_unsupported_subtable_break(self):
-        logger = logging.getLogger("fontTools.feaLib.builder")
+        logger = logging.getLogger("fontTools.otlLib.builder")
         with CapturingLogHandler(logger, level='WARNING') as captor:
             self.build(
                 "feature test {"
@@ -597,6 +597,26 @@ class BuilderTest(unittest.TestCase):
         font = self.build(features, tables=["GSUB"])
         self.assertIn("GSUB", font)
         self.assertNotIn("name", font)
+
+    def test_singlePos_multiplePositionsForSameGlyph(self):
+        self.assertRaisesRegex(
+            FeatureLibError,
+            "Already defined different position for glyph",
+            self.build,
+            "lookup foo {"
+            "    pos A -45; "
+            "    pos A 45; "
+            "} foo;")
+
+    def test_pairPos_enumRuleOverridenBySinglePair_DEBUG(self):
+        logger = logging.getLogger("fontTools.otlLib.builder")
+        with CapturingLogHandler(logger, "DEBUG") as captor:
+            self.build(
+                "feature test {"
+                "    enum pos A [V Y] -80;"
+                "    pos A V -75;"
+                "} test;")
+        captor.assertRegex('Already defined position for pair A V at')
 
 
 def generate_feature_file_test(name):
