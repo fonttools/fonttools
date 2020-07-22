@@ -72,17 +72,20 @@ def addOpenTypeFeaturesFromString(font, features, filename=None, tables=None):
 
 class Builder(object):
 
-    supportedTables = frozenset(Tag(tag) for tag in [
-        "BASE",
-        "GDEF",
-        "GPOS",
-        "GSUB",
-        "OS/2",
-        "head",
-        "hhea",
-        "name",
-        "vhea",
-    ])
+    supportedTables = frozenset(
+        Tag(tag)
+        for tag in [
+            "BASE",
+            "GDEF",
+            "GPOS",
+            "GSUB",
+            "OS/2",
+            "head",
+            "hhea",
+            "name",
+            "vhea",
+        ]
+    )
 
     def __init__(self, font, featurefile):
         self.font = font
@@ -170,19 +173,20 @@ class Builder(object):
             self.build_name()
         if "OS/2" in tables:
             self.build_OS_2()
-        for tag in ('GPOS', 'GSUB'):
+        for tag in ("GPOS", "GSUB"):
             if tag not in tables:
                 continue
             table = self.makeTable(tag)
-            if (table.ScriptList.ScriptCount > 0 or
-                    table.FeatureList.FeatureCount > 0 or
-                    table.LookupList.LookupCount > 0):
+            if (
+                table.ScriptList.ScriptCount > 0
+                or table.FeatureList.FeatureCount > 0
+                or table.LookupList.LookupCount > 0
+            ):
                 fontTable = self.font[tag] = newTable(tag)
                 fontTable.table = table
             elif tag in self.font:
                 del self.font[tag]
-        if (any(tag in self.font for tag in ("GPOS", "GSUB")) and
-                "OS/2" in self.font):
+        if any(tag in self.font for tag in ("GPOS", "GSUB")) and "OS/2" in self.font:
             self.font["OS/2"].usMaxContext = maxCtxFont(self.font)
         if "GDEF" in tables:
             gdef = self.buildGDEF()
@@ -210,16 +214,19 @@ class Builder(object):
             self.features_.setdefault(key, []).append(lookup)
 
     def get_lookup_(self, location, builder_class):
-        if (self.cur_lookup_ and
-            type(self.cur_lookup_) == builder_class and
-            self.cur_lookup_.lookupflag == self.lookupflag_ and
-            self.cur_lookup_.markFilterSet ==
-                self.lookupflag_markFilterSet_):
+        if (
+            self.cur_lookup_
+            and type(self.cur_lookup_) == builder_class
+            and self.cur_lookup_.lookupflag == self.lookupflag_
+            and self.cur_lookup_.markFilterSet == self.lookupflag_markFilterSet_
+        ):
             return self.cur_lookup_
         if self.cur_lookup_name_ and self.cur_lookup_:
             raise FeatureLibError(
                 "Within a named lookup block, all rules must be of "
-                "the same lookup type and flag", location)
+                "the same lookup type and flag",
+                location,
+            )
         self.cur_lookup_ = builder_class(self.font, location)
         self.cur_lookup_.lookupflag = self.lookupflag_
         self.cur_lookup_.markFilterSet = self.lookupflag_markFilterSet_
@@ -230,8 +237,7 @@ class Builder(object):
         if self.cur_feature_name_:
             # We are starting a lookup rule inside a feature. This includes
             # lookup rules inside named lookups inside features.
-            self.add_lookup_to_feature_(self.cur_lookup_,
-                                        self.cur_feature_name_)
+            self.add_lookup_to_feature_(self.cur_lookup_, self.cur_feature_name_)
         return self.cur_lookup_
 
     def build_feature_aalt_(self):
@@ -239,14 +245,16 @@ class Builder(object):
             return
         alternates = {g: set(a) for g, a in self.aalt_alternates_.items()}
         for location, name in self.aalt_features_ + [(None, "aalt")]:
-            feature = [(script, lang, feature, lookups)
-                       for (script, lang, feature), lookups
-                       in self.features_.items()
-                       if feature == name]
+            feature = [
+                (script, lang, feature, lookups)
+                for (script, lang, feature), lookups in self.features_.items()
+                if feature == name
+            ]
             # "aalt" does not have to specify its own lookups, but it might.
             if not feature and name != "aalt":
-                raise FeatureLibError("Feature %s has not been defined" % name,
-                                      location)
+                raise FeatureLibError(
+                    "Feature %s has not been defined" % name, location
+                )
             for script, lang, feature, lookups in feature:
                 for lookuplist in lookups:
                     if not isinstance(lookuplist, list):
@@ -254,19 +262,23 @@ class Builder(object):
                     for lookup in lookuplist:
                         for glyph, alts in lookup.getAlternateGlyphs().items():
                             alternates.setdefault(glyph, set()).update(alts)
-        single = {glyph: list(repl)[0] for glyph, repl in alternates.items()
-                  if len(repl) == 1}
+        single = {
+            glyph: list(repl)[0] for glyph, repl in alternates.items() if len(repl) == 1
+        }
         # TODO: Figure out the glyph alternate ordering used by makeotf.
         # https://github.com/fonttools/fonttools/issues/836
-        multi = {glyph: sorted(repl, key=self.font.getGlyphID)
-                 for glyph, repl in alternates.items()
-                 if len(repl) > 1}
+        multi = {
+            glyph: sorted(repl, key=self.font.getGlyphID)
+            for glyph, repl in alternates.items()
+            if len(repl) > 1
+        }
         if not single and not multi:
             return
-        self.features_ = {(script, lang, feature): lookups
-                          for (script, lang, feature), lookups
-                          in self.features_.items()
-                          if feature != "aalt"}
+        self.features_ = {
+            (script, lang, feature): lookups
+            for (script, lang, feature), lookups in self.features_.items()
+            if feature != "aalt"
+        }
         old_lookups = self.lookups_
         self.lookups_ = []
         self.start_feature(self.aalt_location_, "aalt")
@@ -333,8 +345,12 @@ class Builder(object):
         params = None
         if tag == "size":
             params = otTables.FeatureParamsSize()
-            params.DesignSize, params.SubfamilyID, params.RangeStart, \
-                    params.RangeEnd = self.size_parameters_
+            (
+                params.DesignSize,
+                params.SubfamilyID,
+                params.RangeStart,
+                params.RangeEnd,
+            ) = self.size_parameters_
             if tag in self.featureNames_ids_:
                 params.SubfamilyNameID = self.featureNames_ids_[tag]
             else:
@@ -352,14 +368,18 @@ class Builder(object):
             params = otTables.FeatureParamsCharacterVariants()
             params.Format = 0
             params.FeatUILabelNameID = self.cv_parameters_ids_.get(
-                (tag, 'FeatUILabelNameID'), 0)
+                (tag, "FeatUILabelNameID"), 0
+            )
             params.FeatUITooltipTextNameID = self.cv_parameters_ids_.get(
-                (tag, 'FeatUITooltipTextNameID'), 0)
+                (tag, "FeatUITooltipTextNameID"), 0
+            )
             params.SampleTextNameID = self.cv_parameters_ids_.get(
-                (tag, 'SampleTextNameID'), 0)
+                (tag, "SampleTextNameID"), 0
+            )
             params.NumNamedParameters = self.cv_num_named_params_.get(tag, 0)
             params.FirstParamUILabelNameID = self.cv_parameters_ids_.get(
-                (tag, 'ParamUILabelNameID_0'), 0)
+                (tag, "ParamUILabelNameID_0"), 0
+            )
             params.CharCount = len(self.cv_characters_[tag])
             params.Character = self.cv_characters_[tag]
         return params
@@ -402,10 +422,18 @@ class Builder(object):
             table.fsType = self.os2_["fstype"]
         if "panose" in self.os2_:
             panose = getTableModule("OS/2").Panose()
-            panose.bFamilyType, panose.bSerifStyle, panose.bWeight,\
-                panose.bProportion, panose.bContrast, panose.bStrokeVariation,\
-                panose.bArmStyle, panose.bLetterForm, panose.bMidline, \
-                panose.bXHeight = self.os2_["panose"]
+            (
+                panose.bFamilyType,
+                panose.bSerifStyle,
+                panose.bWeight,
+                panose.bProportion,
+                panose.bContrast,
+                panose.bStrokeVariation,
+                panose.bArmStyle,
+                panose.bLetterForm,
+                panose.bMidline,
+                panose.bXHeight,
+            ) = self.os2_["panose"]
             table.panose = panose
         if "typoascender" in self.os2_:
             table.sTypoAscender = self.os2_["typoascender"]
@@ -441,28 +469,63 @@ class Builder(object):
         if "upperopsize" in self.os2_:
             table.usUpperOpticalPointSize = self.os2_["upperopsize"]
             version = 5
+
         def checkattr(table, attrs):
             for attr in attrs:
                 if not hasattr(table, attr):
                     setattr(table, attr, 0)
+
         table.version = max(version, table.version)
         # this only happens for unit tests
         if version >= 1:
             checkattr(table, ("ulCodePageRange1", "ulCodePageRange2"))
         if version >= 2:
-            checkattr(table, ("sxHeight", "sCapHeight", "usDefaultChar",
-                              "usBreakChar", "usMaxContext"))
+            checkattr(
+                table,
+                (
+                    "sxHeight",
+                    "sCapHeight",
+                    "usDefaultChar",
+                    "usBreakChar",
+                    "usMaxContext",
+                ),
+            )
         if version >= 5:
-            checkattr(table, ("usLowerOpticalPointSize",
-                              "usUpperOpticalPointSize"))
+            checkattr(table, ("usLowerOpticalPointSize", "usUpperOpticalPointSize"))
 
     def build_codepages_(self, pages):
         pages2bits = {
-            1252: 0,  1250: 1, 1251: 2, 1253: 3, 1254: 4, 1255: 5, 1256: 6,
-            1257: 7,  1258: 8, 874: 16, 932: 17, 936: 18, 949: 19, 950: 20,
-            1361: 21, 869: 48, 866: 49, 865: 50, 864: 51, 863: 52, 862: 53,
-            861:  54, 860: 55, 857: 56, 855: 57, 852: 58, 775: 59, 737: 60,
-            708:  61, 850: 62, 437: 63,
+            1252: 0,
+            1250: 1,
+            1251: 2,
+            1253: 3,
+            1254: 4,
+            1255: 5,
+            1256: 6,
+            1257: 7,
+            1258: 8,
+            874: 16,
+            932: 17,
+            936: 18,
+            949: 19,
+            950: 20,
+            1361: 21,
+            869: 48,
+            866: 49,
+            865: 50,
+            864: 51,
+            863: 52,
+            862: 53,
+            861: 54,
+            860: 55,
+            857: 56,
+            855: 57,
+            852: 58,
+            775: 59,
+            737: 60,
+            708: 61,
+            850: 62,
+            437: 63,
         }
         bits = [pages2bits[p] for p in pages if p in pages2bits]
         pages = []
@@ -518,16 +581,22 @@ class Builder(object):
     def buildGDEF(self):
         gdef = otTables.GDEF()
         gdef.GlyphClassDef = self.buildGDEFGlyphClassDef_()
-        gdef.AttachList = \
-            otl.buildAttachList(self.attachPoints_, self.glyphMap)
-        gdef.LigCaretList = \
-            otl.buildLigCaretList(self.ligCaretCoords_, self.ligCaretPoints_,
-                                  self.glyphMap)
+        gdef.AttachList = otl.buildAttachList(self.attachPoints_, self.glyphMap)
+        gdef.LigCaretList = otl.buildLigCaretList(
+            self.ligCaretCoords_, self.ligCaretPoints_, self.glyphMap
+        )
         gdef.MarkAttachClassDef = self.buildGDEFMarkAttachClassDef_()
         gdef.MarkGlyphSetsDef = self.buildGDEFMarkGlyphSetsDef_()
         gdef.Version = 0x00010002 if gdef.MarkGlyphSetsDef else 0x00010000
-        if any((gdef.GlyphClassDef, gdef.AttachList, gdef.LigCaretList,
-                gdef.MarkAttachClassDef, gdef.MarkGlyphSetsDef)):
+        if any(
+            (
+                gdef.GlyphClassDef,
+                gdef.AttachList,
+                gdef.LigCaretList,
+                gdef.MarkAttachClassDef,
+                gdef.MarkGlyphSetsDef,
+            )
+        ):
             result = newTable("GDEF")
             result.table = gdef
             return result
@@ -562,13 +631,14 @@ class Builder(object):
 
     def buildGDEFMarkGlyphSetsDef_(self):
         sets = []
-        for glyphs, id_ in sorted(self.markFilterSets_.items(),
-                                 key=lambda item: item[1]):
+        for glyphs, id_ in sorted(
+            self.markFilterSets_.items(), key=lambda item: item[1]
+        ):
             sets.append(glyphs)
         return otl.buildMarkGlyphSetsDef(sets, self.glyphMap)
 
     def buildLookups_(self, tag):
-        assert tag in ('GPOS', 'GSUB'), tag
+        assert tag in ("GPOS", "GSUB"), tag
         for lookup in self.lookups_:
             lookup.lookup_index = None
         lookups = []
@@ -606,10 +676,11 @@ class Builder(object):
             # l.lookup_index will be None when a lookup is not needed
             # for the table under construction. For example, substitution
             # rules will have no lookup_index while building GPOS tables.
-            lookup_indices = tuple([l.lookup_index for l in lookups
-                                    if l.lookup_index is not None])
+            lookup_indices = tuple(
+                [l.lookup_index for l in lookups if l.lookup_index is not None]
+            )
 
-            size_feature = (tag == "GPOS" and feature_tag == "size")
+            size_feature = tag == "GPOS" and feature_tag == "size"
             if len(lookup_indices) == 0 and not size_feature:
                 continue
 
@@ -620,14 +691,12 @@ class Builder(object):
                 frec = otTables.FeatureRecord()
                 frec.FeatureTag = feature_tag
                 frec.Feature = otTables.Feature()
-                frec.Feature.FeatureParams = self.buildFeatureParams(
-                                                feature_tag)
+                frec.Feature.FeatureParams = self.buildFeatureParams(feature_tag)
                 frec.Feature.LookupListIndex = list(lookup_indices)
                 frec.Feature.LookupCount = len(lookup_indices)
                 table.FeatureList.FeatureRecord.append(frec)
                 feature_indices[feature_key] = feature_index
-            scripts.setdefault(script, {}).setdefault(lang, []).append(
-                feature_index)
+            scripts.setdefault(script, {}).setdefault(lang, []).append(feature_index)
             if self.required_features_.get((script, lang)) == feature_tag:
                 required_feature_indices[(script, lang)] = feature_index
 
@@ -643,17 +712,16 @@ class Builder(object):
                 langrec.LangSys = otTables.LangSys()
                 langrec.LangSys.LookupOrder = None
 
-                req_feature_index = \
-                    required_feature_indices.get((script, lang))
+                req_feature_index = required_feature_indices.get((script, lang))
                 if req_feature_index is None:
                     langrec.LangSys.ReqFeatureIndex = 0xFFFF
                 else:
                     langrec.LangSys.ReqFeatureIndex = req_feature_index
 
-                langrec.LangSys.FeatureIndex = [i for i in feature_indices
-                                                if i != req_feature_index]
-                langrec.LangSys.FeatureCount = \
-                    len(langrec.LangSys.FeatureIndex)
+                langrec.LangSys.FeatureIndex = [
+                    i for i in feature_indices if i != req_feature_index
+                ]
+                langrec.LangSys.FeatureCount = len(langrec.LangSys.FeatureIndex)
 
                 if lang == "dflt":
                     srec.Script.DefaultLangSys = langrec.LangSys
@@ -670,24 +738,27 @@ class Builder(object):
 
     def add_language_system(self, location, script, language):
         # OpenType Feature File Specification, section 4.b.i
-        if (script == "DFLT" and language == "dflt" and
-                self.default_language_systems_):
+        if script == "DFLT" and language == "dflt" and self.default_language_systems_:
             raise FeatureLibError(
                 'If "languagesystem DFLT dflt" is present, it must be '
-                'the first of the languagesystem statements', location)
+                "the first of the languagesystem statements",
+                location,
+            )
         if script == "DFLT":
             if self.seen_non_DFLT_script_:
                 raise FeatureLibError(
                     'languagesystems using the "DFLT" script tag must '
                     "precede all other languagesystems",
-                    location
+                    location,
                 )
         else:
             self.seen_non_DFLT_script_ = True
         if (script, language) in self.default_language_systems_:
             raise FeatureLibError(
-                '"languagesystem %s %s" has already been specified' %
-                (script.strip(), language.strip()), location)
+                '"languagesystem %s %s" has already been specified'
+                % (script.strip(), language.strip()),
+                location,
+            )
         self.default_language_systems_.add((script, language))
 
     def get_default_language_systems_(self):
@@ -699,11 +770,11 @@ class Builder(object):
         if self.default_language_systems_:
             return frozenset(self.default_language_systems_)
         else:
-            return frozenset({('DFLT', 'dflt')})
+            return frozenset({("DFLT", "dflt")})
 
     def start_feature(self, location, name):
         self.language_systems = self.get_default_language_systems_()
-        self.script_ = 'DFLT'
+        self.script_ = "DFLT"
         self.cur_lookup_ = None
         self.cur_feature_name_ = name
         self.lookupflag_ = 0
@@ -722,12 +793,14 @@ class Builder(object):
     def start_lookup_block(self, location, name):
         if name in self.named_lookups_:
             raise FeatureLibError(
-                'Lookup "%s" has already been defined' % name, location)
+                'Lookup "%s" has already been defined' % name, location
+            )
         if self.cur_feature_name_ == "aalt":
             raise FeatureLibError(
                 "Lookup blocks cannot be placed inside 'aalt' features; "
                 "move it out, and then refer to it with a lookup statement",
-                location)
+                location,
+            )
         self.cur_lookup_name_ = name
         self.named_lookups_[name] = None
         self.cur_lookup_ = None
@@ -753,20 +826,24 @@ class Builder(object):
         self.fontRevision_ = revision
 
     def set_language(self, location, language, include_default, required):
-        assert(len(language) == 4)
-        if self.cur_feature_name_ in ('aalt', 'size'):
+        assert len(language) == 4
+        if self.cur_feature_name_ in ("aalt", "size"):
             raise FeatureLibError(
                 "Language statements are not allowed "
-                "within \"feature %s\"" % self.cur_feature_name_, location)
+                'within "feature %s"' % self.cur_feature_name_,
+                location,
+            )
         if self.cur_feature_name_ is None:
             raise FeatureLibError(
                 "Language statements are not allowed "
-                "within standalone lookup blocks", location)
+                "within standalone lookup blocks",
+                location,
+            )
         self.cur_lookup_ = None
 
         key = (self.script_, language, self.cur_feature_name_)
-        lookups = self.features_.get((key[0], 'dflt', key[2]))
-        if (language == 'dflt' or include_default) and lookups:
+        lookups = self.features_.get((key[0], "dflt", key[2]))
+        if (language == "dflt" or include_default) and lookups:
             self.features_[key] = lookups[:]
         else:
             self.features_[key] = []
@@ -777,10 +854,14 @@ class Builder(object):
             if key in self.required_features_:
                 raise FeatureLibError(
                     "Language %s (script %s) has already "
-                    "specified feature %s as its required feature" % (
-                        language.strip(), self.script_.strip(),
-                        self.required_features_[key].strip()),
-                    location)
+                    "specified feature %s as its required feature"
+                    % (
+                        language.strip(),
+                        self.script_.strip(),
+                        self.required_features_[key].strip(),
+                    ),
+                    location,
+                )
             self.required_features_[key] = self.cur_feature_name_
 
     def getMarkAttachClass_(self, location, glyphs):
@@ -796,7 +877,8 @@ class Builder(object):
                 raise FeatureLibError(
                     "Glyph %s already has been assigned "
                     "a MarkAttachmentType at %s" % (glyph, loc),
-                    location)
+                    location,
+                )
             self.markAttach_[glyph] = (id_, location)
         return id_
 
@@ -823,23 +905,25 @@ class Builder(object):
         self.lookupflag_ = value
 
     def set_script(self, location, script):
-        if self.cur_feature_name_ in ('aalt', 'size'):
+        if self.cur_feature_name_ in ("aalt", "size"):
             raise FeatureLibError(
                 "Script statements are not allowed "
-                "within \"feature %s\"" % self.cur_feature_name_, location)
+                'within "feature %s"' % self.cur_feature_name_,
+                location,
+            )
         if self.cur_feature_name_ is None:
             raise FeatureLibError(
-                "Script statements are not allowed "
-                "within standalone lookup blocks", location)
-        if self.language_systems == {(script, 'dflt')}:
+                "Script statements are not allowed " "within standalone lookup blocks",
+                location,
+            )
+        if self.language_systems == {(script, "dflt")}:
             # Nothing to do.
             return
         self.cur_lookup_ = None
         self.script_ = script
         self.lookupflag_ = 0
         self.lookupflag_markFilterSet_ = None
-        self.set_language(location, "dflt",
-                          include_default=True, required=False)
+        self.set_language(location, "dflt", include_default=True, required=False)
 
     def find_lookup_builders_(self, lookups):
         """Helper for building chain contextual substitutions
@@ -850,8 +934,9 @@ class Builder(object):
         lookup_builders = []
         for lookuplist in lookups:
             if lookuplist is not None:
-                lookup_builders.append([self.named_lookups_.get(l.name)
-                    for l in lookuplist])
+                lookup_builders.append(
+                    [self.named_lookups_.get(l.name) for l in lookuplist]
+                )
             else:
                 lookup_builders.append(None)
         return lookup_builders
@@ -862,17 +947,17 @@ class Builder(object):
 
     def add_chain_context_pos(self, location, prefix, glyphs, suffix, lookups):
         lookup = self.get_lookup_(location, ChainContextPosBuilder)
-        lookup.rules.append((prefix, glyphs, suffix,
-                            self.find_lookup_builders_(lookups)))
+        lookup.rules.append(
+            (prefix, glyphs, suffix, self.find_lookup_builders_(lookups))
+        )
 
-    def add_chain_context_subst(self, location,
-                                prefix, glyphs, suffix, lookups):
+    def add_chain_context_subst(self, location, prefix, glyphs, suffix, lookups):
         lookup = self.get_lookup_(location, ChainContextSubstBuilder)
-        lookup.rules.append((prefix, glyphs, suffix,
-                                     self.find_lookup_builders_(lookups)))
+        lookup.rules.append(
+            (prefix, glyphs, suffix, self.find_lookup_builders_(lookups))
+        )
 
-    def add_alternate_subst(self, location,
-                            prefix, glyph, suffix, replacement):
+    def add_alternate_subst(self, location, prefix, glyph, suffix, replacement):
         if self.cur_feature_name_ == "aalt":
             alts = self.aalt_alternates_.setdefault(glyph, set())
             alts.update(replacement)
@@ -885,15 +970,15 @@ class Builder(object):
             lookup = self.get_lookup_(location, AlternateSubstBuilder)
         if glyph in lookup.alternates:
             raise FeatureLibError(
-                'Already defined alternates for glyph "%s"' % glyph,
-                location)
+                'Already defined alternates for glyph "%s"' % glyph, location
+            )
         lookup.alternates[glyph] = replacement
 
     def add_feature_reference(self, location, featureName):
         if self.cur_feature_name_ != "aalt":
             raise FeatureLibError(
-                'Feature references are only allowed inside "feature aalt"',
-                location)
+                'Feature references are only allowed inside "feature aalt"', location
+            )
         self.aalt_features_.append((location, featureName))
 
     def add_featureName(self, tag):
@@ -919,19 +1004,23 @@ class Builder(object):
         else:
             self.base_horiz_axis_ = (bases, scripts)
 
-    def set_size_parameters(self, location, DesignSize, SubfamilyID,
-                            RangeStart, RangeEnd):
-        if self.cur_feature_name_ != 'size':
+    def set_size_parameters(
+        self, location, DesignSize, SubfamilyID, RangeStart, RangeEnd
+    ):
+        if self.cur_feature_name_ != "size":
             raise FeatureLibError(
                 "Parameters statements are not allowed "
-                "within \"feature %s\"" % self.cur_feature_name_, location)
+                'within "feature %s"' % self.cur_feature_name_,
+                location,
+            )
         self.size_parameters_ = [DesignSize, SubfamilyID, RangeStart, RangeEnd]
         for script, lang in self.language_systems:
             key = (script, lang, self.cur_feature_name_)
             self.features_.setdefault(key, [])
 
-    def add_ligature_subst(self, location,
-                           prefix, glyphs, suffix, replacement, forceChain):
+    def add_ligature_subst(
+        self, location, prefix, glyphs, suffix, replacement, forceChain
+    ):
         if prefix or suffix or forceChain:
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
             lookup = self.get_chained_lookup_(location, LigatureSubstBuilder)
@@ -947,8 +1036,9 @@ class Builder(object):
         for g in sorted(itertools.product(*glyphs)):
             lookup.ligatures[g] = replacement
 
-    def add_multiple_subst(self, location,
-                           prefix, glyph, suffix, replacements, forceChain=False):
+    def add_multiple_subst(
+        self, location, prefix, glyph, suffix, replacements, forceChain=False
+    ):
         if prefix or suffix or forceChain:
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
             sub = self.get_chained_lookup_(location, MultipleSubstBuilder)
@@ -959,19 +1049,19 @@ class Builder(object):
         if glyph in lookup.mapping:
             if replacements == lookup.mapping[glyph]:
                 log.info(
-                    'Removing duplicate multiple substitution from glyph'
+                    "Removing duplicate multiple substitution from glyph"
                     ' "%s" to %s%s',
-                    glyph, replacements,
-                    f' at {location}' if location else '',
+                    glyph,
+                    replacements,
+                    f" at {location}" if location else "",
                 )
             else:
                 raise FeatureLibError(
-                    'Already defined substitution for glyph "%s"' % glyph,
-                    location)
+                    'Already defined substitution for glyph "%s"' % glyph, location
+                )
         lookup.mapping[glyph] = replacements
 
-    def add_reverse_chain_single_subst(self, location, old_prefix,
-                                       old_suffix, mapping):
+    def add_reverse_chain_single_subst(self, location, old_prefix, old_suffix, mapping):
         lookup = self.get_lookup_(location, ReverseChainSingleSubstBuilder)
         lookup.rules.append((old_prefix, old_suffix, mapping))
 
@@ -989,15 +1079,18 @@ class Builder(object):
             if from_glyph in lookup.mapping:
                 if to_glyph == lookup.mapping[from_glyph]:
                     log.info(
-                        'Removing duplicate single substitution from glyph'
+                        "Removing duplicate single substitution from glyph"
                         ' "%s" to "%s" at %s',
-                        from_glyph, to_glyph, location,
+                        from_glyph,
+                        to_glyph,
+                        location,
                     )
                 else:
                     raise FeatureLibError(
-                        'Already defined rule for replacing glyph "%s" by "%s"' %
-                        (from_glyph, lookup.mapping[from_glyph]),
-                        location)
+                        'Already defined rule for replacing glyph "%s" by "%s"'
+                        % (from_glyph, lookup.mapping[from_glyph]),
+                        location,
+                    )
             lookup.mapping[from_glyph] = to_glyph
 
     def add_single_subst_chained_(self, location, prefix, suffix, mapping):
@@ -1012,9 +1105,11 @@ class Builder(object):
     def add_cursive_pos(self, location, glyphclass, entryAnchor, exitAnchor):
         lookup = self.get_lookup_(location, CursivePosBuilder)
         lookup.add_attachment(
-            location, glyphclass,
+            location,
+            glyphclass,
             makeOpenTypeAnchor(entryAnchor),
-            makeOpenTypeAnchor(exitAnchor))
+            makeOpenTypeAnchor(exitAnchor),
+        )
 
     def add_marks_(self, location, lookupBuilder, marks):
         """Helper for add_mark_{base,liga,mark}_pos."""
@@ -1023,15 +1118,15 @@ class Builder(object):
                 for mark in markClassDef.glyphs.glyphSet():
                     if mark not in lookupBuilder.marks:
                         otMarkAnchor = makeOpenTypeAnchor(markClassDef.anchor)
-                        lookupBuilder.marks[mark] = (
-                            markClass.name, otMarkAnchor)
+                        lookupBuilder.marks[mark] = (markClass.name, otMarkAnchor)
                     else:
                         existingMarkClass = lookupBuilder.marks[mark][0]
                         if markClass.name != existingMarkClass:
                             raise FeatureLibError(
-                                "Glyph %s cannot be in both @%s and @%s" % (
-                                    mark, existingMarkClass, markClass.name),
-                                location)
+                                "Glyph %s cannot be in both @%s and @%s"
+                                % (mark, existingMarkClass, markClass.name),
+                                location,
+                            )
 
     def add_mark_base_pos(self, location, bases, marks):
         builder = self.get_lookup_(location, MarkBasePosBuilder)
@@ -1039,8 +1134,7 @@ class Builder(object):
         for baseAnchor, markClass in marks:
             otBaseAnchor = makeOpenTypeAnchor(baseAnchor)
             for base in bases:
-                builder.bases.setdefault(base, {})[markClass.name] = (
-                    otBaseAnchor)
+                builder.bases.setdefault(base, {})[markClass.name] = otBaseAnchor
 
     def add_mark_lig_pos(self, location, ligatures, components):
         builder = self.get_lookup_(location, MarkLigPosBuilder)
@@ -1060,11 +1154,11 @@ class Builder(object):
         for baseAnchor, markClass in marks:
             otBaseAnchor = makeOpenTypeAnchor(baseAnchor)
             for baseMark in baseMarks:
-                builder.baseMarks.setdefault(baseMark, {})[markClass.name] = (
-                    otBaseAnchor)
+                builder.baseMarks.setdefault(baseMark, {})[
+                    markClass.name
+                ] = otBaseAnchor
 
-    def add_class_pair_pos(self, location, glyphclass1, value1,
-                           glyphclass2, value2):
+    def add_class_pair_pos(self, location, glyphclass1, value1, glyphclass2, value2):
         lookup = self.get_lookup_(location, PairPosBuilder)
         v1 = makeOpenTypeValueRecord(value1, pairPosContext=True)
         v2 = makeOpenTypeValueRecord(value2, pairPosContext=True)
@@ -1112,20 +1206,21 @@ class Builder(object):
                 sub.add_pos(location, glyph, otValue)
             subs.append(sub)
         assert len(pos) == len(subs), (pos, subs)
-        chain.rules.append(
-            (prefix, [g for g, v in pos], suffix, subs))
+        chain.rules.append((prefix, [g for g, v in pos], suffix, subs))
 
     def setGlyphClass_(self, location, glyph, glyphClass):
         oldClass, oldLocation = self.glyphClassDefs_.get(glyph, (None, None))
         if oldClass and oldClass != glyphClass:
             raise FeatureLibError(
-                "Glyph %s was assigned to a different class at %s" %
-                (glyph, oldLocation),
-                location)
+                "Glyph %s was assigned to a different class at %s"
+                % (glyph, oldLocation),
+                location,
+            )
         self.glyphClassDefs_[glyph] = (glyphClass, location)
 
-    def add_glyphClassDef(self, location, baseGlyphs, ligatureGlyphs,
-                          markGlyphs, componentGlyphs):
+    def add_glyphClassDef(
+        self, location, baseGlyphs, ligatureGlyphs, markGlyphs, componentGlyphs
+    ):
         for glyph in baseGlyphs:
             self.setGlyphClass_(location, glyph, 1)
         for glyph in ligatureGlyphs:
@@ -1145,8 +1240,7 @@ class Builder(object):
             if glyph not in self.ligCaretCoords_:
                 self.ligCaretCoords_[glyph] = carets
 
-    def add_name_record(self, location, nameID, platformID, platEncID,
-                        langID, string):
+    def add_name_record(self, location, nameID, platformID, platEncID, langID, string):
         self.names_.append([nameID, platformID, platEncID, langID, string])
 
     def add_os2_field(self, key, value):
@@ -1168,8 +1262,7 @@ def makeOpenTypeAnchor(anchor):
         deviceX = otl.buildDevice(dict(anchor.xDeviceTable))
     if anchor.yDeviceTable is not None:
         deviceY = otl.buildDevice(dict(anchor.yDeviceTable))
-    return otl.buildAnchor(anchor.x, anchor.y, anchor.contourpoint,
-                           deviceX, deviceY)
+    return otl.buildAnchor(anchor.x, anchor.y, anchor.contourpoint, deviceX, deviceY)
 
 
 _VALUEREC_ATTRS = {
@@ -1193,6 +1286,3 @@ def makeOpenTypeValueRecord(v, pairPosContext):
         vr = {"YAdvance": 0} if v.vertical else {"XAdvance": 0}
     valRec = otl.buildValue(vr)
     return valRec
-
-
-
