@@ -1398,28 +1398,28 @@ class ChainContextualRulesetTest(object):
         font.setGlyphOrder(["a","b","c","d","A","B","C","D","E"])
         sb = builder.ChainContextSubstBuilder(font, None)
         prefix, input_, suffix, lookups = [["a"], ["b"]], [["c"]], [], [None]
-        sb.rules.append((prefix, input_, suffix, lookups))
+        sb.rules.append(builder.ChainContextualRule(prefix, input_, suffix, lookups))
 
         prefix, input_, suffix, lookups = [["a"], ["d"]], [["c"]], [], [None]
-        sb.rules.append((prefix, input_, suffix, lookups))
+        sb.rules.append(builder.ChainContextualRule(prefix, input_, suffix, lookups))
 
         sb.add_subtable_break(None)
 
         # Second subtable has some glyph classes
         prefix, input_, suffix, lookups = [["A"]], [["E"]], [], [None]
-        sb.rules.append((prefix, input_, suffix, lookups))
+        sb.rules.append(builder.ChainContextualRule(prefix, input_, suffix, lookups))
         prefix, input_, suffix, lookups = [["A"]], [["C","D"]], [], [None]
-        sb.rules.append((prefix, input_, suffix, lookups))
+        sb.rules.append(builder.ChainContextualRule(prefix, input_, suffix, lookups))
         prefix, input_, suffix, lookups = [["A", "B"]], [["E"]], [], [None]
-        sb.rules.append((prefix, input_, suffix, lookups))
+        sb.rules.append(builder.ChainContextualRule(prefix, input_, suffix, lookups))
 
         sb.add_subtable_break(None)
 
         # Third subtable has no pre/post context
         prefix, input_, suffix, lookups = [], [["E"]], [], [None]
-        sb.rules.append((prefix, input_, suffix, lookups))
+        sb.rules.append(builder.ChainContextualRule(prefix, input_, suffix, lookups))
         prefix, input_, suffix, lookups = [], [["C","D"]], [], [None]
-        sb.rules.append((prefix, input_, suffix, lookups))
+        sb.rules.append(builder.ChainContextualRule(prefix, input_, suffix, lookups))
 
         rulesets = sb.rulesets()
         assert len(rulesets) == 3
