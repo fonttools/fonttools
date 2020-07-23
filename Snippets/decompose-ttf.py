@@ -14,7 +14,6 @@ if len(sys.argv) != 3:
 	print("usage: decompose-ttf.py fontfile.ttf outfile.ttf")
 	sys.exit(1)
 
-
 src = sys.argv[1]
 dst = sys.argv[2]
 
