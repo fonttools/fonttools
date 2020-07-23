@@ -1,3 +1,9 @@
+#! /usr/bin/env python3
+
+# Example script to decompose the composite glyphs in a TTF into
+# non-composite outlines.
+
+
 import sys
 from fontTools.ttLib import TTFont
 from fontTools.pens.recordingPen import DecomposingRecordingPen
