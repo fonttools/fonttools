@@ -55,6 +55,6 @@ class HashPointPen(AbstractPointPen):
     ):
         tr = "".join([f"{t:+}" for t in transformation])
         self.data.append(f"[({tr})")
-        tpen = TransformPointPen(self, transformation)
+        tpen = TransformPointPen(self, Identity)
         self.glyphset[baseGlyphName].drawPoints(tpen)
         self.data.append("]")
