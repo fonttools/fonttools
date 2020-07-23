@@ -107,3 +107,15 @@ class HashPointPenTest(object):
         glyph.drawPoints(pen2)
 
         assert pen.hash != pen2.hash
+
+    def test_glyphVsComposite(self):
+        # If a glyph contains a component, the decomposed glyph should still
+        # compare false
+        pen = HashPointPen(_TestGlyph(), {"a": _TestGlyph()})
+        pen.addComponent("a", Identity)
+
+        pen2 = HashPointPen(_TestGlyph())
+        glyph = _TestGlyph()
+        glyph.drawPoints(pen2)
+
+        assert pen.hash != pen2.hash
