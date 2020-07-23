@@ -19,15 +19,12 @@ class HashPointPen(AbstractPointPen):
         self.width = round(getattr(glyph, "width", 0), 9)
         self.data = ["w%s" % self.width]
 
-    def getHash(self):
+    @property
+    def hash(self):
         data = "".join(self.data)
         if len(data) >= 128:
             data = hashlib.sha512(data.encode("ascii")).hexdigest()
         return data
-
-    @property
-    def hash(self):
-        return self.getHash()
 
     def beginPath(self, identifier=None, **kwargs):
         pass
