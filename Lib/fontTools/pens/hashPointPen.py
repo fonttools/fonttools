@@ -53,6 +53,6 @@ class HashPointPen(AbstractPointPen):
         self, baseGlyphName, transformation, identifier=None, **kwargs
     ):
         tr = "".join([f"{t:+}" for t in transformation])
-        self.data.append(f"[({tr})")
+        self.data.append("[")
         self.glyphset[baseGlyphName].drawPoints(self)
-        self.data.append("]")
+        self.data.append(f"({tr})]")

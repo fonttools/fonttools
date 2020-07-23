@@ -57,7 +57,7 @@ class HashPointPenTest(object):
     def test_addComponent(self):
         pen = HashPointPen(_TestGlyph(), {"a": _TestGlyph()})
         pen.addComponent("a", (2, 0, 0, 3, -10, 5))
-        assert pen.hash == "w500[(+2+0+0+3-10+5)l0+0l10+110o50+75o60+50c50+0|]"
+        assert pen.hash == "w500[l0+0l10+110o50+75o60+50c50+0|(+2+0+0+3-10+5)]"
 
     def test_outlineAndComponent(self):
         pen = HashPointPen(_TestGlyph(), {"a": _TestGlyph()})
@@ -67,7 +67,7 @@ class HashPointPenTest(object):
 
         assert (
             pen.hash
-            == "w500l0+0l10+110o50+75o60+50c50+0|[(+2+0+0+2-10+5)l0+0l10+110o50+75o60+50c50+0|]"
+            == "w500l0+0l10+110o50+75o60+50c50+0|[l0+0l10+110o50+75o60+50c50+0|(+2+0+0+2-10+5)]"
         )
 
     def test_addComponent_missing_raises(self):
