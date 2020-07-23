@@ -8,7 +8,7 @@ from fontTools.pens.transformPen import TransformPointPen
 class HashPointPen(AbstractPointPen):
     """
     This pen can be used to check if a glyph's contents (outlines plus
-    components) has changed.
+    components) have changed.
 
     Components are decomposed, because that is what happens in TrueType
     hinting.
