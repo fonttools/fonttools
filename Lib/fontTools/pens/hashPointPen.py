@@ -3,7 +3,6 @@ import hashlib
 
 from fontTools.misc.transform import Identity
 from fontTools.pens.pointPen import AbstractPointPen
-from fontTools.pens.transformPen import TransformPointPen
 
 
 class HashPointPen(AbstractPointPen):
@@ -55,6 +54,5 @@ class HashPointPen(AbstractPointPen):
     ):
         tr = "".join([f"{t:+}" for t in transformation])
         self.data.append(f"[({tr})")
-        tpen = TransformPointPen(self, Identity)
-        self.glyphset[baseGlyphName].drawPoints(tpen)
+        self.glyphset[baseGlyphName].drawPoints(self)
         self.data.append("]")
