@@ -53,11 +53,8 @@ class HashPointPen(AbstractPointPen):
     def addComponent(
         self, baseGlyphName, transformation, identifier=None, **kwargs
     ):
-        if transformation == self.DEFAULT_TRANSFORM:
-            self.data.append(f"[{baseGlyphName}")
-        else:
-            tr = "".join([f"{t:+}" for t in transformation])
-            self.data.append(f"[{baseGlyphName}({tr})")
+        tr = "".join([f"{t:+}" for t in transformation])
+        self.data.append(f"[({tr})")
         tpen = TransformPointPen(self, transformation)
         self.glyphset[baseGlyphName].drawPoints(tpen)
         self.data.append("]")
