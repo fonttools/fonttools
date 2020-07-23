@@ -1,3 +1,4 @@
+from fontTools.misc.transform import Identity
 from fontTools.pens.hashPointPen import HashPointPen
 import pytest
 
@@ -56,7 +57,7 @@ class HashPointPenTest(object):
     def test_addComponent(self):
         pen = HashPointPen(_TestGlyph(), {"a": _TestGlyph()})
         pen.addComponent("a", (2, 0, 0, 3, -10, 5))
-        assert pen.hash == "w500l-10+5l10+335o90+230o110+155c90+5|"
+        assert pen.hash == "w500[a(+2+0+0+3-10+5)l-10+5l10+335o90+230o110+155c90+5|]"
 
     def test_outlineAndComponent(self):
         pen = HashPointPen(_TestGlyph(), {"a": _TestGlyph()})
@@ -65,14 +66,14 @@ class HashPointPenTest(object):
         pen.addComponent("a", (2, 0, 0, 2, -10, 5))
 
         assert (
-            pen.getHash()
-            == "w500l0+0l10+110o50+75o60+50c50+0|l-10+5l10+225o90+155o110+105c90+5|"
+            pen.hash
+            == "w500l0+0l10+110o50+75o60+50c50+0|[a(+2+0+0+2-10+5)l-10+5l10+225o90+155o110+105c90+5|]"
         )
 
     def test_addComponent_missing_raises(self):
         pen = HashPointPen(_TestGlyph(), dict())
         with pytest.raises(KeyError) as excinfo:
-            pen.addComponent("a", (1, 0, 0, 1, 0, 0))
+            pen.addComponent("a", Identity)
         assert excinfo.value.args[0] == "a"
 
     def test_similarGlyphs(self):
