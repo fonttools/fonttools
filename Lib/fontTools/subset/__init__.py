@@ -1635,7 +1635,7 @@ def prune_post_subset(self, font, options):
 	#	table.ScriptList = None
 
 	if hasattr(table, 'FeatureVariations'):
-		if not (table.FeatureList and table.FeatureVariations.FeatureVariationRecord):
+		if not (table.FeatureList and hasattr(table.FeatureVariations, 'FeatureVariationRecord') and table.FeatureVariations.FeatureVariationRecord):
 			table.FeatureVariations = None
 
 		if not table.FeatureVariations and table.Version == 0x00010001:
