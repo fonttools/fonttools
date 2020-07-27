@@ -919,7 +919,7 @@ class BaseDocReader(LogMixin):
                 self.log.warning("Location with undefined axis: \"%s\".", dimName)
                 continue
             xValue = yValue = None
-            self.validateAttributes(dimensionElement, { "xvalue": float })
+            self.validateAttributes(dimensionElement, {"xvalue": float})
             xValue = float(dimensionElement.attrib.get('xvalue'))
             try:
                 yValue = dimensionElement.attrib.get('yvalue')
