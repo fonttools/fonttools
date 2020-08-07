@@ -107,7 +107,7 @@
       </FeatureRecord>
     </FeatureList>
     <LookupList>
-      <!-- LookupCount=24 -->
+      <!-- LookupCount=26 -->
       <Lookup index="0">
         <LookupType value="1"/>
         <LookupFlag value="1"/><!-- rightToLeft -->
@@ -398,6 +398,31 @@
           </Coverage>
           <ValueFormat value="4"/>
           <Value XAdvance="2"/>
+        </SinglePos>
+      </Lookup>
+      <Lookup index="24">
+        <LookupType value="1"/>
+        <LookupFlag value="16"/><!-- useMarkFilteringSet -->
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="Y"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
+        </SinglePos>
+        <MarkFilteringSet value="0"/>
+      </Lookup>
+      <Lookup index="25">
+        <LookupType value="1"/>
+        <LookupFlag value="256"/><!-- markAttachmentType[1] -->
+        <!-- SubTableCount=1 -->
+        <SinglePos index="0" Format="1">
+          <Coverage>
+            <Glyph value="Z"/>
+          </Coverage>
+          <ValueFormat value="4"/>
+          <Value XAdvance="1"/>
         </SinglePos>
       </Lookup>
     </LookupList>

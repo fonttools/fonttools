@@ -408,19 +408,6 @@ class Parser(object):
         self.expect_symbol_("]")
         return glyphs
 
-    def parse_class_name_(self):
-        # Parses named class - either a glyph class or mark class.
-        name = self.expect_class_name_()
-        gc = self.glyphclasses_.resolve(name)
-        if gc is None:
-            raise FeatureLibError(
-                "Unknown glyph class @%s" % name, self.cur_token_location_
-            )
-        if isinstance(gc, self.ast.MarkClass):
-            return self.ast.MarkClassName(gc, location=self.cur_token_location_)
-        else:
-            return self.ast.GlyphClassName(gc, location=self.cur_token_location_)
-
     def parse_glyph_pattern_(self, vertical):
         # Parses a glyph pattern, including lookups and context, e.g.::
         #
@@ -633,10 +620,10 @@ class Parser(object):
             seen.add(self.next_token_)
             if self.next_token_ == "MarkAttachmentType":
                 self.expect_keyword_("MarkAttachmentType")
-                markAttachment = self.parse_class_name_()
+                markAttachment = self.parse_glyphclass_(accept_glyphname=False)
             elif self.next_token_ == "UseMarkFilteringSet":
                 self.expect_keyword_("UseMarkFilteringSet")
-                markFilteringSet = self.parse_class_name_()
+                markFilteringSet = self.parse_glyphclass_(accept_glyphname=False)
             elif self.next_token_ in flags:
                 value_seen = True
                 value = value | flags[self.expect_name_()]
