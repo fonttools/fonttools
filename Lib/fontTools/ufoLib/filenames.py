@@ -1,6 +1,6 @@
 """
 User name to file name conversion.
-This was taken form the UFO 3 spec.
+This was taken from the UFO 3 spec.
 """
 
 illegalCharacters = r"\" * + / : < > ? [ \ ] | \0".split(" ")
