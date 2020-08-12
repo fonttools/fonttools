@@ -519,14 +519,14 @@
     <AxisValueArray>
       <AxisValue index="0" Format="3">
         <AxisIndex value="0"/>
-        <Flags value="2"/>
+        <Flags value="2"/>  <!-- ElidableAxisValueName -->
         <ValueNameID value="261"/>  <!-- Regular -->
         <Value value="400.0"/>
         <LinkedValue value="700.0"/>
       </AxisValue>
       <AxisValue index="1" Format="2">
         <AxisIndex value="1"/>
-        <Flags value="2"/>
+        <Flags value="2"/>  <!-- ElidableAxisValueName -->
         <ValueNameID value="261"/>  <!-- Regular -->
         <NominalValue value="100.0"/>
         <RangeMinValue value="93.75"/>

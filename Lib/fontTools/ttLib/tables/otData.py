@@ -872,7 +872,7 @@ otData = [
 	('AxisValueFormat1', [
 		('uint16', 'Format', None, None, 'Format, = 1'),
 		('uint16', 'AxisIndex', None, None, 'Index into the axis record array identifying the axis of design variation to which the axis value record applies.'),
-		('uint16', 'Flags', None, None, 'Flags.'),
+		('STATFlags', 'Flags', None, None, 'Flags.'),
 		('NameID', 'ValueNameID', None, None, ''),
 		('Fixed', 'Value', None, None, ''),
 	]),
@@ -880,7 +880,7 @@ otData = [
 	('AxisValueFormat2', [
 		('uint16', 'Format', None, None, 'Format, = 2'),
 		('uint16', 'AxisIndex', None, None, 'Index into the axis record array identifying the axis of design variation to which the axis value record applies.'),
-		('uint16', 'Flags', None, None, 'Flags.'),
+		('STATFlags', 'Flags', None, None, 'Flags.'),
 		('NameID', 'ValueNameID', None, None, ''),
 		('Fixed', 'NominalValue', None, None, ''),
 		('Fixed', 'RangeMinValue', None, None, ''),
@@ -890,7 +890,7 @@ otData = [
 	('AxisValueFormat3', [
 		('uint16', 'Format', None, None, 'Format, = 3'),
 		('uint16', 'AxisIndex', None, None, 'Index into the axis record array identifying the axis of design variation to which the axis value record applies.'),
-		('uint16', 'Flags', None, None, 'Flags.'),
+		('STATFlags', 'Flags', None, None, 'Flags.'),
 		('NameID', 'ValueNameID', None, None, ''),
 		('Fixed', 'Value', None, None, ''),
 		('Fixed', 'LinkedValue', None, None, ''),
@@ -899,7 +899,7 @@ otData = [
 	('AxisValueFormat4', [
 		('uint16', 'Format', None, None, 'Format, = 4'),
 		('uint16', 'AxisCount', None, None, 'The total number of axes contributing to this axis-values combination.'),
-		('uint16', 'Flags', None, None, 'Flags.'),
+		('STATFlags', 'Flags', None, None, 'Flags.'),
 		('NameID', 'ValueNameID', None, None, ''),
 		('struct', 'AxisValueRecord', 'AxisCount', 0, 'Array of AxisValue records that provide the combination of axis values, one for each contributing axis. '),
 	]),
