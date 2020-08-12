@@ -81,7 +81,7 @@ Methods
    location. Returns None if there isn't one.
 -  ``normalizeLocation(aLocation)``: return a dict with normalized axis values.
 -  ``normalize()``: normalize the geometry of this designspace: scale all the
-  locations of all masters and instances to the ``-1 - 0 - 1`` value.
+   locations of all masters and instances to the ``-1 - 0 - 1`` value.
 -  ``loadSourceFonts()``: Ensure SourceDescriptor.font attributes are loaded,
    and return list of fonts.
 -  ``tostring(encoding=None)``: Returns the designspace as a string. Default 
@@ -297,6 +297,8 @@ RuleDescriptor object
 -  Each condition is a dict with ``name``, ``minimum`` and ``maximum`` keys.
 -  ``subs``: list of substitutions
 -  Each substitution is stored as tuples of glyphnames, e.g. ("a", "a.alt").
+-  Note: By default, rules are applied *before* text shaping/OpenType layout. See 
+   `5.0 rules element`_.
 
 Evaluating rules
 ----------------
@@ -849,6 +851,7 @@ glyphname pairs: the glyphs that need to be substituted. For a rule to be trigge
 **only one** of the conditionsets needs to be true, ``OR``. Within a conditionset 
 **all** conditions need to be true, ``AND``.
 
+.. attributes-11:
 
 Attributes
 ----------
