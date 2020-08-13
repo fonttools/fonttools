@@ -312,8 +312,8 @@ Evaluating rules
 
     r1 = RuleDescriptor()
     r1.name = "unique.rule.name"
-    r1.conditionsSets.append([dict(name="weight", minimum=-10, maximum=10), dict(...)])
-    r1.conditionsSets.append([dict(...), dict(...)])
+    r1.conditionSets.append([dict(name="weight", minimum=-10, maximum=10), dict(...)])
+    r1.conditionSets.append([dict(...), dict(...)])
     r1.subs.append(("a", "a.alt"))
 
 
