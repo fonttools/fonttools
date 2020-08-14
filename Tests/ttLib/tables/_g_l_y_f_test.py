@@ -472,29 +472,27 @@ class GlyphTest:
         )
 
     def test_getCompositeMaxpValues(self):
-        glyphTable = newTable("glyf")
-        glyphTable.glyphs = {}
-        glyphTable.glyphOrder = ["zero.numr", "zero.dnom", "percent", "perthousand", "fraction"]
-        pen = TTGlyphPen(glyphTable)  # empty non-composite glyph
-        glyphTable["fraction"] = pen.glyph()
-        glyphTable["zero.numr"] = pen.glyph()
-        pen = TTGlyphPen(glyphTable)
+        glyphSet = {}
+        pen = TTGlyphPen(glyphSet)  # empty non-composite glyph
+        glyphSet["fraction"] = pen.glyph()
+        glyphSet["zero.numr"] = pen.glyph()
+        pen = TTGlyphPen(glyphSet)
         pen.addComponent("zero.numr", (1, 0, 0, 1, 0, 0))
-        glyphTable["zero.dnom"] = pen.glyph()
-        pen = TTGlyphPen(glyphTable)
+        glyphSet["zero.dnom"] = pen.glyph()
+        pen = TTGlyphPen(glyphSet)
         pen.addComponent("zero.numr", (1, 0, 0, 1, 0, 0))
         pen.addComponent("fraction", (1, 0, 0, 1, 0, 0))
         pen.addComponent("zero.dnom", (1, 0, 0, 1, 0, 0))
-        glyphTable["percent"] = pen.glyph()
-        pen = TTGlyphPen(glyphTable)
+        glyphSet["percent"] = pen.glyph()
+        pen = TTGlyphPen(glyphSet)
         pen.addComponent("zero.numr", (1, 0, 0, 1, 0, 0))
         pen.addComponent("fraction", (1, 0, 0, 1, 0, 0))
         pen.addComponent("zero.dnom", (1, 0, 0, 1, 0, 0))
         pen.addComponent("zero.dnom", (1, 0, 0, 1, 0, 0))
-        glyphTable["perthousand"] = pen.glyph()
-        assert glyphTable["zero.dnom"].getCompositeMaxpValues(glyphTable)[2] == 1
-        assert glyphTable["percent"].getCompositeMaxpValues(glyphTable)[2] == 2
-        assert glyphTable["perthousand"].getCompositeMaxpValues(glyphTable)[2] == 2
+        glyphSet["perthousand"] = pen.glyph()
+        assert glyphSet["zero.dnom"].getCompositeMaxpValues(glyphSet)[2] == 1
+        assert glyphSet["percent"].getCompositeMaxpValues(glyphSet)[2] == 2
+        assert glyphSet["perthousand"].getCompositeMaxpValues(glyphSet)[2] == 2
 
 
 class GlyphComponentTest:
