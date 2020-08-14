@@ -475,13 +475,7 @@ class GlyphTest:
         glyphTable = newTable("glyf")
         glyphTable.glyphs = {}
         glyphTable.glyphOrder = ["zero.numr", "zero.dnom", "percent", "perthousand", "fraction"]
-        pen = TTGlyphPen(glyphTable)
-        pen.moveTo((0, 0))
-        pen.lineTo((100, 0))
-        pen.lineTo((100, 100))
-        pen.lineTo((0, 100))
-        pen.closePath()
-        # simple contour glyph
+        pen = TTGlyphPen(glyphTable)  # empty non-composite glyph
         glyphTable["fraction"] = pen.glyph()
         glyphTable["zero.numr"] = pen.glyph()
         pen = TTGlyphPen(glyphTable)
