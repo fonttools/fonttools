@@ -472,6 +472,7 @@ class GlyphTest:
         )
 
     def test_getCompositeMaxpValues(self):
+        # https://github.com/fonttools/fonttools/issues/2044
         glyphSet = {}
         pen = TTGlyphPen(glyphSet)  # empty non-composite glyph
         glyphSet["fraction"] = pen.glyph()
