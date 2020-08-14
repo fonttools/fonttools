@@ -471,6 +471,37 @@ class GlyphTest:
             ]
         )
 
+    def test_getCompositeMaxpValues(self):
+        glyphTable = newTable("glyf")
+        glyphTable.glyphs = {}
+        glyphTable.glyphOrder = ["zero.numr", "zero.dnom", "percent", "perthousand", "fraction"]
+        pen = TTGlyphPen(glyphTable)
+        pen.moveTo((0, 0))
+        pen.lineTo((100, 0))
+        pen.lineTo((100, 100))
+        pen.lineTo((0, 100))
+        pen.closePath()
+        # simple contour glyph
+        glyphTable["fraction"] = pen.glyph()
+        glyphTable["zero.numr"] = pen.glyph()
+        pen = TTGlyphPen(glyphTable)
+        pen.addComponent("zero.numr", (1, 0, 0, 1, 0, 0))
+        glyphTable["zero.dnom"] = pen.glyph()
+        pen = TTGlyphPen(glyphTable)
+        pen.addComponent("zero.numr", (1, 0, 0, 1, 0, 0))
+        pen.addComponent("fraction", (1, 0, 0, 1, 0, 0))
+        pen.addComponent("zero.dnom", (1, 0, 0, 1, 0, 0))
+        glyphTable["percent"] = pen.glyph()
+        pen = TTGlyphPen(glyphTable)
+        pen.addComponent("zero.numr", (1, 0, 0, 1, 0, 0))
+        pen.addComponent("fraction", (1, 0, 0, 1, 0, 0))
+        pen.addComponent("zero.dnom", (1, 0, 0, 1, 0, 0))
+        pen.addComponent("zero.dnom", (1, 0, 0, 1, 0, 0))
+        glyphTable["perthousand"] = pen.glyph()
+        assert glyphTable["zero.dnom"].getCompositeMaxpValues(glyphTable)[2] == 1
+        assert glyphTable["percent"].getCompositeMaxpValues(glyphTable)[2] == 2
+        assert glyphTable["perthousand"].getCompositeMaxpValues(glyphTable)[2] == 2
+
 
 class GlyphComponentTest:
 
