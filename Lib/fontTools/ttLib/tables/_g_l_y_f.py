@@ -650,6 +650,7 @@ class Glyph(object):
 		assert self.isComposite()
 		nContours = 0
 		nPoints = 0
+		initialMaxComponentDepth = maxComponentDepth
 		for compo in self.components:
 			baseGlyph = glyfTable[compo.glyphName]
 			if baseGlyph.numberOfContours == 0:
@@ -657,8 +658,9 @@ class Glyph(object):
 			elif baseGlyph.numberOfContours > 0:
 				nP, nC = baseGlyph.getMaxpValues()
 			else:
-				nP, nC, maxComponentDepth = baseGlyph.getCompositeMaxpValues(
-						glyfTable, maxComponentDepth + 1)
+				nP, nC, componentDepth = baseGlyph.getCompositeMaxpValues(
+						glyfTable, initialMaxComponentDepth + 1)
+				maxComponentDepth = max(maxComponentDepth, componentDepth)
 			nPoints = nPoints + nP
 			nContours = nContours + nC
 		return CompositeMaxpValues(nPoints, nContours, maxComponentDepth)
