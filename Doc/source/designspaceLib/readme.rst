@@ -297,8 +297,7 @@ RuleDescriptor object
 -  Each condition is a dict with ``name``, ``minimum`` and ``maximum`` keys.
 -  ``subs``: list of substitutions
 -  Each substitution is stored as tuples of glyphnames, e.g. ("a", "a.alt").
--  Note: By default, rules are applied *before* text shaping/OpenType layout. See 
-   `5.0 rules element`_.
+-  Note: By default, rules are applied first, before other text shaping/OpenType layout, as they are part of the `Required Variation Alternates OpenType feature <https://docs.microsoft.com/en-us/typography/opentype/spec/features_pt#-tag-rvrn>`_. See `5.0 rules element`_ § Attributes.
 
 Evaluating rules
 ----------------
@@ -857,7 +856,8 @@ Attributes
 ----------
 
 -  ``processing``: flag, optional. Valid values are [``first``, ``last``]. This flag indicates whether the substitution rules should be applied before or after other glyph substitution features.
--  If no ``processing`` attribute is given, interpret as ``first``.
+-  If no ``processing`` attribute is given, interpret as ``first``, and put the substitution rule in the `rvrn` feature.
+-  If ``processing`` is ``last``, put it in `rclt`.
 
 .. 51-rule-element:
 
