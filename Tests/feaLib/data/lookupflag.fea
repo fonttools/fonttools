@@ -147,3 +147,13 @@ feature test {
         pos two 2;
     } X;
 } test;
+
+lookup Y {
+    lookupflag UseMarkFilteringSet [acute grave macron];
+    pos Y 1;
+} Y;
+
+lookup Z {
+    lookupflag MarkAttachmentType [acute grave macron];
+    pos Z 1;
+} Z;
