@@ -1,3 +1,14 @@
+- [feaLib] Allow anonymous classes in LookupFlags definitions (#2037).
+- [Docs] Better document DesignSpace rules processing order (#2041).
+- [ttLib] Fixed 21-year old bug in ``maxp.maxComponentDepth`` calculation (#2044,
+  #2045).
+- [varLib.models] Fixed misspelled argument name in CLI entry point (81d0042a).
+- [subset] When subsetting GSUB v1.1, fixed TypeError by checking whether the
+  optional FeatureVariations table is present (e63ecc5b).
+- [Snippets] Added snippet to show how to decompose glyphs in a TTF (#2030).
+- [otlLib] Generate GSUB type 5 and GPOS type 7 contextual lookups where appropriate
+  (#2016).
+
 4.13.0 (released 2020-07-10)
 ----------------------------
 
