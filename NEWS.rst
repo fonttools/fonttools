@@ -1,3 +1,6 @@
+4.14.0 (released 2020-08-19)
+----------------------------
+
 - [feaLib] Allow anonymous classes in LookupFlags definitions (#2037).
 - [Docs] Better document DesignSpace rules processing order (#2041).
 - [ttLib] Fixed 21-year old bug in ``maxp.maxComponentDepth`` calculation (#2044,
