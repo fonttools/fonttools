@@ -360,6 +360,12 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
 		for i in fvar.instances:
 			exclude.add(i.subfamilyNameID)
 			exclude.add(i.postscriptNameID)
+		if 'STAT' in varfont:
+			stat = varfont['STAT'].table
+			if stat.DesignAxisRecord:
+				exclude.update(a.AxisNameID for a in stat.DesignAxisRecord.Axis)
+			if stat.AxisValueArray:
+				exclude.update(v.ValueNameID for v in stat.AxisValueArray.AxisValue)
 		if 'ltag' in varfont:
 			# Drop the whole 'ltag' table if all its language tags are referenced by
 			# name records to be pruned.
