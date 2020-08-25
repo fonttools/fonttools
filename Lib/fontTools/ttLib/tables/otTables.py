@@ -1211,11 +1211,10 @@ class LookupList(BaseTable):
 		raise ValueError
 
 	def toXML2(self, xmlWriter, font):
-		if "Debg" not in font:
+		if "Debg" not in font or "io.github.fonttools.feaLib" not in font["Debg"].data:
 			return super().toXML2(xmlWriter, font)
-		import json
 		table = self.table()
-		s = font["Debg"].data[table]
+		s = font["Debg"].data["io.github.fonttools.feaLib"][table]
 		for conv in self.getConverters():
 			if conv.repeat:
 				value = getattr(self, conv.name, [])
