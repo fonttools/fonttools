@@ -1187,6 +1187,53 @@ class COLR(BaseTable):
 		}
 
 
+class LookupList(BaseTable):
+	def table(self):
+		for l in self.Lookup:
+			for st in l.SubTable:
+				if isinstance(st, SingleSubst): return "GSUB"
+				if isinstance(st, MultipleSubst): return "GSUB"
+				if isinstance(st, AlternateSubst): return "GSUB"
+				if isinstance(st, LigatureSubst): return "GSUB"
+				if isinstance(st, ContextSubst): return "GSUB"
+				if isinstance(st, ChainContextSubst): return "GSUB"
+				if isinstance(st, ReverseChainSingleSubst): return "GSUB"
+				if isinstance(st, ExtensionSubst): return "GSUB"
+				if isinstance(st, SinglePos): return "GPOS"
+				if isinstance(st, PairPos): return "GPOS"
+				if isinstance(st, CursivePos): return "GPOS"
+				if isinstance(st, MarkBasePos): return "GPOS"
+				if isinstance(st, MarkLigPos): return "GPOS"
+				if isinstance(st, MarkMarkPos): return "GPOS"
+				if isinstance(st, ContextPos): return "GPOS"
+				if isinstance(st, ChainContextPos): return "GPOS"
+				if isinstance(st, ExtensionPos): return "GPOS"
+		raise ValueError
+
+	def toXML2(self, xmlWriter, font):
+		if "Debg" not in font:
+			return super().toXML2(xmlWriter, font)
+		import json
+		table = self.table()
+		s = font["Debg"].data[table]
+		for conv in self.getConverters():
+			if conv.repeat:
+				value = getattr(self, conv.name, [])
+				for i in range(len(value)):
+					item = value[i]
+					if str(i) in s:
+						thisLu = s[str(i)]
+						tag = thisLu[0]
+						if thisLu[1]:
+							tag = f'{thisLu[1]}: {tag}'
+						if thisLu[2]:
+							tag = f'{tag} in {thisLu[2][2]} ({thisLu[2][0]}/{thisLu[2][1]})'
+						xmlWriter.comment(tag)
+						xmlWriter.newline()
+
+					conv.xmlWrite(xmlWriter, font, item, conv.name,
+							[("index", i)])
+
 class BaseGlyphRecordArray(BaseTable):
 
 	def preWrite(self, font):
