@@ -88,7 +88,7 @@ class Builder(object):
         ]
     )
 
-    def __init__(self, font, featurefile):
+    def __init__(self, font, featurefile, debug=False):
         self.font = font
         # 'featurefile' can be either a path or file object (in which case we
         # parse it into an AST), or a pre-parsed AST instance
@@ -96,6 +96,7 @@ class Builder(object):
             self.parseTree, self.file = featurefile, None
         else:
             self.parseTree, self.file = None, featurefile
+        self.debug = debug
         self.glyphMap = font.getReverseGlyphMap()
         self.default_language_systems_ = set()
         self.script_ = None
@@ -202,7 +203,8 @@ class Builder(object):
                 self.font["BASE"] = base
             elif "BASE" in self.font:
                 del self.font["BASE"]
-        self.buildDebg()
+        if self.debug:
+            self.buildDebg()
 
     def get_chained_lookup_(self, location, builder_class):
         result = builder_class(self.font, location)
