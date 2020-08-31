@@ -1,6 +1,6 @@
 # we use the official Brotli module on CPython and the CFFI-based
 # extension 'brotlipy' on PyPy
-brotli==1.0.7; platform_python_implementation != "PyPy"
+brotli==1.0.9; platform_python_implementation != "PyPy"
 brotlipy==0.7.0; platform_python_implementation == "PyPy"
 unicodedata2==13.0.0.post2; python_version < '3.9' and platform_python_implementation != "PyPy"
 scipy==1.5.2; platform_python_implementation != "PyPy"
