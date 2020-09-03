@@ -1146,10 +1146,11 @@ class Tokenizer(object):
 		return line
 
 def build(f, font, tableTag=None):
-	"""Parse a Monotype font layout file.
+	"""Convert a Monotype font layout file to an OpenType layout object
 
 	A font object must be passed, but this may be a "dummy" font; it is only
-	used for sorting glyph sets when making coverage tables.
+	used for sorting glyph sets when making coverage tables and to hold the
+	OpenType layout table while it is being built.
 
 	Args:
 		f: A file object.
@@ -1171,7 +1172,6 @@ def main(args=None, font=None):
 
 	Args:
 		args: Command line arguments (``--font``, ``--table``, input files).
-		font (TTFont): If passed, used for sorting glyph sets.
 	"""
 	import sys
 	from fontTools import configLogger
