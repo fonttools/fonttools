@@ -849,7 +849,7 @@ def registerCustomTableClass(tag, moduleName, className=None):
 
 def unregisterCustomTableClass(tag):
 	"""Unregister the custom packer/unpacker class for a table."""
-	_customTableRegistry.pop(tag)
+	del _customTableRegistry[tag]
 
 
 def getCustomTableClass(tag):
