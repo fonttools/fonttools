@@ -860,9 +860,7 @@ def getCustomTableClass(tag):
 
 
 def getTableClass(tag):
-	"""Fetch the packer/unpacker class for a table.
-	Return None when no class is found.
-	"""
+	"""Fetch the packer/unpacker class for a table."""
 	tableClass = getCustomTableClass(tag)
 	if tableClass is not None:
 		return tableClass
