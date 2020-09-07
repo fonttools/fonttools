@@ -1,5 +1,5 @@
 import io
-from fontTools.ttLib import TTFont, newTable, registerCustomTableClass
+from fontTools.ttLib import TTFont, newTable, registerCustomTableClass, unregisterCustomTableClass
 from fontTools.ttLib.tables.DefaultTable import DefaultTable
 
 
@@ -32,6 +32,7 @@ def test_registerCustomTableClass():
     font = TTFont(f)
     assert font[TABLETAG].numbers == [0, 1, 255]
     assert font[TABLETAG].compile(font) == b"\x00\x01\xff"
+    unregisterCustomTableClass(TABLETAG)
 
 
 def test_registerCustomTableClassStandardName():
@@ -40,3 +41,4 @@ def test_registerCustomTableClassStandardName():
     font[TABLETAG] = newTable(TABLETAG)
     font[TABLETAG].numbers = [4, 5, 6]
     assert font[TABLETAG].compile(font) == b"\x04\x05\x06"
+    unregisterCustomTableClass(TABLETAG)

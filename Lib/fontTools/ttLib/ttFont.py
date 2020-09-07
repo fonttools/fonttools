@@ -847,6 +847,11 @@ def registerCustomTableClass(tag, moduleName, className=None):
 	_customTableRegistry[tag] = (moduleName, className)
 
 
+def unregisterCustomTableClass(tag):
+	"""Unregister the custom packer/unpacker class for a table."""
+	_customTableRegistry.pop(tag)
+
+
 def getCustomTableClass(tag):
 	"""Return the custom table class for tag, if one has been registered
 	with 'registerCustomTableClass()'. Else return None.
