@@ -119,7 +119,7 @@ def test(glyphsets, glyphs=None, names=None):
 				allNodeTypes.append(nodeTypes)
 				allVectors.append(contourVectors)
 				for contour in contourPens:
-					nodeTypes.append(tuple([ instruction[0] for instruction in contour.value ]))
+					nodeTypes.append(tuple(instruction[0] for instruction in contour.value))
 					stats = StatisticsPen(glyphset=glyphset)
 					contour.replay(stats)
 					size = abs(stats.area) ** .5 * .5
@@ -135,12 +135,12 @@ def test(glyphsets, glyphs=None, names=None):
 					#print(vector)
 
 			# Check each master against the next one in the list.
-			for i,(m0,m1) in enumerate(zip(allNodeTypes[:-1],allNodeTypes[1:])):
+			for i, (m0, m1) in enumerate(zip(allNodeTypes[:-1], allNodeTypes[1:])):
 				if len(m0) != len(m1):
 					print('%s: %s+%s: Glyphs not compatible (wrong number of paths %i+%i)!!!!!' % (glyph_name, names[i], names[i+1], len(m0), len(m1)))
 				if m0 == m1:
 					continue
-				for pathIx, (nodes1, nodes2) in enumerate(zip(m0,m1)):
+				for pathIx, (nodes1, nodes2) in enumerate(zip(m0, m1)):
 					if nodes1 == nodes2:
 						continue
 					print('%s: %s+%s: Glyphs not compatible at path %i!!!!!' % (glyph_name, names[i], names[i+1], pathIx))
