@@ -35,7 +35,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def addOpenTypeFeatures(font, featurefile, tables=None):
+def addOpenTypeFeatures(font, featurefile, tables=None, debug=False):
     """Add features from a file to a font. Note that this replaces any features
     currently present.
 
@@ -45,13 +45,15 @@ def addOpenTypeFeatures(font, featurefile, tables=None):
             parse it into an AST), or a pre-parsed AST instance.
         tables: If passed, restrict the set of affected tables to those in the
             list.
+        debug: Whether to add source debugging information to the font in the
+            ``Debg`` table
 
     """
     builder = Builder(font, featurefile)
-    builder.build(tables=tables)
+    builder.build(tables=tables, debug=debug)
 
 
-def addOpenTypeFeaturesFromString(font, features, filename=None, tables=None):
+def addOpenTypeFeaturesFromString(font, features, filename=None, tables=None, debug=False):
     """Add features from a string to a font. Note that this replaces any
     features currently present.
 
@@ -63,13 +65,15 @@ def addOpenTypeFeaturesFromString(font, features, filename=None, tables=None):
             directory is assumed.
         tables: If passed, restrict the set of affected tables to those in the
             list.
+        debug: Whether to add source debugging information to the font in the
+            ``Debg`` table
 
     """
 
     featurefile = UnicodeIO(tounicode(features))
     if filename:
         featurefile.name = filename
-    addOpenTypeFeatures(font, featurefile, tables=tables)
+    addOpenTypeFeatures(font, featurefile, tables=tables, debug=debug)
 
 
 class Builder(object):
@@ -89,7 +93,7 @@ class Builder(object):
         ]
     )
 
-    def __init__(self, font, featurefile, debug=False):
+    def __init__(self, font, featurefile):
         self.font = font
         # 'featurefile' can be either a path or file object (in which case we
         # parse it into an AST), or a pre-parsed AST instance
@@ -97,7 +101,6 @@ class Builder(object):
             self.parseTree, self.file = featurefile, None
         else:
             self.parseTree, self.file = None, featurefile
-        self.debug = debug
         self.glyphMap = font.getReverseGlyphMap()
         self.default_language_systems_ = set()
         self.script_ = None
@@ -149,7 +152,7 @@ class Builder(object):
         # for table 'vhea'
         self.vhea_ = {}
 
-    def build(self, tables=None):
+    def build(self, tables=None, debug=False):
         if self.parseTree is None:
             self.parseTree = Parser(self.file, self.glyphMap).parse()
         self.parseTree.build(self)
@@ -204,7 +207,7 @@ class Builder(object):
                 self.font["BASE"] = base
             elif "BASE" in self.font:
                 del self.font["BASE"]
-        if self.debug:
+        if debug:
             self.buildDebg()
 
     def get_chained_lookup_(self, location, builder_class):
