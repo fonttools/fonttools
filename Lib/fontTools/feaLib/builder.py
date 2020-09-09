@@ -644,10 +644,10 @@ class Builder(object):
         return otl.buildMarkGlyphSetsDef(sets, self.glyphMap)
 
     def buildDebg(self):
-        if not "Debg" in self.font:
+        if "Debg" not in self.font:
             self.font["Debg"] = newTable("Debg")
             self.font["Debg"].data = {}
-        self.font["Debg"].data["io.github.fonttools.feaLib"] = self.lookup_locations
+        self.font["Debg"].data["com.github.fonttools.feaLib"] = self.lookup_locations
 
     def buildLookups_(self, tag):
         assert tag in ("GPOS", "GSUB"), tag

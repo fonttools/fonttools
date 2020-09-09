@@ -1189,33 +1189,18 @@ class COLR(BaseTable):
 
 
 class LookupList(BaseTable):
+	@property
 	def table(self):
 		for l in self.Lookup:
 			for st in l.SubTable:
-				if isinstance(st, SingleSubst): return "GSUB"
-				if isinstance(st, MultipleSubst): return "GSUB"
-				if isinstance(st, AlternateSubst): return "GSUB"
-				if isinstance(st, LigatureSubst): return "GSUB"
-				if isinstance(st, ContextSubst): return "GSUB"
-				if isinstance(st, ChainContextSubst): return "GSUB"
-				if isinstance(st, ReverseChainSingleSubst): return "GSUB"
-				if isinstance(st, ExtensionSubst): return "GSUB"
-				if isinstance(st, SinglePos): return "GPOS"
-				if isinstance(st, PairPos): return "GPOS"
-				if isinstance(st, CursivePos): return "GPOS"
-				if isinstance(st, MarkBasePos): return "GPOS"
-				if isinstance(st, MarkLigPos): return "GPOS"
-				if isinstance(st, MarkMarkPos): return "GPOS"
-				if isinstance(st, ContextPos): return "GPOS"
-				if isinstance(st, ChainContextPos): return "GPOS"
-				if isinstance(st, ExtensionPos): return "GPOS"
+				if type(st).__name__.endswith("Subst"): return "GSUB"
+				if type(st).__name__.endswith("Pos"): return "GPOS"
 		raise ValueError
 
 	def toXML2(self, xmlWriter, font):
-		if "Debg" not in font or "io.github.fonttools.feaLib" not in font["Debg"].data:
+		if not font or "Debg" not in font or "com.github.fonttools.feaLib" not in font["Debg"].data:
 			return super().toXML2(xmlWriter, font)
-		table = self.table()
-		s = font["Debg"].data["io.github.fonttools.feaLib"][table]
+		debugData = font["Debg"].data["com.github.fonttools.feaLib"][self.table]
 		for conv in self.getConverters():
 			if conv.repeat:
 				value = getattr(self, conv.name, [])
