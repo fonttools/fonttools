@@ -29,16 +29,20 @@ def test_registerCustomTableClass():
     f.seek(0)
     assert font[TABLETAG].data == b"\x00\x01\xff"
     registerCustomTableClass(TABLETAG, "ttFont_test", "CustomTableClass")
-    font = TTFont(f)
-    assert font[TABLETAG].numbers == [0, 1, 255]
-    assert font[TABLETAG].compile(font) == b"\x00\x01\xff"
-    unregisterCustomTableClass(TABLETAG)
+    try:
+        font = TTFont(f)
+        assert font[TABLETAG].numbers == [0, 1, 255]
+        assert font[TABLETAG].compile(font) == b"\x00\x01\xff"
+    finally:
+        unregisterCustomTableClass(TABLETAG)
 
 
 def test_registerCustomTableClassStandardName():
     registerCustomTableClass(TABLETAG, "ttFont_test")
-    font = TTFont()
-    font[TABLETAG] = newTable(TABLETAG)
-    font[TABLETAG].numbers = [4, 5, 6]
-    assert font[TABLETAG].compile(font) == b"\x04\x05\x06"
-    unregisterCustomTableClass(TABLETAG)
+    try:
+        font = TTFont()
+        font[TABLETAG] = newTable(TABLETAG)
+        font[TABLETAG].numbers = [4, 5, 6]
+        assert font[TABLETAG].compile(font) == b"\x04\x05\x06"
+    finally:
+        unregisterCustomTableClass(TABLETAG)
