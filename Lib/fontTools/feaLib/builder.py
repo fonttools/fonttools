@@ -2,6 +2,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import binary2num, safeEval
 from fontTools.feaLib.error import FeatureLibError
+from fontTools.feaLib.lookupdebuginfo import LookupDebugInfo
 from fontTools.feaLib.parser import Parser
 from fontTools.feaLib.ast import FeatureFile
 from fontTools.otlLib import builder as otl
@@ -657,11 +658,11 @@ class Builder(object):
             if lookup.table != tag:
                 continue
             lookup.lookup_index = len(lookups)
-            self.lookup_locations[tag][len(lookups)] = [
-                    str(lookup.location),
-                    self.get_lookup_name_(lookup),
-                    None
-                ]
+            self.lookup_locations[tag][lookup.lookup_index] = LookupDebugInfo(
+                    location=str(lookup.location),
+                    name=self.get_lookup_name_(lookup),
+                    feature=None
+                )
             lookups.append(lookup)
         try:
             otLookups = [l.build() for l in lookups]
@@ -701,7 +702,7 @@ class Builder(object):
                 continue
 
             for ix in lookup_indices:
-                self.lookup_locations[tag][ix][2] = key
+                self.lookup_locations[tag][ix] = self.lookup_locations[tag][ix]._replace(feature = key)
 
             feature_key = (feature_tag, lookup_indices)
             feature_index = feature_indices.get(feature_key)

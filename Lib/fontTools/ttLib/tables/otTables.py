@@ -12,6 +12,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.textTools import pad, safeEval
 from .otBase import BaseTable, FormatSwitchingBaseTable, ValueRecord, CountReference
+from fontTools.feaLib.lookupdebuginfo import LookupDebugInfo
 import logging
 import struct
 
@@ -1218,20 +1219,20 @@ class LookupList(BaseTable):
 		for conv in self.getConverters():
 			if conv.repeat:
 				value = getattr(self, conv.name, [])
-				for i in range(len(value)):
-					item = value[i]
-					if str(i) in s:
-						thisLu = s[str(i)]
-						tag = thisLu[0]
-						if thisLu[1]:
-							tag = f'{thisLu[1]}: {tag}'
-						if thisLu[2]:
-							tag = f'{tag} in {thisLu[2][2]} ({thisLu[2][0]}/{thisLu[2][1]})'
+				for lookupIndex, item in enumerate(value):
+					if str(lookupIndex) in debugData:
+						info = LookupDebugInfo(*debugData[str(lookupIndex)])
+						tag = info.location
+						if info.name:
+							tag = f'{info.name}: {tag}'
+						if info.feature:
+							script,language,feature = info.feature
+							tag = f'{tag} in {feature} ({script}/{language})'
 						xmlWriter.comment(tag)
 						xmlWriter.newline()
 
 					conv.xmlWrite(xmlWriter, font, item, conv.name,
-							[("index", i)])
+							[("index", lookupIndex)])
 
 class BaseGlyphRecordArray(BaseTable):
 
