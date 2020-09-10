@@ -18,7 +18,7 @@ class TTFont(object):
 	"""
 
 	def __init__(self, file=None, res_name_or_index=None,
-			sfntVersion="\000\001\000\000", flavor=None, checkChecksums=False,
+			sfntVersion="\000\001\000\000", flavor=None, checkChecksums=0,
 			verbose=None, recalcBBoxes=True, allowVID=False, ignoreDecompileErrors=False,
 			recalcTimestamp=True, fontNumber=-1, lazy=None, quiet=None,
 			_tableCache=None):
