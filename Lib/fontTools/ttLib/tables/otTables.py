@@ -1218,6 +1218,11 @@ class LookupList(BaseTable):
 
 					conv.xmlWrite(xmlWriter, font, item, conv.name,
 							[("index", lookupIndex)])
+			else:
+				if conv.aux and not eval(conv.aux, None, vars(self)):
+					continue
+				value = getattr(self, conv.name, None) # TODO Handle defaults instead of defaulting to None!
+				conv.xmlWrite(xmlWriter, font, value, conv.name, [])
 
 class BaseGlyphRecordArray(BaseTable):
 
