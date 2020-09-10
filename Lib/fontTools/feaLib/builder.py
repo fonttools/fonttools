@@ -2,7 +2,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import binary2num, safeEval
 from fontTools.feaLib.error import FeatureLibError
-from fontTools.feaLib.lookupdebuginfo import LookupDebugInfo
+from fontTools.feaLib.lookupdebuginfo import LookupDebugInfo, LOOKUP_DEBUG_INFO_KEY
 from fontTools.feaLib.parser import Parser
 from fontTools.feaLib.ast import FeatureFile
 from fontTools.otlLib import builder as otl
@@ -650,7 +650,7 @@ class Builder(object):
         if "Debg" not in self.font:
             self.font["Debg"] = newTable("Debg")
             self.font["Debg"].data = {}
-        self.font["Debg"].data["com.github.fonttools.feaLib"] = self.lookup_locations
+        self.font["Debg"].data[LOOKUP_DEBUG_INFO_KEY] = self.lookup_locations
 
     def buildLookups_(self, tag):
         assert tag in ("GPOS", "GSUB"), tag

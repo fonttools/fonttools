@@ -12,7 +12,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.textTools import pad, safeEval
 from .otBase import BaseTable, FormatSwitchingBaseTable, ValueRecord, CountReference
-from fontTools.feaLib.lookupdebuginfo import LookupDebugInfo
+from fontTools.feaLib.lookupdebuginfo import LookupDebugInfo, LOOKUP_DEBUG_INFO_KEY
 import logging
 import struct
 
@@ -1198,9 +1198,9 @@ class LookupList(BaseTable):
 		raise ValueError
 
 	def toXML2(self, xmlWriter, font):
-		if not font or "Debg" not in font or "com.github.fonttools.feaLib" not in font["Debg"].data:
+		if not font or "Debg" not in font or LOOKUP_DEBUG_INFO_KEY not in font["Debg"].data:
 			return super().toXML2(xmlWriter, font)
-		debugData = font["Debg"].data["com.github.fonttools.feaLib"][self.table]
+		debugData = font["Debg"].data[LOOKUP_DEBUG_INFO_KEY][self.table]
 		for conv in self.getConverters():
 			if conv.repeat:
 				value = getattr(self, conv.name, [])
