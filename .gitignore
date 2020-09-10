@@ -54,3 +54,6 @@ dmypy.json
 
 # Cython sources (e.g. cu2qu)
 Lib/**/*.c
+
+# Ctags
+tags
