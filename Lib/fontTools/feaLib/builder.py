@@ -661,7 +661,7 @@ class Builder(object):
             if lookup.table != tag:
                 continue
             lookup.lookup_index = len(lookups)
-            self.lookup_locations[tag][lookup.lookup_index] = LookupDebugInfo(
+            self.lookup_locations[tag][str(lookup.lookup_index)] = LookupDebugInfo(
                     location=str(lookup.location),
                     name=self.get_lookup_name_(lookup),
                     feature=None
@@ -705,7 +705,7 @@ class Builder(object):
                 continue
 
             for ix in lookup_indices:
-                self.lookup_locations[tag][ix] = self.lookup_locations[tag][ix]._replace(feature = key)
+                self.lookup_locations[tag][str(ix)] = self.lookup_locations[tag][str(ix)]._replace(feature = key)
 
             feature_key = (feature_tag, lookup_indices)
             feature_index = feature_indices.get(feature_key)
