@@ -35,7 +35,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def addOpenTypeFeatures(font, featurefile, tables=None, debug=True):
+def addOpenTypeFeatures(font, featurefile, tables=None, debug=False):
     """Add features from a file to a font. Note that this replaces any features
     currently present.
 
@@ -54,7 +54,7 @@ def addOpenTypeFeatures(font, featurefile, tables=None, debug=True):
 
 
 def addOpenTypeFeaturesFromString(
-    font, features, filename=None, tables=None, debug=True
+    font, features, filename=None, tables=None, debug=False
 ):
     """Add features from a string to a font. Note that this replaces any
     features currently present.
@@ -154,7 +154,7 @@ class Builder(object):
         # for table 'vhea'
         self.vhea_ = {}
 
-    def build(self, tables=None, debug=True):
+    def build(self, tables=None, debug=False):
         if self.parseTree is None:
             self.parseTree = Parser(self.file, self.glyphMap).parse()
         self.parseTree.build(self)
