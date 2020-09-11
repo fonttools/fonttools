@@ -12,7 +12,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.textTools import pad, safeEval
 from .otBase import BaseTable, FormatSwitchingBaseTable, ValueRecord, CountReference
-from fontTools.feaLib.lookupdebuginfo import LookupDebugInfo, LOOKUP_DEBUG_INFO_KEY
+from fontTools.feaLib.lookupDebugInfo import LookupDebugInfo, LOOKUP_DEBUG_INFO_KEY
 import logging
 import struct
 

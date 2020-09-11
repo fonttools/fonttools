@@ -2,7 +2,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import binary2num, safeEval
 from fontTools.feaLib.error import FeatureLibError
-from fontTools.feaLib.lookupdebuginfo import LookupDebugInfo, LOOKUP_DEBUG_INFO_KEY
+from fontTools.feaLib.lookupDebugInfo import LookupDebugInfo, LOOKUP_DEBUG_INFO_KEY
 from fontTools.feaLib.parser import Parser
 from fontTools.feaLib.ast import FeatureFile
 from fontTools.otlLib import builder as otl
@@ -35,7 +35,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def addOpenTypeFeatures(font, featurefile, tables=None, debug=False):
+def addOpenTypeFeatures(font, featurefile, tables=None, debug=True):
     """Add features from a file to a font. Note that this replaces any features
     currently present.
 
@@ -53,7 +53,7 @@ def addOpenTypeFeatures(font, featurefile, tables=None, debug=False):
     builder.build(tables=tables, debug=debug)
 
 
-def addOpenTypeFeaturesFromString(font, features, filename=None, tables=None, debug=False):
+def addOpenTypeFeaturesFromString(font, features, filename=None, tables=None, debug=True):
     """Add features from a string to a font. Note that this replaces any
     features currently present.
 
@@ -152,7 +152,7 @@ class Builder(object):
         # for table 'vhea'
         self.vhea_ = {}
 
-    def build(self, tables=None, debug=False):
+    def build(self, tables=None, debug=True):
         if self.parseTree is None:
             self.parseTree = Parser(self.file, self.glyphMap).parse()
         self.parseTree.build(self)
