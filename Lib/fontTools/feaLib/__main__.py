@@ -64,8 +64,9 @@ def main(args=None):
 
     font = TTFont(options.input_font)
     try:
-        addOpenTypeFeatures(font, options.input_fea, tables=options.tables,
-            debug=options.debug)
+        addOpenTypeFeatures(
+            font, options.input_fea, tables=options.tables, debug=options.debug
+        )
     except FeatureLibError as e:
         if options.traceback:
             raise

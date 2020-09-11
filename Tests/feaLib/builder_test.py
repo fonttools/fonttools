@@ -122,8 +122,8 @@ class BuilderTest(unittest.TestCase):
         expected = self.read_ttx(expected_ttx)
         if replace:
             for i in range(len(expected)):
-                for k,v in replace.items():
-                    expected[i] = expected[i].replace(k,v)
+                for k, v in replace.items():
+                    expected[i] = expected[i].replace(k, v)
         if actual != expected:
             for line in difflib.unified_diff(
                     expected, actual, fromfile=expected_ttx, tofile=path):
@@ -146,9 +146,8 @@ class BuilderTest(unittest.TestCase):
                 font[tag].compile(font)
         debugttx = self.getpath("%s-debug.ttx" % name)
         if os.path.exists(debugttx):
-            addOpenTypeFeatures(font, feapath,
-                debug=True)
-            self.expect_ttx(font, debugttx, replace = { "__PATH__": feapath })
+            addOpenTypeFeatures(font, feapath, debug=True)
+            self.expect_ttx(font, debugttx, replace = {"__PATH__": feapath})
 
     def check_fea2fea_file(self, name, base=None, parser=Parser):
         font = makeTTFont()
@@ -627,6 +626,7 @@ class BuilderTest(unittest.TestCase):
                 "    pos A V -75;"
                 "} test;")
         captor.assertRegex('Already defined position for pair A V at')
+
 
 def generate_feature_file_test(name):
     return lambda self: self.check_feature_file(name)

@@ -1193,8 +1193,10 @@ class LookupList(BaseTable):
 	def table(self):
 		for l in self.Lookup:
 			for st in l.SubTable:
-				if type(st).__name__.endswith("Subst"): return "GSUB"
-				if type(st).__name__.endswith("Pos"): return "GPOS"
+				if type(st).__name__.endswith("Subst"):
+					return "GSUB"
+				if type(st).__name__.endswith("Pos"):
+					return "GPOS"
 		raise ValueError
 
 	def toXML2(self, xmlWriter, font):
