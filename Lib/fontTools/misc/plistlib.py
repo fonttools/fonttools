@@ -116,7 +116,7 @@ class Data:
 
 
 def _encode_base64(
-    data: bytes, maxlinelength: int = 76, indent_level: int = 1
+    data: bytes, maxlinelength: Optional[int] = 76, indent_level: int = 1
 ) -> bytes:
     data = b64encode(data)
     if data and maxlinelength:
@@ -354,9 +354,7 @@ def _date_element(date: datetime, ctx: SimpleNamespace) -> etree.Element:
     return el
 
 
-def _data_element(
-    data: Union[bytes, Data], ctx: SimpleNamespace
-) -> etree.Element:
+def _data_element(data: bytes, ctx: SimpleNamespace) -> etree.Element:
     el = etree.Element("data")
     el.text = _encode_base64(
         data,
@@ -366,9 +364,7 @@ def _data_element(
     return el
 
 
-def _string_or_data_element(
-    raw_bytes: Union[bytes, bytearray, Data], ctx: SimpleNamespace
-) -> etree.Element:
+def _string_or_data_element(raw_bytes: bytes, ctx: SimpleNamespace) -> etree.Element:
     if ctx.use_builtin_types:
         return _data_element(raw_bytes, ctx)
     else:
