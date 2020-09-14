@@ -1,5 +1,6 @@
 import sys
 import re
+from typing import Any, Callable, Dict, List, NoReturn, Optional, Sequence, Tuple, Union
 import warnings
 from io import BytesIO
 from datetime import datetime
@@ -52,9 +53,12 @@ _date_parser = re.compile(
 )
 
 
-def _date_from_string(s):
+def _date_from_string(s: str) -> datetime:
     order = ("year", "month", "day", "hour", "minute", "second")
-    gd = _date_parser.match(s).groupdict()
+    m = _date_parser.match(s)
+    if m is None:
+        raise ValueError(f"Expected ISO 8601 date string, but got '{s:r}'.")
+    gd = m.groupdict()
     lst = []
     for key in order:
         val = gd[key]
@@ -64,7 +68,7 @@ def _date_from_string(s):
     return datetime(*lst)
 
 
-def _date_to_string(d):
+def _date_to_string(d: datetime) -> str:
     return "%04d-%02d-%02dT%02d:%02d:%02dZ" % (
         d.year,
         d.month,
@@ -73,21 +77,6 @@ def _date_to_string(d):
         d.minute,
         d.second,
     )
-
-
-def _encode_base64(data, maxlinelength=76, indent_level=1):
-    data = b64encode(data)
-    if data and maxlinelength:
-        # split into multiple lines right-justified to 'maxlinelength' chars
-        indent = b"\n" + b"  " * indent_level
-        max_length = max(16, maxlinelength - len(indent))
-        chunks = []
-        for i in range(0, len(data), max_length):
-            chunks.append(indent)
-            chunks.append(data[i : i + max_length])
-        chunks.append(indent)
-        data = b"".join(chunks)
-    return data
 
 
 class Data:
@@ -100,21 +89,21 @@ class Data:
     The actual binary data is retrieved using the ``data`` attribute.
     """
 
-    def __init__(self, data):
+    def __init__(self, data: Any) -> None:
         if not isinstance(data, bytes):
             raise TypeError("Expected bytes, found %s" % type(data).__name__)
         self.data = data
 
     @classmethod
-    def fromBase64(cls, data):
+    def fromBase64(cls, data: Union[bytes, str]) -> "Data":
         return cls(b64decode(data))
 
-    def asBase64(self, maxlinelength=76, indent_level=1):
+    def asBase64(self, maxlinelength: int = 76, indent_level: int = 1) -> bytes:
         return _encode_base64(
             self.data, maxlinelength=maxlinelength, indent_level=indent_level
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, self.__class__):
             return self.data == other.data
         elif isinstance(other, bytes):
@@ -124,6 +113,23 @@ class Data:
 
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, repr(self.data))
+
+
+def _encode_base64(
+    data: bytes, maxlinelength: int = 76, indent_level: int = 1
+) -> bytes:
+    data = b64encode(data)
+    if data and maxlinelength:
+        # split into multiple lines right-justified to 'maxlinelength' chars
+        indent = b"\n" + b"  " * indent_level
+        max_length = max(16, maxlinelength - len(indent))
+        chunks = []
+        for i in range(0, len(data), max_length):
+            chunks.append(indent)
+            chunks.append(data[i : i + max_length])
+        chunks.append(indent)
+        data = b"".join(chunks)
+    return data
 
 
 class PlistTarget:
@@ -265,9 +271,12 @@ def end_date(self):
     self.add_object(_date_from_string(self.get_data()))
 
 
-_TARGET_START_HANDLERS = {"dict": start_dict, "array": start_array}
+_TARGET_START_HANDLERS: Dict[str, Callable[[PlistTarget], None]] = {
+    "dict": start_dict,
+    "array": start_array
+}
 
-_TARGET_END_HANDLERS = {
+_TARGET_END_HANDLERS: Dict[str, Callable[[PlistTarget], None]] = {
     "dict": end_dict,
     "array": end_array,
     "key": end_key,
@@ -284,35 +293,33 @@ _TARGET_END_HANDLERS = {
 # functions to build element tree from plist data
 
 
-def _string_element(value, ctx):
+def _string_element(value: str, ctx: SimpleNamespace) -> etree.Element:
     el = etree.Element("string")
     el.text = value
     return el
 
 
-def _bool_element(value, ctx):
+def _bool_element(value: bool, ctx: SimpleNamespace) -> etree.Element:
     if value:
         return etree.Element("true")
-    else:
-        return etree.Element("false")
+    return etree.Element("false")
 
 
-def _integer_element(value, ctx):
+def _integer_element(value: Integral, ctx: SimpleNamespace) -> etree.Element:
     if -1 << 63 <= value < 1 << 64:
         el = etree.Element("integer")
         el.text = "%d" % value
         return el
-    else:
-        raise OverflowError(value)
+    raise OverflowError(value)
 
 
-def _real_element(value, ctx):
+def _real_element(value: float, ctx: SimpleNamespace) -> etree.Element:
     el = etree.Element("real")
     el.text = repr(value)
     return el
 
 
-def _dict_element(d, ctx):
+def _dict_element(d: Dict[str, Any], ctx: SimpleNamespace) -> etree.Element:
     el = etree.Element("dict")
     items = d.items()
     if ctx.sort_keys:
@@ -330,7 +337,7 @@ def _dict_element(d, ctx):
     return el
 
 
-def _array_element(array, ctx):
+def _array_element(array: Sequence[Any], ctx: SimpleNamespace) -> etree.Element:
     el = etree.Element("array")
     if len(array) == 0:
         return el
@@ -341,13 +348,15 @@ def _array_element(array, ctx):
     return el
 
 
-def _date_element(date, ctx):
+def _date_element(date: datetime, ctx: SimpleNamespace) -> etree.Element:
     el = etree.Element("date")
     el.text = _date_to_string(date)
     return el
 
 
-def _data_element(data, ctx):
+def _data_element(
+    data: Union[bytes, Data], ctx: SimpleNamespace
+) -> etree.Element:
     el = etree.Element("data")
     el.text = _encode_base64(
         data,
@@ -357,7 +366,9 @@ def _data_element(data, ctx):
     return el
 
 
-def _string_or_data_element(raw_bytes, ctx):
+def _string_or_data_element(
+    raw_bytes: Union[bytes, bytearray, Data], ctx: SimpleNamespace
+) -> etree.Element:
     if ctx.use_builtin_types:
         return _data_element(raw_bytes, ctx)
     else:
@@ -372,20 +383,63 @@ def _string_or_data_element(raw_bytes, ctx):
 
 
 @singledispatch
-def _make_element(value, ctx):
+def _make_element(value: Any, ctx: SimpleNamespace) -> NoReturn:
     raise TypeError("unsupported type: %s" % type(value))
 
-_make_element.register(str)(_string_element)
-_make_element.register(bool)(_bool_element)
-_make_element.register(Integral)(_integer_element)
-_make_element.register(float)(_real_element)
-_make_element.register(Mapping)(_dict_element)
-_make_element.register(list)(_array_element)
-_make_element.register(tuple)(_array_element)
-_make_element.register(datetime)(_date_element)
-_make_element.register(bytes)(_string_or_data_element)
-_make_element.register(bytearray)(_data_element)
-_make_element.register(Data)(lambda v, ctx: _data_element(v.data, ctx))
+
+@_make_element.register
+def _(value: bool, ctx: SimpleNamespace) -> etree.Element:
+    return _bool_element(value, ctx)
+
+
+@_make_element.register
+def _(value: bytearray, ctx: SimpleNamespace) -> etree.Element:
+    return _data_element(bytes(value), ctx)
+
+
+@_make_element.register
+def _(value: bytes, ctx: SimpleNamespace) -> etree.Element:
+    return _string_or_data_element(value, ctx)
+
+
+@_make_element.register
+def _(value: Data, ctx: SimpleNamespace) -> etree.Element:
+    return _data_element(value.data, ctx)
+
+
+@_make_element.register
+def _(value: datetime, ctx: SimpleNamespace) -> etree.Element:
+    return _date_element(value, ctx)
+
+
+@_make_element.register
+def _(value: float, ctx: SimpleNamespace) -> etree.Element:
+    return _real_element(value, ctx)
+
+
+@_make_element.register
+def _(value: Integral, ctx: SimpleNamespace) -> etree.Element:
+    return _integer_element(value, ctx)
+
+
+@_make_element.register(list)
+def _(value: List[Any], ctx: SimpleNamespace) -> etree.Element:
+    return _array_element(value, ctx)
+
+
+@_make_element.register(Mapping)
+def _(value: Dict[str, Any], ctx: SimpleNamespace) -> etree.Element:
+    return _dict_element(value, ctx)
+
+
+@_make_element.register
+def _(value: str, ctx: SimpleNamespace) -> etree.Element:
+    return _string_element(value, ctx)
+
+
+@_make_element.register(tuple)
+def _(value: Tuple[Any, ...], ctx: SimpleNamespace) -> etree.Element:
+    return _array_element(value, ctx)
 
 
 # Public functions to create element tree from plist-compatible python
@@ -393,13 +447,13 @@ _make_element.register(Data)(lambda v, ctx: _data_element(v.data, ctx))
 
 
 def totree(
-    value,
-    sort_keys=True,
-    skipkeys=False,
-    use_builtin_types=None,
-    pretty_print=True,
-    indent_level=1,
-):
+    value: Any,
+    sort_keys: bool = True,
+    skipkeys: bool = False,
+    use_builtin_types: Optional[bool] = None,
+    pretty_print: bool = True,
+    indent_level: int = 1,
+) -> etree.Element:
     """Convert a value derived from a plist into an XML tree.
 
     Args:
