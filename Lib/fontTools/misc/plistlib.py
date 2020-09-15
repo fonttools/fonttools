@@ -378,42 +378,39 @@ def _string_or_data_element(raw_bytes: bytes, ctx: SimpleNamespace) -> etree.Ele
         return _string_element(string, ctx)
 
 
-@singledispatch
-def _make_element(value: Any, ctx: SimpleNamespace) -> NoReturn:
-    raise TypeError("unsupported type: %s" % type(value))
-
-
-PlistEncodable = Union[
-    str,
-    bool,
-    Integral,
-    float,
-    Mapping[str, Any],
-    List[Any],
-    Tuple[Any, ...],
-    datetime,
-    bytes,
-    Data,
-]
-
-_make_element.register(str)(_string_element)  # type: ignore
-_make_element.register(bool)(_bool_element)  # type: ignore
-_make_element.register(Integral)(_integer_element)  # type: ignore
-_make_element.register(float)(_real_element)  # type: ignore
-_make_element.register(collections.abc.Mapping)(_dict_element)  # type: ignore
-_make_element.register(list)(_array_element)  # type: ignore
-_make_element.register(tuple)(_array_element)  # type: ignore
-_make_element.register(datetime)(_date_element)  # type: ignore
-_make_element.register(bytes)(_string_or_data_element)  # type: ignore
-_make_element.register(bytearray)(_data_element)  # type: ignore
-_make_element.register(Data)(lambda v, ctx: _data_element(v.data, ctx))  # type: ignore
-
 # The following is to pacify type checkers. At the time of this writing, neither
 # mypy nor Pyright can deal with singledispatch properly. Mypy additionally
 # complains about a single overload when there should be more (?) so silence it.
-@overload  # type: ignore
+PlistEncodable = Union[
+    bool,
+    bytes,
+    Data,
+    datetime,
+    float,
+    Integral,
+    List[Any],
+    Mapping[str, Any],
+    str,
+    Tuple[Any, ...],
+]
+
+
+@singledispatch
 def _make_element(value: PlistEncodable, ctx: SimpleNamespace) -> etree.Element:
-    ...
+    raise TypeError("unsupported type: %s" % type(value))
+
+
+_make_element.register(str)(_string_element)
+_make_element.register(bool)(_bool_element)
+_make_element.register(Integral)(_integer_element)
+_make_element.register(float)(_real_element)
+_make_element.register(collections.abc.Mapping)(_dict_element)
+_make_element.register(list)(_array_element)
+_make_element.register(tuple)(_array_element)
+_make_element.register(datetime)(_date_element)
+_make_element.register(bytes)(_string_or_data_element)
+_make_element.register(bytearray)(_data_element)
+_make_element.register(Data)(lambda v, ctx: _data_element(v.data, ctx))
 
 
 # Public functions to create element tree from plist-compatible python
