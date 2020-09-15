@@ -161,11 +161,10 @@ PlistEncodable = Union[
     Data,
     datetime,
     float,
-    Integral,
-    List[Any],
+    int,
     Mapping[str, Any],
+    Sequence[Any],
     str,
-    Tuple[Any, ...],
 ]
 
 
@@ -225,7 +224,9 @@ class PlistTarget:
     def data(self, data: str) -> None:
         self._data.append(data)
 
-    def close(self) -> Optional[PlistEncodable]:
+    def close(self) -> PlistEncodable:
+        if self.root is None:
+            raise ValueError("No root set.")
         return self.root
 
     # helpers
@@ -346,7 +347,7 @@ def _bool_element(value: bool, ctx: SimpleNamespace) -> etree.Element:
     return etree.Element("false")
 
 
-def _integer_element(value: Integral, ctx: SimpleNamespace) -> etree.Element:
+def _integer_element(value: int, ctx: SimpleNamespace) -> etree.Element:
     if -1 << 63 <= value < 1 << 64:
         el = etree.Element("integer")
         el.text = "%d" % value
@@ -360,11 +361,11 @@ def _real_element(value: float, ctx: SimpleNamespace) -> etree.Element:
     return el
 
 
-def _dict_element(d: Dict[str, Any], ctx: SimpleNamespace) -> etree.Element:
+def _dict_element(d: Mapping[str, Any], ctx: SimpleNamespace) -> etree.Element:
     el = etree.Element("dict")
     items = d.items()
     if ctx.sort_keys:
-        items = sorted(items)
+        items = sorted(items)  # type: ignore
     ctx.indent_level += 1
     for key, value in items:
         if not isinstance(key, str):
@@ -397,7 +398,7 @@ def _date_element(date: datetime, ctx: SimpleNamespace) -> etree.Element:
 
 def _data_element(data: bytes, ctx: SimpleNamespace) -> etree.Element:
     el = etree.Element("data")
-    el.text = _encode_base64(
+    el.text = _encode_base64(  # type: ignore
         data,
         maxlinelength=(76 if ctx.pretty_print else None),
         indent_level=ctx.indent_level,
@@ -491,26 +492,11 @@ def totree(
     return _make_element(value, context)
 
 
-# NOTE: Due to https://github.com/python/mypy/issues/3737, one needs overrides for dict_type.
-@overload
-def fromtree(
-    tree: etree.Element, *, use_builtin_types: Optional[bool] = ...
-) -> Dict[str, Any]:
-    ...
-
-
-@overload
-def fromtree(
-    tree: etree.Element, *, use_builtin_types: Optional[bool] = ..., dict_type: Type[_D]
-) -> _D:
-    ...
-
-
 def fromtree(
     tree: etree.Element,
     use_builtin_types: Optional[bool] = None,
     dict_type: Type[_D] = dict,  # type: ignore
-) -> _D:
+) -> Any:
     """Convert an XML tree to a plist structure.
 
     Args:
@@ -522,9 +508,7 @@ def fromtree(
 
     Returns: An object (usually a dictionary).
     """
-    target = PlistTarget(
-        use_builtin_types=use_builtin_types, dict_type=dict_type
-    )
+    target = PlistTarget(use_builtin_types=use_builtin_types, dict_type=dict_type)
     for action, element in etree.iterwalk(tree, events=("start", "end")):
         if action == "start":
             target.start(element.tag, element.attrib)
@@ -538,24 +522,13 @@ def fromtree(
 
 
 # python3 plistlib API
-# Typing stubs copied from typeshed.
-@overload
-def load(fp: IO[bytes], *, use_builtin_types: Optional[bool] = ...) -> Dict[str, Any]:
-    ...
-
-
-@overload
-def load(
-    fp: IO[bytes], *, use_builtin_types: Optional[bool] = ..., dict_type: Type[_D]
-) -> _D:
-    ...
 
 
 def load(
     fp: IO[bytes],
     use_builtin_types: Optional[bool] = None,
     dict_type: Type[_D] = dict,  # type: ignore
-) -> _D:
+) -> Any:
     """Load a plist file into an object.
 
     Args:
@@ -587,23 +560,11 @@ def load(
         return result
 
 
-@overload
-def loads(value: bytes, *, use_builtin_types: Optional[bool] = ...) -> Dict[str, Any]:
-    ...
-
-
-@overload
-def loads(
-    value: bytes, *, use_builtin_types: Optional[bool] = ..., dict_type: Type[_D]
-) -> _D:
-    ...
-
-
 def loads(
     value: bytes,
     use_builtin_types: Optional[bool] = None,
     dict_type: Type[_D] = dict,  # type: ignore
-) -> _D:
+) -> Any:
     """Load a plist file from a string into an object.
 
     Args:
