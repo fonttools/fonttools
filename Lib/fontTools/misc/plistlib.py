@@ -1,6 +1,6 @@
 import sys
 import re
-from typing import Any, Callable, Dict, List, NoReturn, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, List, NoReturn, Optional, Sequence, Tuple, Union, overload
 import warnings
 from io import BytesIO
 from datetime import datetime
@@ -383,59 +383,38 @@ def _make_element(value: Any, ctx: SimpleNamespace) -> NoReturn:
     raise TypeError("unsupported type: %s" % type(value))
 
 
-@_make_element.register
-def _(value: bool, ctx: SimpleNamespace) -> etree.Element:
-    return _bool_element(value, ctx)
+PlistEncodable = Union[
+    str,
+    bool,
+    Integral,
+    float,
+    Mapping[str, Any],
+    List[Any],
+    Tuple[Any, ...],
+    datetime,
+    bytes,
+    bytearray,
+    Data,
+]
 
+_make_element.register(str)(_string_element)  # type: ignore
+_make_element.register(bool)(_bool_element)  # type: ignore
+_make_element.register(Integral)(_integer_element)  # type: ignore
+_make_element.register(float)(_real_element)  # type: ignore
+_make_element.register(Mapping)(_dict_element)  # type: ignore
+_make_element.register(list)(_array_element)  # type: ignore
+_make_element.register(tuple)(_array_element)  # type: ignore
+_make_element.register(datetime)(_date_element)  # type: ignore
+_make_element.register(bytes)(_string_or_data_element)  # type: ignore
+_make_element.register(bytearray)(_data_element)  # type: ignore
+_make_element.register(Data)(lambda v, ctx: _data_element(v.data, ctx))  # type: ignore
 
-@_make_element.register
-def _(value: bytearray, ctx: SimpleNamespace) -> etree.Element:
-    return _data_element(bytes(value), ctx)
-
-
-@_make_element.register
-def _(value: bytes, ctx: SimpleNamespace) -> etree.Element:
-    return _string_or_data_element(value, ctx)
-
-
-@_make_element.register
-def _(value: Data, ctx: SimpleNamespace) -> etree.Element:
-    return _data_element(value.data, ctx)
-
-
-@_make_element.register
-def _(value: datetime, ctx: SimpleNamespace) -> etree.Element:
-    return _date_element(value, ctx)
-
-
-@_make_element.register
-def _(value: float, ctx: SimpleNamespace) -> etree.Element:
-    return _real_element(value, ctx)
-
-
-@_make_element.register
-def _(value: Integral, ctx: SimpleNamespace) -> etree.Element:
-    return _integer_element(value, ctx)
-
-
-@_make_element.register(list)
-def _(value: List[Any], ctx: SimpleNamespace) -> etree.Element:
-    return _array_element(value, ctx)
-
-
-@_make_element.register(Mapping)
-def _(value: Dict[str, Any], ctx: SimpleNamespace) -> etree.Element:
-    return _dict_element(value, ctx)
-
-
-@_make_element.register
-def _(value: str, ctx: SimpleNamespace) -> etree.Element:
-    return _string_element(value, ctx)
-
-
-@_make_element.register(tuple)
-def _(value: Tuple[Any, ...], ctx: SimpleNamespace) -> etree.Element:
-    return _array_element(value, ctx)
+# The following is to pacify type checkers. At the time of this writing, neither
+# mypy nor Pyright can deal with singledispatch properly. Mypy additionally
+# complains about a single overload when there should be more (?) so silence it.
+@overload  # type: ignore
+def _make_element(value: PlistEncodable, ctx: SimpleNamespace) -> etree.Element:
+    ...
 
 
 # Public functions to create element tree from plist-compatible python
@@ -443,7 +422,7 @@ def _(value: Tuple[Any, ...], ctx: SimpleNamespace) -> etree.Element:
 
 
 def totree(
-    value: Any,
+    value: PlistEncodable,
     sort_keys: bool = True,
     skipkeys: bool = False,
     use_builtin_types: Optional[bool] = None,
