@@ -152,6 +152,23 @@ def _encode_base64(
     return data
 
 
+# Mypy does not support recursive type aliases as of 0.782, Pylance does.
+# https://github.com/python/mypy/issues/731
+# https://devblogs.microsoft.com/python/pylance-introduces-five-new-features-that-enable-type-magic-for-python-developers/#1-support-for-recursive-type-aliases
+PlistEncodable = Union[
+    bool,
+    bytes,
+    Data,
+    datetime,
+    float,
+    Integral,
+    List[Any],
+    Mapping[str, Any],
+    str,
+    Tuple[Any, ...],
+]
+
+
 class PlistTarget:
     """ Event handler using the ElementTree Target API that can be
     passed to a XMLParser to produce property list objects from XML.
@@ -181,7 +198,7 @@ class PlistTarget:
     ) -> None:
         self.stack = []
         self.current_key = None
-        self.root = None
+        self.root: Optional[PlistEncodable] = None
         if use_builtin_types is None:
             self._use_builtin_types = USE_BUILTIN_TYPES
         else:
@@ -194,26 +211,26 @@ class PlistTarget:
             self._use_builtin_types = use_builtin_types
         self._dict_type = dict_type
 
-    def start(self, tag, attrib):
+    def start(self, tag: str, attrib: Mapping[str, str]) -> None:
         self._data = []
         handler = _TARGET_START_HANDLERS.get(tag)
         if handler is not None:
             handler(self)
 
-    def end(self, tag):
+    def end(self, tag: str) -> None:
         handler = _TARGET_END_HANDLERS.get(tag)
         if handler is not None:
             handler(self)
 
-    def data(self, data):
+    def data(self, data: str) -> None:
         self._data.append(data)
 
-    def close(self):
+    def close(self) -> Optional[PlistEncodable]:
         return self.root
 
     # helpers
 
-    def add_object(self, value):
+    def add_object(self, value: PlistEncodable) -> None:
         if self.current_key is not None:
             if not isinstance(self.stack[-1], type({})):
                 raise ValueError("unexpected element: %r" % self.stack[-1])
@@ -227,7 +244,7 @@ class PlistTarget:
                 raise ValueError("unexpected element: %r" % self.stack[-1])
             self.stack[-1].append(value)
 
-    def get_data(self):
+    def get_data(self) -> str:
         data = "".join(self._data)
         self._data = []
         return data
@@ -236,68 +253,68 @@ class PlistTarget:
 # event handlers
 
 
-def start_dict(self):
+def start_dict(self: PlistTarget) -> None:
     d = self._dict_type()
     self.add_object(d)
     self.stack.append(d)
 
 
-def end_dict(self):
+def end_dict(self: PlistTarget) -> None:
     if self.current_key:
         raise ValueError("missing value for key '%s'" % self.current_key)
     self.stack.pop()
 
 
-def end_key(self):
+def end_key(self: PlistTarget) -> None:
     if self.current_key or not isinstance(self.stack[-1], type({})):
         raise ValueError("unexpected key")
     self.current_key = self.get_data()
 
 
-def start_array(self):
+def start_array(self: PlistTarget) -> None:
     a = []
     self.add_object(a)
     self.stack.append(a)
 
 
-def end_array(self):
+def end_array(self: PlistTarget) -> None:
     self.stack.pop()
 
 
-def end_true(self):
+def end_true(self: PlistTarget) -> None:
     self.add_object(True)
 
 
-def end_false(self):
+def end_false(self: PlistTarget) -> None:
     self.add_object(False)
 
 
-def end_integer(self):
+def end_integer(self: PlistTarget) -> None:
     self.add_object(int(self.get_data()))
 
 
-def end_real(self):
+def end_real(self: PlistTarget) -> None:
     self.add_object(float(self.get_data()))
 
 
-def end_string(self):
+def end_string(self: PlistTarget) -> None:
     self.add_object(self.get_data())
 
 
-def end_data(self):
+def end_data(self: PlistTarget) -> None:
     if self._use_builtin_types:
         self.add_object(b64decode(self.get_data()))
     else:
         self.add_object(Data.fromBase64(self.get_data()))
 
 
-def end_date(self):
+def end_date(self: PlistTarget) -> None:
     self.add_object(_date_from_string(self.get_data()))
 
 
 _TARGET_START_HANDLERS: Dict[str, Callable[[PlistTarget], None]] = {
     "dict": start_dict,
-    "array": start_array
+    "array": start_array,
 }
 
 _TARGET_END_HANDLERS: Dict[str, Callable[[PlistTarget], None]] = {
@@ -405,20 +422,6 @@ def _string_or_data_element(raw_bytes: bytes, ctx: SimpleNamespace) -> etree.Ele
 # The following is to pacify type checkers. At the time of this writing, neither
 # mypy nor Pyright can deal with singledispatch properly. Mypy additionally
 # complains about a single overload when there should be more (?) so silence it.
-PlistEncodable = Union[
-    bool,
-    bytes,
-    Data,
-    datetime,
-    float,
-    Integral,
-    List[Any],
-    Mapping[str, Any],
-    str,
-    Tuple[Any, ...],
-]
-
-
 @singledispatch
 def _make_element(value: PlistEncodable, ctx: SimpleNamespace) -> etree.Element:
     raise TypeError("unsupported type: %s" % type(value))
