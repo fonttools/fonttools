@@ -1,8 +1,22 @@
 import collections.abc
 import sys
 import re
-from typing import Any, Callable, Dict, List, NoReturn, Optional, Sequence, Tuple, Union, overload
-from typing import Any, Callable, Dict, List, Mapping, NoReturn, Optional, Sequence, Tuple, Type, TypeVar, Union, overload, IO
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    overload,
+    IO,
+)
 import warnings
 from io import BytesIO
 from datetime import datetime
@@ -39,6 +53,12 @@ PLIST_DOCTYPE = (
     b'"http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
 )
 
+
+# Copied from the typeshed module.
+mm = MutableMapping[str, Any]
+_D = TypeVar("_D", bound=mm)
+
+
 # Date should conform to a subset of ISO 8601:
 # YYYY '-' MM '-' DD 'T' HH ':' MM ':' SS 'Z'
 _date_parser = re.compile(
@@ -65,7 +85,7 @@ def _date_from_string(s: str) -> datetime:
         if val is None:
             break
         lst.append(int(val))
-    return datetime(*lst)
+    return datetime(*lst)  # type: ignore
 
 
 def _date_to_string(d: datetime) -> str:
@@ -89,7 +109,7 @@ class Data:
     The actual binary data is retrieved using the ``data`` attribute.
     """
 
-    def __init__(self, data: Any) -> None:
+    def __init__(self, data: bytes) -> None:
         if not isinstance(data, bytes):
             raise TypeError("Expected bytes, found %s" % type(data).__name__)
         self.data = data
@@ -111,7 +131,7 @@ class Data:
         else:
             return NotImplemented
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "%s(%s)" % (self.__class__.__name__, repr(self.data))
 
 
@@ -154,7 +174,11 @@ class PlistTarget:
     http://lxml.de/parsing.html#the-target-parser-interface
     """
 
-    def __init__(self, use_builtin_types=None, dict_type=dict):
+    def __init__(
+        self,
+        use_builtin_types: Optional[bool] = None,
+        dict_type: Type[_D] = dict,  # type: ignore
+    ) -> None:
         self.stack = []
         self.current_key = None
         self.root = None
@@ -464,7 +488,26 @@ def totree(
     return _make_element(value, context)
 
 
-def fromtree(tree, use_builtin_types=None, dict_type=dict):
+# NOTE: Due to https://github.com/python/mypy/issues/3737, one needs overrides for dict_type.
+@overload
+def fromtree(
+    tree: etree.Element, *, use_builtin_types: Optional[bool] = ...
+) -> Dict[str, Any]:
+    ...
+
+
+@overload
+def fromtree(
+    tree: etree.Element, *, use_builtin_types: Optional[bool] = ..., dict_type: Type[_D]
+) -> _D:
+    ...
+
+
+def fromtree(
+    tree: etree.Element,
+    use_builtin_types: Optional[bool] = None,
+    dict_type: Type[_D] = dict,  # type: ignore
+) -> _D:
     """Convert an XML tree to a plist structure.
 
     Args:
@@ -492,9 +535,24 @@ def fromtree(tree, use_builtin_types=None, dict_type=dict):
 
 
 # python3 plistlib API
+# Typing stubs copied from typeshed.
+@overload
+def load(fp: IO[bytes], *, use_builtin_types: Optional[bool] = ...) -> Dict[str, Any]:
+    ...
 
 
-def load(fp, use_builtin_types=None, dict_type=dict):
+@overload
+def load(
+    fp: IO[bytes], *, use_builtin_types: Optional[bool] = ..., dict_type: Type[_D]
+) -> _D:
+    ...
+
+
+def load(
+    fp: IO[bytes],
+    use_builtin_types: Optional[bool] = None,
+    dict_type: Type[_D] = dict,  # type: ignore
+) -> _D:
     """Load a plist file into an object.
 
     Args:
@@ -526,11 +584,27 @@ def load(fp, use_builtin_types=None, dict_type=dict):
         return result
 
 
-def loads(value, use_builtin_types=None, dict_type=dict):
+@overload
+def loads(value: bytes, *, use_builtin_types: Optional[bool] = ...) -> Dict[str, Any]:
+    ...
+
+
+@overload
+def loads(
+    value: bytes, *, use_builtin_types: Optional[bool] = ..., dict_type: Type[_D]
+) -> _D:
+    ...
+
+
+def loads(
+    value: bytes,
+    use_builtin_types: Optional[bool] = None,
+    dict_type: Type[_D] = dict,  # type: ignore
+) -> _D:
     """Load a plist file from a string into an object.
 
     Args:
-        value: A string containing a plist.
+        value: A bytes string containing a plist.
         use_builtin_types: If True, binary data is deserialized to
             bytes strings. If False, it is wrapped in :py:class:`Data`
             objects. Defaults to True if not provided. Deprecated.
@@ -546,13 +620,13 @@ def loads(value, use_builtin_types=None, dict_type=dict):
 
 
 def dump(
-    value,
-    fp,
-    sort_keys=True,
-    skipkeys=False,
-    use_builtin_types=None,
-    pretty_print=True,
-):
+    value: PlistEncodable,
+    fp: IO[Any],
+    sort_keys: bool = True,
+    skipkeys: bool = False,
+    use_builtin_types: Optional[bool] = None,
+    pretty_print: bool = True,
+) -> None:
     """Write a Python object to a plist file.
 
     Args:
@@ -605,12 +679,12 @@ def dump(
 
 
 def dumps(
-    value,
-    sort_keys=True,
-    skipkeys=False,
-    use_builtin_types=None,
-    pretty_print=True,
-):
+    value: PlistEncodable,
+    sort_keys: bool = True,
+    skipkeys: bool = False,
+    use_builtin_types: Optional[bool] = None,
+    pretty_print: bool = True,
+) -> bytes:
     """Write a Python object to a string in plist format.
 
     Args:
