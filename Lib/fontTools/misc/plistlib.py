@@ -51,11 +51,6 @@ PLIST_DOCTYPE = (
 )
 
 
-# Copied from the typeshed module.
-mm = MutableMapping[str, Any]
-_D = TypeVar("_D", bound=mm)
-
-
 # Date should conform to a subset of ISO 8601:
 # YYYY '-' MM '-' DD 'T' HH ':' MM ':' SS 'Z'
 _date_parser = re.compile(
@@ -190,7 +185,7 @@ class PlistTarget:
     def __init__(
         self,
         use_builtin_types: Optional[bool] = None,
-        dict_type: Type[_D] = dict,  # type: ignore
+        dict_type: Type[MutableMapping[str, Any]] = dict,  # type: ignore
     ) -> None:
         self.stack = []
         self.current_key = None
@@ -492,7 +487,7 @@ def totree(
 def fromtree(
     tree: etree.Element,
     use_builtin_types: Optional[bool] = None,
-    dict_type: Type[_D] = dict,  # type: ignore
+    dict_type: Type[MutableMapping[str, Any]] = dict,
 ) -> Any:
     """Convert an XML tree to a plist structure.
 
@@ -524,7 +519,7 @@ def fromtree(
 def load(
     fp: IO[bytes],
     use_builtin_types: Optional[bool] = None,
-    dict_type: Type[_D] = dict,  # type: ignore
+    dict_type: Type[MutableMapping[str, Any]] = dict,
 ) -> Any:
     """Load a plist file into an object.
 
@@ -560,7 +555,7 @@ def load(
 def loads(
     value: bytes,
     use_builtin_types: Optional[bool] = None,
-    dict_type: Type[_D] = dict,  # type: ignore
+    dict_type: Type[MutableMapping[str, Any]] = dict,
 ) -> Any:
     """Load a plist file from a string into an object.
 
