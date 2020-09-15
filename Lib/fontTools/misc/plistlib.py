@@ -1,14 +1,14 @@
+import collections.abc
 import sys
 import re
 from typing import Any, Callable, Dict, List, NoReturn, Optional, Sequence, Tuple, Union, overload
+from typing import Any, Callable, Dict, List, Mapping, NoReturn, Optional, Sequence, Tuple, Type, TypeVar, Union, overload, IO
 import warnings
 from io import BytesIO
 from datetime import datetime
 from base64 import b64encode, b64decode
 from numbers import Integral
-
 from types import SimpleNamespace
-from collections.abc import Mapping
 from functools import singledispatch
 
 from fontTools.misc import etree
@@ -393,7 +393,6 @@ PlistEncodable = Union[
     Tuple[Any, ...],
     datetime,
     bytes,
-    bytearray,
     Data,
 ]
 
@@ -401,7 +400,7 @@ _make_element.register(str)(_string_element)  # type: ignore
 _make_element.register(bool)(_bool_element)  # type: ignore
 _make_element.register(Integral)(_integer_element)  # type: ignore
 _make_element.register(float)(_real_element)  # type: ignore
-_make_element.register(Mapping)(_dict_element)  # type: ignore
+_make_element.register(collections.abc.Mapping)(_dict_element)  # type: ignore
 _make_element.register(list)(_array_element)  # type: ignore
 _make_element.register(tuple)(_array_element)  # type: ignore
 _make_element.register(datetime)(_date_element)  # type: ignore
