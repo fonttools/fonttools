@@ -189,7 +189,7 @@ class PlistTarget:
         dict_type: Type[MutableMapping[str, Any]] = dict,
     ) -> None:
         self.stack: List[PlistEncodable] = []
-        self.current_key = None
+        self.current_key: Optional[str] = None
         self.root: Optional[PlistEncodable] = None
         if use_builtin_types is None:
             self._use_builtin_types = USE_BUILTIN_TYPES
@@ -226,9 +226,10 @@ class PlistTarget:
 
     def add_object(self, value: PlistEncodable) -> None:
         if self.current_key is not None:
-            if not isinstance(self.stack[-1], type({})):
-                raise ValueError("unexpected element: %r" % self.stack[-1])
-            self.stack[-1][self.current_key] = value
+            stack_top = self.stack[-1]
+            if not isinstance(stack_top, collections.abc.MutableMapping):
+                raise ValueError("unexpected element: %r" % stack_top)
+            stack_top[self.current_key] = value
             self.current_key = None
         elif not self.stack:
             # this is the root object
@@ -261,13 +262,13 @@ def end_dict(self: PlistTarget) -> None:
 
 
 def end_key(self: PlistTarget) -> None:
-    if self.current_key or not isinstance(self.stack[-1], type({})):
+    if self.current_key or not isinstance(self.stack[-1], collections.abc.Mapping):
         raise ValueError("unexpected key")
     self.current_key = self.get_data()
 
 
 def start_array(self: PlistTarget) -> None:
-    a = []
+    a: List[PlistEncodable] = []
     self.add_object(a)
     self.stack.append(a)
 
@@ -541,7 +542,7 @@ def load(
     if not hasattr(fp, "read"):
         raise AttributeError("'%s' object has no attribute 'read'" % type(fp).__name__)
     target = PlistTarget(use_builtin_types=use_builtin_types, dict_type=dict_type)
-    parser = etree.XMLParser(target=target)
+    parser = etree.XMLParser(target=target)  # type: ignore
     result = etree.parse(fp, parser=parser)
     # lxml returns the target object directly, while ElementTree wraps
     # it as the root of an ElementTree object
@@ -626,7 +627,12 @@ def dump(
     else:
         header = XML_DECLARATION + PLIST_DOCTYPE
     fp.write(header)
-    tree.write(fp, encoding="utf-8", pretty_print=pretty_print, xml_declaration=False)
+    tree.write(
+        fp,
+        encoding="utf-8",
+        pretty_print=pretty_print,  # type: ignore
+        xml_declaration=False,
+    )
 
 
 def dumps(
