@@ -234,9 +234,10 @@ class PlistTarget:
             # this is the root object
             self.root = value
         else:
-            if not isinstance(self.stack[-1], type([])):
-                raise ValueError("unexpected element: %r" % self.stack[-1])
-            self.stack[-1].append(value)
+            stack_top = self.stack[-1]
+            if not isinstance(stack_top, list):
+                raise ValueError("unexpected element: %r" % stack_top)
+            stack_top.append(value)
 
     def get_data(self) -> str:
         data = "".join(self._data)
