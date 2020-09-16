@@ -5,6 +5,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    List,
     Mapping,
     MutableMapping,
     Optional,
@@ -187,7 +188,7 @@ class PlistTarget:
         use_builtin_types: Optional[bool] = None,
         dict_type: Type[MutableMapping[str, Any]] = dict,
     ) -> None:
-        self.stack = []
+        self.stack: List[PlistEncodable] = []
         self.current_key = None
         self.root: Optional[PlistEncodable] = None
         if use_builtin_types is None:
@@ -203,7 +204,7 @@ class PlistTarget:
         self._dict_type = dict_type
 
     def start(self, tag: str, attrib: Mapping[str, str]) -> None:
-        self._data = []
+        self._data: List[str] = []
         handler = _TARGET_START_HANDLERS.get(tag)
         if handler is not None:
             handler(self)
@@ -412,9 +413,11 @@ def _string_or_data_element(raw_bytes: bytes, ctx: SimpleNamespace) -> etree.Ele
         return _string_element(string, ctx)
 
 
-# The following is to pacify type checkers. At the time of this writing, neither
-# mypy nor Pyright can deal with singledispatch properly. Mypy additionally
-# complains about a single overload when there should be more (?) so silence it.
+# The following is probably not entirely correct. The signature should take `Any`
+# and return `NoReturn`. At the time of this writing, neither mypy nor Pyright
+# can deal with singledispatch properly and will apply the signature of the base
+# function to all others. Being slightly dishonest makes it type-check and return
+# usable typing information for the optimistic case.
 @singledispatch
 def _make_element(value: PlistEncodable, ctx: SimpleNamespace) -> etree.Element:
     raise TypeError("unsupported type: %s" % type(value))
