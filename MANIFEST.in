@@ -13,6 +13,8 @@ include *requirements.txt
 include tox.ini
 include run-tests.sh
 
+recursive-include Lib/fontTools py.typed
+
 include .appveyor.yml
 include .codecov.yml
 include .coveragerc

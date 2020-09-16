@@ -30,7 +30,7 @@ from fontTools.misc.py23 import (
     tobytes,
 )
 
-# By default, we 
+# By default, we
 #  - deserialize <data> elements as bytes and
 #  - serialize bytes as <data> elements.
 # Before, on Python 2, we
@@ -62,7 +62,7 @@ _date_parser = re.compile(
     r"(?::(?P<minute>\d\d)"
     r"(?::(?P<second>\d\d))"
     r"?)?)?)?)?Z",
-    re.ASCII
+    re.ASCII,
 )
 
 
@@ -162,7 +162,7 @@ PlistEncodable = Union[
 
 
 class PlistTarget:
-    """ Event handler using the ElementTree Target API that can be
+    """Event handler using the ElementTree Target API that can be
     passed to a XMLParser to produce property list objects from XML.
     It is based on the CPython plistlib module's _PlistParser class,
     but does not use the expat parser.
@@ -407,8 +407,7 @@ def _string_or_data_element(raw_bytes: bytes, ctx: SimpleNamespace) -> etree.Ele
             string = raw_bytes.decode(encoding="ascii", errors="strict")
         except UnicodeDecodeError:
             raise ValueError(
-                "invalid non-ASCII bytes; use unicode string instead: %r"
-                % raw_bytes
+                "invalid non-ASCII bytes; use unicode string instead: %r" % raw_bytes
             )
         return _string_element(string, ctx)
 
@@ -539,12 +538,8 @@ def load(
     """
 
     if not hasattr(fp, "read"):
-        raise AttributeError(
-            "'%s' object has no attribute 'read'" % type(fp).__name__
-        )
-    target = PlistTarget(
-        use_builtin_types=use_builtin_types, dict_type=dict_type
-    )
+        raise AttributeError("'%s' object has no attribute 'read'" % type(fp).__name__)
+    target = PlistTarget(use_builtin_types=use_builtin_types, dict_type=dict_type)
     parser = etree.XMLParser(target=target)
     result = etree.parse(fp, parser=parser)
     # lxml returns the target object directly, while ElementTree wraps
@@ -608,12 +603,10 @@ def dump(
         ``ValueError``
             if non-representable binary data is present
             and `use_builtin_types` is false.
-   """
+    """
 
     if not hasattr(fp, "write"):
-        raise AttributeError(
-            "'%s' object has no attribute 'write'" % type(fp).__name__
-        )
+        raise AttributeError("'%s' object has no attribute 'write'" % type(fp).__name__)
     root = etree.Element("plist", version="1.0")
     el = totree(
         value,
@@ -632,9 +625,7 @@ def dump(
     else:
         header = XML_DECLARATION + PLIST_DOCTYPE
     fp.write(header)
-    tree.write(
-        fp, encoding="utf-8", pretty_print=pretty_print, xml_declaration=False
-    )
+    tree.write(fp, encoding="utf-8", pretty_print=pretty_print, xml_declaration=False)
 
 
 def dumps(
