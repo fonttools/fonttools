@@ -627,10 +627,10 @@ def dump(
     else:
         header = XML_DECLARATION + PLIST_DOCTYPE
     fp.write(header)
-    tree.write(
+    tree.write(  # type: ignore
         fp,
         encoding="utf-8",
-        pretty_print=pretty_print,  # type: ignore
+        pretty_print=pretty_print,
         xml_declaration=False,
     )
 
