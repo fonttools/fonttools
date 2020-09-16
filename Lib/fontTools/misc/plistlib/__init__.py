@@ -78,7 +78,7 @@ def _date_from_string(s: str) -> datetime:
         if val is None:
             break
         lst.append(int(val))
-    return datetime(*lst)  # type: ignore
+    return datetime(lst[0], lst[1], lst[2], lst[3], lst[4], lst[5])
 
 
 def _date_to_string(d: datetime) -> str:
