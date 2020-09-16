@@ -185,7 +185,7 @@ class PlistTarget:
     def __init__(
         self,
         use_builtin_types: Optional[bool] = None,
-        dict_type: Type[MutableMapping[str, Any]] = dict,  # type: ignore
+        dict_type: Type[MutableMapping[str, Any]] = dict,
     ) -> None:
         self.stack = []
         self.current_key = None
