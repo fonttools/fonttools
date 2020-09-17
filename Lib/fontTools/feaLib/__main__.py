@@ -39,6 +39,12 @@ def main(args=None):
         help="Specify the table(s) to be built.",
     )
     parser.add_argument(
+        "-d",
+        "--debug",
+        action="store_true",
+        help="Add source-level debugging information to font.",
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         help="increase the logger verbosity. Multiple -v " "options are allowed.",
@@ -58,7 +64,9 @@ def main(args=None):
 
     font = TTFont(options.input_font)
     try:
-        addOpenTypeFeatures(font, options.input_fea, tables=options.tables)
+        addOpenTypeFeatures(
+            font, options.input_fea, tables=options.tables, debug=options.debug
+        )
     except FeatureLibError as e:
         if options.traceback:
             raise

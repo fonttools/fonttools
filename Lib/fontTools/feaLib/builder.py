@@ -2,6 +2,7 @@ from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import binary2num, safeEval
 from fontTools.feaLib.error import FeatureLibError
+from fontTools.feaLib.lookupDebugInfo import LookupDebugInfo, LOOKUP_DEBUG_INFO_KEY
 from fontTools.feaLib.parser import Parser
 from fontTools.feaLib.ast import FeatureFile
 from fontTools.otlLib import builder as otl
@@ -34,7 +35,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def addOpenTypeFeatures(font, featurefile, tables=None):
+def addOpenTypeFeatures(font, featurefile, tables=None, debug=False):
     """Add features from a file to a font. Note that this replaces any features
     currently present.
 
@@ -44,13 +45,17 @@ def addOpenTypeFeatures(font, featurefile, tables=None):
             parse it into an AST), or a pre-parsed AST instance.
         tables: If passed, restrict the set of affected tables to those in the
             list.
+        debug: Whether to add source debugging information to the font in the
+            ``Debg`` table
 
     """
     builder = Builder(font, featurefile)
-    builder.build(tables=tables)
+    builder.build(tables=tables, debug=debug)
 
 
-def addOpenTypeFeaturesFromString(font, features, filename=None, tables=None):
+def addOpenTypeFeaturesFromString(
+    font, features, filename=None, tables=None, debug=False
+):
     """Add features from a string to a font. Note that this replaces any
     features currently present.
 
@@ -62,13 +67,15 @@ def addOpenTypeFeaturesFromString(font, features, filename=None, tables=None):
             directory is assumed.
         tables: If passed, restrict the set of affected tables to those in the
             list.
+        debug: Whether to add source debugging information to the font in the
+            ``Debg`` table
 
     """
 
     featurefile = UnicodeIO(tounicode(features))
     if filename:
         featurefile.name = filename
-    addOpenTypeFeatures(font, featurefile, tables=tables)
+    addOpenTypeFeatures(font, featurefile, tables=tables, debug=debug)
 
 
 class Builder(object):
@@ -108,6 +115,7 @@ class Builder(object):
         self.cur_lookup_name_ = None
         self.cur_feature_name_ = None
         self.lookups_ = []
+        self.lookup_locations = {"GSUB": {}, "GPOS": {}}
         self.features_ = {}  # ('latn', 'DEU ', 'smcp') --> [LookupBuilder*]
         self.required_features_ = {}  # ('latn', 'DEU ') --> 'scmp'
         # for feature 'aalt'
@@ -146,7 +154,7 @@ class Builder(object):
         # for table 'vhea'
         self.vhea_ = {}
 
-    def build(self, tables=None):
+    def build(self, tables=None, debug=False):
         if self.parseTree is None:
             self.parseTree = Parser(self.file, self.glyphMap).parse()
         self.parseTree.build(self)
@@ -201,6 +209,8 @@ class Builder(object):
                 self.font["BASE"] = base
             elif "BASE" in self.font:
                 del self.font["BASE"]
+        if debug:
+            self.buildDebg()
 
     def get_chained_lookup_(self, location, builder_class):
         result = builder_class(self.font, location)
@@ -638,6 +648,12 @@ class Builder(object):
             sets.append(glyphs)
         return otl.buildMarkGlyphSetsDef(sets, self.glyphMap)
 
+    def buildDebg(self):
+        if "Debg" not in self.font:
+            self.font["Debg"] = newTable("Debg")
+            self.font["Debg"].data = {}
+        self.font["Debg"].data[LOOKUP_DEBUG_INFO_KEY] = self.lookup_locations
+
     def buildLookups_(self, tag):
         assert tag in ("GPOS", "GSUB"), tag
         for lookup in self.lookups_:
@@ -647,6 +663,11 @@ class Builder(object):
             if lookup.table != tag:
                 continue
             lookup.lookup_index = len(lookups)
+            self.lookup_locations[tag][str(lookup.lookup_index)] = LookupDebugInfo(
+                location=str(lookup.location),
+                name=self.get_lookup_name_(lookup),
+                feature=None,
+            )
             lookups.append(lookup)
         try:
             otLookups = [l.build() for l in lookups]
@@ -684,6 +705,11 @@ class Builder(object):
             size_feature = tag == "GPOS" and feature_tag == "size"
             if len(lookup_indices) == 0 and not size_feature:
                 continue
+
+            for ix in lookup_indices:
+                self.lookup_locations[tag][str(ix)] = self.lookup_locations[tag][
+                    str(ix)
+                ]._replace(feature=key)
 
             feature_key = (feature_tag, lookup_indices)
             feature_index = feature_indices.get(feature_key)
@@ -736,6 +762,12 @@ class Builder(object):
         table.FeatureList.FeatureCount = len(table.FeatureList.FeatureRecord)
         table.LookupList.LookupCount = len(table.LookupList.Lookup)
         return table
+
+    def get_lookup_name_(self, lookup):
+        rev = {v: k for k, v in self.named_lookups_.items()}
+        if lookup in rev:
+            return rev[lookup]
+        return None
 
     def add_language_system(self, location, script, language):
         # OpenType Feature File Specification, section 4.b.i
