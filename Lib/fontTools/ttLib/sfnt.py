@@ -43,7 +43,7 @@ class SFNTReader(object):
 		# return default object
 		return object.__new__(cls)
 
-	def __init__(self, file, checkChecksums=1, fontNumber=-1):
+	def __init__(self, file, checkChecksums=0, fontNumber=-1):
 		self.file = file
 		self.checkChecksums = checkChecksums
 

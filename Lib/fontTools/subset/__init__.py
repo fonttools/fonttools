@@ -2711,7 +2711,7 @@ class Subsetter(object):
 def load_font(fontFile,
 	      options,
 	      allowVID=False,
-	      checkChecksums=False,
+	      checkChecksums=0,
 	      dontLoadGlyphNames=False,
 	      lazy=True):
 
