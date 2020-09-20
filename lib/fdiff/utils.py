@@ -20,9 +20,10 @@ def get_file_modtime(path):
 
 
 def get_tables_argument_list(table_string):
-    """Converts a comma separated OpenType table string into a Python list or return None if
-    the table_string was not defined (i.e., it was not included in an option on the command line).
-    Tables that are composed of three characters must be right padded with a space."""
+    """Converts a comma separated OpenType table string into a Python list or
+    return None if the table_string was not defined (i.e., it was not included
+    in an option on the command line). Tables that are composed of three
+    characters must be right padded with a space."""
     if table_string is None:
         return None
     else:

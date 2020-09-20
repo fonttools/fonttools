@@ -39,7 +39,8 @@ def _async_fetch_files(dirpath, urls):
         elif task.result().http_status != 200:
             # handle non-200 HTTP response status codes + file write fails
             raise AIOError(
-                f"failed to pull '{task.result().url}' with HTTP status code {task.result().http_status}"
+                f"failed to pull '{task.result().url}' with HTTP status "
+                f"code {task.result().http_status}"
             )
 
 
@@ -188,7 +189,8 @@ def u_diff(
     that is not included in filepath_a OR filepath_b
     :raises: fdiff.exceptions.AIOError if exception raised during execution of async I/O
              GET request for URL or file write
-    :raises: fdiff.exceptions.AIOError if GET request to URL returned non-200 response status code"""
+    :raises: fdiff.exceptions.AIOError if GET request to URL returned non-200 response
+    status code"""
     with tempfile.TemporaryDirectory() as tmpdirpath:
         # define the file paths with either local file requests
         # or HTTP GET requests of remote files based on the command line request
@@ -236,23 +238,24 @@ def external_diff(
     use_multiprocess=True,
 ):
     """Performs a unified diff on a TTX serialized data format dump of font binary data using
-        an external diff executable that is requested by the caller via `command`
+    an external diff executable that is requested by the caller via `command`
 
-        command: (string) command line executable string and arguments to define execution
-        filepath_a: (string) pre-file local file path or URL path
-        filepath_b: (string) post-file local file path or URL path
-        include_tables: (list of str) Python list of OpenType tables to include in the diff
-        exclude_tables: (list of str) Python list of OpentType tables to exclude from the diff
-        use_multiprocess: (bool) use multi-processor optimizations (default=True)
+    command: (string) command line executable string and arguments to define execution
+    filepath_a: (string) pre-file local file path or URL path
+    filepath_b: (string) post-file local file path or URL path
+    include_tables: (list of str) Python list of OpenType tables to include in the diff
+    exclude_tables: (list of str) Python list of OpentType tables to exclude from the diff
+    use_multiprocess: (bool) use multi-processor optimizations (default=True)
 
-        include_tables and exclude_tables are mutually exclusive arguments.  Only one should
-        be defined
+    include_tables and exclude_tables are mutually exclusive arguments.  Only one should
+    be defined
 
-        :returns: Generator of ordered diff line strings that include newline line endings
-        :raises: KeyError if include_tables or exclude_tables includes a mis-specified table
-        that is not included in filepath_a OR filepath_b
-        :raises: IOError if exception raised during execution of `command` on TTX files
-        :raises: fdiff.exceptions.AIOError if GET request to URL returned non-200 response status code"""
+    :returns: Generator of ordered diff line strings that include newline line endings
+    :raises: KeyError if include_tables or exclude_tables includes a mis-specified table
+    that is not included in filepath_a OR filepath_b
+    :raises: IOError if exception raised during execution of `command` on TTX files
+    :raises: fdiff.exceptions.AIOError if GET request to URL returned non-200 response
+    status code"""
     with tempfile.TemporaryDirectory() as tmpdirpath:
         # define the file paths with either local file requests
         # or HTTP GET requests of remote files based on the command line request

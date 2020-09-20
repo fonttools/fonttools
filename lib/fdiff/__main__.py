@@ -124,14 +124,16 @@ def run(argv):
         # head and tail are not supported when external diff tool is called
         if args.head or args.tail:
             sys.stderr.write(
-                f"[ERROR] The head and tail options are not supported with external diff executable calls.{os.linesep}"
+                f"[ERROR] The head and tail options are not supported with external "
+                f"diff executable calls.{os.linesep}"
             )
             sys.exit(1)
 
         # lines of context filter is not supported when external diff tool is called
         if args.lines != 3:
             sys.stderr.write(
-                f"[ERROR] The lines option is not supported with external diff executable calls.{os.linesep}"
+                f"[ERROR] The lines option is not supported with external diff "
+                f"executable calls.{os.linesep}"
             )
             sys.exit(1)
 
