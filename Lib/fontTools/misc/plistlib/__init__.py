@@ -356,7 +356,7 @@ def _real_element(value: float, ctx: SimpleNamespace) -> etree.Element:
     return el
 
 
-def _dict_element(d: Mapping[str, Any], ctx: SimpleNamespace) -> etree.Element:
+def _dict_element(d: Mapping[str, PlistEncodable], ctx: SimpleNamespace) -> etree.Element:
     el = etree.Element("dict")
     items = d.items()
     if ctx.sort_keys:
