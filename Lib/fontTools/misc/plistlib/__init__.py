@@ -374,7 +374,7 @@ def _dict_element(d: Mapping[str, PlistEncodable], ctx: SimpleNamespace) -> etre
     return el
 
 
-def _array_element(array: Sequence[Any], ctx: SimpleNamespace) -> etree.Element:
+def _array_element(array: Sequence[PlistEncodable], ctx: SimpleNamespace) -> etree.Element:
     el = etree.Element("array")
     if len(array) == 0:
         return el
