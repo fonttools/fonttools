@@ -2,3 +2,4 @@ pytest>=3.0
 tox>=2.5
 bump2version>=0.5.6
 sphinx>=1.5.5
+mypy>=0.782
