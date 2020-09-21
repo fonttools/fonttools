@@ -1,3 +1,16 @@
+- [plistlib] Added typing annotations to plistlib module. Set up mypy static
+  typechecker to run automatically on CI (#2061).
+- [ttLib] Implement private ``Debg`` table, a reverse-DNS namespaced JSON dict.
+- [feaLib] Optionally add an entry into the ``Debg`` table with the original
+  lookup name (if any), feature name / script / language combination (if any),
+  and original source filename and line location. Annotate the ttx output for
+  a lookup with the information from the Debg table (#2052).
+- [sfnt] Disabled checksum checking by default in ``SFNTReader`` (#2058).
+- [Docs] Document ``mtiLib`` module (#2027).
+- [varLib.interpolatable] Added checks for contour node count and operation type
+  of each node (#2054).
+- [ttLib] Added API to register custom table packer/unpacker classes (#2055).
+
 4.14.0 (released 2020-08-19)
 ----------------------------
 
