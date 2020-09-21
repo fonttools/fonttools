@@ -11,7 +11,6 @@ from typing import (
     Optional,
     Sequence,
     Type,
-    TypeVar,
     Union,
     IO,
 )
@@ -78,7 +77,8 @@ def _date_from_string(s: str) -> datetime:
         if val is None:
             break
         lst.append(int(val))
-    return datetime(lst[0], lst[1], lst[2], lst[3], lst[4], lst[5])
+    # NOTE: mypy doesn't know that lst is 6 elements long.
+    return datetime(*lst)  # type:ignore
 
 
 def _date_to_string(d: datetime) -> str:
@@ -393,6 +393,7 @@ def _date_element(date: datetime, ctx: SimpleNamespace) -> etree.Element:
 
 def _data_element(data: bytes, ctx: SimpleNamespace) -> etree.Element:
     el = etree.Element("data")
+    # NOTE: mypy is confused about whether el.text should be str or bytes.
     el.text = _encode_base64(  # type: ignore
         data,
         maxlinelength=(76 if ctx.pretty_print else None),
@@ -577,7 +578,7 @@ def loads(
 
 def dump(
     value: PlistEncodable,
-    fp: IO[Any],
+    fp: IO[bytes],
     sort_keys: bool = True,
     skipkeys: bool = False,
     use_builtin_types: Optional[bool] = None,

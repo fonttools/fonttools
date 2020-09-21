@@ -452,7 +452,6 @@ setup_params = dict(
 	packages=find_packages("Lib"),
 	include_package_data=True,
 	data_files=find_data_files(),
-	zip_safe=False,  # So mypy can find typing information.
 	ext_modules=ext_modules,
 	setup_requires=setup_requires,
 	extras_require=extras_require,
