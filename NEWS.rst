@@ -1,3 +1,6 @@
+4.15.0 (released 2020-09-21)
+----------------------------
+
 - [plistlib] Added typing annotations to plistlib module. Set up mypy static
   typechecker to run automatically on CI (#2061).
 - [ttLib] Implement private ``Debg`` table, a reverse-DNS namespaced JSON dict.
