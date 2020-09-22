@@ -8,6 +8,7 @@ from numbers import Number
 import math
 import operator
 
+
 def calcBounds(array):
     """Calculate the bounding rectangle of a 2D points array.
 
@@ -22,6 +23,7 @@ def calcBounds(array):
     xs = [x for x, y in array]
     ys = [y for x, y in array]
     return min(xs), min(ys), max(xs), max(ys)
+
 
 def calcIntBounds(array, round=otRound):
     """Calculate the integer bounding rectangle of a 2D points array.
@@ -57,6 +59,7 @@ def updateBounds(bounds, p, min=min, max=max):
     xMin, yMin, xMax, yMax = bounds
     return min(xMin, x), min(yMin, y), max(xMax, x), max(yMax, y)
 
+
 def pointInRect(p, rect):
     """Test if a point is inside a bounding rectangle.
 
@@ -71,6 +74,7 @@ def pointInRect(p, rect):
     (x, y) = p
     xMin, yMin, xMax, yMax = rect
     return (xMin <= x <= xMax) and (yMin <= y <= yMax)
+
 
 def pointsInRect(array, rect):
     """Determine which points are inside a bounding rectangle.
@@ -88,6 +92,7 @@ def pointsInRect(array, rect):
     xMin, yMin, xMax, yMax = rect
     return [(xMin <= x <= xMax) and (yMin <= y <= yMax) for x, y in array]
 
+
 def vectorLength(vector):
     """Calculate the length of the given vector.
 
@@ -99,6 +104,7 @@ def vectorLength(vector):
     """
     x, y = vector
     return math.sqrt(x**2 + y**2)
+
 
 def asInt16(array):
     """Round a list of floats to 16-bit signed integers.
@@ -130,6 +136,7 @@ def normRect(rect):
     (xMin, yMin, xMax, yMax) = rect
     return min(xMin, xMax), min(yMin, yMax), max(xMin, xMax), max(yMin, yMax)
 
+
 def scaleRect(rect, x, y):
     """Scale a bounding box rectangle.
 
@@ -144,6 +151,7 @@ def scaleRect(rect, x, y):
     """
     (xMin, yMin, xMax, yMax) = rect
     return xMin * x, yMin * y, xMax * x, yMax * y
+
 
 def offsetRect(rect, dx, dy):
     """Offset a bounding box rectangle.
@@ -160,6 +168,7 @@ def offsetRect(rect, dx, dy):
     (xMin, yMin, xMax, yMax) = rect
     return xMin+dx, yMin+dy, xMax+dx, yMax+dy
 
+
 def insetRect(rect, dx, dy):
     """Inset a bounding box rectangle on all sides.
 
@@ -174,6 +183,7 @@ def insetRect(rect, dx, dy):
     """
     (xMin, yMin, xMax, yMax) = rect
     return xMin+dx, yMin+dy, xMax-dx, yMax-dy
+
 
 def sectRect(rect1, rect2):
     """Test for rectangle-rectangle intersection.
@@ -197,6 +207,7 @@ def sectRect(rect1, rect2):
         return False, (0, 0, 0, 0)
     return True, (xMin, yMin, xMax, yMax)
 
+
 def unionRect(rect1, rect2):
     """Determine union of bounding rectangles.
 
@@ -215,6 +226,7 @@ def unionRect(rect1, rect2):
                               max(xMax1, xMax2), max(yMax1, yMax2))
     return (xMin, yMin, xMax, yMax)
 
+
 def rectCenter(rect):
     """Determine rectangle center.
 
@@ -227,6 +239,7 @@ def rectCenter(rect):
     """
     (xMin, yMin, xMax, yMax) = rect
     return (xMin+xMax)/2, (yMin+yMax)/2
+
 
 def intRect(rect):
     """Round a rectangle to integer values.
@@ -292,6 +305,7 @@ class Vector(object):
 
     def __add__(self, other):
         return Vector(self._vectorOp(other, operator.add), keep=True)
+
     def __iadd__(self, other):
         self.values = self._vectorOp(other, operator.add)
         return self
@@ -299,14 +313,17 @@ class Vector(object):
 
     def __sub__(self, other):
         return Vector(self._vectorOp(other, operator.sub), keep=True)
+
     def __isub__(self, other):
         self.values = self._vectorOp(other, operator.sub)
         return self
+
     def __rsub__(self, other):
         return other + (-self)
 
     def __mul__(self, other):
         return Vector(self._scalarOp(other, operator.mul), keep=True)
+
     def __imul__(self, other):
         self.values = self._scalarOp(other, operator.mul)
         return self
@@ -314,16 +331,20 @@ class Vector(object):
 
     def __truediv__(self, other):
         return Vector(self._scalarOp(other, operator.div), keep=True)
+
     def __itruediv__(self, other):
         self.values = self._scalarOp(other, operator.div)
         return self
 
     def __pos__(self):
         return Vector(self._unaryOp(operator.pos), keep=True)
+
     def __neg__(self):
         return Vector(self._unaryOp(operator.neg), keep=True)
+
     def __round__(self):
         return Vector(self._unaryOp(round), keep=True)
+
     def toInt(self):
         """Synonym for ``round``."""
         return self.__round__()
@@ -333,6 +354,7 @@ class Vector(object):
             return self.values == other.values
         else:
             return self.values == other
+
     def __ne__(self, other):
         return not self.__eq__(other)
 
@@ -342,6 +364,7 @@ class Vector(object):
 
     def __abs__(self):
         return math.sqrt(sum([x*x for x in self.values]))
+
     def dot(self, other):
         """Performs vector dot product, returning sum of
         ``a[0] * b[0], a[1] * b[1], ...``"""
@@ -452,6 +475,7 @@ def _test():
     >>> intRect((0.9, 2.9, 3.1, 4.1))
     (0, 2, 4, 5)
     """
+
 
 if __name__ == "__main__":
     import sys

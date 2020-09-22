@@ -111,7 +111,7 @@ class ProgramTest(unittest.TestCase):
         finally:
             output_string = buf.getvalue()
         assert output_string == ttProgramXML
-        
+
 
 if __name__ == '__main__':
     import sys

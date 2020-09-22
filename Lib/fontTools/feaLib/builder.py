@@ -248,7 +248,8 @@ class Builder(object):
         if self.cur_feature_name_:
             # We are starting a lookup rule inside a feature. This includes
             # lookup rules inside named lookups inside features.
-            self.add_lookup_to_feature_(self.cur_lookup_, self.cur_feature_name_)
+            self.add_lookup_to_feature_(
+                self.cur_lookup_, self.cur_feature_name_)
         return self.cur_lookup_
 
     def build_feature_aalt_(self):
@@ -410,12 +411,14 @@ class Builder(object):
                 tag = nameID
                 if tag in self.featureNames_:
                     if tag not in self.featureNames_ids_:
-                        self.featureNames_ids_[tag] = self.get_user_name_id(table)
+                        self.featureNames_ids_[
+                            tag] = self.get_user_name_id(table)
                         assert self.featureNames_ids_[tag] is not None
                     nameID = self.featureNames_ids_[tag]
                 elif tag[0] in self.cv_parameters_:
                     if tag not in self.cv_parameters_ids_:
-                        self.cv_parameters_ids_[tag] = self.get_user_name_id(table)
+                        self.cv_parameters_ids_[
+                            tag] = self.get_user_name_id(table)
                         assert self.cv_parameters_ids_[tag] is not None
                     nameID = self.cv_parameters_ids_[tag]
             table.setName(string, nameID, platformID, platEncID, langID)
@@ -426,7 +429,8 @@ class Builder(object):
         table = self.font.get("OS/2")
         if not table:  # this only happens for unit tests
             table = self.font["OS/2"] = newTable("OS/2")
-            data = b"\0" * sstruct.calcsize(getTableModule("OS/2").OS2_format_0)
+            data = b"\0" * \
+                sstruct.calcsize(getTableModule("OS/2").OS2_format_0)
             table.decompile(data, self.font)
         version = 0
         if "fstype" in self.os2_:
@@ -502,7 +506,8 @@ class Builder(object):
                 ),
             )
         if version >= 5:
-            checkattr(table, ("usLowerOpticalPointSize", "usUpperOpticalPointSize"))
+            checkattr(table, ("usLowerOpticalPointSize",
+                              "usUpperOpticalPointSize"))
 
     def build_codepages_(self, pages):
         pages2bits = {
@@ -592,7 +597,8 @@ class Builder(object):
     def buildGDEF(self):
         gdef = otTables.GDEF()
         gdef.GlyphClassDef = self.buildGDEFGlyphClassDef_()
-        gdef.AttachList = otl.buildAttachList(self.attachPoints_, self.glyphMap)
+        gdef.AttachList = otl.buildAttachList(
+            self.attachPoints_, self.glyphMap)
         gdef.LigCaretList = otl.buildLigCaretList(
             self.ligCaretCoords_, self.ligCaretPoints_, self.glyphMap
         )
@@ -692,7 +698,7 @@ class Builder(object):
         scripts = {}  # 'latn' --> {'DEU': [23, 24]} for feature #23,24
         # Sort the feature table by feature tag:
         # https://github.com/fonttools/fonttools/issues/568
-        sortFeatureTag = lambda f: (f[0][2], f[0][1], f[0][0], f[1])
+        def sortFeatureTag(f): return (f[0][2], f[0][1], f[0][0], f[1])
         for key, lookups in sorted(self.features_.items(), key=sortFeatureTag):
             script, lang, feature_tag = key
             # l.lookup_index will be None when a lookup is not needed
@@ -718,12 +724,14 @@ class Builder(object):
                 frec = otTables.FeatureRecord()
                 frec.FeatureTag = feature_tag
                 frec.Feature = otTables.Feature()
-                frec.Feature.FeatureParams = self.buildFeatureParams(feature_tag)
+                frec.Feature.FeatureParams = self.buildFeatureParams(
+                    feature_tag)
                 frec.Feature.LookupListIndex = list(lookup_indices)
                 frec.Feature.LookupCount = len(lookup_indices)
                 table.FeatureList.FeatureRecord.append(frec)
                 feature_indices[feature_key] = feature_index
-            scripts.setdefault(script, {}).setdefault(lang, []).append(feature_index)
+            scripts.setdefault(script, {}).setdefault(
+                lang, []).append(feature_index)
             if self.required_features_.get((script, lang)) == feature_tag:
                 required_feature_indices[(script, lang)] = feature_index
 
@@ -739,7 +747,8 @@ class Builder(object):
                 langrec.LangSys = otTables.LangSys()
                 langrec.LangSys.LookupOrder = None
 
-                req_feature_index = required_feature_indices.get((script, lang))
+                req_feature_index = required_feature_indices.get(
+                    (script, lang))
                 if req_feature_index is None:
                     langrec.LangSys.ReqFeatureIndex = 0xFFFF
                 else:
@@ -748,7 +757,8 @@ class Builder(object):
                 langrec.LangSys.FeatureIndex = [
                     i for i in feature_indices if i != req_feature_index
                 ]
-                langrec.LangSys.FeatureCount = len(langrec.LangSys.FeatureIndex)
+                langrec.LangSys.FeatureCount = len(
+                    langrec.LangSys.FeatureIndex)
 
                 if lang == "dflt":
                     srec.Script.DefaultLangSys = langrec.LangSys
@@ -956,7 +966,8 @@ class Builder(object):
         self.script_ = script
         self.lookupflag_ = 0
         self.lookupflag_markFilterSet_ = None
-        self.set_language(location, "dflt", include_default=True, required=False)
+        self.set_language(location, "dflt",
+                          include_default=True, required=False)
 
     def find_lookup_builders_(self, lookups):
         """Helper for building chain contextual substitutions
@@ -1002,7 +1013,8 @@ class Builder(object):
         if prefix or suffix:
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
             lookup = self.get_chained_lookup_(location, AlternateSubstBuilder)
-            chain.rules.append(ChainContextualRule(prefix, [{glyph}], suffix, [lookup]))
+            chain.rules.append(ChainContextualRule(
+                prefix, [{glyph}], suffix, [lookup]))
         else:
             lookup = self.get_lookup_(location, AlternateSubstBuilder)
         if glyph in lookup.alternates:
@@ -1061,7 +1073,8 @@ class Builder(object):
         if prefix or suffix or forceChain:
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
             lookup = self.get_chained_lookup_(location, LigatureSubstBuilder)
-            chain.rules.append(ChainContextualRule(prefix, glyphs, suffix, [lookup]))
+            chain.rules.append(ChainContextualRule(
+                prefix, glyphs, suffix, [lookup]))
         else:
             lookup = self.get_lookup_(location, LigatureSubstBuilder)
 
@@ -1080,7 +1093,8 @@ class Builder(object):
             chain = self.get_lookup_(location, ChainContextSubstBuilder)
             sub = self.get_chained_lookup_(location, MultipleSubstBuilder)
             sub.mapping[glyph] = replacements
-            chain.rules.append(ChainContextualRule(prefix, [{glyph}], suffix, [sub]))
+            chain.rules.append(ChainContextualRule(
+                prefix, [{glyph}], suffix, [sub]))
             return
         lookup = self.get_lookup_(location, MultipleSubstBuilder)
         if glyph in lookup.mapping:
@@ -1157,7 +1171,8 @@ class Builder(object):
                 for mark in markClassDef.glyphs.glyphSet():
                     if mark not in lookupBuilder.marks:
                         otMarkAnchor = makeOpenTypeAnchor(markClassDef.anchor)
-                        lookupBuilder.marks[mark] = (markClass.name, otMarkAnchor)
+                        lookupBuilder.marks[mark] = (
+                            markClass.name, otMarkAnchor)
                     else:
                         existingMarkClass = lookupBuilder.marks[mark][0]
                         if markClass.name != existingMarkClass:
@@ -1173,7 +1188,8 @@ class Builder(object):
         for baseAnchor, markClass in marks:
             otBaseAnchor = makeOpenTypeAnchor(baseAnchor)
             for base in bases:
-                builder.bases.setdefault(base, {})[markClass.name] = otBaseAnchor
+                builder.bases.setdefault(
+                    base, {})[markClass.name] = otBaseAnchor
 
     def add_mark_lig_pos(self, location, ligatures, components):
         builder = self.get_lookup_(location, MarkLigPosBuilder)
@@ -1218,7 +1234,8 @@ class Builder(object):
         else:
             lookup = self.get_lookup_(location, SinglePosBuilder)
             for glyphs, value in pos:
-                otValueRecord = makeOpenTypeValueRecord(value, pairPosContext=False)
+                otValueRecord = makeOpenTypeValueRecord(
+                    value, pairPosContext=False)
                 for glyph in glyphs:
                     try:
                         lookup.add_pos(location, glyph, otValueRecord)

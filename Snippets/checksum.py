@@ -15,7 +15,8 @@ def write_checksum(filepaths, stdout_write=False, use_ttx=False, include_tables=
     checksum_dict = {}
     for path in filepaths:
         if not os.path.exists(path):
-            sys.stderr.write("[checksum.py] ERROR: " + path + " is not a valid file path" + os.linesep)
+            sys.stderr.write("[checksum.py] ERROR: " + path +
+                             " is not a valid file path" + os.linesep)
             sys.exit(1)
 
         if use_ttx:
@@ -31,7 +32,8 @@ def write_checksum(filepaths, stdout_write=False, use_ttx=False, include_tables=
             tt = TTFont(path)
             # important to keep the newlinestr value defined here as hash values will change across platforms
             # if platform specific newline values are assumed
-            tt.saveXML(temp_ttx_path, newlinestr="\n", skipTables=exclude_tables, tables=include_tables)
+            tt.saveXML(temp_ttx_path, newlinestr="\n",
+                       skipTables=exclude_tables, tables=include_tables)
             checksum_path = temp_ttx_path
         else:
             if include_tables is not None:
@@ -47,7 +49,8 @@ def write_checksum(filepaths, stdout_write=False, use_ttx=False, include_tables=
         file_contents = _read_binary(checksum_path)
 
         # store SHA1 hash data and associated file path basename in the checksum_dict dictionary
-        checksum_dict[basename(checksum_path)] = hashlib.sha1(file_contents).hexdigest()
+        checksum_dict[basename(checksum_path)] = hashlib.sha1(
+            file_contents).hexdigest()
 
         # remove temp ttx files when present
         if use_ttx and do_not_cleanup is False:
@@ -71,7 +74,8 @@ def check_checksum(filepaths):
     check_failed = False
     for path in filepaths:
         if not os.path.exists(path):
-            sys.stderr.write("[checksum.py] ERROR: " + path + " is not a valid filepath" + os.linesep)
+            sys.stderr.write("[checksum.py] ERROR: " + path +
+                             " is not a valid filepath" + os.linesep)
             sys.exit(1)
 
         with open(path, mode='r') as file:
@@ -84,7 +88,8 @@ def check_checksum(filepaths):
                     expected_sha1 = line_list[0]
                     test_path = line_list[1]
                 else:
-                    sys.stderr.write("[checksum.py] ERROR: failed to parse checksum file values" + os.linesep)
+                    sys.stderr.write(
+                        "[checksum.py] ERROR: failed to parse checksum file values" + os.linesep)
                     sys.exit(1)
 
                 if not os.path.exists(test_path):
@@ -114,20 +119,28 @@ def _read_binary(filepath):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(prog="checksum.py", description="A SHA1 hash checksum list generator and checksum testing script")
-    parser.add_argument("-t", "--ttx", help="Calculate from ttx file", action="store_true")
-    parser.add_argument("-s", "--stdout", help="Write output to stdout stream", action="store_true")
-    parser.add_argument("-n", "--noclean", help="Do not discard *.ttx files used to calculate SHA1 hashes", action="store_true")
-    parser.add_argument("-c", "--check", help="Verify checksum values vs. files", action="store_true")
+    parser = argparse.ArgumentParser(
+        prog="checksum.py", description="A SHA1 hash checksum list generator and checksum testing script")
+    parser.add_argument(
+        "-t", "--ttx", help="Calculate from ttx file", action="store_true")
+    parser.add_argument(
+        "-s", "--stdout", help="Write output to stdout stream", action="store_true")
+    parser.add_argument(
+        "-n", "--noclean", help="Do not discard *.ttx files used to calculate SHA1 hashes", action="store_true")
+    parser.add_argument(
+        "-c", "--check", help="Verify checksum values vs. files", action="store_true")
     parser.add_argument("filepaths", nargs="+", help="One or more file paths.  Use checksum file path for -c/--check.  Use paths\
         to font files for all other commands.")
 
-    parser.add_argument("-i", "--include", action="append", help="Included OpenType tables for ttx data dump")
-    parser.add_argument("-e", "--exclude", action="append", help="Excluded OpenType tables for ttx data dump")
+    parser.add_argument("-i", "--include", action="append",
+                        help="Included OpenType tables for ttx data dump")
+    parser.add_argument("-e", "--exclude", action="append",
+                        help="Excluded OpenType tables for ttx data dump")
 
     args = parser.parse_args(sys.argv[1:])
 
     if args.check is True:
         check_checksum(args.filepaths)
     else:
-        write_checksum(args.filepaths, stdout_write=args.stdout, use_ttx=args.ttx, do_not_cleanup=args.noclean, include_tables=args.include, exclude_tables=args.exclude)
+        write_checksum(args.filepaths, stdout_write=args.stdout, use_ttx=args.ttx,
+                       do_not_cleanup=args.noclean, include_tables=args.include, exclude_tables=args.exclude)

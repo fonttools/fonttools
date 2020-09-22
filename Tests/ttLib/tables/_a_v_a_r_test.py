@@ -32,7 +32,8 @@ class AxisVariationTableTest(unittest.TestCase):
         avar = table__a_v_a_r()
         avar.segments["wdth"] = {-1.0: -1.0, 0.0: 0.0, 0.3: 0.8, 1.0: 1.0}
         avar.segments["wght"] = {-1.0: -1.0, 0.0: 0.0, 1.0: 1.0}
-        self.assertEqual(TEST_DATA, avar.compile(self.makeFont(["wdth", "wght"])))
+        self.assertEqual(TEST_DATA, avar.compile(
+            self.makeFont(["wdth", "wght"])))
 
     def test_decompile(self):
         avar = table__a_v_a_r()
@@ -45,19 +46,21 @@ class AxisVariationTableTest(unittest.TestCase):
     def test_decompile_unsupportedVersion(self):
         avar = table__a_v_a_r()
         font = self.makeFont(["wdth", "wght"])
-        self.assertRaises(TTLibError, avar.decompile, deHexStr("02 01 03 06 00 00 00 00"), font)
+        self.assertRaises(TTLibError, avar.decompile,
+                          deHexStr("02 01 03 06 00 00 00 00"), font)
 
     def test_toXML(self):
         avar = table__a_v_a_r()
-        avar.segments["opsz"] = {-1.0: -1.0, 0.0: 0.0, 0.2999878: 0.7999878, 1.0: 1.0}
+        avar.segments["opsz"] = {-1.0: -1.0,
+                                 0.0: 0.0, 0.2999878: 0.7999878, 1.0: 1.0}
         writer = XMLWriter(BytesIO())
         avar.toXML(writer, self.makeFont(["opsz"]))
         self.assertEqual([
             '<segment axis="opsz">',
-                '<mapping from="-1.0" to="-1.0"/>',
-                '<mapping from="0.0" to="0.0"/>',
-                '<mapping from="0.3" to="0.8"/>',
-                '<mapping from="1.0" to="1.0"/>',
+            '<mapping from="-1.0" to="-1.0"/>',
+            '<mapping from="0.0" to="0.0"/>',
+            '<mapping from="0.3" to="0.8"/>',
+            '<mapping from="1.0" to="1.0"/>',
             '</segment>'
         ], self.xml_lines(writer))
 

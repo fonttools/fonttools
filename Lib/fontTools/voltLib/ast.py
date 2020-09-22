@@ -107,6 +107,7 @@ class GroupDefinition(Statement):
 
 class GlyphName(Expression):
     """A single glyph name, such as cedilla."""
+
     def __init__(self, glyph, location=None):
         Expression.__init__(self, location)
         self.glyph = glyph
@@ -120,6 +121,7 @@ class GlyphName(Expression):
 
 class Enum(Expression):
     """An enum"""
+
     def __init__(self, enum, location=None):
         Expression.__init__(self, location)
         self.enum = enum
@@ -144,6 +146,7 @@ class Enum(Expression):
 
 class GroupName(Expression):
     """A glyph group"""
+
     def __init__(self, group, parser, location=None):
         Expression.__init__(self, location)
         self.group = group
@@ -165,6 +168,7 @@ class GroupName(Expression):
 
 class Range(Expression):
     """A glyph range"""
+
     def __init__(self, start, end, parser, location=None):
         Expression.__init__(self, location)
         self.start = start
@@ -375,7 +379,6 @@ class PositionAdjustSingleDefinition(Statement):
             res += f'{coverage} BY{pos}'
         res += '\nEND_ADJUST\nEND_POSITION'
         return res
-
 
 
 class ContextDefinition(Statement):

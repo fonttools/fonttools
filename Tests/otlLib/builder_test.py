@@ -116,7 +116,8 @@ class BuilderTest(object):
     def test_buildBaseArray(self):
         anchor = builder.buildAnchor
         baseArray = builder.buildBaseArray(
-            {"a": {2: anchor(300, 80)}, "c": {1: anchor(300, 80), 2: anchor(300, -20)}},
+            {"a": {2: anchor(300, 80)}, "c": {
+                1: anchor(300, 80), 2: anchor(300, -20)}},
             numMarkClasses=4,
             glyphMap=self.GLYPHMAP,
         )
@@ -214,7 +215,8 @@ class BuilderTest(object):
 
     def test_buildCursivePos(self):
         pos = builder.buildCursivePosSubtable(
-            {"two": (self.ANCHOR1, self.ANCHOR2), "four": (self.ANCHOR3, self.ANCHOR1)},
+            {"two": (self.ANCHOR1, self.ANCHOR2),
+             "four": (self.ANCHOR3, self.ANCHOR1)},
             self.GLYPHMAP,
         )
         assert getXML(pos.toXML) == [
@@ -494,7 +496,8 @@ class BuilderTest(object):
                 "LOOKUP_FLAG_USE_MARK_FILTERING_SET; flags=0x0010"
             ),
         ) as excinfo:
-            builder.buildLookup([s], builder.LOOKUP_FLAG_USE_MARK_FILTERING_SET, None)
+            builder.buildLookup(
+                [s], builder.LOOKUP_FLAG_USE_MARK_FILTERING_SET, None)
 
     def test_buildLookup_conflictingSubtableTypes(self):
         s1 = builder.buildSingleSubstSubtable({"one": "two"})
@@ -1038,11 +1041,12 @@ class BuilderTest(object):
 
     def test_buildValue(self):
         value = builder.buildValue({"XPlacement": 7, "YPlacement": 23})
-        func = lambda writer, font: value.toXML(writer, font, valueName="Val")
+        def func(writer, font): return value.toXML(
+            writer, font, valueName="Val")
         assert getXML(func) == ['<Val XPlacement="7" YPlacement="23"/>']
 
     def test_getLigatureKey(self):
-        components = lambda s: [tuple(word) for word in s.split()]
+        def components(s): return [tuple(word) for word in s.split()]
         c = components("fi fl ff ffi fff")
         c.sort(key=builder._getLigatureKey)
         assert c == components("fff ffi ff fi fl")
@@ -1260,7 +1264,8 @@ buildStatTable_test_data = [
             name="Optical Size",
             values=[
                 dict(nominalValue=6, rangeMaxValue=10, name='Small'),
-                dict(rangeMinValue=10, nominalValue=14, rangeMaxValue=24, name='Text', flags=0x2),
+                dict(rangeMinValue=10, nominalValue=14,
+                     rangeMaxValue=24, name='Text', flags=0x2),
                 dict(rangeMinValue=24, nominalValue=600, name='Display')])], None, 2, [
         '  <STAT>',
         '    <Version value="0x00010001"/>',
@@ -1395,38 +1400,45 @@ def test_stat_infinities():
 class ChainContextualRulesetTest(object):
     def test_makeRulesets(self):
         font = ttLib.TTFont()
-        font.setGlyphOrder(["a","b","c","d","A","B","C","D","E"])
+        font.setGlyphOrder(["a", "b", "c", "d", "A", "B", "C", "D", "E"])
         sb = builder.ChainContextSubstBuilder(font, None)
         prefix, input_, suffix, lookups = [["a"], ["b"]], [["c"]], [], [None]
-        sb.rules.append(builder.ChainContextualRule(prefix, input_, suffix, lookups))
+        sb.rules.append(builder.ChainContextualRule(
+            prefix, input_, suffix, lookups))
 
         prefix, input_, suffix, lookups = [["a"], ["d"]], [["c"]], [], [None]
-        sb.rules.append(builder.ChainContextualRule(prefix, input_, suffix, lookups))
+        sb.rules.append(builder.ChainContextualRule(
+            prefix, input_, suffix, lookups))
 
         sb.add_subtable_break(None)
 
         # Second subtable has some glyph classes
         prefix, input_, suffix, lookups = [["A"]], [["E"]], [], [None]
-        sb.rules.append(builder.ChainContextualRule(prefix, input_, suffix, lookups))
-        prefix, input_, suffix, lookups = [["A"]], [["C","D"]], [], [None]
-        sb.rules.append(builder.ChainContextualRule(prefix, input_, suffix, lookups))
+        sb.rules.append(builder.ChainContextualRule(
+            prefix, input_, suffix, lookups))
+        prefix, input_, suffix, lookups = [["A"]], [["C", "D"]], [], [None]
+        sb.rules.append(builder.ChainContextualRule(
+            prefix, input_, suffix, lookups))
         prefix, input_, suffix, lookups = [["A", "B"]], [["E"]], [], [None]
-        sb.rules.append(builder.ChainContextualRule(prefix, input_, suffix, lookups))
+        sb.rules.append(builder.ChainContextualRule(
+            prefix, input_, suffix, lookups))
 
         sb.add_subtable_break(None)
 
         # Third subtable has no pre/post context
         prefix, input_, suffix, lookups = [], [["E"]], [], [None]
-        sb.rules.append(builder.ChainContextualRule(prefix, input_, suffix, lookups))
-        prefix, input_, suffix, lookups = [], [["C","D"]], [], [None]
-        sb.rules.append(builder.ChainContextualRule(prefix, input_, suffix, lookups))
+        sb.rules.append(builder.ChainContextualRule(
+            prefix, input_, suffix, lookups))
+        prefix, input_, suffix, lookups = [], [["C", "D"]], [], [None]
+        sb.rules.append(builder.ChainContextualRule(
+            prefix, input_, suffix, lookups))
 
         rulesets = sb.rulesets()
         assert len(rulesets) == 3
         assert rulesets[0].hasPrefixOrSuffix
         assert not rulesets[0].hasAnyGlyphClasses
         cd = rulesets[0].format2ClassDefs()
-        assert set(cd[0].classes()[1:]) == set([("d",),("b",),("a",)])
+        assert set(cd[0].classes()[1:]) == set([("d",), ("b",), ("a",)])
         assert set(cd[1].classes()[1:]) == set([("c",)])
         assert set(cd[2].classes()[1:]) == set()
 
@@ -1439,7 +1451,7 @@ class ChainContextualRulesetTest(object):
         assert rulesets[2].format2ClassDefs()
         cd = rulesets[2].format2ClassDefs()
         assert set(cd[0].classes()[1:]) == set()
-        assert set(cd[1].classes()[1:]) == set([("C","D"), ("E",)])
+        assert set(cd[1].classes()[1:]) == set([("C", "D"), ("E",)])
         assert set(cd[2].classes()[1:]) == set()
 
 

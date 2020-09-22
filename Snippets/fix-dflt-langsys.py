@@ -65,7 +65,7 @@ def ProcessFiles(filenames):
 
 def main():
     parser = argparse.ArgumentParser(
-            description="Fix LangSys records for DFLT script")
+        description="Fix LangSys records for DFLT script")
     parser.add_argument("files", metavar="FILE", type=str, nargs="+",
                         help="input font to process")
     parser.add_argument("-s", "--silent", action='store_true',
@@ -80,6 +80,7 @@ def main():
         logging.basicConfig(format=logformat, level=logging.INFO)
 
     ProcessFiles(args.files)
+
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -339,7 +339,8 @@ class ParserTest(unittest.TestCase):
 
     def test_glyphclass_range_dash(self):
         glyphNames = "A-foo.sc B-foo.sc C-foo.sc".split()
-        [gc] = self.parse("@range = [A-foo.sc-C-foo.sc];", glyphNames).statements
+        [gc] = self.parse("@range = [A-foo.sc-C-foo.sc];",
+                          glyphNames).statements
         self.assertEqual(gc.glyphSet(), ("A-foo.sc", "B-foo.sc", "C-foo.sc"))
 
     def test_glyphclass_range_dash_with_space(self):
@@ -355,7 +356,8 @@ class ParserTest(unittest.TestCase):
         # https://github.com/fonttools/fonttools/issues/1768
         glyphNames = ()
         with CapturingLogHandler("fontTools.feaLib.parser", level="WARNING") as caplog:
-            [gc] = self.parse("@class = [A-foo.sc B-foo.sc C D];", glyphNames).statements
+            [gc] = self.parse(
+                "@class = [A-foo.sc B-foo.sc C D];", glyphNames).statements
         self.assertEqual(gc.glyphSet(), ("A-foo.sc", "B-foo.sc", "C", "D"))
         self.assertEqual(len(caplog.records), 2)
         caplog.assertRegex("Ambiguous glyph name that looks like a range:")
@@ -366,7 +368,8 @@ class ParserTest(unittest.TestCase):
         # or as a range, then the semantics should be the single dashed name.
         glyphNames = (
             "A-foo.sc-C-foo.sc A-foo.sc B-foo.sc C-foo.sc".split())
-        [gc] = self.parse("@range = [A-foo.sc-C-foo.sc];", glyphNames).statements
+        [gc] = self.parse("@range = [A-foo.sc-C-foo.sc];",
+                          glyphNames).statements
         self.assertEqual(gc.glyphSet(), ("A-foo.sc-C-foo.sc",))
 
     def test_glyphclass_range_dash_ambiguous(self):
@@ -418,7 +421,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(vowels_uc.glyphSet(), tuple("AEIOU"))
         self.assertEqual(vowels.glyphSet(), tuple("aeiouAEIOUyY"))
         self.assertEqual(vowels.asFea(),
-            "@Vowels = [@Vowels.lc @Vowels.uc y Y];")
+                         "@Vowels = [@Vowels.lc @Vowels.uc y Y];")
         self.assertRaisesRegex(
             FeatureLibError, "Unknown glyph class @unknown",
             self.parse, "@bad = [@unknown];")
@@ -716,7 +719,7 @@ class ParserTest(unittest.TestCase):
                          ("acute", "grave", "macron"))
         self.assertIsNone(flag.markFilteringSet)
         self.assertEqual(flag.asFea(),
-            "lookupflag RightToLeft MarkAttachmentType @TOP_MARKS;")
+                         "lookupflag RightToLeft MarkAttachmentType @TOP_MARKS;")
 
     def test_lookupflag_format_A_MarkAttachmentType_glyphClass(self):
         flag = self.parse_lookupflag_(
@@ -728,7 +731,7 @@ class ParserTest(unittest.TestCase):
                          ("acute", "grave", "macron"))
         self.assertIsNone(flag.markFilteringSet)
         self.assertEqual(flag.asFea(),
-            "lookupflag RightToLeft MarkAttachmentType [acute grave macron];")
+                         "lookupflag RightToLeft MarkAttachmentType [acute grave macron];")
 
     def test_lookupflag_format_A_UseMarkFilteringSet(self):
         flag = self.parse_lookupflag_(
@@ -741,7 +744,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(flag.markFilteringSet.glyphSet(),
                          ("cedilla", "ogonek"))
         self.assertEqual(flag.asFea(),
-            "lookupflag IgnoreLigatures UseMarkFilteringSet @BOTTOM_MARKS;")
+                         "lookupflag IgnoreLigatures UseMarkFilteringSet @BOTTOM_MARKS;")
 
     def test_lookupflag_format_A_UseMarkFilteringSet_glyphClass(self):
         flag = self.parse_lookupflag_(
@@ -753,7 +756,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(flag.markFilteringSet.glyphSet(),
                          ("cedilla", "ogonek"))
         self.assertEqual(flag.asFea(),
-            "lookupflag IgnoreLigatures UseMarkFilteringSet [cedilla ogonek];")
+                         "lookupflag IgnoreLigatures UseMarkFilteringSet [cedilla ogonek];")
 
     def test_lookupflag_format_B(self):
         flag = self.parse_lookupflag_("lookupflag 7;")
@@ -762,7 +765,7 @@ class ParserTest(unittest.TestCase):
         self.assertIsNone(flag.markAttachment)
         self.assertIsNone(flag.markFilteringSet)
         self.assertEqual(flag.asFea(),
-            "lookupflag RightToLeft IgnoreBaseGlyphs IgnoreLigatures;")
+                         "lookupflag RightToLeft IgnoreBaseGlyphs IgnoreLigatures;")
 
     def test_lookupflag_format_B_zero(self):
         flag = self.parse_lookupflag_("lookupflag 0;")
@@ -861,7 +864,8 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(glyphstr(pos.suffix), "comma")
 
     def test_gpos_type_1_chained_special_kern_format_valuerecord_format_b(self):
-        doc = self.parse("feature kern {pos [A B] [T Y]' comma <0 0 0 0>;} kern;")
+        doc = self.parse(
+            "feature kern {pos [A B] [T Y]' comma <0 0 0 0>;} kern;")
         pos = doc.statements[0].statements[0]
         self.assertIsInstance(pos, ast.SinglePosStatement)
         [(glyphs, value)] = pos.pos
@@ -1540,7 +1544,7 @@ class ParserTest(unittest.TestCase):
             FeatureLibError,
             'Expected "by", "from" or explicit lookup references',
             self.parse, "feature liga {substitute f f i;} liga;")
-    
+
     def test_substitute_invalid_statement(self):
         self.assertRaisesRegex(
             FeatureLibError,
@@ -1768,7 +1772,8 @@ class ParserTest(unittest.TestCase):
         fea_path = self.getpath("include/test.ufo/features.fea")
         include_dir = os.path.dirname(os.path.dirname(fea_path))
         doc = Parser(fea_path, includeDir=include_dir).parse()
-        assert len(doc.statements) == 1 and doc.statements[0].text == "# Nothing"
+        assert len(
+            doc.statements) == 1 and doc.statements[0].text == "# Nothing"
 
     def parse(self, text, glyphNames=GLYPHNAMES, followIncludes=True):
         featurefile = StringIO(text)

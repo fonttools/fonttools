@@ -101,7 +101,8 @@ def test_build_CPAL_v1_types_no_labels():
 
     assert cpal.paletteTypes == paletteTypes
     assert cpal.paletteLabels == [cpal.NO_NAME_ID] * len(palettes)
-    assert cpal.paletteEntryLabels == [cpal.NO_NAME_ID] * cpal.numPaletteEntries
+    assert cpal.paletteEntryLabels == [
+        cpal.NO_NAME_ID] * cpal.numPaletteEntries
 
 
 def test_build_CPAL_v1_labels():
@@ -218,7 +219,8 @@ def test_buildSolidColorPaint():
     assert p.Color.Alpha.value == 0.5
     assert p.Color.Alpha.varIdx == 0
 
-    p = builder.buildSolidColorPaint(3, alpha=builder.VariableFloat(0.5, varIdx=2))
+    p = builder.buildSolidColorPaint(
+        3, alpha=builder.VariableFloat(0.5, varIdx=2))
     assert p.Format == 1
     assert p.Color.PaletteIndex == 3
     assert p.Color.Alpha.value == 0.5
@@ -298,7 +300,8 @@ def test_buildLinearGradientPaint():
         builder.buildColorStop(0.5, 1),
         builder.buildColorStop(1.0, 2, alpha=0.8),
     ]
-    color_line = builder.buildColorLine(color_stops, extend=builder.ExtendMode.REPEAT)
+    color_line = builder.buildColorLine(
+        color_stops, extend=builder.ExtendMode.REPEAT)
     p0 = (builder.VariableInt(100), builder.VariableInt(200))
     p1 = (builder.VariableInt(150), builder.VariableInt(250))
 
@@ -313,7 +316,8 @@ def test_buildLinearGradientPaint():
     assert gradient.ColorLine.Extend == builder.ExtendMode.PAD
     assert gradient.ColorLine.ColorStop == color_stops
 
-    gradient = builder.buildLinearGradientPaint(color_line, p0, p1, p2=(150, 230))
+    gradient = builder.buildLinearGradientPaint(
+        color_line, p0, p1, p2=(150, 230))
     assert (gradient.x2.value, gradient.y2.value) == (150, 230)
     assert (gradient.x2, gradient.y2) != (gradient.x1, gradient.y1)
 
@@ -324,7 +328,8 @@ def test_buildRadialGradientPaint():
         builder.buildColorStop(0.5, 1),
         builder.buildColorStop(1.0, 2, alpha=0.8),
     ]
-    color_line = builder.buildColorLine(color_stops, extend=builder.ExtendMode.REPEAT)
+    color_line = builder.buildColorLine(
+        color_stops, extend=builder.ExtendMode.REPEAT)
     c0 = (builder.VariableInt(100), builder.VariableInt(200))
     c1 = (builder.VariableInt(150), builder.VariableInt(250))
     r0 = builder.VariableInt(10)
@@ -339,7 +344,8 @@ def test_buildRadialGradientPaint():
     assert gradient.r1 == r1
     assert gradient.Transform is None
 
-    gradient = builder.buildRadialGradientPaint({"stops": color_stops}, c0, c1, r0, r1)
+    gradient = builder.buildRadialGradientPaint(
+        {"stops": color_stops}, c0, c1, r0, r1)
     assert gradient.ColorLine.Extend == builder.ExtendMode.PAD
     assert gradient.ColorLine.ColorStop == color_stops
 
@@ -361,7 +367,8 @@ def test_buildLayerV1Record():
     assert layer.Paint.Format == 1
     assert layer.Paint.Color.PaletteIndex == 2
 
-    layer = builder.buildLayerV1Record("a", builder.buildSolidColorPaint(3, 0.9))
+    layer = builder.buildLayerV1Record(
+        "a", builder.buildSolidColorPaint(3, 0.9))
     assert layer.Paint.Format == 1
     assert layer.Paint.Color.PaletteIndex == 3
     assert layer.Paint.Color.Alpha.value == 0.9
@@ -550,7 +557,8 @@ def test_splitSolidAndGradientGlyphs():
         ]
     }
 
-    colorGlyphsV0, colorGlyphsV1 = builder._splitSolidAndGradientGlyphs(colorGlyphs)
+    colorGlyphsV0, colorGlyphsV1 = builder._splitSolidAndGradientGlyphs(
+        colorGlyphs)
 
     assert colorGlyphsV0 == {"a": [("b", 0), ("c", 1), ("d", 2), ("e", 3)]}
     assert not colorGlyphsV1
@@ -559,7 +567,8 @@ def test_splitSolidAndGradientGlyphs():
         "a": [("b", builder.buildSolidColorPaint(paletteIndex=0, alpha=0.0))]
     }
 
-    colorGlyphsV0, colorGlyphsV1 = builder._splitSolidAndGradientGlyphs(colorGlyphs)
+    colorGlyphsV0, colorGlyphsV1 = builder._splitSolidAndGradientGlyphs(
+        colorGlyphs)
 
     assert not colorGlyphsV0
     assert colorGlyphsV1 == colorGlyphs
@@ -580,7 +589,8 @@ def test_splitSolidAndGradientGlyphs():
         ],
     }
 
-    colorGlyphsV0, colorGlyphsV1 = builder._splitSolidAndGradientGlyphs(colorGlyphs)
+    colorGlyphsV0, colorGlyphsV1 = builder._splitSolidAndGradientGlyphs(
+        colorGlyphs)
 
     assert colorGlyphsV0 == {"a": [("b", 0)]}
     assert "a" not in colorGlyphsV1
@@ -677,7 +687,8 @@ class BuildCOLRTest(object):
         assert colr.table.VarStore is None
 
         assert colr.table.BaseGlyphRecordCount == 1
-        assert isinstance(colr.table.BaseGlyphRecordArray, ot.BaseGlyphRecordArray)
+        assert isinstance(colr.table.BaseGlyphRecordArray,
+                          ot.BaseGlyphRecordArray)
         assert colr.table.LayerRecordCount == 2
         assert isinstance(colr.table.LayerRecordArray, ot.LayerRecordArray)
 

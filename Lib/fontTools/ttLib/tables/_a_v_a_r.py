@@ -27,7 +27,8 @@ AVAR_HEADER_FORMAT = """
     reserved:      H
     axisCount:     H
 """
-assert sstruct.calcsize(AVAR_HEADER_FORMAT) == 8, sstruct.calcsize(AVAR_HEADER_FORMAT)
+assert sstruct.calcsize(
+    AVAR_HEADER_FORMAT) == 8, sstruct.calcsize(AVAR_HEADER_FORMAT)
 
 
 class table__a_v_a_r(DefaultTable.DefaultTable):

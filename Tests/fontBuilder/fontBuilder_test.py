@@ -92,7 +92,8 @@ def _verifyOutput(outPath, tables=None):
     f.saveXML(outPath + ".ttx", tables=tables)
     with open(outPath + ".ttx") as f:
         testData = strip_VariableItems(f.read())
-    refData = strip_VariableItems(getTestData(os.path.basename(outPath) + ".ttx"))
+    refData = strip_VariableItems(
+        getTestData(os.path.basename(outPath) + ".ttx"))
     assert refData == testData
 
 
@@ -132,8 +133,10 @@ def test_build_otf(tmpdir):
     pen = T2CharStringPen(600, None)
     drawTestGlyph(pen)
     charString = pen.getCharString()
-    charStrings = {".notdef": charString, "A": charString, "a": charString, ".null": charString}
-    fb.setupCFF(nameStrings['psName'], {"FullName": nameStrings['psName']}, charStrings, {})
+    charStrings = {".notdef": charString, "A": charString,
+                   "a": charString, ".null": charString}
+    fb.setupCFF(nameStrings['psName'], {
+                "FullName": nameStrings['psName']}, charStrings, {})
 
     lsb = {gn: cs.calcBounds(None)[0] for gn, cs in charStrings.items()}
     metrics = {}
@@ -177,7 +180,8 @@ def test_build_var(tmpdir):
     pen = TTGlyphPen(None)
     emptyGlyph = pen.glyph()
 
-    glyphs = {".notdef": emptyGlyph, "A": glyph1, "a": glyph2, ".null": emptyGlyph}
+    glyphs = {".notdef": emptyGlyph, "A": glyph1,
+              "a": glyph2, ".null": emptyGlyph}
     fb.setupGlyf(glyphs)
     metrics = {}
     glyphTable = fb.font["glyf"]
@@ -195,7 +199,8 @@ def test_build_var(tmpdir):
         ('DOWN', 0, 0, 100, "Down"),
     ]
     instances = [
-        dict(location=dict(LEFT=0, RGHT=0, UPPP=0, DOWN=0), stylename="TotallyNormal"),
+        dict(location=dict(LEFT=0, RGHT=0, UPPP=0, DOWN=0),
+             stylename="TotallyNormal"),
         dict(location=dict(LEFT=0, RGHT=100, UPPP=100, DOWN=0), stylename="Right Up"),
     ]
     fb.setupFvar(axes, instances)
@@ -219,7 +224,7 @@ def test_build_var(tmpdir):
                 [
                     {"LEFT": (0.8, 1), "DOWN": (0.8, 1)},
                     {"RGHT": (0.8, 1), "UPPP": (0.8, 1)},
-                  ],
+                ],
                 {"A": "a"}
             )
         ],
@@ -250,11 +255,13 @@ def test_build_cff2(tmpdir):
     fb = _setupFontBuilderFvar(fb)
     fb = _setupFontBuilderCFF2(fb)
 
-    metrics = {gn: (advanceWidth, 0) for gn, advanceWidth in advanceWidths.items()}
+    metrics = {gn: (advanceWidth, 0)
+               for gn, advanceWidth in advanceWidths.items()}
     fb.setupHorizontalMetrics(metrics)
 
     fb.setupHorizontalHeader(ascent=824, descent=200)
-    fb.setupOS2(sTypoAscender=825, sTypoDescender=200, usWinAscent=824, usWinDescent=200)
+    fb.setupOS2(sTypoAscender=825, sTypoDescender=200,
+                usWinAscent=824, usWinDescent=200)
     fb.setupPost()
 
     fb.save(outPath)
@@ -268,7 +275,8 @@ def test_build_cff_to_cff2(tmpdir):
     pen = T2CharStringPen(600, None)
     drawTestGlyph(pen)
     charString = pen.getCharString()
-    charStrings = {".notdef": charString, "A": charString, "a": charString, ".null": charString}
+    charStrings = {".notdef": charString, "A": charString,
+                   "a": charString, ".null": charString}
     fb.setupCFF("TestFont", {}, charStrings, {})
 
     from fontTools.varLib.cff import convertCFFtoCFF2
@@ -348,7 +356,8 @@ def test_unicodeVariationSequences(tmpdir):
 
     uvs = [
         (0x0030, 0xFE00, "zero.slash"),
-        (0x0030, 0xFE01, "zero"),  # should result in the exact same subtable data, due to cmap[0x0030] == "zero"
+        # should result in the exact same subtable data, due to cmap[0x0030] == "zero"
+        (0x0030, 0xFE01, "zero"),
     ]
     fb.setupCharacterMap(cmap, uvs)
     fb.save(outPath)

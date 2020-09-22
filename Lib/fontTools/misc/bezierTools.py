@@ -2,6 +2,7 @@
 """fontTools.misc.bezierTools.py -- tools for working with Bezier path segments.
 """
 
+from math import sqrt, acos, cos, pi
 from fontTools.misc.arrayTools import calcBounds
 from fontTools.misc.py23 import *
 import math
@@ -51,14 +52,16 @@ def _split_cubic_into_two(p0, p1, p2, p3):
     return ((p0, (p0 + p1) * .5, mid - deriv3, mid),
             (mid, mid + deriv3, (p2 + p3) * .5, p3))
 
+
 def _calcCubicArcLengthCRecurse(mult, p0, p1, p2, p3):
-	arch = abs(p0-p3)
-	box = abs(p0-p1) + abs(p1-p2) + abs(p2-p3)
-	if arch * mult >= box:
-		return (arch + box) * .5
-	else:
-		one,two = _split_cubic_into_two(p0,p1,p2,p3)
-		return _calcCubicArcLengthCRecurse(mult, *one) + _calcCubicArcLengthCRecurse(mult, *two)
+    arch = abs(p0-p3)
+    box = abs(p0-p1) + abs(p1-p2) + abs(p2-p3)
+    if arch * mult >= box:
+        return (arch + box) * .5
+    else:
+        one, two = _split_cubic_into_two(p0, p1, p2, p3)
+        return _calcCubicArcLengthCRecurse(mult, *one) + _calcCubicArcLengthCRecurse(mult, *two)
+
 
 def calcCubicArcLengthC(pt1, pt2, pt3, pt4, tolerance=0.005):
     """Calculates the arc length for a cubic Bezier segment.
@@ -70,7 +73,7 @@ def calcCubicArcLengthC(pt1, pt2, pt3, pt4, tolerance=0.005):
     Returns:
         Arc length value.
     """
-    mult = 1. + 1.5 * tolerance # The 1.5 is a empirical hack; no math
+    mult = 1. + 1.5 * tolerance  # The 1.5 is a empirical hack; no math
     return _calcCubicArcLengthCRecurse(mult, pt1, pt2, pt3, pt4)
 
 
@@ -143,15 +146,16 @@ def calcQuadraticArcLengthC(pt1, pt2, pt3):
     scale = abs(n)
     if scale == 0.:
         return abs(pt3-pt1)
-    origDist = _dot(n,d0)
+    origDist = _dot(n, d0)
     if abs(origDist) < epsilon:
-        if _dot(d0,d1) >= 0:
+        if _dot(d0, d1) >= 0:
             return abs(pt3-pt1)
         a, b = abs(d0), abs(d1)
         return (a*a + b*b) / (a+b)
-    x0 = _dot(d,d0) / origDist
-    x1 = _dot(d,d1) / origDist
-    Len = abs(2 * (_intSecAtan(x1) - _intSecAtan(x0)) * origDist / (scale * (x1 - x0)))
+    x0 = _dot(d, d0) / origDist
+    x1 = _dot(d, d1) / origDist
+    Len = abs(2 * (_intSecAtan(x1) - _intSecAtan(x0))
+              * origDist / (scale * (x1 - x0)))
     return Len
 
 
@@ -190,13 +194,15 @@ def approximateQuadraticArcLengthC(pt1, pt2, pt3):
     # to be integrated with the best-matching fifth-degree polynomial
     # approximation of it.
     #
-    #https://en.wikipedia.org/wiki/Gaussian_quadrature#Gauss.E2.80.93Legendre_quadrature
+    # https://en.wikipedia.org/wiki/Gaussian_quadrature#Gauss.E2.80.93Legendre_quadrature
 
     # abs(BezierCurveC[2].diff(t).subs({t:T})) for T in sorted(.5, .5±sqrt(3/5)/2),
     # weighted 5/18, 8/18, 5/18 respectively.
-    v0 = abs(-0.492943519233745*pt1 + 0.430331482911935*pt2 + 0.0626120363218102*pt3)
+    v0 = abs(-0.492943519233745*pt1 + 0.430331482911935 *
+             pt2 + 0.0626120363218102*pt3)
     v1 = abs(pt3-pt1)*0.4444444444444444
-    v2 = abs(-0.0626120363218102*pt1 - 0.430331482911935*pt2 + 0.492943519233745*pt3)
+    v2 = abs(-0.0626120363218102*pt1 - 0.430331482911935 *
+             pt2 + 0.492943519233745*pt3)
 
     return v0 + v1 + v2
 
@@ -227,7 +233,8 @@ def calcQuadraticBounds(pt1, pt2, pt3):
         roots.append(-bx/ax2)
     if ay2 != 0:
         roots.append(-by/ay2)
-    points = [(ax*t*t + bx*t + cx, ay*t*t + by*t + cy) for t in roots if 0 <= t < 1] + [pt1, pt3]
+    points = [(ax*t*t + bx*t + cx, ay*t*t + by*t + cy)
+              for t in roots if 0 <= t < 1] + [pt1, pt3]
     return calcBounds(points)
 
 
@@ -277,9 +284,11 @@ def approximateCubicArcLengthC(pt1, pt2, pt3, pt4):
     # abs(BezierCurveC[3].diff(t).subs({t:T})) for T in sorted(0, .5±(3/7)**.5/2, .5, 1),
     # weighted 1/20, 49/180, 32/90, 49/180, 1/20 respectively.
     v0 = abs(pt2-pt1)*.15
-    v1 = abs(-0.558983582205757*pt1 + 0.325650248872424*pt2 + 0.208983582205757*pt3 + 0.024349751127576*pt4)
+    v1 = abs(-0.558983582205757*pt1 + 0.325650248872424*pt2 +
+             0.208983582205757*pt3 + 0.024349751127576*pt4)
     v2 = abs(pt4-pt1+pt3-pt2)*0.26666666666666666
-    v3 = abs(-0.024349751127576*pt1 - 0.208983582205757*pt2 - 0.325650248872424*pt3 + 0.558983582205757*pt4)
+    v3 = abs(-0.024349751127576*pt1 - 0.208983582205757*pt2 -
+             0.325650248872424*pt3 + 0.558983582205757*pt4)
     v4 = abs(pt4-pt3)*.15
 
     return v0 + v1 + v2 + v3 + v4
@@ -313,7 +322,8 @@ def calcCubicBounds(pt1, pt2, pt3, pt4):
     yRoots = [t for t in solveQuadratic(ay3, by2, cy) if 0 <= t < 1]
     roots = xRoots + yRoots
 
-    points = [(ax*t*t*t + bx*t*t + cx * t + dx, ay*t*t*t + by*t*t + cy * t + dy) for t in roots] + [pt1, pt4]
+    points = [(ax*t*t*t + bx*t*t + cx * t + dx, ay*t*t*t + by *
+               t*t + cy * t + dy) for t in roots] + [pt1, pt4]
     return calcBounds(points)
 
 
@@ -411,7 +421,7 @@ def splitQuadratic(pt1, pt2, pt3, where, isHorizontal):
     """
     a, b, c = calcQuadraticParameters(pt1, pt2, pt3)
     solutions = solveQuadratic(a[isHorizontal], b[isHorizontal],
-        c[isHorizontal] - where)
+                               c[isHorizontal] - where)
     solutions = sorted([t for t in solutions if 0 <= t < 1])
     if not solutions:
         return [(pt1, pt2, pt3)]
@@ -447,7 +457,7 @@ def splitCubic(pt1, pt2, pt3, pt4, where, isHorizontal):
     """
     a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
     solutions = solveCubic(a[isHorizontal], b[isHorizontal], c[isHorizontal],
-        d[isHorizontal] - where)
+                           d[isHorizontal] - where)
     solutions = sorted([t for t in solutions if 0 <= t < 1])
     if not solutions:
         return [(pt1, pt2, pt3, pt4)]
@@ -557,7 +567,8 @@ def _splitCubicAtT(a, b, c, d, *ts):
         c1y = (2*by*t1 + cy + 3*ay*t1_2) * delta
         d1x = ax*t1_3 + bx*t1_2 + cx*t1 + dx
         d1y = ay*t1_3 + by*t1_2 + cy*t1 + dy
-        pt1, pt2, pt3, pt4 = calcCubicPoints((a1x, a1y), (b1x, b1y), (c1x, c1y), (d1x, d1y))
+        pt1, pt2, pt3, pt4 = calcCubicPoints(
+            (a1x, a1y), (b1x, b1y), (c1x, c1y), (d1x, d1y))
         segments.append((pt1, pt2, pt3, pt4))
     return segments
 
@@ -566,11 +577,9 @@ def _splitCubicAtT(a, b, c, d, *ts):
 # Equation solvers.
 #
 
-from math import sqrt, acos, cos, pi
-
 
 def solveQuadratic(a, b, c,
-        sqrt=sqrt):
+                   sqrt=sqrt):
     """Solve a quadratic equation.
 
     Solves *a*x*x + b*x + c = 0* where a, b and c are real.
@@ -715,8 +724,8 @@ def calcCubicParameters(pt1, pt2, pt3, pt4):
     x3, y3 = pt3
     x4, y4 = pt4
     dx, dy = pt1
-    cx = (x2 -dx) * 3.0
-    cy = (y2 -dy) * 3.0
+    cx = (x2 - dx) * 3.0
+    cy = (y2 - dy) * 3.0
     bx = (x3 - x2) * 3.0 - cx
     by = (y3 - y2) * 3.0 - cy
     ax = x4 - dx - cx - bx
@@ -772,6 +781,7 @@ def printSegments(segments):
     """
     for segment in segments:
         print(_segmentrepr(segment))
+
 
 if __name__ == "__main__":
     import sys

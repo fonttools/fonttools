@@ -3,19 +3,20 @@ from fontTools.varLib.featureVars import (
     overlayFeatureVariations)
 
 
-def test_linear(n = 10):
+def test_linear(n=10):
     conds = []
     for i in range(n):
         end = i / n
         start = end - 1.
         region = [{'X': (start, end)}]
-        subst = {'g%.2g'%start: 'g%.2g'%end}
+        subst = {'g%.2g' % start: 'g%.2g' % end}
         conds.append((region, subst))
     overlaps = overlayFeatureVariations(conds)
     assert len(overlaps) == 2 * n - 1, overlaps
     return conds, overlaps
 
-def test_quadratic(n = 10):
+
+def test_quadratic(n=10):
     conds = []
     for i in range(1, n + 1):
         region = [{'X': (0, i / n),
@@ -26,11 +27,13 @@ def test_quadratic(n = 10):
     assert len(overlaps) == n * (n + 1) // 2, overlaps
     return conds, overlaps
 
+
 def _merge_substitutions(substitutions):
     merged = {}
     for subst in substitutions:
         merged.update(subst)
     return merged
+
 
 def _match_condition(location, overlaps):
     for box, substitutions in overlaps:
@@ -39,6 +42,7 @@ def _match_condition(location, overlaps):
             if start <= coord <= end:
                 return _merge_substitutions(substitutions)
     return {}  # no match
+
 
 def test_overlaps_1():
     # https://github.com/fonttools/fonttools/issues/1400
@@ -67,6 +71,7 @@ def test_overlaps_1():
     assert subst == {0: 0, 1: 1}
     subst = _match_condition({'abcd': 10}, overlaps)
     assert subst == {1: 1}
+
 
 def test_overlaps_2():
     # https://github.com/fonttools/fonttools/issues/1400
@@ -106,6 +111,7 @@ def run(test, n, quiet):
         print("Output:")
         pprint(output)
         print()
+
 
 if __name__ == "__main__":
     import sys

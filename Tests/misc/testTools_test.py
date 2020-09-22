@@ -22,7 +22,7 @@ class TestToolsTest(unittest.TestCase):
                     "    some more text",
                 ]),
                 ("Foo", {"n": "3"}, [])
-            ])
+        ])
 
     def test_parseXML_bytes(self):
         self.assertEqual(testTools.parseXML(
@@ -40,23 +40,23 @@ class TestToolsTest(unittest.TestCase):
                     "    some more text",
                 ]),
                 ("Foo", {"n": "3"}, [])
-            ])
+        ])
 
     def test_parseXML_str_list(self):
         self.assertEqual(testTools.parseXML(
             ['<Foo n="1"/>'
              '<Foo n="2"/>']), [
-                ("Foo", {"n": "1"}, []),
-                ("Foo", {"n": "2"}, [])
-            ])
+            ("Foo", {"n": "1"}, []),
+            ("Foo", {"n": "2"}, [])
+        ])
 
     def test_parseXML_bytes_list(self):
         self.assertEqual(testTools.parseXML(
             [b'<Foo n="1"/>'
              b'<Foo n="2"/>']), [
-                ("Foo", {"n": "1"}, []),
-                ("Foo", {"n": "2"}, [])
-            ])
+            ("Foo", {"n": "1"}, []),
+            ("Foo", {"n": "2"}, [])
+        ])
 
     def test_getXML(self):
         def toXML(writer, ttFont):

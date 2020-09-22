@@ -165,8 +165,8 @@ class DecomposeSegmentTest(unittest.TestCase):
         decompose = decomposeQuadraticSegment
         self.assertRaises(AssertionError, decompose, [])
         self.assertRaises(AssertionError, decompose, [(0, 0)])
-        self.assertEqual([((0,0), (4, 8))], decompose([(0, 0), (4, 8)]))
-        self.assertEqual([((0,0), (2, 4)), ((4, 8), (9, -9))],
+        self.assertEqual([((0, 0), (4, 8))], decompose([(0, 0), (4, 8)]))
+        self.assertEqual([((0, 0), (2, 4)), ((4, 8), (9, -9))],
                          decompose([(0, 0), (4, 8), (9, -9)]))
         self.assertEqual(
             [((0, 0), (2.0, 4.0)), ((4, 8), (6.5, -0.5)), ((9, -9), (10, 10))],

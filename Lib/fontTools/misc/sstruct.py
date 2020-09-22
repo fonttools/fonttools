@@ -56,67 +56,71 @@ __copyright__ = "Copyright 1998, Just van Rossum <just@letterror.com>"
 
 
 class Error(Exception):
-	pass
+    pass
+
 
 def pack(fmt, obj):
-	formatstring, names, fixes = getformat(fmt)
-	elements = []
-	if not isinstance(obj, dict):
-		obj = obj.__dict__
-	for name in names:
-		value = obj[name]
-		if name in fixes:
-			# fixed point conversion
-			value = fl2fi(value, fixes[name])
-		elif isinstance(value, basestring):
-			value = tobytes(value)
-		elements.append(value)
-	data = struct.pack(*(formatstring,) + tuple(elements))
-	return data
+    formatstring, names, fixes = getformat(fmt)
+    elements = []
+    if not isinstance(obj, dict):
+        obj = obj.__dict__
+    for name in names:
+        value = obj[name]
+        if name in fixes:
+            # fixed point conversion
+            value = fl2fi(value, fixes[name])
+        elif isinstance(value, basestring):
+            value = tobytes(value)
+        elements.append(value)
+    data = struct.pack(*(formatstring,) + tuple(elements))
+    return data
+
 
 def unpack(fmt, data, obj=None):
-	if obj is None:
-		obj = {}
-	data = tobytes(data)
-	formatstring, names, fixes = getformat(fmt)
-	if isinstance(obj, dict):
-		d = obj
-	else:
-		d = obj.__dict__
-	elements = struct.unpack(formatstring, data)
-	for i in range(len(names)):
-		name = names[i]
-		value = elements[i]
-		if name in fixes:
-			# fixed point conversion
-			value = fi2fl(value, fixes[name])
-		elif isinstance(value, bytes):
-			try:
-				value = tostr(value)
-			except UnicodeDecodeError:
-				pass
-		d[name] = value
-	return obj
+    if obj is None:
+        obj = {}
+    data = tobytes(data)
+    formatstring, names, fixes = getformat(fmt)
+    if isinstance(obj, dict):
+        d = obj
+    else:
+        d = obj.__dict__
+    elements = struct.unpack(formatstring, data)
+    for i in range(len(names)):
+        name = names[i]
+        value = elements[i]
+        if name in fixes:
+            # fixed point conversion
+            value = fi2fl(value, fixes[name])
+        elif isinstance(value, bytes):
+            try:
+                value = tostr(value)
+            except UnicodeDecodeError:
+                pass
+        d[name] = value
+    return obj
+
 
 def unpack2(fmt, data, obj=None):
-	length = calcsize(fmt)
-	return unpack(fmt, data[:length], obj), data[length:]
+    length = calcsize(fmt)
+    return unpack(fmt, data[:length], obj), data[length:]
+
 
 def calcsize(fmt):
-	formatstring, names, fixes = getformat(fmt)
-	return struct.calcsize(formatstring)
+    formatstring, names, fixes = getformat(fmt)
+    return struct.calcsize(formatstring)
 
 
 # matches "name:formatchar" (whitespace is allowed)
 _elementRE = re.compile(
-		r"\s*"							# whitespace
-		r"([A-Za-z_][A-Za-z_0-9]*)"		# name (python identifier)
-		r"\s*:\s*"						# whitespace : whitespace
-		r"([cbBhHiIlLqQfd]|[0-9]+[ps]|"	# formatchar...
-			r"([0-9]+)\.([0-9]+)(F))"	# ...formatchar
-		r"\s*"							# whitespace
-		r"(#.*)?$"						# [comment] + end of string
-	)
+    r"\s*"							# whitespace
+    r"([A-Za-z_][A-Za-z_0-9]*)"		# name (python identifier)
+    r"\s*:\s*"						# whitespace : whitespace
+    r"([cbBhHiIlLqQfd]|[0-9]+[ps]|"  # formatchar...
+    r"([0-9]+)\.([0-9]+)(F))"  # ...formatchar
+    r"\s*"							# whitespace
+    r"(#.*)?$"						# [comment] + end of string
+)
 
 # matches the special struct fmt chars and 'x' (pad byte)
 _extraRE = re.compile(r"\s*([x@=<>!])\s*(#.*)?$")
@@ -125,52 +129,55 @@ _extraRE = re.compile(r"\s*([x@=<>!])\s*(#.*)?$")
 _emptyRE = re.compile(r"\s*(#.*)?$")
 
 _fixedpointmappings = {
-		8: "b",
-		16: "h",
-		32: "l"}
+    8: "b",
+    16: "h",
+    32: "l"}
 
 _formatcache = {}
 
+
 def getformat(fmt):
-	fmt = tostr(fmt, encoding="ascii")
-	try:
-		formatstring, names, fixes = _formatcache[fmt]
-	except KeyError:
-		lines = re.split("[\n;]", fmt)
-		formatstring = ""
-		names = []
-		fixes = {}
-		for line in lines:
-			if _emptyRE.match(line):
-				continue
-			m = _extraRE.match(line)
-			if m:
-				formatchar = m.group(1)
-				if formatchar != 'x' and formatstring:
-					raise Error("a special fmt char must be first")
-			else:
-				m = _elementRE.match(line)
-				if not m:
-					raise Error("syntax error in fmt: '%s'" % line)
-				name = m.group(1)
-				names.append(name)
-				formatchar = m.group(2)
-				if m.group(3):
-					# fixed point
-					before = int(m.group(3))
-					after = int(m.group(4))
-					bits = before + after
-					if bits not in [8, 16, 32]:
-						raise Error("fixed point must be 8, 16 or 32 bits long")
-					formatchar = _fixedpointmappings[bits]
-					assert m.group(5) == "F"
-					fixes[name] = after
-			formatstring = formatstring + formatchar
-		_formatcache[fmt] = formatstring, names, fixes
-	return formatstring, names, fixes
+    fmt = tostr(fmt, encoding="ascii")
+    try:
+        formatstring, names, fixes = _formatcache[fmt]
+    except KeyError:
+        lines = re.split("[\n;]", fmt)
+        formatstring = ""
+        names = []
+        fixes = {}
+        for line in lines:
+            if _emptyRE.match(line):
+                continue
+            m = _extraRE.match(line)
+            if m:
+                formatchar = m.group(1)
+                if formatchar != 'x' and formatstring:
+                    raise Error("a special fmt char must be first")
+            else:
+                m = _elementRE.match(line)
+                if not m:
+                    raise Error("syntax error in fmt: '%s'" % line)
+                name = m.group(1)
+                names.append(name)
+                formatchar = m.group(2)
+                if m.group(3):
+                    # fixed point
+                    before = int(m.group(3))
+                    after = int(m.group(4))
+                    bits = before + after
+                    if bits not in [8, 16, 32]:
+                        raise Error(
+                            "fixed point must be 8, 16 or 32 bits long")
+                    formatchar = _fixedpointmappings[bits]
+                    assert m.group(5) == "F"
+                    fixes[name] = after
+            formatstring = formatstring + formatchar
+        _formatcache[fmt] = formatstring, names, fixes
+    return formatstring, names, fixes
+
 
 def _test():
-	fmt = """
+    fmt = """
 		# comments are allowed
 		>  # big endian (see documentation for struct)
 		# empty lines are allowed:
@@ -184,28 +191,29 @@ def _test():
 		afixed: 16.16F
 	"""
 
-	print('size:', calcsize(fmt))
+    print('size:', calcsize(fmt))
 
-	class foo(object):
-		pass
+    class foo(object):
+        pass
 
-	i = foo()
+    i = foo()
 
-	i.ashort = 0x7fff
-	i.along = 0x7fffffff
-	i.abyte = 0x7f
-	i.achar = "a"
-	i.astr = "12345"
-	i.afloat = 0.5
-	i.adouble = 0.5
-	i.afixed = 1.5
+    i.ashort = 0x7fff
+    i.along = 0x7fffffff
+    i.abyte = 0x7f
+    i.achar = "a"
+    i.astr = "12345"
+    i.afloat = 0.5
+    i.adouble = 0.5
+    i.afixed = 1.5
 
-	data = pack(fmt, i)
-	print('data:', repr(data))
-	print(unpack(fmt, data))
-	i2 = foo()
-	unpack(fmt, data, i2)
-	print(vars(i2))
+    data = pack(fmt, i)
+    print('data:', repr(data))
+    print(unpack(fmt, data))
+    i2 = foo()
+    unpack(fmt, data, i2)
+    print(vars(i2))
+
 
 if __name__ == "__main__":
-	_test()
+    _test()

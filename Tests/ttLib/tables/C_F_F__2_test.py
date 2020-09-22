@@ -22,6 +22,7 @@ def strip_VariableItems(string):
     string = re.sub('<modified value="[^"]+"/>', '', string)
     return string
 
+
 class CFFTableTest(unittest.TestCase):
 
     @classmethod

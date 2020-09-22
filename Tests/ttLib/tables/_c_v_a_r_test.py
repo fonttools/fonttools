@@ -8,9 +8,9 @@ import unittest
 
 
 CVAR_DATA = deHexStr(
-    "0001 0000 "      #  0: majorVersion=1 minorVersion=0
-    "8002 0018 "      #  4: tupleVariationCount=2|TUPLES_SHARE_POINT_NUMBERS offsetToData=24
-    "0004 "           #  8: tvHeader[0].variationDataSize=4
+    "0001 0000 "  # 0: majorVersion=1 minorVersion=0
+    "8002 0018 "  # 4: tupleVariationCount=2|TUPLES_SHARE_POINT_NUMBERS offsetToData=24
+    "0004 "  # 8: tvHeader[0].variationDataSize=4
     "8000 "           # 10: tvHeader[0].tupleIndex=EMBEDDED_PEAK
     "4000 0000 "      # 12: tvHeader[0].peakTuple=[1.0, 0.0]
     "0004 "           # 16: tvHeader[1].variationDataSize=4
@@ -21,15 +21,18 @@ CVAR_DATA = deHexStr(
     "02 09 07 08")    # 29: deltas=[9, 7, 8]
 
 CVAR_PRIVATE_POINT_DATA = deHexStr(
-    "0001 0000 "                    #  0: majorVersion=1 minorVersion=0
-    "0002 0018 "                    #  4: tupleVariationCount=2 offsetToData=24
-    "0009 "                         #  8: tvHeader[0].variationDataSize=9
-    "A000 "                         # 10: tvHeader[0].tupleIndex=EMBEDDED_PEAK|PRIVATE_POINT_NUMBERS
+    "0001 0000 "  # 0: majorVersion=1 minorVersion=0
+    "0002 0018 "  # 4: tupleVariationCount=2 offsetToData=24
+    "0009 "  # 8: tvHeader[0].variationDataSize=9
+    # 10: tvHeader[0].tupleIndex=EMBEDDED_PEAK|PRIVATE_POINT_NUMBERS
+    "A000 "
     "4000 0000 "                    # 12: tvHeader[0].peakTuple=[1.0, 0.0]
     "0009 "                         # 16: tvHeader[1].variationDataSize=9
-    "A000 "                         # 18: tvHeader[1].tupleIndex=EMBEDDED_PEAK|PRIVATE_POINT_NUMBERS
+    # 18: tvHeader[1].tupleIndex=EMBEDDED_PEAK|PRIVATE_POINT_NUMBERS
+    "A000 "
     "C000 3333 "                    # 20: tvHeader[1].peakTuple=[-1.0, 0.8]
-    "03 02 02 01 01 02 03 01 04 "   # 24: pointCount=3 run_count=2 cvt=2 1 1 run_count=2 deltas=[3, 1, 4]
+    # 24: pointCount=3 run_count=2 cvt=2 1 1 run_count=2 deltas=[3, 1, 4]
+    "03 02 02 01 01 02 03 01 04 "
     "03 02 02 01 01 02 09 07 08 ")  # 33: pointCount=3 run_count=2 cvt=2 1 1 run_count=2 deltas=[9, 7, 8]
 
 CVAR_XML = [
@@ -80,12 +83,14 @@ class CVARTableTest(unittest.TestCase):
     def test_compile(self):
         font, cvar = self.makeFont()
         cvar.variations = CVAR_VARIATIONS
-        self.assertEqual(hexStr(cvar.compile(font)), hexStr(CVAR_PRIVATE_POINT_DATA))
+        self.assertEqual(hexStr(cvar.compile(font)),
+                         hexStr(CVAR_PRIVATE_POINT_DATA))
 
     def test_compile_shared_points(self):
         font, cvar = self.makeFont()
         cvar.variations = CVAR_VARIATIONS
-        self.assertEqual(hexStr(cvar.compile(font, useSharedPoints=True)), hexStr(CVAR_DATA))
+        self.assertEqual(
+            hexStr(cvar.compile(font, useSharedPoints=True)), hexStr(CVAR_DATA))
 
     def test_decompile(self):
         font, cvar = self.makeFont()

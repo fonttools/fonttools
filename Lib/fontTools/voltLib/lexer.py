@@ -1,5 +1,6 @@
 from fontTools.voltLib.error import VoltLibError
 
+
 class Lexer(object):
     NUMBER = "NUMBER"
     STRING = "STRING"

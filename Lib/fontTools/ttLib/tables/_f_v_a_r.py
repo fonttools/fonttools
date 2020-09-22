@@ -42,6 +42,7 @@ FVAR_INSTANCE_FORMAT = """
     flags:      H
 """
 
+
 class table__f_v_a_r(DefaultTable.DefaultTable):
     dependencies = ["name"]
 
@@ -51,7 +52,8 @@ class table__f_v_a_r(DefaultTable.DefaultTable):
         self.instances = []
 
     def compile(self, ttFont):
-        instanceSize = sstruct.calcsize(FVAR_INSTANCE_FORMAT) + (len(self.axes) * 4)
+        instanceSize = sstruct.calcsize(
+            FVAR_INSTANCE_FORMAT) + (len(self.axes) * 4)
         includePostScriptNames = any(instance.postscriptNameID != 0xFFFF
                                      for instance in self.instances)
         if includePostScriptNames:
@@ -77,7 +79,8 @@ class table__f_v_a_r(DefaultTable.DefaultTable):
         headerSize = sstruct.calcsize(FVAR_HEADER_FORMAT)
         header = sstruct.unpack(FVAR_HEADER_FORMAT, data[0:headerSize])
         if header["version"] != 0x00010000:
-            raise TTLibError("unsupported 'fvar' version %04x" % header["version"])
+            raise TTLibError("unsupported 'fvar' version %04x" %
+                             header["version"])
         pos = header["offsetToData"]
         axisSize = header["axisSize"]
         for _ in range(header["axisCount"]):
@@ -108,6 +111,7 @@ class table__f_v_a_r(DefaultTable.DefaultTable):
             instance = NamedInstance()
             instance.fromXML(name, attrs, content, ttFont)
             self.instances.append(instance)
+
 
 class Axis(object):
     def __init__(self):
@@ -156,7 +160,8 @@ class Axis(object):
                 setattr(
                     self,
                     tag[0].lower() + tag[1:],
-                    str2fl(value, 16) if tag.endswith("Value") else safeEval(value)
+                    str2fl(value, 16) if tag.endswith(
+                        "Value") else safeEval(value)
                 )
 
 
@@ -180,13 +185,13 @@ class NamedInstance(object):
         sstruct.unpack2(FVAR_INSTANCE_FORMAT, data, self)
         pos = sstruct.calcsize(FVAR_INSTANCE_FORMAT)
         for axis in axisTags:
-            value = struct.unpack(">l", data[pos : pos + 4])[0]
+            value = struct.unpack(">l", data[pos: pos + 4])[0]
             self.coordinates[axis] = fi2fl(value, 16)
             pos += 4
         if pos + 2 <= len(data):
-          self.postscriptNameID = struct.unpack(">H", data[pos : pos + 2])[0]
+            self.postscriptNameID = struct.unpack(">H", data[pos: pos + 2])[0]
         else:
-          self.postscriptNameID = 0xFFFF
+            self.postscriptNameID = 0xFFFF
 
     def toXML(self, writer, ttFont):
         name = ttFont["name"].getDebugName(self.subfamilyNameID)
@@ -198,9 +203,9 @@ class NamedInstance(object):
         if psname is not None:
             writer.comment(u"PostScript: " + psname)
             writer.newline()
-        if self.postscriptNameID  == 0xFFFF:
-           writer.begintag("NamedInstance", flags=("0x%X" % self.flags),
-                           subfamilyNameID=self.subfamilyNameID)
+        if self.postscriptNameID == 0xFFFF:
+            writer.begintag("NamedInstance", flags=("0x%X" % self.flags),
+                            subfamilyNameID=self.subfamilyNameID)
         else:
             writer.begintag("NamedInstance", flags=("0x%X" % self.flags),
                             subfamilyNameID=self.subfamilyNameID,

@@ -73,12 +73,12 @@ def AddGlyphVariations(font, thin, regular, black):
         regularCoord = GetCoordinates(regular, glyphName)
         thinCoord = GetCoordinates(thin, glyphName)
         blackCoord = GetCoordinates(black, glyphName)
-        if not regularCoord or not blackCoord or not thinCoord:            
+        if not regularCoord or not blackCoord or not thinCoord:
             logging.warning("glyph %s not present in all input fonts",
                             glyphName)
             continue
         if (len(regularCoord) != len(blackCoord) or
-            len(regularCoord) != len(thinCoord)):
+                len(regularCoord) != len(thinCoord)):
             logging.warning("glyph %s has not the same number of "
                             "control points in all input fonts", glyphName)
             continue
@@ -111,7 +111,6 @@ def GetCoordinates(font, glyphName):
         coord = [c for c in glyph.getCoordinates(glyphTable)[0]]
     # Add phantom points for (left, right, top, bottom) positions.
     horizontalAdvanceWidth, leftSideBearing = font["hmtx"].metrics[glyphName]
-
 
     leftSideX = glyph.xMin - leftSideBearing
     rightSideX = leftSideX + horizontalAdvanceWidth

@@ -113,7 +113,8 @@ def buildCOLR(
 
     if version in (None, 0) and not varStore:
         # split color glyphs into v0 and v1 and encode separately
-        colorGlyphsV0, colorGlyphsV1 = _splitSolidAndGradientGlyphs(colorGlyphs)
+        colorGlyphsV0, colorGlyphsV1 = _splitSolidAndGradientGlyphs(
+            colorGlyphs)
         if version == 0 and colorGlyphsV1:
             # TODO Derive "average" solid color from gradients?
             raise ValueError("Can't encode gradients in COLRv0")
@@ -227,7 +228,8 @@ def buildCPAL(
             # input colors are RGBA, CPAL encodes them as BGRA
             red, green, blue, alpha = color
             colors.append(
-                C_P_A_L_.Color(*(round(v * 255) for v in (blue, green, red, alpha)))
+                C_P_A_L_.Color(*(round(v * 255)
+                                 for v in (blue, green, red, alpha)))
             )
         cpal.palettes.append(colors)
 
@@ -239,7 +241,8 @@ def buildCPAL(
                 raise ColorLibError(
                     f"Expected {len(palettes)} paletteTypes, got {len(paletteTypes)}"
                 )
-            cpal.paletteTypes = [ColorPaletteType(t).value for t in paletteTypes]
+            cpal.paletteTypes = [ColorPaletteType(
+                t).value for t in paletteTypes]
         else:
             cpal.paletteTypes = [C_P_A_L_.table_C_P_A_L_.DEFAULT_PALETTE_TYPE] * len(
                 palettes
@@ -252,7 +255,8 @@ def buildCPAL(
                 )
             cpal.paletteLabels = buildPaletteLabels(paletteLabels, nameTable)
         else:
-            cpal.paletteLabels = [C_P_A_L_.table_C_P_A_L_.NO_NAME_ID] * len(palettes)
+            cpal.paletteLabels = [
+                C_P_A_L_.table_C_P_A_L_.NO_NAME_ID] * len(palettes)
 
         if paletteEntryLabels is not None:
             if len(paletteEntryLabels) != cpal.numPaletteEntries:
@@ -260,7 +264,8 @@ def buildCPAL(
                     f"Expected {cpal.numPaletteEntries} paletteEntryLabels, "
                     f"got {len(paletteEntryLabels)}"
                 )
-            cpal.paletteEntryLabels = buildPaletteLabels(paletteEntryLabels, nameTable)
+            cpal.paletteEntryLabels = buildPaletteLabels(
+                paletteEntryLabels, nameTable)
         else:
             cpal.paletteEntryLabels = [
                 C_P_A_L_.table_C_P_A_L_.NO_NAME_ID
@@ -450,7 +455,8 @@ def _to_ot_paint(paint: _PaintInput) -> ot.Paint:
         return buildSolidColorPaint(paletteIndex)
     elif isinstance(paint, collections.abc.Mapping):
         return buildPaint(**paint)
-    raise TypeError(f"expected int, Mapping or ot.Paint, found {type(paint.__name__)}")
+    raise TypeError(
+        f"expected int, Mapping or ot.Paint, found {type(paint.__name__)}")
 
 
 def buildLayerV1Record(layerGlyph: str, paint: _PaintInput) -> ot.LayerV1Record:

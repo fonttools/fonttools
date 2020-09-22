@@ -305,7 +305,7 @@ def test_xml_from_xml(testfile, tableTag):
     name = os.path.splitext(testfile)[0]
     setupfile = getpath("%s.ttx.%s.setup" % (name, tagToXML(tableTag)))
     if os.path.exists(setupfile):
-#        import pdb; pdb.set_trace()
+        #        import pdb; pdb.set_trace()
         font.importXML(setupfile)
     xml_from_xml = dump_ttx(font, tableTag)
 

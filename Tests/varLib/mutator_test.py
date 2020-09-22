@@ -102,7 +102,8 @@ class MutatorTest(unittest.TestCase):
         for path in ttx_paths:
             self.compile_font(path, suffix, self.tempdir)
 
-        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
+        def finder(s): return s.replace(
+            ufo_dir, self.tempdir).replace('.ufo', suffix)
         varfont, _, _ = build(ds_path, finder)
         varfont_name = 'Mutator'
         varfont_path = os.path.join(self.tempdir, varfont_name + suffix)
@@ -111,9 +112,11 @@ class MutatorTest(unittest.TestCase):
         args = [varfont_path, 'wght=500', 'cntr=50']
         mutator(args)
 
-        instfont_path = os.path.splitext(varfont_path)[0] + '-instance' + suffix
+        instfont_path = os.path.splitext(
+            varfont_path)[0] + '-instance' + suffix
         instfont = TTFont(instfont_path)
-        tables = [table_tag for table_tag in instfont.keys() if table_tag != 'head']
+        tables = [table_tag for table_tag in instfont.keys()
+                  if table_tag != 'head']
         expected_ttx_path = self.get_test_output(varfont_name + '.ttx')
         self.expect_ttx(instfont, expected_ttx_path, tables)
 
@@ -132,10 +135,13 @@ class MutatorTest(unittest.TestCase):
         args = [varfont_path, 'wdth=80', 'ASCN=628']
         mutator(args)
 
-        instfont_path = os.path.splitext(varfont_path)[0] + '-instance' + suffix
+        instfont_path = os.path.splitext(
+            varfont_path)[0] + '-instance' + suffix
         instfont = TTFont(instfont_path)
-        tables = [table_tag for table_tag in instfont.keys() if table_tag != 'head']
-        expected_ttx_path = self.get_test_output(varfont_name + '-instance.ttx')
+        tables = [table_tag for table_tag in instfont.keys()
+                  if table_tag != 'head']
+        expected_ttx_path = self.get_test_output(
+            varfont_name + '-instance.ttx')
         self.expect_ttx(instfont, expected_ttx_path, tables)
 
     def test_varlib_mutator_iup_ttf(self):
@@ -150,14 +156,17 @@ class MutatorTest(unittest.TestCase):
 
         varfont_name = 'Mutator_IUP'
         varfont_path = os.path.join(self.tempdir, varfont_name + suffix)
-        
+
         args = [varfont_path, 'wdth=80', 'ASCN=628']
         mutator(args)
 
-        instfont_path = os.path.splitext(varfont_path)[0] + '-instance' + suffix
+        instfont_path = os.path.splitext(
+            varfont_path)[0] + '-instance' + suffix
         instfont = TTFont(instfont_path)
-        tables = [table_tag for table_tag in instfont.keys() if table_tag != 'head']
-        expected_ttx_path = self.get_test_output(varfont_name + '-instance.ttx')
+        tables = [table_tag for table_tag in instfont.keys()
+                  if table_tag != 'head']
+        expected_ttx_path = self.get_test_output(
+            varfont_name + '-instance.ttx')
         self.expect_ttx(instfont, expected_ttx_path, tables)
 
     def test_varlib_mutator_CFF2(self):
@@ -174,7 +183,7 @@ class MutatorTest(unittest.TestCase):
 
         expected_ttx_name = 'InterpolateTestCFF2VF'
         tables = ["hmtx", "CFF2"]
-        loc = {'wght':float(200)}
+        loc = {'wght': float(200)}
 
         varfont = TTFont(varfont_path)
         new_font = make_instance(varfont, loc)

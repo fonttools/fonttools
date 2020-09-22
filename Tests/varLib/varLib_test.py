@@ -126,7 +126,8 @@ class BuildTest(unittest.TestCase):
             if post_process_master is not None:
                 post_process_master(font, savepath)
 
-        finder = lambda s: s.replace(ufo_dir, self.tempdir).replace('.ufo', suffix)
+        def finder(s): return s.replace(
+            ufo_dir, self.tempdir).replace('.ufo', suffix)
         varfont, model, _ = build(ds_path, finder)
 
         if save_before_dump:
@@ -313,7 +314,8 @@ class BuildTest(unittest.TestCase):
         ds = DesignSpaceDocument.fromfile(ds_path)
         for source in ds.sources:
             source.path = os.path.join(
-                self.tempdir, os.path.basename(source.filename).replace(".ufo", ".otf")
+                self.tempdir, os.path.basename(
+                    source.filename).replace(".ufo", ".otf")
             )
         ds.updatePaths()
 
@@ -335,7 +337,8 @@ class BuildTest(unittest.TestCase):
         ds = DesignSpaceDocument.fromfile(ds_path)
         for source in ds.sources:
             source.path = os.path.join(
-                self.tempdir, os.path.basename(source.filename).replace(".ufo", ".otf")
+                self.tempdir, os.path.basename(
+                    source.filename).replace(".ufo", ".otf")
             )
         ds.updatePaths()
 
@@ -357,7 +360,8 @@ class BuildTest(unittest.TestCase):
         ds = DesignSpaceDocument.fromfile(ds_path)
         for source in ds.sources:
             source.path = os.path.join(
-                self.tempdir, os.path.basename(source.filename).replace(".ufo", ".otf")
+                self.tempdir, os.path.basename(
+                    source.filename).replace(".ufo", ".otf")
             )
         ds.updatePaths()
 
@@ -379,7 +383,8 @@ class BuildTest(unittest.TestCase):
         ds = DesignSpaceDocument.fromfile(ds_path)
         for source in ds.sources:
             source.path = os.path.join(
-                self.tempdir, os.path.basename(source.filename).replace(".ufo", ".otf")
+                self.tempdir, os.path.basename(
+                    source.filename).replace(".ufo", ".otf")
             )
         ds.updatePaths()
 
@@ -401,7 +406,8 @@ class BuildTest(unittest.TestCase):
         ds = DesignSpaceDocument.fromfile(ds_path)
         for source in ds.sources:
             source.path = os.path.join(
-                self.tempdir, os.path.basename(source.filename).replace(".ufo", ".otf")
+                self.tempdir, os.path.basename(
+                    source.filename).replace(".ufo", ".otf")
             )
         ds.updatePaths()
 
@@ -453,7 +459,8 @@ class BuildTest(unittest.TestCase):
         self.assertTrue(os.path.exists(varfont_path))
 
         varfont = TTFont(varfont_path)
-        tables = [table_tag for table_tag in varfont.keys() if table_tag != 'head']
+        tables = [table_tag for table_tag in varfont.keys()
+                  if table_tag != 'head']
         expected_ttx_path = self.get_test_output('BuildMain.ttx')
         self.expect_ttx(varfont, expected_ttx_path, tables)
 
@@ -469,7 +476,8 @@ class BuildTest(unittest.TestCase):
         ds = DesignSpaceDocument.fromfile(ds_path)
         for source in ds.sources:
             filename = os.path.join(
-                self.tempdir, os.path.basename(source.filename).replace(".ufo", ".ttf")
+                self.tempdir, os.path.basename(
+                    source.filename).replace(".ufo", ".ttf")
             )
             source.font = TTFont(
                 filename, recalcBBoxes=False, recalcTimestamp=False, lazy=True
@@ -478,7 +486,8 @@ class BuildTest(unittest.TestCase):
 
         varfont, _, _ = build(ds)
         varfont = reload_font(varfont)
-        tables = [table_tag for table_tag in varfont.keys() if table_tag != "head"]
+        tables = [table_tag for table_tag in varfont.keys()
+                  if table_tag != "head"]
         self.expect_ttx(varfont, expected_ttx_path, tables)
 
     def test_varlib_build_from_ttf_paths(self):
@@ -493,13 +502,15 @@ class BuildTest(unittest.TestCase):
         ds = DesignSpaceDocument.fromfile(ds_path)
         for source in ds.sources:
             source.path = os.path.join(
-                self.tempdir, os.path.basename(source.filename).replace(".ufo", ".ttf")
+                self.tempdir, os.path.basename(
+                    source.filename).replace(".ufo", ".ttf")
             )
         ds.updatePaths()
 
         varfont, _, _ = build(ds)
         varfont = reload_font(varfont)
-        tables = [table_tag for table_tag in varfont.keys() if table_tag != "head"]
+        tables = [table_tag for table_tag in varfont.keys()
+                  if table_tag != "head"]
         self.expect_ttx(varfont, expected_ttx_path, tables)
 
     def test_varlib_build_from_ttx_paths(self):
@@ -510,13 +521,15 @@ class BuildTest(unittest.TestCase):
         ds = DesignSpaceDocument.fromfile(ds_path)
         for source in ds.sources:
             source.path = os.path.join(
-                ttx_dir, os.path.basename(source.filename).replace(".ufo", ".ttx")
+                ttx_dir, os.path.basename(
+                    source.filename).replace(".ufo", ".ttx")
             )
         ds.updatePaths()
 
         varfont, _, _ = build(ds)
         varfont = reload_font(varfont)
-        tables = [table_tag for table_tag in varfont.keys() if table_tag != "head"]
+        tables = [table_tag for table_tag in varfont.keys()
+                  if table_tag != "head"]
         self.expect_ttx(varfont, expected_ttx_path, tables)
 
     def test_varlib_build_sparse_masters(self):
@@ -525,7 +538,8 @@ class BuildTest(unittest.TestCase):
 
         varfont, _, _ = build(ds_path)
         varfont = reload_font(varfont)
-        tables = [table_tag for table_tag in varfont.keys() if table_tag != "head"]
+        tables = [table_tag for table_tag in varfont.keys()
+                  if table_tag != "head"]
         self.expect_ttx(varfont, expected_ttx_path, tables)
 
     def test_varlib_build_lazy_masters(self):
@@ -539,14 +553,16 @@ class BuildTest(unittest.TestCase):
             buf = BytesIO()
             font.save(buf, reorderTables=False)
             buf.seek(0)
-            font = TTFont(buf, lazy=True)  # reopen in lazy mode, to reproduce #1808
+            # reopen in lazy mode, to reproduce #1808
+            font = TTFont(buf, lazy=True)
             return font
 
         ds = DesignSpaceDocument.fromfile(ds_path)
         ds.loadSourceFonts(_open_font)
         varfont, _, _ = build(ds)
         varfont = reload_font(varfont)
-        tables = [table_tag for table_tag in varfont.keys() if table_tag != "head"]
+        tables = [table_tag for table_tag in varfont.keys()
+                  if table_tag != "head"]
         self.expect_ttx(varfont, expected_ttx_path, tables)
 
     def test_varlib_build_sparse_masters_MVAR(self):
@@ -643,7 +659,8 @@ class BuildTest(unittest.TestCase):
         ds = DesignSpaceDocument.fromfile(ds_path)
         for source in ds.sources:
             source.path = os.path.join(
-                self.tempdir, os.path.basename(source.filename).replace(".ufo", suffix)
+                self.tempdir, os.path.basename(
+                    source.filename).replace(".ufo", suffix)
             )
         ds.updatePaths()
 
@@ -668,7 +685,8 @@ class BuildTest(unittest.TestCase):
         ds = DesignSpaceDocument.fromfile(ds_path)
         for source in ds.sources:
             source.path = os.path.join(
-                self.tempdir, os.path.basename(source.filename).replace(".ufo", suffix)
+                self.tempdir, os.path.basename(
+                    source.filename).replace(".ufo", suffix)
             )
         ds.updatePaths()
 
@@ -684,7 +702,8 @@ class BuildTest(unittest.TestCase):
         self._run_varlib_build_test(
             designspace_name='SingleMaster',
             font_name='TestFamily',
-            tables=['GDEF', 'HVAR', 'MVAR', 'STAT', 'fvar', 'cvar', 'gvar', 'name'],
+            tables=['GDEF', 'HVAR', 'MVAR', 'STAT',
+                    'fvar', 'cvar', 'gvar', 'name'],
             expected_ttx_name='SingleMaster',
             save_before_dump=True,
         )
@@ -704,7 +723,8 @@ class BuildTest(unittest.TestCase):
             ttx_dump = TTFont()
             ttx_dump.importXML(
                 os.path.join(
-                    ttx_dir, os.path.basename(source.filename).replace(".ttf", ".ttx")
+                    ttx_dir, os.path.basename(
+                        source.filename).replace(".ttf", ".ttx")
                 )
             )
             source.font = reload_font(ttx_dump)
@@ -731,7 +751,7 @@ class BuildTest(unittest.TestCase):
             assert getattr(class2_zero.Value1, "XAdvDevice", None) is None
 
         # Assert the variable font's kerning table (without deltas) is equal to the
-        # default font's kerning table. The bug fixed in 
+        # default font's kerning table. The bug fixed in
         # https://github.com/fonttools/fonttools/pull/1638 caused rogue kerning
         # values to be written to the variable font.
         assert _extract_flat_kerning(varfont, class_kerning_table) == {
@@ -808,7 +828,8 @@ def _extract_flat_kerning(font, pairpos_table):
     for glyph_name_1 in pairpos_table.Coverage.glyphs:
         class_def_1 = pairpos_table.ClassDef1.classDefs.get(glyph_name_1, 0)
         for glyph_name_2 in font.getGlyphOrder():
-            class_def_2 = pairpos_table.ClassDef2.classDefs.get(glyph_name_2, 0)
+            class_def_2 = pairpos_table.ClassDef2.classDefs.get(
+                glyph_name_2, 0)
             kern_value = (
                 pairpos_table.Class1Record[class_def_1]
                 .Class2Record[class_def_2]

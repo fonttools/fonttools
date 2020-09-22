@@ -8,8 +8,10 @@ import pytest
 COLR_V0_DATA = (
     b"\x00\x00"  # Version (0)
     b"\x00\x01"  # BaseGlyphRecordCount (1)
-    b"\x00\x00\x00\x0e"  # Offset to BaseGlyphRecordArray from beginning of table (14)
-    b"\x00\x00\x00\x14"  # Offset to LayerRecordArray from beginning of table (20)
+    # Offset to BaseGlyphRecordArray from beginning of table (14)
+    b"\x00\x00\x00\x0e"
+    # Offset to LayerRecordArray from beginning of table (20)
+    b"\x00\x00\x00\x14"
     b"\x00\x03"  # LayerRecordCount (3)
     b"\x00\x06"  # BaseGlyphRecord[0].BaseGlyph (6)
     b"\x00\x00"  # BaseGlyphRecord[0].FirstLayerIndex (0)
@@ -68,8 +70,10 @@ class COLR_V0_Test(object):
 COLR_V1_DATA = (
     b"\x00\x01"  # Version (1)
     b"\x00\x01"  # BaseGlyphRecordCount (1)
-    b"\x00\x00\x00\x16"  # Offset to BaseGlyphRecordArray from beginning of table (22)
-    b"\x00\x00\x00\x1c"  # Offset to LayerRecordArray from beginning of table (28)
+    # Offset to BaseGlyphRecordArray from beginning of table (22)
+    b"\x00\x00\x00\x16"
+    # Offset to LayerRecordArray from beginning of table (28)
+    b"\x00\x00\x00\x1c"
     b"\x00\x03"  # LayerRecordCount (3)
     b"\x00\x00\x00("  # Offset to BaseGlyphV1List from beginning of table (40)
     b"\x00\x00\x00\x00"  # Offset to VarStore (NULL)
@@ -84,7 +88,8 @@ COLR_V1_DATA = (
     b"\x00\x02"  # LayerRecord[2].PaletteIndex (2)
     b"\x00\x00\x00\x01"  # BaseGlyphV1List.BaseGlyphCount (1)
     b"\x00\n"  # BaseGlyphV1List.BaseGlyphV1Record[0].BaseGlyph (10)
-    b"\x00\x00\x00\n"  # Offset to LayerV1List from beginning of BaseGlyphV1List (10)
+    # Offset to LayerV1List from beginning of BaseGlyphV1List (10)
+    b"\x00\x00\x00\n"
     b"\x00\x00\x00\x03"  # LayerV1List.LayerCount (3)
     b"\x00\x0b"  # LayerV1List.LayerV1Record[0].LayerGlyph (11)
     b"\x00\x00\x00\x16"  # Offset to Paint from beginning of LayerV1List (22)

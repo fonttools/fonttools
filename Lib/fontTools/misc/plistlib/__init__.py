@@ -139,7 +139,7 @@ def _encode_base64(
         chunks = []
         for i in range(0, len(data), max_length):
             chunks.append(indent)
-            chunks.append(data[i : i + max_length])
+            chunks.append(data[i: i + max_length])
         chunks.append(indent)
         data = b"".join(chunks)
     return data
@@ -505,7 +505,8 @@ def fromtree(
 
     Returns: An object (usually a dictionary).
     """
-    target = PlistTarget(use_builtin_types=use_builtin_types, dict_type=dict_type)
+    target = PlistTarget(
+        use_builtin_types=use_builtin_types, dict_type=dict_type)
     for action, element in etree.iterwalk(tree, events=("start", "end")):
         if action == "start":
             target.start(element.tag, element.attrib)
@@ -541,8 +542,10 @@ def load(
     """
 
     if not hasattr(fp, "read"):
-        raise AttributeError("'%s' object has no attribute 'read'" % type(fp).__name__)
-    target = PlistTarget(use_builtin_types=use_builtin_types, dict_type=dict_type)
+        raise AttributeError(
+            "'%s' object has no attribute 'read'" % type(fp).__name__)
+    target = PlistTarget(
+        use_builtin_types=use_builtin_types, dict_type=dict_type)
     parser = etree.XMLParser(target=target)  # type: ignore
     result = etree.parse(fp, parser=parser)
     # lxml returns the target object directly, while ElementTree wraps
@@ -609,7 +612,8 @@ def dump(
     """
 
     if not hasattr(fp, "write"):
-        raise AttributeError("'%s' object has no attribute 'write'" % type(fp).__name__)
+        raise AttributeError(
+            "'%s' object has no attribute 'write'" % type(fp).__name__)
     root = etree.Element("plist", version="1.0")
     el = totree(
         value,

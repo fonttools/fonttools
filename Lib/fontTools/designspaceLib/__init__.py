@@ -87,7 +87,8 @@ class SimpleDescriptor(AsDictMixin):
             try:
                 assert(getattr(self, attr) == getattr(other, attr))
             except AssertionError:
-                print("failed attribute", attr, getattr(self, attr), "!=", getattr(other, attr))
+                print("failed attribute", attr, getattr(
+                    self, attr), "!=", getattr(other, attr))
 
 
 class SourceDescriptor(SimpleDescriptor):
@@ -302,13 +303,15 @@ class InstanceDescriptor(SimpleDescriptor):
         return self.localisedFamilyName.get(languageCode)
 
     def setStyleMapStyleName(self, styleMapStyleName, languageCode="en"):
-        self.localisedStyleMapStyleName[languageCode] = tounicode(styleMapStyleName)
+        self.localisedStyleMapStyleName[languageCode] = tounicode(
+            styleMapStyleName)
 
     def getStyleMapStyleName(self, languageCode="en"):
         return self.localisedStyleMapStyleName.get(languageCode)
 
     def setStyleMapFamilyName(self, styleMapFamilyName, languageCode="en"):
-        self.localisedStyleMapFamilyName[languageCode] = tounicode(styleMapFamilyName)
+        self.localisedStyleMapFamilyName[languageCode] = tounicode(
+            styleMapFamilyName)
 
     def getStyleMapFamilyName(self, languageCode="en"):
         return self.localisedStyleMapFamilyName.get(languageCode)
@@ -317,11 +320,11 @@ class InstanceDescriptor(SimpleDescriptor):
 def tagForAxisName(name):
     # try to find or make a tag name for this axis name
     names = {
-        'weight':   ('wght', dict(en = 'Weight')),
-        'width':    ('wdth', dict(en = 'Width')),
-        'optical':  ('opsz', dict(en = 'Optical Size')),
-        'slant':    ('slnt', dict(en = 'Slant')),
-        'italic':   ('ital', dict(en = 'Italic')),
+        'weight':   ('wght', dict(en='Weight')),
+        'width':    ('wdth', dict(en='Width')),
+        'optical':  ('opsz', dict(en='Optical Size')),
+        'slant':    ('slnt', dict(en='Slant')),
+        'italic':   ('ital', dict(en='Italic')),
     }
     if name.lower() in names:
         return names[name.lower()]
@@ -474,8 +477,10 @@ class BaseDocWriter(object):
             dimElement = ET.Element('dimension')
             dimElement.attrib['name'] = dimensionName
             if type(dimensionValue) == tuple:
-                dimElement.attrib['xvalue'] = self.intOrFloat(dimensionValue[0])
-                dimElement.attrib['yvalue'] = self.intOrFloat(dimensionValue[1])
+                dimElement.attrib['xvalue'] = self.intOrFloat(
+                    dimensionValue[0])
+                dimElement.attrib['yvalue'] = self.intOrFloat(
+                    dimensionValue[1])
             else:
                 dimElement.attrib['xvalue'] = self.intOrFloat(dimensionValue)
             locElement.append(dimElement)
@@ -501,9 +506,11 @@ class BaseDocWriter(object):
                 conditionElement = ET.Element('condition')
                 conditionElement.attrib['name'] = cond.get('name')
                 if cond.get('minimum') is not None:
-                    conditionElement.attrib['minimum'] = self.intOrFloat(cond.get('minimum'))
+                    conditionElement.attrib['minimum'] = self.intOrFloat(
+                        cond.get('minimum'))
                 if cond.get('maximum') is not None:
-                    conditionElement.attrib['maximum'] = self.intOrFloat(cond.get('maximum'))
+                    conditionElement.attrib['maximum'] = self.intOrFloat(
+                        cond.get('maximum'))
                 conditionsetElement.append(conditionElement)
             if len(conditionsetElement):
                 ruleElement.append(conditionsetElement)
@@ -555,7 +562,8 @@ class BaseDocWriter(object):
                     continue  # already stored in the element attribute
                 localisedStyleNameElement = ET.Element('stylename')
                 localisedStyleNameElement.attrib[XML_LANG] = code
-                localisedStyleNameElement.text = instanceObject.getStyleName(code)
+                localisedStyleNameElement.text = instanceObject.getStyleName(
+                    code)
                 instanceElement.append(localisedStyleNameElement)
         if instanceObject.localisedFamilyName:
             languageCodes = list(instanceObject.localisedFamilyName.keys())
@@ -565,31 +573,39 @@ class BaseDocWriter(object):
                     continue  # already stored in the element attribute
                 localisedFamilyNameElement = ET.Element('familyname')
                 localisedFamilyNameElement.attrib[XML_LANG] = code
-                localisedFamilyNameElement.text = instanceObject.getFamilyName(code)
+                localisedFamilyNameElement.text = instanceObject.getFamilyName(
+                    code)
                 instanceElement.append(localisedFamilyNameElement)
         if instanceObject.localisedStyleMapStyleName:
-            languageCodes = list(instanceObject.localisedStyleMapStyleName.keys())
+            languageCodes = list(
+                instanceObject.localisedStyleMapStyleName.keys())
             languageCodes.sort()
             for code in languageCodes:
                 if code == "en":
                     continue
-                localisedStyleMapStyleNameElement = ET.Element('stylemapstylename')
+                localisedStyleMapStyleNameElement = ET.Element(
+                    'stylemapstylename')
                 localisedStyleMapStyleNameElement.attrib[XML_LANG] = code
-                localisedStyleMapStyleNameElement.text = instanceObject.getStyleMapStyleName(code)
+                localisedStyleMapStyleNameElement.text = instanceObject.getStyleMapStyleName(
+                    code)
                 instanceElement.append(localisedStyleMapStyleNameElement)
         if instanceObject.localisedStyleMapFamilyName:
-            languageCodes = list(instanceObject.localisedStyleMapFamilyName.keys())
+            languageCodes = list(
+                instanceObject.localisedStyleMapFamilyName.keys())
             languageCodes.sort()
             for code in languageCodes:
                 if code == "en":
                     continue
-                localisedStyleMapFamilyNameElement = ET.Element('stylemapfamilyname')
+                localisedStyleMapFamilyNameElement = ET.Element(
+                    'stylemapfamilyname')
                 localisedStyleMapFamilyNameElement.attrib[XML_LANG] = code
-                localisedStyleMapFamilyNameElement.text = instanceObject.getStyleMapFamilyName(code)
+                localisedStyleMapFamilyNameElement.text = instanceObject.getStyleMapFamilyName(
+                    code)
                 instanceElement.append(localisedStyleMapFamilyNameElement)
 
         if instanceObject.location is not None:
-            locationElement, instanceObject.location = self._makeLocationElement(instanceObject.location)
+            locationElement, instanceObject.location = self._makeLocationElement(
+                instanceObject.location)
             instanceElement.append(locationElement)
         if instanceObject.filename is not None:
             instanceElement.attrib['filename'] = instanceObject.filename
@@ -605,7 +621,8 @@ class BaseDocWriter(object):
                 instanceElement.append(glyphsElement)
             glyphsElement = instanceElement.findall('.glyphs')[0]
             for glyphName, data in sorted(instanceObject.glyphs.items()):
-                glyphElement = self._writeGlyphElement(instanceElement, instanceObject, glyphName, data)
+                glyphElement = self._writeGlyphElement(
+                    instanceElement, instanceObject, glyphName, data)
                 glyphsElement.append(glyphElement)
         if instanceObject.kerning:
             kerningElement = ET.Element('kerning')
@@ -615,7 +632,8 @@ class BaseDocWriter(object):
             instanceElement.append(infoElement)
         if instanceObject.lib:
             libElement = ET.Element('lib')
-            libElement.append(plistlib.totree(instanceObject.lib, indent_level=4))
+            libElement.append(plistlib.totree(
+                instanceObject.lib, indent_level=4))
             instanceElement.append(libElement)
         self.root.findall('.instances')[0].append(instanceElement)
 
@@ -662,7 +680,8 @@ class BaseDocWriter(object):
                 glyphElement.attrib["name"] = name
                 glyphElement.attrib["mute"] = '1'
                 sourceElement.append(glyphElement)
-        locationElement, sourceObject.location = self._makeLocationElement(sourceObject.location)
+        locationElement, sourceObject.location = self._makeLocationElement(
+            sourceObject.location)
         sourceElement.append(locationElement)
         self.root.findall('.sources')[0].append(sourceElement)
 
@@ -676,9 +695,11 @@ class BaseDocWriter(object):
         if data.get('mute'):
             glyphElement.attrib['mute'] = "1"
         if data.get('unicodes') is not None:
-            glyphElement.attrib['unicode'] = " ".join([hex(u) for u in data.get('unicodes')])
+            glyphElement.attrib['unicode'] = " ".join(
+                [hex(u) for u in data.get('unicodes')])
         if data.get('instanceLocation') is not None:
-            locationElement, data['instanceLocation'] = self._makeLocationElement(data.get('instanceLocation'))
+            locationElement, data['instanceLocation'] = self._makeLocationElement(
+                data.get('instanceLocation'))
             glyphElement.append(locationElement)
         if glyphName is not None:
             glyphElement.attrib['name'] = glyphName
@@ -695,7 +716,8 @@ class BaseDocWriter(object):
                 if m.get('font') is not None:
                     masterElement.attrib['source'] = m.get('font')
                 if m.get('location') is not None:
-                    locationElement, m['location'] = self._makeLocationElement(m.get('location'))
+                    locationElement, m['location'] = self._makeLocationElement(
+                        m.get('location'))
                     masterElement.append(locationElement)
                 mastersElement.append(masterElement)
             glyphElement.append(mastersElement)
@@ -713,7 +735,8 @@ class BaseDocReader(LogMixin):
         self.documentObject = documentObject
         tree = ET.parse(self.path)
         self.root = tree.getroot()
-        self.documentObject.formatVersion = self.root.attrib.get("format", "3.0")
+        self.documentObject.formatVersion = self.root.attrib.get(
+            "format", "3.0")
         self._axes = []
         self.rules = []
         self.sources = []
@@ -823,7 +846,8 @@ class BaseDocReader(LogMixin):
                 # '{http://www.w3.org/XML/1998/namespace}lang'
                 for key, lang in labelNameElement.items():
                     if key == XML_LANG:
-                        axisObject.labelNames[lang] = tounicode(labelNameElement.text)
+                        axisObject.labelNames[lang] = tounicode(
+                            labelNameElement.text)
             self.documentObject.axes.append(axisObject)
             self.axisDefaults[axisObject.name] = axisObject.default
 
@@ -831,7 +855,8 @@ class BaseDocReader(LogMixin):
         for sourceCount, sourceElement in enumerate(self.root.findall(".sources/source")):
             filename = sourceElement.attrib.get('filename')
             if filename is not None and self.path is not None:
-                sourcePath = os.path.abspath(os.path.join(os.path.dirname(self.path), filename))
+                sourcePath = os.path.abspath(os.path.join(
+                    os.path.dirname(self.path), filename))
             else:
                 sourcePath = None
             sourceName = sourceElement.attrib.get('name')
@@ -893,14 +918,16 @@ class BaseDocReader(LogMixin):
             dimName = dimensionElement.attrib.get("name")
             if self._strictAxisNames and dimName not in self.axisDefaults:
                 # In case the document contains no axis definitions,
-                self.log.warning("Location with undefined axis: \"%s\".", dimName)
+                self.log.warning(
+                    "Location with undefined axis: \"%s\".", dimName)
                 continue
             xValue = yValue = None
             try:
                 xValue = dimensionElement.attrib.get('xvalue')
                 xValue = float(xValue)
             except ValueError:
-                self.log.warning("KeyError in readLocation xValue %3.3f", xValue)
+                self.log.warning(
+                    "KeyError in readLocation xValue %3.3f", xValue)
             try:
                 yValue = dimensionElement.attrib.get('yvalue')
                 if yValue is not None:
@@ -916,12 +943,14 @@ class BaseDocReader(LogMixin):
     def readInstances(self, makeGlyphs=True, makeKerning=True, makeInfo=True):
         instanceElements = self.root.findall('.instances/instance')
         for instanceElement in instanceElements:
-            self._readSingleInstanceElement(instanceElement, makeGlyphs=makeGlyphs, makeKerning=makeKerning, makeInfo=makeInfo)
+            self._readSingleInstanceElement(
+                instanceElement, makeGlyphs=makeGlyphs, makeKerning=makeKerning, makeInfo=makeInfo)
 
     def _readSingleInstanceElement(self, instanceElement, makeGlyphs=True, makeKerning=True, makeInfo=True):
         filename = instanceElement.attrib.get('filename')
         if filename is not None and self.documentObject.path is not None:
-            instancePath = os.path.join(os.path.dirname(self.documentObject.path), filename)
+            instancePath = os.path.join(os.path.dirname(
+                self.documentObject.path), filename)
         else:
             instancePath = None
         instanceObject = self.instanceDescriptorClass()
@@ -960,12 +989,14 @@ class BaseDocReader(LogMixin):
             for key, lang in styleMapStyleNameElement.items():
                 if key == XML_LANG:
                     styleMapStyleName = styleMapStyleNameElement.text
-                    instanceObject.setStyleMapStyleName(styleMapStyleName, lang)
+                    instanceObject.setStyleMapStyleName(
+                        styleMapStyleName, lang)
         for styleMapFamilyNameElement in instanceElement.findall('stylemapfamilyname'):
             for key, lang in styleMapFamilyNameElement.items():
                 if key == XML_LANG:
                     styleMapFamilyName = styleMapFamilyNameElement.text
-                    instanceObject.setStyleMapFamilyName(styleMapFamilyName, lang)
+                    instanceObject.setStyleMapFamilyName(
+                        styleMapFamilyName, lang)
         instanceLocation = self.locationFromElement(instanceElement)
         if instanceLocation is not None:
             instanceObject.location = instanceLocation
@@ -1006,7 +1037,8 @@ class BaseDocReader(LogMixin):
         glyphData = {}
         glyphName = glyphElement.attrib.get('name')
         if glyphName is None:
-            raise DesignSpaceDocumentError("Glyph object without name attribute")
+            raise DesignSpaceDocumentError(
+                "Glyph object without name attribute")
         mute = glyphElement.attrib.get("mute")
         if mute == "1":
             glyphData['mute'] = True
@@ -1017,7 +1049,8 @@ class BaseDocReader(LogMixin):
                 unicodes = [int(u, 16) for u in unicodes.split(" ")]
                 glyphData['unicodes'] = unicodes
             except ValueError:
-                raise DesignSpaceDocumentError("unicode values %s are not integers" % unicodes)
+                raise DesignSpaceDocumentError(
+                    "unicode values %s are not integers" % unicodes)
 
         for noteElement in glyphElement.findall('.note'):
             glyphData['note'] = noteElement.text
@@ -1051,6 +1084,7 @@ class BaseDocReader(LogMixin):
 
 class DesignSpaceDocument(LogMixin, AsDictMixin):
     """ Read, write data from the designspace file"""
+
     def __init__(self, readerClass=None, writerClass=None):
         self.path = None
         self.filename = None
@@ -1236,13 +1270,15 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
                 if descriptor.filename is not None and not force:
                     continue
                 if self.path is not None:
-                    descriptor.filename = self._posixRelativePath(descriptor.path)
+                    descriptor.filename = self._posixRelativePath(
+                        descriptor.path)
         if instances:
             for descriptor in self.instances:
                 if descriptor.filename is not None and not force:
                     continue
                 if self.path is not None:
-                    descriptor.filename = self._posixRelativePath(descriptor.path)
+                    descriptor.filename = self._posixRelativePath(
+                        descriptor.path)
 
     def newAxisDescriptor(self):
         # Ask the writer class to make us a new axisDescriptor
@@ -1316,23 +1352,29 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
         for item in self.instances:
             # glyph masters for this instance
             for _, glyphData in item.glyphs.items():
-                glyphData['instanceLocation'] = self.normalizeLocation(glyphData['instanceLocation'])
+                glyphData['instanceLocation'] = self.normalizeLocation(
+                    glyphData['instanceLocation'])
                 for glyphMaster in glyphData['masters']:
-                    glyphMaster['location'] = self.normalizeLocation(glyphMaster['location'])
+                    glyphMaster['location'] = self.normalizeLocation(
+                        glyphMaster['location'])
             item.location = self.normalizeLocation(item.location)
         # the axes
         for axis in self.axes:
             # scale the map first
             newMap = []
             for inputValue, outputValue in axis.map:
-                newOutputValue = self.normalizeLocation({axis.name: outputValue}).get(axis.name)
+                newOutputValue = self.normalizeLocation(
+                    {axis.name: outputValue}).get(axis.name)
                 newMap.append((inputValue, newOutputValue))
             if newMap:
                 axis.map = newMap
             # finally the axis values
-            minimum = self.normalizeLocation({axis.name: axis.minimum}).get(axis.name)
-            maximum = self.normalizeLocation({axis.name: axis.maximum}).get(axis.name)
-            default = self.normalizeLocation({axis.name: axis.default}).get(axis.name)
+            minimum = self.normalizeLocation(
+                {axis.name: axis.minimum}).get(axis.name)
+            maximum = self.normalizeLocation(
+                {axis.name: axis.maximum}).get(axis.name)
+            default = self.normalizeLocation(
+                {axis.name: axis.default}).get(axis.name)
             # and set them in the axis.minimum
             axis.minimum = minimum
             axis.maximum = maximum
@@ -1344,14 +1386,17 @@ class DesignSpaceDocument(LogMixin, AsDictMixin):
                 newConditions = []
                 for cond in conditions:
                     if cond.get('minimum') is not None:
-                        minimum = self.normalizeLocation({cond['name']: cond['minimum']}).get(cond['name'])
+                        minimum = self.normalizeLocation(
+                            {cond['name']: cond['minimum']}).get(cond['name'])
                     else:
                         minimum = None
                     if cond.get('maximum') is not None:
-                        maximum = self.normalizeLocation({cond['name']: cond['maximum']}).get(cond['name'])
+                        maximum = self.normalizeLocation(
+                            {cond['name']: cond['maximum']}).get(cond['name'])
                     else:
                         maximum = None
-                    newConditions.append(dict(name=cond['name'], minimum=minimum, maximum=maximum))
+                    newConditions.append(
+                        dict(name=cond['name'], minimum=minimum, maximum=maximum))
                 newConditionSets.append(newConditions)
             rule.conditionSets = newConditionSets
 

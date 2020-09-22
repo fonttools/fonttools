@@ -14,6 +14,7 @@ Gloc_header = '''
     numAttribs:   H    # NUmber of attributes
 '''
 
+
 class table_G__l_o_c(DefaultTable.DefaultTable):
     """
     Support Graphite Gloc tables
@@ -30,24 +31,32 @@ class table_G__l_o_c(DefaultTable.DefaultTable):
         flags = self.flags
         del self.flags
         self.locations = array.array('I' if flags & 1 else 'H')
-        self.locations.frombytes(data[:len(data) - self.numAttribs * (flags & 2)])
-        if sys.byteorder != "big": self.locations.byteswap()
+        self.locations.frombytes(
+            data[:len(data) - self.numAttribs * (flags & 2)])
+        if sys.byteorder != "big":
+            self.locations.byteswap()
         self.attribIds = array.array('H')
         if flags & 2:
             self.attribIds.frombytes(data[-self.numAttribs * 2:])
-            if sys.byteorder != "big": self.attribIds.byteswap()
+            if sys.byteorder != "big":
+                self.attribIds.byteswap()
 
     def compile(self, ttFont):
         data = sstruct.pack(Gloc_header, dict(version=1.0,
-                flags=(bool(self.attribIds) << 1) + (self.locations.typecode == 'I'),
-                numAttribs=self.numAttribs))
-        if sys.byteorder != "big": self.locations.byteswap()
+                                              flags=(bool(self.attribIds) << 1) +
+                                              (self.locations.typecode == 'I'),
+                                              numAttribs=self.numAttribs))
+        if sys.byteorder != "big":
+            self.locations.byteswap()
         data += self.locations.tobytes()
-        if sys.byteorder != "big": self.locations.byteswap()
+        if sys.byteorder != "big":
+            self.locations.byteswap()
         if self.attribIds:
-            if sys.byteorder != "big": self.attribIds.byteswap()
+            if sys.byteorder != "big":
+                self.attribIds.byteswap()
             data += self.attribIds.tobytes()
-            if sys.byteorder != "big": self.attribIds.byteswap()
+            if sys.byteorder != "big":
+                self.attribIds.byteswap()
         return data
 
     def set(self, locations):

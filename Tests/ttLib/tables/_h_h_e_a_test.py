@@ -139,6 +139,7 @@ class HheaCompileOrToXMLTest(unittest.TestCase):
         hhea.descent = -299
         self.assertEqual(hhea.descender, -299)
 
+
 class HheaDecompileOrFromXMLTest(unittest.TestCase):
 
     def setUp(self):

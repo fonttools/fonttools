@@ -74,7 +74,9 @@ def test_unsupported_subtable_break_1(ttfont):
         builder.add_subtable_break(MockBuilderLocation((5, "beta")))
         builder.build()
 
-    captor.assertRegex('5:beta: unsupported "subtable" statement for lookup type')
+    captor.assertRegex(
+        '5:beta: unsupported "subtable" statement for lookup type')
+
 
 def test_chain_pos_references_GSUB_lookup(ttfont):
     location = MockBuilderLocation((0, "alpha"))

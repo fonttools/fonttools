@@ -23,6 +23,7 @@ META_DATA_TEXT = deHexStr(
     "6B 2C 43 79 72 6C 4C 61 74 6E 2C 47 72 65 6B 2C "
     "43 79 72 6C")
 
+
 class MetaTableTest(unittest.TestCase):
     def test_decompile(self):
         table = table__m_e_t_a()
@@ -54,7 +55,7 @@ class MetaTableTest(unittest.TestCase):
         xml = writer.file.getvalue().decode("utf-8")
         self.assertEqual([
             '<hexdata tag="TEST">',
-                'cafebeef',
+            'cafebeef',
             '</hexdata>'
         ], [line.strip() for line in xml.splitlines()][1:])
 
@@ -66,8 +67,8 @@ class MetaTableTest(unittest.TestCase):
         xml = writer.file.getvalue().decode("utf-8")
         self.assertEqual([
             '<hexdata tag="TEST">',
-                '<!-- ascii: Hello! -->',
-                '48656c6c 6f21',
+            '<!-- ascii: Hello! -->',
+            '48656c6c 6f21',
             '</hexdata>'
         ], [line.strip() for line in xml.splitlines()][1:])
 

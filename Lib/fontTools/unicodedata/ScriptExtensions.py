@@ -60,7 +60,8 @@ RANGES = [
     0x061D,  # .. 0x061E ; None
     0x061F,  # .. 0x061F ; {'Arab', 'Rohg', 'Syrc', 'Thaa', 'Yezi'}
     0x0620,  # .. 0x063F ; None
-    0x0640,  # .. 0x0640 ; {'Adlm', 'Arab', 'Mand', 'Mani', 'Phlp', 'Rohg', 'Sogd', 'Syrc'}
+    # .. 0x0640 ; {'Adlm', 'Arab', 'Mand', 'Mani', 'Phlp', 'Rohg', 'Sogd', 'Syrc'}
+    0x0640,
     0x0641,  # .. 0x064A ; None
     0x064B,  # .. 0x0655 ; {'Arab', 'Syrc'}
     0x0656,  # .. 0x065F ; None
@@ -70,8 +71,10 @@ RANGES = [
     0x0671,  # .. 0x06D3 ; None
     0x06D4,  # .. 0x06D4 ; {'Arab', 'Rohg'}
     0x06D5,  # .. 0x0950 ; None
-    0x0951,  # .. 0x0951 ; {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym', 'Orya', 'Shrd', 'Taml', 'Telu', 'Tirh'}
-    0x0952,  # .. 0x0952 ; {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym', 'Orya', 'Taml', 'Telu', 'Tirh'}
+    # .. 0x0951 ; {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym', 'Orya', 'Shrd', 'Taml', 'Telu', 'Tirh'}
+    0x0951,
+    # .. 0x0952 ; {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym', 'Orya', 'Taml', 'Telu', 'Tirh'}
+    0x0952,
     0x0953,  # .. 0x0963 ; None
     0x0964,  # .. 0x0964 ; {'Beng', 'Deva', 'Dogr', 'Gong', 'Gonm', 'Gran', 'Gujr', 'Guru', 'Knda', 'Mahj', 'Mlym', 'Nand', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'}
     0x0965,  # .. 0x0965 ; {'Beng', 'Deva', 'Dogr', 'Gong', 'Gonm', 'Gran', 'Gujr', 'Guru', 'Knda', 'Limb', 'Mahj', 'Mlym', 'Nand', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'}
@@ -118,7 +121,8 @@ RANGES = [
     0x1CEB,  # .. 0x1CEC ; {'Deva'}
     0x1CED,  # .. 0x1CED ; {'Beng', 'Deva'}
     0x1CEE,  # .. 0x1CF1 ; {'Deva'}
-    0x1CF2,  # .. 0x1CF2 ; {'Beng', 'Deva', 'Gran', 'Knda', 'Nand', 'Orya', 'Telu', 'Tirh'}
+    # .. 0x1CF2 ; {'Beng', 'Deva', 'Gran', 'Knda', 'Nand', 'Orya', 'Telu', 'Tirh'}
+    0x1CF2,
     0x1CF3,  # .. 0x1CF3 ; {'Deva', 'Gran'}
     0x1CF4,  # .. 0x1CF4 ; {'Deva', 'Gran', 'Knda'}
     0x1CF5,  # .. 0x1CF6 ; {'Beng', 'Deva'}
@@ -186,9 +190,12 @@ RANGES = [
     0xA670,  # .. 0xA6FF ; None
     0xA700,  # .. 0xA707 ; {'Hani', 'Latn'}
     0xA708,  # .. 0xA82F ; None
-    0xA830,  # .. 0xA832 ; {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Knda', 'Kthi', 'Mahj', 'Mlym', 'Modi', 'Nand', 'Sind', 'Takr', 'Tirh'}
-    0xA833,  # .. 0xA835 ; {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Knda', 'Kthi', 'Mahj', 'Modi', 'Nand', 'Sind', 'Takr', 'Tirh'}
-    0xA836,  # .. 0xA839 ; {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Kthi', 'Mahj', 'Modi', 'Sind', 'Takr', 'Tirh'}
+    # .. 0xA832 ; {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Knda', 'Kthi', 'Mahj', 'Mlym', 'Modi', 'Nand', 'Sind', 'Takr', 'Tirh'}
+    0xA830,
+    # .. 0xA835 ; {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Knda', 'Kthi', 'Mahj', 'Modi', 'Nand', 'Sind', 'Takr', 'Tirh'}
+    0xA833,
+    # .. 0xA839 ; {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Kthi', 'Mahj', 'Modi', 'Sind', 'Takr', 'Tirh'}
+    0xA836,
     0xA83A,  # .. 0xA8F0 ; None
     0xA8F1,  # .. 0xA8F1 ; {'Beng', 'Deva'}
     0xA8F2,  # .. 0xA8F2 ; None
@@ -266,11 +273,15 @@ VALUES = [
     None,                                                      # 0671..06D3
     {'Arab', 'Rohg'},                                          # 06D4..06D4
     None,                                                      # 06D5..0950
-    {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym', 'Orya', 'Shrd', 'Taml', 'Telu', 'Tirh'},  # 0951..0951
-    {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym', 'Orya', 'Taml', 'Telu', 'Tirh'},  # 0952..0952
+    {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn', 'Mlym',
+        'Orya', 'Shrd', 'Taml', 'Telu', 'Tirh'},  # 0951..0951
+    {'Beng', 'Deva', 'Gran', 'Gujr', 'Guru', 'Knda', 'Latn',
+        'Mlym', 'Orya', 'Taml', 'Telu', 'Tirh'},  # 0952..0952
     None,                                                      # 0953..0963
-    {'Beng', 'Deva', 'Dogr', 'Gong', 'Gonm', 'Gran', 'Gujr', 'Guru', 'Knda', 'Mahj', 'Mlym', 'Nand', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'},  # 0964..0964
-    {'Beng', 'Deva', 'Dogr', 'Gong', 'Gonm', 'Gran', 'Gujr', 'Guru', 'Knda', 'Limb', 'Mahj', 'Mlym', 'Nand', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'},  # 0965..0965
+    {'Beng', 'Deva', 'Dogr', 'Gong', 'Gonm', 'Gran', 'Gujr', 'Guru', 'Knda', 'Mahj', 'Mlym',
+        'Nand', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'},  # 0964..0964
+    {'Beng', 'Deva', 'Dogr', 'Gong', 'Gonm', 'Gran', 'Gujr', 'Guru', 'Knda', 'Limb', 'Mahj',
+        'Mlym', 'Nand', 'Orya', 'Sind', 'Sinh', 'Sylo', 'Takr', 'Taml', 'Telu', 'Tirh'},  # 0965..0965
     {'Deva', 'Dogr', 'Kthi', 'Mahj'},                          # 0966..096F
     None,                                                      # 0970..09E5
     {'Beng', 'Cakm', 'Sylo'},                                  # 09E6..09EF
@@ -382,9 +393,12 @@ VALUES = [
     None,                                                      # A670..A6FF
     {'Hani', 'Latn'},                                          # A700..A707
     None,                                                      # A708..A82F
-    {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Knda', 'Kthi', 'Mahj', 'Mlym', 'Modi', 'Nand', 'Sind', 'Takr', 'Tirh'},  # A830..A832
-    {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Knda', 'Kthi', 'Mahj', 'Modi', 'Nand', 'Sind', 'Takr', 'Tirh'},  # A833..A835
-    {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Kthi', 'Mahj', 'Modi', 'Sind', 'Takr', 'Tirh'},  # A836..A839
+    {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Knda', 'Kthi', 'Mahj',
+        'Mlym', 'Modi', 'Nand', 'Sind', 'Takr', 'Tirh'},  # A830..A832
+    {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Knda', 'Kthi', 'Mahj',
+        'Modi', 'Nand', 'Sind', 'Takr', 'Tirh'},  # A833..A835
+    {'Deva', 'Dogr', 'Gujr', 'Guru', 'Khoj', 'Kthi', 'Mahj',
+        'Modi', 'Sind', 'Takr', 'Tirh'},  # A836..A839
     None,                                                      # A83A..A8F0
     {'Beng', 'Deva'},                                          # A8F1..A8F1
     None,                                                      # A8F2..A8F2

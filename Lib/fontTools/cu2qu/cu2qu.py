@@ -1,5 +1,5 @@
 #cython: language_level=3
-#distutils: define_macros=CYTHON_TRACE_NOGIL=1
+# distutils: define_macros=CYTHON_TRACE_NOGIL=1
 
 # Copyright 2015 Google Inc. All Rights Reserved.
 #
@@ -112,7 +112,7 @@ def split_cubic_into_n_iter(p0, p1, p2, p3, n):
         a, b = split_cubic_into_two(p0, p1, p2, p3)
         return iter(split_cubic_into_three(*a) + split_cubic_into_three(*b))
 
-    return _split_cubic_into_n_gen(p0,p1,p2,p3,n)
+    return _split_cubic_into_n_gen(p0, p1, p2, p3, n)
 
 
 @cython.locals(p0=cython.complex, p1=cython.complex, p2=cython.complex, p3=cython.complex, n=cython.int)
@@ -394,7 +394,6 @@ def curve_to_quadratic(curve, max_err):
     raise ApproxNotFoundError(curve)
 
 
-
 @cython.locals(l=cython.int, last_i=cython.int, i=cython.int)
 def curves_to_quadratic(curves, max_errors):
     """Return quadratic Bezier splines approximating the input cubic Beziers.
@@ -482,10 +481,12 @@ if __name__ == '__main__':
         def wrapper(function, setup_func):
             function = globals()[function]
             setup_func = globals()[setup_func]
+
             def wrapped():
                 return function(*setup_func())
             return wrapped
-        results = timeit.repeat(wrapper(function, setup_func), repeat=repeat, number=number)
+        results = timeit.repeat(
+            wrapper(function, setup_func), repeat=repeat, number=number)
         print('\t%5.1fus' % (min(results) * 1000000. / number))
 
     def main():

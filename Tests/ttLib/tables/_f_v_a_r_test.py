@@ -8,7 +8,6 @@ from fontTools.ttLib.tables._n_a_m_e import table__n_a_m_e, NameRecord
 import unittest
 
 
-
 FVAR_DATA = deHexStr(
     "00 01 00 00 00 10 00 02 00 02 00 14 00 02 00 0C "
     "77 67 68 74 00 64 00 00 01 90 00 00 03 84 00 00 00 00 01 01 "
@@ -74,7 +73,8 @@ class FontVariationTableTest(unittest.TestCase):
         fvar = table__f_v_a_r()
         fvar.decompile(FVAR_DATA, ttFont={"fvar": fvar})
         self.assertEqual(["wght", "wdth"], [a.axisTag for a in fvar.axes])
-        self.assertEqual([259, 260], [i.subfamilyNameID for i in fvar.instances])
+        self.assertEqual(
+            [259, 260], [i.subfamilyNameID for i in fvar.instances])
 
     def test_toXML(self):
         font = MakeFont()
@@ -103,7 +103,8 @@ class FontVariationTableTest(unittest.TestCase):
             fvar.fromXML(name, attrs, content, ttFont=None)
         self.assertEqual(["opsz", "slnt"], [a.axisTag for a in fvar.axes])
         self.assertEqual([0, 0x123], [a.flags for a in fvar.axes])
-        self.assertEqual([765, 234], [i.subfamilyNameID for i in fvar.instances])
+        self.assertEqual(
+            [765, 234], [i.subfamilyNameID for i in fvar.instances])
 
 
 class AxisTest(unittest.TestCase):
@@ -135,12 +136,12 @@ class AxisTest(unittest.TestCase):
             '',
             '<!-- Optical Size -->',
             '<Axis>',
-                '<AxisTag>opsz</AxisTag>',
-                '<Flags>0xABC</Flags>',
-                '<MinValue>-0.5</MinValue>',
-                '<DefaultValue>1.3</DefaultValue>',
-                '<MaxValue>1.5</MaxValue>',
-                '<AxisNameID>256</AxisNameID>',
+            '<AxisTag>opsz</AxisTag>',
+            '<Flags>0xABC</Flags>',
+            '<MinValue>-0.5</MinValue>',
+            '<DefaultValue>1.3</DefaultValue>',
+            '<MaxValue>1.5</MaxValue>',
+            '<AxisNameID>256</AxisNameID>',
             '</Axis>'
         ], xml_lines(writer))
 
@@ -191,14 +192,16 @@ class NamedInstanceTest(unittest.TestCase):
         inst.decompile(FVAR_INSTANCE_DATA_WITH_PSNAME, ["wght", "wdth"])
         self.assertEqual(564, inst.postscriptNameID)
         self.assertEqual(345, inst.subfamilyNameID)
-        self.assertDictAlmostEqual({"wght": 0.6999969, "wdth": 0.5}, inst.coordinates)
+        self.assertDictAlmostEqual(
+            {"wght": 0.6999969, "wdth": 0.5}, inst.coordinates)
 
     def test_decompile_withoutPostScriptName(self):
         inst = NamedInstance()
         inst.decompile(FVAR_INSTANCE_DATA_WITHOUT_PSNAME, ["wght", "wdth"])
         self.assertEqual(0xFFFF, inst.postscriptNameID)
         self.assertEqual(345, inst.subfamilyNameID)
-        self.assertDictAlmostEqual({"wght": 0.6999969, "wdth": 0.5}, inst.coordinates)
+        self.assertDictAlmostEqual(
+            {"wght": 0.6999969, "wdth": 0.5}, inst.coordinates)
 
     def test_toXML_withPostScriptName(self):
         font = MakeFont()
@@ -215,8 +218,8 @@ class NamedInstanceTest(unittest.TestCase):
             '<!-- PostScript: Test-LightCondensed -->',
             '<NamedInstance flags="0xE9" postscriptNameID="%s" subfamilyNameID="%s">' % (
                 inst.postscriptNameID, inst.subfamilyNameID),
-              '<coord axis="wght" value="0.7"/>',
-              '<coord axis="wdth" value="0.5"/>',
+            '<coord axis="wght" value="0.7"/>',
+            '<coord axis="wdth" value="0.5"/>',
             '</NamedInstance>'
         ], xml_lines(writer))
 
@@ -232,9 +235,9 @@ class NamedInstanceTest(unittest.TestCase):
             '',
             '<!-- Light Condensed -->',
             '<NamedInstance flags="0xABC" subfamilyNameID="%s">' %
-                inst.subfamilyNameID,
-              '<coord axis="wght" value="0.7"/>',
-              '<coord axis="wdth" value="0.5"/>',
+            inst.subfamilyNameID,
+            '<coord axis="wght" value="0.7"/>',
+            '<coord axis="wdth" value="0.5"/>',
             '</NamedInstance>'
         ], xml_lines(writer))
 
@@ -248,7 +251,8 @@ class NamedInstanceTest(unittest.TestCase):
             inst.fromXML(name, attrs, content, ttFont=MakeFont())
         self.assertEqual(257, inst.postscriptNameID)
         self.assertEqual(345, inst.subfamilyNameID)
-        self.assertDictAlmostEqual({"wght": 0.6999969, "wdth": 0.5}, inst.coordinates)
+        self.assertDictAlmostEqual(
+            {"wght": 0.6999969, "wdth": 0.5}, inst.coordinates)
 
     def test_fromXML_withoutPostScriptName(self):
         inst = NamedInstance()
@@ -260,7 +264,8 @@ class NamedInstanceTest(unittest.TestCase):
             inst.fromXML(name, attrs, content, ttFont=MakeFont())
         self.assertEqual(0x123ABC, inst.flags)
         self.assertEqual(345, inst.subfamilyNameID)
-        self.assertDictAlmostEqual({"wght": 0.6999969, "wdth": 0.5}, inst.coordinates)
+        self.assertDictAlmostEqual(
+            {"wght": 0.6999969, "wdth": 0.5}, inst.coordinates)
 
 
 if __name__ == "__main__":

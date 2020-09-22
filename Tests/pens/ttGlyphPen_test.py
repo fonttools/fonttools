@@ -240,7 +240,8 @@ class TTGlyphPenTest(TestCase):
             compositeGlyph.compile({'a': baseGlyph})
 
     def assertGlyphBoundsEqual(self, glyph, bounds):
-        self.assertEqual((glyph.xMin, glyph.yMin, glyph.xMax, glyph.yMax), bounds)
+        self.assertEqual(
+            (glyph.xMin, glyph.yMin, glyph.xMax, glyph.yMax), bounds)
 
     def test_round_float_coordinates_and_component_offsets(self):
         glyphSet = {}

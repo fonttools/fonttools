@@ -117,7 +117,8 @@ def main(args=None):
     options = parser.parse_args(args)
 
     if ufo_module is None:
-        parser.error("Either ufoLib2 or defcon are required to run this script.")
+        parser.error(
+            "Either ufoLib2 or defcon are required to run this script.")
 
     if not options.verbose:
         level = "WARNING"

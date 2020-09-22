@@ -270,7 +270,8 @@ class AATLookupTest(unittest.TestCase):
             "B": "C",
             "C": "A"
         })
-        self.assertEqual(writer.getData(), deHexStr("0000 0000 0003 0003 0001"))
+        self.assertEqual(writer.getData(), deHexStr(
+            "0000 0000 0003 0003 0001"))
 
     def test_writeFormat2(self):
         writer = OTTableWriter()

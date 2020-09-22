@@ -103,7 +103,7 @@ class HmtxTableTest(unittest.TestCase):
 
         self.assertTrue(
             len([r for r in captor.records
-                if "has a huge advance" in r.msg]) == 1)
+                 if "has a huge advance" in r.msg]) == 1)
 
     def test_decompile_no_header_table(self):
         font = TTFont()
@@ -169,7 +169,7 @@ class HmtxTableTest(unittest.TestCase):
 
         self.assertTrue(
             len([r for r in captor.records
-                if "Glyph 'A' has negative advance" in r.msg]) == 1)
+                 if "Glyph 'A' has negative advance" in r.msg]) == 1)
 
     def test_compile_struct_out_of_range(self):
         font = self.makeFont(numGlyphs=1, numberOfMetrics=1)
@@ -219,8 +219,8 @@ class HmtxTableTest(unittest.TestCase):
             getXML(mtxTable.toXML),
             ('<mtx name="A" %s="674" %s="-11"/>\n'
              '<mtx name="B" %s="632" %s="79"/>' % (
-                (self.tableClass.advanceName,
-                 self.tableClass.sideBearingName) * 2)).split('\n'))
+                 (self.tableClass.advanceName,
+                  self.tableClass.sideBearingName) * 2)).split('\n'))
 
     def test_fromXML(self):
         mtxTable = newTable(self.tag)

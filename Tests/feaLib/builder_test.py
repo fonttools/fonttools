@@ -1,7 +1,7 @@
 from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import CapturingLogHandler
 from fontTools.feaLib.builder import Builder, addOpenTypeFeatures, \
-        addOpenTypeFeaturesFromString
+    addOpenTypeFeaturesFromString
 from fontTools.feaLib.error import FeatureLibError
 from fontTools.ttLib import TTFont
 from fontTools.feaLib.parser import Parser
@@ -147,7 +147,7 @@ class BuilderTest(unittest.TestCase):
         debugttx = self.getpath("%s-debug.ttx" % name)
         if os.path.exists(debugttx):
             addOpenTypeFeatures(font, feapath, debug=True)
-            self.expect_ttx(font, debugttx, replace = {"__PATH__": feapath})
+            self.expect_ttx(font, debugttx, replace={"__PATH__": feapath})
 
     def check_fea2fea_file(self, name, base=None, parser=Parser):
         font = makeTTFont()
@@ -208,7 +208,8 @@ class BuilderTest(unittest.TestCase):
                 "    sub B by B.sc;"
                 "    sub A by A.sc;"
                 "} test;")
-        captor.assertRegex('Removing duplicate single substitution from glyph "A" to "A.sc"')
+        captor.assertRegex(
+            'Removing duplicate single substitution from glyph "A" to "A.sc"')
 
     def test_multipleSubst_multipleSubstitutionsForSameGlyph(self):
         self.assertRaisesRegex(
@@ -230,7 +231,8 @@ class BuilderTest(unittest.TestCase):
                 "    sub c_t by c t;"
                 "    sub f_f_i by f f i;"
                 "} test;")
-        captor.assertRegex(r"Removing duplicate multiple substitution from glyph \"f_f_i\" to \('f', 'f', 'i'\)")
+        captor.assertRegex(
+            r"Removing duplicate multiple substitution from glyph \"f_f_i\" to \('f', 'f', 'i'\)")
 
     def test_pairPos_redefinition_warning(self):
         # https://github.com/fonttools/fonttools/issues/1147
@@ -246,7 +248,8 @@ class BuilderTest(unittest.TestCase):
                 "  pos @Y_LC @SMALL_PUNC -100;"
                 "} kern;")
 
-        captor.assertRegex("Already defined position for pair yacute semicolon")
+        captor.assertRegex(
+            "Already defined position for pair yacute semicolon")
 
         # the first definition prevails: yacute semicolon -70
         st = font["GPOS"].table.LookupList.Lookup[0].SubTable[0]
@@ -478,7 +481,8 @@ class BuilderTest(unittest.TestCase):
                     for bcd in self.base.markClass.definitions:
                         if res != "":
                             res += "\n{}".format(indent)
-                        res += "pos base {} {}".format(bcd.glyphs.asFea(), bcd.anchor.asFea())
+                        res += "pos base {} {}".format(
+                            bcd.glyphs.asFea(), bcd.anchor.asFea())
                         for m in self.marks:
                             res += " mark @{}".format(m.name)
                         res += ";"
@@ -491,6 +495,7 @@ class BuilderTest(unittest.TestCase):
 
         class testAst(object):
             MarkBasePosStatement = ast_MarkBasePosStatement
+
             def __getattr__(self, name):
                 return getattr(ast, name)
 
@@ -535,7 +540,7 @@ class BuilderTest(unittest.TestCase):
                 return bcdef
 
             extensions = {
-                'baseClass' : lambda s : s.parseBaseClass()
+                'baseClass': lambda s: s.parseBaseClass()
             }
             ast = testAst()
 

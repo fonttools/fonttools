@@ -95,7 +95,7 @@ class CurveToQuadraticTest(unittest.TestCase):
             n = len(splines[0]) - 2
             for spline in splines[1:]:
                 self.assertEqual(len(spline) - 2, n,
-                    'Got incompatible conversion results')
+                                 'Got incompatible conversion results')
             results[n] += 1
         self.assertEqual(results, expected)
         self.results.append(('compatible spline lengths', results))

@@ -75,7 +75,8 @@ class TTXTest(unittest.TestCase):
         file_path = "invalid_font_path"
         with self.assertRaises(getopt.GetoptError) as cm:
             ttx.parseOptions([file_path])
-        self.assertTrue('File not found: "%s"' % file_path in str(cm.exception))
+        self.assertTrue('File not found: "%s"' %
+                        file_path in str(cm.exception))
 
     def test_parseOptions_font2ttx_1st_time(self):
         file_name = "TestOTF.otf"
@@ -248,7 +249,8 @@ class TTXTest(unittest.TestCase):
                 # glyphs without outline data only have 'name' attribute
                 glyph_file_name = item[1].get("src")
                 if glyph_file_name is not None:
-                    glyph_file_path = os.path.join(temp_folder, glyph_file_name)
+                    glyph_file_path = os.path.join(
+                        temp_folder, glyph_file_name)
                     self.assertTrue(os.path.exists(glyph_file_path))
 
     def test_guessFileType_ttf(self):

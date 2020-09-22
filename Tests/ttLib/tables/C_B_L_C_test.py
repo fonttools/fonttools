@@ -9,7 +9,8 @@ from fontTools.ttLib import TTFont
 DATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data")
 
 # This is a subset from NotoColorEmoji.ttf which contains an IndexTable format=3
-INDEX_FORMAT_3_TTX = os.path.join(DATA_DIR, "NotoColorEmoji.subset.index_format_3.ttx")
+INDEX_FORMAT_3_TTX = os.path.join(
+    DATA_DIR, "NotoColorEmoji.subset.index_format_3.ttx")
 # The CLBC table was compiled with Harfbuzz' hb-subset and contains the correct padding
 CBLC_INDEX_FORMAT_3 = base64.b64decode(
     "AAMAAAAAAAEAAAA4AAAALAAAAAIAAAAAZeWIAAAAAAAAAAAAZeWIAAAAAAAAAAAAAAEAA"

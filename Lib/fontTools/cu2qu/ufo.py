@@ -47,6 +47,8 @@ logger = logging.getLogger(__name__)
 
 
 _zip = zip
+
+
 def zip(*args):
     """Ensure each argument to zip has the same length. Also make sure a list is
     returned for python 2/3 compatibility.

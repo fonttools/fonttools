@@ -8,8 +8,8 @@ import unittest
 # Example: Format 0 Ligature Caret Table
 # https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6lcar.html
 LCAR_FORMAT_0_DATA = deHexStr(
-    '0001 0000 0000 '  #  0: Version=1.0, Format=0
-    '0006 0004 0002 '  #  6: LookupFormat=6, UnitSize=4, NUnits=2
+    '0001 0000 0000 '  # 0: Version=1.0, Format=0
+    '0006 0004 0002 '  # 6: LookupFormat=6, UnitSize=4, NUnits=2
     '0008 0001 0000 '  # 12: SearchRange=8, EntrySelector=1, RangeShift=0
     '0001 001E '       # 18: Glyph=1 (f_r), OffsetOfLigCaretEntry=30
     '0003 0022 '       # 22: Glyph=3 (f_f_l), OffsetOfLigCaretEntry=34
@@ -41,8 +41,8 @@ LCAR_FORMAT_0_XML = [
 # Example: Format 1 Ligature Caret Table
 # https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6lcar.html
 LCAR_FORMAT_1_DATA = deHexStr(
-    '0001 0000 0001 '  #  0: Version=1.0, Format=1
-    '0006 0004 0002 '  #  6: LookupFormat=6, UnitSize=4, NUnits=2
+    '0001 0000 0001 '  # 0: Version=1.0, Format=1
+    '0006 0004 0002 '  # 6: LookupFormat=6, UnitSize=4, NUnits=2
     '0008 0001 0000 '  # 12: SearchRange=8, EntrySelector=1, RangeShift=0
     '0001 001E '       # 18: Glyph=1 (f_r), OffsetOfLigCaretEntry=30
     '0003 0022 '       # 22: Glyph=3 (f_f_l), OffsetOfLigCaretEntry=34

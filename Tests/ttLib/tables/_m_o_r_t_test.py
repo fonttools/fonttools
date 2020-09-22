@@ -16,9 +16,9 @@ import unittest
 # character; the non-contiguous glyph range for the AAT lookup makes
 # format 6 to be most compact.
 MORT_NONCONTEXTUAL_DATA = deHexStr(
-    '0001 0000 '  #  0: Version=1.0
-    '0000 0001 '  #  4: MorphChainCount=1
-    '0000 0001 '  #  8: DefaultFlags=1
+    '0001 0000 '  # 0: Version=1.0
+    '0000 0001 '  # 4: MorphChainCount=1
+    '0000 0001 '  # 8: DefaultFlags=1
     '0000 0050 '  # 12: StructLength=80
     '0003 0001 '  # 16: MorphFeatureCount=3, MorphSubtableCount=1
     '0004 0000 '  # 20: Feature[0].FeatureType=4/VertSubst, .FeatureSetting=on
@@ -91,7 +91,7 @@ class MORTNoncontextualGlyphSubstitutionTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.maxDiff = None
-        glyphs = ['.notdef'] + ['g.%d' % i for i in range (1, 140)]
+        glyphs = ['.notdef'] + ['g.%d' % i for i in range(1, 140)]
         glyphs[11], glyphs[13] = 'parenleft', 'parenright'
         glyphs[135], glyphs[136] = 'parenleft.vertical', 'parenright.vertical'
         cls.font = FakeFont(glyphs)

@@ -11,7 +11,8 @@ class CffLibTest(DataFilesHandler):
 
     def test_topDict_recalcFontBBox(self):
         topDict = TopDict()
-        topDict.CharStrings = CharStrings(None, None, None, PrivateDict(), None, None)
+        topDict.CharStrings = CharStrings(
+            None, None, None, PrivateDict(), None, None)
         topDict.CharStrings.fromXML(None, None, parseXML("""
             <CharString name=".notdef">
               endchar
@@ -32,7 +33,8 @@ class CffLibTest(DataFilesHandler):
 
     def test_topDict_recalcFontBBox_empty(self):
         topDict = TopDict()
-        topDict.CharStrings = CharStrings(None, None, None, PrivateDict(), None, None)
+        topDict.CharStrings = CharStrings(
+            None, None, None, PrivateDict(), None, None)
         topDict.CharStrings.fromXML(None, None, parseXML("""
             <CharString name=".notdef">
               endchar
@@ -54,7 +56,7 @@ class CffLibTest(DataFilesHandler):
         encoding = [".notdef"] * 256
         encoding[0x20] = "space"
         topDict.Encoding = encoding
-        
+
         self.temp_dir()
         save_path = os.path.join(self.tempdir, 'TestOTF.otf')
         font.save(save_path)

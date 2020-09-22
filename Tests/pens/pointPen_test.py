@@ -36,7 +36,8 @@ class _TestSegmentPen(AbstractPen):
         self._commands.append("endpath")
 
     def addComponent(self, glyphName, transformation):
-        self._commands.append("'%s' %s addcomponent" % (glyphName, transformation))
+        self._commands.append("'%s' %s addcomponent" %
+                              (glyphName, transformation))
 
 
 def _reprKwargs(kwargs):
@@ -109,7 +110,8 @@ class PointToSegmentPenTest(unittest.TestCase):
         ppen.addPoint((10, 20), "line")
         ppen.addPoint((20, 20), "line")
         ppen.endPath()
-        self.assertEqual("10 10 moveto 10 20 lineto 20 20 lineto closepath", repr(pen))
+        self.assertEqual(
+            "10 10 moveto 10 20 lineto 20 20 lineto closepath", repr(pen))
 
     def test_cubic(self):
         pen = _TestSegmentPen()
@@ -120,7 +122,8 @@ class PointToSegmentPenTest(unittest.TestCase):
         ppen.addPoint((20, 20))
         ppen.addPoint((20, 40), "curve")
         ppen.endPath()
-        self.assertEqual("10 10 moveto 10 20 20 20 20 40 curveto closepath", repr(pen))
+        self.assertEqual(
+            "10 10 moveto 10 20 20 20 20 40 curveto closepath", repr(pen))
 
     def test_quad(self):
         pen = _TestSegmentPen()
@@ -131,7 +134,8 @@ class PointToSegmentPenTest(unittest.TestCase):
         ppen.addPoint((40, 40))
         ppen.addPoint((10, 40), "qcurve")
         ppen.endPath()
-        self.assertEqual("10 10 moveto 10 40 40 40 10 40 qcurveto closepath", repr(pen))
+        self.assertEqual(
+            "10 10 moveto 10 40 40 40 10 40 qcurveto closepath", repr(pen))
 
     def test_quad_onlyOffCurvePoints(self):
         pen = _TestSegmentPen()
@@ -141,7 +145,8 @@ class PointToSegmentPenTest(unittest.TestCase):
         ppen.addPoint((10, 40))
         ppen.addPoint((40, 40))
         ppen.endPath()
-        self.assertEqual("10 10 10 40 40 40 None qcurveto closepath", repr(pen))
+        self.assertEqual(
+            "10 10 10 40 40 40 None qcurveto closepath", repr(pen))
 
     def test_roundTrip1(self):
         tpen = _TestPointPen()
@@ -277,7 +282,8 @@ class TestSegmentToPointPen(unittest.TestCase):
         pen.lineTo((10, 20))
         pen.lineTo((20, 20))
         pen.closePath()
-        self.assertEqual("10 10 moveto 10 20 lineto 20 20 lineto closepath", repr(spen))
+        self.assertEqual(
+            "10 10 moveto 10 20 lineto 20 20 lineto closepath", repr(spen))
 
     def test_roundTrip2(self):
         spen = _TestSegmentPen()
@@ -342,6 +348,7 @@ class TestGuessSmoothPointPen(unittest.TestCase):
                          "addPoint((3, 200)) addPoint((300, 200)) "
                          "addPoint((400, 200), segmentType='curve') endPath()",
                          repr(tpen))
+
 
 class TestReverseContourPointPen(unittest.TestCase):
 

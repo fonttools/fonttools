@@ -11,9 +11,9 @@ import unittest
 # The test case has therefore been adapted from the example 'mort' table in
 # https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6mort.html
 MORX_NONCONTEXTUAL_DATA = deHexStr(
-    '0002 0000 '  #  0: Version=2, Reserved=0
-    '0000 0001 '  #  4: MorphChainCount=1
-    '0000 0001 '  #  8: DefaultFlags=1
+    '0002 0000 '  # 0: Version=2, Reserved=0
+    '0000 0001 '  # 4: MorphChainCount=1
+    '0000 0001 '  # 8: DefaultFlags=1
     '0000 0058 '  # 12: StructLength=88
     '0000 0003 '  # 16: MorphFeatureCount=3
     '0000 0001 '  # 20: MorphSubtableCount=1
@@ -86,9 +86,9 @@ MORX_NONCONTEXTUAL_XML = [
 
 
 MORX_REARRANGEMENT_DATA = deHexStr(
-    '0002 0000 '  #  0: Version=2, Reserved=0
-    '0000 0001 '  #  4: MorphChainCount=1
-    '0000 0001 '  #  8: DefaultFlags=1
+    '0002 0000 '  # 0: Version=2, Reserved=0
+    '0000 0001 '  # 4: MorphChainCount=1
+    '0000 0001 '  # 8: DefaultFlags=1
     '0000 0078 '  # 12: StructLength=120 (+8=128)
     '0000 0000 '  # 16: MorphFeatureCount=0
     '0000 0001 '  # 20: MorphSubtableCount=1
@@ -107,8 +107,8 @@ MORX_REARRANGEMENT_DATA = deHexStr(
     '0001 0005 '  # 64:   Glyph=A; Class=5
     '0003 0004 '  # 68:   Glyph=C; Class=4
     'FFFF 0000 '  # 72:   Glyph=<end>; Value=0
-    '0000 0001 0002 0003 0002 0001 '  #  76: State[0][0..5]
-    '0003 0003 0003 0003 0003 0003 '  #  88: State[1][0..5]
+    '0000 0001 0002 0003 0002 0001 '  # 76: State[0][0..5]
+    '0003 0003 0003 0003 0003 0003 '  # 88: State[1][0..5]
     '0001 0003 0003 0003 0002 0002 '  # 100: State[2][0..5]
     '0002 FFFF '  # 112: Entries[0].NewState=2, .Flags=0xFFFF
     '0001 A00D '  # 116: Entries[1].NewState=1, .Flags=0xA00D
@@ -268,9 +268,9 @@ MORX_REARRANGEMENT_XML = [
 #
 # TODO: Ask Apple to fix “Example 1” in the ‘morx’ specification.
 MORX_CONTEXTUAL_DATA = deHexStr(
-    '0002 0000 '  #  0: Version=2, Reserved=0
-    '0000 0001 '  #  4: MorphChainCount=1
-    '0000 0001 '  #  8: DefaultFlags=1
+    '0002 0000 '  # 0: Version=2, Reserved=0
+    '0000 0001 '  # 4: MorphChainCount=1
+    '0000 0001 '  # 8: DefaultFlags=1
     '0000 00B4 '  # 12: StructLength=180 (+8=188)
     '0000 0000 '  # 16: MorphFeatureCount=0
     '0000 0001 '  # 20: MorphSubtableCount=1
@@ -297,7 +297,7 @@ MORX_CONTEXTUAL_DATA = deHexStr(
     'FFFF 0000 '  # 88:   Glyph=<end>; Value=<filler>
 
     # State array.
-    '0000 0000 0000 0000 0000 0001 '  #  92: State[0][0..5]
+    '0000 0000 0000 0000 0000 0001 '  # 92: State[0][0..5]
     '0000 0000 0000 0000 0000 0001 '  # 104: State[1][0..5]
     '0000 0000 0000 0000 0002 0001 '  # 116: State[2][0..5]
 
@@ -484,9 +484,9 @@ MORX_CONTEXTUAL_XML = [
 #
 # TODO: Ask Apple to fix “Example 2” in the ‘morx’ specification.
 MORX_LIGATURE_DATA = deHexStr(
-    '0002 0000 '  #  0: Version=2, Reserved=0
-    '0000 0001 '  #  4: MorphChainCount=1
-    '0000 0001 '  #  8: DefaultFlags=1
+    '0002 0000 '  # 0: Version=2, Reserved=0
+    '0000 0001 '  # 4: MorphChainCount=1
+    '0000 0001 '  # 8: DefaultFlags=1
     '0000 00DA '  # 12: StructLength=218 (+8=226)
     '0000 0000 '  # 16: MorphFeatureCount=0
     '0000 0001 '  # 20: MorphSubtableCount=1
@@ -527,7 +527,8 @@ MORX_LIGATURE_DATA = deHexStr(
     '0000 '       # 166: Entries[1].ActionIndex=<n/a> because no 0x2000 flag
     '0003 8000 '  # 168: Entries[2].NewState=3, .Flags=0x8000 (SetComponent)
     '0000 '       # 172: Entries[2].ActionIndex=<n/a> because no 0x2000 flag
-    '0000 A000 '  # 174: Entries[3].NewState=0, .Flags=0xA000 (SetComponent,Act)
+    # 174: Entries[3].NewState=0, .Flags=0xA000 (SetComponent,Act)
+    '0000 A000 '
     '0000 '       # 178: Entries[3].ActionIndex=0 (start at Action[0])
 
     # Ligature actions table.
@@ -710,9 +711,9 @@ MORX_LIGATURE_XML = [
 # Taken from the `morx` table of the second font in DevanagariSangamMN.ttc
 # on macOS X 10.12.6; manually pruned to just contain the insertion lookup.
 MORX_INSERTION_DATA = deHexStr(
-    '0002 0000 '  #  0: Version=2, Reserved=0
-    '0000 0001 '  #  4: MorphChainCount=1
-    '0000 0001 '  #  8: DefaultFlags=1
+    '0002 0000 '  # 0: Version=2, Reserved=0
+    '0000 0001 '  # 4: MorphChainCount=1
+    '0000 0001 '  # 8: DefaultFlags=1
     '0000 00A4 '  # 12: StructLength=164 (+8=172)
     '0000 0000 '  # 16: MorphFeatureCount=0
     '0000 0001 '  # 20: MorphSubtableCount=1
@@ -726,16 +727,16 @@ MORX_INSERTION_DATA = deHexStr(
     '0000 004A '  # 44: STXHeader.StateArrayOffset=74 (+36=110)
     '0000 006E '  # 48: STXHeader.EntryTableOffset=110 (+36=146)
     '0000 0086 '  # 52: STXHeader.InsertionActionOffset=134 (+36=170)
-     # Glyph class table.
-    '0002 0006 '       #  56: ClassTable.LookupFormat=2, .UnitSize=6
-    '0006 0018 '       #  60:   .NUnits=6, .SearchRange=24
-    '0002 000C '       #  64:   .EntrySelector=2, .RangeShift=12
-    '00AC 00AC 0005 '  #  68: GlyphID 172..172 -> GlyphClass 5
-    '01EB 01E6 0005 '  #  74: GlyphID 486..491 -> GlyphClass 5
-    '01F0 01F0 0004 '  #  80: GlyphID 496..496 -> GlyphClass 4
-    '01F8 01F6 0004 '  #  88: GlyphID 502..504 -> GlyphClass 4
-    '01FC 01FA 0004 '  #  92: GlyphID 506..508 -> GlyphClass 4
-    '0250 0250 0005 '  #  98: GlyphID 592..592 -> GlyphClass 5
+    # Glyph class table.
+    '0002 0006 '  # 56: ClassTable.LookupFormat=2, .UnitSize=6
+    '0006 0018 '  # 60:   .NUnits=6, .SearchRange=24
+    '0002 000C '  # 64:   .EntrySelector=2, .RangeShift=12
+    '00AC 00AC 0005 '  # 68: GlyphID 172..172 -> GlyphClass 5
+    '01EB 01E6 0005 '  # 74: GlyphID 486..491 -> GlyphClass 5
+    '01F0 01F0 0004 '  # 80: GlyphID 496..496 -> GlyphClass 4
+    '01F8 01F6 0004 '  # 88: GlyphID 502..504 -> GlyphClass 4
+    '01FC 01FA 0004 '  # 92: GlyphID 506..508 -> GlyphClass 4
+    '0250 0250 0005 '  # 98: GlyphID 592..592 -> GlyphClass 5
     'FFFF FFFF 0000 '  # 104: <end of lookup>
     # State array.
     '0000 0000 0000 0000 0001 0000 '  # 110: State[0][0..5]
@@ -866,7 +867,7 @@ class MORXNoncontextualGlyphSubstitutionTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.maxDiff = None
-        glyphs = ['.notdef'] + ['g.%d' % i for i in range (1, 140)]
+        glyphs = ['.notdef'] + ['g.%d' % i for i in range(1, 140)]
         glyphs[11], glyphs[13] = 'parenleft', 'parenright'
         glyphs[135], glyphs[136] = 'parenleft.vertical', 'parenright.vertical'
         cls.font = FakeFont(glyphs)
@@ -909,7 +910,7 @@ class MORXContextualSubstitutionTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.maxDiff = None
-        g = ['.notdef'] + ['g.%d' % i for i in range (1, 910)]
+        g = ['.notdef'] + ['g.%d' % i for i in range(1, 910)]
         g[80] = 'C'
         g[50], g[52], g[201], g[202] = 'A', 'B', 'X', 'Y'
         g[600], g[601], g[602], g[900] = (
@@ -934,7 +935,7 @@ class MORXLigatureSubstitutionTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.maxDiff = None
-        g = ['.notdef'] + ['g.%d' % i for i in range (1, 1515)]
+        g = ['.notdef'] + ['g.%d' % i for i in range(1, 1515)]
         g[20:29] = 'a b c d e f g h i'.split()
         g[1000:1008] = 'adf adg adh adi aef aeg aeh aei'.split()
         g[1008:1016] = 'bdf bdg bdh bdi bef beg beh bei'.split()
@@ -960,7 +961,7 @@ class MORXGlyphInsertionTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.maxDiff = None
-        cls.font = FakeFont(['.notdef'] + ['g.%d' % i for i in range (1, 910)])
+        cls.font = FakeFont(['.notdef'] + ['g.%d' % i for i in range(1, 910)])
 
     def test_decompile_toXML(self):
         table = newTable('morx')

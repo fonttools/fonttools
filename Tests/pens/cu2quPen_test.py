@@ -318,6 +318,7 @@ pen.endPath()""".splitlines())
 
         # collect the output of _flushContour before it's sent to _drawPoints
         new_segments = []
+
         def _drawPoints(segments):
             new_segments.extend(segments)
             Cu2QuPointPen._drawPoints(quadpen, segments)

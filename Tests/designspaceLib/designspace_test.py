@@ -12,6 +12,7 @@ from fontTools.designspaceLib import (
     InstanceDescriptor, evaluateRule, processRules, posix, DesignSpaceDocumentError)
 from fontTools import ttLib
 
+
 def _axesAsDict(axes):
     """
         Make the axis data we have available in
@@ -118,13 +119,15 @@ def test_fill_document(tmpdir):
     i1.familyName = "InstanceFamilyName"
     i1.styleName = "InstanceStyleName"
     i1.name = "instance.ufo1"
-    i1.location = dict(weight=500, spooky=666)  # this adds a dimension that is not defined.
+    # this adds a dimension that is not defined.
+    i1.location = dict(weight=500, spooky=666)
     i1.postScriptFontName = "InstancePostscriptName"
     i1.styleMapFamilyName = "InstanceStyleMapFamilyName"
     i1.styleMapStyleName = "InstanceStyleMapStyleName"
     glyphData = dict(name="arrow", mute=True, unicodes=[0x123, 0x124, 0x125])
     i1.glyphs['arrow'] = glyphData
-    i1.lib['com.coolDesignspaceApp.binaryData'] = plistlib.Data(b'<binary gunk>')
+    i1.lib['com.coolDesignspaceApp.binaryData'] = plistlib.Data(
+        b'<binary gunk>')
     i1.lib['com.coolDesignspaceApp.specimenText'] = "Hamburgerwhatever"
     doc.addInstance(i1)
     # add instance 2
@@ -134,11 +137,12 @@ def test_fill_document(tmpdir):
     i2.styleName = "InstanceStyleName"
     i2.name = "instance.ufo2"
     # anisotropic location
-    i2.location = dict(weight=500, width=(400,300))
+    i2.location = dict(weight=500, width=(400, 300))
     i2.postScriptFontName = "InstancePostscriptName"
     i2.styleMapFamilyName = "InstanceStyleMapFamilyName"
     i2.styleMapStyleName = "InstanceStyleMapStyleName"
-    glyphMasters = [dict(font="master.ufo1", glyphName="BB", location=dict(width=20,weight=20)), dict(font="master.ufo2", glyphName="CC", location=dict(width=900,weight=900))]
+    glyphMasters = [dict(font="master.ufo1", glyphName="BB", location=dict(width=20, weight=20)), dict(
+        font="master.ufo2", glyphName="CC", location=dict(width=900, weight=900))]
     glyphData = dict(name="arrow", unicodes=[101, 201, 301])
     glyphData['masters'] = glyphMasters
     glyphData['note'] = "A note about this glyph"
@@ -243,13 +247,14 @@ def test_unicodes(tmpdir):
         t2 = f2.read()
     assert t1 == t2
     # check the unicode values read from the document
-    assert new.instances[0].glyphs['arrow']['unicodes'] == [100,200,300]
+    assert new.instances[0].glyphs['arrow']['unicodes'] == [100, 200, 300]
 
 
 def test_localisedNames(tmpdir):
     tmpdir = str(tmpdir)
     testDocPath = os.path.join(tmpdir, "testLocalisedNames.designspace")
-    testDocPath2 = os.path.join(tmpdir, "testLocalisedNames_roundtrip.designspace")
+    testDocPath2 = os.path.join(
+        tmpdir, "testLocalisedNames_roundtrip.designspace")
     masterPath1 = os.path.join(tmpdir, "masters", "masterTest1.ufo")
     masterPath2 = os.path.join(tmpdir, "masters", "masterTest2.ufo")
     instancePath1 = os.path.join(tmpdir, "instances", "instanceTest1.ufo")
@@ -283,7 +288,8 @@ def test_localisedNames(tmpdir):
     i1.setStyleMapFamilyName("Montserrat Halbfett", "de")
     i1.setStyleMapFamilyName(u"モンセラート SemiBold", "ja")
     i1.name = "instance.ufo1"
-    i1.location = dict(weight=500, spooky=666)  # this adds a dimension that is not defined.
+    # this adds a dimension that is not defined.
+    i1.location = dict(weight=500, spooky=666)
     i1.postScriptFontName = "InstancePostscriptName"
     glyphData = dict(name="arrow", mute=True, unicodes=[0x123])
     i1.glyphs['arrow'] = glyphData
@@ -318,7 +324,7 @@ def test_localisedNames(tmpdir):
     a3.name = "spooky"
     a3.tag = "spok"
     a3.map = [(0.0, 10.0), (401.0, 66.0), (1000.0, 990.0)]
-    #doc.addAxis(a3)    # uncomment this line to test the effects of default axes values
+    # doc.addAxis(a3)    # uncomment this line to test the effects of default axes values
     # write some rules
     r1 = RuleDescriptor()
     r1.name = "named.rule.1"
@@ -355,7 +361,7 @@ def test_handleNoAxes(tmpdir):
     # Case 1: No axes element in the document, but there are sources and instances
     doc = DesignSpaceDocument()
 
-    for name, value in [('One', 1),('Two', 2),('Three', 3)]:
+    for name, value in [('One', 1), ('Two', 2), ('Three', 3)]:
         a = AxisDescriptor()
         a.minimum = 0
         a.maximum = 1000
@@ -394,7 +400,7 @@ def test_handleNoAxes(tmpdir):
     i1.familyName = "InstanceFamilyName"
     i1.styleName = "InstanceStyleName"
     i1.name = "instance.ufo1"
-    i1.location = dict(axisNameOne=(-1000,500), axisNameTwo=100)
+    i1.location = dict(axisNameOne=(-1000, 500), axisNameTwo=100)
     i1.postScriptFontName = "InstancePostscriptName"
     i1.styleMapFamilyName = "InstanceStyleMapFamilyName"
     i1.styleMapStyleName = "InstanceStyleMapStyleName"
@@ -404,6 +410,7 @@ def test_handleNoAxes(tmpdir):
     verify = DesignSpaceDocument()
     verify.read(testDocPath)
     verify.write(testDocPath2)
+
 
 def test_pathNameResolve(tmpdir):
     tmpdir = str(tmpdir)
@@ -476,7 +483,8 @@ def test_pathNameResolve(tmpdir):
     verify.read(testDocPath3)
     assert verify.sources[0].filename == "../somewhere/over/the/rainbow.ufo"
     # make the absolute path for filename so we can see if it matches the path
-    p = os.path.abspath(os.path.join(os.path.dirname(testDocPath3), verify.sources[0].filename))
+    p = os.path.abspath(os.path.join(os.path.dirname(
+        testDocPath3), verify.sources[0].filename))
     assert verify.sources[0].path == posix(p)
 
     # Case 4: the filename points to one file, the path points to another. The path takes precedence.
@@ -506,7 +514,7 @@ def test_pathNameResolve(tmpdir):
     s.familyName = "MasterFamilyName"
     s.styleName = "MasterStyleNameOne"
     doc.addSource(s)
-    doc.write(testDocPath5) # so that the document has a path
+    doc.write(testDocPath5)  # so that the document has a path
     doc.updateFilenameFromPath()
     assert doc.sources[0].filename == "masters/masterTest1.ufo"
 
@@ -520,7 +528,7 @@ def test_pathNameResolve(tmpdir):
     s.location = dict(weight=0)
     s.familyName = "MasterFamilyName"
     s.styleName = "MasterStyleNameOne"
-    doc.write(testDocPath5) # so that the document has a path
+    doc.write(testDocPath5)  # so that the document has a path
     doc.addSource(s)
     assert doc.sources[0].filename == "../somewhere/over/the/rainbow.ufo"
     doc.updateFilenameFromPath(force=True)
@@ -543,16 +551,20 @@ def test_normalise1():
     # clipping beyond max values:
     assert doc.normalizeLocation(dict(axisName_a=1001)) == {'axisName_a': 1.0}
     assert doc.normalizeLocation(dict(axisName_a=500)) == {'axisName_a': 0.5}
-    assert doc.normalizeLocation(dict(axisName_a=-1000)) == {'axisName_a': -1.0}
-    assert doc.normalizeLocation(dict(axisName_a=-1001)) == {'axisName_a': -1.0}
+    assert doc.normalizeLocation(
+        dict(axisName_a=-1000)) == {'axisName_a': -1.0}
+    assert doc.normalizeLocation(
+        dict(axisName_a=-1001)) == {'axisName_a': -1.0}
     # anisotropic coordinates normalise to isotropic
-    assert doc.normalizeLocation(dict(axisName_a=(1000, -1000))) == {'axisName_a': 1.0}
+    assert doc.normalizeLocation(
+        dict(axisName_a=(1000, -1000))) == {'axisName_a': 1.0}
     doc.normalize()
     r = []
     for axis in doc.axes:
         r.append((axis.name, axis.minimum, axis.default, axis.maximum))
     r.sort()
     assert r == [('axisName_a', -1.0, 0.0, 1.0)]
+
 
 def test_normalise2():
     # normalisation with minimum > 0
@@ -568,11 +580,13 @@ def test_normalise2():
     assert doc.normalizeLocation(dict(axisName_b=1000)) == {'axisName_b': 1.0}
     # clipping beyond max values:
     assert doc.normalizeLocation(dict(axisName_b=1001)) == {'axisName_b': 1.0}
-    assert doc.normalizeLocation(dict(axisName_b=500)) == {'axisName_b': 0.4444444444444444}
+    assert doc.normalizeLocation(dict(axisName_b=500)) == {
+        'axisName_b': 0.4444444444444444}
     assert doc.normalizeLocation(dict(axisName_b=-1000)) == {'axisName_b': 0.0}
     assert doc.normalizeLocation(dict(axisName_b=-1001)) == {'axisName_b': 0.0}
     # anisotropic coordinates normalise to isotropic
-    assert doc.normalizeLocation(dict(axisName_b=(1000,-1000))) == {'axisName_b': 1.0}
+    assert doc.normalizeLocation(
+        dict(axisName_b=(1000, -1000))) == {'axisName_b': 1.0}
     assert doc.normalizeLocation(dict(axisName_b=1001)) == {'axisName_b': 1.0}
     doc.normalize()
     r = []
@@ -580,6 +594,7 @@ def test_normalise2():
         r.append((axis.name, axis.minimum, axis.default, axis.maximum))
     r.sort()
     assert r == [('axisName_b', 0.0, 0.0, 1.0)]
+
 
 def test_normalise3():
     # normalisation of negative values, with default == maximum
@@ -602,6 +617,7 @@ def test_normalise3():
     r.sort()
     assert r == [('ccc', -1.0, 0.0, 0.0)]
 
+
 def test_normalise4():
     # normalisation with a map
     doc = DesignSpaceDocument()
@@ -611,7 +627,7 @@ def test_normalise4():
     a4.maximum = 1000
     a4.default = 0
     a4.name = "ddd"
-    a4.map = [(0,100), (300, 500), (600, 500), (1000,900)]
+    a4.map = [(0, 100), (300, 500), (600, 500), (1000, 900)]
     doc.addAxis(a4)
     doc.normalize()
     r = []
@@ -619,6 +635,7 @@ def test_normalise4():
         r.append((axis.name, axis.map))
     r.sort()
     assert r == [('ddd', [(0, 0.0), (300, 0.5), (600, 0.5), (1000, 1.0)])]
+
 
 def test_axisMapping():
     # note: because designspance lib does not do any actual
@@ -630,7 +647,7 @@ def test_axisMapping():
     a4.maximum = 1000
     a4.default = 0
     a4.name = "ddd"
-    a4.map = [(0,100), (300, 500), (600, 500), (1000,900)]
+    a4.map = [(0, 100), (300, 500), (600, 500), (1000, 900)]
     doc.addAxis(a4)
     doc.normalize()
     r = []
@@ -638,6 +655,7 @@ def test_axisMapping():
         r.append((axis.name, axis.map))
     r.sort()
     assert r == [('ddd', [(0, 0.0), (300, 0.5), (600, 0.5), (1000, 1.0)])]
+
 
 def test_rulesConditions(tmpdir):
     # tests of rules, conditionsets and conditions
@@ -649,16 +667,19 @@ def test_rulesConditions(tmpdir):
     ])
     r1.subs.append(("a", "a.alt"))
 
-    assert evaluateRule(r1, dict(axisName_a = 500, axisName_b = 0)) == True
-    assert evaluateRule(r1, dict(axisName_a = 0, axisName_b = 0)) == True
-    assert evaluateRule(r1, dict(axisName_a = 1000, axisName_b = 0)) == True
-    assert evaluateRule(r1, dict(axisName_a = 1000, axisName_b = -100)) == False
-    assert evaluateRule(r1, dict(axisName_a = 1000.0001, axisName_b = 0)) == False
-    assert evaluateRule(r1, dict(axisName_a = -0.0001, axisName_b = 0)) == False
-    assert evaluateRule(r1, dict(axisName_a = -100, axisName_b = 0)) == False
-    assert processRules([r1], dict(axisName_a = 500, axisName_b = 0), ["a", "b", "c"]) == ['a.alt', 'b', 'c']
-    assert processRules([r1], dict(axisName_a = 500, axisName_b = 0), ["a.alt", "b", "c"]) == ['a.alt', 'b', 'c']
-    assert processRules([r1], dict(axisName_a = 2000, axisName_b = 0), ["a", "b", "c"]) == ['a', 'b', 'c']
+    assert evaluateRule(r1, dict(axisName_a=500, axisName_b=0)) == True
+    assert evaluateRule(r1, dict(axisName_a=0, axisName_b=0)) == True
+    assert evaluateRule(r1, dict(axisName_a=1000, axisName_b=0)) == True
+    assert evaluateRule(r1, dict(axisName_a=1000, axisName_b=-100)) == False
+    assert evaluateRule(r1, dict(axisName_a=1000.0001, axisName_b=0)) == False
+    assert evaluateRule(r1, dict(axisName_a=-0.0001, axisName_b=0)) == False
+    assert evaluateRule(r1, dict(axisName_a=-100, axisName_b=0)) == False
+    assert processRules([r1], dict(axisName_a=500, axisName_b=0), [
+                        "a", "b", "c"]) == ['a.alt', 'b', 'c']
+    assert processRules([r1], dict(axisName_a=500, axisName_b=0), [
+                        "a.alt", "b", "c"]) == ['a.alt', 'b', 'c']
+    assert processRules([r1], dict(axisName_a=2000, axisName_b=0), [
+                        "a", "b", "c"]) == ['a', 'b', 'c']
 
     # rule with only a maximum
     r2 = RuleDescriptor()
@@ -666,9 +687,9 @@ def test_rulesConditions(tmpdir):
     r2.conditionSets.append([dict(name='axisName_a', maximum=500)])
     r2.subs.append(("b", "b.alt"))
 
-    assert evaluateRule(r2, dict(axisName_a = 0)) == True
-    assert evaluateRule(r2, dict(axisName_a = -500)) == True
-    assert evaluateRule(r2, dict(axisName_a = 1000)) == False
+    assert evaluateRule(r2, dict(axisName_a=0)) == True
+    assert evaluateRule(r2, dict(axisName_a=-500)) == True
+    assert evaluateRule(r2, dict(axisName_a=1000)) == False
 
     # rule with only a minimum
     r3 = RuleDescriptor()
@@ -676,9 +697,9 @@ def test_rulesConditions(tmpdir):
     r3.conditionSets.append([dict(name='axisName_a', minimum=500)])
     r3.subs.append(("c", "c.alt"))
 
-    assert evaluateRule(r3, dict(axisName_a = 0)) == False
-    assert evaluateRule(r3, dict(axisName_a = 1000)) == True
-    assert evaluateRule(r3, dict(axisName_a = 1000)) == True
+    assert evaluateRule(r3, dict(axisName_a=0)) == False
+    assert evaluateRule(r3, dict(axisName_a=1000)) == True
+    assert evaluateRule(r3, dict(axisName_a=1000)) == True
 
     # rule with only a minimum, maximum in separate conditions
     r4 = RuleDescriptor()
@@ -689,9 +710,10 @@ def test_rulesConditions(tmpdir):
     ])
     r4.subs.append(("c", "c.alt"))
 
-    assert evaluateRule(r4, dict(axisName_a = 1000, axisName_b = 0)) == True
-    assert evaluateRule(r4, dict(axisName_a = 0, axisName_b = 0)) == False
-    assert evaluateRule(r4, dict(axisName_a = 1000, axisName_b = 1000)) == False
+    assert evaluateRule(r4, dict(axisName_a=1000, axisName_b=0)) == True
+    assert evaluateRule(r4, dict(axisName_a=0, axisName_b=0)) == False
+    assert evaluateRule(r4, dict(axisName_a=1000, axisName_b=1000)) == False
+
 
 def test_rulesDocument(tmpdir):
     # tests of rules in a document, roundtripping.
@@ -726,7 +748,8 @@ def test_rulesDocument(tmpdir):
     assert len(doc.rules) == 1
     assert len(doc.rules[0].conditionSets) == 1
     assert len(doc.rules[0].conditionSets[0]) == 2
-    assert _axesAsDict(doc.axes) == {'axisName_a': {'map': [], 'name': 'axisName_a', 'default': 0, 'minimum': 0, 'maximum': 1000, 'tag': 'TAGA'}, 'axisName_b': {'map': [], 'name': 'axisName_b', 'default': 2000, 'minimum': 2000, 'maximum': 3000, 'tag': 'TAGB'}}
+    assert _axesAsDict(doc.axes) == {'axisName_a': {'map': [], 'name': 'axisName_a', 'default': 0, 'minimum': 0, 'maximum': 1000, 'tag': 'TAGA'}, 'axisName_b': {
+        'map': [], 'name': 'axisName_b', 'default': 2000, 'minimum': 2000, 'maximum': 3000, 'tag': 'TAGB'}}
     assert doc.rules[0].conditionSets == [[
         {'minimum': 0, 'maximum': 1000, 'name': 'axisName_a'},
         {'minimum': 0, 'maximum': 3000, 'name': 'axisName_b'}]]
@@ -755,6 +778,7 @@ def test_rulesDocument(tmpdir):
     assert len(doc3.rules) == 1
     assert len(doc3.rules[0].conditionSets) == 2
 
+
 def _addUnwrappedCondition(path):
     # only for testing, so we can make an invalid designspace file
     # older designspace files may have conditions that are not wrapped in a conditionset
@@ -762,9 +786,11 @@ def _addUnwrappedCondition(path):
     with open(path, 'r', encoding='utf-8') as f:
         d = f.read()
     print(d)
-    d = d.replace('<rule name="named.rule.1">', '<rule name="named.rule.1">\n\t<condition maximum="22" minimum="33" name="axisName_a" />')
+    d = d.replace('<rule name="named.rule.1">',
+                  '<rule name="named.rule.1">\n\t<condition maximum="22" minimum="33" name="axisName_a" />')
     with open(path, 'w', encoding='utf-8') as f:
         f.write(d)
+
 
 def test_documentLib(tmpdir):
     # roundtrip test of the document lib with some nested data
@@ -778,7 +804,7 @@ def test_documentLib(tmpdir):
     a1.maximum = 1000
     a1.default = 0
     doc.addAxis(a1)
-    dummyData = dict(a=123, b=u"äbc", c=[1,2,3], d={'a':123})
+    dummyData = dict(a=123, b=u"äbc", c=[1, 2, 3], d={'a': 123})
     dummyKey = "org.fontTools.designspaceLib"
     doc.lib = {dummyKey: dummyData}
     doc.write(testDocPath1)
@@ -955,7 +981,7 @@ def test_addAxisDescriptor():
     ds = DesignSpaceDocument()
 
     axis = ds.addAxisDescriptor(
-      name="Weight", tag="wght", minimum=100, default=400, maximum=900
+        name="Weight", tag="wght", minimum=100, default=400, maximum=900
     )
 
     assert ds.axes[0] is axis
@@ -970,7 +996,8 @@ def test_addAxisDescriptor():
 def test_addSourceDescriptor():
     ds = DesignSpaceDocument()
 
-    source = ds.addSourceDescriptor(name="TestSource", location={"Weight": 400})
+    source = ds.addSourceDescriptor(
+        name="TestSource", location={"Weight": 400})
 
     assert ds.sources[0] is source
     assert isinstance(source, SourceDescriptor)
@@ -982,10 +1009,10 @@ def test_addInstanceDescriptor():
     ds = DesignSpaceDocument()
 
     instance = ds.addInstanceDescriptor(
-      name="TestInstance",
-      location={"Weight": 400},
-      styleName="Regular",
-      styleMapStyleName="regular",
+        name="TestInstance",
+        location={"Weight": 400},
+        styleName="Regular",
+        styleMapStyleName="regular",
     )
 
     assert ds.instances[0] is instance

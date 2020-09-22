@@ -202,6 +202,7 @@ RTL_SCRIPTS = {
     'Yezi',  # Yezidi
 }
 
+
 def script_horizontal_direction(script_code, default=KeyError):
     """ Return "RTL" for scripts that contain right-to-left characters
     according to the Bidi_Class property. Otherwise return "LTR".

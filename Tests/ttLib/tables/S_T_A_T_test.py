@@ -6,26 +6,26 @@ import unittest
 
 
 STAT_DATA = deHexStr(
-    '0001 0000 '           #   0: Version=1.0
-    '0008 0002 '           #   4: DesignAxisSize=8, DesignAxisCount=2
-    '0000 0012 '           #   8: OffsetToDesignAxes=18
-    '0003 0000 0022 '      #  12: AxisValueCount=3, OffsetToAxisValueOffsets=34
-    '7767 6874 '           #  18: DesignAxis[0].AxisTag='wght'
-    '012D 0002 '           #  22: DesignAxis[0].NameID=301, .AxisOrdering=2
-    '5445 5354 '           #  26: DesignAxis[1].AxisTag='TEST'
-    '012E 0001 '           #  30: DesignAxis[1].NameID=302, .AxisOrdering=1
-    '0006 0012 0026 '      #  34: AxisValueOffsets = [6, 18, 38] (+34)
-    '0001 0000 0000  '     #  40: AxisValue[0].Format=1, .AxisIndex=0, .Flags=0
-    '0191 0190 0000 '      #  46: AxisValue[0].ValueNameID=401, .Value=400.0
-    '0002 0001 0000 '      #  52: AxisValue[1].Format=2, .AxisIndex=1, .Flags=0
-    '0192 '                #  58: AxisValue[1].ValueNameID=402
-    '0002 0000 '           #  60: AxisValue[1].NominalValue=2.0
-    '0001 0000 '           #  64: AxisValue[1].RangeMinValue=1.0
-    '0003 0000 '           #  68: AxisValue[1].RangeMaxValue=3.0
-    '0003 0000 0000 '      #  72: AxisValue[2].Format=3, .AxisIndex=0, .Flags=0
-    '0002 '                #  78: AxisValue[2].ValueNameID=2 'Regular'
-    '0190 0000 02BC 0000 ' #  80: AxisValue[2].Value=400.0, .LinkedValue=700.0
-)                          #  88: <end>
+    '0001 0000 '  # 0: Version=1.0
+    '0008 0002 '  # 4: DesignAxisSize=8, DesignAxisCount=2
+    '0000 0012 '  # 8: OffsetToDesignAxes=18
+    '0003 0000 0022 '  # 12: AxisValueCount=3, OffsetToAxisValueOffsets=34
+    '7767 6874 '  # 18: DesignAxis[0].AxisTag='wght'
+    '012D 0002 '  # 22: DesignAxis[0].NameID=301, .AxisOrdering=2
+    '5445 5354 '  # 26: DesignAxis[1].AxisTag='TEST'
+    '012E 0001 '  # 30: DesignAxis[1].NameID=302, .AxisOrdering=1
+    '0006 0012 0026 '  # 34: AxisValueOffsets = [6, 18, 38] (+34)
+    '0001 0000 0000  '  # 40: AxisValue[0].Format=1, .AxisIndex=0, .Flags=0
+    '0191 0190 0000 '  # 46: AxisValue[0].ValueNameID=401, .Value=400.0
+    '0002 0001 0000 '  # 52: AxisValue[1].Format=2, .AxisIndex=1, .Flags=0
+    '0192 '  # 58: AxisValue[1].ValueNameID=402
+    '0002 0000 '  # 60: AxisValue[1].NominalValue=2.0
+    '0001 0000 '  # 64: AxisValue[1].RangeMinValue=1.0
+    '0003 0000 '  # 68: AxisValue[1].RangeMaxValue=3.0
+    '0003 0000 0000 '  # 72: AxisValue[2].Format=3, .AxisIndex=0, .Flags=0
+    '0002 '  # 78: AxisValue[2].ValueNameID=2 'Regular'
+    '0190 0000 02BC 0000 '  # 80: AxisValue[2].Value=400.0, .LinkedValue=700.0
+)  # 88: <end>
 assert(len(STAT_DATA) == 88)
 
 
@@ -74,17 +74,17 @@ STAT_XML = [
 
 # Contains junk data for making sure we get our offset decoding right.
 STAT_DATA_WITH_AXIS_JUNK = deHexStr(
-    '0001 0000 '           #   0: Version=1.0
-    '000A 0002 '           #   4: DesignAxisSize=10, DesignAxisCount=2
-    '0000 0012 '           #   8: OffsetToDesignAxes=18
-    '0000 0000 0000 '      #  12: AxisValueCount=3, OffsetToAxisValueOffsets=34
-    '7767 6874 '           #  18: DesignAxis[0].AxisTag='wght'
-    '012D 0002 '           #  22: DesignAxis[0].NameID=301, .AxisOrdering=2
-    'DEAD '                #  26: <junk>
-    '5445 5354 '           #  28: DesignAxis[1].AxisTag='TEST'
-    '012E 0001 '           #  32: DesignAxis[1].NameID=302, .AxisOrdering=1
-    'BEEF '                #  36: <junk>
-)                          #  38: <end>
+    '0001 0000 '  # 0: Version=1.0
+    '000A 0002 '  # 4: DesignAxisSize=10, DesignAxisCount=2
+    '0000 0012 '  # 8: OffsetToDesignAxes=18
+    '0000 0000 0000 '  # 12: AxisValueCount=3, OffsetToAxisValueOffsets=34
+    '7767 6874 '  # 18: DesignAxis[0].AxisTag='wght'
+    '012D 0002 '  # 22: DesignAxis[0].NameID=301, .AxisOrdering=2
+    'DEAD '  # 26: <junk>
+    '5445 5354 '  # 28: DesignAxis[1].AxisTag='TEST'
+    '012E 0001 '  # 32: DesignAxis[1].NameID=302, .AxisOrdering=1
+    'BEEF '  # 36: <junk>
+)  # 38: <end>
 
 assert(len(STAT_DATA_WITH_AXIS_JUNK) == 38)
 
@@ -114,9 +114,9 @@ STAT_XML_WITH_AXIS_JUNK = [
 
 
 STAT_DATA_AXIS_VALUE_FORMAT3 = deHexStr(
-    '0001 0000 '  #  0: Version=1.0
-    '0008 0001 '  #  4: DesignAxisSize=8, DesignAxisCount=1
-    '0000 0012 '  #  8: OffsetToDesignAxes=18
+    '0001 0000 '  # 0: Version=1.0
+    '0008 0001 '  # 4: DesignAxisSize=8, DesignAxisCount=1
+    '0000 0012 '  # 8: OffsetToDesignAxes=18
     '0001 '       # 12: AxisValueCount=1
     '0000 001A '  # 14: OffsetToAxisValueOffsets=26
     '7767 6874 '  # 18: DesignAxis[0].AxisTag='wght'
@@ -157,9 +157,9 @@ STAT_XML_AXIS_VALUE_FORMAT3 = [
 
 
 STAT_DATA_VERSION_1_1 = deHexStr(
-    '0001 0001 '  #  0: Version=1.1
-    '0008 0001 '  #  4: DesignAxisSize=8, DesignAxisCount=1
-    '0000 0014 '  #  8: OffsetToDesignAxes=20
+    '0001 0001 '  # 0: Version=1.1
+    '0008 0001 '  # 4: DesignAxisSize=8, DesignAxisCount=1
+    '0000 0014 '  # 8: OffsetToDesignAxes=20
     '0001 '       # 12: AxisValueCount=1
     '0000 001C '  # 14: OffsetToAxisValueOffsets=28
     '0101 '       # 18: ElidedFallbackNameID: 257

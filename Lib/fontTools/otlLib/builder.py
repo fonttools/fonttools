@@ -254,11 +254,13 @@ class AlternateSubstBuilder(LookupBuilder):
         return self.alternates
 
     def add_subtable_break(self, location):
-        self.alternates[(self.SUBTABLE_BREAK_, location)] = self.SUBTABLE_BREAK_
+        self.alternates[(self.SUBTABLE_BREAK_, location)
+                        ] = self.SUBTABLE_BREAK_
 
 
 class ChainContextualRule(
-    namedtuple("ChainContextualRule", ["prefix", "glyphs", "suffix", "lookups"])
+    namedtuple("ChainContextualRule", [
+               "prefix", "glyphs", "suffix", "lookups"])
 ):
     @property
     def is_subtable_break(self):
@@ -393,7 +395,8 @@ class ChainContextualBuilder(LookupBuilder):
         subtablename = f"Context{self.subtable_type}"
         if chaining:
             subtablename = "Chain" + subtablename
-        st = getattr(ot, subtablename)()  # ot.ChainContextPos()/ot.ChainSubst()/etc.
+        # ot.ChainContextPos()/ot.ChainSubst()/etc.
+        st = getattr(ot, subtablename)()
         setattr(st, f"{self.subtable_type}Count", 0)
         setattr(st, f"{self.subtable_type}LookupRecord", [])
         return st
@@ -522,7 +525,8 @@ class ChainContextSubstBuilder(ChainContextualBuilder):
                     if lookup is not None:
                         alts = lookup.getAlternateGlyphs()
                         for glyph, replacements in alts.items():
-                            result.setdefault(glyph, set()).update(replacements)
+                            result.setdefault(
+                                glyph, set()).update(replacements)
         return result
 
     def find_chainable_single_subst(self, glyphs):
@@ -616,7 +620,8 @@ class MultipleSubstBuilder(LookupBuilder):
         return LookupBuilder.equals(self, other) and self.mapping == other.mapping
 
     def build(self):
-        subtables = self.build_subst_subtables(self.mapping, buildMultipleSubstSubtable)
+        subtables = self.build_subst_subtables(
+            self.mapping, buildMultipleSubstSubtable)
         return self.buildLookup_(subtables)
 
     def add_subtable_break(self, location):
@@ -646,7 +651,8 @@ class CursivePosBuilder(LookupBuilder):
 
     def equals(self, other):
         return (
-            LookupBuilder.equals(self, other) and self.attachments == other.attachments
+            LookupBuilder.equals(
+                self, other) and self.attachments == other.attachments
         )
 
     def add_attachment(self, location, glyphs, entryAnchor, exitAnchor):
@@ -734,7 +740,8 @@ class MarkBasePosBuilder(LookupBuilder):
         }
         bases = {}
         for glyph, anchors in self.bases.items():
-            bases[glyph] = {markClasses[mc]: anchor for (mc, anchor) in anchors.items()}
+            bases[glyph] = {markClasses[mc]: anchor for (
+                mc, anchor) in anchors.items()}
         subtables = buildMarkBasePos(marks, bases, self.glyphMap)
         return self.buildLookup_(subtables)
 
@@ -972,7 +979,8 @@ class SingleSubstBuilder(LookupBuilder):
             An ``otTables.Lookup`` object representing the multiple
             substitution lookup.
         """
-        subtables = self.build_subst_subtables(self.mapping, buildSingleSubstSubtable)
+        subtables = self.build_subst_subtables(
+            self.mapping, buildSingleSubstSubtable)
         return self.buildLookup_(subtables)
 
     def getAlternateGlyphs(self):
@@ -1156,7 +1164,8 @@ class PairPosBuilder(LookupBuilder):
             builder.addPair(glyphclass1, value1, glyphclass2, value2)
         subtables = []
         if self.glyphPairs:
-            subtables.extend(buildPairPosGlyphs(self.glyphPairs, self.glyphMap))
+            subtables.extend(buildPairPosGlyphs(
+                self.glyphPairs, self.glyphMap))
         for key in sorted(builders.keys()):
             subtables.extend(builders[key].subtables())
         return self.buildLookup_(subtables)
@@ -2135,7 +2144,8 @@ def _getSinglePosValueKey(valueRecord):
     return tuple(result)
 
 
-_DeviceTuple = namedtuple("_DeviceTuple", "DeltaFormat StartSize EndSize DeltaValue")
+_DeviceTuple = namedtuple(
+    "_DeviceTuple", "DeltaFormat StartSize EndSize DeltaValue")
 
 
 def _makeDeviceTuple(device):
@@ -2209,7 +2219,8 @@ def buildAttachList(attachPoints, glyphMap):
         return None
     self = ot.AttachList()
     self.Coverage = buildCoverage(attachPoints.keys(), glyphMap)
-    self.AttachPoint = [buildAttachPoint(attachPoints[g]) for g in self.Coverage.glyphs]
+    self.AttachPoint = [buildAttachPoint(
+        attachPoints[g]) for g in self.Coverage.glyphs]
     self.GlyphCount = len(self.AttachPoint)
     return self
 

@@ -30,7 +30,8 @@ needs_sphinx = "1.3"
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.viewcode", "sphinx.ext.napoleon", "sphinx.ext.coverage"]
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.viewcode",
+              "sphinx.ext.napoleon", "sphinx.ext.coverage"]
 
 autodoc_mock_imports = ["gtk"]
 
@@ -148,7 +149,8 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "fonttools", u"fontTools Documentation", [author], 1)]
+man_pages = [(master_doc, "fonttools",
+              u"fontTools Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output -------------------------------------------

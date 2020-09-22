@@ -15,7 +15,8 @@ class FixedToolsTest(unittest.TestCase):
     def test_roundtrip(self):
         for bits in range(0, 15):
             for value in range(-(2**(bits+1)), 2**(bits+1)):
-                self.assertEqual(value, floatToFixed(fixedToFloat(value, bits), bits))
+                self.assertEqual(value, floatToFixed(
+                    fixedToFloat(value, bits), bits))
 
     def test_fixedToFloat_precision14(self):
         self.assertAlmostEqual(0.7999878, fixedToFloat(13107, 14))

@@ -28,6 +28,7 @@ class LexerTest(unittest.TestCase):
         self.assertEqual(lex("123 -456"),
                          [(Lexer.NUMBER, 123), (Lexer.NUMBER, -456)])
 
+
 if __name__ == "__main__":
     import sys
     sys.exit(unittest.main())

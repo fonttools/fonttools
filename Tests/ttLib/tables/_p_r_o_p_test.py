@@ -6,9 +6,9 @@ import unittest
 
 
 PROP_FORMAT_0_DATA = deHexStr(
-    '0001 0000 0000 '  #  0: Version=1.0, Format=0
-    '0005 '            #  6: DefaultProperties=European number terminator
-)                      #  8: <end>
+    '0001 0000 0000 '  # 0: Version=1.0, Format=0
+    '0005 '  # 6: DefaultProperties=European number terminator
+)  # 8: <end>
 assert(len(PROP_FORMAT_0_DATA) == 8)
 
 
@@ -21,9 +21,9 @@ PROP_FORMAT_0_XML = [
 
 
 PROP_FORMAT_1_DATA = deHexStr(
-    '0003 0000 0001 '  #  0: Version=3.0, Format=1
-    '0000 '            #  6: DefaultProperties=left-to-right; non-whitespace
-    '0008 0003 0004 '  #  8: LookupFormat=8, FirstGlyph=3, GlyphCount=4
+    '0003 0000 0001 '  # 0: Version=3.0, Format=1
+    '0000 '  # 6: DefaultProperties=left-to-right; non-whitespace
+    '0008 0003 0004 '  # 8: LookupFormat=8, FirstGlyph=3, GlyphCount=4
     '000B '            # 14: Properties[C]=other neutral
     '000A '            # 16: Properties[D]=whitespace
     '600B '            # 18: Properties[E]=other neutral; hanging punct

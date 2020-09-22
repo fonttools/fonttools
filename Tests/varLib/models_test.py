@@ -30,9 +30,9 @@ def test_normalizeLocation():
 
 def test_supportScalar():
     assert supportScalar({}, {}) == 1.0
-    assert supportScalar({'wght':.2}, {}) == 1.0
-    assert supportScalar({'wght':.2}, {'wght':(0,2,3)}) == 0.1
-    assert supportScalar({'wght':2.5}, {'wght':(0,2,4)}) == 0.75
+    assert supportScalar({'wght': .2}, {}) == 1.0
+    assert supportScalar({'wght': .2}, {'wght': (0, 2, 3)}) == 0.1
+    assert supportScalar({'wght': 2.5}, {'wght': (0, 2, 4)}) == 0.75
 
 
 class VariationModelTest(object):

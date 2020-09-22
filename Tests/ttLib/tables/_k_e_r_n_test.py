@@ -9,12 +9,12 @@ import pytest
 
 
 KERN_VER_0_FMT_0_DATA = deHexStr(
-    '0000 '            #  0: version=0
-    '0001 '            #  2: nTables=1
-    '0000 '            #  4: version=0 (bogus field, unused)
-    '0020 '            #  6: length=32
-    '00 '              #  8: format=0
-    '01 '              #  9: coverage=1
+    '0000 '  # 0: version=0
+    '0001 '  # 2: nTables=1
+    '0000 '  # 4: version=0 (bogus field, unused)
+    '0020 '  # 6: length=32
+    '00 '  # 8: format=0
+    '01 '  # 9: coverage=1
     '0003 '            # 10: nPairs=3
     '000C '            # 12: searchRange=12
     '0001 '            # 14: entrySelector=1
@@ -35,9 +35,9 @@ KERN_VER_0_FMT_0_XML = [
 ]
 
 KERN_VER_1_FMT_0_DATA = deHexStr(
-    '0001 0000 '       #  0: version=1
-    '0000 0001 '       #  4: nTables=1
-    '0000 0022 '       #  8: length=34
+    '0001 0000 '  # 0: version=1
+    '0000 0001 '  # 4: nTables=1
+    '0000 0022 '  # 8: length=34
     '00 '              # 12: coverage=0
     '00 '              # 13: format=0
     '0000 '            # 14: tupleIndex=0
@@ -61,12 +61,12 @@ KERN_VER_1_FMT_0_XML = [
 ]
 
 KERN_VER_0_FMT_UNKNOWN_DATA = deHexStr(
-    '0000 '            #  0: version=0
-    '0002 '            #  2: nTables=2
-    '0000 '            #  4: version=0
-    '000A '            #  6: length=10
-    '04 '              #  8: format=4  (format 4 doesn't exist)
-    '01 '              #  9: coverage=1
+    '0000 '  # 0: version=0
+    '0002 '  # 2: nTables=2
+    '0000 '  # 4: version=0
+    '000A '  # 6: length=10
+    '04 '  # 8: format=4  (format 4 doesn't exist)
+    '01 '  # 9: coverage=1
     '1234 5678 '       # 10: garbage...
     '0000 '            # 14: version=0
     '000A '            # 16: length=10
@@ -91,9 +91,9 @@ KERN_VER_0_FMT_UNKNOWN_XML = [
 ]
 
 KERN_VER_1_FMT_UNKNOWN_DATA = deHexStr(
-    '0001 0000 '       #  0: version=1
-    '0000 0002 '       #  4: nTables=2
-    '0000 000C '       #  8: length=12
+    '0001 0000 '  # 0: version=1
+    '0000 0002 '  # 4: nTables=2
+    '0000 000C '  # 8: length=12
     '00 '              # 12: coverage=0
     '04 '              # 13: format=4  (format 4 doesn't exist)
     '0000 '            # 14: tupleIndex=0
@@ -121,12 +121,12 @@ KERN_VER_1_FMT_UNKNOWN_XML = [
 ]
 
 KERN_VER_0_FMT_0_OVERFLOWING_DATA = deHexStr(
-    '0000 '  #  0: version=0
-    '0001 '  #  2: nTables=1
-    '0000 '  #  4: version=0 (bogus field, unused)
-    '0274 '  #  6: length=628 (bogus value for 66164 % 0x10000)
-    '00 '    #  8: format=0
-    '01 '    #  9: coverage=1
+    '0000 '  # 0: version=0
+    '0001 '  # 2: nTables=1
+    '0000 '  # 4: version=0 (bogus field, unused)
+    '0274 '  # 6: length=628 (bogus value for 66164 % 0x10000)
+    '00 '  # 8: format=0
+    '01 '  # 9: coverage=1
     '2B11 '  # 10: nPairs=11025
     'C000 '  # 12: searchRange=49152
     '000D '  # 14: entrySelector=13
@@ -141,6 +141,7 @@ KERN_VER_0_FMT_0_OVERFLOWING_DATA = deHexStr(
 def font():
     return FakeFont(list("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                          "abcdefghijklmnopqrstuvwxyz"))
+
 
 @pytest.fixture
 def overflowing_font():

@@ -20,6 +20,7 @@ def logger_name_generator():
         yield basename+str(num)
         num += 1
 
+
 unique_logger_name = logger_name_generator()
 
 
@@ -61,7 +62,7 @@ class TimerTest(object):
     def test_split(self):
         timer = Timer()
         time.sleep(0.01)
-        fist_lap =  timer.split()
+        fist_lap = timer.split()
         assert timer.elapsed == fist_lap
         time.sleep(0.1)
         second_lap = timer.split()
@@ -110,6 +111,7 @@ class TimerTest(object):
         @timer()
         def test1():
             time.sleep(0.01)
+
         @timer('run test 2', level=logging.INFO)
         def test2():
             time.sleep(0.02)

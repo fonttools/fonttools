@@ -14,9 +14,9 @@ import unittest
 # what our encoder emits. (The value for end-of-table markers
 # does not actually matter).
 ANKR_FORMAT_0_DATA = deHexStr(
-    '0000 0000 '       #  0: Format=0, Flags=0
-    '0000 000C '       #  4: LookupTableOffset=12
-    '0000 0024 '       #  8: GlyphDataTableOffset=36
+    '0000 0000 '  # 0: Format=0, Flags=0
+    '0000 000C '  # 4: LookupTableOffset=12
+    '0000 0024 '  # 8: GlyphDataTableOffset=36
     '0006 0004 0002 '  # 12: LookupFormat=6, UnitSize=4, NUnits=2
     '0008 0001 0000 '  # 18: SearchRange=8, EntrySelector=1, RangeShift=0
     '0001 0000 '       # 24: Glyph=A, Offset=0 (+GlyphDataTableOffset=36)
@@ -56,9 +56,9 @@ ANKR_FORMAT_0_XML = [
 # Same data as ANKR_FORMAT_0_DATA, but with chunks of unused data
 # whose presence should not stop us from decompiling the table.
 ANKR_FORMAT_0_STRAY_DATA = deHexStr(
-    '0000 0000 '       #  0: Format=0, Flags=0
-    '0000 0018 '       #  4: LookupTableOffset=24
-    '0000 0034 '       #  8: GlyphDataTableOffset=52
+    '0000 0000 '  # 0: Format=0, Flags=0
+    '0000 0018 '  # 4: LookupTableOffset=24
+    '0000 0034 '  # 8: GlyphDataTableOffset=52
     'DEAD BEEF CAFE '  # 12: <stray data>
     'DEAD BEEF CAFE '  # 18: <stray data>
     '0006 0004 0002 '  # 24: LookupFormat=6, UnitSize=4, NUnits=2
@@ -77,9 +77,9 @@ assert len(ANKR_FORMAT_0_STRAY_DATA) == 68
 
 # Constructed test case where glyphs A and D share the same anchor data.
 ANKR_FORMAT_0_SHARING_DATA = deHexStr(
-    '0000 0000 '       #  0: Format=0, Flags=0
-    '0000 000C '       #  4: LookupTableOffset=12
-    '0000 0028 '       #  8: GlyphDataTableOffset=40
+    '0000 0000 '  # 0: Format=0, Flags=0
+    '0000 000C '  # 4: LookupTableOffset=12
+    '0000 0028 '  # 8: GlyphDataTableOffset=40
     '0006 0004 0003 '  # 12: LookupFormat=6, UnitSize=4, NUnits=3
     '0008 0001 0004 '  # 18: SearchRange=8, EntrySelector=1, RangeShift=4
     '0001 0000 '       # 24: Glyph=A, Offset=0 (+GlyphDataTableOffset=36)

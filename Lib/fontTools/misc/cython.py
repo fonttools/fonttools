@@ -10,8 +10,10 @@ We only define the symbols that we use. E.g. see fontTools.cu2qu
 
 from types import SimpleNamespace
 
+
 def _empty_decorator(x):
     return x
+
 
 compiled = False
 
@@ -22,4 +24,4 @@ for name in ("cfunc", "inline"):
     globals()[name] = _empty_decorator
 
 locals = lambda **_: _empty_decorator
-returns = lambda _: _empty_decorator
+def returns(_): return _empty_decorator

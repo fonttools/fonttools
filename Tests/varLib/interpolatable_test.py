@@ -83,7 +83,6 @@ class InterpolatableTest(unittest.TestCase):
         ttf_paths = self.get_file_list(self.tempdir, suffix)
         self.assertIsNone(interpolatable_main(ttf_paths))
 
-
     def test_interpolatable_otf(self):
         suffix = '.otf'
         ttx_dir = self.get_test_input('master_ttx_interpolatable_otf')

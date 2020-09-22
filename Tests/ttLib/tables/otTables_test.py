@@ -390,14 +390,15 @@ class RearrangementMorphActionTest(unittest.TestCase):
         r = otTables.RearrangementMorphAction()
         r.decompile(OTTableReader(deHexStr("1234fffd")),
                     self.font, actionReader=None)
-        toXML = lambda w, f: r.toXML(w, f, {"Test": "Foo"}, "Transition")
+
+        def toXML(w, f): return r.toXML(w, f, {"Test": "Foo"}, "Transition")
         self.assertEqual(getXML(toXML, self.font), [
-                '<Transition Test="Foo">',
-                '  <NewState value="4660"/>',  # 0x1234 = 4660
-                '  <Flags value="MarkFirst,DontAdvance,MarkLast"/>',
-                '  <ReservedFlags value="0x1FF0"/>',
-                '  <Verb value="13"/><!-- ABxCD ⇒ CDxBA -->',
-                '</Transition>',
+            '<Transition Test="Foo">',
+            '  <NewState value="4660"/>',  # 0x1234 = 4660
+            '  <Flags value="MarkFirst,DontAdvance,MarkLast"/>',
+            '  <ReservedFlags value="0x1FF0"/>',
+            '  <Verb value="13"/><!-- ABxCD ⇒ CDxBA -->',
+            '</Transition>',
         ])
 
 
@@ -422,15 +423,16 @@ class ContextualMorphActionTest(unittest.TestCase):
         a = otTables.ContextualMorphAction()
         a.decompile(OTTableReader(deHexStr("1234f117deadbeef")),
                     self.font, actionReader=None)
-        toXML = lambda w, f: a.toXML(w, f, {"Test": "Foo"}, "Transition")
+
+        def toXML(w, f): return a.toXML(w, f, {"Test": "Foo"}, "Transition")
         self.assertEqual(getXML(toXML, self.font), [
-                '<Transition Test="Foo">',
-                '  <NewState value="4660"/>',  # 0x1234 = 4660
-                '  <Flags value="SetMark,DontAdvance"/>',
-                '  <ReservedFlags value="0x3117"/>',
-                '  <MarkIndex value="57005"/>',  # 0xDEAD = 57005
-                '  <CurrentIndex value="48879"/>',  # 0xBEEF = 48879
-                '</Transition>',
+            '<Transition Test="Foo">',
+            '  <NewState value="4660"/>',  # 0x1234 = 4660
+            '  <Flags value="SetMark,DontAdvance"/>',
+            '  <ReservedFlags value="0x3117"/>',
+            '  <MarkIndex value="57005"/>',  # 0xDEAD = 57005
+            '  <CurrentIndex value="48879"/>',  # 0xBEEF = 48879
+            '</Transition>',
         ])
 
 
@@ -443,15 +445,16 @@ class LigatureMorphActionTest(unittest.TestCase):
         actionReader = OTTableReader(deHexStr("DEADBEEF 7FFFFFFE 80000003"))
         a.decompile(OTTableReader(deHexStr("1234FAB30001")),
                     self.font, actionReader)
-        toXML = lambda w, f: a.toXML(w, f, {"Test": "Foo"}, "Transition")
+
+        def toXML(w, f): return a.toXML(w, f, {"Test": "Foo"}, "Transition")
         self.assertEqual(getXML(toXML, self.font), [
-                '<Transition Test="Foo">',
-                '  <NewState value="4660"/>',  # 0x1234 = 4660
-                '  <Flags value="SetComponent,DontAdvance"/>',
-                '  <ReservedFlags value="0x1AB3"/>',
-                '  <Action GlyphIndexDelta="-2" Flags="Store"/>',
-                '  <Action GlyphIndexDelta="3"/>',
-                '</Transition>',
+            '<Transition Test="Foo">',
+            '  <NewState value="4660"/>',  # 0x1234 = 4660
+            '  <Flags value="SetComponent,DontAdvance"/>',
+            '  <ReservedFlags value="0x1AB3"/>',
+            '  <Action GlyphIndexDelta="-2" Flags="Store"/>',
+            '  <Action GlyphIndexDelta="3"/>',
+            '</Transition>',
         ])
 
     def testCompileActions_empty(self):
@@ -486,7 +489,7 @@ class InsertionMorphActionTest(unittest.TestCase):
         '<Transition Test="Foo">',
         '  <NewState value="4660"/>',  # 0x1234 = 4660
         '  <Flags value="SetMark,DontAdvance,CurrentIsKashidaLike,'
-              'MarkedIsKashidaLike,CurrentInsertBefore,MarkedInsertBefore"/>',
+        'MarkedIsKashidaLike,CurrentInsertBefore,MarkedInsertBefore"/>',
         '  <CurrentInsertionAction glyph="B"/>',
         '  <CurrentInsertionAction glyph="C"/>',
         '  <MarkedInsertionAction glyph="B"/>',
@@ -505,7 +508,8 @@ class InsertionMorphActionTest(unittest.TestCase):
             deHexStr("DEAD BEEF 0002 0001 0004 0002 0003 DEAD BEEF"))
         a.decompile(OTTableReader(deHexStr("1234 FC43 0005 0002")),
                     self.font, actionReader)
-        toXML = lambda w, f: a.toXML(w, f, {"Test": "Foo"}, "Transition")
+
+        def toXML(w, f): return a.toXML(w, f, {"Test": "Foo"}, "Transition")
         self.assertEqual(getXML(toXML, self.font), self.MORPH_ACTION_XML)
 
     def testCompileFromXML(self):
@@ -514,7 +518,7 @@ class InsertionMorphActionTest(unittest.TestCase):
             a.fromXML(name, attrs, content, self.font)
         writer = OTTableWriter()
         a.compile(writer, self.font,
-	          actionIndex={('B', 'C'): 9, ('B', 'A', 'D'): 7})
+                  actionIndex={('B', 'C'): 9, ('B', 'A', 'D'): 7})
         self.assertEqual(hexStr(writer.getAllData()), "1234fc4300090007")
 
     def testCompileActions_empty(self):
@@ -551,11 +555,13 @@ class SplitMultipleSubstTest:
         from fontTools.otlLib.builder import buildMultipleSubstSubtable
         from fontTools.ttLib.tables.otBase import OverflowErrorRecord
 
-        oldSubTable = buildMultipleSubstSubtable({'e': 1, 'a': 2, 'b': 3, 'c': 4, 'd': 5})
+        oldSubTable = buildMultipleSubstSubtable(
+            {'e': 1, 'a': 2, 'b': 3, 'c': 4, 'd': 5})
         oldSubTable.Format = 1
         newSubTable = otTables.MultipleSubst()
 
-        ok = otTables.splitMultipleSubst(oldSubTable, newSubTable, OverflowErrorRecord((None, None, None, itemName, itemRecord)))
+        ok = otTables.splitMultipleSubst(oldSubTable, newSubTable, OverflowErrorRecord(
+            (None, None, None, itemName, itemRecord)))
 
         assert ok
         assert oldSubTable.Format == newSubTable.Format
@@ -573,119 +579,120 @@ class SplitMultipleSubstTest:
 
     def test_Sequence(self):
         oldMapping, newMapping = self.overflow('Sequence', 4)
-        assert oldMapping == {'a': 2, 'b': 3,'c': 4}
+        assert oldMapping == {'a': 2, 'b': 3, 'c': 4}
         assert newMapping == {'d': 5, 'e': 1}
 
 
 def test_splitMarkBasePos():
-	from fontTools.otlLib.builder import buildAnchor, buildMarkBasePosSubtable
+    from fontTools.otlLib.builder import buildAnchor, buildMarkBasePosSubtable
 
-	marks = {
-		"acutecomb": (0, buildAnchor(0, 600)),
-		"gravecomb": (0, buildAnchor(0, 590)),
-		"cedillacomb": (1, buildAnchor(0, 0)),
-	}
-	bases = {
-		"a": {
-			0: buildAnchor(350, 500),
-			1: None,
-		},
-		"c": {
-			0: buildAnchor(300, 700),
-			1: buildAnchor(300, 0),
-		},
-	}
-	glyphOrder = ["a", "c", "acutecomb", "gravecomb", "cedillacomb"]
-	glyphMap = {g: i for i, g in enumerate(glyphOrder)}
+    marks = {
+        "acutecomb": (0, buildAnchor(0, 600)),
+        "gravecomb": (0, buildAnchor(0, 590)),
+        "cedillacomb": (1, buildAnchor(0, 0)),
+    }
+    bases = {
+        "a": {
+            0: buildAnchor(350, 500),
+            1: None,
+        },
+        "c": {
+            0: buildAnchor(300, 700),
+            1: buildAnchor(300, 0),
+        },
+    }
+    glyphOrder = ["a", "c", "acutecomb", "gravecomb", "cedillacomb"]
+    glyphMap = {g: i for i, g in enumerate(glyphOrder)}
 
-	oldSubTable = buildMarkBasePosSubtable(marks, bases, glyphMap)
-	oldSubTable.MarkCoverage.Format = oldSubTable.BaseCoverage.Format = 1
-	newSubTable = otTables.MarkBasePos()
+    oldSubTable = buildMarkBasePosSubtable(marks, bases, glyphMap)
+    oldSubTable.MarkCoverage.Format = oldSubTable.BaseCoverage.Format = 1
+    newSubTable = otTables.MarkBasePos()
 
-	ok = otTables.splitMarkBasePos(oldSubTable, newSubTable, overflowRecord=None)
+    ok = otTables.splitMarkBasePos(
+        oldSubTable, newSubTable, overflowRecord=None)
 
-	assert ok
+    assert ok
 
-	assert getXML(oldSubTable.toXML) == [
-		'<MarkBasePos Format="1">',
-		'  <MarkCoverage Format="1">',
-		'    <Glyph value="acutecomb"/>',
-		'    <Glyph value="gravecomb"/>',
-		'  </MarkCoverage>',
-		'  <BaseCoverage Format="1">',
-		'    <Glyph value="a"/>',
-		'    <Glyph value="c"/>',
-		'  </BaseCoverage>',
-		'  <!-- ClassCount=1 -->',
-		'  <MarkArray>',
-		'    <!-- MarkCount=2 -->',
-		'    <MarkRecord index="0">',
-		'      <Class value="0"/>',
-		'      <MarkAnchor Format="1">',
-		'        <XCoordinate value="0"/>',
-		'        <YCoordinate value="600"/>',
-		'      </MarkAnchor>',
-		'    </MarkRecord>',
-		'    <MarkRecord index="1">',
-		'      <Class value="0"/>',
-		'      <MarkAnchor Format="1">',
-		'        <XCoordinate value="0"/>',
-		'        <YCoordinate value="590"/>',
-		'      </MarkAnchor>',
-		'    </MarkRecord>',
-		'  </MarkArray>',
-		'  <BaseArray>',
-		'    <!-- BaseCount=2 -->',
-		'    <BaseRecord index="0">',
-		'      <BaseAnchor index="0" Format="1">',
-		'        <XCoordinate value="350"/>',
-		'        <YCoordinate value="500"/>',
-		'      </BaseAnchor>',
-		'    </BaseRecord>',
-		'    <BaseRecord index="1">',
-		'      <BaseAnchor index="0" Format="1">',
-		'        <XCoordinate value="300"/>',
-		'        <YCoordinate value="700"/>',
-		'      </BaseAnchor>',
-		'    </BaseRecord>',
-		'  </BaseArray>',
-		'</MarkBasePos>',
-	]
+    assert getXML(oldSubTable.toXML) == [
+        '<MarkBasePos Format="1">',
+        '  <MarkCoverage Format="1">',
+        '    <Glyph value="acutecomb"/>',
+        '    <Glyph value="gravecomb"/>',
+        '  </MarkCoverage>',
+        '  <BaseCoverage Format="1">',
+        '    <Glyph value="a"/>',
+        '    <Glyph value="c"/>',
+        '  </BaseCoverage>',
+        '  <!-- ClassCount=1 -->',
+        '  <MarkArray>',
+        '    <!-- MarkCount=2 -->',
+        '    <MarkRecord index="0">',
+        '      <Class value="0"/>',
+        '      <MarkAnchor Format="1">',
+        '        <XCoordinate value="0"/>',
+        '        <YCoordinate value="600"/>',
+        '      </MarkAnchor>',
+        '    </MarkRecord>',
+        '    <MarkRecord index="1">',
+        '      <Class value="0"/>',
+        '      <MarkAnchor Format="1">',
+        '        <XCoordinate value="0"/>',
+        '        <YCoordinate value="590"/>',
+        '      </MarkAnchor>',
+        '    </MarkRecord>',
+        '  </MarkArray>',
+        '  <BaseArray>',
+        '    <!-- BaseCount=2 -->',
+        '    <BaseRecord index="0">',
+        '      <BaseAnchor index="0" Format="1">',
+        '        <XCoordinate value="350"/>',
+        '        <YCoordinate value="500"/>',
+        '      </BaseAnchor>',
+        '    </BaseRecord>',
+        '    <BaseRecord index="1">',
+        '      <BaseAnchor index="0" Format="1">',
+        '        <XCoordinate value="300"/>',
+        '        <YCoordinate value="700"/>',
+        '      </BaseAnchor>',
+        '    </BaseRecord>',
+        '  </BaseArray>',
+        '</MarkBasePos>',
+    ]
 
-	assert getXML(newSubTable.toXML) == [
-		'<MarkBasePos Format="1">',
-		'  <MarkCoverage Format="1">',
-		'    <Glyph value="cedillacomb"/>',
-		'  </MarkCoverage>',
-		'  <BaseCoverage Format="1">',
-		'    <Glyph value="a"/>',
-		'    <Glyph value="c"/>',
-		'  </BaseCoverage>',
-		'  <!-- ClassCount=1 -->',
-		'  <MarkArray>',
-		'    <!-- MarkCount=1 -->',
-		'    <MarkRecord index="0">',
-		'      <Class value="0"/>',
-		'      <MarkAnchor Format="1">',
-		'        <XCoordinate value="0"/>',
-		'        <YCoordinate value="0"/>',
-		'      </MarkAnchor>',
-		'    </MarkRecord>',
-		'  </MarkArray>',
-		'  <BaseArray>',
-		'    <!-- BaseCount=2 -->',
-		'    <BaseRecord index="0">',
-		'      <BaseAnchor index="0" empty="1"/>',
-		'    </BaseRecord>',
-		'    <BaseRecord index="1">',
-		'      <BaseAnchor index="0" Format="1">',
-		'        <XCoordinate value="300"/>',
-		'        <YCoordinate value="0"/>',
-		'      </BaseAnchor>',
-		'    </BaseRecord>',
-		'  </BaseArray>',
-		'</MarkBasePos>',
-	]
+    assert getXML(newSubTable.toXML) == [
+        '<MarkBasePos Format="1">',
+        '  <MarkCoverage Format="1">',
+        '    <Glyph value="cedillacomb"/>',
+        '  </MarkCoverage>',
+        '  <BaseCoverage Format="1">',
+        '    <Glyph value="a"/>',
+        '    <Glyph value="c"/>',
+        '  </BaseCoverage>',
+        '  <!-- ClassCount=1 -->',
+        '  <MarkArray>',
+        '    <!-- MarkCount=1 -->',
+        '    <MarkRecord index="0">',
+        '      <Class value="0"/>',
+        '      <MarkAnchor Format="1">',
+        '        <XCoordinate value="0"/>',
+        '        <YCoordinate value="0"/>',
+        '      </MarkAnchor>',
+        '    </MarkRecord>',
+        '  </MarkArray>',
+        '  <BaseArray>',
+        '    <!-- BaseCount=2 -->',
+        '    <BaseRecord index="0">',
+        '      <BaseAnchor index="0" empty="1"/>',
+        '    </BaseRecord>',
+        '    <BaseRecord index="1">',
+        '      <BaseAnchor index="0" Format="1">',
+        '        <XCoordinate value="300"/>',
+        '        <YCoordinate value="0"/>',
+        '      </BaseAnchor>',
+        '    </BaseRecord>',
+        '  </BaseArray>',
+        '</MarkBasePos>',
+    ]
 
 
 if __name__ == "__main__":

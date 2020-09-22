@@ -40,7 +40,8 @@ def maxCtxSubtable(maxCtx, tag, lookupType, st):
 
     # context
     elif (tag == "GPOS" and lookupType == 7) or (tag == "GSUB" and lookupType == 5):
-        maxCtx = maxCtxContextualSubtable(maxCtx, st, "Pos" if tag == "GPOS" else "Sub")
+        maxCtx = maxCtxContextualSubtable(
+            maxCtx, st, "Pos" if tag == "GPOS" else "Sub")
 
     # chained context
     elif (tag == "GPOS" and lookupType == 8) or (tag == "GSUB" and lookupType == 6):
@@ -50,7 +51,8 @@ def maxCtxSubtable(maxCtx, tag, lookupType, st):
 
     # extensions
     elif (tag == "GPOS" and lookupType == 9) or (tag == "GSUB" and lookupType == 7):
-        maxCtx = maxCtxSubtable(maxCtx, tag, st.ExtensionLookupType, st.ExtSubTable)
+        maxCtx = maxCtxSubtable(
+            maxCtx, tag, st.ExtensionLookupType, st.ExtSubTable)
 
     # reverse-chained context
     elif tag == "GSUB" and lookupType == 8:

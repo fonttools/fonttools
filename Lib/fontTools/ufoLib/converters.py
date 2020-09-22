@@ -3,12 +3,12 @@ Conversion functions.
 """
 
 
-
 # adapted from the UFO spec
 
 def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups, glyphSet=()):
     # gather known kerning groups based on the prefixes
-    firstReferencedGroups, secondReferencedGroups = findKnownKerningGroups(groups)
+    firstReferencedGroups, secondReferencedGroups = findKnownKerningGroups(
+        groups)
     # Make lists of groups referenced in kerning pairs.
     for first, seconds in list(kerning.items()):
         if first in groups and first not in glyphSet:
@@ -22,7 +22,8 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups, glyphSet=()):
     firstRenamedGroups = {}
     for first in firstReferencedGroups:
         # Make a list of existing group names.
-        existingGroupNames = list(groups.keys()) + list(firstRenamedGroups.keys())
+        existingGroupNames = list(groups.keys()) + \
+            list(firstRenamedGroups.keys())
         # Remove the old prefix from the name
         newName = first.replace("@MMK_L_", "")
         # Add the new prefix to the name.
@@ -34,7 +35,8 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups, glyphSet=()):
     secondRenamedGroups = {}
     for second in secondReferencedGroups:
         # Make a list of existing group names.
-        existingGroupNames = list(groups.keys()) + list(secondRenamedGroups.keys())
+        existingGroupNames = list(groups.keys()) + \
+            list(secondRenamedGroups.keys())
         # Remove the old prefix from the name
         newName = second.replace("@MMK_R_", "")
         # Add the new prefix to the name.
@@ -61,6 +63,7 @@ def convertUFO1OrUFO2KerningToUFO3Kerning(kerning, groups, glyphSet=()):
         groups[newName] = group
     # Return the kerning and the groups.
     return newKerning, groups, dict(side1=firstRenamedGroups, side2=secondRenamedGroups)
+
 
 def findKnownKerningGroups(groups):
     """
@@ -123,6 +126,7 @@ def makeUniqueGroupName(name, groupNames, counter=0):
         return makeUniqueGroupName(name, groupNames, counter + 1)
     # Otherwise send back the new name.
     return newName
+
 
 def test():
     """
@@ -329,6 +333,7 @@ def test():
     >>> groups == expected
     True
     """
+
 
 if __name__ == "__main__":
     import doctest

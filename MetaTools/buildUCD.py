@@ -233,6 +233,7 @@ def build_ranges(filename, local_ucd=None, output_path=None,
 
 _normalize_re = re.compile(r"[-_ ]+")
 
+
 def normalize(string):
     """Remove case, strip space, '-' and '_' for loose matching."""
     return _normalize_re.sub("", string).lower()

@@ -149,7 +149,7 @@ class ParserTest(unittest.TestCase):
 
     def test_def_group_groups_not_yet_defined(self):
         [group1, test_group1, test_group2, test_group3, group2] = \
-        self.parse(
+            self.parse(
             'DEF_GROUP "Group1"\n'
             ' ENUM GLYPH "a" GLYPH "b" GLYPH "c" GLYPH "d" END_ENUM\n'
             'END_GROUP\n'
@@ -600,7 +600,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(context.left[0][0].enum[1].glyph, "fraction")
         self.assertEqual(context.right, [])
         self.assertSubEqual(lookup.sub, [["one"], ["two"]],
-                [["one.dnom"], ["two.dnom"]])
+                            [["one.dnom"], ["two.dnom"]])
 
     def test_substitution_single_in_contexts(self):
         [group, lookup] = self.parse(
@@ -879,7 +879,7 @@ class ParserTest(unittest.TestCase):
         ).statements
         self.assertEqual(lookup.name, "ccmp")
         self.assertSubEqual(lookup.sub, [["aacute"], ["agrave"]],
-                [["a", "acutecomb"], ["a", "gravecomb"]])
+                            [["a", "acutecomb"], ["a", "gravecomb"]])
 
     def test_substitution_multiple_to_single(self):
         [lookup] = self.parse(
@@ -898,7 +898,7 @@ class ParserTest(unittest.TestCase):
         ).statements
         self.assertEqual(lookup.name, "liga")
         self.assertSubEqual(lookup.sub, [["f", "i"], ["f", "t"]],
-                [["f_i"], ["f_t"]])
+                            [["f_i"], ["f_t"]])
 
     def test_substitution_reverse_chaining_single(self):
         [lookup] = self.parse(
@@ -931,7 +931,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(len(enum.enum), 2)
         self.assertEqual(enum.enum[0].glyph, "fraction")
         self.assertEqual((enum.enum[1].start, enum.enum[1].end),
-                ('zero.numr', 'nine.numr'))
+                         ('zero.numr', 'nine.numr'))
 
     # GPOS
     #  ATTACH_CURSIVE
@@ -985,13 +985,13 @@ class ParserTest(unittest.TestCase):
             (anchor1.name, anchor1.gid, anchor1.glyph_name, anchor1.component,
              anchor1.locked, anchor1.pos),
             ("MARK_top", 120, "acutecomb", 1, False, (None, 0, 450, {}, {},
-             {}))
+                                                      {}))
         )
         self.assertEqual(
             (anchor2.name, anchor2.gid, anchor2.glyph_name, anchor2.component,
              anchor2.locked, anchor2.pos),
             ("MARK_top", 121, "gravecomb", 1, False, (None, 0, 450, {}, {},
-             {}))
+                                                      {}))
         )
         self.assertEqual(
             (anchor3.name, anchor3.gid, anchor3.glyph_name, anchor3.component,
@@ -1220,7 +1220,7 @@ class ParserTest(unittest.TestCase):
                           def_glyph.type, def_glyph.components),
                          (".notdef", 0, None, "BASE", None))
         self.assertEqual(str(doc),
-            '\nDEF_GLYPH ".notdef" ID 0 TYPE BASE END_GLYPH END\n')
+                         '\nDEF_GLYPH ".notdef" ID 0 TYPE BASE END_GLYPH END\n')
 
     def parse_(self, text):
         return Parser(UnicodeIO(text)).parse()
@@ -1229,6 +1229,7 @@ class ParserTest(unittest.TestCase):
         doc = self.parse_(text)
         self.assertEqual('\n'.join(str(s) for s in doc.statements), text)
         return Parser(UnicodeIO(text)).parse()
+
 
 if __name__ == "__main__":
     import sys

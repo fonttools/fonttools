@@ -9,14 +9,14 @@ import unittest
 # On macOS X 10.12.6, the first font in /System/Library/Fonts/PingFang.ttc
 # has a ‘cidg’ table with a similar structure as this test data, just larger.
 CIDG_DATA = deHexStr(
-    "0000 0000 "          #   0: Format=0, Flags=0
-    "0000 0098 "          #   4: StructLength=152
-    "0000 "               #   8: Registry=0
-    "41 64 6F 62 65 "     #  10: RegistryName="Adobe"
-    + ("00" * 59) +       #  15: <padding>
-    "0002 "               #  74: Order=2
-    "43 4E 53 31 "        #  76: Order="CNS1"
-    + ("00" * 60) +       #  80: <padding>
+    "0000 0000 "  # 0: Format=0, Flags=0
+    "0000 0098 "  # 4: StructLength=152
+    "0000 "  # 8: Registry=0
+    "41 64 6F 62 65 "  # 10: RegistryName="Adobe"
+    + ("00" * 59) +  # 15: <padding>
+    "0002 "  # 74: Order=2
+    "43 4E 53 31 "  # 76: Order="CNS1"
+    + ("00" * 60) +  # 80: <padding>
     "0000 "               # 140: SupplementVersion=0
     "0004 "               # 142: Count
     "0000 "               # 144: GlyphID[0]=.notdef
@@ -28,20 +28,20 @@ assert len(CIDG_DATA) == 152, len(CIDG_DATA)
 
 
 CIDG_XML = [
-   '<CIDGlyphMapping Format="0">',
-   '  <DataFormat value="0"/>',
-   '  <!-- StructLength=152 -->',
-   '  <Registry value="0"/>',
-   '  <RegistryName value="Adobe"/>',
-   '  <Order value="2"/>',
-   '  <OrderName value="CNS1"/>',
-   '  <SupplementVersion value="0"/>',
-   '  <Mapping>',
-   '    <CID cid="0" glyph=".notdef"/>',
-   '    <CID cid="2" glyph="C"/>',
-   '    <CID cid="3" glyph="A"/>',
-   '  </Mapping>',
-   '</CIDGlyphMapping>',
+    '<CIDGlyphMapping Format="0">',
+    '  <DataFormat value="0"/>',
+    '  <!-- StructLength=152 -->',
+    '  <Registry value="0"/>',
+    '  <RegistryName value="Adobe"/>',
+    '  <Order value="2"/>',
+    '  <OrderName value="CNS1"/>',
+    '  <SupplementVersion value="0"/>',
+    '  <Mapping>',
+    '    <CID cid="0" glyph=".notdef"/>',
+    '    <CID cid="2" glyph="C"/>',
+    '    <CID cid="3" glyph="A"/>',
+    '  </Mapping>',
+    '</CIDGlyphMapping>',
 ]
 
 

@@ -21,6 +21,7 @@ def t2c_round(number, tolerance=0.5):
         # else return the value un-rounded
         return number
 
+
 def makeRoundFunc(tolerance):
     if tolerance < 0:
         raise ValueError("Rounding tolerance must be positive")
@@ -49,7 +50,7 @@ class T2CharStringPen(BasePen):
         self._CFF2 = CFF2
         self._width = width
         self._commands = []
-        self._p0 = (0,0)
+        self._p0 = (0, 0)
 
     def _p(self, pt):
         p0 = self._p0

@@ -11,6 +11,7 @@ Sill_hdr = '''
     version:    16.16F
 '''
 
+
 class table_S__i_l_l(DefaultTable.DefaultTable):
 
     def __init__(self, tag=None):
@@ -26,7 +27,7 @@ class table_S__i_l_l(DefaultTable.DefaultTable):
         langinfo = []
         for i in range(numLangs):
             (langcode, numsettings, offset) = struct.unpack(">4sHH",
-                                                        data[i * 8:(i+1) * 8])
+                                                            data[i * 8:(i+1) * 8])
             offset = int(offset / 8) - (numLangs + 1)
             langcode = langcode.replace(b'\000', b'')
             langinfo.append((langcode.decode("utf-8"), numsettings, offset))
@@ -47,13 +48,14 @@ class table_S__i_l_l(DefaultTable.DefaultTable):
         fdat = b""
         offset = len(self.langs)
         for c, inf in sorted(self.langs.items()):
-            ldat += struct.pack(">4sHH", c.encode('utf8'), len(inf), 8 * offset + 20)
+            ldat += struct.pack(">4sHH", c.encode('utf8'),
+                                len(inf), 8 * offset + 20)
             for fid, val in inf:
                 fdat += struct.pack(">LHH", fid, val, 0)
             offset += len(inf)
         ldat += struct.pack(">LHH", 0x80808080, 0, 8 * offset + 20)
         return sstruct.pack(Sill_hdr, self) + grUtils.bininfo(len(self.langs)) + \
-                ldat + fdat
+            ldat + fdat
 
     def toXML(self, writer, ttFont):
         writer.simpletag('version', version=self.version)
@@ -74,8 +76,9 @@ class table_S__i_l_l(DefaultTable.DefaultTable):
             c = attrs['name']
             self.langs[c] = []
             for element in content:
-                if not isinstance(element, tuple): continue
+                if not isinstance(element, tuple):
+                    continue
                 tag, a, subcontent = element
                 if tag == 'feature':
                     self.langs[c].append((grUtils.tag2num(a['fid']),
-                                            int(safeEval(a['val']))))
+                                          int(safeEval(a['val']))))

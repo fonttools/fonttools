@@ -8,9 +8,9 @@ import unittest
 # Apple's spec of the baseline table gives no example for 'bsln' format 0,
 # but the Apple Chancery font contains the following data.
 BSLN_FORMAT_0_DATA = deHexStr(
-    '0001 0000 0000 '       #  0: Version=1.0, Format=0
-    '0000 '                 #  6: DefaultBaseline=0 (Roman baseline)
-    '0000 01D1 0000 0541 '  #  8: Delta[0..3]=0, 465, 0, 1345
+    '0001 0000 0000 '  # 0: Version=1.0, Format=0
+    '0000 '  # 6: DefaultBaseline=0 (Roman baseline)
+    '0000 01D1 0000 0541 '  # 8: Delta[0..3]=0, 465, 0, 1345
     '01FB 0000 0000 0000 '  # 16: Delta[4..7]=507, 0, 0, 0
     '0000 0000 0000 0000 '  # 24: Delta[8..11]=0, 0, 0, 0
     '0000 0000 0000 0000 '  # 32: Delta[12..15]=0, 0, 0, 0
@@ -67,9 +67,9 @@ BSLN_FORMAT_0_XML = [
 # The example in the AAT specification uses the value 270 for Seg[0].LastGlyph,
 # whereas we use the value 10 for testng to shorten the XML dump.
 BSLN_FORMAT_1_DATA = deHexStr(
-    '0001 0000 0001 '       #  0: Version=1.0, Format=1
-    '0001 '                 #  6: DefaultBaseline=1 (Ideographic baseline)
-    '0000 0357 0000 05F0 '  #  8: Delta[0..3]=0, 855, 0, 1520
+    '0001 0000 0001 '  # 0: Version=1.0, Format=1
+    '0001 '  # 6: DefaultBaseline=1 (Ideographic baseline)
+    '0000 0357 0000 05F0 '  # 8: Delta[0..3]=0, 855, 0, 1520
     '0000 0000 0000 0000 '  # 16: Delta[4..7]=0, 0, 0, 0
     '0000 0000 0000 0000 '  # 24: Delta[8..11]=0, 0, 0, 0
     '0000 0000 0000 0000 '  # 32: Delta[12..15]=0, 0, 0, 0
@@ -137,9 +137,9 @@ BSLN_FORMAT_1_XML = [
 
 
 BSLN_FORMAT_2_DATA = deHexStr(
-    '0001 0000 0002 '       #  0: Version=1.0, Format=2
-    '0004 '                 #  6: DefaultBaseline=4 (Math)
-    '0016 '                 #  8: StandardGlyph=22
+    '0001 0000 0002 '  # 0: Version=1.0, Format=2
+    '0004 '  # 6: DefaultBaseline=4 (Math)
+    '0016 '  # 8: StandardGlyph=22
     '0050 0051 FFFF 0052 '  # 10: ControlPoint[0..3]=80, 81, <none>, 82
     'FFFF FFFF FFFF FFFF '  # 18: ControlPoint[4..7]=<none>
     'FFFF FFFF FFFF FFFF '  # 26: ControlPoint[8..11]=<none>
@@ -198,9 +198,9 @@ BSLN_FORMAT_2_XML = [
 # The example in the AAT specification uses the value 270 for Seg[0].LastGlyph,
 # whereas we use the value 10 for testng to shorten the XML dump.
 BSLN_FORMAT_3_DATA = deHexStr(
-    '0001 0000 0003 '       #  0: Version=1.0, Format=3
-    '0001 '                 #  6: DefaultBaseline=1 (Ideographic)
-    '0016 '                 #  8: StandardGlyph=22
+    '0001 0000 0003 '  # 0: Version=1.0, Format=3
+    '0001 '  # 6: DefaultBaseline=1 (Ideographic)
+    '0016 '  # 8: StandardGlyph=22
     '0050 0051 FFFF 0052 '  # 10: ControlPoint[0..3]=80, 81, <none>, 82
     'FFFF FFFF FFFF FFFF '  # 18: ControlPoint[4..7]=<none>
     'FFFF FFFF FFFF FFFF '  # 26: ControlPoint[8..11]=<none>

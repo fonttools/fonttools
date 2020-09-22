@@ -57,11 +57,16 @@ class RecordingPointPenTest:
 
         assert pen.value == [
             ("beginPath", (), {"identifier": "abc"}),
-            ("addPoint", ((0.0, 0.0), "line", False, "start"), {"identifier": "0000"}),
-            ("addPoint", ((0.0, 100.0), "line", False, None), {"identifier": "0001"}),
-            ("addPoint", ((50.0, 75.0), None, False, None), {"identifier": "0002"}),
-            ("addPoint", ((60.0, 50.0), None, False, None), {"identifier": "0003"}),
-            ("addPoint", ((50.0, 0.0), "curve", True, "last"), {"identifier": "0004"}),
+            ("addPoint", ((0.0, 0.0), "line", False,
+                          "start"), {"identifier": "0000"}),
+            ("addPoint", ((0.0, 100.0), "line",
+                          False, None), {"identifier": "0001"}),
+            ("addPoint", ((50.0, 75.0), None, False, None),
+             {"identifier": "0002"}),
+            ("addPoint", ((60.0, 50.0), None, False, None),
+             {"identifier": "0003"}),
+            ("addPoint", ((50.0, 0.0), "curve",
+                          True, "last"), {"identifier": "0004"}),
             ("endPath", (), {}),
             ("addComponent", ("a", (2, 0, 0, 2, -10, 5)), {}),
         ]
