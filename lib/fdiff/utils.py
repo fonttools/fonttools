@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-
 from datetime import datetime, timezone
 from typing import List, Optional, Text, Union
 

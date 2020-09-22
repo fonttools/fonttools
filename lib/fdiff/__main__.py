@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
+import argparse
 import os
 import sys
-import argparse
-from typing import Iterator, Iterable, List, Optional, Text, Tuple
+from typing import Iterable, Iterator, List, Optional, Text, Tuple
 
 from . import __version__
 from .color import color_unified_diff_line

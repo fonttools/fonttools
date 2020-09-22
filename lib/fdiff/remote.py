@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
+import asyncio
 import os.path
 import urllib.parse
-
 # from collections import namedtuple
 from typing import Any, AnyStr, List, NamedTuple, Optional, Text, Tuple
 
 import aiohttp  # type: ignore
-import asyncio
 
 from .aio import async_write_bin
 
