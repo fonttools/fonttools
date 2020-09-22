@@ -7,16 +7,17 @@ from multiprocessing import Pool, cpu_count
 import shlex
 import subprocess
 import tempfile
+from typing import Any, Iterator, Iterable, List, Optional, Text, Tuple
 
-from fontTools.ttLib import TTFont
+from fontTools.ttLib import TTFont  # type: ignore
 
-from fdiff.exceptions import AIOError
-from fdiff.remote import (
+from .exceptions import AIOError
+from .remote import (
     _get_filepath_from_url,
     create_async_get_request_session_and_run,
 )
 
-from fdiff.utils import get_file_modtime
+from .utils import get_file_modtime
 
 
 #
@@ -26,7 +27,7 @@ from fdiff.utils import get_file_modtime
 #
 
 
-def _async_fetch_files(dirpath, urls):
+def _async_fetch_files(dirpath: Text, urls: List[Text]) -> None:
     loop = asyncio.get_event_loop()
     tasks = loop.run_until_complete(
         create_async_get_request_session_and_run(urls, dirpath)
@@ -45,8 +46,13 @@ def _async_fetch_files(dirpath, urls):
 
 
 def _get_fonts_and_save_xml(
-    filepath_a, filepath_b, tmpdirpath, include_tables, exclude_tables, use_multiprocess
-):
+    filepath_a: Text,
+    filepath_b: Text,
+    tmpdirpath: Text,
+    include_tables: Optional[List[Text]],
+    exclude_tables: Optional[List[Text]],
+    use_multiprocess: bool,
+) -> Tuple[Text, Text, Text, Text, Text, Text]:
     post_pathname, postpath, pre_pathname, prepath = _get_pre_post_paths(
         filepath_a, filepath_b, tmpdirpath
     )
@@ -69,8 +75,12 @@ def _get_fonts_and_save_xml(
     return left_ttxpath, right_ttxpath, pre_pathname, prepath, post_pathname, postpath
 
 
-def _get_pre_post_paths(filepath_a, filepath_b, dirpath):
-    urls = []
+def _get_pre_post_paths(
+    filepath_a: Text,
+    filepath_b: Text,
+    dirpath: Text,
+) -> Tuple[Text, Text, Text, Text]:
+    urls: List[Text] = []
     if filepath_a.startswith("http"):
         urls.append(filepath_a)
         prepath = _get_filepath_from_url(filepath_a, dirpath)
@@ -94,14 +104,14 @@ def _get_pre_post_paths(filepath_a, filepath_b, dirpath):
 
 
 def _mp_save_ttx_xml(
-    tt_left,
-    tt_right,
-    left_ttxpath,
-    right_ttxpath,
-    exclude_tables,
-    include_tables,
-    use_multiprocess,
-):
+    tt_left: Any,
+    tt_right: Any,
+    left_ttxpath: Text,
+    right_ttxpath: Text,
+    exclude_tables: Optional[List[Text]],
+    include_tables: Optional[List[Text]],
+    use_multiprocess: bool,
+) -> None:
     if use_multiprocess and cpu_count() > 1:
         # Use parallel fontTools.ttLib.TTFont.saveXML dump
         # by default on multi CPU systems.  This is a performance
@@ -121,13 +131,20 @@ def _mp_save_ttx_xml(
         _ttfont_save_xml(tt_right, right_ttxpath, include_tables, exclude_tables)
 
 
-def _ttfont_save_xml(ttf, filepath, include_tables, exclude_tables):
+def _ttfont_save_xml(
+    ttf: Any,
+    filepath: Text,
+    include_tables: Optional[List[Text]],
+    exclude_tables: Optional[List[Text]],
+) -> bool:
     """Writes TTX specification formatted XML to disk on filepath."""
     ttf.saveXML(filepath, tables=include_tables, skipTables=exclude_tables)
     return True
 
 
-def _validate_table_excludes(exclude_tables, tt_left, tt_right):
+def _validate_table_excludes(
+    exclude_tables: Optional[List[Text]], tt_left: Any, tt_right: Any
+) -> None:
     # Validation: exclude_tables request should be for tables that are in one of
     # the two fonts.  Mis-specified OT table definitions could otherwise result
     # in the presence of a table in the diff when the request was to exclude it.
@@ -140,7 +157,9 @@ def _validate_table_excludes(exclude_tables, tt_left, tt_right):
                 )
 
 
-def _validate_table_includes(include_tables, tt_left, tt_right):
+def _validate_table_includes(
+    include_tables: Optional[List[Text]], tt_left: Any, tt_right: Any
+) -> None:
     # Validation: include_tables request should be for tables that are in one of
     # the two fonts. This otherwise silently passes with exit status code 0 which
     # could lead to the interpretation of no diff between two files when the table
@@ -164,13 +183,13 @@ def _validate_table_includes(include_tables, tt_left, tt_right):
 
 
 def u_diff(
-    filepath_a,
-    filepath_b,
-    context_lines=3,
-    include_tables=None,
-    exclude_tables=None,
-    use_multiprocess=True,
-):
+    filepath_a: Text,
+    filepath_b: Text,
+    context_lines: int = 3,
+    include_tables: Optional[List[Text]] = None,
+    exclude_tables: Optional[List[Text]] = None,
+    use_multiprocess: bool = True,
+) -> Iterator[Text]:
     """Performs a unified diff on a TTX serialized data format dump of font binary data using
     a modified version of the Python standard libary difflib module.
 
@@ -230,13 +249,13 @@ def u_diff(
 
 
 def external_diff(
-    command,
-    filepath_a,
-    filepath_b,
-    include_tables=None,
-    exclude_tables=None,
-    use_multiprocess=True,
-):
+    command: Text,
+    filepath_a: Text,
+    filepath_b: Text,
+    include_tables: Optional[List[Text]] = None,
+    exclude_tables: Optional[List[Text]] = None,
+    use_multiprocess: bool = True,
+) -> Iterable[Tuple[Text, Optional[int]]]:
     """Performs a unified diff on a TTX serialized data format dump of font binary data using
     an external diff executable that is requested by the caller via `command`
 
@@ -285,10 +304,10 @@ def external_diff(
         )
 
         while True:
-            output = process.stdout.readline()
+            output = process.stdout.readline()  # type: ignore
             exit_status = process.poll()
             if len(output) == 0 and exit_status is not None:
-                err = process.stderr.read()
+                err = process.stderr.read()  # type: ignore
                 if err:
                     raise IOError(err)
                 yield output, exit_status
