@@ -275,9 +275,6 @@ def ttDump(input, output, options):
 @Timer(log, 'Done compiling TTX in %(time).3f seconds')
 def ttCompile(input, output, options):
 	log.info('Compiling "%s" to "%s"...' % (input, output))
-	if options.useZopfli:
-		from fontTools.ttLib import sfnt
-		sfnt.USE_ZOPFLI = True
 	ttf = TTFont(options.mergeFile, flavor=options.flavor,
 			recalcBBoxes=options.recalcBBoxes,
 			recalcTimestamp=options.recalcTimestamp,
@@ -289,7 +286,7 @@ def ttCompile(input, output, options):
 		mtime = os.path.getmtime(input)
 		ttf['head'].modified = timestampSinceEpoch(mtime)
 
-	ttf.save(output)
+	ttf.save(output, use_zopfli=options.useZopfli)
 
 
 def guessFileType(fileName):
