@@ -157,7 +157,7 @@ ZLIB_COMPRESSION_LEVEL = 6
 # The Python bindings are available at https://pypi.python.org/pypi/zopfli
 # Note: this global variable is deprecated, please use the `use_zopfli`
 # parameter instead
-USE_ZOPFLI = None
+USE_ZOPFLI = False
 
 # mapping between zlib's compression levels and zopfli's 'numiterations'.
 # Use lower values for files over several MB in size or it will be too slow
