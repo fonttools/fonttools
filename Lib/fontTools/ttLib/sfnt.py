@@ -181,8 +181,14 @@ def compress(data, use_zopfli=False, level=ZLIB_COMPRESSION_LEVEL):
 		from zlib import compress
 		return compress(data, level)
 	else:
-		from zopfli.zlib import compress
-		return compress(data, numiterations=ZOPFLI_LEVELS[level])
+		try:
+			from zopfli.zlib import compress
+			return compress(data, numiterations=ZOPFLI_LEVELS[level])
+		except ImportError:
+			raise ImportError(
+				"zopfli package not found. Please install the zopfli package"
+				"before you use zopfli compression."
+			)
 
 
 class SFNTWriter(object):
