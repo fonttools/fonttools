@@ -14,6 +14,7 @@ a table's length chages you need to rewrite the whole file anyway.
 
 from io import BytesIO
 from types import SimpleNamespace
+import warnings
 from fontTools.misc.py23 import Tag
 from fontTools.misc import sstruct
 from fontTools.ttLib import TTLibError
@@ -152,6 +153,12 @@ class SFNTReader(object):
 # default compression level for WOFF 1.0 tables and metadata
 ZLIB_COMPRESSION_LEVEL = 6
 
+# if set to True, use zopfli instead of zlib for compressing WOFF 1.0.
+# The Python bindings are available at https://pypi.python.org/pypi/zopfli
+# Note: this global variable is deprecated, please use the `use_zopfli`
+# parameter instead
+USE_ZOPFLI = None
+
 # mapping between zlib's compression levels and zopfli's 'numiterations'.
 # Use lower values for files over several MB in size or it will be too slow
 ZOPFLI_LEVELS = {
@@ -168,7 +175,7 @@ ZOPFLI_LEVELS = {
 }
 
 
-def compress(data, use_zopfli=False, level=ZLIB_COMPRESSION_LEVEL):
+def compress(data, level=ZLIB_COMPRESSION_LEVEL, use_zopfli=False):
 	""" Compress 'data' to Zlib format. If 'use_zopfli' argument is True,
 	zopfli is used instead of the zlib module.
 	The compression 'level' must be between 0 and 9. 1 gives best speed,
@@ -177,10 +184,15 @@ def compress(data, use_zopfli=False, level=ZLIB_COMPRESSION_LEVEL):
 	"""
 	if not (0 <= level <= 9):
 		raise ValueError('Bad compression level: %s' % level)
-	if not use_zopfli or level == 0:
-		from zlib import compress
-		return compress(data, level)
-	else:
+	if (use_zopfli or USE_ZOPFLI) and level > 0:
+		if USE_ZOPFLI:
+			# user explicitly set a deprecated global variable
+			# provide deprecation warning and respect this request
+			warnings.warn(
+				"'USE_ZOPFLI' is a deprecated global variable, please convert to "
+				"the 'use_zopfli' parameter",
+				DeprecationWarning
+			)
 		try:
 			from zopfli.zlib import compress
 			return compress(data, numiterations=ZOPFLI_LEVELS[level])
@@ -189,6 +201,9 @@ def compress(data, use_zopfli=False, level=ZLIB_COMPRESSION_LEVEL):
 				"zopfli package not found. Please install the zopfli package"
 				"before you use zopfli compression."
 			)
+	else:
+		from zlib import compress
+		return compress(data, level)
 
 
 class SFNTWriter(object):
@@ -316,7 +331,7 @@ class SFNTWriter(object):
 				self.metaOrigLength = len(data.metaData)
 				self.file.seek(0,2)
 				self.metaOffset = self.file.tell()
-				compressedMetaData = compress(data.metaData, self.use_zopfli, self.compression_level)
+				compressedMetaData = compress(data.metaData, level=self.compression_level, use_zopfli=self.use_zopfli)
 				self.metaLength = len(compressedMetaData)
 				self.file.write(compressedMetaData)
 			else:
@@ -535,7 +550,7 @@ class WOFFDirectoryEntry(DirectoryEntry):
 	def encodeData(self, data):
 		self.origLength = len(data)
 		if not self.uncompressed:
-			compressedData = compress(data, use_zopfli=self.use_zopfli, level=self.zlibCompressionLevel)
+			compressedData = compress(data, level=self.zlibCompressionLevel, use_zopfli=self.use_zopfli)
 		if self.uncompressed or len(compressedData) >= self.origLength:
 			# Encode uncompressed
 			rawData = data
