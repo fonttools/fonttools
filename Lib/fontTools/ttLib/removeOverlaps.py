@@ -1,37 +1,29 @@
-#! /usr/bin/env python3
+""" Simplify TrueType glyphs by merging overlapping contours/components.
 
-# Example script to remove overlaps in TTF using skia-pathops.
-# Overlapping components will be decomposed.
+Requires https://github.com/fonttools/skia-pathops
+"""
 
-
-import sys
 from typing import Iterable, Optional, Mapping
+
 from fontTools.ttLib import ttFont
 from fontTools.ttLib.tables import _g_l_y_f
 from fontTools.pens.recordingPen import DecomposingRecordingPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 
-try:
-    import pathops
-except ImportError:
-    sys.exit(
-        "This script requires the skia-pathops module. "
-        "`pip install skia-pathops` and then retry."
-    )
+import pathops
+
 
 _TTGlyphMapping = Mapping[str, ttFont._TTGlyph]
 
 
-def skpath_from_simple_glyph(glyphName: str, glyphSet: _TTGlyphMapping) -> pathops.Path:
+def skPathFromSimpleGlyph(glyphName: str, glyphSet: _TTGlyphMapping) -> pathops.Path:
     path = pathops.Path()
     pathPen = path.getPen()
     glyphSet[glyphName].draw(pathPen)
     return path
 
 
-def skpath_from_composite_glyph(
-    glyphName: str, glyphSet: _TTGlyphMapping
-) -> pathops.Path:
+def skPathFromCompositeGlyph(glyphName: str, glyphSet: _TTGlyphMapping) -> pathops.Path:
     # record TTGlyph outlines without components
     dcPen = DecomposingRecordingPen(glyphSet)
     glyphSet[glyphName].draw(dcPen)
@@ -42,7 +34,7 @@ def skpath_from_composite_glyph(
     return path
 
 
-def simple_glyph_from_skpath(path: pathops.Path) -> _g_l_y_f.Glyph:
+def ttfGlyphFromSkPath(path: pathops.Path) -> _g_l_y_f.Glyph:
     # Skia paths have no 'components', no need for glyphSet
     ttPen = TTGlyphPen(glyphSet=None)
     path.draw(ttPen)
@@ -53,21 +45,37 @@ def simple_glyph_from_skpath(path: pathops.Path) -> _g_l_y_f.Glyph:
     return glyph
 
 
-def remove_overlaps(
+def removeOverlaps(
     font: ttFont.TTFont, glyphNames: Optional[Iterable[str]] = None
 ) -> None:
-    if glyphNames is None:
-        glyphNames = font.getGlyphOrder()
+    """ Simplify glyphs in TTFont by merging overlapping contours.
 
-    glyfTable = font["glyf"]
+    Overlapping components are first decomposed to simple contours, then merged.
+
+    Currently this only works with TrueType fonts with 'glyf' table.
+    Raises NotImplementedError if 'glyf' table is absent.
+
+    Args:
+        font: input TTFont object, modified in place.
+        glyphNames: optional iterable of glyph names (str) to remove overlaps from.
+            By default, all glyphs in the font are processed.
+    """
+    try:
+        glyfTable = font["glyf"]
+    except KeyError:
+        raise NotImplementedError("removeOverlaps currently only works with TTFs")
+
     hmtxTable = font["hmtx"]
     glyphSet = font.getGlyphSet()
 
+    if glyphNames is None:
+        glyphNames = font.getGlyphOrder()
+
     for glyphName in glyphNames:
         if glyfTable[glyphName].isComposite():
-            path = skpath_from_composite_glyph(glyphName, glyphSet)
+            path = skPathFromCompositeGlyph(glyphName, glyphSet)
         else:
-            path = skpath_from_simple_glyph(glyphName, glyphSet)
+            path = skPathFromSimpleGlyph(glyphName, glyphSet)
 
         # duplicate path
         path2 = pathops.Path(path)
@@ -77,24 +85,31 @@ def remove_overlaps(
 
         # replace TTGlyph if simplified copy is different
         if path2 != path:
-            glyfTable[glyphName] = glyph = simple_glyph_from_skpath(path2)
+            glyfTable[glyphName] = glyph = ttfGlyphFromSkPath(path2)
             # also ensure hmtx LSB == glyph.xMin so glyph origin is at x=0
             width, lsb = hmtxTable[glyphName]
             if lsb != glyph.xMin:
                 hmtxTable[glyphName] = (width, glyph.xMin)
 
 
-def main() -> None:
-    if len(sys.argv) < 3:
-        print("usage: remove-overlaps.py fontfile.ttf outfile.ttf [GLYPHNAMES ...]")
+def main(args=None):
+    import sys
+
+    if args is None:
+        args = sys.argv[1:]
+
+    if len(args) < 2:
+        print(
+            f"usage: fonttools ttLib.removeOverlaps INPUT.ttf OUTPUT.ttf [GLYPHS ...]"
+        )
         sys.exit(1)
 
-    src = sys.argv[1]
-    dst = sys.argv[2]
-    glyphNames = sys.argv[3:] or None
+    src = args[0]
+    dst = args[1]
+    glyphNames = args[2:] or None
 
     with ttFont.TTFont(src) as f:
-        remove_overlaps(f, glyphNames)
+        removeOverlaps(f, glyphNames)
         f.save(dst)
 
 
