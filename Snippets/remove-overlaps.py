@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
-# Example script to remove overlaps in TTF using skia-pathops
+# Example script to remove overlaps in TTF using skia-pathops.
+# Overlapping components will be decomposed.
 
 
 import sys
@@ -35,10 +36,15 @@ def skpath_from_composite_glyph(glyphName, glyphSet):
     return path
 
 
-def tt_glyph_from_skpath(path):
-    ttPen = TTGlyphPen(None)
+def simple_glyph_from_skpath(path):
+    # Skia paths have no 'components', no need for glyphSet
+    ttPen = TTGlyphPen(glyphSet=None)
     path.draw(ttPen)
-    return ttPen.glyph()
+    glyph = ttPen.glyph()
+    assert not glyph.isComposite()
+    # compute glyph.xMin (glyfTable parameter unused for non composites)
+    glyph.recalcBounds(glyfTable=None)
+    return glyph
 
 
 def main():
@@ -51,6 +57,7 @@ def main():
 
     with TTFont(src) as f:
         glyfTable = f["glyf"]
+        hmtxTable = f["hmtx"]
         glyphSet = f.getGlyphSet()
 
         for glyphName in glyphSet.keys():
@@ -67,7 +74,11 @@ def main():
 
             # replace TTGlyph if simplified copy is different
             if path2 != path:
-                glyfTable[glyphName] = tt_glyph_from_skpath(path2)
+                glyfTable[glyphName] = glyph = simple_glyph_from_skpath(path2)
+                # also ensure hmtx LSB == glyph.xMin so glyph origin is at x=0
+                width, lsb = hmtxTable[glyphName]
+                if lsb != glyph.xMin:
+                    hmtxTable[glyphName] = (width, glyph.xMin)
 
         f.save(dst)
 
