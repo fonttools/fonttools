@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-ansicolors = {
+from typing import Dict, Text
+
+ansicolors: Dict[Text, Text] = {
     "BLACK": "\033[30m",
     "RED": "\033[31m",
     "GREEN": "\033[32m",
@@ -13,13 +15,13 @@ ansicolors = {
     "RESET": "\033[0m",
 }
 
-green_start = ansicolors["GREEN"]
-red_start = ansicolors["RED"]
-cyan_start = ansicolors["CYAN"]
-reset = ansicolors["RESET"]
+green_start: Text = ansicolors["GREEN"]
+red_start: Text = ansicolors["RED"]
+cyan_start: Text = ansicolors["CYAN"]
+reset: Text = ansicolors["RESET"]
 
 
-def color_unified_diff_line(line):
+def color_unified_diff_line(line: Text) -> Text:
     """Returns an ANSI escape code colored string with color based
     on the unified diff line type."""
     if line[0:2] == "+ ":

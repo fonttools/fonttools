@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 
+import argparse
 import os
 import sys
-import argparse
+from typing import Iterable, Iterator, List, Optional, Text, Tuple
 
-from fdiff import __version__
-from fdiff.color import color_unified_diff_line
-from fdiff.diff import external_diff, u_diff
-from fdiff.textiter import head, tail
-from fdiff.utils import file_exists, get_tables_argument_list
+from . import __version__
+from .color import color_unified_diff_line
+from .diff import external_diff, u_diff
+from .textiter import head, tail
+from .utils import file_exists, get_tables_argument_list
 
 
-def main():  # pragma: no cover
+def main() -> None:  # pragma: no cover
     # try/except block rationale:
     # handles "premature" socket closure exception that is
     # raised by Python when stdout is piped to tools like
@@ -27,13 +28,11 @@ def main():  # pragma: no cover
         sys.exit(0)
 
 
-def run(argv):
+def run(argv: List[Text]) -> None:
     # ------------------------------------------
     # argparse command line argument definitions
     # ------------------------------------------
-    parser = argparse.ArgumentParser(
-        description="An OpenType table diff tool for fonts."
-    )
+    parser = argparse.ArgumentParser(description="An OpenType table diff tool for fonts.")
     parser.add_argument("--version", action="version", version=f"fdiff v{__version__}")
     parser.add_argument(
         "-c",
@@ -66,7 +65,7 @@ def run(argv):
     parser.add_argument("PREFILE", help="Font file path/URL 1")
     parser.add_argument("POSTFILE", help="Font file path/URL 2")
 
-    args = parser.parse_args(argv)
+    args: argparse.Namespace = parser.parse_args(argv)
 
     # /////////////////////////////////////////////////////////
     #
@@ -110,12 +109,12 @@ def run(argv):
     # the command line arguments
     # set as a Python list if it was defined on the command line
     # or as None if it was not set on the command line
-    include_list = get_tables_argument_list(args.include)
-    exclude_list = get_tables_argument_list(args.exclude)
+    include_list: Optional[List[Text]] = get_tables_argument_list(args.include)
+    exclude_list: Optional[List[Text]] = get_tables_argument_list(args.exclude)
 
     # flip logic of the command line flag for multi process
     # optimization use
-    use_mp = not args.nomp
+    use_mp: bool = not args.nomp
 
     if args.external:
         # ------------------------------
@@ -138,7 +137,7 @@ def run(argv):
             sys.exit(1)
 
         try:
-            diff = external_diff(
+            ext_diff: Iterable[Tuple[Text, Optional[int]]] = external_diff(
                 args.external,
                 args.PREFILE,
                 args.POSTFILE,
@@ -148,7 +147,7 @@ def run(argv):
             )
 
             # write stdout from external tool
-            for line, exit_code in diff:
+            for line, exit_code in ext_diff:
                 # format with color if color flag is entered on command line
                 if args.color:
                     sys.stdout.write(color_unified_diff_line(line))
@@ -165,7 +164,7 @@ def run(argv):
         # ---------------
         # perform the unified diff analysis
         try:
-            diff = u_diff(
+            uni_diff: Iterator[Text] = u_diff(
                 args.PREFILE,
                 args.POSTFILE,
                 context_lines=args.lines,
@@ -180,11 +179,11 @@ def run(argv):
         # re-define the line contents of the diff iterable
         # if head or tail is requested
         if args.head:
-            iterable = head(diff, args.head)
+            iterable = head(uni_diff, args.head)
         elif args.tail:
-            iterable = tail(diff, args.tail)
+            iterable = tail(uni_diff, args.tail)
         else:
-            iterable = diff
+            iterable = uni_diff
 
         # print unified diff results to standard output stream
         has_diff = False
