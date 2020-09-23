@@ -163,7 +163,7 @@ class WOFF2Writer(SFNTWriter):
 	flavor = "woff2"
 
 	def __init__(self, file, numTables, sfntVersion="\000\001\000\000",
-		         flavor=None, flavorData=None):
+		         flavor=None, flavorData=None, use_zopfli=False, compression_level=0):
 		if not haveBrotli:
 			log.error(
 				'The WOFF2 encoder requires the Brotli Python extension, available at: '

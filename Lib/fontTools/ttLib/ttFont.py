@@ -2,7 +2,7 @@ from fontTools.misc import xmlWriter
 from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import deprecateArgument
 from fontTools.ttLib import TTLibError
-from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter
+from fontTools.ttLib.sfnt import SFNTReader, SFNTWriter, ZLIB_COMPRESSION_LEVEL
 import os
 import logging
 import itertools
@@ -152,11 +152,14 @@ class TTFont(object):
 		if self.reader is not None:
 			self.reader.close()
 
-	def save(self, file, reorderTables=True):
+	def save(self, file, reorderTables=True, use_zopfli=False, compression_level=ZLIB_COMPRESSION_LEVEL):
 		"""Save the font to disk. Similarly to the constructor,
 		the 'file' argument can be either a pathname or a writable
 		file object.
 		"""
+		if self.flavor != "woff" and use_zopfli:
+			raise TTLibError("'use_zopfli' can only be set to True for woff format writes")
+
 		if not hasattr(file, "write"):
 			if self.lazy and self.reader.file.name == file:
 				raise TTLibError(
@@ -169,7 +172,12 @@ class TTFont(object):
 
 		tmp = BytesIO()
 
-		writer_reordersTables = self._save(tmp)
+		writer_reordersTables = self._save(
+			tmp,
+			tableCache=None,
+			use_zopfli=use_zopfli,
+			compression_level=compression_level
+		)
 
 		if (reorderTables is None or writer_reordersTables or
 				(reorderTables is False and self.reader is None)):
@@ -193,7 +201,7 @@ class TTFont(object):
 		if closeStream:
 			file.close()
 
-	def _save(self, file, tableCache=None):
+	def _save(self, file, tableCache=None, use_zopfli=False, compression_level=ZLIB_COMPRESSION_LEVEL):
 		"""Internal function, to be shared by save() and TTCollection.save()"""
 
 		if self.recalcTimestamp and 'head' in self:
@@ -204,7 +212,15 @@ class TTFont(object):
 			tags.remove("GlyphOrder")
 		numTables = len(tags)
 		# write to a temporary stream to allow saving to unseekable streams
-		writer = SFNTWriter(file, numTables, self.sfntVersion, self.flavor, self.flavorData)
+		writer = SFNTWriter(
+			file=file,
+			numTables=numTables,
+			sfntVersion=self.sfntVersion,
+			flavor=self.flavor,
+			flavorData=self.flavorData,
+			use_zopfli=use_zopfli,
+			compression_level=compression_level
+		)
 
 		done = []
 		for tag in tags:

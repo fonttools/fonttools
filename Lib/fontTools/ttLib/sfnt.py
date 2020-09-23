@@ -152,10 +152,6 @@ class SFNTReader(object):
 # default compression level for WOFF 1.0 tables and metadata
 ZLIB_COMPRESSION_LEVEL = 6
 
-# if set to True, use zopfli instead of zlib for compressing WOFF 1.0.
-# The Python bindings are available at https://pypi.python.org/pypi/zopfli
-USE_ZOPFLI = False
-
 # mapping between zlib's compression levels and zopfli's 'numiterations'.
 # Use lower values for files over several MB in size or it will be too slow
 ZOPFLI_LEVELS = {
@@ -172,8 +168,8 @@ ZOPFLI_LEVELS = {
 }
 
 
-def compress(data, level=ZLIB_COMPRESSION_LEVEL):
-	""" Compress 'data' to Zlib format. If 'USE_ZOPFLI' variable is True,
+def compress(data, use_zopfli=False, level=ZLIB_COMPRESSION_LEVEL):
+	""" Compress 'data' to Zlib format. If 'use_zopfli' argument is True,
 	zopfli is used instead of the zlib module.
 	The compression 'level' must be between 0 and 9. 1 gives best speed,
 	9 gives best compression (0 gives no compression at all).
@@ -181,7 +177,7 @@ def compress(data, level=ZLIB_COMPRESSION_LEVEL):
 	"""
 	if not (0 <= level <= 9):
 		raise ValueError('Bad compression level: %s' % level)
-	if not USE_ZOPFLI or level == 0:
+	if not use_zopfli or level == 0:
 		from zlib import compress
 		return compress(data, level)
 	else:
@@ -209,17 +205,20 @@ class SFNTWriter(object):
 		return object.__new__(cls)
 
 	def __init__(self, file, numTables, sfntVersion="\000\001\000\000",
-			flavor=None, flavorData=None):
+			flavor=None, flavorData=None, use_zopfli=False, compression_level=ZLIB_COMPRESSION_LEVEL):
 		self.file = file
 		self.numTables = numTables
 		self.sfntVersion = Tag(sfntVersion)
 		self.flavor = flavor
 		self.flavorData = flavorData
+		self.use_zopfli = use_zopfli
+		self.compression_level = compression_level
 
 		if self.flavor == "woff":
 			self.directoryFormat = woffDirectoryFormat
 			self.directorySize = woffDirectorySize
 			self.DirectoryEntry = WOFFDirectoryEntry
+			self.DirectoryEntry.use_zopfli = use_zopfli
 
 			self.signature = "wOFF"
 
@@ -311,7 +310,7 @@ class SFNTWriter(object):
 				self.metaOrigLength = len(data.metaData)
 				self.file.seek(0,2)
 				self.metaOffset = self.file.tell()
-				compressedMetaData = compress(data.metaData)
+				compressedMetaData = compress(data.metaData, self.use_zopfli, self.compression_level)
 				self.metaLength = len(compressedMetaData)
 				self.file.write(compressedMetaData)
 			else:
@@ -515,6 +514,7 @@ class WOFFDirectoryEntry(DirectoryEntry):
 		# use the class attribute if it was already set.
 		if not hasattr(WOFFDirectoryEntry, 'zlibCompressionLevel'):
 			self.zlibCompressionLevel = ZLIB_COMPRESSION_LEVEL
+		self.use_zopfli = False
 
 	def decodeData(self, rawData):
 		import zlib
@@ -529,7 +529,7 @@ class WOFFDirectoryEntry(DirectoryEntry):
 	def encodeData(self, data):
 		self.origLength = len(data)
 		if not self.uncompressed:
-			compressedData = compress(data, self.zlibCompressionLevel)
+			compressedData = compress(data, use_zopfli=self.use_zopfli, level=self.zlibCompressionLevel)
 		if self.uncompressed or len(compressedData) >= self.origLength:
 			# Encode uncompressed
 			rawData = data
