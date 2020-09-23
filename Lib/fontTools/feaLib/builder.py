@@ -707,9 +707,10 @@ class Builder(object):
                 continue
 
             for ix in lookup_indices:
-                self.lookup_locations[tag][str(ix)] = self.lookup_locations[tag][
-                    str(ix)
-                ]._replace(feature=key)
+                if str(ix) in self.lookup_locations[tag]:
+                    self.lookup_locations[tag][str(ix)] = self.lookup_locations[tag][
+                        str(ix)
+                    ]._replace(feature=key)
 
             feature_key = (feature_tag, lookup_indices)
             feature_index = feature_indices.get(feature_key)
