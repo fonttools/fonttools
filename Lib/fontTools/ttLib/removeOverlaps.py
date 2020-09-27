@@ -89,13 +89,10 @@ def removeOverlaps(
         else:
             path = skPathFromSimpleGlyph(glyphName, glyphSet)
 
-        # duplicate path
-        path2 = pathops.Path(path)
-
         # remove overlaps
-        path2.simplify()
+        path2 = pathops.simplify(path, clockwise=path.clockwise)
 
-        # replace TTGlyph if simplified copy is different
+        # replace TTGlyph if simplified path is different
         if path2 != path:
             glyfTable[glyphName] = glyph = ttfGlyphFromSkPath(path2)
             # also ensure hmtx LSB == glyph.xMin so glyph origin is at x=0
