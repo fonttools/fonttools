@@ -71,6 +71,18 @@ def removeOverlaps(
     if glyphNames is None:
         glyphNames = font.getGlyphOrder()
 
+    # process all simple glyphs first, then composites with increasing component depth,
+    # so that we don't unnecessarily decompose components simply because their base
+    # glyph has overlaps
+    glyphNames = sorted(
+        glyphNames,
+        key=lambda name: (
+            glyfTable[name].getCompositeMaxpValues(glyfTable).maxComponentDepth
+            if glyfTable[name].isComposite()
+            else 0,
+            name,
+        ),
+    )
     for glyphName in glyphNames:
         if glyfTable[glyphName].isComposite():
             path = skPathFromCompositeGlyph(glyphName, glyphSet)
