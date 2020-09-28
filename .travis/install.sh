@@ -27,4 +27,4 @@ if [ "$TRAVIS_OS_NAME" == "osx" ]; then
     source .venv/bin/activate
 fi
 
-python -m pip install $ci_requirements
+python -m pip install --upgrade $ci_requirements
