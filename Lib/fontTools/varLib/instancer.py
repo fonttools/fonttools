@@ -122,7 +122,7 @@ class NormalizedAxisRange(AxisRange):
         return self
 
 
-class OverlapsMode(IntEnum):
+class OverlapMode(IntEnum):
     KEEP_AND_DONT_SET_FLAGS = 0
     KEEP_AND_SET_FLAGS = 1
     REMOVE = 2
@@ -1186,7 +1186,7 @@ def instantiateVariableFont(
     axisLimits,
     inplace=False,
     optimize=True,
-    overlap=OverlapsMode.KEEP_AND_SET_FLAGS,
+    overlap=OverlapMode.KEEP_AND_SET_FLAGS,
 ):
     """Instantiate variable font, either fully or partially.
 
@@ -1209,19 +1209,19 @@ def instantiateVariableFont(
             remaining 'gvar' table's deltas. Possibly faster, and might work around
             rendering issues in some buggy environments, at the cost of a slightly
             larger file size.
-        overlap (OverlapsMode): variable fonts usually contain overlapping contours, and
+        overlap (OverlapMode): variable fonts usually contain overlapping contours, and
             some font rendering engines on Apple platforms require that the
             `OVERLAP_SIMPLE` and `OVERLAP_COMPOUND` flags in the 'glyf' table be set to
             force rendering using a non-zero fill rule. Thus we always set these flags
             on all glyphs to maximise cross-compatibility of the generated instance.
-            You can disable this by passing OverlapsMode.KEEP_AND_DONT_SET_FLAGS.
+            You can disable this by passing OverlapMode.KEEP_AND_DONT_SET_FLAGS.
             If you want to remove the overlaps altogether and merge overlapping
-            contours and components, you can pass OverlapsMode.REMOVE. Note that this
+            contours and components, you can pass OverlapMode.REMOVE. Note that this
             requires the skia-pathops package (available to pip install).
             The overlap parameter only has effect when generating full static instances.
     """
     # 'overlap' used to be bool and is now enum; for backward compat keep accepting bool
-    overlap = OverlapsMode(int(overlap))
+    overlap = OverlapMode(int(overlap))
 
     sanityCheckVariableTables(varfont)
 
@@ -1264,9 +1264,9 @@ def instantiateVariableFont(
 
     if "fvar" not in varfont:
         if "glyf" in varfont:
-            if overlap == OverlapsMode.KEEP_AND_SET_FLAGS:
+            if overlap == OverlapMode.KEEP_AND_SET_FLAGS:
                 setMacOverlapFlags(varfont["glyf"])
-            elif overlap == OverlapsMode.REMOVE:
+            elif overlap == OverlapMode.REMOVE:
                 from fontTools.ttLib.removeOverlaps import removeOverlaps
 
                 log.info("Removing overlaps from glyf table")
@@ -1387,9 +1387,9 @@ def parseArgs(args):
     options = parser.parse_args(args)
 
     if options.remove_overlaps:
-        options.overlap = OverlapsMode.REMOVE
+        options.overlap = OverlapMode.REMOVE
     else:
-        options.overlap = OverlapsMode(int(options.overlap))
+        options.overlap = OverlapMode(int(options.overlap))
 
     infile = options.input
     if not os.path.isfile(infile):
