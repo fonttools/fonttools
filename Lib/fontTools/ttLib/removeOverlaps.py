@@ -3,11 +3,11 @@
 Requires https://github.com/fonttools/skia-pathops
 """
 
+import itertools
 from typing import Iterable, Optional, Mapping
 
 from fontTools.ttLib import ttFont
 from fontTools.ttLib.tables import _g_l_y_f
-from fontTools.pens.recordingPen import DecomposingRecordingPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 
 import pathops
@@ -16,22 +16,46 @@ import pathops
 _TTGlyphMapping = Mapping[str, ttFont._TTGlyph]
 
 
-def skPathFromSimpleGlyph(glyphName: str, glyphSet: _TTGlyphMapping) -> pathops.Path:
+def skPathFromGlyph(glyphName: str, glyphSet: _TTGlyphMapping) -> pathops.Path:
     path = pathops.Path()
-    pathPen = path.getPen()
+    pathPen = path.getPen(glyphSet=glyphSet)
     glyphSet[glyphName].draw(pathPen)
     return path
 
 
-def skPathFromCompositeGlyph(glyphName: str, glyphSet: _TTGlyphMapping) -> pathops.Path:
-    # record TTGlyph outlines without components
-    dcPen = DecomposingRecordingPen(glyphSet)
-    glyphSet[glyphName].draw(dcPen)
-    # replay recording onto a skia-pathops Path
-    path = pathops.Path()
-    pathPen = path.getPen()
-    dcPen.replay(pathPen)
-    return path
+def skPathFromGlyphComponent(
+    component: _g_l_y_f.GlyphComponent, glyphSet: _TTGlyphMapping
+):
+    baseGlyphName, transformation = component.getComponentInfo()
+    path = skPathFromGlyph(baseGlyphName, glyphSet)
+    return path.transform(*transformation)
+
+
+def componentsOverlap(glyph: _g_l_y_f.Glyph, glyphSet: _TTGlyphMapping) -> bool:
+    if not glyph.isComposite():
+        raise ValueError("This method only works with TrueType composite glyphs")
+    if len(glyph.components) < 2:
+        return False  # single component, no overlaps
+
+    component_paths = {}
+
+    def _get_nth_component_path(index: int) -> pathops.Path:
+        if index not in component_paths:
+            component_paths[index] = skPathFromGlyphComponent(
+                glyph.components[index], glyphSet
+            )
+        return component_paths[index]
+
+    return any(
+        pathops.op(
+            _get_nth_component_path(i),
+            _get_nth_component_path(j),
+            pathops.PathOp.INTERSECTION,
+            fix_winding=False,
+            keep_starting_points=False,
+        )
+        for i, j in itertools.combinations(range(len(glyph.components)), 2)
+    )
 
 
 def ttfGlyphFromSkPath(path: pathops.Path) -> _g_l_y_f.Glyph:
@@ -48,7 +72,7 @@ def ttfGlyphFromSkPath(path: pathops.Path) -> _g_l_y_f.Glyph:
 def removeOverlaps(
     font: ttFont.TTFont, glyphNames: Optional[Iterable[str]] = None
 ) -> None:
-    """ Simplify glyphs in TTFont by merging overlapping contours.
+    """Simplify glyphs in TTFont by merging overlapping contours.
 
     Overlapping components are first decomposed to simple contours, then merged.
 
@@ -66,6 +90,7 @@ def removeOverlaps(
         raise NotImplementedError("removeOverlaps currently only works with TTFs")
 
     hmtxTable = font["hmtx"]
+    # wraps the underlying glyf Glyphs, takes care of interfacing with drawing pens
     glyphSet = font.getGlyphSet()
 
     if glyphNames is None:
@@ -84,10 +109,12 @@ def removeOverlaps(
         ),
     )
     for glyphName in glyphNames:
-        if glyfTable[glyphName].isComposite():
-            path = skPathFromCompositeGlyph(glyphName, glyphSet)
-        else:
-            path = skPathFromSimpleGlyph(glyphName, glyphSet)
+        glyph = glyfTable[glyphName]
+        # decompose composite glyphs only if components overlap each other
+        if glyph.isComposite() and not componentsOverlap(glyph, glyphSet):
+            continue
+
+        path = skPathFromGlyph(glyphName, glyphSet)
 
         # remove overlaps
         path2 = pathops.simplify(path, clockwise=path.clockwise)
