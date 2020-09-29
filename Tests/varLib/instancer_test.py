@@ -1400,6 +1400,13 @@ def varfont2():
     return f
 
 
+@pytest.fixture
+def varfont3():
+    f = ttLib.TTFont(recalcTimestamp=False)
+    f.importXML(os.path.join(TESTDATA, "PartialInstancerTest3-VF.ttx"))
+    return f
+
+
 def _dump_ttx(ttFont):
     # compile to temporary bytes stream, reload and dump to XML
     tmp = BytesIO()
@@ -1411,13 +1418,16 @@ def _dump_ttx(ttFont):
     return _strip_ttLibVersion(s.getvalue())
 
 
-def _get_expected_instance_ttx(wght, wdth):
+def _get_expected_instance_ttx(
+    name, *locations, overlap=instancer.OverlapMode.KEEP_AND_SET_FLAGS
+):
+    filename = f"{name}-VF-instance-{','.join(str(loc) for loc in locations)}"
+    if overlap == instancer.OverlapMode.KEEP_AND_DONT_SET_FLAGS:
+        filename += "-no-overlap-flags"
+    elif overlap == instancer.OverlapMode.REMOVE:
+        filename += "-no-overlaps"
     with open(
-        os.path.join(
-            TESTDATA,
-            "test_results",
-            "PartialInstancerTest2-VF-instance-{0},{1}.ttx".format(wght, wdth),
-        ),
+        os.path.join(TESTDATA, "test_results", f"{filename}.ttx"),
         "r",
         encoding="utf-8",
     ) as fp:
@@ -1433,7 +1443,7 @@ class InstantiateVariableFontTest(object):
         partial = instancer.instantiateVariableFont(varfont2, {"wght": wght})
         instance = instancer.instantiateVariableFont(partial, {"wdth": wdth})
 
-        expected = _get_expected_instance_ttx(wght, wdth)
+        expected = _get_expected_instance_ttx("PartialInstancerTest2", wght, wdth)
 
         assert _dump_ttx(instance) == expected
 
@@ -1442,7 +1452,30 @@ class InstantiateVariableFontTest(object):
             varfont2, {"wght": None, "wdth": None}
         )
 
-        expected = _get_expected_instance_ttx(400, 100)
+        expected = _get_expected_instance_ttx("PartialInstancerTest2", 400, 100)
+
+        assert _dump_ttx(instance) == expected
+
+    @pytest.mark.parametrize(
+        "overlap, wght",
+        [
+            (instancer.OverlapMode.KEEP_AND_DONT_SET_FLAGS, 400),
+            (instancer.OverlapMode.REMOVE, 400),
+            (instancer.OverlapMode.REMOVE, 700),
+        ],
+    )
+    def test_overlap(self, varfont3, wght, overlap):
+        pytest.importorskip("pathops")
+
+        location = {"wght": wght}
+
+        instance = instancer.instantiateVariableFont(
+            varfont3, location, overlap=overlap
+        )
+
+        expected = _get_expected_instance_ttx(
+            "PartialInstancerTest3", wght, overlap=overlap
+        )
 
         assert _dump_ttx(instance) == expected
 
