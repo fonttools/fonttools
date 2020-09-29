@@ -124,7 +124,7 @@ extras_require = {
 	],
 	# for fontTools.ttLib.removeOverlaps, to remove overlaps in TTF fonts
 	"pathops": [
-		"skia-pathops >= 0.4.2",
+		"skia-pathops >= 0.5.0",
 	],
 }
 # use a special 'all' key as shorthand to includes all the extra dependencies
