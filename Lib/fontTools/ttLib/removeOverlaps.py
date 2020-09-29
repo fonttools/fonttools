@@ -111,7 +111,11 @@ def removeOverlaps(
     for glyphName in glyphNames:
         glyph = glyfTable[glyphName]
         # decompose composite glyphs only if components overlap each other
-        if glyph.isComposite() and not componentsOverlap(glyph, glyphSet):
+        if (
+            glyph.numberOfContours == 0
+            or glyph.isComposite()
+            and not componentsOverlap(glyph, glyphSet)
+        ):
             continue
 
         path = skPathFromGlyph(glyphName, glyphSet)
