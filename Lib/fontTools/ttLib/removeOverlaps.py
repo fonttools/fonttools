@@ -97,8 +97,8 @@ def removeOverlaps(
         glyphNames = font.getGlyphOrder()
 
     # process all simple glyphs first, then composites with increasing component depth,
-    # so that we don't unnecessarily decompose components simply because their base
-    # glyph has overlaps
+    # so that by the time we test for component intersections the respective base glyphs
+    # have already been simplified
     glyphNames = sorted(
         glyphNames,
         key=lambda name: (
