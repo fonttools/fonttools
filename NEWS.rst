@@ -1,3 +1,14 @@
+- [removeOverlaps] Added new module and ``removeOverlaps`` function that merges
+  overlapping contours and components in TrueType glyphs. It requires the
+  `skia-pathops <https://github.com/fonttools/skia-pathops>`__ module.
+  Note that removing overlaps invalidates the TrueType hinting (#2068).
+- [varLib.instancer] Added ``--remove-overlaps`` command-line option.
+  The ``overlap`` option in ``instantiateVariableFont`` now takes an ``OverlapMode``
+  enum: 0: KEEP_AND_DONT_SET_FLAGS, 1: KEEP_AND_SET_FLAGS (default), and 2: REMOVE.
+  The latter is equivalent to calling ``removeOverlaps`` on the generated static
+  instance. The option continues to accept ``bool`` value for backward compatibility.
+
+
 4.15.0 (released 2020-09-21)
 ----------------------------
 
