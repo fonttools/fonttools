@@ -95,8 +95,8 @@ def removeTTGlyphOverlaps(
         # remove overlaps
         path2 = pathops.simplify(path, clockwise=path.clockwise)
 
-        # replace TTGlyph if simplified path is different
-        if path2 != path:
+        # replace TTGlyph if simplified path is different (ignoring contour order)
+        if {tuple(c) for c in path.contours} != {tuple(c) for c in path2.contours}:
             glyfTable[glyphName] = glyph = ttfGlyphFromSkPath(path2)
             # simplified glyph is always unhinted
             assert not glyph.program
