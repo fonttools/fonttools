@@ -4,14 +4,21 @@ Requires https://github.com/fonttools/skia-pathops
 """
 
 import itertools
+import logging
 from typing import Iterable, Optional, Mapping
 
 from fontTools.ttLib import ttFont
 from fontTools.ttLib.tables import _g_l_y_f
+from fontTools.ttLib.tables import _h_m_t_x
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 
 import pathops
 
+
+__all__ = ["removeOverlaps"]
+
+
+log = logging.getLogger("fontTools.ttLib.removeOverlaps")
 
 _TTGlyphMapping = Mapping[str, ttFont._TTGlyph]
 
@@ -69,6 +76,38 @@ def ttfGlyphFromSkPath(path: pathops.Path) -> _g_l_y_f.Glyph:
     return glyph
 
 
+def removeTTGlyphOverlaps(
+    glyphName: str,
+    glyphSet: _TTGlyphMapping,
+    glyfTable: _g_l_y_f.table__g_l_y_f,
+    hmtxTable: _h_m_t_x.table__h_m_t_x,
+) -> bool:
+    glyph = glyfTable[glyphName]
+    # decompose composite glyphs only if components overlap each other
+    if (
+        glyph.numberOfContours > 0
+        or glyph.isComposite()
+        and componentsOverlap(glyph, glyphSet)
+    ):
+        path = skPathFromGlyph(glyphName, glyphSet)
+
+        # remove overlaps
+        path2 = pathops.simplify(path, clockwise=path.clockwise)
+
+        # replace TTGlyph if simplified path is different
+        if path2 != path:
+            glyfTable[glyphName] = glyph = ttfGlyphFromSkPath(path2)
+            # simplified glyph is always unhinted
+            assert not glyph.program
+            # also ensure hmtx LSB == glyph.xMin so glyph origin is at x=0
+            width, lsb = hmtxTable[glyphName]
+            if lsb != glyph.xMin:
+                hmtxTable[glyphName] = (width, glyph.xMin)
+            return True
+
+    return False
+
+
 def removeOverlaps(
     font: ttFont.TTFont, glyphNames: Optional[Iterable[str]] = None
 ) -> None:
@@ -108,28 +147,12 @@ def removeOverlaps(
             name,
         ),
     )
+    modified = set()
     for glyphName in glyphNames:
-        glyph = glyfTable[glyphName]
-        # decompose composite glyphs only if components overlap each other
-        if (
-            glyph.numberOfContours == 0
-            or glyph.isComposite()
-            and not componentsOverlap(glyph, glyphSet)
-        ):
-            continue
+        if removeTTGlyphOverlaps(glyphName, glyphSet, glyfTable, hmtxTable):
+            modified.add(glyphName)
 
-        path = skPathFromGlyph(glyphName, glyphSet)
-
-        # remove overlaps
-        path2 = pathops.simplify(path, clockwise=path.clockwise)
-
-        # replace TTGlyph if simplified path is different
-        if path2 != path:
-            glyfTable[glyphName] = glyph = ttfGlyphFromSkPath(path2)
-            # also ensure hmtx LSB == glyph.xMin so glyph origin is at x=0
-            width, lsb = hmtxTable[glyphName]
-            if lsb != glyph.xMin:
-                hmtxTable[glyphName] = (width, glyph.xMin)
+    log.debug("Removed overlaps for %s glyphs:\n%s", len(modified), " ".join(modified))
 
 
 def main(args=None):
