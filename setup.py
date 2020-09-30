@@ -122,6 +122,10 @@ extras_require = {
 	"type1": [
 		"xattr; sys_platform == 'darwin'",
 	],
+	# for fontTools.ttLib.removeOverlaps, to remove overlaps in TTF fonts
+	"pathops": [
+		"skia-pathops >= 0.5.0",
+	],
 }
 # use a special 'all' key as shorthand to includes all the extra dependencies
 extras_require["all"] = sum(extras_require.values(), [])

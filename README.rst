@@ -174,6 +174,16 @@ are required to unlock the extra features named "ufo", etc.
 
   *Extra:* ``type1``
 
+- ``Lib/fontTools/ttLib/removeOverlaps.py``
+
+  Simplify TrueType glyphs by merging overlapping contours and components.
+
+  * `skia-pathops <https://pypi.python.org/pypy/skia-pathops>`__: Python
+    bindings for the Skia library's PathOps module, performing boolean
+    operations on paths (union, intersection, etc.).
+
+  *Extra:* ``pathops``
+
 - ``Lib/fontTools/pens/cocoaPen.py``
 
   Pen for drawing glyphs with Cocoa ``NSBezierPath``, requires:
