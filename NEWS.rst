@@ -1,3 +1,6 @@
+4.16.0 (released 2020-09-30)
+----------------------------
+
 - [removeOverlaps] Added new module and ``removeOverlaps`` function that merges
   overlapping contours and components in TrueType glyphs. It requires the
   `skia-pathops <https://github.com/fonttools/skia-pathops>`__ module.
