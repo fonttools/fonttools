@@ -81,6 +81,7 @@ def removeTTGlyphOverlaps(
     glyphSet: _TTGlyphMapping,
     glyfTable: _g_l_y_f.table__g_l_y_f,
     hmtxTable: _h_m_t_x.table__h_m_t_x,
+    removeHinting: bool = True,
 ) -> bool:
     glyph = glyfTable[glyphName]
     # decompose composite glyphs only if components overlap each other
@@ -105,11 +106,15 @@ def removeTTGlyphOverlaps(
                 hmtxTable[glyphName] = (width, glyph.xMin)
             return True
 
+    if removeHinting:
+        glyph.removeHinting()
     return False
 
 
 def removeOverlaps(
-    font: ttFont.TTFont, glyphNames: Optional[Iterable[str]] = None
+    font: ttFont.TTFont,
+    glyphNames: Optional[Iterable[str]] = None,
+    removeHinting: bool = True,
 ) -> None:
     """Simplify glyphs in TTFont by merging overlapping contours.
 
@@ -118,10 +123,15 @@ def removeOverlaps(
     Currently this only works with TrueType fonts with 'glyf' table.
     Raises NotImplementedError if 'glyf' table is absent.
 
+    Note that removing overlaps invalidates the hinting. By default we drop hinting
+    from all glyphs whether or not overlaps are removed from a given one, as it would
+    look weird if only some glyphs are left (un)hinted.
+
     Args:
         font: input TTFont object, modified in place.
         glyphNames: optional iterable of glyph names (str) to remove overlaps from.
             By default, all glyphs in the font are processed.
+        removeHinting (bool): set to False to keep hinting for unmodified glyphs.
     """
     try:
         glyfTable = font["glyf"]
@@ -149,7 +159,9 @@ def removeOverlaps(
     )
     modified = set()
     for glyphName in glyphNames:
-        if removeTTGlyphOverlaps(glyphName, glyphSet, glyfTable, hmtxTable):
+        if removeTTGlyphOverlaps(
+            glyphName, glyphSet, glyfTable, hmtxTable, removeHinting
+        ):
             modified.add(glyphName)
 
     log.debug("Removed overlaps for %s glyphs:\n%s", len(modified), " ".join(modified))
