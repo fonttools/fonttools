@@ -1187,6 +1187,7 @@ def instantiateVariableFont(
     inplace=False,
     optimize=True,
     overlap=OverlapMode.KEEP_AND_SET_FLAGS,
+    update_nametable=False
 ):
     """Instantiate variable font, either fully or partially.
 
@@ -1272,6 +1273,10 @@ def instantiateVariableFont(
                 log.info("Removing overlaps from glyf table")
                 removeOverlaps(varfont)
 
+    if update_nametable:
+        log.info("Updating nametable")
+        updateNameTable(varfont, axisLimits)
+
     varLib.set_default_weight_width_slant(
         varfont,
         location={
@@ -1282,6 +1287,90 @@ def instantiateVariableFont(
     )
 
     return varfont
+
+
+def updateNameTable(varfont, axisLimits):
+    nametable = varfont["name"]
+    if "STAT" not in varfont:
+        raise ValueError("Cannot update name table since there is no STAT table.")
+    stat = varfont['STAT']
+    axisRecords = stat.table.DesignAxisRecord.Axis
+    axisValues = stat.table.AxisValueArray.AxisValue
+
+    axisOrder = {a.AxisOrdering: a.AxisTag for a in axisRecords}
+    axisValueNames = []
+    for axisValue in axisValues:
+        axisTag = axisOrder[axisValue.AxisIndex]
+        axisValueName = nametable.getName(
+            axisValue.ValueNameID,
+            3,
+            1,
+            0x409
+        ).toUnicode()
+        # Ignore axisValue if it has ELIDABLE_AXIS_VALUE_NAME flag enabled.
+        # Enabling this flag will hide the axisValue in application font menus.
+        if axisValue.Flags == 2:
+            continue
+
+        if axisValue.Format in (1, 3):
+            # Add axisValue if it's used to link to another variable font
+            if axisTag not in axisLimits and axisValue.Value == 1.0:
+                axisValueNames.append(axisValueName)
+
+            # Add axisValue if its value is in the axisLimits and the user has
+            # pinned the axis
+            elif isinstance(axisLimits[axisTag], float) and axisValue.Value == axisLimits[axisTag]:
+                axisValueNames.append(axisValueName)
+
+        if axisValue.Format == 2:
+            if isinstance(axisLimits[axisTag], float) and axisLimits[axisTag] >= axisValue.RangeMinValue \
+                and axisLimits[axisTag] <= axisValue.RangeMaxValue:
+                    axisValueNames.append(axisValueName)
+
+        # TODO Format 4
+        if axisValue.Format == 4:
+            raise NotImplementedError("Cannot update nametable using format 4 axisValues")
+        
+    _updateNameRecords(nametable, axisValueNames)
+
+
+def _updateNameRecords(nametable, axisValueNames):
+    # Update nametable based on the discovered axisValueNames
+    # using the R/I/B/BI model.
+    ribbiStyles = frozenset(["Regular", "Italic", "Bold", "Bold Italic"])
+    ribbiParticles = [n for n in axisValueNames if n in ribbiStyles]
+    nonRibbiParticles = [n for n in axisValueNames if n not in ribbiStyles]
+
+    currentFamilyName = nametable.getName(16, 3, 1, 0x409) or \
+            nametable.getName(1, 3, 1, 0x409)
+    currentFamilyName = currentFamilyName.toUnicode()
+
+    currentStyleName = nametable.getName(17, 3, 1, 0x409) or \
+            nametable.getName(2, 3, 1, 0x409)
+    currentStyleName = currentStyleName.toUnicode()
+
+    nameIDs = {1: currentFamilyName, 2: " ".join(ribbiParticles) or "Regular"}
+    # Include Typographic family and subfamily names if there are
+    # nonRibbiParticles
+    if nonRibbiParticles:
+        nameIDs[1] = f"{currentFamilyName} {' '.join(nonRibbiParticles)}"
+        nameIDs[16] = currentFamilyName
+        nameIDs[17] = " ".join(nonRibbiParticles + ribbiParticles)
+
+    newFamilyName = nameIDs.get(16) or nameIDs.get(1)
+    newStyleName = nameIDs.get(17) or nameIDs.get(2)
+    # Update full font name
+    nameIDs[4] = f"{newFamilyName} {newStyleName}"
+    # Update postscript name
+    nameIDs[6] = f"{newFamilyName.replace(' ', '')}-{newStyleName.replace(' ', '')}"
+    # Update uniqueID
+    # TODO
+    # versionRecord = nametable.getName(5, 3, 1, 0x409)
+
+    existingPlatforms = set((r.platformID, r.platEncID, r.langID) for r in nametable.names)
+    for nameID, string in nameIDs.items():
+        for plat in existingPlatforms:
+            nametable.setName(string, nameID, *plat)
 
 
 def splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange):
@@ -1377,6 +1466,12 @@ def parseArgs(args):
         help="Merge overlapping contours and components (only applicable "
         "when generating a full instance). Requires skia-pathops",
     )
+    parser.add_argument(
+        "--update-nametable",
+        action="store_true",
+        help="Update the instantiated font's nametable using the STAT "
+        "table Axis Values"
+    )
     loggingGroup = parser.add_mutually_exclusive_group(required=False)
     loggingGroup.add_argument(
         "-v", "--verbose", action="store_true", help="Run more verbosely."
@@ -1428,6 +1523,7 @@ def main(args=None):
         inplace=True,
         optimize=options.optimize,
         overlap=options.overlap,
+        update_nametable=options.update_nametable,
     )
 
     outfile = (
