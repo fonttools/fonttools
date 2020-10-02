@@ -1916,6 +1916,43 @@ def test_normalizeAxisLimits_missing_from_fvar(varfont):
         instancer.normalizeAxisLimits(varfont, {"ZZZZ": 1000})
 
 
+def _get_name_records(varfont):
+    nametable = varfont["name"]
+    return {
+        (r.nameID, r.platformID, r.platEncID, r.langID): r.toUnicode()
+        for r in nametable.names
+    }
+
+
+def test_updateNameTable(varfont):
+    instancer.updateNameTable(varfont, {"wght": 400, "wdth": 100})
+    names = _get_name_records(varfont)
+    assert names[(1, 3, 1, 0x409)] == "Test Variable Font"
+    assert names[(2, 3, 1, 0x0409)] == "Regular"
+    assert names[(6, 3, 1, 0x409)] == "TestVariableFont-Regular"
+    assert (16, 3, 1, 0x409) not in names
+    assert (17, 3, 1, 0x409) not in names
+
+    instancer.updateNameTable(varfont, {"wght": 900, "wdth": 100})
+    names = _get_name_records(varfont)
+    assert names[(1, 3, 1, 0x409)] == "Test Variable Font Black"
+    assert names[(2, 3, 1, 0x409)] == "Regular"
+    assert names[(6, 3, 1, 0x409)] == "TestVariableFont-Black"
+    assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
+    assert names[(17, 3, 1, 0x409)] == "Black"
+
+    instancer.updateNameTable(varfont, {"wght": 100, "wdth": 100})
+    names = _get_name_records(varfont)
+    assert names[(1, 3, 1, 0x409)] == "Test Variable Font Thin"
+    assert names[(2, 3, 1, 0x409)] == "Regular"
+    assert names[(6, 3, 1, 0x409)] == "TestVariableFont-Thin"
+    assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
+    assert names[(17, 3, 1, 0x409)] == "Thin"
+
+    # TODO (Marc F) this doesn't work because our test font is using Format 4 for wdth axis
+    instancer.updateNameTable(varfont, {"wdth": 79, "wdth": 400})
+
+
 def test_sanityCheckVariableTables(varfont):
     font = ttLib.TTFont()
     with pytest.raises(ValueError, match="Missing required table fvar"):

@@ -127,6 +127,15 @@ class OverlapMode(IntEnum):
     KEEP_AND_SET_FLAGS = 1
     REMOVE = 2
 
+class NameID(IntEnum):
+    FAMILY_NAME = 1
+    SUBFAMILY_NAME = 2
+    UNIQUE_FONT_IDENTIFIER = 3
+    FULL_FONT_NAME = 4
+    POSTSCRIPT_NAME = 6
+    TYPOGRAPHIC_FAMILY_NAME = 16
+    TYPOGRAPHIC_SUBFAMILY_NAME = 17
+
 
 def instantiateTupleVariationStore(
     variations, axisLimits, origCoords=None, endPts=None
@@ -1187,6 +1196,7 @@ def instantiateVariableFont(
     inplace=False,
     optimize=True,
     overlap=OverlapMode.KEEP_AND_SET_FLAGS,
+    update_nametable=False
 ):
     """Instantiate variable font, either fully or partially.
 
@@ -1272,6 +1282,10 @@ def instantiateVariableFont(
                 log.info("Removing overlaps from glyf table")
                 removeOverlaps(varfont)
 
+    if update_nametable:
+        log.info("Updating nametable")
+        updateNameTable(varfont, axisLimits)
+
     varLib.set_default_weight_width_slant(
         varfont,
         location={
@@ -1282,6 +1296,131 @@ def instantiateVariableFont(
     )
 
     return varfont
+
+
+def updateNameTable(varfont, axisLimits):
+    nametable = varfont["name"]
+    if "STAT" not in varfont:
+        raise ValueError("Cannot update name table since there is no STAT table.")
+    stat = varfont['STAT']
+
+    axisRecords = stat.table.DesignAxisRecord.Axis
+    axisValues = stat.table.AxisValueArray.AxisValue
+
+    axisOrder = {a.AxisOrdering: a.AxisTag for a in axisRecords}
+    keptAxisValues = []
+    for axisValue in axisValues:
+        # TODO Format 4
+        if axisValue.Format == 4:
+            continue
+
+        axisTag = axisOrder[axisValue.AxisIndex]
+        if axisTag in axisLimits:
+            pinnedAxis = isinstance(axisLimits[axisTag], (float, int))
+        else:
+            pinnedAxis = False
+
+        # Ignore axisValue if it has ELIDABLE_AXIS_VALUE_NAME flag enabled.
+        # Enabling this flag will hide the axisValue in application font menus.
+        if axisValue.Flags == 2:
+            continue
+
+        if axisValue.Format in (1, 3):
+            # Add axisValue if it's used to link to another variable font
+            if axisTag not in axisLimits and axisValue.Value == 1.0:
+                keptAxisValues.append(axisValue)
+
+            # Add axisValue if its value is in the axisLimits and the user has
+            # pinned the axis
+            elif pinnedAxis and axisValue.Value == axisLimits[axisTag]:
+                keptAxisValues.append(axisValue)
+
+        if axisValue.Format == 2:
+            if pinnedAxis and axisLimits[axisTag] >= axisValue.RangeMinValue \
+                and axisLimits[axisTag] <= axisValue.RangeMaxValue:
+                    keptAxisValues.append(axisValue)
+
+    _updateNameRecords(varfont, nametable, keptAxisValues)
+
+
+def _updateNameRecords(varfont, nametable, axisValues):
+    # Update nametable based on the axisValues
+    # using the R/I/B/BI and WWS models.
+    engNameRecords = any([r for r in nametable.names if r.langID == 0x409])
+    if not engNameRecords:
+        # TODO (Marc F) improve error msg
+        raise ValueError("No English namerecords")
+
+    ribbiAxisValues = _ribbiAxisValues(nametable, axisValues)
+    nonRibbiAxisValues = [av for av in axisValues if av not in ribbiAxisValues]
+
+    nametblLangs = set((r.platformID, r.platEncID, r.langID) for r in nametable.names)
+    for lang in nametblLangs:
+        _updateStyleRecords(
+            nametable,
+            ribbiAxisValues,
+            nonRibbiAxisValues,
+            lang,
+        )
+
+
+def _ribbiAxisValues(nametable, axisValues):
+    ribbiStyles = frozenset(["Regular", "Italic", "Bold", "Bold Italic"])
+    res = []
+    for axisValue in axisValues:
+        name = nametable.getName(axisValue.ValueNameID, 3, 1, 0x409).toUnicode()
+        if name in ribbiStyles:
+            res.append(axisValue)
+    return res
+
+
+def _updateStyleRecords(
+    nametable,
+    ribbiAxisValues,
+    nonRibbiAxisValues,
+    lang=(3, 1, 0x409)
+):
+#    wwsAxes = frozenset(["wght", "wdth", "ital"])
+    currentFamilyName = nametable.getName(NameID.TYPOGRAPHIC_FAMILY_NAME, *lang) or \
+            nametable.getName(NameID.FAMILY_NAME, *lang)
+    if not currentFamilyName:
+        return
+    currentFamilyName = currentFamilyName.toUnicode()
+
+    currentStyleName = nametable.getName(NameID.TYPOGRAPHIC_SUBFAMILY_NAME, *lang) or \
+            nametable.getName(NameID.SUBFAMILY_NAME, *lang)
+    currentStyleName = currentStyleName.toUnicode()
+
+    ribbiName = " ".join([nametable.getName(a.ValueNameID, *lang).toUnicode() for a in ribbiAxisValues])
+    nonRibbiName = " ".join([nametable.getName(a.ValueNameID, *lang).toUnicode() for a in nonRibbiAxisValues])
+
+    nameIDs = {
+        NameID.FAMILY_NAME: currentFamilyName,
+        NameID.SUBFAMILY_NAME: ribbiName or "Regular"
+    }
+    if nonRibbiAxisValues:
+        nameIDs[NameID.FAMILY_NAME] = f"{currentFamilyName} {nonRibbiName}"
+        nameIDs[NameID.TYPOGRAPHIC_FAMILY_NAME] = currentFamilyName
+        nameIDs[NameID.TYPOGRAPHIC_SUBFAMILY_NAME] = f"{nonRibbiName} {ribbiName}".strip()
+#    # Include WWS name records if there are nonWwsParticles
+#    if nonWwsParticles:
+#        nameIDs[21] = f"{currentFamilyName} {' '.join(nonWwsParticles)}"
+#        nameIDs[22] = " ".join(wwsParticles)
+#        # Enable fsSelection bit 8 (WWS)
+#        varfont['OS/2'].fsSelection |= (1 << 8)
+#
+    newFamilyName = nameIDs.get(NameID.TYPOGRAPHIC_FAMILY_NAME) or \
+            nameIDs.get(NameID.FAMILY_NAME)
+    newStyleName = nameIDs.get(NameID.TYPOGRAPHIC_SUBFAMILY_NAME) or \
+            nameIDs.get(NameID.SUBFAMILY_NAME)
+
+    nameIDs[NameID.FULL_FONT_NAME] = f"{newFamilyName} {newStyleName}"
+    nameIDs[NameID.POSTSCRIPT_NAME] = f"{newFamilyName.replace(' ', '')}-{newStyleName.replace(' ', '')}"
+    # Update uniqueID
+    # TODO
+    # versionRecord = nametable.getName(5, 3, 1, 0x409)
+    for nameID, string in nameIDs.items():
+        nametable.setName(string, nameID, *lang)
 
 
 def splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange):
@@ -1377,6 +1516,12 @@ def parseArgs(args):
         help="Merge overlapping contours and components (only applicable "
         "when generating a full instance). Requires skia-pathops",
     )
+    parser.add_argument(
+        "--update-nametable",
+        action="store_true",
+        help="Update the instantiated font's nametable using the STAT "
+        "table Axis Values"
+    )
     loggingGroup = parser.add_mutually_exclusive_group(required=False)
     loggingGroup.add_argument(
         "-v", "--verbose", action="store_true", help="Run more verbosely."
@@ -1428,6 +1573,7 @@ def main(args=None):
         inplace=True,
         optimize=options.optimize,
         overlap=options.overlap,
+        update_nametable=options.update_nametable,
     )
 
     outfile = (
