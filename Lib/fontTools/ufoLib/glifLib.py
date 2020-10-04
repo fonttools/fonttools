@@ -1416,10 +1416,10 @@ def _validateAndMassagePointStructures(contour, pointAttributes, openContourOffC
 				raise GlifLibError("Unknown child elements in point element.")
 		# x and y are required
 		for attr in ("x", "y"):
-			value = element.get(attr)
-			if validate and value is None:
-				raise GlifLibError("Required %s attribute is missing in point element." % attr)
-			point[attr] = _number(value)
+			try:
+				point[attr] = _number(point[attr])
+			except KeyError as e:
+				raise GlifLibError(f"Required {attr} attribute is missing in point element.") from e
 		# segment type
 		pointType = point.pop("type", "offcurve")
 		if validate and pointType not in pointTypeOptions:

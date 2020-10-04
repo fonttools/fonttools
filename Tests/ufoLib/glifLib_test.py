@@ -10,6 +10,7 @@ from fontTools.ufoLib.glifLib import (
 )
 from fontTools.ufoLib.errors import GlifLibError, UnsupportedGLIFFormat, UnsupportedUFOFormat
 from fontTools.misc.etree import XML_DECLARATION
+from fontTools.pens.recordingPen import RecordingPointPen
 import pytest
 
 GLYPHSETDIR = getDemoFontGlyphSetPath()
@@ -250,6 +251,27 @@ class ReadWriteFuncTest:
 		with pytest.raises(GlifLibError, match="Forbidden GLIF format version"):
 			readGlyphFromString(s, _Glyph(), formatVersions=[1])
 
+	def test_read_ensure_x_y(self):
+		"""Ensure that a proper GlifLibError is raised when point coordinates are
+		missing, regardless of validation setting."""
+
+		s = """<?xml version='1.0' encoding='utf-8'?>
+		<glyph name="A" format="2">
+			<outline>
+				<contour>
+					<point x="545" y="0" type="line"/>
+					<point x="638" type="line"/>
+				</contour>
+			</outline>
+		</glyph>
+		"""
+		pen = RecordingPointPen() 
+
+		with pytest.raises(GlifLibError, match="Required y attribute"):
+			readGlyphFromString(s, _Glyph(), pen)
+
+		with pytest.raises(GlifLibError, match="Required y attribute"):
+			readGlyphFromString(s, _Glyph(), pen, validate=False)
 
 def test_GlyphSet_unsupported_ufoFormatVersion(tmp_path, caplog):
 	with pytest.raises(UnsupportedUFOFormat):
