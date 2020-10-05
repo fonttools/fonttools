@@ -1,3 +1,10 @@
+- [varLib.instancer] Fixed ``TypeError`` exception when instantiating a VF with
+  a GSUB table 1.1 in which ``FeatureVariations`` attribute is present but set to
+  ``None`` -- indicating that optional ``FeatureVariations`` is missing (#2077).
+- [glifLib] Make ``x`` and ``y`` attributes of the ``point`` element required
+  even when validation is turned off, and raise a meaningful ``GlifLibError``
+  message when that happens (#2075).
+
 4.16.0 (released 2020-09-30)
 ----------------------------
 
