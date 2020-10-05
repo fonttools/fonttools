@@ -1,3 +1,6 @@
+4.16.1 (released 2020-10-05)
+----------------------------
+
 - [varLib.instancer] Fixed ``TypeError`` exception when instantiating a VF with
   a GSUB table 1.1 in which ``FeatureVariations`` attribute is present but set to
   ``None`` -- indicating that optional ``FeatureVariations`` is missing (#2077).
