@@ -1666,6 +1666,19 @@ class InstantiateFeatureVariationsTest(object):
         assert len(rec1.ConditionSet.ConditionTable) == 2
         assert rec1.ConditionSet.ConditionTable[0].Format == 2
 
+    def test_GSUB_FeatureVariations_is_None(self, varfont2):
+        varfont2["GSUB"].table.Version = 0x00010001
+        varfont2["GSUB"].table.FeatureVariations = None
+        tmp = BytesIO()
+        varfont2.save(tmp)
+        varfont = ttLib.TTFont(tmp)
+
+        # DO NOT raise an exception when the optional 'FeatureVariations' attribute is
+        # present but is set to None (e.g. with GSUB 1.1); skip and do nothing.
+        assert varfont["GSUB"].table.FeatureVariations is None
+        instancer.instantiateFeatureVariations(varfont, {"wght": 400, "wdth": 100})
+        assert varfont["GSUB"].table.FeatureVariations is None
+
 
 class LimitTupleVariationAxisRangesTest:
     def check_limit_single_var_axis_range(self, var, axisTag, axisRange, expected):
