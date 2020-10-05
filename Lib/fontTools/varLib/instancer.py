@@ -683,8 +683,8 @@ def instantiateOTL(varfont, axisLimits):
 
 def instantiateFeatureVariations(varfont, axisLimits):
     for tableTag in ("GPOS", "GSUB"):
-        if tableTag not in varfont or not hasattr(
-            varfont[tableTag].table, "FeatureVariations"
+        if tableTag not in varfont or not getattr(
+            varfont[tableTag].table, "FeatureVariations", None
         ):
             continue
         log.info("Instantiating FeatureVariations of %s table", tableTag)
