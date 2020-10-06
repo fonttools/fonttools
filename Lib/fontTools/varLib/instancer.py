@@ -1315,31 +1315,35 @@ def updateNameTable(varfont, axisLimits):
         if axisValue.Format in (1, 3):
             # Add axisValue if it's used to link to another variable font
             if axisTag not in axisLimits and axisValue.Value == 1.0:
-                axisValueNames.append(axisValueName)
+                axisValueNames.append((axisValueName, axisTag))
 
             # Add axisValue if its value is in the axisLimits and the user has
             # pinned the axis
             elif isinstance(axisLimits[axisTag], float) and axisValue.Value == axisLimits[axisTag]:
-                axisValueNames.append(axisValueName)
+                axisValueNames.append((axisValueName, axisTag))
 
         if axisValue.Format == 2:
             if isinstance(axisLimits[axisTag], float) and axisLimits[axisTag] >= axisValue.RangeMinValue \
                 and axisLimits[axisTag] <= axisValue.RangeMaxValue:
-                    axisValueNames.append(axisValueName)
+                    axisValueNames.append((axisValueName, axisTag))
 
         # TODO Format 4
         if axisValue.Format == 4:
             raise NotImplementedError("Cannot update nametable using format 4 axisValues")
         
-    _updateNameRecords(nametable, axisValueNames)
+    _updateNameRecords(varfont, nametable, axisValueNames)
 
 
-def _updateNameRecords(nametable, axisValueNames):
+def _updateNameRecords(varfont, nametable, axisValueNames):
     # Update nametable based on the discovered axisValueNames
-    # using the R/I/B/BI model.
+    # using the R/I/B/BI and WWS models.
     ribbiStyles = frozenset(["Regular", "Italic", "Bold", "Bold Italic"])
-    ribbiParticles = [n for n in axisValueNames if n in ribbiStyles]
-    nonRibbiParticles = [n for n in axisValueNames if n not in ribbiStyles]
+    wwsAxes = frozenset(["wght", "wdth", "ital"])
+
+    ribbiParticles = [n for n, _ in axisValueNames if n in ribbiStyles]
+    nonRibbiParticles = [n for n, _ in axisValueNames if n not in ribbiStyles]
+    wwsParticles = [n for n, axis in axisValueNames if axis in wwsAxes]
+    nonWwsParticles = [n for n, axis in axisValueNames if axis not in wwsAxes]
 
     currentFamilyName = nametable.getName(16, 3, 1, 0x409) or \
             nametable.getName(1, 3, 1, 0x409)
@@ -1350,12 +1354,17 @@ def _updateNameRecords(nametable, axisValueNames):
     currentStyleName = currentStyleName.toUnicode()
 
     nameIDs = {1: currentFamilyName, 2: " ".join(ribbiParticles) or "Regular"}
-    # Include Typographic family and subfamily names if there are
-    # nonRibbiParticles
+    # Include Typographic name records if there are nonRibbiParticles
     if nonRibbiParticles:
         nameIDs[1] = f"{currentFamilyName} {' '.join(nonRibbiParticles)}"
         nameIDs[16] = currentFamilyName
         nameIDs[17] = " ".join(nonRibbiParticles + ribbiParticles)
+    # Include WWS name records if there are nonWwsParticles
+    if nonWwsParticles:
+        nameIDs[21] = f"{currentFamilyName} {' '.join(nonWwsParticles)}"
+        nameIDs[22] = " ".join(wwsParticles)
+        # Enable fsSelection bit 8 (WWS)
+        varfont['OS/2'].fsSelection |= (1 << 8)
 
     newFamilyName = nameIDs.get(16) or nameIDs.get(1)
     newStyleName = nameIDs.get(17) or nameIDs.get(2)
