@@ -525,17 +525,21 @@ class StructWithLength(Struct):
 
 class Table(Struct):
 
-	longOffset = False
 	staticSize = 2
 
 	def readOffset(self, reader):
 		return reader.readUShort()
 
 	def writeNullOffset(self, writer):
-		if self.longOffset:
+		staticSize = self.staticSize
+		if staticSize == 4:
 			writer.writeULong(0)
-		else:
+		elif staticSize == 2:
 			writer.writeUShort(0)
+		elif staticSize == 3:
+			writer.writeUInt24(0)
+		else:
+			raise AssertionError(self.staticSize)
 
 	def read(self, reader, font, tableDict):
 		offset = self.readOffset(reader)
@@ -554,8 +558,7 @@ class Table(Struct):
 		if value is None:
 			self.writeNullOffset(writer)
 		else:
-			subWriter = writer.getSubWriter()
-			subWriter.longOffset = self.longOffset
+			subWriter = writer.getSubWriter(offsetSize=self.staticSize)
 			subWriter.name = self.name
 			if repeatIndex is not None:
 				subWriter.repeatIndex = repeatIndex
@@ -564,11 +567,19 @@ class Table(Struct):
 
 class LTable(Table):
 
-	longOffset = True
 	staticSize = 4
 
 	def readOffset(self, reader):
 		return reader.readULong()
+
+
+# Table pointed to by a 24-bit, 3-byte long offset
+class Table24(Table):
+
+	staticSize = 3
+
+	def readOffset(self, reader):
+		return reader.readUInt24()
 
 
 # TODO Clean / merge the SubTable and SubStruct
@@ -905,13 +916,11 @@ class AATLookupWithDataOffset(BaseConverter):
 			offsetByGlyph[glyph] = offset
 		# For calculating the offsets to our AATLookup and data table,
 		# we can use the regular OTTableWriter infrastructure.
-		lookupWriter = writer.getSubWriter()
-		lookupWriter.longOffset = True
+		lookupWriter = writer.getSubWriter(offsetSize=4)
 		lookup = AATLookup('DataOffsets', None, None, UShort)
 		lookup.write(lookupWriter, font, tableDict, offsetByGlyph, None)
 
-		dataWriter = writer.getSubWriter()
-		dataWriter.longOffset = True
+		dataWriter = writer.getSubWriter(offsetSize=4)
 		writer.writeSubTable(lookupWriter)
 		writer.writeSubTable(dataWriter)
 		for d in compiledData:
@@ -1252,8 +1261,7 @@ class STXHeader(BaseConverter):
 				(len(table.PerGlyphLookups), numLookups))
 		writer = OTTableWriter()
 		for lookup in table.PerGlyphLookups:
-			lookupWriter = writer.getSubWriter()
-			lookupWriter.longOffset = True
+			lookupWriter = writer.getSubWriter(offsetSize=4)
 			self.perGlyphLookup.write(lookupWriter, font,
 			                          {}, lookup, None)
 			writer.writeSubTable(lookupWriter)
@@ -1739,6 +1747,7 @@ converterMapping = {
 	"struct":	Struct,
 	"Offset":	Table,
 	"LOffset":	LTable,
+	"Offset24":	Table24,
 	"ValueRecord":	ValueRecord,
 	"DeltaValue":	DeltaValue,
 	"VarIdxMapValue":	VarIdxMapValue,
