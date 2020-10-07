@@ -1924,7 +1924,8 @@ def _get_name_records(varfont):
     }
 
 
-def test_updateNameTable(varfont):
+def test_updateNameTable_with_registered_axes(varfont):
+    # Regular
     instancer.updateNameTable(varfont, {"wght": 400, "wdth": 100})
     names = _get_name_records(varfont)
     assert names[(1, 3, 1, 0x409)] == "Test Variable Font"
@@ -1933,6 +1934,7 @@ def test_updateNameTable(varfont):
     assert (16, 3, 1, 0x409) not in names
     assert (17, 3, 1, 0x409) not in names
 
+    # Black
     instancer.updateNameTable(varfont, {"wght": 900, "wdth": 100})
     names = _get_name_records(varfont)
     assert names[(1, 3, 1, 0x409)] == "Test Variable Font Black"
@@ -1941,6 +1943,7 @@ def test_updateNameTable(varfont):
     assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
     assert names[(17, 3, 1, 0x409)] == "Black"
 
+    # Thin
     instancer.updateNameTable(varfont, {"wght": 100, "wdth": 100})
     names = _get_name_records(varfont)
     assert names[(1, 3, 1, 0x409)] == "Test Variable Font Thin"
@@ -1949,8 +1952,47 @@ def test_updateNameTable(varfont):
     assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
     assert names[(17, 3, 1, 0x409)] == "Thin"
 
-    # TODO (Marc F) this doesn't work because our test font is using Format 4 for wdth axis
-    instancer.updateNameTable(varfont, {"wdth": 79, "wdth": 400})
+    # Thin Condensed
+    instancer.updateNameTable(varfont, {"wdth": 79, "wght": 100})
+    names = _get_name_records(varfont)
+    assert names[(1, 3, 1, 0x409)] == "Test Variable Font Thin Condensed"
+    assert names[(2, 3, 1, 0x409)] == "Regular"
+    assert names[(6, 3, 1, 0x409)] == "TestVariableFont-ThinCondensed"
+    assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
+    assert names[(17, 3, 1, 0x409)] == "Thin Condensed"
+
+
+def test_updateNameTable_with_multilingual_names(varfont):
+    name = varfont["name"]
+    name.setName("Test Variable Font", 1, 3, 1, 0x405)
+    name.setName("Normal", 2, 3, 1, 0x405)
+    name.setName("Normal", 261, 3, 1, 0x405) # nameID 261=Regular STAT entry
+    name.setName("Negreta",266, 3, 1, 0x405) # nameID 266=Black STAT entry
+    name.setName("Zhuštěné", 279, 3, 1, 0x405) # nameID 279=Condensed STAT entry
+
+    # Regular | Normal
+    instancer.updateNameTable(varfont, {"wdth": 100, "wght": 400})
+    names = _get_name_records(varfont)
+    assert names[(1, 3, 1, 0x405)] == "Test Variable Font"
+    assert names[(2, 3, 1, 0x405)] == "Normal"
+    assert (16, 3, 1, 0x405) not in names
+    assert (17, 3, 1, 0x405) not in names
+
+    # Black | Negreta
+    instancer.updateNameTable(varfont, {"wdth": 100, "wght": 900})
+    names = _get_name_records(varfont)
+    assert names[(1, 3, 1, 0x405)] == "Test Variable Font Negreta"
+    assert names[(2, 3, 1, 0x405)] == "Normal"
+    assert names[(16, 3, 1, 0x405)] == "Test Variable Font"
+    assert names[(17, 3, 1, 0x405)] == "Negreta"
+
+    # Black Condensed | Negreta Zhuštěné
+    instancer.updateNameTable(varfont, {"wdth": 79, "wght": 900})
+    names = _get_name_records(varfont)
+    assert names[(1, 3, 1, 0x405)] == "Test Variable Font Negreta Zhuštěné"
+    assert names[(2, 3, 1, 0x405)] == "Normal"
+    assert names[(16, 3, 1, 0x405)] == "Test Variable Font"
+    assert names[(17, 3, 1, 0x405)] == "Negreta Zhuštěné"
 
 
 def test_sanityCheckVariableTables(varfont):
