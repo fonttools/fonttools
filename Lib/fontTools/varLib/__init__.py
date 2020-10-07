@@ -44,7 +44,8 @@ from .errors import VarLibError, VarLibValidationError
 log = logging.getLogger("fontTools.varLib")
 
 # This is a lib key for the designspace document. The value should be
-# an OpenType feature tag, to be used as the FeatureVariations faature.
+# an OpenType feature tag, to be used as the FeatureVariations feature.
+# If present, the DesignSpace <rules processing="..."> flag is ignored.
 FEAVAR_FEATURETAG_LIB_KEY = "com.github.fonttools.varLib.featureVarsFeatureTag"
 
 #
@@ -918,10 +919,10 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 	if 'cvar' not in exclude and 'glyf' in vf:
 		_merge_TTHinting(vf, model, master_fonts)
 	if 'GSUB' not in exclude and ds.rules:
-		if ds.rulesProcessingLast:
-			featureTag = ds.lib.get(FEAVAR_FEATURETAG_LIB_KEY, "rclt")
-		else:
-			featureTag = "rvrn"
+		featureTag = ds.lib.get(
+			FEAVAR_FEATURETAG_LIB_KEY,
+			"rclt" if ds.rulesProcessingLast else "rvrn"
+		)
 		_add_GSUB_feature_variations(vf, ds.axes, ds.internal_axis_supports, ds.rules, featureTag)
 	if 'CFF2' not in exclude and ('CFF ' in vf or 'CFF2' in vf):
 		_add_CFF2(vf, model, master_fonts)
