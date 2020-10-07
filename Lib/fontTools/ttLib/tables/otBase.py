@@ -829,6 +829,26 @@ class FormatSwitchingBaseTable(BaseTable):
 		BaseTable.toXML(self, xmlWriter, font, attrs, name)
 
 
+class UInt8FormatSwitchingBaseTable(FormatSwitchingBaseTable):
+	def readFormat(self, reader):
+		self.Format = reader.readUInt8()
+
+	def writeFormat(self, writer):
+		writer.writeUInt8(self.Format)
+
+
+formatSwitchingBaseTables = {
+	"uint16": FormatSwitchingBaseTable,
+	"uint8": UInt8FormatSwitchingBaseTable,
+}
+
+def getFormatSwitchingBaseTableClass(formatType):
+	try:
+		return formatSwitchingBaseTables[formatType]
+	except KeyError:
+		raise TypeError(f"Unsupported format type: {formatType!r}")
+
+
 #
 # Support for ValueRecords
 #
