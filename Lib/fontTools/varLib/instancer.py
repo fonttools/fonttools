@@ -1303,14 +1303,22 @@ def updateNameTable(varfont, axisLimits):
     if "STAT" not in varfont:
         raise ValueError("Cannot update name table since there is no STAT table.")
     stat = varfont['STAT']
+
     axisRecords = stat.table.DesignAxisRecord.Axis
     axisValues = stat.table.AxisValueArray.AxisValue
 
     axisOrder = {a.AxisOrdering: a.AxisTag for a in axisRecords}
     keptAxisValues = []
     for axisValue in axisValues:
+        # TODO Format 4
+        if axisValue.Format == 4:
+            continue
+
         axisTag = axisOrder[axisValue.AxisIndex]
-        pinnedAxis = isinstance(axisLimits[axisTag], float)
+        if axisTag in axisLimits:
+            pinnedAxis = isinstance(axisLimits[axisTag], (float, int))
+        else:
+            pinnedAxis = False
 
         # Ignore axisValue if it has ELIDABLE_AXIS_VALUE_NAME flag enabled.
         # Enabling this flag will hide the axisValue in application font menus.
@@ -1332,10 +1340,6 @@ def updateNameTable(varfont, axisLimits):
                 and axisLimits[axisTag] <= axisValue.RangeMaxValue:
                     keptAxisValues.append(axisValue)
 
-        # TODO Format 4
-        if axisValue.Format == 4:
-            raise NotImplementedError("Cannot update nametable using format 4 axisValues")
-        
     _updateNameRecords(varfont, nametable, keptAxisValues)
 
 
@@ -1397,7 +1401,7 @@ def _updateStyleRecords(
     if nonRibbiAxisValues:
         nameIDs[NameID.FAMILY_NAME] = f"{currentFamilyName} {nonRibbiName}"
         nameIDs[NameID.TYPOGRAPHIC_FAMILY_NAME] = currentFamilyName
-        nameIDs[NameID.TYPOGRAPHIC_SUBFAMILY_NAME] = f"{nonRibbiName} {ribbiName}"
+        nameIDs[NameID.TYPOGRAPHIC_SUBFAMILY_NAME] = f"{nonRibbiName} {ribbiName}".strip()
 #    # Include WWS name records if there are nonWwsParticles
 #    if nonWwsParticles:
 #        nameIDs[21] = f"{currentFamilyName} {' '.join(nonWwsParticles)}"
