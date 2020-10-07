@@ -43,6 +43,8 @@ from .errors import VarLibError, VarLibValidationError
 
 log = logging.getLogger("fontTools.varLib")
 
+# This is a lib key for the designspace document. The value should be
+# an OpenType feature tag, to be used as the FeatureVariations faature.
 FEAVAR_FEATURETAG_LIB_KEY = "com.github.fonttools.varLib.featureVarsFeatureTag"
 
 #
