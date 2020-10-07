@@ -1298,49 +1298,73 @@ def instantiateVariableFont(
     return varfont
 
 
-def updateNameTable(varfont, axisLimits):
-    nametable = varfont["name"]
-    if "STAT" not in varfont:
-        raise ValueError("Cannot update name table since there is no STAT table.")
-    stat = varfont['STAT']
+def axisValuesFromAxisLimits(stat, axisLimits):
 
     axisRecords = stat.table.DesignAxisRecord.Axis
     axisValues = stat.table.AxisValueArray.AxisValue
 
-    axisOrder = {a.AxisOrdering: a.AxisTag for a in axisRecords}
-    keptAxisValues = []
-    for axisValue in axisValues:
-        # TODO Format 4
-        if axisValue.Format == 4:
-            continue
+    format4 = [a for a in axisValues if a.Format == 4]
+    nonformat4  = [a for a in axisValues if a not in format4]
+    axisValues = format4 + nonformat4
 
-        axisTag = axisOrder[axisValue.AxisIndex]
-        if axisTag in axisLimits:
-            pinnedAxis = isinstance(axisLimits[axisTag], (float, int))
-        else:
-            pinnedAxis = False
+    axisOrder = {a.AxisOrdering: a.AxisTag for a in axisRecords}
+    pinnedAxes = set(k for k, v in axisLimits.items() if isinstance(v, (float, int)))
+
+    results, seen_axes = [], set()
+    for axisValue in axisValues:
 
         # Ignore axisValue if it has ELIDABLE_AXIS_VALUE_NAME flag enabled.
         # Enabling this flag will hide the axisValue in application font menus.
         if axisValue.Flags == 2:
             continue
 
-        if axisValue.Format in (1, 3):
+        if axisValue.Format == 4:
+            axisIndexes = set(r.AxisIndex for r in axisValue.AxisValueRecord)
+            if seen_axes - axisIndexes != seen_axes:
+                continue
+            # TODO fix dup appends 
+            for rec in axisValue.AxisValueRecord:
+                axisTag = axisOrder[rec.AxisIndex]
+                if axisTag not in pinnedAxes:
+                    continue
+                if rec.Value == axisLimits[axisTag]:
+                    seen_axes.add(rec.AxisIndex)
+                    results.append((rec.AxisIndex, axisValue))
+
+        elif axisValue.Format in (1, 3):
+            axisTag = axisOrder[axisValue.AxisIndex]
             # Add axisValue if it's used to link to another variable font
             if axisTag not in axisLimits and axisValue.Value == 1.0:
-                keptAxisValues.append(axisValue)
+                seen_axes.add(rec.AxisIndex)
+                results.append((axisValue.AxisIndex, axisValue))
 
+            if axisTag not in pinnedAxes:
+                continue
             # Add axisValue if its value is in the axisLimits and the user has
             # pinned the axis
-            elif pinnedAxis and axisValue.Value == axisLimits[axisTag]:
-                keptAxisValues.append(axisValue)
+            elif axisValue.Value == axisLimits[axisTag]:
+                seen_axes.add(rec.AxisIndex)
+                results.append((axisValue.AxisIndex,axisValue))
 
-        if axisValue.Format == 2:
-            if pinnedAxis and axisLimits[axisTag] >= axisValue.RangeMinValue \
+        elif axisValue.Format == 2:
+            axisTag = axisOrder[axisValue.AxisIndex]
+            if axisTag not in pinnedAxes:
+                continue
+            if axisLimits[axisTag] >= axisValue.RangeMinValue \
                 and axisLimits[axisTag] <= axisValue.RangeMaxValue:
-                    keptAxisValues.append(axisValue)
+                    seen_axes.add(axisValue.AxisIndex)
+                    results.append((axisValue.AxisIndex, axisValue))
+    return [v for k, v in sorted(results)]
 
-    _updateNameRecords(varfont, nametable, keptAxisValues)
+
+def updateNameTable(varfont, axisLimits):
+    if "STAT" not in varfont:
+        raise ValueError("Cannot update name table since there is no STAT table.")
+    stat = varfont['STAT']
+    nametable = varfont["name"]
+
+    selectedAxisValues = axisValuesFromAxisLimits(stat, axisLimits)
+    _updateNameRecords(varfont, nametable, selectedAxisValues)
 
 
 def _updateNameRecords(varfont, nametable, axisValues):
