@@ -1315,6 +1315,7 @@ def axisValuesFromAxisLimits(stat, axisLimits):
 
         # Ignore axisValue if it has ELIDABLE_AXIS_VALUE_NAME flag enabled.
         # Enabling this flag will hide the axisValue in application font menus.
+        # TODO this is too greedy! we need to retain wght axisValues
         if axisValue.Flags == 2:
             continue
 
@@ -1407,12 +1408,14 @@ def _updateStyleRecords(
 #    wwsAxes = frozenset(["wght", "wdth", "ital"])
     currentFamilyName = nametable.getName(NameID.TYPOGRAPHIC_FAMILY_NAME, *lang) or \
             nametable.getName(NameID.FAMILY_NAME, *lang)
-    if not currentFamilyName:
-        return
-    currentFamilyName = currentFamilyName.toUnicode()
 
     currentStyleName = nametable.getName(NameID.TYPOGRAPHIC_SUBFAMILY_NAME, *lang) or \
             nametable.getName(NameID.SUBFAMILY_NAME, *lang)
+    # TODO cleanup
+    if not currentFamilyName or not currentStyleName:
+        print(f"Cannot update {lang} since it's missing a familyName nameID 1 or subFamilyName nameID 2 entry")
+        return
+    currentFamilyName = currentFamilyName.toUnicode()
     currentStyleName = currentStyleName.toUnicode()
 
     ribbiName = " ".join([nametable.getName(a.ValueNameID, *lang).toUnicode() for a in ribbiAxisValues])
@@ -1420,7 +1423,7 @@ def _updateStyleRecords(
 
     nameIDs = {
         NameID.FAMILY_NAME: currentFamilyName,
-        NameID.SUBFAMILY_NAME: ribbiName or "Regular"
+        NameID.SUBFAMILY_NAME: ribbiName or nametable.getName(NameID.SUBFAMILY_NAME, *lang).toUnicode()
     }
     if nonRibbiAxisValues:
         nameIDs[NameID.FAMILY_NAME] = f"{currentFamilyName} {nonRibbiName}"
