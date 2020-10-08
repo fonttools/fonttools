@@ -1336,7 +1336,7 @@ def axisValuesFromAxisLimits(stat, axisLimits):
             axisTag = axisOrder[axisValue.AxisIndex]
             # Add axisValue if it's used to link to another variable font
             if axisTag not in axisLimits and axisValue.Value == 1.0:
-                seen_axes.add(rec.AxisIndex)
+                seen_axes.add(axisValue.AxisIndex)
                 results.append((axisValue.AxisIndex, axisValue))
 
             if axisTag not in pinnedAxes:
@@ -1344,7 +1344,7 @@ def axisValuesFromAxisLimits(stat, axisLimits):
             # Add axisValue if its value is in the axisLimits and the user has
             # pinned the axis
             elif axisValue.Value == axisLimits[axisTag]:
-                seen_axes.add(rec.AxisIndex)
+                seen_axes.add(axisValue.AxisIndex)
                 results.append((axisValue.AxisIndex,axisValue))
 
         elif axisValue.Format == 2:
@@ -1426,7 +1426,7 @@ def _updateStyleRecords(
         NameID.SUBFAMILY_NAME: ribbiName or nametable.getName(NameID.SUBFAMILY_NAME, *lang).toUnicode()
     }
     if nonRibbiAxisValues:
-        nameIDs[NameID.FAMILY_NAME] = f"{currentFamilyName} {nonRibbiName}"
+        nameIDs[NameID.FAMILY_NAME] = f"{currentFamilyName} {nonRibbiName}".strip()
         nameIDs[NameID.TYPOGRAPHIC_FAMILY_NAME] = currentFamilyName
         nameIDs[NameID.TYPOGRAPHIC_SUBFAMILY_NAME] = f"{nonRibbiName} {ribbiName}".strip()
 #    # Include WWS name records if there are nonWwsParticles
