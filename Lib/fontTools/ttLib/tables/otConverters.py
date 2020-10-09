@@ -14,7 +14,8 @@ from .otBase import (CountReference, FormatSwitchingBaseTable,
 from .otTables import (lookupTypes, AATStateTable, AATState, AATAction,
                        ContextualMorphAction, LigatureMorphAction,
                        InsertionMorphAction, MorxSubtable, VariableFloat,
-                       VariableInt, ExtendMode as _ExtendMode)
+                       VariableInt, ExtendMode as _ExtendMode,
+                       CompositeMode as _CompositeMode)
 from itertools import zip_longest
 from functools import partial
 import struct
@@ -1714,15 +1715,25 @@ class VarUInt16(_NamedTupleConverter):
 	converterClasses = [UShort, ULong]
 
 
-class ExtendMode(UShort):
+class _UInt8Enum(UInt8):
+	enumClass = NotImplemented
+
 	def read(self, reader, font, tableDict):
-		return _ExtendMode(super().read(reader, font, tableDict))
-	@staticmethod
-	def fromString(value):
-		return getattr(_ExtendMode, value.upper())
-	@staticmethod
-	def toString(value):
-		return _ExtendMode(value).name.lower()
+		return self.enumClass(super().read(reader, font, tableDict))
+	@classmethod
+	def fromString(cls, value):
+		return getattr(cls.enumClass, value.upper())
+	@classmethod
+	def toString(cls, value):
+		return cls.enumClass(value).name.lower()
+
+
+class ExtendMode(_UInt8Enum):
+	enumClass = _ExtendMode
+
+
+class CompositeMode(_UInt8Enum):
+	enumClass = _CompositeMode
 
 
 converterMapping = {
@@ -1754,6 +1765,7 @@ converterMapping = {
 	"VarDataValue":	VarDataValue,
 	"LookupFlag": LookupFlag,
 	"ExtendMode": ExtendMode,
+	"CompositeMode": CompositeMode,
 
 	# AAT
 	"CIDGlyphMap":	CIDGlyphMap,
@@ -1769,6 +1781,7 @@ converterMapping = {
 	"STXHeader":	lambda C: partial(STXHeader, tableClass=C),
 	"OffsetTo":	lambda C: partial(Table, tableClass=C),
 	"LOffsetTo":	lambda C: partial(LTable, tableClass=C),
+	"LOffset24To":	lambda C: partial(Table24, tableClass=C),
 
 	# Variable types
 	"VarFixed": VarFixed,

@@ -1292,6 +1292,38 @@ class ExtendMode(IntEnum):
 	REFLECT = 2
 
 
+# Porter-Duff modes for COLRv1 PaintComposite:
+# https://github.com/googlefonts/colr-gradients-spec/tree/off_sub_1#compositemode-enumeration
+class CompositeMode(IntEnum):
+	CLEAR = 0
+	SRC = 1
+	DEST = 2
+	SRC_OVER = 3
+	DEST_OVER = 4
+	SRC_IN = 5
+	DEST_IN = 6
+	SRC_OUT = 7
+	DEST_OUT = 8
+	SRC_ATOP = 9
+	DEST_ATOP = 10
+	XOR = 11
+	SCREEN = 12
+	OVERLAY = 13
+	DARKEN = 14
+	LIGHTEN = 15
+	COLOR_DODGE = 16
+	COLOR_BURN = 17
+	HARD_LIGHT = 18
+	SOFT_LIGHT = 19
+	DIFFERENCE = 20
+	EXCLUSION = 21
+	MULTIPLY = 22
+	HSL_HUE = 23
+	HSL_SATURATION = 24
+	HSL_COLOR = 25
+	HSL_LUMINOSITY = 26
+
+
 # For each subtable format there is a class. However, we don't really distinguish
 # between "field name" and "format name": often these are the same. Yet there's
 # a whole bunch of fields with different names. The following dict is a mapping

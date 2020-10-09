@@ -85,19 +85,22 @@ COLR_V1_DATA = (
     b"\x00\x00\x00\x01"  # BaseGlyphV1List.BaseGlyphCount (1)
     b"\x00\n"  # BaseGlyphV1List.BaseGlyphV1Record[0].BaseGlyph (10)
     b"\x00\x00\x00\n"  # Offset to LayerV1List from beginning of BaseGlyphV1List (10)
-    b"\x00\x00\x00\x03"  # LayerV1List.LayerCount (3)
-    b"\x00\x0b"  # LayerV1List.LayerV1Record[0].LayerGlyph (11)
-    b"\x00\x00\x00\x16"  # Offset to Paint from beginning of LayerV1List (22)
-    b"\x00\x0c"  # LayerV1List.LayerV1Record[1].LayerGlyph (12)
-    b"\x00\x00\x00 "  # Offset to Paint from beginning of LayerV1List (32)
-    b"\x00\r"  # LayerV1List.LayerV1Record[2].LayerGlyph (13)
-    b"\x00\x00\x00x"  # Offset to Paint from beginning of LayerV1List (120)
-    b"\x00\x01"  # Paint.Format (1)
+    b"\x03"  # LayerV1List.LayerCount (3)
+    b"\x00\x00\x00\r"  # Offset to Paint from beginning of LayerV1List (13)
+    b"\x00\x00\x00\x1c"  # Offset to Paint from beginning of LayerV1List (28)
+    b"\x00\x00\x00w"  # Offset to Paint from beginning of LayerV1List (119)
+    b"\x04"  # LayerV1List.Paint[0].Format (4)
+    b"\x00\x00\x06"  # Offset to Paint subtable from beginning of PaintGlyph (6)
+    b"\x00\x0b"  # LayerV1List.Paint[0].Glyph (11)
+    b"\x01"  # LayerV1List.Paint[0].Paint.Format (1)
     b"\x00\x02"  # Paint.Color.PaletteIndex (2)
     b" \x00"  # Paint.Color.Alpha.value (0.5)
     b"\x00\x00\x00\x00"  # Paint.Color.Alpha.varIdx (0)
-    b"\x00\x02"  # Paint.Format (2)
-    b"\x00\x00\x00*"  # Offset to ColorLine from beginning of Paint (42)
+    b"\x04"  # LayerV1List.Paint[1].Format (4)
+    b"\x00\x00\x06"  # Offset to Paint subtable from beginning of PaintGlyph (6)
+    b"\x00\x0c"  # LayerV1List.Paint[1].Glyph (12)
+    b"\x02"  # LayerV1List.Paint[1].Paint.Format (2)
+    b"\x00\x00("  # Offset to ColorLine from beginning of PaintLinearGradient (40)
     b"\x00\x01"  # Paint.x0.value (1)
     b"\x00\x00\x00\x00"  # Paint.x0.varIdx (0)
     b"\x00\x02"  # Paint.y0.value (2)
@@ -108,9 +111,9 @@ COLR_V1_DATA = (
     b"\x00\x00\x00\x00"  # Paint.y1.varIdx (0)
     b"\x00\x05"  # Paint.x2.value (5)
     b"\x00\x00\x00\x00"  # Paint.x2.varIdx (0)
-    b"\x00\x06"  # Paint.y2.value (5)
+    b"\x00\x06"  # Paint.y2.value (6)
     b"\x00\x00\x00\x00"  # Paint.y2.varIdx (0)
-    b"\x00\x01"  # ColorLine.Extend (1 or "repeat")
+    b"\x01"  # ColorLine.Extend (1 or "repeat")
     b"\x00\x03"  # ColorLine.StopCount (3)
     b"\x00\x00"  # ColorLine.ColorStop[0].StopOffset.value (0.0)
     b"\x00\x00\x00\x00"  # ColorLine.ColorStop[0].StopOffset.varIdx (0)
@@ -127,8 +130,14 @@ COLR_V1_DATA = (
     b"\x00\x05"  # ColorLine.ColorStop[2].Color.PaletteIndex (5)
     b"@\x00"  # ColorLine.ColorStop[2].Color.Alpha.value (1.0)
     b"\x00\x00\x00\x00"  # ColorLine.ColorStop[2].Color.Alpha.varIdx (0)
-    b"\x00\x03"  # Paint.Format (3)
-    b"\x00\x00\x00."  # Offset to ColorLine from beginning of Paint (46)
+    b"\x04"  # LayerV1List.Paint[2].Format (4)
+    b"\x00\x00\x06"  # Offset to Paint subtable from beginning of PaintGlyph (6)
+    b"\x00\r"  # LayerV1List.Paint[2].Glyph (13)
+    b"\x06"  # LayerV1List.Paint[2].Paint.Format (6)
+    b"\x00\x00\x08"  # Offset to Paint subtable from beginning of PaintTransform (8)
+    b"\x00\x00\x00O"  # Offset to Transform from beginning of PaintTransform (79)
+    b"\x03"  # LayerV1List.Paint[2].Paint.Paint.Format (3)
+    b"\x00\x00("  # Offset to ColorLine from beginning of PaintRadialGradient (40)
     b"\x00\x07"  # Paint.x0.value (7)
     b"\x00\x00\x00\x00"
     b"\x00\x08"  # Paint.y0.value (8)
@@ -141,26 +150,29 @@ COLR_V1_DATA = (
     b"\x00\x00\x00\x00"
     b"\x00\x0c"  # Paint.r1.value (12)
     b"\x00\x00\x00\x00"
-    b"\x00\x00\x00N"  # Offset to Affine2x2 from beginning of Paint (78)
-    b"\x00\x00"  # ColorLine.Extend (0 or "pad")
+    b"\x00"  # ColorLine.Extend (0 or "pad")
     b"\x00\x02"  # ColorLine.StopCount (2)
     b"\x00\x00"  # ColorLine.ColorStop[0].StopOffset.value (0.0)
     b"\x00\x00\x00\x00"
     b"\x00\x06"  # ColorLine.ColorStop[0].Color.PaletteIndex (6)
-    b"@\x00"     # ColorLine.ColorStop[0].Color.Alpha.value (1.0)
+    b"@\x00"  # ColorLine.ColorStop[0].Color.Alpha.value (1.0)
     b"\x00\x00\x00\x00"
     b"@\x00"  # ColorLine.ColorStop[1].StopOffset.value (1.0)
     b"\x00\x00\x00\x00"
     b"\x00\x07"  # ColorLine.ColorStop[1].Color.PaletteIndex (7)
     b"\x19\x9a"  # ColorLine.ColorStop[1].Color.Alpha.value (0.4)
     b"\x00\x00\x00\x00"
-    b"\xff\xf3\x00\x00"  # Affine2x2.xx.value (-13)
+    b"\xff\xf3\x00\x00"  # Affine2x3.xx.value (-13)
     b"\x00\x00\x00\x00"
-    b"\x00\x0e\x00\x00"  # Affine2x2.xy.value (14)
+    b"\x00\x0e\x00\x00"  # Affine2x3.xy.value (14)
     b"\x00\x00\x00\x00"
-    b"\x00\x0f\x00\x00"  # Affine2x2.yx.value (15)
+    b"\x00\x0f\x00\x00"  # Affine2x3.yx.value (15)
     b"\x00\x00\x00\x00"
-    b"\xff\xef\x00\x00"  # Affine2x2.yy.value (-17)
+    b"\xff\xef\x00\x00"  # Affine2x3.yy.value (-17)
+    b"\x00\x00\x00\x00"
+    b"\x00\x12\x00\x00"  # Affine2x3.yy.value (18)
+    b"\x00\x00\x00\x00"
+    b"\x00\x13\x00\x00"  # Affine2x3.yy.value (19)
     b"\x00\x00\x00\x00"
 )
 
@@ -196,17 +208,16 @@ COLR_V1_XML = [
     '    <BaseGlyph value="glyph00010"/>',
     "    <LayerV1List>",
     "      <!-- LayerCount=3 -->",
-    '      <LayerV1Record index="0">',
-    '        <LayerGlyph value="glyph00011"/>',
+    '      <Paint index="0" Format="4">',
     '        <Paint Format="1">',
     "          <Color>",
     '            <PaletteIndex value="2"/>',
     '            <Alpha value="0.5"/>',
     "          </Color>",
     "        </Paint>",
-    "      </LayerV1Record>",
-    '      <LayerV1Record index="1">',
-    '        <LayerGlyph value="glyph00012"/>',
+    '        <Glyph value="glyph00011"/>',
+    "      </Paint>",
+    '      <Paint index="1" Format="4">',
     '        <Paint Format="2">',
     "          <ColorLine>",
     '            <Extend value="repeat"/>',
@@ -240,42 +251,47 @@ COLR_V1_XML = [
     '          <x2 value="5"/>',
     '          <y2 value="6"/>',
     "        </Paint>",
-    "      </LayerV1Record>",
-    '      <LayerV1Record index="2">',
-    '        <LayerGlyph value="glyph00013"/>',
-    '        <Paint Format="3">',
-    "          <ColorLine>",
-    '            <Extend value="pad"/>',
-    "            <!-- StopCount=2 -->",
-    '            <ColorStop index="0">',
-    '              <StopOffset value="0.0"/>',
-    "              <Color>",
-    '                <PaletteIndex value="6"/>',
-    '                <Alpha value="1.0"/>',
-    "              </Color>",
-    "            </ColorStop>",
-    '            <ColorStop index="1">',
-    '              <StopOffset value="1.0"/>',
-    "              <Color>",
-    '                <PaletteIndex value="7"/>',
-    '                <Alpha value="0.4"/>',
-    "              </Color>",
-    "            </ColorStop>",
-    "          </ColorLine>",
-    '          <x0 value="7"/>',
-    '          <y0 value="8"/>',
-    '          <r0 value="9"/>',
-    '          <x1 value="10"/>',
-    '          <y1 value="11"/>',
-    '          <r1 value="12"/>',
+    '        <Glyph value="glyph00012"/>',
+    "      </Paint>",
+    '      <Paint index="2" Format="4">',
+    '        <Paint Format="6">',
+    '          <Paint Format="3">',
+    "            <ColorLine>",
+    '              <Extend value="pad"/>',
+    "              <!-- StopCount=2 -->",
+    '              <ColorStop index="0">',
+    '                <StopOffset value="0.0"/>',
+    "                <Color>",
+    '                  <PaletteIndex value="6"/>',
+    '                  <Alpha value="1.0"/>',
+    "                </Color>",
+    "              </ColorStop>",
+    '              <ColorStop index="1">',
+    '                <StopOffset value="1.0"/>',
+    "                <Color>",
+    '                  <PaletteIndex value="7"/>',
+    '                  <Alpha value="0.4"/>',
+    "                </Color>",
+    "              </ColorStop>",
+    "            </ColorLine>",
+    '            <x0 value="7"/>',
+    '            <y0 value="8"/>',
+    '            <r0 value="9"/>',
+    '            <x1 value="10"/>',
+    '            <y1 value="11"/>',
+    '            <r1 value="12"/>',
+    "          </Paint>",
     "          <Transform>",
     '            <xx value="-13.0"/>',
     '            <xy value="14.0"/>',
     '            <yx value="15.0"/>',
     '            <yy value="-17.0"/>',
+    '            <dx value="18.0"/>',
+    '            <dy value="19.0"/>',
     "          </Transform>",
     "        </Paint>",
-    "      </LayerV1Record>",
+    '        <Glyph value="glyph00013"/>',
+    "      </Paint>",
     "    </LayerV1List>",
     "  </BaseGlyphV1Record>",
     "</BaseGlyphV1List>",
