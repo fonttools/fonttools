@@ -1331,25 +1331,39 @@ def axisValueIsSelected(axisValue, seeker):
     return False
 
 
+def axisValueIndexes(axisValue):
+    if axisValue.Format == 4:
+        return [r.AxisIndex for r in axisValue.AxisValueRecord]
+    return [axisValue.AxisIndex]
+
+
+def axisValuesIndexes(axisValues):
+    res = []
+    for axisValue in axisValues:
+        res += axisValueIndexes(axisValue)
+    return res
+
+
 def axisValuesFromAxisLimits(stat, axisLimits):
     axisValues = stat.table.AxisValueArray.AxisValue
     axisRecords = stat.table.DesignAxisRecord.Axis
     axisOrder = {a.AxisTag: a.AxisOrdering for a in axisRecords}
+    axisTag = {a.AxisOrdering: a.AxisTag for a in axisRecords}
     # Only check pinnedAxes for matching AxisValues
-    AxisValuesToFind = {
+    axisValuesToFind = {
         axisOrder[k]: v for k, v in axisLimits.items() \
         if isinstance(v, (float, int))
     }
 
-    axisValues = [a for a in axisValues if axisValueIsSelected(a, AxisValuesToFind)]
-    axisValuesMissing = set(AxisValuesToFind) - set(a.AxisIndex for a in axisValues)
+    axisValues = [a for a in axisValues if axisValueIsSelected(a, axisValuesToFind)]
+    axisValuesMissing = set(axisValuesToFind) - set(axisValuesIndexes(axisValues))
     if axisValuesMissing:
         # TODO better error msg
-        missing = [i for i in axisValuesMissing]
-        raise ValueError(f"Cannot find AxisValues for {missing}")
+        missing = [f"{axisTag[i]}={axisValuesToFind[i]}" for i in axisValuesMissing]
+        raise ValueError(f"Cannot find AxisValue for {', '.join(missing)}")
     # filter out Elidable axisValues
     axisValues = [a for a in axisValues if a.Flags != 2]
-    # TODO sort and remove duplicates so format 4 axisValues are dominant 
+    # TODO sort and remove duplicates so format 4 axisValues are dominant
     return axisValues
 
 
