@@ -205,20 +205,20 @@ def test_buildColorIndex():
     assert c.Alpha.varIdx == 2
 
 
-def test_buildSolidColorPaint():
-    p = builder.buildSolidColorPaint(0)
+def test_buildPaintSolid():
+    p = builder.buildPaintSolid(0)
     assert p.Format == 1
     assert p.Color.PaletteIndex == 0
     assert p.Color.Alpha.value == 1.0
     assert p.Color.Alpha.varIdx == 0
 
-    p = builder.buildSolidColorPaint(1, alpha=0.5)
+    p = builder.buildPaintSolid(1, alpha=0.5)
     assert p.Format == 1
     assert p.Color.PaletteIndex == 1
     assert p.Color.Alpha.value == 0.5
     assert p.Color.Alpha.varIdx == 0
 
-    p = builder.buildSolidColorPaint(3, alpha=builder.VariableFloat(0.5, varIdx=2))
+    p = builder.buildPaintSolid(3, alpha=builder.VariableFloat(0.5, varIdx=2))
     assert p.Format == 1
     assert p.Color.PaletteIndex == 3
     assert p.Color.Alpha.value == 0.5
@@ -294,7 +294,7 @@ def test_buildAffine2x3():
     assert matrix.dy == builder.VariableFloat(-3.0)
 
 
-def test_buildLinearGradientPaint():
+def test_buildPaintLinearGradient():
     color_stops = [
         builder.buildColorStop(0.0, 0),
         builder.buildColorStop(0.5, 1),
@@ -304,23 +304,23 @@ def test_buildLinearGradientPaint():
     p0 = (builder.VariableInt(100), builder.VariableInt(200))
     p1 = (builder.VariableInt(150), builder.VariableInt(250))
 
-    gradient = builder.buildLinearGradientPaint(color_line, p0, p1)
+    gradient = builder.buildPaintLinearGradient(color_line, p0, p1)
     assert gradient.Format == 2
     assert gradient.ColorLine == color_line
     assert (gradient.x0, gradient.y0) == p0
     assert (gradient.x1, gradient.y1) == p1
     assert (gradient.x2, gradient.y2) == p1
 
-    gradient = builder.buildLinearGradientPaint({"stops": color_stops}, p0, p1)
+    gradient = builder.buildPaintLinearGradient({"stops": color_stops}, p0, p1)
     assert gradient.ColorLine.Extend == builder.ExtendMode.PAD
     assert gradient.ColorLine.ColorStop == color_stops
 
-    gradient = builder.buildLinearGradientPaint(color_line, p0, p1, p2=(150, 230))
+    gradient = builder.buildPaintLinearGradient(color_line, p0, p1, p2=(150, 230))
     assert (gradient.x2.value, gradient.y2.value) == (150, 230)
     assert (gradient.x2, gradient.y2) != (gradient.x1, gradient.y1)
 
 
-def test_buildRadialGradientPaint():
+def test_buildPaintRadialGradient():
     color_stops = [
         builder.buildColorStop(0.0, 0),
         builder.buildColorStop(0.5, 1),
@@ -332,7 +332,7 @@ def test_buildRadialGradientPaint():
     r0 = builder.VariableInt(10)
     r1 = builder.VariableInt(5)
 
-    gradient = builder.buildRadialGradientPaint(color_line, c0, c1, r0, r1)
+    gradient = builder.buildPaintRadialGradient(color_line, c0, c1, r0, r1)
     assert gradient.Format == 3
     assert gradient.ColorLine == color_line
     assert (gradient.x0, gradient.y0) == c0
@@ -340,7 +340,7 @@ def test_buildRadialGradientPaint():
     assert gradient.r0 == r0
     assert gradient.r1 == r1
 
-    gradient = builder.buildRadialGradientPaint({"stops": color_stops}, c0, c1, r0, r1)
+    gradient = builder.buildPaintRadialGradient({"stops": color_stops}, c0, c1, r0, r1)
     assert gradient.ColorLine.Extend == builder.ExtendMode.PAD
     assert gradient.ColorLine.ColorStop == color_stops
 
@@ -351,14 +351,14 @@ def test_buildPaintGlyph():
     assert layer.Paint.Format == 1
     assert layer.Paint.Color.PaletteIndex == 2
 
-    layer = builder.buildPaintGlyph("a", builder.buildSolidColorPaint(3, 0.9))
+    layer = builder.buildPaintGlyph("a", builder.buildPaintSolid(3, 0.9))
     assert layer.Paint.Format == 1
     assert layer.Paint.Color.PaletteIndex == 3
     assert layer.Paint.Color.Alpha.value == 0.9
 
     layer = builder.buildPaintGlyph(
         "a",
-        builder.buildLinearGradientPaint(
+        builder.buildPaintLinearGradient(
             {"stops": [(0.0, 3), (1.0, 4)]}, (100, 200), (150, 250)
         ),
     )
@@ -374,7 +374,7 @@ def test_buildPaintGlyph():
 
     layer = builder.buildPaintGlyph(
         "a",
-        builder.buildRadialGradientPaint(
+        builder.buildPaintRadialGradient(
             {
                 "stops": [
                     (0.0, 5),
@@ -467,7 +467,7 @@ def test_buildLayerV1List():
                 "r1": 10,
             },
         ),
-        builder.buildPaintGlyph("e", builder.buildSolidColorPaint(8)),
+        builder.buildPaintGlyph("e", builder.buildPaintSolid(8)),
     ]
     layers = builder.buildLayerV1List(layers)
 
@@ -546,7 +546,7 @@ def test_split_color_glyphs_by_version():
     assert not colorGlyphsV1
 
     colorGlyphs = {
-        "a": [("b", builder.buildSolidColorPaint(paletteIndex=0, alpha=0.0))]
+        "a": [("b", builder.buildPaintSolid(paletteIndex=0, alpha=0.0))]
     }
 
     colorGlyphsV0, colorGlyphsV1 = builder._split_color_glyphs_by_version(colorGlyphs)

@@ -332,7 +332,7 @@ def buildColorIndex(
     return self
 
 
-def buildSolidColorPaint(
+def buildPaintSolid(
     paletteIndex: int, alpha: _ScalarInput = _DEFAULT_ALPHA
 ) -> ot.Paint:
     self = ot.Paint()
@@ -396,7 +396,7 @@ def _to_color_line(obj):
     raise TypeError(obj)
 
 
-def buildLinearGradientPaint(
+def buildPaintLinearGradient(
     colorLine: _ColorLineInput,
     p0: _PointTuple,
     p1: _PointTuple,
@@ -431,7 +431,7 @@ def buildAffine2x3(
     return self
 
 
-def buildRadialGradientPaint(
+def buildPaintRadialGradient(
     colorLine: _ColorLineInput,
     c0: _PointTuple,
     c1: _PointTuple,
@@ -488,9 +488,9 @@ def buildPaintComposite(
 
 
 _PAINT_BUILDERS = {
-    1: buildSolidColorPaint,
-    2: buildLinearGradientPaint,
-    3: buildRadialGradientPaint,
+    1: buildPaintSolid,
+    2: buildPaintLinearGradient,
+    3: buildPaintRadialGradient,
     4: buildPaintGlyph,
     5: buildPaintColorGlyph,
     6: buildPaintTransform,
@@ -503,7 +503,7 @@ def buildPaint(paint: _PaintInput) -> ot.Paint:
         return paint
     elif isinstance(paint, int):
         paletteIndex = paint
-        return buildSolidColorPaint(paletteIndex)
+        return buildPaintSolid(paletteIndex)
     elif isinstance(paint, tuple):
         layerGlyph, paint = paint
         return buildPaintGlyph(layerGlyph, paint)
