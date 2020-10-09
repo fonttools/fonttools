@@ -68,7 +68,7 @@ class OnlineVarStoreBuilder(object):
 			self._outer = varDataIdx
 			self._data = self._store.VarData[varDataIdx]
 			self._cache = self._varDataCaches[key]
-			if len(self._data.Item) == 0xFFF:
+			if len(self._data.Item) == 0xFFFF:
 				# This is full.  Need new one.
 				varDataIdx = None
 
