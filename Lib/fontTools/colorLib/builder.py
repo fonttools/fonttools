@@ -6,13 +6,26 @@ import collections
 import copy
 import enum
 from functools import partial
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 from fontTools.ttLib.tables import C_O_L_R_
 from fontTools.ttLib.tables import C_P_A_L_
 from fontTools.ttLib.tables import _n_a_m_e
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otTables import (
     ExtendMode,
+    CompositeMode,
     VariableValue,
     VariableFloat,
     VariableInt,
@@ -21,11 +34,11 @@ from .errors import ColorLibError
 
 
 # TODO move type aliases to colorLib.types?
+T = TypeVar("T")
 _Kwargs = Mapping[str, Any]
-_PaintInput = Union[int, _Kwargs, ot.Paint]
-_LayerTuple = Tuple[str, _PaintInput]
-_LayersList = Sequence[_LayerTuple]
-_ColorGlyphsDict = Dict[str, _LayersList]
+_PaintInput = Union[int, _Kwargs, ot.Paint, Tuple[str, "_PaintInput"]]
+_PaintInputList = Sequence[_PaintInput]
+_ColorGlyphsDict = Dict[str, Union[_PaintInputList, ot.LayerV1List]]
 _ColorGlyphsV0Dict = Dict[str, Sequence[Tuple[str, int]]]
 _Number = Union[int, float]
 _ScalarInput = Union[_Number, VariableValue, Tuple[_Number, int]]
@@ -33,10 +46,13 @@ _ColorStopTuple = Tuple[_ScalarInput, int]
 _ColorStopInput = Union[_ColorStopTuple, _Kwargs, ot.ColorStop]
 _ColorStopsList = Sequence[_ColorStopInput]
 _ExtendInput = Union[int, str, ExtendMode]
+_CompositeInput = Union[int, str, CompositeMode]
 _ColorLineInput = Union[_Kwargs, ot.ColorLine]
 _PointTuple = Tuple[_ScalarInput, _ScalarInput]
-_AffineTuple = Tuple[_ScalarInput, _ScalarInput, _ScalarInput, _ScalarInput]
-_AffineInput = Union[_AffineTuple, ot.Affine2x2]
+_AffineTuple = Tuple[
+    _ScalarInput, _ScalarInput, _ScalarInput, _ScalarInput, _ScalarInput, _ScalarInput
+]
+_AffineInput = Union[_AffineTuple, ot.Affine2x3]
 
 
 def populateCOLRv0(
@@ -91,14 +107,13 @@ def buildCOLR(
     """Build COLR table from color layers mapping.
 
     Args:
-        colorGlyphs: map of base glyph names to lists of (layer glyph names,
-            Paint) tuples. For COLRv0, a paint is simply the color palette index
-            (int); for COLRv1, paint can be either solid colors (with variable
-            opacity), linear gradients or radial gradients.
+        colorGlyphs: map of base glyph name to, either list of (layer glyph name,
+            color palette index) tuples for COLRv0; or list of Paints (dicts)
+            for COLRv1.
         version: the version of COLR table. If None, the version is determined
-            by the presence of gradients or variation data (varStore), which
-            require version 1; otherwise, if there are only simple colors, version
-            0 is used.
+            by the presence of COLRv1 paints or variation data (varStore), which
+            require version 1; otherwise, if all base glyphs use only simple color
+            layers, version 0 is used.
         glyphMap: a map from glyph names to glyph indices, as returned from
             TTFont.getReverseGlyphMap(), to optionally sort base records by GID.
         varStore: Optional ItemVarationStore for deltas associated with v1 layer.
@@ -113,10 +128,9 @@ def buildCOLR(
 
     if version in (None, 0) and not varStore:
         # split color glyphs into v0 and v1 and encode separately
-        colorGlyphsV0, colorGlyphsV1 = _splitSolidAndGradientGlyphs(colorGlyphs)
+        colorGlyphsV0, colorGlyphsV1 = _split_color_glyphs_by_version(colorGlyphs)
         if version == 0 and colorGlyphsV1:
-            # TODO Derive "average" solid color from gradients?
-            raise ValueError("Can't encode gradients in COLRv0")
+            raise ValueError("Can't encode COLRv1 glyphs in COLRv0")
     else:
         # unless explicitly requested for v1 or have variations, in which case
         # we encode all color glyph as v1
@@ -277,29 +291,16 @@ def buildCPAL(
 _DEFAULT_ALPHA = VariableFloat(1.0)
 
 
-def _splitSolidAndGradientGlyphs(
+def _split_color_glyphs_by_version(
     colorGlyphs: _ColorGlyphsDict,
-) -> Tuple[Dict[str, List[Tuple[str, int]]], Dict[str, List[Tuple[str, ot.Paint]]]]:
+) -> Tuple[_ColorGlyphsV0Dict, _ColorGlyphsDict]:
     colorGlyphsV0 = {}
     colorGlyphsV1 = {}
     for baseGlyph, layers in colorGlyphs.items():
-        newLayers = []
-        allSolidColors = True
-        for layerGlyph, paint in layers:
-            paint = _to_ot_paint(paint)
-            if (
-                paint.Format != 1
-                or paint.Color.Alpha.value != _DEFAULT_ALPHA.value
-            ):
-                allSolidColors = False
-            newLayers.append((layerGlyph, paint))
-        if allSolidColors:
-            colorGlyphsV0[baseGlyph] = [
-                (layerGlyph, paint.Color.PaletteIndex)
-                for layerGlyph, paint in newLayers
-            ]
+        if all(isinstance(l, tuple) and isinstance(l[1], int) for l in layers):
+            colorGlyphsV0[baseGlyph] = layers
         else:
-            colorGlyphsV1[baseGlyph] = newLayers
+            colorGlyphsV1[baseGlyph] = layers
 
     # sanity check
     assert set(colorGlyphs) == (set(colorGlyphsV0) | set(colorGlyphsV1))
@@ -351,15 +352,23 @@ def buildColorStop(
     return self
 
 
-def _to_extend_mode(v: _ExtendInput) -> ExtendMode:
-    if isinstance(v, ExtendMode):
+def _to_enum_value(v: Union[str, int, T], enumClass: Type[T]) -> T:
+    if isinstance(v, enumClass):
         return v
     elif isinstance(v, str):
         try:
-            return getattr(ExtendMode, v.upper())
+            return getattr(enumClass, v.upper())
         except AttributeError:
-            raise ValueError(f"{v!r} is not a valid ExtendMode")
-    return ExtendMode(v)
+            raise ValueError(f"{v!r} is not a valid {enumClass.__name__}")
+    return enumClass(v)
+
+
+def _to_extend_mode(v: _ExtendInput) -> ExtendMode:
+    return _to_enum_value(v, ExtendMode)
+
+
+def _to_composite_mode(v: _CompositeInput) -> CompositeMode:
+    return _to_enum_value(v, CompositeMode)
 
 
 def buildColorLine(
@@ -406,12 +415,17 @@ def buildLinearGradientPaint(
     return self
 
 
-def buildAffine2x2(
-    xx: _ScalarInput, xy: _ScalarInput, yx: _ScalarInput, yy: _ScalarInput
-) -> ot.Affine2x2:
-    self = ot.Affine2x2()
+def buildAffine2x3(
+    xx: _ScalarInput,
+    xy: _ScalarInput,
+    yx: _ScalarInput,
+    yy: _ScalarInput,
+    dx: _ScalarInput,
+    dy: _ScalarInput,
+) -> ot.Affine2x3:
+    self = ot.Affine2x3()
     locs = locals()
-    for attr in ("xx", "xy", "yx", "yy"):
+    for attr in ("xx", "xy", "yx", "yy", "dx", "dy"):
         value = locs[attr]
         setattr(self, attr, _to_variable_float(value))
     return self
@@ -423,7 +437,6 @@ def buildRadialGradientPaint(
     c1: _PointTuple,
     r0: _ScalarInput,
     r1: _ScalarInput,
-    transform: Optional[_AffineInput] = None,
 ) -> ot.Paint:
 
     self = ot.Paint()
@@ -435,50 +448,86 @@ def buildRadialGradientPaint(
         setattr(self, f"y{i}", _to_variable_int(y))
         setattr(self, f"r{i}", _to_variable_int(r))
 
-    if transform is not None and not isinstance(transform, ot.Affine2x2):
-        transform = buildAffine2x2(*transform)
-    self.Transform = transform
-
     return self
 
 
-def _to_ot_paint(paint: _PaintInput) -> ot.Paint:
+def buildPaintGlyph(glyph: str, paint: _PaintInput) -> ot.Paint:
+    self = ot.Paint()
+    self.Format = 4
+    self.Glyph = glyph
+    self.Paint = buildPaint(paint)
+    return self
+
+
+def buildPaintColorGlyph(glyph: str) -> ot.Paint:
+    self = ot.Paint()
+    self.Format = 5
+    self.Glyph = glyph
+    return self
+
+
+def buildPaintTransform(transform: _AffineInput, paint: _PaintInput) -> ot.Paint:
+    self = ot.Paint()
+    self.Format = 6
+    if not isinstance(transform, ot.Affine2x3):
+        transform = buildAffine2x3(*transform)
+    self.Transform = transform
+    self.Paint = buildPaint(paint)
+    return self
+
+
+def buildPaintComposite(
+    mode: _CompositeInput, source: _PaintInput, backdrop: _PaintInput
+):
+    self = ot.Paint()
+    self.Format = 7
+    self.SourcePaint = buildPaint(source)
+    self.CompositeMode = _to_composite_mode(mode)
+    self.BackdropPaint = buildPaint(backdrop)
+    return self
+
+
+_PAINT_BUILDERS = {
+    1: buildSolidColorPaint,
+    2: buildLinearGradientPaint,
+    3: buildRadialGradientPaint,
+    4: buildPaintGlyph,
+    5: buildPaintColorGlyph,
+    6: buildPaintTransform,
+    7: buildPaintComposite,
+}
+
+
+def buildPaint(paint: _PaintInput) -> ot.Paint:
     if isinstance(paint, ot.Paint):
         return paint
     elif isinstance(paint, int):
         paletteIndex = paint
         return buildSolidColorPaint(paletteIndex)
+    elif isinstance(paint, tuple):
+        layerGlyph, paint = paint
+        return buildPaintGlyph(layerGlyph, paint)
     elif isinstance(paint, collections.abc.Mapping):
-        return buildPaint(**paint)
-    raise TypeError(f"expected int, Mapping or ot.Paint, found {type(paint.__name__)}")
+        kwargs = dict(paint)
+        fmt = kwargs.pop("format")
+        try:
+            return _PAINT_BUILDERS[fmt](**kwargs)
+        except KeyError:
+            raise NotImplementedError(fmt)
+    raise TypeError(
+        f"expected int, Mapping or ot.Paint, found {type(paint).__name__}: {paint!r}"
+    )
 
 
-def buildLayerV1Record(layerGlyph: str, paint: _PaintInput) -> ot.LayerV1Record:
-    self = ot.LayerV1Record()
-    self.LayerGlyph = layerGlyph
-    self.Paint = _to_ot_paint(paint)
-    return self
-
-
-def buildLayerV1List(
-    layers: Sequence[Union[_LayerTuple, ot.LayerV1Record]]
-) -> ot.LayerV1List:
+def buildLayerV1List(layers: _PaintInputList) -> ot.LayerV1List:
     self = ot.LayerV1List()
     self.LayerCount = len(layers)
-    records = []
-    for layer in layers:
-        if isinstance(layer, ot.LayerV1Record):
-            record = layer
-        else:
-            layerGlyph, paint = layer
-            record = buildLayerV1Record(layerGlyph, paint)
-        records.append(record)
-    self.LayerV1Record = records
+    self.Paint = [buildPaint(layer) for layer in layers]
     return self
 
 
 def buildBaseGlyphV1Record(
-    baseGlyph: str, layers: Union[_LayersList, ot.LayerV1List]
+    baseGlyph: str, layers: Union[_PaintInputList, ot.LayerV1List]
 ) -> ot.BaseGlyphV1List:
     self = ot.BaseGlyphV1Record()
     self.BaseGlyph = baseGlyph
@@ -489,7 +538,7 @@ def buildBaseGlyphV1Record(
 
 
 def buildBaseGlyphV1List(
-    colorGlyphs: Union[_ColorGlyphsDict, Dict[str, ot.LayerV1List]],
+    colorGlyphs: _ColorGlyphsDict,
     glyphMap: Optional[Mapping[str, int]] = None,
 ) -> ot.BaseGlyphV1List:
     if glyphMap is not None:
@@ -506,17 +555,3 @@ def buildBaseGlyphV1List(
     self.BaseGlyphCount = len(records)
     self.BaseGlyphV1Record = records
     return self
-
-
-_PAINT_BUILDERS = {
-    1: buildSolidColorPaint,
-    2: buildLinearGradientPaint,
-    3: buildRadialGradientPaint,
-}
-
-
-def buildPaint(format: int, **kwargs) -> ot.Paint:
-    try:
-        return _PAINT_BUILDERS[format](**kwargs)
-    except KeyError:
-        raise NotImplementedError(format)
