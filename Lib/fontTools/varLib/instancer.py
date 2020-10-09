@@ -1298,64 +1298,59 @@ def instantiateVariableFont(
     return varfont
 
 
+def axisValueIsSelected(axisValue, seeker):
+    if axisValue.Format == 4:
+        res = []
+        for rec in axisValue.AxisValueRecord:
+            axisIndex = rec.AxisIndex
+            if axisIndex not in seeker:
+                return False
+            if rec.Value == seeker[axisIndex]:
+                res.append(True)
+            else:
+                res.append(False)
+        return True if all(res) else False
+
+    axisIndex = axisValue.AxisIndex
+    if axisIndex not in seeker:
+        return False
+
+    if axisValue.Format in (1, 3):
+        # Add axisValue if it's used to link to another variable font
+        if axisIndex not in seeker and axisValue.Value == 1.0:
+            return True
+
+        elif axisValue.Value == seeker[axisIndex]:
+            return True
+
+    if axisValue.Format == 2:
+        return True if all([
+            seeker[axisIndex] >= axisValue.RangeMinValue,
+            seeker[axisIndex] <= axisValue.RangeMaxValue
+        ]) else False
+    return False
+
+
 def axisValuesFromAxisLimits(stat, axisLimits):
-
-    axisRecords = stat.table.DesignAxisRecord.Axis
     axisValues = stat.table.AxisValueArray.AxisValue
+    axisRecords = stat.table.DesignAxisRecord.Axis
+    axisOrder = {a.AxisTag: a.AxisOrdering for a in axisRecords}
+    # Only check pinnedAxes for matching AxisValues
+    AxisValuesToFind = {
+        axisOrder[k]: v for k, v in axisLimits.items() \
+        if isinstance(v, (float, int))
+    }
 
-    format4 = [a for a in axisValues if a.Format == 4]
-    nonformat4  = [a for a in axisValues if a not in format4]
-    axisValues = format4 + nonformat4
-
-    axisOrder = {a.AxisOrdering: a.AxisTag for a in axisRecords}
-    pinnedAxes = set(k for k, v in axisLimits.items() if isinstance(v, (float, int)))
-
-    results, seen_axes = [], set()
-    for axisValue in axisValues:
-
-        # Ignore axisValue if it has ELIDABLE_AXIS_VALUE_NAME flag enabled.
-        # Enabling this flag will hide the axisValue in application font menus.
-        # TODO this is too greedy! we need to retain wght axisValues
-        if axisValue.Flags == 2:
-            continue
-
-        if axisValue.Format == 4:
-            axisIndexes = set(r.AxisIndex for r in axisValue.AxisValueRecord)
-            if seen_axes - axisIndexes != seen_axes:
-                continue
-            # TODO fix dup appends 
-            for rec in axisValue.AxisValueRecord:
-                axisTag = axisOrder[rec.AxisIndex]
-                if axisTag not in pinnedAxes:
-                    continue
-                if rec.Value == axisLimits[axisTag]:
-                    seen_axes.add(rec.AxisIndex)
-                    results.append((rec.AxisIndex, axisValue))
-
-        elif axisValue.Format in (1, 3):
-            axisTag = axisOrder[axisValue.AxisIndex]
-            # Add axisValue if it's used to link to another variable font
-            if axisTag not in axisLimits and axisValue.Value == 1.0:
-                seen_axes.add(axisValue.AxisIndex)
-                results.append((axisValue.AxisIndex, axisValue))
-
-            if axisTag not in pinnedAxes:
-                continue
-            # Add axisValue if its value is in the axisLimits and the user has
-            # pinned the axis
-            elif axisValue.Value == axisLimits[axisTag]:
-                seen_axes.add(axisValue.AxisIndex)
-                results.append((axisValue.AxisIndex,axisValue))
-
-        elif axisValue.Format == 2:
-            axisTag = axisOrder[axisValue.AxisIndex]
-            if axisTag not in pinnedAxes:
-                continue
-            if axisLimits[axisTag] >= axisValue.RangeMinValue \
-                and axisLimits[axisTag] <= axisValue.RangeMaxValue:
-                    seen_axes.add(axisValue.AxisIndex)
-                    results.append((axisValue.AxisIndex, axisValue))
-    return [v for k, v in sorted(results)]
+    axisValues = [a for a in axisValues if axisValueIsSelected(a, AxisValuesToFind)]
+    axisValuesMissing = set(AxisValuesToFind) - set(a.AxisIndex for a in axisValues)
+    if axisValuesMissing:
+        # TODO better error msg
+        missing = [i for i in axisValuesMissing]
+        raise ValueError(f"Cannot find AxisValues for {missing}")
+    # filter out Elidable axisValues
+    axisValues = [a for a in axisValues if a.Flags != 2]
+    # TODO sort and remove duplicates so format 4 axisValues are dominant 
+    return axisValues
 
 
 def updateNameTable(varfont, axisLimits):
