@@ -1926,7 +1926,7 @@ def _get_name_records(varfont):
 
 def test_updateNameTable_with_registered_axes(varfont):
     # Regular
-    instancer.updateNameTable(varfont, {"wght": 400, "wdth": 100})
+    instancer.updateNameTable(varfont, {"wght": 400})
     names = _get_name_records(varfont)
     assert names[(1, 3, 1, 0x409)] == "Test Variable Font"
     assert names[(2, 3, 1, 0x0409)] == "Regular"
@@ -1935,7 +1935,7 @@ def test_updateNameTable_with_registered_axes(varfont):
     assert (17, 3, 1, 0x409) not in names
 
     # Black
-    instancer.updateNameTable(varfont, {"wght": 900, "wdth": 100})
+    instancer.updateNameTable(varfont, {"wght": 900})
     names = _get_name_records(varfont)
     assert names[(1, 3, 1, 0x409)] == "Test Variable Font Black"
     assert names[(2, 3, 1, 0x409)] == "Regular"
@@ -1944,7 +1944,7 @@ def test_updateNameTable_with_registered_axes(varfont):
     assert names[(17, 3, 1, 0x409)] == "Black"
 
     # Thin
-    instancer.updateNameTable(varfont, {"wght": 100, "wdth": 100})
+    instancer.updateNameTable(varfont, {"wght": 100})
     names = _get_name_records(varfont)
     assert names[(1, 3, 1, 0x409)] == "Test Variable Font Thin"
     assert names[(2, 3, 1, 0x409)] == "Regular"
@@ -1971,7 +1971,7 @@ def test_updateNameTable_with_multilingual_names(varfont):
     name.setName("Zhuštěné", 279, 3, 1, 0x405) # nameID 279=Condensed STAT entry
 
     # Regular | Normal
-    instancer.updateNameTable(varfont, {"wdth": 100, "wght": 400})
+    instancer.updateNameTable(varfont, {"wght": 400})
     names = _get_name_records(varfont)
     assert names[(1, 3, 1, 0x405)] == "Test Variable Font"
     assert names[(2, 3, 1, 0x405)] == "Normal"
@@ -1979,7 +1979,7 @@ def test_updateNameTable_with_multilingual_names(varfont):
     assert (17, 3, 1, 0x405) not in names
 
     # Black | Negreta
-    instancer.updateNameTable(varfont, {"wdth": 100, "wght": 900})
+    instancer.updateNameTable(varfont, {"wght": 900})
     names = _get_name_records(varfont)
     assert names[(1, 3, 1, 0x405)] == "Test Variable Font Negreta"
     assert names[(2, 3, 1, 0x405)] == "Normal"
@@ -2002,6 +2002,11 @@ def test_updateNametable_partial(varfont):
     assert names[(2, 3, 1, 0x409)] == "Regular"
     assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
     assert names[(17, 3, 1, 0x409)] == "Condensed" #? maybe Condensed Regular?
+
+
+def test_updateNameTable_missing_axisValues(varfont):
+    with pytest.raises(ValueError, match="Cannot find AxisValue for wght=200"):
+        instancer.updateNameTable(varfont, {"wght": 200})
 
 
 def test_sanityCheckVariableTables(varfont):
