@@ -1995,6 +1995,15 @@ def test_updateNameTable_with_multilingual_names(varfont):
     assert names[(17, 3, 1, 0x405)] == "Negreta Zhuštěné"
 
 
+def test_updateNametable_partial(varfont):
+    instancer.updateNameTable(varfont, {"wdth": 79, "wght": (400, 900)})
+    names = _get_name_records(varfont)
+    assert names[(1, 3, 1, 0x409)] == "Test Variable Font Condensed"
+    assert names[(2, 3, 1, 0x409)] == "Regular"
+    assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
+    assert names[(17, 3, 1, 0x409)] == "Condensed" #? maybe Condensed Regular?
+
+
 def test_sanityCheckVariableTables(varfont):
     font = ttLib.TTFont()
     with pytest.raises(ValueError, match="Missing required table fvar"):
