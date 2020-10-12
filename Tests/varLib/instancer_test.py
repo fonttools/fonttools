@@ -2009,6 +2009,29 @@ def test_updateNameTable_missing_axisValues(varfont):
         instancer.updateNameTable(varfont, {"wght": 200})
 
 
+def test_updateNameTable_vf_with_italic_attribute(varfont):
+    font_link_axisValue = varfont["STAT"].table.AxisValueArray.AxisValue[4]
+    font_link_axisValue.Flags = 0
+    font_link_axisValue.ValueNameID = 294 # Roman --> Italic
+
+    # Italic
+    instancer.updateNameTable(varfont, {"wght": 400})
+    names = _get_name_records(varfont)
+    assert names[(1, 3, 1, 0x409)] == "Test Variable Font"
+    assert names[(2, 3, 1, 0x409)] == "Italic"
+    assert (16, 3, 1, 0x405) not in names
+    assert (17, 3, 1, 0x405) not in names
+
+    # Black Condensed Italic
+    instancer.updateNameTable(varfont, {"wdth": 79, "wght": 900})
+    names = _get_name_records(varfont)
+    assert names[(1, 3, 1, 0x409)] == "Test Variable Font Black Condensed"
+    assert names[(2, 3, 1, 0x409)] == "Italic"
+    assert names[(6, 3, 1, 0x409)] == "TestVariableFont-BlackCondensedItalic"
+    assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
+    assert names[(17, 3, 1, 0x409)] == "Black Condensed Italic"
+
+
 def test_sanityCheckVariableTables(varfont):
     font = ttLib.TTFont()
     with pytest.raises(ValueError, match="Missing required table fvar"):
