@@ -1369,6 +1369,7 @@ def axisValuesFromAxisLimits(stat, axisLimits):
 def sortedAxisValues(axisValues):
     # Sort and remove duplicates so format 4 axisValues are dominant
     results, seenAxes = [], set()
+    # ensure format4 axes with the most AxisValueRecords are first
     format4 = sorted(
         [a for a in axisValues if a.Format == 4],
         key=lambda k: len(k.AxisValueRecord), reverse=True
@@ -1392,14 +1393,15 @@ def updateNameTable(varfont, axisLimits):
     if "STAT" not in varfont:
         raise ValueError("Cannot update name table since there is no STAT table.")
     stat = varfont['STAT']
-    fvar = varfont['fvar']
     nametable = varfont["name"]
 
     # add default axis values if they are missing from axisLimits
-    fvarDefaults = {a.axisTag: a.defaultValue for a in fvar.axes}
-    for k, v in fvarDefaults.items():
-        if k not in axisLimits:
-            axisLimits[k] = v
+    if 'fvar' in varfont:
+        fvar = varfont['fvar']
+        fvarDefaults = {a.axisTag: a.defaultValue for a in fvar.axes}
+        for k, v in fvarDefaults.items():
+            if k not in axisLimits:
+                axisLimits[k] = v
 
     selectedAxisValues = axisValuesFromAxisLimits(stat, axisLimits)
     _updateNameRecords(varfont, nametable, selectedAxisValues)
@@ -1419,6 +1421,7 @@ def _updateNameRecords(varfont, nametable, axisValues):
     nametblLangs = set((r.platformID, r.platEncID, r.langID) for r in nametable.names)
     for lang in nametblLangs:
         _updateStyleRecords(
+            varfont,
             nametable,
             ribbiAxisValues,
             nonRibbiAxisValues,
@@ -1437,6 +1440,7 @@ def _ribbiAxisValues(nametable, axisValues):
 
 
 def _updateStyleRecords(
+    varfont,
     nametable,
     ribbiAxisValues,
     nonRibbiAxisValues,
@@ -1480,11 +1484,37 @@ def _updateStyleRecords(
 
     nameIDs[NameID.FULL_FONT_NAME] = f"{newFamilyName} {newStyleName}"
     nameIDs[NameID.POSTSCRIPT_NAME] = f"{newFamilyName.replace(' ', '')}-{newStyleName.replace(' ', '')}"
-    # Update uniqueID
-    # TODO
-    # versionRecord = nametable.getName(5, 3, 1, 0x409)
+    nameIDs[NameID.UNIQUE_FONT_IDENTIFIER] = _uniqueIdRecord(varfont, lang, nameIDs)
+
     for nameID, string in nameIDs.items():
+        if not string:
+            continue
         nametable.setName(string, nameID, *lang)
+
+
+def _uniqueIdRecord(varfont, lang, nameIDs):
+    name = varfont['name']
+    record = name.getName(NameID.UNIQUE_FONT_IDENTIFIER, *lang)
+    if not record:
+        return None
+
+    def isSubString(string1, string2):
+        if string2 in string1:
+            return True
+        return False
+
+    # Check if full name and postscript name are a substring
+    for nameID in (4, 6):
+        nameRecord = name.getName(nameID, *lang)
+        if not nameRecord:
+            continue
+        if isSubString(record.toUnicode(), nameRecord.toUnicode()):
+            return record.toUnicode().replace(
+                nameRecord.toUnicode(),
+                nameIDs[nameRecord.nameID]
+            )
+    # TODO (M Foley) Construct new uniqueID if full name or postscript names are not subsets
+    return None
 
 
 def splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange):
