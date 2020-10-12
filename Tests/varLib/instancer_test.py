@@ -1209,8 +1209,8 @@ class InstantiateSTATTest(object):
     @pytest.mark.parametrize(
         "location, expected",
         [
-            ({"wght": 400}, ["Regular", "Condensed", "Upright"]),
-            ({"wdth": 100}, ["Thin", "Regular", "Black", "Upright"]),
+            ({"wght": 400}, ["Regular", "Condensed", "Upright", "Normal"]),
+            ({"wdth": 100}, ["Thin", "Regular", "Black", "Upright", "Normal"]),
         ],
     )
     def test_pin_and_drop_axis(self, varfont, location, expected):
@@ -1344,7 +1344,7 @@ class InstantiateSTATTest(object):
 def test_pruningUnusedNames(varfont):
     varNameIDs = instancer.getVariationNameIDs(varfont)
 
-    assert varNameIDs == set(range(256, 296 + 1))
+    assert varNameIDs == set(range(256, 297 + 1))
 
     fvar = varfont["fvar"]
     stat = varfont["STAT"].table
