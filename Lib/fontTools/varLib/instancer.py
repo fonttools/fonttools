@@ -1312,22 +1312,24 @@ def axisValueIsSelected(axisValue, seeker):
         return True if all(res) else False
 
     axisIndex = axisValue.AxisIndex
-    if axisIndex not in seeker:
-        return False
 
     if axisValue.Format in (1, 3):
-        # Add axisValue if it's used to link to another variable font
-        if axisIndex not in seeker and axisValue.Value == 1.0:
+        # Add axisValue if it's an attribute of a font. Font family
+        if axisIndex not in seeker and axisValue.Value in [0.0, 1.0]:
             return True
 
-        elif axisValue.Value == seeker[axisIndex]:
+        elif axisIndex in seeker and axisValue.Value == seeker[axisIndex]:
             return True
 
     if axisValue.Format == 2:
         return True if all([
-            seeker[axisIndex] >= axisValue.RangeMinValue,
-            seeker[axisIndex] <= axisValue.RangeMaxValue
+            axisIndex in seeker and seeker[axisIndex] >= axisValue.RangeMinValue,
+            axisIndex in seeker and seeker[axisIndex] <= axisValue.RangeMaxValue
         ]) else False
+
+    if axisIndex not in seeker:
+        return False
+
     return False
 
 
@@ -1358,7 +1360,6 @@ def axisValuesFromAxisLimits(stat, axisLimits):
     axisValues = [a for a in axisValues if axisValueIsSelected(a, axisValuesToFind)]
     axisValuesMissing = set(axisValuesToFind) - set(axisValuesIndexes(axisValues))
     if axisValuesMissing:
-        # TODO better error msg
         missing = [f"{axisTag[i]}={axisValuesToFind[i]}" for i in axisValuesMissing]
         raise ValueError(f"Cannot find AxisValue for {', '.join(missing)}")
     # filter out Elidable axisValues
