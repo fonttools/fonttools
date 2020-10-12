@@ -1930,6 +1930,7 @@ def test_updateNameTable_with_registered_axes(varfont):
     names = _get_name_records(varfont)
     assert names[(1, 3, 1, 0x409)] == "Test Variable Font"
     assert names[(2, 3, 1, 0x0409)] == "Regular"
+    assert names[(3, 3, 1, 0x0409)] == "2.001;GOOG;TestVariableFont-Regular"
     assert names[(6, 3, 1, 0x409)] == "TestVariableFont-Regular"
     assert (16, 3, 1, 0x409) not in names
     assert (17, 3, 1, 0x409) not in names
@@ -1939,6 +1940,7 @@ def test_updateNameTable_with_registered_axes(varfont):
     names = _get_name_records(varfont)
     assert names[(1, 3, 1, 0x409)] == "Test Variable Font Black"
     assert names[(2, 3, 1, 0x409)] == "Regular"
+    assert names[(3, 3, 1, 0x0409)] == "2.001;GOOG;TestVariableFont-Black"
     assert names[(6, 3, 1, 0x409)] == "TestVariableFont-Black"
     assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
     assert names[(17, 3, 1, 0x409)] == "Black"
@@ -1948,6 +1950,7 @@ def test_updateNameTable_with_registered_axes(varfont):
     names = _get_name_records(varfont)
     assert names[(1, 3, 1, 0x409)] == "Test Variable Font Thin"
     assert names[(2, 3, 1, 0x409)] == "Regular"
+    assert names[(3, 3, 1, 0x0409)] == "2.001;GOOG;TestVariableFont-Thin"
     assert names[(6, 3, 1, 0x409)] == "TestVariableFont-Thin"
     assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
     assert names[(17, 3, 1, 0x409)] == "Thin"
@@ -1957,6 +1960,7 @@ def test_updateNameTable_with_registered_axes(varfont):
     names = _get_name_records(varfont)
     assert names[(1, 3, 1, 0x409)] == "Test Variable Font Thin Condensed"
     assert names[(2, 3, 1, 0x409)] == "Regular"
+    assert names[(3, 3, 1, 0x0409)] == "2.001;GOOG;TestVariableFont-ThinCondensed"
     assert names[(6, 3, 1, 0x409)] == "TestVariableFont-ThinCondensed"
     assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
     assert names[(17, 3, 1, 0x409)] == "Thin Condensed"
@@ -1975,6 +1979,7 @@ def test_updateNameTable_with_multilingual_names(varfont):
     names = _get_name_records(varfont)
     assert names[(1, 3, 1, 0x405)] == "Test Variable Font"
     assert names[(2, 3, 1, 0x405)] == "Normal"
+    assert (3, 3, 1, 0x405) not in names
     assert (16, 3, 1, 0x405) not in names
     assert (17, 3, 1, 0x405) not in names
 
@@ -1983,6 +1988,7 @@ def test_updateNameTable_with_multilingual_names(varfont):
     names = _get_name_records(varfont)
     assert names[(1, 3, 1, 0x405)] == "Test Variable Font Negreta"
     assert names[(2, 3, 1, 0x405)] == "Normal"
+    assert (3, 3, 1, 0x405) not in names
     assert names[(16, 3, 1, 0x405)] == "Test Variable Font"
     assert names[(17, 3, 1, 0x405)] == "Negreta"
 
@@ -1991,6 +1997,7 @@ def test_updateNameTable_with_multilingual_names(varfont):
     names = _get_name_records(varfont)
     assert names[(1, 3, 1, 0x405)] == "Test Variable Font Negreta Zhuštěné"
     assert names[(2, 3, 1, 0x405)] == "Normal"
+    assert (3, 3, 1, 0x405) not in names
     assert names[(16, 3, 1, 0x405)] == "Test Variable Font"
     assert names[(17, 3, 1, 0x405)] == "Negreta Zhuštěné"
 
@@ -2000,6 +2007,7 @@ def test_updateNametable_partial(varfont):
     names = _get_name_records(varfont)
     assert names[(1, 3, 1, 0x409)] == "Test Variable Font Condensed"
     assert names[(2, 3, 1, 0x409)] == "Regular"
+    assert (3, 3, 1, 0x405) not in names
     assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
     assert names[(17, 3, 1, 0x409)] == "Condensed" #? maybe Condensed Regular?
 
