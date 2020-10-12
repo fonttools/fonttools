@@ -134,8 +134,19 @@ COLR_V1_DATA = (
     b"\x00\x00\x06"  # Offset to Paint subtable from beginning of PaintGlyph (6)
     b"\x00\r"  # LayerV1List.Paint[2].Glyph (13)
     b"\x06"  # LayerV1List.Paint[2].Paint.Format (6)
-    b"\x00\x00\x08"  # Offset to Paint subtable from beginning of PaintTransform (8)
-    b"\x00\x00\x00O"  # Offset to Transform from beginning of PaintTransform (79)
+    b"\x00\x004"  # Offset to Paint subtable from beginning of PaintTransform (52)
+    b"\xff\xf3\x00\x00"  # Affine2x3.xx.value (-13)
+    b"\x00\x00\x00\x00"
+    b"\x00\x0e\x00\x00"  # Affine2x3.xy.value (14)
+    b"\x00\x00\x00\x00"
+    b"\x00\x0f\x00\x00"  # Affine2x3.yx.value (15)
+    b"\x00\x00\x00\x00"
+    b"\xff\xef\x00\x00"  # Affine2x3.yy.value (-17)
+    b"\x00\x00\x00\x00"
+    b"\x00\x12\x00\x00"  # Affine2x3.yy.value (18)
+    b"\x00\x00\x00\x00"
+    b"\x00\x13\x00\x00"  # Affine2x3.yy.value (19)
+    b"\x00\x00\x00\x00"
     b"\x03"  # LayerV1List.Paint[2].Paint.Paint.Format (3)
     b"\x00\x00("  # Offset to ColorLine from beginning of PaintRadialGradient (40)
     b"\x00\x07"  # Paint.x0.value (7)
@@ -161,18 +172,6 @@ COLR_V1_DATA = (
     b"\x00\x00\x00\x00"
     b"\x00\x07"  # ColorLine.ColorStop[1].Color.PaletteIndex (7)
     b"\x19\x9a"  # ColorLine.ColorStop[1].Color.Alpha.value (0.4)
-    b"\x00\x00\x00\x00"
-    b"\xff\xf3\x00\x00"  # Affine2x3.xx.value (-13)
-    b"\x00\x00\x00\x00"
-    b"\x00\x0e\x00\x00"  # Affine2x3.xy.value (14)
-    b"\x00\x00\x00\x00"
-    b"\x00\x0f\x00\x00"  # Affine2x3.yx.value (15)
-    b"\x00\x00\x00\x00"
-    b"\xff\xef\x00\x00"  # Affine2x3.yy.value (-17)
-    b"\x00\x00\x00\x00"
-    b"\x00\x12\x00\x00"  # Affine2x3.yy.value (18)
-    b"\x00\x00\x00\x00"
-    b"\x00\x13\x00\x00"  # Affine2x3.yy.value (19)
     b"\x00\x00\x00\x00"
 )
 

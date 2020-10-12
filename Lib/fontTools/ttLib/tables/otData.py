@@ -1650,7 +1650,7 @@ otData = [
 	('PaintFormat6', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 6'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintTransformed table) to Paint subtable.'),
-		('LOffsetTo(Affine2x3)', 'Transform', None, None, 'Offset (from beginning of PaintTrasformed table) to Affine2x3 subtable.'),
+		('Affine2x3', 'Transform', None, None, 'Offset (from beginning of PaintTrasformed table) to Affine2x3 subtable.'),
 	]),
 	('PaintFormat7', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 7'),
