@@ -1329,9 +1329,6 @@ def axisValueIsSelected(axisValue, seeker):
             axisIndex in seeker and seeker[axisIndex] <= axisValue.RangeMaxValue
         ]) else False
 
-    if axisIndex not in seeker:
-        return False
-
     return False
 
 
@@ -1395,7 +1392,14 @@ def updateNameTable(varfont, axisLimits):
     if "STAT" not in varfont:
         raise ValueError("Cannot update name table since there is no STAT table.")
     stat = varfont['STAT']
+    fvar = varfont['fvar']
     nametable = varfont["name"]
+
+    # add default axis values if they are missing from axisLimits
+    fvarDefaults = {a.axisTag: a.defaultValue for a in fvar.axes}
+    for k, v in fvarDefaults.items():
+        if k not in axisLimits:
+            axisLimits[k] = v
 
     selectedAxisValues = axisValuesFromAxisLimits(stat, axisLimits)
     _updateNameRecords(varfont, nametable, selectedAxisValues)
