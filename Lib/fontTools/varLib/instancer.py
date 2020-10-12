@@ -1366,8 +1366,29 @@ def axisValuesFromAxisLimits(stat, axisLimits):
         raise ValueError(f"Cannot find AxisValue for {', '.join(missing)}")
     # filter out Elidable axisValues
     axisValues = [a for a in axisValues if a.Flags & ELIDABLE_AXIS_VALUE_NAME != 2]
-    # TODO sort and remove duplicates so format 4 axisValues are dominant
-    return axisValues
+    return sortedAxisValues(axisValues)
+
+
+def sortedAxisValues(axisValues):
+    # Sort and remove duplicates so format 4 axisValues are dominant
+    results, seenAxes = [], set()
+    format4 = sorted(
+        [a for a in axisValues if a.Format == 4],
+        key=lambda k: len(k.AxisValueRecord), reverse=True
+    )
+    nonFormat4 = [a for a in axisValues if a not in format4]
+
+    for axisValue in format4:
+        axes = set([r.AxisIndex for r in axisValue.AxisValueRecord])
+        if seenAxes - axes == seenAxes:
+            seenAxes |= axes
+            results.append((tuple(axes), axisValue))
+
+    for axisValue in nonFormat4:
+        axisIndex = axisValue.AxisIndex
+        if axisIndex not in seenAxes:
+            results.append(((axisIndex,), axisValue))
+    return [v for k, v in sorted(results)]
 
 
 def updateNameTable(varfont, axisLimits):

@@ -2032,6 +2032,33 @@ def test_updateNameTable_vf_with_italic_attribute(varfont):
     assert names[(17, 3, 1, 0x409)] == "Black Condensed Italic"
 
 
+def test_updateNameTable_format4_axisValues(varfont):
+    # format 4 axisValues should dominate the other axisValues
+    stat = varfont["STAT"].table
+
+    axisValue = otTables.AxisValue()
+    axisValue.Format = 4
+    axisValue.Flags = 0
+    varfont["name"].setName("Dominant Value", 297, 3, 1, 0x409)
+    axisValue.ValueNameID = 297
+    axisValue.AxisValueRecord = []
+    for tag, value in (("wght", 900), ("wdth", 79)):
+        rec = otTables.AxisValueRecord()
+        rec.AxisIndex = next(
+            i for i, a in enumerate(stat.DesignAxisRecord.Axis) if a.AxisTag == tag
+        )
+        rec.Value = value
+        axisValue.AxisValueRecord.append(rec)
+    stat.AxisValueArray.AxisValue.append(axisValue)
+
+    instancer.updateNameTable(varfont, {"wdth": 79, "wght": 900})
+    names = _get_name_records(varfont)
+    assert names[(1, 3, 1, 0x409)] == "Test Variable Font Dominant Value"
+    assert names[(2, 3, 1, 0x409)] == "Regular"
+    assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
+    assert names[(17, 3, 1, 0x409)] == "Dominant Value"
+
+
 def test_sanityCheckVariableTables(varfont):
     font = ttLib.TTFont()
     with pytest.raises(ValueError, match="Missing required table fvar"):
