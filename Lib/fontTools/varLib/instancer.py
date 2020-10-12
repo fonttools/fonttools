@@ -136,6 +136,8 @@ class NameID(IntEnum):
     TYPOGRAPHIC_FAMILY_NAME = 16
     TYPOGRAPHIC_SUBFAMILY_NAME = 17
 
+ELIDABLE_AXIS_VALUE_NAME = 2
+
 
 def instantiateTupleVariationStore(
     variations, axisLimits, origCoords=None, endPts=None
@@ -1363,7 +1365,7 @@ def axisValuesFromAxisLimits(stat, axisLimits):
         missing = [f"{axisTag[i]}={axisValuesToFind[i]}" for i in axisValuesMissing]
         raise ValueError(f"Cannot find AxisValue for {', '.join(missing)}")
     # filter out Elidable axisValues
-    axisValues = [a for a in axisValues if a.Flags != 2]
+    axisValues = [a for a in axisValues if a.Flags & ELIDABLE_AXIS_VALUE_NAME != 2]
     # TODO sort and remove duplicates so format 4 axisValues are dominant
     return axisValues
 
