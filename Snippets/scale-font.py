@@ -4,8 +4,6 @@ USAGE:
 scale-font.py path/to/inputFont.ttf targetUPM path/to/outputFont.ttf
 
 Only works on .ttf (no CFF) for now
-
-TO DO: add support for scaling GPOS lookups type 7 and 8
 """
 
 from fontTools import ttLib
@@ -19,7 +17,7 @@ def _scale_lookup_type1(subTable, scale_factor):
     attrs = ['XAdvance', 'YAdvance', 'XPlacement', 'YPlacement']
 
     for attr in attrs:
-        if subTable.Format == 1 and hasattr(subTable, attr):
+        if subTable.Format == 1 and hasattr(subTable.Value, attr):
             setattr(subTable.Value, attr, scale_value_factor(getattr(subTable.Value, attr), scale_factor))
         elif subTable.Format == 2:
             for subSubTable in subTable.Value:
@@ -101,11 +99,9 @@ def _scale_lookup_type6(subTable, scale_factor):
                 setattr(mark2Anchor, attr, scale_value_factor(getattr(mark1Record.MarkAnchor, attr), scale_factor))
 
 def _scale_lookup_type7(subTable, scale_factor):
-    # TO DO
     pass 
     
 def _scale_lookup_type8(subTable, scale_factor):
-    # TO DO
     pass        
 
 
