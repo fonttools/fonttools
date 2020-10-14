@@ -2013,7 +2013,7 @@ def test_updateNametable_partial(varfont):
 
 
 def test_updateNameTable_missing_axisValues(varfont):
-    with pytest.raises(ValueError, match="Cannot find AxisValue for wght=200"):
+    with pytest.raises(ValueError, match="Cannot find Axis Value Tables wght=200"):
         instancer.updateNameTable(varfont, {"wght": 200})
 
 

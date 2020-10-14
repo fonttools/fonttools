@@ -127,6 +127,7 @@ class OverlapMode(IntEnum):
     KEEP_AND_SET_FLAGS = 1
     REMOVE = 2
 
+
 class NameID(IntEnum):
     FAMILY_NAME = 1
     SUBFAMILY_NAME = 2
@@ -135,6 +136,7 @@ class NameID(IntEnum):
     POSTSCRIPT_NAME = 6
     TYPOGRAPHIC_FAMILY_NAME = 16
     TYPOGRAPHIC_SUBFAMILY_NAME = 17
+
 
 ELIDABLE_AXIS_VALUE_NAME = 2
 
@@ -1110,6 +1112,280 @@ def pruningUnusedNames(varfont):
             del varfont["ltag"]
 
 
+def updateNameTable(varfont, axisLimits):
+    """Update an instatiated variable font's name table using the STAT
+    table's Axis Value Tables.
+
+    To establish which Axis Value Tables are needed, we first remove all
+    tables whose Value's are not in the axisLimits dictionary. We then
+    remove all tables which have Flag 2 enabled (ELIDABLE_AXIS_VALUE_NAME).
+    Finally, we remove duplicates and ensure Format 4 tables preside over
+    the other formats.
+
+    The updated nametable will conform to the R/I/B/BI naming model.
+    """
+    if "STAT" not in varfont:
+        raise ValueError("Cannot update name table since there is no STAT table.")
+    stat = varfont["STAT"]
+    fvar = varfont["fvar"]
+
+    # The updated name table must reflect the 'zero origin' of the font.
+    # If a user is instantiating a partial font, we will populate the
+    # unpinned axes with their default values.
+    fvarDefaults = {a.axisTag: a.defaultValue for a in fvar.axes}
+    axisCoords = axisLimits
+    for axisTag, val in fvarDefaults.items():
+        if axisTag not in axisCoords:
+            axisCoords[axisTag] = val
+        elif isinstance(axisCoords[axisTag], tuple):
+            axisCoords[axisTag] = val
+
+    axisValueTables = _axisValueTablesFromAxisCoords(stat, axisCoords)
+    _updateNameRecords(varfont, axisValueTables)
+
+
+def _axisValueTablesFromAxisCoords(stat, axisCoords):
+    axisValueTables = stat.table.AxisValueArray.AxisValue
+    axisRecords = stat.table.DesignAxisRecord.Axis
+    axisRecordIndex = {a.AxisTag: a.AxisOrdering for a in axisRecords}
+    axisRecordTag = {a.AxisOrdering: a.AxisTag for a in axisRecords}
+
+    axisValuesToFind = {
+        axisRecordIndex[axisTag]: val for axisTag, val in axisCoords.items()
+    }
+    axisValueTables = [
+        v for v in axisValueTables if _axisValueInAxisCoords(v, axisValuesToFind)
+    ]
+    axisValueTablesMissing = set(axisValuesToFind) - axisValueRecordsIndexes(
+        axisValueTables
+    )
+    if axisValueTablesMissing:
+        missing = ", ".join(
+            f"{axisRecordTag[i]}={axisValuesToFind[i]}" for i in axisValueTablesMissing
+        )
+        raise ValueError(f"Cannot find Axis Value Tables {missing}")
+    # remove axis Value Tables which have Elidable_AXIS_VALUE_NAME flag set
+    axisValueTables = [
+        v for v in axisValueTables if v.Flags & ELIDABLE_AXIS_VALUE_NAME != 2
+    ]
+    return _sortedAxisValues(axisValueTables)
+
+
+def _axisValueInAxisCoords(axisValueTable, axisCoords):
+    if axisValueTable.Format == 4:
+        res = []
+        for rec in axisValueTable.AxisValueRecord:
+            axisIndex = rec.AxisIndex
+            if axisIndex not in axisCoords:
+                return False
+            if rec.Value == axisCoords[axisIndex]:
+                res.append(True)
+            else:
+                res.append(False)
+        return True if all(res) else False
+
+    axisIndex = axisValueTable.AxisIndex
+
+    if axisValueTable.Format in (1, 3):
+        # A variable font can have additional axes that are not implemented as
+        # dynamic-variation axes in the fvar table, but that are
+        # relevant for the font or the family of which it is a member. This
+        # condition will include them.
+        # A common scenario is a family which consists of two variable fonts,
+        # one for Roman styles, the other for Italic styles. Both fonts have a
+        # weight axis. In order to establish a relationship between the fonts,
+        # an Italic Axis Record is created for both fonts. In the Roman font,
+        # an Axis Value Table is added to the Italic Axis Record which has the
+        # name "Roman" and its Value is set to 0.0, it also includes link
+        # Value of 1. In the Italic font, an Axis Value Table is also added
+        # to the Italic Axis Record which has the name "Italic", its Value set
+        # to 1.0.
+        if axisIndex not in axisCoords and axisValueTable.Value in (0.0, 1.0):
+            return True
+
+        elif axisIndex in axisCoords and axisValueTable.Value == axisCoords[axisIndex]:
+            return True
+
+    if axisValueTable.Format == 2:
+        return (
+            True
+            if all(
+                [
+                    axisIndex in axisCoords
+                    and axisCoords[axisIndex] >= axisValueTable.RangeMinValue,
+                    axisIndex in axisCoords
+                    and axisCoords[axisIndex] <= axisValueTable.RangeMaxValue,
+                ]
+            )
+            else False
+        )
+    return False
+
+
+def axisValueRecordsIndexes(axisValueTables):
+    res = set()
+    for val in axisValueTables:
+        res |= axisValueRecordIndexes(val)
+    return res
+
+
+def axisValueRecordIndexes(axisValueTable):
+    if axisValueTable.Format == 4:
+        return set(r.AxisIndex for r in axisValueTable.AxisValueRecord)
+    return set([axisValueTable.AxisIndex])
+
+
+def _sortedAxisValues(axisValueTables):
+    # Sort and remove duplicates ensuring that format 4 axis Value Tables
+    # are dominant
+    results = []
+    seenAxes = set()
+    # sort format 4 axes so the tables with the most AxisValueRecords
+    # are first
+    format4 = sorted(
+        [v for v in axisValueTables if v.Format == 4],
+        key=lambda v: len(v.AxisValueRecord),
+        reverse=True,
+    )
+    nonFormat4 = [v for v in axisValueTables if v not in format4]
+
+    for val in format4:
+        axisIndexes = axisValueRecordIndexes(val)
+        if bool(seenAxes & axisIndexes) == False:
+            seenAxes |= axisIndexes
+            results.append((tuple(axisIndexes), val))
+
+    for val in nonFormat4:
+        axisIndex = val.AxisIndex
+        if axisIndex not in seenAxes:
+            seenAxes.add(axisIndex)
+            results.append(((axisIndex,), val))
+    return [axisValueTable for _, axisValueTable in sorted(results)]
+
+
+def _updateNameRecords(varfont, axisValueTables):
+    # Update nametable based on the axisValues using the R/I/B/BI model.
+    nametable = varfont["name"]
+
+    ribbiAxisValues = _ribbiAxisValueTables(nametable, axisValueTables)
+    nonRibbiAxisValues = [v for v in axisValueTables if v not in ribbiAxisValues]
+
+    nameTablePlatEncLangs = set(
+        (r.platformID, r.platEncID, r.langID) for r in nametable.names
+    )
+    for platEncLang in nameTablePlatEncLangs:
+        _updateStyleRecords(
+            varfont,
+            nametable,
+            ribbiAxisValues,
+            nonRibbiAxisValues,
+            platEncLang,
+        )
+
+
+def _ribbiAxisValueTables(nametable, axisValueTables):
+    engNameRecords = any([r for r in nametable.names if r.langID == 0x409])
+    if not engNameRecords:
+        raise ValueError(
+            f"Canot determine if there are RIBBI Axis Value Tables "
+            "since there are no name table Records which have "
+            "platformID=3, platEncID=1, langID=0x409"
+        )
+    return [
+        v
+        for v in axisValueTables
+        if nametable.getName(v.ValueNameID, 3, 1, 0x409).toUnicode()
+        in ("Regular", "Italic", "Bold", "Bold Italic")
+    ]
+
+
+def _updateStyleRecords(
+    varfont, nametable, ribbiAxisValues, nonRibbiAxisValues, platEncLang=(3, 1, 0x409)
+):
+    currentFamilyName = nametable.getName(
+        NameID.TYPOGRAPHIC_FAMILY_NAME, *platEncLang
+    ) or nametable.getName(NameID.FAMILY_NAME, *platEncLang)
+
+    currentStyleName = nametable.getName(
+        NameID.TYPOGRAPHIC_SUBFAMILY_NAME, *platEncLang
+    ) or nametable.getName(NameID.SUBFAMILY_NAME, *platEncLang)
+
+    if not currentFamilyName or not currentStyleName:
+        # Since no family name or style name entries were found, we cannot
+        # update this set of name Records.
+        return
+
+    currentFamilyName = currentFamilyName.toUnicode()
+    currentStyleName = currentStyleName.toUnicode()
+
+    ribbiName = " ".join(
+        nametable.getName(a.ValueNameID, *platEncLang).toUnicode()
+        for a in ribbiAxisValues
+    )
+    nonRibbiName = " ".join(
+        nametable.getName(a.ValueNameID, *platEncLang).toUnicode()
+        for a in nonRibbiAxisValues
+    )
+
+    nameIDs = {
+        NameID.FAMILY_NAME: currentFamilyName,
+        # TODO (M Foley) what about Elidable fallback name instead?
+        NameID.SUBFAMILY_NAME: ribbiName
+        or nametable.getName(NameID.SUBFAMILY_NAME, *platEncLang).toUnicode(),
+    }
+    if nonRibbiAxisValues:
+        nameIDs[NameID.FAMILY_NAME] = f"{currentFamilyName} {nonRibbiName}".strip()
+        nameIDs[NameID.TYPOGRAPHIC_FAMILY_NAME] = currentFamilyName
+        nameIDs[
+            NameID.TYPOGRAPHIC_SUBFAMILY_NAME
+        ] = f"{nonRibbiName} {ribbiName}".strip()
+
+    newFamilyName = nameIDs.get(NameID.TYPOGRAPHIC_FAMILY_NAME) or nameIDs.get(
+        NameID.FAMILY_NAME
+    )
+    newStyleName = nameIDs.get(NameID.TYPOGRAPHIC_SUBFAMILY_NAME) or nameIDs.get(
+        NameID.SUBFAMILY_NAME
+    )
+
+    nameIDs[NameID.FULL_FONT_NAME] = f"{newFamilyName} {newStyleName}"
+    # TODO (M Foley) implement Adobe PS naming for VFs
+    nameIDs[
+        NameID.POSTSCRIPT_NAME
+    ] = f"{newFamilyName.replace(' ', '')}-{newStyleName.replace(' ', '')}"
+    nameIDs[NameID.UNIQUE_FONT_IDENTIFIER] = _updateUniqueIdNameRecord(
+        varfont, nameIDs, platEncLang
+    )
+
+    for nameID, string in nameIDs.items():
+        if not string:
+            continue
+        nametable.setName(string, nameID, *platEncLang)
+
+
+def _updateUniqueIdNameRecord(varfont, nameIDs, platEncLang):
+    name = varfont["name"]
+    record = name.getName(NameID.UNIQUE_FONT_IDENTIFIER, *platEncLang)
+    if not record:
+        return None
+
+    def isSubString(string1, string2):
+        if string2 in string1:
+            return True
+        return False
+
+    # Check if full name and postscript name are a substring
+    for nameID in (4, 6):
+        nameRecord = name.getName(nameID, *platEncLang)
+        if not nameRecord:
+            continue
+        if isSubString(record.toUnicode(), nameRecord.toUnicode()):
+            return record.toUnicode().replace(
+                nameRecord.toUnicode(), nameIDs[nameRecord.nameID]
+            )
+    # TODO (M Foley) Construct new uniqueID if full name or postscript names are not subsets
+    return None
+
+
 def setMacOverlapFlags(glyfTable):
     flagOverlapCompound = _g_l_y_f.OVERLAP_COMPOUND
     flagOverlapSimple = _g_l_y_f.flagOverlapSimple
@@ -1198,7 +1474,7 @@ def instantiateVariableFont(
     inplace=False,
     optimize=True,
     overlap=OverlapMode.KEEP_AND_SET_FLAGS,
-    update_nametable=False
+    updateFontNames=False,
 ):
     """Instantiate variable font, either fully or partially.
 
@@ -1231,6 +1507,11 @@ def instantiateVariableFont(
             contours and components, you can pass OverlapMode.REMOVE. Note that this
             requires the skia-pathops package (available to pip install).
             The overlap parameter only has effect when generating full static instances.
+        updateFontNames (bool): if True, update the instantiated font's nametable using
+            the Axis Value Tables from the STAT table. The name table will be updated so
+            it conforms to the R/I/B/BI model. If the STAT table is missing or
+            an Axis Value table is missing for a given coordinate, an Error will be
+            raised.
     """
     # 'overlap' used to be bool and is now enum; for backward compat keep accepting bool
     overlap = OverlapMode(int(overlap))
@@ -1245,6 +1526,10 @@ def instantiateVariableFont(
 
     if not inplace:
         varfont = deepcopy(varfont)
+
+    if updateFontNames:
+        log.info("Updating nametable")
+        updateNameTable(varfont, axisLimits)
 
     if "gvar" in varfont:
         instantiateGvar(varfont, normalizedLimits, optimize=optimize)
@@ -1284,10 +1569,6 @@ def instantiateVariableFont(
                 log.info("Removing overlaps from glyf table")
                 removeOverlaps(varfont)
 
-    if update_nametable:
-        log.info("Updating nametable")
-        updateNameTable(varfont, axisLimits)
-
     varLib.set_default_weight_width_slant(
         varfont,
         location={
@@ -1298,223 +1579,6 @@ def instantiateVariableFont(
     )
 
     return varfont
-
-
-def axisValueIsSelected(axisValue, seeker):
-    if axisValue.Format == 4:
-        res = []
-        for rec in axisValue.AxisValueRecord:
-            axisIndex = rec.AxisIndex
-            if axisIndex not in seeker:
-                return False
-            if rec.Value == seeker[axisIndex]:
-                res.append(True)
-            else:
-                res.append(False)
-        return True if all(res) else False
-
-    axisIndex = axisValue.AxisIndex
-
-    if axisValue.Format in (1, 3):
-        # Add axisValue if it's an attribute of a font. Font family
-        if axisIndex not in seeker and axisValue.Value in [0.0, 1.0]:
-            return True
-
-        elif axisIndex in seeker and axisValue.Value == seeker[axisIndex]:
-            return True
-
-    if axisValue.Format == 2:
-        return True if all([
-            axisIndex in seeker and seeker[axisIndex] >= axisValue.RangeMinValue,
-            axisIndex in seeker and seeker[axisIndex] <= axisValue.RangeMaxValue
-        ]) else False
-
-    return False
-
-
-def axisValueIndexes(axisValue):
-    if axisValue.Format == 4:
-        return [r.AxisIndex for r in axisValue.AxisValueRecord]
-    return [axisValue.AxisIndex]
-
-
-def axisValuesIndexes(axisValues):
-    res = []
-    for axisValue in axisValues:
-        res += axisValueIndexes(axisValue)
-    return res
-
-
-def axisValuesFromAxisLimits(stat, axisLimits):
-    axisValues = stat.table.AxisValueArray.AxisValue
-    axisRecords = stat.table.DesignAxisRecord.Axis
-    axisOrder = {a.AxisTag: a.AxisOrdering for a in axisRecords}
-    axisTag = {a.AxisOrdering: a.AxisTag for a in axisRecords}
-    # Only check pinnedAxes for matching AxisValues
-    axisValuesToFind = {
-        axisOrder[k]: v for k, v in axisLimits.items() \
-        if isinstance(v, (float, int))
-    }
-
-    axisValues = [a for a in axisValues if axisValueIsSelected(a, axisValuesToFind)]
-    axisValuesMissing = set(axisValuesToFind) - set(axisValuesIndexes(axisValues))
-    if axisValuesMissing:
-        missing = [f"{axisTag[i]}={axisValuesToFind[i]}" for i in axisValuesMissing]
-        raise ValueError(f"Cannot find AxisValue for {', '.join(missing)}")
-    # filter out Elidable axisValues
-    axisValues = [a for a in axisValues if a.Flags & ELIDABLE_AXIS_VALUE_NAME != 2]
-    return sortedAxisValues(axisValues)
-
-
-def sortedAxisValues(axisValues):
-    # Sort and remove duplicates so format 4 axisValues are dominant
-    results, seenAxes = [], set()
-    # ensure format4 axes with the most AxisValueRecords are first
-    format4 = sorted(
-        [a for a in axisValues if a.Format == 4],
-        key=lambda k: len(k.AxisValueRecord), reverse=True
-    )
-    nonFormat4 = [a for a in axisValues if a not in format4]
-
-    for axisValue in format4:
-        axes = set([r.AxisIndex for r in axisValue.AxisValueRecord])
-        if seenAxes - axes == seenAxes:
-            seenAxes |= axes
-            results.append((tuple(axes), axisValue))
-
-    for axisValue in nonFormat4:
-        axisIndex = axisValue.AxisIndex
-        if axisIndex not in seenAxes:
-            results.append(((axisIndex,), axisValue))
-    return [v for k, v in sorted(results)]
-
-
-def updateNameTable(varfont, axisLimits):
-    if "STAT" not in varfont:
-        raise ValueError("Cannot update name table since there is no STAT table.")
-    stat = varfont['STAT']
-    nametable = varfont["name"]
-
-    # add default axis values if they are missing from axisLimits
-    if 'fvar' in varfont:
-        fvar = varfont['fvar']
-        fvarDefaults = {a.axisTag: a.defaultValue for a in fvar.axes}
-        for k, v in fvarDefaults.items():
-            if k not in axisLimits:
-                axisLimits[k] = v
-
-    selectedAxisValues = axisValuesFromAxisLimits(stat, axisLimits)
-    _updateNameRecords(varfont, nametable, selectedAxisValues)
-
-
-def _updateNameRecords(varfont, nametable, axisValues):
-    # Update nametable based on the axisValues
-    # using the R/I/B/BI and WWS models.
-    engNameRecords = any([r for r in nametable.names if r.langID == 0x409])
-    if not engNameRecords:
-        # TODO (Marc F) improve error msg
-        raise ValueError("No English namerecords")
-
-    ribbiAxisValues = _ribbiAxisValues(nametable, axisValues)
-    nonRibbiAxisValues = [av for av in axisValues if av not in ribbiAxisValues]
-
-    nametblLangs = set((r.platformID, r.platEncID, r.langID) for r in nametable.names)
-    for lang in nametblLangs:
-        _updateStyleRecords(
-            varfont,
-            nametable,
-            ribbiAxisValues,
-            nonRibbiAxisValues,
-            lang,
-        )
-
-
-def _ribbiAxisValues(nametable, axisValues):
-    ribbiStyles = frozenset(["Regular", "Italic", "Bold", "Bold Italic"])
-    res = []
-    for axisValue in axisValues:
-        name = nametable.getName(axisValue.ValueNameID, 3, 1, 0x409).toUnicode()
-        if name in ribbiStyles:
-            res.append(axisValue)
-    return res
-
-
-def _updateStyleRecords(
-    varfont,
-    nametable,
-    ribbiAxisValues,
-    nonRibbiAxisValues,
-    lang=(3, 1, 0x409)
-):
-#    wwsAxes = frozenset(["wght", "wdth", "ital"])
-    currentFamilyName = nametable.getName(NameID.TYPOGRAPHIC_FAMILY_NAME, *lang) or \
-            nametable.getName(NameID.FAMILY_NAME, *lang)
-
-    currentStyleName = nametable.getName(NameID.TYPOGRAPHIC_SUBFAMILY_NAME, *lang) or \
-            nametable.getName(NameID.SUBFAMILY_NAME, *lang)
-    # TODO cleanup
-    if not currentFamilyName or not currentStyleName:
-        print(f"Cannot update {lang} since it's missing a familyName nameID 1 or subFamilyName nameID 2 entry")
-        return
-    currentFamilyName = currentFamilyName.toUnicode()
-    currentStyleName = currentStyleName.toUnicode()
-
-    ribbiName = " ".join([nametable.getName(a.ValueNameID, *lang).toUnicode() for a in ribbiAxisValues])
-    nonRibbiName = " ".join([nametable.getName(a.ValueNameID, *lang).toUnicode() for a in nonRibbiAxisValues])
-
-    nameIDs = {
-        NameID.FAMILY_NAME: currentFamilyName,
-        NameID.SUBFAMILY_NAME: ribbiName or nametable.getName(NameID.SUBFAMILY_NAME, *lang).toUnicode()
-    }
-    if nonRibbiAxisValues:
-        nameIDs[NameID.FAMILY_NAME] = f"{currentFamilyName} {nonRibbiName}".strip()
-        nameIDs[NameID.TYPOGRAPHIC_FAMILY_NAME] = currentFamilyName
-        nameIDs[NameID.TYPOGRAPHIC_SUBFAMILY_NAME] = f"{nonRibbiName} {ribbiName}".strip()
-#    # Include WWS name records if there are nonWwsParticles
-#    if nonWwsParticles:
-#        nameIDs[21] = f"{currentFamilyName} {' '.join(nonWwsParticles)}"
-#        nameIDs[22] = " ".join(wwsParticles)
-#        # Enable fsSelection bit 8 (WWS)
-#        varfont['OS/2'].fsSelection |= (1 << 8)
-#
-    newFamilyName = nameIDs.get(NameID.TYPOGRAPHIC_FAMILY_NAME) or \
-            nameIDs.get(NameID.FAMILY_NAME)
-    newStyleName = nameIDs.get(NameID.TYPOGRAPHIC_SUBFAMILY_NAME) or \
-            nameIDs.get(NameID.SUBFAMILY_NAME)
-
-    nameIDs[NameID.FULL_FONT_NAME] = f"{newFamilyName} {newStyleName}"
-    nameIDs[NameID.POSTSCRIPT_NAME] = f"{newFamilyName.replace(' ', '')}-{newStyleName.replace(' ', '')}"
-    nameIDs[NameID.UNIQUE_FONT_IDENTIFIER] = _uniqueIdRecord(varfont, lang, nameIDs)
-
-    for nameID, string in nameIDs.items():
-        if not string:
-            continue
-        nametable.setName(string, nameID, *lang)
-
-
-def _uniqueIdRecord(varfont, lang, nameIDs):
-    name = varfont['name']
-    record = name.getName(NameID.UNIQUE_FONT_IDENTIFIER, *lang)
-    if not record:
-        return None
-
-    def isSubString(string1, string2):
-        if string2 in string1:
-            return True
-        return False
-
-    # Check if full name and postscript name are a substring
-    for nameID in (4, 6):
-        nameRecord = name.getName(nameID, *lang)
-        if not nameRecord:
-            continue
-        if isSubString(record.toUnicode(), nameRecord.toUnicode()):
-            return record.toUnicode().replace(
-                nameRecord.toUnicode(),
-                nameIDs[nameRecord.nameID]
-            )
-    # TODO (M Foley) Construct new uniqueID if full name or postscript names are not subsets
-    return None
 
 
 def splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange):
@@ -1613,8 +1677,8 @@ def parseArgs(args):
     parser.add_argument(
         "--update-nametable",
         action="store_true",
-        help="Update the instantiated font's nametable using the STAT "
-        "table Axis Values"
+        help="Update the instantiated font's nametable. Input font must have "
+        "a STAT table with Axis Value Tables",
     )
     loggingGroup = parser.add_mutually_exclusive_group(required=False)
     loggingGroup.add_argument(
@@ -1667,7 +1731,7 @@ def main(args=None):
         inplace=True,
         optimize=options.optimize,
         overlap=options.overlap,
-        update_nametable=options.update_nametable,
+        updateFontNames=options.update_nametable,
     )
 
     outfile = (
