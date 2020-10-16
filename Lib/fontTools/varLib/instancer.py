@@ -1309,9 +1309,9 @@ def _updateStyleRecords(
 
 
 def _updateUniqueIdNameRecord(varfont, nameIDs, platEncLang):
-    name = varfont["name"]
-    record = name.getName(NameID.UNIQUE_FONT_IDENTIFIER, *platEncLang)
-    if not record:
+    nametable = varfont["name"]
+    currentRecord = nametable.getName(NameID.UNIQUE_FONT_IDENTIFIER, *platEncLang)
+    if not currentRecord:
         return None
 
     def isSubString(string1, string2):
@@ -1319,13 +1319,13 @@ def _updateUniqueIdNameRecord(varfont, nameIDs, platEncLang):
             return True
         return False
 
-    # Check if full name and postscript name are a substring
+    # Check if full name and postscript name are a substring of currentRecord
     for nameID in (4, 6):
-        nameRecord = name.getName(nameID, *platEncLang)
+        nameRecord = nametable.getName(nameID, *platEncLang)
         if not nameRecord:
             continue
-        if isSubString(record.toUnicode(), nameRecord.toUnicode()):
-            return record.toUnicode().replace(
+        if isSubString(currentRecord.toUnicode(), nameRecord.toUnicode()):
+            return currentRecord.toUnicode().replace(
                 nameRecord.toUnicode(), nameIDs[nameRecord.nameID]
             )
     # TODO (M Foley) Construct new uniqueID if full name or postscript names are not subsets
