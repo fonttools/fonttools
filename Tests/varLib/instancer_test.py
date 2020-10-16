@@ -1966,6 +1966,10 @@ def test_updateNameTable_with_registered_axes(varfont):
     assert names[(17, 3, 1, 0x409)] == "Thin Condensed"
 
 
+def test_updatetNameTable_axis_order(varfont):
+    pass
+
+
 def test_updateNameTable_with_multilingual_names(varfont):
     name = varfont["name"]
     name.setName("Test Variable Font", 1, 3, 1, 0x405)
@@ -2015,6 +2019,12 @@ def test_updateNametable_partial(varfont):
 def test_updateNameTable_missing_axisValues(varfont):
     with pytest.raises(ValueError, match="Cannot find Axis Value Tables wght=200"):
         instancer.updateNameTable(varfont, {"wght": 200})
+
+
+def test_updateNameTable_missing_stat(varfont):
+    del varfont["STAT"]
+    with pytest.raises(ValueError, match="Cannot update name table since there is no STAT table."):
+        instancer.updateNameTable(varfont, {"wght": 400})
 
 
 def test_updateNameTable_vf_with_italic_attribute(varfont):

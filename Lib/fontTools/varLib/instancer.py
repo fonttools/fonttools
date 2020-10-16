@@ -1021,6 +1021,11 @@ def instantiateSTAT(varfont, axisLimits):
     ):
         return  # STAT table empty, nothing to do
 
+    log.info("Instantiating STAT table")
+    _instantiateSTAT(stat, axisLimits)
+
+
+def _instantiateSTAT(stat, axisLimits):
     location, axisRanges = splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange)
 
     def isAxisValueOutsideLimits(axisTag, axisValue):
@@ -1031,8 +1036,6 @@ def instantiateSTAT(varfont, axisLimits):
             if axisValue < axisRange.minimum or axisValue > axisRange.maximum:
                 return True
         return False
-
-    log.info("Instantiating STAT table")
 
     # only keep AxisValues whose axis is not pinned nor restricted, or is pinned at the
     # exact (nominal) value, or is restricted but the value is within the new range
@@ -1113,11 +1116,11 @@ def pruningUnusedNames(varfont):
 
 
 def updateNameTable(varfont, axisLimits):
-    """Update an instatiated variable font's name table using the STAT
-    table's Axis Value Tables.
+    """Update an instatiated variable font's name table using the Axis
+    Value Tables from the STAT table.
 
     To establish which Axis Value Tables are needed, we first remove all
-    tables whose Value's are not in the axisLimits dictionary. We then
+    tables whose Value's are not in the axisLimits. We then
     remove all tables which have Flag 2 enabled (ELIDABLE_AXIS_VALUE_NAME).
     Finally, we remove duplicates and ensure Format 4 tables preside over
     the other formats.
@@ -1129,9 +1132,9 @@ def updateNameTable(varfont, axisLimits):
     stat = varfont["STAT"]
     fvar = varfont["fvar"]
 
-    # The updated name table must reflect the 'zero origin' of the font.
+    # The updated name table must reflect the new 'zero origin' of the font.
     # If a user is instantiating a partial font, we will populate the
-    # unpinned axes with their default values.
+    # unpinned axes with their default axis values.
     fvarDefaults = {a.axisTag: a.defaultValue for a in fvar.axes}
     axisCoords = axisLimits
     for axisTag, val in fvarDefaults.items():
@@ -1140,104 +1143,46 @@ def updateNameTable(varfont, axisLimits):
         elif isinstance(axisCoords[axisTag], tuple):
             axisCoords[axisTag] = val
 
-    axisValueTables = _axisValueTablesFromAxisCoords(stat, axisCoords)
-    _updateNameRecords(varfont, axisValueTables)
+    stat_new = deepcopy(stat).table
+    _instantiateSTAT(stat_new, axisCoords)
+    checkMissingAxisValues(stat_new, axisCoords)
 
-
-def _axisValueTablesFromAxisCoords(stat, axisCoords):
-    axisValueTables = stat.table.AxisValueArray.AxisValue
-    axisRecords = stat.table.DesignAxisRecord.Axis
-    axisRecordIndex = {a.AxisTag: a.AxisOrdering for a in axisRecords}
-    axisRecordTag = {a.AxisOrdering: a.AxisTag for a in axisRecords}
-
-    axisValuesToFind = {
-        axisRecordIndex[axisTag]: val for axisTag, val in axisCoords.items()
-    }
-    axisValueTables = [
-        v for v in axisValueTables if _axisValueInAxisCoords(v, axisValuesToFind)
-    ]
-    axisValueTablesMissing = set(axisValuesToFind) - axisValueRecordsIndexes(
-        axisValueTables
-    )
-    if axisValueTablesMissing:
-        missing = ", ".join(
-            f"{axisRecordTag[i]}={axisValuesToFind[i]}" for i in axisValueTablesMissing
-        )
-        raise ValueError(f"Cannot find Axis Value Tables {missing}")
+    axisValueTables = stat_new.AxisValueArray.AxisValue
     # remove axis Value Tables which have Elidable_AXIS_VALUE_NAME flag set
+    # Axis Value which have this flag enabled won't be visible in
+    # application font menus.
     axisValueTables = [
         v for v in axisValueTables if v.Flags & ELIDABLE_AXIS_VALUE_NAME != 2
     ]
-    return _sortedAxisValues(axisValueTables)
+    stat_new.AxisValueArray.AxisValue = axisValueTables
+    axisValueTables = _sortedAxisValues(stat_new, axisCoords)
+    _updateNameRecords(varfont, axisValueTables)
 
 
-def _axisValueInAxisCoords(axisValueTable, axisCoords):
-    if axisValueTable.Format == 4:
-        res = []
-        for rec in axisValueTable.AxisValueRecord:
-            axisIndex = rec.AxisIndex
-            if axisIndex not in axisCoords:
-                return False
-            if rec.Value == axisCoords[axisIndex]:
-                res.append(True)
-            else:
-                res.append(False)
-        return True if all(res) else False
-
-    axisIndex = axisValueTable.AxisIndex
-
-    if axisValueTable.Format in (1, 3):
-        # A variable font can have additional axes that are not implemented as
-        # dynamic-variation axes in the fvar table, but that are
-        # relevant for the font or the family of which it is a member. This
-        # condition will include them.
-        # A common scenario is a family which consists of two variable fonts,
-        # one for Roman styles, the other for Italic styles. Both fonts have a
-        # weight axis. In order to establish a relationship between the fonts,
-        # an Italic Axis Record is created for both fonts. In the Roman font,
-        # an Axis Value Table is added to the Italic Axis Record which has the
-        # name "Roman" and its Value is set to 0.0, it also includes link
-        # Value of 1. In the Italic font, an Axis Value Table is also added
-        # to the Italic Axis Record which has the name "Italic", its Value set
-        # to 1.0.
-        if axisIndex not in axisCoords and axisValueTable.Value in (0.0, 1.0):
-            return True
-
-        elif axisIndex in axisCoords and axisValueTable.Value == axisCoords[axisIndex]:
-            return True
-
-    if axisValueTable.Format == 2:
-        return (
-            True
-            if all(
-                [
-                    axisIndex in axisCoords
-                    and axisCoords[axisIndex] >= axisValueTable.RangeMinValue,
-                    axisIndex in axisCoords
-                    and axisCoords[axisIndex] <= axisValueTable.RangeMaxValue,
-                ]
-            )
-            else False
-        )
-    return False
-
-
-def axisValueRecordsIndexes(axisValueTables):
-    res = set()
+def checkMissingAxisValues(stat, axisCoords):
+    seen = set()
+    axisValueTables = stat.AxisValueArray.AxisValue
+    designAxes = stat.DesignAxisRecord.Axis
     for val in axisValueTables:
-        res |= axisValueRecordIndexes(val)
-    return res
+        if val.Format == 4:
+            for rec in val.AxisValueRecord:
+                axisTag = designAxes[rec.AxisIndex].AxisTag
+                seen.add(axisTag)
+        else:
+            axisTag = designAxes[val.AxisIndex].AxisTag
+            seen.add(axisTag)
+
+    missingAxes = set(axisCoords) - seen
+    if missingAxes:
+        missing = ", ".join(f"{i}={axisCoords[i]}" for i in missingAxes)
+        raise ValueError(f"Cannot find Axis Value Tables {missing}")
 
 
-def axisValueRecordIndexes(axisValueTable):
-    if axisValueTable.Format == 4:
-        return set(r.AxisIndex for r in axisValueTable.AxisValueRecord)
-    return set([axisValueTable.AxisIndex])
-
-
-def _sortedAxisValues(axisValueTables):
+def _sortedAxisValues(stat, axisCoords):
     # Sort and remove duplicates ensuring that format 4 axis Value Tables
     # are dominant
+    axisValueTables = stat.AxisValueArray.AxisValue
+    designAxes = stat.DesignAxisRecord.Axis
     results = []
     seenAxes = set()
     # sort format 4 axes so the tables with the most AxisValueRecords
@@ -1250,7 +1195,7 @@ def _sortedAxisValues(axisValueTables):
     nonFormat4 = [v for v in axisValueTables if v not in format4]
 
     for val in format4:
-        axisIndexes = axisValueRecordIndexes(val)
+        axisIndexes = set(r.AxisIndex for r in val.AxisValueRecord)
         if bool(seenAxes & axisIndexes) == False:
             seenAxes |= axisIndexes
             results.append((tuple(axisIndexes), val))
@@ -1260,6 +1205,7 @@ def _sortedAxisValues(axisValueTables):
         if axisIndex not in seenAxes:
             seenAxes.add(axisIndex)
             results.append(((axisIndex,), val))
+
     return [axisValueTable for _, axisValueTable in sorted(results)]
 
 
@@ -1311,7 +1257,7 @@ def _updateStyleRecords(
     ) or nametable.getName(NameID.SUBFAMILY_NAME, *platEncLang)
 
     if not currentFamilyName or not currentStyleName:
-        # Since no family name or style name entries were found, we cannot
+        # Since no family name or style name records were found, we cannot
         # update this set of name Records.
         return
 
@@ -1510,7 +1456,7 @@ def instantiateVariableFont(
         updateFontNames (bool): if True, update the instantiated font's nametable using
             the Axis Value Tables from the STAT table. The name table will be updated so
             it conforms to the R/I/B/BI model. If the STAT table is missing or
-            an Axis Value table is missing for a given coordinate, an Error will be
+            an Axis Value table is missing for a given axis coordinate, an Error will be
             raised.
     """
     # 'overlap' used to be bool and is now enum; for backward compat keep accepting bool
