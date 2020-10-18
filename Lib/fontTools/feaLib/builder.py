@@ -30,6 +30,7 @@ from fontTools.otlLib.error import OpenTypeLibError
 from collections import defaultdict
 import itertools
 import logging
+import warnings
 
 
 log = logging.getLogger(__name__)
@@ -707,10 +708,13 @@ class Builder(object):
                 continue
 
             for ix in lookup_indices:
-                if str(ix) in self.lookup_locations[tag]:
+                try:
                     self.lookup_locations[tag][str(ix)] = self.lookup_locations[tag][
                         str(ix)
                     ]._replace(feature=key)
+                except KeyError:
+                    warnings.warn("feaLib.Builder subclass needs upgrading to "
+                        "stash debug information. See fonttools#2065.")
 
             feature_key = (feature_tag, lookup_indices)
             feature_index = feature_indices.get(feature_key)
