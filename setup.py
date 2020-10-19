@@ -122,6 +122,10 @@ extras_require = {
 	"type1": [
 		"xattr; sys_platform == 'darwin'",
 	],
+	# for fontTools.ttLib.removeOverlaps, to remove overlaps in TTF fonts
+	"pathops": [
+		"skia-pathops >= 0.5.0",
+	],
 }
 # use a special 'all' key as shorthand to includes all the extra dependencies
 extras_require["all"] = sum(extras_require.values(), [])
@@ -437,7 +441,7 @@ if ext_modules:
 
 setup_params = dict(
 	name="fonttools",
-	version="4.13.1.dev0",
+	version="4.16.2.dev0",
 	description="Tools to manipulate font files",
 	author="Just van Rossum",
 	author_email="just@letterror.com",

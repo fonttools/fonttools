@@ -471,6 +471,30 @@ class GlyphTest:
             ]
         )
 
+    def test_getCompositeMaxpValues(self):
+        # https://github.com/fonttools/fonttools/issues/2044
+        glyphSet = {}
+        pen = TTGlyphPen(glyphSet)  # empty non-composite glyph
+        glyphSet["fraction"] = pen.glyph()
+        glyphSet["zero.numr"] = pen.glyph()
+        pen = TTGlyphPen(glyphSet)
+        pen.addComponent("zero.numr", (1, 0, 0, 1, 0, 0))
+        glyphSet["zero.dnom"] = pen.glyph()
+        pen = TTGlyphPen(glyphSet)
+        pen.addComponent("zero.numr", (1, 0, 0, 1, 0, 0))
+        pen.addComponent("fraction", (1, 0, 0, 1, 0, 0))
+        pen.addComponent("zero.dnom", (1, 0, 0, 1, 0, 0))
+        glyphSet["percent"] = pen.glyph()
+        pen = TTGlyphPen(glyphSet)
+        pen.addComponent("zero.numr", (1, 0, 0, 1, 0, 0))
+        pen.addComponent("fraction", (1, 0, 0, 1, 0, 0))
+        pen.addComponent("zero.dnom", (1, 0, 0, 1, 0, 0))
+        pen.addComponent("zero.dnom", (1, 0, 0, 1, 0, 0))
+        glyphSet["perthousand"] = pen.glyph()
+        assert glyphSet["zero.dnom"].getCompositeMaxpValues(glyphSet)[2] == 1
+        assert glyphSet["percent"].getCompositeMaxpValues(glyphSet)[2] == 2
+        assert glyphSet["perthousand"].getCompositeMaxpValues(glyphSet)[2] == 2
+
 
 class GlyphComponentTest:
 

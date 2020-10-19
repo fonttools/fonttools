@@ -114,12 +114,16 @@ class BuilderTest(unittest.TestCase):
                     lines.append(line.rstrip() + os.linesep)
         return lines
 
-    def expect_ttx(self, font, expected_ttx):
+    def expect_ttx(self, font, expected_ttx, replace=None):
         path = self.temp_path(suffix=".ttx")
         font.saveXML(path, tables=['head', 'name', 'BASE', 'GDEF', 'GSUB',
                                    'GPOS', 'OS/2', 'hhea', 'vhea'])
         actual = self.read_ttx(path)
         expected = self.read_ttx(expected_ttx)
+        if replace:
+            for i in range(len(expected)):
+                for k, v in replace.items():
+                    expected[i] = expected[i].replace(k, v)
         if actual != expected:
             for line in difflib.unified_diff(
                     expected, actual, fromfile=expected_ttx, tofile=path):
@@ -133,12 +137,17 @@ class BuilderTest(unittest.TestCase):
 
     def check_feature_file(self, name):
         font = makeTTFont()
-        addOpenTypeFeatures(font, self.getpath("%s.fea" % name))
+        feapath = self.getpath("%s.fea" % name)
+        addOpenTypeFeatures(font, feapath)
         self.expect_ttx(font, self.getpath("%s.ttx" % name))
         # Make sure we can produce binary OpenType tables, not just XML.
         for tag in ('GDEF', 'GSUB', 'GPOS'):
             if tag in font:
                 font[tag].compile(font)
+        debugttx = self.getpath("%s-debug.ttx" % name)
+        if os.path.exists(debugttx):
+            addOpenTypeFeatures(font, feapath, debug=True)
+            self.expect_ttx(font, debugttx, replace = {"__PATH__": feapath})
 
     def check_fea2fea_file(self, name, base=None, parser=Parser):
         font = makeTTFont()

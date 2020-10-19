@@ -718,6 +718,18 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(flag.asFea(),
             "lookupflag RightToLeft MarkAttachmentType @TOP_MARKS;")
 
+    def test_lookupflag_format_A_MarkAttachmentType_glyphClass(self):
+        flag = self.parse_lookupflag_(
+            "lookupflag RightToLeft MarkAttachmentType [acute grave macron];")
+        self.assertIsInstance(flag, ast.LookupFlagStatement)
+        self.assertEqual(flag.value, 1)
+        self.assertIsInstance(flag.markAttachment, ast.GlyphClass)
+        self.assertEqual(flag.markAttachment.glyphSet(),
+                         ("acute", "grave", "macron"))
+        self.assertIsNone(flag.markFilteringSet)
+        self.assertEqual(flag.asFea(),
+            "lookupflag RightToLeft MarkAttachmentType [acute grave macron];")
+
     def test_lookupflag_format_A_UseMarkFilteringSet(self):
         flag = self.parse_lookupflag_(
             "@BOTTOM_MARKS = [cedilla ogonek];"
@@ -730,6 +742,18 @@ class ParserTest(unittest.TestCase):
                          ("cedilla", "ogonek"))
         self.assertEqual(flag.asFea(),
             "lookupflag IgnoreLigatures UseMarkFilteringSet @BOTTOM_MARKS;")
+
+    def test_lookupflag_format_A_UseMarkFilteringSet_glyphClass(self):
+        flag = self.parse_lookupflag_(
+            "lookupflag UseMarkFilteringSet [cedilla ogonek] IgnoreLigatures;")
+        self.assertIsInstance(flag, ast.LookupFlagStatement)
+        self.assertEqual(flag.value, 4)
+        self.assertIsNone(flag.markAttachment)
+        self.assertIsInstance(flag.markFilteringSet, ast.GlyphClass)
+        self.assertEqual(flag.markFilteringSet.glyphSet(),
+                         ("cedilla", "ogonek"))
+        self.assertEqual(flag.asFea(),
+            "lookupflag IgnoreLigatures UseMarkFilteringSet [cedilla ogonek];")
 
     def test_lookupflag_format_B(self):
         flag = self.parse_lookupflag_("lookupflag 7;")

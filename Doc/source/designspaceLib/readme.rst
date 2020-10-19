@@ -81,7 +81,7 @@ Methods
    location. Returns None if there isn't one.
 -  ``normalizeLocation(aLocation)``: return a dict with normalized axis values.
 -  ``normalize()``: normalize the geometry of this designspace: scale all the
-  locations of all masters and instances to the ``-1 - 0 - 1`` value.
+   locations of all masters and instances to the ``-1 - 0 - 1`` value.
 -  ``loadSourceFonts()``: Ensure SourceDescriptor.font attributes are loaded,
    and return list of fonts.
 -  ``tostring(encoding=None)``: Returns the designspace as a string. Default 
@@ -297,6 +297,7 @@ RuleDescriptor object
 -  Each condition is a dict with ``name``, ``minimum`` and ``maximum`` keys.
 -  ``subs``: list of substitutions
 -  Each substitution is stored as tuples of glyphnames, e.g. ("a", "a.alt").
+-  Note: By default, rules are applied first, before other text shaping/OpenType layout, as they are part of the `Required Variation Alternates OpenType feature <https://docs.microsoft.com/en-us/typography/opentype/spec/features_pt#-tag-rvrn>`_. See `5.0 rules element`_ § Attributes.
 
 Evaluating rules
 ----------------
@@ -312,8 +313,8 @@ Evaluating rules
 
     r1 = RuleDescriptor()
     r1.name = "unique.rule.name"
-    r1.conditionsSets.append([dict(name="weight", minimum=-10, maximum=10), dict(...)])
-    r1.conditionsSets.append([dict(...), dict(...)])
+    r1.conditionSets.append([dict(name="weight", minimum=-10, maximum=10), dict(...)])
+    r1.conditionSets.append([dict(...), dict(...)])
     r1.subs.append(("a", "a.alt"))
 
 
@@ -849,12 +850,14 @@ glyphname pairs: the glyphs that need to be substituted. For a rule to be trigge
 **only one** of the conditionsets needs to be true, ``OR``. Within a conditionset 
 **all** conditions need to be true, ``AND``.
 
+.. attributes-11:
 
 Attributes
 ----------
 
 -  ``processing``: flag, optional. Valid values are [``first``, ``last``]. This flag indicates whether the substitution rules should be applied before or after other glyph substitution features.
--  If no ``processing`` attribute is given, interpret as ``first``.
+-  If no ``processing`` attribute is given, interpret as ``first``, and put the substitution rule in the `rvrn` feature.
+-  If ``processing`` is ``last``, put it in `rclt`.
 
 .. 51-rule-element:
 

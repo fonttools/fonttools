@@ -20,6 +20,9 @@ matrix:
   include:
     - python: 3.6
       env:
+        - TOXENV=mypy
+    - python: 3.6
+      env:
         - TOXENV=py36-cov,package_readme
         - BUILD_DIST=true
     - python: 3.7

@@ -104,6 +104,7 @@ def test(glyphsets, glyphs=None, names=None):
 
 		try:
 			allVectors = []
+			allNodeTypes = []
 			for glyphset,name in zip(glyphsets, names):
 				#print('.', end='')
 				glyph = glyphset[glyph_name]
@@ -114,8 +115,11 @@ def test(glyphsets, glyphs=None, names=None):
 				del perContourPen
 
 				contourVectors = []
+				nodeTypes = []
+				allNodeTypes.append(nodeTypes)
 				allVectors.append(contourVectors)
 				for contour in contourPens:
+					nodeTypes.append(tuple(instruction[0] for instruction in contour.value))
 					stats = StatisticsPen(glyphset=glyphset)
 					contour.replay(stats)
 					size = abs(stats.area) ** .5 * .5
@@ -131,6 +135,23 @@ def test(glyphsets, glyphs=None, names=None):
 					#print(vector)
 
 			# Check each master against the next one in the list.
+			for i, (m0, m1) in enumerate(zip(allNodeTypes[:-1], allNodeTypes[1:])):
+				if len(m0) != len(m1):
+					print('%s: %s+%s: Glyphs not compatible (wrong number of paths %i+%i)!!!!!' % (glyph_name, names[i], names[i+1], len(m0), len(m1)))
+				if m0 == m1:
+					continue
+				for pathIx, (nodes1, nodes2) in enumerate(zip(m0, m1)):
+					if nodes1 == nodes2:
+						continue
+					print('%s: %s+%s: Glyphs not compatible at path %i!!!!!' % (glyph_name, names[i], names[i+1], pathIx))
+					if len(nodes1) != len(nodes2):
+						print("%s has %i nodes, %s has %i nodes" % (names[i], len(nodes1), names[i+1], len(nodes2)))
+						continue
+					for nodeIx, (n1, n2) in enumerate(zip(nodes1, nodes2)):
+						if n1 != n2:
+							print("At node %i, %s has %s, %s has %s" % (nodeIx, names[i], n1, names[i+1], n2))
+							continue
+
 			for i,(m0,m1) in enumerate(zip(allVectors[:-1],allVectors[1:])):
 				if len(m0) != len(m1):
 					print('%s: %s+%s: Glyphs not compatible!!!!!' % (glyph_name, names[i], names[i+1]))

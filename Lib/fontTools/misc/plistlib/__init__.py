@@ -1,13 +1,25 @@
+import collections.abc
 import sys
 import re
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Sequence,
+    Type,
+    Union,
+    IO,
+)
 import warnings
 from io import BytesIO
 from datetime import datetime
 from base64 import b64encode, b64decode
 from numbers import Integral
-
 from types import SimpleNamespace
-from collections.abc import Mapping
 from functools import singledispatch
 
 from fontTools.misc import etree
@@ -17,7 +29,7 @@ from fontTools.misc.py23 import (
     tobytes,
 )
 
-# By default, we 
+# By default, we
 #  - deserialize <data> elements as bytes and
 #  - serialize bytes as <data> elements.
 # Before, on Python 2, we
@@ -38,6 +50,7 @@ PLIST_DOCTYPE = (
     b'"http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
 )
 
+
 # Date should conform to a subset of ISO 8601:
 # YYYY '-' MM '-' DD 'T' HH ':' MM ':' SS 'Z'
 _date_parser = re.compile(
@@ -48,23 +61,27 @@ _date_parser = re.compile(
     r"(?::(?P<minute>\d\d)"
     r"(?::(?P<second>\d\d))"
     r"?)?)?)?)?Z",
-    re.ASCII
+    re.ASCII,
 )
 
 
-def _date_from_string(s):
+def _date_from_string(s: str) -> datetime:
     order = ("year", "month", "day", "hour", "minute", "second")
-    gd = _date_parser.match(s).groupdict()
+    m = _date_parser.match(s)
+    if m is None:
+        raise ValueError(f"Expected ISO 8601 date string, but got '{s:r}'.")
+    gd = m.groupdict()
     lst = []
     for key in order:
         val = gd[key]
         if val is None:
             break
         lst.append(int(val))
-    return datetime(*lst)
+    # NOTE: mypy doesn't know that lst is 6 elements long.
+    return datetime(*lst)  # type:ignore
 
 
-def _date_to_string(d):
+def _date_to_string(d: datetime) -> str:
     return "%04d-%02d-%02dT%02d:%02d:%02dZ" % (
         d.year,
         d.month,
@@ -75,7 +92,45 @@ def _date_to_string(d):
     )
 
 
-def _encode_base64(data, maxlinelength=76, indent_level=1):
+class Data:
+    """Represents binary data when ``use_builtin_types=False.``
+
+    This class wraps binary data loaded from a plist file when the
+    ``use_builtin_types`` argument to the loading function (:py:func:`fromtree`,
+    :py:func:`load`, :py:func:`loads`) is false.
+
+    The actual binary data is retrieved using the ``data`` attribute.
+    """
+
+    def __init__(self, data: bytes) -> None:
+        if not isinstance(data, bytes):
+            raise TypeError("Expected bytes, found %s" % type(data).__name__)
+        self.data = data
+
+    @classmethod
+    def fromBase64(cls, data: Union[bytes, str]) -> "Data":
+        return cls(b64decode(data))
+
+    def asBase64(self, maxlinelength: int = 76, indent_level: int = 1) -> bytes:
+        return _encode_base64(
+            self.data, maxlinelength=maxlinelength, indent_level=indent_level
+        )
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, self.__class__):
+            return self.data == other.data
+        elif isinstance(other, bytes):
+            return self.data == other
+        else:
+            return NotImplemented
+
+    def __repr__(self) -> str:
+        return "%s(%s)" % (self.__class__.__name__, repr(self.data))
+
+
+def _encode_base64(
+    data: bytes, maxlinelength: Optional[int] = 76, indent_level: int = 1
+) -> bytes:
     data = b64encode(data)
     if data and maxlinelength:
         # split into multiple lines right-justified to 'maxlinelength' chars
@@ -90,44 +145,24 @@ def _encode_base64(data, maxlinelength=76, indent_level=1):
     return data
 
 
-class Data:
-    """Represents binary data when ``use_builtin_types=False.``
-
-    This class wraps binary data loaded from a plist file when the
-    ``use_builtin_types`` argument to the loading function (:py:func:`fromtree`,
-    :py:func:`load`, :py:func:`loads`) is false.
-
-    The actual binary data is retrieved using the ``data`` attribute.
-    """
-
-    def __init__(self, data):
-        if not isinstance(data, bytes):
-            raise TypeError("Expected bytes, found %s" % type(data).__name__)
-        self.data = data
-
-    @classmethod
-    def fromBase64(cls, data):
-        return cls(b64decode(data))
-
-    def asBase64(self, maxlinelength=76, indent_level=1):
-        return _encode_base64(
-            self.data, maxlinelength=maxlinelength, indent_level=indent_level
-        )
-
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.data == other.data
-        elif isinstance(other, bytes):
-            return self.data == other
-        else:
-            return NotImplemented
-
-    def __repr__(self):
-        return "%s(%s)" % (self.__class__.__name__, repr(self.data))
+# Mypy does not support recursive type aliases as of 0.782, Pylance does.
+# https://github.com/python/mypy/issues/731
+# https://devblogs.microsoft.com/python/pylance-introduces-five-new-features-that-enable-type-magic-for-python-developers/#1-support-for-recursive-type-aliases
+PlistEncodable = Union[
+    bool,
+    bytes,
+    Data,
+    datetime,
+    float,
+    int,
+    Mapping[str, Any],
+    Sequence[Any],
+    str,
+]
 
 
 class PlistTarget:
-    """ Event handler using the ElementTree Target API that can be
+    """Event handler using the ElementTree Target API that can be
     passed to a XMLParser to produce property list objects from XML.
     It is based on the CPython plistlib module's _PlistParser class,
     but does not use the expat parser.
@@ -148,10 +183,14 @@ class PlistTarget:
     http://lxml.de/parsing.html#the-target-parser-interface
     """
 
-    def __init__(self, use_builtin_types=None, dict_type=dict):
-        self.stack = []
-        self.current_key = None
-        self.root = None
+    def __init__(
+        self,
+        use_builtin_types: Optional[bool] = None,
+        dict_type: Type[MutableMapping[str, Any]] = dict,
+    ) -> None:
+        self.stack: List[PlistEncodable] = []
+        self.current_key: Optional[str] = None
+        self.root: Optional[PlistEncodable] = None
         if use_builtin_types is None:
             self._use_builtin_types = USE_BUILTIN_TYPES
         else:
@@ -164,40 +203,44 @@ class PlistTarget:
             self._use_builtin_types = use_builtin_types
         self._dict_type = dict_type
 
-    def start(self, tag, attrib):
-        self._data = []
+    def start(self, tag: str, attrib: Mapping[str, str]) -> None:
+        self._data: List[str] = []
         handler = _TARGET_START_HANDLERS.get(tag)
         if handler is not None:
             handler(self)
 
-    def end(self, tag):
+    def end(self, tag: str) -> None:
         handler = _TARGET_END_HANDLERS.get(tag)
         if handler is not None:
             handler(self)
 
-    def data(self, data):
+    def data(self, data: str) -> None:
         self._data.append(data)
 
-    def close(self):
+    def close(self) -> PlistEncodable:
+        if self.root is None:
+            raise ValueError("No root set.")
         return self.root
 
     # helpers
 
-    def add_object(self, value):
+    def add_object(self, value: PlistEncodable) -> None:
         if self.current_key is not None:
-            if not isinstance(self.stack[-1], type({})):
-                raise ValueError("unexpected element: %r" % self.stack[-1])
-            self.stack[-1][self.current_key] = value
+            stack_top = self.stack[-1]
+            if not isinstance(stack_top, collections.abc.MutableMapping):
+                raise ValueError("unexpected element: %r" % stack_top)
+            stack_top[self.current_key] = value
             self.current_key = None
         elif not self.stack:
             # this is the root object
             self.root = value
         else:
-            if not isinstance(self.stack[-1], type([])):
-                raise ValueError("unexpected element: %r" % self.stack[-1])
-            self.stack[-1].append(value)
+            stack_top = self.stack[-1]
+            if not isinstance(stack_top, list):
+                raise ValueError("unexpected element: %r" % stack_top)
+            stack_top.append(value)
 
-    def get_data(self):
+    def get_data(self) -> str:
         data = "".join(self._data)
         self._data = []
         return data
@@ -206,68 +249,71 @@ class PlistTarget:
 # event handlers
 
 
-def start_dict(self):
+def start_dict(self: PlistTarget) -> None:
     d = self._dict_type()
     self.add_object(d)
     self.stack.append(d)
 
 
-def end_dict(self):
+def end_dict(self: PlistTarget) -> None:
     if self.current_key:
         raise ValueError("missing value for key '%s'" % self.current_key)
     self.stack.pop()
 
 
-def end_key(self):
-    if self.current_key or not isinstance(self.stack[-1], type({})):
+def end_key(self: PlistTarget) -> None:
+    if self.current_key or not isinstance(self.stack[-1], collections.abc.Mapping):
         raise ValueError("unexpected key")
     self.current_key = self.get_data()
 
 
-def start_array(self):
-    a = []
+def start_array(self: PlistTarget) -> None:
+    a: List[PlistEncodable] = []
     self.add_object(a)
     self.stack.append(a)
 
 
-def end_array(self):
+def end_array(self: PlistTarget) -> None:
     self.stack.pop()
 
 
-def end_true(self):
+def end_true(self: PlistTarget) -> None:
     self.add_object(True)
 
 
-def end_false(self):
+def end_false(self: PlistTarget) -> None:
     self.add_object(False)
 
 
-def end_integer(self):
+def end_integer(self: PlistTarget) -> None:
     self.add_object(int(self.get_data()))
 
 
-def end_real(self):
+def end_real(self: PlistTarget) -> None:
     self.add_object(float(self.get_data()))
 
 
-def end_string(self):
+def end_string(self: PlistTarget) -> None:
     self.add_object(self.get_data())
 
 
-def end_data(self):
+def end_data(self: PlistTarget) -> None:
     if self._use_builtin_types:
         self.add_object(b64decode(self.get_data()))
     else:
         self.add_object(Data.fromBase64(self.get_data()))
 
 
-def end_date(self):
+def end_date(self: PlistTarget) -> None:
     self.add_object(_date_from_string(self.get_data()))
 
 
-_TARGET_START_HANDLERS = {"dict": start_dict, "array": start_array}
+_TARGET_START_HANDLERS: Dict[str, Callable[[PlistTarget], None]] = {
+    "dict": start_dict,
+    "array": start_array,
+}
 
-_TARGET_END_HANDLERS = {
+_TARGET_END_HANDLERS: Dict[str, Callable[[PlistTarget], None]] = {
     "dict": end_dict,
     "array": end_array,
     "key": end_key,
@@ -284,39 +330,37 @@ _TARGET_END_HANDLERS = {
 # functions to build element tree from plist data
 
 
-def _string_element(value, ctx):
+def _string_element(value: str, ctx: SimpleNamespace) -> etree.Element:
     el = etree.Element("string")
     el.text = value
     return el
 
 
-def _bool_element(value, ctx):
+def _bool_element(value: bool, ctx: SimpleNamespace) -> etree.Element:
     if value:
         return etree.Element("true")
-    else:
-        return etree.Element("false")
+    return etree.Element("false")
 
 
-def _integer_element(value, ctx):
+def _integer_element(value: int, ctx: SimpleNamespace) -> etree.Element:
     if -1 << 63 <= value < 1 << 64:
         el = etree.Element("integer")
         el.text = "%d" % value
         return el
-    else:
-        raise OverflowError(value)
+    raise OverflowError(value)
 
 
-def _real_element(value, ctx):
+def _real_element(value: float, ctx: SimpleNamespace) -> etree.Element:
     el = etree.Element("real")
     el.text = repr(value)
     return el
 
 
-def _dict_element(d, ctx):
+def _dict_element(d: Mapping[str, PlistEncodable], ctx: SimpleNamespace) -> etree.Element:
     el = etree.Element("dict")
     items = d.items()
     if ctx.sort_keys:
-        items = sorted(items)
+        items = sorted(items)  # type: ignore
     ctx.indent_level += 1
     for key, value in items:
         if not isinstance(key, str):
@@ -330,7 +374,7 @@ def _dict_element(d, ctx):
     return el
 
 
-def _array_element(array, ctx):
+def _array_element(array: Sequence[PlistEncodable], ctx: SimpleNamespace) -> etree.Element:
     el = etree.Element("array")
     if len(array) == 0:
         return el
@@ -341,15 +385,16 @@ def _array_element(array, ctx):
     return el
 
 
-def _date_element(date, ctx):
+def _date_element(date: datetime, ctx: SimpleNamespace) -> etree.Element:
     el = etree.Element("date")
     el.text = _date_to_string(date)
     return el
 
 
-def _data_element(data, ctx):
+def _data_element(data: bytes, ctx: SimpleNamespace) -> etree.Element:
     el = etree.Element("data")
-    el.text = _encode_base64(
+    # NOTE: mypy is confused about whether el.text should be str or bytes.
+    el.text = _encode_base64(  # type: ignore
         data,
         maxlinelength=(76 if ctx.pretty_print else None),
         indent_level=ctx.indent_level,
@@ -357,7 +402,7 @@ def _data_element(data, ctx):
     return el
 
 
-def _string_or_data_element(raw_bytes, ctx):
+def _string_or_data_element(raw_bytes: bytes, ctx: SimpleNamespace) -> etree.Element:
     if ctx.use_builtin_types:
         return _data_element(raw_bytes, ctx)
     else:
@@ -365,21 +410,26 @@ def _string_or_data_element(raw_bytes, ctx):
             string = raw_bytes.decode(encoding="ascii", errors="strict")
         except UnicodeDecodeError:
             raise ValueError(
-                "invalid non-ASCII bytes; use unicode string instead: %r"
-                % raw_bytes
+                "invalid non-ASCII bytes; use unicode string instead: %r" % raw_bytes
             )
         return _string_element(string, ctx)
 
 
+# The following is probably not entirely correct. The signature should take `Any`
+# and return `NoReturn`. At the time of this writing, neither mypy nor Pyright
+# can deal with singledispatch properly and will apply the signature of the base
+# function to all others. Being slightly dishonest makes it type-check and return
+# usable typing information for the optimistic case.
 @singledispatch
-def _make_element(value, ctx):
+def _make_element(value: PlistEncodable, ctx: SimpleNamespace) -> etree.Element:
     raise TypeError("unsupported type: %s" % type(value))
+
 
 _make_element.register(str)(_string_element)
 _make_element.register(bool)(_bool_element)
 _make_element.register(Integral)(_integer_element)
 _make_element.register(float)(_real_element)
-_make_element.register(Mapping)(_dict_element)
+_make_element.register(collections.abc.Mapping)(_dict_element)
 _make_element.register(list)(_array_element)
 _make_element.register(tuple)(_array_element)
 _make_element.register(datetime)(_date_element)
@@ -393,13 +443,13 @@ _make_element.register(Data)(lambda v, ctx: _data_element(v.data, ctx))
 
 
 def totree(
-    value,
-    sort_keys=True,
-    skipkeys=False,
-    use_builtin_types=None,
-    pretty_print=True,
-    indent_level=1,
-):
+    value: PlistEncodable,
+    sort_keys: bool = True,
+    skipkeys: bool = False,
+    use_builtin_types: Optional[bool] = None,
+    pretty_print: bool = True,
+    indent_level: int = 1,
+) -> etree.Element:
     """Convert a value derived from a plist into an XML tree.
 
     Args:
@@ -439,7 +489,11 @@ def totree(
     return _make_element(value, context)
 
 
-def fromtree(tree, use_builtin_types=None, dict_type=dict):
+def fromtree(
+    tree: etree.Element,
+    use_builtin_types: Optional[bool] = None,
+    dict_type: Type[MutableMapping[str, Any]] = dict,
+) -> Any:
     """Convert an XML tree to a plist structure.
 
     Args:
@@ -451,9 +505,7 @@ def fromtree(tree, use_builtin_types=None, dict_type=dict):
 
     Returns: An object (usually a dictionary).
     """
-    target = PlistTarget(
-        use_builtin_types=use_builtin_types, dict_type=dict_type
-    )
+    target = PlistTarget(use_builtin_types=use_builtin_types, dict_type=dict_type)
     for action, element in etree.iterwalk(tree, events=("start", "end")):
         if action == "start":
             target.start(element.tag, element.attrib)
@@ -469,7 +521,11 @@ def fromtree(tree, use_builtin_types=None, dict_type=dict):
 # python3 plistlib API
 
 
-def load(fp, use_builtin_types=None, dict_type=dict):
+def load(
+    fp: IO[bytes],
+    use_builtin_types: Optional[bool] = None,
+    dict_type: Type[MutableMapping[str, Any]] = dict,
+) -> Any:
     """Load a plist file into an object.
 
     Args:
@@ -485,13 +541,9 @@ def load(fp, use_builtin_types=None, dict_type=dict):
     """
 
     if not hasattr(fp, "read"):
-        raise AttributeError(
-            "'%s' object has no attribute 'read'" % type(fp).__name__
-        )
-    target = PlistTarget(
-        use_builtin_types=use_builtin_types, dict_type=dict_type
-    )
-    parser = etree.XMLParser(target=target)
+        raise AttributeError("'%s' object has no attribute 'read'" % type(fp).__name__)
+    target = PlistTarget(use_builtin_types=use_builtin_types, dict_type=dict_type)
+    parser = etree.XMLParser(target=target)  # type: ignore
     result = etree.parse(fp, parser=parser)
     # lxml returns the target object directly, while ElementTree wraps
     # it as the root of an ElementTree object
@@ -501,11 +553,15 @@ def load(fp, use_builtin_types=None, dict_type=dict):
         return result
 
 
-def loads(value, use_builtin_types=None, dict_type=dict):
+def loads(
+    value: bytes,
+    use_builtin_types: Optional[bool] = None,
+    dict_type: Type[MutableMapping[str, Any]] = dict,
+) -> Any:
     """Load a plist file from a string into an object.
 
     Args:
-        value: A string containing a plist.
+        value: A bytes string containing a plist.
         use_builtin_types: If True, binary data is deserialized to
             bytes strings. If False, it is wrapped in :py:class:`Data`
             objects. Defaults to True if not provided. Deprecated.
@@ -521,13 +577,13 @@ def loads(value, use_builtin_types=None, dict_type=dict):
 
 
 def dump(
-    value,
-    fp,
-    sort_keys=True,
-    skipkeys=False,
-    use_builtin_types=None,
-    pretty_print=True,
-):
+    value: PlistEncodable,
+    fp: IO[bytes],
+    sort_keys: bool = True,
+    skipkeys: bool = False,
+    use_builtin_types: Optional[bool] = None,
+    pretty_print: bool = True,
+) -> None:
     """Write a Python object to a plist file.
 
     Args:
@@ -550,12 +606,10 @@ def dump(
         ``ValueError``
             if non-representable binary data is present
             and `use_builtin_types` is false.
-   """
+    """
 
     if not hasattr(fp, "write"):
-        raise AttributeError(
-            "'%s' object has no attribute 'write'" % type(fp).__name__
-        )
+        raise AttributeError("'%s' object has no attribute 'write'" % type(fp).__name__)
     root = etree.Element("plist", version="1.0")
     el = totree(
         value,
@@ -574,18 +628,21 @@ def dump(
     else:
         header = XML_DECLARATION + PLIST_DOCTYPE
     fp.write(header)
-    tree.write(
-        fp, encoding="utf-8", pretty_print=pretty_print, xml_declaration=False
+    tree.write(  # type: ignore
+        fp,
+        encoding="utf-8",
+        pretty_print=pretty_print,
+        xml_declaration=False,
     )
 
 
 def dumps(
-    value,
-    sort_keys=True,
-    skipkeys=False,
-    use_builtin_types=None,
-    pretty_print=True,
-):
+    value: PlistEncodable,
+    sort_keys: bool = True,
+    skipkeys: bool = False,
+    use_builtin_types: Optional[bool] = None,
+    pretty_print: bool = True,
+) -> bytes:
     """Write a Python object to a string in plist format.
 
     Args:

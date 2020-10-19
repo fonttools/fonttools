@@ -2,7 +2,6 @@
 #
 # Google Author(s): Behdad Esfahbod
 
-from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
@@ -1635,9 +1634,13 @@ def prune_post_subset(self, font, options):
 	#	table.ScriptList = None
 
 	if hasattr(table, 'FeatureVariations'):
-		if not (table.FeatureList and table.FeatureVariations.FeatureVariationRecord):
+		# drop FeatureVariations if there are no features to substitute
+		if table.FeatureVariations and not (
+			table.FeatureList and table.FeatureVariations.FeatureVariationRecord
+		):
 			table.FeatureVariations = None
 
+		# downgrade table version if there are no FeatureVariations
 		if not table.FeatureVariations and table.Version == 0x00010001:
 			table.Version = 0x00010000
 
@@ -2708,7 +2711,7 @@ class Subsetter(object):
 def load_font(fontFile,
 	      options,
 	      allowVID=False,
-	      checkChecksums=False,
+	      checkChecksums=0,
 	      dontLoadGlyphNames=False,
 	      lazy=True):
 

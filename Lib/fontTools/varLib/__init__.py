@@ -43,6 +43,10 @@ from .errors import VarLibError, VarLibValidationError
 
 log = logging.getLogger("fontTools.varLib")
 
+# This is a lib key for the designspace document. The value should be
+# an OpenType feature tag, to be used as the FeatureVariations feature.
+# If present, the DesignSpace <rules processing="..."> flag is ignored.
+FEAVAR_FEATURETAG_LIB_KEY = "com.github.fonttools.varLib.featureVarsFeatureTag"
 
 #
 # Creation routines
@@ -629,7 +633,7 @@ def _merge_OTL(font, model, master_fonts, axisTags):
 		font['GPOS'].table.remap_device_varidxes(varidx_map)
 
 
-def _add_GSUB_feature_variations(font, axes, internal_axis_supports, rules, rulesProcessingLast):
+def _add_GSUB_feature_variations(font, axes, internal_axis_supports, rules, featureTag):
 
 	def normalize(name, value):
 		return models.normalizeLocation(
@@ -664,10 +668,6 @@ def _add_GSUB_feature_variations(font, axes, internal_axis_supports, rules, rule
 
 		conditional_subs.append((region, subs))
 
-	if rulesProcessingLast:
-		featureTag = 'rclt'
-	else:
-		featureTag = 'rvrn'
 	addFeatureVariations(font, conditional_subs, featureTag)
 
 
@@ -682,6 +682,7 @@ _DesignSpaceData = namedtuple(
 		"instances",
 		"rules",
 		"rulesProcessingLast",
+		"lib",
 	],
 )
 
@@ -811,6 +812,7 @@ def load_designspace(designspace):
 		instances,
 		ds.rules,
 		ds.rulesProcessingLast,
+		ds.lib,
 	)
 
 
@@ -917,7 +919,11 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 	if 'cvar' not in exclude and 'glyf' in vf:
 		_merge_TTHinting(vf, model, master_fonts)
 	if 'GSUB' not in exclude and ds.rules:
-		_add_GSUB_feature_variations(vf, ds.axes, ds.internal_axis_supports, ds.rules, ds.rulesProcessingLast)
+		featureTag = ds.lib.get(
+			FEAVAR_FEATURETAG_LIB_KEY,
+			"rclt" if ds.rulesProcessingLast else "rvrn"
+		)
+		_add_GSUB_feature_variations(vf, ds.axes, ds.internal_axis_supports, ds.rules, featureTag)
 	if 'CFF2' not in exclude and ('CFF ' in vf or 'CFF2' in vf):
 		_add_CFF2(vf, model, master_fonts)
 		if "post" in vf:

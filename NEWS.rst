@@ -1,3 +1,57 @@
+4.16.1 (released 2020-10-05)
+----------------------------
+
+- [varLib.instancer] Fixed ``TypeError`` exception when instantiating a VF with
+  a GSUB table 1.1 in which ``FeatureVariations`` attribute is present but set to
+  ``None`` -- indicating that optional ``FeatureVariations`` is missing (#2077).
+- [glifLib] Make ``x`` and ``y`` attributes of the ``point`` element required
+  even when validation is turned off, and raise a meaningful ``GlifLibError``
+  message when that happens (#2075).
+
+4.16.0 (released 2020-09-30)
+----------------------------
+
+- [removeOverlaps] Added new module and ``removeOverlaps`` function that merges
+  overlapping contours and components in TrueType glyphs. It requires the
+  `skia-pathops <https://github.com/fonttools/skia-pathops>`__ module.
+  Note that removing overlaps invalidates the TrueType hinting (#2068).
+- [varLib.instancer] Added ``--remove-overlaps`` command-line option.
+  The ``overlap`` option in ``instantiateVariableFont`` now takes an ``OverlapMode``
+  enum: 0: KEEP_AND_DONT_SET_FLAGS, 1: KEEP_AND_SET_FLAGS (default), and 2: REMOVE.
+  The latter is equivalent to calling ``removeOverlaps`` on the generated static
+  instance. The option continues to accept ``bool`` value for backward compatibility.
+
+
+4.15.0 (released 2020-09-21)
+----------------------------
+
+- [plistlib] Added typing annotations to plistlib module. Set up mypy static
+  typechecker to run automatically on CI (#2061).
+- [ttLib] Implement private ``Debg`` table, a reverse-DNS namespaced JSON dict.
+- [feaLib] Optionally add an entry into the ``Debg`` table with the original
+  lookup name (if any), feature name / script / language combination (if any),
+  and original source filename and line location. Annotate the ttx output for
+  a lookup with the information from the Debg table (#2052).
+- [sfnt] Disabled checksum checking by default in ``SFNTReader`` (#2058).
+- [Docs] Document ``mtiLib`` module (#2027).
+- [varLib.interpolatable] Added checks for contour node count and operation type
+  of each node (#2054).
+- [ttLib] Added API to register custom table packer/unpacker classes (#2055).
+
+4.14.0 (released 2020-08-19)
+----------------------------
+
+- [feaLib] Allow anonymous classes in LookupFlags definitions (#2037).
+- [Docs] Better document DesignSpace rules processing order (#2041).
+- [ttLib] Fixed 21-year old bug in ``maxp.maxComponentDepth`` calculation (#2044,
+  #2045).
+- [varLib.models] Fixed misspelled argument name in CLI entry point (81d0042a).
+- [subset] When subsetting GSUB v1.1, fixed TypeError by checking whether the
+  optional FeatureVariations table is present (e63ecc5b).
+- [Snippets] Added snippet to show how to decompose glyphs in a TTF (#2030).
+- [otlLib] Generate GSUB type 5 and GPOS type 7 contextual lookups where appropriate
+  (#2016).
+
 4.13.0 (released 2020-07-10)
 ----------------------------
 

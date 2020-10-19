@@ -18,7 +18,7 @@ class TTFont(object):
 	"""
 
 	def __init__(self, file=None, res_name_or_index=None,
-			sfntVersion="\000\001\000\000", flavor=None, checkChecksums=False,
+			sfntVersion="\000\001\000\000", flavor=None, checkChecksums=0,
 			verbose=None, recalcBBoxes=True, allowVID=False, ignoreDecompileErrors=False,
 			recalcTimestamp=True, fontNumber=-1, lazy=None, quiet=None,
 			_tableCache=None):
@@ -830,10 +830,48 @@ def getTableModule(tag):
 		return getattr(tables, pyTag)
 
 
-def getTableClass(tag):
-	"""Fetch the packer/unpacker class for a table.
-	Return None when no class is found.
+# Registry for custom table packer/unpacker classes. Keys are table
+# tags, values are (moduleName, className) tuples.
+# See registerCustomTableClass() and getCustomTableClass()
+_customTableRegistry = {}
+
+
+def registerCustomTableClass(tag, moduleName, className=None):
+	"""Register a custom packer/unpacker class for a table.
+	The 'moduleName' must be an importable module. If no 'className'
+	is given, it is derived from the tag, for example it will be
+	table_C_U_S_T_ for a 'CUST' tag.
+
+	The registered table class should be a subclass of
+	fontTools.ttLib.tables.DefaultTable.DefaultTable
 	"""
+	if className is None:
+		className = "table_" + tagToIdentifier(tag)
+	_customTableRegistry[tag] = (moduleName, className)
+
+
+def unregisterCustomTableClass(tag):
+	"""Unregister the custom packer/unpacker class for a table."""
+	del _customTableRegistry[tag]
+
+
+def getCustomTableClass(tag):
+	"""Return the custom table class for tag, if one has been registered
+	with 'registerCustomTableClass()'. Else return None.
+	"""
+	if tag not in _customTableRegistry:
+		return None
+	import importlib
+	moduleName, className = _customTableRegistry[tag]
+	module = importlib.import_module(moduleName)
+	return getattr(module, className)
+
+
+def getTableClass(tag):
+	"""Fetch the packer/unpacker class for a table."""
+	tableClass = getCustomTableClass(tag)
+	if tableClass is not None:
+		return tableClass
 	module = getTableModule(tag)
 	if module is None:
 		from .tables.DefaultTable import DefaultTable

@@ -444,10 +444,10 @@ def main(args=None):
 	configLogger(level=args.loglevel)
 	from pprint import pprint
 
-	if args.designspacefile:
+	if args.designspace:
 		from fontTools.designspaceLib import DesignSpaceDocument
 		doc = DesignSpaceDocument()
-		doc.read(args.designspacefile)
+		doc.read(args.designspace)
 		locs = [s.location for s in doc.sources]
 		print("Original locations:")
 		pprint(locs)

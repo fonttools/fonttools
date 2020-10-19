@@ -87,6 +87,7 @@ from fontTools.varLib.merger import MutatorMerger
 from contextlib import contextmanager
 import collections
 from copy import deepcopy
+from enum import IntEnum
 import logging
 from itertools import islice
 import os
@@ -119,6 +120,12 @@ class NormalizedAxisRange(AxisRange):
         if self.maximum < 0:
             raise ValueError(f"Expected axis range maximum >= 0; got {self.maximum}")
         return self
+
+
+class OverlapMode(IntEnum):
+    KEEP_AND_DONT_SET_FLAGS = 0
+    KEEP_AND_SET_FLAGS = 1
+    REMOVE = 2
 
 
 def instantiateTupleVariationStore(
@@ -578,7 +585,7 @@ class _TupleVarStoreAdapter(object):
 
 
 def instantiateItemVariationStore(itemVarStore, fvarAxes, axisLimits):
-    """ Compute deltas at partial location, and update varStore in-place.
+    """Compute deltas at partial location, and update varStore in-place.
 
     Remove regions in which all axes were instanced, or fall outside the new axis
     limits. Scale the deltas of the remaining regions where only some of the axes
@@ -676,8 +683,8 @@ def instantiateOTL(varfont, axisLimits):
 
 def instantiateFeatureVariations(varfont, axisLimits):
     for tableTag in ("GPOS", "GSUB"):
-        if tableTag not in varfont or not hasattr(
-            varfont[tableTag].table, "FeatureVariations"
+        if tableTag not in varfont or not getattr(
+            varfont[tableTag].table, "FeatureVariations", None
         ):
             continue
         log.info("Instantiating FeatureVariations of %s table", tableTag)
@@ -1175,9 +1182,13 @@ def populateAxisDefaults(varfont, axisLimits):
 
 
 def instantiateVariableFont(
-    varfont, axisLimits, inplace=False, optimize=True, overlap=True
+    varfont,
+    axisLimits,
+    inplace=False,
+    optimize=True,
+    overlap=OverlapMode.KEEP_AND_SET_FLAGS,
 ):
-    """ Instantiate variable font, either fully or partially.
+    """Instantiate variable font, either fully or partially.
 
     Depending on whether the `axisLimits` dictionary references all or some of the
     input varfont's axes, the output font will either be a full instance (static
@@ -1198,13 +1209,20 @@ def instantiateVariableFont(
             remaining 'gvar' table's deltas. Possibly faster, and might work around
             rendering issues in some buggy environments, at the cost of a slightly
             larger file size.
-        overlap (bool): variable fonts usually contain overlapping contours, and some
-            font rendering engines on Apple platforms require that the `OVERLAP_SIMPLE`
-            and `OVERLAP_COMPOUND` flags in the 'glyf' table be set to force rendering
-            using a non-zero fill rule. Thus we always set these flags on all glyphs
-            to maximise cross-compatibility of the generated instance. You can disable
-            this by setting `overalap` to False.
+        overlap (OverlapMode): variable fonts usually contain overlapping contours, and
+            some font rendering engines on Apple platforms require that the
+            `OVERLAP_SIMPLE` and `OVERLAP_COMPOUND` flags in the 'glyf' table be set to
+            force rendering using a non-zero fill rule. Thus we always set these flags
+            on all glyphs to maximise cross-compatibility of the generated instance.
+            You can disable this by passing OverlapMode.KEEP_AND_DONT_SET_FLAGS.
+            If you want to remove the overlaps altogether and merge overlapping
+            contours and components, you can pass OverlapMode.REMOVE. Note that this
+            requires the skia-pathops package (available to pip install).
+            The overlap parameter only has effect when generating full static instances.
     """
+    # 'overlap' used to be bool and is now enum; for backward compat keep accepting bool
+    overlap = OverlapMode(int(overlap))
+
     sanityCheckVariableTables(varfont)
 
     axisLimits = populateAxisDefaults(varfont, axisLimits)
@@ -1245,8 +1263,14 @@ def instantiateVariableFont(
         instantiateFvar(varfont, axisLimits)
 
     if "fvar" not in varfont:
-        if "glyf" in varfont and overlap:
-            setMacOverlapFlags(varfont["glyf"])
+        if "glyf" in varfont:
+            if overlap == OverlapMode.KEEP_AND_SET_FLAGS:
+                setMacOverlapFlags(varfont["glyf"])
+            elif overlap == OverlapMode.REMOVE:
+                from fontTools.ttLib.removeOverlaps import removeOverlaps
+
+                log.info("Removing overlaps from glyf table")
+                removeOverlaps(varfont)
 
     varLib.set_default_weight_width_slant(
         varfont,
@@ -1346,6 +1370,13 @@ def parseArgs(args):
         help="Don't set OVERLAP_SIMPLE/OVERLAP_COMPOUND glyf flags (only applicable "
         "when generating a full instance)",
     )
+    parser.add_argument(
+        "--remove-overlaps",
+        dest="remove_overlaps",
+        action="store_true",
+        help="Merge overlapping contours and components (only applicable "
+        "when generating a full instance). Requires skia-pathops",
+    )
     loggingGroup = parser.add_mutually_exclusive_group(required=False)
     loggingGroup.add_argument(
         "-v", "--verbose", action="store_true", help="Run more verbosely."
@@ -1354,6 +1385,11 @@ def parseArgs(args):
         "-q", "--quiet", action="store_true", help="Turn verbosity off."
     )
     options = parser.parse_args(args)
+
+    if options.remove_overlaps:
+        options.overlap = OverlapMode.REMOVE
+    else:
+        options.overlap = OverlapMode(int(options.overlap))
 
     infile = options.input
     if not os.path.isfile(infile):

@@ -11,8 +11,9 @@ What is this?
   licence <LICENSE>`__.
 | Among other things this means you can use it free of charge.
 
-`User documentation <https://fonttools.readthedocs.io/en/latest/>` and
-`developer documentation <https://fonttools.readthedocs.io/en/latest/developer.html>` are available at `Read the Docs <https://fonttools.readthedocs.io/>`.
+`User documentation <https://fonttools.readthedocs.io/en/latest/>`_ and
+`developer documentation <https://fonttools.readthedocs.io/en/latest/developer.html>`_
+are available at `Read the Docs <https://fonttools.readthedocs.io/>`_.
 
 Installation
 ~~~~~~~~~~~~
@@ -172,6 +173,16 @@ are required to unlock the extra features named "ufo", etc.
     extended filesystem attributes (macOS platform only).
 
   *Extra:* ``type1``
+
+- ``Lib/fontTools/ttLib/removeOverlaps.py``
+
+  Simplify TrueType glyphs by merging overlapping contours and components.
+
+  * `skia-pathops <https://pypi.python.org/pypy/skia-pathops>`__: Python
+    bindings for the Skia library's PathOps module, performing boolean
+    operations on paths (union, intersection, etc.).
+
+  *Extra:* ``pathops``
 
 - ``Lib/fontTools/pens/cocoaPen.py``
 

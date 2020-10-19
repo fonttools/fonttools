@@ -13,6 +13,7 @@ from fontTools.otlLib.builder import (
     ClassPairPosSubtableBuilder,
     PairPosBuilder,
     SinglePosBuilder,
+    ChainContextualRule
 )
 from fontTools.otlLib.error import OpenTypeLibError
 from fontTools.ttLib import TTFont
@@ -79,7 +80,7 @@ def test_chain_pos_references_GSUB_lookup(ttfont):
     location = MockBuilderLocation((0, "alpha"))
     builder = ChainContextPosBuilder(ttfont, location)
     builder2 = SingleSubstBuilder(ttfont, location)
-    builder.rules.append(([], [], [], [[builder2]]))
+    builder.rules.append(ChainContextualRule([], [], [], [[builder2]]))
 
     with pytest.raises(OpenTypeLibError, match="0:alpha: Missing index of the specified lookup, might be a substitution lookup"):
         builder.build()
