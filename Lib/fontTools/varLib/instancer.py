@@ -1216,15 +1216,26 @@ def _updateNameRecords(varfont, axisValueTables):
     ribbiAxisValues = _ribbiAxisValueTables(nametable, axisValueTables)
     nonRibbiAxisValues = [v for v in axisValueTables if v not in ribbiAxisValues]
 
+    getName = nametable.getName
     nameTablePlatEncLangs = set(
         (r.platformID, r.platEncID, r.langID) for r in nametable.names
     )
     for platEncLang in nameTablePlatEncLangs:
-        _updateStyleRecords(
+
+        subFamilyName = [
+            getName(a.ValueNameID, *platEncLang) for a in ribbiAxisValues if a
+        ]
+        subFamilyName = " ".join([r.toUnicode() for r in subFamilyName if r])
+        typoSubFamilyName = [
+            getName(a.ValueNameID, *platEncLang) for a in nonRibbiAxisValues if a
+        ]
+        typoSubFamilyName = " ".join([r.toUnicode() for r in typoSubFamilyName if r])
+
+        updateNameTableStyleRecords(
             varfont,
             nametable,
-            ribbiAxisValues,
-            nonRibbiAxisValues,
+            subFamilyName,
+            typoSubFamilyName,
             platEncLang,
         )
 
@@ -1245,8 +1256,8 @@ def _ribbiAxisValueTables(nametable, axisValueTables):
     ]
 
 
-def _updateStyleRecords(
-    varfont, nametable, ribbiAxisValues, nonRibbiAxisValues, platEncLang=(3, 1, 0x409)
+def updateNameTableStyleRecords(
+    varfont, nametable, ribbiName, nonRibbiName, platEncLang=(3, 1, 0x409)
 ):
     currentFamilyName = nametable.getName(
         NameID.TYPOGRAPHIC_FAMILY_NAME, *platEncLang
@@ -1264,22 +1275,13 @@ def _updateStyleRecords(
     currentFamilyName = currentFamilyName.toUnicode()
     currentStyleName = currentStyleName.toUnicode()
 
-    ribbiName = " ".join(
-        nametable.getName(a.ValueNameID, *platEncLang).toUnicode()
-        for a in ribbiAxisValues
-    )
-    nonRibbiName = " ".join(
-        nametable.getName(a.ValueNameID, *platEncLang).toUnicode()
-        for a in nonRibbiAxisValues
-    )
-
     nameIDs = {
         NameID.FAMILY_NAME: currentFamilyName,
         # TODO (M Foley) what about Elidable fallback name instead?
         NameID.SUBFAMILY_NAME: ribbiName
         or nametable.getName(NameID.SUBFAMILY_NAME, *platEncLang).toUnicode(),
     }
-    if nonRibbiAxisValues:
+    if nonRibbiName:
         nameIDs[NameID.FAMILY_NAME] = f"{currentFamilyName} {nonRibbiName}".strip()
         nameIDs[NameID.TYPOGRAPHIC_FAMILY_NAME] = currentFamilyName
         nameIDs[
