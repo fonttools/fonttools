@@ -7,6 +7,7 @@ from fontTools.ttLib.tables import _f_v_a_r, _g_l_y_f
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools import varLib
+from fontTools.otlLib.builder import buildStatTable
 from fontTools.varLib import instancer
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib import builder
@@ -1967,7 +1968,35 @@ def test_updateNameTable_with_registered_axes(varfont):
 
 
 def test_updatetNameTable_axis_order(varfont):
-    pass
+    axes = [
+        dict(
+            tag="wght",
+            name="Weight",
+            values=[
+                dict(value=400, name='Regular'),
+            ],
+        ),
+        dict(
+            tag="wdth",
+            name="Width",
+            values=[
+                dict(value=75, name="Condensed"),
+            ]
+        )
+    ]
+    buildStatTable(varfont, axes)
+    instancer.updateNameTable(varfont, {"wdth": 75, "wght": 400})
+    names = _get_name_records(varfont)
+    assert names[(17, 3, 1, 0x409)] == "Regular Condensed"
+
+    # Swap the axes so the names get swapped
+    axes[0], axes[1] = axes[1], axes[0]
+
+    buildStatTable(varfont, axes)
+    instancer.updateNameTable(varfont, {"wdth": 75, "wght": 400})
+    names = _get_name_records(varfont)
+    assert names[(17, 3, 1, 0x409)] == "Condensed Regular"
+
 
 def test_updateNameTable_with_multilingual_names(varfont):
     name = varfont["name"]

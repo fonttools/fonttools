@@ -1225,14 +1225,19 @@ def _updateNameRecords(varfont, axisValueTables):
         subFamilyName = " ".join(r.toUnicode() for r in subFamilyNameRecords if r)
 
         typoSubFamilyNameRecords = [
-            getName(a.ValueNameID, *platEncLang) for a in nonRibbiAxisValues if a
+            getName(a.ValueNameID, *platEncLang) for a in axisValueTables if a
         ]
         typoSubFamilyName = " ".join(
             r.toUnicode() for r in typoSubFamilyNameRecords if r
         )
 
+        familyNameSuffixRecords = [
+            getName(a.ValueNameID, *platEncLang) for a in nonRibbiAxisValues if a
+        ]
+        familyNameSuffix = " ".join(r.toUnicode() for r in familyNameSuffixRecords if r)
         updateNameTableStyleRecords(
             varfont,
+            familyNameSuffix,
             subFamilyName,
             typoSubFamilyName,
             *platEncLang,
@@ -1260,7 +1265,13 @@ def _ribbiAxisValueTables(nametable, axisValueTables):
 
 
 def updateNameTableStyleRecords(
-    varfont, ribbiName, nonRibbiName, platformID=3, platEncID=1, langID=0x409
+    varfont,
+    familyNameSuffix,
+    subFamilyName,
+    typoSubFamilyName,
+    platformID=3,
+    platEncID=1,
+    langID=0x409,
 ):
     # TODO (Marc F) It may be nice to make this part of a standalone
     # font renamer in the future.
@@ -1285,15 +1296,13 @@ def updateNameTableStyleRecords(
 
     nameIDs = {
         NameID.FAMILY_NAME: currentFamilyName,
-        NameID.SUBFAMILY_NAME: ribbiName
+        NameID.SUBFAMILY_NAME: subFamilyName
         or nametable.getName(NameID.SUBFAMILY_NAME, *platEncLang).toUnicode(),
     }
-    if nonRibbiName:
-        nameIDs[NameID.FAMILY_NAME] = f"{currentFamilyName} {nonRibbiName}".strip()
+    if typoSubFamilyName:
+        nameIDs[NameID.FAMILY_NAME] = f"{currentFamilyName} {familyNameSuffix}".strip()
         nameIDs[NameID.TYPOGRAPHIC_FAMILY_NAME] = currentFamilyName
-        nameIDs[
-            NameID.TYPOGRAPHIC_SUBFAMILY_NAME
-        ] = f"{nonRibbiName} {ribbiName}".strip()
+        nameIDs[NameID.TYPOGRAPHIC_SUBFAMILY_NAME] = f"{typoSubFamilyName}".strip()
 
     newFamilyName = nameIDs.get(NameID.TYPOGRAPHIC_FAMILY_NAME) or nameIDs.get(
         NameID.FAMILY_NAME
