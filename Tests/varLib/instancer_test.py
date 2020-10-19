@@ -2041,7 +2041,7 @@ def test_updateNametable_partial(varfont):
     assert names[(2, 3, 1, 0x409)] == "Regular"
     assert (3, 3, 1, 0x405) not in names
     assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
-    assert names[(17, 3, 1, 0x409)] == "Condensed" #? maybe Condensed Regular?
+    assert names[(17, 3, 1, 0x409)] == "Condensed"
 
 
 def test_updateNameTable_missing_axisValues(varfont):
