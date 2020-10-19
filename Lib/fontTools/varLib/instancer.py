@@ -133,6 +133,7 @@ class NameID(IntEnum):
     SUBFAMILY_NAME = 2
     UNIQUE_FONT_IDENTIFIER = 3
     FULL_FONT_NAME = 4
+    VERSION_STRING = 5
     POSTSCRIPT_NAME = 6
     TYPOGRAPHIC_FAMILY_NAME = 16
     TYPOGRAPHIC_SUBFAMILY_NAME = 17
@@ -1117,13 +1118,7 @@ def pruningUnusedNames(varfont):
 
 def updateNameTable(varfont, axisLimits):
     """Update an instatiated variable font's name table using the Axis
-    Value Tables from the STAT table.
-
-    To establish which Axis Value Tables are needed, we first remove all
-    tables whose Value's are not in the axisLimits. We then
-    remove all tables which have Flag 2 enabled (ELIDABLE_AXIS_VALUE_NAME).
-    Finally, we remove duplicates and ensure Format 4 tables preside over
-    the other formats.
+    Values from the STAT table.
 
     The updated nametable will conform to the R/I/B/BI naming model.
     """
@@ -1133,23 +1128,24 @@ def updateNameTable(varfont, axisLimits):
     fvar = varfont["fvar"]
 
     # The updated name table must reflect the new 'zero origin' of the font.
-    # If a user is instantiating a partial font, we will populate the
-    # unpinned axes with their default axis values.
+    # If we're instantiating a partial font, we will populate the unpinned
+    # axes with their default axis values.
     fvarDefaults = {a.axisTag: a.defaultValue for a in fvar.axes}
-    axisCoords = axisLimits
+    axisCoords = deepcopy(axisLimits)
     for axisTag, val in fvarDefaults.items():
-        if axisTag not in axisCoords:
-            axisCoords[axisTag] = val
-        elif isinstance(axisCoords[axisTag], tuple):
+        if axisTag not in axisCoords or isinstance(axisCoords[axisTag], tuple):
             axisCoords[axisTag] = val
 
+    # To get the required Axis Values for the zero origin, we can simply
+    # duplicate the STAT table and instantiate it using the axis coords we
+    # created in the previous step.
     stat_new = deepcopy(stat).table
     _instantiateSTAT(stat_new, axisCoords)
     checkMissingAxisValues(stat_new, axisCoords)
 
     axisValueTables = stat_new.AxisValueArray.AxisValue
-    # remove axis Value Tables which have Elidable_AXIS_VALUE_NAME flag set
-    # Axis Value which have this flag enabled won't be visible in
+    # Remove axis Values which have Elidable_AXIS_VALUE_NAME flag set
+    # Axis Values which have this flag enabled won't be visible in
     # application font menus.
     axisValueTables = [
         v for v in axisValueTables if v.Flags & ELIDABLE_AXIS_VALUE_NAME != 2
@@ -1174,18 +1170,18 @@ def checkMissingAxisValues(stat, axisCoords):
 
     missingAxes = set(axisCoords) - seen
     if missingAxes:
-        missing = ", ".join(f"{i}={axisCoords[i]}" for i in missingAxes)
-        raise ValueError(f"Cannot find Axis Value Tables {missing}")
+        missing = ", ".join(f"'{i}={axisCoords[i]}'" for i in missingAxes)
+        raise ValueError(f"Cannot find Axis Value Tables [{missing}]")
 
 
 def _sortedAxisValues(stat, axisCoords):
-    # Sort and remove duplicates ensuring that format 4 axis Value Tables
+    # Sort and remove duplicates ensuring that format 4 Axis Values
     # are dominant
     axisValueTables = stat.AxisValueArray.AxisValue
     designAxes = stat.DesignAxisRecord.Axis
     results = []
     seenAxes = set()
-    # sort format 4 axes so the tables with the most AxisValueRecords
+    # Sort format 4 axes so the tables with the most AxisValueRecords
     # are first
     format4 = sorted(
         [v for v in axisValueTables if v.Format == 4],
@@ -1196,15 +1192,16 @@ def _sortedAxisValues(stat, axisCoords):
 
     for val in format4:
         axisIndexes = set(r.AxisIndex for r in val.AxisValueRecord)
-        if bool(seenAxes & axisIndexes) == False:
+        minIndex = min(axisIndexes)
+        if not seenAxes & axisIndexes:
             seenAxes |= axisIndexes
-            results.append((tuple(axisIndexes), val))
+            results.append((minIndex, val))
 
     for val in nonFormat4:
         axisIndex = val.AxisIndex
         if axisIndex not in seenAxes:
             seenAxes.add(axisIndex)
-            results.append(((axisIndex,), val))
+            results.append((axisIndex, val))
 
     return [axisValueTable for _, axisValueTable in sorted(results)]
 
@@ -1212,9 +1209,13 @@ def _sortedAxisValues(stat, axisCoords):
 def _updateNameRecords(varfont, axisValueTables):
     # Update nametable based on the axisValues using the R/I/B/BI model.
     nametable = varfont["name"]
+    stat = varfont["STAT"].table
 
-    ribbiAxisValues = _ribbiAxisValueTables(nametable, axisValueTables)
-    nonRibbiAxisValues = [v for v in axisValueTables if v not in ribbiAxisValues]
+    axisValueNameIDs = [a.ValueNameID for a in axisValueTables]
+    ribbiNameIDs = [n for n in axisValueNameIDs if nameIdIsRibbi(nametable, n)]
+    nonRibbiNameIDs = [n for n in axisValueNameIDs if n not in ribbiNameIDs]
+    elidedNameID = stat.ElidedFallbackNameID
+    elidedNameIsRibbi = nameIdIsRibbi(nametable, elidedNameID)
 
     getName = nametable.getName
     nameTablePlatEncLangs = set(
@@ -1222,43 +1223,73 @@ def _updateNameRecords(varfont, axisValueTables):
     )
     for platEncLang in nameTablePlatEncLangs:
 
-        subFamilyName = [
-            getName(a.ValueNameID, *platEncLang) for a in ribbiAxisValues if a
-        ]
-        subFamilyName = " ".join([r.toUnicode() for r in subFamilyName if r])
-        typoSubFamilyName = [
-            getName(a.ValueNameID, *platEncLang) for a in nonRibbiAxisValues if a
-        ]
-        typoSubFamilyName = " ".join([r.toUnicode() for r in typoSubFamilyName if r])
+        if not all(getName(i, *platEncLang) for i in (1,2, elidedNameID)):
+            # Since no family name and subfamily name records were found,
+            # we cannot update this set of name Records.
+            continue
 
-        updateNameTableStyleRecords(
+        subFamilyName = " ".join(
+            getName(n, *platEncLang).toUnicode() for n in ribbiNameIDs
+        )
+        typoSubFamilyName = " ".join(
+            getName(n, *platEncLang).toUnicode() for n in axisValueNameIDs
+        )
+
+        # If neither subFamilyName and typographic SubFamilyName exist,
+        # we will use the STAT's elidedFallbackName
+        if not typoSubFamilyName and not subFamilyName:
+            if elidedNameIsRibbi:
+                subFamilyName = getName(elidedNameID, *platEncLang).toUnicode()
+            else:
+                typoSubFamilyName = getName(elidedNameID, *platEncLang).toUnicode()
+
+        familyNameSuffix = " ".join(
+            getName(n, *platEncLang).toUnicode() for n in nonRibbiNameIDs
+        )
+
+        _updateNameTableStyleRecords(
             varfont,
-            nametable,
+            familyNameSuffix,
             subFamilyName,
             typoSubFamilyName,
-            platEncLang,
+            *platEncLang,
         )
 
 
-def _ribbiAxisValueTables(nametable, axisValueTables):
-    engNameRecords = any([r for r in nametable.names if r.langID == 0x409])
+def nameIdIsRibbi(nametable, nameID):
+    engNameRecords = any(
+        r
+        for r in nametable.names
+        if (r.platformID, r.platEncID, r.langID) == (3, 1, 0x409)
+    )
     if not engNameRecords:
         raise ValueError(
             f"Canot determine if there are RIBBI Axis Value Tables "
             "since there are no name table Records which have "
             "platformID=3, platEncID=1, langID=0x409"
         )
-    return [
-        v
-        for v in axisValueTables
-        if nametable.getName(v.ValueNameID, 3, 1, 0x409).toUnicode()
+    return (
+        True
+        if nametable.getName(nameID, 3, 1, 0x409).toUnicode()
         in ("Regular", "Italic", "Bold", "Bold Italic")
-    ]
+        else False
+    )
 
 
-def updateNameTableStyleRecords(
-    varfont, nametable, ribbiName, nonRibbiName, platEncLang=(3, 1, 0x409)
+def _updateNameTableStyleRecords(
+    varfont,
+    familyNameSuffix,
+    subFamilyName,
+    typoSubFamilyName,
+    platformID=3,
+    platEncID=1,
+    langID=0x409,
 ):
+    # TODO (Marc F) It may be nice to make this part a standalone
+    # font renamer in the future.
+    nametable = varfont["name"]
+    platEncLang = (platformID, platEncID, langID)
+
     currentFamilyName = nametable.getName(
         NameID.TYPOGRAPHIC_FAMILY_NAME, *platEncLang
     ) or nametable.getName(NameID.FAMILY_NAME, *platEncLang)
@@ -1267,26 +1298,25 @@ def updateNameTableStyleRecords(
         NameID.TYPOGRAPHIC_SUBFAMILY_NAME, *platEncLang
     ) or nametable.getName(NameID.SUBFAMILY_NAME, *platEncLang)
 
-    if not currentFamilyName or not currentStyleName:
-        # Since no family name or style name records were found, we cannot
-        # update this set of name Records.
-        return
-
     currentFamilyName = currentFamilyName.toUnicode()
     currentStyleName = currentStyleName.toUnicode()
 
     nameIDs = {
         NameID.FAMILY_NAME: currentFamilyName,
-        # TODO (M Foley) what about Elidable fallback name instead?
-        NameID.SUBFAMILY_NAME: ribbiName
-        or nametable.getName(NameID.SUBFAMILY_NAME, *platEncLang).toUnicode(),
+        NameID.SUBFAMILY_NAME: subFamilyName,
     }
-    if nonRibbiName:
-        nameIDs[NameID.FAMILY_NAME] = f"{currentFamilyName} {nonRibbiName}".strip()
+    if typoSubFamilyName:
+        nameIDs[NameID.FAMILY_NAME] = f"{currentFamilyName} {familyNameSuffix}".strip()
         nameIDs[NameID.TYPOGRAPHIC_FAMILY_NAME] = currentFamilyName
-        nameIDs[
+        nameIDs[NameID.TYPOGRAPHIC_SUBFAMILY_NAME] = f"{typoSubFamilyName}"
+    # Remove previous Typographic Family and SubFamily names since they're
+    # no longer required
+    else:
+        for nameID in (
+            NameID.TYPOGRAPHIC_FAMILY_NAME,
             NameID.TYPOGRAPHIC_SUBFAMILY_NAME
-        ] = f"{nonRibbiName} {ribbiName}".strip()
+        ):
+            nametable.removeNames(nameID=nameID)
 
     newFamilyName = nameIDs.get(NameID.TYPOGRAPHIC_FAMILY_NAME) or nameIDs.get(
         NameID.FAMILY_NAME
@@ -1330,8 +1360,21 @@ def _updateUniqueIdNameRecord(varfont, nameIDs, platEncLang):
             return currentRecord.toUnicode().replace(
                 nameRecord.toUnicode(), nameIDs[nameRecord.nameID]
             )
-    # TODO (M Foley) Construct new uniqueID if full name or postscript names are not subsets
-    return None
+    # Create a new string since we couldn't find any substrings.
+    fontVersion = _fontVersion(varfont, platEncLang)
+    vendor = varfont["OS/2"].achVendID.strip()
+    psName = nameIDs[NameID.POSTSCRIPT_NAME]
+    return f"{fontVersion};{vendor};{psName}"
+
+
+def _fontVersion(font, platEncLang=(3, 1, 0x409)):
+    nameRecord = font["name"].getName(NameID.VERSION_STRING, *platEncLang)
+    if nameRecord is None:
+        return f'{font["head"].fontRevision:.3f}'
+    # "Version 1.101; ttfautohint (v1.8.1.43-b0c9)" --> "1.101"
+    # Also works fine with inputs "Version 1.101" or "1.101" etc
+    versionNumber = nameRecord.toUnicode().split(";")[0]
+    return versionNumber.lstrip("Version ").strip()
 
 
 def setMacOverlapFlags(glyfTable):

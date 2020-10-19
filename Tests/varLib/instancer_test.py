@@ -7,6 +7,7 @@ from fontTools.ttLib.tables import _f_v_a_r, _g_l_y_f
 from fontTools.ttLib.tables import otTables
 from fontTools.ttLib.tables.TupleVariation import TupleVariation
 from fontTools import varLib
+from fontTools.otlLib.builder import buildStatTable
 from fontTools.varLib import instancer
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib import builder
@@ -1967,7 +1968,34 @@ def test_updateNameTable_with_registered_axes(varfont):
 
 
 def test_updatetNameTable_axis_order(varfont):
-    pass
+    axes = [
+        dict(
+            tag="wght",
+            name="Weight",
+            values=[
+                dict(value=400, name='Regular'),
+            ],
+        ),
+        dict(
+            tag="wdth",
+            name="Width",
+            values=[
+                dict(value=75, name="Condensed"),
+            ]
+        )
+    ]
+    buildStatTable(varfont, axes)
+    instancer.updateNameTable(varfont, {"wdth": 75, "wght": 400})
+    names = _get_name_records(varfont)
+    assert names[(17, 3, 1, 0x409)] == "Regular Condensed"
+
+    # Swap the axes so the names get swapped
+    axes[0], axes[1] = axes[1], axes[0]
+
+    buildStatTable(varfont, axes)
+    instancer.updateNameTable(varfont, {"wdth": 75, "wght": 400})
+    names = _get_name_records(varfont)
+    assert names[(17, 3, 1, 0x409)] == "Condensed Regular"
 
 
 def test_updateNameTable_with_multilingual_names(varfont):
@@ -2013,11 +2041,11 @@ def test_updateNametable_partial(varfont):
     assert names[(2, 3, 1, 0x409)] == "Regular"
     assert (3, 3, 1, 0x405) not in names
     assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
-    assert names[(17, 3, 1, 0x409)] == "Condensed" #? maybe Condensed Regular?
+    assert names[(17, 3, 1, 0x409)] == "Condensed"
 
 
 def test_updateNameTable_missing_axisValues(varfont):
-    with pytest.raises(ValueError, match="Cannot find Axis Value Tables wght=200"):
+    with pytest.raises(ValueError, match="Cannot find Axis Value Tables \['wght=200'\]"):
         instancer.updateNameTable(varfont, {"wght": 200})
 
 
@@ -2029,7 +2057,8 @@ def test_updateNameTable_missing_stat(varfont):
 
 def test_updateNameTable_vf_with_italic_attribute(varfont):
     font_link_axisValue = varfont["STAT"].table.AxisValueArray.AxisValue[4]
-    font_link_axisValue.Flags = 0
+    # Unset ELIDABLE_AXIS_VALUE_NAME flag
+    font_link_axisValue.Flags &= ~instancer.ELIDABLE_AXIS_VALUE_NAME
     font_link_axisValue.ValueNameID = 294 # Roman --> Italic
 
     # Italic
@@ -2075,6 +2104,23 @@ def test_updateNameTable_format4_axisValues(varfont):
     assert names[(2, 3, 1, 0x409)] == "Regular"
     assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
     assert names[(17, 3, 1, 0x409)] == "Dominant Value"
+
+
+def test_updateNameTable_elided_axisValues(varfont):
+    stat = varfont["STAT"].table
+    # set ELIDABLE_AXIS_VALUE_NAME flag for all axisValues
+    for axisValue in stat.AxisValueArray.AxisValue:
+        axisValue.Flags |= instancer.ELIDABLE_AXIS_VALUE_NAME
+
+    stat.ElidedFallbackNameID = 266 # Regular --> Black
+    instancer.updateNameTable(varfont, {"wght": 400})
+    names = _get_name_records(varfont)
+    # Since all axis values are elided, the elided fallback name
+    # must be used to construct the style names. Since we
+    # changed it to Black, we need both a typoSubFamilyName and
+    # the subFamilyName set so it conforms to the RIBBI model.
+    assert names[(2, 3, 1, 0x409)] == "Regular"
+    assert names[(17, 3, 1, 0x409)] == "Black"
 
 
 def test_sanityCheckVariableTables(varfont):
