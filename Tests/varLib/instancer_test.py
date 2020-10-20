@@ -2106,6 +2106,23 @@ def test_updateNameTable_format4_axisValues(varfont):
     assert names[(17, 3, 1, 0x409)] == "Dominant Value"
 
 
+def test_updateNameTable_elided_axisValues(varfont):
+    stat = varfont["STAT"].table
+    # set ELIDABLE_AXIS_VALUE_NAME flag for all axisValues
+    for axisValue in stat.AxisValueArray.AxisValue:
+        axisValue.Flags |= instancer.ELIDABLE_AXIS_VALUE_NAME
+
+    stat.ElidedFallbackNameID = 266 # Regular --> Black
+    instancer.updateNameTable(varfont, {"wght": 400})
+    names = _get_name_records(varfont)
+    # Since all axis values are elided, the elided fallback name
+    # must be used to construct the style names. Since we
+    # changed it to Black, we need both a typoSubFamilyName and
+    # the subFamilyName set so it conforms to the RIBBI model.
+    assert names[(2, 3, 1, 0x409)] == "Regular"
+    assert names[(17, 3, 1, 0x409)] == "Black"
+
+
 def test_sanityCheckVariableTables(varfont):
     font = ttLib.TTFont()
     with pytest.raises(ValueError, match="Missing required table fvar"):

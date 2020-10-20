@@ -1209,9 +1209,13 @@ def _sortedAxisValues(stat, axisCoords):
 def _updateNameRecords(varfont, axisValueTables):
     # Update nametable based on the axisValues using the R/I/B/BI model.
     nametable = varfont["name"]
+    stat = varfont["STAT"].table
 
-    ribbiAxisValues = _ribbiAxisValueTables(nametable, axisValueTables)
-    nonRibbiAxisValues = [v for v in axisValueTables if v not in ribbiAxisValues]
+    axisValueNameIds = [a.ValueNameID for a in axisValueTables]
+    ribbiNameIds = [n for n in axisValueNameIds if nameIdIsRibbi(nametable, n)]
+    nonRibbiNameIds = [n for n in axisValueNameIds if n not in ribbiNameIds]
+    elidedNameId = stat.ElidedFallbackNameID
+    elidedNameIsRibbi = nameIdIsRibbi(nametable, elidedNameId)
 
     getName = nametable.getName
     nameTablePlatEncLangs = set(
@@ -1219,23 +1223,31 @@ def _updateNameRecords(varfont, axisValueTables):
     )
     for platEncLang in nameTablePlatEncLangs:
 
-        subFamilyNameRecords = [
-            getName(a.ValueNameID, *platEncLang) for a in ribbiAxisValues if a
-        ]
-        subFamilyName = " ".join(r.toUnicode() for r in subFamilyNameRecords if r)
+        if not nametable.getName(NameID.FAMILY_NAME, *platEncLang):
+            # Since no family name record was found, we cannot
+            # update this set of name Records.
+            continue
 
-        typoSubFamilyNameRecords = [
-            getName(a.ValueNameID, *platEncLang) for a in axisValueTables if a
-        ]
+        subFamilyName = " ".join(
+            getName(n, *platEncLang).toUnicode() for n in ribbiNameIds
+        )
         typoSubFamilyName = " ".join(
-            r.toUnicode() for r in typoSubFamilyNameRecords if r
+            getName(n, *platEncLang).toUnicode() for n in axisValueNameIds
         )
 
-        familyNameSuffixRecords = [
-            getName(a.ValueNameID, *platEncLang) for a in nonRibbiAxisValues if a
-        ]
-        familyNameSuffix = " ".join(r.toUnicode() for r in familyNameSuffixRecords if r)
-        updateNameTableStyleRecords(
+        # If neither subFamilyName and typoSubFamilyName exist,
+        # we will use the STAT's elidedFallbackNameID
+        if not typoSubFamilyName and not subFamilyName:
+            if elidedNameIsRibbi:
+                subFamilyName = getName(elidedNameId, *platEncLang).toUnicode()
+            else:
+                typoSubFamilyName = getName(elidedNameId, *platEncLang).toUnicode()
+
+        familyNameSuffix = " ".join(
+            getName(n, *platEncLang).toUnicode() for n in nonRibbiNameIds
+        )
+
+        _updateNameTableStyleRecords(
             varfont,
             familyNameSuffix,
             subFamilyName,
@@ -1244,7 +1256,7 @@ def _updateNameRecords(varfont, axisValueTables):
         )
 
 
-def _ribbiAxisValueTables(nametable, axisValueTables):
+def nameIdIsRibbi(nametable, nameID):
     engNameRecords = any(
         r
         for r in nametable.names
@@ -1256,15 +1268,15 @@ def _ribbiAxisValueTables(nametable, axisValueTables):
             "since there are no name table Records which have "
             "platformID=3, platEncID=1, langID=0x409"
         )
-    return [
-        v
-        for v in axisValueTables
-        if nametable.getName(v.ValueNameID, 3, 1, 0x409).toUnicode()
+    return (
+        True
+        if nametable.getName(nameID, 3, 1, 0x409).toUnicode()
         in ("Regular", "Italic", "Bold", "Bold Italic")
-    ]
+        else False
+    )
 
 
-def updateNameTableStyleRecords(
+def _updateNameTableStyleRecords(
     varfont,
     familyNameSuffix,
     subFamilyName,
@@ -1273,7 +1285,7 @@ def updateNameTableStyleRecords(
     platEncID=1,
     langID=0x409,
 ):
-    # TODO (Marc F) It may be nice to make this part of a standalone
+    # TODO (Marc F) It may be nice to make this part a standalone
     # font renamer in the future.
     nametable = varfont["name"]
     platEncLang = (platformID, platEncID, langID)
@@ -1286,9 +1298,7 @@ def updateNameTableStyleRecords(
         NameID.TYPOGRAPHIC_SUBFAMILY_NAME, *platEncLang
     ) or nametable.getName(NameID.SUBFAMILY_NAME, *platEncLang)
 
-    if not currentFamilyName or not currentStyleName:
-        # Since no family name or style name records were found, we cannot
-        # update this set of name Records.
+    if not currentFamilyName and not currentStyleName:
         return
 
     currentFamilyName = currentFamilyName.toUnicode()
@@ -1296,8 +1306,7 @@ def updateNameTableStyleRecords(
 
     nameIDs = {
         NameID.FAMILY_NAME: currentFamilyName,
-        NameID.SUBFAMILY_NAME: subFamilyName
-        or nametable.getName(NameID.SUBFAMILY_NAME, *platEncLang).toUnicode(),
+        NameID.SUBFAMILY_NAME: subFamilyName,
     }
     if typoSubFamilyName:
         nameIDs[NameID.FAMILY_NAME] = f"{currentFamilyName} {familyNameSuffix}".strip()
