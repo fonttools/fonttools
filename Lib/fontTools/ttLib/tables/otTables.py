@@ -1324,6 +1324,36 @@ class CompositeMode(IntEnum):
 	HSL_LUMINOSITY = 26
 
 
+class Paint(getFormatSwitchingBaseTableClass("uint8")):
+
+	class Format(IntEnum):
+		PaintSolid = 1
+		PaintLinearGradient = 2
+		PaintRadialGradient = 3
+		PaintGlyph = 4
+		PaintColorGlyph = 5
+		PaintTransform = 6
+		PaintComposite = 7
+
+	def getFormatName(self):
+		try:
+			return self.__class__.Format(self.Format).name
+		except ValueError:
+			raise NotImplementedError(f"Unknown Paint format: {self.Format}")
+
+	def toXML(self, xmlWriter, font, attrs=None, name=None):
+		tableName = name if name else self.__class__.__name__
+		if attrs is None:
+			attrs = []
+		attrs.append(("Format", self.Format))
+		xmlWriter.begintag(tableName, attrs)
+		xmlWriter.comment(self.getFormatName())
+		xmlWriter.newline()
+		self.toXML2(xmlWriter, font)
+		xmlWriter.endtag(tableName)
+		xmlWriter.newline()
+
+
 # For each subtable format there is a class. However, we don't really distinguish
 # between "field name" and "format name": often these are the same. Yet there's
 # a whole bunch of fields with different names. The following dict is a mapping
