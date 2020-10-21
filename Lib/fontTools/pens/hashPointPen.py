@@ -1,7 +1,6 @@
 # Modified from https://github.com/adobe-type-tools/psautohint/blob/08b346865710ed3c172f1eb581d6ef243b203f99/python/psautohint/ufoFont.py#L800-L838
 import hashlib
 
-from fontTools.misc.transform import Identity
 from fontTools.pens.pointPen import AbstractPointPen
 
 
@@ -32,8 +31,6 @@ class HashPointPen(AbstractPointPen):
     >    # Compile the hinting code ...
     >    pass
     """
-
-    DEFAULT_TRANSFORM = Identity
 
     def __init__(self, glyphWidth=0, glyphSet=None):
         self.glyphset = glyphSet
