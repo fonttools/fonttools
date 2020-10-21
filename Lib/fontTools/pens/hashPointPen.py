@@ -20,17 +20,17 @@ class HashPointPen(AbstractPointPen):
     check if the outlines have changed, which would probably make the hinting
     code invalid.
 
-    >>> glyph = ufo[name]
-    >>> hash_pen = HashPointPen(glyph.width, ufo)
-    >>> glyph.drawPoints(hash_pen)
-    >>> ttdata = glyph.lib.get("public.truetype.instructions", None)
-    >>> stored_hash = ttdata.get("id", None)  # The hash is stored in the "id" key
-    >>> if stored_hash is None or stored_hash != hash_pen.hash:
-    >>>    logger.error(f"Glyph hash mismatch, glyph '{name}' will have no instructions in font.")
-    >>> else:
-    >>>    # The hash values are identical, the outline has not changed.
-    >>>    # Compile the hinting code ...
-    >>>    pass
+    > glyph = ufo[name]
+    > hash_pen = HashPointPen(glyph.width, ufo)
+    > glyph.drawPoints(hash_pen)
+    > ttdata = glyph.lib.get("public.truetype.instructions", None)
+    > stored_hash = ttdata.get("id", None)  # The hash is stored in the "id" key
+    > if stored_hash is None or stored_hash != hash_pen.hash:
+    >    logger.error(f"Glyph hash mismatch, glyph '{name}' will have no instructions in font.")
+    > else:
+    >    # The hash values are identical, the outline has not changed.
+    >    # Compile the hinting code ...
+    >    pass
     """
 
     DEFAULT_TRANSFORM = Identity
