@@ -97,7 +97,7 @@ class HashPointPenTest(object):
         glyph = _TestGlyph()
         glyph.drawPoints(pen)
 
-        pen2 = HashPointPen(_TestGlyph2())
+        pen2 = HashPointPen(_TestGlyph2().width)
         glyph = _TestGlyph2()
         glyph.drawPoints(pen2)
 
