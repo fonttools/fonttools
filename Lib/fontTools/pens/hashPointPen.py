@@ -12,6 +12,25 @@ class HashPointPen(AbstractPointPen):
 
     Components are added as the original outline plus each composite's
     transformation.
+
+    Example: You have some TrueType hinting code for a glyph which you want to
+    compile. The hinting code specifies a hash value computed with HashPointPen
+    that was valid for the glyph's outlines at the time the hinting code was
+    written. Now you can calculate the hash for the glyph's current outlines to
+    check if the outlines have changed, which would probably make the hinting
+    code invalid.
+
+    >>> glyph = ufo[name]
+    >>> hash_pen = HashPointPen(glyph, ufo)
+    >>> glyph.drawPoints(hash_pen)
+    >>> ttdata = glyph.lib.get("public.truetype.instructions", None)
+    >>> stored_hash = ttdata.get("id", None)  # The hash is stored in the "id" key
+    >>> if stored_hash is None or stored_hash != hash_pen.hash:
+    >>>    logger.error(f"Glyph hash mismatch, glyph '{name}' will have no instructions in font.")
+    >>> else:
+    >>>    # The hash values are identical, the outline has not changed.
+    >>>    # Compile the hinting code ...
+    >>>    pass
     """
 
     DEFAULT_TRANSFORM = Identity
