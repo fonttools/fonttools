@@ -21,7 +21,7 @@ class HashPointPen(AbstractPointPen):
     code invalid.
 
     >>> glyph = ufo[name]
-    >>> hash_pen = HashPointPen(glyph, ufo)
+    >>> hash_pen = HashPointPen(glyph.width, ufo)
     >>> glyph.drawPoints(hash_pen)
     >>> ttdata = glyph.lib.get("public.truetype.instructions", None)
     >>> stored_hash = ttdata.get("id", None)  # The hash is stored in the "id" key
@@ -35,10 +35,9 @@ class HashPointPen(AbstractPointPen):
 
     DEFAULT_TRANSFORM = Identity
 
-    def __init__(self, glyph, glyphSet=None):
+    def __init__(self, glyphWidth=0, glyphSet=None):
         self.glyphset = glyphSet
-        self.width = round(getattr(glyph, "width", 0), 9)
-        self.data = ["w%s" % self.width]
+        self.data = ["w%s" % round(glyphWidth, 9)]
 
     @property
     def hash(self):
