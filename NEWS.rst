@@ -1,3 +1,6 @@
+- Add HashPointPen adapted from psautohint. With this pen, a hash value of a glyph
+  can be computed, which can later be used to detect glyph changes (#2005).
+
 4.16.1 (released 2020-10-05)
 ----------------------------
 
