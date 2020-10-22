@@ -1131,7 +1131,7 @@ def updateNameTable(varfont, axisLimits):
     # If we're instantiating a partial font, we will populate the unpinned
     # axes with their default axis values.
     fvarDefaults = {a.axisTag: a.defaultValue for a in fvar.axes}
-    axisCoords = axisLimits
+    axisCoords = deepcopy(axisLimits)
     for axisTag, val in fvarDefaults.items():
         if axisTag not in axisCoords or isinstance(axisCoords[axisTag], tuple):
             axisCoords[axisTag] = val
