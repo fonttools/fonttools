@@ -19,6 +19,7 @@ from typing import (
     TypeVar,
     Union,
 )
+from fontTools.misc.fixedTools import fixedToFloat
 from fontTools.ttLib.tables import C_O_L_R_
 from fontTools.ttLib.tables import C_P_A_L_
 from fontTools.ttLib.tables import _n_a_m_e
@@ -53,6 +54,8 @@ _AffineTuple = Tuple[
     _ScalarInput, _ScalarInput, _ScalarInput, _ScalarInput, _ScalarInput, _ScalarInput
 ]
 _AffineInput = Union[_AffineTuple, ot.Affine2x3]
+
+MAX_LAYER_V1_COUNT = 255
 
 
 def populateCOLRv0(
@@ -308,19 +311,50 @@ def _split_color_glyphs_by_version(
     return colorGlyphsV0, colorGlyphsV1
 
 
-def _to_variable_value(value: _ScalarInput, cls=VariableValue) -> VariableValue:
-    if isinstance(value, cls):
-        return value
-    try:
-        it = iter(value)
-    except TypeError:  # not iterable
-        return cls(value)
-    else:
-        return cls._make(it)
+def _to_variable_value(
+    value: _ScalarInput,
+    minValue: _Number,
+    maxValue: _Number,
+    cls: Type[VariableValue],
+) -> VariableValue:
+    if not isinstance(value, cls):
+        try:
+            it = iter(value)
+        except TypeError:  # not iterable
+            value = cls(value)
+        else:
+            value = cls._make(it)
+    if value.value < minValue:
+        raise OverflowError(f"{cls.__name__}: {value.value} < {minValue}")
+    if value.value > maxValue:
+        raise OverflowError(f"{cls.__name__}: {value.value} < {maxValue}")
+    return value
 
 
-_to_variable_float = partial(_to_variable_value, cls=VariableFloat)
-_to_variable_int = partial(_to_variable_value, cls=VariableInt)
+_to_variable_f16dot16_float = partial(
+    _to_variable_value,
+    cls=VariableFloat,
+    minValue=-(2 ** 15),
+    maxValue=fixedToFloat(2 ** 31 - 1, 16),
+)
+_to_variable_f2dot14_float = partial(
+    _to_variable_value,
+    cls=VariableFloat,
+    minValue=-2.0,
+    maxValue=fixedToFloat(2 ** 15 - 1, 14),
+)
+_to_variable_int16 = partial(
+    _to_variable_value,
+    cls=VariableInt,
+    minValue=-(2 ** 15),
+    maxValue=2 ** 15 - 1,
+)
+_to_variable_uint16 = partial(
+    _to_variable_value,
+    cls=VariableInt,
+    minValue=0,
+    maxValue=2 ** 16,
+)
 
 
 def buildColorIndex(
@@ -328,7 +362,7 @@ def buildColorIndex(
 ) -> ot.ColorIndex:
     self = ot.ColorIndex()
     self.PaletteIndex = int(paletteIndex)
-    self.Alpha = _to_variable_float(alpha)
+    self.Alpha = _to_variable_f2dot14_float(alpha)
     return self
 
 
@@ -347,7 +381,7 @@ def buildColorStop(
     alpha: _ScalarInput = _DEFAULT_ALPHA,
 ) -> ot.ColorStop:
     self = ot.ColorStop()
-    self.StopOffset = _to_variable_float(offset)
+    self.StopOffset = _to_variable_f2dot14_float(offset)
     self.Color = buildColorIndex(paletteIndex, alpha)
     return self
 
@@ -409,8 +443,8 @@ def buildPaintLinearGradient(
     if p2 is None:
         p2 = copy.copy(p1)
     for i, (x, y) in enumerate((p0, p1, p2)):
-        setattr(self, f"x{i}", _to_variable_int(x))
-        setattr(self, f"y{i}", _to_variable_int(y))
+        setattr(self, f"x{i}", _to_variable_int16(x))
+        setattr(self, f"y{i}", _to_variable_int16(y))
 
     return self
 
@@ -427,7 +461,7 @@ def buildAffine2x3(
     locs = locals()
     for attr in ("xx", "xy", "yx", "yy", "dx", "dy"):
         value = locs[attr]
-        setattr(self, attr, _to_variable_float(value))
+        setattr(self, attr, _to_variable_f16dot16_float(value))
     return self
 
 
@@ -444,9 +478,9 @@ def buildPaintRadialGradient(
     self.ColorLine = _to_color_line(colorLine)
 
     for i, (x, y), r in [(0, c0, r0), (1, c1, r1)]:
-        setattr(self, f"x{i}", _to_variable_int(x))
-        setattr(self, f"y{i}", _to_variable_int(y))
-        setattr(self, f"r{i}", _to_variable_int(r))
+        setattr(self, f"x{i}", _to_variable_int16(x))
+        setattr(self, f"y{i}", _to_variable_int16(y))
+        setattr(self, f"r{i}", _to_variable_uint16(r))
 
     return self
 
@@ -521,7 +555,12 @@ def buildPaint(paint: _PaintInput) -> ot.Paint:
 
 def buildLayerV1List(layers: _PaintInputList) -> ot.LayerV1List:
     self = ot.LayerV1List()
-    self.LayerCount = len(layers)
+    layerCount = len(layers)
+    if layerCount > MAX_LAYER_V1_COUNT:
+        raise OverflowError(
+            "LayerV1List.LayerCount: {layerCount} > {MAX_LAYER_V1_COUNT}"
+        )
+    self.LayerCount = layerCount
     self.Paint = [buildPaint(layer) for layer in layers]
     return self
 
@@ -537,6 +576,13 @@ def buildBaseGlyphV1Record(
     return self
 
 
+def _format_glyph_errors(errors: Mapping[str, Exception]) -> str:
+    lines = []
+    for baseGlyph, error in sorted(errors.items()):
+        lines.append(f"    {baseGlyph} => {type(error).__name__}: {error}")
+    return "\n".join(lines)
+
+
 def buildBaseGlyphV1List(
     colorGlyphs: _ColorGlyphsDict,
     glyphMap: Optional[Mapping[str, int]] = None,
@@ -547,10 +593,21 @@ def buildBaseGlyphV1List(
         )
     else:
         colorGlyphItems = colorGlyphs.items()
-    records = [
-        buildBaseGlyphV1Record(baseGlyph, layers)
-        for baseGlyph, layers in colorGlyphItems
-    ]
+
+    errors = {}
+    records = []
+    for baseGlyph, layers in colorGlyphItems:
+        try:
+            records.append(buildBaseGlyphV1Record(baseGlyph, layers))
+        except (ColorLibError, OverflowError, ValueError, TypeError) as e:
+            errors[baseGlyph] = e
+
+    if errors:
+        failed_glyphs = _format_glyph_errors(errors)
+        exc = ColorLibError(f"Failed to build BaseGlyphV1List:\n{failed_glyphs}")
+        exc.errors = errors
+        raise exc from next(iter(errors.values()))
+
     self = ot.BaseGlyphV1List()
     self.BaseGlyphCount = len(records)
     self.BaseGlyphV1Record = records
