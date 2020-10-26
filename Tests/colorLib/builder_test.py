@@ -437,6 +437,86 @@ def test_buildPaintGlyph_from_dict():
     assert layer.Paint.r0.value == 4
 
 
+def test_buildPaintColorGlyph():
+    paint = builder.buildPaintColorGlyph("a")
+    assert paint.Format == ot.Paint.Format.PaintColorGlyph
+    assert paint.Glyph == "a"
+
+
+def test_buildPaintTransform():
+    paint = builder.buildPaintTransform(
+        transform=builder.buildAffine2x3(1, 2, 3, 4, 5, 6),
+        paint=builder.buildPaintGlyph(
+            glyph="a",
+            paint=builder.buildPaintSolid(paletteIndex=0, alpha=1.0),
+        ),
+    )
+
+    assert paint.Format == ot.Paint.Format.PaintTransform
+    assert paint.Transform.xx.value == 1.0
+    assert paint.Transform.xy.value == 2.0
+    assert paint.Transform.yx.value == 3.0
+    assert paint.Transform.yy.value == 4.0
+    assert paint.Transform.dx.value == 5.0
+    assert paint.Transform.dy.value == 6.0
+    assert paint.Paint.Format == ot.Paint.Format.PaintGlyph
+
+    paint = builder.buildPaintTransform(
+        (1, 0, 0, 0.3333, 10, 10),
+        {
+            "format": 3,
+            "colorLine": {"stops": [(0.0, 0), (1.0, 1)]},
+            "c0": (100, 100),
+            "c1": (100, 100),
+            "r0": 0,
+            "r1": 50,
+        },
+    )
+
+    assert paint.Format == ot.Paint.Format.PaintTransform
+    assert paint.Transform.xx.value == 1.0
+    assert paint.Transform.xy.value == 0.0
+    assert paint.Transform.yx.value == 0.0
+    assert paint.Transform.yy.value == 0.3333
+    assert paint.Transform.dx.value == 10
+    assert paint.Transform.dy.value == 10
+    assert paint.Paint.Format == ot.Paint.Format.PaintRadialGradient
+
+
+def test_buildPaintComposite():
+    composite = builder.buildPaintComposite(
+        mode=ot.CompositeMode.SRC_OVER,
+        source={
+            "format": 7,
+            "mode": "src_over",
+            "source": {"format": 4, "glyph": "c", "paint": 2},
+            "backdrop": {"format": 4, "glyph": "b", "paint": 1},
+        },
+        backdrop=builder.buildPaintGlyph(
+            "a", builder.buildPaintSolid(paletteIndex=0, alpha=1.0)
+        ),
+    )
+
+    assert composite.Format == ot.Paint.Format.PaintComposite
+    assert composite.SourcePaint.Format == ot.Paint.Format.PaintComposite
+    assert composite.SourcePaint.SourcePaint.Format == ot.Paint.Format.PaintGlyph
+    assert composite.SourcePaint.SourcePaint.Glyph == "c"
+    assert composite.SourcePaint.SourcePaint.Paint.Format == ot.Paint.Format.PaintSolid
+    assert composite.SourcePaint.SourcePaint.Paint.Color.PaletteIndex == 2
+    assert composite.SourcePaint.CompositeMode == ot.CompositeMode.SRC_OVER
+    assert composite.SourcePaint.BackdropPaint.Format == ot.Paint.Format.PaintGlyph
+    assert composite.SourcePaint.BackdropPaint.Glyph == "b"
+    assert (
+        composite.SourcePaint.BackdropPaint.Paint.Format == ot.Paint.Format.PaintSolid
+    )
+    assert composite.SourcePaint.BackdropPaint.Paint.Color.PaletteIndex == 1
+    assert composite.CompositeMode == ot.CompositeMode.SRC_OVER
+    assert composite.BackdropPaint.Format == ot.Paint.Format.PaintGlyph
+    assert composite.BackdropPaint.Glyph == "a"
+    assert composite.BackdropPaint.Paint.Format == ot.Paint.Format.PaintSolid
+    assert composite.BackdropPaint.Paint.Color.PaletteIndex == 0
+
+
 def test_buildLayerV1List():
     layers = [
         ("a", 1),
@@ -545,9 +625,7 @@ def test_split_color_glyphs_by_version():
     assert colorGlyphsV0 == {"a": [("b", 0), ("c", 1), ("d", 2), ("e", 3)]}
     assert not colorGlyphsV1
 
-    colorGlyphs = {
-        "a": [("b", builder.buildPaintSolid(paletteIndex=0, alpha=0.0))]
-    }
+    colorGlyphs = {"a": [("b", builder.buildPaintSolid(paletteIndex=0, alpha=0.0))]}
 
     colorGlyphsV0, colorGlyphsV1 = builder._split_color_glyphs_by_version(colorGlyphs)
 
