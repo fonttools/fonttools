@@ -82,10 +82,12 @@ COLR_V1_DATA = (
     b"\x00\x01"  # LayerRecord[1].PaletteIndex (1)
     b"\x00\t"  # LayerRecord[2].LayerGlyph (9)
     b"\x00\x02"  # LayerRecord[2].PaletteIndex (2)
-    b"\x00\x00\x00\x01"  # BaseGlyphV1List.BaseGlyphCount (1)
+    b"\x00\x00\x00\x02"  # BaseGlyphV1List.BaseGlyphCount (2)
     b"\x00\n"  # BaseGlyphV1List.BaseGlyphV1Record[0].BaseGlyph (10)
-    b"\x00\x00\x00\n"  # Offset to LayerV1List from beginning of BaseGlyphV1List (10)
-    b"\x03"  # LayerV1List.LayerCount (3)
+    b"\x00\x00\x00\x10"  # Offset to LayerV1List from beginning of BaseGlyphV1List (16)
+    b"\x00\x0e"  # BaseGlyphV1List.BaseGlyphV1Record[1].BaseGlyph (14)
+    b"\x00\x00\x01\x08"  # Offset to LayerV1List from beginning of BaseGlyphV1List (264)
+    b"\x03"  # BaseGlyphV1Record[0].LayerV1List.LayerCount (3)
     b"\x00\x00\x00\r"  # Offset to Paint from beginning of LayerV1List (13)
     b"\x00\x00\x00\x1c"  # Offset to Paint from beginning of LayerV1List (28)
     b"\x00\x00\x00w"  # Offset to Paint from beginning of LayerV1List (119)
@@ -173,6 +175,28 @@ COLR_V1_DATA = (
     b"\x00\x07"  # ColorLine.ColorStop[1].Color.PaletteIndex (7)
     b"\x19\x9a"  # ColorLine.ColorStop[1].Color.Alpha.value (0.4)
     b"\x00\x00\x00\x00"
+    b"\x01"  # BaseGlyphV1Record[1].LayerV1List.LayerCount (1)
+    b"\x00\x00\x00\x05"  # Offset to Paint from beginning of LayerV1List (5)
+    b"\x07"  #  LayerV1List.Paint[0].Format (7)
+    b"\x00\x00<"  # Offset to SourcePaint from beginning of PaintComposite (60)
+    b"\x03"  # LayerV1List.Paint[0].CompositeMode [SRC_OVER] (3)
+    b"\x00\x00\x08"  # Offset to BackdropPaint from beginning of PaintComposite (8)
+    b"\x06"  # Paint[0].BackdropPaint.Format (6)
+    b"\x00\x004"  # Offset to Paint from beginning of PaintTransform (52)
+    b"\x00\x01\x00\x00"  # Affine2x3.xx.value (1.0)
+    b"\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00"  # Affine2x3.xy.value (0.0)
+    b"\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00"  # Affine2x3.yx.value (0.0)
+    b"\x00\x00\x00\x00"
+    b"\x00\x01\x00\x00"  # Affine2x3.yy.value (1.0)
+    b"\x00\x00\x00\x00"
+    b"\x01,\x00\x00"  # Affine2x3.dx.value (300.0)
+    b"\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00"  # Affine2x3.dy.value (0.0)
+    b"\x00\x00\x00\x00"
+    b"\x05"  # Paint[0].SourcePaint.Format (5)
+    b"\x00\n"  # Paint[0].SourcePaint.Glyph (10)
 )
 
 
@@ -202,7 +226,7 @@ COLR_V1_XML = [
     "</LayerRecordArray>",
     "<!-- LayerRecordCount=3 -->",
     "<BaseGlyphV1List>",
-    "  <!-- BaseGlyphCount=1 -->",
+    "  <!-- BaseGlyphCount=2 -->",
     '  <BaseGlyphV1Record index="0">',
     '    <BaseGlyph value="glyph00010"/>',
     "    <LayerV1List>",
@@ -290,6 +314,31 @@ COLR_V1_XML = [
     "          </Transform>",
     "        </Paint>",
     '        <Glyph value="glyph00013"/>',
+    "      </Paint>",
+    "    </LayerV1List>",
+    "  </BaseGlyphV1Record>",
+    '  <BaseGlyphV1Record index="1">',
+    '    <BaseGlyph value="glyph00014"/>',
+    "    <LayerV1List>",
+    "      <!-- LayerCount=1 -->",
+    '      <Paint index="0" Format="7"><!-- PaintComposite -->',
+    '        <SourcePaint Format="5"><!-- PaintColorGlyph -->',
+    '          <Glyph value="glyph00010"/>',
+    "        </SourcePaint>",
+    '        <CompositeMode value="src_over"/>',
+    '        <BackdropPaint Format="6"><!-- PaintTransform -->',
+    '          <Paint Format="5"><!-- PaintColorGlyph -->',
+    '            <Glyph value="glyph00010"/>',
+    "          </Paint>",
+    "          <Transform>",
+    '            <xx value="1.0"/>',
+    '            <xy value="0.0"/>',
+    '            <yx value="0.0"/>',
+    '            <yy value="1.0"/>',
+    '            <dx value="300.0"/>',
+    '            <dy value="0.0"/>',
+    "          </Transform>",
+    "        </BackdropPaint>",
     "      </Paint>",
     "    </LayerV1List>",
     "  </BaseGlyphV1Record>",
