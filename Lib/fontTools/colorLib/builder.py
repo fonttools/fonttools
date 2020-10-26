@@ -370,7 +370,7 @@ def buildPaintSolid(
     paletteIndex: int, alpha: _ScalarInput = _DEFAULT_ALPHA
 ) -> ot.Paint:
     self = ot.Paint()
-    self.Format = 1
+    self.Format = int(ot.Paint.Format.PaintSolid)
     self.Color = buildColorIndex(paletteIndex, alpha)
     return self
 
@@ -437,7 +437,7 @@ def buildPaintLinearGradient(
     p2: Optional[_PointTuple] = None,
 ) -> ot.Paint:
     self = ot.Paint()
-    self.Format = 2
+    self.Format = int(ot.Paint.Format.PaintLinearGradient)
     self.ColorLine = _to_color_line(colorLine)
 
     if p2 is None:
@@ -474,7 +474,7 @@ def buildPaintRadialGradient(
 ) -> ot.Paint:
 
     self = ot.Paint()
-    self.Format = 3
+    self.Format = int(ot.Paint.Format.PaintRadialGradient)
     self.ColorLine = _to_color_line(colorLine)
 
     for i, (x, y), r in [(0, c0, r0), (1, c1, r1)]:
@@ -487,7 +487,7 @@ def buildPaintRadialGradient(
 
 def buildPaintGlyph(glyph: str, paint: _PaintInput) -> ot.Paint:
     self = ot.Paint()
-    self.Format = 4
+    self.Format = int(ot.Paint.Format.PaintGlyph)
     self.Glyph = glyph
     self.Paint = buildPaint(paint)
     return self
@@ -495,14 +495,14 @@ def buildPaintGlyph(glyph: str, paint: _PaintInput) -> ot.Paint:
 
 def buildPaintColorGlyph(glyph: str) -> ot.Paint:
     self = ot.Paint()
-    self.Format = 5
+    self.Format = int(ot.Paint.Format.PaintColorGlyph)
     self.Glyph = glyph
     return self
 
 
 def buildPaintTransform(transform: _AffineInput, paint: _PaintInput) -> ot.Paint:
     self = ot.Paint()
-    self.Format = 6
+    self.Format = int(ot.Paint.Format.PaintTransform)
     if not isinstance(transform, ot.Affine2x3):
         transform = buildAffine2x3(*transform)
     self.Transform = transform
@@ -514,7 +514,7 @@ def buildPaintComposite(
     mode: _CompositeInput, source: _PaintInput, backdrop: _PaintInput
 ):
     self = ot.Paint()
-    self.Format = 7
+    self.Format = int(ot.Paint.Format.PaintComposite)
     self.SourcePaint = buildPaint(source)
     self.CompositeMode = _to_composite_mode(mode)
     self.BackdropPaint = buildPaint(backdrop)

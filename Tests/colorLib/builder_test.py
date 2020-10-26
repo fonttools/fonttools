@@ -207,19 +207,19 @@ def test_buildColorIndex():
 
 def test_buildPaintSolid():
     p = builder.buildPaintSolid(0)
-    assert p.Format == 1
+    assert p.Format == ot.Paint.Format.PaintSolid
     assert p.Color.PaletteIndex == 0
     assert p.Color.Alpha.value == 1.0
     assert p.Color.Alpha.varIdx == 0
 
     p = builder.buildPaintSolid(1, alpha=0.5)
-    assert p.Format == 1
+    assert p.Format == ot.Paint.Format.PaintSolid
     assert p.Color.PaletteIndex == 1
     assert p.Color.Alpha.value == 0.5
     assert p.Color.Alpha.varIdx == 0
 
     p = builder.buildPaintSolid(3, alpha=builder.VariableFloat(0.5, varIdx=2))
-    assert p.Format == 1
+    assert p.Format == ot.Paint.Format.PaintSolid
     assert p.Color.PaletteIndex == 3
     assert p.Color.Alpha.value == 0.5
     assert p.Color.Alpha.varIdx == 2
@@ -333,7 +333,7 @@ def test_buildPaintRadialGradient():
     r1 = builder.VariableInt(5)
 
     gradient = builder.buildPaintRadialGradient(color_line, c0, c1, r0, r1)
-    assert gradient.Format == 3
+    assert gradient.Format == ot.Paint.Format.PaintRadialGradient
     assert gradient.ColorLine == color_line
     assert (gradient.x0, gradient.y0) == c0
     assert (gradient.x1, gradient.y1) == c1
@@ -348,11 +348,11 @@ def test_buildPaintRadialGradient():
 def test_buildPaintGlyph():
     layer = builder.buildPaintGlyph("a", 2)
     assert layer.Glyph == "a"
-    assert layer.Paint.Format == 1
+    assert layer.Paint.Format == ot.Paint.Format.PaintSolid
     assert layer.Paint.Color.PaletteIndex == 2
 
     layer = builder.buildPaintGlyph("a", builder.buildPaintSolid(3, 0.9))
-    assert layer.Paint.Format == 1
+    assert layer.Paint.Format == ot.Paint.Format.PaintSolid
     assert layer.Paint.Color.PaletteIndex == 3
     assert layer.Paint.Color.Alpha.value == 0.9
 
@@ -362,7 +362,7 @@ def test_buildPaintGlyph():
             {"stops": [(0.0, 3), (1.0, 4)]}, (100, 200), (150, 250)
         ),
     )
-    assert layer.Paint.Format == 2
+    assert layer.Paint.Format == ot.Paint.Format.PaintLinearGradient
     assert layer.Paint.ColorLine.ColorStop[0].StopOffset.value == 0.0
     assert layer.Paint.ColorLine.ColorStop[0].Color.PaletteIndex == 3
     assert layer.Paint.ColorLine.ColorStop[1].StopOffset.value == 1.0
@@ -388,7 +388,7 @@ def test_buildPaintGlyph():
             10,
         ),
     )
-    assert layer.Paint.Format == 3
+    assert layer.Paint.Format == ot.Paint.Format.PaintRadialGradient
     assert layer.Paint.ColorLine.ColorStop[0].StopOffset.value == 0.0
     assert layer.Paint.ColorLine.ColorStop[0].Color.PaletteIndex == 5
     assert layer.Paint.ColorLine.ColorStop[1].StopOffset.value == 0.5
@@ -407,7 +407,7 @@ def test_buildPaintGlyph():
 def test_buildPaintGlyph_from_dict():
     layer = builder.buildPaintGlyph("a", {"format": 1, "paletteIndex": 0})
     assert layer.Glyph == "a"
-    assert layer.Paint.Format == 1
+    assert layer.Paint.Format == ot.Paint.Format.PaintSolid
     assert layer.Paint.Color.PaletteIndex == 0
 
     layer = builder.buildPaintGlyph(
@@ -419,7 +419,7 @@ def test_buildPaintGlyph_from_dict():
             "p1": (10, 10),
         },
     )
-    assert layer.Paint.Format == 2
+    assert layer.Paint.Format == ot.Paint.Format.PaintLinearGradient
     assert layer.Paint.ColorLine.ColorStop[0].StopOffset.value == 0.0
 
     layer = builder.buildPaintGlyph(
@@ -433,7 +433,7 @@ def test_buildPaintGlyph_from_dict():
             "r1": 0,
         },
     )
-    assert layer.Paint.Format == 3
+    assert layer.Paint.Format == ot.Paint.Format.PaintRadialGradient
     assert layer.Paint.r0.value == 4
 
 
