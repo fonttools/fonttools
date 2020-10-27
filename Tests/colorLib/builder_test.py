@@ -437,23 +437,23 @@ def test_buildPaintGlyph_from_dict():
     assert layer.Paint.r0.value == 4
 
 
-def test_buildPaintColorGlyph():
-    paint = builder.buildPaintColorGlyph("a")
-    assert paint.Format == ot.Paint.Format.PaintColorGlyph
+def test_buildPaintColrSlice():
+    paint = builder.buildPaintColrSlice("a")
+    assert paint.Format == ot.Paint.Format.PaintColrSlice
     assert paint.Glyph == "a"
     assert paint.FirstLayerIndex == 0
     assert paint.LastLayerIndex == 255
 
-    paint = builder.buildPaintColorGlyph("a", firstLayerIndex=1, lastLayerIndex=254)
+    paint = builder.buildPaintColrSlice("a", firstLayerIndex=1, lastLayerIndex=254)
     assert paint.FirstLayerIndex == 1
     assert paint.LastLayerIndex == 254
 
     with pytest.raises(ValueError, match="Expected first <= last index"):
-        builder.buildPaintColorGlyph("a", 255, 0)
+        builder.buildPaintColrSlice("a", 255, 0)
     with pytest.raises(OverflowError, match="firstLayerIndex .* out of range"):
-        builder.buildPaintColorGlyph("a", -1, 255)
+        builder.buildPaintColrSlice("a", -1, 255)
     with pytest.raises(OverflowError, match="lastLayerIndex .* out of range"):
-        builder.buildPaintColorGlyph("a", 0, 256)
+        builder.buildPaintColrSlice("a", 0, 256)
 
 
 def test_buildPaintTransform():

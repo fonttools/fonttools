@@ -493,11 +493,11 @@ def buildPaintGlyph(glyph: str, paint: _PaintInput) -> ot.Paint:
     return self
 
 
-def buildPaintColorGlyph(
+def buildPaintColrSlice(
     glyph: str, firstLayerIndex: int = 0, lastLayerIndex: int = 255
 ) -> ot.Paint:
     self = ot.Paint()
-    self.Format = int(ot.Paint.Format.PaintColorGlyph)
+    self.Format = int(ot.Paint.Format.PaintColrSlice)
     self.Glyph = glyph
     if firstLayerIndex > lastLayerIndex:
         raise ValueError(
@@ -539,7 +539,7 @@ _PAINT_BUILDERS = {
     2: buildPaintLinearGradient,
     3: buildPaintRadialGradient,
     4: buildPaintGlyph,
-    5: buildPaintColorGlyph,
+    5: buildPaintColrSlice,
     6: buildPaintTransform,
     7: buildPaintComposite,
 }
