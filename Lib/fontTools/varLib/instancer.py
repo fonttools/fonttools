@@ -1175,7 +1175,7 @@ def checkMissingAxisValues(stat, axisCoords):
 
 
 def _sortedAxisValues(stat, axisCoords):
-    # Sort and remove duplicates ensuring that format 4 axis Value Tables
+    # Sort and remove duplicates ensuring that format 4 Axis Values
     # are dominant
     axisValueTables = stat.AxisValueArray.AxisValue
     designAxes = stat.DesignAxisRecord.Axis
@@ -1211,11 +1211,11 @@ def _updateNameRecords(varfont, axisValueTables):
     nametable = varfont["name"]
     stat = varfont["STAT"].table
 
-    axisValueNameIds = [a.ValueNameID for a in axisValueTables]
-    ribbiNameIds = [n for n in axisValueNameIds if nameIdIsRibbi(nametable, n)]
-    nonRibbiNameIds = [n for n in axisValueNameIds if n not in ribbiNameIds]
-    elidedNameId = stat.ElidedFallbackNameID
-    elidedNameIsRibbi = nameIdIsRibbi(nametable, elidedNameId)
+    axisValueNameIDs = [a.ValueNameID for a in axisValueTables]
+    ribbiNameIDs = [n for n in axisValueNameIDs if nameIdIsRibbi(nametable, n)]
+    nonRibbiNameIDs = [n for n in axisValueNameIDs if n not in ribbiNameIDs]
+    elidedNameID = stat.ElidedFallbackNameID
+    elidedNameIsRibbi = nameIdIsRibbi(nametable, elidedNameID)
 
     getName = nametable.getName
     nameTablePlatEncLangs = set(
@@ -1223,28 +1223,28 @@ def _updateNameRecords(varfont, axisValueTables):
     )
     for platEncLang in nameTablePlatEncLangs:
 
-        if not nametable.getName(NameID.FAMILY_NAME, *platEncLang):
-            # Since no family name record was found, we cannot
-            # update this set of name Records.
+        if not all(getName(i, *platEncLang) for i in (1,2, elidedNameID)):
+            # Since no family name and subfamily name records were found,
+            # we cannot update this set of name Records.
             continue
 
         subFamilyName = " ".join(
-            getName(n, *platEncLang).toUnicode() for n in ribbiNameIds
+            getName(n, *platEncLang).toUnicode() for n in ribbiNameIDs
         )
         typoSubFamilyName = " ".join(
-            getName(n, *platEncLang).toUnicode() for n in axisValueNameIds
+            getName(n, *platEncLang).toUnicode() for n in axisValueNameIDs
         )
 
-        # If neither subFamilyName and typoSubFamilyName exist,
-        # we will use the STAT's elidedFallbackNameID
+        # If neither subFamilyName and typographic SubFamilyName exist,
+        # we will use the STAT's elidedFallbackName
         if not typoSubFamilyName and not subFamilyName:
             if elidedNameIsRibbi:
-                subFamilyName = getName(elidedNameId, *platEncLang).toUnicode()
+                subFamilyName = getName(elidedNameID, *platEncLang).toUnicode()
             else:
-                typoSubFamilyName = getName(elidedNameId, *platEncLang).toUnicode()
+                typoSubFamilyName = getName(elidedNameID, *platEncLang).toUnicode()
 
         familyNameSuffix = " ".join(
-            getName(n, *platEncLang).toUnicode() for n in nonRibbiNameIds
+            getName(n, *platEncLang).toUnicode() for n in nonRibbiNameIDs
         )
 
         _updateNameTableStyleRecords(
@@ -1298,9 +1298,6 @@ def _updateNameTableStyleRecords(
         NameID.TYPOGRAPHIC_SUBFAMILY_NAME, *platEncLang
     ) or nametable.getName(NameID.SUBFAMILY_NAME, *platEncLang)
 
-    if not currentFamilyName and not currentStyleName:
-        return
-
     currentFamilyName = currentFamilyName.toUnicode()
     currentStyleName = currentStyleName.toUnicode()
 
@@ -1311,7 +1308,15 @@ def _updateNameTableStyleRecords(
     if typoSubFamilyName:
         nameIDs[NameID.FAMILY_NAME] = f"{currentFamilyName} {familyNameSuffix}".strip()
         nameIDs[NameID.TYPOGRAPHIC_FAMILY_NAME] = currentFamilyName
-        nameIDs[NameID.TYPOGRAPHIC_SUBFAMILY_NAME] = f"{typoSubFamilyName}".strip()
+        nameIDs[NameID.TYPOGRAPHIC_SUBFAMILY_NAME] = f"{typoSubFamilyName}"
+    # Remove previous Typographic Family and SubFamily names since they're
+    # no longer required
+    else:
+        for nameID in (
+            NameID.TYPOGRAPHIC_FAMILY_NAME,
+            NameID.TYPOGRAPHIC_SUBFAMILY_NAME
+        ):
+            nametable.removeNames(nameID=nameID)
 
     newFamilyName = nameIDs.get(NameID.TYPOGRAPHIC_FAMILY_NAME) or nameIDs.get(
         NameID.FAMILY_NAME
