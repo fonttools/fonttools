@@ -493,10 +493,23 @@ def buildPaintGlyph(glyph: str, paint: _PaintInput) -> ot.Paint:
     return self
 
 
-def buildPaintColorGlyph(glyph: str) -> ot.Paint:
+def buildPaintColorGlyph(
+    glyph: str, firstLayerIndex: int = 0, lastLayerIndex: int = 255
+) -> ot.Paint:
     self = ot.Paint()
     self.Format = int(ot.Paint.Format.PaintColorGlyph)
     self.Glyph = glyph
+    if firstLayerIndex > lastLayerIndex:
+        raise ValueError(
+            f"Expected first <= last index, found: {firstLayerIndex} > {lastLayerIndex}"
+        )
+    for prefix in ("first", "last"):
+        indexName = f"{prefix}LayerIndex"
+        index = locals()[indexName]
+        if index < 0 or index > 255:
+            raise OverflowError(f"{indexName} ({index}) out of range [0..255]")
+    self.FirstLayerIndex = firstLayerIndex
+    self.LastLayerIndex = lastLayerIndex
     return self
 
 

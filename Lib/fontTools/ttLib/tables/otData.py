@@ -1646,6 +1646,8 @@ otData = [
 	('PaintFormat5', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 5'),
 		('GlyphID', 'Glyph', None, None, 'Virtual glyph ID for a BaseGlyphV1List base glyph.'),
+		('uint8', 'FirstLayerIndex', None, None, 'First layer index to reuse'),
+		('uint8', 'LastLayerIndex', None, None, 'Last layer index to reuse, inclusive'),
 	]),
 	('PaintFormat6', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 6'),

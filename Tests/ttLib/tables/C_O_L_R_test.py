@@ -197,6 +197,8 @@ COLR_V1_DATA = (
     b"\x00\x00\x00\x00"
     b"\x05"  # Paint[0].SourcePaint.Format (5)
     b"\x00\n"  # Paint[0].SourcePaint.Glyph (10)
+    b"\x00"  # Paint[0].SourcePaint.FirstLayerIndex (0)
+    b"\xff"  # Paint[0].SourcePaint.LastLayerIndex (255)
 )
 
 
@@ -324,11 +326,15 @@ COLR_V1_XML = [
     '      <Paint index="0" Format="7"><!-- PaintComposite -->',
     '        <SourcePaint Format="5"><!-- PaintColorGlyph -->',
     '          <Glyph value="glyph00010"/>',
+    '          <FirstLayerIndex value="0"/>',
+    '          <LastLayerIndex value="255"/>',
     "        </SourcePaint>",
     '        <CompositeMode value="src_over"/>',
     '        <BackdropPaint Format="6"><!-- PaintTransform -->',
     '          <Paint Format="5"><!-- PaintColorGlyph -->',
     '            <Glyph value="glyph00010"/>',
+    '            <FirstLayerIndex value="0"/>',
+    '            <LastLayerIndex value="255"/>',
     "          </Paint>",
     "          <Transform>",
     '            <xx value="1.0"/>',
