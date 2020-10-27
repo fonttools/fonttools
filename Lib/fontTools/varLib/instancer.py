@@ -1124,7 +1124,9 @@ def updateNameTable(varfont, axisLimits):
     """
     if "STAT" not in varfont:
         raise ValueError("Cannot update name table since there is no STAT table.")
-    stat = varfont["STAT"]
+    stat = varfont["STAT"].table
+    if not stat.AxisValueArray:
+        raise ValueError("Cannot update name table since there are no STAT Axis Values")
     fvar = varfont["fvar"]
 
     # The updated name table must reflect the new 'zero origin' of the font.
@@ -1139,7 +1141,7 @@ def updateNameTable(varfont, axisLimits):
     # To get the required Axis Values for the zero origin, we can simply
     # duplicate the STAT table and instantiate it using the axis coords we
     # created in the previous step.
-    stat_new = deepcopy(stat).table
+    stat_new = deepcopy(stat)
     _instantiateSTAT(stat_new, axisCoords)
     checkMissingAxisValues(stat_new, axisCoords)
 
@@ -1232,7 +1234,7 @@ def _updateNameRecords(varfont, axisValueTables):
             getName(n, *platEncLang).toUnicode() for n in ribbiNameIDs
         )
         typoSubFamilyName = " ".join(
-            getName(n, *platEncLang).toUnicode() for n in axisValueNameIDs
+            getName(n, *platEncLang).toUnicode() for n in axisValueNameIDs if nonRibbiNameIDs
         )
 
         # If neither subFamilyName and typographic SubFamilyName exist,
