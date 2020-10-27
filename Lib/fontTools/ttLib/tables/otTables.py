@@ -1753,7 +1753,10 @@ def _buildClasses():
 		if m:
 			# XxxFormatN subtable, we only add the "base" table
 			name = m.group(1)
-			formatType = table[0][0]  # can be 'uint16' or 'uint8'
+			# the first row of a format-switching otData table describes the Format;
+			# the first column defines the type of the Format field.
+			# Currently this can be either 'uint16' or 'uint8'.
+			formatType = table[0][0]
 			baseClass = getFormatSwitchingBaseTableClass(formatType)
 		if name not in namespace:
 			# the class doesn't exist yet, so the base implementation is used.

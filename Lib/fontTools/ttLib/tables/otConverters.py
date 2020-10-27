@@ -532,15 +532,7 @@ class Table(Struct):
 		return reader.readUShort()
 
 	def writeNullOffset(self, writer):
-		staticSize = self.staticSize
-		if staticSize == 4:
-			writer.writeULong(0)
-		elif staticSize == 2:
-			writer.writeUShort(0)
-		elif staticSize == 3:
-			writer.writeUInt24(0)
-		else:
-			raise AssertionError(self.staticSize)
+		writer.writeUShort(0)
 
 	def read(self, reader, font, tableDict):
 		offset = self.readOffset(reader)
@@ -573,6 +565,9 @@ class LTable(Table):
 	def readOffset(self, reader):
 		return reader.readULong()
 
+	def writeNullOffset(self, writer):
+		writer.writeULong(0)
+
 
 # Table pointed to by a 24-bit, 3-byte long offset
 class Table24(Table):
@@ -581,6 +576,9 @@ class Table24(Table):
 
 	def readOffset(self, reader):
 		return reader.readUInt24()
+
+	def writeNullOffset(self, writer):
+		writer.writeUInt24(0)
 
 
 # TODO Clean / merge the SubTable and SubStruct
