@@ -1146,7 +1146,7 @@ def updateNameTable(varfont, axisLimits):
     checkMissingAxisValues(stat_new, axisCoords)
 
     axisValueTables = stat_new.AxisValueArray.AxisValue
-    # Remove axis Values which have Elidable_AXIS_VALUE_NAME flag set
+    # Remove axis Values which have Elidable_AXIS_VALUE_NAME flag set.
     # Axis Values which have this flag enabled won't be visible in
     # application font menus.
     axisValueTables = [
@@ -1159,9 +1159,9 @@ def updateNameTable(varfont, axisLimits):
 
 def checkMissingAxisValues(stat, axisCoords):
     seen = set()
-    axisValueTables = stat.AxisValueArray.AxisValue
+    axisValues = stat.AxisValueArray.AxisValue
     designAxes = stat.DesignAxisRecord.Axis
-    for val in axisValueTables:
+    for val in axisValues:
         if val.Format == 4:
             for rec in val.AxisValueRecord:
                 axisTag = designAxes[rec.AxisIndex].AxisTag
@@ -1179,18 +1179,18 @@ def checkMissingAxisValues(stat, axisCoords):
 def _sortedAxisValues(stat, axisCoords):
     # Sort and remove duplicates ensuring that format 4 Axis Values
     # are dominant
-    axisValueTables = stat.AxisValueArray.AxisValue
+    axisValues = stat.AxisValueArray.AxisValue
     designAxes = stat.DesignAxisRecord.Axis
     results = []
     seenAxes = set()
     # Sort format 4 axes so the tables with the most AxisValueRecords
     # are first
     format4 = sorted(
-        [v for v in axisValueTables if v.Format == 4],
+        [v for v in axisValues if v.Format == 4],
         key=lambda v: len(v.AxisValueRecord),
         reverse=True,
     )
-    nonFormat4 = [v for v in axisValueTables if v not in format4]
+    nonFormat4 = [v for v in axisValues if v not in format4]
 
     for val in format4:
         axisIndexes = set(r.AxisIndex for r in val.AxisValueRecord)
@@ -1205,48 +1205,47 @@ def _sortedAxisValues(stat, axisCoords):
             seenAxes.add(axisIndex)
             results.append((axisIndex, val))
 
-    return [axisValueTable for _, axisValueTable in sorted(results)]
+    return [axisValue for _, axisValue in sorted(results)]
 
 
-def _updateNameRecords(varfont, axisValueTables):
+def _updateNameRecords(varfont, axisValues):
     # Update nametable based on the axisValues using the R/I/B/BI model.
     nametable = varfont["name"]
     stat = varfont["STAT"].table
 
-    axisValueNameIDs = [a.ValueNameID for a in axisValueTables]
-    ribbiNameIDs = [n for n in axisValueNameIDs if nameIdIsRibbi(nametable, n)]
+    axisValueNameIDs = [a.ValueNameID for a in axisValues]
+    ribbiNameIDs = [n for n in axisValueNameIDs if nameIDIsRibbi(nametable, n)]
     nonRibbiNameIDs = [n for n in axisValueNameIDs if n not in ribbiNameIDs]
     elidedNameID = stat.ElidedFallbackNameID
-    elidedNameIsRibbi = nameIdIsRibbi(nametable, elidedNameID)
+    elidedNameIsRibbi = nameIDIsRibbi(nametable, elidedNameID)
 
     getName = nametable.getName
-    nameTablePlatEncLangs = set(
-        (r.platformID, r.platEncID, r.langID) for r in nametable.names
-    )
-    for platEncLang in nameTablePlatEncLangs:
-
-        if not all(getName(i, *platEncLang) for i in (1,2, elidedNameID)):
+    platforms = set((r.platformID, r.platEncID, r.langID) for r in nametable.names)
+    for platform in platforms:
+        if not all(getName(i, *platform) for i in (1, 2, elidedNameID)):
             # Since no family name and subfamily name records were found,
             # we cannot update this set of name Records.
             continue
 
         subFamilyName = " ".join(
-            getName(n, *platEncLang).toUnicode() for n in ribbiNameIDs
+            getName(n, *platform).toUnicode() for n in ribbiNameIDs
         )
         typoSubFamilyName = " ".join(
-            getName(n, *platEncLang).toUnicode() for n in axisValueNameIDs if nonRibbiNameIDs
+            getName(n, *platform).toUnicode()
+            for n in axisValueNameIDs
+            if nonRibbiNameIDs
         )
 
         # If neither subFamilyName and typographic SubFamilyName exist,
         # we will use the STAT's elidedFallbackName
         if not typoSubFamilyName and not subFamilyName:
             if elidedNameIsRibbi:
-                subFamilyName = getName(elidedNameID, *platEncLang).toUnicode()
+                subFamilyName = getName(elidedNameID, *platform).toUnicode()
             else:
-                typoSubFamilyName = getName(elidedNameID, *platEncLang).toUnicode()
+                typoSubFamilyName = getName(elidedNameID, *platform).toUnicode()
 
         familyNameSuffix = " ".join(
-            getName(n, *platEncLang).toUnicode() for n in nonRibbiNameIDs
+            getName(n, *platform).toUnicode() for n in nonRibbiNameIDs
         )
 
         _updateNameTableStyleRecords(
@@ -1254,11 +1253,11 @@ def _updateNameRecords(varfont, axisValueTables):
             familyNameSuffix,
             subFamilyName,
             typoSubFamilyName,
-            *platEncLang,
+            *platform,
         )
 
 
-def nameIdIsRibbi(nametable, nameID):
+def nameIDIsRibbi(nametable, nameID):
     engNameRecords = any(
         r
         for r in nametable.names
@@ -1290,15 +1289,15 @@ def _updateNameTableStyleRecords(
     # TODO (Marc F) It may be nice to make this part a standalone
     # font renamer in the future.
     nametable = varfont["name"]
-    platEncLang = (platformID, platEncID, langID)
+    platform = (platformID, platEncID, langID)
 
     currentFamilyName = nametable.getName(
-        NameID.TYPOGRAPHIC_FAMILY_NAME, *platEncLang
-    ) or nametable.getName(NameID.FAMILY_NAME, *platEncLang)
+        NameID.TYPOGRAPHIC_FAMILY_NAME, *platform
+    ) or nametable.getName(NameID.FAMILY_NAME, *platform)
 
     currentStyleName = nametable.getName(
-        NameID.TYPOGRAPHIC_SUBFAMILY_NAME, *platEncLang
-    ) or nametable.getName(NameID.SUBFAMILY_NAME, *platEncLang)
+        NameID.TYPOGRAPHIC_SUBFAMILY_NAME, *platform
+    ) or nametable.getName(NameID.SUBFAMILY_NAME, *platform)
 
     currentFamilyName = currentFamilyName.toUnicode()
     currentStyleName = currentStyleName.toUnicode()
@@ -1316,7 +1315,7 @@ def _updateNameTableStyleRecords(
     else:
         for nameID in (
             NameID.TYPOGRAPHIC_FAMILY_NAME,
-            NameID.TYPOGRAPHIC_SUBFAMILY_NAME
+            NameID.TYPOGRAPHIC_SUBFAMILY_NAME,
         ):
             nametable.removeNames(nameID=nameID)
 
@@ -1333,18 +1332,18 @@ def _updateNameTableStyleRecords(
         NameID.POSTSCRIPT_NAME
     ] = f"{newFamilyName.replace(' ', '')}-{newStyleName.replace(' ', '')}"
     nameIDs[NameID.UNIQUE_FONT_IDENTIFIER] = _updateUniqueIdNameRecord(
-        varfont, nameIDs, platEncLang
+        varfont, nameIDs, platform
     )
 
     for nameID, string in nameIDs.items():
         if not string:
             continue
-        nametable.setName(string, nameID, *platEncLang)
+        nametable.setName(string, nameID, *platform)
 
 
-def _updateUniqueIdNameRecord(varfont, nameIDs, platEncLang):
+def _updateUniqueIdNameRecord(varfont, nameIDs, platform):
     nametable = varfont["name"]
-    currentRecord = nametable.getName(NameID.UNIQUE_FONT_IDENTIFIER, *platEncLang)
+    currentRecord = nametable.getName(NameID.UNIQUE_FONT_IDENTIFIER, *platform)
     if not currentRecord:
         return None
 
@@ -1355,7 +1354,7 @@ def _updateUniqueIdNameRecord(varfont, nameIDs, platEncLang):
 
     # Check if full name and postscript name are a substring of currentRecord
     for nameID in (4, 6):
-        nameRecord = nametable.getName(nameID, *platEncLang)
+        nameRecord = nametable.getName(nameID, *platform)
         if not nameRecord:
             continue
         if isSubString(currentRecord.toUnicode(), nameRecord.toUnicode()):
@@ -1363,14 +1362,14 @@ def _updateUniqueIdNameRecord(varfont, nameIDs, platEncLang):
                 nameRecord.toUnicode(), nameIDs[nameRecord.nameID]
             )
     # Create a new string since we couldn't find any substrings.
-    fontVersion = _fontVersion(varfont, platEncLang)
+    fontVersion = _fontVersion(varfont, platform)
     vendor = varfont["OS/2"].achVendID.strip()
     psName = nameIDs[NameID.POSTSCRIPT_NAME]
     return f"{fontVersion};{vendor};{psName}"
 
 
-def _fontVersion(font, platEncLang=(3, 1, 0x409)):
-    nameRecord = font["name"].getName(NameID.VERSION_STRING, *platEncLang)
+def _fontVersion(font, platform=(3, 1, 0x409)):
+    nameRecord = font["name"].getName(NameID.VERSION_STRING, *platform)
     if nameRecord is None:
         return f'{font["head"].fontRevision:.3f}'
     # "Version 1.101; ttfautohint (v1.8.1.43-b0c9)" --> "1.101"
