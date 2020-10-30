@@ -1588,12 +1588,12 @@ otData = [
 	]),
 
 	('Affine2x3', [
-		('VarFixed', 'xx', None, None, ''),
-		('VarFixed', 'xy', None, None, ''),
-		('VarFixed', 'yx', None, None, ''),
-		('VarFixed', 'yy', None, None, ''),
-		('VarFixed', 'dx', None, None, ''),
-		('VarFixed', 'dy', None, None, ''),
+		('VarFixed', 'xx', None, None, 'x-part of x basis vector'),
+		('VarFixed', 'yx', None, None, 'y-part of x basis vector'),
+		('VarFixed', 'xy', None, None, 'x-part of y basis vector'),
+		('VarFixed', 'yy', None, None, 'y-part of y basis vector'),
+		('VarFixed', 'dx', None, None, 'Translation in x direction'),
+		('VarFixed', 'dy', None, None, 'Translation in y direction'),
 	]),
 
 	('ColorIndex', [

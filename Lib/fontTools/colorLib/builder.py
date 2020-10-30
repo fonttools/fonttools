@@ -449,19 +449,21 @@ def buildPaintLinearGradient(
     return self
 
 
-def buildAffine2x3(
-    xx: _ScalarInput,
-    xy: _ScalarInput,
-    yx: _ScalarInput,
-    yy: _ScalarInput,
-    dx: _ScalarInput,
-    dy: _ScalarInput,
-) -> ot.Affine2x3:
+def buildAffine2x3(transform: _AffineTuple) -> ot.Affine2x3:
+    if len(transform) != 6:
+        raise ValueError(f"Expected 6-tuple of floats, found: {transform!}")
     self = ot.Affine2x3()
-    locs = locals()
-    for attr in ("xx", "xy", "yx", "yy", "dx", "dy"):
-        value = locs[attr]
-        setattr(self, attr, _to_variable_f16dot16_float(value))
+    # COLRv1 Affine2x3 uses the same column-major order to serialize a 2D
+    # Affine Transformation as the one used by fontTools.misc.transform.
+    # However, for historical reasons, the labels 'xy' and 'yx' are swapped.
+    # Their fundamental meaning is the same though.
+    # COLRv1 Affine2x3 follows the names found in FreeType and Cairo.
+    # In all case, the second element in the 6-tuple correspond to the
+    # y-part of the x basis vector, and the third to the x-part of the y
+    # basis vector.
+    # See https://github.com/googlefonts/colr-gradients-spec/pull/85
+    for i, attr in enumerate(("xx", "yx", "xy", "yy", "dx", "dy")):
+        setattr(self, attr, _to_variable_f16dot16_float(transform[i]))
     return self
 
 
@@ -517,7 +519,7 @@ def buildPaintTransform(transform: _AffineInput, paint: _PaintInput) -> ot.Paint
     self = ot.Paint()
     self.Format = int(ot.Paint.Format.PaintTransform)
     if not isinstance(transform, ot.Affine2x3):
-        transform = buildAffine2x3(*transform)
+        transform = buildAffine2x3(transform)
     self.Transform = transform
     self.Paint = buildPaint(paint)
     return self

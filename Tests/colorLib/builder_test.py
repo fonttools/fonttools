@@ -285,10 +285,10 @@ def test_buildColorLine():
 
 
 def test_buildAffine2x3():
-    matrix = builder.buildAffine2x3(1.5, 0, 0.5, 2.0, 1.0, -3.0)
+    matrix = builder.buildAffine2x3((1.5, 0, 0.5, 2.0, 1.0, -3.0))
     assert matrix.xx == builder.VariableFloat(1.5)
-    assert matrix.xy == builder.VariableFloat(0.0)
-    assert matrix.yx == builder.VariableFloat(0.5)
+    assert matrix.yx == builder.VariableFloat(0.0)
+    assert matrix.xy == builder.VariableFloat(0.5)
     assert matrix.yy == builder.VariableFloat(2.0)
     assert matrix.dx == builder.VariableFloat(1.0)
     assert matrix.dy == builder.VariableFloat(-3.0)
@@ -458,7 +458,7 @@ def test_buildPaintColrSlice():
 
 def test_buildPaintTransform():
     paint = builder.buildPaintTransform(
-        transform=builder.buildAffine2x3(1, 2, 3, 4, 5, 6),
+        transform=builder.buildAffine2x3((1, 2, 3, 4, 5, 6)),
         paint=builder.buildPaintGlyph(
             glyph="a",
             paint=builder.buildPaintSolid(paletteIndex=0, alpha=1.0),
@@ -467,8 +467,8 @@ def test_buildPaintTransform():
 
     assert paint.Format == ot.Paint.Format.PaintTransform
     assert paint.Transform.xx.value == 1.0
-    assert paint.Transform.xy.value == 2.0
-    assert paint.Transform.yx.value == 3.0
+    assert paint.Transform.yx.value == 2.0
+    assert paint.Transform.xy.value == 3.0
     assert paint.Transform.yy.value == 4.0
     assert paint.Transform.dx.value == 5.0
     assert paint.Transform.dy.value == 6.0
@@ -488,8 +488,8 @@ def test_buildPaintTransform():
 
     assert paint.Format == ot.Paint.Format.PaintTransform
     assert paint.Transform.xx.value == 1.0
-    assert paint.Transform.xy.value == 0.0
     assert paint.Transform.yx.value == 0.0
+    assert paint.Transform.xy.value == 0.0
     assert paint.Transform.yy.value == 0.3333
     assert paint.Transform.dx.value == 10
     assert paint.Transform.dy.value == 10
