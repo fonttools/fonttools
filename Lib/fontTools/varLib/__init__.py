@@ -220,6 +220,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 	assert "gvar" not in font
 	gvar = font["gvar"] = newTable('gvar')
 	glyf = font['glyf']
+	defaultMasterIndex = masterModel.reverseMapping[0]
 
 	# use hhea.ascent of base master as default vertical origin when vmtx is missing
 	baseAscent = font['hhea'].ascent
@@ -231,6 +232,15 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 			m["glyf"].getCoordinatesAndControls(glyph, m, defaultVerticalOrigin=baseAscent)
 			for m in master_ttfs
 		]
+
+		if allData[defaultMasterIndex][1].numberOfContours != 0:
+			# If the default master is not empty, interpret empty non-default masters
+			# as missing glyphs from a sparse master
+			allData = [
+				d if d is not None and d[1].numberOfContours != 0 else None
+				for d in allData
+			]
+
 		model, allData = masterModel.getSubModel(allData)
 
 		allCoords = [d[0] for d in allData]
