@@ -451,7 +451,7 @@ def buildPaintLinearGradient(
 
 def buildAffine2x3(transform: _AffineTuple) -> ot.Affine2x3:
     if len(transform) != 6:
-        raise ValueError(f"Expected 6-tuple of floats, found: {transform!}")
+        raise ValueError(f"Expected 6-tuple of floats, found: {transform!r}")
     self = ot.Affine2x3()
     # COLRv1 Affine2x3 uses the same column-major order to serialize a 2D
     # Affine Transformation as the one used by fontTools.misc.transform.
