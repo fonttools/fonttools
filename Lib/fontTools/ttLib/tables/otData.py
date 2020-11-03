@@ -1550,6 +1550,7 @@ otData = [
 		('LOffset', 'LayerRecordArray', None, None, 'Offset (from beginning of COLR table) to Layer Records.'),
 		('uint16', 'LayerRecordCount', None, None, 'Number of Layer Records.'),
 		('LOffset', 'BaseGlyphV1List', None, 'Version >= 1', 'Offset (from beginning of COLR table) to array of Version-1 Base Glyph records.'),
+		('LOffset', 'LayerV1List', None, 'Version >= 1', 'Offset (from beginning of COLR table) to LayerV1List.'),
 		('LOffset', 'VarStore', None, 'Version >= 1', 'Offset to variation store (may be NULL)'),
 	]),
 
@@ -1579,11 +1580,11 @@ otData = [
 
 	('BaseGlyphV1Record', [
 		('GlyphID', 'BaseGlyph', None, None, 'Glyph ID of reference glyph.'),
-		('LOffset', 'LayerV1List', None, None, 'Offset (from beginning of BaseGlyphV1List) to LayerV1List.'),
+		('LOffset', 'Paint', None, None, 'Offset (from beginning of BaseGlyphV1Record) to Paint, typically a PaintColrLayers.'),
 	]),
 
 	('LayerV1List', [
-		('uint8', 'LayerCount', None, None, 'Number of Version-1 Layers'),
+		('uint32', 'LayerCount', None, None, 'Number of Version-1 Layers'),
 		('LOffset', 'Paint', 'LayerCount', 0, 'Array of offsets to Paint tables, from the start of the LayerV1List table.'),
 	]),
 
@@ -1659,5 +1660,10 @@ otData = [
 		('LOffset24To(Paint)', 'SourcePaint', None, None, 'Offset (from beginning of PaintComposite table) to source Paint subtable.'),
 		('CompositeMode', 'CompositeMode', None, None, 'A CompositeMode enumeration value.'),
 		('LOffset24To(Paint)', 'BackdropPaint', None, None, 'Offset (from beginning of PaintComposite table) to backdrop Paint subtable.'),
+	]),
+	('PaintFormat8', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 8'),
+		('uint8', 'NumLayers', None, None, 'Number of offsets to Paint to read from LayerV1List.'),
+		('uint32', 'FirstLayerIndex', None, None, 'Index into LayerV1List.'),
 	]),
 ]

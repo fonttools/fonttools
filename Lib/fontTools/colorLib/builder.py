@@ -39,7 +39,7 @@ T = TypeVar("T")
 _Kwargs = Mapping[str, Any]
 _PaintInput = Union[int, _Kwargs, ot.Paint, Tuple[str, "_PaintInput"]]
 _PaintInputList = Sequence[_PaintInput]
-_ColorGlyphsDict = Dict[str, Union[_PaintInputList, ot.LayerV1List]]
+_ColorGlyphsDict = Dict[str, Union[_PaintInputList, _PaintInput]]
 _ColorGlyphsV0Dict = Dict[str, Sequence[Tuple[str, int]]]
 _Number = Union[int, float]
 _ScalarInput = Union[_Number, VariableValue, Tuple[_Number, int]]
@@ -55,7 +55,7 @@ _AffineTuple = Tuple[
 ]
 _AffineInput = Union[_AffineTuple, ot.Affine2x3]
 
-MAX_LAYER_V1_COUNT = 255
+MAX_PAINT_COLR_LAYER_COUNT = 255
 
 
 def populateCOLRv0(
@@ -571,12 +571,20 @@ def buildPaint(paint: _PaintInput) -> ot.Paint:
 def buildLayerV1List(layers: _PaintInputList) -> ot.LayerV1List:
     self = ot.LayerV1List()
     layerCount = len(layers)
-    if layerCount > MAX_LAYER_V1_COUNT:
-        raise OverflowError(
-            "LayerV1List.LayerCount: {layerCount} > {MAX_LAYER_V1_COUNT}"
-        )
     self.LayerCount = layerCount
     self.Paint = [buildPaint(layer) for layer in layers]
+    return self
+
+
+def buildPaintColrLayers(firstLayerIndex: int, numLayers: int) -> ot.Paint:
+    self = ot.Paint()
+    self.Format = int(ot.Paint.Format.PaintColrLayers)
+    if numLayers > MAX_PAINT_COLR_LAYER_COUNT:
+        raise OverflowError(
+            "PaintColrLayers.NumLayers: {numLayers} > {MAX_PAINT_COLR_LAYER_COUNT}"
+        )
+    self.NumLayers = numLayers
+    self.FirstLayerIndex = firstLayerIndex
     return self
 
 

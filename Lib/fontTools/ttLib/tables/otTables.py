@@ -1334,6 +1334,7 @@ class Paint(getFormatSwitchingBaseTableClass("uint8")):
 		PaintColrSlice = 5
 		PaintTransform = 6
 		PaintComposite = 7
+		PaintColrLayers = 8
 
 	def getFormatName(self):
 		try:
