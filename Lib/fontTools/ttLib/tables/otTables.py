@@ -1331,7 +1331,7 @@ class Paint(getFormatSwitchingBaseTableClass("uint8")):
 		PaintLinearGradient = 2
 		PaintRadialGradient = 3
 		PaintGlyph = 4
-		PaintColrSlice = 5
+		PaintColrGlyph = 5
 		PaintTransform = 6
 		PaintComposite = 7
 		PaintColrLayers = 8

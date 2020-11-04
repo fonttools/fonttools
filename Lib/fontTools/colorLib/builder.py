@@ -9,6 +9,7 @@ from functools import partial
 from typing import (
     Any,
     Dict,
+    Generator,
     Iterable,
     List,
     Mapping,
@@ -23,6 +24,7 @@ from fontTools.misc.fixedTools import fixedToFloat
 from fontTools.ttLib.tables import C_O_L_R_
 from fontTools.ttLib.tables import C_P_A_L_
 from fontTools.ttLib.tables import _n_a_m_e
+from fontTools.ttLib.tables.otBase import BaseTable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.ttLib.tables.otTables import (
     ExtendMode,
@@ -111,8 +113,8 @@ def buildCOLR(
 
     Args:
         colorGlyphs: map of base glyph name to, either list of (layer glyph name,
-            color palette index) tuples for COLRv0; or list of Paints (dicts)
-            for COLRv1.
+            color palette index) tuples for COLRv0; or a single Paint (dict) or
+            list of Paint for COLRv1.
         version: the version of COLR table. If None, the version is determined
             by the presence of COLRv1 paints or variation data (varStore), which
             require version 1; otherwise, if all base glyphs use only simple color
@@ -148,7 +150,8 @@ def buildCOLR(
         colr.BaseGlyphRecordArray = colr.LayerRecordArray = None
 
     if colorGlyphsV1:
-        colr.BaseGlyphV1List = buildBaseGlyphV1List(colorGlyphsV1, glyphMap)
+        colr.LayerV1List, colr.BaseGlyphV1List = buildColrV1(colorGlyphsV1, glyphMap)
+
 
     if version is None:
         version = 1 if (varStore or colorGlyphsV1) else 0
@@ -430,6 +433,111 @@ def _to_color_line(obj):
     raise TypeError(obj)
 
 
+_PAINT_BUILDERS = {
+    1: lambda _, kwargs: buildPaintSolid(**kwargs),
+    2: lambda _, kwargs: buildPaintLinearGradient(**kwargs),
+    3: lambda _, kwargs: buildPaintRadialGradient(**kwargs),
+    4: lambda builder, kwargs: buildPaintGlyph(builder, **kwargs),
+    5: lambda _, kwargs: buildPaintColrGlyph(**kwargs),
+    6: lambda builder, kwargs: buildPaintTransform(builder, **kwargs),
+    7: lambda builder, kwargs: buildPaintComposite(builder, **kwargs),
+}
+
+
+def _as_tuple(obj) -> Tuple[Any, ...]:
+    # start simple, who even cares about cyclic graphs or interesting field types
+    def _tuple_safe(value):
+        if isinstance(value, enum.Enum):
+            return value
+        elif hasattr(value, "__dict__"):
+            return tuple((k, _tuple_safe(v)) for k, v in value.__dict__.items())
+        elif isinstance(value, collections.abc.MutableSequence):
+            return tuple(_tuple_safe(e) for e in value)
+        return value
+    return tuple(_tuple_safe(obj))
+
+
+def _reuse_ranges(num_layers: int) -> Generator[Tuple[int, int], None, None]:
+    # TODO feels like something itertools might have already
+    for lbound in range(num_layers):
+        # TODO may want a max length to limit scope of search
+        # Reuse of very large #s of layers is relatively unlikely
+        # +2: we want sequences of at least 2
+        # otData handles single-record duplication
+        for ubound in range(lbound + 2, num_layers + 1):
+            yield (lbound, ubound)
+
+
+class LayerCollector:
+    Slices: List[ot.Paint]
+    Layers: List[ot.Paint]
+    ReusePool: Mapping[Tuple[Any, ...], int]
+
+    def __init__(self):
+        self.Slices = []
+        self.Layers = []
+        self.ReusePool = {}
+
+    def buildColrLayers(self, paints: List[_PaintInput]) -> ot.Paint:
+        paint = ot.Paint()
+        paint.Format = int(ot.Paint.Format.PaintColrLayers)
+        self.Slices.append(paint)
+
+        paints = [self.build(p) for p in paints]
+
+        # Look for reuse, with preference to longer sequences
+        found_reuse = True
+        while found_reuse:
+            found_reuse = False
+
+            ranges = sorted(_reuse_ranges(len(paints)),
+                key=lambda t: (t[1] - t[0], t[1], t[0]),
+                reverse=True)
+            for lbound, ubound in ranges:
+                reuse_lbound = self.ReusePool.get(_as_tuple(paints[lbound:ubound]), -1)
+                if reuse_lbound == -1:
+                    continue
+                found_reuse = True
+                new_slice = ot.Paint()
+                new_slice.Format = int(ot.Paint.Format.PaintColrLayers)
+                new_slice.NumLayers = ubound - lbound
+                new_slice.FirstLayerIndex = reuse_lbound
+                paints = paints[:lbound] + [new_slice] + paints[ubound:]
+
+        paint.NumLayers = len(paints)
+        paint.FirstLayerIndex = len(self.Layers)
+        self.Layers.extend(paints)
+
+        # Register our parts for reuse
+        for lbound, ubound in _reuse_ranges(len(paints)):
+            self.ReusePool[_as_tuple(paints[lbound:ubound])] = lbound + paint.FirstLayerIndex
+
+        return paint
+
+    def build(self, paint: _PaintInput) -> ot.Paint:
+        if isinstance(paint, ot.Paint):
+            return paint
+        elif isinstance(paint, int):
+            paletteIndex = paint
+            return buildPaintSolid(paletteIndex)
+        elif isinstance(paint, tuple):
+            layerGlyph, paint = paint
+            return buildPaintGlyph(self, layerGlyph, paint)
+        elif isinstance(paint, list):
+            # implicit PaintColrLayers
+            return self.buildColrLayers(paint)
+        elif isinstance(paint, collections.abc.Mapping):
+            kwargs = dict(paint)
+            fmt = kwargs.pop("format")
+            try:
+                return _PAINT_BUILDERS[fmt](self, kwargs)
+            except KeyError:
+                raise NotImplementedError(fmt)
+        raise TypeError(
+            f"expected int, Mapping or ot.Paint, found {type(paint).__name__}: {paint!r}"
+        )
+
+
 def buildPaintLinearGradient(
     colorLine: _ColorLineInput,
     p0: _PointTuple,
@@ -487,115 +595,50 @@ def buildPaintRadialGradient(
     return self
 
 
-def buildPaintGlyph(glyph: str, paint: _PaintInput) -> ot.Paint:
+def buildPaintGlyph(layerCollector: LayerCollector, glyph: str, paint: _PaintInput) -> ot.Paint:
     self = ot.Paint()
     self.Format = int(ot.Paint.Format.PaintGlyph)
     self.Glyph = glyph
-    self.Paint = buildPaint(paint)
+    self.Paint = layerCollector.build(paint)
     return self
 
 
-def buildPaintColrSlice(
-    glyph: str, firstLayerIndex: int = 0, lastLayerIndex: int = 255
+def buildPaintColrGlyph(
+    glyph: str
 ) -> ot.Paint:
     self = ot.Paint()
-    self.Format = int(ot.Paint.Format.PaintColrSlice)
+    self.Format = int(ot.Paint.Format.PaintColrGlyph)
     self.Glyph = glyph
-    if firstLayerIndex > lastLayerIndex:
-        raise ValueError(
-            f"Expected first <= last index, found: {firstLayerIndex} > {lastLayerIndex}"
-        )
-    for prefix in ("first", "last"):
-        indexName = f"{prefix}LayerIndex"
-        index = locals()[indexName]
-        if index < 0 or index > 255:
-            raise OverflowError(f"{indexName} ({index}) out of range [0..255]")
-    self.FirstLayerIndex = firstLayerIndex
-    self.LastLayerIndex = lastLayerIndex
     return self
 
 
-def buildPaintTransform(transform: _AffineInput, paint: _PaintInput) -> ot.Paint:
+def buildPaintTransform(layerCollector: LayerCollector, transform: _AffineInput, paint: _PaintInput) -> ot.Paint:
     self = ot.Paint()
     self.Format = int(ot.Paint.Format.PaintTransform)
     if not isinstance(transform, ot.Affine2x3):
         transform = buildAffine2x3(transform)
     self.Transform = transform
-    self.Paint = buildPaint(paint)
+    self.Paint = layerCollector.build(paint)
     return self
 
 
 def buildPaintComposite(
-    mode: _CompositeInput, source: _PaintInput, backdrop: _PaintInput
+    layerCollector: LayerCollector, mode: _CompositeInput, source: _PaintInput, backdrop: _PaintInput
 ):
     self = ot.Paint()
     self.Format = int(ot.Paint.Format.PaintComposite)
-    self.SourcePaint = buildPaint(source)
+    self.SourcePaint = layerCollector.build(source)
     self.CompositeMode = _to_composite_mode(mode)
-    self.BackdropPaint = buildPaint(backdrop)
-    return self
-
-
-_PAINT_BUILDERS = {
-    1: buildPaintSolid,
-    2: buildPaintLinearGradient,
-    3: buildPaintRadialGradient,
-    4: buildPaintGlyph,
-    5: buildPaintColrSlice,
-    6: buildPaintTransform,
-    7: buildPaintComposite,
-}
-
-
-def buildPaint(paint: _PaintInput) -> ot.Paint:
-    if isinstance(paint, ot.Paint):
-        return paint
-    elif isinstance(paint, int):
-        paletteIndex = paint
-        return buildPaintSolid(paletteIndex)
-    elif isinstance(paint, tuple):
-        layerGlyph, paint = paint
-        return buildPaintGlyph(layerGlyph, paint)
-    elif isinstance(paint, collections.abc.Mapping):
-        kwargs = dict(paint)
-        fmt = kwargs.pop("format")
-        try:
-            return _PAINT_BUILDERS[fmt](**kwargs)
-        except KeyError:
-            raise NotImplementedError(fmt)
-    raise TypeError(
-        f"expected int, Mapping or ot.Paint, found {type(paint).__name__}: {paint!r}"
-    )
-
-
-def buildLayerV1List(layers: _PaintInputList) -> ot.LayerV1List:
-    self = ot.LayerV1List()
-    layerCount = len(layers)
-    self.LayerCount = layerCount
-    self.Paint = [buildPaint(layer) for layer in layers]
-    return self
-
-
-def buildPaintColrLayers(firstLayerIndex: int, numLayers: int) -> ot.Paint:
-    self = ot.Paint()
-    self.Format = int(ot.Paint.Format.PaintColrLayers)
-    if numLayers > MAX_PAINT_COLR_LAYER_COUNT:
-        raise OverflowError(
-            "PaintColrLayers.NumLayers: {numLayers} > {MAX_PAINT_COLR_LAYER_COUNT}"
-        )
-    self.NumLayers = numLayers
-    self.FirstLayerIndex = firstLayerIndex
+    self.BackdropPaint = layerCollector.build(backdrop)
     return self
 
 
 def buildBaseGlyphV1Record(
-    baseGlyph: str, layers: Union[_PaintInputList, ot.LayerV1List]
+    baseGlyph: str, layerCollector: LayerCollector, paint: _PaintInput
 ) -> ot.BaseGlyphV1List:
     self = ot.BaseGlyphV1Record()
     self.BaseGlyph = baseGlyph
-    if not isinstance(layers, ot.LayerV1List):
-        layers = buildLayerV1List(layers)
-    self.LayerV1List = layers
+    self.Paint = layerCollector.build(paint)
     return self
 
 
@@ -606,10 +649,10 @@ def _format_glyph_errors(errors: Mapping[str, Exception]) -> str:
     return "\n".join(lines)
 
 
-def buildBaseGlyphV1List(
+def buildColrV1(
     colorGlyphs: _ColorGlyphsDict,
     glyphMap: Optional[Mapping[str, int]] = None,
-) -> ot.BaseGlyphV1List:
+) -> Tuple[ot.LayerV1List, ot.BaseGlyphV1List]:
     if glyphMap is not None:
         colorGlyphItems = sorted(
             colorGlyphs.items(), key=lambda item: glyphMap[item[0]]
@@ -618,10 +661,12 @@ def buildBaseGlyphV1List(
         colorGlyphItems = colorGlyphs.items()
 
     errors = {}
-    records = []
-    for baseGlyph, layers in colorGlyphItems:
+    baseGlyphs = []
+    layerCollector = LayerCollector()
+    for baseGlyph, paint in colorGlyphItems:
         try:
-            records.append(buildBaseGlyphV1Record(baseGlyph, layers))
+            baseGlyphs.append(buildBaseGlyphV1Record(baseGlyph, layerCollector, paint))
+
         except (ColorLibError, OverflowError, ValueError, TypeError) as e:
             errors[baseGlyph] = e
 
@@ -631,7 +676,10 @@ def buildBaseGlyphV1List(
         exc.errors = errors
         raise exc from next(iter(errors.values()))
 
-    self = ot.BaseGlyphV1List()
-    self.BaseGlyphCount = len(records)
-    self.BaseGlyphV1Record = records
-    return self
+    layers = ot.LayerV1List()
+    layers.LayerCount = len(layerCollector.Layers)
+    layers.Paint = layerCollector.Layers
+    glyphs = ot.BaseGlyphV1List()
+    glyphs.BaseGlyphCount = len(baseGlyphs)
+    glyphs.BaseGlyphV1Record = baseGlyphs
+    return (layers, glyphs)
