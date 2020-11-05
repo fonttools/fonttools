@@ -469,19 +469,19 @@ def _reuse_ranges(num_layers: int) -> Generator[Tuple[int, int], None, None]:
 
 
 class LayerCollector:
-    Slices: List[ot.Paint]
-    Layers: List[ot.Paint]
-    ReusePool: Mapping[Tuple[Any, ...], int]
+    slices: List[ot.Paint]
+    layers: List[ot.Paint]
+    reusePool: Mapping[Tuple[Any, ...], int]
 
     def __init__(self):
-        self.Slices = []
-        self.Layers = []
-        self.ReusePool = {}
+        self.slices = []
+        self.layers = []
+        self.reusePool = {}
 
     def buildColrLayers(self, paints: List[_PaintInput]) -> ot.Paint:
         paint = ot.Paint()
         paint.Format = int(ot.Paint.Format.PaintColrLayers)
-        self.Slices.append(paint)
+        self.slices.append(paint)
 
         paints = [self.build(p) for p in paints]
 
@@ -494,7 +494,7 @@ class LayerCollector:
                 key=lambda t: (t[1] - t[0], t[1], t[0]),
                 reverse=True)
             for lbound, ubound in ranges:
-                reuse_lbound = self.ReusePool.get(_as_tuple(paints[lbound:ubound]), -1)
+                reuse_lbound = self.reusePool.get(_as_tuple(paints[lbound:ubound]), -1)
                 if reuse_lbound == -1:
                     continue
                 found_reuse = True
@@ -505,12 +505,12 @@ class LayerCollector:
                 paints = paints[:lbound] + [new_slice] + paints[ubound:]
 
         paint.NumLayers = len(paints)
-        paint.FirstLayerIndex = len(self.Layers)
-        self.Layers.extend(paints)
+        paint.FirstLayerIndex = len(self.layers)
+        self.layers.extend(paints)
 
         # Register our parts for reuse
         for lbound, ubound in _reuse_ranges(len(paints)):
-            self.ReusePool[_as_tuple(paints[lbound:ubound])] = lbound + paint.FirstLayerIndex
+            self.reusePool[_as_tuple(paints[lbound:ubound])] = lbound + paint.FirstLayerIndex
 
         return paint
 
@@ -677,8 +677,8 @@ def buildColrV1(
         raise exc from next(iter(errors.values()))
 
     layers = ot.LayerV1List()
-    layers.LayerCount = len(layerCollector.Layers)
-    layers.Paint = layerCollector.Layers
+    layers.LayerCount = len(layerCollector.layers)
+    layers.Paint = layerCollector.layers
     glyphs = ot.BaseGlyphV1List()
     glyphs.BaseGlyphCount = len(baseGlyphs)
     glyphs.BaseGlyphV1Record = baseGlyphs
