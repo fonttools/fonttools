@@ -643,7 +643,7 @@ def assertNoV0Content(colr):
 
 
 def test_build_layerv1list_empty():
-    # Nobody uses PaintColorLayers (format 8), no layerlist
+    # Nobody uses PaintColrLayers (format 8), no layerlist
     colr = builder.buildCOLR(
         {
             "a": {
@@ -651,7 +651,8 @@ def test_build_layerv1list_empty():
                 "paint": {"format": 1, "paletteIndex": 2, "alpha": 0.8},
                 "glyph": "b",
             },
-            "b": {
+            # A list of 1 shouldn't become a PaintColrLayers
+            "b": [{
                 "format": 4, # PaintGlyph
                 "paint":  {
                     "format": 2,
@@ -664,7 +665,7 @@ def test_build_layerv1list_empty():
                     "p2": (2, 2),
                 },
                 "glyph": "bb",
-            },
+            }],
         }
     )
 
@@ -836,7 +837,7 @@ class BuildCOLRTest(object):
                             "p1": (3, 4),
                             "p2": (2, 2),
                         },
-                    )
+                    ),
                 ],
             }
         )
@@ -860,7 +861,8 @@ class BuildCOLRTest(object):
                             "p1": (3, 4),
                             "p2": (2, 2),
                         },
-                    )
+                    ),
+                    ("f", {"format": 1, "paletteIndex": 2, "alpha": 0.8}),
                 ],
             }
         )

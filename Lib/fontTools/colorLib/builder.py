@@ -524,8 +524,13 @@ class LayerCollector:
             layerGlyph, paint = paint
             return buildPaintGlyph(self, layerGlyph, paint)
         elif isinstance(paint, list):
-            # implicit PaintColrLayers
-            return self.buildColrLayers(paint)
+            # implicit PaintColrLayers for a list of > 1
+            if len(paint) == 0:
+                raise ValueError("An empty list is hard to paint")
+            elif len(paint) == 1:
+                return self.build(paint[0])
+            else:
+                return self.buildColrLayers(paint)
         elif isinstance(paint, collections.abc.Mapping):
             kwargs = dict(paint)
             fmt = kwargs.pop("format")
