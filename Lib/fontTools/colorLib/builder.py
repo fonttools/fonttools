@@ -539,7 +539,7 @@ class LayerCollector:
             except KeyError:
                 raise NotImplementedError(fmt)
         raise TypeError(
-            f"expected int, Mapping or ot.Paint, found {type(paint).__name__}: {paint!r}"
+            f"Not sure what to do with {type(paint).__name__}: {paint!r}"
         )
 
 
