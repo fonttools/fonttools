@@ -690,6 +690,7 @@ def _paint_names(paints) -> List[str]:
             result.append(f"Layers[{paint.FirstLayerIndex}:{paint.FirstLayerIndex+paint.NumLayers}]")
     return result
 
+
 def test_build_layerv1list_simple():
     # Two colr glyphs, each with two layers the first of which is common
     # All layers use the same solid paint
@@ -790,11 +791,40 @@ def test_build_layerv1list_with_sharing():
     assert len(baseGlyphs) == 3
     assert (_paint_names([b.Paint for b in baseGlyphs]) ==
         ["Layers[0:3]", "Layers[3:6]", "Layers[6:8]"])
-    assert _paint_names([baseGlyphs[0].Paint]), ["Layers[0:4]"]
-    assert _paint_names([baseGlyphs[0].Paint]), ["Layers[0:4]"]
     assert (_paint_names(colr.table.LayerV1List.Paint) ==
             ["back1", "back2", "a_fore", "b_back", "Layers[0:2]", "b_fore", "c_back", "Layers[0:2]"])
     assert colr.table.LayerV1List.LayerCount == 8
+
+def test_build_layerv1list_with_overlaps():
+    paints = [
+        {
+            "format": 4, # PaintGlyph
+            "paint": {"format": 1, "paletteIndex": 2, "alpha": 0.8},
+            "glyph": c,
+        }
+        for c in "abcdefghi"
+    ]
+
+    # list => PaintColrLayers, which means contents should be in LayerV1List
+    colr = builder.buildCOLR(
+        {
+            "a": paints[0:4],
+            "b": paints[0:6],
+            "c": paints[2:8],
+        }
+    )
+
+    assertIsColrV1(colr)
+    assertNoV0Content(colr)
+
+    baseGlyphs = colr.table.BaseGlyphV1List.BaseGlyphV1Record
+    #assert colr.table.BaseGlyphV1List.BaseGlyphCount == 2
+
+    assert (_paint_names(colr.table.LayerV1List.Paint) ==
+            ["a", "b", "c", "d", "Layers[0:4]", "e", "f", "Layers[2:4]", "Layers[5:7]", "g", "h"])
+    assert (_paint_names([b.Paint for b in baseGlyphs]) ==
+        ["Layers[0:4]", "Layers[4:7]", "Layers[7:11]"])
+    assert colr.table.LayerV1List.LayerCount == 11
 
 class BuildCOLRTest(object):
     def test_automatic_version_all_solid_color_glyphs(self):

@@ -497,12 +497,13 @@ class LayerCollector:
                 reuse_lbound = self.reusePool.get(_as_tuple(paints[lbound:ubound]), -1)
                 if reuse_lbound == -1:
                     continue
-                found_reuse = True
                 new_slice = ot.Paint()
                 new_slice.Format = int(ot.Paint.Format.PaintColrLayers)
                 new_slice.NumLayers = ubound - lbound
                 new_slice.FirstLayerIndex = reuse_lbound
                 paints = paints[:lbound] + [new_slice] + paints[ubound:]
+                found_reuse = True
+                break
 
         paint.NumLayers = len(paints)
         paint.FirstLayerIndex = len(self.layers)
