@@ -1327,14 +1327,14 @@ class CompositeMode(IntEnum):
 class Paint(getFormatSwitchingBaseTableClass("uint8")):
 
 	class Format(IntEnum):
-		PaintSolid = 1
-		PaintLinearGradient = 2
-		PaintRadialGradient = 3
-		PaintGlyph = 4
-		PaintColrGlyph = 5
-		PaintTransform = 6
-		PaintComposite = 7
-		PaintColrLayers = 8
+		PaintColrLayers = 1
+		PaintSolid = 2
+		PaintLinearGradient = 3
+		PaintRadialGradient = 4
+		PaintGlyph = 5
+		PaintColrGlyph = 6
+		PaintTransform = 7
+		PaintComposite = 8
 
 	def getFormatName(self):
 		try:
