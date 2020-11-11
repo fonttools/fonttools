@@ -1550,6 +1550,7 @@ otData = [
 		('LOffset', 'LayerRecordArray', None, None, 'Offset (from beginning of COLR table) to Layer Records.'),
 		('uint16', 'LayerRecordCount', None, None, 'Number of Layer Records.'),
 		('LOffset', 'BaseGlyphV1List', None, 'Version >= 1', 'Offset (from beginning of COLR table) to array of Version-1 Base Glyph records.'),
+		('LOffset', 'LayerV1List', None, 'Version >= 1', 'Offset (from beginning of COLR table) to LayerV1List.'),
 		('LOffset', 'VarStore', None, 'Version >= 1', 'Offset to variation store (may be NULL)'),
 	]),
 
@@ -1579,24 +1580,21 @@ otData = [
 
 	('BaseGlyphV1Record', [
 		('GlyphID', 'BaseGlyph', None, None, 'Glyph ID of reference glyph.'),
-		('LOffset', 'LayerV1List', None, None, 'Offset (from beginning of BaseGlyphV1List) to LayerV1List.'),
+		('LOffset', 'Paint', None, None, 'Offset (from beginning of BaseGlyphV1Record) to Paint, typically a PaintColrLayers.'),
 	]),
 
 	('LayerV1List', [
-		('uint32', 'LayerCount', None, None, 'Number of Version-1 Layer records'),
-		('struct', 'LayerV1Record', 'LayerCount', 0, 'Array of Version-1 Layer records'),
+		('uint32', 'LayerCount', None, None, 'Number of Version-1 Layers'),
+		('LOffset', 'Paint', 'LayerCount', 0, 'Array of offsets to Paint tables, from the start of the LayerV1List table.'),
 	]),
 
-	('LayerV1Record', [
-		('GlyphID', 'LayerGlyph', None, None, 'Glyph ID of layer glyph (must be in z-order from bottom to top).'),
-		('LOffset', 'Paint', None, None, 'Offset (from beginning of LayerV1List) to Paint subtable.'),
-	]),
-
-	('Affine2x2', [
-		('VarFixed', 'xx', None, None, ''),
-		('VarFixed', 'xy', None, None, ''),
-		('VarFixed', 'yx', None, None, ''),
-		('VarFixed', 'yy', None, None, ''),
+	('Affine2x3', [
+		('VarFixed', 'xx', None, None, 'x-part of x basis vector'),
+		('VarFixed', 'yx', None, None, 'y-part of x basis vector'),
+		('VarFixed', 'xy', None, None, 'x-part of y basis vector'),
+		('VarFixed', 'yy', None, None, 'y-part of y basis vector'),
+		('VarFixed', 'dx', None, None, 'Translation in x direction'),
+		('VarFixed', 'dy', None, None, 'Translation in y direction'),
 	]),
 
 	('ColorIndex', [
@@ -1616,13 +1614,19 @@ otData = [
 	]),
 
 	('PaintFormat1', [
-		('uint16', 'PaintFormat', None, None, 'Format identifier-format = 1'),
-		('ColorIndex', 'Color', None, None, 'A solid color paint.'),
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 1'),
+		('uint8', 'NumLayers', None, None, 'Number of offsets to Paint to read from LayerV1List.'),
+		('uint32', 'FirstLayerIndex', None, None, 'Index into LayerV1List.'),
 	]),
 
 	('PaintFormat2', [
-		('uint16', 'PaintFormat', None, None, 'Format identifier-format = 2'),
-		('LOffset', 'ColorLine', None, None, 'Offset (from beginning of Paint table) to ColorLine subtable.'),
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 2'),
+		('ColorIndex', 'Color', None, None, 'A solid color paint.'),
+	]),
+
+	('PaintFormat3', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 3'),
+		('Offset24', 'ColorLine', None, None, 'Offset (from beginning of Paint table) to ColorLine subtable.'),
 		('VarInt16', 'x0', None, None, ''),
 		('VarInt16', 'y0', None, None, ''),
 		('VarInt16', 'x1', None, None, ''),
@@ -1631,15 +1635,38 @@ otData = [
 		('VarInt16', 'y2', None, None, ''),
 	]),
 
-	('PaintFormat3', [
-		('uint16', 'PaintFormat', None, None, 'Format identifier-format = 3'),
-		('LOffset', 'ColorLine', None, None, 'Offset (from beginning of Paint table) to ColorLine subtable.'),
+	('PaintFormat4', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 4'),
+		('Offset24', 'ColorLine', None, None, 'Offset (from beginning of Paint table) to ColorLine subtable.'),
 		('VarInt16', 'x0', None, None, ''),
 		('VarInt16', 'y0', None, None, ''),
 		('VarUInt16', 'r0', None, None, ''),
 		('VarInt16', 'x1', None, None, ''),
 		('VarInt16', 'y1', None, None, ''),
 		('VarUInt16', 'r1', None, None, ''),
-		('LOffsetTo(Affine2x2)', 'Transform', None, None, 'Offset (from beginning of Paint table) to Affine2x2 subtable.'),
+	]),
+
+	('PaintFormat5', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 5'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintGlyph table) to Paint subtable.'),
+		('GlyphID', 'Glyph', None, None, 'Glyph ID for the source outline.'),
+	]),
+
+	('PaintFormat6', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 6'),
+		('GlyphID', 'Glyph', None, None, 'Virtual glyph ID for a BaseGlyphV1List base glyph.'),
+	]),
+
+	('PaintFormat7', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 7'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintTransformed table) to Paint subtable.'),
+		('Affine2x3', 'Transform', None, None, 'Offset (from beginning of PaintTrasformed table) to Affine2x3 subtable.'),
+	]),
+
+	('PaintFormat8', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 8'),
+		('LOffset24To(Paint)', 'SourcePaint', None, None, 'Offset (from beginning of PaintComposite table) to source Paint subtable.'),
+		('CompositeMode', 'CompositeMode', None, None, 'A CompositeMode enumeration value.'),
+		('LOffset24To(Paint)', 'BackdropPaint', None, None, 'Offset (from beginning of PaintComposite table) to backdrop Paint subtable.'),
 	]),
 ]

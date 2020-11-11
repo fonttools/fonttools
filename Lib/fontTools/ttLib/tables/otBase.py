@@ -208,13 +208,23 @@ class OTTableWriter(object):
 
 	"""Helper class to gather and assemble data for OpenType tables."""
 
-	def __init__(self, localState=None, tableTag=None):
+	def __init__(self, localState=None, tableTag=None, offsetSize=2):
 		self.items = []
 		self.pos = None
 		self.localState = localState
 		self.tableTag = tableTag
-		self.longOffset = False
+		self.offsetSize = offsetSize
 		self.parent = None
+
+	# DEPRECATED: 'longOffset' is kept as a property for backward compat with old code.
+	# You should use 'offsetSize' instead (2, 3 or 4 bytes).
+	@property
+	def longOffset(self):
+		return self.offsetSize == 4
+
+	@longOffset.setter
+	def longOffset(self, value):
+		self.offsetSize = 4 if value else 2
 
 	def __setitem__(self, name, value):
 		state = self.localState.copy() if self.localState else dict()
@@ -236,7 +246,7 @@ class OTTableWriter(object):
 			if hasattr(item, "getCountData"):
 				l += item.size
 			elif hasattr(item, "getData"):
-				l += 4 if item.longOffset else 2
+				l += item.offsetSize
 			else:
 				l = l + len(item)
 		return l
@@ -250,9 +260,9 @@ class OTTableWriter(object):
 			item = items[i]
 
 			if hasattr(item, "getData"):
-				if item.longOffset:
+				if item.offsetSize == 4:
 					items[i] = packULong(item.pos - pos)
-				else:
+				elif item.offsetSize == 2:
 					try:
 						items[i] = packUShort(item.pos - pos)
 					except struct.error:
@@ -260,6 +270,10 @@ class OTTableWriter(object):
 						overflowErrorRecord = self.getOverflowErrorRecord(item)
 
 						raise OTLOffsetOverflowError(overflowErrorRecord)
+				elif item.offsetSize == 3:
+					items[i] = packUInt24(item.pos - pos)
+				else:
+					raise ValueError(item.offsetSize)
 
 		return bytesjoin(items)
 
@@ -274,7 +288,7 @@ class OTTableWriter(object):
 	def __eq__(self, other):
 		if type(self) != type(other):
 			return NotImplemented
-		return self.longOffset == other.longOffset and self.items == other.items
+		return self.offsetSize == other.offsetSize and self.items == other.items
 
 	def _doneWriting(self, internedTables):
 		# Convert CountData references to data string items
@@ -395,8 +409,8 @@ class OTTableWriter(object):
 
 	# interface for gathering data, as used by table.compile()
 
-	def getSubWriter(self):
-		subwriter = self.__class__(self.localState, self.tableTag)
+	def getSubWriter(self, offsetSize=2):
+		subwriter = self.__class__(self.localState, self.tableTag, offsetSize=offsetSize)
 		subwriter.parent = self # because some subtables have idential values, we discard
 					# the duplicates under the getAllData method. Hence some
 					# subtable writers can have more than one parent writer.
@@ -519,6 +533,10 @@ def packUShort(value):
 def packULong(value):
 	assert 0 <= value < 0x100000000, value
 	return struct.pack(">L", value)
+
+def packUInt24(value):
+	assert 0 <= value < 0x1000000, value
+	return struct.pack(">L", value)[1:]
 
 
 class BaseTable(object):
@@ -809,6 +827,26 @@ class FormatSwitchingBaseTable(BaseTable):
 
 	def toXML(self, xmlWriter, font, attrs=None, name=None):
 		BaseTable.toXML(self, xmlWriter, font, attrs, name)
+
+
+class UInt8FormatSwitchingBaseTable(FormatSwitchingBaseTable):
+	def readFormat(self, reader):
+		self.Format = reader.readUInt8()
+
+	def writeFormat(self, writer):
+		writer.writeUInt8(self.Format)
+
+
+formatSwitchingBaseTables = {
+	"uint16": FormatSwitchingBaseTable,
+	"uint8": UInt8FormatSwitchingBaseTable,
+}
+
+def getFormatSwitchingBaseTableClass(formatType):
+	try:
+		return formatSwitchingBaseTables[formatType]
+	except KeyError:
+		raise TypeError(f"Unsupported format type: {formatType!r}")
 
 
 #

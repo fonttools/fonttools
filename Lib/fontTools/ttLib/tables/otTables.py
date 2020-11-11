@@ -11,7 +11,10 @@ from collections import namedtuple
 from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
 from fontTools.misc.textTools import pad, safeEval
-from .otBase import BaseTable, FormatSwitchingBaseTable, ValueRecord, CountReference
+from .otBase import (
+	BaseTable, FormatSwitchingBaseTable, ValueRecord, CountReference,
+	getFormatSwitchingBaseTableClass,
+)
 from fontTools.feaLib.lookupDebugInfo import LookupDebugInfo, LOOKUP_DEBUG_INFO_KEY
 import logging
 import struct
@@ -1289,6 +1292,69 @@ class ExtendMode(IntEnum):
 	REFLECT = 2
 
 
+# Porter-Duff modes for COLRv1 PaintComposite:
+# https://github.com/googlefonts/colr-gradients-spec/tree/off_sub_1#compositemode-enumeration
+class CompositeMode(IntEnum):
+	CLEAR = 0
+	SRC = 1
+	DEST = 2
+	SRC_OVER = 3
+	DEST_OVER = 4
+	SRC_IN = 5
+	DEST_IN = 6
+	SRC_OUT = 7
+	DEST_OUT = 8
+	SRC_ATOP = 9
+	DEST_ATOP = 10
+	XOR = 11
+	SCREEN = 12
+	OVERLAY = 13
+	DARKEN = 14
+	LIGHTEN = 15
+	COLOR_DODGE = 16
+	COLOR_BURN = 17
+	HARD_LIGHT = 18
+	SOFT_LIGHT = 19
+	DIFFERENCE = 20
+	EXCLUSION = 21
+	MULTIPLY = 22
+	HSL_HUE = 23
+	HSL_SATURATION = 24
+	HSL_COLOR = 25
+	HSL_LUMINOSITY = 26
+
+
+class Paint(getFormatSwitchingBaseTableClass("uint8")):
+
+	class Format(IntEnum):
+		PaintColrLayers = 1
+		PaintSolid = 2
+		PaintLinearGradient = 3
+		PaintRadialGradient = 4
+		PaintGlyph = 5
+		PaintColrGlyph = 6
+		PaintTransform = 7
+		PaintComposite = 8
+
+	def getFormatName(self):
+		try:
+			return self.__class__.Format(self.Format).name
+		except ValueError:
+			raise NotImplementedError(f"Unknown Paint format: {self.Format}")
+
+	def toXML(self, xmlWriter, font, attrs=None, name=None):
+		tableName = name if name else self.__class__.__name__
+		if attrs is None:
+			attrs = []
+		attrs.append(("Format", self.Format))
+		xmlWriter.begintag(tableName, attrs)
+		xmlWriter.comment(self.getFormatName())
+		xmlWriter.newline()
+		self.toXML2(xmlWriter, font)
+		xmlWriter.endtag(tableName)
+		xmlWriter.newline()
+
+
 # For each subtable format there is a class. However, we don't really distinguish
 # between "field name" and "format name": often these are the same. Yet there's
 # a whole bunch of fields with different names. The following dict is a mapping
@@ -1688,7 +1754,11 @@ def _buildClasses():
 		if m:
 			# XxxFormatN subtable, we only add the "base" table
 			name = m.group(1)
-			baseClass = FormatSwitchingBaseTable
+			# the first row of a format-switching otData table describes the Format;
+			# the first column defines the type of the Format field.
+			# Currently this can be either 'uint16' or 'uint8'.
+			formatType = table[0][0]
+			baseClass = getFormatSwitchingBaseTableClass(formatType)
 		if name not in namespace:
 			# the class doesn't exist yet, so the base implementation is used.
 			cls = type(name, (baseClass,), {})
