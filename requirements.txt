@@ -3,10 +3,10 @@
 brotli==1.0.9; platform_python_implementation != "PyPy"
 brotlipy==0.7.0; platform_python_implementation == "PyPy"
 unicodedata2==13.0.0.post2; python_version < '3.9' and platform_python_implementation != "PyPy"
-scipy==1.5.2; platform_python_implementation != "PyPy"
-munkres==1.1.2; platform_python_implementation == "PyPy"
+scipy==1.5.4; platform_python_implementation != "PyPy"
+munkres==1.1.4; platform_python_implementation == "PyPy"
 zopfli==0.1.6
 fs==2.4.11
-skia-pathops==0.5.0; platform_python_implementation != "PyPy"
+skia-pathops==0.5.1.post1; platform_python_implementation != "PyPy"
 # this is only required to run Tests/cu2qu/{ufo,cli}_test.py
 ufoLib2==0.6.2
