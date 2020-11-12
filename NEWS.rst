@@ -1,3 +1,6 @@
+4.17.0 (released 2020-11-12)
+----------------------------
+
 - [colorLib/otData] Updated to latest draft ``COLR`` v1 spec (#2092).
 - [svgLib] Fixed parsing error when arc commands' boolean flags are not separated
   by space or comma (#2094).
