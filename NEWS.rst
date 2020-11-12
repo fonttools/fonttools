@@ -1,3 +1,12 @@
+- [colorLib/otData] Updated to latest draft ``COLR`` v1 spec (#2092).
+- [svgLib] Fixed parsing error when arc commands' boolean flags are not separated
+  by space or comma (#2094).
+- [varLib] Interpret empty non-default glyphs as 'missing', if the default glyph is
+  not empty (#2082).
+- [feaLib.builder] Only stash lookup location for ``Debg`` if ``Builder.buildLookups_``
+  has cooperated (#2065, #2067).
+- [varLib] Fixed bug in VarStore optimizer (#2073, #2083).
+- [varLib] Add designspace lib key for custom feavar feature tag (#2080).
 - Add HashPointPen adapted from psautohint. With this pen, a hash value of a glyph
   can be computed, which can later be used to detect glyph changes (#2005).
 
