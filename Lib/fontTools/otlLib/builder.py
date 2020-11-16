@@ -2,10 +2,16 @@ from collections import namedtuple, OrderedDict
 from fontTools.misc.fixedTools import fixedToFloat
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot
-from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
+from fontTools.ttLib.tables.otBase import (
+    ValueRecord,
+    valueRecordFormatDict,
+    OTTableWriter,
+    CountReference,
+)
 from fontTools.ttLib.tables import otBase
 from fontTools.otlLib.error import OpenTypeLibError
 import logging
+import copy
 
 
 log = logging.getLogger(__name__)
@@ -329,6 +335,17 @@ class ChainContextualBuilder(LookupBuilder):
             ruleset[-1].addRule(rule)
         # Squish any empty subtables
         return [x for x in ruleset if len(x.rules) > 0]
+
+    def getCompiledSize_(self, subtables):
+        size = 0
+        for st in subtables:
+            w = OTTableWriter()
+            w["LookupType"] = CountReference(
+                {"LookupType": st.LookupType}, "LookupType"
+            )
+            copy.deepcopy(st).compile(w, self.font)
+            size += len(w.getAllData())
+        return size
 
     def build(self):
         """Build the lookup.
