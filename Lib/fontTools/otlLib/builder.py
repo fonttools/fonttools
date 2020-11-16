@@ -348,6 +348,76 @@ class ChainContextualBuilder(LookupBuilder):
         # buildLookup_
         return self.buildLookup_(subtables)
 
+    def buildFormat2Subtable(self, ruleset, classdefs, chaining=True):
+        st = self.newSubtable_(chaining=chaining)
+        st.Format = 2
+        st.populateDefaults()
+
+        if chaining:
+            (
+                st.BacktrackClassDef,
+                st.InputClassDef,
+                st.LookAheadClassDef,
+            ) = [c.build() for c in classdefs]
+        else:
+            st.ClassDef = classdefs[1].build()
+
+        inClasses = classdefs[1].classes()
+
+        classSets = []
+        for _ in inClasses:
+            classSet = self.newRuleSet_(format=2, chaining=chaining)
+            classSet.populateDefaults()
+            classSets.append(classSet)
+
+        coverage = set()
+        classRuleAttr = self.ruleAttr_(format=2, chaining=chaining)
+
+        for rule in ruleset.rules:
+            rule_table = self.newRule_(format=2, chaining=chaining)
+            if chaining:
+                rule_table.BacktrackGlyphCount = len(rule.prefix)
+                rule_table.LookAheadGlyphCount = len(rule.suffix)
+                rule_table.Backtrack = [
+                    st.BacktrackClassDef.classDefs[list(x)[0]]
+                    for x in reversed(rule.prefix)
+                ]
+                rule_table.LookAhead = [
+                    st.LookAheadClassDef.classDefs[list(x)[0]] for x in rule.suffix
+                ]
+
+                rule_table.InputGlyphCount = len(rule.glyphs)
+                rule_table.Input = [
+                    st.InputClassDef.classDefs[list(x)[0]] for x in rule.glyphs[1:]
+                ]
+                setForThisRule = classSets[
+                    st.InputClassDef.classDefs[list(rule.glyphs[0])[0]]
+                ]
+            else:
+                rule_table.GlyphCount = len(rule.glyphs)
+                rule_table.Class = [  # The spec calls this InputSequence
+                    st.ClassDef.classDefs[list(x)[0]] for x in rule.glyphs[1:]
+                ]
+                setForThisRule = classSets[
+                    st.ClassDef.classDefs[list(rule.glyphs[0])[0]]
+                ]
+
+            self.buildLookupList(rule, rule_table)
+            coverage |= set(rule.glyphs[0])
+
+            getattr(setForThisRule, classRuleAttr).append(rule_table)
+            setattr(
+                setForThisRule,
+                f"{classRuleAttr}Count",
+                getattr(setForThisRule, f"{classRuleAttr}Count") + 1,
+            )
+        setattr(st, self.ruleSetAttr_(format=2, chaining=chaining), classSets)
+        setattr(
+            st, self.ruleSetAttr_(format=2, chaining=chaining) + "Count", len(classSets)
+        )
+        st.Coverage = buildCoverage(coverage, self.glyphMap)
+        return st
+
     def buildFormat3Subtable(self, rule, chaining=True):
         st = self.newSubtable_(chaining=chaining)
         st.Format = 3
