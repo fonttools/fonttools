@@ -296,13 +296,26 @@ def buildCPAL(
 _DEFAULT_ALPHA = VariableFloat(1.0)
 
 
+def _is_colrv0_layer(layer: Any) -> bool:
+    # Consider as COLRv0 layer any sequence of length 2 (be it tuple or list) in which
+    # the first element is a str (the layerGlyph) and the second element is an int
+    # (CPAL paletteIndex).
+    # https://github.com/googlefonts/ufo2ft/issues/426
+    try:
+        layerGlyph, paletteIndex = layer
+    except (TypeError, ValueError):
+        return False
+    else:
+        return isinstance(layerGlyph, str) and isinstance(paletteIndex, int)
+
+
 def _split_color_glyphs_by_version(
     colorGlyphs: _ColorGlyphsDict,
 ) -> Tuple[_ColorGlyphsV0Dict, _ColorGlyphsDict]:
     colorGlyphsV0 = {}
     colorGlyphsV1 = {}
     for baseGlyph, layers in colorGlyphs.items():
-        if all(isinstance(l, tuple) and isinstance(l[1], int) for l in layers):
+        if all(_is_colrv0_layer(l) for l in layers):
             colorGlyphsV0[baseGlyph] = layers
         else:
             colorGlyphsV1[baseGlyph] = layers
