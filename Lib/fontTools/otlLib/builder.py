@@ -357,7 +357,10 @@ class ChainContextualBuilder(LookupBuilder):
             self.setInputCoverage_(rule.glyphs, st)
         else:
             self.setCoverage_(rule.glyphs, st)
+        self.buildLookupList(rule, st)
+        return st
 
+    def buildLookupList(self, rule, st):
         for sequenceIndex, lookupList in enumerate(rule.lookups):
             if lookupList is not None:
                 if not isinstance(lookupList, list):
@@ -377,7 +380,6 @@ class ChainContextualBuilder(LookupBuilder):
                     rec = self.newLookupRecord_(st)
                     rec.SequenceIndex = sequenceIndex
                     rec.LookupListIndex = l.lookup_index
-        return st
 
     def add_subtable_break(self, location):
         self.rules.append(
