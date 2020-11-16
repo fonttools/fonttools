@@ -400,6 +400,50 @@ class ChainContextualBuilder(LookupBuilder):
         setattr(st, f"{self.subtable_type}LookupRecord", [])
         return st
 
+    # Format 1 and format 2 GSUB5/GSUB6/GPOS7/GPOS8 rulesets and rules form a family:
+    #
+    #       format 1 ruleset      format 1 rule      format 2 ruleset      format 2 rule
+    # GSUB5 SubRuleSet            SubRule            SubClassSet           SubClassRule
+    # GSUB6 ChainSubRuleSet       ChainSubRule       ChainSubClassSet      ChainSubClassRule
+    # GPOS7 PosRuleSet            PosRule            PosClassSet           PosClassRule
+    # GPOS8 ChainPosRuleSet       ChainPosRule       ChainPosClassSet      ChainPosClassRule
+    #
+    # The following functions generate the attribute names and subtables according
+    # to this naming convention.
+    def ruleSetAttr_(self, format=1, chaining=True):
+        if format == 2:
+            formatType = "Class"
+        elif format == 1:
+            formatType = "Rule"
+        subtablename = f"{self.subtable_type[0:3]}{formatType}Set"  # Sub, not Subst.
+        if chaining:
+            subtablename = "Chain" + subtablename
+        return subtablename
+
+    def ruleAttr_(self, format=1, chaining=True):
+        if format == 2:
+            formatType = "Class"
+        elif format == 1:
+            formatType = ""
+        subtablename = f"{self.subtable_type[0:3]}{formatType}Rule"  # Sub, not Subst.
+        if chaining:
+            subtablename = "Chain" + subtablename
+        return subtablename
+
+    def newRuleSet_(self, format=1, chaining=True):
+        st = getattr(
+            ot, self.ruleSetAttr_(format, chaining)
+        )()  # ot.ChainPosRuleSet()/ot.SubRuleSet()/etc.
+        st.populateDefaults()
+        return st
+
+    def newRule_(self, format=1, chaining=True):
+        st = getattr(
+            ot, self.ruleAttr_(format, chaining)
+        )()  # ot.ChainPosClassRule()/ot.SubClassRule()/etc.
+        st.populateDefaults()
+        return st
+
     def attachSubtableWithCount_(
         self, st, subtable_name, count_name, existing=None, index=None, chaining=False
     ):
