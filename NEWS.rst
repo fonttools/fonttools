@@ -1,3 +1,6 @@
+4.17.1 (released 2020-11-16)
+----------------------------
+
 - [colorLib] Fixed regression in 4.17.0 when building COLR v0 table; when color
   layers are stored in UFO lib plist, we can't distinguish tuples from lists so
   we need to accept either types (e5439eb9, googlefonts/ufo2ft/issues#426).
