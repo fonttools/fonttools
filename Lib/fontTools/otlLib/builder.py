@@ -359,8 +359,31 @@ class ChainContextualBuilder(LookupBuilder):
         rulesets = self.rulesets()
         chaining = any(ruleset.hasPrefixOrSuffix for ruleset in rulesets)
         for ruleset in rulesets:
+            # Determine format strategy. We try to build formats 1, 2 and 3
+            # subtables and then work out which is best. candidates list holds
+            # the subtables in each format for this ruleset (including a dummy
+            # "format 0" to make the addressing match the format numbers).
+
+            # We can always build a format 3 lookup by accumulating each of
+            # the rules into a list, so start with that.
+            candidates = [None, None, None, []]
             for rule in ruleset.rules:
-                subtables.append(self.buildFormat3Subtable(rule, chaining))
+                candidates[3].append(self.buildFormat3Subtable(rule, chaining))
+
+            # Can we express the whole ruleset as a format 2 subtable?
+            classdefs = ruleset.format2ClassDefs()
+            if classdefs:
+                candidates[2] = [
+                    self.buildFormat2Subtable(ruleset, classdefs, chaining)
+                ]
+
+            if not ruleset.hasAnyGlyphClasses:
+                candidates[1] = [self.buildFormat1Subtable(ruleset, chaining)]
+
+            candidates = [x for x in candidates if x is not None]
+            winner = min(candidates, key=self.getCompiledSize_)
+            subtables.extend(winner)
+
         # If we are not chaining, lookup type will be automatically fixed by
         # buildLookup_
         return self.buildLookup_(subtables)
