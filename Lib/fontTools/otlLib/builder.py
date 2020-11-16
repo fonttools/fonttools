@@ -348,6 +348,52 @@ class ChainContextualBuilder(LookupBuilder):
         # buildLookup_
         return self.buildLookup_(subtables)
 
+    def buildFormat1Subtable(self, ruleset, chaining=True):
+        st = self.newSubtable_(chaining=chaining)
+        st.Format = 1
+        st.populateDefaults()
+        coverage = set()
+        rulesets_by_first_glyph = {}
+        ruleAttr = self.ruleAttr_(format=1, chaining=chaining)
+
+        for rule in ruleset.rules:
+            rule_table = self.newRule_(format=1, chaining=chaining)
+
+            if chaining:
+                rule_table.BacktrackGlyphCount = len(rule.prefix)
+                rule_table.LookAheadGlyphCount = len(rule.suffix)
+                rule_table.Backtrack = [list(x)[0] for x in reversed(rule.prefix)]
+                rule_table.LookAhead = [list(x)[0] for x in rule.suffix]
+
+                rule_table.InputGlyphCount = len(rule.glyphs)
+            else:
+                rule_table.GlyphCount = len(rule.glyphs)
+
+            rule_table.Input = [list(x)[0] for x in rule.glyphs[1:]]
+
+            self.buildLookupList(rule, rule_table)
+
+            firstGlyph = list(rule.glyphs[0])[0]
+            if not firstGlyph in rulesets_by_first_glyph:
+                coverage.add(firstGlyph)
+                rulesets_by_first_glyph[firstGlyph] = []
+            rulesets_by_first_glyph[firstGlyph].append(rule_table)
+
+        st.Coverage = buildCoverage(coverage, self.glyphMap)
+        ruleSets = []
+        for g in st.Coverage.glyphs:
+            ruleSet = self.newRuleSet_(format=1, chaining=chaining)
+            setattr(ruleSet, ruleAttr, rulesets_by_first_glyph[g])
+            setattr(ruleSet, f"{ruleAttr}Count", len(rulesets_by_first_glyph[g]))
+            ruleSets.append(ruleSet)
+
+        setattr(st, self.ruleSetAttr_(format=1, chaining=chaining), ruleSets)
+        setattr(
+            st, self.ruleSetAttr_(format=1, chaining=chaining) + "Count", len(ruleSets)
+        )
+
+        return st
+
     def buildFormat2Subtable(self, ruleset, classdefs, chaining=True):
         st = self.newSubtable_(chaining=chaining)
         st.Format = 2
