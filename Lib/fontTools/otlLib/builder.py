@@ -463,6 +463,9 @@ class ChainContextualBuilder(LookupBuilder):
             if chaining:
                 rule_table.BacktrackGlyphCount = len(rule.prefix)
                 rule_table.LookAheadGlyphCount = len(rule.suffix)
+                # The glyphs in the rule may be list, tuple, odict_keys...
+                # Order is not important anyway because they are guaranteed
+                # to be members of the same class.
                 rule_table.Backtrack = [
                     st.BacktrackClassDef.classDefs[list(x)[0]]
                     for x in reversed(rule.prefix)
