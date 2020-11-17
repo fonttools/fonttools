@@ -393,38 +393,38 @@ class ChainContextualBuilder(LookupBuilder):
         st.Format = 1
         st.populateDefaults()
         coverage = set()
-        rulesets_by_first_glyph = {}
+        rulesetsByFirstGlyph = {}
         ruleAttr = self.ruleAttr_(format=1, chaining=chaining)
 
         for rule in ruleset.rules:
-            rule_table = self.newRule_(format=1, chaining=chaining)
+            ruleAsSubtable = self.newRule_(format=1, chaining=chaining)
 
             if chaining:
-                rule_table.BacktrackGlyphCount = len(rule.prefix)
-                rule_table.LookAheadGlyphCount = len(rule.suffix)
-                rule_table.Backtrack = [list(x)[0] for x in reversed(rule.prefix)]
-                rule_table.LookAhead = [list(x)[0] for x in rule.suffix]
+                ruleAsSubtable.BacktrackGlyphCount = len(rule.prefix)
+                ruleAsSubtable.LookAheadGlyphCount = len(rule.suffix)
+                ruleAsSubtable.Backtrack = [list(x)[0] for x in reversed(rule.prefix)]
+                ruleAsSubtable.LookAhead = [list(x)[0] for x in rule.suffix]
 
-                rule_table.InputGlyphCount = len(rule.glyphs)
+                ruleAsSubtable.InputGlyphCount = len(rule.glyphs)
             else:
-                rule_table.GlyphCount = len(rule.glyphs)
+                ruleAsSubtable.GlyphCount = len(rule.glyphs)
 
-            rule_table.Input = [list(x)[0] for x in rule.glyphs[1:]]
+            ruleAsSubtable.Input = [list(x)[0] for x in rule.glyphs[1:]]
 
-            self.buildLookupList(rule, rule_table)
+            self.buildLookupList(rule, ruleAsSubtable)
 
             firstGlyph = list(rule.glyphs[0])[0]
-            if not firstGlyph in rulesets_by_first_glyph:
+            if not firstGlyph in rulesetsByFirstGlyph:
                 coverage.add(firstGlyph)
-                rulesets_by_first_glyph[firstGlyph] = []
-            rulesets_by_first_glyph[firstGlyph].append(rule_table)
+                rulesetsByFirstGlyph[firstGlyph] = []
+            rulesetsByFirstGlyph[firstGlyph].append(ruleAsSubtable)
 
         st.Coverage = buildCoverage(coverage, self.glyphMap)
         ruleSets = []
         for g in st.Coverage.glyphs:
             ruleSet = self.newRuleSet_(format=1, chaining=chaining)
-            setattr(ruleSet, ruleAttr, rulesets_by_first_glyph[g])
-            setattr(ruleSet, f"{ruleAttr}Count", len(rulesets_by_first_glyph[g]))
+            setattr(ruleSet, ruleAttr, rulesetsByFirstGlyph[g])
+            setattr(ruleSet, f"{ruleAttr}Count", len(rulesetsByFirstGlyph[g]))
             ruleSets.append(ruleSet)
 
         setattr(st, self.ruleSetAttr_(format=1, chaining=chaining), ruleSets)
@@ -459,41 +459,41 @@ class ChainContextualBuilder(LookupBuilder):
         classRuleAttr = self.ruleAttr_(format=2, chaining=chaining)
 
         for rule in ruleset.rules:
-            rule_table = self.newRule_(format=2, chaining=chaining)
+            ruleAsSubtable = self.newRule_(format=2, chaining=chaining)
             if chaining:
-                rule_table.BacktrackGlyphCount = len(rule.prefix)
-                rule_table.LookAheadGlyphCount = len(rule.suffix)
+                ruleAsSubtable.BacktrackGlyphCount = len(rule.prefix)
+                ruleAsSubtable.LookAheadGlyphCount = len(rule.suffix)
                 # The glyphs in the rule may be list, tuple, odict_keys...
                 # Order is not important anyway because they are guaranteed
                 # to be members of the same class.
-                rule_table.Backtrack = [
+                ruleAsSubtable.Backtrack = [
                     st.BacktrackClassDef.classDefs[list(x)[0]]
                     for x in reversed(rule.prefix)
                 ]
-                rule_table.LookAhead = [
+                ruleAsSubtable.LookAhead = [
                     st.LookAheadClassDef.classDefs[list(x)[0]] for x in rule.suffix
                 ]
 
-                rule_table.InputGlyphCount = len(rule.glyphs)
-                rule_table.Input = [
+                ruleAsSubtable.InputGlyphCount = len(rule.glyphs)
+                ruleAsSubtable.Input = [
                     st.InputClassDef.classDefs[list(x)[0]] for x in rule.glyphs[1:]
                 ]
                 setForThisRule = classSets[
                     st.InputClassDef.classDefs[list(rule.glyphs[0])[0]]
                 ]
             else:
-                rule_table.GlyphCount = len(rule.glyphs)
-                rule_table.Class = [  # The spec calls this InputSequence
+                ruleAsSubtable.GlyphCount = len(rule.glyphs)
+                ruleAsSubtable.Class = [  # The spec calls this InputSequence
                     st.ClassDef.classDefs[list(x)[0]] for x in rule.glyphs[1:]
                 ]
                 setForThisRule = classSets[
                     st.ClassDef.classDefs[list(rule.glyphs[0])[0]]
                 ]
 
-            self.buildLookupList(rule, rule_table)
+            self.buildLookupList(rule, ruleAsSubtable)
             coverage |= set(rule.glyphs[0])
 
-            getattr(setForThisRule, classRuleAttr).append(rule_table)
+            getattr(setForThisRule, classRuleAttr).append(ruleAsSubtable)
             setattr(
                 setForThisRule,
                 f"{classRuleAttr}Count",
