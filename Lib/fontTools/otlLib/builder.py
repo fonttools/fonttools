@@ -343,6 +343,8 @@ class ChainContextualBuilder(LookupBuilder):
             w["LookupType"] = CountReference(
                 {"LookupType": st.LookupType}, "LookupType"
             )
+            # We need to make a copy here because compiling
+            # modifies the subtable (finalizing formats etc.)
             copy.deepcopy(st).compile(w, self.font)
             size += len(w.getAllData())
         return size
