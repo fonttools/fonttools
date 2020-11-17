@@ -414,7 +414,7 @@ class ChainContextualBuilder(LookupBuilder):
             self.buildLookupList(rule, ruleAsSubtable)
 
             firstGlyph = list(rule.glyphs[0])[0]
-            if not firstGlyph in rulesetsByFirstGlyph:
+            if firstGlyph not in rulesetsByFirstGlyph:
                 coverage.add(firstGlyph)
                 rulesetsByFirstGlyph[firstGlyph] = []
             rulesetsByFirstGlyph[firstGlyph].append(ruleAsSubtable)
