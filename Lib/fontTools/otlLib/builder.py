@@ -454,7 +454,6 @@ class ChainContextualBuilder(LookupBuilder):
         for _ in inClasses:
             classSet = self.newRuleSet_(format=2, chaining=chaining)
             classSet.populateDefaults()
-            classSets.append(classSet)
 
         coverage = set()
         classRuleAttr = self.ruleAttr_(format=2, chaining=chaining)
