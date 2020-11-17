@@ -567,20 +567,24 @@ class ChainContextualBuilder(LookupBuilder):
     # The following functions generate the attribute names and subtables according
     # to this naming convention.
     def ruleSetAttr_(self, format=1, chaining=True):
-        if format == 2:
-            formatType = "Class"
-        elif format == 1:
+        if format == 1:
             formatType = "Rule"
+        elif format == 2:
+            formatType = "Class"
+        else:
+            raise AssertionError(formatType)
         subtablename = f"{self.subtable_type[0:3]}{formatType}Set"  # Sub, not Subst.
         if chaining:
             subtablename = "Chain" + subtablename
         return subtablename
 
     def ruleAttr_(self, format=1, chaining=True):
-        if format == 2:
-            formatType = "Class"
-        elif format == 1:
+        if format == 1:
             formatType = ""
+        elif format == 2:
+            formatType = "Class"
+        else:
+            raise AssertionError(formatType)
         subtablename = f"{self.subtable_type[0:3]}{formatType}Rule"  # Sub, not Subst.
         if chaining:
             subtablename = "Chain" + subtablename
