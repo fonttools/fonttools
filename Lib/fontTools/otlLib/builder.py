@@ -2,10 +2,16 @@ from collections import namedtuple, OrderedDict
 from fontTools.misc.fixedTools import fixedToFloat
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables as ot
-from fontTools.ttLib.tables.otBase import ValueRecord, valueRecordFormatDict
+from fontTools.ttLib.tables.otBase import (
+    ValueRecord,
+    valueRecordFormatDict,
+    OTTableWriter,
+    CountReference,
+)
 from fontTools.ttLib.tables import otBase
 from fontTools.otlLib.error import OpenTypeLibError
 import logging
+import copy
 
 
 log = logging.getLogger(__name__)
@@ -330,6 +336,19 @@ class ChainContextualBuilder(LookupBuilder):
         # Squish any empty subtables
         return [x for x in ruleset if len(x.rules) > 0]
 
+    def getCompiledSize_(self, subtables):
+        size = 0
+        for st in subtables:
+            w = OTTableWriter()
+            w["LookupType"] = CountReference(
+                {"LookupType": st.LookupType}, "LookupType"
+            )
+            # We need to make a copy here because compiling
+            # modifies the subtable (finalizing formats etc.)
+            copy.deepcopy(st).compile(w, self.font)
+            size += len(w.getAllData())
+        return size
+
     def build(self):
         """Build the lookup.
 
@@ -342,11 +361,152 @@ class ChainContextualBuilder(LookupBuilder):
         rulesets = self.rulesets()
         chaining = any(ruleset.hasPrefixOrSuffix for ruleset in rulesets)
         for ruleset in rulesets:
+            # Determine format strategy. We try to build formats 1, 2 and 3
+            # subtables and then work out which is best. candidates list holds
+            # the subtables in each format for this ruleset (including a dummy
+            # "format 0" to make the addressing match the format numbers).
+
+            # We can always build a format 3 lookup by accumulating each of
+            # the rules into a list, so start with that.
+            candidates = [None, None, None, []]
             for rule in ruleset.rules:
-                subtables.append(self.buildFormat3Subtable(rule, chaining))
+                candidates[3].append(self.buildFormat3Subtable(rule, chaining))
+
+            # Can we express the whole ruleset as a format 2 subtable?
+            classdefs = ruleset.format2ClassDefs()
+            if classdefs:
+                candidates[2] = [
+                    self.buildFormat2Subtable(ruleset, classdefs, chaining)
+                ]
+
+            if not ruleset.hasAnyGlyphClasses:
+                candidates[1] = [self.buildFormat1Subtable(ruleset, chaining)]
+
+            candidates = [x for x in candidates if x is not None]
+            winner = min(candidates, key=self.getCompiledSize_)
+            subtables.extend(winner)
+
         # If we are not chaining, lookup type will be automatically fixed by
         # buildLookup_
         return self.buildLookup_(subtables)
+
+    def buildFormat1Subtable(self, ruleset, chaining=True):
+        st = self.newSubtable_(chaining=chaining)
+        st.Format = 1
+        st.populateDefaults()
+        coverage = set()
+        rulesetsByFirstGlyph = {}
+        ruleAttr = self.ruleAttr_(format=1, chaining=chaining)
+
+        for rule in ruleset.rules:
+            ruleAsSubtable = self.newRule_(format=1, chaining=chaining)
+
+            if chaining:
+                ruleAsSubtable.BacktrackGlyphCount = len(rule.prefix)
+                ruleAsSubtable.LookAheadGlyphCount = len(rule.suffix)
+                ruleAsSubtable.Backtrack = [list(x)[0] for x in reversed(rule.prefix)]
+                ruleAsSubtable.LookAhead = [list(x)[0] for x in rule.suffix]
+
+                ruleAsSubtable.InputGlyphCount = len(rule.glyphs)
+            else:
+                ruleAsSubtable.GlyphCount = len(rule.glyphs)
+
+            ruleAsSubtable.Input = [list(x)[0] for x in rule.glyphs[1:]]
+
+            self.buildLookupList(rule, ruleAsSubtable)
+
+            firstGlyph = list(rule.glyphs[0])[0]
+            if firstGlyph not in rulesetsByFirstGlyph:
+                coverage.add(firstGlyph)
+                rulesetsByFirstGlyph[firstGlyph] = []
+            rulesetsByFirstGlyph[firstGlyph].append(ruleAsSubtable)
+
+        st.Coverage = buildCoverage(coverage, self.glyphMap)
+        ruleSets = []
+        for g in st.Coverage.glyphs:
+            ruleSet = self.newRuleSet_(format=1, chaining=chaining)
+            setattr(ruleSet, ruleAttr, rulesetsByFirstGlyph[g])
+            setattr(ruleSet, f"{ruleAttr}Count", len(rulesetsByFirstGlyph[g]))
+            ruleSets.append(ruleSet)
+
+        setattr(st, self.ruleSetAttr_(format=1, chaining=chaining), ruleSets)
+        setattr(
+            st, self.ruleSetAttr_(format=1, chaining=chaining) + "Count", len(ruleSets)
+        )
+
+        return st
+
+    def buildFormat2Subtable(self, ruleset, classdefs, chaining=True):
+        st = self.newSubtable_(chaining=chaining)
+        st.Format = 2
+        st.populateDefaults()
+
+        if chaining:
+            (
+                st.BacktrackClassDef,
+                st.InputClassDef,
+                st.LookAheadClassDef,
+            ) = [c.build() for c in classdefs]
+        else:
+            st.ClassDef = classdefs[1].build()
+
+        inClasses = classdefs[1].classes()
+
+        classSets = []
+        for _ in inClasses:
+            classSet = self.newRuleSet_(format=2, chaining=chaining)
+            classSets.append(classSet)
+
+        coverage = set()
+        classRuleAttr = self.ruleAttr_(format=2, chaining=chaining)
+
+        for rule in ruleset.rules:
+            ruleAsSubtable = self.newRule_(format=2, chaining=chaining)
+            if chaining:
+                ruleAsSubtable.BacktrackGlyphCount = len(rule.prefix)
+                ruleAsSubtable.LookAheadGlyphCount = len(rule.suffix)
+                # The glyphs in the rule may be list, tuple, odict_keys...
+                # Order is not important anyway because they are guaranteed
+                # to be members of the same class.
+                ruleAsSubtable.Backtrack = [
+                    st.BacktrackClassDef.classDefs[list(x)[0]]
+                    for x in reversed(rule.prefix)
+                ]
+                ruleAsSubtable.LookAhead = [
+                    st.LookAheadClassDef.classDefs[list(x)[0]] for x in rule.suffix
+                ]
+
+                ruleAsSubtable.InputGlyphCount = len(rule.glyphs)
+                ruleAsSubtable.Input = [
+                    st.InputClassDef.classDefs[list(x)[0]] for x in rule.glyphs[1:]
+                ]
+                setForThisRule = classSets[
+                    st.InputClassDef.classDefs[list(rule.glyphs[0])[0]]
+                ]
+            else:
+                ruleAsSubtable.GlyphCount = len(rule.glyphs)
+                ruleAsSubtable.Class = [  # The spec calls this InputSequence
+                    st.ClassDef.classDefs[list(x)[0]] for x in rule.glyphs[1:]
+                ]
+                setForThisRule = classSets[
+                    st.ClassDef.classDefs[list(rule.glyphs[0])[0]]
+                ]
+
+            self.buildLookupList(rule, ruleAsSubtable)
+            coverage |= set(rule.glyphs[0])
+
+            getattr(setForThisRule, classRuleAttr).append(ruleAsSubtable)
+            setattr(
+                setForThisRule,
+                f"{classRuleAttr}Count",
+                getattr(setForThisRule, f"{classRuleAttr}Count") + 1,
+            )
+        setattr(st, self.ruleSetAttr_(format=2, chaining=chaining), classSets)
+        setattr(
+            st, self.ruleSetAttr_(format=2, chaining=chaining) + "Count", len(classSets)
+        )
+        st.Coverage = buildCoverage(coverage, self.glyphMap)
+        return st
 
     def buildFormat3Subtable(self, rule, chaining=True):
         st = self.newSubtable_(chaining=chaining)
@@ -357,7 +517,10 @@ class ChainContextualBuilder(LookupBuilder):
             self.setInputCoverage_(rule.glyphs, st)
         else:
             self.setCoverage_(rule.glyphs, st)
+        self.buildLookupList(rule, st)
+        return st
 
+    def buildLookupList(self, rule, st):
         for sequenceIndex, lookupList in enumerate(rule.lookups):
             if lookupList is not None:
                 if not isinstance(lookupList, list):
@@ -377,7 +540,6 @@ class ChainContextualBuilder(LookupBuilder):
                     rec = self.newLookupRecord_(st)
                     rec.SequenceIndex = sequenceIndex
                     rec.LookupListIndex = l.lookup_index
-        return st
 
     def add_subtable_break(self, location):
         self.rules.append(
@@ -396,6 +558,54 @@ class ChainContextualBuilder(LookupBuilder):
         st = getattr(ot, subtablename)()  # ot.ChainContextPos()/ot.ChainSubst()/etc.
         setattr(st, f"{self.subtable_type}Count", 0)
         setattr(st, f"{self.subtable_type}LookupRecord", [])
+        return st
+
+    # Format 1 and format 2 GSUB5/GSUB6/GPOS7/GPOS8 rulesets and rules form a family:
+    #
+    #       format 1 ruleset      format 1 rule      format 2 ruleset      format 2 rule
+    # GSUB5 SubRuleSet            SubRule            SubClassSet           SubClassRule
+    # GSUB6 ChainSubRuleSet       ChainSubRule       ChainSubClassSet      ChainSubClassRule
+    # GPOS7 PosRuleSet            PosRule            PosClassSet           PosClassRule
+    # GPOS8 ChainPosRuleSet       ChainPosRule       ChainPosClassSet      ChainPosClassRule
+    #
+    # The following functions generate the attribute names and subtables according
+    # to this naming convention.
+    def ruleSetAttr_(self, format=1, chaining=True):
+        if format == 1:
+            formatType = "Rule"
+        elif format == 2:
+            formatType = "Class"
+        else:
+            raise AssertionError(formatType)
+        subtablename = f"{self.subtable_type[0:3]}{formatType}Set"  # Sub, not Subst.
+        if chaining:
+            subtablename = "Chain" + subtablename
+        return subtablename
+
+    def ruleAttr_(self, format=1, chaining=True):
+        if format == 1:
+            formatType = ""
+        elif format == 2:
+            formatType = "Class"
+        else:
+            raise AssertionError(formatType)
+        subtablename = f"{self.subtable_type[0:3]}{formatType}Rule"  # Sub, not Subst.
+        if chaining:
+            subtablename = "Chain" + subtablename
+        return subtablename
+
+    def newRuleSet_(self, format=1, chaining=True):
+        st = getattr(
+            ot, self.ruleSetAttr_(format, chaining)
+        )()  # ot.ChainPosRuleSet()/ot.SubRuleSet()/etc.
+        st.populateDefaults()
+        return st
+
+    def newRule_(self, format=1, chaining=True):
+        st = getattr(
+            ot, self.ruleAttr_(format, chaining)
+        )()  # ot.ChainPosClassRule()/ot.SubClassRule()/etc.
+        st.populateDefaults()
         return st
 
     def attachSubtableWithCount_(

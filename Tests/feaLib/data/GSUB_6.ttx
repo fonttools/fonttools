@@ -229,36 +229,30 @@
         <LookupType value="6"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <ChainContextSubst index="0" Format="3">
-          <!-- BacktrackGlyphCount=3 -->
-          <BacktrackCoverage index="0">
-            <Glyph value="E"/>
-          </BacktrackCoverage>
-          <BacktrackCoverage index="1">
-            <Glyph value="D"/>
-          </BacktrackCoverage>
-          <BacktrackCoverage index="2">
-            <Glyph value="A"/>
-          </BacktrackCoverage>
-          <!-- InputGlyphCount=1 -->
-          <InputCoverage index="0">
+        <ChainContextSubst index="0" Format="1">
+          <Coverage>
             <Glyph value="c_t"/>
-          </InputCoverage>
-          <!-- LookAheadGlyphCount=3 -->
-          <LookAheadCoverage index="0">
-            <Glyph value="V"/>
-          </LookAheadCoverage>
-          <LookAheadCoverage index="1">
-            <Glyph value="W"/>
-          </LookAheadCoverage>
-          <LookAheadCoverage index="2">
-            <Glyph value="X"/>
-          </LookAheadCoverage>
-          <!-- SubstCount=1 -->
-          <SubstLookupRecord index="0">
-            <SequenceIndex value="0"/>
-            <LookupListIndex value="2"/>
-          </SubstLookupRecord>
+          </Coverage>
+          <!-- ChainSubRuleSetCount=1 -->
+          <ChainSubRuleSet index="0">
+            <!-- ChainSubRuleCount=1 -->
+            <ChainSubRule index="0">
+              <!-- BacktrackGlyphCount=3 -->
+              <Backtrack index="0" value="E"/>
+              <Backtrack index="1" value="D"/>
+              <Backtrack index="2" value="A"/>
+              <!-- InputGlyphCount=1 -->
+              <!-- LookAheadGlyphCount=3 -->
+              <LookAhead index="0" value="V"/>
+              <LookAhead index="1" value="W"/>
+              <LookAhead index="2" value="X"/>
+              <!-- SubstCount=1 -->
+              <SubstLookupRecord index="0">
+                <SequenceIndex value="0"/>
+                <LookupListIndex value="2"/>
+              </SubstLookupRecord>
+            </ChainSubRule>
+          </ChainSubRuleSet>
         </ChainContextSubst>
       </Lookup>
     </LookupList>

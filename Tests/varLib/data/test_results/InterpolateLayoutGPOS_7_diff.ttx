@@ -86,26 +86,28 @@
         <LookupType value="7"/>
         <LookupFlag value="0"/>
         <!-- SubTableCount=1 -->
-        <ContextPos index="0" Format="3">
-          <!-- GlyphCount=3 -->
-          <!-- PosCount=2 -->
-          <Coverage index="0" Format="1">
+        <ContextPos index="0" Format="1">
+          <Coverage Format="1">
             <Glyph value="A"/>
           </Coverage>
-          <Coverage index="1" Format="1">
-            <Glyph value="a"/>
-          </Coverage>
-          <Coverage index="2" Format="1">
-            <Glyph value="uni0303"/>
-          </Coverage>
-          <PosLookupRecord index="0">
-            <SequenceIndex value="0"/>
-            <LookupListIndex value="0"/>
-          </PosLookupRecord>
-          <PosLookupRecord index="1">
-            <SequenceIndex value="2"/>
-            <LookupListIndex value="1"/>
-          </PosLookupRecord>
+          <!-- PosRuleSetCount=1 -->
+          <PosRuleSet index="0">
+            <!-- PosRuleCount=1 -->
+            <PosRule index="0">
+              <!-- GlyphCount=3 -->
+              <!-- PosCount=2 -->
+              <Input index="0" value="a"/>
+              <Input index="1" value="uni0303"/>
+              <PosLookupRecord index="0">
+                <SequenceIndex value="0"/>
+                <LookupListIndex value="0"/>
+              </PosLookupRecord>
+              <PosLookupRecord index="1">
+                <SequenceIndex value="2"/>
+                <LookupListIndex value="1"/>
+              </PosLookupRecord>
+            </PosRule>
+          </PosRuleSet>
         </ContextPos>
       </Lookup>
     </LookupList>

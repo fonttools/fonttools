@@ -1,0 +1,20 @@
+lookup GSUB5f1 {
+    ignore sub three four;
+    ignore sub four five;
+} GSUB5f1;
+
+lookup GSUB5f2 {
+    ignore sub [a - z] [A - H] [I - Z];
+    ignore sub [a - z] [A - H] [I - Z];
+    ignore sub [a - z] [I - Z] [A - H];
+} GSUB5f2;
+
+lookup GSUB5f3 {
+    ignore sub e;
+} GSUB5f3;
+
+feature test {
+    lookup GSUB5f1;
+    lookup GSUB5f2;
+    lookup GSUB5f3;
+} test;
