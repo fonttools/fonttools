@@ -9,6 +9,7 @@ from fontTools.misc.fixedTools import (
 from fontTools.misc.textTools import safeEval, num2binary, binary2num
 from fontTools.ttLib import TTLibError
 from . import DefaultTable
+import re
 import struct
 
 
@@ -127,6 +128,11 @@ class Axis(object):
     def compile(self):
         if len(self.axisTag) > 4:
             obj = dict(self.__dict__)
+            if not re.match(r"#\d+$", self.axisTag[4:]):
+                raise TTLibError(
+                    f"axis tag extension does not follow required 'xxxx#N' "
+                    f"format: {self.axisTag}"
+                )
             obj["axisTag"] = self.axisTag[:4]
         else:
             obj = self

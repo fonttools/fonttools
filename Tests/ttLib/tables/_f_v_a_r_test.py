@@ -134,6 +134,16 @@ class FontVariationTableTest(unittest.TestCase):
         self.assertEqual(expectedAxisTags, [a.axisTag for a in fvar.axes])
         self.assertEqual([expectedAxisTags] * 2, [sorted(i.coordinates.keys()) for i in fvar.instances])
 
+    def test_compile_duplicate_axis_tags_bad_tag_extension(self):
+        font = MakeFont()
+        assert len(font["fvar"].axes) == 2
+        axisMap = dict(wght="DUPP123", wdth="DUPP#abc")
+        for axis in font["fvar"].axes:
+            axis.axisTag = axisMap[axis.axisTag]
+        font["fvar"].instances = []
+        with self.assertRaises(TTLibError):
+            h = font["fvar"].compile(font)
+
 
 class AxisTest(unittest.TestCase):
     def test_compile(self):
