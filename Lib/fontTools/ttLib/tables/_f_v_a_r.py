@@ -128,7 +128,7 @@ class Axis(object):
     def compile(self):
         if len(self.axisTag) > 4:
             obj = dict(self.__dict__)
-            if not re.match(r"#\d+$", self.axisTag[4:]):
+            if re.match(r"#\d+$", self.axisTag[4:]) is None:
                 raise TTLibError(
                     f"axis tag extension does not follow required 'xxxx#N' "
                     f"format: {self.axisTag}"
