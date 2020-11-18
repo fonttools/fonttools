@@ -80,9 +80,15 @@ class table__f_v_a_r(DefaultTable.DefaultTable):
             raise TTLibError("unsupported 'fvar' version %04x" % header["version"])
         pos = header["offsetToData"]
         axisSize = header["axisSize"]
+        axisTagsSeen = {}
         for _ in range(header["axisCount"]):
             axis = Axis()
             axis.decompile(data[pos:pos+axisSize])
+            if axis.axisTag in axisTagsSeen:
+                axisTagsSeen[axis.axisTag] += 1
+                axis.axisTag = f"{axis.axisTag}#{axisTagsSeen[axis.axisTag]}"
+            else:
+                axisTagsSeen[axis.axisTag] = 0
             self.axes.append(axis)
             pos += axisSize
         instanceSize = header["instanceSize"]
@@ -119,7 +125,12 @@ class Axis(object):
         self.maxValue = 1.0
 
     def compile(self):
-        return sstruct.pack(FVAR_AXIS_FORMAT, self)
+        if len(self.axisTag) > 4:
+            obj = dict(self.__dict__)
+            obj["axisTag"] = self.axisTag[:4]
+        else:
+            obj = self
+        return sstruct.pack(FVAR_AXIS_FORMAT, obj)
 
     def decompile(self, data):
         sstruct.unpack2(FVAR_AXIS_FORMAT, data, self)
