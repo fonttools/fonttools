@@ -2,7 +2,11 @@ from fontTools.misc.py23 import *
 from fontTools.misc import sstruct
 from fontTools.misc.textTools import binary2num, safeEval
 from fontTools.feaLib.error import FeatureLibError
-from fontTools.feaLib.lookupDebugInfo import LookupDebugInfo, LOOKUP_DEBUG_INFO_KEY
+from fontTools.feaLib.lookupDebugInfo import (
+    LookupDebugInfo,
+    LOOKUP_DEBUG_INFO_KEY,
+    LOOKUP_DEBUG_ENV_VAR,
+)
 from fontTools.feaLib.parser import Parser
 from fontTools.feaLib.ast import FeatureFile
 from fontTools.otlLib import builder as otl
@@ -31,6 +35,7 @@ from collections import defaultdict
 import itertools
 import logging
 import warnings
+import os
 
 
 log = logging.getLogger(__name__)
@@ -210,7 +215,7 @@ class Builder(object):
                 self.font["BASE"] = base
             elif "BASE" in self.font:
                 del self.font["BASE"]
-        if debug:
+        if debug or os.environ.get(LOOKUP_DEBUG_ENV_VAR):
             self.buildDebg()
 
     def get_chained_lookup_(self, location, builder_class):
