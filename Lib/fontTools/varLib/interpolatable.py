@@ -9,7 +9,9 @@ $ fonttools varLib.interpolatable font1 font2 ...
 from fontTools.pens.basePen import AbstractPen, BasePen
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.statisticsPen import StatisticsPen
+from collections import OrderedDict
 import itertools
+import sys
 
 
 class PerContourPen(BasePen):
@@ -110,6 +112,13 @@ def test(glyphsets, glyphs=None, names=None):
         glyphs = glyphsets[0].keys()
 
     hist = []
+    problems = OrderedDict()
+
+    def add_problem(glyphname, problem):
+        if not glyphname in problems:
+            problems[glyphname] = []
+        problems[glyphname].append(problem)
+
     for glyph_name in glyphs:
         # print()
         # print(glyph_name)
@@ -120,10 +129,7 @@ def test(glyphsets, glyphs=None, names=None):
             for glyphset, name in zip(glyphsets, names):
                 # print('.', end='')
                 if glyph_name not in glyphset:
-                    print(
-                        "%s: Glyph cannot be interpolated - does not exist in master %s"
-                        % (glyph_name, name)
-                    )
+                    add_problem(glyph_name, {"type": "missing", "master": name})
                     continue
                 glyph = glyphset[glyph_name]
 
@@ -138,7 +144,7 @@ def test(glyphsets, glyphs=None, names=None):
                 nodeTypes = []
                 allNodeTypes.append(nodeTypes)
                 allVectors.append(contourVectors)
-                for contour in contourPens:
+                for ix, contour in enumerate(contourPens):
                     nodeTypes.append(
                         tuple(instruction[0] for instruction in contour.value)
                     )
@@ -146,10 +152,11 @@ def test(glyphsets, glyphs=None, names=None):
                     try:
                         contour.replay(stats)
                     except NotImplementedError as e:
-                        print(
-                            "%s: Glyph cannot be interpolated - open path!" % glyph_name
+                        add_problem(
+                            glyph_name,
+                            {"master": name, "contour": ix, "type": "open_path"},
                         )
-                        break
+                        continue
                     size = abs(stats.area) ** 0.5 * 0.5
                     vector = (
                         int(size),
@@ -165,49 +172,69 @@ def test(glyphsets, glyphs=None, names=None):
             # Check each master against the next one in the list.
             for i, (m0, m1) in enumerate(zip(allNodeTypes[:-1], allNodeTypes[1:])):
                 if len(m0) != len(m1):
-                    print(
-                        "%s: %s+%s: Glyphs not compatible (wrong number of paths %i+%i)!!!!!"
-                        % (glyph_name, names[i], names[i + 1], len(m0), len(m1))
+                    add_problem(
+                        glyph_name,
+                        {
+                            "type": "path_count",
+                            "master_1": names[i],
+                            "master_2": names[i + 1],
+                            "value_1": len(m0),
+                            "value_2": len(m1),
+                        },
                     )
                 if m0 == m1:
                     continue
                 for pathIx, (nodes1, nodes2) in enumerate(zip(m0, m1)):
                     if nodes1 == nodes2:
                         continue
-                    print(
-                        "%s: %s+%s: Glyphs not compatible at path %i!!!!!"
-                        % (glyph_name, names[i], names[i + 1], pathIx)
-                    )
                     if len(nodes1) != len(nodes2):
-                        print(
-                            "%s has %i nodes, %s has %i nodes"
-                            % (names[i], len(nodes1), names[i + 1], len(nodes2))
+                        add_problem(
+                            glyph_name,
+                            {
+                                "type": "node_count",
+                                "path": pathIx,
+                                "master_1": names[i],
+                                "master_2": names[i + 1],
+                                "value_1": len(nodes1),
+                                "value_2": len(nodes2),
+                            },
                         )
                         continue
                     for nodeIx, (n1, n2) in enumerate(zip(nodes1, nodes2)):
                         if n1 != n2:
-                            print(
-                                "At node %i, %s has %s, %s has %s"
-                                % (nodeIx, names[i], n1, names[i + 1], n2)
+                            add_problem(
+                                glyph_name,
+                                {
+                                    "type": "node_incompatibility",
+                                    "path": pathIx,
+                                    "node": nodeIx,
+                                    "master_1": names[i],
+                                    "master_2": names[i + 1],
+                                    "value_1": n1,
+                                    "value_2": n2,
+                                },
                             )
                             continue
 
             for i, (m0, m1) in enumerate(zip(allVectors[:-1], allVectors[1:])):
                 if len(m0) != len(m1):
-                    print(
-                        "%s: %s+%s: Glyphs not compatible!!!!!"
-                        % (glyph_name, names[i], names[i + 1])
-                    )
+                    # We already reported this
                     continue
                 if not m0:
                     continue
                 costs = [[_vlen(_vdiff(v0, v1)) for v1 in m1] for v0 in m0]
                 matching, matching_cost = min_cost_perfect_bipartite_matching(costs)
                 if matching != list(range(len(m0))):
-                    print(
-                        "%s: %s+%s: Glyph has wrong contour/component order: %s"
-                        % (glyph_name, names[i], names[i + 1], matching)
-                    )  # , m0, m1)
+                    add_problem(
+                        glyph_name,
+                        {
+                            "type": "contour_order",
+                            "master_1": names[i],
+                            "master_2": names[i + 1],
+                            "value_1": list(range(len(m0))),
+                            "value_2": matching,
+                        },
+                    )
                     break
                 upem = 2048
                 item_cost = round(
@@ -216,17 +243,23 @@ def test(glyphsets, glyphs=None, names=None):
                 hist.append(item_cost)
                 threshold = 7
                 if item_cost >= threshold:
-                    print(
-                        "%s: %s+%s: Glyph has very high cost: %d%%"
-                        % (glyph_name, names[i], names[i + 1], item_cost)
+                    add_problem(
+                        glyph_name,
+                        {
+                            "type": "high_cost",
+                            "master_1": names[i],
+                            "master_2": names[i + 1],
+                            "value_1": item_cost,
+                            "value_2": threshold,
+                        },
                     )
 
         except ValueError as e:
-            print("%s: %s: math error %s; skipping glyph." % (glyph_name, name, e))
-            print(contour.value)
-            # raise
-    # for x in hist:
-    # 	print(x)
+            add_problem(
+                glyph_name,
+                {"type": "math_error", "master": name, "error": e},
+            )
+    return problems
 
 
 def main(args=None):
@@ -236,6 +269,11 @@ def main(args=None):
     parser = argparse.ArgumentParser(
         "fonttools varLib.interpolatable",
         description=main.__doc__,
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output report in JSON format",
     )
     parser.add_argument(
         "inputs", metavar="FILE", type=str, nargs="+", help="Input TTF/UFO files"
@@ -263,7 +301,68 @@ def main(args=None):
             fonts.append(TTFont(filename))
 
     glyphsets = [font.getGlyphSet() for font in fonts]
-    test(glyphsets, glyphs=glyphs, names=names)
+    problems = test(glyphsets, glyphs=glyphs, names=names)
+    if args.json:
+        import json
+
+        print(json.dumps(problems))
+    else:
+        for glyph, glyph_problems in problems.items():
+            print(f"Glyph {glyph} was not compatible: ")
+            for p in glyph_problems:
+                if p["type"] == "missing":
+                    print("    Glyph was missing in master %s" % p["master"])
+                if p["type"] == "open_path":
+                    print("    Glyph has an open path in master %s" % p["master"])
+                if p["type"] == "path_count":
+                    print(
+                        "    Path count differs: %i in %s, %i in %s"
+                        % (p["value_1"], p["master_1"], p["value_2"], p["master_2"])
+                    )
+                if p["type"] == "node_count":
+                    print(
+                        "    Node count differs in path %i: %i in %s, %i in %s"
+                        % (
+                            p["path"],
+                            p["value_1"],
+                            p["master_1"],
+                            p["value_2"],
+                            p["master_2"],
+                        )
+                    )
+                if p["type"] == "node_incompatibility":
+                    print(
+                        "    Node %o incompatible in path %i: %s in %s, %s in %s"
+                        % (
+                            p["node"],
+                            p["path"],
+                            p["value_1"],
+                            p["master_1"],
+                            p["value_2"],
+                            p["master_2"],
+                        )
+                    )
+                if p["type"] == "contour_order":
+                    print(
+                        "    Contour order differs: %s in %s, %s in %s"
+                        % (
+                            p["value_1"],
+                            p["master_1"],
+                            p["value_2"],
+                            p["master_2"],
+                        )
+                    )
+                if p["type"] == "high_cost":
+                    print(
+                        "    Interpolation has high cost: cost of %s to %s = %i, threshold %i"
+                        % (
+                            p["master_1"],
+                            p["master_2"],
+                            p["value_1"],
+                            p["value_2"],
+                        )
+                    )
+    sys.exit(int(bool(problems)))
 
 
 if __name__ == "__main__":
