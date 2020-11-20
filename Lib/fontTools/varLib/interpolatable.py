@@ -362,10 +362,12 @@ def main(args=None):
                             p["value_2"],
                         )
                     )
-    sys.exit(int(bool(problems)))
+    if problems:
+        return problems
 
 
 if __name__ == "__main__":
     import sys
 
-    main()
+    problems = main()
+    sys.exit(int(bool(problems)))
