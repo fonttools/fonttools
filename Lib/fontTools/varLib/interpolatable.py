@@ -121,7 +121,11 @@ def test(glyphsets, glyphs=None, names=None):
 				for contour in contourPens:
 					nodeTypes.append(tuple(instruction[0] for instruction in contour.value))
 					stats = StatisticsPen(glyphset=glyphset)
-					contour.replay(stats)
+					try:
+						contour.replay(stats)
+					except NotImplementedError as e:
+						print('%s: Glyph cannot be interpolated - open path!' % glyph_name)
+						break
 					size = abs(stats.area) ** .5 * .5
 					vector = (
 						int(size),
