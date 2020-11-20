@@ -186,7 +186,7 @@ def main(args=None):
 		description=main.__doc__,
 	)
 	parser.add_argument('inputs', metavar='FILE', type=str, nargs='+',
-		help="Input TTF files")
+		help="Input TTF/UFO files")
 
 	args = parser.parse_args(args)
 	glyphs = None
@@ -197,8 +197,14 @@ def main(args=None):
 	from os.path import basename
 	names = [basename(filename).rsplit('.', 1)[0] for filename in args.inputs]
 
-	from fontTools.ttLib import TTFont
-	fonts = [TTFont(filename) for filename in args.inputs]
+	fonts = []
+	for filename in args.inputs:
+		if filename.endswith(".ufo"):
+			from fontTools.ufoLib import UFOReader
+			fonts.append(UFOReader(filename))
+		else:
+			from fontTools.ttLib import TTFont
+			fonts.append(TTFont(filename))
 
 	glyphsets = [font.getGlyphSet() for font in fonts]
 	test(glyphsets, glyphs=glyphs, names=names)
