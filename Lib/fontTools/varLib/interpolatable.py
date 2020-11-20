@@ -107,6 +107,9 @@ def test(glyphsets, glyphs=None, names=None):
 			allNodeTypes = []
 			for glyphset,name in zip(glyphsets, names):
 				#print('.', end='')
+				if glyph_name not in glyphset:
+						print('%s: Glyph cannot be interpolated - does not exist in master %s' % (glyph_name, name))
+						continue
 				glyph = glyphset[glyph_name]
 
 				perContourPen = PerContourOrComponentPen(RecordingPen, glyphset=glyphset)
