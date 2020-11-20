@@ -45,10 +45,15 @@ class BuildTest(unittest.TestCase):
         if self.tempdir:
             shutil.rmtree(self.tempdir)
 
-    @staticmethod
-    def get_test_input(test_file_or_folder):
-        path, _ = os.path.split(__file__)
-        return os.path.join(path, "data", test_file_or_folder)
+    def get_test_input(self, test_file_or_folder, copy=False):
+        parent_dir = os.path.dirname(__file__)
+        path = os.path.join(parent_dir, "data", test_file_or_folder)
+        if copy:
+            copied_path = os.path.join(self.tempdir, test_file_or_folder)
+            shutil.copy2(path, copied_path)
+            return copied_path
+        else:
+            return path
 
     @staticmethod
     def get_test_output(test_file_or_folder):
@@ -314,11 +319,12 @@ class BuildTest(unittest.TestCase):
         )
 
     def test_varlib_nonmarking_CFF2(self):
-        ds_path = self.get_test_input('TestNonMarkingCFF2.designspace')
+        self.temp_dir()
+
+        ds_path = self.get_test_input('TestNonMarkingCFF2.designspace', copy=True)
         ttx_dir = self.get_test_input("master_non_marking_cff2")
         expected_ttx_path = self.get_test_output("TestNonMarkingCFF2.ttx")
 
-        self.temp_dir()
         for path in self.get_file_list(ttx_dir, '.ttx', 'TestNonMarkingCFF2_'):
             self.compile_font(path, ".otf", self.tempdir)
 
@@ -336,11 +342,12 @@ class BuildTest(unittest.TestCase):
         self.expect_ttx(varfont, expected_ttx_path, tables)
 
     def test_varlib_build_CFF2(self):
-        ds_path = self.get_test_input('TestCFF2.designspace')
+        self.temp_dir()
+
+        ds_path = self.get_test_input('TestCFF2.designspace', copy=True)
         ttx_dir = self.get_test_input("master_cff2")
         expected_ttx_path = self.get_test_output("BuildTestCFF2.ttx")
 
-        self.temp_dir()
         for path in self.get_file_list(ttx_dir, '.ttx', 'TestCFF2_'):
             self.compile_font(path, ".otf", self.tempdir)
 
@@ -358,11 +365,12 @@ class BuildTest(unittest.TestCase):
         self.expect_ttx(varfont, expected_ttx_path, tables)
 
     def test_varlib_build_CFF2_from_CFF2(self):
-        ds_path = self.get_test_input('TestCFF2Input.designspace')
+        self.temp_dir()
+
+        ds_path = self.get_test_input('TestCFF2Input.designspace', copy=True)
         ttx_dir = self.get_test_input("master_cff2_input")
         expected_ttx_path = self.get_test_output("BuildTestCFF2.ttx")
 
-        self.temp_dir()
         for path in self.get_file_list(ttx_dir, '.ttx', 'TestCFF2_'):
             self.compile_font(path, ".otf", self.tempdir)
 
@@ -380,11 +388,12 @@ class BuildTest(unittest.TestCase):
         self.expect_ttx(varfont, expected_ttx_path, tables)
 
     def test_varlib_build_sparse_CFF2(self):
-        ds_path = self.get_test_input('TestSparseCFF2VF.designspace')
+        self.temp_dir()
+
+        ds_path = self.get_test_input('TestSparseCFF2VF.designspace', copy=True)
         ttx_dir = self.get_test_input("master_sparse_cff2")
         expected_ttx_path = self.get_test_output("TestSparseCFF2VF.ttx")
 
-        self.temp_dir()
         for path in self.get_file_list(ttx_dir, '.ttx', 'MasterSet_Kanji-'):
             self.compile_font(path, ".otf", self.tempdir)
 
@@ -402,11 +411,12 @@ class BuildTest(unittest.TestCase):
         self.expect_ttx(varfont, expected_ttx_path, tables)
 
     def test_varlib_build_vpal(self):
-        ds_path = self.get_test_input('test_vpal.designspace')
+        self.temp_dir()
+
+        ds_path = self.get_test_input('test_vpal.designspace', copy=True)
         ttx_dir = self.get_test_input("master_vpal_test")
         expected_ttx_path = self.get_test_output("test_vpal.ttx")
 
-        self.temp_dir()
         for path in self.get_file_list(ttx_dir, '.ttx', 'master_vpal_test_'):
             self.compile_font(path, ".otf", self.tempdir)
 
@@ -494,11 +504,12 @@ class BuildTest(unittest.TestCase):
         self.expect_ttx(varfont, expected_ttx_path, tables)
 
     def test_varlib_build_from_ttf_paths(self):
-        ds_path = self.get_test_input("Build.designspace")
+        self.temp_dir()
+
+        ds_path = self.get_test_input("Build.designspace", copy=True)
         ttx_dir = self.get_test_input("master_ttx_interpolatable_ttf")
         expected_ttx_path = self.get_test_output("BuildMain.ttx")
 
-        self.temp_dir()
         for path in self.get_file_list(ttx_dir, '.ttx', 'TestFamily-'):
             self.compile_font(path, ".ttf", self.tempdir)
 
@@ -643,12 +654,13 @@ class BuildTest(unittest.TestCase):
         assert all(tag in mvar_tags for tag in fontTools.varLib.mvar.MVAR_ENTRIES)
 
     def test_varlib_build_VVAR_CFF2(self):
-        ds_path = self.get_test_input('TestVVAR.designspace')
+        self.temp_dir()
+
+        ds_path = self.get_test_input('TestVVAR.designspace', copy=True)
         ttx_dir = self.get_test_input("master_vvar_cff2")
         expected_ttx_name = 'TestVVAR'
         suffix = '.otf'
 
-        self.temp_dir()
         for path in self.get_file_list(ttx_dir, '.ttx', 'TestVVAR'):
             font, savepath = self.compile_font(path, suffix, self.tempdir)
 
@@ -668,12 +680,13 @@ class BuildTest(unittest.TestCase):
         self.check_ttx_dump(varfont, expected_ttx_path, tables, suffix)
 
     def test_varlib_build_BASE(self):
-        ds_path = self.get_test_input('TestBASE.designspace')
+        self.temp_dir()
+
+        ds_path = self.get_test_input('TestBASE.designspace', copy=True)
         ttx_dir = self.get_test_input("master_base_test")
         expected_ttx_name = 'TestBASE'
         suffix = '.otf'
 
-        self.temp_dir()
         for path in self.get_file_list(ttx_dir, '.ttx', 'TestBASE'):
             font, savepath = self.compile_font(path, suffix, self.tempdir)
 
