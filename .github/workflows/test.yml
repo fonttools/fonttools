@@ -43,6 +43,9 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install packages
       run: pip install tox coverage
+    - name: (Optionally install PyObjC package if on macOS platform)
+      if: ${{ runner.os == "macOS" }}
+      run: pip install pyobjc
     - name: Run Tox
       run: tox -e py-cov
     - name: Run Tox without lxml
