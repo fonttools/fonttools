@@ -78,6 +78,16 @@ class SubsetTest(unittest.TestCase):
 # Tests
 # -----
 
+    def test_layout_scripts(self):
+        _, fontpath = self.compile_font(self.getpath("layout_scripts.ttx"), ".otf")
+        subsetpath = self.temp_path(".otf")
+        subset.main([fontpath, "--glyphs=*", "--layout-features=*",
+                     "--layout-scripts=latn,arab.URD,arab.dflt",
+                     "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("expect_layout_scripts.ttx"),
+                        ["GPOS", "GSUB"])
+
     def test_no_notdef_outline_otf(self):
         _, fontpath = self.compile_font(self.getpath("TestOTF-Regular.ttx"), ".otf")
         subsetpath = self.temp_path(".otf")
