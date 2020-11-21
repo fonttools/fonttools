@@ -9,6 +9,7 @@ $ fonttools varLib.interpolatable font1 font2 ...
 from fontTools.pens.basePen import AbstractPen, BasePen
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.pens.statisticsPen import StatisticsPen
+from fontTools.pens.momentsPen import OpenContourError
 from collections import OrderedDict
 import itertools
 import sys
@@ -151,7 +152,7 @@ def test(glyphsets, glyphs=None, names=None):
                     stats = StatisticsPen(glyphset=glyphset)
                     try:
                         contour.replay(stats)
-                    except NotImplementedError as e:
+                    except OpenContourError as e:
                         add_problem(
                             glyph_name,
                             {"master": name, "contour": ix, "type": "open_path"},
