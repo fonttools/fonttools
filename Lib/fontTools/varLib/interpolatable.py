@@ -116,9 +116,7 @@ def test(glyphsets, glyphs=None, names=None):
     problems = OrderedDict()
 
     def add_problem(glyphname, problem):
-        if not glyphname in problems:
-            problems[glyphname] = []
-        problems[glyphname].append(problem)
+        problems.setdefault(glyphname, []).append(problem)
 
     for glyph_name in glyphs:
         # print()
