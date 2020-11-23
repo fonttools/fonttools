@@ -683,7 +683,13 @@ class UFOReader(_UFOBaseIO):
 		# this will already have been raised during __init__
 		raise UFOLibError("The default layer is not defined in layercontents.plist.")
 
-	def getGlyphSet(self, layerName=None, validateRead=None, validateWrite=None):
+	def getGlyphSet(
+		self,
+		layerName=None,
+		validateRead=None,
+		validateWrite=None,
+		expectContentsFile=False
+	):
 		"""
 		Return the GlyphSet associated with the
 		glyphs directory mapped to layerName
@@ -695,6 +701,10 @@ class UFOReader(_UFOBaseIO):
 		class's validate value, can be overridden.
 		``validateWrite`` will validate the written data, by default it is set to the
 		class's validate value, can be overridden.
+		``expectContentsFile`` will raise a GlifLibError if a contents.plist file is
+		not found on the glyph set file system. This should be set to ``True`` if you
+		are reading an existing UFO and ``False`` if you use ``getGlyphSet`` to create
+		a fresh	glyph set.
 		"""
 		from fontTools.ufoLib.glifLib import GlyphSet
 
@@ -723,6 +733,7 @@ class UFOReader(_UFOBaseIO):
 			ufoFormatVersion=self._formatVersion,
 			validateRead=validateRead,
 			validateWrite=validateWrite,
+			expectContentsFile=expectContentsFile
 		)
 
 	def getCharacterMapping(self, layerName=None, validate=None):
@@ -1422,7 +1433,15 @@ class UFOWriter(UFOReader):
 			raise UFOLibError("Could not locate a glyph set directory for the layer named %s." % layerName)
 		return foundDirectory
 
-	def getGlyphSet(self, layerName=None, defaultLayer=True, glyphNameToFileNameFunc=None, validateRead=None, validateWrite=None):
+	def getGlyphSet(
+		self,
+		layerName=None,
+		defaultLayer=True,
+		glyphNameToFileNameFunc=None,
+		validateRead=None,
+		validateWrite=None,
+		expectContentsFile=False,
+	):
 		"""
 		Return the GlyphSet object associated with the
 		appropriate glyph directory in the .ufo.
@@ -1435,6 +1454,10 @@ class UFOWriter(UFOReader):
 		class's validate value, can be overridden.
 		``validateWrte`` will validate the written data, by default it is set to the
 		class's validate value, can be overridden.
+		``expectContentsFile`` will raise a GlifLibError if a contents.plist file is
+		not found on the glyph set file system. This should be set to ``True`` if you
+		are reading an existing UFO and ``False`` if you use ``getGlyphSet`` to create
+		a fresh	glyph set.
 		"""
 		if validateRead is None:
 			validateRead = self._validate
@@ -1459,7 +1482,12 @@ class UFOWriter(UFOReader):
 			raise UFOLibError("A layer name must be provided for non-default layers.")
 		# move along to format specific writing
 		if self._formatVersion < UFOFormatVersion.FORMAT_3_0:
-			return self._getDefaultGlyphSet(validateRead, validateWrite, glyphNameToFileNameFunc=glyphNameToFileNameFunc)
+			return self._getDefaultGlyphSet(
+				validateRead,
+				validateWrite,
+				glyphNameToFileNameFunc=glyphNameToFileNameFunc,
+				expectContentsFile=expectContentsFile
+			)
 		elif self._formatVersion.major == UFOFormatVersion.FORMAT_3_0.major:
 			return self._getGlyphSetFormatVersion3(
 				validateRead,
@@ -1467,11 +1495,18 @@ class UFOWriter(UFOReader):
 				layerName=layerName,
 				defaultLayer=defaultLayer,
 				glyphNameToFileNameFunc=glyphNameToFileNameFunc,
+				expectContentsFile=expectContentsFile,
 			)
 		else:
 			raise NotImplementedError(self._formatVersion)
 
-	def _getDefaultGlyphSet(self, validateRead, validateWrite, glyphNameToFileNameFunc=None):
+	def _getDefaultGlyphSet(
+		self,
+		validateRead,
+		validateWrite,
+		glyphNameToFileNameFunc=None,
+		expectContentsFile=False,
+	):
 		from fontTools.ufoLib.glifLib import GlyphSet
 
 		glyphSubFS = self.fs.makedir(DEFAULT_GLYPHS_DIRNAME, recreate=True)
@@ -1481,6 +1516,7 @@ class UFOWriter(UFOReader):
 			ufoFormatVersion=self._formatVersion,
 			validateRead=validateRead,
 			validateWrite=validateWrite,
+			expectContentsFile=expectContentsFile,
 		)
 
 	def _getGlyphSetFormatVersion3(
@@ -1490,6 +1526,7 @@ class UFOWriter(UFOReader):
 		layerName=None,
 		defaultLayer=True,
 		glyphNameToFileNameFunc=None,
+		expectContentsFile=False,
 	):
 		from fontTools.ufoLib.glifLib import GlyphSet
 
@@ -1529,6 +1566,7 @@ class UFOWriter(UFOReader):
 			ufoFormatVersion=self._formatVersion,
 			validateRead=validateRead,
 			validateWrite=validateWrite,
+			expectContentsFile=expectContentsFile,
 		)
 
 	def renameGlyphSet(self, layerName, newLayerName, defaultLayer=False):

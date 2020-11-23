@@ -54,6 +54,16 @@ class GlyphSetTests(unittest.TestCase):
 				added, removed,
 				"%s.glif file differs after round tripping" % glyphName)
 
+	def testContentsExist(self):
+		with self.assertRaises(GlifLibError):
+			GlyphSet(
+				self.dstDir,
+				ufoFormatVersion=2,
+				validateRead=True,
+				validateWrite=True,
+				expectContentsFile=True,
+			)
+
 	def testRebuildContents(self):
 		gset = GlyphSet(GLYPHSETDIR, validateRead=True, validateWrite=True)
 		contents = gset.contents

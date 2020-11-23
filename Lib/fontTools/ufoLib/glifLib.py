@@ -135,6 +135,7 @@ class GlyphSet(_UFOBaseIO):
 		ufoFormatVersion=None,
 		validateRead=True,
 		validateWrite=True,
+		expectContentsFile=False,
 	):
 		"""
 		'path' should be a path (string) to an existing local directory, or
@@ -191,6 +192,8 @@ class GlyphSet(_UFOBaseIO):
 		self.fs = filesystem
 		# if glyphSet contains no 'contents.plist', we consider it empty
 		self._havePreviousFile = filesystem.exists(CONTENTS_FILENAME)
+		if expectContentsFile and not self._havePreviousFile:
+			raise GlifLibError(f"{CONTENTS_FILENAME} is missing.")
 		# attribute kept for backward compatibility
 		self.ufoFormatVersion = ufoFormatVersion.major
 		self.ufoFormatVersionTuple = ufoFormatVersion
