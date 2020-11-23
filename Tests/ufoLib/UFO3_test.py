@@ -3946,7 +3946,7 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 
 		reader = UFOReader(self.ufoPath, validate=True)
 		with self.assertRaises(GlifLibError):
-			reader.getGlyphSet("layer 1", expectContentsFile=True)
+			reader.getGlyphSet("layer 1")
 
 		writer = UFOWriter(self.ufoPath, validate=True)
 		with self.assertRaises(GlifLibError):

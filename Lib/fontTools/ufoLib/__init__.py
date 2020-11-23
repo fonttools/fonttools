@@ -683,13 +683,7 @@ class UFOReader(_UFOBaseIO):
 		# this will already have been raised during __init__
 		raise UFOLibError("The default layer is not defined in layercontents.plist.")
 
-	def getGlyphSet(
-		self,
-		layerName=None,
-		validateRead=None,
-		validateWrite=None,
-		expectContentsFile=False
-	):
+	def getGlyphSet(self, layerName=None, validateRead=None, validateWrite=None):
 		"""
 		Return the GlyphSet associated with the
 		glyphs directory mapped to layerName
@@ -701,10 +695,6 @@ class UFOReader(_UFOBaseIO):
 		class's validate value, can be overridden.
 		``validateWrite`` will validate the written data, by default it is set to the
 		class's validate value, can be overridden.
-		``expectContentsFile`` will raise a GlifLibError if a contents.plist file is
-		not found on the glyph set file system. This should be set to ``True`` if you
-		are reading an existing UFO and ``False`` if you use ``getGlyphSet`` to create
-		a fresh	glyph set.
 		"""
 		from fontTools.ufoLib.glifLib import GlyphSet
 
@@ -733,7 +723,7 @@ class UFOReader(_UFOBaseIO):
 			ufoFormatVersion=self._formatVersion,
 			validateRead=validateRead,
 			validateWrite=validateWrite,
-			expectContentsFile=expectContentsFile
+			expectContentsFile=True
 		)
 
 	def getCharacterMapping(self, layerName=None, validate=None):
