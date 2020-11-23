@@ -3940,6 +3940,26 @@ class UFO3WriteLayersTestCase(unittest.TestCase):
 		result = list(writer.getGlyphSet("layer 2", defaultLayer=False).keys())
 		self.assertEqual(expected, result)
 
+	def testGetGlyphSetNoContents(self):
+		self.makeUFO()
+		os.remove(os.path.join(self.ufoPath, "glyphs.layer 1", "contents.plist"))
+
+		reader = UFOReader(self.ufoPath, validate=True)
+		with self.assertRaises(GlifLibError):
+			reader.getGlyphSet("layer 1")
+
+		writer = UFOWriter(self.ufoPath, validate=True)
+		with self.assertRaises(GlifLibError):
+			writer.getGlyphSet("layer 1", defaultLayer=False, expectContentsFile=True)
+
+		# There's a separate code path for < v3 UFOs.
+		with open(os.path.join(self.ufoPath, "metainfo.plist"), "wb") as f:
+			plistlib.dump(dict(creator="test", formatVersion=2), f)
+		os.remove(os.path.join(self.ufoPath, "glyphs", "contents.plist"))
+		writer = UFOWriter(self.ufoPath, validate=True, formatVersion=2)
+		with self.assertRaises(GlifLibError):
+			writer.getGlyphSet(expectContentsFile=True)
+
 	# make a new font with two layers
 
 	def testNewFontOneLayer(self):
