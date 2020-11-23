@@ -39,16 +39,16 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
         self.segments = {}
 
     def compile(self, ttFont):
-        axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
+        axisIds = [axis.axisId for axis in ttFont["fvar"].axes]
         header = {
             "majorVersion": 1,
             "minorVersion": 0,
             "reserved": 0,
-            "axisCount": len(axisTags)
+            "axisCount": len(axisIds)
         }
         result = [sstruct.pack(AVAR_HEADER_FORMAT, header)]
-        for axis in axisTags:
-            mappings = sorted(self.segments[axis].items())
+        for axisId in axisIds:
+            mappings = sorted(self.segments[axisId].items())
             result.append(struct.pack(">H", len(mappings)))
             for key, value in mappings:
                 fixedKey = fl2fi(key, 14)
@@ -57,7 +57,7 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
         return bytesjoin(result)
 
     def decompile(self, data, ttFont):
-        axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
+        axisIds = [axis.axisId for axis in ttFont["fvar"].axes]
         header = {}
         headerSize = sstruct.calcsize(AVAR_HEADER_FORMAT)
         header = sstruct.unpack(AVAR_HEADER_FORMAT, data[0:headerSize])
@@ -65,8 +65,8 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
         if majorVersion != 1:
             raise TTLibError("unsupported 'avar' version %d" % majorVersion)
         pos = headerSize
-        for axis in axisTags:
-            segments = self.segments[axis] = {}
+        for axisId in axisIds:
+            segments = self.segments[axisId] = {}
             numPairs = struct.unpack(">H", data[pos:pos+2])[0]
             pos = pos + 2
             for _ in range(numPairs):
@@ -75,11 +75,11 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
                 pos = pos + 4
 
     def toXML(self, writer, ttFont):
-        axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
-        for axis in axisTags:
-            writer.begintag("segment", axis=axis)
+        axisIds = [axis.axisId for axis in ttFont["fvar"].axes]
+        for axisId in axisIds:
+            writer.begintag("segment", axis=axisId)
             writer.newline()
-            for key, value in sorted(self.segments[axis].items()):
+            for key, value in sorted(self.segments[axisId].items()):
                 key = fl2str(key, 14)
                 value = fl2str(value, 14)
                 writer.simpletag("mapping", **{"from": key, "to": value})
@@ -89,8 +89,8 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
 
     def fromXML(self, name, attrs, content, ttFont):
         if name == "segment":
-            axis = attrs["axis"]
-            segment = self.segments[axis] = {}
+            axisId = attrs["axis"]
+            segment = self.segments[axisId] = {}
             for element in content:
                 if isinstance(element, tuple):
                     elementName, elementAttrs, _ = element
@@ -99,5 +99,5 @@ class table__a_v_a_r(DefaultTable.DefaultTable):
                         toValue = str2fl(elementAttrs["to"], 14)
                         if fromValue in segment:
                             log.warning("duplicate entry for %s in axis '%s'",
-                                        fromValue, axis)
+                                        fromValue, axisId)
                         segment[fromValue] = toValue

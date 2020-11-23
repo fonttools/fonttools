@@ -35,14 +35,14 @@ CVAR_PRIVATE_POINT_DATA = deHexStr(
 CVAR_XML = [
     '<version major="1" minor="0"/>',
     '<tuple>',
-    '  <coord axis="wght" value="1.0"/>',
+    '  <coord axis="weight" value="1.0"/>',
     '  <delta cvt="2" value="3"/>',
     '  <delta cvt="3" value="1"/>',
     '  <delta cvt="4" value="4"/>',
     '</tuple>',
     '<tuple>',
-    '  <coord axis="wght" value="-1.0"/>',
-    '  <coord axis="wdth" value="0.8"/>',
+    '  <coord axis="weight" value="-1.0"/>',
+    '  <coord axis="width" value="0.8"/>',
     '  <delta cvt="2" value="9"/>',
     '  <delta cvt="3" value="7"/>',
     '  <delta cvt="4" value="8"/>',
@@ -50,8 +50,8 @@ CVAR_XML = [
 ]
 
 CVAR_VARIATIONS = [
-    TupleVariation({"wght": (0.0, 1.0, 1.0)}, [None, None, 3, 1, 4]),
-    TupleVariation({"wght": (-1, -1.0, 0.0), "wdth": (0.0, 0.7999878, 0.7999878)},
+    TupleVariation({"weight": (0.0, 1.0, 1.0)}, [None, None, 3, 1, 4]),
+    TupleVariation({"weight": (-1, -1.0, 0.0), "width": (0.0, 0.7999878, 0.7999878)},
                    [None, None, 9, 7, 8]),
 ]
 
@@ -75,6 +75,7 @@ class CVARTableTest(unittest.TestCase):
         Axis = getTableModule("fvar").Axis
         fvar.axes = [Axis(), Axis()]
         fvar.axes[0].axisTag, fvar.axes[1].axisTag = "wght", "wdth"
+        fvar.axes[0].axisId, fvar.axes[1].axisId = "weight", "width"
         return font, cvar
 
     def test_compile(self):

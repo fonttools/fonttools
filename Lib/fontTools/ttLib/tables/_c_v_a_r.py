@@ -32,7 +32,7 @@ class table__c_v_a_r(DefaultTable.DefaultTable):
         tupleVariationCount, tuples, data = compileTupleVariationStore(
             variations=[v for v in self.variations if v.hasImpact()],
             pointCount=len(ttFont["cvt "].values),
-            axisTags=[axis.axisTag for axis in ttFont["fvar"].axes],
+            axisIds=[axis.axisId for axis in ttFont["fvar"].axes],
             sharedTupleIndices={},
             useSharedPoints=useSharedPoints)
         header = {
@@ -48,14 +48,14 @@ class table__c_v_a_r(DefaultTable.DefaultTable):
         ])
 
     def decompile(self, data, ttFont):
-        axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
+        axisIds = [axis.axisId for axis in ttFont["fvar"].axes]
         header = {}
         sstruct.unpack(CVAR_HEADER_FORMAT, data[0:CVAR_HEADER_SIZE], header)
         self.majorVersion = header["majorVersion"]
         self.minorVersion = header["minorVersion"]
         assert self.majorVersion == 1, self.majorVersion
         self.variations = decompileTupleVariationStore(
-            tableTag=self.tableTag, axisTags=axisTags,
+            tableTag=self.tableTag, axisIds=axisIds,
             tupleVariationCount=header["tupleVariationCount"],
             pointCount=len(ttFont["cvt "].values), sharedTuples=None,
             data=data, pos=CVAR_HEADER_SIZE, dataPos=header["offsetToData"])
@@ -74,9 +74,9 @@ class table__c_v_a_r(DefaultTable.DefaultTable):
                     var.fromXML(tupleName, tupleAttrs, tupleContent)
 
     def toXML(self, writer, ttFont):
-        axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
+        axisIds = [axis.axisId for axis in ttFont["fvar"].axes]
         writer.simpletag("version",
                          major=self.majorVersion, minor=self.minorVersion)
         writer.newline()
         for var in self.variations:
-            var.toXML(writer, axisTags)
+            var.toXML(writer, axisIds)

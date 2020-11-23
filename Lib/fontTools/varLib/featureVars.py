@@ -19,7 +19,7 @@ def addFeatureVariations(font, conditionalSubstitutions, featureTag='rvrn'):
     The `conditionalSubstitutions` argument is a list of (Region, Substitutions)
     tuples.
 
-    A Region is a list of Boxes. A Box is a dict mapping axisTags to
+    A Region is a list of Boxes. A Box is a dict mapping axisIds to
     (minValue, maxValue) tuples. Irrelevant axes may be omitted and they are
     interpretted as extending to end of axis in each direction.  A Box represents
     an orthogonal 'rectangular' subset of an N-dimensional design space.
@@ -54,7 +54,7 @@ def overlayFeatureVariations(conditionalSubstitutions):
     The `conditionalSubstitutions` argument is a list of (Region, Substitutions)
     tuples.
 
-    A Region is a list of Boxes. A Box is a dict mapping axisTags to
+    A Region is a list of Boxes. A Box is a dict mapping axisIds to
     (minValue, maxValue) tuples. Irrelevant axes may be omitted and they are
     interpretted as extending to end of axis in each direction.  A Box represents
     an orthogonal 'rectangular' subset of an N-dimensional design space.
@@ -179,14 +179,14 @@ def overlayBox(top, bot):
     intersection = {}
     intersection.update(top)
     intersection.update(bot)
-    for axisTag in set(top) & set(bot):
-        min1, max1 = top[axisTag]
-        min2, max2 = bot[axisTag]
+    for axisId in set(top) & set(bot):
+        min1, max1 = top[axisId]
+        min2, max2 = bot[axisId]
         minimum = max(min1, min2)
         maximum = min(max1, max2)
         if not minimum < maximum:
             return None, bot # Do not intersect
-        intersection[axisTag] = minimum,maximum
+        intersection[axisId] = minimum,maximum
 
     # Remainder
     #
@@ -202,12 +202,12 @@ def overlayBox(top, bot):
     remainder = dict(bot)
     exactlyOne = False
     fullyInside = False
-    for axisTag in bot:
-        if axisTag not in intersection:
+    for axisId in bot:
+        if axisId not in intersection:
             fullyInside = False
             continue # Axis range lies fully within
-        min1, max1 = intersection[axisTag]
-        min2, max2 = bot[axisTag]
+        min1, max1 = intersection[axisId]
+        min2, max2 = bot[axisId]
         if min1 <= min2 and max2 <= max1:
             continue # Axis range lies fully within
 
@@ -235,7 +235,7 @@ def overlayBox(top, bot):
             # Remainder leaks out from both sides.  Can't cut either.
             return intersection, bot
 
-        remainder[axisTag] = minimum,maximum
+        remainder[axisId] = minimum,maximum
 
     if fullyInside:
         # bot is fully within intersection.  Remainder is empty.
@@ -311,17 +311,17 @@ def addFeatureVariationsRaw(font, conditionalSubstitutions, featureTag='rvrn'):
 
     lookupMap = buildSubstitutionLookups(gsub, allSubstitutions)
 
-    axisIndices = {axis.axisTag: axisIndex for axisIndex, axis in enumerate(font["fvar"].axes)}
+    axisIndices = {axis.axisId: axisIndex for axisIndex, axis in enumerate(font["fvar"].axes)}
 
     featureVariationRecords = []
     for conditionSet, substitutions in conditionalSubstitutions:
         conditionTable = []
-        for axisTag, (minValue, maxValue) in sorted(conditionSet.items()):
+        for axisId, (minValue, maxValue) in sorted(conditionSet.items()):
             if minValue > maxValue:
                 raise VarLibValidationError(
                     "A condition set has a minimum value above the maximum value."
                 )
-            ct = buildConditionTable(axisIndices[axisTag], minValue, maxValue)
+            ct = buildConditionTable(axisIndices[axisId], minValue, maxValue)
             conditionTable.append(ct)
 
         lookupIndices = [lookupMap[subst] for subst in substitutions]

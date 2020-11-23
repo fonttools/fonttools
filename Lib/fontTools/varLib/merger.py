@@ -1020,9 +1020,9 @@ class VariationMerger(AligningMerger):
 	"""A merger that takes multiple master fonts, and builds a
 	variable font."""
 
-	def __init__(self, model, axisTags, font):
+	def __init__(self, model, axisIds, font):
 		Merger.__init__(self, font)
-		self.store_builder = varStore.OnlineVarStoreBuilder(axisTags)
+		self.store_builder = varStore.OnlineVarStoreBuilder(axisIds)
 		self.setModel(model)
 
 	def setModel(self, model):

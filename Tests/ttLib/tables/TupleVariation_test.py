@@ -229,9 +229,9 @@ class TupleVariationTest(unittest.TestCase):
 		var = TupleVariation(
 			{"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
 			[(7,4), (8,5), (9,6)])
-		axisTags = ["wght", "wdth"]
-		sharedPeakIndices = { var.compileCoord(axisTags): 0x77 }
-		tup, deltas, _ = var.compile(axisTags, sharedPeakIndices,
+		axisIds = ["wght", "wdth"]
+		sharedPeakIndices = { var.compileCoord(axisIds): 0x77 }
+		tup, deltas, _ = var.compile(axisIds, sharedPeakIndices,
 		                          sharedPoints={0,1,2})
 		# len(deltas)=8; flags=None; tupleIndex=0x77
 		# embeddedPeaks=[]; intermediateCoord=[]
@@ -244,9 +244,9 @@ class TupleVariationTest(unittest.TestCase):
 		var = TupleVariation(
 			{"wght": (0.3, 0.5, 0.7), "wdth": (0.1, 0.8, 0.9)},
 			[(7,4), (8,5), (9,6)])
-		axisTags = ["wght", "wdth"]
-		sharedPeakIndices = { var.compileCoord(axisTags): 0x77 }
-		tup, deltas, _ = var.compile(axisTags, sharedPeakIndices,
+		axisIds = ["wght", "wdth"]
+		sharedPeakIndices = { var.compileCoord(axisIds): 0x77 }
+		tup, deltas, _ = var.compile(axisIds, sharedPeakIndices,
 		                          sharedPoints={0,1,2})
 		# len(deltas)=8; flags=INTERMEDIATE_REGION; tupleIndex=0x77
 		# embeddedPeak=[]; intermediateCoord=[(0.3, 0.1), (0.7, 0.9)]
@@ -259,9 +259,9 @@ class TupleVariationTest(unittest.TestCase):
 		var = TupleVariation(
 			{"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
 			[(7,4), (8,5), (9,6)])
-		axisTags = ["wght", "wdth"]
-		sharedPeakIndices = { var.compileCoord(axisTags): 0x77 }
-		tup, deltas, _ = var.compile(axisTags, sharedPeakIndices,
+		axisIds = ["wght", "wdth"]
+		sharedPeakIndices = { var.compileCoord(axisIds): 0x77 }
+		tup, deltas, _ = var.compile(axisIds, sharedPeakIndices,
 		                          sharedPoints=None)
 		# len(deltas)=9; flags=PRIVATE_POINT_NUMBERS; tupleIndex=0x77
 		# embeddedPeak=[]; intermediateCoord=[]
@@ -275,9 +275,9 @@ class TupleVariationTest(unittest.TestCase):
 		var = TupleVariation(
 			{"wght": (0.0, 0.5, 1.0), "wdth": (0.0, 0.8, 1.0)},
 			[(7,4), (8,5), (9,6)])
-		axisTags = ["wght", "wdth"]
-		sharedPeakIndices = { var.compileCoord(axisTags): 0x77 }
-		tuple, deltas, _ = var.compile(axisTags,
+		axisIds = ["wght", "wdth"]
+		sharedPeakIndices = { var.compileCoord(axisIds): 0x77 }
+		tuple, deltas, _ = var.compile(axisIds,
 		                            sharedPeakIndices, sharedPoints=None)
 		# len(deltas)=9; flags=PRIVATE_POINT_NUMBERS; tupleIndex=0x77
 		# embeddedPeak=[]; intermediateCoord=[(0.0, 0.0), (1.0, 1.0)]
@@ -292,7 +292,7 @@ class TupleVariationTest(unittest.TestCase):
 		var = TupleVariation(
 			{"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
 			[(7,4), (8,5), (9,6)])
-		tup, deltas, _ = var.compile(axisTags=["wght", "wdth"],
+		tup, deltas, _ = var.compile(axisIds=["wght", "wdth"],
 		                          sharedCoordIndices={}, sharedPoints={0, 1, 2})
 		# len(deltas)=8; flags=EMBEDDED_PEAK_TUPLE
 		# embeddedPeak=[(0.5, 0.8)]; intermediateCoord=[]
@@ -305,7 +305,7 @@ class TupleVariationTest(unittest.TestCase):
 		var = TupleVariation(
 			{"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
 			[3, 1, 4])
-		tup, deltas, _ = var.compile(axisTags=["wght", "wdth"],
+		tup, deltas, _ = var.compile(axisIds=["wght", "wdth"],
 		                          sharedCoordIndices={}, sharedPoints={0, 1, 2})
 		# len(deltas)=4; flags=EMBEDDED_PEAK_TUPLE
 		# embeddedPeak=[(0.5, 0.8)]; intermediateCoord=[]
@@ -317,7 +317,7 @@ class TupleVariationTest(unittest.TestCase):
 		var = TupleVariation(
 			{"wght": (0.0, 0.5, 1.0), "wdth": (0.0, 0.8, 0.8)},
 			[(7,4), (8,5), (9,6)])
-		tup, deltas, _ = var.compile(axisTags=["wght", "wdth"],
+		tup, deltas, _ = var.compile(axisIds=["wght", "wdth"],
 		                          sharedCoordIndices={},
 		                          sharedPoints={0, 1, 2})
 		# len(deltas)=8; flags=EMBEDDED_PEAK_TUPLE
@@ -333,7 +333,7 @@ class TupleVariationTest(unittest.TestCase):
 			{"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
 			[(7,4), (8,5), (9,6)])
 		tup, deltas, _ = var.compile(
-			axisTags=["wght", "wdth"], sharedCoordIndices={}, sharedPoints=None)
+			axisIds=["wght", "wdth"], sharedCoordIndices={}, sharedPoints=None)
 		# len(deltas)=9; flags=PRIVATE_POINT_NUMBERS|EMBEDDED_PEAK_TUPLE
 		# embeddedPeak=[(0.5, 0.8)]; intermediateCoord=[]
 		self.assertEqual("00 09 A0 00 20 00 33 33", hexencode(tup))
@@ -347,7 +347,7 @@ class TupleVariationTest(unittest.TestCase):
 			{"wght": (0.0, 0.5, 0.5), "wdth": (0.0, 0.8, 0.8)},
 			[7, 8, 9])
 		tup, deltas, _ = var.compile(
-			axisTags=["wght", "wdth"], sharedCoordIndices={}, sharedPoints=None)
+			axisIds=["wght", "wdth"], sharedCoordIndices={}, sharedPoints=None)
 		# len(deltas)=5; flags=PRIVATE_POINT_NUMBERS|EMBEDDED_PEAK_TUPLE
 		# embeddedPeak=[(0.5, 0.8)]; intermediateCoord=[]
 		self.assertEqual("00 05 A0 00 20 00 33 33", hexencode(tup))
@@ -360,7 +360,7 @@ class TupleVariationTest(unittest.TestCase):
 			{"wght": (0.4, 0.5, 0.6), "wdth": (0.7, 0.8, 0.9)},
 			[(7,4), (8,5), (9,6)])
 		tup, deltas, _ = var.compile(
-			axisTags = ["wght", "wdth"],
+			axisIds = ["wght", "wdth"],
 			sharedCoordIndices={}, sharedPoints=None)
 		# len(deltas)=9;
 		# flags=PRIVATE_POINT_NUMBERS|INTERMEDIATE_REGION|EMBEDDED_PEAK_TUPLE
@@ -377,7 +377,7 @@ class TupleVariationTest(unittest.TestCase):
 			{"wght": (0.4, 0.5, 0.6), "wdth": (0.7, 0.8, 0.9)},
 			[7, 8, 9])
 		tup, deltas, _ = var.compile(
-			axisTags = ["wght", "wdth"],
+			axisIds = ["wght", "wdth"],
 			sharedCoordIndices={}, sharedPoints=None)
 		# len(deltas)=5;
 		# flags=PRIVATE_POINT_NUMBERS|INTERMEDIATE_REGION|EMBEDDED_PEAK_TUPLE
@@ -616,7 +616,7 @@ class TupleVariationTest(unittest.TestCase):
 
 	def test_decompileSharedTuples_Skia(self):
 		sharedTuples = decompileSharedTuples(
-			axisTags=["wght", "wdth"], sharedTupleCount=8,
+			axisIds=["wght", "wdth"], sharedTupleCount=8,
 			data=SKIA_GVAR_SHARED_TUPLES_DATA, offset=0)
 		self.assertEqual(sharedTuples, SKIA_GVAR_SHARED_TUPLES)
 
@@ -632,14 +632,14 @@ class TupleVariationTest(unittest.TestCase):
 		]
 		self.assertEqual(
 			compileTupleVariationStore(variations, pointCount=8,
-			                           axisTags=["wght", "opsz"],
+			                           axisIds=["wght", "opsz"],
 			                           sharedTupleIndices={}),
             (0, b"", b""))
 
 	def test_compileTupleVariationStore_noVariations(self):
 		self.assertEqual(
 			compileTupleVariationStore(variations=[], pointCount=8,
-			                           axisTags=["wght", "opsz"],
+			                           axisIds=["wght", "opsz"],
 			                           sharedTupleIndices={}),
             (0, b"", b""))
 
@@ -652,7 +652,7 @@ class TupleVariationTest(unittest.TestCase):
 			               deltas)
 		]
 		tupleVariationCount, tuples, data = compileTupleVariationStore(
-			variations, pointCount=4, axisTags=["wght", "wdth"],
+			variations, pointCount=4, axisIds=["wght", "wdth"],
 			sharedTupleIndices={})
 		self.assertEqual(
 			decompileTupleVariationStore("cvar", ["wght", "wdth"],
@@ -670,7 +670,7 @@ class TupleVariationTest(unittest.TestCase):
 			               deltas)
 		]
 		tupleVariationCount, tuples, data = compileTupleVariationStore(
-			variations, pointCount=4, axisTags=["wght", "wdth"],
+			variations, pointCount=4, axisIds=["wght", "wdth"],
 			sharedTupleIndices={})
 		self.assertEqual(
 			decompileTupleVariationStore("gvar", ["wght", "wdth"],
@@ -681,7 +681,7 @@ class TupleVariationTest(unittest.TestCase):
 
 	def test_decompileTupleVariationStore_Skia_I(self):
 		tvar = decompileTupleVariationStore(
-			tableTag="gvar", axisTags=["wght", "wdth"],
+			tableTag="gvar", axisIds=["wght", "wdth"],
 			tupleVariationCount=8, pointCount=18,
 			sharedTuples=SKIA_GVAR_SHARED_TUPLES,
 			data=SKIA_GVAR_I_DATA, pos=4, dataPos=36)
@@ -694,7 +694,7 @@ class TupleVariationTest(unittest.TestCase):
 
 	def test_decompileTupleVariationStore_empty(self):
 		self.assertEqual(
-			decompileTupleVariationStore(tableTag="gvar", axisTags=[],
+			decompileTupleVariationStore(tableTag="gvar", axisIds=[],
 			                             tupleVariationCount=0, pointCount=5,
 			                             sharedTuples=[],
 			                             data=b"", pos=4, dataPos=4),

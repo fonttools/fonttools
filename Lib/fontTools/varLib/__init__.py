@@ -69,10 +69,17 @@ def _add_fvar(font, axes, instances):
 
 	fvar = newTable('fvar')
 	nameTable = font['name']
+	axisTagsSeen = {}
 
 	for a in axes.values():
 		axis = Axis()
 		axis.axisTag = Tag(a.tag)
+		if axis.axisTag in axisTagsSeen:
+			axisTagsSeen[axis.axisTag] += 1
+			axis.axisId = f"{axis.axisTag}#{axisTagsSeen[axis.axisTag]}"
+		else:
+			axisTagsSeen[axis.axisTag] = 0
+			axis.axisId = axis.axisTag
 		# TODO Skip axes that have no variation.
 		axis.minValue, axis.defaultValue, axis.maxValue = a.minimum, a.default, a.maximum
 		axis.axisNameID = nameTable.addMultilingualName(a.labelNames, font, minNameID=256)
@@ -387,13 +394,13 @@ HVAR_FIELDS = _MetricsFields(tableTag='HVAR', metricsTag='hmtx', sb1='LsbMap',
 VVAR_FIELDS = _MetricsFields(tableTag='VVAR', metricsTag='vmtx', sb1='TsbMap',
 	sb2='BsbMap', advMapping='AdvHeightMap', vOrigMapping='VOrgMap')
 
-def _add_HVAR(font, masterModel, master_ttfs, axisTags):
-	_add_VHVAR(font, masterModel, master_ttfs, axisTags, HVAR_FIELDS)
+def _add_HVAR(font, masterModel, master_ttfs, axisIds):
+	_add_VHVAR(font, masterModel, master_ttfs, axisIds, HVAR_FIELDS)
 
-def _add_VVAR(font, masterModel, master_ttfs, axisTags):
-	_add_VHVAR(font, masterModel, master_ttfs, axisTags, VVAR_FIELDS)
+def _add_VVAR(font, masterModel, master_ttfs, axisIds):
+	_add_VHVAR(font, masterModel, master_ttfs, axisIds, VVAR_FIELDS)
 
-def _add_VHVAR(font, masterModel, master_ttfs, axisTags, tableFields):
+def _add_VHVAR(font, masterModel, master_ttfs, axisIds, tableFields):
 
 	tableTag = tableFields.tableTag
 	assert tableTag not in font
@@ -418,7 +425,7 @@ def _add_VHVAR(font, masterModel, master_ttfs, axisTags, tableFields):
 		vOrigMetricses = None
 
 	metricsStore, advanceMapping, vOrigMapping = _get_advance_metrics(font,
-		masterModel, master_ttfs, axisTags, glyphOrder, advMetricses,
+		masterModel, master_ttfs, axisIds, glyphOrder, advMetricses,
 		vOrigMetricses)
 
 	vhvar.VarStore = metricsStore
@@ -435,7 +442,7 @@ def _add_VHVAR(font, masterModel, master_ttfs, axisTags, tableFields):
 	return
 
 def _get_advance_metrics(font, masterModel, master_ttfs,
-		axisTags, glyphOrder, advMetricses, vOrigMetricses=None):
+		axisIds, glyphOrder, advMetricses, vOrigMetricses=None):
 
 	vhAdvanceDeltasAndSupports = {}
 	vOrigDeltasAndSupports = {}
@@ -459,7 +466,7 @@ def _get_advance_metrics(font, masterModel, master_ttfs,
 	if singleModel:
 		# Build direct mapping
 		supports = next(iter(vhAdvanceDeltasAndSupports.values()))[1][1:]
-		varTupleList = builder.buildVarRegionList(supports, axisTags)
+		varTupleList = builder.buildVarRegionList(supports, axisIds)
 		varTupleIndexes = list(range(len(supports)))
 		varData = builder.buildVarData(varTupleIndexes, [], optimize=False)
 		for glyphName in glyphOrder:
@@ -468,7 +475,7 @@ def _get_advance_metrics(font, masterModel, master_ttfs,
 		directStore = builder.buildVarStore(varTupleList, [varData])
 
 	# Build optimized indirect mapping
-	storeBuilder = varStore.OnlineVarStoreBuilder(axisTags)
+	storeBuilder = varStore.OnlineVarStoreBuilder(axisIds)
 	advMapping = {}
 	for glyphName in glyphOrder:
 		deltas, supports = vhAdvanceDeltasAndSupports[glyphName]
@@ -516,11 +523,11 @@ def _get_advance_metrics(font, masterModel, master_ttfs,
 
 	return metricsStore, advanceMapping, vOrigMapping
 
-def _add_MVAR(font, masterModel, master_ttfs, axisTags):
+def _add_MVAR(font, masterModel, master_ttfs, axisIds):
 
 	log.info("Generating MVAR")
 
-	store_builder = varStore.OnlineVarStoreBuilder(axisTags)
+	store_builder = varStore.OnlineVarStoreBuilder(axisIds)
 
 	records = []
 	lastTableTag = None
@@ -595,11 +602,11 @@ def _add_MVAR(font, masterModel, master_ttfs, axisTags):
 		mvar.ValueRecord = sorted(records, key=lambda r: r.ValueTag)
 
 
-def _add_BASE(font, masterModel, master_ttfs, axisTags):
+def _add_BASE(font, masterModel, master_ttfs, axisIds):
 
 	log.info("Generating BASE")
 
-	merger = VariationMerger(masterModel, axisTags, font)
+	merger = VariationMerger(masterModel, axisIds, font)
 	merger.mergeTables(font, master_ttfs, ['BASE'])
 	store = merger.store_builder.finish()
 
@@ -611,10 +618,10 @@ def _add_BASE(font, masterModel, master_ttfs, axisTags):
 	base.VarStore = store
 
 
-def _merge_OTL(font, model, master_fonts, axisTags):
+def _merge_OTL(font, model, master_fonts, axisIds):
 
 	log.info("Merging OpenType Layout tables")
-	merger = VariationMerger(model, axisTags, font)
+	merger = VariationMerger(model, axisIds, font)
 
 	merger.mergeTables(font, master_fonts, ['GSUB', 'GDEF', 'GPOS'])
 	store = merger.store_builder.finish()
@@ -907,23 +914,23 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 		{ds.axes[k].tag: v for k,v in loc.items()} for loc in ds.normalized_master_locs
 	]
 	# From here on, we use fvar axes only
-	axisTags = [axis.axisTag for axis in fvar.axes]
+	axisIds = [axis.axisId for axis in fvar.axes]
 
 	# Assume single-model for now.
-	model = models.VariationModel(normalized_master_locs, axisOrder=axisTags)
+	model = models.VariationModel(normalized_master_locs, axisOrder=axisIds)
 	assert 0 == model.mapping[ds.base_idx]
 
 	log.info("Building variations tables")
 	if 'BASE' not in exclude and 'BASE' in vf:
-		_add_BASE(vf, model, master_fonts, axisTags)
+		_add_BASE(vf, model, master_fonts, axisIds)
 	if 'MVAR' not in exclude:
-		_add_MVAR(vf, model, master_fonts, axisTags)
+		_add_MVAR(vf, model, master_fonts, axisIds)
 	if 'HVAR' not in exclude:
-		_add_HVAR(vf, model, master_fonts, axisTags)
+		_add_HVAR(vf, model, master_fonts, axisIds)
 	if 'VVAR' not in exclude and 'vmtx' in vf:
-		_add_VVAR(vf, model, master_fonts, axisTags)
+		_add_VVAR(vf, model, master_fonts, axisIds)
 	if 'GDEF' not in exclude or 'GPOS' not in exclude:
-		_merge_OTL(vf, model, master_fonts, axisTags)
+		_merge_OTL(vf, model, master_fonts, axisIds)
 	if 'gvar' not in exclude and 'glyf' in vf:
 		_add_gvar(vf, model, master_fonts, optimize=optimize)
 	if 'cvar' not in exclude and 'glyf' in vf:
@@ -945,7 +952,7 @@ def build(designspace, master_finder=lambda s:s, exclude=[], optimize=True):
 				post.mapping = {}
 
 	set_default_weight_width_slant(
-		vf, location={axis.axisTag: axis.defaultValue for axis in vf["fvar"].axes}
+		vf, location={axis.axisId: axis.defaultValue for axis in vf["fvar"].axes}
 	)
 
 	for tag in exclude:
