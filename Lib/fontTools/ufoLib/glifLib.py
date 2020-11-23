@@ -149,6 +149,9 @@ class GlyphSet(_UFOBaseIO):
 
 		``validateRead`` will validate read operations. Its default is ``True``.
 		``validateWrite`` will validate write operations. Its default is ``True``.
+		``expectContentsFile`` will raise a GlifLibError if a contents.plist file is
+		not found on the glyph set file system. This should be set to ``True`` if you
+		are reading an existing UFO and ``False`` if you create a fresh	glyph set.
 		"""
 		try:
 			ufoFormatVersion = UFOFormatVersion(ufoFormatVersion)
