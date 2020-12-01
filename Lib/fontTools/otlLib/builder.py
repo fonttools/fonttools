@@ -314,9 +314,10 @@ class ChainContextualRuleset:
         classdefbuilder = ClassDefBuilder(useClass0=False)
         for position in context:
             for glyphset in position:
-                if not classdefbuilder.canAdd(glyphset):
+                glyphs = set(glyphset)
+                if not classdefbuilder.canAdd(glyphs):
                     return None
-                classdefbuilder.add(glyphset)
+                classdefbuilder.add(glyphs)
         return classdefbuilder
 
 
@@ -2558,13 +2559,11 @@ class ClassDefBuilder(object):
         if isinstance(glyphs, (set, frozenset)):
             glyphs = sorted(glyphs)
         glyphs = tuple(glyphs)
-        tempglyphs = set()
         if glyphs in self.classes_:
             return True
         for glyph in glyphs:
-            if glyph in self.glyphs_ or glyph in tempglyphs:
+            if glyph in self.glyphs_:
                 return False
-            tempglyphs.add(glyph)
         return True
 
     def add(self, glyphs):
