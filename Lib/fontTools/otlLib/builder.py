@@ -2558,11 +2558,13 @@ class ClassDefBuilder(object):
         if isinstance(glyphs, (set, frozenset)):
             glyphs = sorted(glyphs)
         glyphs = tuple(glyphs)
+        tempglyphs = set()
         if glyphs in self.classes_:
             return True
         for glyph in glyphs:
-            if glyph in self.glyphs_:
+            if glyph in self.glyphs_ or glyph in tempglyphs:
                 return False
+            tempglyphs.add(glyph)
         return True
 
     def add(self, glyphs):
