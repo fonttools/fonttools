@@ -82,8 +82,8 @@ extras_require = {
 	# for fontTools.sfnt and fontTools.woff2: to compress/uncompress
 	# WOFF 1.0 and WOFF 2.0 webfonts.
 	"woff": [
-		"brotli >= 1.0.1; platform_python_implementation != 'PyPy'",
-		"brotlipy >= 0.7.0; platform_python_implementation == 'PyPy'",
+		"brotli >= 1.0.1; platform_python_implementation == 'CPython'",
+		"brotlicffi >= 0.8.0; platform_python_implementation != 'CPython'",
 		"zopfli >= 0.1.4",
 	],
 	# for fontTools.unicode and fontTools.unicodedata: to use the latest version

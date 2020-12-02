@@ -19,7 +19,10 @@ log = logging.getLogger("fontTools.ttLib.woff2")
 
 haveBrotli = False
 try:
-	import brotli
+	try:
+		import brotlicffi as brotli
+	except ImportError:
+		import brotli
 	haveBrotli = True
 except ImportError:
 	pass
