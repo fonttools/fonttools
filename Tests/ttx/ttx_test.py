@@ -18,7 +18,10 @@ try:
 except ImportError:
     zopfli = None
 try:
-    import brotli
+    try:
+        import brotlicffi as brotli
+    except ImportError:
+        import brotli
 except ImportError:
     brotli = None
 
