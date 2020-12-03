@@ -544,7 +544,7 @@ def test_buildPaintComposite():
     composite = layerBuilder.buildPaintComposite(
         mode=ot.CompositeMode.SRC_OVER,
         source={
-            "format": 8,
+            "format": 10,
             "mode": "src_over",
             "source": {"format": 5, "glyph": "c", "paint": 2},
             "backdrop": {"format": 5, "glyph": "b", "paint": 1},
@@ -572,6 +572,44 @@ def test_buildPaintComposite():
     assert composite.BackdropPaint.Glyph == "a"
     assert composite.BackdropPaint.Paint.Format == ot.Paint.Format.PaintSolid
     assert composite.BackdropPaint.Paint.Color.PaletteIndex == 0
+
+
+def test_buildPaintRotate():
+    layerBuilder = LayerV1ListBuilder()
+    paint = layerBuilder.buildPaintRotate(
+        paint=layerBuilder.buildPaintGlyph(
+            "a", layerBuilder.buildPaintSolid(paletteIndex=0, alpha=1.0)
+        ),
+        angle=15,
+        centerX=127,
+        centerY=129,
+    )
+
+    assert paint.Format == ot.Paint.Format.PaintRotate
+    assert paint.Paint.Format == ot.Paint.Format.PaintGlyph
+    assert paint.angle.value == 15
+    assert paint.centerX.value == 127
+    assert paint.centerY.value == 129
+
+
+def test_buildPaintRotate():
+    layerBuilder = LayerV1ListBuilder()
+    paint = layerBuilder.buildPaintSkew(
+        paint=layerBuilder.buildPaintGlyph(
+            "a", layerBuilder.buildPaintSolid(paletteIndex=0, alpha=1.0)
+        ),
+        xSkewAngle=15,
+        ySkewAngle=42,
+        centerX=127,
+        centerY=129,
+    )
+
+    assert paint.Format == ot.Paint.Format.PaintSkew
+    assert paint.Paint.Format == ot.Paint.Format.PaintGlyph
+    assert paint.xSkewAngle.value == 15
+    assert paint.ySkewAngle.value == 42
+    assert paint.centerX.value == 127
+    assert paint.centerY.value == 129
 
 
 def test_buildColrV1():
