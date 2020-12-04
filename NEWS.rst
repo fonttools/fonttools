@@ -1,3 +1,6 @@
+4.18.0 (released 2020-12-04)
+----------------------------
+
 - [COLRv1] Update to latest draft: added ``PaintRotate`` and ``PaintSkew`` (#2118).
 - [woff2] Support new ``brotlicffi`` bindings for PyPy (#2117).
 - [glifLib] Added ``expectContentsFile`` parameter to ``GlyphSet``, for use when
