@@ -1665,6 +1665,23 @@ otData = [
 
 	('PaintFormat8', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 8'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintRotate table) to Paint subtable.'),
+		('VarFixed', 'angle', None, None, ''),
+		('VarFixed', 'centerX', None, None, ''),
+		('VarFixed', 'centerY', None, None, ''),
+	]),
+
+	('PaintFormat9', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 9'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintRotate table) to Paint subtable.'),
+		('VarFixed', 'xSkewAngle', None, None, ''),
+		('VarFixed', 'ySkewAngle', None, None, ''),
+		('VarFixed', 'centerX', None, None, ''),
+		('VarFixed', 'centerY', None, None, ''),
+	]),
+
+	('PaintFormat10', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 8'),
 		('LOffset24To(Paint)', 'SourcePaint', None, None, 'Offset (from beginning of PaintComposite table) to source Paint subtable.'),
 		('CompositeMode', 'CompositeMode', None, None, 'A CompositeMode enumeration value.'),
 		('LOffset24To(Paint)', 'BackdropPaint', None, None, 'Offset (from beginning of PaintComposite table) to backdrop Paint subtable.'),

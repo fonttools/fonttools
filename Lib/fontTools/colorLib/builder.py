@@ -542,6 +542,38 @@ class LayerV1ListBuilder:
         ot_paint.Paint = self.buildPaint(paint)
         return ot_paint
 
+    def buildPaintRotate(
+        self,
+        paint: _PaintInput,
+        angle: _ScalarInput,
+        centerX: _ScalarInput,
+        centerY: _ScalarInput,
+    ) -> ot.Paint:
+        ot_paint = ot.Paint()
+        ot_paint.Format = int(ot.Paint.Format.PaintRotate)
+        ot_paint.Paint = self.buildPaint(paint)
+        ot_paint.angle = _to_variable_f16dot16_float(angle)
+        ot_paint.centerX = _to_variable_f16dot16_float(centerX)
+        ot_paint.centerY = _to_variable_f16dot16_float(centerY)
+        return ot_paint
+
+    def buildPaintSkew(
+        self,
+        paint: _PaintInput,
+        xSkewAngle: _ScalarInput,
+        ySkewAngle: _ScalarInput,
+        centerX: _ScalarInput,
+        centerY: _ScalarInput,
+    ) -> ot.Paint:
+        ot_paint = ot.Paint()
+        ot_paint.Format = int(ot.Paint.Format.PaintSkew)
+        ot_paint.Paint = self.buildPaint(paint)
+        ot_paint.xSkewAngle = _to_variable_f16dot16_float(xSkewAngle)
+        ot_paint.ySkewAngle = _to_variable_f16dot16_float(ySkewAngle)
+        ot_paint.centerX = _to_variable_f16dot16_float(centerX)
+        ot_paint.centerY = _to_variable_f16dot16_float(centerY)
+        return ot_paint
+
     def buildPaintComposite(
         self,
         mode: _CompositeInput,
