@@ -1,3 +1,21 @@
+- [COLRv1] Update to latest draft: added ``PaintRotate`` and ``PaintSkew`` (#2118).
+- [woff2] Support new ``brotlicffi`` bindings for PyPy (#2117).
+- [glifLib] Added ``expectContentsFile`` parameter to ``GlyphSet``, for use when
+  reading existing UFOs, to comply with the specification stating that a
+  ``contents.plist`` file must exist in a glyph set (#2114).
+- [subset] Allow ``LangSys`` tags in ``--layout-scripts`` option (#2112). For example:
+  ``--layout-scripts=arab.dflt,arab.URD,latn``; this will keep ``DefaultLangSys``
+  and ``URD`` language for ``arab`` script, and all languages for ``latn`` script.
+- [varLib.interpolatable] Allow UFOs to be checked; report open paths, non existant
+  glyphs; add a ``--json`` option to produce a machine-readable list of
+  incompatibilities
+- [pens] Added ``QuartzPen`` to create ``CGPath`` from glyph outlines on macOS.
+  Requires pyobjc (#2107).
+- [feaLib] You can export ``FONTTOOLS_LOOKUP_DEBUGGING=1`` to enable feature file
+  debugging info stored in ``Debg`` table (#2106).
+- [otlLib] Build more efficient format 1 and format 2 contextual lookups whenever
+  possible (#2101).
+
 4.17.1 (released 2020-11-16)
 ----------------------------
 
