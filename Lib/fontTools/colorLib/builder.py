@@ -436,20 +436,6 @@ def _to_color_line(obj):
     raise TypeError(obj)
 
 
-def _as_tuple(obj) -> Tuple[Any, ...]:
-    # start simple, who even cares about cyclic graphs or interesting field types
-    def _tuple_safe(value):
-        if isinstance(value, enum.Enum):
-            return value
-        elif hasattr(value, "__dict__"):
-            return tuple((k, _tuple_safe(v)) for k, v in value.__dict__.items())
-        elif isinstance(value, collections.abc.MutableSequence):
-            return tuple(_tuple_safe(e) for e in value)
-        return value
-
-    return tuple(_tuple_safe(obj))
-
-
 def _reuse_ranges(num_layers: int) -> Generator[Tuple[int, int], None, None]:
     # TODO feels like something itertools might have already
     for lbound in range(num_layers):
@@ -465,11 +451,13 @@ class LayerV1ListBuilder:
     slices: List[ot.Paint]
     layers: List[ot.Paint]
     reusePool: Mapping[Tuple[Any, ...], int]
+    paintTuples: Mapping[int, Tuple[Any, ...]]
 
     def __init__(self):
         self.slices = []
         self.layers = []
         self.reusePool = {}
+        self.paintTuples = {}
 
     def buildPaintSolid(
         self, paletteIndex: int, alpha: _ScalarInput = _DEFAULT_ALPHA
@@ -605,7 +593,9 @@ class LayerV1ListBuilder:
                 reverse=True,
             )
             for lbound, ubound in ranges:
-                reuse_lbound = self.reusePool.get(_as_tuple(paints[lbound:ubound]), -1)
+                reuse_lbound = self.reusePool.get(
+                    self._paints_as_tuple(paints[lbound:ubound]), -1
+                )
                 if reuse_lbound == -1:
                     continue
                 new_slice = ot.Paint()
@@ -622,7 +612,7 @@ class LayerV1ListBuilder:
 
         # Register our parts for reuse
         for lbound, ubound in _reuse_ranges(len(paints)):
-            self.reusePool[_as_tuple(paints[lbound:ubound])] = (
+            self.reusePool[self._paints_as_tuple(paints[lbound:ubound])] = (
                 lbound + ot_paint.FirstLayerIndex
             )
 
@@ -659,6 +649,32 @@ class LayerV1ListBuilder:
         layers.LayerCount = len(self.layers)
         layers.Paint = self.layers
         return layers
+
+    def _paints_as_tuple(self, paints: Sequence[ot.Paint]) -> Tuple[Any, ...]:
+        # Return a hashable tuple of tuples from the ot.Paint sequence.
+        # Cache result by id(paint) to avoid computing more than once per paint.
+        # DO NOT MUTATE the paint after this, otherwise you invalidate the cache!
+
+        # Start simple, who even cares about cyclic graphs or interesting field types
+        def _tuple_safe(value):
+            is_paint = isinstance(value, ot.Paint)
+
+            if is_paint and id(value) in self.paintTuples:
+                return self.paintTuples[id(value)]
+
+            result = value
+            if isinstance(value, enum.Enum):
+                result = value
+            elif hasattr(value, "__dict__"):
+                result = tuple((k, _tuple_safe(v)) for k, v in value.__dict__.items())
+            elif isinstance(value, collections.abc.MutableSequence):
+                result = tuple(_tuple_safe(e) for e in value)
+
+            if is_paint:
+                self.paintTuples[id(value)] = result
+            return result
+
+        return tuple(_tuple_safe(paint) for paint in paints)
 
 
 LayerV1ListBuilder._buildFunctions = {
