@@ -465,7 +465,9 @@ class LayerV1ListBuilder:
             if isinstance(value, enum.Enum):
                 return value
             elif hasattr(value, "__dict__"):
-                return tuple((k, _tuple_safe(v)) for k, v in value.__dict__.items())
+                return tuple(
+                    (k, _tuple_safe(v)) for k, v in sorted(value.__dict__.items())
+                )
             elif isinstance(value, collections.abc.MutableSequence):
                 return tuple(_tuple_safe(e) for e in value)
             return value
