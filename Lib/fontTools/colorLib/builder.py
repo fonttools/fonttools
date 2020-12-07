@@ -452,12 +452,14 @@ class LayerV1ListBuilder:
     layers: List[ot.Paint]
     reusePool: Mapping[Tuple[Any, ...], int]
     tuples: Mapping[int, Tuple[Any, ...]]
+    keepAlive: List[ot.Paint]  # we need id to remain valid
 
     def __init__(self):
         self.slices = []
         self.layers = []
         self.reusePool = {}
         self.tuples = {}
+        self.keepAlive = []
 
     def _paint_tuple(self, paint: ot.Paint):
         # start simple, who even cares about cyclic graphs or interesting field types
@@ -478,6 +480,7 @@ class LayerV1ListBuilder:
         if result is None:
             result = _tuple_safe(paint)
             self.tuples[id(paint)] = result
+            self.keepAlive.append(paint)
         return result
 
     def _as_tuple(self, paints: Sequence[ot.Paint]) -> Tuple[Any, ...]:
