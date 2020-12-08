@@ -474,8 +474,8 @@ class LayerV1ListBuilder:
                 return tuple(_tuple_safe(e) for e in value)
             return value
 
-        # Cache the tuples for individual Paint instead of the a whole sequence
-        #  because the seq could be a transient slice
+        # Cache the tuples for individual Paint instead of the whole sequence
+        # because the seq could be a transient slice
         result = self.tuples.get(id(paint), None)
         if result is None:
             result = _tuple_safe(paint)
