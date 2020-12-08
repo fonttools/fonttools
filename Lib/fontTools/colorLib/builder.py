@@ -436,20 +436,6 @@ def _to_color_line(obj):
     raise TypeError(obj)
 
 
-def _as_tuple(obj) -> Tuple[Any, ...]:
-    # start simple, who even cares about cyclic graphs or interesting field types
-    def _tuple_safe(value):
-        if isinstance(value, enum.Enum):
-            return value
-        elif hasattr(value, "__dict__"):
-            return tuple((k, _tuple_safe(v)) for k, v in value.__dict__.items())
-        elif isinstance(value, collections.abc.MutableSequence):
-            return tuple(_tuple_safe(e) for e in value)
-        return value
-
-    return tuple(_tuple_safe(obj))
-
-
 def _reuse_ranges(num_layers: int) -> Generator[Tuple[int, int], None, None]:
     # TODO feels like something itertools might have already
     for lbound in range(num_layers):
@@ -465,11 +451,40 @@ class LayerV1ListBuilder:
     slices: List[ot.Paint]
     layers: List[ot.Paint]
     reusePool: Mapping[Tuple[Any, ...], int]
+    tuples: Mapping[int, Tuple[Any, ...]]
+    keepAlive: List[ot.Paint]  # we need id to remain valid
 
     def __init__(self):
         self.slices = []
         self.layers = []
         self.reusePool = {}
+        self.tuples = {}
+        self.keepAlive = []
+
+    def _paint_tuple(self, paint: ot.Paint):
+        # start simple, who even cares about cyclic graphs or interesting field types
+        def _tuple_safe(value):
+            if isinstance(value, enum.Enum):
+                return value
+            elif hasattr(value, "__dict__"):
+                return tuple(
+                    (k, _tuple_safe(v)) for k, v in sorted(value.__dict__.items())
+                )
+            elif isinstance(value, collections.abc.MutableSequence):
+                return tuple(_tuple_safe(e) for e in value)
+            return value
+
+        # Cache the tuples for individual Paint instead of the whole sequence
+        # because the seq could be a transient slice
+        result = self.tuples.get(id(paint), None)
+        if result is None:
+            result = _tuple_safe(paint)
+            self.tuples[id(paint)] = result
+            self.keepAlive.append(paint)
+        return result
+
+    def _as_tuple(self, paints: Sequence[ot.Paint]) -> Tuple[Any, ...]:
+        return tuple(self._paint_tuple(p) for p in paints)
 
     def buildPaintSolid(
         self, paletteIndex: int, alpha: _ScalarInput = _DEFAULT_ALPHA
@@ -605,7 +620,9 @@ class LayerV1ListBuilder:
                 reverse=True,
             )
             for lbound, ubound in ranges:
-                reuse_lbound = self.reusePool.get(_as_tuple(paints[lbound:ubound]), -1)
+                reuse_lbound = self.reusePool.get(
+                    self._as_tuple(paints[lbound:ubound]), -1
+                )
                 if reuse_lbound == -1:
                     continue
                 new_slice = ot.Paint()
@@ -622,7 +639,7 @@ class LayerV1ListBuilder:
 
         # Register our parts for reuse
         for lbound, ubound in _reuse_ranges(len(paints)):
-            self.reusePool[_as_tuple(paints[lbound:ubound])] = (
+            self.reusePool[self._as_tuple(paints[lbound:ubound])] = (
                 lbound + ot_paint.FirstLayerIndex
             )
 
