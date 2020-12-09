@@ -1,3 +1,6 @@
+- [colorLib] Speed optimization for ``LayerV1ListBuilder`` (#2119).
+- [mutator] Fixed missing tab in ``interpolate_cff2_metrics`` (0957dc7a).
+
 4.18.0 (released 2020-12-04)
 ----------------------------
 
