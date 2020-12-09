@@ -1,4 +1,4 @@
-|Travis Build Status| |Appveyor Build status| |Coverage Status| |PyPI| |Gitter Chat|
+|CI Build Status| |Coverage Status| |PyPI| |Gitter Chat|
 
 What is this?
 ~~~~~~~~~~~~~
@@ -240,10 +240,8 @@ Rights Reserved.
 
 Have fun!
 
-.. |Travis Build Status| image:: https://travis-ci.org/fonttools/fonttools.svg
-   :target: https://travis-ci.org/fonttools/fonttools
-.. |Appveyor Build status| image:: https://ci.appveyor.com/api/projects/status/0f7fmee9as744sl7/branch/master?svg=true
-   :target: https://ci.appveyor.com/project/fonttools/fonttools/branch/master
+.. |CI Build Status| image:: https://github.com/fonttools/fonttools/workflows/Test/badge.svg
+   :target: https://github.com/fonttools/fonttools/actions?query=workflow%3ATest
 .. |Coverage Status| image:: https://codecov.io/gh/fonttools/fonttools/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/fonttools/fonttools
 .. |PyPI| image:: https://img.shields.io/pypi/v/fonttools.svg
