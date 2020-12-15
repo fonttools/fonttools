@@ -544,7 +544,7 @@ def test_buildPaintComposite():
     composite = layerBuilder.buildPaintComposite(
         mode=ot.CompositeMode.SRC_OVER,
         source={
-            "format": 10,
+            "format": 11,
             "mode": "src_over",
             "source": {"format": 5, "glyph": "c", "paint": 2},
             "backdrop": {"format": 5, "glyph": "b", "paint": 1},
@@ -574,6 +574,22 @@ def test_buildPaintComposite():
     assert composite.BackdropPaint.Paint.Color.PaletteIndex == 0
 
 
+def test_buildPaintTranslate():
+    layerBuilder = LayerV1ListBuilder()
+    paint = layerBuilder.buildPaintTranslate(
+        paint=layerBuilder.buildPaintGlyph(
+            "a", layerBuilder.buildPaintSolid(paletteIndex=0, alpha=1.0)
+        ),
+        dx=123,
+        dy=-345,
+    )
+
+    assert paint.Format == ot.Paint.Format.PaintTranslate
+    assert paint.Paint.Format == ot.Paint.Format.PaintGlyph
+    assert paint.dx.value == 123
+    assert paint.dy.value == -345
+
+
 def test_buildPaintRotate():
     layerBuilder = LayerV1ListBuilder()
     paint = layerBuilder.buildPaintRotate(
@@ -592,7 +608,7 @@ def test_buildPaintRotate():
     assert paint.centerY.value == 129
 
 
-def test_buildPaintRotate():
+def test_buildPaintSkew():
     layerBuilder = LayerV1ListBuilder()
     paint = layerBuilder.buildPaintSkew(
         paint=layerBuilder.buildPaintGlyph(
