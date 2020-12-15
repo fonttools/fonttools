@@ -557,6 +557,16 @@ class LayerV1ListBuilder:
         ot_paint.Paint = self.buildPaint(paint)
         return ot_paint
 
+    def buildPaintTranslate(
+        self, paint: _PaintInput, dx: _ScalarInput, dy: _ScalarInput
+    ):
+        ot_paint = ot.Paint()
+        ot_paint.Format = int(ot.Paint.Format.PaintTranslate)
+        ot_paint.Paint = self.buildPaint(paint)
+        ot_paint.dx = _to_variable_f16dot16_float(dx)
+        ot_paint.dy = _to_variable_f16dot16_float(dy)
+        return ot_paint
+
     def buildPaintRotate(
         self,
         paint: _PaintInput,
