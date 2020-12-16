@@ -1,3 +1,6 @@
+- [COLRv1] Implemented ``PaintTranslate`` paint format (#2129).
+- [varLib.cff] Fixed unbound local variable error (#1787).
+
 4.18.1 (released 2020-12-09)
 ----------------------------
 
