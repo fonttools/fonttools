@@ -314,9 +314,10 @@ class ChainContextualRuleset:
         classdefbuilder = ClassDefBuilder(useClass0=False)
         for position in context:
             for glyphset in position:
-                if not classdefbuilder.canAdd(glyphset):
+                glyphs = set(glyphset)
+                if not classdefbuilder.canAdd(glyphs):
                     return None
-                classdefbuilder.add(glyphset)
+                classdefbuilder.add(glyphs)
         return classdefbuilder
 
 
