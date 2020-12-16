@@ -1,5 +1,7 @@
 - [COLRv1] Implemented ``PaintTranslate`` paint format (#2129).
 - [varLib.cff] Fixed unbound local variable error (#1787).
+- [otlLib] Don't crash when creating OpenType class definitions if some glyphs
+  occur more than once (#2125).
 
 4.18.1 (released 2020-12-09)
 ----------------------------
