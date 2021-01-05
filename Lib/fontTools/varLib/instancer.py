@@ -137,6 +137,7 @@ class NameID(IntEnum):
     POSTSCRIPT_NAME = 6
     TYPOGRAPHIC_FAMILY_NAME = 16
     TYPOGRAPHIC_SUBFAMILY_NAME = 17
+    VARIATIONS_POSTSCRIPT_NAME_PREFIX = 25
 
 
 ELIDABLE_AXIS_VALUE_NAME = 2
@@ -1173,7 +1174,7 @@ def checkMissingAxisValues(stat, axisCoords):
     missingAxes = set(axisCoords) - seen
     if missingAxes:
         missing = ", ".join(f"'{i}={axisCoords[i]}'" for i in missingAxes)
-        raise ValueError(f"Cannot find Axis Value Tables [{missing}]")
+        raise ValueError(f"Cannot find Axis Values [{missing}]")
 
 
 def _sortedAxisValues(stat, axisCoords):
@@ -1327,10 +1328,9 @@ def _updateNameTableStyleRecords(
     )
 
     nameIDs[NameID.FULL_FONT_NAME] = f"{newFamilyName} {newStyleName}"
-    # TODO (M Foley) implement Adobe PS naming for VFs
-    nameIDs[
-        NameID.POSTSCRIPT_NAME
-    ] = f"{newFamilyName.replace(' ', '')}-{newStyleName.replace(' ', '')}"
+    nameIDs[NameID.POSTSCRIPT_NAME] = _updatePSNameRecord(
+        varfont, newFamilyName, newStyleName, platform
+    )
     nameIDs[NameID.UNIQUE_FONT_IDENTIFIER] = _updateUniqueIdNameRecord(
         varfont, nameIDs, platform
     )
@@ -1339,6 +1339,32 @@ def _updateNameTableStyleRecords(
         if not string:
             continue
         nametable.setName(string, nameID, *platform)
+
+
+def _updatePSNameRecord(varfont, familyName, styleName, platform):
+    # Implementation based on Adobe Technical Note #5902 :
+    # https://wwwimages2.adobe.com/content/dam/acom/en/devnet/font/pdfs/5902.AdobePSNameGeneration.pdf
+    nametable = varfont["name"]
+
+    family_prefix = nametable.getName(
+        NameID.VARIATIONS_POSTSCRIPT_NAME_PREFIX, *platform
+    )
+    if family_prefix:
+        family_prefix = familyPrefix.toUnicode()
+    else:
+        family_prefix = familyName
+
+    psName = f"{family_prefix}-{styleName}"
+    # Remove any characters other than uppercase Latin letters, lowercase
+    # Latin letters, digits and hyphens.
+    psName = re.sub(r"[^A-Za-z0-9-]", r"", psName)
+
+    if len(psName) > 127:
+        # Abbreviating the stylename so it fits within 127 characters whilst
+        # conforming to every vendor's specification is too complex. Instead
+        # we simply truncate the psname and add the required "..."
+        return f"{psName[:124]}..."
+    return psName
 
 
 def _updateUniqueIdNameRecord(varfont, nameIDs, platform):
