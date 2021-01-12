@@ -147,6 +147,10 @@ class LoggingPen(LogMixin, AbstractPen):
 	pass
 
 
+class MissingComponentError(KeyError):
+	"""Indicates a component pointing to a non-existent glyph in the glyphset."""
+
+
 class DecomposingPen(LoggingPen):
 
 	""" Implements a 'addComponent' method that decomposes components
@@ -155,10 +159,12 @@ class DecomposingPen(LoggingPen):
 
 	You must override moveTo, lineTo, curveTo and qCurveTo. You may
 	additionally override closePath, endPath and addComponent.
+
+	By default a warning message is logged when a base glyph is missing;
+	set the class variable ``skipMissingComponents`` to False if you want
+	to raise a :class:`MissingComponentError` exception.
 	"""
 
-	# By default a warning message is logged when a base glyph is missing;
-	# set this to False if you want to raise a 'KeyError' exception
 	skipMissingComponents = True
 
 	def __init__(self, glyphSet):
@@ -176,7 +182,7 @@ class DecomposingPen(LoggingPen):
 			glyph = self.glyphSet[glyphName]
 		except KeyError:
 			if not self.skipMissingComponents:
-				raise
+				raise MissingComponentError(glyphName)
 			self.log.warning(
 				"glyph '%s' is missing from glyphSet; skipped" % glyphName)
 		else:
