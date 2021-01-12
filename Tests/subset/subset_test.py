@@ -753,6 +753,13 @@ class SubsetTest(unittest.TestCase):
         # check all glyphs are kept via GSUB closure, no changes expected
         self.expect_ttx(subsetfont, ttx)
 
+    def test_cmap_prune_format12(self):
+        _, fontpath = self.compile_font(self.getpath("CmapSubsetTest.ttx"), ".ttf")
+        subsetpath = self.temp_path(".ttf")
+        subset.main([fontpath, "--glyphs=a", "--output-file=%s" % subsetpath])
+        subsetfont = TTFont(subsetpath)
+        self.expect_ttx(subsetfont, self.getpath("CmapSubsetTest.subset.ttx"), ["cmap"])
+
 
 @pytest.fixture
 def featureVarsTestFont():
