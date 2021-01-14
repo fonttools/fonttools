@@ -1,6 +1,6 @@
 """Helpers for manipulating 2D points and vectors in COLR table."""
 
-from math import copysign, cos, sqrt, pi
+from math import copysign, cos, hypot, pi
 from fontTools.misc.fixedTools import otRound
 
 
@@ -8,12 +8,8 @@ def _vector_between_points(a, b):
     return (b[0] - a[0], b[1] - a[1])
 
 
-def _vector_length(vec):
-    return sqrt(vec[0] * vec[0] + vec[1] * vec[1])
-
-
 def _distance_between_points(a, b):
-    return _vector_length(_vector_between_points(a, b))
+    return hypot(*_vector_between_points(a, b))
 
 
 def _round_point(pt):
@@ -25,7 +21,7 @@ def _round_circle(centre, radius):
 
 
 def _unit_vector(vec):
-    length = _vector_length(vec)
+    length = hypot(*vec)
     if length == 0:
         return None
     return (vec[0] / length, vec[1] / length)
