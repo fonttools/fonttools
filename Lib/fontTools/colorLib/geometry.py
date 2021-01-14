@@ -4,12 +4,8 @@ from math import copysign, cos, hypot, pi
 from fontTools.misc.fixedTools import otRound
 
 
-def _vector_between_points(a, b):
-    return (b[0] - a[0], b[1] - a[1])
-
-
-def _distance_between_points(a, b):
-    return hypot(*_vector_between_points(a, b))
+def _vector_between(origin, target):
+    return (target[0] - origin[0], target[1] - origin[1])
 
 
 def _round_point(pt):
@@ -33,7 +29,7 @@ _NEARLY_ZERO = 1 / (1 << 12)  # 0.000244140625
 
 
 def _is_circle_inside_circle(c0, r0, c1, r1):
-    dist = r0 + _distance_between_points(c0, c1)
+    dist = r0 + hypot(*_vector_between(c0, c1))
     return abs(r1 - dist) <= _NEARLY_ZERO or r1 > dist
 
 
@@ -89,9 +85,9 @@ def nudge_start_circle_almost_inside(c0, r0, c1, r1):
             if rc0 == rc1:  # nowhere to nudge along a zero vector, bail out
                 break
             if inside_after_round:
-                direction = _vector_between_points(rc1, rc0)
+                direction = _vector_between(rc1, rc0)
             else:
-                direction = _vector_between_points(rc0, rc1)
+                direction = _vector_between(rc0, rc1)
             rc0 = _nudge_point(rc0, direction)
             inside_after_round = _is_circle_inside_circle(rc0, rr0, rc1, rr1)
             if inside_before_round == inside_after_round:
