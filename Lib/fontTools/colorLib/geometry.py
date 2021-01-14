@@ -28,9 +28,9 @@ def _unit_vector(vec):
 _NEARLY_ZERO = 1 / (1 << 12)  # 0.000244140625
 
 
-def _is_circle_inside_circle(c0, r0, c1, r1):
-    dist = r0 + hypot(*_vector_between(c0, c1))
-    return abs(r1 - dist) <= _NEARLY_ZERO or r1 > dist
+def _is_circle_inside_circle(inner_centre, inner_radius, outer_centre, outer_radius):
+    dist = inner_radius + hypot(*_vector_between(inner_centre, outer_centre))
+    return abs(outer_radius - dist) <= _NEARLY_ZERO or outer_radius > dist
 
 
 # The unit vector's X and Y components are respectively
