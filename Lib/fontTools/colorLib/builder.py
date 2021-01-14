@@ -34,6 +34,7 @@ from fontTools.ttLib.tables.otTables import (
     VariableInt,
 )
 from .errors import ColorLibError
+from .geometry import nudge_start_circle_almost_inside
 
 
 # TODO move type aliases to colorLib.types?
@@ -328,9 +329,9 @@ def _split_color_glyphs_by_version(
 
 def _to_variable_value(
     value: _ScalarInput,
-    minValue: _Number,
-    maxValue: _Number,
-    cls: Type[VariableValue],
+    cls: Type[VariableValue] = VariableFloat,
+    minValue: Optional[_Number] = None,
+    maxValue: Optional[_Number] = None,
 ) -> VariableValue:
     if not isinstance(value, cls):
         try:
@@ -339,9 +340,9 @@ def _to_variable_value(
             value = cls(value)
         else:
             value = cls._make(it)
-    if value.value < minValue:
+    if minValue is not None and value.value < minValue:
         raise OverflowError(f"{cls.__name__}: {value.value} < {minValue}")
-    if value.value > maxValue:
+    if maxValue is not None and value.value > maxValue:
         raise OverflowError(f"{cls.__name__}: {value.value} < {maxValue}")
     return value
 
@@ -526,7 +527,20 @@ class LayerV1ListBuilder:
         ot_paint.Format = int(ot.Paint.Format.PaintRadialGradient)
         ot_paint.ColorLine = _to_color_line(colorLine)
 
-        for i, (x, y), r in [(0, c0, r0), (1, c1, r1)]:
+        # normalize input types (which may or may not specify a varIdx)
+        x0, y0 = _to_variable_value(c0[0]), _to_variable_value(c0[1])
+        r0 = _to_variable_value(r0)
+        x1, y1 = _to_variable_value(c1[0]), _to_variable_value(c1[1])
+        r1 = _to_variable_value(r1)
+
+        # avoid abrupt change after rounding when c0 is near c1's perimeter
+        c0x, c0y = nudge_start_circle_almost_inside(
+            (x0.value, y0.value), r0.value, (x1.value, y1.value), r1.value
+        )
+        x0, y0 = x0._replace(value=c0x), y0._replace(value=c0y)
+
+        for i, (x, y, r) in enumerate(((x0, y0, r0), (x1, y1, r1))):
+            # rounding happens here as floats are converted to integers
             setattr(ot_paint, f"x{i}", _to_variable_int16(x))
             setattr(ot_paint, f"y{i}", _to_variable_int16(y))
             setattr(ot_paint, f"r{i}", _to_variable_uint16(r))
