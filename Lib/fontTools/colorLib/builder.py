@@ -534,10 +534,11 @@ class LayerV1ListBuilder:
         r1 = _to_variable_value(r1)
 
         # avoid abrupt change after rounding when c0 is near c1's perimeter
-        c0x, c0y = nudge_start_circle_almost_inside(
+        c = nudge_start_circle_almost_inside(
             (x0.value, y0.value), r0.value, (x1.value, y1.value), r1.value
         )
-        x0, y0 = x0._replace(value=c0x), y0._replace(value=c0y)
+        x0, y0 = x0._replace(value=c.centre[0]), y0._replace(value=c.centre[1])
+        r0 = r0._replace(value=c.radius)
 
         for i, (x, y, r) in enumerate(((x0, y0, r0), (x1, y1, r1))):
             # rounding happens here as floats are converted to integers
