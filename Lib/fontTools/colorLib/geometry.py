@@ -90,12 +90,12 @@ def round_start_circle_stable_containment(c0, r0, c1, r1):
     https://github.com/googlefonts/colr-gradients-spec/issues/204
     https://github.com/googlefonts/picosvg/issues/158
     """
-    start_circle, end_circle = Circle(c0, r0), Circle(c1, r1)
+    start, end = Circle(c0, r0), Circle(c1, r1)
 
-    inside_before_round = start_circle.inside(end_circle)
+    inside_before_round = start.inside(end)
 
-    round_start = start_circle.round()
-    round_end = end_circle.round()
+    round_start = start.round()
+    round_end = end.round()
 
     # At most 3 iterations ought to be enough to converge. In the first, we
     # check if the start circle keeps containment after normal rounding; then
@@ -131,9 +131,9 @@ def round_start_circle_stable_containment(c0, r0, c1, r1):
             round_start.nudge_towards(direction)
     else:  # likely a bug
         raise AssertionError(
-            f"Rounding circle {start_circle} "
+            f"Rounding circle {start} "
             f"{'inside' if inside_before_round else 'outside'} "
-            f"{end_circle} failed after {max_attempts} attempts!"
+            f"{end} failed after {max_attempts} attempts!"
         )
 
     return round_start
