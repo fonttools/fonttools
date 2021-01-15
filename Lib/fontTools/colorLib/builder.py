@@ -34,7 +34,7 @@ from fontTools.ttLib.tables.otTables import (
     VariableInt,
 )
 from .errors import ColorLibError
-from .geometry import nudge_start_circle_almost_inside
+from .geometry import round_start_circle_stable_containment
 
 
 # TODO move type aliases to colorLib.types?
@@ -534,7 +534,7 @@ class LayerV1ListBuilder:
         r1 = _to_variable_value(r1)
 
         # avoid abrupt change after rounding when c0 is near c1's perimeter
-        c = nudge_start_circle_almost_inside(
+        c = round_start_circle_stable_containment(
             (x0.value, y0.value), r0.value, (x1.value, y1.value), r1.value
         )
         x0, y0 = x0._replace(value=c.centre[0]), y0._replace(value=c.centre[1])

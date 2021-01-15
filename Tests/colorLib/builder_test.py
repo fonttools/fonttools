@@ -1,7 +1,7 @@
 from fontTools.ttLib import newTable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.colorLib import builder
-from fontTools.colorLib.geometry import nudge_start_circle_almost_inside, Circle
+from fontTools.colorLib.geometry import round_start_circle_stable_containment, Circle
 from fontTools.colorLib.builder import LayerV1ListBuilder
 from fontTools.colorLib.errors import ColorLibError
 import pytest
@@ -1066,10 +1066,10 @@ class TrickyRadialGradientTest:
         else:
             return Circle(c0, r0).inside(Circle(c1, r1))
 
-    def nudge_start_circle_position(self, c0, r0, c1, r1, inside=True):
+    def round_start_circle(self, c0, r0, c1, r1, inside=True):
         assert self.circle_inside_circle(c0, r0, c1, r1) is inside
         assert self.circle_inside_circle(c0, r0, c1, r1, rounded=True) is not inside
-        r = nudge_start_circle_almost_inside(c0, r0, c1, r1)
+        r = round_start_circle_stable_containment(c0, r0, c1, r1)
         assert (
             self.circle_inside_circle(r.centre, r.radius, c1, r1, rounded=True)
             is inside
@@ -1082,8 +1082,7 @@ class TrickyRadialGradientTest:
         r0 = 0
         c1 = (642.99108, 104.70327999999995)
         r1 = 260.0072
-        result = self.nudge_start_circle_position(c0, r0, c1, r1, inside=True)
-        assert result == ((386, 71), 0)
+        assert self.round_start_circle(c0, r0, c1, r1, inside=True) == ((386, 71), 0)
 
     @pytest.mark.parametrize(
         "c0, r0, c1, r1, inside, expected",
@@ -1105,4 +1104,4 @@ class TrickyRadialGradientTest:
         ],
     )
     def test_nudge_start_circle_position(self, c0, r0, c1, r1, inside, expected):
-        assert self.nudge_start_circle_position(c0, r0, c1, r1, inside) == expected
+        assert self.round_start_circle(c0, r0, c1, r1, inside) == expected

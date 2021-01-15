@@ -78,8 +78,8 @@ class Circle:
         self.centre = _nudge_point(self.centre, direction)
 
 
-def nudge_start_circle_almost_inside(c0, r0, c1, r1):
-    """Nudge c0 so it continues to be inside/outside c1 after rounding.
+def round_start_circle_stable_containment(c0, r0, c1, r1):
+    """Round start circle so that it stays inside/outside end circle after rounding.
 
     The rounding of circle coordinates to integers may cause an abrupt change
     if the start circle c0 is so close to the end circle c1's perimiter that
