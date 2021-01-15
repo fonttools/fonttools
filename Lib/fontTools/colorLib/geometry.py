@@ -96,9 +96,21 @@ def round_start_circle_stable_containment(c0, r0, c1, r1):
 
     round_start = start.round()
     round_end = end.round()
+    inside_after_round = round_start.inside(round_end)
 
-    # At most 3 iterations ought to be enough to converge. In the first, we
-    # check if the start circle keeps containment after normal rounding; then
+    if inside_before_round == inside_after_round:
+        return round_start
+    elif inside_after_round:
+        # start was outside before rounding: we need to push start away from end
+        direction = _vector_between(round_end.centre, round_start.centre)
+        radius_delta = +1.0
+    else:
+        # start was inside before rounding: we need to push start towards end
+        direction = _vector_between(round_start.centre, round_end.centre)
+        radius_delta = -1.0
+
+    # At most 2 iterations ought to be enough to converge. Before the loop, we
+    # know the start circle didn't keep containment after normal rounding; thus
     # we continue adjusting by -/+ 1.0 until containment is restored.
     # Normal rounding can at most move each coordinates -/+0.5; in the worst case
     # both the start and end circle's centres and radii will be rounded in opposite
@@ -112,23 +124,16 @@ def round_start_circle_stable_containment(c0, r0, c1, r1):
     # -1.82842 after rounding (c0 is now outside c1). Nudging c0 by -1.0 on both
     # x and y axes moves it towards c1 by hypot(-1.0, -1.0) = 1.41421. Two of these
     # moves cover twice that distance, which is enough to restore containment.
-    max_attempts = 3
+    max_attempts = 2
     for _ in range(max_attempts):
-        inside_after_round = round_start.inside(round_end)
-        if inside_before_round == inside_after_round:
-            break
         if round_start.concentric(round_end):
             # can't move c0 towards c1 (they are the same), so we change the radius
-            if inside_after_round:
-                round_start.radius += 1.0
-            else:
-                round_start.radius -= 1.0
+            round_start.radius += radius_delta
+            assert round_start.radius >= 0
         else:
-            if inside_after_round:
-                direction = _vector_between(round_end.centre, round_start.centre)
-            else:
-                direction = _vector_between(round_start.centre, round_end.centre)
             round_start.nudge_towards(direction)
+        if inside_before_round == round_start.inside(round_end):
+            break
     else:  # likely a bug
         raise AssertionError(
             f"Rounding circle {start} "
