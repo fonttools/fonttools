@@ -674,6 +674,43 @@ def test_buildColrV1():
     assert baseGlyphs.BaseGlyphV1Record[2].BaseGlyph == "g"
 
 
+def test_buildColrV1_more_than_255_paints():
+    num_paints = 364
+    colorGlyphs = {
+        "a": [
+            {
+                "format": 5,  # PaintGlyph
+                "paint": 0,
+                "glyph": name,
+            }
+            for name in (f"glyph{i}" for i in range(num_paints))
+        ],
+    }
+    layers, baseGlyphs = builder.buildColrV1(colorGlyphs)
+    paints = layers.Paint
+
+    assert len(paints) == num_paints + 1
+
+    assert all(paints[i].Format == ot.Paint.Format.PaintGlyph for i in range(255))
+
+    assert paints[255].Format == ot.Paint.Format.PaintColrLayers
+    assert paints[255].FirstLayerIndex == 0
+    assert paints[255].NumLayers == 255
+
+    assert all(
+        paints[i].Format == ot.Paint.Format.PaintGlyph
+        for i in range(256, num_paints + 1)
+    )
+
+    assert baseGlyphs.BaseGlyphCount == len(colorGlyphs)
+    assert baseGlyphs.BaseGlyphV1Record[0].BaseGlyph == "a"
+    assert (
+        baseGlyphs.BaseGlyphV1Record[0].Paint.Format == ot.Paint.Format.PaintColrLayers
+    )
+    assert baseGlyphs.BaseGlyphV1Record[0].Paint.FirstLayerIndex == 255
+    assert baseGlyphs.BaseGlyphV1Record[0].Paint.NumLayers == num_paints + 1 - 255
+
+
 def test_split_color_glyphs_by_version():
     layerBuilder = LayerV1ListBuilder()
     colorGlyphs = {
