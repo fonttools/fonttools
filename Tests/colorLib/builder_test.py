@@ -1,6 +1,7 @@
 from fontTools.ttLib import newTable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.colorLib import builder
+from fontTools.colorLib.geometry import round_start_circle_stable_containment, Circle
 from fontTools.colorLib.builder import LayerV1ListBuilder
 from fontTools.colorLib.errors import ColorLibError
 import pytest
@@ -1055,3 +1056,52 @@ class BuildCOLRTest(object):
         assert hasattr(colr, "table")
         assert isinstance(colr.table, ot.COLR)
         assert colr.table.VarStore is None
+
+
+class TrickyRadialGradientTest:
+    @staticmethod
+    def circle_inside_circle(c0, r0, c1, r1, rounded=False):
+        if rounded:
+            return Circle(c0, r0).round().inside(Circle(c1, r1).round())
+        else:
+            return Circle(c0, r0).inside(Circle(c1, r1))
+
+    def round_start_circle(self, c0, r0, c1, r1, inside=True):
+        assert self.circle_inside_circle(c0, r0, c1, r1) is inside
+        assert self.circle_inside_circle(c0, r0, c1, r1, rounded=True) is not inside
+        r = round_start_circle_stable_containment(c0, r0, c1, r1)
+        assert (
+            self.circle_inside_circle(r.centre, r.radius, c1, r1, rounded=True)
+            is inside
+        )
+        return r.centre, r.radius
+
+    def test_noto_emoji_mosquito_u1f99f(self):
+        # https://github.com/googlefonts/picosvg/issues/158
+        c0 = (385.23508, 70.56727999999998)
+        r0 = 0
+        c1 = (642.99108, 104.70327999999995)
+        r1 = 260.0072
+        assert self.round_start_circle(c0, r0, c1, r1, inside=True) == ((386, 71), 0)
+
+    @pytest.mark.parametrize(
+        "c0, r0, c1, r1, inside, expected",
+        [
+            # inside before round, outside after round
+            ((1.4, 0), 0, (2.6, 0), 1.3, True, ((2, 0), 0)),
+            ((1, 0), 0.6, (2.8, 0), 2.45, True, ((2, 0), 1)),
+            ((6.49, 6.49), 0, (0.49, 0.49), 8.49, True, ((5, 5), 0)),
+            # outside before round, inside after round
+            ((0, 0), 0, (2, 0), 1.5, False, ((-1, 0), 0)),
+            ((0, -0.5), 0, (0, -2.5), 1.5, False, ((0, 1), 0)),
+            # the following ones require two nudges to round correctly
+            ((0.5, 0), 0, (9.4, 0), 8.8, False, ((-1, 0), 0)),
+            ((1.5, 1.5), 0, (0.49, 0.49), 1.49, True, ((0, 0), 0)),
+            # limit case when circle almost exactly overlap
+            ((0.5000001, 0), 0.5000001, (0.499999, 0), 0.4999999, True, ((0, 0), 0)),
+            # concentrical circles, r0 > r1
+            ((0, 0), 1.49, (0, 0), 1, False, ((0, 0), 2)),
+        ],
+    )
+    def test_nudge_start_circle_position(self, c0, r0, c1, r1, inside, expected):
+        assert self.round_start_circle(c0, r0, c1, r1, inside) == expected
