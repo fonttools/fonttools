@@ -30,26 +30,26 @@ _NEARLY_ZERO = 1 / (1 << 12)  # 0.000244140625
 _UNIT_VECTOR_THRESHOLD = cos(3 / 8 * pi)  # == sin(1/8 * pi) == 0.38268343236508984
 
 
-def _nudge_point(pt, direction):
-    # Nudge point coordinates -/+ 1.0 approximately based on the direction vector.
+def _rounding_offset(direction):
+    # Return 2-tuple of -/+ 1.0 or 0.0 approximately based on the direction vector.
     # We divide the unit circle in 8 equal slices oriented towards the cardinal
     # (N, E, S, W) and intermediate (NE, SE, SW, NW) directions. To each slice we
     # map one of the possible cases: -1, 0, +1 for either X and Y coordinate.
-    # E.g. Return (x + 1.0, y - 1.0) if unit vector is oriented towards SE, or
-    # (x - 1.0, y) if it's pointing West, etc.
+    # E.g. Return (+1.0, -1.0) if unit vector is oriented towards SE, or
+    # (-1.0, 0.0) if it's pointing West, etc.
     uv = _unit_vector(direction)
     if not uv:
-        return pt
+        return (0, 0)
 
     result = []
-    for coord, uv_component in zip(pt, uv):
+    for uv_component in uv:
         if -_UNIT_VECTOR_THRESHOLD <= uv_component < _UNIT_VECTOR_THRESHOLD:
             # unit vector component near 0: direction almost orthogonal to the
             # direction of the current axis, thus keep coordinate unchanged
-            result.append(coord)
+            result.append(0)
         else:
             # nudge coord by +/- 1.0 in direction of unit vector
-            result.append(coord + copysign(1.0, uv_component))
+            result.append(copysign(1.0, uv_component))
     return tuple(result)
 
 
@@ -74,8 +74,8 @@ class Circle:
     def concentric(self, other):
         return self.centre == other.centre
 
-    def nudge_towards(self, direction):
-        self.centre = _nudge_point(self.centre, direction)
+    def move(self, dx, dy):
+        self.centre = (self.centre[0] + dx, self.centre[1] + dy)
 
 
 def round_start_circle_stable_containment(c0, r0, c1, r1):
@@ -108,6 +108,7 @@ def round_start_circle_stable_containment(c0, r0, c1, r1):
         # start was inside before rounding: we need to push start towards end
         direction = _vector_between(round_start.centre, round_end.centre)
         radius_delta = -1.0
+    dx, dy = _rounding_offset(direction)
 
     # At most 2 iterations ought to be enough to converge. Before the loop, we
     # know the start circle didn't keep containment after normal rounding; thus
@@ -131,7 +132,7 @@ def round_start_circle_stable_containment(c0, r0, c1, r1):
             round_start.radius += radius_delta
             assert round_start.radius >= 0
         else:
-            round_start.nudge_towards(direction)
+            round_start.move(dx, dy)
         if inside_before_round == round_start.inside(round_end):
             break
     else:  # likely a bug
