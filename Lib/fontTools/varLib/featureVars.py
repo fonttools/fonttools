@@ -10,7 +10,7 @@ from fontTools.ttLib.tables import otTables as ot
 from fontTools.otlLib.builder import buildLookup, buildSingleSubstSubtable
 from collections import OrderedDict
 
-from .errors import VarLibValidationError
+from .errors import VarLibError, VarLibValidationError
 
 
 def addFeatureVariations(font, conditionalSubstitutions, featureTag='rvrn'):
@@ -298,6 +298,11 @@ def addFeatureVariationsRaw(font, conditionalSubstitutions, featureTag='rvrn'):
         varFeatureIndex = gsub.FeatureList.FeatureRecord.index(varFeature)
 
         for scriptRecord in gsub.ScriptList.ScriptRecord:
+            if scriptRecord.Script.DefaultLangSys is None:
+                raise VarLibError(
+                    "Feature variations require that the script "
+                    f"'{scriptRecord.ScriptTag}' defines a default language system."
+                )
             langSystems = [lsr.LangSys for lsr in scriptRecord.Script.LangSysRecord]
             for langSys in [scriptRecord.Script.DefaultLangSys] + langSystems:
                 langSys.FeatureIndex.append(varFeatureIndex)
