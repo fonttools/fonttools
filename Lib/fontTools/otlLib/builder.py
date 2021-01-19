@@ -2574,7 +2574,8 @@ class ClassDefBuilder(object):
             return
         self.classes_.add(glyphs)
         for glyph in glyphs:
-            assert glyph not in self.glyphs_
+            if glyph in self.glyphs_:
+                raise TypeError(f"Glyph {glyph} already present in class.")
             self.glyphs_[glyph] = glyphs
 
     def classes(self):

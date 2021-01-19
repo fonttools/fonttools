@@ -1101,6 +1101,18 @@ class ClassDefBuilderTest(object):
         assert not b.canAdd({"d", "e", "f"})
         assert not b.canAdd({"f"})
 
+    def test_add_exception(self):
+        b = builder.ClassDefBuilder(useClass0=True)
+        b.add({"a", "b", "c", "d"})
+        with pytest.raises(TypeError):
+            b.add({"a"})
+        with pytest.raises(TypeError):
+            b.add({"b"})
+        with pytest.raises(TypeError):
+            b.add({"c"})
+        with pytest.raises(TypeError):
+            b.add({"d"})
+
 
 buildStatTable_test_data = [
     ([
