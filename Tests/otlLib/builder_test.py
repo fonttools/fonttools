@@ -2,7 +2,7 @@ import io
 import struct
 from fontTools.misc.fixedTools import floatToFixed
 from fontTools.misc.testTools import getXML
-from fontTools.otlLib import builder
+from fontTools.otlLib import builder, error
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
 import pytest
@@ -1104,7 +1104,7 @@ class ClassDefBuilderTest(object):
     def test_add_exception(self):
         b = builder.ClassDefBuilder(useClass0=True)
         b.add({"a", "b", "c"})
-        with pytest.raises(ValueError):
+        with pytest.raises(error.OpenTypeLibError):
             b.add({"a", "d"})
 
 

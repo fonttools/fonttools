@@ -2575,7 +2575,7 @@ class ClassDefBuilder(object):
         self.classes_.add(glyphs)
         for glyph in glyphs:
             if glyph in self.glyphs_:
-                raise ValueError(f"Glyph {glyph} is already present in class.")
+                raise OpenTypeLibError(f"Glyph {glyph} is already present in class.", None)
             self.glyphs_[glyph] = glyphs
 
     def classes(self):
