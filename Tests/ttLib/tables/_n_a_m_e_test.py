@@ -432,6 +432,18 @@ class NameRecordTest(unittest.TestCase):
 		name = makeName(b'\xfe', 123, 1, 1, 0) # Mac Japanese
 		self.assertEqual(name.toUnicode(), unichr(0x2122))
 
+	def test_extended_mac_encodings_errors(self):
+		s = "汉仪彩云体简"
+		name = makeName(s.encode("x_mac_simp_chinese_ttx"), 123, 1, 25, 0)
+		# first check we round-trip with 'strict'
+		self.assertEqual(name.toUnicode(errors="strict"), s)
+
+		# append an incomplete invalid sequence and check that we handle
+		# errors with the requested error handler
+		name.string += b"\xba"
+		self.assertEqual(name.toUnicode(errors="backslashreplace"), s + "\\xba")
+		self.assertEqual(name.toUnicode(errors="replace"), s + "�")
+
 	def test_extended_unknown(self):
 		name = makeName(b'\xfe', 123, 10, 11, 12)
 		self.assertEqual(name.getEncoding(), "ascii")
