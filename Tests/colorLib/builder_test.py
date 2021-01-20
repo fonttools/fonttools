@@ -2,7 +2,7 @@ from fontTools.ttLib import newTable
 from fontTools.ttLib.tables import otTables as ot
 from fontTools.colorLib import builder
 from fontTools.colorLib.geometry import round_start_circle_stable_containment, Circle
-from fontTools.colorLib.builder import LayerV1ListBuilder
+from fontTools.colorLib.builder import LayerV1ListBuilder, _build_n_ary_tree
 from fontTools.colorLib.errors import ColorLibError
 import pytest
 from typing import List
@@ -674,6 +674,43 @@ def test_buildColrV1():
     assert baseGlyphs.BaseGlyphV1Record[2].BaseGlyph == "g"
 
 
+def test_buildColrV1_more_than_255_paints():
+    num_paints = 364
+    colorGlyphs = {
+        "a": [
+            {
+                "format": 5,  # PaintGlyph
+                "paint": 0,
+                "glyph": name,
+            }
+            for name in (f"glyph{i}" for i in range(num_paints))
+        ],
+    }
+    layers, baseGlyphs = builder.buildColrV1(colorGlyphs)
+    paints = layers.Paint
+
+    assert len(paints) == num_paints + 1
+
+    assert all(paints[i].Format == ot.Paint.Format.PaintGlyph for i in range(255))
+
+    assert paints[255].Format == ot.Paint.Format.PaintColrLayers
+    assert paints[255].FirstLayerIndex == 0
+    assert paints[255].NumLayers == 255
+
+    assert all(
+        paints[i].Format == ot.Paint.Format.PaintGlyph
+        for i in range(256, num_paints + 1)
+    )
+
+    assert baseGlyphs.BaseGlyphCount == len(colorGlyphs)
+    assert baseGlyphs.BaseGlyphV1Record[0].BaseGlyph == "a"
+    assert (
+        baseGlyphs.BaseGlyphV1Record[0].Paint.Format == ot.Paint.Format.PaintColrLayers
+    )
+    assert baseGlyphs.BaseGlyphV1Record[0].Paint.FirstLayerIndex == 255
+    assert baseGlyphs.BaseGlyphV1Record[0].Paint.NumLayers == num_paints + 1 - 255
+
+
 def test_split_color_glyphs_by_version():
     layerBuilder = LayerV1ListBuilder()
     colorGlyphs = {
@@ -1105,3 +1142,81 @@ class TrickyRadialGradientTest:
     )
     def test_nudge_start_circle_position(self, c0, r0, c1, r1, inside, expected):
         assert self.round_start_circle(c0, r0, c1, r1, inside) == expected
+
+
+@pytest.mark.parametrize(
+    "lst, n, expected",
+    [
+        ([0], 2, [0]),
+        ([0, 1], 2, [0, 1]),
+        ([0, 1, 2], 2, [[0, 1], 2]),
+        ([0, 1, 2], 3, [0, 1, 2]),
+        ([0, 1, 2, 3], 2, [[0, 1], [2, 3]]),
+        ([0, 1, 2, 3], 3, [[0, 1, 2], 3]),
+        ([0, 1, 2, 3, 4], 3, [[0, 1, 2], 3, 4]),
+        ([0, 1, 2, 3, 4, 5], 3, [[0, 1, 2], [3, 4, 5]]),
+        (list(range(7)), 3, [[0, 1, 2], [3, 4, 5], 6]),
+        (list(range(8)), 3, [[0, 1, 2], [3, 4, 5], [6, 7]]),
+        (list(range(9)), 3, [[0, 1, 2], [3, 4, 5], [6, 7, 8]]),
+        (list(range(10)), 3, [[[0, 1, 2], [3, 4, 5], [6, 7, 8]], 9]),
+        (list(range(11)), 3, [[[0, 1, 2], [3, 4, 5], [6, 7, 8]], 9, 10]),
+        (list(range(12)), 3, [[[0, 1, 2], [3, 4, 5], [6, 7, 8]], [9, 10, 11]]),
+        (list(range(13)), 3, [[[0, 1, 2], [3, 4, 5], [6, 7, 8]], [9, 10, 11], 12]),
+        (
+            list(range(14)),
+            3,
+            [[[0, 1, 2], [3, 4, 5], [6, 7, 8]], [[9, 10, 11], 12, 13]],
+        ),
+        (
+            list(range(15)),
+            3,
+            [[[0, 1, 2], [3, 4, 5], [6, 7, 8]], [9, 10, 11], [12, 13, 14]],
+        ),
+        (
+            list(range(16)),
+            3,
+            [[[0, 1, 2], [3, 4, 5], [6, 7, 8]], [[9, 10, 11], [12, 13, 14], 15]],
+        ),
+        (
+            list(range(23)),
+            3,
+            [
+                [[0, 1, 2], [3, 4, 5], [6, 7, 8]],
+                [[9, 10, 11], [12, 13, 14], [15, 16, 17]],
+                [[18, 19, 20], 21, 22],
+            ],
+        ),
+        (
+            list(range(27)),
+            3,
+            [
+                [[0, 1, 2], [3, 4, 5], [6, 7, 8]],
+                [[9, 10, 11], [12, 13, 14], [15, 16, 17]],
+                [[18, 19, 20], [21, 22, 23], [24, 25, 26]],
+            ],
+        ),
+        (
+            list(range(28)),
+            3,
+            [
+                [
+                    [[0, 1, 2], [3, 4, 5], [6, 7, 8]],
+                    [[9, 10, 11], [12, 13, 14], [15, 16, 17]],
+                    [[18, 19, 20], [21, 22, 23], [24, 25, 26]],
+                ],
+                27,
+            ],
+        ),
+        (list(range(257)), 256, [list(range(256)), 256]),
+        (list(range(258)), 256, [list(range(256)), 256, 257]),
+        (list(range(512)), 256, [list(range(256)), list(range(256, 512))]),
+        (list(range(512 + 1)), 256, [list(range(256)), list(range(256, 512)), 512]),
+        (
+            list(range(256 ** 2)),
+            256,
+            [list(range(k * 256, k * 256 + 256)) for k in range(256)],
+        ),
+    ],
+)
+def test_build_n_ary_tree(lst, n, expected):
+    assert _build_n_ary_tree(lst, n) == expected
