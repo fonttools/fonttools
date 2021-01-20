@@ -1103,15 +1103,9 @@ class ClassDefBuilderTest(object):
 
     def test_add_exception(self):
         b = builder.ClassDefBuilder(useClass0=True)
-        b.add({"a", "b", "c", "d"})
-        with pytest.raises(TypeError):
-            b.add({"a"})
-        with pytest.raises(TypeError):
-            b.add({"b"})
-        with pytest.raises(TypeError):
-            b.add({"c"})
-        with pytest.raises(TypeError):
-            b.add({"d"})
+        b.add({"a", "b", "c"})
+        with pytest.raises(ValueError):
+            b.add({"a", "d"})
 
 
 buildStatTable_test_data = [
