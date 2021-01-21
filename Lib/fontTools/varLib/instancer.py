@@ -1693,7 +1693,7 @@ def parseArgs(args):
         "when generating a full instance). Requires skia-pathops",
     )
     parser.add_argument(
-        "--update-nametable",
+        "--update-name-table",
         action="store_true",
         help="Update the instantiated font's nametable. Input font must have "
         "a STAT table with Axis Value Tables",
@@ -1749,7 +1749,7 @@ def main(args=None):
         inplace=True,
         optimize=options.optimize,
         overlap=options.overlap,
-        updateFontNames=options.update_nametable,
+        updateFontNames=options.update_name_table,
     )
 
     outfile = (
