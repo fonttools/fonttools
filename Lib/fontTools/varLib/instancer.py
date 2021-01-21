@@ -1154,7 +1154,7 @@ def updateNameTable(varfont, axisLimits):
         v for v in axisValueTables if v.Flags & ELIDABLE_AXIS_VALUE_NAME != 2
     ]
     stat_new.AxisValueArray.AxisValue = axisValueTables
-    axisValueTables = _sortedAxisValues(stat_new, axisCoords)
+    axisValueTables = _sortedAxisValues(stat_new)
     _updateNameRecords(varfont, axisValueTables)
 
 
@@ -1177,7 +1177,7 @@ def checkMissingAxisValues(stat, axisCoords):
         raise ValueError(f"Cannot find Axis Values [{missing}]")
 
 
-def _sortedAxisValues(stat, axisCoords):
+def _sortedAxisValues(stat):
     # Sort and remove duplicates ensuring that format 4 Axis Values
     # are dominant
     axisValues = stat.AxisValueArray.AxisValue
