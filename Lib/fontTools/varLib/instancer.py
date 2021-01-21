@@ -1121,7 +1121,7 @@ def updateNameTable(varfont, axisLimits):
     """Update an instatiated variable font's name table using the Axis
     Values from the STAT table.
 
-    The updated nametable will conform to the R/I/B/BI naming model.
+    The updated name table will conform to the R/I/B/BI naming model.
     """
     if "STAT" not in varfont:
         raise ValueError("Cannot update name table since there is no STAT table.")
@@ -1546,7 +1546,7 @@ def instantiateVariableFont(
         varfont = deepcopy(varfont)
 
     if updateFontNames:
-        log.info("Updating nametable")
+        log.info("Updating name table")
         updateNameTable(varfont, axisLimits)
 
     if "gvar" in varfont:
@@ -1695,7 +1695,7 @@ def parseArgs(args):
     parser.add_argument(
         "--update-name-table",
         action="store_true",
-        help="Update the instantiated font's nametable. Input font must have "
+        help="Update the instantiated font's `name` table. Input font must have "
         "a STAT table with Axis Value Tables",
     )
     loggingGroup = parser.add_mutually_exclusive_group(required=False)
