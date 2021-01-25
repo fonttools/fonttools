@@ -1123,6 +1123,28 @@ def updateNameTable(varfont, axisLimits):
 
     The updated name table will conform to the R/I/B/BI naming model.
     """
+    # This task can be split into two parts:
+
+    #   1. Collecting and sorting the relevant AxisValues:
+    # - First check the variable font has a STAT table and it contains
+    #   AxisValues.
+    # - Create a dictionary which contains the new default locations for each
+    #   axis.
+    # - Duplicate the existing stat table and instantiate it using the dict
+    #   we created in the last step. We should now have a new STAT table
+    #   which only contains AxisValues for the default axis locations.
+    # - Remove any AxisValues which have the Elidable_AXIS_VALUE_NAME set.
+    # - Remove and sort AxisValues so format 4 AxisValues take presedence.
+
+    #   2. Updating a name table's style and family names from a list of
+    #   AxisValues:
+    # - Sort AxisValues into two groups, one for RIBBI, the other for non-RIBBI
+    # - Repeat the next steps for each name table record platform:
+    #   - Create new subFamily name and Typographic subFamily from the above
+    #     groups
+    #   - Update nameIDs 1, 2, 3, 4, 5, 6, 16, 17 using the new name created
+    #     in the last step.
+
     if "STAT" not in varfont:
         raise ValueError("Cannot update name table since there is no STAT table.")
     stat = varfont["STAT"].table
@@ -1151,10 +1173,10 @@ def updateNameTable(varfont, axisLimits):
     # Axis Values which have this flag enabled won't be visible in
     # application font menus.
     axisValueTables = [
-        v for v in axisValueTables if v.Flags & ELIDABLE_AXIS_VALUE_NAME != 2
+        v for v in axisValueTables if not v.Flags & ELIDABLE_AXIS_VALUE_NAME
     ]
     stat_new.AxisValueArray.AxisValue = axisValueTables
-    axisValueTables = _sortedAxisValues(stat_new)
+    axisValueTables = _sortAxisValues(stat_new)
     _updateNameRecords(varfont, axisValueTables)
 
 
@@ -1177,7 +1199,7 @@ def checkMissingAxisValues(stat, axisCoords):
         raise ValueError(f"Cannot find Axis Values [{missing}]")
 
 
-def _sortedAxisValues(stat):
+def _sortAxisValues(stat):
     # Sort and remove duplicates ensuring that format 4 Axis Values
     # are dominant
     axisValues = stat.AxisValueArray.AxisValue
