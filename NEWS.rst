@@ -1,3 +1,16 @@
+- [codecs] Handle ``errors`` parameter different from 'strict' for the custom
+  extended mac encodings (#2137, #2132).
+- [featureVars] Raise better error message when a script is missing the required
+  default language system (#2154).
+- [COLRv1] Avoid abrupt change caused by rounding ``PaintRadialGradient.c0`` when
+  the start circle almost touches the end circle's perimeter (#2148).
+- [COLRv1] Support building unlimited lists of paints as 255-ary trees of
+  ``PaintColrLayers`` tables (#2153).
+- [subset] Prune redundant format-12 cmap subtables when all non-BMP characters
+  are dropped (#2146).
+- [basePen] Raise ``MissingComponentError`` instead of bare ``KeyError`` when a
+  referenced component is missing (#2145).
+
 4.18.2 (released 2020-12-16)
 ----------------------------
 
