@@ -1,3 +1,6 @@
+4.19.0 (released 2021-01-25)
+----------------------------
+
 - [codecs] Handle ``errors`` parameter different from 'strict' for the custom
   extended mac encodings (#2137, #2132).
 - [featureVars] Raise better error message when a script is missing the required
