@@ -1166,7 +1166,7 @@ def updateNameTable(varfont, axisLimits):
     # created in the previous step.
     stat_new = deepcopy(stat)
     _instantiateSTAT(stat_new, axisCoords)
-    checkMissingAxisValues(stat_new, axisCoords)
+    checkMissingAxisValues(stat_new, axisCoords.keys())
 
     axisValueTables = stat_new.AxisValueArray.AxisValue
     # Remove axis Values which have Elidable_AXIS_VALUE_NAME flag set.
@@ -1180,7 +1180,7 @@ def updateNameTable(varfont, axisLimits):
     _updateNameRecords(varfont, axisValueTables)
 
 
-def checkMissingAxisValues(stat, axisCoords):
+def checkMissingAxisValues(stat, axisTags):
     seen = set()
     axisValues = stat.AxisValueArray.AxisValue
     designAxes = stat.DesignAxisRecord.Axis
@@ -1193,10 +1193,10 @@ def checkMissingAxisValues(stat, axisCoords):
             axisTag = designAxes[val.AxisIndex].AxisTag
             seen.add(axisTag)
 
-    missingAxes = set(axisCoords) - seen
+    missingAxes = set(axisTags) - seen
     if missingAxes:
-        missing = ", ".join(f"'{i}={axisCoords[i]}'" for i in missingAxes)
-        raise ValueError(f"Cannot find Axis Values [{missing}]")
+        missing = ", ".join(missingAxes)
+        raise ValueError(f"Cannot find Axis Values for axes [{missing}]")
 
 
 def _sortAxisValues(stat):
