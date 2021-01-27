@@ -1024,10 +1024,12 @@ def instantiateSTAT(varfont, axisLimits):
         return  # STAT table empty, nothing to do
 
     log.info("Instantiating STAT table")
-    _instantiateSTAT(stat, axisLimits)
+    newAxisValueTables = axisValuesFromAxisLimits(stat, axisLimits)
+    stat.AxisValueArray.AxisValue = newAxisValueTables
+    stat.AxisValueCount = len(stat.AxisValueArray.AxisValue)
 
 
-def _instantiateSTAT(stat, axisLimits):
+def axisValuesFromAxisLimits(stat, axisLimits):
     location, axisRanges = splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange)
 
     def isAxisValueOutsideLimits(axisTag, axisValue):
@@ -1068,9 +1070,7 @@ def _instantiateSTAT(stat, axisLimits):
         else:
             log.warn("Unknown AxisValue table format (%s); ignored", axisValueFormat)
         newAxisValueTables.append(axisValueTable)
-
-    stat.AxisValueArray.AxisValue = newAxisValueTables
-    stat.AxisValueCount = len(stat.AxisValueArray.AxisValue)
+    return newAxisValueTables
 
 
 def getVariationNameIDs(varfont):
@@ -1130,15 +1130,20 @@ def updateNameTable(varfont, axisLimits):
     #   AxisValues.
     # - Create a dictionary which contains the new default locations for each
     #   axis.
-    # - Duplicate the existing stat table and instantiate it using the dict
-    #   we created in the last step. We should now have a new STAT table
-    #   which only contains AxisValues for the default axis locations.
-    # - Remove any AxisValues which have the Elidable_AXIS_VALUE_NAME set.
-    # - Remove and sort AxisValues so format 4 AxisValues take presedence.
+    # - Create a new list of AxisValues whose Values match the new default
+    #   locations.
+    # - Remove any AxisValues from the list which have the
+    #   Elidable_AXIS_VALUE_NAME set.
+    # - Remove and sort AxisValues in the list so format 4 AxisValues take
+    #   presedence.
 
     #   2. Updating a name table's style and family names from a list of
     #   AxisValues:
-    # - Sort AxisValues into two groups, one for RIBBI, the other for non-RIBBI
+    # - Sort AxisValues into two groups. For the first group, the names must
+    #   any of the following ["Regular", "Italic", "Bold", "Bold Italic"].
+    #   This group of names is often referred to as "RIBBI" names. For the
+    #   other group, names must be non-RIBBI e.g "Medium Italic", "Condensed"
+    #   etc.
     # - Repeat the next steps for each name table record platform:
     #   - Create new subFamily name and Typographic subFamily from the above
     #     groups
@@ -1163,28 +1168,21 @@ def updateNameTable(varfont, axisLimits):
         ):
             defaultAxisCoords[axisTag] = val
 
-    # To get the required Axis Values for the zero origin, we can simply
-    # duplicate the STAT table and instantiate it using the axis coords we
-    # created in the previous step.
-    stat_new = deepcopy(stat)
-    _instantiateSTAT(stat_new, defaultAxisCoords)
-    checkMissingAxisValues(stat_new, defaultAxisCoords.keys())
+    axisValueTables = axisValuesFromAxisLimits(stat, defaultAxisCoords)
+    checkMissingAxisValues(stat, axisValueTables, defaultAxisCoords.keys())
 
-    axisValueTables = stat_new.AxisValueArray.AxisValue
     # Remove axis Values which have ELIDABLE_AXIS_VALUE_NAME flag set.
     # Axis Values which have this flag enabled won't be visible in
     # application font menus.
     axisValueTables = [
         v for v in axisValueTables if not v.Flags & ELIDABLE_AXIS_VALUE_NAME
     ]
-    stat_new.AxisValueArray.AxisValue = axisValueTables
-    axisValueTables = _sortAxisValues(stat_new)
+    axisValueTables = _sortAxisValues(axisValueTables)
     _updateNameRecords(varfont, axisValueTables)
 
 
-def checkMissingAxisValues(stat, axisTags):
+def checkMissingAxisValues(stat, axisValues, axisTags):
     seen = set()
-    axisValues = stat.AxisValueArray.AxisValue
     designAxes = stat.DesignAxisRecord.Axis
     for val in axisValues:
         if val.Format == 4:
@@ -1201,11 +1199,9 @@ def checkMissingAxisValues(stat, axisTags):
         raise ValueError(f"Cannot find Axis Values for axes [{missing}]")
 
 
-def _sortAxisValues(stat):
+def _sortAxisValues(axisValues):
     # Sort and remove duplicates ensuring that format 4 Axis Values
     # are dominant
-    axisValues = stat.AxisValueArray.AxisValue
-    designAxes = stat.DesignAxisRecord.Axis
     results = []
     seenAxes = set()
     # Sort format 4 axes so the tables with the most AxisValueRecords
