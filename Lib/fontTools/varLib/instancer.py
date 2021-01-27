@@ -1156,20 +1156,22 @@ def updateNameTable(varfont, axisLimits):
     # If we're instantiating a partial font, we will populate the unpinned
     # axes with their default axis values.
     fvarDefaults = {a.axisTag: a.defaultValue for a in fvar.axes}
-    axisCoords = deepcopy(axisLimits)
+    defaultAxisCoords = deepcopy(axisLimits)
     for axisTag, val in fvarDefaults.items():
-        if axisTag not in axisCoords or isinstance(axisCoords[axisTag], tuple):
-            axisCoords[axisTag] = val
+        if axisTag not in defaultAxisCoords or isinstance(
+            defaultAxisCoords[axisTag], tuple
+        ):
+            defaultAxisCoords[axisTag] = val
 
     # To get the required Axis Values for the zero origin, we can simply
     # duplicate the STAT table and instantiate it using the axis coords we
     # created in the previous step.
     stat_new = deepcopy(stat)
-    _instantiateSTAT(stat_new, axisCoords)
-    checkMissingAxisValues(stat_new, axisCoords.keys())
+    _instantiateSTAT(stat_new, defaultAxisCoords)
+    checkMissingAxisValues(stat_new, defaultAxisCoords.keys())
 
     axisValueTables = stat_new.AxisValueArray.AxisValue
-    # Remove axis Values which have Elidable_AXIS_VALUE_NAME flag set.
+    # Remove axis Values which have ELIDABLE_AXIS_VALUE_NAME flag set.
     # Axis Values which have this flag enabled won't be visible in
     # application font menus.
     axisValueTables = [
