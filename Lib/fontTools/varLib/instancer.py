@@ -1125,30 +1125,92 @@ def updateNameTable(varfont, axisLimits):
     """
     # This task can be split into two parts:
 
-    #   1. Collecting and sorting the relevant AxisValues:
-    # - First check the variable font has a STAT table and it contains
-    #   AxisValues.
-    # - Create a dictionary which contains the new default locations for each
-    #   axis.
-    # - Create a new list of AxisValues whose Values match the new default
-    #   locations.
-    # - Remove any AxisValues from the list which have the
-    #   Elidable_AXIS_VALUE_NAME set.
-    # - Remove and sort AxisValues in the list so format 4 AxisValues take
-    #   presedence.
+    # Task 1: Collecting and sorting the relevant AxisValues:
+    # 1. First check the variable font has a STAT table and it contains
+    #    AxisValues.
+    # 2. Create a dictionary which contains the pinned axes from the
+    #    axisLimits dict and for the unpinned axes, we'll use the fvar
+    #    default coordinates e.g
+    #    axisLimits = {"wght": 500, "wdth": AxisRange(75, 100), our dict will
+    #    be {"wght": 500, "wdth": 100} if the width axis has a default of 100.
+    # 3. Create a new list of AxisValues whose Values match the dict we just
+    #    created.
+    # 4. Remove any AxisValues from the list which have the
+    #    Elidable_AXIS_VALUE_NAME flag set.
+    # 5. Remove and sort AxisValues in the list so format 4 AxisValues take
+    #    precedence. According to the MS Spec "if a format 1, format 2 or
+    #    format 3 table has a (nominal) value used in a format 4 table that
+    #    also has values for other axes, the format 4 table, being the more
+    #    specific match, is used",
+    #    https://docs.microsoft.com/en-us/typography/opentype/spec/stat#axis-value-table-format-4
 
-    #   2. Updating a name table's style and family names from a list of
-    #   AxisValues:
-    # - Sort AxisValues into two groups. For the first group, the names must
-    #   any of the following ["Regular", "Italic", "Bold", "Bold Italic"].
-    #   This group of names is often referred to as "RIBBI" names. For the
-    #   other group, names must be non-RIBBI e.g "Medium Italic", "Condensed"
-    #   etc.
-    # - Repeat the next steps for each name table record platform:
-    #   - Create new subFamily name and Typographic subFamily from the above
-    #     groups
-    #   - Update nameIDs 1, 2, 3, 4, 5, 6, 16, 17 using the new name created
-    #     in the last step.
+    # Task 2: Updating a name table's style and family names from a list of
+    # AxisValues:
+    # 1. Sort AxisValues into two groups. For the first group, the names must be
+    #    any of the following ["Regular", "Italic", "Bold", "Bold Italic"].
+    #    This group of names is often referred to as "RIBBI" names. For the
+    #    other group, names must be non-RIBBI e.g "Medium Italic", "Condensed"
+    #    etc.
+    # 2. Repeat the next steps for each name table record platform:
+    #    a. Create new subFamily name and Typographic subFamily name from the
+    #       above groups.
+    #    b. Update nameIDs 1, 2, 3, 4, 6, 16, 17 using the new name created
+    #       in the last step.
+    #
+    # Step by step example:
+    # A variable font which has a width and weight axes.
+    # AxisValues in font (represented as simplified dicts):
+    # axisValues = [
+    #     {"name": "Light", "axis": "wght", "value": 300},
+    #     {"name": "Regular", "axis": "wght", "value": 400},
+    #     {"name": "Medium", "axis": "wght", "value": 500},
+    #     {"name": "Bold", "axis": "wght", "value": 600},
+    #     {"name": "Condensed", "axis": "wdth", "value": 75},
+    #     {"name": "Normal", "axis": "wdth", "value": 100, "flags": 0x2},
+    # ]
+    # # Let's instantiate a partial font which has a pinned wght axis and an
+    #   unpinned width axis.
+    # >>> axisLimits = {"wght": 500, "width": AxisRange(75, 100)}
+    # >>> updateNameTable(varfont, axisLimits)
+    #
+    # AxisValues remaining after task 1.3:
+    # axisValues = [
+    #     {"name": "Medium", "axis": "wght", "value": 500},
+    #     {"name": "Normal", "axis": "wdth", "value": 100, "flags": 0x2}
+    # ]
+    #
+    # AxisValues remaining after completing all 1.x tasks:
+    # axisValues = [{"name": "Medium", "axis": "wght", "value": 500}]
+    # The Normal AxisValue is removed because it has the
+    # Elidable_AXIS_VALUE_NAME flag set.
+    #
+    # # AxisValues after separating into two groups in task 2.1:
+    # ribbiAxisValues = []
+    # nonRibbiAxisValues = [{"name": "Medium", "axis": "wght", "value": 500}]
+    #
+    # # Names created from AxisValues in task 2.2a for Win US English platform:
+    # subFamilyName = ""
+    # typoSubFamilyName = "Medium"
+    #
+    # NameRecords updated in task 2.2b for Win US English platform:
+    # NameID 1 familyName: "Open Sans" --> "Open Sans Medium"
+    # NameID 2 subFamilyName: "Regular" --> "Regular"
+    # NameID 3 Unique font identifier: "3.000;GOOG;OpenSans-Regular" --> \
+    #     "3.000;GOOG;OpenSans-Medium"
+    # NameID 4 Full font name: "Open Sans Regular" --> "Open Sans Medium"
+    # NameID 6 PostScript name: "OpenSans-Regular" --> "OpenSans-Medium"
+    # NameID 16 Typographic Family name: None --> "Open Sans"
+    # NameID 17 Typographic Subfamily name: None --> "Medium"
+    #
+    # Notes on name table record updates:
+    # - Typographic names have been added since Medium is a non-Ribbi name.
+    # - Neither the before or after name records include the Width AxisValue
+    #   names because the "Normal" AxisValue has the
+    #   Elidable_AXIS_VALUE_NAME flag set.
+    #   If we instantiate the same font but pin the wdth axis to 75,
+    #   the "Condensed" AxisValue will be included.
+    # - For info regarding how RIBBI and non-RIBBI can be constructed see:
+    # https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-ids
 
     if "STAT" not in varfont:
         raise ValueError("Cannot update name table since there is no STAT table.")
@@ -1164,12 +1226,12 @@ def updateNameTable(varfont, axisLimits):
     defaultAxisCoords = deepcopy(axisLimits)
     for axisTag, val in fvarDefaults.items():
         if axisTag not in defaultAxisCoords or isinstance(
-            defaultAxisCoords[axisTag], tuple
+            defaultAxisCoords[axisTag], AxisRange
         ):
             defaultAxisCoords[axisTag] = val
 
     axisValueTables = axisValuesFromAxisLimits(stat, defaultAxisCoords)
-    checkMissingAxisValues(stat, axisValueTables, defaultAxisCoords.keys())
+    checkAxisValuesExist(stat, axisValueTables, defaultAxisCoords)
 
     # Remove axis Values which have ELIDABLE_AXIS_VALUE_NAME flag set.
     # Axis Values which have this flag enabled won't be visible in
@@ -1181,22 +1243,29 @@ def updateNameTable(varfont, axisLimits):
     _updateNameRecords(varfont, axisValueTables)
 
 
-def checkMissingAxisValues(stat, axisValues, axisTags):
+def checkAxisValuesExist(stat, axisValues, axisCoords):
     seen = set()
     designAxes = stat.DesignAxisRecord.Axis
-    for val in axisValues:
-        if val.Format == 4:
-            for rec in val.AxisValueRecord:
-                axisTag = designAxes[rec.AxisIndex].AxisTag
+    for axisValueTable in axisValues:
+        axisValueFormat = axisValueTable.Format
+        if axisValueTable.Format in (1, 2, 3):
+            axisTag = designAxes[axisValueTable.AxisIndex].AxisTag
+            if axisValueFormat == 2:
+                axisValue = axisValueTable.NominalValue
+            else:
+                axisValue = axisValueTable.Value
+            if axisTag in axisCoords and axisValue == axisCoords[axisTag]:
                 seen.add(axisTag)
-        else:
-            axisTag = designAxes[val.AxisIndex].AxisTag
-            seen.add(axisTag)
+        elif axisValueTable.Format == 4:
+            for rec in axisValueTable.AxisValueRecord:
+                axisTag = designAxes[rec.AxisIndex].AxisTag
+                if axisTag in axisCoords and rec.Value == axisCoords[axisTag]:
+                    seen.add(axisTag)
 
-    missingAxes = set(axisTags) - seen
+    missingAxes = set(axisCoords) - seen
     if missingAxes:
-        missing = ", ".join(missingAxes)
-        raise ValueError(f"Cannot find Axis Values for axes [{missing}]")
+        missing = ", ".join(f"'{i}={axisCoords[i]}'" for i in missingAxes)
+        raise ValueError(f"Cannot find Axis Values [{missing}]")
 
 
 def _sortAxisValues(axisValues):
@@ -1340,11 +1409,11 @@ def _updateNameTableStyleRecords(
         ):
             nametable.removeNames(nameID=nameID)
 
-    newFamilyName = nameIDs.get(NameID.TYPOGRAPHIC_FAMILY_NAME) or nameIDs.get(
-        NameID.FAMILY_NAME
+    newFamilyName = (
+        nameIDs.get(NameID.TYPOGRAPHIC_FAMILY_NAME) or nameIDs[NameID.FAMILY_NAME]
     )
-    newStyleName = nameIDs.get(NameID.TYPOGRAPHIC_SUBFAMILY_NAME) or nameIDs.get(
-        NameID.SUBFAMILY_NAME
+    newStyleName = (
+        nameIDs.get(NameID.TYPOGRAPHIC_SUBFAMILY_NAME) or nameIDs[NameID.SUBFAMILY_NAME]
     )
 
     nameIDs[NameID.FULL_FONT_NAME] = f"{newFamilyName} {newStyleName}"
@@ -1393,23 +1462,20 @@ def _updateUniqueIdNameRecord(varfont, nameIDs, platform):
     if not currentRecord:
         return None
 
-    def isSubString(string1, string2):
-        if string2 in string1:
-            return True
-        return False
-
     # Check if full name and postscript name are a substring of currentRecord
-    for nameID in (4, 6):
+    for nameID in (NameID.FULL_FONT_NAME, NameID.POSTSCRIPT_NAME):
         nameRecord = nametable.getName(nameID, *platform)
         if not nameRecord:
             continue
-        if isSubString(currentRecord.toUnicode(), nameRecord.toUnicode()):
+        if currentRecord.toUnicode() in nameRecord.toUnicode():
             return currentRecord.toUnicode().replace(
                 nameRecord.toUnicode(), nameIDs[nameRecord.nameID]
             )
     # Create a new string since we couldn't find any substrings.
     fontVersion = _fontVersion(varfont, platform)
-    vendor = varfont["OS/2"].achVendID.strip()
+    achVendID = varfont["OS/2"].achVendID
+    # Remove non-ASCII characers and trailing spaces
+    vendor = re.sub(r"[^\x00-\x7F]", "", achVendID).strip()
     psName = nameIDs[NameID.POSTSCRIPT_NAME]
     return f"{fontVersion};{vendor};{psName}"
 

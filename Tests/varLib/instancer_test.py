@@ -2000,6 +2000,7 @@ def test_updatetNameTable_axis_order(varfont):
 
 def test_updateNameTable_with_multilingual_names(varfont):
     name = varfont["name"]
+    # langID 0x405 is the Czech Windows langID
     name.setName("Test Variable Font", 1, 3, 1, 0x405)
     name.setName("Normal", 2, 3, 1, 0x405)
     name.setName("Normal", 261, 3, 1, 0x405) # nameID 261=Regular STAT entry
@@ -2035,17 +2036,16 @@ def test_updateNameTable_with_multilingual_names(varfont):
 
 
 def test_updateNametable_partial(varfont):
-    instancer.updateNameTable(varfont, {"wdth": 79, "wght": (400, 900)})
+    instancer.updateNameTable(varfont, {"wdth": 79, "wght": instancer.AxisRange(400, 900)})
     names = _get_name_records(varfont)
     assert names[(1, 3, 1, 0x409)] == "Test Variable Font Condensed"
     assert names[(2, 3, 1, 0x409)] == "Regular"
-    assert (3, 3, 1, 0x405) not in names
     assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
     assert names[(17, 3, 1, 0x409)] == "Condensed"
 
 
 def test_updateNameTable_missing_axisValues(varfont):
-    with pytest.raises(ValueError, match="Cannot find Axis Values for axes \[wght\]"):
+    with pytest.raises(ValueError, match="Cannot find Axis Values \['wght=200'\]"):
         instancer.updateNameTable(varfont, {"wght": 200})
 
 
