@@ -1221,7 +1221,7 @@ class WOFF2RoundtripTest(object):
 		assert tmp.getvalue() == tmp2.getvalue()
 		assert ttFont.flavor == "woff2"
 
-	def test_roundtrip_overlap_bit(self):
+	def test_roundtrip_off_curve_despite_overlap_bit(self):
 		ttx = os.path.join(data_dir, "woff2_overlap_offcurve_in.ttx")
 		ttFont = ttLib.TTFont()
 		ttFont.importXML(ttx)
