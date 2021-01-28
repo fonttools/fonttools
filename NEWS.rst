@@ -1,3 +1,6 @@
+- [woff2] An initial off-curve point with an overlap flag now stays an off-curve
+  point after compression.
+
 4.19.0 (released 2021-01-25)
 ----------------------------
 
