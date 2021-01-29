@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from array import array
 from fontTools.misc.fixedTools import MAX_F2DOT14, otRound, floatToFixedToFloat
 from fontTools.pens.basePen import LoggingPen
