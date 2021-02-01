@@ -777,7 +777,8 @@ class FontBuilder(object):
         """
         from fontTools.colorLib.builder import buildCOLR
 
-        self.font["COLR"] = buildCOLR(colorLayers)
+        glyphMap = self.font.getReverseGlyphMap()
+        self.font["COLR"] = buildCOLR(colorLayers, glyphMap=glyphMap)
 
     def setupCPAL(
         self,
