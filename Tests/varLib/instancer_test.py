@@ -145,7 +145,7 @@ class InstantiateGvarTest(object):
         assert "gvar" not in varfont
 
     def test_composite_glyph_not_in_gvar(self, varfont):
-        """ The 'minus' glyph is a composite glyph, which references 'hyphen' as a
+        """The 'minus' glyph is a composite glyph, which references 'hyphen' as a
         component, but has no tuple variations in gvar table, so the component offset
         and the phantom points do not change; however the sidebearings and bounding box
         do change as a result of the parent glyph 'hyphen' changing.
@@ -1917,54 +1917,106 @@ def test_normalizeAxisLimits_missing_from_fvar(varfont):
         instancer.normalizeAxisLimits(varfont, {"ZZZZ": 1000})
 
 
-def _get_name_records(varfont):
+def _test_name_records(varfont, expected, isNonRIBBI, platforms=[0x409]):
     nametable = varfont["name"]
-    return {
+    font_names = {
         (r.nameID, r.platformID, r.platEncID, r.langID): r.toUnicode()
         for r in nametable.names
     }
+    for k in expected:
+        if k[-1] not in platforms:
+            continue
+        assert font_names[k] == expected[k]
+    if isNonRIBBI:
+        font_nameids = set(i[0] for i in font_names)
+        assert 16 in font_nameids
+        assert 17 in font_nameids
 
 
-def test_updateNameTable_with_registered_axes(varfont):
-    # Regular
-    instancer.updateNameTable(varfont, {"wght": 400})
-    names = _get_name_records(varfont)
-    assert names[(1, 3, 1, 0x409)] == "Test Variable Font"
-    assert names[(2, 3, 1, 0x0409)] == "Regular"
-    assert names[(3, 3, 1, 0x0409)] == "2.001;GOOG;TestVariableFont-Regular"
-    assert names[(6, 3, 1, 0x409)] == "TestVariableFont-Regular"
-    assert (16, 3, 1, 0x409) not in names
-    assert (17, 3, 1, 0x409) not in names
-
-    # Black
-    instancer.updateNameTable(varfont, {"wght": 900})
-    names = _get_name_records(varfont)
-    assert names[(1, 3, 1, 0x409)] == "Test Variable Font Black"
-    assert names[(2, 3, 1, 0x409)] == "Regular"
-    assert names[(3, 3, 1, 0x0409)] == "2.001;GOOG;TestVariableFont-Black"
-    assert names[(6, 3, 1, 0x409)] == "TestVariableFont-Black"
-    assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
-    assert names[(17, 3, 1, 0x409)] == "Black"
-
-    # Thin
-    instancer.updateNameTable(varfont, {"wght": 100})
-    names = _get_name_records(varfont)
-    assert names[(1, 3, 1, 0x409)] == "Test Variable Font Thin"
-    assert names[(2, 3, 1, 0x409)] == "Regular"
-    assert names[(3, 3, 1, 0x0409)] == "2.001;GOOG;TestVariableFont-Thin"
-    assert names[(6, 3, 1, 0x409)] == "TestVariableFont-Thin"
-    assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
-    assert names[(17, 3, 1, 0x409)] == "Thin"
-
-    # Thin Condensed
-    instancer.updateNameTable(varfont, {"wdth": 79, "wght": 100})
-    names = _get_name_records(varfont)
-    assert names[(1, 3, 1, 0x409)] == "Test Variable Font Thin Condensed"
-    assert names[(2, 3, 1, 0x409)] == "Regular"
-    assert names[(3, 3, 1, 0x0409)] == "2.001;GOOG;TestVariableFont-ThinCondensed"
-    assert names[(6, 3, 1, 0x409)] == "TestVariableFont-ThinCondensed"
-    assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
-    assert names[(17, 3, 1, 0x409)] == "Thin Condensed"
+@pytest.mark.parametrize(
+    "limits, expected, isNonRIBBI",
+    [
+        # Regular
+        (
+            {"wght": 400},
+            {
+                (1, 3, 1, 0x409): "Test Variable Font",
+                (2, 3, 1, 0x409): "Regular",
+                (3, 3, 1, 0x409): "2.001;GOOG;TestVariableFont-Regular",
+                (6, 3, 1, 0x409): "TestVariableFont-Regular",
+            },
+            False,
+        ),
+        # Regular Normal (width axis Normal isn't included since it is elided)
+        (
+            {"wght": 400, "wdth": 100},
+            {
+                (1, 3, 1, 0x409): "Test Variable Font",
+                (2, 3, 1, 0x409): "Regular",
+                (3, 3, 1, 0x409): "2.001;GOOG;TestVariableFont-Regular",
+                (6, 3, 1, 0x409): "TestVariableFont-Regular",
+            },
+            False,
+        ),
+        # Black
+        (
+            {"wght": 900},
+            {
+                (1, 3, 1, 0x409): "Test Variable Font Black",
+                (2, 3, 1, 0x409): "Regular",
+                (3, 3, 1, 0x409): "2.001;GOOG;TestVariableFont-Black",
+                (6, 3, 1, 0x409): "TestVariableFont-Black",
+                (16, 3, 1, 0x409): "Test Variable Font",
+                (17, 3, 1, 0x409): "Black",
+            },
+            True,
+        ),
+        # Thin
+        (
+            {"wght": 100},
+            {
+                (1, 3, 1, 0x409): "Test Variable Font Thin",
+                (2, 3, 1, 0x409): "Regular",
+                (3, 3, 1, 0x409): "2.001;GOOG;TestVariableFont-Thin",
+                (6, 3, 1, 0x409): "TestVariableFont-Thin",
+                (16, 3, 1, 0x409): "Test Variable Font",
+                (17, 3, 1, 0x409): "Thin",
+            },
+            True,
+        ),
+        # Thin Condensed
+        (
+            {"wght": 100, "wdth": 79},
+            {
+                (1, 3, 1, 0x409): "Test Variable Font Thin Condensed",
+                (2, 3, 1, 0x409): "Regular",
+                (3, 3, 1, 0x409): "2.001;GOOG;TestVariableFont-ThinCondensed",
+                (6, 3, 1, 0x409): "TestVariableFont-ThinCondensed",
+                (16, 3, 1, 0x409): "Test Variable Font",
+                (17, 3, 1, 0x409): "Thin Condensed",
+            },
+            True,
+        ),
+        # Condensed with unpinned weights
+        (
+            {"wdth": 79, "wght": instancer.AxisRange(400, 900)},
+            {
+                (1, 3, 1, 0x409): "Test Variable Font Condensed",
+                (2, 3, 1, 0x409): "Regular",
+                (3, 3, 1, 0x409): "2.001;GOOG;TestVariableFont-Condensed",
+                (6, 3, 1, 0x409): "TestVariableFont-Condensed",
+                (16, 3, 1, 0x409): "Test Variable Font",
+                (17, 3, 1, 0x409): "Condensed",
+            },
+            True,
+        ),
+    ],
+)
+def test_updateNameTable_with_registered_axes_ribbi(
+    varfont, limits, expected, isNonRIBBI
+):
+    instancer.updateNameTable(varfont, limits)
+    _test_name_records(varfont, expected, isNonRIBBI)
 
 
 def test_updatetNameTable_axis_order(varfont):
@@ -1973,7 +2025,7 @@ def test_updatetNameTable_axis_order(varfont):
             tag="wght",
             name="Weight",
             values=[
-                dict(value=400, name='Regular'),
+                dict(value=400, name="Regular"),
             ],
         ),
         dict(
@@ -1981,67 +2033,69 @@ def test_updatetNameTable_axis_order(varfont):
             name="Width",
             values=[
                 dict(value=75, name="Condensed"),
-            ]
-        )
+            ],
+        ),
     ]
+    nametable = varfont["name"]
     buildStatTable(varfont, axes)
     instancer.updateNameTable(varfont, {"wdth": 75, "wght": 400})
-    names = _get_name_records(varfont)
-    assert names[(17, 3, 1, 0x409)] == "Regular Condensed"
+    assert nametable.getName(17, 3, 1, 0x409).toUnicode() == "Regular Condensed"
 
     # Swap the axes so the names get swapped
     axes[0], axes[1] = axes[1], axes[0]
 
     buildStatTable(varfont, axes)
     instancer.updateNameTable(varfont, {"wdth": 75, "wght": 400})
-    names = _get_name_records(varfont)
-    assert names[(17, 3, 1, 0x409)] == "Condensed Regular"
+    assert nametable.getName(17, 3, 1, 0x409).toUnicode() == "Condensed Regular"
 
 
-def test_updateNameTable_with_multilingual_names(varfont):
+@pytest.mark.parametrize(
+    "limits, expected, isNonRIBBI",
+    [
+        # Regular | Normal
+        (
+            {"wght": 400},
+            {
+                (1, 3, 1, 0x409): "Test Variable Font",
+                (2, 3, 1, 0x409): "Normal",
+            },
+            False,
+        ),
+        # Black | Negreta
+        (
+            {"wght": 900},
+            {
+                (1, 3, 1, 0x409): "Test Variable Font Negreta",
+                (2, 3, 1, 0x409): "Normal",
+                (16, 3, 1, 0x409): "Test Variable Font",
+                (17, 3, 1, 0x409): "Negreta",
+            },
+            True,
+        ),
+        # Black Condensed | Negreta Zhuštěné
+        (
+            {"wght": 900, "wdth": 79},
+            {
+                (1, 3, 1, 0x409): "Test Variable Font Negreta Zhuštěné",
+                (2, 3, 1, 0x409): "Normal",
+                (16, 3, 1, 0x409): "Test Variable Font",
+                (17, 3, 1, 0x409): "Negreta Zhuštěné",
+            },
+            True,
+        ),
+    ],
+)
+def test_updateNameTable_with_multilingual_names(varfont, limits, expected, isNonRIBBI):
     name = varfont["name"]
     # langID 0x405 is the Czech Windows langID
     name.setName("Test Variable Font", 1, 3, 1, 0x405)
     name.setName("Normal", 2, 3, 1, 0x405)
-    name.setName("Normal", 261, 3, 1, 0x405) # nameID 261=Regular STAT entry
-    name.setName("Negreta",266, 3, 1, 0x405) # nameID 266=Black STAT entry
-    name.setName("Zhuštěné", 279, 3, 1, 0x405) # nameID 279=Condensed STAT entry
+    name.setName("Normal", 261, 3, 1, 0x405)  # nameID 261=Regular STAT entry
+    name.setName("Negreta", 266, 3, 1, 0x405)  # nameID 266=Black STAT entry
+    name.setName("Zhuštěné", 279, 3, 1, 0x405)  # nameID 279=Condensed STAT entry
 
-    # Regular | Normal
-    instancer.updateNameTable(varfont, {"wght": 400})
-    names = _get_name_records(varfont)
-    assert names[(1, 3, 1, 0x405)] == "Test Variable Font"
-    assert names[(2, 3, 1, 0x405)] == "Normal"
-    assert (3, 3, 1, 0x405) not in names
-    assert (16, 3, 1, 0x405) not in names
-    assert (17, 3, 1, 0x405) not in names
-
-    # Black | Negreta
-    instancer.updateNameTable(varfont, {"wght": 900})
-    names = _get_name_records(varfont)
-    assert names[(1, 3, 1, 0x405)] == "Test Variable Font Negreta"
-    assert names[(2, 3, 1, 0x405)] == "Normal"
-    assert (3, 3, 1, 0x405) not in names
-    assert names[(16, 3, 1, 0x405)] == "Test Variable Font"
-    assert names[(17, 3, 1, 0x405)] == "Negreta"
-
-    # Black Condensed | Negreta Zhuštěné
-    instancer.updateNameTable(varfont, {"wdth": 79, "wght": 900})
-    names = _get_name_records(varfont)
-    assert names[(1, 3, 1, 0x405)] == "Test Variable Font Negreta Zhuštěné"
-    assert names[(2, 3, 1, 0x405)] == "Normal"
-    assert (3, 3, 1, 0x405) not in names
-    assert names[(16, 3, 1, 0x405)] == "Test Variable Font"
-    assert names[(17, 3, 1, 0x405)] == "Negreta Zhuštěné"
-
-
-def test_updateNametable_partial(varfont):
-    instancer.updateNameTable(varfont, {"wdth": 79, "wght": instancer.AxisRange(400, 900)})
-    names = _get_name_records(varfont)
-    assert names[(1, 3, 1, 0x409)] == "Test Variable Font Condensed"
-    assert names[(2, 3, 1, 0x409)] == "Regular"
-    assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
-    assert names[(17, 3, 1, 0x409)] == "Condensed"
+    instancer.updateNameTable(varfont, limits)
+    names = _test_name_records(varfont, expected, isNonRIBBI, platforms=[0x405])
 
 
 def test_updateNameTable_missing_axisValues(varfont):
@@ -2051,32 +2105,49 @@ def test_updateNameTable_missing_axisValues(varfont):
 
 def test_updateNameTable_missing_stat(varfont):
     del varfont["STAT"]
-    with pytest.raises(ValueError, match="Cannot update name table since there is no STAT table."):
+    with pytest.raises(
+        ValueError, match="Cannot update name table since there is no STAT table."
+    ):
         instancer.updateNameTable(varfont, {"wght": 400})
 
 
-def test_updateNameTable_vf_with_italic_attribute(varfont):
+@pytest.mark.parametrize(
+    "limits, expected, isNonRIBBI",
+    [
+        # Regular | Normal
+        (
+            {"wght": 400},
+            {
+                (1, 3, 1, 0x409): "Test Variable Font",
+                (2, 3, 1, 0x409): "Italic",
+                (6, 3, 1, 0x409): "TestVariableFont-Italic",
+            },
+            False,
+        ),
+        # Black Condensed Italic
+        (
+            {"wght": 900, "wdth": 79},
+            {
+                (1, 3, 1, 0x409): "Test Variable Font Black Condensed",
+                (2, 3, 1, 0x409): "Italic",
+                (6, 3, 1, 0x409): "TestVariableFont-BlackCondensedItalic",
+                (16, 3, 1, 0x409): "Test Variable Font",
+                (17, 3, 1, 0x409): "Black Condensed Italic",
+            },
+            True,
+        ),
+    ],
+)
+def test_updateNameTable_vf_with_italic_attribute(
+    varfont, limits, expected, isNonRIBBI
+):
     font_link_axisValue = varfont["STAT"].table.AxisValueArray.AxisValue[4]
     # Unset ELIDABLE_AXIS_VALUE_NAME flag
     font_link_axisValue.Flags &= ~instancer.ELIDABLE_AXIS_VALUE_NAME
-    font_link_axisValue.ValueNameID = 294 # Roman --> Italic
+    font_link_axisValue.ValueNameID = 294  # Roman --> Italic
 
-    # Italic
-    instancer.updateNameTable(varfont, {"wght": 400})
-    names = _get_name_records(varfont)
-    assert names[(1, 3, 1, 0x409)] == "Test Variable Font"
-    assert names[(2, 3, 1, 0x409)] == "Italic"
-    assert (16, 3, 1, 0x405) not in names
-    assert (17, 3, 1, 0x405) not in names
-
-    # Black Condensed Italic
-    instancer.updateNameTable(varfont, {"wdth": 79, "wght": 900})
-    names = _get_name_records(varfont)
-    assert names[(1, 3, 1, 0x409)] == "Test Variable Font Black Condensed"
-    assert names[(2, 3, 1, 0x409)] == "Italic"
-    assert names[(6, 3, 1, 0x409)] == "TestVariableFont-BlackCondensedItalic"
-    assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
-    assert names[(17, 3, 1, 0x409)] == "Black Condensed Italic"
+    instancer.updateNameTable(varfont, limits)
+    names = _test_name_records(varfont, expected, isNonRIBBI)
 
 
 def test_updateNameTable_format4_axisValues(varfont):
@@ -2099,11 +2170,13 @@ def test_updateNameTable_format4_axisValues(varfont):
     stat.AxisValueArray.AxisValue.append(axisValue)
 
     instancer.updateNameTable(varfont, {"wdth": 79, "wght": 900})
-    names = _get_name_records(varfont)
-    assert names[(1, 3, 1, 0x409)] == "Test Variable Font Dominant Value"
-    assert names[(2, 3, 1, 0x409)] == "Regular"
-    assert names[(16, 3, 1, 0x409)] == "Test Variable Font"
-    assert names[(17, 3, 1, 0x409)] == "Dominant Value"
+    expected = {
+        (1, 3, 1, 0x409): "Test Variable Font Dominant Value",
+        (2, 3, 1, 0x409): "Regular",
+        (16, 3, 1, 0x409): "Test Variable Font",
+        (17, 3, 1, 0x409): "Dominant Value",
+    }
+    _test_name_records(varfont, expected, isNonRIBBI=True)
 
 
 def test_updateNameTable_elided_axisValues(varfont):
@@ -2112,15 +2185,14 @@ def test_updateNameTable_elided_axisValues(varfont):
     for axisValue in stat.AxisValueArray.AxisValue:
         axisValue.Flags |= instancer.ELIDABLE_AXIS_VALUE_NAME
 
-    stat.ElidedFallbackNameID = 266 # Regular --> Black
+    stat.ElidedFallbackNameID = 266  # Regular --> Black
     instancer.updateNameTable(varfont, {"wght": 400})
-    names = _get_name_records(varfont)
     # Since all axis values are elided, the elided fallback name
     # must be used to construct the style names. Since we
     # changed it to Black, we need both a typoSubFamilyName and
     # the subFamilyName set so it conforms to the RIBBI model.
-    assert names[(2, 3, 1, 0x409)] == "Regular"
-    assert names[(17, 3, 1, 0x409)] == "Black"
+    expected = {(2, 3, 1, 0x409): "Regular", (17, 3, 1, 0x409): "Black"}
+    _test_name_records(varfont, expected, isNonRIBBI=True)
 
 
 def test_sanityCheckVariableTables(varfont):
