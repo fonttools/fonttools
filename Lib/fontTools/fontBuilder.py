@@ -770,14 +770,17 @@ class FontBuilder(object):
             self.font, conditionalSubstitutions, featureTag=featureTag
         )
 
-    def setupCOLR(self, colorLayers):
+    def setupCOLR(self, colorLayers, version=None, varStore=None):
         """Build new COLR table using color layers dictionary.
 
         Cf. `fontTools.colorLib.builder.buildCOLR`.
         """
         from fontTools.colorLib.builder import buildCOLR
 
-        self.font["COLR"] = buildCOLR(colorLayers)
+        glyphMap = self.font.getReverseGlyphMap()
+        self.font["COLR"] = buildCOLR(
+            colorLayers, version=version, glyphMap=glyphMap, varStore=varStore
+        )
 
     def setupCPAL(
         self,
