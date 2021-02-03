@@ -1,7 +1,7 @@
 from fontTools.misc.py23 import *
 from fontTools.misc.py23 import round3
 from fontTools.misc.arrayTools import (
-    calcBounds, calcIntBounds, updateBounds, pointInRect, pointsInRect,
+    Vector, calcBounds, calcIntBounds, updateBounds, pointInRect, pointsInRect,
     vectorLength, asInt16, normRect, scaleRect, offsetRect, insetRect,
     sectRect, unionRect, rectCenter, intRect)
 import math
@@ -88,3 +88,14 @@ def test_rectCenter():
 
 def test_intRect():
     assert intRect((0.9, 2.9, 3.1, 4.1)) == (0, 2, 4, 5)
+
+
+def test_Vector():
+    v = Vector([100, 200])
+    assert v == Vector([100, 200])
+    assert v == [100, 200]
+    assert v + Vector([1, 2]) == [101, 202]
+    assert v - Vector([1, 2]) == [99, 198]
+    assert v * 2 == [200, 400]
+    assert v * 0.5 == [50, 100]
+    assert v / 2 == [50, 100]
