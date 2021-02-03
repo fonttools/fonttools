@@ -385,6 +385,29 @@ def test_buildPaintRadialGradient():
     assert gradient.ColorLine.ColorStop == color_stops
 
 
+def test_buildPaintSweepGradient():
+    layerBuilder = LayerV1ListBuilder()
+    paint = layerBuilder.buildPaintSweepGradient(
+        colorLine=builder.buildColorLine(
+            stops=[
+                builder.buildColorStop(0.0, 0),
+                builder.buildColorStop(0.5, 1),
+                builder.buildColorStop(1.0, 2, alpha=0.8),
+            ],
+        ),
+        centerX=127,
+        centerY=129,
+        startAngle=15,
+        endAngle=42,
+    )
+
+    assert paint.Format == ot.Paint.Format.PaintSweepGradient
+    assert paint.centerX.value == 127
+    assert paint.centerY.value == 129
+    assert paint.startAngle.value == 15
+    assert paint.endAngle.value == 42
+
+
 def test_buildPaintGlyph_Solid():
     layerBuilder = LayerV1ListBuilder()
     layer = layerBuilder.buildPaintGlyph("a", 2)
