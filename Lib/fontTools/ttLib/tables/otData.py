@@ -1589,21 +1589,21 @@ otData = [
 	]),
 
 	('Affine2x3', [
-		('VarFixed', 'xx', None, None, 'x-part of x basis vector'),
-		('VarFixed', 'yx', None, None, 'y-part of x basis vector'),
-		('VarFixed', 'xy', None, None, 'x-part of y basis vector'),
-		('VarFixed', 'yy', None, None, 'y-part of y basis vector'),
-		('VarFixed', 'dx', None, None, 'Translation in x direction'),
-		('VarFixed', 'dy', None, None, 'Translation in y direction'),
+		('Fixed', 'xx', None, None, 'x-part of x basis vector'),
+		('Fixed', 'yx', None, None, 'y-part of x basis vector'),
+		('Fixed', 'xy', None, None, 'x-part of y basis vector'),
+		('Fixed', 'yy', None, None, 'y-part of y basis vector'),
+		('Fixed', 'dx', None, None, 'Translation in x direction'),
+		('Fixed', 'dy', None, None, 'Translation in y direction'),
 	]),
 
 	('ColorIndex', [
 		('uint16', 'PaletteIndex', None, None, 'Index value to use with a selected color palette.'),
-		('VarF2Dot14', 'Alpha', None, None, 'Values outsided [0.,1.] reserved'),
+		('F2Dot14', 'Alpha', None, None, 'Values outsided [0.,1.] reserved'),
 	]),
 
 	('ColorStop', [
-		('VarF2Dot14', 'StopOffset', None, None, ''),
+		('F2Dot14', 'StopOffset', None, None, ''),
 		('ColorIndex', 'Color', None, None, ''),
 	]),
 
@@ -1627,23 +1627,23 @@ otData = [
 	('PaintFormat3', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 3'),
 		('Offset24', 'ColorLine', None, None, 'Offset (from beginning of Paint table) to ColorLine subtable.'),
-		('VarInt16', 'x0', None, None, ''),
-		('VarInt16', 'y0', None, None, ''),
-		('VarInt16', 'x1', None, None, ''),
-		('VarInt16', 'y1', None, None, ''),
-		('VarInt16', 'x2', None, None, ''),
-		('VarInt16', 'y2', None, None, ''),
+		('Int16', 'x0', None, None, ''),
+		('Int16', 'y0', None, None, ''),
+		('Int16', 'x1', None, None, ''),
+		('Int16', 'y1', None, None, ''),
+		('Int16', 'x2', None, None, ''),
+		('Int16', 'y2', None, None, ''),
 	]),
 
 	('PaintFormat4', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 4'),
 		('Offset24', 'ColorLine', None, None, 'Offset (from beginning of Paint table) to ColorLine subtable.'),
-		('VarInt16', 'x0', None, None, ''),
-		('VarInt16', 'y0', None, None, ''),
-		('VarUInt16', 'r0', None, None, ''),
-		('VarInt16', 'x1', None, None, ''),
-		('VarInt16', 'y1', None, None, ''),
-		('VarUInt16', 'r1', None, None, ''),
+		('Int16', 'x0', None, None, ''),
+		('Int16', 'y0', None, None, ''),
+		('UInt16', 'r0', None, None, ''),
+		('Int16', 'x1', None, None, ''),
+		('Int16', 'y1', None, None, ''),
+		('UInt16', 'r1', None, None, ''),
 	]),
 
 	('PaintFormat5', [
@@ -1666,25 +1666,25 @@ otData = [
 	('PaintFormat8', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 8'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintTranslate table) to Paint subtable.'),
-		('VarFixed', 'dx', None, None, 'Translation in x direction.'),
-		('VarFixed', 'dy', None, None, 'Translation in y direction.'),
+		('Fixed', 'dx', None, None, 'Translation in x direction.'),
+		('Fixed', 'dy', None, None, 'Translation in y direction.'),
 	]),
 
 	('PaintFormat9', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 9'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintRotate table) to Paint subtable.'),
-		('VarFixed', 'angle', None, None, ''),
-		('VarFixed', 'centerX', None, None, ''),
-		('VarFixed', 'centerY', None, None, ''),
+		('Fixed', 'angle', None, None, ''),
+		('Fixed', 'centerX', None, None, ''),
+		('Fixed', 'centerY', None, None, ''),
 	]),
 
 	('PaintFormat10', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 10'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintSkew table) to Paint subtable.'),
-		('VarFixed', 'xSkewAngle', None, None, ''),
-		('VarFixed', 'ySkewAngle', None, None, ''),
-		('VarFixed', 'centerX', None, None, ''),
-		('VarFixed', 'centerY', None, None, ''),
+		('Fixed', 'xSkewAngle', None, None, ''),
+		('Fixed', 'ySkewAngle', None, None, ''),
+		('Fixed', 'centerX', None, None, ''),
+		('Fixed', 'centerY', None, None, ''),
 	]),
 
 	('PaintFormat11', [

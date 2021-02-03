@@ -34,6 +34,13 @@ from fontTools.ttLib.tables.otTables import (
     VariableFloat,
     VariableInt,
 )
+from fontTools.ttLib.tables.otConverters import (
+    SimpleValue,
+    Fixed,
+    F2Dot14,
+    Short,
+    UShort,
+)
 from .errors import ColorLibError
 from .geometry import round_start_circle_stable_containment
 
@@ -330,45 +337,52 @@ def _split_color_glyphs_by_version(
 
 def _to_variable_value(
     value: _ScalarInput,
-    cls: Type[VariableValue] = VariableFloat,
+    cls: Type[SimpleValue],
     minValue: Optional[_Number] = None,
     maxValue: Optional[_Number] = None,
 ) -> VariableValue:
-    if not isinstance(value, cls):
-        try:
-            it = iter(value)
-        except TypeError:  # not iterable
-            value = cls(value)
-        else:
-            value = cls._make(it)
-    if minValue is not None and value.value < minValue:
-        raise OverflowError(f"{cls.__name__}: {value.value} < {minValue}")
-    if maxValue is not None and value.value > maxValue:
-        raise OverflowError(f"{cls.__name__}: {value.value} < {maxValue}")
+
+    # Making instances of the simple values is uncooperative
+    
+    # if not isinstance(value, cls):
+    #     try:
+    #         it = iter(value)
+    #     except TypeError:  # not iterable
+    #         value = cls(value)  # value, repeat, aux
+    #     else:
+    #         value = cls._make(it)
+    # if minValue is not None and value.value < minValue:
+    #     raise OverflowError(f"{cls.__name__}: {value.value} < {minValue}")
+    # if maxValue is not None and value.value > maxValue:
+    #     raise OverflowError(f"{cls.__name__}: {value.value} < {maxValue}")
+    if minValue is not None and value < minValue:
+        raise OverflowError(f"{cls.__name__}: {value} < {minValue}")
+    if maxValue is not None and value > maxValue:
+        raise OverflowError(f"{cls.__name__}: {value} < {maxValue}")
     return value
 
 
 _to_variable_f16dot16_float = partial(
     _to_variable_value,
-    cls=VariableFloat,
+    cls=Fixed,
     minValue=-(2 ** 15),
     maxValue=fixedToFloat(2 ** 31 - 1, 16),
 )
 _to_variable_f2dot14_float = partial(
     _to_variable_value,
-    cls=VariableFloat,
+    cls=F2Dot14,
     minValue=-2.0,
     maxValue=fixedToFloat(2 ** 15 - 1, 14),
 )
 _to_variable_int16 = partial(
     _to_variable_value,
-    cls=VariableInt,
+    cls=Short,
     minValue=-(2 ** 15),
     maxValue=2 ** 15 - 1,
 )
 _to_variable_uint16 = partial(
     _to_variable_value,
-    cls=VariableInt,
+    cls=UShort,
     minValue=0,
     maxValue=2 ** 16,
 )
@@ -529,17 +543,17 @@ class LayerV1ListBuilder:
         ot_paint.ColorLine = _to_color_line(colorLine)
 
         # normalize input types (which may or may not specify a varIdx)
-        x0, y0 = _to_variable_value(c0[0]), _to_variable_value(c0[1])
-        r0 = _to_variable_value(r0)
-        x1, y1 = _to_variable_value(c1[0]), _to_variable_value(c1[1])
-        r1 = _to_variable_value(r1)
+        x0, y0 = _to_variable_value(c0[0], Short), _to_variable_value(c0[1], Short)
+        r0 = _to_variable_value(r0, UShort)
+        x1, y1 = _to_variable_value(c1[0], Short), _to_variable_value(c1[1], Short)
+        r1 = _to_variable_value(r1, UShort)
 
         # avoid abrupt change after rounding when c0 is near c1's perimeter
         c = round_start_circle_stable_containment(
-            (x0.value, y0.value), r0.value, (x1.value, y1.value), r1.value
+            (x0, y0), r0, (x1, y1), r1
         )
-        x0, y0 = x0._replace(value=c.centre[0]), y0._replace(value=c.centre[1])
-        r0 = r0._replace(value=c.radius)
+        x0, y0 = c.centre[0], c.centre[1]
+        r0 = c.radius
 
         for i, (x, y, r) in enumerate(((x0, y0, r0), (x1, y1, r1))):
             # rounding happens here as floats are converted to integers
