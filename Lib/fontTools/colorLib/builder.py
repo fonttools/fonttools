@@ -343,14 +343,14 @@ def _to_variable_value(
 ) -> VariableValue:
 
     # Making instances of the simple values is uncooperative
-    
-    # if not isinstance(value, cls):
-    #     try:
-    #         it = iter(value)
-    #     except TypeError:  # not iterable
-    #         value = cls(value)  # value, repeat, aux
-    #     else:
-    #         value = cls._make(it)
+
+    if not isinstance(value, cls):
+        try:
+            it = iter(value)
+        except TypeError:  # not iterable
+            value = cls(value)  # value, repeat, aux
+        else:
+            value = cls._make(it)
     # if minValue is not None and value.value < minValue:
     #     raise OverflowError(f"{cls.__name__}: {value.value} < {minValue}")
     # if maxValue is not None and value.value > maxValue:
@@ -364,25 +364,25 @@ def _to_variable_value(
 
 _to_variable_f16dot16_float = partial(
     _to_variable_value,
-    cls=Fixed,
+    cls=float,
     minValue=-(2 ** 15),
     maxValue=fixedToFloat(2 ** 31 - 1, 16),
 )
 _to_variable_f2dot14_float = partial(
     _to_variable_value,
-    cls=F2Dot14,
+    cls=float,
     minValue=-2.0,
     maxValue=fixedToFloat(2 ** 15 - 1, 14),
 )
 _to_variable_int16 = partial(
     _to_variable_value,
-    cls=Short,
+    cls=int,
     minValue=-(2 ** 15),
     maxValue=2 ** 15 - 1,
 )
 _to_variable_uint16 = partial(
     _to_variable_value,
-    cls=UShort,
+    cls=int,
     minValue=0,
     maxValue=2 ** 16,
 )
@@ -543,10 +543,10 @@ class LayerV1ListBuilder:
         ot_paint.ColorLine = _to_color_line(colorLine)
 
         # normalize input types (which may or may not specify a varIdx)
-        x0, y0 = _to_variable_value(c0[0], Short), _to_variable_value(c0[1], Short)
-        r0 = _to_variable_value(r0, UShort)
-        x1, y1 = _to_variable_value(c1[0], Short), _to_variable_value(c1[1], Short)
-        r1 = _to_variable_value(r1, UShort)
+        x0, y0 = _to_variable_int16(c0[0]), _to_variable_int16(c0[1])
+        r0 = _to_variable_uint16(r0)
+        x1, y1 = _to_variable_int16(c1[0]), _to_variable_int16(c1[1])
+        r1 = _to_variable_uint16(r1)
 
         # avoid abrupt change after rounding when c0 is near c1's perimeter
         c = round_start_circle_stable_containment(
