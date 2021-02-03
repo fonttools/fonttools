@@ -843,8 +843,10 @@ class Parser(object):
 
         num_lookups = len([l for l in lookups if l is not None])
 
+        is_deletion = False
         if len(new) == 1 and len(new[0].glyphSet()) == 0:
             new = []  # Deletion
+            is_deletion = True
 
         # GSUB lookup type 1: Single substitution.
         # Format A: "substitute a by a.sc;"
@@ -947,7 +949,7 @@ class Parser(object):
             )
 
         # If there are remaining glyphs to parse, this is an invalid GSUB statement
-        if len(new) != 0:
+        if len(new) != 0 or is_deletion:
             raise FeatureLibError("Invalid substitution statement", location)
 
         # GSUB lookup type 6: Chaining contextual substitution.
