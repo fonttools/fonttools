@@ -545,10 +545,10 @@ def test_buildPaintComposite():
     composite = layerBuilder.buildPaintComposite(
         mode=ot.CompositeMode.SRC_OVER,
         source={
-            "format": 11,
+            "format": 12,
             "mode": "src_over",
-            "source": {"format": 5, "glyph": "c", "paint": 2},
-            "backdrop": {"format": 5, "glyph": "b", "paint": 1},
+            "source": {"format": 6, "glyph": "c", "paint": 2},
+            "backdrop": {"format": 6, "glyph": "b", "paint": 1},
         },
         backdrop=layerBuilder.buildPaintGlyph(
             "a", layerBuilder.buildPaintSolid(paletteIndex=0, alpha=1.0)
@@ -679,7 +679,7 @@ def test_buildColrV1_more_than_255_paints():
     colorGlyphs = {
         "a": [
             {
-                "format": 5,  # PaintGlyph
+                "format": 6,  # PaintGlyph
                 "paint": 0,
                 "glyph": name,
             }
@@ -775,18 +775,18 @@ def assertNoV0Content(colr):
 
 
 def test_build_layerv1list_empty():
-    # Nobody uses PaintColrLayers (format 8), no layerlist
+    # Nobody uses PaintColrLayers (format 1), no layerlist
     colr = builder.buildCOLR(
         {
             "a": {
-                "format": 5,  # PaintGlyph
+                "format": 6,  # PaintGlyph
                 "paint": {"format": 2, "paletteIndex": 2, "alpha": 0.8},
                 "glyph": "b",
             },
             # A list of 1 shouldn't become a PaintColrLayers
             "b": [
                 {
-                    "format": 5,  # PaintGlyph
+                    "format": 6,  # PaintGlyph
                     "paint": {
                         "format": 3,
                         "colorLine": {
@@ -832,17 +832,17 @@ def test_build_layerv1list_simple():
     # All layers use the same solid paint
     solid_paint = {"format": 2, "paletteIndex": 2, "alpha": 0.8}
     backdrop = {
-        "format": 5,  # PaintGlyph
+        "format": 6,  # PaintGlyph
         "paint": solid_paint,
         "glyph": "back",
     }
     a_foreground = {
-        "format": 5,  # PaintGlyph
+        "format": 6,  # PaintGlyph
         "paint": solid_paint,
         "glyph": "a_fore",
     }
     b_foreground = {
-        "format": 5,  # PaintGlyph
+        "format": 6,  # PaintGlyph
         "paint": solid_paint,
         "glyph": "b_fore",
     }
@@ -882,33 +882,33 @@ def test_build_layerv1list_with_sharing():
     solid_paint = {"format": 2, "paletteIndex": 2, "alpha": 0.8}
     backdrop = [
         {
-            "format": 5,  # PaintGlyph
+            "format": 6,  # PaintGlyph
             "paint": solid_paint,
             "glyph": "back1",
         },
         {
-            "format": 5,  # PaintGlyph
+            "format": 6,  # PaintGlyph
             "paint": solid_paint,
             "glyph": "back2",
         },
     ]
     a_foreground = {
-        "format": 5,  # PaintGlyph
+        "format": 6,  # PaintGlyph
         "paint": solid_paint,
         "glyph": "a_fore",
     }
     b_background = {
-        "format": 5,  # PaintGlyph
+        "format": 6,  # PaintGlyph
         "paint": solid_paint,
         "glyph": "b_back",
     }
     b_foreground = {
-        "format": 5,  # PaintGlyph
+        "format": 6,  # PaintGlyph
         "paint": solid_paint,
         "glyph": "b_fore",
     }
     c_background = {
-        "format": 5,  # PaintGlyph
+        "format": 6,  # PaintGlyph
         "paint": solid_paint,
         "glyph": "c_back",
     }
@@ -951,7 +951,7 @@ def test_build_layerv1list_with_sharing():
 def test_build_layerv1list_with_overlaps():
     paints = [
         {
-            "format": 5,  # PaintGlyph
+            "format": 6,  # PaintGlyph
             "paint": {"format": 2, "paletteIndex": 2, "alpha": 0.8},
             "glyph": c,
         }

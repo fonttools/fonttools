@@ -1648,38 +1648,47 @@ otData = [
 
 	('PaintFormat5', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 5'),
-		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintGlyph table) to Paint subtable.'),
-		('GlyphID', 'Glyph', None, None, 'Glyph ID for the source outline.'),
+		('Offset24', 'ColorLine', None, None, 'Offset (from beginning of PaintSweep table) to ColorLine subtable.'),
+		('VarInt16', 'centerX', None, None, 'Center x coordinate.'),
+		('VarInt16', 'centerY', None, None, 'Center y coordinate.'),
+		('VarFixed', 'startAngle', None, None, 'Start of the angular range of the gradient.'),
+		('VarFixed', 'endAngle', None, None, 'End of the angular range of the gradient.'),
 	]),
 
 	('PaintFormat6', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 6'),
-		('GlyphID', 'Glyph', None, None, 'Virtual glyph ID for a BaseGlyphV1List base glyph.'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintGlyph table) to Paint subtable.'),
+		('GlyphID', 'Glyph', None, None, 'Glyph ID for the source outline.'),
 	]),
 
 	('PaintFormat7', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 7'),
-		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintTransformed table) to Paint subtable.'),
-		('Affine2x3', 'Transform', None, None, 'Offset (from beginning of PaintTrasformed table) to Affine2x3 subtable.'),
+		('GlyphID', 'Glyph', None, None, 'Virtual glyph ID for a BaseGlyphV1List base glyph.'),
 	]),
 
 	('PaintFormat8', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 8'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintTransformed table) to Paint subtable.'),
+		('Affine2x3', 'Transform', None, None, 'Offset (from beginning of PaintTrasformed table) to Affine2x3 subtable.'),
+	]),
+
+	('PaintFormat9', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 9'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintTranslate table) to Paint subtable.'),
 		('VarFixed', 'dx', None, None, 'Translation in x direction.'),
 		('VarFixed', 'dy', None, None, 'Translation in y direction.'),
 	]),
 
-	('PaintFormat9', [
-		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 9'),
+	('PaintFormat10', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 10'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintRotate table) to Paint subtable.'),
 		('VarFixed', 'angle', None, None, ''),
 		('VarFixed', 'centerX', None, None, ''),
 		('VarFixed', 'centerY', None, None, ''),
 	]),
 
-	('PaintFormat10', [
-		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 10'),
+	('PaintFormat11', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 11'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintSkew table) to Paint subtable.'),
 		('VarFixed', 'xSkewAngle', None, None, ''),
 		('VarFixed', 'ySkewAngle', None, None, ''),
@@ -1687,8 +1696,8 @@ otData = [
 		('VarFixed', 'centerY', None, None, ''),
 	]),
 
-	('PaintFormat11', [
-		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 11'),
+	('PaintFormat12', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 12'),
 		('LOffset24To(Paint)', 'SourcePaint', None, None, 'Offset (from beginning of PaintComposite table) to source Paint subtable.'),
 		('CompositeMode', 'CompositeMode', None, None, 'A CompositeMode enumeration value.'),
 		('LOffset24To(Paint)', 'BackdropPaint', None, None, 'Offset (from beginning of PaintComposite table) to backdrop Paint subtable.'),
