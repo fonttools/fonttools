@@ -188,6 +188,21 @@ class Comment(Element):
         return self.text
 
 
+class NullGlyph(Expression):
+    """The NULL glyph, used in glyph deletion substitutions."""
+
+    def __init__(self, location=None):
+        Expression.__init__(self, location)
+        #: The name itself as a string
+
+    def glyphSet(self):
+        """The glyphs in this class as a tuple of :class:`GlyphName` objects."""
+        return ()
+
+    def asFea(self, indent=""):
+        return "NULL"
+
+
 class GlyphName(Expression):
     """A single glyph name, such as ``cedilla``."""
 
@@ -1246,8 +1261,9 @@ class MultipleSubstStatement(Statement):
                 res += " " + " ".join(map(asFea, self.suffix))
         else:
             res += asFea(self.glyph)
+        replacement = self.replacement or [ NullGlyph() ]
         res += " by "
-        res += " ".join(map(asFea, self.replacement))
+        res += " ".join(map(asFea, replacement))
         res += ";"
         return res
 
