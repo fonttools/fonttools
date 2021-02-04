@@ -314,10 +314,15 @@ class Parser(object):
                 location,
             )
 
-    def parse_glyphclass_(self, accept_glyphname):
+    def parse_glyphclass_(self, accept_glyphname, accept_null=False):
         # Parses a glyph class, either named or anonymous, or (if
-        # ``bool(accept_glyphname)``) a glyph name.
+        # ``bool(accept_glyphname)``) a glyph name. If ``bool(accept_null)`` then
+        # also accept the special NULL glyph.
         if accept_glyphname and self.next_token_type_ in (Lexer.NAME, Lexer.CID):
+            if accept_null and self.next_token_ == "NULL":
+                # If you want a glyph called NULL, you should escape it.
+                self.advance_lexer_()
+                return self.ast.NullGlyph(location=self.cur_token_location_)
             glyph = self.expect_glyph_()
             self.check_glyph_name_in_glyph_set(glyph)
             return self.ast.GlyphName(glyph, location=self.cur_token_location_)
@@ -375,7 +380,8 @@ class Parser(object):
                     self.expect_symbol_("-")
                     range_end = self.expect_cid_()
                     self.check_glyph_name_in_glyph_set(
-                        f"cid{range_start:05d}", f"cid{range_end:05d}",
+                        f"cid{range_start:05d}",
+                        f"cid{range_end:05d}",
                     )
                     glyphs.add_cid_range(
                         range_start,
@@ -804,7 +810,7 @@ class Parser(object):
         if self.next_token_ == "by":
             keyword = self.expect_keyword_("by")
             while self.next_token_ != ";":
-                gc = self.parse_glyphclass_(accept_glyphname=True)
+                gc = self.parse_glyphclass_(accept_glyphname=True, accept_null=True)
                 new.append(gc)
         elif self.next_token_ == "from":
             keyword = self.expect_keyword_("from")
@@ -837,6 +843,11 @@ class Parser(object):
 
         num_lookups = len([l for l in lookups if l is not None])
 
+        is_deletion = False
+        if len(new) == 1 and len(new[0].glyphSet()) == 0:
+            new = []  # Deletion
+            is_deletion = True
+
         # GSUB lookup type 1: Single substitution.
         # Format A: "substitute a by a.sc;"
         # Format B: "substitute [one.fitted one.oldstyle] by one;"
@@ -863,8 +874,10 @@ class Parser(object):
             not reverse
             and len(old) == 1
             and len(old[0].glyphSet()) == 1
-            and len(new) > 1
-            and max([len(n.glyphSet()) for n in new]) == 1
+            and (
+                (len(new) > 1 and max([len(n.glyphSet()) for n in new]) == 1)
+                or len(new) == 0
+            )
             and num_lookups == 0
         ):
             return self.ast.MultipleSubstStatement(
@@ -936,7 +949,7 @@ class Parser(object):
             )
 
         # If there are remaining glyphs to parse, this is an invalid GSUB statement
-        if len(new) != 0:
+        if len(new) != 0 or is_deletion:
             raise FeatureLibError("Invalid substitution statement", location)
 
         # GSUB lookup type 6: Chaining contextual substitution.

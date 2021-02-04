@@ -73,7 +73,7 @@ class BuilderTest(unittest.TestCase):
         LigatureSubtable AlternateSubtable MultipleSubstSubtable 
         SingleSubstSubtable aalt_chain_contextual_subst AlternateChained 
         MultipleLookupsPerGlyph MultipleLookupsPerGlyph2 GSUB_6_formats
-        GSUB_5_formats
+        GSUB_5_formats delete_glyph
     """.split()
 
     def __init__(self, methodName):

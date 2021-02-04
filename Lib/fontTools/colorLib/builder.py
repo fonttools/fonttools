@@ -549,6 +549,23 @@ class LayerV1ListBuilder:
 
         return ot_paint
 
+    def buildPaintSweepGradient(
+        self,
+        colorLine: _ColorLineInput,
+        centerX: _ScalarInput,
+        centerY: _ScalarInput,
+        startAngle: _ScalarInput,
+        endAngle: _ScalarInput,
+    ) -> ot.Paint:
+        ot_paint = ot.Paint()
+        ot_paint.Format = int(ot.Paint.Format.PaintSweepGradient)
+        ot_paint.ColorLine = _to_color_line(colorLine)
+        ot_paint.centerX = _to_variable_int16(centerX)
+        ot_paint.centerY = _to_variable_int16(centerY)
+        ot_paint.startAngle = _to_variable_f16dot16_float(startAngle)
+        ot_paint.endAngle = _to_variable_f16dot16_float(endAngle)
+        return ot_paint
+
     def buildPaintGlyph(self, glyph: str, paint: _PaintInput) -> ot.Paint:
         ot_paint = ot.Paint()
         ot_paint.Format = int(ot.Paint.Format.PaintGlyph)

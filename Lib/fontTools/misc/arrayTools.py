@@ -313,9 +313,9 @@ class Vector(object):
     __rmul__ = __mul__
 
     def __truediv__(self, other):
-        return Vector(self._scalarOp(other, operator.div), keep=True)
+        return Vector(self._scalarOp(other, operator.truediv), keep=True)
     def __itruediv__(self, other):
-        self.values = self._scalarOp(other, operator.div)
+        self.values = self._scalarOp(other, operator.truediv)
         return self
 
     def __pos__(self):
