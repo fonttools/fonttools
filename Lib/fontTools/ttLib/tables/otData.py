@@ -1612,21 +1612,21 @@ otData = [
 		('uint16', 'StopCount', None, None, 'Number of Color stops.'),
 		('ColorStop', 'ColorStop', 'StopCount', 0, 'Array of Color stops.'),
 	]),
-
+	# PaintColrLayers
 	('PaintFormat1', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 1'),
 		('uint8', 'NumLayers', None, None, 'Number of offsets to Paint to read from LayerV1List.'),
 		('uint32', 'FirstLayerIndex', None, None, 'Index into LayerV1List.'),
 	]),
-
+	# PaintSolid
 	('PaintFormat2', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 2'),
 		('ColorIndex', 'Color', None, None, 'A solid color paint.'),
 	]),
-
+	# PaintLinearGradient
 	('PaintFormat3', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 3'),
-		('Offset24', 'ColorLine', None, None, 'Offset (from beginning of Paint table) to ColorLine subtable.'),
+		('Offset24', 'ColorLine', None, None, 'Offset (from beginning of PaintLinearGradient table) to ColorLine subtable.'),
 		('VarInt16', 'x0', None, None, ''),
 		('VarInt16', 'y0', None, None, ''),
 		('VarInt16', 'x1', None, None, ''),
@@ -1634,10 +1634,10 @@ otData = [
 		('VarInt16', 'x2', None, None, ''),
 		('VarInt16', 'y2', None, None, ''),
 	]),
-
+	# PaintRadialGradient
 	('PaintFormat4', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 4'),
-		('Offset24', 'ColorLine', None, None, 'Offset (from beginning of Paint table) to ColorLine subtable.'),
+		('Offset24', 'ColorLine', None, None, 'Offset (from beginning of PaintRadialGradient table) to ColorLine subtable.'),
 		('VarInt16', 'x0', None, None, ''),
 		('VarInt16', 'y0', None, None, ''),
 		('VarUInt16', 'r0', None, None, ''),
@@ -1645,50 +1645,59 @@ otData = [
 		('VarInt16', 'y1', None, None, ''),
 		('VarUInt16', 'r1', None, None, ''),
 	]),
-
+	# PaintSweepGradient
 	('PaintFormat5', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 5'),
+		('Offset24', 'ColorLine', None, None, 'Offset (from beginning of PaintSweepGradient table) to ColorLine subtable.'),
+		('VarInt16', 'centerX', None, None, 'Center x coordinate.'),
+		('VarInt16', 'centerY', None, None, 'Center y coordinate.'),
+		('VarFixed', 'startAngle', None, None, 'Start of the angular range of the gradient.'),
+		('VarFixed', 'endAngle', None, None, 'End of the angular range of the gradient.'),
+	]),
+	# PaintGlyph
+	('PaintFormat6', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 6'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintGlyph table) to Paint subtable.'),
 		('GlyphID', 'Glyph', None, None, 'Glyph ID for the source outline.'),
 	]),
-
-	('PaintFormat6', [
-		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 6'),
-		('GlyphID', 'Glyph', None, None, 'Virtual glyph ID for a BaseGlyphV1List base glyph.'),
-	]),
-
+	# PaintColrGlyph
 	('PaintFormat7', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 7'),
-		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintTransformed table) to Paint subtable.'),
-		('Affine2x3', 'Transform', None, None, 'Offset (from beginning of PaintTrasformed table) to Affine2x3 subtable.'),
+		('GlyphID', 'Glyph', None, None, 'Virtual glyph ID for a BaseGlyphV1List base glyph.'),
 	]),
-
+	# PaintTransform
 	('PaintFormat8', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 8'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintTransform table) to Paint subtable.'),
+		('Affine2x3', 'Transform', None, None, '2x3 matrix for 2D affine transformations.'),
+	]),
+	# PaintTranslate
+	('PaintFormat9', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 9'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintTranslate table) to Paint subtable.'),
 		('VarFixed', 'dx', None, None, 'Translation in x direction.'),
 		('VarFixed', 'dy', None, None, 'Translation in y direction.'),
 	]),
-
-	('PaintFormat9', [
-		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 9'),
+	# PaintRotate
+	('PaintFormat10', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 10'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintRotate table) to Paint subtable.'),
 		('VarFixed', 'angle', None, None, ''),
 		('VarFixed', 'centerX', None, None, ''),
 		('VarFixed', 'centerY', None, None, ''),
 	]),
-
-	('PaintFormat10', [
-		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 10'),
+	# PaintSkew
+	('PaintFormat11', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 11'),
 		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintSkew table) to Paint subtable.'),
 		('VarFixed', 'xSkewAngle', None, None, ''),
 		('VarFixed', 'ySkewAngle', None, None, ''),
 		('VarFixed', 'centerX', None, None, ''),
 		('VarFixed', 'centerY', None, None, ''),
 	]),
-
-	('PaintFormat11', [
-		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 11'),
+	# PaintComposite
+	('PaintFormat12', [
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 12'),
 		('LOffset24To(Paint)', 'SourcePaint', None, None, 'Offset (from beginning of PaintComposite table) to source Paint subtable.'),
 		('CompositeMode', 'CompositeMode', None, None, 'A CompositeMode enumeration value.'),
 		('LOffset24To(Paint)', 'BackdropPaint', None, None, 'Offset (from beginning of PaintComposite table) to backdrop Paint subtable.'),

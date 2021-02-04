@@ -1331,13 +1331,14 @@ class Paint(getFormatSwitchingBaseTableClass("uint8")):
 		PaintSolid = 2
 		PaintLinearGradient = 3
 		PaintRadialGradient = 4
-		PaintGlyph = 5
-		PaintColrGlyph = 6
-		PaintTransform = 7
-		PaintTranslate = 8
-		PaintRotate = 9
-		PaintSkew = 10
-		PaintComposite = 11
+		PaintSweepGradient = 5
+		PaintGlyph = 6
+		PaintColrGlyph = 7
+		PaintTransform = 8
+		PaintTranslate = 9
+		PaintRotate = 10
+		PaintSkew = 11
+		PaintComposite = 12
 
 	def getFormatName(self):
 		try:
