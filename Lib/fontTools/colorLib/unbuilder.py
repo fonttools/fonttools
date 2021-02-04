@@ -88,7 +88,7 @@ class LayerV1ListUnbuilder:
         p1 = (self.unbuildVariableValue(paint.x1), self.unbuildVariableValue(paint.y1))
         p2 = (self.unbuildVariableValue(paint.x2), self.unbuildVariableValue(paint.y2))
         return {
-            "format": int(ot.Paint.Format.PaintLinearGradient),
+            "format": int(paint.Format),
             "colorLine": unbuildColorLine(
                 paint.ColorLine, ignoreVarIdx=self.ignoreVarIdx
             ),
@@ -103,7 +103,7 @@ class LayerV1ListUnbuilder:
         c1 = (self.unbuildVariableValue(paint.x1), self.unbuildVariableValue(paint.y1))
         r1 = self.unbuildVariableValue(paint.r1)
         return {
-            "format": int(ot.Paint.Format.PaintRadialGradient),
+            "format": int(paint.Format),
             "colorLine": unbuildColorLine(
                 paint.ColorLine, ignoreVarIdx=self.ignoreVarIdx
             ),
@@ -115,7 +115,7 @@ class LayerV1ListUnbuilder:
 
     def unbuildPaintSweepGradient(self, paint):
         return {
-            "format": int(ot.Paint.Format.PaintSweepGradient),
+            "format": int(paint.Format),
             "colorLine": unbuildColorLine(
                 paint.ColorLine, ignoreVarIdx=self.ignoreVarIdx
             ),
@@ -127,20 +127,20 @@ class LayerV1ListUnbuilder:
 
     def unbuildPaintGlyph(self, paint):
         return {
-            "format": int(ot.Paint.Format.PaintGlyph),
+            "format": int(paint.Format),
             "glyph": paint.Glyph,
             "paint": self.unbuildPaint(paint.Paint),
         }
 
     def unbuildPaintColrGlyph(self, paint):
         return {
-            "format": int(ot.Paint.Format.PaintColrGlyph),
+            "format": int(paint.Format),
             "glyph": paint.Glyph,
         }
 
     def unbuildPaintTransform(self, paint):
         return {
-            "format": int(ot.Paint.Format.PaintTransform),
+            "format": int(paint.Format),
             "transform": unbuildAffine2x3(
                 paint.Transform, ignoreVarIdx=self.ignoreVarIdx
             ),
@@ -149,7 +149,7 @@ class LayerV1ListUnbuilder:
 
     def unbuildPaintTranslate(self, paint):
         return {
-            "format": int(ot.Paint.Format.PaintTranslate),
+            "format": int(paint.Format),
             "dx": self.unbuildVariableValue(paint.dx),
             "dy": self.unbuildVariableValue(paint.dy),
             "paint": self.unbuildPaint(paint.Paint),
@@ -157,7 +157,7 @@ class LayerV1ListUnbuilder:
 
     def unbuildPaintRotate(self, paint):
         return {
-            "format": int(ot.Paint.Format.PaintRotate),
+            "format": int(paint.Format),
             "angle": self.unbuildVariableValue(paint.angle),
             "centerX": self.unbuildVariableValue(paint.centerX),
             "centerY": self.unbuildVariableValue(paint.centerY),
@@ -166,7 +166,7 @@ class LayerV1ListUnbuilder:
 
     def unbuildPaintSkew(self, paint):
         return {
-            "format": int(ot.Paint.Format.PaintSkew),
+            "format": int(paint.Format),
             "xSkewAngle": self.unbuildVariableValue(paint.xSkewAngle),
             "ySkewAngle": self.unbuildVariableValue(paint.ySkewAngle),
             "centerX": self.unbuildVariableValue(paint.centerX),
@@ -176,7 +176,7 @@ class LayerV1ListUnbuilder:
 
     def unbuildPaintComposite(self, paint):
         return {
-            "format": int(ot.Paint.Format.PaintComposite),
+            "format": int(paint.Format),
             "mode": paint.CompositeMode.name.lower(),
             "source": self.unbuildPaint(paint.SourcePaint),
             "backdrop": self.unbuildPaint(paint.BackdropPaint),
