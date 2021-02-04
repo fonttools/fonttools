@@ -113,6 +113,18 @@ class LayerV1ListUnbuilder:
             "r1": r1,
         }
 
+    def unbuildPaintSweepGradient(self, paint):
+        return {
+            "format": int(ot.Paint.Format.PaintSweepGradient),
+            "colorLine": unbuildColorLine(
+                paint.ColorLine, ignoreVarIdx=self.ignoreVarIdx
+            ),
+            "centerX": self.unbuildVariableValue(paint.centerX),
+            "centerY": self.unbuildVariableValue(paint.centerY),
+            "startAngle": self.unbuildVariableValue(paint.startAngle),
+            "endAngle": self.unbuildVariableValue(paint.endAngle),
+        }
+
     def unbuildPaintGlyph(self, paint):
         return {
             "format": int(ot.Paint.Format.PaintGlyph),

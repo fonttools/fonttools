@@ -103,7 +103,25 @@ TEST_COLOR_GLYPHS = {
             },
         },
     },
-    "glyph00015": [
+    "glyph00015": {
+        "format": int(ot.Paint.Format.PaintGlyph),
+        "glyph": "glyph00011",
+        "paint": {
+            "format": int(ot.Paint.Format.PaintSweepGradient),
+            "colorLine": {
+                "stops": [
+                    {"offset": 0.0, "paletteIndex": 3, "alpha": 1.0},
+                    {"offset": 1.0, "paletteIndex": 5, "alpha": 1.0},
+                ],
+                "extend": "pad",
+            },
+            "centerX": 259,
+            "centerY": 300,
+            "startAngle": 45.0,
+            "endAngle": 135.0,
+        },
+    },
+    "glyph00016": [
         {
             "format": int(ot.Paint.Format.PaintGlyph),
             "glyph": "glyph00011",
