@@ -229,7 +229,7 @@ def buildCOLR(
     self.version = colr.Version = version
 
     if version == 0:
-        self._fromOTTable(colr)
+        self.ColorLayers = self._decompileColorLayersV0(colr)
     else:
         colr.VarStore = varStore
         self.table = colr
