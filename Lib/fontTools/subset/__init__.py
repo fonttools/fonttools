@@ -1983,22 +1983,79 @@ def subset_glyphs(self, s):
 	else:
 		assert False, "unknown 'prop' format %s" % prop.Format
 
+def _paint_glyph_names(paint, colr):
+	result = set()
+
+	def callback(paint):
+		if paint.Format in {
+			otTables.PaintFormat.PaintGlyph,
+			otTables.PaintFormat.PaintColrGlyph,
+		}:
+			result.add(paint.Glyph)
+
+	paint.traverse(colr, callback)
+	return result
+
 @_add_method(ttLib.getTableClass('COLR'))
 def closure_glyphs(self, s):
+	if self.version > 0:
+		# on decompiling COLRv1, we only keep around the raw otTables
+		# but for subsetting we need dicts with fully decompiled layers;
+		# we store them temporarily in the C_O_L_R_ instance and delete
+		# them after we have finished subsetting.
+		self.ColorLayers = self._decompileColorLayersV0(self.table)
+		self.ColorLayersV1 = {
+			rec.BaseGlyph: rec.Paint
+			for rec in self.table.BaseGlyphV1List.BaseGlyphV1Record
+		}
+
 	decompose = s.glyphs
 	while decompose:
 		layers = set()
 		for g in decompose:
-			for l in self.ColorLayers.get(g, []):
-				layers.add(l.name)
+			for layer in self.ColorLayers.get(g, []):
+				layers.add(layer.name)
+
+			if self.version > 0:
+				paint = self.ColorLayersV1.get(g)
+				if paint is not None:
+					layers.update(_paint_glyph_names(paint, self.table))
+
 		layers -= s.glyphs
 		s.glyphs.update(layers)
 		decompose = layers
 
 @_add_method(ttLib.getTableClass('COLR'))
 def subset_glyphs(self, s):
+	from fontTools.colorLib.unbuilder import unbuildColrV1
+	from fontTools.colorLib.builder import buildColrV1, populateCOLRv0
+
 	self.ColorLayers = {g: self.ColorLayers[g] for g in s.glyphs if g in self.ColorLayers}
-	return bool(self.ColorLayers)
+	if self.version == 0:
+		return bool(self.ColorLayers)
+
+	layersV0 = self.ColorLayers
+	populateCOLRv0(
+		self.table,
+		{
+			g: [(layer.name, layer.colorID) for layer in layersV0[g]]
+			for g in layersV0
+		},
+	)
+	del self.ColorLayers
+
+	colorGlyphsV1 = unbuildColrV1(
+		self.table.LayerV1List,
+		self.table.BaseGlyphV1List,
+		ignoreVarIdx=not self.table.VarStore,
+	)
+	self.table.LayerV1List, self.table.BaseGlyphV1List = buildColrV1(
+		{g: colorGlyphsV1[g] for g in colorGlyphsV1 if g in s.glyphs}
+	)
+	del self.ColorLayersV1
+
+	# TODO: also prune ununsed varIndices in COLR.VarStore
+	return bool(layersV0) or bool(self.table.BaseGlyphV1List.BaseGlyphV1Record)
 
 # TODO: prune unused palettes
 @_add_method(ttLib.getTableClass('CPAL'))
