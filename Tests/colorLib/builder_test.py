@@ -3,9 +3,18 @@ from fontTools.ttLib.tables import otTables as ot
 from fontTools.colorLib import builder
 from fontTools.colorLib.geometry import round_start_circle_stable_containment, Circle
 from fontTools.colorLib.builder import LayerV1ListBuilder, _build_n_ary_tree
+from fontTools.colorLib.table_builder import TableBuilder
 from fontTools.colorLib.errors import ColorLibError
 import pytest
 from typing import List
+
+
+def _build(cls, source):
+    return LayerV1ListBuilder().tableBuilder.build(cls, source)
+
+
+def _buildPaint(source):
+    return LayerV1ListBuilder().buildPaint(source)
 
 
 def test_buildCOLR_v0():
@@ -223,105 +232,132 @@ def test_buildCPAL_invalid_color():
 
 
 def test_buildColorIndex():
-    c = builder.buildColorIndex(0)
-    assert c.PaletteIndex == 0
+    c = _build(ot.ColorIndex, 1)
+    assert c.PaletteIndex == 1
     assert c.Alpha.value == 1.0
     assert c.Alpha.varIdx == 0
 
-    c = builder.buildColorIndex(1, alpha=0.5)
+
+def test_buildColorIndex_Alpha():
+    c = _build(ot.ColorIndex, (1, 0.5))
     assert c.PaletteIndex == 1
     assert c.Alpha.value == 0.5
     assert c.Alpha.varIdx == 0
 
-    c = builder.buildColorIndex(3, alpha=builder.VariableFloat(0.5, varIdx=2))
+
+def test_buildColorIndex_Variable():
+    c = _build(ot.ColorIndex, (3, builder.VariableFloat(0.5, varIdx=2)))
     assert c.PaletteIndex == 3
     assert c.Alpha.value == 0.5
     assert c.Alpha.varIdx == 2
 
 
 def test_buildPaintSolid():
-    p = LayerV1ListBuilder().buildPaintSolid(0)
+    p = _buildPaint((ot.PaintFormat.PaintSolid, 0))
     assert p.Format == ot.PaintFormat.PaintSolid
     assert p.Color.PaletteIndex == 0
     assert p.Color.Alpha.value == 1.0
     assert p.Color.Alpha.varIdx == 0
 
-    p = LayerV1ListBuilder().buildPaintSolid(1, alpha=0.5)
+
+def test_buildPaintSolid_Alpha():
+    p = _buildPaint((ot.PaintFormat.PaintSolid, (1, 0.5)))
     assert p.Format == ot.PaintFormat.PaintSolid
     assert p.Color.PaletteIndex == 1
     assert p.Color.Alpha.value == 0.5
     assert p.Color.Alpha.varIdx == 0
 
-    p = LayerV1ListBuilder().buildPaintSolid(
-        3, alpha=builder.VariableFloat(0.5, varIdx=2)
-    )
+
+def test_buildPaintSolid_Variable():
+    p = _buildPaint((ot.PaintFormat.PaintSolid, (3, builder.VariableFloat(0.5, varIdx=2))))
     assert p.Format == ot.PaintFormat.PaintSolid
     assert p.Color.PaletteIndex == 3
     assert p.Color.Alpha.value == 0.5
     assert p.Color.Alpha.varIdx == 2
 
 
-def test_buildColorStop():
-    s = builder.buildColorStop(0.1, 2)
+def test_buildColorStop_DefaultAlpha():
+    s = _build(ot.ColorStop, (0.1, 2))
     assert s.StopOffset == builder.VariableFloat(0.1)
     assert s.Color.PaletteIndex == 2
     assert s.Color.Alpha == builder._DEFAULT_ALPHA
 
-    s = builder.buildColorStop(offset=0.2, paletteIndex=3, alpha=0.4)
-    assert s.StopOffset == builder.VariableFloat(0.2)
-    assert s.Color == builder.buildColorIndex(3, alpha=0.4)
 
-    s = builder.buildColorStop(
-        offset=builder.VariableFloat(0.0, varIdx=1),
-        paletteIndex=0,
-        alpha=builder.VariableFloat(0.3, varIdx=2),
+def test_buildColorStop():
+    s = _build(
+        ot.ColorStop, {"StopOffset": 0.2, "Color": {"PaletteIndex": 3, "Alpha": 0.4}}
+    )
+    assert s.StopOffset == builder.VariableFloat(0.2)
+    assert s.Color == _build(ot.ColorIndex, (3, 0.4))
+
+
+def test_buildColorStop_Variable():
+    s = _build(
+        ot.ColorStop,
+        {
+            "StopOffset": builder.VariableFloat(0.0, varIdx=1),
+            "Color": {
+                "PaletteIndex": 0,
+                "Alpha": builder.VariableFloat(0.3, varIdx=2),
+            },
+        },
     )
     assert s.StopOffset == builder.VariableFloat(0.0, varIdx=1)
     assert s.Color.PaletteIndex == 0
     assert s.Color.Alpha == builder.VariableFloat(0.3, varIdx=2)
 
 
-def test_buildColorLine():
+def test_buildColorLine_StopList():
     stops = [(0.0, 0), (0.5, 1), (1.0, 2)]
 
-    cline = builder.buildColorLine(stops)
+    cline = _build(ot.ColorLine, {"ColorStop": stops})
     assert cline.Extend == builder.ExtendMode.PAD
     assert cline.StopCount == 3
     assert [
         (cs.StopOffset.value, cs.Color.PaletteIndex) for cs in cline.ColorStop
     ] == stops
 
-    cline = builder.buildColorLine(stops, extend="pad")
+    cline = _build(ot.ColorLine, {"Extend": "pad", "ColorStop": stops})
     assert cline.Extend == builder.ExtendMode.PAD
 
-    cline = builder.buildColorLine(stops, extend=builder.ExtendMode.REPEAT)
+    cline = _build(
+        ot.ColorLine, {"ColorStop": stops, "Extend": builder.ExtendMode.REPEAT}
+    )
     assert cline.Extend == builder.ExtendMode.REPEAT
 
-    cline = builder.buildColorLine(stops, extend=builder.ExtendMode.REFLECT)
+    cline = _build(
+        ot.ColorLine, {"ColorStop": stops, "Extend": builder.ExtendMode.REFLECT}
+    )
     assert cline.Extend == builder.ExtendMode.REFLECT
 
-    cline = builder.buildColorLine([builder.buildColorStop(*s) for s in stops])
+    cline = _build(
+        ot.ColorLine, {"ColorStop": [_build(ot.ColorStop, s) for s in stops]}
+    )
     assert [
         (cs.StopOffset.value, cs.Color.PaletteIndex) for cs in cline.ColorStop
     ] == stops
 
+
+def test_buildColorLine_StopMap_Variations():
     stops = [
-        {"offset": (0.0, 1), "paletteIndex": 0, "alpha": (0.5, 2)},
-        {"offset": (1.0, 3), "paletteIndex": 1, "alpha": (0.3, 4)},
+        {"StopOffset": (0.0, (1,)), "Color": {"PaletteIndex": 0, "Alpha": (0.5, 2)}},
+        {"StopOffset": (1.0, (3,)), "Color": {"PaletteIndex": 1, "Alpha": (0.3, 4)}},
     ]
-    cline = builder.buildColorLine(stops)
+    cline = _build(ot.ColorLine, {"ColorStop": stops})
     assert [
         {
-            "offset": cs.StopOffset,
-            "paletteIndex": cs.Color.PaletteIndex,
-            "alpha": cs.Color.Alpha,
+            "StopOffset": cs.StopOffset,
+            "Color": {
+                "PaletteIndex": cs.Color.PaletteIndex,
+                "Alpha": cs.Color.Alpha,
+            },
         }
         for cs in cline.ColorStop
     ] == stops
 
 
 def test_buildAffine2x3():
-    matrix = builder.buildAffine2x3((1.5, 0, 0.5, 2.0, 1.0, -3.0))
+    matrix = _build(ot.Affine2x3, (1.5, 0, 0.5, 2.0, 1.0, -3.0))
     assert matrix.xx == builder.VariableFloat(1.5)
     assert matrix.yx == builder.VariableFloat(0.0)
     assert matrix.xy == builder.VariableFloat(0.5)
@@ -330,47 +366,55 @@ def test_buildAffine2x3():
     assert matrix.dy == builder.VariableFloat(-3.0)
 
 
-def test_buildPaintLinearGradient():
-    layerBuilder = LayerV1ListBuilder()
-    color_stops = [
-        builder.buildColorStop(0.0, 0),
-        builder.buildColorStop(0.5, 1),
-        builder.buildColorStop(1.0, 2, alpha=0.8),
+def _sample_stops():
+    return [
+        _build(ot.ColorStop, (0.0, 0)),
+        _build(ot.ColorStop, (0.5, 1)),
+        _build(ot.ColorStop, (1.0, (2, 0.8))),
     ]
-    color_line = builder.buildColorLine(color_stops, extend=builder.ExtendMode.REPEAT)
-    p0 = (builder.VariableInt(100), builder.VariableInt(200))
-    p1 = (builder.VariableInt(150), builder.VariableInt(250))
 
-    gradient = layerBuilder.buildPaintLinearGradient(color_line, p0, p1)
-    assert gradient.Format == 3
-    assert gradient.ColorLine == color_line
-    assert (gradient.x0, gradient.y0) == p0
-    assert (gradient.x1, gradient.y1) == p1
-    assert (gradient.x2, gradient.y2) == p1
 
-    gradient = layerBuilder.buildPaintLinearGradient({"stops": color_stops}, p0, p1)
+def test_buildPaintLinearGradient():
+    color_stops = _sample_stops()
+    x0, y0, x1, y1, x2, y2 = tuple(builder.VariableInt(v) for v in (1, 2, 3, 4, 5, 6))
+    gradient = _buildPaint(
+        {
+            "Format": ot.PaintFormat.PaintLinearGradient,
+            "ColorLine": {"ColorStop": color_stops},
+            "x0": x0,
+            "y0": y0,
+            "x1": x1,
+            "y1": y1,
+            "x2": x2,
+            "y2": y2,
+        },
+    )
     assert gradient.ColorLine.Extend == builder.ExtendMode.PAD
     assert gradient.ColorLine.ColorStop == color_stops
 
-    gradient = layerBuilder.buildPaintLinearGradient(color_line, p0, p1, p2=(150, 230))
-    assert (gradient.x2.value, gradient.y2.value) == (150, 230)
-    assert (gradient.x2, gradient.y2) != (gradient.x1, gradient.y1)
+    gradient = _buildPaint(gradient)
+    assert (gradient.x0.value, gradient.y0.value) == (1, 2)
+    assert (gradient.x1.value, gradient.y1.value) == (3, 4)
+    assert (gradient.x2.value, gradient.y2.value) == (5, 6)
 
 
 def test_buildPaintRadialGradient():
-    layerBuilder = LayerV1ListBuilder()
     color_stops = [
-        builder.buildColorStop(0.0, 0),
-        builder.buildColorStop(0.5, 1),
-        builder.buildColorStop(1.0, 2, alpha=0.8),
+        _build(ot.ColorStop, (0.0, (0,))),
+        _build(ot.ColorStop, (0.5, 1)),
+        _build(ot.ColorStop, (1.0, (2, 0.8))),
     ]
-    color_line = builder.buildColorLine(color_stops, extend=builder.ExtendMode.REPEAT)
+    color_line = _build(
+        ot.ColorLine, {"ColorStop": color_stops, "Extend": builder.ExtendMode.REPEAT}
+    )
     c0 = (builder.VariableInt(100), builder.VariableInt(200))
     c1 = (builder.VariableInt(150), builder.VariableInt(250))
     r0 = builder.VariableInt(10)
     r1 = builder.VariableInt(5)
 
-    gradient = layerBuilder.buildPaintRadialGradient(color_line, c0, c1, r0, r1)
+    gradient = _build(
+        ot.Paint, (ot.PaintFormat.PaintRadialGradient, color_line, *c0, r0, *c1, r1)
+    )
     assert gradient.Format == ot.PaintFormat.PaintRadialGradient
     assert gradient.ColorLine == color_line
     assert (gradient.x0, gradient.y0) == c0
@@ -378,27 +422,43 @@ def test_buildPaintRadialGradient():
     assert gradient.r0 == r0
     assert gradient.r1 == r1
 
-    gradient = layerBuilder.buildPaintRadialGradient(
-        {"stops": color_stops}, c0, c1, r0, r1
+    gradient = _build(
+        ot.Paint,
+        {
+            "Format": ot.PaintFormat.PaintRadialGradient,
+            "ColorLine": {"ColorStop": color_stops},
+            "x0": c0[0],
+            "y0": c0[1],
+            "x1": c1[0],
+            "y1": c1[1],
+            "r0": r0,
+            "r1": r1,
+        },
     )
     assert gradient.ColorLine.Extend == builder.ExtendMode.PAD
     assert gradient.ColorLine.ColorStop == color_stops
+    assert (gradient.x0, gradient.y0) == c0
+    assert (gradient.x1, gradient.y1) == c1
+    assert gradient.r0 == r0
+    assert gradient.r1 == r1
 
 
 def test_buildPaintSweepGradient():
-    layerBuilder = LayerV1ListBuilder()
-    paint = layerBuilder.buildPaintSweepGradient(
-        colorLine=builder.buildColorLine(
-            stops=[
-                builder.buildColorStop(0.0, 0),
-                builder.buildColorStop(0.5, 1),
-                builder.buildColorStop(1.0, 2, alpha=0.8),
-            ],
-        ),
-        centerX=127,
-        centerY=129,
-        startAngle=15,
-        endAngle=42,
+    paint = _buildPaint(
+        {
+            "Format": ot.PaintFormat.PaintSweepGradient,
+            "ColorLine": {
+                "ColorStop": (
+                    (0.0, 0),
+                    (0.5, 1),
+                    (1.0, (2, 0.8)),
+                )
+            },
+            "centerX": 127,
+            "centerY": 129,
+            "startAngle": 15,
+            "endAngle": 42,
+        }
     )
 
     assert paint.Format == ot.PaintFormat.PaintSweepGradient
@@ -409,25 +469,53 @@ def test_buildPaintSweepGradient():
 
 
 def test_buildPaintGlyph_Solid():
-    layerBuilder = LayerV1ListBuilder()
-    layer = layerBuilder.buildPaintGlyph("a", 2)
+    layer = _build(
+        ot.Paint,
+        (
+            ot.PaintFormat.PaintGlyph,
+            (
+                ot.PaintFormat.PaintSolid,
+                2,
+            ),
+            "a",
+        ),
+    )
+    assert layer.Format == ot.PaintFormat.PaintGlyph
     assert layer.Glyph == "a"
     assert layer.Paint.Format == ot.PaintFormat.PaintSolid
     assert layer.Paint.Color.PaletteIndex == 2
 
-    layer = layerBuilder.buildPaintGlyph("a", layerBuilder.buildPaintSolid(3, 0.9))
+    layer = _build(
+        ot.Paint,
+        (
+            ot.PaintFormat.PaintGlyph,
+            (
+                ot.PaintFormat.PaintSolid,
+                (3, 0.9),
+            ),
+            "a",
+        ),
+    )
     assert layer.Paint.Format == ot.PaintFormat.PaintSolid
     assert layer.Paint.Color.PaletteIndex == 3
     assert layer.Paint.Color.Alpha.value == 0.9
 
 
 def test_buildPaintGlyph_LinearGradient():
-    layerBuilder = LayerV1ListBuilder()
-    layer = layerBuilder.buildPaintGlyph(
-        "a",
-        layerBuilder.buildPaintLinearGradient(
-            {"stops": [(0.0, 3), (1.0, 4)]}, (100, 200), (150, 250)
-        ),
+    layer = _build(
+        ot.Paint,
+        {
+            "Format": ot.PaintFormat.PaintGlyph,
+            "Glyph": "a",
+            "Paint": {
+                "Format": ot.PaintFormat.PaintLinearGradient,
+                "ColorLine": {"ColorStop": [(0.0, 3), (1.0, 4)]},
+                "x0": 100,
+                "y0": 200,
+                "x1": 150,
+                "y1": 250,
+            },
+        },
     )
     assert layer.Paint.Format == ot.PaintFormat.PaintLinearGradient
     assert layer.Paint.ColorLine.ColorStop[0].StopOffset.value == 0.0
@@ -441,23 +529,31 @@ def test_buildPaintGlyph_LinearGradient():
 
 
 def test_buildPaintGlyph_RadialGradient():
-    layerBuilder = LayerV1ListBuilder()
-    layer = layerBuilder.buildPaintGlyph(
-        "a",
-        layerBuilder.buildPaintRadialGradient(
-            {
-                "stops": [
-                    (0.0, 5),
-                    {"offset": 0.5, "paletteIndex": 6, "alpha": 0.8},
-                    (1.0, 7),
-                ]
-            },
-            (50, 50),
-            (75, 75),
-            30,
-            10,
+    layer = _build(
+        ot.Paint,
+        (
+            int(ot.PaintFormat.PaintGlyph),
+            (
+                ot.PaintFormat.PaintRadialGradient,
+                (
+                    "pad",
+                    [
+                        (0.0, 5),
+                        {"StopOffset": 0.5, "Color": {"PaletteIndex": 6, "Alpha": 0.8}},
+                        (1.0, 7),
+                    ],
+                ),
+                50,
+                50,
+                30,
+                75,
+                75,
+                10,
+            ),
+            "a",
         ),
     )
+    assert layer.Format == ot.PaintFormat.PaintGlyph
     assert layer.Paint.Format == ot.PaintFormat.PaintRadialGradient
     assert layer.Paint.ColorLine.ColorStop[0].StopOffset.value == 0.0
     assert layer.Paint.ColorLine.ColorStop[0].Color.PaletteIndex == 5
@@ -475,39 +571,58 @@ def test_buildPaintGlyph_RadialGradient():
 
 
 def test_buildPaintGlyph_Dict_Solid():
-    layerBuilder = LayerV1ListBuilder()
-    layer = layerBuilder.buildPaintGlyph("a", {"format": 2, "paletteIndex": 0})
+    layer = _build(
+        ot.Paint,
+        (
+            int(ot.PaintFormat.PaintGlyph),
+            (int(ot.PaintFormat.PaintSolid), 1),
+            "a",
+        ),
+    )
+    assert layer.Format == ot.PaintFormat.PaintGlyph
+    assert layer.Format == ot.PaintFormat.PaintGlyph
     assert layer.Glyph == "a"
     assert layer.Paint.Format == ot.PaintFormat.PaintSolid
-    assert layer.Paint.Color.PaletteIndex == 0
+    assert layer.Paint.Color.PaletteIndex == 1
 
 
 def test_buildPaintGlyph_Dict_LinearGradient():
-    layerBuilder = LayerV1ListBuilder()
-    layer = layerBuilder.buildPaintGlyph(
-        "a",
+    layer = _build(
+        ot.Paint,
         {
-            "format": 3,
-            "colorLine": {"stops": [(0.0, 0), (1.0, 1)]},
-            "p0": (0, 0),
-            "p1": (10, 10),
+            "Format": ot.PaintFormat.PaintGlyph,
+            "Glyph": "a",
+            "Paint": {
+                "Format": 3,
+                "ColorLine": {"ColorStop": [(0.0, 0), (1.0, 1)]},
+                "x0": 0,
+                "y0": 0,
+                "x1": 10,
+                "y1": 10,
+            },
         },
     )
+    assert layer.Format == ot.PaintFormat.PaintGlyph
+    assert layer.Glyph == "a"
     assert layer.Paint.Format == ot.PaintFormat.PaintLinearGradient
     assert layer.Paint.ColorLine.ColorStop[0].StopOffset.value == 0.0
 
 
 def test_buildPaintGlyph_Dict_RadialGradient():
-    layerBuilder = LayerV1ListBuilder()
-    layer = layerBuilder.buildPaintGlyph(
-        "a",
+    layer = _buildPaint(
         {
-            "format": 4,
-            "colorLine": {"stops": [(0.0, 0), (1.0, 1)]},
-            "c0": (0, 0),
-            "c1": (10, 10),
-            "r0": 4,
-            "r1": 0,
+            "Glyph": "a",
+            "Paint": {
+                "Format": int(ot.PaintFormat.PaintRadialGradient),
+                "ColorLine": {"ColorStop": [(0.0, 0), (1.0, 1)]},
+                "x0": 0,
+                "y0": 0,
+                "r0": 4,
+                "x1": 10,
+                "y1": 10,
+                "r1": 0,
+            },
+            "Format": int(ot.PaintFormat.PaintGlyph),
         },
     )
     assert layer.Paint.Format == ot.PaintFormat.PaintRadialGradient
@@ -515,18 +630,17 @@ def test_buildPaintGlyph_Dict_RadialGradient():
 
 
 def test_buildPaintColrGlyph():
-    paint = LayerV1ListBuilder().buildPaintColrGlyph("a")
+    paint = _buildPaint((int(ot.PaintFormat.PaintColrGlyph), "a"))
     assert paint.Format == ot.PaintFormat.PaintColrGlyph
     assert paint.Glyph == "a"
 
 
 def test_buildPaintTransform():
-    layerBuilder = LayerV1ListBuilder()
-    paint = layerBuilder.buildPaintTransform(
-        transform=builder.buildAffine2x3((1, 2, 3, 4, 5, 6)),
-        paint=layerBuilder.buildPaintGlyph(
-            glyph="a",
-            paint=layerBuilder.buildPaintSolid(paletteIndex=0, alpha=1.0),
+    paint = _buildPaint(
+        (
+            int(ot.PaintFormat.PaintTransform),
+            (ot.PaintFormat.PaintGlyph, (ot.PaintFormat.PaintSolid, (0, 1.0)), "a"),
+            _build(ot.Affine2x3, (1, 2, 3, 4, 5, 6)),
         ),
     )
 
@@ -541,22 +655,28 @@ def test_buildPaintTransform():
     assert paint.Transform.dx.value == 5.0
     assert paint.Transform.dy.value == 6.0
 
-    paint = layerBuilder.buildPaintTransform(
-        (1, 0, 0, 0.3333, 10, 10),
+    paint = _build(
+        ot.Paint,
         {
-            "format": 4,
-            "colorLine": {"stops": [(0.0, 0), (1.0, 1)]},
-            "c0": (100, 100),
-            "c1": (100, 100),
-            "r0": 0,
-            "r1": 50,
+            "Format": ot.PaintFormat.PaintTransform,
+            "Transform": (1, 2, 3, 0.3333, 10, 10),
+            "Paint": {
+                "Format": int(ot.PaintFormat.PaintRadialGradient),
+                "ColorLine": {"ColorStop": [(0.0, 0), (1.0, 1)]},
+                "x0": 100,
+                "y0": 101,
+                "x1": 102,
+                "y1": 103,
+                "r0": 0,
+                "r1": 50,
+            },
         },
     )
 
     assert paint.Format == ot.PaintFormat.PaintTransform
     assert paint.Transform.xx.value == 1.0
-    assert paint.Transform.yx.value == 0.0
-    assert paint.Transform.xy.value == 0.0
+    assert paint.Transform.yx.value == 2.0
+    assert paint.Transform.xy.value == 3.0
     assert paint.Transform.yy.value == 0.3333
     assert paint.Transform.dx.value == 10
     assert paint.Transform.dy.value == 10
@@ -564,18 +684,34 @@ def test_buildPaintTransform():
 
 
 def test_buildPaintComposite():
-    layerBuilder = LayerV1ListBuilder()
-    composite = layerBuilder.buildPaintComposite(
-        mode=ot.CompositeMode.SRC_OVER,
-        source={
-            "format": 12,
-            "mode": "src_over",
-            "source": {"format": 6, "glyph": "c", "paint": 2},
-            "backdrop": {"format": 6, "glyph": "b", "paint": 1},
+    composite = _build(
+        ot.Paint,
+        {
+            "Format": int(ot.PaintFormat.PaintComposite),
+            "CompositeMode": "src_over",
+            "SourcePaint": {
+                "Format": ot.PaintFormat.PaintComposite,
+                "CompositeMode": "src_over",
+                "SourcePaint": {
+                    "Format": int(ot.PaintFormat.PaintGlyph),
+                    "Glyph": "c",
+                    "Paint": (ot.PaintFormat.PaintSolid, 2),
+                },
+                "BackdropPaint": {
+                    "Format": int(ot.PaintFormat.PaintGlyph),
+                    "Glyph": "b",
+                    "Paint": (ot.PaintFormat.PaintSolid, 1),
+                },
+            },
+            "BackdropPaint": {
+                "Format": ot.PaintFormat.PaintGlyph,
+                "Glyph": "a",
+                "Paint": {
+                    "Format": ot.PaintFormat.PaintSolid,
+                    "Color": (0, 1.0),
+                },
+            },
         },
-        backdrop=layerBuilder.buildPaintGlyph(
-            "a", layerBuilder.buildPaintSolid(paletteIndex=0, alpha=1.0)
-        ),
     )
 
     assert composite.Format == ot.PaintFormat.PaintComposite
@@ -587,9 +723,7 @@ def test_buildPaintComposite():
     assert composite.SourcePaint.CompositeMode == ot.CompositeMode.SRC_OVER
     assert composite.SourcePaint.BackdropPaint.Format == ot.PaintFormat.PaintGlyph
     assert composite.SourcePaint.BackdropPaint.Glyph == "b"
-    assert (
-        composite.SourcePaint.BackdropPaint.Paint.Format == ot.PaintFormat.PaintSolid
-    )
+    assert composite.SourcePaint.BackdropPaint.Paint.Format == ot.PaintFormat.PaintSolid
     assert composite.SourcePaint.BackdropPaint.Paint.Color.PaletteIndex == 1
     assert composite.CompositeMode == ot.CompositeMode.SRC_OVER
     assert composite.BackdropPaint.Format == ot.PaintFormat.PaintGlyph
@@ -599,13 +733,18 @@ def test_buildPaintComposite():
 
 
 def test_buildPaintTranslate():
-    layerBuilder = LayerV1ListBuilder()
-    paint = layerBuilder.buildPaintTranslate(
-        paint=layerBuilder.buildPaintGlyph(
-            "a", layerBuilder.buildPaintSolid(paletteIndex=0, alpha=1.0)
-        ),
-        dx=123,
-        dy=-345,
+    paint = _build(
+        ot.Paint,
+        {
+            "Format": ot.PaintFormat.PaintTranslate,
+            "Paint": (
+                ot.PaintFormat.PaintGlyph,
+                (ot.PaintFormat.PaintSolid, (0, 1.0)),
+                "a",
+            ),
+            "dx": 123,
+            "dy": -345,
+        },
     )
 
     assert paint.Format == ot.PaintFormat.PaintTranslate
@@ -615,14 +754,19 @@ def test_buildPaintTranslate():
 
 
 def test_buildPaintRotate():
-    layerBuilder = LayerV1ListBuilder()
-    paint = layerBuilder.buildPaintRotate(
-        paint=layerBuilder.buildPaintGlyph(
-            "a", layerBuilder.buildPaintSolid(paletteIndex=0, alpha=1.0)
-        ),
-        angle=15,
-        centerX=127,
-        centerY=129,
+    paint = _build(
+        ot.Paint,
+        {
+            "Format": ot.PaintFormat.PaintRotate,
+            "Paint": (
+                ot.PaintFormat.PaintGlyph,
+                (ot.PaintFormat.PaintSolid, (0, 1.0)),
+                "a",
+            ),
+            "angle": 15,
+            "centerX": 127,
+            "centerY": 129,
+        },
     )
 
     assert paint.Format == ot.PaintFormat.PaintRotate
@@ -633,15 +777,20 @@ def test_buildPaintRotate():
 
 
 def test_buildPaintSkew():
-    layerBuilder = LayerV1ListBuilder()
-    paint = layerBuilder.buildPaintSkew(
-        paint=layerBuilder.buildPaintGlyph(
-            "a", layerBuilder.buildPaintSolid(paletteIndex=0, alpha=1.0)
-        ),
-        xSkewAngle=15,
-        ySkewAngle=42,
-        centerX=127,
-        centerY=129,
+    paint = _build(
+        ot.Paint,
+        {
+            "Format": ot.PaintFormat.PaintSkew,
+            "Paint": (
+                ot.PaintFormat.PaintGlyph,
+                (ot.PaintFormat.PaintSolid, (0, 1.0)),
+                "a",
+            ),
+            "xSkewAngle": 15,
+            "ySkewAngle": 42,
+            "centerX": 127,
+            "centerY": 129,
+        },
     )
 
     assert paint.Format == ot.PaintFormat.PaintSkew
@@ -654,22 +803,44 @@ def test_buildPaintSkew():
 
 def test_buildColrV1():
     colorGlyphs = {
-        "a": [("b", 0), ("c", 1)],
-        "d": [
-            ("e", {"format": 2, "paletteIndex": 2, "alpha": 0.8}),
-            (
-                "f",
-                {
-                    "format": 4,
-                    "colorLine": {"stops": [(0.0, 3), (1.0, 4)], "extend": "reflect"},
-                    "c0": (0, 0),
-                    "c1": (0, 0),
-                    "r0": 10,
-                    "r1": 0,
-                },
-            ),
-        ],
-        "g": [("h", 5)],
+        "a": (
+            ot.PaintFormat.PaintColrLayers,
+            [
+                (ot.PaintFormat.PaintGlyph, (ot.PaintFormat.PaintSolid, 0), "b"),
+                (ot.PaintFormat.PaintGlyph, (ot.PaintFormat.PaintSolid, 1), "c"),
+            ],
+        ),
+        "d": (
+            ot.PaintFormat.PaintColrLayers,
+            [
+                (
+                    ot.PaintFormat.PaintGlyph,
+                    {"Format": 2, "Color": {"PaletteIndex": 2, "Alpha": 0.8}},
+                    "e",
+                ),
+                (
+                    ot.PaintFormat.PaintGlyph,
+                    {
+                        "Format": 4,
+                        "ColorLine": {
+                            "ColorStop": [(0.0, 3), (1.0, 4)],
+                            "Extend": "reflect",
+                        },
+                        "x0": 0,
+                        "y0": 0,
+                        "x1": 0,
+                        "y1": 0,
+                        "r0": 10,
+                        "r1": 0,
+                    },
+                    "f",
+                ),
+            ],
+        ),
+        "g": (
+            ot.PaintFormat.PaintColrLayers,
+            [(ot.PaintFormat.PaintGlyph, (ot.PaintFormat.PaintSolid, 5), "h")],
+        ),
     }
     glyphMap = {
         ".notdef": 0,
@@ -700,14 +871,17 @@ def test_buildColrV1():
 def test_buildColrV1_more_than_255_paints():
     num_paints = 364
     colorGlyphs = {
-        "a": [
-            {
-                "format": 6,  # PaintGlyph
-                "paint": 0,
-                "glyph": name,
-            }
-            for name in (f"glyph{i}" for i in range(num_paints))
-        ],
+        "a": (
+            ot.PaintFormat.PaintColrLayers,
+            [
+                {
+                    "Format": int(ot.PaintFormat.PaintGlyph),
+                    "Paint": (ot.PaintFormat.PaintSolid, 0),
+                    "Glyph": name,
+                }
+                for name in (f"glyph{i}" for i in range(num_paints))
+            ],
+        ),
     }
     layers, baseGlyphs = builder.buildColrV1(colorGlyphs)
     paints = layers.Paint
@@ -750,9 +924,7 @@ def test_split_color_glyphs_by_version():
     assert colorGlyphsV0 == {"a": [("b", 0), ("c", 1), ("d", 2), ("e", 3)]}
     assert not colorGlyphsV1
 
-    colorGlyphs = {
-        "a": [("b", layerBuilder.buildPaintSolid(paletteIndex=0, alpha=0.0))]
-    }
+    colorGlyphs = {"a": (ot.PaintFormat.PaintGlyph, 0, "b")}
 
     colorGlyphsV0, colorGlyphsV1 = builder._split_color_glyphs_by_version(colorGlyphs)
 
@@ -798,32 +970,35 @@ def assertNoV0Content(colr):
 
 
 def test_build_layerv1list_empty():
-    # Nobody uses PaintColrLayers (format 1), no layerlist
+    # Nobody uses PaintColrLayers, no layerlist
     colr = builder.buildCOLR(
         {
-            "a": {
-                "format": 6,  # PaintGlyph
-                "paint": {"format": 2, "paletteIndex": 2, "alpha": 0.8},
-                "glyph": "b",
-            },
-            # A list of 1 shouldn't become a PaintColrLayers
-            "b": [
-                {
-                    "format": 6,  # PaintGlyph
-                    "paint": {
-                        "format": 3,
-                        "colorLine": {
-                            "stops": [(0.0, 2), (1.0, 3)],
-                            "extend": "reflect",
-                        },
-                        "p0": (1, 2),
-                        "p1": (3, 4),
-                        "p2": (2, 2),
+            # BaseGlyph, tuple form
+            "a": (
+                int(ot.PaintFormat.PaintGlyph),
+                (2, (2, 0.8)),
+                "b",
+            ),
+            # BaseGlyph, map form
+            "b": {
+                "Format": int(ot.PaintFormat.PaintGlyph),
+                "Paint": {
+                    "Format": int(ot.PaintFormat.PaintLinearGradient),
+                    "ColorLine": {
+                        "ColorStop": [(0.0, 2), (1.0, 3)],
+                        "Extend": "reflect",
                     },
-                    "glyph": "bb",
-                }
-            ],
-        }
+                    "x0": 1,
+                    "y0": 2,
+                    "x1": 3,
+                    "y1": 4,
+                    "x2": 2,
+                    "y2": 2,
+                },
+                "Glyph": "bb",
+            },
+        },
+        version=1,
     )
 
     assertIsColrV1(colr)
@@ -853,35 +1028,42 @@ def _paint_names(paints) -> List[str]:
 def test_build_layerv1list_simple():
     # Two colr glyphs, each with two layers the first of which is common
     # All layers use the same solid paint
-    solid_paint = {"format": 2, "paletteIndex": 2, "alpha": 0.8}
+    solid_paint = {"Format": 2, "Color": {"PaletteIndex": 2, "Alpha": 0.8}}
     backdrop = {
-        "format": 6,  # PaintGlyph
-        "paint": solid_paint,
-        "glyph": "back",
+        "Format": int(ot.PaintFormat.PaintGlyph),
+        "Paint": solid_paint,
+        "Glyph": "back",
     }
     a_foreground = {
-        "format": 6,  # PaintGlyph
-        "paint": solid_paint,
-        "glyph": "a_fore",
+        "Format": int(ot.PaintFormat.PaintGlyph),
+        "Paint": solid_paint,
+        "Glyph": "a_fore",
     }
     b_foreground = {
-        "format": 6,  # PaintGlyph
-        "paint": solid_paint,
-        "glyph": "b_fore",
+        "Format": int(ot.PaintFormat.PaintGlyph),
+        "Paint": solid_paint,
+        "Glyph": "b_fore",
     }
 
-    # list => PaintColrLayers, which means contents should be in LayerV1List
+    # list => PaintColrLayers, contents should land in LayerV1List
     colr = builder.buildCOLR(
         {
-            "a": [
-                backdrop,
-                a_foreground,
-            ],
-            "b": [
-                backdrop,
-                b_foreground,
-            ],
-        }
+            "a": (
+                ot.PaintFormat.PaintColrLayers,
+                [
+                    backdrop,
+                    a_foreground,
+                ],
+            ),
+            "b": {
+                "Format": ot.PaintFormat.PaintColrLayers,
+                "Layers": [
+                    backdrop,
+                    b_foreground,
+                ],
+            },
+        },
+        version=1,
     )
 
     assertIsColrV1(colr)
@@ -902,47 +1084,51 @@ def test_build_layerv1list_simple():
 
 def test_build_layerv1list_with_sharing():
     # Three colr glyphs, each with two layers in common
-    solid_paint = {"format": 2, "paletteIndex": 2, "alpha": 0.8}
+    solid_paint = {"Format": 2, "Color": (2, 0.8)}
     backdrop = [
         {
-            "format": 6,  # PaintGlyph
-            "paint": solid_paint,
-            "glyph": "back1",
+            "Format": int(ot.PaintFormat.PaintGlyph),
+            "Paint": solid_paint,
+            "Glyph": "back1",
         },
         {
-            "format": 6,  # PaintGlyph
-            "paint": solid_paint,
-            "glyph": "back2",
+            "Format": ot.PaintFormat.PaintGlyph,
+            "Paint": solid_paint,
+            "Glyph": "back2",
         },
     ]
     a_foreground = {
-        "format": 6,  # PaintGlyph
-        "paint": solid_paint,
-        "glyph": "a_fore",
+        "Format": ot.PaintFormat.PaintGlyph,
+        "Paint": solid_paint,
+        "Glyph": "a_fore",
     }
     b_background = {
-        "format": 6,  # PaintGlyph
-        "paint": solid_paint,
-        "glyph": "b_back",
+        "Format": ot.PaintFormat.PaintGlyph,
+        "Paint": solid_paint,
+        "Glyph": "b_back",
     }
     b_foreground = {
-        "format": 6,  # PaintGlyph
-        "paint": solid_paint,
-        "glyph": "b_fore",
+        "Format": ot.PaintFormat.PaintGlyph,
+        "Paint": solid_paint,
+        "Glyph": "b_fore",
     }
     c_background = {
-        "format": 6,  # PaintGlyph
-        "paint": solid_paint,
-        "glyph": "c_back",
+        "Format": ot.PaintFormat.PaintGlyph,
+        "Paint": solid_paint,
+        "Glyph": "c_back",
     }
 
     # list => PaintColrLayers, which means contents should be in LayerV1List
     colr = builder.buildCOLR(
         {
-            "a": backdrop + [a_foreground],
-            "b": [b_background] + backdrop + [b_foreground],
-            "c": [c_background] + backdrop,
-        }
+            "a": (ot.PaintFormat.PaintColrLayers, backdrop + [a_foreground]),
+            "b": (
+                ot.PaintFormat.PaintColrLayers,
+                [b_background] + backdrop + [b_foreground],
+            ),
+            "c": (ot.PaintFormat.PaintColrLayers, [c_background] + backdrop),
+        },
+        version=1,
     )
 
     assertIsColrV1(colr)
@@ -974,9 +1160,12 @@ def test_build_layerv1list_with_sharing():
 def test_build_layerv1list_with_overlaps():
     paints = [
         {
-            "format": 6,  # PaintGlyph
-            "paint": {"format": 2, "paletteIndex": 2, "alpha": 0.8},
-            "glyph": c,
+            "Format": ot.PaintFormat.PaintGlyph,
+            "Paint": {
+                "Format": ot.PaintFormat.PaintSolid,
+                "Color": {"PaletteIndex": 2, "Alpha": 0.8},
+            },
+            "Glyph": c,
         }
         for c in "abcdefghi"
     ]
@@ -984,10 +1173,11 @@ def test_build_layerv1list_with_overlaps():
     # list => PaintColrLayers, which means contents should be in LayerV1List
     colr = builder.buildCOLR(
         {
-            "a": paints[0:4],
-            "b": paints[0:6],
-            "c": paints[2:8],
-        }
+            "a": (ot.PaintFormat.PaintColrLayers, paints[0:4]),
+            "b": (ot.PaintFormat.PaintColrLayers, paints[0:6]),
+            "c": (ot.PaintFormat.PaintColrLayers, paints[2:8]),
+        },
+        version=1,
     )
 
     assertIsColrV1(colr)
@@ -1017,6 +1207,26 @@ def test_build_layerv1list_with_overlaps():
     assert colr.table.LayerV1List.LayerCount == 11
 
 
+def test_explicit_version_1():
+    colr = builder.buildCOLR(
+        {
+            "a": (
+                ot.PaintFormat.PaintColrLayers,
+                [
+                    (ot.PaintFormat.PaintGlyph, (ot.PaintFormat.PaintSolid, 0), "b"),
+                    (ot.PaintFormat.PaintGlyph, (ot.PaintFormat.PaintSolid, 1), "c"),
+                ],
+            )
+        },
+        version=1,
+    )
+    assert colr.version == 1
+    assert not hasattr(colr, "ColorLayers")
+    assert hasattr(colr, "table")
+    assert isinstance(colr.table, ot.COLR)
+    assert colr.table.VarStore is None
+
+
 class BuildCOLRTest(object):
     def test_automatic_version_all_solid_color_glyphs(self):
         colr = builder.buildCOLR({"a": [("b", 0), ("c", 1)]})
@@ -1028,38 +1238,55 @@ class BuildCOLRTest(object):
     def test_automatic_version_no_solid_color_glyphs(self):
         colr = builder.buildCOLR(
             {
-                "a": [
-                    (
-                        "b",
-                        {
-                            "format": 4,
-                            "colorLine": {
-                                "stops": [(0.0, 0), (1.0, 1)],
-                                "extend": "repeat",
+                "a": (
+                    ot.PaintFormat.PaintColrLayers,
+                    [
+                        (
+                            ot.PaintFormat.PaintGlyph,
+                            {
+                                "Format": int(ot.PaintFormat.PaintRadialGradient),
+                                "ColorLine": {
+                                    "ColorStop": [(0.0, 0), (1.0, 1)],
+                                    "Extend": "repeat",
+                                },
+                                "x0": 1,
+                                "y0": 0,
+                                "x1": 10,
+                                "y1": 0,
+                                "r0": 4,
+                                "r1": 2,
                             },
-                            "c0": (1, 0),
-                            "c1": (10, 0),
-                            "r0": 4,
-                            "r1": 2,
-                        },
-                    ),
-                    ("c", {"format": 2, "paletteIndex": 2, "alpha": 0.8}),
-                ],
-                "d": [
-                    (
-                        "e",
+                            "b",
+                        ),
+                        (
+                            ot.PaintFormat.PaintGlyph,
+                            {"Format": 2, "Color": {"PaletteIndex": 2, "Alpha": 0.8}},
+                            "c",
+                        ),
+                    ],
+                ),
+                "d": (
+                    ot.PaintFormat.PaintColrLayers,
+                    [
                         {
-                            "format": 3,
-                            "colorLine": {
-                                "stops": [(0.0, 2), (1.0, 3)],
-                                "extend": "reflect",
+                            "Format": ot.PaintFormat.PaintGlyph,
+                            "Glyph": "e",
+                            "Paint": {
+                                "Format": ot.PaintFormat.PaintLinearGradient,
+                                "ColorLine": {
+                                    "ColorStop": [(0.0, 2), (1.0, 3)],
+                                    "Extend": "reflect",
+                                },
+                                "x0": 1,
+                                "y0": 2,
+                                "x1": 3,
+                                "y1": 4,
+                                "x2": 2,
+                                "y2": 2,
                             },
-                            "p0": (1, 2),
-                            "p1": (3, 4),
-                            "p2": (2, 2),
-                        },
-                    ),
-                ],
+                        }
+                    ],
+                ),
             }
         )
         assertIsColrV1(colr)
@@ -1072,19 +1299,30 @@ class BuildCOLRTest(object):
         colr = builder.buildCOLR(
             {
                 "a": [("b", 0), ("c", 1)],
-                "d": [
-                    (
-                        "e",
-                        {
-                            "format": 3,
-                            "colorLine": {"stops": [(0.0, 2), (1.0, 3)]},
-                            "p0": (1, 2),
-                            "p1": (3, 4),
-                            "p2": (2, 2),
-                        },
-                    ),
-                    ("f", {"format": 2, "paletteIndex": 2, "alpha": 0.8}),
-                ],
+                "d": (
+                    ot.PaintFormat.PaintColrLayers,
+                    [
+                        (
+                            ot.PaintFormat.PaintGlyph,
+                            {
+                                "Format": ot.PaintFormat.PaintLinearGradient,
+                                "ColorLine": {"ColorStop": [(0.0, 2), (1.0, 3)]},
+                                "x0": 1,
+                                "y0": 2,
+                                "x1": 3,
+                                "y1": 4,
+                                "x2": 2,
+                                "y2": 2,
+                            },
+                            "e",
+                        ),
+                        (
+                            ot.PaintFormat.PaintGlyph,
+                            (ot.PaintFormat.PaintSolid, (2, 0.8)),
+                            "f",
+                        ),
+                    ],
+                ),
             }
         )
         assertIsColrV1(colr)
@@ -1110,7 +1348,26 @@ class BuildCOLRTest(object):
         assert hasattr(colr, "ColorLayers")
 
     def test_explicit_version_1(self):
-        colr = builder.buildCOLR({"a": [("b", 0), ("c", 1)]}, version=1)
+        colr = builder.buildCOLR(
+            {
+                "a": (
+                    ot.PaintFormat.PaintColrLayers,
+                    [
+                        (
+                            ot.PaintFormat.PaintGlyph,
+                            (ot.PaintFormat.PaintSolid, 0),
+                            "b",
+                        ),
+                        (
+                            ot.PaintFormat.PaintGlyph,
+                            (ot.PaintFormat.PaintSolid, 1),
+                            "c",
+                        ),
+                    ],
+                )
+            },
+            version=1,
+        )
         assert colr.version == 1
         assert not hasattr(colr, "ColorLayers")
         assert hasattr(colr, "table")
