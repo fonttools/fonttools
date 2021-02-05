@@ -1324,25 +1324,26 @@ class CompositeMode(IntEnum):
 	HSL_LUMINOSITY = 26
 
 
-class Paint(getFormatSwitchingBaseTableClass("uint8")):
+class PaintFormat(IntEnum):
+	PaintColrLayers = 1
+	PaintSolid = 2
+	PaintLinearGradient = 3
+	PaintRadialGradient = 4
+	PaintSweepGradient = 5
+	PaintGlyph = 6
+	PaintColrGlyph = 7
+	PaintTransform = 8
+	PaintTranslate = 9
+	PaintRotate = 10
+	PaintSkew = 11
+	PaintComposite = 12
 
-	class Format(IntEnum):
-		PaintColrLayers = 1
-		PaintSolid = 2
-		PaintLinearGradient = 3
-		PaintRadialGradient = 4
-		PaintSweepGradient = 5
-		PaintGlyph = 6
-		PaintColrGlyph = 7
-		PaintTransform = 8
-		PaintTranslate = 9
-		PaintRotate = 10
-		PaintSkew = 11
-		PaintComposite = 12
+
+class Paint(getFormatSwitchingBaseTableClass("uint8")):
 
 	def getFormatName(self):
 		try:
-			return self.__class__.Format(self.Format).name
+			return PaintFormat(self.Format).name
 		except ValueError:
 			raise NotImplementedError(f"Unknown Paint format: {self.Format}")
 

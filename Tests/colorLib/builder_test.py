@@ -241,13 +241,13 @@ def test_buildColorIndex():
 
 def test_buildPaintSolid():
     p = LayerV1ListBuilder().buildPaintSolid(0)
-    assert p.Format == ot.Paint.Format.PaintSolid
+    assert p.Format == ot.PaintFormat.PaintSolid
     assert p.Color.PaletteIndex == 0
     assert p.Color.Alpha.value == 1.0
     assert p.Color.Alpha.varIdx == 0
 
     p = LayerV1ListBuilder().buildPaintSolid(1, alpha=0.5)
-    assert p.Format == ot.Paint.Format.PaintSolid
+    assert p.Format == ot.PaintFormat.PaintSolid
     assert p.Color.PaletteIndex == 1
     assert p.Color.Alpha.value == 0.5
     assert p.Color.Alpha.varIdx == 0
@@ -255,7 +255,7 @@ def test_buildPaintSolid():
     p = LayerV1ListBuilder().buildPaintSolid(
         3, alpha=builder.VariableFloat(0.5, varIdx=2)
     )
-    assert p.Format == ot.Paint.Format.PaintSolid
+    assert p.Format == ot.PaintFormat.PaintSolid
     assert p.Color.PaletteIndex == 3
     assert p.Color.Alpha.value == 0.5
     assert p.Color.Alpha.varIdx == 2
@@ -371,7 +371,7 @@ def test_buildPaintRadialGradient():
     r1 = builder.VariableInt(5)
 
     gradient = layerBuilder.buildPaintRadialGradient(color_line, c0, c1, r0, r1)
-    assert gradient.Format == ot.Paint.Format.PaintRadialGradient
+    assert gradient.Format == ot.PaintFormat.PaintRadialGradient
     assert gradient.ColorLine == color_line
     assert (gradient.x0, gradient.y0) == c0
     assert (gradient.x1, gradient.y1) == c1
@@ -401,7 +401,7 @@ def test_buildPaintSweepGradient():
         endAngle=42,
     )
 
-    assert paint.Format == ot.Paint.Format.PaintSweepGradient
+    assert paint.Format == ot.PaintFormat.PaintSweepGradient
     assert paint.centerX.value == 127
     assert paint.centerY.value == 129
     assert paint.startAngle.value == 15
@@ -412,11 +412,11 @@ def test_buildPaintGlyph_Solid():
     layerBuilder = LayerV1ListBuilder()
     layer = layerBuilder.buildPaintGlyph("a", 2)
     assert layer.Glyph == "a"
-    assert layer.Paint.Format == ot.Paint.Format.PaintSolid
+    assert layer.Paint.Format == ot.PaintFormat.PaintSolid
     assert layer.Paint.Color.PaletteIndex == 2
 
     layer = layerBuilder.buildPaintGlyph("a", layerBuilder.buildPaintSolid(3, 0.9))
-    assert layer.Paint.Format == ot.Paint.Format.PaintSolid
+    assert layer.Paint.Format == ot.PaintFormat.PaintSolid
     assert layer.Paint.Color.PaletteIndex == 3
     assert layer.Paint.Color.Alpha.value == 0.9
 
@@ -429,7 +429,7 @@ def test_buildPaintGlyph_LinearGradient():
             {"stops": [(0.0, 3), (1.0, 4)]}, (100, 200), (150, 250)
         ),
     )
-    assert layer.Paint.Format == ot.Paint.Format.PaintLinearGradient
+    assert layer.Paint.Format == ot.PaintFormat.PaintLinearGradient
     assert layer.Paint.ColorLine.ColorStop[0].StopOffset.value == 0.0
     assert layer.Paint.ColorLine.ColorStop[0].Color.PaletteIndex == 3
     assert layer.Paint.ColorLine.ColorStop[1].StopOffset.value == 1.0
@@ -458,7 +458,7 @@ def test_buildPaintGlyph_RadialGradient():
             10,
         ),
     )
-    assert layer.Paint.Format == ot.Paint.Format.PaintRadialGradient
+    assert layer.Paint.Format == ot.PaintFormat.PaintRadialGradient
     assert layer.Paint.ColorLine.ColorStop[0].StopOffset.value == 0.0
     assert layer.Paint.ColorLine.ColorStop[0].Color.PaletteIndex == 5
     assert layer.Paint.ColorLine.ColorStop[1].StopOffset.value == 0.5
@@ -478,7 +478,7 @@ def test_buildPaintGlyph_Dict_Solid():
     layerBuilder = LayerV1ListBuilder()
     layer = layerBuilder.buildPaintGlyph("a", {"format": 2, "paletteIndex": 0})
     assert layer.Glyph == "a"
-    assert layer.Paint.Format == ot.Paint.Format.PaintSolid
+    assert layer.Paint.Format == ot.PaintFormat.PaintSolid
     assert layer.Paint.Color.PaletteIndex == 0
 
 
@@ -493,7 +493,7 @@ def test_buildPaintGlyph_Dict_LinearGradient():
             "p1": (10, 10),
         },
     )
-    assert layer.Paint.Format == ot.Paint.Format.PaintLinearGradient
+    assert layer.Paint.Format == ot.PaintFormat.PaintLinearGradient
     assert layer.Paint.ColorLine.ColorStop[0].StopOffset.value == 0.0
 
 
@@ -510,13 +510,13 @@ def test_buildPaintGlyph_Dict_RadialGradient():
             "r1": 0,
         },
     )
-    assert layer.Paint.Format == ot.Paint.Format.PaintRadialGradient
+    assert layer.Paint.Format == ot.PaintFormat.PaintRadialGradient
     assert layer.Paint.r0.value == 4
 
 
 def test_buildPaintColrGlyph():
     paint = LayerV1ListBuilder().buildPaintColrGlyph("a")
-    assert paint.Format == ot.Paint.Format.PaintColrGlyph
+    assert paint.Format == ot.PaintFormat.PaintColrGlyph
     assert paint.Glyph == "a"
 
 
@@ -530,9 +530,9 @@ def test_buildPaintTransform():
         ),
     )
 
-    assert paint.Format == ot.Paint.Format.PaintTransform
-    assert paint.Paint.Format == ot.Paint.Format.PaintGlyph
-    assert paint.Paint.Paint.Format == ot.Paint.Format.PaintSolid
+    assert paint.Format == ot.PaintFormat.PaintTransform
+    assert paint.Paint.Format == ot.PaintFormat.PaintGlyph
+    assert paint.Paint.Paint.Format == ot.PaintFormat.PaintSolid
 
     assert paint.Transform.xx.value == 1.0
     assert paint.Transform.yx.value == 2.0
@@ -553,14 +553,14 @@ def test_buildPaintTransform():
         },
     )
 
-    assert paint.Format == ot.Paint.Format.PaintTransform
+    assert paint.Format == ot.PaintFormat.PaintTransform
     assert paint.Transform.xx.value == 1.0
     assert paint.Transform.yx.value == 0.0
     assert paint.Transform.xy.value == 0.0
     assert paint.Transform.yy.value == 0.3333
     assert paint.Transform.dx.value == 10
     assert paint.Transform.dy.value == 10
-    assert paint.Paint.Format == ot.Paint.Format.PaintRadialGradient
+    assert paint.Paint.Format == ot.PaintFormat.PaintRadialGradient
 
 
 def test_buildPaintComposite():
@@ -578,23 +578,23 @@ def test_buildPaintComposite():
         ),
     )
 
-    assert composite.Format == ot.Paint.Format.PaintComposite
-    assert composite.SourcePaint.Format == ot.Paint.Format.PaintComposite
-    assert composite.SourcePaint.SourcePaint.Format == ot.Paint.Format.PaintGlyph
+    assert composite.Format == ot.PaintFormat.PaintComposite
+    assert composite.SourcePaint.Format == ot.PaintFormat.PaintComposite
+    assert composite.SourcePaint.SourcePaint.Format == ot.PaintFormat.PaintGlyph
     assert composite.SourcePaint.SourcePaint.Glyph == "c"
-    assert composite.SourcePaint.SourcePaint.Paint.Format == ot.Paint.Format.PaintSolid
+    assert composite.SourcePaint.SourcePaint.Paint.Format == ot.PaintFormat.PaintSolid
     assert composite.SourcePaint.SourcePaint.Paint.Color.PaletteIndex == 2
     assert composite.SourcePaint.CompositeMode == ot.CompositeMode.SRC_OVER
-    assert composite.SourcePaint.BackdropPaint.Format == ot.Paint.Format.PaintGlyph
+    assert composite.SourcePaint.BackdropPaint.Format == ot.PaintFormat.PaintGlyph
     assert composite.SourcePaint.BackdropPaint.Glyph == "b"
     assert (
-        composite.SourcePaint.BackdropPaint.Paint.Format == ot.Paint.Format.PaintSolid
+        composite.SourcePaint.BackdropPaint.Paint.Format == ot.PaintFormat.PaintSolid
     )
     assert composite.SourcePaint.BackdropPaint.Paint.Color.PaletteIndex == 1
     assert composite.CompositeMode == ot.CompositeMode.SRC_OVER
-    assert composite.BackdropPaint.Format == ot.Paint.Format.PaintGlyph
+    assert composite.BackdropPaint.Format == ot.PaintFormat.PaintGlyph
     assert composite.BackdropPaint.Glyph == "a"
-    assert composite.BackdropPaint.Paint.Format == ot.Paint.Format.PaintSolid
+    assert composite.BackdropPaint.Paint.Format == ot.PaintFormat.PaintSolid
     assert composite.BackdropPaint.Paint.Color.PaletteIndex == 0
 
 
@@ -608,8 +608,8 @@ def test_buildPaintTranslate():
         dy=-345,
     )
 
-    assert paint.Format == ot.Paint.Format.PaintTranslate
-    assert paint.Paint.Format == ot.Paint.Format.PaintGlyph
+    assert paint.Format == ot.PaintFormat.PaintTranslate
+    assert paint.Paint.Format == ot.PaintFormat.PaintGlyph
     assert paint.dx.value == 123
     assert paint.dy.value == -345
 
@@ -625,8 +625,8 @@ def test_buildPaintRotate():
         centerY=129,
     )
 
-    assert paint.Format == ot.Paint.Format.PaintRotate
-    assert paint.Paint.Format == ot.Paint.Format.PaintGlyph
+    assert paint.Format == ot.PaintFormat.PaintRotate
+    assert paint.Paint.Format == ot.PaintFormat.PaintGlyph
     assert paint.angle.value == 15
     assert paint.centerX.value == 127
     assert paint.centerY.value == 129
@@ -644,8 +644,8 @@ def test_buildPaintSkew():
         centerY=129,
     )
 
-    assert paint.Format == ot.Paint.Format.PaintSkew
-    assert paint.Paint.Format == ot.Paint.Format.PaintGlyph
+    assert paint.Format == ot.PaintFormat.PaintSkew
+    assert paint.Paint.Format == ot.PaintFormat.PaintGlyph
     assert paint.xSkewAngle.value == 15
     assert paint.ySkewAngle.value == 42
     assert paint.centerX.value == 127
@@ -714,21 +714,21 @@ def test_buildColrV1_more_than_255_paints():
 
     assert len(paints) == num_paints + 1
 
-    assert all(paints[i].Format == ot.Paint.Format.PaintGlyph for i in range(255))
+    assert all(paints[i].Format == ot.PaintFormat.PaintGlyph for i in range(255))
 
-    assert paints[255].Format == ot.Paint.Format.PaintColrLayers
+    assert paints[255].Format == ot.PaintFormat.PaintColrLayers
     assert paints[255].FirstLayerIndex == 0
     assert paints[255].NumLayers == 255
 
     assert all(
-        paints[i].Format == ot.Paint.Format.PaintGlyph
+        paints[i].Format == ot.PaintFormat.PaintGlyph
         for i in range(256, num_paints + 1)
     )
 
     assert baseGlyphs.BaseGlyphCount == len(colorGlyphs)
     assert baseGlyphs.BaseGlyphV1Record[0].BaseGlyph == "a"
     assert (
-        baseGlyphs.BaseGlyphV1Record[0].Paint.Format == ot.Paint.Format.PaintColrLayers
+        baseGlyphs.BaseGlyphV1Record[0].Paint.Format == ot.PaintFormat.PaintColrLayers
     )
     assert baseGlyphs.BaseGlyphV1Record[0].Paint.FirstLayerIndex == 255
     assert baseGlyphs.BaseGlyphV1Record[0].Paint.NumLayers == num_paints + 1 - 255
@@ -841,9 +841,9 @@ def _paint_names(paints) -> List[str]:
     # semi-readable assertions on a LayerV1List order.
     result = []
     for paint in paints:
-        if paint.Format == int(ot.Paint.Format.PaintGlyph):
+        if paint.Format == int(ot.PaintFormat.PaintGlyph):
             result.append(paint.Glyph)
-        elif paint.Format == int(ot.Paint.Format.PaintColrLayers):
+        elif paint.Format == int(ot.PaintFormat.PaintColrLayers):
             result.append(
                 f"Layers[{paint.FirstLayerIndex}:{paint.FirstLayerIndex+paint.NumLayers}]"
             )

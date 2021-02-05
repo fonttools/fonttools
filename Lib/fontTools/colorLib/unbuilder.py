@@ -185,7 +185,7 @@ class LayerV1ListUnbuilder:
 
 LayerV1ListUnbuilder._unbuildFunctions = {
     pf.value: getattr(LayerV1ListUnbuilder, "unbuild" + pf.name)
-    for pf in ot.Paint.Format
+    for pf in ot.PaintFormat
 }
 
 
