@@ -6,3 +6,4 @@ ttFont
    :inherited-members:
    :members:
    :undoc-members:
+   :private-members:
