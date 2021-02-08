@@ -599,8 +599,8 @@ class FontBuilder(object):
 
         assert "fvar" in self.font, "fvar must to be set up first"
         assert "CFF2" in self.font, "CFF2 must to be set up first"
-        axisTags = [a.axisTag for a in self.font["fvar"].axes]
-        varRegionList = buildVarRegionList(regions, axisTags)
+        axisIds = [axis.axisId for axis in self.font["fvar"].axes]
+        varRegionList = buildVarRegionList(regions, axisIds)
         varData = buildVarData(list(range(len(regions))), None, optimize=False)
         varStore = buildVarStore(varRegionList, [varData])
         vstore = VarStoreData(otVarStore=varStore)
@@ -833,10 +833,17 @@ def addFvar(font, axes, instances):
 
     fvar = newTable('fvar')
     nameTable = font['name']
+    axisTagsSeen = {}
 
     for tag, minValue, defaultValue, maxValue, name in axes:
         axis = Axis()
         axis.axisTag = Tag(tag)
+        if axis.axisTag in axisTagsSeen:
+            axisTagsSeen[axis.axisTag] += 1
+            axis.axisId = f"{axis.axisTag}#{axisTagsSeen[axis.axisTag]}"
+        else:
+            axisTagsSeen[axis.axisTag] = 0
+            axis.axisId = axis.axisTag
         axis.minValue, axis.defaultValue, axis.maxValue = minValue, defaultValue, maxValue
         axis.axisNameID = nameTable.addName(tounicode(name))
         fvar.axes.append(axis)

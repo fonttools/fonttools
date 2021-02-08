@@ -25,6 +25,13 @@ FVAR_INSTANCE_DATA_WITHOUT_PSNAME = deHexStr(
 FVAR_INSTANCE_DATA_WITH_PSNAME = (
     FVAR_INSTANCE_DATA_WITHOUT_PSNAME + deHexStr("02 34"))
 
+FVAR_DATA_WITH_DUPLICATE_AXIS_TAGS = deHexStr(
+    "00 01 00 00 00 10 00 02 00 02 00 14 00 02 00 0C "
+    "44 55 50 50 00 64 00 00 01 90 00 00 03 84 00 00 00 00 01 01 "
+    "44 55 50 50 00 32 00 00 00 64 00 00 00 c8 00 00 00 00 01 02 "
+    "01 03 00 00 01 2c 00 00 00 64 00 00 "
+    "01 04 00 00 01 2c 00 00 00 4b 00 00")
+
 
 def xml_lines(writer):
     content = writer.file.getvalue().decode("utf-8")
@@ -45,12 +52,13 @@ def AddName(font, name):
 
 
 def MakeFont():
-    axes = [("wght", "Weight", 100, 400, 900), ("wdth", "Width", 50, 100, 200)]
+    axes = [("weight", "wght", "Weight", 100, 400, 900), ("width", "wdth", "Width", 50, 100, 200)]
     instances = [("Light", 300, 100), ("Light Condensed", 300, 75)]
     fvarTable = table__f_v_a_r()
     font = {"fvar": fvarTable}
-    for tag, name, minValue, defaultValue, maxValue in axes:
+    for axisId, tag, name, minValue, defaultValue, maxValue in axes:
         axis = Axis()
+        axis.axisId = axisId
         axis.axisTag = tag
         axis.defaultValue = defaultValue
         axis.minValue, axis.maxValue = minValue, maxValue
@@ -59,7 +67,28 @@ def MakeFont():
     for name, weight, width in instances:
         inst = NamedInstance()
         inst.subfamilyNameID = AddName(font, name).nameID
-        inst.coordinates = {"wght": weight, "wdth": width}
+        inst.coordinates = {"weight": weight, "width": width}
+        fvarTable.instances.append(inst)
+    return font
+
+
+def MakeFontWithDuplicateAxisTags():
+    axes = [("duplicate", "DUPP", "Duplicate", 100, 400, 900), ("duplicate2", "DUPP", "Duplicate", 50, 100, 200)]
+    instances = [("Light", 300, 100), ("Light Condensed", 300, 75)]
+    fvarTable = table__f_v_a_r()
+    font = {"fvar": fvarTable}
+    for axisId, tag, name, minValue, defaultValue, maxValue in axes:
+        axis = Axis()
+        axis.axisId = axisId
+        axis.axisTag = tag
+        axis.defaultValue = defaultValue
+        axis.minValue, axis.maxValue = minValue, maxValue
+        axis.axisNameID = AddName(font, name).nameID
+        fvarTable.axes.append(axis)
+    for name, weight, width in instances:
+        inst = NamedInstance()
+        inst.subfamilyNameID = AddName(font, name).nameID
+        inst.coordinates = {"duplicate": weight, "duplicate2": width}
         fvarTable.instances.append(inst)
     return font
 
@@ -81,7 +110,8 @@ class FontVariationTableTest(unittest.TestCase):
         writer = XMLWriter(BytesIO())
         font["fvar"].toXML(writer, font)
         xml = writer.file.getvalue().decode("utf-8")
-        self.assertEqual(2, xml.count("<Axis>"))
+        self.assertTrue("<Axis name=\"weight\">" in xml)
+        self.assertTrue("<Axis name=\"width\">" in xml)
         self.assertTrue("<AxisTag>wght</AxisTag>" in xml)
         self.assertTrue("<AxisTag>wdth</AxisTag>" in xml)
         self.assertEqual(2, xml.count("<NamedInstance "))
@@ -91,10 +121,10 @@ class FontVariationTableTest(unittest.TestCase):
     def test_fromXML(self):
         fvar = table__f_v_a_r()
         for name, attrs, content in parseXML(
-                '<Axis>'
+                '<Axis name="optical_size">'
                 '    <AxisTag>opsz</AxisTag>'
                 '</Axis>'
-                '<Axis>'
+                '<Axis name="slant">'
                 '    <AxisTag>slnt</AxisTag>'
                 '    <Flags>0x123</Flags>'
                 '</Axis>'
@@ -102,20 +132,87 @@ class FontVariationTableTest(unittest.TestCase):
                 '<NamedInstance subfamilyNameID="234"/>'):
             fvar.fromXML(name, attrs, content, ttFont=None)
         self.assertEqual(["opsz", "slnt"], [a.axisTag for a in fvar.axes])
+        self.assertEqual(["optical_size", "slant"], [a.axisId for a in fvar.axes])
         self.assertEqual([0, 0x123], [a.flags for a in fvar.axes])
         self.assertEqual([765, 234], [i.subfamilyNameID for i in fvar.instances])
+
+    def test_compile_duplicate_axis_tags(self):
+        font = MakeFontWithDuplicateAxisTags()
+        h = font["fvar"].compile(font)
+        self.assertEqual(FVAR_DATA_WITH_DUPLICATE_AXIS_TAGS, font["fvar"].compile(font))
+
+    def test_compile_duplicate_axis_tags_conflicting_ids(self):
+        font = MakeFontWithDuplicateAxisTags()
+        for axis in font["fvar"].axes:
+            axis.axisId = "DUPP"
+        font["fvar"].instances = []
+        with self.assertRaises(TTLibError):
+            h = font["fvar"].compile(font)
+
+    def test_decompile_duplicate_axis_tags(self):
+        fvar = table__f_v_a_r()
+        fvar.decompile(FVAR_DATA_WITH_DUPLICATE_AXIS_TAGS, ttFont={"fvar": fvar})
+        expectedAxisIds = ["DUPP", "DUPP#1"]
+        expectedAxisTags = ["DUPP", "DUPP"]
+        self.assertEqual(expectedAxisIds, [axis.axisId for axis in fvar.axes])
+        self.assertEqual(expectedAxisTags, [axis.axisTag for axis in fvar.axes])
+        self.assertEqual([expectedAxisIds] * 2, [sorted(i.coordinates.keys()) for i in fvar.instances])
+
+    def test_toXML_duplicate_axis_tags(self):
+        font = MakeFontWithDuplicateAxisTags()
+        writer = XMLWriter(BytesIO())
+        font["fvar"].toXML(writer, font)
+        xml = writer.file.getvalue().decode("utf-8")
+        self.assertTrue("<Axis name=\"duplicate\">" in xml)
+        self.assertTrue("<Axis name=\"duplicate2\">" in xml)
+        self.assertEqual(2, xml.count("<AxisTag>DUPP</AxisTag>"))
+        self.assertEqual(2, xml.count("<NamedInstance "))
+        self.assertTrue("<!-- Light -->" in xml)
+        self.assertTrue("<!-- Light Condensed -->" in xml)
+
+    def test_fromXML_duplicate_axis_tags(self):
+        fvar = table__f_v_a_r()
+        for name, attrs, content in parseXML(
+                '<Axis>'
+                '    <AxisTag>DUPP</AxisTag>'
+                '</Axis>'
+                '<Axis name="duplicate">'
+                '    <AxisTag>DUPP</AxisTag>'
+                '    <Flags>0x123</Flags>'
+                '</Axis>'
+                '<NamedInstance subfamilyNameID="765"/>'
+                '<NamedInstance subfamilyNameID="234"/>'):
+            fvar.fromXML(name, attrs, content, ttFont=None)
+        self.assertEqual(["DUPP", "DUPP"], [a.axisTag for a in fvar.axes])
+        self.assertEqual(["DUPP", "duplicate"], [a.axisId for a in fvar.axes])
+        self.assertEqual([0, 0x123], [a.flags for a in fvar.axes])
+        self.assertEqual([765, 234], [i.subfamilyNameID for i in fvar.instances])
+
+    def test_fromXML_duplicate_axis_tags_conflicting_ids(self):
+        fvar = table__f_v_a_r()
+        with self.assertRaises(TTLibError):
+            for name, attrs, content in parseXML(
+                    '<Axis>'
+                    '    <AxisTag>DUPP</AxisTag>'
+                    '</Axis>'
+                    '<Axis>'
+                    '    <AxisTag>DUPP</AxisTag>'
+                    '    <Flags>0x123</Flags>'
+                    '</Axis>'):
+                fvar.fromXML(name, attrs, content, ttFont=None)
 
 
 class AxisTest(unittest.TestCase):
     def test_compile(self):
         axis = Axis()
-        axis.axisTag, axis.axisNameID = ('opsz', 345)
+        axis.axisId, axis.axisTag, axis.axisNameID = ('optical_size', 'opsz', 345)
         axis.minValue, axis.defaultValue, axis.maxValue = (-0.5, 1.3, 1.5)
         self.assertEqual(FVAR_AXIS_DATA, axis.compile())
 
     def test_decompile(self):
         axis = Axis()
         axis.decompile(FVAR_AXIS_DATA)
+        self.assertIsNone(axis.axisId)
         self.assertEqual("opsz", axis.axisTag)
         self.assertEqual(345, axis.axisNameID)
         self.assertEqual(-0.5, axis.minValue)
@@ -127,6 +224,7 @@ class AxisTest(unittest.TestCase):
         axis = Axis()
         axis.decompile(FVAR_AXIS_DATA)
         AddName(font, "Optical Size").nameID = 256
+        axis.axisId = "optical_size"
         axis.axisNameID = 256
         axis.flags = 0xABC
         writer = XMLWriter(BytesIO())
@@ -134,7 +232,7 @@ class AxisTest(unittest.TestCase):
         self.assertEqual([
             '',
             '<!-- Optical Size -->',
-            '<Axis>',
+            '<Axis name="optical_size">',
                 '<AxisTag>opsz</AxisTag>',
                 '<Flags>0xABC</Flags>',
                 '<MinValue>-0.5</MinValue>',
@@ -147,7 +245,7 @@ class AxisTest(unittest.TestCase):
     def test_fromXML(self):
         axis = Axis()
         for name, attrs, content in parseXML(
-                '<Axis>'
+                '<Axis name="weight">'
                 '    <AxisTag>wght</AxisTag>'
                 '    <Flags>0x123ABC</Flags>'
                 '    <MinValue>100</MinValue>'
@@ -156,6 +254,7 @@ class AxisTest(unittest.TestCase):
                 '    <AxisNameID>256</AxisNameID>'
                 '</Axis>'):
             axis.fromXML(name, attrs, content, ttFont=None)
+        self.assertEqual("weight", axis.axisId)
         self.assertEqual("wght", axis.axisTag)
         self.assertEqual(0x123ABC, axis.flags)
         self.assertEqual(100, axis.minValue)
@@ -206,7 +305,7 @@ class NamedInstanceTest(unittest.TestCase):
         inst.flags = 0xE9
         inst.subfamilyNameID = AddName(font, "Light Condensed").nameID
         inst.postscriptNameID = AddName(font, "Test-LightCondensed").nameID
-        inst.coordinates = {"wght": 0.7, "wdth": 0.5}
+        inst.coordinates = {"weight": 0.7, "width": 0.5}
         writer = XMLWriter(BytesIO())
         inst.toXML(writer, font)
         self.assertEqual([
@@ -215,8 +314,8 @@ class NamedInstanceTest(unittest.TestCase):
             '<!-- PostScript: Test-LightCondensed -->',
             '<NamedInstance flags="0xE9" postscriptNameID="%s" subfamilyNameID="%s">' % (
                 inst.postscriptNameID, inst.subfamilyNameID),
-              '<coord axis="wght" value="0.7"/>',
-              '<coord axis="wdth" value="0.5"/>',
+              '<coord axis="weight" value="0.7"/>',
+              '<coord axis="width" value="0.5"/>',
             '</NamedInstance>'
         ], xml_lines(writer))
 
@@ -225,7 +324,7 @@ class NamedInstanceTest(unittest.TestCase):
         inst = NamedInstance()
         inst.flags = 0xABC
         inst.subfamilyNameID = AddName(font, "Light Condensed").nameID
-        inst.coordinates = {"wght": 0.7, "wdth": 0.5}
+        inst.coordinates = {"weight": 0.7, "width": 0.5}
         writer = XMLWriter(BytesIO())
         inst.toXML(writer, font)
         self.assertEqual([
@@ -233,8 +332,8 @@ class NamedInstanceTest(unittest.TestCase):
             '<!-- Light Condensed -->',
             '<NamedInstance flags="0xABC" subfamilyNameID="%s">' %
                 inst.subfamilyNameID,
-              '<coord axis="wght" value="0.7"/>',
-              '<coord axis="wdth" value="0.5"/>',
+              '<coord axis="weight" value="0.7"/>',
+              '<coord axis="width" value="0.5"/>',
             '</NamedInstance>'
         ], xml_lines(writer))
 
@@ -242,13 +341,13 @@ class NamedInstanceTest(unittest.TestCase):
         inst = NamedInstance()
         for name, attrs, content in parseXML(
                 '<NamedInstance flags="0x0" postscriptNameID="257" subfamilyNameID="345">'
-                '    <coord axis="wght" value="0.7"/>'
-                '    <coord axis="wdth" value="0.5"/>'
+                '    <coord axis="weight" value="0.7"/>'
+                '    <coord axis="width" value="0.5"/>'
                 '</NamedInstance>'):
             inst.fromXML(name, attrs, content, ttFont=MakeFont())
         self.assertEqual(257, inst.postscriptNameID)
         self.assertEqual(345, inst.subfamilyNameID)
-        self.assertDictAlmostEqual({"wght": 0.6999969, "wdth": 0.5}, inst.coordinates)
+        self.assertDictAlmostEqual({"weight": 0.6999969, "width": 0.5}, inst.coordinates)
 
     def test_fromXML_withoutPostScriptName(self):
         inst = NamedInstance()

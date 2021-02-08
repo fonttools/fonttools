@@ -38,11 +38,13 @@ def optimize(request):
 @pytest.fixture
 def fvarAxes():
     wght = _f_v_a_r.Axis()
+    wght.axisId = "weight"
     wght.axisTag = Tag("wght")
     wght.minValue = 100
     wght.defaultValue = 400
     wght.maxValue = 900
     wdth = _f_v_a_r.Axis()
+    wdth.axisId = "width"
     wdth.axisTag = Tag("wdth")
     wdth.minValue = 70
     wdth.defaultValue = 100
@@ -389,6 +391,7 @@ class InstantiateHVARTest(object):
         # to signal there are variations to the glyph's advance widths.
         fvar = varfont["fvar"]
         axis = _f_v_a_r.Axis()
+        axis.axisId = "test"
         axis.axisTag = "TEST"
         fvar.axes.append(axis)
 
@@ -412,7 +415,7 @@ class InstantiateItemVariationStoreTest(object):
         assert len(region.VarRegionAxis) == 3
         assert region.VarRegionAxis[2].PeakCoord == 0
 
-        fvarAxes = [SimpleNamespace(axisTag=axisTag) for axisTag in axisOrder]
+        fvarAxes = [SimpleNamespace(axisId=axisId) for axisId in axisOrder]
 
         assert region.get_support(fvarAxes) == regionAxes
 
@@ -421,15 +424,15 @@ class InstantiateItemVariationStoreTest(object):
         return builder.buildVarStore(
             builder.buildVarRegionList(
                 [
-                    {"wght": (-1.0, -1.0, 0)},
-                    {"wght": (0, 0.5, 1.0)},
-                    {"wght": (0.5, 1.0, 1.0)},
-                    {"wdth": (-1.0, -1.0, 0)},
-                    {"wght": (-1.0, -1.0, 0), "wdth": (-1.0, -1.0, 0)},
-                    {"wght": (0, 0.5, 1.0), "wdth": (-1.0, -1.0, 0)},
-                    {"wght": (0.5, 1.0, 1.0), "wdth": (-1.0, -1.0, 0)},
+                    {"weight": (-1.0, -1.0, 0)},
+                    {"weight": (0, 0.5, 1.0)},
+                    {"weight": (0.5, 1.0, 1.0)},
+                    {"width": (-1.0, -1.0, 0)},
+                    {"weight": (-1.0, -1.0, 0), "width": (-1.0, -1.0, 0)},
+                    {"weight": (0, 0.5, 1.0), "width": (-1.0, -1.0, 0)},
+                    {"weight": (0.5, 1.0, 1.0), "width": (-1.0, -1.0, 0)},
                 ],
-                ["wght", "wdth"],
+                ["weight", "width"],
             ),
             [
                 builder.buildVarData([0, 1, 2], [[100, 100, 100], [100, 100, 100]]),
@@ -442,13 +445,13 @@ class InstantiateItemVariationStoreTest(object):
     @pytest.mark.parametrize(
         "location, expected_deltas, num_regions",
         [
-            ({"wght": 0}, [[0, 0], [0, 0]], 1),
-            ({"wght": 0.25}, [[50, 50], [0, 0]], 1),
-            ({"wdth": 0}, [[0, 0], [0, 0]], 3),
-            ({"wdth": -0.75}, [[0, 0], [75, 75]], 3),
-            ({"wght": 0, "wdth": 0}, [[0, 0], [0, 0]], 0),
-            ({"wght": 0.25, "wdth": 0}, [[50, 50], [0, 0]], 0),
-            ({"wght": 0, "wdth": -0.75}, [[0, 0], [75, 75]], 0),
+            ({"weight": 0}, [[0, 0], [0, 0]], 1),
+            ({"weight": 0.25}, [[50, 50], [0, 0]], 1),
+            ({"width": 0}, [[0, 0], [0, 0]], 3),
+            ({"width": -0.75}, [[0, 0], [75, 75]], 3),
+            ({"weight": 0, "width": 0}, [[0, 0], [0, 0]], 0),
+            ({"weight": 0.25, "width": 0}, [[50, 50], [0, 0]], 0),
+            ({"weight": 0, "width": -0.75}, [[0, 0], [75, 75]], 0),
         ],
     )
     def test_instantiate_default_deltas(
@@ -550,15 +553,15 @@ class TupleVarStoreAdapterTest(object):
 
     def test_roundtrip(self, fvarAxes):
         regions = [
-            {"wght": (-1.0, -1.0, 0)},
-            {"wght": (0, 0.5, 1.0)},
-            {"wght": (0.5, 1.0, 1.0)},
-            {"wdth": (-1.0, -1.0, 0)},
-            {"wght": (-1.0, -1.0, 0), "wdth": (-1.0, -1.0, 0)},
-            {"wght": (0, 0.5, 1.0), "wdth": (-1.0, -1.0, 0)},
-            {"wght": (0.5, 1.0, 1.0), "wdth": (-1.0, -1.0, 0)},
+            {"weight": (-1.0, -1.0, 0)},
+            {"weight": (0, 0.5, 1.0)},
+            {"weight": (0.5, 1.0, 1.0)},
+            {"width": (-1.0, -1.0, 0)},
+            {"weight": (-1.0, -1.0, 0), "width": (-1.0, -1.0, 0)},
+            {"weight": (0, 0.5, 1.0), "width": (-1.0, -1.0, 0)},
+            {"weight": (0.5, 1.0, 1.0), "width": (-1.0, -1.0, 0)},
         ]
-        axisOrder = [axis.axisTag for axis in fvarAxes]
+        axisOrder = [axis.axisId for axis in fvarAxes]
 
         itemVarStore = builder.buildVarStore(
             builder.buildVarRegionList(regions, axisOrder),
@@ -579,29 +582,29 @@ class TupleVarStoreAdapterTest(object):
 
         assert adapter.tupleVarData == [
             [
-                TupleVariation({"wght": (-1.0, -1.0, 0)}, [10, 70]),
-                TupleVariation({"wght": (0, 0.5, 1.0)}, [-20, -80]),
-                TupleVariation({"wght": (0.5, 1.0, 1.0)}, [30, 90]),
+                TupleVariation({"weight": (-1.0, -1.0, 0)}, [10, 70]),
+                TupleVariation({"weight": (0, 0.5, 1.0)}, [-20, -80]),
+                TupleVariation({"weight": (0.5, 1.0, 1.0)}, [30, 90]),
                 TupleVariation(
-                    {"wght": (-1.0, -1.0, 0), "wdth": (-1.0, -1.0, 0)}, [-40, -100]
+                    {"weight": (-1.0, -1.0, 0), "width": (-1.0, -1.0, 0)}, [-40, -100]
                 ),
                 TupleVariation(
-                    {"wght": (0, 0.5, 1.0), "wdth": (-1.0, -1.0, 0)}, [50, 110]
+                    {"weight": (0, 0.5, 1.0), "width": (-1.0, -1.0, 0)}, [50, 110]
                 ),
                 TupleVariation(
-                    {"wght": (0.5, 1.0, 1.0), "wdth": (-1.0, -1.0, 0)}, [-60, -120]
+                    {"weight": (0.5, 1.0, 1.0), "width": (-1.0, -1.0, 0)}, [-60, -120]
                 ),
             ],
             [
-                TupleVariation({"wdth": (-1.0, -1.0, 0)}, [5, 45]),
+                TupleVariation({"width": (-1.0, -1.0, 0)}, [5, 45]),
                 TupleVariation(
-                    {"wght": (-1.0, -1.0, 0), "wdth": (-1.0, -1.0, 0)}, [-15, -55]
+                    {"weight": (-1.0, -1.0, 0), "width": (-1.0, -1.0, 0)}, [-15, -55]
                 ),
                 TupleVariation(
-                    {"wght": (0, 0.5, 1.0), "wdth": (-1.0, -1.0, 0)}, [25, 65]
+                    {"weight": (0, 0.5, 1.0), "width": (-1.0, -1.0, 0)}, [25, 65]
                 ),
                 TupleVariation(
-                    {"wght": (0.5, 1.0, 1.0), "wdth": (-1.0, -1.0, 0)}, [-35, -75]
+                    {"weight": (0.5, 1.0, 1.0), "width": (-1.0, -1.0, 0)}, [-35, -75]
                 ),
             ],
         ]
@@ -1499,11 +1502,11 @@ def _getSubstitutions(gsub, lookupIndices):
 
 
 def makeFeatureVarsFont(conditionalSubstitutions):
-    axes = set()
+    axisIds = set()
     glyphs = set()
     for region, substitutions in conditionalSubstitutions:
         for box in region:
-            axes.update(box.keys())
+            axisIds.update(box.keys())
         glyphs.update(*substitutions.items())
 
     varfont = ttLib.TTFont()
@@ -1511,9 +1514,10 @@ def makeFeatureVarsFont(conditionalSubstitutions):
 
     fvar = varfont["fvar"] = ttLib.newTable("fvar")
     fvar.axes = []
-    for axisTag in sorted(axes):
+    for axisId in sorted(axisIds):
         axis = _f_v_a_r.Axis()
-        axis.axisTag = Tag(axisTag)
+        axis.axisId = axisId
+        axis.axisTag = axisId
         fvar.axes.append(axis)
 
     featureVars.addFeatureVariations(varfont, conditionalSubstitutions)

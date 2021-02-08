@@ -64,15 +64,15 @@ GVAR_VARIATIONS = {
     ],
     "space": [
         TupleVariation(
-            {"wdth": (0.0, 0.7000122, 0.7000122)},
+            {"width": (0.0, 0.7000122, 0.7000122)},
             [(1, 11), (2, 22), (3, 33), (4, 44)]),
     ],
     "I": [
         TupleVariation(
-            {"wght": (0.0, 0.5, 1.0)},
+            {"weight": (0.0, 0.5, 1.0)},
             [(3,3), (1,1), (4,4), (1,1), (5,5), (9,9), (2,2), (6,6)]),
         TupleVariation(
-            {"wght": (-1.0, -1.0, 0.0), "wdth": (0.0, 0.7999878, 0.7999878)},
+            {"weight": (-1.0, -1.0, 0.0), "width": (0.0, 0.7999878, 0.7999878)},
             [(-8,-88), (7,77), None, None, (-4,44), (3,33), (-2,-22), (1,11)]),
     ],
 }
@@ -83,7 +83,7 @@ GVAR_XML = [
     '<reserved value="0"/>',
     '<glyphVariations glyph="I">',
     '  <tuple>',
-    '    <coord axis="wght" min="0.0" value="0.5" max="1.0"/>',
+    '    <coord axis="weight" min="0.0" value="0.5" max="1.0"/>',
     '    <delta pt="0" x="3" y="3"/>',
     '    <delta pt="1" x="1" y="1"/>',
     '    <delta pt="2" x="4" y="4"/>',
@@ -94,8 +94,8 @@ GVAR_XML = [
     '    <delta pt="7" x="6" y="6"/>',
     '  </tuple>',
     '  <tuple>',
-    '    <coord axis="wght" value="-1.0"/>',
-    '    <coord axis="wdth" value="0.8"/>',
+    '    <coord axis="weight" value="-1.0"/>',
+    '    <coord axis="width" value="0.8"/>',
     '    <delta pt="0" x="-8" y="-88"/>',
     '    <delta pt="1" x="7" y="77"/>',
     '    <delta pt="4" x="-4" y="44"/>',
@@ -106,7 +106,7 @@ GVAR_XML = [
     '</glyphVariations>',
     '<glyphVariations glyph="space">',
     '  <tuple>',
-    '    <coord axis="wdth" value="0.7"/>',
+    '    <coord axis="width" value="0.7"/>',
     '    <delta pt="0" x="1" y="11"/>',
     '    <delta pt="1" x="2" y="22"/>',
     '    <delta pt="2" x="3" y="33"/>',
@@ -157,6 +157,7 @@ class GVARTableTest(unittest.TestCase):
 		glyf.glyphs["I"].coordinates = [(10, 10), (10, 20), (20, 20), (20, 10)]
 		fvar.axes = [Axis(), Axis()]
 		fvar.axes[0].axisTag, fvar.axes[1].axisTag = "wght", "wdth"
+		fvar.axes[0].axisId, fvar.axes[1].axisId = "weight", "width"
 		gvar.variations = variations
 		return font, gvar
 

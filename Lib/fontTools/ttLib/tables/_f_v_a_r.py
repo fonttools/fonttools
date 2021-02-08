@@ -67,9 +67,11 @@ class table__f_v_a_r(DefaultTable.DefaultTable):
         }
         result = [sstruct.pack(FVAR_HEADER_FORMAT, header)]
         result.extend([axis.compile() for axis in self.axes])
-        axisTags = [axis.axisTag for axis in self.axes]
+        axisIds = [axis.axisId for axis in self.axes]
+        if len(axisIds) != len(set(axisIds)):
+            raise TTLibError("Duplicate axis ids.")
         for instance in self.instances:
-            result.append(instance.compile(axisTags, includePostScriptNames))
+            result.append(instance.compile(axisIds, includePostScriptNames))
         return bytesjoin(result)
 
     def decompile(self, data, ttFont):
@@ -80,16 +82,23 @@ class table__f_v_a_r(DefaultTable.DefaultTable):
             raise TTLibError("unsupported 'fvar' version %04x" % header["version"])
         pos = header["offsetToData"]
         axisSize = header["axisSize"]
+        axisTagsSeen = {}
         for _ in range(header["axisCount"]):
             axis = Axis()
             axis.decompile(data[pos:pos+axisSize])
+            if axis.axisTag in axisTagsSeen:
+                axisTagsSeen[axis.axisTag] += 1
+                axis.axisId = f"{axis.axisTag}#{axisTagsSeen[axis.axisTag]}"
+            else:
+                axisTagsSeen[axis.axisTag] = 0
+                axis.axisId = axis.axisTag
             self.axes.append(axis)
             pos += axisSize
         instanceSize = header["instanceSize"]
-        axisTags = [axis.axisTag for axis in self.axes]
+        axisIds = [axis.axisId for axis in self.axes]
         for _ in range(header["instanceCount"]):
             instance = NamedInstance()
-            instance.decompile(data[pos:pos+instanceSize], axisTags)
+            instance.decompile(data[pos:pos+instanceSize], axisIds)
             self.instances.append(instance)
             pos += instanceSize
 
@@ -108,9 +117,13 @@ class table__f_v_a_r(DefaultTable.DefaultTable):
             instance = NamedInstance()
             instance.fromXML(name, attrs, content, ttFont)
             self.instances.append(instance)
+        axisIds = [axis.axisId for axis in self.axes]
+        if len(axisIds) != len(set(axisIds)):
+            raise TTLibError("Duplicate axis ids, use Axis name attribute.")
 
 class Axis(object):
     def __init__(self):
+        self.axisId = None
         self.axisTag = None
         self.axisNameID = 0
         self.flags = 0
@@ -130,7 +143,9 @@ class Axis(object):
             writer.newline()
             writer.comment(name)
             writer.newline()
-        writer.begintag("Axis")
+        attrs = {}
+        if (self.axisId != self.axisTag): attrs["name"] = self.axisId
+        writer.begintag("Axis", **attrs)
         writer.newline()
         for tag, value in [("AxisTag", self.axisTag),
                            ("Flags", "0x%X" % self.flags),
@@ -145,12 +160,12 @@ class Axis(object):
         writer.endtag("Axis")
         writer.newline()
 
-    def fromXML(self, name, _attrs, content, ttFont):
+    def fromXML(self, name, attrs, content, ttFont):
         assert(name == "Axis")
         for tag, _, value in filter(lambda t: type(t) is tuple, content):
             value = ''.join(value)
             if tag == "AxisTag":
-                self.axisTag = Tag(value)
+                self.axisTag = self.axisId = Tag(value)
             elif tag in {"Flags", "MinValue", "DefaultValue", "MaxValue",
                          "AxisNameID"}:
                 setattr(
@@ -158,6 +173,8 @@ class Axis(object):
                     tag[0].lower() + tag[1:],
                     str2fl(value, 16) if tag.endswith("Value") else safeEval(value)
                 )
+        if "name" in attrs:
+            self.axisId = attrs["name"]
 
 
 class NamedInstance(object):
@@ -167,21 +184,21 @@ class NamedInstance(object):
         self.flags = 0
         self.coordinates = {}
 
-    def compile(self, axisTags, includePostScriptName):
+    def compile(self, axisIds, includePostScriptName):
         result = [sstruct.pack(FVAR_INSTANCE_FORMAT, self)]
-        for axis in axisTags:
-            fixedCoord = fl2fi(self.coordinates[axis], 16)
+        for axisId in axisIds:
+            fixedCoord = fl2fi(self.coordinates[axisId], 16)
             result.append(struct.pack(">l", fixedCoord))
         if includePostScriptName:
             result.append(struct.pack(">H", self.postscriptNameID))
         return bytesjoin(result)
 
-    def decompile(self, data, axisTags):
+    def decompile(self, data, axisIds):
         sstruct.unpack2(FVAR_INSTANCE_FORMAT, data, self)
         pos = sstruct.calcsize(FVAR_INSTANCE_FORMAT)
-        for axis in axisTags:
+        for axisId in axisIds:
             value = struct.unpack(">l", data[pos : pos + 4])[0]
-            self.coordinates[axis] = fi2fl(value, 16)
+            self.coordinates[axisId] = fi2fl(value, 16)
             pos += 4
         if pos + 2 <= len(data):
           self.postscriptNameID = struct.unpack(">H", data[pos : pos + 2])[0]
@@ -207,8 +224,8 @@ class NamedInstance(object):
                             postscriptNameID=self.postscriptNameID, )
         writer.newline()
         for axis in ttFont["fvar"].axes:
-            writer.simpletag("coord", axis=axis.axisTag,
-                             value=fl2str(self.coordinates[axis.axisTag], 16))
+            writer.simpletag("coord", axis=axis.axisId,
+                             value=fl2str(self.coordinates[axis.axisId], 16))
             writer.newline()
         writer.endtag("NamedInstance")
         writer.newline()

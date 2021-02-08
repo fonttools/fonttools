@@ -30,7 +30,7 @@ MergeTypeError = VarLibCFFPointTypeMergeError
 
 def addCFFVarStore(varFont, varModel, varDataList, masterSupports):
 	fvarTable = varFont['fvar']
-	axisKeys = [axis.axisTag for axis in fvarTable.axes]
+	axisKeys = [axis.axisId for axis in fvarTable.axes]
 	varTupleList = varLib.builder.buildVarRegionList(masterSupports, axisKeys)
 	varStoreCFFV = varLib.builder.buildVarStore(varTupleList, varDataList)
 

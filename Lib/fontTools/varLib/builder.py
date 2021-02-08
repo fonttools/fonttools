@@ -8,20 +8,20 @@ def buildVarRegionAxis(axisSupport):
 	self.StartCoord, self.PeakCoord, self.EndCoord = [float(v) for v in axisSupport]
 	return self
 
-def buildVarRegion(support, axisTags):
-	assert all(tag in axisTags for tag in support.keys()), ("Unknown axis tag found.", support, axisTags)
+def buildVarRegion(support, axisIds):
+	assert all(axisId in axisIds for axisId in support.keys()), ("Unknown axis id found.", support, axisIds)
 	self = ot.VarRegion()
 	self.VarRegionAxis = []
-	for tag in axisTags:
-		self.VarRegionAxis.append(buildVarRegionAxis(support.get(tag, (0,0,0))))
+	for axisId in axisIds:
+		self.VarRegionAxis.append(buildVarRegionAxis(support.get(axisId, (0,0,0))))
 	return self
 
-def buildVarRegionList(supports, axisTags):
+def buildVarRegionList(supports, axisIds):
 	self = ot.VarRegionList()
-	self.RegionAxisCount = len(axisTags)
+	self.RegionAxisCount = len(axisIds)
 	self.Region = []
 	for support in supports:
-		self.Region.append(buildVarRegion(support, axisTags))
+		self.Region.append(buildVarRegion(support, axisIds))
 	self.RegionCount = len(self.Region)
 	return self
 

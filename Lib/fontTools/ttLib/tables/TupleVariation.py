@@ -62,20 +62,20 @@ class TupleVariation(object):
 		"""
 		return any(c is not None for c in self.coordinates)
 
-	def toXML(self, writer, axisTags):
+	def toXML(self, writer, axisIds):
 		writer.begintag("tuple")
 		writer.newline()
-		for axis in axisTags:
-			value = self.axes.get(axis)
+		for axisId in axisIds:
+			value = self.axes.get(axisId)
 			if value is not None:
 				minValue, value, maxValue = value
 				defaultMinValue = min(value, 0.0)  # -0.3 --> -0.3; 0.7 --> 0.0
 				defaultMaxValue = max(value, 0.0)  # -0.3 -->  0.0; 0.7 --> 0.7
 				if minValue == defaultMinValue and maxValue == defaultMaxValue:
-					writer.simpletag("coord", axis=axis, value=fl2str(value, 14))
+					writer.simpletag("coord", axis=axisId, value=fl2str(value, 14))
 				else:
 					attrs = [
-						("axis", axis),
+						("axis", axisId),
 						("min", fl2str(minValue, 14)),
 						("value", fl2str(value, 14)),
 						("max", fl2str(maxValue, 14)),
@@ -105,13 +105,13 @@ class TupleVariation(object):
 
 	def fromXML(self, name, attrs, _content):
 		if name == "coord":
-			axis = attrs["axis"]
+			axisId = attrs["axis"]
 			value = str2fl(attrs["value"], 14)
 			defaultMinValue = min(value, 0.0)  # -0.3 --> -0.3; 0.7 --> 0.0
 			defaultMaxValue = max(value, 0.0)  # -0.3 -->  0.0; 0.7 --> 0.7
 			minValue = str2fl(attrs.get("min", defaultMinValue), 14)
 			maxValue = str2fl(attrs.get("max", defaultMaxValue), 14)
-			self.axes[axis] = (minValue, value, maxValue)
+			self.axes[axisId] = (minValue, value, maxValue)
 		elif name == "delta":
 			if "pt" in attrs:
 				point = safeEval(attrs["pt"])
@@ -126,19 +126,19 @@ class TupleVariation(object):
 				log.warning("bad delta format: %s" %
 				            ", ".join(sorted(attrs.keys())))
 
-	def compile(self, axisTags, sharedCoordIndices, sharedPoints):
+	def compile(self, axisIds, sharedCoordIndices, sharedPoints):
 		tupleData = []
 
-		assert all(tag in axisTags for tag in self.axes.keys()), ("Unknown axis tag found.", self.axes.keys(), axisTags)
+		assert all(axisId in axisIds for axisId in self.axes.keys()), ("Unknown axis id found.", self.axes.keys(), axisIds)
 
-		coord = self.compileCoord(axisTags)
+		coord = self.compileCoord(axisIds)
 		if coord in sharedCoordIndices:
 			flags = sharedCoordIndices[coord]
 		else:
 			flags = EMBEDDED_PEAK_TUPLE
 			tupleData.append(coord)
 
-		intermediateCoord = self.compileIntermediateCoord(axisTags)
+		intermediateCoord = self.compileIntermediateCoord(axisIds)
 		if intermediateCoord is not None:
 			flags |= INTERMEDIATE_REGION
 			tupleData.append(intermediateCoord)
@@ -157,17 +157,17 @@ class TupleVariation(object):
 		tupleData = struct.pack('>HH', len(auxData), flags) + bytesjoin(tupleData)
 		return (tupleData, auxData, usesSharedPoints)
 
-	def compileCoord(self, axisTags):
+	def compileCoord(self, axisIds):
 		result = []
-		for axis in axisTags:
-			_minValue, value, _maxValue = self.axes.get(axis, (0.0, 0.0, 0.0))
+		for axisId in axisIds:
+			_minValue, value, _maxValue = self.axes.get(axisId, (0.0, 0.0, 0.0))
 			result.append(struct.pack(">h", fl2fi(value, 14)))
 		return bytesjoin(result)
 
-	def compileIntermediateCoord(self, axisTags):
+	def compileIntermediateCoord(self, axisIds):
 		needed = False
-		for axis in axisTags:
-			minValue, value, maxValue = self.axes.get(axis, (0.0, 0.0, 0.0))
+		for axisId in axisIds:
+			minValue, value, maxValue = self.axes.get(axisId, (0.0, 0.0, 0.0))
 			defaultMinValue = min(value, 0.0)  # -0.3 --> -0.3; 0.7 --> 0.0
 			defaultMaxValue = max(value, 0.0)  # -0.3 -->  0.0; 0.7 --> 0.7
 			if (minValue != defaultMinValue) or (maxValue != defaultMaxValue):
@@ -177,18 +177,18 @@ class TupleVariation(object):
 			return None
 		minCoords = []
 		maxCoords = []
-		for axis in axisTags:
-			minValue, value, maxValue = self.axes.get(axis, (0.0, 0.0, 0.0))
+		for axisId in axisIds:
+			minValue, value, maxValue = self.axes.get(axisId, (0.0, 0.0, 0.0))
 			minCoords.append(struct.pack(">h", fl2fi(minValue, 14)))
 			maxCoords.append(struct.pack(">h", fl2fi(maxValue, 14)))
 		return bytesjoin(minCoords + maxCoords)
 
 	@staticmethod
-	def decompileCoord_(axisTags, data, offset):
+	def decompileCoord_(axisIds, data, offset):
 		coord = {}
 		pos = offset
-		for axis in axisTags:
-			coord[axis] = fi2fl(struct.unpack(">h", data[pos:pos+2])[0], 14)
+		for axisId in axisIds:
+			coord[axisId] = fi2fl(struct.unpack(">h", data[pos:pos+2])[0], 14)
 			pos += 2
 		return coord, pos
 
@@ -522,10 +522,10 @@ class TupleVariation(object):
 			varOpt = TupleVariation(self.axes, deltaOpt)
 
 			# Shouldn't matter that this is different from fvar...?
-			axisTags = sorted(self.axes.keys())
-			tupleData, auxData, _ = self.compile(axisTags, [], None)
+			axisIds = sorted(self.axes.keys())
+			tupleData, auxData, _ = self.compile(axisIds, [], None)
 			unoptimizedLength = len(tupleData) + len(auxData)
-			tupleData, auxData, _ = varOpt.compile(axisTags, [], None)
+			tupleData, auxData, _ = varOpt.compile(axisIds, [], None)
 			optimizedLength = len(tupleData) + len(auxData)
 
 			if optimizedLength < unoptimizedLength:
@@ -569,18 +569,18 @@ class TupleVariation(object):
 		return self
 
 
-def decompileSharedTuples(axisTags, sharedTupleCount, data, offset):
+def decompileSharedTuples(axisIds, sharedTupleCount, data, offset):
 	result = []
 	for _ in range(sharedTupleCount):
-		t, offset = TupleVariation.decompileCoord_(axisTags, data, offset)
+		t, offset = TupleVariation.decompileCoord_(axisIds, data, offset)
 		result.append(t)
 	return result
 
 
-def compileSharedTuples(axisTags, variations):
+def compileSharedTuples(axisIds, variations):
 	coordCount = {}
 	for var in variations:
-		coord = var.compileCoord(axisTags)
+		coord = var.compileCoord(axisIds)
 		coordCount[coord] = coordCount.get(coord, 0) + 1
 	sharedCoords = [(count, coord)
 					for (coord, count) in coordCount.items() if count > 1]
@@ -591,7 +591,7 @@ def compileSharedTuples(axisTags, variations):
 
 
 def compileTupleVariationStore(variations, pointCount,
-                               axisTags, sharedTupleIndices,
+                               axisIds, sharedTupleIndices,
                                useSharedPoints=True):
 	variations = [v for v in variations if v.hasImpact()]
 	if len(variations) == 0:
@@ -639,9 +639,9 @@ def compileTupleVariationStore(variations, pointCount,
 	sharedPointVariation = None # To keep track of a variation that uses shared points
 	for v in variations:
 		privateTuple, privateData, _ = v.compile(
-			axisTags, sharedTupleIndices, sharedPoints=None)
+			axisIds, sharedTupleIndices, sharedPoints=None)
 		sharedTuple, sharedData, usesSharedPoints = v.compile(
-			axisTags, sharedTupleIndices, sharedPoints=usedPoints)
+			axisIds, sharedTupleIndices, sharedPoints=usedPoints)
 		if useSharedPoints and (len(sharedTuple) + len(sharedData)) < (len(privateTuple) + len(privateData)):
 			tuples.append(sharedTuple)
 			data.append(sharedData)
@@ -661,10 +661,10 @@ def compileTupleVariationStore(variations, pointCount,
 	return tupleVariationCount, tuples, data
 
 
-def decompileTupleVariationStore(tableTag, axisTags,
+def decompileTupleVariationStore(tableTag, axisIds,
                                  tupleVariationCount, pointCount, sharedTuples,
 							     data, pos, dataPos):
-	numAxes = len(axisTags)
+	numAxes = len(axisIds)
 	result = []
 	if (tupleVariationCount & TUPLES_SHARE_POINT_NUMBERS) != 0:
 		sharedPoints, dataPos = TupleVariation.decompilePoints_(
@@ -678,31 +678,31 @@ def decompileTupleVariationStore(tableTag, axisTags,
 		pointDeltaData = data[dataPos : dataPos + dataSize]
 		result.append(decompileTupleVariation_(
 			pointCount, sharedTuples, sharedPoints,
-			tableTag, axisTags, tupleData, pointDeltaData))
+			tableTag, axisIds, tupleData, pointDeltaData))
 		pos += tupleSize
 		dataPos += dataSize
 	return result
 
 
 def decompileTupleVariation_(pointCount, sharedTuples, sharedPoints,
-							 tableTag, axisTags, data, tupleData):
+							 tableTag, axisIds, data, tupleData):
 	assert tableTag in ("cvar", "gvar"), tableTag
 	flags = struct.unpack(">H", data[2:4])[0]
 	pos = 4
 	if (flags & EMBEDDED_PEAK_TUPLE) == 0:
 		peak = sharedTuples[flags & TUPLE_INDEX_MASK]
 	else:
-		peak, pos = TupleVariation.decompileCoord_(axisTags, data, pos)
+		peak, pos = TupleVariation.decompileCoord_(axisIds, data, pos)
 	if (flags & INTERMEDIATE_REGION) != 0:
-		start, pos = TupleVariation.decompileCoord_(axisTags, data, pos)
-		end, pos = TupleVariation.decompileCoord_(axisTags, data, pos)
+		start, pos = TupleVariation.decompileCoord_(axisIds, data, pos)
+		end, pos = TupleVariation.decompileCoord_(axisIds, data, pos)
 	else:
 		start, end = inferRegion_(peak)
 	axes = {}
-	for axis in axisTags:
-		region = start[axis], peak[axis], end[axis]
+	for axisId in axisIds:
+		region = start[axisId], peak[axisId], end[axisId]
 		if region != (0.0, 0.0, 0.0):
-			axes[axis] = region
+			axes[axisId] = region
 	pos = 0
 	if (flags & PRIVATE_POINT_NUMBERS) != 0:
 		points, pos = TupleVariation.decompilePoints_(

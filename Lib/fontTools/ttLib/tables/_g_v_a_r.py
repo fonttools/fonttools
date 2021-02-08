@@ -49,13 +49,13 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		self.variations = {}
 
 	def compile(self, ttFont):
-		axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
+		axisIds = [axis.axisId for axis in ttFont["fvar"].axes]
 		sharedTuples =  tv.compileSharedTuples(
-			axisTags, itertools.chain(*self.variations.values()))
+			axisIds, itertools.chain(*self.variations.values()))
 		sharedTupleIndices = {coord:i for i, coord in enumerate(sharedTuples)}
 		sharedTupleSize = sum([len(c) for c in sharedTuples])
 		compiledGlyphs = self.compileGlyphs_(
-			ttFont, axisTags, sharedTupleIndices)
+			ttFont, axisIds, sharedTupleIndices)
 		offset = 0
 		offsets = []
 		for glyph in compiledGlyphs:
@@ -67,7 +67,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		header = {}
 		header["version"] = self.version
 		header["reserved"] = self.reserved
-		header["axisCount"] = len(axisTags)
+		header["axisCount"] = len(axisIds)
 		header["sharedTupleCount"] = len(sharedTuples)
 		header["offsetToSharedTuples"] = GVAR_HEADER_SIZE + len(compiledOffsets)
 		header["glyphCount"] = len(compiledGlyphs)
@@ -80,25 +80,25 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		result.extend(compiledGlyphs)
 		return bytesjoin(result)
 
-	def compileGlyphs_(self, ttFont, axisTags, sharedCoordIndices):
+	def compileGlyphs_(self, ttFont, axisIds, sharedCoordIndices):
 		result = []
 		for glyphName in ttFont.getGlyphOrder():
 			glyph = ttFont["glyf"][glyphName]
 			pointCount = self.getNumPoints_(glyph)
 			variations = self.variations.get(glyphName, [])
 			result.append(compileGlyph_(variations, pointCount,
-			                            axisTags, sharedCoordIndices))
+			                            axisIds, sharedCoordIndices))
 		return result
 
 	def decompile(self, data, ttFont):
-		axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
+		axisIds = [axis.axisId for axis in ttFont["fvar"].axes]
 		glyphs = ttFont.getGlyphOrder()
 		sstruct.unpack(GVAR_HEADER_FORMAT, data[0:GVAR_HEADER_SIZE], self)
 		assert len(glyphs) == self.glyphCount
-		assert len(axisTags) == self.axisCount
+		assert len(axisIds) == self.axisCount
 		offsets = self.decompileOffsets_(data[GVAR_HEADER_SIZE:], tableFormat=(self.flags & 1), glyphCount=self.glyphCount)
 		sharedCoords = tv.decompileSharedTuples(
-			axisTags, self.sharedTupleCount, data, self.offsetToSharedTuples)
+			axisIds, self.sharedTupleCount, data, self.offsetToSharedTuples)
 		self.variations = {}
 		offsetToData = self.offsetToGlyphVariationData
 		for i in range(self.glyphCount):
@@ -108,7 +108,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			gvarData = data[offsetToData + offsets[i] : offsetToData + offsets[i + 1]]
 			try:
 				self.variations[glyphName] = decompileGlyph_(
-					numPointsInGlyph, sharedCoords, axisTags, gvarData)
+					numPointsInGlyph, sharedCoords, axisIds, gvarData)
 			except Exception:
 				log.error(
 					"Failed to decompile deltas for glyph '%s' (%d points)",
@@ -165,7 +165,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 		writer.newline()
 		writer.simpletag("reserved", value=self.reserved)
 		writer.newline()
-		axisTags = [axis.axisTag for axis in ttFont["fvar"].axes]
+		axisIds = [axis.axisId for axis in ttFont["fvar"].axes]
 		for glyphName in ttFont.getGlyphNames():
 			variations = self.variations.get(glyphName)
 			if not variations:
@@ -173,7 +173,7 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			writer.begintag("glyphVariations", glyph=glyphName)
 			writer.newline()
 			for gvar in variations:
-				gvar.toXML(writer, axisTags)
+				gvar.toXML(writer, axisIds)
 			writer.endtag("glyphVariations")
 			writer.newline()
 
@@ -211,9 +211,9 @@ class table__g_v_a_r(DefaultTable.DefaultTable):
 			return len(getattr(glyph, "coordinates", [])) + NUM_PHANTOM_POINTS
 
 
-def compileGlyph_(variations, pointCount, axisTags, sharedCoordIndices):
+def compileGlyph_(variations, pointCount, axisIds, sharedCoordIndices):
 	tupleVariationCount, tuples, data = tv.compileTupleVariationStore(
-		variations, pointCount, axisTags, sharedCoordIndices)
+		variations, pointCount, axisIds, sharedCoordIndices)
 	if tupleVariationCount == 0:
 		return b""
 	result = (
@@ -224,13 +224,13 @@ def compileGlyph_(variations, pointCount, axisTags, sharedCoordIndices):
 	return result
 
 
-def decompileGlyph_(pointCount, sharedTuples, axisTags, data):
+def decompileGlyph_(pointCount, sharedTuples, axisIds, data):
 	if len(data) < 4:
 		return []
 	tupleVariationCount, offsetToData = struct.unpack(">HH", data[:4])
 	dataPos = offsetToData
 	return tv.decompileTupleVariationStore(
-		"gvar", axisTags,
+		"gvar", axisIds,
 		tupleVariationCount, pointCount,
 		sharedTuples, data, 4, offsetToData
 	)

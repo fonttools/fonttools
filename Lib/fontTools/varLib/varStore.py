@@ -14,10 +14,10 @@ def _getLocationKey(loc):
 
 class OnlineVarStoreBuilder(object):
 
-	def __init__(self, axisTags):
-		self._axisTags = axisTags
+	def __init__(self, axisIds):
+		self._axisIds = axisIds
 		self._regionMap = {}
-		self._regionList = buildVarRegionList([], axisTags)
+		self._regionList = buildVarRegionList([], axisIds)
 		self._store = buildVarStore(self._regionList, [])
 		self._data = None
 		self._model = None
@@ -56,7 +56,7 @@ class OnlineVarStoreBuilder(object):
 			key = _getLocationKey(region)
 			idx = regionMap.get(key)
 			if idx is None:
-				varRegion = buildVarRegion(region, self._axisTags)
+				varRegion = buildVarRegion(region, self._axisIds)
 				idx = regionMap[key] = len(regionList.Region)
 				regionList.Region.append(varRegion)
 			regionIndices.append(idx)
@@ -132,7 +132,7 @@ ot.VarData.addItem = VarData_addItem
 
 def VarRegion_get_support(self, fvar_axes):
 	return {
-		fvar_axes[i].axisTag: (reg.StartCoord,reg.PeakCoord,reg.EndCoord)
+		fvar_axes[i].axisId: (reg.StartCoord,reg.PeakCoord,reg.EndCoord)
 		for i, reg in enumerate(self.VarRegionAxis)
 		if reg.PeakCoord != 0
 	}

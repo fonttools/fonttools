@@ -170,7 +170,7 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
 		varfont = TTFont(stream)
 
 	fvar = varfont['fvar']
-	axes = {a.axisTag:(a.minValue,a.defaultValue,a.maxValue) for a in fvar.axes}
+	axes = {a.axisId:(a.minValue,a.defaultValue,a.maxValue) for a in fvar.axes}
 	loc = normalizeLocation(location, axes)
 	if 'avar' in varfont:
 		maps = varfont['avar'].segments
@@ -265,10 +265,10 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
 			for condition in record.ConditionSet.ConditionTable:
 				if condition.Format == 1:
 					axisIdx = condition.AxisIndex
-					axisTag = fvar.axes[axisIdx].axisTag
+					axisId = fvar.axes[axisIdx].axisId
 					Min = condition.FilterRangeMinValue
 					Max = condition.FilterRangeMaxValue
-					v = loc[axisTag]
+					v = loc[axisId]
 					if not (Min <= v <= Max):
 						applies = False
 				else:
@@ -337,7 +337,7 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
 		asm.append("IDEF[ ]")
 		args = [str(len(loc))]
 		for a in fvar.axes:
-			args.append(str(floatToFixed(loc[a.axisTag], 14)))
+			args.append(str(floatToFixed(loc[a.axisId], 14)))
 		asm.append("NPUSHW[ ] " + ' '.join(args))
 		asm.append("ENDF[ ]")
 		fpgm.program.fromAssembly(asm)
