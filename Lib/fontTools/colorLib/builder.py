@@ -492,7 +492,7 @@ class LayerV1ListBuilder:
         self, paletteIndex: int, alpha: _ScalarInput = _DEFAULT_ALPHA
     ) -> ot.Paint:
         ot_paint = ot.Paint()
-        ot_paint.Format = int(ot.Paint.Format.PaintSolid)
+        ot_paint.Format = int(ot.PaintFormat.PaintSolid)
         ot_paint.Color = buildColorIndex(paletteIndex, alpha)
         return ot_paint
 
@@ -504,7 +504,7 @@ class LayerV1ListBuilder:
         p2: Optional[_PointTuple] = None,
     ) -> ot.Paint:
         ot_paint = ot.Paint()
-        ot_paint.Format = int(ot.Paint.Format.PaintLinearGradient)
+        ot_paint.Format = int(ot.PaintFormat.PaintLinearGradient)
         ot_paint.ColorLine = _to_color_line(colorLine)
 
         if p2 is None:
@@ -525,7 +525,7 @@ class LayerV1ListBuilder:
     ) -> ot.Paint:
 
         ot_paint = ot.Paint()
-        ot_paint.Format = int(ot.Paint.Format.PaintRadialGradient)
+        ot_paint.Format = int(ot.PaintFormat.PaintRadialGradient)
         ot_paint.ColorLine = _to_color_line(colorLine)
 
         # normalize input types (which may or may not specify a varIdx)
@@ -558,7 +558,7 @@ class LayerV1ListBuilder:
         endAngle: _ScalarInput,
     ) -> ot.Paint:
         ot_paint = ot.Paint()
-        ot_paint.Format = int(ot.Paint.Format.PaintSweepGradient)
+        ot_paint.Format = int(ot.PaintFormat.PaintSweepGradient)
         ot_paint.ColorLine = _to_color_line(colorLine)
         ot_paint.centerX = _to_variable_int16(centerX)
         ot_paint.centerY = _to_variable_int16(centerY)
@@ -568,14 +568,14 @@ class LayerV1ListBuilder:
 
     def buildPaintGlyph(self, glyph: str, paint: _PaintInput) -> ot.Paint:
         ot_paint = ot.Paint()
-        ot_paint.Format = int(ot.Paint.Format.PaintGlyph)
+        ot_paint.Format = int(ot.PaintFormat.PaintGlyph)
         ot_paint.Glyph = glyph
         ot_paint.Paint = self.buildPaint(paint)
         return ot_paint
 
     def buildPaintColrGlyph(self, glyph: str) -> ot.Paint:
         ot_paint = ot.Paint()
-        ot_paint.Format = int(ot.Paint.Format.PaintColrGlyph)
+        ot_paint.Format = int(ot.PaintFormat.PaintColrGlyph)
         ot_paint.Glyph = glyph
         return ot_paint
 
@@ -583,7 +583,7 @@ class LayerV1ListBuilder:
         self, transform: _AffineInput, paint: _PaintInput
     ) -> ot.Paint:
         ot_paint = ot.Paint()
-        ot_paint.Format = int(ot.Paint.Format.PaintTransform)
+        ot_paint.Format = int(ot.PaintFormat.PaintTransform)
         if not isinstance(transform, ot.Affine2x3):
             transform = buildAffine2x3(transform)
         ot_paint.Transform = transform
@@ -594,7 +594,7 @@ class LayerV1ListBuilder:
         self, paint: _PaintInput, dx: _ScalarInput, dy: _ScalarInput
     ):
         ot_paint = ot.Paint()
-        ot_paint.Format = int(ot.Paint.Format.PaintTranslate)
+        ot_paint.Format = int(ot.PaintFormat.PaintTranslate)
         ot_paint.Paint = self.buildPaint(paint)
         ot_paint.dx = _to_variable_f16dot16_float(dx)
         ot_paint.dy = _to_variable_f16dot16_float(dy)
@@ -608,7 +608,7 @@ class LayerV1ListBuilder:
         centerY: _ScalarInput,
     ) -> ot.Paint:
         ot_paint = ot.Paint()
-        ot_paint.Format = int(ot.Paint.Format.PaintRotate)
+        ot_paint.Format = int(ot.PaintFormat.PaintRotate)
         ot_paint.Paint = self.buildPaint(paint)
         ot_paint.angle = _to_variable_f16dot16_float(angle)
         ot_paint.centerX = _to_variable_f16dot16_float(centerX)
@@ -624,7 +624,7 @@ class LayerV1ListBuilder:
         centerY: _ScalarInput,
     ) -> ot.Paint:
         ot_paint = ot.Paint()
-        ot_paint.Format = int(ot.Paint.Format.PaintSkew)
+        ot_paint.Format = int(ot.PaintFormat.PaintSkew)
         ot_paint.Paint = self.buildPaint(paint)
         ot_paint.xSkewAngle = _to_variable_f16dot16_float(xSkewAngle)
         ot_paint.ySkewAngle = _to_variable_f16dot16_float(ySkewAngle)
@@ -639,7 +639,7 @@ class LayerV1ListBuilder:
         backdrop: _PaintInput,
     ):
         ot_paint = ot.Paint()
-        ot_paint.Format = int(ot.Paint.Format.PaintComposite)
+        ot_paint.Format = int(ot.PaintFormat.PaintComposite)
         ot_paint.SourcePaint = self.buildPaint(source)
         ot_paint.CompositeMode = _to_composite_mode(mode)
         ot_paint.BackdropPaint = self.buildPaint(backdrop)
@@ -647,7 +647,7 @@ class LayerV1ListBuilder:
 
     def buildColrLayers(self, paints: List[_PaintInput]) -> ot.Paint:
         ot_paint = ot.Paint()
-        ot_paint.Format = int(ot.Paint.Format.PaintColrLayers)
+        ot_paint.Format = int(ot.PaintFormat.PaintColrLayers)
         self.slices.append(ot_paint)
 
         paints = [
@@ -672,7 +672,7 @@ class LayerV1ListBuilder:
                 if reuse_lbound == -1:
                     continue
                 new_slice = ot.Paint()
-                new_slice.Format = int(ot.Paint.Format.PaintColrLayers)
+                new_slice.Format = int(ot.PaintFormat.PaintColrLayers)
                 new_slice.NumLayers = ubound - lbound
                 new_slice.FirstLayerIndex = reuse_lbound
                 paints = paints[:lbound] + [new_slice] + paints[ubound:]
@@ -726,8 +726,8 @@ class LayerV1ListBuilder:
 
 LayerV1ListBuilder._buildFunctions = {
     pf.value: getattr(LayerV1ListBuilder, "build" + pf.name)
-    for pf in ot.Paint.Format
-    if pf != ot.Paint.Format.PaintColrLayers
+    for pf in ot.PaintFormat
+    if pf != ot.PaintFormat.PaintColrLayers
 }
 
 
