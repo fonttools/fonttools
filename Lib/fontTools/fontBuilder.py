@@ -667,8 +667,9 @@ class FontBuilder(object):
         The ``name`` is either a string, or a dict, mapping language codes
         to strings, to allow localized name table entries.
 
-        The instances should be a list of dicts; each instance should be supplied
-        as a dict with keys ``location`` (mapping of axis tags to float values),
+        ```instances`` should be a list of instances, with each instance either
+        supplied as a py:class:`.designspaceLib.InstanceDescriptor` object, or a
+        dict with keys ``location`` (mapping of axis tags to float values),
         ``stylename`` and (optionally) ``postscriptfontname``.
         The ``stylename`` is either a string, or a dict, mapping language codes
         to strings, to allow localized name table entries.
@@ -927,9 +928,15 @@ def addFvar(font, axes, instances):
         fvar.axes.append(axis)
 
     for instance in instances:
-        coordinates = instance["location"]
-        name = instance["stylename"]
-        psname = instance.get("postscriptfontname")
+        if isinstance(instance, dict):
+            coordinates = instance["location"]
+            name = instance["stylename"]
+            psname = instance.get("postscriptfontname")
+        else:
+            coordinates = instance.location
+            name = instance.localisedStyleName or instance.styleName
+            psname = instance.postScriptFontName
+
         if isinstance(name, str):
             name = dict(en=name)
 
