@@ -634,8 +634,9 @@ class FontBuilder(object):
             axes (list): See below.
             instances (list): See below.
 
-        The axes should be a list of iterables; each axis should be supplied
-        in the format ```tupletag, minValue, defaultValue, maxValue, name``.
+        ``axes`` should be a list as axes, with each axis either supplied as
+        a py:class:`.designspaceLib.AxisDescriptor` object, or a tuple in the
+        format ```tupletag, minValue, defaultValue, maxValue, name``.
         The ``name`` is either a string, or a dict, mapping language codes
         to strings, to allow localized name table entries.
 
@@ -843,16 +844,33 @@ def buildCmapSubTable(cmapping, format, platformID, platEncID):
 
 def addFvar(font, axes, instances):
     from .ttLib.tables._f_v_a_r import Axis, NamedInstance
+    from .designspaceLib import AxisDescriptor
 
     assert axes
 
-    fvar = newTable('fvar')
-    nameTable = font['name']
+    fvar = newTable("fvar")
+    nameTable = font["name"]
 
-    for tag, minValue, defaultValue, maxValue, name in axes:
+    for axis_def in axes:
         axis = Axis()
-        axis.axisTag = tag
-        axis.minValue, axis.defaultValue, axis.maxValue = minValue, defaultValue, maxValue
+
+        if isinstance(axis_def, tuple):
+            (
+                axis.axisTag,
+                axis.minValue,
+                axis.defaultValue,
+                axis.maxValue,
+                name,
+            ) = axis_def
+        else:
+            (axis.axisTag, axis.minValue, axis.defaultValue, axis.maxValue, name) = (
+                axis_def.tag,
+                axis_def.minimum,
+                axis_def.default,
+                axis_def.maximum,
+                axis_def.name,
+            )
+
         if isinstance(name, str):
             name = dict(en=name)
 
