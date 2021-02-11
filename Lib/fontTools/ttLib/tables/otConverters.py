@@ -59,14 +59,20 @@ def buildConverters(tableSpec, tableNamespace):
 				converterClass = Struct
 			else:
 				converterClass = eval(tp, tableNamespace, converterMapping)
-		if tp in ('MortChain', 'MortSubtable', 'MorxChain'):
+
+		conv = converterClass(name, repeat, aux)
+
+		if conv.tableClass:
+			# A "template" such as OffsetTo(AType) knowss the table class already
+			tableClass = conv.tableClass
+		elif tp in ('MortChain', 'MortSubtable', 'MorxChain'):
 			tableClass = tableNamespace.get(tp)
 		else:
 			tableClass = tableNamespace.get(tableName)
-		if tableClass is not None:
-			conv = converterClass(name, repeat, aux, tableClass=tableClass)
-		else:
-			conv = converterClass(name, repeat, aux)
+
+		if not conv.tableClass:
+			conv.tableClass = tableClass
+
 		if name in ["SubTable", "ExtSubTable", "SubStruct"]:
 			conv.lookupTypes = tableNamespace['lookupTypes']
 			# also create reverse mapping
