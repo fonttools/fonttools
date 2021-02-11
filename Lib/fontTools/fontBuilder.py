@@ -842,7 +842,6 @@ def buildCmapSubTable(cmapping, format, platformID, platEncID):
 
 
 def addFvar(font, axes, instances):
-    from .misc.py23 import Tag, tounicode
     from .ttLib.tables._f_v_a_r import Axis, NamedInstance
 
     assert axes
@@ -852,23 +851,23 @@ def addFvar(font, axes, instances):
 
     for tag, minValue, defaultValue, maxValue, name in axes:
         axis = Axis()
-        axis.axisTag = Tag(tag)
+        axis.axisTag = tag
         axis.minValue, axis.defaultValue, axis.maxValue = minValue, defaultValue, maxValue
-        if isinstance(name, basestring):
-            name = dict(en=tounicode(name))
+        if isinstance(name, str):
+            name = dict(en=name)
 
         axis.axisNameID = nameTable.addMultilingualName(name, ttFont=font)
         fvar.axes.append(axis)
 
     for instance in instances:
         coordinates = instance['location']
-        name = tounicode(instance['stylename'])
+        name = instance['stylename']
         psname = instance.get('postscriptfontname')
 
         inst = NamedInstance()
         inst.subfamilyNameID = nameTable.addName(name)
         if psname is not None:
-            psname = tounicode(psname)
+            psname = psname
             inst.postscriptNameID = nameTable.addName(psname)
         inst.coordinates = coordinates
         fvar.instances.append(inst)
