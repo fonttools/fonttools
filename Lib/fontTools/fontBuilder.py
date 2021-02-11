@@ -636,6 +636,9 @@ class FontBuilder(object):
 
         The axes should be a list of iterables; each axis should be supplied
         in the format ```tupletag, minValue, defaultValue, maxValue, name``.
+        The ``name`` is either a string, or a dict, mapping language codes
+        to strings, to allow localized name table entries.
+
         The instances should be a list of dicts; each instance should be supplied
         as a dict with keys ``location`` (mapping of axis tags to float values),
         ``stylename`` and (optionally) ``postscriptfontname``.
@@ -851,7 +854,10 @@ def addFvar(font, axes, instances):
         axis = Axis()
         axis.axisTag = Tag(tag)
         axis.minValue, axis.defaultValue, axis.maxValue = minValue, defaultValue, maxValue
-        axis.axisNameID = nameTable.addName(tounicode(name))
+        if isinstance(name, basestring):
+            name = dict(en=tounicode(name))
+
+        axis.axisNameID = nameTable.addMultilingualName(name, ttFont=font)
         fvar.axes.append(axis)
 
     for instance in instances:
