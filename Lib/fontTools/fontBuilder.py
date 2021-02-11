@@ -628,7 +628,7 @@ class FontBuilder(object):
             self.calcGlyphBounds()
 
     def setupFvar(self, axes, instances):
-        """Adds an font variation table to the font.
+        """Adds an font variations table to the font.
 
         Args:
             axes (list): See below.
