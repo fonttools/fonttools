@@ -670,6 +670,8 @@ class FontBuilder(object):
         The instances should be a list of dicts; each instance should be supplied
         as a dict with keys ``location`` (mapping of axis tags to float values),
         ``stylename`` and (optionally) ``postscriptfontname``.
+        The ``stylename`` is either a string, or a dict, mapping language codes
+        to strings, to allow localized name table entries.
         """
 
         addFvar(self.font, axes, instances)
@@ -928,9 +930,11 @@ def addFvar(font, axes, instances):
         coordinates = instance["location"]
         name = instance["stylename"]
         psname = instance.get("postscriptfontname")
+        if isinstance(name, str):
+            name = dict(en=name)
 
         inst = NamedInstance()
-        inst.subfamilyNameID = nameTable.addName(name)
+        inst.subfamilyNameID = nameTable.addMultilingualName(name, ttFont=font)
         if psname is not None:
             psname = psname
             inst.postscriptNameID = nameTable.addName(psname)
