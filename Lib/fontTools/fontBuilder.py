@@ -661,7 +661,7 @@ class FontBuilder(object):
             axes (list): See below.
             instances (list): See below.
 
-        ``axes`` should be a list as axes, with each axis either supplied as
+        ``axes`` should be a list of axes, with each axis either supplied as
         a py:class:`.designspaceLib.AxisDescriptor` object, or a tuple in the
         format ```tupletag, minValue, defaultValue, maxValue, name``.
         The ``name`` is either a string, or a dict, mapping language codes
