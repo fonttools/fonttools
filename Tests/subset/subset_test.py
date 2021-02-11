@@ -992,7 +992,7 @@ def colrv1_path(tmp_path):
                             "c1": (200, 200),
                             "r1": 0,
                             "colorLine": {
-                                "stops": [(0.0, 0), (1.0, 1)], "extend": "repeat"
+                                "stops": [(0.0, 1), (1.0, 2)], "extend": "repeat"
                             },
                         },
                     },
@@ -1015,7 +1015,7 @@ def colrv1_path(tmp_path):
                         "format": int(ot.PaintFormat.PaintLinearGradient),
                         "p0": (0, 0),
                         "p1": (500, 500),
-                        "colorLine": {"stops": [(0.0, 0), (1.0, 2)]},
+                        "colorLine": {"stops": [(0.0, 1), (1.0, 2)]},
                     },
                 },
                 {
@@ -1059,7 +1059,7 @@ def colrv1_path(tmp_path):
     return output_path
 
 
-def test_subset_COLRv1(colrv1_path):
+def test_subset_COLRv1_and_CPAL(colrv1_path):
     subset_path = colrv1_path.parent / (colrv1_path.name + ".subset")
 
     subset.main(
@@ -1089,6 +1089,54 @@ def test_subset_COLRv1(colrv1_path):
     assert "glyph00015" in glyph_set
 
     assert "uniE003" in glyph_set
+
+    assert "COLR" in subset_font
+    colr = subset_font["COLR"].table
+    assert len(colr.BaseGlyphV1List.BaseGlyphV1Record) == 3  # was 4
+
+    base = colr.BaseGlyphV1List.BaseGlyphV1Record[0]
+    assert base.BaseGlyph == "uniE001"
+    layers = colr.LayerV1List.Paint[
+        base.Paint.FirstLayerIndex: base.Paint.FirstLayerIndex + base.Paint.NumLayers
+    ]
+    assert len(layers) == 2
+    # check palette indices were remapped
+    assert layers[0].Paint.Paint.ColorLine.ColorStop[0].Color.PaletteIndex == 0
+    assert layers[0].Paint.Paint.ColorLine.ColorStop[1].Color.PaletteIndex == 1
+    assert layers[1].Paint.Color.PaletteIndex == 0
+
+    assert "CPAL" in subset_font
+    cpal = subset_font["CPAL"]
+    assert [
+        tuple(v / 255 for v in (c.red, c.green, c.blue, c.alpha))
+        for c in cpal.palettes[0]
+    ] == [
+        # the first color 'red' was pruned
+        (0.0, 1.0, 0.0, 1.0),  # green
+        (0.0, 0.0, 1.0, 1.0),  # blue
+    ]
+
+
+def test_subset_COLRv1_and_CPAL_drop_empty(colrv1_path):
+    subset_path = colrv1_path.parent / (colrv1_path.name + ".subset")
+
+    subset.main(
+        [
+            str(colrv1_path),
+            "--glyph-names",
+            f"--output-file={subset_path}",
+            "--glyphs=glyph00010",
+        ]
+    )
+    subset_font = TTFont(subset_path)
+
+    glyph_set = set(subset_font.getGlyphOrder())
+
+    assert "glyph00010" in glyph_set
+    assert "uniE000" not in glyph_set
+
+    assert "COLR" not in subset_font
+    assert "CPAL" not in subset_font
 
 
 if __name__ == "__main__":
