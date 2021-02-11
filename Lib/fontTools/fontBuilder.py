@@ -628,6 +628,19 @@ class FontBuilder(object):
             self.calcGlyphBounds()
 
     def setupFvar(self, axes, instances):
+        """Adds an font variation table to the font.
+
+        Args:
+            axes (list): See below.
+            instances (list): See below.
+
+        The axes should be a list of iterables; each axis should be supplied
+        in the format ```tupletag, minValue, defaultValue, maxValue, name``.
+        The instances should be a list of dicts; each instance should be supplied
+        as a dict with keys ``location`` (mapping of axis tags to float values),
+        ``stylename`` and (optionally) ``postscriptfontname``.
+        """
+
         addFvar(self.font, axes, instances)
 
     def setupGvar(self, variations):
