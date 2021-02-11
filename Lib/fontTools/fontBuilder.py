@@ -136,6 +136,7 @@ from .ttLib.tables._c_m_a_p import cmap_classes
 from .ttLib.tables._n_a_m_e import NameRecord, makeName
 from .misc.timeTools import timestampNow
 import struct
+from collections import OrderedDict
 
 
 _headDefaults = dict(
@@ -646,6 +647,16 @@ class FontBuilder(object):
         """
 
         addFvar(self.font, axes, instances)
+
+    def setupAvar(self, axes):
+        """Adds an axis variations table to the font.
+
+        Args:
+            axes (list): A list of py:class:`.designspaceLib.AxisDescriptor` objects.
+        """
+        from .varLib import _add_avar
+
+        _add_avar(self.font, OrderedDict(enumerate(axes)))  # Only values are used
 
     def setupGvar(self, variations):
         gvar = self.font["gvar"] = newTable('gvar')
