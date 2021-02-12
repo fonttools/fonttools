@@ -216,6 +216,8 @@ class SimpleValue(BaseConverter):
 		return self.fromString(attrs["value"])
 
 class IntValue(SimpleValue):
+	valueClass = int
+
 	@staticmethod
 	def fromString(value):
 		return int(value, 0)
@@ -295,6 +297,7 @@ class Tag(SimpleValue):
 		writer.writeTag(value)
 
 class GlyphID(SimpleValue):
+	valueClass = str
 	staticSize = 2
 	typecode = "H"
 	def readArray(self, reader, font, tableDict, count):
@@ -334,6 +337,7 @@ class NameID(UShort):
 
 
 class FloatValue(SimpleValue):
+	valueClass = float
 	@staticmethod
 	def fromString(value):
 		return float(value)

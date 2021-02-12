@@ -12,7 +12,6 @@ from fontTools.ttLib.tables.otBase import (
 )
 from fontTools.ttLib.tables.otConverters import (
     ComputedInt,
-    GlyphID,
     SimpleValue,
     Struct,
     Short,
@@ -21,18 +20,6 @@ from fontTools.ttLib.tables.otConverters import (
     VarInt16,
     VarUInt16,
 )
-
-
-def _to_glyph_id(value):
-    assert isinstance(value, str), "Expected a glyph name"
-    return value
-
-
-_CONVERTER_OVERRIDES = {
-    Short: int,
-    UShort: int,
-    GlyphID: _to_glyph_id,
-}
 
 
 class BuildCallback(enum.Enum):
@@ -107,10 +94,10 @@ class TableBuilder:
         self._callbackTable = callbackTable
 
     def _convert(self, dest, field, converter, value):
-        converter = _CONVERTER_OVERRIDES.get(type(converter), converter)
-
-        enumClass = getattr(converter, "enumClass", None)
         tupleClass = getattr(converter, "tupleClass", None)
+        enumClass = getattr(converter, "enumClass", None)
+        simpleValueClass = getattr(converter, "valueClass", None)
+
         if tupleClass:
             value = convertTupleClass(tupleClass, value)
 
@@ -124,6 +111,9 @@ class TableBuilder:
                     raise ValueError(f"{value} is not a valid {enumClass}")
             else:
                 value = enumClass(value)
+
+        elif simpleValueClass:
+            value = simpleValueClass(value)
 
         elif isinstance(converter, Struct):
             if converter.repeat:

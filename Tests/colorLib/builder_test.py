@@ -269,7 +269,9 @@ def test_buildPaintSolid_Alpha():
 
 
 def test_buildPaintSolid_Variable():
-    p = _buildPaint((ot.PaintFormat.PaintSolid, (3, builder.VariableFloat(0.5, varIdx=2))))
+    p = _buildPaint(
+        (ot.PaintFormat.PaintSolid, (3, builder.VariableFloat(0.5, varIdx=2)))
+    )
     assert p.Format == ot.PaintFormat.PaintSolid
     assert p.Color.PaletteIndex == 3
     assert p.Color.Alpha.value == 0.5
@@ -1373,6 +1375,29 @@ class BuildCOLRTest(object):
         assert hasattr(colr, "table")
         assert isinstance(colr.table, ot.COLR)
         assert colr.table.VarStore is None
+
+    def test_paint_one_colr_layers(self):
+        # A set of one layers should flip to just that layer
+        colr = builder.buildCOLR(
+            {
+                "a": (
+                    ot.PaintFormat.PaintColrLayers,
+                    [
+                        (
+                            ot.PaintFormat.PaintGlyph,
+                            (ot.PaintFormat.PaintSolid, 0),
+                            "b",
+                        ),
+                    ],
+                )
+            },
+        )
+
+        assert len(colr.table.LayerV1List.Paint) == 0, "PaintColrLayers should be gone"
+        assert colr.table.BaseGlyphV1List.BaseGlyphCount == 1
+        paint = colr.table.BaseGlyphV1List.BaseGlyphV1Record[0].Paint
+        assert paint.Format == ot.PaintFormat.PaintGlyph
+        assert paint.Paint.Format == ot.PaintFormat.PaintSolid
 
 
 class TrickyRadialGradientTest:

@@ -53,16 +53,17 @@ _ColorGlyphsV0Dict = Dict[str, Sequence[Tuple[str, int]]]
 
 MAX_PAINT_COLR_LAYER_COUNT = 255
 _DEFAULT_ALPHA = VariableFloat(1.0)
+_MAX_REUSE_LEN = 32
 
 
 def _beforeBuildPaintRadialGradient(paint, source):
     # normalize input types (which may or may not specify a varIdx)
     x0 = convertTupleClass(VariableFloat, source["x0"])
-    y0 = convertTupleClass(VariableFloat, source.get("y0", 0.0))
-    r0 = convertTupleClass(VariableFloat, source.get("r0", 0.0))
-    x1 = convertTupleClass(VariableFloat, source.get("x1", 0.0))
-    y1 = convertTupleClass(VariableFloat, source.get("y1", 0.0))
-    r1 = convertTupleClass(VariableFloat, source.get("r1", 0.0))
+    y0 = convertTupleClass(VariableFloat, source["y0"])
+    r0 = convertTupleClass(VariableFloat, source["r0"])
+    x1 = convertTupleClass(VariableFloat, source["x1"])
+    y1 = convertTupleClass(VariableFloat, source["y1"])
+    r1 = convertTupleClass(VariableFloat, source["r1"])
 
     # TODO apparently no builder_test confirms this works (?)
 
@@ -373,11 +374,12 @@ def _split_color_glyphs_by_version(
 def _reuse_ranges(num_layers: int) -> Generator[Tuple[int, int], None, None]:
     # TODO feels like something itertools might have already
     for lbound in range(num_layers):
-        # TODO may want a max length to limit scope of search
         # Reuse of very large #s of layers is relatively unlikely
         # +2: we want sequences of at least 2
         # otData handles single-record duplication
-        for ubound in range(lbound + 2, num_layers + 1):
+        for ubound in range(
+            lbound + 2, min(num_layers + 1, lbound + 2 + _MAX_REUSE_LEN)
+        ):
             yield (lbound, ubound)
 
 
@@ -448,6 +450,10 @@ class LayerV1ListBuilder:
         # Convert maps seqs or whatever into typed objects
         layers = [self.buildPaint(l) for l in layers]
 
+        # No reason to have a colr layers with just one entry
+        if len(layers) == 1:
+            return layers[0], {}
+
         # Look for reuse, with preference to longer sequences
         # This may make the layer list smaller
         found_reuse = True
@@ -474,6 +480,7 @@ class LayerV1ListBuilder:
                 break
 
         # The layer list is now final; if it's too big we need to tree it
+        is_tree = len(layers) > MAX_PAINT_COLR_LAYER_COUNT
         layers = _build_n_ary_tree(layers, n=MAX_PAINT_COLR_LAYER_COUNT)
 
         # We now have a tree of sequences with Paint leaves.
@@ -494,12 +501,13 @@ class LayerV1ListBuilder:
         paint.FirstLayerIndex = len(self.layers)
         self.layers.extend(layers)
 
-        # Register our parts for reuse
-        # TODO what if we made ourselves a lovely little tree
-        for lbound, ubound in _reuse_ranges(len(layers)):
-            self.reusePool[self._as_tuple(layers[lbound:ubound])] = (
-                lbound + paint.FirstLayerIndex
-            )
+        # Register our parts for reuse provided we aren't a tree
+        # If we are a tree the leaves registered for reuse and that will suffice
+        if not is_tree:
+            for lbound, ubound in _reuse_ranges(len(layers)):
+                self.reusePool[self._as_tuple(layers[lbound:ubound])] = (
+                    lbound + paint.FirstLayerIndex
+                )
 
         # we've fully built dest; empty source prevents generalized build from kicking in
         return paint, {}
