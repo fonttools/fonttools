@@ -943,7 +943,6 @@ def addFvar(font, axes, instances):
         inst = NamedInstance()
         inst.subfamilyNameID = nameTable.addMultilingualName(name, ttFont=font)
         if psname is not None:
-            psname = psname
             inst.postscriptNameID = nameTable.addName(psname)
         inst.coordinates = coordinates
         fvar.instances.append(inst)
