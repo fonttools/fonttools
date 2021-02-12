@@ -199,12 +199,9 @@
       Down
     </namerecord>
     <namerecord nameID="260" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      TotallyNormal
-    </namerecord>
-    <namerecord nameID="261" platformID="1" platEncID="0" langID="0x0" unicode="True">
       Right Up
     </namerecord>
-    <namerecord nameID="262" platformID="1" platEncID="0" langID="0x0" unicode="True">
+    <namerecord nameID="261" platformID="1" platEncID="0" langID="0x0" unicode="True">
       Neutral
     </namerecord>
     <namerecord nameID="1" platformID="1" platEncID="0" langID="0x4" unicode="True">
@@ -235,12 +232,9 @@
       Down
     </namerecord>
     <namerecord nameID="260" platformID="3" platEncID="1" langID="0x409">
-      TotallyNormal
-    </namerecord>
-    <namerecord nameID="261" platformID="3" platEncID="1" langID="0x409">
       Right Up
     </namerecord>
-    <namerecord nameID="262" platformID="3" platEncID="1" langID="0x409">
+    <namerecord nameID="261" platformID="3" platEncID="1" langID="0x409">
       Neutral
     </namerecord>
     <namerecord nameID="1" platformID="3" platEncID="1" langID="0x413">
@@ -400,7 +394,7 @@
       <AxisValue index="0" Format="1">
         <AxisIndex value="0"/>
         <Flags value="2"/>
-        <ValueNameID value="262"/>  <!-- Neutral -->
+        <ValueNameID value="261"/>  <!-- Neutral -->
         <Value value="0.0"/>
       </AxisValue>
       <AxisValue index="1" Format="1">
@@ -412,7 +406,7 @@
       <AxisValue index="2" Format="1">
         <AxisIndex value="1"/>
         <Flags value="2"/>
-        <ValueNameID value="262"/>  <!-- Neutral -->
+        <ValueNameID value="261"/>  <!-- Neutral -->
         <Value value="0.0"/>
       </AxisValue>
       <AxisValue index="3" Format="1">
@@ -424,7 +418,7 @@
       <AxisValue index="4" Format="1">
         <AxisIndex value="2"/>
         <Flags value="2"/>
-        <ValueNameID value="262"/>  <!-- Neutral -->
+        <ValueNameID value="261"/>  <!-- Neutral -->
         <Value value="0.0"/>
       </AxisValue>
       <AxisValue index="5" Format="1">
@@ -436,7 +430,7 @@
       <AxisValue index="6" Format="1">
         <AxisIndex value="3"/>
         <Flags value="2"/>
-        <ValueNameID value="262"/>  <!-- Neutral -->
+        <ValueNameID value="261"/>  <!-- Neutral -->
         <Value value="0.0"/>
       </AxisValue>
       <AxisValue index="7" Format="1">
@@ -492,7 +486,7 @@
     </Axis>
 
     <!-- TotallyNormal -->
-    <NamedInstance flags="0x0" subfamilyNameID="260">
+    <NamedInstance flags="0x0" subfamilyNameID="2">
       <coord axis="LEFT" value="0.0"/>
       <coord axis="RGHT" value="0.0"/>
       <coord axis="UPPP" value="0.0"/>
@@ -500,7 +494,7 @@
     </NamedInstance>
 
     <!-- Right Up -->
-    <NamedInstance flags="0x0" subfamilyNameID="261">
+    <NamedInstance flags="0x0" subfamilyNameID="260">
       <coord axis="LEFT" value="0.0"/>
       <coord axis="RGHT" value="100.0"/>
       <coord axis="UPPP" value="100.0"/>

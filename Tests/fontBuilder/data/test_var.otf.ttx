@@ -141,9 +141,6 @@
       Test Axis
     </namerecord>
     <namerecord nameID="257" platformID="1" platEncID="0" langID="0x0" unicode="True">
-      TotallyNormal
-    </namerecord>
-    <namerecord nameID="258" platformID="1" platEncID="0" langID="0x0" unicode="True">
       TotallyTested
     </namerecord>
     <namerecord nameID="1" platformID="1" platEncID="0" langID="0x4" unicode="True">
@@ -165,9 +162,6 @@
       Test Axis
     </namerecord>
     <namerecord nameID="257" platformID="3" platEncID="1" langID="0x409">
-      TotallyNormal
-    </namerecord>
-    <namerecord nameID="258" platformID="3" platEncID="1" langID="0x409">
       TotallyTested
     </namerecord>
     <namerecord nameID="1" platformID="3" platEncID="1" langID="0x413">
@@ -290,12 +284,12 @@
     </Axis>
 
     <!-- TotallyNormal -->
-    <NamedInstance flags="0x0" subfamilyNameID="257">
+    <NamedInstance flags="0x0" subfamilyNameID="2">
       <coord axis="TEST" value="0.0"/>
     </NamedInstance>
 
     <!-- TotallyTested -->
-    <NamedInstance flags="0x0" subfamilyNameID="258">
+    <NamedInstance flags="0x0" subfamilyNameID="257">
       <coord axis="TEST" value="100.0"/>
     </NamedInstance>
   </fvar>
