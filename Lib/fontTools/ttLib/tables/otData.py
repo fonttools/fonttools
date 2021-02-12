@@ -1675,7 +1675,7 @@ otData = [
 	# PaintVarLinearGradient
 	('PaintFormat5', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 5'),
-		('LOffset24To(VarColorLine)', 'ColorLine', None, None, 'Offset (from beginning of PaintLinearGradient table) to VarColorLine subtable.'),
+		('LOffset24To(VarColorLine)', 'ColorLine', None, None, 'Offset (from beginning of PaintVarLinearGradient table) to VarColorLine subtable.'),
 		('VarInt16', 'x0', None, None, ''),
 		('VarInt16', 'y0', None, None, ''),
 		('VarInt16', 'x1', None, None, ''),
@@ -1698,7 +1698,7 @@ otData = [
 	# PaintVarRadialGradient
 	('PaintFormat7', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 7'),
-		('LOffset24To(VarColorLine)', 'ColorLine', None, None, 'Offset (from beginning of PaintRadialGradient table) to VarColorLine subtable.'),
+		('LOffset24To(VarColorLine)', 'ColorLine', None, None, 'Offset (from beginning of PaintVarRadialGradient table) to VarColorLine subtable.'),
 		('VarInt16', 'x0', None, None, ''),
 		('VarInt16', 'y0', None, None, ''),
 		('VarUInt16', 'r0', None, None, ''),
@@ -1719,7 +1719,7 @@ otData = [
 	# PaintVarSweepGradient
 	('PaintFormat9', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 9'),
-		('LOffset24To(VarColorLine)', 'ColorLine', None, None, 'Offset (from beginning of PaintSweepGradient table) to VarColorLine subtable.'),
+		('LOffset24To(VarColorLine)', 'ColorLine', None, None, 'Offset (from beginning of PaintVarSweepGradient table) to VarColorLine subtable.'),
 		('VarInt16', 'centerX', None, None, 'Center x coordinate.'),
 		('VarInt16', 'centerY', None, None, 'Center y coordinate.'),
 		('VarFixed', 'startAngle', None, None, 'Start of the angular range of the gradient.'),
@@ -1747,8 +1747,8 @@ otData = [
 	]),
 	# PaintVarTransform
 	('PaintFormat13', [
-		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 12'),
-		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintTransform table) to Paint subtable.'),
+		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 13'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarTransform table) to Paint subtable.'),
 		('VarAffine2x3', 'Transform', None, None, '2x3 matrix for 2D affine transformations.'),
 	]),
 
@@ -1762,7 +1762,7 @@ otData = [
 	# PaintVarTranslate
 	('PaintFormat15', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 15'),
-		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintTranslate table) to Paint subtable.'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarTranslate table) to Paint subtable.'),
 		('VarFixed', 'dx', None, None, 'Translation in x direction.'),
 		('VarFixed', 'dy', None, None, 'Translation in y direction.'),
 	]),
@@ -1778,7 +1778,7 @@ otData = [
 	# PaintVarRotate
 	('PaintFormat17', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 17'),
-		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintRotate table) to Paint subtable.'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarRotate table) to Paint subtable.'),
 		('VarFixed', 'angle', None, None, ''),
 		('VarFixed', 'centerX', None, None, ''),
 		('VarFixed', 'centerY', None, None, ''),
@@ -1796,7 +1796,7 @@ otData = [
 	# PaintVarSkew
 	('PaintFormat19', [
 		('uint8', 'PaintFormat', None, None, 'Format identifier-format = 19'),
-		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintSkew table) to Paint subtable.'),
+		('Offset24', 'Paint', None, None, 'Offset (from beginning of PaintVarSkew table) to Paint subtable.'),
 		('VarFixed', 'xSkewAngle', None, None, ''),
 		('VarFixed', 'ySkewAngle', None, None, ''),
 		('VarFixed', 'centerX', None, None, ''),
