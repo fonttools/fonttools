@@ -57,7 +57,7 @@ _DEFAULT_ALPHA = VariableFloat(1.0)
 
 def _beforeBuildPaintRadialGradient(paint, source):
     # normalize input types (which may or may not specify a varIdx)
-    x0 = convertTupleClass(VariableFloat, source.get("x0", 0.0))
+    x0 = convertTupleClass(VariableFloat, source["x0"])
     y0 = convertTupleClass(VariableFloat, source.get("y0", 0.0))
     r0 = convertTupleClass(VariableFloat, source.get("r0", 0.0))
     x1 = convertTupleClass(VariableFloat, source.get("x1", 0.0))
