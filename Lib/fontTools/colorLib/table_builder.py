@@ -19,7 +19,10 @@ from fontTools.ttLib.tables.otConverters import (
     UShort,
     VarInt16,
     VarUInt16,
+    IntValue,
+    FloatValue,
 )
+from fontTools.misc.fixedTools import otRound
 
 
 class BuildCallback(enum.Enum):
@@ -96,7 +99,6 @@ class TableBuilder:
     def _convert(self, dest, field, converter, value):
         tupleClass = getattr(converter, "tupleClass", None)
         enumClass = getattr(converter, "enumClass", None)
-        simpleValueClass = getattr(converter, "valueClass", None)
 
         if tupleClass:
             value = convertTupleClass(tupleClass, value)
@@ -112,8 +114,10 @@ class TableBuilder:
             else:
                 value = enumClass(value)
 
-        elif simpleValueClass:
-            value = simpleValueClass(value)
+        elif isinstance(converter, IntValue):
+            value = otRound(value)
+        elif isinstance(converter, FloatValue):
+            value = float(value)
 
         elif isinstance(converter, Struct):
             if converter.repeat:
