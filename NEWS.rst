@@ -1,3 +1,6 @@
+4.20.0 (released 2021-02-15)
+----------------------------
+
 - [COLRv1] Added ``unbuildColrV1`` to deconstruct COLRv1 otTables to raw json-able
   data structure; it does the reverse of ``buildColrV1`` (#2171).
 - [feaLib] Allow ``sub X by NULL`` sequence to delete a glyph (#2170).
