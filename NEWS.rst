@@ -1,3 +1,19 @@
+- [COLRv1] Added ``unbuildColrV1`` to deconstruct COLRv1 otTables to raw json-able
+  data structure; it does the reverse of ``buildColrV1`` (#2171).
+- [feaLib] Allow ``sub X by NULL`` sequence to delete a glyph (#2170).
+- [arrayTools] Fixed ``Vector`` division (#2173).
+- [COLRv1] Define new ``PaintSweepGradient`` (#2172).
+- [otTables] Moved ``Paint.Format`` enum class outside of ``Paint`` class definition,
+  now named ``PaintFormat``. It was clashing with paint instance ``Format`` attribute
+  and thus was breaking lazy load of COLR table which relies on magic ``__getattr__``
+  (#2175).
+- [COLRv1] Replace hand-coded builder functions with otData-driven dynamic
+  implementation (#2181).
+- [COLRv1] Define additional static (non-variable) Paint formats (#2181).
+- [fontBuilder] Allow ``setupFvar`` to optionally take ``designspaceLib.AxisDescriptor``
+  objects. Added new ``setupAvar`` method. Support localised names for axes and
+  named instances (#2185).
+
 4.19.1 (released 2021-01-28)
 ----------------------------
 
