@@ -1588,6 +1588,15 @@ otData = [
 		('LOffset', 'Paint', 'LayerCount', 0, 'Array of offsets to Paint tables, from the start of the LayerV1List table.'),
 	]),
 
+	# COLRv1 Affine2x3 uses the same column-major order to serialize a 2D
+	# Affine Transformation as the one used by fontTools.misc.transform.
+	# However, for historical reasons, the labels 'xy' and 'yx' are swapped.
+	# Their fundamental meaning is the same though.
+	# COLRv1 Affine2x3 follows the names found in FreeType and Cairo.
+	# In all case, the second element in the 6-tuple correspond to the
+	# y-part of the x basis vector, and the third to the x-part of the y
+	# basis vector.
+	# See https://github.com/googlefonts/colr-gradients-spec/pull/85
 	('Affine2x3', [
 		('VarFixed', 'xx', None, None, 'x-part of x basis vector'),
 		('VarFixed', 'yx', None, None, 'y-part of x basis vector'),
