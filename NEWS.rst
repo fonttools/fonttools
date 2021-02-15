@@ -13,6 +13,7 @@
 - [COLRv1] Replace hand-coded builder functions with otData-driven dynamic
   implementation (#2181).
 - [COLRv1] Define additional static (non-variable) Paint formats (#2181).
+- [subset] Added support for subsetting COLR v1 and CPAL tables (#2174, #2177).
 - [fontBuilder] Allow ``setupFvar`` to optionally take ``designspaceLib.AxisDescriptor``
   objects. Added new ``setupAvar`` method. Support localised names for axes and
   named instances (#2185).
