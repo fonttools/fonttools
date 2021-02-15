@@ -3,7 +3,9 @@ from fontTools.misc.py23 import *
 from fontTools.misc.testTools import getXML
 from fontTools import subset
 from fontTools.fontBuilder import FontBuilder
+from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib.tables import otTables as ot
 from fontTools.misc.loggingTools import CapturingLogHandler
 import difflib
 import logging
@@ -928,6 +930,257 @@ def test_subset_empty_glyf(tmp_path, ttf_path):
 
     loca = subset_font["loca"]
     assert all(loc == 0 for loc in loca)
+
+
+@pytest.fixture
+def colrv1_path(tmp_path):
+    base_glyph_names = ["uni%04X" % i for i in range(0xE000, 0xE000 + 10)]
+    layer_glyph_names = ["glyph%05d" % i for i in range(10, 20)]
+    glyph_order = [".notdef"] + base_glyph_names + layer_glyph_names
+
+    pen = TTGlyphPen(glyphSet=None)
+    pen.moveTo((0, 0))
+    pen.lineTo((0, 500))
+    pen.lineTo((500, 500))
+    pen.lineTo((500, 0))
+    pen.closePath()
+    glyph = pen.glyph()
+    glyphs = {g: glyph for g in glyph_order}
+
+    fb = FontBuilder(unitsPerEm=1024, isTTF=True)
+    fb.setupGlyphOrder(glyph_order)
+    fb.setupCharacterMap({int(name[3:], 16): name for name in base_glyph_names})
+    fb.setupGlyf(glyphs)
+    fb.setupHorizontalMetrics({g: (500, 0) for g in glyph_order})
+    fb.setupHorizontalHeader()
+    fb.setupOS2()
+    fb.setupPost()
+    fb.setupNameTable({"familyName": "TestCOLRv1", "styleName": "Regular"})
+
+    fb.setupCOLR(
+        {
+            "uniE000": (
+                ot.PaintFormat.PaintColrLayers,
+                [
+                    {
+                        "Format": ot.PaintFormat.PaintGlyph,
+                        "Paint": (ot.PaintFormat.PaintSolid, 0),
+                        "Glyph": "glyph00010",
+                    },
+                    {
+                        "Format": ot.PaintFormat.PaintGlyph,
+                        "Paint": (ot.PaintFormat.PaintSolid, (2, 0.3)),
+                        "Glyph": "glyph00011",
+                    },
+                ],
+            ),
+            "uniE001": (
+                ot.PaintFormat.PaintColrLayers,
+                [
+                    {
+                        "Format": ot.PaintFormat.PaintTransform,
+                        "Paint": {
+                            "Format": ot.PaintFormat.PaintGlyph,
+                            "Paint": {
+                                "Format": ot.PaintFormat.PaintRadialGradient,
+                                "x0": 250,
+                                "y0": 250,
+                                "r0": 250,
+                                "x1": 200,
+                                "y1": 200,
+                                "r1": 0,
+                                "ColorLine": {
+                                    "ColorStop": [(0.0, 1), (1.0, 2)],
+                                    "Extend": "repeat",
+                                },
+                            },
+                            "Glyph": "glyph00012",
+                        },
+                        "Transform": (0.7071, 0.7071, -0.7071, 0.7071, 0, 0),
+                    },
+                    {
+                        "Format": ot.PaintFormat.PaintGlyph,
+                        "Paint": (ot.PaintFormat.PaintSolid, (1, 0.5)),
+                        "Glyph": "glyph00013",
+                    },
+                ],
+            ),
+            "uniE002": (
+                ot.PaintFormat.PaintColrLayers,
+                [
+                    {
+                        "Format": ot.PaintFormat.PaintGlyph,
+                        "Paint": {
+                            "Format": ot.PaintFormat.PaintLinearGradient,
+                            "x0": 0,
+                            "y0": 0,
+                            "x1": 500,
+                            "y1": 500,
+                            "x2": -500,
+                            "y2": 500,
+                            "ColorLine": {"ColorStop": [(0.0, 1), (1.0, 2)]},
+                        },
+                        "Glyph": "glyph00014",
+                    },
+                    {
+                        "Format": ot.PaintFormat.PaintTransform,
+                        "Paint": {
+                            "Format": ot.PaintFormat.PaintGlyph,
+                            "Paint": (ot.PaintFormat.PaintSolid, 1),
+                            "Glyph": "glyph00015",
+                        },
+                        "Transform": (1, 0, 0, 1, 400, 400),
+                    },
+                ],
+            ),
+            "uniE003": {
+                "Format": ot.PaintFormat.PaintRotate,
+                "Paint": {
+                    "Format": ot.PaintFormat.PaintColrGlyph,
+                    "Glyph": "uniE001",
+                },
+                "angle": 45,
+                "centerX": 250,
+                "centerY": 250,
+            },
+            "uniE004": [
+                ("glyph00016", 1),
+                ("glyph00017", 2),
+            ],
+        },
+    )
+    fb.setupCPAL(
+        [
+            [
+                (1.0, 0.0, 0.0, 1.0),  # red
+                (0.0, 1.0, 0.0, 1.0),  # green
+                (0.0, 0.0, 1.0, 1.0),  # blue
+            ],
+        ],
+    )
+
+    output_path = tmp_path / "TestCOLRv1.ttf"
+    fb.save(output_path)
+
+    return output_path
+
+
+def test_subset_COLRv1_and_CPAL(colrv1_path):
+    subset_path = colrv1_path.parent / (colrv1_path.name + ".subset")
+
+    subset.main(
+        [
+            str(colrv1_path),
+            "--glyph-names",
+            f"--output-file={subset_path}",
+            "--unicodes=E002,E003,E004",
+        ]
+    )
+    subset_font = TTFont(subset_path)
+
+    glyph_set = set(subset_font.getGlyphOrder())
+
+    # uniE000 and its children are excluded from subset
+    assert "uniE000" not in glyph_set
+    assert "glyph00010" not in glyph_set
+    assert "glyph00011" not in glyph_set
+
+    # uniE001 and children are pulled in indirectly as PaintColrGlyph by uniE003
+    assert "uniE001" in glyph_set
+    assert "glyph00012" in glyph_set
+    assert "glyph00013" in glyph_set
+
+    assert "uniE002" in glyph_set
+    assert "glyph00014" in glyph_set
+    assert "glyph00015" in glyph_set
+
+    assert "uniE003" in glyph_set
+
+    assert "uniE004" in glyph_set
+    assert "glyph00016" in glyph_set
+    assert "glyph00017" in glyph_set
+
+    assert "COLR" in subset_font
+    colr = subset_font["COLR"].table
+    assert colr.Version == 1
+    assert len(colr.BaseGlyphRecordArray.BaseGlyphRecord) == 1
+    assert len(colr.BaseGlyphV1List.BaseGlyphV1Record) == 3  # was 4
+
+    base = colr.BaseGlyphV1List.BaseGlyphV1Record[0]
+    assert base.BaseGlyph == "uniE001"
+    layers = colr.LayerV1List.Paint[
+        base.Paint.FirstLayerIndex: base.Paint.FirstLayerIndex + base.Paint.NumLayers
+    ]
+    assert len(layers) == 2
+    # check v1 palette indices were remapped
+    assert layers[0].Paint.Paint.ColorLine.ColorStop[0].Color.PaletteIndex == 0
+    assert layers[0].Paint.Paint.ColorLine.ColorStop[1].Color.PaletteIndex == 1
+    assert layers[1].Paint.Color.PaletteIndex == 0
+
+    baseRecV0 = colr.BaseGlyphRecordArray.BaseGlyphRecord[0]
+    assert baseRecV0.BaseGlyph == "uniE004"
+    layersV0 = colr.LayerRecordArray.LayerRecord
+    assert len(layersV0) == 2
+    # check v0 palette indices were remapped
+    assert layersV0[0].PaletteIndex == 0
+    assert layersV0[1].PaletteIndex == 1
+
+    assert "CPAL" in subset_font
+    cpal = subset_font["CPAL"]
+    assert [
+        tuple(v / 255 for v in (c.red, c.green, c.blue, c.alpha))
+        for c in cpal.palettes[0]
+    ] == [
+        # the first color 'red' was pruned
+        (0.0, 1.0, 0.0, 1.0),  # green
+        (0.0, 0.0, 1.0, 1.0),  # blue
+    ]
+
+
+def test_subset_COLRv1_and_CPAL_drop_empty(colrv1_path):
+    subset_path = colrv1_path.parent / (colrv1_path.name + ".subset")
+
+    subset.main(
+        [
+            str(colrv1_path),
+            "--glyph-names",
+            f"--output-file={subset_path}",
+            "--glyphs=glyph00010",
+        ]
+    )
+    subset_font = TTFont(subset_path)
+
+    glyph_set = set(subset_font.getGlyphOrder())
+
+    assert "glyph00010" in glyph_set
+    assert "uniE000" not in glyph_set
+
+    assert "COLR" not in subset_font
+    assert "CPAL" not in subset_font
+
+
+def test_subset_COLRv1_downgrade_version(colrv1_path):
+    subset_path = colrv1_path.parent / (colrv1_path.name + ".subset")
+
+    subset.main(
+        [
+            str(colrv1_path),
+            "--glyph-names",
+            f"--output-file={subset_path}",
+            "--unicodes=E004",
+        ]
+    )
+    subset_font = TTFont(subset_path)
+
+    assert set(subset_font.getGlyphOrder()) == {
+        ".notdef",
+        "uniE004",
+        "glyph00016",
+        "glyph00017",
+    }
+
+    assert "COLR" in subset_font
+    assert subset_font["COLR"].version == 0
 
 
 if __name__ == "__main__":

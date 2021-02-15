@@ -14,7 +14,7 @@ import sys
 import struct
 import array
 import logging
-from collections import Counter
+from collections import Counter, defaultdict
 from types import MethodType
 
 __usage__ = "pyftsubset font-file [glyph...] [--option=value]..."
@@ -1983,27 +1983,130 @@ def subset_glyphs(self, s):
 	else:
 		assert False, "unknown 'prop' format %s" % prop.Format
 
+def _paint_glyph_names(paint, colr):
+	result = set()
+
+	def callback(paint):
+		if paint.Format in {
+			otTables.PaintFormat.PaintGlyph,
+			otTables.PaintFormat.PaintColrGlyph,
+		}:
+			result.add(paint.Glyph)
+
+	paint.traverse(colr, callback)
+	return result
+
 @_add_method(ttLib.getTableClass('COLR'))
 def closure_glyphs(self, s):
+	if self.version > 0:
+		# on decompiling COLRv1, we only keep around the raw otTables
+		# but for subsetting we need dicts with fully decompiled layers;
+		# we store them temporarily in the C_O_L_R_ instance and delete
+		# them after we have finished subsetting.
+		self.ColorLayers = self._decompileColorLayersV0(self.table)
+		self.ColorLayersV1 = {
+			rec.BaseGlyph: rec.Paint
+			for rec in self.table.BaseGlyphV1List.BaseGlyphV1Record
+		}
+
 	decompose = s.glyphs
 	while decompose:
 		layers = set()
 		for g in decompose:
-			for l in self.ColorLayers.get(g, []):
-				layers.add(l.name)
+			for layer in self.ColorLayers.get(g, []):
+				layers.add(layer.name)
+
+			if self.version > 0:
+				paint = self.ColorLayersV1.get(g)
+				if paint is not None:
+					layers.update(_paint_glyph_names(paint, self.table))
+
 		layers -= s.glyphs
 		s.glyphs.update(layers)
 		decompose = layers
 
 @_add_method(ttLib.getTableClass('COLR'))
 def subset_glyphs(self, s):
-	self.ColorLayers = {g: self.ColorLayers[g] for g in s.glyphs if g in self.ColorLayers}
-	return bool(self.ColorLayers)
+	from fontTools.colorLib.unbuilder import unbuildColrV1
+	from fontTools.colorLib.builder import buildColrV1, populateCOLRv0
 
-# TODO: prune unused palettes
+	self.ColorLayers = {g: self.ColorLayers[g] for g in s.glyphs if g in self.ColorLayers}
+	if self.version == 0:
+		return bool(self.ColorLayers)
+
+	colorGlyphsV1 = unbuildColrV1(self.table.LayerV1List, self.table.BaseGlyphV1List)
+	self.table.LayerV1List, self.table.BaseGlyphV1List = buildColrV1(
+		{g: colorGlyphsV1[g] for g in colorGlyphsV1 if g in s.glyphs}
+	)
+	del self.ColorLayersV1
+
+	layersV0 = self.ColorLayers
+	if not self.table.BaseGlyphV1List.BaseGlyphV1Record:
+		# no more COLRv1 glyphs: downgrade to version 0
+		self.version = 0
+		del self.table
+		return bool(layersV0)
+
+	if layersV0:
+		populateCOLRv0(
+			self.table,
+			{
+				g: [(layer.name, layer.colorID) for layer in layersV0[g]]
+				for g in layersV0
+			},
+		)
+	del self.ColorLayers
+
+	# TODO: also prune ununsed varIndices in COLR.VarStore
+	return True
+
 @_add_method(ttLib.getTableClass('CPAL'))
 def prune_post_subset(self, font, options):
-	return True
+	colr = font.get("COLR")
+	if not colr:  # drop CPAL if COLR was subsetted to empty
+		return False
+
+	colors_by_index = defaultdict(list)
+
+	def collect_colors_by_index(paint):
+		if hasattr(paint, "Color"):  # either solid colors...
+			colors_by_index[paint.Color.PaletteIndex].append(paint.Color)
+		elif hasattr(paint, "ColorLine"):  # ... or gradient color stops
+			for stop in paint.ColorLine.ColorStop:
+				colors_by_index[stop.Color.PaletteIndex].append(stop.Color)
+
+	if colr.version == 0:
+		for layers in colr.ColorLayers.values():
+			for layer in layers:
+				colors_by_index[layer.colorID].append(layer)
+	else:
+		if colr.table.LayerRecordArray:
+			for layer in colr.table.LayerRecordArray.LayerRecord:
+				colors_by_index[layer.PaletteIndex].append(layer)
+		for record in colr.table.BaseGlyphV1List.BaseGlyphV1Record:
+			record.Paint.traverse(colr.table, collect_colors_by_index)
+
+	retained_palette_indices = set(colors_by_index.keys())
+	for palette in self.palettes:
+		palette[:] = [c for i, c in enumerate(palette) if i in retained_palette_indices]
+		assert len(palette) == len(retained_palette_indices)
+
+	for new_index, old_index in enumerate(sorted(retained_palette_indices)):
+		for record in colors_by_index[old_index]:
+			if hasattr(record, "colorID"):  # v0
+				record.colorID = new_index
+			elif hasattr(record, "PaletteIndex"):  # v1
+				record.PaletteIndex = new_index
+			else:
+				raise AssertionError(record)
+
+	self.numPaletteEntries = len(self.palettes[0])
+
+	if self.version == 1:
+		self.paletteEntryLabels = [
+			label for i, label in self.paletteEntryLabels if i in retained_palette_indices
+		]
+	return bool(self.numPaletteEntries)
 
 @_add_method(otTables.MathGlyphConstruction)
 def closure_glyphs(self, glyphs):
