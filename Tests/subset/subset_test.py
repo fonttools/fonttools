@@ -1043,6 +1043,10 @@ def colrv1_path(tmp_path):
                 "centerX": 250,
                 "centerY": 250,
             },
+            "uniE004": [
+                ("glyph00016", 1),
+                ("glyph00017", 2),
+            ],
         },
     )
     fb.setupCPAL(
@@ -1069,7 +1073,7 @@ def test_subset_COLRv1_and_CPAL(colrv1_path):
             str(colrv1_path),
             "--glyph-names",
             f"--output-file={subset_path}",
-            "--unicodes=E002,E003",
+            "--unicodes=E002,E003,E004",
         ]
     )
     subset_font = TTFont(subset_path)
@@ -1092,8 +1096,14 @@ def test_subset_COLRv1_and_CPAL(colrv1_path):
 
     assert "uniE003" in glyph_set
 
+    assert "uniE004" in glyph_set
+    assert "glyph00016" in glyph_set
+    assert "glyph00017" in glyph_set
+
     assert "COLR" in subset_font
     colr = subset_font["COLR"].table
+    assert colr.Version == 1
+    assert len(colr.BaseGlyphRecordArray.BaseGlyphRecord) == 1
     assert len(colr.BaseGlyphV1List.BaseGlyphV1Record) == 3  # was 4
 
     base = colr.BaseGlyphV1List.BaseGlyphV1Record[0]
@@ -1102,10 +1112,18 @@ def test_subset_COLRv1_and_CPAL(colrv1_path):
         base.Paint.FirstLayerIndex: base.Paint.FirstLayerIndex + base.Paint.NumLayers
     ]
     assert len(layers) == 2
-    # check palette indices were remapped
+    # check v1 palette indices were remapped
     assert layers[0].Paint.Paint.ColorLine.ColorStop[0].Color.PaletteIndex == 0
     assert layers[0].Paint.Paint.ColorLine.ColorStop[1].Color.PaletteIndex == 1
     assert layers[1].Paint.Color.PaletteIndex == 0
+
+    baseRecV0 = colr.BaseGlyphRecordArray.BaseGlyphRecord[0]
+    assert baseRecV0.BaseGlyph == "uniE004"
+    layersV0 = colr.LayerRecordArray.LayerRecord
+    assert len(layersV0) == 2
+    # check v0 palette indices were remapped
+    assert layersV0[0].PaletteIndex == 0
+    assert layersV0[1].PaletteIndex == 1
 
     assert "CPAL" in subset_font
     cpal = subset_font["CPAL"]
@@ -1139,6 +1157,30 @@ def test_subset_COLRv1_and_CPAL_drop_empty(colrv1_path):
 
     assert "COLR" not in subset_font
     assert "CPAL" not in subset_font
+
+
+def test_subset_COLRv1_downgrade_version(colrv1_path):
+    subset_path = colrv1_path.parent / (colrv1_path.name + ".subset")
+
+    subset.main(
+        [
+            str(colrv1_path),
+            "--glyph-names",
+            f"--output-file={subset_path}",
+            "--unicodes=E004",
+        ]
+    )
+    subset_font = TTFont(subset_path)
+
+    assert set(subset_font.getGlyphOrder()) == {
+        ".notdef",
+        "uniE004",
+        "glyph00016",
+        "glyph00017",
+    }
+
+    assert "COLR" in subset_font
+    assert subset_font["COLR"].version == 0
 
 
 if __name__ == "__main__":

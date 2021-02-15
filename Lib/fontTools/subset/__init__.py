@@ -2034,24 +2034,31 @@ def subset_glyphs(self, s):
 	if self.version == 0:
 		return bool(self.ColorLayers)
 
-	layersV0 = self.ColorLayers
-	populateCOLRv0(
-		self.table,
-		{
-			g: [(layer.name, layer.colorID) for layer in layersV0[g]]
-			for g in layersV0
-		},
-	)
-	del self.ColorLayers
-
 	colorGlyphsV1 = unbuildColrV1(self.table.LayerV1List, self.table.BaseGlyphV1List)
 	self.table.LayerV1List, self.table.BaseGlyphV1List = buildColrV1(
 		{g: colorGlyphsV1[g] for g in colorGlyphsV1 if g in s.glyphs}
 	)
 	del self.ColorLayersV1
 
+	layersV0 = self.ColorLayers
+	if not self.table.BaseGlyphV1List.BaseGlyphV1Record:
+		# no more COLRv1 glyphs: downgrade to version 0
+		self.version = 0
+		del self.table
+		return bool(layersV0)
+
+	if layersV0:
+		populateCOLRv0(
+			self.table,
+			{
+				g: [(layer.name, layer.colorID) for layer in layersV0[g]]
+				for g in layersV0
+			},
+		)
+	del self.ColorLayers
+
 	# TODO: also prune ununsed varIndices in COLR.VarStore
-	return bool(layersV0) or bool(self.table.BaseGlyphV1List.BaseGlyphV1Record)
+	return True
 
 @_add_method(ttLib.getTableClass('CPAL'))
 def prune_post_subset(self, font, options):
