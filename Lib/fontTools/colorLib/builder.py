@@ -56,7 +56,7 @@ _DEFAULT_ALPHA = VariableFloat(1.0)
 _MAX_REUSE_LEN = 32
 
 
-def _beforeBuildPaintRadialGradient(paint, source):
+def _beforeBuildPaintVarRadialGradient(paint, source, srcMapFn=lambda v: v):
     # normalize input types (which may or may not specify a varIdx)
     x0 = convertTupleClass(VariableFloat, source["x0"])
     y0 = convertTupleClass(VariableFloat, source["y0"])
@@ -75,24 +75,40 @@ def _beforeBuildPaintRadialGradient(paint, source):
     r0 = r0._replace(value=c.radius)
 
     # update source to ensure paint is built with corrected values
-    source["x0"] = x0
-    source["y0"] = y0
-    source["r0"] = r0
-    source["x1"] = x1
-    source["y1"] = y1
-    source["r1"] = r1
+    source["x0"] = srcMapFn(x0)
+    source["y0"] = srcMapFn(y0)
+    source["r0"] = srcMapFn(r0)
+    source["x1"] = srcMapFn(x1)
+    source["y1"] = srcMapFn(y1)
+    source["r1"] = srcMapFn(r1)
 
     return paint, source
 
 
+def _beforeBuildPaintRadialGradient(paint, source):
+    return _beforeBuildPaintVarRadialGradient(paint, source, lambda v: v.value)
+
+
 def _defaultColorIndex():
     colorIndex = ot.ColorIndex()
+    colorIndex.Alpha = _DEFAULT_ALPHA.value
+    return colorIndex
+
+
+def _defaultVarColorIndex():
+    colorIndex = ot.VarColorIndex()
     colorIndex.Alpha = _DEFAULT_ALPHA
     return colorIndex
 
 
 def _defaultColorLine():
     colorLine = ot.ColorLine()
+    colorLine.Extend = ExtendMode.PAD
+    return colorLine
+
+
+def _defaultVarColorLine():
+    colorLine = ot.VarColorLine()
     colorLine.Extend = ExtendMode.PAD
     return colorLine
 
@@ -104,8 +120,15 @@ def _buildPaintCallbacks():
             ot.Paint,
             ot.PaintFormat.PaintRadialGradient,
         ): _beforeBuildPaintRadialGradient,
+        (
+            BuildCallback.BEFORE_BUILD,
+            ot.Paint,
+            ot.PaintFormat.PaintVarRadialGradient,
+        ): _beforeBuildPaintVarRadialGradient,
         (BuildCallback.CREATE_DEFAULT, ot.ColorIndex): _defaultColorIndex,
+        (BuildCallback.CREATE_DEFAULT, ot.VarColorIndex): _defaultVarColorIndex,
         (BuildCallback.CREATE_DEFAULT, ot.ColorLine): _defaultColorLine,
+        (BuildCallback.CREATE_DEFAULT, ot.VarColorLine): _defaultVarColorLine,
     }
 
 

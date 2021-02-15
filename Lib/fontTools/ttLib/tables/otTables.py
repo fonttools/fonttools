@@ -1327,16 +1327,24 @@ class CompositeMode(IntEnum):
 class PaintFormat(IntEnum):
 	PaintColrLayers = 1
 	PaintSolid = 2
-	PaintLinearGradient = 3
-	PaintRadialGradient = 4
-	PaintSweepGradient = 5
-	PaintGlyph = 6
-	PaintColrGlyph = 7
-	PaintTransform = 8
-	PaintTranslate = 9
-	PaintRotate = 10
-	PaintSkew = 11
-	PaintComposite = 12
+	PaintVarSolid = 3,
+	PaintLinearGradient = 4
+	PaintVarLinearGradient = 5
+	PaintRadialGradient = 6
+	PaintVarRadialGradient = 7
+	PaintSweepGradient = 8
+	PaintVarSweepGradient = 9
+	PaintGlyph = 10
+	PaintColrGlyph = 11
+	PaintTransform = 12
+	PaintVarTransform = 13
+	PaintTranslate = 14
+	PaintVarTranslate = 15
+	PaintRotate = 16
+	PaintVarRotate = 17
+	PaintSkew = 18
+	PaintVarSkew = 19
+	PaintComposite = 20
 
 
 class Paint(getFormatSwitchingBaseTableClass("uint8")):

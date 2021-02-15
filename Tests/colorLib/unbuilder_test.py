@@ -12,14 +12,14 @@ TEST_COLOR_GLYPHS = {
                 "Format": int(ot.PaintFormat.PaintGlyph),
                 "Paint": {
                     "Format": int(ot.PaintFormat.PaintSolid),
-                    "Color": {"PaletteIndex": 2, "Alpha": (0.5, 0)},
+                    "Color": {"PaletteIndex": 2, "Alpha": 0.5},
                 },
                 "Glyph": "glyph00011",
             },
             {
                 "Format": int(ot.PaintFormat.PaintGlyph),
                 "Paint": {
-                    "Format": int(ot.PaintFormat.PaintLinearGradient),
+                    "Format": int(ot.PaintFormat.PaintVarLinearGradient),
                     "ColorLine": {
                         "Extend": "repeat",
                         "ColorStop": [
@@ -49,28 +49,28 @@ TEST_COLOR_GLYPHS = {
             {
                 "Format": int(ot.PaintFormat.PaintGlyph),
                 "Paint": {
-                    "Format": int(ot.PaintFormat.PaintTransform),
+                    "Format": int(ot.PaintFormat.PaintVarTransform),
                     "Paint": {
                         "Format": int(ot.PaintFormat.PaintRadialGradient),
                         "ColorLine": {
                             "Extend": "pad",
                             "ColorStop": [
                                 {
-                                    "StopOffset": (0.0, 0),
-                                    "Color": {"PaletteIndex": 6, "Alpha": (1.0, 0)},
+                                    "StopOffset": 0,
+                                    "Color": {"PaletteIndex": 6, "Alpha": 1.0},
                                 },
                                 {
-                                    "StopOffset": (1.0, 0),
-                                    "Color": {"PaletteIndex": 7, "Alpha": (0.4, 0)},
+                                    "StopOffset": 1.0,
+                                    "Color": {"PaletteIndex": 7, "Alpha": 0.4},
                                 },
                             ],
                         },
-                        "x0": (7, 0),
-                        "y0": (8, 0),
-                        "r0": (9, 0),
-                        "x1": (10, 0),
-                        "y1": (11, 0),
-                        "r1": (12, 0),
+                        "x0": 7,
+                        "y0": 8,
+                        "r0": 9,
+                        "x1": 10,
+                        "y1": 11,
+                        "r1": 12,
                     },
                     "Transform": {
                         "xx": (-13.0, 0),
@@ -84,16 +84,16 @@ TEST_COLOR_GLYPHS = {
                 "Glyph": "glyph00013",
             },
             {
-                "Format": int(ot.PaintFormat.PaintTranslate),
+                "Format": int(ot.PaintFormat.PaintVarTranslate),
                 "Paint": {
                     "Format": int(ot.PaintFormat.PaintRotate),
                     "Paint": {
-                        "Format": int(ot.PaintFormat.PaintSkew),
+                        "Format": int(ot.PaintFormat.PaintVarSkew),
                         "Paint": {
                             "Format": int(ot.PaintFormat.PaintGlyph),
                             "Paint": {
                                 "Format": int(ot.PaintFormat.PaintSolid),
-                                "Color": {"PaletteIndex": 2, "Alpha": (0.5, 0)},
+                                "Color": {"PaletteIndex": 2, "Alpha": 0.5},
                             },
                             "Glyph": "glyph00011",
                         },
@@ -102,9 +102,9 @@ TEST_COLOR_GLYPHS = {
                         "centerX": (253.0, 0),
                         "centerY": (254.0, 0),
                     },
-                    "angle": (45.0, 0),
-                    "centerX": (255.0, 0),
-                    "centerY": (256.0, 0),
+                    "angle": 45.0,
+                    "centerX": 255.0,
+                    "centerY": 256.0,
                 },
                 "dx": (257.0, 0),
                 "dy": (258.0, 0),
@@ -125,12 +125,12 @@ TEST_COLOR_GLYPHS = {
                 "Glyph": "glyph00010",
             },
             "Transform": {
-                "xx": (1.0, 0),
-                "yx": (0.0, 0),
-                "xy": (0.0, 0),
-                "yy": (1.0, 0),
-                "dx": (300.0, 0),
-                "dy": (0.0, 0),
+                "xx": 1.0,
+                "yx": 0.0,
+                "xy": 0.0,
+                "yy": 1.0,
+                "dx": 300.0,
+                "dy": 0.0,
             },
         },
     },
@@ -142,19 +142,19 @@ TEST_COLOR_GLYPHS = {
                 "Extend": "pad",
                 "ColorStop": [
                     {
-                        "StopOffset": (0.0, 0),
-                        "Color": {"PaletteIndex": 3, "Alpha": (1.0, 0)},
+                        "StopOffset": 0.0,
+                        "Color": {"PaletteIndex": 3, "Alpha": 1.0},
                     },
                     {
-                        "StopOffset": (1.0, 0),
-                        "Color": {"PaletteIndex": 5, "Alpha": (1.0, 0)},
+                        "StopOffset": 1.0,
+                        "Color": {"PaletteIndex": 5, "Alpha": 1.0},
                     },
                 ],
             },
-            "centerX": (259, 0),
-            "centerY": (300, 0),
-            "startAngle": (45.0, 0),
-            "endAngle": (135.0, 0),
+            "centerX": 259,
+            "centerY": 300,
+            "startAngle": 45.0,
+            "endAngle": 135.0,
         },
         "Glyph": "glyph00011",
     },
@@ -164,7 +164,7 @@ TEST_COLOR_GLYPHS = {
             {
                 "Format": int(ot.PaintFormat.PaintGlyph),
                 "Paint": {
-                    "Format": int(ot.PaintFormat.PaintSolid),
+                    "Format": int(ot.PaintFormat.PaintVarSolid),
                     "Color": {"PaletteIndex": 2, "Alpha": (0.5, 0)},
                 },
                 "Glyph": "glyph00011",
@@ -172,7 +172,7 @@ TEST_COLOR_GLYPHS = {
             {
                 "Format": int(ot.PaintFormat.PaintGlyph),
                 "Paint": {
-                    "Format": int(ot.PaintFormat.PaintLinearGradient),
+                    "Format": int(ot.PaintFormat.PaintVarLinearGradient),
                     "ColorLine": {
                         "Extend": "repeat",
                         "ColorStop": [
