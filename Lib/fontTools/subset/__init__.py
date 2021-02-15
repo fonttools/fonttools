@@ -2044,11 +2044,7 @@ def subset_glyphs(self, s):
 	)
 	del self.ColorLayers
 
-	colorGlyphsV1 = unbuildColrV1(
-		self.table.LayerV1List,
-		self.table.BaseGlyphV1List,
-		ignoreVarIdx=not self.table.VarStore,
-	)
+	colorGlyphsV1 = unbuildColrV1(self.table.LayerV1List, self.table.BaseGlyphV1List)
 	self.table.LayerV1List, self.table.BaseGlyphV1List = buildColrV1(
 		{g: colorGlyphsV1[g] for g in colorGlyphsV1 if g in s.glyphs}
 	)
