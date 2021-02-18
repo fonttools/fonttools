@@ -2,9 +2,13 @@
 """fontTools.misc.bezierTools.py -- tools for working with Bezier path segments.
 """
 
-from fontTools.misc.arrayTools import calcBounds
+from fontTools.misc.arrayTools import calcBounds, sectRect, rectArea
+from fontTools.misc.transform import Offset, Identity
 from fontTools.misc.py23 import *
 import math
+from collections import namedtuple
+
+Intersection = namedtuple("Intersection", ["pt", "t1", "t2"])
 
 
 __all__ = [
@@ -25,6 +29,14 @@ __all__ = [
     "splitCubicAtT",
     "solveQuadratic",
     "solveCubic",
+    "quadraticPointAtT",
+    "cubicPointAtT",
+    "linePointAtT",
+    "segmentPointAtT",
+    "lineLineIntersections",
+    "curveLineIntersections",
+    "curveCurveIntersections",
+    "segmentSegmentIntersections",
 ]
 
 
@@ -753,10 +765,376 @@ def calcCubicPoints(a, b, c, d):
     return (x1, y1), (x2, y2), (x3, y3), (x4, y4)
 
 
+#
+# Point at time
+#
+
+
+def linePointAtT(pt1, pt2, t):
+    """Finds the point at time `t` on a line.
+
+    Args:
+        pt1, pt2: Coordinates of the line as 2D tuples.
+        t: The time along the line.
+
+    Returns:
+        A 2D tuple with the coordinates of the point.
+    """
+    return ((pt1[0] * (1 - t) + pt2[0] * t), (pt1[1] * (1 - t) + pt2[1] * t))
+
+
+def quadraticPointAtT(pt1, pt2, pt3, t):
+    """Finds the point at time `t` on a quadratic curve.
+
+    Args:
+        pt1, pt2, pt3: Coordinates of the curve as 2D tuples.
+        t: The time along the curve.
+
+    Returns:
+        A 2D tuple with the coordinates of the point.
+    """
+    x = (1 - t) * (1 - t) * pt1[0] + 2 * (1 - t) * t * pt2[0] + t * t * pt3[0]
+    y = (1 - t) * (1 - t) * pt1[1] + 2 * (1 - t) * t * pt2[1] + t * t * pt3[1]
+    return (x, y)
+
+
+def cubicPointAtT(pt1, pt2, pt3, pt4, t):
+    """Finds the point at time `t` on a cubic curve.
+
+    Args:
+        pt1, pt2, pt3, pt4: Coordinates of the curve as 2D tuples.
+        t: The time along the curve.
+
+    Returns:
+        A 2D tuple with the coordinates of the point.
+    """
+    x = (
+        (1 - t) * (1 - t) * (1 - t) * pt1[0]
+        + 3 * (1 - t) * (1 - t) * t * pt2[0]
+        + 3 * (1 - t) * t * t * pt3[0]
+        + t * t * t * pt4[0]
+    )
+    y = (
+        (1 - t) * (1 - t) * (1 - t) * pt1[1]
+        + 3 * (1 - t) * (1 - t) * t * pt2[1]
+        + 3 * (1 - t) * t * t * pt3[1]
+        + t * t * t * pt4[1]
+    )
+    return (x, y)
+
+
+def segmentPointAtT(seg, t):
+    if len(seg) == 2:
+        return linePointAtT(*seg, t)
+    elif len(seg) == 3:
+        return quadraticPointAtT(*seg, t)
+    elif len(seg) == 4:
+        return cubicPointAtT(*seg, t)
+    raise ValueError("Unknown curve degree")
+
+
+#
+# Intersection finders
+#
+
+
+def _line_t_of_pt(s, e, pt):
+    sx, sy = s
+    ex, ey = e
+    px, py = pt
+    if not math.isclose(sx, ex):
+        return (px - sx) / (ex - sx)
+    if not math.isclose(sy, ey):
+        return (py - sy) / (ey - sy)
+    # Line is a point!
+    return -1
+
+
+def _both_points_are_on_same_side_of_origin(a, b, c):
+    xDiff = (a[0] - c[0]) * (b[0] - c[0])
+    yDiff = (a[1] - c[1]) * (b[1] - c[1])
+    return not (xDiff <= 0.0 and yDiff <= 0.0)
+
+
+def lineLineIntersections(s1, e1, s2, e2):
+    """Finds intersections between two line segments.
+
+    Args:
+        s1, e1: Coordinates of the first line as 2D tuples.
+        s2, e2: Coordinates of the second line as 2D tuples.
+
+    Returns:
+        A list of ``Intersection`` objects, each object having ``pt``, ``t1``
+        and ``t2`` attributes containing the intersection point, time on first
+        segment and time on second segment respectively.
+
+    Examples::
+
+        >>> a = lineLineIntersections( (310,389), (453, 222), (289, 251), (447, 367))
+        >>> len(a)
+        1
+        >>> intersection = a[0]
+        >>> intersection.pt
+        (374.44882952482897, 313.73458370177315)
+        >>> (intersection.t1, intersection.t2)
+        (0.45069111555824454, 0.5408153767394238)
+    """
+    ax, ay = s1
+    bx, by = e1
+    cx, cy = s2
+    dx, dy = e2
+    if math.isclose(cx, dx) and math.isclose(ax, bx):
+        return []
+    if math.isclose(cy, dy) and math.isclose(ay, by):
+        return []
+    if math.isclose(cx, dx) and math.isclose(cy, dy):
+        return []
+    if math.isclose(ax, bx) and math.isclose(ay, by):
+        return []
+    if math.isclose(bx, ax):
+        x = ax
+        slope34 = (dy - xy) / (dx - cx)
+        y = slope34 * (x - cx) + cy
+        pt = (x, y)
+        return [
+            Intersection(
+                pt=pt, t1=_line_t_of_pt(s1, e1, pt), t2=_line_t_of_pt(s2, e2, pt)
+            )
+        ]
+    if math.isclose(cx, dx):
+        x = cx
+        slope12 = (by - ay) / (bx - ax)
+        y = slope12 * (x - ax) + ay
+        pt = (x, y)
+        return [
+            Intersection(
+                pt=pt, t1=_line_t_of_pt(s1, e1, pt), t2=_line_t_of_pt(s2, e2, pt)
+            )
+        ]
+
+    slope12 = (by - ay) / (bx - ax)
+    slope34 = (dy - cy) / (dx - cx)
+    if math.isclose(slope12, slope34):
+        return []
+    x = (slope12 * ax - ay - slope34 * cx + cy) / (slope12 - slope34)
+    y = slope12 * (x - ax) + ay
+    pt = (x, y)
+    if _both_points_are_on_same_side_of_origin(
+        pt, e1, s1
+    ) and _both_points_are_on_same_side_of_origin(pt, s2, e2):
+        return [
+            Intersection(
+                pt=pt, t1=_line_t_of_pt(s1, e1, pt), t2=_line_t_of_pt(s2, e2, pt)
+            )
+        ]
+    return []
+
+
+def _alignment_transformation(segment):
+    start = segment[0]
+    end = segment[-1]
+    m = Offset(-start[0], -start[1])
+    endpt = m.transformPoint(end)
+    angle = math.atan2(endpt[1], endpt[0])
+    return m.reverseTransform(Identity.rotate(-angle))
+
+
+def _curve_line_intersections_t(curve, line):
+    aligned_curve = _alignment_transformation(line).transformPoints(curve)
+    if len(curve) == 3:
+        a, b, c = calcCubicParameters(*aligned_curve)
+        intersections = solveQuadratic(a[0], b[0], c[0])
+        intersections.extend(solveQuadratic(a[1], b[1], c[1]))
+    elif len(curve) == 4:
+        a, b, c, d = calcCubicParameters(*aligned_curve)
+        intersections = solveCubic(a[0], b[0], c[0], d[0])
+        intersections.extend(solveCubic(a[1], b[1], c[1], d[1]))
+    else:
+        raise ValueError("Unknown curve degree")
+    return sorted([i for i in intersections if (0.0 <= i <= 1)])
+
+
+def curveLineIntersections(curve, line):
+    """Finds intersections between a curve and a line.
+
+    Args:
+        curve: List of coordinates of the curve segment as 2D tuples.
+        line: List of coordinates of the line segment as 2D tuples.
+
+    Returns:
+        A list of ``Intersection`` objects, each object having ``pt``, ``t1``
+        and ``t2`` attributes containing the intersection point, time on first
+        segment and time on second segment respectively.
+
+    Examples::
+        >>> curve = [ (100, 240), (30, 60), (210, 230), (160, 30) ]
+        >>> line  = [ (25, 260), (230, 20) ]
+        >>> intersections = curveLineIntersections(curve, line)
+        >>> len(intersections)
+        3
+        >>> intersections[0].pt
+        (84.90010344084885, 189.87306176459828)
+    """
+    if len(curve) == 3:
+        pointFinder = quadraticPointAtT
+    elif len(curve) == 4:
+        pointFinder = cubicPointAtT
+    else:
+        raise ValueError("Unknown curve degree")
+    intersections = []
+    for t in _curve_line_intersections_t(curve, line):
+        pt = pointFinder(*curve, t)
+        intersections.append(Intersection(pt=pt, t1=t, t2=_line_t_of_pt(*line, pt)))
+    return intersections
+
+
+def _curve_bounds(c):
+    if len(c) == 3:
+        return calcQuadraticBounds(*c)
+    elif len(c) == 4:
+        return calcCubicBounds(*c)
+
+
+def _split_curve_at_t(c, t):
+    if len(c) == 3:
+        return splitQuadraticAtT(*c, t)
+    elif len(c) == 4:
+        return splitCubicAtT(*c, t)
+
+
+def _curve_curve_intersections_t(
+    curve1, curve2, precision=1e-3, range1=None, range2=None
+):
+    bounds1 = _curve_bounds(curve1)
+    bounds2 = _curve_bounds(curve2)
+
+    if not range1:
+        range1 = (0.0, 1.0)
+    if not range2:
+        range2 = (0.0, 1.0)
+
+    # If bounds don't intersect, go home
+    intersects, _ = sectRect(bounds1, bounds2)
+    if not intersects:
+        return []
+
+    def midpoint(r):
+        return 0.5 * (r[0] + r[1])
+
+    # If they do overlap but they're tiny, approximate
+    if rectArea(bounds1) < precision and rectArea(bounds2) < precision:
+        return [(midpoint(range1), midpoint(range2))]
+
+    c11, c12 = _split_curve_at_t(curve1, 0.5)
+    c11_range = (range1[0], midpoint(range1))
+    c12_range = (midpoint(range1), range1[1])
+
+    c21, c22 = _split_curve_at_t(curve2, 0.5)
+    c21_range = (range2[0], midpoint(range2))
+    c22_range = (midpoint(range2), range2[1])
+
+    found = []
+    found.extend(
+        _curve_curve_intersections_t(
+            c11, c21, precision, range1=c11_range, range2=c21_range
+        )
+    )
+    found.extend(
+        _curve_curve_intersections_t(
+            c12, c21, precision, range1=c12_range, range2=c21_range
+        )
+    )
+    found.extend(
+        _curve_curve_intersections_t(
+            c11, c22, precision, range1=c11_range, range2=c22_range
+        )
+    )
+    found.extend(
+        _curve_curve_intersections_t(
+            c12, c22, precision, range1=c12_range, range2=c22_range
+        )
+    )
+    unique_key = lambda ts: int(ts[0] / precision)
+    seen = set()
+    return [
+        seen.add(unique_key(ts)) or ts for ts in found if unique_key(ts) not in seen
+    ]
+
+
+def curveCurveIntersections(curve1, curve2):
+    """Finds intersections between a curve and a curve.
+
+    Args:
+        curve1: List of coordinates of the first curve segment as 2D tuples.
+        curve2: List of coordinates of the second curve segment as 2D tuples.
+
+    Returns:
+        A list of ``Intersection`` objects, each object having ``pt``, ``t1``
+        and ``t2`` attributes containing the intersection point, time on first
+        segment and time on second segment respectively.
+
+    Examples::
+        >>> curve1 = [ (10,100), (90,30), (40,140), (220,220) ]
+        >>> curve2 = [ (5,150), (180,20), (80,250), (210,190) ]
+        >>> intersections = curveCurveIntersections(curve1, curve2)
+        >>> len(intersections)
+        3
+        >>> intersections[0].pt
+        (81.7831487395506, 109.88904552375288)
+    """
+    intersection_ts = _curve_curve_intersections_t(curve1, curve2)
+    return [
+        Intersection(pt=segmentPointAtT(curve1, ts[0]), t1=ts[0], t2=ts[1])
+        for ts in intersection_ts
+    ]
+
+
+def segmentSegmentIntersections(seg1, seg2):
+    """Finds intersections between two segments.
+
+    Args:
+        seg1: List of coordinates of the first segment as 2D tuples.
+        seg2: List of coordinates of the second segment as 2D tuples.
+
+    Returns:
+        A list of ``Intersection`` objects, each object having ``pt``, ``t1``
+        and ``t2`` attributes containing the intersection point, time on first
+        segment and time on second segment respectively.
+
+    Examples::
+        >>> curve1 = [ (10,100), (90,30), (40,140), (220,220) ]
+        >>> curve2 = [ (5,150), (180,20), (80,250), (210,190) ]
+        >>> intersections = segmentSegmentIntersections(curve1, curve2)
+        >>> len(intersections)
+        3
+        >>> intersections[0].pt
+        (81.7831487395506, 109.88904552375288)
+        >>> curve3 = [ (100, 240), (30, 60), (210, 230), (160, 30) ]
+        >>> line  = [ (25, 260), (230, 20) ]
+        >>> intersections = segmentSegmentIntersections(curve3, line)
+        >>> len(intersections)
+        3
+        >>> intersections[0].pt
+        (84.90010344084885, 189.87306176459828)
+
+    """
+    # Arrange by degree
+    if len(seg2) > len(seg1):
+        seg2, seg1 = seg1, seg2
+    if len(seg1) > 2:
+        if len(seg2) > 2:
+            return curveCurveIntersections(seg1, seg2)
+        else:
+            return curveLineIntersections(seg1, seg2)
+    elif len(seg1) == 2 and len(seg2) == 2:
+        return lineLineIntersections(seg1, seg2)
+    raise ValueError("Couldn't work out which intersection function to use")
+
+
 def _segmentrepr(obj):
     """
-        >>> _segmentrepr([1, [2, 3], [], [[2, [3, 4], [0.1, 2.2]]]])
-        '(1, (2, 3), (), ((2, (3, 4), (0.1, 2.2))))'
+    >>> _segmentrepr([1, [2, 3], [], [[2, [3, 4], [0.1, 2.2]]]])
+    '(1, (2, 3), (), ((2, (3, 4), (0.1, 2.2))))'
     """
     try:
         it = iter(obj)
