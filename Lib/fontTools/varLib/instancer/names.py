@@ -68,23 +68,18 @@ def pruningUnusedNames(varfont):
 
 
 def updateNameTable(varfont, axisLimits):
-    """Update an instatiated variable font's name table using the
-    AxisValues from the STAT table.
+    """Update instatiated variable font's name table using STAT AxisValues.
 
-    The updated name table will conform to the R/I/B/BI naming model.
-    R/I/B/BI is an acronym for (Regular, Italic, Bold, Bold Italic) font
-    styles.
+    Raises ValueError if the STAT table is missing or an Axis Value table is
+    missing for requested axis locations.
 
-    This task can be split into two parts:
-
-    Task 1: Collect and sort the relevant AxisValues into a new list which
-    only includes AxisValues whose coordinates match the new default
-    axis locations. We also skip any AxisValues which are elided.
-
-    Task 2: Update the name table's style and family names records using the
-    AxisValues found in step 1. The MS spec provides further info for applying
-    the R/I/B/BI model to each name record:
-    https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-ids
+    First, collect all STAT AxisValues that match the new default axis locations
+    (excluding "elided" ones); concatenate the strings in design axis order,
+    while giving priority to "synthetic" values (Format 4), to form the
+    typographic subfamily name associated with the new default instance.
+    Finally, update all related records in the name table, making sure that
+    legacy family/sub-family names conform to the the R/I/B/BI (Regular, Italic,
+    Bold, Bold Italic) naming model.
 
     Example: Updating a partial variable font:
     | >>> ttFont = TTFont("OpenSans[wdth,wght].ttf")
@@ -99,6 +94,10 @@ def updateNameTable(varfont, axisLimits):
     NameID 6 PostScript name: "OpenSans-Regular" --> "OpenSans-Condensed"
     NameID 16 Typographic Family name: None --> "Open Sans"
     NameID 17 Typographic Subfamily name: None --> "Condensed"
+
+    References:
+    https://docs.microsoft.com/en-us/typography/opentype/spec/stat
+    https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-ids
     """
     from . import AxisRange, axisValuesFromAxisLimits
 
@@ -123,9 +122,7 @@ def updateNameTable(varfont, axisLimits):
     axisValueTables = axisValuesFromAxisLimits(stat, defaultAxisCoords)
     checkAxisValuesExist(stat, axisValueTables, defaultAxisCoords)
 
-    # Ignore axis Values which have ELIDABLE_AXIS_VALUE_NAME flag set.
-    # AxisValues which have this flag enabled won't be visible in
-    # application font menus.
+    # ignore "elidable" axis values, should be omitted in application font menus.
     axisValueTables = [
         v for v in axisValueTables if not v.Flags & ELIDABLE_AXIS_VALUE_NAME
     ]
@@ -159,22 +156,20 @@ def checkAxisValuesExist(stat, axisValues, axisCoords):
 
 
 def _sortAxisValues(axisValues):
-    # Sort and remove duplicates and ensure that format 4 AxisValues
-    # are dominant. We need format 4 AxisValues to be dominant because the
-    # MS Spec states, "if a format 1, format 2 or format 3 table has a
+    # Sort by axis index, remove duplicates and ensure that format 4 AxisValues
+    # are dominant.
+    # The MS Spec states: "if a format 1, format 2 or format 3 table has a
     # (nominal) value used in a format 4 table that also has values for
     # other axes, the format 4 table, being the more specific match, is used",
     # https://docs.microsoft.com/en-us/typography/opentype/spec/stat#axis-value-table-format-4
     results = []
     seenAxes = set()
-    # Sort format 4 axes so the tables with the most AxisValueRecords
-    # are first
+    # Sort format 4 axes so the tables with the most AxisValueRecords are first
     format4 = sorted(
         [v for v in axisValues if v.Format == 4],
         key=lambda v: len(v.AxisValueRecord),
         reverse=True,
     )
-    nonFormat4 = [v for v in axisValues if v not in format4]
 
     for val in format4:
         axisIndexes = set(r.AxisIndex for r in val.AxisValueRecord)
@@ -183,7 +178,9 @@ def _sortAxisValues(axisValues):
             seenAxes |= axisIndexes
             results.append((minIndex, val))
 
-    for val in nonFormat4:
+    for val in axisValues:
+        if val in format4:
+            continue
         axisIndex = val.AxisIndex
         if axisIndex not in seenAxes:
             seenAxes.add(axisIndex)
@@ -216,8 +213,7 @@ def _updateNameRecords(varfont, axisValues):
         )
         if nonRibbiNameIDs:
             typoSubFamilyName = " ".join(
-                getName(n, *platform).toUnicode()
-                for n in axisValueNameIDs
+                getName(n, *platform).toUnicode() for n in axisValueNameIDs
             )
         else:
             typoSubFamilyName = None
@@ -244,21 +240,11 @@ def _updateNameRecords(varfont, axisValues):
 
 
 def _isRibbi(nametable, nameID):
-    engNameRecords = any(
-        r
-        for r in nametable.names
-        if (r.platformID, r.platEncID, r.langID) == (3, 1, 0x409)
-    )
-    if not engNameRecords:
-        raise ValueError(
-            f"Cannot determine if there are RIBBI Axis Value Tables "
-            "since there are no name table Records which have "
-            "platformID=3, platEncID=1, langID=0x409"
-        )
+    englishRecord = nametable.getName(nameID, 3, 1, 0x409)
     return (
         True
-        if nametable.getName(nameID, 3, 1, 0x409).toUnicode()
-        in ("Regular", "Italic", "Bold", "Bold Italic")
+        if englishRecord is not None
+        and englishRecord.toUnicode() in ("Regular", "Italic", "Bold", "Bold Italic")
         else False
     )
 
@@ -286,7 +272,7 @@ def _updateNameTableStyleRecords(
     ) or nametable.getName(NameID.SUBFAMILY_NAME, *platform)
 
     if not all([currentFamilyName, currentStyleName]):
-        raise ValueError("Name table must have NameIDs 1 and 2")
+        raise ValueError(f"Missing required NameIDs 1 and 2 for platform {platform}")
 
     currentFamilyName = currentFamilyName.toUnicode()
     currentStyleName = currentStyleName.toUnicode()
@@ -298,10 +284,10 @@ def _updateNameTableStyleRecords(
     if typoSubFamilyName:
         nameIDs[NameID.FAMILY_NAME] = f"{currentFamilyName} {familyNameSuffix}".strip()
         nameIDs[NameID.TYPOGRAPHIC_FAMILY_NAME] = currentFamilyName
-        nameIDs[NameID.TYPOGRAPHIC_SUBFAMILY_NAME] = f"{typoSubFamilyName}"
-    # Remove previous Typographic Family and SubFamily names since they're
-    # no longer required
+        nameIDs[NameID.TYPOGRAPHIC_SUBFAMILY_NAME] = typoSubFamilyName
     else:
+        # Remove previous Typographic Family and SubFamily names since they're
+        # no longer required
         for nameID in (
             NameID.TYPOGRAPHIC_FAMILY_NAME,
             NameID.TYPOGRAPHIC_SUBFAMILY_NAME,
