@@ -1127,7 +1127,7 @@ def segmentSegmentIntersections(seg1, seg2):
         else:
             return curveLineIntersections(seg1, seg2)
     elif len(seg1) == 2 and len(seg2) == 2:
-        return lineLineIntersections(seg1, seg2)
+        return lineLineIntersections(*seg1, *seg2)
     raise ValueError("Couldn't work out which intersection function to use")
 
 
