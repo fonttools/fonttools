@@ -993,6 +993,7 @@ def _curve_bounds(c):
         return calcQuadraticBounds(*c)
     elif len(c) == 4:
         return calcCubicBounds(*c)
+    raise ValueError("Unknown curve degree")
 
 
 def _split_segment_at_t(c, t):
@@ -1004,6 +1005,7 @@ def _split_segment_at_t(c, t):
         return splitQuadraticAtT(*c, t)
     elif len(c) == 4:
         return splitCubicAtT(*c, t)
+    raise ValueError("Unknown curve degree")
 
 
 def _curve_curve_intersections_t(
