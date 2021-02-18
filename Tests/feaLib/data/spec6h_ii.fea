@@ -12,8 +12,10 @@ lookup CNTXT_PAIR_POS {
 } CNTXT_PAIR_POS;
  
 lookup CNTXT_MARK_TO_BASE {
-    pos base o <anchor 250 450> mark @ALL_MARKS;
-    pos base c <anchor 250 450> mark @ALL_MARKS;
+    pos base o
+        <anchor 250 450> mark @ALL_MARKS;
+    pos base c
+        <anchor 250 450> mark @ALL_MARKS;
 } CNTXT_MARK_TO_BASE;
 
 feature test {
