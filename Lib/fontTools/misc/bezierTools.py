@@ -951,7 +951,7 @@ def _curve_line_intersections_t(curve, line):
         intersections.extend(solveCubic(a[1], b[1], c[1], d[1]))
     else:
         raise ValueError("Unknown curve degree")
-    return sorted([i for i in intersections if (0.0 <= i <= 1)])
+    return sorted([i for i in intersections if 0.0 <= i <= 1])
 
 
 def curveLineIntersections(curve, line):
