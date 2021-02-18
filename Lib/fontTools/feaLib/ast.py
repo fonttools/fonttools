@@ -1146,9 +1146,7 @@ class MarkBasePosStatement(Statement):
     def asFea(self, indent=""):
         res = "pos base {}".format(self.base.asFea())
         for a, m in self.marks:
-            res += ("\n" + indent + SHIFT + "{} mark @{}".format(
-                a.asFea(), m.name)
-            )
+            res += "\n" + indent + SHIFT + "{} mark @{}".format(a.asFea(), m.name)
         res += ";"
         return res
 
@@ -1197,8 +1195,11 @@ class MarkLigPosStatement(Statement):
                 temp = "\n" + indent + SHIFT * 2 + "<anchor NULL>"
             else:
                 for a, m in l:
-                    temp += ("\n" + indent + SHIFT * 2 + "{} mark @{}".format(
-                        a.asFea(), m.name)
+                    temp += (
+                        "\n"
+                        + indent
+                        + SHIFT * 2
+                        + "{} mark @{}".format(a.asFea(), m.name)
                     )
             ligs.append(temp)
         res += ("\n" + indent + SHIFT + "ligComponent").join(ligs)
@@ -1222,9 +1223,7 @@ class MarkMarkPosStatement(Statement):
     def asFea(self, indent=""):
         res = "pos mark {}".format(self.baseMarks.asFea())
         for a, m in self.marks:
-            res += ("\n" + indent + SHIFT + "{} mark @{}".format(
-                a.asFea(), m.name)
-            )
+            res += "\n" + indent + SHIFT + "{} mark @{}".format(a.asFea(), m.name)
         res += ";"
         return res
 
@@ -1267,7 +1266,7 @@ class MultipleSubstStatement(Statement):
                 res += " " + " ".join(map(asFea, self.suffix))
         else:
             res += asFea(self.glyph)
-        replacement = self.replacement or [ NullGlyph() ]
+        replacement = self.replacement or [NullGlyph()]
         res += " by "
         res += " ".join(map(asFea, replacement))
         res += ";"
