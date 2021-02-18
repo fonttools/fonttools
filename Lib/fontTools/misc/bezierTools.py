@@ -1137,16 +1137,22 @@ def segmentSegmentIntersections(seg1, seg2):
 
     """
     # Arrange by degree
+    swapped = False
     if len(seg2) > len(seg1):
         seg2, seg1 = seg1, seg2
+        swapped = True
     if len(seg1) > 2:
         if len(seg2) > 2:
-            return curveCurveIntersections(seg1, seg2)
+            intersections = curveCurveIntersections(seg1, seg2)
         else:
-            return curveLineIntersections(seg1, seg2)
+            intersections = curveLineIntersections(seg1, seg2)
     elif len(seg1) == 2 and len(seg2) == 2:
-        return lineLineIntersections(*seg1, *seg2)
-    raise ValueError("Couldn't work out which intersection function to use")
+        intersections = lineLineIntersections(*seg1, *seg2)
+    else:
+        raise ValueError("Couldn't work out which intersection function to use")
+    if not swapped:
+        return intersections
+    return [Intersection(pt=i.pt, t1=i.t2, t2=i.t1) for i in intersections]
 
 
 def _segmentrepr(obj):
