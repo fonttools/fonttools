@@ -879,32 +879,36 @@ def lineLineIntersections(s1, e1, s2, e2):
         >>> (intersection.t1, intersection.t2)
         (0.45069111555824454, 0.5408153767394238)
     """
-    ax, ay = s1
-    bx, by = e1
-    cx, cy = s2
-    dx, dy = e2
-    if math.isclose(cx, dx) and math.isclose(ax, bx):
+    s1x, s1y = s1
+    e1x, e1y = e1
+    s2x, s2y = s2
+    e2x, e2y = e2
+    if (
+        math.isclose(s2x, e2x) and math.isclose(s1x, e1x) and not math.isclose(s1x, s2x)
+    ):  # Parallel vertical
         return []
-    if math.isclose(cy, dy) and math.isclose(ay, by):
+    if (
+        math.isclose(s2y, e2y) and math.isclose(s1y, e1y) and not math.isclose(s1y, s2y)
+    ):  # Parallel horizontal
         return []
-    if math.isclose(cx, dx) and math.isclose(cy, dy):
+    if math.isclose(s2x, e2x) and math.isclose(s2y, e2y):  # Line segment is tiny
         return []
-    if math.isclose(ax, bx) and math.isclose(ay, by):
+    if math.isclose(s1x, e1x) and math.isclose(s1y, e1y):  # Line segment is tiny
         return []
-    if math.isclose(bx, ax):
-        x = ax
-        slope34 = (dy - xy) / (dx - cx)
-        y = slope34 * (x - cx) + cy
+    if math.isclose(e1x, s1x):
+        x = s1x
+        slope34 = (e2y - s2y) / (e2x - s2x)
+        y = slope34 * (x - s2x) + s2y
         pt = (x, y)
         return [
             Intersection(
                 pt=pt, t1=_line_t_of_pt(s1, e1, pt), t2=_line_t_of_pt(s2, e2, pt)
             )
         ]
-    if math.isclose(cx, dx):
-        x = cx
-        slope12 = (by - ay) / (bx - ax)
-        y = slope12 * (x - ax) + ay
+    if math.isclose(s2x, e2x):
+        x = s2x
+        slope12 = (e1y - s1y) / (e1x - s1x)
+        y = slope12 * (x - s1x) + s1y
         pt = (x, y)
         return [
             Intersection(
@@ -912,12 +916,12 @@ def lineLineIntersections(s1, e1, s2, e2):
             )
         ]
 
-    slope12 = (by - ay) / (bx - ax)
-    slope34 = (dy - cy) / (dx - cx)
+    slope12 = (e1y - s1y) / (e1x - s1x)
+    slope34 = (e2y - s2y) / (e2x - s2x)
     if math.isclose(slope12, slope34):
         return []
-    x = (slope12 * ax - ay - slope34 * cx + cy) / (slope12 - slope34)
-    y = slope12 * (x - ax) + ay
+    x = (slope12 * s1x - s1y - slope34 * s2x + s2y) / (slope12 - slope34)
+    y = slope12 * (x - s1x) + s1y
     pt = (x, y)
     if _both_points_are_on_same_side_of_origin(
         pt, e1, s1
@@ -931,6 +935,9 @@ def lineLineIntersections(s1, e1, s2, e2):
 
 
 def _alignment_transformation(segment):
+    # Returns a transformation which aligns a segment horizontally at the
+    # origin. Apply this transformation to curves and root-find to find
+    # intersections with the segment.
     start = segment[0]
     end = segment[-1]
     m = Offset(-start[0], -start[1])
@@ -942,13 +949,11 @@ def _alignment_transformation(segment):
 def _curve_line_intersections_t(curve, line):
     aligned_curve = _alignment_transformation(line).transformPoints(curve)
     if len(curve) == 3:
-        a, b, c = calcCubicParameters(*aligned_curve)
-        intersections = solveQuadratic(a[0], b[0], c[0])
-        intersections.extend(solveQuadratic(a[1], b[1], c[1]))
+        a, b, c = calcQuadraticParameters(*aligned_curve)
+        intersections = solveQuadratic(a[1], b[1], c[1])
     elif len(curve) == 4:
         a, b, c, d = calcCubicParameters(*aligned_curve)
-        intersections = solveCubic(a[0], b[0], c[0], d[0])
-        intersections.extend(solveCubic(a[1], b[1], c[1], d[1]))
+        intersections = solveCubic(a[1], b[1], c[1], d[1])
     else:
         raise ValueError("Unknown curve degree")
     return sorted([i for i in intersections if 0.0 <= i <= 1])
@@ -1000,7 +1005,7 @@ def _split_segment_at_t(c, t):
     if len(c) == 2:
         s, e = c
         midpoint = linePointAtT(s, e, t)
-        return [ ( s,  midpoint), (midpoint, e) ]
+        return [(s, midpoint), (midpoint, e)]
     if len(c) == 3:
         return splitQuadraticAtT(*c, t)
     elif len(c) == 4:
