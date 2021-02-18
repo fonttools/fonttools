@@ -995,7 +995,11 @@ def _curve_bounds(c):
         return calcCubicBounds(*c)
 
 
-def _split_curve_at_t(c, t):
+def _split_segment_at_t(c, t):
+    if len(c) == 2:
+        s, e = c
+        midpoint = linePointAtT(s, e, t)
+        return [ ( s,  midpoint), (midpoint, e) ]
     if len(c) == 3:
         return splitQuadraticAtT(*c, t)
     elif len(c) == 4:
@@ -1025,11 +1029,11 @@ def _curve_curve_intersections_t(
     if rectArea(bounds1) < precision and rectArea(bounds2) < precision:
         return [(midpoint(range1), midpoint(range2))]
 
-    c11, c12 = _split_curve_at_t(curve1, 0.5)
+    c11, c12 = _split_segment_at_t(curve1, 0.5)
     c11_range = (range1[0], midpoint(range1))
     c12_range = (midpoint(range1), range1[1])
 
-    c21, c22 = _split_curve_at_t(curve2, 0.5)
+    c21, c22 = _split_segment_at_t(curve2, 0.5)
     c21_range = (range2[0], midpoint(range2))
     c22_range = (midpoint(range2), range2[1])
 
