@@ -1060,11 +1060,18 @@ def _curve_curve_intersections_t(
             c12, c22, precision, range1=c12_range, range2=c22_range
         )
     )
+
     unique_key = lambda ts: int(ts[0] / precision)
     seen = set()
-    return [
-        seen.add(unique_key(ts)) or ts for ts in found if unique_key(ts) not in seen
-    ]
+    unique_values = []
+
+    for ts in found:
+        if unique_key(ts) in seen:
+            continue
+        seen.add(unique_key(ts))
+        unique_values.append(ts)
+
+    return unique_values
 
 
 def curveCurveIntersections(curve1, curve2):
