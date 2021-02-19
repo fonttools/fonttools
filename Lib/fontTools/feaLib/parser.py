@@ -1186,8 +1186,6 @@ class Parser(object):
             langID = langID or 0x0409  # English
 
         string = self.expect_string_()
-        # self.expect_symbol_(";")
-
         encoding = getEncoding(platformID, platEncID, langID)
         if encoding is None:
             raise FeatureLibError("Unsupported encoding", location)
@@ -1368,7 +1366,7 @@ class Parser(object):
                                       self.cur_token_location_)
 
         self.expect_symbol_("}")
-        return self.ast.STATDesignAxis(axisTag, axisOrder, names, self.cur_token_location_)
+        return self.ast.STATDesignAxisStatement(axisTag, axisOrder, names, self.cur_token_location_)
 
     def parse_STAT_axis_value_(self):
         assert self.is_cur_keyword_("AxisValue")
@@ -1420,7 +1418,7 @@ class Parser(object):
                                           self.cur_token_location_)
                 format4_tags.append(tag)
 
-        return self.ast.STATAxisValueRecord(names, locations, flags, self.cur_token_location_)
+        return self.ast.STATAxisValueStatement(names, locations, flags, self.cur_token_location_)
 
     def parse_STAT_location(self):
         values = []
@@ -1447,7 +1445,7 @@ class Parser(object):
                                       f'of specified range '
                                       f'{min_val}-{max_val}.',
                                       self.next_token_location_)
-        return self.ast.AxisValueLocation(tag, values)
+        return self.ast.AxisValueLocationStatement(tag, values)
 
     def parse_table_STAT_(self, table):
         statements = table.statements
@@ -1989,7 +1987,7 @@ class Parser(object):
             raise FeatureLibError("Expected a tag", self.cur_token_location_)
         if len(self.cur_token_) > 4:
             raise FeatureLibError(
-                "Tags can not be longer than 4 characters", self.cur_token_location_
+                "Tags cannot be longer than 4 characters", self.cur_token_location_
             )
         return (self.cur_token_ + "    ")[:4]
 

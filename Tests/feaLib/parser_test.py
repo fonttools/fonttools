@@ -1284,7 +1284,7 @@ class ParserTest(unittest.TestCase):
         doc = self.parse('table STAT { DesignAxis opsz 0 '
                          '{name "Optical Size";}; } STAT;')
         da = doc.statements[0].statements[0]
-        self.assertIsInstance(da, ast.STATDesignAxis)
+        self.assertIsInstance(da, ast.STATDesignAxisStatement)
         self.assertEqual(da.tag, 'opsz')
         self.assertEqual(da.axisOrder, 0)
         self.assertEqual(da.names[0].string, 'Optical Size')
@@ -1295,7 +1295,7 @@ class ParserTest(unittest.TestCase):
                          'AxisValue {location opsz 8; name "Caption";}; } '
                          'STAT;')
         avr = doc.statements[0].statements[1]
-        self.assertIsInstance(avr, ast.STATAxisValueRecord)
+        self.assertIsInstance(avr, ast.STATAxisValueStatement)
         self.assertEqual(avr.locations[0].tag, 'opsz')
         self.assertEqual(avr.locations[0].values[0], 8)
         self.assertEqual(avr.names[0].string, 'Caption')
@@ -1306,7 +1306,7 @@ class ParserTest(unittest.TestCase):
                          'AxisValue {location opsz 8 6 10; name "Caption";}; } '
                          'STAT;')
         avr = doc.statements[0].statements[1]
-        self.assertIsInstance(avr, ast.STATAxisValueRecord)
+        self.assertIsInstance(avr, ast.STATAxisValueStatement)
         self.assertEqual(avr.locations[0].tag, 'opsz')
         self.assertEqual(avr.locations[0].values, [8, 6, 10])
         self.assertEqual(avr.names[0].string, 'Caption')

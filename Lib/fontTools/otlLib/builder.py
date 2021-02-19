@@ -9,6 +9,7 @@ from fontTools.ttLib.tables.otBase import (
     CountReference,
 )
 from fontTools.ttLib.tables import otBase
+from fontTools.feaLib.ast import STATNameStatement
 from fontTools.otlLib.error import OpenTypeLibError
 import logging
 import copy
@@ -2687,8 +2688,8 @@ def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
         ]
 
     The optional 'elidedFallbackName' argument can be a name ID (int),
-    a string, or a dictionary containing multilingual names. It
-    translates to the ElidedFallbackNameID field.
+    a string, a dictionary containing multilingual names, or a list of 
+    STATNameStatements. It translates to the ElidedFallbackNameID field.
 
     The 'ttFont' argument must be a TTFont instance that already has a
     'name' table. If a 'STAT' table already exists, it will be
@@ -2797,6 +2798,16 @@ def _addName(nameTable, value, minNameID=0):
         names = dict(en=value)
     elif isinstance(value, dict):
         names = value
+    elif isinstance(value, list):
+        nameID = nameTable._findUnusedNameID()
+        for nameRecord in value:
+            if isinstance(nameRecord, STATNameStatement):
+                nameTable.setName(nameRecord.string,
+                                  nameID,nameRecord.platformID,
+                                  nameRecord.platEncID,nameRecord.langID)
+            else:
+                raise TypeError("value must be a list of STATNameStatements")
+        return nameID
     else:
-        raise TypeError("value must be int, str or dict")
+        raise TypeError("value must be int, str, dict or list")
     return nameTable.addMultilingualName(names, minNameID=minNameID)

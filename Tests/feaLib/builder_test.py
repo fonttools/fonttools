@@ -74,7 +74,7 @@ class BuilderTest(unittest.TestCase):
         LigatureSubtable AlternateSubtable MultipleSubstSubtable 
         SingleSubstSubtable aalt_chain_contextual_subst AlternateChained 
         MultipleLookupsPerGlyph MultipleLookupsPerGlyph2 GSUB_6_formats
-        GSUB_5_formats delete_glyph STAT_test
+        GSUB_5_formats delete_glyph STAT_test STAT_test_elidedFallbackNameID
     """.split()
 
     def __init__(self, methodName):
@@ -514,6 +514,7 @@ class BuilderTest(unittest.TestCase):
             '} name;'
             'table STAT {'
             '    ElidedFallbackNameID 256;'
+            '    DesignAxis opsz 1 { name "Optical Size"; };'
             '} STAT;')
 
     def test_STAT_design_axis_name(self):
@@ -647,7 +648,7 @@ class BuilderTest(unittest.TestCase):
     def test_STAT_invalid_location_tag(self):
         self.assertRaisesRegex(
             FeatureLibError,
-            'Tags can not be longer than 4 characters',
+            'Tags cannot be longer than 4 characters',
             self.build,
             'table name {'
             '   nameid 256 "Roman"; '

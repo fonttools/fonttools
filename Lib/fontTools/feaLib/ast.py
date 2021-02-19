@@ -29,7 +29,7 @@ __all__ = [
     "Anchor",
     "AnchorDefinition",
     "AttachStatement",
-    "AxisValueLocation",
+    "AxisValueLocationStatement",
     "BaseAxis",
     "CVParametersNameStatement",
     "ChainContextPosStatement",
@@ -66,8 +66,8 @@ __all__ = [
     "SingleSubstStatement",
     "SizeParameters",
     "Statement",
-    "STATAxisValueRecord",
-    "STATDesignAxis",
+    "STATAxisValueStatement",
+    "STATDesignAxisStatement",
     "STATNameStatement",
     "SubtableStatement",
     "TableBlock",
@@ -1902,7 +1902,7 @@ class VheaField(Statement):
         return "{} {};".format(keywords[self.key], self.value)
 
 
-class STATDesignAxis(Statement):
+class STATDesignAxisStatement(Statement):
     """A STAT table Design Axis
 
     Args:
@@ -1970,12 +1970,12 @@ class ElidedFallbackNameID(Statement):
         return f"ElidedFallbackNameID {self.value};"
 
 
-class STATAxisValueRecord(Statement):
+class STATAxisValueStatement(Statement):
     """A STAT table Axis Value Record
 
     Args:
         names (list): a list of :class:`STATNameStatement` objects
-        locations (list): a list of :class:`AxisValueLocation` objects
+        locations (list): a list of :class:`AxisValueLocationStatement` objects
         flags (int): an int
     """
     def __init__(self, names, locations, flags, location=None):
@@ -1990,8 +1990,7 @@ class STATAxisValueRecord(Statement):
     def asFea(self, indent=""):
         res = "AxisValue {\n"
         for location in self.locations:
-            res += f"location {location.tag} "
-            res += f"{' '.join(str(i) for i in location.values)};\n"
+            res += location.asFea()
 
         for nameRecord in self.names:
             res += nameRecord.asFea()
@@ -2010,7 +2009,7 @@ class STATAxisValueRecord(Statement):
         return res
 
 
-class AxisValueLocation(NamedTuple):
+class AxisValueLocationStatement(Statement):
     """
     A STAT table Axis Value Location
 
@@ -2018,5 +2017,12 @@ class AxisValueLocation(NamedTuple):
         tag (str): a 4 letter axis tag
         values (list): a list of ints and/or floats
     """
-    tag: str
-    values: list
+    def __init__(self, tag, values, location=None):
+        Statement.__init__(self, location)
+        self.tag = tag
+        self.values = values
+
+    def asFea(self, res=""):
+        res += f"location {self.tag} "
+        res += f"{' '.join(str(i) for i in self.values)};\n"
+        return res

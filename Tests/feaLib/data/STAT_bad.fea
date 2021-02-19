@@ -1,3 +1,4 @@
+# bad fea file: Testing DesignAxis tag with incorrect label
 table name {
 	nameid 25 "TestFont";
 } name;
@@ -7,7 +8,7 @@ table STAT {
 
    ElidedFallbackName { name "Roman"; };
 
-   DesignAxis opsz 0 { badtag "Optical Size"; };
+   DesignAxis opsz 0 { badtag "Optical Size"; };  #'badtag' instead of 'name' is incorrect
    DesignAxis wdth 1 { name "Width"; };
    DesignAxis wght 2 { name "Weight"; };
    DesignAxis ital 3 { name "Italic"; };
