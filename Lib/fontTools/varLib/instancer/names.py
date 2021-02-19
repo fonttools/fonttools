@@ -352,10 +352,11 @@ def _updateUniqueIdNameRecord(varfont, nameIDs, platform):
         nameRecord = nametable.getName(nameID, *platform)
         if not nameRecord:
             continue
-        if currentRecord.toUnicode() in nameRecord.toUnicode():
+        if nameRecord.toUnicode() in currentRecord.toUnicode():
             return currentRecord.toUnicode().replace(
                 nameRecord.toUnicode(), nameIDs[nameRecord.nameID]
             )
+
     # Create a new string since we couldn't find any substrings.
     fontVersion = _fontVersion(varfont, platform)
     achVendID = varfont["OS/2"].achVendID
