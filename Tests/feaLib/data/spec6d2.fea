@@ -9,7 +9,11 @@ markClass [dieresis umlaut] <anchor 300 -10> @TOP_MARKS;
 markClass [cedilla] <anchor 300 600> @BOTTOM_MARKS;
 
 feature test {
-    pos base [e o] <anchor 250 450> mark @TOP_MARKS <anchor 250 -12> mark @BOTTOM_MARKS;
-#test-fea2fea: pos base [a u] <anchor 265 450> mark @TOP_MARKS <anchor 250 -10> mark @BOTTOM_MARKS;
-    position base [a u] <anchor 265 450> mark @TOP_MARKS <anchor 250-10> mark @BOTTOM_MARKS;
+    pos base [e o]
+        <anchor 250 450> mark @TOP_MARKS
+        <anchor 250 -12> mark @BOTTOM_MARKS;
+#test-fea2fea: pos base [a u]
+    position base [a u]
+        <anchor 265 450> mark @TOP_MARKS
+        <anchor 250 -10> mark @BOTTOM_MARKS;
 } test;

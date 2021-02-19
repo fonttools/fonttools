@@ -5,14 +5,29 @@ markClass [ogonek] <anchor 800 -10> @OGONEK;
 
 feature test {
 
-    pos ligature [c_t s_t] <anchor 500 800> mark @TOP_MARKS <anchor 500 -200> mark @BOTTOM_MARKS
-        ligComponent <anchor 1500 800> mark @TOP_MARKS <anchor 1500 -200> mark @BOTTOM_MARKS <anchor 1550 0> mark @OGONEK;
+    pos ligature [c_t s_t]
+            <anchor 500 800> mark @TOP_MARKS
+            <anchor 500 -200> mark @BOTTOM_MARKS
+        ligComponent
+            <anchor 1500 800> mark @TOP_MARKS
+            <anchor 1500 -200> mark @BOTTOM_MARKS
+            <anchor 1550 0> mark @OGONEK;
 
-    pos ligature f_l <anchor 300 800> mark @TOP_MARKS <anchor 300 -200> mark @BOTTOM_MARKS
-        ligComponent <anchor 600 800> mark @TOP_MARKS <anchor 600 -200> mark @BOTTOM_MARKS;
+    pos ligature f_l
+            <anchor 300 800> mark @TOP_MARKS
+            <anchor 300 -200> mark @BOTTOM_MARKS
+        ligComponent
+            <anchor 600 800> mark @TOP_MARKS
+            <anchor 600 -200> mark @BOTTOM_MARKS;
 
-    pos ligature [f_f_l] <anchor 300 800> mark @TOP_MARKS <anchor 300 -200> mark @BOTTOM_MARKS
-        ligComponent <anchor 600 800> mark @TOP_MARKS <anchor 600 -200> mark @BOTTOM_MARKS
-        ligComponent <anchor 900 800> mark @TOP_MARKS <anchor 900 -200> mark @BOTTOM_MARKS;
+    pos ligature [f_f_l]
+            <anchor 300 800> mark @TOP_MARKS
+            <anchor 300 -200> mark @BOTTOM_MARKS
+        ligComponent
+            <anchor 600 800> mark @TOP_MARKS
+            <anchor 600 -200> mark @BOTTOM_MARKS
+        ligComponent
+            <anchor 900 800> mark @TOP_MARKS
+            <anchor 900 -200> mark @BOTTOM_MARKS;
 
 } test;

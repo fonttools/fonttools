@@ -4,7 +4,10 @@ markClass sukun <anchor 261 488> @TOP_MARKS;
 markClass kasratan <anchor 346 -98> @BOTTOM_MARKS;
 
 feature test {
-    pos ligature lam_meem_jeem <anchor 625 1800> mark @TOP_MARKS    # mark above lam
-        ligComponent <anchor 376 -368> mark @BOTTOM_MARKS    # mark below meem
-        ligComponent <anchor NULL>;   # jeem has no marks
+    pos ligature lam_meem_jeem
+            <anchor 625 1800> mark @TOP_MARKS    # mark above lam
+        ligComponent
+            <anchor 376 -368> mark @BOTTOM_MARKS    # mark below meem
+        ligComponent
+            <anchor NULL>;   # jeem has no marks
 } test;
