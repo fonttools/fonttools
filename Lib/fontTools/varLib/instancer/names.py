@@ -279,7 +279,7 @@ def _updateNameTableStyleRecords(
 
     nameIDs = {
         NameID.FAMILY_NAME: currentFamilyName,
-        NameID.SUBFAMILY_NAME: subFamilyName,
+        NameID.SUBFAMILY_NAME: subFamilyName or "Regular",
     }
     if typoSubFamilyName:
         nameIDs[NameID.FAMILY_NAME] = f"{currentFamilyName} {familyNameSuffix}".strip()
@@ -305,13 +305,13 @@ def _updateNameTableStyleRecords(
     nameIDs[NameID.POSTSCRIPT_NAME] = _updatePSNameRecord(
         varfont, newFamilyName, newStyleName, platform
     )
-    nameIDs[NameID.UNIQUE_FONT_IDENTIFIER] = _updateUniqueIdNameRecord(
-        varfont, nameIDs, platform
-    )
+
+    uniqueID = _updateUniqueIdNameRecord(varfont, nameIDs, platform)
+    if uniqueID:
+        nameIDs[NameID.UNIQUE_FONT_IDENTIFIER] = uniqueID
 
     for nameID, string in nameIDs.items():
-        if not string:
-            continue
+        assert string, nameID
         nametable.setName(string, nameID, *platform)
 
 
