@@ -148,7 +148,7 @@ class AbstractPen(abc.ABC):
 		raise NotImplementedError
 
 
-class NullPen(object):
+class NullPen(AbstractPen):
 
 	"""A pen that does nothing.
 	"""
