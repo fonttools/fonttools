@@ -7,6 +7,23 @@ from fontTools.pens.pointPen import AbstractPointPen, PointToSegmentPen, \
     SegmentToPointPen, GuessSmoothPointPen, ReverseContourPointPen
 
 
+def test_subclasshook():
+    class NullPen:
+        def beginPath(self, identifier, **kwargs) -> None:
+            pass
+        def endPath(self) -> None:
+            pass
+        def addPoint(self, pt, segmentType, smooth, name, identifier, **kwargs) -> None:
+            pass
+        def addComponent(self, baseGlyphName, transformation, identifier, **kwargs) -> None:
+            pass
+
+    assert issubclass(NullPen, AbstractPointPen)
+    assert isinstance(NullPen(), AbstractPointPen)
+    assert not issubclass(NullPen, AbstractPen)
+    assert not isinstance(NullPen(), AbstractPen)
+
+
 class _TestSegmentPen(AbstractPen):
 
     def __init__(self):
