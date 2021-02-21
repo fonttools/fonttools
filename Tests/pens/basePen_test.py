@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.pens.basePen import \
     AbstractPen, BasePen, decomposeSuperBezierSegment, decomposeQuadraticSegment
 from fontTools.pens.pointPen import AbstractPointPen

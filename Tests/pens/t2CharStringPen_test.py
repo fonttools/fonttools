@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 from fontTools.pens.t2CharStringPen import T2CharStringPen
 import unittest
 
@@ -7,16 +6,12 @@ class T2CharStringPenTest(unittest.TestCase):
 
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
-        # Python 3 renamed assertRaisesRegexp to assertRaisesRegex,
-        # and fires deprecation warnings if a program uses the old name.
-        if not hasattr(self, "assertRaisesRegex"):
-            self.assertRaisesRegex = self.assertRaisesRegexp
 
     def assertAlmostEqualProgram(self, expected, actual):
         self.assertEqual(len(expected), len(actual))
         for i1, i2 in zip(expected, actual):
-            if isinstance(i1, basestring):
-                self.assertIsInstance(i2, basestring)
+            if isinstance(i1, str):
+                self.assertIsInstance(i2, str)
                 self.assertEqual(i1, i2)
             else:
                 self.assertAlmostEqual(i1, i2)

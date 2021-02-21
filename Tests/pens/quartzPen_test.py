@@ -1,4 +1,3 @@
-from fontTools.misc.py23 import *
 import unittest
 
 try:
@@ -68,7 +67,7 @@ class QuartzPenTest(unittest.TestCase):
             "moveto 50.0 0.0 lineto 50.0 500.0 lineto 200.0 500.0 curveto 350.0 500.0 450.0 400.0 450.0 250.0 curveto 450.0 100.0 350.0 0.0 200.0 0.0 close ",
             quartzPathToString(pen.path)
         )
-        
+
     def test_empty(self):
         pen = QuartzPen(None)
         self.assertEqual("", quartzPathToString(pen.path))
