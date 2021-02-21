@@ -60,6 +60,9 @@ class TTGlyphPen(LoggingPen):
         assert self._isClosed(), '"move"-type point must begin a new contour.'
         self._addPoint(pt, 1)
 
+    def curveTo(self, *points):
+        raise NotImplementedError
+
     def qCurveTo(self, *points):
         assert len(points) >= 1
         for pt in points[:-1]:
