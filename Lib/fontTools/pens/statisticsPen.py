@@ -1,6 +1,5 @@
 """Pen calculating area, center of mass, variance and standard-deviation,
 covariance and correlation, and slant, of glyph shapes."""
-from fontTools.misc.py23 import *
 import math
 from fontTools.pens.momentsPen import MomentsPen
 

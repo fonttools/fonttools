@@ -2,7 +2,6 @@
 for shapes.
 """
 
-from fontTools.misc.py23 import *
 from fontTools.pens.basePen import BasePen
 from fontTools.misc.bezierTools import solveQuadratic, solveCubic
 

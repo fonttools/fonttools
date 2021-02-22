@@ -1,10 +1,25 @@
-from fontTools.misc.py23 import *
-from fontTools.misc.loggingTools import CapturingLogHandler
 import unittest
 
 from fontTools.pens.basePen import AbstractPen
 from fontTools.pens.pointPen import AbstractPointPen, PointToSegmentPen, \
     SegmentToPointPen, GuessSmoothPointPen, ReverseContourPointPen
+
+
+def test_subclasshook():
+    class NullPen:
+        def beginPath(self, identifier, **kwargs) -> None:
+            pass
+        def endPath(self) -> None:
+            pass
+        def addPoint(self, pt, segmentType, smooth, name, identifier, **kwargs) -> None:
+            pass
+        def addComponent(self, baseGlyphName, transformation, identifier, **kwargs) -> None:
+            pass
+
+    assert issubclass(NullPen, AbstractPointPen)
+    assert isinstance(NullPen(), AbstractPointPen)
+    assert not issubclass(NullPen, AbstractPen)
+    assert not isinstance(NullPen(), AbstractPen)
 
 
 class _TestSegmentPen(AbstractPen):
@@ -43,7 +58,7 @@ def _reprKwargs(kwargs):
     items = []
     for key in sorted(kwargs):
         value = kwargs[key]
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             items.append("%s='%s'" % (key, value))
         else:
             items.append("%s=%s" % (key, value))

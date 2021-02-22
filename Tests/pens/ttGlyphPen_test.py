@@ -1,5 +1,3 @@
-from fontTools.misc.py23 import *
-
 import os
 import unittest
 import struct
