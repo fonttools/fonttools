@@ -305,3 +305,14 @@ def test_updateNameTable_elided_axisValues(varfont):
     # the subFamilyName set so it conforms to the RIBBI model.
     expected = {(2, 3, 1, 0x409): "Regular", (17, 3, 1, 0x409): "Black"}
     _test_name_records(varfont, expected, isNonRIBBI=True)
+
+
+def test_updateNameTable_existing_subfamily_name_is_not_regular(varfont):
+    # Check the subFamily name will be set to Regular when we update a name
+    # table to a non-RIBBI style and the current subFamily name is a RIBBI
+    # style which isn't Regular.
+    varfont["name"].setName("Bold", 2, 3, 1, 0x409)  # subFamily Regular --> Bold
+
+    instancer.names.updateNameTable(varfont, {"wght": 100})
+    expected = {(2, 3, 1, 0x409): "Regular", (17, 3, 1, 0x409): "Thin"}
+    _test_name_records(varfont, expected, isNonRIBBI=True)
