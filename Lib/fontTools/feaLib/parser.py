@@ -1322,32 +1322,36 @@ class Parser(object):
             if self.is_cur_keyword_("name"):
                 platformID, platEncID, langID, string = self.parse_stat_name_()
                 nameRecord = self.ast.STATNameStatement(
-                    "stat", platformID, platEncID, langID, string,
-                    location=self.cur_token_location_
+                    "stat",
+                    platformID,
+                    platEncID,
+                    langID,
+                    string,
+                    location=self.cur_token_location_,
                 )
                 names.append(nameRecord)
             else:
                 if self.cur_token_ != ";":
-                    raise FeatureLibError(f"Unexpected token {self.cur_token_} "
-                                          f"in ElidedFallbackName",
-                                          self.cur_token_location_)
+                    raise FeatureLibError(
+                        f"Unexpected token {self.cur_token_} " f"in ElidedFallbackName",
+                        self.cur_token_location_,
+                    )
         self.expect_symbol_("}")
         if not names:
-            raise FeatureLibError('Expected "name"',
-                                  self.cur_token_location_)
+            raise FeatureLibError('Expected "name"', self.cur_token_location_)
         return names
 
     def parse_STAT_design_axis(self):
-        assert self.is_cur_keyword_('DesignAxis')
+        assert self.is_cur_keyword_("DesignAxis")
         names = []
         axisTag = self.expect_tag_()
-        if (axisTag not in ('ital', 'opsz', 'slnt', 'wdth', 'wght')
-                and not axisTag.isupper()):
-            log.warning(
-                f'Unregistered axis tag {axisTag} should be uppercase.'
-            )
+        if (
+            axisTag not in ("ital", "opsz", "slnt", "wdth", "wght")
+            and not axisTag.isupper()
+        ):
+            log.warning(f"Unregistered axis tag {axisTag} should be uppercase.")
         axisOrder = self.expect_number_()
-        self.expect_symbol_('{')
+        self.expect_symbol_("{")
         while self.next_token_ != "}" or self.cur_comments_:
             self.advance_lexer_()
             if self.cur_token_type_ is Lexer.COMMENT:
@@ -1362,11 +1366,14 @@ class Parser(object):
             elif self.cur_token_ == ";":
                 continue
             else:
-                raise FeatureLibError(f'Expected "name", got {self.cur_token_}',
-                                      self.cur_token_location_)
+                raise FeatureLibError(
+                    f'Expected "name", got {self.cur_token_}', self.cur_token_location_
+                )
 
         self.expect_symbol_("}")
-        return self.ast.STATDesignAxisStatement(axisTag, axisOrder, names, self.cur_token_location_)
+        return self.ast.STATDesignAxisStatement(
+            axisTag, axisOrder, names, self.cur_token_location_
+        )
 
     def parse_STAT_axis_value_(self):
         assert self.is_cur_keyword_("AxisValue")
@@ -1393,39 +1400,45 @@ class Parser(object):
             elif self.cur_token_ == ";":
                 continue
             else:
-                raise FeatureLibError(f"Unexpected token {self.cur_token_} "
-                                      f"in AxisValue", self.cur_token_location_)
+                raise FeatureLibError(
+                    f"Unexpected token {self.cur_token_} " f"in AxisValue",
+                    self.cur_token_location_,
+                )
         self.expect_symbol_("}")
         if not names:
-            raise FeatureLibError('Expected "Axis Name"',
-                                  self.cur_token_location_)
+            raise FeatureLibError('Expected "Axis Name"', self.cur_token_location_)
         if not locations:
-            raise FeatureLibError('Expected "Axis location"',
-                                  self.cur_token_location_)
+            raise FeatureLibError('Expected "Axis location"', self.cur_token_location_)
         if len(locations) > 1:
             for location in locations:
                 if len(location.values) > 1:
-                    raise FeatureLibError("Only one value is allowed in a "
-                                          "Format 4 Axis Value Record, but "
-                                          f"{len(location.values)} were found.",
-                                          self.cur_token_location_)
+                    raise FeatureLibError(
+                        "Only one value is allowed in a "
+                        "Format 4 Axis Value Record, but "
+                        f"{len(location.values)} were found.",
+                        self.cur_token_location_,
+                    )
             format4_tags = []
             for location in locations:
                 tag = location.tag
                 if tag in format4_tags:
-                    raise FeatureLibError(f"Axis tag {tag} already "
-                                          "defined.",
-                                          self.cur_token_location_)
+                    raise FeatureLibError(
+                        f"Axis tag {tag} already " "defined.", self.cur_token_location_
+                    )
                 format4_tags.append(tag)
 
-        return self.ast.STATAxisValueStatement(names, locations, flags, self.cur_token_location_)
+        return self.ast.STATAxisValueStatement(
+            names, locations, flags, self.cur_token_location_
+        )
 
     def parse_STAT_location(self):
         values = []
         tag = self.expect_tag_()
         if len(tag.strip()) != 4:
-            raise FeatureLibError(f"Axis tag {self.cur_token_} must be 4 "
-                                  "characters", self.cur_token_location_)
+            raise FeatureLibError(
+                f"Axis tag {self.cur_token_} must be 4 " "characters",
+                self.cur_token_location_,
+            )
 
         while self.next_token_ != ";":
             if self.next_token_type_ is Lexer.FLOAT:
@@ -1435,16 +1448,20 @@ class Parser(object):
                 value = self.expect_number_()
                 values.append(value)
             else:
-                raise FeatureLibError(f'Unexpected value "{self.next_token_}". '
-                                      'Expected integer or float.',
-                                      self.next_token_location_)
+                raise FeatureLibError(
+                    f'Unexpected value "{self.next_token_}". '
+                    "Expected integer or float.",
+                    self.next_token_location_,
+                )
         if len(values) == 3:
             nominal, min_val, max_val = values
             if nominal < min_val or nominal > max_val:
-                raise FeatureLibError(f'Default value {nominal} is outside '
-                                      f'of specified range '
-                                      f'{min_val}-{max_val}.',
-                                      self.next_token_location_)
+                raise FeatureLibError(
+                    f"Default value {nominal} is outside "
+                    f"of specified range "
+                    f"{min_val}-{max_val}.",
+                    self.next_token_location_,
+                )
         return self.ast.AxisValueLocationStatement(tag, values)
 
     def parse_table_STAT_(self, table):
@@ -1475,14 +1492,16 @@ class Parser(object):
                         if location.tag not in design_axes:
                             # Tag must be defined in a DesignAxis before it
                             # can be referenced
-                            raise FeatureLibError("DesignAxis not defined for "
-                                                  f"{location.tag}.",
-                                                  self.cur_token_location_)
+                            raise FeatureLibError(
+                                "DesignAxis not defined for " f"{location.tag}.",
+                                self.cur_token_location_,
+                            )
                     statements.append(axisValueRecord)
                     self.expect_symbol_(";")
                 else:
-                    raise FeatureLibError(f"Unexpected token {self.cur_token_}",
-                                          self.cur_token_location_)
+                    raise FeatureLibError(
+                        f"Unexpected token {self.cur_token_}", self.cur_token_location_
+                    )
             elif self.cur_token_ == ";":
                 continue
 
@@ -2056,8 +2075,7 @@ class Parser(object):
             return self.expect_number_() / 10
         else:
             raise FeatureLibError(
-                "Expected an integer or floating-point number",
-                self.cur_token_location_
+                "Expected an integer or floating-point number", self.cur_token_location_
             )
 
     def expect_stat_flags(self):
@@ -2072,8 +2090,7 @@ class Parser(object):
                 value = value | flags[name]
             else:
                 raise FeatureLibError(
-                    f"Unexpected STAT flag {self.cur_token_}",
-                    self.cur_token_location_
+                    f"Unexpected STAT flag {self.cur_token_}", self.cur_token_location_
                 )
         return value
 
@@ -2084,8 +2101,7 @@ class Parser(object):
             return self.expect_number_()
         else:
             raise FeatureLibError(
-                "Expected an integer or floating-point number",
-                self.cur_token_location_
+                "Expected an integer or floating-point number", self.cur_token_location_
             )
 
     def expect_string_(self):
