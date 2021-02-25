@@ -98,6 +98,7 @@ class Builder(object):
             "hhea",
             "name",
             "vhea",
+            "STAT",
         ]
     )
 
@@ -159,6 +160,8 @@ class Builder(object):
         self.hhea_ = {}
         # for table 'vhea'
         self.vhea_ = {}
+        # for table 'STAT'
+        self.stat_ = {}
 
     def build(self, tables=None, debug=False):
         if self.parseTree is None:
@@ -188,6 +191,8 @@ class Builder(object):
             self.build_name()
         if "OS/2" in tables:
             self.build_OS_2()
+        if "STAT" in tables:
+            self.build_STAT()
         for tag in ("GPOS", "GSUB"):
             if tag not in tables:
                 continue
@@ -510,6 +515,140 @@ class Builder(object):
         if version >= 5:
             checkattr(table, ("usLowerOpticalPointSize", "usUpperOpticalPointSize"))
 
+    def setElidedFallbackName(self, value, location):
+        # ElidedFallbackName is a convenience method for setting
+        # ElidedFallbackNameID so only one can be allowed
+        for token in ("ElidedFallbackName", "ElidedFallbackNameID"):
+            if token in self.stat_:
+                raise FeatureLibError(
+                    f"{token} is already set.",
+                    location,
+                )
+        if isinstance(value, int):
+            self.stat_["ElidedFallbackNameID"] = value
+        elif isinstance(value, list):
+            self.stat_["ElidedFallbackName"] = value
+        else:
+            raise AssertionError(value)
+
+    def addDesignAxis(self, designAxis, location):
+        if "DesignAxes" not in self.stat_:
+            self.stat_["DesignAxes"] = []
+        if designAxis.tag in (r.tag for r in self.stat_["DesignAxes"]):
+            raise FeatureLibError(
+                f'DesignAxis already defined for tag "{designAxis.tag}".',
+                location,
+            )
+        if designAxis.axisOrder in (r.axisOrder for r in self.stat_["DesignAxes"]):
+            raise FeatureLibError(
+                f"DesignAxis already defined for axis number {designAxis.axisOrder}.",
+                location,
+            )
+        self.stat_["DesignAxes"].append(designAxis)
+
+    def addAxisValueRecord(self, axisValueRecord, location):
+        if "AxisValueRecords" not in self.stat_:
+            self.stat_["AxisValueRecords"] = []
+        # Check for duplicate AxisValueRecords
+        for record_ in self.stat_["AxisValueRecords"]:
+            if (
+                {n.asFea() for n in record_.names}
+                == {n.asFea() for n in axisValueRecord.names}
+                and {n.asFea() for n in record_.locations}
+                == {n.asFea() for n in axisValueRecord.locations}
+                and record_.flags == axisValueRecord.flags
+            ):
+                raise FeatureLibError(
+                    "An AxisValueRecord with these values is already defined.",
+                    location,
+                )
+        self.stat_["AxisValueRecords"].append(axisValueRecord)
+
+    def build_STAT(self):
+        if not self.stat_:
+            return
+
+        axes = self.stat_.get("DesignAxes")
+        if not axes:
+            raise FeatureLibError("DesignAxes not defined", None)
+        axisValueRecords = self.stat_.get("AxisValueRecords")
+        axisValues = {}
+        format4_locations = []
+        for tag in axes:
+            axisValues[tag.tag] = []
+        if axisValueRecords is not None:
+            for avr in axisValueRecords:
+                valuesDict = {}
+                if avr.flags > 0:
+                    valuesDict["flags"] = avr.flags
+                if len(avr.locations) == 1:
+                    location = avr.locations[0]
+                    values = location.values
+                    if len(values) == 1:  # format1
+                        valuesDict.update({"value": values[0], "name": avr.names})
+                    if len(values) == 2:  # format3
+                        valuesDict.update(
+                            {
+                                "value": values[0],
+                                "linkedValue": values[1],
+                                "name": avr.names,
+                            }
+                        )
+                    if len(values) == 3:  # format2
+                        nominal, minVal, maxVal = values
+                        valuesDict.update(
+                            {
+                                "nominalValue": nominal,
+                                "rangeMinValue": minVal,
+                                "rangeMaxValue": maxVal,
+                                "name": avr.names,
+                            }
+                        )
+                    axisValues[location.tag].append(valuesDict)
+                else:
+                    valuesDict.update(
+                        {
+                            "location": {i.tag: i.values[0] for i in avr.locations},
+                            "name": avr.names,
+                        }
+                    )
+                    format4_locations.append(valuesDict)
+
+        designAxes = [
+            {
+                "ordering": a.axisOrder,
+                "tag": a.tag,
+                "name": a.names,
+                "values": axisValues[a.tag],
+            }
+            for a in axes
+        ]
+
+        nameTable = self.font.get("name")
+        if not nameTable:  # this only happens for unit tests
+            nameTable = self.font["name"] = newTable("name")
+            nameTable.names = []
+
+        if "ElidedFallbackNameID" in self.stat_:
+            nameID = self.stat_["ElidedFallbackNameID"]
+            name = nameTable.getDebugName(nameID)
+            if not name:
+                raise FeatureLibError(
+                    f"ElidedFallbackNameID {nameID} points "
+                    "to a nameID that does not exist in the "
+                    '"name" table',
+                    None,
+                )
+        elif "ElidedFallbackName" in self.stat_:
+            nameID = self.stat_["ElidedFallbackName"]
+
+        otl.buildStatTable(
+            self.font,
+            designAxes,
+            locations=format4_locations,
+            elidedFallbackName=nameID,
+        )
+
     def build_codepages_(self, pages):
         pages2bits = {
             1252: 0,
@@ -718,8 +857,10 @@ class Builder(object):
                         str(ix)
                     ]._replace(feature=key)
                 except KeyError:
-                    warnings.warn("feaLib.Builder subclass needs upgrading to "
-                        "stash debug information. See fonttools#2065.")
+                    warnings.warn(
+                        "feaLib.Builder subclass needs upgrading to "
+                        "stash debug information. See fonttools#2065."
+                    )
 
             feature_key = (feature_tag, lookup_indices)
             feature_index = feature_indices.get(feature_key)
