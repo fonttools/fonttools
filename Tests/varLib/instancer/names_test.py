@@ -39,10 +39,14 @@ def _test_name_records(varfont, expected, isNonRIBBI, platforms=[0x409]):
         if k[-1] not in platforms:
             continue
         assert font_names[k] == expected[k]
+
+    font_nameids = set(i[0] for i in font_names)
     if isNonRIBBI:
-        font_nameids = set(i[0] for i in font_names)
         assert 16 in font_nameids
         assert 17 in font_nameids
+
+    if "fvar" not in varfont:
+        assert 25 not in font_nameids
 
 
 @pytest.mark.parametrize(
