@@ -12,7 +12,6 @@ This allows the caller to provide more data for each point.
 For instance, whether or not a point is smooth, and its name.
 """
 
-import abc
 import math
 from typing import Any, List, Optional, Tuple
 
@@ -28,36 +27,17 @@ __all__ = [
 ]
 
 
-class AbstractPointPen(abc.ABC):
+class AbstractPointPen:
 	"""Baseclass for all PointPens."""
 
-	@classmethod
-	def __subclasshook__(cls, subclass: Any) -> bool:
-		if cls is not AbstractPointPen:
-			return NotImplemented
-		return (
-			hasattr(subclass, "beginPath")
-			and callable(subclass.beginPath)
-			and hasattr(subclass, "endPath")
-			and callable(subclass.endPath)
-			and hasattr(subclass, "addPoint")
-			and callable(subclass.addPoint)
-			and hasattr(subclass, "addComponent")
-			and callable(subclass.addComponent)
-			or NotImplemented
-		)
-
-	@abc.abstractmethod
 	def beginPath(self, identifier: Optional[str] = None, **kwargs: Any) -> None:
 		"""Start a new sub path."""
 		raise NotImplementedError
 
-	@abc.abstractmethod
 	def endPath(self) -> None:
 		"""End the current sub path."""
 		raise NotImplementedError
 
-	@abc.abstractmethod
 	def addPoint(
 		self,
 		pt: Tuple[float, float],
@@ -70,7 +50,6 @@ class AbstractPointPen(abc.ABC):
 		"""Add a point to the current sub path."""
 		raise NotImplementedError
 
-	@abc.abstractmethod
 	def addComponent(
 		self,
 		baseGlyphName: str,
