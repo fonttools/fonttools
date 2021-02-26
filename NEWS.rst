@@ -1,3 +1,14 @@
+- [feaLib] Indent anchor statements in ``asFea()`` to make them more legible and
+  diff-able (#2193).
+- [pens] Turn ``AbstractPen`` and ``AbstractPointPen`` into abstract base classes
+  (#2164).
+- [feaLib] Added support for parsing and building ``STAT`` table from AFDKO feature
+  files (#2039).
+- [instancer] Added option to update name table of generated instance using ``STAT``
+  table's axis values (#2189).
+- [bezierTools] Added functions to compute bezier point-at-time, as well as line-line,
+  curve-line and curve-curve intersections (#2192).
+
 4.20.0 (released 2021-02-15)
 ----------------------------
 
