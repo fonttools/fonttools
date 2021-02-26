@@ -1066,14 +1066,15 @@ def _curve_curve_intersections_t(
         )
     )
 
-    unique_key = lambda ts: int(ts[0] / precision)
+    unique_key = lambda ts: (int(ts[0] / precision), int(ts[1] / precision))
     seen = set()
     unique_values = []
 
     for ts in found:
-        if unique_key(ts) in seen:
+        key = unique_key(ts)
+        if key in seen:
             continue
-        seen.add(unique_key(ts))
+        seen.add(key)
         unique_values.append(ts)
 
     return unique_values
