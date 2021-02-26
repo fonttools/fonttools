@@ -5,29 +5,6 @@ from fontTools.misc.loggingTools import CapturingLogHandler
 import unittest
 
 
-def test_subclasshook():
-    class NullPen:
-        def moveTo(self, pt):
-            pass
-        def lineTo(self, pt):
-            pass
-        def curveTo(self, *points):
-            pass
-        def qCurveTo(self, *points):
-            pass
-        def closePath(self):
-            pass
-        def endPath(self):
-            pass
-        def addComponent(self, glyphName, transformation):
-            pass
-
-    assert issubclass(NullPen, AbstractPen)
-    assert isinstance(NullPen(), AbstractPen)
-    assert not issubclass(NullPen, AbstractPointPen)
-    assert not isinstance(NullPen(), AbstractPointPen)
-
-
 class _TestPen(BasePen):
     def __init__(self):
         BasePen.__init__(self, glyphSet={})
