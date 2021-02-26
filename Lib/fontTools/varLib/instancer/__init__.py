@@ -84,6 +84,7 @@ from fontTools import subset  # noqa: F401
 from fontTools.varLib import builder
 from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.merger import MutatorMerger
+from fontTools.varLib.instancer import names
 from contextlib import contextmanager
 import collections
 from copy import deepcopy
@@ -1008,6 +1009,13 @@ def instantiateSTAT(varfont, axisLimits):
     ):
         return  # STAT table empty, nothing to do
 
+    log.info("Instantiating STAT table")
+    newAxisValueTables = axisValuesFromAxisLimits(stat, axisLimits)
+    stat.AxisValueArray.AxisValue = newAxisValueTables
+    stat.AxisValueCount = len(stat.AxisValueArray.AxisValue)
+
+
+def axisValuesFromAxisLimits(stat, axisLimits):
     location, axisRanges = splitAxisLocationAndRanges(axisLimits, rangeType=AxisRange)
 
     def isAxisValueOutsideLimits(axisTag, axisValue):
@@ -1018,8 +1026,6 @@ def instantiateSTAT(varfont, axisLimits):
             if axisValue < axisRange.minimum or axisValue > axisRange.maximum:
                 return True
         return False
-
-    log.info("Instantiating STAT table")
 
     # only keep AxisValues whose axis is not pinned nor restricted, or is pinned at the
     # exact (nominal) value, or is restricted but the value is within the new range
@@ -1050,53 +1056,7 @@ def instantiateSTAT(varfont, axisLimits):
         else:
             log.warn("Unknown AxisValue table format (%s); ignored", axisValueFormat)
         newAxisValueTables.append(axisValueTable)
-
-    stat.AxisValueArray.AxisValue = newAxisValueTables
-    stat.AxisValueCount = len(stat.AxisValueArray.AxisValue)
-
-
-def getVariationNameIDs(varfont):
-    used = []
-    if "fvar" in varfont:
-        fvar = varfont["fvar"]
-        for axis in fvar.axes:
-            used.append(axis.axisNameID)
-        for instance in fvar.instances:
-            used.append(instance.subfamilyNameID)
-            if instance.postscriptNameID != 0xFFFF:
-                used.append(instance.postscriptNameID)
-    if "STAT" in varfont:
-        stat = varfont["STAT"].table
-        for axis in stat.DesignAxisRecord.Axis if stat.DesignAxisRecord else ():
-            used.append(axis.AxisNameID)
-        for value in stat.AxisValueArray.AxisValue if stat.AxisValueArray else ():
-            used.append(value.ValueNameID)
-    # nameIDs <= 255 are reserved by OT spec so we don't touch them
-    return {nameID for nameID in used if nameID > 255}
-
-
-@contextmanager
-def pruningUnusedNames(varfont):
-    origNameIDs = getVariationNameIDs(varfont)
-
-    yield
-
-    log.info("Pruning name table")
-    exclude = origNameIDs - getVariationNameIDs(varfont)
-    varfont["name"].names[:] = [
-        record for record in varfont["name"].names if record.nameID not in exclude
-    ]
-    if "ltag" in varfont:
-        # Drop the whole 'ltag' table if all the language-dependent Unicode name
-        # records that reference it have been dropped.
-        # TODO: Only prune unused ltag tags, renumerating langIDs accordingly.
-        # Note ltag can also be used by feat or morx tables, so check those too.
-        if not any(
-            record
-            for record in varfont["name"].names
-            if record.platformID == 0 and record.langID != 0xFFFF
-        ):
-            del varfont["ltag"]
+    return newAxisValueTables
 
 
 def setMacOverlapFlags(glyfTable):
@@ -1187,6 +1147,7 @@ def instantiateVariableFont(
     inplace=False,
     optimize=True,
     overlap=OverlapMode.KEEP_AND_SET_FLAGS,
+    updateFontNames=False,
 ):
     """Instantiate variable font, either fully or partially.
 
@@ -1219,6 +1180,11 @@ def instantiateVariableFont(
             contours and components, you can pass OverlapMode.REMOVE. Note that this
             requires the skia-pathops package (available to pip install).
             The overlap parameter only has effect when generating full static instances.
+        updateFontNames (bool): if True, update the instantiated font's name table using
+            the Axis Value Tables from the STAT table. The name table will be updated so
+            it conforms to the R/I/B/BI model. If the STAT table is missing or
+            an Axis Value table is missing for a given axis coordinate, a ValueError will
+            be raised.
     """
     # 'overlap' used to be bool and is now enum; for backward compat keep accepting bool
     overlap = OverlapMode(int(overlap))
@@ -1233,6 +1199,10 @@ def instantiateVariableFont(
 
     if not inplace:
         varfont = deepcopy(varfont)
+
+    if updateFontNames:
+        log.info("Updating name table")
+        names.updateNameTable(varfont, axisLimits)
 
     if "gvar" in varfont:
         instantiateGvar(varfont, normalizedLimits, optimize=optimize)
@@ -1256,7 +1226,7 @@ def instantiateVariableFont(
     if "avar" in varfont:
         instantiateAvar(varfont, axisLimits)
 
-    with pruningUnusedNames(varfont):
+    with names.pruningUnusedNames(varfont):
         if "STAT" in varfont:
             instantiateSTAT(varfont, axisLimits)
 
@@ -1377,6 +1347,12 @@ def parseArgs(args):
         help="Merge overlapping contours and components (only applicable "
         "when generating a full instance). Requires skia-pathops",
     )
+    parser.add_argument(
+        "--update-name-table",
+        action="store_true",
+        help="Update the instantiated font's `name` table. Input font must have "
+        "a STAT table with Axis Value Tables",
+    )
     loggingGroup = parser.add_mutually_exclusive_group(required=False)
     loggingGroup.add_argument(
         "-v", "--verbose", action="store_true", help="Run more verbosely."
@@ -1428,6 +1404,7 @@ def main(args=None):
         inplace=True,
         optimize=options.optimize,
         overlap=options.overlap,
+        updateFontNames=options.update_name_table,
     )
 
     outfile = (
@@ -1443,9 +1420,3 @@ def main(args=None):
         outfile,
     )
     varfont.save(outfile)
-
-
-if __name__ == "__main__":
-    import sys
-
-    sys.exit(main())

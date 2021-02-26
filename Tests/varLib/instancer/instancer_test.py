@@ -20,14 +20,9 @@ import re
 import pytest
 
 
+# see Tests/varLib/instancer/conftest.py for "varfont" fixture definition
+
 TESTDATA = os.path.join(os.path.dirname(__file__), "data")
-
-
-@pytest.fixture
-def varfont():
-    f = ttLib.TTFont()
-    f.importXML(os.path.join(TESTDATA, "PartialInstancerTest-VF.ttx"))
-    return f
 
 
 @pytest.fixture(params=[True, False], ids=["optimize", "no-optimize"])
@@ -144,7 +139,7 @@ class InstantiateGvarTest(object):
         assert "gvar" not in varfont
 
     def test_composite_glyph_not_in_gvar(self, varfont):
-        """ The 'minus' glyph is a composite glyph, which references 'hyphen' as a
+        """The 'minus' glyph is a composite glyph, which references 'hyphen' as a
         component, but has no tuple variations in gvar table, so the component offset
         and the phantom points do not change; however the sidebearings and bounding box
         do change as a result of the parent glyph 'hyphen' changing.
@@ -1209,8 +1204,8 @@ class InstantiateSTATTest(object):
     @pytest.mark.parametrize(
         "location, expected",
         [
-            ({"wght": 400}, ["Regular", "Condensed", "Upright"]),
-            ({"wdth": 100}, ["Thin", "Regular", "Black", "Upright"]),
+            ({"wght": 400}, ["Regular", "Condensed", "Upright", "Normal"]),
+            ({"wdth": 100}, ["Thin", "Regular", "Black", "Upright", "Normal"]),
         ],
     )
     def test_pin_and_drop_axis(self, varfont, location, expected):
@@ -1339,30 +1334,6 @@ class InstantiateSTATTest(object):
 
         assert "Unknown AxisValue table format (5)" in caplog.text
         assert axisValue in varfont2["STAT"].table.AxisValueArray.AxisValue
-
-
-def test_pruningUnusedNames(varfont):
-    varNameIDs = instancer.getVariationNameIDs(varfont)
-
-    assert varNameIDs == set(range(256, 296 + 1))
-
-    fvar = varfont["fvar"]
-    stat = varfont["STAT"].table
-
-    with instancer.pruningUnusedNames(varfont):
-        del fvar.axes[0]  # Weight (nameID=256)
-        del fvar.instances[0]  # Thin (nameID=258)
-        del stat.DesignAxisRecord.Axis[0]  # Weight (nameID=256)
-        del stat.AxisValueArray.AxisValue[0]  # Thin (nameID=258)
-
-    assert not any(n for n in varfont["name"].names if n.nameID in {256, 258})
-
-    with instancer.pruningUnusedNames(varfont):
-        del varfont["fvar"]
-        del varfont["STAT"]
-
-    assert not any(n for n in varfont["name"].names if n.nameID in varNameIDs)
-    assert "ltag" not in varfont
 
 
 def test_setMacOverlapFlags():
