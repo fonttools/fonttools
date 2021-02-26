@@ -1,3 +1,4 @@
+from fontTools.misc.py23 import *
 from fontTools.misc.arrayTools import pairwise
 from fontTools.pens.filterPen import ContourFilterPen
 

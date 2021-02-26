@@ -1,3 +1,4 @@
+from fontTools.misc.py23 import *
 from fontTools.pens.areaPen import AreaPen
 import unittest
 

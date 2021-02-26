@@ -1,3 +1,4 @@
+from fontTools.misc.py23 import *
 from array import array
 from fontTools.misc.fixedTools import MAX_F2DOT14, otRound, floatToFixedToFloat
 from fontTools.pens.basePen import LoggingPen
@@ -71,9 +72,6 @@ class TTGlyphPen(LoggingPen):
     def moveTo(self, pt):
         assert self._isClosed(), '"move"-type point must begin a new contour.'
         self._addPoint(pt, 1)
-
-    def curveTo(self, *points):
-        raise NotImplementedError
 
     def qCurveTo(self, *points):
         assert len(points) >= 1

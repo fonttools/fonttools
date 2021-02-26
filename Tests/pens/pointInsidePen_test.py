@@ -1,4 +1,4 @@
-from io import StringIO
+from fontTools.misc.py23 import *
 from fontTools.pens.pointInsidePen import PointInsidePen
 import unittest
 
@@ -72,16 +72,16 @@ class PointInsidePenTest(unittest.TestCase):
 
     @staticmethod
     def render(draw_function, even_odd):
-        result = StringIO()
+        result = BytesIO()
         for y in range(5):
             for x in range(10):
                 pen = PointInsidePen(None, (x + 0.5, y + 0.5), even_odd)
                 draw_function(pen)
                 if pen.getResult():
-                    result.write("*")
+                    result.write(b"*")
                 else:
-                    result.write(" ")
-        return result.getvalue()
+                    result.write(b" ")
+        return tounicode(result.getvalue())
 
 
     def test_contour_no_solutions(self):

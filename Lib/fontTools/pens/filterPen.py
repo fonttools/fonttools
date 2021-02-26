@@ -1,3 +1,4 @@
+from fontTools.misc.py23 import *
 from fontTools.pens.basePen import AbstractPen
 from fontTools.pens.pointPen import AbstractPointPen
 from fontTools.pens.recordingPen import RecordingPen

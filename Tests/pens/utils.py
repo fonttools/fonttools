@@ -14,7 +14,7 @@
 
 from . import CUBIC_GLYPHS
 from fontTools.pens.pointPen import PointToSegmentPen, SegmentToPointPen
-from math import isclose
+from fontTools.misc.py23 import isclose
 import unittest
 
 

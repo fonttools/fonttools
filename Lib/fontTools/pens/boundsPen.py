@@ -1,3 +1,4 @@
+from fontTools.misc.py23 import *
 from fontTools.misc.arrayTools import updateBounds, pointInRect, unionRect
 from fontTools.misc.bezierTools import calcCubicBounds, calcQuadraticBounds
 from fontTools.pens.basePen import BasePen

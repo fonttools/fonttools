@@ -11,12 +11,8 @@ steps through all the points in a call from glyph.drawPoints().
 This allows the caller to provide more data for each point.
 For instance, whether or not a point is smooth, and its name.
 """
-
-import abc
-import math
-from typing import Any, List, Optional, Tuple
-
 from fontTools.pens.basePen import AbstractPen
+import math
 
 __all__ = [
 	"AbstractPointPen",
@@ -28,56 +24,26 @@ __all__ = [
 ]
 
 
-class AbstractPointPen(abc.ABC):
-	"""Baseclass for all PointPens."""
+class AbstractPointPen(object):
+	"""
+	Baseclass for all PointPens.
+	"""
 
-	@classmethod
-	def __subclasshook__(cls, subclass: Any) -> bool:
-		if cls is not AbstractPointPen:
-			return NotImplemented
-		return (
-			hasattr(subclass, "beginPath")
-			and callable(subclass.beginPath)
-			and hasattr(subclass, "endPath")
-			and callable(subclass.endPath)
-			and hasattr(subclass, "addPoint")
-			and callable(subclass.addPoint)
-			and hasattr(subclass, "addComponent")
-			and callable(subclass.addComponent)
-			or NotImplemented
-		)
-
-	@abc.abstractmethod
-	def beginPath(self, identifier: Optional[str] = None, **kwargs: Any) -> None:
+	def beginPath(self, identifier=None, **kwargs):
 		"""Start a new sub path."""
 		raise NotImplementedError
 
-	@abc.abstractmethod
-	def endPath(self) -> None:
+	def endPath(self):
 		"""End the current sub path."""
 		raise NotImplementedError
 
-	@abc.abstractmethod
-	def addPoint(
-		self,
-		pt: Tuple[float, float],
-		segmentType: Optional[str] = None,
-		smooth: bool = False,
-		name: Optional[str] = None,
-		identifier: Optional[str] = None,
-		**kwargs: Any
-	) -> None:
+	def addPoint(self, pt, segmentType=None, smooth=False, name=None,
+				 identifier=None, **kwargs):
 		"""Add a point to the current sub path."""
 		raise NotImplementedError
 
-	@abc.abstractmethod
-	def addComponent(
-		self,
-		baseGlyphName: str,
-		transformation: Tuple[float, float, float, float, float, float],
-		identifier: Optional[str] = None,
-		**kwargs: Any
-	) -> None:
+	def addComponent(self, baseGlyphName, transformation, identifier=None,
+					 **kwargs):
 		"""Add a sub glyph."""
 		raise NotImplementedError
 

@@ -36,52 +36,26 @@ Coordinates are usually expressed as (x, y) tuples, but generally any
 sequence of length 2 will do.
 """
 
-import abc
-from typing import Any, Tuple
-
+from fontTools.misc.py23 import *
 from fontTools.misc.loggingTools import LogMixin
 
 __all__ =  ["AbstractPen", "NullPen", "BasePen",
 			"decomposeSuperBezierSegment", "decomposeQuadraticSegment"]
 
 
-class AbstractPen(abc.ABC):
-	@classmethod
-	def __subclasshook__(cls, subclass: Any) -> bool:
-		if cls is not AbstractPen:
-			return NotImplemented
-		return (
-			hasattr(subclass, "moveTo")
-			and callable(subclass.moveTo)
-			and hasattr(subclass, "lineTo")
-			and callable(subclass.lineTo)
-			and hasattr(subclass, "curveTo")
-			and callable(subclass.curveTo)
-			and hasattr(subclass, "qCurveTo")
-			and callable(subclass.qCurveTo)
-			and hasattr(subclass, "closePath")
-			and callable(subclass.closePath)
-			and hasattr(subclass, "endPath")
-			and callable(subclass.endPath)
-			and hasattr(subclass, "addComponent")
-			and callable(subclass.addComponent)
-			or NotImplemented
-		)
+class AbstractPen(object):
 
-	@abc.abstractmethod
-	def moveTo(self, pt: Tuple[float, float]) -> None:
+	def moveTo(self, pt):
 		"""Begin a new sub path, set the current point to 'pt'. You must
 		end each sub path with a call to pen.closePath() or pen.endPath().
 		"""
 		raise NotImplementedError
 
-	@abc.abstractmethod
-	def lineTo(self, pt: Tuple[float, float]) -> None:
+	def lineTo(self, pt):
 		"""Draw a straight line from the current point to 'pt'."""
 		raise NotImplementedError
 
-	@abc.abstractmethod
-	def curveTo(self, *points: Tuple[float, float]) -> None:
+	def curveTo(self, *points):
 		"""Draw a cubic bezier with an arbitrary number of control points.
 
 		The last point specified is on-curve, all others are off-curve
@@ -102,8 +76,7 @@ class AbstractPen(abc.ABC):
 		"""
 		raise NotImplementedError
 
-	@abc.abstractmethod
-	def qCurveTo(self, *points: Tuple[float, float]) -> None:
+	def qCurveTo(self, *points):
 		"""Draw a whole string of quadratic curve segments.
 
 		The last point specified is on-curve, all others are off-curve
@@ -120,26 +93,19 @@ class AbstractPen(abc.ABC):
 		"""
 		raise NotImplementedError
 
-	@abc.abstractmethod
-	def closePath(self) -> None:
+	def closePath(self):
 		"""Close the current sub path. You must call either pen.closePath()
 		or pen.endPath() after each sub path.
 		"""
 		pass
 
-	@abc.abstractmethod
-	def endPath(self) -> None:
+	def endPath(self):
 		"""End the current sub path, but don't close it. You must call
 		either pen.closePath() or pen.endPath() after each sub path.
 		"""
 		pass
 
-	@abc.abstractmethod
-	def addComponent(
-		self,
-		glyphName: str,
-		transformation: Tuple[float, float, float, float, float, float]
-	) -> None:
+	def addComponent(self, glyphName, transformation):
 		"""Add a sub glyph. The 'transformation' argument must be a 6-tuple
 		containing an affine transformation, or a Transform object from the
 		fontTools.misc.transform module. More precisely: it should be a
@@ -148,7 +114,7 @@ class AbstractPen(abc.ABC):
 		raise NotImplementedError
 
 
-class NullPen(AbstractPen):
+class NullPen(object):
 
 	"""A pen that does nothing.
 	"""
