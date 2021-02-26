@@ -228,6 +228,19 @@ def rectCenter(rect):
     (xMin, yMin, xMax, yMax) = rect
     return (xMin+xMax)/2, (yMin+yMax)/2
 
+def rectArea(rect):
+    """Determine rectangle area.
+
+    Args:
+        rect: Bounding rectangle, expressed as tuples
+            ``(xMin, yMin, xMax, yMax)``.
+
+    Returns:
+        The area of the rectangle.
+    """
+    (xMin, yMin, xMax, yMax) = rect
+    return (yMax - yMin) * (xMax - xMin)
+
 def intRect(rect):
     """Round a rectangle to integer values.
 
