@@ -978,10 +978,8 @@ def _alignment_transformation(segment):
     # intersections with the segment.
     start = segment[0]
     end = segment[-1]
-    m = Offset(-start[0], -start[1])
-    endpt = m.transformPoint(end)
-    angle = math.atan2(endpt[1], endpt[0])
-    return m.reverseTransform(Identity.rotate(-angle))
+    angle = math.atan2(end[1] - start[1], end[0] - start[0])
+    return Identity.rotate(-angle).translate(-start[0], -start[1])
 
 
 def _curve_line_intersections_t(curve, line):
