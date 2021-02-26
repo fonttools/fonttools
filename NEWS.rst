@@ -1,3 +1,6 @@
+4.21.0 (released 2021-02-26)
+----------------------------
+
 - [feaLib] Indent anchor statements in ``asFea()`` to make them more legible and
   diff-able (#2193).
 - [pens] Turn ``AbstractPen`` and ``AbstractPointPen`` into abstract base classes
