@@ -1,3 +1,6 @@
+- [pens] Reverted breaking change that turned ``AbstractPen`` and ``AbstractPointPen``
+  into abstract base classes (#2164, #2198).
+
 4.21.0 (released 2021-02-26)
 ----------------------------
 
