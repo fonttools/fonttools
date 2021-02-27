@@ -20,7 +20,7 @@ API *will* change in near future.
 """
 from fontTools.misc.py23 import *
 from fontTools.misc.fixedTools import otRound
-from fontTools.misc.arrayTools import Vector
+from fontTools.misc.vector import Vector
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
 from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
