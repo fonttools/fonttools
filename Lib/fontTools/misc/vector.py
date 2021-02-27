@@ -14,7 +14,6 @@ class Vector(tuple):
     """
 
     def __new__(cls, values, keep=False):
-        """Initialize a vector.."""
         if keep is not False:
             warnings.warn(
                 "the 'keep' argument has been deprecated",
