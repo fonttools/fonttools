@@ -40,8 +40,12 @@ from typing import Tuple
 
 from fontTools.misc.loggingTools import LogMixin
 
-__all__ =  ["AbstractPen", "NullPen", "BasePen",
+__all__ =  ["AbstractPen", "NullPen", "BasePen", "PenError",
 			"decomposeSuperBezierSegment", "decomposeQuadraticSegment"]
+
+
+class PenError(Exception):
+	"""Represents an error during penning."""
 
 
 class AbstractPen:
