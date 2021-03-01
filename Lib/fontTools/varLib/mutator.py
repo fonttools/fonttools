@@ -352,7 +352,7 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
 			if hasattr(maxp, "maxStackElements"):
 				maxp.maxStackElements = max(len(loc), maxp.maxStackElements)
 			else:
-				setattr(maxp, "maxInstructionDefs", len(loc))
+				setattr(maxp, "maxStackElements", len(loc))
 
 	if 'name' in varfont:
 		log.info("Pruning name table")
