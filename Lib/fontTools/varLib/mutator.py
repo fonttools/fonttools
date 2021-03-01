@@ -345,14 +345,8 @@ def instantiateVariableFont(varfont, location, inplace=False, overlap=True):
 		# Change maxp attributes as IDEF is added
 		if 'maxp' in varfont:
 			maxp = varfont['maxp']
-			if hasattr(maxp, "maxInstructionDefs"):
-				maxp.maxInstructionDefs += 1
-			else:
-				setattr(maxp, "maxInstructionDefs", 1)
-			if hasattr(maxp, "maxStackElements"):
-				maxp.maxStackElements = max(len(loc), maxp.maxStackElements)
-			else:
-				setattr(maxp, "maxStackElements", len(loc))
+			setattr(maxp, "maxInstructionDefs", 1 + getattr(maxp, "maxInstructionDefs", 0))
+			setattr(maxp, "maxStackElements", max(len(loc), getattr(maxp, "maxStackElements", 0)))
 
 	if 'name' in varfont:
 		log.info("Pruning name table")
