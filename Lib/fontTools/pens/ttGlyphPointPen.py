@@ -3,7 +3,7 @@ from typing import Any, List, Optional, Tuple
 from fontTools.misc.fixedTools import MAX_F2DOT14, otRound, floatToFixedToFloat
 from fontTools.misc.loggingTools import LogMixin
 from fontTools.pens.pointPen import AbstractPointPen
-from fontTools.pens.transformPen import TransformPen
+from fontTools.pens.transformPen import TransformPointPen
 from fontTools.ttLib.tables import ttProgram
 from fontTools.ttLib.tables._g_l_y_f import Glyph
 from fontTools.ttLib.tables._g_l_y_f import GlyphComponent
@@ -96,6 +96,7 @@ class TTGlyphPointPen(LogMixin, AbstractPointPen):
             # cubic curves are not supported
             raise NotImplementedError
 
+        self.current_path.append(pt)
         self.points.append(pt)
 
     def addComponent(
@@ -130,8 +131,8 @@ class TTGlyphPointPen(LogMixin, AbstractPointPen):
                 self.handleOverflowingTransforms and overflowing
             ):
                 # can't have both coordinates and components, so decompose
-                tpen = TransformPen(self, transformation)
-                self.glyphSet[glyphName].draw(tpen)
+                tpen = TransformPointPen(self, transformation)
+                self.glyphSet[glyphName].drawPoints(tpen)
                 continue
 
             component = GlyphComponent()
@@ -160,6 +161,8 @@ class TTGlyphPointPen(LogMixin, AbstractPointPen):
         """
         Returns a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
         """
+        assert self.current_path is None
+
         components = self._buildComponents(componentFlags)
 
         glyph = Glyph()
