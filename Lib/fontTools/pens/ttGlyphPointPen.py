@@ -73,7 +73,7 @@ class TTGlyphPointPen(LogMixin, AbstractPointPen):
         if self.current_path:
             endPt = len(self.points) - 1
             self.endPts.append(endPt)
-            self.current_path = None
+        self.current_path = None
 
     def addPoint(
         self,
