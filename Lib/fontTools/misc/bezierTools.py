@@ -856,7 +856,7 @@ def lineLineIntersections(s1, e1, s2, e2):
         1
         >>> intersection = a[0]
         >>> intersection.pt
-        (374.44882952482897, 313.73458370177315)
+        Vector((374.44882952482897, 313.73458370177315))
         >>> (intersection.t1, intersection.t2)
         (0.45069111555824454, 0.5408153767394238)
     """
@@ -880,7 +880,7 @@ def lineLineIntersections(s1, e1, s2, e2):
         x = s1x
         slope34 = (e2y - s2y) / (e2x - s2x)
         y = slope34 * (x - s2x) + s2y
-        pt = (x, y)
+        pt = Vector((x, y))
         return [
             Intersection(
                 pt=pt, t1=_line_t_of_pt(s1, e1, pt), t2=_line_t_of_pt(s2, e2, pt)
@@ -890,7 +890,7 @@ def lineLineIntersections(s1, e1, s2, e2):
         x = s2x
         slope12 = (e1y - s1y) / (e1x - s1x)
         y = slope12 * (x - s1x) + s1y
-        pt = (x, y)
+        pt = Vector((x, y))
         return [
             Intersection(
                 pt=pt, t1=_line_t_of_pt(s1, e1, pt), t2=_line_t_of_pt(s2, e2, pt)
@@ -903,7 +903,7 @@ def lineLineIntersections(s1, e1, s2, e2):
         return []
     x = (slope12 * s1x - s1y - slope34 * s2x + s2y) / (slope12 - slope34)
     y = slope12 * (x - s1x) + s1y
-    pt = (x, y)
+    pt = Vector((x, y))
     if _both_points_are_on_same_side_of_origin(
         pt, e1, s1
     ) and _both_points_are_on_same_side_of_origin(pt, s2, e2):
