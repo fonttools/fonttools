@@ -4,6 +4,7 @@
 
 from fontTools.misc.arrayTools import calcBounds, sectRect, rectArea
 from fontTools.misc.transform import Offset, Identity
+from fontTools.misc.vector import Vector
 from fontTools.misc.py23 import *
 import math
 from collections import namedtuple
@@ -243,16 +244,15 @@ def calcQuadraticBounds(pt1, pt2, pt3):
         >>> calcQuadraticBounds((0, 0), (100, 0), (100, 100))
         (0.0, 0.0, 100, 100)
     """
-    (ax, ay), (bx, by), (cx, cy) = calcQuadraticParameters(pt1, pt2, pt3)
-    ax2 = ax * 2.0
-    ay2 = ay * 2.0
+    a, b, c = calcQuadraticParameters(pt1, pt2, pt3)
+    ax2, ay2 = a * 2
     roots = []
     if ax2 != 0:
-        roots.append(-bx / ax2)
+        roots.append(-b[0] / ax2)
     if ay2 != 0:
-        roots.append(-by / ay2)
+        roots.append(-b[1] / ay2)
     points = [
-        (ax * t * t + bx * t + cx, ay * t * t + by * t + cy)
+        a * t * t + b * t + c
         for t in roots
         if 0 <= t < 1
     ] + [pt1, pt3]
@@ -343,21 +343,17 @@ def calcCubicBounds(pt1, pt2, pt3, pt4):
         >>> print("%f %f %f %f" % calcCubicBounds((50, 0), (0, 100), (100, 100), (50, 0)))
         35.566243 0.000000 64.433757 75.000000
     """
-    (ax, ay), (bx, by), (cx, cy), (dx, dy) = calcCubicParameters(pt1, pt2, pt3, pt4)
+    a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
     # calc first derivative
-    ax3 = ax * 3.0
-    ay3 = ay * 3.0
-    bx2 = bx * 2.0
-    by2 = by * 2.0
+    ax3, ay3 = a * 3.0
+    bx2, by2 = b * 2.0
+    cx, cy = c
     xRoots = [t for t in solveQuadratic(ax3, bx2, cx) if 0 <= t < 1]
     yRoots = [t for t in solveQuadratic(ay3, by2, cy) if 0 <= t < 1]
     roots = xRoots + yRoots
 
     points = [
-        (
-            ax * t * t * t + bx * t * t + cx * t + dx,
-            ay * t * t * t + by * t * t + cy * t + dy,
-        )
+        a * t * t * t + b * t * t + c * t + d
         for t in roots
     ] + [pt1, pt4]
     return calcBounds(points)
@@ -399,22 +395,17 @@ def splitLine(pt1, pt2, where, isHorizontal):
         ((0, 100), (0, 50))
         ((0, 50), (0, 0))
     """
-    pt1x, pt1y = pt1
-    pt2x, pt2y = pt2
+    pt1 = Vector(pt1)
+    pt2 = Vector(pt2)
 
-    ax = pt2x - pt1x
-    ay = pt2y - pt1y
+    a = pt2 - pt1
+    b = pt1
 
-    bx = pt1x
-    by = pt1y
-
-    a = (ax, ay)[isHorizontal]
-
-    if a == 0:
+    if a[isHorizontal] == 0:
         return [(pt1, pt2)]
-    t = (where - (bx, by)[isHorizontal]) / a
+    t = (where - b[isHorizontal]) / a[isHorizontal]
     if 0 <= t < 1:
-        midPt = ax * t + bx, ay * t + by
+        midPt = a * t + b
         return [(pt1, midPt), (midPt, pt2)]
     else:
         return [(pt1, pt2)]
@@ -555,24 +546,18 @@ def _splitQuadraticAtT(a, b, c, *ts):
     segments = []
     ts.insert(0, 0.0)
     ts.append(1.0)
-    ax, ay = a
-    bx, by = b
-    cx, cy = c
     for i in range(len(ts) - 1):
         t1 = ts[i]
         t2 = ts[i + 1]
         delta = t2 - t1
         # calc new a, b and c
         delta_2 = delta * delta
-        a1x = ax * delta_2
-        a1y = ay * delta_2
-        b1x = (2 * ax * t1 + bx) * delta
-        b1y = (2 * ay * t1 + by) * delta
+        a1 = a * delta_2
+        b1 = (2 * a * t1 + b) * delta
         t1_2 = t1 * t1
-        c1x = ax * t1_2 + bx * t1 + cx
-        c1y = ay * t1_2 + by * t1 + cy
+        c1 = a * t1_2 + b * t1 + c
 
-        pt1, pt2, pt3 = calcQuadraticPoints((a1x, a1y), (b1x, b1y), (c1x, c1y))
+        pt1, pt2, pt3 = calcQuadraticPoints(a1, b1, c1)
         segments.append((pt1, pt2, pt3))
     return segments
 
@@ -582,10 +567,6 @@ def _splitCubicAtT(a, b, c, d, *ts):
     ts.insert(0, 0.0)
     ts.append(1.0)
     segments = []
-    ax, ay = a
-    bx, by = b
-    cx, cy = c
-    dx, dy = d
     for i in range(len(ts) - 1):
         t1 = ts[i]
         t2 = ts[i + 1]
@@ -597,17 +578,11 @@ def _splitCubicAtT(a, b, c, d, *ts):
         t1_3 = t1 * t1_2
 
         # calc new a, b, c and d
-        a1x = ax * delta_3
-        a1y = ay * delta_3
-        b1x = (3 * ax * t1 + bx) * delta_2
-        b1y = (3 * ay * t1 + by) * delta_2
-        c1x = (2 * bx * t1 + cx + 3 * ax * t1_2) * delta
-        c1y = (2 * by * t1 + cy + 3 * ay * t1_2) * delta
-        d1x = ax * t1_3 + bx * t1_2 + cx * t1 + dx
-        d1y = ay * t1_3 + by * t1_2 + cy * t1 + dy
-        pt1, pt2, pt3, pt4 = calcCubicPoints(
-            (a1x, a1y), (b1x, b1y), (c1x, c1y), (d1x, d1y)
-        )
+        a1 = a * delta_3
+        b1 = (3 * a * t1 + b) * delta_2
+        c1 = (2 * b * t1 + c + 3 * a * t1_2) * delta
+        d1 = a * t1_3 + b * t1_2 + c * t1 + d
+        pt1, pt2, pt3, pt4 = calcCubicPoints(a1, b1, c1, d1)
         segments.append((pt1, pt2, pt3, pt4))
     return segments
 
@@ -750,57 +725,37 @@ def solveCubic(a, b, c, d):
 
 
 def calcQuadraticParameters(pt1, pt2, pt3):
-    x2, y2 = pt2
-    x3, y3 = pt3
-    cx, cy = pt1
-    bx = (x2 - cx) * 2.0
-    by = (y2 - cy) * 2.0
-    ax = x3 - cx - bx
-    ay = y3 - cy - by
-    return (ax, ay), (bx, by), (cx, cy)
+    pt1, pt2, pt3 = (Vector(pt) for pt in (pt1, pt2, pt3))
+    c = pt1
+    b = (pt2 - c) * 2.0
+    a = pt3 - c - b
+    return a, b, c
 
 
 def calcCubicParameters(pt1, pt2, pt3, pt4):
-    x2, y2 = pt2
-    x3, y3 = pt3
-    x4, y4 = pt4
-    dx, dy = pt1
-    cx = (x2 - dx) * 3.0
-    cy = (y2 - dy) * 3.0
-    bx = (x3 - x2) * 3.0 - cx
-    by = (y3 - y2) * 3.0 - cy
-    ax = x4 - dx - cx - bx
-    ay = y4 - dy - cy - by
-    return (ax, ay), (bx, by), (cx, cy), (dx, dy)
+    pt1, pt2, pt3, pt4 = (Vector(pt) for pt in (pt1, pt2, pt3, pt4))
+    d = pt1
+    c = (pt2 - d) * 3.0
+    b = (pt3 - pt2) * 3.0 - c
+    a = pt4 - d - c - b
+    return a, b, c, d
 
 
 def calcQuadraticPoints(a, b, c):
-    ax, ay = a
-    bx, by = b
-    cx, cy = c
-    x1 = cx
-    y1 = cy
-    x2 = (bx * 0.5) + cx
-    y2 = (by * 0.5) + cy
-    x3 = ax + bx + cx
-    y3 = ay + by + cy
-    return (x1, y1), (x2, y2), (x3, y3)
+    a, b, c = (Vector(coeff) for coeff in (a, b, c))
+    pt1 = c
+    pt2 = (b * 0.5) + c
+    pt3 = a + b + c
+    return pt1, pt2, pt3
 
 
 def calcCubicPoints(a, b, c, d):
-    ax, ay = a
-    bx, by = b
-    cx, cy = c
-    dx, dy = d
-    x1 = dx
-    y1 = dy
-    x2 = (cx / 3.0) + dx
-    y2 = (cy / 3.0) + dy
-    x3 = (bx + cx) / 3.0 + x2
-    y3 = (by + cy) / 3.0 + y2
-    x4 = ax + dx + cx + bx
-    y4 = ay + dy + cy + by
-    return (x1, y1), (x2, y2), (x3, y3), (x4, y4)
+    a, b, c, d = (Vector(coeff) for coeff in (a, b, c, d))
+    pt1 = d
+    pt2 = (c / 3.0) + d
+    pt3 = (b + c) / 3.0 + pt2
+    pt4 = a + d + c + b
+    return pt1, pt2, pt3, pt4
 
 
 #
@@ -818,7 +773,7 @@ def linePointAtT(pt1, pt2, t):
     Returns:
         A 2D tuple with the coordinates of the point.
     """
-    return ((pt1[0] * (1 - t) + pt2[0] * t), (pt1[1] * (1 - t) + pt2[1] * t))
+    return (Vector(pt1) * (1 - t) + Vector(pt2) * t)
 
 
 def quadraticPointAtT(pt1, pt2, pt3, t):
@@ -831,9 +786,8 @@ def quadraticPointAtT(pt1, pt2, pt3, t):
     Returns:
         A 2D tuple with the coordinates of the point.
     """
-    x = (1 - t) * (1 - t) * pt1[0] + 2 * (1 - t) * t * pt2[0] + t * t * pt3[0]
-    y = (1 - t) * (1 - t) * pt1[1] + 2 * (1 - t) * t * pt2[1] + t * t * pt3[1]
-    return (x, y)
+    a, b, c = calcQuadraticParameters(pt1, pt2, pt3)
+    return a * (t ** 2) + b * t + c
 
 
 def cubicPointAtT(pt1, pt2, pt3, pt4, t):
@@ -846,19 +800,8 @@ def cubicPointAtT(pt1, pt2, pt3, pt4, t):
     Returns:
         A 2D tuple with the coordinates of the point.
     """
-    x = (
-        (1 - t) * (1 - t) * (1 - t) * pt1[0]
-        + 3 * (1 - t) * (1 - t) * t * pt2[0]
-        + 3 * (1 - t) * t * t * pt3[0]
-        + t * t * t * pt4[0]
-    )
-    y = (
-        (1 - t) * (1 - t) * (1 - t) * pt1[1]
-        + 3 * (1 - t) * (1 - t) * t * pt2[1]
-        + 3 * (1 - t) * t * t * pt3[1]
-        + t * t * t * pt4[1]
-    )
-    return (x, y)
+    a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
+    return a * (t ** 3) + b * t ** 2 + c * t + d
 
 
 def segmentPointAtT(seg, t):
@@ -1014,7 +957,7 @@ def curveLineIntersections(curve, line):
         >>> len(intersections)
         3
         >>> intersections[0].pt
-        (84.90010344084885, 189.87306176459828)
+        Vector((84.90010344084884, 189.87306176459828))
     """
     if len(curve) == 3:
         pointFinder = quadraticPointAtT
@@ -1135,7 +1078,7 @@ def curveCurveIntersections(curve1, curve2):
         >>> len(intersections)
         3
         >>> intersections[0].pt
-        (81.7831487395506, 109.88904552375288)
+        Vector((81.7831487395506, 109.88904552375288))
     """
     intersection_ts = _curve_curve_intersections_t(curve1, curve2)
     return [
@@ -1163,14 +1106,14 @@ def segmentSegmentIntersections(seg1, seg2):
         >>> len(intersections)
         3
         >>> intersections[0].pt
-        (81.7831487395506, 109.88904552375288)
+        Vector((81.7831487395506, 109.88904552375288))
         >>> curve3 = [ (100, 240), (30, 60), (210, 230), (160, 30) ]
         >>> line  = [ (25, 260), (230, 20) ]
         >>> intersections = segmentSegmentIntersections(curve3, line)
         >>> len(intersections)
         3
         >>> intersections[0].pt
-        (84.90010344084885, 189.87306176459828)
+        Vector((84.90010344084884, 189.87306176459828))
 
     """
     # Arrange by degree
