@@ -450,7 +450,7 @@ def splitQuadratic(pt1, pt2, pt3, where, isHorizontal):
     solutions = solveQuadratic(
         a[isHorizontal], b[isHorizontal], c[isHorizontal] - where
     )
-    solutions = sorted([t for t in solutions if 0 <= t < 1])
+    solutions = sorted(t for t in solutions if 0 <= t < 1)
     if not solutions:
         return [(pt1, pt2, pt3)]
     return _splitQuadraticAtT(a, b, c, *solutions)
@@ -487,7 +487,7 @@ def splitCubic(pt1, pt2, pt3, pt4, where, isHorizontal):
     solutions = solveCubic(
         a[isHorizontal], b[isHorizontal], c[isHorizontal], d[isHorizontal] - where
     )
-    solutions = sorted([t for t in solutions if 0 <= t < 1])
+    solutions = sorted(t for t in solutions if 0 <= t < 1)
     if not solutions:
         return [(pt1, pt2, pt3, pt4)]
     return _splitCubicAtT(a, b, c, d, *solutions)
@@ -935,7 +935,7 @@ def _curve_line_intersections_t(curve, line):
         intersections = solveCubic(a[1], b[1], c[1], d[1])
     else:
         raise ValueError("Unknown curve degree")
-    return sorted([i for i in intersections if 0.0 <= i <= 1])
+    return sorted(i for i in intersections if 0.0 <= i <= 1)
 
 
 def curveLineIntersections(curve, line):
@@ -1145,7 +1145,7 @@ def _segmentrepr(obj):
     except TypeError:
         return "%g" % obj
     else:
-        return "(%s)" % ", ".join([_segmentrepr(x) for x in it])
+        return "(%s)" % ", ".join(_segmentrepr(x) for x in it)
 
 
 def printSegments(segments):
