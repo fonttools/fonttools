@@ -54,7 +54,9 @@ class TTGlyphPointPen(LogMixin, AbstractPointPen):
         self.types = []
         self.components = []
 
-    def beginPath(self, identifier: Optional[str] = None, **kwargs: Any) -> None:
+    def beginPath(
+        self, identifier: Optional[str] = None, **kwargs: Any
+    ) -> None:
         """
         Start a new sub path.
         """
@@ -106,9 +108,11 @@ class TTGlyphPointPen(LogMixin, AbstractPointPen):
         if self.handleOverflowingTransforms:
             # we can't encode transform values > 2 or < -2 in F2Dot14,
             # so we must decompose the glyph if any transform exceeds these
-            overflowing = any(s > 2 or s < -2
-                              for (glyphName, transformation) in self.components
-                              for s in transformation[:4])
+            overflowing = any(
+                s > 2 or s < -2
+                for (glyphName, transformation) in self.components
+                for s in transformation[:4]
+            )
         components = []
         for glyphName, transformation in self.components:
             if glyphName not in self.glyphSet:
@@ -116,8 +120,9 @@ class TTGlyphPointPen(LogMixin, AbstractPointPen):
                     "skipped non-existing component '%s'", glyphName
                 )
                 continue
-            if (self.points or
-                    (self.handleOverflowingTransforms and overflowing)):
+            if self.points or (
+                self.handleOverflowingTransforms and overflowing
+            ):
                 # can't have both coordinates and components, so decompose
                 tpen = TransformPen(self, transformation)
                 self.glyphSet[glyphName].draw(tpen)
@@ -132,11 +137,14 @@ class TTGlyphPointPen(LogMixin, AbstractPointPen):
                 floatToFixedToFloat(v, 14) for v in transformation[:4]
             )
             if transformation != (1, 0, 0, 1):
-                if (self.handleOverflowingTransforms and
-                        any(MAX_F2DOT14 < s <= 2 for s in transformation)):
+                if self.handleOverflowingTransforms and any(
+                    MAX_F2DOT14 < s <= 2 for s in transformation
+                ):
                     # clamp values ~= +2.0 so we can keep the component
-                    transformation = tuple(MAX_F2DOT14 if MAX_F2DOT14 < s <= 2
-                                           else s for s in transformation)
+                    transformation = tuple(
+                        MAX_F2DOT14 if MAX_F2DOT14 < s <= 2 else s
+                        for s in transformation
+                    )
                 component.transform = (transformation[:2], transformation[2:])
             component.flags = componentFlags
             components.append(component)
