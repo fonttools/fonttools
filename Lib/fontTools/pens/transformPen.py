@@ -1,7 +1,7 @@
 from fontTools.pens.filterPen import FilterPen, FilterPointPen
 
 
-__all__ = ["TransformPen"]
+__all__ = ["TransformPen", "TransformPointPen"]
 
 
 class TransformPen(FilterPen):
