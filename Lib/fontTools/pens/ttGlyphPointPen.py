@@ -54,61 +54,11 @@ class TTGlyphPointPen(LogMixin, AbstractPointPen):
         self.types = []
         self.components = []
 
-    # def _addPoint(self, pt, onCurve):
-    #     self.points.append(pt)
-    #     self.types.append(onCurve)
-
-    # def _popPoint(self):
-    #     self.points.pop()
-    #     self.types.pop()
-
-    # def _isClosed(self):
-    #     return (
-    #         (not self.points) or
-    #         (self.endPts and self.endPts[-1] == len(self.points) - 1))
-
     def beginPath(self, identifier: Optional[str] = None, **kwargs: Any) -> None:
         """
         Start a new sub path.
         """
         pass
-
-    # def lineTo(self, pt):
-    #     self._addPoint(pt, 1)
-
-    # def moveTo(self, pt):
-    #     assert self._isClosed(), '"move"-type point must begin a new contour.'
-    #     self._addPoint(pt, 1)
-
-    # def curveTo(self, *points):
-    #     raise NotImplementedError
-
-    # def qCurveTo(self, *points):
-    #     assert len(points) >= 1
-    #     for pt in points[:-1]:
-    #         self._addPoint(pt, 0)
-
-    #     # last point is None if there are no on-curve points
-    #     if points[-1] is not None:
-    #         self._addPoint(points[-1], 1)
-
-    # def closePath(self):
-    #     endPt = len(self.points) - 1
-
-    #     # ignore anchors (one-point paths)
-    #     if endPt == 0 or (self.endPts and endPt == self.endPts[-1] + 1):
-    #         self._popPoint()
-    #         return
-
-    #     # if first and last point on this path are the same, remove last
-    #     startPt = 0
-    #     if self.endPts:
-    #         startPt = self.endPts[-1] + 1
-    #     if self.points[startPt] == self.points[endPt]:
-    #         self._popPoint()
-    #         endPt -= 1
-
-    #     self.endPts.append(endPt)
 
     def endPath(self) -> None:
         """
@@ -196,8 +146,6 @@ class TTGlyphPointPen(LogMixin, AbstractPointPen):
         """
         Returns a :py:class:`~._g_l_y_f.Glyph` object representing the glyph.
         """
-        # assert self._isClosed(), "Didn't close last contour."
-
         components = self._buildComponents(componentFlags)
 
         glyph = Glyph()
