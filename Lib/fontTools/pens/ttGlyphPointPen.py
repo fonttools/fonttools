@@ -49,6 +49,7 @@ class TTGlyphPointPen(LogMixin, AbstractPointPen):
         self.init()
 
     def init(self):
+        self.current_path = None
         self.points = []
         self.endPts = []
         self.types = []
@@ -60,16 +61,19 @@ class TTGlyphPointPen(LogMixin, AbstractPointPen):
         """
         Start a new sub path.
         """
-        pass
+        assert self.current_path is None
+        self.current_path = []
 
     def endPath(self) -> None:
         """
         End the current sub path.
         """
         # TrueType contours are always "closed"
-        # self.closePath()
-        endPt = len(self.points) - 1
-        self.endPts.append(endPt)
+        assert self.current_path is not None
+        if self.current_path:
+            endPt = len(self.points) - 1
+            self.endPts.append(endPt)
+            self.current_path = None
 
     def addPoint(
         self,
@@ -83,11 +87,13 @@ class TTGlyphPointPen(LogMixin, AbstractPointPen):
         """
         Add a point to the current sub path.
         """
+        assert self.current_path is not None
         if segmentType is None:
             self.types.append(0)  # offcurve
         elif segmentType in ("qcurve", "line"):
             self.types.append(1)  # oncurve
         else:
+            # cubic curves are not supported
             raise NotImplementedError
 
         self.points.append(pt)
