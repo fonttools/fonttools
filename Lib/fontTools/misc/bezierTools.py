@@ -252,7 +252,7 @@ def calcQuadraticBounds(pt1, pt2, pt3):
     if ay2 != 0:
         roots.append(-b[1] / ay2)
     points = [
-        a * t * t + b * t + c
+        a * (t * t) + b * t + c
         for t in roots
         if 0 <= t < 1
     ] + [pt1, pt3]
@@ -353,7 +353,7 @@ def calcCubicBounds(pt1, pt2, pt3, pt4):
     roots = xRoots + yRoots
 
     points = [
-        a * t * t * t + b * t * t + c * t + d
+        a * (t * t * t) + b * (t * t) + c * t + d
         for t in roots
     ] + [pt1, pt4]
     return calcBounds(points)
@@ -801,7 +801,7 @@ def cubicPointAtT(pt1, pt2, pt3, pt4, t):
         A 2D tuple with the coordinates of the point.
     """
     a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
-    return a * (t ** 3) + b * t ** 2 + c * t + d
+    return a * (t ** 3) + b * (t ** 2) + c * t + d
 
 
 def segmentPointAtT(seg, t):
