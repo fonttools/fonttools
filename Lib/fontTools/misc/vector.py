@@ -4,6 +4,9 @@ import operator
 import warnings
 
 
+__all__ = ["Vector"]
+
+
 class Vector(tuple):
 
     """A math-like vector.
