@@ -16,6 +16,8 @@ class Vector(tuple):
     negation, rounding, and comparison tests.
     """
 
+    __slots__ = ()
+
     def __new__(cls, values, keep=False):
         if keep is not False:
             warnings.warn(
