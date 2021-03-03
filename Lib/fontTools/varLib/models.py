@@ -281,7 +281,6 @@ class VariationModel(object):
 
 	def _computeMasterSupports(self, axisPoints):
 		supports = []
-		deltaWeights = []
 		locations = self.locations
 		# Compute min/max across each axis, use it as total range.
 		# TODO Take this as input from outside?
@@ -291,6 +290,7 @@ class VariationModel(object):
 			for k,v in l.items():
 				minV[k] = min(v, minV.get(k, v))
 				maxV[k] = max(v, maxV.get(k, v))
+
 		for i,loc in enumerate(locations):
 			box = {}
 			for axis,locV in loc.items():
@@ -346,16 +346,19 @@ class VariationModel(object):
 				for axis,triple in bestAxes.items ():
 					box[axis] = triple
 			supports.append(box)
+		self.supports = supports
+		self._computeDeltaWeights()
 
+	def _computeDeltaWeights(self):
+		deltaWeights = []
+		for i,loc in enumerate(self.locations):
 			deltaWeight = {}
 			# Walk over previous masters now, populate deltaWeight
-			for j,m in enumerate(locations[:i]):
-				scalar = supportScalar(loc, supports[j])
+			for j,m in enumerate(self.locations[:i]):
+				scalar = supportScalar(loc, self.supports[j])
 				if scalar:
 					deltaWeight[j] = scalar
 			deltaWeights.append(deltaWeight)
-
-		self.supports = supports
 		self.deltaWeights = deltaWeights
 
 	def getDeltas(self, masterValues):
