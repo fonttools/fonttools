@@ -281,34 +281,18 @@ class VariationModel(object):
 
 	def _computeMasterSupports(self, axisPoints):
 		supports = []
-		locations = self.locations
-		# Compute min/max across each axis, use it as total range.
-		# TODO Take this as input from outside?
-		minV = {}
-		maxV = {}
-		for l in locations:
-			for k,v in l.items():
-				minV[k] = min(v, minV.get(k, v))
-				maxV[k] = max(v, maxV.get(k, v))
-
-		for i,loc in enumerate(locations):
-			box = {}
-			for axis,locV in loc.items():
-				if locV > 0:
-					box[axis] = (0, locV, maxV[axis])
-				else:
-					box[axis] = (minV[axis], locV, 0)
-
-			locAxes = set(loc.keys())
+		boxes = self._locationsToBoxes()
+		for i,box in enumerate(boxes):
+			locAxes = set(box.keys())
 			# Walk over previous masters now
-			for j,m in enumerate(locations[:i]):
+			for j,prev_box in enumerate(boxes[:i]):
 				# Master with extra axes do not participte
-				if not set(m.keys()).issubset(locAxes):
+				if not set(prev_box.keys()).issubset(locAxes):
 					continue
 				# If it's NOT in the current box, it does not participate
 				relevant = True
 				for axis, (lower,peak,upper) in box.items():
-					if axis not in m or not (m[axis] == peak or lower < m[axis] < upper):
+					if axis not in prev_box or not (prev_box[axis][1] == peak or lower < prev_box[axis][1] < upper):
 						relevant = False
 						break
 				if not relevant:
@@ -323,8 +307,8 @@ class VariationModel(object):
 
 				bestAxes = {}
 				bestRatio = -1
-				for axis in m.keys():
-					val = m[axis]
+				for axis in prev_box.keys():
+					val = prev_box[axis][1]
 					assert axis in box
 					lower,locV,upper = box[axis]
 					newLower, newUpper = lower, upper
@@ -348,6 +332,28 @@ class VariationModel(object):
 			supports.append(box)
 		self.supports = supports
 		self._computeDeltaWeights()
+
+	def _locationsToBoxes(self):
+		locations = self.locations
+		# Compute min/max across each axis, use it as total range.
+		# TODO Take this as input from outside?
+		minV = {}
+		maxV = {}
+		for l in locations:
+			for k,v in l.items():
+				minV[k] = min(v, minV.get(k, v))
+				maxV[k] = max(v, maxV.get(k, v))
+
+		boxes = []
+		for i,loc in enumerate(locations):
+			box = {}
+			for axis,locV in loc.items():
+				if locV > 0:
+					box[axis] = (0, locV, maxV[axis])
+				else:
+					box[axis] = (minV[axis], locV, 0)
+			boxes.append(box)
+		return boxes
 
 	def _computeDeltaWeights(self):
 		deltaWeights = []
