@@ -1,17 +1,18 @@
-##########################
-OpenType Variation Support
-##########################
+##################################
+varLib: OpenType Variation Support
+##################################
 
-The `fontTools.varLib` package contains a number of classes and routines
+The ``fontTools.varLib`` package contains a number of classes and routines
 for handling, building and interpolating variable font data. These routines
 rely on a common set of concepts, many of which are equivalent to concepts
-in the OpenType Specification, but some of which are unique to `varLib`.
+in the OpenType Specification, but some of which are unique to ``varLib``.
 
 Terminology
 -----------
 
 axis
-   "A designer-determined variable in a font face design that can be used to derive multiple, variant designs within a family." (OpenType Specification)
+   "A designer-determined variable in a font face design that can be used to
+   derive multiple, variant designs within a family." (OpenType Specification)
    An axis has a minimum value, a maximum value and a default value.
 
 designspace
@@ -70,7 +71,7 @@ support
    tuple ``(min, peak, max)``.
 
 box
-   `varLib` uses the term "box" to denote the minimum and maximum "corners" of
+   ``varLib`` uses the term "box" to denote the minimum and maximum "corners" of
    a support, ignoring its peak value.
 
 delta
