@@ -2,8 +2,8 @@
 
 from fontTools.varLib.models import VariationModel, supportScalar
 from fontTools.designspaceLib import DesignSpaceDocument
-from mpl_toolkits.mplot3d import axes3d
 from matplotlib import pyplot
+from mpl_toolkits.mplot3d import axes3d
 from itertools import cycle
 import math
 import logging
