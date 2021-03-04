@@ -71,7 +71,7 @@ class Vector(tuple):
     def __neg__(self):
         return self._unaryOp(operator.neg)
 
-    def __round__(self):
+    def __round__(self, *, round=round):
         return self._unaryOp(round)
 
     def __eq__(self, other):

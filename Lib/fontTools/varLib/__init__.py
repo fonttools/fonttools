@@ -34,6 +34,7 @@ from fontTools.varLib.mvar import MVAR_ENTRIES
 from fontTools.varLib.iup import iup_delta_optimize
 from fontTools.varLib.featureVars import addFeatureVariations
 from fontTools.designspaceLib import DesignSpaceDocument
+from functools import partial
 from collections import OrderedDict, namedtuple
 import os.path
 import logging
@@ -253,7 +254,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 
 		# Update gvar
 		gvar.variations[glyph] = []
-		deltas = model.getDeltas(allCoords, round=round) # builtin round calls into GlyphCoordinates.__round__()
+		deltas = model.getDeltas(allCoords, round=partial(GlyphCoordinates.__round__, round=round))
 		supports = model.supports
 		assert len(deltas) == len(supports)
 
@@ -363,7 +364,7 @@ def _merge_TTHinting(font, masterModel, master_ttfs):
 		return
 
 	variations = []
-	deltas, supports = masterModel.getDeltasAndSupports(all_cvs, round=round) # builtin round calls into Vector.__round__
+	deltas, supports = masterModel.getDeltasAndSupports(all_cvs, round=round) # builtin round calls into Vector.__round__, which uses builtin round as we like
 	for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
 		if all(v == 0 for v in delta):
 			continue
