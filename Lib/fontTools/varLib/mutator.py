@@ -3,7 +3,8 @@ Instantiate a variation font.  Run, eg:
 
 $ fonttools varLib.mutator ./NotoSansArabic-VF.ttf wght=140 wdth=85
 """
-from fontTools.misc.fixedTools import floatToFixedToFloat, otRound, floatToFixed
+from fontTools.misc.fixedTools import floatToFixedToFloat, floatToFixed
+from fontTools.misc.roundTools import otRound
 from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables import ttProgram

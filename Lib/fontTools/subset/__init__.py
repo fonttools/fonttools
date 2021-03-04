@@ -2,7 +2,7 @@
 #
 # Google Author(s): Behdad Esfahbod
 
-from fontTools.misc.fixedTools import otRound
+from fontTools.misc.roundTools import otRound
 from fontTools import ttLib
 from fontTools.ttLib.tables import otTables
 from fontTools.otlLib.maxContextCalc import maxCtxFont

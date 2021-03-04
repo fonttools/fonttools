@@ -1,7 +1,7 @@
 # Copyright (c) 2009 Type Supply LLC
 # Author: Tal Leming
 
-from fontTools.misc.fixedTools import otRound
+from fontTools.misc.roundTools import otRound
 from fontTools.misc.psCharStrings import T2CharString
 from fontTools.pens.basePen import BasePen
 from fontTools.cffLib.specializer import specializeCommands, commandsToProgram
