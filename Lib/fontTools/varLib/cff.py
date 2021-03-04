@@ -18,7 +18,7 @@ from fontTools.ttLib import newTable
 from fontTools import varLib
 from fontTools.varLib.models import allEqual
 from fontTools.misc.psCharStrings import T2CharString, T2OutlineExtractor
-from fontTools.pens.t2CharStringPen import T2CharStringPen, t2c_round
+from fontTools.pens.t2CharStringPen import T2CharStringPen, roundFunc
 
 from .errors import VarLibCFFDictMergeError, VarLibCFFPointTypeMergeError, VarLibMergeError
 
@@ -422,16 +422,6 @@ def merge_charstrings(glyphOrder, num_masters, top_dicts, masterModel):
 	return cvData
 
 
-def makeRoundNumberFunc(tolerance):
-	if tolerance < 0:
-		raise ValueError("Rounding tolerance must be positive")
-
-	def roundNumber(val):
-		return t2c_round(val, tolerance)
-
-	return roundNumber
-
-
 class CFFToCFF2OutlineExtractor(T2OutlineExtractor):
 	""" This class is used to remove the initial width from the CFF
 	charstring without trying to add the width to self.nominalWidthX,
@@ -518,7 +508,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 		self.prev_move_idx = 0
 		self.seen_moveto = False
 		self.glyphName = glyphName
-		self.roundNumber = makeRoundNumberFunc(roundTolerance)
+		self.round = roundFunc(roundTolerance)
 
 	def add_point(self, point_type, pt_coords):
 		if self.m_index == 0:
@@ -649,8 +639,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 					self, private=None, globalSubrs=None,
 					var_model=None, optimize=True):
 		commands = self._commands
-		commands = self.reorder_blend_args(commands, var_model.getDeltas,
-											self.roundNumber)
+		commands = self.reorder_blend_args(commands, var_model.getDeltas, self.round)
 		if optimize:
 			commands = specializeCommands(
 						commands, generalizeFirst=False,
