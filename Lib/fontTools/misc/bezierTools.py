@@ -786,8 +786,9 @@ def quadraticPointAtT(pt1, pt2, pt3, t):
     Returns:
         A 2D tuple with the coordinates of the point.
     """
-    a, b, c = calcQuadraticParameters(pt1, pt2, pt3)
-    return a * (t ** 2) + b * t + c
+    pt1, pt2, pt3 = (Vector(pt) for pt in (pt1, pt2, pt3))
+    t1 = 1 - t
+    return t1 * t1 * pt1 + 2 * t1 * t * pt2 + t * t * pt3
 
 
 def cubicPointAtT(pt1, pt2, pt3, pt4, t):
@@ -800,8 +801,14 @@ def cubicPointAtT(pt1, pt2, pt3, pt4, t):
     Returns:
         A 2D tuple with the coordinates of the point.
     """
-    a, b, c, d = calcCubicParameters(pt1, pt2, pt3, pt4)
-    return a * (t ** 3) + b * (t ** 2) + c * t + d
+    pt1, pt2, pt3, pt4 = (Vector(pt) for pt in (pt1, pt2, pt3, pt4))
+    t1 = 1 - t
+    return (
+        t1 * t1 * t1 * pt1
+        + 3 * t1 * t1 * t * pt2
+        + 3 * t1 * t * t * pt3
+        + t * t * t * pt4
+    )
 
 
 def segmentPointAtT(seg, t):
@@ -957,7 +964,7 @@ def curveLineIntersections(curve, line):
         >>> len(intersections)
         3
         >>> intersections[0].pt
-        Vector((84.90010344084884, 189.87306176459828))
+        Vector((84.90010344084885, 189.87306176459828))
     """
     if len(curve) == 3:
         pointFinder = quadraticPointAtT
@@ -1113,7 +1120,7 @@ def segmentSegmentIntersections(seg1, seg2):
         >>> len(intersections)
         3
         >>> intersections[0].pt
-        Vector((84.90010344084884, 189.87306176459828))
+        Vector((84.90010344084885, 189.87306176459828))
 
     """
     # Arrange by degree
