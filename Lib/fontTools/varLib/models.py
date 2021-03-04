@@ -368,7 +368,7 @@ class VariationModel(object):
 			deltaWeights.append(deltaWeight)
 		self.deltaWeights = deltaWeights
 
-	def getDeltas(self, masterValues, round=noRound):
+	def getDeltas(self, masterValues, *, round=noRound):
 		assert len(masterValues) == len(self.deltaWeights)
 		mapping = self.reverseMapping
 		out = []
@@ -379,7 +379,7 @@ class VariationModel(object):
 			out.append(round(delta))
 		return out
 
-	def getDeltasAndSupports(self, items, round=noRound):
+	def getDeltasAndSupports(self, items, *, round=noRound):
 		model, items = self.getSubModel(items)
 		return model.getDeltas(items, round=round), model.supports
 
@@ -403,11 +403,11 @@ class VariationModel(object):
 		scalars = self.getScalars(loc)
 		return self.interpolateFromDeltasAndScalars(deltas, scalars)
 
-	def interpolateFromMasters(self, loc, masterValues, round=noRound):
+	def interpolateFromMasters(self, loc, masterValues, *, round=noRound):
 		deltas = self.getDeltas(masterValues, round=round)
 		return self.interpolateFromDeltas(loc, deltas)
 
-	def interpolateFromMastersAndScalars(self, masterValues, scalars, round=noRound):
+	def interpolateFromMastersAndScalars(self, masterValues, scalars, *, round=noRound):
 		deltas = self.getDeltas(masterValues, round=round)
 		return self.interpolateFromDeltasAndScalars(deltas, scalars)
 
