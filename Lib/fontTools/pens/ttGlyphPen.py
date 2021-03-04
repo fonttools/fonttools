@@ -1,5 +1,6 @@
 from array import array
 from fontTools.misc.fixedTools import MAX_F2DOT14, otRound, floatToFixedToFloat
+from fontTools.misc.roundTools import otRound
 from fontTools.pens.basePen import LoggingPen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.ttLib.tables import ttProgram

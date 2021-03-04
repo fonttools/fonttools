@@ -22,7 +22,7 @@ from fontTools.ttLib.tables.otConverters import (
     IntValue,
     FloatValue,
 )
-from fontTools.misc.fixedTools import otRound
+from fontTools.misc.roundTools import otRound
 
 
 class BuildCallback(enum.Enum):
