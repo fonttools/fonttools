@@ -5,6 +5,7 @@ __all__ = ['nonNone', 'allNone', 'allEqual', 'allEqualTo', 'subList',
 	   'supportScalar',
 	   'VariationModel']
 
+from fontTools.misc.roundTools import noRound
 from .errors import VariationModelError
 
 
@@ -358,7 +359,7 @@ class VariationModel(object):
 		self.supports = supports
 		self.deltaWeights = deltaWeights
 
-	def getDeltas(self, masterValues):
+	def getDeltas(self, masterValues, round=noRound):
 		assert len(masterValues) == len(self.deltaWeights)
 		mapping = self.reverseMapping
 		out = []
@@ -366,12 +367,12 @@ class VariationModel(object):
 			delta = masterValues[mapping[i]]
 			for j,weight in weights.items():
 				delta -= out[j] * weight
-			out.append(delta)
+			out.append(round(delta))
 		return out
 
-	def getDeltasAndSupports(self, items):
+	def getDeltasAndSupports(self, items, round=noRound):
 		model, items = self.getSubModel(items)
-		return model.getDeltas(items), model.supports
+		return model.getDeltas(items, round=round), model.supports
 
 	def getScalars(self, loc):
 		return [supportScalar(loc, support) for support in self.supports]
@@ -393,12 +394,12 @@ class VariationModel(object):
 		scalars = self.getScalars(loc)
 		return self.interpolateFromDeltasAndScalars(deltas, scalars)
 
-	def interpolateFromMasters(self, loc, masterValues):
-		deltas = self.getDeltas(masterValues)
+	def interpolateFromMasters(self, loc, masterValues, round=noRound):
+		deltas = self.getDeltas(masterValues, round=round)
 		return self.interpolateFromDeltas(loc, deltas)
 
-	def interpolateFromMastersAndScalars(self, masterValues, scalars):
-		deltas = self.getDeltas(masterValues)
+	def interpolateFromMastersAndScalars(self, masterValues, scalars, round=noRound):
+		deltas = self.getDeltas(masterValues, round=round)
 		return self.interpolateFromDeltasAndScalars(deltas, scalars)
 
 
