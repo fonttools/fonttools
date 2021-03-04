@@ -83,11 +83,11 @@ class OnlineVarStoreBuilder(object):
 
 
 	def storeMasters(self, master_values):
-		deltas = self._model.getDeltas(master_values, round=otRound)
+		deltas = self._model.getDeltas(master_values, round=round)
 		base = deltas.pop(0)
 		return base, self.storeDeltas(deltas, round=noRound)
 
-	def storeDeltas(self, deltas, round=otRound):
+	def storeDeltas(self, deltas, round=round):
 		deltas = [round(d) for d in deltas]
 		if len(deltas) == len(self._supports) + 1:
 			deltas = tuple(deltas[1:])
@@ -112,7 +112,7 @@ class OnlineVarStoreBuilder(object):
 		self._cache[deltas] = varIdx
 		return varIdx
 
-def VarData_addItem(self, deltas, round=otRound):
+def VarData_addItem(self, deltas, round=round):
 	deltas = [round(d) for d in deltas]
 
 	countUs = self.VarRegionCount

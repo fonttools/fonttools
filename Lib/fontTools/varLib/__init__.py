@@ -440,7 +440,7 @@ def _get_advance_metrics(font, masterModel, master_ttfs,
 	vOrigDeltasAndSupports = {}
 	for glyph in glyphOrder:
 		vhAdvances = [metrics[glyph][0] if glyph in metrics else None for metrics in advMetricses]
-		vhAdvanceDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(vhAdvances, round=otRound)
+		vhAdvanceDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(vhAdvances, round=round)
 
 	singleModel = models.allEqual(id(v[1]) for v in vhAdvanceDeltasAndSupports.values())
 
@@ -452,7 +452,7 @@ def _get_advance_metrics(font, masterModel, master_ttfs,
 			# glyphs which have a non-default vOrig.
 			vOrigs = [metrics[glyph] if glyph in metrics else defaultVOrig
 				for metrics, defaultVOrig in vOrigMetricses]
-			vOrigDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(vOrigs, round=otRound)
+			vOrigDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(vOrigs, round=round)
 
 	directStore = None
 	if singleModel:
