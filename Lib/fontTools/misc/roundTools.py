@@ -3,13 +3,20 @@ Various round-to-integer helpers.
 """
 
 import math
+import functools
 import logging
 
 log = logging.getLogger(__name__)
 
 __all__ = [
+	"noRound",
 	"otRound",
+	"maybeRound",
+	"roundFunc",
 ]
+
+def noRound(value):
+	return value
 
 def otRound(value):
 	"""Round float value to nearest integer towards ``+Infinity``.
@@ -34,3 +41,18 @@ def otRound(value):
 	# https://github.com/fonttools/fonttools/issues/1248#issuecomment-383198166
 	return int(math.floor(value + 0.5))
 
+def maybeRound(v, tolerance, round=otRound):
+	rounded = round(v)
+	return rounded if abs(rounded - v) <= tolerance else v
+
+def roundFunc(tolerance, round=otRound):
+    if tolerance < 0:
+        raise ValueError("Rounding tolerance must be positive")
+
+    if tolerance == 0:
+        return noRound
+
+    if tolerance >= .5:
+        return round
+
+    return functools.partial(maybeRound, tolerance=tolerance, round=round)
