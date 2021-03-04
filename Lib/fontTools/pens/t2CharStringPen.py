@@ -7,27 +7,21 @@ from fontTools.pens.basePen import BasePen
 from fontTools.cffLib.specializer import specializeCommands, commandsToProgram
 
 
-def t2c_round(number, tolerance=0.5):
-    if tolerance == 0:
-        return number  # no-op
-    rounded = otRound(number)
-    # return rounded integer if the tolerance >= 0.5, or if the absolute
-    # difference between the original float and the rounded integer is
-    # within the tolerance
-    if tolerance >= .5 or abs(rounded - number) <= tolerance:
-        return rounded
-    else:
-        # else return the value un-rounded
-        return number
-
-def roundFunc(tolerance):
+def roundFunc(tolerance, round=otRound):
     if tolerance < 0:
         raise ValueError("Rounding tolerance must be positive")
 
-    def round(v):
-        return t2c_round(v, tolerance)
+    if tolerance == 0:
+        return lambda x: x
 
-    return round
+    if tolerance >= .5:
+        return round
+
+    def maybe_round(v):
+        rounded = round(v)
+        return rounded if abs(rounded - v) <= tolerance else v
+
+    return maybe_round
 
 
 class T2CharStringPen(BasePen):
