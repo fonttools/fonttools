@@ -510,7 +510,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 		self.prev_move_idx = 0
 		self.seen_moveto = False
 		self.glyphName = glyphName
-		self.round = roundFunc(roundTolerance)
+		self.round = roundFunc(roundTolerance, round=round)
 
 	def add_point(self, point_type, pt_coords):
 		if self.m_index == 0:
