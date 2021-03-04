@@ -17,8 +17,9 @@ from fontTools.cffLib.specializer import (
 from fontTools.ttLib import newTable
 from fontTools import varLib
 from fontTools.varLib.models import allEqual
+from fontTools.misc.roundTools import roundFunc
 from fontTools.misc.psCharStrings import T2CharString, T2OutlineExtractor
-from fontTools.pens.t2CharStringPen import T2CharStringPen, roundFunc
+from fontTools.pens.t2CharStringPen import T2CharStringPen
 
 from .errors import VarLibCFFDictMergeError, VarLibCFFPointTypeMergeError, VarLibMergeError
 

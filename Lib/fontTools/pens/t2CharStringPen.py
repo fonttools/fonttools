@@ -1,27 +1,10 @@
 # Copyright (c) 2009 Type Supply LLC
 # Author: Tal Leming
 
-from fontTools.misc.roundTools import otRound
+from fontTools.misc.roundTools import otRound, roundFunc
 from fontTools.misc.psCharStrings import T2CharString
 from fontTools.pens.basePen import BasePen
 from fontTools.cffLib.specializer import specializeCommands, commandsToProgram
-
-
-def roundFunc(tolerance, round=otRound):
-    if tolerance < 0:
-        raise ValueError("Rounding tolerance must be positive")
-
-    if tolerance == 0:
-        return lambda x: x
-
-    if tolerance >= .5:
-        return round
-
-    def maybe_round(v):
-        rounded = round(v)
-        return rounded if abs(rounded - v) <= tolerance else v
-
-    return maybe_round
 
 
 class T2CharStringPen(BasePen):
