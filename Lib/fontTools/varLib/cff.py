@@ -20,6 +20,7 @@ from fontTools.varLib.models import allEqual
 from fontTools.misc.roundTools import roundFunc
 from fontTools.misc.psCharStrings import T2CharString, T2OutlineExtractor
 from fontTools.pens.t2CharStringPen import T2CharStringPen
+from functools import partial
 
 from .errors import VarLibCFFDictMergeError, VarLibCFFPointTypeMergeError, VarLibMergeError
 
@@ -585,7 +586,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 	def getCommands(self):
 		return self._commands
 
-	def reorder_blend_args(self, commands, get_delta_func, round_func):
+	def reorder_blend_args(self, commands, get_delta_func):
 		"""
 		We first re-order the master coordinate values.
 		For a moveto to lineto, the args are now arranged as:
@@ -628,8 +629,6 @@ class CFF2CharStringMergePen(T2CharStringPen):
 					else:
 						# convert to deltas
 						deltas = get_delta_func(coord)[1:]
-						if round_func:
-							deltas = [round_func(delta) for delta in deltas]
 						coord = [coord[0]] + deltas
 						new_coords.append(coord)
 				cmd[1] = new_coords
@@ -640,7 +639,7 @@ class CFF2CharStringMergePen(T2CharStringPen):
 					self, private=None, globalSubrs=None,
 					var_model=None, optimize=True):
 		commands = self._commands
-		commands = self.reorder_blend_args(commands, var_model.getDeltas, self.round)
+		commands = self.reorder_blend_args(commands, partial (var_model.getDeltas, round=self.round))
 		if optimize:
 			commands = specializeCommands(
 						commands, generalizeFirst=False,

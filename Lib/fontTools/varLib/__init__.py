@@ -19,7 +19,7 @@ Then you can make a variable-font this way:
 API *will* change in near future.
 """
 from fontTools.misc.py23 import *
-from fontTools.misc.fixedTools import otRound
+from fontTools.misc.roundTools import noRound, otRound
 from fontTools.misc.vector import Vector
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._f_v_a_r import Axis, NamedInstance
@@ -253,7 +253,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 
 		# Update gvar
 		gvar.variations[glyph] = []
-		deltas = model.getDeltas(allCoords)
+		deltas = model.getDeltas(allCoords, round=round) # builtin round calls into GlyphCoordinates.__round__()
 		supports = model.supports
 		assert len(deltas) == len(supports)
 
@@ -262,7 +262,7 @@ def _add_gvar(font, masterModel, master_ttfs, tolerance=0.5, optimize=True):
 		endPts = control.endPts
 
 		for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
-			if all(abs(v) <= tolerance for v in delta.array) and not isComposite:
+			if all(v == 0 for v in delta.array) and not isComposite:
 				continue
 			var = TupleVariation(support, delta)
 			if optimize:
@@ -304,7 +304,7 @@ def _remove_TTHinting(font):
 	font["glyf"].removeHinting()
 	# TODO: Modify gasp table to deactivate gridfitting for all ranges?
 
-def _merge_TTHinting(font, masterModel, master_ttfs, tolerance=0.5):
+def _merge_TTHinting(font, masterModel, master_ttfs):
 
 	log.info("Merging TT hinting")
 	assert "cvar" not in font
@@ -363,10 +363,9 @@ def _merge_TTHinting(font, masterModel, master_ttfs, tolerance=0.5):
 		return
 
 	variations = []
-	deltas, supports = masterModel.getDeltasAndSupports(all_cvs)
+	deltas, supports = masterModel.getDeltasAndSupports(all_cvs, round=round) # builtin round calls into Vector.__round__
 	for i,(delta,support) in enumerate(zip(deltas[1:], supports[1:])):
-		delta = [otRound(d) for d in delta]
-		if all(abs(v) <= tolerance for v in delta):
+		if all(v == 0 for v in delta):
 			continue
 		var = TupleVariation(support, delta)
 		variations.append(var)
@@ -441,7 +440,7 @@ def _get_advance_metrics(font, masterModel, master_ttfs,
 	vOrigDeltasAndSupports = {}
 	for glyph in glyphOrder:
 		vhAdvances = [metrics[glyph][0] if glyph in metrics else None for metrics in advMetricses]
-		vhAdvanceDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(vhAdvances)
+		vhAdvanceDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(vhAdvances, round=otRound)
 
 	singleModel = models.allEqual(id(v[1]) for v in vhAdvanceDeltasAndSupports.values())
 
@@ -453,7 +452,7 @@ def _get_advance_metrics(font, masterModel, master_ttfs,
 			# glyphs which have a non-default vOrig.
 			vOrigs = [metrics[glyph] if glyph in metrics else defaultVOrig
 				for metrics, defaultVOrig in vOrigMetricses]
-			vOrigDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(vOrigs)
+			vOrigDeltasAndSupports[glyph] = masterModel.getDeltasAndSupports(vOrigs, round=otRound)
 
 	directStore = None
 	if singleModel:
@@ -463,7 +462,7 @@ def _get_advance_metrics(font, masterModel, master_ttfs,
 		varTupleIndexes = list(range(len(supports)))
 		varData = builder.buildVarData(varTupleIndexes, [], optimize=False)
 		for glyphName in glyphOrder:
-			varData.addItem(vhAdvanceDeltasAndSupports[glyphName][0])
+			varData.addItem(vhAdvanceDeltasAndSupports[glyphName][0], round=noRound)
 		varData.optimize()
 		directStore = builder.buildVarStore(varTupleList, [varData])
 
@@ -473,14 +472,14 @@ def _get_advance_metrics(font, masterModel, master_ttfs,
 	for glyphName in glyphOrder:
 		deltas, supports = vhAdvanceDeltasAndSupports[glyphName]
 		storeBuilder.setSupports(supports)
-		advMapping[glyphName] = storeBuilder.storeDeltas(deltas)
+		advMapping[glyphName] = storeBuilder.storeDeltas(deltas, round=noRound)
 
 	if vOrigMetricses:
 		vOrigMap = {}
 		for glyphName in glyphOrder:
 			deltas, supports = vOrigDeltasAndSupports[glyphName]
 			storeBuilder.setSupports(supports)
-			vOrigMap[glyphName] = storeBuilder.storeDeltas(deltas)
+			vOrigMap[glyphName] = storeBuilder.storeDeltas(deltas, round=noRound)
 
 	indirectStore = storeBuilder.finish()
 	mapping2 = indirectStore.optimize()
