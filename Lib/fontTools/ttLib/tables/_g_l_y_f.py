@@ -1627,10 +1627,6 @@ class GlyphCoordinates(object):
 			a[i] = -a[i]
 		return r
 	def __round__(self):
-		"""
-		Note: This is Python 3 only.  Python 2 does not call __round__.
-		As such, we cannot test this method either. :(
-		"""
 		r = self.copy()
 		r.toInt()
 		return r
