@@ -4,6 +4,9 @@ import operator
 import warnings
 
 
+__all__ = ["Vector"]
+
+
 class Vector(tuple):
 
     """A math-like vector.
@@ -12,6 +15,8 @@ class Vector(tuple):
     vector addition and subtraction, scalar multiplication and division,
     negation, rounding, and comparison tests.
     """
+
+    __slots__ = ()
 
     def __new__(cls, values, keep=False):
         if keep is not False:
